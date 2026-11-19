@@ -9,7 +9,7 @@ Standing: Proposed by the architect, Nov 19, 2026. Waits for the designer
 ## What is so today, read from the code
 
 - **An enemy base is four facts.** `PublicBase` in `sim-core`'s view holds the number, the name, the hex and the side that holds it. A seat's `list_bases` and `get_entity` say so in as many words: "number, name, place and holder only".
-- **An estimate of men ashore can be given at the start.** A scenario's `[[estimate]]` (decision 0092, item 16) gives a side a count of the enemy's men in a hex, held from day 1 with the grade "told". The staff reads it: it sizes a landing on it, and it does not count as knowing at balanced or at preserve the force (decision 0147, item 13), so a group is still sent to look. Scenarios 72 and 82 use it. The 39 days gives none.
+- **An estimate of men ashore can be given at the start.** A scenario's `[[estimate]]` (decision 0092, item 16) gives a side a count of the enemy's men in a hex, held from day 1 with the grade "told". The staff reads it: it sizes a landing on it, and it does not count as knowing at balanced or at preserve the force (decision 0147, item 13), so a group is still sent to look. Scenarios 24, 38, 68, 74 and 80 use it. The 39 days gives none.
 - **A side's own base has an airfield size and a port size,** which change in play: an airfield is built up (decision 0099) and damaged and mended (decision 0103).
 - **The directive from above** (decision 0157) already says "Intelligence reports he is building an airfield at Lunga". The staff's own picture does not hold it.
 
