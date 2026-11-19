@@ -9,7 +9,7 @@ use sim_core::refdata::{
     AirCombatFigures, AirSupplyFigures, AirUpkeepFigures, AircraftRole, AircraftType, AttackWeapon,
     BombardmentFigures, ClassSide, ClassSides, FatigueFigures, GroundFigures, PassingChances,
     PortSize, RefData, ReportError, ReportFigures, SearchFigures, ShipClass, ShipKind,
-    SurfaceCombatFigures,
+    SurfaceCombatFigures, TrialFigures,
 };
 use sim_core::state::ShipSystem;
 
@@ -3724,5 +3724,81 @@ mod tests {
         let float = reports_text().replacen("on_time = \"0.7\"", "on_time = 0.7", 1);
         assert_ne!(float, reports_text());
         assert!(parse_report_figures(&float, here()).is_err());
+    }
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct TrialFile {
+    placeholder: bool,
+    enemy_base_supply_t: Quantity,
+    enemy_base_fuel_t: Quantity,
+}
+
+/// Loads a trial's figures file (decision 0174, "The figures"), named by a
+/// scenario's optional `trial` key: a `placeholder` flag and what a base of
+/// the enemy's is given, `enemy_base_supply_t` and `enemy_base_fuel_t`, each
+/// a whole number or a decimal string, neither below 0.
+pub fn load_trial_figures(path: &Path) -> Result<TrialFigures, DataError> {
+    let text = fs::read_to_string(path).map_err(|e| DataError::in_file(path, e.to_string()))?;
+    parse_trial_figures(&text, path)
+}
+
+/// Parses a trial's figures from TOML text. `path` is only used in messages.
+fn parse_trial_figures(text: &str, path: &Path) -> Result<TrialFigures, DataError> {
+    let fail = |message: String| DataError::in_file(path, message);
+    let file: TrialFile = toml::from_str(text).map_err(|e| fail(e.to_string()))?;
+    let number = |field: &str, quantity: &Quantity| -> Result<Fixed, DataError> {
+        quantity
+            .to_fixed()
+            .map_err(|e| fail(format!("{field} {e}")))
+    };
+    let figures = TrialFigures {
+        placeholder: file.placeholder,
+        enemy_base_supply_t: number("enemy_base_supply_t", &file.enemy_base_supply_t)?,
+        enemy_base_fuel_t: number("enemy_base_fuel_t", &file.enemy_base_fuel_t)?,
+    };
+    if let Some(problem) = figures.problem() {
+        return Err(fail(problem));
+    }
+    Ok(figures)
+}
+
+#[cfg(test)]
+mod trial_figures_tests {
+    use super::*;
+
+    #[test]
+    fn a_trial_figures_file_is_read_and_refused_where_it_is_wrong() {
+        let path = Path::new("trial.toml");
+        let figures = parse_trial_figures(
+            "placeholder = true\nenemy_base_supply_t = 1000\nenemy_base_fuel_t = \"500.5\"\n",
+            path,
+        )
+        .expect("the figures parse");
+        assert!(figures.placeholder);
+        assert_eq!(figures.enemy_base_supply_t, Fixed::from_int(1000));
+        assert_eq!(figures.enemy_base_fuel_t, Fixed::from_ratio(1001, 2));
+        for (text, words) in [
+            (
+                "placeholder = true\nenemy_base_supply_t = -1\nenemy_base_fuel_t = 500\n",
+                "enemy_base_supply_t is -1, below 0",
+            ),
+            (
+                "placeholder = true\nenemy_base_supply_t = 1000.0\nenemy_base_fuel_t = 500\n",
+                "enemy_base_supply_t",
+            ),
+            (
+                "placeholder = true\nenemy_base_supply_t = 1000\n",
+                "enemy_base_fuel_t",
+            ),
+            (
+                "placeholder = true\nenemy_base_supply_t = 1\nenemy_base_fuel_t = 1\nguns = 2\n",
+                "guns",
+            ),
+        ] {
+            let error = parse_trial_figures(text, path).expect_err(text);
+            assert!(error.to_string().contains(words), "{error} names {words}");
+        }
     }
 }

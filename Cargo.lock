@@ -162,6 +162,7 @@ dependencies = [
  "sim-core",
  "sim-data",
  "sim-staff",
+ "sim-trial",
 ]
 
 [[package]]
@@ -271,6 +272,15 @@ version = "0.1.0"
 dependencies = [
  "sim-core",
  "sim-data",
+]
+
+[[package]]
+name = "sim-trial"
+version = "0.1.0"
+dependencies = [
+ "sim-core",
+ "sim-data",
+ "sim-staff",
 ]
 
 [[package]]

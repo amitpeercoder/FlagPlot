@@ -21,7 +21,7 @@ use sim_core::orders::{
     StragglerInstruction, TaskForceOrder, WhenSpent,
 };
 use sim_core::pictures::{CommandRef, NamedSuperior};
-use sim_core::refdata::{RefData, ShipKind};
+use sim_core::refdata::{RefData, ShipKind, TrialFigures};
 use sim_core::state::{
     AirGroup, AirGroupLocation, Arrival, Base, Formation, LandUnit, Replacement, Ship,
     ShipLocation, ShipSystem, ShipSystems, Side, Skills, SystemState, TaskForce, TruthState,
@@ -38,7 +38,7 @@ use crate::reference::{
     load_air_combat_figures, load_air_supply_figures, load_air_upkeep_figures, load_aircraft_types,
     load_class_sides, load_fatigue_figures, load_ground_figures, load_port_sizes,
     load_report_figures, load_search_figures, load_ship_classes, load_surface_combat_figures,
-    parse_kind,
+    load_trial_figures, parse_kind,
 };
 
 /// One file name or a list of them (decision 0043).
@@ -111,6 +111,12 @@ struct ScenarioFile {
     /// without it no class or type has a side. A reference file, redirected
     /// by `LoadOptions::reference_root` as the class files are.
     class_sides: Option<String>,
+    /// Path to a trial's figures, relative to the scenario file (decision
+    /// 0174): what a base of the enemy's is given when a side's picture is
+    /// made. Optional: a scenario that is not to be tried names none. A
+    /// reference file, redirected by `LoadOptions::reference_root` as the
+    /// class files are. Kept with the scenario, never put into the world.
+    trial: Option<String>,
     #[serde(default)]
     base: Vec<BaseSpec>,
     #[serde(default)]
@@ -1451,6 +1457,9 @@ pub struct Scenario {
     /// The intents each side believed the enemy held (decision 0173, 7),
     /// kept as the forces are.
     believed_intents: Vec<BelievedIntent>,
+    /// A trial's figures (decision 0174), where the scenario names them:
+    /// the scenario's, not the world's, never hashed and read by no rule.
+    trial_figures: Option<TrialFigures>,
 }
 
 /// How a scenario is loaded, beyond the file itself.
@@ -1461,8 +1470,9 @@ pub struct LoadOptions {
     /// A directory to read the scenario's reference (figures) files from, in
     /// place of the places it names. Each reference file the scenario names
     /// (ship classes, port sizes, aircraft types, and the search, surface
-    /// combat, air combat, air upkeep, fatigue and base supply figures, and
-    /// the file of sides of decision 0173) is
+    /// combat, air combat, air upkeep, fatigue and base supply figures, the
+    /// file of sides of decision 0173 and a trial's figures of decision 0174)
+    /// is
     /// looked up by its file name directly under this directory. A file that
     /// is not there is an error that names it: there is no fallback to the
     /// file the scenario names, which would defeat the purpose. The map is
@@ -1702,6 +1712,18 @@ impl Scenario {
         }
         data_files.extend(reports_file);
         data_files.extend(class_sides_file);
+        // A trial's figures (decision 0174): kept with the scenario, never
+        // put into the world. Named last, so that the files of a scenario
+        // that names none are listed as they were.
+        let trial_file = match &file.trial {
+            Some(name) => Some(reference(name)?),
+            None => None,
+        };
+        let trial_figures = match &trial_file {
+            Some(path) => Some(load_trial_figures(path)?),
+            None => None,
+        };
+        data_files.extend(trial_file);
 
         let mut truth = TruthState::default();
 
@@ -3392,7 +3414,13 @@ impl Scenario {
             data_files,
             believed_forces,
             believed_intents,
+            trial_figures,
         })
+    }
+
+    /// A trial's figures (decision 0174), where the scenario names them.
+    pub fn trial_figures(&self) -> Option<&TrialFigures> {
+        self.trial_figures.as_ref()
     }
 
     /// The enemy forces `side` believed in and held no contact of when the
@@ -3517,6 +3545,7 @@ impl Scenario {
             data_files: self.data_files.clone(),
             believed_forces: self.believed_forces.clone(),
             believed_intents: self.believed_intents.clone(),
+            trial_figures: self.trial_figures.clone(),
         })
     }
 

@@ -1,0 +1,15 @@
+Placeholder scenario 93: The enemy's half
+PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
+seed 1942
+
+day   1  hash 8e458d24764896d7  2 events
+day   2  hash c4f1f69096802cfa  2 events
+
+task_force:1 "Placeholder task force 1" (Allied): Idle at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+ship:1 "Placeholder cruiser 1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 800 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply
+base:1 "Placeholder base 1" (Allied) at (0,0): 1000 t of supply in stock, 1000 t of fuel in stock
+base:2 "Placeholder base 2" (Japanese) at (8,3): 200 t of supply in stock
+Allied: no contacts
+Allied: no battle claims
+Japanese: no contacts
+Japanese: no battle claims

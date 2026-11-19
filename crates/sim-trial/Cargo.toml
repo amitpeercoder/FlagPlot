@@ -1,0 +1,16 @@
+[package]
+name = "sim-trial"
+description = "Flag Plot trials: the pictures of a world a side may be tried in, made from its view and what it believed by written rules, and the worlds built from them (decision 0174)."
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+
+[dependencies]
+sim-core.workspace = true
+sim-staff.workspace = true
+
+[dev-dependencies]
+sim-data.workspace = true
+
+[lints]
+workspace = true

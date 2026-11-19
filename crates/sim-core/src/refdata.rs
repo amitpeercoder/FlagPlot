@@ -1158,6 +1158,38 @@ pub struct ClassSides {
     pub aircraft_types: BTreeMap<AircraftTypeId, ClassSide>,
 }
 
+/// The figures of a trial (decision 0174, "The figures"): what a side is
+/// taken to assume of what it cannot see when the enemy's half of a picture
+/// is built. Plain data, the scenario's and not the world's: it is not in
+/// [`RefData`], never put into a [`World`](crate::World), never hashed, and
+/// no rule of play reads it. The loader keeps it with a scenario that names
+/// it, for the crate that builds the enemy's half to be handed.
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct TrialFigures {
+    /// True where the figures rest on no source.
+    pub placeholder: bool,
+    /// The supply a base of the enemy's is given, in tons (rule 5).
+    pub enemy_base_supply_t: Fixed,
+    /// The fuel for ships a base of the enemy's is given, in tons (rule 5).
+    pub enemy_base_fuel_t: Fixed,
+}
+
+impl TrialFigures {
+    /// Describes what is wrong with the figures, if anything: a figure below
+    /// 0.
+    pub fn problem(&self) -> Option<String> {
+        for (name, value) in [
+            ("enemy_base_supply_t", self.enemy_base_supply_t),
+            ("enemy_base_fuel_t", self.enemy_base_fuel_t),
+        ] {
+            if value.is_negative() {
+                return Some(format!("{name} is {value}, below 0"));
+            }
+        }
+        None
+    }
+}
+
 impl RefData {
     /// Whose the class of ship `id` is (decision 0173, 4): `None` when the
     /// scenario names no file of sides or the class is not in it.

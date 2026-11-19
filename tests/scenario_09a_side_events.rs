@@ -80,7 +80,8 @@ fn unit_side(truth: &TruthState, entity: EntityRef) -> Option<Side> {
         EntityRef::Pilot(_)
         | EntityRef::LandUnit(_)
         | EntityRef::Contact(_)
-        | EntityRef::Event(_) => None,
+        | EntityRef::Event(_)
+        | EntityRef::Place(_) => None,
     }
 }
 

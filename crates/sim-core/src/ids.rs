@@ -304,6 +304,12 @@ pub enum EntityRef {
     /// An event in the log, named by the draw that rests on it (decision
     /// 0135, 11). Added at the end.
     Event(EventId),
+    /// A place in one of a side's own lists, counted from 1: what a trial's
+    /// draws are keyed on (decision 0174, 3), where the thing drawn for is a
+    /// contact, a pair of them or a believed force and has no number of its
+    /// own. The list is told by the draw's own value. Never an entity of the
+    /// world: no event and no state names one. Added at the end.
+    Place(u32),
 }
 
 impl EntityRef {
@@ -319,6 +325,7 @@ impl EntityRef {
             EntityRef::LandUnit(_) => 6,
             EntityRef::Contact(_) => 7,
             EntityRef::Event(_) => 8,
+            EntityRef::Place(_) => 9,
         }
     }
 
@@ -332,6 +339,7 @@ impl EntityRef {
             EntityRef::LandUnit(id) => id.raw(),
             EntityRef::Contact(id) => id.raw(),
             EntityRef::Event(id) => id.raw(),
+            EntityRef::Place(place) => place,
         }
     }
 
@@ -352,6 +360,7 @@ impl fmt::Display for EntityRef {
             EntityRef::LandUnit(id) => id.fmt(f),
             EntityRef::Contact(id) => id.shown().fmt(f),
             EntityRef::Event(id) => id.shown().fmt(f),
+            EntityRef::Place(place) => write!(f, "place:{place}"),
         }
     }
 }
