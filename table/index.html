@@ -55,6 +55,7 @@ button:disabled { opacity: 0.45; cursor: default; }
 .order { position: fixed; left: 16px; bottom: 92px; width: min(420px, calc(100% - 32px)); max-height: calc(100% - 170px); overflow-y: auto; background: var(--paper); color: var(--paper-ink); font-family: var(--f-type); font-size: 14px; line-height: 1.38; padding: 14px 16px; border-radius: 2px; box-shadow: 0 8px 24px rgba(0,0,0,0.55); display: flex; flex-direction: column; gap: 10px; }
 .order h2, .sheet h2 { margin: 0; font-family: var(--f-ui); font-size: 19px; font-weight: 700; letter-spacing: 0.12em; }
 .order fieldset { border: 0; border-top: 1px dashed #8d8672; margin: 0; padding: 8px 0 0; display: flex; flex-wrap: wrap; gap: 4px 14px; }
+.order input[type=range] { flex: 1 1 100%; accent-color: var(--own); }
 .order legend { font-size: 12px; color: var(--paper-dim); padding: 0 6px 0 0; }
 .order label { display: inline-flex; align-items: center; gap: 6px; min-height: 38px; cursor: pointer; }
 .stops { border: 0; margin: 0; padding: 9px 12px; background: var(--paper-old); color: var(--paper-ink); font-family: var(--f-type); font-size: 13px; border-radius: 2px; box-shadow: 0 4px 12px rgba(0,0,0,0.45); display: flex; flex-wrap: wrap; gap: 2px 12px; }
@@ -186,24 +187,35 @@ button:disabled { opacity: 0.45; cursor: default; }
 <form class="order" id="force" hidden aria-label="Order to a force">
   <h2>ORDER · <span id="f-name"></span></h2>
   <div id="f-when"></div>
-  <fieldset><legend>THE FORCE</legend>
-    <label><input type="radio" name="verb" id="f-v-none" value="none" checked> No change</label>
-    <label><input type="radio" name="verb" id="f-v-slow" value="slow"> Slow to 8 knots</label>
-    <label><input type="radio" name="verb" id="f-v-cruise" value="cruise"> Cruising speed</label>
-    <label><input type="radio" name="verb" id="f-v-full" value="full"> Full speed</label>
-    <label><input type="radio" name="verb" id="f-v-battle" value="battle"> Battle readiness</label>
-    <label><input type="radio" name="verb" id="f-v-normal" value="normal"> Normal readiness</label>
-    <label><input type="radio" name="verb" id="f-v-route" value="route"> Steam for a place I touch</label>
+  <fieldset><legend>SPEED</legend>
+    <label><input type="radio" name="spd" value="" checked> As it is<span id="f-spd-now"></span></label>
+    <label><input type="radio" name="spd" value="cruise"> Cruising</label>
+    <label><input type="radio" name="spd" value="full"> Full</label>
+    <label><input type="radio" name="spd" value="knots"> <span id="f-kn-out">12</span> knots</label>
+    <input type="range" id="f-kn" min="4" max="30" step="1" value="12" aria-label="Knots" hidden>
+  </fieldset>
+  <fieldset><legend>READINESS</legend>
+    <label><input type="radio" name="rdy" value="" checked> As it is<span id="f-rdy-now"></span></label>
+    <label><input type="radio" name="rdy" value="normal"> Normal</label>
+    <label><input type="radio" name="rdy" value="battle"> Battle</label>
+  </fieldset>
+  <fieldset><legend>COURSE</legend>
+    <label><input type="radio" name="crs" value="" checked> As it is</label>
+    <label><input type="radio" name="crs" value="route"> Steam for a place I touch</label>
   </fieldset>
   <fieldset><legend>ITS SHIPS</legend>
-    <label><input type="radio" name="verb" id="f-v-detach" value="detach"> Detach the ships I tick as a new force</label>
-    <label id="f-l-join"><input type="radio" name="verb" id="f-v-join" value="join"> Join another force here</label>
-    <label id="f-l-down"><input type="radio" name="verb" id="f-v-down" value="down"> Stand it down in port</label>
+    <label><input type="radio" name="shp" value="" checked> As they are</label>
+    <label><input type="radio" name="shp" value="detach"> Detach the ships I tick as a new force</label>
+    <label id="f-l-join"><input type="radio" name="shp" value="join"> Join another force here</label>
+    <label id="f-l-down"><input type="radio" name="shp" value="down"> Stand it down in port</label>
   </fieldset>
   <fieldset id="f-ships" hidden><legend>DETACH</legend></fieldset>
   <fieldset id="f-join" hidden><legend>JOIN</legend></fieldset>
   <div id="f-route" hidden></div>
   <fieldset id="f-air" hidden><legend>AIR GROUPS HERE</legend></fieldset>
+  <div class="pv"><b>THIS ORDER</b>
+    <div id="f-summary">Nothing is changed yet.</div>
+  </div>
   <div class="pv"><b>BEFORE YOU SIGN</b>
     <div>If the staff is using this force, your order takes it out of the staff's hands. The staff plans round it until you release it.</div>
     <div id="f-result"></div>
@@ -1135,7 +1147,7 @@ button:disabled { opacity: 0.45; cursor: default; }
     picking = false; canvas.classList.remove('picking'); force = { f: best.force, route: null };
     $('f-name').textContent = best.force.task_force.name.replace(/^Placeholder /, '').toUpperCase();
     $('f-when').textContent = clock.at === 'dusk' ? 'It is 1800. The order goes in with tonight\'s orders.' : 'It is ' + clock.at + '. The order is taken in at the start of the ' + (clock.at === '0600' ? 'morning' : 'afternoon') + ' pulse.';
-    $('f-v-none').checked = true; $('f-route').hidden = true; $('f-result').textContent = '';
+    ['spd', 'rdy', 'crs', 'shp'].forEach(function (n) { document.querySelector('#force input[name="' + n + '"][value=""]').checked = true; }); $('f-kn').hidden = true; $('f-kn').value = 12; $('f-kn-out').textContent = '12'; $('f-spd-now').textContent = best.force.speed ? ': ' + best.force.speed : ''; $('f-rdy-now').textContent = best.force.readiness ? ': ' + best.force.readiness : ''; $('f-route').hidden = true; $('f-result').textContent = ''; $('f-summary').textContent = 'Nothing is changed yet.';
     var fs = $('f-ships'), fj = $('f-join'), fhere = best.force; fs.hidden = true; fj.hidden = true;
     while (fs.children.length > 1) fs.removeChild(fs.lastChild); while (fj.children.length > 1) fj.removeChild(fj.lastChild);
     api('get_entity', { handle: fhere.task_force.handle }).then(function (a) { if (!force || force.f !== fhere) return; ((a.entity && a.entity.ships) || []).filter(function (x) { return !x.sunk; }).forEach(function (x) { var l = el('label'), c = el('input'); c.type = 'checkbox'; c.value = num(x.ship.handle); l.appendChild(c); l.appendChild(document.createTextNode(' ' + String(x.ship.name || x.ship.handle).replace(/^Placeholder /, ''))); fs.appendChild(l); }); }).catch(function () {});
@@ -1150,24 +1162,36 @@ button:disabled { opacity: 0.45; cursor: default; }
   function pickRoute(p) {
     var hd = 1e9, hh = null; hexes.forEach(function (h) { var d = world(h[3], h[4]).distanceTo(p); if (d < hd) { hd = d; hh = h; } });
     if (!hh || !force) return; picking = false; canvas.classList.remove('picking'); force.route = [hh[0], hh[1]];
-    $('f-route').textContent = 'To ' + (M.hexNames[hh[0] + ',' + hh[1]] || 'hex ' + hh[0] + ', ' + hh[1]) + '.'; $('f-route').hidden = false; setStatus('A draft order. Nothing is ordered until you sign.');
+    $('f-route').textContent = 'To ' + (M.hexNames[hh[0] + ',' + hh[1]] || 'hex ' + hh[0] + ', ' + hh[1]) + '.'; $('f-route').hidden = false; setStatus('A draft order. Nothing is ordered until you sign.'); forceSummary();
   }
-  $('force').addEventListener('change', function (e) { if (e.target.name === 'verb') { $('f-ships').hidden = e.target.value !== 'detach'; $('f-join').hidden = e.target.value !== 'join'; }
-    if (e.target.name === 'verb' && e.target.value === 'route') { picking = 'route'; canvas.classList.add('picking'); setStatus('Touch the chart where the force is to steam for.'); } });
+  function fPick(n) { return (document.querySelector('#force input[name="' + n + '"]:checked') || {}).value || ''; }
+  // What the draft would order, as the orders themselves and as words.
+  function forceDraft() {
+    var unit = force.f.task_force.handle, orders = [], words = [], reshapes = false, spd = fPick('spd'), rdy = fPick('rdy'), shp = fPick('shp');
+    if (spd === 'knots') { orders.push({ unit: unit, order: { kind: 'set_speed', knots: String($('f-kn').value) } }); words.push('Speed ' + $('f-kn').value + ' knots.'); }
+    else if (spd) { orders.push({ unit: unit, order: { kind: 'set_speed', speed: spd } }); words.push(spd === 'full' ? 'Full speed.' : 'Cruising speed.'); }
+    if (rdy) { orders.push({ unit: unit, order: { kind: 'set_readiness', readiness: rdy } }); words.push(rdy === 'battle' ? 'Battle readiness.' : 'Normal readiness.'); }
+    if (fPick('crs') === 'route') { if (!force.route) return { error: 'Touch the chart for the place first.', words: ['Steam for a place: touch the chart.'] }; orders.push({ unit: unit, order: { kind: 'set_route', waypoints: [force.route] } }); words.push('Steam ' + $('f-route').textContent.replace(/^To /, 'for ')); }
+    if (shp === 'detach') { var picked = Array.prototype.map.call(document.querySelectorAll('#f-ships input:checked'), function (c) { return +c.value; }), all = document.querySelectorAll('#f-ships input').length;
+      if (!picked.length) return { error: 'Tick the ships to detach.', words: words.concat('Detach: tick the ships.') }; if (picked.length === all) return { error: 'A force cannot detach every ship. Leave one.', words: words };
+      orders.push({ unit: unit, order: { kind: 'detach', ships: picked } }); words.push('Detach ' + picked.length + (picked.length > 1 ? ' ships' : ' ship') + ' as a new force.'); }
+    if (shp === 'join') { var into = document.querySelector('#f-join input:checked'); if (!into) return { error: 'No other force is here.', words: words }; orders.push({ unit: unit, order: { kind: 'join', into: into.value } }); words.push('Join ' + into.parentNode.textContent.trim() + '.'); reshapes = true; }
+    if (shp === 'down') { orders.push({ unit: unit, order: { kind: 'stand_down' } }); words.push('Stand down in port.'); reshapes = true; }
+    Array.prototype.forEach.call(document.querySelectorAll('#f-air input:checked'), function (c) { orders.push({ unit: c.value, order: { kind: 'set_air_mission', mission: 'rest' } }); words.push(c.parentNode.textContent.trim() + '.'); });
+    return { orders: orders, words: words, reshapes: reshapes };
+  }
+  function forceSummary() { if (!force) return; var d = forceDraft(); $('f-summary').textContent = d.words.length ? d.words.join(' ') : 'Nothing is changed yet.'; }
+  $('force').addEventListener('input', function (e) { if (e.target.id === 'f-kn') { $('f-kn-out').textContent = e.target.value; forceSummary(); } });
+  $('force').addEventListener('change', function (e) {
+    if (e.target.name === 'spd') $('f-kn').hidden = fPick('spd') !== 'knots';
+    if (e.target.name === 'shp') { $('f-ships').hidden = fPick('shp') !== 'detach'; $('f-join').hidden = fPick('shp') !== 'join'; }
+    if (e.target.name === 'crs') { if (fPick('crs') === 'route') { picking = 'route'; canvas.classList.add('picking'); setStatus('Touch the chart where the force is to steam for.'); } else { picking = false; canvas.classList.remove('picking'); force.route = null; $('f-route').hidden = true; } }
+    forceSummary(); });
   $('f-cancel').addEventListener('click', function () { closeForce(); setStatus('The draft is torn up. Nothing was ordered.'); });
   $('force').addEventListener('submit', function (e) {
     e.preventDefault(); if (!force) return;
-    var verb = (document.querySelector('#force input[name="verb"]:checked') || {}).value, unit = force.f.task_force.handle, orders = [];
-    var body = { slow: { kind: 'set_speed', knots: '8' }, cruise: { kind: 'set_speed', speed: 'cruise' }, full: { kind: 'set_speed', speed: 'full' }, battle: { kind: 'set_readiness', readiness: 'battle' }, normal: { kind: 'set_readiness', readiness: 'normal' } }[verb];
-    if (verb === 'route') { if (!force.route) { $('f-result').textContent = 'Touch the chart for the place first.'; return; } body = { kind: 'set_route', waypoints: [force.route] }; }
-    var reshapes = false;
-    if (verb === 'detach') { var picked = Array.prototype.map.call(document.querySelectorAll('#f-ships input:checked'), function (c) { return +c.value; }), all = document.querySelectorAll('#f-ships input').length;
-      if (!picked.length) { $('f-result').textContent = 'Tick the ships to detach.'; return; } if (picked.length === all) { $('f-result').textContent = 'A force cannot detach every ship. Leave one.'; return; }
-      body = { kind: 'detach', ships: picked }; }
-    if (verb === 'join') { var into = document.querySelector('#f-join input:checked'); if (!into) { $('f-result').textContent = 'No other force is here.'; return; } body = { kind: 'join', into: into.value }; reshapes = true; }
-    if (verb === 'down') { body = { kind: 'stand_down' }; reshapes = true; }
-    if (body) orders.push({ unit: unit, order: body });
-    Array.prototype.forEach.call(document.querySelectorAll('#f-air input:checked'), function (c) { orders.push({ unit: c.value, order: { kind: 'set_air_mission', mission: 'rest' } }); });
+    var d = forceDraft(); if (d.error) { $('f-result').textContent = d.error; return; }
+    var unit = force.f.task_force.handle, orders = d.orders, reshapes = d.reshapes;
     if (!orders.length) { $('f-result').textContent = 'Nothing is chosen.'; return; }
     var n = num(unit), mine = ((M.state && M.state.holds) || []).some(function (x) { return x.target && x.target.task_force === n; });
     (clock.at === 'dusk' && !mine && !reshapes ? api('hold', { task_force: n }) : Promise.resolve()).then(function () { return api('issue_orders', { orders: orders }); }).then(function (a) {
