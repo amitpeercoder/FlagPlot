@@ -1289,7 +1289,7 @@ button:disabled { opacity: 0.45; cursor: default; }
     else if (k === 'strike_found_nothing' && R('^' + H + ' found nothing at ' + AT)) out = N(m[1]) + ' found nothing at ' + P(m[2], m[3]);
     else if (k === 'base_attacked' && R('^' + H + ' bombs at ' + H)) out = N(m[1]) + ' bombed ' + N(m[2]);
     else if (k === 'air_attack' && R('^' + H + ' (bombs|torpedoes) at a ship')) out = N(m[1]) + ' attacked a ship with ' + m[2];
-    else if (k === 'claim_received' && R('claim (at|over) ' + AT + ': (.*)$')) out = 'Claimed ' + m[1] + ' ' + P(m[2], m[3]) + ': ' + m[4].replace(/^0 aircraft/, 'no aircraft');
+    else if (k === 'claim_received' && R('claim (?:from the sea )?(at|over) ' + AT + ': (.*)$')) out = (/from the sea/.test(t) ? 'Ships report ' : 'Pilots report ') + m[4].replace(/\b0 aircraft/g, 'no aircraft').replace(/\baircraft\b/g, 'enemy aircraft') + ' ' + m[1] + ' ' + P(m[2], m[3]);
     else if (k === 'aircraft_arrived' && R('^' + H + ' received (\\d+) aircraft and (\\d+) pilots')) out = N(m[1]) + ' received ' + m[2] + ' aircraft and ' + m[3] + ' pilots';
     else if (k === 'shore_bombardment_against' && R('^' + H + ' at ' + AT + ' bombarded from the sea: (\\d+) shells, .*?(\\d+) hits')) out = N(m[1]) + ' was shelled from the sea: ' + fig(m[4]) + ' shells, ' + fig(m[5]) + ' hits';
     else if (k === 'aircraft_destroyed_on_ground' && R('^' + H + ' lost (\\d+) aircraft on the ground at ' + H + ', (\\d+) left')) out = N(m[1]) + ' lost ' + m[2] + ' aircraft on the ground at ' + N(m[3]) + '; ' + m[4] + ' left';
@@ -1316,7 +1316,7 @@ button:disabled { opacity: 0.45; cursor: default; }
       else if (k === 'ship_sunk' && R('^' + H + ' of ' + H + ' sank')) out = N(m[1]) + ', of ' + N(m[2]) + ', was sunk';
       else if (k === 'force_broke_off' && R('^' + H + ' broke off, ([\\d.]+) of its ships')) out = N(m[1]) + ' broke off the action, ' + (m[2] === '0.5' ? 'half' : m[2] === '1' ? 'all' : Math.round(parseFloat(m[2]) * 100) + ' in a hundred') + ' of its ships sunk or crippled';
       else if (k === 'engagement_ended' && R('^engagement of ' + H + ' at ' + AT + ' ended in round \\d+: (.*)$')) out = 'The action of ' + N(m[1]) + ' at ' + P(m[2], m[3]) + ' ended' + (/broke off/.test(m[4]) ? ': a force broke off' : '');
-      else if (k === 'claim_received' && R('claims (\\d+) enemy ships? sunk at ' + AT)) out = 'Claimed at ' + P(m[2], m[3]) + ': ' + (m[1] === '0' ? 'no enemy ship' : m[1] + (m[1] === '1' ? ' enemy ship' : ' enemy ships')) + ' sunk';
+      else if (k === 'claim_received' && R('claims (\\d+) enemy ships? sunk at ' + AT)) out = 'Reported: ' + (m[1] === '0' ? 'no enemy ship' : m[1] + (m[1] === '1' ? ' enemy ship' : ' enemy ships')) + ' sunk at ' + P(m[2], m[3]);
       else if (R('^' + H + ' looked, chance [^:]*: (\\w+)')) out = N(m[1]) + (m[2] === 'sighted' ? ' sighted the enemy' : ' looked and sighted nothing');
       else if (k === 'ship_damaged' && R('^' + H + ' took (\\d+) hits? on (\\w+)')) out = N(m[1]) + ' took ' + m[2] + (m[2] === '1' ? ' hit' : ' hits') + (m[3] === 'fire' ? ', starting fires' : m[3] === 'flotation' ? ' on the hull' : ' on ' + m[3]);
       else if (k === 'system_hit' && R('^' + H + ' (.*) hit, (?:no change, still (\\w+)|(\\w+) -> (\\w+))')) { var same = m[3] || (m[4] === m[5] ? m[5] : ''); out = N(m[1]) + ': ' + m[2] + ' hit, ' + (same ? (same === 'working' ? 'still in action' : same === 'out' ? 'already out of action' : 'still ' + same) : 'now ' + (m[5] === 'working' ? 'in action' : m[5] === 'out' ? 'out of action' : m[5])); }
