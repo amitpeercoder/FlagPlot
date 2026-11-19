@@ -1,0 +1,50 @@
+Placeholder scenario 94: A trial
+PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
+seed 1942
+
+day   1  hash eb7895eb4b33e9a7  3 events
+day   2  hash b7b4c559c57fc389  3 events
+day   3  hash 14acfc1a73c528c3  3 events
+day   4  hash a5065ece03f9e5b9  3 events
+day   5  hash 93eda9c3bd58fcb7  3 events
+day   6  hash 8c440d1b92b78751  3 events
+day   7  hash 1c766272f26a26eb  3 events
+day   8  hash 1b618aa43934e701  3 events
+
+#1 D1 -         base:1 at the end of the day: 1000 t of supply, 0 aircraft ready: not open
+#2 D1 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#3 D1 -         base:4 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#4 D2 -         base:1 at the end of the day: 1000 t of supply, 0 aircraft ready: not open
+#5 D2 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#6 D2 -         base:4 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#7 D3 -         base:1 at the end of the day: 1000 t of supply, 0 aircraft ready: not open
+#8 D3 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#9 D3 -         base:4 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#10 D4 -         base:1 at the end of the day: 1000 t of supply, 0 aircraft ready: not open
+#11 D4 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#12 D4 -         base:4 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#13 D5 -         base:1 at the end of the day: 1000 t of supply, 0 aircraft ready: not open
+#14 D5 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#15 D5 -         base:4 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#16 D6 -         base:1 at the end of the day: 1000 t of supply, 0 aircraft ready: not open
+#17 D6 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#18 D6 -         base:4 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#19 D7 -         base:1 at the end of the day: 1000 t of supply, 0 aircraft ready: not open
+#20 D7 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#21 D7 -         base:4 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#22 D8 -         base:1 at the end of the day: 1000 t of supply, 0 aircraft ready: not open
+#23 D8 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#24 D8 -         base:4 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+
+task_force:1 "Placeholder transport force 1" (Allied): Idle at (2,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; home port base:4
+ship:1 "Placeholder troop transport 1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1000 t of fuel, 30 t of supply, 600 men of land_unit:1 aboard
+ship:2 "Placeholder troop transport 2": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1000 t of fuel, 0 t of supply, 400 men of land_unit:2 aboard
+base:1 "Placeholder base A" (Allied) at (0,0): 1000 t of supply in stock
+base:2 "Placeholder airfield B" (Japanese) at (4,0): 0 t of supply in stock
+base:4 "Placeholder staging C" (Allied) at (0,6): 0 t of supply in stock
+land_unit:1 "Placeholder Infantry" (Allied): no men ashore
+land_unit:2 "Placeholder Pioneers" (Allied): no men ashore
+Allied: no contacts
+Allied: no battle claims
+Japanese: no contacts
+Japanese: no battle claims

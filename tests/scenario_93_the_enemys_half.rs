@@ -220,7 +220,7 @@ use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
 use sim_core::ids::{AirGroupId, AircraftTypeId, BaseId, LandUnitId, ShipId, TaskForceId};
 use sim_core::orders::{AirMission, Mission, Posture, Readiness, SpeedSetting};
-use sim_core::refdata::{ShipKind, TrialFigures};
+use sim_core::refdata::{ShipKind, TrialFigures, TrialSize};
 use sim_core::state::{AirGroupLocation, ShipLocation, Side, TaskForceStatus};
 use sim_core::time::Pulse;
 use sim_core::world_picture::PictureClaim;
@@ -1127,6 +1127,18 @@ fn property_no_peek_what_the_side_cannot_see_gives_it_the_same_pictures() {
         placeholder: true,
         enemy_base_supply_t: kn(1000),
         enemy_base_fuel_t: kn(500),
+        seed: 1942,
+        // The seed and the sizes of a trial (decision 0175) are read by no rule of the
+        // enemy's half; these are trial.toml's.
+        small: TrialSize { worlds: 8, days: 7 },
+        standard: TrialSize {
+            worlds: 16,
+            days: 14,
+        },
+        full: TrialSize {
+            worlds: 64,
+            days: 21,
+        },
     };
     let make = |world: &World| {
         pictures(

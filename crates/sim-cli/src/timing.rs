@@ -15,7 +15,10 @@
 //! the soak and from day 150. Two more measure the staff (decision 0107,
 //! "What it must pass", Speed): the staff's decisions for one side on each
 //! day of the slice played with the staffs, and a quiet week (seven staffed
-//! days) in one call. No number fails them.
+//! days) in one call. Last, a trial (decision 0175, 9): the Allied side's
+//! "control Guadalcanal" on the 39 days, from the evening before day 1 and
+//! from the evening of day 20, at each of the three sizes, with both
+//! staffs. No number fails them.
 
 use std::hint::black_box;
 use std::time::{Duration, Instant};
@@ -25,6 +28,11 @@ use sim_data::{LoadOptions, Scenario};
 
 const DEFAULT_SLICE: &str = "data/scenarios/07_full_slice.toml";
 const DEFAULT_SOAK: &str = "data/scenarios/08_soak.toml";
+/// The 39 days with the intents as stated: stage 3's proof's arrangement
+/// (a), whose first Allied intent is "control Guadalcanal" (decision 0153).
+const DEFAULT_TRIAL_SLICE: &str = "data/scenarios/stage-3-proof/07a_slice.toml";
+/// The trial's figures where the slice names none (decision 0174).
+const DEFAULT_TRIAL_FIGURES: &str = "data/reference/trial.toml";
 
 /// The one place the clock is read (decision 0100, 11). The workspace lint
 /// forbids `Instant::now` everywhere else. What it returns is only ever
@@ -52,6 +60,11 @@ struct Settings {
     early: u32,
     late: u32,
     soak_late: u32,
+    trial_slice: String,
+    trial_figures: String,
+    trial_late: u32,
+    only_trial: bool,
+    trial_size: Option<String>,
 }
 
 fn parse(args: &[String], usage: &str) -> Result<Settings, String> {
@@ -65,6 +78,11 @@ fn parse(args: &[String], usage: &str) -> Result<Settings, String> {
         early: 1,
         late: 12,
         soak_late: 150,
+        trial_slice: DEFAULT_TRIAL_SLICE.to_string(),
+        trial_figures: DEFAULT_TRIAL_FIGURES.to_string(),
+        trial_late: 20,
+        only_trial: false,
+        trial_size: None,
     };
     let mut words = args.iter();
     while let Some(word) = words.next() {
@@ -88,6 +106,21 @@ fn parse(args: &[String], usage: &str) -> Result<Settings, String> {
             "--late-day" => settings.late = number("--late-day", value("--late-day")?)?,
             "--soak-late-day" => {
                 settings.soak_late = number("--soak-late-day", value("--soak-late-day")?)?
+            }
+            "--trial-slice" => settings.trial_slice = value("--trial-slice")?.clone(),
+            "--trial-figures" => settings.trial_figures = value("--trial-figures")?.clone(),
+            "--trial-late-day" => {
+                settings.trial_late = number("--trial-late-day", value("--trial-late-day")?)?
+            }
+            "--only-trial" => settings.only_trial = true,
+            "--trial-size" => {
+                let name = value("--trial-size")?.clone();
+                if !["small", "standard", "full"].contains(&name.as_str()) {
+                    return Err(format!(
+                        "--trial-size \"{name}\" is not small, standard or full"
+                    ));
+                }
+                settings.trial_size = Some(name);
             }
             other => return Err(format!("unknown argument \"{other}\"\n\n{usage}")),
         }
@@ -383,6 +416,155 @@ fn games(start: &Start, games: u32, days: u32) -> Result<(Spread, Duration, u32)
     Ok((spread(times), total, played))
 }
 
+/// The course of the measure from the evening before day 1 (decision 0175,
+/// amended point 13): the Allied side's own commands of day 1 in the
+/// slice, each on the world's first day, in the order given.
+fn trial_course(scenario: &Scenario) -> Result<Vec<sim_trial::CourseCommand>, String> {
+    let course: Vec<sim_trial::CourseCommand> = scenario
+        .scripted_commands()
+        .get(&1)
+        .cloned()
+        .unwrap_or_default()
+        .into_iter()
+        .filter(|(side, _)| *side == sim_core::state::Side::Allied)
+        .map(|(_, command)| sim_trial::CourseCommand::first_day(command))
+        .collect();
+    if course.is_empty() {
+        return Err("the trial's slice gives the Allied side no command on day 1".to_string());
+    }
+    Ok(course)
+}
+
+/// The slice played with its own commands and both staffs to the evening of
+/// `day`: the live game a trial is asked on.
+fn trial_live_game(path: &str, day: u32, options: &LoadOptions) -> Result<Scenario, String> {
+    let mut scenario =
+        Scenario::load_with(std::path::Path::new(path), options).map_err(|e| e.to_string())?;
+    let staffs = sim_staff::staffs();
+    while scenario.world.day() < day {
+        scenario
+            .next_day_staffed(sim_staff::as_staffs(&staffs))
+            .map_err(|e| e.to_string())?
+            .ok_or_else(|| format!("{path} ended before day {day}"))?;
+    }
+    Ok(scenario)
+}
+
+/// What one trial of the measure took and gave.
+struct TrialTime {
+    size: &'static str,
+    worlds: u32,
+    days: u32,
+    from: u32,
+    time: Duration,
+    played_days: usize,
+    failed: Vec<String>,
+}
+
+/// One trial of the Allied side on `live`, timed from the making of its
+/// pictures to the dropping of its worlds, with both staffs (decision 0175,
+/// 9).
+fn time_trial(
+    live: &Scenario,
+    figures: &sim_core::refdata::TrialFigures,
+    course: &[sim_trial::CourseCommand],
+    size: (&'static str, sim_core::refdata::TrialSize),
+) -> Result<TrialTime, String> {
+    let side = sim_core::state::Side::Allied;
+    let believed = sim_trial::Believed {
+        forces: live.believed_forces(side).cloned().collect(),
+        intents: live.believed_intents(side).cloned().collect(),
+    };
+    let asked = sim_trial::Asked {
+        trial: 1,
+        worlds: size.1.worlds,
+        days: size.1.days,
+        course: course.to_vec(),
+    };
+    let view = live.world.side_view(side);
+    let begin = clock();
+    let played = sim_trial::play(
+        &view,
+        &believed,
+        figures,
+        live.world.ref_data(),
+        live.world.map(),
+        asked,
+    )
+    .map_err(|e| e.to_string())?;
+    let played_days = played.worlds.iter().map(|w| w.days.len()).sum();
+    let failed = played
+        .failed()
+        .iter()
+        .map(|f| format!("world {} day {}: {}", f.world, f.day, f.words))
+        .collect();
+    drop(played);
+    let time = begin.elapsed();
+    Ok(TrialTime {
+        size: size.0,
+        worlds: size.1.worlds,
+        days: size.1.days,
+        from: live.world.day(),
+        time,
+        played_days,
+        failed,
+    })
+}
+
+/// The measure of decision 0175, 9: a trial from the evening before day 1
+/// and from the evening of `late`, at each size, once each.
+fn trials(s: &Settings, options: &LoadOptions) -> Result<Vec<TrialTime>, String> {
+    let early = trial_live_game(&s.trial_slice, 0, options)?;
+    let course = trial_course(&early)?;
+    let figures = match early.trial_figures() {
+        Some(figures) => figures.clone(),
+        None => sim_data::load_trial_figures(std::path::Path::new(&s.trial_figures))
+            .map_err(|e| e.to_string())?,
+    };
+    let late = trial_live_game(&s.trial_slice, s.trial_late, options)?;
+    println!();
+    println!(
+        "h. A trial of the Allied side on {} (decision 0175, 9): from the evening before day 1 with its own {} command(s) of day 1 as the course, and from the evening of day {} with an empty course; the trial's seed {}, trial 1; both staffs; once each, timed from the making of the pictures to the dropping of the worlds:",
+        s.trial_slice,
+        course.len(),
+        s.trial_late,
+        figures.seed
+    );
+    let mut times = Vec::new();
+    for (live, course) in [(&early, course.as_slice()), (&late, &[][..])] {
+        let before = live.world.state_hash();
+        for size in figures.sizes() {
+            if s.trial_size.as_deref().is_some_and(|name| name != size.0) {
+                continue;
+            }
+            let t = time_trial(live, &figures, course, size)?;
+            println!(
+                "  {:<8} {:>2} worlds x {:>2} days ({:>4} days of play) from the evening of day {:>2}: {:>10}   {} days played{}",
+                t.size,
+                t.worlds,
+                t.days,
+                size.1.days_of_play(),
+                t.from,
+                show(t.time),
+                t.played_days,
+                if t.failed.is_empty() {
+                    String::new()
+                } else {
+                    format!("; {} world(s) failed", t.failed.len())
+                }
+            );
+            for failed in &t.failed {
+                println!("    failed: {failed}");
+            }
+            times.push(t);
+        }
+        if live.world.state_hash() != before {
+            return Err("a trial changed the live game's hash".to_string());
+        }
+    }
+    Ok(times)
+}
+
 pub fn command(args: &[String], usage: &str, options: &LoadOptions) -> Result<(), String> {
     let s = parse(args, usage)?;
     let release = !cfg!(debug_assertions);
@@ -405,6 +587,13 @@ pub fn command(args: &[String], usage: &str, options: &LoadOptions) -> Result<()
     println!(
         "The times are wall-clock times of this run, outside the game; they change nothing in it."
     );
+    if s.only_trial {
+        let h = trials(&s, options)?;
+        println!();
+        println!("What it means:");
+        trial_totals(&h);
+        return Ok(());
+    }
 
     let early = start_at(&s.slice, s.early, options)?;
     let late = start_at(&s.slice, s.late, options)?;
@@ -532,6 +721,8 @@ pub fn command(args: &[String], usage: &str, options: &LoadOptions) -> Result<()
         g.push((label, week, played));
     }
 
+    let h = trials(&s, options)?;
+
     println!();
     println!("What it means (medians; the times a designer can set \"Speed\" from):");
     println!(
@@ -585,5 +776,19 @@ pub fn command(args: &[String], usage: &str, options: &LoadOptions) -> Result<()
             show(week.median)
         );
     }
+    trial_totals(&h);
     Ok(())
+}
+
+fn trial_totals(h: &[TrialTime]) {
+    for t in h {
+        println!(
+            "  A trial, {} ({} worlds x {} days), from the evening of day {}: {}.",
+            t.size,
+            t.worlds,
+            t.days,
+            t.from,
+            show(t.time)
+        );
+    }
 }

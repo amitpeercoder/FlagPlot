@@ -9,6 +9,7 @@ publish.workspace = true
 sim-core.workspace = true
 sim-data.workspace = true
 sim-staff.workspace = true
+sim-trial.workspace = true
 sim-agent = { path = "../sim-agent" }
 serde.workspace = true
 serde_json.workspace = true

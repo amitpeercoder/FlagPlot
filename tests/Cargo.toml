@@ -512,3 +512,7 @@ path = "scenario_92_a_sides_own_half.rs"
 [[test]]
 name = "scenario_93_the_enemys_half"
 path = "scenario_93_the_enemys_half.rs"
+
+[[test]]
+name = "scenario_94_a_trial"
+path = "scenario_94_a_trial.rs"

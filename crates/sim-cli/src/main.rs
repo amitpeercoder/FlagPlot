@@ -47,6 +47,8 @@ Usage: sim-cli run <scenario.toml> [--events] [--seed N] [--save <game.json>] [-
                    [--at SEAT] [--seed N] [--save <game.json>] [--transcript <file.jsonl>]
        sim-cli time --machine TEXT [--repeats N] [--games N] [--days N] [--slice FILE] [--soak FILE]
                     [--early-day N] [--late-day N] [--soak-late-day N] [--reference DIR]
+                    [--trial-slice FILE] [--trial-figures FILE] [--trial-late-day N] [--only-trial]
+                    [--trial-size small|standard|full]
        sim-cli play --game FILE ... (run `sim-cli play` for its usage)
 
   run       Runs a scenario to its last day and prints the state hash of
@@ -84,7 +86,15 @@ Usage: sim-cli run <scenario.toml> [--events] [--seed N] [--save <game.json>] [-
             and without its event log; and --games (100) games of --days (30)
             from the start of the soak and from its day 150. Each is a spread
             (min, median, max) over --repeats (20) runs, except the games, one
-            run each. --machine names the machine in the report. It ends with
+            run each. Last, a trial of the Allied side (decision 0175, 9) on
+            --trial-slice (default stage 3's proof's 07a_slice): from the
+            evening before day 1 with the side's own commands of day 1 as the
+            course, and from the evening of --trial-late-day (20), the slice
+            played to it with both staffs, with an empty course; at each of
+            the three sizes of --trial-figures (the slice's own, else
+            data/reference/trial.toml), once each, with both staffs.
+            --only-trial times the trial alone; --trial-size one size only.
+            --machine names the machine in the report. It ends with
             the totals that matter. Use a release build; it changes nothing in
             any scenario, save or hash.
   validate  The umpire's judge of a batch (decision 0062's file, version 5)
