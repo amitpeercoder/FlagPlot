@@ -1263,6 +1263,15 @@ button:disabled { opacity: 0.45; cursor: default; }
     // page turns into its name and a way to its card; the name is noted for that.
     function N(h) { if (linked && !/^contact:/.test(h)) { if (!M.names[h] && names[h]) M.names[h] = names[h]; return h; } return names[h] || M.names[h] || h.replace('_', ' ').replace(':', ' '); }
     function P(q, r) { return M.hexNames[q + ',' + r] || whereIs({ q: parseInt(q, 10), r: parseInt(r, 10) }); }
+    // The side's own units ashore in a hex, named where the report is of the
+    // day just resolved (the table holds them as they stand now), with the verb.
+    function ours(q, r, day) {
+      var there = day != null && M.day != null && day >= M.day - 1 ? (M.units || []).filter(function (u) { return u.men_ashore && !u.destroyed && u.place && u.place.q === parseInt(q, 10) && u.place.r === parseInt(r, 10); }) : [];
+      if (!there.length) return 'Our troops are';
+      var who = there.slice(0, there.length > 3 ? 2 : 3).map(function (u) { return N(u.land_unit.handle); }), rest = there.length - who.length;
+      if (rest) who.push(rest + ' other units');
+      return (who.length > 1 ? who.slice(0, -1).join(', ') + ' and ' + who[who.length - 1] : who[0]) + (who.length > 1 ? ' are' : ' is');
+    }
     var H = '((?:task_force|air_group|land_unit|base|ship|contact):\\d+)', AT = '\\((-?\\d+),(-?\\d+)\\)', CL = 'D\\d+ (\\d\\d):(\\d\\d)';
     var t = String(e.text).replace(/^(Allied|Japanese|allied|japanese) /, ''), m, k = e.event_kind;
     function R(pattern) { m = new RegExp(pattern).exec(t); return m; }
@@ -1277,7 +1286,7 @@ button:disabled { opacity: 0.45; cursor: default; }
     else if (k === 'ground_fight' && R('fight ashore at ' + AT)) out = 'Fighting ashore at ' + P(m[1], m[2]);
     else if (k === 'men_lost_in_fight' && R('^' + H + ' lost (\\d+) men in the fight at ' + AT + ', (\\d+) left')) out = N(m[1]) + ' lost ' + fig(m[2]) + (m[2] === '1' ? ' man' : ' men') + ' in the fighting at ' + P(m[3], m[4]) + '; ' + fig(m[5]) + ' remain ashore';
     else if (k === 'base_changed_side' && R('^' + H + ' at ' + AT + ' changed from the (\\w+) side to the (\\w+) side: ([\\d.]+) t of supply and ([\\d.]+) t of fuel kept')) out = (m[5].toLowerCase() === config.seat) ? N(m[1]) + ' is taken. Captured: ' + fig(m[6]) + ' t of supply and ' + fig(m[7]) + ' t of fuel' : N(m[1]) + ' is lost to the enemy';
-    else if (k === 'ground_report_received' && R('ground report at ' + AT + ': (\\d+) enemy men ashore(?: \\(([^)]*)\\))?')) out = (m[4] === 'men in contact' ? 'Our troops at ' + P(m[1], m[2]) + ' are in contact with ' + enemyForce(m[3]) : m[4] === 'seen from the air' ? 'Air reconnaissance of ' + P(m[1], m[2]) + ' reports ' + enemyForce(m[3]) : 'Intelligence gives ' + enemyForce(m[3]) + ' at ' + P(m[1], m[2]));
+    else if (k === 'ground_report_received' && R('ground report at ' + AT + ': (\\d+) enemy men ashore(?: \\(([^)]*)\\))?')) out = (m[4] === 'men in contact' ? ours(m[1], m[2], e.day).replace(/ (is|are)$/, '') + ' at ' + P(m[1], m[2]) + (/ is$/.test(ours(m[1], m[2], e.day)) ? ' is' : ' are') + ' in contact with ' + enemyForce(m[3]) : m[4] === 'seen from the air' ? 'Air reconnaissance of ' + P(m[1], m[2]) + ' reports ' + enemyForce(m[3]) : 'Intelligence gives ' + enemyForce(m[3]) + ' at ' + P(m[1], m[2]));
     else if (k === 'ground_found_empty' && R('men at ' + AT + ' find no enemy')) out = 'Our men at ' + P(m[1], m[2]) + ' find no enemy ashore';
     else if (k === 'report_received' && R('report: (.*), at ' + AT + ': (new|refreshed) contact:(\\d+)')) out = 'Sighting report: ' + m[1] + ', at ' + P(m[2], m[3]) + (m[4] === 'new' ? '. Plotted as contact ' + m[5] : '. Contact ' + m[5] + ' confirmed');
     else if (k === 'search_attempt' && R('^' + H + ' searched and sighted (.*)$')) out = N(m[1]) + ' sighted ' + m[2];
@@ -1840,7 +1849,7 @@ button:disabled { opacity: 0.45; cursor: default; }
       if (e.pulse && (e.event_kind === 'order_accepted' || e.event_kind === 'order_rejected')) { lines.push({ text: 'Your direct order: ' + named(e.text), hex: null, red: e.event_kind === 'order_rejected' }); return; }
       if (QUIET[e.event_kind] || D_ROUTINE[e.event_kind]) return;
       perKind[e.event_kind] = (perKind[e.event_kind] || 0) + 1; if (perKind[e.event_kind] > 3) return;
-      lines.push({ text: sayEvent(e), hex: hexIn(e.text), red: /enemy|attack|bomb|sunk|hit|lost|contact|fight|surrender/.test(e.text) });
+      lines.push({ text: sayEvent(e, true), hex: hexIn(e.text), red: /enemy|attack|bomb|sunk|hit|lost|contact|fight|surrender/.test(e.text) });
     });
     Object.keys(landed).forEach(function (k) { lines.unshift({ text: commas(landed[k]) + ' men landed at ' + named(k), hex: hexIn(k), red: false }); });
     Object.keys(perKind).forEach(function (k) { if (perKind[k] > 3) lines.push({ text: 'and ' + (perKind[k] - 3) + ' more reports of ' + k.replace(/_/g, ' ') }); });
@@ -1857,7 +1866,7 @@ button:disabled { opacity: 0.45; cursor: default; }
     moveT = any ? 0 : 1;
     var lines = digest(evs), box = el('div', 'phase'); box.appendChild(el('b', '', phaseWords(day, ph))); log.appendChild(box); log.scrollTop = log.scrollHeight;
     if (!lines.length) box.appendChild(el('div', '', any ? 'Your forces steam on. Nothing else is reported.' : 'Nothing is reported.'));
-    for (var k = 0; k < lines.length; k++) { box.appendChild(el('div', lines[k].red ? 'red' : '', lines[k].text)); flash(lines[k].hex, lines[k].red ? 0xa3211a : 0x1f4e8c); log.scrollTop = log.scrollHeight; if (!calm) await sleep(Math.min(420, 2400 / lines.length)); }
+    for (var k = 0; k < lines.length; k++) { box.appendChild(rich('div', lines[k].red ? 'red' : '', lines[k].text)); flash(lines[k].hex, lines[k].red ? 0xa3211a : 0x1f4e8c); log.scrollTop = log.scrollHeight; if (!calm) await sleep(Math.min(420, 2400 / lines.length)); }
     if (!calm) await sleep(any || lines.length ? 1500 : 500);
   }
   async function plotDay(day, events) {
