@@ -1484,8 +1484,8 @@ button:disabled { opacity: 0.45; cursor: default; }
     M.forces.forEach(function (f) { if (f.available_from > M.day) rows.push([f.available_from, f.task_force.handle + ': ' + f.ships_afloat + ' ship' + (f.ships_afloat === 1 ? '' : 's') + ', ' + f.mission.replace(/_/g, ' ') + ', at ' + hexWords(f.place)]); });
     rows.sort(function (a, b) { return a[0] - b[0]; });
     var g = el('div', 'head'); rows.forEach(function (r) { g.appendChild(el('span', '', dateOf(r[0] - 1) || 'Day ' + r[0])); g.appendChild(rich('span', '', r[1])); });
-    doc.appendChild(g); doc.appendChild(el('div', 'foot', 'This is all that is scheduled to come to you. What is not here is not coming.'));
-    sheetAs('WHAT IS COMING'); doc.hidden = false; $('sheet-text').hidden = true; $('sheet').hidden = false; $('sheet-close').focus();
+    doc.appendChild(g); doc.appendChild(el('div', 'foot', 'This is all that is scheduled to reach you. Nothing else is on its way.'));
+    sheetAs('REINFORCEMENT SCHEDULE'); doc.hidden = false; $('sheet-text').hidden = true; $('sheet').hidden = false; $('sheet-close').focus();
   }
 
   // ---- the plan sheet: an intent and what the staff has made of it ----
