@@ -270,6 +270,10 @@ pub struct ShipDetail {
     /// when she carries none.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub troops: Option<TroopsAboard>,
+    /// The men her class can carry (decision 0066, 4). Left out for a ship
+    /// that carries none.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub troop_capacity_men: Option<u32>,
 }
 
 /// The men a ship carries and whose they are.
@@ -501,6 +505,10 @@ fn entity_of(view: &SideView<'_>, handle: &str) -> Option<Detail> {
                     .map(|g| ctx.group(g.id))
                     .collect(),
                 troops: troops_aboard(&ctx, ship),
+                troop_capacity_men: view
+                    .ship_class(ship.class)
+                    .map(|c| c.troop_capacity_men)
+                    .filter(|men| *men > 0),
             }))
         }
         "land_unit" => {
