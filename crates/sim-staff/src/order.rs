@@ -1,5 +1,6 @@
 //! A plan handed in as an order (decision 0159, rule E, items 15 to 17): for
-//! each intent of the commander's in force, what the staff already works out,
+//! each intent of the commander's in force, and each "take a place" in force
+//! that the staff formed (decision 0164), what the staff already works out,
 //! as data, worked when asked and stored nowhere.
 //!
 //! - **The plan, its phases and its tasks** are read from the side's command
@@ -35,16 +36,27 @@ use sim_core::view::SideView;
 use crate::air::Day;
 use crate::reasons::statement;
 
-/// The plan order of every intent of the commander's in force, in number
-/// order. `day` is the staff's morning, `None` where the air doctrine has
-/// nothing to work (no take and no hold).
+/// The plan order of every intent of the commander's in force and of every
+/// "take a place" in force that the staff formed (decision 0164, items 1 and
+/// 2), together in number order. `day` is the staff's morning, `None` where
+/// the air doctrine has nothing to work (no take and no hold).
 pub(crate) fn orders(view: &SideView<'_>, day: Option<&Day<'_, '_>>) -> Vec<PlanOrder> {
     let state = view.command_state();
     state
         .intents_in_force()
-        .filter(|intent| intent.maker == Maker::Commander)
+        .filter(|intent| has_an_order(intent))
         .filter_map(|intent| order_of(view, day, intent))
         .collect()
+}
+
+/// Whether the staff hands in a plan order for `intent`: an intent of the
+/// commander's, or a "take a place" the staff formed (decision 0164, item
+/// 1). No other intent of the staff's has one.
+fn has_an_order(intent: &Intent) -> bool {
+    match intent.maker {
+        Maker::Commander => true,
+        Maker::Staff => matches!(intent.kind, IntentKind::TakePlace { .. }),
+    }
 }
 
 fn order_of(view: &SideView<'_>, day: Option<&Day<'_, '_>>, intent: &Intent) -> Option<PlanOrder> {

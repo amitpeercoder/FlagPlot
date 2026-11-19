@@ -1706,11 +1706,14 @@ fn waited_json(n: &Names<'_>, waited: &sim_core::command::Waited) -> Value {
     })
 }
 
-/// `plan_order`: the plan of one of the commander's intents as the staff
-/// hands it in (decision 0159, rule E): its mission, its phases and where
-/// each stands, what it waits for, the men, the day it expects to be ashore,
-/// the need to know and the staff's tasks under it. Read from the view and
-/// stored nowhere.
+/// `plan_order`: the plan of one of the commander's intents, or of a "take a
+/// place" the staff formed (decision 0164), as the staff hands it in
+/// (decision 0159, rule E): its mission, its phases and where each stands,
+/// what it waits for, the men, the day it expects to be ashore, the need to
+/// know and the staff's tasks under it. Read from the view and stored
+/// nowhere. Any other intent of the staff's has no order and is refused, in
+/// the words an intent the side does not have is refused in (decision 0164,
+/// item 3).
 pub fn plan_order(view: &SideView<'_>, staff: &dyn Staff, intent: u32) -> Result<Value, CallError> {
     use sim_core::command::{PhaseName, PhaseStage};
     let n = Names::new(view);
