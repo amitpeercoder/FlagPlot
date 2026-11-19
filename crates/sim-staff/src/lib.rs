@@ -267,7 +267,13 @@ use sim_core::view::SideView;
 /// preserve the force only with leave to launch); before release the task
 /// strikes nothing at the place and gives a group looking at it no order. A
 /// side with no such take gets the orders `supply-38` gave.
-pub const DOCTRINE_VERSION: &str = "supply-39";
+/// `supply-40` adds decision 0162: a supply run by night names in its load
+/// order the most any one ship is to hold, the least of the ships' limits,
+/// and is cut only to what those levels allow, in place of the cut to the
+/// first ship; the speed is chosen on the load as spread. A side with no
+/// supply run by night gets the orders `supply-39` gave; one whose run was
+/// cut now carries more.
+pub const DOCTRINE_VERSION: &str = "supply-40";
 
 /// The staff: the doctrine for keeping a base supplied (stage 1) and, after
 /// it, the air doctrine for holding a place and covering a base from the air

@@ -778,6 +778,7 @@ fn load_to(raw: u32, weight: i64) -> OrderKind {
         TaskForceOrder::LoadTo {
             cargo: Cargo::Supply,
             weight_t: n(weight),
+            each_t: None,
         },
     )
 }

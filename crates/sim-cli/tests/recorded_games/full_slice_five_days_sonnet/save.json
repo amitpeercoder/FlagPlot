@@ -70,28 +70,28 @@
       "hash": "3b3353e3ccc0e0d7"
     }
   ],
-  "doctrine_version": "supply-39",
+  "doctrine_version": "supply-40",
   "format": "flagplot-saved-game",
   "hashes": [
     {
       "day": 1,
-      "hash": "ce6cea70b035219f"
+      "hash": "17558fe57c73bc98"
     },
     {
       "day": 2,
-      "hash": "52f6b626bcdc18a7"
+      "hash": "6c60a9d38e7e8c64"
     },
     {
       "day": 3,
-      "hash": "8523e9e72cf22829"
+      "hash": "63223c3cdc2fe1c4"
     },
     {
       "day": 4,
-      "hash": "07843e5129206892"
+      "hash": "604d521f4f5a206b"
     },
     {
       "day": 5,
-      "hash": "49367cf86726b88a"
+      "hash": "27b661e56a807087"
     }
   ],
   "orders": [
@@ -859,7 +859,7 @@
       "unit": "task_force:26"
     }
   ],
-  "rules_version": 19,
+  "rules_version": 20,
   "scenario": {
     "file": "data/scenarios/07_full_slice.toml",
     "hash": "ea80088f7a6c0c9c"
@@ -870,6 +870,6 @@
   },
   "seed": 1942,
   "staff": [],
-  "state_version": "flagplot-state-v47",
-  "version": 22
+  "state_version": "flagplot-state-v48",
+  "version": 23
 }

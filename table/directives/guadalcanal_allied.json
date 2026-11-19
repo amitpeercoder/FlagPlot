@@ -4,26 +4,26 @@
     {
       "number": 1,
       "when": "start",
-      "from": "Commander in Chief, Pacific Fleet",
-      "to": "Commander, South Pacific",
-      "subject": "Tulagi and Lunga",
+      "from": "Commander in Chief, U.S. Pacific Fleet",
+      "to": "Commander, South Pacific Area and South Pacific Force",
+      "subject": "Tulagi and Lunga Point",
       "parts": [
         {
           "heading": "1. Situation",
           "text": [
-            "The enemy took Tulagi in May. Intelligence reports he is building an airfield at Lunga, on Guadalcanal. Aircraft based there will reach the sea lane to Australia."
+            "Japanese forces occupy Tulagi. An airfield is reported under construction at Lunga Point, Guadalcanal. Aircraft operating from that field would threaten communications with Australia."
           ]
         },
         {
           "heading": "2. Mission",
           "text": [
-            "Take and hold Tulagi and Lunga, to keep the line to Australia open."
+            "Seize and hold Tulagi and the airfield at Lunga Point, to safeguard communications with Australia."
           ]
         },
         {
           "heading": "3. Execution",
           "text": [
-            "The forces assigned are yours to employ. The method is yours.",
+            "Employ the forces assigned to your command as you judge necessary. The method is yours.",
             "Further direction will follow as the situation requires."
           ]
         }
@@ -34,20 +34,20 @@
       "when": {
         "base_is_yours": 1
       },
-      "from": "Commander in Chief, Pacific Fleet",
-      "to": "Commander, South Pacific",
-      "subject": "Lunga",
+      "from": "Commander in Chief, U.S. Pacific Fleet",
+      "to": "Commander, South Pacific Area and South Pacific Force",
+      "subject": "Lunga Point",
       "parts": [
         {
           "heading": "1. Situation",
           "text": [
-            "Lunga is in your hands. The enemy is expected to contest it by sea and by air from Rabaul, and to land troops on Guadalcanal. Intelligence expects his carriers to come south in support."
+            "Lunga Point is in your hands. The enemy is expected to contest it by sea and by air from Rabaul, and to land troops on Guadalcanal. His carriers are reported likely to come south in support."
           ]
         },
         {
           "heading": "2. Mission",
           "text": [
-            "Hold Lunga and Tulagi. Bring the airfield into operation and keep it in operation, to deny the enemy the southern Solomons."
+            "Hold Lunga Point and Tulagi. Bring the airfield into operation and keep it in operation, to deny the enemy the southern Solomons."
           ]
         },
         {

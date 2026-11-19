@@ -84,8 +84,10 @@ pub const FORMAT: &str = "flagplot-agent";
 /// `order` (a staffed seat) and its answer `plan_order`: the plan of one of
 /// the commander's intents as the staff hands it in, with its phases, what it
 /// waits for, its men and the day it expects to be ashore (decision 0159,
-/// rule E).
-pub const VERSION: u32 = 26;
+/// rule E). 27 adds to the load order with a `weight_t` the level `each_t`,
+/// a decimal string, the most any one ship is to hold of the cargo, and the
+/// refusal `LevelNotAboveZero` (decision 0162).
+pub const VERSION: u32 = 27;
 
 /// The answer to a question about something the side does not know of: a
 /// unit of the enemy, a number that does not exist, an event the side may not

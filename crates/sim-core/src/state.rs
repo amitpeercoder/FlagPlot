@@ -593,6 +593,10 @@ pub struct CargoOrder {
     /// Whether the load keeps the base's stock above its reserve: a load the
     /// staff ordered (decision 8 of 0111). False for every other order.
     pub heeds_reserve: bool,
+    /// The most any one ship is to hold of the named cargo (decision 0162,
+    /// 1): a level, like the weight. `None` sets no level. Only with a
+    /// weight.
+    pub each_t: Option<Fixed>,
 }
 
 impl CargoOrder {
@@ -605,6 +609,7 @@ impl CargoOrder {
             unit,
             weight_t: None,
             heeds_reserve: false,
+            each_t: None,
         }
     }
 }

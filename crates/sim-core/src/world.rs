@@ -131,10 +131,13 @@ impl Default for MadeIds {
 /// with two reports two hexes apart in one pulse) and 19 from decision 0147 (an
 /// estimate's grade and the reconnaissance mission, which a game saved under
 /// the old rules could not hold, and the live figures' two reconnaissance
-/// figures). A pull request raises it by one
+/// figures) and 20 from decision 0162 (a load to a weight may name the most
+/// a ship is to hold: an order a game saved under the old rules could not
+/// hold, and the staff's supply run by night names it). A pull request
+/// raises it by one
 /// when it changes a rule in a way that changes what an existing game would do; a
 /// change that leaves every existing game as it was leaves it alone.
-pub const RULES_VERSION: u32 = 19;
+pub const RULES_VERSION: u32 = 20;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct SimConfig {

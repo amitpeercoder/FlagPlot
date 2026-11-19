@@ -2,24 +2,24 @@ Placeholder scenario 42b: Two reasons on one day
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 09655c88e2184e6a  24 events
-day   2  hash 4fbdab821c4b5449  9 events
-day   3  hash 4049ccf2ffc21434  7 events
-day   4  hash 0d391af4dc949d4d  6 events
-day   5  hash 7c9adeed503f6bc9  6 events
-day   6  hash 4dada929533932c6  6 events
-day   7  hash 7a719ba74d50ccd4  6 events
-day   8  hash 7808bea1a4dd80b3  6 events
-day   9  hash 22dac21fceaa0c43  6 events
-day  10  hash 43ea948651ade448  6 events
-day  11  hash a5a78e02cd9f6fee  6 events
-day  12  hash 182d2f386d440e88  6 events
-day  13  hash e9bbfeef4ec47a6c  6 events
-day  14  hash 5e74c98877a2c906  6 events
-day  15  hash 00efac7693d6c5e0  6 events
-day  16  hash dc9821d1d45bc02d  6 events
-day  17  hash 8df0d397d918aca3  6 events
-day  18  hash aca1ac24b4dcef09  6 events
+day   1  hash 257a87563a891b83  24 events
+day   2  hash 6a42e60dac187e14  9 events
+day   3  hash c41d9a05d2aa389f  7 events
+day   4  hash 1654040c4d0c943c  6 events
+day   5  hash 52e1fdddeea26d06  6 events
+day   6  hash 400fa047a93cf253  6 events
+day   7  hash 4aeb36ae49a840b3  6 events
+day   8  hash 0f6d147081f91b12  6 events
+day   9  hash 34621148e531f474  6 events
+day  10  hash 565a32b1f29c745d  6 events
+day  11  hash bc75df9dbd85c129  6 events
+day  12  hash 256a9fd280120521  6 events
+day  13  hash 3e3b30bcb866c58f  6 events
+day  14  hash 2a40e67befe4b2d3  6 events
+day  15  hash 2f3b8c9ad606a037  6 events
+day  16  hash 1fab822a8ffdb238  6 events
+day  17  hash 229c1f1fa7a2c8f0  6 events
+day  18  hash 26225eb4c63c9454  6 events
 
 #1 D1 -         Allied the commander's command taken: set intent:1 to keep base:2 supplied at 30 days, a run every 15 days
 #2 D1 -         Allied plan:1 drafted for intent:1  <- #1

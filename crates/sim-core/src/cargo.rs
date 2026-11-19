@@ -196,6 +196,31 @@ impl HaltGround<'_> {
             .map(|weight| (weight - self.aboard_of(ships, named)).max(Fixed::ZERO))
     }
 
+    /// What a load of `named` may still put aboard `ship` by its level
+    /// (decision 0162, 1): the level less what the ship holds of the cargo,
+    /// not below 0, or `None` for a load with no level.
+    pub(crate) fn level_left(
+        &self,
+        cargo: CargoOrder,
+        ship: ShipId,
+        named: Cargo,
+    ) -> Option<Fixed> {
+        cargo
+            .each_t
+            .map(|level| (level - self.aboard_of(&[ship], named)).max(Fixed::ZERO))
+    }
+
+    /// Whether `ship` can take more of `named` by its room and the load's
+    /// level (decisions 4 of 0111 and 2 of 0162).
+    pub(crate) fn can_take(&self, cargo: CargoOrder, ship: ShipId, named: Cargo) -> bool {
+        let record = &self.ships[&ship];
+        record.supply_t + record.cargo_fuel_t
+            < self.ref_data.ship_classes[&record.class].cargo_capacity_t
+            && !self
+                .level_left(cargo, ship, named)
+                .is_some_and(|left| left.is_zero())
+    }
+
     /// The stock a load of `named` may draw on at `base` (decision 8 of
     /// 0111): all of it, or for a load that heeds the reserve what the base
     /// holds above its reserve.
@@ -235,16 +260,13 @@ impl HaltGround<'_> {
         let cargo_done = match (cargo.action.loads(), base) {
             (Some(named), Some(base)) => {
                 // The stock it may draw on is gone, or the weight is aboard,
-                // or no ship has room (decision 4 of 0111).
+                // or no ship has room (decision 4 of 0111), or none is below
+                // the level (decision 0162, 2).
                 self.stock_for(cargo, base, named).is_zero()
                     || self
                         .weight_left(cargo, ships, named)
                         .is_some_and(|left| left.is_zero())
-                    || ships.iter().all(|id| {
-                        let ship = &self.ships[id];
-                        ship.supply_t + ship.cargo_fuel_t
-                            == self.ref_data.ship_classes[&ship.class].cargo_capacity_t
-                    })
+                    || ships.iter().all(|id| !self.can_take(cargo, *id, named))
             }
             // No cargo named, or none to load where the side has no base.
             _ => true,
@@ -441,9 +463,18 @@ impl World {
                         let men = participant.cargo.unit.is_some_and(|unit| {
                             unit_ashore > 0 && self.berths_for(*ship_id, unit) > 0
                         });
+                        // A ship at the load's level has none to take
+                        // (decision 0162, 1).
+                        let below_level = participant.cargo.action.loads().is_none_or(|named| {
+                            !self
+                                .halt_ground()
+                                .level_left(participant.cargo, *ship_id, named)
+                                .is_some_and(|left| left.is_zero())
+                        });
                         let cargo = participant.cargo.action.loads().is_some()
                             && participant.base.is_some()
                             && capacity - ship.supply_t - ship.cargo_fuel_t > Fixed::ZERO
+                            && below_level
                             && stock > Fixed::ZERO;
                         men || cargo
                     } else {
@@ -778,6 +809,11 @@ impl World {
                     if let Some(left) = ground.weight_left(p.cargo, &p.ships, named) {
                         moved = moved.min(left);
                     }
+                    // And no more than the ship's level allows (decision
+                    // 0162, 1).
+                    if let Some(left) = ground.level_left(p.cargo, *ship_id, named) {
+                        moved = moved.min(left);
+                    }
                     moves.push((named, moved));
                 }
             } else {
@@ -850,6 +886,14 @@ impl World {
                             name: "room_t",
                             value: room,
                         });
+                        // The level, only where the order names one, so a
+                        // breakdown with none is as it was (decision 0162).
+                        if let Some(level) = p.cargo.each_t {
+                            factors.push(Factor {
+                                name: "each_t",
+                                value: level,
+                            });
+                        }
                         factors.push(Factor {
                             name: "base_stock_t",
                             value: stock_before,
@@ -1028,11 +1072,9 @@ impl World {
             && !ground
                 .weight_left(p.cargo, &p.ships, named)
                 .is_some_and(|left| left.is_zero())
-            && p.ships.iter().any(|id| {
-                let ship = &self.truth.ships[id];
-                ship.supply_t + ship.cargo_fuel_t
-                    < self.ref_data.ship_classes[&ship.class].cargo_capacity_t
-            });
+            && p.ships
+                .iter()
+                .any(|id| ground.can_take(p.cargo, *id, named));
         if !held {
             return;
         }

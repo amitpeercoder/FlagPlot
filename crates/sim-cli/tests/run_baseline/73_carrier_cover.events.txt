@@ -2,14 +2,14 @@ Placeholder scenario 73: Carrier cover
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash d17f874e545300ff  24 events
-day   2  hash 261f7dca04608d84  38 events
-day   3  hash 451da83baaa70828  25 events
-day   4  hash cf9a54bf2c81a7a0  20 events
-day   5  hash 02a52b26587ea6fd  25 events
-day   6  hash 70ca2d07fe788d40  33 events
-day   7  hash fd68c6acceff19a2  27 events
-day   8  hash 1a6922056e37cad9  17 events
+day   1  hash 02689060600f51ba  24 events
+day   2  hash c4ed65607c354c2f  38 events
+day   3  hash 0e56a31c02f27625  25 events
+day   4  hash efa561f55e364af7  20 events
+day   5  hash ab2ea613094c8618  25 events
+day   6  hash 07f4628f01126b5d  33 events
+day   7  hash da9f0d15f8b27095  27 events
+day   8  hash 937d3185db60d9a0  17 events
 
 #1 D1 -         Allied the commander's command taken: set intent:1 to take the place at (10,0)
 #2 D1 -         Allied plan:1 drafted for intent:1  <- #1

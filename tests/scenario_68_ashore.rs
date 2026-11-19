@@ -329,6 +329,7 @@ fn given(o: &StaffOrder) -> Given {
                 TaskForceOrder::LoadTo {
                     cargo: Cargo::Supply,
                     weight_t,
+                    ..
                 },
             ..
         } => Given::LoadTo(*weight_t),
