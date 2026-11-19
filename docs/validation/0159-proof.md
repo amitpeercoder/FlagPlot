@@ -2,6 +2,8 @@
 
 Run on Nov 19, 2026, by the architect, to the conditions of decision 0159 and to the readings written into that decision before the run ("The proof: how each condition is read"). Release build, live figures, seeds 1 to 1,000, from the branch's commit 450dfba1, which is main at 708e8fc3 (the merge of pull request 451, step 6) with the reading scripts and nothing else: state layout `flagplot-state-v47`, rules label 19, doctrine `supply-39`, agent interface 26, saved game 22. Nothing was tuned, and no rule, figure, reading, mark, intent or file was changed after the run.
 
+**Closed by the designer on Nov 19, 2026, with the miss as named** (decision 0159, "Closed on Nov 19, 2026"). The report below is as it was written before he decided.
+
 **Result: not passed as stated.** One condition fails: the Japanese side's men landed at a place it has not taken still starve, one in four. Every other judged condition meets its mark.
 
 | Condition | Value | Mark | Holds |
