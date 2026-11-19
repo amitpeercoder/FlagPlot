@@ -756,7 +756,7 @@ button:disabled { opacity: 0.45; cursor: default; }
   }
   // An air group as a row of a list: its name, its aircraft and what they are
   // for on the left; how many are ready and what it is doing on the right.
-  function airLine(x) { return x.air_group.handle + ', ' + x.aircraft_type + (x.role ? ' (' + x.role + ')' : '') + ' · ' + String(x.mission).replace(/_/g, ' ') + ': ' + x.ready + ' of ' + (x.ready + x.damaged); }
+  function airLine(x) { return x.air_group.handle + ', ' + String(x.aircraft_type).replace(/^\S+ (?=\S*\d)/, '') + (x.role ? ' (' + x.role + ')' : '') + ' · ' + String(x.mission).replace(/_/g, ' ') + ': ' + x.ready + ' of ' + (x.ready + x.damaged); }
   // The share of a group's aircraft on hand that are ready to fly.
   function airLevel(x) { var all = x.ready + x.damaged; return all > 0 ? x.ready / all : null; }
   function airList(body, title, groups) { listOf(body, title, groups.map(airLine), 'ready', groups.map(airLevel)); }
