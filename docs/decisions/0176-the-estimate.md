@@ -1,10 +1,10 @@
 # 0176: The estimate: what a trial says of a course, in counts of worlds
 
-Status: a plan by the architect, written on Nov 19, 2026, inside the plan for step 3, stage 4 (decision 0161, step 6 of its ten, section E, rules 13 to 15), which the designer confirmed. To be read by a reviewer who has not seen it written, and amended, before it is built.
+Status: settled by the architect on Nov 19, 2026, inside the plan for step 3, stage 4 (decision 0161, step 6 of its ten, section E, rules 13 to 15), which the designer confirmed. It was read by a reviewer who had not seen it written, and amended (below), before any of it was built. The hand calculation is written. To be built when decision 0175's build has merged: it changes the same crate.
 
 Summary: A trial plays a course in a number of worlds. The estimate is what is read from them: in how many worlds the end was met, and by what day; in how many it was met and lost again; in how many it was not met; what it cost in men, ships and aircraft, as the lowest, the middle and the highest; what the trial's enemy lost; what was assumed; and where the worlds part by a thing the side did not know. It speaks in counts of worlds and never in chances, and in places, days, men, ships and aircraft and never in points. With it comes one thing the trial lacked: a way to say that the men at a place may be more than the side's estimate, and not known
 
-Standing: A plan, written by the architect on Nov 19, 2026, inside decision 0161. Under review
+Standing: Settled by the architect, Nov 19, 2026, inside decision 0161, and amended on review. The build waits for decision 0175's
 
 ## Why
 
@@ -66,3 +66,28 @@ What is so today, read from the code:
 ## The hand calculation
 
 It is in `tests/scenario_95_the_estimate.rs`, written before the code: decision 0161's own case. On scenario 68's figures, where every shot is whole and hits, a landing of 600 men at a place the side estimates at 200 and believes may hold 400 more: four worlds, the place taken on day 4 in the two with 200 and not taken in the two with 600, with what each cost counted man by man.
+
+## Amended on review, Nov 19, 2026
+
+The plan was read by a reviewer who had not seen it written, against decision 0161, decision 0175 as amended, the code and scenario 68. What follows is the architect's and replaces the rules above where they differ. The hand calculation is amended with it.
+
+1. **What a trial must keep, beyond decision 0175's record.** A world's state at the end of a day is not kept, and an estimate needs two things of it. So the playing of a trial records, for the side tried, in each world:
+   - **at the end of each day,** the hexes in which the side holds a base, and the hexes of the enemy's bases on its map;
+   - **at the end of the first day played,** the side's plan orders, as its staff works them from its view.
+
+   To record them the play takes the tried side's view of the world at the day's end, and reads nothing else of it. This is added to decision 0175's record of a world by this build.
+2. **Met is the staff's own test** (replaces rule 4's reading). A place is the side's at the end of a day where the side holds a base in its hex and no base of the enemy's is there on its map: the test by which the staff marks a take met. It is read from the day's record of item 1, so that a place taken by a landing where the enemy had no base is met as one taken from him is. The end of "take a place" is its hex; of "control an island", every named place of the island; of "hold", its base being the side's. It is one function, so that the proof can apply it to a live game.
+3. **Days are the world's own day numbers.** An end already met when the trial begins, such as a hold of a base the side holds, is met on the first day played.
+4. **Kept, and lost again** (replaces rule 5). The end is met and kept where it is met at the end of the horizon; its day is the first day it was met. It is met and lost again where it was met at the end of some day and is not at the end of the horizon. A world that met its end on the last day counts as kept, and nothing tried it after: the estimate gives the latest day met so that this can be seen.
+5. **The plan order is world 1's** (replaces rule 11), as recorded at the end of the first day: the men wanted and to hand, what it waits for or that it waits for nothing, the day expected ashore, what must be known, and its tasks. Where another world's plan order differs, the estimate says in how many it does. The lift and the weight of supply that decision 0161, 13, also names are in the staff's orders and not in a plan order; they are left for the step that shows an estimate to a seat.
+6. **Believed men are set aside when the side knows better.** They are not made in a world where the side holds an estimate of that hex of a day after the scenario's start, a count it has had since, or where the place is the side's by item 2. The assumptions say so. A believed body of men has a `name`, as a believed force has, for the estimate to call it by.
+7. **The loader refuses** believed men with no place, with a base that is not on the believing side's map, and at a hex that is sea, as well as the faults of rule 1.
+8. **Where the worlds part** (replaces rule 14): by each force or body of men of unknown standing, and by each pair of reports that is one force in some worlds and two in others (decision 0161, 7). Each side of a parting has its count of worlds, its counts of rule 7, and for each of the five costs, the side's and the enemy's, the lowest, the middle and the highest. A parting is shown where its two sides differ in any of those.
+9. **What was assumed is grouped by what it is of,** not by the numbers given to the things made: an enemy base, the men of an estimate, a believed force or body of men, a contact, a pair. Each is one line with the worlds it was made in and, for a thing of unknown standing, the worlds it was not; a force placed by reach has the count of worlds it was placed in and no list of hexes.
+10. **An estimate keeps each world's own figures:** its number; the day its end was first met, or none; whether it was lost again; the five costs of each side; and what its picture assumed. The lowest, middle and highest are read from them, and so can a comparison of two courses, world for world.
+11. **What its other plans lost** (replaces rule 12): for each other intent of the side's with an end, the worlds in which it was met and kept with the course and without, and the middle day met of each. It is named as displaced where it is met in fewer worlds or its middle day is later. Whoever asks for an estimate asks for the second trial; the seat's tool will.
+12. **Ships out of action** are the side's ships afloat at the end of the horizon whose days of repair are 1 or more, a ship in a yard among them.
+13. **No world played:** an estimate of a trial none of whose worlds could be played says so, with the count, and gives no day and no cost.
+14. **The source test of `sim-trial`** lets two parts of the crate take a view of a world the crate built: the play, to record item 1; and the making of an estimate. Nowhere else.
+15. **The words** are for a reader. The data is what is asserted: the test checks the estimate's fields exactly, and of its words only that they name the counts of worlds and hold no chance, per cent or points.
+
