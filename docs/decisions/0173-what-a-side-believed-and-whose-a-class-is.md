@@ -112,3 +112,13 @@ Built on Nov 19, 2026. The five statements of "What the tests are to show" hold:
 
 **What changed of what is generated.** `crates/sim-cli/tests/recorded_games/full_slice_five_days_sonnet/save.json`: the hash of `data/scenarios/07_full_slice.toml`, and one more data file listed with its hash, `class_sides_full_slice.csv`; its paragraph is in that folder's `README.md`. And one pinned count in a test, `crates/sim-cli/tests/saved_games.rs` (`the_saved_game_holds_orders_with_their_origin_and_the_files_it_names`): the full slice's saved game names 18 data files, not 17. Nothing else: no run baseline (the full slice's run, events and daily hashes are as they were), no agent golden, no pinned hash, no batch fixture.
 
+## The architect's rulings
+
+Made on Nov 19, 2026, on reading the build.
+
+1. **The readings of "As built" stand as made,** with reading 10 as ruled there: a believed intent names no force of the enemy's, and its check reads nothing a side could not see.
+2. **The file of sides is a reference file and has a frozen copy** (reading 1), since the full slice must load on the frozen figures. The frozen copy has no row for a class the frozen class files do not give.
+3. **Replacements and arrivals are not checked against the file of sides** (reading 3). They name a type and a side, and a row for the wrong side would be a fault of the same kind; the check is owed, and is written in `docs/open-work.md`.
+4. **The staff's setup for the full slice was changed by hand** (reading 12), the script that makes it not being in the repository. That is accepted for this change, and the script is owed to the repository so that the file can be made again.
+5. **The 39 days' five beliefs are the architect's placeholders** (item 11). No count in them is from a source.
+
