@@ -1455,7 +1455,8 @@ pub struct LoadOptions {
     /// A directory to read the scenario's reference (figures) files from, in
     /// place of the places it names. Each reference file the scenario names
     /// (ship classes, port sizes, aircraft types, and the search, surface
-    /// combat, air combat, air upkeep, fatigue and base supply figures) is
+    /// combat, air combat, air upkeep, fatigue and base supply figures, and
+    /// the file of sides of decision 0173) is
     /// looked up by its file name directly under this directory. A file that
     /// is not there is an error that names it: there is no fallback to the
     /// file the scenario names, which would defeat the purpose. The map is

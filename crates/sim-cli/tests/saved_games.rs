@@ -266,7 +266,8 @@ fn the_saved_game_holds_orders_with_their_origin_and_the_files_it_names() {
         "data/scenarios/07_full_slice.toml"
     );
     assert_eq!(value["seed"], 1942);
-    assert_eq!(value["data_files"].as_array().expect("files").len(), 17);
+    // 18 since decision 0173: the file of sides is one of them.
+    assert_eq!(value["data_files"].as_array().expect("files").len(), 18);
     assert_eq!(value["hashes"].as_array().expect("hashes").len(), 39);
     let orders = value["orders"].as_array().expect("orders");
     assert!(orders.len() > 50);
