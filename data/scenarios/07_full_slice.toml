@@ -1442,6 +1442,43 @@ side = "japanese"
 men = 333
 task_force = 39
 
+# The opening estimates (decision 0160, rule A; decision 0092, 16): what each
+# side believed of the enemy's men ashore before the first day, held from day
+# 1 with the grade "told". They are the record's own estimates, wrong as they
+# were (the designer's answer 1 of decision 0160), not the truth.
+#
+# The Allied side holds the figures of Admiral Turner's Operation Plan A3-42 of
+# 30 July 1942, the last dated estimate before the landing and the one the
+# landing was planned on (the architect's ruling, Nov 19, 2026, decision 0160,
+# "As built: step 1"). Both figures were high. The earlier estimates on file are
+# not read: the division's Operation Order 7-42 of 20 July (land_unit_facts
+# 161, 7,000 on Guadalcanal; 231, 1,400 in the Tulagi area), CINCPAC's of 6
+# July (1700, Tulagi 1,400; no place on Guadalcanal, gaps.csv) and the
+# division's of 11 and 27 July (1584, 1585, 5,000 on Guadalcanal); nor the
+# totals of both places (199 to 213, 1701).
+#
+# The Japanese side holds none: no figure existed before 7 August, as no
+# Allied man was ashore (gaps.csv, "a Japanese estimate of Allied men ashore
+# on Guadalcanal or Tulagi dated before 7 August 1942"). No other place has an
+# estimate in the record, so none is given.
+
+# Lunga's hex (base 1), 5,275 men on Guadalcanal: land_unit_facts 162 (Hough)
+# and 163 (Zimmerman), both of Operation Plan A3-42, 30 July.
+[[estimate]]
+side = "allied"
+q = 2
+r = -4
+men = 5275
+
+# Tulagi's hex (base 4), 1,850 men on Tulagi and Gavutu-Tanambogo together,
+# which the slice holds as one place: land_unit_facts 232 (Hough, 30 July) and
+# 230 (Zimmerman); Miller gives the same (233).
+[[estimate]]
+side = "allied"
+q = 3
+r = -5
+men = 1850
+
 
 [[task_force]]
 id = 1
