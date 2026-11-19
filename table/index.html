@@ -218,7 +218,6 @@ button:disabled { opacity: 0.45; cursor: default; }
   <fieldset id="f-ships" hidden><legend>DETACH AS A NEW FORCE</legend></fieldset>
   <fieldset id="f-join" hidden><legend>JOIN</legend></fieldset>
   <div id="f-route" hidden></div>
-  <fieldset id="f-air" hidden><legend>AIR GROUPS HERE</legend></fieldset>
   <div class="pv"><b>THIS ORDER</b>
     <div id="f-summary">Nothing is changed yet.</div>
   </div>
@@ -1167,10 +1166,7 @@ button:disabled { opacity: 0.45; cursor: default; }
     var others = M.forces.filter(function (o) { return o !== fhere && sameHex(o.place, fhere.place) && !(o.available_from > M.day); }), atBase = M.bases.some(function (b) { return sameHex(b.place, fhere.place); });
     others.forEach(function (o, i) { var l = el('label'), c = el('input'); c.type = 'radio'; c.name = 'into'; c.value = o.task_force.handle; c.checked = i === 0; l.appendChild(c); l.appendChild(document.createTextNode(' ' + o.task_force.name.replace(/^Placeholder /, ''))); fj.appendChild(l); });
     $('f-l-join').hidden = !(atBase && others.length); $('f-l-down').hidden = !atBase; $('f-l-detach').hidden = false; $('f-shp').hidden = false;
-    var box = $('f-air'), here = M.air.filter(function (x) { return x.place && best.force.place && x.place.q === best.force.place.q && x.place.r === best.force.place.r; });
-    while (box.children.length > 1) box.removeChild(box.lastChild);
-    here.forEach(function (x) { var l = el('label'), c = el('input'); c.type = 'checkbox'; c.id = 'f-air-' + num(x.air_group.handle); c.value = x.air_group.handle; l.appendChild(c); l.appendChild(document.createTextNode(' Stand down ' + x.air_group.name)); box.appendChild(l); });
-    box.hidden = !here.length; $('force').hidden = false; setStatus('A draft order. Nothing is ordered until you sign.');
+    $('force').hidden = false; setStatus('A draft order. Nothing is ordered until you sign.');
   }
   function pickRoute(p) {
     var hd = 1e9, hh = null; hexes.forEach(function (h) { var d = world(h[3], h[4]).distanceTo(p); if (d < hd) { hd = d; hh = h; } });
@@ -1190,7 +1186,6 @@ button:disabled { opacity: 0.45; cursor: default; }
       orders.push({ unit: unit, order: { kind: 'detach', ships: picked } }); words.push('Detach ' + picked.length + (picked.length > 1 ? ' ships' : ' ship') + ' as a new force.'); }
     if (shp === 'join') { var into = document.querySelector('#f-join input:checked'); if (!into) return { error: 'No other force is here.', words: words }; orders.push({ unit: unit, order: { kind: 'join', into: into.value } }); words.push('Join ' + into.parentNode.textContent.trim() + '.'); reshapes = true; }
     if (shp === 'down') { orders.push({ unit: unit, order: { kind: 'stand_down' } }); words.push('Stand down in port.'); reshapes = true; }
-    Array.prototype.forEach.call(document.querySelectorAll('#f-air input:checked'), function (c) { orders.push({ unit: c.value, order: { kind: 'set_air_mission', mission: 'rest' } }); words.push(c.parentNode.textContent.trim() + '.'); });
     return { orders: orders, words: words, reshapes: reshapes };
   }
   function forceSummary() { if (!force) return; var d = forceDraft(); $('f-summary').textContent = d.words.length ? d.words.join(' ') : 'Nothing is changed yet.'; }
