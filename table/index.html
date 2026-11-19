@@ -28,10 +28,19 @@ button { font-family: var(--f-ui); cursor: pointer; }
 button:focus-visible { outline: 3px solid #f0c36a; outline-offset: 2px; }
 button:disabled { opacity: 0.45; cursor: default; }
 
-.top { position: fixed; top: 0; left: 0; right: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 22px; padding: 10px 400px 8px 16px; pointer-events: none; text-shadow: 0 1px 6px #000; }
+.top { position: fixed; top: 0; left: 0; right: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 22px; padding: 10px 270px 8px 16px; pointer-events: none; text-shadow: 0 1px 6px #000; }
 .top h1 { margin: 0; font-size: 24px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; }
 .intray { pointer-events: auto; position: relative; display: inline-flex; align-items: center; gap: 9px; min-height: 30px; padding: 0 12px; margin-left: 6px; background: #4d3a28; color: var(--paper); border: 1px solid #241a12; border-radius: 2px; font-family: var(--f-ui); font-size: 14px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; text-shadow: none; cursor: pointer; box-shadow: inset 0 -3px 0 rgba(0,0,0,0.28), 0 2px 6px rgba(0,0,0,0.4); }
 .intray[hidden] { display: none; }
+.intray.menu::before { display: none; }
+.intray.menu::after { content: '\25BE'; font-size: 11px; opacity: 0.7; }
+.intray.menu[aria-expanded="true"] { background: #6a513a; }
+.intray .mark { display: inline-block; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--enemy); color: #fff; font-size: 12px; line-height: 18px; text-align: center; letter-spacing: 0; }
+.pop { position: fixed; top: 46px; z-index: 30; display: flex; flex-direction: column; gap: 8px; padding: 10px; width: min(330px, calc(100% - 32px)); max-height: calc(100% - 140px); overflow-y: auto; background: rgba(24,26,23,0.94); border: 1px solid #4a463c; border-radius: 2px; box-shadow: 0 8px 22px rgba(0,0,0,0.55); }
+.pop[hidden] { display: none; }
+.pop .papers { flex-direction: column; flex-wrap: nowrap; }
+.pop .papers button { text-align: left; display: flex; justify-content: space-between; align-items: center; box-shadow: none; }
+.pop #leave-slot:empty { display: none; }
 .intray::before { content: ''; position: absolute; left: 9px; right: 9px; top: -4px; height: 5px; background: var(--paper-old); border-radius: 1px 1px 0 0; box-shadow: 0 -1px 2px rgba(0,0,0,0.35); }
 .intray.new::before { left: 14px; right: 30px; top: -9px; height: 10px; background: var(--paper); transform: rotate(-2deg); }
 .intray .stamp { background: var(--paper); font-size: 12px; }
@@ -256,13 +265,18 @@ button:disabled { opacity: 0.45; cursor: default; }
   <h1>Flag Plot</h1>
   <p id="seat">The table</p>
   <button type="button" id="btn-in" class="intray" hidden></button>
+  <button type="button" id="btn-orders" class="intray menu" aria-expanded="false" aria-controls="pop-orders" title="Your orders in force, and your standing leave" hidden></button>
+  <button type="button" id="btn-staff" class="intray menu" aria-expanded="false" aria-controls="pop-staff" title="The staff's standing papers" hidden></button>
+</div>
+<div id="pop-orders" class="pop" hidden>
+  <div id="papers" class="papers" role="toolbar" aria-label="Your directives, orders and what you have signed"></div>
+  <div id="leave-slot"></div>
+</div>
+<div id="pop-staff" class="pop" hidden>
+  <div id="papers-staff" class="papers" role="toolbar" aria-label="The staff's standing papers"></div>
 </div>
 
 <aside class="tray" aria-label="Signals">
-  <h2>Command</h2>
-  <div id="papers" class="papers" role="toolbar" aria-label="Your directives, orders and what you have signed"></div>
-  <h2>Staff</h2>
-  <div id="papers-staff" class="papers" role="toolbar" aria-label="The staff's standing papers"></div>
   <h2>Signals</h2>
   <div id="signals"></div>
 </aside>
@@ -825,7 +839,7 @@ button:disabled { opacity: 0.45; cursor: default; }
   }
   var TOLD = { contact: 'A contact is reported', attack: 'You are attacked', loss: 'A ship is lost or out of action', strike: 'Your strike is away', landing: 'Your men are ashore, or fighting' };
   function showSignals() {
-    var box = $('signals'), s = M.state; box.textContent = ''; $('papers').textContent = ''; $('papers-staff').textContent = '';
+    var box = $('signals'), s = M.state; box.textContent = ''; $('papers').textContent = ''; $('papers-staff').textContent = ''; $('leave-slot').textContent = '';
     if (M.over) slip('THE UMPIRE', 'ENDED', 'The game is over', M.result && M.result.outcome ? 'Result: ' + (M.result.outcome.words || JSON.stringify(M.result.outcome)) : (lastRun && lastRun.summary) || '');
     lastTold.forEach(function (t) { slip('FROM THE PLOT · ' + (clock.at === 'dusk' ? '1800' : clock.at), 'STOPPED THE CLOCK', TOLD[t.thing] || t.thing, t.lines.slice(0, 4).join(' · '), true); });
     (s.holds || []).forEach(function (h) {
@@ -852,7 +866,7 @@ button:disabled { opacity: 0.45; cursor: default; }
       var l = el('article', 'slip leave'), top = el('div', 'lv'), sw = el('div', 'seg'); l.title = 'Your standing leave, for every plan now and to come: whether the staff launches a plan as soon as it is ready, or waits for your word.';
       top.appendChild(el('span', '', 'PLANS LAUNCH')); sw.setAttribute('role', 'group'); sw.setAttribute('aria-label', 'When a plan of yours launches');
       [['WHEN READY', true], ['ON MY WORD', false]].forEach(function (o) { var b = el('button', '', o[0]); b.type = 'button'; b.setAttribute('aria-pressed', String(!!s.leaves.launch === o[1])); if (!!s.leaves.launch !== o[1]) b.addEventListener('click', function () { act('set_leave', { leave: 'launch', given: o[1] }); }); sw.appendChild(b); });
-      top.appendChild(sw); l.appendChild(top); $('signals').appendChild(l);
+      top.appendChild(sw); l.appendChild(top); $('leave-slot').appendChild(l);
       (function () { var coming = s.plans.filter(function (p) { return p.state === 'draft' || p.state === 'preparing'; }); if (!coming.length) return; var d = el('div', 'lvnote', s.leaves.launch ? 'Getting ready: ' : 'Getting ready, and will wait: ');
         coming.forEach(function (p, k) { var po = planOf(p.number), b = el('button', 'ref', 'plan ' + p.number + (po.name ? ', ' + po.name : '')); b.type = 'button'; if (po.root != null) b.addEventListener('click', function () { readPlan(po.root); }); if (k) d.appendChild(document.createTextNode('; ')); d.appendChild(b); }); l.appendChild(d); })();
     }
@@ -1989,6 +2003,25 @@ button:disabled { opacity: 0.45; cursor: default; }
   $('btn-view').addEventListener('click', function () { chartView = !chartView; try { localStorage.setItem('flagplot.view', chartView ? 'chart' : 'table'); } catch (e) {} signs(); });
   $('btn-hexes').setAttribute('aria-pressed', String(showHexes));
   $('btn-hexes').addEventListener('click', function () { showHexes = !showHexes; try { localStorage.setItem('flagplot.hexes', showHexes ? '1' : '0'); } catch (e) {} this.setAttribute('aria-pressed', String(showHexes)); paintBase(); if (g) drawMarks(); $('card').hidden = true; });
+  // Your orders and the staff's papers hang from the top bar, so that the
+  // side of the table is kept for what needs your eye: the signals.
+  var MENUS = [['btn-orders', 'pop-orders'], ['btn-staff', 'pop-staff']];
+  function shutMenus(but) { MENUS.forEach(function (m) { if (m[1] !== but) { $(m[1]).hidden = true; $(m[0]).setAttribute('aria-expanded', 'false'); } }); }
+  MENUS.forEach(function (m) {
+    $(m[0]).addEventListener('click', function (e) { e.stopPropagation(); var pop = $(m[1]), open = pop.hidden; shutMenus(); if (!open) return; var r = this.getBoundingClientRect(); pop.style.left = Math.max(8, Math.min(r.left, window.innerWidth - 346)) + 'px'; pop.style.top = (r.bottom + 6) + 'px'; pop.hidden = false; this.setAttribute('aria-expanded', 'true'); });
+    $(m[1]).addEventListener('click', function (e) { e.stopPropagation(); if (e.target.closest('.papers button, .ref')) shutMenus(); });
+  });
+  document.addEventListener('click', function () { shutMenus(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') shutMenus(); });
+  function menuWords() {
+    var n = $('papers').children.length, o = $('btn-orders'), st = $('btn-staff'), due = 0;
+    o.hidden = !n && !$('leave-slot').children.length; o.textContent = 'Orders \u00B7 ' + n;
+    [].forEach.call($('papers').querySelectorAll('.mark'), function (m) { due += parseInt(m.textContent, 10) || 0; }); if (due) { var a = document.createElement('span'); a.className = 'mark'; a.textContent = String(due); o.appendChild(a); }
+    due = 0; [].forEach.call($('papers-staff').querySelectorAll('.mark'), function (m) { due += parseInt(m.textContent, 10) || 0; });
+    st.hidden = !$('papers-staff').children.length; st.textContent = 'Staff'; if (due) { var b = document.createElement('span'); b.className = 'mark'; b.textContent = String(due); st.appendChild(b); }
+    if (o.hidden) $('pop-orders').hidden = true; if (st.hidden) $('pop-staff').hidden = true;
+  }
+  new MutationObserver(menuWords).observe($('pop-orders'), { childList: true, subtree: true }); new MutationObserver(menuWords).observe($('pop-staff'), { childList: true, subtree: true });
   $('btn-stops').addEventListener('click', function () { var f = $('stops'); f.hidden = !f.hidden; this.setAttribute('aria-expanded', String(!f.hidden)); });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !$('stops').hidden) { $('stops').hidden = true; $('btn-stops').setAttribute('aria-expanded', 'false'); } });
   $('btn-back').addEventListener('click', function () { goal.x = 0; goal.z = 0; goal.zoom = 0; });
