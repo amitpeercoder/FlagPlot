@@ -547,7 +547,7 @@ button:disabled { opacity: 0.45; cursor: default; }
       var l = slip('STANDING LEAVE', s.leaves.launch ? 'GIVEN' : null, s.leaves.launch ? 'The staff may launch a plan that is ready' : 'Every plan waits for your word before it launches', null, !s.leaves.launch);
       button(l, s.leaves.launch ? 'WITHHOLD IT' : 'GIVE LEAVE TO LAUNCH', !s.leaves.launch, function () { act('set_leave', { leave: 'launch', given: !s.leaves.launch }); });
     }
-    if (s.queued && s.queued.length) slip('FROM YOU · SIGNED', 'SENT', s.queued.length + ' signal' + (s.queued.length > 1 ? 's go' : ' goes') + ' to the staff at 1800', s.queued.map(function (q) { return q.text || q.shown || (q.command && q.command.kind) || 'a command'; }).join('; ') + '.');
+    if (s.queued && s.queued.length) paper('Signed \u00B7 ' + s.queued.length, readSigned).title = 'What you have signed, for the staff at 1800';
     showDirectives();
     roots.forEach(function (r) { var b = paper(sayIntent(r, {}), function () { readPlan(r.number); }); b.title = 'Your intent ' + r.number + (r.in_force ? ', in force' : ', ended') + ': read the plan'; if (!r.in_force) b.style.opacity = 0.6; });
     if ((M.arrivals && M.arrivals.length) || M.forces.some(function (f) { return f.available_from > M.day; })) paper('Reinforcements', readSchedule);
@@ -727,6 +727,14 @@ button:disabled { opacity: 0.45; cursor: default; }
     var est = M.estimates.filter(function (e) { return sameHex(e.place, b.place); })[0];
     if (est) { body.appendChild(el('div', 'sub', 'INTELLIGENCE')); kv(body, [['Enemy men ashore', 'About ' + commas(est.men) + ' men'], ['From', est.came_from], ['Age', daysOld(est)]]); }
    
+  }
+  // What the commander has signed and the staff has not yet taken in: a
+  // record to look at, not a signal that asks anything of him.
+  function readSigned() {
+    var doc = $('sheet-doc'), q = (M.state && M.state.queued) || []; doc.textContent = '';
+    q.forEach(function (x, i) { doc.appendChild(rich('p', '', (i + 1) + '. ' + String(x.text || x.shown || (x.command && x.command.kind) || 'a command').replace(/^./, function (c) { return c.toUpperCase(); }))); });
+    doc.appendChild(el('div', 'foot', 'These go to the staff at 1800.'));
+    $('sheet-title').textContent = 'SIGNED'; doc.hidden = false; $('sheet-text').hidden = true; $('sheet').hidden = false; $('sheet-close').focus();
   }
   function readSchedule() {
     var doc = $('sheet-doc'), rows = []; doc.textContent = '';
