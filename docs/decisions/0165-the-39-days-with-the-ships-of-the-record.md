@@ -1,10 +1,10 @@
 # 0165: The 39 days with the ships of the record: a plan
 
-Status: a plan by the architect, written on Nov 19, 2026, for the designer's confirmation. Nothing is built. It follows the research of the same day (`docs/research/oob/ship-names-39-days.md`) and takes up what decisions 0093 (item 8) and 0101 (items 16 and 17, ruling H) left as gaps.
+Status: a plan by the architect, written on Nov 19, 2026 and confirmed by the designer the same day with the six answers the architect recommended. Nothing is built; the research of step 1 is commissioned. It follows the research of the same day (`docs/research/oob/ship-names-39-days.md`) and takes up what decisions 0093 (item 8) and 0101 (items 16 and 17, ruling H) left as gaps.
 
 Summary: A plan to replace the placeholder transports of the 39 days with the ships the record names. Its 78 placeholders that stand for real ships stand for 54 ships the record now names and 14 it does not, but a name is not what keeps them out: a real ship may carry no invented figure, and the transports, the destroyer-transports and three classes of Japanese destroyer still lack facts a class is derived from. Six steps: a second round of research for those facts, the derivation rules a transport needs, the classes, the American landings at the record's 15 and 8 ships, the Japanese runs as the destroyers that made them, and the baseline run again. It is done before stage 4's proof. With six questions for the designer
 
-Standing: A plan for the designer's confirmation, Nov 19, 2026
+Standing: Confirmed by the designer, Nov 19, 2026, with his six answers, each as recommended. Step 1, the second round of research, is under way
 
 ## What is so today
 
@@ -65,4 +65,15 @@ Before the proof of stage 4 (decision 0161, step 9), which is run on the 39 days
    - **A ship that was real and whose name the record does not give** (the twelve American ships of the later runs) is called what a staff would call her: her type and her run, "a destroyer-transport of Transport Division 12", with no name. She had a name, and a made-up one in the right style is the kind of invention most easily taken for fact.
    - **A ship that never existed** (the fifteen invented to exercise rules, and any scenario that is not history) may take a name in the pattern of her navy and type, chosen so that no ship of that navy bore it, and is marked as invented in the data by a field of her own in place of the word "Placeholder" in her name. The table shows the mark wherever it shows the name. This changes the data rule that a made-up thing is named "Placeholder", and is built only if confirmed.
    - **Barges and craft that had numbers and no names** keep numbers.
+
+## Confirmed on Nov 19, 2026
+
+The designer confirmed the plan: "Yes, as recommended."
+
+1. No real name goes on a placeholder's figures in the meantime.
+2. A ship that cannot be completed stays a placeholder; no figure is assumed for it.
+3. The Japanese runs fight as destroyers.
+4. The four destroyer-transports of 15 August stay unnamed.
+5. It is done before stage 4's proof.
+6. A real ship whose name the record does not give is called by her type and her run. A ship that never existed may take a name in the pattern of her navy and type that no ship of that navy bore, with a mark of her own in the data and on the table. Craft that had numbers keep numbers. The change to the data rule that a made-up thing is named "Placeholder" is confirmed with it, and is written into `docs/engineering/data-rules.md` and `CLAUDE.md` by the pull request that builds the mark.
 
