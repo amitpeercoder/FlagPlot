@@ -531,7 +531,8 @@ button:disabled { opacity: 0.45; cursor: default; }
     if (M.over) slip('THE UMPIRE', 'ENDED', 'The game is over', M.result && M.result.outcome ? 'Result: ' + (M.result.outcome.words || JSON.stringify(M.result.outcome)) : (lastRun && lastRun.summary) || '');
     lastTold.forEach(function (t) { slip('FROM THE PLOT · ' + (clock.at === 'dusk' ? '1800' : clock.at), 'STOPPED THE CLOCK', TOLD[t.thing] || t.thing, t.lines.slice(0, 4).join(' · '), true); });
     (s.holds || []).forEach(function (h) {
-      var a = slip('HELD FROM THE STAFF', null, null, h.text), args = {}; ['ship', 'task_force', 'air_group', 'land_unit', 'setting'].forEach(function (k) { if (h.target && h.target[k] != null) args[k] = h.target[k]; });
+      var a = slip('HELD FROM THE STAFF', null, null, null), args = {}, what = null; ['ship', 'task_force', 'air_group', 'land_unit', 'setting'].forEach(function (k) { if (h.target && h.target[k] != null) { args[k] = h.target[k]; if (k !== 'setting' && !what) what = k + ':' + h.target[k]; } });
+      var since = /day (\d+)/.exec(h.text || ''); a.appendChild(what ? rich('div', '', what + ', held by your order' + (since ? ' of day ' + since[1] : '')) : el('div', '', h.text));
       button(a, 'RELEASE TO THE STAFF', false, function () { act('release', args, 'Released. The staff may use it again from dusk.'); });
     });
     if (lastRun && lastRun.fired) lastRun.fired.forEach(function (f) {
@@ -756,10 +757,10 @@ button:disabled { opacity: 0.45; cursor: default; }
   }
   function readSchedule() {
     var doc = $('sheet-doc'), rows = []; doc.textContent = '';
-    (M.arrivals || []).forEach(function (a) { rows.push([a.day, a.air_group.name + ': ' + a.aircraft + ' aircraft' + (a.pilots ? ', ' + a.pilots + ' pilots' : '') + ', to ' + a.at.name + (a.can_be_delivered ? '' : '. Cannot be delivered as things stand' + (a.waits_for && a.waits_for.reason === 'base_not_yours' ? ': the base is not yours' : ''))]); });
-    M.forces.forEach(function (f) { if (f.available_from > M.day) rows.push([f.available_from, f.task_force.name.replace(/^Placeholder /, '') + ': ' + f.ships_afloat + ' ship' + (f.ships_afloat === 1 ? '' : 's') + ', ' + f.mission.replace(/_/g, ' ') + ', at ' + hexWords(f.place)]); });
+    (M.arrivals || []).forEach(function (a) { rows.push([a.day, (a.air_group.handle ? (M.names[a.air_group.handle] = a.air_group.name, a.air_group.handle) : a.air_group.name) + ': ' + a.aircraft + ' aircraft' + (a.pilots ? ', ' + a.pilots + ' pilots' : '') + ', to ' + (a.at.handle || a.at.name) + (a.can_be_delivered ? '' : '. Cannot be delivered as things stand' + (a.waits_for && a.waits_for.reason === 'base_not_yours' ? ': the base is not yours' : ''))]); });
+    M.forces.forEach(function (f) { if (f.available_from > M.day) rows.push([f.available_from, f.task_force.handle + ': ' + f.ships_afloat + ' ship' + (f.ships_afloat === 1 ? '' : 's') + ', ' + f.mission.replace(/_/g, ' ') + ', at ' + hexWords(f.place)]); });
     rows.sort(function (a, b) { return a[0] - b[0]; });
-    var g = el('div', 'head'); rows.forEach(function (r) { g.appendChild(el('span', '', dateOf(r[0] - 1) || 'Day ' + r[0])); g.appendChild(el('span', '', r[1])); });
+    var g = el('div', 'head'); rows.forEach(function (r) { g.appendChild(el('span', '', dateOf(r[0] - 1) || 'Day ' + r[0])); g.appendChild(rich('span', '', r[1])); });
     doc.appendChild(g); doc.appendChild(el('div', 'foot', 'This is all that is scheduled to come to you. What is not here is not coming.'));
     $('sheet-title').textContent = 'WHAT IS COMING'; doc.hidden = false; $('sheet-text').hidden = true; $('sheet').hidden = false; $('sheet-close').focus();
   }
