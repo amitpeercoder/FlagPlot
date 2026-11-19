@@ -1366,12 +1366,12 @@ fn believed_intent(
         Side::Allied => Side::Japanese,
         Side::Japanese => Side::Allied,
     };
+    // Every base it names is on the believing side's map, read from that
+    // side's own view: one of its own bases, or an enemy base it sees.
+    let view = world.side_view(side);
     for raw in [kind.own_base(), kind.target()].into_iter().flatten() {
-        let on_map = world
-            .umpire()
-            .bases
-            .get(&raw)
-            .is_some_and(|base| base.side == side || base.on_map);
+        let on_map = view.bases().any(|base| base.id == raw)
+            || view.enemy_bases().any(|base| base.id == raw);
         if !on_map {
             return Err(format!(
                 "{what} names base {}, which is not on the {} side's map",
@@ -1380,6 +1380,12 @@ fn believed_intent(
             ));
         }
     }
+    // A kind that names a task force is refused before this (the
+    // architect's ruling on reading 10). For the kinds left, the command's
+    // check reads, of the enemy, only the side of a base it names, which the
+    // believing side's map shows (checked above); of the believing side, the
+    // `on_map` of its own base (a hold or target of it); and the map.
+    debug_assert!(kind.force().is_none());
     world.check_root_intent(enemy, &kind).map_err(|refusal| {
         format!(
             "{what} could not be given to the {} side: {refusal}",
@@ -8425,6 +8431,52 @@ task_force = 3
         assert!(message.contains("needs \"intent_kind\""), "{message}");
         // A hold of the believing side's own base, on both maps, loads.
         parse_with(&believed_intent("intent_kind = \"hold\"\nbase = 1")).expect("loads");
+    }
+
+    /// The architect's ruling on reading 10 of decision 0173's "As built": a
+    /// believed intent may not name a force of the enemy's, and the check of
+    /// the kinds left reads nothing of the enemy's units.
+    #[test]
+    fn a_believed_intent_names_no_enemy_force_and_reads_none() {
+        for body in [
+            "intent_kind = \"stand_at\"\ntask_force = 1\nhex = [3, 0]",
+            "intent_kind = \"operate_carriers\"\ntask_force = 1\nhex = [3, 0]",
+            "intent_kind = \"ready_landing\"\ntask_force = 1\nhex = [0, 0]",
+            "intent_kind = \"bombard\"\ntask_force = 1\ntarget = 1",
+            // Refused by the kind alone, whatever the keys.
+            "intent_kind = \"bombard\"",
+        ] {
+            let message = error_of(&believed_intent(body));
+            assert!(
+                message.contains("a side cannot name a force of the enemy's"),
+                "{body}: {message}"
+            );
+        }
+        // Two scenarios that differ only in the enemy's forces: the second
+        // has one more Japanese task force, with a ship. Both load the same
+        // believed intents, of each kind that names a base, a hex or an
+        // island.
+        let intents = format!(
+            "{}{}{}{}{}{}{}{}{}{}",
+            believed_intent("intent_kind = \"cover\"\nbase = 2"),
+            believed_intent("intent_kind = \"strike_ships\"\nbase = 2"),
+            believed_intent("intent_kind = \"build_up\"\nbase = 2\nwants = [\"airfield\"]"),
+            believed_intent("intent_kind = \"hold\"\nbase = 2"),
+            believed_intent("intent_kind = \"hold\"\nbase = 1"),
+            believed_intent("intent_kind = \"keep_supplied\"\nbase = 2\nfloor_days = 3"),
+            believed_intent("intent_kind = \"neutralise\"\ntarget = 1"),
+            believed_intent("intent_kind = \"raid\"\nbase = 2\ntarget = 1"),
+            believed_intent("intent_kind = \"deny\"\nhex = [3, 0]\ndistance = 2"),
+            believed_intent("intent_kind = \"take_place\"\nhex = [0, 0]"),
+        );
+        let enemy_force = "\n[[task_force]]\nid = 7\nname = \"Enemy TF\"\nside = \"japanese\"\nat_base = 2\nmission = \"escort\"\n\n[[ship]]\nid = 7\nname = \"Enemy ship\"\nclass = 1\nside = \"japanese\"\nfuel_t = 100\ntask_force = 7\n";
+        let without = parse_with(&intents).expect("loads without the force");
+        let with = parse_with(&format!("{intents}{enemy_force}")).expect("loads with the force");
+        let kept = |scenario: &Scenario| -> Vec<BelievedIntent> {
+            scenario.believed_intents(Side::Allied).cloned().collect()
+        };
+        assert_eq!(kept(&without).len(), 10);
+        assert_eq!(kept(&without), kept(&with));
     }
 
     /// Statement 5, in part: entries and a file of sides change no game.

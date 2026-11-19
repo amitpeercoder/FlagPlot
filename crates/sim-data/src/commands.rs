@@ -685,8 +685,17 @@ impl BelievedIntentSpec {
     /// the table in a refusal. What the game would refuse of it (a base, a
     /// force, a hex) is checked after, against the world.
     pub(crate) fn intent_kind(&self, what: &str) -> Result<IntentKind, String> {
-        if self.intent_kind.is_none() {
-            return Err(format!("{what} needs \"intent_kind\""));
+        match self.intent_kind.as_deref() {
+            None => return Err(format!("{what} needs \"intent_kind\"")),
+            // The architect's ruling on reading 10 of decision 0173's "As
+            // built": a side cannot name a force of the enemy's by its
+            // number, so no kind that takes a task force is believed.
+            Some(name @ ("stand_at" | "operate_carriers" | "ready_landing" | "bombard")) => {
+                return Err(format!(
+                    "{what} has intent_kind \"{name}\", which names a task force: a side cannot name a force of the enemy's, so a believed intent is of a kind that names only a base, a hex or an island"
+                ))
+            }
+            Some(_) => {}
         }
         let enemy = match Side::from(self.side) {
             Side::Allied => SideSpec::Japanese,
