@@ -69,7 +69,21 @@ button:disabled { opacity: 0.45; cursor: default; }
 .order details.pv { display: block; }
 .order details.pv summary { font-size: 12px; color: var(--paper-dim); cursor: pointer; min-height: 28px; }
 .order details.pv > div { display: flex; flex-direction: column; gap: 6px; padding-top: 4px; }
-.sheet { position: fixed; left: 50%; top: 56px; transform: translateX(-50%); width: min(760px, calc(100% - 32px)); max-height: calc(100% - 160px); overflow: auto; background: var(--paper); color: var(--paper-ink); padding: 16px 18px; border-radius: 2px; box-shadow: 0 10px 34px rgba(0,0,0,0.6); display: flex; flex-direction: column; gap: 10px; }
+.sheetwrap { z-index: 40; position: fixed; left: 50%; top: 56px; transform: translateX(-50%); width: min(760px, calc(100% - 32px)); max-height: calc(100% - 150px); display: flex; flex-direction: column; gap: 10px; }
+.sheetwrap[hidden] { display: none; }
+.sheetwrap.dispatch { width: min(620px, calc(100% - 32px)); }
+.sheetbar { flex: none; background: rgba(22,28,26,0.88); padding: 8px 8px 8px 14px; border-radius: 2px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.sheetbar span { color: var(--ink-dim); font-size: 13px; letter-spacing: 0.04em; }
+.sheetbar button { min-height: 42px; padding: 0 16px; border-radius: 2px; font-size: 16px; font-weight: 600; letter-spacing: 0.08em; background: var(--paper); color: var(--paper-ink); border: 0; margin-left: auto; }
+.sheet .label { font-family: var(--f-type); font-size: 12px; color: var(--paper-dim); letter-spacing: 0.06em; }
+.dispatch .sheet { padding: 26px 30px 24px; }
+.dispatch .sheet h2 { font-family: var(--f-type); font-size: 20px; letter-spacing: 0.04em; }
+.dispatch .sheet .doc { gap: 12px; }
+.dispatch .sheet .doc .head { border-bottom: 1px solid #8d8672; color: var(--paper-ink); font-size: 14px; }
+.dispatch .sheet .doc .head span:nth-child(odd) { color: var(--paper-dim); }
+.dispatch .sheet .doc p b { font-weight: 400; text-decoration: underline; text-underline-offset: 3px; }
+@media (max-width: 520px) { .dispatch .sheet { padding: 18px 16px; } .sheetwrap { top: 12px; max-height: calc(100% - 24px); } }
+.sheet { min-height: 0; overflow: auto; background: var(--paper); color: var(--paper-ink); padding: 16px 18px; border-radius: 2px; box-shadow: 0 10px 34px rgba(0,0,0,0.6); display: flex; flex-direction: column; gap: 10px; }
 .sheet .doc { font-family: var(--f-type); font-size: 15px; line-height: 1.5; display: flex; flex-direction: column; gap: 10px; max-width: 62ch; }
 .card { left: 16px; bottom: auto; top: 60px; width: min(340px, calc(100% - 32px)); max-height: calc(100% - 170px); }
 .planorder { border: 1px solid #8d8672; padding: 8px 12px; margin: 10px 0 14px; }
@@ -201,14 +215,18 @@ button:disabled { opacity: 0.45; cursor: default; }
   <div class="row"><button type="button" id="card-back" hidden>BACK</button><button type="button" id="card-close">PUT IT DOWN</button></div>
 </aside>
 
-<section class="sheet" id="sheet" hidden aria-label="The briefing">
-  <div class="row" style="display:flex;justify-content:space-between;align-items:baseline;gap:12px">
+<div class="sheetwrap" id="sheet" hidden>
+  <section class="sheet" id="sheet-paper" aria-label="The paper you are reading" tabindex="0">
+    <div class="label" id="sheet-label" hidden></div>
     <h2 id="sheet-title">THE BRIEFING</h2>
-    <button type="button" id="sheet-close">PUT IT DOWN</button>
+    <div class="doc" id="sheet-doc" hidden></div>
+    <pre id="sheet-text"></pre>
+  </section>
+  <div class="sheetbar">
+    <span id="sheet-note"></span>
+    <button type="button" id="sheet-close">RETURN TO CHART</button>
   </div>
-  <div class="doc" id="sheet-doc" hidden></div>
-  <pre id="sheet-text"></pre>
-</section>
+</div>
 
 <div class="view" role="group" aria-label="Your view of the table">
   <button type="button" id="btn-back">Sit back</button>
@@ -784,7 +802,7 @@ button:disabled { opacity: 0.45; cursor: default; }
     var doc = $('sheet-doc'), q = (M.state && M.state.queued) || []; doc.textContent = '';
     q.forEach(function (x, i) { doc.appendChild(rich('p', '', (i + 1) + '. ' + String(x.text || x.shown || (x.command && x.command.kind) || 'a command').replace(/^./, function (c) { return c.toUpperCase(); }))); });
     doc.appendChild(el('div', 'foot', 'These go to the staff at 1800.'));
-    $('sheet-title').textContent = 'SIGNED'; doc.hidden = false; $('sheet-text').hidden = true; $('sheet').hidden = false; $('sheet-close').focus();
+    sheetAs('SIGNED'); doc.hidden = false; $('sheet-text').hidden = true; $('sheet').hidden = false; $('sheet-close').focus();
   }
   function readSchedule() {
     var doc = $('sheet-doc'), rows = []; doc.textContent = '';
@@ -793,7 +811,7 @@ button:disabled { opacity: 0.45; cursor: default; }
     rows.sort(function (a, b) { return a[0] - b[0]; });
     var g = el('div', 'head'); rows.forEach(function (r) { g.appendChild(el('span', '', dateOf(r[0] - 1) || 'Day ' + r[0])); g.appendChild(rich('span', '', r[1])); });
     doc.appendChild(g); doc.appendChild(el('div', 'foot', 'This is all that is scheduled to come to you. What is not here is not coming.'));
-    $('sheet-title').textContent = 'WHAT IS COMING'; doc.hidden = false; $('sheet-text').hidden = true; $('sheet').hidden = false; $('sheet-close').focus();
+    sheetAs('WHAT IS COMING'); doc.hidden = false; $('sheet-text').hidden = true; $('sheet').hidden = false; $('sheet-close').focus();
   }
 
   // ---- the plan sheet: an intent and what the staff has made of it ----
@@ -890,7 +908,7 @@ button:disabled { opacity: 0.45; cursor: default; }
       ['preserve', 'balanced', 'press'].forEach(function (r) { var b = el('button', '', 'RISK: ' + r.toUpperCase() + ((lim.risk || 'balanced') === r ? ' ✓' : '')); b.type = 'button'; b.addEventListener('click', function () { act('set_limit', { limit: 'risk', intent: root, risk: r }, 'Risk set to ' + r + '. The staff plans again at 1800.').then(function () { readPlan(root); }); }); row.appendChild(b); });
       var w = el('button', '', 'WITHDRAW THIS INTENT'); w.type = 'button'; w.addEventListener('click', function () { act('withdraw_intent', { intent: root }, 'The intent is withdrawn from 1800.').then(function () { $('sheet').hidden = true; }); }); row.appendChild(w);
       doc.appendChild(el('div', 'foot', (a[2].inside_day ? 'Worked now, in the middle of the day; the staff is asked again at dusk and may then do otherwise. ' : '') + 'You change a plan by instruction: your leave, a limit, a cancel or a withdrawal. To keep a force out of it, touch the force and order it yourself.'));
-      $('sheet-title').textContent = 'THE PLAN'; doc.hidden = false; $('sheet-text').hidden = true; $('sheet').hidden = false; $('sheet-close').focus();
+      sheetAs('THE PLAN'); doc.hidden = false; $('sheet-text').hidden = true; $('sheet').hidden = false; $('sheet-close').focus();
     }).catch(function (e) { setStatus('The plan could not be read: ' + e.message); });
   }
 
@@ -921,13 +939,15 @@ button:disabled { opacity: 0.45; cursor: default; }
     });
     keep(); if (fresh && $('sheet').hidden) setTimeout(function () { readDirective(fresh); }, 0);
   }
+  // What the sheet is: its title, and for a directive the small label above
+  // it and the line outside the paper that says what the paper is.
+  function sheetAs(title, label, note) { $('sheet-title').textContent = title; $('sheet-label').textContent = label || ''; $('sheet-label').hidden = !label; $('sheet-note').textContent = note || ''; $('sheet').classList.toggle('dispatch', !!label); $('sheet-paper').scrollTop = 0; }
   function readDirective(d) {
     var doc = $('sheet-doc'), head = el('div', 'head'); doc.textContent = '';
     [['From', d.from], ['To', d.to], ['Date', dateOf(received[d.number] - 2, true) || 'Day ' + received[d.number]], ['Subject', d.subject]].forEach(function (r) { head.appendChild(el('span', '', r[0])); head.appendChild(el('span', '', r[1])); });
     doc.appendChild(head);
-    d.parts.forEach(function (p) { doc.appendChild(el('h3', '', p.heading)); p.text.forEach(function (t) { doc.appendChild(el('p', '', t)); }); });
-    doc.appendChild(el('div', 'foot', 'Written for the game. Not a historical document.'));
-    $('sheet-title').textContent = 'DIRECTIVE ' + d.number; doc.hidden = false; $('sheet-text').hidden = true; $('sheet').hidden = false; $('sheet-close').focus();
+    d.parts.forEach(function (p) { p.text.forEach(function (t, i) { var para = el('p', ''); if (!i) { para.appendChild(el('b', '', p.heading + '.')); para.appendChild(document.createTextNode('  ')); } para.appendChild(document.createTextNode(t)); doc.appendChild(para); }); });
+    sheetAs(String(d.subject).toUpperCase(), 'DIRECTIVE ' + d.number, 'A fictional dispatch written for Flag Plot.'); doc.hidden = false; $('sheet-text').hidden = true; $('sheet').hidden = false; $('sheet-close').focus();
     if (!readOnes[d.number]) { readOnes[d.number] = true; keep(); showSignals(); }
   }
   // ---- the staff's evening report ----
@@ -996,11 +1016,12 @@ button:disabled { opacity: 0.45; cursor: default; }
       M.forces.forEach(function (f) { if (f.available_from > M.day && f.available_from <= M.day + 7) soon.push([f.available_from, dateOf(f.available_from - 1) + ': ' + f.task_force.handle + ' may be used.']); });
       part('4. Coming this week', soon.sort(function (x, y) { return x[0] - y[0]; }).map(function (x) { return x[1]; }));
       var row = el('div', 'row'), full = el('button', '', 'THE FULL RETURN'); full.type = 'button'; full.addEventListener('click', readBriefing); row.appendChild(full); doc.appendChild(row);
-      $('sheet-title').textContent = 'EVENING REPORT'; doc.hidden = false; $('sheet-text').hidden = true; $('sheet').hidden = false; $('sheet-close').focus();
+      sheetAs('EVENING REPORT'); doc.hidden = false; $('sheet-text').hidden = true; $('sheet').hidden = false; $('sheet-close').focus();
     }).catch(function (e) { setStatus('The staff reports at dusk. ' + e.message); });
   }
-  function readBriefing() { api('get_briefing', { text: true }).then(function (b) { $('sheet-title').textContent = 'THE STAFF\'S RETURN'; $('sheet-doc').hidden = true; $('sheet-text').hidden = false; $('sheet-text').textContent = b.text || JSON.stringify(b, null, 1); $('sheet').hidden = false; $('sheet-close').focus(); }).catch(function (e) { setStatus(e.message); }); }
+  function readBriefing() { api('get_briefing', { text: true }).then(function (b) { sheetAs('THE STAFF\'S RETURN'); $('sheet-doc').hidden = true; $('sheet-text').hidden = false; $('sheet-text').textContent = b.text || JSON.stringify(b, null, 1); $('sheet').hidden = false; $('sheet-close').focus(); }).catch(function (e) { setStatus(e.message); }); }
   $('sheet-close').addEventListener('click', function () { $('sheet').hidden = true; });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !$('sheet').hidden) { $('sheet').hidden = true; } });
 
   // ---- time: you watch a day played out, and may stop between days ----
   // The seat's tools answer between days, so a day is fought and then plotted: the table plays the three
