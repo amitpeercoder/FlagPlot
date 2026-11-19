@@ -28,7 +28,7 @@ button { font-family: var(--f-ui); cursor: pointer; }
 button:focus-visible { outline: 3px solid #f0c36a; outline-offset: 2px; }
 button:disabled { opacity: 0.45; cursor: default; }
 
-.top { position: fixed; top: 0; left: 0; right: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 22px; padding: 10px 640px 8px 16px; pointer-events: none; text-shadow: 0 1px 6px #000; }
+.top { position: fixed; top: 0; left: 0; right: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 22px; padding: 10px 400px 8px 16px; pointer-events: none; text-shadow: 0 1px 6px #000; }
 .top h1 { margin: 0; font-size: 24px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; }
 .intray { pointer-events: auto; position: relative; display: inline-flex; align-items: center; gap: 9px; min-height: 30px; padding: 0 12px; margin-left: 6px; background: #4d3a28; color: var(--paper); border: 1px solid #241a12; border-radius: 2px; font-family: var(--f-ui); font-size: 14px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; text-shadow: none; cursor: pointer; box-shadow: inset 0 -3px 0 rgba(0,0,0,0.28), 0 2px 6px rgba(0,0,0,0.4); }
 .intray[hidden] { display: none; }
@@ -42,7 +42,8 @@ button:disabled { opacity: 0.45; cursor: default; }
 
 .tray { position: fixed; top: 60px; right: 16px; width: min(350px, calc(100% - 32px)); max-height: calc(100% - 170px); overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-bottom: 6px; }
 .view { position: fixed; top: 12px; right: 16px; display: flex; gap: 6px; }
-.view button { min-height: 34px; padding: 0 12px; background: rgba(0,0,0,0.35); color: var(--ink-dim); border: 1px solid var(--ink-dim); border-radius: 2px; font-size: 13px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; }
+.view button svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.view button { display: inline-flex; align-items: center; gap: 6px; min-width: 36px; justify-content: center; min-height: 34px; padding: 0 8px; background: rgba(0,0,0,0.35); color: var(--ink-dim); border: 1px solid var(--ink-dim); border-radius: 2px; font-size: 13px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; }
 .view button:hover, .view button:focus-visible, .view button[aria-pressed="true"] { color: var(--ink); border-color: var(--ink); }
 .tray h2 { margin: 4px 0 0; font-size: 14px; font-weight: 600; letter-spacing: 0.16em; opacity: 0.85; text-transform: uppercase; text-shadow: 0 1px 6px #000; }
 #signals { display: flex; flex-direction: column; gap: 10px; }
@@ -54,6 +55,13 @@ button:disabled { opacity: 0.45; cursor: default; }
 .papers button { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-height: 34px; padding: 0 12px; background: var(--paper-old); color: var(--paper-ink); border: 0; border-radius: 2px; font-size: 14px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; box-shadow: 0 3px 8px rgba(0,0,0,0.4); }
 .slip { background: var(--paper-old); color: var(--paper-ink); font-family: var(--f-type); font-size: 14px; line-height: 1.38; padding: 11px 14px; border-radius: 2px; box-shadow: 0 4px 12px rgba(0,0,0,0.45); display: flex; flex-direction: column; gap: 7px; overflow-wrap: anywhere; }
 .slip.decide { background: var(--paper); }
+.slip.leave { padding: 7px 10px; gap: 4px; }
+.slip.leave .lv { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-family: var(--f-ui); font-size: 12px; font-weight: 700; letter-spacing: 0.12em; color: var(--paper-dim); }
+.slip.leave .seg { display: inline-flex; }
+.slip.leave .seg button { min-height: 28px; padding: 0 9px; font-size: 12px; letter-spacing: 0.1em; border-width: 1px; border-radius: 0; color: var(--paper-dim); border-color: var(--paper-dim); }
+.slip.leave .seg button + button { border-left: 0; }
+.slip.leave .seg button[aria-pressed="true"] { background: var(--own); color: var(--paper); border-color: var(--own); cursor: default; }
+.slip.leave .lvnote { font-size: 12px; color: var(--paper-dim); }
 .slip .from { font-size: 12px; color: var(--paper-dim); display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
 .stamp { font-family: var(--f-ui); font-weight: 700; font-size: 14px; letter-spacing: 0.12em; color: var(--enemy); border: 2px solid var(--enemy); padding: 0 6px; transform: rotate(-2deg); white-space: nowrap; }
 .stamp.ok { color: var(--own); border-color: var(--own); }
@@ -330,13 +338,13 @@ button:disabled { opacity: 0.45; cursor: default; }
 </div>
 
 <div class="view" role="group" aria-label="Your view of the table">
-  <button type="button" id="btn-back">Sit back</button>
-  <button type="button" id="btn-lean">Lean in</button>
-  <button type="button" id="btn-view" title="See the table from the chair, or the chart from above">View: table</button>
-  <button type="button" id="btn-hexes" aria-pressed="false">Hexes</button>
-  <button type="button" id="btn-pieces" title="Which pieces stand on the chart">Pieces: all</button>
-  <button type="button" id="btn-labels" title="Which slips stand over the pieces">Labels: pointer</button>
-  <button type="button" id="btn-stops" aria-expanded="false" aria-controls="stops" hidden>Clock stops</button>
+  <button type="button" id="btn-back" title="Sit back: the whole table" aria-label="Sit back"><svg viewBox="0 0 24 24"><circle cx="10" cy="10" r="6.5"/><path d="M15 15l6 6M7 10h6"/></svg></button>
+  <button type="button" id="btn-lean" title="Lean in" aria-label="Lean in"><svg viewBox="0 0 24 24"><circle cx="10" cy="10" r="6.5"/><path d="M15 15l6 6M7 10h6M10 7v6"/></svg></button>
+  <button type="button" id="btn-view"></button>
+  <button type="button" id="btn-hexes" aria-pressed="false" title="Hexes and their numbers" aria-label="Hexes"><svg viewBox="0 0 24 24"><path d="M7 3.5h10l5 8.5-5 8.5H7L2 12z"/></svg></button>
+  <button type="button" id="btn-pieces"></button>
+  <button type="button" id="btn-labels"></button>
+  <button type="button" id="btn-stops" aria-expanded="false" aria-controls="stops" hidden title="What stops the clock" aria-label="Clock stops"><svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 8.5V13l3 2M9.5 2.5h5"/></svg></button>
 </div>
 <fieldset class="stops" id="stops" hidden>
   <legend>THE CLOCK STOPS WHEN I AM TOLD OF</legend>
@@ -841,10 +849,12 @@ button:disabled { opacity: 0.45; cursor: default; }
     if (roots.length) {
       // The leave is for every plan, now and to come: the slip says so, and
       // names the plans it bears on today.
-      var l = slip('STANDING LEAVE \u00B7 ALL PLANS', s.leaves.launch ? 'GIVEN' : null, s.leaves.launch ? 'The staff launches any plan of yours as soon as it is ready, without asking' : 'Every plan waits for your word before it launches', null, !s.leaves.launch);
-      (function () { var coming = s.plans.filter(function (p) { return p.state === 'draft' || p.state === 'preparing'; }), d = el('div', '', coming.length ? (s.leaves.launch ? 'Getting ready now: ' : 'Getting ready, and will wait: ') : 'No plan is getting ready at present.');
-        coming.forEach(function (p, k) { var po = planOf(p.number), b = el('button', 'ref', 'plan ' + p.number + (po.name ? ', ' + po.name : '')); b.type = 'button'; if (po.root != null) b.addEventListener('click', function () { readPlan(po.root); }); if (k) d.appendChild(document.createTextNode('; ')); d.appendChild(b); }); if (coming.length) d.appendChild(document.createTextNode('.')); l.insertBefore(d, l.querySelector('.row')); })();
-      button(l, s.leaves.launch ? 'WITHHOLD IT' : 'GIVE LEAVE TO LAUNCH', !s.leaves.launch, function () { act('set_leave', { leave: 'launch', given: !s.leaves.launch }); });
+      var l = el('article', 'slip leave'), top = el('div', 'lv'), sw = el('div', 'seg'); l.title = 'Your standing leave, for every plan now and to come: whether the staff launches a plan as soon as it is ready, or waits for your word.';
+      top.appendChild(el('span', '', 'PLANS LAUNCH')); sw.setAttribute('role', 'group'); sw.setAttribute('aria-label', 'When a plan of yours launches');
+      [['WHEN READY', true], ['ON MY WORD', false]].forEach(function (o) { var b = el('button', '', o[0]); b.type = 'button'; b.setAttribute('aria-pressed', String(!!s.leaves.launch === o[1])); if (!!s.leaves.launch !== o[1]) b.addEventListener('click', function () { act('set_leave', { leave: 'launch', given: o[1] }); }); sw.appendChild(b); });
+      top.appendChild(sw); l.appendChild(top); $('signals').appendChild(l);
+      (function () { var coming = s.plans.filter(function (p) { return p.state === 'draft' || p.state === 'preparing'; }); if (!coming.length) return; var d = el('div', 'lvnote', s.leaves.launch ? 'Getting ready: ' : 'Getting ready, and will wait: ');
+        coming.forEach(function (p, k) { var po = planOf(p.number), b = el('button', 'ref', 'plan ' + p.number + (po.name ? ', ' + po.name : '')); b.type = 'button'; if (po.root != null) b.addEventListener('click', function () { readPlan(po.root); }); if (k) d.appendChild(document.createTextNode('; ')); d.appendChild(b); }); l.appendChild(d); })();
     }
     // Command: the directives, the commander's own intents and what he has
     // signed. An intent is marked where a plan under it waits for his word.
@@ -1964,13 +1974,19 @@ button:disabled { opacity: 0.45; cursor: default; }
     if (goal.zoom < 0.2) { var f = null; M.forces.forEach(function (x) { if (x.place && x.mission === 'carrier' && !f) f = x; }); var v = f ? placeOf(f.place) : new THREE.Vector3(); goal.x = v.x; goal.z = v.z; goal.zoom = 0.55; }
     else goal.zoom += 0.2; clampGoal();
   });
-  $('btn-pieces').textContent = PIECE_WORD[piecesShown];
-  $('btn-pieces').addEventListener('click', function () { piecesShown = PIECES[(PIECES.indexOf(piecesShown) + 1) % PIECES.length]; try { localStorage.setItem('flagplot.pieces', piecesShown); } catch (e) {} this.textContent = PIECE_WORD[piecesShown]; if (g) drawMarks(); });
+  // The view's buttons are signs, with a word only where a sign cannot say which of several it is on.
+  var SIGN = { table: '<svg viewBox="0 0 24 24"><path d="M6 7h12l4 11H2z"/></svg>', chart: '<svg viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15"/><path d="M9 4.5v15M15 4.5v15M3.5 12h17"/></svg>', pieces: '<svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12"/><path d="M3 6l18 12M21 6L3 18"/></svg>', labels: '<svg viewBox="0 0 24 24"><path d="M3 5h10l8 7-8 7H3z"/><circle cx="8" cy="12" r="1.3"/></svg>' };
+  function sign(b, svg, word, title) { b.innerHTML = svg; if (word) { var w = document.createElement('span'); w.textContent = word; b.appendChild(w); } b.title = title; b.setAttribute('aria-label', title); }
+  function signs() {
+    sign($('btn-view'), chartView ? SIGN.chart : SIGN.table, '', chartView ? 'The chart from above. Touch for the table from the chair' : 'The table from the chair. Touch for the chart from above');
+    sign($('btn-pieces'), SIGN.pieces, { all: 'all', own: 'ours', enemy: 'enemy', none: 'off' }[piecesShown], PIECE_WORD[piecesShown]);
+    sign($('btn-labels'), SIGN.labels, { pointer: 'pointer', all: 'all', off: 'off' }[labelsShown], LABEL_WORD[labelsShown] + ': the slips over the pieces');
+  }
+  $('btn-pieces').addEventListener('click', function () { piecesShown = PIECES[(PIECES.indexOf(piecesShown) + 1) % PIECES.length]; try { localStorage.setItem('flagplot.pieces', piecesShown); } catch (e) {} signs(); if (g) drawMarks(); });
   $('card-prev').addEventListener('click', function () { stepStack(-1); }); $('card-next').addEventListener('click', function () { stepStack(1); });
-  $('btn-labels').textContent = LABEL_WORD[labelsShown];
-  $('btn-labels').addEventListener('click', function () { labelsShown = LABELS[(LABELS.indexOf(labelsShown) + 1) % LABELS.length]; try { localStorage.setItem('flagplot.labels', labelsShown); } catch (e) {} this.textContent = LABEL_WORD[labelsShown]; });
-  $('btn-view').textContent = chartView ? 'View: chart' : 'View: table';
-  $('btn-view').addEventListener('click', function () { chartView = !chartView; try { localStorage.setItem('flagplot.view', chartView ? 'chart' : 'table'); } catch (e) {} this.textContent = chartView ? 'View: chart' : 'View: table'; });
+  $('btn-labels').addEventListener('click', function () { labelsShown = LABELS[(LABELS.indexOf(labelsShown) + 1) % LABELS.length]; try { localStorage.setItem('flagplot.labels', labelsShown); } catch (e) {} signs(); });
+  signs();
+  $('btn-view').addEventListener('click', function () { chartView = !chartView; try { localStorage.setItem('flagplot.view', chartView ? 'chart' : 'table'); } catch (e) {} signs(); });
   $('btn-hexes').setAttribute('aria-pressed', String(showHexes));
   $('btn-hexes').addEventListener('click', function () { showHexes = !showHexes; try { localStorage.setItem('flagplot.hexes', showHexes ? '1' : '0'); } catch (e) {} this.setAttribute('aria-pressed', String(showHexes)); paintBase(); if (g) drawMarks(); $('card').hidden = true; });
   $('btn-stops').addEventListener('click', function () { var f = $('stops'); f.hidden = !f.hidden; this.setAttribute('aria-expanded', String(!f.hidden)); });
