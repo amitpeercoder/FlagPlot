@@ -455,7 +455,9 @@ button:disabled { opacity: 0.45; cursor: default; }
       var b;
       if (i.task_force != null && i.hex) move('task_force:' + i.task_force, i.hex, i.kind === 'ready_landing' ? 'landing' : 'cover', i);
       if (i.kind === 'ready_landing' && i.hex && i.limits && i.limits.forces) (i.limits.forces.task_forces || []).forEach(function (n) { move('task_force:' + n, i.hex, 'landing', i); });
-      if (i.kind === 'take_place' && i.hex) mark(hexV(i.hex[0], i.hex[1]), 27, 'TAKE', pending(i));
+      if (i.kind === 'take_place' && i.hex) { var tk = { v: hexV(i.hex[0], i.hex[1]), r: 27, label: 'TAKE', dash: pending(i) }; if (tk.v) { marks.rings.push(tk);
+        // The day the staff expects the first men ashore, where its plan order gives one.
+        asks.push(api('order', { intent: i.number }).then(function (o) { if (o && o.expected_ashore != null) tk.label = 'TAKE \u00B7 ASHORE ' + (dateOf(o.expected_ashore - 1) || 'DAY ' + o.expected_ashore); else if (o) { var stage = {}; (o.phases || []).forEach(function (ph) { stage[ph.name] = ph.stage; }); if (stage.land === 'done') tk.label = 'TAKEN'; else if (stage.move === 'done') tk.label = 'TAKE \u00B7 MEN ASHORE'; } }).catch(function () {})); } }
       if (i.kind === 'hold' && (b = baseOf(i.base))) mark(placeOf(b.place), 24, 'HOLD', pending(i));
       if (i.kind === 'neutralise' && (b = baseOf(i.target))) mark(placeOf(b.place), 22, 'NEUTRALISE', pending(i));
       if (i.kind === 'deny' && i.hex && i.distance) { var h = hexAt[i.hex[0] + ',' + i.hex[1]]; if (h) marks.rings.push({ v: world(h[3], h[4]), edge: world(h[3] + i.distance * hexMiles() / 60, h[4]), label: 'DENY', dash: true }); }
@@ -477,9 +479,12 @@ button:disabled { opacity: 0.45; cursor: default; }
       planMarks = marks; $('planchip-text').textContent = 'PLAN ON CHART · ' + plainWords(sayIntent(top, {})); $('planchip').hidden = false; if (g) drawMarks();
     });
   }
+  var planDrawnAt = 0;
+  function planZoom() { return Math.max(0.28, Math.min(1, camDist / 11)); }
   function showPlanOnChart(root) { planShown = root; return buildPlan(root); }
   function drawPlan(u, ring) {
-    var navy = '#12335c', tags = [], spots = {}, order = [];
+    // Tags and arrows keep much the same size to the eye as you lean in.
+    var navy = '#12335c', tags = [], spots = {}, order = [], z = planZoom(); planDrawnAt = camDist; var u0 = u; u = u * z;
     function tag(x, y, lines) {
       g.font = '700 ' + Math.round(14 * u) + "px 'Courier Prime', monospace"; var w = 0, lh = 17 * u; lines.forEach(function (t) { w = Math.max(w, g.measureText(t).width); });
       // Keep one tag off another: step down until it is clear.
@@ -496,7 +501,7 @@ button:disabled { opacity: 0.45; cursor: default; }
       else { c = cpx(r.v); var k = Math.round(c[0] / (8 * u)) + ',' + Math.round(c[1] / (8 * u)), at = spots[k]; if (!at) { at = spots[k] = { v: r.v, r: 0, dash: true, words: [], names: [] }; order.push(at); } at.r = Math.max(at.r, r.r); at.dash = at.dash && r.dash; if (r.names) at.names = at.names.concat(r.names); else at.words.push(r.label); }
     });
     // One ring a place, with what is to be done there and who stands there.
-    order.forEach(function (at) { var c = ring(at.v, at.r, navy, 0.9, at.dash, 2.6), lines = []; if (at.words.length) lines.push(at.words.join(' \u00B7 ')); at.names.forEach(function (n) { lines.push(n); }); if (at.names.length) lines[lines.length - 1] += ' \u00B7 on station'; tag(c[0], c[1] + (at.r + 12 + 8 * lines.length) * u, lines); });
+    order.forEach(function (at) { var c = ring(at.v, at.r, navy, 0.9, at.dash, 2.6), lines = []; if (at.words.length) lines.push(at.words.join(' \u00B7 ')); at.names.forEach(function (n) { lines.push(n); }); if (at.names.length) lines[lines.length - 1] += ' \u00B7 on station'; tag(c[0], c[1] + at.r * u0 + (12 + 8 * lines.length) * u, lines); });
     planMarks.moves.forEach(function (m) {
       var w = ({ landing: 7, cover: 4.5, supply: 3.2, air: 2.4 })[m.kind] || 3, P = m.pts.filter(Boolean).map(cpx), k;
       if (P.length < 2) return;
@@ -1517,6 +1522,7 @@ button:disabled { opacity: 0.45; cursor: default; }
       if (mover) { var dir = mover.to.clone().sub(mover.from).normalize(); placeRake(mover.grp.position.clone().addScaledVector(dir, -0.15).setY(0.03), dir); rake.visible = moveT < 1; }
     } else rake.visible = false;
     // The tiles grow as the commander sits back, so that they read from the chair.
+    if (planMarks && g && Math.abs(camDist - planDrawnAt) > planDrawnAt * 0.06) drawMarks();
     var grow = Math.max(1, Math.min(2.1, camDist / 3.2)); function size(g) { g.scale.setScalar(grow); g.children[0].scale.y = 1 / grow; } Object.keys(pieces).forEach(function (h) { size(pieces[h].grp); }); statics.forEach(size);
     flashes = flashes.filter(function (f) { f.userData.t += dt / 1.3; var k = f.userData.t; f.scale.setScalar(0.08 + k * 0.42); f.material.opacity = 0.9 * (1 - k); if (k >= 1) { scene.remove(f); f.geometry.dispose(); f.material.dispose(); return false; } return true; });
     placeCamera();

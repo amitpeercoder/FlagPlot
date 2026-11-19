@@ -94,3 +94,18 @@ id,key,name,kind,nation
 1290,jp-run-1942-10-28-228th-infantry-express,"Tokyo Express landings of the 228th Infantry, Kokumbona to Cape Esperance, 28 Oct to 8 Nov",run,jp
 1391,us-task-force-67,"Task Force 67 (Kinkaid, then Wright): cruisers and destroyers at Espiritu Santo, Operation Plan 1-42 of 27 Nov 1942",transport-group,us
 1392,jp-run-1942-12-03-drums,"Destroyer drum run to Guadalcanal, 3 Dec 1942 (Tanaka)",run,jp
+1400,us-run-1942-08-07-watchtower-landing,"Task Force 62 landing voyage and landings at Guadalcanal and Tulagi, 7-9 August 1942 (Transport Groups XRAY and YOKE)",run,us
+1410,us-run-1942-08-21-2-5-crossing,"2d Battalion, 5th Marines, Tulagi to Guadalcanal by APD, 21 Aug",run,us
+1411,us-convoy-1942-08-28-burrows-kopara,"Burrows and Kopara with Gamble, Tracy, Colhoun, Gregory and Little, Efate to Guadalcanal and Tulagi, 26-29 Aug (uboat.net and NHHC DANFS Burrows)",run,us
+1412,us-run-1942-08-31-betelgeuse-6th-ncb,"Betelgeuse (escort Henley) with the 6th Naval Construction Battalion, 31 Aug to 2 Sep",run,us
+1413,us-run-1942-08-31-yp-boats-with-helm,"Helm towing three YP harbour patrol boats to Tulagi, 29-31 Aug",run,us
+1414,us-run-1942-08-31-raider-parachute-crossings,"1st Raider and 1st Parachute Battalions, Tulagi to Guadalcanal, 28 Aug to 3 Sep",run,us
+1415,us-run-1942-09-04-savo-raid,"Little and Gregory carrying Raiders to Savo Island, 4 Sep",run,us
+1416,us-run-1942-09-03-fomalhaut-and-apds,"Fomalhaut and three destroyer-transports with supplies, 3 Sep (Miller)",run,us
+1417,us-run-1942-09-14-bellatrix-fuller,"Bellatrix and Fuller under two-destroyer escort, second run to Lunga, 14 Sep",run,us
+1418,us-run-1942-08-16-manley-stringham,"Manley and Stringham with bombs, ammunition and gasoline from Espiritu Santo, 16 Aug",run,us
+1419,us-run-1942-08-20-burrows-mag23-echelon,"Burrows with the MAG-23 forward echelon, 20 Aug (Hough; disputed date)",run,us
+1420,jp-run-1942-08-24-uzuki-kokumbona,"Uzuki transport run Rabaul to Guadalcanal, 24-25 Aug (food and ammunition landed at Kokumbona)",run,jp
+1421,jp-run-1942-09-01-tsugaru-urakaze-tanikaze-shikinami-uranami,"Troop and field-artillery run, Shortland to Guadalcanal, 1-2 Sep: Urakaze, Tanikaze, Shikinami, Uranami; cover Fubuki, Shirayuki, Amagiri",run,jp
+1422,jp-run-1942-09-01-barge-convoy-gizo,"Barge-carrying convoy Sado Maru and Asaka Maru, Shortlands to Gizo and back, 1-2 Sep, escorted by Yudachi and Murakumo",run,jp
+1423,jp-run-1942-09-04-santa-isabel-barges,"Troop-carrying barges from Santa Isabel to Guadalcanal escorted by Kawakaze, Umikaze, Suzukaze, 4-5 Sep",run,jp
