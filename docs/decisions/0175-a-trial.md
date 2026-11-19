@@ -1,10 +1,10 @@
 # 0175: A trial: one course played in a number of worlds
 
-Status: settled by the architect on Nov 19, 2026, inside the plan for step 3, stage 4 (decision 0161, step 5 of its ten, section D, rules 10 to 12), which the designer confirmed. The hand calculation is written. Amended on review on Nov 19, 2026. Built on Nov 19, 2026 (As built, below). Its three sizes are placeholders until the designer accepts the times measured by the build.
+Status: settled by the architect on Nov 19, 2026, inside the plan for step 3, stage 4 (decision 0161, step 5 of its ten, section D, rules 10 to 12), which the designer confirmed. The hand calculation is written. Amended on review on Nov 19, 2026. Built on Nov 19, 2026 (As built, below). The designer accepted its three sizes on the measured times on Nov 19, 2026 (Confirmed, below).
 
 Summary: A trial takes a course, builds the worlds a side's picture allows, and plays each forward for a number of days with both sides on doctrine. It is given the course as the commander's commands that make it, each on its day, so that an order, a limit, a leave or an approval can be tried. Its size is a number of worlds and of days, fixed and not timed. It can be stopped at any point and leaves nothing. It reads the side's view and what the side believed and changes nothing in the live game: the live game's hash is the same after it
 
-Standing: Settled by the architect, Nov 19, 2026, inside decision 0161, and amended on review the same day. Built on Nov 19, 2026. The sizes wait for the designer
+Standing: Settled by the architect, Nov 19, 2026, inside decision 0161, and amended on review the same day. Built on Nov 19, 2026. The sizes accepted by the designer the same day
 
 ## Why
 
@@ -132,4 +132,8 @@ Made on Nov 19, 2026, on reading the build.
 3. **A world of a trial records its breakdowns,** as any world does. Turning them off would make a trial cheaper and would move no result. It is left until the times ask for it, and is written in `docs/open-work.md`.
 4. **A command of the course for a day outside the horizon is refused** when the trial is asked, before any world is played. It is a fault of the asking, not of a world.
 5. **The failing day is made by a field that exists only in the crate's own test build.** Nothing of it is in the library as built.
+
+## Confirmed on Nov 19, 2026
+
+The designer was given the measured times of the three sizes (rulings, 2) and accepted them: "Accept them." The sizes stand as written: small, 8 worlds for 7 days; standard, 16 for 14; full, 64 for 21. They are the sizes the designer accepted on the times measured that day, on that machine; a change to either is the designer's.
 
