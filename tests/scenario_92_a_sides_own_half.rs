@@ -71,8 +71,20 @@
 //!   days 4 and 5 as the scenario gives them, has at the end of each of
 //!   those days the live game's ships, task forces, bases and air groups,
 //!   field for field but for the numbers of the orders and events they
-//!   cite. Day 4 is the day of the carrier battle: the fights of the
-//!   built world are the live game's, hit for hit.
+//!   cite. (Corrected by the architect on Nov 19, 2026: this sentence
+//!   said that day 4 is the day of the carrier battle. In the full slice
+//!   of 39 days the carriers meet on days 18 and 19, and days 4 and 5
+//!   have no fight at sea or in the air.)
+//!
+//!   So that the fights are covered: on every evening from day 1 to day
+//!   38 the two halves joined hold what the whole picture holds, as
+//!   above, and a world built from them on the game's seed with no
+//!   domain, given the scenario's orders of every later day, has at the
+//!   end of each day to day 39 the live game's ships, task forces, bases,
+//!   air groups and land units, and the events of each day are the live
+//!   game's by day, pulse and kind. The carrier battle of days 18 and 19,
+//!   the raids on bases, the ships sunk and the fights ashore are all
+//!   among them.
 //!
 //!   This case is also the test decision 0170 owes of a world with days
 //!   behind it (its rulings, 7). If the built world and the live game

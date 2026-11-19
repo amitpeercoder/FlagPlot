@@ -96,3 +96,13 @@ Nothing of the state, the hash, a draw or an event changed.
 8. *An order a unit refers to that is not the side's own* would make the half refuse ("refers to an order that is not the side's own"). No game reaches it: every order a unit holds was given by its side or for it by a rule.
 9. *A seat-cut view's next air group number* is 0, as its next force number is.
 
+## The architect's rulings
+
+Made on Nov 19, 2026, on reading the build.
+
+1. **The nine readings of "As built" stand as made.**
+2. **The hand calculation was wrong in one sentence, and is corrected by the architect.** It said that day 4 of the full slice is the day of the carrier battle. That was true of the slice of one week; in the 39 days the carriers meet on days 18 and 19. The build found it and, so that the fights were covered, rebuilt the full slice on every evening from day 1 to day 38 and played each to day 39. That sweep is now a statement of the hand calculation.
+3. **The sweep stands as the test decision 0170 owed of a world with days behind it** (its rulings, 7), for everything the full slice reaches: on no evening and no later day did a world built from two halves part from the live game. The four rules that read the log of earlier days are still not reached by it, and stay owed.
+4. **A view of units as a command holds them is refused a half** (reading 3). Such a view is not the side's own state but what was last reported of it.
+5. **The join puts replacements and arrivals in the loader's one order** (reading 6), since that order is part of the state; orders stay the Allied side's first and then the Japanese side's.
+
