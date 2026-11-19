@@ -178,3 +178,17 @@ Where the worlds part, by 400 men at (4,0), believed, standing unknown ("Reinfor
 A trial of a seat is a plain trial's work and a little more (the window's bookkeeping and the answer); the second trial plays an empty course, which is cheaper than the first, so "with" is about 1.6 to 1.7 times "without", not twice. The full size is about 40 per cent above decision 0175's measured 16 s, on a machine under load; it is for the designer with the window's 67 s (decision 0177, rulings, 8).
 
 **Not verified by this build.** That a game file kept by `play` replays a trial at the cost logged (no recorded game has a trial); the times on an unloaded machine; the table, which is not changed.
+
+## The architect's rulings
+
+Read on Nov 20, 2026, with the build's core: the answer's types and the makers of the values that name a unit, the agent's source test (unchanged), and that nothing of `sim-core` is touched. The hand calculation in `tests/scenario_97_a_seats_trial.rs` is as the architect wrote it; no number was changed.
+
+1. **The runner in a library of `sim-cli`** stands (reading 1): it is the one crate that may know both the session and a trial, and the scenario test uses the runner the binary uses.
+2. **A window of one given date** for a seat's trial stands (reading 2): one way of playing, and the next record asks for more dates of the same thing.
+3. **The second trial of an intent already in force is not to be played** (reading 3). With the intent standing in both trials nothing is compared, and the time is spent for a line that says nothing. The answer is to say that the order is already in force and its cost to the other plans is in things as they stand. What an order in force costs the others is a what-if, "without this order", and belongs to the next record. Owed, in `docs/open-work.md`: today the second trial is played there.
+4. **A leave the commander has withheld by a queued command is not given back by the course** (reading 5). Stands: it is his word, and the answer says the trial was given no leave.
+5. **A preview of a limit on a staff's intent** is tried (reading 6). Stands: the limit is the commander's command, whoever formed the intent.
+6. **A force or a base formed inside a trial** is named by its ships or its place (reading 9), and the side's own units by the side's numbers in the words of the standing commands (reading 13). Stand.
+7. **"Worlds 1 to 4 at the larger size are those of the smaller"** is tested through what the answer gives and not world by world, since rule 4 keeps a world's own figures out of the answer. Stands; decision 0175's own tests hold it world by world.
+8. **The measured times,** on the 39 days under load: 1.2 s, 3.9 s and 22.7 s for the three sizes, and 2.0 s, 6.4 s and 36.1 s with the second trial, which is about 1.6 times and not twice, its course being empty. The full size is above decision 0175's 16 s, measured on a quieter machine. No size is changed. It goes to the designer with the window's 67 s.
+
