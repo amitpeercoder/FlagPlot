@@ -126,3 +126,15 @@ Built on Nov 19, 2026, on the branch `world-from-picture-build`, from the head o
 10. *The event's name.* It is `BuiltFromPicture`, "world built from a picture" in words: the agent's briefing must name every kind of event, and the lint on the agent's library forbids the word `World` outside `session.rs`, so the kind may not carry it.
 11. *The agent's lint* bans the new names outright, though the umpire's key already keeps the two umpire's calls from it: no tool builds a world yet, and `World::from_picture` needs no key.
 
+## The architect's rulings
+
+Made on Nov 19, 2026, on reading the build.
+
+1. **The eleven readings of "As built" stand as made.**
+2. **The type is `WorldPicture` and the words are "a picture of a world"** (reading 1), kept apart from a command's picture of decisions 0134 to 0138. The event is `BuiltFromPicture`.
+3. **A picture of one day and a state of another is refused** (reading 2). It is a fault item 6 should have named.
+4. **A picture made outside `sim-core` cannot hold a halted force or a force on a yard trip** (reading 3), since the event such a force cites cannot be named outside the crate. That stands, and it settles where step 4's copying of a side's own half is done: in `sim-core`, as this record's "What it leaves for later" has it, where the event is set as the umpire's whole picture sets it.
+5. **Only the first fault is named** (reading 5). A picture is made by a program, and one fault is enough to stop it.
+6. **Not checked, and left so** (reading 7): the day an order was issued, an order's side against its unit's, a contact's age against the age at which it is dropped. The first two move nothing; a contact past its age is dropped on the first pulse, as the hand calculation's own contact is on its third.
+7. **No rule that reads the days before a picture was reached** in either round trip. The four the record names (item 11) are therefore stated and not tested across a picture; a test of each is owed with the step that first builds a world from a view in the middle of a campaign.
+
