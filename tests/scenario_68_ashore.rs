@@ -1009,6 +1009,7 @@ fn nothing_left_to_send() {
 }
 
 #[test]
+#[ignore = "decision 0169 changes this property (at balanced, with no hold of B, the second lift of days 8 to 10 is short with nothing in reach and cannot be fed, so it is not sent): it waits for the architect to restate it"]
 fn a_hold_is_honoured() {
     let g = play(&with_commands(&text(), &hold_unit(7, 2)));
     let wanted: Vec<(u32, Given)> = main_orders()[..14].to_vec();

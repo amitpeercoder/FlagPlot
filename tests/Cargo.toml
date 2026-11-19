@@ -491,3 +491,7 @@ path = "scenario_87_the_order_of_a_staffs_take.rs"
 [[test]]
 name = "scenario_88_what_the_attacked_saw"
 path = "scenario_88_what_the_attacked_saw.rs"
+
+[[test]]
+name = "scenario_90_a_take_that_does_not_go_to_starve"
+path = "scenario_90_a_take_that_does_not_go_to_starve.rs"
