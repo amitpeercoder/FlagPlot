@@ -144,7 +144,7 @@ button:disabled { opacity: 0.45; cursor: default; }
 .sheet .doc .node .who { font-size: 12px; color: var(--paper-dim); display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
 .sheet .doc .node .work { font-size: 13px; color: var(--paper-dim); }
 .sheet .doc .row { display: flex; flex-wrap: wrap; gap: 8px; }
-.ref { display: inline; min-height: 0 !important; padding: 0 !important; border: 0 !important; border-bottom: 1px solid transparent !important; border-radius: 0 !important; background: transparent !important; color: var(--own) !important; font: inherit !important; letter-spacing: 0 !important; cursor: pointer; }
+.ref { text-align: left; display: inline; min-height: 0 !important; padding: 0 !important; border: 0 !important; border-bottom: 1px solid transparent !important; border-radius: 0 !important; background: transparent !important; color: var(--own) !important; font: inherit !important; letter-spacing: 0 !important; cursor: pointer; }
 .ref.enemy { color: var(--enemy) !important; }
 .ref:hover, .ref:focus-visible { border-bottom-color: currentColor !important; }
 .sheet .doc details { font-size: 13px; }
@@ -275,6 +275,7 @@ button:disabled { opacity: 0.45; cursor: default; }
 <div class="view" role="group" aria-label="Your view of the table">
   <button type="button" id="btn-back">Sit back</button>
   <button type="button" id="btn-lean">Lean in</button>
+  <button type="button" id="btn-view" title="See the table from the chair, or the chart from above">View: table</button>
   <button type="button" id="btn-hexes" aria-pressed="false">Hexes</button>
   <button type="button" id="btn-pieces" title="Which pieces stand on the chart">Pieces: all</button>
   <button type="button" id="btn-stops" aria-expanded="false" aria-controls="stops" hidden>Clock stops</button>
@@ -947,7 +948,8 @@ button:disabled { opacity: 0.45; cursor: default; }
     links(body, title, now.map(function (f) { return [f.task_force.name.replace(/^Placeholder /, ''), function () { cardForce({ force: f }); }]; }));
     if (!later.length) return;
     var d = document.createElement('details'), sm = document.createElement('summary'); sm.textContent = 'NOT YET YOURS TO USE (' + later.length + ')'; sm.className = 'sub'; sm.style.cursor = 'pointer'; d.appendChild(sm);
-    later.sort(function (a, b) { return a.available_from - b.available_from; }).forEach(function (f) { d.appendChild(rich('div', '', f.task_force.handle + ', from ' + (dateOf(f.available_from - 1) || 'day ' + f.available_from))); });
+    var rows = el('div', 'rows'); d.appendChild(rows);
+    later.sort(function (a, b) { return a.available_from - b.available_from; }).forEach(function (f) { var row = el('div', 'lrow'); row.appendChild(rich('span', '', f.task_force.handle)); row.appendChild(el('span', 'fig', dateOf(f.available_from - 1) || 'day ' + f.available_from)); rows.appendChild(row); });
     body.appendChild(d);
   }
   // The way back: each card remembers what was open before it, a card or a
@@ -1503,11 +1505,16 @@ button:disabled { opacity: 0.45; cursor: default; }
   // ---- the chair: you lean, you do not fly ----
   var goal = { x: 0, z: 0, zoom: 0 }, cur = { x: 0, z: 0, zoom: 0 }, camDist = 12;
   function clampGoal() { goal.x = Math.max(-TW / 2, Math.min(TW / 2, goal.x)); goal.z = Math.max(-TD / 2, Math.min(TD / 2, goal.z)); goal.zoom = Math.max(0, Math.min(1, goal.zoom)); }
+  var chartView = false, flat = 0;
+  try { chartView = localStorage.getItem('flagplot.view') === 'chart'; flat = chartView ? 1 : 0; } catch (e) {}
   function placeCamera() {
     var k = 0.12; cur.x += (goal.x - cur.x) * k; cur.z += (goal.z - cur.z) * k; cur.zoom += (goal.zoom - cur.zoom) * k;
     var far = Math.max(12.5, TD * 1.35) * Math.max(1, 1.35 / camera.aspect), e = ease(cur.zoom);
-    camDist = far * Math.pow(1.5 / far, e); var elv = (32 + 38 * e) * Math.PI / 180;
-    camera.position.set(cur.x, camDist * Math.sin(elv), cur.z + camDist * Math.cos(elv)); camera.lookAt(cur.x, 0, cur.z - (1 - e) * 0.6);
+    // From the chair the table is seen at an angle; from above, as a chart is
+    // read, straight down with north up. `flat` goes from one to the other.
+    flat += ((chartView ? 1 : 0) - flat) * k; if (Math.abs((chartView ? 1 : 0) - flat) < 0.002) flat = chartView ? 1 : 0;
+    var half = Math.tan(camera.fov * Math.PI / 360), above = Math.max((TD / 2 + 0.9) / half, (TW / 2 + 0.3) / (half * camera.aspect)), d0 = far * Math.pow(1.5 / far, e), d1 = above * Math.pow(1.5 / above, e); camDist = d0 + (d1 - d0) * flat; var elv = ((32 + 38 * e) * (1 - flat) + 89.9 * flat) * Math.PI / 180;
+    camera.position.set(cur.x, camDist * Math.sin(elv), cur.z + camDist * Math.cos(elv)); camera.lookAt(cur.x, 0, cur.z - (1 - e) * 0.6 * (1 - flat));
   }
   var ray = new THREE.Raycaster(), plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
   function onTable(cx, cy) { var r = canvas.getBoundingClientRect(); ray.setFromCamera({ x: ((cx - r.left) / r.width) * 2 - 1, y: -((cy - r.top) / r.height) * 2 + 1 }, camera); var p = new THREE.Vector3(); return ray.ray.intersectPlane(plane, p) ? p : null; }
@@ -1518,7 +1525,7 @@ button:disabled { opacity: 0.45; cursor: default; }
   });
   canvas.addEventListener('pointermove', function (e) {
     var p = ptrs[e.pointerId]; if (!p) { if (e.pointerType === 'mouse') canvas.classList.toggle('over', !picking && !playing && !!tileAt(e.clientX, e.clientY)); return; } var ids = Object.keys(ptrs);
-    if (ids.length === 1) { var s = camDist * 0.0016; goal.x -= (e.clientX - p.x) * s; goal.z -= (e.clientY - p.y) * s * 1.5; clampGoal(); }
+    if (ids.length === 1) { var s = camDist * 0.0016; goal.x -= (e.clientX - p.x) * s; goal.z -= (e.clientY - p.y) * s * (1.5 - 0.5 * flat); clampGoal(); }
     p.x = e.clientX; p.y = e.clientY;
     if (ids.length === 2 && pinch0) { var d = Math.hypot(ptrs[ids[0]].x - ptrs[ids[1]].x, ptrs[ids[0]].y - ptrs[ids[1]].y); goal.zoom = zoom0 + Math.log(d / pinch0) * 0.5; clampGoal(); }
   });
@@ -1536,6 +1543,8 @@ button:disabled { opacity: 0.45; cursor: default; }
   });
   $('btn-pieces').textContent = PIECE_WORD[piecesShown];
   $('btn-pieces').addEventListener('click', function () { piecesShown = PIECES[(PIECES.indexOf(piecesShown) + 1) % PIECES.length]; try { localStorage.setItem('flagplot.pieces', piecesShown); } catch (e) {} this.textContent = PIECE_WORD[piecesShown]; if (g) drawMarks(); });
+  $('btn-view').textContent = chartView ? 'View: chart' : 'View: table';
+  $('btn-view').addEventListener('click', function () { chartView = !chartView; try { localStorage.setItem('flagplot.view', chartView ? 'chart' : 'table'); } catch (e) {} this.textContent = chartView ? 'View: chart' : 'View: table'; });
   $('btn-hexes').setAttribute('aria-pressed', String(showHexes));
   $('btn-hexes').addEventListener('click', function () { showHexes = !showHexes; try { localStorage.setItem('flagplot.hexes', showHexes ? '1' : '0'); } catch (e) {} this.setAttribute('aria-pressed', String(showHexes)); paintBase(); if (g) drawMarks(); $('card').hidden = true; });
   $('btn-stops').addEventListener('click', function () { var f = $('stops'); f.hidden = !f.hidden; this.setAttribute('aria-expanded', String(!f.hidden)); });
@@ -1560,7 +1569,9 @@ button:disabled { opacity: 0.45; cursor: default; }
     labels.forEach(function (L) {
       var a = L.anchor(), show = sideShown(L.side) && (L.tier === 0 || (L.tier === 1 && cur.zoom > 0.3) || (L.tier === -1 && cur.zoom <= 0.3));
       L.sp.visible = show; L.pin.visible = show; if (!show) return;
-      tmp.set(a.x + L.off[0], L.h, a.z + L.off[1]); L.sp.position.copy(tmp);
+      // From above a slip lies on the chart beside what it names, north of it
+      // by its height from the chair, so that stacked slips stay apart.
+      tmp.set(a.x + L.off[0] + 0.22 * flat, L.h * (1 - flat) + 0.06 * flat, a.z + L.off[1] - L.h * 0.55 * flat); L.sp.position.copy(tmp);
       var s = Math.max(0.14, Math.min(1.2, camera.position.distanceTo(tmp) * 0.085)); L.sp.scale.set(s * 1.6 * L.wide, s * 1.6 * L.wide / L.aspect, 1);
       var pos = L.pin.geometry.attributes.position; pos.setXYZ(0, a.x, 0.02, a.z); pos.setXYZ(1, tmp.x, tmp.y, tmp.z); pos.needsUpdate = true;
     });
