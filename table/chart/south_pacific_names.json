@@ -1,0 +1,28 @@
+{
+  "note": "Names lettered on the chart, for the eye only. The game reads none of it. kind: sea, water (a strait or sound), land (a large island or mainland), island, group. Positions are where the lettering sits, in degrees.",
+  "names": [
+    {"name": "CORAL SEA", "kind": "sea", "lat": -16.2, "lon": 156.5},
+    {"name": "SOLOMON SEA", "kind": "sea", "lat": -8.6, "lon": 152.6},
+    {"name": "PACIFIC OCEAN", "kind": "sea", "lat": -5.2, "lon": 164.5},
+    {"name": "New Georgia Sound", "kind": "water", "lat": -8.25, "lon": 158.45},
+    {"name": "Indispensable Strait", "kind": "water", "lat": -9.15, "lon": 160.55},
+    {"name": "NEW GUINEA", "kind": "land", "lat": -7.6, "lon": 146.6},
+    {"name": "NEW BRITAIN", "kind": "land", "lat": -5.9, "lon": 150.4},
+    {"name": "NEW IRELAND", "kind": "land", "lat": -3.3, "lon": 151.6},
+    {"name": "NEW CALEDONIA", "kind": "land", "lat": -21.9, "lon": 166.6},
+    {"name": "Bougainville", "kind": "island", "lat": -5.75, "lon": 155.6},
+    {"name": "Choiseul", "kind": "island", "lat": -6.75, "lon": 157.3},
+    {"name": "Santa Isabel", "kind": "island", "lat": -7.7, "lon": 159.6},
+    {"name": "New Georgia", "kind": "island", "lat": -8.75, "lon": 157.2},
+    {"name": "Malaita", "kind": "island", "lat": -8.75, "lon": 161.45},
+    {"name": "Guadalcanal", "kind": "island", "lat": -10.05, "lon": 159.9},
+    {"name": "San Cristobal", "kind": "island", "lat": -10.95, "lon": 162.0},
+    {"name": "Rennell", "kind": "island", "lat": -11.95, "lon": 160.3},
+    {"name": "Espiritu Santo", "kind": "island", "lat": -14.7, "lon": 165.9},
+    {"name": "Efate", "kind": "island", "lat": -17.95, "lon": 168.9},
+    {"name": "SOLOMON ISLANDS", "kind": "group", "lat": -6.9, "lon": 160.6},
+    {"name": "SANTA CRUZ ISLANDS", "kind": "group", "lat": -10.2, "lon": 166.3},
+    {"name": "NEW HEBRIDES", "kind": "group", "lat": -16.6, "lon": 169.6},
+    {"name": "LOUISIADE ARCHIPELAGO", "kind": "group", "lat": -11.9, "lon": 153.2}
+  ]
+}

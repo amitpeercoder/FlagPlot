@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "flagplot-agent/plan_order",
-  "title": "plan_order: the plan of one of the commander's intents as the staff hands it in, worked from the view and stored nowhere",
+  "title": "plan_order: the plan of one of the commander's intents, or of a take the staff formed, as the staff hands it in, worked from the view and stored nowhere",
   "description": "Decision 0159, rule E: the mission, the plan and its state, the phases in order and where each stands, what the plan waits for, the men wanted and to hand, the day it expects its first men ashore, the need to know, the staff's tasks under it and a brief in words.",
   "type": "object",
   "required": [
@@ -44,7 +44,7 @@
     },
     "intent": {
       "type": "integer",
-      "description": "The commander's intent asked about."
+      "description": "The intent asked about: the commander's, or a take_place the staff formed."
     },
     "mission": {
       "type": "string",

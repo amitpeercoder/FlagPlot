@@ -2699,23 +2699,25 @@ pub trait Staff {
         Vec::new()
     }
 
-    /// The plan order of each intent of the commander's in force: the
-    /// mission, the phases, what the plan waits for, what it needs and has,
-    /// the day it expects to be ashore, the need to know and the tasks
-    /// (decision 0159, rule E). Worked from the view as the staff works this
-    /// morning and stored nowhere. Empty by default.
+    /// The plan order of each intent of the commander's in force, and of
+    /// each "take a place" in force that the staff formed (decision 0164),
+    /// in number order: the mission, the phases, what the plan waits for,
+    /// what it needs and has, the day it expects to be ashore, the need to
+    /// know and the tasks (decision 0159, rule E). Worked from the view as
+    /// the staff works this morning and stored nowhere. Empty by default.
     fn plan_orders(&self, _view: SideView<'_>) -> Vec<PlanOrder> {
         Vec::new()
     }
 }
 
 /// A plan handed in as an order (decision 0159, rule E, items 15 to 17): for
-/// one intent of the commander's, what the staff already works out, as data.
-/// It is worked when asked, from the side's command state and the staff's own
-/// sums, and is not state: not hashed, not saved. The plan's state, its phases
-/// and its tasks are read from the command state as the morning finds it,
-/// before that morning's decisions; what it waits for, the men, the day
-/// ashore and the need to know are the staff's working of that morning.
+/// one intent of the commander's, or one "take a place" the staff formed
+/// (decision 0164), what the staff already works out, as data. It is worked
+/// when asked, from the side's command state and the staff's own sums, and is
+/// not state: not hashed, not saved. The plan's state, its phases and its
+/// tasks are read from the command state as the morning finds it, before that
+/// morning's decisions; what it waits for, the men, the day ashore and the
+/// need to know are the staff's working of that morning.
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct PlanOrder {
     pub intent: IntentId,
