@@ -350,17 +350,7 @@ button:disabled { opacity: 0.45; cursor: default; }
       for (var tl = Math.ceil(lo * 2) / 2; tl <= hi; tl += 0.5) { var tx = cpx(world(latMid, tl))[0], len = tl % 1 === 0 ? 22 : 12; b2.beginPath(); b2.moveTo(tx, 14); b2.lineTo(tx, 14 + len); b2.moveTo(tx, H - 14); b2.lineTo(tx, H - 14 - len); b2.stroke(); }
       for (var ta = Math.ceil(la * 2) / 2; ta <= ha; ta += 0.5) { var ty = cpx(world(ta, lonMid))[1], ln = ta % 1 === 0 ? 22 : 12; b2.beginPath(); b2.moveTo(14, ty); b2.lineTo(14 + ln, ty); b2.moveTo(W - 14, ty); b2.lineTo(W - 14 - ln, ty); b2.stroke(); }
     };
-    if (showHexes) {
-    // the land, hex by hex as the game has it
-    var R = HEXR * PX * 1.02;
-    hexes.forEach(function (h) {
-      if (h[2] === 'deep_sea') return;
-      var c = cpx(world(h[3], h[4]));
-      b2.beginPath(); for (var k = 0; k < 6; k++) { var an = Math.PI / 6 + k * Math.PI / 3; b2[k ? 'lineTo' : 'moveTo'](c[0] + R * Math.cos(an), c[1] + R * Math.sin(an)); } b2.closePath();
-      if (h[2] === 'land') { b2.fillStyle = '#c3b383'; b2.fill(); b2.strokeStyle = '#c3b383'; b2.lineWidth = 2; b2.stroke(); }
-      else { b2.fillStyle = '#d3e6e8'; b2.fill(); b2.fillStyle = 'rgba(195,179,131,' + (0.35 + 0.65 * Math.min(100, h[5]) / 100).toFixed(2) + ')'; b2.fill(); b2.strokeStyle = 'rgba(74,70,59,0.55)'; b2.lineWidth = 1.5; b2.stroke(); }
-    });
-    } else if (coast) {
+    if (coast) {
       // The chart as a chart: the coastline of Natural Earth (public domain),
       // for the eye only. The game plays on the hexes behind it.
       var trace = function () { b2.beginPath(); coast.forEach(function (r) { for (var n = 0; n < r.length; n += 2) { var c = cpx(world(r[n + 1], r[n])); b2[n ? 'lineTo' : 'moveTo'](c[0], c[1]); } b2.closePath(); }); };
@@ -388,6 +378,15 @@ button:disabled { opacity: 0.45; cursor: default; }
       c2.filter = 'none'; c2.clearRect(0, 0, mw, mh); c2.putImageData(img, 0, 0);
       b2.imageSmoothingEnabled = true; b2.drawImage(m2, 0, 0, mw, mh, 0, 0, mw * q, mh * q);
       border();
+    }
+    if (showHexes) {
+      // The hexes laid over the chart, as the game plays on them: every hex
+      // outlined, and a hex no ship can enter hatched. A coast hex is sea a
+      // ship can use, so it is left clear.
+      var R = HEXR * PX, hexPath = function (h) { var c = cpx(world(h[3], h[4])); b2.beginPath(); for (var k = 0; k < 6; k++) { var an = Math.PI / 6 + k * Math.PI / 3; b2[k ? 'lineTo' : 'moveTo'](c[0] + R * Math.cos(an), c[1] + R * Math.sin(an)); } b2.closePath(); return c; };
+      b2.lineWidth = 1; b2.strokeStyle = 'rgba(40,70,95,0.22)'; hexes.forEach(function (h) { hexPath(h); b2.stroke(); });
+      hexes.forEach(function (h) { if (h[2] !== 'land') return; var c = hexPath(h); b2.save(); b2.clip(); b2.fillStyle = 'rgba(74,62,40,0.16)'; b2.fill(); b2.strokeStyle = 'rgba(74,62,40,0.45)'; b2.lineWidth = 1.2; b2.beginPath(); for (var d = -2 * R; d <= 2 * R; d += R * 0.32) { b2.moveTo(c[0] + d - R, c[1] + R); b2.lineTo(c[0] + d + R, c[1] - R); } b2.stroke(); b2.restore(); hexPath(h); b2.strokeStyle = 'rgba(74,62,40,0.6)'; b2.lineWidth = 1.4; b2.stroke(); });
+      b2.lineWidth = 1.6; b2.strokeStyle = 'rgba(40,70,95,0.5)'; hexes.forEach(function (h) { if (h[2] === 'coast') { hexPath(h); b2.stroke(); } });
     }
     b2.strokeStyle = '#3f3b31'; b2.lineWidth = 6; b2.strokeRect(14, 14, W - 28, H - 28);
     };
