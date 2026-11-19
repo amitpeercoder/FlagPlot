@@ -68,6 +68,14 @@ impl<'a> SideView<'a> {
         }
     }
 
+    /// Whether this view's units are as a command holds them
+    /// ([`KnownView::view`] for the area command while reports travel),
+    /// not the side's own state: such a view gives no half of a picture
+    /// (decision 0171).
+    pub(crate) fn is_held_view(&self) -> bool {
+        self.known_to.is_some()
+    }
+
     /// The moment the area command's held state of `command` is of, on a
     /// view known to the area command (decision 0136, 11). `None` on any
     /// other view, and for a command the area command does not hold.

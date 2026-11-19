@@ -482,6 +482,7 @@ Anything that plays the game is handed a side's view and never the truth. The tr
 | --- | --- |
 | Its own ships, task forces, bases and air groups | Exactly. There is no fog over a side's own units. Supply and fuel stocks of its own bases and ships are shown. A base's fuel is for ships: no air rule reads it. A base's airfield, the work done on it, the damage to it, its defences with their grade and the day's work are shown to its own side, and so are the share of its aircraft a damaged field lets fly and the aircraft it keeps on the ground (chapter 5, A damaged airfield; chapter 7, Units that work and what they build). |
 | Its own replacement streams and arrivals | Exactly. |
+| The next numbers of its own units made in play | Its own side's: the number its next task force and its next air group made in play will take (below). Nothing of the enemy's. [0171] |
 | The enemy's forces | Only as contacts: a hex, a count, a kind and an age, each made and refreshed by reports, each possibly wrong. |
 | What it believes came of its fights and raids | Its claims. The damage it does to the enemy is truth and is not shown to it. The damage done to its own ships and aircraft is shown to it whole. |
 | Its own land units | Exactly: the men ashore and where, the men aboard and in which ships (chapter 7), each unit's skills (chapter 7, What a land unit is good at), and whether it is a working unit, its job and its work (chapter 7, Units that work and what they build), and its fieldworks and cover (chapter 7, Cover and fieldworks). |
@@ -890,6 +891,19 @@ A trial plays a course forward in worlds that are not the live one, and such a w
 10. **The umpire's rebuild.** With the umpire's key, the whole picture of a live world may be taken (`World::whole_picture`: both sides as they are, belief and all; the orders the state and the command states refer to, renumbered from 1 in the order of their numbers; the contacts renumbered from 1; nothing while a day is open) and a world rebuilt from it on the live game's seed with no domain (`World::rebuild_from_picture`), which draws what the live game draws. It is for the test that the build loses nothing and for the umpire's tools. Nothing that plays the game holds the key, and the agent's library may not name either call. [0170, rule 13]
 
 A side sees: of the picture, only the event that begins its world. What it believes in a built world is the belief the picture gave it.
+
+### A side's own half of a picture
+
+A picture of a world is made of two halves, one for each side. A side's **own half** is what its view gives it whole on an evening, copied from that view and nothing else. Two halves, one of each side, are joined into a picture. [0171]
+
+1. **What a half holds.** The day; the side; its ships, task forces, bases, air groups, land units, formations, replacement streams and arrivals, as the engine's own state holds them; its orders in force, as a list, each referred to by its place in it from 1; its command state, whole; its belief as a picture holds one (above, item 1); and its two counters, the next number of a task force and of an air group made in play. It holds no number of a live game's order or event. Its fields are open, so that a half can also be made by rule; a half made so names its orders by their place and can hold no halted force and no force on a yard trip, having no event to cite. [0171, rules 1 and 8]
+2. **A side's view gives its own half** (`SideView::own_half`), on an evening. It is refused while a day is open, and at a view cut to a seat or whose units are as a command holds them: only a whole side has a half. [0171, rule 2]
+3. **The orders in force** are the orders the side's units and its command state refer to, and no other, in the order of the side's own numbers for them (How orders are numbered and sorted); every reference is re-pointed to the order's place in the list. [0171, rule 3]
+4. **Every event a unit cites is the picture's:** the arrival of a force, what alerted it, its halt and what it did since, its yard trip and a march begun by an event cite the first event of a world built from a picture, as the umpire's whole picture has them. [0171, rule 4]
+5. **The belief** is the side's contacts in the order of its own numbers for them, its claims in the order held and its estimates in the order of their hexes, each without the event that reported it. [0171, rule 5]
+6. **The counters** are the side's own: the next number of a force and of an air group made in play (What a side may know). [0171, rule 6]
+7. **Two halves make a picture** (`WorldPicture::from_halves`): the units of both; the orders of the Allied half and then of the Japanese, each re-pointed to its new place; each side's belief, command state and counters; no objectives. The replacement streams and arrivals of both are put in the one order the state keeps them in. The halves may be given in either order. It refuses two halves of one side, halves of different days, two units of one number, and a half that refers to an order not in its own list. [0171, rule 7]
+8. **No peek.** Two worlds that differ only in what a side cannot see and has not been told give it equal halves. The staff and the agent's library may not take or join a half. [0171, rule 9]
 
 ## The state hash and saved games
 
