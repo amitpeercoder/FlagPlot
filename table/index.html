@@ -737,8 +737,11 @@ button:disabled { opacity: 0.45; cursor: default; }
   // Pieces at one place are stacked as counters are, each on the one before:
   // two tops at one height would shimmer through each other.
   var lifts = {};
-  function lift(v) { var k = Math.round(v.x * 100) + ',' + Math.round(v.z * 100), n = lifts[k] || 0; lifts[k] = n + 1; return n * 0.042; }
-  function fixed(grp, v, dx, dz, thing) { grp.position.set(v.x + (dx || 0) * tk(), lift(v), v.z + (dz || 0) * tk()); grp.userData.thing = thing || null; statics.push(grp); return grp; }
+  // A piece stands on the one beneath it only where it is set on the very
+  // same spot. Pieces set side by side about a place stay on the table, a
+  // hair apart in height so that their tops do not flicker where they lap.
+  function lift(v, beside) { var k = Math.round(v.x * 100) + ',' + Math.round(v.z * 100), n = lifts[k] || 0; lifts[k] = n + 1; return n * (beside ? 0.003 : 0.042); }
+  function fixed(grp, v, dx, dz, thing) { var at = { x: v.x + (dx || 0) * tk(), z: v.z + (dz || 0) * tk() }; grp.position.set(at.x, lift(at), at.z); grp.userData.thing = thing || null; statics.push(grp); return grp; }
   var moveT = 1, mover = null;
   function layPieces() {
     statics.forEach(function (m) { scene.remove(m); }); statics = []; dropLabels(); ghosted = false; lifts = {};
@@ -749,7 +752,7 @@ button:disabled { opacity: 0.45; cursor: default; }
     Object.keys(byHex).forEach(function (k) {
       var list = byHex[k], centre = placeOf(list[0].place);
       list.forEach(function (f, i) {
-        var h = f.task_force.handle, an = i * 2.4, rad = list.length > 1 ? (0.16 + 0.07 * i) * tk() : 0, to = centre.clone().add(new THREE.Vector3(Math.cos(an) * rad, lift(centre), Math.sin(an) * rad));
+        var h = f.task_force.handle, an = i * 2.4, rad = list.length > 1 ? (0.16 + 0.07 * i) * tk() : 0, to = centre.clone().add(new THREE.Vector3(Math.cos(an) * rad, lift(centre, list.length > 1), Math.sin(an) * rad));
         var p = pieces[h]; seen[h] = true;
         if (!p) { p = pieces[h] = { grp: forcePiece(f), from: to.clone(), to: to.clone() }; p.grp.position.copy(to); }
         else { p.from = p.grp.position.clone(); p.to = to; var d = p.from.distanceTo(to); if (d > far) { far = d; mover = p; } }
