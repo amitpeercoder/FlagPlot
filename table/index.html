@@ -75,7 +75,8 @@ button:disabled { opacity: 0.45; cursor: default; }
 .stamp { font-family: var(--f-ui); font-weight: 700; font-size: 14px; letter-spacing: 0.12em; color: var(--enemy); border: 2px solid var(--enemy); padding: 0 6px; transform: rotate(-2deg); white-space: nowrap; }
 .stamp.ok { color: var(--own); border-color: var(--own); }
 .slip strong { font-size: 15px; }
-.slip .why { border-top: 1px dashed #8d8672; padding-top: 7px; display: flex; flex-direction: column; gap: 6px; }
+.slip .why { border-top: 1px dashed #8d8672; padding-top: 7px; display: flex; flex-direction: column; gap: 8px; max-height: 46vh; overflow-y: auto; font-size: 13px; }
+.slip .why .reason + .reason { border-top: 1px dotted #8d8672; padding-top: 8px; }
 .slip .row, .order .row { display: flex; flex-wrap: wrap; gap: 8px; }
 .slip button, .order button, .sheet button { min-height: 42px; padding: 0 14px; border-radius: 2px; font-size: 16px; font-weight: 600; letter-spacing: 0.08em; background: transparent; color: var(--paper-ink); border: 1.5px solid var(--paper-ink); }
 .slip button.go, .order button.go { background: var(--own); color: var(--paper); border-color: var(--own); }
@@ -835,9 +836,8 @@ button:disabled { opacity: 0.45; cursor: default; }
     b.disabled = true; var box = a.appendChild(el('div', 'why'));
     numbers.slice(0, 3).reduce(function (p, n) {
       return p.then(function () { return api('why', { number: n }); }).then(function (w) {
-        box.appendChild(el('div', '', plainWords(w.serves || '')));
-        if (w.reason && w.reason.worked) box.appendChild(el('div', '', plainWords(w.reason.worked)));
-        if (w.reason && w.reason.would_change && w.reason.would_change.length) box.appendChild(el('div', '', plainWords('What would change it: ' + w.reason.would_change.join('; ') + '.')));
+        // The reason laid out as the war diary lays it out: what the staff came to, what it is for, the cause, what would change it.
+        var one = box.appendChild(el('div', 'reason')); reasonView(one, w);
       });
     }, Promise.resolve()).catch(function (e) { box.appendChild(el('div', '', e.message)); });
   }
