@@ -91,7 +91,7 @@ button:disabled { opacity: 0.45; cursor: default; }
 .cardnav { position: sticky; top: -14px; z-index: 1; margin: -14px -16px -6px; padding: 4px 8px 2px; background: var(--paper); border-bottom: 1px solid rgba(90,85,72,0.22); display: flex; justify-content: space-between; }
 .card .cardnav button { min-height: 30px; padding: 0 8px; border: 0; background: transparent; color: var(--paper-dim); font-family: var(--f-ui); font-size: 12px; font-weight: 700; letter-spacing: 0.12em; }
 .card .cardnav button:hover, .card .cardnav button:focus-visible { color: var(--paper-ink); }
-.card .cardnav #card-close { margin-left: auto; }
+.card .cardnav #card-close { margin-left: auto; font-size: 15px; letter-spacing: 0; min-width: 30px; }
 .card .lhead { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
 .card .lhead span + span { font-family: var(--f-type); font-size: 12px; font-weight: 400; letter-spacing: 0; text-transform: none; color: var(--paper-dim); }
 .card .lrow { display: flex; justify-content: space-between; align-items: baseline; gap: 14px; padding: 3px 0; border-bottom: 1px dotted rgba(90,85,72,0.35); }
@@ -215,7 +215,7 @@ button:disabled { opacity: 0.45; cursor: default; }
 </form>
 
 <aside class="order card" id="card" hidden aria-label="What is known of what you touched" aria-live="polite">
-  <div class="cardnav"><button type="button" id="card-back" hidden>&#8592; BACK</button><button type="button" id="card-close" title="Put it down (Esc)">PUT DOWN &#10005;</button></div>
+  <div class="cardnav"><button type="button" id="card-back" hidden>&#8592; BACK</button><button type="button" id="card-close" title="Close (Esc)" aria-label="Close">&#10005;</button></div>
   <div id="card-body" style="display:flex;flex-direction:column;gap:8px"></div>
 </aside>
 
