@@ -937,3 +937,58 @@ fact = "torpedo_tubes"
 row = 726
 reason = "Nine 61 cm tubes with the Type 90 torpedo, for Fubuki and Hatsuyuki. Every source read agrees on the type in 1942 (ship_class_facts 1359 to 1362, torpedo_model: a US technical mission report, NavWeaps and both Wikipedias), and none disputes the count of nine (fits 727 to 729). Row 726 is the one fit row that has both; it stays disputed only because the other fit rows carry the as-built Type 8 as a stand-in. The architect's ruling of 2026-11-13."
 agreed = "2026-11-13"
+
+# Decision 0166, rulings 9 to 11: the Japanese destroyers of the troop runs
+# of 16 August to 14 September 1942, read for the Guadalcanal landings list.
+# Ruling 12 (the Hatsuharu class's six tubes with the Type 90) needs no
+# exception: fits 1083 to 1085 are preferred and agree, and the Type 93 and
+# eight-tube readings (fits 1086, 1087) are disputed, so they are not read.
+
+[[exception]]
+entity = "jp-kagero-class"
+fact = "main_rounds_per_gun"
+row = 2450
+reason = "150 rounds a gun, the figure given for the 12.7 cm/50 gun, not for a class. It follows the exception already made for the Pensacola class's 8-inch gun (row 1016): a gun's stated outfit is read for a class that mounts it where nothing nearer exists. Decision 0166, 9."
+agreed = "2026-11-19"
+
+[[exception]]
+entity = "jp-shiratsuyu-class"
+fact = "main_rounds_per_gun"
+row = 2451
+reason = "150 rounds a gun, the figure given for the 12.7 cm/50 gun, not for a class. It follows the exception already made for the Pensacola class's 8-inch gun (row 1016): a gun's stated outfit is read for a class that mounts it where nothing nearer exists. Decision 0166, 9."
+agreed = "2026-11-19"
+
+[[exception]]
+entity = "jp-hatsuharu-class"
+fact = "main_rounds_per_gun"
+row = 2452
+reason = "150 rounds a gun, the figure given for the 12.7 cm/50 gun, not for a class. It follows the exception already made for the Pensacola class's 8-inch gun (row 1016): a gun's stated outfit is read for a class that mounts it where nothing nearer exists. Decision 0166, 9."
+agreed = "2026-11-19"
+
+[[exception]]
+entity = "jp-shiratsuyu-class"
+fact = "endurance_nm"
+row = 2455
+reason = "4,000 nm at 18 knots (rows 2455, 2456). The other figure, 6,000 nm at 15 knots (rows 2453, 2454), is for another speed and does not contradict it; it is kept as a note, as the Kagero class's 15-knot figure is. Reading every destroyer class at or near 18 knots keeps them on one footing. Decision 0166, 10."
+agreed = "2026-11-19"
+
+[[exception]]
+entity = "jp-shiratsuyu-class"
+fact = "endurance_speed_kn"
+row = 2456
+reason = "18 knots, the speed of the 4,000 nm read from row 2455. The other figure, 6,000 nm at 15 knots (rows 2453, 2454), is for another speed and does not contradict it. Decision 0166, 10."
+agreed = "2026-11-19"
+
+[[exception]]
+entity = "jp-hatsuharu-class"
+fact = "endurance_nm"
+row = 2460
+reason = "4,000 nm at 14 knots (rows 2460, 2461). The other reading, 6,000 nm at 15 knots (rows 2458, 2459), is the same figure its one source gives the Shiratsuyu class, a different hull, and is longer at a higher speed than the first; it is left disputed and not read. Decision 0166, 11."
+agreed = "2026-11-19"
+
+[[exception]]
+entity = "jp-hatsuharu-class"
+fact = "endurance_speed_kn"
+row = 2461
+reason = "14 knots, the speed of the 4,000 nm read from row 2460. The other reading, 6,000 nm at 15 knots (rows 2458, 2459), is left disputed and not read. Decision 0166, 11."
+agreed = "2026-11-19"

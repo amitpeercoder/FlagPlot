@@ -5,21 +5,36 @@
 #
 # WHO IS HERE, AND WHO IS NOT. Only ships every figure of which can be read
 # from the facts are listed: the derivation writes nothing if one figure of
-# one ship cannot be read. That leaves four Fubuki-class destroyers of the
-# Japanese runs of 29 and 31 August. Left out, each for want of a fact
-# (docs/research/oob/troop-lift.md has the full list, and gaps.csv the rows):
-# - Every American transport and cargo ship (19 ships): no row gives a
-#   standard displacement, endurance with its speed, or fuel capacity that can
-#   be read (navypedia's figures for three classes are lone low-grade rows),
-#   no rule maps the types transport and cargo_ship to a kind or derives a
-#   transport's cargo, and no row gives radar or rounds per gun.
-# - The four destroyer-transports: the two readings of their guns after
-#   conversion disagree, the class's maximum speed is disputed, no row of the
-#   4-inch/50 gives its shell, and no row gives radar.
-# - Kagero class (the six of 18 August, and Kagero on 31 August): no torpedo
-#   tube fit and no rounds per gun. Shiratsuyu class (Kawakaze, Umikaze,
-#   Suzukaze, Yudachi): no endurance, tube fit or rounds per gun. Oite
-#   (Kamikaze class, 16 August): no rounds per gun and no radar row.
+# one ship cannot be read. Each destroyer's troop figure is read from one run
+# of the scenario's (decision 0166, 15; a ship is read for one run only): the
+# first of those runs she made whose men and ships are not disputed (decision
+# 0166, As built, 1), but for the four the list first had, which keep their
+# runs. Here are fourteen destroyers of the Japanese runs:
+# - Fubuki class: Fubuki and Shirayuki (29 August), Hatsuyuki and Amagiri
+#   (31 August), as the list first had them; Murakumo, Uranami and Shikinami
+#   (4 September), decision 0166, 13.
+# - Kagero class: Kagero (31 August). Shiratsuyu class: Kawakaze, Umikaze and
+#   Suzukaze (31 August), Yudachi (4 September). Hatsuharu class: Yugure
+#   (2 September), Ariake (4 September). Their rounds per gun, and the
+#   Shiratsuyu and Hatsuharu endurances, are read by the exceptions of
+#   decision 0166, 9 to 11 (rules.toml).
+# Left out, each for want of a fact or a ruling (decision 0166 has the rest;
+# docs/research/oob/class-facts-39-days.md and gaps.csv the rows):
+# - Arashi, Hagikaze, Hamakaze, Tanikaze and Urakaze (Kagero class): every
+#   figure but the troop figure can be read, and their one run of the
+#   scenario, 18 August, has its men disputed (900, 916, 917 or about 1,000).
+#   Tanikaze and Urakaze also made the run of 1 September, which the scenario
+#   does not hold. They wait for the architect's ruling on the run.
+# - Asagiri (Fubuki class): her only run, Desdiv 20's of 28 August, was
+#   aborted and is not one of the scenario's runs.
+# - Oite (Kamikaze class, 16 August) and every Mutsuki-class ship: no source
+#   read gives rounds per gun for the 12 cm gun (decision 0166).
+# - Every American transport and cargo ship (19 ships): fuel and endurance
+#   are not read (decision 0166), and the rules for a transport (decision
+#   0166, 1 to 5) are part B, not yet in oob-derive.
+# - The four destroyer-transports: endurance not found, fuel only in
+#   barrels, rounds per gun not found, the standard displacement a lone low
+#   row, and the guns after conversion disputed (decision 0166).
 #
 # The date is the first day of the scenario.
 
@@ -34,13 +49,23 @@ ships = [
     "fubuki", "shirayuki",
     # 31 August, Tasimboko.
     "hatsuyuki", "amagiri",
+    "kagero", "kawakaze", "umikaze", "suzukaze",
+    # 2 September, Taivu.
+    "yugure",
+    # 4 September, Taivu, two sections.
+    "yudachi", "murakumo", "uranami", "shikinami", "ariake",
 ]
 
 # Working assumption, not a fact (decision 0019, 5), as in the Cape Esperance
 # list for Fubuki and Hatsuyuki: no row says whether these ships carried a
 # search radar on the date, and they are treated as not fitted. A sourced fit
 # or a sourced none is read from the facts instead.
-radar_unknown_means_none = ["fubuki", "shirayuki", "hatsuyuki", "amagiri"]
+radar_unknown_means_none = [
+    "fubuki", "shirayuki", "hatsuyuki", "amagiri",
+    "kagero", "kawakaze", "umikaze", "suzukaze",
+    "yugure",
+    "yudachi", "murakumo", "uranami", "shikinami", "ariake",
+]
 
 # The troop capacity (decision 0093, 8; the rule is in the sources file).
 # None of these ships has a stated capacity, so each rests on a run: the men
@@ -58,7 +83,8 @@ troop_figures = true
 # --landed 900 men at Tassafaronga". Hough's "two destroyer transports" for
 # the same night (row 149) is not read: it gives no figure of men, and
 # Zimmerman's names four ships that combinedfleet also puts on the run.
-# Kawakaze and Umikaze are of a class that cannot be derived yet.
+# The men of this run are disputed (900, 750 or about 450; decision 0166,
+# As built), so Kawakaze and Umikaze, now derivable, are read on 31 August.
 [[troops.run]]
 run = "jp-run-1942-08-29-tassafaronga-destroyers"
 ships = ["fubuki", "shirayuki"]
@@ -72,14 +98,43 @@ reason = "Zimmerman names the four destroyers (row 148) and the 900 men they lan
 # 143-155 men, for a total of some 1,200" (row 153), which agrees: 1,200 / 8
 # is 150. Hatsuyuki is also named on the run of 29 August by combinedfleet
 # (ship_facts row 1321) but not by Zimmerman; she is read here, on the run
-# both name her for.
+# both name her for. Kagero, Kawakaze, Umikaze and Suzukaze are four more of
+# combinedfleet's eight (decision 0166, As built): Kagero's first run, of
+# 18 August, and Kawakaze's and Umikaze's, of 29 August, have their men
+# disputed. Zimmerman's "all the above craft" also takes in Yudachi (ship_facts
+# 1331), whom combinedfleet's eight do not name; she is read on 4 September.
 [[troops.run]]
 run = "jp-run-1942-08-31-tasimboko-destroyers"
-ships = ["hatsuyuki", "amagiri"]
+ships = ["hatsuyuki", "amagiri", "kagero", "kawakaze", "umikaze", "suzukaze"]
 men_row = 47
 ships_row = 155
 ships_in_run = 8
 reason = "Zimmerman's 1,200 men (row 47); combinedfleet's eight destroyers by name (row 155), whose own per-ship figure of 143 to 155 men (row 153) brackets the 150 the rule gives. Read by the troop-lift lead, for the architect's review."
+
+# combinedfleet: Yugure "With KAGERO, landed about 150 men and supplies at
+# Taivu" (rows 159, 160), one source; no other row gives the men or the ships
+# of the run. Kagero is read on 31 August, the first run of the scenario she
+# made whose men are not disputed (decision 0166, As built).
+[[troops.run]]
+run = "jp-run-1942-09-02-taivu-yugure-kagero"
+ships = ["yugure"]
+men_row = 159
+ships_row = 160
+ships_in_run = 2
+reason = "combinedfleet's about 150 men (row 159) and two ships, Yugure and Kagero (row 160), one statement; no other row of the run gives men or ships. Decision 0166, 15."
+
+# combinedfleet: six destroyers in two sections "landed about 1,000 soldiers
+# of Ichiki and Aoba Detachments at Taivu" (rows 161, 162). The pages
+# disagree on which section led and which followed (ship_facts 2359, 2360);
+# both name the same six ships and the same 1,000 men, so the figure does not
+# depend on it. Hatsuyuki is read on 31 August.
+[[troops.run]]
+run = "jp-run-1942-09-04-taivu-two-sections"
+ships = ["yudachi", "murakumo", "uranami", "shikinami", "ariake"]
+men_row = 161
+ships_row = 162
+ships_in_run = 6
+reason = "combinedfleet's about 1,000 men (row 161) over its six destroyers in two sections (row 162). Which section led is disputed (ship_facts 2359, 2360) but both readings name the same six ships and the same men, so the figure does not rest on it. Decision 0166, 15."
 
 # The class ids, pinned (decision 0077), continuing from the highest id any
 # list has pinned (3008, cape_esperance.toml). Two rows of the Fubuki class,
@@ -87,3 +142,10 @@ reason = "Zimmerman's 1,200 men (row 47); combinedfleet's eight destroyers by na
 [class_ids]
 3009 = ["fubuki", "shirayuki"]
 3010 = ["hatsuyuki", "amagiri"]
+# Decision 0166, part A: the destroyers of the runs.
+3011 = ["kagero"]
+3012 = ["kawakaze", "umikaze", "suzukaze"]
+3013 = ["yudachi"]
+3014 = ["yugure"]
+3015 = ["ariake"]
+3016 = ["murakumo", "uranami", "shikinami"]
