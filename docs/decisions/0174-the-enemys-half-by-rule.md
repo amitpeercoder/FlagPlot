@@ -136,3 +136,17 @@ Built on Nov 19, 2026, on the branch `enemy-half-build`, from the head of decisi
 23. *`sim-staff`* is a dependency as rule 1 says; the library does not yet use it. The playing of a trial, which will hand the staffs to the built worlds, is step 5.
 24. *What the source test bans* (`crates/sim-trial/tests/source.rs`), in code lines of every source file: `World` as a word of its own except on a line that imports it, calls `World::from_picture(` or returns `Result<World, SimError>`; and outright `umpire`, `Umpire`, `whole_picture`, `rebuild_from_picture`, `side_view`, `at_seat`, `known_to`, `at_staff_step`, `World::new`, `TruthState`, `BeliefState`, `EventLog`, `events_all`, `IdAllocator`, `std::fs`, `std::net`, `std::env`, `SystemTime`, `Instant`, `HashMap`, `HashSet`, `f32`, `f64` and `unsafe`; and `sim-data`, `sim-cli`, `sim-agent`, `map-tool` and the `oob-` crates as normal dependencies. Resolving a world is not allowed yet: the record lets a trial resolve one, and this step does not.
 25. *The rulebook* gains chapter 9, "The trial", begun with how a picture's enemy is made; chapter 1 gains the trial subsystem, the entity `Place` and the four draws in "Every draw is keyed", the `trial` key in "A game from a scenario" and a pointer from "A side's own half of a picture"; the glossary gains "trial", "enemy's half", "assumption (of a picture)" and "trial's figures"; `docs/commands.md` the `trial` key; `docs/engineering/layout.md` the crate's row and boundary; the frozen figures' README the two new copies.
+
+## The architect's rulings
+
+Made on Nov 19, 2026, on reading the build.
+
+1. **The readings of "As built" stand as made.**
+2. **The hand calculation's case 2 was wrong in an input, and is corrected by the architect.** It took the carrier from the enemy by giving class 4 to the other side alone; the class file has a second carrier class, and rule 8 rightly builds that one. The case now gives every carrier class to the other side alone. The rule is unchanged.
+3. **Rule 20 is read as the build read it:** a side is refused a trial where a unit the scenario numbered lies from 900,001 to 1,000,000. Units made in play are numbered above that and do not clash.
+4. **A made unit is given nothing the record did not give it:** no guns or repairs at a base, no cargo or men in a ship, the standard experience and skills. These are assumptions, and the list that goes with a picture names the ones that are figures.
+5. **A place in a side's own list is a thing a draw may be keyed on** (`EntityRef::Place`, added at the end), since a contact's own number may not be read outside the engine. It is used by the trial's draws alone.
+6. **A view lists the classes and the types of the reference data.** They are public data, as a class read by its number already is.
+7. **A contact stands for one believed force at most,** and a merged pair is placed on the newer report's draw.
+8. **With no file of sides no ship is built,** and the assumptions say so. A scenario that is to be tried names one.
+

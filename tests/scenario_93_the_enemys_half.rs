@@ -65,7 +65,10 @@
 //! - It is at (5,2) in every world: a contact of age 0 is where it was
 //!   reported.
 //!
-//! With the file of sides giving class 4 to the Allied side alone: the
+//! (Corrected by the architect on Nov 19, 2026: this said "class 4" alone.
+//! The class file has a second carrier, class 5, which would then be
+//! built in its place.) With the file of sides giving every carrier
+//! class, 4 and 5, to the Allied side alone: the
 //! carrier is not built, the force is the four destroyers, 900,001 to
 //! 900,004, on the carrier mission with no air group, and the
 //! assumptions say one carrier was left out for want of a class.
