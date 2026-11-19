@@ -605,7 +605,7 @@ button:disabled { opacity: 0.45; cursor: default; }
     kv(body, [['Where', '(' + pl.q + ', ' + pl.r + ')'], ['Held by', t.base ? 'the enemy' : null]]);
     if (!t.sea || est) body.appendChild(el('div', 'sub', 'HIS MEN ASHORE'));
     if (est) kv(body, [['Estimate', 'About ' + commas(est.men) + ' men'], ['From', est.came_from], ['Age', daysOld(est)]]);
-    else if (!t.sea) body.appendChild(el('div', '', t.base ? 'No estimate is held. Nobody of yours has seen the place.' : 'None reported.'));
+    else if (!t.sea) body.appendChild(el('div', '', 'No intelligence.'));
     links(body, 'CONTACTS HERE', contactsAt(pl));
     if (!here.length && !t.base) body.appendChild(el('div', '', 'No contact is held here.'));
    
