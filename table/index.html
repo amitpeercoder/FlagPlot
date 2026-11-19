@@ -1426,9 +1426,9 @@ button:disabled { opacity: 0.45; cursor: default; }
   function tidyWorked(t) {
     return String(t).replace(/((?:the waters to deny at \(-?\d+,-?\d+\)(?:, )?){4,})/g, function (run) { var n = run.match(/the waters/g).length, tail = /, $/.test(run) ? ', ' : ''; return 'the waters to deny in ' + n + ' places' + tail; })
       .replace(/ \(\d+ hex\(es\) on the map\)/g, '').replace(/(base:\d+ \([^)]*\)) at \(-?\d+,-?\d+\)/g, '$1')
-      .replace(/hex\(es\)/g, 'hexes').replace(/(\d) x ([\d(])/g, '$1 × $2')
+      .replace(/hex\(es\)/g, 'hexes').replace(/ x (?=[\d(])/g, ' \u00D7 ')
       .replace(/(^|[^:\w.])(\d+)\.(\d{3,})\b/g, function (m, a, w, f) { return a + (Math.round(parseFloat(w + '.' + f) * 10) / 10); })
-      .replace(/(^|[^:\w.,])(\d{5,})\b(?!\.\d)/g, function (m, a, w) { return a + w.replace(/\B(?=(\d{3})+$)/g, ','); });
+      .replace(/(^|[^:\w.,])(\d{4,})\b(?!\.\d)/g, function (m, a, w) { return a + w.replace(/\B(?=(\d{3})+$)/g, ','); });
   }
   function workedView(into, verdict, r, own) {
     var box = el('div', 'reason', ''), say = function (t) { return reasonWords(t, own, true); };
