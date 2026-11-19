@@ -857,6 +857,19 @@ impl World {
         hash::hash_world(self)
     }
 
+    /// A means for tests only (decision 0175), built only with the feature
+    /// `test-means`, which no normal build enables: makes the state break an
+    /// invariant that no rule of play reads, by giving the lowest-numbered
+    /// base a yard passage of 0 days, so that the next day resolved fails
+    /// its check of the invariants at its end. A world with no base is left
+    /// as it is.
+    #[cfg(feature = "test-means")]
+    pub fn break_an_invariant_for_a_test(&mut self) {
+        if let Some(base) = self.truth.bases.values_mut().next() {
+            base.yard_passage_days = Some(0);
+        }
+    }
+
     /// Opens the random number stream for one entity in one subsystem at one
     /// moment. This is the only source of randomness the rules may use.
     /// `draw` names the rule that draws; a new rule adds its own value to

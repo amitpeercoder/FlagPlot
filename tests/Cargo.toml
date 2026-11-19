@@ -9,7 +9,9 @@ publish.workspace = true
 sim-core.workspace = true
 sim-data.workspace = true
 sim-staff.workspace = true
-sim-trial.workspace = true
+# Scenario 94 makes one world of a trial fail a day by a means for tests
+# only (decision 0175).
+sim-trial = { workspace = true, features = ["test-means"] }
 # Scenario 41's preview is asked through the agent's tools.
 sim-agent = { path = "../crates/sim-agent" }
 serde_json.workspace = true
@@ -512,3 +514,7 @@ path = "scenario_92_a_sides_own_half.rs"
 [[test]]
 name = "scenario_93_the_enemys_half"
 path = "scenario_93_the_enemys_half.rs"
+
+[[test]]
+name = "scenario_94_a_trial"
+path = "scenario_94_a_trial.rs"

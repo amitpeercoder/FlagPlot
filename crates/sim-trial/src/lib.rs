@@ -1,8 +1,9 @@
-//! Flag Plot trials (decision 0174, step 4 of step 3's stage 4).
+//! Flag Plot trials (decisions 0174 and 0175, steps 4 and 5 of step 3's
+//! stage 4).
 //!
 //! A trial tries a side's course in many worlds that could be the one it is
-//! in. This crate makes those worlds' pictures and builds the worlds; the
-//! playing of a trial is the next step's (decision 0161, D).
+//! in. This crate makes those worlds' pictures, builds the worlds and plays
+//! them (decision 0161, D).
 //!
 //! - [`pictures`] makes the pictures of a trial: from a side's view, what
 //!   that side believed (the forces it believed in and the intents it
@@ -18,6 +19,12 @@
 //!   and the map it is handed, on the stream of its trial and its world
 //!   (decision 0170, 12), and hands in for the enemy, for the first morning,
 //!   the intents the side believed he held (rule 19).
+//! - [`begin`] and [`play`] play a trial (decision 0175): one course, the
+//!   commander's commands of the side tried, in each world from 1, for a
+//!   horizon of days, with both sides' staffs on doctrine. [`Playing`] is
+//!   worked a world's day at a time and can be dropped at any step;
+//!   [`Played`] is the worlds as played, each with its number, its
+//!   assumptions, its days and the world as its play left it.
 //!
 //! What the rules read is fixed (decision 0161, 6): a side's view, what the
 //! scenario says that side believed, and the trial's figures and settings.
@@ -35,8 +42,11 @@
 mod assumption;
 mod draw;
 mod enemy;
+mod play;
 
 pub use assumption::{Assumption, NotMade, Source};
+pub use play::{begin, play, Asked, Failed, Played, PlayedDay, PlayedWorld, Playing, Stepped};
+pub use sim_core::refdata::TrialSize;
 
 use core::fmt;
 

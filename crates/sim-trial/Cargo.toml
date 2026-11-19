@@ -9,6 +9,12 @@ publish.workspace = true
 sim-core.workspace = true
 sim-staff.workspace = true
 
+[features]
+# A means for tests only (decision 0175): `Playing::break_world_on`, which
+# makes one world of a trial break an invariant on a day. Never enabled by a
+# normal build; only the scenario tests ask for it.
+test-means = ["sim-core/test-means"]
+
 [dev-dependencies]
 sim-data.workspace = true
 

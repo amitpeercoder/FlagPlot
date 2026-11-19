@@ -1,0 +1,133 @@
+# Scenario 94: a trial.
+#
+# Decision 0175, step 5 of step 3's stage 4. One course is played in a number
+# of worlds built from the Allied side's picture, for a number of days, with
+# both sides on doctrine; the live game is not touched.
+#
+# It is scenario 86 (fed with the lift) with three changes, as the hand
+# calculation's inputs give them:
+#   1. Its three commands of day 1 (control island 1, leave to prepare, leave
+#      to launch) are taken out: they are the course the test tries, and the
+#      live game is given none of them. In this game nothing is ever ordered.
+#   2. It names a file of the trial's figures,
+#      trial_placeholder_scenario_94.toml, in which an enemy base is assumed
+#      to hold 0 t of supply and 0 t of fuel, and the three sizes are as
+#      decision 0175 has them.
+#   3. It names a file of sides, class_sides_placeholder_scenario_94.csv,
+#      that gives every class and type to both sides.
+#
+# So: Allied base 1 at A, (0,0), with 1,000 t of supply; Japanese base 2 at B,
+# (4,0), with nothing; Allied base 4 at C, (0,6), with nothing; task force 1,
+# Allied, two placeholder troop transports stopped at sea at (2,0), unit 1
+# (600 fighting men) and 30 t of supply in ship 1 and unit 2 (400 working
+# men) in ship 2. The Allied side holds no contact and no estimate and
+# believes nothing. The game is 8 days.
+#
+# The hand calculation is in tests/scenario_94_a_trial.rs. The test runs this
+# file on the frozen step 1 figures; the trial's figures and the file of sides
+# have frozen copies in data/reference/step1.
+#
+# PLACEHOLDER DATA. The bases, ships, units, figures, island and map are
+# invented.
+
+name = "Placeholder scenario 94: A trial"
+placeholder = true
+seed = 1942
+days = 8
+map = "../map/placeholder_preparing.toml"
+ship_classes = [
+    "../reference/ship_classes.csv",
+    "../reference/ship_classes_placeholder_transports.csv",
+]
+port_sizes = "../reference/port_sizes.csv"
+aircraft_types = "../reference/aircraft_types.csv"
+search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat.toml"
+air_combat = "../reference/air_combat.toml"
+ground = "../reference/ground.toml"
+class_sides = "../reference/class_sides_placeholder_scenario_94.csv"
+trial = "../reference/trial_placeholder_scenario_94.toml"
+
+# Allied base 1 at A, with supply for every man for the whole game and no
+# fuel.
+[[base]]
+id = 1
+name = "Placeholder base A"
+side = "allied"
+q = 0
+r = 0
+supply_t = 1000
+fuel_t = 0
+
+# Japanese base 2 at B: no gun, no aircraft, no man, no stock.
+[[base]]
+id = 2
+name = "Placeholder airfield B"
+side = "japanese"
+q = 4
+r = 0
+supply_t = 0
+fuel_t = 0
+
+# Allied base 4 at C: the transports' home port, with no stock at all.
+[[base]]
+id = 4
+name = "Placeholder staging C"
+side = "allied"
+q = 0
+r = 6
+supply_t = 0
+fuel_t = 0
+
+# Task force 1: two placeholder troop transports, stopped at sea at (2,0), with
+# base 4 their home port. Unit 1 fills ship 1, which has 30 t of supply
+# aboard; unit 2 goes into ship 2.
+[[task_force]]
+id = 1
+name = "Placeholder transport force 1"
+side = "allied"
+q = 2
+r = 0
+home_port = 4
+mission = "transport"
+
+[[ship]]
+id = 1
+name = "Placeholder troop transport 1"
+class = 10
+side = "allied"
+fuel_t = 1000
+supply_t = 30
+task_force = 1
+
+[[ship]]
+id = 2
+name = "Placeholder troop transport 2"
+class = 10
+side = "allied"
+fuel_t = 1000
+task_force = 1
+
+# The land units, aboard. Unit 1 is a fighting unit, unit 2 is a working
+# unit; each at the standard of experience, 2, and with every skill at 2, the
+# defaults.
+[[land_unit]]
+id = 1
+name = "Placeholder Infantry"
+side = "allied"
+men = 600
+task_force = 1
+
+[[land_unit]]
+id = 2
+name = "Placeholder Pioneers"
+side = "allied"
+working = true
+men = 400
+task_force = 1
+
+# The island: base 2.
+[[island]]
+number = 1
+name = "Placeholder island"
+places = [{ base = 2 }]

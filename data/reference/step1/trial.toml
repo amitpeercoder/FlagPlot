@@ -1,13 +1,15 @@
 # FROZEN: a copy of data/reference/trial.toml
 # as first made, on Nov 19, 2026, for scenario 93's hand calculation (decision
 # 0174). Do not edit. A rule that adds a new figure adds it here too, with its
-# first value. Otherwise byte for byte the live file.
+# first value. Otherwise byte for byte the live file. The three sizes were
+# added for decision 0175 (Nov 19, 2026), with their first values.
 # A TRIAL'S FIGURES (decision 0174, "The figures"): what a side is taken to
 # assume, when the enemy's half of a picture is made, of what it cannot see.
 # Named by a scenario that is to be tried, with its `trial` key.
 #
-# PLACEHOLDER DATA. Both figures are set by the architect and rest on no
-# source: no row sizes what a side should assume of a base it has not seen.
+# PLACEHOLDER DATA. Every figure is set by the architect and rests on no
+# source: no row sizes what a side should assume of a base it has not seen,
+# and the sizes are a budget of work, not a fact.
 
 placeholder = true
 
@@ -18,3 +20,20 @@ enemy_base_supply_t = 1000
 # The fuel for ships a base of the enemy's on the side's map is given, in
 # tons (decision 0174, 5). Placeholder.
 enemy_base_fuel_t = 500
+
+# The three sizes of a trial (decision 0175, 2): a number of worlds and a
+# horizon in days. Each count of worlds is a power of two, so that the forces
+# of unknown standing are tried evenly (decision 0174, 14). Set by what is
+# asked, never by a clock. Placeholders, set by the architect; they wait for
+# the designer to accept the times measured on the named machine.
+[small]
+worlds = 8
+days = 7
+
+[standard]
+worlds = 16
+days = 14
+
+[full]
+worlds = 64
+days = 21

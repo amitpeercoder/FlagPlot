@@ -8,5 +8,12 @@ publish.workspace = true
 # Deliberately no dependencies. See docs/decisions/0004-state-hash.md.
 [dependencies]
 
+[features]
+# A means for tests only (decision 0175): `World::break_an_invariant_for_a_test`,
+# so that a test can make one world of a trial fail a day. Never enabled by a
+# normal build; only the scenario tests ask for it, through `sim-trial`'s
+# feature of the same name.
+test-means = []
+
 [lints]
 workspace = true

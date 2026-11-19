@@ -9,7 +9,7 @@ use sim_core::refdata::{
     AirCombatFigures, AirSupplyFigures, AirUpkeepFigures, AircraftRole, AircraftType, AttackWeapon,
     BombardmentFigures, ClassSide, ClassSides, FatigueFigures, GroundFigures, PassingChances,
     PortSize, RefData, ReportError, ReportFigures, SearchFigures, ShipClass, ShipKind,
-    SurfaceCombatFigures, TrialFigures,
+    SurfaceCombatFigures, TrialFigures, TrialSize,
 };
 use sim_core::state::ShipSystem;
 
@@ -3733,12 +3733,36 @@ struct TrialFile {
     placeholder: bool,
     enemy_base_supply_t: Quantity,
     enemy_base_fuel_t: Quantity,
+    small: TrialSizeFile,
+    standard: TrialSizeFile,
+    full: TrialSizeFile,
+}
+
+/// A size of a trial as the file gives it (decision 0175, 2): whole numbers.
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct TrialSizeFile {
+    worlds: u32,
+    days: u32,
+}
+
+impl TrialSizeFile {
+    fn size(&self) -> TrialSize {
+        TrialSize {
+            worlds: self.worlds,
+            days: self.days,
+        }
+    }
 }
 
 /// Loads a trial's figures file (decision 0174, "The figures"), named by a
 /// scenario's optional `trial` key: a `placeholder` flag and what a base of
 /// the enemy's is given, `enemy_base_supply_t` and `enemy_base_fuel_t`, each
-/// a whole number or a decimal string, neither below 0.
+/// a whole number or a decimal string, neither below 0; and the three sizes
+/// of a trial (decision 0175, 2), the tables `small`, `standard` and `full`,
+/// each of `worlds` and `days` as whole numbers, at least one day and a
+/// count of worlds that is a power of two. Every key is required, as the
+/// file's other figures are: a file without the sizes is refused.
 pub fn load_trial_figures(path: &Path) -> Result<TrialFigures, DataError> {
     let text = fs::read_to_string(path).map_err(|e| DataError::in_file(path, e.to_string()))?;
     parse_trial_figures(&text, path)
@@ -3757,6 +3781,9 @@ fn parse_trial_figures(text: &str, path: &Path) -> Result<TrialFigures, DataErro
         placeholder: file.placeholder,
         enemy_base_supply_t: number("enemy_base_supply_t", &file.enemy_base_supply_t)?,
         enemy_base_fuel_t: number("enemy_base_fuel_t", &file.enemy_base_fuel_t)?,
+        small: file.small.size(),
+        standard: file.standard.size(),
+        full: file.full.size(),
     };
     if let Some(problem) = figures.problem() {
         return Err(fail(problem));
@@ -3768,36 +3795,87 @@ fn parse_trial_figures(text: &str, path: &Path) -> Result<TrialFigures, DataErro
 mod trial_figures_tests {
     use super::*;
 
+    const SIZES: &str = "[small]\nworlds = 8\ndays = 7\n[standard]\nworlds = 16\ndays = 14\n[full]\nworlds = 64\ndays = 21\n";
+
     #[test]
     fn a_trial_figures_file_is_read_and_refused_where_it_is_wrong() {
         let path = Path::new("trial.toml");
         let figures = parse_trial_figures(
-            "placeholder = true\nenemy_base_supply_t = 1000\nenemy_base_fuel_t = \"500.5\"\n",
+            &format!(
+                "placeholder = true\nenemy_base_supply_t = 1000\nenemy_base_fuel_t = \"500.5\"\n{SIZES}"
+            ),
             path,
         )
         .expect("the figures parse");
         assert!(figures.placeholder);
         assert_eq!(figures.enemy_base_supply_t, Fixed::from_int(1000));
         assert_eq!(figures.enemy_base_fuel_t, Fixed::from_ratio(1001, 2));
+        assert_eq!(figures.small, TrialSize { worlds: 8, days: 7 });
+        assert_eq!(
+            figures.standard,
+            TrialSize {
+                worlds: 16,
+                days: 14
+            }
+        );
+        assert_eq!(
+            figures.full,
+            TrialSize {
+                worlds: 64,
+                days: 21
+            }
+        );
         for (text, words) in [
             (
-                "placeholder = true\nenemy_base_supply_t = -1\nenemy_base_fuel_t = 500\n",
+                format!("placeholder = true\nenemy_base_supply_t = -1\nenemy_base_fuel_t = 500\n{SIZES}"),
                 "enemy_base_supply_t is -1, below 0",
             ),
             (
-                "placeholder = true\nenemy_base_supply_t = 1000.0\nenemy_base_fuel_t = 500\n",
+                format!("placeholder = true\nenemy_base_supply_t = 1000.0\nenemy_base_fuel_t = 500\n{SIZES}"),
                 "enemy_base_supply_t",
             ),
             (
-                "placeholder = true\nenemy_base_supply_t = 1000\n",
+                format!("placeholder = true\nenemy_base_supply_t = 1000\n{SIZES}"),
                 "enemy_base_fuel_t",
             ),
             (
-                "placeholder = true\nenemy_base_supply_t = 1\nenemy_base_fuel_t = 1\nguns = 2\n",
+                format!("placeholder = true\nenemy_base_supply_t = 1\nenemy_base_fuel_t = 1\nguns = 2\n{SIZES}"),
                 "guns",
             ),
+            (
+                "placeholder = true\nenemy_base_supply_t = 1\nenemy_base_fuel_t = 1\n".to_string(),
+                "small",
+            ),
+            (
+                format!(
+                    "placeholder = true\nenemy_base_supply_t = 1\nenemy_base_fuel_t = 1\n{}",
+                    SIZES.replace("worlds = 16", "worlds = 12")
+                ),
+                "the standard size has 12 worlds, not a power of two",
+            ),
+            (
+                format!(
+                    "placeholder = true\nenemy_base_supply_t = 1\nenemy_base_fuel_t = 1\n{}",
+                    SIZES.replace("worlds = 64", "worlds = 0")
+                ),
+                "the full size has 0 worlds",
+            ),
+            (
+                format!(
+                    "placeholder = true\nenemy_base_supply_t = 1\nenemy_base_fuel_t = 1\n{}",
+                    SIZES.replace("days = 7", "days = 0")
+                ),
+                "the small size has no day",
+            ),
+            (
+                format!(
+                    "placeholder = true\nenemy_base_supply_t = 1\nenemy_base_fuel_t = 1\n{}",
+                    SIZES.replace("days = 7", "days = 7.0")
+                ),
+                "days",
+            ),
         ] {
-            let error = parse_trial_figures(text, path).expect_err(text);
+            let error = parse_trial_figures(&text, path).expect_err(&text);
             assert!(error.to_string().contains(words), "{error} names {words}");
         }
     }

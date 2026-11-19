@@ -1172,11 +1172,42 @@ pub struct TrialFigures {
     pub enemy_base_supply_t: Fixed,
     /// The fuel for ships a base of the enemy's is given, in tons (rule 5).
     pub enemy_base_fuel_t: Fixed,
+    /// The three sizes of a trial (decision 0175, 2): small, standard and
+    /// full.
+    pub small: TrialSize,
+    pub standard: TrialSize,
+    pub full: TrialSize,
+}
+
+/// A size of a trial (decision 0175, 2): how many worlds it plays and for
+/// how many days. Work, not time: the same on any machine.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct TrialSize {
+    pub worlds: u32,
+    pub days: u32,
+}
+
+impl TrialSize {
+    /// The days of play a trial of this size asks for: worlds times days.
+    pub fn days_of_play(self) -> u64 {
+        u64::from(self.worlds) * u64::from(self.days)
+    }
 }
 
 impl TrialFigures {
+    /// The three sizes by name, smallest first.
+    pub fn sizes(&self) -> [(&'static str, TrialSize); 3] {
+        [
+            ("small", self.small),
+            ("standard", self.standard),
+            ("full", self.full),
+        ]
+    }
+
     /// Describes what is wrong with the figures, if anything: a figure below
-    /// 0.
+    /// 0, or a size of no world or no day, or whose count of worlds is not a
+    /// power of two (decision 0175, 2: so that the forces of unknown
+    /// standing are tried evenly, decision 0174, 14).
     pub fn problem(&self) -> Option<String> {
         for (name, value) in [
             ("enemy_base_supply_t", self.enemy_base_supply_t),
@@ -1184,6 +1215,17 @@ impl TrialFigures {
         ] {
             if value.is_negative() {
                 return Some(format!("{name} is {value}, below 0"));
+            }
+        }
+        for (name, size) in self.sizes() {
+            if size.days == 0 {
+                return Some(format!("the {name} size has no day"));
+            }
+            if !size.worlds.is_power_of_two() {
+                return Some(format!(
+                    "the {name} size has {} worlds, not a power of two",
+                    size.worlds
+                ));
             }
         }
         None
