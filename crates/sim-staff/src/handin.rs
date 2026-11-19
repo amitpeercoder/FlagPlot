@@ -36,6 +36,9 @@ pub(crate) enum Step {
     Speed(SpeedSetting),
     LoadTo {
         weight_t: Fixed,
+        /// The most a ship is to hold (decision 0162, 5): named on a supply
+        /// run by night.
+        each_t: Option<Fixed>,
     },
     Join {
         into: Who,
@@ -176,9 +179,10 @@ impl Out {
                     },
                     Step::Unload => TaskForceOrder::Unload,
                     Step::Speed(speed) => TaskForceOrder::SetSpeed(*speed),
-                    Step::LoadTo { weight_t } => TaskForceOrder::LoadTo {
+                    Step::LoadTo { weight_t, each_t } => TaskForceOrder::LoadTo {
                         cargo: Cargo::Supply,
                         weight_t: *weight_t,
+                        each_t: *each_t,
                     },
                     Step::Join { into } => TaskForceOrder::JoinTo(force(*into)),
                     Step::Escort { charge } => TaskForceOrder::Escort(charge.map(force)),

@@ -178,8 +178,11 @@ pub const FORMAT: &str = "flagplot-saved-game";
 /// lacks them and is refused, not converted. Version 22 (decision 0159, rule
 /// D) adds in `"commands"` the limit `knowledge` (`knowledge` and, for a
 /// recent count, `within_days`); its state version is v47. A game of an older
-/// version lacks it and is refused, not converted.
-pub const VERSION: u32 = 22;
+/// version lacks it and is refused, not converted. Version 23 (decision 0162)
+/// adds to the load order with a weight the level `each_t`, the most a ship
+/// is to hold; its state version is v48. A game of an older version is
+/// refused, not converted.
+pub const VERSION: u32 = 23;
 
 pub type Script = BTreeMap<u32, Vec<(Side, OrderRequest)>>;
 
@@ -722,6 +725,7 @@ mod tests {
                 order: TaskForceOrder::LoadTo {
                     cargo: Cargo::Supply,
                     weight_t: Fixed::from_int(1200),
+                    each_t: None,
                 },
             },
             OrderKind::TaskForce {
@@ -729,6 +733,7 @@ mod tests {
                 order: TaskForceOrder::LoadTo {
                     cargo: Cargo::Fuel,
                     weight_t: Fixed::from_raw(2_500_001),
+                    each_t: None,
                 },
             },
             OrderKind::TaskForce {
@@ -1136,6 +1141,7 @@ mod tests {
                     order: TaskForceOrder::LoadTo {
                         cargo: Cargo::Supply,
                         weight_t: Fixed::from_raw(120_000_001),
+                        each_t: None,
                     },
                 },
                 intent,
@@ -1245,7 +1251,7 @@ mod tests {
         .expect("writes");
         let written: Value = serde_json::from_str(&fs::read_to_string(&file).expect("reads"))
             .expect("the file is JSON");
-        assert_eq!(written["version"], 22);
+        assert_eq!(written["version"], 23);
         assert_eq!(written["doctrine_version"], sim_staff::DOCTRINE_VERSION);
         assert_eq!(written["commands"].as_array().expect("commands").len(), 26);
         assert_eq!(written["staff"].as_array().expect("staff").len(), 1);

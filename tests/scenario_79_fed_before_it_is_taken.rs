@@ -249,6 +249,7 @@ fn given(o: &StaffOrder) -> Given {
                 TaskForceOrder::LoadTo {
                     cargo: Cargo::Supply,
                     weight_t,
+                    ..
                 },
         } if target.raw() == 1 => Given::LoadTo(*weight_t),
         OrderKind::TaskForce {

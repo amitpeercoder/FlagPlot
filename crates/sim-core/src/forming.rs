@@ -148,20 +148,25 @@ impl World {
     /// above its reserve than the order asks (decision 9 of 0111): the tons
     /// it may take below the reserve, as it stands at intake. What it asks is
     /// the weight less what is aboard, or with no weight the force's room,
-    /// and no more than the stock. `None` for an order that is not a load of
+    /// and no more than the stock. With a level (decision 0162) a ship's
+    /// room counts only up to the level less what it holds of the cargo. `None` for an order that is not a load of
     /// supply or fuel, where the side has no base, or with nothing below.
     pub(crate) fn load_below_reserve(
         &self,
         force: TaskForceId,
         order: &TaskForceOrder,
     ) -> Option<EventKind> {
-        let (cargo, weight) = match order {
-            TaskForceOrder::Load => (Cargo::Supply, None),
-            TaskForceOrder::LoadFuel => (Cargo::Fuel, None),
-            TaskForceOrder::LoadTo { cargo, weight_t } => (*cargo, Some(*weight_t)),
+        let (cargo, weight, level) = match order {
+            TaskForceOrder::Load => (Cargo::Supply, None, None),
+            TaskForceOrder::LoadFuel => (Cargo::Fuel, None, None),
+            TaskForceOrder::LoadTo {
+                cargo,
+                weight_t,
+                each_t,
+            } => (*cargo, Some(*weight_t), *each_t),
             TaskForceOrder::LoadUnit {
                 cargo: Some(cargo), ..
-            } => (*cargo, None),
+            } => (*cargo, None, None),
             _ => return None,
         };
         let record = &self.truth.task_forces[&force];
@@ -181,10 +186,11 @@ impl World {
                         Cargo::Supply => ship.supply_t,
                         Cargo::Fuel => ship.cargo_fuel_t,
                     };
-                    (
-                        aboard + of_cargo,
-                        room + capacity - ship.supply_t - ship.cargo_fuel_t,
-                    )
+                    let mut ship_room = capacity - ship.supply_t - ship.cargo_fuel_t;
+                    if let Some(level) = level {
+                        ship_room = ship_room.min((level - of_cargo).max(Fixed::ZERO));
+                    }
+                    (aboard + of_cargo, room + ship_room)
                 });
         let asks = match weight {
             Some(weight) => (weight - aboard).max(Fixed::ZERO).min(room),

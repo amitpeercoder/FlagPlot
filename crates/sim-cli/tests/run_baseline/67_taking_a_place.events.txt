@@ -2,20 +2,20 @@ Placeholder scenario 67: Taking a place
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 588bb986af226b0a  23 events
-day   2  hash e076e38107b86bf4  9 events
-day   3  hash 18bf6369dd2142a4  9 events
-day   4  hash 88f1f9159a94345c  8 events
-day   5  hash 3c36c3ebf955a966  9 events
-day   6  hash c47d0e69fe865490  7 events
-day   7  hash 5bcaf782abc1d98c  13 events
-day   8  hash 88ab6fbb4acf5ba1  11 events
-day   9  hash 1498d60ceea93339  11 events
-day  10  hash 88880bf043b509cf  29 events
-day  11  hash ae76b8220a543b51  21 events
-day  12  hash f26ef724c05781ef  12 events
-day  13  hash 399514e3e93be6cb  8 events
-day  14  hash ec285575431b5ea1  8 events
+day   1  hash b33537052c207925  23 events
+day   2  hash 3dd4143aafa4622b  9 events
+day   3  hash 20d3ac4e0948936f  9 events
+day   4  hash 7fc2b792cf106573  8 events
+day   5  hash 450774e6d368c79b  9 events
+day   6  hash 853ddb17807c9e61  7 events
+day   7  hash 17d97b7b7889792f  13 events
+day   8  hash ae4f3720b72bca1e  11 events
+day   9  hash 057e5d7571632ab2  11 events
+day  10  hash 1da2fadf8fd6f84a  29 events
+day  11  hash c9e2e41cb3d34abe  21 events
+day  12  hash 227519b9f1dd0e90  12 events
+day  13  hash fa73e0927749759a  8 events
+day  14  hash 52acc58a23e449b2  8 events
 
 #1 D1 -         Allied the commander's command taken: set intent:1 to take the place at (4,0)
 #2 D1 -         Allied plan:1 drafted for intent:1  <- #1

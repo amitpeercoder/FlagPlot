@@ -16,12 +16,16 @@
 //!   with room for the load and for which every ship has the fuel of the
 //!   route out and home at that speed, by the engine's measure.
 //! - **The night's limit** (item 7): no ship carries more than the place's
-//!   rate for it times the night's hours. A load to a weight fills ships in
-//!   ship order, so a load is cut until the first ship filled carries no more
-//!   than its limit, and each after it likewise (item 8).
+//!   rate for it times the night's hours. A supply run's load names a level,
+//!   the least of the ships' limits, and each ship takes no more than the
+//!   level less its supply aboard; the load is cut to what the levels allow
+//!   (decision 0162, 5 to 7, replacing item 8 for a supply run). A lift's
+//!   load is still cut until the first ship filled carries no more than its
+//!   limit, and each after it likewise (item 8; decision 0162, 9).
 //!
-//! The pure parts are [`night_hours`] and [`weight_within`]; the rest reads
-//! the side's view and the engine's measures through it.
+//! The pure parts are [`night_hours`], [`weight_within`], [`spread`] and
+//! [`most_within`]; the rest reads the side's view and the engine's measures
+//! through it.
 
 use sim_core::command::Risk;
 use sim_core::fixed::Fixed;
@@ -62,6 +66,36 @@ pub(crate) fn weight_within(lines: &[(Fixed, Fixed, Fixed)]) -> Fixed {
         }
     }
     most
+}
+
+/// What each ship takes of a load of `take_t` with a level of `level_t`
+/// (decision 0162, 1), as the engine fills it: each line is a ship's supply
+/// aboard and its room to take more, in ship order; each takes the least of
+/// its room, what is left of the load and the level less its supply aboard,
+/// not below 0.
+pub(crate) fn spread(lines: &[(Fixed, Fixed)], take_t: Fixed, level_t: Fixed) -> Vec<Fixed> {
+    let mut left = take_t;
+    lines
+        .iter()
+        .map(|(aboard, room)| {
+            let part = (*room)
+                .min(left)
+                .min((level_t - *aboard).max(Fixed::ZERO))
+                .max(Fixed::ZERO);
+            left -= part;
+            part
+        })
+        .collect()
+}
+
+/// The most a supply run may take with a level of `level_t` (decision 0162,
+/// 5): the sum, over its ships, of the least of a ship's room and the level
+/// less its supply aboard, not below 0.
+pub(crate) fn most_within(lines: &[(Fixed, Fixed)], level_t: Fixed) -> Fixed {
+    lines
+        .iter()
+        .map(|(aboard, room)| (*room).min((level_t - *aboard).max(Fixed::ZERO)))
+        .fold(Fixed::ZERO, |sum, part| sum + part)
 }
 
 /// The enemy base that makes a run go by night (item 2): the nearest on the
@@ -276,14 +310,20 @@ pub(crate) fn try_ships(
 /// fuel that has the longest night, whose limit the load is then cut to.
 /// `None` where no speed arrives in the night with the fuel.
 pub(crate) fn choose<'t>(tried: &'t [Tried], loads: &[(Fixed, Fixed)]) -> Option<&'t Tried> {
+    choose_by(tried, |night| {
+        loads.iter().all(|(load, rate)| *load <= *rate * night)
+    })
+}
+
+/// [`choose`] with the test of room for the load given as `fits`, which is
+/// asked with a speed's night hours (decision 0162, 7: a supply run reads
+/// it on its load as spread).
+pub(crate) fn choose_by(tried: &[Tried], fits: impl Fn(Fixed) -> bool) -> Option<&Tried> {
     let eligible: Vec<&Tried> = tried
         .iter()
         .filter(|t| t.night.is_some() && t.has_fuel())
         .collect();
-    let fits = |t: &Tried| {
-        let night = t.night.unwrap_or(Fixed::ZERO);
-        loads.iter().all(|(load, rate)| *load <= *rate * night)
-    };
+    let fits = |t: &Tried| fits(t.night.unwrap_or(Fixed::ZERO));
     eligible
         .iter()
         .find(|t| fits(t))
@@ -337,6 +377,19 @@ mod tests {
         );
         assert_eq!(night_hours(Fixed::from_int(30)), Some(Fixed::from_int(6)));
         assert_eq!(night_hours(Fixed::from_int(12)), None);
+    }
+
+    #[test]
+    fn a_load_spread_under_a_level() {
+        let t = Fixed::from_int;
+        // Decision 0162's order alone: 10 t, nothing and 45 t aboard, 45 t to
+        // take, a level of 40 t.
+        let lines = [(t(10), t(40)), (t(0), t(50)), (t(45), t(5))];
+        assert_eq!(spread(&lines, t(45), t(40)), vec![t(30), t(15), t(0)]);
+        // Scenario 85: three empty ships of 50 t, a level of 40 t.
+        let empty = [(t(0), t(50)), (t(0), t(50)), (t(0), t(50))];
+        assert_eq!(most_within(&empty, t(40)), t(120));
+        assert_eq!(spread(&empty, t(150), t(40)), vec![t(40), t(40), t(40)]);
     }
 
     #[test]

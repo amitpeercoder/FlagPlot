@@ -22,7 +22,7 @@
       "const": "flagplot-agent"
     },
     "version": {
-      "const": 26
+      "const": 27
     },
     "kind": {
       "const": "issue_orders"

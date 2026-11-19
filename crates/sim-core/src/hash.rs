@@ -240,8 +240,10 @@ const fn speed_code(speed: SpeedSetting) -> u8 {
 /// "wait for" and "after", and to a limit set by a command the codes 7, 8
 /// and 9 for them (decision 0159, 9);
 /// version 47 adds to an intent's limits, after "after", "knowledge", and to
-/// a limit set by a command the code 10 for it (decision 0159, 12).
-pub const STATE_VERSION: &[u8] = b"flagplot-state-v47";
+/// a limit set by a command the code 10 for it (decision 0159, 12);
+/// version 48 adds a cargo order's level, `each_t`, after `heeds_reserve`
+/// (decision 0162).
+pub const STATE_VERSION: &[u8] = b"flagplot-state-v48";
 
 /// Names every field of the state, with no `..` in any pattern. It does
 /// nothing when it runs. It is here so that a field added to the state does
@@ -449,6 +451,7 @@ fn name_every_field(world: &World) {
             unit: _,
             weight_t: _,
             heeds_reserve: _,
+            each_t: _,
         }) = cargo_order
         {}
         if let Some(YardTrip {
@@ -1449,6 +1452,14 @@ pub(crate) fn hash_task_force(h: &mut StateHasher, task_force: &TaskForce) {
                 None => h.u8(0),
             }
             h.u8(u8::from(cargo.heeds_reserve));
+            // After whether it heeds the reserve (decision 0162).
+            match cargo.each_t {
+                Some(level) => {
+                    h.u8(1);
+                    h.i64(level.raw());
+                }
+                None => h.u8(0),
+            }
         }
         None => h.u8(0),
     }

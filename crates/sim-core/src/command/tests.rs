@@ -1965,6 +1965,7 @@ fn a_same_day_forming_order_then_a_load_order_to_the_new_force_are_both_accepted
         order: TaskForceOrder::LoadTo {
             cargo: Cargo::Supply,
             weight_t: t(100),
+            each_t: None,
         },
     };
     let form = OrderKind::Base {
@@ -2335,6 +2336,7 @@ fn an_order_to_a_force_a_queued_forming_order_will_make_is_accepted_by_the_queue
             order: TaskForceOrder::LoadTo {
                 cargo: Cargo::Supply,
                 weight_t: t(100),
+                each_t: None,
             },
         },
         origin: Origin::PLAYER,

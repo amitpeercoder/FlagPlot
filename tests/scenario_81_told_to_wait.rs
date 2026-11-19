@@ -295,6 +295,7 @@ fn given(o: &StaffOrder) -> Given {
                 TaskForceOrder::LoadTo {
                     cargo: Cargo::Supply,
                     weight_t,
+                    ..
                 },
         } => Given::LoadTo(target.raw(), *weight_t),
         OrderKind::LandUnit {

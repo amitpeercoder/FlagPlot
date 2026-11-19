@@ -2,12 +2,12 @@ Scenario 6d1: Pilots and replacements
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 8c776fdf07440c12  27 events
-day   2  hash f669d93107c4286a  22 events
-day   3  hash 3c54d5951ee7edcf  23 events
-day   4  hash 90f56e86daf74e39  25 events
-day   5  hash fa9775cc2164510a  23 events
-day   6  hash 682a2942570d967b  23 events
+day   1  hash dd34ab1e88f48a55  27 events
+day   2  hash 0e1e4dfeabcf984d  22 events
+day   3  hash 19c2934782cf7ea4  23 events
+day   4  hash f5b690af4ef4906a  25 events
+day   5  hash 58bf048cdbba3ff5  23 events
+day   6  hash f2640c7ba12c7294  23 events
 
 #1 D1 -         order:1 accepted for air_group:3  <- order:1
 #2 D1 -         order:2 accepted for air_group:5  <- order:2
