@@ -144,7 +144,7 @@ button:disabled { opacity: 0.45; cursor: default; }
 .sheet .doc .node .who { font-size: 12px; color: var(--paper-dim); display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
 .sheet .doc .node .work { font-size: 13px; color: var(--paper-dim); }
 .sheet .doc .row { display: flex; flex-wrap: wrap; gap: 8px; }
-.ref { display: inline; min-height: 0 !important; padding: 0 !important; border: 0 !important; border-bottom: 1px solid transparent !important; border-radius: 0 !important; background: transparent !important; color: var(--own) !important; font: inherit !important; letter-spacing: 0 !important; cursor: pointer; }
+.ref { text-align: left; display: inline; min-height: 0 !important; padding: 0 !important; border: 0 !important; border-bottom: 1px solid transparent !important; border-radius: 0 !important; background: transparent !important; color: var(--own) !important; font: inherit !important; letter-spacing: 0 !important; cursor: pointer; }
 .ref.enemy { color: var(--enemy) !important; }
 .ref:hover, .ref:focus-visible { border-bottom-color: currentColor !important; }
 .sheet .doc details { font-size: 13px; }
@@ -948,7 +948,8 @@ button:disabled { opacity: 0.45; cursor: default; }
     links(body, title, now.map(function (f) { return [f.task_force.name.replace(/^Placeholder /, ''), function () { cardForce({ force: f }); }]; }));
     if (!later.length) return;
     var d = document.createElement('details'), sm = document.createElement('summary'); sm.textContent = 'NOT YET YOURS TO USE (' + later.length + ')'; sm.className = 'sub'; sm.style.cursor = 'pointer'; d.appendChild(sm);
-    later.sort(function (a, b) { return a.available_from - b.available_from; }).forEach(function (f) { d.appendChild(rich('div', '', f.task_force.handle + ', from ' + (dateOf(f.available_from - 1) || 'day ' + f.available_from))); });
+    var rows = el('div', 'rows'); d.appendChild(rows);
+    later.sort(function (a, b) { return a.available_from - b.available_from; }).forEach(function (f) { var row = el('div', 'lrow'); row.appendChild(rich('span', '', f.task_force.handle)); row.appendChild(el('span', 'fig', dateOf(f.available_from - 1) || 'day ' + f.available_from)); rows.appendChild(row); });
     body.appendChild(d);
   }
   // The way back: each card remembers what was open before it, a card or a
