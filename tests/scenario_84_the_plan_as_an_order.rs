@@ -118,7 +118,8 @@
 //!   in which it is asked on every morning has the daily hashes of the
 //!   game in which it is never asked.
 //! - **A seat's tool gives it.** The tool answers for an intent of the
-//!   commander's by its number, and refuses an intent of the staff's and
+//!   commander's by its number, and for a take the staff formed (decision
+//!   0164), and refuses any other intent of the staff's and
 //!   an intent that is not the side's with the reason it refuses any
 //!   intent the side does not have.
 //! - **No "no order".** In none of the orders above is there a line for a
