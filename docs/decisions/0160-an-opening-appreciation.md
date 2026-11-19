@@ -1,10 +1,10 @@
 # 0160: An opening appreciation: what a side believes of the enemy's places when the game begins
 
-Status: a plan by the architect, written on Nov 19, 2026 for the designer's approval. Nothing is built. It follows the designer's remark on the table that an enemy base touched on the first day shows nothing but its name, while the directive from above speaks of what intelligence reports there.
+Status: a plan by the architect, written on Nov 19, 2026 and confirmed by the designer the same day with the three answers the architect recommended. Nothing is built yet. It follows the designer's remark on the table that an enemy base touched on the first day shows nothing but its name, while the directive from above speaks of what intelligence reports there.
 
 Summary: A side begins a game holding a blank picture of every enemy place: its name, its position and who holds it, and nothing else until a report comes in during play. The plan gives a side an opening appreciation, the picture its intelligence handed it before the first day, in two parts. First, the 39 days is given opening estimates of the enemy's men ashore, by the rule the engine already has, from the record's own pre-landing estimates, which were wrong. Second, a side is told what a chart and an intelligence summary would tell it of an enemy base, whether it has an airfield and an anchorage and of what size, as last known and dated, by one new kind of belief. The enemy's types of unit are left for the intelligence design.
 
-Standing: Proposed by the architect, Nov 19, 2026. Waits for the designer
+Standing: Confirmed by the designer, Nov 19, 2026. Step 1, the research and the data, is next; step 2 follows stage 4's trial
 
 ## What is so today, read from the code
 
@@ -69,3 +69,11 @@ The step's test carries its hand calculation, written by the architect before it
 1. **Should the opening estimates be the record's, wrong as they were, or a fair count?** The architect recommends the record's: the commander of 1942 planned on a figure that was off, and finding that out is part of the game. The cost is that the staff, sizing a landing on it, may bring too many or too few until it has looked.
 2. **Should a side know an enemy base's works at all without being told or looking?** The architect recommends no: told at the start where the record knew it, otherwise unknown until seen.
 3. **Should step 1 come before stage 4's trial?** The architect recommends yes for the data, since the trial is played on what the side believes and is poorer with a blank picture; step 2 can follow the trial.
+
+## Confirmed on Nov 19, 2026
+
+The designer confirmed the plan as recommended:
+
+1. The opening estimates are the record's own, wrong as they were.
+2. A side knows an enemy base's works only where it was told at the start or has seen them.
+3. Step 1, the data, comes before stage 4's trial; step 2, the belief of works, follows the trial.
