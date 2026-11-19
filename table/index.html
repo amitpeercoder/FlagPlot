@@ -137,6 +137,9 @@ button:disabled { opacity: 0.45; cursor: default; }
 .cardnav { position: sticky; top: -14px; z-index: 1; margin: -14px -16px -6px; padding: 4px 8px 2px; background: var(--paper); border-bottom: 1px solid rgba(90,85,72,0.22); display: flex; justify-content: space-between; }
 .card .cardnav button { min-height: 30px; padding: 0 8px; border: 0; background: transparent; color: var(--paper-dim); font-family: var(--f-ui); font-size: 12px; font-weight: 700; letter-spacing: 0.12em; }
 .card .cardnav button:hover, .card .cardnav button:focus-visible { color: var(--paper-ink); }
+.card .cardnav #card-step { display: inline-flex; align-items: center; gap: 2px; margin-left: 8px; font-family: var(--f-ui); font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--paper-dim); }
+.card .cardnav #card-step[hidden] { display: none; }
+.card .cardnav #card-step button { font-size: 18px; letter-spacing: 0; min-width: 28px; }
 .card .cardnav #card-close { margin-left: auto; font-size: 15px; letter-spacing: 0; min-width: 30px; }
 .card .lhead { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
 .card .lhead span + span { font-family: var(--f-type); font-size: 12px; font-weight: 400; letter-spacing: 0; text-transform: none; color: var(--paper-dim); }
@@ -310,7 +313,7 @@ button:disabled { opacity: 0.45; cursor: default; }
 </form>
 
 <aside class="order card" id="card" hidden aria-label="What is known of what you touched" aria-live="polite">
-  <div class="cardnav"><button type="button" id="card-back" hidden>&#8592; BACK</button><button type="button" id="card-close" title="Close (Esc)" aria-label="Close">&#10005;</button></div>
+  <div class="cardnav"><button type="button" id="card-back" hidden>&#8592; BACK</button><span id="card-step" hidden><button type="button" id="card-prev" title="The one before, of those at this place" aria-label="The one before">&#8249;</button><span id="card-step-n"></span><button type="button" id="card-next" title="The next, of those at this place" aria-label="The next">&#8250;</button></span><button type="button" id="card-close" title="Close (Esc)" aria-label="Close">&#10005;</button></div>
   <div id="card-body" style="display:flex;flex-direction:column;gap:8px"></div>
 </aside>
 
@@ -999,8 +1002,36 @@ button:disabled { opacity: 0.45; cursor: default; }
   function openCard(title, stamp, own) { if (arcDraft) { arcDraft = null; if (g) drawMarks(); }
     var body = $('card-body'), head = el('div', 'headline'); body.textContent = '';
     head.appendChild(el('h2', '', title)); if (stamp) head.appendChild(el('span', 'stamp' + (own ? ' ok' : ''), stamp)); body.appendChild(head);
-    $('card').hidden = false; return body;
+    $('card').hidden = false; if (!stackShowing) { stack = null; $('card-step').hidden = true; } return body;
   }
+  // Pieces that share a place lie on one another. A touch opens the one
+  // touched; the card then steps through all that is at that place, and a
+  // second touch on the same piece goes to the next.
+  var stack = null, stackShowing = false;
+  function thingPlace(t) { return t.kind === 'force' ? t.force.place : t.kind === 'contact' ? t.contact.place : t.kind === 'base' ? t.base.place : t.place; }
+  function thingKey(t) { return t.kind === 'force' ? 'f' + t.force.task_force.handle : t.kind === 'contact' ? 'c' + t.contact.contact.handle : t.kind === 'base' ? 'b' + t.base.base.handle : 'p'; }
+  function thingsAt(pl) {
+    var list = [];
+    M.bases.forEach(function (b) { if (sameHex(b.place, pl)) list.push({ kind: 'base', base: b }); });
+    M.forces.forEach(function (f) { if (f.place && !(f.available_from > M.day) && sameHex(f.place, pl)) list.push({ kind: 'force', force: f }); });
+    var his = M.enemyBases.filter(function (b) { return sameHex(b.place, pl); })[0];
+    if (his || M.estimates.some(function (e) { return sameHex(e.place, pl); })) list.push({ kind: 'place', place: pl, base: his });
+    M.contacts.forEach(function (c) { if (sameHex(c.place, pl)) list.push({ kind: 'contact', contact: c }); });
+    return list;
+  }
+  function showStack() {
+    var t = stack.list[stack.i]; stackShowing = true;
+    try { ({ force: cardForce, contact: cardContact, base: cardBase, place: cardPlace })[t.kind](t); } finally { stackShowing = false; }
+    $('card-step').hidden = stack.list.length < 2; $('card-step-n').textContent = (stack.i + 1) + ' of ' + stack.list.length;
+  }
+  function touch(t) {
+    var pl = thingPlace(t), list = pl ? thingsAt(pl) : [], k = thingKey(t), i = -1;
+    list.forEach(function (x, n) { if (i < 0 && thingKey(x) === k) i = n; });
+    if (i < 0) { list.unshift(t); i = 0; } else list[i] = t;
+    if (stack && !$('card').hidden && list.length > 1 && thingKey(stack.list[stack.i]) === k && sameHex(thingPlace(stack.list[stack.i]), pl)) i = (i + 1) % list.length;
+    stack = { list: list, i: i }; showStack();
+  }
+  function stepStack(by) { if (!stack) return; stack.i = (stack.i + by + stack.list.length) % stack.list.length; showStack(); }
   // An air group as a row of a list: its name, its aircraft and what they are
   // for on the left; how many are ready and what it is doing on the right.
   function airLine(x) { return x.air_group.handle + ', ' + String(x.aircraft_type).replace(/^\S+ (?=\S*\d)/, '') + (x.role ? ' (' + x.role + ')' : '') + ' · ' + String(x.mission).replace(/_/g, ' ') + ': ' + x.ready + '/' + (x.ready + x.damaged); }
@@ -1070,7 +1101,7 @@ button:disabled { opacity: 0.45; cursor: default; }
     // An own base wins over the forces lying at it: its card leads to them.
     M.bases.forEach(function (b) { var v = placeOf(b.place); if (v && v.distanceTo(p) < 0.32) best = { kind: 'base', base: b }; });
     if (!best) { var hd = 1e9, hh = null; hexes.forEach(function (h) { var d = world(h[3], h[4]).distanceTo(p); if (d < hd) { hd = d; hh = h; } }); if (!hh) return; best = { kind: 'place', place: { q: hh[0], r: hh[1] }, sea: hh[5] === 0 }; }
-    ({ force: cardForce, contact: cardContact, base: cardBase, place: cardPlace })[best.kind](best);
+    touch(best);
   }
   function cardContact(t) {
     var c = t.contact, body = openCard('CONTACT ' + num(c.contact.handle), 'ENEMY');
@@ -1903,7 +1934,7 @@ button:disabled { opacity: 0.45; cursor: default; }
   function up(e) {
     delete ptrs[e.pointerId]; if (!Object.keys(ptrs).length) canvas.classList.remove('dragging'); pinch0 = 0;
     if (picking && downAt && e.type === 'pointerup' && Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y) < 6) { var p = onTable(e.clientX, e.clientY); if (p && Math.abs(p.x) <= TW / 2 && Math.abs(p.z) <= TD / 2) (picking === 'force' ? pickForce : picking === 'route' ? pickRoute : pick)(p); }
-    else if (!picking && !playing && downAt && e.type === 'pointerup' && Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y) < 6) { var q = onTable(e.clientX, e.clientY); var hit = tileAt(e.clientX, e.clientY); if (hit) ({ force: cardForce, contact: cardContact, base: cardBase, place: cardPlace })[hit.kind](hit); else if (q && Math.abs(q.x) <= TW / 2 && Math.abs(q.z) <= TD / 2) look(q); }
+    else if (!picking && !playing && downAt && e.type === 'pointerup' && Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y) < 6) { var q = onTable(e.clientX, e.clientY); var hit = tileAt(e.clientX, e.clientY); if (hit) touch(hit); else if (q && Math.abs(q.x) <= TW / 2 && Math.abs(q.z) <= TD / 2) look(q); }
     downAt = null;
   }
   canvas.addEventListener('pointerup', up); canvas.addEventListener('pointercancel', up);
@@ -1918,6 +1949,7 @@ button:disabled { opacity: 0.45; cursor: default; }
   });
   $('btn-pieces').textContent = PIECE_WORD[piecesShown];
   $('btn-pieces').addEventListener('click', function () { piecesShown = PIECES[(PIECES.indexOf(piecesShown) + 1) % PIECES.length]; try { localStorage.setItem('flagplot.pieces', piecesShown); } catch (e) {} this.textContent = PIECE_WORD[piecesShown]; if (g) drawMarks(); });
+  $('card-prev').addEventListener('click', function () { stepStack(-1); }); $('card-next').addEventListener('click', function () { stepStack(1); });
   $('btn-labels').textContent = LABEL_WORD[labelsShown];
   $('btn-labels').addEventListener('click', function () { labelsShown = LABELS[(LABELS.indexOf(labelsShown) + 1) % LABELS.length]; try { localStorage.setItem('flagplot.labels', labelsShown); } catch (e) {} this.textContent = LABEL_WORD[labelsShown]; });
   $('btn-view').textContent = chartView ? 'View: chart' : 'View: table';
