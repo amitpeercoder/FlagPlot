@@ -334,6 +334,7 @@ pub fn tool_list_for(names: &[&str]) -> Vec<Value> {
     let mut all = tool_definitions();
     all.extend(staff_tool_definitions());
     all.push(advance_definition());
+    all.extend(crate::staff_tools::trial_tool_definitions());
     names
         .iter()
         .filter_map(|name| all.iter().find(|(n, _, _)| n == name))

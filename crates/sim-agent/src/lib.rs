@@ -53,6 +53,7 @@ mod session;
 mod staffing;
 mod text;
 mod told;
+mod trial;
 mod words;
 
 pub use answer::{NotKnown, FORMAT, VERSION};
@@ -107,9 +108,16 @@ pub use queries::{
 };
 pub use record::{
     parse_seat, seat_name, CallError, Post, Seat, SeatKind, TranscriptEntry, COMMAND_TOOLS, TOOLS,
+    TRIAL_TOOLS,
 };
 pub use session::{OrdersInsideDay, Session, NOT_KNOWN};
 pub use staffing::{
     command_state, plan_order, plans, propose, staff_orders, why, STAFF_DEFAULT_INTERVAL_DAYS,
 };
 pub use told::{told_as, DayPart, STOP_ON};
+pub use trial::{
+    AssumedNoteShown, AssumedShown, AssumedThing, BaseShown, CountShown, CourseStep, ForceShown,
+    LiveIds, MadeFrom, MapBase, NeedsShown, OtherPlanShown, OwnForce, OwnShip, OwnUnit, PartShown,
+    PartingShown, PlanTaskShown, SizeAsked, TaskShown, TrialAnswer, TrialAsked, TrialCosts,
+    TrialRefused, TrialRunner, TrialSpread, TrialStep, TrialUnderWay, TrialWent, WaitShown,
+};

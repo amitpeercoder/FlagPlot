@@ -1534,6 +1534,11 @@ fn base_words(view: &SideView<'_>, base: sim_core::ids::BaseId) -> String {
     }
 }
 
+/// An intent's kind in the words of the tool `order`, in the side's numbers.
+pub(crate) fn intent_words(view: &SideView<'_>, kind: IntentKind) -> String {
+    Names::new(view).text(&task_words(view, kind))
+}
+
 /// A task of a plan order in words, from its kind alone.
 fn task_words(view: &SideView<'_>, kind: IntentKind) -> String {
     match kind {
@@ -2793,7 +2798,7 @@ pub(crate) fn commands_text(view: &SideView<'_>, commands: &[CommandKind]) -> Ve
 /// The intent a previewed command is about: the intent set, or the intent
 /// the limit is for. A reserve is for a base, not an intent: it is read as
 /// about the lowest intent in force whose forces limit loads at that base.
-fn previewed_intent(view: &SideView<'_>, kind: &CommandKind) -> Option<IntentId> {
+pub(crate) fn previewed_intent(view: &SideView<'_>, kind: &CommandKind) -> Option<IntentId> {
     match kind {
         CommandKind::SetIntent { intent, .. } => Some(*intent),
         CommandKind::SetLimit(Limit::Reserve { base, .. }) => view

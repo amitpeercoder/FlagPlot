@@ -318,6 +318,20 @@ pub(crate) struct Setup {
 }
 
 pub(crate) fn setup(made: &[TrialPicture], asked: &Asked) -> Result<Setup, Refused> {
+    setup_with_standing(made, asked, 0)
+}
+
+/// [`setup`] where the first `standing` commands of the course are standing
+/// commands (decision 0177, amended 2): what the side had handed in for the
+/// morning already. A leave among them is the commander's own and is not
+/// counted as given by the course (decision 0178, rule 9); a leave the
+/// course gives after them is counted only where the side, with them taken
+/// in, does not hold it.
+pub(crate) fn setup_with_standing(
+    made: &[TrialPicture],
+    asked: &Asked,
+    standing: usize,
+) -> Result<Setup, Refused> {
     if asked.days == 0 {
         return Err(Refused("a trial's horizon has no day".to_string()));
     }
@@ -338,20 +352,26 @@ pub(crate) fn setup(made: &[TrialPicture], asked: &Asked) -> Result<Setup, Refus
     }
     // The leaves the course gives that the side has not given (amended
     // point 4), read from its own half: the same in every picture.
-    let held = made
+    let mut held = made
         .first()
         .and_then(|first| first.picture.command.get(&first.side))
         .map(|state| state.leaves)
         .unwrap_or_default();
     let mut leaves_given = Vec::new();
-    for c in &asked.course {
-        if let CommandKind::SetLeave { leave, given: true } = c.command {
+    for (index, c) in asked.course.iter().enumerate() {
+        if let CommandKind::SetLeave { leave, given } = c.command {
             let had = match leave {
-                Leave::Prepare => held.prepare,
-                Leave::Launch => held.launch,
+                Leave::Prepare => &mut held.prepare,
+                Leave::Launch => &mut held.launch,
             };
-            if !had && !leaves_given.contains(&leave) {
+            // A standing command's leave is the commander's own: it is taken
+            // in as his, and the course gives only what he does not hold
+            // after it (decision 0178, rule 9).
+            if index >= standing && given && !*had && !leaves_given.contains(&leave) {
                 leaves_given.push(leave);
+            }
+            if index < standing {
+                *had = given;
             }
         }
     }

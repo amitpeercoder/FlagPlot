@@ -1,0 +1,1016 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "flagplot-agent/trial",
+  "title": "trial: the estimate of an intent of the commander's, or of a previewed draft, in counts of worlds",
+  "description": "Decision 0178: a seat's trial of an intent or a preview, played in several worlds from what the side believes. It gives how it went, what it cost the side and the trial's enemy, what the plan needs, what other plans it displaces, what was assumed and where the worlds part, all in counts of worlds and men, never chances or points. It changes nothing in the game and is kept with the session.",
+  "type": "object",
+  "required": [
+    "format",
+    "version",
+    "kind",
+    "estimate",
+    "asked",
+    "first_day",
+    "last_day",
+    "has_end",
+    "how_it_went",
+    "could_not_be_played",
+    "cost",
+    "enemy_lost",
+    "needs",
+    "other_plans",
+    "assumed",
+    "leaves_given_to_the_side",
+    "uneven",
+    "partings",
+    "text"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "format": {
+      "const": "flagplot-agent"
+    },
+    "version": {
+      "const": 29
+    },
+    "kind": {
+      "const": "trial"
+    },
+    "estimate": {
+      "type": "integer",
+      "description": "The number of this estimate among those the seat was shown, from 1."
+    },
+    "asked": {
+      "type": "object",
+      "required": [
+        "intent",
+        "preview",
+        "tried_intent",
+        "size",
+        "worlds",
+        "days",
+        "for_day",
+        "standing",
+        "course",
+        "second_trial",
+        "orders_not_tried"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "intent": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "preview": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "tried_intent": {
+          "type": "integer"
+        },
+        "size": {
+          "type": "string"
+        },
+        "worlds": {
+          "type": "integer"
+        },
+        "days": {
+          "type": "integer"
+        },
+        "for_day": {
+          "type": "integer"
+        },
+        "standing": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "course": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "second_trial": {
+          "type": "boolean"
+        },
+        "orders_not_tried": {
+          "type": "integer"
+        }
+      },
+      "description": "What was asked: the intent or the preview, the size, and what was taken in on the morning tried, in words."
+    },
+    "first_day": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "last_day": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "has_end": {
+      "type": "boolean",
+      "description": "Whether the intent has an end a trial can read."
+    },
+    "how_it_went": {
+      "$ref": "#/$defs/went"
+    },
+    "could_not_be_played": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      }
+    },
+    "cost": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/costs"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "enemy_lost": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/costs"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "needs": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "world",
+            "at_the_end_of_day",
+            "men",
+            "waits_for",
+            "expected_ashore",
+            "count",
+            "tasks",
+            "differs_in"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "world": {
+              "type": "integer"
+            },
+            "at_the_end_of_day": {
+              "type": "integer"
+            },
+            "men": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "required": [
+                    "wanted",
+                    "to_hand"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "wanted": {
+                      "type": "integer"
+                    },
+                    "to_hand": {
+                      "type": "integer"
+                    }
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "waits_for": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "text"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "text": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "expected_ashore": {
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "count": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "required": [
+                    "place",
+                    "asked",
+                    "held",
+                    "met"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "place": {
+                      "$ref": "defs.schema.json#/$defs/place"
+                    },
+                    "asked": {
+                      "type": "string"
+                    },
+                    "held": {
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "required": [
+                            "men",
+                            "came_from",
+                            "day"
+                          ],
+                          "additionalProperties": false,
+                          "properties": {
+                            "men": {
+                              "type": "integer"
+                            },
+                            "came_from": {
+                              "type": "string"
+                            },
+                            "day": {
+                              "type": "integer"
+                            }
+                          }
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "met": {
+                      "type": "boolean"
+                    }
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "tasks": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/task"
+              }
+            },
+            "differs_in": {
+              "type": "array",
+              "items": {
+                "type": "integer"
+              }
+            }
+          },
+          "description": "What the plan needs and has, as the staff worked it in one world at the end of a day."
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "other_plans": {
+      "oneOf": [
+        {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "intent",
+              "task",
+              "with",
+              "without",
+              "displaced"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "intent": {
+                "type": "integer"
+              },
+              "task": {
+                "$ref": "#/$defs/task"
+              },
+              "with": {
+                "type": "object",
+                "required": [
+                  "worlds",
+                  "middle_day"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "worlds": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer"
+                    }
+                  },
+                  "middle_day": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ]
+                  }
+                }
+              },
+              "without": {
+                "type": "object",
+                "required": [
+                  "worlds",
+                  "middle_day"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "worlds": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer"
+                    }
+                  },
+                  "middle_day": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ]
+                  }
+                }
+              },
+              "displaced": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "enum": [
+                  "in_fewer_worlds",
+                  "later",
+                  null
+                ]
+              }
+            },
+            "description": "One other plan of the side with an end, by the worlds that met and kept it with this one and without."
+          }
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "Null where no second trial was played; a list (possibly empty) otherwise."
+    },
+    "assumed": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "thing",
+          "from",
+          "made_in",
+          "not_in",
+          "notes",
+          "text"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "thing": {
+            "$ref": "#/$defs/thing"
+          },
+          "from": {
+            "$ref": "#/$defs/from"
+          },
+          "made_in": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "not_in": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "notes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "text": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "leaves_given_to_the_side": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "uneven": {
+      "type": "boolean"
+    },
+    "partings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "by",
+          "from",
+          "with",
+          "without"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "by": {
+            "$ref": "#/$defs/thing"
+          },
+          "from": {
+            "$ref": "#/$defs/from"
+          },
+          "with": {
+            "type": "object",
+            "required": [
+              "how_it_went",
+              "cost",
+              "enemy_lost"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "how_it_went": {
+                "$ref": "#/$defs/went"
+              },
+              "cost": {
+                "oneOf": [
+                  {
+                    "$ref": "#/$defs/costs"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "enemy_lost": {
+                "oneOf": [
+                  {
+                    "$ref": "#/$defs/costs"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            }
+          },
+          "without": {
+            "type": "object",
+            "required": [
+              "how_it_went",
+              "cost",
+              "enemy_lost"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "how_it_went": {
+                "$ref": "#/$defs/went"
+              },
+              "cost": {
+                "oneOf": [
+                  {
+                    "$ref": "#/$defs/costs"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "enemy_lost": {
+                "oneOf": [
+                  {
+                    "$ref": "#/$defs/costs"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "text": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "The estimate in words, a line to each part."
+    }
+  },
+  "$defs": {
+    "spread": {
+      "type": "object",
+      "required": [
+        "lowest",
+        "middle",
+        "highest"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "lowest": {
+          "type": "integer"
+        },
+        "middle": {
+          "type": "integer"
+        },
+        "highest": {
+          "type": "integer"
+        }
+      },
+      "description": "The lowest, the middle and the highest over the worlds played."
+    },
+    "costs": {
+      "type": "object",
+      "required": [
+        "men_lost_to_the_enemy",
+        "men_lost_unfed",
+        "ships_sunk",
+        "ships_out_of_action",
+        "aircraft_lost"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "men_lost_to_the_enemy": {
+          "$ref": "#/$defs/spread"
+        },
+        "men_lost_unfed": {
+          "$ref": "#/$defs/spread"
+        },
+        "ships_sunk": {
+          "$ref": "#/$defs/spread"
+        },
+        "ships_out_of_action": {
+          "$ref": "#/$defs/spread"
+        },
+        "aircraft_lost": {
+          "$ref": "#/$defs/spread"
+        }
+      },
+      "description": "What one side lost, as the lowest, middle and highest count over the worlds played."
+    },
+    "went": {
+      "type": "object",
+      "required": [
+        "worlds",
+        "met_and_kept",
+        "met_days",
+        "met_and_lost_again",
+        "not_met"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "worlds": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "met_and_kept": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "met_days": {
+          "oneOf": [
+            {
+              "type": "object",
+              "required": [
+                "earliest",
+                "middle",
+                "latest"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "earliest": {
+                  "type": "integer"
+                },
+                "middle": {
+                  "type": "integer"
+                },
+                "latest": {
+                  "type": "integer"
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The earliest, middle and latest day the end was met, over the worlds that met and kept it; null where none did or the intent has no end a trial can read."
+        },
+        "met_and_lost_again": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "not_met": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        }
+      },
+      "description": "The worlds of one trial or of one side of a parting, by what became of the end: the numbers of worlds, never chances."
+    },
+    "force": {
+      "type": "object",
+      "required": [
+        "task_force",
+        "formed"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "task_force": {
+          "oneOf": [
+            {
+              "$ref": "defs.schema.json#/$defs/handle"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "formed": {
+          "type": "boolean"
+        },
+        "ships": {
+          "type": "array",
+          "items": {
+            "$ref": "defs.schema.json#/$defs/handle"
+          }
+        }
+      },
+      "description": "A task force in the side's own numbers, or, where formed is true, the force the staff would form (its ships, where they are named)."
+    },
+    "base": {
+      "type": "object",
+      "required": [
+        "base",
+        "formed"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "base": {
+          "oneOf": [
+            {
+              "$ref": "defs.schema.json#/$defs/handle"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "formed": {
+          "type": "boolean"
+        },
+        "place": {
+          "$ref": "defs.schema.json#/$defs/place_or_null"
+        }
+      },
+      "description": "A base in the side's own numbers, or, where formed is true, the landing place the staff would make (its place where known)."
+    },
+    "task": {
+      "type": "object",
+      "required": [
+        "kind",
+        "place",
+        "day",
+        "force",
+        "bases",
+        "text"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "keep_supplied",
+            "cover",
+            "hold",
+            "neutralise",
+            "raid",
+            "deny",
+            "strike_ships",
+            "search_waters",
+            "stand_at",
+            "operate_carriers",
+            "ready_landing",
+            "build_up",
+            "take_place",
+            "bombard",
+            "control_island"
+          ]
+        },
+        "place": {
+          "$ref": "defs.schema.json#/$defs/place_or_null"
+        },
+        "day": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "force": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/force"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bases": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/base"
+          }
+        },
+        "phase": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Given only for a task under the plan the trial worked out: the phase it belongs to, or null."
+        },
+        "text": {
+          "type": "string"
+        }
+      },
+      "description": "One task of a plan, in the words the tool order uses."
+    },
+    "thing": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "base",
+            "place",
+            "supply_t",
+            "fuel_t"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "enemy_base"
+            },
+            "base": {
+              "$ref": "defs.schema.json#/$defs/handle"
+            },
+            "place": {
+              "$ref": "defs.schema.json#/$defs/place"
+            },
+            "supply_t": {
+              "$ref": "defs.schema.json#/$defs/dec"
+            },
+            "fuel_t": {
+              "$ref": "defs.schema.json#/$defs/dec"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "place",
+            "men"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "men"
+            },
+            "place": {
+              "$ref": "defs.schema.json#/$defs/place"
+            },
+            "men": {
+              "type": "integer"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "ship_kind",
+            "ships",
+            "place"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "force"
+            },
+            "ship_kind": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "ships": {
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "place": {
+              "$ref": "defs.schema.json#/$defs/place_or_null"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "no_belief"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "intent",
+            "place",
+            "base"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "enemy_intent"
+            },
+            "intent": {
+              "type": "string"
+            },
+            "place": {
+              "$ref": "defs.schema.json#/$defs/place_or_null"
+            },
+            "base": {
+              "oneOf": [
+                {
+                  "$ref": "defs.schema.json#/$defs/handle"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "no_intent"
+            }
+          }
+        }
+      ],
+      "description": "What the trial assumed or parted the worlds by: an enemy base, men at a place, a force, no belief of the enemy's, an intent of the enemy's, or no intent."
+    },
+    "from": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "kind"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "map"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "place"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "contact"
+            },
+            "place": {
+              "$ref": "defs.schema.json#/$defs/place"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "places"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "contacts_as_one"
+            },
+            "places": {
+              "type": "array",
+              "items": {
+                "$ref": "defs.schema.json#/$defs/place"
+              },
+              "minItems": 2,
+              "maxItems": 2
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "estimate"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "name",
+            "standing"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "believed"
+            },
+            "name": {
+              "type": "string"
+            },
+            "standing": {
+              "type": "string",
+              "enum": [
+                "unknown",
+                "present",
+                "absent"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "trial"
+            }
+          }
+        }
+      ],
+      "description": "Where an assumed thing came from: the map, one contact, two contacts taken for one force, the estimate of the place, a belief, or the trial itself."
+    }
+  }
+}

@@ -341,3 +341,38 @@ pub fn staff_tool_definitions() -> Vec<(&'static str, String, Value)> {
         ),
     ]
 }
+
+const TRIAL_DESCRIPTION: &str = "Try an intent of yours, or a draft you previewed, before it is taken in, and be told what it would cost (decision 0178). The trial plays the coming days in a number of worlds that could be the one you are in, each made from what you know and believe of the enemy, with your staff and his carrying out what each side has handed in, and answers with the estimate: in how many worlds the end was met and kept and by what day, met and lost again, or not met; what it cost your side and what the trial's enemy lost, each as the lowest, the middle and the highest over the worlds; what the plan needs and has and when it could go; what your other plans with an end lose by it, where you have any; what was assumed of the enemy and what each thing assumed was made from; and where the worlds part by a thing you do not know. It speaks in counts of worlds, never in chances or points, and gives no advice. Asked at dusk, between days; it tries the coming morning with everything you have queued for it (your orders to units are not tried, and the answer says so). It changes nothing: nothing is queued, no preview is spent, and the same question on the same evening gives the same answer. A trial takes seconds: the small size under about a second on a large game, the full size much longer, and twice as long where your other plans are weighed. Arguments: intent (the number of an intent of yours, in force or queued) or preview (the number of a preview you were shown, still good), one of the two; size (small, standard or full; small where none is given). Example: {\"intent\": 1, \"size\": \"small\"}. Refused at an open day, after the game is over, for an intent that is not yours, is the staff's, is withdrawn or has its withdrawal queued, for a preview that is void or not yours, and for a size the trial's figures do not name.";
+
+const TRIALS_DESCRIPTION: &str = "The estimates you have been shown by trial, each with the evening it was asked on and what was asked, marked where it was asked on an earlier evening or before your queue changed; or one again by its number, unchanged. Argument: estimate (optional, the number of an estimate you were shown). It changes nothing.";
+
+/// The tools of a seat in a game that has a trial (decision 0178): `trial`
+/// and `trials`, each with its description and input schema.
+pub fn trial_tool_definitions() -> Vec<(&'static str, String, Value)> {
+    vec![
+        (
+            "trial",
+            TRIAL_DESCRIPTION.to_string(),
+            json!({
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "intent": {"type": "integer", "minimum": 1, "description": "The number of an intent of yours, in force or queued for the morning."},
+                    "preview": {"type": "integer", "minimum": 1, "description": "The number of a preview you were shown, to try that draft."},
+                    "size": {"type": "string", "description": "The size by its name in the trial's figures: small, standard or full; small where none is given."}
+                }
+            }),
+        ),
+        (
+            "trials",
+            TRIALS_DESCRIPTION.to_string(),
+            json!({
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "estimate": {"type": "integer", "minimum": 1, "description": "The number of an estimate you were shown, to be given it again."}
+                }
+            }),
+        ),
+    ]
+}

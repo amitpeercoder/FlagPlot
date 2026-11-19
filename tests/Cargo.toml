@@ -12,6 +12,9 @@ sim-staff.workspace = true
 sim-trial.workspace = true
 # Scenario 41's preview is asked through the agent's tools.
 sim-agent = { path = "../crates/sim-agent" }
+# Scenario 97's session is given what plays a seat's trials as sim-cli
+# gives it (decision 0178).
+sim-cli = { path = "../crates/sim-cli" }
 serde_json.workspace = true
 # Part 3 of scenario 4b reads the anchors file and places each position in a
 # hex with the map tool's own projection.
@@ -524,3 +527,7 @@ path = "scenario_95_the_estimate.rs"
 [[test]]
 name = "scenario_96_the_window"
 path = "scenario_96_the_window.rs"
+
+[[test]]
+name = "scenario_97_a_seats_trial"
+path = "scenario_97_a_seats_trial.rs"

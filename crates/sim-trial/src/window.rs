@@ -46,7 +46,9 @@ use crate::enemy::other;
 use crate::estimate::{
     end_of, end_of_kind, estimate, intent_words, Estimate, Spread, WorldFigures,
 };
-use crate::play::{play_day, setup, start, Asked, CourseCommand, Failed, InPlay, Played};
+use crate::play::{
+    play_day, setup_with_standing, start, Asked, CourseCommand, Failed, InPlay, Played,
+};
 use crate::play::{PlayedWorld, Setup};
 use crate::{pictures, Believed, Refused, Trial, TrialPicture};
 
@@ -430,7 +432,9 @@ pub fn begin_window(
             day: c.day + shift,
             command: c.command.clone(),
         }));
-        let mut set = setup(
+        // A leave among the standing commands is the commander's own, not
+        // given by the course (decision 0178, rule 9).
+        let mut set = setup_with_standing(
             &made,
             &Asked {
                 trial: asked.trial,
@@ -438,6 +442,7 @@ pub fn begin_window(
                 days: asked.days + shift,
                 course,
             },
+            line.len(),
         )?;
         // The day of the world the course proper is taken in: the
         // standing commands are not the course.

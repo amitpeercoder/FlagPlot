@@ -168,10 +168,16 @@ pub fn open(
     // The staff each side is given comes from the doctrine; the commands are
     // the scenario's own, given as the commander's (decision 0107).
     let staffs = sim_staff::staffs();
+    // What plays a seat's trials, where the scenario names a file of the
+    // trial's figures (decision 0178, rule 6); with none, no trial.
+    let trial = sim_cli::seat_trial::SeatTrials::runner_of(&scenario);
     let mut session = Session::new(scenario.world, &name, days, allied, japanese)
         .with_staffs(staffs)
         .with_commands(remembered.commands().clone())
         .with_orders_inside_a_day(inside_day, remembered.script_inside_day().clone());
+    if let Some(runner) = trial {
+        session = session.with_trial(runner);
+    }
     for (side, post) in posts {
         session = session.with_post(*side, *post)?;
     }
