@@ -631,7 +631,16 @@ button:disabled { opacity: 0.45; cursor: default; }
   function kv(body, rows) { var g = el('div', 'kv'); rows.forEach(function (r) { if (r[1] == null || r[1] === '') return; g.appendChild(el('span', '', r[0])); g.appendChild(el('span', '', String(r[1]))); }); body.appendChild(g); return g; }
   function listOf(body, title, lines) { if (!lines.length) return; body.appendChild(el('div', 'sub', title)); lines.forEach(function (l) { body.appendChild(rich('div', '', l)); }); }
   function links(body, title, items) { if (!items.length) return; body.appendChild(el('div', 'sub', title)); var row = el('div', 'row'); items.forEach(function (i) { var b = el('button', '', i[0]); b.type = 'button'; b.addEventListener('click', i[1]); row.appendChild(b); }); body.appendChild(row); }
-  function forcesAt(pl, but) { return M.forces.filter(function (f) { return sameHex(f.place, pl) && f !== but; }).map(function (f) { return [f.task_force.name.replace(/^Placeholder /, ''), function () { cardForce({ force: f }); }]; }); }
+  // The forces at a place: those the commander may use now as buttons, and
+  // those not yet his to use folded beneath, each with the day it comes.
+  function forcesHere(body, title, pl, but) {
+    var all = M.forces.filter(function (f) { return sameHex(f.place, pl) && f !== but; }), now = all.filter(function (f) { return !(f.available_from > M.day); }), later = all.filter(function (f) { return f.available_from > M.day; });
+    links(body, title, now.map(function (f) { return [f.task_force.name.replace(/^Placeholder /, ''), function () { cardForce({ force: f }); }]; }));
+    if (!later.length) return;
+    var d = document.createElement('details'), sm = document.createElement('summary'); sm.textContent = 'NOT YET YOURS TO USE (' + later.length + ')'; sm.className = 'sub'; sm.style.cursor = 'pointer'; d.appendChild(sm);
+    later.sort(function (a, b) { return a.available_from - b.available_from; }).forEach(function (f) { d.appendChild(rich('div', '', f.task_force.handle + ', from ' + (dateOf(f.available_from - 1) || 'day ' + f.available_from))); });
+    body.appendChild(d);
+  }
   // The way back: each card remembers what was open before it, a card or a
   // sheet, until the card is put down or the clock moves.
   var trail = [], shown = null, trailAt = '';
@@ -711,7 +720,7 @@ button:disabled { opacity: 0.45; cursor: default; }
     if (!M.over && !playing) { var row = el('div', 'row'), b = el('button', '', held ? 'ORDER IT' : 'TAKE CHARGE OF IT'); b.type = 'button'; b.addEventListener('click', function () { orderForce(f); }); row.appendChild(b);
       if (held) { var r = el('button', '', 'RETURN IT TO THE STAFF'); r.type = 'button'; r.addEventListener('click', function () { act('release', { task_force: num(h) }, 'Released. The staff may use it again from dusk.').then(function () { $('card').hidden = true; }); }); row.appendChild(r); }
       body.appendChild(row); }
-    links(body, 'ALSO HERE', forcesAt(f.place, f));
+    forcesHere(body, 'ALSO HERE', f.place, f);
    
   }
   function cardBase(t) {
@@ -721,7 +730,7 @@ button:disabled { opacity: 0.45; cursor: default; }
       ['Airfield', b.airfield_size ? 'size ' + b.airfield_size : 'none'], ['Port', b.port_size ? 'size ' + b.port_size : 'none']]);
     listOf(body, 'MEN ASHORE', M.units.filter(function (u) { return u.men_ashore && sameHex(u.place, b.place); }).map(function (u) { return u.land_unit.handle + ': ' + commas(u.men_ashore) + ' men, ' + u.posture; }));
     listOf(body, 'AIR GROUPS HERE', M.air.filter(function (x) { return x.location && x.location.handle === h; }).map(function (x) { return x.air_group.handle + ', ' + x.aircraft_type + ': ' + x.ready + ' ready' + (x.damaged ? ', ' + x.damaged + ' damaged' : '') + ', ' + String(x.mission).replace(/_/g, ' '); }));
-    links(body, 'FORCES HERE', forcesAt(b.place, null));
+    forcesHere(body, 'FORCES HERE', b.place, null);
     var port = el('div'); body.appendChild(port);
     if (!M.over && !playing) api('get_entity', { handle: h }).then(function (a) {
       var inPort = (a.entity && a.entity.ships_in_port) || []; if (!inPort.length) return;
