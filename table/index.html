@@ -30,6 +30,14 @@ button:disabled { opacity: 0.45; cursor: default; }
 
 .top { position: fixed; top: 0; left: 0; right: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 22px; padding: 10px 470px 8px 16px; pointer-events: none; text-shadow: 0 1px 6px #000; }
 .top h1 { margin: 0; font-size: 24px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; }
+.intray { pointer-events: auto; position: relative; display: inline-flex; align-items: center; gap: 9px; min-height: 30px; padding: 0 12px; margin-left: 6px; background: #4d3a28; color: var(--paper); border: 1px solid #241a12; border-radius: 2px; font-family: var(--f-ui); font-size: 14px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; text-shadow: none; cursor: pointer; box-shadow: inset 0 -3px 0 rgba(0,0,0,0.28), 0 2px 6px rgba(0,0,0,0.4); }
+.intray[hidden] { display: none; }
+.intray::before { content: ''; position: absolute; left: 9px; right: 9px; top: -4px; height: 5px; background: var(--paper-old); border-radius: 1px 1px 0 0; box-shadow: 0 -1px 2px rgba(0,0,0,0.35); }
+.intray.new::before { left: 14px; right: 30px; top: -9px; height: 10px; background: var(--paper); transform: rotate(-2deg); }
+.intray .stamp { background: var(--paper); font-size: 12px; }
+.inlist { border-top: 1px solid #8d8672; padding: 9px 0; cursor: pointer; display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; }
+.inlist:hover strong, .inlist:focus-visible strong { text-decoration: underline; }
+.inlist small { color: var(--paper-dim); grid-column: 1; }
 .top p { margin: 0; font-size: 17px; letter-spacing: 0.05em; color: var(--ink-dim); }
 
 .tray { position: fixed; top: 60px; right: 16px; width: min(350px, calc(100% - 32px)); max-height: calc(100% - 170px); overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-bottom: 6px; }
@@ -205,6 +213,7 @@ button:disabled { opacity: 0.45; cursor: default; }
 <div class="top">
   <h1>Flag Plot</h1>
   <p id="seat">The table</p>
+  <button type="button" id="btn-in" class="intray" hidden></button>
 </div>
 
 <aside class="tray" aria-label="Signals">
@@ -1272,17 +1281,32 @@ button:disabled { opacity: 0.45; cursor: default; }
     return false;
   }
   function showDirectives() {
-    recall(); var list = config.directives || [], fresh = null;
+    recall(); var list = config.directives || [], fresh = null, got = [], unread = 0;
     list.forEach(function (d) { if (received[d.number] == null && directiveDue(d)) { received[d.number] = M.day; fresh = d; } });
     list.slice().reverse().forEach(function (d) {
       if (received[d.number] == null) return;
-      var isNew = !readOnes[d.number];
-      if (!isNew) { paper('Directive ' + d.number, function () { readDirective(d); }); return; }
-      mark(paper('Directive ' + d.number, function () { readDirective(d); }), 1, 'new, not yet read');
+      var isNew = !readOnes[d.number]; got.push(d); if (!isNew) return; unread += 1;
       var a = slip('FROM ' + d.from.toUpperCase(), 'NEW', 'Directive ' + d.number + ': ' + d.subject, null, true);
       button(a, 'READ THE DIRECTIVE', true, function () { readDirective(d); });
     });
+    // The in-tray on the top of the table: what has come from above. A paper
+    // stands up out of it, stamped, while one lies unread.
+    var tray = $('btn-in'); tray.hidden = !got.length; tray.textContent = ''; tray.classList.toggle('new', unread > 0);
+    tray.appendChild(el('span', '', 'In \u00B7 ' + got.length + (got.length === 1 ? ' directive' : ' directives'))); if (unread) tray.appendChild(el('span', 'stamp', 'RECEIVED'));
+    tray.title = unread ? unread + ' not yet read' : 'Directives from the commander above';
+    tray.onclick = function () { if (got.length === 1) readDirective(got[0]); else readInTray(got); };
     keep(); if (fresh && $('sheet').hidden) setTimeout(function () { readDirective(fresh); }, 0);
+  }
+  function readInTray(got) {
+    var doc = $('sheet-doc'); doc.textContent = '';
+    got.forEach(function (d) {
+      var row = el('div', 'inlist'); row.tabIndex = 0; row.setAttribute('role', 'button');
+      row.appendChild(el('strong', '', 'Directive ' + d.number + '. ' + d.subject)); if (!readOnes[d.number]) row.appendChild(el('span', 'stamp', 'NEW')); else row.appendChild(el('span', '', ''));
+      row.appendChild(el('small', '', 'From ' + d.from + ' \u00B7 ' + (dateOf(received[d.number] - 2, true) || 'day ' + received[d.number])));
+      row.addEventListener('click', function () { readDirective(d); }); row.addEventListener('keydown', function (e) { if (e.key === 'Enter') readDirective(d); });
+      doc.appendChild(row);
+    });
+    sheetAs('DIRECTIVES RECEIVED', 'IN'); doc.hidden = false; $('sheet-text').hidden = true; $('sheet').hidden = false; $('sheet-close').focus();
   }
   // What the sheet is: its title, and for a directive the small label above
   // it and the line outside the paper that says what the paper is.
