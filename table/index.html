@@ -169,8 +169,8 @@ button:disabled { opacity: 0.45; cursor: default; }
 .card .cardnav #card-step { display: inline-flex; align-items: center; gap: 2px; margin-left: 8px; font-family: var(--f-ui); font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--paper-dim); }
 .card .cardnav #card-step[hidden] { display: none; }
 .card .cardnav #card-step button { font-size: 18px; letter-spacing: 0; min-width: 28px; }
-.card .cardnav #card-find { margin-left: 6px; border: 1px solid var(--paper-dim); }
-.card .cardnav #card-find[hidden] { display: none; }
+.card .cardnav #card-find, .card .cardnav #card-diary { margin-left: 6px; border: 1px solid var(--paper-dim); }
+.card .cardnav #card-find[hidden], .card .cardnav #card-diary[hidden] { display: none; }
 .card .cardnav #card-close { margin-left: auto; font-size: 15px; letter-spacing: 0; min-width: 30px; }
 .card .lhead { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
 .card .lhead span + span { font-family: var(--f-type); font-size: 12px; font-weight: 400; letter-spacing: 0; text-transform: none; color: var(--paper-dim); }
@@ -354,7 +354,7 @@ button:disabled { opacity: 0.45; cursor: default; }
 </form>
 
 <aside class="order card" id="card" hidden aria-label="What is known of what you touched" aria-live="polite">
-  <div class="cardnav"><button type="button" id="card-back" hidden>&#8592; BACK</button><button type="button" id="card-find" hidden title="Turn the table to where it is">ON CHART</button><span id="card-step" hidden><button type="button" id="card-prev" title="The one before, of those at this place" aria-label="The one before">&#8249;</button><span id="card-step-n"></span><button type="button" id="card-next" title="The next, of those at this place" aria-label="The next">&#8250;</button></span><button type="button" id="card-close" title="Close (Esc)" aria-label="Close">&#10005;</button></div>
+  <div class="cardnav"><button type="button" id="card-back" hidden>&#8592; BACK</button><button type="button" id="card-find" hidden title="Turn the table to where it is">ON CHART</button><button type="button" id="card-diary" hidden title="What the war diary holds of it">ITS DIARY</button><span id="card-step" hidden><button type="button" id="card-prev" title="The one before, of those at this place" aria-label="The one before">&#8249;</button><span id="card-step-n"></span><button type="button" id="card-next" title="The next, of those at this place" aria-label="The next">&#8250;</button></span><button type="button" id="card-close" title="Close (Esc)" aria-label="Close">&#10005;</button></div>
   <div id="card-body" style="display:flex;flex-direction:column;gap:8px"></div>
 </aside>
 
@@ -865,7 +865,7 @@ button:disabled { opacity: 0.45; cursor: default; }
   function showSignals() {
     var box = $('signals'), s = M.state; box.textContent = ''; $('papers').textContent = ''; $('papers-staff').textContent = ''; $('leave-slot').textContent = '';
     if (M.over) slip('THE UMPIRE', 'ENDED', 'The game is over', M.result && M.result.outcome ? 'Result: ' + (M.result.outcome.words || JSON.stringify(M.result.outcome)) : (lastRun && lastRun.summary) || '');
-    lastTold.forEach(function (t) { var a = slip('FROM THE PLOT · ' + (clock.at === 'dusk' ? '1800' : clock.at), 'STOPPED THE CLOCK', TOLD[t.thing] || t.thing, null, true); t.lines.slice(0, 6).forEach(function (l) { a.appendChild(rich('div', 'told', l)); }); if (t.lines.length > 6) a.appendChild(el('div', 'told', 'And ' + (t.lines.length - 6) + ' more: see the war diary.')); });
+    lastTold.forEach(function (t) { var a = slip('FROM THE PLOT · ' + (clock.at === 'dusk' ? '1800' : clock.at), 'STOPPED THE CLOCK', TOLD[t.thing] || t.thing, null, true); t.lines.slice(0, 10).forEach(function (l) { a.appendChild(rich('div', 'told', l)); }); if (t.lines.length > 10) a.appendChild(el('div', 'told', 'And ' + (t.lines.length - 10) + ' more: see the war diary.')); });
     (s.holds || []).forEach(function (h) {
       var a = slip('HELD FROM THE STAFF', null, null, null), args = {}, what = null; ['ship', 'task_force', 'air_group', 'land_unit', 'setting'].forEach(function (k) { if (h.target && h.target[k] != null) { args[k] = h.target[k]; if (k !== 'setting' && !what) what = k + ':' + h.target[k]; } });
       var since = /day (\d+)/.exec(h.text || ''); a.appendChild(what ? rich('div', '', what + ', held by your direct order' + (since ? ' of day ' + since[1] : '')) : el('div', '', h.text));
@@ -1075,9 +1075,12 @@ button:disabled { opacity: 0.45; cursor: default; }
   function hexMiles() { var a = hexAt['0,0'], b = hexAt['1,0']; if (!a || !b) return 40; var rad = Math.PI / 180, dlat = (b[3] - a[3]) * rad, dlon = (b[4] - a[4]) * rad, h = Math.pow(Math.sin(dlat / 2), 2) + Math.cos(a[3] * rad) * Math.cos(b[3] * rad) * Math.pow(Math.sin(dlon / 2), 2); return Math.round(2 * 3440.065 * Math.asin(Math.sqrt(h)) / 5) * 5; }
   function round(n) { return showHexes ? n + ' hexes round' : 'within ' + n * hexMiles() + ' miles'; }
   function hexWords(pl) { var known = M.hexNames[pl.q + ',' + pl.r]; return known || whereIs(pl); }
+  // The unit a card is of, for the way from the card to its own diary.
+  var cardHandle = null, wantDiary = null;
   function openCard(title, stamp, own) { if (arcDraft) { arcDraft = null; if (g) drawMarks(); }
     var body = $('card-body'), head = el('div', 'headline'); body.textContent = '';
     head.appendChild(el('h2', '', title)); if (stamp) head.appendChild(el('span', 'stamp' + (own ? ' ok' : ''), stamp)); body.appendChild(head);
+    cardHandle = wantDiary; wantDiary = null; $('card-diary').hidden = !cardHandle;
     $('card').hidden = false; $('card-find').hidden = true; if (!stackShowing) { stack = null; $('card-step').hidden = true; } return body;
   }
   // Pieces that share a place lie on one another. A touch opens the one
@@ -1157,6 +1160,13 @@ button:disabled { opacity: 0.45; cursor: default; }
   cardUnit = remember(cardUnit); cardEntity = remember(cardEntity); cardContact = remember(cardContact); cardPlace = remember(cardPlace); cardForce = remember(cardForce); cardBase = remember(cardBase);
   $('card-back').addEventListener('click', function () { var was = trail.pop(); if (!was) return; shown = was; $('card-back').hidden = !trail.length; backWords(); was(); });
   $('card-find').addEventListener('click', function () { if (findAt) turnTo(findAt); });
+  $('card-diary').addEventListener('click', function () { if (cardHandle) readUnitDiary(cardHandle); });
+  (function () { var f = cardForce, b = cardBase, u = cardUnit, e = cardEntity;
+    cardForce = function (x) { wantDiary = x && x.force ? x.force.task_force.handle : null; return f.apply(this, arguments); };
+    cardBase = function (x) { wantDiary = x && x.base && x.base.base ? x.base.base.handle : null; return b.apply(this, arguments); };
+    cardUnit = function (x) { wantDiary = x && x.land_unit ? x.land_unit.handle : null; return u.apply(this, arguments); };
+    cardEntity = function (h) { wantDiary = typeof h === 'string' ? h : null; return e.apply(this, arguments); };
+  })();
   $('card-close').addEventListener('click', function () { $('card').hidden = true; forget(); });
   // The tile under the pointer, if there is one: a touch on a tile is a touch
   // on what it stands for, whatever else lies in the same hex.
@@ -1503,6 +1513,25 @@ button:disabled { opacity: 0.45; cursor: default; }
     row.addEventListener('click', function (ev) { if (ev.target.className !== 'ref') open(); }); row.addEventListener('keydown', function (ev) { if (ev.key === 'Enter') open(); });
     return row;
   }
+  // The war diary of one unit: every day's entries that name it, the latest
+  // day first. Days gone by do not change, so they are kept once read.
+  var dayKept = {};
+  function readUnitDiary(h) {
+    var last = diaryLast || M.day || 1, days = []; for (var d = 1; d <= last; d++) days.push(d);
+    setStatus('Reading the diary.');
+    Promise.all(days.map(function (d) { return dayKept[d] ? Promise.resolve(dayKept[d]) : eventsOf(d).then(function (evs) { if (d < last) dayKept[d] = evs; return evs; }).catch(function () { return []; }); })).then(function (all) {
+      var doc = $('sheet-doc'), any = false; doc.textContent = '';
+      var head = el('div', 'head'); head.appendChild(el('span', '', 'Of')); head.appendChild(rich('span', '', h)); doc.appendChild(head);
+      for (var k = all.length - 1; k >= 0; k--) {
+        var mine = all[k].filter(function (e) { return !D_ROUTINE[e.event_kind] && e.event_kind !== 'staff_reason' && !emptyClaim(e) && (e.entities || []).some(function (x) { return x && x.handle === h; }); });
+        if (!mine.length) continue; any = true;
+        var sec = el('div', 'phase'); sec.appendChild(el('b', '', (dateOf(days[k] - 1) || 'day ' + days[k])));
+        mine.forEach(function (e) { sec.appendChild(diaryRow(sayEvent(e, true), e.number, null)); }); doc.appendChild(sec);
+      }
+      if (!any) doc.appendChild(el('p', '', 'The diary holds nothing of it yet.'));
+      sheetAs('WAR DIARY'); doc.hidden = false; $('sheet-text').hidden = true; $('card').hidden = true; $('sheet').hidden = false; $('sheet-close').focus(); setStatus('');
+    });
+  }
   function readDiary(day) {
     api('events', day ? { day: day } : {}).then(function (a) {
       var doc = $('sheet-doc'), d = a.day, evs = a.events || []; doc.textContent = ''; if (!day) diaryLast = d;
@@ -1836,7 +1865,7 @@ button:disabled { opacity: 0.45; cursor: default; }
   // it. Closing the sheet forgets the lot.
   var sheetTrail = [], sheetHere = null, sheetBacking = false;
   function tracked(name, fn, keyOf) { var w = function () { var args = arguments, key = name + (keyOf ? ':' + keyOf.apply(null, args) : ''), again = function () { w.apply(null, args); }; if ($('sheet').hidden) sheetTrail = []; else if (sheetHere && sheetHere.key !== key && !sheetBacking) sheetTrail.push(sheetHere); sheetBacking = false; sheetHere = { key: key, fn: again }; return fn.apply(null, args); }; return w; }
-  readDiary = tracked('diary', readDiary); readSchedule = tracked('schedule', readSchedule); readPlan = tracked('plan', readPlan, function (root) { return root; });
+  readDiary = tracked('diary', readDiary); readUnitDiary = tracked('unitdiary', readUnitDiary, function (h) { return h; }); readSchedule = tracked('schedule', readSchedule); readPlan = tracked('plan', readPlan, function (root) { return root; });
   readOob = tracked('oob', readOob); readInTray = tracked('in', readInTray); readDirective = tracked('directive', readDirective, function (d) { return d.number; }); readReport = tracked('report', readReport); readBriefing = tracked('situation', readBriefing);
   $('sheet-back').addEventListener('click', function () { var p = sheetTrail.pop(); if (!p) return; sheetBacking = true; p.fn(); });
   $('sheet-close').addEventListener('click', function () { $('sheet').hidden = true; });
@@ -1848,6 +1877,7 @@ button:disabled { opacity: 0.45; cursor: default; }
   // The seat's tools answer between days, so a day is fought and then plotted: the table plays the three
   // pulses in turn from what the side was told in each. Stopping the clock takes effect when the day is plotted.
   var playing = false, flashes = [];
+  var HURT = { aircraft_destroyed_on_ground: 1, damaged_aircraft_destroyed_on_ground: 1, men_lost_to_fire: 1, base_supply_destroyed: 1, airfield_damaged: 1, ship_damaged: 1, ship_sunk: 1 };
   var QUIET = { fuel_burned: 1, air_group_fatigue: 1, task_force_fatigue: 1, land_unit_fatigue: 1, aircraft_worn: 1, cargo_unloaded: 1, order_accepted: 1, staff_reason: 1, command_taken: 1, intent_formed: 1, plan_drafted: 1, plan_state_changed: 1, plan_amended: 1, fight_day_counted: 1, ground_fire: 1, left_roster: 1, search_flown: 1, strike_mission_cleared: 1, base_at_day_end: 1, task_force_halted: 1, task_force_steamed: 1, staff_notice: 1, interrupt_fired: 1, men_fed: 1 };
   function eventsOf(day, pulse) { var args = { day: day }; if (pulse) args.pulse = pulse; return api('events', args).then(function (a) { return a.events || []; }); }
   function named(text) {
@@ -1915,7 +1945,12 @@ button:disabled { opacity: 0.45; cursor: default; }
               await plotPhase(done.day, done.pulse, evs);
               if (done.pulse === 'afternoon') { var end = await eventsOf(done.day, 'end'); end.forEach(function (e) { byNumber[e.number] = e; }); await plotPhase(done.day, 'end', end); }
             }
-            (r.told || []).forEach(function (t) { lastTold.push({ thing: t.thing, lines: t.events.filter(function (n) { return byNumber[n]; }).map(function (n) { return sayEvent(byNumber[n], true); }) }); });
+            (r.told || []).forEach(function (t) {
+              var told = t.events.filter(function (n) { return byNumber[n]; }), lines = told.map(function (n) { return sayEvent(byNumber[n], true); });
+              // What the attack did to the side's own: the units that lost aircraft or men at the places attacked, in that pulse.
+              if (t.thing === 'attack') { var at = {}, when = {}; told.forEach(function (n) { when[byNumber[n].pulse] = 1; (byNumber[n].entities || []).forEach(function (x) { if (x && /^(base|task_force):/.test(x.handle)) at[x.handle] = 1; }); });
+                Object.keys(byNumber).map(Number).sort(function (a, b) { return a - b; }).forEach(function (n) { var e = byNumber[n]; if (told.indexOf(n) >= 0 || !HURT[e.event_kind] || !when[e.pulse] || !(e.entities || []).some(function (x) { return x && at[x.handle]; })) return; lines.push(sayEvent(e, true)); }); }
+              lastTold.push({ thing: t.thing, lines: lines }); });
             clock = { at: r.clock.at, day: r.clock.day }; await refresh();
             if (!until || !playing || r.game_over || r.stopped !== 'pulses') {
               var when = clock.at === 'dusk' ? 'at 1800' : 'at ' + clock.at + ' of day ' + clock.day;
