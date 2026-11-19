@@ -91,7 +91,7 @@ day   6  hash f94980ed21d3b804  21 events
 #80 D4 morning   air_group:1 searched 060-120 out to 400 nm from base:1 with 12 aircraft  <- order:1, order:2
 #81 D4 morning   air_group:4 launched 8 aircraft at base:3 at (10,0), 200 nm  <- order:4
 #82 D4 morning   air_group:5 launched 8 aircraft at base:4 at (5,4), 160 nm  <- order:5
-#83 D4 morning   air_group:4 bombs at base:3: 8 shots x 0.2 = 1.6 expected, 2 hits: 0 on aircraft, 0 on supply, 2 on nothing; type not made out  <- #81
+#83 D4 morning   air_group:4 bombs at base:3: 8 shots x 0.2 = 1.6 expected, 2 hits: 0 on aircraft, 0 on supply, 2 on nothing  <- #81
 #84 D4 morning   air_group:5 bombs at base:4: 8 shots x 0.2 = 1.6 expected, 1 hit: 0 on aircraft, 0 on supply, 1 on nothing; recognised as aircraft_type:3  <- #82
 #85 D4 morning   2 hits on the airfield of base:3 (Japanese), damage 6  <- #83
 #86 D4 morning   Allied claim over (10,0): 0 aircraft shot down  <- #83

@@ -132,7 +132,7 @@ day   8  hash 937d3185db60d9a0  17 events
 #119 D5 morning   air_group:2 searched 050-120 out to 300 nm from ship:1 at (4,0) with 6 aircraft  <- order:7, order:8
 #120 D5 morning   air_group:3 launched 10 aircraft at base:2 at (10,0), 240 nm  <- order:13
 #121 D5 morning   air_group:1 sent 6 escorts with air_group:3  <- order:5, order:6, #120
-#122 D5 morning   air_group:3 bombs at base:2: 10 shots x 0.2 = 2 expected, 2 hits: 0 on aircraft, 1 on supply, 1 on nothing; type not made out  <- #120
+#122 D5 morning   air_group:3 bombs at base:2: 10 shots x 0.2 = 2 expected, 2 hits: 0 on aircraft, 1 on supply, 1 on nothing  <- #120
 #123 D5 morning   Allied claim at (10,0): 1 aircraft destroyed on the ground  <- #122
 #124 D5 morning   task_force:2 steamed 60 nm at 10 kn from (3,0) to (5,0)  <- order:17
 #125 D5 morning   ship:2 burned 6 t, 982 t remaining  <- #124

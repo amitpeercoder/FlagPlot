@@ -2771,10 +2771,10 @@ impl fmt::Display for EventKind {
                 }
                 write!(
                     f,
-                    "{} on nothing; {}",
-                    hits - hits_on_aircraft - hits_on_supply - hits_on_men,
-                    RecognisedWords(*recognised)
-                )
+                    "{} on nothing",
+                    hits - hits_on_aircraft - hits_on_supply - hits_on_men
+                )?;
+                recognised_suffix(f, *recognised)
             }
             EventKind::AircraftDestroyedOnGround {
                 air_group,
@@ -2989,13 +2989,17 @@ impl fmt::Display for EventKind {
                 hits,
                 recognised,
                 ..
-            } => write!(
-                f,
-                "{air_group} {} at {ship}: {shots} shots x {chance} = {expected} expected, {hits} {}; {}",
-                weapon.name(),
-                if *hits == 1 { "hit" } else { "hits" },
-                RecognisedWords(*recognised)
-            ),
+            } => {
+                write!(
+                    f,
+                    "{air_group} {} at {ship}: {shots} shots x {chance} = {expected} expected, {hits} {}",
+                    weapon.name(),
+                    if *hits == 1 { "hit" } else { "hits" },
+                )?;
+                // Named only where recognised, so a world where no type is
+                // recognised reads as it did before decision 0167.
+                recognised_suffix(f, *recognised)
+            }
             EventKind::EscortsSent {
                 air_group,
                 with_air_group,
@@ -4342,9 +4346,23 @@ pub fn base_is_open(supply_t: Fixed, aircraft_ready: u32) -> bool {
 }
 
 /// Ship IDs written as a list, such as `ship:2, ship:4`.
+/// The true event's words of what the people under an attack made of the
+/// aircraft (decision 0167): "; recognised as aircraft_type:3" where they
+/// recognised them, nothing where they did not, so that a world where no type
+/// is recognised reads as it did before the rule.
+fn recognised_suffix(
+    f: &mut fmt::Formatter<'_>,
+    recognised: Option<AircraftTypeId>,
+) -> fmt::Result {
+    match recognised {
+        Some(_) => write!(f, "; {}", RecognisedWords(recognised)),
+        None => Ok(()),
+    }
+}
+
 /// What the people under an air attack or a raid made of the aircraft
 /// (decision 0167): "recognised as aircraft_type:3", or "type not made out".
-/// The true event and the attacked side's event say it alike.
+/// The attacked side's event says it either way.
 pub struct RecognisedWords(pub Option<AircraftTypeId>);
 
 impl fmt::Display for RecognisedWords {

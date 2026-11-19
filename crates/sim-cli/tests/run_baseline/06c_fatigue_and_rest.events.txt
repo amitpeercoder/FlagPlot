@@ -28,7 +28,7 @@ day   8  hash 2392c8434e10ccce  18 events
 #15 D1 morning   air_group:3 patrol at the bombers of air_group:1: 3 shots x 0.3 = 0.9 expected, 0 hits  <- #11
 #16 D1 morning   air_group:3 lost 3 aircraft, 9 left  <- #13
 #17 D1 morning   air_group:2 lost 1 aircraft, 11 left  <- #14
-#18 D1 morning   air_group:1 bombs at base:2: 18 shots x 0.2 = 3.6 expected, 1 hit: 0 on aircraft, 1 on supply, 0 on nothing; type not made out  <- #11
+#18 D1 morning   air_group:1 bombs at base:2: 18 shots x 0.2 = 3.6 expected, 1 hit: 0 on aircraft, 1 on supply, 0 on nothing  <- #11
 #19 D1 morning   air_group:3 patrol at the bombers of air_group:1: 6 shots x 0.3 = 1.8 expected, 2 hits after the attack  <- #11, #18
 #20 D1 morning   air_group:1 lost 2 aircraft, 16 left  <- #19
 #21 D1 morning   base:2 guns at the raid of air_group:1: 20 shots x 0.05 = 1 expected, 0 hits after the attack  <- #11, #18
@@ -126,7 +126,7 @@ day   8  hash 2392c8434e10ccce  18 events
 #113 D5 morning   air_group:3 patrol at the escorts of air_group:2: 1 shots x 0.3 = 0.3 expected, 0 hits  <- #110, #111
 #114 D5 morning   air_group:3 patrol at the bombers of air_group:1: 1 shots x 0.3 = 0.3 expected, 0 hits  <- #110
 #115 D5 morning   air_group:3 lost 1 aircraft, 6 left  <- #112
-#116 D5 morning   air_group:1 bombs at base:2: 6 shots x 0.2 = 1.2 expected, 0 hits: 0 on aircraft, 0 on supply, 0 on nothing; type not made out  <- #110
+#116 D5 morning   air_group:1 bombs at base:2: 6 shots x 0.2 = 1.2 expected, 0 hits: 0 on aircraft, 0 on supply, 0 on nothing  <- #110
 #117 D5 morning   air_group:3 patrol at the bombers of air_group:1: 3 shots x 0.3 = 0.9 expected, 2 hits after the attack  <- #110, #116
 #118 D5 morning   air_group:1 lost 2 aircraft, 6 left  <- #117
 #119 D5 morning   base:2 guns at the raid of air_group:1: 20 shots x 0.05 = 1 expected, 3 hits after the attack  <- #110, #116

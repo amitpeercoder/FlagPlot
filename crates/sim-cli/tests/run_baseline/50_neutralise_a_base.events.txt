@@ -39,7 +39,7 @@ day  12  hash 998c851260076836  14 events
 #22 D1 morning   air_group:1 launched 10 aircraft at base:2 at (5,0), 200 nm  <- order:1
 #23 D1 morning   air_group:3 launched 10 aircraft at base:2 at (5,0), 200 nm  <- order:4
 #24 D1 morning   air_group:2 sent 8 escorts with air_group:1  <- order:2, order:3, #22
-#25 D1 morning   air_group:1 bombs at base:2: 10 shots x 0.2 = 2 expected, 1 hit: 0 on aircraft, 0 on supply, 1 on nothing; type not made out  <- #22
+#25 D1 morning   air_group:1 bombs at base:2: 10 shots x 0.2 = 2 expected, 1 hit: 0 on aircraft, 0 on supply, 1 on nothing  <- #22
 #26 D1 morning   air_group:3 bombs at base:2: 10 shots x 0.2 = 2 expected, 2 hits: 1 on aircraft, 0 on supply, 1 on nothing; recognised as aircraft_type:3  <- #23
 #27 D1 morning   Allied claim at (5,0): 1 aircraft destroyed on the ground  <- #25, #26
 #28 D1 morning   air_group:1 gained 11 fatigue from its base strike sortie of 400 nm, now 11  <- #22
@@ -56,7 +56,7 @@ day  12  hash 998c851260076836  14 events
 #39 D2 morning   air_group:3 launched 9 aircraft at base:2 at (5,0), 200 nm  <- order:4
 #40 D2 morning   air_group:2 sent 7 escorts with air_group:1  <- order:2, order:3, #38
 #41 D2 morning   air_group:1 bombs at base:2: 9 shots x 0.2 = 1.8 expected, 4 hits: 0 on aircraft, 0 on supply, 4 on nothing; recognised as aircraft_type:3  <- #38
-#42 D2 morning   air_group:3 bombs at base:2: 9 shots x 0.2 = 1.8 expected, 0 hits: 0 on aircraft, 0 on supply, 0 on nothing; type not made out  <- #39
+#42 D2 morning   air_group:3 bombs at base:2: 9 shots x 0.2 = 1.8 expected, 0 hits: 0 on aircraft, 0 on supply, 0 on nothing  <- #39
 #43 D2 morning   Allied claim at (5,0): 2 aircraft destroyed on the ground  <- #41, #42
 #44 D2 morning   air_group:1 gained 11 fatigue from its base strike sortie of 400 nm, now 17  <- #38
 #45 D2 morning   air_group:2 gained 11 fatigue from its escort sortie of 400 nm, now 17  <- #40
@@ -88,7 +88,7 @@ day  12  hash 998c851260076836  14 events
 #71 D4 morning   air_group:3 launched 8 aircraft at base:2 at (5,0), 200 nm  <- order:4
 #72 D4 morning   air_group:2 sent 6 escorts with air_group:1  <- order:2, order:3, #70
 #73 D4 morning   air_group:1 bombs at base:2: 8 shots x 0.2 = 1.6 expected, 1 hit: 0 on aircraft, 1 on supply, 0 on nothing; recognised as aircraft_type:3  <- #70
-#74 D4 morning   air_group:3 bombs at base:2: 8 shots x 0.2 = 1.6 expected, 1 hit: 0 on aircraft, 0 on supply, 1 on nothing; type not made out  <- #71
+#74 D4 morning   air_group:3 bombs at base:2: 8 shots x 0.2 = 1.6 expected, 1 hit: 0 on aircraft, 0 on supply, 1 on nothing  <- #71
 #75 D4 morning   Allied claim at (5,0): 2 aircraft destroyed on the ground  <- #73, #74
 #76 D4 morning   air_group:1 gained 11 fatigue from its base strike sortie of 400 nm, now 29  <- #70
 #77 D4 morning   air_group:2 gained 11 fatigue from its escort sortie of 400 nm, now 29  <- #72
@@ -103,8 +103,8 @@ day  12  hash 998c851260076836  14 events
 #86 D5 morning   air_group:1 launched 7 aircraft at base:2 at (5,0), 200 nm  <- order:1
 #87 D5 morning   air_group:3 launched 7 aircraft at base:2 at (5,0), 200 nm  <- order:4
 #88 D5 morning   air_group:2 sent 6 escorts with air_group:1  <- order:2, order:3, #86
-#89 D5 morning   air_group:1 bombs at base:2: 7 shots x 0.2 = 1.4 expected, 0 hits: 0 on aircraft, 0 on supply, 0 on nothing; type not made out  <- #86
-#90 D5 morning   air_group:3 bombs at base:2: 7 shots x 0.2 = 1.4 expected, 2 hits: 0 on aircraft, 0 on supply, 2 on nothing; type not made out  <- #87
+#89 D5 morning   air_group:1 bombs at base:2: 7 shots x 0.2 = 1.4 expected, 0 hits: 0 on aircraft, 0 on supply, 0 on nothing  <- #86
+#90 D5 morning   air_group:3 bombs at base:2: 7 shots x 0.2 = 1.4 expected, 2 hits: 0 on aircraft, 0 on supply, 2 on nothing  <- #87
 #91 D5 morning   Allied claim at (5,0): 2 aircraft destroyed on the ground  <- #89, #90
 #92 D5 morning   air_group:1 gained 11 fatigue from its base strike sortie of 400 nm, now 35  <- #86
 #93 D5 morning   air_group:2 gained 11 fatigue from its escort sortie of 400 nm, now 35  <- #88
@@ -152,7 +152,7 @@ day  12  hash 998c851260076836  14 events
 #135 D8 morning   air_group:3 launched 5 aircraft at base:2 at (5,0), 200 nm  <- order:4
 #136 D8 morning   air_group:2 sent 4 escorts with air_group:1  <- order:2, order:3, #134
 #137 D8 morning   air_group:1 bombs at base:2: 5 shots x 0.2 = 1 expected, 3 hits: 0 on aircraft, 2 on supply, 1 on nothing; recognised as aircraft_type:3  <- #134
-#138 D8 morning   air_group:3 bombs at base:2: 5 shots x 0.2 = 1 expected, 1 hit: 0 on aircraft, 0 on supply, 1 on nothing; type not made out  <- #135
+#138 D8 morning   air_group:3 bombs at base:2: 5 shots x 0.2 = 1 expected, 1 hit: 0 on aircraft, 0 on supply, 1 on nothing  <- #135
 #139 D8 morning   Allied claim at (5,0): 1 aircraft destroyed on the ground  <- #137, #138
 #140 D8 morning   air_group:1 gained 11 fatigue from its base strike sortie of 400 nm, now 53  <- #134
 #141 D8 morning   air_group:2 gained 11 fatigue from its escort sortie of 400 nm, now 53  <- #136
@@ -185,7 +185,7 @@ day  12  hash 998c851260076836  14 events
 #168 D10 morning   air_group:1 launched 6 aircraft at base:2 at (5,0), 200 nm  <- order:7
 #169 D10 morning   air_group:3 launched 6 aircraft at base:2 at (5,0), 200 nm  <- order:8
 #170 D10 morning   air_group:2 sent 4 escorts with air_group:1  <- order:2, order:3, #168
-#171 D10 morning   air_group:1 bombs at base:2: 6 shots x 0.2 = 1.2 expected, 0 hits: 0 on aircraft, 0 on supply, 0 on nothing; type not made out  <- #168
+#171 D10 morning   air_group:1 bombs at base:2: 6 shots x 0.2 = 1.2 expected, 0 hits: 0 on aircraft, 0 on supply, 0 on nothing  <- #168
 #172 D10 morning   air_group:3 bombs at base:2: 6 shots x 0.2 = 1.2 expected, 0 hits: 0 on aircraft, 0 on supply, 0 on nothing; recognised as aircraft_type:3  <- #169
 #173 D10 morning   Allied claim at (5,0): 2 aircraft destroyed on the ground  <- #171, #172
 #174 D10 morning   air_group:1 gained 11 fatigue from its base strike sortie of 400 nm, now 49  <- #168
@@ -202,7 +202,7 @@ day  12  hash 998c851260076836  14 events
 #185 D11 morning   air_group:3 launched 5 aircraft at base:2 at (5,0), 200 nm  <- order:8
 #186 D11 morning   air_group:2 sent 4 escorts with air_group:1  <- order:2, order:3, #184
 #187 D11 morning   air_group:1 bombs at base:2: 5 shots x 0.2 = 1 expected, 1 hit: 0 on aircraft, 0 on supply, 1 on nothing; recognised as aircraft_type:3  <- #184
-#188 D11 morning   air_group:3 bombs at base:2: 5 shots x 0.2 = 1 expected, 3 hits: 0 on aircraft, 1 on supply, 2 on nothing; type not made out  <- #185
+#188 D11 morning   air_group:3 bombs at base:2: 5 shots x 0.2 = 1 expected, 3 hits: 0 on aircraft, 1 on supply, 2 on nothing  <- #185
 #189 D11 morning   Allied claim at (5,0): 2 aircraft destroyed on the ground  <- #187, #188
 #190 D11 morning   air_group:1 gained 11 fatigue from its base strike sortie of 400 nm, now 55  <- #184
 #191 D11 morning   air_group:2 gained 11 fatigue from its escort sortie of 400 nm, now 55  <- #186

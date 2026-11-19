@@ -364,8 +364,9 @@ fn a_step_carries_only_the_pictures_that_changed() {
 /// export's state version and day hashes and nothing else.
 /// Remade again for decision 0167, in the four scenarios with an air attack
 /// or a raid (5, 31, 50 and 58): each changes in the hash of
-/// `air_combat.toml`, the words of those events (the type recognised or
-/// "type not made out", and the attacked side's weapon), their `recognised`
+/// `air_combat.toml`, the words of those events (the true event's type where
+/// recognised; the attacked side's weapon, and its type recognised or "type
+/// not made out"), their `recognised`
 /// field where a type was recognised and the attacked side's `weapon`, and
 /// nothing else: with those taken back out each file hashes as pinned before.
 #[test]
@@ -381,10 +382,10 @@ fn a_scenario_with_command_levels_off_exports_as_it_did() {
         ("05_eastern_solomons", 0xd685_0321_f029_2f71),
         ("21_landing", 0x683b_4443_825d_250f),
         ("23_fight_ashore", 0x7ffb_464b_9c3f_0fda),
-        ("31_airfield_damage", 0xbaf1_5f19_efac_5920),
+        ("31_airfield_damage", 0x62b4_1c5d_8d20_3847),
         ("36_one_convoy", 0x9120_78a8_3caf_83b2),
         ("43_keep_two_bases_fed", 0xf0c2_7b11_3554_79b1),
-        ("50_neutralise_a_base", 0x1f7d_4cd2_b506_9c9a),
+        ("50_neutralise_a_base", 0x5553_643f_b8ac_cdf8),
         ("58_a_carrier_force_closes", 0x1a44_9fa5_ba47_b79b),
     ];
     let prefix6 = br#"{"format":"flagplot-replay","version":6,"#;

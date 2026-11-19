@@ -1804,7 +1804,7 @@ day  39  hash c251c1be7062ff4a  139 events
 #1760 D18 afternoon air_group:119 lost 1 aircraft, 5 left  <- #1756
 #1761 D18 afternoon air_group:112 found nothing at (6,-4)  <- #1748
 #1762 D18 afternoon air_group:115 found nothing at (6,-4)  <- #1749
-#1763 D18 afternoon air_group:119 bombs at base:1: 5 shots x 0.2 = 1 expected, 0 hits: 0 on aircraft, 0 on supply, 0 on nothing; type not made out  <- #1750, #1760
+#1763 D18 afternoon air_group:119 bombs at base:1: 5 shots x 0.2 = 1 expected, 0 hits: 0 on aircraft, 0 on supply, 0 on nothing  <- #1750, #1760
 #1764 D18 afternoon air_group:10 patrol at the bombers of air_group:119: 3 shots x 0.3 = 0.9 expected, 0 hits after the attack  <- #1750, #1763
 #1765 D18 afternoon base:1 guns at the raid of air_group:119: 8 shots x 0.05 = 0.4 expected, 0 hits after the attack  <- #1750, #1763
 #1766 D18 afternoon Japanese contact:2 not there at (6,-4): dropped  <- #1761
@@ -1924,7 +1924,7 @@ day  39  hash c251c1be7062ff4a  139 events
 #1880 D19 morning   air_group:11 bombs at ship:33: 12 shots x 0.2 = 2.4 expected, 1 hit; recognised as aircraft_type:2101  <- #1861
 #1881 D19 morning   air_group:106 bombs at ship:33: 15 shots x 0.2 = 3 expected, 5 hits; recognised as aircraft_type:2001  <- #1862
 #1882 D19 morning   air_group:107 bombs at ship:33: 15 shots x 0.2 = 3 expected, 4 hits; recognised as aircraft_type:2001  <- #1863
-#1883 D19 morning   air_group:108 torpedoes at ship:33: 8 shots x 0.15 = 1.2 expected, 2 hits; type not made out  <- #1864
+#1883 D19 morning   air_group:108 torpedoes at ship:33: 8 shots x 0.15 = 1.2 expected, 2 hits  <- #1864
 #1884 D19 morning   air_group:119 bombs at base:1: 1 shots x 0.2 = 0.2 expected, 0 hits: 0 on aircraft, 0 on supply, 0 on nothing; recognised as aircraft_type:2005  <- #1865
 #1885 D19 morning   air_group:10 patrol at the bombers of air_group:1: 4 shots x 0.3 = 1.2 expected, 2 hits after the attack  <- #1860, #1879
 #1886 D19 morning   air_group:1 lost 2 aircraft, 38 left  <- #1885
@@ -2043,7 +2043,7 @@ day  39  hash c251c1be7062ff4a  139 events
 #1999 D19 afternoon air_group:107 found nothing at (6,-9)  <- #1980
 #2000 D19 afternoon air_group:108 found nothing at (6,-9)  <- #1981
 #2001 D19 afternoon air_group:112 bombs at ship:1: 10 shots x 0.2 = 2 expected, 1 hit; recognised as aircraft_type:2004  <- #1982, #1990
-#2002 D19 afternoon air_group:115 bombs at ship:1: 8 shots x 0.2 = 1.6 expected, 3 hits; type not made out  <- #1983
+#2002 D19 afternoon air_group:115 bombs at ship:1: 8 shots x 0.2 = 1.6 expected, 3 hits  <- #1983
 #2003 D19 afternoon air_group:101 patrol at the bombers of air_group:112: 12 shots x 0.3 = 3.6 expected, 3 hits after the attack  <- #1982, #2001
 #2004 D19 afternoon air_group:112 lost 3 aircraft, 9 left  <- #2003
 #2005 D19 afternoon task_force:1 guns at the raid of air_group:112: 123 shots x 0.05 = 6.15 expected, 7 hits after the attack  <- #1982, #2001
@@ -2236,9 +2236,9 @@ day  39  hash c251c1be7062ff4a  139 events
 #2192 D20 afternoon air_group:107 launched 8 aircraft at contact:4 at (7,-9), 160 nm  <- order:66, #2186
 #2193 D20 afternoon air_group:108 launched 5 aircraft at contact:4 at (7,-9), 160 nm  <- order:67, #2186
 #2194 D20 afternoon air_group:11 bombs at ship:34: 9 shots x 0.2 = 1.8 expected, 2 hits; recognised as aircraft_type:2101  <- #2190
-#2195 D20 afternoon air_group:106 bombs at ship:34: 8 shots x 0.2 = 1.6 expected, 1 hit; type not made out  <- #2191
+#2195 D20 afternoon air_group:106 bombs at ship:34: 8 shots x 0.2 = 1.6 expected, 1 hit  <- #2191
 #2196 D20 afternoon air_group:107 bombs at ship:34: 8 shots x 0.2 = 1.6 expected, 3 hits; recognised as aircraft_type:2001  <- #2192
-#2197 D20 afternoon air_group:108 torpedoes at ship:34: 5 shots x 0.15 = 0.75 expected, 0 hits; type not made out  <- #2193
+#2197 D20 afternoon air_group:108 torpedoes at ship:34: 5 shots x 0.15 = 0.75 expected, 0 hits  <- #2193
 #2198 D20 afternoon task_force:4 guns at the raid of air_group:11: 13 shots x 0.028125 = 0.365625 expected, 1 hit after the attack  <- #2190, #2194
 #2199 D20 afternoon air_group:11 lost 1 aircraft, 10 left  <- #2198
 #2200 D20 afternoon air_group:11 lost 1 pilot, 11 left  <- #2199
@@ -3659,7 +3659,7 @@ day  39  hash c251c1be7062ff4a  139 events
 #3615 D27 morning   air_group:2 lost 4 pilots, 20 left  <- #3614
 #3616 D27 morning   air_group:1 lost 2 aircraft, 38 left  <- #3611
 #3617 D27 morning   air_group:1 lost 2 pilots, 39 left  <- #3616
-#3618 D27 morning   air_group:1 bombs at base:1: 21 shots x 0.2 = 4.2 expected, 4 hits: 0 on aircraft, 0 on supply, 2 on men, 2 on nothing; type not made out  <- #3606, #3616
+#3618 D27 morning   air_group:1 bombs at base:1: 21 shots x 0.2 = 4.2 expected, 4 hits: 0 on aircraft, 0 on supply, 2 on men, 2 on nothing  <- #3606, #3616
 #3619 D27 morning   air_group:13 patrol at the bombers of air_group:1: 5 shots x 0.3 = 1.5 expected, 3 hits after the attack  <- #3606, #3618
 #3620 D27 morning   air_group:1 lost 3 aircraft, 35 left  <- #3619
 #3621 D27 morning   air_group:1 lost 3 pilots, 36 left  <- #3620
@@ -4157,7 +4157,7 @@ day  39  hash c251c1be7062ff4a  139 events
 #4113 D30 morning   air_group:13 lost 1 pilot, 13 left  <- #4112
 #4114 D30 morning   air_group:2 lost 1 aircraft, 23 left  <- #4109
 #4115 D30 morning   air_group:2 lost 1 pilot, 23 left  <- #4114
-#4116 D30 morning   air_group:1 bombs at base:1: 23 shots x 0.2 = 4.6 expected, 4 hits: 0 on aircraft, 2 on supply, 2 on nothing; type not made out  <- #4105
+#4116 D30 morning   air_group:1 bombs at base:1: 23 shots x 0.2 = 4.6 expected, 4 hits: 0 on aircraft, 2 on supply, 2 on nothing  <- #4105
 #4117 D30 morning   air_group:10 patrol at the bombers of air_group:1: 3 shots x 0.3 = 0.9 expected, 2 hits after the attack  <- #4105, #4116
 #4118 D30 morning   air_group:1 lost 2 aircraft, 38 left  <- #4117
 #4119 D30 morning   air_group:1 lost 2 pilots, 39 left  <- #4118
