@@ -25,6 +25,11 @@
 //!   are as decision 0175 has them;
 //! - it names a file of sides that gives every class to both sides.
 //!
+//! (Added on review.) The build writes those two files, each with its
+//! frozen copy: the trial's figures also hold `seed = 1942`, and the
+//! file of sides has a row for every class and type scenario 86's
+//! reference files give, the troop transport's among them.
+//!
 //! So the live game is: base 1 at A, (0,0), Allied, 1,000 t of supply;
 //! base 2 at B, (4,0), Japanese, with nothing; base 4 at C, (0,6),
 //! Allied, with nothing; task force 1, Allied, two troop transports at
@@ -62,7 +67,11 @@
 //!   fuel. Unit 1 has 600 men and unit 2 has 400, all ashore at B.
 //! - **The Japanese staff gives no order** on any day.
 //!
-//! The four worlds have the same hash at the end of every day.
+//! The four worlds hold the same state at the end of every day: ships,
+//! task forces, bases, land units and both sides' command states, field
+//! for field. (Amended on review: this said they have the same hash. A
+//! world's hash holds its trial's number and its own, so the hashes of
+//! two worlds are never equal.)
 //!
 //! ## 2. The live game is not touched
 //!
@@ -71,6 +80,13 @@
 //! both staffs: no order is given on any day, task force 1 is at (2,0)
 //! at the end, base 2 is Japanese, and its eight daily hashes are those
 //! of the same game resolved with no trial ever asked.
+//!
+//! (Added on review.) And on every evening: the live game is played its
+//! 8 days with both staffs, and on each evening from the one before day
+//! 1 to the evening of day 7 a trial of 2 worlds for 2 days, with the
+//! course of case 1, is asked of the Allied side's view and played out.
+//! The live game's eight daily hashes are those of the game never
+//! asked.
 //!
 //! ## 3. The sizes
 //!
@@ -86,8 +102,9 @@
 //! and with an empty course:
 //! world 3 of a trial of 4 worlds and world 3 of a trial of 8 have the
 //! same hash at the end of each of 3 days, and their pictures are equal.
-//! Worlds 1 to 8 of the trial of 8 do not all have the same hash at the
-//! end of day 1.
+//! In the pictures of worlds 1 to 8 the Japanese force is not at the
+//! same hex in all of them. (Amended on review: this compared the
+//! worlds' hashes, which differ by their numbers alone.)
 //!
 //! ## 5. Stopped, and begun again
 //!
@@ -112,10 +129,34 @@
 //!   hands in commands to and resolves only a world it built, and names
 //!   no umpire, no whole picture and no view of a world it was not
 //!   given.
-//! - **A failed world is reported, and the others are played.** With one
-//!   world made to break an invariant on its day 2 by a means of the
-//!   test, the trial reports that world and that day, and the other
-//!   worlds are as in case 1.
+//! - **A world that cannot be played is reported, and the others are
+//!   played.** (Amended on review, which found no means named.) The
+//!   trial of case 1 played from its pictures, with world 2's picture
+//!   altered by the test so that its world is refused when built (its
+//!   Allied counter of forces set below the side's first number): world
+//!   2's record has its number, day 0 and the engine's words; worlds 1,
+//!   3 and 4 are as in case 1. A day that fails in play is tested inside
+//!   the crate, with a day's step made to fail by the test: that world's
+//!   record has the day and the days before it, and the other worlds
+//!   are played.
+//! - **The enemy's intents are handed in once.** (Added on review.) With
+//!   the Allied side believing that the Japanese side holds base 2: in
+//!   each world of case 1, at the end of day 1 the Japanese side's
+//!   command state has exactly one intent, to hold base 2, and no
+//!   command of that side was refused.
+//! - **Two courses, the same worlds.** (Added on review.) With case 4's
+//!   contact: the pictures of worlds 1 to 4 are equal, world for world,
+//!   whether the course is case 1's or empty.
+//! - **The seed is the trial's.** (Added on review.) The live game
+//!   loaded on another seed of its own gives the Allied side the same
+//!   pictures and, played out, worlds with the same hashes.
+//! - **A command on its day.** (Added on review.) The course of case 1
+//!   with each command given day 3: in each world nothing is ordered on
+//!   days 1 and 2, and the landing is ordered on day 3.
+//! - **A refused command is reported.** (Added on review.) The course of
+//!   case 1 with a fourth command, the approval of a plan that does not
+//!   exist: each world's record has that command as refused, with the
+//!   engine's words, and the world plays as in case 1.
 //! - **No live game changes** by the build: no baseline, golden file or
 //!   pinned hash moves.
 
