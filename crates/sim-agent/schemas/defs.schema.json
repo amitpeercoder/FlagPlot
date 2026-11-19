@@ -499,6 +499,9 @@
         "aircraft_type": {
           "type": "string"
         },
+        "role": {
+          "enum": ["patrol", "bomber", "fighter"]
+        },
         "location": {
           "description": "The base or the ship the group is at; null for a group lost with a base that changed side (decision 0090, 20), which has no place.",
           "$ref": "#/$defs/handle_or_null"
