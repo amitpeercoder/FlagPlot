@@ -621,14 +621,14 @@ button:disabled { opacity: 0.45; cursor: default; }
    
   }
   function cardPlace(t) {
-    var pl = t.place, name = (t.base && t.base.base.name) || M.hexNames[pl.q + ',' + pl.r], body = openCard((name || (t.sea ? 'OPEN WATER' : 'LAND')).toUpperCase(), t.base ? 'ENEMY' : null);
+    var pl = t.place, name = (t.base && t.base.base.name) || M.hexNames[pl.q + ',' + pl.r], body = openCard((name || (t.sea ? 'OPEN WATER' : 'LAND')).toUpperCase(), t.base ? 'ENEMY BASE' : null);
     var est = M.estimates.filter(function (e) { return sameHex(e.place, pl); })[0], here = M.contacts.filter(function (c) { return sameHex(c.place, pl); });
-    kv(body, [['Where', '(' + pl.q + ', ' + pl.r + ')'], ['Held by', t.base ? 'the enemy' : null]]);
-    if (!t.sea || est) body.appendChild(el('div', 'sub', 'INTELLIGENCE'));
-    if (est) kv(body, [['Men ashore', 'About ' + commas(est.men) + ' men'], ['From', est.came_from], ['Age', daysOld(est)]]);
-    else if (!t.sea) body.appendChild(el('div', '', 'No intelligence.'));
-    links(body, 'CONTACTS HERE', contactsAt(pl));
-    if (!here.length && !t.base) body.appendChild(el('div', '', 'No contact is held here.'));
+    kv(body, [['Where', '(' + pl.q + ', ' + pl.r + ')']]);
+    // What is believed of the place, a line for each thing held, each with
+    // where it came from and how old it is. A thing not held has no line.
+    if (est) { body.appendChild(el('div', 'sub', 'MEN ASHORE')); kv(body, [['Estimate', 'About ' + commas(est.men) + ' men'], ['From', est.came_from], ['Age', daysOld(est)]]); }
+    links(body, t.base ? 'SEEN HERE' : 'CONTACTS HERE', contactsAt(pl));
+    if (!est && !here.length) body.appendChild(el('div', '', t.sea ? 'No contact is held here.' : 'No intelligence.'));
    
   }
   function cardForce(t) {
