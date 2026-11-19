@@ -252,6 +252,10 @@ pub struct ShipDetail {
     pub port: Option<Handle>,
     pub place: Option<Place>,
     pub fuel_t: Dec,
+    /// The fuel her class's tanks hold, so that `fuel_t` reads as a level.
+    /// Left out where her class is not known.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fuel_capacity_t: Option<Dec>,
     pub supply_t: Dec,
     pub cargo_fuel_t: Dec,
     pub flotation_damage: Dec,
@@ -355,6 +359,10 @@ pub struct ShipLine {
     pub class: String,
     pub sunk: bool,
     pub fuel_t: Dec,
+    /// The fuel her class's tanks hold, so that `fuel_t` reads as a level.
+    /// Left out where her class is not known.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fuel_capacity_t: Option<Dec>,
     pub flotation_damage: Dec,
     pub fire_damage: Dec,
     /// As in [`ShipDetail`]: shown only when it is not 2.
@@ -489,6 +497,7 @@ fn entity_of(view: &SideView<'_>, handle: &str) -> Option<Detail> {
                 port,
                 place: ctx.ship_hex(ship).map(|h| ctx.place(h)),
                 fuel_t: Dec(ship.fuel_t),
+                fuel_capacity_t: view.ship_class(ship.class).map(|c| Dec(c.fuel_capacity_t)),
                 supply_t: Dec(ship.supply_t),
                 cargo_fuel_t: Dec(ship.cargo_fuel_t),
                 flotation_damage: Dec(ship.flotation_damage),
@@ -546,6 +555,7 @@ fn entity_of(view: &SideView<'_>, handle: &str) -> Option<Detail> {
                         class: class_name(&ctx, s),
                         sunk: s.location == ShipLocation::Sunk,
                         fuel_t: Dec(s.fuel_t),
+                        fuel_capacity_t: view.ship_class(s.class).map(|c| Dec(c.fuel_capacity_t)),
                         flotation_damage: Dec(s.flotation_damage),
                         fire_damage: Dec(s.fire_damage),
                         experience: shown_experience(s),
