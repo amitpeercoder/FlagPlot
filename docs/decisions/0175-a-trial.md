@@ -122,3 +122,14 @@ About 13 to 15 ms a day of play from the first evening, when every plan of both 
 15. *Amended point 3* (what a side handed in and the engine has not taken in) needs nothing of the crate: a trial is asked of a view on an evening, and the caller puts such commands at the head of the course. *Amended point 15* is noted and nothing is built for it.
 
 **Documents.** Chapter 9 of the rulebook gains "Playing a trial" (rules 1 to 10: the course and its days, the seed and number, the sizes, the playing and the horizon, the number alone, stopping, nothing changed, what it gives back, a world that cannot be played, the measure), and its opening, "What is built" and the source's rules say so; the glossary gains "course (of a trial)", "horizon (of a trial)" and "size (of a trial)" and amends "trial" and "trial's figures"; `docs/commands.md` the workload h and its options, and the seed and sizes in the `trial` key; `docs/engineering/layout.md` the crate's row and boundary and `sim-cli`'s use of the crate; the frozen figures' README the new copies, the seed and the sizes.
+
+## The architect's rulings
+
+Made on Nov 19, 2026, on reading the build.
+
+1. **The readings of "As built" stand as made.**
+2. **The times are measured and are the designer's to accept.** On the named machine, from the evening before day 1 of the 39 days: 0.83 s at small, 2.93 s at standard, 16.0 s at full; from the evening of day 20: 0.51 s, 1.83 s and 10.5 s; with 35, 75 and 318 MB at the peak. The machine was not quiet, and a trial uses one core. The sizes stay placeholders until the designer has said.
+3. **A world of a trial records its breakdowns,** as any world does. Turning them off would make a trial cheaper and would move no result. It is left until the times ask for it, and is written in `docs/open-work.md`.
+4. **A command of the course for a day outside the horizon is refused** when the trial is asked, before any world is played. It is a fault of the asking, not of a world.
+5. **The failing day is made by a field that exists only in the crate's own test build.** Nothing of it is in the library as built.
+
