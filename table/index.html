@@ -90,6 +90,7 @@ button:disabled { opacity: 0.45; cursor: default; }
 .bar { position: fixed; left: 0; right: 0; bottom: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; background: var(--panel); border-top: 1px solid var(--rule); padding: 10px 16px 12px; }
 .clock { font-family: var(--f-type); font-size: 21px; font-weight: 700; letter-spacing: 0.03em; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .status { font-size: 17px; color: var(--ink-dim); letter-spacing: 0.03em; flex: 1 1 200px; min-width: 0; }
+.status:empty { display: none; }
 .acts { display: flex; flex-wrap: wrap; gap: 8px; margin-left: auto; }
 .acts button { min-height: 46px; padding: 0 16px; background: transparent; color: var(--ink); border: 1.5px solid var(--ink); border-radius: 2px; font-size: 17px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; }
 .acts button.main { background: var(--ink); color: var(--room); border-color: var(--ink); font-weight: 700; padding: 0 24px; }
@@ -928,7 +929,7 @@ button:disabled { opacity: 0.45; cursor: default; }
             clock = { at: r.clock.at, day: r.clock.day }; await refresh();
             if (!until || !playing || r.game_over || r.stopped !== 'pulses') {
               var when = clock.at === 'dusk' ? 'at 1800' : 'at ' + clock.at + ' of day ' + clock.day;
-              return rest(r.game_over ? 'The game is over.' : r.stopped === 'told' ? 'The clock is stopped ' + when + ': you were told something you asked to be stopped for.' : r.stopped === 'interrupt' ? 'The clock is stopped ' + when + ': the staff has a signal for you.' : 'The clock is stopped ' + when + (clock.at === 'dusk' ? '. Your orders for day ' + M.day + ' go in now.' : '. You may order a force, or carry on.'));
+              return rest(r.game_over ? 'The game is over.' : r.stopped === 'told' ? 'The clock is stopped ' + when + ': you were told something you asked to be stopped for.' : r.stopped === 'interrupt' ? 'The clock is stopped ' + when + ': the staff has a signal for you.' : '');
             }
           } else {
             var day = M.day; setStatus('Day ' + day + ' is being fought.');
@@ -936,7 +937,7 @@ button:disabled { opacity: 0.45; cursor: default; }
             setStatus('Day ' + day + ': the plot, pulse by pulse, from what your side was told.');
             await plotDay(day, await eventsOf(day)); await refresh();
             var fired = d.fired && d.fired.length;
-            if (!until || !playing || d.game_over || fired) return rest(d.game_over ? 'The game is over.' : fired ? 'The clock is stopped: ' + d.fired.length + ' signal' + (d.fired.length > 1 ? 's wait' : ' waits') + ' for you.' : 'The clock is stopped. Your orders for day ' + M.day + ' go in at 1800.');
+            if (!until || !playing || d.game_over || fired) return rest(d.game_over ? 'The game is over.' : fired ? 'The clock is stopped: ' + d.fired.length + ' signal' + (d.fired.length > 1 ? 's wait' : ' waits') + ' for you.' : '');
           }
         }
       } catch (e) { rest('Refused: ' + e.message); }
@@ -1098,7 +1099,7 @@ button:disabled { opacity: 0.45; cursor: default; }
     config = a[0]; hexes = a[1]; $('seat').textContent = 'Commander, ' + (config.seat === 'allied' ? 'the Allied side' : 'the Japanese side');
     var ready = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
     return ready.then(function () { layChart(); cur.zoom = 0; placeCamera(); requestAnimationFrame(frame); return fetch('/tools').then(function (r) { return r.json(); }).then(function (names) { names.forEach(function (n) { OFFERED[n] = true; }); $('btn-stops').hidden = !OFFERED.advance; if (OFFERED.advance) $('btn-day').textContent = 'Next pulse'; return refresh(); }); });
-  }).then(function () { setStatus(clock.at === 'dusk' ? 'The clock is stopped. Your orders for day ' + M.day + ' go in at 1800. Drag to look along the table; scroll to lean in.' : 'The clock is stopped at ' + clock.at + ' of day ' + M.day + '. You may order a force, or carry on.'); })
+  }).then(function () { var shown = true; try { shown = localStorage.getItem('flagplot.hint.look') === '1'; localStorage.setItem('flagplot.hint.look', '1'); } catch (e) {} setStatus(shown ? '' : 'Drag to look along the table; scroll to lean in.'); })
     .catch(function (e) { fatal('The table could not reach the game: ' + e.message); });
 })();
 </script>
