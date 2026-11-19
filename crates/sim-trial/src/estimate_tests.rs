@@ -55,6 +55,7 @@ fn world(number: u32, days: Vec<PlayedDay>) -> PlayedWorld {
         refused: Vec::new(),
         failed: None,
         plan_orders: None,
+        taken_in: None,
         world: None,
     }
 }

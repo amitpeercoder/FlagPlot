@@ -53,7 +53,7 @@ pub fn end_of(view: &SideView<'_>, intent: IntentId) -> Option<End> {
     end_of_kind(view, kind)
 }
 
-fn end_of_kind(view: &SideView<'_>, kind: IntentKind) -> Option<End> {
+pub(crate) fn end_of_kind(view: &SideView<'_>, kind: IntentKind) -> Option<End> {
     let places = match kind {
         IntentKind::TakePlace { hex, .. } => vec![hex],
         IntentKind::ControlIsland { island, .. } => {
@@ -513,10 +513,15 @@ pub struct Estimate {
     /// not a report.
     pub enemy_costs: Option<Costs>,
     /// The intent's plan order (amended 5), as the side's staff worked it at
-    /// the end of the first day in world 1, or the first world with one.
+    /// the end of the first day in world 1, or the first world with one; at
+    /// the end of the day the course was taken in, where that is later
+    /// (decision 0177, 6).
     pub plan_order: Option<PlanOrder>,
     /// The world whose plan order it is.
     pub plan_order_world: Option<u32>,
+    /// The day at whose end it was recorded: the day the course was taken
+    /// in, or the first day played.
+    pub plan_order_day: Option<u32>,
     /// The worlds whose plan order of the intent differs from it.
     pub plan_order_differs_in: Vec<u32>,
     /// What was assumed, grouped by what it is of.
@@ -575,20 +580,26 @@ pub fn estimate(played: &Played, intent: IntentId, as_they_stand: Option<&Played
     let enemy_losses: Vec<Losses> = figures.iter().map(|w| w.enemy).collect();
 
     // The plan order (amended 5): world 1's, or the first world's that has
-    // one, and the worlds whose differs.
-    let order_of = |w: &PlayedWorld| -> Option<PlanOrder> {
-        w.plan_orders
-            .as_ref()?
-            .iter()
-            .find(|order| order.intent == intent)
-            .cloned()
+    // one, and the worlds whose differs. It is the one recorded at the end
+    // of the day the course was taken in, where the course has a command
+    // and that day was played (decision 0177, 6); otherwise the first day's.
+    let orders_of = |w: &PlayedWorld| -> Option<Vec<PlanOrder>> {
+        match &w.taken_in {
+            Some(taken) => Some(taken.plan_orders.clone()),
+            None => w.plan_orders.clone(),
+        }
     };
-    let reference = played.worlds.iter().find(|w| w.plan_orders.is_some());
+    let order_of = |w: &PlayedWorld| -> Option<PlanOrder> {
+        orders_of(w)?
+            .into_iter()
+            .find(|order| order.intent == intent)
+    };
+    let reference = played.worlds.iter().find(|w| orders_of(w).is_some());
     let plan_order = reference.and_then(order_of);
     let plan_order_differs_in = played
         .worlds
         .iter()
-        .filter(|w| w.plan_orders.is_some() && order_of(w) != plan_order)
+        .filter(|w| orders_of(w).is_some() && order_of(w) != plan_order)
         .map(|w| w.number)
         .collect();
 
@@ -609,6 +620,12 @@ pub fn estimate(played: &Played, intent: IntentId, as_they_stand: Option<&Played
         enemy_costs: Costs::of(&enemy_losses),
         plan_order,
         plan_order_world: reference.map(|w| w.number),
+        plan_order_day: reference.and_then(|w| {
+            w.taken_in
+                .as_ref()
+                .map(|taken| taken.day)
+                .or_else(|| w.days.first().map(|d| d.day))
+        }),
         plan_order_differs_in,
         assumed: assumed(&figures),
         leaves_given: played.leaves_given.clone(),
@@ -1105,7 +1122,7 @@ fn costs_words(costs: &Costs) -> String {
     )
 }
 
-fn intent_words(kind: IntentKind) -> String {
+pub(crate) fn intent_words(kind: IntentKind) -> String {
     match kind {
         IntentKind::TakePlace { hex, .. } => format!("take the place at {hex}"),
         IntentKind::ControlIsland { island, .. } => format!("control island {island}"),
@@ -1372,10 +1389,12 @@ impl fmt::Display for Estimate {
             )?;
         }
         if let (Some(order), Some(world)) = (&self.plan_order, self.plan_order_world) {
+            let day = self
+                .plan_order_day
+                .map_or_else(|| "its first day".to_string(), |day| format!("day {day}"));
             write!(
                 f,
-                "What it needs and has, from world {world}'s plan order at the end of its first \
-                 day: {}.",
+                "What it needs and has, from world {world}'s plan order at the end of {day}: {}.",
                 plan_order_words(order)
             )?;
             if self.plan_order_differs_in.is_empty() {
