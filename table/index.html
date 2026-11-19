@@ -276,6 +276,7 @@ button:disabled { opacity: 0.45; cursor: default; }
   <button type="button" id="btn-back">Sit back</button>
   <button type="button" id="btn-lean">Lean in</button>
   <button type="button" id="btn-hexes" aria-pressed="false">Hexes</button>
+  <button type="button" id="btn-pieces" title="Which pieces stand on the chart">Pieces: all</button>
   <button type="button" id="btn-stops" aria-expanded="false" aria-controls="stops" hidden>Clock stops</button>
 </div>
 <fieldset class="stops" id="stops" hidden>
@@ -552,6 +553,9 @@ button:disabled { opacity: 0.45; cursor: default; }
     var intents = M.state ? M.state.intents.filter(function (i) { return i.in_force && !i.parent; }) : [];
     intents.forEach(function (it, k) { var v = intentPlace(it); if (!v) return; var c = ring(v, 30 + k * 4, '#1f4e8c', 1, false, 2.8); g.fillStyle = '#12335c'; g.fillText('INTENT ' + it.number + ' · ' + (WORD[it.kind] || it.kind.toUpperCase()), c[0] + (36 + k * 4) * u, c[1] + (4 + k * 14) * u); });
     if (draft) ring(draft.v, 30, '#1f4e8c', 1, true, 2.2);
+    // Where the side's own forces are, marked on the chart itself with a ring
+    // the size of the hex, while their pieces are put away.
+    if (!sideShown('own')) (function () { var done = {}, rad = HEXR * PX * 0.82; g.save(); M.forces.forEach(function (f) { if (!f.place || f.available_from > M.day) return; var k = f.place.q + ',' + f.place.r; if (done[k]) return; done[k] = true; var c = cpx(placeOf(f.place)); g.beginPath(); g.arc(c[0], c[1], rad, 0, 7); g.fillStyle = 'rgba(18,51,92,0.16)'; g.fill(); g.strokeStyle = 'rgba(18,51,92,0.85)'; g.lineWidth = 2.6 * u; g.stroke(); }); g.restore(); })();
     // The bases by name, lettered on the chart beside their marks.
     var bz = planZoom(), bu = u * bz; planDrawnAt = camDist; g.save(); g.font = '700 ' + Math.round(15 * bu) + "px 'Libre Caslon Text', Georgia, serif"; g.textBaseline = 'middle'; g.lineJoin = 'round'; try { g.letterSpacing = Math.round(1.5 * bu) + 'px'; } catch (e) {}
     M.bases.concat(M.enemyBases).forEach(function (b) { if (/^Landing at/.test(b.base.name)) return; var c = cpx(placeOf(b.place)), mine = M.bases.indexOf(b) >= 0, t = b.base.name.toUpperCase(); g.strokeStyle = 'rgba(232,238,230,0.85)'; g.lineWidth = 4 * bu; g.strokeText(t, c[0] + 12 * u, c[1] - 12 * u); g.fillStyle = mine ? '#12335c' : '#8a2019'; g.fillText(t, c[0] + 12 * u, c[1] - 12 * u); });
@@ -569,7 +573,7 @@ button:disabled { opacity: 0.45; cursor: default; }
     var tex = new THREE.CanvasTexture(cv); tex.encoding = THREE.sRGBEncoding;
     var sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthTest: false, transparent: true })); sp.renderOrder = 10; scene.add(sp);
     var pin = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]), new THREE.LineBasicMaterial({ color: 0x2b2a26 })); scene.add(pin);
-    var L = { sp: sp, pin: pin, tex: tex, anchor: anchor, h: h, tier: tier, off: off || [0, 0], aspect: cv.width / cv.height, wide: cv.width / 600 };
+    var L = { side: colour === RED ? 'enemy' : 'own', sp: sp, pin: pin, tex: tex, anchor: anchor, h: h, tier: tier, off: off || [0, 0], aspect: cv.width / cv.height, wide: cv.width / 600 };
     labels.push(L); return L;
   }
   function dropLabels() { labels.forEach(function (L) { scene.remove(L.sp); scene.remove(L.pin); L.tex.dispose(); L.sp.material.dispose(); L.pin.geometry.dispose(); }); labels = []; }
@@ -577,6 +581,10 @@ button:disabled { opacity: 0.45; cursor: default; }
 
   // ---- the pieces: a block is yours and known exactly ----
   var pieces = {}, statics = [];
+  // Which pieces stand on the chart: all, the side's own, the enemy's, or none.
+  var PIECES = ['all', 'own', 'enemy', 'none'], PIECE_WORD = { all: 'Pieces: all', own: 'Pieces: ours', enemy: 'Pieces: enemy', none: 'Pieces: off' }, piecesShown = 'all';
+  try { var kept = localStorage.getItem('flagplot.pieces'); if (PIECES.indexOf(kept) >= 0) piecesShown = kept; } catch (e) {}
+  function sideShown(side) { return piecesShown === 'all' || (piecesShown !== 'none' && (piecesShown === 'own') === (side === 'own')); }
   // ---- the pieces: period tiles (decision 0154) ----
   // Cream tiles in ink. A rectangle is the side's own and a diamond the
   // enemy's, a silhouette says what it is, and a dashed frame says it is
@@ -603,16 +611,20 @@ button:disabled { opacity: 0.45; cursor: default; }
     silhouette(g, kind); return c;
   }
   var symCache = {};
+  // No piece is larger than a hex, at any distance: the largest, a carrier
+  // force's, is four fifths of a hex across, and the rest keep their share of it.
+  function tk() { return 0.8 * HEXR * Math.sqrt(3) / 0.26; }
   function tile(side, kind, sure, size, alpha) {
+    size = size * tk();
     var key = [side, kind, sure].join('|'), tex = symCache[key];
     if (!tex) { tex = symCache[key] = new THREE.CanvasTexture(symbol(side, kind, sure)); tex.anisotropy = 8; }
     var edge = new THREE.MeshStandardMaterial({ color: 0xcdbf94, roughness: 0.8, transparent: alpha < 1, opacity: alpha == null ? 1 : alpha });
     var top = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.7, transparent: alpha < 1, opacity: alpha == null ? 1 : alpha });
-    var grp = new THREE.Group(), b = new THREE.Mesh(new THREE.BoxGeometry(size, 0.04, size), [edge, edge, top, edge, edge, edge]);
+    var grp = new THREE.Group(); grp.userData.side = side; var b = new THREE.Mesh(new THREE.BoxGeometry(size, 0.04, size), [edge, edge, top, edge, edge, edge]);
     b.position.y = 0.022; b.castShadow = true; grp.add(b); scene.add(grp); return grp;
   }
   function forcePiece(f) { var big = f.mission === 'carrier'; return tile('own', kindOf(f.mission), true, big ? 0.26 : 0.21); }
-  function fixed(grp, v, dx, dz, thing) { grp.position.set(v.x + (dx || 0), 0, v.z + (dz || 0)); grp.userData.thing = thing || null; statics.push(grp); return grp; }
+  function fixed(grp, v, dx, dz, thing) { grp.position.set(v.x + (dx || 0) * tk(), 0, v.z + (dz || 0) * tk()); grp.userData.thing = thing || null; statics.push(grp); return grp; }
   var moveT = 1, mover = null;
   function layPieces() {
     statics.forEach(function (m) { scene.remove(m); }); statics = []; dropLabels();
@@ -623,7 +635,7 @@ button:disabled { opacity: 0.45; cursor: default; }
     Object.keys(byHex).forEach(function (k) {
       var list = byHex[k], centre = placeOf(list[0].place);
       list.forEach(function (f, i) {
-        var h = f.task_force.handle, an = i * 2.4, rad = list.length > 1 ? 0.16 + 0.07 * i : 0, to = centre.clone().add(new THREE.Vector3(Math.cos(an) * rad, 0, Math.sin(an) * rad));
+        var h = f.task_force.handle, an = i * 2.4, rad = list.length > 1 ? (0.16 + 0.07 * i) * tk() : 0, to = centre.clone().add(new THREE.Vector3(Math.cos(an) * rad, 0, Math.sin(an) * rad));
         var p = pieces[h]; seen[h] = true;
         if (!p) { p = pieces[h] = { grp: forcePiece(f), from: to.clone(), to: to.clone() }; p.grp.position.copy(to); }
         else { p.from = p.grp.position.clone(); p.to = to; var d = p.from.distanceTo(to); if (d > far) { far = d; mover = p; } }
@@ -957,8 +969,8 @@ button:disabled { opacity: 0.45; cursor: default; }
   function tileAt(cx, cy) {
     var r = canvas.getBoundingClientRect(), meshes = [], of = [];
     ray.setFromCamera({ x: ((cx - r.left) / r.width) * 2 - 1, y: -((cy - r.top) / r.height) * 2 + 1 }, camera);
-    Object.keys(pieces).forEach(function (h) { meshes.push(pieces[h].grp.children[0]); of.push({ kind: 'force', force: pieces[h].force }); });
-    statics.forEach(function (g) { if (g.userData.thing) { meshes.push(g.children[0]); of.push(g.userData.thing); } });
+    if (sideShown('own')) Object.keys(pieces).forEach(function (h) { meshes.push(pieces[h].grp.children[0]); of.push({ kind: 'force', force: pieces[h].force }); });
+    statics.forEach(function (g) { if (g.userData.thing && sideShown(g.userData.side)) { meshes.push(g.children[0]); of.push(g.userData.thing); } });
     var hits = ray.intersectObjects(meshes, false); return hits.length ? of[meshes.indexOf(hits[0].object)] : null;
   }
   function contactsAt(pl) { return M.contacts.filter(function (c) { return sameHex(c.place, pl); }).map(function (c) { return ['Contact ' + num(c.contact.handle), function () { cardContact({ contact: c }); }]; }); }
@@ -1522,6 +1534,8 @@ button:disabled { opacity: 0.45; cursor: default; }
     if (goal.zoom < 0.2) { var f = null; M.forces.forEach(function (x) { if (x.place && x.mission === 'carrier' && !f) f = x; }); var v = f ? placeOf(f.place) : new THREE.Vector3(); goal.x = v.x; goal.z = v.z; goal.zoom = 0.55; }
     else goal.zoom += 0.2; clampGoal();
   });
+  $('btn-pieces').textContent = PIECE_WORD[piecesShown];
+  $('btn-pieces').addEventListener('click', function () { piecesShown = PIECES[(PIECES.indexOf(piecesShown) + 1) % PIECES.length]; try { localStorage.setItem('flagplot.pieces', piecesShown); } catch (e) {} this.textContent = PIECE_WORD[piecesShown]; if (g) drawMarks(); });
   $('btn-hexes').setAttribute('aria-pressed', String(showHexes));
   $('btn-hexes').addEventListener('click', function () { showHexes = !showHexes; try { localStorage.setItem('flagplot.hexes', showHexes ? '1' : '0'); } catch (e) {} this.setAttribute('aria-pressed', String(showHexes)); paintBase(); if (g) drawMarks(); $('card').hidden = true; });
   $('btn-stops').addEventListener('click', function () { var f = $('stops'); f.hidden = !f.hidden; this.setAttribute('aria-expanded', String(!f.hidden)); });
@@ -1538,13 +1552,13 @@ button:disabled { opacity: 0.45; cursor: default; }
       Object.keys(pieces).forEach(function (h) { var p = pieces[h]; p.grp.position.lerpVectors(p.from, p.to, e); });
       if (mover) { var dir = mover.to.clone().sub(mover.from).normalize(); placeRake(mover.grp.position.clone().addScaledVector(dir, -0.15).setY(0.03), dir); rake.visible = moveT < 1; }
     } else rake.visible = false;
-    // The tiles lie flat on the chart, and grow a little as the commander sits back.
+    // The tiles lie flat on the chart at one size. Which of them show is the commander's choice.
     if (g && Math.abs(camDist - planDrawnAt) > planDrawnAt * 0.06) drawMarks();
-    var grow = Math.max(1, Math.min(1.45, camDist / 4.5)); function size(g) { g.scale.setScalar(grow); g.children[0].scale.y = 1 / grow; } Object.keys(pieces).forEach(function (h) { size(pieces[h].grp); }); statics.forEach(size);
+    Object.keys(pieces).forEach(function (h) { pieces[h].grp.visible = sideShown('own'); }); statics.forEach(function (m) { m.visible = sideShown(m.userData.side); });
     flashes = flashes.filter(function (f) { f.userData.t += dt / 1.3; var k = f.userData.t; f.scale.setScalar(0.08 + k * 0.42); f.material.opacity = 0.9 * (1 - k); if (k >= 1) { scene.remove(f); f.geometry.dispose(); f.material.dispose(); return false; } return true; });
     placeCamera();
     labels.forEach(function (L) {
-      var a = L.anchor(), show = L.tier === 0 || (L.tier === 1 && cur.zoom > 0.3) || (L.tier === -1 && cur.zoom <= 0.3);
+      var a = L.anchor(), show = sideShown(L.side) && (L.tier === 0 || (L.tier === 1 && cur.zoom > 0.3) || (L.tier === -1 && cur.zoom <= 0.3));
       L.sp.visible = show; L.pin.visible = show; if (!show) return;
       tmp.set(a.x + L.off[0], L.h, a.z + L.off[1]); L.sp.position.copy(tmp);
       var s = Math.max(0.14, Math.min(1.2, camera.position.distanceTo(tmp) * 0.085)); L.sp.scale.set(s * 1.6 * L.wide, s * 1.6 * L.wide / L.aspect, 1);
