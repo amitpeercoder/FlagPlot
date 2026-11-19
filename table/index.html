@@ -168,7 +168,7 @@ button:disabled { opacity: 0.45; cursor: default; }
 
 <aside class="order card" id="card" hidden aria-label="What is known of what you touched" aria-live="polite">
   <div id="card-body" style="display:flex;flex-direction:column;gap:8px"></div>
-  <div class="row"><button type="button" id="card-close">PUT IT DOWN</button></div>
+  <div class="row"><button type="button" id="card-back" hidden>BACK</button><button type="button" id="card-close">PUT IT DOWN</button></div>
 </aside>
 
 <section class="sheet" id="sheet" hidden aria-label="The briefing">
@@ -515,7 +515,7 @@ button:disabled { opacity: 0.45; cursor: default; }
   }
   function turnTo(pl) { var v = pl && placeOf(pl); if (!v) return; goal.x = v.x; goal.z = v.z; if (goal.zoom < 0.55) goal.zoom = 0.55; clampGoal(); }
   function see(h) {
-    var kind = h.split(':')[0], n = num(h), found; $('sheet').hidden = true;
+    var kind = h.split(':')[0], n = num(h), found; if (!$('sheet').hidden) { forget(); trailAt = stamp(); shown = function () { $('card').hidden = true; $('sheet').hidden = false; }; } $('sheet').hidden = true;
     try { history.replaceState(null, '', '#see=' + h); } catch (e) {}
     if (kind === 'task_force') { found = M.forces.filter(function (f) { return f.task_force.handle === h; })[0]; if (found) { turnTo(found.place); return cardForce({ force: found }); } }
     if (kind === 'base') { found = M.bases.filter(function (b) { return b.base.handle === h; })[0]; if (found) { turnTo(found.place); return cardBase({ base: found }); } found = M.enemyBases.filter(function (b) { return b.base.handle === h; })[0]; if (found) { turnTo(found.place); return cardPlace({ place: found.place, base: found }); } }
@@ -563,7 +563,20 @@ button:disabled { opacity: 0.45; cursor: default; }
   function listOf(body, title, lines) { if (!lines.length) return; body.appendChild(el('div', 'sub', title)); lines.forEach(function (l) { body.appendChild(rich('div', '', l)); }); }
   function links(body, title, items) { if (!items.length) return; body.appendChild(el('div', 'sub', title)); var row = el('div', 'row'); items.forEach(function (i) { var b = el('button', '', i[0]); b.type = 'button'; b.addEventListener('click', i[1]); row.appendChild(b); }); body.appendChild(row); }
   function forcesAt(pl, but) { return M.forces.filter(function (f) { return sameHex(f.place, pl) && f !== but; }).map(function (f) { return [f.task_force.name.replace(/^Placeholder /, ''), function () { cardForce({ force: f }); }]; }); }
-  $('card-close').addEventListener('click', function () { $('card').hidden = true; });
+  // The way back: each card remembers what was open before it, a card or a
+  // sheet, until the card is put down or the clock moves.
+  var trail = [], shown = null, trailAt = '';
+  function stamp() { return M.day + ':' + (typeof clock === 'object' && clock ? clock.at : ''); }
+  function forget() { trail = []; shown = null; $('card-back').hidden = true; }
+  function remember(f) { return function (a) {
+    if (trailAt !== stamp()) { forget(); trailAt = stamp(); }
+    if (shown) trail.push(shown);
+    shown = function () { $('sheet').hidden = true; f(a); };
+    $('card-back').hidden = !trail.length; return f(a);
+  }; }
+  cardUnit = remember(cardUnit); cardEntity = remember(cardEntity); cardContact = remember(cardContact); cardPlace = remember(cardPlace); cardForce = remember(cardForce); cardBase = remember(cardBase);
+  $('card-back').addEventListener('click', function () { var was = trail.pop(); if (!was) return; shown = was; $('card-back').hidden = !trail.length; was(); });
+  $('card-close').addEventListener('click', function () { $('card').hidden = true; forget(); });
   // The tile under the pointer, if there is one: a touch on a tile is a touch
   // on what it stands for, whatever else lies in the same hex.
   function tileAt(cx, cy) {
