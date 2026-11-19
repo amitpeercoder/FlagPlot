@@ -801,6 +801,7 @@ impl World {
             self.objectives.as_ref(),
             self.command_state(side),
             TaskForceId::new(self.made_ids.next_task_force(side)),
+            AirGroupId::new(self.made_ids.next_air_group(side)),
             PulseScratch {
                 grounded_bases: &self.grounded_bases,
                 field_damage: &self.field_damage,

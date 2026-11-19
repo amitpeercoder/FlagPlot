@@ -1070,6 +1070,11 @@ fn the_library_code_names_nothing_of_the_truth() {
         "from_picture",
         "whole_picture",
         "WorldPicture",
+        // A side's own half of a picture, and the joining of two (decision
+        // 0171): nothing that plays the game takes or joins a half.
+        "own_half",
+        "from_halves",
+        "PictureHalf",
         "Hasher",
         "TruthState",
         "BeliefState",

@@ -1120,3 +1120,14 @@ entry of `raids_on_bases` gains `weapon` (always `"bombs"`) and `recognised`, th
 the side's events say it too: "ship:N attacked by A aircraft with bombs, recognised as NAME" or "..., type not made
 out", and a raid on a base ends "; recognised as NAME" or "; type not made out"; `explain` and `events` give those
 words. The side that attacked is told nothing new.
+
+## Preview numbers counted for each side (decision 0172, 4)
+
+The version is unchanged, 28: no field is added or removed, and what a one-seat session is given is what it was given.
+A preview's number (`preview` in the `preview` answer, and in `approve {"preview": N}` and the `command` answer of an
+approve) counts the previews that side was shown, from 1. It counted every preview of the session, whoever asked, so
+in a session with a seat on each side the number a side was given told it how many previews the other had asked for;
+another side's previews are no longer counted. A preview is approved by its number among its own side's, as before:
+another side's number was never approved, and the checks of a void preview (a day or a pulse resolved, something
+queued after it) are as they were. An escort's `charge` in `issue_orders` is a task force in the side's numbers at
+every seat, as a join's `into` is (decision 0172, 2): at the area's seat it was read as the scenario's number.

@@ -130,6 +130,9 @@ pub struct SideView<'a> {
     /// The number the side's next made task force will take (its own
     /// counter; the other side's is never handed over).
     next_task_force: TaskForceId,
+    /// The number the side's next air group made in play will take (its own
+    /// counter; the other side's is never handed over, decision 0171, 6).
+    next_air_group: AirGroupId,
     /// The scratch of the pulse in hand, which the choices of the air steps
     /// read (decision 0100): the bases grounded at the pulse's start, the
     /// strikes launched and not landed, what each group flew and the decks
@@ -180,6 +183,7 @@ impl<'a> SideView<'a> {
         objectives: Option<&'a crate::objectives::Objectives>,
         command: &'a crate::command::CommandState,
         next_task_force: TaskForceId,
+        next_air_group: AirGroupId,
         pulse: PulseScratch<'a>,
         day_in_hand: Option<crate::world::DayInHand>,
     ) -> SideView<'a> {
@@ -200,6 +204,7 @@ impl<'a> SideView<'a> {
             objectives,
             command,
             next_task_force,
+            next_air_group,
             pulse,
             day_in_hand,
         }
@@ -260,6 +265,17 @@ impl<'a> SideView<'a> {
             return TaskForceId::new(0);
         }
         self.next_task_force
+    }
+
+    /// The number the side's next air group made in play will take
+    /// (decision 0171, 6): its own series only. A side knows its own air
+    /// groups, and the number says nothing of the enemy. A view cut to a
+    /// seat gives 0, as [`SideView::next_task_force_id`] does there.
+    pub fn next_air_group_id(&self) -> AirGroupId {
+        if self.seat.is_some() {
+            return AirGroupId::new(0);
+        }
+        self.next_air_group
     }
 
     /// The side's own command state, whole: its intents with their limits,

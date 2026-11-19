@@ -108,10 +108,12 @@ fn unit_numbers_to_ids(ctx: &Ctx<'_>, body: &Value, stand_ins: &mut BTreeMap<u32
         }
         return body;
     }
-    // An escort names the force it covers. A seat at a command names it as
-    // it numbers its own forces, and a number that names none of them becomes
-    // the number no force has (decision 0138, 5).
-    if body.get("kind").and_then(Value::as_str) == Some("escort") && ctx.view.seat().is_some() {
+    // An escort names the force it covers by the side's number, at every
+    // seat, as a join names its force; a number that names none of the
+    // side's forces becomes the number no force has, so an enemy force and
+    // one that does not exist are refused alike (decisions 0138, 5, and
+    // 0172, 2).
+    if body.get("kind").and_then(Value::as_str) == Some("escort") {
         if let Some(number) = body
             .get("charge")
             .and_then(Value::as_str)
@@ -234,7 +236,9 @@ pub struct Session {
     /// command, or empties its queue, and whenever a day is resolved. A
     /// preview is void when it has risen since (ruling 26).
     revisions: BTreeMap<Side, u32>,
-    /// The previews shown, numbered 1, 2, 3... in the session.
+    /// The previews shown, each side's numbered 1, 2, 3... among its own
+    /// (decision 0172, 4): what a seat is given never counts the other
+    /// side's.
     previews: Vec<PreviewRecord>,
     /// Whether a seat may stop the clock between pulses and give orders
     /// inside a day: the scenario's key (decision 0156).
@@ -244,6 +248,10 @@ pub struct Session {
     /// The orders handed in to the engine inside a day, with their pulses,
     /// for the saved game.
     handed_in_inside: OrdersInsideDay,
+    /// The day the game stopped inside, and the words every later call is
+    /// given, once the engine could not resolve a day (decision 0172, 3).
+    /// The world is then half advanced: nothing reads or advances it again.
+    stopped: Option<(u32, String)>,
 }
 
 /// The arguments of a call as a map: an object, or nothing.
@@ -289,6 +297,7 @@ impl Session {
             inside_day: false,
             script_inside: OrdersInsideDay::new(),
             handed_in_inside: OrdersInsideDay::new(),
+            stopped: None,
         }
     }
 
@@ -541,6 +550,13 @@ impl Session {
         self.world.day() >= self.days
     }
 
+    /// The day the game stopped inside, if the engine could not resolve it
+    /// (decision 0172, 3). A stopped game is not over and goes no further:
+    /// every call is answered with the words of the stop.
+    pub fn stopped_inside_day(&self) -> Option<u32> {
+        self.stopped.as_ref().map(|(day, _)| *day)
+    }
+
     /// The state hash at the end of each resolved day.
     pub fn day_hashes(&self) -> &[u64] {
         self.world.day_hashes()
@@ -602,7 +618,12 @@ impl Session {
             ));
         }
         let after_day = self.world.day();
-        let outcome = self.dispatch(side, tool, arguments);
+        // A game stopped inside a day is neither read nor advanced again:
+        // every call is given the words of the stop (decision 0172, 3).
+        let outcome = match &self.stopped {
+            Some((_, words)) => Err(CallError::new(words.clone())),
+            None => self.dispatch(side, tool, arguments),
+        };
         let answer = match &outcome {
             Ok(value) => value.clone(),
             Err(error) => error.to_json(),
@@ -1517,7 +1538,8 @@ impl Session {
             ));
         }
         let as_is = self.preview();
-        let number = u32::try_from(self.previews.len() + 1).expect("few previews");
+        let shown = self.previews.iter().filter(|p| p.side == side).count();
+        let number = u32::try_from(shown + 1).expect("few previews");
         let staff: &dyn Staff = self.staffs[&side].as_ref();
         let out = staffing::preview(
             number,
@@ -1854,7 +1876,7 @@ impl Session {
                     .insert(*side, decisions.clone());
             }
         }
-        opened.map(|_| ()).map_err(internal)
+        opened.map(|_| ()).map_err(|e| self.stop(day, &e))
     }
 
     /// Resolves the next pulse of the open day, and closes the day after its
@@ -1889,27 +1911,33 @@ impl Session {
                     .push((pulse, side, request.clone()));
                 self.world
                     .submit_orders_inside_day(side, vec![request])
-                    .map_err(internal)?;
+                    .map_err(|e| self.stop(day, &e))?;
             }
         }
         self.world
             .resolve_next_pulse(&mut |_, _| {})
-            .map_err(internal)?;
+            .map_err(|e| self.stop(day, &e))?;
         if self.open_day().is_none() {
-            self.world.close_day(&mut |_, _| {}).map_err(internal)?;
+            self.world
+                .close_day(&mut |_, _| {})
+                .map_err(|e| self.stop(day, &e))?;
         }
         Ok((day, pulse))
     }
-}
 
-/// The one thing a caller is told when the engine cannot go on. The engine's
-/// own words may name the other side's units: they go to the umpire's
-/// stderr.
-fn internal(e: sim_core::SimError) -> CallError {
-    eprintln!("operator: the day could not be resolved: {e}");
-    CallError::new(
-        "the day could not be resolved: the game has stopped on an internal error; the operator has the details",
-    )
+    /// The one thing a caller is told when the engine cannot go on, and the
+    /// stop recorded, so that every later call is told the same and the
+    /// half-advanced world is not read or advanced again (decision 0172, 3).
+    /// The engine's own words may name the other side's units: they go to
+    /// the umpire's stderr.
+    fn stop(&mut self, day: u32, e: &sim_core::SimError) -> CallError {
+        eprintln!("operator: day {day} could not be resolved: {e}");
+        let words = format!(
+            "the day could not be resolved: the game has stopped inside day {day} on an internal error; the operator has the details"
+        );
+        self.stopped = Some((day, words.clone()));
+        CallError::new(words)
+    }
 }
 
 fn to_value<T: serde::Serialize>(answer: &T) -> Result<Value, CallError> {

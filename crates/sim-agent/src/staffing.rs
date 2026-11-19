@@ -3081,8 +3081,8 @@ fn other_plans_give_up(
 /// `preview`: what a changed intent or limit would do, worked on two copies
 /// of the world as the coming day will find it: `as_is` with the side's
 /// queued commands, and `with` the same and the command queued last. It is
-/// stored nowhere in the game. `number` is the preview's number in the
-/// session.
+/// stored nowhere in the game. `number` is the preview's number among the
+/// side's own previews (decision 0172, 4).
 pub(crate) fn preview(
     number: u32,
     as_is: &SideView<'_>,

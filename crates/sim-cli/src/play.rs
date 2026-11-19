@@ -18,13 +18,14 @@ use sim_agent::{parse_seat, seat_name, Post, SeatKind};
 use sim_core::state::Side;
 
 use crate::mcp::{tool_list, Server};
+use crate::save;
 use crate::serve::{self, Kept};
 use sim_staff::DOCTRINE_VERSION;
 
 const FORMAT: &str = "flagplot-game";
 
 pub const USAGE: &str = "\
-Usage: sim-cli play --game FILE [--scenario SCENARIO --seat allied|japanese [--at SEAT] [--seed N]] TOOL [ARGUMENTS_JSON]
+Usage: sim-cli play --game FILE [--scenario SCENARIO --seat allied|japanese [--at SEAT] [--seed N]] [--unpinned] TOOL [ARGUMENTS_JSON]
        sim-cli play --game FILE --tools
        sim-cli play --game FILE --export-save FILE --export-transcript FILE
 
@@ -54,12 +55,125 @@ Usage: sim-cli play --game FILE [--scenario SCENARIO --seat allied|japanese [--a
   --export-transcript F  Replay the game and write the transcript: every call
                      with the whole answer it was given, one JSON line each.
   --seed N           (first call) Play with seed N instead of the scenario's.
+  --unpinned         Continue a game file made before game files recorded
+                     their inputs. A game file records the seed it is played
+                     on, the hash of the scenario file and of each data file,
+                     and the rules version; a call is refused, and nothing is
+                     written, if any of them has changed since. A game file
+                     with no such record is exported as before, but a new call
+                     is made on it only with --unpinned.
   --at SEAT          (first call) Where the seat sits: area (the default),
                      area:easier (the side's own picture, every report at once,
                      and its forces exactly), or task_force:N or base:N, N the
                      number the scenario file gives it, for a seat that is given
                      only what that command holds and may order its own units
                      only (command levels on). Kept in FILE.";
+
+/// What a game was begun on (decision 0172, 1): the seed it is played on,
+/// the hash of the scenario file and of each data file, and the rules
+/// version, as a saved game records them (`save.rs`).
+#[derive(Clone, PartialEq, Debug)]
+struct Pin {
+    seed: u64,
+    scenario_hash: String,
+    data_files: Vec<(String, String)>,
+    rules_version: u32,
+}
+
+impl Pin {
+    /// The pin of a game opened now, from what the opening read.
+    fn of(scenario: &str, kept: &Kept) -> Result<Pin, String> {
+        Ok(Pin {
+            seed: kept.seed(),
+            scenario_hash: save::file_hash(Path::new(scenario))?,
+            data_files: kept.data_files().to_vec(),
+            rules_version: sim_core::world::RULES_VERSION,
+        })
+    }
+
+    fn to_json(&self) -> Value {
+        json!({
+            "seed": self.seed,
+            "scenario_hash": self.scenario_hash,
+            "data_files": self
+                .data_files
+                .iter()
+                .map(|(file, hash)| json!({"file": file, "hash": hash}))
+                .collect::<Vec<_>>(),
+            "rules_version": self.rules_version,
+        })
+    }
+
+    fn from_json(v: &Value) -> Option<Pin> {
+        let mut data_files = Vec::new();
+        for entry in v.get("data_files")?.as_array()? {
+            data_files.push((
+                entry.get("file")?.as_str()?.to_string(),
+                entry.get("hash")?.as_str()?.to_string(),
+            ));
+        }
+        Some(Pin {
+            seed: v.get("seed")?.as_u64()?,
+            scenario_hash: v.get("scenario_hash")?.as_str()?.to_string(),
+            data_files,
+            rules_version: u32::try_from(v.get("rules_version")?.as_u64()?).ok()?,
+        })
+    }
+
+    /// Refuses a game whose inputs on disk are not those it was begun on,
+    /// naming what changed. It reads the files only: nothing is loaded.
+    fn check_files(&self, game: &str, scenario: &str) -> Result<(), String> {
+        let refused = |what: String| {
+            format!("{game} cannot be replayed: {what}; the game is not replayed on other inputs, so begin it again")
+        };
+        if self.rules_version != sim_core::world::RULES_VERSION {
+            return Err(refused(format!(
+                "it was begun under rules version {}, and this program has rules version {}",
+                self.rules_version,
+                sim_core::world::RULES_VERSION
+            )));
+        }
+        let now = save::file_hash(Path::new(scenario))
+            .map_err(|e| refused(format!("the scenario file {scenario} cannot be read ({e})")))?;
+        if now != self.scenario_hash {
+            return Err(refused(format!(
+                "the scenario file {scenario} has changed since the game was begun (begun on hash {}, now {now})",
+                self.scenario_hash
+            )));
+        }
+        for (file, hash) in &self.data_files {
+            let now = save::file_hash(Path::new(file))
+                .map_err(|e| refused(format!("the data file {file} cannot be read ({e})")))?;
+            if &now != hash {
+                return Err(refused(format!(
+                    "the data file {file} has changed since the game was begun (begun on hash {hash}, now {now})"
+                )));
+            }
+        }
+        Ok(())
+    }
+
+    /// Refuses a game opened on a seed or a list of data files other than
+    /// the pinned: with the files unchanged neither can differ, but the game
+    /// is not played if one does.
+    fn check_opened(&self, game: &str, kept: &Kept) -> Result<(), String> {
+        if kept.seed() != self.seed {
+            return Err(format!(
+                "{game} cannot be replayed: it was begun on seed {}, and the scenario now gives seed {}; begin it again",
+                self.seed,
+                kept.seed()
+            ));
+        }
+        let pinned: Vec<&str> = self.data_files.iter().map(|(f, _)| f.as_str()).collect();
+        let now: Vec<&str> = kept.data_files().iter().map(|(f, _)| f.as_str()).collect();
+        if pinned != now {
+            return Err(format!(
+                "{game} cannot be replayed: the scenario now names other data files than when the game was begun; begin it again"
+            ));
+        }
+        Ok(())
+    }
+}
 
 struct Header {
     scenario: String,
@@ -72,6 +186,9 @@ struct Header {
     /// game file made before doctrines were recorded has none, which is read
     /// as `"none"`: no doctrine existed.
     doctrine_version: String,
+    /// What the game was begun on (decision 0172, 1). A game file made
+    /// before game files were pinned has none.
+    pin: Option<Pin>,
 }
 
 impl Header {
@@ -85,6 +202,9 @@ impl Header {
         });
         if self.at != Post::Area {
             header["at"] = json!(self.at.text());
+        }
+        if let Some(pin) = &self.pin {
+            header["inputs"] = pin.to_json();
         }
         serde_json::to_string(&header).expect("a header serialises")
     }
@@ -110,9 +230,14 @@ impl Header {
                 .and_then(|at| Post::parse(at).ok())
                 .ok_or_else(bad)?,
         };
+        let pin = match v.get("inputs") {
+            None => None,
+            Some(inputs) => Some(Pin::from_json(inputs).ok_or_else(bad)?),
+        };
         Ok(Header {
             at,
             doctrine_version,
+            pin,
             scenario: v
                 .get("scenario")
                 .and_then(Value::as_str)
@@ -235,6 +360,9 @@ fn read_calls(text: &str, file: &str) -> Result<(Header, Vec<(String, Value)>), 
 
 impl Client {
     fn finish(&self, save: Option<&str>, transcript: Option<&str>) -> Result<(), String> {
+        if let (Some(_), Some(day)) = (save, self.server.session.stopped_inside_day()) {
+            return Err(format!("the game stopped inside day {day} on an internal error and did not end: there is no saved game of it; the transcript says what each call was told"));
+        }
         if save.is_some() && !self.server.session.is_over() {
             return Err("the game is not over: a saved game holds both sides' orders and is given only when the game has ended".to_string());
         }
@@ -251,6 +379,7 @@ pub fn command(args: &[String]) -> Result<(), String> {
     let mut export_save = None;
     let mut export_transcript = None;
     let mut tools = false;
+    let mut unpinned = false;
     let mut positional: Vec<&str> = Vec::new();
     let mut words = args.iter().map(String::as_str);
     while let Some(word) = words.next() {
@@ -284,6 +413,7 @@ pub fn command(args: &[String]) -> Result<(), String> {
             "--export-save" => export_save = Some(value("--export-save")?),
             "--export-transcript" => export_transcript = Some(value("--export-transcript")?),
             "--tools" => tools = true,
+            "--unpinned" => unpinned = true,
             flag if flag.starts_with("--") => {
                 return Err(format!("unknown option \"{flag}\"\n\n{USAGE}"))
             }
@@ -365,8 +495,32 @@ pub fn command(args: &[String]) -> Result<(), String> {
                 header.doctrine_version
             ));
         }
+        // A game is replayed only on the inputs it was begun on (decision
+        // 0172, 1); one begun before game files recorded them is exported
+        // as before, and given a new call only on the caller's word.
+        match &header.pin {
+            Some(pin) => {
+                if unpinned {
+                    return Err(format!(
+                        "--unpinned is for a game file made before game files recorded their inputs, and {game} records them"
+                    ));
+                }
+                pin.check_files(game, &header.scenario)?;
+            }
+            None if !exporting && !unpinned => {
+                return Err(format!(
+                    "{game} was begun before game files recorded their inputs, so whether its scenario or a data file has changed since cannot be told; to continue it as it is, say so with --unpinned"
+                ));
+            }
+            None => {}
+        }
         (header, calls)
     } else {
+        if unpinned {
+            return Err(format!(
+                "{game} is a new game, and a new game records its inputs: --unpinned is for a game file made before"
+            ));
+        }
         if exporting {
             return Err(format!("{game} does not exist: there is no game to export"));
         }
@@ -382,11 +536,25 @@ pub fn command(args: &[String]) -> Result<(), String> {
             at: at.unwrap_or_default(),
             seed,
             doctrine_version: DOCTRINE_VERSION.to_string(),
+            pin: None,
         };
         (header, Vec::new())
     };
 
     let mut client = replay(&header, &calls)?;
+    // A new game is pinned to what it was opened on; a pinned one is checked
+    // against what it was opened on now, before any call is kept.
+    let header = match (&header.pin, existing) {
+        (Some(pin), _) => {
+            pin.check_opened(game, &client.kept)?;
+            header
+        }
+        (None, false) => Header {
+            pin: Some(Pin::of(&header.scenario, &client.kept)?),
+            ..header
+        },
+        (None, true) => header,
+    };
 
     if exporting {
         if !positional.is_empty() {

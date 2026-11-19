@@ -25,7 +25,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use crate::belief::{BattleClaim, BeliefState, GroundEstimate, GroundGrade};
+use crate::belief::{BattleClaim, BeliefState, Contact, GroundEstimate, GroundGrade};
 use crate::command::{CommandState, Hold, HoldMaker};
 use crate::events::{Cause, EventKind, EventLog};
 use crate::hex::Hex;
@@ -41,6 +41,9 @@ use crate::state::{
 };
 use crate::time::Pulse;
 use crate::world::{MadeIds, SimError, World, MADE_IDS_FLOOR};
+
+mod half;
+pub use half::PictureHalf;
 
 /// One evening of a world, as plain data (decision 0170, 1). Built by
 /// whoever may build one; checked and used by [`World::from_picture`].
@@ -571,9 +574,24 @@ impl World {
 /// A side's belief as a picture holds it: everything but the event
 /// numbers, the contacts in the order of their numbers.
 fn picture_belief(belief: &BeliefState) -> PictureBelief {
+    belief_of(
+        belief.contacts(),
+        belief.claims(),
+        belief.ground_estimates(),
+    )
+}
+
+/// A belief as a picture holds it, from its parts as a belief or a side's
+/// view gives them: the contacts in the order of their numbers, the claims
+/// in the order held, the estimates in the order of their hexes, each
+/// without the event that reported it.
+fn belief_of<'a>(
+    contacts: impl Iterator<Item = &'a Contact>,
+    claims: &[BattleClaim],
+    estimates: impl Iterator<Item = &'a GroundEstimate>,
+) -> PictureBelief {
     PictureBelief {
-        contacts: belief
-            .contacts()
+        contacts: contacts
             .map(|contact| PictureContact {
                 hex: contact.estimated_hex,
                 ship_count: contact.estimated_ship_count,
@@ -581,8 +599,7 @@ fn picture_belief(belief: &BeliefState) -> PictureBelief {
                 age_pulses: contact.age_pulses,
             })
             .collect(),
-        claims: belief
-            .claims()
+        claims: claims
             .iter()
             .map(|claim| {
                 let BattleClaim {
@@ -612,8 +629,7 @@ fn picture_belief(belief: &BeliefState) -> PictureBelief {
                 }
             })
             .collect(),
-        estimates: belief
-            .ground_estimates()
+        estimates: estimates
             .map(|estimate| PictureEstimate {
                 hex: estimate.hex,
                 men: estimate.men,
