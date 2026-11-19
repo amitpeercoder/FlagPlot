@@ -1297,6 +1297,10 @@ button:disabled { opacity: 0.45; cursor: default; }
   function sayIntent(i, said) {
     if (said[i.number]) return nameText(said[i.number]).replace(/^./, function (c) { return c.toUpperCase(); });
     var where = (i.target && i.target.name) || (i.base && i.base.name) || (i.island != null && (config.islands.filter(function (x) { return x.number === i.island; })[0] || {}).name) || (i.hex && (M.hexNames[i.hex[0] + ',' + i.hex[1]] || whereIs({ q: i.hex[0], r: i.hex[1] }))) || '';
+    // Said as a person would say it: the place goes where English puts it.
+    if (where && i.kind === 'keep_supplied') return 'Keep ' + where + ' supplied';
+    if (where && i.kind === 'cover') return 'Cover ' + where + ' from the air';
+    if (where && i.kind === 'deny') return 'Deny the waters round ' + where;
     var w = (WORD[i.kind] || i.kind.replace(/_/g, ' ')).toLowerCase(); return (w.charAt(0).toUpperCase() + w.slice(1) + ' ' + where).trim();
   }
   function readPlan(root) {
