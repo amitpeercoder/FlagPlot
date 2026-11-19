@@ -44,7 +44,8 @@
 //! The claim's words, day 2, false 1 and made out 1: they hold "15
 //! aircraft destroyed on the ground" and name type 3 as decision 0167
 //! names a type, with 15 against it. At made out 0 the words are those
-//! of scenario 11's run, to the letter.
+//! of scenario 11's run, to the letter but for the clause at their end
+//! that names the units (decision 0180, built with this record).
 //!
 //! ## The type is the group's on the ground, not the bombers'
 //!
@@ -60,7 +61,8 @@
 //! 1: every claim's numbers are the same, and the event logs are the same
 //! but for the Japanese claims' types and words and the events that
 //! decision 0167's recognition records. With made out 0 the logs are
-//! those of scenario 11's variants as they run today.
+//! those of scenario 11's variants as they run today, but for that
+//! clause.
 //!
 //! ## The rule's own function
 //!
