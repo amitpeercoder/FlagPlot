@@ -2247,7 +2247,10 @@ fn a_scenario_that_gives_no_pilots_and_no_replacements_has_the_hashes_it_had_bef
                 && !stem.starts_with("82_")
                 // And scenario 83's, whose staff moves a carrier force to
                 // look (decision 0159, rule D, item 14).
-                && !stem.starts_with("83_"))
+                && !stem.starts_with("83_")
+                // And scenario 85's, whose staff spreads a run by night
+                // over its ships (decision 0162).
+                && !stem.starts_with("85_"))
             .then(|| stem.to_string())
         })
         .collect();
