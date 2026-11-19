@@ -28,7 +28,7 @@ button { font-family: var(--f-ui); cursor: pointer; }
 button:focus-visible { outline: 3px solid #f0c36a; outline-offset: 2px; }
 button:disabled { opacity: 0.45; cursor: default; }
 
-.top { position: fixed; top: 0; left: 0; right: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 22px; padding: 10px 470px 8px 16px; pointer-events: none; text-shadow: 0 1px 6px #000; }
+.top { position: fixed; top: 0; left: 0; right: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 22px; padding: 10px 640px 8px 16px; pointer-events: none; text-shadow: 0 1px 6px #000; }
 .top h1 { margin: 0; font-size: 24px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; }
 .intray { pointer-events: auto; position: relative; display: inline-flex; align-items: center; gap: 9px; min-height: 30px; padding: 0 12px; margin-left: 6px; background: #4d3a28; color: var(--paper); border: 1px solid #241a12; border-radius: 2px; font-family: var(--f-ui); font-size: 14px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; text-shadow: none; cursor: pointer; box-shadow: inset 0 -3px 0 rgba(0,0,0,0.28), 0 2px 6px rgba(0,0,0,0.4); }
 .intray[hidden] { display: none; }
@@ -330,6 +330,7 @@ button:disabled { opacity: 0.45; cursor: default; }
   <button type="button" id="btn-view" title="See the table from the chair, or the chart from above">View: table</button>
   <button type="button" id="btn-hexes" aria-pressed="false">Hexes</button>
   <button type="button" id="btn-pieces" title="Which pieces stand on the chart">Pieces: all</button>
+  <button type="button" id="btn-labels" title="Which slips stand over the pieces">Labels: pointer</button>
   <button type="button" id="btn-stops" aria-expanded="false" aria-controls="stops" hidden>Clock stops</button>
 </div>
 <fieldset class="stops" id="stops" hidden>
@@ -646,6 +647,10 @@ button:disabled { opacity: 0.45; cursor: default; }
   // Which pieces stand on the chart: all, the side's own, the enemy's, or none.
   var PIECES = ['all', 'own', 'enemy', 'none'], PIECE_WORD = { all: 'Pieces: all', own: 'Pieces: ours', enemy: 'Pieces: enemy', none: 'Pieces: off' }, piecesShown = 'all';
   try { var kept = localStorage.getItem('flagplot.pieces'); if (PIECES.indexOf(kept) >= 0) piecesShown = kept; } catch (e) {}
+  // Which slips stand over the chart: the ones where the pointer is, all, or none.
+  // With all of them up the chart cannot be read, so the pointer's is the first choice.
+  var LABELS = ['pointer', 'all', 'off'], LABEL_WORD = { pointer: 'Labels: pointer', all: 'Labels: all', off: 'Labels: off' }, labelsShown = 'pointer', hoverAt = null;
+  try { var keptL = localStorage.getItem('flagplot.labels'); if (LABELS.indexOf(keptL) >= 0) labelsShown = keptL; } catch (e) {}
   function sideShown(side) { return piecesShown === 'all' || (piecesShown !== 'none' && (piecesShown === 'own') === (side === 'own')); }
   // ---- the pieces: period tiles (decision 0154) ----
   // Cream tiles in ink. A rectangle is the side's own and a diamond the
@@ -1890,7 +1895,7 @@ button:disabled { opacity: 0.45; cursor: default; }
     var ids = Object.keys(ptrs); if (ids.length === 2) { pinch0 = Math.hypot(ptrs[ids[0]].x - ptrs[ids[1]].x, ptrs[ids[0]].y - ptrs[ids[1]].y); zoom0 = goal.zoom; }
   });
   canvas.addEventListener('pointermove', function (e) {
-    var p = ptrs[e.pointerId]; if (!p) { if (e.pointerType === 'mouse') canvas.classList.toggle('over', !picking && !playing && !!tileAt(e.clientX, e.clientY)); return; } var ids = Object.keys(ptrs);
+    var p = ptrs[e.pointerId]; if (!p) { hoverAt = onTable(e.clientX, e.clientY); if (e.pointerType === 'mouse') canvas.classList.toggle('over', !picking && !playing && !!tileAt(e.clientX, e.clientY)); return; } var ids = Object.keys(ptrs);
     if (ids.length === 1) { var s = camDist * 0.0016; goal.x -= (e.clientX - p.x) * s; goal.z -= (e.clientY - p.y) * s * (1.5 - 0.5 * flat); clampGoal(); }
     p.x = e.clientX; p.y = e.clientY;
     if (ids.length === 2 && pinch0) { var d = Math.hypot(ptrs[ids[0]].x - ptrs[ids[1]].x, ptrs[ids[0]].y - ptrs[ids[1]].y); goal.zoom = zoom0 + Math.log(d / pinch0) * 0.5; clampGoal(); }
@@ -1902,6 +1907,7 @@ button:disabled { opacity: 0.45; cursor: default; }
     downAt = null;
   }
   canvas.addEventListener('pointerup', up); canvas.addEventListener('pointercancel', up);
+  canvas.addEventListener('pointerleave', function () { hoverAt = null; });
   canvas.addEventListener('wheel', function (e) { e.preventDefault(); // A trackpad sends many small steps, and a pinch sends smaller ones still
     // (marked with the control key): the pull toward the pointer is in
     // proportion to the step, so that a gesture does not slide the table away.
@@ -1912,6 +1918,8 @@ button:disabled { opacity: 0.45; cursor: default; }
   });
   $('btn-pieces').textContent = PIECE_WORD[piecesShown];
   $('btn-pieces').addEventListener('click', function () { piecesShown = PIECES[(PIECES.indexOf(piecesShown) + 1) % PIECES.length]; try { localStorage.setItem('flagplot.pieces', piecesShown); } catch (e) {} this.textContent = PIECE_WORD[piecesShown]; if (g) drawMarks(); });
+  $('btn-labels').textContent = LABEL_WORD[labelsShown];
+  $('btn-labels').addEventListener('click', function () { labelsShown = LABELS[(LABELS.indexOf(labelsShown) + 1) % LABELS.length]; try { localStorage.setItem('flagplot.labels', labelsShown); } catch (e) {} this.textContent = LABEL_WORD[labelsShown]; });
   $('btn-view').textContent = chartView ? 'View: chart' : 'View: table';
   $('btn-view').addEventListener('click', function () { chartView = !chartView; try { localStorage.setItem('flagplot.view', chartView ? 'chart' : 'table'); } catch (e) {} this.textContent = chartView ? 'View: chart' : 'View: table'; });
   $('btn-hexes').setAttribute('aria-pressed', String(showHexes));
@@ -1937,8 +1945,9 @@ button:disabled { opacity: 0.45; cursor: default; }
     var faint = !!planMarks; if (faint !== ghosted) { ghosted = faint; var dim = function (grp) { var mats = grp.children[0].material, base = grp.userData.alpha == null ? 1 : grp.userData.alpha; (mats.length ? mats : [mats]).forEach(function (mt) { mt.transparent = faint || base < 1; mt.opacity = faint ? base * 0.3 : base; mt.needsUpdate = true; }); grp.children[0].castShadow = !faint; }; Object.keys(pieces).forEach(function (h) { dim(pieces[h].grp); }); statics.forEach(dim); labels.forEach(function (L) { L.sp.material.opacity = faint ? 0.3 : 1; L.pin.material.transparent = true; L.pin.material.opacity = faint ? 0.25 : 1; }); }
     flashes = flashes.filter(function (f) { f.userData.t += dt / 1.3; var k = f.userData.t; f.scale.setScalar(0.08 + k * 0.42); f.material.opacity = 0.9 * (1 - k); if (k >= 1) { scene.remove(f); f.geometry.dispose(); f.material.dispose(); return false; } return true; });
     placeCamera();
+    var near = 0.6 * HEXR * Math.sqrt(3);
     labels.forEach(function (L) {
-      var a = L.anchor(), show = sideShown(L.side) && (L.tier === 0 || (L.tier === 1 && cur.zoom > 0.3) || (L.tier === -1 && cur.zoom <= 0.3));
+      var a = L.anchor(), show = sideShown(L.side) && (labelsShown === 'all' ? (L.tier === 0 || (L.tier === 1 && cur.zoom > 0.3) || (L.tier === -1 && cur.zoom <= 0.3)) : labelsShown === 'pointer' && !!hoverAt && Math.hypot(a.x - hoverAt.x, a.z - hoverAt.z) < near);
       L.sp.visible = show; L.pin.visible = show; if (!show) return;
       // From above a slip lies on the chart beside what it names, north of it
       // by its height from the chair, so that stacked slips stay apart.
