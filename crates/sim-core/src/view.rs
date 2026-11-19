@@ -1049,6 +1049,18 @@ impl<'a> SideView<'a> {
         self.ref_data.aircraft_types.get(&id)
     }
 
+    /// Whose a class of ship is (decision 0173, 4): reference data, so common
+    /// knowledge. `None` when the scenario names no file of sides.
+    pub fn ship_class_side(&self, id: ShipClassId) -> Option<crate::refdata::ClassSide> {
+        self.ref_data.ship_class_side(id)
+    }
+
+    /// Whose a type of aircraft is (decision 0173, 4): reference data, so
+    /// common knowledge. `None` when the scenario names no file of sides.
+    pub fn aircraft_type_side(&self, id: AircraftTypeId) -> Option<crate::refdata::ClassSide> {
+        self.ref_data.aircraft_type_side(id)
+    }
+
     /// How far `group`'s strikes and escorts may go with the reach it has in
     /// force, in miles: [`RefData::reach_nm`], the one function every test of
     /// the distance of a strike or an escort uses (decision 2 of 0059). The

@@ -117,6 +117,8 @@ air_upkeep = "../../reference/air_upkeep.toml"
 fatigue = "../../reference/fatigue.toml"
 air_supply = "../../reference/air_supply.toml"
 ground = "../../reference/ground.toml"
+# Whose each class and type is (decision 0173, 1 to 3).
+class_sides = "../../reference/class_sides_full_slice.csv"
 
 # The Japanese bases at Lunga and Tulagi have no defences (0): no row sizes
 # the works of the garrisons of 7 August, so they stay 0 until research gives
@@ -1862,6 +1864,57 @@ side = "allied"
 q = 3
 r = -5
 men = 1850
+
+# What each side believed of the enemy on the evening before 7 August
+# (decision 0173, 11). PLACEHOLDERS: every entry rests on no source yet. What
+# each command believed of the other's forces and purpose in the first week of
+# August 1942 is in the record and is owed as rows in data/oob before these
+# entries lose their mark (decision 0173, 12). No rule of the game reads them:
+# they are kept with the scenario for the constructor of a side's picture.
+# The Japanese side is given no belief of what the Allied side intends.
+
+[[believed_force]]
+side = "allied"
+name = "Placeholder Japanese cruiser force"
+kind = "cruiser"
+ships = 6
+standing = "present"
+at_base = 2
+day = 0
+placeholder = true
+note = "Decision 0173, 11: rests on no source yet; the research of what the Allied command believed of the Japanese forces before 7 August 1942 is owed."
+
+[[believed_force]]
+side = "allied"
+name = "Placeholder Japanese carrier force"
+kind = "carrier"
+ships = 8
+standing = "unknown"
+placeholder = true
+note = "Decision 0173, 11: rests on no source yet; the research of what the Allied command believed of the Japanese forces before 7 August 1942 is owed."
+
+[[believed_intent]]
+side = "allied"
+intent_kind = "hold"
+base = 1
+placeholder = true
+note = "Decision 0173, 11: the Japanese side believed to mean to hold Lunga. Rests on no source yet; the research of what the Allied command believed of the Japanese purpose before 7 August 1942 is owed."
+
+[[believed_intent]]
+side = "allied"
+intent_kind = "hold"
+base = 4
+placeholder = true
+note = "Decision 0173, 11: the Japanese side believed to mean to hold Tulagi. Rests on no source yet; the research of what the Allied command believed of the Japanese purpose before 7 August 1942 is owed."
+
+[[believed_force]]
+side = "japanese"
+name = "Placeholder Allied carrier force"
+kind = "carrier"
+ships = 8
+standing = "unknown"
+placeholder = true
+note = "Decision 0173, 11: rests on no source yet; the research of what the Japanese command believed of the Allied forces before 7 August 1942 is owed."
 
 
 [[task_force]]

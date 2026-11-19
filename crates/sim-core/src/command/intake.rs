@@ -391,11 +391,8 @@ impl World {
                     return Err(CommandRefusal::KindCannotChange(*intent));
                 }
                 // "Search waters" stands under "deny an area" only (decision
-                // 0123, 11).
-                if !kind.may_be_root() {
-                    return Err(CommandRefusal::NotARoot);
-                }
-                self.check_intent_kind(side, kind)
+                // 0123, 11); then the kind itself.
+                self.check_root_intent(side, kind)
             }
             CommandKind::WithdrawIntent { intent } => {
                 let found = self.in_force_intent(side, *intent)?;
@@ -921,6 +918,19 @@ impl World {
                 Ok(())
             }
         }
+    }
+
+    /// Checks an intent of `kind` as a commander's `set_intent` of a new
+    /// number would be checked for `side` at the start of the game, changing
+    /// nothing: the kind may be a root (a kind the staff alone may give is
+    /// refused), and its bases, force, hexes and island pass the same check
+    /// as the command's. The loader checks a believed intent with it, for the
+    /// believing side's enemy (decision 0173, 7).
+    pub fn check_root_intent(&self, side: Side, kind: &IntentKind) -> Result<(), CommandRefusal> {
+        if !kind.may_be_root() {
+            return Err(CommandRefusal::NotARoot);
+        }
+        self.check_intent_kind(side, kind)
     }
 
     /// Checks the kind of an intent set or formed: its own base is the

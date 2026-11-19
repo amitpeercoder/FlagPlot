@@ -11,6 +11,7 @@
 
 pub mod bearing;
 pub mod belief;
+pub mod believed;
 pub mod choices;
 pub mod command;
 pub mod commander;

@@ -7,8 +7,9 @@ use sim_core::fixed::Fixed;
 use sim_core::ids::{AircraftTypeId, ShipClassId};
 use sim_core::refdata::{
     AirCombatFigures, AirSupplyFigures, AirUpkeepFigures, AircraftRole, AircraftType, AttackWeapon,
-    BombardmentFigures, FatigueFigures, GroundFigures, PassingChances, PortSize, RefData,
-    ReportError, ReportFigures, SearchFigures, ShipClass, ShipKind, SurfaceCombatFigures,
+    BombardmentFigures, ClassSide, ClassSides, FatigueFigures, GroundFigures, PassingChances,
+    PortSize, RefData, ReportError, ReportFigures, SearchFigures, ShipClass, ShipKind,
+    SurfaceCombatFigures,
 };
 use sim_core::state::ShipSystem;
 
@@ -1238,6 +1239,86 @@ struct ReportsFile {
     sideways: ReportChancesFile,
     down: ReportChancesFile,
     radio_reach_nm: ReportReachFile,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct ClassSideRow {
+    table: String,
+    id: u32,
+    side: String,
+    note: String,
+}
+
+/// Loads a file of sides (decision 0173, 1): a hand-written CSV with the
+/// columns `table` (`ship_class` or `aircraft_type`), `id`, `side`
+/// (`allied`, `japanese` or `both`) and `note`, which every row gives. A
+/// class or type given twice is refused here; whether the file is whole for
+/// a scenario is the scenario's check.
+pub fn load_class_sides(path: &Path) -> Result<ClassSides, DataError> {
+    let text = fs::read_to_string(path).map_err(|e| DataError::in_file(path, e.to_string()))?;
+    parse_class_sides(&text, path)
+}
+
+/// Parses a file of sides from CSV text. `path` is only used in messages.
+fn parse_class_sides(text: &str, path: &Path) -> Result<ClassSides, DataError> {
+    let mut reader = csv::ReaderBuilder::new()
+        .comment(Some(b'#'))
+        .trim(csv::Trim::All)
+        .from_reader(text.as_bytes());
+    let mut sides = ClassSides::default();
+    for row in reader.deserialize::<ClassSideRow>() {
+        let row = row.map_err(|e| DataError::in_file(path, e.to_string()))?;
+        let side = match row.side.as_str() {
+            "allied" => ClassSide::Allied,
+            "japanese" => ClassSide::Japanese,
+            "both" => ClassSide::Both,
+            other => {
+                return Err(DataError::in_file(
+                    path,
+                    format!(
+                        "{} {}: unknown side \"{other}\": allied, japanese or both",
+                        row.table, row.id
+                    ),
+                ))
+            }
+        };
+        if row.note.is_empty() {
+            return Err(DataError::in_file(
+                path,
+                format!(
+                    "{} {}: the note is empty; every row says what its side rests on",
+                    row.table, row.id
+                ),
+            ));
+        }
+        let twice = match row.table.as_str() {
+            "ship_class" => sides
+                .ship_classes
+                .insert(ShipClassId::new(row.id), side)
+                .is_some(),
+            "aircraft_type" => sides
+                .aircraft_types
+                .insert(AircraftTypeId::new(row.id), side)
+                .is_some(),
+            other => {
+                return Err(DataError::in_file(
+                    path,
+                    format!(
+                        "row for id {}: unknown table \"{other}\": ship_class or aircraft_type",
+                        row.id
+                    ),
+                ))
+            }
+        };
+        if twice {
+            return Err(DataError::in_file(
+                path,
+                format!("{} {} is given twice", row.table, row.id),
+            ));
+        }
+    }
+    Ok(sides)
 }
 
 /// Loads the report figures from a TOML file (decision 0135).
