@@ -49,6 +49,7 @@ Usage: sim-cli run <scenario.toml> [--events] [--seed N] [--save <game.json>] [-
                     [--early-day N] [--late-day N] [--soak-late-day N] [--reference DIR]
                     [--trial-slice FILE] [--trial-figures FILE] [--trial-late-day N] [--only-trial]
                     [--trial-size small|standard|full] [--only-window] [--window-runs N]
+                    [--only-seat-trial] [--seat-trial-runs N]
        sim-cli play --game FILE ... (run `sim-cli play` for its usage)
 
   run       Runs a scenario to its last day and prints the state hash of
@@ -98,6 +99,9 @@ Usage: sim-cli run <scenario.toml> [--events] [--seed N] [--save <game.json>] [-
             before day 1, at each size, at the dates it chooses and, where it
             chooses fewer than three, at the first and 3 and 5 days after it;
             --window-runs (1) times each; --only-window times the window alone.
+            Then a seat's trial (decision 0178) of that intent, at each size,
+            without and with the second trial; --seat-trial-runs (1) times
+            each; --only-seat-trial times it alone.
             --machine names the machine in the report. It ends with
             the totals that matter. Use a release build; it changes nothing in
             any scenario, save or hash.

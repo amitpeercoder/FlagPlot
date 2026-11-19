@@ -51,6 +51,10 @@ pub const COMMAND_TOOLS: [&str; 19] = [
     "why",
 ];
 
+/// The tools of a seat with a staff that plays a whole side, in a game that
+/// has a trial (decision 0178, rule 7), listed after [`COMMAND_TOOLS`].
+pub const TRIAL_TOOLS: [&str; 2] = ["trial", "trials"];
+
 /// The seat's name as the interface writes it: `allied` or `japanese`.
 pub fn seat_name(side: Side) -> &'static str {
     match side {

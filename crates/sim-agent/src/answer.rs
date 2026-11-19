@@ -91,8 +91,12 @@ pub const FORMAT: &str = "flagplot-agent";
 /// them, the aircraft's type: the briefing's `attacks_on_ships` from the air
 /// are counted by weapon, with `weapon`, `recognised` and `not_recognised`,
 /// a raid on a base has `weapon` and `recognised`, and the words of both
-/// events say it (decision 0167).
-pub const VERSION: u32 = 28;
+/// events say it (decision 0167). 29 adds, in a game that has a trial, the
+/// tools `trial` and `trials` of a seat with a staff that plays a whole side,
+/// and their answers `trial`, the estimate of an intent or a previewed draft
+/// in a commander's words, and `trials`, the estimates the seat was shown
+/// (decision 0178).
+pub const VERSION: u32 = 29;
 
 /// The answer to a question about something the side does not know of: a
 /// unit of the enemy, a number that does not exist, an event the side may not

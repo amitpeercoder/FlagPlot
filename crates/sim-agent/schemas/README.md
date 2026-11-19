@@ -25,6 +25,8 @@ Every answer is a JSON object with a top-level `"format": "flagplot-agent"`,
 | `preview` | `preview.schema.json` | `preview` |
 | `propose` | `propose.schema.json` | `propose` |
 | `plan_order` | `plan_order.schema.json` | `order` (a seat whose side has a staff): the plan of one of the commander's intents, or of a take the staff formed, as the staff hands it in |
+| `trial` | `trial.schema.json` | `trial` (a seat with a staff that plays a whole side, in a game that has a trial): the estimate of an intent of the commander's, or of a draft he previewed, in a commander's words (decision 0178) |
+| `trials` | `trials.schema.json` | `trials` (the same seat): the estimates the seat was shown, each with what was asked and whether it still stands; given an `estimate`, the stored `trial` answer again by its number (decision 0178) |
 | `staff_orders` | `staff_orders.schema.json` | `staff_orders` |
 | `why` | `why.schema.json` | `why` (or `not_known`) |
 | `run` | `run.schema.json` | `run` (offered where exactly one seat is held by a player) |
@@ -56,7 +58,7 @@ miles that can be a decimal, shots) is a decimal string such as `"12"` or
 
 ## The version rule
 
-`version` is 28. A field removed from an answer, or a field whose meaning
+`version` is 29. A field removed from an answer, or a field whose meaning
 changes, raises the version by one. A field added does not change it, so a
 reader must ignore fields it does not know. (The schemas here set
 `additionalProperties: false` because they describe this version exactly; a
@@ -1131,3 +1133,13 @@ another side's previews are no longer counted. A preview is approved by its numb
 another side's number was never approved, and the checks of a void preview (a day or a pulse resolved, something
 queued after it) are as they were. An escort's `charge` in `issue_orders` is a task force in the side's numbers at
 every seat, as a join's `into` is (decision 0172, 2): at the area's seat it was read as the scenario's number.
+
+## A seat's trial (decision 0178)
+
+`version` is 29. In a game that has a trial (a scenario that names a file of the trial's figures), a seat whose side has
+a staff that plays a whole side is offered two tools, `trial` and `trials`, and their answers. `trial` takes an intent of
+the commander's or a preview and the size of the trial, and answers `trial`: how it went, in counts of worlds, what it
+cost the side and the trial's enemy, what the plan needs, what other plans it displaces, what was assumed and where the
+worlds part. It gives no chance and no points, changes nothing in the game and is kept with the session. `trials` lists
+the estimates the seat was shown, each with whether it still stands, and given `{"estimate": N}` returns that stored
+`trial` answer again. A game with no trial lists the same tools as before, and its answers differ only in the version.

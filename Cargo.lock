@@ -159,6 +159,7 @@ dependencies = [
  "map-tool",
  "serde_json",
  "sim-agent",
+ "sim-cli",
  "sim-core",
  "sim-data",
  "sim-staff",

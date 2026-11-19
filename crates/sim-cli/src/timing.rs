@@ -21,7 +21,8 @@
 //! staffs. Last, a window (decision 0177): the same course from the evening
 //! before day 1 at the dates the window chooses, and, where it chooses fewer
 //! than three, at three dates given 3 and 5 days after the first, at each
-//! size. No number fails them.
+//! size. Last, a seat's trial (decision 0178), the tool `trial`, at each
+//! size without and with its second trial. No number fails them.
 
 use std::hint::black_box;
 use std::time::{Duration, Instant};
@@ -70,6 +71,8 @@ struct Settings {
     trial_size: Option<String>,
     only_window: bool,
     window_runs: u32,
+    only_seat_trial: bool,
+    seat_trial_runs: u32,
 }
 
 fn parse(args: &[String], usage: &str) -> Result<Settings, String> {
@@ -90,6 +93,8 @@ fn parse(args: &[String], usage: &str) -> Result<Settings, String> {
         trial_size: None,
         only_window: false,
         window_runs: 1,
+        only_seat_trial: false,
+        seat_trial_runs: 1,
     };
     let mut words = args.iter();
     while let Some(word) = words.next() {
@@ -121,6 +126,11 @@ fn parse(args: &[String], usage: &str) -> Result<Settings, String> {
             }
             "--only-trial" => settings.only_trial = true,
             "--only-window" => settings.only_window = true,
+            "--only-seat-trial" => settings.only_seat_trial = true,
+            "--seat-trial-runs" => {
+                settings.seat_trial_runs =
+                    number("--seat-trial-runs", value("--seat-trial-runs")?)?.max(1)
+            }
             "--window-runs" => {
                 settings.window_runs = number("--window-runs", value("--window-runs")?)?.max(1)
             }
@@ -606,6 +616,13 @@ pub fn command(args: &[String], usage: &str, options: &LoadOptions) -> Result<()
         trial_totals(&h);
         return Ok(());
     }
+    if s.only_seat_trial {
+        let j = seat_trials(&s, options)?;
+        println!();
+        println!("What it means:");
+        seat_trial_totals(&j);
+        return Ok(());
+    }
     if s.only_window {
         let i = windows(&s, options)?;
         println!();
@@ -742,6 +759,7 @@ pub fn command(args: &[String], usage: &str, options: &LoadOptions) -> Result<()
 
     let h = trials(&s, options)?;
     let i = windows(&s, options)?;
+    let j = seat_trials(&s, options)?;
 
     println!();
     println!("What it means (medians; the times a designer can set \"Speed\" from):");
@@ -798,6 +816,7 @@ pub fn command(args: &[String], usage: &str, options: &LoadOptions) -> Result<()
     }
     trial_totals(&h);
     window_totals(&i);
+    seat_trial_totals(&j);
     Ok(())
 }
 
@@ -1003,6 +1022,165 @@ fn window_totals(i: &[WindowTime]) {
             t.days,
             t.dates,
             if t.given { " given" } else { " chosen" },
+            show(t.time.median),
+            t.time.runs
+        );
+    }
+}
+
+/// What one seat's trial took and gave, over its runs, without and with the
+/// second trial of things as they stand.
+struct SeatTrialTime {
+    size: &'static str,
+    worlds: u32,
+    days: u32,
+    second: bool,
+    time: Spread,
+    played: usize,
+    other_plans: Option<usize>,
+}
+
+/// The Allied side's trial as the session asks it for the intent first
+/// stated among the side's commands of day 1, from the evening before day 1
+/// (decision 0178): the standing commands are those commands, the course
+/// gives the leaves the side does not hold, and the second trial, where
+/// asked, has the standing commands less the intent and its limits.
+fn seat_trials(s: &Settings, options: &LoadOptions) -> Result<Vec<SeatTrialTime>, String> {
+    use sim_agent::{CourseStep, SizeAsked, TrialAsked, TrialRunner, TrialStep};
+    use sim_core::command::{CommandKind, Leave};
+
+    let live = trial_live_game(&s.trial_slice, 0, options)?;
+    let side = sim_core::state::Side::Allied;
+    let standing: Vec<CommandKind> = live
+        .scripted_commands()
+        .get(&1)
+        .cloned()
+        .unwrap_or_default()
+        .into_iter()
+        .filter(|(who, _)| *who == side)
+        .map(|(_, command)| command)
+        .collect();
+    let intent = standing
+        .iter()
+        .find_map(|c| match c {
+            CommandKind::SetIntent { intent, .. } => Some(*intent),
+            _ => None,
+        })
+        .ok_or("the trial's slice gives the Allied side no intent on day 1")?;
+    let figures = match live.trial_figures() {
+        Some(figures) => figures.clone(),
+        None => sim_data::load_trial_figures(std::path::Path::new(&s.trial_figures))
+            .map_err(|e| e.to_string())?,
+    };
+    let view = live.world.side_view(side);
+    let held = view.command_state().leaves;
+    let mut course = Vec::new();
+    for (leave, is_held) in [(Leave::Prepare, held.prepare), (Leave::Launch, held.launch)] {
+        let given = standing
+            .iter()
+            .any(|c| matches!(c, CommandKind::SetLeave { leave: l, given: true } if *l == leave));
+        if !is_held && !given {
+            course.push(CourseStep {
+                day: 1,
+                command: CommandKind::SetLeave { leave, given: true },
+            });
+        }
+    }
+    let as_they_stand: Vec<CommandKind> = standing
+        .iter()
+        .filter(|c| match c {
+            CommandKind::SetIntent { intent: i, .. } => *i != intent,
+            CommandKind::SetLimit(limit) => limit.intent() != Some(intent),
+            _ => true,
+        })
+        .cloned()
+        .collect();
+    let runner = sim_cli::seat_trial::SeatTrials::with_figures(&live, figures.clone());
+    println!();
+    println!(
+        "j. A seat's trial of the Allied side's intent {} on {} (decision 0178): from the evening before day 1, standing commands the side's {} command(s) of day 1, a course of {} leave(s) given, the date day {}; the trial's seed {}, trial 1; both staffs; {} run(s) each, timed from begin to the answer, without the second trial and with it (its standing commands {}):",
+        intent.raw(),
+        s.trial_slice,
+        standing.len(),
+        course.len(),
+        view.day() + 1,
+        figures.seed,
+        s.seat_trial_runs,
+        as_they_stand.len()
+    );
+    let before = live.world.state_hash();
+    let mut times = Vec::new();
+    for size in figures.sizes() {
+        if s.trial_size.as_deref().is_some_and(|name| name != size.0) {
+            continue;
+        }
+        for second in [false, true] {
+            let mut runs = Vec::new();
+            let mut played = 0;
+            let mut other_plans = None;
+            for _ in 0..s.seat_trial_runs {
+                let asked = TrialAsked {
+                    trial: 1,
+                    size: SizeAsked::Named(size.0.to_string()),
+                    standing: standing.clone(),
+                    course: course.clone(),
+                    dates: vec![view.day() + 1],
+                    intent,
+                    as_they_stand: second.then(|| as_they_stand.clone()),
+                };
+                let begin = clock();
+                let mut under_way = runner.begin(&view, &asked).map_err(|e| e.0)?;
+                let answer = loop {
+                    if let TrialStep::Done(answer) = under_way.step() {
+                        break answer;
+                    }
+                };
+                played = answer.went.played.len();
+                other_plans = answer.other_plans.as_ref().map(|p| p.len());
+                drop(answer);
+                drop(under_way);
+                runs.push(begin.elapsed());
+            }
+            let t = SeatTrialTime {
+                size: size.0,
+                worlds: size.1.worlds,
+                days: size.1.days,
+                second,
+                time: spread(runs),
+                played,
+                other_plans,
+            };
+            println!(
+                "  {:<8} {:>2} worlds x {:>2} days, {}: median {}, min {}, max {} over {} run(s)   {} world(s) played{}",
+                t.size,
+                t.worlds,
+                t.days,
+                if second { "with the second trial   " } else { "without the second trial" },
+                show(t.time.median),
+                show(t.time.min),
+                show(t.time.max),
+                t.time.runs,
+                t.played,
+                t.other_plans
+                    .map_or(String::new(), |n| format!("; {n} other plan(s) weighed"))
+            );
+            times.push(t);
+        }
+    }
+    if live.world.state_hash() != before {
+        return Err("a seat's trial changed the live game's hash".to_string());
+    }
+    Ok(times)
+}
+
+fn seat_trial_totals(j: &[SeatTrialTime]) {
+    for t in j {
+        println!(
+            "  A seat's trial, {} ({} worlds x {} days), {} the second trial, from the evening before day 1: {} (median of {}).",
+            t.size,
+            t.worlds,
+            t.days,
+            if t.second { "with" } else { "without" },
             show(t.time.median),
             t.time.runs
         );

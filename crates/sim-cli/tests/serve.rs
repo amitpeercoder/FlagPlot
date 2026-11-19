@@ -368,3 +368,34 @@ fn two_players_resolve_the_day_when_both_have_ended_it() {
     assert_eq!(out[0]["result"]["resolved"], false);
     assert_eq!(out[1]["result"]["resolved"], true);
 }
+
+/// Decision 0178, rule 6: `serve` hands a session what plays a seat's
+/// trials exactly where the scenario names a file of the trial's figures.
+#[test]
+fn a_trial_is_offered_exactly_where_the_scenario_names_its_figures() {
+    for (scenario, has) in [
+        ("data/scenarios/97_a_seats_trial.toml", true),
+        ("data/scenarios/95_the_estimate.toml", true),
+        (SCENARIO, false),
+        ("data/scenarios/80_a_take_that_waits.toml", false),
+    ] {
+        let named = std::fs::read_to_string(Path::new(ROOT).join(scenario))
+            .expect("the scenario reads")
+            .lines()
+            .any(|line| line.starts_with("trial ="));
+        assert_eq!(named, has, "{scenario}");
+        let input = request(json!(1), "allied", "trials", json!({})) + "\n";
+        let out = serve(&[scenario, "--seat", "allied=player"], &input);
+        assert!(out.status.success(), "{}", text(&out.stderr));
+        let line: Value = serde_json::from_str(text(&out.stdout).trim()).expect("one answer");
+        if has {
+            assert_eq!(line["result"]["kind"], "trials", "{scenario}: {line}");
+        } else {
+            let message = line["error"]["message"].as_str().unwrap_or_default();
+            assert!(
+                message.contains("\"trials\" is not a tool"),
+                "{scenario}: {line}"
+            );
+        }
+    }
+}
