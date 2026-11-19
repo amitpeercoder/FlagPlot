@@ -154,6 +154,13 @@ button:disabled { opacity: 0.45; cursor: default; }
     <label><input type="radio" name="verb" id="f-v-normal" value="normal"> Normal readiness</label>
     <label><input type="radio" name="verb" id="f-v-route" value="route"> Steam for a place I touch</label>
   </fieldset>
+  <fieldset><legend>ITS SHIPS</legend>
+    <label><input type="radio" name="verb" id="f-v-detach" value="detach"> Detach the ships I tick as a new force</label>
+    <label id="f-l-join"><input type="radio" name="verb" id="f-v-join" value="join"> Join another force here</label>
+    <label id="f-l-down"><input type="radio" name="verb" id="f-v-down" value="down"> Stand it down in port</label>
+  </fieldset>
+  <fieldset id="f-ships" hidden><legend>DETACH</legend></fieldset>
+  <fieldset id="f-join" hidden><legend>JOIN</legend></fieldset>
   <div id="f-route" hidden></div>
   <fieldset id="f-air" hidden><legend>AIR GROUPS HERE</legend></fieldset>
   <div class="pv"><b>BEFORE YOU SIGN</b>
@@ -654,6 +661,15 @@ button:disabled { opacity: 0.45; cursor: default; }
     listOf(body, 'MEN ASHORE', M.units.filter(function (u) { return u.men_ashore && sameHex(u.place, b.place); }).map(function (u) { return u.land_unit.handle + ': ' + commas(u.men_ashore) + ' men, ' + u.posture; }));
     listOf(body, 'AIR GROUPS HERE', M.air.filter(function (x) { return x.location && x.location.handle === h; }).map(function (x) { return x.air_group.handle + ', ' + x.aircraft_type + ': ' + x.ready + ' ready' + (x.damaged ? ', ' + x.damaged + ' damaged' : '') + ', ' + String(x.mission).replace(/_/g, ' '); }));
     links(body, 'FORCES HERE', forcesAt(b.place, null));
+    var port = el('div'); body.appendChild(port);
+    if (!M.over && !playing) api('get_entity', { handle: h }).then(function (a) {
+      var inPort = (a.entity && a.entity.ships_in_port) || []; if (!inPort.length) return;
+      port.appendChild(el('div', 'sub', 'SHIPS IN PORT, IN NO FORCE'));
+      inPort.forEach(function (x) { var l = el('label'), c = el('input'); c.type = 'checkbox'; c.value = num(x.handle); l.style.display = 'block'; l.appendChild(c); l.appendChild(document.createTextNode(' ' + String(x.name || x.handle).replace(/^Placeholder /, ''))); port.appendChild(l); });
+      var row = el('div', 'row'), go = el('button', '', 'FORM A FORCE OF THOSE I TICK'), said = el('div', 'work'); go.type = 'button'; row.appendChild(go); port.appendChild(row); port.appendChild(said);
+      go.addEventListener('click', function () { var picked = Array.prototype.map.call(port.querySelectorAll('input:checked'), function (c) { return +c.value; }); if (!picked.length) { said.textContent = 'Tick the ships first.'; return; }
+        api('issue_orders', { orders: [{ unit: h, order: { kind: 'form_task_force', ships: picked } }] }).then(function (r) { var res = (r.results || [])[0] || {}; if (res.status === 'queued') { said.textContent = 'Signed. The force is formed when the orders go in.'; go.disabled = true; refresh(); } else said.textContent = 'Refused: ' + (res.text || (res.reason && (res.reason.text || res.reason)) || res.status); }).catch(function (e) { said.textContent = 'Refused: ' + e.message; }); });
+    }).catch(function () {});
     links(body, 'ENEMY CONTACTS HERE', contactsAt(b.place));
     var est = M.estimates.filter(function (e) { return sameHex(e.place, b.place); })[0];
     if (est) { body.appendChild(el('div', 'sub', 'INTELLIGENCE')); kv(body, [['Enemy men ashore', 'About ' + commas(est.men) + ' men'], ['From', est.came_from], ['Age', daysOld(est)]]); }
@@ -979,6 +995,12 @@ button:disabled { opacity: 0.45; cursor: default; }
     $('f-name').textContent = best.force.task_force.name.replace(/^Placeholder /, '').toUpperCase();
     $('f-when').textContent = clock.at === 'dusk' ? 'It is 1800. The order goes in with tonight\'s orders.' : 'It is ' + clock.at + '. The order is taken in at the start of the ' + (clock.at === '0600' ? 'morning' : 'afternoon') + ' pulse.';
     $('f-v-none').checked = true; $('f-route').hidden = true; $('f-result').textContent = '';
+    var fs = $('f-ships'), fj = $('f-join'), fhere = best.force; fs.hidden = true; fj.hidden = true;
+    while (fs.children.length > 1) fs.removeChild(fs.lastChild); while (fj.children.length > 1) fj.removeChild(fj.lastChild);
+    api('get_entity', { handle: fhere.task_force.handle }).then(function (a) { if (!force || force.f !== fhere) return; ((a.entity && a.entity.ships) || []).filter(function (x) { return !x.sunk; }).forEach(function (x) { var l = el('label'), c = el('input'); c.type = 'checkbox'; c.value = num(x.ship.handle); l.appendChild(c); l.appendChild(document.createTextNode(' ' + String(x.ship.name || x.ship.handle).replace(/^Placeholder /, ''))); fs.appendChild(l); }); }).catch(function () {});
+    var others = M.forces.filter(function (o) { return o !== fhere && sameHex(o.place, fhere.place); }), atBase = M.bases.some(function (b) { return sameHex(b.place, fhere.place); });
+    others.forEach(function (o, i) { var l = el('label'), c = el('input'); c.type = 'radio'; c.name = 'into'; c.value = o.task_force.handle; c.checked = i === 0; l.appendChild(c); l.appendChild(document.createTextNode(' ' + o.task_force.name.replace(/^Placeholder /, ''))); fj.appendChild(l); });
+    $('f-l-join').hidden = !(atBase && others.length); $('f-l-down').hidden = !atBase;
     var box = $('f-air'), here = M.air.filter(function (x) { return x.place && best.force.place && x.place.q === best.force.place.q && x.place.r === best.force.place.r; });
     while (box.children.length > 1) box.removeChild(box.lastChild);
     here.forEach(function (x) { var l = el('label'), c = el('input'); c.type = 'checkbox'; c.id = 'f-air-' + num(x.air_group.handle); c.value = x.air_group.handle; l.appendChild(c); l.appendChild(document.createTextNode(' Stand down ' + x.air_group.name)); box.appendChild(l); });
@@ -989,18 +1011,25 @@ button:disabled { opacity: 0.45; cursor: default; }
     if (!hh || !force) return; picking = false; canvas.classList.remove('picking'); force.route = [hh[0], hh[1]];
     $('f-route').textContent = 'To ' + (M.hexNames[hh[0] + ',' + hh[1]] || 'hex ' + hh[0] + ', ' + hh[1]) + '.'; $('f-route').hidden = false; setStatus('A draft order. Nothing is ordered until you sign.');
   }
-  $('force').addEventListener('change', function (e) { if (e.target.name === 'verb' && e.target.value === 'route') { picking = 'route'; canvas.classList.add('picking'); setStatus('Touch the chart where the force is to steam for.'); } });
+  $('force').addEventListener('change', function (e) { if (e.target.name === 'verb') { $('f-ships').hidden = e.target.value !== 'detach'; $('f-join').hidden = e.target.value !== 'join'; }
+    if (e.target.name === 'verb' && e.target.value === 'route') { picking = 'route'; canvas.classList.add('picking'); setStatus('Touch the chart where the force is to steam for.'); } });
   $('f-cancel').addEventListener('click', function () { closeForce(); setStatus('The draft is torn up. Nothing was ordered.'); });
   $('force').addEventListener('submit', function (e) {
     e.preventDefault(); if (!force) return;
     var verb = (document.querySelector('#force input[name="verb"]:checked') || {}).value, unit = force.f.task_force.handle, orders = [];
     var body = { slow: { kind: 'set_speed', knots: '8' }, cruise: { kind: 'set_speed', speed: 'cruise' }, full: { kind: 'set_speed', speed: 'full' }, battle: { kind: 'set_readiness', readiness: 'battle' }, normal: { kind: 'set_readiness', readiness: 'normal' } }[verb];
     if (verb === 'route') { if (!force.route) { $('f-result').textContent = 'Touch the chart for the place first.'; return; } body = { kind: 'set_route', waypoints: [force.route] }; }
+    var reshapes = false;
+    if (verb === 'detach') { var picked = Array.prototype.map.call(document.querySelectorAll('#f-ships input:checked'), function (c) { return +c.value; }), all = document.querySelectorAll('#f-ships input').length;
+      if (!picked.length) { $('f-result').textContent = 'Tick the ships to detach.'; return; } if (picked.length === all) { $('f-result').textContent = 'A force cannot detach every ship. Leave one.'; return; }
+      body = { kind: 'detach', ships: picked }; }
+    if (verb === 'join') { var into = document.querySelector('#f-join input:checked'); if (!into) { $('f-result').textContent = 'No other force is here.'; return; } body = { kind: 'join', into: into.value }; reshapes = true; }
+    if (verb === 'down') { body = { kind: 'stand_down' }; reshapes = true; }
     if (body) orders.push({ unit: unit, order: body });
     Array.prototype.forEach.call(document.querySelectorAll('#f-air input:checked'), function (c) { orders.push({ unit: c.value, order: { kind: 'set_air_mission', mission: 'rest' } }); });
     if (!orders.length) { $('f-result').textContent = 'Nothing is chosen.'; return; }
     var n = num(unit), mine = ((M.state && M.state.holds) || []).some(function (x) { return x.target && x.target.task_force === n; });
-    (clock.at === 'dusk' && !mine ? api('hold', { task_force: n }) : Promise.resolve()).then(function () { return api('issue_orders', { orders: orders }); }).then(function (a) {
+    (clock.at === 'dusk' && !mine && !reshapes ? api('hold', { task_force: n }) : Promise.resolve()).then(function () { return api('issue_orders', { orders: orders }); }).then(function (a) {
       var queued = 0, refused = []; (a.results || []).forEach(function (r) { if (r.status === 'queued') queued++; else refused.push(r.text || (r.reason && (r.reason.text || r.reason)) || r.status); });
       if (refused.length) { $('f-result').textContent = (queued ? queued + ' queued. ' : '') + 'Refused: ' + refused.join(' '); return; }
       closeForce(); refresh(); setStatus(queued + ' order' + (queued > 1 ? 's' : '') + ' signed, for the ' + (a.for_pulse || 'next') + ' pulse. Carry on to see ' + (queued > 1 ? 'them' : 'it') + ' act.');
