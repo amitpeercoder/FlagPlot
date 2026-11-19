@@ -112,6 +112,49 @@ pub(crate) enum Waiting {
         reach: String,
         words: String,
     },
+    /// Decision 0169, 5: a lift short of the men wanted, with too few in
+    /// reach, whose men cannot be fed: at balanced it does not go.
+    Starve {
+        starve: Starve,
+        /// What the staff read before the count, in words.
+        words: String,
+    },
+}
+
+/// Decision 0169, 2 to 4: the count of a lift short of the men wanted with
+/// too few in reach, and whether its men can be fed where they wait.
+#[derive(Clone, Debug)]
+pub(crate) struct Starve {
+    pub(crate) force: TaskForceId,
+    pub(crate) wanted: u32,
+    /// The fit men of the operation ashore at the place that can attack.
+    pub(crate) ashore: u32,
+    /// The fighting men the lift carries.
+    pub(crate) lift: u32,
+    /// The men in reach by `last`.
+    pub(crate) reach: u32,
+    pub(crate) last: u32,
+    /// The words of the count and of the men in reach.
+    pub(crate) count: String,
+    /// Item 4 in words.
+    pub(crate) fed_words: String,
+    pub(crate) fed: bool,
+}
+
+impl Starve {
+    /// The men to hand: those ashore that can attack and those of the lift.
+    pub(crate) fn have(&self) -> u32 {
+        self.ashore + self.lift
+    }
+
+    /// The words of a lift that goes short because its men can be fed
+    /// (item 6).
+    pub(crate) fn goes_words(&self) -> String {
+        format!(
+            " {} {} So it goes short: its men can be fed where they wait.",
+            self.count, self.fed_words
+        )
+    }
 }
 
 /// A lift as a choice gives it: the transport force, the units and the
@@ -252,6 +295,10 @@ struct HoldCheck {
     short: Vec<String>,
     /// The check in words, in the order a staff works it.
     words: String,
+    /// The daily need of the men and the days until supply follows: what
+    /// a short lift's supply aboard is weighed against (decision 0169, 4).
+    need: Fixed,
+    until: u32,
 }
 
 /// The share of `attack_fatigue_limit` at or below which a unit not on
@@ -624,6 +671,31 @@ impl Day<'_, '_> {
             check.as_ref().map(|c| (c.days, c.days_words.clone())),
             self.draw_on(end, source),
         );
+        // Decision 0169, 1 to 6: a first lift with men aboard, short of the
+        // men wanted with too few in reach, goes only where its men can be
+        // fed. A first lift whose men are all ashore is decision 0159's.
+        let mut fed_words = String::new();
+        if choice.picks.iter().any(|p| p.aboard) {
+            if let Some(starve) =
+                self.starve_check(end, &force, force.id, 0, choice.men, &fed, supply.level)
+            {
+                if !starve.fed {
+                    let words = choice
+                        .lines
+                        .iter()
+                        .filter(|l| {
+                            !l.ends_with("the staff goes with what it has")
+                                && !l.starts_with("short by ")
+                        })
+                        .cloned()
+                        .collect::<Vec<_>>()
+                        .join("; ");
+                    self.hand_in_wait(end, plan, &Waiting::Starve { starve, words });
+                    return;
+                }
+                fed_words = starve.goes_words();
+            }
+        }
         let days = match self.days(&force, &units, &supply, place, source_hex, end) {
             Ok(days) => days,
             Err(why) => {
@@ -682,7 +754,7 @@ impl Day<'_, '_> {
                 .join(" and ")
         };
         let worked = format!(
-            "{choice_words}; {}; {}.{date_words}",
+            "{choice_words}; {}; {}.{date_words}{fed_words}",
             supply.words, days.words
         );
         let form_reason = serving(end, plan)
@@ -1047,6 +1119,11 @@ impl Day<'_, '_> {
                 have: *have,
                 then: None,
             },
+            Waiting::Starve { starve, .. } => MenWait {
+                wanted: starve.wanted,
+                have: starve.have(),
+                then: None,
+            },
         };
         self.men_waits.insert(end.id, kept);
         match waiting {
@@ -1120,7 +1197,223 @@ impl Day<'_, '_> {
                     self.lines.push(worked);
                 }
             }
+            Waiting::Starve { starve, words } => {
+                // Once for the plan: two later lifts stopped on one morning
+                // hand in one notice.
+                let noticed = self.noticed(NoticeKind::CannotBringEnough, plan.id)
+                    || self
+                        .target(in_scope)
+                        .notices
+                        .iter()
+                        .any(|n| n.kind == NoticeKind::CannotBringEnough && n.plan == plan.id);
+                let worked = format!(
+                    "{words}. {} {} At balanced the staff does not land men it cannot feed: it forms nothing and gives {} no order under {}{}, and waits for the commander.",
+                    starve.count,
+                    starve.fed_words,
+                    starve.force,
+                    end.id,
+                    if noticed {
+                        ""
+                    } else {
+                        ", hands in the notice that it cannot bring enough"
+                    }
+                );
+                let reason = serving(end, plan)
+                    .evidence(words.clone(), today)
+                    .evidence(starve.fed_words.clone(), today)
+                    .binding(format!(
+                        "{} men wanted, {} in reach by day {}, and the men cannot be fed",
+                        starve.wanted, starve.reach, starve.last
+                    ))
+                    .worked(worked.clone())
+                    .would_change(
+                        "the risk, a limit, the estimate, a unit's day coming into reach, or supply at the source",
+                    )
+                    .done();
+                if noticed {
+                    self.target(in_scope).no_orders.push(reason);
+                } else {
+                    self.notice(in_scope, reason, NoticeKind::CannotBringEnough, plan);
+                }
+                if in_scope {
+                    self.lines.push(worked);
+                }
+            }
         }
+    }
+
+    /// The fighting men of `units`, ashore and aboard.
+    fn fighting_men(&self, units: &[LandUnitId]) -> u32 {
+        units
+            .iter()
+            .filter_map(|id| self.view.land_units().find(|u| u.id == *id))
+            .filter(|u| !u.working)
+            .map(|u| u.men_ashore + self.view.men_aboard(u.id).unwrap_or(0))
+            .sum()
+    }
+
+    /// Decision 0169, 1 to 4: for a lift by `force` at balanced, the count
+    /// of the men wanted against the fit men ashore that can attack
+    /// (`ashore`) and the fighting men of the lift (`lift`), the men in reach
+    /// by the take's last day, and whether the men of `fed` can be fed with
+    /// `level` aboard when it sails. `None` where the lift goes as before:
+    /// not at balanced, no estimate held, the lift not short, or enough in
+    /// reach. `first` is the take's first lift, which is never a later lift.
+    #[allow(clippy::too_many_arguments)]
+    pub(crate) fn starve_check(
+        &self,
+        end: &Intent,
+        force: &TaskForce,
+        first: TaskForceId,
+        ashore: u32,
+        lift: u32,
+        fed: &[LandUnitId],
+        level: Fixed,
+    ) -> Option<Starve> {
+        let IntentKind::TakePlace { hex: place, by_day } = end.kind else {
+            return None;
+        };
+        let risk = self.state.risk_read_up(end.id);
+        if risk != Risk::Balanced {
+            return None;
+        }
+        let view = self.view;
+        let figures = view.ground_figures()?;
+        // Item 2: short.
+        let wanted = men_wanted(view, place, risk)?;
+        if ashore + lift >= wanted {
+            return None;
+        }
+        // Item 3: the men in reach by the take's last day, on the horizon of
+        // decision 0159, 6.
+        let last = by_day.unwrap_or(self.today + WAIT_HORIZON_DAYS);
+        self.as_of.set(Some(last));
+        let stand = self.later_lift_plan(end, first, None);
+        self.as_of.set(None);
+        let mut others: Vec<String> = Vec::new();
+        let mut more = 0u32;
+        for send in stand.map(|s| s.send).unwrap_or_default() {
+            if send.force.id == force.id {
+                continue;
+            }
+            let men: u32 = self
+                .aboard(send.force.id)
+                .into_iter()
+                .filter(|(u, _)| send.fighting.contains(&u.id))
+                .map(|(_, men)| men)
+                .sum();
+            if men == 0 {
+                continue;
+            }
+            more += men;
+            let from = view
+                .available_from(EntityRef::TaskForce(send.force.id))
+                .filter(|from| *from > self.today);
+            others.push(match from {
+                Some(day) => format!(
+                    "{men} aboard {}, which may be used from day {day}",
+                    send.force.id
+                ),
+                None => format!("{men} aboard {}", send.force.id),
+            });
+        }
+        let reach = ashore + lift + more;
+        if reach >= wanted {
+            return None;
+        }
+        let have = ashore + lift;
+        let ashore_words = if ashore == 0 {
+            String::new()
+        } else {
+            format!(" and the units of the operation ashore at {place} that can attack have {ashore} fit men")
+        };
+        let last_words = match by_day {
+            Some(_) => format!("day {last}, the latest day"),
+            None => format!("day {last}, the {WAIT_HORIZON_DAYS} days the staff looks ahead"),
+        };
+        let others_words = if others.is_empty() {
+            "no other force with fighting men aboard can be used by then".to_string()
+        } else {
+            others.join("; ")
+        };
+        let count = format!(
+            "The staff wants {wanted} men; the lift by {} gives {lift} fighting men{ashore_words}: {have}, short by {}. The men in reach by {last_words}: {reach} ({others_words}), fewer than the {wanted} wanted.",
+            force.id,
+            wanted - have
+        );
+        // Item 4: fed.
+        let Some((hold, _, _)) = self.hold_of_place(place) else {
+            return Some(Starve {
+                force: force.id,
+                wanted,
+                ashore,
+                lift,
+                reach,
+                last,
+                count,
+                fed_words: format!(
+                    "No hold of {place} with a source of supply is in force: nothing follows the men, so they cannot be fed."
+                ),
+                fed: false,
+            });
+        };
+        let Some(check) = self.hold_check(end, force, fed, figures, place) else {
+            return Some(Starve {
+                force: force.id,
+                wanted,
+                ashore,
+                lift,
+                reach,
+                last,
+                count,
+                fed_words: format!(
+                    "The check that the place can be held cannot be worked for {} of {}: the staff can reckon no passage between the place and the source, so the men cannot be fed.",
+                    hold.id,
+                    base_text_of(view, &hold)
+                ),
+                fed: false,
+            });
+        };
+        if !check.short.is_empty() {
+            return Some(Starve {
+                force: force.id,
+                wanted,
+                ashore,
+                lift,
+                reach,
+                last,
+                count,
+                fed_words: format!("{} So the men cannot be fed.", check.words),
+                fed: false,
+            });
+        }
+        let eaten = check.need * whole(check.until);
+        let fed_now = level >= eaten;
+        let verdict = if fed_now {
+            format!("at least the {} they eat: the men can be fed", tons(eaten))
+        } else {
+            format!("short by {}: the men cannot be fed", tons(eaten - level))
+        };
+        Some(Starve {
+            force: force.id,
+            wanted,
+            ashore,
+            lift,
+            reach,
+            last,
+            count,
+            fed_words: format!(
+                "{} What the lift has aboard when it sails: {} against the daily need of {} for the {} days until supply follows, {} x {} = {}, {verdict}.",
+                check.words,
+                tons(level),
+                tons(check.need),
+                check.until,
+                tons(check.need),
+                check.until,
+                tons(eaten)
+            ),
+            fed: fed_now,
+        })
     }
 
     /// Items 6 to 10: the transport force and the units that land, or why
@@ -1757,6 +2050,8 @@ impl Day<'_, '_> {
             ),
             short,
             words,
+            need,
+            until,
         })
     }
 
@@ -3144,7 +3439,7 @@ impl Day<'_, '_> {
                 self.target(in_scope).no_orders.push(reason);
                 return;
             }
-            let supply = self.supply(
+            let mut supply = self.supply(
                 force,
                 &lift,
                 source,
@@ -3153,6 +3448,27 @@ impl Day<'_, '_> {
                 None,
                 self.draw_on(end, source),
             );
+            // Decision 0169, 1 to 6: a second lift short of the men wanted
+            // with too few in reach goes only where its men can be fed.
+            let men = self.fighting_men(&lift);
+            let fed = self.with_aboard(force, &lift);
+            if let Some(starve) =
+                self.starve_check(end, force, force.id, fit, men, &fed, supply.level)
+            {
+                if !starve.fed {
+                    let words = format!(
+                        "{judged}. A second lift: {} by {}",
+                        lift.iter()
+                            .map(ToString::to_string)
+                            .collect::<Vec<_>>()
+                            .join(" and "),
+                        force.id
+                    );
+                    self.hand_in_wait(end, plan, &Waiting::Starve { starve, words });
+                    return;
+                }
+                supply.words.push_str(&starve.goes_words());
+            }
             self.move_step(
                 end,
                 plan,
@@ -3167,6 +3483,35 @@ impl Day<'_, '_> {
         }
         if picks.is_empty() {
             return;
+        }
+        // Decision 0169, 1 to 6: a second lift short of the men wanted with
+        // too few in reach goes only where its men can be fed; where they
+        // cannot, the units are not added to the limit and nothing is
+        // ordered.
+        let mut second_fed = String::new();
+        {
+            let pick_ids: Vec<LandUnitId> = picks.iter().map(|(id, _)| *id).collect();
+            let men: u32 = picks.iter().map(|(_, men)| *men).sum();
+            let level = self
+                .supply(
+                    force,
+                    &pick_ids,
+                    source,
+                    source_hex,
+                    figures,
+                    None,
+                    self.draw_on(end, source),
+                )
+                .level;
+            let fed = self.with_aboard(force, &pick_ids);
+            if let Some(starve) = self.starve_check(end, force, force.id, fit, men, &fed, level) {
+                if !starve.fed {
+                    let words = format!("{judged}. A second lift: {}", lift_lines.join("; "));
+                    self.hand_in_wait(end, plan, &Waiting::Starve { starve, words });
+                    return;
+                }
+                second_fed = starve.goes_words();
+            }
         }
         // Item 12: the units of the second lift are kept as the task's
         // forces limit, by `set_limit` on the morning the lift is decided.
@@ -3200,7 +3545,7 @@ impl Day<'_, '_> {
             .map(ToString::to_string)
             .collect::<Vec<_>>()
             .join(", ");
-        let supply = self.supply(
+        let mut supply = self.supply(
             force,
             &pick_ids,
             source,
@@ -3209,6 +3554,7 @@ impl Day<'_, '_> {
             None,
             self.draw_on(end, source),
         );
+        supply.words.push_str(&second_fed);
         let reason = serving(end, plan)
             .evidence(judged.clone(), today)
             .evidence(lift_lines.join("; "), today)
@@ -3376,6 +3722,57 @@ impl Day<'_, '_> {
         if stand.send.is_empty() {
             return;
         }
+        let mut stand = stand;
+        // Decision 0169, 1 to 6: each later lift, short of the men wanted
+        // with too few in reach, goes only where its men can be fed. The
+        // forces that do not go are given nothing and not added to the limit.
+        let mut fed_words: std::collections::BTreeMap<TaskForceId, String> =
+            std::collections::BTreeMap::new();
+        if let (IntentKind::ReadyLanding { force: first, .. }, Some(figures)) =
+            (task.kind, self.view.ground_figures())
+        {
+            let risk = self.state.risk_read_up(end.id);
+            let task_units: Vec<LandUnitId> = self
+                .state
+                .land_units_on_chain(task.id)
+                .map(|f| f.into_iter().collect())
+                .unwrap_or_default();
+            let (ops, _, _) = self.units_ashore(&task_units, place, risk, figures);
+            let fit: u32 = ops.iter().filter(|a| a.can).map(|a| a.fit).sum();
+            let mut kept = Vec::new();
+            for send in std::mem::take(&mut stand.send) {
+                let men: u32 = self
+                    .aboard(send.force.id)
+                    .into_iter()
+                    .filter(|(u, _)| send.fighting.contains(&u.id))
+                    .map(|(_, men)| men)
+                    .sum();
+                let aboard = self
+                    .view
+                    .ships()
+                    .filter(|s| s.location == ShipLocation::TaskForce(send.force.id))
+                    .fold(Fixed::ZERO, |sum, s| sum + s.supply_t);
+                let fed = self.with_aboard(&send.force, &send.fighting);
+                match self.starve_check(end, &send.force, first, fit, men, &fed, aboard) {
+                    Some(starve) if !starve.fed => {
+                        let words = format!(
+                            "{judged}. {} is a later lift as it stands, with {} aboard",
+                            send.force.id, send.words
+                        );
+                        self.hand_in_wait(end, plan, &Waiting::Starve { starve, words });
+                    }
+                    Some(starve) => {
+                        fed_words.insert(send.force.id, starve.goes_words());
+                        kept.push(send);
+                    }
+                    None => kept.push(send),
+                }
+            }
+            stand.send = kept;
+            if stand.send.is_empty() {
+                return;
+            }
+        }
         let in_scope = self.in_scope(end.id);
         let today = self.today;
         let current = self
@@ -3442,10 +3839,11 @@ impl Day<'_, '_> {
                 words: format!("{} of supply aboard", tons(aboard)),
             };
             let head = format!(
-                "A later lift as it stands: {} has {} aboard and nothing to load ({} of supply aboard); everyone aboard lands. Its units are not set to attack before it sails: the judgement of each morning sets them once they are ashore.",
+                "A later lift as it stands: {} has {} aboard and nothing to load ({} of supply aboard); everyone aboard lands. Its units are not set to attack before it sails: the judgement of each morning sets them once they are ashore.{}",
                 send.force.id,
                 send.words,
-                tons(aboard)
+                tons(aboard),
+                fed_words.get(&send.force.id).map_or("", String::as_str)
             );
             if in_scope {
                 self.lines.push(format!(

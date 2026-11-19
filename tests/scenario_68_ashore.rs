@@ -184,11 +184,21 @@
 //!   waits, says each morning that it is short and has no unit to bring,
 //!   and gives no order after day 6: ten orders in all. The place is not
 //!   taken by the end. The force lies at A from hour 148.
-//! - **A hold is honoured.** With unit 2 held from day 7: unit 3 is sent
-//!   as in the main case. On the morning of day 11 the units that can
-//!   attack are 1 and 3, 900 fit men against 1,200 wanted: the staff
-//!   waits, short by 300, and names the hold. Fourteen orders in all, and
-//!   the place is not taken.
+//! - **A hold is honoured.** With unit 2 held from day 7. (Restated by
+//!   the architect on Nov 19, 2026, for decision 0169: before it unit 3
+//!   was sent as in the main case, for fourteen orders in all, and on day
+//!   11 the staff waited with 900 fit men, short by 300.) On the morning
+//!   of day 8 the second lift, task force 1 with unit 3's 600 men, would
+//!   leave the operation with 300 + 600 = 900 fit men against the 1,200
+//!   wanted, no other force is in reach by day 15, and no hold of B with
+//!   a source of supply is in force, so the men cannot be fed: at
+//!   balanced the staff does not send it. It hands in "cannot bring
+//!   enough" on day 8, once, and gives no order from day 7 on. The
+//!   notices of the game are "ready" on day 2 and that one. On the
+//!   morning of day 11 the unit that can attack is unit 1, 300 fit men
+//!   against 1,200 wanted: the staff waits, short by 900, and names the
+//!   hold. Ten orders in all, the main case's first ten, and the place
+//!   is not taken.
 //! - **Scenario 67 is not changed:** it gives the orders and the numbers
 //!   it gave.
 //! - The same start gives the same orders; two worlds that differ only in
@@ -1011,12 +1021,18 @@ fn nothing_left_to_send() {
 #[test]
 fn a_hold_is_honoured() {
     let g = play(&with_commands(&text(), &hold_unit(7, 2)));
-    let wanted: Vec<(u32, Given)> = main_orders()[..14].to_vec();
+    // Restated for decision 0169: the second lift of day 8 is not sent.
+    let wanted: Vec<(u32, Given)> = main_orders()[..10].to_vec();
     assert_eq!(g.all_orders(), wanted);
+    assert!((7..=g.days()).all(|day| g.orders(day).is_empty()));
+    assert_eq!(
+        g.all_notices(),
+        vec![(2, NoticeKind::Ready), (8, NoticeKind::CannotBringEnough)]
+    );
     assert_says(
         &g.judgement(11),
         &[
-            "have 900 fit men against the 1200 wanted, short by 300",
+            "have 300 fit men against the 1200 wanted, short by 900",
             "land_unit:2 (Placeholder Second) (300 men ashore) is left out: land_unit:2 is held",
         ],
     );
