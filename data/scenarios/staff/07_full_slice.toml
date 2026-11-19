@@ -149,7 +149,10 @@ airfield_work = 13763
 
 # The Rabaul airfields, Lakunai and Vunakanau, in one hex. Nothing attacks
 # them in this scenario, so they are given no guns. Supply and repairs a day
-# are placeholders.
+# are placeholders. The fuel is a PLACEHOLDER (decision 0163, 7): no row gives
+# Rabaul's stock of fuel oil in August 1942 (a gap in data/oob/gaps.csv). It is
+# sized not to bind: a fast transport's round trip to Lunga burns about 139 t,
+# so 5,000 t is thirty-six such trips.
 
 [[base]]
 id = 2
@@ -158,6 +161,7 @@ side = "japanese"
 q = -5
 r = -13
 supply_t = 10000
+fuel_t = 5000
 aircraft_repairs_per_day = 4
 
 # Espiritu Santo, where the convoy loads (the hex of Segond Channel, port

@@ -2,45 +2,45 @@ Scenario 7: The full slice, 7 August to 14 September 1942
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash f120361731237a0f  246 events
-day   2  hash 68297e4c11111791  146 events
-day   3  hash 48ce05e8b0744fcf  147 events
-day   4  hash 25ea94ed86fc2604  152 events
-day   5  hash c944a0167a26e585  140 events
-day   6  hash f3f44ba9219d6519  34 events
-day   7  hash 4196dee8499b9cc4  30 events
-day   8  hash e57ea002b0441dc6  43 events
-day   9  hash 2be9d4e9c703eff4  48 events
-day  10  hash d87a69a281873d01  55 events
-day  11  hash 9cf64c9818be12a2  79 events
-day  12  hash bf413e55f183773a  68 events
-day  13  hash 7fb6c1448b8b03f7  102 events
-day  14  hash 94352e9cabb467a9  79 events
-day  15  hash 2670d5d5b5f0ed16  92 events
-day  16  hash f3a77f0639f04e76  87 events
-day  17  hash 49116882b32b13f4  49 events
-day  18  hash 940449ebda59f5b9  210 events
-day  19  hash 5839e2f78a1edb94  258 events
-day  20  hash ca5772439ac01495  207 events
-day  21  hash 6043befc8807b363  255 events
-day  22  hash 75ca0f4515839806  159 events
-day  23  hash cca32e44a2df518a  225 events
-day  24  hash a4af66d9e4b0e97e  221 events
-day  25  hash 743d85ccfe237177  238 events
-day  26  hash 312f0a60f72a8063  170 events
-day  27  hash f8b366303368d0dc  196 events
-day  28  hash 04306631f91fb0fc  150 events
-day  29  hash 9305ae2d7eb118ee  144 events
-day  30  hash 823cf738ae4f2681  186 events
-day  31  hash be150b426f3887ff  184 events
-day  32  hash 74c2f3079cdec6cd  161 events
-day  33  hash 86c3d4df02a851b1  122 events
-day  34  hash 527f7481c5c5558c  142 events
-day  35  hash 44097c20656a3a2e  168 events
-day  36  hash 2f5d29a56adaff26  153 events
-day  37  hash 1e78999dda304937  220 events
-day  38  hash e573efb03d319291  151 events
-day  39  hash ae19277a3145dec7  139 events
+day   1  hash c7b1f517c9473347  246 events
+day   2  hash a0bf252e004a0eb1  146 events
+day   3  hash 69f2f42214bfd3af  147 events
+day   4  hash 63ca5a7725eb1154  152 events
+day   5  hash b49b3aecae197a75  140 events
+day   6  hash 8b7d84027665b079  34 events
+day   7  hash 65419acefd36cf8c  30 events
+day   8  hash dd48b4f1f9f75946  43 events
+day   9  hash d9911145974500fc  48 events
+day  10  hash 120a8bd49242a441  55 events
+day  11  hash a06986c37a28faca  79 events
+day  12  hash 304a0a2f5629496a  68 events
+day  13  hash de63c4092c969d97  102 events
+day  14  hash c54d86589996153c  84 events
+day  15  hash 3df8172e72f5962b  92 events
+day  16  hash ba5b352e6b652fa7  87 events
+day  17  hash 60125ee181229565  49 events
+day  18  hash 3bb774b5550232d8  210 events
+day  19  hash 5d5f0c04a9c7c379  258 events
+day  20  hash ffe3b605810ab151  207 events
+day  21  hash 8ef968c18af51eca  255 events
+day  22  hash a3b5aa2e034bc678  159 events
+day  23  hash 46894ab8eacbc477  225 events
+day  24  hash 69b75b5d45db4156  221 events
+day  25  hash 53d3c4bee8853472  238 events
+day  26  hash 54d6062628a65afa  170 events
+day  27  hash a95663469f465306  196 events
+day  28  hash 0036a8f7cbdaf395  150 events
+day  29  hash 4a941bbd82e38b48  144 events
+day  30  hash 75d2b8d07ee2a631  186 events
+day  31  hash 82a3799038333502  184 events
+day  32  hash bc24ca4ba58f041d  161 events
+day  33  hash 0b7f40cfdf7ac42b  122 events
+day  34  hash 041eb7b41f57a9bd  142 events
+day  35  hash ae1411eddf7fc7c8  168 events
+day  36  hash 3b2eb176fea0dba2  153 events
+day  37  hash af80190e1f3a5207  220 events
+day  38  hash 4faaf74c00cf9e14  151 events
+day  39  hash 56a5ff96f5591a30  139 events
 
 task_force:1 "Task Force 16" (Allied): Idle at (7,-5); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Task Force 11" (Allied): Idle at (7,-5); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
@@ -206,11 +206,11 @@ ship:97 "Placeholder fast transport, Parachutists 1": afloat in task_force:25; d
 ship:98 "Placeholder fast transport, Parachutists 2": afloat in task_force:25; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 427.75 t of fuel, 0 t of supply
 ship:99 "Placeholder troop transport, Seabees 1": afloat in task_force:26; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 937.1 t of fuel, 0 t of supply
 ship:100 "Placeholder fast transport with cargo, task force 30, 1": afloat in task_force:30; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 439.25 t of fuel, 0 t of supply
-ship:101 "Placeholder fast transport with cargo, task force 31, 1": afloat in task_force:31; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 221.605472 t of fuel, 0 t of supply
-ship:102 "Placeholder fast transport with cargo, task force 31, 2": afloat in task_force:31; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 221.605472 t of fuel, 0 t of supply
-ship:103 "Placeholder fast transport with cargo, task force 31, 3": afloat in task_force:31; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 221.605472 t of fuel, 0 t of supply
-ship:104 "Placeholder fast transport with cargo, task force 31, 4": afloat in task_force:31; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 221.605472 t of fuel, 0 t of supply
-ship:105 "Placeholder fast transport with cargo, task force 31, 5": afloat in task_force:31; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 221.605472 t of fuel, 0 t of supply
+ship:101 "Placeholder fast transport with cargo, task force 31, 1": afloat in task_force:31; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 500 t of fuel, 0 t of supply
+ship:102 "Placeholder fast transport with cargo, task force 31, 2": afloat in task_force:31; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 500 t of fuel, 0 t of supply
+ship:103 "Placeholder fast transport with cargo, task force 31, 3": afloat in task_force:31; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 500 t of fuel, 0 t of supply
+ship:104 "Placeholder fast transport with cargo, task force 31, 4": afloat in task_force:31; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 500 t of fuel, 0 t of supply
+ship:105 "Placeholder fast transport with cargo, task force 31, 5": afloat in task_force:31; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 500 t of fuel, 0 t of supply
 ship:106 "Fubuki": afloat in task_force:32; damage flotation 0, fire 0; all systems working; 900 gun rounds, torpedoes ready; 425.882982 t of fuel, 0 t of supply
 ship:107 "Shirayuki": afloat in task_force:32; damage flotation 0, fire 0; all systems working; 900 gun rounds, torpedoes ready; 425.882982 t of fuel, 0 t of supply
 ship:108 "Placeholder fast transport with cargo, task force 32, 1": afloat in task_force:32; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 439.25 t of fuel, 0 t of supply
@@ -240,7 +240,7 @@ ship:131 "Placeholder fast transport with cargo, task force 38, 4": afloat in ta
 ship:132 "Placeholder fast transport with cargo, task force 39, 1": afloat in task_force:39; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 439.25 t of fuel, 0 t of supply
 ship:133 "Placeholder fast transport with cargo, task force 39, 2": afloat in task_force:39; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 439.25 t of fuel, 0 t of supply
 base:1 "Lunga" (Allied) at (2,-4): 1632.025 t of supply in stock, 0 t of fuel in stock, 8 anti-aircraft shots, repairs 3 aircraft a day, 20063 of work done on the airfield
-base:2 "Rabaul" (Japanese) at (-5,-13): 8118.32 t of supply in stock, repairs 4 aircraft a day
+base:2 "Rabaul" (Japanese) at (-5,-13): 8118.32 t of supply in stock, 3608.02736 t of fuel in stock, repairs 4 aircraft a day
 base:3 "Espiritu Santo" (Allied) at (7,6): 2561.1 t of supply in stock, 0 t of fuel in stock
 base:4 "Tulagi" (Allied) at (3,-5): 0 t of supply in stock, no airfield
 base:5 "Placeholder Japanese stock at Taivu" (Japanese) at (3,-4): 10.95 t of supply in stock, no airfield, formed in play, on its own side's map only

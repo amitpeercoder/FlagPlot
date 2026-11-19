@@ -1,10 +1,10 @@
 # 0163: Fed with the lift: the second part of the first mend of stage 4
 
-Status: settled by the architect on Nov 19, 2026, inside the plan for step 3, stage 4 (decision 0161, step 1 of its nine, "fed with the lift"). Step 1 is written in two records: decision 0162, the load of a supply run by night; and this one. It adds no rule to the engine: it changes where the staff finds its source of supply and where a lift goes when it has landed, and it gives one base of the 39 days a stock of fuel. Not built.
+Status: settled by the architect on Nov 19, 2026, inside the plan for step 3, stage 4 (decision 0161, step 1 of its nine, "fed with the lift"). Step 1 is written in two records: decision 0162, the load of a supply run by night; and this one. It adds no rule to the engine: it changes where the staff finds its source of supply and where a lift goes when it has landed, and it gives one base of the 39 days a stock of fuel. Built on Nov 19, 2026 (As built, below).
 
 Summary: Under "control an island" the staff named no source of supply until a transport happened to lie empty at one of its bases, and took the first base where one did, whatever that base held. The ships that had carried the men went back where they came from and fed nobody. Now the source is the base with the most supply, named on the first morning; a lift that has landed its men goes on to that base and joins the ships that feed the place; and Rabaul, which had no fuel, has some, so that a supply ship can make a third run
 
-Standing: Settled by the architect, Nov 19, 2026, inside decision 0161. Not built
+Standing: Settled by the architect, Nov 19, 2026, inside decision 0161. Built on Nov 19, 2026
 
 ## Why
 
@@ -61,3 +61,30 @@ One thing this does not gain is days. A force found empty at the source on a mor
 ## The hand calculation
 
 It is in `tests/scenario_86_fed_with_the_lift.rs`, written before the code. It is scenario 77 with the two spare forces taken away and the lift's home made a base with no supply. As the rule stood, the lift would land its men, go home, lie empty there, and that empty base would be named the source: the men would eat what they landed with and then go hungry. Now the source is the base with supply, named on day 1; the lift goes on to it, joins the pool on day 3, and on day 4 loads the run that lands on day 5.
+
+## As built
+
+Built on Nov 19, 2026, on the branch `fed-with-the-lift`.
+
+- **The source** (`island_source` in `crates/sim-staff/src/island.rs`). Where the commander names none: the side's bases in no named place's hex that the staff may take, in base order; a base with nothing above its reserve is passed over and its line says it cannot be the source; of the rest, the most supply above the reserve, then the lower number. The pool there (`pool_at`) is worked as before and may be empty; the reason gives it ("with no transport force stopped there with nothing aboard", or the forces). The hold's forces limit is then the source and no force, and its reason says "and no force". Kept as before. `island_pools` is unchanged.
+- **The route** (`lift_end` in `crates/sim-staff/src/take.rs`, read by `move_step`, which serves the first lift, a second lift, a later lift as it stands and a hold's lift). Where `hold_of_place` finds a hold of a base in the place's hex with a source, and that source is not the lift's own, the route is worked out to the place and on to that source, and the force's fuel is measured by the engine's forecast at the speed it goes: the burn to the place, and the burn of the whole way, less it, on. Every ship must have the whole burn aboard and not run dry. Then the route goes on; its reason says "N nm on to base:X" and "It goes on to base:X, the source of supply of intent:H, the hold of (q,r), to join the ships that feed the place: every ship has the fuel, by the engine's measure at ..., ship:S has A t against B t to (q,r) and C t on to base:X, D t"; the route order's own line says "out to the place and on to the source of supply of the hold of the place". Else it goes back to its own source as before, and the reason adds "It does not go on to base:X ...: not every ship has the fuel, ..." with the same figures. The night's timing and the fuel check of the passage are worked on the route it takes.
+- **Data.** Base 2, Rabaul, of `data/scenarios/07_full_slice.toml` has `fuel_t = 5000`, with the comment; `data/oob/gaps.csv` has the gap (Rabaul's stock of fuel oil, not searched). `data/scenarios/staff/07_full_slice.toml` is made again by `make_staff_setup.py` (the copy run first on main's inputs made main's file byte for byte), and the three arrangements by `make_arrangements.py`. The frozen copy is not changed.
+- **Doctrine** `supply-41`. No state, event, draw, order or rules label changes.
+- **Scenario 86** (`data/scenarios/86_fed_with_the_lift.toml`, `tests/scenario_86_fed_with_the_lift.rs`). See the build's report for each assertion that does not agree with the hand calculation; none was changed.
+
+Readings the record did not make:
+
+1. **The commander's source is his, whatever it holds.** The test of "nothing above its reserve" is applied only to a source the staff chooses; a source the commander names is taken on the first morning with no ship and no stock (the hand calculation's property "the commander's source", base 4 with nothing). It must still be a base the staff may take, as before.
+2. **Which hold.** "The hold of that place" is read as `hold_of_place`: the first hold in force, in intent order, of a base in the place's hex with a source in the forces limit on its chain, the hold the check of decision 0144 reads. A hold the commander made counts as one the staff made.
+3. **Every lift.** Item 4 is applied in `move_step`, so to a first lift made at a base, a second lift, a later lift as it stands and a force a hold sends alike. Where the lift's own source is the hold's, nothing changes.
+4. **The speed it goes,** for the fuel test: by night, the speed the night's choice gives on the route on to the source (cruising speed where neither speed brings it in the night); by day, the force's own setting. The burns are the engine's forecast over the staff's waypoints, with no margin.
+5. **What is left as it was.** The supply a lift takes is still sized and loaded at its own source, and its escort is still found at its own source. A take whose first lift has gone on to another base is given no second lift with that force: the second lift waits for the force at the take's own source, as before.
+6. **With no ship in the pool** the supply intent's reason is the supply doctrine's own for an empty pool, "No ship of the pool of intent:N is afloat, so there is nothing to send", which comes before the doctrine reckons the stock or a run. It does not say what run it would order. Nothing in the doctrine was changed for item 3.
+
+
+What changed in the games already built:
+
+- **Scenario 76.** Its main game gives the orders it gave; the reasons of the source now say "with nothing aboard". Its property "no source" (the commander holds the one transport force) no longer has no source: base 1 is named on day 1 with no force, and a "keep supplied" of base 3 is formed under its hold on day 4. Its test asserts the old reading and fails; it goes to the architect.
+- **Scenario 77.** The same orders; only the words of the source's reason change in its run baseline.
+- **The scripted full slice** changes from day 1 by Rabaul's fuel: the Japanese transports of task force 31 now fuel there. The recorded games change in their doctrine version, and `full_slice_five_days_sonnet` in its hashes too; no transcript changes.
+- **Scenarios 06d1 and 06d2** leave scenario 86 out of the files whose hashes they hold to before their stage, as they do the other staffed scenarios.
