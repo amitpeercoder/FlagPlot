@@ -108,8 +108,13 @@ button:disabled { opacity: 0.45; cursor: default; }
 .sheetwrap[hidden] { display: none; }
 .sheetwrap.dispatch { width: min(620px, calc(100% - 32px)); }
 .sheetbar { flex: none; background: rgba(22,28,26,0.88); padding: 8px 8px 8px 14px; border-radius: 2px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
-#sheet-chart { background: transparent; color: var(--ink); border: 1px solid var(--rule); }
-#sheet-chart + #sheet-close { margin-left: 0; }
+.sheetnav { flex: none; display: flex; align-items: center; gap: 4px; margin-bottom: -10px; padding: 4px 8px 2px; background: var(--paper); border-bottom: 1px solid rgba(90,85,72,0.22); border-radius: 2px 2px 0 0; position: relative; z-index: 1; }
+.sheetnav button { min-height: 30px; padding: 0 8px; border: 0; background: transparent; color: var(--paper-dim); font-family: var(--f-ui); font-size: 12px; font-weight: 700; letter-spacing: 0.12em; cursor: pointer; }
+.sheetnav button:hover, .sheetnav button:focus-visible { color: var(--paper-ink); }
+.sheetnav #sheet-chart { margin-left: auto; color: var(--own); }
+.sheetnav #sheet-close { font-size: 15px; letter-spacing: 0; min-width: 30px; }
+.sheetnav #sheet-chart[hidden] + #sheet-close { margin-left: auto; }
+.sheetnav + .sheet { border-radius: 0 0 2px 2px; }
 #planchip { position: fixed; top: 54px; left: 50%; transform: translateX(-50%); z-index: 6; display: flex; align-items: center; gap: 10px; max-width: calc(100% - 32px); background: var(--paper); color: var(--paper-ink); padding: 6px 6px 6px 12px; border-radius: 2px; font-size: 14px; letter-spacing: 0.04em; box-shadow: 0 2px 10px rgba(0,0,0,0.4); }
 #planchip[hidden] { display: none; }
 #planchip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -294,17 +299,13 @@ button:disabled { opacity: 0.45; cursor: default; }
 </aside>
 
 <div class="sheetwrap" id="sheet" hidden>
+  <div class="sheetnav"><button type="button" id="sheet-back" hidden>&#8592; BACK</button><span id="sheet-note" hidden></span><button type="button" id="sheet-chart" hidden>SHOW ON CHART</button><button type="button" id="sheet-close" title="Close (Esc)" aria-label="Close">&#10005;</button></div>
   <section class="sheet" id="sheet-paper" aria-label="The paper you are reading" tabindex="0">
     <div class="label" id="sheet-label" hidden></div>
     <h2 id="sheet-title">THE BRIEFING</h2>
     <div class="doc" id="sheet-doc" hidden></div>
     <pre id="sheet-text"></pre>
   </section>
-  <div class="sheetbar">
-    <span id="sheet-note"></span>
-    <button type="button" id="sheet-chart" hidden>SHOW ON CHART</button>
-    <button type="button" id="sheet-close">RETURN TO CHART</button>
-  </div>
 </div>
 
 <div class="view" role="group" aria-label="Your view of the table">
@@ -1281,7 +1282,7 @@ button:disabled { opacity: 0.45; cursor: default; }
         fold('Staff decisions and orders', staff); fold('Routine', routine);
       });
       if (!any) doc.appendChild(el('p', '', 'Nothing is entered for the day.'));
-      sheetAs('WAR DIARY', (dateOf(d - 1, true) || 'DAY ' + d).toUpperCase(), 'Touch an entry for what led to it.'); doc.classList.add('diary'); doc.hidden = false; $('sheet-text').hidden = true; $('sheet').hidden = false; $('sheet-close').focus();
+      sheetAs('WAR DIARY', (dateOf(d - 1, true) || 'DAY ' + d).toUpperCase()); doc.classList.add('diary'); doc.hidden = false; $('sheet-text').hidden = true; $('sheet').hidden = false; $('sheet-close').focus();
     }).catch(function (e) { setStatus('The diary could not be read: ' + e.message); });
   }
   function readSchedule() {
@@ -1441,13 +1442,13 @@ button:disabled { opacity: 0.45; cursor: default; }
   }
   // What the sheet is: its title, and for a directive the small label above
   // it and the line outside the paper that says what the paper is.
-  function sheetAs(title, label, note) { $('sheet-title').textContent = title; $('sheet-label').textContent = label || ''; $('sheet-label').hidden = !label; $('sheet-note').textContent = note || ''; $('sheet').classList.toggle('dispatch', !!label); $('sheet-paper').scrollTop = 0; $('sheet-chart').hidden = true; $('sheet-doc').classList.remove('diary'); }
+  function sheetAs(title, label, note) { $('sheet-title').textContent = title; $('sheet-label').textContent = label || ''; $('sheet-label').hidden = !label; $('sheet-note').textContent = note || ''; $('sheet').classList.toggle('dispatch', !!label); $('sheet-paper').scrollTop = 0; $('sheet-chart').hidden = true; $('sheet-doc').classList.remove('diary'); $('sheet-back').hidden = !sheetTrail.length; }
   function readDirective(d) {
     var doc = $('sheet-doc'), head = el('div', 'head'); doc.textContent = '';
     [['From', d.from], ['To', d.to], ['Date', dateOf(received[d.number] - 2, true) || 'Day ' + received[d.number]], ['Subject', d.subject]].forEach(function (r) { head.appendChild(el('span', '', r[0])); head.appendChild(el('span', '', r[1])); });
     doc.appendChild(head);
     d.parts.forEach(function (p) { p.text.forEach(function (t, i) { var para = el('p', ''); if (!i) { para.appendChild(el('b', '', p.heading + '.')); para.appendChild(document.createTextNode('  ')); } para.appendChild(document.createTextNode(t)); doc.appendChild(para); }); });
-    sheetAs(String(d.subject).toUpperCase(), 'DIRECTIVE ' + d.number, 'A fictional dispatch written for Flag Plot.'); doc.hidden = false; $('sheet-text').hidden = true; $('sheet').hidden = false; $('sheet-close').focus();
+    sheetAs(String(d.subject).toUpperCase(), 'DIRECTIVE ' + d.number); doc.hidden = false; $('sheet-text').hidden = true; $('sheet').hidden = false; $('sheet-close').focus();
     if (!readOnes[d.number]) { readOnes[d.number] = true; keep(); showSignals(); }
   }
   // ---- the staff's evening report ----
@@ -1520,6 +1521,14 @@ button:disabled { opacity: 0.45; cursor: default; }
     }).catch(function (e) { setStatus('The staff reports at dusk. ' + e.message); });
   }
   function readBriefing() { api('get_briefing', { text: true }).then(function (b) { sheetAs('THE SITUATION'); $('sheet-doc').hidden = true; $('sheet-text').hidden = false; $('sheet-text').textContent = b.text || JSON.stringify(b, null, 1); $('sheet').hidden = false; $('sheet-close').focus(); }).catch(function (e) { setStatus(e.message); }); }
+  // ---- one paper opened from another: the way back ----
+  // A paper opened while another lies open remembers it, and BACK returns to
+  // it. Closing the sheet forgets the lot.
+  var sheetTrail = [], sheetHere = null, sheetBacking = false;
+  function tracked(name, fn, keyOf) { var w = function () { var args = arguments, key = name + (keyOf ? ':' + keyOf.apply(null, args) : ''), again = function () { w.apply(null, args); }; if ($('sheet').hidden) sheetTrail = []; else if (sheetHere && sheetHere.key !== key && !sheetBacking) sheetTrail.push(sheetHere); sheetBacking = false; sheetHere = { key: key, fn: again }; return fn.apply(null, args); }; return w; }
+  readSigned = tracked('signed', readSigned); readDiary = tracked('diary', readDiary); readSchedule = tracked('schedule', readSchedule); readPlan = tracked('plan', readPlan, function (root) { return root; });
+  readInTray = tracked('in', readInTray); readDirective = tracked('directive', readDirective, function (d) { return d.number; }); readReport = tracked('report', readReport); readBriefing = tracked('situation', readBriefing);
+  $('sheet-back').addEventListener('click', function () { var p = sheetTrail.pop(); if (!p) return; sheetBacking = true; p.fn(); });
   $('sheet-close').addEventListener('click', function () { $('sheet').hidden = true; });
   $('planchip-off').addEventListener('click', clearPlan);
   $('planchip-read').addEventListener('click', function () { if (planShown != null) readPlan(planShown); });
