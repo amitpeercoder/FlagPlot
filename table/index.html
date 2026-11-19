@@ -82,17 +82,9 @@ button:disabled { opacity: 0.45; cursor: default; }
 .sheet .doc .node .who { font-size: 12px; color: var(--paper-dim); display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
 .sheet .doc .node .work { font-size: 13px; color: var(--paper-dim); }
 .sheet .doc .row { display: flex; flex-wrap: wrap; gap: 8px; }
-.ref { display: inline; min-height: 0 !important; padding: 0 !important; border: 0 !important; border-bottom: 1.5px solid currentColor !important; border-radius: 0 !important; background: transparent !important; color: var(--own) !important; font: inherit !important; letter-spacing: 0 !important; cursor: pointer; }
+.ref { display: inline; min-height: 0 !important; padding: 0 !important; border: 0 !important; border-bottom: 1px solid transparent !important; border-radius: 0 !important; background: transparent !important; color: var(--own) !important; font: inherit !important; letter-spacing: 0 !important; cursor: pointer; }
 .ref.enemy { color: var(--enemy) !important; }
-/* Trial styles for a name that is a link, chosen with the 'Links' button while the designer compares them. */
-body[data-links="b"] .ref { color: inherit !important; border-bottom: 1px dotted #6b6453 !important; }
-body[data-links="b"] .ref.enemy { color: var(--enemy) !important; border-bottom-color: currentColor !important; }
-body[data-links="c"] .ref { color: inherit !important; border-bottom: 0 !important; font-weight: 700 !important; }
-body[data-links="c"] .ref.enemy { color: var(--enemy) !important; }
-body[data-links="d"] .ref { color: inherit !important; border-bottom: 0 !important; }
-body[data-links="d"] .ref.enemy { color: var(--enemy) !important; }
-body[data-links="e"] .ref { border-bottom: 0 !important; }
-body[data-links="b"] .ref:hover, body[data-links="c"] .ref:hover, body[data-links="d"] .ref:hover, body[data-links="e"] .ref:hover, body[data-links="b"] .ref:focus-visible, body[data-links="c"] .ref:focus-visible, body[data-links="d"] .ref:focus-visible, body[data-links="e"] .ref:focus-visible { border-bottom: 1px solid currentColor !important; }
+.ref:hover, .ref:focus-visible { border-bottom-color: currentColor !important; }
 .sheet .doc details { font-size: 13px; }
 .sheet .doc summary { cursor: pointer; color: var(--paper-dim); font-family: var(--f-ui); font-weight: 700; letter-spacing: 0.1em; font-size: 12px; min-height: 28px; }
 .sheet .doc .state { font-family: var(--f-ui); font-weight: 700; letter-spacing: 0.1em; font-size: 12px; white-space: nowrap; }
@@ -210,7 +202,6 @@ body[data-links="b"] .ref:hover, body[data-links="c"] .ref:hover, body[data-link
   <button type="button" id="btn-back">Sit back</button>
   <button type="button" id="btn-lean">Lean in</button>
   <button type="button" id="btn-hexes" aria-pressed="false">Hexes</button>
-  <button type="button" id="btn-links" title="Try the styles for a name that is a link">Links A</button>
   <button type="button" id="btn-stops" aria-expanded="false" aria-controls="stops" hidden>Clock stops</button>
 </div>
 <fieldset class="stops" id="stops" hidden>
@@ -1211,9 +1202,6 @@ body[data-links="b"] .ref:hover, body[data-links="c"] .ref:hover, body[data-link
     if (goal.zoom < 0.2) { var f = null; M.forces.forEach(function (x) { if (x.place && x.mission === 'carrier' && !f) f = x; }); var v = f ? placeOf(f.place) : new THREE.Vector3(); goal.x = v.x; goal.z = v.z; goal.zoom = 0.55; }
     else goal.zoom += 0.2; clampGoal();
   });
-  (function () { var kinds = ['a', 'b', 'c', 'd', 'e'], now = 'a'; try { now = localStorage.getItem('flagplot.links') || 'a'; } catch (e) {}
-    function set(k) { now = k; document.body.setAttribute('data-links', k); $('btn-links').textContent = 'Links ' + k.toUpperCase(); try { localStorage.setItem('flagplot.links', k); } catch (e) {} }
-    set(kinds.indexOf(now) < 0 ? 'a' : now); $('btn-links').addEventListener('click', function () { set(kinds[(kinds.indexOf(now) + 1) % kinds.length]); }); })();
   $('btn-hexes').setAttribute('aria-pressed', String(showHexes));
   $('btn-hexes').addEventListener('click', function () { showHexes = !showHexes; try { localStorage.setItem('flagplot.hexes', showHexes ? '1' : '0'); } catch (e) {} this.setAttribute('aria-pressed', String(showHexes)); paintBase(); if (g) drawMarks(); $('card').hidden = true; });
   $('btn-stops').addEventListener('click', function () { var f = $('stops'); f.hidden = !f.hidden; this.setAttribute('aria-expanded', String(!f.hidden)); });
