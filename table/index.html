@@ -655,7 +655,7 @@ button:disabled { opacity: 0.45; cursor: default; }
     var w = (WORD[i.kind] || i.kind.replace(/_/g, ' ')).toLowerCase(); return (w.charAt(0).toUpperCase() + w.slice(1) + ' ' + where).trim();
   }
   function readPlan(root) {
-    Promise.all([api('command_state'), api('plans'), api('staff_orders').catch(function () { return {}; })]).then(function (a) {
+    Promise.all([api('command_state'), api('plans'), api('staff_orders').catch(function () { return {}; }), api('order', { intent: root }).catch(function () { return null; })]).then(function (a) {
       var st = a[0], plans = {}, said = {}, work = {}, doc = $('sheet-doc'); doc.textContent = '';
       (a[1].plans || []).forEach(function (p) { plans[p.number] = p; });
       function note(r, verdict) { if (!r || !r.serves) return; var n = r.serves.intent; if (r.serves.statement) said[n] = r.serves.statement; (r.serves.chain || []).forEach(function (c) { said[c.intent] = c.statement; }); (work[n] = work[n] || []).push({ verdict: verdict, r: r }); }
@@ -684,6 +684,29 @@ button:disabled { opacity: 0.45; cursor: default; }
         }
         st.intents.filter(function (c) { return c.parent === i.number; }).forEach(function (c) { walk(c, depth + 1); });
       })(top, 0);
+      // The plan as the staff hands it in (decision 0159, rule E, from the
+      // tool `order`): its phases with the one under way marked, what it
+      // waits for with the day it is expected, the men, and the day it
+      // expects to be ashore. A refusal shows nothing.
+      (function (o) {
+        if (!o || !(o.phases || []).length && !(o.waits_for || []).length) return;
+        var box = el('div', 'order');
+        box.appendChild(el('h3', '', 'The plan as ordered'));
+        (o.phases || []).forEach(function (ph) {
+          var line = rich('div', 'work', (ph.stage === 'under_way' ? '\u25B6 ' : ph.stage === 'done' ? '\u2713 ' : '\u00A0\u00A0 ') + nameText(ph.text));
+          if (ph.stage === 'under_way') line.style.fontWeight = 'bold';
+          if (ph.stage === 'done') line.style.opacity = 0.6;
+          box.appendChild(line);
+        });
+        if ((o.waits_for || []).length) {
+          box.appendChild(el('div', 'sub', 'IT WAITS FOR'));
+          o.waits_for.forEach(function (w) { var d = rich('div', 'work', nameText(w.text)); if (!w.met) d.style.color = 'var(--enemy)'; box.appendChild(d); });
+        }
+        if (o.men && !(o.waits_for || []).some(function (w) { return w.kind === 'men'; })) box.appendChild(rich('div', 'work', 'Men: ' + commas(o.men.wanted) + ' wanted, ' + commas(o.men.to_hand) + ' to hand.'));
+        if (o.expected_ashore != null) box.appendChild(rich('div', 'work', 'It expects to be ashore on day ' + o.expected_ashore + '.'));
+        else (o.text || []).filter(function (t) { return /ashore\.$/.test(t); }).forEach(function (t) { box.appendChild(rich('div', 'work', nameText(t))); });
+        doc.appendChild(box);
+      })(a[3]);
       doc.appendChild(el('h3', '', '1. The brief'));
       var order = ['WAITS FOR YOU', 'CANNOT BE MET', 'ORDERS TODAY', 'PREPARING', 'STANDING', 'DONE', 'ENDED'], sum = order.filter(function (k) { return tally[k]; }).map(function (k) { return tally[k] + ' ' + k.toLowerCase(); });
       doc.appendChild(el('p', '', lines.length ? 'The staff has made ' + lines.length + ' task' + (lines.length === 1 ? '' : 's') + ' of it: ' + sum.join(', ') + '.' : 'The staff has made nothing of it yet. It plans at 1800.'));

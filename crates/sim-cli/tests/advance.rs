@@ -83,7 +83,7 @@ fn names(answer: &Value) -> Vec<String> {
 fn the_tool_lists_with_the_key_on_and_off() {
     let off = mcp(KEY_OFF, &opening());
     let off_names = names(&off[1]);
-    assert_eq!(off_names.len(), 28);
+    assert_eq!(off_names.len(), 29);
     assert!(off_names.contains(&"events".to_string()));
     assert!(!off_names.contains(&"advance".to_string()));
     let instructions = off[0]["result"]["instructions"].as_str().unwrap();
@@ -91,12 +91,12 @@ fn the_tool_lists_with_the_key_on_and_off() {
 
     let on = mcp(KEY_ON, &opening());
     let on_names = names(&on[1]);
-    assert_eq!(on_names.len(), 29);
+    assert_eq!(on_names.len(), 30);
     assert_eq!(on_names.last().map(String::as_str), Some("advance"));
-    assert_eq!(&on_names[..28], off_names.as_slice());
+    assert_eq!(&on_names[..29], off_names.as_slice());
     let instructions = on[0]["result"]["instructions"].as_str().unwrap();
     assert!(instructions.contains("Stopping between pulses"));
-    let advance = &on[1]["result"]["tools"][28];
+    let advance = &on[1]["result"]["tools"][29];
     let description = advance["description"].as_str().unwrap();
     for kind in [
         "report_received",
@@ -119,7 +119,7 @@ fn the_tool_lists_with_the_key_on_and_off() {
     // play --tools needs no game: the tools of a seat with a staff and the
     // key off.
     let listed = text(&binary(&["play", "--game", "unused", "--tools"]).stdout);
-    assert_eq!(listed.matches("\nTOOL ").count() + 1, 28);
+    assert_eq!(listed.matches("\nTOOL ").count() + 1, 29);
     assert!(listed.contains("TOOL events\n"));
 }
 

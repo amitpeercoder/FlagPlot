@@ -80,8 +80,12 @@ pub const FORMAT: &str = "flagplot-agent";
 /// issue_orders), the refusal of get_briefing at 0600 and 1200, and the note
 /// `inside_day` on the answers worked at 0600 or 1200 on the state as it
 /// stands (command_state, plans, staff_orders, propose, preview, a queued
-/// command, and a passage or yard measure) (decision 0156).
-pub const VERSION: u32 = 25;
+/// command, and a passage or yard measure) (decision 0156). 26 adds the tool
+/// `order` (a staffed seat) and its answer `plan_order`: the plan of one of
+/// the commander's intents as the staff hands it in, with its phases, what it
+/// waits for, its men and the day it expects to be ashore (decision 0159,
+/// rule E).
+pub const VERSION: u32 = 26;
 
 /// The answer to a question about something the side does not know of: a
 /// unit of the enemy, a number that does not exist, an event the side may not

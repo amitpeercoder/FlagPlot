@@ -18,7 +18,7 @@
 //! * [`get_entity`]: everything the side knows of one unit or contact (a
 //!   ship, task force, air group, land unit or base of its own).
 //! * [`explain`]: an event as the side may see it and its visible causes.
-//! * [`command_state`], [`plans`], [`propose`], [`staff_orders`], [`why`] and
+//! * [`command_state`], [`plans`], [`propose`], [`plan_order`], [`staff_orders`], [`why`] and
 //!   the commands a seat queues (`set_intent`, `withdraw_intent`,
 //!   `set_limit`, `set_leave`, `approve`, `cancel_plan`): the tools of a seat
 //!   whose side has a staff (decision 0107). Each answers from a view of the
@@ -109,5 +109,7 @@ pub use record::{
     parse_seat, seat_name, CallError, Post, Seat, SeatKind, TranscriptEntry, COMMAND_TOOLS, TOOLS,
 };
 pub use session::{OrdersInsideDay, Session, NOT_KNOWN};
-pub use staffing::{command_state, plans, propose, staff_orders, why, STAFF_DEFAULT_INTERVAL_DAYS};
+pub use staffing::{
+    command_state, plan_order, plans, propose, staff_orders, why, STAFF_DEFAULT_INTERVAL_DAYS,
+};
 pub use told::{told_as, DayPart, STOP_ON};

@@ -24,7 +24,7 @@
 //! The doctrine reads the side's own view and its planned command state and
 //! nothing else.
 
-use sim_core::command::{Awaited, Intent, IntentKind, NoticeKind, Plan};
+use sim_core::command::{Awaited, Intent, IntentKind, NoticeKind, Plan, WaitedFor};
 use sim_core::hex::Hex;
 use sim_core::ids::EntityRef;
 
@@ -33,25 +33,34 @@ use crate::available;
 use crate::fleet::force_stopped_at;
 use crate::reasons::serving;
 
+/// One limit that tells a take to wait, as the morning reads it: what it
+/// waits for, whether it is met, whether it can never be met as it stands,
+/// the day it is expected to be met where there is one, and, where it is
+/// unmet, its words for the reason.
+pub(crate) struct Told {
+    pub(crate) thing: WaitedFor,
+    pub(crate) met: bool,
+    pub(crate) never: bool,
+    pub(crate) expected_day: Option<u32>,
+    pub(crate) words: Option<String>,
+}
+
 impl Day<'_, '_> {
-    /// Items 9 to 11, for a "take a place" whose landing is ready and whose
-    /// plan is preparing: `true` where a limit that tells it to wait is unmet
-    /// and the reason (or the notice) is handed in, so that the plan is not
-    /// released this morning; `false` where none is set or every one is met.
-    pub(crate) fn told_to_wait(&mut self, end: &Intent, plan: &Plan, ready_words: &str) -> bool {
+    /// Item 9: each limit "not before", "wait for" and "after" read up the
+    /// tree of the take `end`, in that order, as this morning finds it. Read
+    /// by [`Day::told_to_wait`] and by the plan order (decision 0159, 15).
+    /// Empty for an intent that is not a take, or with no such limit.
+    pub(crate) fn told_limits(&self, end: &Intent) -> Vec<Told> {
         let limits = self.state.waits_read_up(end.id);
+        let mut found: Vec<Told> = Vec::new();
         if limits.is_empty() {
-            return false;
+            return found;
         }
-        let IntentKind::TakePlace { hex: place, .. } = end.kind else {
-            return false;
+        let IntentKind::TakePlace { .. } = end.kind else {
+            return found;
         };
-        let in_scope = self.in_scope(end.id);
         let today = self.today;
         let view = self.view;
-        // What is waited for, and what can never come, each in words.
-        let mut unmet: Vec<String> = Vec::new();
-        let mut never: Vec<String> = Vec::new();
         let set_on = |on: sim_core::ids::IntentId| {
             if on == end.id {
                 String::new()
@@ -61,12 +70,19 @@ impl Day<'_, '_> {
         };
 
         if let Some((day, on)) = limits.not_before {
-            if today < day {
-                unmet.push(format!(
-                    "the commander's limit not before day {day}{}: it is not to go before day {day}",
-                    set_on(on)
-                ));
-            }
+            let met = today >= day;
+            found.push(Told {
+                thing: WaitedFor::Day(day),
+                met,
+                never: false,
+                expected_day: (!met).then_some(day),
+                words: (!met).then(|| {
+                    format!(
+                        "the commander's limit not before day {day}{}: it is not to go before day {day}",
+                        set_on(on)
+                    )
+                }),
+            });
         }
 
         let source = self
@@ -74,49 +90,73 @@ impl Day<'_, '_> {
             .forces_as_bound(end)
             .and_then(|f| f.source)
             .and_then(|s| view.bases().find(|b| b.id == s).map(|b| (s, b.hex)));
+        let never = |thing: WaitedFor, words: String| Told {
+            thing,
+            met: false,
+            never: true,
+            expected_day: None,
+            words: Some(words),
+        };
+        let waiting = |thing: WaitedFor, words: Option<String>, from: Option<u32>, at: bool| {
+            let met = words.is_none();
+            Told {
+                thing,
+                met,
+                never: false,
+                expected_day: if met || !at { None } else { from },
+                words,
+            }
+        };
         for (awaited, on) in &limits.wait_for {
             let limit_words = format!("the commander's limit wait for {awaited}{}", set_on(*on));
+            let thing = WaitedFor::Force(*awaited);
             match *awaited {
                 Awaited::TaskForce(id) => {
                     let Some(force) = view
                         .task_forces()
                         .find(|f| f.id == id && !f.ships.is_empty())
                     else {
-                        never.push(format!("{limit_words}: the side no longer has {awaited}"));
+                        found.push(never(
+                            thing,
+                            format!("{limit_words}: the side no longer has {awaited}"),
+                        ));
                         continue;
                     };
                     let from = available::force_waiting(view, id);
                     let at = source.is_some_and(|(_, hex)| force_stopped_at(force, hex));
-                    if let Some(words) = awaited_words(&limit_words, *awaited, from, at, source) {
-                        unmet.push(words);
-                    }
+                    let words = awaited_words(&limit_words, *awaited, from, at, source);
+                    found.push(waiting(thing, words, from, at));
                 }
                 Awaited::LandUnit(id) => {
                     let Some(unit) = view.land_units().find(|u| u.id == id) else {
-                        never.push(format!("{limit_words}: the side no longer has {awaited}"));
+                        found.push(never(
+                            thing,
+                            format!("{limit_words}: the side no longer has {awaited}"),
+                        ));
                         continue;
                     };
                     let aboard = view
                         .ships()
                         .any(|s| s.troops.as_ref().is_some_and(|t| t.unit == id && t.men > 0));
                     if unit.men_ashore == 0 && !aboard {
-                        never.push(format!(
-                            "{limit_words}: the side no longer has a man of {awaited}"
+                        found.push(never(
+                            thing,
+                            format!("{limit_words}: the side no longer has a man of {awaited}"),
                         ));
                         continue;
                     }
                     let from = available::not_before(view, EntityRef::LandUnit(id));
                     let at =
                         source.is_some_and(|(_, hex)| unit.men_ashore > 0 && unit.hex == Some(hex));
-                    if let Some(words) = awaited_words(&limit_words, *awaited, from, at, source) {
-                        unmet.push(words);
-                    }
+                    let words = awaited_words(&limit_words, *awaited, from, at, source);
+                    found.push(waiting(thing, words, from, at));
                 }
             }
         }
 
         for (other, on) in &limits.after {
             let limit_words = format!("the commander's limit after {other}{}", set_on(*on));
+            let thing = WaitedFor::Intent(*other);
             let named = self.state.intents.get(other).cloned();
             let places: Vec<Hex> = match named.as_ref().map(|i| i.kind) {
                 Some(IntentKind::TakePlace { hex, .. }) => vec![hex],
@@ -128,23 +168,55 @@ impl Day<'_, '_> {
             };
             let met = !places.is_empty() && places.iter().all(|hex| self.place_is_ours(*hex));
             if met {
+                found.push(waiting(thing, None, None, false));
                 continue;
             }
             match named {
-                Some(found) if found.in_force() => {
+                Some(found_intent) if found_intent.in_force() => {
                     let not_yet: Vec<String> = places
                         .iter()
                         .filter(|hex| !self.place_is_ours(**hex))
                         .map(ToString::to_string)
                         .collect();
-                    unmet.push(format!(
-                        "{limit_words}: the place of {other} at {} is not yet the side's",
-                        not_yet.join(" and ")
+                    found.push(waiting(
+                        thing,
+                        Some(format!(
+                            "{limit_words}: the place of {other} at {} is not yet the side's",
+                            not_yet.join(" and ")
+                        )),
+                        None,
+                        false,
                     ));
                 }
-                _ => never.push(format!(
-                    "{limit_words}: {other} is withdrawn, so its place will not be taken for it"
+                _ => found.push(never(
+                    thing,
+                    format!(
+                        "{limit_words}: {other} is withdrawn, so its place will not be taken for it"
+                    ),
                 )),
+            }
+        }
+        found
+    }
+
+    /// Items 9 to 11, for a "take a place" whose landing is ready and whose
+    /// plan is preparing: `true` where a limit that tells it to wait is unmet
+    /// and the reason (or the notice) is handed in, so that the plan is not
+    /// released this morning; `false` where none is set or every one is met.
+    pub(crate) fn told_to_wait(&mut self, end: &Intent, plan: &Plan, ready_words: &str) -> bool {
+        let IntentKind::TakePlace { hex: place, .. } = end.kind else {
+            return false;
+        };
+        let in_scope = self.in_scope(end.id);
+        let today = self.today;
+        // What is waited for, and what can never come, each in words.
+        let mut unmet: Vec<String> = Vec::new();
+        let mut never: Vec<String> = Vec::new();
+        for told in self.told_limits(end) {
+            match (told.never, told.words) {
+                (true, Some(words)) => never.push(words),
+                (false, Some(words)) => unmet.push(words),
+                (_, None) => {}
             }
         }
 

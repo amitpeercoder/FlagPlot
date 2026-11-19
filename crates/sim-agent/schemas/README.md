@@ -24,6 +24,7 @@ Every answer is a JSON object with a top-level `"format": "flagplot-agent"`,
 | `command` | `command.schema.json` | `set_intent`, `withdraw_intent`, `set_limit`, `set_leave`, `hold`, `release`, `set_interrupt`, `acknowledge`, `approve` (of a plan or of a preview), `cancel_plan`: queued or refused; also `preview` of a command the tool refuses, and `approve` of a void preview |
 | `preview` | `preview.schema.json` | `preview` |
 | `propose` | `propose.schema.json` | `propose` |
+| `plan_order` | `plan_order.schema.json` | `order` (a seat whose side has a staff): the plan of one of the commander's intents as the staff hands it in |
 | `staff_orders` | `staff_orders.schema.json` | `staff_orders` |
 | `why` | `why.schema.json` | `why` (or `not_known`) |
 | `run` | `run.schema.json` | `run` (offered where exactly one seat is held by a player) |
@@ -55,7 +56,7 @@ miles that can be a decimal, shots) is a decimal string such as `"12"` or
 
 ## The version rule
 
-`version` is 14. A field removed from an answer, or a field whose meaning
+`version` is 26. A field removed from an answer, or a field whose meaning
 changes, raises the version by one. A field added does not change it, so a
 reader must ignore fields it does not know. (The schemas here set
 `additionalProperties: false` because they describe this version exactly; a
@@ -1078,3 +1079,20 @@ count that was told or where the figures give no range; `held` is null where not
 group in the side's numbers and `since_day`, or null), `moved_to_look` (decision 0159, item 14: the carrier force in
 the side's numbers that the staff moves or has moved to look at the place while the need is not met, and its `hex`, or
 null), `met` and `text`, the need in one line. It is null for every other plan, a released one too.
+
+## The plan as an order: the tool `order` (decision 0159, rule E, items 15 to 17)
+
+`version` is 26. The tool `order` (a seat whose side has a staff; argument `intent`, the number of one of the commander's
+intents in force) gives the answer `plan_order` (`plan_order.schema.json`); it changes nothing and is worked on the
+state as the coming day will find it, with the commands queued taken in. An intent not in force, the staff's own or
+not the side's is refused in the words `propose` uses. The answer has `for_day`, `as_at`, `intent`, `mission` (the
+intent in words), `plan` (`number`, `state`), `phases` (in order: `name`, one of `prepare`, `move`, `land`, `wait`,
+`hold`; `stage`, `done`, `under_way` or `to_come`; `ends`, one of `released`, `first_man_ashore`,
+`place_is_the_sides`, `base_is_the_sides` and `never`; `place`, a place, for the first two; `base`, a handle, for
+`base_is_the_sides`; `text`, a line; a take has prepare, move and land, a hold wait and hold or hold alone, the other
+kinds none), `waits_for` (each with `kind`, one of `men`, `leave`, `day`, `force`, `intent` and `knowledge`; `met`;
+`expected_day`, null where the staff can work none; the key of its kind, `wanted` and `to_hand`, `leave`, `day`,
+`force` (as `awaited`), `intent` or `knowledge` (as `knowledge`), the other keys null; and `text`), `men` (`wanted`
+and `to_hand`, or null), `expected_ashore` (a day, or null where the staff cannot say or the men are ashore),
+`need_to_know` (as in `plans`, or null), `tasks` (the staff's intents under it: `intent`, `kind`, `statement`, `phase`)
+and `text`, the brief as an array of lines. Nothing else is in it: no reasons.

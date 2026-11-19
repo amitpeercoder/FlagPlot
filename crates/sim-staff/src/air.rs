@@ -366,6 +366,9 @@ pub(crate) struct Day<'v, 'a> {
     /// this morning, or sends to it: a carrier task gives them no order
     /// (decision 0159, 14, item 4 of scenario 83's rule).
     pub(crate) looking_groups: std::collections::BTreeSet<AirGroupId>,
+    /// What each take that waits for men found this morning (decision 0159,
+    /// rule B), kept for the plan order and stored nowhere.
+    pub(crate) men_waits: BTreeMap<IntentId, crate::take::MenWait>,
 }
 
 /// The kinds the air doctrine serves: hold, cover, neutralise, raid, deny,
@@ -414,6 +417,15 @@ pub(crate) fn needs_to_know(view: &SideView<'_>) -> Vec<sim_core::command::NeedT
     let known = view.known_to(sim_core::pictures::CommandRef::Area);
     let area = known.view();
     Day::run(view, &area, None).map_or_else(Vec::new, |day| day.needs)
+}
+
+/// The plan order of each intent of the commander's in force (decision 0159,
+/// rule E), from the staff's working of this morning, stored nowhere.
+pub(crate) fn plan_orders(view: &SideView<'_>) -> Vec<sim_core::command::PlanOrder> {
+    let known = view.known_to(sim_core::pictures::CommandRef::Area);
+    let area = known.view();
+    let day = Day::run(view, &area, None);
+    crate::order::orders(view, day.as_ref())
 }
 
 /// What the air doctrine would hand in this morning for the tree of `intent`
@@ -484,7 +496,7 @@ impl<'v, 'a> Day<'v, 'a> {
     /// in force (it hands in nothing). With a `scope` (a proposal) the root
     /// of the tree asked for is taken as released and only what is handed in
     /// for its tree is kept.
-    fn run(
+    pub(crate) fn run(
         view: &'v SideView<'a>,
         area: &'v SideView<'v>,
         scope: Option<IntentId>,
@@ -526,6 +538,7 @@ impl<'v, 'a> Day<'v, 'a> {
             lifts_due: BTreeMap::new(),
             needs: Vec::new(),
             looking_groups: std::collections::BTreeSet::new(),
+            men_waits: BTreeMap::new(),
         };
         day.leaves();
         // Decision 0151: the tree of an island, formed before the doctrines

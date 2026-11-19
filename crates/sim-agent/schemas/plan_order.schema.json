@@ -1,0 +1,349 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "flagplot-agent/plan_order",
+  "title": "plan_order: the plan of one of the commander's intents as the staff hands it in, worked from the view and stored nowhere",
+  "description": "Decision 0159, rule E: the mission, the plan and its state, the phases in order and where each stands, what the plan waits for, the men wanted and to hand, the day it expects its first men ashore, the need to know, the staff's tasks under it and a brief in words.",
+  "type": "object",
+  "required": [
+    "format",
+    "version",
+    "kind",
+    "for_day",
+    "as_at",
+    "intent",
+    "mission",
+    "plan",
+    "phases",
+    "waits_for",
+    "men",
+    "expected_ashore",
+    "need_to_know",
+    "tasks",
+    "text"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "inside_day": {
+      "type": "string",
+      "description": "Given only at 0600 or 1200, in a game that stops between pulses (decision 0156): the answer was worked on the state as it stands, as if the open day were closed now, before the rest of the day, its fight ashore and its end are resolved; a command is checked again when it is taken in at the next dusk."
+    },
+    "format": {
+      "const": "flagplot-agent"
+    },
+    "version": {
+      "const": 26
+    },
+    "kind": {
+      "const": "plan_order"
+    },
+    "for_day": {
+      "type": "integer"
+    },
+    "as_at": {
+      "type": "string"
+    },
+    "intent": {
+      "type": "integer",
+      "description": "The commander's intent asked about."
+    },
+    "mission": {
+      "type": "string",
+      "description": "The intent in words."
+    },
+    "plan": {
+      "type": "object",
+      "required": [
+        "number",
+        "state"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "number": {
+          "type": "integer"
+        },
+        "state": {
+          "enum": [
+            "draft",
+            "preparing",
+            "released",
+            "complete",
+            "failed",
+            "cancelled"
+          ]
+        }
+      }
+    },
+    "phases": {
+      "type": "array",
+      "description": "The phases in order: a take's prepare, move and land; a hold's wait and hold, or hold alone where the base is the side's. Empty for the other kinds.",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "stage",
+          "ends",
+          "place",
+          "base",
+          "text"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "enum": [
+              "prepare",
+              "move",
+              "land",
+              "wait",
+              "hold"
+            ]
+          },
+          "stage": {
+            "enum": [
+              "done",
+              "under_way",
+              "to_come"
+            ]
+          },
+          "ends": {
+            "enum": [
+              "released",
+              "first_man_ashore",
+              "place_is_the_sides",
+              "base_is_the_sides",
+              "never"
+            ]
+          },
+          "place": {
+            "oneOf": [
+              {
+                "$ref": "defs.schema.json#/$defs/place"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The hex of first_man_ashore and place_is_the_sides; null otherwise."
+          },
+          "base": {
+            "oneOf": [
+              {
+                "$ref": "defs.schema.json#/$defs/handle"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The base of base_is_the_sides; null otherwise."
+          },
+          "text": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "waits_for": {
+      "type": "array",
+      "description": "What must be so before the phase under way can end, where the staff waits on it. Empty once a take's plan is released.",
+      "items": {
+        "type": "object",
+        "required": [
+          "kind",
+          "met",
+          "expected_day",
+          "wanted",
+          "to_hand",
+          "leave",
+          "day",
+          "force",
+          "intent",
+          "knowledge",
+          "text"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "enum": [
+              "men",
+              "leave",
+              "day",
+              "force",
+              "intent",
+              "knowledge"
+            ]
+          },
+          "met": {
+            "type": "boolean"
+          },
+          "expected_day": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "The day it is expected to be met, where the staff can work one."
+          },
+          "wanted": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "men: the men wanted."
+          },
+          "to_hand": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "men: the men to hand."
+          },
+          "leave": {
+            "enum": [
+              "prepare",
+              "launch",
+              null
+            ],
+            "description": "leave: the leave withheld."
+          },
+          "day": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "day: the day the plan does not go before."
+          },
+          "force": {
+            "oneOf": [
+              {
+                "$ref": "command_defs.schema.json#/$defs/awaited"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "force: what the plan waits for."
+          },
+          "intent": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "intent: the intent the plan goes after."
+          },
+          "knowledge": {
+            "oneOf": [
+              {
+                "$ref": "command_defs.schema.json#/$defs/knowledge"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "knowledge: the count asked before the landing goes."
+          },
+          "text": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "men": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "wanted",
+            "to_hand"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "wanted": {
+              "type": "integer"
+            },
+            "to_hand": {
+              "type": "integer"
+            }
+          }
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "The men wanted and to hand, where the side holds a count of the enemy at the place; null otherwise."
+    },
+    "expected_ashore": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "description": "The day the take expects its first men ashore; null where it cannot say or they are ashore."
+    },
+    "need_to_know": {
+      "oneOf": [
+        {
+          "$ref": "command_defs.schema.json#/$defs/need_to_know"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "The need to know of a take whose plan is preparing; null otherwise."
+    },
+    "tasks": {
+      "type": "array",
+      "description": "The staff's intents under the plan's intent, each with the phase it serves.",
+      "items": {
+        "type": "object",
+        "required": [
+          "intent",
+          "kind",
+          "statement",
+          "phase"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "intent": {
+            "type": "integer"
+          },
+          "kind": {
+            "enum": [
+              "keep_supplied",
+              "cover",
+              "hold",
+              "neutralise",
+              "raid",
+              "deny",
+              "strike_ships",
+              "search_waters",
+              "stand_at",
+              "operate_carriers",
+              "ready_landing",
+              "build_up",
+              "take_place",
+              "control_island",
+              "bombard"
+            ]
+          },
+          "statement": {
+            "type": "string"
+          },
+          "phase": {
+            "enum": [
+              "prepare",
+              "move",
+              "land",
+              "wait",
+              "hold",
+              null
+            ]
+          }
+        }
+      }
+    },
+    "text": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "The brief in a few lines: the mission, the phases with the one under way marked, what it waits for, the men, the day it expects to be ashore."
+    }
+  }
+}
