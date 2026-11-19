@@ -175,6 +175,19 @@
 //!   architect to state, and not asserted here. (The numbers of two
 //!   takes that share a force are the staff's priority's, decision 0111,
 //!   and are worked when the build shows what it gives.)
+//!
+//!   Stated by the architect on Nov 19, 2026, from the build's run: the
+//!   live game played to the evening of day 1 with intent 2 standing,
+//!   and the course intent 10, take the place at (4,0) with task force 1
+//!   and unit 1; a trial of 4 worlds for 8 days and a second of the same
+//!   worlds with an empty course. Without the course unit 2 lands on
+//!   day 4; with it unit 1 lands on day 4 and unit 2 stays at A. Intent
+//!   2 is met and kept in worlds 1 and 3 with a middle day of 4, with
+//!   the course and without: it is not named as displaced. Both intents
+//!   end at the same place, so the course changes which unit lands and
+//!   costs the other plan nothing an estimate reads. A displacement by
+//!   two takes of different places is left for the what-ifs of the next
+//!   step.
 //! - **Believed present, and absent.** With the 400 men's standing
 //!   present: the garrison is 600 in all four worlds, the end is met in
 //!   none, and the estimate shows no parting. With it absent: 200 in all
@@ -199,9 +212,14 @@
 //! - **Believed men are set aside.** (Added on review.) With the Allied
 //!   side's estimate of B of a day after the start, a picture taken on
 //!   an evening after a report: the 400 are made in no world, and the
-//!   assumptions say the side has a count since. The build makes the
-//!   case from the live game played to the evening of day 5 with
-//!   scenario 68's course, where the day's report gives a count.
+//!   assumptions say the side has a count since. The case is made from
+//!   the Allied side's view of world 2 of the main trial at the end of
+//!   its play, which holds a count of 300 men of day 8: asked of that
+//!   view, the 400 are made in no world. (Corrected by the architect on
+//!   Nov 19, 2026, after the build: this said to play the live game to
+//!   day 5 with the course. There the landing meets the live garrison
+//!   of 1,200, unit 1 is destroyed on day 4, and with no man of the
+//!   side at B no report is made.)
 //! - **No world played.** (Added on review.) With every picture made
 //!   unsound by the test: the estimate says that none of 4 worlds could
 //!   be played, and gives no day and no cost.

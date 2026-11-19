@@ -124,3 +124,14 @@ Built on Nov 19, 2026, on the branch `the-estimate-build`, from the head of `a-t
 12. *The words* name each count as "n of m worlds" and the worlds by number, and render the plan order's tasks and the enemy's intents by the engine's own names where no words exist. They hold no per cent sign and neither "chance" nor "points".
 
 **Documents.** Chapter 9 gains rule 15 of the enemy's half (believed men) and "The estimate" (rules 1 to 12), and its opening, what is built, the source's rules and what a trial gives back say so; chapter 1 names `[[believed_men]]`; the glossary gains "estimate (of a trial)", "believed men", "met and kept", "lost again" and "parting (of a trial's worlds)", and amends "estimate (of the enemy ashore)" and "standing"; `docs/commands.md` the new entry; `docs/engineering/layout.md` the crate's row; the frozen figures' README the two new copies. `docs/engineering/data-rules.md` lists nothing of a side's beliefs and is unchanged.
+
+## The architect's rulings
+
+Made on Nov 19, 2026, on reading the build.
+
+1. **The readings of "As built" stand as made.**
+2. **The hand calculation's means for "believed men are set aside" was wrong, and is corrected by the architect.** It had the live game played on with the course until a report gave a count. The live garrison is 1,200: the landing is destroyed on its first evening and no report is made. The case is made from a view that does hold a later count, the side's view of a world of the main trial at its end. The rule and its statement are unchanged.
+3. **"A plan displaced" in a scenario is stated from the build's run,** in the test file: two takes of one place that share a force do not displace one another by anything an estimate reads, since the place is taken on the same day by whichever unit lands. The rule's own counting is tested inside the crate. A case of two places is owed with the next step.
+4. **"It waits for nothing" stands beside a need to know that is not met.** A count told at the start is not a count seen, and at balanced the plan order asks for one; with nothing that can look, the take goes without. The estimate gives both, as the plan order does.
+5. **The words name tasks and kinds as the engine prints them.** That is for a reader who is a programmer. Words for a commander are the next step's, which shows an estimate to a seat.
+
