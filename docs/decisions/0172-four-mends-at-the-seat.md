@@ -61,3 +61,13 @@ The readings the build made that the record did not:
 
 **The agent interface's version** stays 28. Its rule (`crates/sim-agent/src/answer.rs`) is that a field removed or changed in meaning raises it and a field added does not. No field is added or removed; the number's meaning to the seat that reads it, the number by which it approves a preview, counted from 1 over the previews it was shown, is what every session with one seat was given and is given now. Only in a session with a seat on each side did the old number differ, and there it carried the other side's count, which the seat was never to have. The build read that as a leak mended, not a meaning changed; raising the version would change only the `version` of every recorded transcript. The architect may rule otherwise.
 
+## The architect's rulings
+
+Made on Nov 19, 2026, on reading the build.
+
+1. **The seven readings of "As built" stand as made.**
+2. **The agent interface version is not raised.** A preview's number means what it meant to every seat that could know what it meant: the number to approve by, counted over the previews that seat was shown. What it carried besides, in a session of two seats, was a count of the other side's, which no seat was told it carried and none should have been given.
+3. **Any error of the engine while a day resolves stops the session's game** (reading 6), not a broken invariant alone. The session cannot tell a world it may go on with from one it may not, and it is not for a seat to try.
+4. **An export is checked against the pin as a call is** (reading 2): to export a game from changed inputs is to export another game.
+5. **The state's layout version is not in the pin** (reading 1). The rules label and the files are; a change of layout with neither is a change that plays the same game.
+
