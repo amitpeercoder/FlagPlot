@@ -158,9 +158,10 @@
 //!   On the morning of day 6 and on each morning after, the staff gives
 //!   no order and hands in the notice that it cannot meet intent 1.
 //! - **The night's limit.** With the lighter rate of a size 0 port at
-//!   4 t an hour: a ship's limit is 4 x 5 1/3 = 21 1/3 t. A load fills
-//!   ship 1 first, so the load is cut to 21 1/3 t, all in ship 1, and
-//!   ship 2 goes with its force empty. The reason gives the cut.
+//!   4 t an hour: a ship's limit is 4 x 5 1/3 = 21 1/3 t. The load of
+//!   60 t is cut to 42 2/3 t, 21 1/3 t in each ship (decision 0162; as
+//!   the rule stood it was 21 1/3 t, all in ship 1). The reason gives
+//!   the cut and the level.
 //! - **Not the fuel for full speed.** With each ship holding 300 t and
 //!   base 1 no fuel: at 36 kn a ship needs 303.75 t and has 300. Full
 //!   speed is passed over, cruise arrives by day, and at balanced the run
