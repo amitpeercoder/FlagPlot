@@ -156,6 +156,9 @@
         "fuel_t": {
           "$ref": "defs.schema.json#/$defs/dec"
         },
+        "fuel_capacity_t": {
+          "$ref": "defs.schema.json#/$defs/dec"
+        },
         "supply_t": {
           "$ref": "defs.schema.json#/$defs/dec"
         },
@@ -251,6 +254,9 @@
           "type": "boolean"
         },
         "fuel_t": {
+          "$ref": "defs.schema.json#/$defs/dec"
+        },
+        "fuel_capacity_t": {
           "$ref": "defs.schema.json#/$defs/dec"
         },
         "flotation_damage": {
