@@ -1493,7 +1493,7 @@ button:disabled { opacity: 0.45; cursor: default; }
     api('events', day ? { day: day } : {}).then(function (a) {
       var doc = $('sheet-doc'), d = a.day, evs = a.events || []; doc.textContent = ''; if (!day) diaryLast = d;
       var blocks = { dusk: [], night: [], morning: [], afternoon: [], close: [] };
-      evs.forEach(function (e) { if (e.event_kind === 'staff_reason' || e.event_kind === 'intent_formed' || e.event_kind === 'interrupt_fired') return; blocks[e.pulse || (D_ROUTINE[e.event_kind] ? 'close' : 'dusk')].push(e); });
+      evs.forEach(function (e) { if (emptyClaim(e) || e.event_kind === 'staff_reason' || e.event_kind === 'intent_formed' || e.event_kind === 'interrupt_fired') return; blocks[e.pulse || (D_ROUTINE[e.event_kind] ? 'close' : 'dusk')].push(e); });
       var head = el('div', 'head'), who = (config.directives && config.directives[0] && config.directives[0].to) || (config.seat === 'allied' ? 'the Allied command' : 'the Japanese command');
       [['Kept by', 'Staff of ' + who], ['For', (dateOf(d - 1, true) || 'day ' + d) + ', from 1800 the evening before']].forEach(function (r) { head.appendChild(el('span', '', r[0])); head.appendChild(el('span', '', r[1])); });
       doc.appendChild(head);
@@ -1845,12 +1845,14 @@ button:disabled { opacity: 0.45; cursor: default; }
     if (!h) return; var ring = new THREE.Mesh(new THREE.RingGeometry(0.85, 1, 40), new THREE.MeshBasicMaterial({ color: colour, transparent: true, opacity: 0.9, depthTest: false }));
     ring.rotation.x = -Math.PI / 2; ring.position.copy(world(h[3], h[4], 0.012)); ring.userData.t = 0; scene.add(ring); flashes.push(ring);
   }
+  // A claim of nothing: no aircraft and no ship. It is no news.
+  function emptyClaim(e) { return e.event_kind === 'claim_received' && (/: 0 aircraft shot down$/.test(e.text) || /claims 0 enemy ships? sunk/.test(e.text) || /: 0 aircraft destroyed on the ground$/.test(e.text)); }
   function digest(events) {
     var lines = [], landed = {}, perKind = {};
     events.forEach(function (e) {
       if (e.event_kind === 'men_landed') { var m = /landed (\d+) men .* at (\(-?\d+,-?\d+\))/.exec(e.text); if (m) { landed[m[2]] = (landed[m[2]] || 0) + parseInt(m[1], 10); return; } }
       if (e.pulse && (e.event_kind === 'order_accepted' || e.event_kind === 'order_rejected')) { lines.push({ text: 'Your direct order: ' + named(e.text), hex: null, red: e.event_kind === 'order_rejected' }); return; }
-      if (QUIET[e.event_kind] || D_ROUTINE[e.event_kind]) return;
+      if (QUIET[e.event_kind] || D_ROUTINE[e.event_kind] || emptyClaim(e)) return;
       perKind[e.event_kind] = (perKind[e.event_kind] || 0) + 1; if (perKind[e.event_kind] > 3) return;
       lines.push({ text: sayEvent(e, true), hex: hexIn(e.text), red: /enemy|attack|bomb|sunk|hit|lost|contact|fight|surrender/.test(e.text) });
     });
