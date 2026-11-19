@@ -53,6 +53,7 @@ button:disabled { opacity: 0.45; cursor: default; }
 .view { position: fixed; top: 12px; right: 16px; display: flex; gap: 6px; }
 .view button svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; flex: none; }
 .view button { display: inline-flex; align-items: center; gap: 6px; min-width: 36px; justify-content: center; min-height: 34px; padding: 0 8px; background: rgba(0,0,0,0.35); color: var(--ink-dim); border: 1px solid var(--ink-dim); border-radius: 2px; font-size: 13px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; }
+.view button.ask { color: #fff; border-color: var(--enemy); background: var(--enemy); }
 .view button:hover, .view button:focus-visible, .view button[aria-pressed="true"] { color: var(--ink); border-color: var(--ink); }
 .tray h2 { margin: 4px 0 0; font-size: 14px; font-weight: 600; letter-spacing: 0.16em; opacity: 0.85; text-transform: uppercase; text-shadow: 0 1px 6px #000; }
 #signals { display: flex; flex-direction: column; gap: 10px; }
@@ -359,6 +360,7 @@ button:disabled { opacity: 0.45; cursor: default; }
   <button type="button" id="btn-hexes" aria-pressed="false" title="Hexes and their numbers" aria-label="Hexes"><svg viewBox="0 0 24 24"><path d="M7 3.5h10l5 8.5-5 8.5H7L2 12z"/></svg></button>
   <button type="button" id="btn-pieces"></button>
   <button type="button" id="btn-labels"></button>
+  <button type="button" id="btn-restart" title="Begin the game again from its first evening" aria-label="Begin the game again"><svg viewBox="0 0 24 24"><path d="M4.5 12a7.5 7.5 0 1 0 2.4-5.5M4 3.5v4h4"/></svg></button>
   <button type="button" id="btn-stops" aria-expanded="false" aria-controls="stops" hidden title="What stops the clock" aria-label="Clock stops"><svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 8.5V13l3 2M9.5 2.5h5"/></svg></button>
 </div>
 <fieldset class="stops" id="stops" hidden>
@@ -2026,6 +2028,14 @@ button:disabled { opacity: 0.45; cursor: default; }
     if (o.hidden) $('pop-orders').hidden = true; if (st.hidden) $('pop-staff').hidden = true;
   }
   new MutationObserver(menuWords).observe($('pop-orders'), { childList: true, subtree: true }); new MutationObserver(menuWords).observe($('pop-staff'), { childList: true, subtree: true });
+  // Beginning again is asked twice: the first touch says what it will do, the second does it.
+  var restartAsked = 0;
+  $('btn-restart').addEventListener('click', function () {
+    var b = this;
+    if (!restartAsked) { var w = document.createElement('span'); w.textContent = 'again to restart'; b.appendChild(w); b.classList.add('ask'); setStatus('Touch it again to begin the game anew from its first evening. This game is not kept.'); restartAsked = setTimeout(function () { restartAsked = 0; b.classList.remove('ask'); if (b.lastChild.tagName === 'SPAN') b.removeChild(b.lastChild); }, 5000); return; }
+    clearTimeout(restartAsked); b.disabled = true; setStatus('Beginning again.');
+    fetch('/restart', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }).then(function (r) { return r.json(); }).then(function (a) { if (a.refused != null) throw new Error(a.refused); try { history.replaceState(null, '', location.pathname); } catch (e) {} location.reload(); }).catch(function (e) { b.disabled = false; setStatus('It could not begin again: ' + e.message); });
+  });
   $('btn-stops').addEventListener('click', function () { var f = $('stops'); f.hidden = !f.hidden; this.setAttribute('aria-expanded', String(!f.hidden)); });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !$('stops').hidden) { $('stops').hidden = true; $('btn-stops').setAttribute('aria-expanded', 'false'); } });
   $('btn-back').addEventListener('click', function () { goal.x = 0; goal.z = 0; goal.zoom = 0; });
