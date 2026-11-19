@@ -859,10 +859,10 @@ impl World {
 
     /// A means for tests only (decision 0175), built only with the feature
     /// `test-means`, which no normal build enables: makes the state break an
-    /// invariant that no rule of play reads, by giving the lowest-numbered
-    /// base a yard passage of 0 days, so that the next day resolved fails
-    /// its check of the invariants at its end. A world with no base is left
-    /// as it is.
+    /// invariant by giving the lowest-numbered base a yard passage of 0
+    /// days, a figure read only when a ship goes to the yard, so that the
+    /// next day resolved fails its check of the invariants at its end. A
+    /// world with no base is left as it is.
     #[cfg(feature = "test-means")]
     pub fn break_an_invariant_for_a_test(&mut self) {
         if let Some(base) = self.truth.bases.values_mut().next() {
