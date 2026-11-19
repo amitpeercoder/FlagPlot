@@ -1067,6 +1067,14 @@ fn property_every_scenario_on_the_frozen_figures_has_no_event_of_the_rule() {
         .collect();
     files.sort();
     for file in files {
+        // Scenario 96 names ground figures of its own on which men dig in
+        // (decision 0177's hand calculation): the rule is on there by design.
+        if file
+            .file_name()
+            .is_some_and(|name| name.to_string_lossy().starts_with("96_"))
+        {
+            continue;
+        }
         let mut scenario = common::load(&file)
             .unwrap_or_else(|e| panic!("{} loads on the frozen figures: {e:?}", file.display()));
         scenario

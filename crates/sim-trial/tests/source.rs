@@ -30,6 +30,15 @@
 ///   (`.command_state()`). Every other file is banned `side_view` and
 ///   `command_state(` as before. A world named in either is one the crate
 ///   built, since no function takes one.
+/// - **The window** (decision 0177, amended 7) adds two: the play reads the
+///   side tried's own command state through the view it takes at a day's
+///   end, on one line (`play.rs`, `.command_state()`), for the landings it
+///   has formed on the day the course is taken in; and the window
+///   (`window.rs`) takes the view of the enemy side of a world it built on
+///   one line, which must name the other side of the side tried
+///   (`other(`) and stand in the one function that reads the enemy on a
+///   date's eve (`enemy_on_the_eve`), for his men ashore at the places of the
+///   intent's end and their cover.
 /// - **A test module** of the crate (a file whose name ends `_tests.rs`),
 ///   compiled only for its own tests, is not read.
 /// - **Banned outright:** the umpire and his key; the whole picture of a
@@ -96,10 +105,12 @@ fn a_trial_takes_a_side_view_and_nothing_else_of_a_live_game() {
     ];
     // The views a part of the crate may take of a world it built, by file:
     // the word allowed, and the most lines that may name it there.
-    let allowed_in: [(&str, &str, usize); 3] = [
+    let allowed_in: [(&str, &str, usize); 5] = [
         ("play.rs", ".side_view(", 1),
+        ("play.rs", ".command_state()", 1),
         ("estimate.rs", ".side_view(", usize::MAX),
         ("estimate.rs", ".command_state()", usize::MAX),
+        ("window.rs", ".side_view(", 1),
     ];
     let allowed_world = [
         "use sim_core::World;",
@@ -134,10 +145,27 @@ fn a_trial_takes_a_side_view_and_nothing_else_of_a_live_game() {
                 .to_string();
             let text = std::fs::read_to_string(&path).expect("a source reads");
             let mut allowed_lines = vec![0usize; allowed_in.len()];
+            // The function a line stands in, by the last `fn` begun.
+            let mut in_fn = String::new();
             for (i, line) in text.lines().enumerate() {
                 let code = line.trim_start();
                 if code.starts_with("//") {
                     continue;
+                }
+                if let Some(at) = code.find("fn ") {
+                    let rest = &code[at + 3..];
+                    if let Some(end) = rest.find(['(', '<']) {
+                        in_fn = rest[..end].to_string();
+                    }
+                }
+                // The window's one view: of the enemy side, on a date's eve.
+                if name == "window.rs" && code.contains(".side_view(") {
+                    assert!(
+                        code.contains(".side_view(other(") && in_fn == "enemy_on_the_eve",
+                        "{}:{} takes a view other than the enemy's on a date's eve: {line}",
+                        path.display(),
+                        i + 1
+                    );
                 }
                 // An allowed view is cut out of the line before the check, and
                 // counted.

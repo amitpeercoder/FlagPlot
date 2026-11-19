@@ -15,10 +15,13 @@
 //! the soak and from day 150. Two more measure the staff (decision 0107,
 //! "What it must pass", Speed): the staff's decisions for one side on each
 //! day of the slice played with the staffs, and a quiet week (seven staffed
-//! days) in one call. Last, a trial (decision 0175, 9): the Allied side's
+//! days) in one call. Then a trial (decision 0175, 9): the Allied side's
 //! "control Guadalcanal" on the 39 days, from the evening before day 1 and
 //! from the evening of day 20, at each of the three sizes, with both
-//! staffs. No number fails them.
+//! staffs. Last, a window (decision 0177): the same course from the evening
+//! before day 1 at the dates the window chooses, and, where it chooses fewer
+//! than three, at three dates given 3 and 5 days after the first, at each
+//! size. No number fails them.
 
 use std::hint::black_box;
 use std::time::{Duration, Instant};
@@ -65,6 +68,8 @@ struct Settings {
     trial_late: u32,
     only_trial: bool,
     trial_size: Option<String>,
+    only_window: bool,
+    window_runs: u32,
 }
 
 fn parse(args: &[String], usage: &str) -> Result<Settings, String> {
@@ -83,6 +88,8 @@ fn parse(args: &[String], usage: &str) -> Result<Settings, String> {
         trial_late: 20,
         only_trial: false,
         trial_size: None,
+        only_window: false,
+        window_runs: 1,
     };
     let mut words = args.iter();
     while let Some(word) = words.next() {
@@ -113,6 +120,10 @@ fn parse(args: &[String], usage: &str) -> Result<Settings, String> {
                 settings.trial_late = number("--trial-late-day", value("--trial-late-day")?)?
             }
             "--only-trial" => settings.only_trial = true,
+            "--only-window" => settings.only_window = true,
+            "--window-runs" => {
+                settings.window_runs = number("--window-runs", value("--window-runs")?)?.max(1)
+            }
             "--trial-size" => {
                 let name = value("--trial-size")?.clone();
                 if !["small", "standard", "full"].contains(&name.as_str()) {
@@ -595,6 +606,13 @@ pub fn command(args: &[String], usage: &str, options: &LoadOptions) -> Result<()
         trial_totals(&h);
         return Ok(());
     }
+    if s.only_window {
+        let i = windows(&s, options)?;
+        println!();
+        println!("What it means:");
+        window_totals(&i);
+        return Ok(());
+    }
 
     let early = start_at(&s.slice, s.early, options)?;
     let late = start_at(&s.slice, s.late, options)?;
@@ -723,6 +741,7 @@ pub fn command(args: &[String], usage: &str, options: &LoadOptions) -> Result<()
     }
 
     let h = trials(&s, options)?;
+    let i = windows(&s, options)?;
 
     println!();
     println!("What it means (medians; the times a designer can set \"Speed\" from):");
@@ -778,6 +797,7 @@ pub fn command(args: &[String], usage: &str, options: &LoadOptions) -> Result<()
         );
     }
     trial_totals(&h);
+    window_totals(&i);
     Ok(())
 }
 
@@ -790,6 +810,201 @@ fn trial_totals(h: &[TrialTime]) {
             t.days,
             t.from,
             show(t.time)
+        );
+    }
+}
+
+/// What one window of the measure took and gave, over its runs.
+struct WindowTime {
+    size: &'static str,
+    worlds: u32,
+    days: u32,
+    dates: Vec<u32>,
+    given: bool,
+    time: Spread,
+    played_days: usize,
+    failed: usize,
+}
+
+/// One window of the Allied side on `live` from the evening before day 1,
+/// timed from the making of its pictures to the dropping of its worlds, with
+/// both staffs, `runs` times (decision 0177, amended 6).
+fn time_window(
+    live: &Scenario,
+    figures: &sim_core::refdata::TrialFigures,
+    course: &[sim_trial::CourseCommand],
+    intent: sim_core::ids::IntentId,
+    size: (&'static str, sim_core::refdata::TrialSize),
+    given: Option<Vec<u32>>,
+    runs: u32,
+) -> Result<WindowTime, String> {
+    let side = sim_core::state::Side::Allied;
+    let believed = sim_trial::Believed {
+        forces: live.believed_forces(side).cloned().collect(),
+        intents: live.believed_intents(side).cloned().collect(),
+        men: live.believed_men(side).cloned().collect(),
+    };
+    let view = live.world.side_view(side);
+    let mut times = Vec::new();
+    let mut dates = Vec::new();
+    let mut played_days = 0;
+    let mut failed = 0;
+    for _ in 0..runs {
+        let asked = sim_trial::WindowAsked {
+            trial: 1,
+            worlds: size.1.worlds,
+            days: size.1.days,
+            intent,
+            standing: Vec::new(),
+            course: course.to_vec(),
+            dates: given.clone(),
+        };
+        let begin = clock();
+        let played = sim_trial::play_window(
+            &view,
+            &believed,
+            figures,
+            live.world.ref_data(),
+            live.world.map(),
+            asked,
+        )
+        .map_err(|e| e.to_string())?;
+        dates = played.dates.dates.iter().map(|d| d.day).collect();
+        // The days of play: each date's own days, and the days before the
+        // last date once (amended 5), not the days each date's record
+        // shares with the days before it.
+        let last_shift = played.played.last().map_or(0, |date| date.shift);
+        played_days = played
+            .played
+            .iter()
+            .map(|date| {
+                date.played
+                    .worlds
+                    .iter()
+                    .map(|w| w.days.len().saturating_sub(date.shift as usize))
+                    .sum::<usize>()
+            })
+            .sum::<usize>()
+            + played
+                .played
+                .first()
+                .map_or(0, |date| date.played.worlds.len())
+                * last_shift as usize;
+        failed = played.played.iter().map(|date| date.failed().len()).sum();
+        drop(played);
+        times.push(begin.elapsed());
+    }
+    Ok(WindowTime {
+        size: size.0,
+        worlds: size.1.worlds,
+        days: size.1.days,
+        dates,
+        given: given.is_some(),
+        time: spread(times),
+        played_days,
+        failed,
+    })
+}
+
+/// The measure of decision 0177, amended 6: a window of the Allied side's
+/// own commands of day 1 on the trial's slice from the evening before day 1,
+/// at each size, at the dates it chooses and, where it chooses fewer than
+/// three, at the first and 3 and 5 days after it.
+fn windows(s: &Settings, options: &LoadOptions) -> Result<Vec<WindowTime>, String> {
+    let early = trial_live_game(&s.trial_slice, 0, options)?;
+    let course = trial_course(&early)?;
+    let intent = course
+        .iter()
+        .find_map(|c| match c.command {
+            sim_core::command::CommandKind::SetIntent { intent, .. } => Some(intent),
+            _ => None,
+        })
+        .ok_or("the trial's slice gives the Allied side no intent on day 1")?;
+    let figures = match early.trial_figures() {
+        Some(figures) => figures.clone(),
+        None => sim_data::load_trial_figures(std::path::Path::new(&s.trial_figures))
+            .map_err(|e| e.to_string())?,
+    };
+    println!();
+    println!(
+        "i. A window of the Allied side's intent {} on {} (decision 0177, amended 6): from the evening before day 1 with its own {} command(s) of day 1 as the course, at the dates the window chooses and, where it chooses fewer than three, at the first and 3 and 5 days after it; the trial's seed {}, trial 1; both staffs; {} run(s) each, timed from the making of the pictures to the dropping of the worlds:",
+        intent.raw(),
+        s.trial_slice,
+        course.len(),
+        figures.seed,
+        s.window_runs
+    );
+    let before = early.world.state_hash();
+    let view = early.world.side_view(sim_core::state::Side::Allied);
+    let mut times = Vec::new();
+    for size in figures.sizes() {
+        if s.trial_size.as_deref().is_some_and(|name| name != size.0) {
+            continue;
+        }
+        let told = sim_trial::dates(&view, &course, intent, size.1.days);
+        println!(
+            "  {} ({} worlds x {} days): {}",
+            size.0,
+            size.1.worlds,
+            size.1.days,
+            told.to_string().trim_end().replace('\n', "\n    ")
+        );
+        let mut asks = vec![None];
+        if told.dates.len() < sim_trial::MOST_DATES {
+            asks.push(Some(vec![
+                told.first_day,
+                told.first_day + 3,
+                told.first_day + 5,
+            ]));
+        }
+        for given in asks {
+            let t = time_window(
+                &early,
+                &figures,
+                &course,
+                intent,
+                size,
+                given,
+                s.window_runs,
+            )?;
+            println!(
+                "  {:<8} {:>2} worlds x {:>2} days, dates {:?}{}: median {}, min {}, max {} over {} run(s)   {} days of play{}",
+                t.size,
+                t.worlds,
+                t.days,
+                t.dates,
+                if t.given { " (given)" } else { " (chosen)" },
+                show(t.time.median),
+                show(t.time.min),
+                show(t.time.max),
+                t.time.runs,
+                t.played_days,
+                if t.failed == 0 {
+                    String::new()
+                } else {
+                    format!("; {} world(s) of a date failed", t.failed)
+                }
+            );
+            times.push(t);
+        }
+    }
+    if early.world.state_hash() != before {
+        return Err("a window changed the live game's hash".to_string());
+    }
+    Ok(times)
+}
+
+fn window_totals(i: &[WindowTime]) {
+    for t in i {
+        println!(
+            "  A window, {} ({} worlds x {} days), dates {:?}{}, from the evening before day 1: {} (median of {}).",
+            t.size,
+            t.worlds,
+            t.days,
+            t.dates,
+            if t.given { " given" } else { " chosen" },
+            show(t.time.median),
+            t.time.runs
         );
     }
 }

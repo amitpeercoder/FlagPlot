@@ -53,6 +53,7 @@ mod draw;
 mod enemy;
 mod estimate;
 mod play;
+mod window;
 
 pub use assumption::{Assumption, NotMade, SetAside, Source};
 pub use estimate::{
@@ -60,10 +61,15 @@ pub use estimate::{
     Losses, OtherPlan, PartSide, PartedBy, Parting, Spread, Went, WorldFigures,
 };
 pub use play::{
-    begin, begin_from_pictures, play, Asked, BasesAt, CourseCommand, Failed, Played, PlayedDay,
-    PlayedWorld, Playing, RefusedCommand, Stepped,
+    begin, begin_from_pictures, play, Asked, BasesAt, CourseCommand, Failed, Landing, Played,
+    PlayedDay, PlayedWorld, Playing, RefusedCommand, Stepped, TakenIn,
 };
 pub use sim_core::refdata::TrialSize;
+pub use window::{
+    begin_window, dates, given_dates, play_window, window, world_for_world, Chosen, CoverSpread,
+    Date, DatePlayed, Dates, Due, DueKind, EnemyAt, EnemyOnTheEve, PlayedWindow, Window,
+    WindowAsked, WindowDate, WindowPlaying, WorldForWorld, MOST_DATES,
+};
 
 use core::fmt;
 
