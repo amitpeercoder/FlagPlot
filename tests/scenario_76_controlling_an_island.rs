@@ -151,11 +151,16 @@
 //! - **The commander names the source.** With a forces limit on intent 1
 //!   that names base 1 as the source: the tree and the orders are those
 //!   of the main case.
-//! - **No source.** With task force 1 left out: no base can be the
-//!   source of supply or of the landing. The holds form no supply and
-//!   say so; the take hands in the notice that it cannot meet its intent
-//!   on day 1 and gives the reason each morning; the island is
-//!   controlled on 0 of 14 days.
+//! - **No source of the landing.** With task force 1 left out: no base
+//!   can be the source of the landing; the take hands in the notice
+//!   that it cannot meet its intent on day 1 and gives the reason each
+//!   morning. Base 1 is the source of supply from day 1, with no force
+//!   (decision 0163, item 1), and "keep base 3 supplied", with a floor
+//!   of 5 days, is formed under the hold of its place on day 4, with no
+//!   ship to send. The island is controlled on 0 of 14 days. (Restated
+//!   by the architect on Nov 19, 2026, for decision 0163: before it no
+//!   base could be the source of supply either, and the holds formed no
+//!   supply.)
 //! - **An enemy base near.** With a Japanese base 5 on the Allied map at
 //!   (2,3), in no named place's hex: "neutralise base 2" and then
 //!   "neutralise base 5" are formed on day 1, after the denial, and each

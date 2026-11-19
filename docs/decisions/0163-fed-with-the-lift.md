@@ -35,7 +35,7 @@ One thing this does not gain is days. A force found empty at the source on a mor
 
 ## The data
 
-7. **Rabaul holds fuel.** Base 2 of `data/scenarios/07_full_slice.toml` is given `fuel_t = 5000`, a placeholder: no row gives Rabaul's stock of fuel oil in August 1942, and `data/oob/gaps.csv` gains the gap. The figure is sized not to bind: a fast transport's round trip to Lunga burns about 139 t, so 5,000 t is thirty-six such trips. The comment on the base says so. The staff's setup and the three arrangements of stage 3's proof are made again by their scripts. The frozen copy is not changed.
+7. **Rabaul holds fuel.** Base 2 of `data/scenarios/07_full_slice.toml` is given `fuel_t = 50000`, a placeholder: no row gives Rabaul's stock of fuel oil in August 1942, and `data/oob/gaps.csv` gains the gap. The figure is sized not to bind: a fast transport's round trip to Lunga burns about 139 t, so 50,000 t is three hundred and sixty such trips, and a hundred destroyers' tanks filled. The comment on the base says so. The staff's setup and the three arrangements of stage 3's proof are made again by their scripts. The frozen copy is not changed.
 8. **Why it is right to change it before the proof.** A side whose main base has no fuel cannot run supply for 39 days by any rule; the proof of this stage would measure the scenario's gap and not the staff. It is recorded here, before any run, and no figure is set from a run.
 
 ## What it leaves for later
@@ -88,3 +88,12 @@ What changed in the games already built:
 - **Scenario 77.** The same orders; only the words of the source's reason change in its run baseline.
 - **The scripted full slice** changes from day 1 by Rabaul's fuel: the Japanese transports of task force 31 now fuel there. The recorded games change in their doctrine version, and `full_slice_five_days_sonnet` in its hashes too; no transcript changes.
 - **Scenarios 06d1 and 06d2** leave scenario 86 out of the files whose hashes they hold to before their stage, as they do the other staffed scenarios.
+
+## The architect's rulings
+
+1. **The landing's base in scenario 86 is base 5** (Nov 19, 2026). The hand calculation called it base 3; bases 1, 2 and 4 are in the scenario, so the base a landing forms takes the next number. The doc comment is restated.
+2. **A supply intent with no ship in its pool gives the doctrine's reason and reckons nothing.** Item 3 said it gives "the run it would order". The doctrine tests the pool before it reckons the stock and the run, and its reason is that no ship of the pool is afloat. That stands: item 3 is read as that reason, unchanged, and the hand calculation's day 3 is restated.
+3. **"Not the fuel to go on" is restated,** with the source the farther base, so that a ship can be short for the way on and have the fuel for the way home.
+4. **Scenario 76's property "No source" is restated** as "No source of the landing": the source of supply is now named with no ship, which is this record's item 1.
+5. **Rabaul's fuel is 50,000 t, not 5,000 t.** The first figure was sized against the supply ships' runs alone. The build's runs showed the lifts that come on to Rabaul by item 4 fill their tanks there too, and 5,000 t was gone by day 26: the figure bound, which item 7 said it was not to. It is a placeholder for a stock no row gives, set so that fuel at the side's main base is not what limits it; no run was judged, and no figure is set to an outcome.
+6. **The readings of "As built" stand as made,** with one noted for later: a take whose first lift went on to the source gets no second lift with that force.

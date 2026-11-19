@@ -77,7 +77,7 @@
 //!
 //! | Day | Hour | The staff's orders | What happens |
 //! | --- | --- | --- | --- |
-//! | 1 | 0 | Task force 1: `prepare_landing` at B, roster 1; a route to B and on to A, acting at B; an unload order | Sails at hour 0 and arrives at hour 8. In the night's last 4 hours each ship lands 320 men. In the morning ship 1 lands 280 men in 3.5 hours and then 30 t in 1.5 hours; ship 2 lands 80 men in an hour. Base 3, "Landing at (4,0)", is formed. The force steams for A at hour 18 |
+//! | 1 | 0 | Task force 1: `prepare_landing` at B, roster 1; a route to B and on to A, acting at B; an unload order | Sails at hour 0 and arrives at hour 8. In the night's last 4 hours each ship lands 320 men. In the morning ship 1 lands 280 men in 3.5 hours and then 30 t in 1.5 hours; ship 2 lands 80 men in an hour. Base 5, "Landing at (4,0)", is formed. The force steams for A at hour 18 |
 //! | 2 | 24 | Unit 1 set to attack | The force arrives at A at hour 34. Base 2 changes side at the end of the day |
 //! | 3 | 48 | Unit 1 set to defend | |
 //! | 4 | 72 | Task force 1: a load of supply to a weight of 85 t | Ship 1 loads 85 t at A |
@@ -95,18 +95,18 @@
 //!   for a passage of 80 nm and 160 nm, 24 t. The route's reason names
 //!   base 1 and says it is the source of supply.
 //! - **Day 2.** The judgement is to attack. The hold of base 2 still
-//!   waits, and the side has base 3 in the hex with 1,000 men ashore:
-//!   "keep base 3 supplied", with a floor of 5 days, is formed under the
+//!   waits, and the side has base 5 in the hex with 1,000 men ashore:
+//!   "keep base 5 supplied", with a floor of 5 days, is formed under the
 //!   hold.
 //! - **Day 3.** The take is met and unit 1 is set to defend. Task force 1
 //!   lies empty at base 1: the hold's forces limit is set to base 1 and
 //!   task force 1. The supply intent is served for the first time, on
-//!   the limit as it stood that morning, base 1 and no force. The stock
-//!   at B is 25 t, the use is 1,000 x 0.005 = 5 t a day, and the floor's
-//!   stock is 25 t. A run ordered today would arrive on day 4, and the
-//!   reading of day 5 is 25 - 10 = 15 t, below 25: a run is wanted and
-//!   no ship of the limit can carry it. The staff gives no order for it
-//!   and gives the reason.
+//!   the limit as it stood that morning, base 1 and no force. The pool
+//!   has no ship afloat: the staff gives no order for it, and its one
+//!   reason says that no ship of the pool is afloat and there is nothing
+//!   to send. The stock and the run are not reckoned on a morning with
+//!   no ship. (Restated by the architect on Nov 19, 2026: the first
+//!   writing had the run reckoned and then found to have no ship.)
 //! - **Day 4.** The limit is base 1 and task force 1. The stock at B is
 //!   20 t. A run ordered today arrives on day 5, and the reading of day
 //!   6 is 20 - 10 = 10 t, below 25: a run. Its load is the floor's stock
@@ -117,7 +117,8 @@
 //!
 //! ## Supply, fuel and men
 //!
-//! - **Base 3** takes 30 t on the morning of day 1. It pays 5 t for 1,000
+//! - **Base 5**, the base the landing forms (bases 1, 2 and 4 are in
+//!   the scenario, so it takes the next number), takes 30 t on the morning of day 1. It pays 5 t for 1,000
 //!   men on the nights of days 2, 3, 4 and 5: base 2, Allied from the
 //!   end of day 2 and the lower numbered, holds nothing on those nights.
 //!   It holds 25, 20, 15 and 10 t after them and ends with 10 t.
@@ -141,11 +142,17 @@
 //!   hold's forces limit names no source on any day, no "keep supplied"
 //!   is formed, and the lift is routed to B and back to base 4, as
 //!   before.
-//! - **Not the fuel to go on.** With each ship holding 20 t of fuel: the
-//!   passage to B burns 8 t and the passage on to A 16 t, 24 t against
-//!   20 t. The lift is routed to B and back to base 4, as before, and
-//!   the route's reason gives the two figures. Only the orders of day 1
-//!   are asserted.
+//! - **Not the fuel to go on.** With base 1's supply 0, base 4's
+//!   1,000 t, task force 1's home port base 1, and each ship holding
+//!   26 t of fuel: the source is base 4. The passage to B burns 8 t and
+//!   the passage on to base 4, at C, more than the 18 t left; the
+//!   passage back to base 1 burns 16 t, 24 t out and back against 26 t.
+//!   The lift is routed to B and back to base 1, as before, and the
+//!   route's reason says it does not go on to base 4 and gives each
+//!   ship's fuel against the burn to B and on. Only the orders and the
+//!   route's reason of day 1 are asserted. (Restated by the architect on
+//!   Nov 19, 2026: in the first writing the way home was the longer, so
+//!   a ship short for the way on was short for the way home too.)
 //! - **The commander's source.** With intent 1 given a forces limit that
 //!   names base 4 as the source: the source is base 4, as before, and
 //!   the lift is routed to B and back to base 4.
