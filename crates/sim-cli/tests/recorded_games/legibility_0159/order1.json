@@ -1,0 +1,80 @@
+{
+  "as_at": "the start of day 2, with the commands you have queued taken in",
+  "expected_ashore": 8,
+  "for_day": 2,
+  "format": "flagplot-agent",
+  "intent": 1,
+  "kind": "plan_order",
+  "men": {
+    "to_hand": 600,
+    "wanted": 1200
+  },
+  "mission": "take the place at (4,0)",
+  "need_to_know": null,
+  "phases": [
+    {
+      "base": null,
+      "ends": "released",
+      "name": "prepare",
+      "place": null,
+      "stage": "to_come",
+      "text": "Prepare: ends when the plan is released. To come."
+    },
+    {
+      "base": null,
+      "ends": "first_man_ashore",
+      "name": "move",
+      "place": {
+        "lat": null,
+        "lon": null,
+        "name": null,
+        "q": 4,
+        "r": 0
+      },
+      "stage": "to_come",
+      "text": "Move: ends when the first man is ashore at (4,0). To come."
+    },
+    {
+      "base": null,
+      "ends": "place_is_the_sides",
+      "name": "land",
+      "place": {
+        "lat": null,
+        "lon": null,
+        "name": null,
+        "q": 4,
+        "r": 0
+      },
+      "stage": "to_come",
+      "text": "Land: ends when (4,0) is the side's. To come."
+    }
+  ],
+  "plan": {
+    "number": 1,
+    "state": "draft"
+  },
+  "tasks": [],
+  "text": [
+    "Mission: take the place at (4,0).",
+    "Phases: Prepare, Move, Land.",
+    "It waits for: Men: 1,200 wanted, 600 to hand; not met; expected day 4.",
+    "Men wanted 1,200, to hand 600.",
+    "It expects to be ashore on day 8."
+  ],
+  "version": 26,
+  "waits_for": [
+    {
+      "day": null,
+      "expected_day": 4,
+      "force": null,
+      "intent": null,
+      "kind": "men",
+      "knowledge": null,
+      "leave": null,
+      "met": false,
+      "text": "Men: 1,200 wanted, 600 to hand; not met; expected day 4.",
+      "to_hand": 600,
+      "wanted": 1200
+    }
+  ]
+}

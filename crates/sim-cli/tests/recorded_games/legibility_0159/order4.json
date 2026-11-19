@@ -1,0 +1,102 @@
+{
+  "as_at": "the start of day 3, with the commands you have queued taken in",
+  "expected_ashore": null,
+  "for_day": 3,
+  "format": "flagplot-agent",
+  "intent": 1,
+  "kind": "plan_order",
+  "men": null,
+  "mission": "take the place at (4,0)",
+  "need_to_know": {
+    "asked": {
+      "from": null,
+      "setting": "count",
+      "within_days": null
+    },
+    "held": null,
+    "intent": 1,
+    "looking": null,
+    "met": false,
+    "moved_to_look": null,
+    "place": {
+      "lat": null,
+      "lon": null,
+      "name": null,
+      "q": 4,
+      "r": 0
+    },
+    "text": "Asked by the risk: a count. Nothing held; none looking. Not met."
+  },
+  "phases": [
+    {
+      "base": null,
+      "ends": "released",
+      "name": "prepare",
+      "place": null,
+      "stage": "under_way",
+      "text": "Prepare: ends when the plan is released. Under way."
+    },
+    {
+      "base": null,
+      "ends": "first_man_ashore",
+      "name": "move",
+      "place": {
+        "lat": null,
+        "lon": null,
+        "name": null,
+        "q": 4,
+        "r": 0
+      },
+      "stage": "to_come",
+      "text": "Move: ends when the first man is ashore at (4,0). To come."
+    },
+    {
+      "base": null,
+      "ends": "place_is_the_sides",
+      "name": "land",
+      "place": {
+        "lat": null,
+        "lon": null,
+        "name": null,
+        "q": 4,
+        "r": 0
+      },
+      "stage": "to_come",
+      "text": "Land: ends when (4,0) is the side's. To come."
+    }
+  ],
+  "plan": {
+    "number": 1,
+    "state": "preparing"
+  },
+  "tasks": [
+    {
+      "intent": 4,
+      "kind": "ready_landing",
+      "phase": "prepare",
+      "statement": "ready a landing at (4,0) by task_force:1"
+    }
+  ],
+  "text": [
+    "Mission: take the place at (4,0).",
+    "Phases: Prepare (under way), Move, Land.",
+    "It waits for: An intent: after intent 3; not met.",
+    "It cannot yet say when it will be ashore."
+  ],
+  "version": 26,
+  "waits_for": [
+    {
+      "day": null,
+      "expected_day": null,
+      "force": null,
+      "intent": 3,
+      "kind": "intent",
+      "knowledge": null,
+      "leave": null,
+      "met": false,
+      "text": "An intent: after intent 3; not met.",
+      "to_hand": null,
+      "wanted": null
+    }
+  ]
+}

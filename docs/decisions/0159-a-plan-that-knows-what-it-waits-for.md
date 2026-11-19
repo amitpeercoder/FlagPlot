@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 18, 2026, for the designer's app
 
 Summary: A plan for the opening of stage 4: men ashore at a place not yet taken are fed by supply runs to the base their landing formed; a take that cannot bring enough waits for the day the schedule brings it, and asks the commander where it never will, in place of going with what it has; a commander may tell a plan to wait (not before a day, until a force may be used, until another intent is met) and may say how much must be known before a landing, apart from the risk word; where nothing in reach can look, the staff may move a carrier force to look and says what that costs; and the staff hands in each plan as an order, with its phases, what each waits for and what it needs, so that a tool and the table can show it. With the arithmetic of its cases, the conditions of its proof, six steps and six questions for the designer
 
-Standing: Confirmed by the designer, Nov 18, 2026, with his six answers, each as recommended. Being built step by step; step 1, fed ashore, and step 2, a take that waits, are built; step 3, the limits to wait, is built; step 4, knowledge (rule D, items 12 and 13), is built; step 5, a force moved to look (rule D, item 14, as the architect ruled it on Nov 18, 2026), is built; step 6, the plan order (rule E), is built: all six steps are built, and the proof of 0159, run once, is next and is the architect's to run
+Standing: Confirmed by the designer, Nov 18, 2026, with his six answers, each as recommended. Being built step by step; step 1, fed ashore, and step 2, a take that waits, are built; step 3, the limits to wait, is built; step 4, knowledge (rule D, items 12 and 13), is built; step 5, a force moved to look (rule D, item 14, as the architect ruled it on Nov 18, 2026), is built; step 6, the plan order (rule E), is built: all six steps are built. Its proof was run once on Nov 19, 2026: not passed as stated, one condition failing (the Japanese side's men landed at a place it has not taken are still lost to hunger, one in four against a mark of one in twenty) and every other holding; it waits for the designer
 
 ## What is so today, read from the code
 
@@ -211,3 +211,13 @@ Written by the architect on Nov 19, 2026, with all six steps on main and before 
 8. **Reported, not judged.** From arrangement (a), by stage 3's own reading scripts: on how many seeds the Japanese side attacks the airfield ashore, on how many each side holds it on day 39, and each side's median margin from its intents and given nothing, beside stage 3's figures (0 of 1,000; the Allied side on 1,000; 64.65 and -59.95; -64.65 and -51.51).
 
 The same start gives the same game is checked as stage 3 checked it (each batch made twice), and reported.
+
+## The proof: run on Nov 19, 2026
+
+Run once by the architect, to the readings above, on 1,000 seeds of each arrangement; nothing was changed after it. The report is `docs/validation/0159-proof.md`.
+
+**Not passed as stated.** Condition 3 fails for the Japanese side: the median game loses 0.2537 of the men it lands at Lunga to hunger (1,532 of 6,076) against a mark of 0.05, where stage 3 saw about one in four. The rule of step 1 acts (the staff forms the supply of its men ashore and runs it), and is defeated by two things it does not govern: the supply is formed days after the first men are ashore, and a run by night lands 25 t where the men landed eat 30 t a day. The Allied side holds at 0.0346.
+
+Every other judged condition holds: the hand calculations; nothing changed where it is unused (0 lines of 194 files); no take short when waiting would have brought enough (0 of 12,000 lifts, though all 10,000 Japanese lifts sail far short with nothing in reach to make up the number, which the condition does not judge); the five built cases of a plan that waits; legibility, 6 of 6; a seat told nothing more. Reported beside stage 3: the Japanese side attacks the airfield ashore on 0 of 1,000 seeds, and the margins are as they were (64.73 and -64.73 from intents).
+
+The architect recommends naming the miss and going on to the trial, with two mends taken into stage 4's plan, each to be a decision record of its own: the supply of men ashore formed with the lift that lands them and sized to them; and a take that does not lift men to a place where its own count says they cannot be enough and its own supply cannot feed them. Nothing is run again to turn the miss into a pass.
