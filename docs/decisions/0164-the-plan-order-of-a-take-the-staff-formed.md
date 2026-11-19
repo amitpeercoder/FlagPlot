@@ -1,10 +1,10 @@
 # 0164: The plan order of a take the staff formed
 
-Status: settled by the architect on Nov 19, 2026. It widens decision 0159, rule E (items 15 to 17), by one kind of intent. It adds no state, no order and no event. To be built.
+Status: settled by the architect on Nov 19, 2026. It widens decision 0159, rule E (items 15 to 17), by one kind of intent. It adds no state, no order and no event. Built on Nov 19, 2026 (As built, below).
 
 Summary: The staff hands in a plan order for each intent of the commander's, and the seat's tool refused every intent of the staff's. A commander who says "control the island" therefore could not ask when the men would be ashore: the take is the staff's. A "take a place" the staff formed now has a plan order of its own, worked as a commander's take is, and the tool answers for it
 
-Standing: Settled by the architect, Nov 19, 2026
+Standing: Settled by the architect, Nov 19, 2026. Built on Nov 19, 2026
 
 ## Why
 
@@ -57,3 +57,10 @@ Built on Nov 19, 2026, as the record says, with one statement of the hand calcul
 2. **The mission.** The hand calculation gives no words for it ("the take's statement, as the staff's reasons give it"). The test asserts that the mission on each morning is among the statements of intent 2 that the staff's handed-in reasons give, as `serves` or as a link of a chain.
 3. **The plan.** The hand calculation says the take has "a plan of its own" and gives no number. The test asserts the order's plan is the plan the command state gives intent 2 on that morning (plan 2).
 4. **The tool's refusals.** Beyond intents 3 and 8 on morning 2, the test asserts that every staff intent in force without an order is refused on every morning, in the words of an intent the side does not have.
+
+## The architect's rulings
+
+1. **The need to know is on the order of a staff's take that is preparing** (Nov 19, 2026). The hand calculation said no need to know is asked on any morning. On the morning of day 2 the take is preparing, and the order of a take that is preparing gives the need to know whether or not the staff waits on it (chapter 8, The plan order): the risk asks a count, none is held, nobody looks, it is not met, and since nothing of the side's can look it is not among what the order waits for. The rule is right and the statement was wrong; the doc comment is restated by the architect.
+2. **The readings of "As built" stand as made.**
+3. **Asked by the table.** The table asks the order of each take under the plan it draws, and shows the day ashore at the place.
+

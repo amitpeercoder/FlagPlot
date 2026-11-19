@@ -43,7 +43,17 @@
 //!
 //! The mission is the take's statement, as the staff's reasons give it.
 //! On each of the four mornings its one task is intent 8, ready a
-//! landing, in the phase prepare. No need to know is asked.
+//! landing, in the phase prepare.
+//!
+//! The need to know: on the morning of day 2, the plan preparing, the
+//! order gives it as the order of any take that is preparing does. The
+//! risk, balanced, asks a count of the enemy at B; the commander asked
+//! none; none is held; nobody is looking and no force was moved to look;
+//! it is not met. Nothing of the side's can look, so the take does not
+//! wait on it, and it is not among what the order waits for. On the
+//! mornings of days 3, 4 and 5 the plan is released and none is asked.
+//! (Restated by the architect on Nov 19, 2026: the first writing had "no
+//! need to know is asked" on every morning.)
 //!
 //! The day it expects, by the sums of a latest day (the day it starts
 //! from, plus the days to embark, plus the days of passage, less 1):
@@ -90,8 +100,8 @@ use std::path::PathBuf;
 use serde_json::Value;
 use sim_core::choices::Moment;
 use sim_core::command::{
-    IntentKind, Maker, OrderTask, Phase, PhaseEnd, PhaseName, PhaseStage, PlanId, PlanOrder,
-    PlanState, Staff,
+    IntentKind, Knowledge, Maker, NeedToKnow, OrderTask, Phase, PhaseEnd, PhaseName, PhaseStage,
+    PlanId, PlanOrder, PlanState, Staff,
 };
 use sim_core::hex::Hex;
 use sim_core::ids::{IntentId, TaskForceId};
@@ -301,9 +311,20 @@ fn assert_row(
     // Its one task is intent 8, ready a landing, in the phase prepare.
     assert_eq!(o.tasks, landing_task(), "morning {day}");
     assert_eq!(o.expected_ashore, expected_ashore, "morning {day}");
-    // No need to know is asked. Last, so that the rest of the row is
-    // checked whatever this gives.
-    assert_eq!(o.need_to_know, None, "morning {day}");
+    // The need to know: on the morning of day 2, a count asked by the
+    // risk, nothing held, nobody looking, not met; on the others none.
+    let want = (day == 2).then(|| NeedToKnow {
+        plan: g.plan_of_2[&day],
+        intent: IntentId::new(2),
+        place: Hex::new(4, 0),
+        asked: Knowledge::Count,
+        asked_from: None,
+        held: None,
+        looking: None,
+        moved_to_look: None,
+        met: false,
+    });
+    assert_eq!(o.need_to_know, want, "morning {day}");
 }
 
 // ---------------------------------------------------------------- The order of intent 2
@@ -444,9 +465,11 @@ fn the_tool_answers_for_the_take() {
     assert_eq!(a["intent"], 1);
     assert_eq!(a["phases"], serde_json::json!([]));
     assert!(a["expected_ashore"].is_null());
-    // No need to know is asked, on any of the four mornings. Last, so that
-    // the rest is checked whatever this gives.
-    assert!(needs.is_empty(), "{needs:?}");
+    // The need to know is given on the morning of day 2 and on no other,
+    // and it is not met.
+    assert_eq!(needs.len(), 1, "{needs:?}");
+    assert_eq!(needs[0].0, 2, "{needs:?}");
+    assert_eq!(needs[0].1["met"], serde_json::json!(false), "{needs:?}");
 }
 
 #[test]
