@@ -456,6 +456,7 @@ fn stream_of(seed: u64, pulse: Pulse, entity: EntityRef, other: EntityRef) -> Rn
         entity,
         other: Some(other),
         draw: Draw::Legacy,
+        domain: None,
     }
     .stream()
 }

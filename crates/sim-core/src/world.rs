@@ -16,7 +16,7 @@ use crate::map::Map;
 use crate::objectives::{self, GameResult, Objectives};
 use crate::orders::{Order, OrderRequest};
 use crate::refdata::RefData;
-use crate::rng::{Draw, RngKey, RngStream, Subsystem};
+use crate::rng::{Domain, Draw, RngKey, RngStream, Subsystem};
 use crate::state::{ShipSystem, Side, SystemState, TruthState};
 use crate::time::Pulse;
 use crate::upkeep::Sortie;
@@ -39,19 +39,35 @@ pub struct MadeIds {
 
 impl MadeIds {
     pub fn new() -> Self {
-        let start = |side: Side| match side {
-            Side::Allied => MADE_IDS_FLOOR + 1,
-            Side::Japanese => 2 * MADE_IDS_FLOOR + 1,
-        };
         let series = || {
             Side::ALL
                 .into_iter()
-                .map(|side| (side, start(side)))
+                .map(|side| (side, Self::first(side)))
                 .collect()
         };
         Self {
             task_forces: series(),
             air_groups: series(),
+        }
+    }
+
+    /// The counters as a picture gives them (decision 0170, 10): for each
+    /// side, the next task force and the next air group. A side not given
+    /// starts at its first numbers.
+    pub(crate) fn at(next: &BTreeMap<Side, (u32, u32)>) -> Self {
+        let mut made = Self::new();
+        for (side, (task_force, air_group)) in next {
+            made.task_forces.insert(*side, *task_force);
+            made.air_groups.insert(*side, *air_group);
+        }
+        made
+    }
+
+    /// The first number of `side`'s series: its counters start here.
+    pub const fn first(side: Side) -> u32 {
+        match side {
+            Side::Allied => MADE_IDS_FLOOR + 1,
+            Side::Japanese => 2 * MADE_IDS_FLOOR + 1,
         }
     }
 
@@ -367,6 +383,11 @@ pub struct World {
     /// Not state: how to record, never what happens, like `config`. A cell,
     /// because the choices are made by functions that only read the world.
     pub(crate) choice_trace: TraceCell,
+    /// The domain of every draw, for a world built from a picture on a
+    /// stream of its own (decision 0170, 12); `None` for a live game and for
+    /// the umpire's rebuild on the live stream. Hashed last, and only where
+    /// there is one, so a live game's hash is what it was.
+    pub(crate) domain: Option<Domain>,
 }
 
 impl World {
@@ -558,6 +579,7 @@ impl World {
             deck_losses: Vec::new(),
             objectives: None,
             choice_trace: TraceCell::default(),
+            domain: None,
         })
     }
 
@@ -650,6 +672,12 @@ impl World {
 
     pub fn seed(&self) -> u64 {
         self.seed
+    }
+
+    /// The domain of the world's draws (decision 0170, 12): `None` for a
+    /// live game.
+    pub fn domain(&self) -> Option<Domain> {
+        self.domain
     }
 
     /// The last day resolved. 0 before the first day.
@@ -848,6 +876,7 @@ impl World {
             entity,
             other: None,
             draw,
+            domain: self.domain,
         }
         .stream()
     }
@@ -874,6 +903,7 @@ impl World {
             entity,
             other: Some(other),
             draw,
+            domain: self.domain,
         }
         .stream()
     }

@@ -2264,6 +2264,9 @@ pub(super) fn describe(
                 .with("command", Field::Str(command_word(*command)))
                 .with("as_of", Field::Str(as_of.to_string())),
         ),
+        // The picture a world was built from (decision 0170, 7): the day of
+        // its evening.
+        EventKind::BuiltFromPicture { day } => ("built_from_picture", d.int("day", *day)),
         EventKind::ShipRearmed {
             ship,
             task_force,

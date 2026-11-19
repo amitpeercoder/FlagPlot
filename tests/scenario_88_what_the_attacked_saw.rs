@@ -254,6 +254,7 @@ fn drawn(seed: u64, day: u32, target: EntityRef, chance: Fixed) -> bool {
         entity: target,
         other: None,
         draw: Draw::RaidRecognised,
+        domain: None,
     }
     .stream()
     .chance(chance)

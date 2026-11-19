@@ -33,6 +33,7 @@ pub mod state;
 pub mod time;
 pub mod view;
 pub mod world;
+pub mod world_picture;
 
 mod airstrike;
 mod available;

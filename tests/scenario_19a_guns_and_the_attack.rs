@@ -422,6 +422,7 @@ fn gun_draws(seed: u64, shots: usize, chance: Fixed) -> Vec<bool> {
         entity: EntityRef::Ship(ShipId::new(1)),
         other: Some(EntityRef::AirGroup(AirGroupId::new(2))),
         draw: Draw::Legacy,
+        domain: None,
     }
     .stream();
     (0..shots).map(|_| stream.chance(chance)).collect()
