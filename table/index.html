@@ -918,7 +918,7 @@ button:disabled { opacity: 0.45; cursor: default; }
       mark(paper('Reinforcements', readSchedule, true), due, due + ' due by tomorrow');
     }
     paper('Order of battle', function () { readOob(); }, true);
-    if (clock.at === 'dusk') paper('Report', readReport, true); else { paper('Situation', readBriefing, true); if (lastRun && lastRun.summary) slip('FROM STAFF', null, 'So far today', lastRun.summary); }
+    if (clock.at === 'dusk') paper('Report', readReport, true); else paper('Situation', readBriefing, true);
     // What the staff decided is in the war diary, entry by entry.
     if (M.day > 1 || clock.at !== 'dusk') paper('War diary', function () { readDiary(); }, true);
   }
