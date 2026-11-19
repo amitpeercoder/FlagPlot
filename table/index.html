@@ -110,6 +110,12 @@ button:disabled { opacity: 0.45; cursor: default; }
 .seg label:hover > span { border-color: var(--paper-ink); }
 .order input[type=range] { flex: 1 1 100%; accent-color: var(--own); }
 .order legend { font-size: 12px; color: var(--paper-dim); padding: 0 6px 0 0; }
+.order #o-ends { flex-direction: column; flex-wrap: nowrap; gap: 6px; }
+.order #o-ends label { align-items: flex-start; min-height: 0; padding: 3px 0; }
+.order #o-ends input { margin-top: 3px; flex: none; }
+.order #o-ends .endw { display: flex; flex-direction: column; gap: 1px; }
+.order #o-ends .endw b { font-weight: 700; }
+.order #o-ends .endw small { font-size: 12px; color: var(--paper-dim); line-height: 1.3; }
 .order label { display: inline-flex; align-items: center; gap: 6px; min-height: 38px; cursor: pointer; }
 .stops { border: 0; margin: 0; padding: 9px 12px; background: var(--paper-old); color: var(--paper-ink); font-family: var(--f-type); font-size: 13px; border-radius: 2px; box-shadow: 0 4px 12px rgba(0,0,0,0.45); display: flex; flex-wrap: wrap; gap: 2px 12px; }
 #stops { position: fixed; top: 52px; right: 16px; width: min(330px, calc(100% - 32px)); z-index: 5; }
@@ -622,7 +628,7 @@ button:disabled { opacity: 0.45; cursor: default; }
     });
     g.restore();
   }
-  var WORD = { control_island: 'CONTROL THE ISLAND', take_place: 'TAKE', hold: 'HOLD', neutralise: 'NEUTRALISE', deny: 'DENY THESE WATERS', keep_supplied: 'KEEP SUPPLIED', cover: 'COVER FROM THE AIR' };
+  var WORD = { control_island: 'SEIZE AND HOLD', take_place: 'CAPTURE', hold: 'HOLD', neutralise: 'NEUTRALISE', deny: 'DENY THESE WATERS', keep_supplied: 'KEEP SUPPLIED', cover: 'COVER FROM THE AIR' };
 
   function drawMarks() {
     g.setTransform(1, 0, 0, 1, 0, 0); g.drawImage(baseCanvas, 0, 0);
@@ -906,7 +912,7 @@ button:disabled { opacity: 0.45; cursor: default; }
   // the hexes are not shown, a hex as its place or its position and a count
   // of hexes as miles.
   // The engine says intent; the table says order, as a commander would.
-  function orderWords(t) { return String(t).replace(/\bintents\b/g, 'orders').replace(/\bIntents\b/g, 'Orders').replace(/\bintent\b/g, 'order').replace(/\bIntent\b/g, 'Order'); }
+  function orderWords(t) { return String(t).replace(/\bcontrols island\b/g, 'seizes and holds island').replace(/\b([Cc])ontrol island\b/g, function (x, c) { return (c === 'C' ? 'Seize' : 'seize') + ' and hold island'; }).replace(/\btakes the place at\b/g, 'captures').replace(/\b([Tt])ake the place at\b/g, function (x, c) { return c === 'T' ? 'Capture' : 'capture'; }).replace(/\bintents\b/g, 'orders').replace(/\bIntents\b/g, 'Orders').replace(/\bintent\b/g, 'order').replace(/\bIntent\b/g, 'Order'); }
   function plainWords(t) {
     t = orderWords(String(t).replace(/(intent|plan):(\d+)/gi, '$1 $2')).replace(/island \d+ \(([^)]+)\)/g, '$1').replace(/Placeholder /g, '');
     if (showHexes) return t;
@@ -1907,10 +1913,10 @@ button:disabled { opacity: 0.45; cursor: default; }
   function closeOrder() { $('order').hidden = true; draft = null; picking = false; canvas.classList.remove('picking'); if (g) drawMarks(); }
   function ends(target) {
     var list = [], n = target.base ? num(target.base.base.handle) : null;
-    if (n != null) config.islands.forEach(function (i) { if (i.base === n) list.push(['Control ' + i.name, { intent_kind: 'control_island', island: i.number }]); });
-    if (target.kind === 'enemy') list.push(['Take it', { intent_kind: 'take_place', base: n }], ['Neutralise it', { intent_kind: 'neutralise', target: n }]);
-    if (target.kind === 'own') list.push(['Hold it', { intent_kind: 'hold', base: n }], ['Keep it supplied, 30 days', { intent_kind: 'keep_supplied', base: n, floor_days: 30 }], ['Cover it from the air', { intent_kind: 'cover', base: n }]);
-    if (target.kind === 'waters') list.push(['Deny these waters, ' + round(2), { intent_kind: 'deny', hex: [target.q, target.r], distance: 2 }], ['Deny these waters, ' + round(4), { intent_kind: 'deny', hex: [target.q, target.r], distance: 4 }]);
+    if (n != null) config.islands.forEach(function (i) { if (i.base === n) list.push(['Seize and hold ' + i.name, { intent_kind: 'control_island', island: i.number }, 'Capture its places, garrison and supply them, deny the waters round it, and keep its airfields out of the enemy\'s use.']); });
+    if (target.kind === 'enemy') list.push(['Capture ' + target.name + ' only', { intent_kind: 'take_place', base: n }, 'Land men and capture the place. Nothing is ordered for afterwards: no garrison, no supply.'], ['Neutralise ' + target.name, { intent_kind: 'neutralise', target: n }, 'Air raids on its airfield until it can fly no aircraft. No landing.']);
+    if (target.kind === 'own') list.push(['Hold ' + target.name, { intent_kind: 'hold', base: n }, 'Its men defend it; it is kept supplied and covered from the air.'], ['Keep it supplied, 30 days', { intent_kind: 'keep_supplied', base: n, floor_days: 30 }, 'Supply runs keep 30 days of stock there. Nothing else.'], ['Cover it from the air', { intent_kind: 'cover', base: n }, 'Fighters over it and searches round it. Nothing else.']);
+    if (target.kind === 'waters') list.push(['Deny these waters, ' + round(2), { intent_kind: 'deny', hex: [target.q, target.r], distance: 2 }, 'Search them and strike any enemy ship that enters.'], ['Deny these waters, ' + round(4), { intent_kind: 'deny', hex: [target.q, target.r], distance: 4 }, 'The same, over a wider circle.']);
     return list;
   }
   function pick(p) {
@@ -1921,7 +1927,7 @@ button:disabled { opacity: 0.45; cursor: default; }
     draft = best; draft.ends = ends(best); picking = false; canvas.classList.remove('picking');
     $('o-place').textContent = best.name;
     var box = $('o-ends'); while (box.children.length > 1) box.removeChild(box.lastChild);
-    draft.ends.forEach(function (e, i) { var l = el('label'), r = el('input'); r.type = 'radio'; r.name = 'end'; r.value = String(i); r.id = 'o-end-' + i; r.checked = i === 0; l.appendChild(r); l.appendChild(document.createTextNode(' ' + e[0])); box.appendChild(l); });
+    draft.ends.forEach(function (e, i) { var l = el('label'), r = el('input'); r.type = 'radio'; r.name = 'end'; r.value = String(i); r.id = 'o-end-' + i; r.checked = i === 0; l.appendChild(r); var t = el('span', 'endw'); t.appendChild(el('b', '', e[0])); if (e[2]) t.appendChild(el('small', '', e[2])); l.appendChild(t); box.appendChild(l); });
     $('o-risk-balanced').checked = true; $('order').hidden = false; drawMarks(); askPreview();
     setStatus('A draft. Nothing is ordered until you sign.');
   }
