@@ -97,6 +97,12 @@ button:disabled { opacity: 0.45; cursor: default; }
 .sheetwrap[hidden] { display: none; }
 .sheetwrap.dispatch { width: min(620px, calc(100% - 32px)); }
 .sheetbar { flex: none; background: rgba(22,28,26,0.88); padding: 8px 8px 8px 14px; border-radius: 2px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+#sheet-chart { background: transparent; color: var(--ink); border: 1px solid var(--rule); }
+#sheet-chart + #sheet-close { margin-left: 0; }
+#planchip { position: fixed; top: 54px; left: 50%; transform: translateX(-50%); z-index: 6; display: flex; align-items: center; gap: 10px; max-width: calc(100% - 32px); background: var(--paper); color: var(--paper-ink); padding: 6px 6px 6px 12px; border-radius: 2px; font-size: 14px; letter-spacing: 0.04em; box-shadow: 0 2px 10px rgba(0,0,0,0.4); }
+#planchip[hidden] { display: none; }
+#planchip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#planchip button { min-height: 32px; padding: 0 10px; background: transparent; color: inherit; border: 1px solid rgba(0,0,0,0.3); border-radius: 2px; font: inherit; font-weight: 600; cursor: pointer; }
 .sheetbar span { color: var(--ink-dim); font-size: 13px; letter-spacing: 0.04em; }
 .sheetbar button { min-height: 42px; padding: 0 16px; border-radius: 2px; font-size: 16px; font-weight: 600; letter-spacing: 0.08em; background: var(--paper); color: var(--paper-ink); border: 0; margin-left: auto; }
 .sheet .label { font-family: var(--f-type); font-size: 12px; color: var(--paper-dim); letter-spacing: 0.06em; }
@@ -261,6 +267,7 @@ button:disabled { opacity: 0.45; cursor: default; }
   </section>
   <div class="sheetbar">
     <span id="sheet-note"></span>
+    <button type="button" id="sheet-chart" hidden>SHOW ON CHART</button>
     <button type="button" id="sheet-close">RETURN TO CHART</button>
   </div>
 </div>
@@ -280,6 +287,7 @@ button:disabled { opacity: 0.45; cursor: default; }
   <label><input type="checkbox" id="stop-landing"> men ashore</label>
 </fieldset>
 
+<div id="planchip" hidden><span id="planchip-text"></span><button type="button" id="planchip-read">READ</button><button type="button" id="planchip-off" title="Take the plan off the chart" aria-label="Take the plan off the chart">✕</button></div>
 <footer class="bar">
   <div class="clock" id="clock">DAY 1</div>
   <div class="status" id="status" role="status">Laying the chart.</div>
@@ -415,6 +423,97 @@ button:disabled { opacity: 0.45; cursor: default; }
     if (it.hex) { var h = hexAt[it.hex[0] + ',' + it.hex[1]]; return h ? world(h[3], h[4]) : null; }
     b = baseByNumber(it.base != null ? it.base : it.target); return b ? placeOf(b.place) : null;
   }
+  // ---- a plan on the chart ----
+  // One plan's movements as the staff has them this morning: an arrow for
+  // each force that is to move, along the passage the game answers for it,
+  // with the day it would arrive; a ring where a force already stands, where
+  // a place is held, taken or beaten down, and round waters denied. Read
+  // from the seat's own tools (command_state, staff_orders, measure).
+  var planShown = null, planMarks = null;
+  function hexV(q, r) { var h = hexAt[q + ',' + r]; return h ? world(h[3], h[4]) : null; }
+  function clearPlan() { planShown = null; planMarks = null; $('planchip').hidden = true; if (g) drawMarks(); }
+  function buildPlan(root) {
+    var st = M.state; if (!st) return Promise.resolve();
+    var by = {}, plans = {}; st.intents.forEach(function (i) { by[i.number] = i; }); (st.plans || []).forEach(function (p) { plans[p.number] = p; });
+    var top = by[root]; if (!top || !top.in_force) { clearPlan(); return Promise.resolve(); }
+    var tree = [], inTree = {}; (function walk(i) { tree.push(i); inTree[i.number] = i; st.intents.filter(function (c) { return c.parent === i.number && c.in_force; }).forEach(walk); })(top);
+    var marks = { root: root, moves: [], rings: [] }, asks = [], seen = {}, stand = {};
+    function pending(i) { var p = i.plan != null ? plans[i.plan] : null; return !p || p.state === 'draft' || p.state === 'preparing'; }
+    function baseOf(o) { return o ? M.bases.concat(M.enemyBases).filter(function (b) { return b.base.handle === o.handle; })[0] : null; }
+    function mark(v, r, label, dash) { if (v) marks.rings.push({ v: v, r: r, label: label, dash: dash }); }
+    function move(h, hex, kind, i) {
+      var f = M.forces.filter(function (x) { return x.task_force.handle === h; })[0], to = hexV(hex[0], hex[1]);
+      if (!f || !f.place || !to || seen[h]) return; seen[h] = true;
+      if (f.place.q === hex[0] && f.place.r === hex[1]) { var k = hex[0] + ',' + hex[1]; if (!stand[k]) { stand[k] = { v: to, r: 20, names: [], dash: pending(i) }; marks.rings.push(stand[k]); } stand[k].names.push(nameOf(h)); stand[k].label = stand[k].names.join(', ') + ' · on station'; return; }
+      var m = { pts: [placeOf(f.place), to], label: nameOf(h), kind: kind, dash: pending(i) }; marks.moves.push(m);
+      asks.push(api('measure', { question: 'passage', task_force: h, to: { q: hex[0], r: hex[1] } }).then(function (a) {
+        if (a.route && a.route.length) m.pts = [placeOf(f.place)].concat(a.route.map(placeOf));
+        m.when = a.outcome === 'arrives' && a.ends ? (dateOf(a.ends.day - 1) || 'DAY ' + a.ends.day) + ', ' + a.ends.pulse : a.outcome ? String(a.outcome).replace(/_/g, ' ') : '';
+      }).catch(function () {}));
+    }
+    tree.forEach(function (i) {
+      var b;
+      if (i.task_force != null && i.hex) move('task_force:' + i.task_force, i.hex, i.kind === 'ready_landing' ? 'landing' : 'cover', i);
+      if (i.kind === 'ready_landing' && i.hex && i.limits && i.limits.forces) (i.limits.forces.task_forces || []).forEach(function (n) { move('task_force:' + n, i.hex, 'landing', i); });
+      if (i.kind === 'take_place' && i.hex) mark(hexV(i.hex[0], i.hex[1]), 27, 'TAKE', pending(i));
+      if (i.kind === 'hold' && (b = baseOf(i.base))) mark(placeOf(b.place), 24, 'HOLD', pending(i));
+      if (i.kind === 'neutralise' && (b = baseOf(i.target))) mark(placeOf(b.place), 22, 'NEUTRALISE', pending(i));
+      if (i.kind === 'deny' && i.hex && i.distance) { var h = hexAt[i.hex[0] + ',' + i.hex[1]]; if (h) marks.rings.push({ v: world(h[3], h[4]), edge: world(h[3] + i.distance * hexMiles() / 60, h[4]), label: 'DENY', dash: true }); }
+      if (i.kind === 'keep_supplied' && (b = baseOf(i.base))) { var src = baseOf(i.limits_read_up && i.limits_read_up.forces && i.limits_read_up.forces.source); if (src) marks.moves.push({ pts: [placeOf(src.place), placeOf(b.place)], label: 'Supply from ' + src.base.name, kind: 'supply', dash: pending(i) }); }
+    });
+    // What the staff orders this morning for the plan: a force given a
+    // course, and the air groups set on a base to be beaten down.
+    asks.push(api('staff_orders').then(function (so) {
+      var raids = {}, more = [];
+      (so.orders || []).forEach(function (o) {
+        var i = inTree[o.intent]; if (!i) return;
+        if (/^task_force:/.test(o.unit) && o.order.kind === 'set_route' && (o.order.waypoints || []).length) { var f = M.forces.filter(function (x) { return x.task_force.handle === o.unit; })[0], n0 = asks.length; move(o.unit, (o.order.act_at && o.order.act_at[0]) || o.order.waypoints[0], f && f.mission === 'transport' ? 'supply' : 'cover', i); more = more.concat(asks.slice(n0)); }
+        if (/^air_group:/.test(o.unit) && i.kind === 'neutralise' && o.order.kind === 'set_air_mission') { var x = M.air.filter(function (y) { return y.air_group.handle === o.unit; })[0], b = baseOf(i.target); if (x && x.place && b) { var k = x.place.q + ',' + x.place.r + '>' + i.number; if (!raids[k]) { raids[k] = { pts: [placeOf(x.place), placeOf(b.place)], kind: 'air', n: 0, dash: true }; marks.moves.push(raids[k]); } raids[k].n += 1; raids[k].label = raids[k].n + ' air group' + (raids[k].n > 1 ? 's' : ''); } }
+      });
+      return Promise.all(more);
+    }).catch(function () {}));
+    return Promise.all(asks).then(function () {
+      if (planShown !== root) return;
+      planMarks = marks; $('planchip-text').textContent = 'PLAN ON CHART · ' + plainWords(sayIntent(top, {})); $('planchip').hidden = false; if (g) drawMarks();
+    });
+  }
+  function showPlanOnChart(root) { planShown = root; return buildPlan(root); }
+  function drawPlan(u, ring) {
+    var navy = '#12335c', tags = [], spots = {}, order = [];
+    function tag(x, y, lines) {
+      g.font = '700 ' + Math.round(14 * u) + "px 'Courier Prime', monospace"; var w = 0, lh = 17 * u; lines.forEach(function (t) { w = Math.max(w, g.measureText(t).width); });
+      // Keep one tag off another: step down until it is clear.
+      var box = { x: x - w / 2 - 5 * u, y: y - lh * lines.length / 2 - 3 * u, w: w + 10 * u, h: lh * lines.length + 6 * u }, tries = 0;
+      while (tries++ < 8 && tags.some(function (t) { return box.x < t.x + t.w && t.x < box.x + box.w && box.y < t.y + t.h && t.y < box.y + box.h; })) box.y += box.h + 2 * u;
+      tags.push(box);
+      g.save(); g.globalAlpha = 0.92; g.fillStyle = '#f1ead6'; g.fillRect(box.x, box.y, box.w, box.h); g.globalAlpha = 1; g.strokeStyle = navy; g.lineWidth = u; g.strokeRect(box.x, box.y, box.w, box.h);
+      g.fillStyle = navy; g.textAlign = 'center'; lines.forEach(function (t, n) { g.fillText(t, box.x + box.w / 2, box.y + 3 * u + lh * (n + 0.75)); }); g.restore();
+    }
+    g.save(); g.lineCap = 'round'; g.lineJoin = 'round';
+    planMarks.rings.forEach(function (r) {
+      var c;
+      if (r.edge) { c = cpx(r.v); var e = cpx(r.edge), rad = Math.abs(e[1] - c[1]); g.save(); g.globalAlpha = 0.7; g.strokeStyle = navy; g.lineWidth = 2 * u; g.setLineDash([10 * u, 7 * u]); g.beginPath(); g.arc(c[0], c[1], rad, 0, 7); g.stroke(); g.restore(); tag(c[0], c[1] - rad, [r.label]); }
+      else { c = cpx(r.v); var k = Math.round(c[0] / (8 * u)) + ',' + Math.round(c[1] / (8 * u)), at = spots[k]; if (!at) { at = spots[k] = { v: r.v, r: 0, dash: true, words: [], names: [] }; order.push(at); } at.r = Math.max(at.r, r.r); at.dash = at.dash && r.dash; if (r.names) at.names = at.names.concat(r.names); else at.words.push(r.label); }
+    });
+    // One ring a place, with what is to be done there and who stands there.
+    order.forEach(function (at) { var c = ring(at.v, at.r, navy, 0.9, at.dash, 2.6), lines = []; if (at.words.length) lines.push(at.words.join(' \u00B7 ')); at.names.forEach(function (n) { lines.push(n); }); if (at.names.length) lines[lines.length - 1] += ' \u00B7 on station'; tag(c[0], c[1] + (at.r + 12 + 8 * lines.length) * u, lines); });
+    planMarks.moves.forEach(function (m) {
+      var w = ({ landing: 7, cover: 4.5, supply: 3.2, air: 2.4 })[m.kind] || 3, P = m.pts.filter(Boolean).map(cpx), k;
+      if (P.length < 2) return;
+      if (P.length > 4) { var Q = [P[0]]; for (k = 2; k < P.length - 1; k += 2) Q.push(P[k]); Q.push(P[P.length - 1]); P = Q; }
+      var end = P[P.length - 1], prev = P[P.length - 2], ang = Math.atan2(end[1] - prev[1], end[0] - prev[0]), hl = (w * 2.4 + 7) * u, stop = [end[0] - Math.cos(ang) * hl * 0.85, end[1] - Math.sin(ang) * hl * 0.85];
+      g.globalAlpha = m.kind === 'air' ? 0.6 : 0.88; g.strokeStyle = navy; g.fillStyle = navy; g.lineWidth = w * u;
+      g.setLineDash(m.dash || m.kind === 'supply' || m.kind === 'air' ? [Math.max(8, w * 2.5) * u, Math.max(6, w * 2) * u] : []);
+      g.beginPath(); g.moveTo(P[0][0], P[0][1]);
+      if (P.length === 2) g.lineTo(stop[0], stop[1]);
+      else for (k = 1; k < P.length - 1; k++) { if (k === P.length - 2) g.quadraticCurveTo(P[k][0], P[k][1], stop[0], stop[1]); else g.quadraticCurveTo(P[k][0], P[k][1], (P[k][0] + P[k + 1][0]) / 2, (P[k][1] + P[k + 1][1]) / 2); }
+      g.stroke(); g.setLineDash([]);
+      g.beginPath(); g.moveTo(end[0], end[1]); g.lineTo(end[0] - Math.cos(ang - 0.42) * hl, end[1] - Math.sin(ang - 0.42) * hl); g.lineTo(end[0] - Math.cos(ang + 0.42) * hl, end[1] - Math.sin(ang + 0.42) * hl); g.closePath(); g.fill();
+      g.globalAlpha = 1; var a = P[Math.floor((P.length - 1) / 2)], b = P[Math.ceil((P.length - 1) / 2)];
+      tag((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, m.when ? [m.label, m.when.toUpperCase()] : [m.label]);
+    });
+    g.restore();
+  }
   var WORD = { control_island: 'CONTROL THE ISLAND', take_place: 'TAKE', hold: 'HOLD', neutralise: 'NEUTRALISE', deny: 'DENY THESE WATERS', keep_supplied: 'KEEP SUPPLIED', cover: 'COVER FROM THE AIR' };
 
   function drawMarks() {
@@ -435,6 +534,7 @@ button:disabled { opacity: 0.45; cursor: default; }
     var intents = M.state ? M.state.intents.filter(function (i) { return i.in_force && !i.parent; }) : [];
     intents.forEach(function (it, k) { var v = intentPlace(it); if (!v) return; var c = ring(v, 30 + k * 4, '#1f4e8c', 1, false, 2.8); g.fillStyle = '#12335c'; g.fillText('INTENT ' + it.number + ' · ' + (WORD[it.kind] || it.kind.toUpperCase()), c[0] + (36 + k * 4) * u, c[1] + (4 + k * 14) * u); });
     if (draft) ring(draft.v, 30, '#1f4e8c', 1, true, 2.2);
+    if (planMarks) drawPlan(u, ring);
     chartTex.needsUpdate = true;
   }
 
@@ -563,6 +663,7 @@ button:disabled { opacity: 0.45; cursor: default; }
       M.air.forEach(function (x) { M.names[x.air_group.handle] = x.air_group.name; });
       M.bases.concat(M.enemyBases).forEach(function (b) { M.names[b.base.handle] = b.base.name; if (b.place && !/^Landing at/.test(b.base.name)) M.hexNames[b.place.q + ',' + b.place.r] = b.base.name; });
       layPieces(); drawMarks(); showClock(); showSignals();
+      if (planShown != null) buildPlan(planShown);
     });
   }
   var MONTHS = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
@@ -1031,7 +1132,7 @@ button:disabled { opacity: 0.45; cursor: default; }
       ['preserve', 'balanced', 'press'].forEach(function (r) { var b = el('button', '', 'RISK: ' + r.toUpperCase() + ((lim.risk || 'balanced') === r ? ' ✓' : '')); b.type = 'button'; b.addEventListener('click', function () { act('set_limit', { limit: 'risk', intent: root, risk: r }, 'Risk set to ' + r + '. The staff plans again at 1800.').then(function () { readPlan(root); }); }); row.appendChild(b); });
       var w = el('button', '', 'WITHDRAW THIS INTENT'); w.type = 'button'; w.addEventListener('click', function () { act('withdraw_intent', { intent: root }, 'The intent is withdrawn from 1800.').then(function () { $('sheet').hidden = true; }); }); row.appendChild(w);
       doc.appendChild(el('div', 'foot', (a[2].inside_day ? 'Worked now, in the middle of the day; the staff is asked again at dusk and may then do otherwise. ' : '') + 'You change a plan by instruction: your leave, a limit, a cancel or a withdrawal. To keep a force out of it, touch the force and order it yourself.'));
-      sheetAs('THE PLAN'); doc.hidden = false; $('sheet-text').hidden = true; $('sheet').hidden = false; $('sheet-close').focus();
+      sheetAs('THE PLAN'); $('sheet-chart').hidden = false; $('sheet-chart').onclick = function () { $('sheet').hidden = true; showPlanOnChart(root); }; doc.hidden = false; $('sheet-text').hidden = true; $('sheet').hidden = false; $('sheet-close').focus();
     }).catch(function (e) { setStatus('The plan could not be read: ' + e.message); });
   }
 
@@ -1064,7 +1165,7 @@ button:disabled { opacity: 0.45; cursor: default; }
   }
   // What the sheet is: its title, and for a directive the small label above
   // it and the line outside the paper that says what the paper is.
-  function sheetAs(title, label, note) { $('sheet-title').textContent = title; $('sheet-label').textContent = label || ''; $('sheet-label').hidden = !label; $('sheet-note').textContent = note || ''; $('sheet').classList.toggle('dispatch', !!label); $('sheet-paper').scrollTop = 0; }
+  function sheetAs(title, label, note) { $('sheet-title').textContent = title; $('sheet-label').textContent = label || ''; $('sheet-label').hidden = !label; $('sheet-note').textContent = note || ''; $('sheet').classList.toggle('dispatch', !!label); $('sheet-paper').scrollTop = 0; $('sheet-chart').hidden = true; }
   function readDirective(d) {
     var doc = $('sheet-doc'), head = el('div', 'head'); doc.textContent = '';
     [['From', d.from], ['To', d.to], ['Date', dateOf(received[d.number] - 2, true) || 'Day ' + received[d.number]], ['Subject', d.subject]].forEach(function (r) { head.appendChild(el('span', '', r[0])); head.appendChild(el('span', '', r[1])); });
@@ -1144,6 +1245,8 @@ button:disabled { opacity: 0.45; cursor: default; }
   }
   function readBriefing() { api('get_briefing', { text: true }).then(function (b) { sheetAs('THE STAFF\'S RETURN'); $('sheet-doc').hidden = true; $('sheet-text').hidden = false; $('sheet-text').textContent = b.text || JSON.stringify(b, null, 1); $('sheet').hidden = false; $('sheet-close').focus(); }).catch(function (e) { setStatus(e.message); }); }
   $('sheet-close').addEventListener('click', function () { $('sheet').hidden = true; });
+  $('planchip-off').addEventListener('click', clearPlan);
+  $('planchip-read').addEventListener('click', function () { if (planShown != null) readPlan(planShown); });
   document.addEventListener('keydown', function (e) { if (e.key !== 'Escape') return; if (!$('sheet').hidden) { $('sheet').hidden = true; } else if (!$('card').hidden) { $('card-close').click(); } });
 
   // ---- time: you watch a day played out, and may stop between days ----
