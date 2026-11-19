@@ -1,10 +1,10 @@
 # 0177: The window: the same course at two or three dates
 
-Status: a plan by the architect, written on Nov 19, 2026, inside the plan for step 3, stage 4 (decision 0161, step 7 of its ten, section F, rules 16 and 17), which the designer confirmed. To be read by a reviewer who has not seen it written, and amended, before it is built.
+Status: settled by the architect on Nov 19, 2026, inside the plan for step 3, stage 4 (decision 0161, step 7 of its ten, section F, rules 16 and 17), which the designer confirmed. It was read by a reviewer who had not seen it written, and amended (below), before any of it was built. The hand calculation is written. To be built when decision 0176's build has merged: it changes the same crate.
 
 Summary: A commander who is shown what an operation would cost today wants to know what it would cost next week. The window tries the same course at two or three dates, in the same worlds, and sets the estimates side by side: what the side has more of at the later date, what the enemy did with the same days, and how it then went. The dates are taken from when something of the side's own changes, not at even steps. A later date is the same commands handed in on a later morning, with the days between played
 
-Standing: A plan, written by the architect on Nov 19, 2026, inside decision 0161. Under review
+Standing: Settled by the architect, Nov 19, 2026, inside decision 0161, and amended on review. The build waits for decision 0176's
 
 ## Why
 
@@ -14,7 +14,7 @@ What is so today, read from the code:
 
 - **A course's commands each have a day of the world** (decision 0175, amended, 1), and the pictures and the draws of a trial do not depend on the course or on how many days are played (amended, 6 and 8). So the same worlds can be played with a course handed in on day 1 and on day 4.
 - **A take chooses its units once,** on the morning its plan is made ready, from the units it may use that morning. A limit "not before a day" holds the release and does not move that choice. A course handed in on a later morning is chosen on that morning, with what is usable then.
-- **With a count of the enemy the staff takes the men it wants and no more;** with none it takes every unit its ships can carry. So a later date sends more men where there is no count, or where the men wanted are more than are to hand on the earlier date.
+- **With a count of the enemy the staff takes the men it wants and no more;** with none it takes every unit its ships can carry. So a later date sends more men where there is no count; or where the men wanted are more than are to hand on the earlier date and the earlier date goes all the same, at press or with nothing in reach. At balanced, where more men are in reach within the staff's horizon, the earlier date waits for them by itself (decision 0159, rule B) and the two dates send the same men.
 - **A side's view gives the days its own things change:** the day a force, a ship, an air group or a land unit may first be used; the day aircraft fly in; the day a force is back from a yard; the day a supply run is due.
 - **A trial's enemy, given no intent, orders nothing.** What he does with days is what the engine does for him: men on the defence dig in, by the ground figures (decision 0106), and eat.
 - **An estimate is of one intent of the side tried,** with the plan order recorded at the end of the first day played (decision 0176, amended, 1 and 5).
@@ -53,4 +53,25 @@ What is so today, read from the code:
 
 ## The hand calculation
 
-It is in `tests/scenario_96_the_window.rs`, written before the code: decision 0161's case. A take that can go now with one unit of 600 men or on day 4 with two, against 200 men who dig in while the side waits. Two dates. At the first the place falls on day 4; at the second on day 8, with 600 more men ashore and the enemy's cover at 30 where it was 0 on the eve of the first; and it costs the same 100 men at both.
+It is in `tests/scenario_96_the_window.rs`, written before the code: decision 0161's case. A take that can go now with one unit of 600 men or on day 4 with two, against 200 men who dig in while the side waits. Two dates. At the first the place falls on day 4; at the second on day 8, with 600 more men and the enemy's cover at 30 on its eve where it was 0; and it costs the same 100 men at both. A second case, added on review, has worlds that differ: where 200 more men may be there, the first date fails in the worlds that have them and the second takes the place in all four.
+
+## Amended on review, Nov 19, 2026
+
+The plan was read by a reviewer who had not seen it written, against decision 0161, the spec, decisions 0175 and 0176 as amended, and the code. What follows is the architect's and replaces the rules above where they differ. The hand calculation is amended with it.
+
+1. **A later date is "decide later", not "prepare now and go later".** Nothing of the course is done before its date: the units it would take lie idle in the days between, and a landing decided on day 4 is ashore later than one prepared from day 1 and held. Decision 0161, 16, asks for the days between to be played "with preparation". The staff cannot yet prepare a landing and add to it a unit that comes later: a take chooses its units once. So a window overstates what waiting costs in days, and each later date says so in its own words. Preparing early for a later date is left with the proof's comparison of preparation (condition 9) and the what-ifs of the next step.
+2. **The shift** (replaces rule 2). A date's shift is the date less the first date. Each command of the course is handed in that many days later than at the first date. A day written inside a command, a latest day or a "not before", is kept as written. What the side has already handed in for the morning, which whoever asks puts at the head of a course (decision 0175, amended, 3), is given apart as standing commands and is not shifted.
+3. **Where the dates come from** (replaces rule 4): the days, after the first and no later than the last day of the first date's play, on which something the course may use first becomes usable, each on the morning the staff can first use it:
+   - a task force, a ship, a land unit or an air group of the side: the day it may first be used;
+   - a task force in a yard: the day it is back.
+
+   Things due on one day make one date, and it names them all. What counts as "what the course may use" is what the take itself would count: where the course gives its intent a forces limit, the units and forces that limit names, and of a kind it does not name, every one of the side's; with no limit, every fighting unit and transport force of the side. The limit is read from the course's own commands. Aircraft due to fly in and supply runs due are left for later: they are usable only from the morning after their day, and which of them a course may use is not settled.
+4. **Dates may be given.** Whoever asks may name the dates in place of those of item 3, up to three. A what-if that varies the date will.
+5. **The days before a date are played once.** In each world the days from the trial's first to the eve of the last date are played as things stand, once, and each date's play goes on from the world as it stood on its eve. The result is the one separate trials would give, world for world and hash for hash: a world's draws are keyed on its own day, and nothing of the course is in them. So a window of three dates is three trials' days and the days between, not three trials each begun again.
+6. **Its cost.** At the full size, three dates 3 and 5 days apart are 64 x (21 x 3 + 8) = 4,544 days of play against a trial's 1,344: about 54 s on the measured times of decision 0175 where a trial takes 16 s; at standard about 10 s against 2.9 s; at small about 3 s against 0.83 s. The designer accepted the times of a trial and is told these.
+7. **What the play records for a window,** beyond decisions 0175 and 0176, for the side tried in each world: at the end of the day a course's first command is taken in, the side's plan orders and the units and forces of each landing it has formed; and from the world as it stands on each date's eve, read from its enemy's side, the men ashore at each place of the intent's end and their cover. The eve of the first date is the picture's own evening.
+8. **Men to hand at a date** (replaces rule 7's reading) are the men of the units the take chose on the day its course was taken in, read from the landing it formed. A plan order gives men wanted and to hand only where the side holds a count of the enemy; where it does, both are given too.
+9. **What the enemy did** (rule 8, made plain): for each place of the intent's end, one line: his men ashore there on the eve, and the cover of the unit of his there with the least cover, the higher of its fieldworks and, where he has a base there, the base's defences; each as lowest, middle and highest over that date's worlds.
+10. **World for world** (rule 9, made plain): a world that could not be played at either date is counted apart and is in none of the four counts. Met and lost again counts as not met and kept. The two dates end on different days, each at the end of its own play. The comparison is one function of two estimates' records of their worlds, for any two courses in the same worlds.
+11. **A window keeps for each date** its day, the day its course was taken in, what came due on it by name and kind, the men its take chose, its day expected ashore where a plan order gives one, and its estimate.
+

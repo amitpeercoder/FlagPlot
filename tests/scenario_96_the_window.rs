@@ -21,18 +21,26 @@
 //!
 //! Scenario 68's (see its hand calculation, and scenario 95's): one
 //! shot for each 100 firing men, every shot hits and takes 50 men; a
-//! side is beaten where the other attacked and it has no man left. With
-//! three ground figures of this scenario's own: `fieldworks_per_day` 10,
-//! `fieldworks_limit` 100 and `cover_in_fight` 0.5. A fighting unit
-//! ashore on the defence digs 10 of fieldworks at the end of each day,
-//! after that day's fight, to 100 at most. In a fight a defender's loss
-//! is cut by its cover over 100 times 0.5, and cut to a whole man: at a
-//! cover of 30 a loss of 300 is 300 x (1 - 0.15) = 255; at 70 a loss of
-//! 600 is 600 x (1 - 0.35) = 390. Cover does not change the shots of
-//! either side, and an attacker has none.
+//! side is beaten where the other attacked and it has no man left, or
+//! fewer than 0.2 of the other's. B has no land link, so beaten men
+//! cannot fall back: they surrender. With three ground figures of this
+//! scenario's own: `fieldworks_per_day` 10, `fieldworks_limit` 100 and
+//! `cover_in_fight` 0.5. A fighting unit ashore on the defence digs 10
+//! of fieldworks at the end of each day, after that day's fight, to 100
+//! at most. In a fight the loss of a side is first held to the men it
+//! has and shared between its units; each unit's part is then cut by
+//! its cover over 100 times 0.5, and cut to a whole man: at a cover of
+//! 30 a part of 200 is 200 x (1 - 0.15) = 170; at 70 it is
+//! 200 x (1 - 0.35) = 130. Cover does not change the shots of either
+//! side, and an attacker has none. (Amended on review: this first cut
+//! the loss by cover before holding it to the men there, which is not
+//! the engine's order, and left out the 0.2 of the beaten.)
 //!
 //! With no count of the enemy the staff takes every unit its ships can
-//! carry, and ashore it attacks.
+//! carry, and ashore it attacks. At balanced it asks for a count before
+//! it goes and, with nothing that can look, goes without one. There is
+//! one task force: no unit is sent after the first lift while the
+//! horizons here last.
 //!
 //! ## Inputs
 //!
@@ -90,11 +98,13 @@
 //! | --- | --- | --- |
 //! | Men ashore | 600, on attack | 200, on defend, fieldworks 30 |
 //! | Shots, all hits | 6 | 2 |
-//! | Men lost | 2 x 50 = 100 | 6 x 50 = 300, cut by cover to 255, more than the 200: all 200 |
-//! | Left | 500 | none |
+//! | Men lost in the fight | 2 x 50 = 100 | 6 x 50 = 300, held to the 200 there, cut by cover to 170 |
+//! | Left | 500 | 30 |
 //!
-//! Base 2 is Allied at the end of day 4: the end is met on day 4, in
-//! each of the four worlds. No man is lost after it.
+//! The Japanese side has 30 men against 0.2 x 500 = 100: it is beaten.
+//! Its 30 men surrender. Base 2 is Allied at the end of day 4: the end
+//! is met on day 4, in each of the four worlds. The plan is marked
+//! complete on the morning of day 5, and no man is lost after day 4.
 //!
 //! ## The second date: day 4
 //!
@@ -112,35 +122,111 @@
 //! | --- | --- | --- |
 //! | Men ashore | 600 and 600, on attack | 200, on defend, fieldworks 70 |
 //! | Shots, all hits | 6 and 6 | 2 |
-//! | Men lost | 2 x 50 = 100: 50 each | 12 x 50 = 600, cut by cover to 390, more than the 200: all 200 |
-//! | Left | 550 and 550 | none |
+//! | Men lost in the fight | 2 x 50 = 100: 50 each | 12 x 50 = 600, held to the 200 there, cut by cover to 130 |
+//! | Left | 550 and 550 | 70 |
 //!
-//! Base 2 is Allied at the end of day 8: the end is met on day 8, in
-//! each of the four worlds.
+//! The Japanese side has 70 men against 0.2 x 1,100 = 220: it is
+//! beaten, and its 70 men surrender. Base 2 is Allied at the end of day
+//! 8: the end is met on day 8, in each of the four worlds.
 //!
 //! ## The window of intent 1
 //!
 //! | | The first date, day 1 | The second date, day 4 |
 //! | --- | --- | --- |
 //! | Played to | day 8 | day 11 |
-//! | The plan order: men wanted | no count | no count |
-//! | The plan order: men to hand | 600 | 1,200 |
+//! | Its course taken in on | day 1 | day 4 |
+//! | The men its take chose | 600, unit 1 | 1,200, units 1 and 2 |
+//! | The plan order: men wanted and to hand | none: no count is held | none |
 //! | The plan order: day expected ashore | day 4 | day 8 |
 //! | The enemy at B on the eve: men, lowest, middle, highest | 200, 200, 200 (the evening before day 1) | 200, 200, 200 (the evening of day 3) |
 //! | The enemy at B on the eve: cover | 0, 0, 0 | 30, 30, 30 |
 //! | Met and kept | 4 of 4 worlds, on day 4, 4 and 4 | 4 of 4, on day 8, 8 and 8 |
 //! | The side's men lost to the enemy | 100, 100, 100 | 100, 100, 100 |
-//! | The trial's enemy's men lost | 200, 200, 200 | 200, 200, 200 |
+//! | The trial's enemy's men lost to the enemy | 200, 200, 200 (170 in the fight and 30 by surrender) | 200, 200, 200 (130 and 70) |
 //! | Every other cost of either side | 0 | 0 |
 //!
-//! - **What the second date buys:** unit 2, usable from day 4; 600 more
-//!   men to hand, 1,200 against 600.
+//! - **What the second date buys:** unit 2, a land unit, usable from
+//!   day 4; its take chose 1,200 men against 600.
+//! - **What the second date's words say** besides: that nothing of the
+//!   course was done before day 4.
 //! - **World for world,** the second date against the first: met and
 //!   kept at both in 4 worlds; at the first alone in none; at the later
 //!   alone in none; at neither in none.
 //!
+//! ## Worlds that differ: where waiting wins
+//!
+//! (Added on review, so that the comparison of the dates world for
+//! world has something to compare.) The main case with one change: the
+//! Allied side also believes 200 more men may be at B, standing
+//! unknown; and a size of 5 days. In worlds 2 and 4 the garrison is two
+//! units of 200, land units 900,001 and 900,002; in worlds 1 and 3 it
+//! is the 200. The first date is played to day 5 and the second to day
+//! 8.
+//!
+//! - **Worlds 1 and 3** are the main case: met on day 4 at the first
+//!   date and on day 8 at the second; the side loses 100 men at each.
+//! - **Worlds 2 and 4, the first date.** The fight of day 4: 600
+//!   against 200 and 200 at fieldworks 30. The 6 hits take 300, 150
+//!   from each unit, each cut by cover to 150 x 0.85 = 127.5, 127 men:
+//!   73 are left in each, 146. The 4 Japanese shots take 200: unit 1
+//!   has 400. 146 is not fewer than 0.2 x 400 = 80: not beaten. The
+//!   report gives 146, so 292 men are wanted; unit 1's fit men on the
+//!   morning of day 5 are 400 x 50 / 100 = 200: it is set to defend,
+//!   and there is no fight on day 5. Not met by day 5. The side has
+//!   lost 200 men and the enemy 254.
+//! - **Worlds 2 and 4, the second date.** The fight of day 8: 1,200
+//!   against 200 and 200 at fieldworks 70. The 12 hits take 600, held
+//!   to the 400 there, 200 from each unit, each cut to 200 x 0.65 =
+//!   130: 70 are left in each, 140. The 4 Japanese shots take 200, 100
+//!   from each Allied unit: 1,000 are left. 140 is fewer than
+//!   0.2 x 1,000 = 200: beaten, and the 140 surrender. Met on day 8.
+//!   The side has lost 200 men and the enemy 400.
+//!
+//! | | The first date, day 1 | The second date, day 4 |
+//! | --- | --- | --- |
+//! | Met and kept | 2 of 4 worlds, worlds 1 and 3, on day 4 | 4 of 4, on day 8 |
+//! | Not met | 2, worlds 2 and 4 | none |
+//! | The side's men lost to the enemy | 100, 100, 200 | 100, 100, 200 |
+//! | The trial's enemy's men lost to the enemy | 200, 200, 254 | 200, 200, 400 |
+//! | The enemy at B on the eve: men | 200, 200, 400 | 200, 200, 400 |
+//! | The enemy at B on the eve: the least cover | 0, 0, 0 | 30, 30, 30 |
+//!
+//! - **World for world,** the second date against the first: met and
+//!   kept at both in 2 worlds, 1 and 3; at the first alone in none; at
+//!   the later alone in 2, worlds 2 and 4; at neither in none.
+//! - **Each date's estimate parts its worlds** by the 200 men of
+//!   unknown standing, as decision 0176 has it.
+//!
 //! # Properties
 //!
+//! - **The days before a date are played once, and nothing is changed
+//!   by it.** (Added on review.) The second date's estimate in the main
+//!   case is, field for field, the estimate of a plain trial of 4
+//!   worlds for 11 days whose course has each command on day 4; and each
+//!   of its worlds has that trial's hash at the end of every day.
+//! - **World for world, by counting.** (Added on review.) Inside the
+//!   crate, on records made by the test: five worlds, one met and kept
+//!   at both dates, one at the first alone, one at the later alone, one
+//!   at neither, and one that could not be played at the later date,
+//!   give 1, 1, 1, 1 and one counted apart. A world met and lost again
+//!   at a date counts there as not met and kept.
+//! - **The edge of the horizon.** (Added on review.) With unit 2 usable
+//!   from day 8 and a size of 8 days: day 8 is a date. From day 9: it is
+//!   not.
+//! - **Two things on one day are one date.** (Added on review.) With a
+//!   third unit also usable from day 4: one later date, day 4, naming
+//!   units 2 and 3.
+//! - **A force back from a yard is a date.** (Added on review.) With a
+//!   second transport force of the side's in a yard and due back on day
+//!   3, and no forces limit on the course: day 3 is a date and names
+//!   it.
+//! - **Standing commands are not shifted.** (Added on review.) With a
+//!   command given as standing, a hold put on unit 2 for the morning of
+//!   day 1: at the second date it is taken in on day 1, and the course
+//!   on day 4.
+//! - **Dates may be given.** (Added on review.) The main case asked for
+//!   with the dates 1 and 3: the second date is day 3; unit 2 may not be
+//!   used that morning, so its take chooses unit 1 alone, 600 men.
 //! - **The same worlds.** The pictures of the two dates' trials are
 //!   equal, world for world.
 //! - **The first date is the estimate.** The first date's estimate is
