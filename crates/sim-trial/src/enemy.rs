@@ -28,7 +28,7 @@ use sim_core::view::SideView;
 use sim_core::world::MADE_IDS_FLOOR;
 use sim_core::world_picture::{PictureBelief, PictureContact, PictureCounters, PictureHalf};
 
-use crate::assumption::{Assumption, NotMade, Source};
+use crate::assumption::{Assumption, NotMade, SetAside, Source};
 use crate::draw;
 use crate::{Believed, Refused, Trial};
 use sim_core::refdata::TrialFigures;
@@ -61,6 +61,14 @@ pub(crate) fn check(
             "the believed force {} is the {} side's, and the {} side is tried",
             force.name,
             force.side.name(),
+            side.name()
+        )));
+    }
+    if let Some(men) = believed.men.iter().find(|men| men.side != side) {
+        return Err(Refused(format!(
+            "the believed men {} are the {} side's belief, and the {} side is tried",
+            men.name,
+            men.side.name(),
             side.name()
         )));
     }
@@ -735,31 +743,13 @@ pub(crate) fn make(
         let id = LandUnitId::new(next(&mut making.next_unit, "land units")?);
         making.half.land_units.insert(
             id,
-            LandUnit {
+            men_unit(
                 id,
-                name: format!("Assumed men at {}", estimate.hex),
-                side: enemy,
-                men_ashore: estimate.men,
-                hex: (estimate.men > 0).then_some(estimate.hex),
-                posture: Posture::Defend,
-                posture_order: None,
-                fatigue: Fixed::ZERO,
-                fed_share: Fixed::ONE,
-                march: None,
-                rehearsal: Fixed::ZERO,
-                rehearsal_hex: None,
-                activity: Activity::Ready,
-                activity_order: None,
-                experience: LandUnit::DEFAULT_EXPERIENCE,
-                training_days: 0,
-                fight_days: 0,
-                skills: Skills::STANDARD_ALL,
-                working: false,
-                when_spent: None,
-                fieldworks: Fixed::ZERO,
-                available_from: None,
-                formation: None,
-            },
+                format!("Assumed men at {}", estimate.hex),
+                enemy,
+                estimate.hex,
+                estimate.men,
+            ),
         );
         making.assumptions.push(Assumption::MenAshore {
             unit: id,
@@ -887,6 +877,69 @@ pub(crate) fn make(
         making.force(&rules, source, force.kind, force.ships, at)?;
     }
 
+    // Decision 0176, rule 2 and amended 6: the men the side believes may be
+    // ashore beyond its estimate, in the order of its list, each of unknown
+    // standing taking its turn after the believed forces of unknown standing.
+    for (place, men) in (1..).zip(&believed.men) {
+        let in_world = if men.standing == Standing::Absent {
+            making.assumptions.push(Assumption::BelievedMenRuledOut {
+                place,
+                name: men.name.clone(),
+                hex: men.hex,
+                men: men.men,
+            });
+            false
+        } else if let Some(why) = set_aside(own, view, men.hex) {
+            making.assumptions.push(Assumption::BelievedMenSetAside {
+                place,
+                name: men.name.clone(),
+                hex: men.hex,
+                men: men.men,
+                standing: men.standing,
+                why,
+            });
+            false
+        } else if men.standing == Standing::Unknown {
+            let digit = unknown;
+            unknown += 1;
+            let bits = u64::from(world - 1);
+            let here = bits.checked_shr(digit).unwrap_or(0) & 1 == 1;
+            if !here {
+                making.assumptions.push(Assumption::BelievedMenNotInWorld {
+                    place,
+                    name: men.name.clone(),
+                    hex: men.hex,
+                    men: men.men,
+                });
+            }
+            here
+        } else {
+            true
+        };
+        if !in_world {
+            continue;
+        }
+        let id = LandUnitId::new(next(&mut making.next_unit, "land units")?);
+        making.half.land_units.insert(
+            id,
+            men_unit(
+                id,
+                format!("Assumed men believed at {} ({})", men.hex, men.name),
+                enemy,
+                men.hex,
+                men.men,
+            ),
+        );
+        making.assumptions.push(Assumption::BelievedMenMade {
+            unit: id,
+            place,
+            name: men.name.clone(),
+            hex: men.hex,
+            men: men.men,
+            standing: men.standing,
+        });
+    }
+
     // Rules 18 and 19.
     making.assumptions.push(Assumption::EnemyGivenNoBelief);
     if believed.intents.is_empty() {
@@ -898,6 +951,58 @@ pub(crate) fn make(
             .push(Assumption::EnemyIntent { kind: intent.kind });
     }
     Ok((making.half, making.assumptions))
+}
+
+/// A fighting unit of `men` men at `hex`, on defend, as rule 6 makes the
+/// unit of an estimate: the standard experience and every skill at the
+/// standard, fed, rested, with no fieldworks, no rehearsal, no march, no
+/// formation and no standing order.
+fn men_unit(id: LandUnitId, name: String, side: Side, hex: Hex, men: u32) -> LandUnit {
+    LandUnit {
+        id,
+        name,
+        side,
+        men_ashore: men,
+        hex: (men > 0).then_some(hex),
+        posture: Posture::Defend,
+        posture_order: None,
+        fatigue: Fixed::ZERO,
+        fed_share: Fixed::ONE,
+        march: None,
+        rehearsal: Fixed::ZERO,
+        rehearsal_hex: None,
+        activity: Activity::Ready,
+        activity_order: None,
+        experience: LandUnit::DEFAULT_EXPERIENCE,
+        training_days: 0,
+        fight_days: 0,
+        skills: Skills::STANDARD_ALL,
+        working: false,
+        when_spent: None,
+        fieldworks: Fixed::ZERO,
+        available_from: None,
+        formation: None,
+    }
+}
+
+/// Why believed men at `hex` are set aside (decision 0176, amended 6), if
+/// they are: the side holds an estimate of the hex of a day after the
+/// scenario's start, a count it has had since; or the place is the side's,
+/// a base of its own in the hex and none of the enemy's there on its map.
+fn set_aside(own: &PictureHalf, view: &SideView<'_>, hex: Hex) -> Option<SetAside> {
+    if let Some(estimate) = own
+        .belief
+        .estimates
+        .iter()
+        .find(|estimate| estimate.hex == hex && estimate.day > 0)
+    {
+        return Some(SetAside::CountSince { day: estimate.day });
+    }
+    let ours = own.bases.values().any(|base| base.hex == hex)
+        && !view
+            .enemy_bases()
+            .any(|base| base.hex == hex && base.side != own.side);
+    ours.then_some(SetAside::PlaceIsTheSides)
 }
 
 /// The contact that may stand for a believed force (rule 15), if any: the

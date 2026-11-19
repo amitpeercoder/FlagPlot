@@ -474,6 +474,7 @@ fn time_trial(
     let believed = sim_trial::Believed {
         forces: live.believed_forces(side).cloned().collect(),
         intents: live.believed_intents(side).cloned().collect(),
+        men: live.believed_men(side).cloned().collect(),
     };
     let asked = sim_trial::Asked {
         trial: 1,

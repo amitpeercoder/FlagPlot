@@ -21,12 +21,22 @@
 ///   resolved with a watcher, a copy at the staff's step or as if closed,
 ///   the hashes of past days, the orders of the book and a side's command
 ///   state read from it.
+/// - **A view of a world the crate built** (decision 0176, amended 14) is
+///   taken in two parts of the crate and nowhere else: the play
+///   (`play.rs`), on one line, to record at each day's end where bases
+///   stand and on the first day the side's plan orders; and the making of an
+///   estimate (`estimate.rs`), which reads each world through its two sides'
+///   views, and the side's own command state through its view
+///   (`.command_state()`). Every other file is banned `side_view` and
+///   `command_state(` as before. A world named in either is one the crate
+///   built, since no function takes one.
 /// - **A test module** of the crate (a file whose name ends `_tests.rs`),
 ///   compiled only for its own tests, is not read.
 /// - **Banned outright:** the umpire and his key; the whole picture of a
 ///   live world and the rebuild on a live seed; a view taken from a world
-///   (`side_view`, `at_seat`, `known_to`, `at_staff_step`), since a trial is
-///   handed the view and is never given the live world to take one from;
+///   (`side_view`, `at_seat`, `known_to`, `at_staff_step`) but as allowed
+///   above, since a trial is handed the live view and is never given the
+///   live world to take one from;
 ///   the truth state, the belief state and the event log of a world; reading
 ///   files or the clock; the hash collections and floating point; `unsafe`.
 /// - **Its dependencies** are `sim-core` and `sim-staff` only; `sim-data`
@@ -84,6 +94,13 @@ fn a_trial_takes_a_side_view_and_nothing_else_of_a_live_game() {
         "orders()",
         "command_state(",
     ];
+    // The views a part of the crate may take of a world it built, by file:
+    // the word allowed, and the most lines that may name it there.
+    let allowed_in: [(&str, &str, usize); 3] = [
+        ("play.rs", ".side_view(", 1),
+        ("estimate.rs", ".side_view(", usize::MAX),
+        ("estimate.rs", ".command_state()", usize::MAX),
+    ];
     let allowed_world = [
         "use sim_core::World;",
         "World::from_picture(",
@@ -110,12 +127,34 @@ fn a_trial_takes_a_side_view_and_nothing_else_of_a_live_game() {
                 continue;
             }
             files += 1;
+            let name = path
+                .file_name()
+                .and_then(|name| name.to_str())
+                .unwrap_or_default()
+                .to_string();
             let text = std::fs::read_to_string(&path).expect("a source reads");
+            let mut allowed_lines = vec![0usize; allowed_in.len()];
             for (i, line) in text.lines().enumerate() {
                 let code = line.trim_start();
                 if code.starts_with("//") {
                     continue;
                 }
+                // An allowed view is cut out of the line before the check, and
+                // counted.
+                let mut checked = code.to_string();
+                for (k, (file, word, most)) in allowed_in.iter().enumerate() {
+                    if *file == name && checked.contains(word) {
+                        allowed_lines[k] += 1;
+                        assert!(
+                            allowed_lines[k] <= *most,
+                            "{}:{} names {word} more often than allowed: {line}",
+                            path.display(),
+                            i + 1
+                        );
+                        checked = checked.replace(word, "");
+                    }
+                }
+                let code = checked.as_str();
                 for word in banned {
                     assert!(
                         !code.contains(word),

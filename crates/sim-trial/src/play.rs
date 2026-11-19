@@ -22,13 +22,16 @@
 //! The only things a trial does to a world are the things a game does to
 //! it between days: it hands in commands, and resolves a day with the
 //! staffs; it reads the world's day, a day's hash and events, and what the
-//! staffs handed in. Every world it touches it built itself; no call of
-//! the crate takes a world.
+//! staffs handed in; and at each day's end it takes the side tried's view,
+//! to record where bases stand and, on the first day, the side's plan
+//! orders (decision 0176, amended 1). Every world it touches it built
+//! itself; no call of the crate takes a world.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
-use sim_core::command::{CommandKind, Leave, Staff, StaffDecisions};
+use sim_core::command::{CommandKind, Leave, PlanOrder, Staff, StaffDecisions};
 use sim_core::events::EventKind;
+use sim_core::hex::Hex;
 use sim_core::map::Map;
 use sim_core::orders::Issuer;
 use sim_core::refdata::{RefData, TrialFigures};
@@ -72,12 +75,45 @@ pub struct Asked {
 }
 
 /// One day of a world as played: its number in the game, the world's hash
-/// at its end, and what each side's staff handed in for it.
+/// at its end, what each side's staff handed in for it, and where the side
+/// tried and the enemy on its map held bases at its end (decision 0176,
+/// amended 1).
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct PlayedDay {
     pub day: u32,
     pub hash: u64,
     pub staff: BTreeMap<Side, StaffDecisions>,
+    /// The bases at the day's end, as the side tried sees them.
+    pub bases: BasesAt,
+}
+
+/// Where bases stood at the end of a day, as a side sees them (decision
+/// 0176, amended 1): the hexes in which the side holds a base, and the hexes
+/// of the enemy's bases on its map. What the test of a place being the side's
+/// reads ([`crate::met`]).
+#[derive(Clone, PartialEq, Eq, Debug, Default)]
+pub struct BasesAt {
+    /// The hexes in which the side holds a base.
+    pub own: BTreeSet<Hex>,
+    /// The hexes of the enemy's bases on the side's map.
+    pub enemy: BTreeSet<Hex>,
+}
+
+impl BasesAt {
+    /// Where bases stand in a side's view: its own bases' hexes, and the
+    /// hexes of the bases on its map that are not its own. A live game's view
+    /// gives the same as a world's.
+    pub fn of(view: &SideView<'_>) -> BasesAt {
+        let side = view.side();
+        BasesAt {
+            own: view.bases().map(|base| base.hex).collect(),
+            enemy: view
+                .enemy_bases()
+                .filter(|base| base.side != side)
+                .map(|base| base.hex)
+                .collect(),
+        }
+    }
 }
 
 /// A command of the course that a world refused (amended point 5): the day
@@ -117,6 +153,10 @@ pub struct PlayedWorld {
     pub refused: Vec<RefusedCommand>,
     /// Why the world was stopped, where it was.
     pub failed: Option<Failed>,
+    /// The plan orders of the side tried, as its staff works them from its
+    /// view at the end of the first day played (decision 0176, amended 1);
+    /// `None` where no day was played.
+    pub plan_orders: Option<Vec<PlanOrder>>,
     /// The world as its play left it; `None` where its picture was refused.
     pub world: Option<World>,
 }
@@ -125,6 +165,8 @@ pub struct PlayedWorld {
 /// numbers, and what the record of the trial says of itself.
 #[derive(Clone, Debug)]
 pub struct Played {
+    /// The side tried; `None` where the trial was given no picture.
+    pub side: Option<Side>,
     pub worlds: Vec<PlayedWorld>,
     /// The count of worlds is not a power of two, so the forces of unknown
     /// standing were not tried evenly (amended point 9).
@@ -169,6 +211,7 @@ pub struct Playing {
     staffs: BTreeMap<Side, Box<dyn Staff + Send>>,
     in_play: Option<InPlay>,
     played: Vec<PlayedWorld>,
+    side: Option<Side>,
     uneven: bool,
     leaves_given: Vec<Leave>,
     /// A day made to fail by a test of the crate: the world and the day of
@@ -263,7 +306,9 @@ pub fn begin_from_pictures(
             }
         }
     }
+    let side = made.first().map(|first| first.side);
     Ok(Playing {
+        side,
         to_begin: made.into_iter(),
         ref_data: ref_data.clone(),
         map: map.clone(),
@@ -294,6 +339,7 @@ impl Playing {
                             days: Vec::new(),
                             refused: Vec::new(),
                             failed: None,
+                            plan_orders: None,
                             world: Some(built),
                         },
                         side: picture.side,
@@ -311,6 +357,7 @@ impl Playing {
                         days: Vec::new(),
                         refused: Vec::new(),
                         failed: Some(failed.clone()),
+                        plan_orders: None,
                         world: None,
                     });
                     return Some(Stepped::Failed(failed));
@@ -390,10 +437,22 @@ impl Playing {
                         }
                     }
                 }
+                // What the estimate reads of the day's end (decision 0176,
+                // amended 1), from the side tried's view of the world, and
+                // nothing else of it: where bases stand; and on the first
+                // day, the side's plan orders as its staff works them.
+                let view = world.side_view(current.side);
+                if current.record.days.is_empty() {
+                    current.record.plan_orders = self
+                        .staffs
+                        .get(&current.side)
+                        .map(|staff| staff.plan_orders(view));
+                }
                 current.record.days.push(PlayedDay {
                     day: summary.day,
                     hash: summary.state_hash,
                     staff: world.staff_handed_in().clone(),
+                    bases: BasesAt::of(&view),
                 });
                 Stepped::Day {
                     world: number,
@@ -434,6 +493,7 @@ impl Playing {
     pub fn play_out(mut self) -> Played {
         while self.step().is_some() {}
         Played {
+            side: self.side,
             worlds: self.played,
             uneven: self.uneven,
             leaves_given: self.leaves_given,

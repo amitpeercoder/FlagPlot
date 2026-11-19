@@ -19,6 +19,12 @@
 //!   and the map it is handed, on the stream of its trial and its world
 //!   (decision 0170, 12), and hands in for the enemy, for the first morning,
 //!   the intents the side believed he held (rule 19).
+//! - [`estimate`] reads an estimate of one intent of the side tried from a
+//!   trial as played (decision 0176): in how many worlds its end was met and
+//!   kept, met and lost again, or not met; what it cost each side; what was
+//!   assumed; and where the worlds part. In counts of worlds, never in
+//!   chances or points. [`met`] is the test of an end, usable on a live
+//!   game's view as on a world's record.
 //! - [`begin`] and [`play`] play a trial (decision 0175): one course, the
 //!   commander's commands of the side tried each on a day of the world, in
 //!   each world from 1, for a horizon of days, with both sides' staffs on
@@ -45,18 +51,23 @@
 mod assumption;
 mod draw;
 mod enemy;
+mod estimate;
 mod play;
 
-pub use assumption::{Assumption, NotMade, Source};
+pub use assumption::{Assumption, NotMade, SetAside, Source};
+pub use estimate::{
+    end_of, estimate, met, Assumed, AssumedNote, AssumedOf, Costs, Displaced, End, Estimate, Kept,
+    Losses, OtherPlan, PartSide, PartedBy, Parting, Spread, Went, WorldFigures,
+};
 pub use play::{
-    begin, begin_from_pictures, play, Asked, CourseCommand, Failed, Played, PlayedDay, PlayedWorld,
-    Playing, RefusedCommand, Stepped,
+    begin, begin_from_pictures, play, Asked, BasesAt, CourseCommand, Failed, Played, PlayedDay,
+    PlayedWorld, Playing, RefusedCommand, Stepped,
 };
 pub use sim_core::refdata::TrialSize;
 
 use core::fmt;
 
-use sim_core::believed::{BelievedForce, BelievedIntent};
+use sim_core::believed::{BelievedForce, BelievedIntent, BelievedMen};
 use sim_core::command::{CommandKind, IntentKind, Leave};
 use sim_core::ids::IntentId;
 use sim_core::map::Map;
@@ -81,12 +92,14 @@ pub struct Trial {
 
 /// What a side believed when the game began (decision 0173): the forces of
 /// the enemy's it believed in and had not seen, and the intents it believed
-/// he held, each in the order the scenario gives them. Every entry must be
-/// the tried side's own belief.
+/// he held; and the men of the enemy's it believed may be ashore at a place
+/// beyond its estimate (decision 0176, 1); each in the order the scenario
+/// gives them. Every entry must be the tried side's own belief.
 #[derive(Clone, PartialEq, Eq, Debug, Default)]
 pub struct Believed {
     pub forces: Vec<BelievedForce>,
     pub intents: Vec<BelievedIntent>,
+    pub men: Vec<BelievedMen>,
 }
 
 /// The picture of one world of a trial, with what was assumed in making it

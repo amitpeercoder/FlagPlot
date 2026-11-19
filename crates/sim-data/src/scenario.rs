@@ -3,7 +3,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use serde::Deserialize;
-use sim_core::believed::{BelievedForce, BelievedIntent, LastKnown, Standing};
+use sim_core::believed::{BelievedForce, BelievedIntent, BelievedMen, LastKnown, Standing};
 use sim_core::choices::Moment;
 use sim_core::command::CommandKind;
 use sim_core::commander::{Commander, Initiative, NamedCommander};
@@ -148,6 +148,10 @@ struct ScenarioFile {
     /// The intents a side believes the enemy holds (decision 0173, 7).
     #[serde(default)]
     believed_intent: Vec<BelievedIntentSpec>,
+    /// The men of the enemy's a side believes may be ashore at a place
+    /// beyond its estimate (decision 0176, 1).
+    #[serde(default)]
+    believed_men: Vec<BelievedMenSpec>,
     /// Missions and objectives (decision 0054). Optional.
     objectives: Option<ObjectivesSpec>,
     /// Whether command levels are on (decision 0134, 1). Optional; off when
@@ -351,6 +355,26 @@ struct BelievedForceSpec {
     q: Option<i32>,
     r: Option<i32>,
     day: Option<u32>,
+    placeholder: Option<bool>,
+    note: Option<String>,
+}
+
+/// Men of the enemy's a side believes may be ashore at a place beyond those
+/// it holds an estimate of (decision 0176, 1, amended 6 and 7): the side that
+/// believes it, a name, the place (`at_base`, a base of the enemy's on the
+/// side's map, or `q` and `r`, a hex of land on the map), the men, 1 or more,
+/// and the standing (`present`, `absent` or `unknown`). `placeholder` is true
+/// where the belief rests on no source, and then `note` is required.
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct BelievedMenSpec {
+    side: SideSpec,
+    name: String,
+    men: u32,
+    standing: String,
+    at_base: Option<u32>,
+    q: Option<i32>,
+    r: Option<i32>,
     placeholder: Option<bool>,
     note: Option<String>,
 }
@@ -1357,6 +1381,89 @@ fn believed_force(
     })
 }
 
+/// Believed men as the scenario states them, checked (decision 0176, 1 and
+/// amended 7) as a believed force is, against the world as loaded: a place,
+/// a base of the enemy's on the believing side's map or a hex of the map that
+/// is not sea; 1 or more men; a known standing.
+fn believed_men(
+    spec: &BelievedMenSpec,
+    index: usize,
+    world: &World,
+) -> Result<BelievedMen, String> {
+    let side: Side = spec.side.into();
+    let what = format!("believed men {} ({})", index + 1, spec.name);
+    if spec.men == 0 {
+        return Err(format!("{what} have no man: they are 1 or more"));
+    }
+    let standing = Standing::from_name(&spec.standing).ok_or_else(|| {
+        format!(
+            "{what} have unknown standing \"{}\": present, absent or unknown",
+            spec.standing
+        )
+    })?;
+    let (hex, base) = match (spec.at_base, spec.q, spec.r) {
+        (Some(_), Some(_), _) | (Some(_), _, Some(_)) => {
+            return Err(format!(
+                "{what} have both \"at_base\" and a hex; they take one"
+            ))
+        }
+        (Some(raw), None, None) => {
+            let id = BaseId::new(raw);
+            let base = world.umpire().bases.get(&id).ok_or_else(|| {
+                format!("{what} are at base {raw}, which is not a base of the scenario")
+            })?;
+            if base.side == side {
+                return Err(format!(
+                    "{what} are at base {raw} ({}), which is the {} side's own: believed men are the enemy's",
+                    base.name,
+                    side.name()
+                ));
+            }
+            if !base.on_map {
+                return Err(format!(
+                    "{what} are at base {raw} ({}), which is not on the {} side's map",
+                    base.name,
+                    side.name()
+                ));
+            }
+            (base.hex, Some(id))
+        }
+        (None, Some(q), Some(r)) => {
+            let hex = Hex::new(q, r);
+            let Some(data) = world.map().get(hex) else {
+                return Err(format!("{what} are at {q},{r}, off the map"));
+            };
+            if !matches!(data.kind, HexKind::Land | HexKind::Coast) {
+                return Err(format!(
+                    "{what} are at {q},{r}, which is sea: men are ashore"
+                ));
+            }
+            (hex, None)
+        }
+        (None, Some(_), None) | (None, None, Some(_)) => {
+            return Err(format!(
+                "{what} give one of \"q\" and \"r\"; a hex takes both"
+            ))
+        }
+        (None, None, None) => {
+            return Err(format!(
+                "{what} have no place: they take \"at_base\" or \"q\" and \"r\""
+            ))
+        }
+    };
+    let placeholder = spec.placeholder.unwrap_or(false);
+    Ok(BelievedMen {
+        side,
+        name: spec.name.clone(),
+        hex,
+        base,
+        men: spec.men,
+        standing,
+        placeholder,
+        note: entry_note(placeholder, &spec.note, &what)?,
+    })
+}
+
 /// A believed intent as the scenario states it, checked (decision 0173, 7
 /// and 9) as a `set_intent` command of its kind would be for the enemy's
 /// side, and every base it names on the believing side's map.
@@ -1457,6 +1564,9 @@ pub struct Scenario {
     /// The intents each side believed the enemy held (decision 0173, 7),
     /// kept as the forces are.
     believed_intents: Vec<BelievedIntent>,
+    /// The men of the enemy's each side believed may be ashore at a place
+    /// beyond its estimate (decision 0176, 1), kept as the forces are.
+    believed_men: Vec<BelievedMen>,
     /// A trial's figures (decision 0174), where the scenario names them:
     /// the scenario's, not the world's, never hashed and read by no rule.
     trial_figures: Option<TrialFigures>,
@@ -3396,6 +3506,10 @@ impl Scenario {
         for (index, spec) in file.believed_intent.iter().enumerate() {
             believed_intents.push(believed_intent(spec, index, &world).map_err(&fail)?);
         }
+        let mut believed_men_list = Vec::new();
+        for (index, spec) in file.believed_men.iter().enumerate() {
+            believed_men_list.push(believed_men(spec, index, &world).map_err(&fail)?);
+        }
 
         Ok(Scenario {
             name: file.name,
@@ -3414,6 +3528,7 @@ impl Scenario {
             data_files,
             believed_forces,
             believed_intents,
+            believed_men: believed_men_list,
             trial_figures,
         })
     }
@@ -3437,6 +3552,13 @@ impl Scenario {
         self.believed_intents
             .iter()
             .filter(move |intent| intent.side == side)
+    }
+
+    /// The men of the enemy's `side` believed may be ashore at a place beyond
+    /// its estimate when the game began (decision 0176, 1), in the order the
+    /// file gives them.
+    pub fn believed_men(&self, side: Side) -> impl Iterator<Item = &BelievedMen> + '_ {
+        self.believed_men.iter().filter(move |men| men.side == side)
     }
 
     /// The superiors the scenario names, if command levels are on (decision
@@ -3545,6 +3667,7 @@ impl Scenario {
             data_files: self.data_files.clone(),
             believed_forces: self.believed_forces.clone(),
             believed_intents: self.believed_intents.clone(),
+            believed_men: self.believed_men.clone(),
             trial_figures: self.trial_figures.clone(),
         })
     }

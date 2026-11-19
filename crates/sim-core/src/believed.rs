@@ -1,6 +1,7 @@
 //! What a side believed of the enemy when the game began (decision 0173, 5
 //! to 9): the forces it believed in and held no contact of, and the intents
-//! it believed the enemy held.
+//! it believed the enemy held; and the men it believed may be ashore at a
+//! place beyond its estimate (decision 0176, 1).
 //!
 //! Plain data, the scenario's and not the world's. A believed force and a
 //! believed intent are not state and not belief: they are never put into a
@@ -121,6 +122,37 @@ pub struct BelievedIntent {
 
 impl BelievedIntent {
     /// The side believed to hold the intent: the believing side's enemy.
+    pub const fn enemy(&self) -> Side {
+        other(self.side)
+    }
+}
+
+/// Men of the enemy's that a side believes may be ashore at a place beyond
+/// those it holds an estimate of (decision 0176, 1, amended 6 and 7), as the
+/// scenario states them. Plain data, as a believed force is: not state, not
+/// belief, never put into a world and never hashed.
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct BelievedMen {
+    /// The side that believes it.
+    pub side: Side,
+    /// Words, for the estimate to name it by.
+    pub name: String,
+    /// The hex of the place: the base's where `base` is named.
+    pub hex: Hex,
+    /// The base of the enemy's on the side's map the scenario names the
+    /// place by, if it names one; `None` where it gives a hex.
+    pub base: Option<BaseId>,
+    /// How many men: 1 or more.
+    pub men: u32,
+    pub standing: Standing,
+    /// True where the belief rests on no source.
+    pub placeholder: bool,
+    /// What the entry rests on; required where it is a placeholder.
+    pub note: Option<String>,
+}
+
+impl BelievedMen {
+    /// The side whose men they are believed to be.
     pub const fn enemy(&self) -> Side {
         other(self.side)
     }
