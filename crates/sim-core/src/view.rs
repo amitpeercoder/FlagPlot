@@ -1049,6 +1049,20 @@ impl<'a> SideView<'a> {
         self.ref_data.aircraft_types.get(&id)
     }
 
+    /// Every class of ship the scenario's reference data gives, in the order
+    /// of their numbers (decision 0174, 8): reference data, so common
+    /// knowledge.
+    pub fn ship_classes(&self) -> impl Iterator<Item = &'a ShipClass> + 'a {
+        self.ref_data.ship_classes.values()
+    }
+
+    /// Every type of aircraft the scenario's reference data gives, in the
+    /// order of their numbers (decision 0174, 9): reference data, so common
+    /// knowledge.
+    pub fn aircraft_types(&self) -> impl Iterator<Item = &'a AircraftType> + 'a {
+        self.ref_data.aircraft_types.values()
+    }
+
     /// Whose a class of ship is (decision 0173, 4): reference data, so common
     /// knowledge. `None` when the scenario names no file of sides.
     pub fn ship_class_side(&self, id: ShipClassId) -> Option<crate::refdata::ClassSide> {

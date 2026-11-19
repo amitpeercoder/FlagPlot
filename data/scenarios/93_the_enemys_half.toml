@@ -1,0 +1,69 @@
+# Scenario 93: the enemy's half of a picture, by rule.
+#
+# Decision 0174, the third part of step 4 of step 3's stage 4. From what the
+# Allied side holds and believes, `sim-trial` makes the enemy it will be
+# tried against. This file is the inputs of the hand calculation in
+# tests/scenario_93_the_enemys_half.rs: the placeholder map of scenario 1
+# (open sea but the two coast hexes of the bases), the placeholder classes
+# and types, a file of sides that gives each of them to both sides, and a
+# trial's figures file. Allied base 1 lies at (0,0) with task force 1, one
+# placeholder cruiser, stopped there with no order. Japanese base 2 lies at
+# (8,3), on the Allied side's map. The Japanese side has nothing afloat.
+# Nobody moves. The Allied side holds no contact, no estimate and no belief;
+# the test adds, case by case, the contacts, estimates and believed forces
+# and intents the case names, after the end of this file.
+#
+# The test runs this file on the frozen step 1 figures. The file of sides
+# and the trial's figures have frozen copies in data/reference/step1.
+#
+# PLACEHOLDER DATA. The bases, the ship, the map and the figures are
+# invented.
+
+name = "Placeholder scenario 93: The enemy's half"
+placeholder = true
+seed = 1942
+days = 2
+map = "../map/placeholder_transit.toml"
+ship_classes = "../reference/ship_classes.csv"
+port_sizes = "../reference/port_sizes.csv"
+aircraft_types = "../reference/aircraft_types.csv"
+search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat.toml"
+ground = "../reference/ground.toml"
+class_sides = "../reference/class_sides_placeholder_scenario_93.csv"
+trial = "../reference/trial.toml"
+
+# Allied base 1 at (0,0).
+[[base]]
+id = 1
+name = "Placeholder base 1"
+side = "allied"
+q = 0
+r = 0
+supply_t = 1000
+fuel_t = 1000
+
+# Japanese base 2 at (8,3), on both sides' maps. What it holds the Allied
+# side does not know: the enemy's half gives it the trial's figures.
+[[base]]
+id = 2
+name = "Placeholder base 2"
+side = "japanese"
+q = 8
+r = 3
+supply_t = 200
+
+[[task_force]]
+id = 1
+name = "Placeholder task force 1"
+side = "allied"
+at_base = 1
+mission = "surface_combat"
+
+[[ship]]
+id = 1
+name = "Placeholder cruiser 1"
+class = 1
+side = "allied"
+fuel_t = 2000
+task_force = 1

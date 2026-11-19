@@ -700,7 +700,10 @@ impl Owners {
             EntityRef::AirGroup(id) => self.air_groups.get(&id).copied(),
             EntityRef::Base(id) => self.bases.get(&id).copied(),
             EntityRef::LandUnit(id) => self.land_units.get(&id).copied(),
-            EntityRef::Pilot(_) | EntityRef::Contact(_) | EntityRef::Event(_) => None,
+            EntityRef::Pilot(_)
+            | EntityRef::Contact(_)
+            | EntityRef::Event(_)
+            | EntityRef::Place(_) => None,
         }
     }
 }
@@ -4866,6 +4869,7 @@ mod tests {
                                 | EntityRef::Contact(_)
                                 | EntityRef::Event(_)
                                 | EntityRef::Pilot(_)
+                                | EntityRef::Place(_)
                                 | EntityRef::LandUnit(_) => true,
                             };
                             assert!(own, "{side:?} is shown {entity} in {:?}", event.kind);

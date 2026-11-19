@@ -9,6 +9,7 @@ publish.workspace = true
 sim-core.workspace = true
 sim-data.workspace = true
 sim-staff.workspace = true
+sim-trial.workspace = true
 # Scenario 41's preview is asked through the agent's tools.
 sim-agent = { path = "../crates/sim-agent" }
 serde_json.workspace = true
@@ -507,3 +508,7 @@ path = "scenario_91_a_world_from_a_picture.rs"
 [[test]]
 name = "scenario_92_a_sides_own_half"
 path = "scenario_92_a_sides_own_half.rs"
+
+[[test]]
+name = "scenario_93_the_enemys_half"
+path = "scenario_93_the_enemys_half.rs"

@@ -29,6 +29,9 @@ pub enum Subsystem {
     Logistics,
     Upkeep,
     Intelligence,
+    /// A trial's own draws, made in building a picture's enemy (decision
+    /// 0174, 3), never by a rule of play. Added at the end.
+    Trial,
 }
 
 impl Subsystem {
@@ -43,6 +46,7 @@ impl Subsystem {
             Subsystem::Logistics => 6,
             Subsystem::Upkeep => 7,
             Subsystem::Intelligence => 8,
+            Subsystem::Trial => 9,
         }
     }
 }
@@ -123,11 +127,26 @@ pub enum Draw {
     /// subsystem, keyed on the ship or the base. Its attacks in the pulse
     /// draw from it in turn, in the order they are recorded.
     RaidRecognised,
+    /// Where a force made for a contact is (decision 0174, 13): one stream
+    /// for each contact and world of a trial, in the trial subsystem, keyed
+    /// on the contact's place in the side's list (`EntityRef::Place`), with
+    /// no pulse, on the picture's day, in the trial's domain.
+    TrialContactHex,
+    /// Whether two contacts that may be one force are one in a world
+    /// (decision 0174, 12): one stream for each pair and world, keyed on the
+    /// first contact's place and the second's as the other.
+    TrialPair,
+    /// Where a believed force last known at a place is (decision 0174, 17):
+    /// keyed on the force's place in the side's list of believed forces.
+    TrialBelievedHex,
+    /// At which base of the enemy's a believed force of no known place is
+    /// (decision 0174, 17): keyed as [`Draw::TrialBelievedHex`] is.
+    TrialBelievedBase,
 }
 
 impl Draw {
     /// Every value, for the test that their codes differ.
-    pub const ALL: [Draw; 14] = [
+    pub const ALL: [Draw; 18] = [
         Draw::Legacy,
         Draw::Claim,
         Draw::Ditch,
@@ -142,6 +161,10 @@ impl Draw {
         Draw::StateReport,
         Draw::Reconnaissance,
         Draw::RaidRecognised,
+        Draw::TrialContactHex,
+        Draw::TrialPair,
+        Draw::TrialBelievedHex,
+        Draw::TrialBelievedBase,
     ];
 
     /// A stable number for the rule. Never renumber. 0 is `Legacy` alone
@@ -162,6 +185,10 @@ impl Draw {
             Draw::StateReport => 11,
             Draw::Reconnaissance => 12,
             Draw::RaidRecognised => 13,
+            Draw::TrialContactHex => 14,
+            Draw::TrialPair => 15,
+            Draw::TrialBelievedHex => 16,
+            Draw::TrialBelievedBase => 17,
         }
     }
 }

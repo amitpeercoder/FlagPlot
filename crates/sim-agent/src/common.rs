@@ -451,6 +451,9 @@ impl<'a> Ctx<'a> {
                 Some(number) => bare(format!("event:{number}")),
                 None => bare("event".to_string()),
             },
+            // Only a trial's draw's key (decision 0174, 3); no event names
+            // it.
+            EntityRef::Place(place) => bare(format!("place:{place}")),
         }
     }
 

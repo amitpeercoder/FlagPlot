@@ -278,7 +278,7 @@ impl<'a> SideView<'a> {
                     }
                 }
                 EntityRef::Contact(_) | EntityRef::Event(_) => {}
-                EntityRef::Pilot(_) => return false,
+                EntityRef::Pilot(_) | EntityRef::Place(_) => return false,
             }
         }
         own

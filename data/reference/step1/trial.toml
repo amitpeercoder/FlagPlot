@@ -1,0 +1,20 @@
+# FROZEN: a copy of data/reference/trial.toml
+# as first made, on Nov 19, 2026, for scenario 93's hand calculation (decision
+# 0174). Do not edit. A rule that adds a new figure adds it here too, with its
+# first value. Otherwise byte for byte the live file.
+# A TRIAL'S FIGURES (decision 0174, "The figures"): what a side is taken to
+# assume, when the enemy's half of a picture is made, of what it cannot see.
+# Named by a scenario that is to be tried, with its `trial` key.
+#
+# PLACEHOLDER DATA. Both figures are set by the architect and rest on no
+# source: no row sizes what a side should assume of a base it has not seen.
+
+placeholder = true
+
+# The supply a base of the enemy's on the side's map is given, in tons
+# (decision 0174, 5). Placeholder.
+enemy_base_supply_t = 1000
+
+# The fuel for ships a base of the enemy's on the side's map is given, in
+# tons (decision 0174, 5). Placeholder.
+enemy_base_fuel_t = 500
