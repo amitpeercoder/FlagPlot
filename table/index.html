@@ -270,11 +270,11 @@ button:disabled { opacity: 0.45; cursor: default; }
     paintBase = function () {
     var b2 = baseCanvas.getContext('2d'), W = baseCanvas.width, H = baseCanvas.height, s = 7;
     function rnd() { s = (s * 16807) % 2147483647; return s / 2147483647; }
-    b2.fillStyle = '#e9e1c9'; b2.fillRect(0, 0, W, H);
-    for (var i = 0; i < 5000; i++) { b2.fillStyle = rnd() > 0.5 ? 'rgba(120,105,70,0.10)' : 'rgba(255,255,255,0.22)'; b2.fillRect(rnd() * W, rnd() * H, 3, 3); }
-    b2.strokeStyle = 'rgba(90,80,55,0.16)'; b2.lineWidth = 3; b2.beginPath(); b2.moveTo(W / 2, 0); b2.lineTo(W / 2, H); b2.moveTo(0, H / 2); b2.lineTo(W, H / 2); b2.stroke();
+    b2.fillStyle = '#8fb9cc'; b2.fillRect(0, 0, W, H);
+    for (var i = 0; i < 5000; i++) { b2.fillStyle = rnd() > 0.5 ? 'rgba(40,80,105,0.07)' : 'rgba(255,255,255,0.14)'; b2.fillRect(rnd() * W, rnd() * H, 3, 3); }
+    b2.strokeStyle = 'rgba(40,75,100,0.14)'; b2.lineWidth = 3; b2.beginPath(); b2.moveTo(W / 2, 0); b2.lineTo(W / 2, H); b2.moveTo(0, H / 2); b2.lineTo(W, H / 2); b2.stroke();
     // a line every two degrees
-    b2.strokeStyle = '#b6c0c0'; b2.lineWidth = 1.2; b2.fillStyle = '#56605f'; b2.font = "600 20px 'Barlow Condensed', sans-serif";
+    b2.strokeStyle = 'rgba(45,85,110,0.32)'; b2.lineWidth = 1.2; b2.fillStyle = '#2f5268'; b2.font = "600 20px 'Barlow Condensed', sans-serif";
     for (var lon = Math.ceil(lo / 2) * 2; lon <= hi; lon += 2) { var x = cpx(world(latMid, lon))[0]; b2.beginPath(); b2.moveTo(x, 0); b2.lineTo(x, H); b2.stroke(); b2.fillText(lon + '° E', x + 6, H - 14); }
     for (var lat = Math.ceil(la / 2) * 2; lat <= ha; lat += 2) { var y = cpx(world(lat, lonMid))[1]; b2.beginPath(); b2.moveTo(0, y); b2.lineTo(W, y); b2.stroke(); b2.fillText(Math.abs(lat) + '° ' + (lat < 0 ? 'S' : 'N'), W - 70, y - 6); }
     // the scale along the border: a short tick each half degree, a long one each degree
@@ -291,14 +291,17 @@ button:disabled { opacity: 0.45; cursor: default; }
       var c = cpx(world(h[3], h[4]));
       b2.beginPath(); for (var k = 0; k < 6; k++) { var an = Math.PI / 6 + k * Math.PI / 3; b2[k ? 'lineTo' : 'moveTo'](c[0] + R * Math.cos(an), c[1] + R * Math.sin(an)); } b2.closePath();
       if (h[2] === 'land') { b2.fillStyle = '#c3b383'; b2.fill(); b2.strokeStyle = '#c3b383'; b2.lineWidth = 2; b2.stroke(); }
-      else { b2.fillStyle = 'rgba(195,179,131,' + (0.35 + 0.65 * Math.min(100, h[5]) / 100).toFixed(2) + ')'; b2.fill(); b2.strokeStyle = 'rgba(74,70,59,0.55)'; b2.lineWidth = 1.5; b2.stroke(); }
+      else { b2.fillStyle = '#d3e6e8'; b2.fill(); b2.fillStyle = 'rgba(195,179,131,' + (0.35 + 0.65 * Math.min(100, h[5]) / 100).toFixed(2) + ')'; b2.fill(); b2.strokeStyle = 'rgba(74,70,59,0.55)'; b2.lineWidth = 1.5; b2.stroke(); }
     });
     } else if (coast) {
       // The chart as a chart: the coastline of Natural Earth (public domain),
       // for the eye only. The game plays on the hexes behind it.
       var trace = function () { b2.beginPath(); coast.forEach(function (r) { for (var n = 0; n < r.length; n += 2) { var c = cpx(world(r[n + 1], r[n])); b2[n ? 'lineTo' : 'moveTo'](c[0], c[1]); } b2.closePath(); }); };
-      b2.lineJoin = 'round'; trace(); b2.strokeStyle = 'rgba(150,176,176,0.30)'; b2.lineWidth = HEXR * PX * 0.5; b2.stroke();
-      trace(); b2.strokeStyle = 'rgba(150,176,176,0.35)'; b2.lineWidth = HEXR * PX * 0.22; b2.stroke();
+      b2.lineJoin = 'round'; try { b2.filter = 'blur(' + (HEXR * PX * 0.16).toFixed(1) + 'px)'; } catch (e) {}
+      trace(); b2.strokeStyle = 'rgba(196,224,230,0.55)'; b2.lineWidth = HEXR * PX * 1.5; b2.stroke();
+      trace(); b2.strokeStyle = 'rgba(214,234,236,0.75)'; b2.lineWidth = HEXR * PX * 0.8; b2.stroke();
+      trace(); b2.strokeStyle = 'rgba(228,241,240,0.9)'; b2.lineWidth = HEXR * PX * 0.3; b2.stroke();
+      b2.filter = 'none';
       trace(); b2.fillStyle = '#c9bb8f'; b2.fill(); b2.strokeStyle = '#4e4636'; b2.lineWidth = 2.2; b2.stroke();
       border();
     } else {
@@ -313,7 +316,7 @@ button:disabled { opacity: 0.45; cursor: default; }
       for (var n = 0; n < d.length; n += 4) { var al = d[n + 3];
         if (al > 150) { d[n] = 201; d[n + 1] = 187; d[n + 2] = 143; d[n + 3] = 255; }
         else if (al > 128) { d[n] = 78; d[n + 1] = 70; d[n + 2] = 54; d[n + 3] = 235; }
-        else if (al > 40) { d[n] = 150; d[n + 1] = 176; d[n + 2] = 176; d[n + 3] = Math.round((al - 40) * 0.9); }
+        else if (al > 8) { d[n] = 218; d[n + 1] = 236; d[n + 2] = 238; d[n + 3] = Math.min(230, Math.round((al - 8) * 2.4)); }
         else d[n + 3] = 0; }
       c2.filter = 'none'; c2.clearRect(0, 0, mw, mh); c2.putImageData(img, 0, 0);
       b2.imageSmoothingEnabled = true; b2.drawImage(m2, 0, 0, mw, mh, 0, 0, mw * q, mh * q);
