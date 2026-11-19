@@ -55,6 +55,9 @@ button:disabled { opacity: 0.45; cursor: default; }
 .order { position: fixed; left: 16px; bottom: 92px; width: min(420px, calc(100% - 32px)); max-height: calc(100% - 170px); overflow-y: auto; background: var(--paper); color: var(--paper-ink); font-family: var(--f-type); font-size: 14px; line-height: 1.38; padding: 14px 16px; border-radius: 2px; box-shadow: 0 8px 24px rgba(0,0,0,0.55); display: flex; flex-direction: column; gap: 10px; }
 .order h2, .sheet h2 { margin: 0; font-family: var(--f-ui); font-size: 19px; font-weight: 700; letter-spacing: 0.12em; }
 .order fieldset { border: 0; border-top: 1px dashed #8d8672; margin: 0; padding: 8px 0 0; display: flex; flex-wrap: wrap; gap: 4px 14px; }
+.airorder { display: flex; flex-direction: column; gap: 8px; }
+.airorder .asum:empty { display: none; }
+.frow[hidden] { display: none; }
 .frow { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
 .frow .fl { flex: 0 0 82px; font-size: 12px; color: var(--paper-dim); }
 .seg { display: inline-flex; flex-wrap: wrap; gap: 0; }
@@ -636,6 +639,56 @@ button:disabled { opacity: 0.45; cursor: default; }
     if (last < text.length) e.appendChild(document.createTextNode(plainWords(text.slice(last)))); return e;
   }
   function turnTo(pl) { var v = pl && placeOf(pl); if (!v) return; goal.x = v.x; goal.z = v.z; if (goal.zoom < 0.55) goal.zoom = 0.55; clampGoal(); }
+  // The order to an air group, on its own card: its mission as a switch with
+  // the present one picked out; a search's arc; a strike's base. Signing
+  // takes the group out of the staff's hands, as an order to a force does.
+  var airSigned = {};
+  var MISSION = { rest: 'Rest', search: 'Search', naval_strike: 'Strike ships', combat_air_patrol: 'Air patrol', base_strike: 'Strike a base' };
+  var ARCS = [['All round', 0, 0], ['North', 270, 90], ['East', 0, 180], ['South', 90, 270], ['West', 180, 0]];
+  function segOf(parent, label, name, items, now) {
+    var row = el('div', 'frow'), seg = el('span', 'seg'); row.appendChild(el('span', 'fl', label));
+    items.forEach(function (it) { var l = el('label'), c = el('input'); c.type = 'radio'; c.name = name; c.value = it[0]; c.checked = String(it[0]) === String(now); l.appendChild(c); l.appendChild(el('span', '', it[1])); seg.appendChild(l); });
+    row.appendChild(seg); parent.appendChild(row); return row;
+  }
+  function airOrder(body, e, h) {
+    var x = e.summary, n = num(h); if (M.over || playing || x.available_from > M.day || x.lost_with_base) return;
+    var held = ((M.state && M.state.holds) || []).some(function (o) { return o.target && o.target.air_group === n && !o.target.setting; });
+    var kvg = body.querySelector('.kv'); if (kvg) { kvg.appendChild(el('span', '', 'In whose hands')); kvg.appendChild(el('span', '', held ? 'Yours' : 'The staff\'s')); var was = airSigned[h]; if (was && was.day === M.day && was.at === clock.at) { kvg.appendChild(el('span', '', 'Ordered')); kvg.appendChild(el('span', '', was.words + ' Not yet in effect.')); } }
+    var can = [['rest', MISSION.rest]];
+    if (+x.search_range_nm > 0) can.push(['search', MISSION.search]);
+    if (+x.strike_radius_nm > 0 && x.role !== 'fighter' && x.role !== 'patrol') can.push(['naval_strike', MISSION.naval_strike]);
+    if (!x.role || x.role === 'fighter') can.push(['combat_air_patrol', MISSION.combat_air_patrol]);
+    if (+x.strike_radius_nm > 0 && x.role !== 'fighter' && x.role !== 'patrol' && M.enemyBases.length) can.push(['base_strike', MISSION.base_strike]);
+    if (!can.some(function (c) { return c[0] === x.mission; })) can.push([x.mission, MISSION[x.mission] || String(x.mission).replace(/_/g, ' ')]);
+    var form = el('div', 'airorder'); body.appendChild(form); form.appendChild(el('div', 'sub', 'ORDER'));
+    segOf(form, 'Mission', 'amis', can, x.mission);
+    var arcNow = e.search_from_deg == null ? '' : ARCS.map(function (a, i) { return a[1] === e.search_from_deg && a[2] === e.search_to_deg ? String(i) : null; }).filter(Boolean)[0] || '';
+    var arcRow = segOf(form, 'Arc', 'aarc', ARCS.map(function (a, i) { return [i, a[0]]; }), arcNow);
+    var baseRow = segOf(form, 'Base', 'abase', M.enemyBases.map(function (b) { return [num(b.base.handle), b.base.name]; }), '');
+    var sum = el('div', 'asum'), out = el('div', ''), row = el('div', 'row'), go = el('button', 'go', 'SIGN AND SEND'); go.type = 'button'; row.appendChild(go); form.appendChild(sum); form.appendChild(row); form.appendChild(out);
+    if (held) { var r = el('button', '', 'RETURN IT TO THE STAFF'); r.type = 'button'; r.addEventListener('click', function () { act('release', { air_group: n }, 'Released. The staff may use it again from dusk.').then(function () { $('card').hidden = true; }); }); row.appendChild(r); }
+    function pick(name) { var c = form.querySelector('input[name="' + name + '"]:checked'); return c ? c.value : ''; }
+    function draft() {
+      var m = pick('amis'), orders = [], words = [];
+      arcRow.hidden = m !== 'search'; baseRow.hidden = m !== 'base_strike';
+      if (m === 'base_strike') { var b = pick('abase'); if (!b) return { error: 'Choose the base.', words: ['Strike a base: choose it.'] }; orders.push({ unit: h, order: { kind: 'set_air_mission', mission: m, target_base: +b } }); words.push('Strike ' + form.querySelector('input[name="abase"]:checked').parentNode.textContent + ' each morning.'); }
+      else if (m !== x.mission) { orders.push({ unit: h, order: { kind: 'set_air_mission', mission: m } }); if (m !== 'search') words.push((MISSION[m] || m) + '.'); }
+      if (m === 'search') { var a = pick('aarc'); if (a === '') return { error: 'Choose the arc to search.', words: ['Search: choose the arc.'] };
+        if (a === arcNow && m !== x.mission) words.push('Search ' + ARCS[+a][0].toLowerCase() + '.');
+        if (a !== arcNow) { orders.push({ unit: h, order: { kind: 'set_search_arc', from_deg: ARCS[+a][1], to_deg: ARCS[+a][2], range_nm: String(x.search_range_nm) } }); words.push('Search ' + ARCS[+a][0].toLowerCase() + ', out to ' + x.search_range_nm + ' miles.'); } }
+      return { orders: orders, words: words };
+    }
+    function show() { var d = draft(); sum.textContent = d.words.join(' '); go.hidden = !d.words.length; out.textContent = ''; }
+    form.addEventListener('change', show); show();
+    go.addEventListener('click', function () {
+      var d = draft(); if (d.error) { out.textContent = d.error; return; } if (!d.orders.length) return;
+      (clock.at === 'dusk' && !held ? api('hold', { air_group: n }) : Promise.resolve()).then(function () { return api('issue_orders', { orders: d.orders }); }).then(function (a) {
+        var refused = []; (a.results || []).forEach(function (r) { if (r.status !== 'queued') refused.push(r.text || (r.reason && (r.reason.text || r.reason)) || r.status); });
+        if (refused.length) { out.textContent = 'Refused: ' + refused.join(' '); return; }
+        airSigned[h] = { day: M.day, at: clock.at, words: d.words.join(' ') }; setStatus('Signed, for the ' + (a.for_pulse || 'next') + ' pulse.'); return refresh().then(function () { see(h); });
+      }).catch(function (err) { out.textContent = 'Refused: ' + err.message; });
+    });
+  }
   function see(h) {
     var kind = h.split(':')[0], n = num(h), found; if (!$('sheet').hidden) { forget(); trailAt = stamp(); shown = function () { $('card').hidden = true; $('sheet').hidden = false; }; } $('sheet').hidden = true;
     try { history.replaceState(null, '', '#see=' + h); } catch (e) {}
@@ -657,7 +710,8 @@ button:disabled { opacity: 0.45; cursor: default; }
       var e = a.entity; if (!e) { var no = openCard(nameOf(h).toUpperCase(), null); no.appendChild(el('div', '', 'Nothing is held of it.')); return; }
       if (e.entity_kind === 'air_group') { var x = e.summary, body = openCard(x.air_group.name.toUpperCase(), 'YOURS', true); turnTo(x.place);
         kv(body, [['Aircraft', x.aircraft_type], ['Ready', x.ready + ' of ' + e.strength + (x.damaged ? ', ' + x.damaged + ' damaged' : '')], ['Mission', String(x.mission).replace(/_/g, ' ') + (x.stood_down ? ', stood down' : '')], ['Fatigue', x.fatigue], ['Strike radius', x.strike_radius_nm + ' miles'], ['Search range', x.search_range_nm + ' miles']]);
-        body.appendChild(el('div', 'sub', 'BASED AT')); body.appendChild(rich('div', '', x.location.handle)); return; }
+        var kvg = body.querySelector('.kv'); if (kvg && x.location) { if (x.location.name) M.names[x.location.handle] = String(x.location.name).replace(/^Placeholder /, ''); kvg.appendChild(el('span', '', 'Based at')); kvg.appendChild(rich('span', '', x.location.handle)); }
+        airOrder(body, e, h); return; }
       if (e.entity_kind === 'ship') { var b2 = openCard(e.ship.name.replace(/^Placeholder /, '').toUpperCase(), 'YOURS', true), sys = e.systems || {}, out = Object.keys(sys).filter(function (k) { return sys[k] !== 'working'; }); turnTo(e.place);
         kv(b2, [['Class', e.class], ['Kind', String(e.ship_kind).replace(/_/g, ' ')], ['State', e.sunk ? 'SUNK' : (+e.flotation_damage || +e.fire_damage) ? 'damaged' : 'sound'], ['Out of action', out.length ? out.map(function (k) { return k.replace(/_/g, ' ') + ' ' + sys[k]; }).join(', ') : null], ['Own fuel', commas(e.fuel_t) + (+e.fuel_capacity_t > 0 ? ' of ' + commas(e.fuel_capacity_t) : '') + ' t, ' + commas(e.range_nm) + ' miles'], ['Cargo', (+e.supply_t || +e.cargo_fuel_t) ? commas(e.supply_t) + ' t supply, ' + commas(e.cargo_fuel_t) + ' t fuel' : null]]);
         if (e.troops || e.troop_capacity_men) { b2.appendChild(el('div', 'sub', 'MEN ABOARD')); b2.appendChild(rich('div', '', (e.troops ? e.troops.land_unit.handle + ': ' + commas(e.troops.men) + ' men' : 'None') + (e.troop_capacity_men ? ' (room for ' + commas(e.troop_capacity_men) + ')' : ''))); }
