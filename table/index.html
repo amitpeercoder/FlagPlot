@@ -65,7 +65,6 @@ button:disabled { opacity: 0.45; cursor: default; }
 .card .kv { display: grid; grid-template-columns: auto 1fr; gap: 3px 12px; }
 .card .kv span:nth-child(odd) { color: var(--paper-dim); font-size: 12px; padding-top: 2px; }
 .card .sub { font-family: var(--f-ui); font-size: 12px; font-weight: 700; letter-spacing: 0.12em; color: var(--paper-dim); margin-top: 4px; }
-.card .note { font-size: 12px; color: var(--paper-dim); border-top: 1px dashed #8d8672; padding-top: 7px; }
 .card .headline { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
 .sheet .doc .node { border-left: 2px solid #8d8672; padding: 2px 0 2px 12px; display: flex; flex-direction: column; gap: 5px; }
 .sheet .doc .node .who { font-size: 12px; color: var(--paper-dim); display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
@@ -518,19 +517,19 @@ button:disabled { opacity: 0.45; cursor: default; }
     var body = openCard(u.land_unit.name.toUpperCase(), 'YOURS', true);
     kv(body, [['Men ashore', u.men_ashore ? commas(u.men_ashore) : null], ['Men aboard', u.men_aboard ? commas(u.men_aboard) : null], ['Where', u.place ? hexWords(u.place) : 'aboard ship'], ['Posture', u.posture], ['Doing', u.activity], ['Fatigue', u.fatigue], ['Fed last night', String(u.fed_last_night || '').replace(/_/g, ' ')], ['Experience', u.experience]]);
     if ((u.aboard || []).length) { body.appendChild(el('div', 'sub', 'ABOARD')); body.appendChild(rich('div', '', u.aboard.map(function (a) { return a.ship.handle + ' ' + a.men; }).join(', '))); }
-    body.appendChild(el('div', 'note', 'Your own return, as your staff holds it now.'));
+   
   }
   function cardEntity(h) {
     api('get_entity', { handle: h }).then(function (a) {
       var e = a.entity; if (!e) { var no = openCard(nameOf(h).toUpperCase(), null); no.appendChild(el('div', '', 'Nothing is held of it.')); return; }
       if (e.entity_kind === 'air_group') { var x = e.summary, body = openCard(x.air_group.name.toUpperCase(), 'YOURS', true); turnTo(x.place);
         kv(body, [['Aircraft', x.aircraft_type], ['Ready', x.ready + ' of ' + e.strength + (x.damaged ? ', ' + x.damaged + ' damaged' : '')], ['Mission', String(x.mission).replace(/_/g, ' ') + (x.stood_down ? ', stood down' : '')], ['Fatigue', x.fatigue], ['Strike radius', x.strike_radius_nm + ' miles'], ['Search range', x.search_range_nm + ' miles']]);
-        body.appendChild(el('div', 'sub', 'BASED AT')); body.appendChild(rich('div', '', x.location.handle)); body.appendChild(el('div', 'note', 'Your own return, as your staff holds it now.')); return; }
+        body.appendChild(el('div', 'sub', 'BASED AT')); body.appendChild(rich('div', '', x.location.handle)); return; }
       if (e.entity_kind === 'ship') { var b2 = openCard(e.ship.name.replace(/^Placeholder /, '').toUpperCase(), 'YOURS', true), sys = e.systems || {}, out = Object.keys(sys).filter(function (k) { return sys[k] !== 'working'; }); turnTo(e.place);
         kv(b2, [['Class', e.class], ['Kind', String(e.ship_kind).replace(/_/g, ' ')], ['State', e.sunk ? 'SUNK' : (+e.flotation_damage || +e.fire_damage) ? 'damaged' : 'sound'], ['Out of action', out.length ? out.map(function (k) { return k.replace(/_/g, ' ') + ' ' + sys[k]; }).join(', ') : null], ['Fuel', commas(e.fuel_t) + ' t, ' + commas(e.range_nm) + ' miles'], ['Cargo', (+e.supply_t || +e.cargo_fuel_t) ? commas(e.supply_t) + ' t supply, ' + commas(e.cargo_fuel_t) + ' t fuel' : null]]);
         if (e.task_force) { b2.appendChild(el('div', 'sub', 'IN')); b2.appendChild(rich('div', '', e.task_force.handle)); }
         if ((e.air_groups || []).length) { b2.appendChild(el('div', 'sub', 'AIR GROUPS ABOARD')); b2.appendChild(rich('div', '', e.air_groups.map(function (g) { M.names[g.handle] = g.name; return g.handle; }).join(', '))); }
-        b2.appendChild(el('div', 'note', 'Your own return, as your staff holds it now.')); return; }
+        return; }
       var other = openCard(nameOf(h).toUpperCase(), null); other.appendChild(el('div', '', 'Nothing more is held of it.'));
     }).catch(function (e) { setStatus(e.message); });
   }
@@ -587,7 +586,7 @@ button:disabled { opacity: 0.45; cursor: default; }
         listOf(how, 'HOW WE KNOW', lines);
       });
     }).catch(function () {});
-    body.appendChild(el('div', 'note', 'A report, not the truth. It may be wrong in number, in kind and in place, and it is where he was seen, not where he is now.'));
+   
   }
   function cardPlace(t) {
     var pl = t.place, name = (t.base && t.base.base.name) || M.hexNames[pl.q + ',' + pl.r], body = openCard((name || (t.sea ? 'OPEN WATER' : 'LAND')).toUpperCase(), t.base ? 'ENEMY' : null);
@@ -598,7 +597,7 @@ button:disabled { opacity: 0.45; cursor: default; }
     else if (!t.sea) body.appendChild(el('div', '', t.base ? 'No estimate is held. Nobody of yours has seen the place.' : 'None reported.'));
     links(body, 'CONTACTS HERE', contactsAt(pl));
     if (!here.length && !t.base) body.appendChild(el('div', '', 'No contact is held here.'));
-    body.appendChild(el('div', 'note', t.base ? 'Of an enemy base you know its name, its place and who holds it. The rest comes from reports, and an estimate of men can be wrong by half either way.' : 'What is not reported is not known: an empty hex on the chart is not an empty sea.'));
+   
   }
   function cardForce(t) {
     var f = t.force, h = f.task_force.handle, body = openCard(f.task_force.name.replace(/^Placeholder /, '').toUpperCase(), 'YOURS', true);
@@ -617,7 +616,7 @@ button:disabled { opacity: 0.45; cursor: default; }
       listOf(ships, 'MEN ABOARD', M.units.filter(function (u) { return (u.aboard || []).some(function (b) { return mine[b.ship.handle]; }); }).map(function (u) { return u.land_unit.handle + ': ' + commas(u.men_aboard) + ' men'; }));
     }).catch(function (e) { ships.appendChild(el('div', '', 'The ships could not be listed: ' + e.message)); });
     links(body, 'ALSO HERE', forcesAt(f.place, f));
-    body.appendChild(el('div', 'note', 'Your own return, as your staff holds it now.'));
+   
   }
   function cardBase(t) {
     var b = t.base, h = b.base.handle, dos = b.days_of_supply || {}, body = openCard(b.base.name.toUpperCase(), 'YOURS', true);
@@ -630,7 +629,7 @@ button:disabled { opacity: 0.45; cursor: default; }
     links(body, 'ENEMY CONTACTS HERE', contactsAt(b.place));
     var est = M.estimates.filter(function (e) { return sameHex(e.place, b.place); })[0];
     if (est) { body.appendChild(el('div', 'sub', 'HIS MEN ASHORE HERE')); kv(body, [['Estimate', 'About ' + commas(est.men) + ' men'], ['From', est.came_from], ['Age', daysOld(est)]]); }
-    body.appendChild(el('div', 'note', 'Your own return, as your staff holds it now.'));
+   
   }
   function readSchedule() {
     var doc = $('sheet-doc'), rows = []; doc.textContent = '';
