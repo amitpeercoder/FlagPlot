@@ -413,7 +413,7 @@ strike as a base that does not exist.
   and its count), `destroyed`, and `fed_last_night` (`fed`, `partly_fed`,
   `unfed` from the side's own `MenFed` event of the last night pulse in the
   unit's hex; `not_ashore`; `not_known` when the side holds no such event).
-  A ship's detail and a ship line have `troops` when she carries men.
+  A ship's detail and a ship line have `troops` when she carries men. A ship's detail has `troop_capacity_men`, the men her class can carry, when it can carry any.
 - **The briefing's `land_units`** part follows `bases` and is left out when the
   side has no unit: the units, then yesterday's men landed and embarked, bases
   formed, units divided, loads finished, how the men ashore were fed, men lost

@@ -191,6 +191,10 @@
         },
         "troops": {
           "$ref": "#/$defs/troops"
+        },
+        "troop_capacity_men": {
+          "description": "The men the ship's class can carry (decision 0066, 4). Present only for a ship that can carry men.",
+          "$ref": "defs.schema.json#/$defs/count"
         }
       }
     },
