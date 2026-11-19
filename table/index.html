@@ -350,7 +350,6 @@ button:disabled { opacity: 0.45; cursor: default; }
   <div class="clock" id="clock">DAY 1</div>
   <div class="status" id="status" role="status">Laying the chart.</div>
   <div class="acts">
-    <button type="button" id="btn-force" hidden>Order a force</button>
     <button type="button" id="btn-intent">State an intent</button>
     <button type="button" id="btn-day">One day</button>
     <button type="button" class="main" id="btn-go">Carry on</button>
@@ -774,7 +773,6 @@ button:disabled { opacity: 0.45; cursor: default; }
   // The date `days` after the daylight of day 1. A game day runs from 1800 to 1800: the night, the morning, the afternoon.
   function dateOf(days, year) { if (!config.start) return ''; var d = new Date(config.start + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + days); return d.getUTCDate() + ' ' + MONTHS[d.getUTCMonth()] + (year ? ' ' + d.getUTCFullYear() : ''); }
   function showClock() {
-    $('btn-force').hidden = !!M.over;
     if (clock.at !== 'dusk') { var today = dateOf(M.day - 1, true); $('clock').textContent = (today ? today + ' · ' : '') + clock.at + ' · DAY ' + M.day + (M.lastDay ? ' OF ' + M.lastDay : ''); return; }
     var day = M.lastDay ? Math.min(M.day, M.lastDay) : M.day, dusk = dateOf(M.day - 2, true);
     $('clock').textContent = (dusk ? dusk + ' · ' : '') + '1800 · ' + (M.over ? 'THE LAST DAY IS FOUGHT' : 'ORDERS FOR DAY ' + day + ' OF ' + M.lastDay);
@@ -1136,6 +1134,10 @@ button:disabled { opacity: 0.45; cursor: default; }
       ['Cargo', f.cargo_supply_t != null ? commas(f.cargo_supply_t) + ' t supply, ' + commas(f.cargo_fuel_t || 0) + ' t fuel' : null],
       ['Shortest legs', f.least_fuelled ? f.least_fuelled.ship.name.replace(/^Placeholder /, '') + ': ' + commas(f.least_fuelled.fuel_t) + ' t, ' + commas(f.least_fuelled.range_nm) + ' miles at cruising speed' : null],
       ['In whose hands', held ? 'Yours, by your order. The staff plans round it.' : 'The staff\'s']]);
+    // Ordering a force is done from its card, so the buttons stand at the head of it.
+    if (!M.over && !playing && !(f.available_from > M.day)) { var row = el('div', 'row'), b = el('button', '', held ? 'ORDER IT' : 'TAKE CHARGE OF IT'); b.type = 'button'; b.addEventListener('click', function () { orderForce(f); }); row.appendChild(b);
+      if (held) { var r = el('button', '', 'RETURN IT TO THE STAFF'); r.type = 'button'; r.addEventListener('click', function () { act('release', { task_force: num(h) }, 'Released. The staff may use it again from dusk.').then(function () { $('card').hidden = true; }); }); row.appendChild(r); }
+      body.appendChild(row); }
     var ships = el('div'); body.appendChild(ships);
     api('get_entity', { handle: h }).then(function (a) {
       var list = (a.entity && a.entity.ships) || [], mine = {}; list.forEach(function (x) { mine[x.ship.handle] = true; if (x.ship.name) M.names[x.ship.handle] = x.ship.name.replace(/^Placeholder /, ''); });
@@ -1143,9 +1145,6 @@ button:disabled { opacity: 0.45; cursor: default; }
       airList(ships, 'AIR GROUPS ABOARD', M.air.filter(function (x) { return x.location && mine[x.location.handle]; }));
       listOf(ships, 'SHIPS', list.map(function (x) { var hurt = (+x.flotation_damage || +x.fire_damage) ? ', damaged' : ''; var cls = String(x.class || '').replace(/^Placeholder /, ''); return x.ship.handle + (cls && String(x.ship.name || '').toLowerCase().indexOf(cls.toLowerCase()) < 0 ? ', ' + cls : '') + ': ' + (x.sunk ? 'SUNK' : commas(x.fuel_t) + ' t' + hurt); }), (function () { var have = 0, room = 0; list.forEach(function (x) { if (x.sunk) return; have += +x.fuel_t || 0; room += +x.fuel_capacity_t || 0; }); return room > 0 ? 'own fuel, ' + commas(Math.round(have)) + ' of ' + commas(Math.round(room)) + ' t' : 'own fuel'; })(), list.map(function (x) { return x.sunk || !(+x.fuel_capacity_t > 0) ? null : +x.fuel_t / +x.fuel_capacity_t; }));
     }).catch(function (e) { ships.appendChild(el('div', '', 'The ships could not be listed: ' + e.message)); });
-    if (!M.over && !playing && !(f.available_from > M.day)) { var row = el('div', 'row'), b = el('button', '', held ? 'ORDER IT' : 'TAKE CHARGE OF IT'); b.type = 'button'; b.addEventListener('click', function () { orderForce(f); }); row.appendChild(b);
-      if (held) { var r = el('button', '', 'RETURN IT TO THE STAFF'); r.type = 'button'; r.addEventListener('click', function () { act('release', { task_force: num(h) }, 'Released. The staff may use it again from dusk.').then(function () { $('card').hidden = true; }); }); row.appendChild(r); }
-      body.appendChild(row); }
     forcesHere(body, 'ALSO HERE', f.place, f);
    
   }
@@ -1780,7 +1779,6 @@ button:disabled { opacity: 0.45; cursor: default; }
   // ---- an order to a force at 0600 or 1200: touch the force, choose, sign (decision 0156) ----
   var force = null;
   function closeForce() { $('force').hidden = true; force = null; if (g) drawMarks(); if (picking === 'force' || picking === 'route') { picking = false; canvas.classList.remove('picking'); } }
-  $('btn-force').addEventListener('click', function () { if (playing) return; closeOrder(); closeForce(); picking = 'force'; canvas.classList.add('picking'); setStatus('Touch one of your forces on the chart.'); });
   function pickForce(p) {
     var best = null, bd = 0.4; Object.keys(pieces).forEach(function (h) { var d = pieces[h].grp.position.distanceTo(p); if (d < bd) { bd = d; best = pieces[h]; } });
     if (!best) { setStatus('No force of yours is there. Touch one of your tiles.'); return; }
