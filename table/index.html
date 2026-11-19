@@ -20,6 +20,7 @@ html, body { height: 100%; margin: 0; }
 body { background: var(--room); color: var(--ink); font-family: var(--f-ui); overflow: hidden; }
 [hidden] { display: none !important; }
 #scene { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; }
+#scene.over { cursor: pointer; }
 #scene.dragging { cursor: grabbing; }
 #scene.picking { cursor: crosshair; }
 #shade { position: fixed; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 50% 45%, rgba(0,0,0,0) 45%, rgba(0,0,0,0.55) 100%); }
@@ -27,11 +28,14 @@ button { font-family: var(--f-ui); cursor: pointer; }
 button:focus-visible { outline: 3px solid #f0c36a; outline-offset: 2px; }
 button:disabled { opacity: 0.45; cursor: default; }
 
-.top { position: fixed; top: 0; left: 0; right: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 22px; padding: 10px 16px 8px; pointer-events: none; text-shadow: 0 1px 6px #000; }
+.top { position: fixed; top: 0; left: 0; right: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 22px; padding: 10px 310px 8px 16px; pointer-events: none; text-shadow: 0 1px 6px #000; }
 .top h1 { margin: 0; font-size: 24px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; }
 .top p { margin: 0; font-size: 17px; letter-spacing: 0.05em; color: var(--ink-dim); }
 
 .tray { position: fixed; top: 60px; right: 16px; width: min(350px, calc(100% - 32px)); max-height: calc(100% - 170px); overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-bottom: 6px; }
+.view { position: fixed; top: 12px; right: 16px; display: flex; gap: 6px; }
+.view button { min-height: 34px; padding: 0 12px; background: rgba(0,0,0,0.35); color: var(--ink-dim); border: 1px solid var(--ink-dim); border-radius: 2px; font-size: 13px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; }
+.view button:hover, .view button:focus-visible { color: var(--ink); border-color: var(--ink); }
 .tray h2 { margin: 0; font-size: 18px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; text-shadow: 0 1px 6px #000; }
 #signals { display: flex; flex-direction: column; gap: 10px; }
 .slip { background: var(--paper-old); color: var(--paper-ink); font-family: var(--f-type); font-size: 14px; line-height: 1.38; padding: 11px 14px; border-radius: 2px; box-shadow: 0 4px 12px rgba(0,0,0,0.45); display: flex; flex-direction: column; gap: 7px; overflow-wrap: anywhere; }
@@ -51,6 +55,8 @@ button:disabled { opacity: 0.45; cursor: default; }
 .order legend { font-size: 12px; color: var(--paper-dim); padding: 0 6px 0 0; }
 .order label { display: inline-flex; align-items: center; gap: 6px; min-height: 38px; cursor: pointer; }
 .stops { border: 0; margin: 0; padding: 9px 12px; background: var(--paper-old); color: var(--paper-ink); font-family: var(--f-type); font-size: 13px; border-radius: 2px; box-shadow: 0 4px 12px rgba(0,0,0,0.45); display: flex; flex-wrap: wrap; gap: 2px 12px; }
+#stops { position: fixed; top: 52px; right: 16px; width: min(330px, calc(100% - 32px)); z-index: 5; }
+#stops[hidden] { display: none; }
 .stops legend { float: left; width: 100%; font-size: 12px; color: var(--paper-dim); padding: 0 0 4px; }
 .stops label { display: inline-flex; align-items: center; gap: 5px; min-height: 30px; cursor: pointer; }
 .stops input { accent-color: var(--own); width: 16px; height: 16px; margin: 0; }
@@ -65,7 +71,6 @@ button:disabled { opacity: 0.45; cursor: default; }
 .card .kv { display: grid; grid-template-columns: auto 1fr; gap: 3px 12px; }
 .card .kv span:nth-child(odd) { color: var(--paper-dim); font-size: 12px; padding-top: 2px; }
 .card .sub { font-family: var(--f-ui); font-size: 12px; font-weight: 700; letter-spacing: 0.12em; color: var(--paper-dim); margin-top: 4px; }
-.card .note { font-size: 12px; color: var(--paper-dim); border-top: 1px dashed #8d8672; padding-top: 7px; }
 .card .headline { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
 .sheet .doc .node { border-left: 2px solid #8d8672; padding: 2px 0 2px 12px; display: flex; flex-direction: column; gap: 5px; }
 .sheet .doc .node .who { font-size: 12px; color: var(--paper-dim); display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
@@ -86,6 +91,7 @@ button:disabled { opacity: 0.45; cursor: default; }
 .bar { position: fixed; left: 0; right: 0; bottom: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; background: var(--panel); border-top: 1px solid var(--rule); padding: 10px 16px 12px; }
 .clock { font-family: var(--f-type); font-size: 21px; font-weight: 700; letter-spacing: 0.03em; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .status { font-size: 17px; color: var(--ink-dim); letter-spacing: 0.03em; flex: 1 1 200px; min-width: 0; }
+.status:empty { display: none; }
 .acts { display: flex; flex-wrap: wrap; gap: 8px; margin-left: auto; }
 .acts button { min-height: 46px; padding: 0 16px; background: transparent; color: var(--ink); border: 1.5px solid var(--ink); border-radius: 2px; font-size: 17px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; }
 .acts button.main { background: var(--ink); color: var(--room); border-color: var(--ink); font-weight: 700; padding: 0 24px; }
@@ -116,14 +122,6 @@ button:disabled { opacity: 0.45; cursor: default; }
 
 <aside class="tray" aria-label="Signals">
   <h2>Signals</h2>
-  <fieldset class="stops" id="stops" hidden>
-    <legend>THE CLOCK STOPS WHEN I AM TOLD OF</legend>
-    <label><input type="checkbox" id="stop-contact" checked> a contact</label>
-    <label><input type="checkbox" id="stop-attack" checked> an attack on mine</label>
-    <label><input type="checkbox" id="stop-loss" checked> a ship lost</label>
-    <label><input type="checkbox" id="stop-strike"> my strike away</label>
-    <label><input type="checkbox" id="stop-landing"> men ashore</label>
-  </fieldset>
   <div id="signals"></div>
 </aside>
 
@@ -170,7 +168,7 @@ button:disabled { opacity: 0.45; cursor: default; }
 
 <aside class="order card" id="card" hidden aria-label="What is known of what you touched" aria-live="polite">
   <div id="card-body" style="display:flex;flex-direction:column;gap:8px"></div>
-  <div class="row"><button type="button" id="card-close">PUT IT DOWN</button></div>
+  <div class="row"><button type="button" id="card-back" hidden>BACK</button><button type="button" id="card-close">PUT IT DOWN</button></div>
 </aside>
 
 <section class="sheet" id="sheet" hidden aria-label="The briefing">
@@ -182,12 +180,24 @@ button:disabled { opacity: 0.45; cursor: default; }
   <pre id="sheet-text"></pre>
 </section>
 
+<div class="view" role="group" aria-label="Your view of the table">
+  <button type="button" id="btn-back">Sit back</button>
+  <button type="button" id="btn-lean">Lean in</button>
+  <button type="button" id="btn-stops" aria-expanded="false" aria-controls="stops" hidden>Clock stops</button>
+</div>
+<fieldset class="stops" id="stops" hidden>
+  <legend>THE CLOCK STOPS WHEN I AM TOLD OF</legend>
+  <label><input type="checkbox" id="stop-contact" checked> a contact</label>
+  <label><input type="checkbox" id="stop-attack" checked> an attack on mine</label>
+  <label><input type="checkbox" id="stop-loss" checked> a ship lost</label>
+  <label><input type="checkbox" id="stop-strike"> my strike away</label>
+  <label><input type="checkbox" id="stop-landing"> men ashore</label>
+</fieldset>
+
 <footer class="bar">
   <div class="clock" id="clock">DAY 1</div>
   <div class="status" id="status" role="status">Laying the chart.</div>
   <div class="acts">
-    <button type="button" id="btn-back">Sit back</button>
-    <button type="button" id="btn-lean">Lean in</button>
     <button type="button" id="btn-force" hidden>Order a force</button>
     <button type="button" id="btn-intent">State an intent</button>
     <button type="button" id="btn-day">One day</button>
@@ -505,7 +515,7 @@ button:disabled { opacity: 0.45; cursor: default; }
   }
   function turnTo(pl) { var v = pl && placeOf(pl); if (!v) return; goal.x = v.x; goal.z = v.z; if (goal.zoom < 0.55) goal.zoom = 0.55; clampGoal(); }
   function see(h) {
-    var kind = h.split(':')[0], n = num(h), found; $('sheet').hidden = true;
+    var kind = h.split(':')[0], n = num(h), found; if (!$('sheet').hidden) { forget(); trailAt = stamp(); shown = function () { $('card').hidden = true; $('sheet').hidden = false; }; } $('sheet').hidden = true;
     try { history.replaceState(null, '', '#see=' + h); } catch (e) {}
     if (kind === 'task_force') { found = M.forces.filter(function (f) { return f.task_force.handle === h; })[0]; if (found) { turnTo(found.place); return cardForce({ force: found }); } }
     if (kind === 'base') { found = M.bases.filter(function (b) { return b.base.handle === h; })[0]; if (found) { turnTo(found.place); return cardBase({ base: found }); } found = M.enemyBases.filter(function (b) { return b.base.handle === h; })[0]; if (found) { turnTo(found.place); return cardPlace({ place: found.place, base: found }); } }
@@ -518,19 +528,20 @@ button:disabled { opacity: 0.45; cursor: default; }
     var body = openCard(u.land_unit.name.toUpperCase(), 'YOURS', true);
     kv(body, [['Men ashore', u.men_ashore ? commas(u.men_ashore) : null], ['Men aboard', u.men_aboard ? commas(u.men_aboard) : null], ['Where', u.place ? hexWords(u.place) : 'aboard ship'], ['Posture', u.posture], ['Doing', u.activity], ['Fatigue', u.fatigue], ['Fed last night', String(u.fed_last_night || '').replace(/_/g, ' ')], ['Experience', u.experience]]);
     if ((u.aboard || []).length) { body.appendChild(el('div', 'sub', 'ABOARD')); body.appendChild(rich('div', '', u.aboard.map(function (a) { return a.ship.handle + ' ' + a.men; }).join(', '))); }
-    body.appendChild(el('div', 'note', 'Your own return, as your staff holds it now.'));
+   
   }
   function cardEntity(h) {
     api('get_entity', { handle: h }).then(function (a) {
       var e = a.entity; if (!e) { var no = openCard(nameOf(h).toUpperCase(), null); no.appendChild(el('div', '', 'Nothing is held of it.')); return; }
       if (e.entity_kind === 'air_group') { var x = e.summary, body = openCard(x.air_group.name.toUpperCase(), 'YOURS', true); turnTo(x.place);
         kv(body, [['Aircraft', x.aircraft_type], ['Ready', x.ready + ' of ' + e.strength + (x.damaged ? ', ' + x.damaged + ' damaged' : '')], ['Mission', String(x.mission).replace(/_/g, ' ') + (x.stood_down ? ', stood down' : '')], ['Fatigue', x.fatigue], ['Strike radius', x.strike_radius_nm + ' miles'], ['Search range', x.search_range_nm + ' miles']]);
-        body.appendChild(el('div', 'sub', 'BASED AT')); body.appendChild(rich('div', '', x.location.handle)); body.appendChild(el('div', 'note', 'Your own return, as your staff holds it now.')); return; }
+        body.appendChild(el('div', 'sub', 'BASED AT')); body.appendChild(rich('div', '', x.location.handle)); return; }
       if (e.entity_kind === 'ship') { var b2 = openCard(e.ship.name.replace(/^Placeholder /, '').toUpperCase(), 'YOURS', true), sys = e.systems || {}, out = Object.keys(sys).filter(function (k) { return sys[k] !== 'working'; }); turnTo(e.place);
         kv(b2, [['Class', e.class], ['Kind', String(e.ship_kind).replace(/_/g, ' ')], ['State', e.sunk ? 'SUNK' : (+e.flotation_damage || +e.fire_damage) ? 'damaged' : 'sound'], ['Out of action', out.length ? out.map(function (k) { return k.replace(/_/g, ' ') + ' ' + sys[k]; }).join(', ') : null], ['Fuel', commas(e.fuel_t) + ' t, ' + commas(e.range_nm) + ' miles'], ['Cargo', (+e.supply_t || +e.cargo_fuel_t) ? commas(e.supply_t) + ' t supply, ' + commas(e.cargo_fuel_t) + ' t fuel' : null]]);
+        if (e.troops) { b2.appendChild(el('div', 'sub', 'MEN ABOARD')); b2.appendChild(rich('div', '', e.troops.land_unit.handle + ': ' + commas(e.troops.men) + ' men')); }
         if (e.task_force) { b2.appendChild(el('div', 'sub', 'IN')); b2.appendChild(rich('div', '', e.task_force.handle)); }
         if ((e.air_groups || []).length) { b2.appendChild(el('div', 'sub', 'AIR GROUPS ABOARD')); b2.appendChild(rich('div', '', e.air_groups.map(function (g) { M.names[g.handle] = g.name; return g.handle; }).join(', '))); }
-        b2.appendChild(el('div', 'note', 'Your own return, as your staff holds it now.')); return; }
+        return; }
       var other = openCard(nameOf(h).toUpperCase(), null); other.appendChild(el('div', '', 'Nothing more is held of it.'));
     }).catch(function (e) { setStatus(e.message); });
   }
@@ -553,7 +564,20 @@ button:disabled { opacity: 0.45; cursor: default; }
   function listOf(body, title, lines) { if (!lines.length) return; body.appendChild(el('div', 'sub', title)); lines.forEach(function (l) { body.appendChild(rich('div', '', l)); }); }
   function links(body, title, items) { if (!items.length) return; body.appendChild(el('div', 'sub', title)); var row = el('div', 'row'); items.forEach(function (i) { var b = el('button', '', i[0]); b.type = 'button'; b.addEventListener('click', i[1]); row.appendChild(b); }); body.appendChild(row); }
   function forcesAt(pl, but) { return M.forces.filter(function (f) { return sameHex(f.place, pl) && f !== but; }).map(function (f) { return [f.task_force.name.replace(/^Placeholder /, ''), function () { cardForce({ force: f }); }]; }); }
-  $('card-close').addEventListener('click', function () { $('card').hidden = true; });
+  // The way back: each card remembers what was open before it, a card or a
+  // sheet, until the card is put down or the clock moves.
+  var trail = [], shown = null, trailAt = '';
+  function stamp() { return M.day + ':' + (typeof clock === 'object' && clock ? clock.at : ''); }
+  function forget() { trail = []; shown = null; $('card-back').hidden = true; }
+  function remember(f) { return function (a) {
+    if (trailAt !== stamp()) { forget(); trailAt = stamp(); }
+    if (shown) trail.push(shown);
+    shown = function () { $('sheet').hidden = true; f(a); };
+    $('card-back').hidden = !trail.length; return f(a);
+  }; }
+  cardUnit = remember(cardUnit); cardEntity = remember(cardEntity); cardContact = remember(cardContact); cardPlace = remember(cardPlace); cardForce = remember(cardForce); cardBase = remember(cardBase);
+  $('card-back').addEventListener('click', function () { var was = trail.pop(); if (!was) return; shown = was; $('card-back').hidden = !trail.length; was(); });
+  $('card-close').addEventListener('click', function () { $('card').hidden = true; forget(); });
   // The tile under the pointer, if there is one: a touch on a tile is a touch
   // on what it stands for, whatever else lies in the same hex.
   function tileAt(cx, cy) {
@@ -587,18 +611,18 @@ button:disabled { opacity: 0.45; cursor: default; }
         listOf(how, 'HOW WE KNOW', lines);
       });
     }).catch(function () {});
-    body.appendChild(el('div', 'note', 'A report, not the truth. It may be wrong in number, in kind and in place, and it is where he was seen, not where he is now.'));
+   
   }
   function cardPlace(t) {
     var pl = t.place, name = (t.base && t.base.base.name) || M.hexNames[pl.q + ',' + pl.r], body = openCard((name || (t.sea ? 'OPEN WATER' : 'LAND')).toUpperCase(), t.base ? 'ENEMY' : null);
     var est = M.estimates.filter(function (e) { return sameHex(e.place, pl); })[0], here = M.contacts.filter(function (c) { return sameHex(c.place, pl); });
     kv(body, [['Where', '(' + pl.q + ', ' + pl.r + ')'], ['Held by', t.base ? 'the enemy' : null]]);
-    if (!t.sea || est) body.appendChild(el('div', 'sub', 'HIS MEN ASHORE'));
-    if (est) kv(body, [['Estimate', 'About ' + commas(est.men) + ' men'], ['From', est.came_from], ['Age', daysOld(est)]]);
-    else if (!t.sea) body.appendChild(el('div', '', t.base ? 'No estimate is held. Nobody of yours has seen the place.' : 'None reported.'));
+    if (!t.sea || est) body.appendChild(el('div', 'sub', 'INTELLIGENCE'));
+    if (est) kv(body, [['Men ashore', 'About ' + commas(est.men) + ' men'], ['From', est.came_from], ['Age', daysOld(est)]]);
+    else if (!t.sea) body.appendChild(el('div', '', 'No intelligence.'));
     links(body, 'CONTACTS HERE', contactsAt(pl));
     if (!here.length && !t.base) body.appendChild(el('div', '', 'No contact is held here.'));
-    body.appendChild(el('div', 'note', t.base ? 'Of an enemy base you know its name, its place and who holds it. The rest comes from reports, and an estimate of men can be wrong by half either way.' : 'What is not reported is not known: an empty hex on the chart is not an empty sea.'));
+   
   }
   function cardForce(t) {
     var f = t.force, h = f.task_force.handle, body = openCard(f.task_force.name.replace(/^Placeholder /, '').toUpperCase(), 'YOURS', true);
@@ -611,13 +635,13 @@ button:disabled { opacity: 0.45; cursor: default; }
       ['In whose hands', held ? 'Yours, by your order. The staff plans round it.' : 'The staff\'s']]);
     var ships = el('div'); body.appendChild(ships);
     api('get_entity', { handle: h }).then(function (a) {
-      var list = (a.entity && a.entity.ships) || [], mine = {}; list.forEach(function (x) { mine[x.ship.handle] = true; });
-      listOf(ships, 'SHIPS', list.map(function (x) { var hurt = (+x.flotation_damage || +x.fire_damage) ? ', damaged' : ''; return x.ship.handle + (x.class ? ', ' + x.class : '') + ': ' + commas(x.fuel_t) + ' t fuel' + (x.sunk ? ', SUNK' : hurt); }));
-      listOf(ships, 'AIR GROUPS ABOARD', M.air.filter(function (x) { return x.location && mine[x.location.handle]; }).map(function (x) { return x.air_group.handle + ', ' + x.aircraft_type + ': ' + x.ready + ' ready' + (x.damaged ? ', ' + x.damaged + ' damaged' : '') + ', ' + String(x.mission).replace(/_/g, ' '); }));
+      var list = (a.entity && a.entity.ships) || [], mine = {}; list.forEach(function (x) { mine[x.ship.handle] = true; if (x.ship.name) M.names[x.ship.handle] = x.ship.name.replace(/^Placeholder /, ''); });
       listOf(ships, 'MEN ABOARD', M.units.filter(function (u) { return (u.aboard || []).some(function (b) { return mine[b.ship.handle]; }); }).map(function (u) { return u.land_unit.handle + ': ' + commas(u.men_aboard) + ' men'; }));
+      listOf(ships, 'AIR GROUPS ABOARD', M.air.filter(function (x) { return x.location && mine[x.location.handle]; }).map(function (x) { return x.air_group.handle + ', ' + x.aircraft_type + ': ' + x.ready + ' ready' + (x.damaged ? ', ' + x.damaged + ' damaged' : '') + ', ' + String(x.mission).replace(/_/g, ' '); }));
+      listOf(ships, 'SHIPS', list.map(function (x) { var hurt = (+x.flotation_damage || +x.fire_damage) ? ', damaged' : ''; var cls = String(x.class || '').replace(/^Placeholder /, ''); return x.ship.handle + (cls && String(x.ship.name || '').toLowerCase().indexOf(cls.toLowerCase()) < 0 ? ', ' + cls : '') + ': ' + commas(x.fuel_t) + ' t fuel' + (x.sunk ? ', SUNK' : hurt); }));
     }).catch(function (e) { ships.appendChild(el('div', '', 'The ships could not be listed: ' + e.message)); });
     links(body, 'ALSO HERE', forcesAt(f.place, f));
-    body.appendChild(el('div', 'note', 'Your own return, as your staff holds it now.'));
+   
   }
   function cardBase(t) {
     var b = t.base, h = b.base.handle, dos = b.days_of_supply || {}, body = openCard(b.base.name.toUpperCase(), 'YOURS', true);
@@ -629,8 +653,8 @@ button:disabled { opacity: 0.45; cursor: default; }
     links(body, 'FORCES HERE', forcesAt(b.place, null));
     links(body, 'ENEMY CONTACTS HERE', contactsAt(b.place));
     var est = M.estimates.filter(function (e) { return sameHex(e.place, b.place); })[0];
-    if (est) { body.appendChild(el('div', 'sub', 'HIS MEN ASHORE HERE')); kv(body, [['Estimate', 'About ' + commas(est.men) + ' men'], ['From', est.came_from], ['Age', daysOld(est)]]); }
-    body.appendChild(el('div', 'note', 'Your own return, as your staff holds it now.'));
+    if (est) { body.appendChild(el('div', 'sub', 'INTELLIGENCE')); kv(body, [['Enemy men ashore', 'About ' + commas(est.men) + ' men'], ['From', est.came_from], ['Age', daysOld(est)]]); }
+   
   }
   function readSchedule() {
     var doc = $('sheet-doc'), rows = []; doc.textContent = '';
@@ -920,7 +944,7 @@ button:disabled { opacity: 0.45; cursor: default; }
             clock = { at: r.clock.at, day: r.clock.day }; await refresh();
             if (!until || !playing || r.game_over || r.stopped !== 'pulses') {
               var when = clock.at === 'dusk' ? 'at 1800' : 'at ' + clock.at + ' of day ' + clock.day;
-              return rest(r.game_over ? 'The game is over.' : r.stopped === 'told' ? 'The clock is stopped ' + when + ': you were told something you asked to be stopped for.' : r.stopped === 'interrupt' ? 'The clock is stopped ' + when + ': the staff has a signal for you.' : 'The clock is stopped ' + when + (clock.at === 'dusk' ? '. Your orders for day ' + M.day + ' go in now.' : '. You may order a force, or carry on.'));
+              return rest(r.game_over ? 'The game is over.' : r.stopped === 'told' ? 'The clock is stopped ' + when + ': you were told something you asked to be stopped for.' : r.stopped === 'interrupt' ? 'The clock is stopped ' + when + ': the staff has a signal for you.' : '');
             }
           } else {
             var day = M.day; setStatus('Day ' + day + ' is being fought.');
@@ -928,7 +952,7 @@ button:disabled { opacity: 0.45; cursor: default; }
             setStatus('Day ' + day + ': the plot, pulse by pulse, from what your side was told.');
             await plotDay(day, await eventsOf(day)); await refresh();
             var fired = d.fired && d.fired.length;
-            if (!until || !playing || d.game_over || fired) return rest(d.game_over ? 'The game is over.' : fired ? 'The clock is stopped: ' + d.fired.length + ' signal' + (d.fired.length > 1 ? 's wait' : ' waits') + ' for you.' : 'The clock is stopped. Your orders for day ' + M.day + ' go in at 1800.');
+            if (!until || !playing || d.game_over || fired) return rest(d.game_over ? 'The game is over.' : fired ? 'The clock is stopped: ' + d.fired.length + ' signal' + (d.fired.length > 1 ? 's wait' : ' waits') + ' for you.' : '');
           }
         }
       } catch (e) { rest('Refused: ' + e.message); }
@@ -1041,7 +1065,7 @@ button:disabled { opacity: 0.45; cursor: default; }
     var ids = Object.keys(ptrs); if (ids.length === 2) { pinch0 = Math.hypot(ptrs[ids[0]].x - ptrs[ids[1]].x, ptrs[ids[0]].y - ptrs[ids[1]].y); zoom0 = goal.zoom; }
   });
   canvas.addEventListener('pointermove', function (e) {
-    var p = ptrs[e.pointerId]; if (!p) return; var ids = Object.keys(ptrs);
+    var p = ptrs[e.pointerId]; if (!p) { if (e.pointerType === 'mouse') canvas.classList.toggle('over', !picking && !playing && !!tileAt(e.clientX, e.clientY)); return; } var ids = Object.keys(ptrs);
     if (ids.length === 1) { var s = camDist * 0.0016; goal.x -= (e.clientX - p.x) * s; goal.z -= (e.clientY - p.y) * s * 1.5; clampGoal(); }
     p.x = e.clientX; p.y = e.clientY;
     if (ids.length === 2 && pinch0) { var d = Math.hypot(ptrs[ids[0]].x - ptrs[ids[1]].x, ptrs[ids[0]].y - ptrs[ids[1]].y); goal.zoom = zoom0 + Math.log(d / pinch0) * 0.5; clampGoal(); }
@@ -1058,6 +1082,8 @@ button:disabled { opacity: 0.45; cursor: default; }
     if (goal.zoom < 0.2) { var f = null; M.forces.forEach(function (x) { if (x.place && x.mission === 'carrier' && !f) f = x; }); var v = f ? placeOf(f.place) : new THREE.Vector3(); goal.x = v.x; goal.z = v.z; goal.zoom = 0.55; }
     else goal.zoom += 0.2; clampGoal();
   });
+  $('btn-stops').addEventListener('click', function () { var f = $('stops'); f.hidden = !f.hidden; this.setAttribute('aria-expanded', String(!f.hidden)); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !$('stops').hidden) { $('stops').hidden = true; $('btn-stops').setAttribute('aria-expanded', 'false'); } });
   $('btn-back').addEventListener('click', function () { goal.x = 0; goal.z = 0; goal.zoom = 0; });
   function resize() { var w = window.innerWidth, h = window.innerHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
   window.addEventListener('resize', resize); resize();
@@ -1087,8 +1113,8 @@ button:disabled { opacity: 0.45; cursor: default; }
   Promise.all([fetch('/config').then(function (r) { return r.json(); }), fetch('/map').then(function (r) { return r.json(); })]).then(function (a) {
     config = a[0]; hexes = a[1]; $('seat').textContent = 'Commander, ' + (config.seat === 'allied' ? 'the Allied side' : 'the Japanese side');
     var ready = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
-    return ready.then(function () { layChart(); cur.zoom = 0; placeCamera(); requestAnimationFrame(frame); return fetch('/tools').then(function (r) { return r.json(); }).then(function (names) { names.forEach(function (n) { OFFERED[n] = true; }); $('stops').hidden = !OFFERED.advance; if (OFFERED.advance) $('btn-day').textContent = 'Next pulse'; return refresh(); }); });
-  }).then(function () { setStatus(clock.at === 'dusk' ? 'The clock is stopped. Your orders for day ' + M.day + ' go in at 1800. Drag to look along the table; scroll to lean in.' : 'The clock is stopped at ' + clock.at + ' of day ' + M.day + '. You may order a force, or carry on.'); })
+    return ready.then(function () { layChart(); cur.zoom = 0; placeCamera(); requestAnimationFrame(frame); return fetch('/tools').then(function (r) { return r.json(); }).then(function (names) { names.forEach(function (n) { OFFERED[n] = true; }); $('btn-stops').hidden = !OFFERED.advance; if (OFFERED.advance) $('btn-day').textContent = 'Next pulse'; return refresh(); }); });
+  }).then(function () { var shown = true; try { shown = localStorage.getItem('flagplot.hint.look') === '1'; localStorage.setItem('flagplot.hint.look', '1'); } catch (e) {} setStatus(shown ? '' : 'Drag to look along the table; scroll to lean in.'); })
     .catch(function (e) { fatal('The table could not reach the game: ' + e.message); });
 })();
 </script>
