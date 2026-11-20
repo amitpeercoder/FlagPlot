@@ -1326,3 +1326,56 @@ fn what_the_enemy_holds_changes_nothing_the_staff_tools_say() {
         }
     }
 }
+
+/// Two worlds that differ only in the enemy's mission give a side the same
+/// briefing, as data and as text, byte for byte, on the evening before day 1
+/// and at the start of every later day (decision 0183, amended 9): a side is
+/// shown what the enemy is scored for and never his mission.
+#[test]
+fn the_enemys_mission_changes_nothing_the_briefing_says() {
+    const ES: &str = "05_eastern_solomons.toml";
+    let allied = "Find and sink the Japanese carriers supporting the reinforcement of Guadalcanal, and keep your own carriers in action. The Japanese carriers are expected to come down from the north.";
+    let japanese = "Destroy the American carriers east of Guadalcanal, and keep your own in action. The American carriers are believed to be south or east of Guadalcanal.";
+    let text = scenario_text(ES);
+    for side in SIDES {
+        let (enemy_mission, other_words) = match side {
+            Side::Allied => (japanese, "PLACEHOLDER JAPANESE MISSION, another sentence."),
+            Side::Japanese => (allied, "PLACEHOLDER ALLIED MISSION, another sentence."),
+        };
+        let altered = text.replacen(
+            &format!("mission = \"{enemy_mission}\""),
+            &format!("mission = \"{other_words}\""),
+            1,
+        );
+        assert_ne!(altered, text, "the enemy's mission is in the file");
+        let briefings = |source: &str| {
+            let mut scenario = load_text(source, ES, 1942);
+            let mut out = Vec::new();
+            support::play(&mut scenario, |s| {
+                let made = briefing(&s.world.side_view(side), "Eastern Solomons");
+                out.push((
+                    serde_json::to_string(&made).expect("serialises"),
+                    made.to_text(),
+                ));
+            });
+            out
+        };
+        let one = briefings(&text);
+        let two = briefings(&altered);
+        assert_eq!(one.len(), 2, "the evening before day 1 and the end");
+        assert_eq!(one, two, "{side:?}");
+        for (json, words) in &one {
+            for mission in [enemy_mission, other_words] {
+                assert!(!json.contains(mission), "{json}");
+                assert!(!words.contains(mission), "{words}");
+            }
+        }
+        // The enemy's objectives are in it: the difference is the mission
+        // alone.
+        assert!(
+            one[0].1.contains("The enemy is scored for:"),
+            "{}",
+            one[0].1
+        );
+    }
+}

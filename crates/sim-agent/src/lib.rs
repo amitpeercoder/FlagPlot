@@ -96,8 +96,8 @@ pub use measure::{
 };
 pub use neutralise::{neutralise_measure, NeutraliseMeasure};
 pub use objectives::{
-    result_part, KnownLine, LevelsPart, ObjectiveLine, ObjectivesPart, ResultPart, ScoreLine,
-    ShipKindPoints, ShipsOfKind, SideResultPart,
+    result_part, EnemyObjectiveLine, KnownLine, LevelsPart, ObjectiveLine, ObjectivesPart,
+    ResultPart, ScoreLine, ShipKindPoints, ShipsOfKind, SideResultPart,
 };
 pub use orders::{is_orderable_unit, order_from_json, order_to_json, unit_text};
 pub use queries::{

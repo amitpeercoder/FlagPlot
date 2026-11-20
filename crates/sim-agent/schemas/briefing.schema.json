@@ -10,7 +10,7 @@
   "additionalProperties": false,
   "properties": {
     "format": { "const": "flagplot-agent" },
-    "version": { "const": 31 },
+    "version": { "const": 32 },
     "kind": { "const": "briefing" },
     "heading": { "$ref": "#/$defs/heading" },
     "objectives": { "$ref": "#/$defs/objectives" },
@@ -77,7 +77,7 @@
       }
     },
     "objectives": {
-      "description": "The side's own mission and objectives (decision 0054), its progress as far as it can know it, and the umpire's result once the game is over. mission is null and objectives empty when the scenario has none; result is null until the game is over (and always null without objectives).",
+      "description": "The side's own mission and objectives (decision 0054), its progress as far as it can know it, what the enemy is scored for (enemy_objectives, decision 0183), and the umpire's result once the game is over. mission is null and objectives empty when the scenario has none; result is null until the game is over (and always null without objectives).",
       "type": "object",
       "required": ["mission", "objectives", "levels", "result"],
       "additionalProperties": false,
@@ -109,6 +109,49 @@
             { "$ref": "#/$defs/result" },
             { "type": "null" }
           ]
+        },
+        "enemy_objectives": {
+          "description": "What the enemy is scored for (decision 0183): his objectives in the scenario's order, each with its kind, its base, open or shut and its worth, and nothing of his mission, his progress or his state. Left out when the scenario has no objectives and at a seat at a command; empty when the enemy has no objectives.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/enemy_objective" }
+        }
+      }
+    },
+    "enemy_objective": {
+      "description": "One objective of the enemy's (decision 0183): what it is and what it is worth. It has no field for a count, days counted, points earned, a basis or whether a base is open now.",
+      "type": "object",
+      "required": ["kind", "base", "closed", "ship_points", "points"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": { "enum": ["ships_sunk", "ships_crippled", "ships_out_of_action", "aircraft_destroyed", "cargo_landed", "base_open", "base_held", "men_lost"] },
+        "base": {
+          "description": "The base of cargo_landed, base_open and base_held, by the map's number and name; null for the others.",
+          "$ref": "defs.schema.json#/$defs/handle_or_null"
+        },
+        "closed": {
+          "description": "For base_open: true if the enemy is scored for the base being shut, false if open. Null for the others.",
+          "type": ["boolean", "null"]
+        },
+        "ship_points": {
+          "description": "For ships_sunk, ships_crippled and ships_out_of_action: the points for each kind of the reader's ships (for ships_out_of_action, for a ship away for the whole horizon). Empty for the others.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["kind", "points"],
+            "additionalProperties": false,
+            "properties": {
+              "kind": { "enum": ["carrier", "battleship", "cruiser", "destroyer", "transport", "auxiliary"] },
+              "points": { "$ref": "defs.schema.json#/$defs/dec" }
+            }
+          }
+        },
+        "horizon_days": {
+          "description": "For ships_out_of_action only (left out for every other kind): the days of the horizon its shares are of (decision 0088), at least 1.",
+          "type": "integer"
+        },
+        "points": {
+          "description": "Points for one aircraft, one ton, the base as wanted on every day, the base held at the end or each 100 men; null for the ship objectives.",
+          "$ref": "defs.schema.json#/$defs/dec_or_null"
         }
       }
     },
