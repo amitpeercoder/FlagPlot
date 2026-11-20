@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 20, 2026, at the designer's aski
 
 Summary: A second small scenario for play: the Coral Sea over five days, 6 to 10 May 1942. Two American carriers and a cruiser group against two Japanese fleet carriers and a light carrier, with a Japanese convoy bound for Port Moresby that lands on the last days if it is not stopped or turned back. It is built in three stages: the data is settled and derived first, then the scenario with its hand calculation, then its runs and games under the guards of decision 0187. Most of the ships and aircraft it needs the game already has.
 
-Standing: Confirmed by the designer on Nov 20, 2026, with his answers; stage A's table and research are in and ruled on; its derivation list is built ("Stage A as built") and waits for the architect's reading of its exceptions.
+Standing: Confirmed by the designer on Nov 20, 2026; built through its first run of 1,000 games, which is far outside the band (the Japanese side ahead in 982). It is not a contest between the engine's staffs, for two things a staff cannot yet do; that is with the designer.
 
 ## Why
 
@@ -302,3 +302,62 @@ Written by the architect on Nov 20, 2026 as the doc comment of `tests/scenario_1
 5. **Corrections to this record:** Rabaul has two bomber groups, 41 aircraft, where amended 41 counted one of 24. Lexington's squadrons are read from her own report's rows for 7 May, which have better standing than the low row ruling 18 named. The convoy's hour of leaving is on the Japanese clock and is converted. Its transports go no faster than 6.5 kn, which a row calls their most.
 6. **The architect saw the trial game before amending the orders,** and says so in the hand calculation: the Japanese side won it by 41.56 points on the landing. The changes of 2 and 3 and the nine transports mend what did nothing or could not load; the change of 4 is for a reason the mission gives. The Japanese orders are as first written.
 7. **Expected, and reported by the build without being mended:** the men ashore count the garrison and wait for twice its number, so Port Moresby is not attacked (amended 34 is true only until they land); the Striking Force closes only on what it takes for a carrier, and stayed out of the trial's fight until day 5; Shoho's torpedo planes are her force's search and do not strike.
+
+## Stage B as built
+
+Built on Nov 20, 2026 by the scenario's lead, to the hand calculation of `tests/scenario_105_the_coral_sea.rs`. No rule of the simulation, no other scenario, no derivation list and no existing data file's content changed.
+
+### What was built
+
+- **The scenario,** `data/scenarios/coral-sea/`: the base `base_coral_sea.toml` (not played) and the four files `01a_coral_sea.toml` to `01d_coral_sea.toml`, made from it by `scripts/coral-sea/make_files.py` (`--check` says whether each is as made). Ships 1 to 53 in the order the hand calculation lists them (task force 1 is ships 1 to 16, task force 2 17 to 21, task force 3 22 to 31, task force 4 32 to 37, Yubari 38, the placeholder destroyers 39 to 43, the transports 44 to 53); air groups 1 to 20 and land units 1 to 3 as it numbers them; bases 1 and 2. Every real ship cites her two rows of `engagement_forces` and her experience row; every strength its row; every placeholder is marked and named. The header lists what is left out. The files are kept out of the loops that walk `data/scenarios/*.toml` by being in their own folder (decision 0072); no loop in `.github/` or `scripts/` walks the folder.
+- **The placeholder transport of 6.5 knots,** class 14, in `data/reference/ship_classes_placeholder_transport_6_5_knots.csv`: class 10 with a cruise and a top speed of 6.5 kn.
+- **The file of sides,** `data/reference/class_sides_coral_sea.csv`, for the list's classes and types, the placeholder classes of `ship_classes.csv` and class 14. Both new files have frozen copies in `data/reference/step1`, which `frozen_figures.rs` asks of every live figures file, and a line in its README.
+- **The tests,** `tests/scenario_105_the_coral_sea.rs`: one or more for each of the 24 statements and for each property, 29 in all, registered in `tests/Cargo.toml`. All pass; none is ignored.
+- **The one game,** `docs/validation/coral-sea-one-game.md`.
+
+### Readings where the hand calculation did not reach
+
+1. **The ground figures and the other reference files** are scenario 103's, the live ones (`ground.toml`, `air_upkeep.toml`, `fatigue.toml`, `air_supply.toml`, `search.toml`, `surface_combat.toml`, `air_combat.toml`, `trial.toml`, `port_sizes.csv`). No new ground file.
+2. **No believed force** is stated for either side, and no estimate of the enemy's men: the hand calculation names none and no row gives what either side believed. Scenario 103's base states a placeholder carrier force for each side; this one does not. A believed force reaches a side's picture and no rule of the engine reads it.
+3. **One island,** New Guinea, of Port Moresby, so that an order to control an island can be given at the table. The hand calculation names none; the scenario is not on the table's list yet.
+4. **No formation** for any land unit: no row gives one for these men.
+5. **Port Moresby** has its airfield (the default), no anti-aircraft figure and no repairs a day. Rabaul has the 39 days' supply, fuel and repairs.
+6. **The support group's order** gives no speed, as the hand calculation gives none: it sails at its cruise, 12 kn.
+7. **The target list** is the six kinds in full: transport, carrier, battleship, cruiser, destroyer, auxiliary. A group strikes only a kind on its list, so "the other kinds in the game's own order" are all written out.
+8. **Statement 20's sea measure** is stated by its test from the game: 461 nm, the same as by air.
+
+### What the one game showed, for the architect
+
+The six Allied bomber groups never flew. The commander's order that sets their target lists also holds each group, by the override of chapter 8, and a group held is given nothing by the staff. They rested for five days: the Allied side searched nothing, held no contact and struck nothing. Statement 19 holds in its letter for that reason. The convoy sailed on day 1, landed all 5,386 men at Port Moresby at 2142 on 8 May, the hour of statement 15, and the men waited for twice the garrison and did not attack. The Japanese side won by 58.76, decisive. A probe with a release of the six groups on day 2 (not kept) had them strike from day 2; the convoy still landed. The report has the rest, day by day.
+
+### Not done
+
+- No run of 1,000 and no report of one: the architect reads the one game first, and may mend the orders.
+- The scenario is not added to `table/scenarios.json`.
+- **A test of another scenario fails:** scenario 104's statement 23 says no scenario file but scenario 103's four has `for_play = true`, and the Coral Sea's five now have it, as statement 22 here asks. The two statements disagree; neither is changed. It is the architect's to rule.
+
+## The architect's rulings on the one game
+
+Read on Nov 20, 2026: the build's report and its one game (`docs/validation/coral-sea-one-game.md`).
+
+1. **The order to strike transports first is taken out.** A commander's order to an air group holds the group from the staff, and the six Allied bomber groups flew nothing for five days. A side the engine plays cannot be told what to strike first.
+2. **Something the game cannot yet do, recorded:** a staff sent to stop a landing has no way to put the transports first. Its strikes take the most important kind, and go at the nearest force it holds a contact of. This stands beside the staff that never turns a convoy back (amended 31) as what the scenario shows is wanted, and each would be a rule with a record of its own.
+3. **The support group is sent at 20 knots.** At its cruising speed it reached the convoy's route a day and a half after the convoy had passed. The figure is a placeholder.
+4. **Scenario 104's statement was the architect's mistake:** it said no file but scenario 103's has the key that marks a scenario for play. It now names scenario 105's files too.
+5. **The build's readings stand:** no believed force and no estimate for either side; one island, New Guinea, for the table; no formations; Port Moresby with an airfield and no anti-aircraft figure; scenario 103's ground figures.
+6. **The game played again** on those orders is a battle: the support group meets the convoy at the tip by night, sinks Yubari and loses two destroyers; the Allied carriers sink Shoho and Aoba; the Striking Force puts Yorktown out of action; and the convoy lands every man. The Japanese side wins it by 42.46.
+7. **The orders are not changed again before the run.** The architect has now seen three games of them (a reviewer's trial, the build's, and his own), and has changed the Allied orders after two. Each change mended an order that did nothing or broke what it touched, or was for a reason the mission gives, and each is written where it was made. The run of 1,000 games is made on the orders as they stand, and what it shows is put to the designer.
+8. **What to expect of the band.** With the landing worth 53.86 points and no staff able to stop it, the staffs' games are likely to go one way. That would be a finding about what the engine's staffs can do, and the next means of decision 0187 is not reached for before the designer has seen it.
+
+## Stage C: the first run
+
+Made by the architect on Nov 20, 2026 (`docs/validation/coral-sea-first-run.md`): 1,000 games of file a, staff against staff, on the orders as they stood after the one game.
+
+1. **Far outside the band.** The Japanese side is ahead in 982 games and the Allied in 18. The convoy lands every man in 978 games; a transport is sunk in 12.
+2. **It is what the rulings on the one game expected,** and for the reasons given there. The Allied carriers do their work on what they strike: Shoho is sunk in 912 games. They do not strike the convoy. The support group fights in every game and does not stop it. No staff turns it back.
+3. **The next means of decision 0187 is not reached for.** Lowering what the men are worth until the staffs' games come out even would hide that a staff sent to stop a landing does not strike the ships that carry it. The scenario's figures, levels, forces and orders stand as they are.
+4. **What the scenario is today:** a battle that plays through, with the surface action, the loss of Shoho and the carrier fight in it, and whose result between the engine's two staffs is all but fixed. It is not put on the table's list as a balanced game. Whether it is a contest when a person or an agent commands the Allied side, who can order his groups at the convoy himself, is not known: no such game has been played.
+5. **For the designer:**
+   - two rules the scenario shows are wanted, each to be planned by its own record: a staff that puts the ships of a landing first when its order is to stop one, and a staff that turns a threatened convoy back (which he has already said to plan after this run);
+   - whether to play the games between agents now, before either rule, to learn whether a commander who is not the staff can stop the convoy;
+   - whether the scenario goes on the table's list meanwhile, said plainly to be one-sided against the engine.
