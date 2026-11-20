@@ -1044,7 +1044,7 @@ button:disabled { opacity: 0.45; cursor: default; }
     api('get_entity', { handle: h }).then(function (a) {
       var e = a.entity; if (!e) { var no = openCard(nameOf(h).toUpperCase(), null); no.appendChild(el('div', '', 'Nothing is held of it.')); return; }
       if (e.entity_kind === 'air_group') { var x = e.summary, body = openCard(x.air_group.name.toUpperCase(), 'YOURS', true); turnTo(x.place);
-        kv(body, [['Aircraft', x.aircraft_type], ['Ready', x.ready + ' of ' + e.strength + (x.damaged ? ', ' + x.damaged + ' damaged' : '')], ['Mission', String(x.mission).replace(/_/g, ' ') + (x.stood_down ? ', stood down' : '')], ['Fatigue', x.fatigue], ['Strike radius', x.strike_radius_nm + ' miles'], ['Search range', x.search_range_nm + ' miles']]);
+        kv(body, [['Aircraft', x.aircraft_type], ['Ready', x.ready + ' of ' + e.strength + (x.damaged ? ', ' + x.damaged + ' damaged' : '')], ['Mission', String(x.mission).replace(/_/g, ' ') + (x.stood_down ? ', stood down' : '')], ['Fatigue', x.fatigue], ['Claims to date', (function (c) { if (!c) return null; var w = []; if (c.shot_down) w.push(c.shot_down + ' shot down'); if (c.on_ground) w.push(c.on_ground + ' on the ground'); if (c.hits) w.push(c.hits + (c.hits === 1 ? ' hit' : ' hits') + ' on ships'); return w.length ? w.join(', ') : null; })(x.claimed_to_date || e.claimed_to_date)], ['Strike radius', x.strike_radius_nm + ' miles'], ['Search range', x.search_range_nm + ' miles']]);
         var kvg = body.querySelector('.kv'); if (kvg && x.location) { if (x.location.name) M.names[x.location.handle] = String(x.location.name).replace(/^Placeholder /, ''); kvg.appendChild(el('span', '', 'Based at')); kvg.appendChild(rich('span', '', x.location.handle)); }
         airOrder(body, e, h); return; }
       if (e.entity_kind === 'ship') { var b2 = openCard(e.ship.name.replace(/^Placeholder /, '').toUpperCase(), 'YOURS', true), sys = e.systems || {}, out = Object.keys(sys).filter(function (k) { return sys[k] !== 'working'; }); turnTo(e.place);
@@ -1312,7 +1312,14 @@ button:disabled { opacity: 0.45; cursor: default; }
     else if (k === 'strike_found_nothing' && R('^' + H + ' found nothing at ' + AT)) out = N(m[1]) + ' found nothing at ' + P(m[2], m[3]);
     else if (k === 'base_attacked' && R('^' + H + ' bombs at ' + H)) out = N(m[1]) + ' bombed ' + N(m[2]);
     else if (k === 'air_attack' && R('^' + H + ' (bombs|torpedoes) at a ship')) out = N(m[1]) + ' attacked a ship with ' + m[2];
-    else if (k === 'claim_received' && R('claim (?:from the sea )?(at|over) ' + AT + ': (.*)$')) out = (/from the sea/.test(t) ? 'Ships report ' : 'Pilots report ') + m[4].replace(/\b0 aircraft/g, 'no aircraft').replace(/\baircraft\b/g, 'enemy aircraft') + ' ' + m[1] + ' ' + P(m[2], m[3]);
+    else if (k === 'claim_received' && R('claim (?:from the sea )?(at|over) ' + AT + ': (.*)$')) out = (function (words) {
+      // Who claims what, where the game says (decision 0180), and the types made out on the ground (decision 0179).
+      var c = words.indexOf('; claimed by '), by = c >= 0 ? words.slice(c + 13).split('; by ') : [], where = ' ' + m[1] + ' ' + P(m[2], m[3]); if (c >= 0) words = words.slice(0, c);
+      words = words.replace(/\b0 aircraft/g, 'no aircraft').replace(/\b(\d+|no) aircraft (shot|destroyed)/g, '$1 enemy aircraft $2').replace(/ \(([^)]*\d+ of [^)]*)\)/, function (x, list) { return ' (' + list.replace(/(\d+) of /g, '$1 ').replace(/Placeholder /g, '') + ')'; });
+      var who = by.map(function (line) { var u = /^((?:air_group|task_force|base|ship):\d+)(?: "[^"]*")?: (.*)$/.exec(line); return u ? { unit: (/^air_group:/.test(u[1]) ? '' : 'the guns of ') + N(u[1]), what: u[2] } : null; }).filter(Boolean);
+      if (who.length === 1) return who[0].unit.replace(/^t/, 'T') + (/^the guns/.test(who[0].unit) ? ' report ' : ' reports ') + words + where;
+      if (who.length > 1) return 'Reported' + where + ': ' + words + '. ' + who.map(function (w) { return w.unit + ', ' + w.what; }).join('; ').replace(/^t/, 'T');
+      return (/from the sea/.test(t) ? 'Ships report ' : 'Pilots report ') + words + where; })(m[4]);
     else if (k === 'aircraft_arrived' && R('^' + H + ' received (\\d+) aircraft and (\\d+) pilots')) out = N(m[1]) + ' received ' + m[2] + ' aircraft and ' + m[3] + ' pilots';
     else if (k === 'shore_bombardment_against' && R('^' + H + ' at ' + AT + ' bombarded from the sea: (\\d+) shells, .*?(\\d+) hits')) out = N(m[1]) + ' was shelled from the sea: ' + fig(m[4]) + ' shells, ' + fig(m[5]) + ' hits';
     else if (k === 'aircraft_destroyed_on_ground' && R('^' + H + ' lost (\\d+) aircraft on the ground at ' + H + ', (\\d+) left')) out = N(m[1]) + ' lost ' + m[2] + ' aircraft on the ground at ' + N(m[3]) + '; ' + m[4] + ' left';
