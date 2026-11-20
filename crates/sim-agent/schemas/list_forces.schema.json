@@ -7,7 +7,7 @@
   "additionalProperties": false,
   "properties": {
     "format": { "const": "flagplot-agent" },
-    "version": { "const": 35 },
+    "version": { "const": 36 },
     "kind": { "const": "list_forces" },
     "area": { "$ref": "#/$defs/area_or_null" },
     "task_forces": { "type": "array", "items": { "$ref": "defs.schema.json#/$defs/force_line" } },
@@ -15,6 +15,11 @@
       "description": "The side's own land units (decision 0066, 21), in the area if one is given. Left out when the side has none.",
       "type": "array",
       "items": { "$ref": "defs.schema.json#/$defs/land_unit_line" }
+    },
+    "to_enter": {
+      "description": "The side's own forces and units held apart until their day (decision 0195, 7): not on the map, so not in task_forces or land_units. In the area if one is given. Left out when none is held.",
+      "type": "array",
+      "items": { "$ref": "defs.schema.json#/$defs/entry_line" }
     }
   },
   "$defs": {

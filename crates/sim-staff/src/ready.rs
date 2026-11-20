@@ -259,7 +259,12 @@ impl Day<'_, '_> {
         let mut left = Vec::new();
         for id in self.units_named(task) {
             let Some(unit) = self.view.land_units().find(|u| u.id == id) else {
-                left.push(format!("{id} is not one of the side's units now"));
+                // A unit held apart until its day (decision 0195, 13) is
+                // named with its day, not as gone.
+                match crate::available::entering_on(self.view, EntityRef::LandUnit(id)) {
+                    Some(day) => left.push(crate::available::enters_words(id, day)),
+                    None => left.push(format!("{id} is not one of the side's units now")),
+                }
                 continue;
             };
             let aboard = self.view.men_aboard(id).unwrap_or(0);
@@ -372,6 +377,21 @@ impl Day<'_, '_> {
             return;
         };
         let Some(force) = view.task_forces().find(|f| f.id == force_id).cloned() else {
+            if let Some(day) = crate::available::entering_on(view, EntityRef::TaskForce(force_id)) {
+                // Held apart until its day (decision 0195, 13): one reason, no
+                // order under the task, which is neither failed nor finished.
+                let reason = serving(task, plan)
+                    .evidence(crate::available::enters_words(force_id, day), today)
+                    .binding(format!("the day {force_id} enters, {day}"))
+                    .worked(format!(
+                        "{force_id} enters on day {day}, so the staff gives no order under {} before then.",
+                        task.id
+                    ))
+                    .would_change("the day coming")
+                    .done();
+                self.target(in_scope).no_orders.push(reason);
+                return;
+            }
             let reason = serving(task, plan)
                 .evidence(
                     format!("{force_id} is not one of the side's forces now"),

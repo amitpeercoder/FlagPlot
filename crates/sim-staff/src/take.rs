@@ -421,6 +421,11 @@ impl Day<'_, '_> {
         // The wait of item 5 with no man of the operation ashore.
         let none_wanted = wanted == Some(0);
         let waits = match view.task_forces().find(|f| f.id == first) {
+            // A first lift held apart until its day (decision 0195, 13) is
+            // not lost: no later lift goes before it has entered.
+            None if crate::available::entering_on(view, EntityRef::TaskForce(first)).is_some() => {
+                return Vec::new();
+            }
             None => none_wanted,
             Some(force) => {
                 if self
@@ -1429,7 +1434,10 @@ impl Day<'_, '_> {
         let mut transport: Option<TaskForce> = None;
         for id in &limit.task_forces {
             let Some(force) = view.task_forces().find(|f| f.id == *id) else {
-                refused.push(format!("{id} is not one of the side's forces now"));
+                match crate::available::entering_on(view, EntityRef::TaskForce(*id)) {
+                    Some(day) => refused.push(crate::available::enters_words(id, day)),
+                    None => refused.push(format!("{id} is not one of the side's forces now")),
+                }
                 continue;
             };
             if force.mission != Mission::Transport {
@@ -1509,7 +1517,10 @@ impl Day<'_, '_> {
         let mut candidates: Vec<(LandUnit, bool)> = Vec::new();
         for id in &limit.land_units {
             let Some(unit) = view.land_units().find(|u| u.id == *id) else {
-                left.push(format!("{id} is not one of the side's units now"));
+                match crate::available::entering_on(view, EntityRef::LandUnit(*id)) {
+                    Some(day) => left.push(crate::available::enters_words(id, day)),
+                    None => left.push(format!("{id} is not one of the side's units now")),
+                }
                 continue;
             };
             if unit.working {
@@ -2321,6 +2332,22 @@ impl Day<'_, '_> {
         // Decision 0147, 14 and 15: the group that looks at the place.
         self.look_orders(end, plan);
         let Some(force) = view.task_forces().find(|f| f.id == force_id).cloned() else {
+            if let Some(day) = crate::available::entering_on(view, EntityRef::TaskForce(force_id)) {
+                // Held apart until its day (decision 0195, 13): not lost, so
+                // the later lifts are not sent as for a lost first lift; one
+                // reason, no order under the take.
+                let reason = serving(end, plan)
+                    .evidence(crate::available::enters_words(force_id, day), today)
+                    .binding(format!("the day {force_id} enters, {day}"))
+                    .worked(format!(
+                        "{force_id} enters on day {day}, so the staff gives no order under {} before then.",
+                        end.id
+                    ))
+                    .would_change("the day coming")
+                    .done();
+                self.target(in_scope).no_orders.push(reason);
+                return;
+            }
             // Decision 0152, 5: the first lift is lost; the later lifts as
             // they stand go.
             if plan.state == PlanState::Released
@@ -4083,6 +4110,17 @@ impl Day<'_, '_> {
                 continue;
             }
             let Some(unit) = view.land_units().find(|u| u.id == id) else {
+                // A fighting unit held apart until its day (decision 0195,
+                // 13) is coming: named with its day.
+                if let Some(day) = crate::available::entering_on(view, EntityRef::LandUnit(id)) {
+                    let fighting = view
+                        .entry_of(EntityRef::LandUnit(id))
+                        .and_then(|entry| entry.land_units.get(&id))
+                        .is_some_and(|u| !u.working);
+                    if fighting {
+                        lines.push(crate::available::enters_words(id, day));
+                    }
+                }
                 continue;
             };
             if unit.working {

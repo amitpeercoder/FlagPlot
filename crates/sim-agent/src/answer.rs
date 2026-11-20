@@ -115,8 +115,12 @@ pub const FORMAT: &str = "flagplot-agent";
 /// standing interrupt `lift_turned_back`, and the task force order
 /// `no_cargo_work` (decision 0191). 35 adds the limit `targets` (`kinds`,
 /// `waters_first`) of decision 0190 to `set_limit` and `command_state`, and the
-/// air group order `set_strike_first_waters` (`hexes`).
-pub const VERSION: u32 = 35;
+/// air group order `set_strike_first_waters` (`hexes`). 36 adds what is held apart
+/// for the side until its day (decision 0195): the briefing's `arrivals.to_enter`,
+/// `entered_yesterday` and `entry_waiting_yesterday`, `list_forces`' `to_enter`,
+/// and the entity answer `to_enter` for a held unit; and the refusal `is not on
+/// the map yet`.
+pub const VERSION: u32 = 36;
 
 /// The answer to a question about something the side does not know of: a
 /// unit of the enemy, a number that does not exist, an event the side may not

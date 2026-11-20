@@ -1658,6 +1658,19 @@ pub struct ArrivalsPart {
     /// later, and those held past their day.
     pub due: Vec<DueArrival>,
     pub replacements: Vec<ReplacementStream>,
+    /// The side's own forces and units held apart until their day, each with
+    /// its day, its place and what it is (decision 0195, 7): not on the map,
+    /// not in `list_forces`' forces. Left out when none is held.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub to_enter: Vec<crate::entries::EntryLine>,
+    /// What came onto the map yesterday (decision 0195, 2). Left out when
+    /// nothing did.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub entered_yesterday: Vec<crate::entries::EnteredLine>,
+    /// Units that could not enter yesterday and wait for their base. Left out
+    /// when none.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub entry_waiting_yesterday: Vec<crate::entries::EntryWaitingLine>,
 }
 
 #[derive(Clone, PartialEq, Eq, Debug, Serialize)]
@@ -1951,11 +1964,25 @@ pub fn briefing_for_game(view: &SideView<'_>, scenario: &str, last_day: Option<u
             .arrivals()
             .filter(|a| a.day >= today || a.waiting)
             .filter_map(|a| {
-                let group = ctx.groups.get(&a.air_group)?;
-                if !crate::lines::arrival_is_deliverable_to(&ctx, group) {
+                // An arrival to a group held apart waits until the group
+                // has entered (decision 0195, 5 and 9).
+                let held = ctx.held_groups.get(&a.air_group).copied();
+                let group = match held {
+                    Some(group) => group,
+                    None => ctx.groups.get(&a.air_group)?,
+                };
+                if held.is_none() && !crate::lines::arrival_is_deliverable_to(&ctx, group) {
                     return None;
                 }
-                let waits_for = crate::lines::arrival_waits(&ctx, group);
+                let waits_for = if held.is_some() {
+                    Some(crate::lines::ArrivalWaits {
+                        reason: "group_not_entered",
+                        damage: None,
+                        refused_at: None,
+                    })
+                } else {
+                    crate::lines::arrival_waits(&ctx, group)
+                };
                 Some(DueArrival {
                     day: a.day,
                     air_group: ctx.group(a.air_group),
@@ -1966,7 +1993,7 @@ pub fn briefing_for_game(view: &SideView<'_>, scenario: &str, last_day: Option<u
                         sim_core::state::AirGroupLocation::Ship(ship) => Some(ctx.ship(ship)),
                         sim_core::state::AirGroupLocation::Lost => None,
                     },
-                    held_past_day: a.day < today,
+                    held_past_day: a.day < today && held.is_none(),
                     can_be_delivered: waits_for.is_none(),
                     waits_for,
                 })
@@ -1983,6 +2010,9 @@ pub fn briefing_for_game(view: &SideView<'_>, scenario: &str, last_day: Option<u
                 pilots_per_day: r.pilots_per_day,
             })
             .collect(),
+        to_enter: crate::entries::entry_lines(&ctx),
+        entered_yesterday: std::mem::take(&mut day.entries.entered),
+        entry_waiting_yesterday: std::mem::take(&mut day.entries.waiting),
     };
 
     let warnings = warnings(&ctx, &day, rules);
@@ -2516,6 +2546,8 @@ struct Day {
     /// The forces whose unloading or loading was finished yesterday, with
     /// the base and the event (decision 0110, item 6).
     finished: BTreeMap<TaskForceId, (&'static str, Option<BaseId>, u32)>,
+    /// The side's entries onto the map (decision 0195).
+    entries: crate::entries::EntriesDay,
 }
 
 /// What one force put ashore yesterday.
@@ -2762,12 +2794,18 @@ impl Day {
         let mut bombardments: Vec<Bombardment> = Vec::new();
         let mut shell_fire: Vec<ShellFire> = Vec::new();
         let mut bombardments_against: Vec<BombardmentAgainst> = Vec::new();
+        let mut entries = crate::entries::EntriesDay::default();
 
         for e in events {
             let id = ctx.number(e.id);
             match &e.kind {
                 SideEventKind::Whole(kind) => match kind {
                     EventKind::OrderAccepted { .. } => orders.accepted += 1,
+                    EventKind::ForceEntered { .. }
+                    | EventKind::UnitEntered { .. }
+                    | EventKind::EntryWaiting { .. } => {
+                        entries.read(ctx, kind, id);
+                    }
                     EventKind::OrderRejected {
                         order,
                         target,
@@ -4284,6 +4322,7 @@ impl Day {
             found_empty,
             landing,
             finished,
+            entries,
         }
     }
 }

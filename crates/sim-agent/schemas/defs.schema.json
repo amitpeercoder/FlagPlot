@@ -745,9 +745,81 @@
       "required": ["reason"],
       "additionalProperties": false,
       "properties": {
-        "reason": { "enum": ["base_not_yours", "no_airfield", "airfield_damage"] },
+        "reason": { "enum": ["base_not_yours", "no_airfield", "airfield_damage", "group_not_entered"] },
         "damage": { "description": "For airfield_damage: the field's damage.", "$ref": "#/$defs/dec" },
         "refused_at": { "description": "For airfield_damage: the damage at or above which the field takes no aircraft.", "$ref": "#/$defs/dec" }
+      }
+    },
+    "entry_line": {
+      "description": "A force or unit of the side held apart until its day (decision 0195, 7): not on the map. A task force has `hex`; a land unit or an air group has `base`. `ships` counts a force's ships by kind; `air_groups` and `land_units` are what enters with it (or the one unit itself, with its aircraft or men). `waiting` is true once its day has come and it could not enter; `waits_for` says why.",
+      "type": "object",
+      "required": ["day", "kind", "unit", "waiting"],
+      "additionalProperties": false,
+      "properties": {
+        "day": { "type": "integer" },
+        "kind": { "enum": ["task_force", "land_unit", "air_group"] },
+        "unit": { "$ref": "#/$defs/handle" },
+        "hex": { "$ref": "#/$defs/place" },
+        "base": { "$ref": "#/$defs/handle" },
+        "ships": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["kind", "ships"],
+            "additionalProperties": false,
+            "properties": { "kind": { "type": "string" }, "ships": { "type": "integer" } }
+          }
+        },
+        "air_groups": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["air_group", "aircraft"],
+            "additionalProperties": false,
+            "properties": { "air_group": { "$ref": "#/$defs/handle" }, "aircraft": { "type": "integer" } }
+          }
+        },
+        "land_units": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["land_unit", "men"],
+            "additionalProperties": false,
+            "properties": { "land_unit": { "$ref": "#/$defs/handle" }, "men": { "type": "integer" } }
+          }
+        },
+        "waiting": { "type": "boolean" },
+        "waits_for": { "enum": ["not_the_sides_base", "takes_no_aircraft"] }
+      }
+    },
+    "entered_line": {
+      "description": "A force or unit that came onto the map yesterday (decision 0195, 2).",
+      "type": "object",
+      "required": ["unit", "place", "event"],
+      "additionalProperties": false,
+      "properties": {
+        "unit": { "$ref": "#/$defs/handle" },
+        "place": { "$ref": "#/$defs/place" },
+        "base": { "$ref": "#/$defs/handle" },
+        "ships": { "type": "array", "items": { "$ref": "#/$defs/handle" } },
+        "air_groups": { "type": "array", "items": { "$ref": "#/$defs/handle" } },
+        "land_units": { "type": "array", "items": { "$ref": "#/$defs/handle" } },
+        "men": { "type": "integer" },
+        "aircraft": { "type": "integer" },
+        "event": { "type": "integer" }
+      }
+    },
+    "entry_waiting_line": {
+      "description": "A unit that could not enter yesterday and waits for its base (decision 0195, 2 and 16).",
+      "type": "object",
+      "required": ["unit", "base", "day", "waits_for", "event"],
+      "additionalProperties": false,
+      "properties": {
+        "unit": { "$ref": "#/$defs/handle" },
+        "base": { "$ref": "#/$defs/handle" },
+        "day": { "type": "integer" },
+        "waits_for": { "enum": ["not_the_sides_base", "takes_no_aircraft"] },
+        "event": { "type": "integer" }
       }
     },
     "days_of_supply": {
@@ -843,7 +915,7 @@
           "const": "flagplot-agent"
         },
         "version": {
-          "const": 35
+          "const": 36
         },
         "kind": {
           "const": "not_known"

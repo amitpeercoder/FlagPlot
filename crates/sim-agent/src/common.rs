@@ -86,6 +86,13 @@ pub(crate) struct Ctx<'a> {
     pub land_units: BTreeMap<LandUnitId, &'a LandUnit>,
     /// The public facts of the bases the side does not own.
     pub enemy_bases: BTreeMap<BaseId, PublicBase>,
+    /// The side's own units held apart until their day (decision 0195, 13):
+    /// not on the map, so not in the maps above, but each has its number
+    /// and its name, and the side may name it in an order or a command.
+    pub held_ships: BTreeMap<ShipId, &'a Ship>,
+    pub held_forces: BTreeMap<TaskForceId, &'a TaskForce>,
+    pub held_groups: BTreeMap<AirGroupId, &'a AirGroup>,
+    pub held_land_units: BTreeMap<LandUnitId, &'a LandUnit>,
     place_names: BTreeMap<Hex, String>,
     /// The side's own number for each event it sees, by the log's number.
     numbers: BTreeMap<EventId, u32>,
@@ -135,11 +142,28 @@ impl<'a> Ctx<'a> {
             .enumerate()
             .map(|(i, o)| (o.id, u32::try_from(i + 1).expect("few orders")))
             .collect();
-        let ship_ids = ships.keys().copied().collect();
-        let force_ids = forces.keys().copied().collect();
-        let group_ids = groups.keys().copied().collect();
-        let land_unit_ids = land_units.keys().copied().collect();
+        let mut held_ships: BTreeMap<ShipId, &Ship> = BTreeMap::new();
+        let mut held_forces: BTreeMap<TaskForceId, &TaskForce> = BTreeMap::new();
+        let mut held_groups: BTreeMap<AirGroupId, &AirGroup> = BTreeMap::new();
+        let mut held_land_units: BTreeMap<LandUnitId, &LandUnit> = BTreeMap::new();
+        for entry in view.entering() {
+            held_ships.extend(entry.ships.iter().map(|(id, s)| (*id, s)));
+            held_forces.extend(entry.task_force.iter().map(|f| (f.id, f)));
+            held_groups.extend(entry.air_groups.iter().map(|(id, g)| (*id, g)));
+            held_land_units.extend(entry.land_units.iter().map(|(id, u)| (*id, u)));
+        }
+        // A held unit has its number from the start, in the umpire's id
+        // order with the rest, so that no number changes the day it enters
+        // (decision 0195, 13).
+        let ship_ids = sorted_ids(ships.keys().chain(held_ships.keys()));
+        let force_ids = sorted_ids(forces.keys().chain(held_forces.keys()));
+        let group_ids = sorted_ids(groups.keys().chain(held_groups.keys()));
+        let land_unit_ids = sorted_ids(land_units.keys().chain(held_land_units.keys()));
         Ctx {
+            held_ships,
+            held_forces,
+            held_groups,
+            held_land_units,
             view,
             order_numbers,
             order_words,
@@ -404,6 +428,44 @@ impl<'a> Ctx<'a> {
         self.land_units.get(&id).copied()
     }
 
+    /// The own land unit a side number names, one held apart included: the
+    /// side may name it in an order or a command and the engine says it is
+    /// not on the map yet (decision 0195, 7 and 8).
+    pub fn own_land_unit_or_held(&self, number: u32) -> Option<&'a LandUnit> {
+        let id = *self.land_unit_ids.get(number_position(number)?)?;
+        self.land_units
+            .get(&id)
+            .or_else(|| self.held_land_units.get(&id))
+            .copied()
+    }
+
+    /// As [`Ctx::own_land_unit_or_held`], for a ship.
+    pub fn own_ship_or_held(&self, number: u32) -> Option<&'a Ship> {
+        let id = *self.ship_ids.get(number_position(number)?)?;
+        self.ships
+            .get(&id)
+            .or_else(|| self.held_ships.get(&id))
+            .copied()
+    }
+
+    /// As [`Ctx::own_land_unit_or_held`], for a task force.
+    pub fn own_force_or_held(&self, number: u32) -> Option<&'a TaskForce> {
+        let id = *self.force_ids.get(number_position(number)?)?;
+        self.forces
+            .get(&id)
+            .or_else(|| self.held_forces.get(&id))
+            .copied()
+    }
+
+    /// As [`Ctx::own_land_unit_or_held`], for an air group.
+    pub fn own_group_or_held(&self, number: u32) -> Option<&'a AirGroup> {
+        let id = *self.group_ids.get(number_position(number)?)?;
+        self.groups
+            .get(&id)
+            .or_else(|| self.held_groups.get(&id))
+            .copied()
+    }
+
     /// The own ship a side number names; `None` for a number that names none.
     pub fn own_ship(&self, number: u32) -> Option<&'a Ship> {
         let id = *self.ship_ids.get(number_position(number)?)?;
@@ -449,7 +511,11 @@ impl<'a> Ctx<'a> {
             handle: self
                 .ship_number(id)
                 .map_or_else(|| id.to_string(), |n| format!("ship:{n}")),
-            name: self.ships.get(&id).map(|s| s.name.clone()),
+            name: self
+                .ships
+                .get(&id)
+                .or_else(|| self.held_ships.get(&id))
+                .map(|s| s.name.clone()),
         }
     }
 
@@ -458,7 +524,11 @@ impl<'a> Ctx<'a> {
             handle: self
                 .force_number(id)
                 .map_or_else(|| id.to_string(), |n| format!("task_force:{n}")),
-            name: self.forces.get(&id).map(|f| f.name.clone()),
+            name: self
+                .forces
+                .get(&id)
+                .or_else(|| self.held_forces.get(&id))
+                .map(|f| f.name.clone()),
         }
     }
 
@@ -467,7 +537,11 @@ impl<'a> Ctx<'a> {
             handle: self
                 .group_number(id)
                 .map_or_else(|| id.to_string(), |n| format!("air_group:{n}")),
-            name: self.groups.get(&id).map(|g| g.name.clone()),
+            name: self
+                .groups
+                .get(&id)
+                .or_else(|| self.held_groups.get(&id))
+                .map(|g| g.name.clone()),
         }
     }
 
@@ -476,7 +550,11 @@ impl<'a> Ctx<'a> {
             handle: self
                 .land_unit_number(id)
                 .map_or_else(|| id.to_string(), |n| format!("land_unit:{n}")),
-            name: self.land_units.get(&id).map(|u| u.name.clone()),
+            name: self
+                .land_units
+                .get(&id)
+                .or_else(|| self.held_land_units.get(&id))
+                .map(|u| u.name.clone()),
         }
     }
 
@@ -560,6 +638,13 @@ impl<'a> Ctx<'a> {
             .filter_map(|id| self.ships.get(id).copied())
             .filter(|s| s.location != ShipLocation::Sunk)
     }
+}
+
+/// The ids in one list, in the umpire's order.
+fn sorted_ids<'i, T: Copy + Ord + 'i>(ids: impl Iterator<Item = &'i T>) -> Vec<T> {
+    let mut ids: Vec<T> = ids.copied().collect();
+    ids.sort_unstable();
+    ids
 }
 
 /// A unit's number from its place in the list: places count from 0, numbers

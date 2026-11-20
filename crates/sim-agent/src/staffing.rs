@@ -2455,19 +2455,19 @@ pub(crate) fn request(
                 };
                 let (raw, stand_ins) = match key {
                     "task_forces" => (
-                        ctx.own_force(number).map(|f| f.id.raw()),
+                        ctx.own_force_or_held(number).map(|f| f.id.raw()),
                         &mut force_stand_ins,
                     ),
                     "air_groups" => (
-                        ctx.own_group(number).map(|g| g.id.raw()),
+                        ctx.own_group_or_held(number).map(|g| g.id.raw()),
                         &mut group_stand_ins,
                     ),
                     "land_units" => (
-                        ctx.own_land_unit(number).map(|u| u.id.raw()),
+                        ctx.own_land_unit_or_held(number).map(|u| u.id.raw()),
                         &mut land_unit_stand_ins,
                     ),
                     _ => (
-                        ctx.own_ship(number).map(|s| s.id.raw()),
+                        ctx.own_ship_or_held(number).map(|s| s.id.raw()),
                         &mut ship_stand_ins,
                     ),
                 };
@@ -2496,7 +2496,7 @@ pub(crate) fn request(
             .and_then(Value::as_u64)
             .and_then(|n| u32::try_from(n).ok())
         {
-            let id = match ctx.own_force(number).map(|f| f.id.raw()) {
+            let id = match ctx.own_force_or_held(number).map(|f| f.id.raw()) {
                 Some(raw) => raw,
                 None => match force_stand_ins
                     .iter()
@@ -2539,19 +2539,19 @@ pub(crate) fn request(
             };
             let (raw, stand_ins) = match key {
                 "ship" => (
-                    ctx.own_ship(number).map(|s| s.id.raw()),
+                    ctx.own_ship_or_held(number).map(|s| s.id.raw()),
                     &mut ship_stand_ins,
                 ),
                 "task_force" => (
-                    ctx.own_force(number).map(|f| f.id.raw()),
+                    ctx.own_force_or_held(number).map(|f| f.id.raw()),
                     &mut force_stand_ins,
                 ),
                 "land_unit" => (
-                    ctx.own_land_unit(number).map(|u| u.id.raw()),
+                    ctx.own_land_unit_or_held(number).map(|u| u.id.raw()),
                     &mut land_unit_stand_ins,
                 ),
                 _ => (
-                    ctx.own_group(number).map(|g| g.id.raw()),
+                    ctx.own_group_or_held(number).map(|g| g.id.raw()),
                     &mut group_stand_ins,
                 ),
             };
