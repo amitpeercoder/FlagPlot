@@ -55,6 +55,10 @@ pub enum PulsePhase {
     /// after the repair and the arrivals, from day 2 (decisions 6 to 8 of
     /// 0038).
     AirReplacement,
+    /// Each supply line gives its base its tons, after the replacements and
+    /// before the night's aircraft and men are paid for, from day 1
+    /// (decision 0196, 2 and 8).
+    SupplyLines,
     /// Each base pays the daily supply for its aircraft, after the repair
     /// and the replacements (decisions 2 and 5 of 0039).
     AirSupplyUpkeep,
@@ -85,10 +89,11 @@ pub enum EndOfDayPhase {
     BaseCount,
 }
 
-const NIGHT_SEQUENCE: [PulsePhase; 11] = [
+const NIGHT_SEQUENCE: [PulsePhase; 12] = [
     PulsePhase::AircraftRepair,
     PulsePhase::AirArrival,
     PulsePhase::AirReplacement,
+    PulsePhase::SupplyLines,
     PulsePhase::AirSupplyUpkeep,
     PulsePhase::MenSupply,
     PulsePhase::AirGroupRest,
@@ -467,6 +472,7 @@ impl World {
             PulsePhase::AircraftWear => self.wear_aircraft(day, pulse),
             PulsePhase::AirArrival => self.receive_arrivals(day, pulse),
             PulsePhase::AirReplacement => self.receive_replacements(day, pulse),
+            PulsePhase::SupplyLines => self.receive_supply_lines(day, pulse),
             PulsePhase::AirSupplyUpkeep => self.pay_daily_supply(day, pulse),
             PulsePhase::MenSupply => self.feed_men_ashore(day, pulse),
             PulsePhase::AirGroupRest => self.stand_down_and_return_air_groups(day, pulse),
@@ -1968,6 +1974,25 @@ mod tests {
         assert!(at(PulsePhase::AirReplacement) < at(PulsePhase::AirSupplyUpkeep));
         assert!(at(PulsePhase::AirSupplyUpkeep) < at(PulsePhase::AirGroupRest));
         assert!(!DAYLIGHT_SEQUENCE.contains(&PulsePhase::AirSupplyUpkeep));
+    }
+
+    #[test]
+    fn supply_lines_give_after_the_replacements_and_before_the_night_is_paid_for() {
+        let at = |phase: PulsePhase| {
+            NIGHT_SEQUENCE
+                .iter()
+                .position(|p| *p == phase)
+                .expect("the phase is in the night")
+        };
+        // Decision 0196, 8: a step of its own, right after the replacements
+        // and before the aircraft and the men are paid for.
+        assert_eq!(
+            at(PulsePhase::SupplyLines),
+            at(PulsePhase::AirReplacement) + 1
+        );
+        assert!(at(PulsePhase::SupplyLines) < at(PulsePhase::AirSupplyUpkeep));
+        assert!(at(PulsePhase::SupplyLines) < at(PulsePhase::MenSupply));
+        assert!(!DAYLIGHT_SEQUENCE.contains(&PulsePhase::SupplyLines));
     }
 
     use super::*;

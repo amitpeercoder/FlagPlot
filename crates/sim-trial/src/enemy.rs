@@ -697,6 +697,8 @@ pub(crate) fn make(
             entering: BTreeMap::new(),
             formations: BTreeMap::new(),
             replacements: Vec::new(),
+            // Decision 0196: the enemy's made picture holds no supply line.
+            supply_lines: Vec::new(),
             arrivals: Vec::new(),
             orders: Vec::new(),
             command: CommandState::new(),

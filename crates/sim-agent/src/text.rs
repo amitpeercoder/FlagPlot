@@ -1162,6 +1162,19 @@ impl Briefing {
             )
         });
 
+        if !self.arrivals.supply_lines.is_empty() {
+            o.each("Supply lines", &self.arrivals.supply_lines, |x| {
+                format!(
+                    "Supply line: {} receives {} tons of supply and {} tons of fuel a night, days {} to {}",
+                    x.base.text(),
+                    x.supply_t.0,
+                    x.fuel_t.0,
+                    x.first_day,
+                    x.last_day
+                )
+            });
+        }
+
         o.heading("WARNINGS");
         let w = &self.warnings;
         o.each("Ships that cannot reach a base", &w.ship_cannot_reach_base, |x| {

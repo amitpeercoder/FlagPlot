@@ -51,7 +51,8 @@ use crate::refdata::{
 };
 use crate::side_events::{self, Owners, SideEvent};
 use crate::state::{
-    AirGroup, Arrival, Base, Formation, LandUnit, Replacement, Ship, Side, TaskForce, TruthState,
+    AirGroup, Arrival, Base, Formation, LandUnit, Replacement, Ship, Side, SupplyLine, TaskForce,
+    TruthState,
 };
 use crate::upkeep::Sortie;
 
@@ -568,6 +569,17 @@ impl<'a> SideView<'a> {
             .replacements
             .iter()
             .filter(move |stream| view.owns_stream(stream))
+    }
+
+    /// The side's own supply lines (decision 0196, 7 and 10), known exactly,
+    /// in the order the state keeps them: those whose side is the side's,
+    /// whoever holds the base now. The enemy's are not visible.
+    pub fn supply_lines(&self) -> impl Iterator<Item = &'a SupplyLine> + '_ {
+        let view = *self;
+        self.truth
+            .supply_lines
+            .iter()
+            .filter(move |line| view.owns_line(line))
     }
 
     /// The arrivals due to the side's own air groups (decision 0041), known

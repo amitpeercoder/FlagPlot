@@ -1658,6 +1658,11 @@ pub struct ArrivalsPart {
     /// later, and those held past their day.
     pub due: Vec<DueArrival>,
     pub replacements: Vec<ReplacementStream>,
+    /// The side's own supply lines from off the map whose last day is today
+    /// or later (decision 0196, 4 and 5), in the state's order. Left out when
+    /// none; the enemy's are never given.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub supply_lines: Vec<SupplyLineDue>,
     /// The side's own forces and units held apart until their day, each with
     /// its day, its place and what it is (decision 0195, 7): not on the map,
     /// not in `list_forces`' forces. Left out when none is held.
@@ -1688,6 +1693,22 @@ pub struct DueArrival {
     /// What holds it, when it cannot be delivered.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub waits_for: Option<crate::lines::ArrivalWaits>,
+}
+
+/// A supply line giving a base stock each night from off the map (decision
+/// 0196).
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct SupplyLineDue {
+    /// The base that receives the stock.
+    pub base: Handle,
+    /// Tons of supply added a night.
+    pub supply_t: Dec,
+    /// Tons of fuel added a night.
+    pub fuel_t: Dec,
+    /// The first day it gives.
+    pub first_day: u32,
+    /// The last day it gives.
+    pub last_day: u32,
 }
 
 #[derive(Clone, PartialEq, Eq, Debug, Serialize)]
@@ -2008,6 +2029,17 @@ pub fn briefing_for_game(view: &SideView<'_>, scenario: &str, last_day: Option<u
                     .map_or_else(|| r.aircraft_type.to_string(), |t| t.name.clone()),
                 aircraft_per_day: r.aircraft_per_day,
                 pilots_per_day: r.pilots_per_day,
+            })
+            .collect(),
+        supply_lines: view
+            .supply_lines()
+            .filter(|l| l.last_day >= today)
+            .map(|l| SupplyLineDue {
+                base: ctx.base(l.base),
+                supply_t: Dec(l.supply_t),
+                fuel_t: Dec(l.fuel_t),
+                first_day: l.first_day,
+                last_day: l.last_day,
             })
             .collect(),
         to_enter: crate::entries::entry_lines(&ctx),
@@ -3961,6 +3993,7 @@ impl Day {
                     | EventKind::AirFight { .. }
                     | EventKind::AntiAircraftFire { .. }
                     | EventKind::ReplacementsReceived { .. }
+                    | EventKind::StockReceived { .. }
                     | EventKind::AircraftArrived { .. }
                     | EventKind::BaseAntiAircraftFire { .. }
                     | EventKind::BaseAttacked { .. }

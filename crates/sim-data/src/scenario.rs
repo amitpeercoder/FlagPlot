@@ -128,6 +128,8 @@ struct ScenarioFile {
     #[serde(default)]
     arrival: Vec<ArrivalSpec>,
     #[serde(default)]
+    supply_line: Vec<SupplyLineSpec>,
+    #[serde(default)]
     task_force: Vec<TaskForceSpec>,
     #[serde(default)]
     ship: Vec<ShipSpec>,
@@ -573,6 +575,25 @@ struct ArrivalSpec {
     aircraft: u32,
     /// Defaults to 0. Only for a group whose pilots are tracked.
     pilots: Option<u32>,
+}
+
+/// A supply line: tons of supply and fuel a day that appear at a base from
+/// off the map, on the days from `first_day` to `last_day` (decision 0196).
+/// Its side may differ from the base's side at the start.
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct SupplyLineSpec {
+    base: u32,
+    /// Tons of supply a day. Defaults to 0.
+    supply_t: Option<Quantity>,
+    /// Tons of fuel a day. Defaults to 0.
+    fuel_t: Option<Quantity>,
+    /// Defaults to 1.
+    first_day: Option<u32>,
+    /// Defaults to the game's last day.
+    last_day: Option<u32>,
+    /// Defaults to the base's side at the start.
+    side: Option<SideSpec>,
 }
 
 #[derive(Deserialize)]
@@ -2696,6 +2717,64 @@ impl Scenario {
             });
         }
 
+        // Supply lines come after bases are known (decision 0196).
+        for (index, spec) in file.supply_line.iter().enumerate() {
+            let number = index + 1;
+            let base_id = BaseId::new(spec.base);
+            let base = truth.bases.get(&base_id).ok_or_else(|| {
+                fail(format!(
+                    "supply line {number} is at unknown base {}",
+                    spec.base
+                ))
+            })?;
+            let side: Side = spec.side.map_or(base.side, Into::into);
+            let tons = |q: &Option<Quantity>, what: &str| -> Result<Fixed, DataError> {
+                let t = match q {
+                    None => Fixed::ZERO,
+                    Some(q) => q
+                        .to_fixed()
+                        .map_err(|e| fail(format!("supply line {number} {what}: {e}")))?,
+                };
+                if t < Fixed::ZERO {
+                    return Err(fail(format!("supply line {number} has {what} below 0")));
+                }
+                Ok(t)
+            };
+            let supply_t = tons(&spec.supply_t, "supply_t")?;
+            let fuel_t = tons(&spec.fuel_t, "fuel_t")?;
+            if supply_t == Fixed::ZERO && fuel_t == Fixed::ZERO {
+                return Err(fail(format!(
+                    "supply line {number} gives nothing: neither supply nor fuel is above 0"
+                )));
+            }
+            let first_day = spec.first_day.unwrap_or(1);
+            let last_day = spec.last_day.unwrap_or(file.days);
+            if first_day < 1 {
+                return Err(fail(format!(
+                    "supply line {number} has a first day below 1"
+                )));
+            }
+            if first_day > file.days || last_day > file.days {
+                return Err(fail(format!(
+                    "supply line {number} has days {first_day} to {last_day}, past the game's last day {}",
+                    file.days
+                )));
+            }
+            if last_day < first_day {
+                return Err(fail(format!(
+                    "supply line {number} has its last day {last_day} before its first day {first_day}"
+                )));
+            }
+            truth.supply_lines.push(sim_core::state::SupplyLine {
+                side,
+                base: base_id,
+                supply_t,
+                fuel_t,
+                first_day,
+                last_day,
+            });
+        }
+
         // Arrivals come after the air groups are known (decision 0041).
         for (index, spec) in file.arrival.iter().enumerate() {
             let number = index + 1;
@@ -3259,6 +3338,9 @@ impl Scenario {
         truth
             .arrivals
             .sort_by_key(|a| (a.day, a.air_group, a.aircraft, a.pilots));
+        truth
+            .supply_lines
+            .sort_by_key(sim_core::state::SupplyLine::order_key);
 
         // Islands are map data (decision 0151, 1); they are added before the
         // world is built, so both sides' maps have them.
@@ -4363,6 +4445,99 @@ r = 0
         assert!(error_of(&replacement("allied", 1, 9)).contains("unknown aircraft type"));
         assert!(parse_with(&replacement("allied", 1, 1).replace("= 2\n", "= 2.5\n")).is_err());
         assert!(parse_with(&format!("{}extra = 1\n", replacement("allied", 1, 1))).is_err());
+    }
+
+    fn supply_line(extra: &str) -> String {
+        format!("[[supply_line]]\n{extra}")
+    }
+
+    #[test]
+    fn supply_lines_load_with_defaults_in_one_order_and_are_checked() {
+        let none = parse_with("").expect("loads");
+        assert!(none.world.umpire().supply_lines.is_empty());
+        // Defaults: the base's side, day 1 to the last day, fuel 0.
+        let one = parse_with(&supply_line("base = 2\nsupply_t = 10\n")).expect("loads");
+        let lines = &one.world.umpire().supply_lines;
+        assert_eq!(lines.len(), 1);
+        assert_eq!(
+            (
+                lines[0].side,
+                lines[0].base.raw(),
+                lines[0].first_day,
+                lines[0].last_day
+            ),
+            (Side::Japanese, 2, 1, 2)
+        );
+        assert_eq!(lines[0].supply_t, Fixed::from_int(10));
+        assert_eq!(lines[0].fuel_t, Fixed::ZERO);
+        // A decimal string loads exactly; a TOML float is refused.
+        let dec = parse_with(&supply_line("base = 1\nfuel_t = \"12.5\"\n")).expect("loads");
+        assert_eq!(
+            dec.world.umpire().supply_lines[0].fuel_t,
+            "12.5".parse::<Fixed>().unwrap()
+        );
+        assert!(parse_with(&supply_line("base = 1\nfuel_t = 12.5\n")).is_err());
+        // An explicit side may differ from the base's.
+        let other = parse_with(&supply_line(
+            "base = 1\nside = \"japanese\"\nsupply_t = 1\n",
+        ))
+        .expect("loads");
+        assert_eq!(other.world.umpire().supply_lines[0].side, Side::Japanese);
+        // Refusals.
+        let bad = |extra: &str| error_of(&supply_line(extra));
+        let m = bad("base = 9\nsupply_t = 1\n");
+        assert!(
+            m.contains("supply line 1") && m.contains("unknown base"),
+            "{m}"
+        );
+        let m = bad("base = 1\nsupply_t = -1\nfuel_t = 5\n");
+        assert!(m.contains("supply line 1") && m.contains("below 0"), "{m}");
+        let m = bad("base = 1\nsupply_t = 1\nfuel_t = -1\n");
+        assert!(m.contains("supply line 1") && m.contains("below 0"), "{m}");
+        let m = bad("base = 1\n");
+        assert!(
+            m.contains("supply line 1") && m.contains("gives nothing"),
+            "{m}"
+        );
+        let m = bad("base = 1\nsupply_t = 0\nfuel_t = 0\n");
+        assert!(m.contains("gives nothing"), "{m}");
+        let m = bad("base = 1\nsupply_t = 1\nfirst_day = 0\n");
+        assert!(
+            m.contains("supply line 1") && m.contains("first day below 1"),
+            "{m}"
+        );
+        let m = bad("base = 1\nsupply_t = 1\nfirst_day = 3\n");
+        assert!(
+            m.contains("supply line 1") && m.contains("past the game's last day"),
+            "{m}"
+        );
+        let m = bad("base = 1\nsupply_t = 1\nlast_day = 3\n");
+        assert!(m.contains("past the game's last day"), "{m}");
+        let m = bad("base = 1\nsupply_t = 1\nfirst_day = 2\nlast_day = 1\n");
+        assert!(
+            m.contains("supply line 1") && m.contains("before its first day"),
+            "{m}"
+        );
+        // The number is the line's place in the file.
+        let second = format!(
+            "{}{}",
+            supply_line("base = 1\nsupply_t = 1\n"),
+            supply_line("base = 9\nsupply_t = 1\n")
+        );
+        assert!(error_of(&second).contains("supply line 2"));
+        assert!(parse_with(&supply_line("base = 1\nsupply_t = 1\nextra = 1\n")).is_err());
+        // Two lines to one base are both kept, in one order.
+        let a = supply_line("base = 1\nsupply_t = 5\nfirst_day = 2\n");
+        let b = supply_line("base = 1\nsupply_t = 3\n");
+        let ab = parse_with(&format!("{a}{b}")).expect("loads");
+        let ba = parse_with(&format!("{b}{a}")).expect("loads");
+        let (x, y) = (
+            &ab.world.umpire().supply_lines,
+            &ba.world.umpire().supply_lines,
+        );
+        assert_eq!(x.len(), 2);
+        assert_eq!(x, y);
+        assert_eq!((x[0].first_day, x[1].first_day), (1, 2));
     }
 
     fn arrival(day: u32, group: u32, aircraft: u32, pilots: &str) -> String {

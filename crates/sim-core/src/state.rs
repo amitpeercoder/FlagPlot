@@ -1156,6 +1156,47 @@ pub struct Replacement {
     pub pilots_per_day: u32,
 }
 
+/// A supply line a scenario gives a base (decision 0196, rules 1, 2 and 7):
+/// on each night from `first_day` to `last_day`, both counted, while the
+/// base is `side`'s, `supply_t` tons of supply and `fuel_t` tons of fuel are
+/// added to its stock. On a night the base is not the line's side's nothing
+/// is given and nothing is kept for later. It is not cargo and no ship
+/// carries it. Static: it is never changed by the rules.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct SupplyLine {
+    pub side: Side,
+    pub base: BaseId,
+    /// Tons of supply a day, at least 0.
+    pub supply_t: Fixed,
+    /// Tons of fuel a day, at least 0.
+    pub fuel_t: Fixed,
+    /// The first day it gives, at least 1.
+    pub first_day: u32,
+    /// The last day it gives, not before `first_day`.
+    pub last_day: u32,
+}
+
+impl SupplyLine {
+    /// Whether the line's days hold `day`.
+    pub const fn gives_on(&self, day: u32) -> bool {
+        self.first_day <= day && day <= self.last_day
+    }
+
+    /// The one order the state keeps supply lines in, whatever order they
+    /// are given in (decision 0196, 7, as decision 0043, 4c, keeps streams):
+    /// by side, base, first day, last day, then tons of supply and of fuel.
+    pub fn order_key(&self) -> (u8, BaseId, u32, u32, i64, i64) {
+        (
+            self.side.code(),
+            self.base,
+            self.first_day,
+            self.last_day,
+            self.supply_t.raw(),
+            self.fuel_t.raw(),
+        )
+    }
+}
+
 /// Aircraft and pilots a scenario flies in to an air group on a named day
 /// (decision 0041). The rules change only `waiting`.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -1423,6 +1464,12 @@ pub struct TruthState {
     /// with no `enters`. Added at the end, and hashed last, only where it is
     /// not empty.
     pub entering: BTreeMap<EntityRef, crate::entering::Entering>,
+    /// The supply lines a scenario gives its bases (decision 0196): tons of
+    /// supply and fuel added to a base each night of the line's days while
+    /// the base is the line's side's. Static: never changed by the rules.
+    /// Empty in a scenario with no `[[supply_line]]`. Added at the end, and
+    /// hashed last, only where it is not empty.
+    pub supply_lines: Vec<SupplyLine>,
 }
 
 /// A day's hits on the men of one side in one hex (decision 10 of 0106):
