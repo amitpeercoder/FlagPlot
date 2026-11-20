@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 20, 2026, at the designer's aski
 
 Summary: The designer wants to watch a game on the table in which an agent commands a side, against the engine or against another agent. He gives no orders. He holds the clock: next pulse, carry on, stop, and he reads what a side's commander reads. This record gives a game a third party, the watcher, who holds the clock and can read and cannot order. A seat's own tools for moving time become its word that it is ready, and for how long. The table's bridge holds one such game, with a door for each agent
 
-Standing: A plan, written by the architect on Nov 20, 2026, at the designer's asking, and amended on review. Not built
+Standing: A plan, written by the architect on Nov 20, 2026, at the designer's asking, and amended on review. Step 1, the session and `serve`, is built and ruled on; step 2, the table, is not built
 
 ## Why
 
@@ -198,3 +198,18 @@ It holds. On ES at dusk, each read a seat has (the watcher's sixteen where the s
 - Anything of step 2: no bridge, door, key or page exists, and no agent has played a watched game.
 - A seat at a task force or a base in a watched game beyond its list of tools.
 - A watched game with a trial: none of the three scenarios names a trial's figures.
+
+## The architect's rulings on step 1
+
+Read on Nov 20, 2026, with the build's core: the watcher's read, which goes through a seat's own tools and only those of his list, and leaves no entry in a transcript; that `sim-core`, `sim-trial` and the agent's source test are untouched; and that the statements in `tests/scenario_101_a_game_watched.rs` are as the architect wrote them.
+
+1. **A seat's answers do not read the other seat's queue** (statement 13). It held, both ways, for every read a seat has at dusk and for two previews. No leak between seats was found. A dry run was not among the reads tried, since the scenario used has none: it is to be tried on a scenario with a trial before a game of two agents is called fair. Owed.
+2. **Statement 5 as tested stands.** On the scenario named, the first contact comes in the last pulse of the game, and `advance` says the game is over before it says what the side was told. The test holds what matters: the call is answered at that step and not before, with the plain game's answer byte for byte.
+3. **Each tool of time is a call, a check and an answer,** and the game not watched uses the same three in its own loop. Stands: the two cannot drift apart.
+4. **`run`'s staff orders are worked when the call is made.** Stands, as `run` does today.
+5. **A held call's entry in the transcript** is placed when it is answered and keeps the days resolved when it was made. Stands.
+6. **The watcher may read a side whose seat is the script's.** Stands: it is what watching an agent against the engine needs.
+7. **The watcher's requests exist only in a watched game.** Stands.
+8. **Only a watched game left inside a day is saved as stopped inside a day.** Stands.
+9. **The scenarios the build chose** for a seat at a command, an interrupt and an engine's stop stand.
+10. **The watcher's answers have no schema, and the agent interface's version is not raised.** Stands for step 1: nothing a seat is given changed shape. Step 2 is built against the shapes in "As built: step 1"; if the page needs them fixed, they are given schemas then.
