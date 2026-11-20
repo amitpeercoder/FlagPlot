@@ -1,10 +1,10 @@
 # 0182: A game watched: agents at the seats, a watcher at the clock
 
-Status: a plan by the architect, written on Nov 20, 2026, at the designer's asking. It is to be read by a reviewer who has not seen it written, and amended, before any of it is built. It is built after decision 0181's build, which changes the same files.
+Status: a plan by the architect, written on Nov 20, 2026, at the designer's asking. Read by a reviewer who had not seen it written, and amended on that reading ("Amended on review", which replaces what is above it where they differ) before any of it is built. It is built after decision 0181's build, which changes the same files.
 
 Summary: The designer wants to watch a game on the table in which an agent commands a side, against the engine or against another agent. He gives no orders. He holds the clock: next pulse, carry on, stop, and he reads what a side's commander reads. This record gives a game a third party, the watcher, who holds the clock and can read and cannot order. A seat's own tools for moving time become its word that it is ready, and for how long. The table's bridge holds one such game, with a door for each agent
 
-Standing: A plan, written by the architect on Nov 20, 2026. Not yet reviewed and not built
+Standing: A plan, written by the architect on Nov 20, 2026, at the designer's asking, and amended on review. Not built
 
 ## Why
 
@@ -98,3 +98,62 @@ Each is the architect's, inside what was asked, and can be turned.
 2. **An agent may ask to be woken inside a day or only at dusk,** as a player may today. An agent that asks for every pulse is slower and costs more; that is its choice.
 3. **The clock never moves past an agent that has not finished.** A slow agent is waited for, and the page says who.
 4. **The bridge starts no model.** The first games are played by agents this session starts, each given a seat's door.
+
+## Amended on review
+
+An independent reading of the plan and its test, against the code, found the following. Each was checked before it was taken. This section replaces what is above it where they differ, and the test's statements are amended with it.
+
+### What is so today, corrected
+
+1. **A command carries no pulse** in a saved game; only an order given inside a day does. And a seat that has ended its day can still ask for a preview, which leaves a record: "can read and cannot order" is not wholly so today.
+
+### The seat's tools of time, in two parts
+
+2. **Each of `end_day`, `run` and `advance` resolves time inside itself today,** so none can be reused whole. In a watched game each is split: **the call** checks its arguments, sets the seat's stop and makes it ready; **the answer** is made when the stop has come. A call refused for its arguments is answered at once, and the seat is not ready.
+3. **Readiness is a field of its own** beside a seat's "ended", which is reset at every dusk and cannot say "ready for three days". With it the session holds what the answer is made from, as the tools gather it today inside their loops: where the clock stood at the call, the count of the side's events before each pulse, the last dusk closed, and for `run` the staff's orders worked before the first day.
+4. **What goes in when.** A seat ready across several dusks has its queued orders and commands handed in at the first dusk only, as `run` has it today. `run` asked at 0600 counts the rest of that day as its first day, as today.
+5. **An interrupt stops the seat that set it and no other.** No stop needs both seats.
+6. **If the engine stops on an error,** every held call is answered with the words of the stop, as every call is today.
+7. **When two seats' stops come on one step** the Allied seat's answer is made first.
+
+### A held seat
+
+8. **This changes decision 0050, rule 9, in a watched game only.** There a seat that has ended its day may still read. In a watched game a seat that is ready makes no call until it is answered: an agent's call of time is one call that takes long. A call from a held seat is refused, saying it is ready and waits for the clock; it changes no state, and is in the transcript as every refused call is.
+9. **A held call's entry in the transcript** is written when it is answered.
+10. **"As the same tool answers today"** (rule 6) means: as it answers in a game with that seat alone played, the same calls made. With two seats played and no watcher, `end_day` answers at once with the day not resolved; that is not the measure.
+
+### Intake, and what a seat's answers read
+
+11. **Inside a day the script's orders are taken in before the played seats',** and of the played seats' the Allied first. So which played seat spoke first changes nothing (rule 9), but a side played by a seat is not the same game as that side scripted where the script orders inside a day. The test does not claim it is.
+12. **A seat's previews of the coming day are worked on a copy of the game with both sides' queues handed in.** Whether any answer a seat is given can differ with what the other seat has queued is not known. The build tests it: each read a seat has at dusk, with the other seat's queue empty and full, must be the same byte for byte. If one is not, the build stops and the architect is told before any game of two agents is played: it would be a leak between seats that is there today.
+
+### What the watcher is given
+
+13. **His reads, by name** (rule 10): `get_briefing`, `list_forces`, `list_bases`, `list_contacts`, `get_entity`, `measure`, `explain`, `events`, `command_state`, `plans`, `staff_orders`, `propose`, `order`, `why`, `report` and `trials`. Not `preview` and not `trial`, which leave a record.
+14. **Three more requests of his own** (rule 15): where the game stands (rule 13); what a seat did since its last stop (rule 14); and the step, whose answer says what was resolved: the day, the pulse, where the clock now stands, and which seats' stops came. What each side was told in the pulse he reads with `events`, as that side.
+
+### Keeping the sides apart at the bridge
+
+15. **Each door has its own key.** The bridge makes a key for each seat's door and one for the watcher when it starts, and prints them. A call without its door's key is refused. The page is served the watcher's key. This guards against a seat's agent calling the other seat's door or the watcher's by mistake. It is not proof against an agent that sets out to cheat on the same machine, and the record does not claim it.
+16. **Whoever starts the agents gives each its own door and key and nothing else,** and passes nothing the watcher reads to any agent. Where this session starts them, each is a separate agent told only its seat.
+
+### The host
+
+17. **A call of time held long.** A tool call that waits while the watcher reads may outlast a client's patience. The door answers a held call after a set wait with "still waiting", and offers the seat one tool of the door's own, `wait`, which holds again and gives the answer when it has come. The session makes the answer once and keeps it until the door collects it.
+18. **`serve` answers a seat's tool definitions and opening words,** which only `mcp` has today; they are moved to where both can use them. The bridge reads `serve`'s lines on a thread of its own and matches each answer to its call by `id`.
+19. **Leaving in the middle of a day:** the saved game says it stopped inside a day, as decision 0172 has it. The bridge takes a folder to keep the saved game and the transcripts in.
+20. **No restart in a watched game** while a seat's agent is connected.
+
+### The page
+
+21. **Its clock is drawn from the step's answer and from `events` read as the side watched,** not from the answer of `advance`, which it no longer calls.
+22. **Carry on stops on what the watcher ticks,** read from the side watched: the same list a player has today (a contact, an attack, a loss, a strike, a landing). It is the page's own stopping and no rule of the game.
+23. **Switching the side watched** changes the heading, the words for a base taken and the directives shown to that side's. A side with no directives file shows none.
+
+### Two steps, two pull requests
+
+24. **Step 1: the session and `serve`,** with both seats, and the test. **Step 2: the bridge, the doors, the seat's program and the page.** A game of one agent against the engine can be watched once both are in; so can a game of two.
+
+### The test, corrected
+
+25. Scenario 78 has no Japanese unit and nothing to stop on, and scenario 5 is one day. The statements that need two sides or a stop are made on `data/scenarios/orders-inside-proof/05_eastern_solomons_on.toml`; the one that needs days without orders inside a day on `data/scenarios/01_transit.toml`. The session is opened through `sim-cli`'s library on the live figures, as `serve` opens it; the function that opens a game moves there from the binary.
