@@ -912,7 +912,8 @@
                   "ready",
                   "late",
                   "met",
-                  "cannot_bring_enough"
+                  "cannot_bring_enough",
+                  "lift_turned_back"
                 ]
               },
               "plan": {
@@ -1109,7 +1110,8 @@
             "cannot_meet",
             "waits_for_leave",
             "ship_lost",
-            "cannot_bring_enough"
+            "cannot_bring_enough",
+            "lift_turned_back"
           ]
         },
         "plan": {
@@ -1201,7 +1203,8 @@
                   "cannot_meet",
                   "waits_for_leave",
                   "ship_lost",
-                  "cannot_bring_enough"
+                  "cannot_bring_enough",
+                  "lift_turned_back"
                 ]
               },
               "plan": {
@@ -1239,7 +1242,8 @@
               "cannot_meet",
               "waits_for_leave",
               "ship_lost",
-              "cannot_bring_enough"
+              "cannot_bring_enough",
+              "lift_turned_back"
             ]
           }
         },

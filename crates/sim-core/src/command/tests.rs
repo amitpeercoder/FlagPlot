@@ -4375,6 +4375,22 @@ fn cannot_bring_enough_has_its_names_and_codes() {
     );
 }
 
+#[test]
+fn lift_turned_back_has_its_names_and_codes() {
+    assert_eq!(NoticeKind::LiftTurnedBack.code(), 9);
+    assert_eq!(NoticeKind::LiftTurnedBack.name(), "lift_turned_back");
+    assert_eq!(
+        NoticeKind::from_name("lift_turned_back"),
+        Some(NoticeKind::LiftTurnedBack)
+    );
+    assert_eq!(StandingKind::LiftTurnedBack.code(), 5);
+    assert_eq!(StandingKind::LiftTurnedBack.name(), "lift_turned_back");
+    assert_eq!(
+        StandingKind::from_name("lift_turned_back"),
+        Some(StandingKind::LiftTurnedBack)
+    );
+}
+
 // ---------------------------------------------------------------------------
 // Decision 0159, rule C: no ring of waits (the architect's ruling on step 3).
 // ---------------------------------------------------------------------------

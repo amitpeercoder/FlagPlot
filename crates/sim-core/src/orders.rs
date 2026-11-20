@@ -580,6 +580,12 @@ pub enum TaskForceOrder {
     SetRadioSilence {
         on: bool,
     },
+    /// Do no cargo work (decision 0191): clear the force's cargo order, a
+    /// load or an unload, wherever it is and whatever its status. Always
+    /// accepted for a force of the side. It touches no cargo, no men and
+    /// nothing else: a force that arrives at a base afterwards lands and
+    /// loads nothing. Added at the end.
+    NoCargoWork,
 }
 
 /// An order to a base of the side (decision 0111). Added with the first.

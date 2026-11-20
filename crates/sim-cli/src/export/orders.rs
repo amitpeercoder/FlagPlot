@@ -111,6 +111,7 @@ fn text(kind: &OrderKind) -> String {
             // Decision 0136, 15.
             TaskForceOrder::SetRadioSilence { on: true } => "keep radio silence".to_string(),
             TaskForceOrder::SetRadioSilence { on: false } => "end radio silence".to_string(),
+            TaskForceOrder::NoCargoWork => "do no cargo work".to_string(),
         },
         OrderKind::Base { order, .. } => match order {
             BaseOrder::FormTaskForce { ships } => {

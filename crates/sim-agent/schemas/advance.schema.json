@@ -8,7 +8,7 @@
   "additionalProperties": false,
   "properties": {
     "format": { "const": "flagplot-agent" },
-    "version": { "const": 33 },
+    "version": { "const": 34 },
     "kind": { "const": "advance" },
     "pulses_resolved": {
       "type": "array",

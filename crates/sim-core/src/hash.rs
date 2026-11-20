@@ -250,8 +250,12 @@ const fn speed_code(speed: SpeedSetting) -> u8 {
 /// after its `from_bombardment`, in a side's belief, a command's picture and
 /// a report in flight alike, and an air group's `claims` (aircraft shot
 /// down, on the ground, hits) after its `available_from` (decisions 0179 and
-/// 0180).
-pub const STATE_VERSION: &[u8] = b"flagplot-state-v49";
+/// 0180);
+/// version 50 adds the standing interrupt kind `lift_turned_back` (code 5) to
+/// a side's standing interrupts and the kinds switched off, and the notice
+/// kind `lift_turned_back` (code 9), and the task force order `no_cargo_work`
+/// (code 18, in the agent's table) (decision 0191).
+pub const STATE_VERSION: &[u8] = b"flagplot-state-v50";
 
 /// Names every field of the state, with no `..` in any pattern. It does
 /// nothing when it runs. It is here so that a field added to the state does

@@ -1171,6 +1171,7 @@ impl World {
                     | TaskForceOrder::SetMission(_)
                     | TaskForceOrder::SetReadiness(_)
                     | TaskForceOrder::SetRadioSilence { .. }
+                    | TaskForceOrder::NoCargoWork
                     | TaskForceOrder::Unload => Ok(()),
                 }
             }
@@ -1724,6 +1725,11 @@ impl World {
                     TaskForceOrder::Unload => {
                         task_force.cargo_order =
                             Some(CargoOrder::new(CargoAction::Unload, order.id, None));
+                    }
+                    TaskForceOrder::NoCargoWork => {
+                        // Decision 0191: no cargo work. The cargo order
+                        // goes; nothing aboard or ashore is touched.
+                        task_force.cargo_order = None;
                     }
                     TaskForceOrder::LoadUnit { unit, cargo } => {
                         task_force.cargo_order = Some(CargoOrder {

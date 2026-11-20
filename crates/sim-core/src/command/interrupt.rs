@@ -254,7 +254,8 @@ impl World {
         match kind {
             StandingKind::CannotMeet
             | StandingKind::WaitsForLeave
-            | StandingKind::CannotBringEnough => {
+            | StandingKind::CannotBringEnough
+            | StandingKind::LiftTurnedBack => {
                 for (notice, event) in notices.get(&side).into_iter().flatten() {
                     let counts = matches!(
                         (kind, notice.kind),
@@ -264,6 +265,7 @@ impl World {
                                 StandingKind::CannotBringEnough,
                                 NoticeKind::CannotBringEnough
                             )
+                            | (StandingKind::LiftTurnedBack, NoticeKind::LiftTurnedBack)
                     );
                     if counts {
                         holding

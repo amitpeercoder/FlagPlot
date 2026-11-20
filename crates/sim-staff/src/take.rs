@@ -2525,6 +2525,14 @@ impl Day<'_, '_> {
             self.ashore(end, plan, task, &force, place, source, source_hex);
             return;
         }
+        // Decision 0191: a lift under way with men aboard, read against the
+        // danger before the take's own step routes it on.
+        if matches!(
+            self.turn_back_step(end, plan, &force, place, (source, source_hex)),
+            crate::turn_back::Reading::Decided
+        ) {
+            return;
+        }
         if routed(&force, place) {
             // Decision 0152, 5: the first lift has been to the place and no
             // man of it is ashore there; the later lifts as they stand go.
@@ -2864,6 +2872,21 @@ impl Day<'_, '_> {
             return;
         }
 
+        // Decision 0191, 14, 19 and 20: a first lift with men aboard does
+        // not sail where the danger would turn it back at the risk, nor on
+        // the first clear morning after it.
+        let danger_words = if first_lift {
+            match self.before_sailing(end, plan, force, place, source_hex) {
+                Ok(words) => words,
+                Err(reason) => {
+                    self.target(in_scope).no_orders.push(*reason);
+                    return;
+                }
+            }
+        } else {
+            String::new()
+        };
+
         // Item 19: the passage.
         let (waypoints, out_nm, back_nm) = match self.route_for(force, place, back_hex, end) {
             Ok(found) => found,
@@ -3066,7 +3089,7 @@ impl Day<'_, '_> {
         };
         let onward_text = onward_words.map_or_else(String::new, |w| format!(" {w}"));
         let worked = format!(
-            "{head}{left_text} It sails today (day {today}, hour {sail_hour}): {out_nm} nm out at {speed} kn = {hours_out} hours, so it arrives at {place} at hour {}; {back_words}.{onward_text} Fuel: {}.{}{loading_words}{night_words}",
+            "{head}{left_text} It sails today (day {today}, hour {sail_hour}): {out_nm} nm out at {speed} kn = {hours_out} hours, so it arrives at {place} at hour {}; {back_words}.{onward_text} Fuel: {}.{}{loading_words}{night_words}{danger_words}",
             sail_hour + hours_out,
             fuel_lines.join(", "),
             escort_words.map_or_else(String::new, |w| format!(" {w}"))

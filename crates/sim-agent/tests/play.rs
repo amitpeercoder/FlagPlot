@@ -159,9 +159,10 @@ fn tf_index(order: &TaskForceOrder) -> usize {
         TaskForceOrder::StandDown => 15,
         TaskForceOrder::Escort(_) => 16,
         TaskForceOrder::SetRadioSilence { .. } => 17,
+        TaskForceOrder::NoCargoWork => 18,
     }
 }
-const TF_KINDS: usize = 18;
+const TF_KINDS: usize = 19;
 
 fn ag_index(order: &AirGroupOrder) -> usize {
     match order {
@@ -230,6 +231,8 @@ fn examples() -> Vec<OrderKind> {
         // Decision 0136: radio silence on and off.
         tf(TaskForceOrder::SetRadioSilence { on: true }),
         tf(TaskForceOrder::SetRadioSilence { on: false }),
+        // Decision 0191: do no cargo work.
+        tf(TaskForceOrder::NoCargoWork),
         OrderKind::Base {
             target: BaseId::new(2),
             order: BaseOrder::FormTaskForce {

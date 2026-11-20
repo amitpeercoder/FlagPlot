@@ -1516,6 +1516,89 @@ mod tests {
         }
     }
 
+    fn accepted_and_refused(world: &World) -> (usize, usize) {
+        let count = |want_accepted: bool| {
+            world
+                .events()
+                .iter()
+                .filter(|event| match event.kind {
+                    EventKind::OrderAccepted { .. } => want_accepted,
+                    EventKind::OrderRejected { .. } => !want_accepted,
+                    _ => false,
+                })
+                .count()
+        };
+        (count(true), count(false))
+    }
+
+    #[test]
+    fn no_cargo_work_clears_an_unload_order_and_touches_nothing() {
+        // Decision 0191. Stopped at base 1 with 1000 t aboard: an unload and
+        // then no cargo work in the one day. Both are accepted; the cargo
+        // order is gone; nothing is landed all day, so the ship keeps its
+        // 1000 t and the base has none.
+        let mut world = world(1, 1, 0, &[(1, Hex::new(0, 0), &[(1, 1000)])]);
+        world.submit_orders(
+            Side::Allied,
+            vec![
+                order(1, TaskForceOrder::Unload),
+                order(1, TaskForceOrder::NoCargoWork),
+            ],
+        );
+        world.resolve_day().expect("day resolves");
+        assert_eq!(accepted_and_refused(&world), (2, 0));
+        assert_eq!(world.umpire().task_forces[&tf(1)].cargo_order, None);
+        assert!(!world.events().iter().any(|event| matches!(
+            event.kind,
+            EventKind::CargoUnloaded { .. } | EventKind::UnloadingComplete { .. }
+        )));
+        assert_eq!(
+            world.umpire().ships[&ship(1)].supply_t,
+            Fixed::from_int(1000)
+        );
+        assert_eq!(world.umpire().bases[&BaseId::new(1)].supply_t, Fixed::ZERO);
+    }
+
+    #[test]
+    fn a_force_with_no_cargo_work_that_arrives_at_a_base_lands_nothing() {
+        // Under way for base 2 (160 nm, 10 h at 16 kn) with an unload and
+        // then no cargo work, ordered together: accepted under way; on
+        // arrival nothing is unloaded and the 1000 t stay aboard.
+        let mut world = world(1, 1, 0, &[(1, Hex::new(0, 0), &[(1, 1000)])]);
+        world.submit_orders(
+            Side::Allied,
+            vec![
+                order(1, TaskForceOrder::route(vec![Hex::new(4, 0)])),
+                order(1, TaskForceOrder::Unload),
+                order(1, TaskForceOrder::NoCargoWork),
+            ],
+        );
+        world.resolve_day().expect("day resolves");
+        assert_eq!(accepted_and_refused(&world), (3, 0));
+        let force = &world.umpire().task_forces[&tf(1)];
+        assert_eq!(force.cargo_order, None);
+        assert_eq!(force.arrived_at_hours, Some(Fixed::from_int(10)));
+        assert!(!world.events().iter().any(|event| matches!(
+            event.kind,
+            EventKind::CargoUnloaded { .. } | EventKind::UnloadingComplete { .. }
+        )));
+        assert_eq!(
+            world.umpire().ships[&ship(1)].supply_t,
+            Fixed::from_int(1000)
+        );
+        assert_eq!(world.umpire().bases[&BaseId::new(2)].supply_t, Fixed::ZERO);
+    }
+
+    #[test]
+    fn no_cargo_work_is_accepted_with_no_cargo_order_and_refused_for_the_enemys_force() {
+        let mut world = world(1, 1, 0, &[(1, Hex::new(0, 0), &[(1, 1000)])]);
+        world.submit_orders(Side::Allied, vec![order(1, TaskForceOrder::NoCargoWork)]);
+        world.submit_orders(Side::Japanese, vec![order(1, TaskForceOrder::NoCargoWork)]);
+        world.resolve_day().expect("day resolves");
+        assert_eq!(accepted_and_refused(&world), (1, 1));
+        assert_eq!(world.umpire().task_forces[&tf(1)].cargo_order, None);
+    }
+
     #[test]
     fn unload_without_a_base_here_does_nothing() {
         let mut world = world(1, 1, 0, &[(1, Hex::new(2, 0), &[(1, 500)])]);
