@@ -309,6 +309,9 @@ impl World {
             let into = match existing {
                 Some(id) => id,
                 None => {
+                    // Nothing held apart until its day is a base (decision
+                    // 0195, 18): the next number above the state's highest
+                    // is above every base there is.
                     let id = BaseId::new(
                         self.truth
                             .bases

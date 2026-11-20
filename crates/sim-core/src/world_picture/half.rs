@@ -18,8 +18,9 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::command::CommandState;
+use crate::entering::Entering;
 use crate::ids::{
-    AirGroupId, BaseId, EventId, FormationId, LandUnitId, OrderId, ShipId, TaskForceId,
+    AirGroupId, BaseId, EntityRef, EventId, FormationId, LandUnitId, OrderId, ShipId, TaskForceId,
 };
 use crate::orders::Order;
 use crate::state::{
@@ -50,6 +51,9 @@ pub struct PictureHalf {
     pub air_groups: BTreeMap<AirGroupId, AirGroup>,
     pub land_units: BTreeMap<LandUnitId, LandUnit>,
     pub formations: BTreeMap<FormationId, Formation>,
+    /// What is held apart for the side until its day (decision 0195, 20),
+    /// keyed by the unit that enters: the side's own entries only.
+    pub entering: BTreeMap<EntityRef, Entering>,
     /// The side's replacement streams, in the order they are applied.
     pub replacements: Vec<Replacement>,
     /// The arrivals due to the side's air groups, in the order they are
@@ -129,6 +133,10 @@ impl SideView<'_> {
                 .formations()
                 .map(|formation| (formation.id, formation.clone()))
                 .collect(),
+            entering: self
+                .entering()
+                .map(|entry| (entry.unit(), entry.clone()))
+                .collect(),
         };
         let mut commands = BTreeMap::from([(side, self.command_state().clone())]);
 
@@ -200,6 +208,7 @@ impl SideView<'_> {
             land_units,
             hits_on_men: _,
             formations,
+            entering,
         } = truth;
         let command = commands.remove(&side).expect("the side's command state");
         Ok(PictureHalf {
@@ -211,6 +220,7 @@ impl SideView<'_> {
             air_groups,
             land_units,
             formations,
+            entering,
             replacements,
             arrivals,
             orders,
@@ -298,6 +308,7 @@ impl WorldPicture {
             land_units: BTreeMap::new(),
             hits_on_men: BTreeMap::new(),
             formations: BTreeMap::new(),
+            entering: BTreeMap::new(),
         };
         let mut orders = Vec::new();
         let mut beliefs = BTreeMap::new();
@@ -313,6 +324,7 @@ impl WorldPicture {
                 air_groups,
                 land_units,
                 formations,
+                entering,
                 replacements,
                 arrivals,
                 orders: own_orders,
@@ -332,6 +344,7 @@ impl WorldPicture {
                 land_units,
                 hits_on_men: BTreeMap::new(),
                 formations,
+                entering,
             };
             let mut commands = BTreeMap::from([(side, own_command)]);
             // Re-point the half's orders past those already joined, after
@@ -367,6 +380,7 @@ impl WorldPicture {
                 land_units,
                 hits_on_men: _,
                 formations,
+                entering,
             } = own;
             join_units(&mut truth.ships, ships)?;
             join_units(&mut truth.task_forces, task_forces)?;
@@ -374,6 +388,7 @@ impl WorldPicture {
             join_units(&mut truth.air_groups, air_groups)?;
             join_units(&mut truth.land_units, land_units)?;
             join_units(&mut truth.formations, formations)?;
+            join_units(&mut truth.entering, entering)?;
             truth.replacements.extend(replacements);
             truth.arrivals.extend(arrivals);
             orders.extend(own_orders);

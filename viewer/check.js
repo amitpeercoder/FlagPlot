@@ -86,6 +86,13 @@ function checkSideViews(replay, umpireModel) {
     for (const [list, word] of [['ships', 'ship'], ['task_forces', 'task_force'], ['air_groups', 'air_group']]) {
       for (const u of replay.initial[list] || []) if (u.side !== side) enemyUnits.add(word + ':' + u.id);
     }
+    // The enemy's entries (decision 0195) name nothing on this side's page either.
+    for (const en of replay.initial.entering || []) {
+      if (en.side === side) continue;
+      if (en.task_force) enemyUnits.add('task_force:' + en.task_force.id);
+      for (const sh of en.ships || []) enemyUnits.add('ship:' + sh.id);
+      for (const g of en.air_groups || []) enemyUnits.add('air_group:' + g.id);
+    }
     let last = 0;
     sv.events.forEach((e, i) => {
       assert(e.n === i + 1, label + ': event ' + (i + 1) + ' is numbered ' + e.n + ', not 1, 2, 3 in order');
@@ -128,7 +135,11 @@ function checkSideViews(replay, umpireModel) {
     }
     assert(enemy === 0, label + ': ' + enemy + ' enemy force(s) or enemy-held contacts in the side\'s page');
     for (const b of model.bases.values()) if (b.side !== side) assert(Object.keys(b).every(k => ['id', 'name', 'side', 'q', 'r'].includes(k)), label + ': enemy base ' + b.id + ' carries more than id, name, side and hex');
-    assert(model.initShips.size === (replay.initial.ships || []).filter(s => s.side === side).length, label + ': ships are not exactly its own');
+    // Decision 0195: what a side's units hold apart is its own ships too, and the page holds the side's own entries only.
+    const heldShips = (replay.initial.entering || []).filter(en => en.side === side).reduce((n, en) => n + (en.ships || []).length, 0);
+    assert(model.initShips.size === (replay.initial.ships || []).filter(s => s.side === side).length + heldShips, label + ': ships are not exactly its own');
+    assert((sr.initial.entering || []).every(en => en.side === side), label + ': the page holds an entry of the other side');
+    assert((sr.initial.entering || []).length === (replay.initial.entering || []).filter(en => en.side === side).length, label + ': the page lacks an entry of its own');
     assert(model.days.size === 0, label + ': carries state hashes, which are the umpire\'s');
     assert(model.replay.orders.every(o => o.side === side), label + ': carries the other side\'s orders');
     const day0 = sv.events.map((e, i) => e.day === 0 ? i : -1).filter(i => i >= 0);
@@ -559,6 +570,46 @@ function checkSituation(replay, model, label, side) {
   return note;
 }
 
+// ---- Forces that arrive (decision 0195): what is held apart is not drawn before its day, and is from it ----
+/** Every entry of the opening state is well formed; a force that enters is in no step before its event and in the force table from the step of it, at its hex, with its ships. */
+function checkEntering(replay, model) {
+  const entries = replay.initial.entering || [];
+  for (const en of entries) {
+    const where = 'entry ' + en.unit + ': ';
+    assert(typeof en.unit === 'string' && /^(task_force|air_group|land_unit):\d+$/.test(en.unit), where + 'the unit is not a force, an air group or a land unit');
+    assert(Number.isInteger(en.day) && en.day >= 2, where + 'the day is not a whole number from 2');
+    assert(en.side === 'allied' || en.side === 'japanese', where + 'no side');
+    assert((en.hex !== undefined) !== (en.base !== undefined), where + 'it names a hex or a base, one only');
+    assert(en.task_force ? en.hex !== undefined : en.base !== undefined, where + 'a force enters at a hex and a unit at a base');
+    const id = Number(en.unit.split(':')[1]);
+    const word = en.unit.split(':')[0];
+    for (const list of ['task_forces', 'ships', 'air_groups', 'land_units']) {
+      const held = list === 'task_forces' ? (en.task_force ? [en.task_force] : []) : (en[list] || []);
+      for (const u of held) assert(!(replay.initial[list] || []).some(x => x.id === u.id), where + list.replace('_', ' ') + ' ' + u.id + ' is both on the map and held apart');
+    }
+    const entered = replay.events.filter(e => e.kind === (word === 'task_force' ? 'force_entered' : 'unit_entered') && (word === 'task_force' ? e.data.force === id : e.data.unit === en.unit));
+    const last = replay.days.length ? replay.days[replay.days.length - 1].day : Infinity;
+    if (!entered.length) { assert(en.day > last || en.waiting || replay.events.some(e => e.kind === 'entry_waiting' && e.data.unit === en.unit) || en.day > (model.steps[model.steps.length - 1].day), where + 'its day came and it neither entered nor waits'); continue; }
+    const ev = entered[0];
+    assert(ev.day >= en.day, where + 'it entered on day ' + ev.day + ', before its day ' + en.day);
+    if (word !== 'task_force') continue;
+    assert(Array.isArray(ev.data.hex) && ev.data.hex[0] === en.hex.q && ev.data.hex[1] === en.hex.r, where + 'the event names another hex than the entry');
+    assert(JSON.stringify(ev.data.ships) === JSON.stringify((en.ships || []).map(s => s.id)), where + 'the event names other ships than the entry');
+    const at = model.stepOfEvent.get(ev.id);
+    model.states.forEach((st, si) => {
+      if (si < at) {
+        assert(!st.forces.has(id), where + 'it is drawn at step ' + si + ', before its entry at step ' + at);
+        for (const sid of ev.data.ships) assert(!st.shipForce.has(sid), where + 'ship ' + sid + ' is in a force at step ' + si + ', before the entry');
+      } else if (!st.sunk.has(ev.data.ships[0]) || ev.data.ships.length > 1) {
+        const f = st.forces.get(id);
+        assert(!!f, where + 'it is not drawn at step ' + si + ', from its entry');
+        if (si === at && f) assert(f.ships.length === ev.data.ships.length, where + 'it enters with ' + f.ships.length + ' ships, the event says ' + ev.data.ships.length);
+      }
+    });
+  }
+  return entries.length;
+}
+
 // ---- One replay ----
 let currentFile = '';
 function checkReplay(file) {
@@ -582,6 +633,8 @@ function checkReplay(file) {
     if (fg.base == null || !lastState.groupBase || !lastState.groupBase.has(fg.id)) continue;
     assert(lastState.groupBase.get(fg.id) === fg.base, 'air_group:' + fg.id + ' is rebuilt at base:' + lastState.groupBase.get(fg.id) + ' but ends at base:' + fg.base);
   }
+
+  checkEntering(replay, model);
 
   // Steps: Start first; every event in exactly one step; steps ordered
   // Day-0 events (contacts a scenario starts a side with) are the Start step's; every other step has days >= 1.

@@ -25,7 +25,7 @@ use crate::command::{
 };
 use crate::events::{Cause, EventKind};
 use crate::fixed::Fixed;
-use crate::ids::{AirGroupId, BaseId, EventId, IntentId, LandUnitId, ShipId};
+use crate::ids::{AirGroupId, BaseId, EntityRef, EventId, IntentId, LandUnitId, ShipId};
 use crate::orders::{AirGroupOrder, BaseOrder, Issuer, OrderKind, OrderRequest, RejectReason};
 use crate::state::{AirGroupLocation, ShipLocation, Side};
 use crate::world::World;
@@ -92,12 +92,75 @@ impl World {
         }
     }
 
-    /// Whether `ship` is one of `side`'s own and not sunk.
+    /// The side's own ship `ship`: on the map, or held apart for the side
+    /// until its day (decision 0195, 14), read from its entry. Never the
+    /// enemy's, held or not.
+    fn own_ship(&self, side: Side, ship: ShipId) -> Option<&crate::state::Ship> {
+        let found = match self.truth.ships.get(&ship) {
+            Some(found) => Some(found),
+            None => self
+                .held_entry(side, EntityRef::Ship(ship))?
+                .ships
+                .get(&ship),
+        };
+        found.filter(|found| found.side == side)
+    }
+
+    /// The side's own task force `force`, on the map or held apart for it.
+    pub(crate) fn own_force(
+        &self,
+        side: Side,
+        force: crate::ids::TaskForceId,
+    ) -> Option<&crate::state::TaskForce> {
+        let found = match self.truth.task_forces.get(&force) {
+            Some(found) => Some(found),
+            None => self
+                .held_entry(side, EntityRef::TaskForce(force))?
+                .task_force
+                .as_ref(),
+        };
+        found.filter(|found| found.side == side)
+    }
+
+    /// The side's own air group `group`, on the map or held apart for it.
+    fn own_group(&self, side: Side, group: AirGroupId) -> Option<&crate::state::AirGroup> {
+        let found = match self.truth.air_groups.get(&group) {
+            Some(found) => Some(found),
+            None => self
+                .held_entry(side, EntityRef::AirGroup(group))?
+                .air_groups
+                .get(&group),
+        };
+        found.filter(|found| found.side == side)
+    }
+
+    /// The side's own land unit `unit`, on the map or held apart for it.
+    fn own_land_unit_struct(
+        &self,
+        side: Side,
+        unit: LandUnitId,
+    ) -> Option<&crate::state::LandUnit> {
+        let found = match self.truth.land_units.get(&unit) {
+            Some(found) => Some(found),
+            None => self
+                .held_entry(side, EntityRef::LandUnit(unit))?
+                .land_units
+                .get(&unit),
+        };
+        found.filter(|found| found.side == side)
+    }
+
+    /// The entry that holds `unit` apart for `side` (decision 0195): the
+    /// side's own only, so that a command names no enemy's held unit.
+    fn held_entry(&self, side: Side, unit: EntityRef) -> Option<&crate::entering::Entering> {
+        self.truth.entry_of(unit).filter(|entry| entry.side == side)
+    }
+
+    /// Whether `ship` is one of `side`'s own and not sunk (on the map, or
+    /// held apart for the side, decision 0195, 14).
     fn own_ship_afloat(&self, side: Side, ship: ShipId) -> bool {
-        self.truth
-            .ships
-            .get(&ship)
-            .is_some_and(|ship| ship.side == side && ship.location != ShipLocation::Sunk)
+        self.own_ship(side, ship)
+            .is_some_and(|ship| ship.location != ShipLocation::Sunk)
     }
 
     /// Whether `base` is one of `side`'s own.
@@ -109,10 +172,7 @@ impl World {
     }
 
     fn own_land_unit(&self, side: Side, unit: LandUnitId) -> bool {
-        self.truth
-            .land_units
-            .get(&unit)
-            .is_some_and(|found| found.side == side)
+        self.own_land_unit_struct(side, unit).is_some()
     }
 
     /// Whether `ship` is in the pool of `forces`: listed in it, or in a task
@@ -121,7 +181,13 @@ impl World {
         if forces.ships.contains(&ship) {
             return true;
         }
-        self.truth.ships.get(&ship).is_some_and(|ship| {
+        // A ship held apart is read from its entry (decision 0195, 14).
+        let found = self.truth.ships.get(&ship).or_else(|| {
+            self.truth
+                .entry_of(EntityRef::Ship(ship))
+                .and_then(|entry| entry.ships.get(&ship))
+        });
+        found.is_some_and(|ship| {
             matches!(
                 ship.location,
                 ShipLocation::TaskForce(force) | ShipLocation::Yard(force)
@@ -144,16 +210,14 @@ impl World {
         let Some(found) = state.intents.get(&intent) else {
             return false;
         };
-        let own = self.truth.air_groups.get(&group).filter(|g| g.side == side);
+        let own = self.own_group(side, group);
         let Some(own) = own else {
             return false;
         };
         if let Addressee::TaskForce(force) = found.addressee {
             let aboard = match own.location {
                 AirGroupLocation::Ship(ship) => self
-                    .truth
-                    .task_forces
-                    .get(&force)
+                    .own_force(side, force)
                     .is_some_and(|found| found.ships.contains(&ship)),
                 _ => false,
             };
@@ -184,7 +248,7 @@ impl World {
         let Some(found) = state.intents.get(&intent) else {
             return false;
         };
-        let Some(own) = self.truth.land_units.get(&unit).filter(|u| u.side == side) else {
+        let Some(own) = self.own_land_unit_struct(side, unit) else {
             return false;
         };
         // A hold may use the fighting units with men ashore in its base's
@@ -567,22 +631,12 @@ impl World {
                             }
                         }
                         for force in &limit.task_forces {
-                            let own = self
-                                .truth
-                                .task_forces
-                                .get(force)
-                                .is_some_and(|force| force.side == side);
-                            if !own {
+                            if self.own_force(side, *force).is_none() {
                                 return Err(CommandRefusal::NotYourForce(*force));
                             }
                         }
                         for group in &limit.air_groups {
-                            let own = self
-                                .truth
-                                .air_groups
-                                .get(group)
-                                .is_some_and(|found| found.side == side);
-                            if !own {
+                            if self.own_group(side, *group).is_none() {
                                 return Err(CommandRefusal::NotYourGroup(*group));
                             }
                         }
@@ -619,12 +673,7 @@ impl World {
                     // the enemy (decision 0159, 9).
                     Limit::WaitFor { awaited, .. } => match awaited {
                         Some(Awaited::TaskForce(force)) => {
-                            let own = self
-                                .truth
-                                .task_forces
-                                .get(force)
-                                .is_some_and(|found| found.side == side);
-                            if !own {
+                            if self.own_force(side, *force).is_none() {
                                 return Err(CommandRefusal::NotYourForce(*force));
                             }
                         }
@@ -831,22 +880,12 @@ impl World {
                         }
                     }
                     HoldTarget::TaskForce(force) => {
-                        let own = self
-                            .truth
-                            .task_forces
-                            .get(force)
-                            .is_some_and(|found| found.side == side);
-                        if !own {
+                        if self.own_force(side, *force).is_none() {
                             return Err(CommandRefusal::NotYourForce(*force));
                         }
                     }
                     HoldTarget::Setting { group, .. } | HoldTarget::AirGroup(group) => {
-                        let own = self
-                            .truth
-                            .air_groups
-                            .get(group)
-                            .is_some_and(|found| found.side == side);
-                        if !own {
+                        if self.own_group(side, *group).is_none() {
                             return Err(CommandRefusal::NotYourGroup(*group));
                         }
                     }
@@ -994,12 +1033,7 @@ impl World {
         // A task of a task force names a force of the side and a hex on the
         // map (decisions 0124, 7, and 0125, 1).
         if let Some(force) = kind.force() {
-            let own = self
-                .truth
-                .task_forces
-                .get(&force)
-                .is_some_and(|found| found.side == side);
-            if !own {
+            if self.own_force(side, force).is_none() {
                 return Err(CommandRefusal::NotYourForce(force));
             }
         }
@@ -1059,18 +1093,16 @@ impl World {
         if state.holds.is_empty() {
             return None;
         }
-        let force = self
-            .truth
-            .ships
-            .get(&ship)
-            .and_then(|found| match found.location {
-                ShipLocation::TaskForce(force) => self
-                    .truth
-                    .task_forces
-                    .get(&force)
-                    .map(|found| (force, &found.ships)),
-                _ => None,
-            });
+        let found = self.truth.ships.get(&ship).or_else(|| {
+            self.held_entry(side, EntityRef::Ship(ship))
+                .and_then(|entry| entry.ships.get(&ship))
+        });
+        let force = found.and_then(|found| match found.location {
+            ShipLocation::TaskForce(force) => self
+                .own_force(side, force)
+                .map(|found| (force, &found.ships)),
+            _ => None,
+        });
         state.hold_on_ship(ship, force)
     }
 
@@ -1080,7 +1112,7 @@ impl World {
         if state.holds.is_empty() {
             return None;
         }
-        let ships = &self.truth.task_forces.get(&force)?.ships;
+        let ships = &self.own_force(side, force)?.ships;
         state.hold_on_force(force, ships)
     }
 
@@ -1605,6 +1637,10 @@ impl World {
         // The guard of a hold comes first (decision 0107, rulings 18 and 30).
         let forced = if let Some(target) = self.held_order_target(side, &request.kind) {
             Some(RejectReason::Held(target))
+        } else if let Some(refused) = self.not_yet_entered(side, &request.kind) {
+            // A unit of its own not on the map yet (decision 0195, 8): the
+            // refusal gives the day it enters.
+            Some(refused)
         } else if let Some(refused) = self.not_yet_available(side, &request.kind, day) {
             // Before its day a unit is in no forces limit (decision 0140, 3):
             // the refusal gives the day.
@@ -1642,10 +1678,8 @@ impl World {
         if forces.task_forces.contains(&target) {
             return true;
         }
-        self.truth.task_forces.get(&target).is_some_and(|force| {
-            force.side == side
-                && !force.ships.is_empty()
-                && force.ships.iter().all(|ship| forces.ships.contains(ship))
+        self.own_force(side, target).is_some_and(|force| {
+            !force.ships.is_empty() && force.ships.iter().all(|ship| forces.ships.contains(ship))
         })
     }
 

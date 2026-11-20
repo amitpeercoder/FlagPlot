@@ -145,7 +145,7 @@ fn unit_numbers_to_ids(ctx: &Ctx<'_>, body: &Value, stand_ins: &mut BTreeMap<u32
             let Some(number) = ship.as_u64().and_then(|n| u32::try_from(n).ok()) else {
                 continue;
             };
-            let id = match ctx.own_ship(number) {
+            let id = match ctx.own_ship_or_held(number) {
                 Some(own) => own.id.raw(),
                 None => {
                     let existing = stand_ins.iter().find(|(_, n)| **n == number);
@@ -1863,33 +1863,36 @@ impl Session {
                 .bases
                 .contains_key(&BaseId::new(number))
                 .then_some(number),
-            "task_force" => ctx.own_force(number).map(|f| f.id.raw()).or_else(|| {
-                // A seat at a command makes no force by an order: a number
-                // that is none of its own names nothing (decision 0138, 5).
-                if at_seat {
-                    return None;
-                }
-                // A number just past the side's forces names the force a
-                // queued forming order will make, in the order intake takes
-                // them in (decision 0111); any other number names nothing.
-                let k = number.checked_sub(ctx.force_count() + 1)?;
-                let forming = queued
-                    .iter()
-                    .filter(|queued| queued.kind.forms_task_force())
-                    .count();
-                if usize::try_from(k).ok()? >= forming {
-                    return None;
-                }
-                let floor = match side {
-                    Side::Allied => MADE_IDS_FLOOR,
-                    Side::Japanese => 2 * MADE_IDS_FLOOR,
-                };
-                let raw = ctx.next_made_force(floor) + k;
-                new_force = Some((raw, number));
-                Some(raw)
-            }),
-            "land_unit" => ctx.own_land_unit(number).map(|u| u.id.raw()),
-            _ => ctx.own_group(number).map(|g| g.id.raw()),
+            "task_force" => ctx
+                .own_force_or_held(number)
+                .map(|f| f.id.raw())
+                .or_else(|| {
+                    // A seat at a command makes no force by an order: a number
+                    // that is none of its own names nothing (decision 0138, 5).
+                    if at_seat {
+                        return None;
+                    }
+                    // A number just past the side's forces names the force a
+                    // queued forming order will make, in the order intake takes
+                    // them in (decision 0111); any other number names nothing.
+                    let k = number.checked_sub(ctx.force_count() + 1)?;
+                    let forming = queued
+                        .iter()
+                        .filter(|queued| queued.kind.forms_task_force())
+                        .count();
+                    if usize::try_from(k).ok()? >= forming {
+                        return None;
+                    }
+                    let floor = match side {
+                        Side::Allied => MADE_IDS_FLOOR,
+                        Side::Japanese => 2 * MADE_IDS_FLOOR,
+                    };
+                    let raw = ctx.next_made_force(floor) + k;
+                    new_force = Some((raw, number));
+                    Some(raw)
+                }),
+            "land_unit" => ctx.own_land_unit_or_held(number).map(|u| u.id.raw()),
+            _ => ctx.own_group_or_held(number).map(|g| g.id.raw()),
         }
         .unwrap_or(NO_SUCH_UNIT);
         let mut stand_ins: BTreeMap<u32, u32> = BTreeMap::new();

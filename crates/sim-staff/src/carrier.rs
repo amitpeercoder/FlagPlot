@@ -637,6 +637,29 @@ impl Day<'_, '_> {
             .sum();
 
         match (&force, held) {
+            (None, _)
+                if crate::available::entering_on(view, sim_core::ids::EntityRef::TaskForce(id))
+                    .is_some() =>
+            {
+                // A force held apart until its day (decision 0195, 13) is not
+                // on the map: one reason, no order to it or its groups, and
+                // the intent is neither failed nor finished.
+                let day =
+                    crate::available::entering_on(view, sim_core::ids::EntityRef::TaskForce(id))
+                        .unwrap_or(today);
+                let words = crate::available::enters_words(id, day);
+                notes.push(
+                    serving(task, &plan)
+                        .evidence(words.clone(), today)
+                        .binding(format!("the day {id} enters, {day}"))
+                        .worked(format!(
+                            "{intent_words}: {} is to be served by {id}, which enters on day {day}, so the staff gives {id} and its groups no order.",
+                            task.id
+                        ))
+                        .would_change("the day come")
+                        .done(),
+                );
+            }
             (None, _) => {
                 cannot = true;
                 notes.push(

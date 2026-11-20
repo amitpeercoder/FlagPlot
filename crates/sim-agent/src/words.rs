@@ -277,6 +277,9 @@ pub(crate) fn refusal(reason: &sim_core::orders::RejectReason) -> String {
         R::NotYetAvailable { .. } => {
             " (the unit is still there and the rules act on it, but its side may not use it before that day: list_forces and get_entity show a unit's available_from while its day is to come)"
         }
+        R::NotYetEntered { .. } => {
+            " (not_yet_entered: the unit is the side's own but is held apart until its day: it is not in a hex and no rule acts on it; list_forces' to_enter and get_entity say where and when it enters, and a unit that waits for its base enters on the first day the base takes it)"
+        }
         R::AlreadyMovedToday => {
             " (a group moves once a day; the order that moved it was given earlier in this day)"
         }
@@ -289,6 +292,34 @@ pub(crate) fn refusal(reason: &sim_core::orders::RejectReason) -> String {
 mod tests {
     use super::refusal;
     use sim_core::orders::RejectReason;
+
+    #[test]
+    fn a_refusal_for_a_unit_not_yet_entered_says_its_day_and_whether_it_waits() {
+        use sim_core::ids::{EntityRef, TaskForceId};
+        let unit = EntityRef::TaskForce(TaskForceId::new(3));
+        let coming = refusal(&RejectReason::NotYetEntered {
+            unit,
+            day: 5,
+            waiting: false,
+        });
+        assert!(
+            coming.starts_with(
+                "task_force:3 is not on the map yet: it enters on day 5 (not_yet_entered:"
+            ),
+            "{coming}"
+        );
+        let waiting = refusal(&RejectReason::NotYetEntered {
+            unit,
+            day: 5,
+            waiting: true,
+        });
+        assert!(
+            waiting.starts_with(
+                "task_force:3 is not on the map yet: it was to enter on day 5 and waits for its base (not_yet_entered:"
+            ),
+            "{waiting}"
+        );
+    }
 
     #[test]
     fn the_refusals_of_a_posture_order_and_of_a_lost_group_have_their_hints() {

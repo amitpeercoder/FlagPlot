@@ -328,7 +328,13 @@ use sim_core::view::SideView;
 /// take whose men are ashore in the game's last days, and none that waits
 /// on a unit or lift due after the game's end, gets the orders `supply-46`
 /// gave.
-pub const DOCTRINE_VERSION: &str = "supply-47";
+/// `supply-48` adds decision 0195: the staff reads what is held apart for the
+/// side until its day as a unit that may be used from its day: a force
+/// named by an intent and not yet on the map is given no order and a reason
+/// "{force} enters on day {day}", and a force or land unit held apart counts
+/// as coming where a take counts what it may use and where more is coming.
+/// With nothing held apart its orders and reasons are those `supply-47` gave.
+pub const DOCTRINE_VERSION: &str = "supply-48";
 
 /// The staff: the doctrine for keeping a base supplied (stage 1) and, after
 /// it, the air doctrine for holding a place and covering a base from the air

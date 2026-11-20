@@ -112,6 +112,20 @@ impl Day<'_, '_> {
             let thing = WaitedFor::Force(*awaited);
             match *awaited {
                 Awaited::TaskForce(id) => {
+                    // A force held apart until its day (decision 0195, 13) is
+                    // awaited, not gone: it is not yet on the map.
+                    if let Some(day) = available::entering_on(view, EntityRef::TaskForce(id)) {
+                        found.push(waiting(
+                            thing,
+                            Some(format!(
+                                "{limit_words}: {}",
+                                available::enters_words(awaited, day)
+                            )),
+                            Some(day),
+                            false,
+                        ));
+                        continue;
+                    }
                     let Some(force) = view
                         .task_forces()
                         .find(|f| f.id == id && !f.ships.is_empty())
@@ -128,6 +142,18 @@ impl Day<'_, '_> {
                     found.push(waiting(thing, words, from, at));
                 }
                 Awaited::LandUnit(id) => {
+                    if let Some(day) = available::entering_on(view, EntityRef::LandUnit(id)) {
+                        found.push(waiting(
+                            thing,
+                            Some(format!(
+                                "{limit_words}: {}",
+                                available::enters_words(awaited, day)
+                            )),
+                            Some(day),
+                            false,
+                        ));
+                        continue;
+                    }
                     let Some(unit) = view.land_units().find(|u| u.id == id) else {
                         found.push(never(
                             thing,

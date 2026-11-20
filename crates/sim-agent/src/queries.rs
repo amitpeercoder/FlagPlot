@@ -49,6 +49,12 @@ pub struct ListForces {
     /// unit is listed (it keeps its number) and is in no area.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub land_units: Vec<LandUnitLine>,
+    /// The side's own forces and units held apart until their day (decision
+    /// 0195, 7): not on the map, so not in `task_forces` or `land_units`. In
+    /// `area` if one is given, an entry at a base by the base's hex where
+    /// that is known. Left out when none is held.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub to_enter: Vec<crate::entries::EntryLine>,
 }
 
 #[derive(Clone, PartialEq, Eq, Debug, Serialize)]
@@ -127,6 +133,22 @@ pub fn list_forces(view: &SideView<'_>, area: Option<(Hex, u32)>) -> ListForces 
                 .map(|u| land_unit_line(&ctx, u, &fed))
                 .collect()
         },
+        to_enter: view
+            .entering()
+            .filter(|entry| {
+                area.is_none()
+                    || match entry.place {
+                        sim_core::entering::EntryPlace::Hex(hex) => within(area, hex),
+                        sim_core::entering::EntryPlace::Base(base) => ctx
+                            .bases
+                            .get(&base)
+                            .map(|b| b.hex)
+                            .or_else(|| ctx.enemy_bases.get(&base).map(|b| b.hex))
+                            .is_some_and(|hex| within(area, hex)),
+                    }
+            })
+            .map(|entry| crate::entries::entry_line(&ctx, entry))
+            .collect(),
     }
 }
 
@@ -226,6 +248,8 @@ pub enum Detail {
     Base(BaseDetail),
     EnemyBase(EnemyBaseDetail),
     Contact(ContactDetail),
+    /// A unit held apart until its day (decision 0195, 7).
+    ToEnter(crate::entries::EntryDetail),
 }
 
 #[derive(Clone, PartialEq, Eq, Debug, Serialize)]
@@ -476,6 +500,34 @@ fn entity_of(view: &SideView<'_>, handle: &str) -> Option<Detail> {
     let mut ctx = Ctx::new(*view);
     if kind == "base" {
         ctx.set_events(&view.events());
+    }
+    // A unit held apart is the side's own but not on the map: what it is
+    // and when and where it enters (decision 0195, 7).
+    let held = match kind {
+        "ship" => ctx
+            .held_ships
+            .keys()
+            .find(|s| ctx.ship_number(**s) == Some(id))
+            .map(|s| EntityRef::Ship(*s)),
+        "task_force" => ctx
+            .held_forces
+            .keys()
+            .find(|f| ctx.force_number(**f) == Some(id))
+            .map(|f| EntityRef::TaskForce(*f)),
+        "air_group" => ctx
+            .held_groups
+            .keys()
+            .find(|g| ctx.group_number(**g) == Some(id))
+            .map(|g| EntityRef::AirGroup(*g)),
+        "land_unit" => ctx
+            .held_land_units
+            .keys()
+            .find(|u| ctx.land_unit_number(**u) == Some(id))
+            .map(|u| EntityRef::LandUnit(*u)),
+        _ => None,
+    };
+    if let Some(unit) = held {
+        return crate::entries::entry_detail(&ctx, unit).map(Detail::ToEnter);
     }
     match kind {
         "ship" => {

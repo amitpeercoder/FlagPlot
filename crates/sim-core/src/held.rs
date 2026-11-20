@@ -218,7 +218,10 @@ impl World {
 
     /// Puts a task force on radio silence at the start of a game (decision
     /// 0136, 15), for the loader. Fails if the game has begun or the force
-    /// does not exist. It has an effect only where reports travel.
+    /// does not exist. It has an effect only where reports travel. A force
+    /// held apart until its day (decision 0195, 11) keeps silence from the
+    /// day it enters: its entry is marked, and it goes into the set then. Run
+    /// again on a truth that holds the entries it changes nothing.
     pub fn keep_radio_silence_from_the_start(
         &mut self,
         force: crate::ids::TaskForceId,
@@ -228,6 +231,14 @@ impl World {
                 "radio silence can only be set at the start before day 1 and before any event"
                     .to_string(),
             ));
+        }
+        if let Some(entry) = self
+            .truth
+            .entering
+            .get_mut(&crate::ids::EntityRef::TaskForce(force))
+        {
+            entry.radio_silent = true;
+            return Ok(());
         }
         if !self.truth.task_forces.contains_key(&force) {
             return Err(crate::world::SimError::InvalidSetup(format!(
@@ -471,6 +482,11 @@ impl World {
         // A unit before its day (decision 0140, 2) is refused first, from
         // anyone: a side knows its own days exactly, so it is no matter of
         // what the area command holds.
+        // A unit of its own held apart until its day (decision 0195, 8 and
+        // 15) is refused before that.
+        if let Some(refused) = self.not_yet_entered(order.side, &order.kind) {
+            return Err(refused);
+        }
         if let Some(refused) = self.not_yet_available(order.side, &order.kind, order.day_issued) {
             return Err(refused);
         }

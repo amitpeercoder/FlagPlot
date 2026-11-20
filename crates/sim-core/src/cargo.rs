@@ -537,13 +537,10 @@ impl World {
             if land_unit.men_ashore == 0 || land_unit.hex == Some(p.hex) {
                 continue;
             }
-            let new_id = LandUnitId::new(
-                self.truth
-                    .land_units
-                    .keys()
-                    .next_back()
-                    .map_or(1, |id| id.raw() + 1),
-            );
+            // One above the highest of the state and of what is held apart
+            // until its day, so that no number is ever one of a scenario's
+            // (decision 0195, 18).
+            let new_id = self.truth.next_land_unit_id();
             let name = format!("{}, detachment {}", land_unit.name, new_id.raw());
             let side = land_unit.side;
             let mut men = 0;
@@ -614,6 +611,9 @@ impl World {
         if let Some(base) = existing {
             return (divided, None, base);
         }
+        // Nothing held apart until its day is a base (decision 0195, 18): a
+        // base is never held apart, so the next number above the state's
+        // highest is above every base there is.
         let id = BaseId::new(
             self.truth
                 .bases

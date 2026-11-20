@@ -18,9 +18,12 @@ use sim_core::view::SideView;
 /// rule B, item 7): the task forces and the land units its forces limit
 /// names; of a kind the limit does not name, and with no limit, every
 /// transport force and every fighting unit of the side. Each in number
-/// order. The one notion: the take reads it where it names the units it may
-/// use later and not today, and a trial's window reads it for the days on
-/// which something the course may use first becomes usable (decision 0177,
+/// order. A force or a land unit held apart until its day (decision 0195,
+/// 13) is counted too, as a unit that may be used from its day: it is read
+/// from the entry that holds it, and so is in no pool of units on the map.
+/// The one notion: the take reads it where it names the units it may use
+/// later and not today, and a trial's window reads it for the days on which
+/// something the course may use first becomes usable (decision 0177,
 /// amended 3).
 #[derive(Clone, Debug, Default)]
 pub struct Counted<'a> {
@@ -32,21 +35,29 @@ pub struct Counted<'a> {
 pub fn counted_by_a_take<'a>(view: &SideView<'a>, limit: Option<&ForcesLimit>) -> Counted<'a> {
     let named_forces = limit.filter(|f| !f.task_forces.is_empty());
     let named_units = limit.filter(|f| !f.land_units.is_empty());
+    let force_counts = |force: &TaskForce| {
+        named_forces.map_or(force.mission == Mission::Transport, |f| {
+            f.task_forces.contains(&force.id)
+        })
+    };
+    let unit_counts = |unit: &LandUnit| {
+        !unit.working && named_units.is_none_or(|f| f.land_units.contains(&unit.id))
+    };
+    let mut task_forces: Vec<&'a TaskForce> =
+        view.task_forces().filter(|f| force_counts(f)).collect();
+    let mut land_units: Vec<&'a LandUnit> = view.land_units().filter(|u| unit_counts(u)).collect();
+    // What is held apart for the side, from its entries (decision 0195, 13).
+    for entry in view.entering() {
+        if let Some(force) = entry.task_force.as_ref().filter(|f| force_counts(f)) {
+            task_forces.push(force);
+        }
+        land_units.extend(entry.land_units.values().filter(|u| unit_counts(u)));
+    }
+    task_forces.sort_by_key(|f| f.id);
+    land_units.sort_by_key(|u| u.id);
     Counted {
-        task_forces: view
-            .task_forces()
-            .filter(|force| {
-                named_forces.map_or(force.mission == Mission::Transport, |f| {
-                    f.task_forces.contains(&force.id)
-                })
-            })
-            .collect(),
-        land_units: view
-            .land_units()
-            .filter(|unit| {
-                !unit.working && named_units.is_none_or(|f| f.land_units.contains(&unit.id))
-            })
-            .collect(),
+        task_forces,
+        land_units,
     }
 }
 
@@ -79,6 +90,21 @@ pub(crate) fn group_may_be_used(view: &SideView<'_>, group: AirGroupId) -> bool 
 /// names a unit left out for its day uses this.
 pub(crate) fn from_day_words(day: u32) -> String {
     format!("may be used from day {day}")
+}
+
+/// The day a unit held apart for the side enters (decision 0195, 13): the
+/// day from which it may be used, which is no earlier than its entry's day.
+/// `None` for a unit on the map and for a unit that is not the side's.
+pub(crate) fn entering_on(view: &SideView<'_>, unit: EntityRef) -> Option<u32> {
+    let entry = view.entry_of(unit)?;
+    Some(view.available_from(unit).unwrap_or(entry.day))
+}
+
+/// The words for a unit held apart: "task_force:5 enters on day 3". Every
+/// reason that names a force or a unit not yet on the map uses this
+/// (decision 0195, 13).
+pub(crate) fn enters_words(unit: impl std::fmt::Display, day: u32) -> String {
+    format!("{unit} enters on day {day}")
 }
 
 /// A unit with its day: "ship:2 may be used from day 5".
@@ -151,6 +177,14 @@ mod tests {
         assert_eq!(
             named_with_day(ShipId::new(2), 5),
             "ship:2 may be used from day 5"
+        );
+    }
+
+    #[test]
+    fn a_unit_held_apart_is_worded_with_its_day() {
+        assert_eq!(
+            enters_words(TaskForceId::new(5), 3),
+            "task_force:5 enters on day 3"
         );
     }
 

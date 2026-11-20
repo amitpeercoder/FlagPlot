@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 20, 2026, on the designer's word
 
 Summary: Every ship and land unit of a scenario is on the map from the first day. One that should come later can only be marked "may be used from day N", and then lies where the scenario put it, to be seen and attacked, for the days before. This lets a task force, with everything aboard it, and a land unit or an air group at a base, come onto the map on a day the scenario names. Until that day it is not there.
 
-Standing: Planned on Nov 20, 2026 and amended on review; not yet built.
+Standing: Planned on Nov 20, 2026 and amended on review; the designer's answer is taken; built on Nov 20, 2026 ("As built", below), its readings and four statements of scenario 111 with the architect.
 
 ## Why
 
@@ -87,3 +87,63 @@ A reviewer read the plan against the order of a day, the staff's readers and the
 
 25. **Restated by the architect:** the force enters before the day's orders; the sighting is the morning's search at a chance of 1; two forces in one hex fight in the night's movement; a unit that has not entered is named in no event but its entry, its waiting and the refusal of an order to it; refusals are added for rule 19.
 26. **Built second,** after decision 0194, which gives the view the game's days that this rule's checks read.
+
+## Confirmed on Nov 20, 2026
+
+The designer: "Go with your recommendations." **The 39 days is left as it is.** Its late forces go on lying on the map from day 1, marked as usable from their days, and its proofs' files stand. The rule is used from the next scenario on.
+
+## As built
+
+Built on Nov 20, 2026, on the branch `forces-that-arrive`, on decision 0194's build. No figure changed. Every scenario under `data/scenarios` (160 files, the frozen copies apart) gives, with `sim-cli run --events`, byte for byte the output it gave before: no event and no daily hash moved. No existing scenario has the key, and the 39 days is not changed (the designer's answer).
+
+### What was built
+
+- **The state** (`crates/sim-core/src/entering.rs`). `TruthState::entering`, the last field of the truth: a map from the unit that enters (a task force, an air group or a land unit) to an `Entering`: its day, side, place (`EntryPlace::Hex` for a force, `Base` for a unit or group), whether it waits, and, whole as the scenario wrote them, the force, its ships, the groups aboard and the land units whose men are all aboard; and for a force its superior, commander and radio silence. `TruthState::hold_apart` is the loader's way in: it moves a unit and all aboard out of the state. Nothing held is in the maps the day's rules walk, so no rule acts on it.
+- **The entry step** (`World::bring_in`), the first of the day, inside `take_steps_one_to_three`, so a day and `at_staff_step` (the staff's view and a seat's check of orders) both take it, before the commands. Entries come in key order: task forces by number, then air groups, then land units. A force always enters at its hex. A land unit enters at its base where the base is its side's; an air group too, and where it has aircraft only while the base takes them. Else it waits, tried again each day.
+- **Events**, at the end of `EventKind`: `ForceEntered` (force, side, hex, the side's base there if any, ships, groups, land units), `UnitEntered` (unit, side, base, hex, men, aircraft) and `EntryWaiting` (unit, side, base, the day named, why: `NotTheSidesBase` or `TakesNoAircraft`). No cause, no pulse. Its own side sees each whole; the enemy nothing (`side_events.rs`).
+- **Orders.** `RejectReason::NotYetEntered { unit, day, waiting }`, at the end: "{unit} is not on the map yet: it enters on day {day}" (waiting: "it was to enter on day {day} and waits for its base"). Tried first in `validate_order` and for a staff's order, on the order's unit, the ships a base forms a force from and the land unit a force is to load, for the side's own held units. The enemy's held unit is not in the state and is refused as any unit not one's own (`NotYourUnit`; for a land unit's order `NotYourLandUnit`, as for one that does not exist).
+- **Commands.** A forces limit, an intent naming a force, a "wait for" limit and a hold may name a unit held apart for the side (`command/intake.rs`, the `own_*` readers; `invariants.rs`, the command state's check of holds, commitments and runs).
+- **Numbers.** A land unit made by division takes `TruthState::next_land_unit_id`, above the state's and what is held apart together. Nothing held apart is a base, so a base formed in play is numbered as before.
+- **Arrivals.** An arrival to a held group waits, with no event, and is delivered on the first night after the group enters.
+- **Command levels.** At the start the superior, commander and radio silence named for a held force are kept in its entry; a held force is not a command at the start, so it cannot be named a superior or a contact's `seen_by`. On entry it becomes a command as one formed in play does, under its superior where that is still a command, else the area command, with its commander.
+- **The hash.** Hashed last, after the domain, and only where something is held (`hash_entry`), every field named in `name_every_field`. `flagplot-state-v51` stands; no golden file was remade.
+- **The view** (`view.rs`). `SideView::entering()` and `entry_of(unit)`, the side's own only. "Is it mine" is true of an own held unit; `available_from` gives the later of its entry day and its own days; `may_use` is false for any held unit; `arrivals()` lists those to own held groups. A held unit is in none of the view's lists of the map, and every question about the map (a march, a landing, a force's ammunition, a strike) answers nothing of it.
+- **Pictures.** A picture's truth carries the entries; a side's half its own (`PictureHalf::entering`); a world made from a picture or from halves refuses a number both in the state and held apart.
+- **The loader** (`crates/sim-data/src/scenario.rs`). The key `enters` on `[[task_force]]`, `[[land_unit]]` and `[[air_group]]` (and on `[[ship]]` only to refuse it). Refused, each with its reason: below 2; after the last day; on a ship; on a group aboard a ship; on a unit aboard a force; a force off the map or on a hex that is not sea or coast; a land unit in a hex with no base; an arrival dated before its group enters (its own day or its ship's force's); an escort order whose force and charge do not enter on one day.
+- **The staff** (`crates/sim-staff`, doctrine `supply-48`). `counted_by_a_take` counts the side's held forces and land units; "more is coming" counts a held fighting unit entering at the source, or a held lift with fighting men aboard, from its day, and names it with its day; the carrier, stand, bombard, landing and take doctrines give a held force no order and hand in one reason, "{force} enters on day {day}", leaving the intent neither failed nor finished; a "wait for" naming a held unit waits.
+- **The agent** (interface version 36). The briefing's `arrivals.to_enter`, `entered_yesterday` and `entry_waiting_yesterday`; `list_forces.to_enter`; `get_entity` of a held unit (`to_enter`); handles for held units; the refusal's words. Each left out when empty.
+- **The umpire's readers.** The batch record finds an entered ship's force and counts a group as formed in play only where it was neither in the state nor held apart at the start; the batch's ship table holds the ships held apart, and one that never entered is in no count. The replay's opening state lists what is held apart (`entering`, left out when empty); the viewer draws a force from its `ForceEntered` and `viewer/check.js` checks it. `sim-cli run` prints a line for each unit held apart after the header.
+- **The trial.** A trial's worlds are built from the side's half, which carries its entries, and bring them in on their day; its dates read `counted_by_a_take`. The enemy's made half holds nothing apart: what the side does not know is coming is not made up. A ready landing's men count those of a held unit (`sim-trial/src/play.rs`).
+- **Scenario 111** (`data/scenarios/forces-that-arrive/`, with the placeholder map `data/map/placeholder_forces_that_arrive.toml`) and its tests: 29 pass and 3 are left ignored, below.
+- **Versions.** The rules label stays 25: no existing game plays differently. The state's layout stays v51. The saved game's version stays 23: its format did not change. The doctrine version is `supply-48` and the agent interface 36; the recorded games were remade for these two labels alone.
+
+### Readings taken
+
+1. **Where a force may enter** is a hex of the map that is sea or coast (`is_navigable`); a base of its side on land is not one, since no force may lie on land.
+2. **A waiting unit is tried at the first step of each day,** not in a night pulse (rule 12 put the entry there); a base that changes side in a day's fight ashore is the unit's from the next day's first step (`docs/rules/differences.md`, row 56).
+3. **The day a held unit may be used,** as the staff and the view read it, is the later of its own days and the day it is next tried: its day, or for one that waits the day after the last resolved.
+4. **`ForceEntered`'s base** is the lowest numbered base of the force's side in its hex. A land unit enters with its men as written, in its base's hex.
+5. **An escort and its charge** are checked in the scripted escort orders, since only an order gives a charge; a force with no `enters` is there from day 1.
+6. **A held air group at a base with no airfield** is refused when the scenario is read, by the check that refuses any group with aircraft there (decision 6 of 0099), though rule 16 would have it wait. A base whose field takes no aircraft for damage makes it wait.
+7. **The agent's numbers** for a side's units count its held units from day 1, so no number changes when one enters.
+
+### The statements of scenario 111 that do not hold as written
+
+- **9a, a route given is kept.** A scenario gives a task force no route but by an `[[order]]`, and an order before its day is refused (statement 5). The test is ignored; a substitute shows a route ordered on day 3 is taken and sets out in day 3's night. Rule 17's "a route and a speed the scenario gives it are kept" has no key to rest on.
+- **11a, on days 1 and 2.** The staff judges "more is coming" only on a morning with men ashore at the place, which no take has on days 1 and 2. The test is ignored; a substitute on scenario 109's setting shows that on the mornings ashore before the held unit's day the staff says more is coming and names it and its day.
+- **14, a game of two days.** Statement 13 refuses `enters` after the game's last day, so a game of two days cannot hold K's `enters = 3`. The test is ignored; a substitute stops the six days after day 2 and finds K's ships in no count.
+- **11b, a hold** was refused by the check of the command state's invariants until that check read the entries; it holds as built.
+
+### Not done
+
+Nothing leaves the map (rule 22). The 39 days is unchanged. The viewer does not show a unit still held at the end of a game.
+
+## The architect's rulings on the build
+
+Read on Nov 20, 2026, with the build's report and its "As built".
+
+1. **The readings of "As built" stand,** and row 56 of `docs/rules/differences.md` is confirmed: a waiting entry is tried at the first step of each day, where its first entry is. Among the others: a force enters only at a sea or coast hex; an air group with aircraft at a base that has no airfield is refused when the scenario is read, as it is today, and waits only where the field is damaged; a side's held units are numbered for its seat from day 1, so that no handle changes when one enters.
+2. **Three statements of the worked example were the architect's mistakes** and are corrected by him: a scenario gives a force a route only by an order, so "a route given is kept" becomes a route ordered on its day; the staff says what is coming only on a morning of the judgement ashore, so that statement is set in scenario 109's setting; and a game of two days cannot hold a force that enters on day 3, so the count is read from the game stopped after day 2. Each has the test the build wrote in its place.
+3. **No existing game moved:** 160 scenario files give the same events and the same daily hashes before and after; no golden file was remade; the state's layout and the rules label are as they were. The full run passes on the final commit.
+4. **A fault the build found and mended:** the check of holds, commitments and runs did not read what is held apart, so a hold naming a held force failed the game's own invariants.
+5. **Left as it is, and known:** nothing leaves the map; the viewer and the end of `run` show nothing of a unit still held apart when a game ends; the staff's stand, bombardment and landing doctrines' words for a held force have no test of their own.

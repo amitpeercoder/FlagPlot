@@ -10,8 +10,8 @@ use sim_core::commander::{Commander, Initiative, NamedCommander};
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
 use sim_core::ids::{
-    AirGroupId, AircraftTypeId, BaseId, FormationId, IntentId, LandUnitId, ShipClassId, ShipId,
-    TaskForceId,
+    AirGroupId, AircraftTypeId, BaseId, EntityRef, FormationId, IntentId, LandUnitId, ShipClassId,
+    ShipId, TaskForceId,
 };
 use sim_core::map::{HexKind, Island, IslandPlace};
 use sim_core::objectives::{Levels, Objective, Objectives, ShipPoints, SideObjectives};
@@ -484,6 +484,12 @@ struct LandUnitSpec {
     /// The day from which the side may use it (decision 0140, 1): a whole
     /// number from 1. Without it, from day 1.
     available_from: Option<u32>,
+    /// The day the unit enters the game (decision 0195, 1): a whole number
+    /// from 2 up to the scenario's `days`. Until then it is held apart, in
+    /// no hex and in no count. Without it, the unit is there on day 1.
+    /// Placed at a base (a land unit ashore in a hex with a base); not one
+    /// aboard a force, which enters with its force.
+    enters: Option<u32>,
     /// The formation the unit belongs to (decision 0140, 7): a formation of
     /// its side.
     formation: Option<u32>,
@@ -540,6 +546,11 @@ struct AirGroupSpec {
     /// The day from which the side may use it (decision 0140, 1): a whole
     /// number from 1. Without it, from day 1.
     available_from: Option<u32>,
+    /// The day the unit enters the game (decision 0195, 1): a whole number
+    /// from 2 up to the scenario's `days`. Until then it is held apart, in
+    /// no hex and in no count. Without it, the unit is there on day 1.
+    /// At a base; a group aboard a ship enters with its ship's force.
+    enters: Option<u32>,
 }
 
 /// A stream of replacements for a side at a base (decision 6 of 0038).
@@ -597,6 +608,11 @@ struct TaskForceSpec {
     /// The day from which the side may use it (decision 0140, 1): a whole
     /// number from 1. Without it, from day 1.
     available_from: Option<u32>,
+    /// The day the unit enters the game (decision 0195, 1): a whole number
+    /// from 2 up to the scenario's `days`. Until then it is held apart, in
+    /// no hex and in no count. Without it, the unit is there on day 1.
+    /// The force enters at its hex, with its ships and all aboard.
+    enters: Option<u32>,
 }
 
 #[derive(Deserialize)]
@@ -640,6 +656,11 @@ struct ShipSpec {
     /// The day from which the side may use it (decision 0140, 1): a whole
     /// number from 1. Without it, from day 1.
     available_from: Option<u32>,
+    /// The day the unit enters the game (decision 0195, 1): a whole number
+    /// from 2 up to the scenario's `days`. Until then it is held apart, in
+    /// no hex and in no count. Without it, the unit is there on day 1.
+    /// Refused: a ship enters with its force (decision 0195, 1).
+    enters: Option<u32>,
 }
 
 #[derive(Deserialize, Clone, Copy)]
@@ -3325,6 +3346,148 @@ impl Scenario {
                     }
                 }
             }
+        }
+
+        // Units that enter later (decision 0195, 1, 16 to 19): checked here,
+        // against the whole truth, then held apart before the world is made.
+        let mut held: Vec<(EntityRef, u32)> = Vec::new();
+        {
+            let mut force_day: BTreeMap<u32, u32> = BTreeMap::new();
+            let mut group_day: BTreeMap<u32, u32> = BTreeMap::new();
+            let mut unit_day: BTreeMap<u32, u32> = BTreeMap::new();
+            let check_day = |what: &str, day: u32| -> Result<(), DataError> {
+                if day < 2 {
+                    return Err(fail(format!(
+                        "{what} has enters = {day}: a unit there on day 1 needs no `enters`, and a unit enters on day 2 or later (decision 0195, 1)"
+                    )));
+                }
+                if day > file.days {
+                    return Err(fail(format!(
+                        "{what} has enters = {day}, after the last day of the scenario ({}): it would never enter",
+                        file.days
+                    )));
+                }
+                Ok(())
+            };
+            for spec in &file.ship {
+                if spec.enters.is_some() {
+                    return Err(fail(format!(
+                        "ship {} has `enters`: a ship enters with its task force, so put `enters` on the force (decision 0195, 1)",
+                        spec.id
+                    )));
+                }
+            }
+            for spec in &file.task_force {
+                let Some(day) = spec.enters else { continue };
+                let what = format!("task force {}", spec.id);
+                check_day(&what, day)?;
+                let id = TaskForceId::new(spec.id);
+                let hex = truth.task_forces[&id].position();
+                match map.get(hex) {
+                    None => {
+                        return Err(fail(format!(
+                            "{what} enters on day {day} at {},{}, which is off the map: a force enters at a sea or coast hex (decision 0195, 17)",
+                            hex.q, hex.r
+                        )))
+                    }
+                    Some(data) if !data.is_navigable() => {
+                        return Err(fail(format!(
+                            "{what} enters on day {day} at {},{}, which is land: a force enters at a sea or coast hex, or at a base of its side whose hex is sea or coast (decision 0195, 17)",
+                            hex.q, hex.r
+                        )))
+                    }
+                    Some(_) => {}
+                }
+                force_day.insert(spec.id, day);
+            }
+            for spec in &file.air_group {
+                let Some(day) = spec.enters else { continue };
+                let what = format!("air group {}", spec.id);
+                check_day(&what, day)?;
+                if spec.ship.is_some() {
+                    return Err(fail(format!(
+                        "{what} is aboard a ship and has `enters`: it enters with its ship's task force, so put `enters` on the force (decision 0195, 1)"
+                    )));
+                }
+                group_day.insert(spec.id, day);
+            }
+            for spec in &file.land_unit {
+                let Some(day) = spec.enters else { continue };
+                let what = format!("land unit {}", spec.id);
+                check_day(&what, day)?;
+                if spec.task_force.is_some() {
+                    return Err(fail(format!(
+                        "{what} is aboard a task force and has `enters`: it enters with its force, so put `enters` on the force (decision 0195, 1)"
+                    )));
+                }
+                unit_day.insert(spec.id, day);
+            }
+            // An arrival of aircraft dated before its group is there.
+            for (index, spec) in file.arrival.iter().enumerate() {
+                let group = AirGroupId::new(spec.air_group);
+                let entered = match group_day.get(&spec.air_group) {
+                    Some(day) => Some(*day),
+                    None => match truth.air_groups.get(&group).map(|g| g.location) {
+                        Some(AirGroupLocation::Ship(ship)) => match truth.ships.get(&ship) {
+                            Some(Ship {
+                                location: ShipLocation::TaskForce(force) | ShipLocation::Yard(force),
+                                ..
+                            }) => force_day.get(&force.raw()).copied(),
+                            _ => None,
+                        },
+                        _ => None,
+                    },
+                };
+                if let Some(day) = entered {
+                    if spec.day < day {
+                        return Err(fail(format!(
+                            "arrival {} is on day {}, before air group {} enters on day {day}: an arrival is dated on its group's day or after (decision 0195, 19)",
+                            index + 1,
+                            spec.day,
+                            spec.air_group
+                        )));
+                    }
+                }
+            }
+            // An escort and its charge enter on one day or both are there.
+            for spec in &file.order {
+                if let (
+                    Some(escort),
+                    ActionSpec::Escort {
+                        charge: Some(charge),
+                    },
+                ) = (spec.task_force, &spec.action)
+                {
+                    let escort_day = force_day.get(&escort).copied();
+                    let charge_day = force_day.get(charge).copied();
+                    if escort_day != charge_day {
+                        let says = |day: Option<u32>| match day {
+                            Some(day) => format!("enters on day {day}"),
+                            None => "is there from day 1".to_string(),
+                        };
+                        return Err(fail(format!(
+                            "the escort order on day {} names task force {escort}, which {}, to escort task force {charge}, which {}: an escort and its charge enter on one day or neither enters (decision 0195, 19)",
+                            spec.day,
+                            says(escort_day),
+                            says(charge_day)
+                        )));
+                    }
+                }
+            }
+            for (raw, day) in force_day {
+                held.push((EntityRef::TaskForce(TaskForceId::new(raw)), day));
+            }
+            for (raw, day) in group_day {
+                held.push((EntityRef::AirGroup(AirGroupId::new(raw)), day));
+            }
+            for (raw, day) in unit_day {
+                held.push((EntityRef::LandUnit(LandUnitId::new(raw)), day));
+            }
+        }
+        for (unit, day) in held {
+            truth
+                .hold_apart(unit, day)
+                .map_err(|message| fail(format!("{message} (`enters`, decision 0195)")))?;
         }
 
         let mut world =
@@ -8817,5 +8980,253 @@ task_force = 3
         .expect("loads");
         assert_eq!(plain.world.state_hash(), with.world.state_hash());
         assert_eq!(plain.world.events().len(), with.world.events().len());
+    }
+
+    // Forces that arrive (decision 0195): the key `enters`.
+
+    /// `HEAD` for a game of six days with a ground file, then `extra`.
+    fn arriving(extra: &str) -> Result<Scenario, DataError> {
+        arriving_on("placeholder_search", "", extra)
+    }
+
+    /// As `arriving`, on the named map, with `top` added to the top keys.
+    fn arriving_on(map: &str, top: &str, extra: &str) -> Result<Scenario, DataError> {
+        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data/scenarios/test.toml");
+        let head = HEAD
+            .replace("placeholder_search", map)
+            .replace("days = 2\n", &format!("days = 2\n{top}"))
+            .replace("days = 2\n", "days = 6\n")
+            .replace(
+                "ship_classes = \"../reference/ship_classes.csv\"",
+                "ship_classes = [\"../reference/ship_classes.csv\", \"../reference/ship_classes_placeholder_transports.csv\"]",
+            )
+            .replace("search = ", "ground = \"../reference/ground.toml\"\nsearch = ");
+        Scenario::parse(&format!("{head}{extra}"), &path)
+    }
+
+    fn arriving_error(extra: &str) -> String {
+        arriving(extra)
+            .expect_err("the scenario is refused")
+            .message
+    }
+
+    /// Allied task force 1 (ships 1 and 2, a carrier with air group 1
+    /// aboard, 400 men of land unit 1 aboard) with `force_extra`.
+    fn arriving_force(force_extra: &str) -> String {
+        format!(
+            "\n[[task_force]]\nid = 1\nname = \"Force\"\nside = \"allied\"\nq = 3\nr = 0\nmission = \"transport\"\n{force_extra}\n\
+             [[ship]]\nid = 1\nname = \"S1\"\nclass = 10\nside = \"allied\"\nfuel_t = 100\ntask_force = 1\n\
+             [[ship]]\nid = 2\nname = \"S2\"\nclass = 4\nside = \"allied\"\nfuel_t = 100\ntask_force = 1\n\
+             [[air_group]]\nid = 1\nname = \"AG1\"\nside = \"allied\"\nship = 2\naircraft_type = 1\nready = 4\n\
+             [[land_unit]]\nid = 1\nname = \"LU1\"\nside = \"allied\"\nmen = 400\ntask_force = 1\n"
+        )
+    }
+
+    const ARRIVING_GROUP_2: &str = "\n[[air_group]]\nid = 2\nname = \"AG2\"\nside = \"allied\"\nbase = 1\naircraft_type = 1\nready = 3\n";
+    const ARRIVING_UNIT_2: &str =
+        "\n[[land_unit]]\nid = 2\nname = \"LU2\"\nside = \"allied\"\nmen = 300\nq = 0\nr = 0\n";
+
+    #[test]
+    fn units_that_enter_are_held_apart_and_a_seeded_copy_holds_the_same() {
+        let text = format!(
+            "{}{}{}\n[[arrival]]\nday = 3\nair_group = 2\naircraft = 2\n\n[[arrival]]\nday = 3\nair_group = 1\naircraft = 1\n",
+            arriving_force("enters = 3"),
+            ARRIVING_GROUP_2.replace("ready = 3", "ready = 3\nenters = 3"),
+            ARRIVING_UNIT_2.replace("r = 0", "r = 0\nenters = 3"),
+        );
+        let scenario = arriving(&text).expect("loads");
+        let truth = scenario.world.umpire();
+        let keys: Vec<EntityRef> = truth.entering.keys().copied().collect();
+        assert_eq!(
+            keys,
+            vec![
+                EntityRef::TaskForce(TaskForceId::new(1)),
+                EntityRef::AirGroup(AirGroupId::new(2)),
+                EntityRef::LandUnit(LandUnitId::new(2)),
+            ]
+        );
+        assert!(truth.task_forces.is_empty());
+        assert!(truth.ships.is_empty());
+        assert!(truth.air_groups.is_empty());
+        assert!(truth.land_units.is_empty());
+        let force = &truth.entering[&keys[0]];
+        assert_eq!(force.day, 3);
+        assert_eq!(force.ships.len(), 2);
+        assert_eq!(force.air_groups.len(), 1);
+        assert_eq!(force.land_units.len(), 1);
+        assert_eq!(force.land_units[&LandUnitId::new(1)].men_ashore, 0);
+        let other = scenario.with_seed(9).expect("a seeded copy");
+        assert_eq!(
+            other
+                .world
+                .umpire()
+                .entering
+                .keys()
+                .copied()
+                .collect::<Vec<_>>(),
+            keys
+        );
+        assert!(other.world.umpire().task_forces.is_empty());
+        // A scenario with no `enters` holds nothing.
+        let plain = arriving(&arriving_force("")).expect("loads");
+        assert!(plain.world.umpire().entering.is_empty());
+        assert_eq!(plain.world.umpire().ships.len(), 2);
+    }
+
+    #[test]
+    fn an_arrival_dated_on_its_groups_day_is_taken_and_one_before_is_refused() {
+        let group = ARRIVING_GROUP_2.replace("ready = 3", "ready = 3\nenters = 4");
+        let arrival = |day: u32, group: u32| {
+            format!("\n[[arrival]]\nday = {day}\nair_group = {group}\naircraft = 1\n")
+        };
+        let ok = arriving(&format!("{group}{}", arrival(4, 2))).expect("on the day");
+        assert_eq!(ok.world.umpire().arrivals.len(), 1);
+        let message = arriving_error(&format!("{group}{}", arrival(3, 2)));
+        assert!(
+            message.contains("before air group 2 enters on day 4"),
+            "{message}"
+        );
+        // A group aboard a ship takes its force's day.
+        let force = arriving_force("enters = 5");
+        let message = arriving_error(&format!("{force}{}", arrival(4, 1)));
+        assert!(
+            message.contains("before air group 1 enters on day 5"),
+            "{message}"
+        );
+        arriving(&format!("{force}{}", arrival(5, 1))).expect("on the force's day");
+    }
+
+    #[test]
+    fn enters_is_refused_with_its_reason() {
+        for (extra, words) in [
+            (
+                arriving_force("enters = 1"),
+                "task force 1 has enters = 1: a unit there on day 1 needs no `enters`",
+            ),
+            (arriving_force("enters = 0"), "has enters = 0"),
+            (
+                arriving_force("enters = 7"),
+                "enters = 7, after the last day of the scenario (6)",
+            ),
+            (
+                arriving_force("").replace(
+                    "fuel_t = 100\ntask_force = 1\n[[ship]]",
+                    "fuel_t = 100\ntask_force = 1\nenters = 3\n[[ship]]",
+                ),
+                "ship 1 has `enters`: a ship enters with its task force",
+            ),
+            (
+                arriving_force("").replace("ready = 4\n", "ready = 4\nenters = 3\n"),
+                "air group 1 is aboard a ship and has `enters`",
+            ),
+        ] {
+            let message = arriving_error(&extra);
+            assert!(message.contains(words), "{words}: {message}");
+        }
+        let aboard = arriving_force("").replace("men = 400\n", "men = 400\nenters = 3\n");
+        let message = arriving_error(&aboard);
+        assert!(
+            message.contains("land unit 1 is aboard a task force and has `enters`"),
+            "{message}"
+        );
+        // Group and unit at a base: below 2 and above the days.
+        let message =
+            arriving_error(&ARRIVING_GROUP_2.replace("ready = 3", "ready = 3\nenters = 1"));
+        assert!(message.contains("air group 2 has enters = 1"), "{message}");
+        let message = arriving_error(&ARRIVING_UNIT_2.replace("r = 0", "r = 0\nenters = 9"));
+        assert!(message.contains("land unit 2 has enters = 9"), "{message}");
+    }
+
+    #[test]
+    fn a_force_enters_at_sea_or_coast_on_the_map_only() {
+        let off = arriving_force("enters = 3").replace("q = 3", "q = 500");
+        let message = arriving_error(&off);
+        assert!(
+            message.contains("task force 1 enters on day 3 at 500,0, which is off the map"),
+            "{message}"
+        );
+        // A land hex, on a map with land.
+        let land = arriving_force("enters = 3").replace("q = 3", "q = 4");
+        let message = arriving_on("placeholder_island", "", &land)
+            .expect_err("refused")
+            .message;
+        assert!(
+            message.contains("task force 1 enters on day 3 at 4,0, which is land"),
+            "{message}"
+        );
+        let sea = arriving_force("enters = 3");
+        arriving_on("placeholder_island", "", &sea).expect("sea is fine");
+    }
+
+    #[test]
+    fn a_land_unit_that_enters_needs_a_base_in_its_hex() {
+        // (4,0) is land on the island map, with no base.
+        let unit = ARRIVING_UNIT_2.replace("q = 0\nr = 0", "q = 4\nr = 0\nenters = 3");
+        let message = arriving_on("placeholder_island", "", &unit)
+            .expect_err("refused")
+            .message;
+        assert!(message.contains("land_unit:2 enters on day 3"), "{message}");
+        assert!(message.contains("where there is no base"), "{message}");
+    }
+
+    #[test]
+    fn an_escort_and_its_charge_enter_on_one_day() {
+        let second = |extra: &str| {
+            format!(
+                "\n[[task_force]]\nid = 2\nname = \"Escort\"\nside = \"allied\"\nq = 3\nr = 0\nmission = \"escort\"\n{extra}\n\
+                 [[ship]]\nid = 9\nname = \"S9\"\nclass = 1\nside = \"allied\"\nfuel_t = 100\ntask_force = 2\n\
+                 [[order]]\nday = 4\nside = \"allied\"\ntask_force = 2\nkind = \"escort\"\ncharge = 1\n"
+            )
+        };
+        // Both enter on day 3.
+        arriving(&format!(
+            "{}{}",
+            arriving_force("enters = 3"),
+            second("enters = 3")
+        ))
+        .expect("one day");
+        // Neither enters.
+        arriving(&format!("{}{}", arriving_force(""), second(""))).expect("neither");
+        let message = arriving_error(&format!("{}{}", arriving_force("enters = 3"), second("")));
+        assert!(message.contains("task force 2, which is there from day 1, to escort task force 1, which enters on day 3"), "{message}");
+        let message = arriving_error(&format!("{}{}", arriving_force(""), second("enters = 3")));
+        assert!(message.contains("task force 2, which enters on day 3, to escort task force 1, which is there from day 1"), "{message}");
+        let message = arriving_error(&format!(
+            "{}{}",
+            arriving_force("enters = 3"),
+            second("enters = 4")
+        ));
+        assert!(
+            message.contains("an escort and its charge enter on one day"),
+            "{message}"
+        );
+    }
+
+    #[test]
+    fn a_held_force_may_have_a_commander_and_radio_silence_but_is_no_superior() {
+        let levels =
+            |extra: &str| arriving_on("placeholder_search", "command_levels = true\n", extra);
+        let held = arriving_force("enters = 3\nradio_silence = true\nsuperior = { base = 1 }");
+        let commander = "\n[[commander]]\nside = \"allied\"\ntask_force = 1\nname = \"Hold\"\ninitiative = \"bold\"\nnote = \"a placeholder\"\n";
+        let scenario =
+            levels(&format!("{held}{commander}")).expect("a held force may be commanded");
+        let entry = &scenario.world.umpire().entering[&EntityRef::TaskForce(TaskForceId::new(1))];
+        assert!(entry.radio_silent);
+        assert_eq!(
+            entry.commander.as_ref().map(|c| c.name.as_str()),
+            Some("Hold")
+        );
+        assert!(entry.superior.is_some());
+        let again = scenario.with_seed(3).expect("a seeded copy");
+        assert!(
+            again.world.umpire().entering[&EntityRef::TaskForce(TaskForceId::new(1))].radio_silent
+        );
+        // A held force named as another's superior is refused, with sim-core's reason.
+        let other = "\n[[task_force]]\nid = 2\nname = \"Other\"\nside = \"allied\"\nat_base = 1\nmission = \"escort\"\nsuperior = { task_force = 1 }\n\
+                     [[ship]]\nid = 9\nname = \"S9\"\nclass = 1\nside = \"allied\"\nfuel_t = 100\ntask_force = 2\n";
+        let message = levels(&format!("{}{other}", arriving_force("enters = 3")))
+            .expect_err("refused")
+            .message;
+        assert!(message.contains("command"), "{message}");
     }
 }

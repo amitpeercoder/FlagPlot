@@ -1103,6 +1103,55 @@ impl Briefing {
                 x.pilots
             )
         });
+        if !self.arrivals.to_enter.is_empty() {
+            o.each("To enter", &self.arrivals.to_enter, |x| {
+                format!("To enter: {}", entry_text(x))
+            });
+        }
+        if !self.arrivals.entered_yesterday.is_empty() {
+            o.each("Entered yesterday", &self.arrivals.entered_yesterday, |x| {
+                let mut words = format!(
+                    "Entered yesterday: {} entered at {}",
+                    x.unit.text(),
+                    x.place.text()
+                );
+                if let Some(base) = &x.base {
+                    words.push_str(&format!(" ({})", base.text()));
+                }
+                if !x.ships.is_empty() {
+                    words.push_str(&format!(", {} ship(s)", x.ships.len()));
+                }
+                if !x.air_groups.is_empty() {
+                    words.push_str(&format!(", {} air group(s)", x.air_groups.len()));
+                }
+                if !x.land_units.is_empty() {
+                    words.push_str(&format!(", {} land unit(s)", x.land_units.len()));
+                }
+                if let Some(men) = x.men {
+                    words.push_str(&format!(", {men} men"));
+                }
+                if let Some(aircraft) = x.aircraft {
+                    words.push_str(&format!(", {aircraft} aircraft"));
+                }
+                format!("{words} (event {})", x.event)
+            });
+        }
+        if !self.arrivals.entry_waiting_yesterday.is_empty() {
+            o.each(
+                "Waiting to enter",
+                &self.arrivals.entry_waiting_yesterday,
+                |x| {
+                    format!(
+                        "Waiting to enter: {} was to enter on day {} at {} and waits: {} (event {})",
+                        x.unit.text(),
+                        x.day,
+                        x.base.text(),
+                        entry_wait_text(x.waits_for),
+                        x.event
+                    )
+                },
+            );
+        }
         o.each("Replacements", &self.arrivals.replacements, |x| {
             format!(
                 "Replacements: {} receives {} {} aircraft and {} pilots a day",
@@ -2659,6 +2708,7 @@ fn waits_text(waits_for: &[&str]) -> String {
 fn waits_text_arrival(w: &crate::lines::ArrivalWaits) -> String {
     match (w.reason, &w.damage, &w.refused_at) {
         ("base_not_yours", _, _) => "the base is not yet your side's".to_string(),
+        ("group_not_entered", _, _) => "the group is not on the map yet".to_string(),
         ("no_airfield", _, _) => "the base has no airfield".to_string(),
         (_, Some(damage), Some(level)) => format!(
             "the airfield's damage {} is at or above {}, the level at which it takes no aircraft",
@@ -2666,6 +2716,49 @@ fn waits_text_arrival(w: &crate::lines::ArrivalWaits) -> String {
         ),
         _ => "the airfield takes no aircraft".to_string(),
     }
+}
+
+/// Why a unit held apart waits for its base, in words (decision 0195).
+fn entry_wait_text(word: &str) -> &'static str {
+    match word {
+        "takes_no_aircraft" => "the base takes no aircraft",
+        _ => "the base is not yet its side's",
+    }
+}
+
+/// A unit held apart for the side, in words (decision 0195, 7).
+pub(crate) fn entry_text(x: &crate::entries::EntryLine) -> String {
+    let at = match (&x.hex, &x.base) {
+        (Some(place), _) => place.text(),
+        (None, Some(base)) => base.text(),
+        (None, None) => String::new(),
+    };
+    let mut what = Vec::new();
+    for ships in &x.ships {
+        what.push(format!("{} {}", ships.ships, ships.kind));
+    }
+    for group in &x.air_groups {
+        what.push(format!(
+            "{} ({} aircraft)",
+            group.air_group.text(),
+            group.aircraft
+        ));
+    }
+    for unit in &x.land_units {
+        what.push(format!("{} ({} men)", unit.land_unit.text(), unit.men));
+    }
+    let state = match (x.waiting, x.waits_for) {
+        (false, _) => String::new(),
+        (true, Some(why)) => format!("; waiting: {}", entry_wait_text(why)),
+        (true, None) => "; waiting".to_string(),
+    };
+    format!(
+        "{} enters on day {} at {}: {}{state}",
+        x.unit.text(),
+        x.day,
+        at,
+        what.join(", ")
+    )
 }
 
 /// An empty group's arrival, in words (decision 0110, item 2).

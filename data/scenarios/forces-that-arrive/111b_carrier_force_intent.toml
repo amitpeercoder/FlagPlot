@@ -1,0 +1,269 @@
+# Scenario 111: forces that arrive.
+#
+# Decision 0195. A placeholder scenario of six days on the placeholder map
+# data/map/placeholder_forces_that_arrive.toml. Side A (Allied) has base 1,
+# B, at (0,0), with land unit 1 (400 men) and air group 1, four placeholder
+# flying boats that search the arc 080 to 100 at 600 nm, and task force 1, a
+# cruiser force lying at sea at (3,0). Side J (Japanese) has base 2, R, at
+# (14,0) with 500 t of supply. J's force K, task force 11 (a carrier, ship 11,
+# and two destroyers, ships 12 and 13, with a fighter group 11 and a bomber
+# group 12 aboard the carrier), has `enters = 3` at the sea hex E, (8,0), 5
+# hexes from A's force. J's transport force L, task force 12 (a transport,
+# ship 21, with 40 t of supply aboard, and land unit 2, U, 600 men), has
+# `enters = 4` at R. J's land unit V, land unit 9, 300 men, and air group G,
+# air group 21, 12 fighters, have `enters = 3` at R, base 2. V has the highest
+# land unit number of the scenario. There is no order but A's search
+# and no command in the file: the tests add what they want at the marks below,
+# as scenario 109's test does. The hand calculation is in
+# tests/scenario_111_forces_that_arrive.rs. The test runs this file on the
+# frozen step 1 figures.
+#
+# 111b_carrier_force_intent.toml is this file with J's intent to operate K
+# from E (and its risk and leaves) added at the `# MARK: commands` mark. It is
+# kept as a file because the saved game of statement 15 names the file it was
+# played from.
+#
+# Kept out of the loops that walk data/scenarios/*.toml by being in this
+# folder (decision 0072).
+#
+# PLACEHOLDER DATA. The bases, ships, units and map are invented. Every name
+# below says "Placeholder".
+
+name = "Placeholder scenario 111: Forces that arrive"
+placeholder = true
+seed = 1942
+days = 6
+map = "../../map/placeholder_forces_that_arrive.toml"
+ship_classes = [
+    "../../reference/ship_classes.csv",
+    "../../reference/ship_classes_placeholder_transports.csv",
+]
+port_sizes = "../../reference/port_sizes.csv"
+aircraft_types = "../../reference/aircraft_types.csv"
+search = "../../reference/search.toml"
+surface_combat = "../../reference/surface_combat.toml"
+air_combat = "../../reference/air_combat.toml"
+ground = "../../reference/ground.toml"
+class_sides = "../../reference/class_sides_placeholder_scenario_96.csv"
+trial = "../../reference/trial_placeholder_scenario_96.toml"
+
+# Allied base 1, B.
+[[base]]
+id = 1
+name = "Placeholder base B"
+side = "allied"
+q = 0
+r = 0
+supply_t = 1000
+fuel_t = 2000
+
+# Japanese base 2, R.
+[[base]]
+id = 2
+name = "Placeholder base R"
+side = "japanese"
+q = 14
+r = 0
+supply_t = 500
+fuel_t = 500
+
+# MARK: bases
+
+# Task force 1, A's cruiser force, at sea at (3,0).
+[[task_force]]
+id = 1
+name = "Placeholder Allied cruiser force"
+side = "allied"
+q = 3
+r = 0
+mission = "surface_combat"
+
+[[ship]]
+id = 1
+name = "Placeholder Allied cruiser 1"
+class = 1
+side = "allied"
+fuel_t = 2000
+task_force = 1
+
+[[ship]]
+id = 2
+name = "Placeholder Allied cruiser 2"
+class = 1
+side = "allied"
+fuel_t = 2000
+task_force = 1
+
+# Task force 11, K: enters on day 3 at E, (8,0), stopped.
+[[task_force]]
+id = 11
+name = "Placeholder carrier force K"
+side = "japanese"
+q = 8
+r = 0
+mission = "carrier"
+enters = 3
+
+[[ship]]
+id = 11
+name = "Placeholder carrier 11"
+class = 4
+side = "japanese"
+fuel_t = 2900
+task_force = 11
+
+[[ship]]
+id = 12
+name = "Placeholder destroyer 12"
+class = 2
+side = "japanese"
+fuel_t = 480
+task_force = 11
+
+[[ship]]
+id = 13
+name = "Placeholder destroyer 13"
+class = 2
+side = "japanese"
+fuel_t = 470
+task_force = 11
+
+[[air_group]]
+id = 11
+name = "Placeholder fighters 11"
+side = "japanese"
+ship = 11
+aircraft_type = 4
+ready = 12
+
+[[air_group]]
+id = 12
+name = "Placeholder dive bombers 12"
+side = "japanese"
+ship = 11
+aircraft_type = 3
+ready = 10
+
+# Task force 12, L: enters on day 4 at R with U and 40 t of supply aboard.
+[[task_force]]
+id = 12
+name = "Placeholder transport force L"
+side = "japanese"
+q = 14
+r = 0
+mission = "transport"
+enters = 4
+
+[[ship]]
+id = 21
+name = "Placeholder troop transport 21"
+class = 10
+side = "japanese"
+fuel_t = 900
+supply_t = 40
+task_force = 12
+
+# MARK: forces
+
+# Land unit 1, A's, ashore at B.
+[[land_unit]]
+id = 1
+name = "Placeholder Allied battalion 1"
+side = "allied"
+men = 400
+q = 0
+r = 0
+
+# U, land unit 2, aboard L.
+[[land_unit]]
+id = 2
+name = "Placeholder U"
+side = "japanese"
+men = 600
+task_force = 12
+
+# V, land unit 9, J's, enters at R on day 3.
+[[land_unit]]
+id = 9
+name = "Placeholder V"
+side = "japanese"
+men = 300
+q = 14
+r = 0
+enters = 3
+
+# MARK: units
+
+# Air group 1, A's search group at B.
+[[air_group]]
+id = 1
+name = "Placeholder Allied flying boats 1"
+side = "allied"
+base = 1
+aircraft_type = 1
+ready = 4
+
+# G, air group 21, J's fighters, enters at R on day 3.
+[[air_group]]
+id = 21
+name = "Placeholder G"
+side = "japanese"
+base = 2
+aircraft_type = 4
+ready = 12
+enters = 3
+
+# MARK: groups
+
+# A's search of the arc 080 to 100, 600 nm, from day 1: at the range of K's
+# hex, a chance of 1.
+[[order]]
+day = 1
+side = "allied"
+air_group = 1
+kind = "set_air_mission"
+mission = "search"
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 1
+kind = "set_search_arc"
+from_deg = 80
+to_deg = 100
+range_nm = 600
+
+# MARK: orders
+
+[[command]]
+day = 1
+side = "japanese"
+kind = "set_intent"
+intent = 1
+intent_kind = "operate_carriers"
+task_force = 11
+hex = [8, 0]
+
+[[command]]
+day = 1
+side = "japanese"
+kind = "set_limit"
+limit = "risk"
+intent = 1
+risk = "press"
+
+[[command]]
+day = 1
+side = "japanese"
+kind = "set_leave"
+leave = "prepare"
+given = true
+
+[[command]]
+day = 1
+side = "japanese"
+kind = "set_leave"
+leave = "launch"
+given = true
+
+# MARK: commands

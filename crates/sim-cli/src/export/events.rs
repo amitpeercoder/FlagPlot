@@ -1,6 +1,7 @@
 //! The event log as JSON.
 
 use serde::Serialize;
+use sim_core::entering::EntryWait;
 use sim_core::events::{
     Arrival, Breakdown, Cause, Event, EventKind, FatigueChange, ForceFatigueChange,
     LandFatigueChange, ReportListener, SupplyUse,
@@ -212,6 +213,11 @@ fn reject_reason(reason: &RejectReason) -> Data {
         RejectReason::NotYetAvailable { unit, day } => base("not_yet_available")
             .with("unit", Field::Str(unit.to_string()))
             .int("day", *day),
+        // Decision 0195, 8 and 15.
+        RejectReason::NotYetEntered { unit, day, waiting } => base("not_yet_entered")
+            .with("unit", Field::Str(unit.to_string()))
+            .int("day", *day)
+            .flag("waiting", *waiting),
     }
 }
 
@@ -1153,6 +1159,60 @@ pub(super) fn describe(
                 .int("aircraft", *aircraft)
                 .int("pilots", *pilots)
                 .num("damage", *damage),
+        ),
+        EventKind::ForceEntered {
+            force,
+            side,
+            hex,
+            base,
+            ships,
+            air_groups,
+            land_units,
+        } => (
+            "force_entered",
+            d.id("force", *force)
+                .text("side", names::side(*side))
+                .hex("hex", *hex)
+                .id_when_some("base", *base)
+                .ids("ships", ships)
+                .ids("air_groups", air_groups)
+                .ids("land_units", land_units),
+        ),
+        EventKind::UnitEntered {
+            unit,
+            side,
+            base,
+            hex,
+            men,
+            aircraft,
+        } => (
+            "unit_entered",
+            d.with("unit", Field::Str(unit.to_string()))
+                .text("side", names::side(*side))
+                .id("base", *base)
+                .hex("hex", *hex)
+                .int("men", *men)
+                .int("aircraft", *aircraft),
+        ),
+        EventKind::EntryWaiting {
+            unit,
+            side,
+            base,
+            day,
+            wait,
+        } => (
+            "entry_waiting",
+            d.with("unit", Field::Str(unit.to_string()))
+                .text("side", names::side(*side))
+                .id("base", *base)
+                .int("day", *day)
+                .text(
+                    "wait",
+                    match wait {
+                        EntryWait::NotTheSidesBase => "not_the_sides_base",
+                        EntryWait::TakesNoAircraft => "takes_no_aircraft",
+                    },
+                ),
         ),
         EventKind::AirfieldMended {
             unit,

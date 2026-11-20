@@ -657,7 +657,23 @@ fn landings(view: &SideView<'_>) -> Vec<Landing> {
                                 .land_units()
                                 .find(|u| u.id == *unit)
                                 .map_or(0, |u| u.men_ashore);
-                            (*unit, ashore + view.men_aboard(*unit).unwrap_or(0))
+                            // A unit held apart until its day (decision 0195)
+                            // has its men in its entry: ashore, or aboard the
+                            // ships of the force that brings it.
+                            let held: u32 = view
+                                .entering()
+                                .map(|entry| {
+                                    entry.land_units.get(unit).map_or(0, |u| u.men_ashore)
+                                        + entry
+                                            .ships
+                                            .values()
+                                            .filter_map(|ship| ship.troops)
+                                            .filter(|troops| troops.unit == *unit)
+                                            .map(|troops| troops.men)
+                                            .sum::<u32>()
+                                })
+                                .sum();
+                            (*unit, ashore + view.men_aboard(*unit).unwrap_or(0) + held)
                         })
                         .collect()
                 })

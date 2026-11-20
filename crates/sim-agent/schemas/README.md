@@ -60,7 +60,7 @@ miles that can be a decimal, shots) is a decimal string such as `"12"` or
 
 ## The version rule
 
-`version` is 32. A field removed from an answer, or a field whose meaning
+`version` is 36. A field removed from an answer, or a field whose meaning
 changes, raises the version by one. A field added does not change it, so a
 reader must ignore fields it does not know. (The schemas here set
 `additionalProperties: false` because they describe this version exactly; a
@@ -154,6 +154,22 @@ Version 35 (decision 0190) adds the limit `targets` (`kinds`, `waters_first`) to
 `set_strike_first_waters` (`hexes`) (see "What to strike first" below). Both
 are left out of an answer where they are not set, so a game without them reads
 as before.
+
+Version 36 (decision 0195) adds what is held apart for the side until its day.
+The briefing's `arrivals` part gains `to_enter` (each force or unit of the side
+not yet on the map: its `day`, its `hex` (a task force) or `base` (a land unit or
+an air group), what it is (`ships` by kind and count, `air_groups` with their
+aircraft, `land_units` with their men), `waiting` and `waits_for`),
+`entered_yesterday` and `entry_waiting_yesterday`; an arrival due to such a group
+is in `due` with `waits_for.reason` `group_not_entered`. `list_forces` gains
+`to_enter` (the same lines, in the area if one is given: a unit at a base by the
+base's hex). `get_entity` of a held force, ship, air group or land unit answers
+`entity_kind` `to_enter` (`held`, `unit`, `class` for a ship, `enters`). A held
+unit has its number from the start, and an order or command may name it: an
+order is refused with "... is not on the map yet: it enters on day N" (or "was
+to enter on day N and waits for its base"). Every new field is left out when
+nothing is held, so a game with nothing held reads as before. Only the side's
+own entries are ever given.
 
 The fight ashore (decision 0090, see "The fight ashore" below) adds only fields
 and values, so `version` stays 3.

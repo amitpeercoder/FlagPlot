@@ -1,0 +1,62 @@
+# PLACEHOLDER MAP. Open sea with coast hexes, used by scenario 111 (decision
+# 0195, forces that arrive): B at (0,0), A's base; R at (14,0), J's base, and
+# R2 at (15,0) beside it, joined to R by a land link, the hex J's land unit M
+# marches from in the variant of statement 8; Y0 at (2,6) and Y1 at (4,6),
+# two coast hexes two hexes apart, where the variant of statement 11 divides
+# a land unit. E at (8,0) is a sea hex. (10,5) is a land hex, where the test
+# of statement 13 puts a force it says may not enter there. The geography is
+# invented.
+
+placeholder = true
+
+# Ranges are inclusive.
+[[region]]
+kind = "deep_sea"
+q = [-4, 20]
+r = [-4, 10]
+
+[[hex]]
+q = 0
+r = 0
+kind = "coast"
+port_size = 3
+anchorage = true
+
+[[hex]]
+q = 14
+r = 0
+kind = "coast"
+port_size = 3
+anchorage = true
+
+[[hex]]
+q = 15
+r = 0
+kind = "coast"
+port_size = 3
+anchorage = true
+
+[[hex]]
+q = 2
+r = 6
+kind = "coast"
+port_size = 3
+anchorage = true
+
+[[hex]]
+q = 4
+r = 6
+kind = "coast"
+port_size = 3
+anchorage = true
+
+[[land_link]]
+a = [14, 0]
+b = [15, 0]
+note = "Placeholder: R and R2 are on one landmass."
+
+# A land hex: no force enters here.
+[[hex]]
+q = 10
+r = 5
+kind = "land"

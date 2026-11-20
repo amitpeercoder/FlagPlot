@@ -449,11 +449,15 @@ fn contact_side(world: &World, event: &Event) -> Option<Side> {
         _ => {}
     }
     let truth = world.umpire();
-    event.kind.entities().into_iter().find_map(|e| match e {
-        EntityRef::TaskForce(id) => truth.task_forces.get(&id).map(|t| t.side),
-        EntityRef::AirGroup(id) => truth.air_groups.get(&id).map(|g| g.side),
-        EntityRef::Ship(id) => truth.ships.get(&id).map(|s| s.side),
-        _ => None,
+    event.kind.entities().into_iter().find_map(|e| {
+        match e {
+            EntityRef::TaskForce(id) => truth.task_forces.get(&id).map(|t| t.side),
+            EntityRef::AirGroup(id) => truth.air_groups.get(&id).map(|g| g.side),
+            EntityRef::Ship(id) => truth.ships.get(&id).map(|s| s.side),
+            _ => None,
+        }
+        // A unit still held apart (decision 0195) has its entry's side.
+        .or_else(|| truth.entry_of(e).map(|entry| entry.side))
     })
 }
 
@@ -477,7 +481,8 @@ fn list_unit(
         EntityRef::Base(id) => truth.bases.contains_key(&id),
         EntityRef::LandUnit(id) => truth.land_units.contains_key(&id),
         _ => false,
-    } || world.events().iter().any(names_unit);
+    } || truth.entry_of(unit).is_some()
+        || world.events().iter().any(names_unit);
     if !known {
         return Err(format!(
             "no {unit} in this run{}",
@@ -491,6 +496,17 @@ fn list_unit(
     // detached; a sunk ship has none.
     let mut membership: BTreeMap<ShipId, TaskForceId> = BTreeMap::new();
     for force in executed.initial.task_forces.values() {
+        for ship in &force.ships {
+            membership.insert(*ship, force.id);
+        }
+    }
+    // A force held apart at the start (decision 0195) has its ships all the same.
+    for force in executed
+        .initial
+        .entering
+        .values()
+        .filter_map(|entry| entry.task_force.as_ref())
+    {
         for ship in &force.ships {
             membership.insert(*ship, force.id);
         }

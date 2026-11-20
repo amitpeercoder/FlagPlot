@@ -686,6 +686,25 @@ impl Day<'_, '_> {
         };
         let force = view.task_forces().find(|f| f.id == id).cloned();
         let Some(force) = force else {
+            if let Some(day) =
+                crate::available::entering_on(view, sim_core::ids::EntityRef::TaskForce(id))
+            {
+                // Held apart until its day (decision 0195, 13): one reason, no
+                // order, and the intent is neither failed nor finished.
+                let words = crate::available::enters_words(id, day);
+                let reason = serving(task, &plan)
+                    .evidence(words, today)
+                    .binding(format!("the day {id} enters, {day}"))
+                    .worked(format!(
+                        "{intent_words}: {} is to be served by {id}, which enters on day {day}, so the staff gives {id} no order.",
+                        task.id
+                    ))
+                    .would_change("the day come")
+                    .done();
+                out.summary = Some(reason);
+                self.hand_in_stand(task, &plan, id, out, in_scope, &intent_words);
+                return;
+            }
             let reason = serving(task, &plan)
                 .evidence(format!("{id} is not one of the side's forces now"), today)
                 .worked(format!(

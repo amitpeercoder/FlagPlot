@@ -692,6 +692,9 @@ pub(crate) fn make(
             bases: BTreeMap::new(),
             air_groups: BTreeMap::new(),
             land_units: BTreeMap::new(),
+            // Decision 0195, 20: the enemy's made picture holds nothing
+            // apart; what it is given in the state it has.
+            entering: BTreeMap::new(),
             formations: BTreeMap::new(),
             replacements: Vec::new(),
             arrivals: Vec::new(),
