@@ -279,3 +279,14 @@ The architect let readings 1, 2, 4, 5, 6, 7 and 8 stand (Perkins with five guns,
 
 Exceptions are now 44 (nine more). Nothing is now left out for want of a fact but the ships ruling 12 names and the placeholder destroyers.
 
+## The architect's rulings on the list
+
+Read on Nov 20, 2026: the team's two reports and every one of the 44 exceptions written for the list in `data/derivation/rules.toml`.
+
+1. **The exceptions stand,** each with the row it names and its reason. They follow the rulings of stage A; where the team read beyond them (Chicago's anti-aircraft rows, the torpedo marks of Hobart, Perkins and Walke, the bombs of the land bombers, Australia's 2-pounders counted by barrels, Shoho's fuel converted from metric tons) each reading is written in its exception and is accepted.
+2. **What is weak is said to be weak.** Every armour, tank and load figure of the SBD-2, the TBD-1 and the A5M4 rests on low-grade pages read by exception. The SBD-2's pilot armour is a yes inferred from one aircraft of the squadron. Their radii, 180 miles, are strong: Lexington's own report of the launch against Shoho. Each exception names what is to be found.
+3. **Perkins is read with five guns** though the source's own line says most of her class had lost one; no row says so of her.
+4. **The three types are flown,** so the American side has its torpedo planes and Lexington her second dive bomber squadron.
+5. **Six destroyers have no experience value** (one unconfirmed commissioning row each). They take what the rules give a ship not answered. A second source for each is wanted.
+6. **This list's check is added to the commands run before a commit** (`CLAUDE.md`), by the architect.
+7. **Stage A is done.** Stage B, the scenario, begins with the architect's hand calculation. Still open for it: the convoy's men, the garrison and the port, which are placeholders, and the number of transports.
