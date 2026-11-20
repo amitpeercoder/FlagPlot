@@ -334,3 +334,4 @@ The six Allied bomber groups never flew. The commander's order that sets their t
 
 - No run of 1,000 and no report of one: the architect reads the one game first, and may mend the orders.
 - The scenario is not added to `table/scenarios.json`.
+- **A test of another scenario fails:** scenario 104's statement 23 says no scenario file but scenario 103's four has `for_play = true`, and the Coral Sea's five now have it, as statement 22 here asks. The two statements disagree; neither is changed. It is the architect's to rule.
