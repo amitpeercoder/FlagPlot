@@ -3329,6 +3329,9 @@ impl Scenario {
 
         let mut world =
             World::new(file.seed, ref_data, map, truth).map_err(|e| fail(e.to_string()))?;
+        // The game's days, configuration beside the objectives (decision
+        // 0194, 12): set once, here, where the world is made.
+        world.set_game_days(file.days);
         // Command levels go on before anything that reaches a belief
         // (decision 0134, 12): the starting contacts and estimates then reach
         // every picture as they reach the side's.
@@ -3693,6 +3696,9 @@ impl Scenario {
         world.hold_starting_estimates(self.estimates.clone())?;
         if let Some(objectives) = self.world.objectives() {
             world.set_objectives(objectives.clone())?;
+        }
+        if let Some(days) = self.world.game_days() {
+            world.set_game_days(days);
         }
         Ok(Scenario {
             name: self.name.clone(),
