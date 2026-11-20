@@ -96,3 +96,16 @@ No other game's events or hashes moved; no hash moved where the events did not. 
 **Existing tests that changed.** `tests/scenario_109_men_ashore_with_no_more_coming.rs`, `statement_3_balanced_with_nothing_more_coming_the_units_attack`, the architect's: its assertion that nothing is ordered after day 4 (`g.all_postures()`) now gives `[(4, 1, Attack), (4, 2, Attack), (6, 1, Defend), (6, 2, Defend)]` against `[(4, 1, Attack), (4, 2, Attack)]`, because the game is 7 days and day 6 has 2 left after a failed day. It is ignored with that reason, for the architect to restate. Scenarios 91 and 92 gained the new field and no number.
 
 **Not done.** Statement 5's variant and statement 8 in play. Scenario 105's forty games and 1,000 games were not run again.
+
+## The architect's rulings on the build
+
+Read on Nov 20, 2026, with the build's report and its "As built".
+
+1. **The readings of "As built" stand,** and rows 53 to 55 of `docs/rules/differences.md` are confirmed: a session hands the world the days it is given; "a lift that cannot arrive" is read as one that may not be used by the game's last day, with no passage reckoned; where the judgement waits for a reason of its own, units on attack are set to defend as before.
+2. **Three statements of the worked example were the architect's mistakes** and are corrected by him:
+   - "no daily hash differs from the same game before this rule" was wrong of a game with last days in it: the rule changes what happens in them. What is true and tested is that the game's length itself moves no hash;
+   - the variant in which an attack does not fail and the men stay in cannot be reached in this setting, since an attack that does not fail there takes the place that day. It is tested on the judgement alone;
+   - a game of one day never reaches the judgement ashore, and the statement is taken out.
+3. **Scenario 109's statement 3 is restated by the architect:** in its game of seven days the men sent in on day 4 are set back to defend on day 6, their attack of day 5 having failed.
+4. **Games that moved,** of every scenario file played before and after: the Coral Sea with a person in the Allied seat, where the men are no longer sent in on the last day (still a decisive Japanese victory, 53.86 to 0.8 where it was 56.58 to 4); scenario 109 in its last days; the stage 3 proof's first file in its reasons alone. No hash moved where the events did not, and no golden file was remade.
+5. **Found on the way, and left:** in scenario 109 the men ashore are unfed from about day 5 and fire nothing, so every attack after day 4 fails; and an attack is recorded as failed on a day the place falls. Both are the fight ashore's rules and not this one's.
