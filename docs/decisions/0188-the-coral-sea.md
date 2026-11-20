@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 20, 2026, at the designer's aski
 
 Summary: A second small scenario for play: the Coral Sea over five days, 6 to 10 May 1942. Two American carriers and a cruiser group against two Japanese fleet carriers and a light carrier, with a Japanese convoy bound for Port Moresby that lands on the last days if it is not stopped or turned back. It is built in three stages: the data is settled and derived first, then the scenario with its hand calculation, then its runs and games under the guards of decision 0187. Most of the ships and aircraft it needs the game already has.
 
-Standing: Confirmed by the designer on Nov 20, 2026, with his answers; stages A and B are built and ruled on (the list, the scenario, its tests and one game); stage C, the run of 1,000 games and the band, is under way.
+Standing: Confirmed by the designer on Nov 20, 2026; built through its first run of 1,000 games, which is far outside the band (the Japanese side ahead in 982). It is not a contest between the engine's staffs, for two things a staff cannot yet do; that is with the designer.
 
 ## Why
 
@@ -348,3 +348,16 @@ Read on Nov 20, 2026: the build's report and its one game (`docs/validation/cora
 6. **The game played again** on those orders is a battle: the support group meets the convoy at the tip by night, sinks Yubari and loses two destroyers; the Allied carriers sink Shoho and Aoba; the Striking Force puts Yorktown out of action; and the convoy lands every man. The Japanese side wins it by 42.46.
 7. **The orders are not changed again before the run.** The architect has now seen three games of them (a reviewer's trial, the build's, and his own), and has changed the Allied orders after two. Each change mended an order that did nothing or broke what it touched, or was for a reason the mission gives, and each is written where it was made. The run of 1,000 games is made on the orders as they stand, and what it shows is put to the designer.
 8. **What to expect of the band.** With the landing worth 53.86 points and no staff able to stop it, the staffs' games are likely to go one way. That would be a finding about what the engine's staffs can do, and the next means of decision 0187 is not reached for before the designer has seen it.
+
+## Stage C: the first run
+
+Made by the architect on Nov 20, 2026 (`docs/validation/coral-sea-first-run.md`): 1,000 games of file a, staff against staff, on the orders as they stood after the one game.
+
+1. **Far outside the band.** The Japanese side is ahead in 982 games and the Allied in 18. The convoy lands every man in 978 games; a transport is sunk in 12.
+2. **It is what the rulings on the one game expected,** and for the reasons given there. The Allied carriers do their work on what they strike: Shoho is sunk in 912 games. They do not strike the convoy. The support group fights in every game and does not stop it. No staff turns it back.
+3. **The next means of decision 0187 is not reached for.** Lowering what the men are worth until the staffs' games come out even would hide that a staff sent to stop a landing does not strike the ships that carry it. The scenario's figures, levels, forces and orders stand as they are.
+4. **What the scenario is today:** a battle that plays through, with the surface action, the loss of Shoho and the carrier fight in it, and whose result between the engine's two staffs is all but fixed. It is not put on the table's list as a balanced game. Whether it is a contest when a person or an agent commands the Allied side, who can order his groups at the convoy himself, is not known: no such game has been played.
+5. **For the designer:**
+   - two rules the scenario shows are wanted, each to be planned by its own record: a staff that puts the ships of a landing first when its order is to stop one, and a staff that turns a threatened convoy back (which he has already said to plan after this run);
+   - whether to play the games between agents now, before either rule, to learn whether a commander who is not the staff can stop the convoy;
+   - whether the scenario goes on the table's list meanwhile, said plainly to be one-sided against the engine.
