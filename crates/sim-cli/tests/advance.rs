@@ -121,6 +121,49 @@ fn the_tool_lists_with_the_key_on_and_off() {
     let listed = text(&binary(&["play", "--game", "unused", "--tools"]).stdout);
     assert_eq!(listed.matches("\nTOOL ").count() + 1, 29);
     assert!(listed.contains("TOOL events\n"));
+
+    // With a scenario and a seat it lists that game's seat's own tools: the
+    // key on offers `advance`, a scenario that names a trial's figures offers
+    // `trial` and `trials`, and neither is in the list that needs no game.
+    let of = |scenario: &str| {
+        text(
+            &binary(&[
+                "play",
+                "--game",
+                "unused",
+                "--scenario",
+                scenario,
+                "--seat",
+                "allied",
+                "--tools",
+            ])
+            .stdout,
+        )
+    };
+    assert!(!listed.contains("TOOL advance\n") && !listed.contains("TOOL trial\n"));
+    assert!(of(KEY_ON).contains("TOOL advance\n"));
+    let tried = of("data/scenarios/100_what_ifs_from_a_seat.toml");
+    assert!(tried.contains("TOOL trial\n") && tried.contains("TOOL trials\n"));
+    assert_eq!(of(KEY_OFF), listed);
+    // A game file that exists is asked for its own seat's tools, with no
+    // scenario named again.
+    let dir = temp_dir("tools-of-a-game");
+    let game = dir.join("g.txt");
+    let game = game.to_str().unwrap();
+    ok(
+        &play(
+            game,
+            &[
+                "--scenario",
+                "data/scenarios/100_what_ifs_from_a_seat.toml",
+                "--seat",
+                "allied",
+                "command_state",
+            ],
+        ),
+        "the first call",
+    );
+    assert_eq!(text(&play(game, &["--tools"]).stdout), tried);
 }
 
 fn play(game: &str, args: &[&str]) -> Output {
