@@ -297,7 +297,15 @@ use sim_core::view::SideView;
 /// to the place, kept back until two clear mornings, and held at its
 /// passage on such a morning. A side that holds no contact reported as a
 /// carrier near a lift's way gets the orders `supply-42` gave.
-pub const DOCTRINE_VERSION: &str = "supply-43";
+/// `supply-44` adds decision 0192: a stand task's force with no home port,
+/// not stopped at a base of the side, is routed to its station, one way, on
+/// the first morning it is not there and not under way to it, and lies
+/// stopped there; its fuel is weighed to the nearest base by sea that can
+/// fuel it, and it goes in to that base, its home port from then, when a
+/// ship is short of the passage there. A force with a home port stopped at
+/// sea on no route is routed home at cruise. A side with no such stand gets
+/// the orders `supply-43` gave.
+pub const DOCTRINE_VERSION: &str = "supply-44";
 
 /// The staff: the doctrine for keeping a base supplied (stage 1) and, after
 /// it, the air doctrine for holding a place and covering a base from the air
