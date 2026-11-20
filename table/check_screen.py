@@ -158,11 +158,11 @@ def the_screen(bridge):
     check("<html" in get(bridge.table + "/"), "the page is served under the table's key")
     check(get(bridge.table + "/config") == {"screen": True}, "with no game in hand the page is told to show the screen")
     listed = get(bridge.table + "/scenarios")["scenarios"]
-    check([s["id"] for s in listed] == ["guadalcanal-39-days", "eastern-solomons"],
-          "the screen lists the 39 days and the Eastern Solomons")
+    check([s["id"] for s in listed] == ["guadalcanal-39-days", "eastern-solomons", "eastern-solomons-five-days", "coral-sea"],
+          "the screen lists the 39 days, the Eastern Solomons, the Eastern Solomons over five days and the Coral Sea")
     check(all("file" not in p for s in listed for p in s["pairings"]), "the list given to the screen names no file")
-    check(len(listed[0]["pairings"]) == 7 and len(listed[1]["pairings"]) == 4,
-          "the 39 days offers 7 games and the Eastern Solomons 4")
+    check([len(s["pairings"]) for s in listed] == [7, 4, 7, 7],
+          "the 39 days offers 7 games, the Eastern Solomons 4, the five-day Eastern Solomons 7 and the Coral Sea 7")
     seat = get(bridge.table + "/agent?side=allied&scenario=guadalcanal-39-days")["ok"]
     program = os.path.join(HERE, "seat_mcp.py")
     check(seat["claude"].startswith("claude mcp add flag-plot-allied -- python3 " + program + " --url " + bridge.root + "/seat/"),
@@ -209,6 +209,11 @@ def every_game(bridge, listed):
                 check(wait_until(lambda: get(bridge.table + "/standing")["ok"]["waiting_for"] == []), f"{name}: the agents are ready")
                 step = post(bridge.table + "/step")["ok"]
                 check(step["resolved"]["day"] == 1, f"{name}: the watcher steps day 1")
+                # A game with orders inside a day is stepped a pulse at a time: step on until the day is resolved.
+                for _ in range(6):
+                    if not config["watch"]["inside_day"] or wait_until(lambda: not any(t.is_alive() for t in held), 5):
+                        break
+                    post(bridge.table + "/step")
                 for t in held:
                     t.join(60)
                 check(all(t.answer["ok"]["resolved"] is True for t in held) and config["watch"]["agents"] == agents,
