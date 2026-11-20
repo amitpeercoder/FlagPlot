@@ -10,6 +10,12 @@
 //! outcome, and the counts behind the points, read from the game's own
 //! result and events. The final hash and the margin are the batch's for the
 //! same seed, which is how the report checks that the two are one run.
+//! Since decision 0186 the Japanese side's objectives include men landed at
+//! Taivu, so each line has its count and points under `men_landed` with the
+//! others; beside them `men_landed_taivu` is every man the events show landed
+//! there by the Japanese side and `japanese_men_embarked` every Japanese man
+//! the events show embarked anywhere, so that the objective's count can be
+//! checked against the landings (decision 0186, 22).
 //!
 //! It is ignored, so `cargo test` never runs it; it is run by hand:
 //!
@@ -64,11 +70,18 @@ fn write_the_counts_of_each_seed() {
         let world = &scenario.world;
         let result = world.result().expect("a result");
         let mut men_landed_taivu = 0u32;
+        let mut japanese_men_embarked = 0u32;
         for event in world.events().iter() {
-            if let EventKind::MenLanded { hex, men, unit, .. } = event.kind {
-                if hex == taivu && world.umpire().land_units[&unit].side == Side::Japanese {
+            let japanese =
+                |unit| world.umpire().land_units.get(&unit).map(|u| u.side) == Some(Side::Japanese);
+            match event.kind {
+                EventKind::MenLanded { hex, men, unit, .. } if hex == taivu && japanese(unit) => {
                     men_landed_taivu += men;
                 }
+                EventKind::MenEmbarked { men, unit, .. } if japanese(unit) => {
+                    japanese_men_embarked += men;
+                }
+                _ => {}
             }
         }
         // What each side scored, by the objective's kind: the count, and for
@@ -107,7 +120,7 @@ fn write_the_counts_of_each_seed() {
         }
         writeln!(
             text,
-            "{{\"seed\": {seed}, \"final_hash\": \"{hash:016x}\", \"allied_margin\": \"{}\", \"allied_outcome\": \"{}\", \"men_landed_taivu\": {men_landed_taivu}, {}}}",
+            "{{\"seed\": {seed}, \"final_hash\": \"{hash:016x}\", \"allied_margin\": \"{}\", \"allied_outcome\": \"{}\", \"men_landed_taivu\": {men_landed_taivu}, \"japanese_men_embarked\": {japanese_men_embarked}, {}}}",
             result.allied.margin,
             result.allied.outcome.name(),
             sides.join(", ")

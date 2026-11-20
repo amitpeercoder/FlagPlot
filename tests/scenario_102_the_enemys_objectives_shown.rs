@@ -297,7 +297,10 @@ fn expected_line(world: &World, objective: &Objective, horizon: u32) -> Value {
             line["closed"] = json!(closed);
             line["points"] = dec(*points);
         }
-        Objective::MenLost { points_per_100_men } => line["points"] = dec(*points_per_100_men),
+        Objective::MenLost { points_per_100_men }
+        | Objective::MenLanded {
+            points_per_100_men, ..
+        } => line["points"] = dec(*points_per_100_men),
     }
     line
 }

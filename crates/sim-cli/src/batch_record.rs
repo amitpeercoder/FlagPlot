@@ -5,7 +5,9 @@
 //! `base_changes` is, so the version stays 5; so are `men_lost_by_day`,
 //! `airfields_built`, `arrivals_delivered` and `ashore_by_day`, and the
 //! header's `daily_supply_t_per_man`, and `men_lost` has a fifth cause,
-//! `surrendered`). It only reads: the log, the truth after each day and at the end.
+//! `surrendered`; the header's `for_play`, decision 0187, was added at
+//! version 6 with the version unchanged, and a file without it is of record).
+//! It only reads: the log, the truth after each day and at the end.
 //! Every quantity is a whole number or, for a `Fixed`, a decimal string. A
 //! list is empty when there is nothing, and every key is always written, so
 //! a reader can tell an old file (key missing) from a run with none.
@@ -85,6 +87,9 @@ pub struct Header {
     /// Supply a man ashore costs his base a day, as a decimal string, from
     /// the ground figures; `None` where the scenario has none.
     pub daily_supply_t_per_man: Option<String>,
+    /// True for a scenario for play (decision 0187, 22); false for one of
+    /// record and for one with no objectives.
+    pub for_play: bool,
 }
 
 /// The initial task force of each ship (none for a ship in port).
@@ -134,6 +139,7 @@ pub fn header(initial: &TruthState, world: &World) -> Header {
             .ground
             .as_ref()
             .map(|figures| figures.daily_supply_t_per_man.to_string()),
+        for_play: world.objectives().is_some_and(|o| o.for_play),
     }
 }
 

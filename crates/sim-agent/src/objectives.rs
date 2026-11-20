@@ -56,10 +56,12 @@ pub struct LevelsPart {
 #[derive(Clone, PartialEq, Eq, Debug, Serialize)]
 pub struct ObjectiveLine {
     /// `ships_sunk`, `ships_crippled`, `ships_out_of_action`,
-    /// `aircraft_destroyed`, `cargo_landed`, `base_open`, `base_held` or
-    /// `men_lost`.
+    /// `aircraft_destroyed`, `cargo_landed`, `base_open`, `base_held`,
+    /// `men_lost` or `men_landed`.
     pub kind: &'static str,
-    /// The base of `cargo_landed`, `base_open` and `base_held`.
+    /// The base of `cargo_landed`, `base_open`, `base_held` and
+    /// `men_landed`; a base not on the side's map is given by its hex
+    /// (decision 0186, 17).
     pub base: Option<Handle>,
     /// For `base_open`: true if the side wants the base shut.
     pub closed: Option<bool>,
@@ -75,8 +77,9 @@ pub struct ObjectiveLine {
     /// Points for one aircraft (`aircraft_destroyed`), one ton
     /// (`cargo_landed`) or the base being as wanted on every day
     /// (`base_open`, which earns the share of the days it was); the base
-    /// being the side's own at the end (`base_held`); or each 100 enemy men
-    /// lost (`men_lost`, decision 0090, 26).
+    /// being the side's own at the end (`base_held`); each 100 enemy men
+    /// lost (`men_lost`, decision 0090, 26); or each 100 men landed
+    /// (`men_landed`, decision 0186).
     pub points: Option<Dec>,
     /// For `cargo_landed` only (left out for every other kind): the points
     /// for a thousand tons, which is `points` times 1,000. The text gives the
@@ -101,8 +104,9 @@ pub struct ObjectiveLine {
 pub struct EnemyObjectiveLine {
     /// As [`ObjectiveLine::kind`].
     pub kind: &'static str,
-    /// The base of `cargo_landed`, `base_open` and `base_held`, by the map's
-    /// number and name.
+    /// The base of `cargo_landed`, `base_open`, `base_held` and `men_landed`,
+    /// by the map's number and name; a base not on the reader's map is given
+    /// by its hex (decision 0186, 17).
     pub base: Option<Handle>,
     /// For `base_open`: true if the enemy is scored for the base being shut.
     pub closed: Option<bool>,
@@ -113,7 +117,8 @@ pub struct EnemyObjectiveLine {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub horizon_days: Option<u32>,
     /// Points for one aircraft, one ton, the base as wanted on every day, the
-    /// base held at the end or each 100 men; `None` for the ship objectives.
+    /// base held at the end, each 100 men lost or each 100 men landed; `None`
+    /// for the ship objectives.
     pub points: Option<Dec>,
     /// For `cargo_landed` only (left out for every other kind): the points
     /// for a thousand tons, which is `points` times 1,000. The text gives the
@@ -176,8 +181,8 @@ pub struct ShipKindPoints {
 #[derive(Clone, PartialEq, Eq, Debug, Serialize)]
 pub struct KnownLine {
     pub basis: &'static str,
-    /// Ships, aircraft, tons (unloaded less loaded back), or for a base of
-    /// the side's own the days it ended as wanted.
+    /// Ships, aircraft, tons (unloaded less loaded back), men landed, or for
+    /// a base of the side's own the days it ended as wanted.
     pub count: Dec,
     /// For `base_open` at a base of the side's own: the days counted, which
     /// `count` is out of.
@@ -216,8 +221,8 @@ pub struct ScoreLine {
     pub kind: &'static str,
     pub base: Option<Handle>,
     pub closed: Option<bool>,
-    /// Ships, aircraft, tons (unloaded less loaded back), or for a base the
-    /// days it ended as wanted.
+    /// Ships, aircraft, tons (unloaded less loaded back), men landed, or for
+    /// a base the days it ended as wanted.
     pub count: Dec,
     /// For `base_open`: the days counted, which `count` is out of.
     pub days: Option<u32>,
@@ -281,7 +286,7 @@ fn line(
 ) -> ObjectiveLine {
     let mut line = ObjectiveLine {
         kind: objective.name(),
-        base: objective.base().map(|b| ctx.base(b)),
+        base: objective.base().map(|b| objective_base(ctx, b)),
         closed: None,
         ship_points: Vec::new(),
         horizon_days: None,
@@ -318,9 +323,29 @@ fn line(
             line.open_now = Some(open_now(ctx, *base, *closed));
         }
         Objective::BaseHeld { points, .. } => line.points = Some(Dec(*points)),
-        Objective::MenLost { points_per_100_men } => line.points = Some(Dec(*points_per_100_men)),
+        Objective::MenLost { points_per_100_men }
+        | Objective::MenLanded {
+            points_per_100_men, ..
+        } => line.points = Some(Dec(*points_per_100_men)),
     }
     line
+}
+
+/// The base an objective names, as the reading side writes it (decision
+/// 0186, 17): by the map's number and name when the base is on its map, own
+/// or enemy; by its hex, `(q,r)` with no name, when it is not and the hex is
+/// known; otherwise as `Ctx::base` has it.
+fn objective_base(ctx: &Ctx<'_>, base: sim_core::ids::BaseId) -> Handle {
+    if ctx.bases.contains_key(&base) || ctx.enemy_bases.contains_key(&base) {
+        return ctx.base(base);
+    }
+    match ctx.view.objective_base_hex(base) {
+        Some(hex) => Handle {
+            handle: hex.to_string(),
+            name: None,
+        },
+        None => ctx.base(base),
+    }
 }
 
 /// One objective of the enemy's, from the scenario's configuration alone
@@ -332,7 +357,7 @@ fn enemy_line(
 ) -> EnemyObjectiveLine {
     let mut line = EnemyObjectiveLine {
         kind: objective.name(),
-        base: objective.base().map(|b| ctx.base(b)),
+        base: objective.base().map(|b| objective_base(ctx, b)),
         closed: None,
         ship_points: Vec::new(),
         horizon_days: None,
@@ -358,7 +383,10 @@ fn enemy_line(
             line.closed = Some(*closed);
             line.points = Some(Dec(*points));
         }
-        Objective::MenLost { points_per_100_men } => line.points = Some(Dec(*points_per_100_men)),
+        Objective::MenLost { points_per_100_men }
+        | Objective::MenLanded {
+            points_per_100_men, ..
+        } => line.points = Some(Dec(*points_per_100_men)),
     }
     line
 }
@@ -468,7 +496,7 @@ fn side_result(ctx: &Ctx<'_>, result: &SideResult) -> SideResultPart {
             .iter()
             .map(|o| ScoreLine {
                 kind: o.kind,
-                base: o.base.map(|b| ctx.base(b)),
+                base: o.base.map(|b| objective_base(ctx, b)),
                 closed: (o.kind == "base_open").then_some(o.closed),
                 count: Dec(o.count),
                 days: o.days,

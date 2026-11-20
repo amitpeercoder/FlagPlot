@@ -806,7 +806,23 @@ impl<'a> SideView<'a> {
             return Vec::new();
         };
         let bases: Vec<BaseId> = self.bases().map(|base| base.id).collect();
-        objectives::known_progress(own, &bases, &self.events())
+        let none = std::collections::BTreeMap::new();
+        let hexes = self.objectives.map_or(&none, |o| &o.base_hexes);
+        objectives::known_progress(own, &bases, hexes, &self.events())
+    }
+
+    /// The hex of a base an objective of either side names, from the
+    /// scenario's objectives (decision 0186, 17): where an objective is is
+    /// part of the victory conditions (decision 0183), so a side is told it
+    /// even for a base not on its map. `None` for a base no objective names,
+    /// and at a seat at a command, which is given no objectives.
+    pub fn objective_base_hex(&self, base: BaseId) -> Option<Hex> {
+        if self.seat.is_some() {
+            return None;
+        }
+        self.objectives
+            .and_then(|o| o.base_hexes.get(&base))
+            .copied()
     }
 
     /// The map is common knowledge.

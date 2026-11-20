@@ -504,3 +504,210 @@ fn two_worlds_that_differ_in_an_enemy_ships_damage_give_a_side_the_same_ships_ou
     assert!(out_two > out_one, "{out_two}");
     assert_ne!(total_one, total_two);
 }
+
+// ---------------------------------------------------------------------
+// Men landed (decision 0186) and a base not on the reader's map.
+// ---------------------------------------------------------------------
+
+/// One objective of each kind for each side (a scenario counts damaged ships
+/// one way, so `damage` is one of ships_crippled and ships_out_of_action: the
+/// nine kinds are between the two texts); bases 1 and 2 of the raid.
+const EVERY_KIND: &str = r#"
+[objectives]
+minor = 1
+major = 2
+decisive = 3
+horizon_days = 3
+
+[objectives.allied]
+mission = "ALLIED MISSION"
+
+[objectives.japanese]
+mission = "JAPANESE MISSION"
+"#;
+
+fn every_kind_for(side: &str, damage: &str) -> String {
+    format!(
+        r#"
+[[objectives.{side}.objective]]
+kind = "ships_sunk"
+points = {{ carrier = 1 }}
+[[objectives.{side}.objective]]
+kind = "{damage}"
+points = {{ carrier = 1 }}
+[[objectives.{side}.objective]]
+kind = "aircraft_destroyed"
+points = 1
+[[objectives.{side}.objective]]
+kind = "cargo_landed"
+base = 1
+points_per_t = "0.005"
+[[objectives.{side}.objective]]
+kind = "base_open"
+base = 2
+points = 1
+[[objectives.{side}.objective]]
+kind = "base_open"
+base = 1
+closed = true
+points = 1
+[[objectives.{side}.objective]]
+kind = "base_held"
+base = 2
+points = 1
+[[objectives.{side}.objective]]
+kind = "men_lost"
+points_per_100_men = 1
+[[objectives.{side}.objective]]
+kind = "men_landed"
+base = 1
+points_per_100_men = 1
+"#
+    )
+}
+
+fn nine_kinds_text(damage: &str) -> String {
+    let (head, _) = EVERY_KIND.split_once("[objectives.allied]").expect("split");
+    format!(
+        "{}{head}[objectives.allied]\nmission = \"ALLIED MISSION\"\n{}\n[objectives.japanese]\nmission = \"JAPANESE MISSION\"\n{}",
+        scenario_text(RAID),
+        every_kind_for("allied", damage),
+        every_kind_for("japanese", damage)
+    )
+}
+
+/// A base as the text writes it: the handle, and the name in quotes.
+fn handle_text(h: &sim_agent::Handle) -> String {
+    match &h.name {
+        Some(name) => format!("{} \"{}\"", h.handle, name),
+        None => h.handle.clone(),
+    }
+}
+
+#[test]
+fn men_landed_has_its_words_for_the_side_and_for_the_enemy() {
+    let scenario = raid(&nine_kinds_text("ships_crippled"), 1);
+    let allied = scenario.world.side_view(Side::Allied);
+    let made = briefing(&allied, "Raid");
+    let text = made.to_text();
+    let own = made
+        .objectives
+        .objectives
+        .iter()
+        .find(|l| l.kind == "men_landed")
+        .expect("own line");
+    assert_eq!(own.points.map(|p| p.0.to_string()), Some("1".to_string()));
+    let base = handle_text(own.base.as_ref().expect("a base"));
+    assert!(
+        text.contains(&format!(
+            "Objective: men you land from ships at {base} and do not take off again, points for each hundred men: 1"
+        )),
+        "{text}"
+    );
+    // Exact progress, 0 men at the start.
+    assert_eq!(own.known.basis, "exact");
+    assert!(
+        text.contains("What you know of your progress: 0, worth 0 points"),
+        "{text}"
+    );
+    let enemy = made
+        .objectives
+        .enemy_objectives
+        .as_ref()
+        .expect("enemy objectives")
+        .iter()
+        .find(|l| l.kind == "men_landed")
+        .expect("enemy line");
+    let base = handle_text(enemy.base.as_ref().expect("a base"));
+    assert!(
+        text.contains(&format!(
+            "men the enemy lands from ships at {base} and does not take off again, points for each hundred men: 1"
+        )),
+        "{text}"
+    );
+}
+
+#[test]
+fn an_objective_line_of_each_of_the_nine_kinds_is_written_without_panicking() {
+    let mut kinds = std::collections::BTreeSet::new();
+    for (damage, side) in [
+        ("ships_crippled", Side::Allied),
+        ("ships_out_of_action", Side::Japanese),
+    ] {
+        let scenario = raid(&nine_kinds_text(damage), 1);
+        let view = scenario.world.side_view(side);
+        let made = briefing(&view, "Raid");
+        assert_eq!(made.objectives.objectives.len(), 9);
+        assert_eq!(
+            made.objectives
+                .enemy_objectives
+                .as_ref()
+                .expect("enemy")
+                .len(),
+            9
+        );
+        kinds.extend(made.objectives.objectives.iter().map(|l| l.kind));
+        let text = made.to_text();
+        assert!(text.contains("men you land from ships"), "{text}");
+        let json = serde_json::to_value(&made).expect("serialises");
+        let schemas = schemas();
+        valid(&schemas, "briefing.schema.json", &json, "nine kinds");
+    }
+    assert_eq!(kinds.len(), 9, "{kinds:?}");
+}
+
+#[test]
+fn an_objective_at_a_base_not_on_the_readers_map_is_named_by_its_hex() {
+    // Base 1, the Japanese airfield, is not on the Allied side's map.
+    let text = nine_kinds_text("ships_crippled").replacen(
+        "name = \"Placeholder airfield A\"\nside = \"japanese\"",
+        "name = \"Placeholder airfield A\"\nside = \"japanese\"\non_map = false",
+        1,
+    );
+    assert!(text.contains("on_map = false"));
+    let scenario = raid(&text, 1);
+    let japanese = scenario.world.side_view(Side::Japanese);
+    let hex = japanese
+        .bases()
+        .find(|b| b.id == sim_core::ids::BaseId::new(1))
+        .expect("base 1")
+        .hex;
+    let hex_text = hex.to_string();
+    let allied = scenario.world.side_view(Side::Allied);
+    assert!(!allied
+        .enemy_bases()
+        .any(|b| b.id == sim_core::ids::BaseId::new(1)));
+    let made = briefing(&allied, "Raid");
+    let text = made.to_text();
+    // The Japanese objective at base 1 is written by its hex, no name.
+    let enemy_lines: Vec<_> = made
+        .objectives
+        .enemy_objectives
+        .as_ref()
+        .expect("enemy")
+        .iter()
+        .filter(|l| matches!(l.kind, "men_landed" | "cargo_landed" | "base_open"))
+        .filter(|l| l.base.as_ref().is_some_and(|b| b.handle == hex_text))
+        .collect();
+    assert!(enemy_lines.len() >= 3, "{enemy_lines:?}");
+    assert!(enemy_lines
+        .iter()
+        .all(|l| l.base.as_ref().unwrap().name.is_none()));
+    assert!(
+        text.contains(&format!(
+            "men the enemy lands from ships at {hex_text} and does not take off again"
+        )),
+        "{text}"
+    );
+    // The Allied side's own objective at base 1 (an enemy base it has not
+    // found) is also written by its hex; base 2, on its map, by number.
+    let own = made
+        .objectives
+        .objectives
+        .iter()
+        .find(|l| l.kind == "men_landed")
+        .expect("own");
+    assert_eq!(own.base.as_ref().expect("base").handle, hex_text);
+    assert!(text.contains("base:2"), "{text}");
+    assert!(!text.contains("base:1 "), "{text}");
+}

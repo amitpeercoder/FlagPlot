@@ -820,6 +820,20 @@ fn what_validate_refuses() {
     b["label"] = json!("");
     refuse("empty-label", &b, MEASURES, "not letters, digits");
     let mut b = good.clone();
+    b["for_play"] = json!(true);
+    refuse(
+        "for-play",
+        &b,
+        MEASURES,
+        "is a scenario for play (decision 0187)",
+    );
+    // A batch of record, with the key false or without it, is judged.
+    let mut b = good.clone();
+    b["for_play"] = json!(false);
+    assert!(validate(&setup("of-record", &b, MEASURES), "r.md")
+        .status
+        .success());
+    let mut b = good.clone();
     b["version"] = json!(1);
     refuse("version", &b, MEASURES, "version 1");
     // A version 3 batch, the shape before who sighted first, is refused for
