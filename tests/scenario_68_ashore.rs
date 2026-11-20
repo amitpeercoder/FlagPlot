@@ -180,10 +180,19 @@
 //!   marked complete and the notice handed in on the morning of day 6.
 //!   Eight orders and five staff commands; unit 3 is never sent.
 //! - **Nothing left to send.** With unit 3 held from day 1: the first six
-//!   days are as in the main case. From the morning of day 6 the staff
-//!   waits, says each morning that it is short and has no unit to bring,
-//!   and gives no order after day 6: ten orders in all. The place is not
-//!   taken by the end. The force lies at A from hour 148.
+//!   days are as in the main case. (Restated by the architect on Nov 20,
+//!   2026, for decision 0193: before it the staff waited from day 6 and
+//!   gave no order after day 6, ten orders in all.) From the morning of
+//!   day 6 the staff says each morning that it is short and has no unit
+//!   to bring, and that nothing more is coming. On day 6 units 1 and 2,
+//!   landed on attack, are set to defend. On the morning of day 8 they
+//!   have 300 + 300 = 600 fit men, at least the estimate of 600: with
+//!   nothing more coming the staff wants 600 x 1 = 600 at balanced, and
+//!   sets both to attack: twelve orders in all, the main case's first
+//!   ten and these two. The garrison loses 300 and has 300 left; units 1
+//!   and 2 lose 150 each. On day 9 they are committed and attack again,
+//!   and are left with 75 each at fatigue 100. The place is not taken by
+//!   the end. The force lies at A from hour 148.
 //! - **A hold is honoured.** With unit 2 held from day 7. (Restated by
 //!   the architect on Nov 19, 2026, for decision 0169: before it unit 3
 //!   was sent as in the main case, for fourteen orders in all, and on day
@@ -192,9 +201,13 @@
 //!   leave the operation with 300 + 600 = 900 fit men against the 1,200
 //!   wanted, no other force is in reach by day 15, and no hold of B with
 //!   a source of supply is in force, so the men cannot be fed: at
-//!   balanced the staff does not send it. It hands in "cannot bring
-//!   enough" on day 8, once, and gives no order from day 7 on. The
-//!   notices of the game are "ready" on day 2 and that one. On the
+//!   balanced the staff does not send it. Nothing more is coming, and
+//!   unit 1's 300 fit men are short of the estimate of 600, so the staff
+//!   waits. It hands in "cannot bring enough" on each morning from day 8
+//!   to day 14, and gives no order from day 7 on. (Restated by the
+//!   architect on Nov 20, 2026, for decision 0193: before it the notice
+//!   was handed in on day 8, once.) The notices of the game are "ready"
+//!   on day 2 and those seven. On the
 //!   morning of day 11 the unit that can attack is unit 1, 300 fit men
 //!   against 1,200 wanted: the staff waits, short by 900, and names the
 //!   hold. Ten orders in all, the main case's first ten, and the place
@@ -1004,10 +1017,11 @@ fn a_garrison_the_estimate_was_right_about() {
 }
 
 #[test]
-#[ignore = "decision 0193 changes it: with unit 3 held nothing more is coming, so on the morning of day 8 units 1 and 2 (600 fit men) are at least the estimate of 600 and are set to attack at balanced (orders (8, Attack(1)) and (8, Attack(2)) after the ten expected); the architect's to restate"]
 fn nothing_left_to_send() {
     let g = play(&with_commands(&text(), &hold_unit(1, 3)));
-    assert_eq!(g.all_orders(), main_orders()[..10].to_vec());
+    let mut wanted: Vec<(u32, Given)> = main_orders()[..10].to_vec();
+    wanted.extend([(8, Given::Attack(1)), (8, Given::Attack(2))]);
+    assert_eq!(g.all_orders(), wanted);
     for day in 7..=14 {
         assert_says(
             &g.judgement(day),
@@ -1020,7 +1034,6 @@ fn nothing_left_to_send() {
 }
 
 #[test]
-#[ignore = "decision 0193, rule 11, changes it: with unit 2 held from day 7 nothing more is coming and the men are too few, so `cannot_bring_enough` is handed in on each morning from day 8 to day 14, not on day 8 alone; the architect's to restate"]
 fn a_hold_is_honoured() {
     let g = play(&with_commands(&text(), &hold_unit(7, 2)));
     // Restated for decision 0169: the second lift of day 8 is not sent.
@@ -1029,7 +1042,16 @@ fn a_hold_is_honoured() {
     assert!((7..=g.days()).all(|day| g.orders(day).is_empty()));
     assert_eq!(
         g.all_notices(),
-        vec![(2, NoticeKind::Ready), (8, NoticeKind::CannotBringEnough)]
+        vec![
+            (2, NoticeKind::Ready),
+            (8, NoticeKind::CannotBringEnough),
+            (9, NoticeKind::CannotBringEnough),
+            (10, NoticeKind::CannotBringEnough),
+            (11, NoticeKind::CannotBringEnough),
+            (12, NoticeKind::CannotBringEnough),
+            (13, NoticeKind::CannotBringEnough),
+            (14, NoticeKind::CannotBringEnough),
+        ]
     );
     assert_says(
         &g.judgement(11),

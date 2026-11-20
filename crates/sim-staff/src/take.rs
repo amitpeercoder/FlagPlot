@@ -3501,7 +3501,7 @@ impl Day<'_, '_> {
         if orders.is_empty() || waits_with_nothing || committed {
             let worked = if committed {
                 format!(
-                    "{judged}. The units on attack are committed: {} {} sent in with nothing more coming, and the staff does not set {} to defend because the estimate is larger; it sets no other unit to attack.",
+                    "{judged}. The units on attack are committed: {} {} sent in with nothing more coming, and the staff does not set {} to defend; it sets no other unit to attack.",
                     kept.iter().map(ToString::to_string).collect::<Vec<_>>().join(" and "),
                     if kept.len() == 1 { "was" } else { "were" },
                     if kept.len() == 1 { "it" } else { "them" }

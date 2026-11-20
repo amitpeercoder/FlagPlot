@@ -103,16 +103,34 @@
 //!   scenario 68's own case shows.)
 //! - **Worlds 2 and 4.** The Japanese side has 300 men against
 //!   0.2 x 300 = 60: it is not beaten. Unit 1 has 300 men at a fatigue
-//!   of 50. That evening's report gives 300 enemy men. On the morning of
-//!   day 5 the men wanted are 600 and unit 1's fit men are 150: the
-//!   staff sets it to defend and waits. Its fit men are 225 on the
-//!   morning of day 6 and 300 from day 7, against 600 wanted: it waits
-//!   on every morning to day 8, and there is no unit to bring. No one
-//!   attacks, so there is no fight after day 4 and no more men are
-//!   lost. Base 2 is Japanese at the end of day 8: the end is not met.
-//!   Seven staff orders in all, the seventh unit 1 set to defend on day
-//!   5. The weights of fire on day 4 are equal, 6 against 6: the attack
-//!   is not below the defence, so it does not fail.
+//!   of 50. That evening's report gives 300 enemy men. There is no unit
+//!   to bring, so nothing more is coming, and the men wanted are the
+//!   estimate times 1, 300. On the morning of day 5 unit 1's fit men are
+//!   150: it was landed on attack and not sent in with nothing more
+//!   coming, so the staff sets it to defend and waits. Its fit men are
+//!   225 on the morning of day 6: it waits. On the morning of day 7 they
+//!   are 300, at least the 300 wanted: the staff sets unit 1 to attack.
+//!   Unit 1 fires 3 shots, all hits: the enemy loses 150, 50 and 100,
+//!   and has 50 and 100 left. The enemy fires 1 + 2 = 3 hits: unit 1
+//!   loses 150 and has 150 left, at fatigue 50. That evening's report
+//!   gives 150. On the morning of day 8 unit 1 has 75 fit men against
+//!   150 wanted, but it was sent in with nothing more coming: it is
+//!   committed, and the staff does not set it to defend. It fires 0.75
+//!   shots, 1 hit: the enemy loses 17 and 33, and has 33 and 67 left.
+//!   Unit 900,002 fires 1 hit; unit 900,001's 0.5 shot hits in world 4
+//!   and not in world 2. So unit 1 loses 50 in world 2 and has 100 left,
+//!   and loses 100 in world 4 and has 50 left. The attack fails, 0.75
+//!   against 1.5, and unit 1, at fatigue 100, goes back to defend. That
+//!   evening's report gives 100. Base 2 is Japanese at the end of day 8:
+//!   the end is not met. Eight staff orders in all, the seventh unit 1
+//!   set to defend on day 5 and the eighth unit 1 set to attack on day
+//!   7. The weights of fire on day 4 are equal, 6 against 6: that attack
+//!   is not below the defence, so it does not fail. The side loses
+//!   300 + 150 + 50 = 500 in world 2 and 300 + 150 + 100 = 550 in world
+//!   4; the enemy 300 + 150 + 50 = 500 in each. (Restated by the
+//!   architect on Nov 20, 2026, for decision 0193: before it the staff
+//!   waited on every morning to day 8 with 600 wanted, no one attacked
+//!   after day 4, seven staff orders in all, and each side lost 300.)
 //!
 //! Every man of both sides is fed on every night. The Japanese are fed
 //! from base 2's 200 t. The Allied men ashore are fed from base 3 in
@@ -127,12 +145,15 @@
 //!   lost again in none. Not met by day 8 in 2, worlds 2 and 4. None
 //!   could not be played.
 //! - **What it cost the side,** lowest, middle, highest. Men lost to the
-//!   enemy: the worlds give 100, 300, 100, 300; in order 100, 100, 300,
-//!   300; the middle is the value at place 2: 100, 100, 300. Men lost
+//!   enemy: the worlds give 100, 500, 100, 550; in order 100, 100, 500,
+//!   550; the middle is the value at place 2: 100, 100, 550. Men lost
 //!   unfed: 0, 0, 0. Ships sunk: 0, 0, 0. Ships out of action: 0, 0, 0.
 //!   Aircraft: 0, 0, 0.
 //! - **What the trial's enemy lost.** Men lost to the enemy: the worlds
-//!   give 200, 300, 200, 300: 200, 200, 300. The rest: 0.
+//!   give 200, 500, 200, 500: 200, 200, 500. The rest: 0. (Restated by
+//!   the architect on Nov 20, 2026, for decision 0193: before it the
+//!   worlds gave the side 100, 300, 100, 300, so 100, 100, 300, and the
+//!   enemy 200, 300, 200, 300, so 200, 200, 300.)
 //! - **What it needs and has,** from world 1's plan order at the end of
 //!   day 1: men wanted 400, to hand 600; it waits for nothing; the day
 //!   expected ashore is day 4. The plan order is the same in all four
@@ -147,13 +168,17 @@
 //! - **Where the worlds part,** by the 400 men believed at B, the only
 //!   parting. With them, worlds 2 and 4: 2 worlds; met and kept in 0,
 //!   lost again in 0, not met in 2; the side's men lost to the enemy
-//!   300, 300, 300; the enemy's 300, 300, 300; every other cost of
-//!   either side 0, 0, 0. Without them, worlds 1 and 3: 2 worlds; met
-//!   and kept in 2, on day 4, 4 and 4; the side's men lost to the enemy
-//!   100, 100, 100; the enemy's 200, 200, 200; every other cost 0, 0, 0.
+//!   500, 500, 550 (500 and 550: the middle of two is the lower); the
+//!   enemy's 500, 500, 500; every other cost of either side 0, 0, 0.
+//!   Without them, worlds 1 and 3: 2 worlds; met and kept in 2, on day
+//!   4, 4 and 4; the side's men lost to the enemy 100, 100, 100; the
+//!   enemy's 200, 200, 200; every other cost 0, 0, 0.
 //! - **Each world's own figures:** world 1, met on day 4, not lost,
 //!   the side's men lost to the enemy 100, the enemy's 200; world 2,
-//!   not met, 300 and 300; world 3 as world 1; world 4 as world 2.
+//!   not met, 500 and 500; world 3 as world 1; world 4, not met, 550 and
+//!   500. (Restated by the architect on Nov 20, 2026, for decision 0193:
+//!   before it the worlds with the 400 gave 300, 300, 300 for each side,
+//!   and world 4 was as world 2, 300 and 300.)
 //! - **Its other plans:** the side has none, and no trial of things as
 //!   they stand is given.
 //!
@@ -214,12 +239,13 @@
 //!   an evening after a report: the 400 are made in no world, and the
 //!   assumptions say the side has a count since. The case is made from
 //!   the Allied side's view of world 2 of the main trial at the end of
-//!   its play, which holds a count of 300 men of day 8: asked of that
-//!   view, the 400 are made in no world. (Corrected by the architect on
-//!   Nov 19, 2026, after the build: this said to play the live game to
-//!   day 5 with the course. There the landing meets the live garrison
-//!   of 1,200, unit 1 is destroyed on day 4, and with no man of the
-//!   side at B no report is made.)
+//!   its play, which holds a count of 100 men of day 8 (restated by the
+//!   architect on Nov 20, 2026, for decision 0193: before it, 300):
+//!   asked of that view, the 400 are made in no world. (Corrected by the
+//!   architect on Nov 19, 2026, after the build: this said to play the
+//!   live game to day 5 with the course. There the landing meets the live
+//!   garrison of 1,200, unit 1 is destroyed on day 4, and with no man of
+//!   the side at B no report is made.)
 //! - **No world played.** (Added on review.) With every picture made
 //!   unsound by the test: the estimate says that none of 4 worlds could
 //!   be played, and gives no day and no cost.
@@ -842,7 +868,6 @@ fn the_fight_of_day_4_takes_the_place_in_worlds_1_and_3() {
 }
 
 #[test]
-#[ignore = "decision 0193 changes it: in worlds 2 and 4 nothing more is coming (no unit to bring), and on the morning of day 7 unit 1 has 300 fit men, at least the estimate of 300, so at balanced it is set to attack and fights again; the men lost and the counts after day 6 move (the side loses 500 to 550 men in those worlds, not 300); the architect's to restate"]
 fn the_fight_of_day_4_does_not_take_the_place_in_worlds_2_and_4() {
     for world in [2, 4] {
         let truth = snapshot(world, 4);
@@ -863,28 +888,39 @@ fn the_fight_of_day_4_does_not_take_the_place_in_worlds_2_and_4() {
             .find(|s| s.world == world && s.day == 4)
             .and_then(|s| s.estimate_at_b);
         assert_eq!(report, Some(300));
-        for day in 5..=8 {
+        // Restated for decision 0193: unit 1 attacks again on day 7 and
+        // stays in on day 8. On day 8 unit 900,001's half shot hits in
+        // world 4 and not in world 2.
+        let unit_1_day_8 = if world == 2 { 100 } else { 50 };
+        for (day, ours, first, second, posture) in [
+            (5, 300, 100, 200, Posture::Defend),
+            (6, 300, 100, 200, Posture::Defend),
+            (7, 150, 50, 100, Posture::Attack),
+            (8, unit_1_day_8, 33, 67, Posture::Defend),
+        ] {
             let truth = snapshot(world, day);
-            assert_eq!(men_of(truth, 1), 300, "world {world} day {day}");
-            assert_eq!(men_of(truth, 900_001), 100);
-            assert_eq!(men_of(truth, 900_002), 200);
+            assert_eq!(men_of(truth, 1), ours, "world {world} day {day}");
+            assert_eq!(men_of(truth, 900_001), first);
+            assert_eq!(men_of(truth, 900_002), second);
             assert_eq!(base_side(truth, 2), JAPANESE);
-            assert_eq!(
-                truth.land_units[&LandUnitId::new(1)].posture,
-                Posture::Defend
-            );
+            assert_eq!(truth.land_units[&LandUnitId::new(1)].posture, posture);
         }
-        // Seven staff orders, the seventh unit 1 set to defend on day 5.
+        // Eight staff orders, the seventh unit 1 set to defend on day 5 and
+        // the eighth unit 1 set to attack on day 7.
         let w = &main_case().played.worlds[world as usize - 1];
         let by_day = orders(w);
         let all: Vec<Given> = by_day.iter().flat_map(|(_, o)| o.clone()).collect();
-        assert_eq!(all.len(), 7, "world {world}: {all:?}");
+        assert_eq!(all.len(), 8, "world {world}: {all:?}");
         assert_eq!(by_day[4], (5, vec![Given::Defend(1)]));
-        // The attack did not fail: the weights of fire were equal.
-        assert!(!world_of(w)
+        // The attack of day 4 did not fail: the weights of fire were
+        // equal. The attack of day 8 failed, 0.75 against 1.5.
+        let failed: Vec<u32> = world_of(w)
             .events()
             .iter()
-            .any(|e| matches!(e.kind, EventKind::GroundAttackFailed { .. })));
+            .filter(|e| matches!(e.kind, EventKind::GroundAttackFailed { .. }))
+            .map(|e| e.day)
+            .collect();
+        assert_eq!(failed, vec![8], "world {world}");
     }
 }
 
@@ -1010,11 +1046,10 @@ fn how_it_went() {
 }
 
 #[test]
-#[ignore = "decision 0193 changes it: in worlds 2 and 4 nothing more is coming (no unit to bring), and on the morning of day 7 unit 1 has 300 fit men, at least the estimate of 300, so at balanced it is set to attack and fights again; the men lost and the counts after day 6 move (the side loses 500 to 550 men in those worlds, not 300); the architect's to restate"]
 fn what_it_cost_each_side() {
     let e = main_estimate();
-    assert_eq!(e.side_costs, Some(costs(spread(100, 100, 300))));
-    assert_eq!(e.enemy_costs, Some(costs(spread(200, 200, 300))));
+    assert_eq!(e.side_costs, Some(costs(spread(100, 100, 550))));
+    assert_eq!(e.enemy_costs, Some(costs(spread(200, 200, 500))));
 }
 
 #[test]
@@ -1046,7 +1081,6 @@ fn what_was_assumed() {
 }
 
 #[test]
-#[ignore = "decision 0193 changes it: in worlds 2 and 4 nothing more is coming (no unit to bring), and on the morning of day 7 unit 1 has 300 fit men, at least the estimate of 300, so at balanced it is set to attack and fights again; the men lost and the counts after day 6 move (the side loses 500 to 550 men in those worlds, not 300); the architect's to restate"]
 fn where_the_worlds_part() {
     let e = main_estimate();
     assert_eq!(
@@ -1064,8 +1098,8 @@ fn where_the_worlds_part() {
                     lost_again: vec![],
                     not_met: vec![2, 4],
                 },
-                side: Some(costs(spread(300, 300, 300))),
-                enemy: Some(costs(spread(300, 300, 300))),
+                side: Some(costs(spread(500, 500, 550))),
+                enemy: Some(costs(spread(500, 500, 500))),
             },
             without: PartSide {
                 went: Went {
@@ -1083,7 +1117,6 @@ fn where_the_worlds_part() {
 }
 
 #[test]
-#[ignore = "decision 0193 changes it: in worlds 2 and 4 nothing more is coming (no unit to bring), and on the morning of day 7 unit 1 has 300 fit men, at least the estimate of 300, so at balanced it is set to attack and fights again; the men lost and the counts after day 6 move (the side loses 500 to 550 men in those worlds, not 300); the architect's to restate"]
 fn each_worlds_own_figures() {
     let e = main_estimate();
     let got: Vec<(u32, Option<u32>, bool, Losses, Losses)> = e
@@ -1095,9 +1128,9 @@ fn each_worlds_own_figures() {
         got,
         vec![
             (1, Some(4), false, men_lost(100), men_lost(200)),
-            (2, None, false, men_lost(300), men_lost(300)),
+            (2, None, false, men_lost(500), men_lost(500)),
             (3, Some(4), false, men_lost(100), men_lost(200)),
-            (4, None, false, men_lost(300), men_lost(300)),
+            (4, None, false, men_lost(550), men_lost(500)),
         ]
     );
     for (w, played) in e.worlds.iter().zip(&main_case().played.worlds) {
@@ -1210,10 +1243,9 @@ fn believed_present_and_absent() {
 /// (the live game played to the evening of day 5 with the course) gives no
 /// count, for unit 1's attack on 1,200 men fails on day 4 and its men are
 /// lost, so no man of the side is at B to report. The view taken is world 2
-/// of the main case at the end of its play, where the daily report from day 4 gives
-/// 300 men at B: a side's view, as any other, with a count since the start.
+/// of the main case at the end of its play, where the daily report of day 8 gives
+/// 100 men at B: a side's view, as any other, with a count since the start.
 #[test]
-#[ignore = "decision 0193 changes it: in worlds 2 and 4 nothing more is coming (no unit to bring), and on the morning of day 7 unit 1 has 300 fit men, at least the estimate of 300, so at balanced it is set to attack and fights again; the men lost and the counts after day 6 move (the side loses 500 to 550 men in those worlds, not 300); the architect's to restate"]
 fn believed_men_are_set_aside_when_the_side_has_a_count_since() {
     let live = scenario();
     let two = &main_case().played.worlds[1];
@@ -1222,7 +1254,7 @@ fn believed_men_are_set_aside_when_the_side_has_a_count_since() {
     let count = view.ground_estimate(B).expect("a count of B");
     assert_eq!(
         (count.men, count.day),
-        (300, 8),
+        (100, 8),
         "a count of a day after the start: the daily report"
     );
     let made = pictures(
@@ -1317,7 +1349,6 @@ fn no_world_played() {
 }
 
 #[test]
-#[ignore = "decision 0193 changes it: in worlds 2 and 4 nothing more is coming (no unit to bring), and on the morning of day 7 unit 1 has 300 fit men, at least the estimate of 300, so at balanced it is set to attack and fights again; the men lost and the counts after day 6 move (the side loses 500 to 550 men in those worlds, not 300); the architect's to restate"]
 fn a_world_that_could_not_be_played_is_counted_apart() {
     let e = estimate(&with_unsound(&[1]), IntentId::new(1), None);
     assert_eq!(
@@ -1337,9 +1368,9 @@ fn a_world_that_could_not_be_played_is_counted_apart() {
             not_met: vec![4],
         }
     );
-    // 100, 100, 300 in order: the middle at place 2.
-    assert_eq!(e.side_costs, Some(costs(spread(100, 100, 300))));
-    assert_eq!(e.enemy_costs, Some(costs(spread(200, 200, 300))));
+    // 100, 100, 550 in order: the middle at place 2.
+    assert_eq!(e.side_costs, Some(costs(spread(100, 100, 550))));
+    assert_eq!(e.enemy_costs, Some(costs(spread(200, 200, 500))));
     let words = e.to_string();
     assert!(words.contains("3 of 4 worlds played"), "{words}");
 }

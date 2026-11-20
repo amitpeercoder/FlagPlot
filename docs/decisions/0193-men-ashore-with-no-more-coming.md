@@ -103,12 +103,21 @@ Built on Nov 20, 2026 on the branch `men-ashore-no-more-coming`, to rules 1 to 8
 
 No run baseline, golden file or pinned hash changed; the recorded games' saves changed in their rules label and doctrine version alone.
 
-**Existing tests that changed.** Eleven tests, the architect's hand calculations, fail under the rule as it is meant and are ignored with the reason, for the architect to restate; no expected number was changed:
+**Existing tests that changed.** Eleven tests, the architect's hand calculations, failed under the rule as it is meant. They were ignored in the build and restated by the architect on Nov 20, 2026, from the build's table of what the game now gives; the restatement is in each file's doc comment and assertions:
 
-- `nothing_left_to_send` (`tests/scenario_68_ashore.rs`, the assertion of all the orders): with unit 3 held nothing more is coming, so on the morning of day 8 units 1 and 2, 600 fit men, are at least the estimate of 600 and are set to attack at balanced. Two orders follow the ten it expects: `(8, Attack(1))` and `(8, Attack(2))`.
-- `a_hold_is_honoured` (the assertion of all the notices): with unit 2 held from day 7, nothing more is coming and the men are too few, so `cannot_bring_enough` is handed in on each morning from day 8 to day 14, not on day 8 alone (rule 11).
-- Scenario 95, the estimate (`tests/scenario_95_the_estimate.rs`): `the_fight_of_day_4_does_not_take_the_place_in_worlds_2_and_4` (unit 1's men on day 7: 150, not 300), `what_it_cost_each_side`, `where_the_worlds_part`, `each_worlds_own_figures`, `believed_men_are_set_aside_when_the_side_has_a_count_since` and `a_world_that_could_not_be_played_is_counted_apart`. In worlds 2 and 4 there is no unit to bring, so nothing more is coming; on day 5 unit 1, landed on attack and beaten back, is set to defend as before, and on the morning of day 7 its 300 fit men are at least the estimate of 300, so at balanced it is set to attack and fights again. The side's men lost in those worlds are 500 and 550, not 300, and the enemy's 500, not 300.
-- Scenario 97, a seat's trial (`tests/scenario_97_a_seats_trial.rs`), which asks scenario 95's estimate: `the_answer_is_scenario_95s_estimate_of_intent_1`, `where_the_worlds_part` and `a_larger_size_is_more_of_the_same_worlds`, for the same cause (the men lost to the enemy, highest 550, not 300).
+- `tests/scenario_68_ashore.rs`, `nothing_left_to_send`: twelve orders, not ten; units 1 and 2 are set to attack on day 8 with 600 fit men against the estimate of 600.
+- `tests/scenario_68_ashore.rs`, `a_hold_is_honoured`: `cannot_bring_enough` is handed in on each morning from day 8 to day 14, not on day 8 alone.
+- `tests/scenario_95_the_estimate.rs`, `the_fight_of_day_4_does_not_take_the_place_in_worlds_2_and_4`: unit 1 attacks again on day 7 and stays in on day 8; the men by day, eight orders, and a failed attack on day 8.
+- `tests/scenario_95_the_estimate.rs`, `what_it_cost_each_side`: the side 100, 100, 550; the enemy 200, 200, 500.
+- `tests/scenario_95_the_estimate.rs`, `where_the_worlds_part`: with the 400, the side 500, 500, 550 and the enemy 500, 500, 500.
+- `tests/scenario_95_the_estimate.rs`, `each_worlds_own_figures`: world 2 loses 500 and 500, world 4 550 and 500.
+- `tests/scenario_95_the_estimate.rs`, `believed_men_are_set_aside_when_the_side_has_a_count_since`: world 2's count at the end is 100 of day 8, not 300.
+- `tests/scenario_95_the_estimate.rs`, `a_world_that_could_not_be_played_is_counted_apart`: of worlds 1, 3 and 4, the side 100, 100, 550 and the enemy 200, 200, 500.
+- `tests/scenario_97_a_seats_trial.rs`, `the_answer_is_scenario_95s_estimate_of_intent_1`: the cost 100, 100, 550 and the enemy's 200, 200, 500.
+- `tests/scenario_97_a_seats_trial.rs`, `where_the_worlds_part`: with the 400, the side's men lost 500, 500, 550.
+- `tests/scenario_97_a_seats_trial.rs`, `a_larger_size_is_more_of_the_same_worlds`: at `standard`, the side's men lost 100, 100, 550.
+
+The reason of a unit kept in says the staff "does not set it to defend"; a first build added "because the estimate is larger", which was wrong where the estimate had fallen and the fit men with it, and was taken out.
 
 **Not done.** Statement 9 in play. Scenario 105's own tests and its forty games were not re-read for rule 16 beyond the full test run.
 
