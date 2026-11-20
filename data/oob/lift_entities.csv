@@ -114,3 +114,4 @@ id,key,name,kind,nation
 1501,us-run-1942-11-04-callaghan-8th-marines,"Callaghan's task force with the 8th Marines and 1st Battalion 10th Marines, Lunga Point, 4-5 Nov",run,us
 1502,us-run-1942-11-29-aola-3d-battalion-147th,"Four transports with the 3d Battalion 147th Infantry and others, Aola Bay, 29 Nov",run,us
 1503,jp-run-1942-10-11-chitose-nisshin,"Seaplane carriers Chitose and Nisshin with destroyers, Shortland to Tassafaronga, 11-12 Oct (2d Division troops and howitzers)",run,jp
+6500,jp-midway-transport-group,"Midway Occupation Force transport group (the transports carrying the Midway landing force, 28 May to 13 June 1942)",transport-group,jp

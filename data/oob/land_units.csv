@@ -176,3 +176,20 @@ id,key,name,nation,service,kind,parent
 1212,us-battery-f-244th-coast-artillery-battalion,"Battery F, 244th Coast Artillery Battalion (155-mm guns)",us,us-army,formation,
 1213,us-1st-battalion-10th-marines,"1st Battalion, 10th Marines (75-mm pack howitzers)",us,usmc,formation,us-10th-marines
 1214,us-battery-l-11th-marines,"L Battery, 11th Marines (155-mm howitzers)",us,usmc,formation,us-11th-marines
+6200,us-forces-midway,"US forces at Midway, May-June 1942 (Marine ground forces, Navy air station, Army aviation, patrol craft)",us,mixed,forces-at-place,
+6201,us-6th-defense-battalion,"6th Defense Battalion, Fleet Marine Force (reinforced), Midway",us,usmc,formation,
+6202,us-3d-defense-battalion-midway-detachment,"3d Defense Battalion detachment at Midway (3-inch AA group, 37-mm and 20-mm/40-mm batteries), May 1942",us,usmc,echelon,us-3d-defense-battalion
+6203,us-2d-raider-battalion-companies-c-d-midway,"2d Raider Battalion, Companies C and D, Midway",us,usmc,echelon,us-2d-raider-battalion
+6204,us-22d-provisional-marine-company,"22d Provisional Marine Company, Midway",us,usmc,formation,
+6205,us-23d-provisional-marine-company,"23d Provisional Marine Company, Midway",us,usmc,formation,
+6206,us-mag-22-ground-echelon-midway,"Marine Air Group 22 ground echelon (VMF-221 and VMSB-241 ground crews), Midway",us,usmc,echelon,
+6207,us-naval-air-station-midway-personnel,Naval Air Station Midway: Navy personnel,us,usn,garrison,
+6208,us-7th-air-force-detachment-midway,"Army 7th Air Force detachment at Midway (B-17 and B-26 crews, signal and liaison personnel)",us,usaaf,task-group,
+6209,us-midway-light-tank-platoon,"Light tank platoon (five tanks) sent to Midway, 26 May 1942",us,usmc,formation,
+6220,jp-midway-landing-force,"Japanese Midway landing force (2nd Combined SNLF, the Ikki Detachment, construction units, a survey unit)",jp,mixed,task-group,
+6221,jp-ikki-detachment-midway,"Ikki (Ichiki) Detachment, Midway Operation, May-June 1942",jp,ija,formation,
+6222,jp-2nd-combined-snlf,2nd Combined Special Naval Landing Force (Midway),jp,ijn,formation,
+6223,jp-yokosuka-snlf-midway,"Yokosuka Special Naval Landing Force element of the 2nd Combined SNLF (printed ""1 YOKOSUKA SNLF"")",jp,ijn,formation,jp-2nd-combined-snlf
+6224,jp-kure-snlf-midway,"Kure Special Naval Landing Force element of the 2nd Combined SNLF (printed ""2 KURE SNLF"")",jp,ijn,formation,jp-2nd-combined-snlf
+6225,jp-11th-construction-unit-midway,11th Naval Construction Battalion (Midway plan),jp,ijn,construction,
+6226,jp-12th-construction-unit-midway,12th Naval Construction Battalion (Midway plan),jp,ijn,construction,

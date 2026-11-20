@@ -70,3 +70,12 @@ id,key,name,nation,type
 1068,us-cimarron-class,Cimarron class,us,oiler
 1069,jp-okinoshima-class,Okinoshima class,jp,minelayer
 1070,jp-tsugaru-class,"Tsugaru class (minelayer, single ship)",jp,minelayer
+6100,jp-akagi-class,"Akagi (single ship, converted from an Amagi-class battlecruiser hull)",jp,carrier
+6101,jp-kaga-class,"Kaga (single ship, converted from a battleship hull)",jp,carrier
+6102,jp-soryu-class,"Soryu (single ship; Hiryu is a modified sister, separate class)",jp,carrier
+6103,jp-hiryu-class,"Hiryu (single ship, modified Soryu design)",jp,carrier
+6104,jp-yamato-class,Yamato class,jp,battleship
+6105,jp-hosho-class,Hosho (single ship),jp,light_carrier
+6106,jp-ise-class,Ise class,jp,battleship
+6107,jp-fuso-class,Fuso class,jp,battleship
+6108,jp-kuma-class,Kuma class,jp,light_cruiser

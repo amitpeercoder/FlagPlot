@@ -37,3 +37,6 @@ id,key,name,nation,designation,role
 1034,a-20,Douglas A-20 Havoc,us,A-20,light_bomber
 1035,hudson,Lockheed Hudson,us,Hudson,patrol_bomber
 1040,p-38,Lockheed P-38 Lightning (model not given by the source),us,P-38,fighter
+6100,f2a-3,Brewster F2A-3 Buffalo,us,F2A-3,fighter
+6101,sb2u-3,Vought SB2U-3 Vindicator,us,SB2U-3,dive_bomber
+6102,d4y1-c,Yokosuka D4Y1-C Type 2 Reconnaissance Aircraft Model 11,jp,D4Y1-C,reconnaissance

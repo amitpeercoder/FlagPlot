@@ -72,3 +72,8 @@ id,key,name,nation,kind
 1068,us-5in-unspecified,US 5in gun (length in calibres and mark not specified by sources read),us,gun
 1069,us-3in-unspecified,US 3in gun (length in calibres and mark not specified by sources read),us,gun
 1070,us-6in-unspecified,US 6in gun (length in calibres and mark not specified by sources read),us,gun
+6100,jp-46cm-45-type94,46 cm/45 Type 94 (designated 40 cm/45 Type 94),jp,gun
+6101,jp-155mm-60-3ns,15.5 cm/60 3rd Year Type,jp,gun
+6102,jp-8cm-40-3ns,8 cm (76 mm in Navypedia)/40 3rd Year Type AA gun,jp,aa_gun
+6150,jp-bomb-30kg,30 kg bomb,jp,bomb
+6151,us-bomb-600lb-gp,600 lb GP bomb,us,bomb
