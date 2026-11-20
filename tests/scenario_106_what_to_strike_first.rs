@@ -120,3 +120,109 @@
 //! - A contact moved into the waters never ranks lower than it did.
 //!
 //! The tests are written by the build under these statements.
+
+// The architect's statement numbers (7a, 9a to 9d) are list items in the doc
+// comment above, which is left as written.
+#![allow(clippy::doc_lazy_continuation)]
+
+mod common;
+
+// ------------------------------------------------- Statement 12: the record
+
+mod record {
+    use std::fmt::Write as _;
+    use std::path::Path;
+
+    use sim_core::state::Side;
+    use sim_staff::{as_staffs, staffs};
+
+    use super::common;
+
+    /// FNV-1a, 64 bits: a digest of a text that does not change with the
+    /// compiler, as the standard library's hasher may.
+    pub fn fnv(text: &str) -> u64 {
+        let mut h: u64 = 0xcbf2_9ce4_8422_2325;
+        for byte in text.bytes() {
+            h ^= u64::from(byte);
+            h = h.wrapping_mul(0x0100_0000_01b3);
+        }
+        h
+    }
+
+    /// A scenario file under `data/scenarios`, played by its staffs on the
+    /// live figures for `days` days (all of them where `None`): every
+    /// decision each side's staff handed in, day by day, then every event of
+    /// the game, as text. The daily hashes are not in it.
+    pub fn played(file: &str, days: Option<u32>) -> String {
+        let path = common::data_dir().join("scenarios").join(file);
+        // Live figures: the files are live scenarios, and nothing here
+        // asserts a number of a figure.
+        let mut scenario = common::load_live(Path::new(&path)).expect("the scenario loads");
+        let held = staffs();
+        let mut out = String::new();
+        loop {
+            let day = scenario.world.day() + 1;
+            if days.is_some_and(|last| day > last) {
+                break;
+            }
+            let summary = scenario
+                .next_day_staffed(as_staffs(&held))
+                .expect("a day resolves");
+            if summary.is_none() {
+                break;
+            }
+            for side in Side::ALL {
+                let handed = scenario
+                    .world
+                    .staff_handed_in()
+                    .get(&side)
+                    .cloned()
+                    .unwrap_or_default();
+                writeln!(out, "day {day} {side:?} {handed:#?}").expect("a string writes");
+            }
+        }
+        for event in scenario.world.events().iter() {
+            writeln!(out, "{event:?}").expect("a string writes");
+        }
+        out
+    }
+}
+
+/// Statement 12, and the first property: no game without the limit changes.
+/// Scenario 5, the five-day scenario's file a and the 39 days' first week
+/// (stage 3's proof, arrangement a, both sides with intents), each played by
+/// its staffs, and, beside them, the second proof's Eastern Solomons and
+/// week (file a of each; the week is days 15 to 21 of its file), which give
+/// carrier forces and denies: every decision a staff hands in and every
+/// event of the game, as text, has the digest it had on the branch this
+/// rule was built from (`station-from-the-sea` at 4aebfa0e, before any of
+/// decision 0190). The daily hashes are left out: they all move with the
+/// new fields of the state. A later change that moves one of these games
+/// remakes its digest, with `FLAGPILOT_106_RECORD` set to a folder to write
+/// the texts into for a comparison.
+#[test]
+fn s12_no_game_without_the_limit_changes() {
+    let games: [(&str, Option<u32>, u64); 5] = [
+        ("05_eastern_solomons.toml", None, 0x6ed6_d981_3862_0cae),
+        ("five-days/01a_eastern_solomons.toml", None, 0x0986_e16d_1c5c_11bb),
+        ("stage-3-proof/07a_slice.toml", Some(7), 0x2a39_9fd1_1603_6253),
+        ("second-proof/05a_eastern_solomons.toml", None, 0x0e25_c601_cbf3_eb7c),
+        ("second-proof/07a_week.toml", None, 0xcfbf_084c_b2f4_3ec5),
+    ];
+    let write_to = std::env::var("FLAGPILOT_106_RECORD").ok();
+    let mut moved = Vec::new();
+    for (file, days, digest) in games {
+        let text = record::played(file, days);
+        let found = record::fnv(&text);
+        if let Some(dir) = &write_to {
+            let name = file.replace('/', "__");
+            std::fs::write(std::path::Path::new(dir).join(format!("{name}.txt")), &text)
+                .expect("the record writes");
+            println!("{file} {found:#018x}");
+        }
+        if found != digest {
+            moved.push(format!("{file}: {found:#018x}, recorded {digest:#018x}"));
+        }
+    }
+    assert!(moved.is_empty(), "games moved: {moved:#?}");
+}
