@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 20, 2026, at the designer's aski
 
 Summary: A second small scenario for play: the Coral Sea over five days, 6 to 10 May 1942. Two American carriers and a cruiser group against two Japanese fleet carriers and a light carrier, with a Japanese convoy bound for Port Moresby that lands on the last days if it is not stopped or turned back. It is built in three stages: the data is settled and derived first, then the scenario with its hand calculation, then its runs and games under the guards of decision 0187. Most of the ships and aircraft it needs the game already has.
 
-Standing: Confirmed by the designer on Nov 20, 2026, with his answers; stage A, the data and its research, is under way.
+Standing: Confirmed by the designer on Nov 20, 2026, with his answers; stage A's table and research are in and ruled on; its derivation list is being built.
 
 ## Why
 
@@ -174,3 +174,51 @@ The designer answered the questions one by one, taking the architect's proposal 
 3. **Placeholders at the centre:** stage A and its research were begun on his word ("Yes, start stage A"). Whether stage B is built on marked placeholders is decided when stage A's table is in.
 4. **The convoy stays decisive.** The scoring keeps the game's existing figures, so that the landing decides the game. If the first runs and the games between agents show the carriers do not matter, the architect proposes a lower worth for the men then, with a reason from the mission.
 5. **A staff that turns a convoy back** is planned as a rule of its own after this scenario's first run, from what the run shows the staff does with the convoy. The first version's engine never turns back.
+
+## Stage A: the architect's rulings
+
+Made on Nov 20, 2026 on stage A's table and research (`docs/research/coral-sea-stage-a.md`; 259 new fact and fit rows, each checked against its page by the team). They are the rules the derivation list is built to. Each exception the list then writes names its row and its reason, and the architect reads every one before the list merges.
+
+### How a disagreement is read
+
+1. **A ship's own report of the time is read before any later account.** Then the higher grade of source. Between sources of one grade, the figure a source states plainly is read before one it hedges ("probably", "about").
+2. **A row dated only to a year** is read as the existing lists read the same row or its like, where one does. Where none does, it is read if leaving it out would give a figure known to be wrong for the date, and the exception says so and is marked unconfirmed.
+3. **A figure that rests on one low row** is read only by a written exception with its reason (`data/oob/README.md`), and the thing to find is named beside it.
+4. **Where a row is missing and no rule above reaches it, nothing is made up:** the ship or type is left out and named, or the scenario waits.
+
+### Surface fire
+
+5. **It is modelled where a surface fight is the force's purpose,** and not elsewhere. The support group is sent to stop the convoy, so Australia, Chicago, Hobart and their destroyers, the four cruisers of the Main Force and the convoy's escort have their guns and torpedoes. The carriers and the ships of their screens do not, as in the Eastern Solomons list. Where a ship of the first kind has no rounds for a gun, her ammunition is read as not limiting, as the Savo Island list reads Yubari's.
+
+### Ship by ship
+
+6. **Lexington.** Her 8-inch guns are gone (the rows agree). Her heavy anti-aircraft guns are the twelve 5-inch/25 of the class row, which no row says were touched; the list reads that row for her by an exception, unconfirmed, and a ship row dated to May is still to be found. Her 1.1-inch mounts are read as seven and her 20 mm as 32, the one source that gives counts for April 1942; her own report shows 20 mm aboard on 8 May and names a mount numbered 8, which is noted beside the exception.
+7. **Yorktown** is her own report of the battle: eight 5-inch/38, four 1.1-inch quads, 24 of 20 mm, 18 of .50 calibre.
+8. **Chester** is read as Northampton class with her own fit; her 20 mm row, dated to the year, falls under ruling 2.
+9. **Shoho.** Eight 12.7 cm; her 25 mm are read as 8, which three sources state, against 12 that one states and another calls probable. Her displacement and fuel are settled by ruling 1 in the list. Her air group is 6 A5M4, 6 A6M2 and 9 B5N: the fighters agree across sources, and nine torpedo planes is what the analysis of 1947 and one other give.
+10. **Myoko and Haguro:** 7,500 nm at 14 kn, the better source of the two.
+11. **Perkins, the Sims class, Australia, and Akebono, Ushio and Sazanami:** each has disputed rows; the list settles them by ruling 1 and the architect reads each.
+12. **Left out of the first version, each named in the scenario's header:**
+    - **the fuelling group, Neosho and Sims.** An oiler has no kind in the simulation and Neosho has no endurance or fuel in tons. She cannot be rated, and Sims without her has no task. The Japanese search then has no decoy to find, which is a loss to the game and is said;
+    - **Tsugaru** (no fuel row), **Tippecanoe, Tangier and Toho Maru** (no class on file).
+13. **The convoy's escort** is Yubari as rated, and "Placeholder destroyers" of a placeholder class for the Kamikaze and Mutsuki class ships, since no row gives the rounds their guns carried (decision 0184, amended 18).
+
+### Aircraft
+
+14. **The SBD-3's radius** is the 200 miles of the rows of August, read for May by an exception: the same aircraft with the same load.
+15. **The fleet carriers' torpedo bomber is the B5N2,** on the order of battle of December 1941 and two undated rows, by an exception; no source read names the model for May.
+16. **The F4F-3's range** is settled by ruling 1.
+17. **The SBD-2, TBD-1, A5M4, B5N1 and G3M2 lack a range or a load.** They are researched as part of building the list. A type still without them is not flown: its squadron is left out and named. No type stands in for another.
+18. **Strengths.** Yorktown's squadrons are her reports'. Lexington's and the Japanese fleet carriers' are the one low row's, by an exception, with Lexington's launches of 7 May beside them as lower bounds.
+
+### The land side and the convoy, for stage B
+
+19. **The landing was planned for dawn on 10 May:** three sources now say so, and rule 39's "rests on no row" no longer holds.
+20. **Port Moresby's garrison** has no figure for May. The scenario's is a placeholder, named one, resting on the 3,000 of January 1942.
+21. **The convoy's men** have no count from a good source. The scenario's are a placeholder, named one, resting on the 4,886 of the detachment at Guam in January and the low row for the naval landing force.
+22. **The number of transports** is disputed between five and twelve. It is settled in the hand calculation from the men to be carried and the rows, with the reason.
+23. **Allied aircraft on land now have a table** (1 May 1942, from the analysis of 1947, checked on the page image). The designer left them out of the first version; the rows are there for the second.
+
+### A fault in the work, recorded
+
+24. **Researchers saved pages and scans to a scratch folder** to search them, against their brief, which allowed reading and not saving. Nothing was committed and the files were deleted. The next brief says it again.
