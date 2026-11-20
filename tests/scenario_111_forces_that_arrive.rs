@@ -25,11 +25,11 @@
 //!    or groups that the day's rules walk. K's ships burn no fuel and its
 //!    groups gain no fatigue: on entering, each has the fuel and the
 //!    figures the scenario wrote.
-//! 2. **It enters at the start of its day.** At the start of day 3's
-//!    night pulse K is in E, stopped, with its ships and groups, and the
-//!    event `ForceEntered` names day 3, E, the force, its three ships
-//!    and its two groups. In that same pulse A's force and K may sight
-//!    each other.
+//! 2. **It enters first thing on its day.** Before day 3's commands are
+//!    taken in and before any pulse, K is in E, stopped, with its ships
+//!    and groups, and the event `ForceEntered` names day 3, E, the force,
+//!    its three ships and its two groups. A's search of E's hex on the
+//!    morning of day 3, flown at a chance of 1, sights it.
 //! 3. **Who sees the event.** J sees it whole. A is given nothing of it.
 //! 4. **A side knows what is coming.** On day 1, J's view lists K (day 3,
 //!    E, a carrier and two destroyers, two groups), L (day 4, R, one
@@ -37,7 +37,9 @@
 //!    them. J's briefing has each under what is due.
 //! 5. **Orders before the day are refused,** to K, to a ship of K's, to a
 //!    group aboard, to U and to V, each with the words that it enters on
-//!    day N. On the day it enters an order is taken.
+//!    day N. An order given for day 3 itself is taken. A's order naming
+//!    K before day 3 is refused as for a unit that is not A's, with
+//!    nothing said of a day.
 //! 6. **An intent may name it.** J's "operate a carrier force" for K,
 //!    given on day 1, is accepted. The staff gives K no order on days 1
 //!    and 2 and says K enters on day 3; on the morning of day 3 it orders
@@ -45,34 +47,52 @@
 //! 7. **A unit and a group at a base.** On day 3 V is ashore at R with
 //!    300 men and G is at R with 12 aircraft; `UnitEntered` is recorded
 //!    for each. On days 1 and 2 R feeds no man of V.
-//! 8. **It waits for its base.** With R taken by A on day 2: V and G do
-//!    not enter on day 3; `EntryWaiting` is recorded each night, to J;
-//!    they enter on the night R is J's again.
-//! 9. **A force enters whoever is there.** With A's force lying in E on
-//!    day 3, K enters E, and the two forces are in one hex as two forces
-//!    that met.
+//! 8. **It waits for its base.** With R taken by A at the end of day 2:
+//!    V and G do not enter on day 3; `EntryWaiting` is recorded each day
+//!    they wait, to J; they enter on the first day that begins with R
+//!    J's again. With R J's and its airfield taking no aircraft, V
+//!    enters and G waits.
+//! 8a. **A base not yet its side's.** A land unit of A's with `enters =
+//!    3` at R, which is J's on day 1, loads; it waits until R is A's.
+//! 9. **A force enters whoever is there.** With A's surface force lying
+//!    in E on day 3, K enters E, and the two fight in the movement of
+//!    day 3's night, as two forces stopped in one hex do.
+//! 9a. **A route given is kept.** K with a route in the scenario sets
+//!    out on it in day 3's night.
 //! 10. **Men and cargo aboard come with it.** On day 4 L is at R with U's
 //!     600 men and 40 t of supply aboard.
-//! 11. **Its numbers are its own.** A task force formed in play on day 1
-//!     and a land unit made by division on day 2 take no number of K's,
-//!     L's, U's or V's.
+//! 11. **Its numbers are its own.** V has the highest land unit number of
+//!     the scenario. A land unit made by division on day 2 takes the
+//!     number above V's, not V's. A task force formed in play on day 1
+//!     takes no number of K's or L's.
+//! 11a. **What is coming is counted as coming.** J has men ashore under a
+//!     "take a place" who are too few, and V is in the take's forces
+//!     limit: on days 1 and 2 the staff says more is coming and names V
+//!     and day 3 (decision 0193).
+//! 11b. **A hold and a forces limit may name it** on day 1, for J. The
+//!     same commands from A naming K are refused as not A's.
 //! 12. **With "may be used from".** K with `enters = 3` and
 //!     `available_from = 5`: it is on the map from day 3 and refuses
 //!     orders until day 5.
 //! 13. **Refused scenarios.** `enters = 1`; `enters = 7` in a game of
 //!     six days; `enters` on a ship, or on a group aboard a ship, or on a
-//!     unit aboard one; a force entering on a land hex with no base of
-//!     its side. Each with its reason.
+//!     unit aboard one; a force entering on a land hex; a land unit with
+//!     `enters` in a hex with no base; an arrival of aircraft dated
+//!     before its group enters; an escort and its charge entering on
+//!     different days. Each with its reason.
 //! 14. **Never entered, never counted.** A game of two days ends with
 //!     K's carrier in no count of ships sunk, out of action or afloat.
 //! 15. **Saved and loaded** on day 2, the game goes on the same, and the
 //!     daily hashes are the same.
+//! 15a. **In a trial.** A dry run J asks on day 1 that plays to day 4 has
+//!     K on the map from day 3 in every world.
 //! 16. **No `enters`, no change.** Scenario 5 and the 39 days' first week
-//!     give the events they gave before.
+//!     give the events and the daily hashes they gave before.
 //!
 //! # Properties
 //!
-//! - A unit that has not entered appears in no event but its own entry.
+//! - A unit that has not entered is named in no event but its entry, its
+//!   waiting and the refusal of an order to it.
 //! - The same seed gives the same daily hashes twice.
 //!
 //! The tests are written by the build under these statements.
