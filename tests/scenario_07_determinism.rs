@@ -621,6 +621,9 @@ fn the_full_slice_log_has_every_kind_of_event_the_engine_can_emit() {
         "ForceEntered",
         "UnitEntered",
         "EntryWaiting",
+        // The full slice gives no base a supply line: no existing scenario
+        // is given one (decision 0196). Scenario 112 records it.
+        "StockReceived",
     ];
     let missing: Vec<&String> = all
         .difference(&seen)
