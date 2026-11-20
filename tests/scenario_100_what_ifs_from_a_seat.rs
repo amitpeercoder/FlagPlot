@@ -101,8 +101,9 @@
 //!
 //! On the same evening, with the same three commands queued, he asks
 //! `preview` of a `set_limit`, "not before day 3", on intent 1. It is
-//! his preview 1. He asks `trial` of preview 1 at `small`, and names no
-//! `beside`: for a preview of a limit it is `as_it_stands`.
+//! his preview 1. He asks `trial` of preview 1 at `small`, and gives no
+//! `compare`: for a preview of a limit it is true, and the second trial
+//! is the plan as it stands.
 //!
 //! **The two trials.** Both are given the three standing commands; the
 //! first has the draft besides. Neither is given a leave by the trial.
@@ -164,8 +165,8 @@
 //!
 //! ## C. What does it cost me: without it
 //!
-//! On the same evening he asks `trial` of intent 1, `beside` set to
-//! `without_it`, at `small`.
+//! On the same evening he asks `trial` of intent 1 with `compare` true,
+//! at `small`.
 //!
 //! **The two trials.** The first has the three standing commands and an
 //! empty course: the first date of A. The second has the standing
@@ -194,53 +195,63 @@
 //!
 //! - **Asked twice, the same.** Each of A, B and C asked again on the
 //!   same evening gives the same fields and words.
-//! - **Where no `beside` is given.** `trial` of intent 1 with nothing
+//! - **Where no `compare` is given.** `trial` of intent 1 with nothing
 //!   more plays one trial: the side has no other plan. `trial` of
-//!   preview 1 with `beside` set to `nothing` plays one trial, and its
-//!   figures are B's "with the draft".
+//!   preview 1 with `compare` false plays one trial, and its figures are
+//!   B's "with the draft".
 //! - **The same leaves in both trials.** Without command 3: the what-if
 //!   of B has B's figures on both sides. Leave to launch is given by the
 //!   trial in both trials, and the answer names it as given to the side
 //!   by the trial. (Before this record the second trial was given no
 //!   leave, and its landing would not have sailed.)
 //! - **Another plan to weigh.** With a hold of base 1 queued as well,
-//!   his intent 2: `trial` of intent 1 with no `beside` plays the second
+//!   his intent 2: `trial` of intent 1 with no `compare` plays the second
 //!   trial, without intent 1. Intent 2 is met and kept in 4 worlds with
 //!   intent 1 and in 4 without, and is not named as displaced.
 //! - **An order in force.** With the three commands taken in on day 1
 //!   and the trial asked on the evening of day 1:
-//!   - with no `beside`, one trial is played, and the answer says the
+//!   - with no `compare`, one trial is played, and the answer says the
 //!     order is in force;
-//!   - with `without_it`, two are played, of days 2 to 6. The second is
-//!     handed the withdrawal of intent 1 on the morning of day 2, before
-//!     the staff is asked: nothing sails, the side's men lost are 0, 0,
-//!     0, and the answer says the withdrawal is the trial's. In the
+//!   - with `compare` true, two are played, of days 2 to 6. The second
+//!     is handed the withdrawal of intent 1 on the morning of day 2,
+//!     before the staff is asked: nothing sails, the side's men lost
+//!     are 0, 0, 0, and the answer says that the order is withdrawn on
+//!     the coming morning, that what was already ordered stands, and
+//!     that the withdrawal is the trial's. In the
 //!     first the place is taken on day 4 in worlds 1 and 3. What worlds
 //!     2 and 4 cost by day 6 is reported by the build for the architect
 //!     to state, and not asserted here.
 //! - **Dates given.** `trial` of intent 1 with `dates` of day 4 gives
-//!   A's window.
+//!   A's window, and so does `dates` of days 1 and 4.
+//! - **A draft limit at later dates.** `trial` of preview 1 with `dates`
+//!   chosen: the course is commands 1 and 2 and then the draft, and the
+//!   dates are day 1 and day 4, chosen from the forces limit. Its first
+//!   date has B's figures with the draft. The second date's figures are
+//!   reported by the build, and not asserted here.
 //! - **A draft at later dates.** On a fresh evening he previews the
 //!   `set_intent` alone and asks `trial` of that preview with `dates`
 //!   chosen. With no forces limit every transport force and fighting
 //!   unit of the side counts, so day 4 is a date. It is answered with a
 //!   window of two dates; its figures are reported by the build, and not
 //!   asserted here.
-//! - **Asked before it is played.** A with `play` false: the answer
+//! - **Asked before it is played.** A with `describe` true: the answer
 //!   gives the standing command, the two commands of the course, the
 //!   dates day 1 and day 4 with unit 2 due on day 4, and 4 worlds for 5
-//!   days at the first date and 8 at the second. B with `play` false:
-//!   two trials of 4 worlds for 5 days, the second as it stands. Nothing
+//!   days at the first date and 8 at the second. B with `describe` true:
+//!   two trials of 4 worlds for 5 days, the second the plan as it
+//!   stands. Nothing
 //!   is played, the hash is the same, and `trials` lists nothing more.
 //! - **Refused, each with its own words and nothing played:**
-//!   - `as_it_stands` with an `intent`;
-//!   - `without_it` with a `preview`;
-//!   - `dates` with `beside` set to `as_it_stands` or `without_it`;
-//!   - `dates` of an intent in force;
-//!   - `dates` of three days; of days not ascending; of a day not after
-//!     the coming morning; and `dates` that is neither `chosen` nor a
-//!     list of days;
-//!   - a `beside` that is none of the three.
+//!   - `dates` with `compare` true;
+//!   - `dates` of an intent in force, named by `intent` or by a preview
+//!     of a limit on it;
+//!   - `dates` of three later days; of days not ascending; of day 6,
+//!     which is after the last day of the first date's play; and `dates`
+//!     that is neither `chosen` nor a list of days;
+//!   - with a second intent queued, a take of another place, and an
+//!     "after intent 1" queued on it: `dates` of intent 1, and `compare`
+//!     true of intent 1, each naming the "after";
+//!   - a `compare` or a `describe` that is not true or false.
 //! - **Nothing of the trial's enemy is named.** Every number of a unit,
 //!   a task force or a base in each answer, fields and words, is one the
 //!   seat's own tools give in the live game; no run of digits in it is

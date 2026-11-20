@@ -1,10 +1,10 @@
 # 0181: What-ifs and the window from a seat: a draft beside the plan, an order taken away, and the same order at later dates
 
-Status: a plan by the architect, written on Nov 20, 2026, inside the plan for step 3, stage 4 (decision 0161, step 8 of its ten, section G, rule 18, and section F from a seat). It is the second record of step 8; the first is decision 0178. It is to be read by a reviewer who has not seen it written, and amended, before any of it is built.
+Status: a plan by the architect, written on Nov 20, 2026, inside the plan for step 3, stage 4 (decision 0161, step 8 of its ten, section G, rule 18, and section F from a seat). It is the second record of step 8; the first is decision 0178. Read by a reviewer who had not seen it written, and amended on that reading ("Amended on review", which replaces the rules above it where they differ) before any of it is built.
 
 Summary: A commander can ask what an order would cost. This record lets him ask the three questions that follow. What if I change one thing: the draft is tried beside the plan as it stands, in the same worlds, and the two are set side by side. What does this order cost me: the side is tried with the order and without it. What if I give it later: the same order is tried at two or three dates. Each is the tool `trial` with one more argument. Nothing new is played: the trial, the estimate and the window are those already built
 
-Standing: A plan, written by the architect on Nov 20, 2026, inside decision 0161. Not yet reviewed and not built
+Standing: A plan, written by the architect on Nov 20, 2026, inside decision 0161, and amended on review. Not built
 
 ## Why
 
@@ -100,4 +100,24 @@ It is in `tests/scenario_100_what_ifs_from_a_seat.rs`, written before the code: 
 
 - **The window.** The commander queues the take, its forces limit and his leave, and asks `trial` with `dates` chosen. He is answered with scenario 96's window: at the coming morning the place is taken in 2 of 4 worlds, and on day 4, with the second unit, in 4 of 4.
 - **A what-if of the date.** He previews "not before day 3" on the take and tries it. The landing is readied at once and goes a day later, against men who have dug a day more. Beside the plan as it stands: taken in the same 2 worlds, on day 5 and not day 4, at the same cost to his side; the trial's enemy loses 240 men, not 254, in the worlds where the place is not taken.
-- **Without it.** Beside `without_it` the side loses no man and the place is not taken.
+- **Without it.** Compared with the side without the order, the side loses no man and the place is not taken.
+
+## Amended on review
+
+An independent reading of the plan and its hand calculation, against the code, confirmed every statement of "What is so today" and every number of the hand calculation, and found the following. Each was checked before it was taken. This section replaces the rules above where they differ, and the hand calculation is amended with it.
+
+1. **One switch, not three values** (replaces rules 1 to 3). `as_it_stands` with a preview and `without_it` with an intent were one thing under two names, and a preview that sets a new intent had no intent in the second trial for "as it stands" to read. `trial` gains `compare`, true or false: whether a second trial is played of the side **without the thing tried**. What that is:
+   - a preview of a limit, or of a change to an intent that is in force or queued: the plan as it stands, without the draft. The intent is in both trials, and the answer gives it in both, and world for world;
+   - a preview that sets a new intent, or an intent that is queued: the side without that intent. It is not in the second trial to have gone: the answer gives the costs of each side there and no count of worlds for it;
+   - an intent in force: the side with the intent withdrawn on the coming morning.
+2. **Where `compare` is not given** it is true for a preview of a limit or of a change to an intent that stands; true for a new intent, previewed or queued, where the side has another plan to weigh, as today; false for an intent in force; and false wherever `dates` is given.
+3. **A withdrawal is a withdrawal** (rule 4). Withdrawing an intent in force cancels its plan and the staff's intents under it. It does not undo what was ordered: a landing being readied, ships under way and men ashore stay as they are. The answer says "with the order withdrawn on the coming morning", that what was already ordered stands, and that the withdrawal is the trial's.
+4. **A window hands in the whole order at each date** (replaces rule 10). The course of a window is every standing command that sets the intent tried or a limit on it, in order, and after them the draft where a preview is tried, and the leaves the side lacks. So a previewed limit is tried as part of the order given later, not as a limit given later to an order given now; and the dates are chosen from the order's own forces limit, which is in the course. The standing commands are the rest.
+5. **No later date for an order in force** (replaces rule 11). `dates` is refused where the intent tried is in force, whether it is named by `intent` or by a preview of a limit on it or of a change to it. The words say that an order in force cannot be given later, and that a landing in force is held to a day by a "not before", which can be previewed and compared.
+6. **The scenario's commands are standing commands too.** Wherever a rule moves or drops "the commands that set the intent or a limit on it", it means among all the standing commands: the scenario's commands of the day for that side and what the seat has queued, as the second trial's filter reads them today.
+7. **A standing command left behind that names the intent.** Where the commands that set the intent tried are moved to a later date or dropped, and another standing command names that intent (an "after" on another intent), the trial is refused, naming the command: it would be refused at intake in the worlds played, and the two trials would differ by more than the thing tried. An intent in force that is withdrawn is not such a case: the other order then waits, as it would in the game.
+8. **`dates` is forgiving and bounded** (rule 9). A list may begin with the coming morning, which is the first date in any case: it is dropped, and one or two later days remain. A given date later than the last day of the first date's play, or than the game's last day, is refused; chosen dates are bound so already.
+9. **`describe`, not `play`** (rule 15). The table's button is "Dry run", which is the trial itself; an argument `play` set to false would be taken for it. `trial` gains `describe`, false where none is given: with it true nothing is played and the answer says what would be tried.
+10. **What it costs, said for each call.** A preview of a limit is compared by default, so it is two trials: at the full size about 36 s on the 39 days against 23 s for one. `compare` false asks for one.
+11. **This changes how decision 0178 split step 8.** That record says step 8 is written in two records, and puts the lift and the weight of supply with the window. Step 8 is written in three: decision 0178; this one; and the next, the trials the staff asks for, with the lift and the weight of supply. They go with the trial a leave is asked with because that is where a commander is shown what is to sail; a window's later date already says what it gains in men.
+12. **Reworded:** rule 11's "a window of one" meant a window of an intent in force (item 5).
