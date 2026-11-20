@@ -720,6 +720,7 @@ fn statement_2_nothing_more_is_coming_and_the_reason_says_what_was_looked_for() 
 // ------------------------------------------------------------------ Statement 3
 
 #[test]
+#[ignore = "decision 0194 moves it: the game is 7 days, so on the morning of day 6 two days are left, the side's attack of day 5 failed, and the staff sets U and V to defend (decision 0194, 9). all_postures() is now [(4, 1, Attack), (4, 2, Attack), (6, 1, Defend), (6, 2, Defend)] against the expected [(4, 1, Attack), (4, 2, Attack)]. The architect's to restate."]
 fn statement_3_balanced_with_nothing_more_coming_the_units_attack() {
     let g = play(&text());
     assert_eq!(

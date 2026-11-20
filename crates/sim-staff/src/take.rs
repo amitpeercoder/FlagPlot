@@ -3538,19 +3538,28 @@ impl Day<'_, '_> {
             let worked = if held_back {
                 let on_attack: Vec<String> = ops
                     .iter()
-                    .filter(|a| a.unit.posture == Posture::Attack && !pulled)
+                    .filter(|a| a.unit.posture == Posture::Attack)
                     .map(|a| a.unit.id.to_string())
                     .collect();
+                let verb = |one: &str, many: &str| {
+                    if on_attack.len() == 1 { one } else { many }.to_string()
+                };
                 format!(
                     "{judged}. With fewer than {} days of the game left the staff begins no attack ashore, because an attack begun so late only costs men: it sets no unit on defend to attack{}.",
                     coming::LAST_DAYS,
                     if on_attack.is_empty() {
                         String::new()
+                    } else if pulled {
+                        format!(
+                            ", and {} on attack, whose attack failed yesterday, {} set to defend",
+                            on_attack.join(" and "),
+                            verb("is", "are")
+                        )
                     } else {
                         format!(
                             ", and {} on attack, whose attack did not fail, {} in",
                             on_attack.join(" and "),
-                            if on_attack.len() == 1 { "stays" } else { "stay" }
+                            verb("stays", "stay")
                         )
                     }
                 )
