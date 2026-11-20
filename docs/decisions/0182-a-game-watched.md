@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 20, 2026, at the designer's aski
 
 Summary: The designer wants to watch a game on the table in which an agent commands a side, against the engine or against another agent. He gives no orders. He holds the clock: next pulse, carry on, stop, and he reads what a side's commander reads. This record gives a game a third party, the watcher, who holds the clock and can read and cannot order. A seat's own tools for moving time become its word that it is ready, and for how long. The table's bridge holds one such game, with a door for each agent
 
-Standing: A plan, written by the architect on Nov 20, 2026, at the designer's asking, and amended on review. Step 1, the session and `serve`, is built and ruled on; step 2, the table, is not built
+Standing: A plan, written by the architect on Nov 20, 2026, at the designer's asking, and amended on review. Step 1, the session and `serve`, is built and ruled on; step 2, the table, is built, checked by script and not yet read in a browser
 
 ## Why
 
@@ -213,3 +213,54 @@ Read on Nov 20, 2026, with the build's core: the watcher's read, which goes thro
 8. **Only a watched game left inside a day is saved as stopped inside a day.** Stands.
 9. **The scenarios the build chose** for a seat at a command, an interrupt and an engine's stop stand.
 10. **The watcher's answers have no schema, and the agent interface's version is not raised.** Stands for step 1: nothing a seat is given changed shape. Step 2 is built against the shapes in "As built: step 1"; if the page needs them fixed, they are given schemas then.
+
+## As built: step 2
+
+Built on Nov 20, 2026: the table's bridge in watch mode, a door for each agent's seat, the seat's program and the page's watching (rules 16 to 18, amended 15 to 23). No Rust changed.
+
+### What was built
+
+- **`table/serve.py --watch`,** with `--seat` once for each side an agent plays, the other the script's. It starts `sim-cli serve SCENARIO --watched --seat SIDE=player ..`, reads its answer lines on a thread of its own and matches each to its request by `id`. At start it makes a key for each agent's door and one for the watcher and prints the watcher's page, `http://127.0.0.1:PORT/watch/KEY/`, and each door, `http://127.0.0.1:PORT/seat/KEY`. Without `--watch` it is the bridge it was, driving `sim-cli mcp`.
+- **A door** answers `GET /tools` (the seat's tools from `serve`, and `wait`), `GET /instructions` (the seat's opening words from `serve` and a paragraph on the watched clock) and `POST /call` with `{tool, arguments}`, answered `{"ok": ..}` or `{"refused": .., "allowed": ..}`. A call not answered within `--hold` seconds, 50 unless given, is answered `{"waiting": true, "tool", "words"}`; the door keeps the call and its `wait` holds again and gives the answer once it has come (amended 17).
+- **The watcher's address** serves the page and, under it, the config, the map, the watcher's tools from a side, a read (`POST /call` with `{tool, arguments, side}`, passed as the watcher's read), the standing, a seat's calls, the step and the restart.
+- **`--keep DIR`** passes `--save` and `--transcript` to `serve`; on leaving (Ctrl-C or SIGTERM) the bridge closes `serve`'s input, `serve` writes the saved game and the transcript, and the bridge writes each seat's entries to a file of its own.
+- **`table/seat_mcp.py --url DOOR`:** a Model Context Protocol server on standard input and output (`initialize`, `ping`, `tools/list`, `tools/call`) that passes each call to the door. The briefing is text unless asked for data, as `sim-cli mcp` has it. Standard library only.
+- **The page,** when the bridge says the game is watched: the heading names the commander watched; a switch between the sides where both are agents'; the order form, the direct orders, the air group's order, forming a force, the release, the leave's switch, approve and cancel, the risk and the withdrawal, the dry run, the what-ifs, the "do not stop me" and "give it" buttons are not offered; the reads go to the watcher's reads from the side watched; a slip for each agent's seat, ready and until when or waited for, with the calls of the side watched since its last stop (tool, arguments in the table's words where it has them, refused or not, and the `reason`) and the call it holds; the clock is Next pulse (Next day where a step is a day), Carry on and Stop.
+- **`table/check_watch.py`,** the check by script, below.
+
+### Readings the record did not make, for the architect to rule on
+
+1. **The watcher's key is in the page's address,** not written into the page: the page finds it in its own path and puts every request under it. The page is not served without the key (`/` says the game is watched), and neither are the config (it holds both sides' directives), the map or the reads.
+2. **Carry on's loop is the page's.** It asks the standing; while a seat is waited for it says who and asks again every 1.5 s; when none is, it steps, plots the step from `events` read as the side watched, and stops on a thing ticked, the game's end or the watcher's Stop. The bridge passes steps and holds no loop. Closing the page stops it. Next pulse with a seat waited for says who and does not step.
+3. **The page reads what the side was told from its events,** not from `advance`'s `told`, which it no longer calls (amended 21): by the event kinds `told_as` names, and, for two of them, by the event's text (a report of a new contact; propulsion or flight deck out).
+4. **The door holds any call** not answered within its wait, not only calls of time: a long dry run would be held and collected by `wait` the same way.
+5. **A call while a held call is unanswered is passed to the session,** which refuses it and enters it in the transcript (amended 8). A call after the held call's answer has come and before `wait` collects it is refused by the door, saying to call `wait`, and is in no transcript; so is `wait` with nothing held.
+6. **The watcher looks only from a side an agent plays.** The session lets him read the script's side (ruling 6); the bridge refuses it, as rule 18 offers the switch only where both sides are agents'. Widening it is one line of the bridge.
+7. **The watcher's tools from a side are taken from the refusal of a read naming no tool,** whose `allowed` lists them: `serve` has no request that lists them.
+8. **The slip lists the calls of the side watched;** of the other agent it shows only whether it is ready. Its calls are seen by switching side.
+9. **Begin again** in a watched game is refused while an agent has called its door in the last five minutes (amended 20). The keys are kept; the new game's files are kept beside the first, as `save-2.json` and so on.
+10. **The transcript is one file from `serve`;** the bridge keeps it and writes one more file a seat (`transcript_allied.jsonl`, `transcript_japanese.jsonl`).
+11. **Directives in a watched game** are given as `--directives allied=FILE` and `--directives japanese=FILE`; a bare file is the first agent's.
+12. **Calls held when the bridge is left** are answered that the game's server has stopped.
+
+### The check by script
+
+`python3 table/check_watch.py`, on ports 8760 to 8762, with the door's wait shortened to 3 seconds. On `orders-inside-proof/05_eastern_solomons_on.toml` with both seats agents', and `--keep`: wrong keys refused at a door and at the watcher's address, the page not served without the key; each door's tools with `wait` and its words; reads and an order at each seat, with a `reason`; the watcher refused `issue_orders`, `preview` and `end_day`, and reading the Japanese briefing; a step refused naming both seats, then both ready; the watcher shown the Allied order with its reason and its held `advance`; the Allied `advance` answered after the night's step in its open call; the Japanese `end_day` answered "waiting" after 3 s, a read from the held seat refused, the next step waiting for the Allied seat alone; the morning and the afternoon stepped, the game over with both stops; the Japanese `wait` giving its `end_day` answer; `wait` with nothing held refused; restart refused; on leaving, the saved game and the three transcripts kept, each seat's holding its own calls, the watcher's reads in none; the saved game replayed by `sim-cli replay`. On scenario 78 with the Allied seat an agent's and the Japanese the script's: one door printed; the watcher refused the script's side; an order queued; `seat_mcp.py` answering `initialize`, `tools/list` (with `wait`), `tools/call` of `get_briefing` as text and a refusal as an error result; three pulses stepped and the `end_day` answered at dusk and not before; the day's events read as the Allied side. The bridge without `--watch` serving the page, its tools, `get_briefing` and `end_day` through `/call` as before. Every line held.
+
+### Not verified
+
+- **The page in a browser.** Its script parses, and nothing else of it was run. To be looked at: the watched heading and the side switch (and that switching changes the heading, the words for a base taken and the directives, and that a side with no directives file shows none); that no control that orders shows anywhere (the signals, the force, base and air group cards, the plan sheet, the order form, the leave's switch); the seat slips and the calls' words; Next pulse, Carry on and Stop, the plot of a pulse and of a day, the wait for a seat, and Carry on stopping on what is ticked; the directives kept apart for each side across a reload; Begin again.
+- **A game played by models.** The doors were called by scripts only.
+- **A watched game with a trial,** and the dry run among the reads of the tripwire (ruling 1, owed).
+
+## The architect's rulings on step 2
+
+Read on Nov 20, 2026, and looked at in a browser on a watched game of the Eastern Solomons with both seats played by hand through their doors.
+
+1. **Seen to work on the page:** the heading and the switch between the sides; no control that orders, on the chart, the plan sheet or the leave switch; each seat's slip with ready or waited for, its calls in words and the reason it gave; Next pulse stepping the clock once both seats were ready; and no error in the page's console. Not looked at: Carry on stopping on what is ticked, the directives kept apart by side, and a restart.
+2. **The watcher's key in the page's address** stands (reading 1): nothing is served without it.
+3. **Carry on's loop is the page's.** Stands: the bridge passes steps and knows nothing of pace, as rule 4 has it.
+4. **The watcher looks only from a side an agent plays** (reading 5). It stands for now and is narrower than ruling 6 on step 1: looking from the engine's side of a game against the engine is owed, a line's change.
+5. **The door holds any slow call,** and a call made before `wait` has collected an answer is refused by the door and is in no transcript (readings 3 and 4). Stand.
+6. **The page still speaks to the watcher as the commander** in places ("your order", "waits for your leave", "from staff, for decision"). It gives him nothing he may not read and lets him do nothing, but the words are wrong for a watcher. Owed: they are to say whose order and whose leave.
+7. **A seat's readiness is said shortly:** "Ready for 1 more pulse", without the clause on interrupts, and a call of time reads "Has finished, and waits for the clock". Changed by the architect on the look.
