@@ -1004,6 +1004,7 @@ fn a_garrison_the_estimate_was_right_about() {
 }
 
 #[test]
+#[ignore = "decision 0193 changes it: with unit 3 held nothing more is coming, so on the morning of day 8 units 1 and 2 (600 fit men) are at least the estimate of 600 and are set to attack at balanced (orders (8, Attack(1)) and (8, Attack(2)) after the ten expected); the architect's to restate"]
 fn nothing_left_to_send() {
     let g = play(&with_commands(&text(), &hold_unit(1, 3)));
     assert_eq!(g.all_orders(), main_orders()[..10].to_vec());
@@ -1019,6 +1020,7 @@ fn nothing_left_to_send() {
 }
 
 #[test]
+#[ignore = "decision 0193, rule 11, changes it: with unit 2 held from day 7 nothing more is coming and the men are too few, so `cannot_bring_enough` is handed in on each morning from day 8 to day 14, not on day 8 alone; the architect's to restate"]
 fn a_hold_is_honoured() {
     let g = play(&with_commands(&text(), &hold_unit(7, 2)));
     // Restated for decision 0169: the second lift of day 8 is not sent.

@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 20, 2026, on the designer's word
 
 Summary: Men landed to take a place attack only when they are as many as the risk asks for against the enemy they count: twice his number at balanced. When they are fewer, the staff waits for a second lift. When there is nothing more to send, it waits for ever. This gives the staff a judgement for that case: with no more coming, a balanced staff attacks if its fit men are at least the enemy's, a pressing staff attacks whatever the count, and a careful one waits and tells the commander.
 
-Standing: Planned on Nov 20, 2026; waits for its review.
+Standing: Planned on Nov 20, 2026, amended on review and built on Nov 20, 2026 ("As built"); the readings marked there, and statement 9 of scenario 109, are the architect's to confirm.
 
 ## Why
 
@@ -62,3 +62,51 @@ A reviewer read the plan against the take's code and ran the scenarios that have
 14. **The worked example is corrected by the architect:** U and V are ashore on defend; the attack fatigue limit is the reference file's and the test states it; W is in the take's forces limit; statement 9 follows decision 0191; statement 4's and 6's notice is `cannot_bring_enough`; statements are added for rule 10 (a unit before its day is coming; a unit no ship can carry is not) and rule 12, with three properties: more fit men never turn an attack into a wait; a larger estimate never turns a wait into an attack; a lift added never lowers the men wanted.
 15. **What moves:** of the scenarios with a take, the stage 3 proof's first file on days 37 to 39, where both takes wait with nothing coming and their fit men are below the estimate: new notices and no attack. The Coral Sea on day 5.
 16. **For scenario 105 it is one day's fight.** The first judgement ashore is on the last day in every one of forty games; in 29 of them this rule sends the men in. Port Moresby will not fall inside the game.
+
+## As built
+
+Built on Nov 20, 2026 on the branch `men-ashore-no-more-coming`, to rules 1 to 8 as amended on review (10 to 16). Scenario 105 is not changed.
+
+**What was built.**
+
+- `crates/sim-staff/src/take/coming.rs`, new: the test "more is coming" (`more_coming`), the men wanted with nothing more coming (`men_per_man_with_nothing_coming`: 3, 1 and 0, placeholders), and the judgement as a pure function (`verdict`: attack, wait or committed), with unit tests of the worked example and of the six properties.
+- `crates/sim-staff/src/take.rs`, the judgement ashore (`ashore`): where an estimate is held and the fit men that can attack are fewer than the men wanted, the test is worked; with nothing more coming the reason adds what was looked for and the men wanted, the units attack, wait or stay in, and where it waits the staff hands in `cannot_bring_enough`. Nothing else of the morning changes: the second lift, the later lifts and "not to starve" still read the men wanted while more is coming.
+- `crates/sim-staff/src/lib.rs`: the doctrine version `supply-46`. `crates/sim-core/src/world.rs`: the rules label 24. No state, no event, no draw, no order and no notice kind is added; the state layout, the saved game's version and the agent interface are as they were.
+- Scenario 109: `data/scenarios/men-ashore-no-more-coming/109_men_ashore_with_no_more_coming.toml`, on scenario 107's placeholder map, in a folder of its own (decision 0072), with a ground figures file of its own (`data/reference/ground_placeholder_scenario_109.toml` and its frozen copy in `data/reference/step1`: the frozen figures with `rest_per_day` 0, `unfed_loss_share_per_day` 0, `preparation_per_day` 100 and no report error, so the opening estimate stands). The tests are in `tests/scenario_109_men_ashore_with_no_more_coming.rs`, under the architect's statements.
+- The rulebook (chapter 8, Taking a place, Ashore, items 4 to 10, A second lift, the notice's row and the standing interrupt's row, the versions), the glossary ("men wanted" and "more is coming", new; "cannot bring enough"), `docs/rules/differences.md` rows 50 to 52, `docs/commands.md`, `docs/open-work.md`, and the recorded games' saves (the rules label and the doctrine version; no transcript changed).
+
+**Readings made in the build** (the architect's to confirm):
+
+1. **When it is worked.** Only on a morning an estimate is held and the fit men that can attack are fewer than the men wanted while more is coming. On any other morning the judgement and its reason are as before.
+2. **The lifts of the take** are its first lift and the forces the forces limit of its "ready a landing" names. One with fighting men aboard a ship afloat is more coming, whatever its route: under way, turned back or waiting.
+3. **Later lifts** are counted as "not to starve" counts them: a lift as it stands the end may send, with fighting men aboard, that may first be used by the end's last day. A lift the commander holds is left out of them, as before, and so is not coming.
+4. **A unit or force before its day counts from its day.** With a date, it is coming where its day is no later than the date. With no date it is always in time: the staff's seven days are counted from its day. Read with today and seven days, the stage 3 proof would have moved on days 13 to 15, where the next force to come may be used from day 23; the review said it must not move before day 36 (`docs/rules/differences.md` row 50).
+5. **A unit of the forces limit** is one chosen or one of the end's limit as it binds. It is coming where it is a fighting unit with men ashore, not at the place, with no man aboard, not held, ashore at the source, in time, and carried. **Carried:** the first lift has a ship afloat and is bound for the source (the last hex of its route, or where it lies). Where it lies stopped at the source, its ships must berth the units by the choice of a second lift, and at balanced "not to starve" must not forbid that lift. A unit ashore elsewhere than the source is not coming: no rule brings it.
+6. **Once sent in, they stay in** holds, at balanced and at press, for a unit on attack that the staff sent in under this rule, and no notice is handed in then. The staff keeps no state: it reads its own reasons in the side's log. A unit was sent in under this rule where the staff's last order to it that the log holds is an attack whose reason is bound "sent in with nothing more coming". Any other unit on attack, a unit landed on attack by a lift made at a base among them, is set to defend as before. A first build kept every unit on attack in, and scenarios 68, 95 and 97 showed a unit landed on attack and beaten back left in to attack again, which the record does not ask for (`docs/rules/differences.md` row 51).
+7. **The notice** is handed in on each morning it waits with nothing more coming, once a morning for the plan. Its standing interrupt fires once for the plan, on the first such morning, as the table of standing interrupts has it (`docs/rules/differences.md` row 52). At preserve the force, where units on attack are set to defend, the notice rests on a reason of its own beside the orders.
+
+**The tests.** Every statement and property of scenario 109 has a test: 22 pass and 1 is ignored. Nine unit tests are added in `sim-staff`.
+
+- **Statement 9, ignored:** a lift turned back cannot be built while men of the take are ashore. Decision 0191 turns back only the first lift before any of its men are ashore, and a scenario's contact is too old by the morning of the judgement. A force the scenario routes to its source is held by the commander's order and so not counted. The code counts a lift of the take with fighting men aboard whatever its route (reading 2), so the statement holds as built, but it is not proved in play.
+- **The morning M** is day 4: the lift sails at press on day 1 (at balanced "not to starve" holds it, with no hold of the place) and the risk is balanced from day 2.
+- **Statement 1** ("today") is proved by the reason's 6,888 wanted and that, with more coming, the staff waits each morning with no notice. No switch is in the code.
+- **Statement 7:** on M the transports are on their way home, and the reason says the unit left behind is to be sent when they lie at the source; on day 6 they do, and it is sent. The staff waits with no notice on both mornings.
+- **Statement 9b** is judged on day 5: the transports are sunk on day 4 after the landing, so on M more is coming and on day 5 nothing is.
+- **Statement 9c** is exact: an Allied landing brings the true count to 9,000 and a report error of one gives that estimate the next morning. U loses a man a day unfed once ashore, so the fit men that day are 5,085.
+- **Statement 12:** the interrupt stops the day once, on day 4; the notice is handed in on days 4 to 7.
+
+**What it moved.** Every scenario under `data/scenarios` (the step 2 frozen copies left out) was run with the rule and without it on the same build (a switch not committed), and the output of `run --events` compared. Three moved:
+
+- `data/scenarios/stage-3-proof/07a_slice.toml`, the Japanese side. Day 36, the take of (3,-5): its last lift as it stands, task force 38, was sent that morning by the take of (2,-4), higher in priority, so nothing more is coming to (3,-5). Days 37 to 39, both takes: nothing more is coming, and the fit men (4,403 to 4,435 at (2,-4) against estimates of 8,787 to 12,022; 1,200 at (3,-5) against 3,614 to 8,496) are fewer than the estimate. Each morning a new reason and the notice `cannot_bring_enough`; no attack. Days 11 to 35 do not move. The daily hashes of days 36 to 39 change.
+- `data/scenarios/coral-sea/01b_coral_sea.toml`, day 5, the last: the Japanese men at (-17,-4), 5,116 fit against 3,444 counted, are set to attack at balanced. The other three Coral Sea files do not reach a judgement ashore on their seed (in 01a the lift is turned back).
+- Scenario 109, its own.
+
+No run baseline, golden file or pinned hash changed; the recorded games' saves changed in their rules label and doctrine version alone.
+
+**Existing tests that changed.** Two tests of scenario 68, the architect's hand calculation, fail under the rule as it is meant and are ignored with the reason, for the architect to restate; no expected number was changed:
+
+- `nothing_left_to_send` (`tests/scenario_68_ashore.rs`, the assertion of all the orders): with unit 3 held nothing more is coming, so on the morning of day 8 units 1 and 2, 600 fit men, are at least the estimate of 600 and are set to attack at balanced. Two orders follow the ten it expects: `(8, Attack(1))` and `(8, Attack(2))`.
+- `a_hold_is_honoured` (the assertion of all the notices): with unit 2 held from day 7, nothing more is coming and the men are too few, so `cannot_bring_enough` is handed in on each morning from day 8 to day 14, not on day 8 alone (rule 11).
+
+**Not done.** Statement 9 in play. Scenario 105's own tests and its forty games were not re-read for rule 16 beyond the full test run.
+
