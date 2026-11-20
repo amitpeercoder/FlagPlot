@@ -67,3 +67,38 @@ No rule of the simulation is added or changed. New: a frame file for each map an
 ## Questions for the designer
 
 1. **The present map's chart will be drawn a little narrower,** 2 in 100, when it is drawn true. The architect proposes to do it, so that one way of drawing serves every map.
+
+## Amended on review
+
+A reviewer who had not seen the plan written read it against the code on Nov 20, 2026. What follows replaces the rules it names; where it and the text above differ, this holds.
+
+**The present map's file does not change by one byte (replaces rules 1, 2 and 5).** A map file's bytes are hashed into every saved game, and five recorded games, a batch and the validation reports carry the present map's hash. So:
+
+17. **The header's lines as they are today are the frame.** The lines "Projection: hex (0,0) is centred at …", "east_nm = …", "north_nm = …" and "Extent: every hex whose centre lies from … to … and from … to …" are written for every generated map in exactly the present form, with that map's numbers (degrees as whole numbers or decimals, "28.5 N, 178.5 E"). No line is added to the header for the frame.
+18. **The header is the authority for every reader but the tool that makes the map.** `sim-data` reads those lines into fixed-point values and hands a map's frame to whoever asks: the check of passages, the export, the agent's places. The table's bridge reads the same lines of the map file, which it may read. A map with no such lines has no frame, and everything behaves for it as it does today.
+19. **The rule is for generated maps.** The 45 placeholder maps are on no sea and have no frame.
+20. **The map tool takes a frame file as an argument, and with none it makes the present map.** The present map's frame stays in the tool as its default, named as that, with its title and its date; its command line and so its header are unchanged. This is the one place a map's frame is in code. A frame file gives the title, the date, the centre, the factor, the extent and the land marks, every quantity as a string. It is kept in `data/map/frames/`, where nothing that walks `data/map/` for maps will take it for one, and only the map tool reads it.
+21. **What proves it:** the build makes the present map again with the changed tool and compares it with the committed file, byte for byte, and says so in "As built". The test of the committed map is widened to every committed generated map: its rows are those of its header's extent, and each centre is where its header's projection puts it. For the Midway map, a test that the frame file and the header agree.
+
+**Longitude in the file (replaces rule 3).**
+
+22. **The map file's longitude column stays as it is documented: west negative, between -180 and 180.** A hex of the Midway map at 177 24 W reads -177.4. An agent is given that number, as today.
+23. **Only the map tool, in making a map, and a drawing of a map run longitude on.** The tool shifts the source's shapes whole, ring by ring, into the frame's run before sampling. The table's chart, its position readout and names, the viewer's labels and the script that clips the coast add 360 to any longitude west of the frame's western edge, and letter what they show east or west.
+
+**The frame of the Midway map (replaces rules 6 and 7).**
+
+24. **South edge 18 N,** not 19 N, so that Wake (19 17 N) is not in the last row, where a small change to the frame would drop it. Extent 18 N to 38 N, 163 E to 166 W; about 1,400 hexes. Decision 0198's rule on the south edge is amended by this line.
+25. **The error, the right way round.** East and west distances on the map are 0.878817 over the cosine of the latitude times the true ones: 8 in 100 short at 18 N, 11 in 100 long at 38 N, 3 in 1,000 short at Midway. Accepted as rule 7 says.
+26. **Pearl Harbor is off the map,** and with it every Allied base but Midway; a force going east stops at 166 W. Wake's southern sides are the edge. Scenario 114's hand calculation says what that means for each force.
+
+**Land marks (replaces rules 8 and 9's mechanism).**
+
+27. **A land mark is a line of the frame file:** a name and a position, citing its row of `data/oob/place_positions.csv`. The anchors file and its seven columns are not changed, and the Midway map needs no anchors file: a hex with no land point has one body of water.
+28. **A marked hex is coast with land percentage 0** and is listed in the header in a line of its own, "Marked land: …"; it is not counted among the hexes with a land point and 0 percent.
+29. **Names that are only names** (Kure, Pearl and Hermes Reef, Lisianski, French Frigate Shoals) go in the table's names file and the export's labels, not in any file the map is made from.
+
+**What else changes (added to rules 12 to 15 and "What it costs").**
+
+30. **The export's map gains the frame** (centre, factor, western and eastern edge), and the viewer and its check read it there instead of the cosine of 12 degrees.
+31. **Named for the build,** beyond what the plan listed: the map tool's search box and padding for the extent; `water`, which is given a map to read its frame from; the three tests that call the tool's projection; the check of passages' constants; the table bridge's default map and its chart loaded once at start; the clipping script's fixed box; the tool server's opening words.
+32. **Decision 0185 is amended** where it has the table's list name a scenario without its map (rule 12 here).
