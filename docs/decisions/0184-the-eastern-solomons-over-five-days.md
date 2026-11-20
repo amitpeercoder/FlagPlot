@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 20, 2026, at the designer's aski
 
 Summary: The 39 days are lopsided: in seven games between agents the Allied side won all seven decisively, because its landing arrives on the first day and the Japanese fleet on the seventeenth. The designer asked for a second scenario of about five days, small and interesting, that either side can win. This is the Eastern Solomons, 22 to 26 August 1942: three Japanese carriers against two American and an airfield, with a Japanese troop convoy that must reach Guadalcanal. It is made almost wholly of what the repository holds. It is played from orders by a commander or a staff on each side, has no scripted orders, and its points are set after a first run so that the results are spread. Six questions for the designer
 
-Standing: A plan, written by the architect on Nov 20, 2026, at the designer's asking, and amended on review: the review found that the scenario as first written was no contest. For the designer's confirmation; not built
+Standing: Confirmed by the designer on Nov 20, 2026, as amended on review: five days from 23 August, on the game's one scale of points, with a first run of staffs shown to him before any scale of its own. Not built: the hand calculation is next
 
 ## Why
 
@@ -147,3 +147,14 @@ An independent reading of the plan, against the scenario files, the fact rows, t
 3. **Wasp, Kondo, Mikawa and Chitose left out,** with Jintsu, the patrol boats and two destroyers that cannot be rated yet. Recommended.
 4. **A person's default seat is the Allied one.** Recommended.
 5. **Coral Sea commissioned as research now,** to follow. Recommended.
+
+## Confirmed on Nov 20, 2026
+
+The designer answered the two questions put to him:
+
+1. **Five days, 23 to 27 August.**
+2. **The game's one scale of points, then decide:** the scenario is built on it, 1,000 games of staff against staff are run and their spread shown to him, and he then decides whether this scenario is to have a scale of its own.
+
+Questions 3 and 4 go as recommended, as the architect's to carry unless he says otherwise: Wasp, Kondo, Mikawa and Chitose are left out with the ships that cannot be rated, and a person's default seat is the Allied one. Question 5, the research for Coral Sea, is not begun on this answer: it waits for his word.
+
+Next: the hand calculation, written by the architect, and then the build.
