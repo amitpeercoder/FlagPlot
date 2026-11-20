@@ -48,16 +48,29 @@
 //! 6. **Cleared.** The limit set with no kinds is cleared: the next
 //!    morning the staff orders B's list back to the six kinds in the
 //!    order of importance.
-//! 7. **The waters come first.** No targets limit. A deny of the waters
-//!    within 1 hex of T's hex names F. T, reported as a cruiser, is in
-//!    those waters at 150 nm; C, reported as a carrier, is outside them
-//!    at 100 nm. The staff orders B's waters to strike first to the
-//!    deny's seven hexes. B launches at T, though C is the more
-//!    important kind and the nearer. With the deny withdrawn the staff
-//!    orders B's waters empty, and B launches at C.
-//! 8. **Both parts together.** As statement 7, with the limit of
-//!    statement 2 on the deny: B launches at T, and its aircraft attack
-//!    a transport of T's force and not the destroyer.
+//! 7. **The waters come first, where the commander says so.** A deny of
+//!    the waters within 1 hex of T's hex, all seven of them on the map,
+//!    names F in its forces limit and carries a targets limit of the six
+//!    kinds in the order of importance with `waters_first` true. T,
+//!    reported as a cruiser, is in those waters at 150 nm; C, reported as
+//!    a carrier, is outside them at 100 nm. The staff orders B's waters
+//!    to strike first to the deny's seven hexes, and the order serves
+//!    the deny. B launches at T, though C is the more important kind and
+//!    the nearer. With the deny withdrawn the staff orders B's waters
+//!    empty the next morning, and B launches at C.
+//! 7a. **Not without the switch.** The same deny naming F with no
+//!    targets limit, or with one whose `waters_first` is false: the
+//!    staff gives no order about waters, B's are empty, and B launches at
+//!    C. `waters_first` true on an intent that is not a deny or beneath
+//!    one is refused, with the reason.
+//! 7b. **The carrier's search covers the waters.** In statement 7 the
+//!    waters' hexes are among the threats of F's search arc; in
+//!    statement 7a they are not.
+//! 8. **Both parts together.** As statement 7, with the limit's kinds
+//!    those of statement 2: B's list is transport first though the limit
+//!    is on the deny and F serves a task of its own; B launches at T, and
+//!    its aircraft attack a transport of T's force and not the
+//!    destroyer.
 //! 9. **Closing on what is in the waters.** As statement 7 with T at 300
 //!    nm, beyond reach, and no carrier contact held. At balanced F closes
 //!    on T, to the first hex on its way within 200 nm of T's hex, and the
@@ -66,26 +79,33 @@
 //!    held. At preserve the force F closes on nothing, with the deny or
 //!    without.
 //! 9a. **A contact outside the waters is ranked as today.** As statement
-//!    7 with T moved one hex outside the waters: B launches at C.
+//!    7 with T moved one hex outside the waters: B launches at C. And a
+//!    contact in the waters beyond B's reach does not keep B from C in
+//!    reach: B launches at C.
+//! 9d. **Closing leaves a carrier in reach for a contact in the
+//!    waters.** As statement 7 with T in the waters at 300 nm and C
+//!    outside them at 100 nm, in reach. At balanced F closes on T.
 //! 9b. **Preserve the force keeps the limit's list.** With the limit of
 //!    statement 2 at preserve the force, B's list is the limit's six
 //!    kinds and not the risk's three.
-//! 9c. **A strike sized to its target sends on what is over.** With B of
-//!    60 aircraft, T reported as a cruiser of 4 ships in the waters and C
-//!    outside: the aircraft the sizing figures give for T go at T and
-//!    the rest at C. The test takes the split from the sizing figures in
-//!    the reference file and states both numbers.
+//! 9c. **A group launches once in a pulse.** With B of 60 aircraft, T
+//!    reported as a cruiser of 4 ships in the waters and C outside: the
+//!    aircraft the sizing figures give for T go at T and the rest do not
+//!    fly that pulse; none goes at C. A second bomber group aboard F
+//!    launches at C. The test takes the number sent at T from the sizing
+//!    figures in the reference file and states it.
 //! 10. **Refused:** a limit that names no intent of the side's in force;
 //!     a kind named twice. Each with the reason, as the other limits are
 //!     refused. A limit on a staff-made task with other kinds than its
 //!     parent's is taken, not refused as wider.
 //! 11. **What a seat reads.** `command_state` shows the limit on the
 //!     intent, the kinds in order. The other side is shown nothing of it.
-//! 12. **No game without the limit changes.** The daily hashes of
-//!     scenario 5 and of the 39 days' first week, each played by its
-//!     staffs, are what they are before this rule, apart from the state
-//!     hash's version line. The test takes the hashes of the fields, not
-//!     a number written here.
+//! 12. **No game without the limit changes.** Scenario 5, the five-day
+//!     scenario's file a and the 39 days' first week, each played by its
+//!     staffs: every order a staff hands in and every event of the game
+//!     is what it was before this rule. (The daily hashes all move, with
+//!     the new fields of the state; the test compares orders and events
+//!     against a record made before the change.)
 //!
 //! # Properties
 //!
