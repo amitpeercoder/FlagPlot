@@ -123,3 +123,9 @@ Read on Nov 20, 2026, with the build's core: the one new reading on a side's vie
 4. **A base reads `base:1 "Lunga"`** in the enemy's lines, as everywhere in a briefing. Stands.
 5. **The statements on hashes and results are played through a watched session with both seats the script's,** and a further check on a scenario where the staffs act shows the same orders, hashes and result whether the briefings are read or not (readings 6 to 8). Stand.
 6. **Not seen:** an agent deciding differently for it. Two games of agents on the 39 days are to be played to see whether a Japanese commander now goes for the transports.
+
+## Changed on Nov 20, 2026: supply landed is given for each thousand tons
+
+Two games of agents were played on the 39 days with the enemy's objectives shown. One Japanese commander wrote afterwards that he had read the line on supply landed and set it aside: "0.005 points for each ton" looked like nothing beside a carrier's 10, and it was the largest item in the result (5,171 t, 25.9 points). The designer asked for the worth to be given for each 1,000 tons.
+
+The briefing's text now reads "points for each thousand tons: 5", in a side's own objective and in the enemy's. The briefing's data keeps `points`, for one ton, and gains `points_per_1000_t` for an objective of supply landed, since every number in the text is in the data. An objective's worth in a scenario's file, and how it is scored, are unchanged. The agent interface's version is not raised: a field is added and none changed.

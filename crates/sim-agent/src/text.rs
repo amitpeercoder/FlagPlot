@@ -2353,6 +2353,14 @@ fn ship_points_text(points: &[ShipKindPoints]) -> String {
     list.join(", ")
 }
 
+/// The worth of supply landed, said for each 1,000 tons: an objective gives
+/// it by the ton (0.005), which reads as nothing beside a carrier's 10 and
+/// is 5 for a thousand tons. The data has both: `points` for one ton and
+/// `points_per_1000_t`.
+fn per_thousand_t(points: Option<crate::common::Dec>) -> String {
+    points.map(|p| p.0.to_string()).unwrap_or_default()
+}
+
 /// One objective of the enemy's in words written from the reader's side
 /// (decision 0183, amended 5): what the enemy is scored for, and nothing of
 /// his progress or state.
@@ -2375,7 +2383,8 @@ fn enemy_objective_text(line: &EnemyObjectiveLine) -> String {
         ),
         "aircraft_destroyed" => format!("your aircraft destroyed, points for each: {points}"),
         "cargo_landed" => format!(
-            "tons of supply and fuel the enemy unloads at {base} and does not load back, points for each ton: {points}"
+            "tons of supply and fuel the enemy unloads at {base} and does not load back, points for each thousand tons: {}",
+            per_thousand_t(line.points_per_1000_t)
         ),
         "base_held" => format!(
             "{base} is the enemy's at the end of the game, points: {points}"
@@ -2413,7 +2422,8 @@ fn objective_text(o: &mut Out, line: &ObjectiveLine) {
             format!("Objective: enemy aircraft destroyed, points for each: {points}")
         }
         "cargo_landed" => format!(
-            "Objective: tons of supply and fuel you unload at {base} and do not load back, points for each ton: {points}"
+            "Objective: tons of supply and fuel you unload at {base} and do not load back, points for each thousand tons: {}",
+            per_thousand_t(line.points_per_1000_t)
         ),
         "base_held" => format!(
             "Objective: {base} is your own side's at the end of the game, points: {points}"

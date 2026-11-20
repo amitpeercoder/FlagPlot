@@ -288,7 +288,11 @@ fn expected_line(world: &World, objective: &Objective, horizon: u32) -> Value {
         Objective::AircraftDestroyed { points } | Objective::BaseHeld { points, .. } => {
             line["points"] = dec(*points);
         }
-        Objective::CargoLanded { points_per_t, .. } => line["points"] = dec(*points_per_t),
+        Objective::CargoLanded { points_per_t, .. } => {
+            line["points"] = dec(*points_per_t);
+            // The worth for a thousand tons, which the text gives.
+            line["points_per_1000_t"] = dec(*points_per_t * 1000);
+        }
         Objective::BaseOpen { closed, points, .. } => {
             line["closed"] = json!(closed);
             line["points"] = dec(*points);
@@ -451,6 +455,7 @@ fn s3_an_enemys_objective_has_no_field_for_progress_or_state() {
             "horizon_days",
             "kind",
             "points",
+            "points_per_1000_t",
             "ship_points"
         ]
     );
