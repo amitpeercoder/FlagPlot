@@ -212,3 +212,17 @@ Read on Nov 20, 2026, with the build's report, its "As built" and the report of 
 4. **What is the architect's to mend, in a second version of the orders a side the engine plays is given:** the Japanese hold names the base the convoy returns to; the order to neutralise Lunga names Rabaul's fighters with its bombers; and the Allied side is given an order to deny the waters north of Guadalcanal, so that Lunga's dive bombers and the carriers strike what comes down. Each is an order of the game as it stands. They are made in a second build, with the 1,000 games run again and both runs kept.
 5. **What is the designer's:** landing the convoy scores almost nothing, because the game has no objective for men put ashore. Whether to add one, and whether this scenario is then to have points of its own, is put to him with both runs.
 6. **Not seen:** a game from a seat beyond its opening, and games between agents.
+
+## The second version of the orders
+
+Made on Nov 20, 2026, as ruling 4 above said, and in no other way:
+
+- **Japanese, hold Taivu:** its forces limit names Rabaul (base 2) as the source, so the convoy returns there when it has landed.
+- **Japanese, neutralise Lunga:** its forces are the bombers and the fighters at Rabaul (groups 27 and 28).
+- **Allied, intent 4:** deny the waters within 2 hexes of (3,-7), the approach from the north to Taivu, with no forces limit. The staff forms a task to strike ships from Lunga under it, which takes VMSB-232 from the cover's search.
+
+The hand calculation's "What a side the engine plays is given" states them, the two tests of the orders check them, and the four files are made again. Nothing else of the scenario changes.
+
+**The second run** (`docs/validation/five-days-eastern-solomons-second-run.md`, beside the first): each order does what it was for, and the result moves toward the Allied side: 963 wins of 1,000 against 846, the Japanese side 5 against 26. Lunga is shut on some day in 8 games; the convoy lands in 997 and its landing is worth 0.45 points; the dive bombers at Lunga strike the carriers they can reach, and a Japanese carrier is sunk in 561 games against 388.
+
+**The architect's reading.** The orders are no longer what holds the Japanese side back. Two of its three aims cannot score as the game stands: its bombers do not shut Lunga in five days whatever they are given, and the men it lands count for nothing. The orders are not changed again in the light of a run. What is left is the designer's (ruling 5): whether men put ashore score, and whether "Lunga shut" is an aim this scenario should keep at 10 points when it is got in 8 games of 1,000.

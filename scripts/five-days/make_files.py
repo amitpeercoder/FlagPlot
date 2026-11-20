@@ -68,16 +68,20 @@ HEADER = '''# SCENARIO 103, THE EASTERN SOLOMONS OVER FIVE DAYS (decision 0184).
 # scenario_103_the_eastern_solomons_over_five_days.rs, "What a side the
 # engine plays is given"), on day 1, with no risk set (balanced):
 #   Japanese: intent 1, hold Taivu (base 5), its forces the convoy (task
-#     force 5) and its three land units (27, 28, 29); intent 2, neutralise
-#     Lunga (base 1), its forces the land bombers at Rabaul (group 27);
+#     force 5) and its three land units (27, 28, 29), with Rabaul (base 2)
+#     the source the convoy returns to; intent 2, neutralise Lunga (base 1),
+#     its forces the land bombers and the fighters at Rabaul (groups 27, 28);
 #     intent 3, operate task force 3 from (8,-11); intent 4, operate task
 #     force 4 from (7,-9), each with its own air groups (no forces limit);
 #     leave to prepare and leave to launch given.
 #   Allied: intent 1, hold Lunga (base 1), its forces the four land units
 #     there (1 to 4) and the two squadrons (groups 9 and 10); intent 2,
 #     operate task force 1 from (6,-3); intent 3, operate task force 2 from
-#     (7,-3), each with its own air groups (no forces limit); leave to
-#     prepare and leave to launch given.
+#     (7,-3), each with its own air groups (no forces limit); intent 4,
+#     deny the waters within 2 hexes of (3,-7), with no forces limit; leave
+#     to prepare and leave to launch given.
+# These are the second version of the orders (decision 0184, "The second
+# version of the orders").
 #
 # Kept out of the loops that walk data/scenarios/*.toml by being in this
 # folder (decision 0072).
@@ -101,6 +105,7 @@ limit = "forces"
 intent = 1
 task_forces = [5]
 land_units = [27, 28, 29]
+source = 2
 
 [[command]]
 day = 1
@@ -116,7 +121,7 @@ side = "japanese"
 kind = "set_limit"
 limit = "forces"
 intent = 2
-air_groups = [27]
+air_groups = [27, 28]
 
 [[command]]
 day = 1
@@ -186,6 +191,15 @@ intent = 3
 intent_kind = "operate_carriers"
 task_force = 2
 hex = [7, -3]
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_intent"
+intent = 4
+intent_kind = "deny"
+hex = [3, -7]
+distance = 2
 
 [[command]]
 day = 1
