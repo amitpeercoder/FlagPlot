@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 20, 2026, on the designer's word
 
 Summary: A land unit's men only ever fall. Nothing in play adds a man. Over 39 days that is bearable; over a campaign of months every unit wastes away. This lets a scenario give a base a stream of replacement men, so many a day, who join the units ashore there that are under strength and not in a fight, and who bring the unit's experience down toward a recruit's.
 
-Standing: Planned on Nov 20, 2026 and amended on review; not yet built.
+Standing: Planned on Nov 20, 2026 and amended on review; not yet built. The designer's answer is taken.
 
 ## Why
 
@@ -73,3 +73,7 @@ A reviewer read the plan against the rules of a land unit and the code. He found
 ### The question for the designer, restated
 
 Replacements above the standard level cost a veteran unit a level once they are half its strength. The architect proposes it. The simpler rule leaves experience alone, as decision 0097 had it.
+
+## Confirmed on Nov 20, 2026
+
+The designer: "Go with your recommendations." **Replacements cost a unit above the standard level one level** once they are half its establishment (rule 12).

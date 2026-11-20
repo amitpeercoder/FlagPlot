@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 20, 2026, on the designer's word
 
 Summary: Every ship and land unit of a scenario is on the map from the first day. One that should come later can only be marked "may be used from day N", and then lies where the scenario put it, to be seen and attacked, for the days before. This lets a task force, with everything aboard it, and a land unit or an air group at a base, come onto the map on a day the scenario names. Until that day it is not there.
 
-Standing: Planned on Nov 20, 2026 and amended on review; not yet built.
+Standing: Planned on Nov 20, 2026 and amended on review; not yet built. The designer's answer is taken.
 
 ## Why
 
@@ -87,3 +87,7 @@ A reviewer read the plan against the order of a day, the staff's readers and the
 
 25. **Restated by the architect:** the force enters before the day's orders; the sighting is the morning's search at a chance of 1; two forces in one hex fight in the night's movement; a unit that has not entered is named in no event but its entry, its waiting and the refusal of an order to it; refusals are added for rule 19.
 26. **Built second,** after decision 0194, which gives the view the game's days that this rule's checks read.
+
+## Confirmed on Nov 20, 2026
+
+The designer: "Go with your recommendations." **The 39 days is left as it is.** Its late forces go on lying on the map from day 1, marked as usable from their days, and its proofs' files stand. The rule is used from the next scenario on.

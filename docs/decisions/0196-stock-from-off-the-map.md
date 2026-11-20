@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 20, 2026, on the designer's word
 
 Summary: A base's supply and fuel come only from what ships unload there. Nothing refills a rear base, so a long game drains Rabaul and Espiritu Santo to nothing. This lets a scenario give a base a supply line: so many tons of supply and of fuel a day, from a day to a day, added to its stock at night while the base is its side's. It is the simple form. The form the design note asks for, cargo that arrives in real ships that can be attacked, is begun by decision 0195, which lets the ships come; nothing yet lets them leave, and that waits for a record of its own.
 
-Standing: Planned on Nov 20, 2026 and amended on review; not yet built.
+Standing: Planned on Nov 20, 2026 and amended on review; not yet built. The designer's answer is taken.
 
 ## Why
 
@@ -55,3 +55,7 @@ A reviewer read the plan against the design note, the rules of a day and the cod
 ### A question for the designer
 
 His design note says the slice's supply lines arrive "in real ships that can be attacked" (`docs/design/economy.md`, answer 5). The same note says arrivals "should stay a rate fed from outside the theatre", and that a route the enemy cannot reach is a pool of tonnage and not named ships (answer 4). This rule is the second: a rate, for a base whose own line runs away from the fighting. Nothing in the game stops a scenario giving Lunga a line, which would undo the war on shipping. So: **a line is given only to a rear base, and each scenario's record says for each line why the enemy could not have cut it.** Where he could, the cargo comes in ships that enter by date (decision 0195). Is that acceptable, or should a line be refused by the game anywhere but at a base the scenario marks as a rear base? The architect proposes the first: a rule of scenarios, written in `docs/engineering/roles-and-tests.md`, and no new marking.
+
+## Confirmed on Nov 20, 2026
+
+The designer: "Go with your recommendations." **A supply line is given only to a rear base, and each scenario's record says for each line why the enemy could not have cut it.** It is a rule of scenarios, written in `docs/engineering/roles-and-tests.md` by the build, and the game refuses no line. Where the enemy could cut it, the cargo comes in ships.
