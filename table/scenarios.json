@@ -1,0 +1,57 @@
+{
+  "note": "The scenarios offered for play on the table's new game screen (decision 0185). The screen reads nothing else of a scenario. For each, a game is offered only where a file makes it one: the engine's side given orders to its units (\"script\") or orders for its staff to carry out (\"staff\"), and a side played by a person or an agent given nothing. Each pairing names who holds each side (person, agent or engine) and the file. Kept by hand: a scenario renamed or moved is changed here.",
+  "scenarios": [
+    {
+      "id": "guadalcanal-39-days",
+      "name": "Guadalcanal: the first thirty-nine days",
+      "dates": "7 August to 14 September 1942",
+      "days": 39,
+      "start": "1942-08-07",
+      "lines": [
+        "The landings on Guadalcanal and Tulagi and the weeks of fighting for the airfield at Lunga Point, at sea, in the air and ashore."
+      ],
+      "sides": {
+        "allied": "Seize and hold Tulagi and the airfield at Lunga Point, to safeguard communications with Australia.",
+        "japanese": "Hold Lunga and Tulagi or take them back, close the airfield, sink what supplies it, and win the carrier fight."
+      },
+      "islands": [
+        {"number": 1, "name": "Guadalcanal", "base": 1},
+        {"number": 2, "name": "Tulagi", "base": 4}
+      ],
+      "directives": {
+        "allied": "table/directives/guadalcanal_allied.json"
+      },
+      "pairings": [
+        {"allied": "person", "japanese": "engine", "engine": "staff", "file": "data/scenarios/stage-3-proof/07b_slice.toml"},
+        {"allied": "engine", "japanese": "person", "engine": "staff", "file": "data/scenarios/stage-3-proof/07c_slice.toml"},
+        {"allied": "person", "japanese": "agent", "file": "data/scenarios/staff/07_full_slice.toml"},
+        {"allied": "agent", "japanese": "person", "file": "data/scenarios/staff/07_full_slice.toml"},
+        {"allied": "agent", "japanese": "engine", "engine": "staff", "file": "data/scenarios/stage-3-proof/07b_slice.toml"},
+        {"allied": "engine", "japanese": "agent", "engine": "staff", "file": "data/scenarios/stage-3-proof/07c_slice.toml"},
+        {"allied": "agent", "japanese": "agent", "file": "data/scenarios/staff/07_full_slice.toml"}
+      ]
+    },
+    {
+      "id": "eastern-solomons",
+      "name": "The Eastern Solomons",
+      "dates": "24 August 1942",
+      "days": 1,
+      "start": "1942-08-24",
+      "lines": [
+        "One day of carrier battle. Two American carrier forces lie east of Guadalcanal; the Japanese carrier striking force and the Ryujo detachment come down from the north."
+      ],
+      "sides": {
+        "allied": "Find and sink the Japanese carriers supporting the reinforcement of Guadalcanal, and keep your own carriers in action.",
+        "japanese": "Destroy the American carriers east of Guadalcanal, and keep your own in action."
+      },
+      "islands": [],
+      "directives": {},
+      "pairings": [
+        {"allied": "person", "japanese": "engine", "engine": "script", "file": "data/scenarios/second-proof/05c_eastern_solomons.toml"},
+        {"allied": "engine", "japanese": "person", "engine": "script", "file": "data/scenarios/second-proof/05e_eastern_solomons.toml"},
+        {"allied": "agent", "japanese": "engine", "engine": "script", "file": "data/scenarios/second-proof/05c_eastern_solomons.toml"},
+        {"allied": "engine", "japanese": "agent", "engine": "script", "file": "data/scenarios/second-proof/05e_eastern_solomons.toml"}
+      ]
+    }
+  ]
+}

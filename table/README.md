@@ -10,6 +10,14 @@ From the top of the repository:
 
 ```
 cargo build --release -p sim-cli
+python3 table/serve.py
+```
+
+and open the address it prints, `http://127.0.0.1:8742/table/KEY/`. That is the new game screen (decision 0185, below): choose the scenario, the seat and who plays the other side, and begin.
+
+A game can still be named on the command line, and the bridge then holds that game alone, as it did before the screen:
+
+```
 python3 table/serve.py data/scenarios/stage-3-proof/07b_slice.toml --seat allied --start 1942-08-07 --island "1=Guadalcanal@1" --island "2=Tulagi@4"
 ```
 
@@ -19,9 +27,10 @@ Then open http://127.0.0.1:8742/. That scenario is the 39 days of the staff's se
 
 ## What is in it
 
-- `serve.py`: the bridge. It starts `sim-cli mcp SCENARIO --seat SIDE`, passes the page's tool calls to it one at a time, and serves the page and the map's hexes; with `--watch`, a watched game (below). Python's standard library only. It listens on this machine alone.
-- `seat_mcp.py`: one seat's door of a watched game as a Model Context Protocol server.
-- `check_watch.py`: the check of a watched game by script.
+- `serve.py`: the bridge. Started with no scenario it serves the new game screen and holds the game begun from it. Started with one, it starts `sim-cli mcp SCENARIO --seat SIDE`, passes the page's tool calls to it one at a time, and serves the page and the map's hexes; with `--watch`, a watched game (below). Python's standard library only. It listens on this machine alone.
+- `scenarios.json`: the scenarios the new game screen offers, and the file for each game offered.
+- `seat_mcp.py`: one seat's door as a Model Context Protocol server.
+- `check_watch.py`: the check of a watched game by script. `check_screen.py`: the check of the new game screen and its games by script.
 - `index.html`: the page. One file, no build step.
 - `directives/`: the directives a seat is given from the commander above, one file a seat of a scenario, written by hand in the game's own words. `guadalcanal_allied.json` is for the Allied seat of the 39 days: add `--directives table/directives/guadalcanal_allied.json` to the command above.
 
@@ -82,6 +91,32 @@ With `--keep DIR` the saved game and the transcripts are written when the bridge
 **What the keys are for.** Each door answers its own seat's calls and nothing else, and no door returns anything the watcher reads. The keys keep a program from calling a door not its own, or the watcher's, by mistake. They do not stop a program on this machine that sets out to cheat: it can read the bridge's printed lines, or the game's own files. Watch fair agents.
 
 **The check.** `python3 table/check_watch.py` (ports 8760 to 8762, `--port` for others) plays two short watched games through the doors as scripted agents would, with the watcher stepping, checks `seat_mcp.py` over a door, then the player's table without `--watch`, and stops everything it started. It shortens the door's 50 seconds to 3. It needs `sim-cli` built in release.
+
+## The new game screen
+
+`python3 table/serve.py`, with no scenario (decision 0185), prints one address, `http://127.0.0.1:8742/table/KEY/`, with a key made new at every start. The screen and the table are both there. Options: `--port`, `--sim-cli`, `--map`, `--hold` (the doors' wait, 50 seconds), `--keep DIR` (each game is kept in `DIR/game-N` when it ends: the saved game, the transcript, the journal and, where seats were played through `serve`, a file of each seat's calls) and `--scenarios FILE` (the list, `table/scenarios.json` unless given). `--seat`, `--start`, `--island`, `--directives` and `--watch` name a game, and are refused without a scenario.
+
+The screen asks three things: the scenario, from `table/scenarios.json`, with its dates and length and what each side is to do; the seat, Allied, Japanese or to watch; and who plays each other side, the engine or an agent. It says what the engine is for the choice made (a staff carrying out the orders the scenario gives that side, or forces following the scenario's orders as written), and for each seat an agent holds, how the agent takes it. "Begin" opens the game and the page becomes the table. On the table "New game", touched twice, ends the game in hand, whoever is at a seat, and returns to the screen. "Begin again" begins the same game anew, and is refused while an agent has called its door in the last five minutes.
+
+**The list.** `table/scenarios.json` gives for each scenario its name, dates, length, lines, the date of day 1, the islands' names, each side's directives file where it has one, and its pairings: who holds each side (`person`, `agent` or `engine`), what the engine is (`staff` or `script`) and the scenario file that makes it a game. A game is offered only where a file gives the engine's side orders or orders for its staff, and the sides played by a person or an agent nothing. Kept by hand: a scenario renamed or moved is changed there. It offers today:
+
+| Scenario | Game | File |
+| --- | --- | --- |
+| The 39 days | Allied against the engine; watching an Allied agent against the engine | `stage-3-proof/07b_slice.toml` |
+| The 39 days | Japanese against the engine; watching a Japanese agent against the engine | `stage-3-proof/07c_slice.toml` |
+| The 39 days | A person against an agent, either side; watching two agents | `staff/07_full_slice.toml` |
+| The Eastern Solomons | Allied against the engine; watching an Allied agent against the engine | `second-proof/05c_eastern_solomons.toml` |
+| The Eastern Solomons | Japanese against the engine; watching a Japanese agent against the engine | `second-proof/05e_eastern_solomons.toml` |
+
+The Eastern Solomons has no file in which neither side is given anything, so it offers no game of a person against an agent and none of two agents.
+
+**How the bridge holds each game.** A person against the engine: `sim-cli mcp` for his seat, as without the screen. A game watched: `sim-cli serve --watched`, as `--watch` has it. A person against an agent: `sim-cli serve --watched` with both seats played, and no watcher. The bridge steps the clock itself whenever both seats are ready. The person's calls are his seat's own; a call of time (Next pulse, One day, Carry on) is held until the clock reaches its stop, and once pressed it cannot be taken back. While it is held he may read, and is answered as the watcher would be from his own side; he may not preview, try a dry run or order. Of the other side he is told only whether its commander is at his seat and whether he is waited for. Every request of a watcher's is refused in this game.
+
+**An agent's seat.** Each side has a door, `http://127.0.0.1:8742/seat/KEY`, whose address holds for as long as the bridge runs, so that a client is set up once. A door answers only while its side is an agent's in the game in hand; it says "not yet at its seat" on the table until its first request in that game. When a game ends, every call still held at a door is answered that the game has ended and a new one begun. The screen, and on the table the button "The agent's seat", give for each agent's seat, to copy: the `claude mcp add flag-plot-SIDE -- python3 /…/table/seat_mcp.py --url DOOR` line; the same as an entry of tool-server settings, for a client that reads them from a file when it starts; the door itself; and a brief (the side, its directive where it has one, to play to the end, and to read nothing but what the tools tell it). Beside them the person is told that a model at a keyboard stops of itself long before a campaign ends, that a model with a shell could read the scenario's file and asking it not to is the only guard, and that a call may wait about fifty seconds before it answers that it waits. The door's opening words say that the clock moves when both commanders have finished (or, in a game watched, that a watcher holds it), and that any call may be held, not only a call of time.
+
+**What the keys are for.** The table's key and each door's keep a program from calling what is not its own by mistake. They are no guard against a program on this machine that sets out to cheat, and none against the person himself: he sets the agent up, so he has handled its door. In a game of a person against an agent nothing of the agent's side, its calls or its reasons is sent to the page, and nothing of the person's to the agent's door; the door is shown on the table only behind "The agent's seat". What `--keep` writes holds both seats' calls and is the umpire's, for after the game.
+
+**The check.** `python3 table/check_screen.py` (ports 8780 to 8785, `--port` for others) starts the bridge with no scenario, reads the list, begins every game it offers and plays a day of each, plays a person against an agent through several days with both the page's calls and the agent's door made by script, checks that the sides are kept apart, that a held call is answered when a new game begins and that the door serves the new game, runs `seat_mcp.py` against a door, and then runs `check_watch.py` for the bridge started with a scenario. It shortens the doors' wait to 3 seconds and stops everything it started. It needs `sim-cli` built in release.
 
 ## What it does not do
 
