@@ -47,34 +47,87 @@ pub struct CourseStep {
     pub command: CommandKind,
 }
 
+/// The dates a trial is asked at (decision 0181, rule 9 and amended 8).
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub enum DatesAsked {
+    /// The coming morning alone: a trial, answered as one.
+    Coming,
+    /// A window whose later dates the runner chooses from what the course
+    /// may use (decision 0177, amended 3).
+    Chosen,
+    /// A window of these days of the game, the coming morning first, then
+    /// one or two later days, ascending.
+    Given(Vec<u32>),
+}
+
+/// What the second trial is of (decision 0181, amended 1): the side without
+/// the thing tried.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum BesideOf {
+    /// A draft of a limit, or of a change to an intent that stands: the plan
+    /// as it stands, without the draft. The intent is in both trials.
+    AsItStands,
+    /// A new intent, previewed or queued: the side without it.
+    WithoutIt,
+    /// An intent in force: the side with it withdrawn on the coming morning.
+    Withdrawn,
+}
+
+impl BesideOf {
+    pub fn name(self) -> &'static str {
+        match self {
+            BesideOf::AsItStands => "as_it_stands",
+            BesideOf::WithoutIt => "without_it",
+            BesideOf::Withdrawn => "withdrawn",
+        }
+    }
+}
+
+/// The second trial (decision 0181, amended 1 and rule 4): what it is of, its
+/// own standing commands and its own course, played in the same worlds as the
+/// first and given the same leaves.
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct SecondAsked {
+    pub of: BesideOf,
+    pub standing: Vec<CommandKind>,
+    pub course: Vec<CourseStep>,
+}
+
 /// What a trial is asked (rule 2): its number; its size; the standing
 /// commands, what the side would take in on the coming morning without it
 /// (rule 8), handed in apart from the course and never shifted; the course;
-/// the dates to try, days of the game (one here, the coming morning); the
-/// intent whose estimate is wanted; and, where a second trial of things as
-/// they stand is wanted, its standing commands (rule 11), tried with an
-/// empty course.
+/// the dates to try (decision 0181, rule 9); the intent whose estimate is
+/// wanted; and, where a second trial is wanted, its own commands and course
+/// (decision 0181, amended 1).
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct TrialAsked {
     pub trial: u32,
     pub size: SizeAsked,
     pub standing: Vec<CommandKind>,
     pub course: Vec<CourseStep>,
-    pub dates: Vec<u32>,
+    pub dates: DatesAsked,
     pub intent: IntentId,
-    pub as_they_stand: Option<Vec<CommandKind>>,
+    pub second: Option<SecondAsked>,
 }
 
 /// Why a trial is refused, in words a seat may be shown.
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct TrialRefused(pub String);
 
+/// A trial played to its end: answered as a trial, or, where dates were
+/// asked, as a window (decision 0181, rule 13).
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub enum Answered {
+    Trial(Box<TrialAnswer>),
+    Window(WindowAnswer),
+}
+
 /// What one step of a trial under way did (rule 3).
 pub enum TrialStep {
     /// Some of it was played; more is to come.
     Going,
     /// It is played to its end: the answer.
-    Done(Box<TrialAnswer>),
+    Done(Box<Answered>),
 }
 
 /// A trial under way (rule 3): stepped until it is done. Dropped, it leaves
@@ -86,12 +139,34 @@ pub trait TrialUnderWay: Send {
 /// What plays a seat's trials (rules 1, 3 and 5), handed to the session by
 /// its caller. To begin takes a side's whole view, on an evening, and what
 /// is asked; it answers with a trial under way, or why it cannot be tried.
+/// To describe takes the same and plays nothing: it says the size and the
+/// dates, with what is due on each (decision 0181, amended 9).
 pub trait TrialRunner: Send {
     fn begin(
         &self,
         view: &SideView<'_>,
         asked: &TrialAsked,
     ) -> Result<Box<dyn TrialUnderWay>, TrialRefused>;
+
+    fn describe(&self, view: &SideView<'_>, asked: &TrialAsked) -> Result<Described, TrialRefused>;
+}
+
+/// What would be played, told before anything is (decision 0181, amended
+/// 9): the size, and each date with what came due on it.
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct Described {
+    pub worlds: u32,
+    pub days: u32,
+    pub size: Option<String>,
+    /// The first day of the trial and the last of the first date's play.
+    pub first_day: u32,
+    pub last_day: u32,
+    /// The dates, the first first; one for a trial of the coming morning.
+    pub dates: Vec<DueDateShown>,
+    /// Whether the dates were given, not chosen.
+    pub given: bool,
+    /// Days on which something came due that are not tried.
+    pub not_tried: Vec<DueDateShown>,
 }
 
 // ------------------------------------------------- Things of the side's own
@@ -497,6 +572,125 @@ pub struct TrialAnswer {
     /// The count of worlds is not a power of two.
     pub uneven: bool,
     pub partings: Vec<PartingShown>,
+    /// The second trial, where one was played (decision 0181, rule 5).
+    pub beside: Option<BesideShown>,
+}
+
+/// Two estimates of the same worlds compared one for one (decision 0177,
+/// amended 10): met and kept in both, in the first alone, in the second
+/// alone and in neither, and the worlds that could not be played at one of
+/// the two counted apart.
+#[derive(Clone, PartialEq, Eq, Debug, Default)]
+pub struct MatchedShown {
+    pub both: Vec<u32>,
+    pub first_alone: Vec<u32>,
+    pub later_alone: Vec<u32>,
+    pub neither: Vec<u32>,
+    pub apart: Vec<u32>,
+}
+
+/// The second trial, beside the first (decision 0181, rule 5 and amended
+/// 1): what it is of, how the intent went there where it is there, what it
+/// cost each side there, and, for the plan as it stands, the two world for
+/// world.
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct BesideShown {
+    pub of: BesideOf,
+    /// `None` where the intent is not in the second trial to have gone.
+    pub went: Option<TrialWent>,
+    pub last_day: Option<u32>,
+    pub could_not: Vec<u32>,
+    pub side_costs: Option<TrialCosts>,
+    pub enemy_costs: Option<TrialCosts>,
+    /// The first against the second; only for the plan as it stands.
+    pub matched: Option<MatchedShown>,
+}
+
+/// What came due on a date (decision 0177, amended 3): a thing of the side's
+/// own, by the live game's number, and the day.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum DueThing {
+    /// A task force, the day it may first be used.
+    Force(OwnForce),
+    /// A task force away at a yard, the day it is back.
+    BackFromYard(OwnForce),
+    /// A land unit, the day it may first be used.
+    LandUnit(OwnUnit),
+}
+
+/// One thing that came due, and its day.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct DueShown {
+    pub thing: DueThing,
+    pub day: u32,
+}
+
+/// A date and what came due on it.
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct DueDateShown {
+    pub day: u32,
+    pub due: Vec<DueShown>,
+}
+
+/// The men a date's take chose (decision 0177, amended 8): the side's own
+/// units, by the live game's numbers, with their men, in the world of the
+/// plan order, and the worlds whose landings name other units.
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct ChosenShown {
+    pub world: u32,
+    pub units: Vec<(OwnUnit, u32)>,
+    pub men: u32,
+    pub differs_in: Vec<u32>,
+}
+
+/// The lowest, the middle and the highest of a cover over the worlds.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct CoverShown {
+    pub lowest: Fixed,
+    pub middle: Fixed,
+    pub highest: Fixed,
+}
+
+/// The enemy at a place on a date's eve (decision 0177, amended 9): men and
+/// cover at a place, the trial's own reckoning, never a unit.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct EnemyEveShown {
+    pub place: Hex,
+    /// The day whose evening it is.
+    pub eve: u32,
+    pub men: Option<TrialSpread>,
+    pub least_cover: Option<CoverShown>,
+}
+
+/// One date of a window (decision 0181, rule 13).
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct DateShown {
+    pub day: u32,
+    pub after_first: u32,
+    /// The day of the game the order was handed in.
+    pub taken_in: Option<u32>,
+    pub due: Vec<DueShown>,
+    pub chosen: Option<ChosenShown>,
+    pub expected_ashore: Option<u32>,
+    pub enemy: Vec<EnemyEveShown>,
+    /// This date against the first, world for world; `None` at the first.
+    pub against_first: Option<MatchedShown>,
+    /// The fields a trial's answer has, for this date.
+    pub trial: TrialAnswer,
+}
+
+/// The answer of a window, made for a seat (decision 0181, rule 13).
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct WindowAnswer {
+    pub worlds: u32,
+    pub days: u32,
+    pub size: Option<String>,
+    pub given: bool,
+    pub first_day: u32,
+    /// The last day of the first date's play: the bound of the dates.
+    pub last_day: u32,
+    pub dates: Vec<DateShown>,
+    pub not_tried: Vec<DueDateShown>,
 }
 
 // ------------------------------------------------------------------- Words
@@ -1097,51 +1291,65 @@ pub(crate) struct AskedShown {
     pub course: Vec<String>,
     pub second_trial: bool,
     pub orders_queued: usize,
+    /// What the second trial is of, where one is played.
+    pub beside: Option<BesideOf>,
+    /// The intent tried is in force on the evening asked.
+    pub in_force: bool,
+    pub dates: DatesAsked,
 }
 
-/// The fields and the words of a trial's answer (rules 15 to 17), named as
-/// the seat's tools name things.
-pub(crate) fn answer_fields(
-    view: &SideView<'_>,
-    number: u32,
-    asked: &AskedShown,
-    answer: &TrialAnswer,
-) -> Value {
-    let n = Naming::new(view);
+impl AskedShown {
+    /// What was asked, as fields.
+    fn json(&self, worlds: u32, days: u32) -> Value {
+        json!({
+            "intent": self.intent,
+            "preview": self.preview,
+            "tried_intent": self.tried_intent,
+            "size": self.size,
+            "worlds": worlds,
+            "days": days,
+            "for_day": self.for_day,
+            "standing": self.standing,
+            "course": self.course,
+            "second_trial": self.second_trial,
+            "orders_not_tried": self.orders_queued,
+            "compare": self.beside.is_some(),
+            "beside": self.beside.map(BesideOf::name),
+            "in_force": self.in_force,
+            "dates": match &self.dates {
+                DatesAsked::Coming => Value::Null,
+                DatesAsked::Chosen => json!("chosen"),
+                DatesAsked::Given(days) => json!(days),
+            },
+        })
+    }
+
+    /// "You have 2 orders to units queued: ...", where any are.
+    fn orders_line(&self) -> Option<String> {
+        (self.orders_queued > 0).then(|| {
+            format!(
+                "You have {} order{} to units queued: a trial does not try orders to units, and they are not in it.",
+                self.orders_queued,
+                if self.orders_queued == 1 { "" } else { "s" }
+            )
+        })
+    }
+}
+
+/// The words of what a second trial is of.
+fn beside_words(of: BesideOf) -> &'static str {
+    match of {
+        BesideOf::AsItStands => "the plan as it stands, without the draft",
+        BesideOf::WithoutIt => "your side without the order",
+        BesideOf::Withdrawn => "your side with the order withdrawn on the coming morning",
+    }
+}
+
+/// How it went, the worlds that could not be played, what it cost the side
+/// and what the trial's enemy lost (rule 17), in words.
+fn went_and_cost_lines(answer: &TrialAnswer) -> Vec<String> {
     let of = answer.went.played.len();
-    let mut text: Vec<String> = Vec::new();
-
-    // What was tried, and in how many worlds.
-    text.push(format!(
-        "Tried: {}, {}, as it would go from the morning of day {}, with what you have handed in for that morning, in {} worlds of {} days each (the size {}).",
-        asked.tried,
-        asked.what,
-        asked.for_day,
-        answer.worlds,
-        answer.days,
-        asked.size
-    ));
-    if !asked.standing.is_empty() {
-        text.push(format!(
-            "Taken in on that morning as you have it: {}.",
-            asked.standing.join("; ")
-        ));
-    }
-    if !asked.course.is_empty() {
-        text.push(format!(
-            "Added by the trial on that morning: {}.",
-            asked.course.join("; ")
-        ));
-    }
-    if asked.orders_queued > 0 {
-        text.push(format!(
-            "You have {} order{} to units queued: a trial does not try orders to units, and they are not in it.",
-            asked.orders_queued,
-            if asked.orders_queued == 1 { "" } else { "s" }
-        ));
-    }
-
-    // How it went.
+    let mut text = Vec::new();
     if of == 0 {
         text.push(format!(
             "How it went: none of the {} worlds could be played, so there is no day and no cost to give.",
@@ -1185,8 +1393,6 @@ pub(crate) fn answer_fields(
             }
         ));
     }
-
-    // What it cost the side, and what the trial's enemy lost.
     if let Some(costs) = &answer.side_costs {
         text.push(format!(
             "What it cost your side, the lowest, the middle and the highest over the worlds: {}.",
@@ -1199,86 +1405,177 @@ pub(crate) fn answer_fields(
             costs_words(costs)
         ));
     }
+    text
+}
 
-    // What it needs and has, and when it could go.
-    if let Some(needs) = &answer.needs {
-        let mut parts = Vec::new();
-        if let Some((wanted, to_hand)) = needs.men {
-            parts.push(format!(
-                "men wanted {}, to hand {}",
-                thousands(wanted),
-                thousands(to_hand)
-            ));
-        }
-        if needs.waits_for.is_empty() {
-            parts.push("it waits for nothing".to_string());
-        } else {
-            parts.push(format!(
-                "it waits for {}",
-                needs
-                    .waits_for
-                    .iter()
-                    .map(|w| n.wait_words(w))
-                    .collect::<Vec<_>>()
-                    .join(", ")
-            ));
-        }
-        match needs.expected_ashore {
-            Some(day) => parts.push(format!("the day expected ashore is day {day}")),
-            None => parts.push("no day ashore can yet be given".to_string()),
-        }
-        if let Some(count) = &needs.count {
-            let held = match count.held {
-                None => "none is held".to_string(),
-                Some((men, grade, day)) => format!(
-                    "the one held is {} men, {} on day {day}",
-                    thousands(men),
-                    match grade {
-                        GroundGrade::Told => "told",
-                        GroundGrade::SeenFromAir => "seen from the air",
-                        GroundGrade::MenInContact => "reported by your men in contact",
-                    }
-                ),
-            };
-            parts.push(format!(
-                "{} of the enemy at {} is asked for, and {held}, which {}",
-                capital_free(&count.asked.to_string()),
-                n.place(count.place),
-                if count.met {
-                    "meets it"
-                } else {
-                    "does not meet it"
+/// What it needs and has, and when it could go, in words.
+fn needs_lines(n: &Naming<'_>, answer: &TrialAnswer) -> Vec<String> {
+    let Some(needs) = &answer.needs else {
+        return Vec::new();
+    };
+    let mut parts = Vec::new();
+    if let Some((wanted, to_hand)) = needs.men {
+        parts.push(format!(
+            "men wanted {}, to hand {}",
+            thousands(wanted),
+            thousands(to_hand)
+        ));
+    }
+    if needs.waits_for.is_empty() {
+        parts.push("it waits for nothing".to_string());
+    } else {
+        parts.push(format!(
+            "it waits for {}",
+            needs
+                .waits_for
+                .iter()
+                .map(|w| n.wait_words(w))
+                .collect::<Vec<_>>()
+                .join(", ")
+        ));
+    }
+    match needs.expected_ashore {
+        Some(day) => parts.push(format!("the day expected ashore is day {day}")),
+        None => parts.push("no day ashore can yet be given".to_string()),
+    }
+    if let Some(count) = &needs.count {
+        let held = match count.held {
+            None => "none is held".to_string(),
+            Some((men, grade, day)) => format!(
+                "the one held is {} men, {} on day {day}",
+                thousands(men),
+                match grade {
+                    GroundGrade::Told => "told",
+                    GroundGrade::SeenFromAir => "seen from the air",
+                    GroundGrade::MenInContact => "reported by your men in contact",
                 }
+            ),
+        };
+        parts.push(format!(
+            "{} of the enemy at {} is asked for, and {held}, which {}",
+            capital_free(&count.asked.to_string()),
+            n.place(count.place),
+            if count.met {
+                "meets it"
+            } else {
+                "does not meet it"
+            }
+        ));
+    }
+    let mut line = format!(
+        "What it needs and has, as your staff worked it in world {} at the end of day {}: {}.",
+        needs.world,
+        needs.day,
+        parts.join("; ")
+    );
+    if !needs.tasks.is_empty() {
+        line.push_str(&format!(
+            " Its tasks: {}.",
+            needs
+                .tasks
+                .iter()
+                .map(|t| n.task_words(&t.task))
+                .collect::<Vec<_>>()
+                .join("; ")
+        ));
+    }
+    if !needs.differs_in.is_empty() {
+        line.push_str(&format!(
+            " It differs in {}.",
+            of_worlds(&needs.differs_in, answer.worlds as usize)
+        ));
+    }
+    vec![line]
+}
+
+/// "met and kept in both in 2 worlds (worlds 1 and 3)" and the like.
+fn in_worlds(worlds: &[u32]) -> String {
+    match worlds.len() {
+        0 => "in none".to_string(),
+        1 => format!("in 1 world (world {})", worlds[0]),
+        count => format!("in {count} worlds (worlds {})", list(worlds)),
+    }
+}
+
+/// The second trial beside the first (decision 0181, rule 5), in words.
+fn beside_lines(asked: &AskedShown, beside: &BesideShown) -> Vec<String> {
+    let mut text = Vec::new();
+    let mut line = format!("Beside it, {}, in the same worlds", beside_words(beside.of));
+    match (&beside.went, beside.of) {
+        (Some(went), _) => {
+            let of = went.played.len();
+            let by = beside
+                .last_day
+                .map_or_else(String::new, |day| format!(" by day {day}"));
+            line.push_str(&format!(
+                ": met and kept in {}",
+                of_worlds(&went.met_kept, of)
+            ));
+            if let Some(days) = went.met_days {
+                line.push_str(&format!(
+                    ", the earliest day {}, the middle day {} and the latest day {}",
+                    days.lowest, days.middle, days.highest
+                ));
+            }
+            line.push_str(&format!(
+                "; met and lost again in {}; not met{by} in {}.",
+                of_worlds(&went.lost_again, of),
+                of_worlds(&went.not_met, of)
             ));
         }
+        (None, BesideOf::Withdrawn) => line.push_str(&format!(
+            ": the order is withdrawn on the coming morning, and what was already ordered stands, a landing being readied, ships under way and men ashore as they are. The withdrawal is the trial's, not yours: intent {} is not withdrawn in your game.",
+            asked.tried_intent
+        )),
+        (None, _) => line.push_str(": the order is not there to have gone, so only what it cost is given."),
+    }
+    text.push(line);
+    if !beside.could_not.is_empty() {
+        text.push(format!(
+            "Beside it, {} could not be played.",
+            of_worlds(&beside.could_not, beside.could_not.len().max(1))
+        ));
+    }
+    if let Some(costs) = &beside.side_costs {
+        text.push(format!(
+            "Beside it, what it cost your side, the lowest, the middle and the highest over the worlds: {}.",
+            costs_words(costs)
+        ));
+    }
+    if let Some(costs) = &beside.enemy_costs {
+        text.push(format!(
+            "Beside it, what the trial's enemy lost, by the trial's own reckoning: {}.",
+            costs_words(costs)
+        ));
+    }
+    if let Some(m) = &beside.matched {
         let mut line = format!(
-            "What it needs and has, as your staff worked it in world {} at the end of day {}: {}.",
-            needs.world,
-            needs.day,
-            parts.join("; ")
+            "Taken world by world, the draft against the plan as it stands: met and kept in both {}; with the draft alone {}; as it stands alone {}; in neither {}",
+            in_worlds(&m.both),
+            in_worlds(&m.first_alone),
+            in_worlds(&m.later_alone),
+            in_worlds(&m.neither)
         );
-        if !needs.tasks.is_empty() {
+        if !m.apart.is_empty() {
             line.push_str(&format!(
-                " Its tasks: {}.",
-                needs
-                    .tasks
-                    .iter()
-                    .map(|t| n.task_words(&t.task))
-                    .collect::<Vec<_>>()
-                    .join("; ")
+                "; could not be played in one of the two, counted apart, {}",
+                in_worlds(&m.apart)
             ));
         }
-        if !needs.differs_in.is_empty() {
-            line.push_str(&format!(
-                " It differs in {}.",
-                of_worlds(&needs.differs_in, answer.worlds as usize)
-            ));
-        }
+        line.push('.');
         text.push(line);
     }
+    text
+}
 
-    // What its other plans lost.
+/// What the other plans lost (decision 0176), in words.
+fn other_plans_lines(n: &Naming<'_>, asked: &AskedShown, answer: &TrialAnswer) -> Vec<String> {
+    let mut text = Vec::new();
     match &answer.other_plans {
+        None if asked.in_force => text.push(format!(
+            "Your order is in force: what it costs your other plans is in things as they stand, and no second trial was played. Asked again with \"compare\" true, intent {} is tried beside your side with it withdrawn on the coming morning, which shows what it costs you.",
+            asked.tried_intent
+        )),
         None => text
             .push("Your side has no other plan to weigh: no second trial was played.".to_string()),
         Some(plans) if plans.is_empty() => {
@@ -1308,8 +1605,13 @@ pub(crate) fn answer_fields(
             }
         }
     }
+    text
+}
 
-    // What was assumed.
+/// What was assumed, the leaves given and an uneven count, in words.
+fn assumed_lines(n: &Naming<'_>, answer: &TrialAnswer, second: bool) -> Vec<String> {
+    let of = answer.went.played.len();
+    let mut text = Vec::new();
     if !answer.assumed.is_empty() {
         let lines: Vec<String> = answer
             .assumed
@@ -1326,8 +1628,13 @@ pub(crate) fn answer_fields(
     } else {
         for leave in &answer.leaves_given {
             text.push(format!(
-                "Leave to {} given to the side by the trial, not by you: it frees every plan of the side that waits for it, not this one alone.",
-                leave.name()
+                "Leave to {} given to the side by the trial, not by you: it frees every plan of the side that waits for it, not this one alone.{}",
+                leave.name(),
+                if second {
+                    " It is given in both trials."
+                } else {
+                    ""
+                }
             ));
         }
     }
@@ -1337,21 +1644,42 @@ pub(crate) fn answer_fields(
                 .to_string(),
         );
     }
+    text
+}
 
-    // Where the worlds part.
-    for parting in &answer.partings {
-        let mut by = n.thing_words(&parting.by);
-        if let Some(from) = n.made_from_words(&parting.from) {
-            by.push_str(", ");
-            by.push_str(&from);
-        }
-        text.push(format!(
-            "Where the worlds part, by {by}. With them, {}. Without them, {}.",
-            n.part_words(&parting.with),
-            n.part_words(&parting.without)
-        ));
-    }
+/// Where the worlds part, in words.
+fn parting_lines(n: &Naming<'_>, answer: &TrialAnswer) -> Vec<String> {
+    answer
+        .partings
+        .iter()
+        .map(|parting| {
+            let mut by = n.thing_words(&parting.by);
+            if let Some(from) = n.made_from_words(&parting.from) {
+                by.push_str(", ");
+                by.push_str(&from);
+            }
+            format!(
+                "Where the worlds part, by {by}. With them, {}. Without them, {}.",
+                n.part_words(&parting.with),
+                n.part_words(&parting.without)
+            )
+        })
+        .collect()
+}
 
+fn matched_json(m: &MatchedShown, first: &str, later: &str) -> Value {
+    let mut out = serde_json::Map::new();
+    out.insert("both".to_string(), json!(m.both));
+    out.insert(first.to_string(), json!(m.first_alone));
+    out.insert(later.to_string(), json!(m.later_alone));
+    out.insert("neither".to_string(), json!(m.neither));
+    out.insert("apart".to_string(), json!(m.apart));
+    Value::Object(out)
+}
+
+/// The fields of an estimate a trial's answer and a window's date share.
+fn estimate_json(n: &Naming<'_>, answer: &TrialAnswer) -> serde_json::Map<String, Value> {
+    let of = answer.went.played.len();
     let needs = answer.needs.as_ref().map(|needs| {
         json!({
             "world": needs.world,
@@ -1373,21 +1701,7 @@ pub(crate) fn answer_fields(
             "differs_in": needs.differs_in,
         })
     });
-    json!({
-        "estimate": number,
-        "asked": {
-            "intent": asked.intent,
-            "preview": asked.preview,
-            "tried_intent": asked.tried_intent,
-            "size": asked.size,
-            "worlds": answer.worlds,
-            "days": answer.days,
-            "for_day": asked.for_day,
-            "standing": asked.standing,
-            "course": asked.course,
-            "second_trial": asked.second_trial,
-            "orders_not_tried": asked.orders_queued,
-        },
+    let fields = json!({
         "first_day": answer.first_day,
         "last_day": answer.last_day,
         "has_end": answer.has_end,
@@ -1419,8 +1733,458 @@ pub(crate) fn answer_fields(
             "with": {"how_it_went": n.went_json(&p.with.went), "cost": p.with.side.as_ref().map(costs_json), "enemy_lost": p.with.enemy.as_ref().map(costs_json)},
             "without": {"how_it_went": n.went_json(&p.without.went), "cost": p.without.side.as_ref().map(costs_json), "enemy_lost": p.without.enemy.as_ref().map(costs_json)},
         })).collect::<Vec<_>>(),
+    });
+    match fields {
+        Value::Object(map) => map,
+        _ => unreachable!("an object"),
+    }
+}
+
+/// The fields and the words of a trial's answer (rules 15 to 17), named as
+/// the seat's tools name things.
+pub(crate) fn answer_fields(
+    view: &SideView<'_>,
+    number: u32,
+    asked: &AskedShown,
+    answer: &TrialAnswer,
+) -> Value {
+    let n = Naming::new(view);
+    let mut text: Vec<String> = Vec::new();
+
+    // What was tried, and in how many worlds.
+    text.push(format!(
+        "Tried: {}, {}, as it would go from the morning of day {}, with what you have handed in for that morning, in {} worlds of {} days each (the size {}).",
+        asked.tried,
+        asked.what,
+        asked.for_day,
+        answer.worlds,
+        answer.days,
+        asked.size
+    ));
+    if !asked.standing.is_empty() {
+        text.push(format!(
+            "Taken in on that morning as you have it: {}.",
+            asked.standing.join("; ")
+        ));
+    }
+    if !asked.course.is_empty() {
+        text.push(format!(
+            "Added by the trial on that morning: {}.",
+            asked.course.join("; ")
+        ));
+    }
+    text.extend(asked.orders_line());
+    text.extend(went_and_cost_lines(answer));
+    text.extend(needs_lines(&n, answer));
+    if let Some(beside) = &answer.beside {
+        text.extend(beside_lines(asked, beside));
+    }
+    text.extend(other_plans_lines(&n, asked, answer));
+    text.extend(assumed_lines(&n, answer, answer.beside.is_some()));
+    text.extend(parting_lines(&n, answer));
+
+    let mut fields = serde_json::Map::new();
+    fields.insert("estimate".to_string(), json!(number));
+    fields.insert("asked".to_string(), asked.json(answer.worlds, answer.days));
+    fields.extend(estimate_json(&n, answer));
+    fields.insert(
+        "beside".to_string(),
+        answer.beside.as_ref().map_or(Value::Null, |b| {
+            json!({
+                "of": b.of.name(),
+                "how_it_went": b.went.as_ref().map(|w| n.went_json(w)),
+                "last_day": b.last_day,
+                "could_not_be_played": b.could_not,
+                "cost": b.side_costs.as_ref().map(costs_json),
+                "enemy_lost": b.enemy_costs.as_ref().map(costs_json),
+                "world_for_world": b.matched.as_ref().map(|m| matched_json(m, "with_the_draft_alone", "as_it_stands_alone")),
+            })
+        }),
+    );
+    fields.insert("text".to_string(), json!(text));
+    Value::Object(fields)
+}
+
+impl Naming<'_> {
+    fn due_words(&self, due: &DueShown) -> String {
+        match due.thing {
+            DueThing::Force(force) => {
+                format!(
+                    "{}, may first be used on day {}",
+                    self.force(force),
+                    due.day
+                )
+            }
+            DueThing::BackFromYard(force) => {
+                format!(
+                    "{}, back from the yard on day {}",
+                    self.force(force),
+                    due.day
+                )
+            }
+            DueThing::LandUnit(unit) => {
+                format!("{}, may first be used on day {}", self.unit(unit), due.day)
+            }
+        }
+    }
+
+    fn due_json(&self, due: &DueShown) -> Value {
+        let (kind, handle) = match due.thing {
+            DueThing::Force(force) => ("task_force", json!(self.ctx.force(force.id()))),
+            DueThing::BackFromYard(force) => ("back_from_yard", json!(self.ctx.force(force.id()))),
+            DueThing::LandUnit(unit) => ("land_unit", json!(self.ctx.land_unit(unit.id()))),
+        };
+        json!({"kind": kind, "unit": handle, "day": due.day, "text": self.due_words(due)})
+    }
+
+    fn dues_words(&self, due: &[DueShown]) -> String {
+        due.iter()
+            .map(|d| self.due_words(d))
+            .collect::<Vec<_>>()
+            .join("; ")
+    }
+}
+
+fn cover_words(cover: Option<CoverShown>) -> String {
+    cover.map_or_else(
+        || "none, for no unit of his is there".to_string(),
+        |c| format!("{}, {}, {}", c.lowest, c.middle, c.highest),
+    )
+}
+
+/// The fields and the words of a window's answer (decision 0181, rules 13
+/// and 14), named as the seat's tools name things.
+pub(crate) fn window_fields(
+    view: &SideView<'_>,
+    number: u32,
+    asked: &AskedShown,
+    answer: &WindowAnswer,
+) -> Value {
+    let n = Naming::new(view);
+    let mut text: Vec<String> = Vec::new();
+    let first = answer.dates.first().map_or(answer.first_day, |d| d.day);
+    text.push(format!(
+        "Tried at {} date{}: {}, {}, the whole order handed in at each date, in the same {} worlds, each date played for {} days from its morning (the size {}). The dates were {}: {}.",
+        answer.dates.len(),
+        if answer.dates.len() == 1 { "" } else { "s" },
+        asked.tried,
+        asked.what,
+        answer.worlds,
+        answer.days,
+        asked.size,
+        if answer.given {
+            "given by you"
+        } else {
+            "chosen from what of yours the order may use comes due"
+        },
+        answer
+            .dates
+            .iter()
+            .map(|d| format!("day {}", d.day))
+            .collect::<Vec<_>>()
+            .join(", ")
+    ));
+    if !asked.standing.is_empty() {
+        text.push(format!(
+            "Taken in on the coming morning, day {first}, at every date, as you have it: {}.",
+            asked.standing.join("; ")
+        ));
+    }
+    if !asked.course.is_empty() {
+        text.push(format!(
+            "Handed in on the morning of each date: {}.",
+            asked.course.join("; ")
+        ));
+    }
+    text.extend(asked.orders_line());
+    if !answer.given && answer.dates.len() == 1 {
+        text.push(format!(
+            "Nothing of yours that the order may use is due to change by day {}: the window has one date.",
+            answer.last_day
+        ));
+    }
+    let mut dates = Vec::new();
+    for (i, date) in answer.dates.iter().enumerate() {
+        let mut lines = Vec::new();
+        if i == 0 {
+            lines.push(format!(
+                "The first date, day {}, the coming morning: the order handed in on day {}, played to {}.",
+                date.day,
+                date.taken_in.unwrap_or(date.day),
+                date.trial
+                    .last_day
+                    .map_or_else(|| "no day".to_string(), |d| format!("day {d}"))
+            ));
+        } else {
+            lines.push(format!(
+                "A later date, day {}, {} day{} after the first: the order handed in on day {}, played to {}. Nothing of the order was done before day {}: the units it would take lay idle in the days between, and a landing decided on day {} is ashore later than one prepared from day {first} and held.",
+                date.day,
+                date.after_first,
+                if date.after_first == 1 { "" } else { "s" },
+                date.taken_in.unwrap_or(date.day),
+                date.trial
+                    .last_day
+                    .map_or_else(|| "no day".to_string(), |d| format!("day {d}")),
+                date.day,
+                date.day
+            ));
+            if date.due.is_empty() {
+                lines.push(format!(
+                    "What came due by day {}: nothing of yours that the order may use.",
+                    date.day
+                ));
+            } else {
+                lines.push(format!(
+                    "What came due by day {}: {}.",
+                    date.day,
+                    n.dues_words(&date.due)
+                ));
+            }
+        }
+        match &date.chosen {
+            Some(chosen) => {
+                let units: Vec<String> = chosen
+                    .units
+                    .iter()
+                    .map(|(unit, men)| format!("{}, {} men", n.unit(*unit), thousands(*men)))
+                    .collect();
+                let mut line = format!(
+                    "Its take chose {} men, in world {}: {}.",
+                    thousands(chosen.men),
+                    chosen.world,
+                    units.join("; ")
+                );
+                if chosen.differs_in.is_empty() {
+                    line.push_str(" The same in every world.");
+                } else {
+                    line.push_str(&format!(" Other units {}.", in_worlds(&chosen.differs_in)));
+                }
+                lines.push(line);
+            }
+            None => lines.push(
+                "Its take had formed no landing by the end of the day the order was handed in."
+                    .to_string(),
+            ),
+        }
+        for enemy in &date.enemy {
+            lines.push(format!(
+                "The enemy at {} on the evening {}, the trial's own reckoning of an enemy it made, the lowest, the middle and the highest: men ashore {}; the least cover {}.",
+                n.place(enemy.place),
+                if enemy.eve + 1 == answer.first_day {
+                    format!("before day {}", answer.first_day)
+                } else {
+                    format!("of day {}", enemy.eve)
+                },
+                enemy
+                    .men
+                    .map_or_else(|| "none read".to_string(), spread_words),
+                cover_words(enemy.least_cover)
+            ));
+        }
+        lines.extend(went_and_cost_lines(&date.trial));
+        lines.extend(needs_lines(&n, &date.trial));
+        lines.extend(assumed_lines(&n, &date.trial, false));
+        lines.extend(parting_lines(&n, &date.trial));
+        if let Some(m) = &date.against_first {
+            let mut line = format!(
+                "Day {} against day {first}, world for world: met and kept at both {}; at the first alone {}; at the later alone {}; at neither {}",
+                date.day,
+                in_worlds(&m.both),
+                in_worlds(&m.first_alone),
+                in_worlds(&m.later_alone),
+                in_worlds(&m.neither)
+            );
+            if !m.apart.is_empty() {
+                line.push_str(&format!(
+                    "; could not be played at one of the two, counted apart, {}",
+                    in_worlds(&m.apart)
+                ));
+            }
+            line.push('.');
+            lines.push(line);
+        }
+        let mut fields = serde_json::Map::new();
+        fields.insert("day".to_string(), json!(date.day));
+        fields.insert("after_first".to_string(), json!(date.after_first));
+        fields.insert("taken_in".to_string(), json!(date.taken_in));
+        fields.insert(
+            "due".to_string(),
+            json!(date.due.iter().map(|d| n.due_json(d)).collect::<Vec<_>>()),
+        );
+        fields.insert(
+            "chosen".to_string(),
+            date.chosen.as_ref().map_or(Value::Null, |c| {
+                json!({
+                    "world": c.world,
+                    "men": c.men,
+                    "units": c.units.iter().map(|(u, men)| json!({"land_unit": n.ctx.land_unit(u.id()), "men": men})).collect::<Vec<_>>(),
+                    "differs_in": c.differs_in,
+                })
+            }),
+        );
+        fields.insert("expected_ashore".to_string(), json!(date.expected_ashore));
+        fields.insert(
+            "enemy_on_the_eve".to_string(),
+            json!(date
+                .enemy
+                .iter()
+                .map(|e| json!({
+                    "place": n.ctx.place(e.place),
+                    "eve": e.eve,
+                    "men": e.men.map(spread_json),
+                    "least_cover": e.least_cover.map(|c| json!({
+                        "lowest": crate::common::Dec(c.lowest),
+                        "middle": crate::common::Dec(c.middle),
+                        "highest": crate::common::Dec(c.highest),
+                    })),
+                }))
+                .collect::<Vec<_>>()),
+        );
+        fields.extend(estimate_json(&n, &date.trial));
+        fields.remove("other_plans");
+        fields.insert(
+            "against_first".to_string(),
+            date.against_first.as_ref().map_or(Value::Null, |m| {
+                matched_json(m, "first_alone", "later_alone")
+            }),
+        );
+        fields.insert("text".to_string(), json!(lines));
+        text.extend(lines.iter().cloned());
+        dates.push(Value::Object(fields));
+    }
+    for date in &answer.not_tried {
+        text.push(format!(
+            "Not tried, for a window has three dates at most: day {}, {}.",
+            date.day,
+            n.dues_words(&date.due)
+        ));
+    }
+    text.push(
+        "No second trial is played beside a window, and its answer names no other plan."
+            .to_string(),
+    );
+    json!({
+        "estimate": number,
+        "asked": asked.json(answer.worlds, answer.days),
+        "given": answer.given,
+        "first_day": answer.first_day,
+        "last_day": answer.last_day,
+        "dates": dates,
+        "not_tried": answer.not_tried.iter().map(|d| json!({
+            "day": d.day,
+            "due": d.due.iter().map(|due| n.due_json(due)).collect::<Vec<_>>(),
+        })).collect::<Vec<_>>(),
         "text": text,
     })
+}
+
+/// The fields and the words of what would be tried, with nothing played
+/// (decision 0181, amended 9).
+pub(crate) fn described_fields(
+    view: &SideView<'_>,
+    asked: &AskedShown,
+    described: &Described,
+) -> Value {
+    let n = Naming::new(view);
+    let window = !matches!(asked.dates, DatesAsked::Coming);
+    let mut text = vec![format!(
+        "Not played: this is what would be tried. {}, {}, from the morning of day {}, at the size {}.",
+        capital(&asked.tried),
+        asked.what,
+        asked.for_day,
+        asked.size
+    )];
+    if !asked.standing.is_empty() {
+        text.push(format!(
+            "Taken in on the coming morning{}, as you have it: {}.",
+            if window { " at every date" } else { "" },
+            asked.standing.join("; ")
+        ));
+    }
+    if !asked.course.is_empty() {
+        text.push(format!(
+            "{}: {}.",
+            if window {
+                "Handed in on the morning of each date"
+            } else {
+                "Added by the trial on that morning"
+            },
+            asked.course.join("; ")
+        ));
+    }
+    text.extend(asked.orders_line());
+    let first = described
+        .dates
+        .first()
+        .map_or(described.first_day, |d| d.day);
+    let mut plays = Vec::new();
+    for (i, date) in described.dates.iter().enumerate() {
+        let days = described.days + (date.day - first);
+        plays.push(
+            json!({"trial": "first", "date": date.day, "worlds": described.worlds, "days": days}),
+        );
+        if window {
+            let due = if i == 0 {
+                "the coming morning".to_string()
+            } else if date.due.is_empty() {
+                "nothing of yours that the order may use comes due by it".to_string()
+            } else {
+                format!("by it, {}", n.dues_words(&date.due))
+            };
+            text.push(format!(
+                "Day {}, {due}: {} worlds of {} days each.",
+                date.day, described.worlds, days
+            ));
+        }
+    }
+    if let Some(of) = asked.beside {
+        plays.push(json!({"trial": "second", "date": first, "worlds": described.worlds, "days": described.days}));
+        text.push(format!(
+            "Two trials of {} worlds of {} days each, in the same worlds: the first with {}, the second {}.",
+            described.worlds,
+            described.days,
+            if asked.preview.is_some() { "the draft" } else { "the order" },
+            beside_words(of)
+        ));
+    } else if !window {
+        text.push(format!(
+            "One trial of {} worlds of {} days each, with no second trial beside it.",
+            described.worlds, described.days
+        ));
+    }
+    for date in &described.not_tried {
+        text.push(format!(
+            "Not tried, for a window has three dates at most: day {}, {}.",
+            date.day,
+            n.dues_words(&date.due)
+        ));
+    }
+    text.push("Nothing is played, nothing is changed and no estimate is kept.".to_string());
+    json!({
+        "asked": asked.json(described.worlds, described.days),
+        "given": described.given,
+        "first_day": described.first_day,
+        "last_day": described.last_day,
+        "dates": described.dates.iter().map(|d| json!({
+            "day": d.day,
+            "due": d.due.iter().map(|due| n.due_json(due)).collect::<Vec<_>>(),
+        })).collect::<Vec<_>>(),
+        "not_tried": described.not_tried.iter().map(|d| json!({
+            "day": d.day,
+            "due": d.due.iter().map(|due| n.due_json(due)).collect::<Vec<_>>(),
+        })).collect::<Vec<_>>(),
+        "plays": plays,
+        "text": text,
+    })
+}
+
+/// Words made to begin with a capital, for the head of a sentence.
+fn capital(words: &str) -> String {
+    let mut out = words.to_string();
+    if let Some(first) = out.get_mut(0..1) {
+        first.make_ascii_uppercase();
+    }
+    out
 }
 
 /// Words that begin with a capital made to begin with a small letter, for

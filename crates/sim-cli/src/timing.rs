@@ -1044,9 +1044,14 @@ struct SeatTrialTime {
 /// stated among the side's commands of day 1, from the evening before day 1
 /// (decision 0178): the standing commands are those commands, the course
 /// gives the leaves the side does not hold, and the second trial, where
-/// asked, has the standing commands less the intent and its limits.
+/// asked, has the standing commands less the intent and its limits and the
+/// same leaves: the order compared with the side without it (decision 0181,
+/// amended 1 and rule 4).
 fn seat_trials(s: &Settings, options: &LoadOptions) -> Result<Vec<SeatTrialTime>, String> {
-    use sim_agent::{CourseStep, SizeAsked, TrialAsked, TrialRunner, TrialStep};
+    use sim_agent::{
+        Answered, BesideOf, CourseStep, DatesAsked, SecondAsked, SizeAsked, TrialAsked,
+        TrialRunner, TrialStep,
+    };
     use sim_core::command::{CommandKind, Leave};
 
     let live = trial_live_game(&s.trial_slice, 0, options)?;
@@ -1124,9 +1129,13 @@ fn seat_trials(s: &Settings, options: &LoadOptions) -> Result<Vec<SeatTrialTime>
                     size: SizeAsked::Named(size.0.to_string()),
                     standing: standing.clone(),
                     course: course.clone(),
-                    dates: vec![view.day() + 1],
+                    dates: DatesAsked::Coming,
                     intent,
-                    as_they_stand: second.then(|| as_they_stand.clone()),
+                    second: second.then(|| SecondAsked {
+                        of: BesideOf::WithoutIt,
+                        standing: as_they_stand.clone(),
+                        course: course.clone(),
+                    }),
                 };
                 let begin = clock();
                 let mut under_way = runner.begin(&view, &asked).map_err(|e| e.0)?;
@@ -1134,6 +1143,11 @@ fn seat_trials(s: &Settings, options: &LoadOptions) -> Result<Vec<SeatTrialTime>
                     if let TrialStep::Done(answer) = under_way.step() {
                         break answer;
                     }
+                };
+                let Answered::Trial(answer) = *answer else {
+                    return Err(
+                        "a seat's trial of the coming morning was answered as a window".to_string(),
+                    );
                 };
                 played = answer.went.played.len();
                 other_plans = answer.other_plans.as_ref().map(|p| p.len());
@@ -1155,7 +1169,7 @@ fn seat_trials(s: &Settings, options: &LoadOptions) -> Result<Vec<SeatTrialTime>
                 t.size,
                 t.worlds,
                 t.days,
-                if second { "with the second trial   " } else { "without the second trial" },
+                if second { "compared, a second trial" } else { "without the second trial" },
                 show(t.time.median),
                 show(t.time.min),
                 show(t.time.max),

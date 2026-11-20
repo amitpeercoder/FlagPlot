@@ -12,7 +12,9 @@
 use std::collections::BTreeMap;
 
 use serde_json::{json, Value};
-use sim_core::command::{CommandKind, IntentKind, Leave, Maker, Staff, StaffDecisions, Staffs};
+use sim_core::command::{
+    CommandKind, IntentKind, Leave, Limit, Maker, Staff, StaffDecisions, Staffs,
+};
 use sim_core::hex::Hex;
 use sim_core::ids::{AirGroupId, BaseId, IntentId, LandUnitId, ShipId, TaskForceId};
 use sim_core::orders::{OrderKind, OrderRequest, Origin, RejectReason, TaskForceOrder};
@@ -37,8 +39,8 @@ use crate::record::{
 use crate::staffing;
 use crate::told::{events_answer, told_since, DayPart, STOP_ON};
 use crate::trial::{
-    answer_fields, command_words, AskedShown, CourseStep, SizeAsked, TrialAsked, TrialRunner,
-    TrialStep,
+    answer_fields, command_words, described_fields, window_fields, Answered, AskedShown, BesideOf,
+    CourseStep, DatesAsked, SecondAsked, SizeAsked, TrialAsked, TrialRunner, TrialStep,
 };
 
 /// The orders given inside a day, by day, each with its pulse and side, in
@@ -1721,15 +1723,18 @@ impl Session {
 
     /// `trial`: an intent of the commander's, or a draft he previewed, tried
     /// in the worlds of a trial at a size, and answered with the estimate in
-    /// a commander's words, or with why it cannot be tried (rules 7 to 19).
-    /// It changes nothing in the game: no command is queued, no preview is
-    /// spent, and the hash is what it was (rule 14).
+    /// a commander's words, or with why it cannot be tried (decision 0178,
+    /// rules 7 to 19). With `compare` it is set beside the side without the
+    /// thing tried; with `dates` it is a window; with `describe` nothing is
+    /// played and the answer says what would be (decision 0181). It changes
+    /// nothing in the game: no command is queued, no preview is spent, and
+    /// the hash is what it was (rule 14).
     fn trial_tool(
         &mut self,
         side: Side,
         args: &serde_json::Map<String, Value>,
     ) -> Result<Value, CallError> {
-        const ARGUMENTS: [&str; 3] = ["intent", "preview", "size"];
+        const ARGUMENTS: [&str; 6] = ["intent", "preview", "size", "compare", "dates", "describe"];
         if let Some(key) = args.keys().find(|k| !ARGUMENTS.contains(&k.as_str())) {
             return Err(CallError::naming(
                 format!("\"{key}\" is not an argument of trial"),
@@ -1757,6 +1762,13 @@ impl Session {
                     .ok_or_else(|| CallError::new(format!("\"{key}\" must be a whole number"))),
             }
         };
+        let flag = |key: &str| -> Result<Option<bool>, CallError> {
+            match args.get(key) {
+                None | Some(Value::Null) => Ok(None),
+                Some(Value::Bool(b)) => Ok(Some(*b)),
+                Some(_) => Err(CallError::new(format!("\"{key}\" must be true or false"))),
+            }
+        };
         let (intent_arg, preview_arg) = (number("intent")?, number("preview")?);
         let size = match args.get("size") {
             None | Some(Value::Null) => "small".to_string(),
@@ -1768,6 +1780,67 @@ impl Session {
                 ))
             }
         };
+        let compare_arg = flag("compare")?;
+        let describe = flag("describe")?.unwrap_or(false);
+        let day = self.command_day();
+        // `dates` (decision 0181, rule 9 and amended 8): `chosen`, or one or
+        // two days after the coming morning, ascending; the coming morning
+        // may lead the list and is dropped, for it is the first date in any
+        // case.
+        let dates = match args.get("dates") {
+            None | Some(Value::Null) => DatesAsked::Coming,
+            Some(Value::String(word)) if word == "chosen" => DatesAsked::Chosen,
+            Some(Value::Array(items)) => {
+                let mut days = Vec::new();
+                for item in items {
+                    let Some(d) = item.as_u64().and_then(|n| u32::try_from(n).ok()) else {
+                        return Err(CallError::new(
+                            "\"dates\" must be \"chosen\" or a list of days of the game, each a whole number",
+                        ));
+                    };
+                    days.push(d);
+                }
+                if days.first() == Some(&day) {
+                    days.remove(0);
+                }
+                if days.is_empty() || days.len() > 2 {
+                    return Err(CallError::new(format!(
+                        "\"dates\" gives {} day{} after the coming morning, day {day}: a window is tried at the coming morning and one or two later days",
+                        days.len(),
+                        if days.len() == 1 { "" } else { "s" }
+                    )));
+                }
+                if let Some(early) = days.iter().find(|d| **d < day) {
+                    return Err(CallError::new(format!(
+                        "\"dates\" gives day {early}, before the coming morning, day {day}: a date is the coming morning or a day after it"
+                    )));
+                }
+                if days.windows(2).any(|pair| pair[0] >= pair[1]) {
+                    return Err(CallError::new(
+                        "the days of \"dates\" are not each after the one before: give them in order, each once",
+                    ));
+                }
+                if let Some(late) = days.iter().find(|d| **d > self.days) {
+                    return Err(CallError::new(format!(
+                        "\"dates\" gives day {late}, after the game's last day, day {}",
+                        self.days
+                    )));
+                }
+                days.insert(0, day);
+                DatesAsked::Given(days)
+            }
+            Some(_) => {
+                return Err(CallError::new(
+                    "\"dates\" must be \"chosen\" or a list of one or two days of the game after the coming morning",
+                ))
+            }
+        };
+        let window = !matches!(dates, DatesAsked::Coming);
+        if window && compare_arg == Some(true) {
+            return Err(CallError::new(
+                "a window has no second trial: give \"dates\" or \"compare\" true, not both",
+            ));
+        }
         match (intent_arg, preview_arg) {
             (Some(_), Some(_)) => {
                 return Err(CallError::new(
@@ -1781,7 +1854,6 @@ impl Session {
             }
             _ => {}
         }
-        let day = self.command_day();
         // The standing commands (rule 8): the side's commands of that day in
         // the scenario, then what its seat has queued, in that order.
         let mut standing: Vec<CommandKind> = self
@@ -1799,8 +1871,7 @@ impl Session {
         let coming = self.preview();
         let coming_view = coming.side_view(side);
         let state = coming_view.command_state();
-        let (tried, mut course, tried_words, other_from_standing) = match (intent_arg, preview_arg)
-        {
+        let (tried, draft, tried_words) = match (intent_arg, preview_arg) {
             (Some(raw), _) => {
                 let id = IntentId::new(raw);
                 if standing
@@ -1825,7 +1896,7 @@ impl Session {
                     return Err(CallError::new(format!("intent {raw} is withdrawn")));
                 }
                 let words = staffing::intent_words(&coming_view, held.kind);
-                (id, Vec::new(), format!("intent {raw}, {words}"), true)
+                (id, None, format!("intent {raw}, {words}"))
             }
             (None, Some(raw)) => {
                 let Some(record) = self
@@ -1854,25 +1925,33 @@ impl Session {
                     )));
                 };
                 let words = command_words(&coming_view, &command);
-                (id, vec![command], format!("preview {raw}, {words}"), false)
+                (id, Some(command), format!("preview {raw}, {words}"))
             }
             (None, None) => unreachable!("one of the two is given"),
         };
-        // The leaves the course gives (rule 9): each the side neither holds
-        // nor has among the standing commands.
-        let held = self.world.side_view(side).command_state().leaves;
-        for (leave, has) in [(Leave::Prepare, held.prepare), (Leave::Launch, held.launch)] {
-            let standing_gives = standing.iter().any(
-                |c| matches!(c, CommandKind::SetLeave { leave: l, given: true } if *l == leave),
-            );
-            if !has && !standing_gives {
-                course.push(CommandKind::SetLeave { leave, given: true });
-            }
-        }
-        // The second trial (rule 11): where the side has another intent of
-        // the commander's with an end, in force or queued, things as they
-        // stand: the standing commands, less those that set the intent
-        // tried or a limit on it.
+        // Whether the intent tried stands already: in force in the game this
+        // evening, or set among the standing commands.
+        let in_force = self
+            .world
+            .side_view(side)
+            .command_state()
+            .intents
+            .get(&tried)
+            .is_some_and(|i| i.in_force());
+        let sets = |c: &CommandKind| match c {
+            CommandKind::SetIntent { intent, .. } => *intent == tried,
+            CommandKind::SetLimit(limit) => limit.intent() == Some(tried),
+            _ => false,
+        };
+        let queued = !in_force && standing.iter().any(&sets);
+        // What the second trial would be of (decision 0181, amended 1).
+        let of = match &draft {
+            None if in_force => BesideOf::Withdrawn,
+            None => BesideOf::WithoutIt,
+            Some(CommandKind::SetIntent { .. }) if !in_force && !queued => BesideOf::WithoutIt,
+            Some(_) => BesideOf::AsItStands,
+        };
+        // Where `compare` is not given (amended 2).
         let other = state.intents_in_force().any(|i| {
             i.id != tried
                 && i.maker == Maker::Commander
@@ -1883,21 +1962,88 @@ impl Session {
                         | IntentKind::Hold { .. }
                 )
         });
-        let as_they_stand = other.then(|| {
-            standing
-                .iter()
-                .filter(|c| {
-                    !other_from_standing
-                        || !match c {
-                            CommandKind::SetIntent { intent, .. } => *intent == tried,
-                            CommandKind::SetLimit(limit) => limit.intent() == Some(tried),
-                            _ => false,
-                        }
-                })
-                .cloned()
-                .collect::<Vec<_>>()
+        let compare = compare_arg.unwrap_or(match of {
+            _ if window => false,
+            BesideOf::AsItStands => true,
+            BesideOf::WithoutIt => other,
+            BesideOf::Withdrawn => false,
         });
-        let standing_words: Vec<String> = standing
+        // No later date for an order in force (amended 5).
+        if window && in_force {
+            return Err(CallError::new(format!(
+                "intent {} is in force: an order in force cannot be given later. A landing in force is held to a day by a \"not before\", which can be previewed and compared",
+                tried.raw()
+            )));
+        }
+        // A window hands in the whole order at each date (amended 4); the
+        // second trial of a queued order leaves it out (amended 1). Either
+        // way the commands that set it move or go, and a standing command
+        // left behind that names it is refused (amended 7).
+        let moves = window || (compare && of == BesideOf::WithoutIt && queued);
+        if moves {
+            if let Some(after) = standing.iter().find(|c| {
+                !sets(c)
+                    && matches!(c, CommandKind::SetLimit(Limit::After { other: Some(o), .. }) if *o == tried)
+            }) {
+                return Err(CallError::new(format!(
+                    "\"{}\" stands among your commands for the morning and names intent {}: the trial would {} intent {} and not that command, so the worlds would differ by more than the thing tried. It cannot be tried so",
+                    command_words(&coming_view, after),
+                    tried.raw(),
+                    if window { "move" } else { "leave out" },
+                    tried.raw()
+                )));
+            }
+        }
+        // The leaves the course gives (rule 9): each the side neither holds
+        // nor has among the standing commands. Both trials are given them
+        // (decision 0181, rule 4).
+        let held = self.world.side_view(side).command_state().leaves;
+        let mut leaves = Vec::new();
+        for (leave, has) in [(Leave::Prepare, held.prepare), (Leave::Launch, held.launch)] {
+            let standing_gives = standing.iter().any(
+                |c| matches!(c, CommandKind::SetLeave { leave: l, given: true } if *l == leave),
+            );
+            if !has && !standing_gives {
+                leaves.push(CommandKind::SetLeave { leave, given: true });
+            }
+        }
+        let (first_standing, course): (Vec<CommandKind>, Vec<CommandKind>) = if window {
+            let mut course: Vec<CommandKind> =
+                standing.iter().filter(|c| sets(c)).cloned().collect();
+            course.extend(draft.iter().cloned());
+            course.extend(leaves.iter().cloned());
+            (
+                standing.iter().filter(|c| !sets(c)).cloned().collect(),
+                course,
+            )
+        } else {
+            let mut course: Vec<CommandKind> = draft.iter().cloned().collect();
+            course.extend(leaves.iter().cloned());
+            (standing.clone(), course)
+        };
+        let second = compare.then(|| {
+            let (second_standing, mut second_course) = match of {
+                BesideOf::AsItStands => (standing.clone(), Vec::new()),
+                BesideOf::WithoutIt => (
+                    standing.iter().filter(|c| !sets(c)).cloned().collect(),
+                    Vec::new(),
+                ),
+                BesideOf::Withdrawn => (
+                    standing.clone(),
+                    vec![CommandKind::WithdrawIntent { intent: tried }],
+                ),
+            };
+            second_course.extend(leaves.iter().cloned());
+            SecondAsked {
+                of,
+                standing: second_standing,
+                course: second_course
+                    .into_iter()
+                    .map(|command| CourseStep { day: 1, command })
+                    .collect(),
+            }
+        });
+        let standing_words: Vec<String> = first_standing
             .iter()
             .map(|c| command_words(&coming_view, c))
             .collect();
@@ -1909,17 +2055,15 @@ impl Session {
         let asked = TrialAsked {
             trial: 1,
             size: SizeAsked::Named(size.clone()),
-            standing,
+            standing: first_standing,
             course: course
                 .into_iter()
                 .map(|command| CourseStep { day: 1, command })
                 .collect(),
-            dates: vec![day],
+            dates: dates.clone(),
             intent: tried,
-            as_they_stand,
+            second,
         };
-        let second = asked.as_they_stand.is_some();
-        let answer = self.play_trial(side, &asked)?;
         let shown = AskedShown {
             tried: match (intent_arg, preview_arg) {
                 (Some(raw), _) => format!("intent {raw}"),
@@ -1936,13 +2080,30 @@ impl Session {
             for_day: day,
             standing: standing_words,
             course: course_words,
-            second_trial: second,
+            second_trial: asked.second.is_some(),
             orders_queued: self.seats[&side].queued.len(),
+            beside: asked.second.as_ref().map(|s| s.of),
+            in_force,
+            dates,
         };
+        if describe {
+            let described = self.describe_trial(side, &asked)?;
+            let fields = described_fields(&self.world.side_view(side), &shown, &described);
+            return Ok(staffing::answer("trial_described", fields));
+        }
+        let answered = self.play_trial(side, &asked)?;
         let number = u32::try_from(self.trials_shown.iter().filter(|t| t.side == side).count() + 1)
             .expect("few trials");
-        let fields = answer_fields(&self.world.side_view(side), number, &shown, &answer);
-        let out = staffing::answer("trial", fields);
+        let out = match &answered {
+            Answered::Trial(answer) => staffing::answer(
+                "trial",
+                answer_fields(&self.world.side_view(side), number, &shown, answer),
+            ),
+            Answered::Window(answer) => staffing::answer(
+                "window",
+                window_fields(&self.world.side_view(side), number, &shown, answer),
+            ),
+        };
         self.trials_shown.push(TrialRecord {
             number,
             side,
@@ -1956,11 +2117,7 @@ impl Session {
 
     /// Begins a trial on the side's whole view (rule 10), taken here, out of
     /// the dispatch of tools, and steps it to its end (rule 3).
-    fn play_trial(
-        &self,
-        side: Side,
-        asked: &TrialAsked,
-    ) -> Result<crate::trial::TrialAnswer, CallError> {
+    fn play_trial(&self, side: Side, asked: &TrialAsked) -> Result<Answered, CallError> {
         let runner = self
             .trial
             .as_ref()
@@ -1974,6 +2131,22 @@ impl Session {
                 return Ok(*answer);
             }
         }
+    }
+
+    /// What a trial would play, on the side's whole view, with nothing
+    /// played (decision 0181, amended 9).
+    fn describe_trial(
+        &self,
+        side: Side,
+        asked: &TrialAsked,
+    ) -> Result<crate::trial::Described, CallError> {
+        let runner = self
+            .trial
+            .as_ref()
+            .ok_or_else(|| CallError::new("this game has no trial"))?;
+        runner
+            .describe(&self.world.side_view(side), asked)
+            .map_err(|refused| CallError::new(refused.0))
     }
 
     /// `trials`: the estimates the seat was shown, each with the evening it
@@ -2030,8 +2203,15 @@ impl Session {
                     ("current", "asked this evening, on the queue as it stands")
                 };
                 let for_day = t.asked["for_day"].as_u64().unwrap_or(0);
+                let how = if t.answer["kind"] == "window" {
+                    ", at later dates"
+                } else if t.asked["second_trial"] == true {
+                    ", compared"
+                } else {
+                    ""
+                };
                 text.push(format!(
-                    "Estimate {}: {}, asked on the evening before day {for_day}, at the size {}; {note}.",
+                    "Estimate {}: {}{how}, asked on the evening before day {for_day}, at the size {}; {note}.",
                     t.number,
                     match (t.asked["intent"].as_u64(), t.asked["preview"].as_u64()) {
                         (Some(intent), _) => format!("intent {intent}"),
@@ -2042,6 +2222,7 @@ impl Session {
                 ));
                 json!({
                     "estimate": t.number,
+                    "kind": t.answer["kind"],
                     "asked_on": {"days_resolved": t.moment.0, "for_day": for_day},
                     "asked": t.asked,
                     "standing": standing,

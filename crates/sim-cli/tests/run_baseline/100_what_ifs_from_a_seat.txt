@@ -1,0 +1,31 @@
+Placeholder scenario 100: What-ifs from a seat
+PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
+seed 1942
+
+day   1  hash 8b939c2e8bb40138  9 events
+day   2  hash 0e3e00c23afb8e92  9 events
+day   3  hash 6a20c87183431adf  9 events
+day   4  hash 1042438e72ef34a8  9 events
+day   5  hash c68f3093d8bbfd3c  9 events
+day   6  hash 0fe87c15aa89d1db  9 events
+day   7  hash 3482fb6f8d66ef61  9 events
+day   8  hash ee169da63b510e9b  9 events
+day   9  hash 14544e5e07bf27ec  9 events
+day  10  hash 6d78c4acd74a3513  9 events
+day  11  hash 7009fec6647f56cc  6 events
+day  12  hash 0308a0087f8ba3c9  6 events
+day  13  hash 7451192ecee22763  6 events
+day  14  hash 90a38da83dd3fff3  6 events
+
+task_force:1 "Placeholder transport force 1" (Allied): Idle at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+ship:1 "Placeholder troop transport 1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1000 t of fuel, 0 t of supply
+ship:2 "Placeholder troop transport 2": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1000 t of fuel, 0 t of supply
+base:1 "Placeholder base A" (Allied) at (0,0): 916 t of supply in stock
+base:2 "Placeholder airfield B" (Japanese) at (4,0): 116 t of supply in stock
+land_unit:1 "Placeholder First" (Allied): 600 men ashore at (0,0), fieldworks 100
+land_unit:2 "Placeholder Second" (Allied): 600 men ashore at (0,0), fieldworks 100
+land_unit:10 "Placeholder Garrison" (Japanese): 1200 men ashore at (4,0), fieldworks 100
+Allied: no contacts
+Allied: no battle claims
+Japanese: no contacts
+Japanese: no battle claims

@@ -1,0 +1,370 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "flagplot-agent/window",
+  "title": "window: the same order tried at the coming morning and at later dates, in the same worlds",
+  "description": "Decision 0181: a seat's trial with dates. The whole order is handed in at each date, in the same worlds; for each date it gives what came due on it, the men its take chose, the trial's own reckoning of the enemy at the place on its eve, and the fields of a trial's estimate; and each later date against the first, world for world. No second trial, no other plan, no chance and no points. It changes nothing in the game and is kept with the session.",
+  "type": "object",
+  "required": [
+    "format",
+    "version",
+    "kind",
+    "estimate",
+    "asked",
+    "given",
+    "first_day",
+    "last_day",
+    "dates",
+    "not_tried",
+    "text"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "format": {
+      "const": "flagplot-agent"
+    },
+    "version": {
+      "const": 31
+    },
+    "kind": {
+      "const": "window"
+    },
+    "estimate": {
+      "type": "integer",
+      "description": "The number of this estimate among those the seat was shown, from 1."
+    },
+    "asked": {
+      "$ref": "trial.schema.json#/properties/asked"
+    },
+    "given": {
+      "type": "boolean",
+      "description": "Whether the dates were given, not chosen."
+    },
+    "first_day": {
+      "type": "integer"
+    },
+    "last_day": {
+      "type": "integer",
+      "description": "The last day of the first date's play: the bound of the dates."
+    },
+    "dates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "day",
+          "after_first",
+          "taken_in",
+          "due",
+          "chosen",
+          "expected_ashore",
+          "enemy_on_the_eve",
+          "first_day",
+          "last_day",
+          "has_end",
+          "how_it_went",
+          "could_not_be_played",
+          "cost",
+          "enemy_lost",
+          "needs",
+          "assumed",
+          "leaves_given_to_the_side",
+          "uneven",
+          "partings",
+          "against_first",
+          "text"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "day": {
+            "type": "integer"
+          },
+          "after_first": {
+            "type": "integer"
+          },
+          "taken_in": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "due": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/due"
+            }
+          },
+          "chosen": {
+            "oneOf": [
+              {
+                "type": "object",
+                "required": [
+                  "world",
+                  "men",
+                  "units",
+                  "differs_in"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "world": {
+                    "type": "integer"
+                  },
+                  "men": {
+                    "type": "integer"
+                  },
+                  "units": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "land_unit",
+                        "men"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "land_unit": {
+                          "$ref": "defs.schema.json#/$defs/handle"
+                        },
+                        "men": {
+                          "type": "integer"
+                        }
+                      }
+                    }
+                  },
+                  "differs_in": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The men its take chose, the side's own units, in the world of its plan order."
+          },
+          "expected_ashore": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "enemy_on_the_eve": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "place",
+                "eve",
+                "men",
+                "least_cover"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "place": {
+                  "$ref": "defs.schema.json#/$defs/place"
+                },
+                "eve": {
+                  "type": "integer"
+                },
+                "men": {
+                  "oneOf": [
+                    {
+                      "$ref": "trial.schema.json#/$defs/spread"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "least_cover": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "required": [
+                        "lowest",
+                        "middle",
+                        "highest"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "lowest": {
+                          "$ref": "defs.schema.json#/$defs/dec"
+                        },
+                        "middle": {
+                          "$ref": "defs.schema.json#/$defs/dec"
+                        },
+                        "highest": {
+                          "$ref": "defs.schema.json#/$defs/dec"
+                        }
+                      }
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              }
+            },
+            "description": "The trial's own reckoning of the enemy at each place of the intent's end on the eve of the date: men and cover at a place, never a unit."
+          },
+          "first_day": {
+            "$ref": "trial.schema.json#/properties/first_day"
+          },
+          "last_day": {
+            "$ref": "trial.schema.json#/properties/last_day"
+          },
+          "has_end": {
+            "$ref": "trial.schema.json#/properties/has_end"
+          },
+          "how_it_went": {
+            "$ref": "trial.schema.json#/properties/how_it_went"
+          },
+          "could_not_be_played": {
+            "$ref": "trial.schema.json#/properties/could_not_be_played"
+          },
+          "cost": {
+            "$ref": "trial.schema.json#/properties/cost"
+          },
+          "enemy_lost": {
+            "$ref": "trial.schema.json#/properties/enemy_lost"
+          },
+          "needs": {
+            "$ref": "trial.schema.json#/properties/needs"
+          },
+          "assumed": {
+            "$ref": "trial.schema.json#/properties/assumed"
+          },
+          "leaves_given_to_the_side": {
+            "$ref": "trial.schema.json#/properties/leaves_given_to_the_side"
+          },
+          "uneven": {
+            "$ref": "trial.schema.json#/properties/uneven"
+          },
+          "partings": {
+            "$ref": "trial.schema.json#/properties/partings"
+          },
+          "against_first": {
+            "oneOf": [
+              {
+                "type": "object",
+                "required": [
+                  "both",
+                  "first_alone",
+                  "later_alone",
+                  "neither",
+                  "apart"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "both": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer"
+                    }
+                  },
+                  "first_alone": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer"
+                    }
+                  },
+                  "later_alone": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer"
+                    }
+                  },
+                  "neither": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer"
+                    }
+                  },
+                  "apart": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "This date against the first, world for world; null at the first."
+          },
+          "text": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "not_tried": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/due_date"
+      }
+    },
+    "text": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "$defs": {
+    "due": {
+      "type": "object",
+      "required": [
+        "kind",
+        "unit",
+        "day",
+        "text"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "task_force",
+            "back_from_yard",
+            "land_unit"
+          ]
+        },
+        "unit": {
+          "$ref": "defs.schema.json#/$defs/handle"
+        },
+        "day": {
+          "type": "integer"
+        },
+        "text": {
+          "type": "string"
+        }
+      }
+    },
+    "due_date": {
+      "type": "object",
+      "required": [
+        "day",
+        "due"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "day": {
+          "type": "integer"
+        },
+        "due": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/due"
+          }
+        }
+      }
+    }
+  }
+}
