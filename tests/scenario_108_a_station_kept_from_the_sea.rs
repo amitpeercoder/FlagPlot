@@ -681,7 +681,7 @@ fn statement_7_fuel_is_weighed_to_a_base_that_can_fuel_it() {
     assert!(said.contains(
         "ship:4 has 40 t aboard against more than 40 t needed, running dry short of the passage"
     ));
-    assert!(said.contains("short of it"));
+    assert!(said.contains("short of the fuel it needs: "));
     assert!(said.contains("does not go to its station"));
     // With exactly the need it goes: short is less than.
     let exact = play(&ship4_fuel(&press, 45));
@@ -743,7 +743,7 @@ fn statement_8_going_in_for_fuel() {
     );
     let said = played.said(1);
     assert!(said.contains(
-        "ship:3 has 20 t aboard against more than 20 t needed, running dry short of the passage short of it"
+        "short of the fuel it needs: ship:3 has 20 t aboard against more than 20 t needed, running dry short of the passage"
     ));
     assert!(said.contains("It goes in"));
     assert!(said.contains("routed to base:1"));
@@ -787,7 +787,7 @@ fn statements_8_and_9_going_in_then_a_force_with_a_home_port() {
         vec![TaskForceOrder::SetHomePort(base(1)), route(&[(4, 5)])]
     );
     let said = played.said(1);
-    assert!(said.contains("ship:3 has 27 t aboard against 30 t needed short of it"));
+    assert!(said.contains("short of the fuel it needs: ship:3 has 27 t aboard against 30 t needed"));
     assert_eq!(played.position(1, 1), B, "at B by the end of the day");
     assert_eq!(
         played.truth[1].task_forces[&force(1)].home_port,

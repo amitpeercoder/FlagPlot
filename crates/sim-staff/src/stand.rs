@@ -1246,9 +1246,15 @@ impl Day<'_, '_> {
                     );
                     let why = match (short.is_empty(), &ammunition) {
                         (false, Some(a)) => {
-                            format!("{} short of it, and {}", needs_words(&short), a.words)
+                            format!(
+                                "short of the fuel it needs: {}; and {}",
+                                needs_words(&short),
+                                a.words
+                            )
                         }
-                        (false, None) => format!("{} short of it", needs_words(&short)),
+                        (false, None) => {
+                            format!("short of the fuel it needs: {}", needs_words(&short))
+                        }
                         (true, Some(a)) => a.words.clone(),
                         (true, None) => String::new(),
                     };
@@ -1380,9 +1386,15 @@ impl Day<'_, '_> {
                     if !short.is_empty() || ammunition.is_some() {
                         let why = match (short.is_empty(), &ammunition) {
                             (false, Some(a)) => {
-                                format!("{} short of it, and {}", needs_words(&short), a.words)
+                                format!(
+                                    "short of the fuel it needs: {}; and {}",
+                                    needs_words(&short),
+                                    a.words
+                                )
                             }
-                            (false, None) => format!("{} short of it", needs_words(&short)),
+                            (false, None) => {
+                                format!("short of the fuel it needs: {}", needs_words(&short))
+                            }
                             (true, Some(a)) => a.words.clone(),
                             (true, None) => String::new(),
                         };
