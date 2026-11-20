@@ -88,7 +88,7 @@ A reviewer who had not seen the plan written read it against the code on Nov 20,
 **The frame of the Midway map (replaces rules 6 and 7).**
 
 24. **South edge 18 N,** not 19 N, so that Wake (19 17 N) is not in the last row, where a small change to the frame would drop it. Extent 18 N to 38 N, 163 E to 166 W; about 1,400 hexes. Decision 0198's rule on the south edge is amended by this line.
-25. **The error, the right way round.** East and west distances on the map are 0.878817 over the cosine of the latitude times the true ones: 8 in 100 short at 18 N, 11 in 100 long at 38 N, 3 in 1,000 short at Midway. Accepted as rule 7 says.
+25. **The error, the right way round.** East and west distances on the map are 0.878817 over the cosine of the latitude times the true ones: 7.6 in 100 short at 18 N, 11.5 in 100 long at 38 N, 3 in 1,000 short at Midway. Accepted as rule 7 says.
 26. **Pearl Harbor is off the map,** and with it every Allied base but Midway; a force going east stops at 166 W. Wake's southern sides are the edge. Scenario 114's hand calculation says what that means for each force.
 
 **Land marks (replaces rules 8 and 9's mechanism).**
