@@ -36,3 +36,4 @@ id,key,name,nation,designation,role
 1033,b-25,North American B-25 Mitchell,us,B-25,medium_bomber
 1034,a-20,Douglas A-20 Havoc,us,A-20,light_bomber
 1035,hudson,Lockheed Hudson,us,Hudson,patrol_bomber
+1040,p-38,Lockheed P-38 Lightning (model not given by the source),us,P-38,fighter
