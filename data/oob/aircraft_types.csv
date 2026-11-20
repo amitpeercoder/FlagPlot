@@ -24,3 +24,9 @@ id,key,name,nation,designation,role
 1020,e8n2,"Nakajima E8N2 ""Dave"" floatplane",jp,E8N2,floatplane_reconnaissance
 1021,e8n1,"Nakajima E8N1 ""Dave"" floatplane",jp,E8N1,floatplane_reconnaissance
 1022,e7k2,"Kawanishi E7K2 ""Alf"" floatplane",jp,E7K2,floatplane_reconnaissance
+1023,tbd-1,Douglas TBD-1 Devastator,us,TBD-1,torpedo_bomber
+1024,f4f-3,Grumman F4F-3 Wildcat,us,F4F-3,fighter
+1025,sbd-2,Douglas SBD-2 Dauntless,us,SBD-2,dive_bomber
+1026,a5m4,Mitsubishi A5M4 Type 96 Carrier Fighter,jp,A5M4,fighter
+1027,b5n1,Nakajima B5N1 Type 97 Carrier Attack Bomber,jp,B5N1,torpedo_bomber
+1028,g3m2,Mitsubishi G3M2 Type 96 Land Attack Bomber,jp,G3M2,land_attack_bomber
