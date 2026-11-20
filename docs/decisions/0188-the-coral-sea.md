@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 20, 2026, at the designer's aski
 
 Summary: A second small scenario for play: the Coral Sea over five days, 6 to 10 May 1942. Two American carriers and a cruiser group against two Japanese fleet carriers and a light carrier, with a Japanese convoy bound for Port Moresby that lands on the last days if it is not stopped or turned back. It is built in three stages: the data is settled and derived first, then the scenario with its hand calculation, then its runs and games under the guards of decision 0187. Most of the ships and aircraft it needs the game already has.
 
-Standing: Planned on Nov 20, 2026 and amended on review; waits for the designer.
+Standing: Confirmed by the designer on Nov 20, 2026, with his answers; stage A, the data and its research, is under way.
 
 ## Why
 
@@ -164,3 +164,13 @@ A reviewer who had not seen the plan written read it against the fact rows, the 
 3. **Placeholders at the centre.** The convoy's men, the garrison and the port are placeholders until research finds them, and the convoy's men are the largest figure in the scoring. Build on marked placeholders, or hold stage B until the research is in. The architect proposes: begin stage A and its research now, and decide on stage B when its table is in.
 4. **One coin.** At the game's existing figures the convoy outweighs everything else. Keep it so, as the battle was; or have the architect propose, by a rule from the mission, a lower worth for men landed and lost in this scenario so that the carriers count for more.
 5. **A staff that turns a convoy back** is not a rule today. Without it the engine's Japanese side never does what the Japanese commander did. Plan it as a rule of its own, after this scenario's first run; or leave it to people and agents.
+
+## Confirmed on Nov 20, 2026
+
+The designer answered the questions one by one, taking the architect's proposal on each.
+
+1. **The days:** five, 6 to 10 May, without the Tulagi strike.
+2. **Allied aircraft on land** are left out of the first version, and said to be. If the runs show the convoy is seldom found, the research for their strengths is pressed.
+3. **Placeholders at the centre:** stage A and its research were begun on his word ("Yes, start stage A"). Whether stage B is built on marked placeholders is decided when stage A's table is in.
+4. **The convoy stays decisive.** The scoring keeps the game's existing figures, so that the landing decides the game. If the first runs and the games between agents show the carriers do not matter, the architect proposes a lower worth for the men then, with a reason from the mission.
+5. **A staff that turns a convoy back** is planned as a rule of its own after this scenario's first run, from what the run shows the staff does with the convoy. The first version's engine never turns back.
