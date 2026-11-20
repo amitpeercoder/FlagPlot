@@ -80,3 +80,14 @@ id,key,name,region
 1082,horn-island,Horn Island (staging airfield),Torres Strait
 1083,darwin,Darwin,Australia
 1084,sydney-area,Sydney area (airfields),Australia
+6100,midway,"Midway Atoll (Sand Island, Eastern Island and the lagoon)",central-pacific
+6101,midway-sand-island,Midway: Sand Island,central-pacific
+6102,midway-eastern-island,Midway: Eastern Island,central-pacific
+6103,kure-atoll,Kure Atoll (Kure Island),hawaii
+6104,wake,Wake Island,central-pacific
+6105,saipan,Saipan,marianas
+6106,guam,Guam,marianas
+6107,french-frigate-shoals,French Frigate Shoals,hawaii
+6108,laysan,Laysan Island,hawaii
+6109,lisianski,Lisianski Island,hawaii
+6110,point-luck,Point Luck (rendezvous of Task Forces 16 and 17),central-pacific

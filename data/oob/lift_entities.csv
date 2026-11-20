@@ -110,3 +110,4 @@ id,key,name,kind,nation
 1422,jp-run-1942-09-01-barge-convoy-gizo,"Barge-carrying convoy Sado Maru and Asaka Maru, Shortlands to Gizo and back, 1-2 Sep, escorted by Yudachi and Murakumo",run,jp
 1423,jp-run-1942-09-04-santa-isabel-barges,"Troop-carrying barges from Santa Isabel to Guadalcanal escorted by Kawakaze, Umikaze, Suzukaze, 4-5 Sep",run,jp
 1430,jp-run-1942-05-04-port-moresby-invasion-convoy,"Port Moresby invasion convoy (Transport Force under Rear Adm. Abe), Rabaul, sailed 4 May 1942 (operation MO)",run,jp
+6500,jp-midway-transport-group,"Midway Occupation Force transport group (the transports carrying the Midway landing force, 28 May to 13 June 1942)",transport-group,jp
