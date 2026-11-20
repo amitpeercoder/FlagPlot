@@ -2,8 +2,8 @@ Scenario 5d: Carrier duel
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash f0060e569ae6cd38  42 events
-day   2  hash 87179dec9e6d32e7  7 events
+day   1  hash d8b5cf76490aea8b  42 events
+day   2  hash 7dd6196952cb0330  7 events
 
 task_force:1 "Placeholder carrier force A" (Allied): Idle at (4,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Placeholder carrier force B" (Japanese): Idle at (9,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port

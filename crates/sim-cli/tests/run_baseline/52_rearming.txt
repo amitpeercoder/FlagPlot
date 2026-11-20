@@ -2,7 +2,7 @@ Scenario 52: Rearming
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash f0c5d6f6999d070e  6 events
+day   1  hash b8a9a9ece3d9da99  6 events
 
 task_force:1 "Placeholder cruiser force 1" (Allied): Idle at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Placeholder destroyer force 2" (Allied): Idle at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port

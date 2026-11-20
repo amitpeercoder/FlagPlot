@@ -2,9 +2,9 @@ Placeholder scenario 62: Reports between commands
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash b7cd684590641dda  76 events
-day   2  hash 76ffcc20579b50e4  16 events
-day   3  hash 6d7b995a338d0d3b  11 events
+day   1  hash 6b58d7e13985ad91  76 events
+day   2  hash 1ead8d72b26e4d4d  16 events
+day   3  hash dd4b348f5b6d784c  11 events
 
 task_force:1 "Placeholder carrier force 1" (Allied): Arrived at (0,0); readiness battle, alert, rules of engagement: avoid, break off at 0.75, stragglers: keep, keep 0; home port base:1
 task_force:2 "Placeholder carrier force 2" (Allied): Idle at (7,0); readiness battle, alert, rules of engagement: avoid, break off at 0.5, stragglers: keep, keep 0; home port base:1

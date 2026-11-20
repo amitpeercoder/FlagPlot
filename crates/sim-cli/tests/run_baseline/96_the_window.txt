@@ -2,20 +2,20 @@ Placeholder scenario 96: The window
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 6a23ebb0da3db75a  9 events
-day   2  hash 6faea86cc8b782e0  9 events
-day   3  hash df3ae6d575f47b55  9 events
-day   4  hash 38d9be0d473cf42e  9 events
-day   5  hash 781c796983465ada  9 events
-day   6  hash a240968c348af725  9 events
-day   7  hash bbca3400292f80ff  9 events
-day   8  hash 5d86498e84d663cd  9 events
-day   9  hash 37823e113c375cf2  9 events
-day  10  hash 4720a41ec3cfd831  9 events
-day  11  hash c24c39e2e171814e  6 events
-day  12  hash 0be6167a1cb5d367  6 events
-day  13  hash c268679fb8038fdd  6 events
-day  14  hash f48b25aadf0ccae9  6 events
+day   1  hash 0a11d86653187a13  9 events
+day   2  hash a6830b44c376b811  9 events
+day   3  hash 32b8c21c97486690  9 events
+day   4  hash db8a5148dd23ab27  9 events
+day   5  hash e2eb83e38a434e8b  9 events
+day   6  hash 3c5d4984259f9488  9 events
+day   7  hash 00ce580f5de82cda  9 events
+day   8  hash 897452d12609f7f4  9 events
+day   9  hash 896decfe139dfb6f  9 events
+day  10  hash 092de9f65eecd02c  9 events
+day  11  hash 3108060e23d85403  6 events
+day  12  hash 7fa0a22bd6a36bba  6 events
+day  13  hash b832f7939869345c  6 events
+day  14  hash 59bc9578ca80e628  6 events
 
 task_force:1 "Placeholder transport force 1" (Allied): Idle at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 ship:1 "Placeholder troop transport 1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1000 t of fuel, 0 t of supply
