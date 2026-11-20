@@ -700,6 +700,9 @@ pub(crate) fn make(
             // Rule 18: the enemy is given no belief.
             belief: PictureBelief::default(),
             counters: PictureCounters::first(enemy),
+            // Decision 0194, 11: the game's days are the game's, the same
+            // for both sides.
+            game_days: own.game_days,
         },
         assumptions: Vec::new(),
         next_ship: FIRST_MADE,

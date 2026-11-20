@@ -688,6 +688,9 @@ fn case_one_the_japanese_half_holds_nothing_but_its_day_and_counters() {
                 next_task_force: 2_000_001,
                 next_air_group: 2_000_001,
             },
+            // Decision 0194, 11: the game's days, scenario 1's 3, as the
+            // view gives them.
+            game_days: Some(3),
         }
     );
 }
@@ -1160,6 +1163,8 @@ fn japanese_by_hand(allied: &PictureHalf) -> PictureHalf {
         command: CommandState::new(),
         belief: PictureBelief::default(),
         counters: PictureCounters::first(Side::Japanese),
+        // Decision 0194, 11: the game's days are the same in both halves.
+        game_days: allied.game_days,
     }
 }
 

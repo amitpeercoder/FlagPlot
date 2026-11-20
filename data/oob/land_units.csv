@@ -161,6 +161,21 @@ id,key,name,nation,service,kind,parent
 1186,jp-1st-coy-47th-mobile-aa,"1st Company, 47th Mobile (Field) Antiaircraft Battalion",jp,ija,formation,jp-south-seas-detachment
 1187,jp-3d-kure-snlf-port-moresby-group,3d Kure SNLF part embarked for Port Moresby,jp,ijn,task-group,jp-3d-kure-snlf
 1188,jp-10th-construction-unit,10th Naval Construction Unit (Bates: 10th Construction Section),jp,ijn,construction,
+1200,jp-16th-infantry,16th Infantry Regiment,jp,ija,formation,jp-2d-division
+1201,jp-29th-infantry,29th Infantry Regiment,jp,ija,formation,jp-2d-division
+1202,jp-229th-infantry,229th Infantry Regiment,jp,ija,formation,jp-38th-division
+1203,jp-4th-heavy-field-artillery-regiment,4th Heavy Field Artillery Regiment (150-mm howitzers),jp,ija,formation,
+1204,jp-7th-heavy-field-artillery-regiment,7th Heavy Field Artillery Regiment,jp,ija,formation,
+1205,jp-38th-field-antiaircraft-battalion,38th Field Antiaircraft Battalion,jp,ija,formation,jp-38th-division
+1206,jp-6th-independent-rapid-fire-gun-battalion,6th Independent Rapid Fire Gun Battalion,jp,ija,formation,
+1207,jp-4th-maizuru-snlf,No. 4 Maizuru Special Naval Landing Force,jp,ijn,formation,
+1208,us-3d-battalion-147th-infantry,"3d Battalion, 147th Infantry",us,us-army,formation,us-147th-infantry
+1209,us-246th-field-artillery-battalion,246th Field Artillery Battalion,us,us-army,formation,us-americal-division
+1210,us-provisional-battery-k-246th-field-artillery,"Provisional Battery K, 246th Field Artillery Battalion (British 25-pounders)",us,us-army,formation,us-246th-field-artillery-battalion
+1211,us-245th-field-artillery-battalion,245th Field Artillery Battalion (105-mm howitzers),us,us-army,formation,us-182d-infantry
+1212,us-battery-f-244th-coast-artillery-battalion,"Battery F, 244th Coast Artillery Battalion (155-mm guns)",us,us-army,formation,
+1213,us-1st-battalion-10th-marines,"1st Battalion, 10th Marines (75-mm pack howitzers)",us,usmc,formation,us-10th-marines
+1214,us-battery-l-11th-marines,"L Battery, 11th Marines (155-mm howitzers)",us,usmc,formation,us-11th-marines
 6200,us-forces-midway,"US forces at Midway, May-June 1942 (Marine ground forces, Navy air station, Army aviation, patrol craft)",us,mixed,forces-at-place,
 6201,us-6th-defense-battalion,"6th Defense Battalion, Fleet Marine Force (reinforced), Midway",us,usmc,formation,
 6202,us-3d-defense-battalion-midway-detachment,"3d Defense Battalion detachment at Midway (3-inch AA group, 37-mm and 20-mm/40-mm batteries), May 1942",us,usmc,echelon,us-3d-defense-battalion

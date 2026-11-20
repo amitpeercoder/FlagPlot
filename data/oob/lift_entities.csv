@@ -110,4 +110,8 @@ id,key,name,kind,nation
 1422,jp-run-1942-09-01-barge-convoy-gizo,"Barge-carrying convoy Sado Maru and Asaka Maru, Shortlands to Gizo and back, 1-2 Sep, escorted by Yudachi and Murakumo",run,jp
 1423,jp-run-1942-09-04-santa-isabel-barges,"Troop-carrying barges from Santa Isabel to Guadalcanal escorted by Kawakaze, Umikaze, Suzukaze, 4-5 Sep",run,jp
 1430,jp-run-1942-05-04-port-moresby-invasion-convoy,"Port Moresby invasion convoy (Transport Force under Rear Adm. Abe), Rabaul, sailed 4 May 1942 (operation MO)",run,jp
+1500,us-run-1942-11-02-alchiba-fuller-155mm-batteries,"Alchiba and Fuller with stores, ammunition and two 155-mm gun batteries, Lunga Point, 2 Nov",run,us
+1501,us-run-1942-11-04-callaghan-8th-marines,"Callaghan's task force with the 8th Marines and 1st Battalion 10th Marines, Lunga Point, 4-5 Nov",run,us
+1502,us-run-1942-11-29-aola-3d-battalion-147th,"Four transports with the 3d Battalion 147th Infantry and others, Aola Bay, 29 Nov",run,us
+1503,jp-run-1942-10-11-chitose-nisshin,"Seaplane carriers Chitose and Nisshin with destroyers, Shortland to Tassafaronga, 11-12 Oct (2d Division troops and howitzers)",run,jp
 6500,jp-midway-transport-group,"Midway Occupation Force transport group (the transports carrying the Midway landing force, 28 May to 13 June 1942)",transport-group,jp

@@ -160,11 +160,13 @@ impl Default for MadeIds {
 /// game saved under the old rules could not hold) and 24 from decision
 /// 0193 (men ashore with no more coming attack at balanced and at press,
 /// which changes games with a take whose men ashore wait with nothing more
-/// coming). A pull request
+/// coming) and 25 from decision 0194 (no attack ashore begun in a game's
+/// last days, and nothing coming after its end, which changes games with men
+/// ashore in their last days). A pull request
 /// raises it by one
 /// when it changes a rule in a way that changes what an existing game would do; a
 /// change that leaves every existing game as it was leaves it alone.
-pub const RULES_VERSION: u32 = 24;
+pub const RULES_VERSION: u32 = 25;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct SimConfig {
@@ -390,6 +392,14 @@ pub struct World {
     /// in it changes, so it is not state and is not hashed. The result is a
     /// function of the final truth and the event log.
     pub(crate) objectives: Option<Objectives>,
+    /// The number of days the game has (decision 0194, 1 and 12), where the
+    /// scenario or the session gives it. Fixed configuration, like the
+    /// objectives and the reference data: set once where the game is made,
+    /// the same for both sides, and never changed by play, so it is not
+    /// state and is not hashed. `None` for a world given no length. It is
+    /// not the objectives' horizon (decision 0088), which is the days the
+    /// result is judged over.
+    pub(crate) game_days: Option<u32>,
     /// The trace of the choices made, while it is on (decision 0100, 7).
     /// Not state: how to record, never what happens, like `config`. A cell,
     /// because the choices are made by functions that only read the world.
@@ -589,9 +599,24 @@ impl World {
             field_damage: BTreeMap::new(),
             deck_losses: Vec::new(),
             objectives: None,
+            game_days: None,
             choice_trace: TraceCell::default(),
             domain: None,
         })
+    }
+
+    /// Gives the game its number of days (decision 0194, 1 and 12): the
+    /// scenario's, or the session's. Configuration, as the objectives are:
+    /// it changes no state, no event and no hash, and both sides' views
+    /// give it.
+    pub fn set_game_days(&mut self, days: u32) {
+        self.game_days = Some(days);
+    }
+
+    /// The number of days the game has (decision 0194), `None` where it was
+    /// given none.
+    pub fn game_days(&self) -> Option<u32> {
+        self.game_days
     }
 
     /// Gives the game its missions and objectives (decision 0054). Fails if
@@ -814,6 +839,7 @@ impl World {
             &self.events,
             &self.orders,
             self.objectives.as_ref(),
+            self.game_days,
             self.command_state(side),
             TaskForceId::new(self.made_ids.next_task_force(side)),
             AirGroupId::new(self.made_ids.next_air_group(side)),

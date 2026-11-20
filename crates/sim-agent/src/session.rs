@@ -315,7 +315,6 @@ enum Start {
 pub struct Session {
     world: World,
     scenario: String,
-    days: u32,
     seats: BTreeMap<Side, SeatState>,
     /// Where each side's player seat sits; the area command where nothing
     /// else was set (decision 0138, 5).
@@ -374,8 +373,18 @@ fn args_of(arguments: &Value) -> Result<serde_json::Map<String, Value>, CallErro
 
 impl Session {
     /// A session over a game at its starting state, for `days` days.
-    /// `scenario` is the name the briefing's heading carries.
-    pub fn new(world: World, scenario: &str, days: u32, allied: Seat, japanese: Seat) -> Session {
+    /// `scenario` is the name the briefing's heading carries. The days are
+    /// handed to the world, which holds the game's length as configuration
+    /// (decision 0194, 12), and the session reads them from it: the
+    /// briefing, the end of the game and each side's view give one figure.
+    pub fn new(
+        mut world: World,
+        scenario: &str,
+        days: u32,
+        allied: Seat,
+        japanese: Seat,
+    ) -> Session {
+        world.set_game_days(days);
         let mut seats = BTreeMap::new();
         for (side, seat) in [(Side::Allied, allied), (Side::Japanese, japanese)] {
             seats.insert(
@@ -394,7 +403,6 @@ impl Session {
         Session {
             world,
             scenario: scenario.to_string(),
-            days,
             seats,
             posts: BTreeMap::new(),
             handed_in: BTreeMap::new(),
@@ -708,11 +716,13 @@ impl Session {
 
     /// How many days the game runs.
     pub fn days(&self) -> u32 {
-        self.days
+        self.world
+            .game_days()
+            .expect("a session gives its world the game's days")
     }
 
     pub fn is_over(&self) -> bool {
-        self.world.day() >= self.days
+        self.world.day() >= self.days()
     }
 
     /// The day the game stopped inside, if the engine could not resolve it
@@ -1289,7 +1299,7 @@ impl Session {
                 // holds them (decision 0136, 9); the umpire's result below
                 // is read from the side's own view.
                 let mut briefing = self.read(side, |view| {
-                    briefing_for_game(view, &self.scenario, Some(self.days))
+                    briefing_for_game(view, &self.scenario, Some(self.days()))
                 })?;
                 // The final briefing carries the umpire's result (decision 8
                 // of 0054): the game is over, so it is no longer a secret. A
@@ -1345,7 +1355,7 @@ impl Session {
                     )
                 };
                 let context = MeasureContext {
-                    last_day: Some(self.days),
+                    last_day: Some(self.days()),
                     yard_check: Some(&check),
                 };
                 let answer =
@@ -1733,7 +1743,7 @@ impl Session {
                             if let Some(plan) = view.yard_plan(*target) {
                                 let day = plan.return_day(self.world.day() + 1);
                                 result["day_of_return"] = json!(day);
-                                result["returns"] = json!(day <= self.days);
+                                result["returns"] = json!(day <= self.days());
                             }
                         }
                         // A load the commander gives may take a stock below
@@ -2445,10 +2455,10 @@ impl Session {
                         "the days of \"dates\" are not each after the one before: give them in order, each once",
                     ));
                 }
-                if let Some(late) = days.iter().find(|d| **d > self.days) {
+                if let Some(late) = days.iter().find(|d| **d > self.days()) {
                     return Err(CallError::new(format!(
                         "\"dates\" gives day {late}, after the game's last day, day {}",
-                        self.days
+                        self.days()
                     )));
                 }
                 days.insert(0, day);

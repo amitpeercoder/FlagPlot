@@ -71,6 +71,11 @@ pub struct WorldPicture {
     pub counters: BTreeMap<Side, PictureCounters>,
     /// The objectives, where the world is to have them.
     pub objectives: Option<Objectives>,
+    /// The number of days of the game the picture is of (decision 0194,
+    /// 11), where the world is to have it, so that the staffs of a world
+    /// built from it judge as the live game's do. Configuration, as the
+    /// objectives are: not state and not hashed.
+    pub game_days: Option<u32>,
 }
 
 /// What one side believes in a picture (decision 0170, 1). None of it
@@ -578,6 +583,7 @@ impl World {
             orders,
             counters,
             objectives: self.objectives.clone(),
+            game_days: self.game_days,
         })
     }
 }
@@ -695,6 +701,7 @@ fn build(
         orders,
         counters,
         objectives,
+        game_days,
     } = picture;
 
     // The state's own day is the picture's: one day, not two.
@@ -876,6 +883,9 @@ fn build(
     }
     if let Some(objectives) = objectives {
         world.set_objectives(objectives)?;
+    }
+    if let Some(days) = game_days {
+        world.set_game_days(days);
     }
 
     // The first event of the world is the picture (item 7), and what

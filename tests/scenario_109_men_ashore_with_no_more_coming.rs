@@ -39,7 +39,11 @@
 //! 3. **Balanced, with nothing more coming:** men wanted 3,444 x 1 =
 //!    3,444; 5,086 is at least that; U and V are set to attack. The
 //!    reason gives the estimate and its day, 3,444 wanted, 2,700 and
-//!    2,386, 5,086, and that nothing more is coming.
+//!    2,386, 5,086, and that nothing more is coming. (Restated by the
+//!    architect on Nov 20, 2026, for decision 0194: the game is 7 days,
+//!    so on the morning of day 6 two days are left; the attack of day 5
+//!    failed, and the staff sets U and V back to defend that morning.
+//!    Before it they stayed in to the end.)
 //! 4. **Balanced, too few even so.** The estimate is 5,200: 5,086 is
 //!    fewer. The staff waits and hands in the notice
 //!    `cannot_bring_enough`, with
@@ -726,10 +730,16 @@ fn statement_3_balanced_with_nothing_more_coming_the_units_attack() {
         g.postures(M),
         vec![(1, Posture::Attack), (2, Posture::Attack)]
     );
-    // Nothing is ordered before M and nothing is ordered again after it.
+    // Nothing is ordered before M. In the game's last days (decision 0194)
+    // the attack of day 5 has failed and both are set back to defend.
     assert_eq!(
         g.all_postures(),
-        vec![(M, 1, Posture::Attack), (M, 2, Posture::Attack)]
+        vec![
+            (M, 1, Posture::Attack),
+            (M, 2, Posture::Attack),
+            (6, 1, Posture::Defend),
+            (6, 2, Posture::Defend)
+        ]
     );
     let j = judgement(&g, M);
     assert_eq!(wanted(&j), 3_444);

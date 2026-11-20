@@ -143,6 +143,8 @@ Built on Nov 20, 2026, as amended. Work on the table and its bridge alone: `tabl
 
 Every file listed was begun through the bridge with the release `sim-cli` and a day played in it.
 
+**Added on Nov 20, 2026: the two five-day scenarios.** `table/scenarios.json` lists two more, the Eastern Solomons over five days (decision 0184, scenario 103, 23 to 27 August 1942, `eastern-solomons-five-days`, islands 1 Guadalcanal and 2 Tulagi, no directives) and the Coral Sea (decision 0188, scenario 105, 6 to 10 May 1942, `coral-sea`, island 1 New Guinea, no directives). Each offers seven pairings on the 39 days' pattern: the Allied seat played against the engine's staff on file b, the Japanese seat on file c, a person against an agent either way and two agents on file d, an agent against the engine's staff on b and c (files `data/scenarios/five-days/01a` to `01d_eastern_solomons.toml` and `data/scenarios/coral-sea/01a` to `01d_coral_sea.toml`; file a, staff against staff, is not offered). Four scenarios are listed and 25 games offered; `table/check_screen.py` begins each of them.
+
 ### Readings the record did not make, for the architect to rule on
 
 1. **The addresses.** The person's screen and table are one address under one key, `/table/KEY/`; `/` says only to open the printed address. The doors are `/seat/KEY`, as in decision 0182.
