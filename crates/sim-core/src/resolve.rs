@@ -197,7 +197,8 @@ impl World {
         copy
     }
 
-    /// Steps 1 to 3 of the day: the commander's commands, so that an
+    /// Steps 0 to 3 of the day: what is held apart for the day enters (step
+    /// 0, decision 0195, 2; [`World::bring_in`]); the commander's commands, so that an
     /// intent, a limit or a reserve set today binds this morning (decision
     /// 0107); forces back from the yard, home first so that they are at
     /// their base for the day's orders (decision 0069); then the override
@@ -209,6 +210,10 @@ impl World {
     /// that morning is not patched (decision 0069, 2). One function for the
     /// day and for [`World::at_staff_step`], so that they cannot differ.
     fn take_steps_one_to_three(&mut self, day: u32) {
+        // Step 0: what is held apart until today comes onto the map, before
+        // the day's commands are taken in, the staff is asked or an order is
+        // checked (decision 0195, 2). With nothing held it does nothing.
+        self.bring_in(day);
         self.intake_commands(day);
         self.return_from_yard(day);
         self.override_by_orders(day);
@@ -228,6 +233,8 @@ impl World {
     ///
     /// The day's order (decision 0107, "The order of a day"):
     ///
+    /// 0. what is held apart for the day enters, a force with all aboard it,
+    ///    a land unit or an air group at its base (decision 0195, 2);
     /// 1. the commander's commands handed in for the day are taken in;
     /// 2. the override: the commander's orders to a unit in the forces
     ///    limit of an intent in force are taken in and hold it. In the code
@@ -260,7 +267,7 @@ impl World {
     }
 
     /// Opens the next day (decision 0156): everything of the day before its
-    /// first pulse, steps 1 to 5 of the day's order as
+    /// first pulse, steps 0 to 5 of the day's order as
     /// [`World::resolve_day_watched`] lists them, then repair in port.
     /// `watch` is handed the world at the moments `DayBegins` and `Orders`.
     /// Returns the day opened; its night pulse is next.

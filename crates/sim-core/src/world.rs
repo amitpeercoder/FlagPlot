@@ -473,12 +473,16 @@ impl World {
         {
             return Err(SimError::InvalidSetup(problem));
         }
-        if !truth.land_units.is_empty() && ref_data.ground.is_none() {
+        // What is held apart until its day is checked as what is on the map
+        // is (decision 0195, 12): it enters the same world.
+        if (!truth.land_units.is_empty() || truth.held_land_units().next().is_some())
+            && ref_data.ground.is_none()
+        {
             return Err(SimError::InvalidSetup(
                 "there are land units but no ground figures".to_string(),
             ));
         }
-        for group in truth.air_groups.values() {
+        for group in truth.air_groups.values().chain(truth.held_air_groups()) {
             if !ref_data.aircraft_types.contains_key(&group.aircraft_type) {
                 return Err(SimError::InvalidSetup(format!(
                     "{} has unknown aircraft type {}",
@@ -486,7 +490,9 @@ impl World {
                 )));
             }
         }
-        if !truth.air_groups.is_empty() && ref_data.search.is_none() {
+        if (!truth.air_groups.is_empty() || truth.held_air_groups().next().is_some())
+            && ref_data.search.is_none()
+        {
             return Err(SimError::InvalidSetup(
                 "there are air groups but no search figures".to_string(),
             ));
@@ -507,7 +513,7 @@ impl World {
                 "there are surface combat figures but no search figures".to_string(),
             ));
         }
-        for ship in truth.ships.values() {
+        for ship in truth.ships.values().chain(truth.held_ships()) {
             if !ref_data.ship_classes.contains_key(&ship.class) {
                 return Err(SimError::InvalidSetup(format!(
                     "{} has unknown class {}",
@@ -535,7 +541,7 @@ impl World {
 
         if ref_data.surface_combat.is_none() {
             // Without the figures a damaged system has no factor to apply.
-            for ship in truth.ships.values() {
+            for ship in truth.ships.values().chain(truth.held_ships()) {
                 for system in ShipSystem::ALL {
                     if ship.systems.get(system) != SystemState::Working {
                         return Err(SimError::InvalidSetup(format!(

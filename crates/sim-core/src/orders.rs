@@ -1055,6 +1055,16 @@ pub enum RejectReason {
     /// A hex of the waters to strike first is named twice (decision 0190,
     /// 35). Added at the end of the enum.
     WatersHexTwice(Hex),
+    /// An order of a side to a unit of its own that is held apart until its
+    /// day and is not on the map yet (decision 0195, 8 and 15): `unit` is the
+    /// unit named (the order's own, or a ship or land unit it names), `day`
+    /// the day the scenario named, `waiting` true where that day has come and
+    /// the unit waits for its base. Added at the end of the enum.
+    NotYetEntered {
+        unit: EntityRef,
+        day: u32,
+        waiting: bool,
+    },
 }
 
 impl RejectReason {
@@ -1259,6 +1269,19 @@ impl fmt::Display for RejectReason {
             RejectReason::NotYetAvailable { unit, day } => {
                 write!(f, "{unit} may be used from day {day}")
             }
+            RejectReason::NotYetEntered {
+                unit,
+                day,
+                waiting: false,
+            } => write!(f, "{unit} is not on the map yet: it enters on day {day}"),
+            RejectReason::NotYetEntered {
+                unit,
+                day,
+                waiting: true,
+            } => write!(
+                f,
+                "{unit} is not on the map yet: it was to enter on day {day} and waits for its base"
+            ),
         }
     }
 }

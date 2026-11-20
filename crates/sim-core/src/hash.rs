@@ -17,8 +17,10 @@ use crate::command::{
     InterruptStatus, Knowledge, Leaves, Limit, Maker, Plan, Run, RunDays, SetInterrupt,
     StandingSubject, TargetsLimit,
 };
+use crate::commander::Commander;
+use crate::entering::{Entering, EntryPlace};
 use crate::events::Cause;
-use crate::ids::{BaseId, IntentId};
+use crate::ids::{BaseId, EntityRef, IntentId};
 use crate::orders::{Activity, AirMission, Job, Mission, SpeedSetting, WhenSpent};
 use crate::refdata::ShipKind;
 use crate::state::Side;
@@ -260,6 +262,11 @@ const fn speed_code(speed: SpeedSetting) -> u8 {
 /// `waters_first`), and to a limit set by a command the code 11 for it, and
 /// an air group's `strike_first_waters` (the count, then each hex) and
 /// `waters_order` after its `claims` (decision 0190).
+///
+/// What is held apart until its day (decision 0195, 23) does not raise the
+/// version: it is hashed last, after the domain, and only where something is
+/// held, so a game with nothing held apart writes nothing new and its hash is
+/// what it was, as the domain's is (decision 0170, 12).
 pub const STATE_VERSION: &[u8] = b"flagplot-state-v51";
 
 /// Names every field of the state, with no `..` in any pattern. It does
@@ -360,7 +367,35 @@ fn name_every_field(world: &World) {
         land_units,
         hits_on_men,
         formations,
+        entering,
     } = truth;
+    if let Some(Entering {
+        day: _,
+        side: _,
+        place,
+        waiting: _,
+        task_force,
+        ships,
+        air_groups,
+        land_units,
+        superior: _,
+        commander,
+        radio_silent: _,
+    }) = entering.values().next()
+    {
+        match place {
+            EntryPlace::Hex(_) | EntryPlace::Base(_) => {}
+        }
+        // A force, a ship, a group and a land unit are hashed by the walkers
+        // the state uses, so their fields are named above.
+        let _ = (task_force, ships, air_groups, land_units);
+        if let Some(Commander {
+            name: _,
+            initiative: _,
+            note: _,
+        }) = commander
+        {}
+    }
     if let Some(HitsOnMen { hits: _, causes: _ }) = hits_on_men.values().next() {}
     if let Some(Formation {
         id: _,
@@ -2086,7 +2121,75 @@ pub(crate) fn hash_world(world: &World) -> u64 {
         h.u32(domain.world);
     }
 
+    // After the domain, and only where something is held apart (decision
+    // 0195, 23): each entry in key order. A game with nothing held writes
+    // nothing here.
+    if !truth.entering.is_empty() {
+        h.count(truth.entering.len());
+        for (unit, entry) in &truth.entering {
+            hash_entry(&mut h, *unit, entry);
+        }
+    }
+
     h.finish()
+}
+
+/// One unit held apart (decision 0195, 23): the key's kind code and number,
+/// the day, the side, the place (1 then q and r for a hex, 2 then the base),
+/// whether it waits, the force (0, or 1 then the force), the ships, the
+/// groups, the land units (each a count, then each by the state's walker),
+/// the superior (0 for none, else its code and number), the commander (0, or
+/// 1 then his name, rating and note) and radio silence.
+fn hash_entry(h: &mut StateHasher, unit: EntityRef, entry: &Entering) {
+    h.u8(unit.kind_code());
+    h.u32(unit.raw_id());
+    h.u32(entry.day);
+    h.u8(entry.side.code());
+    match entry.place {
+        EntryPlace::Hex(hex) => {
+            h.u8(1);
+            h.i32(hex.q);
+            h.i32(hex.r);
+        }
+        EntryPlace::Base(base) => {
+            h.u8(2);
+            h.u32(base.raw());
+        }
+    }
+    h.u8(u8::from(entry.waiting));
+    match &entry.task_force {
+        None => h.u8(0),
+        Some(force) => {
+            h.u8(1);
+            hash_task_force(h, force);
+        }
+    }
+    h.count(entry.ships.len());
+    for ship in entry.ships.values() {
+        hash_ship(h, ship);
+    }
+    h.count(entry.air_groups.len());
+    for group in entry.air_groups.values() {
+        hash_air_group(h, group);
+    }
+    h.count(entry.land_units.len());
+    for land_unit in entry.land_units.values() {
+        hash_land_unit(h, land_unit);
+    }
+    h.u8(entry.superior.map_or(0, crate::pictures::CommandRef::code));
+    h.u32(entry.superior.map_or(0, crate::pictures::CommandRef::raw));
+    match &entry.commander {
+        None => h.u8(0),
+        Some(commander) => {
+            h.u8(1);
+            h.count(commander.name.len());
+            h.bytes(commander.name.as_bytes());
+            h.u8(commander.initiative.code());
+            h.count(commander.note.len());
+            h.bytes(commander.note.as_bytes());
+        }
+    }
+    h.u8(u8::from(entry.radio_silent));
 }
 
 #[cfg(test)]

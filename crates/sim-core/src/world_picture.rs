@@ -28,6 +28,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use crate::belief::{BattleClaim, BeliefState, Contact, GroundEstimate, GroundGrade};
 use crate::claims::UnitClaim;
 use crate::command::{CommandState, Hold, HoldMaker};
+use crate::entering::Entering;
 use crate::events::{Cause, EventKind, EventLog};
 use crate::hex::Hex;
 use crate::ids::{AircraftTypeId, EntityRef, EventId, IdAllocator, OrderId, UmpireKey};
@@ -54,8 +55,9 @@ pub struct WorldPicture {
     /// the day after. The state's own day must be the same.
     pub day: u32,
     /// Ships, task forces, bases, air groups, land units, formations,
-    /// replacements and arrivals of both sides, as the engine's own state
-    /// holds them. Every order it refers to is named by its place in
+    /// replacements and arrivals of both sides, and what is held apart until
+    /// its day (decision 0195, 20), as the engine's own state holds them.
+    /// Every order it refers to is named by its place in
     /// [`WorldPicture::orders`] ([`WorldPicture::order_at`]).
     pub truth: TruthState,
     /// Each side's belief. A side not here believes nothing.
@@ -200,6 +202,7 @@ fn walk_held_ids(
         land_units,
         hits_on_men,
         formations: _,
+        entering,
     } = truth;
     for force in task_forces.values_mut() {
         walk_task_force(force, visit);
@@ -209,6 +212,33 @@ fn walk_held_ids(
     }
     for unit in land_units.values_mut() {
         walk_land_unit(unit, visit);
+    }
+    // What is held apart (decision 0195, 20) holds a force, groups and land
+    // units, and they hold orders and events as any do.
+    for entry in entering.values_mut() {
+        let Entering {
+            day: _,
+            side: _,
+            place: _,
+            waiting: _,
+            task_force,
+            // A ship holds no order and no event.
+            ships: _,
+            air_groups,
+            land_units,
+            superior: _,
+            commander: _,
+            radio_silent: _,
+        } = entry;
+        if let Some(force) = task_force {
+            walk_task_force(force, visit);
+        }
+        for group in air_groups.values_mut() {
+            walk_air_group(group, visit);
+        }
+        for unit in land_units.values_mut() {
+            walk_land_unit(unit, visit);
+        }
     }
     for ((hex, side), HitsOnMen { hits: _, causes }) in hits_on_men.iter_mut() {
         for cause in causes {
@@ -785,6 +815,12 @@ fn build(
                 group.side.name()
             )));
         }
+    }
+
+    // What is held apart (decision 0195, 20): no number both in the state
+    // and held apart.
+    if let Some(words) = truth.held_apart_twice() {
+        return Err(refuse(words));
     }
 
     // Each command state's next plan is above every plan it holds.
