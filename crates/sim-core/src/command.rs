@@ -1261,15 +1261,20 @@ pub enum StandingKind {
     /// A "take a place" cannot bring the men it wants on any day in reach (a
     /// notice of the staff's, decision 0159, 7). Added at the end.
     CannotBringEnough,
+    /// A "take a place" whose lift the staff turned back to its source for
+    /// enemy carriers near its way (a notice of the staff's, decision 0191,
+    /// 9). Added at the end.
+    LiftTurnedBack,
 }
 
 impl StandingKind {
     /// Every kind, in code order.
-    pub const ALL: [StandingKind; 4] = [
+    pub const ALL: [StandingKind; 5] = [
         StandingKind::CannotMeet,
         StandingKind::WaitsForLeave,
         StandingKind::ShipLost,
         StandingKind::CannotBringEnough,
+        StandingKind::LiftTurnedBack,
     ];
 
     /// A stable number. Part of the state hash. Never renumber.
@@ -1279,6 +1284,7 @@ impl StandingKind {
             StandingKind::WaitsForLeave => 2,
             StandingKind::ShipLost => 3,
             StandingKind::CannotBringEnough => 4,
+            StandingKind::LiftTurnedBack => 5,
         }
     }
 
@@ -1289,6 +1295,7 @@ impl StandingKind {
             StandingKind::WaitsForLeave => "waits_for_leave",
             StandingKind::ShipLost => "ship_lost",
             StandingKind::CannotBringEnough => "cannot_bring_enough",
+            StandingKind::LiftTurnedBack => "lift_turned_back",
         }
     }
 
@@ -2564,6 +2571,12 @@ pub enum NoticeKind {
     /// and any unit coming with its day. The sibling of `CannotMeet`. Handed
     /// in once. Added at the end.
     CannotBringEnough,
+    /// The staff turned a lift of a "take a place" back to its source for
+    /// enemy carriers near its way (decision 0191, 9): its reason gives the
+    /// contact, its kind, age and distance, and the risk. Handed in on the
+    /// morning it is turned back, not on the mornings it is kept back. Added
+    /// at the end.
+    LiftTurnedBack,
 }
 
 impl NoticeKind {
@@ -2578,6 +2591,7 @@ impl NoticeKind {
             NoticeKind::Late => 6,
             NoticeKind::Met => 7,
             NoticeKind::CannotBringEnough => 8,
+            NoticeKind::LiftTurnedBack => 9,
         }
     }
 
@@ -2592,6 +2606,7 @@ impl NoticeKind {
             NoticeKind::Late => "late",
             NoticeKind::Met => "met",
             NoticeKind::CannotBringEnough => "cannot_bring_enough",
+            NoticeKind::LiftTurnedBack => "lift_turned_back",
         }
     }
 
@@ -2606,6 +2621,7 @@ impl NoticeKind {
             NoticeKind::Late,
             NoticeKind::Met,
             NoticeKind::CannotBringEnough,
+            NoticeKind::LiftTurnedBack,
         ]
         .into_iter()
         .find(|kind| kind.name() == name)

@@ -25,7 +25,7 @@
 //! | `mark_plan` | `plan`, `outcome` (`complete` or `failed`) |
 //! | `hold`, `release` | one of `ship`, `task_force`, `air_group` or `land_unit`; with `air_group`, `setting` (`search_arc`) holds that setting alone and no `setting` holds the whole group |
 //! | `end_run` | `plan`, `run` |
-//! | `set_interrupt` | `interrupt`, `base`, `below_days` (a threshold set), or `standing` (`cannot_meet`, `waits_for_leave`, `ship_lost` or `cannot_bring_enough`) and `on` |
+//! | `set_interrupt` | `interrupt`, `base`, `below_days` (a threshold set), or `standing` (`cannot_meet`, `waits_for_leave`, `ship_lost`, `cannot_bring_enough` or `lift_turned_back`) and `on` |
 //! | `acknowledge` | `interrupt`, or `standing` with one of `plan` or `ship` |
 //!
 //! The limits: `forces` has `intent` and `ships`, `task_forces`, `air_groups`,
@@ -1547,6 +1547,10 @@ mod tests {
                 kind: StandingKind::CannotBringEnough,
                 on: false,
             }),
+            CommandKind::SetInterrupt(InterruptSetting::Standing {
+                kind: StandingKind::LiftTurnedBack,
+                on: false,
+            }),
             CommandKind::Acknowledge {
                 interrupt: InterruptRef::Set(InterruptId::new(3)),
             },
@@ -1601,6 +1605,15 @@ mod tests {
                 }
             }),
             json!({ "kind": "acknowledge", "standing": "cannot_bring_enough", "plan": 3 })
+        );
+        assert_eq!(
+            command_to_json(&CommandKind::Acknowledge {
+                interrupt: InterruptRef::Standing {
+                    kind: StandingKind::LiftTurnedBack,
+                    subject: StandingSubject::Plan(PlanId::new(4))
+                }
+            }),
+            json!({ "kind": "acknowledge", "standing": "lift_turned_back", "plan": 4 })
         );
         assert_eq!(
             command_to_json(&CommandKind::Acknowledge {
@@ -2067,6 +2080,12 @@ mod tests {
                     run: None,
                     rests_on: NoticeBasis::Command(0),
                 },
+                StaffNotice {
+                    kind: NoticeKind::LiftTurnedBack,
+                    plan: PlanId::new(3),
+                    run: None,
+                    rests_on: NoticeBasis::Command(0),
+                },
             ],
         };
         let value = staff_decisions_to_json(&decisions);
@@ -2086,6 +2105,7 @@ mod tests {
         assert_eq!(value["notices"][5]["kind"], "late");
         assert_eq!(value["notices"][6]["kind"], "met");
         assert_eq!(value["notices"][7]["kind"], "cannot_bring_enough");
+        assert_eq!(value["notices"][8]["kind"], "lift_turned_back");
         // Nothing handed in is written as three empty lists and reads back
         // as nothing.
         let none = staff_decisions_to_json(&StaffDecisions::default());

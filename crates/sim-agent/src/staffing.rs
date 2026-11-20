@@ -2401,7 +2401,7 @@ pub(crate) fn request(
         } else {
             if body.contains_key("on") {
                 return Err(CallError::new(
-                    "\"on\" is an argument of set_interrupt only with \"standing\" (cannot_meet, waits_for_leave, ship_lost or cannot_bring_enough)",
+                    "\"on\" is an argument of set_interrupt only with \"standing\" (cannot_meet, waits_for_leave, ship_lost, cannot_bring_enough or lift_turned_back)",
                 ));
             }
             if !body.contains_key("interrupt") {

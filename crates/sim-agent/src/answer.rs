@@ -111,8 +111,10 @@ pub const FORMAT: &str = "flagplot-agent";
 /// objectives with its kind, its base, open or shut and its worth, and
 /// nothing of his mission, progress or state (decision 0183). 33 adds the
 /// kind men_landed (decision 0186) and names a base an objective names that
-/// is not on the side's map by its hex.
-pub const VERSION: u32 = 33;
+/// is not on the side's map by its hex. 34 adds the notice kind and the
+/// standing interrupt `lift_turned_back`, and the task force order
+/// `no_cargo_work` (decision 0191).
+pub const VERSION: u32 = 34;
 
 /// The answer to a question about something the side does not know of: a
 /// unit of the enemy, a number that does not exist, an event the side may not

@@ -7,7 +7,7 @@
   "additionalProperties": false,
   "properties": {
     "format": { "const": "flagplot-agent" },
-    "version": { "const": 33 },
+    "version": { "const": 34 },
     "kind": { "const": "list_forces" },
     "area": { "$ref": "#/$defs/area_or_null" },
     "task_forces": { "type": "array", "items": { "$ref": "defs.schema.json#/$defs/force_line" } },

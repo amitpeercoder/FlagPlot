@@ -2,12 +2,12 @@ Placeholder scenario 74: The force assembled
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash d3f6744aa7b06039  25 events
-day   2  hash 39cbdc8e0a05e455  24 events
-day   3  hash 3269ec15cce501d0  16 events
-day   4  hash 17382235f7cf4145  50 events
-day   5  hash 588d66c3387c65af  30 events
-day   6  hash c0412066d467f164  17 events
+day   1  hash 88437aaae577beaf  25 events
+day   2  hash 6977f905d5390247  24 events
+day   3  hash 72237d1d5863c7e6  16 events
+day   4  hash 474eedb0cf0fabb7  50 events
+day   5  hash a4abb8e18710e5c5  30 events
+day   6  hash 6b1d4de479d2b1a2  17 events
 
 #1 D0 -         Allied ground report at (4,0): 300 enemy men ashore (told)
 #2 D1 -         Allied the commander's command taken: set intent:1 to take the place at (4,0)

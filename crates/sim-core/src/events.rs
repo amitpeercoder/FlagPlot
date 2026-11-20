@@ -4181,6 +4181,9 @@ impl fmt::Display for EventKind {
                     (NoticeKind::CannotBringEnough, _) => {
                         write!(f, "{plan} cannot bring the men it wants")
                     }
+                    (NoticeKind::LiftTurnedBack, _) => {
+                        write!(f, "{plan}'s lift is turned back")
+                    }
                 }
             }
             EventKind::InterruptFired {
@@ -4213,6 +4216,9 @@ impl fmt::Display for EventKind {
                         (StandingKind::ShipLost, subject) => write!(f, "{subject} was lost"),
                         (StandingKind::CannotBringEnough, subject) => {
                             write!(f, "{subject} cannot bring the men it wants")
+                        }
+                        (StandingKind::LiftTurnedBack, subject) => {
+                            write!(f, "{subject}'s lift is turned back")
                         }
                     }
                 }

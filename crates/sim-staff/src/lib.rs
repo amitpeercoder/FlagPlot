@@ -52,6 +52,7 @@ pub mod stand;
 pub mod strike;
 mod take;
 mod told;
+mod turn_back;
 mod units;
 
 pub use available::{counted_by_a_take, Counted};
@@ -290,7 +291,13 @@ use sim_core::view::SideView;
 /// does not lift and hands in `cannot_bring_enough` once. A side whose
 /// takes hold no estimate, or whose lifts are not short, gets the orders
 /// `supply-41` gave.
-pub const DOCTRINE_VERSION: &str = "supply-42";
+/// `supply-43` adds decision 0191: the first lift of a released take, with
+/// men aboard and not landing, is turned back to its source by the risk
+/// while a fresh contact reported as a carrier is within 8 hexes of its way
+/// to the place, kept back until two clear mornings, and held at its
+/// passage on such a morning. A side that holds no contact reported as a
+/// carrier near a lift's way gets the orders `supply-42` gave.
+pub const DOCTRINE_VERSION: &str = "supply-43";
 
 /// The staff: the doctrine for keeping a base supplied (stage 1) and, after
 /// it, the air doctrine for holding a place and covering a base from the air

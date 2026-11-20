@@ -856,6 +856,9 @@ enum ActionSpec {
         activity: ActivitySpec,
         job: Option<String>,
     },
+    /// Do no cargo work: clear the force's cargo order (decision 0191). No
+    /// other key.
+    NoCargoWork {},
 }
 
 #[derive(Deserialize, Clone, Copy)]
@@ -2890,6 +2893,7 @@ impl Scenario {
                             TaskForceOrder::JoinTo(TaskForceId::new(*into))
                         }
                         ActionSpec::StandDown {} => TaskForceOrder::StandDown,
+                        ActionSpec::NoCargoWork {} => TaskForceOrder::NoCargoWork,
                         ActionSpec::Escort { charge } => {
                             TaskForceOrder::Escort(charge.map(TaskForceId::new))
                         }
@@ -6646,6 +6650,20 @@ task_force = 3
     }
 
     #[test]
+    fn a_no_cargo_work_order_loads_for_a_task_force_with_no_other_key() {
+        assert_eq!(
+            loaded_orders("kind = \"no_cargo_work\"").expect("loads"),
+            vec![TaskForceOrder::NoCargoWork]
+        );
+        assert!(loaded_orders("kind = \"no_cargo_work\"\nweight_t = 1").is_err());
+        assert!(loaded_orders("kind = \"no_cargo_work\"\ninto = 7").is_err());
+        let body = "kind = \"no_cargo_work\"";
+        assert!(parse_with(&order("air_group = 1", body)).is_err());
+        assert!(parse_with(&order("land_unit = 1", body)).is_err());
+        assert!(error_of(&order("base = 1", body)).contains("for a base must be form_task_force"));
+    }
+
+    #[test]
     fn join_and_stand_down_orders_load_for_a_task_force() {
         assert_eq!(
             loaded_orders("kind = \"join\"\ninto = 7").expect("loads"),
@@ -8014,6 +8032,7 @@ task_force = 3
         for (name, kind) in [
             ("cannot_meet", StandingKind::CannotMeet),
             ("cannot_bring_enough", StandingKind::CannotBringEnough),
+            ("lift_turned_back", StandingKind::LiftTurnedBack),
             ("waits_for_leave", StandingKind::WaitsForLeave),
             ("ship_lost", StandingKind::ShipLost),
         ] {

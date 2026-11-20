@@ -145,6 +145,10 @@ is not on the reader's map, in an objective line, an enemy objective line or
 a result line, is given by its hex: `base.handle` is `"(q,r)"` and
 `base.name` is null.
 
+Version 34 (decision 0191) adds the order `no_cargo_work`, the notice kind
+`lift_turned_back` and the standing interrupt of that name (see "A lift
+turned back" below).
+
 The fight ashore (decision 0090, see "The fight ashore" below) adds only fields
 and values, so `version` stays 3.
 
@@ -1058,6 +1062,18 @@ The version is unchanged, 25. The notice kinds of `report`, `staff_orders` and a
 once for its plan, and its reason gives the men wanted, the men to hand and any unit coming with its day.
 `set_interrupt` and `acknowledge` take `standing` `"cannot_bring_enough"`, with `plan`: a fourth standing interrupt,
 on by default and armed apart for each plan.
+
+## A lift turned back (decision 0191)
+
+The version is 34. The notice kinds of `report`, `staff_orders` and a preview's decisions include `lift_turned_back`:
+the staff turned a lift of a "take a place" back to its source for enemy carriers near its way. It is handed in on the
+morning it is turned back, not on the mornings it is kept back, and its reason gives the contact, its kind, age and
+distance, and the risk. `set_interrupt` and `acknowledge` take `standing` `"lift_turned_back"`, with `plan`: a fifth
+standing interrupt, on by default and armed apart for each plan.
+
+The task force order `no_cargo_work` (`{"kind": "no_cargo_work"}`, no other key) clears the force's load or unload
+order, whatever its status. It is always accepted for a force of the side and touches no cargo and no men: a force that
+then arrives at a base lands and loads nothing, and a force halted only for cargo steams on.
 
 ## A plan told to wait (decision 0159, rule C)
 

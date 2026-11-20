@@ -112,6 +112,8 @@ pub fn order_to_json(kind: &OrderKind) -> Value {
                 "kind": "set_radio_silence",
                 "on": on,
             }),
+            // Decision 0191.
+            TaskForceOrder::NoCargoWork => json!({ "kind": "no_cargo_work" }),
             TaskForceOrder::SetRulesOfEngagement {
                 stance,
                 break_off,
@@ -607,6 +609,7 @@ pub fn order_from_json(unit: &str, value: &Value) -> Result<OrderKind, String> {
                             .ok_or("\"charge\" must be a task force written \"task_force:N\"")?,
                     )),
                 }),
+                "no_cargo_work" => TaskForceOrder::NoCargoWork,
                 "set_radio_silence" => TaskForceOrder::SetRadioSilence {
                     on: value
                         .get("on")
@@ -1050,6 +1053,8 @@ mod tests {
         for text in [
             r#"{"kind":"join","into":"task_force:4"}"#,
             r#"{"kind":"stand_down"}"#,
+            // Decision 0191.
+            r#"{"kind":"no_cargo_work"}"#,
         ] {
             let value: Value = serde_json::from_str(text).expect("JSON");
             let order = load_of(&value).expect("parses");

@@ -1,0 +1,43 @@
+# PLACEHOLDER MAP. A stretch of open sea with three coast hexes, used by
+# scenario 107 (decision 0191, a lift turned back): S at (0,0), a coast hex
+# with port size 5 and an anchorage, the source of the lift; P at (14,0), a
+# coast hex with port size 0, the place to be taken, 14 hexes (560 nm) east
+# of S along the q axis, so that a lift at (2,0) is 12 hexes from P; and S2
+# at (0,12), a second coast hex with port size 5 and an anchorage, 12 hexes
+# south of S along the r axis, a source for the variant that gives the lift
+# a way home that does not lie along its way out. Both legs lie along an axis
+# of the grid, where a leg between centres is charged 40 nm a hex (decision
+# 0058). S2 is also the base T a supply run goes to in the variant of
+# statement 15. The geography is invented.
+
+placeholder = true
+
+# Ranges are inclusive.
+[[region]]
+kind = "deep_sea"
+q = [-4, 20]
+r = [-4, 16]
+
+# S, the source of the lift.
+[[hex]]
+q = 0
+r = 0
+kind = "coast"
+port_size = 5
+anchorage = true
+
+# P, the place, an empty shore.
+[[hex]]
+q = 14
+r = 0
+kind = "coast"
+port_size = 0
+
+# S2, a second source in the variant, and the base T of statement 15.
+[[hex]]
+q = 0
+r = 12
+kind = "coast"
+port_size = 5
+anchorage = true
+

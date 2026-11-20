@@ -1,0 +1,252 @@
+# Scenario 107: a lift turned back.
+#
+# Decision 0191. Side J (the Japanese side) has a base S, base 1, at (0,0)
+# and a transport force L, task force 1, stopped at sea at (2,0) with land
+# unit 1 aboard (1,500 men), three placeholder troop transports and a
+# placeholder destroyer. P at (14,0), 12 hexes from L, is a coast hex with an
+# Allied base 2 in it, with no gun, no aircraft, no man and no stock. A
+# second J force, K, task force 2, one placeholder carrier, lies stopped at
+# sea at (-2,-3), near S. Side A, the Allied side, has a carrier force, task
+# force 3, one placeholder carrier, stopped at sea far to the south at
+# (2,14), and a cruiser force, task force 4, two placeholder cruisers,
+# stopped at sea far to the east at (20,10). Neither Allied force is given an
+# order, and neither side holds a contact: a variant of the test gives J one.
+#
+# On day 1 J's commander states "take the place at (14,0)" with the forces L
+# and land unit 1 and base 1 as the source, asks for no count of the enemy at
+# P (the limit "knowledge: none", so that the plan is released on day 1 at
+# every risk), and gives both leaves. J has an estimate of 100 men at P. The
+# risk is balanced. A staff of J that sees no danger releases the plan on day
+# 1 and routes L to P and home again, acting at P, with the order to unload:
+# L is at (8,0) on the morning of day 2, at P on the morning of day 3 and its
+# 1,500 men are ashore on the morning of day 4. A day is 6 hexes at 10
+# knots, 3 hexes in the night pulse and 1 or 2 in each of the two others.
+#
+# The test builds its variants from the text of this file, at the marked
+# lines below: a contact held by J (a contact entered at age 0 is 3 pulses
+# old on the morning of day 2 and is dropped at 5), the risk (on day 1 or on
+# day 2), a hold, an order to an Allied force that sinks a ship of J's on day
+# 1 (the cruisers, ordered to L at (5,0) or to K at (-2,-3)), a sighting (the
+# Allied carrier force steams north along the line q = 7 and meets L at (7,0)
+# in the morning pulse of day 1, with seed 12 J's report of it names a
+# carrier), L stopped in port at S, L at (8,0), or a supply run to a base T
+# at (0,12) with two cargo ships. The hand calculation is in
+# tests/scenario_107_a_lift_turned_back.rs. The test runs this file on the
+# frozen step 1 figures, with scenario 69's ground figures
+# (data/reference/ground_placeholder_scenario_69.toml). The map is
+# data/map/placeholder_a_lift_turned_back.toml.
+#
+# Kept out of the loops that walk data/scenarios/*.toml by being in this
+# folder (decision 0072).
+#
+# PLACEHOLDER DATA. The bases, ships, unit, estimate, contacts, figures and
+# map are invented. Every name below says "Placeholder".
+
+name = "Placeholder scenario 107: A lift turned back"
+placeholder = true
+seed = 1942
+days = 8
+map = "../../map/placeholder_a_lift_turned_back.toml"
+ship_classes = [
+    "../../reference/ship_classes.csv",
+    "../../reference/ship_classes_placeholder_transports.csv",
+]
+port_sizes = "../../reference/port_sizes.csv"
+aircraft_types = "../../reference/aircraft_types.csv"
+search = "../../reference/search.toml"
+surface_combat = "../../reference/surface_combat.toml"
+ground = "../../reference/ground_placeholder_scenario_69.toml"
+
+# Japanese base 1, S: supply for the whole game and fuel.
+[[base]]
+id = 1
+name = "Placeholder base S"
+side = "japanese"
+q = 0
+r = 0
+supply_t = 1000
+fuel_t = 2000
+
+# Allied base 2, P: an airfield with no gun, no aircraft, no man and no stock.
+[[base]]
+id = 2
+name = "Placeholder airfield P"
+side = "allied"
+q = 14
+r = 0
+supply_t = 0
+fuel_t = 0
+
+# Task force 1, L: three placeholder troop transports and a placeholder
+# destroyer, stopped at sea at (2,0), 12 hexes from P.
+[[task_force]]
+id = 1
+name = "Placeholder lift L"
+side = "japanese"
+q = 2
+r = 0
+mission = "transport"
+
+[[ship]]
+id = 1
+name = "Placeholder troop transport 1"
+class = 10
+side = "japanese"
+fuel_t = 1000
+supply_t = 100
+task_force = 1
+
+[[ship]]
+id = 2
+name = "Placeholder troop transport 2"
+class = 10
+side = "japanese"
+fuel_t = 1000
+supply_t = 100
+task_force = 1
+
+[[ship]]
+id = 3
+name = "Placeholder troop transport 3"
+class = 10
+side = "japanese"
+fuel_t = 1000
+supply_t = 100
+task_force = 1
+
+[[ship]]
+id = 4
+name = "Placeholder destroyer 4"
+class = 2
+side = "japanese"
+fuel_t = 500
+task_force = 1
+
+# Task force 2, K: one placeholder carrier, stopped at sea at (-2,-3), near S.
+[[task_force]]
+id = 2
+name = "Placeholder carrier force K"
+side = "japanese"
+q = -2
+r = -3
+mission = "carrier"
+home_port = 1
+
+[[ship]]
+id = 5
+name = "Placeholder carrier 5"
+class = 4
+side = "japanese"
+fuel_t = 3000
+task_force = 2
+
+# Task force 3, the Allied carrier force: one placeholder carrier, stopped at
+# sea far to the south.
+[[task_force]]
+id = 3
+name = "Placeholder Allied carrier force"
+side = "allied"
+q = 2
+r = 14
+mission = "carrier"
+
+[[ship]]
+id = 6
+name = "Placeholder Allied carrier 6"
+class = 4
+side = "allied"
+fuel_t = 3000
+task_force = 3
+
+# Task force 4, the Allied cruiser force: two placeholder cruisers, stopped at
+# sea far to the east.
+[[task_force]]
+id = 4
+name = "Placeholder Allied cruiser force"
+side = "allied"
+q = 20
+r = 10
+mission = "surface_combat"
+
+[[ship]]
+id = 7
+name = "Placeholder Allied cruiser 7"
+class = 1
+side = "allied"
+fuel_t = 2000
+task_force = 4
+
+[[ship]]
+id = 8
+name = "Placeholder Allied cruiser 8"
+class = 1
+side = "allied"
+fuel_t = 2000
+task_force = 4
+
+# The land unit, aboard L: a fighting unit of 1,500 men, at the standard of
+# experience, 2, the default.
+[[land_unit]]
+id = 1
+name = "Placeholder First"
+side = "japanese"
+men = 1500
+task_force = 1
+
+# The Japanese side's opening estimate of the enemy's men at P.
+[[estimate]]
+side = "japanese"
+q = 14
+r = 0
+men = 100
+
+# The contacts J holds, from the start (the test puts them here), the
+# commands it adds, and the orders it scripts, are put at the three marks.
+# MARK: contacts
+
+# The Japanese commander's commands.
+[[command]]
+day = 1
+side = "japanese"
+kind = "set_intent"
+intent = 1
+intent_kind = "take_place"
+hex = [14, 0]
+
+# MARK: risk
+
+[[command]]
+day = 1
+side = "japanese"
+kind = "set_limit"
+limit = "forces"
+intent = 1
+task_forces = [1]
+land_units = [1]
+source = 1
+
+# No count of the enemy at P is asked for at any risk, so that the plan is
+# released on day 1 at preserve the force as at balanced and at press.
+[[command]]
+day = 1
+side = "japanese"
+kind = "set_limit"
+limit = "knowledge"
+intent = 1
+knowledge = "none"
+
+[[command]]
+day = 1
+side = "japanese"
+kind = "set_leave"
+leave = "prepare"
+given = true
+
+[[command]]
+day = 1
+side = "japanese"
+kind = "set_leave"
+leave = "launch"
+given = true
+
+# MARK: orders
