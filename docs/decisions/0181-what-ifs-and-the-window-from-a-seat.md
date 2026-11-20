@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 20, 2026, inside the plan for st
 
 Summary: A commander can ask what an order would cost. This record lets him ask the three questions that follow. What if I change one thing: the draft is tried beside the plan as it stands, in the same worlds, and the two are set side by side. What does this order cost me: the side is tried with the order and without it. What if I give it later: the same order is tried at two or three dates. Each is the tool `trial` with one more argument. Nothing new is played: the trial, the estimate and the window are those already built
 
-Standing: A plan, written by the architect on Nov 20, 2026, inside decision 0161, and amended on review. Built on Nov 20, 2026. Its readings wait for the architect
+Standing: A plan, written by the architect on Nov 20, 2026, inside decision 0161, and amended on review. Built on Nov 20, 2026, and its readings ruled on
 
 ## Why
 
@@ -174,3 +174,18 @@ Compared is about 1.4 to 1.7 times one trial. A window from a seat is decision 0
 **Test counts.** `cargo test --workspace --release --no-fail-fast`: 4,400 passed, 0 failed, 6 ignored, over 240 test binaries, read from the log. `cargo fmt --all -- --check`, `cargo clippy --workspace --all-targets -- -D warnings`, `sh scripts/regenerate.sh --check` and `sh scripts/decisions-index.sh --check` pass.
 
 **Not verified by this build.** That a game file kept by `play` replays a what-if or a window at the cost logged (no recorded game has a trial); the times on an unloaded machine; an agent playing the three new arguments through `mcp` end to end; the table, which is not changed.
+
+## The architect's rulings
+
+Read on Nov 20, 2026, with the build's core: the session's reading of what is tried and what it is compared with, the commands each trial is handed, and that `sim-core`, `sim-trial` and the agent's source test are untouched. The hand calculation in `tests/scenario_100_what_ifs_from_a_seat.rs` is as the architect wrote it; no number was changed, and every statement held at the first run.
+
+1. **What a "change" is, and "in force"** (reading 1): a previewed `set_intent` whose number is in force or queued, with "in force" read on the game as it stands at dusk. Stands.
+2. **The second trial's course is the leaves,** and for an order in force the withdrawal and then the leaves (reading 2). Stands.
+3. **Only an "after" is looked for** among the standing commands left behind (reading 3). Stands: it is the one limit of another intent that names an intent. If another is added, this check is to read it too.
+4. **Dates are bound in two places,** the game's last day by the session and the first date's play by the runner (reading 4). Stands; an empty list is refused.
+5. **`describe` is answered with the kind `trial_described`** and does not foresee a refusal that arises only once worlds are built (reading 5). Stands: it says what would be tried, not that it can be.
+6. **An order in force, asked with no comparison, says that it is in force** in place of the line on other plans (reading 6). Stands.
+7. **Scenario 97's answers gain fields and lose none.** Stands.
+8. **Two walks of every scenario set scenario 100 aside by name,** as they do scenario 96, whose inputs it has. Stands.
+9. **The figures reported, now stated.** With "not before day 3" the plan order expects the men ashore on day 5. For the order in force, compared, over days 2 to 6: the place is taken on day 4 in worlds 1 and 3 and on day 6 in worlds 2 and 4, the side's men lost to the enemy are 100, 100 and 300, and with the order withdrawn every cost is 0. A previewed limit tried at later dates has, at its second date, the second date of the plain window.
+10. **The measured times,** on the 39 days under load: 0.9 s, 3.1 s and 19.6 s for one trial at the three sizes, and 1.5 s, 4.9 s and 27.2 s compared. No size is changed. The full size stays with the designer.
