@@ -1058,7 +1058,7 @@ fn tulagi_is_allied_with_the_39_days_units_and_has_no_part() {
 
 // ---------------------------------------------- What a side the engine plays is given
 
-fn intent<'a>(state: &'a CommandState, raw: u32) -> &'a sim_core::command::Intent {
+fn intent(state: &CommandState, raw: u32) -> &sim_core::command::Intent {
     &state.intents[&IntentId::new(raw)]
 }
 

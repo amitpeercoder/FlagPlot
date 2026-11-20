@@ -43,7 +43,8 @@ fn number(name: &str, default: u64) -> u64 {
 #[test]
 #[ignore = "a helper for the first run of scenario 103, run by hand"]
 fn write_the_counts_of_each_seed() {
-    let out = std::env::var("FLAGPILOT_FIVE_DAYS_OUT").expect("FLAGPILOT_FIVE_DAYS_OUT names a file");
+    let out =
+        std::env::var("FLAGPILOT_FIVE_DAYS_OUT").expect("FLAGPILOT_FIVE_DAYS_OUT names a file");
     let first = number("FLAGPILOT_FIVE_DAYS_FIRST", 1);
     let runs = number("FLAGPILOT_FIVE_DAYS_RUNS", 1000);
     let path = common::data_dir().join("scenarios/five-days/01a_eastern_solomons.toml");
@@ -64,10 +65,7 @@ fn write_the_counts_of_each_seed() {
         let result = world.result().expect("a result");
         let mut men_landed_taivu = 0u32;
         for event in world.events().iter() {
-            if let EventKind::MenLanded {
-                hex, men, unit, ..
-            } = event.kind
-            {
+            if let EventKind::MenLanded { hex, men, unit, .. } = event.kind {
                 if hex == taivu && world.umpire().land_units[&unit].side == Side::Japanese {
                     men_landed_taivu += men;
                 }
