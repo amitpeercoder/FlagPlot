@@ -186,3 +186,46 @@ id,key,name,nation,class,hull_number
 1186,tsugaru,Tsugaru,jp,,
 1187,sado-maru,Sado Maru,jp,,
 1188,asaka-maru,Asaka Maru,jp,,
+1189,cv-2-lexington,USS Lexington,us,us-lexington-class,CV-2
+1190,cv-5-yorktown,USS Yorktown,us,us-yorktown-class,CV-5
+1191,dd-354-monaghan,USS Monaghan,us,us-farragut-class,DD-354
+1192,dd-355-aylwin,USS Aylwin,us,us-farragut-class,DD-355
+1193,dd-377-perkins,USS Perkins,us,us-mahan-class,DD-377
+1194,dd-409-sims,USS Sims,us,us-sims-class,DD-409
+1195,dd-411-anderson,USS Anderson,us,us-sims-class,DD-411
+1196,dd-412-hammann,USS Hammann,us,us-sims-class,DD-412
+1197,dd-414-russell,USS Russell,us,us-sims-class,DD-414
+1198,dd-416-walke,USS Walke,us,us-sims-class,DD-416
+1199,dd-417-morris,USS Morris,us,us-sims-class,DD-417
+1200,ao-23-neosho,USS Neosho,us,us-cimarron-class,AO-23
+1201,ao-21-tippecanoe,USS Tippecanoe,us,,AO-21
+1202,av-8-tangier,USS Tangier,us,,AV-8
+1203,shoho,Shoho,jp,jp-zuiho-class,
+1204,sazanami,Sazanami,jp,jp-fubuki-class,
+1205,ushio,Ushio,jp,jp-fubuki-class,
+1206,akebono,Akebono,jp,jp-fubuki-class,
+1207,shigure,Shigure,jp,jp-shiratsuyu-class,
+1208,shiratsuyu,Shiratsuyu,jp,jp-shiratsuyu-class,
+1209,toho-maru,Toho Maru (oiler),jp,,
+1210,okinoshima,Okinoshima,jp,jp-okinoshima-class,
+1211,kikuzuki,Kikuzuki,jp,jp-mutsuki-class,
+1212,yuzuki,Yuzuki,jp,jp-mutsuki-class,
+1213,mochizuki,Mochizuki,jp,jp-mutsuki-class,
+1214,asanagi,Asanagi,jp,jp-kamikaze-class,
+1215,tatsuta,Tatsuta,jp,jp-tenryu-class,
+1216,kamikawa-maru,Kamikawa Maru (seaplane tender),jp,,
+1217,hijirikawa-maru,Hijirikawa Maru (seaplane tender),jp,,
+1218,tama-maru,Tama Maru (auxiliary minesweeper),jp,,
+1219,iro,Iro (oiler),jp,,
+1220,hoyo-maru,Hoyo Maru (oiler),jp,,
+1221,shoka-maru,Shoka Maru,jp,,
+1222,mogamigawa-maru,Mogamigawa Maru,jp,,
+1223,goyo-maru,Goyo Maru,jp,,
+1224,akibasan-maru,Akibasan Maru (Bates spells it Akibayama Maru),jp,,
+1225,chowa-maru,Chowa Maru,jp,,
+1226,matsue-maru,Matsue Maru,jp,,
+1227,taifuku-maru,Taifuku Maru,jp,,
+1228,mito-maru,Mito Maru,jp,,
+1229,china-maru,China Maru,jp,,
+1230,hibi-maru,Hibi Maru,jp,,
+1231,azumayama-maru,Azumayama Maru,jp,,

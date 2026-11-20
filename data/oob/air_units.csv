@@ -60,3 +60,13 @@ id,key,name,nation,service,parent
 1056,26th-air-flotilla,"26th Air Flotilla (Rabaul, Misawa and Kisarazu bomber groups)",jp,ijn,11th-air-fleet
 1057,toko-ku,"Toko Kokutai (flying-boat group, a detachment under the 25th Air Flotilla on 12 September 1942 per Wikipedia)",jp,ijn,
 1058,r-area-air-force,"R-Area Air Force (floatplane force from Shortland and Rekata, as Wikipedia calls it)",jp,ijn,
+1059,vf-2,Fighting Squadron 2,us,usn,
+1060,vb-2,Bombing Squadron 2,us,usn,
+1061,vs-2,Scouting Squadron 2,us,usn,
+1062,vt-2,Torpedo Squadron 2,us,usn,
+1063,vf-42,Fighting Squadron 42,us,usn,
+1064,vb-5,Bombing Squadron 5,us,usn,
+1065,vt-5,Torpedo Squadron 5,us,usn,
+1066,shoho-air-unit,Aircraft embarked in light carrier Shoho,jp,ijn,
+1067,motoyama-ku,Motoyama Kokutai (land attack bombers; Bates's name for the group),jp,ijn,25th-air-flotilla
+1068,tangier-search-group,"Search Group (TG 17.9): patrol planes tended by Tangier at Noumea",us,usn,

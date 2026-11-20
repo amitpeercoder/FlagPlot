@@ -66,3 +66,6 @@ id,key,name,nation,type
 1062,jp-hatsuharu-class,Hatsuharu class,jp,destroyer
 1066,us-libra-class,Libra class,us,cargo_ship
 1063,us-caldwell-class,Caldwell class,us,destroyer
+1067,jp-zuiho-class,Zuiho class (converted from the Tsurugizaki-class submarine tenders),jp,light_carrier
+1068,us-cimarron-class,Cimarron class,us,oiler
+1069,jp-okinoshima-class,Okinoshima class,jp,minelayer
