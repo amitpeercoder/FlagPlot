@@ -47,7 +47,10 @@
 //!    from R. With R at 100 t, no reserve, and the runs taking 20 t a
 //!    day, the staff's reason gives no day on which R falls to its
 //!    reserve while the line gives 30 t a day; with the line taken out it
-//!    gives day 5 (100 / 20).
+//!    gives the staff's today and five days more (100 / 20): day 7 on the
+//!    view after day 1, where the staff's today is 2. (Corrected by the
+//!    architect on Nov 21, 2026: "day 5" as first written counted from
+//!    day 0, which no view has.)
 //! 9. **Refused scenarios:** a line to a base the scenario has not; one
 //!    with neither supply nor fuel; a last day before its first; a first
 //!    day of 0; a day past the game's last; tons below 0. A line with no
@@ -750,13 +753,6 @@ fn statement_8a_the_staff_counts_the_line_with_the_line_no_day() {
     // gives no day on which R falls to its reserve while the line gives 30 t
     // a day.
     assert_eq!(with, None);
-}
-
-#[test]
-#[ignore = "statement 8a says that with the line taken out the staff gives day 5 (100 / 20); the staff works from today (the view's day + 1 = 2 on the view after day 1) and gives today + floor(100 / 20) = Some(7); it cannot give 5 on any view, since today is at least 1 and 1 + 5 = 6 (see the passing test beside it)"]
-fn statement_8a_the_staff_counts_the_line_without_the_line_day_5() {
-    let (without, _, _) = dry_day(&keeping_r2_supplied(&without_the_line(&text())));
-    assert_eq!(without, Some(5));
 }
 
 #[test]

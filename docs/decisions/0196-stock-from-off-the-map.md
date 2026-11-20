@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 20, 2026, on the designer's word
 
 Summary: A base's supply and fuel come only from what ships unload there. Nothing refills a rear base, so a long game drains Rabaul and Espiritu Santo to nothing. This lets a scenario give a base a supply line: so many tons of supply and of fuel a day, from a day to a day, added to its stock at night while the base is its side's. It is the simple form. The form the design note asks for, cargo that arrives in real ships that can be attacked, is begun by decision 0195, which lets the ships come; nothing yet lets them leave, and that waits for a record of its own.
 
-Standing: Planned on Nov 20, 2026 and amended on review; built on Nov 21, 2026 to the record as amended on review (scenario 112, "As built", below), owed the architect's confirmation of its readings and of statement 8a.
+Standing: Planned on Nov 20, 2026 and amended on review; built on Nov 21, 2026 (scenario 112) and confirmed by the architect's rulings below.
 
 ## Why
 
@@ -91,3 +91,12 @@ k. **Statement 8a** of scenario 112 ("with the line taken out it gives day 5 (10
 ### Not done
 
 Cargo that comes in ships the enemy can sink, and that leaves, is not built (this record's own scope; nothing leaves the map, decision 0195). No existing scenario is given a line. No figure is researched: every line is a placeholder.
+
+## The architect's rulings
+
+Made on Nov 21, 2026 on reading the build: the step in the night, the event and who sees it, the hash, the loader's refusals and the staff's forecast.
+
+1. **Statement 8a was wrong and is corrected.** "Day 5" counted from a day 0 that no view has. The staff counts from its today: with 100 t and 20 t a day and no line it gives today and five days more, day 7 on the view after day 1. The hand calculation says so now, and the test that was set aside for the old figure is removed; the test of day 7 stands.
+2. **The ten readings of "As built" are confirmed.** Two are worth saying again. A line's fuel is in no forecast, since the staff forecasts supply alone: a base on a fuel line can still be reported short of fuel by nothing, and that is a gap of the staff's, not of this rule. And a line gives only while its base is its side's: a base taken stops receiving and the taker gets nothing from it, with no event; the side that lost it learns of it by losing the base.
+3. **No briefing part for stock received yesterday.** The line is told under what is due, and the stock is in the base's figures. If a long game shows a player surprised by it, it is added then.
+4. **The versions are as built:** doctrine `supply-49`, agent interface 37, the rules label and the state's layout unchanged, since no existing game has a line.
