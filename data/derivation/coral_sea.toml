@@ -18,11 +18,9 @@
 #   Asanagi, Mutsuki, Mochizuki, Uzuki, Yayoi): no row gives the rounds their
 #   guns carried; they stand as "Placeholder destroyers" in the scenario
 #   (ruling 13), not here. The transports are of the placeholder class.
-# - The SBD-2 (Lexington's VB-2), the TBD-1 (VT-2 and VT-5) and the A5M4
-#   (Shoho's six Claudes): ruling 17. No page read gives the SBD-2's or the
-#   TBD-1's pilot armour, or the A5M4's armour and tanks, which the rules read;
-#   the SBD-2 also has no range or radius with a load. No type stands in for
-#   another. What was looked for is in gaps.csv.
+# The SBD-2, TBD-1 and A5M4, left out of the first build for want of a
+# yes-or-no row, are derived on the architect's ruling, from rows found in a
+# second search (each a low row read by exception, ruling 3).
 #
 # LEXINGTON'S GUNS (ruling 6): her twelve 5-inch/25 are read from a ship row
 # written in this pass (fits 1316, Navypedia's armament line with no removal
@@ -33,10 +31,9 @@
 #
 # SURFACE FIRE (ruling 5) is modelled only where a surface fight is the
 # force's purpose: the support group (Australia, Chicago, Hobart, Perkins,
-# Walke), the Main Force's four cruisers and Yubari. Every other ship is in
-# surface_weapons_not_modelled, as in the Eastern Solomons list. Sazanami is
-# of the Main Force but was Shoho's screen, and ruling 5 names its four
-# cruisers only, so she is not modelled (the lead's reading). Where a modelled
+# Walke), the Main Force's cruisers and Sazanami (the architect's ruling on the
+# first build: the Main Force is such a force) and Yubari. Every other ship is
+# in surface_weapons_not_modelled, as in the Eastern Solomons list. Where a modelled
 # ship has no rounds-per-gun row her ammunition is not limiting (ruling 5).
 #
 # The torpedo bombers of the fleet carriers are the B5N2 (ruling 15): the
@@ -75,8 +72,7 @@ ships = [
 ]
 
 # Assumption of the scenario, not a fact (decision 0029, 4; decision 0188,
-# ruling 5): the carriers, their screens, the attack group and Sazanami are
-# not sent to fight ships, so their surface weapons are written as 0.
+# ruling 5): the carriers, their screens and the attack group are not sent to fight ships, so their surface weapons are written as 0.
 surface_weapons_not_modelled = [
     "cv-2-lexington", "cv-5-yorktown",
     "dd-417-morris", "dd-411-anderson", "dd-412-hammann", "dd-414-russell",
@@ -84,7 +80,7 @@ surface_weapons_not_modelled = [
     "dd-360-phelps", "dd-349-dewey", "dd-348-farragut", "dd-355-aylwin", "dd-354-monaghan",
     "shokaku", "zuikaku", "myoko", "haguro",
     "akebono", "ushio", "ariake", "yugure", "shigure", "shiratsuyu",
-    "shoho", "sazanami",
+    "shoho",
 ]
 
 # Working assumption, not a fact (decision 0023; decision 0188, ruling 5): no
@@ -148,8 +144,31 @@ load = "jp-bomb-250kg"
 type = "g3m2"
 load = "jp-bomb-250kg"
 
-# The class ids, pinned (decision 0077): 4000 to 4023, which no other list
-# uses. Aircraft type ids start at 4100.
+# Added on the architect's ruling on the first build, after the eight types
+# above, so that their ids (4100 to 4107) do not move.
+
+# VB-2. Its radius is the distance of the enemy when Lexington launched it
+# against Shoho on 7 May (row 647), read for 6 May as row 280 is for the
+# SBD-3.
+[[aircraft]]
+type = "sbd-2"
+load = "us-bomb-1000lb-gp"
+combat_radius_row = 647
+combat_radius_reason = "About 180 miles, the distance of the enemy reported at 0926 on 7 May 1942, to which Lexington launched VB-2's sixteen SBD-2s with 1,000 lb bombs at about 0953; they reached and attacked Shoho. Lexington's own report (A), a row dated that day, read for 6 May; no stated radius of the type was found."
+
+# VT-2 and VT-5, the same launch (row 648).
+[[aircraft]]
+type = "tbd-1"
+load = "us-torpedo-mk13"
+combat_radius_row = 648
+combat_radius_reason = "About 180 miles, the same launch of 7 May 1942 as the SBD-2's: twelve TBD-1s of VT-2, each with a torpedo, flew it to Shoho. Lexington's own report (A), read for 6 May. It is near the 378 nm range with a torpedo of two low rows (571, 639) halved."
+
+# Shoho's six A5M4 (ruling 9).
+[[aircraft]]
+type = "a5m4"
+
+# The class ids, pinned (decision 0077): 4000 to 4024, which no other list
+# uses. Aircraft type ids start at 4100 (4100 to 4110).
 [class_ids]
 4000 = ["cv-2-lexington"]
 4001 = ["cv-5-yorktown"]
@@ -168,13 +187,17 @@ load = "jp-bomb-250kg"
 4014 = ["shokaku"]
 4015 = ["zuikaku"]
 4016 = ["myoko", "haguro"]
-4017 = ["akebono", "ushio", "sazanami"]
+4017 = ["akebono", "ushio"]
 4018 = ["ariake", "yugure"]
 4019 = ["shigure", "shiratsuyu"]
 4020 = ["shoho"]
 4021 = ["aoba", "kinugasa"]
 4022 = ["kako", "furutaka"]
 4023 = ["yubari"]
+# The architect's ruling on the first build: Sazanami's surface fire is
+# modelled, as a ship of the Main Force; her class row stands beside
+# Akebono's and Ushio's.
+4024 = ["sazanami"]
 
 # The experience values of the ships (decision 0064; the questions and their
 # thresholds are in rules.toml, under [experience]). The tool measures the

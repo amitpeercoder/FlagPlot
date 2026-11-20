@@ -26,8 +26,8 @@ shokaku,4014,Shokaku class (Shokaku)
 zuikaku,4015,Shokaku class (Zuikaku)
 myoko,4016,Myoko class
 haguro,4016,Myoko class
-akebono,4017,Fubuki class
-ushio,4017,Fubuki class
+akebono,4017,"Fubuki class, surface weapons not modelled"
+ushio,4017,"Fubuki class, surface weapons not modelled"
 ariake,4018,Hatsuharu class
 yugure,4018,Hatsuharu class
 shigure,4019,Shiratsuyu class
@@ -37,5 +37,5 @@ aoba,4021,Aoba class
 kinugasa,4021,Aoba class
 kako,4022,Furutaka class
 furutaka,4022,Furutaka class
-sazanami,4017,Fubuki class
+sazanami,4024,Fubuki class
 yubari,4023,Yubari class

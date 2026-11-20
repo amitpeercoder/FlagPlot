@@ -40,6 +40,7 @@
 #   us-porter-class endurance_speed_kn: ship_class_facts.csv row 851 (preferred); reason: The same 15 knots as row 855, from the same tables.; agreed 2026-11-11
 #   us-porter-class fuel_capacity_lt: ship_class_facts.csv row 852 (preferred); reason: The same 651 tons as row 856, from the same tables.; agreed 2026-11-11
 #   jp-shokaku-class light_aa: fits.csv row 458 (unconfirmed); reason: Chosen on the Eastern Solomons sheet: 48 guns of 25 mm in August 1942. The other figures are 42 and 54.; agreed 2026-11-11
+#   jp-fubuki-class torpedo_tubes: fits.csv row 726 (disputed); reason: Nine 61 cm tubes with the Type 90 torpedo, for Fubuki and Hatsuyuki. Every source read agrees on the type in 1942 (ship_class_facts 1359 to 1362, torpedo_model: a US technical mission report, NavWeaps and both Wikipedias), and none disputes the count of nine (fits 727 to 729). Row 726 is the one fit row that has both; it stays disputed only because the other fit rows carry the as-built Type 8 as a stand-in. The architect's ruling of 2026-11-13.; agreed 2026-11-13
 #   jp-shiratsuyu-class endurance_nm: ship_class_facts.csv row 2455 (disputed); reason: 4,000 nm at 18 knots (rows 2455, 2456). The other figure, 6,000 nm at 15 knots (rows 2453, 2454), is for another speed and does not contradict it; it is kept as a note, as the Kagero class's 15-knot figure is. Reading every destroyer class at or near 18 knots keeps them on one footing. Decision 0166, 10.; agreed 2026-11-19
 #   jp-shiratsuyu-class endurance_speed_kn: ship_class_facts.csv row 2456 (disputed); reason: 18 knots, the speed of the 4,000 nm read from row 2455. The other figure, 6,000 nm at 15 knots (rows 2453, 2454), is for another speed and does not contradict it. Decision 0166, 10.; agreed 2026-11-19
 #   jp-hatsuharu-class endurance_nm: ship_class_facts.csv row 2460 (disputed); reason: 4,000 nm at 14 knots (rows 2460, 2461). The other reading, 6,000 nm at 15 knots (rows 2458, 2459), is the same figure its one source gives the Shiratsuyu class, a different hull, and is longer at a higher speed than the first; it is left disputed and not read. Decision 0166, 11.; agreed 2026-11-19
@@ -147,7 +148,6 @@
 #   shigure
 #   shiratsuyu
 #   shoho
-#   sazanami
 # Torpedo tubes not split (decision 0074, 3): not split: no row says how its tubes bear, so torpedo_tubes_one_side is torpedo_tubes, for:
 #   hmas-hobart (Modified Leander class)
 #   dd-377-perkins (Mahan class)
@@ -156,6 +156,7 @@
 #   kinugasa (Aoba class)
 #   kako (Furutaka class)
 #   furutaka (Furutaka class)
+#   sazanami (Fubuki class)
 #   yubari (Yubari class)
 id,name,kind,cruise_speed_kn,max_speed_kn,fuel_capacity_t,endurance_nm,cargo_capacity_t,main_guns,gun_rounds_per_min,gun_rounds_per_gun,gun_damage,torpedo_tubes,torpedo_tubes_one_side,torpedo_damage,toughness,radar,aircraft_capacity,anti_aircraft
 4000,Lexington class,carrier,15,33.25,8400,8210,0,0,0,0,0,0,0,0,1600,0,90,27
@@ -175,10 +176,11 @@ id,name,kind,cruise_speed_kn,max_speed_kn,fuel_capacity_t,endurance_nm,cargo_cap
 4014,Shokaku class (Shokaku),carrier,18,34.2,4100,9700,0,0,0,0,0,0,0,0,1027,0,84,28
 4015,Shokaku class (Zuikaku),carrier,18,34.2,4100,9700,0,0,0,0,0,0,0,0,1027,0,84,28
 4016,Myoko class,cruiser,14,33.8,2431,7500,0,0,0,0,0,0,0,0,511.8,0,3,10
-4017,Fubuki class,destroyer,15,34,475,4700,0,0,0,0,0,0,0,0,83.6,0,0,1
+4017,"Fubuki class, surface weapons not modelled",destroyer,15,34,475,4700,0,0,0,0,0,0,0,0,83.6,0,0,1
 4018,Hatsuharu class,destroyer,14,33.3,492,4000,0,0,0,0,0,0,0,0,68.6,0,0,0
 4019,Shiratsuyu class,destroyer,18,34,492,4000,0,0,0,0,0,0,0,0,66.32,0,0,0
 4020,Zuiho class (converted from the Tsurugizaki-class submarine tenders),carrier,18,28,2559,7800,0,0,0,0,0,0,0,0,450.48,0,30,10
 4021,Aoba class,cruiser,14,33,2040,8000,0,6,1.128571,120,20.975,8,8,196,354.32,0,2,6
 4022,Furutaka class,cruiser,14,33,1858,7900,0,6,1.128571,120,20.975,8,8,196,342.52,0,2,6
 4023,Yubari class,cruiser,14,35.5,902,3310,0,6,1.128571,9999,6.333333,4,4,138,113.76,0,0,0
+4024,Fubuki class,destroyer,15,34,475,4700,0,6,2.444444,150,3.833333,9,9,150,83.6,0,0,1

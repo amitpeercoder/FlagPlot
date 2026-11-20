@@ -256,10 +256,26 @@ Built on Nov 20, 2026 by the list's lead (`data/derivation/coral_sea.toml`, as o
 ### Left out, each to be named in the scenario's header
 
 - Neosho and Sims (ruling 12), Worden with them; Tsugaru, Tippecanoe, Tangier and Toho Maru (ruling 12); the Kamikaze and Mutsuki class destroyers, which stand as placeholder destroyers (ruling 13).
-- **The SBD-2 (VB-2), the TBD-1 (VT-2 and VT-5) and the A5M4 (Shoho's six A5M4)** (ruling 17). The research found loads for the SBD-2 and TBD-1 (Lexington's report of 7 May) and a second range for the TBD-1, but no page read gives the SBD-2's or the TBD-1's pilot armour, the A5M4's armour or tanks, or the SBD-2's range with a load. Without them Lexington has no dive bombers but VS-2's SBD-3s and neither carrier has torpedo planes: a large change to the battle, for the architect to weigh against waiting for the research (Lundstrom's The First Team, the Bureau of Aeronautics' characteristics sheets, which the American Aviation Historical Society's site refused).
+- **The SBD-2 (VB-2), the TBD-1 (VT-2 and VT-5) and the A5M4 (Shoho's six A5M4)** (ruling 17), in the first build; derived after the architect's rulings (below). The research found loads for the SBD-2 and TBD-1 (Lexington's report of 7 May) and a second range for the TBD-1, but no page read gives the SBD-2's or the TBD-1's pilot armour, the A5M4's armour or tanks, or the SBD-2's range with a load. Without them Lexington has no dive bombers but VS-2's SBD-3s and neither carrier has torpedo planes: a large change to the battle, for the architect to weigh against waiting for the research (Lundstrom's The First Team, the Bureau of Aeronautics' characteristics sheets, which the American Aviation Historical Society's site refused).
 
 ### Not done
 
 - `CLAUDE.md`'s list of commands before a commit does not name this list's `--check`; it is the only place the other lists' checks are run, and was left alone as the brief said.
 - No scenario, no class sides file, no change to the simulation's rules.
+
+### The architect's rulings on the first build, and what followed
+
+The architect let readings 1, 2, 4, 5, 6, 7 and 8 stand (Perkins with five guns, as the rows say), and asked for four things, done on Nov 20, 2026:
+
+1. **Sazanami's surface fire is modelled,** as a ship of the Main Force; she has class id 4024 beside Akebono and Ushio (4017). Reading 11 above is withdrawn.
+2. **The SBD-2 and TBD-1 are derived** (type ids 4108 and 4109, after the first eight, so that no id moved). A second search found:
+   - SBD-2 pilot armour: yes. Vintage Aviation News (C): VB-2's BuNo 2106 received armoured seats and a bulletproof windscreen aboard Lexington before 10 March 1942 (aircraft type facts 640), an inference from one aircraft, by exception. Its tanks are not self-sealing by the rows on file (603, 604); The Armory Life says the SBD-2 had self-sealing tanks, which was not entered, since it would dispute two preferred rows.
+   - SBD-2 load: one 1,000 lb bomb, aviation-history.com (C, fits 1324), by exception; Lexington's report gives the same on 7 May (1310, dated that day only).
+   - SBD-2 and TBD-1 radius: about 180 miles, the distance of the enemy when Lexington launched VB-2 and VT-2 against Shoho on 7 May (rows 647 and 648, A), read by the list's `combat_radius_row`, as row 280 is for the SBD-3.
+   - TBD-1 pilot armour: no. Modeling Madness (C): "lacking armor, self-sealing fuel tanks" by December 1941 (641), by exception. Its torpedo: historyofwar's Mark 13 (fits 1312, C), by exception.
+   - Not found: any page of the Naval History and Heritage Command for the SBD or TBD (history.navy.mil returned no text or a certificate error), the National Naval Aviation Museum's page for BuNo 2106 (no text), the Bureau of Aeronautics' sheets (refused before), and Lundstrom.
+3. **The A5M4 is derived** (4110): no pilot armour and no self-sealing tanks, Plane Dave and Migflug (both C, 642 to 645), by exception; range 434 nm on internal fuel (616, pwencycl). Pacific Eagles' 746 miles "internal" is now entered (646) and disputes 616, so 616 stands disputed; the exception reads 616 by ruling 1, since 746 miles is the figure the other sources give with a drop tank.
+4. **Strengths on file** for the three types' squadrons, for stage B: VB-2 16 SBD-2 launched on 7 May (air unit facts 608, a lower bound); VT-2 12 (607, and 477 low); VT-5 10 on 7 May (451); Shoho's 6 A5M4 (611, ruling 9).
+
+Exceptions are now 44 (nine more). Nothing is now left out for want of a fact but the ships ruling 12 names and the placeholder destroyers.
 
