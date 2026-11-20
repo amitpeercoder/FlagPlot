@@ -389,7 +389,7 @@ A side sees: its own cargo events (below).
 
 ### Cargo orders
 
-There are five standing cargo orders. They are one kind of order, so a new one replaces the old. A completed order stays standing until it is replaced, and a route order does not clear it.
+There are five standing cargo orders. They are one kind of order, so a new one replaces the old. A completed order stays standing until it is replaced, and a route order does not clear it. The order to do no cargo work (`no_cargo_work`) clears it: the force then holds no cargo order and works no cargo, as a force made by a split or by forming does, until it is given another. It moves nothing, is accepted whatever the force's status, so it is the one way to take a cargo order away from a force under way, and a force halted at a marked waypoint for its cargo alone steams on at the next pulse's movement, its cargo work being done. The staff gives it to a lift it turns back (chapter 8, Taking a place, A lift turned back). [0191, amended in the build]
 
 | Order | Takes effect |
 | --- | --- |

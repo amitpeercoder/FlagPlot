@@ -449,20 +449,18 @@ impl Day<'_, '_> {
         plan: &Plan,
         force: &TaskForce,
         place: Hex,
-        source_hex: Hex,
     ) -> Result<String, Box<sim_core::command::Reason>> {
         if self.men_aboard_force(force) == 0 {
             return Ok(String::new());
         }
         let m = self.morning(end, plan, force, place);
         if m.any.is_none() {
-            // A lift turned back, read from the force alone (rule 12):
-            // under way and not on its way to the place, or at its source
-            // with men aboard and no cargo order. Its reason says the danger
-            // has passed, though no contact of it is held now.
-            let turned = (force.status == TaskForceStatus::Underway
-                && !crate::take::on_its_way(force, place))
-                || (force.position() == source_hex && force.cargo_order.is_none());
+            // A lift the staff has turned back, by its notice among the
+            // side's events, and that is not on its way to the place: its
+            // reason says the danger has passed, though no contact of it is
+            // held now (a contact is dropped before it is 6 pulses old).
+            let turned = !crate::take::on_its_way(force, place)
+                && self.noticed(NoticeKind::LiftTurnedBack, plan.id);
             return Ok(if turned {
                 self.goes_on_words(&m)
             } else {

@@ -2876,7 +2876,7 @@ impl Day<'_, '_> {
         // not sail where the danger would turn it back at the risk, nor on
         // the first clear morning after it.
         let danger_words = if first_lift {
-            match self.before_sailing(end, plan, force, place, source_hex) {
+            match self.before_sailing(end, plan, force, place) {
                 Ok(words) => words,
                 Err(reason) => {
                     self.target(in_scope).no_orders.push(*reason);
