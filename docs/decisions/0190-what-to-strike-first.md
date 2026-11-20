@@ -131,3 +131,14 @@ Built on Nov 20, 2026 on the branch `what-to-strike-first`, from `station-from-t
 **What it moved.** Every scenario under `data/scenarios` (159 files, the step 2 frozen copies and an untracked trial left out) was run with `run --events` before the change and after it: with the state version and the daily hash lines set aside, every file is the same. The recorded games' transcripts differ only in the interface version. Two pinned hashes (scenario 10's first day and scenario 17a's case 8) were remade by `regenerate.sh`; they move with the new fields of the state, and the run baselines of those scenarios show no event moved.
 
 **Not done.** Scenario 105's limit, deny and run of 1,000 games in four cells. A group the staff may no longer order keeps its waters (a known limit, rule 33). No unit test sits in `deny.rs`: the deny's part is read in `targets.rs` and tested through scenario 106.
+
+## The architect's rulings on the build
+
+Read on Nov 20, 2026: the build's report, its "As built" and the engine's change to the choice of a contact.
+
+1. **The engine's change is the rule's:** among the contacts a group could launch at, one whose estimated hex is in the group's waters comes first, then the list's order as before. A group with no waters is ordered as it always was and cites nothing new.
+2. **The waters order is handed in under the task the group serves and says it serves the deny,** as ruled during the build: the engine checks an order to a group against the forces of the intent it is handed in under, and a deny commands no group of itself.
+3. **The readings of "As built" stand,** among them: a deny binds only while its plan is released; a limit on a task's own chain replaces a deny's; a carrier force with no limit on its own chain takes the list of the lowest-numbered released deny that names it; the raid on a place is filtered only where a targets limit binds.
+4. **No game moved.** All 159 scenario files give the same events before and after, the state version and the daily hashes apart, and a record of every staff decision in five scenarios made before the change still matches. The full run passes.
+5. **Scenario 105 is not changed by this build.** Its deny, its limit and its run are the architect's.
+6. **Not seen:** the viewer with the new field of a replay; that the other side reads nothing of the limit through every tool, of which `command_state` alone was checked.
