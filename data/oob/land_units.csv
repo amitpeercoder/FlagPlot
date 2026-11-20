@@ -142,3 +142,22 @@ id,key,name,nation,service,kind,parent
 1144,jp-8th-independent-antitank-gun-company,8th Independent Antitank Gun Company,jp,ija,formation,
 1145,jp-kawaguchi-artillery-group,Kawaguchi Detachment artillery group (Captain Nakaoka),jp,ija,task-group,jp-kawaguchi-detachment
 1146,jp-ichiki-detachment-engineer-company,"Ichiki Detachment engineer company (1st Company, 7th Engineer Construction Regiment)",jp,ija,formation,jp-ichiki-detachment-first-echelon
+1150,au-forces-port-moresby,Australian forces at Port Moresby (garrison under Maj-Gen Morris),au,army,forces-at-place,
+1151,au-30th-brigade,30th Infantry Brigade (militia),au,army,formation,
+1152,au-39th-battalion,"39th Infantry Battalion (militia, Victorian)",au,army,formation,au-30th-brigade
+1153,au-49th-battalion,49th (Queensland) Infantry Battalion (militia),au,army,formation,
+1154,au-53rd-battalion,"53rd Infantry Battalion (militia, New South Wales)",au,army,formation,au-30th-brigade
+1155,au-13th-field-regiment,13th Field Regiment (artillery),au,army,formation,
+1156,au-23rd-heavy-aa-battery,23rd Heavy Anti-Aircraft Battery,au,army,formation,
+1157,au-paga-coastal-battery,"Paga Coastal Defence Battery (two 6-inch guns), Port Moresby",au,army,garrison,
+1158,au-papuan-infantry-battalion,Papuan Infantry Battalion (PIB),au,army,formation,
+1159,au-14th-brigade,14th Infantry Brigade (militia),au,army,formation,
+1180,jp-south-seas-detachment,"South Seas Detachment (Nankai Shitai), Maj. Gen. Horii",jp,ija,formation,
+1181,jp-144th-infantry,144th Infantry Regiment,jp,ija,formation,jp-south-seas-detachment
+1182,jp-1st-bn-55th-mountain-gun-regt,"1st Battalion, 55th Mountain Gun (Artillery) Regiment",jp,ija,formation,jp-south-seas-detachment
+1183,jp-coy-55th-cavalry,One company of the 55th Cavalry Regiment,jp,ija,formation,jp-south-seas-detachment
+1184,jp-1st-coy-55th-engineer,"1st Company, 55th Engineer Regiment",jp,ija,formation,jp-south-seas-detachment
+1185,jp-2nd-coy-55th-transport,"2nd Company, 55th Transportation Regiment",jp,ija,formation,jp-south-seas-detachment
+1186,jp-1st-coy-47th-mobile-aa,"1st Company, 47th Mobile (Field) Antiaircraft Battalion",jp,ija,formation,jp-south-seas-detachment
+1187,jp-3d-kure-snlf-port-moresby-group,3d Kure SNLF part embarked for Port Moresby,jp,ijn,task-group,jp-3d-kure-snlf
+1188,jp-10th-construction-unit,10th Naval Construction Unit (Bates: 10th Construction Section),jp,ijn,construction,
