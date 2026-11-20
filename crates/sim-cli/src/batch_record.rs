@@ -112,6 +112,19 @@ pub fn initial_force_of(initial: &TruthState) -> BTreeMap<ShipId, TaskForceId> {
     out
 }
 
+/// The ships of the starting state with those held apart in it (decision
+/// 0195), in number order: the ships a batch tables. A ship held apart that
+/// never enters is in the table and in no count of ships sunk or crippled.
+pub fn initial_ships(initial: &TruthState) -> Vec<&sim_core::state::Ship> {
+    let mut ships: Vec<&sim_core::state::Ship> = initial
+        .ships
+        .values()
+        .chain(initial.entering.values().flat_map(|e| e.ships.values()))
+        .collect();
+    ships.sort_by_key(|ship| ship.id);
+    ships
+}
+
 pub fn header(initial: &TruthState, world: &World) -> Header {
     let types = &world.ref_data().aircraft_types;
     Header {

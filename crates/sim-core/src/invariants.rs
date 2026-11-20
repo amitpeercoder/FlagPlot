@@ -18,7 +18,7 @@ use crate::command::{
 };
 use crate::fixed::Fixed;
 use crate::hex::{Hex, HEX_NM};
-use crate::ids::{AirGroupId, BaseId, IntentId, LandUnitId, ShipId, TaskForceId};
+use crate::ids::{AirGroupId, BaseId, EntityRef, IntentId, LandUnitId, ShipId, TaskForceId};
 use crate::map::Map;
 use crate::refdata::RefData;
 use crate::state::Side;
@@ -983,7 +983,12 @@ pub(crate) fn check_command(
     day: u32,
 ) -> Vec<InvariantViolation> {
     let mut violations = Vec::new();
-    let own_ship = |ship: &ShipId| truth.ships.get(ship).is_some_and(|s| s.side == side);
+    // A unit held apart for the side (decision 0195, 14) is its own: a
+    // command may name it before it enters.
+    let held = |unit: EntityRef| truth.entry_of(unit).is_some_and(|e| e.side == side);
+    let own_ship = |ship: &ShipId| {
+        truth.ships.get(ship).is_some_and(|s| s.side == side) || held(EntityRef::Ship(*ship))
+    };
 
     for (ship, list) in &command.commitments {
         if !own_ship(ship) {
@@ -1068,18 +1073,27 @@ pub(crate) fn check_command(
     for (target, hold) in &command.holds {
         let own = match target {
             HoldTarget::Ship(ship) => own_ship(ship),
-            HoldTarget::TaskForce(force) => truth
-                .task_forces
-                .get(force)
-                .is_some_and(|found| found.side == side),
-            HoldTarget::Setting { group, .. } | HoldTarget::AirGroup(group) => truth
-                .air_groups
-                .get(group)
-                .is_some_and(|found| found.side == side),
-            HoldTarget::LandUnit(unit) => truth
-                .land_units
-                .get(unit)
-                .is_some_and(|found| found.side == side),
+            HoldTarget::TaskForce(force) => {
+                truth
+                    .task_forces
+                    .get(force)
+                    .is_some_and(|found| found.side == side)
+                    || held(EntityRef::TaskForce(*force))
+            }
+            HoldTarget::Setting { group, .. } | HoldTarget::AirGroup(group) => {
+                truth
+                    .air_groups
+                    .get(group)
+                    .is_some_and(|found| found.side == side)
+                    || held(EntityRef::AirGroup(*group))
+            }
+            HoldTarget::LandUnit(unit) => {
+                truth
+                    .land_units
+                    .get(unit)
+                    .is_some_and(|found| found.side == side)
+                    || held(EntityRef::LandUnit(*unit))
+            }
         };
         if !own || hold.day > day {
             violations.push(InvariantViolation::HoldUnsound(side, *target));
