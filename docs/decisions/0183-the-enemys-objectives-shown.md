@@ -109,3 +109,6 @@ Built on Nov 20, 2026, on the branch `enemy-objectives-build`, to the record as 
 
 **Grep.** No staff (`sim-staff`), trial (`sim-trial`) or rule of `sim-core` reads `enemy_objectives`, or any side's objectives through a view; the reading is called only by the briefing's objectives part in `sim-agent`. The table (`table/`) was not changed and does not read the field; its situation sheet shows the briefing's text whole and so will show the enemy's lines (amended 8, the designer's).
 
+**Test counts.** `cargo test --workspace --release --no-fail-fast`: 4,439 passed, 0 failed, 7 ignored (one of them statement 1's clause above), over 243 test binaries, read from the log. The first run failed four tests that pin the agent interface's version (`holds_and_preview`, `interrupts`, `play` and `validator` in `crates/sim-agent/tests`); their pin was raised from 31 to 32, as each earlier build raised it, and nothing else in them changed. `cargo fmt --all -- --check`, `cargo clippy --workspace --all-targets -- -D warnings`, `sh scripts/regenerate.sh --check` and `sh scripts/decisions-index.sh --check` pass.
+
+**Not verified by this build.** An agent reading the new lines through `mcp` end to end; the table's situation sheet, which is not changed and was not opened in a browser; whether the words help a commander decide, which only games will show.
