@@ -124,3 +124,15 @@ Built on Nov 20, 2026, with decision 0187's key, in one pull request.
 - **Scenario 103's test.** `the_objectives_are_the_one_scale_over_30_days` fails on the new objective and is ignored with the reason. The table of objectives in its hand calculation (its lines 181 to 191) and the words "The game's one scale" (line 181) are the architect's to change.
 - **The check of rule 22.** The helper `tests/five_days_first_run.rs` now writes, for each seed, the objective's count and points with the others, every Japanese man landed at Taivu and every Japanese man embarked anywhere. Over seeds 1 to 1,000 of file a: no Japanese man was embarked in any game, and the count equals the men landed at Taivu in all 1,000. The Allied side is ahead in 615 and the Japanese in 385. The Allied side wins 483 (decisive 32, major 238, minor 213), the Japanese 249 (decisive 12, major 96, minor 141), with 268 stalemates. These are the figures of rule 12 and of decision 0187, 13 and 28. Seed 1942's game (statements 17 to 21) gives what the hand calculation says.
 - **No state, event, draw or hash changed.** The recorded games changed only in their answers' version, 32 to 33.
+
+## The architect's rulings on the build
+
+Read on Nov 20, 2026, with the build's report and the core of its code (the count, the tally, what a side knows, the score).
+
+1. **The count is the rule's.** A number for each unit and hex, raised by a landing there and lowered by the unit's embarking anywhere, not below 0. An embarking lowers the unit's number in every hex it has one, which is the rule read for each objective by itself.
+2. **The readings of "As built" stand:** a base not on the reader's map is written by its hex in a side's own lines and in the result's lines as well as in the enemy's; the two matches on a kind's name end in an arm that is never reached and writes nothing; the line of a side's progress keeps the common words.
+3. **The hexes of the bases the objectives name are kept with the objectives,** as configuration, and a side may read the hex of such a base. It tells a side where an objective is and nothing of a base's state. This stands under rule 17.
+4. **Two tests are left ignored,** each with its reason: the tests crate cannot build a log for the tally, and the same behaviour is tested inside `sim-core`. Accepted.
+5. **Scenario 103's hand calculation is corrected by the architect:** its scale is the scenario's own, and its table gains men landed. The test left ignored for it is restored with the new kind and the file's key.
+6. **The 1,000 games are as the plan said,** with none replayed for the plan: no Japanese man embarked in any game; the Allied side ahead in 615 and the Japanese in 385; by level 483, 249 and 268. Men landed were 1,500 in 847 games and fewer in 153, where a destroyer carrying men was lost first.
+7. **Not seen:** the table's end screen with the new line, in a browser.

@@ -178,8 +178,11 @@
 //!
 //! ## The objectives
 //!
-//! The game's one scale, as scenarios 5 and 7 state it. Levels: minor 3,
-//! major 8, decisive 16. A horizon of 30 days.
+//! A scale of the scenario's own: it is a scenario for play (decision
+//! 0187), and its file says so. Every figure but the last is the one
+//! scenarios 5 and 7 give the kind; the last, men landed, is the figure of
+//! men lost used again (decision 0186). Levels: minor 3, major 8, decisive
+//! 16. A horizon of 30 days.
 //!
 //! | Kind | Allied | Japanese |
 //! | --- | --- | --- |
@@ -189,6 +192,7 @@
 //! | Enemy men lost, 1 for each 100 | yes | yes |
 //! | Lunga open, 10 points over the days | open | shut |
 //! | Supply landed at Taivu, 0.005 a ton | | yes |
+//! | Men landed at Taivu, 1 for each 100, a placeholder | | yes |
 //!
 //! # Properties
 //!
@@ -1192,11 +1196,11 @@ fn a_side_not_given_orders_holds_no_intent() {
 // ---------------------------------------------------------------- The objectives
 
 #[test]
-#[ignore = "decision 0186 gives the Japanese side men landed at Taivu: the table of objectives in the hand calculation (lines 181 to 191) is the architect's to change, so this test waits for it"]
-fn the_objectives_are_the_one_scale_over_30_days() {
+fn the_objectives_are_the_scenarios_own_over_30_days() {
     use sim_core::objectives::Objective;
     let w = load('a').world;
     let o = w.objectives().expect("objectives");
+    assert!(o.for_play, "a scenario for play");
     assert_eq!(
         (o.levels.minor, o.levels.major, o.levels.decisive),
         (n(3), n(8), n(16))
@@ -1230,6 +1234,7 @@ fn the_objectives_are_the_one_scale_over_30_days() {
         ];
         if side == J {
             expected.push("cargo_landed");
+            expected.push("men_landed");
         }
         assert_eq!(named, expected, "{side:?}");
         for x in list {
@@ -1264,6 +1269,12 @@ fn the_objectives_are_the_one_scale_over_30_days() {
                     points_per_t,
                 } => {
                     assert_eq!((*b, *points_per_t), (base(5), fx("0.005")));
+                }
+                Objective::MenLanded {
+                    base: b,
+                    points_per_100_men,
+                } => {
+                    assert_eq!((*b, *points_per_100_men), (base(5), n(1)));
                 }
                 other => panic!("an objective the table has not: {}", other.name()),
             }

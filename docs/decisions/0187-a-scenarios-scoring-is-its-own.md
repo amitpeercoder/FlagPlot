@@ -108,3 +108,7 @@ Rule 22 was built on Nov 20, 2026, with decision 0186, in one pull request.
 - **Documents.** Chapter 6 says the scale is each scenario's and names the two kinds; the glossary has "scenario of record", "scenario for play" and a new "level"; `docs/commands.md`, `docs/step3-spec.md`, `docs/engineering/roles-and-tests.md` (the three guards) and `docs/open-work.md` are changed.
 - **The band, read again** from the third count of file a's 1,000 games (decision 0186, As built): the Allied side ahead in 615 and the Japanese in 385, as rule 28 said. No game changed.
 - **Not done here:** scenario 103's hand calculation, where it says "the game's one scale", is the architect's (its test of the objectives is ignored until then); the four games between agents (guard three) are still owed.
+
+## The architect's rulings on the build
+
+Read on Nov 20, 2026. The key is built as rule 22 has it: `for_play` in a scenario's objectives, the words over a result, the batch file's header (its version unchanged, as when the daily supply figure was added), and `sim-cli validate` refusing. Scenario 103's base carries the key because it is the source its script reads; it is not played, and that stands. Scenario 103 is the first scenario for play. Its four games between agents are still owed.
