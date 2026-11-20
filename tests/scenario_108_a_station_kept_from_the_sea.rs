@@ -19,7 +19,8 @@
 //! 1. **Today's answer is gone.** At balanced, with no contact held, on
 //!    the first morning the staff does not say G is away from home. It
 //!    routes G to X, and its reason says G has no home port and stands
-//!    from where it is. G is at normal readiness. The same at press.
+//!    from where it is. G is at normal readiness. At press it is routed
+//!    the same, at battle readiness.
 //! 2. **Cruise where the night is enough.** X is 4 hexes from G: 160 nm,
 //!    160 / 15 = 10.7 hours, within 12. G is ordered at cruise.
 //! 3. **Full where it is not.** X is 8 hexes: 320 nm, 21.3 hours at
@@ -51,21 +52,25 @@
 //!    fuel is not weighed, G goes, and the reason says no base of the
 //!    side can fuel it. A nearer base, B2, that holds no fuel is passed
 //!    over for B when B holds fuel.
-//! 8. **Going in for fuel.** G is at X at press. A destroyer's fuel is
-//!    cut below the measure of the passage from X to B at cruise. The
-//!    next morning G is routed to B and B is set as its home port, and
-//!    the reason names the destroyer.
+//! 8. **Going in for fuel.** G is at X at balanced. A destroyer's fuel is
+//!    below the measure of the passage from X to B at cruise times the
+//!    margin of one and a fifth, and above the passage itself. That
+//!    morning G is routed to B and B is set as its home port, and the
+//!    reason names the destroyer. (At press the margin is one: a ship
+//!    cut below the passage itself cannot make it, and runs dry short
+//!    of B. That is what pressing costs, and is not mended here.)
 //! 9. **Then it is a force with a home port.** Stopped at B and fuelled,
 //!    G sorties to X by night and returns, as a stand's force does today.
 //! 10. **A force with a home port is as today.** A second force, H, of
 //!     the same ships, stopped at B with B its home port: every order
 //!     and reason the staff gives H is what it gave before this rule.
-//!     And H under way at sea with B its home port is answered "away
-//!     from home", as today.
+//!     And H under way at sea toward B, B its home port, is answered
+//!     "away from home", as today.
 //! 10a. **Stopped at sea with a home port.** H stopped at sea on no
 //!     route, B its home port: the staff routes H to B at cruise, and
-//!     says why. With B taken by the enemy, the staff says H's home port
-//!     is no longer its side's and stands H from where it is.
+//!     says why. (A home port taken by the enemy is cleared by the
+//!     engine, so the force is then one with no home port, under
+//!     statement 1; no game reaches a home port that is not the side's.)
 //! 11. **Held.** With G held by the commander, the staff gives it no
 //!     order and says it is held.
 //! 12. **Under a deny.** A deny of the waters round X whose forces limit
@@ -914,29 +919,6 @@ fn statement_10a_stopped_at_sea_with_a_home_port() {
 /// port of a force when its base changes side (`HomePortLost`, decision 0090,
 /// 22), so the staff's branch for a home port that is no longer the side's
 /// cannot be reached through a scenario. The body is what the statement says.
-#[test]
-#[ignore = "decision 0192 build: no scenario state reaches it; the loader refuses a home port of the enemy's and the engine clears a captured base's home ports"]
-fn statement_10a_with_b_taken_by_the_enemy() {
-    let t = at(
-        &text(),
-        "bases",
-        &base_at(2, 4, 2, 1000).replace("allied", "japanese"),
-    );
-    let t = at(
-        &t,
-        "forces",
-        &force_h(
-            "q = 0\r = -3".replace('\r', "\nr").as_str(),
-            "home_port = 2",
-            4,
-        ),
-    );
-    let played = play(&t);
-    let said = played.said_of(1, 2);
-    assert!(said.contains("is no longer its side's"));
-    assert!(said.contains("stands from where it is"));
-}
-
 /// Statement 11. With G held by the commander, the staff gives it no order
 /// and says it is held.
 #[test]

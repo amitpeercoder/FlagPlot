@@ -100,3 +100,15 @@ Built on Nov 20, 2026 on the branch `station-from-the-sea`, to rules 1 to 9 as a
 **What it moved.** Every scenario under `data/scenarios` (159 files, the step 2 frozen copies left out) was run with the rule and without it on the same build (a switch not committed), and the output of `run --events` compared. Only scenario 108 moved. No other game has a stand task whose force has no home port, or a force with a home port stopped at sea. Scenario 105 (the Coral Sea) has no stand task on this branch: the support group is moved by the architect's orders, which rules 10 and 19 take out, and that is left to the architect. No run baseline, golden file or pinned hash changed; the recorded games' saves changed in their rules label and doctrine version alone.
 
 **Not done.** Scenario 105 (rules 10 and 19). A force away from the station that is short of fuel does not go in. Going in reads fuel only to the one base; a base with fuel but no ammunition is gone in to for ammunition too.
+
+## The architect's rulings on the build
+
+Read on Nov 20, 2026, with the build's report and its "As built".
+
+1. **The readings of "As built" stand,** among them: only a force at its station goes in for fuel, and a short force away from it stays where it is; speed is cruise where that arrives in the night and full otherwise; "gives a rate" is read as the engine being willing to fuel a ship there; a force outnumbered at preserve the force is given nothing.
+2. **Three statements of the worked example were the architect's mistakes** and are corrected by him:
+   - going in for fuel is stated at balanced. At press the margin is one, so a ship cut below the passage itself cannot make it and runs dry short of the base. That is what pressing costs;
+   - a home port taken by the enemy is cleared by the engine, so no game reaches "a home port that is not the side's". The words are in the code and are never said. The statement is taken out and its ignored test with it;
+   - at press the force is at battle readiness from the first morning.
+3. **No other game moved:** 159 scenario files played with the rule on and off, and only scenario 108's own. No existing test changed.
+4. **Scenario 105 is not changed by this build.** Rules 10 and 19 are applied by the architect with the other rules' changes to it.
