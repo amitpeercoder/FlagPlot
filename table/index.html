@@ -275,6 +275,28 @@ body.watched .gives { display: none !important; }
 .top .seg .intray + .intray { margin-left: 0; }
 .intray[aria-pressed="true"] { background: #6a513a; }
 #seatbox { display: flex; flex-direction: column; gap: 10px; }
+/* The new game screen (decision 0185): a sheet on the table before a game is begun. */
+#newgame { top: 24px; max-height: calc(100% - 48px); }
+#newgame .sheet { gap: 12px; }
+#newgame h3 { margin: 6px 0 0; font-family: var(--f-ui); font-size: 14px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--paper-dim); }
+#newgame .pick { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; align-items: start; padding: 9px 0; border-top: 1px solid #8d8672; font-family: var(--f-type); font-size: 14px; line-height: 1.4; cursor: pointer; }
+#newgame .pick input { margin-top: 4px; accent-color: var(--own); width: 16px; height: 16px; }
+#newgame .pick strong { font-family: var(--f-ui); font-size: 17px; letter-spacing: 0.06em; }
+#newgame .pick small { color: var(--paper-dim); font-size: 12px; }
+#newgame .pick .to { font-size: 13px; }
+#newgame .pick .to b { font-family: var(--f-ui); font-size: 12px; letter-spacing: 0.12em; color: var(--paper-dim); margin-right: 6px; }
+#newgame .seg label { cursor: pointer; margin: 0 -1px -1px 0; font-family: var(--f-ui); font-size: 15px; letter-spacing: 0.08em; text-transform: uppercase; }
+#newgame .seg input:disabled + span { opacity: 0.35; cursor: default; }
+#newgame .frow .fl { flex-basis: 120px; font-family: var(--f-ui); font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase; }
+#newgame .says, .agentseat .says { font-family: var(--f-type); font-size: 14px; line-height: 1.45; display: flex; flex-direction: column; gap: 6px; }
+#newgame .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+#newgame button.go { min-height: 46px; padding: 0 26px; background: var(--own); color: var(--paper); border-color: var(--own); font-size: 17px; font-weight: 700; letter-spacing: 0.12em; }
+.agentseat { border-top: 2px solid #8d8672; padding-top: 8px; display: flex; flex-direction: column; gap: 8px; font-family: var(--f-type); font-size: 14px; }
+.agentseat .copy { display: flex; gap: 8px; align-items: flex-start; }
+.agentseat pre { flex: 1; margin: 0; padding: 6px 8px; background: var(--paper-old); border: 1px solid #b9b199; font-family: var(--f-type); font-size: 12px; line-height: 1.35; white-space: pre-wrap; overflow-wrap: anywhere; user-select: all; }
+.agentseat .copy button { min-height: 32px; padding: 0 10px; font-size: 13px; flex: none; }
+.agentseat ul { margin: 0; padding-left: 18px; color: var(--paper-dim); font-size: 13px; }
+.agentseat .lab { font-size: 13px; color: var(--paper-dim); }
 #seatbox:empty { display: none; }
 .slip .call { font-size: 13px; }
 .slip .call + .call { margin-top: 3px; }
@@ -293,6 +315,8 @@ body.watched .gives { display: none !important; }
 <div id="shade"></div>
 <div id="fatal" hidden></div>
 
+<div class="sheetwrap" id="newgame" hidden><section class="sheet" id="newgame-paper" aria-label="A new game"></section></div>
+
 <aside class="plot" id="plot" hidden aria-label="The plot of the day" aria-live="polite"></aside>
 
 <div class="top">
@@ -302,6 +326,7 @@ body.watched .gives { display: none !important; }
   <button type="button" id="btn-in" class="intray" hidden></button>
   <button type="button" id="btn-orders" class="intray menu" aria-expanded="false" aria-controls="pop-orders" title="Your orders in force, and your standing leave" hidden></button>
   <button type="button" id="btn-staff" class="intray menu" aria-expanded="false" aria-controls="pop-staff" title="The staff's standing papers" hidden></button>
+  <button type="button" id="btn-agent" class="intray" hidden>The agent's seat</button>
 </div>
 <div id="pop-orders" class="pop" hidden>
   <div id="papers" class="papers" role="toolbar" aria-label="Your directives, orders and what you have signed"></div>
@@ -396,6 +421,7 @@ body.watched .gives { display: none !important; }
   <button type="button" id="btn-hexes" aria-pressed="false" title="Hexes and their numbers" aria-label="Hexes"><svg viewBox="0 0 24 24"><path d="M7 3.5h10l5 8.5-5 8.5H7L2 12z"/></svg></button>
   <button type="button" id="btn-pieces"></button>
   <button type="button" id="btn-labels"></button>
+  <button type="button" id="btn-new" title="End this game and choose another" hidden>New game</button>
   <button type="button" id="btn-restart" title="Begin the game again from its first evening" aria-label="Begin the game again"><svg viewBox="0 0 24 24"><path d="M4.5 12a7.5 7.5 0 1 0 2.4-5.5M4 3.5v4h4"/></svg></button>
   <button type="button" id="btn-stops" aria-expanded="false" aria-controls="stops" hidden title="What stops the clock" aria-label="Clock stops"><svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 8.5V13l3 2M9.5 2.5h5"/></svg></button>
 </div>
@@ -434,12 +460,15 @@ body.watched .gives { display: none !important; }
   // Every word the table shows of the game comes through this: one tool of the seat, one answer.
   // In a watched game (decision 0182) the page is served under the watcher's key, and each call is
   // the watcher's read from the side watched.
-  var BASE = (/^\/watch\/[^/]+/.exec(location.pathname) || [''])[0], WATCH = null;
+  // Started with no scenario (decision 0185) the page is served under the person's own key, at the new
+  // game screen until a game is begun. In a game against an agent a call may be held, and answer that it
+  // waits: the page then calls the seat's wait until the answer comes, and takes it as the call's own.
+  var BASE = (/^\/(?:watch|table)\/[^/]+/.exec(location.pathname) || [''])[0], WATCH = null, VERSUS = null;
+  function post(body) { return fetch(BASE + '/call', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then(function (r) { return r.json(); }); }
+  function answerOf(a) { if (a && a.waiting) return post({ tool: 'wait', arguments: {} }).then(answerOf); if (a.refused != null) throw new Error(a.refused); return a.ok; }
   function api(tool, args) {
     var body = { tool: tool, arguments: args || {} }; if (WATCH) body.side = WATCH.side;
-    return fetch(BASE + '/call', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
-      .then(function (r) { return r.json(); })
-      .then(function (a) { if (a.refused != null) throw new Error(a.refused); return a.ok; });
+    return post(body).then(answerOf);
   }
   if (!window.THREE) { fatal('The table needs its drawing library, which did not load. Check the network and reload.'); return; }
 
@@ -1951,7 +1980,7 @@ body.watched .gives { display: none !important; }
   // A directive is received when its condition first holds, read from what
   // the seat's own tools say; it then stays on the desk. Its date is the day
   // it was received.
-  var received = {}, readOnes = {}, KEPT = 'flagplot-directives-' + location.port, recalled = false;
+  var received = {}, readOnes = {}, KEPT_ROOT = 'flagplot-directives-' + location.port, KEPT = KEPT_ROOT, recalled = false;
   // What has been received and read is remembered across a reload of the
   // page, and forgotten when a new game begins (its day is earlier).
   function recall() { if (recalled) return; recalled = true; try { var k = JSON.parse(localStorage.getItem(KEPT) || 'null'); if (k && k.day <= M.day) { received = k.received || {}; readOnes = k.read || {}; } } catch (e) {} }
@@ -2150,7 +2179,7 @@ body.watched .gives { display: none !important; }
       try {
         for (;;) {
           if (OFFERED.advance) {
-            setStatus('The clock runs.');
+            setStatus(VERSUS ? finishedWords() : 'The clock runs.');
             var r = await api('advance', { pulses: 1, stop_on: stopOn() }), done = r.pulses_resolved[0], byNumber = {};
             lastRun = { fired: r.fired || [], summary: r.summary }; lastTold = []; if (r.game_over) { M.over = true; M.result = r.result; }
             if (done) {
@@ -2171,7 +2200,7 @@ body.watched .gives { display: none !important; }
               return rest(r.game_over ? 'The game is over.' : r.stopped === 'told' ? 'The clock is stopped ' + when + ': you were told something you asked to be stopped for.' : r.stopped === 'interrupt' ? 'The clock is stopped ' + when + ': the staff has a signal for you.' : '');
             }
           } else {
-            var day = M.day; setStatus('Day ' + day + ' is being fought.');
+            var day = M.day; setStatus(VERSUS ? finishedWords() : 'Day ' + day + ' is being fought.');
             var d = await api('run', { days: 1 }); lastRun = d; if (d.game_over) { M.over = true; M.result = d.result; }
             setStatus('Day ' + day + ': the plot, pulse by pulse, from what your side was told.');
             await plotDay(day, await eventsOf(day)); await refresh();
@@ -2267,7 +2296,7 @@ body.watched .gives { display: none !important; }
     if (!WATCH) return; var box = $('seatbox'); box.textContent = '';
     WATCH.agents.forEach(function (side) {
       var seat = (st.seats || []).filter(function (x) { return x.seat === side; })[0] || {}, a = el('article', 'slip'), f = el('div', 'from'), waited = !!seat.waited_for;
-      f.appendChild(el('span', '', 'THE ' + SIDE_NAME[side].toUpperCase() + ' COMMANDER')); f.appendChild(el('span', 'stamp' + (waited ? '' : ' ok'), st.game_over ? 'ENDED' : waited ? 'WAITED FOR' : 'READY'));
+      f.appendChild(el('span', '', 'THE ' + SIDE_NAME[side].toUpperCase() + ' COMMANDER')); f.appendChild(el('span', 'stamp' + (waited || seat.at_seat === false ? '' : ' ok'), st.game_over ? 'ENDED' : seat.at_seat === false ? 'NOT YET AT HIS SEAT' : waited ? 'WAITED FOR' : 'READY'));
       a.appendChild(f); if (seat.until && seat.until.words && !st.game_over) a.appendChild(el('div', '', plainWords('Ready ' + seat.until.words.replace(/, or a dusk after a day on which an interrupt[^.]*/, '') + '.')));
       if (side === WATCH.side && calls) { var list = calls.calls || [];
         if (list.length > 12) a.appendChild(el('div', 'call', 'And ' + (list.length - 12) + ' calls before these.'));
@@ -2295,17 +2324,129 @@ body.watched .gives { display: none !important; }
   function watchSide(side) {
     if (!WATCH || side === WATCH.side) return; if (playing) { setStatus('Stop the clock first.'); return; }
     WATCH.side = side; config.seat = side; config.directives = WATCH.directives[side] || [];
-    KEPT = 'flagplot-directives-' + location.port + '-' + side; received = {}; readOnes = {}; recalled = false;
+    KEPT = KEPT_ROOT + '-' + side; received = {}; readOnes = {}; recalled = false;
     dayCache = {}; lastTold = []; lastRun = null; seatSeen = ''; $('plot').textContent = ''; $('plot').hidden = true;
     $('sheet').hidden = true; $('card').hidden = true; clearPlan(); headSeat(); sideButtons();
     watchTools().then(refresh).then(pollSeats).catch(function (e) { setStatus(e.message); });
   }
   function startWatch() {
     var w = config.watch; WATCH = { side: config.seat, agents: w.agents, insideDay: w.inside_day, directives: w.directives || {} };
-    document.body.classList.add('watched'); KEPT = 'flagplot-directives-' + location.port + '-' + WATCH.side;
+    document.body.classList.add('watched'); KEPT = KEPT_ROOT + '-' + WATCH.side;
     headSeat(); sideButtons(); $('btn-stops').hidden = false; $('btn-day').textContent = w.inside_day ? 'Next pulse' : 'Next day';
     setInterval(pollSeats, 2000);
     return watchTools().then(refresh).then(pollSeats);
+  }
+
+  // ---- a person against an agent (decision 0185): no watcher; the clock moves when both have finished ----
+  // The other commander is shown only as at his seat or not, and waited for or not. Nothing else of his
+  // side or of his calls reaches this page.
+  function finishedWords() { return 'You have finished, and cannot take it back until the clock moves. It moves when the ' + SIDE_NAME[VERSUS.other] + ' commander has finished too.'; }
+  function showVersus(st) {
+    var box = $('seatbox'); box.textContent = '';
+    var seat = (st.seats || []).filter(function (x) { return x.seat === VERSUS.other; })[0] || {}, a = el('article', 'slip'), f = el('div', 'from');
+    var word = st.game_over ? 'ENDED' : !seat.at_seat ? 'NOT YET AT HIS SEAT' : seat.waited_for ? 'WAITED FOR' : 'READY';
+    f.appendChild(el('span', '', 'THE ' + SIDE_NAME[VERSUS.other].toUpperCase() + ' COMMANDER')); f.appendChild(el('span', 'stamp' + (word === 'READY' ? ' ok' : ''), word));
+    a.appendChild(f); box.appendChild(a);
+  }
+  function pollVersus() { return fetch(BASE + '/standing').then(function (r) { return r.json(); }).then(function (a) { if (a.ok) showVersus(a.ok); }).catch(function () {}); }
+  function startVersus() {
+    VERSUS = { other: config.versus.other, insideDay: config.versus.inside_day };
+    setInterval(pollVersus, 2000); pollVersus();
+  }
+
+  // ---- the new game screen (decision 0185): the scenario, the seat, who plays the other side ----
+  var SIDES = ['allied', 'japanese'], ENGINE_IS = {
+    staff: function (s) { return 'The ' + s + ' side is the engine\'s: its staff carries out the orders the scenario gives that side, day by day.'; },
+    script: function (s) { return 'The ' + s + ' side is the engine\'s: its forces follow the orders the scenario gives them, as written.'; },
+    none: function (s) { return 'The ' + s + ' side is the engine\'s, and the scenario gives it no orders: its units do only what they do by themselves.'; }
+  };
+  function copyRow(parent, text) {
+    var row = el('div', 'copy'), pre = el('pre', '', text), b = el('button', '', 'COPY'); b.type = 'button';
+    b.addEventListener('click', function () { var done = function () { b.textContent = 'COPIED'; setTimeout(function () { b.textContent = 'COPY'; }, 1500); }; try { navigator.clipboard.writeText(text).then(done, function () { selectIn(pre); }); } catch (e) { selectIn(pre); } });
+    row.appendChild(pre); row.appendChild(b); parent.appendChild(row);
+  }
+  function selectIn(node) { try { var r = document.createRange(); r.selectNodeContents(node); var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(r); } catch (e) {} }
+  // How an agent takes a side's seat: what to copy, and what the person is told beside it.
+  function agentSeat(parent, side, scenario) {
+    var box = el('div', 'agentseat'); box.appendChild(el('h3', '', 'The ' + SIDE_NAME[side] + ' seat, for an agent')); parent.appendChild(box);
+    var said = el('div', 'says', 'Asking the table.'); box.appendChild(said);
+    return fetch(BASE + '/agent?side=' + side + (scenario ? '&scenario=' + encodeURIComponent(scenario) : '')).then(function (r) { return r.json(); }).then(function (a) {
+      if (a.refused != null) throw new Error(a.refused); a = a.ok; box.removeChild(said);
+      box.appendChild(el('div', 'lab', 'For Claude Code, run this once in the folder the model works in:')); copyRow(box, a.claude);
+      box.appendChild(el('div', 'lab', 'For a client that takes its tool servers from a settings file, add this entry. Such a client reads the file when it starts: start it again after adding it.')); copyRow(box, a.settings);
+      box.appendChild(el('div', 'lab', 'The door, for a program that speaks to it directly:')); copyRow(box, a.door);
+      box.appendChild(el('div', 'lab', 'The brief, to give the model:')); copyRow(box, a.brief);
+      var ul = el('ul'); a.notes.forEach(function (n) { ul.appendChild(el('li', '', n)); }); box.appendChild(ul);
+    }).catch(function (e) { said.textContent = 'The table could not say: ' + e.message; });
+  }
+  function showScreen() {
+    var paper = $('newgame-paper'), pick = { scenario: null, seat: null, allied: 'engine', japanese: 'engine' }, list = [];
+    $('newgame').hidden = false; document.querySelector('.top').hidden = true; document.querySelector('.bar').hidden = true; document.querySelector('.view').hidden = true; document.querySelector('.tray').hidden = true;
+    paper.textContent = ''; paper.appendChild(el('h2', '', 'A NEW GAME')); paper.appendChild(el('div', 'says', 'Asking the table for its scenarios.'));
+    function pairings() { var s = list.filter(function (x) { return x.id === pick.scenario; })[0]; return s ? s.pairings : []; }
+    function holderOf(p, side) { return pick.seat === side ? 'person' : p[side]; }
+    function fits(p) { if (pick.seat === 'watch') return p.allied !== 'person' && p.japanese !== 'person'; return p[pick.seat] === 'person'; }
+    function chosen() { var other = SIDES.filter(function (s) { return s !== pick.seat; })[0]; return pairings().filter(function (p) { if (!fits(p)) return false; if (pick.seat === 'watch') return p.allied === pick.allied && p.japanese === pick.japanese; return p[other] === pick[other]; })[0]; }
+    function seg(parent, name, options, value, onPick) {
+      var row = el('div', 'frow'), span = el('span', 'seg'); row.appendChild(el('span', 'fl', name));
+      options.forEach(function (o) { var lab = el('label'), inp = el('input'); inp.type = 'radio'; inp.name = 'ng-' + name; inp.checked = o[0] === value; inp.disabled = !o[2]; inp.addEventListener('change', function () { onPick(o[0]); }); lab.appendChild(inp); lab.appendChild(el('span', '', o[1])); span.appendChild(lab); });
+      row.appendChild(span); parent.appendChild(row);
+    }
+    function draw() {
+      paper.textContent = ''; paper.appendChild(el('h2', '', 'A NEW GAME'));
+      paper.appendChild(el('h3', '', 'The scenario'));
+      list.forEach(function (s) {
+        var lab = el('label', 'pick'), inp = el('input'), body = el('div'); inp.type = 'radio'; inp.name = 'ng-scenario'; inp.checked = s.id === pick.scenario;
+        inp.addEventListener('change', function () { pick.scenario = s.id; pick.seat = null; settle(); draw(); });
+        body.appendChild(el('strong', '', s.name)); body.appendChild(el('div', '', '')); body.lastChild.appendChild(el('small', '', s.dates + ' \u00B7 ' + (s.days === 1 ? 'one day' : s.days + ' days')));
+        (s.lines || []).forEach(function (t) { body.appendChild(el('div', '', t)); });
+        SIDES.forEach(function (side) { if (s.sides && s.sides[side]) { var d = el('div', 'to'); d.appendChild(el('b', '', SIDE_NAME[side].toUpperCase())); d.appendChild(document.createTextNode(s.sides[side])); body.appendChild(d); } });
+        lab.appendChild(inp); lab.appendChild(body); paper.appendChild(lab);
+      });
+      var ps = pairings(); if (!ps.length) return;
+      paper.appendChild(el('h3', '', 'Your seat'));
+      seg(paper, 'Seat', [['allied', 'Allied', ps.some(function (p) { return p.allied === 'person'; })], ['japanese', 'Japanese', ps.some(function (p) { return p.japanese === 'person'; })], ['watch', 'Watch', ps.some(function (p) { return p.allied !== 'person' && p.japanese !== 'person'; })]], pick.seat, function (v) { pick.seat = v; settle(); draw(); });
+      if (pick.seat === 'watch') {
+        paper.appendChild(el('h3', '', 'Each side'));
+        SIDES.forEach(function (side) { seg(paper, SIDE_NAME[side], [['engine', 'The engine', ps.some(function (p) { return fits(p) && p[side] === 'engine'; })], ['agent', 'An agent', ps.some(function (p) { return fits(p) && p[side] === 'agent'; })]], pick[side], function (v) { pick[side] = v; settle(v, side); draw(); }); });
+      } else if (pick.seat) {
+        var other = SIDES.filter(function (x) { return x !== pick.seat; })[0];
+        paper.appendChild(el('h3', '', 'The other side'));
+        seg(paper, SIDE_NAME[other], [['engine', 'The engine', ps.some(function (p) { return fits(p) && p[other] === 'engine'; })], ['agent', 'An agent', ps.some(function (p) { return fits(p) && p[other] === 'agent'; })]], pick[other], function (v) { pick[other] = v; draw(); });
+      }
+      var p = chosen(); if (!p) return;
+      var says = el('div', 'says'); paper.appendChild(el('h3', '', 'The game')); paper.appendChild(says);
+      if (pick.seat === 'watch') says.appendChild(el('div', '', 'You give no orders. You hold the clock, and read what each commander reads.'));
+      else says.appendChild(el('div', '', 'You command the ' + SIDE_NAME[pick.seat] + ' side. It begins with no orders: you give them.'));
+      SIDES.forEach(function (side) { var h = holderOf(p, side); if (h === 'engine') says.appendChild(el('div', '', ENGINE_IS[p.engine || 'none'](SIDE_NAME[side]))); else if (h === 'agent') says.appendChild(el('div', '', 'The ' + SIDE_NAME[side] + ' side is an agent\'s: a model you set up takes its seat, as below. It begins with no orders. The game opens without waiting for it.')); });
+      var agents = SIDES.filter(function (side) { return holderOf(p, side) === 'agent'; });
+      agents.forEach(function (side) { agentSeat(paper, side, pick.scenario); });
+      var row = el('div', 'row'), go = el('button', 'go', 'BEGIN'), note = el('span', 'says', ''); go.type = 'button'; row.appendChild(go); row.appendChild(note); paper.appendChild(row);
+      go.addEventListener('click', function () {
+        go.disabled = true; note.textContent = 'Opening the game.';
+        var body = { scenario: pick.scenario }; SIDES.forEach(function (side) { body[side] = holderOf(p, side); });
+        fetch(BASE + '/begin', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then(function (r) { return r.json(); })
+          .then(function (a) { if (a.refused != null) throw new Error(a.refused); location.reload(); })
+          .catch(function (e) { go.disabled = false; note.textContent = 'It could not begin: ' + e.message; });
+      });
+    }
+    // After a choice, the first game still offered: the seat, then who plays each other side.
+    function settle(v, side) {
+      var ps = pairings(); if (!ps.length) return;
+      if (!pick.seat || !ps.some(fits)) pick.seat = ['allied', 'japanese', 'watch'].filter(function (x) { var keep = pick.seat; pick.seat = x; var ok = ps.some(fits); pick.seat = keep; return ok; })[0];
+      if (chosen()) return;
+      var p = ps.filter(function (q) { return fits(q) && (!side || q[side] === v); })[0] || ps.filter(fits)[0];
+      SIDES.forEach(function (x) { if (x !== pick.seat) pick[x] = p[x]; });
+    }
+    fetch(BASE + '/scenarios').then(function (r) { return r.json(); }).then(function (a) { list = a.scenarios || []; if (list.length) pick.scenario = list[0].id; settle(); draw(); })
+      .catch(function (e) { fatal('The table could not read its scenarios: ' + e.message); });
+  }
+  // From the table: what an agent at a seat of this game is given to copy, behind its own button.
+  function readAgentSeats() {
+    var doc = $('sheet-doc'); doc.textContent = '';
+    doc.appendChild(el('p', '', 'What an agent is given to take its seat in this game. Give each agent its own and nothing else.'));
+    config.home.agents.forEach(function (side) { agentSeat(doc, side, null); });
+    sheetAs('THE AGENT\'S SEAT'); doc.hidden = false; $('sheet-text').hidden = true; $('sheet').hidden = false; $('sheet-close').focus();
   }
 
   // ---- an order to a force at 0600 or 1200: touch the force, choose, sign (decision 0156) ----
@@ -2524,6 +2665,15 @@ body.watched .gives { display: none !important; }
     clearTimeout(restartAsked); b.disabled = true; setStatus('Beginning again.');
     fetch(BASE + '/restart', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }).then(function (r) { return r.json(); }).then(function (a) { if (a.refused != null) throw new Error(a.refused); try { history.replaceState(null, '', location.pathname); } catch (e) {} location.reload(); }).catch(function (e) { b.disabled = false; setStatus('It could not begin again: ' + e.message); });
   });
+  // A new game is asked twice too: it ends the game in hand, whoever is at a seat, and opens the screen.
+  var newAsked = 0;
+  $('btn-new').addEventListener('click', function () {
+    var b = this;
+    if (!newAsked) { b.classList.add('ask'); setStatus('Touch it again to end this game and choose another.'); newAsked = setTimeout(function () { newAsked = 0; b.classList.remove('ask'); }, 5000); return; }
+    clearTimeout(newAsked); b.disabled = true; playing = false; setStatus('Ending this game.');
+    fetch(BASE + '/new', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }).then(function (r) { return r.json(); }).then(function (a) { if (a.refused != null) throw new Error(a.refused); try { history.replaceState(null, '', location.pathname); } catch (e) {} location.reload(); }).catch(function (e) { b.disabled = false; setStatus('It could not end the game: ' + e.message); });
+  });
+  $('btn-agent').addEventListener('click', readAgentSeats);
   $('btn-stops').addEventListener('click', function () { var f = $('stops'); f.hidden = !f.hidden; this.setAttribute('aria-expanded', String(!f.hidden)); });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !$('stops').hidden) { $('stops').hidden = true; $('btn-stops').setAttribute('aria-expanded', 'false'); } });
   $('btn-back').addEventListener('click', function () { goal.x = 0; goal.z = 0; goal.zoom = 0; });
@@ -2558,11 +2708,16 @@ body.watched .gives { display: none !important; }
     renderer.render(scene, camera); requestAnimationFrame(frame);
   }
 
-  Promise.all([fetch(BASE + '/config').then(function (r) { return r.json(); }), fetch(BASE + '/map').then(function (r) { return r.json(); }), fetch(BASE + '/coast').then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }), fetch(BASE + '/names').then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; })]).then(function (a) {
+  var onScreen = false;
+  fetch(BASE + '/config').then(function (r) { return r.json(); }).then(function (c) {
+    if (c.screen) { onScreen = true; showScreen(); return; }
+    return Promise.all([c, fetch(BASE + '/map').then(function (r) { return r.json(); }), fetch(BASE + '/coast').then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }), fetch(BASE + '/names').then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; })]).then(function (a) {
     config = a[0]; hexes = a[1]; coast = a[2] && a[2].rings; chartNames = a[3]; headSeat();
     var ready = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
-    return ready.then(function () { layChart(); cur.zoom = 0; placeCamera(); requestAnimationFrame(frame); if (config.watch) return startWatch(); return fetch(BASE + '/tools').then(function (r) { return r.json(); }).then(function (names) { names.forEach(function (n) { OFFERED[n] = true; }); $('btn-stops').hidden = !OFFERED.advance; if (OFFERED.advance) $('btn-day').textContent = 'Next pulse'; return refresh(); }); });
-  }).then(function () { var shown = true; try { shown = localStorage.getItem('flagplot.hint.look') === '1'; localStorage.setItem('flagplot.hint.look', '1'); } catch (e) {} setStatus(shown ? '' : 'Drag to look along the table; scroll to lean in.'); })
+    if (config.home) { KEPT_ROOT += BASE + '-' + config.home.number; KEPT = KEPT_ROOT; $('btn-new').hidden = false; $('btn-agent').hidden = !config.home.agents.length; }
+    return ready.then(function () { layChart(); cur.zoom = 0; placeCamera(); requestAnimationFrame(frame); if (config.watch) return startWatch(); if (config.versus) startVersus(); return fetch(BASE + '/tools').then(function (r) { return r.json(); }).then(function (names) { names.forEach(function (n) { OFFERED[n] = true; }); $('btn-stops').hidden = !OFFERED.advance; if (OFFERED.advance) $('btn-day').textContent = 'Next pulse'; return refresh(); }); });
+  });
+  }).then(function () { if (onScreen) return; var shown = true; try { shown = localStorage.getItem('flagplot.hint.look') === '1'; localStorage.setItem('flagplot.hint.look', '1'); } catch (e) {} setStatus(shown ? '' : 'Drag to look along the table; scroll to lean in.'); })
     .catch(function (e) { fatal('The table could not reach the game: ' + e.message); });
 })();
 </script>
