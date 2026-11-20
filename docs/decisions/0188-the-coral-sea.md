@@ -290,3 +290,15 @@ Read on Nov 20, 2026: the team's two reports and every one of the 44 exceptions 
 5. **Six destroyers have no experience value** (one unconfirmed commissioning row each). They take what the rules give a ship not answered. A second source for each is wanted.
 6. **This list's check is added to the commands run before a commit** (`CLAUDE.md`), by the architect.
 7. **Stage A is done.** Stage B, the scenario, begins with the architect's hand calculation. Still open for it: the convoy's men, the garrison and the port, which are placeholders, and the number of transports.
+
+## Stage B: the hand calculation, and its review
+
+Written by the architect on Nov 20, 2026 as the doc comment of `tests/scenario_105_the_coral_sea.rs`, then read by a reviewer who had not seen it written, who checked every row and number and played one trial game of it. Eighteen findings. What they changed:
+
+1. **Ten transports, not nine.** A ship carries the men of one unit, so the landing force needs a ship of its own.
+2. **The support group is moved by an order of the commander's.** A staff stands a surface force only from a home port, and this force has none: the order to deny the waters with it did nothing, and it lay idle for five days in the trial.
+3. **The Allied bombers are ordered to strike transports first.** A strike takes the most important kind first, and in the trial every aircraft sent at the convoy hit its escort.
+4. **The Allied carriers' station is (-12,1),** from which every bomber aboard reaches the convoy's route; from the first choice only the SBD-3 did. The architect's arithmetic of its distance was wrong and is corrected.
+5. **Corrections to this record:** Rabaul has two bomber groups, 41 aircraft, where amended 41 counted one of 24. Lexington's squadrons are read from her own report's rows for 7 May, which have better standing than the low row ruling 18 named. The convoy's hour of leaving is on the Japanese clock and is converted. Its transports go no faster than 6.5 kn, which a row calls their most.
+6. **The architect saw the trial game before amending the orders,** and says so in the hand calculation: the Japanese side won it by 41.56 points on the landing. The changes of 2 and 3 and the nine transports mend what did nothing or could not load; the change of 4 is for a reason the mission gives. The Japanese orders are as first written.
+7. **Expected, and reported by the build without being mended:** the men ashore count the garrison and wait for twice its number, so Port Moresby is not attacked (amended 34 is true only until they land); the Striking Force closes only on what it takes for a carrier, and stayed out of the trial's fight until day 5; Shoho's torpedo planes are her force's search and do not strike.
