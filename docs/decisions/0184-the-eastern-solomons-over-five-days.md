@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 20, 2026, at the designer's aski
 
 Summary: The 39 days are lopsided: in seven games between agents the Allied side won all seven decisively, because its landing arrives on the first day and the Japanese fleet on the seventeenth. The designer asked for a second scenario of about five days, small and interesting, that either side can win. This is the Eastern Solomons, 22 to 26 August 1942: three Japanese carriers against two American and an airfield, with a Japanese troop convoy that must reach Guadalcanal. It is made almost wholly of what the repository holds. It is played from orders by a commander or a staff on each side, has no scripted orders, and its points are set after a first run so that the results are spread. Six questions for the designer
 
-Standing: Confirmed by the designer on Nov 20, 2026, as amended on review: five days from 23 August, on the game's one scale of points, with a first run of staffs shown to him before any scale of its own. Not built: the hand calculation is next
+Standing: Confirmed by the designer and built on Nov 20, 2026. The first run of 1,000 games of staffs is no contest yet (the Allied side wins 846): a second version of the orders is the architect's to make, and whether landing the convoy is to score is put to the designer
 
 ## Why
 
@@ -158,3 +158,57 @@ The designer answered the two questions put to him:
 Questions 3 and 4 go as recommended, as the architect's to carry unless he says otherwise: Wasp, Kondo, Mikawa and Chitose are left out with the ships that cannot be rated, and a person's default seat is the Allied one. Question 5, the research for Coral Sea, is not begun on this answer: it waits for his word.
 
 Next: the hand calculation, written by the architect, and then the build.
+
+## As built
+
+Built on Nov 20, 2026 to the hand calculation in `tests/scenario_103_the_eastern_solomons_over_five_days.rs` (scenario 103). No rule, no state and no figure changed; no row under `data/oob`, `data/reference` or `data/derivation` was added or changed; scenario 5, its frozen copy and its variants are untouched (a test pins their bytes).
+
+**What was built.**
+
+- `data/scenarios/five-days/base_eastern_solomons.toml`, the base, itself a scenario that loads; and the four files made from it by `scripts/five-days/make_files.py` (with `--check`): `01a_eastern_solomons.toml` (both sides given the orders of the hand calculation), `01b` (the Japanese side alone), `01c` (the Allied side alone), `01d` (neither). They share one header and differ in their names and `[[command]]` tables only. The folder is walked by no loop over `data/scenarios/*.toml` (decision 0072).
+- The forces, places, starts, orders and objectives of the hand calculation, each figure with its row or marked a placeholder beside it; the ships left out are named in the file with the reason.
+- The tests under the doc comment: 36 that pass and one ignored, the mismatch below.
+- The first run, `docs/validation/five-days-eastern-solomons-first-run.md`, with the helper `tests/five_days_first_run.rs` (ignored; run by hand) and the reader `scripts/five-days/read_first_run.py`. Of 1,000 games of file a, the Allied side wins 846 (404 decisive, 286 major, 156 minor), the Japanese side 26 (23 minor, 3 major), and 128 are stalemates. In every game the convoy lands all 1,500 men and 90 t on the night of day 2 before it is struck, and Lunga is shut on any day in 14. The staff's reasons for it are in the report. No point, level or figure was changed in its light.
+- `docs/commands.md` (the two scripts and the helper) and `docs/open-work.md`. No new word, so no change to the glossary.
+
+**A mismatch with the hand calculation, for the architect.** The calculation puts the 800 men of the Yokosuka 5th on transport 3 and has them land in 6 hours 9 minutes. The placeholder troop transport, class 10, has 600 berths, and a ship carries the men of one unit only, so the loader puts 600 on transport 3, 152 on Kagero (class 3011, 152 berths) and 48 on Kawakaze, the force's ships in order. The test of that statement is kept as written and ignored (`transport_3_carries_the_800_of_the_yokosuka_5th`); the statements of the rates (2.6 t an hour, 130 men an hour, 2 hours 42 minutes for 350 men) pass. In the game the staff's own projection lands 42 t from transport 3 (600 men and 30 t of supply) against 20.8 t a night.
+
+**Readings the record and the hand calculation did not make, numbered for the architect to rule on.**
+
+1. **The class files.** The scenario names the 39 days' five class files, not only the three whose classes it uses, because the 39 days' file of sides, which it names (`class_sides_full_slice.csv`), gives classes 1 to 12 and the loader refuses a file of sides that gives a class the scenario's class files do not. No new reference file was made.
+2. **Kagero's class** is 3011 (the Guadalcanal landings' list, which names her), not 2001, the Eastern Solomons' "Kagero class", whose list names her sisters and not her.
+3. **Numbers.** Ships 1 to 36, task forces 1 to 4 and air groups 1 to 8 and 11 to 26 are scenario 5's. Lunga's squadrons take scenario 5's numbers for the same squadrons, 9 and 10, with the 39 days' types (2100 and 2101, which rate as 2000 and 2001) and strengths (19 and 12). Rabaul's groups, the 39 days' 1 and 2, are 27 and 28, since scenario 5 uses 1 and 2. The convoy is task force 5, ships 37 to 43. The land units at Lunga and Tulagi keep the 39 days' numbers 1 to 8; the Japanese units are 26 (Taivu) and 27 to 29 (the convoy). The bases keep the 39 days' numbers: Lunga 1, Rabaul 2, Tulagi 4, Taivu 5.
+4. **No pilots are counted,** at Rabaul or Lunga either (amended 19 read as the whole scenario's); the 39 days counts pilots at Rabaul. Rabaul's streams of replacements and its 6th Air Group (which arrives on 31 August) are left out: the calculation names the bombers, the fighters and the supply only.
+5. **The Ichiki men are two units of 350,** one for each of transports 1 and 2, as the calculation places them; the rows give 700 as one figure. Their formation is the second echelon (land_units 1024, not in the 39 days); the Yokosuka men's is 1033 and the Taivu survivors' 1023, as in the 39 days. The Marines' formations are the 39 days'.
+6. **Lunga** takes the 39 days' guns (8) and repairs a day (3), its placeholders for Henderson Field; no fuel. **Rabaul** takes its supply (10,000 t) and repairs a day (4); no fuel, since no ship is based there.
+7. **Tulagi's stock: a placeholder of 303 t,** not in the calculation: ten days for its 6,075 men, by the rule the 39 days uses for Tulagi's stock. With none, its men go unfed and lose a share each day (`unfed_loss_share_per_day`), which would score the Japanese side about 14 points for a place that takes no part.
+8. **Taivu** is the 39 days' base 5 as it stands: off the enemy's map (`on_map = false`), no airfield, no supply.
+9. **What each side believes:** the two carrier forces the 39 days states (an Allied belief of a Japanese carrier force, a Japanese belief of an Allied one, eight ships each, standing unknown), marked as resting on no source. The 39 days' Japanese cruiser force at Rabaul (Mikawa's, left out) and its believed intents (the Japanese side holding Lunga and Tulagi, both Allied here) are not about the forces of this scenario and are not stated; the 39 days has no `[[believed_men]]`, so none is stated, and no `[[estimate]]`.
+10. **The islands** are stage 3's proof's: Guadalcanal of Lunga, Tulagi of Tulagi. Taivu is not a place of Guadalcanal in them.
+11. **"Operate ... each with its own air groups"** is read as no forces limit on the four carrier intents: with none, an intent addressed to a task force may use the groups aboard its ships.
+12. **"Neutralise Lunga, its forces the bombers at Rabaul"** names group 27 alone, so the raids go unescorted (the staff says "the fighters can give 0 escorts"); the Tainan fighters are given nothing.
+13. **"Hold Lunga, its forces the four land units"** names the pioneers, a working unit, with the three fighting units.
+14. **"Ships out of action, over the horizon"** is `ships_out_of_action`, which takes the place of `ships_crippled` (the loader refuses both); scenarios 5 and 7 use `ships_crippled`.
+15. **The convoy has no home port** (where it sailed from is disputed), and the hold names no source; the staff then takes Taivu as the source and the convoy lies there after landing, where its destroyers are struck.
+16. **The missions** are rules 11 and 12 in the second person: "Land the convoy's men and supply on Guadalcanal, shut the airfield at Lunga, and sink the American carriers"; "Keep the airfield at Lunga open, stop the convoy, and sink the Japanese carriers while keeping your own." The history note is scenario 5's, used as it is: it does not speak of the convoy.
+17. **The base file** sits in the scenario's folder and loads as a scenario itself, so that its relative paths are the files' own.
+18. **The tests** pin the bytes of the 17 files of scenario 5 and its variants (an FNV digest each) for "scenario 5 is untouched", and run `python3` for the script's check, so CI needs Python 3.
+19. **A directive for each side for the table** ("What is built") is not built: the mission sentences stand for it.
+
+**Not verified.** The landing hour by hour against the calculation's times (only the rates and the staff's projection are checked); the four games between agents of rule 19; a seat played beyond opening, listing its tools and answering `trial`; CI on the pushed commit.
+
+## The architect's rulings on the build
+
+Read on Nov 20, 2026, with the build's report, its "As built" and the report of the first run.
+
+1. **The mismatch was the architect's mistake,** and is corrected by him in the hand calculation: a placeholder transport has 600 berths, so the 800 men of the Yokosuka 5th are 600 on transport 3 and 152 and 48 on two destroyers, and transport 3 lands its 600 in 4 hours 37 minutes. The test left ignored is replaced by one of the corrected statement.
+2. **The readings of "As built" stand,** among them: the class files of the 39 days loaded so that its file of sides loads; ships out of action in place of ships crippled, which a scenario may not have both of; Lunga's guns and repairs and Rabaul's supply taken from the 39 days; and Tulagi given a stock of its own, a placeholder, so that its men are fed. That the four files' test runs Python, which CI has, stands.
+3. **The first run shows no contest yet, and the scenario is not changed in its light by this build.** Of 1,000 games of staff against staff the Allied side won 846, the Japanese 26, with 128 stalemates. The counts say why:
+   - **the convoy landed whole in every game** and a transport was sunk in 5: it sails by night and is sighted only beyond strike range, Lunga's dive bombers search and do not strike, and no Allied order strikes ships from Lunga;
+   - **landing it is worth 0.45 points:** 90 t of supply, and men landed score nothing;
+   - **Lunga was shut on some day in 14 games:** the bombers go without escort, since the order names them alone, and rest after two or three raids;
+   - **the convoy does not leave** when it has landed: the hold names no base to return to;
+   - the carriers do meet, in most games, and that part is a fight: a carrier is sunk on one side or the other in about a third of the games each.
+4. **What is the architect's to mend, in a second version of the orders a side the engine plays is given:** the Japanese hold names the base the convoy returns to; the order to neutralise Lunga names Rabaul's fighters with its bombers; and the Allied side is given an order to deny the waters north of Guadalcanal, so that Lunga's dive bombers and the carriers strike what comes down. Each is an order of the game as it stands. They are made in a second build, with the 1,000 games run again and both runs kept.
+5. **What is the designer's:** landing the convoy scores almost nothing, because the game has no objective for men put ashore. Whether to add one, and whether this scenario is then to have points of its own, is put to him with both runs.
+6. **Not seen:** a game from a seat beyond its opening, and games between agents.

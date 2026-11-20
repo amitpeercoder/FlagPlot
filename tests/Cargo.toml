@@ -551,3 +551,11 @@ path = "scenario_101_a_game_watched.rs"
 [[test]]
 name = "scenario_102_the_enemys_objectives_shown"
 path = "scenario_102_the_enemys_objectives_shown.rs"
+
+[[test]]
+name = "scenario_103_the_eastern_solomons_over_five_days"
+path = "scenario_103_the_eastern_solomons_over_five_days.rs"
+
+[[test]]
+name = "five_days_first_run"
+path = "five_days_first_run.rs"
