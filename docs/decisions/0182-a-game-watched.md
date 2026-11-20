@@ -252,3 +252,15 @@ Built on Nov 20, 2026: the table's bridge in watch mode, a door for each agent's
 - **The page in a browser.** Its script parses, and nothing else of it was run. To be looked at: the watched heading and the side switch (and that switching changes the heading, the words for a base taken and the directives, and that a side with no directives file shows none); that no control that orders shows anywhere (the signals, the force, base and air group cards, the plan sheet, the order form, the leave's switch); the seat slips and the calls' words; Next pulse, Carry on and Stop, the plot of a pulse and of a day, the wait for a seat, and Carry on stopping on what is ticked; the directives kept apart for each side across a reload; Begin again.
 - **A game played by models.** The doors were called by scripts only.
 - **A watched game with a trial,** and the dry run among the reads of the tripwire (ruling 1, owed).
+
+## The architect's rulings on step 2
+
+Read on Nov 20, 2026, and looked at in a browser on a watched game of the Eastern Solomons with both seats played by hand through their doors.
+
+1. **Seen to work on the page:** the heading and the switch between the sides; no control that orders, on the chart, the plan sheet or the leave switch; each seat's slip with ready or waited for, its calls in words and the reason it gave; Next pulse stepping the clock once both seats were ready; and no error in the page's console. Not looked at: Carry on stopping on what is ticked, the directives kept apart by side, and a restart.
+2. **The watcher's key in the page's address** stands (reading 1): nothing is served without it.
+3. **Carry on's loop is the page's.** Stands: the bridge passes steps and knows nothing of pace, as rule 4 has it.
+4. **The watcher looks only from a side an agent plays** (reading 5). It stands for now and is narrower than ruling 6 on step 1: looking from the engine's side of a game against the engine is owed, a line's change.
+5. **The door holds any slow call,** and a call made before `wait` has collected an answer is refused by the door and is in no transcript (readings 3 and 4). Stand.
+6. **The page still speaks to the watcher as the commander** in places ("your order", "waits for your leave", "from staff, for decision"). It gives him nothing he may not read and lets him do nothing, but the words are wrong for a watcher. Owed: they are to say whose order and whose leave.
+7. **A seat's readiness is said shortly:** "Ready for 1 more pulse", without the clause on interrupts, and a call of time reads "Has finished, and waits for the clock". Changed by the architect on the look.

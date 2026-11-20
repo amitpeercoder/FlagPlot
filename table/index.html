@@ -2210,7 +2210,7 @@ body.watched .gives { display: none !important; }
   }
   function callLine(c, held) {
     var d = el('div', 'call' + (c.refused ? ' refused' : '')), w = argWords(c.tool, c.arguments);
-    d.appendChild(rich('span', '', (held ? 'Waits for the clock: ' : '') + (CALLED[c.tool] || c.tool.replace(/_/g, ' ')) + (w ? ' · ' + w : '') + (c.refused ? ' · refused' : '')));
+    d.appendChild(rich('span', '', held ? 'Has finished, and waits for the clock' : (CALLED[c.tool] || c.tool.replace(/_/g, ' ')) + (w ? ' \u00B7 ' + w : '') + (c.refused ? ' \u00B7 refused' : '')));
     if (c.reason) d.appendChild(el('span', 'said', '“' + c.reason + '”'));
     return d;
   }
@@ -2219,7 +2219,7 @@ body.watched .gives { display: none !important; }
     WATCH.agents.forEach(function (side) {
       var seat = (st.seats || []).filter(function (x) { return x.seat === side; })[0] || {}, a = el('article', 'slip'), f = el('div', 'from'), waited = !!seat.waited_for;
       f.appendChild(el('span', '', 'THE ' + SIDE_NAME[side].toUpperCase() + ' COMMANDER')); f.appendChild(el('span', 'stamp' + (waited ? '' : ' ok'), st.game_over ? 'ENDED' : waited ? 'WAITED FOR' : 'READY'));
-      a.appendChild(f); if (seat.until && seat.until.words && !st.game_over) a.appendChild(el('div', '', plainWords('Ready ' + seat.until.words + '.')));
+      a.appendChild(f); if (seat.until && seat.until.words && !st.game_over) a.appendChild(el('div', '', plainWords('Ready ' + seat.until.words.replace(/, or a dusk after a day on which an interrupt[^.]*/, '') + '.')));
       if (side === WATCH.side && calls) { var list = calls.calls || [];
         if (list.length > 12) a.appendChild(el('div', 'call', 'And ' + (list.length - 12) + ' calls before these.'));
         list.slice(-12).forEach(function (c) { a.appendChild(callLine(c, false)); });
