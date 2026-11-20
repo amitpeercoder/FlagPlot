@@ -1,10 +1,10 @@
 # 0184: The Eastern Solomons over five days: a small scenario two commanders can both win. A plan for the designer
 
-Status: a plan by the architect, written on Nov 20, 2026, at the designer's asking, for his confirmation. Nothing is built. It is to be read by a reviewer who has not seen it written, and amended, before it is put to him.
+Status: a plan by the architect, written on Nov 20, 2026, at the designer's asking, for his confirmation. Nothing is built. Read by a reviewer who had not seen it written, and amended on that reading ("Amended on review", which replaces what is above it where they differ) before it is put to him.
 
 Summary: The 39 days are lopsided: in seven games between agents the Allied side won all seven decisively, because its landing arrives on the first day and the Japanese fleet on the seventeenth. The designer asked for a second scenario of about five days, small and interesting, that either side can win. This is the Eastern Solomons, 22 to 26 August 1942: three Japanese carriers against two American and an airfield, with a Japanese troop convoy that must reach Guadalcanal. It is made almost wholly of what the repository holds. It is played from orders by a commander or a staff on each side, has no scripted orders, and its points are set after a first run so that the results are spread. Six questions for the designer
 
-Standing: A plan, written by the architect on Nov 20, 2026, at the designer's asking. Not yet reviewed, not confirmed and not built
+Standing: Confirmed by the designer on Nov 20, 2026, as amended on review: five days from 23 August, on the game's one scale of points, with a first run of staffs shown to him before any scale of its own. Not built: the hand calculation is next
 
 ## Why
 
@@ -90,3 +90,71 @@ No rule is added or changed, and scenario 5 is not touched.
 ## Coral Sea
 
 The designer's other thought. It is the better first battle in history, two carriers a side and an invasion to stop, and it needs what the repository does not have: the order of battle from sources, ratings for Lexington, Yorktown, Shoho and their escorts and at least one aircraft type, and a map that reaches Port Moresby. The architect recommends commissioning that research now, so that it can follow this scenario.
+
+## Amended on review
+
+An independent reading of the plan, against the scenario files, the fact rows, the map and the staff's doctrine, found that the scenario as written above would not be a contest, and several things stated wrongly. Each was checked before it was taken. This section replaces what is above it where they differ, and the questions for the designer are restated at its end.
+
+### What is so today, corrected
+
+1. **Scenario 5's two American forces hold 18 ships,** not 16.
+2. **Ships move by hexes of 40 nm.** From the map's northern edge, where scenario 5 starts the Japanese carriers, Lunga is 15 hexes, 600 nm by sea, about 33 hours at 18 kn. A placeholder transport at 10 kn takes 60 hours.
+3. **A force cannot come onto the map on a later day** (decision 0140, 4). A force with a day from which it may be used is on the map from the first day, where it can be seen and attacked, and cannot be ordered before its day.
+4. **Where the convoy sailed from is disputed** in the rows: Rabaul on 19 August, or Truk on the 16th.
+5. **Which of the convoy's destroyers are rated:** Kagero, Kawakaze, Umikaze and Suzukaze are. Isokaze is of a rated class and on no list. Mutsuki and Yayoi cannot be rated today: no row gives the rounds a gun of their main battery carried.
+6. **The islands are stated in the files of stage 3's proof,** not in the staff's setup.
+7. **The seven games between agents** are no part of the repository: they were played from the architect's session on Nov 20, 2026.
+
+### Why it was no contest, and what makes it one
+
+8. **"Keep a base supplied" lands supply and no men.** A transport force with men aboard is landed under "take a place", or under "hold" a place that is already the side's. So the Japanese order that lands the convoy is to hold Taivu with it, and without such an order it sits where it starts.
+9. **Nothing shut the airfield.** The carriers' doctrine strikes ships; it strikes a base only under a take or the control of an island. The bombers at Rabaul raid a base only under "neutralise". So the Japanese side's orders include "neutralise Lunga" for Rabaul's bombers. That carriers do not raid an airfield by doctrine is left as it is and said in the scenario's notes: a commander may order it directly.
+10. **A carrier force is told where to operate from.** Each side's carrier orders name a hex; the staff holds it there and closes on a contact no more than three pulses old (decision 0130). The hexes are part of the scenario's stated orders for a side the engine plays.
+11. **The convoy does not start at the map's edge.** From there its landing falls on the last night of five days, and the game turns on one invented speed. It starts where the rows put it on 23 August, 200 to 350 nm north of Guadalcanal (three rows, which disagree), at a stated one of them, marked a placeholder: a passage of a day to a day and a half, under Henderson's search for part of it.
+12. **So the game begins on 23 August,** with every force on the map from the first evening where the rows first place it, and no force waiting for a later day. The quiet first day is given up: a force that is on the map and cannot be ordered is a target, not a lesson.
+
+### The objectives
+
+13. **A convoy sunk is already scored:** men lost with a ship count as enemy men lost. No "men landed" kind is needed, and question 2 falls.
+14. **"Lunga open" turns on the supply it starts with** as much as on anything done to it: it is open on a day with supply above zero and one aircraft ready. The starting stock is therefore stated from the rows that bear on it (ten days of captured food on 15 August; about 2,000 t landed on 21 and 22 August) and marked a placeholder, not taken from a run of the 39 days, which is no source.
+15. **The men at Taivu at the start** are the survivors a row gives, "little more than 100", not a figure from a run.
+16. **Ships out of action against a short horizon:** any repair longer than the game counts as the whole of it (decision 0088, 4), so damage weighs nearly as a sinking. The scenario states a horizon longer than its days, as that record provides for a short scenario inside a longer operation.
+
+### Points are not fitted to a run (replaces rules 14, 17 and 18)
+
+17. **Fitting this scenario's points so that staffs split their games six to four is balancing, and the project's rules do not allow it as written:** the scale is one scale, to be set from the record (decision 0054), and nothing is tuned to pass a proof. So:
+    - the scenario is built on the game's one scale, the same worth for each kind as the other scenarios give it, all placeholders as they are;
+    - a first run of 1,000 games of staff against staff is made and reported: how often each side wins, at which level, and the counts behind it;
+    - if the designer then wants this scenario balanced by its points, that is his ruling, and it is recorded as a scale of its own for play, never compared with the record of the battle.
+
+### Data, settled by the architect
+
+18. **No real ship stands in for another.** The convoy's escorts are the rated destroyers the rows name, and "Placeholder destroyers" of a placeholder class for the rest; its transports and their speed, its supply and the hex it starts in are placeholders, each marked. Jintsu, the patrol boats, Mutsuki and Yayoi are left out and said to be, until rows allow them to be rated.
+19. **Everything starts rested.** With fatigue on, the tiredness of late August is not there; five days is short for wear to tell. Fatigue, supply and the land rules are on; wear is on and is not expected to matter. Scenario 5's air groups give no count of pilots, so pilots are not counted.
+20. **Tulagi is Allied and takes no part.** No Allied supply ship comes in during the five days; the two the rows name are left for a later version.
+
+### What a side the engine plays is given
+
+21. **The scenario comes as files for the pairings the table offers** (decision 0185): one in which the Japanese side is given its orders and the Allied side none, one the reverse, and one in which neither is. The orders, stated in the record so that they are not a builder's guess:
+    - **Japanese:** hold Taivu, with the convoy and its men; neutralise Lunga, with the bombers at Rabaul; operate each carrier force from a named hex north of the Solomons; leave to launch given.
+    - **Allied:** hold Lunga and cover it from the air with the squadrons there; operate each carrier force from a named hex south-east of Guadalcanal; leave to launch given.
+    The hexes are chosen by the architect with the hand calculation, from the reach of each side's search and strikes.
+
+### The questions for the designer, restated
+
+1. **Five days from 23 to 27 August, or three days, 23 to 25?** The reviewer proposed three, the days the battle took. The architect recommends five from the 23rd: the battle falls in the first three, and two more leave room for a second attempt by the convoy and a second strike, which is where a commander's decisions tell.
+2. **Points.** The architect recommends building on the game's one scale, running the 1,000 games and showing you the spread, and only then your deciding whether this scenario is to have a scale of its own for balance (item 17).
+3. **Wasp, Kondo, Mikawa and Chitose left out,** with Jintsu, the patrol boats and two destroyers that cannot be rated yet. Recommended.
+4. **A person's default seat is the Allied one.** Recommended.
+5. **Coral Sea commissioned as research now,** to follow. Recommended.
+
+## Confirmed on Nov 20, 2026
+
+The designer answered the two questions put to him:
+
+1. **Five days, 23 to 27 August.**
+2. **The game's one scale of points, then decide:** the scenario is built on it, 1,000 games of staff against staff are run and their spread shown to him, and he then decides whether this scenario is to have a scale of its own.
+
+Questions 3 and 4 go as recommended, as the architect's to carry unless he says otherwise: Wasp, Kondo, Mikawa and Chitose are left out with the ships that cannot be rated, and a person's default seat is the Allied one. Question 5, the research for Coral Sea, is not begun on this answer: it waits for his word.
+
+Next: the hand calculation, written by the architect, and then the build.
