@@ -568,6 +568,8 @@ fn air_group(
         strike_sizing_order: None,
         search_once: false,
         search_once_order: None,
+        strike_first_waters: BTreeSet::new(),
+        waters_order: None,
         available_from: None,
         // A group made for a trial's enemy starts at nothing (decision
         // 0180, 6).

@@ -35,7 +35,9 @@
 //! left out clears the limit. Decision 0159, 12: `"knowledge"` has `intent`,
 //! `knowledge` (`"none"`, `"count"` or `"recent_count"`; left out clears the
 //! limit) and, with `"recent_count"` alone, `within_days` (3 where left
-//! out).
+//! out). Decision 0190: `"targets"` has `intent`, `kinds` (ship kind names,
+//! most wanted first; left out or empty clears the limit) and `waters_first`
+//! (a bool, false where left out).
 
 use std::collections::BTreeSet;
 
@@ -43,7 +45,7 @@ use serde::Deserialize;
 use sim_core::command::{
     Awaited, CommandKind, ForcesLimit, HeldSetting, HoldTarget, IntentKind, InterruptCondition,
     InterruptRef, InterruptSetting, Knowledge, Leave, Limit, PlanId, Risk, StandingKind,
-    StandingSubject, Want, Wants,
+    StandingSubject, TargetsLimit, Want, Wants,
 };
 use sim_core::hex::Hex;
 use sim_core::ids::{AirGroupId, BaseId, IntentId, InterruptId, LandUnitId, ShipId, TaskForceId};
@@ -88,6 +90,8 @@ pub(crate) struct CommandSpec {
     other_intent: Option<u32>,
     knowledge: Option<String>,
     within_days: Option<i64>,
+    kinds: Option<Vec<String>>,
+    waters_first: Option<bool>,
     leave: Option<String>,
     given: Option<bool>,
     plan: Option<u32>,
@@ -139,6 +143,8 @@ impl CommandSpec {
         note(self.other_intent.is_some(), "other_intent");
         note(self.knowledge.is_some(), "knowledge");
         note(self.within_days.is_some(), "within_days");
+        note(self.kinds.is_some(), "kinds");
+        note(self.waters_first.is_some(), "waters_first");
         note(self.leave.is_some(), "leave");
         note(self.given.is_some(), "given");
         note(self.plan.is_some(), "plan");
@@ -225,9 +231,10 @@ impl CommandSpec {
             }
             ("set_limit", Some("after")) => &["limit", "intent", "other_intent"],
             ("set_limit", Some("knowledge")) => &["limit", "intent", "knowledge", "within_days"],
+            ("set_limit", Some("targets")) => &["limit", "intent", "kinds", "waters_first"],
             ("set_limit", Some(other)) => {
                 return Err(format!(
-                    "{what} has limit \"{other}\", which is not forces, area, priority, protected, reserve, risk, not_before, wait_for, after or knowledge"
+                    "{what} has limit \"{other}\", which is not forces, area, priority, protected, reserve, risk, not_before, wait_for, after, knowledge or targets"
                 ))
             }
             ("set_limit", None) => {
@@ -527,6 +534,29 @@ impl CommandSpec {
                         (None, None) => None,
                     },
                 },
+                // Decision 0190: `kinds` (ship kind names, most wanted first)
+                // left out or empty clears the limit; `waters_first` is
+                // false where left out.
+                Some("targets") => Limit::Targets {
+                    intent: intent()?,
+                    targets: match self.kinds.as_deref() {
+                        None | Some([]) => None,
+                        Some(names) => {
+                            let mut kinds = Vec::new();
+                            for name in names {
+                                kinds.push(crate::reference::parse_kind(name).ok_or_else(|| {
+                                    format!(
+                                        "{what} has kind \"{name}\", which is not a kind of ship (carrier, battleship, cruiser, destroyer, transport or auxiliary)"
+                                    )
+                                })?);
+                            }
+                            Some(TargetsLimit {
+                                kinds,
+                                waters_first: self.waters_first.unwrap_or(false),
+                            })
+                        }
+                    },
+                },
                 _ => {
                     let name = self
                         .risk
@@ -732,6 +762,8 @@ impl BelievedIntentSpec {
             other_intent: None,
             knowledge: None,
             within_days: None,
+            kinds: None,
+            waters_first: None,
             leave: None,
             given: None,
             plan: None,

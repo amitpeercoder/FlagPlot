@@ -204,9 +204,21 @@ mod record {
 fn s12_no_game_without_the_limit_changes() {
     let games: [(&str, Option<u32>, u64); 5] = [
         ("05_eastern_solomons.toml", None, 0x6ed6_d981_3862_0cae),
-        ("five-days/01a_eastern_solomons.toml", None, 0x0986_e16d_1c5c_11bb),
-        ("stage-3-proof/07a_slice.toml", Some(7), 0x2a39_9fd1_1603_6253),
-        ("second-proof/05a_eastern_solomons.toml", None, 0x0e25_c601_cbf3_eb7c),
+        (
+            "five-days/01a_eastern_solomons.toml",
+            None,
+            0x0986_e16d_1c5c_11bb,
+        ),
+        (
+            "stage-3-proof/07a_slice.toml",
+            Some(7),
+            0x2a39_9fd1_1603_6253,
+        ),
+        (
+            "second-proof/05a_eastern_solomons.toml",
+            None,
+            0x0e25_c601_cbf3_eb7c,
+        ),
         ("second-proof/07a_week.toml", None, 0xcfbf_084c_b2f4_3ec5),
     ];
     let write_to = std::env::var("FLAGPILOT_106_RECORD").ok();

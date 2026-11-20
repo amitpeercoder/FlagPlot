@@ -802,3 +802,88 @@ fn a_bombard_intent_names_a_task_force_and_an_enemy_base() {
         );
     }
 }
+
+/// Decision 0190: a targets limit is accepted, shown in `command_state` on
+/// the intent it is set on, written back by the tools, refused for a kind
+/// named twice, and cleared by a call with no kinds.
+#[test]
+fn a_targets_limit_is_set_shown_refused_and_cleared() {
+    let mut p = Player::new();
+    p.call("set_intent", json!({"base": 2, "floor_days": 30}));
+    // Without it the intent's limits have no `targets` key at all.
+    let state = p.call("command_state", json!({}));
+    assert!(state["intents"][0]["limits"].get("targets").is_none());
+
+    let a = p.call(
+        "set_limit",
+        json!({"limit": "targets", "intent": 1, "kinds": ["carrier", "cruiser"]}),
+    );
+    assert_eq!(a["status"], "queued", "{a}");
+    assert_eq!(
+        a["command"],
+        json!({
+            "kind": "set_limit", "limit": "targets", "intent": 1,
+            "kinds": ["carrier", "cruiser"], "waters_first": false,
+        })
+    );
+    let state = p.call("command_state", json!({}));
+    assert_eq!(
+        state["intents"][0]["limits"]["targets"],
+        json!({"kinds": ["carrier", "cruiser"], "waters_first": false})
+    );
+
+    // A kind twice is the game's refusal, in its words.
+    let a = p.call(
+        "set_limit",
+        json!({"limit": "targets", "intent": 1, "kinds": ["carrier", "carrier"]}),
+    );
+    assert_eq!(a["status"], "refused", "{a}");
+    assert!(a["reason"]
+        .as_str()
+        .unwrap()
+        .contains("one to six kinds of ship, each once"));
+    // The waters first on an intent that is not a deny is refused.
+    let a = p.call(
+        "set_limit",
+        json!({"limit": "targets", "intent": 1, "kinds": ["carrier"], "waters_first": true}),
+    );
+    assert_eq!(a["status"], "refused", "{a}");
+    assert!(a["reason"]
+        .as_str()
+        .unwrap()
+        .contains("only there may the waters come first"));
+    // A name that is no kind of ship is refused by the tool.
+    let error = p
+        .try_call(
+            "set_limit",
+            json!({"limit": "targets", "intent": 1, "kinds": ["submarine"]}),
+        )
+        .expect_err("not a kind");
+    assert!(
+        error.message.contains("unknown kind of ship"),
+        "{}",
+        error.message
+    );
+
+    // No kinds clears it.
+    let a = p.call("set_limit", json!({"limit": "targets", "intent": 1}));
+    assert_eq!(a["status"], "queued", "{a}");
+    assert_eq!(
+        a["command"],
+        json!({"kind": "set_limit", "limit": "targets", "intent": 1})
+    );
+    let state = p.call("command_state", json!({}));
+    assert!(state["intents"][0]["limits"].get("targets").is_none());
+
+    // The other side's seat is held by a script and cannot be asked: a side
+    // calls only its own command state, and the limit is read from it alone.
+    p.call(
+        "set_limit",
+        json!({"limit": "targets", "intent": 1, "kinds": ["battleship"]}),
+    );
+    let error = p
+        .session
+        .call(Side::Japanese, "command_state", &json!({}))
+        .expect_err("the other side cannot be asked");
+    assert!(!error.message.contains("battleship"));
+}

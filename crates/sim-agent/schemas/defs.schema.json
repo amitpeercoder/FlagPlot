@@ -582,6 +582,12 @@
           "description": "Given (true) only for a group that flies its search once a day, in the morning (set_search_once, decision 0131). Left out where it is off.",
           "const": true
         },
+        "strike_first_waters": {
+          "description": "Given only for a group with waters to strike first (set_strike_first_waters, decision 0190): the hexes as [q, r] pairs. Left out where there are none.",
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "array", "items": { "type": "integer" }, "minItems": 2, "maxItems": 2 }
+        },
         "claimed_to_date": {
           "description": "The group's tally of its claims since the game began (decision 0180, 6): aircraft its people believe they shot down, aircraft they believe they destroyed on the ground, and hits they believe they scored. Claims, never below the truth. Left out while the group has claimed nothing.",
           "type": "object",
@@ -837,7 +843,7 @@
           "const": "flagplot-agent"
         },
         "version": {
-          "const": 34
+          "const": 35
         },
         "kind": {
           "const": "not_known"

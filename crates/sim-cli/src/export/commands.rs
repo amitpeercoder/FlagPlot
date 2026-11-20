@@ -15,7 +15,7 @@ use serde::Serialize;
 use serde_json::value::RawValue;
 use sim_core::command::{
     Amendment, AmendmentChange, Awaited, Baseline, CommandState, Commitment, Intent, IntentKind,
-    IntentLimits, Knowledge, Limit, Maker, Plan, Run, RunDays,
+    IntentLimits, Knowledge, Limit, Maker, Plan, Run, RunDays, TargetsLimit,
 };
 use sim_core::ids::ShipId;
 use sim_core::state::Side;
@@ -280,6 +280,24 @@ struct LimitsOut {
     knowledge: Option<&'static str>,
     #[serde(skip_serializing_if = "Option::is_none")]
     within_days: Option<u32>,
+    /// Decision 0190: left out where the intent sets none.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    targets: Option<TargetsOut>,
+}
+
+/// A "targets" limit: the kinds of ship to strike, most wanted first, and
+/// whether the waters of the deny come first (decision 0190).
+#[derive(Serialize)]
+struct TargetsOut {
+    kinds: Vec<&'static str>,
+    waters_first: bool,
+}
+
+fn targets(targets: &TargetsLimit) -> TargetsOut {
+    TargetsOut {
+        kinds: targets.kinds.iter().map(|kind| kind.name()).collect(),
+        waters_first: targets.waters_first,
+    }
 }
 
 /// What a "wait for" names: `{ "task_force": n }` or `{ "land_unit": n }`.
@@ -329,6 +347,7 @@ fn limits(limits: &IntentLimits) -> LimitsOut {
         after: limits.after.map(|other| other.raw()),
         knowledge: limits.knowledge.map(Knowledge::name),
         within_days: limits.knowledge.and_then(Knowledge::days),
+        targets: limits.targets.as_ref().map(targets),
     }
 }
 
@@ -419,6 +438,10 @@ struct LimitOut {
     knowledge: Option<&'static str>,
     #[serde(skip_serializing_if = "Option::is_none")]
     within_days: Option<u32>,
+    /// Decision 0190: the kinds and the waters of a "targets" limit; left
+    /// out where the limit is cleared.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    targets: Option<TargetsOut>,
 }
 
 fn limit(limit: &Limit) -> LimitOut {
@@ -439,6 +462,7 @@ fn limit(limit: &Limit) -> LimitOut {
         other_intent: None,
         knowledge: None,
         within_days: None,
+        targets: None,
     };
     match limit {
         Limit::Forces { intent, limit } => LimitOut {
@@ -506,6 +530,14 @@ fn limit(limit: &Limit) -> LimitOut {
             knowledge: knowledge.map(Knowledge::name),
             within_days: knowledge.and_then(Knowledge::days),
             ..blank("knowledge")
+        },
+        Limit::Targets {
+            intent,
+            targets: set,
+        } => LimitOut {
+            intent: Some(intent.raw()),
+            targets: set.as_ref().map(targets),
+            ..blank("targets")
         },
     }
 }

@@ -254,6 +254,10 @@ pub struct AirGroupLine {
     /// (decision 0131), given only when it is on.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub search_once: Option<bool>,
+    /// The waters the group strikes first (decision 0190), as `[q, r]`
+    /// pairs, given only when there are some.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub strike_first_waters: Option<Vec<[i32; 2]>>,
     /// The contact the group would launch a strike at if the strike decision
     /// were made now (decision 6 of 0063): `SideView::strike_choice`, the
     /// function the decision itself calls. Left out for a group that is not
@@ -842,6 +846,13 @@ pub(crate) fn air_group_line(ctx: &Ctx<'_>, group: &AirGroup) -> AirGroupLine {
             .then_some(Dec(group.strike_held_share)),
         strike_sizing: group.strike_sizing.then_some(true),
         search_once: group.search_once.then_some(true),
+        strike_first_waters: (!group.strike_first_waters.is_empty()).then(|| {
+            group
+                .strike_first_waters
+                .iter()
+                .map(|h| [h.q, h.r])
+                .collect()
+        }),
         would_strike: ctx
             .view
             .strike_choice(group.id)

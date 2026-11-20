@@ -1482,6 +1482,7 @@ fn view_of(id: u32, fighter: bool, can_search: bool, can_strike: bool, able: u32
         held_share: Fixed::ZERO,
         sizing: false,
         search_once: false,
+        waters: Default::default(),
     }
 }
 
@@ -1505,7 +1506,7 @@ fn no_scout_the_lowest_group_that_can_do_both_searches_and_the_other_strikes() {
             (group(4), CarrierRole::Striker),
         ]
     );
-    let air = decide(Risk::Press, 2, false, 90, 270, &groups);
+    let air = decide(Risk::Press, 2, false, 90, 270, &Default::default(), &groups);
     assert_eq!(air.roles, roles(&groups));
     let of = |raw: u32| -> Vec<AirGroupOrder> {
         air.orders
@@ -1563,10 +1564,26 @@ fn a_raid_on_the_force_raises_the_patrol_to_three_quarters_at_balanced() {
         view_of(2, false, true, false, 6),
         view_of(3, false, false, true, 10),
     ];
-    let calm = decide(Risk::Balanced, 0, false, 60, 300, &groups);
+    let calm = decide(
+        Risk::Balanced,
+        0,
+        false,
+        60,
+        300,
+        &Default::default(),
+        &groups,
+    );
     assert_eq!(calm.share, fx("0.5"));
     assert!(calm.orders.contains(&(group(1), share("0.5"))));
-    let raided = decide(Risk::Balanced, 0, true, 60, 300, &groups);
+    let raided = decide(
+        Risk::Balanced,
+        0,
+        true,
+        60,
+        300,
+        &Default::default(),
+        &groups,
+    );
     assert_eq!(raided.share, fx("0.75"));
     assert!(raided.orders.contains(&(group(1), share("0.75"))));
     assert!(!raided.orders.contains(&(group(1), share("0.5"))));

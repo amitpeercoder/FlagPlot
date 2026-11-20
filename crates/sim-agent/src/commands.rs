@@ -15,7 +15,7 @@
 //! | `set_intent` | `intent`, `intent_kind` (`keep_supplied`, `cover`, `hold`, `neutralise`, `raid`, `deny`, `strike_ships`, `search_waters`, `stand_at`, `operate_carriers`, `ready_landing`, `build_up`, `take_place`, `control_island` or `bombard`; left out for `keep_supplied`, which is what a key's absence reads as), `base` (every kind but `neutralise` and `deny`), `target` (`neutralise`, `raid` and `bombard`), `hex` as `[q, r]` and `distance` in whole hexes (`deny`: the waters within `distance` of `hex`), for `keep_supplied` alone `floor_days` and `interval_days` (left out when not set); `ready_landing` (decision 0141) takes `task_force`, `hex` and `by_day` (left out when there is no date); `build_up` takes `base`, `wants`, a list of `airfield`, `mend`, `defences`, `port` and `aircraft` in order, and `defences`, the points from 1 to 100, written only when `defences` is a want; `take_place` (decision 0142) takes `hex` as `[q, r]` and `by_day` (left out when there is no date), and, in the tool, `base` in place of `hex` (the tool writes the base's hex); `control_island` (decision 0151) takes `island`, the number of an island the scenario names, and `by_day` (left out when there is no date); `bombard` (decision 0146) takes `task_force` and `target` |
 //! | `form_intent` | `parent`, `intent_kind` (`keep_supplied` under a hold, with `floor_days` and optionally `interval_days`; `cover`, `raid`, `deny`, `strike_ships`, `search_waters`, `stand_at`, `operate_carriers`, `ready_landing`, `build_up` or `bombard`), `base` (not for a neutralise, a deny or a task of a task force), `by_day`, `wants` and `defences` (as for `set_intent`), `target` (for a raid), `hex` and `distance` (for a deny), `task_force` and `hex` (for `stand_at` and `operate_carriers`), `task_force` and `target` (for `bombard`): the staff's, a sub-intent under `parent` |
 //! | `withdraw_intent` | `intent` |
-//! | `set_limit` | `limit` (`forces`, `area`, `priority`, `protected`, `reserve`, `risk`, `not_before`, `wait_for`, `after` or `knowledge`) and its keys, below |
+//! | `set_limit` | `limit` (`forces`, `area`, `priority`, `protected`, `reserve`, `risk`, `not_before`, `wait_for`, `after`, `knowledge` or `targets`) and its keys, below |
 //! | `set_leave` | `leave` (`prepare` or `launch`), `given` |
 //! | `approve`, `cancel_plan` | `plan` |
 //! | `commit_ships` | `plan`, `run` (left out when none), `ships`, `from_day`, `to_day` |
@@ -39,7 +39,10 @@
 //! of `task_force` and `land_unit` (neither clears it); `after` has `intent`
 //! and `other_intent` (`null` clears it). Decision 0159, 12: `knowledge` has
 //! `intent`, `knowledge` (`none`, `count` or `recent_count`; `null` clears
-//! it) and, with `recent_count` alone, `within_days`.
+//! it) and, with `recent_count` alone, `within_days`. Decision 0190: `targets`
+//! has `intent`, `kinds` (one to six ship kind names, each once, most wanted
+//! first; left out or empty clears the limit) and `waters_first` (true or
+//! false, false where left out).
 //!
 //! What a staff handed in for a day is `{"orders", "commands", "no_orders"}`
 //! and, left out when there is none, `"notices"` (each `{kind, plan, run,
@@ -61,12 +64,13 @@ use sim_core::command::{
     Addressee, Awaited, ChainLink, CommandKind, Evidence, ForcesLimit, HeldSetting, HoldTarget,
     IntentKind, InterruptCondition, InterruptRef, InterruptSetting, Knowledge, Leave, Limit, Maker,
     NoticeBasis, NoticeKind, PlanId, PlanOutcome, Reason, Risk, RunDays, RunSpec, Serves,
-    StaffCommand, StaffDecisions, StaffNotice, StaffOrder, StandingKind, StandingSubject, Want,
-    Wants,
+    StaffCommand, StaffDecisions, StaffNotice, StaffOrder, StandingKind, StandingSubject,
+    TargetsLimit, Want, Wants,
 };
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
 use sim_core::ids::{AirGroupId, BaseId, IntentId, InterruptId, LandUnitId, ShipId, TaskForceId};
+use sim_core::refdata::ShipKind;
 
 use crate::orders::{order_from_json, order_to_json, unit_text};
 
@@ -125,6 +129,48 @@ fn knowledge_from(value: &Value) -> Result<Option<Knowledge>, String> {
         )),
         (None, None) => Ok(None),
     }
+}
+
+/// A "targets" limit's setting (decision 0190): `kinds`, a list of ship kind
+/// names, left out or empty to clear it, and `waters_first`, false where left
+/// out. How many kinds, and each once, is the game's to refuse.
+fn targets_from(value: &Value) -> Result<Option<TargetsLimit>, String> {
+    let kinds = match value.get("kinds") {
+        None | Some(Value::Null) => Vec::new(),
+        Some(Value::Array(items)) => {
+            let mut kinds = Vec::new();
+            for item in items {
+                let name = item
+                    .as_str()
+                    .ok_or_else(|| "a kind in \"kinds\" is not text".to_string())?;
+                kinds.push(
+                    ShipKind::ALL
+                        .into_iter()
+                        .find(|kind| kind.name() == name)
+                        .ok_or_else(|| format!("unknown kind of ship \"{name}\""))?,
+                );
+            }
+            kinds
+        }
+        Some(_) => return Err("\"kinds\" must be a list of kinds of ship".to_string()),
+    };
+    let waters_first = match value.get("waters_first") {
+        None | Some(Value::Null) => false,
+        Some(Value::Bool(on)) => *on,
+        Some(_) => return Err("\"waters_first\" must be true or false".to_string()),
+    };
+    if kinds.is_empty() {
+        if waters_first {
+            return Err(
+                "\"waters_first\" needs \"kinds\": a limit with no kinds clears it".to_string(),
+            );
+        }
+        return Ok(None);
+    }
+    Ok(Some(TargetsLimit {
+        kinds,
+        waters_first,
+    }))
 }
 
 fn small_opt(value: &Value, key: &str) -> Result<Option<u32>, String> {
@@ -471,6 +517,19 @@ fn limit_to_json(limit: &Limit) -> Value {
             }
             body
         }
+        // Decision 0190: a limit cleared is written with no `kinds`.
+        Limit::Targets { intent, targets } => {
+            let mut body = json!({
+                "kind": "set_limit",
+                "limit": "targets",
+                "intent": intent.raw(),
+            });
+            if let Some(targets) = targets {
+                body["kinds"] = json!(targets.kinds.iter().map(|k| k.name()).collect::<Vec<_>>());
+                body["waters_first"] = json!(targets.waters_first);
+            }
+            body
+        }
     }
 }
 
@@ -548,6 +607,10 @@ fn limit_from_json(value: &Value) -> Result<Limit, String> {
         "knowledge" => Ok(Limit::Knowledge {
             intent: intent()?,
             knowledge: knowledge_from(value)?,
+        }),
+        "targets" => Ok(Limit::Targets {
+            intent: intent()?,
+            targets: targets_from(value)?,
         }),
         other => Err(format!("unknown limit \"{other}\"")),
     }
@@ -1431,6 +1494,17 @@ mod tests {
                 rank: Some(1),
             }),
             CommandKind::SetLimit(Limit::Priority { intent, rank: None }),
+            CommandKind::SetLimit(Limit::Targets {
+                intent,
+                targets: Some(TargetsLimit {
+                    kinds: vec![ShipKind::Carrier, ShipKind::Cruiser],
+                    waters_first: true,
+                }),
+            }),
+            CommandKind::SetLimit(Limit::Targets {
+                intent,
+                targets: None,
+            }),
             CommandKind::SetLimit(Limit::Protected {
                 intent,
                 ships: ships(&[7]),

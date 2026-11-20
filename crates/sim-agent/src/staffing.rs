@@ -309,7 +309,7 @@ fn forces_json(n: &Names<'_>, forces: &sim_core::command::ForcesLimit) -> Value 
 /// The limits set on one intent itself. A limit not set on it is `null` (a
 /// risk, too: `limits_read_up` says what it is read as, from the tree).
 fn limits_json(n: &Names<'_>, limits: &IntentLimits) -> Value {
-    json!({
+    let mut body = json!({
         "forces": limits.forces.as_ref().map(|forces| forces_json(n, forces)),
         "area": limits.area.as_ref().map(|hexes| {
             hexes.iter().map(|h| json!([h.q, h.r])).collect::<Vec<_>>()
@@ -321,6 +321,19 @@ fn limits_json(n: &Names<'_>, limits: &IntentLimits) -> Value {
         "wait_for": limits.wait_for.map(|awaited| awaited_json(n, awaited)),
         "after": limits.after.map(IntentId::raw),
         "knowledge": limits.knowledge.map(knowledge_json),
+    });
+    // Decision 0190: shown only where set, so a game without it reads as before.
+    if let Some(targets) = &limits.targets {
+        body["targets"] = targets_json(targets);
+    }
+    body
+}
+
+/// A "targets" limit (decision 0190): `{"kinds": [...], "waters_first": bool}`.
+fn targets_json(targets: &sim_core::command::TargetsLimit) -> Value {
+    json!({
+        "kinds": targets.kinds.iter().map(|kind| kind.name()).collect::<Vec<_>>(),
+        "waters_first": targets.waters_first,
     })
 }
 
@@ -455,7 +468,8 @@ fn limits_read_up_json(n: &Names<'_>, state: &CommandState, intent: &Intent) -> 
     let area = chain.iter().find(|i| i.limits.area.is_some()).copied();
     let waits = state.waits_read_up(intent.id);
     let knowledge = state.knowledge_read_up(intent.id);
-    json!({
+    let targets = state.targets_read_up(intent.id);
+    let mut body = json!({
         "forces": forces.and_then(|i| i.limits.forces.as_ref()).map(|f| forces_json(n, f)),
         "forces_from": from(forces),
         "air_groups_binding": bound_groups.map(|groups| n.groups(&groups)),
@@ -511,7 +525,13 @@ fn limits_read_up_json(n: &Names<'_>, state: &CommandState, intent: &Intent) -> 
         // set and the risk decides.
         "knowledge": knowledge.map(|(k, _)| knowledge_json(k)),
         "knowledge_from": knowledge.map(|(_, on)| on.raw()),
-    })
+    });
+    // Decision 0190: the nearest on the chain, shown only where one is set.
+    if let Some((targets, on)) = targets {
+        body["targets"] = targets_json(targets);
+        body["targets_from"] = json!(on.raw());
+    }
+    body
 }
 
 /// An intent's kind as the interface writes it: its name, its own base
@@ -2215,6 +2235,8 @@ fn allowed_keys(tool: &str) -> &'static [&'static str] {
             "other_intent",
             "knowledge",
             "within_days",
+            "kinds",
+            "waters_first",
         ],
         "set_leave" => &["leave", "given"],
         "approve" | "cancel_plan" => &["plan"],

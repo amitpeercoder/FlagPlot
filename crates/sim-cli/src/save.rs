@@ -764,6 +764,20 @@ mod tests {
                     ships: vec![ShipId::new(11), ShipId::new(4)],
                 },
             },
+            // Decision 0190: the waters to strike first, given and cleared.
+            OrderKind::AirGroup {
+                target: sim_core::ids::AirGroupId::new(5),
+                order: sim_core::orders::AirGroupOrder::SetStrikeFirstWaters {
+                    hexes: vec![
+                        sim_core::hex::Hex::new(3, -2),
+                        sim_core::hex::Hex::new(-4, 6),
+                    ],
+                },
+            },
+            OrderKind::AirGroup {
+                target: sim_core::ids::AirGroupId::new(5),
+                order: sim_core::orders::AirGroupOrder::SetStrikeFirstWaters { hexes: vec![] },
+            },
         ];
         let mut script: Script = BTreeMap::new();
         script.insert(
@@ -1037,6 +1051,38 @@ mod tests {
                         knowledge: None,
                     }),
                 ),
+                // Decision 0190: the targets limit, set with and without the
+                // waters first, and cleared.
+                (
+                    Side::Allied,
+                    CommandKind::SetLimit(Limit::Targets {
+                        intent,
+                        targets: Some(sim_core::command::TargetsLimit {
+                            kinds: vec![
+                                sim_core::refdata::ShipKind::Transport,
+                                sim_core::refdata::ShipKind::Carrier,
+                            ],
+                            waters_first: true,
+                        }),
+                    }),
+                ),
+                (
+                    Side::Allied,
+                    CommandKind::SetLimit(Limit::Targets {
+                        intent,
+                        targets: Some(sim_core::command::TargetsLimit {
+                            kinds: vec![sim_core::refdata::ShipKind::Cruiser],
+                            waters_first: false,
+                        }),
+                    }),
+                ),
+                (
+                    Side::Allied,
+                    CommandKind::SetLimit(Limit::Targets {
+                        intent,
+                        targets: None,
+                    }),
+                ),
                 (
                     Side::Allied,
                     CommandKind::SetLeave {
@@ -1270,7 +1316,7 @@ mod tests {
             .expect("the file is JSON");
         assert_eq!(written["version"], 23);
         assert_eq!(written["doctrine_version"], sim_staff::DOCTRINE_VERSION);
-        assert_eq!(written["commands"].as_array().expect("commands").len(), 26);
+        assert_eq!(written["commands"].as_array().expect("commands").len(), 29);
         assert_eq!(written["staff"].as_array().expect("staff").len(), 1);
         let saved = read(&file).expect("reads");
         assert_eq!(saved.commands, commands);

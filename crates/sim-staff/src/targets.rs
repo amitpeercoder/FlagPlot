@@ -157,7 +157,11 @@ impl Day<'_, '_> {
     /// architect's ruling on decision 0190, 33): the order is handed in
     /// under the task the group serves, which the engine's forces check
     /// reads. An order that clears the waters serves that task.
-    pub(crate) fn waters_serve(&self, targets: &StrikeTargets, reason: &mut sim_core::command::Reason) {
+    pub(crate) fn waters_serve(
+        &self,
+        targets: &StrikeTargets,
+        reason: &mut sim_core::command::Reason,
+    ) {
         let Some(first) = targets.first_deny() else {
             return;
         };
@@ -174,7 +178,11 @@ impl Day<'_, '_> {
 
     /// What the targets limits give the bombers of `task`, a task that
     /// strikes ships; `force` is the carrier force a carrier task operates.
-    pub(crate) fn strike_targets(&self, task: &Intent, force: Option<TaskForceId>) -> StrikeTargets {
+    pub(crate) fn strike_targets(
+        &self,
+        task: &Intent,
+        force: Option<TaskForceId>,
+    ) -> StrikeTargets {
         let mut out = StrikeTargets::default();
         let own = self.state.targets_read_up(task.id);
         let ancestors: Vec<IntentId> = self
@@ -260,7 +268,10 @@ mod tests {
     #[test]
     fn a_limit_gives_its_kinds_in_order() {
         let t = StrikeTargets {
-            kinds: Some((vec![ShipKind::Transport, ShipKind::Carrier], IntentId::new(2))),
+            kinds: Some((
+                vec![ShipKind::Transport, ShipKind::Carrier],
+                IntentId::new(2),
+            )),
             ..StrikeTargets::default()
         };
         assert_eq!(
