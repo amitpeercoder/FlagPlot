@@ -65,6 +65,9 @@ pub struct PictureHalf {
     /// The side's next number of a task force and of an air group made in
     /// play.
     pub counters: PictureCounters,
+    /// The number of days the game has, as the side's view gives it
+    /// (decision 0194, 11): configuration, the same for both sides.
+    pub game_days: Option<u32>,
 }
 
 fn refuse(words: String) -> SimError {
@@ -217,6 +220,7 @@ impl SideView<'_> {
                 next_task_force: self.next_task_force_id().raw(),
                 next_air_group: self.next_air_group_id().raw(),
             },
+            game_days: self.game_days(),
         })
     }
 }
@@ -245,7 +249,11 @@ impl WorldPicture {
     /// replacement streams and arrivals of both are put in the one order
     /// the state keeps them in (decision 0043, 4c).
     ///
-    /// Refuses two halves of one side, halves of different days, two units
+    /// The picture carries the game's days the halves give (decision 0194,
+    /// 11).
+    ///
+    /// Refuses two halves of one side, halves of different days, halves of
+    /// games of different lengths, two units
     /// of one number, and a half that refers to an order not in its own
     /// list (which, joined, would name an order of the other half).
     pub fn from_halves(one: PictureHalf, other: PictureHalf) -> Result<WorldPicture, SimError> {
@@ -262,6 +270,18 @@ impl WorldPicture {
                 one.day, other.day
             )));
         }
+        if one.game_days != other.game_days {
+            let words = |days: Option<u32>| match days {
+                Some(days) => format!("a game of {days} days"),
+                None => "a game of no length given".to_string(),
+            };
+            return Err(refuse(format!(
+                "the halves cannot be joined: one is of {} and the other of {}",
+                words(one.game_days),
+                words(other.game_days)
+            )));
+        }
+        let game_days = one.game_days;
         let (allied, japanese) = match one.side {
             Side::Allied => (one, other),
             Side::Japanese => (other, one),
@@ -299,6 +319,7 @@ impl WorldPicture {
                 command: own_command,
                 belief,
                 counters: own_counters,
+                game_days: _,
             } = half;
             let mut own = TruthState {
                 day,
@@ -388,6 +409,7 @@ impl WorldPicture {
             orders,
             counters,
             objectives: None,
+            game_days,
         })
     }
 }

@@ -320,7 +320,15 @@ use sim_core::view::SideView;
 /// `cannot_bring_enough` on each such morning. A side with no take whose
 /// men ashore are short with nothing more coming gets the orders and
 /// reasons `supply-45` gave.
-pub const DOCTRINE_VERSION: &str = "supply-46";
+/// `supply-47` adds decision 0194: with fewer than 3 days of the game left
+/// the judgement ashore sets no unit on defend to attack, and sets to
+/// defend a unit on attack whose side's attack at the place failed the day
+/// before; and in the test of what is coming the latest day is the end's
+/// date or the game's last day, whichever is the earlier. A side with no
+/// take whose men are ashore in the game's last days, and none that waits
+/// on a unit or lift due after the game's end, gets the orders `supply-46`
+/// gave.
+pub const DOCTRINE_VERSION: &str = "supply-47";
 
 /// The staff: the doctrine for keeping a base supplied (stage 1) and, after
 /// it, the air doctrine for holding a place and covering a base from the air

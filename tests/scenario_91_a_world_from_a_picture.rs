@@ -290,6 +290,9 @@ fn case_one() -> (WorldPicture, RefData, Map) {
             ),
         ]),
         objectives: None,
+        // Decision 0194, 11: a picture may carry the game's days; this one,
+        // made by hand, carries none, as before.
+        game_days: None,
     };
     (picture, world.ref_data().clone(), world.map().clone())
 }

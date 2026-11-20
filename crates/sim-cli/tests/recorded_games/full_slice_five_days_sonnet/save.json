@@ -74,7 +74,7 @@
       "hash": "7548c1b108bf6d74"
     }
   ],
-  "doctrine_version": "supply-46",
+  "doctrine_version": "supply-47",
   "format": "flagplot-saved-game",
   "hashes": [
     {
@@ -863,7 +863,7 @@
       "unit": "task_force:26"
     }
   ],
-  "rules_version": 24,
+  "rules_version": 25,
   "scenario": {
     "file": "data/scenarios/07_full_slice.toml",
     "hash": "984de13e1d2a00a4"

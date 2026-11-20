@@ -338,6 +338,10 @@ fn name_every_field(world: &World) {
         // Not hashed: fixed for the game and read by no rule (decision 5
         // of 0054).
         objectives: _,
+        // Not hashed: the game's days are configuration, set once where the
+        // game is made, read by no rule of the engine and by the staff only
+        // through a side's view (decision 0194, 12), as the objectives are.
+        game_days: _,
         // Not state: the trace of choices, how to record, never what
         // happens (decision 0100, 7).
         choice_trace: _,

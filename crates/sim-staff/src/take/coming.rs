@@ -13,6 +13,11 @@
 //! source (sent on to a hold's source), its ships cannot berth the unit, or
 //! "not to starve" forbids the lift. The test keeps no state and draws
 //! nothing.
+//!
+//! "More is coming" ends with the game (decision 0194, 10): the latest day
+//! is the end's date or the game's last day, whichever is the earlier. And
+//! in the game's last days (decision 0194, 7 to 9) the staff begins no
+//! attack ashore: [`LAST_DAYS`], [`days_left`].
 
 use std::collections::BTreeSet;
 
@@ -35,6 +40,36 @@ pub(crate) fn men_per_man_with_nothing_coming(risk: Risk) -> u32 {
         Risk::Balanced => 1,
         Risk::Press => 0,
     }
+}
+
+/// The days left below which the staff begins no attack ashore (decision
+/// 0194, 7): with fewer than 3 days of the game left, an attack begun so
+/// late only costs men. The staff's figure, a placeholder.
+pub(crate) const LAST_DAYS: u32 = 3;
+
+/// The days left on the morning of `today` in a game of `game_days` days
+/// (decision 0194, 2 and 11): the game's days less the days resolved, which
+/// are `today - 1`, never below 0, as in a trial played past the game's
+/// end. `None` for a world given no length, which has no last day.
+pub(crate) fn days_left(game_days: Option<u32>, today: u32) -> Option<u32> {
+    game_days.map(|days| days.saturating_sub(today.saturating_sub(1)))
+}
+
+/// Whether a morning with `left` days left is in the game's last days
+/// (decision 0194, 7): fewer than [`LAST_DAYS`] left. A world with no last
+/// day never is.
+pub(crate) fn in_last_days(left: Option<u32>) -> bool {
+    left.is_some_and(|left| left < LAST_DAYS)
+}
+
+/// The words of the days left, for the reason of a morning in the last
+/// days (decision 0194, 7).
+pub(crate) fn last_days_words(left: u32) -> String {
+    format!(
+        "{left} {} of the game {} left, fewer than {LAST_DAYS}",
+        if left == 1 { "day" } else { "days" },
+        if left == 1 { "is" } else { "are" }
+    )
 }
 
 /// The judgement of a morning ashore (decision 0143, items 5 and 6, as
@@ -125,6 +160,18 @@ fn bound_for(force: &TaskForce) -> Hex {
 pub(crate) const SENT_IN: &str = "sent in with nothing more coming";
 
 impl Day<'_, '_> {
+    /// Decision 0194, 9: whether the side's attack at `place` failed on
+    /// `day`, as the side is told it (chapter 7, An attack that fails: the
+    /// side that attacked and failed sees `GroundAttackFailed`, cut to the
+    /// hex).
+    pub(crate) fn attack_failed(&mut self, place: Hex, day: u32) -> bool {
+        use sim_core::side_events::SideEventKind;
+        self.side_events().iter().any(|e| {
+            e.day == day
+                && matches!(e.kind, SideEventKind::GroundAttackFailed { hex } if hex == place)
+        })
+    }
+
     /// Rule 12: whether the staff's last order to `unit` that the side's log
     /// holds was an order sent in under this rule, the reason of which is
     /// bound by [`SENT_IN`]. Read from the side's own events: its orders
@@ -194,9 +241,18 @@ impl Day<'_, '_> {
         wanted: u32,
     ) -> Coming {
         let view = self.view;
-        let by_day = match end.kind {
+        let end_by = match end.kind {
             IntentKind::TakePlace { by_day, .. } => by_day,
             _ => None,
+        };
+        // Decision 0194, 10: "more is coming" ends with the game. The latest
+        // day is the end's date or the game's last day, whichever is the
+        // earlier; a world with no last day has the end's date alone.
+        let game_last = view.game_days();
+        let by_day = match (end_by, game_last) {
+            (Some(by), Some(last)) => Some(by.min(last)),
+            (by, None) => by,
+            (None, last) => last,
         };
         // A unit or force before its day counts from its day: with a date,
         // where its day is no later than the date; with none, always (the
@@ -205,7 +261,9 @@ impl Day<'_, '_> {
             (Some(from), Some(last)) => from <= last,
             _ => true,
         };
-        let last_words = match by_day {
+        // The words name the end's date as before; where the game's last day
+        // is what leaves a unit out, the unit's own words say so.
+        let last_words = match end_by {
             Some(last) => format!("by day {last}, the latest day"),
             None => {
                 "with no date, a unit or force before its day counting from its day".to_string()
@@ -243,7 +301,8 @@ impl Day<'_, '_> {
         }
 
         // 2. The lifts as they stand the end may send as later lifts by its
-        // last day, as "not to starve" counts them.
+        // last day, as "not to starve" counts them: by the end's date or the
+        // game's last day, whichever is the earlier (decision 0194, 10).
         self.as_of.set(Some(by_day.unwrap_or(u32::MAX)));
         let stand = self.later_lift_plan(end, force.id, None);
         self.as_of.set(None);
@@ -296,11 +355,17 @@ impl Day<'_, '_> {
             }
             let from = crate::available::not_before(view, EntityRef::LandUnit(id));
             if !in_time(from) {
-                not.push(format!(
-                    "{} may be used from day {}, after the latest day",
-                    unit_words(unit),
-                    from.unwrap_or_default()
-                ));
+                let from = from.unwrap_or_default();
+                not.push(match game_last {
+                    Some(last) if end_by.is_none_or(|by| from <= by) => format!(
+                        "{} may be used from day {from}, after the game's last day, day {last}",
+                        unit_words(unit)
+                    ),
+                    _ => format!(
+                        "{} may be used from day {from}, after the latest day",
+                        unit_words(unit)
+                    ),
+                });
                 continue;
             }
             let target = sim_core::command::HoldTarget::LandUnit(id);
@@ -594,5 +659,67 @@ mod tests {
             verdict(1_000, Some(3_444), Risk::Balanced, true, true),
             Verdict::Wait
         );
+    }
+
+    #[test]
+    fn the_days_left_on_a_morning() {
+        let left: Vec<Option<u32>> = (1..=8).map(|d| days_left(Some(6), d)).collect();
+        assert_eq!(
+            left,
+            [6, 5, 4, 3, 2, 1, 0, 0].map(Some).to_vec(),
+            "a game of 6 on the mornings of days 1 to 8"
+        );
+        assert_eq!(days_left(Some(6), 0), Some(6));
+        assert_eq!(days_left(Some(6), u32::MAX), Some(0));
+        assert_eq!(days_left(None, 3), None);
+        assert_eq!(days_left(None, 0), None);
+    }
+
+    #[test]
+    fn the_last_days_are_fewer_than_three_left() {
+        assert_eq!(LAST_DAYS, 3);
+        assert!(in_last_days(Some(0)));
+        assert!(in_last_days(Some(1)));
+        assert!(in_last_days(Some(2)));
+        assert!(!in_last_days(Some(3)));
+        assert!(!in_last_days(Some(4)));
+        assert!(!in_last_days(Some(u32::MAX)));
+        assert!(!in_last_days(None));
+    }
+
+    #[test]
+    fn the_last_days_in_words() {
+        assert_eq!(
+            last_days_words(2),
+            "2 days of the game are left, fewer than 3"
+        );
+        assert_eq!(
+            last_days_words(1),
+            "1 day of the game is left, fewer than 3"
+        );
+        assert_eq!(
+            last_days_words(0),
+            "0 days of the game are left, fewer than 3"
+        );
+    }
+
+    #[test]
+    fn with_three_days_left_or_more_nothing_is_the_last_days() {
+        for game in 1..=40u32 {
+            for today in 1..=45u32 {
+                let resolved = today - 1;
+                let last = in_last_days(days_left(Some(game), today));
+                assert_eq!(
+                    last,
+                    game < resolved + LAST_DAYS,
+                    "game {game}, day {today}"
+                );
+                if game >= resolved + LAST_DAYS {
+                    assert!(!last, "game {game}, day {today}");
+                }
+            }
+        }
+        // A world with no length never has a last day, on any morning.
+        assert!((0..=45).all(|d| !in_last_days(days_left(None, d))));
     }
 }

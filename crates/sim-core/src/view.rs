@@ -124,6 +124,9 @@ pub struct SideView<'a> {
     log: &'a EventLog,
     orders: &'a BTreeMap<OrderId, Order>,
     objectives: Option<&'a crate::objectives::Objectives>,
+    /// The number of days the game has (decision 0194): configuration, the
+    /// same for both sides.
+    game_days: Option<u32>,
     /// The side's own command state, whole (decision 0107, 6). The other
     /// side's is never handed over.
     command: &'a crate::command::CommandState,
@@ -181,6 +184,7 @@ impl<'a> SideView<'a> {
         log: &'a EventLog,
         orders: &'a BTreeMap<OrderId, Order>,
         objectives: Option<&'a crate::objectives::Objectives>,
+        game_days: Option<u32>,
         command: &'a crate::command::CommandState,
         next_task_force: TaskForceId,
         next_air_group: AirGroupId,
@@ -202,6 +206,7 @@ impl<'a> SideView<'a> {
             log,
             orders,
             objectives,
+            game_days,
             command,
             next_task_force,
             next_air_group,
@@ -324,6 +329,15 @@ impl<'a> SideView<'a> {
     /// The last day resolved.
     pub fn day(&self) -> u32 {
         self.truth.day
+    }
+
+    /// The number of days the game has (decision 0194, 1): `None` for a
+    /// world given no length. It is the game's configuration, the same for
+    /// both sides and for a seat at any command, like the clock; it says
+    /// nothing of the enemy. It is not [`SideView::horizon_days`], the days
+    /// the objectives are judged over.
+    pub fn game_days(&self) -> Option<u32> {
+        self.game_days
     }
 
     /// The side's own ships, known exactly. Supply aboard is visible only for
