@@ -217,6 +217,10 @@ pub enum InvariantViolation {
     /// or an addressee that is not the one its kind sets. Added at the end
     /// of the enum.
     IntentTreeUnsound(Side, IntentId),
+    /// A supply line that names a base that does not exist, gives nothing,
+    /// gives a negative tonnage, or whose days are not in order from day 1
+    /// (decision 0196, 1 and 13). Added at the end of the enum.
+    SupplyLineUnsound(BaseId),
 }
 
 impl fmt::Display for InvariantViolation {
@@ -249,6 +253,12 @@ impl fmt::Display for InvariantViolation {
             }
             InvariantViolation::ReplacementAtUnknownBase(base) => {
                 write!(f, "a replacement stream is at {base}, which does not exist")
+            }
+            InvariantViolation::SupplyLineUnsound(base) => {
+                write!(
+                    f,
+                    "a supply line to {base} names no base, gives nothing or a negative tonnage, or has its days out of order"
+                )
             }
             InvariantViolation::TaskForceLegCrossesClosedSide(task_force, from, toward) => {
                 write!(
@@ -905,6 +915,19 @@ pub(crate) fn check(truth: &TruthState, map: &Map, ref_data: &RefData) -> Vec<In
     for stream in &truth.replacements {
         if !truth.bases.contains_key(&stream.base) {
             violations.push(InvariantViolation::ReplacementAtUnknownBase(stream.base));
+        }
+    }
+
+    for line in &truth.supply_lines {
+        let gives = line.supply_t > Fixed::ZERO || line.fuel_t > Fixed::ZERO;
+        if !truth.bases.contains_key(&line.base)
+            || !gives
+            || line.supply_t.is_negative()
+            || line.fuel_t.is_negative()
+            || line.first_day < 1
+            || line.last_day < line.first_day
+        {
+            violations.push(InvariantViolation::SupplyLineUnsound(line.base));
         }
     }
 

@@ -1315,6 +1315,10 @@ pub(crate) fn seen(kind: &EventKind, side: Side, owners: &Owners, knows_fight: b
         EventKind::ForceEntered { side: owner, .. }
         | EventKind::UnitEntered { side: owner, .. }
         | EventKind::EntryWaiting { side: owner, .. } => whole_if(*owner == side),
+        // A side sees its own supply lines give, whole: the line's side
+        // holds the base on the night it gives. The enemy is told nothing
+        // (decision 0196, 3).
+        EventKind::StockReceived { side: owner, .. } => whole_if(*owner == side),
         EventKind::AirfieldMended { unit, .. } => whole_if(own_unit(unit)),
         // A side sees its own units' fieldworks and the wear on its own
         // defences whole; the enemy sees none of it (decision 14 of 0106).
@@ -1696,6 +1700,7 @@ fn first_known_round(side: Side, fight: &[Event], owners: &Owners) -> Option<u32
             | EventKind::ForceEntered { .. }
             | EventKind::UnitEntered { .. }
             | EventKind::EntryWaiting { .. }
+            | EventKind::StockReceived { .. }
             | EventKind::AirfieldMended { .. }
             | EventKind::UnitFellBack { .. }
             | EventKind::UnitSurrendered { .. }
@@ -1905,6 +1910,7 @@ fn fight_round(kind: &EventKind) -> Option<u32> {
         | EventKind::ForceEntered { .. }
         | EventKind::UnitEntered { .. }
         | EventKind::EntryWaiting { .. }
+        | EventKind::StockReceived { .. }
         | EventKind::AirfieldMended { .. }
         | EventKind::UnitFellBack { .. }
         | EventKind::UnitSurrendered { .. }
@@ -2258,6 +2264,7 @@ fn count_from_known_round(kind: SideEventKind, known: u32, round_minutes: u32) -
             | EventKind::ForceEntered { .. }
             | EventKind::UnitEntered { .. }
             | EventKind::EntryWaiting { .. }
+            | EventKind::StockReceived { .. }
             | EventKind::AirfieldMended { .. }
             | EventKind::UnitFellBack { .. }
             | EventKind::UnitSurrendered { .. }
@@ -2509,6 +2516,7 @@ fn whole_may_have_hidden_causes(kind: &EventKind) -> bool {
         | EventKind::ForceEntered { .. }
         | EventKind::UnitEntered { .. }
         | EventKind::EntryWaiting { .. }
+        | EventKind::StockReceived { .. }
         | EventKind::AirfieldMended { .. }
         // A halt cites the side's own route order and steaming; steaming on
         // cites the halt, the route order, and the side's own bombardment
@@ -2790,6 +2798,7 @@ pub(crate) fn project(side: Side, log: &[Event], owners: &Owners) -> Vec<SideEve
                     | EventKind::ForceEntered { .. }
                     | EventKind::UnitEntered { .. }
                     | EventKind::EntryWaiting { .. }
+                    | EventKind::StockReceived { .. }
                     | EventKind::AirfieldMended { .. }
                     | EventKind::UnitFellBack { .. }
                     | EventKind::UnitSurrendered { .. }
@@ -4409,6 +4418,18 @@ mod tests {
                     base: base(1),
                     day: 3,
                     wait: crate::entering::EntryWait::TakesNoAircraft,
+                },
+                Whole,
+                Nothing,
+            )),
+            // A supply line's tons are told to the line's side, which holds
+            // the base, whole, and to the enemy not at all (decision 0196, 3).
+            sided(row(
+                EventKind::StockReceived {
+                    base: base(1),
+                    side: Side::Allied,
+                    supply_t: fx(30),
+                    fuel_t: Fixed::from_ratio(25, 2),
                 },
                 Whole,
                 Nothing,

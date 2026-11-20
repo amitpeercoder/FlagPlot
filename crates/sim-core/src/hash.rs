@@ -27,8 +27,8 @@ use crate::state::Side;
 use crate::state::{
     AirGroup, AirGroupLocation, Arrival, Base, CargoOrder, Charge, ClaimTally, DayWork, Formation,
     Halt, HaltWork, HitsOnMen, LandUnit, March, Preparation, Replacement, Route, RulesOfEngagement,
-    SearchArc, Ship, ShipLocation, ShipSystem, ShipSystems, Skills, TaskForce, Troops, TruthState,
-    YardTrip,
+    SearchArc, Ship, ShipLocation, ShipSystem, ShipSystems, Skills, SupplyLine, TaskForce, Troops,
+    TruthState, YardTrip,
 };
 use crate::world::World;
 
@@ -266,7 +266,9 @@ const fn speed_code(speed: SpeedSetting) -> u8 {
 /// What is held apart until its day (decision 0195, 23) does not raise the
 /// version: it is hashed last, after the domain, and only where something is
 /// held, so a game with nothing held apart writes nothing new and its hash is
-/// what it was, as the domain's is (decision 0170, 12).
+/// what it was, as the domain's is (decision 0170, 12). The supply lines
+/// (decision 0196, 7) are hashed after it in the same way, only where a
+/// scenario gives one, and do not raise it either.
 pub const STATE_VERSION: &[u8] = b"flagplot-state-v51";
 
 /// Names every field of the state, with no `..` in any pattern. It does
@@ -368,7 +370,17 @@ fn name_every_field(world: &World) {
         hits_on_men,
         formations,
         entering,
+        supply_lines,
     } = truth;
+    if let Some(SupplyLine {
+        side: _,
+        base: _,
+        supply_t: _,
+        fuel_t: _,
+        first_day: _,
+        last_day: _,
+    }) = supply_lines.first()
+    {}
     if let Some(Entering {
         day: _,
         side: _,
@@ -2128,6 +2140,22 @@ pub(crate) fn hash_world(world: &World) -> u64 {
         h.count(truth.entering.len());
         for (unit, entry) in &truth.entering {
             hash_entry(&mut h, *unit, entry);
+        }
+    }
+
+    // Last, and only where a scenario gives one (decision 0196, 7): each
+    // supply line in the order the state keeps them, its side, base, tons of
+    // supply and of fuel, and its first and last days. A game with no line
+    // writes nothing here, and its hash is what it was.
+    if !truth.supply_lines.is_empty() {
+        h.count(truth.supply_lines.len());
+        for line in &truth.supply_lines {
+            h.u8(line.side.code());
+            h.u32(line.base.raw());
+            h.i64(line.supply_t.raw());
+            h.i64(line.fuel_t.raw());
+            h.u32(line.first_day);
+            h.u32(line.last_day);
         }
     }
 

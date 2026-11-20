@@ -43,7 +43,9 @@ use crate::ids::EntityRef;
 use crate::orders::Order;
 use crate::pictures::{self, CommandRef};
 use crate::side_events::{SideCause, SideEvent, SideEventKind};
-use crate::state::{AirGroup, Base, LandUnit, Replacement, Ship, ShipLocation, TaskForce};
+use crate::state::{
+    AirGroup, Base, LandUnit, Replacement, Ship, ShipLocation, SupplyLine, TaskForce,
+};
 
 use super::{CommandView, SideView};
 
@@ -188,6 +190,18 @@ impl<'a> SideView<'a> {
             && match self.seat {
                 None => true,
                 Some(CommandRef::Base(own)) => stream.base == own,
+                Some(_) => false,
+            }
+    }
+
+    /// Whether a supply line is the view's (decision 0196, 7): the side's
+    /// own, and from a seat at a base only that base's, as a replacement
+    /// stream is.
+    pub(super) fn owns_line(&self, line: &SupplyLine) -> bool {
+        line.side == self.side
+            && match self.seat {
+                None => true,
+                Some(CommandRef::Base(own)) => line.base == own,
                 Some(_) => false,
             }
     }
