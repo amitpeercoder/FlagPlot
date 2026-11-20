@@ -833,7 +833,7 @@ body.watched .gives { display: none !important; }
       M.contacts = a[2].contacts || []; M.estimates = a[2].ground_estimates || [];
       M.state = a[3];
       if (a[4].refused != null) { var at = /stands at (\d{4}) of day (\d+)/.exec(a[4].refused); if (at) clock = { at: at[1], day: parseInt(at[2], 10) }; M.day = clock.day; }
-      else { M.day = a[4].heading.day; M.lastDay = a[4].heading.last_day; M.air = a[4].air_groups || []; M.arrivals = (a[4].arrivals && a[4].arrivals.due) || []; clock = { at: 'dusk', day: M.day }; }
+      else { M.day = a[4].heading.day; M.lastDay = a[4].heading.last_day; if (M.day > M.lastDay) M.over = true; M.air = a[4].air_groups || []; M.arrivals = (a[4].arrivals && a[4].arrivals.due) || []; clock = { at: 'dusk', day: M.day }; }
       M.names = {}; M.hexNames = {};
       M.forces.forEach(function (f) { M.names[f.task_force.handle] = f.task_force.name.replace(/^Placeholder /, ''); });
       M.units.forEach(function (u) { M.names[u.land_unit.handle] = u.land_unit.name; });
@@ -889,7 +889,7 @@ body.watched .gives { display: none !important; }
   var TOLD = { contact: 'A contact is reported', attack: 'You are attacked', loss: 'A ship is lost or out of action', strike: 'Your strike is away', landing: 'Your men are ashore, or fighting' };
   function showSignals() {
     var box = $('signals'), s = M.state; box.textContent = ''; $('papers').textContent = ''; $('papers-staff').textContent = ''; $('leave-slot').textContent = '';
-    if (M.over) slip('THE UMPIRE', 'ENDED', 'The game is over', M.result && M.result.outcome ? 'Result: ' + (M.result.outcome.words || JSON.stringify(M.result.outcome)) : (lastRun && lastRun.summary) || '');
+    if (M.over) { var endSlip = slip('THE UMPIRE', 'ENDED', 'The campaign is over', endLine(), true); endSlip.classList.add('opens'); endSlip.tabIndex = 0; endSlip.setAttribute('role', 'button'); endSlip.addEventListener('click', readEnd); endSlip.appendChild(el('div', 'told', 'READ HOW IT ENDED \u203A')); if (!endShown) { endShown = true; readEnd(); } }
     lastTold.forEach(function (t) { var a = slip('FROM THE PLOT · ' + (clock.at === 'dusk' ? '1800' : clock.at), 'STOPPED THE CLOCK', TOLD[t.thing] || t.thing, null, true); t.lines.slice(0, 10).forEach(function (l) { a.appendChild(rich('div', 'told', l)); }); if (t.lines.length > 10) a.appendChild(el('div', 'told', 'And ' + (t.lines.length - 10) + ' more: see the war diary.')); });
     (s.holds || []).forEach(function (h) {
       var a = slip('HELD FROM THE STAFF', null, null, null), args = {}, what = null; ['ship', 'task_force', 'air_group', 'land_unit', 'setting'].forEach(function (k) { if (h.target && h.target[k] != null) { args[k] = h.target[k]; if (k !== 'setting' && !what) what = k + ':' + h.target[k]; } });
@@ -1898,6 +1898,55 @@ body.watched .gives { display: none !important; }
     sheetAs('THE DRY RUN'); doc.hidden = false; $('sheet-text').hidden = true; $('sheet').hidden = false; $('sheet-close').focus();
   }
 
+  // ---- the end of the game: who won, and what each side did. The tallies
+  // are the umpire's, given to a seat only once the game is over. ----
+  var endShown = false, SIDE_WORD = { allied: 'the Allied side', japanese: 'the Japanese side' };
+  function endOf(side) { return M.result && M.result[side]; }
+  function endLine() { var mine = endOf(config.seat); return mine && mine.outcome ? mine.outcome.replace(/^./, function (c) { return c.toUpperCase(); }) + ' for ' + SIDE_WORD[config.seat] + '.' : ''; }
+  function endCount(o) {
+    var n = Number(o.count), base = o.base && o.base.name ? nameText(o.base.name) : '';
+    switch (o.kind) {
+      case 'ships_sunk': return ['Enemy ships sunk', n ? commas(n) + ((o.ships || []).length ? ' (' + o.ships.map(function (x) { return x.ships + ' ' + x.kind.replace(/_/g, ' '); }).join(', ') + ')' : '') : 'none'];
+      case 'ships_crippled': return ['Enemy ships left afloat and out of action', n ? commas(n) + ((o.ships || []).length ? ' (' + o.ships.map(function (x) { return x.ships + ' ' + x.kind.replace(/_/g, ' '); }).join(', ') + ')' : '') : 'none'];
+      case 'aircraft_destroyed': return ['Enemy aircraft destroyed', commas(n)];
+      case 'men_lost': return ['Enemy men lost', commas(n)];
+      case 'cargo_landed': return ['Supply and fuel landed at ' + base, commas(Math.round(n)) + ' t'];
+      case 'base_open': return [(o.closed ? 'Days the airfield at ' + base + ' was shut' : 'Days the airfield at ' + base + ' was open'), commas(n) + (o.days ? ' of ' + o.days : '')];
+      case 'base_held': return [base + ' at the end', n ? 'held' : 'not held'];
+      default: return [o.kind.replace(/_/g, ' ') + (base ? ', ' + base : ''), commas(n)];
+    }
+  }
+  function readEnd() {
+    var show = function () {
+      var doc = $('sheet-doc'), r = M.result; doc.textContent = '';
+      if (!r || !r.allied || !r.japanese) { doc.appendChild(el('p', '', 'The game is over. This game set no objectives, so the umpire gives no result.')); }
+      else {
+        var mine = r[config.seat], other = config.seat === 'allied' ? 'japanese' : 'allied', won = r.allied.result === 'victory' ? 'allied' : r.japanese.result === 'victory' ? 'japanese' : null;
+        var box = el('div', 'est');
+        box.appendChild(el('div', 'big', won ? (r[won].outcome.replace(/^./, function (c) { return c.toUpperCase(); }) + ' for ' + SIDE_WORD[won] + '.') : 'A stalemate: neither side won.'));
+        box.appendChild(el('div', 'work', 'Day ' + M.lastDay + ' of ' + M.lastDay + ' is fought.'));
+        var rows = [], seen = {};
+        [config.seat, other].forEach(function (side, col) { (r[side].objectives || []).forEach(function (o) { var c = endCount(o), key = o.kind + '|' + (o.base && o.base.handle || '') + '|' + (o.closed ? 1 : 0); if (seen[key] == null) { seen[key] = rows.length; rows.push([c[0], '–', '–']); } rows[seen[key]][col + 1] = c[1]; }); });
+        var t = el('table'), hr = el('tr'); hr.appendChild(el('th', '', '')); hr.appendChild(el('th', '', SIDE_WORD[config.seat].replace(/^the /, 'The '))); hr.appendChild(el('th', '', SIDE_WORD[other].replace(/^the /, 'The '))); t.appendChild(hr);
+        rows.forEach(function (x) { var tr = el('tr'); tr.appendChild(el('th', '', x[0])); tr.appendChild(el('td', '', x[1])); tr.appendChild(el('td', '', x[2])); t.appendChild(tr); });
+        box.appendChild(el('h3', '', 'What each side did')); box.appendChild(t);
+        doc.appendChild(box);
+        if (r.history) { doc.appendChild(el('h3', '', 'In the war itself')); doc.appendChild(rich('p', '', nameText(typeof r.history === 'string' ? r.history : (r.history.text || r.history.note || JSON.stringify(r.history))))); }
+        var d = document.createElement('details'), sm = document.createElement('summary'); sm.textContent = 'THE UMPIRE\'S RECKONING'; d.appendChild(sm);
+        [config.seat, other].forEach(function (side) {
+          d.appendChild(el('div', 'work', SIDE_WORD[side].replace(/^the /, 'The ') + ': ' + (Math.round(Number(r[side].total) * 10) / 10) + ' points.'));
+          (r[side].objectives || []).forEach(function (o) { if (Number(o.points) > 0) { var c = endCount(o); d.appendChild(el('div', 'work', '  ' + c[0] + ', ' + c[1] + ': ' + (Math.round(Number(o.points) * 10) / 10))); } });
+        });
+        d.appendChild(el('div', 'work', 'The margin is ' + (Math.round(Math.abs(Number(mine.margin)) * 10) / 10) + ' points' + (won ? ', which makes it ' + r[won].level + '.' : '.')));
+        doc.appendChild(d);
+      }
+      var row = el('div', 'row'), b = el('button', '', 'READ THE WAR DIARY'); b.type = 'button'; b.addEventListener('click', function () { readDiary(); }); row.appendChild(b); doc.appendChild(row);
+      sheetAs('HOW IT ENDED'); doc.hidden = false; $('sheet-text').hidden = true; $('sheet').hidden = false; $('sheet-close').focus();
+    };
+    if (M.result && M.result.allied) { show(); return; }
+    api('get_briefing').then(function (b) { var r = b && (b.result || (b.objectives && b.objectives.result)); if (r) M.result = r; show(); }).catch(function () { show(); });
+  }
+
   // ---- directives from the commander above ----
   // A directive is received when its condition first holds, read from what
   // the seat's own tools say; it then stays on the desk. Its date is the day
@@ -2029,7 +2078,7 @@ body.watched .gives { display: none !important; }
   // it. Closing the sheet forgets the lot.
   var sheetTrail = [], sheetHere = null, sheetBacking = false;
   function tracked(name, fn, keyOf) { var w = function () { var args = arguments, key = name + (keyOf ? ':' + keyOf.apply(null, args) : ''), again = function () { w.apply(null, args); }; if ($('sheet').hidden) sheetTrail = []; else if (sheetHere && sheetHere.key !== key && !sheetBacking) sheetTrail.push(sheetHere); sheetBacking = false; sheetHere = { key: key, fn: again }; return fn.apply(null, args); }; return w; }
-  readDiary = tracked('diary', readDiary); readUnitDiary = tracked('unitdiary', readUnitDiary, function (h) { return h; }); readSchedule = tracked('schedule', readSchedule); readPlan = tracked('plan', readPlan, function (root) { return root; }); readEstimate = tracked('estimate', readEstimate, function (j) { return j.estimate + ':' + j.kind; });
+  readDiary = tracked('diary', readDiary); readEnd = tracked('end', readEnd); readUnitDiary = tracked('unitdiary', readUnitDiary, function (h) { return h; }); readSchedule = tracked('schedule', readSchedule); readPlan = tracked('plan', readPlan, function (root) { return root; }); readEstimate = tracked('estimate', readEstimate, function (j) { return j.estimate + ':' + j.kind; });
   readOob = tracked('oob', readOob); readInTray = tracked('in', readInTray); readDirective = tracked('directive', readDirective, function (d) { return d.number; }); readReport = tracked('report', readReport); readBriefing = tracked('situation', readBriefing);
   $('sheet-back').addEventListener('click', function () { var p = sheetTrail.pop(); if (!p) return; sheetBacking = true; p.fn(); });
   $('sheet-close').addEventListener('click', function () { $('sheet').hidden = true; });
