@@ -583,3 +583,7 @@ path = "scenario_106_what_to_strike_first.rs"
 [[test]]
 name = "scenario_109_men_ashore_with_no_more_coming"
 path = "scenario_109_men_ashore_with_no_more_coming.rs"
+
+[[test]]
+name = "scenario_110_the_last_day_ashore"
+path = "scenario_110_the_last_day_ashore.rs"

@@ -660,4 +660,66 @@ mod tests {
             Verdict::Wait
         );
     }
+
+    #[test]
+    fn the_days_left_on_a_morning() {
+        let left: Vec<Option<u32>> = (1..=8).map(|d| days_left(Some(6), d)).collect();
+        assert_eq!(
+            left,
+            [6, 5, 4, 3, 2, 1, 0, 0].map(Some).to_vec(),
+            "a game of 6 on the mornings of days 1 to 8"
+        );
+        assert_eq!(days_left(Some(6), 0), Some(6));
+        assert_eq!(days_left(Some(6), u32::MAX), Some(0));
+        assert_eq!(days_left(None, 3), None);
+        assert_eq!(days_left(None, 0), None);
+    }
+
+    #[test]
+    fn the_last_days_are_fewer_than_three_left() {
+        assert_eq!(LAST_DAYS, 3);
+        assert!(in_last_days(Some(0)));
+        assert!(in_last_days(Some(1)));
+        assert!(in_last_days(Some(2)));
+        assert!(!in_last_days(Some(3)));
+        assert!(!in_last_days(Some(4)));
+        assert!(!in_last_days(Some(u32::MAX)));
+        assert!(!in_last_days(None));
+    }
+
+    #[test]
+    fn the_last_days_in_words() {
+        assert_eq!(
+            last_days_words(2),
+            "2 days of the game are left, fewer than 3"
+        );
+        assert_eq!(
+            last_days_words(1),
+            "1 day of the game is left, fewer than 3"
+        );
+        assert_eq!(
+            last_days_words(0),
+            "0 days of the game are left, fewer than 3"
+        );
+    }
+
+    #[test]
+    fn with_three_days_left_or_more_nothing_is_the_last_days() {
+        for game in 1..=40u32 {
+            for today in 1..=45u32 {
+                let resolved = today - 1;
+                let last = in_last_days(days_left(Some(game), today));
+                assert_eq!(
+                    last,
+                    game < resolved + LAST_DAYS,
+                    "game {game}, day {today}"
+                );
+                if game >= resolved + LAST_DAYS {
+                    assert!(!last, "game {game}, day {today}");
+                }
+            }
+        }
+        // A world with no length never has a last day, on any morning.
+        assert!((0..=45).all(|d| !in_last_days(days_left(None, d))));
+    }
 }
