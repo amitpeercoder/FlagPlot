@@ -137,3 +137,13 @@ Built on Nov 20, 2026, on the branch `forces-that-arrive`, on decision 0194's bu
 ### Not done
 
 Nothing leaves the map (rule 22). The 39 days is unchanged. The viewer does not show a unit still held at the end of a game.
+
+## The architect's rulings on the build
+
+Read on Nov 20, 2026, with the build's report and its "As built".
+
+1. **The readings of "As built" stand,** and row 56 of `docs/rules/differences.md` is confirmed: a waiting entry is tried at the first step of each day, where its first entry is. Among the others: a force enters only at a sea or coast hex; an air group with aircraft at a base that has no airfield is refused when the scenario is read, as it is today, and waits only where the field is damaged; a side's held units are numbered for its seat from day 1, so that no handle changes when one enters.
+2. **Three statements of the worked example were the architect's mistakes** and are corrected by him: a scenario gives a force a route only by an order, so "a route given is kept" becomes a route ordered on its day; the staff says what is coming only on a morning of the judgement ashore, so that statement is set in scenario 109's setting; and a game of two days cannot hold a force that enters on day 3, so the count is read from the game stopped after day 2. Each has the test the build wrote in its place.
+3. **No existing game moved:** 160 scenario files give the same events and the same daily hashes before and after; no golden file was remade; the state's layout and the rules label are as they were. The full run passes on the final commit.
+4. **A fault the build found and mended:** the check of holds, commitments and runs did not read what is held apart, so a hold naming a held force failed the game's own invariants.
+5. **Left as it is, and known:** nothing leaves the map; the viewer and the end of `run` show nothing of a unit still held apart when a game ends; the staff's stand, bombardment and landing doctrines' words for a held force have no test of their own.

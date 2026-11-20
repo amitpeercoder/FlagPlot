@@ -57,18 +57,24 @@
 //! 9. **A force enters whoever is there.** With A's surface force lying
 //!    in E on day 3, K enters E, and the two fight in the movement of
 //!    day 3's night, as two forces stopped in one hex do.
-//! 9a. **A route given is kept.** K with a route in the scenario sets
-//!    out on it in day 3's night.
+//! 9a. **It can be routed on its day.** A scenario cannot give a force a
+//!    route but by an order, and an order dated before K's day is
+//!    refused (statement 5). A route ordered for day 3 is taken, and K
+//!    sets out on it in day 3's night.
 //! 10. **Men and cargo aboard come with it.** On day 4 L is at R with U's
 //!     600 men and 40 t of supply aboard.
 //! 11. **Its numbers are its own.** V has the highest land unit number of
 //!     the scenario. A land unit made by division on day 2 takes the
 //!     number above V's, not V's. A task force formed in play on day 1
 //!     takes no number of K's or L's.
-//! 11a. **What is coming is counted as coming.** J has men ashore under a
-//!     "take a place" who are too few, and V is in the take's forces
-//!     limit: on days 1 and 2 the staff says more is coming and names V
-//!     and day 3 (decision 0193).
+//! 11a. **What is coming is counted as coming.** In scenario 109's
+//!     setting, where J has men ashore under a "take a place" who are too
+//!     few, a unit in the take's forces limit that enters at the source
+//!     on a day inside the game: on each morning of the judgement ashore
+//!     before that day the staff says more is coming and names the unit
+//!     and its day (decision 0193). With its day after the game's last,
+//!     the staff says nothing more is coming and names it as after the
+//!     latest day (decision 0194).
 //! 11b. **A hold and a forces limit may name it** on day 1, for J. The
 //!     same commands from A naming K are refused as not A's.
 //! 12. **With "may be used from".** K with `enters = 3` and
@@ -80,8 +86,10 @@
 //!     `enters` in a hex with no base; an arrival of aircraft dated
 //!     before its group enters; an escort and its charge entering on
 //!     different days. Each with its reason.
-//! 14. **Never entered, never counted.** A game of two days ends with
+//! 14. **Never entered, never counted.** The game stopped after day 2 has
 //!     K's carrier in no count of ships sunk, out of action or afloat.
+//!     (A game of two days cannot hold a force that enters on day 3: the
+//!     scenario is refused, statement 13.)
 //! 15. **Saved and loaded** on day 2, the game goes on the same, and the
 //!     daily hashes are the same.
 //! 15a. **In a trial.** A dry run J asks on day 1 that plays to day 4 has
@@ -1369,12 +1377,6 @@ fn k_routed_on(text: &str, day: u32) -> String {
 }
 
 #[test]
-#[ignore = "the scenario file has no key that gives a task force a route (TaskForceSpec has none): a route can only be an [[order]], and an order dated before its day is refused (statement 5), so \"K with a route in the scenario\" cannot be written; the substitute below gives the route by an order of day 3"]
-fn statement_9a_a_route_given_is_kept() {
-    unreachable!("a route cannot be given in the scenario to a force that has not entered");
-}
-
-#[test]
 fn statement_9a_substitute_a_route_ordered_on_day_3_sets_out_in_the_night() {
     let played = play(&k_routed_on(&text(), 3));
     assert!(played.acceptances().contains(&(3, force(11))));
@@ -1511,12 +1513,6 @@ fn said(reason: &sim_core::command::Reason) -> String {
         all.push_str(&e.what);
     }
     all
-}
-
-#[test]
-#[ignore = "on days 1 and 2 the staff cannot say more is coming: the take's judgement ashore (decision 0193) is made from the first morning there are men ashore at the place, and in scenario 109's setting, the only one with a take, that is day 4 (a lift with men aboard is at sea until then); with V entering on day 3 the code gives, on days 1 to 3, only the plan's own reasons (the landing order, the route, \"task_force:1 is routed to (14,0) and its orders stand\"), and nothing of V, and on day 4, the first judgement, V is already at the source and is named as a unit \"left behind at the source: land_unit:3 ... to be sent when task_force:1 lies stopped at the source with nothing aboard\", not as one that enters. The substitute below, with V entering on day 6, gives the judgement on days 4 and 5 naming V and day 6"]
-fn statement_11a_what_is_coming_is_counted_as_coming() {
-    unreachable!("no judgement ashore exists on days 1 and 2");
 }
 
 /// The judgement ashore of `day`: the reason that carries it.
@@ -1872,14 +1868,6 @@ fn statement_13_refused_scenarios() {
 }
 
 // ---------------------------------------------------------------- Statement 14
-
-#[test]
-#[ignore = "a game of two days with K entering on day 3 cannot be loaded: the loader refuses `enters` after the last day (statement 13: \"task force 11 has enters = 3, after the last day of the scenario (2): it would never enter\"), so a scenario can never end before a force's day; the substitute below plays the scenario of six days and stops it after day 2"]
-fn statement_14_never_entered_never_counted() {
-    let text = changed(&text(), "days = 6\n", "days = 2\n");
-    let scenario = load(&text);
-    assert_eq!(scenario.days, 2);
-}
 
 #[test]
 fn statement_14_substitute_a_game_stopped_after_day_2_counts_nothing_of_k() {
