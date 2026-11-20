@@ -44,3 +44,17 @@ What is so today (chapter 8, Standing at a hex by night):
 ## Scenario 105
 
 10. **The architect's two orders to task force 2 are taken out** and the Allied side is given an intent of the commander's own for it: stand at (-13,-2), the centre of the waters decision 0190 has the carriers deny, at press, so that it goes at once and not only when a contact is held. The hand calculation is amended by the architect.
+
+## Amended on review
+
+A reviewer read the plan against the stand doctrine's code and ran the scenarios that have a stand. Found right: the claims of "what is so today"; where the branch belongs; that the engine has the sea route, the passage forecast and the nearest base by sea that the rule needs; that a commander may state "stand at" himself and set its risk. None of the scenarios he ran reaches the new branch, so none of their hashes moves.
+
+11. **It goes to its station at every risk.** As written a balanced force with no threat lay idle where it began, though the plan itself said it has no port to wait in. Rules 1 and 4 are replaced: a force with no home port is routed to its station on the first morning it is not there and not already under way to it. The test of a sortie decides its readiness and no longer whether it goes: battle readiness on a day it would sortie, normal otherwise. At preserve the force it does not go, and a force at the station is given nothing, while a contact that outnumbers it stands within 15 hexes of the station; the reason names it.
+12. **No mark.** The last hex of a route is never treated as marked. The force is routed to the station, arrives and lies stopped there. The reasons say that and nothing of a mark.
+13. **Under way, it is left alone.** A force already under way to its station is given no route.
+14. **Fuel is weighed to a base that can fuel it:** the nearest base of the side by sea that holds fuel above its reserve and gives a rate, the lower number on a tie. Rule 6 sends it there and to no other. With no such base the fuel is not weighed, the force does not go in, and the reason says no base of the side can fuel it. (In scenario 105 Port Moresby holds no fuel, so the support group stays out.)
+15. **Ammunition is read in the same pass as fuel,** as today: a force short of it by the risk's share does not go to its station, and goes in to that base if it is at the station.
+16. **A force with a home port, stopped at sea on no route,** is stuck for ever today: it is "away from home" and is given nothing. It is now routed to its home port at cruise, and from there stands as today. Where its home port is no longer the side's, the staff says so and treats it as a force with no home port; today it says nothing at all.
+17. **Known:** a force lying at its station burns no fuel and is open to the enemy's aircraft by day, and fights any force that enters its hex.
+18. **The worked example is corrected by the architect:** statement 6 (balanced goes at once; its readiness waits for the threat), statement 7 (the fuel is tested at press with a margin of one, and B holds fuel and gives a rate), the mark is dropped, and statements are added for rules 13, 14 and 16 with two properties: a force that goes at balanced goes at press; more fuel aboard never stops it going.
+19. **Scenario 105:** task force 2's intent is "stand at (-13,-2)" with no risk set.
