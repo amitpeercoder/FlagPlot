@@ -2,11 +2,11 @@ Scenario 6b: Wear and repair
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 73f636d9e4301e17  32 events
-day   2  hash 471ce55a61bc08ba  29 events
-day   3  hash 05384710f8a5d269  30 events
-day   4  hash dc6af2342a7f9cc0  28 events
-day   5  hash 6eed2fb7599bdb5b  27 events
+day   1  hash 30826b13e0d734d1  32 events
+day   2  hash 42c2c219f07fac80  29 events
+day   3  hash 767fc984a4cca4c3  30 events
+day   4  hash e66726dfb36963c2  28 events
+day   5  hash 426b3554af497049  27 events
 
 air_group:1 "Placeholder bomber group" (Japanese) at base:1: 2 ready, 1 damaged, mission BaseStrike on base:2, no arc
 air_group:2 "Placeholder escort group" (Japanese) at base:1: 5 ready, 2 damaged, mission CombatAirPatrol, patrol share 0.5, no arc

@@ -2,8 +2,8 @@ Scenario 44: Refuelling that takes time
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash b91b58cff9ee0b10  16 events
-day   2  hash 7afa6086aa77df84  12 events
+day   1  hash cbeb54a34954b082  16 events
+day   2  hash 9cbeabed5cde3eae  12 events
 
 task_force:1 "Placeholder cargo force 1" (Allied): Idle at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Placeholder cruiser force 2" (Allied): Idle at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
