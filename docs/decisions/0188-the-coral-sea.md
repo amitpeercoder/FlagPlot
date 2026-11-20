@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 20, 2026, at the designer's aski
 
 Summary: A second small scenario for play: the Coral Sea over five days, 6 to 10 May 1942. Two American carriers and a cruiser group against two Japanese fleet carriers and a light carrier, with a Japanese convoy bound for Port Moresby that lands on the last days if it is not stopped or turned back. It is built in three stages: the data is settled and derived first, then the scenario with its hand calculation, then its runs and games under the guards of decision 0187. Most of the ships and aircraft it needs the game already has.
 
-Standing: Confirmed by the designer on Nov 20, 2026; built, and with the staff's new rules (decisions 0190 to 0192) inside the band on its third run of 1,000 games: the Allied side ahead in 574, the Japanese in 426. Its four games between agents are owed before it is called balanced.
+Standing: Confirmed by the designer on Nov 20, 2026 and built. It has passed decision 0187's three guards: every figure has its reason before a run; the staffs' third run of 1,000 games is inside the band (574 and 426); and four games between agents do not go one way. It is not yet on the table's list.
 
 ## Why
 
@@ -373,3 +373,13 @@ Recorded by the architect on Nov 20, 2026 (`docs/validation/coral-sea-runs-with-
 5. **What it cost the Allied side to stop the convoy:** its carriers no longer sink a Japanese fleet carrier in any game, and Australia is sunk three times as often.
 6. **Still owed:** the four games between agents, before the scenario is called balanced (decision 0187, guard three); a run with decision 0193 once it is merged; the scenario on the table's list.
 7. **A test loosened.** The property that the convoy does not move and no man lands where the Japanese side is given no orders had a check beside it that every man was still aboard. With the Allied side given orders the carriers now find the idle convoy and sink a transport. The property stands; the check is kept for the file in which neither side is given orders.
+
+## Stage C, ended: the games between agents
+
+Recorded by the architect on Nov 20, 2026 (`docs/validation/coral-sea-agent-games.md`).
+
+1. **Four games, two models, each on each side twice:** a Japanese major victory and a decisive one with the stronger model as Japan; a stalemate and an Allied minor victory with it as the Allies. They do not all go one way, and the result follows the commander.
+2. **The scenario has passed the three guards of decision 0187,** and may be called balanced in that record's sense: a contest for the engine's staffs, and not one-sided between the two models that played it. Four games are few, and the record says so.
+3. **Found by the commanders, each for a record of its own if it is taken up:** the staff orders men ashore to attack on the last day of a game, when it can only cost men (a fault of decision 0193 as built); no warning of fuel for a force with no home port; a carrier's search aimed at the enemy's base; a carrier force that will not leave a contact in reach; a plan that waits without saying it can no longer arrive in time.
+4. **Not looked into:** whether a convoy fought in the hex of its landing in every pulse can land its men; why Lexington is not sunk in any staff game.
+5. **Next:** the scenario on the table's list, with scenario 103.
