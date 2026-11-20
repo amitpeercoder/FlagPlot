@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "flagplot-agent/trials",
   "title": "trials: the estimates the seat was shown",
-  "description": "Decision 0178: the estimates of a trial this seat has been shown, each with what was asked, the evening it was asked and whether it still stands (current, asked on an earlier evening, or asked before the queue changed). Given with an estimate's number, trials returns that stored trial answer itself (kind trial). Changes nothing; kept with the session.",
+  "description": "Decisions 0178 and 0181: the estimates of a trial this seat has been shown, each with its kind (trial or window), what was asked, the evening it was asked and whether it still stands (current, asked on an earlier evening, or asked before the queue changed). Given with an estimate's number, trials returns that stored answer itself (kind trial or window). Changes nothing; kept with the session.",
   "type": "object",
   "required": [
     "format",
@@ -17,7 +17,7 @@
       "const": "flagplot-agent"
     },
     "version": {
-      "const": 30
+      "const": 31
     },
     "kind": {
       "const": "trials"
@@ -28,6 +28,7 @@
         "type": "object",
         "required": [
           "estimate",
+          "kind",
           "asked_on",
           "asked",
           "standing"
@@ -36,6 +37,12 @@
         "properties": {
           "estimate": {
             "type": "integer"
+          },
+          "kind": {
+            "enum": [
+              "trial",
+              "window"
+            ]
           },
           "asked_on": {
             "type": "object",
@@ -54,69 +61,7 @@
             }
           },
           "asked": {
-            "type": "object",
-            "required": [
-              "intent",
-              "preview",
-              "tried_intent",
-              "size",
-              "worlds",
-              "days",
-              "for_day",
-              "standing",
-              "course",
-              "second_trial",
-              "orders_not_tried"
-            ],
-            "additionalProperties": false,
-            "properties": {
-              "intent": {
-                "type": [
-                  "integer",
-                  "null"
-                ]
-              },
-              "preview": {
-                "type": [
-                  "integer",
-                  "null"
-                ]
-              },
-              "tried_intent": {
-                "type": "integer"
-              },
-              "size": {
-                "type": "string"
-              },
-              "worlds": {
-                "type": "integer"
-              },
-              "days": {
-                "type": "integer"
-              },
-              "for_day": {
-                "type": "integer"
-              },
-              "standing": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              },
-              "course": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              },
-              "second_trial": {
-                "type": "boolean"
-              },
-              "orders_not_tried": {
-                "type": "integer"
-              }
-            },
-            "description": "What was asked: the intent or the preview, the size, and what was taken in on the morning tried, in words."
+            "$ref": "trial.schema.json#/properties/asked"
           },
           "standing": {
             "type": "string",

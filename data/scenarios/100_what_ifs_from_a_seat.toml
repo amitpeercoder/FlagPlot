@@ -1,0 +1,144 @@
+# Scenario 100: what-ifs from a seat.
+#
+# Decision 0181, the second part of step 8 of step 3's stage 4. A commander at
+# his seat queues a landing and asks three things of it before a day is
+# resolved: what if I give it later (the tool `trial` with `dates`), what if I
+# hold it a day (a preview of "not before day 3", compared with the plan as it
+# stands), and what does it cost me (`compare`, the side without the order).
+# He is answered with estimates set side by side, and the game is as it was.
+#
+# It is scenario 96's second case, "worlds that differ", from a seat: scenario
+# 96's file with these changes, as the hand calculation's inputs give them:
+#   1. The Allied side also believes 200 more men may be at B, standing
+#      unknown (a second [[believed_men]]).
+#   2. It names its own file of the trial's figures,
+#      trial_placeholder_scenario_100.toml, which is scenario 96's but for the
+#      sizes: small is 4 worlds for 5 days, standard 8 worlds for 5 days and
+#      full 16 worlds for 5 days.
+#   3. It names its own file of sides, class_sides_placeholder_scenario_100.csv,
+#      scenario 96's.
+# Its ground figures are scenario 96's (ground_placeholder_scenario_96.toml),
+# unchanged. The scenario has no commands: the commander gives them from his
+# seat. The Japanese garrison of the live game is as scenario 96 has it, 1,200
+# men; the trial is not told.
+#
+# The hand calculation is in tests/scenario_100_what_ifs_from_a_seat.rs. The
+# test runs this file on the frozen step 1 figures with scenario 96's ground
+# figures, through a session built as sim-cli builds one, with the Allied seat
+# played and the Japanese seat scripted. The trial's figures and the file of
+# sides have frozen copies in data/reference/step1.
+#
+# PLACEHOLDER DATA. The bases, ships, units, beliefs, figures and map are
+# invented.
+
+name = "Placeholder scenario 100: What-ifs from a seat"
+placeholder = true
+seed = 1942
+days = 14
+map = "../map/placeholder_preparing.toml"
+ship_classes = [
+    "../reference/ship_classes.csv",
+    "../reference/ship_classes_placeholder_transports.csv",
+]
+port_sizes = "../reference/port_sizes.csv"
+aircraft_types = "../reference/aircraft_types.csv"
+search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat.toml"
+ground = "../reference/ground_placeholder_scenario_96.toml"
+class_sides = "../reference/class_sides_placeholder_scenario_100.csv"
+trial = "../reference/trial_placeholder_scenario_100.toml"
+
+# Allied base 1 at A, with supply for every man for the whole game and no
+# fuel to give.
+[[base]]
+id = 1
+name = "Placeholder base A"
+side = "allied"
+q = 0
+r = 0
+supply_t = 1000
+fuel_t = 0
+
+# Japanese base 2 at B: an airfield with 200 t of supply and no fuel.
+[[base]]
+id = 2
+name = "Placeholder airfield B"
+side = "japanese"
+q = 4
+r = 0
+supply_t = 200
+fuel_t = 0
+
+# Task force 1: two placeholder troop transports, stopped in port at base 1.
+[[task_force]]
+id = 1
+name = "Placeholder transport force 1"
+side = "allied"
+at_base = 1
+mission = "transport"
+
+[[ship]]
+id = 1
+name = "Placeholder troop transport 1"
+class = 10
+side = "allied"
+fuel_t = 1000
+task_force = 1
+
+[[ship]]
+id = 2
+name = "Placeholder troop transport 2"
+class = 10
+side = "allied"
+fuel_t = 1000
+task_force = 1
+
+# The Allied land units, ashore at A: two fighting units on the defence, at
+# the standard of experience, 2, the default, as is the garrison. Unit 2 may
+# first be used on day 4.
+[[land_unit]]
+id = 1
+name = "Placeholder First"
+side = "allied"
+men = 600
+q = 0
+r = 0
+
+[[land_unit]]
+id = 2
+name = "Placeholder Second"
+side = "allied"
+men = 600
+q = 0
+r = 0
+available_from = 4
+
+# The Japanese garrison of B, on the defence.
+[[land_unit]]
+id = 10
+name = "Placeholder Garrison"
+side = "japanese"
+men = 1200
+q = 4
+r = 0
+
+# The men the Allied side believes are at B: it holds no count of them.
+[[believed_men]]
+side = "allied"
+name = "Garrison believed at B"
+at_base = 2
+men = 200
+standing = "present"
+placeholder = true
+note = "Scenario 96's hand calculation: 200 men are believed at B, with no count of them. Rests on no source."
+
+# The men the Allied side believes may be at B as well: it does not know
+# whether they are there.
+[[believed_men]]
+side = "allied"
+name = "More believed at B"
+at_base = 2
+men = 200
+standing = "unknown"
+placeholder = true
+note = "Scenario 100's hand calculation: 200 more men may be at B, standing unknown. Rests on no source."

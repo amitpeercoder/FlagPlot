@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "flagplot-agent/trial_described",
+  "title": "trial_described: what a trial would play, with nothing played",
+  "description": "Decision 0181, amended 9: a seat's trial asked with describe true. It says what would be tried: the standing commands, the course, what it would be set beside, the dates with what is due on each, and the worlds and days of each trial it would play. Nothing is played, nothing is changed and no estimate is kept.",
+  "type": "object",
+  "required": [
+    "format",
+    "version",
+    "kind",
+    "asked",
+    "given",
+    "first_day",
+    "last_day",
+    "dates",
+    "not_tried",
+    "plays",
+    "text"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "format": {
+      "const": "flagplot-agent"
+    },
+    "version": {
+      "const": 31
+    },
+    "kind": {
+      "const": "trial_described"
+    },
+    "asked": {
+      "$ref": "trial.schema.json#/properties/asked"
+    },
+    "given": {
+      "type": "boolean"
+    },
+    "first_day": {
+      "type": "integer"
+    },
+    "last_day": {
+      "type": "integer"
+    },
+    "dates": {
+      "type": "array",
+      "items": {
+        "$ref": "window.schema.json#/$defs/due_date"
+      }
+    },
+    "not_tried": {
+      "type": "array",
+      "items": {
+        "$ref": "window.schema.json#/$defs/due_date"
+      }
+    },
+    "plays": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "trial",
+          "date",
+          "worlds",
+          "days"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "trial": {
+            "enum": [
+              "first",
+              "second"
+            ]
+          },
+          "date": {
+            "type": "integer"
+          },
+          "worlds": {
+            "type": "integer"
+          },
+          "days": {
+            "type": "integer"
+          }
+        }
+      },
+      "description": "Each trial it would play: the first at each date, and the second where one is asked, each with its worlds and days."
+    },
+    "text": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}
