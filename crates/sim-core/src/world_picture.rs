@@ -385,6 +385,8 @@ fn walk_air_group(group: &mut AirGroup, visit: &mut dyn FnMut(String, HeldId<'_>
         available_from: _,
         // A tally holds no order and no event (decision 0180).
         claims: _,
+        strike_first_waters: _,
+        waters_order,
     } = group;
     for (what, held) in [
         ("mission", mission_order),
@@ -397,6 +399,7 @@ fn walk_air_group(group: &mut AirGroup, visit: &mut dyn FnMut(String, HeldId<'_>
         ("strike share", strike_share_order),
         ("strike sizing", strike_sizing_order),
         ("search once", search_once_order),
+        ("waters to strike first", waters_order),
     ] {
         if let Some(held) = held {
             visit(format!("{id}'s {what} order"), HeldId::Order(held));

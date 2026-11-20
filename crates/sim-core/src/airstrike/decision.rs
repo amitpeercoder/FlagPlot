@@ -174,6 +174,7 @@ impl World {
                 .into_iter()
                 .chain(reach_cause(&group))
                 .chain(target_cause(&group))
+                .chain(waters_cause(&group))
                 .chain([Cause::Event(report_event)])
                 .chain(group.strike_age_order.map(Cause::Order))
                 .chain(group.strike_share_order.map(Cause::Order))
@@ -286,6 +287,16 @@ fn target_cause(group: &AirGroup) -> Option<Cause> {
     group.target_order.map(Cause::Order)
 }
 
+/// The order that set the group's waters to strike first, as a cause of a
+/// launch, while the group has waters (decision 0190, 35): a group with none
+/// cites nothing new, so no log of a game without them changes.
+fn waters_cause(group: &AirGroup) -> Option<Cause> {
+    group
+        .waters_order
+        .filter(|_| !group.strike_first_waters.is_empty())
+        .map(Cause::Order)
+}
+
 /// The oldest contact, in pulses, `group` launches a naval strike on
 /// (decision 0114): its own setting, or the figure of the air combat
 /// figures. The strike decision and a side's view both read it.
@@ -354,9 +365,12 @@ pub(crate) fn contact_verdict(
 /// 0063), each with the ships it reports, in the order it chooses among
 /// them. A contact qualifies if it is no older than `max_age_pulses`, lies
 /// within `reach_nm` of `origin` and is taken for a kind on the group's
-/// target list ([`contact_verdict`]). They are ordered by the kind that
-/// comes first on the list, then the nearest, then the lowest contact
-/// number; a group with sizing off takes the first.
+/// target list ([`contact_verdict`]). They are ordered by whether the
+/// contact's estimated hex is in the group's waters to strike first (those
+/// in them first; decision 0190, 13 and 31), then by the kind that comes
+/// first on the list, then the nearest, then the lowest contact number; a
+/// group with sizing off takes the first. With no waters the order is the
+/// list's.
 ///
 /// It reads the side's belief and the group's own state and orders, and
 /// nothing else: never the enemy.
@@ -376,6 +390,7 @@ pub(crate) fn contacts_to_strike(
         .collect();
     found.sort_by_key(|contact| {
         (
+            !group.strike_first_waters.contains(&contact.estimated_hex),
             group.target_rank(contact.estimated_kind),
             origin.air_distance_nm(contact.estimated_hex),
             contact.id,

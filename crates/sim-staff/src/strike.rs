@@ -25,10 +25,11 @@
 //!   share of a half, since a base that strikes will be struck;
 //! - **any other group** is given no order.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use sim_core::command::{Addressee, Intent, IntentKind, Risk, StaffOrder};
 use sim_core::fixed::Fixed;
+use sim_core::hex::Hex;
 use sim_core::ids::{AirGroupId, BaseId, IntentId};
 use sim_core::orders::{AirGroupOrder, AirMission, OrderKind, Reach};
 use sim_core::refdata::{AircraftRole, ShipKind};
@@ -38,6 +39,7 @@ use crate::air::{mission_words, Day};
 use crate::neutralise::bomber_reach;
 use crate::raid::rest_level;
 use crate::reasons::{base_words, serving};
+use crate::targets::{kinds_words, StrikeTargets};
 
 // ---------------------------------------------------------------------------
 // The risk table (decision 0123, 7, the rows of decision 0113's table).
@@ -112,13 +114,22 @@ pub struct StrikeGroup {
     pub held_share: Fixed,
     pub sizing: bool,
     pub patrol_share: Fixed,
+    /// Its waters to strike first as they stand (decision 0190).
+    pub waters: BTreeSet<Hex>,
 }
 
 /// The orders of one morning, in group number order: for each group its
 /// mission first, then its settings, each only where it differs from what
-/// the group has. For a bomber: mission, oldest contact, target list, reach,
-/// held share, sizing.
-pub fn decide(risk: Risk, figure: u32, groups: &[StrikeGroup]) -> Vec<(AirGroupId, AirGroupOrder)> {
+/// the group has. For a bomber: mission, oldest contact, target list (the
+/// targets limit's kinds where one binds, decision 0190, 3), waters to
+/// strike first (those `targets` gives, the empty set where none binds,
+/// decision 0190, 33), reach, held share, sizing.
+pub fn decide(
+    risk: Risk,
+    figure: u32,
+    targets: &StrikeTargets,
+    groups: &[StrikeGroup],
+) -> Vec<(AirGroupId, AirGroupOrder)> {
     let level = rest_level(risk);
     let mut sorted: Vec<&StrikeGroup> = groups.iter().collect();
     sorted.sort_by_key(|g| g.id);
@@ -143,9 +154,17 @@ pub fn decide(risk: Risk, figure: u32, groups: &[StrikeGroup]) -> Vec<(AirGroupI
                         },
                     ));
                 }
-                let kinds = target_list(risk);
+                let kinds = targets.list_or(target_list(risk));
                 if g.target_priority != kinds {
                     orders.push((g.id, AirGroupOrder::SetTargetPriority { kinds }));
+                }
+                if g.waters != targets.waters {
+                    orders.push((
+                        g.id,
+                        AirGroupOrder::SetStrikeFirstWaters {
+                            hexes: targets.waters.iter().copied().collect(),
+                        },
+                    ));
                 }
                 if g.reach != reach(risk) {
                     orders.push((g.id, AirGroupOrder::SetReach { reach: reach(risk) }));
@@ -187,17 +206,6 @@ pub fn decide(risk: Risk, figure: u32, groups: &[StrikeGroup]) -> Vec<(AirGroupI
 // ---------------------------------------------------------------------------
 // The morning, from the side's view.
 // ---------------------------------------------------------------------------
-
-fn kinds_words(kinds: &[ShipKind]) -> String {
-    if kinds == ShipKind::ALL {
-        return "every kind".to_string();
-    }
-    kinds
-        .iter()
-        .map(|k| k.name())
-        .collect::<Vec<_>>()
-        .join(", ")
-}
 
 fn reach_words(reach: Reach) -> &'static str {
     match reach {
@@ -275,6 +283,7 @@ impl Day<'_, '_> {
             .air_combat_figures()
             .map_or(0, |f| f.strike_contact_max_age_pulses);
         let has_cover = self.cover_in_force(base);
+        let targets = self.strike_targets(task, None);
 
         let mut members = self.at_base(task, base);
         members.retain(|m| self.state.hold_on_group(m.id).is_none());
@@ -364,9 +373,10 @@ impl Day<'_, '_> {
                 held_share: group.strike_held_share,
                 sizing: group.strike_sizing,
                 patrol_share: group.patrol_share,
+                waters: group.strike_first_waters.clone(),
             });
         }
-        let morning = decide(risk, figure, &groups);
+        let morning = decide(risk, figure, &targets, &groups);
 
         let mut orders: Vec<StaffOrder> = Vec::new();
         for (group, order) in &morning {
@@ -395,11 +405,28 @@ impl Day<'_, '_> {
                     ),
                     "a different risk level",
                 ),
-                AirGroupOrder::SetTargetPriority { kinds } => (
-                    format!("a target list of {}", kinds_words(&before.target_priority)),
-                    kinds_words(kinds),
-                    format!("the target list of the {risk_text}"),
-                    "a different risk level",
+                AirGroupOrder::SetTargetPriority { kinds } => match &targets.kinds {
+                    Some((_, on)) => (
+                        format!("a target list of {}", kinds_words(&before.target_priority)),
+                        kinds_words(kinds),
+                        format!(
+                            "the targets limit set on {on}: {}, in that order, at every risk",
+                            kinds_words(kinds)
+                        ),
+                        "the targets limit changed or cleared",
+                    ),
+                    None => (
+                        format!("a target list of {}", kinds_words(&before.target_priority)),
+                        kinds_words(kinds),
+                        format!("the target list of the {risk_text}"),
+                        "a different risk level",
+                    ),
+                },
+                AirGroupOrder::SetStrikeFirstWaters { hexes } => (
+                    crate::targets::waters_had(&before.waters),
+                    crate::targets::waters_had(&hexes.iter().copied().collect()),
+                    crate::targets::waters_binding(&targets),
+                    "the deny withdrawn, or its targets limit changed or cleared",
                 ),
                 AirGroupOrder::SetReach { reach } => (
                     format!("{} reach", reach_words(before.reach)),
@@ -442,6 +469,9 @@ impl Day<'_, '_> {
                 // The group decided (decision 0123, 9).
                 reason.serves.level = Some(Addressee::AirGroup(*group));
             }
+            if matches!(order, AirGroupOrder::SetStrikeFirstWaters { .. }) {
+                self.waters_serve(&targets, &mut reason);
+            }
             orders.push(StaffOrder {
                 kind: OrderKind::AirGroup {
                     target: *group,
@@ -460,9 +490,10 @@ impl Day<'_, '_> {
             .collect();
         let intent_words = format!("{}, striking ships from {base_text}", task.id);
         let wanted_text = format!(
-            "at the {risk_text} a bomber flies the naval strike mission up to a fatigue of {level}, launches on a contact up to {} pulse(s) old, goes for {}, on {} reach, holding back {}, and sizes its strikes",
+            "at the {risk_text} a bomber flies the naval strike mission up to a fatigue of {level}, launches on a contact up to {} pulse(s) old, goes for {}{}, on {} reach, holding back {}, and sizes its strikes",
             contact_age(risk, figure),
-            kinds_words(&target_list(risk)),
+            kinds_words(&targets.list_or(target_list(risk))),
+            crate::targets::wanted_waters_words(&targets),
             reach_words(reach(risk)),
             held_share(risk)
         );
@@ -522,6 +553,10 @@ impl Day<'_, '_> {
 mod tests {
     use super::*;
 
+    fn none() -> StrikeTargets {
+        StrikeTargets::default()
+    }
+
     fn bomber(id: u32) -> StrikeGroup {
         StrikeGroup {
             id: AirGroupId::new(id),
@@ -534,14 +569,15 @@ mod tests {
             held_share: Fixed::ZERO,
             sizing: false,
             patrol_share: Fixed::ONE,
+            waters: BTreeSet::new(),
         }
     }
 
     #[test]
     fn press_gives_four_orders_balanced_two_preserve_four() {
-        assert_eq!(decide(Risk::Press, 0, &[bomber(1)]).len(), 4);
-        assert_eq!(decide(Risk::Balanced, 0, &[bomber(1)]).len(), 2);
-        assert_eq!(decide(Risk::Preserve, 0, &[bomber(1)]).len(), 4);
+        assert_eq!(decide(Risk::Press, 0, &none(), &[bomber(1)]).len(), 4);
+        assert_eq!(decide(Risk::Balanced, 0, &none(), &[bomber(1)]).len(), 2);
+        assert_eq!(decide(Risk::Preserve, 0, &none(), &[bomber(1)]).len(), 4);
     }
 
     #[test]
@@ -556,7 +592,7 @@ mod tests {
         let mut tired = bomber(1);
         tired.fatigue = Fixed::from_int(61);
         tired.mission = AirMission::NavalStrike;
-        let orders = decide(Risk::Press, 0, &[tired]);
+        let orders = decide(Risk::Press, 0, &none(), &[tired]);
         assert_eq!(orders[0].1, AirGroupOrder::SetAirMission(AirMission::Rest));
     }
 }

@@ -1052,6 +1052,14 @@ pub struct AirGroup {
     /// the sum of its lines in every raid's claim. A record, read by no
     /// rule; kept whatever becomes of the group. Added at the end.
     pub claims: ClaimTally,
+    /// The waters the group strikes first (decision 0190, 13): a contact
+    /// whose estimated hex is one of these ranks before every contact
+    /// outside them. Empty by default, and then nothing changes. Added at
+    /// the end.
+    pub strike_first_waters: BTreeSet<Hex>,
+    /// The standing order that set the waters to strike first, if any
+    /// (decision 0190). Added at the end.
+    pub waters_order: Option<OrderId>,
 }
 
 /// An air group's tally of its claims (decision 0180, 6): the aircraft it
@@ -1129,6 +1137,8 @@ impl AirGroup {
             strike_sizing_order: None,
             search_once: false,
             search_once_order: None,
+            strike_first_waters: BTreeSet::new(),
+            waters_order: None,
         }
     }
 }

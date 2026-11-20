@@ -1317,6 +1317,19 @@ impl World {
                     }
                     AirGroupOrder::SetStrikeSizing { .. } => Ok(()),
                     AirGroupOrder::SetSearchOnce { .. } => Ok(()),
+                    // Decision 0190, 35: each hex on the map, and each once.
+                    AirGroupOrder::SetStrikeFirstWaters { hexes } => {
+                        let mut seen = std::collections::BTreeSet::new();
+                        for hex in hexes {
+                            if self.map.get(*hex).is_none() {
+                                return Err(RejectReason::WatersOffMap(*hex));
+                            }
+                            if !seen.insert(*hex) {
+                                return Err(RejectReason::WatersHexTwice(*hex));
+                            }
+                        }
+                        Ok(())
+                    }
                     AirGroupOrder::SetRestThreshold { fatigue } => {
                         if *fatigue < Fixed::ZERO || *fatigue > Fixed::from_int(100) {
                             Err(RejectReason::FatigueOutOfRange(*fatigue))
@@ -1821,6 +1834,10 @@ impl World {
                     AirGroupOrder::SetSearchOnce { on } => {
                         group.search_once = *on;
                         group.search_once_order = Some(order.id);
+                    }
+                    AirGroupOrder::SetStrikeFirstWaters { hexes } => {
+                        group.strike_first_waters = hexes.iter().copied().collect();
+                        group.waters_order = Some(order.id);
                     }
                     AirGroupOrder::SetRestThreshold { fatigue } => {
                         group.rest_above = Some(*fatigue);

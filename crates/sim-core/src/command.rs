@@ -49,6 +49,7 @@ use crate::ids::{
     AirGroupId, BaseId, IntentId, InterruptId, LandUnitId, OrderId, ShipId, TaskForceId,
 };
 use crate::orders::{Issuer, OrderKind};
+use crate::refdata::ShipKind;
 use crate::state::Side;
 use crate::view::SideView;
 
@@ -702,6 +703,25 @@ pub struct IntentLimits {
     /// or a "control an island" of the commander's; `None` where the risk
     /// decides it. Added at the end.
     pub knowledge: Option<Knowledge>,
+    /// The kinds of ship to strike, in order, and whether the waters of the
+    /// deny an area it stands under come first (decision 0190: "targets").
+    /// `None`: not set on this intent; read up the tree, the nearest set on
+    /// the chain. Added at the end.
+    pub targets: Option<TargetsLimit>,
+}
+
+/// The targets limit of an intent (decision 0190): the kinds of ship its
+/// bombers strike, in the order they are to be struck, and whether the
+/// waters of the "deny an area" it is set on or stands under come first.
+/// The staff gives the kinds as the target list of every bomber the limit
+/// binds, at every risk, in place of the list the risk gives; and, with
+/// `waters_first`, the deny's waters as the bomber's waters to strike first.
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct TargetsLimit {
+    /// One to six kinds, each once, most wanted first.
+    pub kinds: Vec<ShipKind>,
+    /// True only on a "deny an area" or an intent beneath one.
+    pub waters_first: bool,
 }
 
 /// How much must be known of the enemy at the place before a landing goes
@@ -880,6 +900,12 @@ pub enum Limit {
         intent: IntentId,
         knowledge: Option<Knowledge>,
     },
+    /// Decision 0190: the kinds of ship to strike, in order, and whether the
+    /// deny's waters come first; `None` clears it. Added at the end.
+    Targets {
+        intent: IntentId,
+        targets: Option<TargetsLimit>,
+    },
 }
 
 impl Limit {
@@ -894,7 +920,8 @@ impl Limit {
             | Limit::NotBefore { intent, .. }
             | Limit::WaitFor { intent, .. }
             | Limit::After { intent, .. }
-            | Limit::Knowledge { intent, .. } => Some(*intent),
+            | Limit::Knowledge { intent, .. }
+            | Limit::Targets { intent, .. } => Some(*intent),
             Limit::Reserve { .. } => None,
         }
     }
@@ -1671,6 +1698,35 @@ impl CommandState {
             .find_map(|on| on.limits.knowledge.map(|knowledge| (knowledge, on.id)))
     }
 
+    /// The targets limit binding `intent`, read up the tree (decision 0190,
+    /// 2): the nearest set on the chain, with the intent it is set on;
+    /// `None` where none is set, and every list and choice is today's.
+    pub fn targets_read_up(&self, intent: IntentId) -> Option<(&TargetsLimit, IntentId)> {
+        self.up_the_tree(intent)
+            .find_map(|on| on.limits.targets.as_ref().map(|targets| (targets, on.id)))
+    }
+
+    /// The "deny an area" intents in force whose nearest forces limit names
+    /// the task force `force` (decision 0190, 28), by number. The strike
+    /// step, a carrier force's closing and its search read them.
+    pub fn denies_naming(&self, force: TaskForceId) -> Vec<&Intent> {
+        self.intents_in_force()
+            .filter(|found| matches!(found.kind, IntentKind::Deny { .. }))
+            .filter(|found| {
+                self.nearest_forces(found.id)
+                    .is_some_and(|limit| limit.task_forces.contains(&force))
+            })
+            .collect()
+    }
+
+    /// Whether `intent` is a "deny an area" or stands beneath one (decision
+    /// 0190, 27): the intents a targets limit with `waters_first` may be set
+    /// on.
+    pub fn is_or_under_deny(&self, intent: IntentId) -> bool {
+        self.up_the_tree(intent)
+            .any(|found| matches!(found.kind, IntentKind::Deny { .. }))
+    }
+
     /// The land units the forces limits on `intent`'s chain allow: those
     /// named in every one of them (decision 0141). `None` where none is set
     /// on the chain.
@@ -2069,6 +2125,13 @@ pub enum CommandRefusal {
     /// A "knowledge" limit asks for a recent count of no days (decision
     /// 0159, 12): a recent count is at least 1 day. Added at the end.
     RecentCountOfNoDays(IntentId),
+    /// A targets limit names a kind of ship twice, or names none (decision
+    /// 0190, 1): one to six kinds, each once. Added at the end.
+    BadTargetKinds(IntentId),
+    /// A targets limit with `waters_first` is set on an intent that is not a
+    /// "deny an area" and does not stand beneath one (decision 0190, 27).
+    /// Added at the end.
+    NoWatersFirstOn(IntentId),
 }
 
 impl core::fmt::Display for CommandRefusal {
@@ -2171,6 +2234,14 @@ impl core::fmt::Display for CommandRefusal {
                 f,
                 "the knowledge limit on {id} asks for a recent count of no days: a recent count is at least 1 day old"
             ),
+            CommandRefusal::BadTargetKinds(id) => write!(
+                f,
+                "the targets limit on {id} must name one to six kinds of ship, each once"
+            ),
+            CommandRefusal::NoWatersFirstOn(id) => write!(
+                f,
+                "{id} is not a deny and does not stand beneath one: only there may the waters come first"
+            ),
         }
     }
 }
@@ -2264,6 +2335,25 @@ impl core::fmt::Display for CommandKind {
                 Limit::Knowledge { intent, knowledge } => match knowledge {
                     Some(knowledge) => write!(f, "{intent} goes on {knowledge}"),
                     None => write!(f, "clear {intent}'s knowledge"),
+                },
+                Limit::Targets { intent, targets } => match targets {
+                    Some(targets) => {
+                        write!(
+                            f,
+                            "{intent} strikes {}",
+                            targets
+                                .kinds
+                                .iter()
+                                .map(|kind| kind.name())
+                                .collect::<Vec<_>>()
+                                .join(", ")
+                        )?;
+                        if targets.waters_first {
+                            write!(f, ", the waters first")?;
+                        }
+                        Ok(())
+                    }
+                    None => write!(f, "clear {intent}'s targets"),
                 },
             },
             CommandKind::SetLeave { leave, given } => write!(
