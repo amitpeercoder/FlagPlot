@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 20, 2026, at the designer's aski
 
 Summary: A game on the table is started today from a command line that names the scenario, the seat and a dozen options. The designer asked for a screen, shown when the game is launched, on which a person chooses the scenario, the side to take or to watch, and whether the other side is played by the engine or by an agent; and for the page to say how an agent is set up. The bridge is started with no scenario and shows that screen. It adds one kind of game the table cannot hold today: a person at one seat and an agent at the other
 
-Standing: A plan, written by the architect on Nov 20, 2026, at the designer's asking, and amended on review. Built, checked by script and not yet read in a browser
+Standing: Built on Nov 20, 2026, to the plan as amended on review, looked at in a browser by the architect and ruled on
 
 ## Why
 
@@ -172,3 +172,13 @@ Every file listed was begun through the bridge with the release `sim-cli` and a 
 - **The page in a browser.** Its script parses, and nothing else of it was run. To be looked at: the screen (the scenarios with their lines, the seat and the other side's choices, a choice not offered not selectable, the lines on the game and the engine, the agent's seat with its four things to copy and the COPY buttons, Begin, and an error shown when it fails); the table after Begin in each kind of game; "New game" asked twice and back to the screen; "The agent's seat" sheet on the table; in a game against an agent: the other commander's slip and its four words, the line on pressing Next pulse, One day or Carry on, reading cards and the briefing while waiting, no order taken while waiting, the plot of the step and "How it ended" at the end; the watcher's slip saying NOT YET AT HIS SEAT.
 - **A game played by models.** The doors were called by scripts only.
 
+
+## The architect's rulings
+
+Read on Nov 20, 2026, and looked at in a browser twice: the screen, and a game of a person on the Allied side of the 39 days against an agent's seat played by hand through its door.
+
+1. **Seen to work:** the screen's three choices and its plain words on the game chosen; the agent's seat with its four things to copy and its three warnings; Begin; the table with "The agent's seat" and "New game"; the other commander's slip; the line on pressing One day; and, once the agent's seat ended its day through the door, the clock moving to the next day on the page with no error.
+2. **A fault found on the first look, and mended:** while the person's call was held the page was replaced by an error, and a reload gave it again. The bridge counted his seat as held only after it had told the page to wait. It now counts from the moment the call is sent, and a page loaded while held keeps its table and picks the wait up. Seen to hold on the second look, with a reload.
+3. **The readings of "As built" stand,** among them: one key for the person's screen and table; the tool server named for its side; "not yet at its seat" ended by the door's first request of any kind; "begin this game again" keeping decision 0182's refusal while "New game" does not.
+4. **The one-day Eastern Solomons is offered against the engine alone,** since every file of it gives a side its orders. Stands; the five-day scenario brings files for every pairing (decision 0184).
+5. **Owed, small:** after the clock moves, the other commander's slip reads "waited for" though the person himself has not yet finished, which reads as if he were the one waiting; it should say that the other commander has not finished. And the standard and full sizes of a dry run, a restart, and "How it ended" in a game against an agent were not looked at.
