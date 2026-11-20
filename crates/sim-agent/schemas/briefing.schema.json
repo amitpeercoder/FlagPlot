@@ -10,7 +10,7 @@
   "additionalProperties": false,
   "properties": {
     "format": { "const": "flagplot-agent" },
-    "version": { "const": 32 },
+    "version": { "const": 33 },
     "kind": { "const": "briefing" },
     "heading": { "$ref": "#/$defs/heading" },
     "objectives": { "$ref": "#/$defs/objectives" },
@@ -123,9 +123,9 @@
       "required": ["kind", "base", "closed", "ship_points", "points"],
       "additionalProperties": false,
       "properties": {
-        "kind": { "enum": ["ships_sunk", "ships_crippled", "ships_out_of_action", "aircraft_destroyed", "cargo_landed", "base_open", "base_held", "men_lost"] },
+        "kind": { "enum": ["ships_sunk", "ships_crippled", "ships_out_of_action", "aircraft_destroyed", "cargo_landed", "base_open", "base_held", "men_lost", "men_landed"] },
         "base": {
-          "description": "The base of cargo_landed, base_open and base_held, by the map's number and name; null for the others.",
+          "description": "The base of cargo_landed, base_open, base_held and men_landed, by the map's number and name; a base not on the reader's map is given by its hex, handle \"(q,r)\" and name null; null for the others.",
           "$ref": "defs.schema.json#/$defs/handle_or_null"
         },
         "closed": {
@@ -154,7 +154,7 @@
           "$ref": "defs.schema.json#/$defs/dec"
         },
         "points": {
-          "description": "Points for one aircraft, one ton, the base as wanted on every day, the base held at the end or each 100 men; null for the ship objectives.",
+          "description": "Points for one aircraft, one ton, the base as wanted on every day, the base held at the end, each 100 men lost or each 100 men landed; null for the ship objectives.",
           "$ref": "defs.schema.json#/$defs/dec_or_null"
         }
       }
@@ -192,8 +192,11 @@
             }
           }
         },
-        "kind": { "enum": ["ships_sunk", "ships_crippled", "ships_out_of_action", "aircraft_destroyed", "cargo_landed", "base_open", "base_held", "men_lost"] },
-        "base": { "$ref": "defs.schema.json#/$defs/handle_or_null" },
+        "kind": { "enum": ["ships_sunk", "ships_crippled", "ships_out_of_action", "aircraft_destroyed", "cargo_landed", "base_open", "base_held", "men_lost", "men_landed"] },
+        "base": {
+          "description": "The base of cargo_landed, base_open, base_held and men_landed; a base not on the reader's map is given by its hex, handle \"(q,r)\" and name null. Null for the others.",
+          "$ref": "defs.schema.json#/$defs/handle_or_null"
+        },
         "closed": { "type": ["boolean", "null"] },
         "ship_points": {
           "description": "For ships_sunk, ships_crippled and ships_out_of_action: the points for each kind of ship (for ships_out_of_action, for a ship away for the whole horizon). Empty for the others.",
@@ -217,7 +220,7 @@
           "$ref": "defs.schema.json#/$defs/dec"
         },
         "points": {
-          "description": "Points for one aircraft, one ton or the base being as wanted; null for the ship objectives.",
+          "description": "Points for one aircraft, one ton, the base being as wanted, the base held, each 100 enemy men lost or each 100 men landed; null for the ship objectives.",
           "$ref": "defs.schema.json#/$defs/dec_or_null"
         },
         "known": {
@@ -263,8 +266,11 @@
             "required": ["kind", "base", "closed", "count", "days", "ships", "points"],
             "additionalProperties": false,
             "properties": {
-              "kind": { "enum": ["ships_sunk", "ships_crippled", "ships_out_of_action", "aircraft_destroyed", "cargo_landed", "base_open", "base_held", "men_lost"] },
-              "base": { "$ref": "defs.schema.json#/$defs/handle_or_null" },
+              "kind": { "enum": ["ships_sunk", "ships_crippled", "ships_out_of_action", "aircraft_destroyed", "cargo_landed", "base_open", "base_held", "men_lost", "men_landed"] },
+              "base": {
+                "description": "As for an objective line: a base not on the reader's map is given by its hex, handle \"(q,r)\" and name null.",
+                "$ref": "defs.schema.json#/$defs/handle_or_null"
+              },
               "closed": { "type": ["boolean", "null"] },
               "count": { "$ref": "defs.schema.json#/$defs/dec" },
               "days": {

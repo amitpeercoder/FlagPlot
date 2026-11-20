@@ -1933,7 +1933,7 @@ body.watched .gives { display: none !important; }
   function endOf(side) { return M.result && M.result[side]; }
   function endLine() { var mine = endOf(config.seat); return mine && mine.outcome ? mine.outcome.replace(/^./, function (c) { return c.toUpperCase(); }) + ' for ' + SIDE_WORD[config.seat] + '.' : ''; }
   function endCount(o) {
-    var n = Number(o.count), base = o.base && o.base.name ? nameText(o.base.name) : '';
+    var n = Number(o.count), base = o.base ? (o.base.name ? nameText(o.base.name) : (o.base.handle || '')) : '';
     switch (o.kind) {
       case 'ships_sunk': return ['Enemy ships sunk', n ? commas(n) + ((o.ships || []).length ? ' (' + o.ships.map(function (x) { return x.ships + ' ' + x.kind.replace(/_/g, ' '); }).join(', ') + ')' : '') : 'none'];
       case 'ships_crippled': return ['Enemy ships left afloat and out of action', n ? commas(n) + ((o.ships || []).length ? ' (' + o.ships.map(function (x) { return x.ships + ' ' + x.kind.replace(/_/g, ' '); }).join(', ') + ')' : '') : 'none'];
@@ -1942,6 +1942,7 @@ body.watched .gives { display: none !important; }
       case 'cargo_landed': return ['Supply and fuel landed at ' + base, commas(Math.round(n)) + ' t'];
       case 'base_open': return [(o.closed ? 'Days the airfield at ' + base + ' was shut' : 'Days the airfield at ' + base + ' was open'), commas(n) + (o.days ? ' of ' + o.days : '')];
       case 'base_held': return [base + ' at the end', n ? 'held' : 'not held'];
+      case 'men_landed': return ['Men landed at ' + base, commas(n)];
       default: return [o.kind.replace(/_/g, ' ') + (base ? ', ' + base : ''), commas(n)];
     }
   }

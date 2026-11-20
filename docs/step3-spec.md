@@ -86,7 +86,7 @@ Each line is a capability the step needs, where it comes from and how it stands 
 | --- | --- | --- |
 | A side's view, and events filtered for a side | Step 1 (decisions 0047 to 0051) | Built |
 | Measuring by the engine's own functions | Decision 0049 | Built |
-| Objectives counted from state, on one scale | Decisions 0054 and 0088 | Built. The scale's points are placeholders |
+| Objectives counted from state | Decisions 0054, 0088 and 0187 | Built. A scenario of record keeps its scoring, whose points are placeholders; a scenario for play may have its own (decision 0187) |
 | Ship repair and ships out of action | Decisions 0069 and 0088 | Built |
 | Land units, carried and fed | Decision 0066 | Built |
 | The fight ashore, a base that changes side, `base_held` | Decision 0090 | Built |

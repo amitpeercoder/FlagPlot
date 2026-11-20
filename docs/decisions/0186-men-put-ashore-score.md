@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 20, 2026, at the designer's aski
 
 Summary: The game scores the supply a side lands at a base and has no objective for the men it lands there. A convoy whose whole purpose is to put 1,500 men ashore scores for its 90 t of supply alone. This adds one kind of objective, men landed at a named base, counted as supply landed is counted and worth points for each hundred men as men lost are. Scenario 103 gives it to the Japanese side at the worth of a man lost, a placeholder for the designer to see.
 
-Standing: Planned on Nov 20, 2026 and amended on review; not yet built.
+Standing: Planned on Nov 20, 2026 and amended on review; built on Nov 20, 2026 ("As built").
 
 ## Why
 
@@ -109,3 +109,30 @@ A reviewer who had not seen the plan written read it against the code and ran th
 - The figure is set at 1 under decision 0187 and may be changed by the designer.
 - "Lunga shut" stays at 10 points.
 - The 39 days is not given the kind.
+
+## As built
+
+Built on Nov 20, 2026, with decision 0187's key, in one pull request.
+
+- **`sim-core`.** `Objective::MenLanded { base, points_per_100_men }`, added at the end, named `men_landed`. `Objective::base()` now names every kind, with no catch-all. The count is `MenLandedCount`: a number for each land unit and hex, raised by a landing in the hex and lowered by an embarking of the unit in any hex, never below 0. The umpire's tally (`Tally::men_landed`, by base) reads the side from each event's ship; a base's count is that of its hex, whoever holds it. The points are `men_lost_points`, the sum men lost uses. What a side knows is exact, from its own units' `MenLanded` and `MenEmbarked` events, which it sees whole. The doc comment at the head of the module says so.
+- **Where an objective's base is.** `Objectives` gains `base_hexes`, the hex of each base an objective names. `World::set_objectives` fills it while it checks that each base exists, and replaces whatever it held. It is configuration, as the rest of `Objectives` is: not in the state and not hashed. `SideView::objective_base_hex` gives it to a side (none at a seat at a command), and `known_progress` takes it. This is how rule 17 is met without a `SideView` method that reads the enemy's truth.
+- **`sim-data`.** `kind = "men_landed"` with `base` and `points_per_100_men`; points below 0 are refused as for men lost, an unknown base by `World::set_objectives`.
+- **`sim-agent`.** The kind in the objective lines, the enemy's lines and the result, with the words of rule 8. A base an objective names that is not on the reading side's map is written by its hex: the handle is "(q,r)" and the name null. This applies to the side's own lines and the result lines as well as the enemy's (a reading: rule 17 names the enemy's line, and the same base in the result told at the end would otherwise still read "base:5"). The two matches on a kind's name in the text name every kind; their last arm is `unreachable!`, since a match on a name must end somewhere, and it never writes words. The agent interface's version is 33; the schemas, their README and the four tests that pin the version say so. The progress line under a men landed objective is the common one, "What you know of your progress: 1500, worth 15 points".
+- **The table's end screen** has a line for men landed, and names a base with no name by its handle.
+- **Scenario 103.** The base gains the Japanese objective, marked a placeholder, and `for_play = true`; the four files are made again by the script.
+- **Tests.** `tests/scenario_104_men_put_ashore.rs` has a test for each of the 27 statements and the five properties. Two are ignored: the half of statement 7 that goes through `tallies`, and the property "nothing the other side's ships do changes it". The tests crate cannot make an event log (`EventLog::record` is the crate's own), so it counts through `known_progress` and `score`. Both are covered in `sim-core`'s own unit tests, which give `tallies` made-up logs with ships of both sides. In statement 23, the base of scenario 103 also has the key; it is not a scenario that is played, only the text the four files are made from, and the test leaves it out by name. `sim-core` and `sim-data` gain unit tests beside those of supply landed and men lost.
+- **Scenario 103's test.** `the_objectives_are_the_one_scale_over_30_days` fails on the new objective and is ignored with the reason. The table of objectives in its hand calculation (its lines 181 to 191) and the words "The game's one scale" (line 181) are the architect's to change.
+- **The check of rule 22.** The helper `tests/five_days_first_run.rs` now writes, for each seed, the objective's count and points with the others, every Japanese man landed at Taivu and every Japanese man embarked anywhere. Over seeds 1 to 1,000 of file a: no Japanese man was embarked in any game, and the count equals the men landed at Taivu in all 1,000. The Allied side is ahead in 615 and the Japanese in 385. The Allied side wins 483 (decisive 32, major 238, minor 213), the Japanese 249 (decisive 12, major 96, minor 141), with 268 stalemates. These are the figures of rule 12 and of decision 0187, 13 and 28. Seed 1942's game (statements 17 to 21) gives what the hand calculation says.
+- **No state, event, draw or hash changed.** The recorded games changed only in their answers' version, 32 to 33.
+
+## The architect's rulings on the build
+
+Read on Nov 20, 2026, with the build's report and the core of its code (the count, the tally, what a side knows, the score).
+
+1. **The count is the rule's.** A number for each unit and hex, raised by a landing there and lowered by the unit's embarking anywhere, not below 0. An embarking lowers the unit's number in every hex it has one, which is the rule read for each objective by itself.
+2. **The readings of "As built" stand:** a base not on the reader's map is written by its hex in a side's own lines and in the result's lines as well as in the enemy's; the two matches on a kind's name end in an arm that is never reached and writes nothing; the line of a side's progress keeps the common words.
+3. **The hexes of the bases the objectives name are kept with the objectives,** as configuration, and a side may read the hex of such a base. It tells a side where an objective is and nothing of a base's state. This stands under rule 17.
+4. **Two tests are left ignored,** each with its reason: the tests crate cannot build a log for the tally, and the same behaviour is tested inside `sim-core`. Accepted.
+5. **Scenario 103's hand calculation is corrected by the architect:** its scale is the scenario's own, and its table gains men landed. The test left ignored for it is restored with the new kind and the file's key.
+6. **The 1,000 games are as the plan said,** with none replayed for the plan: no Japanese man embarked in any game; the Allied side ahead in 615 and the Japanese in 385; by level 483, 249 and 268. Men landed were 1,500 in 847 games and fewer in 153, where a destroyer carrying men was lost first.
+7. **Not seen:** the table's end screen with the new line, in a browser.
