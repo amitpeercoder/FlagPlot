@@ -112,16 +112,17 @@ pub fn outnumbering(afloat: u32, contacts: &[Sighted]) -> Option<Sighted> {
 }
 
 /// The speed a force with no home port goes to its station at (decision
-/// 0192, 2): cruise where the engine's measure at cruise arrives within the
-/// night's [`NIGHT_HOURS`], else full where that arrives at all. Where only
-/// cruise arrives (the force would run dry at full), cruise; where neither
-/// does, none. `cruise` and `full` are the hours of each where it arrives.
-pub fn speed_from_sea(cruise: Option<Fixed>, full: Option<Fixed>) -> Option<SpeedSetting> {
-    match (cruise, full) {
-        (Some(h), _) if h <= Fixed::from_int(NIGHT_HOURS) => Some(SpeedSetting::Cruise),
-        (_, Some(_)) => Some(SpeedSetting::Full),
-        (Some(_), None) => Some(SpeedSetting::Cruise),
-        (None, None) => None,
+/// 0192, 2): cruise where the engine's measure at cruise (`cruise`, the hours
+/// where it arrives) brings it there within the night's [`NIGHT_HOURS`], else
+/// full, whether or not it arrives at full: a force that would run dry is
+/// then short of fuel where its fuel is weighed (rule 5), so that more fuel
+/// aboard never stops it going. `None` where ships cannot get from where it
+/// is to the station at all (`reachable` false).
+pub fn speed_from_sea(cruise: Option<Fixed>, reachable: bool) -> Option<SpeedSetting> {
+    match cruise {
+        Some(h) if h <= Fixed::from_int(NIGHT_HOURS) => Some(SpeedSetting::Cruise),
+        _ if reachable => Some(SpeedSetting::Full),
+        _ => None,
     }
 }
 
@@ -1227,7 +1228,8 @@ impl Day<'_, '_> {
         } else if at_station {
             // At the station it stays, or goes in for fuel (6, 14, 15).
             let going_in = base.and_then(|(b, hex, nm)| {
-                let (needs, _) = fuel_needs(view, id, &[hex], Some(SpeedSetting::Cruise), margin(risk))?;
+                let (needs, _) =
+                    fuel_needs(view, id, &[hex], Some(SpeedSetting::Cruise), margin(risk))?;
                 let short: Vec<ShipFuel> = needs.iter().copied().filter(|n| n.short()).collect();
                 if short.is_empty() && ammunition.is_none() {
                     return None;
@@ -1243,11 +1245,9 @@ impl Day<'_, '_> {
                         needs_words(&needs)
                     );
                     let why = match (short.is_empty(), &ammunition) {
-                        (false, Some(a)) => format!(
-                            "{} short of it, and {}",
-                            needs_words(&short),
-                            a.words
-                        ),
+                        (false, Some(a)) => {
+                            format!("{} short of it, and {}", needs_words(&short), a.words)
+                        }
                         (false, None) => format!("{} short of it", needs_words(&short)),
                         (true, Some(a)) => a.words.clone(),
                         (true, None) => String::new(),
@@ -1268,7 +1268,9 @@ impl Day<'_, '_> {
                             serving(task, plan)
                                 .evidence(fuel_text.clone(), today)
                                 .binding("a force going in for fuel goes at cruise")
-                                .worked(format!("{id} goes in to {base_text} at cruise: it is set to cruise."))
+                                .worked(format!(
+                                    "{id} goes in to {base_text} at cruise: it is set to cruise."
+                                ))
                                 .would_change("the ships' fuel and ammunition enough")
                                 .done(),
                         ));
@@ -1300,10 +1302,9 @@ impl Day<'_, '_> {
                         None => no_base_text.to_string(),
                     };
                     let ammunition_text = match (&ammunition, base) {
-                        (Some(a), None) => format!(
-                            "; {}, but with no base to go in to it stays",
-                            a.words
-                        ),
+                        (Some(a), None) => {
+                            format!("; {}, but with no base to go in to it stays", a.words)
+                        }
                         _ => String::new(),
                     };
                     out.summary = Some(
@@ -1330,7 +1331,7 @@ impl Day<'_, '_> {
                 cruise.map_or_else(|| "no".to_string(), |h| h.to_string()),
                 full.map_or_else(|| "no".to_string(), |h| h.to_string())
             );
-            let chosen = speed_from_sea(cruise, full);
+            let chosen = speed_from_sea(cruise, view.sea_path(here, station).is_some());
             let waypoints: Vec<Hex> = match base {
                 Some((_, hex, _)) if hex != station => vec![station, hex],
                 _ => vec![station],
@@ -1347,7 +1348,7 @@ impl Day<'_, '_> {
                             .evidence(hours_text.clone(), today)
                             .binding("a force goes to its station by the engine's sea route")
                             .worked(format!(
-                                "{intent_words}: {lead}, but {hours_text}: the engine's measure brings it to the station at no speed, so it is given no route and the staff cannot meet {}.",
+                                "{intent_words}: {lead}, but the engine gives no passage from {here} to the station by sea ({hours_text}), so it is given no route and the staff cannot meet {}.",
                                 task.id
                             ))
                             .would_change("a station the force can reach")
@@ -1378,11 +1379,9 @@ impl Day<'_, '_> {
                         .collect();
                     if !short.is_empty() || ammunition.is_some() {
                         let why = match (short.is_empty(), &ammunition) {
-                            (false, Some(a)) => format!(
-                                "{} short of it, and {}",
-                                needs_words(&short),
-                                a.words
-                            ),
+                            (false, Some(a)) => {
+                                format!("{} short of it, and {}", needs_words(&short), a.words)
+                            }
                             (false, None) => format!("{} short of it", needs_words(&short)),
                             (true, Some(a)) => a.words.clone(),
                             (true, None) => String::new(),
@@ -1616,6 +1615,52 @@ mod tests {
         assert_eq!(threat(Risk::Balanced, 2, &[three]), Some(three));
         let far = Sighted { hexes: 16, ..three };
         assert_eq!(threat(Risk::Press, 5, &[far]), None);
+    }
+
+    #[test]
+    fn a_contact_that_outnumbers_the_force_near_the_station() {
+        let nine = Sighted {
+            number: 2,
+            hexes: 10,
+            ships: 9,
+        };
+        let three = Sighted {
+            number: 1,
+            ships: 3,
+            ..nine
+        };
+        assert_eq!(outnumbering(4, &[three, nine]), Some(nine));
+        assert_eq!(outnumbering(4, &[three]), None);
+        assert_eq!(outnumbering(9, &[nine]), None, "as many is not more");
+        let far = Sighted { hexes: 16, ..nine };
+        assert_eq!(outnumbering(4, &[far]), None);
+        let nearer = Sighted {
+            number: 3,
+            hexes: 5,
+            ..nine
+        };
+        assert_eq!(outnumbering(4, &[nine, nearer]), Some(nearer));
+    }
+
+    #[test]
+    fn the_speed_from_the_sea() {
+        let h = |t: &str| t.parse::<Fixed>().unwrap();
+        // 160 nm at 15 kn: 10.666666 hours, within the night.
+        assert_eq!(
+            speed_from_sea(Some(h("10.666666")), true),
+            Some(SpeedSetting::Cruise)
+        );
+        assert_eq!(
+            speed_from_sea(Some(h("12")), true),
+            Some(SpeedSetting::Cruise)
+        );
+        // 320 nm at 15 kn: 21.333333 hours, so full, arrive or not.
+        assert_eq!(
+            speed_from_sea(Some(h("21.333333")), true),
+            Some(SpeedSetting::Full)
+        );
+        assert_eq!(speed_from_sea(None, true), Some(SpeedSetting::Full));
+        assert_eq!(speed_from_sea(None, false), None);
     }
 
     #[test]

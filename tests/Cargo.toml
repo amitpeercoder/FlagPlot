@@ -571,3 +571,7 @@ path = "scenario_104_men_put_ashore.rs"
 [[test]]
 name = "scenario_107_a_lift_turned_back"
 path = "scenario_107_a_lift_turned_back.rs"
+
+[[test]]
+name = "scenario_108_a_station_kept_from_the_sea"
+path = "scenario_108_a_station_kept_from_the_sea.rs"
