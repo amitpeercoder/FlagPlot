@@ -153,7 +153,10 @@ class Watched:
     on a thread of their own and matched to their requests by `id`, since a
     held call's answer comes after later requests' (decision 0182, amended 18)."""
 
-    def __init__(self, command):
+    def __init__(self, command, journal=None):
+        # Every request that can change the game is written here as it is
+        # sent, so a game killed outright can be played again from it.
+        self.journal = open(journal, "w") if journal else None
         self.write_lock = threading.Lock()
         self.table_lock = threading.Lock()
         self.pending = {}
@@ -196,6 +199,9 @@ class Watched:
             try:
                 self.process.stdin.write(json.dumps(request) + "\n")
                 self.process.stdin.flush()
+                if self.journal and request.get("watcher") in (None, "step"):
+                    self.journal.write(json.dumps(request) + "\n")
+                    self.journal.flush()
             except (BrokenPipeError, ValueError, OSError):
                 with self.table_lock:
                     self.pending.pop(request["id"], None)
@@ -513,8 +519,9 @@ def watch(args, islands, chart, coast, names):
         for side in agents:
             command += ["--seat", f"{side}=player"]
         if keep:
-            save, transcript, _ = paths(games["count"])
+            save, transcript, suffix = paths(games["count"])
             command += ["--save", save, "--transcript", transcript]
+            return Watched(command, os.path.join(keep, f"journal{suffix}.jsonl"))
         return Watched(command)
 
     def finish(game, number):
