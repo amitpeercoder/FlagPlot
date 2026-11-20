@@ -1,0 +1,18 @@
+# PLACEHOLDER MAP used by scenario 106. A stretch of open sea round the
+# origin with one port, Allied base 1, at (4,-3). The geography is invented.
+
+placeholder = true
+
+# Ranges are inclusive.
+[[region]]
+kind = "deep_sea"
+q = [-9, 12]
+r = [-9, 12]
+
+# Allied base 1's hex.
+[[hex]]
+q = 4
+r = -3
+kind = "coast"
+port_size = 3
+anchorage = true

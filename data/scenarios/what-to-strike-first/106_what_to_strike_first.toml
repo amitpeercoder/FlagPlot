@@ -1,0 +1,177 @@
+# Scenario 106: what to strike first.
+#
+# Decision 0190. Side A, the Allied side, has task force 1, F: one
+# placeholder carrier stopped at sea at (0,0) with a bomber group, B (group
+# 1, 12 dive bombers of a strike radius of 200 nm in the test's copy of the
+# table of aircraft) and a fighter group (a test adds a scout group, 3), and its home port
+# at Allied base 1 at (4,-3). Side J has two task forces stopped at sea: C
+# (task force 2), one placeholder carrier at (0,4), 160 nm from F; and T
+# (task force 3), three placeholder transports and a placeholder destroyer
+# at (3,0), 120 nm from F. The Allied side holds a contact of each, fresh:
+# C a carrier, T three transports. The Allied commander states "operate task
+# force 1 from (0,0)" at the balanced risk by default and gives both
+# leaves. The hand calculation is in tests/scenario_106_what_to_strike_first.rs.
+#
+# The test builds its variants from the text of this file, at the marked
+# lines below: the limit and the deny in the commands, the contacts, and, for
+# the statement about a tree, a bomber group at Allied base 1. It runs this
+# file on the frozen step 1 figures with the strike radius of type 3 made
+# 200 nm, a strike contact age of 4 pulses and, for one statement, a table of
+# aircraft for each ship added.
+#
+# Kept out of the loops that walk data/scenarios/*.toml by being in this
+# folder (decision 0072).
+#
+# PLACEHOLDER DATA. The base, ships, aircraft, figures and map are invented.
+# Every name below says "Placeholder".
+
+name = "Placeholder scenario 106: What to strike first"
+placeholder = true
+seed = 1942
+days = 2
+map = "../../map/placeholder_what_to_strike_first.toml"
+ship_classes = "../../reference/ship_classes.csv"
+port_sizes = "../../reference/port_sizes.csv"
+aircraft_types = "../../reference/aircraft_types.csv"
+search = "../../reference/search.toml"
+surface_combat = "../../reference/surface_combat.toml"
+air_combat = "../../reference/air_combat.toml"
+
+# Allied base 1.
+[[base]]
+id = 1
+name = "Placeholder base 1"
+side = "allied"
+q = 4
+r = -3
+supply_t = 1000
+fuel_t = 5000
+
+# MARK: bases
+
+# Task force 1, F: one placeholder carrier, stopped at sea at (0,0).
+[[task_force]]
+id = 1
+name = "Placeholder carrier force F"
+side = "allied"
+q = 0
+r = 0
+mission = "carrier"
+home_port = 1
+
+[[ship]]
+id = 1
+name = "Placeholder carrier 1"
+class = 4
+side = "allied"
+fuel_t = 3000
+task_force = 1
+
+# MARK: ships
+
+# B, the bomber group, and the groups beside it aboard.
+[[air_group]]
+id = 1
+name = "Placeholder dive bombers B"
+side = "allied"
+ship = 1
+aircraft_type = 3
+ready = 12
+
+[[air_group]]
+id = 2
+name = "Placeholder fighters 2"
+side = "allied"
+ship = 1
+aircraft_type = 4
+ready = 12
+
+# MARK: groups
+
+# Task force 2, C: one placeholder carrier of side J, stopped at (0,4).
+[[task_force]]
+id = 2
+name = "Placeholder carrier force C"
+side = "japanese"
+q = 0
+r = 4
+mission = "carrier"
+
+[[ship]]
+id = 10
+name = "Placeholder carrier 10"
+class = 4
+side = "japanese"
+fuel_t = 3000
+task_force = 2
+
+# Task force 3, T: three placeholder transports and a placeholder destroyer
+# of side J, stopped at (3,0).
+[[task_force]]
+id = 3
+name = "Placeholder transport force T"
+side = "japanese"
+q = 3
+r = 0
+mission = "transport"
+
+[[ship]]
+id = 20
+name = "Placeholder transport 20"
+class = 3
+side = "japanese"
+fuel_t = 1000
+task_force = 3
+
+[[ship]]
+id = 21
+name = "Placeholder transport 21"
+class = 3
+side = "japanese"
+fuel_t = 1000
+task_force = 3
+
+[[ship]]
+id = 22
+name = "Placeholder transport 22"
+class = 3
+side = "japanese"
+fuel_t = 1000
+task_force = 3
+
+[[ship]]
+id = 23
+name = "Placeholder destroyer 23"
+class = 2
+side = "japanese"
+fuel_t = 500
+task_force = 3
+
+# The contacts the Allied side holds, fresh.
+# MARK: contacts
+
+# The Allied commander's commands.
+[[command]]
+day = 1
+side = "allied"
+kind = "set_intent"
+intent = 1
+intent_kind = "operate_carriers"
+task_force = 1
+hex = [0, 0]
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_leave"
+leave = "prepare"
+given = true
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_leave"
+leave = "launch"
+given = true
+
+# MARK: commands
