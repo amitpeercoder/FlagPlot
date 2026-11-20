@@ -2582,7 +2582,16 @@ fn two_raids_of_unequal_size_fire_the_shots_their_shares_give_in_either_order() 
     for id in [1, 5, 7, 8, 10] {
         assert_eq!(ready_of(&world, id), ready_of(&other, id), "group {id}");
     }
-    assert_eq!(format!("{:?}", world.truth), format!("{:?}", other.truth));
+    // But for each group's tally of its claims (decision 0180), whose false
+    // claims are drawn on streams keyed by the raid's first units.
+    let without_tallies = |truth: &crate::state::TruthState| {
+        let mut truth = truth.clone();
+        for group in truth.air_groups.values_mut() {
+            group.claims = crate::state::ClaimTally::default();
+        }
+        format!("{truth:?}")
+    };
+    assert_eq!(without_tallies(&world.truth), without_tallies(&other.truth));
     assert_eq!(world.events.len(), other.events.len());
 }
 

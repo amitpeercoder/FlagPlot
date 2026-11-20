@@ -1,10 +1,10 @@
 # 0179: The type of the aircraft claimed destroyed on the ground
 
-Status: a plan by the architect, written on Nov 19, 2026, at the designer's word ("if the type is known, it should say which type"). Read by a reviewer who had not seen it written, and amended on that reading ("Amended on review", at the end) before it is built.
+Status: a plan by the architect, written on Nov 19, 2026, at the designer's word ("if the type is known, it should say which type"). Read by a reviewer who had not seen it written, and amended on that reading ("Amended on review") before it was built. Built on Nov 20, 2026, with decision 0180 in one build (As built, at the end).
 
 Summary: A raid on a base claims a number of aircraft destroyed on the ground and says nothing of what they were. The raiders now make out the types of the aircraft they claim, or do not, by one chance for the claim. A type they name is a type that was on the field; the number against it may be more than the truth, as the claim's number already may. A bombardment from the sea makes out none
 
-Standing: A plan, written by the architect on Nov 19, 2026, and amended on review. To be built
+Standing: A plan, written by the architect on Nov 19, 2026, and amended on review. Built on Nov 20, 2026, with decision 0180. Its readings wait for the architect
 
 ## Why
 
@@ -80,3 +80,30 @@ An independent reading of the plan and its hand calculation, against the code, f
 7. **No breakdown was named.** Rule 10.
 8. **The property over many seeds assumed one type on the field.** It now tests each named type against the field of that pulse.
 9. **The list of what changes was short.** "What it costs" names the rest.
+
+## As built
+
+Built on Nov 20, 2026, on the branch `claims-types-and-tally`, from the head of `seat-trial-build` (decision 0178's build, pull request 546) with main and `group-tally` (decision 0180's plan, pull request 547) merged in, together with decision 0180: one rise of the state layout (49) and of the agent interface (30). No number or statement of the hand calculation was changed, and every statement of `tests/scenario_98_the_type_claimed_on_the_ground.rs` holds as written at the first run.
+
+**What was built.**
+
+- **`sim-core`:** `BattleClaim::ground_types` and the event's `ground_types`, a list of (type, number); `claims::ground_claim_types`, rule 3's function (the false aircraft shared by largest remainder, a tie to the lower type); `Draw::ClaimType`, code 18, at the end. In the air combat step the field of each raided base is kept as it first stood, by type, before any raid's hits come off the count; `apply_base_hits` gives what it really destroyed by group (the bombardment sums it, as before); a raid's tally keeps what its bombs destroyed by the type of the group on the ground. The claim draws once on its own stream (`rng_pair`, intelligence, the side's first unit to fire, the raid's first strike group, `Draw::ClaimType`). The claim's words, the breakdown (rule 10), the hash (after `from_bombardment`), a picture's claim (no longer `Copy`), the surface fight's and the bombardment's claims (empty lists).
+- **`sim-agent`:** a briefing's claim gains `ground_types` (`aircraft_type` by name, `aircraft`), left out where empty, and the words name the type by name.
+- **`sim-cli`:** the replay export adds `ground_types` (`aircraft_type` by number, `aircraft`) to `claim_received` where it is not empty.
+- **Tests:** `tests/scenario_98_the_type_claimed_on_the_ground.rs`, 11 tests, to every statement and property.
+- **Generated:** the run baselines differ only in their hash lines and in the words of raids' claims (983 lines changed, each the same line with the types and decision 0180's clause taken out); the five recorded transcripts differ only in the version and in claims; the saves in the state version and the daily hashes; the pinned hashes and the batch fixture in hashes and the state version.
+
+**Readings.** Numbered with decision 0180's, which shares the build.
+
+1. **No draw where the chance is 0** (rules 4 and 11): the draw is made only where the field was not empty, something is claimed on the ground and `raid_recognised_chance` is above 0. So the frozen figures draw nothing new, as rule 11 says.
+2. **The field** is the pool hits on aircraft are taken from (decision 0035, 11; 0036, 11): each group at the base, its damaged aircraft and its ready aircraft not flying in the pulse, added up by the group's type. Two raids on one base in a pulse read the one field as it first stood.
+3. **The breakdown** (rule 10) has, where the draw could be made (a field and something claimed on the ground), pairs of factors `field_type` and `field_aircraft`, `real_type` and `real_aircraft`, `false_type` and `false_aircraft` (the type's number, then its aircraft, in order of type), then `raid_recognised_chance` and `types_made_out` (1 or 0). A factor's name is fixed, so a type is told by a pair. The false aircraft by type are given whether or not the types were made out.
+4. **The words:** "15 aircraft destroyed on the ground (15 of aircraft_type:3)" in the log, "(15 of Placeholder dive bomber)" in the seat's tools (the type by its name in the data, as decision 0167 names one there); several types "(2 of T, 3 of U)".
+5. **"A type named was on the field"** is tested against the groups at base 2 with any aircraft at the start of each day, read from the truth: every aircraft on the field at the start of the morning pulse is of one of them. That is a little wider than the field itself, which the truth does not hold once the step has begun.
+6. **"The logs are those of scenario 11's variants as they run today"** is asserted as: at made out 0 every claim's words, without decision 0180's clause, are the words `claim_text` gives the claim's numbers with no type and no unit, and the fight and every claim's numbers are those at made out 1; scenario 11's own tests, unchanged, pass.
+
+7. **Decision 0167's two properties on scenario 6a.** Rule 11 shares `raid_recognised_chance` with decision 0167, so on scenario 6a the raiders' claim now names types where 0167's test moves that chance, and the state's hash counts a claim's types. In `tests/scenario_88_what_the_attacked_saw.rs` "the attacker is told nothing new" now sets the attacker's own claim aside (the rest of its events are the same, word for word), and "no fight is resolved differently" compares the ships, air groups and bases of every day for both scenarios and the daily hashes for scenario 19a only, whose raid is on ships and names no type. No expected number moved. For the architect: whether the two chances should now be parted, as rule 11 foresees, or the properties restated.
+8. **The world at the end, and decision 0180's tally.** Scenario 11's "the world at the end is the same at every setting of the chances" and the unit test that two raids taken in either order leave the same truth now compare the truth with every air group's tally set aside: the tally is the record of the claims, which the chances (and, in the unit test, the streams the order of the raids keys) move. Nothing else in either differs.
+9. **The replay export test** (`crates/sim-cli/tests/export_pictures.rs`) is re-pinned: the ten exports of the commit before were made again and compared with these; they differ in the state version, the day hashes and, in scenarios 5, 31, 50 and 58, in the claims' words, `claimed_by`, `ground_types` and a claim's breakdown factors, and in nothing else.
+
+**What the table will need.** A claim's line can name the types after the number on the ground, from `ground_types` in the briefing or the export.
