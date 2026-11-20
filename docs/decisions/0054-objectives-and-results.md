@@ -146,3 +146,5 @@ The briefing has an `objectives` part after the heading: the mission, each objec
 - Both sides' mission is required once `[objectives]` is given; a list of objectives may be empty.
 - The result of a game that is asked for before it ends is the score so far; the session and the runner only hand it out at the end.
 - Scenario 5 carries the objectives of the placeholder scale and nothing else changes in it.
+
+*Nov 20, 2026: decision 0187 makes a scenario's scoring its own. A scenario for play may have a scale chosen under its guards; a scenario of record keeps the scoring it has.*
