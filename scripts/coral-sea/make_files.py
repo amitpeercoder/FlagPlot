@@ -80,10 +80,8 @@ HEADER = '''# SCENARIO 105, THE CORAL SEA (decision 0188).
 #   Allied: intent 1, hold Port Moresby (base 1), its forces the garrison
 #     (land unit 1); intent 2, operate task force 1 from (-12,1), with its
 #     own air groups (no forces limit); leave to prepare and leave to launch
-#     given; and two orders of the commander's own: the six bomber groups
-#     (2, 3, 4, 6, 7, 8) to strike transports first, then carriers, then the
-#     other kinds in the game's own order; and task force 2 to move to
-#     (-12,-3).
+#     given; and two orders of the commander's own, both to task force 2:
+#     to move to (-12,-3), and to steam at 20 knots.
 #
 # Kept out of the loops that walk data/scenarios/*.toml by being in this
 # folder (decision 0072).
@@ -118,13 +116,6 @@ def leaves(side):
             + command(side, 'set_leave', leave='"launch"', given='true'))
 
 
-# Transports first, then carriers, then the other kinds in the game's own
-# order of importance (carrier, battleship, cruiser, destroyer, transport,
-# auxiliary; decision 0012, 9).
-STRIKE_FIRST = '["transport", "carrier", "battleship", "cruiser", "destroyer", "auxiliary"]'
-BOMBER_GROUPS = [2, 3, 4, 6, 7, 8]
-
-
 def allied(risk):
     s = 'allied'
     text = command(s, 'set_intent', intent=1, intent_kind='"hold"', base=1)
@@ -133,9 +124,8 @@ def allied(risk):
                     task_force=1, hex='[-12, 1]')
     text += risk_limits(s, [1, 2], risk)
     text += leaves(s)
-    for group in BOMBER_GROUPS:
-        text += order(s, f'air_group = {group}', 'set_target_priority', kinds=STRIKE_FIRST)
     text += order(s, 'task_force = 2', 'set_route', waypoints='[[-12, -3]]')
+    text += order(s, 'task_force = 2', 'set_speed', knots=20)
     return text
 
 

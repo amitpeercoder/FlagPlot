@@ -117,7 +117,8 @@
 //!
 //! 23. **The key.** `for_play = true` in a scenario's `[objectives]` table
 //!     loads; with the key absent or `false` the scenario is of record.
-//!     Scenario 103's four files have it. No other scenario file has it.
+//!     Scenario 103's four files have it, and scenario 105's four
+//!     (decision 0188). No other scenario file has it.
 //! 24. **It changes no game.** File a's five daily hashes on seed 1942 are
 //!     the same with the key as with it taken out.
 //! 25. **The result's words.** `sim-cli run` on file a prints its result
@@ -1179,19 +1180,26 @@ fn statement_23_the_key() {
     // ("base_eastern_solomons.toml", the text the four files are made from)
     // and carries the key as they do: it is not a scenario file in the
     // statement's sense (reported by the build).
-    for file in files
-        .iter()
-        .filter(|f| f.file_name().and_then(|n| n.to_str()) != Some("base_eastern_solomons.toml"))
-    {
+    for file in files.iter().filter(|f| {
+        let name = f.file_name().and_then(|n| n.to_str());
+        name != Some("base_eastern_solomons.toml") && name != Some("base_coral_sea.toml")
+    }) {
         let text = std::fs::read_to_string(file).expect("reads");
         if text.lines().any(|l| l.trim_start().starts_with("for_play")) {
             with_key.push(file.strip_prefix(common::data_dir()).unwrap().to_owned());
         }
     }
-    let want: Vec<PathBuf> = ['a', 'b', 'c', 'd']
+    let mut want: Vec<PathBuf> = ['a', 'b', 'c', 'd']
         .iter()
-        .map(|l| PathBuf::from(format!("scenarios/five-days/01{l}_eastern_solomons.toml")))
+        .flat_map(|l| {
+            [
+                PathBuf::from(format!("scenarios/coral-sea/01{l}_coral_sea.toml")),
+                PathBuf::from(format!("scenarios/five-days/01{l}_eastern_solomons.toml")),
+            ]
+        })
         .collect();
+    want.sort();
+    with_key.sort();
     assert_eq!(with_key, want);
     let five = common::load_live(&common::data_dir().join("scenarios/05_eastern_solomons.toml"))
         .expect("scenario 5 loads");

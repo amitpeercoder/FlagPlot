@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 20, 2026, at the designer's aski
 
 Summary: A second small scenario for play: the Coral Sea over five days, 6 to 10 May 1942. Two American carriers and a cruiser group against two Japanese fleet carriers and a light carrier, with a Japanese convoy bound for Port Moresby that lands on the last days if it is not stopped or turned back. It is built in three stages: the data is settled and derived first, then the scenario with its hand calculation, then its runs and games under the guards of decision 0187. Most of the ships and aircraft it needs the game already has.
 
-Standing: Confirmed by the designer on Nov 20, 2026, with his answers; stage A is built and ruled on; stage B's scenario, tests and one game are built ("Stage B as built"); the one game waits for the architect's reading before any run of 1,000.
+Standing: Confirmed by the designer on Nov 20, 2026, with his answers; stages A and B are built and ruled on (the list, the scenario, its tests and one game); stage C, the run of 1,000 games and the band, is under way.
 
 ## Why
 
@@ -335,3 +335,16 @@ The six Allied bomber groups never flew. The commander's order that sets their t
 - No run of 1,000 and no report of one: the architect reads the one game first, and may mend the orders.
 - The scenario is not added to `table/scenarios.json`.
 - **A test of another scenario fails:** scenario 104's statement 23 says no scenario file but scenario 103's four has `for_play = true`, and the Coral Sea's five now have it, as statement 22 here asks. The two statements disagree; neither is changed. It is the architect's to rule.
+
+## The architect's rulings on the one game
+
+Read on Nov 20, 2026: the build's report and its one game (`docs/validation/coral-sea-one-game.md`).
+
+1. **The order to strike transports first is taken out.** A commander's order to an air group holds the group from the staff, and the six Allied bomber groups flew nothing for five days. A side the engine plays cannot be told what to strike first.
+2. **Something the game cannot yet do, recorded:** a staff sent to stop a landing has no way to put the transports first. Its strikes take the most important kind, and go at the nearest force it holds a contact of. This stands beside the staff that never turns a convoy back (amended 31) as what the scenario shows is wanted, and each would be a rule with a record of its own.
+3. **The support group is sent at 20 knots.** At its cruising speed it reached the convoy's route a day and a half after the convoy had passed. The figure is a placeholder.
+4. **Scenario 104's statement was the architect's mistake:** it said no file but scenario 103's has the key that marks a scenario for play. It now names scenario 105's files too.
+5. **The build's readings stand:** no believed force and no estimate for either side; one island, New Guinea, for the table; no formations; Port Moresby with an airfield and no anti-aircraft figure; scenario 103's ground figures.
+6. **The game played again** on those orders is a battle: the support group meets the convoy at the tip by night, sinks Yubari and loses two destroyers; the Allied carriers sink Shoho and Aoba; the Striking Force puts Yorktown out of action; and the convoy lands every man. The Japanese side wins it by 42.46.
+7. **The orders are not changed again before the run.** The architect has now seen three games of them (a reviewer's trial, the build's, and his own), and has changed the Allied orders after two. Each change mended an order that did nothing or broke what it touched, or was for a reason the mission gives, and each is written where it was made. The run of 1,000 games is made on the orders as they stand, and what it shows is put to the designer.
+8. **What to expect of the band.** With the landing worth 53.86 points and no staff able to stop it, the staffs' games are likely to go one way. That would be a finding about what the engine's staffs can do, and the next means of decision 0187 is not reached for before the designer has seen it.

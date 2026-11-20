@@ -27,10 +27,8 @@
 #   Allied: intent 1, hold Port Moresby (base 1), its forces the garrison
 #     (land unit 1); intent 2, operate task force 1 from (-12,1), with its
 #     own air groups (no forces limit); leave to prepare and leave to launch
-#     given; and two orders of the commander's own: the six bomber groups
-#     (2, 3, 4, 6, 7, 8) to strike transports first, then carriers, then the
-#     other kinds in the game's own order; and task force 2 to move to
-#     (-12,-3).
+#     given; and two orders of the commander's own, both to task force 2:
+#     to move to (-12,-3), and to steam at 20 knots.
 #
 # Kept out of the loops that walk data/scenarios/*.toml by being in this
 # folder (decision 0072).

@@ -27,10 +27,8 @@
 #   Allied: intent 1, hold Port Moresby (base 1), its forces the garrison
 #     (land unit 1); intent 2, operate task force 1 from (-12,1), with its
 #     own air groups (no forces limit); leave to prepare and leave to launch
-#     given; and two orders of the commander's own: the six bomber groups
-#     (2, 3, 4, 6, 7, 8) to strike transports first, then carriers, then the
-#     other kinds in the game's own order; and task force 2 to move to
-#     (-12,-3).
+#     given; and two orders of the commander's own, both to task force 2:
+#     to move to (-12,-3), and to steam at 20 knots.
 #
 # Kept out of the loops that walk data/scenarios/*.toml by being in this
 # folder (decision 0072).
@@ -1222,48 +1220,13 @@ given = true
 [[order]]
 day = 1
 side = "allied"
-air_group = 2
-kind = "set_target_priority"
-kinds = ["transport", "carrier", "battleship", "cruiser", "destroyer", "auxiliary"]
-
-[[order]]
-day = 1
-side = "allied"
-air_group = 3
-kind = "set_target_priority"
-kinds = ["transport", "carrier", "battleship", "cruiser", "destroyer", "auxiliary"]
-
-[[order]]
-day = 1
-side = "allied"
-air_group = 4
-kind = "set_target_priority"
-kinds = ["transport", "carrier", "battleship", "cruiser", "destroyer", "auxiliary"]
-
-[[order]]
-day = 1
-side = "allied"
-air_group = 6
-kind = "set_target_priority"
-kinds = ["transport", "carrier", "battleship", "cruiser", "destroyer", "auxiliary"]
-
-[[order]]
-day = 1
-side = "allied"
-air_group = 7
-kind = "set_target_priority"
-kinds = ["transport", "carrier", "battleship", "cruiser", "destroyer", "auxiliary"]
-
-[[order]]
-day = 1
-side = "allied"
-air_group = 8
-kind = "set_target_priority"
-kinds = ["transport", "carrier", "battleship", "cruiser", "destroyer", "auxiliary"]
+task_force = 2
+kind = "set_route"
+waypoints = [[-12, -3]]
 
 [[order]]
 day = 1
 side = "allied"
 task_force = 2
-kind = "set_route"
-waypoints = [[-12, -3]]
+kind = "set_speed"
+knots = 20

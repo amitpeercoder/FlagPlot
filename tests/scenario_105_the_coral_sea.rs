@@ -251,11 +251,22 @@
 //! trial game of them, and the architect saw it before writing these:
 //! the Japanese side won it by 41.56 points on the landing. Two things
 //! in the first version did nothing at all and are mended (the support
-//! group's order, and nine transports that could not load). Two more are
-//! changed for a reason the mission gives and the trial showed: what the
-//! Allied aircraft strike first, and a station from which every Allied
-//! bomber reaches the convoy's route. Nothing else is changed in its
-//! light, and the Japanese orders are as first written.
+//! group's order, and nine transports that could not load). One more is
+//! changed for a reason the mission gives and the trial showed: a station
+//! from which every Allied bomber reaches the convoy's route. The
+//! Japanese orders are as first written.
+//!
+//! The build then played one game of them, and the architect saw that too:
+//! the Japanese side won it by 58.76. In it an order of his, to the six
+//! Allied bomber groups to strike transports first, held those groups
+//! from the staff, and they flew nothing for five days. A side the engine
+//! plays cannot be told what to strike first: a commander's order to a
+//! group takes it out of the staff's hands. The order is taken out, and
+//! that a staff sent to stop a landing spends its strikes on the escort
+//! is recorded as something the game cannot yet do (decision 0188). The
+//! support group reached the convoy's route a day and a half late at its
+//! cruising speed, and is now sent at 20 knots. After this the orders
+//! are not changed again before the run of 1,000 games.
 //!
 //! **Japanese:**
 //!
@@ -289,22 +300,19 @@
 //!   root(0 + 16 + 0) = 160 nm; (-14,-2) is 40 x root(4 + 9 + 6) = 40 x
 //!   root 19 = 174.4 nm. Deboyne is 40 x root(4 + 9 - 6) = 40 x root 7 =
 //!   105.8 nm;
-//! - an order to each of the six bomber groups, 2, 3, 4, 6, 7 and 8, to
-//!   strike transports first, then carriers, then the other kinds in the
-//!   game's own order. The mission is to stop the landing, and a strike
-//!   that takes the most important kind first spends itself on the
-//!   escort;
-//! - an order to task force 2 to move to (-12,-3), on the convoy's route
-//!   at the tip, as the support group was sent to bar the way. A staff
-//!   stands a surface force only from a home port, and this force has
-//!   none, so no intent would move it: the order is the commander's own.
+//! - two orders to task force 2: to move to (-12,-3), on the convoy's
+//!   route at the tip, as the support group was sent to bar the way, and
+//!   to steam at 20 knots, since a force sent to bar a way is sent at
+//!   speed (589 nm at 20 kn is 29.5 hours; the figure is the
+//!   architect's, a placeholder). A staff stands a surface force only
+//!   from a home port, and this force has none, so no intent would move
+//!   it: the orders are the commander's own.
 //!
 //! 19. File a's commands and orders of day 1 are those, for each side,
 //!     with both leaves, and no other. After day 1 each side's command
-//!     state holds its intents with no risk set; the six Allied bomber
-//!     groups have transports first on their target lists on the morning
-//!     of day 2 as on day 1 (the staff has not put them back); and task
-//!     force 2 has a route to (-12,-3) or has arrived there.
+//!     state holds its intents with no risk set; no Allied air group
+//!     is held; and on the morning of day 2 task force 2 has a route to
+//!     (-12,-3) or has arrived there.
 //! 20. From (-3,5), (-12,1) is 40 x root(9 x 9 + 4 x 4 + 9 x 4) = 40 x
 //!     root 133 = 461.3 nm by air; the game's sea measure is stated by
 //!     the test from the game and is not below that.
@@ -387,8 +395,7 @@
 //! read: whether the convoy sailed and when; when and where it landed and
 //! how many men; what the men did ashore and whether Port Moresby fell;
 //! where each carrier force went and what it struck; what Rabaul's
-//! aircraft and the support group did; whether the order of what to
-//! strike first held through the staff's mornings; and the result. If the
+//! aircraft and the support group did; and the result. If the
 //! orders left out something the mission asks for, the architect mends
 //! them then. What the reviewer's trial showed is expected again and is
 //! reported, not mended, in this build: the men ashore count the garrison
@@ -418,7 +425,7 @@ use sim_core::hex::Hex;
 use sim_core::ids::{AirGroupId, BaseId, IntentId, LandUnitId, ShipClassId, ShipId, TaskForceId};
 use sim_core::map::HexKind;
 use sim_core::objectives::{score, Level, Objective, Outcome, Tally};
-use sim_core::orders::{AirGroupOrder, Issuer, Mission, OrderKind, TaskForceOrder};
+use sim_core::orders::{Issuer, Mission, OrderKind, SpeedSetting, TaskForceOrder};
 use sim_core::refdata::ShipKind;
 use sim_core::state::{AirGroupLocation, Ship, ShipLocation, Side, TruthState};
 use sim_core::time::Pulse;
@@ -597,7 +604,6 @@ struct Played {
 }
 
 struct Morning {
-    priorities: BTreeMap<u32, Vec<ShipKind>>,
     tf2_at: Hex,
     tf2_route: Vec<Hex>,
 }
@@ -621,11 +627,6 @@ fn play(letter: char) -> Played {
                     mornings.insert(
                         day,
                         Morning {
-                            priorities: t
-                                .air_groups
-                                .iter()
-                                .map(|(id, g)| (id.raw(), g.target_priority.clone()))
-                                .collect(),
                             tf2_at: t.task_forces[&tf(2)].position(),
                             tf2_route: t.task_forces[&tf(2)].route.waypoints.clone(),
                         },
@@ -1482,21 +1483,11 @@ fn commander_intents(state: &CommandState) -> BTreeSet<u32> {
         .collect()
 }
 
-const TARGET_ORDER: [ShipKind; 6] = [
-    ShipKind::Transport,
-    ShipKind::Carrier,
-    ShipKind::Battleship,
-    ShipKind::Cruiser,
-    ShipKind::Destroyer,
-    ShipKind::Auxiliary,
-];
-
 /// Statement 19: File a's commands and orders of day 1 are those, for each side, with
 /// both leaves, and no other. After day 1 each side's command state holds
-/// its intents with no risk set; the six Allied bomber groups have
-/// transports first on their target lists on the morning of day 2 as on day
-/// 1 (the staff has not put them back); and task force 2 has a route to
-/// (-12,-3) or has arrived there.
+/// its intents with no risk set; no Allied air group is held; and on the
+/// morning of day 2 task force 2 has a route to (-12,-3) or has arrived
+/// there.
 #[test]
 fn s19_the_orders_of_file_a_on_day_1_and_what_stands_on_the_morning_of_day_2() {
     let a = played('a');
@@ -1585,8 +1576,8 @@ fn s19_the_orders_of_file_a_on_day_1_and_what_stands_on_the_morning_of_day_2() {
     }
     assert!(state.leaves.prepare && state.leaves.launch);
 
-    // The commander's orders of day 1: the six bomber groups' target lists
-    // and task force 2's route, and no other.
+    // The commander's orders of day 1: task force 2's route and its speed,
+    // and no other.
     let given = |side: Side| -> Vec<&sim_core::orders::Order> {
         a.orders
             .iter()
@@ -1598,40 +1589,29 @@ fn s19_the_orders_of_file_a_on_day_1_and_what_stands_on_the_morning_of_day_2() {
         "the Japanese side gives no order of its own"
     );
     let allied = given(A);
-    assert_eq!(allied.len(), 7, "{allied:?}");
+    assert_eq!(allied.len(), 2, "{allied:?}");
     assert!(allied.iter().all(|o| o.day_issued == 1));
-    let mut lists = BTreeSet::new();
+    let mut speeds = Vec::new();
     let mut routes = Vec::new();
     for o in &allied {
         match &o.kind {
-            OrderKind::AirGroup {
-                target,
-                order: AirGroupOrder::SetTargetPriority { kinds },
-            } => {
-                assert_eq!(kinds, &TARGET_ORDER.to_vec(), "group {}", target.raw());
-                lists.insert(target.raw());
-            }
             OrderKind::TaskForce {
                 target,
                 order: TaskForceOrder::SetRoute { waypoints, .. },
             } => routes.push((target.raw(), waypoints.clone())),
+            OrderKind::TaskForce {
+                target,
+                order: TaskForceOrder::SetSpeed(SpeedSetting::Knots(knots)),
+            } => speeds.push((target.raw(), *knots)),
             other => panic!("an order the statement does not give: {other:?}"),
         }
     }
-    assert_eq!(lists, BTreeSet::from([2, 3, 4, 6, 7, 8]));
     assert_eq!(routes, vec![(2, vec![hex(-12, -3)])]);
+    assert_eq!(speeds, vec![(2, n(20))]);
+    // No Allied air group is held from the staff.
+    let held = format!("{:?}", state.holds);
+    assert!(!held.contains("AirGroup"), "held: {held}");
 
-    // On the mornings of days 1 and 2.
-    for day in [1, 2] {
-        let m = &a.mornings[&day];
-        for raw in [2, 3, 4, 6, 7, 8] {
-            assert_eq!(
-                m.priorities[&raw],
-                TARGET_ORDER.to_vec(),
-                "group {raw} on the morning of day {day}"
-            );
-        }
-    }
     let m = &a.mornings[&2];
     assert!(
         m.tf2_at == hex(-12, -3) || m.tf2_route.last() == Some(&hex(-12, -3)),

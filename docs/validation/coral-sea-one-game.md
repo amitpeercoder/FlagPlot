@@ -59,3 +59,16 @@ A probe, not kept and not part of the scenario, says what one change would do: t
 
 - The six bomber groups held by the commander's order to set their lists, and never flown (the first section).
 - The support group's route by the game runs north of the Louisiades, through (-8,-3) and (-10,-3), and at 12 kn it reached the convoy's route a day and a half after the convoy had passed. No speed was given in the order; the hand calculation gives none.
+
+## The game played again, on the orders as the architect mended them
+
+Made by the architect on Nov 20, 2026, after his rulings on the game above (decision 0188, "The architect's rulings on the one game"): the order to the six bomber groups is taken out, and the support group is sent at 20 knots. File a, seed 1942.
+
+- **Day 1.** The Allied groups fly. In the morning 75 bombers of five squadrons go at a contact at (-9,-2), 106 nm from the carriers, by Deboyne.
+- **Day 2, night.** The support group meets the convoy at (-12,-3), where it rounds the tip, and fights it for three rounds. Yubari is sunk; Perkins and Walke are sunk; the support group breaks off with three of its five ships sunk or crippled, and arrives in the hex at 23:27. The convoy steams on.
+- **Day 2.** The Allied carriers strike the Main Force at Deboyne morning and afternoon: Shoho is sunk in the morning and Aoba in the afternoon.
+- **Days 3 and 4.** The Striking Force closes to (-8,1) and (-8,0). The Allied strikes go on at the Main Force. Yorktown, Australia and Chicago end out of action.
+- **Day 4, night.** The convoy halts at Port Moresby at 21:42 and lands all 5,386 men.
+- **The result.** Allied 23.75 (Shoho, Aoba and Yubari sunk, 18; Kinugasa out of action, 2; 75 aircraft, 3.75). Japanese 66.21 (men landed, 53.86; Perkins and Walke sunk, 2; Yorktown, Australia and Chicago out of action, 9; 27 aircraft, 1.35). A decisive Japanese victory by 42.46.
+
+The orders now do what they are for. No Allied aircraft struck a transport: the strikes went at the Main Force, 106 nm away, on every day, and the convoy passed 144 to 174 nm from the carriers unstruck.
