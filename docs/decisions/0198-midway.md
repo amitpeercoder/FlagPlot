@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 20, 2026, on the designer's word
 
 Summary: A third small scenario for play: Midway over four days, 3 to 6 June 1942. Three American carriers and the aircraft of Midway against four Japanese carriers, with a Japanese force bound to land on the atoll. It needs what no scenario has needed: a second map, in another sea. It is built in four stages: the map, the data, the scenario, and whether it is a contest. It uses the rules the Coral Sea called for, which are built.
 
-Standing: Planned on Nov 20, 2026 and amended on review; waits for the designer.
+Standing: Confirmed by the designer on Nov 20, 2026; stage 0, the map, is decision 0199, and stage A, the data, is under way.
 
 ## Why
 
@@ -154,3 +154,12 @@ A reviewer who had not seen the plan written read it against the map tool, the s
 2. **The scoring.** At the game's figures the landing outweighs the four carriers. For the Coral Sea he kept it so. For Midway, the battle everyone knows as four carriers lost: keep the figures as they are and see the run (the architect's proposal), or have him propose, by a rule from the mission, figures in which the carriers count for more.
 3. **A carrier caught rearming, and fog.** The game has neither. Build without them and see the run first (the architect's proposal), or plan either before the scenario.
 4. **Yamato's Main Body left out.** The architect proposes it.
+
+## Confirmed on Nov 20, 2026
+
+The designer: "Go with your recommendations."
+
+1. **Five days, 3 to 7 June.**
+2. **The scoring keeps the game's figures,** the landing outweighing the carriers, and the first run is seen before anything is proposed.
+3. **No rule for a carrier caught rearming, and none for fog, before the scenario.** It is built without them, and what the run shows is put to him.
+4. **Yamato's Main Body is left out.**
