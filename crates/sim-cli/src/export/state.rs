@@ -301,6 +301,10 @@ pub struct AirGroupOut {
     /// morning (decision 0131).
     #[serde(skip_serializing_if = "Option::is_none")]
     search_once: Option<bool>,
+    /// The waters the group strikes first, as `[q, r]` pairs; left out when
+    /// there are none (decision 0190).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    strike_first_waters: Option<Vec<[i32; 2]>>,
     arc: Option<ArcOut>,
 }
 
@@ -659,6 +663,13 @@ fn air_group(group: &AirGroup, ref_data: &RefData) -> AirGroupOut {
             .then_some(Num(group.strike_held_share)),
         strike_sizing: group.strike_sizing.then_some(true),
         search_once: group.search_once.then_some(true),
+        strike_first_waters: (!group.strike_first_waters.is_empty()).then(|| {
+            group
+                .strike_first_waters
+                .iter()
+                .map(|h| [h.q, h.r])
+                .collect()
+        }),
         arc: group.search.map(|arc| ArcOut {
             from_deg: arc.from_deg,
             to_deg: arc.to_deg,

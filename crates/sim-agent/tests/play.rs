@@ -184,9 +184,10 @@ fn ag_index(order: &AirGroupOrder) -> usize {
         AirGroupOrder::SetStrikeHeldShare { .. } => 12,
         AirGroupOrder::SetStrikeSizing { .. } => 13,
         AirGroupOrder::SetSearchOnce { .. } => 14,
+        AirGroupOrder::SetStrikeFirstWaters { .. } => 16,
     }
 }
-const AG_KINDS: usize = 16;
+const AG_KINDS: usize = 17;
 
 fn examples() -> Vec<OrderKind> {
     let tf = |order| OrderKind::TaskForce {
@@ -310,6 +311,11 @@ fn examples() -> Vec<OrderKind> {
         ag(AirGroupOrder::SetStrikeSizing { on: false }),
         ag(AirGroupOrder::SetSearchOnce { on: true }),
         ag(AirGroupOrder::SetSearchOnce { on: false }),
+        // Decision 0190: the waters to strike first, and clearing them.
+        ag(AirGroupOrder::SetStrikeFirstWaters {
+            hexes: vec![Hex::new(3, -2), Hex::new(4, 1)],
+        }),
+        ag(AirGroupOrder::SetStrikeFirstWaters { hexes: Vec::new() }),
     ];
     for mission in [
         Mission::Transport,
@@ -952,7 +958,7 @@ fn with_two_players_the_day_waits_for_both_and_the_order_does_not_matter() {
         assert!(result["allied"]["margin"].is_string(), "{result}");
         assert_eq!(
             last,
-            json!({"format": "flagplot-agent", "version": 34, "kind": "end_day", "resolved": true, "day": 1, "game_over": true})
+            json!({"format": "flagplot-agent", "version": 35, "kind": "end_day", "resolved": true, "day": 1, "game_over": true})
         );
         assert_eq!(session.day_hashes(), hashes, "variant {variant}");
         let world = session.into_world();

@@ -136,7 +136,7 @@ pub fn staff_tool_definitions() -> Vec<(&'static str, String, Value)> {
                 "required": ["limit"],
                 "additionalProperties": false,
                 "properties": {
-                    "limit": {"enum": ["forces", "area", "priority", "protected", "reserve", "risk", "not_before", "wait_for", "after", "knowledge"], "description": "Which limit. forces takes intent, ships, task_forces, air_groups, land_units and source; area takes intent and hexes; priority takes intent and rank; protected takes intent and ships; reserve takes base, supply_t and fuel_t; risk takes intent and risk; not_before takes intent and from_day; wait_for takes intent and one of task_force and land_unit; after takes intent and other_intent; knowledge takes intent, knowledge and (with recent_count) within_days. Each of the last four with its other key left out clears it."},
+                    "limit": {"enum": ["forces", "area", "priority", "protected", "reserve", "risk", "not_before", "wait_for", "after", "knowledge", "targets"], "description": "Which limit. forces takes intent, ships, task_forces, air_groups, land_units and source; area takes intent and hexes; priority takes intent and rank; protected takes intent and ships; reserve takes base, supply_t and fuel_t; risk takes intent and risk; not_before takes intent and from_day; wait_for takes intent and one of task_force and land_unit; after takes intent and other_intent; knowledge takes intent, knowledge and (with recent_count) within_days; targets takes intent, kinds and waters_first. Each of the last five with its other key (for targets, kinds, left out or empty) left out clears it."},
                     "intent": intent.clone(),
                     "ships": numbers("(forces, protected) your ship numbers."),
                     "task_forces": numbers("(forces) your task force numbers."),
@@ -155,6 +155,8 @@ pub fn staff_tool_definitions() -> Vec<(&'static str, String, Value)> {
                     "other_intent": {"type": "integer", "minimum": 1, "description": "(after) the number of another take_place or control_island of yours whose place must be yours first; left out to clear the limit."},
                     "knowledge": {"enum": ["none", "count", "recent_count"], "description": "(knowledge) how much must be known before the landing goes; left out to clear the limit."},
                     "within_days": {"type": "integer", "description": "(knowledge recent_count) the most days old the count may be on the morning it goes, at least 1; 3 where left out."},
+                    "kinds": {"type": "array", "items": {"enum": ["carrier", "battleship", "cruiser", "destroyer", "transport", "auxiliary"]}, "maxItems": 6, "description": "(targets) the kinds of ship the bombers strike, most wanted first, each once; left out or empty to clear the limit."},
+                    "waters_first": {"type": "boolean", "description": "(targets) whether the waters of the deny the intent is, or stands under, are struck first; false where left out."},
                     "clear": clear.clone(),
                     "reason": reason.clone()
                 }
@@ -188,7 +190,7 @@ pub fn staff_tool_definitions() -> Vec<(&'static str, String, Value)> {
         (
             "preview",
             described(PREVIEW_DESCRIPTION),
-            json!({
+            preview_with_targets(json!({
                 "type": "object",
                 "required": ["command"],
                 "additionalProperties": false,
@@ -207,7 +209,7 @@ pub fn staff_tool_definitions() -> Vec<(&'static str, String, Value)> {
                     "base": {"type": "integer", "minimum": 1, "description": "(set_intent) the base to keep supplied, cover or hold, or (set_intent take_place) an enemy base on your map whose hex is the place, or (set_limit reserve) the base's number."},
                     "floor_days": {"type": "integer", "minimum": 1, "description": "(set_intent keep_supplied) days of supply to keep the base at or above."},
                     "interval_days": {"type": "integer", "minimum": 1, "description": "(set_intent) days of use each shipment brings above the floor."},
-                    "limit": {"enum": ["forces", "area", "priority", "protected", "reserve", "risk", "not_before", "wait_for", "after", "knowledge"], "description": "(set_limit) which limit, as set_limit takes it."},
+                    "limit": {"enum": ["forces", "area", "priority", "protected", "reserve", "risk", "not_before", "wait_for", "after", "knowledge", "targets"], "description": "(set_limit) which limit, as set_limit takes it."},
                     "ships": numbers("(set_limit forces, protected) your ship numbers."),
                     "task_forces": numbers("(set_limit forces) your task force numbers."),
                     "air_groups": numbers("(set_limit forces) your air group numbers."),
@@ -225,7 +227,7 @@ pub fn staff_tool_definitions() -> Vec<(&'static str, String, Value)> {
                     "within_days": {"type": "integer", "description": "(set_limit knowledge recent_count) the most days old the count may be, at least 1; 3 where left out."},
                     "reason": reason.clone()
                 }
-            }),
+            })),
         ),
         (
             "approve",
@@ -378,4 +380,22 @@ pub fn trial_tool_definitions() -> Vec<(&'static str, String, Value)> {
             }),
         ),
     ]
+}
+
+/// The preview schema's two keys of the "targets" limit (decision 0190),
+/// added apart from the `json!` that holds the rest, which is at the
+/// macro's recursion limit.
+fn preview_with_targets(mut schema: Value) -> Value {
+    let properties = schema["properties"]
+        .as_object_mut()
+        .expect("the preview schema has properties");
+    properties.insert(
+        "kinds".to_string(),
+        json!({"type": "array", "items": {"enum": ["carrier", "battleship", "cruiser", "destroyer", "transport", "auxiliary"]}, "maxItems": 6, "description": "(set_limit targets) the kinds of ship the bombers strike, most wanted first, each once; left out or empty to clear the limit."}),
+    );
+    properties.insert(
+        "waters_first".to_string(),
+        json!({"type": "boolean", "description": "(set_limit targets) whether the waters of the deny the intent is, or stands under, are struck first; false where left out."}),
+    );
+    schema
 }

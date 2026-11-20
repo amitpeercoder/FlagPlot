@@ -514,6 +514,7 @@ fn aboard(
         held_share: Fixed::ZERO,
         sizing: false,
         search_once: false,
+        waters: Default::default(),
     }
 }
 
@@ -532,7 +533,15 @@ fn on_a_carrier_the_least_tired_bomber_searches_once_a_day_and_the_other_strikes
         aboard(3, false, true, true, 10, 10),
         aboard(4, false, true, true, 4, 10),
     ];
-    let air = decide(Risk::Preserve, 0, false, 50, 120, &groups);
+    let air = decide(
+        Risk::Preserve,
+        0,
+        false,
+        50,
+        120,
+        &Default::default(),
+        &groups,
+    );
     assert_eq!(role_of(&air.roles, 4), CarrierRole::Searcher);
     assert_eq!(role_of(&air.roles, 3), CarrierRole::Striker);
     let to_4: Vec<&AirGroupOrder> = air

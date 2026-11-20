@@ -807,6 +807,12 @@ enum ActionSpec {
     SetSearchOnce {
         on: bool,
     },
+    /// The waters the group strikes first, as `[q, r]` pairs (decision
+    /// 0190, 13). An empty list clears them; a hex off the map or named
+    /// twice is refused when the order reaches intake.
+    SetStrikeFirstWaters {
+        hexes: Vec<[i32; 2]>,
+    },
     /// Move the air group to the named base of its side (decision 0091). A
     /// base that is not the side's, or out of reach, is refused at intake.
     /// The base is the order's `base` key, which `OrderSpec` reads first
@@ -2623,6 +2629,8 @@ impl Scenario {
                 search_once: false,
                 search_once_order: None,
                 available_from: available_day(spec.available_from, id).map_err(&fail)?,
+                strike_first_waters: std::collections::BTreeSet::new(),
+                waters_order: None,
                 // Nothing claimed at the start of the game (decision 0180, 6).
                 claims: sim_core::state::ClaimTally::default(),
             };
@@ -2958,6 +2966,9 @@ impl Scenario {
                         ActionSpec::SetSearchOnce { .. } => {
                             return Err(wrong_target("set_search_once", "air_group"))
                         }
+                        ActionSpec::SetStrikeFirstWaters { .. } => {
+                            return Err(wrong_target("set_strike_first_waters", "air_group"))
+                        }
                         ActionSpec::Rebase {} => {
                             return Err(wrong_target("rebase", "air_group"))
                         }
@@ -3098,12 +3109,17 @@ impl Scenario {
                         ActionSpec::SetSearchOnce { on } => {
                             AirGroupOrder::SetSearchOnce { on: *on }
                         }
+                        ActionSpec::SetStrikeFirstWaters { hexes } => {
+                            AirGroupOrder::SetStrikeFirstWaters {
+                                hexes: hexes.iter().map(|[q, r]| Hex::new(*q, *r)).collect(),
+                            }
+                        }
                         ActionSpec::Rebase {} => AirGroupOrder::Rebase {
                             base: BaseId::new(need_base("rebase")?),
                         },
                         _ => {
                             return Err(fail(format!(
-                                "an order on day {day} for an air_group must be set_air_mission, set_search_arc, set_patrol_share, set_rest_threshold, set_reach, set_target_priority, set_strike_contact_age, set_strike_held_share, set_strike_sizing, set_search_once or rebase"
+                                "an order on day {day} for an air_group must be set_air_mission, set_search_arc, set_patrol_share, set_rest_threshold, set_reach, set_target_priority, set_strike_contact_age, set_strike_held_share, set_strike_sizing, set_search_once, set_strike_first_waters or rebase"
                             )))
                         }
                     };
@@ -4947,6 +4963,19 @@ r = 0
         assert!(parse_with(&order("air_group = 1", "kind = \"set_search_once\"")).is_err());
         assert!(parse_with(&order("air_group = 1", &once("1"))).is_err());
         assert!(error_of(&order("task_force = 1", &once("true"))).contains("air_group"));
+    }
+
+    #[test]
+    fn the_strike_first_waters_order_loads_for_an_air_group() {
+        let waters = |hexes: &str| format!("kind = \"set_strike_first_waters\"\nhexes = {hexes}");
+        parse_with(&order("air_group = 1", &waters("[[0, 0], [1, -1]]"))).expect("hexes load");
+        parse_with(&order("air_group = 1", &waters("[]"))).expect("an empty list loads");
+        assert!(parse_with(&order(
+            "air_group = 1",
+            "kind = \"set_strike_first_waters\""
+        ))
+        .is_err());
+        assert!(error_of(&order("task_force = 1", &waters("[[0, 0]]"))).contains("air_group"));
     }
 
     /// `HEAD` with the air combat key added after the surface combat key.
@@ -7499,6 +7528,50 @@ task_force = 3
         assert_eq!(list.len(), 1);
         assert_eq!(list[0].0, Side::Allied);
         list[0].1.clone()
+    }
+
+    #[test]
+    fn the_targets_limit_loads_with_kind_names_and_clears_with_none() {
+        use sim_core::command::{Limit, TargetsLimit};
+        use sim_core::refdata::ShipKind;
+        let limit = |keys: &str| {
+            command(&format!(
+                "kind = \"set_limit\"\nlimit = \"targets\"\nintent = 4{keys}"
+            ))
+        };
+        assert_eq!(
+            only(&limit(
+                "\nkinds = [\"transport\", \"carrier\"]\nwaters_first = true"
+            )),
+            CommandKind::SetLimit(Limit::Targets {
+                intent: IntentId::new(4),
+                targets: Some(TargetsLimit {
+                    kinds: vec![ShipKind::Transport, ShipKind::Carrier],
+                    waters_first: true,
+                }),
+            })
+        );
+        assert_eq!(
+            only(&limit("\nkinds = [\"cruiser\"]")),
+            CommandKind::SetLimit(Limit::Targets {
+                intent: IntentId::new(4),
+                targets: Some(TargetsLimit {
+                    kinds: vec![ShipKind::Cruiser],
+                    waters_first: false,
+                }),
+            })
+        );
+        for cleared in ["", "\nkinds = []"] {
+            assert_eq!(
+                only(&limit(cleared)),
+                CommandKind::SetLimit(Limit::Targets {
+                    intent: IntentId::new(4),
+                    targets: None,
+                })
+            );
+        }
+        assert!(error_of(&limit("\nkinds = [\"submarine\"]")).contains("submarine"));
+        assert!(parse_with(&limit("\nkinds = [\"carrier\"]\nrank = 1")).is_err());
     }
 
     #[test]

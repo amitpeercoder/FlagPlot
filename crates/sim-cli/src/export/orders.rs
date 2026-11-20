@@ -153,6 +153,13 @@ fn text(kind: &OrderKind) -> String {
             AirGroupOrder::SetSearchOnce { on } => {
                 format!("search once a day {}", if *on { "on" } else { "off" })
             }
+            AirGroupOrder::SetStrikeFirstWaters { hexes } if hexes.is_empty() => {
+                "strike first waters none".to_string()
+            }
+            AirGroupOrder::SetStrikeFirstWaters { hexes } => {
+                let hexes: Vec<String> = hexes.iter().map(|hex| hex.to_string()).collect();
+                format!("strike first waters {}", hexes.join(", "))
+            }
             AirGroupOrder::Rebase { base } => format!("rebase to {base}"),
         },
         OrderKind::LandUnit { order, .. } => match order {

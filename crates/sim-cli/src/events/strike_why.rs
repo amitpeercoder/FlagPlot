@@ -187,7 +187,7 @@ pub fn answer(
 
     if json {
         let key = world.umpire_key();
-        let value = serde_json::json!({
+        let mut value = serde_json::json!({
             "group": asked.group.to_string(),
             "side": side.name(),
             "day": asked.day,
@@ -231,6 +231,14 @@ pub fn answer(
                 },
             })),
         });
+        // Decision 0190: the waters to strike first, left out when none.
+        if !review.waters_first.is_empty() {
+            value["waters_first"] = review
+                .waters_first
+                .iter()
+                .map(|hex| serde_json::json!([hex.q, hex.r]))
+                .collect();
+        }
         println!("{value}");
         return Ok(());
     }
@@ -265,6 +273,18 @@ pub fn answer(
             .collect::<Vec<_>>()
             .join(", ")
     );
+    // Decision 0190: the waters struck before every other.
+    if !review.waters_first.is_empty() {
+        println!(
+            "waters to strike first, before any other: {}",
+            review
+                .waters_first
+                .iter()
+                .map(|hex| hex.to_string())
+                .collect::<Vec<_>>()
+                .join(", ")
+        );
+    }
     println!(
         "{} aircraft able to fly, the share held back is {}, {} to send; strikes {}sized; the pulse is {}dark where the group is",
         review.able_to_fly,

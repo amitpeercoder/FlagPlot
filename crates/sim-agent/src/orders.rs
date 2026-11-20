@@ -216,6 +216,10 @@ pub fn order_to_json(kind: &OrderKind) -> Value {
             AirGroupOrder::SetSearchOnce { on } => {
                 json!({ "kind": "set_search_once", "on": on })
             }
+            AirGroupOrder::SetStrikeFirstWaters { hexes } => json!({
+                "kind": "set_strike_first_waters",
+                "hexes": hexes.iter().map(|h| json!([h.q, h.r])).collect::<Vec<_>>(),
+            }),
             AirGroupOrder::Rebase { base } => json!({
                 "kind": "rebase",
                 "base": base.raw(),
@@ -752,6 +756,15 @@ pub fn order_from_json(unit: &str, value: &Value) -> Result<OrderKind, String> {
                         .get("on")
                         .and_then(Value::as_bool)
                         .ok_or_else(|| "\"on\" is missing or not true or false".to_string())?,
+                },
+                "set_strike_first_waters" => AirGroupOrder::SetStrikeFirstWaters {
+                    hexes: match value.get("hexes") {
+                        None | Some(Value::Null) => Vec::new(),
+                        Some(Value::Array(list)) => hex_pairs(list, "hex of the waters")?,
+                        Some(_) => {
+                            return Err("\"hexes\" must be a list of [q, r] pairs".to_string())
+                        }
+                    },
                 },
                 "rebase" => AirGroupOrder::Rebase {
                     base: BaseId::new(small(value, "base")?),

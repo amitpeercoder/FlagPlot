@@ -2,14 +2,14 @@ Scenario 29: What a land unit is good at
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 951e76cec5a6efe8  64 events
-day   2  hash 0c11394e5a52c99a  63 events
-day   3  hash c55ee9de0b606edf  49 events
-day   4  hash cbf285cf7a8f5eb1  44 events
-day   5  hash 2681a16a3a589436  41 events
-day   6  hash acd9a017cf6bac52  42 events
-day   7  hash 48b076fd9853bfb0  34 events
-day   8  hash 8507d88479f9b131  34 events
+day   1  hash 351b1b22e933fbc3  64 events
+day   2  hash 4201844193c5338b  63 events
+day   3  hash bbd859789d71add4  49 events
+day   4  hash 0c990d1a2849e68a  44 events
+day   5  hash 3ca7c8050eecaaf1  41 events
+day   6  hash 59236b367c5ec99b  42 events
+day   7  hash e64b8df6fca0816d  34 events
+day   8  hash 2ce9c43a0a3aab7c  34 events
 
 task_force:1 "Placeholder transport force 1" (Allied): Idle at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Placeholder transport force 2" (Allied): Idle at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port

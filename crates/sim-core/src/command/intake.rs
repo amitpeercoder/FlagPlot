@@ -529,6 +529,23 @@ impl World {
                             return Err(CommandRefusal::RecentCountOfNoDays(intent));
                         }
                     }
+                    // Decision 0190: one to six kinds, each once; the waters
+                    // first only on a deny or beneath one.
+                    if let Limit::Targets {
+                        targets: Some(targets),
+                        ..
+                    } = limit
+                    {
+                        let mut seen = std::collections::BTreeSet::new();
+                        if targets.kinds.is_empty()
+                            || !targets.kinds.iter().all(|kind| seen.insert(*kind))
+                        {
+                            return Err(CommandRefusal::BadTargetKinds(intent));
+                        }
+                        if targets.waters_first && !state.is_or_under_deny(intent) {
+                            return Err(CommandRefusal::NoWatersFirstOn(intent));
+                        }
+                    }
                     if let Limit::Forces { limit, .. } = limit {
                         // Keeping a base supplied needs a source. Taking a
                         // place does not: the staff chooses what the
@@ -595,7 +612,8 @@ impl World {
                     Limit::Priority { .. }
                     | Limit::Risk { .. }
                     | Limit::NotBefore { .. }
-                    | Limit::Knowledge { .. } => {}
+                    | Limit::Knowledge { .. }
+                    | Limit::Targets { .. } => {}
                     // A force or unit not the side's is refused as a forces
                     // limit naming it is, so that a refusal tells nothing of
                     // the enemy (decision 0159, 9).
@@ -664,7 +682,10 @@ impl World {
                         | Limit::NotBefore { .. }
                         | Limit::WaitFor { .. }
                         | Limit::After { .. }
-                        | Limit::Knowledge { .. } => true,
+                        | Limit::Knowledge { .. }
+                        // A child's targets limit replaces its parent's and
+                        // is never wider (decision 0190, 19).
+                        | Limit::Targets { .. } => true,
                     };
                     if !narrows {
                         return Err(CommandRefusal::WiderThanParent(parent));
@@ -1200,6 +1221,9 @@ impl World {
                         Limit::After { other, .. } => intent.limits.after = *other,
                         Limit::Knowledge { knowledge, .. } => {
                             intent.limits.knowledge = *knowledge;
+                        }
+                        Limit::Targets { targets, .. } => {
+                            intent.limits.targets.clone_from(targets);
                         }
                         Limit::Reserve { .. } => {}
                     }

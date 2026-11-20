@@ -2,9 +2,9 @@ Placeholder scenario 58: A carrier force closes
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash aaa9a8616cb5690d  47 events
-day   2  hash d7f7b35abb1b2944  12 events
-day   3  hash 524826df97b0e156  5 events
+day   1  hash aad9bbe6ad3d77c4  47 events
+day   2  hash 35b66c0d7741013b  12 events
+day   3  hash 80b3529e7a8b7cfb  5 events
 
 #1 D0 -         Allied report: 1 ship, carrier, at (12,0), held at the start: new contact:1
 #2 D1 -         Allied the commander's command taken: set intent:1 to operate the carrier force task_force:1 from (0,0)

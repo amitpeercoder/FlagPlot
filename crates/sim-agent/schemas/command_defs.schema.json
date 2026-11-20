@@ -403,6 +403,25 @@
             { "type": "null" }
           ],
           "description": "Decision 0159, 12: how much must be known before the landing goes, set on this intent itself; null where none is set (the risk then decides)."
+        },
+        "targets": {
+          "description": "Decision 0190: the kinds of ship the intent's bombers strike, in order, and whether the deny's waters come first, set on this intent itself. Left out where none is set.",
+          "type": "object",
+          "required": ["kinds", "waters_first"],
+          "additionalProperties": false,
+          "properties": {
+            "kinds": {
+              "type": "array",
+              "items": { "type": "string" },
+              "minItems": 1,
+              "maxItems": 6,
+              "description": "One to six kinds of ship, each once, most wanted first, as the order set_target_priority names them."
+            },
+            "waters_first": {
+              "type": "boolean",
+              "description": "True only on a deny or an intent beneath one: the deny's waters are struck first."
+            }
+          }
         }
       }
     },
@@ -1485,6 +1504,29 @@
         "knowledge_from": {
           "type": ["integer", "null"],
           "description": "The intent that knowledge limit is set on; null where none is set."
+        },
+        "targets": {
+          "description": "Decision 0190: the targets limit nearest on the intent and above it. Left out where none is set.",
+          "type": "object",
+          "required": ["kinds", "waters_first"],
+          "additionalProperties": false,
+          "properties": {
+            "kinds": {
+              "type": "array",
+              "items": { "type": "string" },
+              "minItems": 1,
+              "maxItems": 6,
+              "description": "One to six kinds of ship, each once, most wanted first, as the order set_target_priority names them."
+            },
+            "waters_first": {
+              "type": "boolean",
+              "description": "True only on a deny or an intent beneath one: the deny's waters are struck first."
+            }
+          }
+        },
+        "targets_from": {
+          "type": "integer",
+          "description": "Decision 0190: the intent that targets limit is set on. Left out where none is set."
         }
       }
     },

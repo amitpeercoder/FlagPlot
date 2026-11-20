@@ -149,6 +149,12 @@ Version 34 (decision 0191) adds the order `no_cargo_work`, the notice kind
 `lift_turned_back` and the standing interrupt of that name (see "A lift
 turned back" below).
 
+Version 35 (decision 0190) adds the limit `targets` (`kinds`, `waters_first`) to
+`set_limit` and `command_state`, and the air group order
+`set_strike_first_waters` (`hexes`) (see "What to strike first" below). Both
+are left out of an answer where they are not set, so a game without them reads
+as before.
+
 The fight ashore (decision 0090, see "The fight ashore" below) adds only fields
 and values, so `version` stays 3.
 
@@ -1074,6 +1080,22 @@ standing interrupt, on by default and armed apart for each plan.
 The task force order `no_cargo_work` (`{"kind": "no_cargo_work"}`, no other key) clears the force's load or unload
 order, whatever its status. It is always accepted for a force of the side and touches no cargo and no men: a force that
 then arrives at a base lands and loads nothing, and a force halted only for cargo steams on.
+
+## What to strike first (decision 0190)
+
+The version is 35. `set_limit` takes the `limit` value `targets`, on an intent of the commander's, with `kinds` (one to six
+ship kind names as `set_target_priority` writes them, each once, most wanted first) and `waters_first` (true or false;
+false where left out; true only on a deny or an intent beneath one, or the game refuses it). `kinds` left out or empty
+clears the limit (with `waters_first` true and no kinds the tool refuses). An intent's `limits` gains `targets`
+(`command_defs.schema.json#/$defs/limits`: `{"kinds": [...], "waters_first": bool}`) and `limits_read_up` gains `targets`
+and `targets_from`, the nearest on the chain and the intent it is set on; each is left out where none is set. The game's
+refusals (a kind twice, none or more than six, the waters first on an intent that may not have them) come in the
+refusal's words as for the other limits. Only the side that set the limit sees it; the other side is shown nothing of it.
+
+The air group order `set_strike_first_waters` (`{"kind": "set_strike_first_waters", "hexes": [[q, r], ...]}`; an empty or
+missing list clears it) is a standing order of its own kind: among the contacts the group could launch at, one whose
+estimated hex is one of the hexes ranks before every one outside them. It is refused for a hex off the map or one named
+twice. An air group line has `strike_first_waters` (`[q, r]` pairs), given only when there are some.
 
 ## A plan told to wait (decision 0159, rule C)
 

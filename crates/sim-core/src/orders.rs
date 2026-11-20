@@ -687,6 +687,16 @@ pub enum AirGroupOrder {
     SetSearchOnce {
         on: bool,
     },
+    /// The waters the group strikes first (decision 0190, 13): among the
+    /// contacts the group could launch at, one whose estimated hex is one of
+    /// these ranks before every one outside them; within each the order is
+    /// the list's, then the nearest, then the lowest number. Empty clears
+    /// it. A standing order of its own kind: it replaces the waters and
+    /// nothing else. Refused for a hex off the map or a hex named twice.
+    /// Added at the end.
+    SetStrikeFirstWaters {
+        hexes: Vec<Hex>,
+    },
 }
 
 /// An order to a land unit (decision 0090).
@@ -1039,6 +1049,12 @@ pub enum RejectReason {
     /// A load order's level, the most a ship is to hold, is 0 or below
     /// (decision 0162, 3). Added at the end of the enum.
     LevelNotAboveZero(Fixed),
+    /// A hex of the waters to strike first is off the map (decision 0190,
+    /// 35). Added at the end of the enum.
+    WatersOffMap(Hex),
+    /// A hex of the waters to strike first is named twice (decision 0190,
+    /// 35). Added at the end of the enum.
+    WatersHexTwice(Hex),
 }
 
 impl RejectReason {
@@ -1189,6 +1205,12 @@ impl fmt::Display for RejectReason {
             }
             RejectReason::LevelNotAboveZero(level) => {
                 write!(f, "the most a ship is to hold, {level} t, is not above 0")
+            }
+            RejectReason::WatersOffMap(hex) => {
+                write!(f, "{hex} of the waters to strike first is off the map")
+            }
+            RejectReason::WatersHexTwice(hex) => {
+                write!(f, "{hex} is named twice in the waters to strike first")
             }
             RejectReason::NoShipsToForm => f.write_str("no ships are listed to form a force"),
             RejectReason::ShipNamedTwice(ship) => write!(f, "{ship} is listed twice"),

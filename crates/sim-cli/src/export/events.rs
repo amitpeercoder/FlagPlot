@@ -134,6 +134,9 @@ fn reject_reason(reason: &RejectReason) -> Data {
         RejectReason::LevelNotAboveZero(level) => {
             base("level_not_above_zero").num("each_t", *level)
         }
+        // Decision 0190.
+        RejectReason::WatersOffMap(hex) => base("waters_off_map").hex("hex", *hex),
+        RejectReason::WatersHexTwice(hex) => base("waters_hex_twice").hex("hex", *hex),
         RejectReason::PatrolShareOutOfRange(share) => {
             base("patrol_share_out_of_range").num("share", *share)
         }

@@ -417,6 +417,8 @@ fn cited_by_group(group: &AirGroup, out: &mut Vec<(String, Cited)>) {
         available_from: _,
         // A tally cites no order and no event (decision 0180).
         claims: _,
+        strike_first_waters: _,
+        waters_order,
     } = group;
     for (what, held) in [
         ("mission", mission_order),
@@ -429,6 +431,7 @@ fn cited_by_group(group: &AirGroup, out: &mut Vec<(String, Cited)>) {
         ("strike share", strike_share_order),
         ("strike sizing", strike_sizing_order),
         ("search once", search_once_order),
+        ("waters", waters_order),
     ] {
         if let Some(held) = held {
             out.push((format!("{id} {what}"), Cited::Order(*held)));

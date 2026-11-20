@@ -15,7 +15,7 @@ use crate::command::{
     Addressee, Amendment, AmendmentChange, Awaited, Baseline, CommandState, Commitment,
     ForcesLimit, Hold, HoldMaker, HoldTarget, Intent, IntentKind, IntentLimits, InterruptCondition,
     InterruptStatus, Knowledge, Leaves, Limit, Maker, Plan, Run, RunDays, SetInterrupt,
-    StandingSubject,
+    StandingSubject, TargetsLimit,
 };
 use crate::events::Cause;
 use crate::ids::{BaseId, IntentId};
@@ -254,8 +254,13 @@ const fn speed_code(speed: SpeedSetting) -> u8 {
 /// version 50 adds the standing interrupt kind `lift_turned_back` (code 5) to
 /// a side's standing interrupts and the kinds switched off, and the notice
 /// kind `lift_turned_back` (code 9), and the task force order `no_cargo_work`
-/// (code 18, in the agent's table) (decision 0191).
-pub const STATE_VERSION: &[u8] = b"flagplot-state-v50";
+/// (code 18, in the agent's table) (decision 0191);
+/// version 51 adds to an intent's limits, after "knowledge", "targets" (0
+/// for none, else 1, the count of kinds, each kind's code and
+/// `waters_first`), and to a limit set by a command the code 11 for it, and
+/// an air group's `strike_first_waters` (the count, then each hex) and
+/// `waters_order` after its `claims` (decision 0190).
+pub const STATE_VERSION: &[u8] = b"flagplot-state-v51";
 
 /// Names every field of the state, with no `..` in any pattern. It does
 /// nothing when it runs. It is here so that a field added to the state does
@@ -543,6 +548,9 @@ fn name_every_field(world: &World) {
             available_from: _,
             // After `available_from` (decision 0180).
             claims,
+            // After `claims` (decision 0190).
+            strike_first_waters: _,
+            waters_order: _,
         } = group;
         let ClaimTally {
             shot_down: _,
@@ -860,7 +868,13 @@ fn name_limits(limits: &IntentLimits) {
         wait_for: _,
         after: _,
         knowledge: _,
+        targets,
     } = limits;
+    if let Some(TargetsLimit {
+        kinds: _,
+        waters_first: _,
+    }) = targets
+    {}
     if let Some(ForcesLimit {
         ships: _,
         task_forces: _,
@@ -942,7 +956,7 @@ fn hash_intent_kind(h: &mut StateHasher, kind: IntentKind) {
 }
 
 /// Hashes the limits of an intent: forces, area, priority, protected, risk,
-/// not before, wait for, after, knowledge.
+/// not before, wait for, after, knowledge, targets.
 fn hash_limits(h: &mut StateHasher, limits: &IntentLimits) {
     match &limits.forces {
         Some(forces) => {
@@ -977,6 +991,24 @@ fn hash_limits(h: &mut StateHasher, limits: &IntentLimits) {
     h.optional_u32(limits.after.map(IntentId::raw));
     // Decision 0159, 12: knowledge.
     hash_knowledge(h, limits.knowledge);
+    // Decision 0190: targets.
+    hash_targets(h, limits.targets.as_ref());
+}
+
+/// Hashes a targets limit: 0 for none, else 1, the count of kinds, each
+/// kind's code in order and whether the waters come first.
+fn hash_targets(h: &mut StateHasher, targets: Option<&TargetsLimit>) {
+    match targets {
+        Some(targets) => {
+            h.u8(1);
+            h.count(targets.kinds.len());
+            for kind in &targets.kinds {
+                h.u8(kind.code());
+            }
+            h.u8(u8::from(targets.waters_first));
+        }
+        None => h.u8(0),
+    }
 }
 
 /// Hashes a "knowledge" limit: 0 for none, else its code, and for a recent
@@ -1092,6 +1124,12 @@ fn hash_limit(h: &mut StateHasher, limit: &Limit) {
             h.u8(10);
             h.u32(intent.raw());
             hash_knowledge(h, *knowledge);
+        }
+        // Decision 0190.
+        Limit::Targets { intent, targets } => {
+            h.u8(11);
+            h.u32(intent.raw());
+            hash_targets(h, targets.as_ref());
         }
     }
 }
@@ -1719,6 +1757,13 @@ pub(crate) fn hash_air_group(h: &mut StateHasher, group: &AirGroup) {
     h.u32(group.claims.shot_down);
     h.u32(group.claims.on_ground);
     h.u32(group.claims.hits);
+    // After the claims (decision 0190).
+    h.count(group.strike_first_waters.len());
+    for hex in &group.strike_first_waters {
+        h.i32(hex.q);
+        h.i32(hex.r);
+    }
+    h.optional_u32(group.waters_order.map(|id| id.raw()));
 }
 
 /// One `LandUnit`, every field in one fixed order. Used for the truth state and for

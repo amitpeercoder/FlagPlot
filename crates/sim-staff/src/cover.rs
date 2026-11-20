@@ -686,6 +686,7 @@ impl Day<'_, '_> {
         groups: &[CarrierGroup],
         reach_of: &BTreeMap<AirGroupId, Fixed>,
         air: &CarrierAir,
+        targets: &crate::targets::StrikeTargets,
     ) -> CoverStrike {
         let mut out = CoverStrike::default();
         let IntentKind::TakePlace { hex: place, .. } = end.kind else {
@@ -709,9 +710,18 @@ impl Day<'_, '_> {
             return out;
         };
         let picture = crate::picture::picture_of(view, task.kind.addressee());
+        // Only contacts the bombers would launch at keep them from the
+        // place: with a targets limit, a kind left off its list does not
+        // (decision 0190, 17). With none, every kind, as before.
         let fresh: Vec<(u32, Fixed)> = picture
             .contacts()
             .filter(|c| c.age_pulses <= CLOSE_MAX_AGE)
+            .filter(|c| {
+                targets
+                    .kinds
+                    .as_ref()
+                    .is_none_or(|(kinds, _)| kinds.contains(&c.estimated_kind))
+            })
             .map(|c| {
                 (
                     picture.contact_number(c.id),

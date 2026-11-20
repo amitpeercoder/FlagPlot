@@ -7821,6 +7821,85 @@ fn a_group_goes_for_the_kind_first_on_its_list_and_never_for_a_kind_off_it() {
     assert!(launches(&world).is_empty());
 }
 
+// ---- the waters to strike first (decision 0190, 13 and 31) ----
+
+fn set_waters(world: &mut World, group: AirGroupId, hexes: &[Hex]) {
+    group_mut(world, group).strike_first_waters = hexes.iter().copied().collect();
+}
+
+#[test]
+fn a_contact_in_the_waters_ranks_before_every_contact_outside_them() {
+    // Contacts 1 (a cruiser, 120 nm), 2 (a transport, 160 nm) and 3 (a
+    // carrier, 240 nm), as above.
+    let contacts = || {
+        vec![
+            held(Hex::new(3, 0), ShipKind::Cruiser, 0),
+            held(Hex::new(-4, 0), ShipKind::Transport, 0),
+            held(Hex::new(0, 6), ShipKind::Carrier, 0),
+        ]
+    };
+    let chosen = |waters: &[Hex]| {
+        let mut world = world(1, contacts());
+        set_waters(&mut world, BOMBERS, waters);
+        world.decide_strikes(1, Pulse::Morning);
+        launches(&world).first().map(|event| launch_of(event).1)
+    };
+    // No waters: today's order, the carrier.
+    assert_eq!(chosen(&[]), Some(3));
+    // The transport's hex in the waters: the transport, though the carrier
+    // is the kind first on the list.
+    assert_eq!(chosen(&[Hex::new(-4, 0)]), Some(2));
+    // Two in the waters: the list's order within them, the cruiser before
+    // the transport.
+    assert_eq!(chosen(&[Hex::new(-4, 0), Hex::new(3, 0)]), Some(1));
+    // Waters that hold no contact change nothing.
+    assert_eq!(chosen(&[Hex::new(5, 5)]), Some(3));
+}
+
+#[test]
+fn a_contact_in_the_waters_out_of_reach_or_off_the_list_does_not_keep_the_group_from_another() {
+    // A carrier in reach outside the waters; a transport in the waters
+    // 360 nm out, beyond the bombers' reach.
+    let mut world = world(
+        1,
+        vec![
+            held(Hex::new(0, 6), ShipKind::Carrier, 0),
+            held(Hex::new(9, 0), ShipKind::Transport, 0),
+        ],
+    );
+    set_waters(&mut world, BOMBERS, &[Hex::new(9, 0)]);
+    world.decide_strikes(1, Pulse::Morning);
+    assert_eq!(launch_of(&launches(&world)[0]).1, 1);
+    // A cruiser in the waters, but off the list: the carrier.
+    let mut world = self::world(
+        1,
+        vec![
+            held(Hex::new(0, 6), ShipKind::Carrier, 0),
+            held(Hex::new(3, 0), ShipKind::Cruiser, 0),
+        ],
+    );
+    set_waters(&mut world, BOMBERS, &[Hex::new(3, 0)]);
+    set_priority(&mut world, BOMBERS, &[ShipKind::Carrier]);
+    world.decide_strikes(1, Pulse::Morning);
+    assert_eq!(launch_of(&launches(&world)[0]).1, 1);
+}
+
+#[test]
+fn a_launch_cites_the_waters_order_only_while_the_group_has_waters() {
+    let contacts = || vec![held(Hex::new(3, 0), ShipKind::Cruiser, 0)];
+    let order = crate::ids::OrderId::new(77);
+    let cites = |waters: &[Hex]| {
+        let mut world = world(1, contacts());
+        set_waters(&mut world, BOMBERS, waters);
+        group_mut(&mut world, BOMBERS).waters_order = Some(order);
+        world.decide_strikes(1, Pulse::Morning);
+        launches(&world)[0].causes.contains(&Cause::Order(order))
+    };
+    assert!(cites(&[Hex::new(3, 0)]));
+    // Cleared to none: the order no longer shaped the choice.
+    assert!(!cites(&[]));
+}
+
 #[test]
 fn of_one_kind_on_the_list_the_nearest_then_the_lowest_contact_is_taken() {
     let chosen = |contacts: Vec<StartingContact>| {

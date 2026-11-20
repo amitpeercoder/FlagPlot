@@ -29,7 +29,7 @@
 //! battle readiness at its hex; the stance avoid and the break-off level of
 //! the risk.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use sim_core::command::{
     Addressee, Intent, IntentKind, NoticeBasis, NoticeKind, Reason, Risk, StaffNotice, StaffOrder,
@@ -60,6 +60,7 @@ use crate::stand::{
     stance_words, stopped, NIGHT_HOURS,
 };
 use crate::strike::{StrikeGroup, StrikeRole};
+use crate::targets::{kinds_words, StrikeTargets};
 
 // ---------------------------------------------------------------------------
 // The pure decision.
@@ -102,6 +103,8 @@ pub struct CarrierGroup {
     pub sizing: bool,
     /// Its setting to search once a day (decision 0131, 1).
     pub search_once: bool,
+    /// Its waters to strike first as they stand (decision 0190).
+    pub waters: BTreeSet<Hex>,
 }
 
 /// What a group is to the carrier task this morning.
@@ -178,13 +181,15 @@ pub fn roles(groups: &[CarrierGroup]) -> Vec<(AirGroupId, CarrierRole)> {
 /// The orders of one morning for the groups aboard (rules 3 to 6): at
 /// `risk`, with the oldest contact `figure`, `attacked` from the air on the
 /// three days before or not, and the search arc from `arc_from` to `arc_to`
-/// (equal for the whole circle).
+/// (equal for the whole circle). A bomber's list and waters to strike first
+/// are those `targets` gives (decision 0190).
 pub fn decide(
     risk: Risk,
     figure: u32,
     attacked: bool,
     arc_from: u32,
     arc_to: u32,
+    targets: &StrikeTargets,
     groups: &[CarrierGroup],
 ) -> CarrierAir {
     let level = rest_level(risk);
@@ -270,8 +275,9 @@ pub fn decide(
                     held_share: g.held_share,
                     sizing: g.sizing,
                     patrol_share: g.patrol_share,
+                    waters: g.waters.clone(),
                 };
-                let strike_orders = crate::strike::decide(risk, figure, &[strike]);
+                let strike_orders = crate::strike::decide(risk, figure, targets, &[strike]);
                 if g.fatigue > level {
                     rested.push(g.id);
                 }
@@ -359,6 +365,9 @@ pub struct Held {
     pub kind: ShipKind,
     pub age: u32,
     pub distance_nm: Fixed,
+    /// Whether its hex is in the waters to strike first of a deny that
+    /// names the force (decision 0190, 15); false where there are none.
+    pub in_waters: bool,
 }
 
 /// What the closing rule makes of one morning's contacts (decision 0130, 2).
@@ -382,10 +391,19 @@ pub enum Closing {
     CloseOn(Held),
 }
 
-/// The first of `contacts` by the order of decision 0130, 2: the kind first
-/// in the order of importance, then the nearest, then the lowest number.
+/// The first of `contacts` by the order of decision 0130, 2: one in the
+/// waters to strike first before one outside them (decision 0190, 15), then
+/// the kind first in the order of importance, then the nearest, then the
+/// lowest number.
 fn first(contacts: impl Iterator<Item = Held>) -> Option<Held> {
-    contacts.min_by_key(|c| (c.kind, c.distance_nm, c.number))
+    contacts.min_by_key(|c| (!c.in_waters, c.kind, c.distance_nm, c.number))
+}
+
+/// Whether a force weighing a contact at `risk` closes on it (decision 0130,
+/// 2, and 0190, 15): a kind the risk closes on, or, at balanced and at
+/// press, any kind in the waters to strike first.
+fn closes_on_contact(risk: Risk, c: &Held) -> bool {
+    closes_on(risk).contains(&c.kind) || (c.in_waters && risk != Risk::Preserve)
 }
 
 /// The level of risk at which a commander of `initiative` weighs a contact
@@ -413,7 +431,7 @@ fn wanted_by<'a>(
         .iter()
         .copied()
         .filter(|c| c.age <= CLOSE_MAX_AGE)
-        .filter(move |c| closes_on(weigh(c)).contains(&c.kind))
+        .filter(move |c| closes_on_contact(weigh(c), c))
 }
 
 /// The first fresh contact of a kind `risk` closes on, wherever it is: the
@@ -587,6 +605,8 @@ impl Day<'_, '_> {
         let risk_text = format!("{} risk", risk.name());
         let level = rest_level(risk);
         let intent_words = format!("{}, operating the carrier force {id} from {hex}", task.id);
+        // What the targets limits give its bombers (decision 0190).
+        let targets = self.strike_targets(task, Some(id));
         let mut orders: Vec<StaffOrder> = Vec::new();
         let mut notes: Vec<Reason> = Vec::new();
         let mut cannot = false;
@@ -873,9 +893,23 @@ impl Day<'_, '_> {
                             distance_nm: Fixed::from_int(i64::from(
                                 here.air_distance_nm(c.estimated_hex),
                             )),
+                            in_waters: targets.waters.contains(&c.estimated_hex),
                         })
                         .collect();
                     held_contacts.sort_by_key(|c| c.number);
+                    let waters_on = !targets.waters.is_empty();
+                    // What the force closes on at a level, in words, with
+                    // the waters where a deny gives them (decision 0190).
+                    let closes_words = |level: Risk| -> String {
+                        if waters_on && level != Risk::Preserve {
+                            format!(
+                                "{}, or any kind in the waters to strike first",
+                                closes_on_words(level)
+                            )
+                        } else {
+                            closes_on_words(level).to_string()
+                        }
+                    };
                     // How each contact is weighed (decision 0137, 7 and 8):
                     // one that is the force's own at the level its
                     // commander's rating reads the task's risk at, one it was
@@ -914,7 +948,7 @@ impl Day<'_, '_> {
                                 crate::picture::contact_words(&picture, c.number),
                                 level.name(),
                                 level.name(),
-                                closes_on_words(level)
+                                closes_words(level)
                             )
                         })
                     };
@@ -929,8 +963,14 @@ impl Day<'_, '_> {
                         format!(" {}.", rating_words.join(". "))
                     };
                     let held_words = |c: &Held| {
+                        let waters_text = targets.deny_of(c.hex).map_or_else(String::new, |d| {
+                            format!(
+                                ", in the waters of {} that the targets limit set on {} puts first",
+                                d.deny, d.limit_on
+                            )
+                        });
                         format!(
-                            "{}, a {}, {} pulse(s) old, is {} nm from {here}",
+                            "{}, a {}, {} pulse(s) old, is {} nm from {here}{waters_text}",
                             crate::picture::contact_words(&picture, c.number),
                             c.kind.name(),
                             c.age,
@@ -977,7 +1017,7 @@ impl Day<'_, '_> {
                                                 crate::picture::contact_words(&picture, c.number),
                                                 c.kind.name(),
                                                 weigh(c).name(),
-                                                closes_on_words(weigh(c))
+                                                closes_words(weigh(c))
                                             )
                                         })
                                         .collect::<Vec<_>>()
@@ -1001,7 +1041,7 @@ impl Day<'_, '_> {
                                         .join("; ");
                                     close_words = Some(format!(
                                             "{id} does not close: at the {risk_text} it closes on {}, and no contact of ships {CLOSE_MAX_AGE} pulses old or less is of that kind ({list}).",
-                                            closes_on_words(risk)
+                                            closes_words(risk)
                                         ));
                                 }
                                 Closing::InReach(c) if left_to_close => {
@@ -1011,14 +1051,14 @@ impl Day<'_, '_> {
                                     close_words = Some(format!(
                                             "{id} left its hex {hex} to close, and {}, within the {reach} nm normal reach of its bombers, the first of the contacts it closes on ({}) within the {reach_words}: it stays where it is and is given no route.{rating_text}",
                                             held_words(&c),
-                                            closes_on_words(weigh(&c))
+                                            closes_words(weigh(&c))
                                         ));
                                 }
                                 Closing::InReach(c) => {
                                     close_words = Some(format!(
                                             "{id} does not close: {}, within the {reach} nm normal reach of its bombers, the first of the contacts it closes on ({}) within the {reach_words}.{rating_text}",
                                             held_words(&c),
-                                            closes_on_words(weigh(&c))
+                                            closes_words(weigh(&c))
                                         ));
                                 }
                                 Closing::TooFar(c) => {
@@ -1107,15 +1147,15 @@ impl Day<'_, '_> {
                                                     // (decision 0137, 10).
                                                     let (binding, why) = match weighed_words(&c) {
                                                         None => (
-                                                            format!("at the {risk_text} the force closes on {} it holds beyond its bombers' reach and within a night at full speed and that reach", closes_on_words(risk)),
-                                                            format!("at the {risk_text} it closes on {}", closes_on_words(risk)),
+                                                            format!("at the {risk_text} the force closes on {} it holds beyond its bombers' reach and within a night at full speed and that reach", closes_words(risk)),
+                                                            format!("at the {risk_text} it closes on {}", closes_words(risk)),
                                                         ),
                                                         Some(words) => (
                                                             format!(
                                                                 "a {} commander weighs a contact of his own at the {} risk, and at that risk the force closes on {} it holds beyond its bombers' reach and within a night at full speed and that reach",
                                                                 initiative.name(),
                                                                 weigh(&c).name(),
-                                                                closes_on_words(weigh(&c))
+                                                                closes_words(weigh(&c))
                                                             ),
                                                             words,
                                                         ),
@@ -1288,6 +1328,16 @@ impl Day<'_, '_> {
                         }
                     }
                 }
+                // The waters to strike first of a deny that names the force
+                // and is not above its task (decision 0190, 29).
+                for d in targets.denies.iter().filter(|d| !d.above) {
+                    for w in &d.hexes {
+                        threats.push(Threat {
+                            hex: *w,
+                            words: format!("the waters to strike first of {} at {w}", d.deny),
+                        });
+                    }
+                }
                 let hexes: Vec<Hex> = threats.iter().map(|t| t.hex).collect();
                 let arc = arc_for(here, &hexes);
                 let arc_text = crate::air::arc_working(&arc, &threats);
@@ -1333,9 +1383,18 @@ impl Day<'_, '_> {
                         held_share: g.strike_held_share,
                         sizing: g.strike_sizing,
                         search_once: g.search_once,
+                        waters: g.strike_first_waters.clone(),
                     });
                 }
-                let mut air = decide(risk, figure, attacked.is_some(), arc.from, arc.to, &groups);
+                let mut air = decide(
+                    risk,
+                    figure,
+                    attacked.is_some(),
+                    arc.from,
+                    arc.to,
+                    &targets,
+                    &groups,
+                );
                 // Under "take a place" the bombers strike the enemy's base at
                 // the place on a morning with no ship to strike (decision
                 // 0148, 4 to 6): the raid's rules decide the mission and the
@@ -1350,8 +1409,9 @@ impl Day<'_, '_> {
                     .or_else(|| self.island_strike_take(task, here, &reach_of))
                     .filter(|_| released);
                 if let Some(end) = end {
-                    cover =
-                        self.cover_strike(task, &plan, &end, here, risk, &groups, &reach_of, &air);
+                    cover = self.cover_strike(
+                        task, &plan, &end, here, risk, &groups, &reach_of, &air, &targets,
+                    );
                     air.orders.retain(|(g, order)| {
                         !(cover.taken.contains(g)
                             && matches!(
@@ -1410,7 +1470,15 @@ impl Day<'_, '_> {
                             g.search_range_nm,
                             carrier_once_words(risk)
                         ),
-                        CarrierRole::Striker => format!("{}, a bomber group, has {fatigue}: it strikes ships by the table of the {risk_text}, with its strikes sized", g.id),
+                        CarrierRole::Striker => match &targets.kinds {
+                            None => format!("{}, a bomber group, has {fatigue}: it strikes ships by the table of the {risk_text}, with its strikes sized", g.id),
+                            Some((kinds, on)) => format!(
+                                "{}, a bomber group, has {fatigue}: it strikes ships by the table of the {risk_text}, with its strikes sized, going for {} in that order by the targets limit set on {on}{}",
+                                g.id,
+                                kinds_words(kinds),
+                                crate::targets::wanted_waters_words(&targets)
+                            ),
+                        },
                         CarrierRole::Other => format!("{}, neither a fighter nor a group that can search or attack a ship: no order", g.id),
                     };
                     lines.insert(g.id, line);
@@ -1447,6 +1515,14 @@ impl Day<'_, '_> {
                             "its search once a day is {}",
                             if b.search_once { "on" } else { "off" }
                         ),
+                        (AirGroupOrder::SetTargetPriority { .. }, Some(b))
+                            if targets.kinds.is_some() =>
+                        {
+                            format!("its target list is {}", kinds_words(&b.target_priority))
+                        }
+                        (AirGroupOrder::SetStrikeFirstWaters { .. }, Some(b)) => {
+                            format!("it has {}", crate::targets::waters_had(&b.waters))
+                        }
                         (AirGroupOrder::SetSearchArc { .. }, Some(b)) => match b.search {
                             Some(a) => format!(
                                 "its arc is {} to {} at {} nm",
@@ -1458,10 +1534,26 @@ impl Day<'_, '_> {
                         },
                         _ => "its standing orders differ from the table".to_string(),
                     };
-                    let mut reason = serving(task, &plan)
+                    let mut builder = serving(task, &plan)
                         .evidence(line.clone(), today)
                         .evidence(has, today)
-                        .binding(format!("rest above fatigue {level} at the {risk_text}"))
+                        .binding(format!("rest above fatigue {level} at the {risk_text}"));
+                    // The limit and the deny that shaped it (decision 0190, 6).
+                    match order {
+                        AirGroupOrder::SetTargetPriority { kinds } => {
+                            if let Some((_, on)) = &targets.kinds {
+                                builder = builder.binding(format!(
+                                    "the targets limit set on {on}: {}, in that order, at every risk",
+                                    kinds_words(kinds)
+                                ));
+                            }
+                        }
+                        AirGroupOrder::SetStrikeFirstWaters { .. } => {
+                            builder = builder.binding(crate::targets::waters_binding(&targets));
+                        }
+                        _ => {}
+                    }
+                    let mut reason = builder
                         .worked(match order {
                             AirGroupOrder::SetStrikeSizing { .. } => format!(
                                 "{line}. The group decides the size of its strikes from the task it is under: {} operates a carrier force, which has more to hit than one force, so each strike is sized by doctrine. Its strike sizing is set on.",
@@ -1474,6 +1566,9 @@ impl Day<'_, '_> {
                         .done();
                     if matches!(order, AirGroupOrder::SetStrikeSizing { .. }) {
                         reason.serves.level = Some(Addressee::AirGroup(*group));
+                    }
+                    if matches!(order, AirGroupOrder::SetStrikeFirstWaters { .. }) {
+                        self.waters_serve(&targets, &mut reason);
                     }
                     orders.push(StaffOrder {
                         kind: OrderKind::AirGroup {
@@ -1552,6 +1647,7 @@ mod tests {
             held_share: Fixed::ZERO,
             sizing: false,
             search_once: false,
+            waters: BTreeSet::new(),
         }
     }
 
@@ -1577,6 +1673,7 @@ mod tests {
             kind,
             age,
             distance_nm: Fixed::from_int(i64::from(Hex { q: 0, r: 0 }.air_distance_nm(hex))),
+            in_waters: false,
         }
     }
 
@@ -1645,6 +1742,45 @@ mod tests {
         );
         assert_eq!(first_wanted(Risk::Balanced, &[a, near]), Some(near));
         assert_eq!(first_wanted(Risk::Balanced, &[a]), None);
+    }
+
+    fn in_waters(mut c: Held) -> Held {
+        c.in_waters = true;
+        c
+    }
+
+    #[test]
+    fn a_contact_in_the_waters_is_closed_on_first_of_any_kind_but_at_preserve() {
+        let reach = Fixed::from_int(250);
+        let night = Fixed::from_int(360);
+        // A cruiser in the waters beyond reach; a carrier outside them in
+        // reach: at balanced and at press the force leaves to close on the
+        // cruiser (decision 0190, 15 and 32).
+        let cruiser = in_waters(held(1, 12, ShipKind::Cruiser, 0));
+        let carrier = held(2, 5, ShipKind::Carrier, 0);
+        for risk in [Risk::Balanced, Risk::Press] {
+            assert_eq!(
+                closing(risk, reach, night, &[cruiser, carrier]),
+                Closing::CloseOn(cruiser),
+                "{risk:?}"
+            );
+        }
+        assert_eq!(
+            closing(Risk::Preserve, reach, night, &[cruiser, carrier]),
+            Closing::Preserve
+        );
+        // Outside the waters a cruiser is not closed on at balanced, as today.
+        let plain = held(1, 12, ShipKind::Cruiser, 0);
+        assert_eq!(
+            closing(Risk::Balanced, reach, night, &[plain]),
+            Closing::NothingOfKind
+        );
+        // Two in the waters: the kind, then the nearest.
+        let transport = in_waters(held(3, 11, ShipKind::Transport, 0));
+        assert_eq!(
+            first_wanted(Risk::Balanced, &[transport, cruiser]),
+            Some(cruiser)
+        );
     }
 
     #[test]

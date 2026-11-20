@@ -80,8 +80,9 @@ pub enum ContactFate {
     /// A kind not on the group's target list.
     KindNotOnList,
     /// It qualified, but another contact came first in the group's order
-    /// (the kind first on its list, then the nearest, then the lowest
-    /// number): this one, by its number in the picture.
+    /// (one in its waters to strike first before one outside them, then the
+    /// kind first on its list, then the nearest, then the lowest number):
+    /// this one, by its number in the picture.
     CameFirst { chosen: u32 },
     /// It qualified, but the groups before this one had sent at it all that
     /// it needs (decision 0118): the need (`None`: the kind has no figure)
@@ -133,6 +134,9 @@ pub struct StrikeReview {
     pub age_limit_pulses: u32,
     /// Its target list, most important first.
     pub target_list: Vec<ShipKind>,
+    /// Its waters to strike first, in hex order (decision 0190): a contact
+    /// in them comes before every one outside them. Empty for none.
+    pub waters_first: Vec<Hex>,
     /// The aircraft it is able to fly (the question `AircraftAbleToFly`).
     pub able_to_fly: u32,
     /// The share of them it holds back.
@@ -299,6 +303,7 @@ impl SideView<'_> {
             reach_nm,
             age_limit_pulses: age_limit,
             target_list: asked.target_priority.clone(),
+            waters_first: asked.strike_first_waters.iter().copied().collect(),
             able_to_fly: able,
             held_share: asked.strike_held_share,
             can_send,

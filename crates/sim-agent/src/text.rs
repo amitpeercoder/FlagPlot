@@ -989,6 +989,16 @@ impl Briefing {
             if g.search_once == Some(true) {
                 s.push_str(", flies its search once a day, in the morning");
             }
+            if let Some(waters) = &g.strike_first_waters {
+                let hexes: Vec<String> = waters
+                    .iter()
+                    .map(|h| format!("({}, {})", h[0], h[1]))
+                    .collect();
+                s.push_str(&format!(
+                    ", strikes first in the waters {}",
+                    hexes.join(" ")
+                ));
+            }
             s.push_str(&format!(", mission {}", plain(g.mission)));
             if let Some(t) = &g.target {
                 s.push_str(&format!(" at {}", t.text()));

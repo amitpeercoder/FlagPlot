@@ -51,6 +51,7 @@ pub mod search;
 pub mod stand;
 pub mod strike;
 mod take;
+pub mod targets;
 mod told;
 mod turn_back;
 mod units;
@@ -305,7 +306,13 @@ use sim_core::view::SideView;
 /// ship is short of the passage there. A force with a home port stopped at
 /// sea on no route is routed home at cruise. A side with no such stand gets
 /// the orders `supply-43` gave.
-pub const DOCTRINE_VERSION: &str = "supply-44";
+/// `supply-45` adds decision 0190: a targets limit on the chain of a task
+/// that strikes ships sets its bombers' target list to the limit's kinds at
+/// every risk; a deny whose chain carries one with `waters_first` gives the
+/// bombers it binds its waters to strike first, adds them to a carrier
+/// force's search arc and has the force close on a contact in them. A side
+/// that sets no targets limit gets the orders `supply-44` gave.
+pub const DOCTRINE_VERSION: &str = "supply-45";
 
 /// The staff: the doctrine for keeping a base supplied (stage 1) and, after
 /// it, the air doctrine for holding a place and covering a base from the air

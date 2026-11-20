@@ -2,14 +2,14 @@ Placeholder scenario 86: Fed with the lift
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 4a7dcbdb03c19b93  73 events
-day   2  hash 47196fadc6f99210  33 events
-day   3  hash 2f37617cba0f10fe  24 events
-day   4  hash 80a4274706fd31c8  16 events
-day   5  hash c0724dd64fdd7954  26 events
-day   6  hash e5bc0546663fc30e  25 events
-day   7  hash 66412355a3bf21b5  20 events
-day   8  hash a0a8863e3e32f1f5  12 events
+day   1  hash 45c8499677bcef0c  73 events
+day   2  hash 7171c668887f5915  33 events
+day   3  hash ba9c8f679b54e0c7  24 events
+day   4  hash c4f7deb4c015dbd7  16 events
+day   5  hash 95701a262b8e843b  26 events
+day   6  hash 86c0dee58697826f  25 events
+day   7  hash 9843b40ca70d9516  20 events
+day   8  hash b8a5839fd0ebcd7a  12 events
 
 #1 D1 -         Allied the commander's command taken: set intent:1 to control island 1
 #2 D1 -         Allied plan:1 drafted for intent:1  <- #1

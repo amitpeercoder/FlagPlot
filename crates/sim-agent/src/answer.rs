@@ -113,8 +113,10 @@ pub const FORMAT: &str = "flagplot-agent";
 /// kind men_landed (decision 0186) and names a base an objective names that
 /// is not on the side's map by its hex. 34 adds the notice kind and the
 /// standing interrupt `lift_turned_back`, and the task force order
-/// `no_cargo_work` (decision 0191).
-pub const VERSION: u32 = 34;
+/// `no_cargo_work` (decision 0191). 35 adds the limit `targets` (`kinds`,
+/// `waters_first`) of decision 0190 to `set_limit` and `command_state`, and the
+/// air group order `set_strike_first_waters` (`hexes`).
+pub const VERSION: u32 = 35;
 
 /// The answer to a question about something the side does not know of: a
 /// unit of the enemy, a number that does not exist, an event the side may not

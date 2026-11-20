@@ -2,20 +2,20 @@ Placeholder scenario 70: A run by night
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 8466199b1ffc97f5  18 events
-day   2  hash 5ffda2de2a76bd22  7 events
-day   3  hash fed70d4d5ecdc003  7 events
-day   4  hash d93aa33bfb2e9d22  6 events
-day   5  hash 7b420b2932557095  14 events
-day   6  hash 41a08fb63b5171e3  28 events
-day   7  hash faa4f872b915a1a3  6 events
-day   8  hash 701efb4c3fecefbe  6 events
-day   9  hash c50abaac2e383eec  6 events
-day  10  hash 3e56b8ac1813d15d  6 events
-day  11  hash f185e75ac7ef45d7  14 events
-day  12  hash 30e9ac1ea5f0ef7e  26 events
-day  13  hash c464f865a666338a  6 events
-day  14  hash 6a324721b96b5249  6 events
+day   1  hash 22ec051ad43462c6  18 events
+day   2  hash 7e4b039602986731  7 events
+day   3  hash a1071d85876d39fc  7 events
+day   4  hash b80291125eb6ddfd  6 events
+day   5  hash a1e3608250205392  14 events
+day   6  hash 8975fc844e2fe74c  28 events
+day   7  hash 32cccb20ddb934f4  6 events
+day   8  hash b7acad4cb0c2d6a9  6 events
+day   9  hash 9f18efb90633743b  6 events
+day  10  hash b0342d8e750ff3de  6 events
+day  11  hash 125202dd07d86ff2  14 events
+day  12  hash 8547d536dc071773  26 events
+day  13  hash ab846f916188bd93  6 events
+day  14  hash 6fc05d153fbc04c8  6 events
 
 #1 D1 -         Allied the commander's command taken: set intent:1 to keep base:2 supplied at 5 days
 #2 D1 -         Allied plan:1 drafted for intent:1  <- #1
