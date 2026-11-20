@@ -100,6 +100,15 @@ pub fn initial_force_of(initial: &TruthState) -> BTreeMap<ShipId, TaskForceId> {
             out.insert(*ship, force.id);
         }
     }
+    // A force held apart (decision 0195) is found by its ships all the same:
+    // a ship that enters is in its force from its entry.
+    for entry in initial.entering.values() {
+        if let Some(force) = &entry.task_force {
+            for ship in &force.ships {
+                out.insert(*ship, force.id);
+            }
+        }
+    }
     out
 }
 
@@ -1236,6 +1245,9 @@ pub fn count(
             | EventKind::UnitWorked { .. }
             | EventKind::AirfieldDamaged { .. }
             | EventKind::ArrivalWaiting { .. }
+            | EventKind::ForceEntered { .. }
+            | EventKind::UnitEntered { .. }
+            | EventKind::EntryWaiting { .. }
             | EventKind::AirfieldMended { .. }
             | EventKind::UnitFellBack { .. }
             | EventKind::MenSurrenderedAshore { .. }
@@ -1354,7 +1366,15 @@ pub fn count(
     let formed_groups = truth
         .air_groups
         .values()
-        .filter(|group| !initial.air_groups.contains_key(&group.id))
+        // Formed in play: neither in the state at the start nor held apart at
+        // the start (decision 0195): a group that enters was not formed.
+        .filter(|group| {
+            !initial.air_groups.contains_key(&group.id)
+                && !initial
+                    .entering
+                    .values()
+                    .any(|entry| entry.air_groups.contains_key(&group.id))
+        })
         .map(|group| FormedGroup {
             id: group.id.raw(),
             name: group.name.clone(),

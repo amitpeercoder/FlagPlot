@@ -244,6 +244,7 @@ fn cited(truth: &TruthState, commands: &BTreeMap<Side, CommandState>) -> Vec<(St
         land_units,
         hits_on_men,
         formations: _,
+        entering: _,
     } = truth;
     for force in task_forces.values() {
         cited_by_force(force, &mut out);
@@ -498,6 +499,7 @@ fn cited_by_half(half: &PictureHalf) -> Vec<(String, Cited)> {
         land_units: half.land_units.clone(),
         hits_on_men: BTreeMap::new(),
         formations: half.formations.clone(),
+        entering: half.entering.clone(),
     };
     cited(&truth, &BTreeMap::from([(half.side, half.command.clone())]))
 }
@@ -679,6 +681,7 @@ fn case_one_the_japanese_half_holds_nothing_but_its_day_and_counters() {
             air_groups: BTreeMap::new(),
             land_units: BTreeMap::new(),
             formations: BTreeMap::new(),
+            entering: BTreeMap::new(),
             replacements: Vec::new(),
             arrivals: Vec::new(),
             orders: Vec::new(),
@@ -1149,6 +1152,7 @@ fn japanese_by_hand(allied: &PictureHalf) -> PictureHalf {
         air_groups: BTreeMap::new(),
         land_units: BTreeMap::new(),
         formations: BTreeMap::new(),
+        entering: BTreeMap::new(),
         replacements: Vec::new(),
         arrivals: Vec::new(),
         orders: vec![PictureOrder {
