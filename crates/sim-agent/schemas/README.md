@@ -145,6 +145,10 @@ is not on the reader's map, in an objective line, an enemy objective line or
 a result line, is given by its hex: `base.handle` is `"(q,r)"` and
 `base.name` is null.
 
+Version 34 (decision 0191) adds the order `no_cargo_work`, the notice kind
+`lift_turned_back` and the standing interrupt of that name (see "A lift
+turned back" below).
+
 The fight ashore (decision 0090, see "The fight ashore" below) adds only fields
 and values, so `version` stays 3.
 

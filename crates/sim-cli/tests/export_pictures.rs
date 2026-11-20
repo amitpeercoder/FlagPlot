@@ -381,6 +381,10 @@ fn a_step_carries_only_the_pictures_that_changed() {
 /// out. Remade again when a claim's event came to name its units as its
 /// entities (decision 0180, on the architect's word): scenarios 5, 31 and 50
 /// change in the `entities` of their raids' claims and in nothing else.
+/// Remade again at the state layout v50 (decision 0191), which changes an
+/// export's state version and day hashes and nothing else: with the old
+/// version and the day hashes of the run baselines before it put back, each
+/// file hashes as pinned before.
 #[test]
 fn a_scenario_with_command_levels_off_exports_as_it_did() {
     fn fnv(bytes: &[u8]) -> u64 {
@@ -389,16 +393,16 @@ fn a_scenario_with_command_levels_off_exports_as_it_did() {
         })
     }
     let before: [(&str, u64); 10] = [
-        ("01_transit", 0x8e11_b3c9_d143_5180),
-        ("04a_night_action", 0xc7c9_079f_e8a1_6e4c),
-        ("05_eastern_solomons", 0x5936_8706_d98e_aefa),
-        ("21_landing", 0xc483_e909_39d4_471b),
-        ("23_fight_ashore", 0x96cf_44b8_2597_db6a),
-        ("31_airfield_damage", 0x2834_20b0_b0df_2d46),
-        ("36_one_convoy", 0x09a6_a1b8_c9ea_b34e),
-        ("43_keep_two_bases_fed", 0xdb41_a1f1_6a0a_51bd),
-        ("50_neutralise_a_base", 0xc411_3299_e871_892e),
-        ("58_a_carrier_force_closes", 0xc6a0_a930_43d8_10a7),
+        ("01_transit", 0x56cf_7a09_6155_dd70),
+        ("04a_night_action", 0x928d_3e2e_7b27_c488),
+        ("05_eastern_solomons", 0x6655_94ba_a6d5_3161),
+        ("21_landing", 0x5ed8_e22a_8ecd_8712),
+        ("23_fight_ashore", 0xb7fa_a3aa_a371_8dca),
+        ("31_airfield_damage", 0x5bd9_5a73_af03_e3fb),
+        ("36_one_convoy", 0x08e7_61ac_0c9f_fd8d),
+        ("43_keep_two_bases_fed", 0x4fcd_fa83_caad_e039),
+        ("50_neutralise_a_base", 0x953d_4c0a_7ebf_0f8c),
+        ("58_a_carrier_force_closes", 0xe260_4479_2afb_46d4),
     ];
     let prefix6 = br#"{"format":"flagplot-replay","version":6,"#;
     let prefix5 = br#"{"format":"flagplot-replay","version":5,"#;
