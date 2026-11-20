@@ -226,3 +226,7 @@ The hand calculation's "What a side the engine plays is given" states them, the 
 **The second run** (`docs/validation/five-days-eastern-solomons-second-run.md`, beside the first): each order does what it was for, and the result moves toward the Allied side: 963 wins of 1,000 against 846, the Japanese side 5 against 26. Lunga is shut on some day in 8 games; the convoy lands in 997 and its landing is worth 0.45 points; the dive bombers at Lunga strike the carriers they can reach, and a Japanese carrier is sunk in 561 games against 388.
 
 **The architect's reading.** The orders are no longer what holds the Japanese side back. Two of its three aims cannot score as the game stands: its bombers do not shut Lunga in five days whatever they are given, and the men it lands count for nothing. The orders are not changed again in the light of a run. What is left is the designer's (ruling 5): whether men put ashore score, and whether "Lunga shut" is an aim this scenario should keep at 10 points when it is got in 8 games of 1,000.
+
+## Changed on Nov 20, 2026: men landed, and a scale of its own
+
+Decision 0186 adds the kind of objective "men landed", which rule 13 above said was not needed, and gives it to the Japanese side at Taivu. Decision 0187 makes this a scenario for play with a scale of its own, on the designer's ruling, which answers ruling 5 and the question left in "The second version of the orders".
