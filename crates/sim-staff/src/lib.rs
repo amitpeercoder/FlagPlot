@@ -312,7 +312,15 @@ use sim_core::view::SideView;
 /// bombers it binds its waters to strike first, adds them to a carrier
 /// force's search arc and has the force close on a contact in them. A side
 /// that sets no targets limit gets the orders `supply-44` gave.
-pub const DOCTRINE_VERSION: &str = "supply-45";
+/// `supply-46` adds decision 0193: on the morning of the judgement ashore,
+/// where the men that can attack are fewer than the men wanted and nothing
+/// more is coming to the place, the men wanted fall to the estimate at
+/// balanced and to none at press, a unit on attack is not set back to
+/// defend at balanced or press, and where it waits the staff hands in
+/// `cannot_bring_enough` on each such morning. A side with no take whose
+/// men ashore are short with nothing more coming gets the orders and
+/// reasons `supply-45` gave.
+pub const DOCTRINE_VERSION: &str = "supply-46";
 
 /// The staff: the doctrine for keeping a base supplied (stage 1) and, after
 /// it, the air doctrine for holding a place and covering a base from the air

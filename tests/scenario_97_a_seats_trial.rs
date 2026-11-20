@@ -66,10 +66,14 @@
 //! - **How it went:** 4 of 4 worlds played; met and kept in 2, worlds 1
 //!   and 3, the earliest, the middle and the latest day 4; met and lost
 //!   again in none; not met by day 8 in 2, worlds 2 and 4.
-//! - **What it cost the side:** men lost to the enemy 100, 100, 300;
+//! - **What it cost the side:** men lost to the enemy 100, 100, 550;
 //!   every other cost 0, 0, 0.
 //! - **What the trial's enemy lost:** men lost to the enemy 200, 200,
-//!   300; every other cost 0, 0, 0.
+//!   500; every other cost 0, 0, 0. (Restated by the architect on Nov
+//!   20, 2026, for decision 0193: in scenario 95's worlds 2 and 4 unit 1
+//!   attacks again on day 7 with nothing more coming, and the side loses
+//!   500 and 550 there, the enemy 500 and 500. Before it these were 100,
+//!   100, 300 and 200, 200, 300.)
 //! - **What it needs and has:** men wanted 400, to hand 600; it waits
 //!   for nothing; the day expected ashore is day 4; a count of the
 //!   enemy at the place is asked for, and the one held is the opening
@@ -84,8 +88,10 @@
 //!   commander queued it himself.
 //! - **Where the worlds part,** by the 400 men believed at B: with
 //!   them, 2 worlds, met and kept in none, the side's men lost to the
-//!   enemy 300, 300, 300; without them, 2 worlds, met and kept in 2 on
-//!   day 4, the side's men lost 100, 100, 100.
+//!   enemy 500, 500, 550; without them, 2 worlds, met and kept in 2 on
+//!   day 4, the side's men lost 100, 100, 100. (Restated by the
+//!   architect on Nov 20, 2026, for decision 0193: before it, with them,
+//!   300, 300, 300.)
 //!
 //! In the answer the base is named as the seat's tools name a base, the
 //! place as they give a place, the task under the plan order in the
@@ -130,8 +136,12 @@
 //!   number, equal to the first answer.
 //! - **A larger size is more of the same worlds.** At `standard`, 8
 //!   worlds: met and kept in 4, worlds 1, 3, 5 and 7; not met in 4;
-//!   the side's men lost to the enemy 100, 100, 300. Worlds 1 to 4 of
-//!   it have the figures they had at `small`.
+//!   the side's men lost to the enemy 100, 100, 550, as the answer gives
+//!   the spread (the answer gives no world's own figures, so which of
+//!   worlds 6 and 8 lost 550, if either, is not stated here). Worlds 1
+//!   to 4 of it have the figures they had at `small`. (Restated by the
+//!   architect on Nov 20, 2026, for decision 0193: before it, 100, 100,
+//!   300.)
 //! - **A draft, tried.** On a fresh evening the commander asks
 //!   `preview` of the `set_intent` alone, and then `trial` of that
 //!   preview. It is tried and answered; nothing is queued; the preview
@@ -426,8 +436,8 @@ fn the_answer_is_scenario_95s_estimate_of_intent_1() {
         })
     );
     assert_eq!(a["could_not_be_played"], json!([]));
-    assert_eq!(a["cost"], costs(spread(100, 100, 300)));
-    assert_eq!(a["enemy_lost"], costs(spread(200, 200, 300)));
+    assert_eq!(a["cost"], costs(spread(100, 100, 550)));
+    assert_eq!(a["enemy_lost"], costs(spread(200, 200, 500)));
     let needs = &a["needs"];
     assert_eq!(needs["men"], json!({"wanted": 400, "to_hand": 600}));
     assert_eq!(needs["waits_for"], json!([]), "it waits for nothing");
@@ -526,7 +536,7 @@ fn where_the_worlds_part() {
     assert_eq!(p["with"]["how_it_went"]["met_and_kept"], json!([]));
     assert_eq!(
         p["with"]["cost"]["men_lost_to_the_enemy"],
-        spread(300, 300, 300)
+        spread(500, 500, 550)
     );
     assert_eq!(p["without"]["how_it_went"]["worlds"], json!([1, 3]));
     assert_eq!(p["without"]["how_it_went"]["met_and_kept"], json!([1, 3]));
@@ -771,7 +781,7 @@ fn a_larger_size_is_more_of_the_same_worlds() {
     assert_eq!(went["not_met"], json!([2, 4, 6, 8]));
     assert_eq!(
         standard["cost"]["men_lost_to_the_enemy"],
-        spread(100, 100, 300)
+        spread(100, 100, 550)
     );
     // Worlds 1 to 4 have the figures they had at small: what each world
     // assumed, and how each went, world by world.

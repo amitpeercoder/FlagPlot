@@ -1,0 +1,281 @@
+# Scenario 109: men ashore with no more coming.
+#
+# Decision 0193. Side J (the Japanese side) has a base S, base 1, at (0,0)
+# and a transport force L, task force 1, nine placeholder troop transports
+# (600 men each), stopped at sea at (2,0), 12 hexes from P, with two land
+# units aboard and nothing else: U, land unit 1, 3,000 men at fatigue 10, and
+# V, land unit 2, 2,386 men at fatigue 0. P at (14,0) is a coast hex with an
+# Allied base 2 in it (1,000 t of supply) and an Allied garrison of 3,444 men
+# on defend (land unit 10). J holds an opening estimate of 3,444 enemy men at
+# P. No unit is left behind at S. A third J unit, W, land unit 3, 2,000 men,
+# is not in the game as it stands: a variant of the test puts it ashore at S
+# or aboard a second lift, and gives it a day.
+#
+# On day 1 J's commander states "take the place at (14,0)" with the forces L,
+# land units 1 and 2 and base 1 as the source, asks for no count of the
+# enemy at P (the limit "knowledge: none"), and gives both leaves. The risk is
+# press on day 1, so that the staff sends the lift (a lift short of the men
+# wanted at balanced, with none to follow it to feed it, is not sent), and
+# balanced from day 2. The staff releases the plan on day 1 and routes L to P
+# and home again, acting at P, with the order to unload: L is at (8,0) on the
+# morning of day 2, at P on the morning of day 3, and U and V are ashore on
+# defend on the morning of day 4, M, the first morning of the judgement
+# ashore. The game is 7 days. The units rest by nothing (rest_per_day 0), no
+# man is lost for want of supply (unfed_loss_share_per_day 0) and no ground
+# report is made (no report error figure is given): U's fatigue is 10 and J's
+# estimate is 3,444 on every morning. Neither side attacks but by the
+# staff's order: the Allied garrison is given no order, and J's units are on
+# defend until the staff sets them to attack.
+#
+# The test builds its variants from the text of this file, at the marked
+# lines below. The hand calculation is in
+# tests/scenario_109_men_ashore_with_no_more_coming.rs. The test runs this
+# file on the frozen step 1 figures, with scenario 109's ground figures
+# (data/reference/ground_placeholder_scenario_109.toml). The map is
+# data/map/placeholder_a_lift_turned_back.toml, scenario 107's.
+#
+# Kept out of the loops that walk data/scenarios/*.toml by being in this
+# folder (decision 0072).
+#
+# PLACEHOLDER DATA. The bases, ships, units, estimate and figures are
+# invented. Every name below says "Placeholder".
+
+name = "Placeholder scenario 109: Men ashore with no more coming"
+placeholder = true
+seed = 1942
+days = 7
+map = "../../map/placeholder_a_lift_turned_back.toml"
+ship_classes = [
+    "../../reference/ship_classes.csv",
+    "../../reference/ship_classes_placeholder_transports.csv",
+]
+port_sizes = "../../reference/port_sizes.csv"
+aircraft_types = "../../reference/aircraft_types.csv"
+search = "../../reference/search.toml"
+surface_combat = "../../reference/surface_combat.toml"
+ground = "../../reference/ground_placeholder_scenario_109.toml"
+
+# Japanese base 1, S: supply for the whole game and fuel.
+[[base]]
+id = 1
+name = "Placeholder base S"
+side = "japanese"
+q = 0
+r = 0
+supply_t = 1000
+fuel_t = 2000
+
+# Allied base 2, P: an airfield with no gun and no aircraft, and 1,000 t of
+# supply, so that the Allied garrison is fed and loses no man unfed.
+[[base]]
+id = 2
+name = "Placeholder airfield P"
+side = "allied"
+q = 14
+r = 0
+supply_t = 1000
+fuel_t = 0
+
+# Task force 1, L: nine placeholder troop transports (600 men each), stopped at
+# sea at (2,0), 12 hexes from P, with U and V aboard and nothing else.
+[[task_force]]
+id = 1
+name = "Placeholder lift L"
+side = "japanese"
+q = 2
+r = 0
+mission = "transport"
+
+[[ship]]
+id = 1
+name = "Placeholder troop transport 1"
+class = 10
+side = "japanese"
+fuel_t = 1000
+task_force = 1
+
+[[ship]]
+id = 2
+name = "Placeholder troop transport 2"
+class = 10
+side = "japanese"
+fuel_t = 1000
+task_force = 1
+
+[[ship]]
+id = 3
+name = "Placeholder troop transport 3"
+class = 10
+side = "japanese"
+fuel_t = 1000
+task_force = 1
+
+[[ship]]
+id = 4
+name = "Placeholder troop transport 4"
+class = 10
+side = "japanese"
+fuel_t = 1000
+task_force = 1
+
+[[ship]]
+id = 5
+name = "Placeholder troop transport 5"
+class = 10
+side = "japanese"
+fuel_t = 1000
+task_force = 1
+
+[[ship]]
+id = 6
+name = "Placeholder troop transport 6"
+class = 10
+side = "japanese"
+fuel_t = 1000
+task_force = 1
+
+[[ship]]
+id = 7
+name = "Placeholder troop transport 7"
+class = 10
+side = "japanese"
+fuel_t = 1000
+task_force = 1
+
+[[ship]]
+id = 8
+name = "Placeholder troop transport 8"
+class = 10
+side = "japanese"
+fuel_t = 1000
+task_force = 1
+
+[[ship]]
+id = 9
+name = "Placeholder troop transport 9"
+class = 10
+side = "japanese"
+fuel_t = 1000
+task_force = 1
+
+# Allied task force 4, a placeholder cruiser force far from everything, so
+# that side A has a force and the game is not over for lack of one.
+[[task_force]]
+id = 4
+name = "Placeholder Allied cruiser force"
+side = "allied"
+q = 20
+r = 10
+mission = "surface_combat"
+
+[[ship]]
+id = 20
+name = "Placeholder Allied cruiser 20"
+class = 1
+side = "allied"
+fuel_t = 2000
+task_force = 4
+
+# U and V, J's units, aboard L. Once landed at P they are on defend.
+[[land_unit]]
+id = 1
+name = "Placeholder U"
+side = "japanese"
+men = 3000
+task_force = 1
+fatigue = 10
+
+[[land_unit]]
+id = 2
+name = "Placeholder V"
+side = "japanese"
+men = 2386
+task_force = 1
+
+# The Allied garrison of P, on defend.
+[[land_unit]]
+id = 10
+name = "Placeholder Allied garrison"
+side = "allied"
+men = 3444
+q = 14
+r = 0
+
+# MARK: units
+
+# J's opening estimate of the enemy's men at P.
+[[estimate]]
+side = "japanese"
+q = 14
+r = 0
+men = 3444
+
+# MARK: estimate
+
+# The Japanese commander's commands.
+[[command]]
+day = 1
+side = "japanese"
+kind = "set_intent"
+intent = 1
+intent_kind = "take_place"
+hex = [14, 0]
+
+# Press the first day, so that the lift is sent (a lift short of the men wanted
+# at balanced, with none to follow it to feed it, is not); balanced from the
+# second day, so that the men ashore are judged at balanced when they are
+# landed. A variant sets another risk on the second day.
+[[command]]
+day = 1
+side = "japanese"
+kind = "set_limit"
+limit = "risk"
+intent = 1
+risk = "press"
+
+[[command]]
+day = 2
+side = "japanese"
+kind = "set_limit"
+limit = "risk"
+intent = 1
+risk = "balanced"
+
+# MARK: risk
+
+# MARK: limit
+[[command]]
+day = 1
+side = "japanese"
+kind = "set_limit"
+limit = "forces"
+intent = 1
+task_forces = [1]
+land_units = [1, 2]
+source = 1
+
+# No count of the enemy at P is asked for at any risk, so that the plan is
+# released on day 1 at preserve the force as at balanced and at press.
+[[command]]
+day = 1
+side = "japanese"
+kind = "set_limit"
+limit = "knowledge"
+intent = 1
+knowledge = "none"
+
+[[command]]
+day = 1
+side = "japanese"
+kind = "set_leave"
+leave = "prepare"
+given = true
+
+[[command]]
+day = 1
+side = "japanese"
+kind = "set_leave"
+leave = "launch"
+given = true
+
+# MARK: orders

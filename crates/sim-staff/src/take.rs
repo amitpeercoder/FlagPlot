@@ -44,6 +44,8 @@ use crate::planner::DEFAULT_INTERVAL_DAYS;
 use crate::reasons::{hold_words, serving};
 use crate::units::{ceil_days, days_word, floor_whole, tons, whole};
 
+mod coming;
+
 /// What a "ready a landing" task found of its readiness this morning: what
 /// "take a place" reads before it asks leave to launch (item 15).
 #[derive(Clone, Debug)]
@@ -3199,7 +3201,6 @@ impl Day<'_, '_> {
         let estimate = view.ground_estimate(place).map(|e| (e.men, e.day));
         let wanted = estimate.map(|(men, _)| men * men_per_man(risk));
         let fit: u32 = ops.iter().filter(|a| a.can).map(|a| a.fit).sum();
-        let attack = wanted.is_none_or(|w| fit >= w);
 
         // Items 9 to 13: what is coming.
         // A unit aboard another force is a later lift as it stands
@@ -3359,25 +3360,97 @@ impl Day<'_, '_> {
                 stand.words.join("; ")
             ));
         }
+        // Decision 0193: on a morning the men that can attack are fewer than
+        // the men wanted, whether more is coming; with nothing more coming
+        // the men wanted fall by the risk (3, 1 or none for each man of the
+        // estimate). While more is coming everything is as before.
+        let nothing: Option<(u32, String)> = match (estimate, wanted) {
+            (Some((men, _)), Some(w)) if fit < w => {
+                let found = self.more_coming(end, task, force, place, (source, source_hex), fit, w);
+                (!found.more).then(|| {
+                    (
+                        men * coming::men_per_man_with_nothing_coming(risk),
+                        found.words,
+                    )
+                })
+            }
+            _ => None,
+        };
+        // Rule 12: the units on attack the staff sent in under this rule,
+        // read from its own reasons in the side's log.
+        let kept: BTreeSet<LandUnitId> = if nothing.is_some() {
+            let on_attack: Vec<LandUnitId> = ops
+                .iter()
+                .filter(|a| a.unit.posture == Posture::Attack)
+                .map(|a| a.unit.id)
+                .collect();
+            on_attack
+                .into_iter()
+                .filter(|id| self.sent_in(*id))
+                .collect()
+        } else {
+            BTreeSet::new()
+        };
+        let verdict = coming::verdict(
+            fit,
+            estimate.map(|(men, _)| men),
+            risk,
+            nothing.is_none(),
+            !kept.is_empty(),
+        );
+        debug_assert!(nothing.is_some() || verdict != coming::Verdict::Committed);
+        let attack = verdict == coming::Verdict::Attack;
+        // Rule 12: once sent in, they stay in.
+        let committed = verdict == coming::Verdict::Committed;
+        if let Some((w, words)) = &nothing {
+            let per = coming::men_per_man_with_nothing_coming(risk);
+            judged.push_str(&format!("; {words}"));
+            if per == 0 {
+                judged.push_str(&format!(
+                    "; at {}, with nothing more coming, the staff wants none: every unit that can attack goes in, whatever the estimate",
+                    risk.name()
+                ));
+            } else {
+                judged.push_str(&format!(
+                    "; at {}, with nothing more coming, the staff wants {per} {} for each, {w} men; the units that can attack have {fit} fit men{}",
+                    risk.name(),
+                    if per == 1 { "man" } else { "men" },
+                    if fit >= *w {
+                        format!(", at least the {w} wanted")
+                    } else {
+                        format!(" against the {w} wanted, short by {}", w - fit)
+                    }
+                ));
+            }
+        }
         let mut orders = Vec::new();
         if attack {
             for a in ops
                 .iter()
                 .filter(|a| a.can && a.unit.posture != Posture::Attack)
             {
-                let reason = serving(end, plan)
+                let mut reason = serving(end, plan)
                     .evidence(judged.clone(), today)
                     .worked(format!(
                         "{judged}. {}: the staff sets {} to attack.",
                         if estimate.is_none() {
                             "With no count of the enemy it attacks"
+                        } else if nothing.is_some() {
+                            "Nothing more is coming and the men that can attack are enough for it"
                         } else {
                             "The men that can attack are enough"
                         },
                         unit_words(&a.unit)
                     ))
-                    .would_change("a larger estimate of the enemy, or more fatigue")
-                    .done();
+                    .would_change(if nothing.is_some() {
+                        "a larger estimate of the enemy, more fatigue, or more men coming"
+                    } else {
+                        "a larger estimate of the enemy, or more fatigue"
+                    });
+                if nothing.is_some() {
+                    reason = reason.binding(coming::SENT_IN);
+                }
+                let reason = reason.done();
                 if in_scope {
                     self.lines.push(format!("{} is set to attack.", a.unit.id));
                 }
@@ -3394,7 +3467,9 @@ impl Day<'_, '_> {
                 });
             }
         } else {
-            for a in ops.iter().filter(|a| a.unit.posture == Posture::Attack) {
+            for a in ops.iter().filter(|a| {
+                a.unit.posture == Posture::Attack && !(committed && kept.contains(&a.unit.id))
+            }) {
                 let reason = serving(end, plan)
                     .evidence(judged.clone(), today)
                     .worked(format!(
@@ -3419,8 +3494,28 @@ impl Day<'_, '_> {
                 });
             }
         }
-        if orders.is_empty() {
-            let worked = if attack {
+        // Rule 6 as amended (11): where it waits with nothing more coming,
+        // the notice that it cannot bring enough, on each morning that
+        // holds; once on a morning for the plan.
+        let waits_with_nothing = nothing.is_some() && !attack && !committed;
+        if orders.is_empty() || waits_with_nothing || committed {
+            let worked = if committed {
+                format!(
+                    "{judged}. The units on attack are committed: {} {} sent in with nothing more coming, and the staff does not set {} to defend; it sets no other unit to attack.",
+                    kept.iter().map(ToString::to_string).collect::<Vec<_>>().join(" and "),
+                    if kept.len() == 1 { "was" } else { "were" },
+                    if kept.len() == 1 { "it" } else { "them" }
+                )
+            } else if waits_with_nothing {
+                format!(
+                    "{judged}. Nothing more is coming and the men that can attack are too few: {}the staff waits, hands in the notice that it cannot bring enough, and waits for the commander.",
+                    if orders.is_empty() {
+                        ""
+                    } else {
+                        "the units on attack are set to defend; "
+                    }
+                )
+            } else if attack {
                 format!(
                     "{judged}. Every unit that can attack is on attack: the staff gives no order to the men ashore."
                 )
@@ -3430,9 +3525,22 @@ impl Day<'_, '_> {
             let reason = serving(end, plan)
                 .evidence(judged.clone(), today)
                 .worked(worked)
-                .would_change("the place the side's, a new estimate, men rested or landed")
+                .would_change(if nothing.is_some() {
+                    "the place the side's, a new estimate, men rested, more men coming, or the risk"
+                } else {
+                    "the place the side's, a new estimate, men rested or landed"
+                })
                 .done();
-            self.target(in_scope).no_orders.push(reason);
+            let handed = self
+                .target(in_scope)
+                .notices
+                .iter()
+                .any(|n| n.kind == NoticeKind::CannotBringEnough && n.plan == plan.id);
+            if waits_with_nothing && !handed {
+                self.notice(in_scope, reason, NoticeKind::CannotBringEnough, plan);
+            } else {
+                self.target(in_scope).no_orders.push(reason);
+            }
         }
         self.target(in_scope).orders.extend(orders);
 
