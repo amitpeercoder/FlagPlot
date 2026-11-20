@@ -227,7 +227,7 @@ pub fn hash_hex(bytes: &[u8]) -> String {
     format!("{:016x}", hasher.finish())
 }
 
-pub(crate) fn file_hash(path: &Path) -> Result<String, String> {
+pub fn file_hash(path: &Path) -> Result<String, String> {
     let bytes = fs::read(path).map_err(|e| format!("{}: {e}", path.display()))?;
     Ok(hash_hex(&bytes))
 }

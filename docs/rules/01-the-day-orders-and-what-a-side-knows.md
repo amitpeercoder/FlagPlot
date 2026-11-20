@@ -262,6 +262,22 @@ Any other order handed in at 0600 or 1200 is refused when it is taken in, as giv
 
 A side sees: its own orders given inside a day accepted or refused, with the reason and the pulse they were taken in, and the held by order events they make, as it sees its orders of dusk. The enemy sees nothing of them. [0047, 0156]
 
+### A watched game
+
+A game may be opened as watched, with `Session::watched` or `sim-cli serve --watched`. It has a third party beside the two seats, the watcher, who holds the clock. He has no seat, is no side and gives no order. His one act that moves time is a step: one pulse where the scenario has orders inside a day, one day where it has not. A step is refused while a played seat is not ready, naming the seats waited for, and when the game is over, stopped on an error or not watched. A game not opened as watched is as it was. [0182, rules 1 to 3]
+
+**Ready.** A played seat is not ready at the start. It becomes ready by a call of time, each with its own stop: `end_day`, until the next dusk; `run`, for that many days or until a dusk after a day on which an interrupt of its side fired; `advance`, for that many pulses or until the end of a pulse in which its side was told one of the things the call names, or a dusk after an interrupt. A scripted seat is always ready. [0182, rule 5, amended 3]
+
+**The held call.** A call of time whose arguments stand is held and the seat is ready; a call refused for its arguments is answered at once and the seat is not ready. A held call is answered when a step brings its stop, as the same tool answers in a game with that seat alone played, and its entry in the transcript is written then. Each seat's stop is its own, and an interrupt stops only the seat that set it; two stops on one step are answered Allied first. If the engine stops on an error every held call is answered with the words of the stop. Queued orders and commands go in at the first dusk only, as for `run`. [0182, rules 6 and 7, amended 2 to 6, 9 and 10]
+
+**A held seat.** While a seat holds a call, any other call of it is refused, saying it is ready and waits for the clock; the refusal changes no state and is in the transcript. This changes decision 0050, rule 9, in a watched game only: there a seat that has ended its day no longer reads. [0182, amended 8]
+
+**Run and advance offered to both.** In a watched game `run` is offered to every played seat that has the command tools, and `advance` too where the scenario has orders inside a day, whatever the other seat is. A seat at a task force or a base still has no `run`. [0182, rule 5]
+
+**The watcher's reads.** He reads as a seat's commander reads, from either side, one at a time, with the read tools of the seat: `get_briefing`, `list_forces`, `list_bases`, `list_contacts`, `get_entity`, `measure`, `explain`, `events`, `command_state`, `plans`, `staff_orders`, `propose`, `order`, `why`, `report` and `trials`, those of them the seat has. He has no tool that orders, commands, acknowledges or moves time, and neither `preview` nor `trial`, which leave a record: each is refused as a tool he does not have. His reads are in no transcript and change no state, no hash and no number of a preview or a trial. He is given nothing a seat is not: no truth of the enemy. He is told where the game stands (the day and the moment, and for each played seat whether it is ready and until when, or waited for) and what a seat did since its last stop. [0182, rules 10 to 14, amended 13 and 14]
+
+**Kept.** A watched game left inside a day is saved with `stopped_inside_day` (decision 0172). The saved game replays without a watcher to the same hashes: who held the clock is no part of it. No state, draw or hash changes. Built so far: the session and `serve --watched` (step 1). The table's bridge, its doors and its page (step 2) are not built. [0182, rule 20, amended 19 and 24]
+
 ### Every reason an order is refused
 
 The reasons are tried in the order written. The first that applies is the one recorded. All other orders are accepted.

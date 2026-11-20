@@ -543,3 +543,7 @@ path = "scenario_99_a_groups_tally_of_claims.rs"
 [[test]]
 name = "scenario_100_what_ifs_from_a_seat"
 path = "scenario_100_what_ifs_from_a_seat.rs"
+
+[[test]]
+name = "scenario_101_a_game_watched"
+path = "scenario_101_a_game_watched.rs"

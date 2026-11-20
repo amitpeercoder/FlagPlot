@@ -35,6 +35,7 @@ use crate::orders::{is_orderable_unit, land_unit_number, order_from_json};
 use crate::queries::{get_entity, list_bases, list_contacts, list_forces};
 use crate::record::{
     seat_name, CallError, Post, Seat, SeatKind, TranscriptEntry, COMMAND_TOOLS, TOOLS, TRIAL_TOOLS,
+    WATCHER_TOOLS,
 };
 use crate::staffing;
 use crate::told::{events_answer, told_since, DayPart, STOP_ON};
@@ -227,6 +228,86 @@ struct SeatState {
     commands: Vec<CommandKind>,
     /// The seat has said it has finished its orders for the coming day.
     ended: bool,
+    /// In a watched game, the call of time the seat made and waits on: the
+    /// seat is ready while it holds one (decision 0182, rule 5).
+    held: Option<Held>,
+    /// In a watched game, the number in the transcript of the seat's last
+    /// call of time answered: its calls since its last stop are those after
+    /// it (rule 14).
+    last_stop: u32,
+}
+
+/// A call of time held in a watched game (decision 0182, amended 2 and 3):
+/// the call as made, the days resolved when it was made (its transcript
+/// entry's), and what its answer is gathered from.
+struct Held {
+    tool: String,
+    arguments: Value,
+    after_day: u32,
+    wait: Wait,
+}
+
+/// What a call of time waits for, and what its answer is made from, as the
+/// tool gathers it inside its loop in a game that is not watched.
+enum Wait {
+    /// `end_day`: until the next dusk.
+    EndDay,
+    /// `run`: for that many days, or until a dusk after a day on which an
+    /// interrupt of the side fired.
+    Run(RunWait),
+    /// `advance`: for that many pulses, or until the end of a pulse in which
+    /// the side was told one of the things named, or a dusk after a day on
+    /// which an interrupt fired.
+    Advance(AdvanceWait),
+}
+
+/// What a call of `run` is answered from.
+struct RunWait {
+    days: u32,
+    /// The first day it resolves: the open day if it was called inside one.
+    first: u32,
+    /// The days closed since the call.
+    count: u32,
+    /// The staff's orders for the first day, worked at the call.
+    staff_orders: Value,
+    stopped: Option<&'static str>,
+}
+
+/// What a call of `advance` is answered from.
+struct AdvanceWait {
+    pulses: u32,
+    stop_on: Vec<&'static str>,
+    /// Where the clock stood at the call, in words.
+    started: String,
+    resolved: Vec<Value>,
+    /// What the side was told in the last pulse resolved.
+    told: Vec<Value>,
+    last_closed: Option<u32>,
+    stopped: Option<&'static str>,
+}
+
+/// What a seat's call in a watched game gives (decision 0182, rule 6): an
+/// answer now, or nothing yet, the call of time being held until a step of
+/// the watcher's brings its stop.
+#[derive(Clone, PartialEq, Debug)]
+pub enum Called {
+    Answered(Result<Value, CallError>),
+    Held,
+}
+
+/// What a step of the watcher's gives (decision 0182, amended 14): its own
+/// answer, or why it was refused, and the held calls whose stops it brought,
+/// each with its seat, the Allied seat's first (amended 7).
+#[derive(Clone, PartialEq, Debug)]
+pub struct Stepped {
+    pub answer: Result<Value, CallError>,
+    pub answered: Vec<(Side, Result<Value, CallError>)>,
+}
+
+/// What a call of time is when it is made: held, or answered at once.
+enum Start {
+    Hold(Wait),
+    Now(Value),
 }
 
 /// A game for play: the world, who holds each seat, the days it runs, and what
@@ -277,6 +358,9 @@ pub struct Session {
     trial: Option<Box<dyn TrialRunner>>,
     /// The estimates the seats were shown (rule 19).
     trials_shown: Vec<TrialRecord>,
+    /// Whether the game is watched: a third party, the watcher, holds the
+    /// clock, and a seat's calls of time wait on his steps (decision 0182).
+    watched: bool,
 }
 
 /// The arguments of a call as a map: an object, or nothing.
@@ -302,6 +386,8 @@ impl Session {
                     queued_inside: Vec::new(),
                     commands: Vec::new(),
                     ended: false,
+                    held: None,
+                    last_stop: 0,
                 },
             );
         }
@@ -325,7 +411,22 @@ impl Session {
             stopped: None,
             trial: None,
             trials_shown: Vec::new(),
+            watched: false,
         }
+    }
+
+    /// This session watched (decision 0182): the watcher holds the clock and
+    /// moves it by [`Session::step`], each played seat's call of time is
+    /// held until its stop comes, and `run` and `advance` are offered to
+    /// every played seat. Nothing in the game is changed by it.
+    pub fn watched(mut self) -> Session {
+        self.watched = true;
+        self
+    }
+
+    /// Whether the game is watched.
+    pub fn is_watched(&self) -> bool {
+        self.watched
     }
 
     /// This session with what plays a seat's trials (decision 0178, rule
@@ -450,9 +551,17 @@ impl Session {
     }
 
     /// Whether `advance` is offered: the scenario lets a seat stop between
-    /// pulses and exactly one seat is a player's, as for `run`.
+    /// pulses and `run` is offered.
     fn advance_offered(&self) -> bool {
-        self.inside_day && self.player_seats() == 1
+        self.inside_day && self.run_offered()
+    }
+
+    /// Whether `run` is offered to a seat with the command tools: exactly
+    /// one seat is a player's (decision 0107, item 29), or the game is
+    /// watched, where it is offered to every played seat (decision 0182,
+    /// rule 5).
+    fn run_offered(&self) -> bool {
+        self.player_seats() == 1 || self.watched
     }
 
     /// This session with a staff for each side in `staffs`, asked on its
@@ -556,8 +665,9 @@ impl Session {
         let mut tools: Vec<&'static str> = TOOLS.to_vec();
         if self.has_command_tools(side) {
             // `run` is offered only where exactly one seat is held by a
-            // player (decision 0107, item 29).
-            let runnable = self.player_seats() == 1;
+            // player (decision 0107, item 29), or in a watched game
+            // (decision 0182, rule 5).
+            let runnable = self.run_offered();
             tools.extend(
                 COMMAND_TOOLS
                     .iter()
@@ -570,7 +680,8 @@ impl Session {
             tools.extend(TRIAL_TOOLS);
         }
         // `advance` is offered where the scenario lets a seat stop between
-        // pulses and one seat is a player's (decision 0156, rule 8).
+        // pulses and one seat is a player's (decision 0156, rule 8), or the
+        // game is watched (decision 0182, rule 5).
         if self.advance_offered() {
             tools.push("advance");
         }
@@ -655,21 +766,43 @@ impl Session {
     /// A call from a seat: one tool, its arguments, an answer. A seat held by
     /// the script cannot be called. A call that is refused as a whole
     /// changes nothing in the game; it is still entered in the transcript,
-    /// because it is something the player was told.
+    /// because it is something the player was told. In a watched game a
+    /// call of time is held (decision 0182): use [`Session::seat_call`],
+    /// which says so; here such a call is held all the same, and answered
+    /// with an error that says where its answer comes from.
     pub fn call(&mut self, side: Side, tool: &str, arguments: &Value) -> Result<Value, CallError> {
+        if !self.watched {
+            return self.call_now(side, tool, arguments);
+        }
+        match self.seat_call(side, tool, arguments) {
+            Called::Answered(outcome) => outcome,
+            Called::Held => Err(CallError::new(
+                "the call is held: in a watched game a call of time is answered when a step of the watcher's brings its stop",
+            )),
+        }
+    }
+
+    /// The refusal of a call to a seat the script holds.
+    fn script_refusal(&self, side: Side) -> CallError {
+        let players: Vec<&str> = Side::ALL
+            .into_iter()
+            .filter(|s| self.seats[s].seat.kind() == SeatKind::Player)
+            .map(seat_name)
+            .collect();
+        CallError::naming(
+            format!(
+                "the {} seat is held by the script and cannot be called",
+                seat_name(side)
+            ),
+            &players,
+        )
+    }
+
+    /// A call answered at once, as every call of a game that is not watched
+    /// is.
+    fn call_now(&mut self, side: Side, tool: &str, arguments: &Value) -> Result<Value, CallError> {
         if self.seats[&side].seat.kind() != SeatKind::Player {
-            let players: Vec<&str> = Side::ALL
-                .into_iter()
-                .filter(|s| self.seats[s].seat.kind() == SeatKind::Player)
-                .map(seat_name)
-                .collect();
-            return Err(CallError::naming(
-                format!(
-                    "the {} seat is held by the script and cannot be called",
-                    seat_name(side)
-                ),
-                &players,
-            ));
+            return Err(self.script_refusal(side));
         }
         let after_day = self.world.day();
         // A game stopped inside a day is neither read nor advanced again:
@@ -678,7 +811,20 @@ impl Session {
             Some((_, words)) => Err(CallError::new(words.clone())),
             None => self.dispatch(side, tool, arguments),
         };
-        let answer = match &outcome {
+        self.enter(side, after_day, tool, arguments, &outcome);
+        outcome
+    }
+
+    /// Enters a call and its answer in the transcript; its number there.
+    fn enter(
+        &mut self,
+        side: Side,
+        after_day: u32,
+        tool: &str,
+        arguments: &Value,
+        outcome: &Result<Value, CallError>,
+    ) -> u32 {
+        let answer = match outcome {
             Ok(value) => value.clone(),
             Err(error) => error.to_json(),
         };
@@ -691,7 +837,436 @@ impl Session {
             arguments: arguments.clone(),
             answer,
         });
+        seq
+    }
+
+    // -----------------------------------------------------------------
+    // A game watched (decision 0182).
+    // -----------------------------------------------------------------
+
+    /// A call from a seat in a watched game (decision 0182, rules 5 to 8):
+    /// a call of time (`end_day`, `run`, `advance`) whose arguments stand is
+    /// held, and the seat is ready until its stop; a call refused for its
+    /// arguments is answered at once. While the seat is ready any other call
+    /// of it is refused, saying so (amended 8). Every other call is answered
+    /// as [`Session::call`] answers it. In a game that is not watched this is
+    /// [`Session::call`].
+    pub fn seat_call(&mut self, side: Side, tool: &str, arguments: &Value) -> Called {
+        if !self.watched {
+            return Called::Answered(self.call_now(side, tool, arguments));
+        }
+        if self.seats[&side].seat.kind() != SeatKind::Player {
+            return Called::Answered(Err(self.script_refusal(side)));
+        }
+        let after_day = self.world.day();
+        let outcome = if let Some((_, words)) = &self.stopped {
+            Err(CallError::new(words.clone()))
+        } else if let Some(held) = &self.seats[&side].held {
+            Err(CallError::new(format!(
+                "the {} seat is ready and waits for the clock: its call of {} is answered when the clock reaches its stop, and until then it makes no other call",
+                seat_name(side),
+                held.tool
+            )))
+        } else if self.is_time_tool(side, tool) {
+            match self.start_time(side, tool, arguments) {
+                Ok(Start::Hold(wait)) => {
+                    self.seats.get_mut(&side).expect("both seats exist").held = Some(Held {
+                        tool: tool.to_string(),
+                        arguments: arguments.clone(),
+                        after_day,
+                        wait,
+                    });
+                    return Called::Held;
+                }
+                Ok(Start::Now(answer)) => Ok(answer),
+                Err(error) => Err(error),
+            }
+        } else {
+            self.dispatch(side, tool, arguments)
+        };
+        self.enter(side, after_day, tool, arguments, &outcome);
+        Called::Answered(outcome)
+    }
+
+    /// Whether `tool` is a tool of time the seat has, which a watched game
+    /// holds.
+    fn is_time_tool(&self, side: Side, tool: &str) -> bool {
+        match tool {
+            "end_day" => true,
+            "run" => self.has_command_tools(side),
+            "advance" => self.advance_offered(),
+            _ => false,
+        }
+    }
+
+    /// The call of a tool of time in a watched game: its arguments checked
+    /// as the tool checks them, and what it waits for, or its answer now
+    /// where it waits for nothing (`end_day` once the game is over).
+    fn start_time(&self, side: Side, tool: &str, arguments: &Value) -> Result<Start, CallError> {
+        let args = args_of(arguments)?;
+        match tool {
+            "end_day" if self.is_over() => Ok(Start::Now(self.end_day_answer(side, false)?)),
+            "end_day" => Ok(Start::Hold(Wait::EndDay)),
+            "run" => Ok(Start::Hold(Wait::Run(self.run_wait(side, &args)?))),
+            _ => Ok(Start::Hold(Wait::Advance(self.advance_wait(&args)?))),
+        }
+    }
+
+    /// The watcher's step (decision 0182, rules 2 and 3, amended 14): one
+    /// pulse where the scenario has orders inside a day, one day where it
+    /// has not. It is refused in a game that is not watched, once the game
+    /// is over or stopped, and while a played seat is not ready, naming the
+    /// seats waited for; then nothing moves. After it each held call is read
+    /// for its stop, the Allied seat's first, and those whose stops came are
+    /// answered. If the engine stops on an error every held call is answered
+    /// with the words of the stop (amended 6).
+    pub fn step(&mut self) -> Stepped {
+        let refused = |error: CallError| Stepped {
+            answer: Err(error),
+            answered: Vec::new(),
+        };
+        if !self.watched {
+            return refused(CallError::new(
+                "this game is not watched: there is no watcher's step, and the seats move the clock",
+            ));
+        }
+        if let Some((_, words)) = &self.stopped {
+            return refused(CallError::new(words.clone()));
+        }
+        if self.is_over() {
+            return refused(CallError::new("the game is over: there is no step to take"));
+        }
+        let waited = self.waited_for();
+        if !waited.is_empty() {
+            return refused(CallError::new(format!(
+                "the clock waits for the {} seat{}: {} not ready, and the clock moves only when every played seat is",
+                waited.join(" and the "),
+                if waited.len() == 1 { "" } else { "s" },
+                if waited.len() == 1 { "it is" } else { "they are" }
+            )));
+        }
+        // What each side held before the step: what it is told in the pulse
+        // is its events after these, as `advance` reads them.
+        let before: BTreeMap<Side, usize> = Side::ALL
+            .into_iter()
+            .map(|side| {
+                (
+                    side,
+                    self.view_of(side).map_or(0, |view| view.events().len()),
+                )
+            })
+            .collect();
+        let mut pulses: Vec<Pulse> = Vec::new();
+        let mut day = 0;
+        let outcome = loop {
+            if self.open_day().is_none() {
+                if let Err(error) = self.begin_day() {
+                    break Err(error);
+                }
+            }
+            match self.resolve_pulse() {
+                Ok((d, pulse)) => {
+                    day = d;
+                    pulses.push(pulse);
+                }
+                Err(error) => break Err(error),
+            }
+            let closed = self.open_day().is_none();
+            // A step is a pulse where a seat may stop between pulses, else
+            // a whole day.
+            if self.inside_day || closed {
+                break Ok(closed);
+            }
+        };
+        let mut answered = Vec::new();
+        let closed = match outcome {
+            Ok(closed) => closed,
+            Err(error) => {
+                for side in Side::ALL {
+                    if let Some(held) = self.take_held(side) {
+                        let answer = self.answer_held(side, held, Err(error.clone()));
+                        answered.push((side, answer));
+                    }
+                }
+                return Stepped {
+                    answer: Err(error),
+                    answered,
+                };
+            }
+        };
+        let pulse = *pulses.last().expect("a step resolves a pulse");
+        for side in Side::ALL {
+            let Some(mut held) = self.take_held(side) else {
+                continue;
+            };
+            let came = match &mut held.wait {
+                Wait::EndDay => closed,
+                Wait::Run(wait) => closed && self.run_after_day(side, wait),
+                Wait::Advance(wait) => {
+                    self.advance_after_pulse(side, wait, day, pulse, closed, before[&side])
+                }
+            };
+            if !came {
+                self.seats.get_mut(&side).expect("both seats exist").held = Some(held);
+                continue;
+            }
+            let answer = match &held.wait {
+                Wait::EndDay => self.end_day_answer(side, true),
+                Wait::Run(wait) => self.run_answer(side, wait),
+                Wait::Advance(wait) => self.advance_answer(side, wait),
+            };
+            let answer = self.answer_held(side, held, answer);
+            answered.push((side, answer));
+        }
+        let stops: Vec<&str> = answered.iter().map(|(side, _)| seat_name(*side)).collect();
+        let resolved_words = match pulses.as_slice() {
+            [one] => format!("the {} pulse of day {day}", one.name()),
+            _ => format!("day {day}"),
+        };
+        let summary = format!(
+            "Resolved {resolved_words}; the clock stands at {}.{}",
+            self.clock_words(),
+            match stops.as_slice() {
+                [] => String::new(),
+                [one] => format!(" The {one} seat's stop came."),
+                _ => format!(" The {} seats' stops came.", stops.join(" and ")),
+            }
+        );
+        Stepped {
+            answer: Ok(json!({
+                "format": FORMAT,
+                "version": VERSION,
+                "kind": "step",
+                "resolved": {
+                    "day": day,
+                    "pulses": pulses.iter().map(|p| p.name()).collect::<Vec<_>>(),
+                },
+                "clock": self.clock(),
+                "stops": stops,
+                "game_over": self.is_over(),
+                "summary": summary,
+            })),
+            answered,
+        }
+    }
+
+    /// The played seats that are not ready, by name, the Allied first.
+    fn waited_for(&self) -> Vec<&'static str> {
+        Side::ALL
+            .into_iter()
+            .filter(|side| {
+                let state = &self.seats[side];
+                state.seat.kind() == SeatKind::Player && state.held.is_none()
+            })
+            .map(seat_name)
+            .collect()
+    }
+
+    fn take_held(&mut self, side: Side) -> Option<Held> {
+        self.seats
+            .get_mut(&side)
+            .expect("both seats exist")
+            .held
+            .take()
+    }
+
+    /// Answers a held call: its entry is written in the transcript now, with
+    /// the days resolved when it was made (amended 9), and the seat's last
+    /// stop is this one.
+    fn answer_held(
+        &mut self,
+        side: Side,
+        held: Held,
+        outcome: Result<Value, CallError>,
+    ) -> Result<Value, CallError> {
+        let seq = self.enter(side, held.after_day, &held.tool, &held.arguments, &outcome);
+        self.seats
+            .get_mut(&side)
+            .expect("both seats exist")
+            .last_stop = seq;
         outcome
+    }
+
+    /// The tools the watcher reads with from the side's seat (decision 0182,
+    /// amended 13): those of [`WATCHER_TOOLS`] the seat has.
+    pub fn watcher_tools(&self, side: Side) -> Vec<&'static str> {
+        let seat = self.tools(side);
+        WATCHER_TOOLS
+            .iter()
+            .copied()
+            .filter(|tool| seat.contains(tool))
+            .collect()
+    }
+
+    /// A read of the watcher's (decision 0182, rules 10 to 12): the side's
+    /// seat's read tool, answered as that seat would be answered now. It is
+    /// entered in no transcript, and none of these tools changes the game,
+    /// the queues or what a preview or a trial is numbered. Any other tool
+    /// is refused as one he does not have.
+    pub fn watch(&mut self, side: Side, tool: &str, arguments: &Value) -> Result<Value, CallError> {
+        if !self.watched {
+            return Err(CallError::new(
+                "this game is not watched: there is no watcher to read",
+            ));
+        }
+        let tools = self.watcher_tools(side);
+        if !tools.contains(&tool) {
+            return Err(CallError::naming(
+                format!(
+                    "\"{tool}\" is not a tool of the watcher's from the {} seat: he reads and changes nothing",
+                    seat_name(side)
+                ),
+                &tools,
+            ));
+        }
+        if let Some((_, words)) = &self.stopped {
+            return Err(CallError::new(words.clone()));
+        }
+        self.dispatch(side, tool, arguments)
+    }
+
+    /// Where the game stands, for the watcher (decision 0182, rule 13): the
+    /// clock, whether the game is over or stopped, and each seat: who holds
+    /// it, whether it is ready and until when, or that it is waited for.
+    pub fn standing(&self) -> Value {
+        let over = self.is_over() || self.stopped.is_some();
+        let seats: Vec<Value> = Side::ALL
+            .into_iter()
+            .map(|side| {
+                let state = &self.seats[&side];
+                let kind = state.seat.kind();
+                let until = state.held.as_ref().map(|held| self.until(held));
+                let waited = kind == SeatKind::Player && state.held.is_none() && !over;
+                json!({
+                    "seat": seat_name(side),
+                    "holder": kind.name(),
+                    "ready": kind == SeatKind::Script || state.held.is_some(),
+                    "until": until,
+                    "waited_for": waited,
+                })
+            })
+            .collect();
+        let waiting: Vec<&str> = if over { Vec::new() } else { self.waited_for() };
+        json!({
+            "format": FORMAT,
+            "version": VERSION,
+            "kind": "standing",
+            "clock": self.clock(),
+            "game_over": self.is_over(),
+            "stopped": self.stopped.as_ref().map(|(_, words)| words.clone()),
+            "seats": seats,
+            "waiting_for": waiting,
+        })
+    }
+
+    /// A held call's stop, for the standing.
+    fn until(&self, held: &Held) -> Value {
+        let dusk = match self.open_day() {
+            Some((day, _)) => day,
+            None => self.world.day() + 1,
+        };
+        match &held.wait {
+            Wait::EndDay => json!({
+                "tool": "end_day",
+                "words": format!("until the dusk at the end of day {dusk}"),
+            }),
+            Wait::Run(wait) => json!({
+                "tool": "run",
+                "days": wait.days,
+                "days_resolved": wait.count,
+                "words": format!(
+                    "until the dusk at the end of day {}, or a dusk after a day on which an interrupt of its side fired",
+                    wait.first + wait.days - 1
+                ),
+            }),
+            Wait::Advance(wait) => {
+                let done = u32::try_from(wait.resolved.len()).expect("few pulses");
+                let left = wait.pulses.saturating_sub(done);
+                let told = if wait.stop_on.is_empty() {
+                    String::new()
+                } else {
+                    format!(
+                        ", or the end of a pulse in which its side is told of {}",
+                        wait.stop_on.join(", ")
+                    )
+                };
+                json!({
+                    "tool": "advance",
+                    "pulses": wait.pulses,
+                    "pulses_resolved": done,
+                    "stop_on": wait.stop_on,
+                    "words": format!(
+                        "for {left} more pulse{}{told}, or a dusk after a day on which an interrupt of its side fired",
+                        if left == 1 { "" } else { "s" }
+                    ),
+                })
+            }
+        }
+    }
+
+    /// What a seat did since its last stop, for the watcher (decision 0182,
+    /// rule 14): its calls in the transcript after its last call of time
+    /// answered, each with its tool, its arguments, whether it was refused
+    /// and its `reason` where it gave one; and the call of time it holds,
+    /// if any, which is in the transcript only once it is answered.
+    pub fn seat_calls(&self, side: Side) -> Value {
+        let state = &self.seats[&side];
+        let reason = |arguments: &Value| match arguments.get("reason") {
+            Some(Value::String(reason)) => json!(reason),
+            _ => Value::Null,
+        };
+        let calls: Vec<Value> = self
+            .transcript
+            .iter()
+            .filter(|entry| entry.seat == side && entry.seq > state.last_stop)
+            .map(|entry| {
+                json!({
+                    "seq": entry.seq,
+                    "tool": entry.tool,
+                    "arguments": entry.arguments,
+                    "refused": entry.answer.get("kind") == Some(&json!("error")),
+                    "reason": reason(&entry.arguments),
+                })
+            })
+            .collect();
+        let held = state.held.as_ref().map(|held| {
+            json!({
+                "tool": held.tool,
+                "arguments": held.arguments,
+                "reason": reason(&held.arguments),
+            })
+        });
+        json!({
+            "format": FORMAT,
+            "version": VERSION,
+            "kind": "seat_calls",
+            "seat": seat_name(side),
+            "since": state.last_stop,
+            "calls": calls,
+            "held": held,
+        })
+    }
+
+    /// The day a watched game was left inside, while a day is open: the
+    /// saved game says it stopped inside it (decision 0182, amended 19).
+    /// `None` in a game that is not watched, and at dusk.
+    pub fn left_inside_day(&self) -> Option<u32> {
+        if !self.watched {
+            return None;
+        }
+        self.open_day().map(|(day, _)| day)
+    }
+
+    /// The side's seat's queues as they stand: its orders for the coming
+    /// day, its orders for the next pulse of the open day and its commands.
+    /// For the runner and tests; no tool gives it.
+    pub fn queue_of(&self, side: Side) -> (Vec<OrderRequest>, Vec<OrderRequest>, Vec<CommandKind>) {
+        let state = &self.seats[&side];
+        (
+            state.queued.clone(),
+            state.queued_inside.clone(),
+            state.commands.clone(),
+        )
     }
 
     fn dispatch(&mut self, side: Side, tool: &str, arguments: &Value) -> Result<Value, CallError> {
@@ -876,12 +1451,39 @@ impl Session {
     /// `advance`: resolves up to `pulses` pulses one at a time, stopping at
     /// the end of the first in which the side was told any of `stop_on`, at
     /// a dusk after a day on which an interrupt of the side fired, or when
-    /// the game is over (decision 0156, rule 8).
+    /// the game is over (decision 0156, rule 8). In a watched game the same
+    /// call is held and the watcher's steps resolve the pulses (decision
+    /// 0182): the call is [`Session::advance_wait`], each pulse
+    /// [`Session::advance_after_pulse`] and the answer
+    /// [`Session::advance_answer`], here and there alike.
     fn advance(
         &mut self,
         side: Side,
         args: &serde_json::Map<String, Value>,
     ) -> Result<Value, CallError> {
+        let mut wait = self.advance_wait(args)?;
+        loop {
+            // What the side held before the pulse: what it is told in it is
+            // its events after these.
+            let before = self.view_of(side).map_or(0, |view| view.events().len());
+            if self.open_day().is_none() {
+                self.begin_day()?;
+            }
+            let (day, pulse) = self.resolve_pulse()?;
+            let closed = self.open_day().is_none();
+            if self.advance_after_pulse(side, &mut wait, day, pulse, closed, before) {
+                break;
+            }
+        }
+        self.advance_answer(side, &wait)
+    }
+
+    /// The call of `advance`: its arguments checked, and where the clock
+    /// stands when it is made.
+    fn advance_wait(
+        &self,
+        args: &serde_json::Map<String, Value>,
+    ) -> Result<AdvanceWait, CallError> {
         if let Some(key) = args
             .keys()
             .find(|k| !["pulses", "stop_on", "reason"].contains(&k.as_str()))
@@ -932,41 +1534,64 @@ impl Session {
                 ))
             }
         }
-        let started = self.clock_words();
-        let mut resolved: Vec<Value> = Vec::new();
-        let mut told: Vec<Value>;
-        let mut last_closed: Option<u32> = None;
-        let stopped = loop {
-            // What the side held before the pulse: what it is told in it is
-            // its events after these.
-            let before = self.view_of(side).map_or(0, |view| view.events().len());
-            if self.open_day().is_none() {
-                self.begin_day()?;
-            }
-            let (day, pulse) = self.resolve_pulse()?;
-            resolved.push(json!({"day": day, "pulse": pulse.name()}));
-            let closed = self.open_day().is_none();
-            if closed {
-                last_closed = Some(day);
-            }
-            told = match self.view_of(side) {
-                Ok(view) => told_since(&view, before, &stop_on),
-                Err(_) => Vec::new(),
-            };
-            if self.is_over() {
-                break "game_over";
-            }
-            if closed && staffing::fired_on_day(&self.world.side_view(side), day) {
-                break "interrupt";
-            }
-            if !told.is_empty() {
-                break "told";
-            }
-            if u32::try_from(resolved.len()).expect("few pulses") >= pulses {
-                break "pulses";
-            }
+        Ok(AdvanceWait {
+            pulses,
+            stop_on,
+            started: self.clock_words(),
+            resolved: Vec::new(),
+            told: Vec::new(),
+            last_closed: None,
+            stopped: None,
+        })
+    }
+
+    /// One pulse resolved under a call of `advance`: the pulse `day`,
+    /// `pulse`, whether it closed the day, and the count of the side's
+    /// events before it. True when the call's stop has come.
+    fn advance_after_pulse(
+        &self,
+        side: Side,
+        wait: &mut AdvanceWait,
+        day: u32,
+        pulse: Pulse,
+        closed: bool,
+        before: usize,
+    ) -> bool {
+        wait.resolved
+            .push(json!({"day": day, "pulse": pulse.name()}));
+        if closed {
+            wait.last_closed = Some(day);
+        }
+        wait.told = match self.view_of(side) {
+            Ok(view) => told_since(&view, before, &wait.stop_on),
+            Err(_) => Vec::new(),
         };
-        let fired = match last_closed {
+        let stopped = if self.is_over() {
+            "game_over"
+        } else if closed && staffing::fired_on_day(&self.world.side_view(side), day) {
+            "interrupt"
+        } else if !wait.told.is_empty() {
+            "told"
+        } else if u32::try_from(wait.resolved.len()).expect("few pulses") >= wait.pulses {
+            "pulses"
+        } else {
+            return false;
+        };
+        wait.stopped = Some(stopped);
+        true
+    }
+
+    /// The answer of `advance` once its stop has come.
+    fn advance_answer(&self, side: Side, wait: &AdvanceWait) -> Result<Value, CallError> {
+        let stopped = wait.stopped.unwrap_or("pulses");
+        let (pulses, stop_on, started, resolved, told) = (
+            wait.pulses,
+            &wait.stop_on,
+            &wait.started,
+            &wait.resolved,
+            &wait.told,
+        );
+        let fired = match wait.last_closed {
             Some(day) => staffing::firings_json(&self.world.side_view(side), day),
             None => Vec::new(),
         };
@@ -2255,6 +2880,12 @@ impl Session {
                 resolved = true;
             }
         }
+        self.end_day_answer(side, resolved)
+    }
+
+    /// The answer of `end_day`: whether the day was resolved, the days
+    /// resolved, whether the game is over and the result.
+    fn end_day_answer(&self, side: Side, resolved: bool) -> Result<Value, CallError> {
         // The answer that reports the game over carries the umpire's result
         // for both sides, when the scenario has objectives (decision 8 of
         // 0054). Otherwise it is null.
@@ -2276,12 +2907,33 @@ impl Session {
     /// `run`: resolves up to `days` days, each exactly as `end_day` does,
     /// and stops after a day on which an interrupt of the side fired, or at
     /// the end of the game, or at `days` (decision 0107, item 29 and ruling
-    /// 36). The queued orders and commands go in on the first day.
+    /// 36). The queued orders and commands go in on the first day. In a
+    /// watched game the same call is held and the watcher's steps resolve
+    /// the days (decision 0182): the call is [`Session::run_wait`], each
+    /// day closed [`Session::run_after_day`] and the answer
+    /// [`Session::run_answer`], here and there alike.
     fn run_days(
         &mut self,
         side: Side,
         args: &serde_json::Map<String, Value>,
     ) -> Result<Value, CallError> {
+        let mut wait = self.run_wait(side, args)?;
+        loop {
+            self.resolve()?;
+            if self.run_after_day(side, &mut wait) {
+                break;
+            }
+        }
+        self.run_answer(side, &wait)
+    }
+
+    /// The call of `run`: its arguments checked, the staff's orders for the
+    /// first day worked before it is resolved, and the first day.
+    fn run_wait(
+        &self,
+        side: Side,
+        args: &serde_json::Map<String, Value>,
+    ) -> Result<RunWait, CallError> {
         if let Some(key) = args
             .keys()
             .find(|k| !["days", "reason"].contains(&k.as_str()))
@@ -2295,7 +2947,7 @@ impl Session {
             None | Some(Value::Null) | Some(Value::String(_)) => {}
             Some(_) => return Err(CallError::new("\"reason\" must be text")),
         }
-        if self.player_seats() != 1 {
+        if !self.run_offered() {
             return Err(CallError::new(
                 "run is offered only where exactly one seat is held by a player: use end_day",
             ));
@@ -2318,22 +2970,37 @@ impl Session {
             let staff: &dyn Staff = self.staffs[&side].as_ref();
             staffing::staff_orders(&world.side_view(side), staff)
         };
-        let first = self.world.day() + 1;
-        let mut count = 0;
-        let stopped = loop {
-            self.resolve()?;
-            count += 1;
-            let day = self.world.day();
-            if self.is_over() {
-                break "game_over";
-            }
-            if staffing::fired_on_day(&self.world.side_view(side), day) {
-                break "interrupt";
-            }
-            if count >= days {
-                break "days";
-            }
+        Ok(RunWait {
+            days,
+            first: self.world.day() + 1,
+            count: 0,
+            staff_orders,
+            stopped: None,
+        })
+    }
+
+    /// A day closed under a call of `run`. True when the call's stop has
+    /// come.
+    fn run_after_day(&self, side: Side, wait: &mut RunWait) -> bool {
+        wait.count += 1;
+        let day = self.world.day();
+        let stopped = if self.is_over() {
+            "game_over"
+        } else if staffing::fired_on_day(&self.world.side_view(side), day) {
+            "interrupt"
+        } else if wait.count >= wait.days {
+            "days"
+        } else {
+            return false;
         };
+        wait.stopped = Some(stopped);
+        true
+    }
+
+    /// The answer of `run` once its stop has come.
+    fn run_answer(&self, side: Side, wait: &RunWait) -> Result<Value, CallError> {
+        let (days, first, count) = (wait.days, wait.first, wait.count);
+        let stopped = wait.stopped.unwrap_or("days");
         let last = self.world.day();
         let fired = staffing::firings_json(&self.world.side_view(side), last);
         let result = match self.final_result() {
@@ -2361,7 +3028,7 @@ impl Session {
             "format": FORMAT,
             "version": VERSION,
             "kind": "run",
-            "staff_orders": staff_orders,
+            "staff_orders": wait.staff_orders,
             "days_resolved": {"first": first, "last": last, "count": count},
             "stopped": stopped,
             "fired": fired,

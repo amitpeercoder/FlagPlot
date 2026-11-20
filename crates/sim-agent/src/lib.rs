@@ -108,9 +108,9 @@ pub use queries::{
 };
 pub use record::{
     parse_seat, seat_name, CallError, Post, Seat, SeatKind, TranscriptEntry, COMMAND_TOOLS, TOOLS,
-    TRIAL_TOOLS,
+    TRIAL_TOOLS, WATCHER_TOOLS,
 };
-pub use session::{OrdersInsideDay, Session, NOT_KNOWN};
+pub use session::{Called, OrdersInsideDay, Session, Stepped, NOT_KNOWN};
 pub use staffing::{
     command_state, plan_order, plans, propose, staff_orders, why, STAFF_DEFAULT_INTERVAL_DAYS,
 };
