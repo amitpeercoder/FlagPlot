@@ -229,3 +229,189 @@ id,key,name,nation,class,hull_number
 1229,china-maru,China Maru,jp,,
 1230,hibi-maru,Hibi Maru,jp,,
 1231,azumayama-maru,Azumayama Maru,jp,,
+1240,cv-8-hornet,USS Hornet,us,,CV-8
+1241,bb-56-washington,USS Washington,us,us-north-carolina-class,BB-56
+1242,cl-52-juneau,USS Juneau,us,us-atlanta-class,CL-52
+1243,cl-53-san-diego,USS San Diego,us,us-atlanta-class,CL-53
+1244,cl-48-honolulu,USS Honolulu,us,us-brooklyn-class,CL-48
+1245,ca-26-northampton,USS Northampton,us,us-northampton-class,CA-26
+1246,bb-45-colorado,USS Colorado,us,,BB-45
+1247,bb-46-maryland,USS Maryland,us,,BB-46
+1248,ar-4-vestal,USS Vestal,us,,AR-4
+1280,dd-376-cushing,USS Cushing,us,us-mahan-class,DD-376
+1281,dd-379-preston,USS Preston,us,us-mahan-class,DD-379
+1282,dd-356-porter,USS Porter,us,us-porter-class,DD-356
+1283,dd-364-mahan,USS Mahan,us,us-mahan-class,DD-364
+1284,dd-366-drayton,USS Drayton,us,us-mahan-class,DD-366
+1285,dd-367-lamson,USS Lamson,us,us-mahan-class,DD-367
+1286,dd-371-conyngham,USS Conyngham,us,us-mahan-class,DD-371
+1287,dd-373-shaw,USS Shaw,us,us-mahan-class,DD-373
+1288,dd-410-hughes,USS Hughes,us,us-sims-class,DD-410
+1289,dd-413-mustin,USS Mustin,us,us-sims-class,DD-413
+1290,dd-433-gwin,USS Gwin,us,us-gleaves-class,DD-433
+1291,dd-434-meredith,USS Meredith,us,us-gleaves-class,DD-434
+1292,dd-486-lansdowne,USS Lansdowne,us,us-gleaves-class,DD-486
+1293,dd-487-lardner,USS Lardner,us,us-gleaves-class,DD-487
+1294,dd-599-barton,USS Barton,us,us-benson-class,DD-599
+1295,dd-445-fletcher,USS Fletcher,us,,DD-445
+1296,dd-449-nicholas,USS Nicholas,us,,DD-449
+1297,dd-450-obannon,USS O'Bannon,us,,DD-450
+1298,dm-17-montgomery,USS Montgomery,us,,DM-17
+1340,junyo,Junyo,jp,,
+1341,hiyo,Hiyo,jp,,
+1342,kongo,Kongo,jp,jp-kongo-class,
+1343,haruna,Haruna,jp,jp-kongo-class,
+1344,yamato,Yamato,jp,,
+1345,isuzu,Isuzu,jp,jp-nagara-class,
+1346,sendai,Sendai,jp,jp-sendai-class,
+1347,chiyoda,Chiyoda,jp,,
+1348,taiyo,Taiyo,jp,,
+1349,unyo,Unyo,jp,,
+1370,akatsuki,Akatsuki,jp,,
+1371,ikazuchi,Ikazuchi,jp,,
+1372,inazuma,Inazuma,jp,,
+1373,hibiki,Hibiki,jp,,
+1374,teruzuki,Teruzuki,jp,jp-akizuki-class,
+1375,naganami,Naganami,jp,,
+1376,makinami,Makinami,jp,,
+1377,takanami,Takanami,jp,,
+1378,mikazuki,Mikazuki,jp,,
+1379,satsuki,Satsuki,jp,,
+1380,fumizuki,Fumizuki,jp,,
+1381,nagatsuki,Nagatsuki,jp,jp-mutsuki-class,
+1382,minazuki,Minazuki,jp,,
+1383,asashio,Asashio,jp,jp-asashio-class,
+1384,oshio,Oshio,jp,jp-asashio-class,
+1385,michishio,Michishio,jp,jp-asashio-class,
+1386,arashio,Arashio,jp,jp-asashio-class,
+1420,sasako-maru,Sasako Maru,jp,,
+1421,azumasan-maru,Azumasan Maru,jp,,
+1422,kyushu-maru,Kyushu Maru,jp,,
+1423,nankai-maru,Nankai Maru,jp,,
+1424,sakito-maru,Sakito Maru,jp,,
+1425,hirokawa-maru,Hirokawa Maru,jp,,
+1426,kinugawa-maru,Kinugawa Maru,jp,,
+1427,yamaura-maru,Yamaura Maru,jp,,
+1428,yamatsuki-maru,Yamatsuki Maru (also spelled Yamazuki),jp,,
+1429,canberra-maru,Canberra Maru,jp,,
+1430,nagara-maru,Nagara Maru,jp,,
+1431,nako-maru,Nako Maru (printed Naka Maru in some accounts),jp,,
+1432,brisbane-maru,Brisbane Maru,jp,,
+1433,shinanogawa-maru,Shinanogawa Maru,jp,,
+1434,arizona-maru,Arizona Maru,jp,,
+1435,kumagawa-maru,Kumagawa Maru,jp,,
+1480,kyokuto-maru,Kyokuto Maru,jp,,
+1481,kokuyo-maru,Kokuyo Maru,jp,,
+1482,toei-maru,Toei Maru,jp,,
+1483,dd-361-clark,USS Clark,us,,
+1484,at-65-seminole,USS Seminole,us,,AT-65
+6305,ao-22-cimarron,USS Cimarron,us,us-cimarron-class,AO-22
+6306,ao-24-platte,USS Platte,us,us-cimarron-class,AO-24
+6307,ao-32-guadalupe,USS Guadalupe,us,us-cimarron-class,AO-32
+6308,avd-10-ballard,USS Ballard,us,us-clemson-class,AVD-10
+6309,avd-11-thornton,USS Thornton,us,us-clemson-class,AVD-11
+6311,at-144-vireo,USS Vireo,us,,AT-144
+6312,aog-13-kaloli,USS Kaloli,us,,AOG-13
+6313,py-25-crystal,USS Crystal,us,,PY-25
+6315,at-64-navajo,USS Navajo,us,,AT-64
+6316,as-11-fulton,USS Fulton,us,,AS-11
+6317,ss-168-nautilus,USS Nautilus,us,,SS-168
+6318,ss-169-dolphin,USS Dolphin,us,,SS-169
+6319,ss-170-cachalot,USS Cachalot,us,,SS-170
+6320,ss-171-cuttlefish,USS Cuttlefish,us,,SS-171
+6321,ss-198-tambor,USS Tambor,us,,SS-198
+6322,ss-202-trout,USS Trout,us,,SS-202
+6323,ss-209-grayling,USS Grayling,us,,SS-209
+6324,ss-210-grenadier,USS Grenadier,us,,SS-210
+6325,ss-211-gudgeon,USS Gudgeon,us,,SS-211
+6326,ss-212-gato,USS Gato,us,,SS-212
+6327,ss-214-grouper,USS Grouper,us,,SS-214
+6328,ss-229-flying-fish,USS Flying Fish,us,,SS-229
+6329,ss-167-narwhal,USS Narwhal,us,,SS-167
+6330,ss-179-plunger,USS Plunger,us,,SS-179
+6331,ss-237-trigger,USS Trigger,us,,SS-237
+6332,ss-173-pike,USS Pike,us,,SS-173
+6333,ss-175-tarpon,USS Tarpon,us,,SS-175
+6334,ss-215-growler,USS Growler,us,,SS-215
+6335,ss-230-finback,USS Finback,us,,SS-230
+6336,ss-213-greenling,USS Greenling,us,,SS-213
+6337,ss-228-drum,USS Drum,us,,SS-228
+6338,ss-180-pollack,USS Pollack,us,,SS-180
+6339,ss-203-tuna,USS Tuna,us,,SS-203
+6340,ss-181-pompano,USS Pompano,us,,SS-181
+6341,ss-172-porpoise,USS Porpoise,us,,SS-172
+6350,akagi,Akagi,jp,jp-akagi-class,
+6351,kaga,Kaga,jp,jp-kaga-class,
+6352,soryu,Soryu,jp,jp-soryu-class,
+6353,hiryu,Hiryu,jp,jp-hiryu-class,
+6356,mikuma,Mikuma,jp,jp-mogami-class,
+6357,mogami,Mogami,jp,jp-mogami-class,
+6359,nagato,Nagato,jp,jp-nagato-class,
+6360,hosho,Hosho,jp,jp-hosho-class,
+6362,ise,Ise,jp,jp-ise-class,
+6363,hyuga,Hyuga,jp,jp-ise-class,
+6364,fuso,Fuso,jp,jp-fuso-class,
+6365,yamashiro,Yamashiro,jp,jp-fuso-class,
+6366,kitakami,Kitakami,jp,jp-kuma-class,
+6367,oi,Oi,jp,jp-kuma-class,
+6369,kasumi,Kasumi,jp,jp-asashio-class,
+6370,arare,Arare,jp,jp-asashio-class,
+6371,shiranui,Shiranui,jp,jp-kagero-class,
+6372,natsushio,Natsushio,jp,jp-kagero-class,
+6377,isonami,Isonami,jp,jp-fubuki-class,
+6378,shinonome,Shinonome,jp,jp-fubuki-class,
+6379,usugumo,Usugumo,jp,jp-fubuki-class,
+6380,sagiri,Sagiri,jp,jp-fubuki-class,
+6382,yukaze,Yukaze,jp,,
+6383,nichiro-maru,Nichiro Maru,jp,,
+6384,kyoei-maru,Kyoei Maru No. 2,jp,,
+6385,hoko-maru,Hoko Maru,jp,,
+6387,shikoku-maru,Shikoku Maru,jp,,
+6388,nippon-maru,Nippon Maru,jp,,
+6390,san-clemente-maru,San Clemente Maru,jp,,
+6391,naruto-maru,Naruto Maru,jp,,
+6393,tora-maru,Tora Maru,jp,,
+6395,zenyo-maru,Zenyo Maru,jp,,
+6396,brazil-maru,Brazil Maru,jp,,
+6397,argentina-maru,Argentina Maru,jp,,
+6398,azuma-maru,Azuma Maru,jp,,
+6399,kirishima-maru,Kirishima Maru,jp,,
+6400,kano-maru,Kano Maru,jp,,
+6401,toa-maru-no-2,Toa Maru No. 2,jp,,
+6402,akebono-maru,Akebono Maru,jp,,
+6403,hokuriku-maru,Hokuriku Maru,jp,,
+6404,goshu-maru,Goshu Maru,jp,,
+6405,keiyo-maru,Keiyo Maru,jp,,
+6406,seicho-maru,Seicho Maru,jp,,
+6407,kiyosumi-maru,Kiyosumi Maru,jp,,
+6408,tama-maru-no-3,Tama Maru No. 3 (auxiliary minesweeper),jp,,
+6409,tama-maru-no-5,Tama Maru No. 5 (auxiliary minesweeper),jp,,
+6410,showa-maru-no-7,Showa Maru No. 7 (auxiliary minesweeper),jp,,
+6411,showa-maru-no-8,Showa Maru No. 8 (auxiliary minesweeper),jp,,
+6412,meiyo-maru,Meiyo Maru,jp,,
+6413,yamafuku-maru,Yamafuku Maru,jp,,
+6414,ch-16,Subchaser CH-16,jp,,
+6415,ch-17,Subchaser CH-17,jp,,
+6416,ch-18,Subchaser CH-18,jp,,
+6417,sata,Sata (oiler),jp,,
+6418,tsurumi,Tsurumi (oiler),jp,,
+6419,genyo-maru,Genyo Maru,jp,,
+6420,kenyo-maru,Kenyo Maru,jp,,
+6421,akashi,Akashi (repair ship),jp,,
+6422,nichiei-maru,Nichiei Maru,jp,,
+6423,soya,Soya (supply ship),jp,,
+6424,i-168,I-168,jp,,
+6425,i-169,I-169,jp,,
+6426,i-171,I-171,jp,,
+6427,i-174,I-174,jp,,
+6428,i-175,I-175,jp,,
+6429,i-156,I-156,jp,,
+6430,i-157,I-157,jp,,
+6431,i-158,I-158,jp,,
+6432,i-159,I-159,jp,,
+6433,i-164,I-164,jp,,
+6434,i-165,I-165,jp,,
+6435,i-166,I-166,jp,,
+6436,i-121,I-121,jp,,
+6437,i-122,I-122,jp,,
+6438,i-123,I-123,jp,,
