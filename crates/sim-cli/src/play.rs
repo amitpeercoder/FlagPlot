@@ -17,7 +17,7 @@ use serde_json::{json, Value};
 use sim_agent::{parse_seat, seat_name, Post, SeatKind};
 use sim_core::state::Side;
 
-use crate::mcp::{tool_list, Server};
+use crate::mcp::{tool_list, tool_list_for, Server};
 use crate::save;
 use crate::serve::{self, Kept};
 use sim_staff::DOCTRINE_VERSION;
@@ -48,7 +48,10 @@ Usage: sim-cli play --game FILE [--scenario SCENARIO --seat allied|japanese [--a
     sim-cli play --game g.txt end_day
 
   --tools            Print the tools, each with its description and input
-                     schema, as the MCP server lists them. Needs no game.
+                     schema, as the MCP server lists them. With a game file
+                     that exists, or --scenario and --seat, the tools of
+                     that game's seat (a game may offer more: a dry run,
+                     orders inside a day); with neither, the common ones.
   --export-save F    Replay the game and write the saved game (which
                      `sim-cli replay` runs with no player). Only once the
                      game is over: a saved game holds both sides' orders.
@@ -433,8 +436,37 @@ pub fn command(args: &[String]) -> Result<(), String> {
         return Ok(());
     }
     if tools {
+        // The tools of this game's seat, where a game is named: a game
+        // file that exists, or a scenario and a seat. A seat is offered
+        // tools by its game (a trial, orders inside a day, a seat at a
+        // command), so the list that needs no game leaves those out.
+        let header = match game {
+            Some(file) if Path::new(file).exists() => {
+                let text = std::fs::read_to_string(file).map_err(|e| format!("{file}: {e}"))?;
+                Some(read_calls(&text, file)?.0)
+            }
+            _ => None,
+        };
+        let opened = match (&header, scenario, seat) {
+            (Some(header), _, _) => {
+                Some((header.scenario.clone(), header.seat, header.at, header.seed))
+            }
+            (None, Some(scenario), Some(seat)) => {
+                Some((scenario.to_string(), seat, at.unwrap_or(Post::Area), seed))
+            }
+            _ => None,
+        };
+        let list = match opened {
+            Some((scenario, seat, at, seed)) => {
+                let seats = BTreeMap::from([(seat, SeatKind::Player)]);
+                let posts = BTreeMap::from([(seat, at)]);
+                let (session, _) = serve::open(&scenario, seed, seats, &posts)?;
+                tool_list_for(&session.tools(seat))
+            }
+            None => tool_list(),
+        };
         let mut text = String::new();
-        for tool in tool_list() {
+        for tool in list {
             text.push_str(&format!(
                 "TOOL {}\n{}\n\ninput schema:\n{}\n\n",
                 tool["name"].as_str().unwrap_or_default(),
