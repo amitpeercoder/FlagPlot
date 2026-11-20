@@ -110,3 +110,12 @@ Built on Nov 20, 2026, with decision 0179, on the branch `claims-types-and-tally
 **Figures the hand calculation asks the build to report.** The base raid's first morning with a second Allied group (group 6, 6 fighters, on patrol over base 2), the Allied claim's list: at chances 0, group 3: 3 shot down, group 6: 1; at chances 1, group 3: 12, group 6: 6, base 2: 20; at the placeholder chances, group 3: 4, group 6: 2, base 2: 1. Days 2 and 3: at 0, 1 and 2, then 3, 1 and base 2 3; at 1, 9, 6, 20, then 7, 6, 20; at the placeholder chances 1, 2, 1, then 3, 1, 4. In each the patrol groups' lines add to the claim less the guns', and neither group is credited with more shots than it had on patrol.
 
 **What the table will need.** A claim's line can say who claims what from `claimed_by` (the briefing's, or the export's), each unit as the seat names it; an air group's card can show `claimed_to_date`. A claim of a side's own never names an enemy unit, and no answer carries an enemy group's tally.
+
+## The architect's rulings
+
+Read on Nov 20, 2026, with the build's core: what a side may see of a claim's units is decided in `side_events.rs`, the claim's owner alone; no view gives a side an enemy group; and the agent's source test is unchanged.
+
+1. **Row 5 of the parting table was the architect's error,** corrected by him in the test file's doc comment: a hit that is cut is neither a real aircraft nor a miss and is never claimed, so the claims are 4 and 1 and add to the firing's own. No other number of the hand calculation was changed.
+2. **The readings of "As built" stand,** each as made; rule 12 as read (reading 5): an air group or a task force must be in the picture and of the claim's side, a base in the picture and of either.
+3. **The claim's event names its units as its entities,** on the architect's word after the build's first report (reading 7): a group's own listing of events, and the table's diary of one unit, now hold its claims. No hash moved by it.
+4. **Tests that compare the whole truth across settings of the claim chances** now set the groups' tallies aside (0179's reading 8). Right: a tally is a record of claims, and moves with them.

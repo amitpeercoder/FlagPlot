@@ -107,3 +107,11 @@ Built on Nov 20, 2026, on the branch `claims-types-and-tally`, from the head of 
 9. **The replay export test** (`crates/sim-cli/tests/export_pictures.rs`) is re-pinned: the ten exports of the commit before were made again and compared with these; they differ in the state version, the day hashes and, in scenarios 5, 31, 50 and 58, in the claims' words, `claimed_by`, `ground_types` and a claim's breakdown factors, and in nothing else.
 
 **What the table will need.** A claim's line can name the types after the number on the ground, from `ground_types` in the briefing or the export.
+
+## The architect's rulings
+
+Read on Nov 20, 2026, with the build's core: the hand calculation in `tests/scenario_98_the_type_claimed_on_the_ground.rs` is as the architect wrote it and no number was changed; the new draw is `Draw::ClaimType`, added at the end; and what a side may see of a claim's types is decided in `side_events.rs`, the claim's owner alone.
+
+1. **The readings of "As built" stand,** each as made.
+2. **Decision 0167's two properties on scenario 6a are restated** (reading 7), and the two chances are not parted. This record chose to use decision 0167's chance, and what follows from that is that the chance now also moves the raiders' own claim. The attacked side is still told nothing new by it, and no fight is resolved differently.
+3. **"A type named was on the field"** is tested against the groups at the base with any aircraft at the start of the day, a little wider than the field (reading 5). It stands as a test; the function's own rows hold the rule exactly.
