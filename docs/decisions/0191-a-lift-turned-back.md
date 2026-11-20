@@ -133,3 +133,13 @@ Built on Nov 20, 2026 on the branch `lift-turned-back`, to rules 1 to 10 as amen
 
 **Not done.** Later lifts and a hold's lifts are not turned back (reading 1). A lift turned back that goes on from the sea and needs more supply than it has aboard is given a load it cannot take under way, as today for any lift not at its source. Scenario 105's 1,000 games are the architect's to run.
 
+## The architect's rulings on the build
+
+Read on Nov 20, 2026: the build's report, its "As built" and the core of the new step (the danger, the table by risk, what it reads).
+
+1. **The order to do no cargo work stands** as the build made it, on the architect's word during the build: a force under way could not otherwise have its order to unload taken away.
+2. **The readings of "As built" stand.** Three are narrower or stricter than the plan and are accepted as they are: only a take's first lift is read, before any of its men are ashore, so a later lift and a hold's lift are not turned back; the check before first sailing uses the test of two clear mornings, since without state a lift kept at its source cannot be told from one about to sail; and the words "the danger has passed for two mornings" are read from the side's own notice once the contact has dropped out of the picture.
+3. **It reads a side's view and its own events and nothing else.**
+4. **One game moved,** of the 158 scenario files played with the rule on and off: the Coral Sea, staff against staff. On its own seed the convoy is turned back on day 3, kept back on day 4, sent on on day 5 and never lands, and a decisive Japanese victory by 42.46 becomes a minor Allied victory by 11.2. That is one seed; the run of 1,000 is the architect's, in four cells with decision 0190.
+5. **Owed:** a test of the escort's part of "hurt" (a ship of a force keeping station on the lift), which no statement covered; and a lift sent on from the sea that needs more supply than is aboard is given a load it cannot take, as any lift away from its source is today.
+6. **Not checked by the architect:** the full run after the build's last fixes and its merge of main, which the pull request's checks make.
