@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 20, 2026, at the designer's aski
 
 Summary: The 39 days are lopsided: in seven games between agents the Allied side won all seven decisively, because its landing arrives on the first day and the Japanese fleet on the seventeenth. The designer asked for a second scenario of about five days, small and interesting, that either side can win. This is the Eastern Solomons, 22 to 26 August 1942: three Japanese carriers against two American and an airfield, with a Japanese troop convoy that must reach Guadalcanal. It is made almost wholly of what the repository holds. It is played from orders by a commander or a staff on each side, has no scripted orders, and its points are set after a first run so that the results are spread. Six questions for the designer
 
-Standing: Confirmed by the designer on Nov 20, 2026, as amended on review: five days from 23 August, on the game's one scale of points, with a first run of staffs shown to him before any scale of its own. Built on Nov 20, 2026 (scenario 103); its first run is reported, and the build's readings and one mismatch with the hand calculation wait for the architect
+Standing: Confirmed by the designer and built on Nov 20, 2026. The first run of 1,000 games of staffs is no contest yet (the Allied side wins 846): a second version of the orders is the architect's to make, and whether landing the convoy is to score is put to the designer
 
 ## Why
 
@@ -196,3 +196,19 @@ Built on Nov 20, 2026 to the hand calculation in `tests/scenario_103_the_eastern
 19. **A directive for each side for the table** ("What is built") is not built: the mission sentences stand for it.
 
 **Not verified.** The landing hour by hour against the calculation's times (only the rates and the staff's projection are checked); the four games between agents of rule 19; a seat played beyond opening, listing its tools and answering `trial`; CI on the pushed commit.
+
+## The architect's rulings on the build
+
+Read on Nov 20, 2026, with the build's report, its "As built" and the report of the first run.
+
+1. **The mismatch was the architect's mistake,** and is corrected by him in the hand calculation: a placeholder transport has 600 berths, so the 800 men of the Yokosuka 5th are 600 on transport 3 and 152 and 48 on two destroyers, and transport 3 lands its 600 in 4 hours 37 minutes. The test left ignored is replaced by one of the corrected statement.
+2. **The readings of "As built" stand,** among them: the class files of the 39 days loaded so that its file of sides loads; ships out of action in place of ships crippled, which a scenario may not have both of; Lunga's guns and repairs and Rabaul's supply taken from the 39 days; and Tulagi given a stock of its own, a placeholder, so that its men are fed. That the four files' test runs Python, which CI has, stands.
+3. **The first run shows no contest yet, and the scenario is not changed in its light by this build.** Of 1,000 games of staff against staff the Allied side won 846, the Japanese 26, with 128 stalemates. The counts say why:
+   - **the convoy landed whole in every game** and a transport was sunk in 5: it sails by night and is sighted only beyond strike range, Lunga's dive bombers search and do not strike, and no Allied order strikes ships from Lunga;
+   - **landing it is worth 0.45 points:** 90 t of supply, and men landed score nothing;
+   - **Lunga was shut on some day in 14 games:** the bombers go without escort, since the order names them alone, and rest after two or three raids;
+   - **the convoy does not leave** when it has landed: the hold names no base to return to;
+   - the carriers do meet, in most games, and that part is a fight: a carrier is sunk on one side or the other in about a third of the games each.
+4. **What is the architect's to mend, in a second version of the orders a side the engine plays is given:** the Japanese hold names the base the convoy returns to; the order to neutralise Lunga names Rabaul's fighters with its bombers; and the Allied side is given an order to deny the waters north of Guadalcanal, so that Lunga's dive bombers and the carriers strike what comes down. Each is an order of the game as it stands. They are made in a second build, with the 1,000 games run again and both runs kept.
+5. **What is the designer's:** landing the convoy scores almost nothing, because the game has no objective for men put ashore. Whether to add one, and whether this scenario is then to have points of its own, is put to him with both runs.
+6. **Not seen:** a game from a seat beyond its opening, and games between agents.

@@ -113,7 +113,11 @@
 //!   so.
 //! - **Three land units aboard,** fighting units: 350 and 350 men of the
 //!   Ichiki Detachment's second echelon on transports 1 and 2, and 800 of
-//!   the Yokosuka 5th Special Naval Landing Force on transport 3.
+//!   the Yokosuka 5th Special Naval Landing Force: 600 on transport 3,
+//!   which has 600 berths, and the rest on the destroyers in the force's
+//!   order, 152 on Kagero and 48 on Kawakaze. (Corrected by the architect
+//!   on Nov 20, 2026, on the build's report: this put all 800 on
+//!   transport 3, which cannot carry them.)
 //! - **Supply aboard:** 30 t on each transport, 90 t, a placeholder (no
 //!   row gives a figure): 1,500 men x 0.005 t x 12 days.
 //!
@@ -125,7 +129,7 @@
 //! 20 t an hour, and for men landing unprepared 0.13 of that, 2.6 t an
 //! hour for each ship. A man is 0.02 t, so a ship lands 130 men an hour.
 //! Transports 1 and 2 land their 350 men in 350 / 130 hours, 2 hours 42
-//! minutes; transport 3 its 800 in 6 hours 9 minutes.
+//! minutes; transport 3 its 600 in 4 hours 37 minutes.
 //!
 //! ## The rest of the forces
 //!
@@ -902,18 +906,23 @@ fn transports_1_and_2_carry_350_men_each() {
     }
 }
 
-/// Transport 3 carries the 800 of the Yokosuka 5th Special Naval Landing
-/// Force, as the hand calculation states. THE BUILD FINDS A MISMATCH: the
-/// class has 600 berths, and the loader puts 600 of the 800 on transport 3,
-/// 152 on Kagero and 48 on Kawakaze (the force's ships in order, a ship
-/// carrying the men of one unit only). Reported to the architect; this test
-/// keeps the statement as written and is ignored until he rules.
+/// The 800 of the Yokosuka 5th Special Naval Landing Force are 600 on
+/// transport 3, which has 600 berths, and the rest on the destroyers: 152
+/// and 48 (the hand calculation as the architect corrected it).
 #[test]
-#[ignore = "mismatch with the hand calculation, reported to the architect: transport 3 has 600 berths"]
-fn transport_3_carries_the_800_of_the_yokosuka_5th() {
+fn the_800_of_the_yokosuka_5th_are_600_on_transport_3_and_the_rest_on_destroyers() {
     let t = start('a');
-    let troops = t.ships[&ship(39)].troops.expect("men aboard");
-    assert_eq!((troops.unit, troops.men), (unit(29), 800));
+    let on_3 = t.ships[&ship(39)].troops.expect("men aboard");
+    assert_eq!((on_3.unit, on_3.men), (unit(29), 600));
+    let mut men: Vec<u32> = t
+        .ships
+        .values()
+        .filter_map(|s| s.troops)
+        .filter(|troops| troops.unit == unit(29))
+        .map(|troops| troops.men)
+        .collect();
+    men.sort_unstable();
+    assert_eq!(men, vec![48, 152, 600]);
 }
 
 // --------------------------------------------------------- The rest of the forces
