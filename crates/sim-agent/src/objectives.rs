@@ -78,6 +78,11 @@ pub struct ObjectiveLine {
     /// being the side's own at the end (`base_held`); or each 100 enemy men
     /// lost (`men_lost`, decision 0090, 26).
     pub points: Option<Dec>,
+    /// For `cargo_landed` only (left out for every other kind): the points
+    /// for a thousand tons, which is `points` times 1,000. The text gives the
+    /// worth by this, since the worth of one ton reads as nothing.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub points_per_1000_t: Option<Dec>,
     /// What the side knows of its progress, from its own units and the events
     /// it may see.
     pub known: KnownLine,
@@ -110,6 +115,11 @@ pub struct EnemyObjectiveLine {
     /// Points for one aircraft, one ton, the base as wanted on every day, the
     /// base held at the end or each 100 men; `None` for the ship objectives.
     pub points: Option<Dec>,
+    /// For `cargo_landed` only (left out for every other kind): the points
+    /// for a thousand tons, which is `points` times 1,000. The text gives the
+    /// worth by this, since the worth of one ton reads as nothing.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub points_per_1000_t: Option<Dec>,
 }
 
 /// Whether a base counts as open at the end of today, from the side's own
@@ -276,6 +286,7 @@ fn line(
         ship_points: Vec::new(),
         horizon_days: None,
         points: None,
+        points_per_1000_t: None,
         known: KnownLine {
             basis: known.basis.name(),
             count: Dec(known.count),
@@ -293,7 +304,10 @@ fn line(
             line.horizon_days = horizon_days;
         }
         Objective::AircraftDestroyed { points } => line.points = Some(Dec(*points)),
-        Objective::CargoLanded { points_per_t, .. } => line.points = Some(Dec(*points_per_t)),
+        Objective::CargoLanded { points_per_t, .. } => {
+            line.points = Some(Dec(*points_per_t));
+            line.points_per_1000_t = Some(Dec(*points_per_t * 1000));
+        }
         Objective::BaseOpen {
             base,
             closed,
@@ -323,6 +337,7 @@ fn enemy_line(
         ship_points: Vec::new(),
         horizon_days: None,
         points: None,
+        points_per_1000_t: None,
     };
     match objective {
         Objective::ShipsSunk(points) | Objective::ShipsCrippled(points) => {
@@ -335,7 +350,10 @@ fn enemy_line(
         Objective::AircraftDestroyed { points } | Objective::BaseHeld { points, .. } => {
             line.points = Some(Dec(*points))
         }
-        Objective::CargoLanded { points_per_t, .. } => line.points = Some(Dec(*points_per_t)),
+        Objective::CargoLanded { points_per_t, .. } => {
+            line.points = Some(Dec(*points_per_t));
+            line.points_per_1000_t = Some(Dec(*points_per_t * 1000));
+        }
         Objective::BaseOpen { closed, points, .. } => {
             line.closed = Some(*closed);
             line.points = Some(Dec(*points));

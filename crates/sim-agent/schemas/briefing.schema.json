@@ -149,6 +149,10 @@
           "description": "For ships_out_of_action only (left out for every other kind): the days of the horizon its shares are of (decision 0088), at least 1.",
           "type": "integer"
         },
+        "points_per_1000_t": {
+          "description": "For cargo_landed only (left out for every other kind): the points for a thousand tons, which is points times 1,000. The text gives the worth by this.",
+          "$ref": "defs.schema.json#/$defs/dec"
+        },
         "points": {
           "description": "Points for one aircraft, one ton, the base as wanted on every day, the base held at the end or each 100 men; null for the ship objectives.",
           "$ref": "defs.schema.json#/$defs/dec_or_null"
@@ -207,6 +211,10 @@
         "horizon_days": {
           "description": "For ships_out_of_action only (left out for every other kind): the days of the horizon its shares are of (decision 0088), at least 1.",
           "type": "integer"
+        },
+        "points_per_1000_t": {
+          "description": "For cargo_landed only (left out for every other kind): the points for a thousand tons, which is points times 1,000. The text gives the worth by this.",
+          "$ref": "defs.schema.json#/$defs/dec"
         },
         "points": {
           "description": "Points for one aircraft, one ton or the base being as wanted; null for the ship objectives.",
