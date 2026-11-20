@@ -1121,6 +1121,8 @@ def home(args, chart, coast, names):
             directive = first_directive(os.path.join(ROOT, file))
         if directive:
             words += f" Your directive, from the {directive[0]}: {directive[1]}"
+        elif entry.get("sides", {}).get(side):
+            words += f" Your mission: {entry['sides'][side]}"
         words += (
             " Play the game to its end: go on until a call answers that the game is over. Read "
             "nothing but what the tools tell you: not the game's files, not the scenario, nothing "
@@ -1141,17 +1143,37 @@ def home(args, chart, coast, names):
         nothing else is taken (amended 3)."""
         door = hand.person_door
         hold = min(args.hold, PERSON_HOLD)
-        if tool != "wait":
+        if tool == "wait":
+            # The held call stays with the door until an answer is given, so
+            # a page loaded again picks the wait up where the last one left it.
             with door.lock:
-                held = door.held is not None
-            if held:
+                slot = door.held
+            if slot is None:
+                return {"refused": "nothing waits: you have no call held"}
+        elif tool in TIME_TOOLS:
+            slot = hand.game.send({"seat": hand.person, "tool": tool, "arguments": arguments or {}})
+            with door.lock:
+                door.held = slot
+            hand.poke.set()
+        else:
+            # Whether his seat has finished is the game's own word, asked each
+            # time: a call of time is held from the moment it is sent.
+            standing = hand.game.ask({"watcher": "standing"}).get("ok") or {}
+            mine = next((s for s in standing.get("seats", []) if s.get("seat") == hand.person), {})
+            if mine.get("ready"):
                 if tool not in hand.reads:
                     return {
                         "refused": "you have finished, and cannot do that until the clock has moved: "
                         "you may read meanwhile"
                     }
                 return hand.game.ask({"watcher": "read", "side": hand.person, "tool": tool, "arguments": arguments})
-        return seat_call(hand.game, door, tool, arguments, hold, sent=hand.poke.set)
+            return seat_call(hand.game, door, tool, arguments, hold, sent=hand.poke.set)
+        if not slot.done.wait(hold):
+            return waiting_words(hand.person, tool if tool != "wait" else "call")
+        with door.lock:
+            if door.held is slot:
+                door.held = None
+        return slot.answer()
 
     def standing_for_person(hand):
         """Where the game stands, as the person may be told it: his own seat,
@@ -1164,6 +1186,8 @@ def home(args, chart, coast, names):
         seats = []
         for seat in full.get("seats", []):
             if seat.get("seat") == hand.person:
+                with hand.person_door.lock:
+                    seat = dict(seat, held=hand.person_door.held is not None)
                 seats.append(seat)
             else:
                 side = seat.get("seat")

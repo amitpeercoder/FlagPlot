@@ -2349,6 +2349,17 @@ body.watched .gives { display: none !important; }
     a.appendChild(f); box.appendChild(a);
   }
   function pollVersus() { return fetch(BASE + '/standing').then(function (r) { return r.json(); }).then(function (a) { if (a.ok) showVersus(a.ok); }).catch(function () {}); }
+  // A page loaded while its call of time is held picks the wait up again, and draws the answer's day once it comes.
+  function resumeVersus() {
+    return fetch(BASE + '/standing').then(function (r) { return r.json(); }).then(function (a) {
+      var mine = ((a.ok && a.ok.seats) || []).filter(function (x) { return x.seat === config.seat; })[0];
+      if (!mine || !mine.held || (a.ok && a.ok.game_over)) return;
+      playing = true; $('btn-go').textContent = 'Stop the clock'; $('btn-day').disabled = true; setStatus(finishedWords());
+      var rest = function (words) { playing = false; $('btn-go').textContent = 'Carry on'; $('btn-day').disabled = false; setStatus(words); };
+      return api('wait').then(function (r) { if (r && r.game_over) { M.over = true; M.result = r.result; } return refresh(); }).then(function () { rest(M.over ? 'The game is over.' : 'The clock has moved.'); })
+        .catch(function (e) { rest(''); return refresh().catch(function () {}); });
+    }).catch(function () {});
+  }
   function startVersus() {
     VERSUS = { other: config.versus.other, insideDay: config.versus.inside_day };
     setInterval(pollVersus, 2000); pollVersus();
@@ -2715,7 +2726,7 @@ body.watched .gives { display: none !important; }
     config = a[0]; hexes = a[1]; coast = a[2] && a[2].rings; chartNames = a[3]; headSeat();
     var ready = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
     if (config.home) { KEPT_ROOT += BASE + '-' + config.home.number; KEPT = KEPT_ROOT; $('btn-new').hidden = false; $('btn-agent').hidden = !config.home.agents.length; }
-    return ready.then(function () { layChart(); cur.zoom = 0; placeCamera(); requestAnimationFrame(frame); if (config.watch) return startWatch(); if (config.versus) startVersus(); return fetch(BASE + '/tools').then(function (r) { return r.json(); }).then(function (names) { names.forEach(function (n) { OFFERED[n] = true; }); $('btn-stops').hidden = !OFFERED.advance; if (OFFERED.advance) $('btn-day').textContent = 'Next pulse'; return refresh(); }); });
+    return ready.then(function () { layChart(); cur.zoom = 0; placeCamera(); requestAnimationFrame(frame); if (config.watch) return startWatch(); if (config.versus) startVersus(); return fetch(BASE + '/tools').then(function (r) { return r.json(); }).then(function (names) { names.forEach(function (n) { OFFERED[n] = true; }); $('btn-stops').hidden = !OFFERED.advance; if (OFFERED.advance) $('btn-day').textContent = 'Next pulse'; return refresh().catch(function (e) { if (!VERSUS || !/waits for the clock/.test(e.message)) throw e; }).then(function () { if (VERSUS) resumeVersus(); }); }); });
   });
   }).then(function () { if (onScreen) return; var shown = true; try { shown = localStorage.getItem('flagplot.hint.look') === '1'; localStorage.setItem('flagplot.hint.look', '1'); } catch (e) {} setStatus(shown ? '' : 'Drag to look along the table; scroll to lean in.'); })
     .catch(function (e) { fatal('The table could not reach the game: ' + e.message); });

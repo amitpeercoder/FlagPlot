@@ -35,6 +35,14 @@ import urllib.request
 HERE = os.path.dirname(os.path.abspath(__file__))
 SIDES = ("allied", "japanese")
 COUNT = {"held": 0}
+# What the page calls through /call when it loads and on every refresh (index.html, refresh()).
+PAGE_LOAD_CALLS = [
+    ("list_forces", {}),
+    ("list_bases", {}),
+    ("list_contacts", {}),
+    ("command_state", {}),
+    ("get_briefing", {"text": False}),
+]
 
 
 def check(holds, words):
@@ -165,7 +173,8 @@ def the_screen(bridge):
           "the brief gives the side, its directive, to play to the end and to read nothing else")
     check(len(seat["notes"]) == 3 and "fifty seconds" in seat["notes"][2], "the person is told the three things beside them")
     jap = get(bridge.table + "/agent?side=japanese&scenario=guadalcanal-39-days")["ok"]
-    check("directive" not in jap["brief"], "a side with no directive is given none in its brief")
+    check("directive" not in jap["brief"] and "Your mission: Hold Lunga and Tulagi" in jap["brief"],
+          "a side with no directive is given the scenario's mission for it in its brief")
     check("no game is in hand" in Agent(seat["door"]).call("list_forces")["refused"], "a door with no game in hand refuses")
     check("not offered" in begin(bridge, "eastern-solomons", "person", "agent")["refused"],
           "a game the list does not offer is refused (the Eastern Solomons, a person against an agent)")
@@ -248,10 +257,24 @@ def person_against_agent(bridge, hold):
     text = json.dumps(get(bridge.table + "/config")) + json.dumps(get(bridge.table + "/standing"))
     check(not any(name in text for name in theirs), "neither the config nor the standing names anything of the agent's side")
 
-    # A call of time held: reads allowed as his own side, a preview refused.
+    # A call of time held: from the moment it is sent, every call the page makes on load and on refresh
+    # is answered (as his own side), before the door's wait is up and after.
     t = later(person.raw, "run", {"days": 1})
-    t.join(hold + 30)
+    check(wait_until(lambda: [s for s in get(bridge.table + "/standing")["ok"]["seats"] if s["seat"] == "allied"][0].get("held")),
+          "the standing tells the page its call is held")
+    for when in ("at once", "after the door's wait"):
+        if when != "at once":
+            t.join(hold + 30)
+        for path in ("/config", "/map", "/standing", "/tools"):
+            check(http("GET", bridge.table + path)[0] == 200, f"on load while held ({when}): {path} answered")
+        for tool, arguments in PAGE_LOAD_CALLS:
+            answer = person.raw(tool, arguments)
+            check("ok" in answer, f"on load and refresh while held ({when}): {tool} answered")
     check(t.answer.get("waiting") is True, f"the person's run, the agent not finished, answers that it waits after {min(hold, 20)} s")
+    # A page loaded again picks the wait up, and is answered when the clock moves.
+    reloaded = later(person.call, "wait")
+    time.sleep(0.5)
+    check(reloaded.is_alive() or reloaded.answer.get("ok") is None, "a reloaded page's wait is held")
     standing = get(bridge.table + "/standing")["ok"]
     check(standing["waiting_for"] == ["japanese"], "the standing says the other commander is waited for")
     while_held = {f["task_force"]["name"] for f in person.raw("list_forces")["ok"]["task_forces"]}
@@ -262,8 +285,11 @@ def person_against_agent(bridge, hold):
     check(get(bridge.table + "/standing")["ok"]["clock"]["day"] == 1, "the clock has not moved")
     agent_end = agent.through("end_day", {"reason": "nothing yet"})
     check(agent_end["ok"]["resolved"] is True and agent_end["ok"]["day"] == 1, "the agent finishes; the bridge steps; its end_day answered")
-    answer = person.call("wait")["ok"]
-    check(answer["kind"] == "run" and answer["days_resolved"]["count"] == 1, "the person's wait gives his run's answer: one day")
+    reloaded.join(60)
+    answer = reloaded.answer["ok"]
+    check(answer["kind"] == "run" and answer["days_resolved"]["count"] == 1,
+          "the reloaded page's wait is answered when the clock moves: his run's answer, one day")
+    check("refused" in person.raw("wait"), "once given, nothing waits")
 
     # A few days: the agent ready for three, the person a day at a time.
     a = later(agent.through, "run", {"days": 3})
