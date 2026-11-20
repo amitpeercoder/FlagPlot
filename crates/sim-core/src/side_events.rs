@@ -880,7 +880,10 @@ pub(crate) fn seen(kind: &EventKind, side: Side, owners: &Owners, knows_fight: b
         // (decisions 0056 and 0135). The types it names were on the enemy's
         // field and are what the raiders made out (decision 0179, 9); the
         // units it names are the side's own, with what each claims (decision
-        // 0180, 9). Both are the claim, seen by whoever sees the claim.
+        // 0180, 9). Both are the claim, seen by whoever sees the claim. The
+        // event's entities are those units, the side's own, so a side sees
+        // them with its own claim and the enemy, who is not given the event,
+        // never does.
         EventKind::ClaimReceived {
             side: owner,
             hex: _,

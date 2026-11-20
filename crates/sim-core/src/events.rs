@@ -2207,8 +2207,12 @@ impl EventKind {
             | EventKind::ForceBrokeOff { task_force, .. } => {
                 vec![EntityRef::TaskForce(*task_force)]
             }
-            // A side is not an entity: the claim names no force or ship.
-            EventKind::ClaimReceived { .. } => Vec::new(),
+            // A side is not an entity, and the claim names no enemy unit: it
+            // names the side's own units that claim, in the order of its list
+            // (decision 0180, on the architect's word), and nothing else.
+            EventKind::ClaimReceived { by_unit, .. } => {
+                by_unit.iter().map(|line| line.unit).collect()
+            }
             EventKind::ShipsDetached {
                 parent,
                 new_force,

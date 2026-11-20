@@ -99,7 +99,7 @@
 //! | group 3: 8, group 7: 4 | 12 | the 2nd and 9th | 2 | 8 and 4 | 1 and 1 | 8 and 4 |
 //! | group 3: 1, group 7: 1 | 1 | none | 0 | 1 and 0 (a tie goes to the lower number) | 0 and 0 | 1 and 0 |
 //! | group 3: 5, group 7: 5 | 3 | the 3rd | 1 | 2 and 1 (1.5 each: 1 and 1, the one left to group 3) | 0 and 1 | 2 and 1 |
-//! | group 3: 8, group 7: 4 | 6 | the 1st, 5th and 6th | 2 | 4 and 2 | 1 and 1 (the cut comes off the last shot) | 4 and 2 |
+//! | group 3: 8, group 7: 4 | 6 | the 1st, 5th and 6th | 2 | 4 and 2 | 1 and 1 (the cut comes off the last shot) | 4 and 1 (the shot that is cut is neither real nor a miss, and is not claimed) |
 //! | group 3: 12 | 6 | the 1st | 1 | 6 | 1 | 6 |
 //!
 //! Row 1: 6 x 8 / 12 = 4 and 6 x 4 / 12 = 2; group 3 has shots 1 to 4,
@@ -530,9 +530,6 @@ fn the_parting_of_a_firing_is_the_table_of_the_hand_calculation() {
             vec![1, 5, 6],
             2,
             vec![part(g3, 4, 1, 3), part(g7, 2, 1, 0)],
-            // The hand calculation gives 4 and 2: see the build's report.
-            // Group 7's shots both hit and one is cut; it has no shot that
-            // missed, so at chance 1 it claims its 1 real aircraft.
             vec![4, 1],
         ),
         (
@@ -550,12 +547,7 @@ fn the_parting_of_a_firing_is_the_table_of_the_hand_calculation() {
         // At false chance 1 a group claims its real aircraft and every shot
         // of its own that missed.
         let at_one: Vec<u32> = parts.iter().map(|p| p.real + p.missed).collect();
-        // Row 5's claims are not asserted against the hand calculation:
-        // the hand calculation and the rule disagree there (the build's
-        // report, reading 1).
-        if index != 4 {
-            assert_eq!(&at_one, claimed, "row {}", index + 1);
-        }
+        assert_eq!(&at_one, claimed, "row {}", index + 1);
         // The shots and the real aircraft add to the firing's own; so do
         // the claims, the firing's own being its real aircraft and its
         // shots that missed.
