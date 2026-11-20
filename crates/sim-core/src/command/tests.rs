@@ -4478,3 +4478,131 @@ fn a_chain_of_afters_that_is_not_a_ring_is_taken_in() {
         Some(intent(3))
     );
 }
+
+// ---- the targets limit (decision 0190) ----
+
+fn targets(n: u32, kinds: &[ShipKind], waters_first: bool) -> CommandKind {
+    CommandKind::SetLimit(Limit::Targets {
+        intent: intent(n),
+        targets: Some(TargetsLimit {
+            kinds: kinds.to_vec(),
+            waters_first,
+        }),
+    })
+}
+
+fn deny_intent(n: u32) -> CommandKind {
+    CommandKind::SetIntent {
+        intent: intent(n),
+        kind: IntentKind::Deny {
+            hex: Hex::new(4, 0),
+            distance: 1,
+        },
+    }
+}
+
+#[test]
+fn a_targets_limit_is_taken_read_up_the_tree_and_cleared() {
+    let mut world = world();
+    player(&mut world, deny_intent(1)).unwrap();
+    assert_eq!(state(&world, A).targets_read_up(intent(1)), None);
+    let kinds = [ShipKind::Transport, ShipKind::Carrier];
+    player(&mut world, targets(1, &kinds, true)).unwrap();
+    let (found, on) = state(&world, A).targets_read_up(intent(1)).unwrap();
+    assert_eq!(
+        (found.kinds.as_slice(), found.waters_first, on),
+        (&kinds[..], true, intent(1))
+    );
+    // A child formed by the staff reads its parent's; its own replaces it,
+    // and is not refused as wider.
+    player(&mut world, CommandKind::Approve { plan: plan(1) }).unwrap();
+    player(&mut world, CommandKind::Approve { plan: plan(1) }).unwrap();
+    staff(
+        &mut world,
+        CommandKind::FormIntent {
+            parent: intent(1),
+            kind: IntentKind::StrikeShips { base: base(1) },
+        },
+    )
+    .unwrap();
+    assert_eq!(
+        state(&world, A).targets_read_up(intent(2)).unwrap().1,
+        intent(1)
+    );
+    player(&mut world, targets(2, &ShipKind::ALL, true)).unwrap();
+    let (found, on) = state(&world, A).targets_read_up(intent(2)).unwrap();
+    assert_eq!(
+        (found.kinds.clone(), on),
+        (ShipKind::ALL.to_vec(), intent(2))
+    );
+    assert_eq!(
+        state(&world, A).targets_read_up(intent(1)).unwrap().1,
+        intent(1)
+    );
+    // Cleared with no kinds.
+    player(
+        &mut world,
+        CommandKind::SetLimit(Limit::Targets {
+            intent: intent(1),
+            targets: None,
+        }),
+    )
+    .unwrap();
+    assert_eq!(state(&world, A).intents[&intent(1)].limits.targets, None);
+    assert!(state(&world, A).is_or_under_deny(intent(2)));
+}
+
+#[test]
+fn a_targets_limit_is_refused_for_a_kind_twice_none_or_waters_first_off_a_deny() {
+    let mut world = world();
+    player(&mut world, set_intent(1)).unwrap();
+    player(&mut world, deny_intent(2)).unwrap();
+    refused(
+        &mut world,
+        Issuer::Player,
+        targets(2, &[ShipKind::Carrier, ShipKind::Carrier], false),
+        CommandRefusal::BadTargetKinds(intent(2)),
+    );
+    refused(
+        &mut world,
+        Issuer::Player,
+        targets(2, &[], false),
+        CommandRefusal::BadTargetKinds(intent(2)),
+    );
+    refused(
+        &mut world,
+        Issuer::Player,
+        targets(1, &[ShipKind::Transport], true),
+        CommandRefusal::NoWatersFirstOn(intent(1)),
+    );
+    refused(
+        &mut world,
+        Issuer::Player,
+        targets(9, &[ShipKind::Transport], false),
+        CommandRefusal::NoSuchIntent(intent(9)),
+    );
+    // Without the switch any intent takes it; on an approved plan it amends.
+    player(&mut world, CommandKind::Approve { plan: plan(1) }).unwrap();
+    player(&mut world, targets(1, &[ShipKind::Transport], false)).unwrap();
+    assert!(matches!(
+        &state(&world, A).plans[&plan(1)].amendments[0].change,
+        AmendmentChange::Limit(Limit::Targets { .. })
+    ));
+}
+
+#[test]
+fn the_denies_naming_a_force_are_those_whose_nearest_forces_limit_names_it() {
+    let mut world = world();
+    player(&mut world, deny_intent(1)).unwrap();
+    player(&mut world, deny_intent(2)).unwrap();
+    let mut named = forces(&[], &[1]);
+    named.source = None;
+    player(&mut world, set_forces(2, named)).unwrap();
+    let found: Vec<IntentId> = state(&world, A)
+        .denies_naming(tf(1))
+        .iter()
+        .map(|i| i.id)
+        .collect();
+    assert_eq!(found, vec![intent(2)]);
+    assert!(state(&world, A).denies_naming(tf(2)).is_empty());
+}

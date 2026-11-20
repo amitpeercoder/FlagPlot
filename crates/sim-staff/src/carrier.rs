@@ -1744,6 +1744,45 @@ mod tests {
         assert_eq!(first_wanted(Risk::Balanced, &[a]), None);
     }
 
+    fn in_waters(mut c: Held) -> Held {
+        c.in_waters = true;
+        c
+    }
+
+    #[test]
+    fn a_contact_in_the_waters_is_closed_on_first_of_any_kind_but_at_preserve() {
+        let reach = Fixed::from_int(250);
+        let night = Fixed::from_int(360);
+        // A cruiser in the waters beyond reach; a carrier outside them in
+        // reach: at balanced and at press the force leaves to close on the
+        // cruiser (decision 0190, 15 and 32).
+        let cruiser = in_waters(held(1, 12, ShipKind::Cruiser, 0));
+        let carrier = held(2, 5, ShipKind::Carrier, 0);
+        for risk in [Risk::Balanced, Risk::Press] {
+            assert_eq!(
+                closing(risk, reach, night, &[cruiser, carrier]),
+                Closing::CloseOn(cruiser),
+                "{risk:?}"
+            );
+        }
+        assert_eq!(
+            closing(Risk::Preserve, reach, night, &[cruiser, carrier]),
+            Closing::Preserve
+        );
+        // Outside the waters a cruiser is not closed on at balanced, as today.
+        let plain = held(1, 12, ShipKind::Cruiser, 0);
+        assert_eq!(
+            closing(Risk::Balanced, reach, night, &[plain]),
+            Closing::NothingOfKind
+        );
+        // Two in the waters: the kind, then the nearest.
+        let transport = in_waters(held(3, 11, ShipKind::Transport, 0));
+        assert_eq!(
+            first_wanted(Risk::Balanced, &[transport, cruiser]),
+            Some(cruiser)
+        );
+    }
+
     #[test]
     fn where_it_goes_and_how_fast() {
         let path: Vec<Hex> = (1..=12).map(|q| Hex { q, r: 0 }).collect();

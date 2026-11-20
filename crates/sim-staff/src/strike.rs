@@ -587,6 +587,70 @@ mod tests {
         assert_eq!(contact_age(Risk::Balanced, 1), 1);
     }
 
+    fn limited(kinds: &[ShipKind], waters: &[Hex]) -> StrikeTargets {
+        StrikeTargets {
+            kinds: Some((kinds.to_vec(), IntentId::new(1))),
+            waters: waters.iter().copied().collect(),
+            denies: Vec::new(),
+        }
+    }
+
+    #[test]
+    fn a_targets_limit_sets_the_list_at_every_risk_and_the_waters_after_it() {
+        let kinds = [ShipKind::Transport, ShipKind::Carrier];
+        let waters = [Hex::new(4, 0), Hex::new(5, 0)];
+        for risk in [Risk::Preserve, Risk::Balanced, Risk::Press] {
+            let orders = decide(risk, 0, &limited(&kinds, &waters), &[bomber(1)]);
+            let list = orders
+                .iter()
+                .position(|(_, o)| {
+                    *o == AirGroupOrder::SetTargetPriority {
+                        kinds: kinds.to_vec(),
+                    }
+                })
+                .expect("the list is ordered");
+            let set = orders
+                .iter()
+                .position(|(_, o)| {
+                    *o == AirGroupOrder::SetStrikeFirstWaters {
+                        hexes: waters.to_vec(),
+                    }
+                })
+                .expect("the waters are ordered");
+            assert_eq!(set, list + 1, "{risk:?}");
+        }
+    }
+
+    #[test]
+    fn with_no_limit_nothing_new_is_ordered_and_waters_left_over_are_cleared() {
+        for risk in [Risk::Preserve, Risk::Balanced, Risk::Press] {
+            assert!(decide(risk, 0, &none(), &[bomber(1)])
+                .iter()
+                .all(|(_, o)| !matches!(o, AirGroupOrder::SetStrikeFirstWaters { .. })));
+        }
+        let mut had = bomber(1);
+        had.waters = [Hex::new(4, 0)].into_iter().collect();
+        assert!(decide(Risk::Balanced, 0, &none(), &[had]).contains(&(
+            AirGroupId::new(1),
+            AirGroupOrder::SetStrikeFirstWaters { hexes: vec![] }
+        )));
+    }
+
+    #[test]
+    fn the_six_kinds_in_the_default_order_give_the_orders_of_no_limit_at_balanced_and_press() {
+        for risk in [Risk::Balanced, Risk::Press] {
+            assert_eq!(
+                decide(
+                    risk,
+                    1,
+                    &limited(&ShipKind::ALL, &[]),
+                    &[bomber(1), bomber(2)]
+                ),
+                decide(risk, 1, &none(), &[bomber(1), bomber(2)])
+            );
+        }
+    }
+
     #[test]
     fn a_tired_bomber_rests() {
         let mut tired = bomber(1);
