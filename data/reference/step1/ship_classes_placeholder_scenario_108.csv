@@ -1,0 +1,16 @@
+# FROZEN: a copy of data/reference/ship_classes_placeholder_scenario_108.csv
+# as it stood when scenario 108 was built, on Nov 20, 2026, for the hand-calculation tests
+# (docs/step2-spec.md, "Tests while figures move"). Do not edit. A rule that adds a
+# new figure adds it here too, with its first value. Otherwise byte for byte the live file.
+# PLACEHOLDER DATA. These two classes are invented for scenario 108
+# (decision 0192, tests/scenario_108_a_station_kept_from_the_sea.rs), whose
+# hand calculation needs a cruise of 15 knots and a full speed of 30 knots.
+# They are not historical and must not be used for validation. Class 15 is
+# class 1 of ship_classes.csv and class 16 is class 2, each with a cruise
+# speed of 15 and a top speed of 30 knots, every other column as the class it
+# copies. Only scenario 108 names this file, so that no other scenario's data
+# hashes move. The columns are those of ship_classes.csv, which says what each
+# is.
+id,name,kind,cruise_speed_kn,max_speed_kn,fuel_capacity_t,endurance_nm,cargo_capacity_t,main_guns,gun_rounds_per_min,gun_rounds_per_gun,gun_damage,torpedo_tubes,torpedo_tubes_one_side,torpedo_damage,toughness,radar,aircraft_capacity,anti_aircraft
+15,"Placeholder cruiser, 15 knots",cruiser,15,30,2000,8000,0,8,3,100,20,8,8,200,400,0,0,0
+16,"Placeholder destroyer, 15 knots",destroyer,15,30,500,4000,0,4,6,150,5,8,8,200,100,0,0,0

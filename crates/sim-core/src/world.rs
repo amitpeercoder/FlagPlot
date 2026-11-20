@@ -153,11 +153,13 @@ impl Default for MadeIds {
 /// 0191 (the order to do no cargo work, which a game saved under the old
 /// rules could not hold, and a lift turned back for carriers near its way,
 /// which changes games with a take and a carrier contact held near its
-/// lift). A pull request
+/// lift) and 22 from decision 0192 (a stand's force with no home port
+/// stands from where it is, and one with a home port stopped at sea goes
+/// home, which changes games with such a stand). A pull request
 /// raises it by one
 /// when it changes a rule in a way that changes what an existing game would do; a
 /// change that leaves every existing game as it was leaves it alone.
-pub const RULES_VERSION: u32 = 21;
+pub const RULES_VERSION: u32 = 22;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct SimConfig {

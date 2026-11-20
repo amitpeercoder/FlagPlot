@@ -1,0 +1,38 @@
+# PLACEHOLDER MAP. A stretch of open sea with a few coast hexes that carry a
+# port, used by scenario 108 (decision 0192). The force G lies at (0,0); its
+# stations lie east along the q axis, 4, 8, 12 and 20 hexes away, at (4,0),
+# (8,0), (12,0) and (20,0). Base B is at (4,5), 5 hexes from (4,0); base B2 is
+# at (4,2), 2 hexes from it; base B3 is at (0,1), next to G. The geography is
+# invented.
+
+placeholder = true
+
+# Ranges are inclusive.
+[[region]]
+kind = "deep_sea"
+q = [-6, 30]
+r = [-6, 12]
+
+# Stands in for scenario 108's base B.
+[[hex]]
+q = 4
+r = 5
+kind = "coast"
+port_size = 3
+anchorage = true
+
+# Stands in for scenario 108's base B2.
+[[hex]]
+q = 4
+r = 2
+kind = "coast"
+port_size = 3
+anchorage = true
+
+# Stands in for scenario 108's base B3.
+[[hex]]
+q = 0
+r = 1
+kind = "coast"
+port_size = 3
+anchorage = true

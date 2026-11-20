@@ -116,7 +116,7 @@
       "hash": "3b3353e3ccc0e0d7"
     }
   ],
-  "doctrine_version": "supply-43",
+  "doctrine_version": "supply-44",
   "format": "flagplot-saved-game",
   "hashes": [
     {
@@ -201,7 +201,7 @@
     }
   ],
   "orders": [],
-  "rules_version": 21,
+  "rules_version": 22,
   "scenario": {
     "file": "data/scenarios/43_keep_two_bases_fed.toml",
     "hash": "0a6c6a34dbb4fcd2"
