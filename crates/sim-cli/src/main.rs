@@ -111,7 +111,9 @@ Usage: sim-cli run <scenario.toml> [--events] [--seed N] [--save <game.json>] [-
             report, by default docs/validation/<battle>-<label>.md, with the
             verdict on each measure. Refuses a batch with no label, of another
             version or state hash layout, or whose inputs no longer match the
-            files on disk (give the same --reference). With a measures file
+            files on disk (give the same --reference), and a batch of a
+            scenario for play (decision 0187: its results are not for the
+            record). With a measures file
             alone, for a scenario not built, every measure is reported as not
             run. With --passages it works each ship passage of a passages file as
             one calculation (the miles the rules charge between two hexes, at
@@ -969,7 +971,12 @@ fn print_result(world: &sim_core::World) {
         return;
     };
     println!();
-    println!("Result (the placeholder scale of decision 0054):");
+    // A scenario for play has a scale of its own (decision 0187, 22).
+    if world.objectives().is_some_and(|o| o.for_play) {
+        println!("Result (the scenario's own scale, for play):");
+    } else {
+        println!("Result (the placeholder scale of decision 0054):");
+    }
     for side in [Side::Allied, Side::Japanese] {
         let r = result.side(side);
         let parts: Vec<String> = r

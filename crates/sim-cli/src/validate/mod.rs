@@ -27,6 +27,10 @@ use report::{Head, Row};
 
 /// A label becomes part of a file name, so it is letters, digits, dot, dash
 /// and underscore.
+fn for_play_refusal(file: &str) -> String {
+    format!("{file} is a scenario for play (decision 0187): its results are not for the record, so validate does not judge it")
+}
+
 fn label_ok(label: &str) -> bool {
     !label.is_empty()
         && label
@@ -155,6 +159,11 @@ pub fn command(
     }
     let batch: Batch = serde_json::from_slice(&batch_bytes)
         .map_err(|e| format!("{batch_path}: not a batch file of version 5 (decision 0062): {e}"))?;
+    // A scenario for play is not judged (decision 0187, 22), whatever the
+    // file says: the scenario is checked below once it is loaded.
+    if batch.for_play {
+        return Err(for_play_refusal(batch_path));
+    }
     // 2. The label is the tuning round.
     let label = match batch.label.as_deref() {
         None => {
@@ -180,6 +189,9 @@ pub fn command(
     // 4. The inputs against the files on disk.
     let scenario = sim_data::Scenario::load_with(Path::new(&batch.scenario.file), options)
         .map_err(|e| e.to_string())?;
+    if scenario.world.objectives().is_some_and(|o| o.for_play) {
+        return Err(for_play_refusal(&batch.scenario.file));
+    }
     let now = crate::save::inputs(&batch.scenario.file, &scenario)?;
     if now.scenario_hash != batch.inputs.scenario_hash {
         return Err(format!(

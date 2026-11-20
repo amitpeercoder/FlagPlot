@@ -137,6 +137,14 @@ as wanted, no longer 1 or 0, and a new field `days` beside it says how many
 days were counted; the points are the objective's points times `count` over
 `days`. `days` is null for every other objective.
 
+Version 33 (decision 0186) adds the kind `men_landed`. It counts the men the
+side's own ships land in the hex of the named base and do not take off
+again, unit by unit and never below 0; its points are for each 100 men
+(`points`), a part of 100 scoring its part. A base an objective names that
+is not on the reader's map, in an objective line, an enemy objective line or
+a result line, is given by its hex: `base.handle` is `"(q,r)"` and
+`base.name` is null.
+
 The fight ashore (decision 0090, see "The fight ashore" below) adds only fields
 and values, so `version` stays 3.
 
@@ -320,7 +328,7 @@ or a hash.
   (`null` until the game is over). A line gives the `kind` (`ships_sunk`,
   `ships_crippled`, `ships_out_of_action`, `aircraft_destroyed`, `cargo_landed`,
   `base_open`, and, added with the ground fight (decision 0090), `base_held` and
-  `men_lost`: see "The fight ashore" below), the
+  `men_lost`: see "The fight ashore" below; and, added in version 33, `men_landed`), the
   `base` where there is one, `closed` for `base_open`, the points (`ship_points`
   for each kind of ship, or `points` for one aircraft, one ton or the base), and
   `known`: what the side knows of its progress. `known.basis` is `exact` (the
