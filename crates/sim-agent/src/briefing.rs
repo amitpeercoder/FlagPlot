@@ -588,9 +588,62 @@ pub struct Claim {
     /// false. Left out when false.
     #[serde(skip_serializing_if = "is_false")]
     pub from_bombardment: bool,
+    /// The types of the aircraft claimed destroyed on the ground, by name,
+    /// each with its number, where the raiders made them out (decision
+    /// 0179). Left out where none is named.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub ground_types: Vec<ClaimedType>,
+    /// Who claims what (decision 0180): each own unit whose fire the claim
+    /// rests on, with what it claims, in the order it first fired. Left out
+    /// for a claim that names no unit.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub claimed_by: Vec<ClaimLine>,
     /// The event that told the side. `explain` on it shows the side's own
     /// firing it rests on.
     pub event: u32,
+}
+
+/// A type of aircraft named in a claim, and the number claimed of it
+/// (decision 0179).
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct ClaimedType {
+    pub aircraft_type: String,
+    pub aircraft: u32,
+}
+
+/// One unit's line in a claim (decision 0180): only what it claims is
+/// above 0.
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct ClaimLine {
+    pub unit: Handle,
+    /// Set for a unit no longer in the game. Left out otherwise.
+    #[serde(skip_serializing_if = "is_false")]
+    pub since_dissolved: bool,
+    pub shot_down: u32,
+    pub on_ground: u32,
+    pub hits: u32,
+}
+
+impl ClaimLine {
+    /// The unit as the seat's tools name it, and one no longer in the game
+    /// by its number, "since dissolved" (decision 0180, 10).
+    pub(crate) fn unit_text(&self) -> String {
+        if self.since_dissolved {
+            format!("{}, since dissolved", self.unit.handle)
+        } else {
+            self.unit.text()
+        }
+    }
+
+    pub(crate) fn as_unit_claim(&self) -> sim_core::claims::UnitClaim {
+        sim_core::claims::UnitClaim {
+            // Words only: the unit is said by `unit_text`.
+            unit: EntityRef::Place(0),
+            shot_down: self.shot_down,
+            on_ground: self.on_ground,
+            hits: self.hits,
+        }
+    }
 }
 
 /// A force away at the yard (decision 0069).
@@ -2979,8 +3032,27 @@ impl Day {
                         claimed_on_ground,
                         from_air,
                         from_bombardment,
+                        ground_types,
+                        by_unit,
                         ..
                     } => claims.push(Claim {
+                        ground_types: ground_types
+                            .iter()
+                            .map(|(aircraft_type, aircraft)| ClaimedType {
+                                aircraft_type: ctx.aircraft_type_name(*aircraft_type),
+                                aircraft: *aircraft,
+                            })
+                            .collect(),
+                        claimed_by: by_unit
+                            .iter()
+                            .map(|line| ClaimLine {
+                                unit: ctx.entity(line.unit),
+                                since_dissolved: !ctx.unit_in_game(line.unit),
+                                shot_down: line.shot_down,
+                                on_ground: line.on_ground,
+                                hits: line.hits,
+                            })
+                            .collect(),
                         place: ctx.place(*hex),
                         claimed_sunk: *claimed_sunk,
                         claimed_hits: *claimed_hits,

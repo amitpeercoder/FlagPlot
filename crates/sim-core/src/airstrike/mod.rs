@@ -145,7 +145,9 @@ use crate::events::{
 };
 use crate::fixed::Fixed;
 use crate::hex::Hex;
-use crate::ids::{AirGroupId, BaseId, ContactId, EntityRef, EventId, ShipId, TaskForceId};
+use crate::ids::{
+    AirGroupId, AircraftTypeId, BaseId, ContactId, EntityRef, EventId, ShipId, TaskForceId,
+};
 use crate::orders::{AirMission, Reach};
 use crate::pictures::{CommandRef, Holders};
 use crate::refdata::{AirCombatFigures, AttackWeapon, ShipKind, SurfaceCombatFigures};
@@ -449,6 +451,13 @@ struct FireRoll {
     /// For the escorts' fire at a patrol: the defending side and hex.
     patrol_of: Option<(Side, Hex)>,
     breakdown: Option<Breakdown>,
+    /// For fighters, each group that fires in the roll and the aircraft it
+    /// has in it, in order of group number: the groups the roll's shots are
+    /// parted among for the claim (decision 0180, 3). Empty for guns.
+    in_firing: Vec<(AirGroupId, u32)>,
+    /// The shots that hit, counted from 1 in the order drawn (decision
+    /// 0180, 3).
+    hit_shots: Vec<u32>,
 }
 
 /// Everything one raid does in the air combat step, worked out on the state
@@ -483,6 +492,10 @@ enum MissKind {
     Gun,
 }
 
+/// One unit's part of a firing: the unit, what its shots really shot down
+/// and its whole shots that missed (decision 0180, 3 and 4).
+type FiringLine = (EntityRef, u32, u32);
+
 /// What one side's firing in one raid adds up to, for its claim (decision 2
 /// of 0056): the firing events of its own, the aircraft it really shot down
 /// and the whole shots that missed.
@@ -497,8 +510,22 @@ struct SideTally {
     causes: Vec<EventId>,
     /// Aircraft really lost to this side's fighters and guns in the raid.
     real_shot_down: u32,
-    /// Whole shots that missed, by firing event, in event order.
-    air_misses: Vec<(u32, MissKind)>,
+    /// Each firing event of fighters or guns, in event order: the false
+    /// claim chance its missed shots are claimed at, and for each unit it
+    /// is parted among, in order, what its shots really shot down and its
+    /// whole shots that missed (decision 0180, 3 and 4).
+    firings: Vec<(MissKind, Vec<FiringLine>)>,
+    /// The units that claim, in the order they first fired, a firing of
+    /// several groups giving them in the order of their numbers (decision
+    /// 0180, 1). Not the holders of the claim, which are `units`.
+    claimers: Vec<EntityRef>,
+    /// Each strike group that attacked, in the order the groups attacked:
+    /// its whole bombs or torpedoes, and what they really did (aircraft
+    /// destroyed on a base, hits on ships) (decision 0180, 5).
+    strikes: Vec<(AirGroupId, u32, u32)>,
+    /// Aircraft the bombs really destroyed on the ground, by the type of
+    /// the group on the ground they belonged to (decision 0179, 3).
+    real_on_ground_by_type: BTreeMap<AircraftTypeId, u32>,
     /// Bombs and torpedoes that really hit the ships attacked.
     hits: u32,
     /// Whole bombs and torpedoes that missed the ships attacked.
@@ -519,6 +546,13 @@ impl SideTally {
         }
         self.causes.push(event);
     }
+
+    /// Notes a unit that claims, in the order units first fire.
+    fn claims_for(&mut self, unit: EntityRef) {
+        if !self.claimers.contains(&unit) {
+            self.claimers.push(unit);
+        }
+    }
 }
 
 /// The claims one raid makes (decision 0056): what each side fired, as
@@ -529,6 +563,10 @@ struct RaidTally {
     target: RaidTarget,
     /// The kind the contact was taken for at the launch, for a raid on ships.
     taken_for: Option<ShipKind>,
+    /// For a raid on a base, the aircraft on the ground there as first
+    /// counted at the start of the step, by the type of each group, in
+    /// order of the type's number (decision 0179, 2). Empty otherwise.
+    field: Vec<(AircraftTypeId, u32)>,
     /// The raid's first strike group, the second part of each claim's key.
     first_group: AirGroupId,
     /// Every strike group of the raid, whose commands hold the attacking
@@ -563,19 +601,38 @@ impl RaidTally {
         };
         side.fired(unit, event);
         side.real_shot_down += real;
-        side.air_misses
-            .push((whole.saturating_sub(roll.hits), kind));
+        // A firing of fighters is parted among its groups shot by shot
+        // (decision 0180, 3); a firing of guns is its recorded unit's (4).
+        let parts: Vec<FiringLine> = if roll.in_firing.is_empty() {
+            vec![(unit, real, whole.saturating_sub(roll.hits))]
+        } else {
+            crate::claims::part_firing(&roll.in_firing, whole, &roll.hit_shots, real)
+                .into_iter()
+                .map(|part| (EntityRef::AirGroup(part.group), part.real, part.missed))
+                .collect()
+        };
+        for (unit, _, _) in &parts {
+            side.claims_for(*unit);
+        }
+        side.firings.push((kind, parts));
     }
 }
 
-/// The shots times chance of a roll: shots, expected hits, hits (decision 10
-/// of 0027, decision 0033, 3). Each shot is one draw from `stream`
-/// ([`roll_shots`]).
-fn roll_hits(stream: &mut RngStream, shots: u32, chance: Fixed) -> (Fixed, Fixed, u32) {
+/// The shots times chance of a roll: shots, expected hits, hits, and which
+/// shots hit, counted from 1 in the order drawn (decision 10 of 0027,
+/// decision 0033, 3, decision 0180, 3). Each shot is one draw from
+/// `stream`, as [`roll_shots`] draws them.
+fn roll_hits(stream: &mut RngStream, shots: u32, chance: Fixed) -> (Fixed, Fixed, u32, Vec<u32>) {
+    let mut hit_shots = Vec::new();
+    for shot in 1..=shots {
+        if stream.chance(chance) {
+            hit_shots.push(shot);
+        }
+    }
+    let hits = u32::try_from(hit_shots.len()).expect("few shots");
     let shots = Fixed::from_int(i64::from(shots));
     let expected = shots * chance;
-    let hits = roll_shots(stream, shots, chance);
-    (shots, expected, hits)
+    (shots, expected, hits, hit_shots)
 }
 
 /// The chance of one shot at aircraft: the base chance and the protection

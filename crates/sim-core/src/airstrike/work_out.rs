@@ -194,7 +194,8 @@ impl World {
                 target_entity,
             );
             let shot = self.shot_chance(air.fighter_hit_chance, first_patrol, air);
-            let (shots, expected, hits) = roll_hits(&mut stream, escort_count, shot.chance);
+            let (shots, expected, hits, hit_shots) =
+                roll_hits(&mut stream, escort_count, shot.chance);
             rolls.push(FireRoll {
                 fire: Fire::Fighters {
                     firer: first_escort,
@@ -209,6 +210,8 @@ impl World {
                 lost: Vec::new(),
                 patrol_of: Some((defending_side, first.hex)),
                 breakdown: breakdown(shots, shot, expected),
+                in_firing: escorts.clone(),
+                hit_shots,
             });
         }
         if let Some((first_patrol, _)) = patrol.first().copied() {
@@ -224,7 +227,8 @@ impl World {
             // A roll with no shots records nothing (decision 0080).
             if let Some((first_escort, _)) = escorts.first().copied().filter(|_| at_escorts > 0) {
                 let shot = self.shot_chance(air.fighter_hit_chance, first_escort, air);
-                let (shots, expected, hits) = roll_hits(&mut stream, at_escorts, shot.chance);
+                let (shots, expected, hits, hit_shots) =
+                    roll_hits(&mut stream, at_escorts, shot.chance);
                 rolls.push(FireRoll {
                     fire: Fire::Fighters {
                         firer: first_patrol,
@@ -239,6 +243,8 @@ impl World {
                     lost: take_hits(hits, &mut escorts),
                     patrol_of: None,
                     breakdown: patrol_breakdown(breakdown(shots, shot, expected)),
+                    in_firing: patrol.clone(),
+                    hit_shots,
                 });
             }
             let at_bombers = split.at_bombers;
@@ -288,7 +294,8 @@ impl World {
                     at: AirTarget::Bombers,
                 };
                 if before_shots > 0 {
-                    let (shots, expected, hits) = roll_hits(&mut stream, before_shots, shot.chance);
+                    let (shots, expected, hits, hit_shots) =
+                        roll_hits(&mut stream, before_shots, shot.chance);
                     rolls.push(FireRoll {
                         fire: fire.clone(),
                         shots,
@@ -298,13 +305,16 @@ impl World {
                         lost: take_hits(hits, &mut bombers),
                         patrol_of: None,
                         breakdown: bombers_breakdown(shots, expected),
+                        in_firing: patrol.clone(),
+                        hit_shots,
                     });
                 }
                 let after_shots = at_bombers - before_shots;
                 if after_shots > 0 {
                     // Rolled now, from the same stream, but its hits come off
                     // the bombers after the attack is worked out.
-                    let (shots, expected, hits) = roll_hits(&mut stream, after_shots, shot.chance);
+                    let (shots, expected, hits, hit_shots) =
+                        roll_hits(&mut stream, after_shots, shot.chance);
                     patrol_after_attack = Some(FireRoll {
                         fire,
                         shots,
@@ -314,6 +324,8 @@ impl World {
                         lost: Vec::new(),
                         patrol_of: None,
                         breakdown: bombers_breakdown(shots, expected),
+                        in_firing: patrol.clone(),
+                        hit_shots,
                     });
                 }
             }
@@ -404,7 +416,8 @@ impl World {
                     })
                 };
                 if before_shots > 0 {
-                    let (shots, expected, hits) = roll_hits(&mut stream, before_shots, shot.chance);
+                    let (shots, expected, hits, hit_shots) =
+                        roll_hits(&mut stream, before_shots, shot.chance);
                     rolls.push(FireRoll {
                         fire: fire.clone(),
                         shots,
@@ -414,13 +427,16 @@ impl World {
                         lost: take_hits(hits, &mut bombers),
                         patrol_of: None,
                         breakdown: guns_breakdown(shots, expected),
+                        in_firing: Vec::new(),
+                        hit_shots,
                     });
                 }
                 let after_shots = gun_shots - before_shots;
                 if after_shots > 0 {
                     // Rolled now, from the same stream, but its hits come off
                     // the bombers after the attack is worked out.
-                    let (shots, expected, hits) = roll_hits(&mut stream, after_shots, shot.chance);
+                    let (shots, expected, hits, hit_shots) =
+                        roll_hits(&mut stream, after_shots, shot.chance);
                     after_attack = Some(FireRoll {
                         fire,
                         shots,
@@ -430,6 +446,8 @@ impl World {
                         lost: Vec::new(),
                         patrol_of: None,
                         breakdown: guns_breakdown(shots, expected),
+                        in_firing: Vec::new(),
+                        hit_shots,
                     });
                 }
             }

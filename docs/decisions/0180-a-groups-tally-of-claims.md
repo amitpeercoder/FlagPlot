@@ -1,10 +1,10 @@
 # 0180: Who made a claim, and an air group's tally of its claims
 
-Status: a plan by the architect, written on Nov 20, 2026, at the designer's word ("it will be good to know which unit or air group did it ... keep record of that"). Read by a reviewer who had not seen it written, and amended on that reading ("Amended on review", at the end) before it is built.
+Status: a plan by the architect, written on Nov 20, 2026, at the designer's word ("it will be good to know which unit or air group did it ... keep record of that"). Read by a reviewer who had not seen it written, and amended on that reading ("Amended on review") before it was built. Built on Nov 20, 2026, with decision 0179 in one build (As built, at the end).
 
 Summary: A raid's claim is one number for a side: so many aircraft shot down, so many destroyed on the ground, so many hits. It now says which unit claims what, and each air group keeps a tally of what it has claimed since the game began. No draw is added and no claim's number changes: the claim is shared out among the units whose fire it rests on. What the tally does for a group's experience is left for the day air groups have one (decision 0064)
 
-Standing: A plan, written by the architect on Nov 20, 2026, and amended on review. To be built with decision 0179, in one build
+Standing: A plan, written by the architect on Nov 20, 2026, and amended on review. Built on Nov 20, 2026, with decision 0179. Its readings were ruled on by the architect on Nov 20, 2026
 
 ## Why
 
@@ -79,3 +79,43 @@ An independent reading of the plan and its hand calculation, against the code, f
 6. **The order of a list was left to the code.** It is given in rule 1 and in the hand calculation's tables.
 7. **A superior may read a lost claim in a tally.** Accepted, and said (rule 9).
 8. **The tally is one field,** not three, and "What it costs" names the places that change.
+
+## As built
+
+Built on Nov 20, 2026, with decision 0179, on the branch `claims-types-and-tally` (decision 0179's As built says from what). One rise of the state layout (49) and of the agent interface (30). No number or statement of the hand calculation was changed. Every statement of `tests/scenario_99_a_groups_tally_of_claims.rs` holds as written. The last cell of the fifth row of the parting table first said 4 and 2, which the rule does not give (reading 1); the architect corrected it to 4 and 1, and it is asserted.
+
+**What was built.**
+
+- **`sim-core`:** `claims::UnitClaim` (a unit, aircraft shot down, on the ground, hits) and `BattleClaim::by_unit`, the same on the event; `state::ClaimTally` and `AirGroup::claims`, added at the end; `claims::part_firing` (rule 3) and `claims::strike_lines` (rule 5), the rules' own functions. A roll of shots now gives which shots hit (`roll_hits`, the same draws as `roll_shots`); a roll of fighters carries the groups in the firing with their aircraft; a raid's tally keeps each firing's parts, each strike group's bombs or torpedoes and what they did, and the units that claim in the order they first fired, apart from the commands that hold the claim first (decision 0135, 1), which are unchanged. The false claims are drawn unit by unit and group by group on the claim's stream, the same draws in the same order as the one drawing before. Each group's tally takes its line as the claim is recorded. The words (one clause at the end), the hash (the claim's list after its types; the group's tally after `available_from`), `name_every_field`, `side_events.rs` (the event's fields named and decided: whole to its own side), a picture's claim and its check (rule 12), the surface fight's and the bombardment's claims (empty).
+- **`sim-data`, `sim-trial`:** a group starts at nothing, a trial's enemy's too.
+- **`sim-agent`:** a briefing's claim gains `claimed_by` (each unit's handle, `since_dissolved` where set, and its three numbers), left out where empty, and the clause in its words; an air group's line (`list_forces`, the briefing, `get_entity`) gains `claimed_to_date`, left out while nothing is claimed, and the text ", claimed to date: 7 shot down"; the seat's `events` and `explain` say a claim with the types by name and the units as the seat names them. Version 30, every schema and the schemas' README.
+- **`sim-cli`:** the replay export adds `claimed_by` (`unit`, `shot_down`, `on_ground`, `hits`) to `claim_received` where it is not empty. The batch record is unchanged.
+- **Tests:** `tests/scenario_99_a_groups_tally_of_claims.rs`, 14 tests; the tests that build a claim, an event of one or a group by hand gain the fields.
+- **Documents:** the rulebook's chapters 1, 3, 5, 8 and 9, the glossary, `docs/commands.md`, and the recorded games' README.
+
+**Readings** (decision 0179's are numbered 1 to 6 in its own As built; these are this record's).
+
+1. **The fifth row of the parting table** (the architect ruled the build right, and corrected the table's last cell to 4 and 1, now asserted). Group 3 has shots 1 to 4 (the 1st hits), group 7 shots 5 and 6 (both hit); the firing really shot down 2, so the cut comes off the 6th shot, and group 7 has 1 real and no shot that missed. By the rule, and as the code has claimed since decision 0056, a hit that is cut is neither a real aircraft nor a miss and is never claimed: at chance 1 group 7 claims 1, and the firing 5 (2 real and 3 missed). The table's 4 and 2 add to 6, which is not the firing's own; "no claim's number changes" and "in every row ... the claims add to the firing's own" both give 4 and 1. Built as 4 and 1; the test asserts the shots and the real aircraft of the row and that the claims add to the firing's own, and not the table's last column. For the architect.
+2. **A firing is one recorded firing event.** The patrol's shots at the bombers before the attack and after it (decision 0087) are two events and are parted each on its own, its first shot to the lowest group.
+3. **The aircraft in a firing:** for the escorts' fire, each escort group's escorts with the raid; for the patrol's, each group's whole patrol over the hex (not the raid's share of it, which is not by group). The shares are in proportion either way.
+4. **The units that claim are kept apart from the holders.** The commands that hold a claim first (decision 0135, 1) are still the first patrol group's, as before, so that with command levels on no report moves; the list names every group of the firing.
+5. **Rule 12** (the architect ruled this reading to stand) is read for each kind of unit: an air group or a task force named must be in the picture and of the claim's side (neither changes side, and neither leaves the state); a base must be in the picture, of either side, since a base may change hands after its guns claimed; any other kind of unit is refused. A unit the picture does not hold is refused.
+6. **"Since dissolved"** is said of a unit the seat's view no longer gives: an own air group or task force not in it, or a base not on the side's map. Groups and forces never leave the state today, so it is not met in any game played.
+7. **The event's units, on the architect's word** (his ruling on the build's report, Nov 20, 2026): a claim's event names as its entities the units of its list, in the list's order, and nothing else, so `sim-cli events --unit` and a seat's `events` give a claim under each group, force or base it names. Only the side that owns the claim is given the event, as before, so the enemy never sees them. Entities are not hashed, and no daily hash moved. Of the generated files none moved (no run baseline, golden, recorded game, pinned hash or batch fixture shows a claim's entities); what changes is the event listings themselves: the export's `entities` of a raid's claim (the export test re-pinned for scenarios 5, 31 and 50, each differing from before in those `entities` alone), a claim under a unit in `events --unit`, and the `entities` of a claim in a seat's `explain` and `events`. As first built the event named no entity.
+8. **"1 hit"** in the clause, as the rest of the claim says it.
+9. **"A tally is kept"** is tested by a group rebased on day 3 to a base added in the variant (it keeps 12, what it claimed on days 1 and 2), and by a group whose every aircraft is taken away in a picture after day 2 and that then plays day 3 (it keeps 0, 31, 0).
+10. **With command levels on** the property is tested on the base raid with command levels on and scenario 63's report figures: every command that holds group 3 holds its tally as of the moment it is held at.
+11. **"No answer of a seat's tools holds a tally of an enemy group"** is tested on the Allied briefing after the three days: the view gives only own groups, and neither Japanese tally is in it.
+
+**Figures the hand calculation asks the build to report.** The base raid's first morning with a second Allied group (group 6, 6 fighters, on patrol over base 2), the Allied claim's list: at chances 0, group 3: 3 shot down, group 6: 1; at chances 1, group 3: 12, group 6: 6, base 2: 20; at the placeholder chances, group 3: 4, group 6: 2, base 2: 1. Days 2 and 3: at 0, 1 and 2, then 3, 1 and base 2 3; at 1, 9, 6, 20, then 7, 6, 20; at the placeholder chances 1, 2, 1, then 3, 1, 4. In each the patrol groups' lines add to the claim less the guns', and neither group is credited with more shots than it had on patrol.
+
+**What the table will need.** A claim's line can say who claims what from `claimed_by` (the briefing's, or the export's), each unit as the seat names it; an air group's card can show `claimed_to_date`. A claim of a side's own never names an enemy unit, and no answer carries an enemy group's tally.
+
+## The architect's rulings
+
+Read on Nov 20, 2026, with the build's core: what a side may see of a claim's units is decided in `side_events.rs`, the claim's owner alone; no view gives a side an enemy group; and the agent's source test is unchanged.
+
+1. **Row 5 of the parting table was the architect's error,** corrected by him in the test file's doc comment: a hit that is cut is neither a real aircraft nor a miss and is never claimed, so the claims are 4 and 1 and add to the firing's own. No other number of the hand calculation was changed.
+2. **The readings of "As built" stand,** each as made; rule 12 as read (reading 5): an air group or a task force must be in the picture and of the claim's side, a base in the picture and of either.
+3. **The claim's event names its units as its entities,** on the architect's word after the build's first report (reading 7): a group's own listing of events, and the table's diary of one unit, now hold its claims. No hash moved by it.
+4. **Tests that compare the whole truth across settings of the claim chances** now set the groups' tallies aside (0179's reading 8). Right: a tally is a record of claims, and moves with them.

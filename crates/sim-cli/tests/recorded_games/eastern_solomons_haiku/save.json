@@ -35,7 +35,7 @@
   "hashes": [
     {
       "day": 1,
-      "hash": "fe207bfedf6c7d19"
+      "hash": "61ccfa5cd5b22437"
     }
   ],
   "orders": [
@@ -524,6 +524,6 @@
   },
   "seed": 1942,
   "staff": [],
-  "state_version": "flagplot-state-v48",
+  "state_version": "flagplot-state-v49",
   "version": 23
 }

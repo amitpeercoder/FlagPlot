@@ -25,11 +25,12 @@ An air group is one unit of aircraft of one aircraft type. It holds:
 - `reach`: normal or extended, default normal, and the order that set it (see "Radius and reach").
 - `stood_down`: whether the staff stood the group down today.
 - `rebased_day`: the day it last moved to another base by order, or none (see "Rebasing an air group").
+- `claims`: its tally of its claims, one thing of three counts: aircraft claimed shot down, aircraft claimed destroyed on the ground and hits claimed on ships. It is the sum of the group's lines in every raid's claim since the game began (chapter 3, What a raid's claim names). It starts at nothing, is kept when the group moves base, is rested, loses every aircraft or is lost (it is a record), and is hashed. Nothing reads it: what it will do for a group's experience waits for air groups to have one (decision 0064). Guns keep none, and a group made for a trial's enemy starts at nothing. [0180]
 - Its place: exactly one base or exactly one ship, or lost (see "A group lost with its base").
 
 [0025, 0035, 0036, 0038, 0041, 0059, 0090, 0091]
 
-A side sees: its own groups whole. The enemy sees nothing of a group except through a sighting report, a claim, or the fight events listed with each rule below.
+A side sees: its own groups whole, the tally of claims too: where command levels are on, a superior knows a group's tally as he knows its state, by its state reports (decision 0136), so he may read in it a claim that was itself lost on its way to him. The enemy sees nothing of a group except through a sighting report, a claim, or the fight events listed with each rule below, and never its tally. [0180]
 
 ### Where a group is
 
@@ -561,7 +562,7 @@ The people of a ship attacked from the air, or of a base raided, see what was dr
 
 **The sighting report.** After a strike group attacks ships, in step 5 and right after its damage lands, the attacking side receives a sighting report of the force attacked. Chapter 3, Reports from a strike, gives what it holds and how its errors are drawn. The event is `ReportReceived`, caused by the `AirAttack`. A strike at a base sends no report. What the report does to the contact the strike was sent at, and whether the group can strike it again, is in chapter 3, Reports from a strike. It reads the force after the damage. [0026, 0012]
 
-**The claim.** Step 6 makes the claims of the pulse's raids, the raiding side's first and then the defending side's, for each raid in order of its first strike group. A raid that found nothing makes none. Chapter 3, The claim after a raid from the air, gives who claims, what a claim counts and how its false counts are drawn. The claim is recorded as `ClaimReceived`, caused by the claimant's own firing events. [0056]
+**The claim.** Step 6 makes the claims of the pulse's raids, the raiding side's first and then the defending side's, for each raid in order of its first strike group. A raid that found nothing makes none. Chapter 3, The claim after a raid from the air, gives who claims, what a claim counts and how its false counts are drawn. The claim is recorded as `ClaimReceived`, caused by the claimant's own firing events. It names the types claimed on the ground and the units that claim, and each air group's line goes to its tally. [0056, 0179, 0180]
 
 A side sees: its own `ReportReceived` and `ClaimReceived`, whole. It never sees the enemy's.
 

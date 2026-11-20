@@ -36,13 +36,13 @@ LOSSES YESTERDAY
 - Ships damaged: none
 - Aircraft lost: air_group:1 "Placeholder defending fighters": 2 shot down [event 18]
 - Aircraft lost: air_group:2 "Placeholder resting bombers": 2 destroyed on the ground [event 20]
-- Claim over (5,0) Placeholder airfield B: 3 aircraft shot down [event 21]
+- Claim over (5,0) Placeholder airfield B: 3 aircraft shot down; claimed by air_group:1 "Placeholder defending fighters": 2 shot down; by base:2 "Placeholder airfield B": 1 shot down [event 21]
 
 TASK FORCES
 - Task forces: none
 
 AIR GROUPS
-- air_group:1 "Placeholder defending fighters" (Placeholder fighter) at base:2 "Placeholder airfield B" (5,0): 7 ready, radius 250 miles, search range 0 miles, mission combat air patrol
+- air_group:1 "Placeholder defending fighters" (Placeholder fighter) at base:2 "Placeholder airfield B" (5,0): 7 ready, radius 250 miles, search range 0 miles, mission combat air patrol, claimed to date: 6 shot down
 - air_group:2 "Placeholder resting bombers" (Placeholder dive bomber) at base:2 "Placeholder airfield B" (5,0): 8 ready, radius 250 miles, search range 0 miles, mission rest
 - air_group:3 "Placeholder scouts" (Placeholder carrier scout) at base:2 "Placeholder airfield B" (5,0): 6 ready, radius 0 miles, search range 300 miles, mission search
 

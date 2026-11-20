@@ -2,8 +2,8 @@ Placeholder scenario 51: An escort force
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash b9a2b270a094e293  21 events
-day   2  hash f0aa538ee65785fc  0 events
+day   1  hash f894f73b32c35f20  21 events
+day   2  hash 2ef6d68ae3563cd7  0 events
 
 task_force:1 "Placeholder cargo force 1" (Allied): Arrived at (5,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Placeholder escort force 2" (Allied): Arrived at (5,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port

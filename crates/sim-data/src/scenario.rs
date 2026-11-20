@@ -2598,6 +2598,8 @@ impl Scenario {
                 search_once: false,
                 search_once_order: None,
                 available_from: available_day(spec.available_from, id).map_err(&fail)?,
+                // Nothing claimed at the start of the game (decision 0180, 6).
+                claims: sim_core::state::ClaimTally::default(),
             };
             if truth.air_groups.insert(id, group).is_some() {
                 return Err(fail(format!("{id} appears twice")));

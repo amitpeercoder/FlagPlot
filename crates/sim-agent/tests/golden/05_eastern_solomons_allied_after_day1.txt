@@ -75,12 +75,12 @@ LOSSES YESTERDAY
 - Landed elsewhere: air_group:2 "VB-6" landed 16 aircraft at base:1 "Henderson Field", joining air_group:10 "VMSB-232" [event 63]
 - Landed elsewhere: air_group:3 "VS-5" landed 16 aircraft at base:1 "Henderson Field", joining air_group:10 "VMSB-232" [event 64]
 - Landed elsewhere: air_group:4 "VT-3" landed 14 aircraft at base:1 "Henderson Field", forming air_group:11 "VT-3 landed at base:1" [event 65]
-- Claim at (7,-9): 9 hits on a carrier, 1 sunk [event 55]
-- Claim at (7,-9): 10 hits on a carrier, 0 sunk [event 56]
-- Claim at (7,-9): 5 hits on a carrier, 0 sunk [event 57]
-- Claim over (7,-5): 30 aircraft shot down [event 58]
-- Claim over (7,-5): 21 aircraft shot down [event 59]
-- Claim over (2,-4) Henderson Field: 3 aircraft shot down [event 60]
+- Claim at (7,-9): 9 hits on a carrier, 1 sunk; claimed by air_group:2 "VB-6": 6 hits; by air_group:4 "VT-3": 3 hits [event 55]
+- Claim at (7,-9): 10 hits on a carrier, 0 sunk; claimed by air_group:6 "VB-3": 3 hits; by air_group:7 "VS-3": 3 hits; by air_group:8 "VT-8": 4 hits [event 56]
+- Claim at (7,-9): 5 hits on a carrier, 0 sunk; claimed by air_group:10 "VMSB-232": 5 hits [event 57]
+- Claim over (7,-5): 30 aircraft shot down; claimed by air_group:1 "VF-6": 7 shot down; by air_group:5 "VF-5": 8 shot down; by task_force:1 "Task Force 16": 15 shot down [event 58]
+- Claim over (7,-5): 21 aircraft shot down; claimed by air_group:1 "VF-6": 6 shot down; by air_group:5 "VF-5": 6 shot down; by task_force:1 "Task Force 16": 9 shot down [event 59]
+- Claim over (2,-4) Henderson Field: 3 aircraft shot down; claimed by air_group:9 "VMF-223": 3 shot down [event 60]
 
 TASK FORCES
 - task_force:1 "Task Force 16" at (7,-5): idle, carrier, speed cruise, readiness normal, not alert, 10 ships afloat
@@ -89,16 +89,16 @@ TASK FORCES
   - Least fuelled: ship:14 "USS Farragut" with 607 t, range 5240 miles at cruising speed
 
 AIR GROUPS
-- air_group:1 "VF-6" (Grumman F4F-4 Wildcat) at ship:1 "USS Enterprise" (7,-5): 0 ready, radius 105 miles, search range 105 miles, mission combat air patrol
-- air_group:2 "VB-6" (Douglas SBD-3 Dauntless) at ship:1 "USS Enterprise" (7,-5): 0 ready, radius 200 miles, search range 200 miles, mission naval strike
+- air_group:1 "VF-6" (Grumman F4F-4 Wildcat) at ship:1 "USS Enterprise" (7,-5): 0 ready, radius 105 miles, search range 105 miles, mission combat air patrol, claimed to date: 13 shot down
+- air_group:2 "VB-6" (Douglas SBD-3 Dauntless) at ship:1 "USS Enterprise" (7,-5): 0 ready, radius 200 miles, search range 200 miles, mission naval strike, claimed to date: 6 hits
 - air_group:3 "VS-5" (Douglas SBD-3 Dauntless) at ship:1 "USS Enterprise" (7,-5): 0 ready, radius 200 miles, search range 200 miles, mission search
-- air_group:4 "VT-3" (Grumman TBF-1 Avenger) at ship:1 "USS Enterprise" (7,-5): 0 ready, radius 190 miles, search range 190 miles, mission naval strike
-- air_group:5 "VF-5" (Grumman F4F-4 Wildcat) at ship:11 "USS Saratoga" (7,-5): 48 ready, radius 105 miles, search range 105 miles, mission combat air patrol
-- air_group:6 "VB-3" (Douglas SBD-3 Dauntless) at ship:11 "USS Saratoga" (7,-5): 14 ready, radius 200 miles, search range 200 miles, mission naval strike, would strike contact:1 now (cruiser, 160 miles)
-- air_group:7 "VS-3" (Douglas SBD-3 Dauntless) at ship:11 "USS Saratoga" (7,-5): 15 ready, radius 200 miles, search range 200 miles, mission naval strike, would strike contact:1 now (cruiser, 160 miles)
-- air_group:8 "VT-8" (Grumman TBF-1 Avenger) at ship:11 "USS Saratoga" (7,-5): 13 ready, radius 190 miles, search range 190 miles, mission naval strike, would strike contact:1 now (cruiser, 160 miles)
-- air_group:9 "VMF-223" (Grumman F4F-4 Wildcat) at base:1 "Henderson Field" (2,-4): 11 ready, radius 105 miles, search range 105 miles, mission combat air patrol
-- air_group:10 "VMSB-232" (Douglas SBD-3 Dauntless) at base:1 "Henderson Field" (2,-4): 42 ready, radius 200 miles, search range 200 miles, mission naval strike, would strike contact:1 now (cruiser, 200 miles)
+- air_group:4 "VT-3" (Grumman TBF-1 Avenger) at ship:1 "USS Enterprise" (7,-5): 0 ready, radius 190 miles, search range 190 miles, mission naval strike, claimed to date: 3 hits
+- air_group:5 "VF-5" (Grumman F4F-4 Wildcat) at ship:11 "USS Saratoga" (7,-5): 48 ready, radius 105 miles, search range 105 miles, mission combat air patrol, claimed to date: 14 shot down
+- air_group:6 "VB-3" (Douglas SBD-3 Dauntless) at ship:11 "USS Saratoga" (7,-5): 14 ready, radius 200 miles, search range 200 miles, mission naval strike, claimed to date: 3 hits, would strike contact:1 now (cruiser, 160 miles)
+- air_group:7 "VS-3" (Douglas SBD-3 Dauntless) at ship:11 "USS Saratoga" (7,-5): 15 ready, radius 200 miles, search range 200 miles, mission naval strike, claimed to date: 3 hits, would strike contact:1 now (cruiser, 160 miles)
+- air_group:8 "VT-8" (Grumman TBF-1 Avenger) at ship:11 "USS Saratoga" (7,-5): 13 ready, radius 190 miles, search range 190 miles, mission naval strike, claimed to date: 4 hits, would strike contact:1 now (cruiser, 160 miles)
+- air_group:9 "VMF-223" (Grumman F4F-4 Wildcat) at base:1 "Henderson Field" (2,-4): 11 ready, radius 105 miles, search range 105 miles, mission combat air patrol, claimed to date: 3 shot down
+- air_group:10 "VMSB-232" (Douglas SBD-3 Dauntless) at base:1 "Henderson Field" (2,-4): 42 ready, radius 200 miles, search range 200 miles, mission naval strike, claimed to date: 5 hits, would strike contact:1 now (cruiser, 200 miles)
 - air_group:11 "VT-3 landed at base:1" (Grumman TBF-1 Avenger) at base:1 "Henderson Field" (2,-4): 14 ready, radius 190 miles, search range 190 miles, mission rest
 
 BASES

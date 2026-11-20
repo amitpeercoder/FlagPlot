@@ -1700,6 +1700,8 @@ pub(super) fn describe(
             claimed_on_ground,
             from_air,
             from_bombardment,
+            ground_types,
+            by_unit,
         } => {
             let d = d
                 .text("side", names::side(*side))
@@ -1727,6 +1729,45 @@ pub(super) fn describe(
                 }
             } else {
                 d
+            };
+            // The types claimed on the ground (decision 0179) and who claims
+            // what (decision 0180), each only where the claim has any, so a
+            // claim without them exports as it did.
+            let d = if ground_types.is_empty() {
+                d
+            } else {
+                d.with(
+                    "ground_types",
+                    Field::Objs(
+                        ground_types
+                            .iter()
+                            .map(|(aircraft_type, aircraft)| {
+                                Data::new()
+                                    .int("aircraft_type", aircraft_type.raw())
+                                    .int("aircraft", *aircraft)
+                            })
+                            .collect(),
+                    ),
+                )
+            };
+            let d = if by_unit.is_empty() {
+                d
+            } else {
+                d.with(
+                    "claimed_by",
+                    Field::Objs(
+                        by_unit
+                            .iter()
+                            .map(|line| {
+                                Data::new()
+                                    .with("unit", Field::Str(line.unit.to_string()))
+                                    .int("shot_down", line.shot_down)
+                                    .int("on_ground", line.on_ground)
+                                    .int("hits", line.hits)
+                            })
+                            .collect(),
+                    ),
+                )
             };
             ("claim_received", d)
         }

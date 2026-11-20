@@ -2,8 +2,8 @@ Placeholder scenario 53: Deny an area
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 0b40af4d966176cb  68 events
-day   2  hash 8cfe6c3cb4b51265  7 events
+day   1  hash 85e6c5fe828c9e1a  68 events
+day   2  hash 3e55f0b5388e6e8c  7 events
 
 #1 D0 -         Allied report: 1 ship, carrier, at (0,4), held at the start: new contact:1
 #2 D0 -         Allied report: 2 ships, cruiser, at (3,0), held at the start: new contact:2

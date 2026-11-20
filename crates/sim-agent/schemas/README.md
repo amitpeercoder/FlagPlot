@@ -58,7 +58,7 @@ miles that can be a decimal, shots) is a decimal string such as `"12"` or
 
 ## The version rule
 
-`version` is 29. A field removed from an answer, or a field whose meaning
+`version` is 30. A field removed from an answer, or a field whose meaning
 changes, raises the version by one. A field added does not change it, so a
 reader must ignore fields it does not know. (The schemas here set
 `additionalProperties: false` because they describe this version exactly; a
@@ -1143,3 +1143,12 @@ cost the side and the trial's enemy, what the plan needs, what other plans it di
 worlds part. It gives no chance and no points, changes nothing in the game and is kept with the session. `trials` lists
 the estimates the seat was shown, each with whether it still stands, and given `{"estimate": N}` returns that stored
 `trial` answer again. A game with no trial lists the same tools as before, and its answers differ only in the version.
+
+## The types claimed on the ground, who claims what, and a group's tally (decisions 0179 and 0180)
+
+`version` is 30. A claim in the briefing's `claims` gains two fields, each left out when empty. `ground_types` names the
+types of the aircraft claimed destroyed on the ground, each `{"aircraft_type", "aircraft"}`, where the raiders made them
+out. `claimed_by` says who claims what: each of the side's own units whose fire the claim rests on, as `{"unit", "shot_down",
+"on_ground", "hits"}`, with `"since_dissolved": true` for a unit no longer in the game. An air group's line (in
+`list_forces`, the briefing, `get_entity`) gains `claimed_to_date`, `{"shot_down", "on_ground", "hits"}`, its tally of its
+claims since the game began, left out while it has claimed nothing. The words of the claim say the same things.

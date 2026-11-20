@@ -2,20 +2,20 @@ Placeholder scenario 96: The window
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash e95629cbcef6f0f1  9 events
-day   2  hash 7e7c8dd544f22e3b  9 events
-day   3  hash 699bc3503868ec2a  9 events
-day   4  hash 40677bc607d65069  9 events
-day   5  hash 87f1245fe9ef34ed  9 events
-day   6  hash c89db90e0549d556  9 events
-day   7  hash 1b6989b68f91d1c4  9 events
-day   8  hash 9160398845ae4d7a  9 events
-day   9  hash 6eca343e79bff759  9 events
-day  10  hash e08ce8abe79e9d36  9 events
-day  11  hash bc51b1657eea4311  6 events
-day  12  hash 17fce079b8d8dd0c  6 events
-day  13  hash 67731b726e0ef7e2  6 events
-day  14  hash f9c4eb2f9068fc0a  6 events
+day   1  hash 8b939c2e8bb40138  9 events
+day   2  hash 0e3e00c23afb8e92  9 events
+day   3  hash 6a20c87183431adf  9 events
+day   4  hash 1042438e72ef34a8  9 events
+day   5  hash c68f3093d8bbfd3c  9 events
+day   6  hash 0fe87c15aa89d1db  9 events
+day   7  hash 3482fb6f8d66ef61  9 events
+day   8  hash ee169da63b510e9b  9 events
+day   9  hash 14544e5e07bf27ec  9 events
+day  10  hash 6d78c4acd74a3513  9 events
+day  11  hash 7009fec6647f56cc  6 events
+day  12  hash 0308a0087f8ba3c9  6 events
+day  13  hash 7451192ecee22763  6 events
+day  14  hash 90a38da83dd3fff3  6 events
 
 #1 D1 night     base:1 spent 6 t of supply on 1200 men ashore for the day, 994 t left
 #2 D1 night     Allied men ashore at (0,0): 1200 of 1200 fed from base:1, 0 unfed  <- #1

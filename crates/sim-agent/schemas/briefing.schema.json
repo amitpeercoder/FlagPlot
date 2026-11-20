@@ -10,7 +10,7 @@
   "additionalProperties": false,
   "properties": {
     "format": { "const": "flagplot-agent" },
-    "version": { "const": 29 },
+    "version": { "const": 30 },
     "kind": { "const": "briefing" },
     "heading": { "$ref": "#/$defs/heading" },
     "objectives": { "$ref": "#/$defs/objectives" },
@@ -776,6 +776,35 @@
               "claimed_on_ground": { "type": "integer" },
               "from_air": { "type": "boolean" },
               "from_bombardment": { "description": "True for the claim of a shore bombardment (decision 0092, 17). Left out when false.", "type": "boolean" },
+              "ground_types": {
+                "description": "The types of the aircraft claimed destroyed on the ground, by name, each with its number, where the raiders made them out (decision 0179). Left out where none is named.",
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["aircraft_type", "aircraft"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "aircraft_type": { "type": "string" },
+                    "aircraft": { "type": "integer" }
+                  }
+                }
+              },
+              "claimed_by": {
+                "description": "Who claims what (decision 0180): each of the side's own units whose fire the claim rests on, with what it claims, in the order it first fired. Left out for a claim that names no unit.",
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["unit", "shot_down", "on_ground", "hits"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "unit": { "$ref": "defs.schema.json#/$defs/handle" },
+                    "since_dissolved": { "description": "True for a unit no longer in the game. Left out otherwise.", "const": true },
+                    "shot_down": { "type": "integer" },
+                    "on_ground": { "type": "integer" },
+                    "hits": { "type": "integer" }
+                  }
+                }
+              },
               "event": {
                 "description": "The event that told the side; explain on it shows the side's own firing it rests on.",
                 "type": "integer"

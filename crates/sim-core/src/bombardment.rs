@@ -741,7 +741,11 @@ impl World {
                 pool.push((group.id, Stock::Ready, group.ready));
             }
         }
-        let destroyed = self.apply_base_hits(day, Some(pulse), base, total, bombardment, &mut pool);
+        let destroyed: u32 = self
+            .apply_base_hits(day, Some(pulse), base, total, bombardment, &mut pool)
+            .iter()
+            .map(|(_, destroyed)| destroyed)
+            .sum();
 
         // The base's side sights the force (decision 7), on the first firing
         // ship's stream after its hits and where they landed.
@@ -858,6 +862,9 @@ impl World {
             from_air: false,
             from_bombardment: true,
             received_event: self.events.next_id(),
+            // A bombardment's claim names no type and no unit (decisions 0179, 6 and 0180, 8).
+            ground_types: Vec::new(),
+            by_unit: Vec::new(),
         };
         // The bombarding force holds its claim first (decision 0135, 1).
         let holders = Holders::Commands {
@@ -903,6 +910,8 @@ impl World {
                 claimed_on_ground,
                 from_air: false,
                 from_bombardment: true,
+                ground_types: Vec::new(),
+                by_unit: Vec::new(),
             },
             causes,
             breakdown,

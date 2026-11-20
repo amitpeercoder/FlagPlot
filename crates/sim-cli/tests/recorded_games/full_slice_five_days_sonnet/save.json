@@ -79,23 +79,23 @@
   "hashes": [
     {
       "day": 1,
-      "hash": "9bfe6d01b52c2c08"
+      "hash": "45b54c86541d7489"
     },
     {
       "day": 2,
-      "hash": "94e35edf712289fc"
+      "hash": "718bfd333d4750db"
     },
     {
       "day": 3,
-      "hash": "d2c332d320f2e7b4"
+      "hash": "75e8a324c0829f4f"
     },
     {
       "day": 4,
-      "hash": "b6e74b89414e6bfb"
+      "hash": "c38d59d41a4d8bbc"
     },
     {
       "day": 5,
-      "hash": "19753b4e6f54a7df"
+      "hash": "2d4bcef3636d89ec"
     }
   ],
   "orders": [
@@ -874,6 +874,6 @@
   },
   "seed": 1942,
   "staff": [],
-  "state_version": "flagplot-state-v48",
+  "state_version": "flagplot-state-v49",
   "version": 23
 }

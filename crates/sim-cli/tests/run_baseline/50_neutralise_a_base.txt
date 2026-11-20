@@ -2,18 +2,18 @@ Placeholder scenario 50: Neutralise a base
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 2a3a85b5bad7afa9  35 events
-day   2  hash bd2b1f893b5171de  16 events
-day   3  hash a39054d2993b8afa  16 events
-day   4  hash e027aeb5e2656e15  16 events
-day   5  hash 937f7c3ab957f39d  16 events
-day   6  hash 469702076f6abd69  16 events
-day   7  hash 134f1789b47603d9  16 events
-day   8  hash 9258aa744bfcc517  16 events
-day   9  hash aec33035c79ef890  14 events
-day  10  hash 62bceb4a013b4e61  20 events
-day  11  hash 40f13a5cac7b9993  16 events
-day  12  hash 998c851260076836  14 events
+day   1  hash 334d3515145260e5  35 events
+day   2  hash d0be4e837b3beb17  16 events
+day   3  hash 5b8ff69c274810e6  16 events
+day   4  hash 46b843c0a88a76f0  16 events
+day   5  hash 5ab4bee345020af1  16 events
+day   6  hash 5b77db95983cbef1  16 events
+day   7  hash 7d8cd61fcc219cb5  16 events
+day   8  hash 66502948ee0245be  16 events
+day   9  hash 72d8d17d97ead12d  14 events
+day  10  hash 5519ddaa65915f03  20 events
+day  11  hash ebec305c9616f39c  16 events
+day  12  hash 6ce37ebedd8a6bed  14 events
 
 air_group:1 "Placeholder dive bombers 1" (Allied) at base:1: 10 ready, mission Rest, fatigue 40, no arc
 air_group:2 "Placeholder fighters 2" (Allied) at base:1: 8 ready, mission CombatAirPatrol, patrol share 0, fatigue 40, no arc
@@ -21,15 +21,15 @@ air_group:3 "Placeholder dive bombers 3" (Allied) at base:1: 10 ready, mission R
 base:1 "Placeholder base 1" (Allied) at (0,0): 1000 t of supply in stock
 base:2 "Placeholder base 2" (Japanese) at (5,0): 0 t of supply in stock
 Allied: no contacts
-Allied claim at (5,0): 1 aircraft destroyed on the ground, day 1 morning
-Allied claim at (5,0): 2 aircraft destroyed on the ground, day 2 morning
-Allied claim at (5,0): 1 aircraft destroyed on the ground, day 3 morning
-Allied claim at (5,0): 2 aircraft destroyed on the ground, day 4 morning
-Allied claim at (5,0): 2 aircraft destroyed on the ground, day 5 morning
-Allied claim at (5,0): 2 aircraft destroyed on the ground, day 6 morning
+Allied claim at (5,0): 1 aircraft destroyed on the ground; claimed by air_group:3: 1 on the ground, day 1 morning
+Allied claim at (5,0): 2 aircraft destroyed on the ground; claimed by air_group:3: 2 on the ground, day 2 morning
+Allied claim at (5,0): 1 aircraft destroyed on the ground; claimed by air_group:3: 1 on the ground, day 3 morning
+Allied claim at (5,0): 2 aircraft destroyed on the ground; claimed by air_group:1: 2 on the ground, day 4 morning
+Allied claim at (5,0): 2 aircraft destroyed on the ground; claimed by air_group:1: 2 on the ground, day 5 morning
+Allied claim at (5,0): 2 aircraft destroyed on the ground; claimed by air_group:1: 1 on the ground; by air_group:3: 1 on the ground, day 6 morning
 Allied claim over (5,0): 0 aircraft shot down, day 7 morning
-Allied claim at (5,0): 1 aircraft destroyed on the ground, day 8 morning
-Allied claim at (5,0): 2 aircraft destroyed on the ground, day 10 morning
-Allied claim at (5,0): 2 aircraft destroyed on the ground, day 11 morning
+Allied claim at (5,0): 1 aircraft destroyed on the ground; claimed by air_group:1: 1 on the ground, day 8 morning
+Allied claim at (5,0): 2 aircraft destroyed on the ground; claimed by air_group:3: 2 on the ground, day 10 morning
+Allied claim at (5,0): 2 aircraft destroyed on the ground; claimed by air_group:1: 2 on the ground, day 11 morning
 Japanese: no contacts
 Japanese: no battle claims

@@ -145,6 +145,9 @@ impl World {
             from_air: false,
             from_bombardment: false,
             received_event: self.events.next_id(),
+            // A surface fight's claim names no type and no unit (decision 0180, 8).
+            ground_types: Vec::new(),
+            by_unit: Vec::new(),
         };
         // The force that fired holds the claim first (decision 0135, 1).
         let holders = Holders::Commands {
@@ -172,6 +175,8 @@ impl World {
                 claimed_on_ground: 0,
                 from_air: false,
                 from_bombardment: false,
+                ground_types: Vec::new(),
+                by_unit: Vec::new(),
             },
             vec![Cause::Event(ended)],
             None,

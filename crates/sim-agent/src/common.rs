@@ -290,6 +290,60 @@ impl<'a> Ctx<'a> {
                 &RecognisedWords(Some(*aircraft_type)).to_string(),
                 &format!("recognised as {}", self.aircraft_type_name(*aircraft_type)),
             ),
+            // A claim names types by the name its data has (decision 0179,
+            // 8) and units as the seat's tools name them, one no longer in
+            // the game "since dissolved" (decision 0180, 10). Each unit is
+            // written by the umpire's token, which the mapping below turns
+            // into the side's number.
+            SideEventKind::Whole(EventKind::ClaimReceived {
+                side,
+                hex,
+                claimed_sunk,
+                claimed_hits,
+                claimed_kind,
+                claimed_shot_down,
+                claimed_on_ground,
+                from_air,
+                from_bombardment,
+                ground_types,
+                by_unit,
+            }) if *from_air => {
+                let types: Vec<(String, u32)> = ground_types
+                    .iter()
+                    .map(|(t, n)| (self.aircraft_type_name(*t), *n))
+                    .collect();
+                let units: Vec<(String, sim_core::claims::UnitClaim)> = by_unit
+                    .iter()
+                    .map(|line| {
+                        let name = match line.unit {
+                            EntityRef::AirGroup(id) => self.groups.get(&id).map(|g| g.name.clone()),
+                            EntityRef::TaskForce(id) => {
+                                self.forces.get(&id).map(|f| f.name.clone())
+                            }
+                            other => self.entity(other).name,
+                        };
+                        let words = match (self.unit_in_game(line.unit), name) {
+                            (true, Some(name)) => format!("{} \"{name}\"", line.unit),
+                            (true, None) => line.unit.to_string(),
+                            (false, _) => format!("{}, since dissolved", line.unit),
+                        };
+                        (words, *line)
+                    })
+                    .collect();
+                sim_core::events::claim_words(
+                    *side,
+                    *hex,
+                    *claimed_sunk,
+                    *claimed_hits,
+                    *claimed_kind,
+                    *claimed_shot_down,
+                    *claimed_on_ground,
+                    *from_air,
+                    *from_bombardment,
+                    &types,
+                    &units,
+                )
+            }
             other => other.to_string(),
         };
         self.map_text(&text)
@@ -434,6 +488,20 @@ impl<'a> Ctx<'a> {
                 .get(&id)
                 .map(|b| b.name.clone())
                 .or_else(|| self.enemy_bases.get(&id).map(|b| b.name.clone())),
+        }
+    }
+
+    /// Whether a unit a claim names is still in the game (decision 0180,
+    /// 10): an own air group or task force the view still gives, or a base
+    /// of either side.
+    pub fn unit_in_game(&self, unit: EntityRef) -> bool {
+        match unit {
+            EntityRef::AirGroup(id) => self.groups.contains_key(&id),
+            EntityRef::TaskForce(id) => self.forces.contains_key(&id),
+            EntityRef::Base(id) => {
+                self.bases.contains_key(&id) || self.enemy_bases.contains_key(&id)
+            }
+            _ => false,
         }
     }
 

@@ -166,6 +166,16 @@ fn variant(name: &str, chances: [&str; 3], seed: Option<u64>, edits: &[(&str, &s
     }
 }
 
+/// The truth with every air group's tally of its claims (decision 0180)
+/// set to nothing: a record of the claims, which the chances move.
+fn without_tallies(truth: &sim_core::state::TruthState) -> sim_core::state::TruthState {
+    let mut truth = truth.clone();
+    for group in truth.air_groups.values_mut() {
+        group.claims = sim_core::state::ClaimTally::default();
+    }
+    truth
+}
+
 fn run(name: &str, chances: [&str; 3], seed: Option<u64>) -> World {
     run_edited(name, chances, seed, &[])
 }
@@ -397,7 +407,13 @@ fn the_fight_is_the_same_at_every_setting_of_the_chances() {
         let all = run(name, ALL, None);
         for other in [&none, &all] {
             assert_eq!(fight_events(&placeholder), fight_events(other), "{name}");
-            assert_eq!(placeholder.umpire(), other.umpire(), "{name}");
+            // An air group's tally of its claims (decision 0180) is the
+            // claims' own record, and so is all that may differ.
+            assert_eq!(
+                without_tallies(placeholder.umpire()),
+                without_tallies(other.umpire()),
+                "{name}"
+            );
             assert_eq!(
                 air_claims(&placeholder).len(),
                 air_claims(other).len(),

@@ -550,14 +550,25 @@ impl Briefing {
                     ev(x.event)
                 )
             } else if x.from_air {
+                let types: Vec<(String, u32)> = x
+                    .ground_types
+                    .iter()
+                    .map(|t| (t.aircraft_type.clone(), t.aircraft))
+                    .collect();
                 let (place, words) = sim_core::events::air_claim_words(
                     x.claimed_sunk,
                     x.claimed_hits,
                     x.taken_for,
                     x.claimed_shot_down,
                     x.claimed_on_ground,
+                    &types,
                 );
-                format!("Claim {place} {}: {words}{}", at(&x.place), ev(x.event))
+                format!(
+                    "Claim {place} {}: {words}{}{}",
+                    at(&x.place),
+                    claimed_by_text(&x.claimed_by),
+                    ev(x.event)
+                )
             } else {
                 format!(
                     "Claim: {} enemy sunk at {}{}",
@@ -990,6 +1001,9 @@ impl Briefing {
                         &a.waits_for
                     )
                 ));
+            }
+            if let Some(c) = &g.claimed_to_date {
+                s.push_str(&format!(", claimed to date: {}", claimed_parts(c)));
             }
             if let Some(w) = &g.would_strike {
                 s.push_str(&format!(
@@ -2638,4 +2652,30 @@ fn as_of_words(as_of: &Option<String>) -> String {
         Some(moment) => format!(" (as last reported, of {moment})"),
         None => String::new(),
     }
+}
+
+/// What an air group has claimed to date, in words (decision 0180, 6): only
+/// what it has claimed.
+fn claimed_parts(c: &crate::lines::ClaimedToDate) -> String {
+    let mut parts: Vec<String> = Vec::new();
+    if c.shot_down != 0 {
+        parts.push(format!("{} shot down", c.shot_down));
+    }
+    if c.on_ground != 0 {
+        parts.push(format!("{} on the ground", c.on_ground));
+    }
+    if c.hits != 0 {
+        parts.push(plural(c.hits, "hit", "hits"));
+    }
+    parts.join(", ")
+}
+
+/// The clause that names who claims what (decision 0180, 10), each unit as
+/// the seat's tools name it.
+fn claimed_by_text(lines: &[crate::briefing::ClaimLine]) -> String {
+    let units: Vec<(String, sim_core::claims::UnitClaim)> = lines
+        .iter()
+        .map(|line| (line.unit_text(), line.as_unit_claim()))
+        .collect();
+    sim_core::events::claimed_by_words(&units)
 }

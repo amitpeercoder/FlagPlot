@@ -15,7 +15,7 @@
       "const": "flagplot-agent"
     },
     "version": {
-      "const": 29
+      "const": 30
     },
     "kind": {
       "const": "briefing_text"
