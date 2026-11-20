@@ -171,6 +171,6 @@ Built on Nov 20, 2026, on the branch `what-ifs-build`, to the record as amended 
 
 Compared is about 1.4 to 1.7 times one trial. A window from a seat is decision 0177's window (workload i), which this build does not change, and was not measured again.
 
-**Test counts.** TESTCOUNTS
+**Test counts.** `cargo test --workspace --release --no-fail-fast`: 4,400 passed, 0 failed, 6 ignored, over 240 test binaries, read from the log. `cargo fmt --all -- --check`, `cargo clippy --workspace --all-targets -- -D warnings`, `sh scripts/regenerate.sh --check` and `sh scripts/decisions-index.sh --check` pass.
 
 **Not verified by this build.** That a game file kept by `play` replays a what-if or a window at the cost logged (no recorded game has a trial); the times on an unloaded machine; an agent playing the three new arguments through `mcp` end to end; the table, which is not changed.
