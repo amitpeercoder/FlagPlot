@@ -1223,14 +1223,18 @@ places = [{ base = 4 }]
 
 # ---------------------------------------------------------------------------
 # MISSIONS AND OBJECTIVES (decision 0054; decision 0184, rules 11 to 13 and
-# amended 13, 16 and 17). The game's one scale, the same worth for each kind
-# as scenarios 5 and 7 give it: every point value and level is a PLACEHOLDER.
-# Ships damaged are counted out of action over a horizon of 30 days, longer
-# than the game (decision 0088, 4), in the place of crippled. The history
-# note is scenario 5's.
+# amended 13, 16 and 17; decisions 0186 and 0187). A scenario for play
+# (decision 0187, 22): its scale is its own, and its results are not laid
+# beside the record or another scenario's. Each kind has the worth scenarios
+# 5 and 7 give it; men landed at Taivu, which they do not have, is given the
+# worth of a man lost (decision 0186, 11). Every point value and level is a
+# PLACEHOLDER. Ships damaged are counted out of action over a horizon of 30
+# days, longer than the game (decision 0088, 4), in the place of crippled.
+# The history note is scenario 5's.
 # ---------------------------------------------------------------------------
 
 [objectives]
+for_play = true
 minor = 3
 major = 8
 decisive = 16
@@ -1290,3 +1294,10 @@ points = 10
 kind = "cargo_landed"
 base = 5
 points_per_t = "0.005"
+
+# PLACEHOLDER (decision 0186, 10 and 11): 1 point for each 100 men the
+# convoy lands at Taivu and does not take off again, the worth of a man lost.
+[[objectives.japanese.objective]]
+kind = "men_landed"
+base = 5
+points_per_100_men = 1

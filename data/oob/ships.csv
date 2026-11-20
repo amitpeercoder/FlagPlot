@@ -126,7 +126,7 @@ id,key,name,nation,class,hull_number
 1122,dd-415-obrien,USS O'Brien,us,,DD-415
 1123,bb-57-south-dakota,USS South Dakota,us,,BB-57
 1124,cl-47-boise,USS Boise,us,us-brooklyn-class,CL-47
-1125,ca-27-chester,USS Chester,us,,CA-27
+1125,ca-27-chester,USS Chester,us,us-northampton-class,CA-27
 1126,ca-24-pensacola,USS Pensacola,us,,CA-24
 1127,dd-378-smith,USS Smith,us,,DD-378
 1128,zuiho,Zuiho,jp,,
@@ -183,7 +183,7 @@ id,key,name,nation,class,hull_number
 1179,yp-326,YP-326,us,,YP-326
 1180,yp-346,YP-346,us,,YP-346
 1185,ch-24,Subchaser CH-24,jp,,CH-24
-1186,tsugaru,Tsugaru,jp,,
+1186,tsugaru,Tsugaru,jp,jp-tsugaru-class,
 1187,sado-maru,Sado Maru,jp,,
 1188,asaka-maru,Asaka Maru,jp,,
 1189,cv-2-lexington,USS Lexington,us,us-lexington-class,CV-2

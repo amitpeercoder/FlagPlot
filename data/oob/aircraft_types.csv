@@ -30,3 +30,9 @@ id,key,name,nation,designation,role
 1026,a5m4,Mitsubishi A5M4 Type 96 Carrier Fighter,jp,A5M4,fighter
 1027,b5n1,Nakajima B5N1 Type 97 Carrier Attack Bomber,jp,B5N1,torpedo_bomber
 1028,g3m2,Mitsubishi G3M2 Type 96 Land Attack Bomber,jp,G3M2,land_attack_bomber
+1030,p-40e,Curtiss P-40E Kittyhawk,us,P-40E,fighter
+1031,a-24,Douglas A-24 Dauntless (Army dive bomber),us,A-24,dive_bomber
+1032,b-26,Martin B-26 Marauder,us,B-26,medium_bomber
+1033,b-25,North American B-25 Mitchell,us,B-25,medium_bomber
+1034,a-20,Douglas A-20 Havoc,us,A-20,light_bomber
+1035,hudson,Lockheed Hudson,us,Hudson,patrol_bomber

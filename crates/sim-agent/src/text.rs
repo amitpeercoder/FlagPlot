@@ -2392,12 +2392,16 @@ fn enemy_objective_text(line: &EnemyObjectiveLine) -> String {
         "men_lost" => format!(
             "your men lost, by any cause, points for each hundred men: {points}"
         ),
-        _ if line.closed == Some(true) => format!(
+        "men_landed" => format!(
+            "men the enemy lands from ships at {base} and does not take off again, points for each hundred men: {points}"
+        ),
+        "base_open" if line.closed == Some(true) => format!(
             "days {base} is shut at the end of the day (no supply, or no aircraft ready), points if shut every day: {points}, earned by the share of days"
         ),
-        _ => format!(
+        "base_open" => format!(
             "days {base} is open at the end of the day (supply and an aircraft ready), points if open every day: {points}, earned by the share of days"
         ),
+        other => unreachable!("a kind of objective with no words: {other}"),
     }
 }
 
@@ -2431,12 +2435,16 @@ fn objective_text(o: &mut Out, line: &ObjectiveLine) {
         "men_lost" => format!(
             "Objective: enemy men lost, by any cause, points for each hundred men: {points}"
         ),
-        _ if line.closed == Some(true) => format!(
+        "men_landed" => format!(
+            "Objective: men you land from ships at {base} and do not take off again, points for each hundred men: {points}"
+        ),
+        "base_open" if line.closed == Some(true) => format!(
             "Objective: {base} shut at the end of each day (no supply, or no aircraft ready), points if shut every day: {points}, earned by the share of days"
         ),
-        _ => format!(
+        "base_open" => format!(
             "Objective: {base} open at the end of each day (supply and an aircraft ready), points if open every day: {points}, earned by the share of days"
         ),
+        other => unreachable!("a kind of objective with no words: {other}"),
     };
     o.line(what);
     let known = &line.known;

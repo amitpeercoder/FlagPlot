@@ -33,6 +33,10 @@ struct Batch {
     /// from `--label`. The engine does not know its own revision.
     #[serde(skip_serializing_if = "Option::is_none")]
     label: Option<String>,
+    /// True for a scenario for play (decision 0187, 22), whose results are
+    /// not for the record. Always written; added at version 6 with the
+    /// version unchanged, so a file without it is of record.
+    for_play: bool,
     runs: u64,
     first_seed: u64,
     ships: Vec<ShipOut>,
@@ -367,6 +371,7 @@ fn build(
         scenario: scenario_out.ok_or_else(|| "no runs were made".to_string())?,
         inputs,
         label,
+        for_play: header.for_play,
         runs,
         first_seed,
         ships,

@@ -586,18 +586,22 @@ impl World {
     /// Gives the game its missions and objectives (decision 0054). Fails if
     /// an objective names a base the game does not have, or if the horizon
     /// is 0 (decision 0088). Changes no state and no hash.
-    pub fn set_objectives(&mut self, objectives: Objectives) -> Result<(), SimError> {
+    pub fn set_objectives(&mut self, mut objectives: Objectives) -> Result<(), SimError> {
         if objectives.horizon_days == 0 {
             return Err(SimError::InvalidSetup(
                 "the objectives' horizon_days must be at least 1".to_string(),
             ));
         }
+        // The hex of each base named, for a side that does not have the
+        // base on its map (decision 0186, 17). Bases do not move.
+        objectives.base_hexes.clear();
         for base in objectives.bases_named() {
-            if !self.truth.bases.contains_key(&base) {
+            let Some(found) = self.truth.bases.get(&base) else {
                 return Err(SimError::InvalidSetup(format!(
                     "an objective names unknown {base}"
                 )));
-            }
+            };
+            objectives.base_hexes.insert(base, found.hex);
         }
         self.objectives = Some(objectives);
         Ok(())

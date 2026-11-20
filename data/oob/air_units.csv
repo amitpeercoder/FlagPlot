@@ -70,3 +70,17 @@ id,key,name,nation,service,parent
 1066,shoho-air-unit,Aircraft embarked in light carrier Shoho,jp,ijn,
 1067,motoyama-ku,Motoyama Kokutai (land attack bombers; Bates's name for the group),jp,ijn,25th-air-flotilla
 1068,tangier-search-group,"Search Group (TG 17.9): patrol planes tended by Tangier at Noumea",us,usn,
+1070,75-sqn-raaf,No. 75 Squadron RAAF (Kittyhawk fighters),au,raaf,
+1071,8th-fg,"8th Fighter Group (USAAF, P-39)",us,usaaf,
+1072,3rd-bg,3rd Bombardment Group (Light) (USAAF),us,usaaf,
+1073,8th-bs-3rd-bg,"8th Bombardment Squadron (Light) (A-24 Dauntless), 3rd Bombardment Group",us,usaaf,3rd-bg
+1074,22nd-bg,"22nd Bombardment Group (Medium) (USAAF, B-26 and B-25)",us,usaaf,
+1075,19th-bg,"19th Bombardment Group (Heavy) (USAAF, B-17)",us,usaaf,
+1076,435th-bs,"435th Bombardment Squadron (Heavy), 19th Bombardment Group (B-17 reconnaissance)",us,usaaf,19th-bg
+1077,35th-fg,"35th Fighter Group (USAAF, P-39 / P-400)",us,usaaf,
+1078,49th-fg,"49th Fighter Group (USAAF, P-40)",us,usaaf,
+1079,32-sqn-raaf,No. 32 Squadron RAAF (Hudsons),au,raaf,
+1080,11-sqn-raaf,No. 11 Squadron RAAF (Catalinas),au,raaf,
+1081,20-sqn-raaf,No. 20 Squadron RAAF (Catalinas),au,raaf,
+1082,raaf-tulagi-catalinas,"RAAF Catalina detachment at Gavutu and Tanambogo, Tulagi (to 2 May 1942)",au,raaf,
+1090,support-force-seaplanes,"Seaplanes of the Support Force (18th Cruiser Division, Deboyne) and tenders Kamikawa Maru and Hijirikawa Maru",jp,ijn,

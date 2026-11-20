@@ -65,13 +65,24 @@
 //!   26), `MenLostToFire` (decision 0092, 20) and `UnitSurrendered`
 //!   (decision 7 of 0104). The points are the objective's points for each 100 men, a part of
 //!   100 scoring its part.
+//! - `men_landed`: the men the side's own ships land in the hex of the named
+//!   base and do not take off again (decision 0186). The count is kept unit
+//!   by unit: for each land unit a number that starts at 0; reading the
+//!   events in order, a `MenLanded` of the unit by a ship of the side in the
+//!   base's hex raises it by the men, and a `MenEmbarked` of the unit by a
+//!   ship of the side, in any hex, lowers it by the men and not below 0. The
+//!   count is the sum over the units. The hex is the base's whoever holds the
+//!   base, and men landed and then lost still count. The points are the
+//!   objective's points for each 100 men, a part of 100 scoring its part, as
+//!   for `men_lost`.
 
 use core::fmt;
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::events::{base_is_open, EventKind, EventLog};
 use crate::fixed::Fixed;
-use crate::ids::{BaseId, ShipId};
+use crate::hex::Hex;
+use crate::ids::{BaseId, LandUnitId, ShipId};
 use crate::refdata::{RefData, ShipKind};
 use crate::side_events::SideEvent;
 use crate::state::{Ship, ShipLocation, ShipSystem, Side, SystemState, TruthState};
@@ -116,6 +127,13 @@ pub enum Objective {
     /// Enemy men lost by any cause, points for each 100 men (decision 0090,
     /// 26). Added at the end of the enum.
     MenLost { points_per_100_men: Fixed },
+    /// Men the side's ships land in the hex of a named base and do not take
+    /// off again, points for each 100 men (decision 0186). Added at the end
+    /// of the enum.
+    MenLanded {
+        base: BaseId,
+        points_per_100_men: Fixed,
+    },
 }
 
 impl Objective {
@@ -130,16 +148,24 @@ impl Objective {
             Objective::ShipsOutOfAction(_) => "ships_out_of_action",
             Objective::BaseHeld { .. } => "base_held",
             Objective::MenLost { .. } => "men_lost",
+            Objective::MenLanded { .. } => "men_landed",
         }
     }
 
-    /// The base the objective names, if it names one.
+    /// The base the objective names, if it names one. Every kind is named
+    /// here, with no catch-all, so that a kind added later is not left out
+    /// of the check that its base exists (decision 0186, 19).
     pub const fn base(&self) -> Option<BaseId> {
         match self {
             Objective::CargoLanded { base, .. }
             | Objective::BaseOpen { base, .. }
-            | Objective::BaseHeld { base, .. } => Some(*base),
-            _ => None,
+            | Objective::BaseHeld { base, .. }
+            | Objective::MenLanded { base, .. } => Some(*base),
+            Objective::ShipsSunk(_)
+            | Objective::ShipsCrippled(_)
+            | Objective::AircraftDestroyed { .. }
+            | Objective::ShipsOutOfAction(_)
+            | Objective::MenLost { .. } => None,
         }
     }
 }
@@ -183,6 +209,18 @@ pub struct Objectives {
     pub horizon_days: u32,
     /// Words, not a computed score (decision 9). Shown with the result.
     pub history: Option<String>,
+    /// The scenario is one for play, with a scale of its own, and not one of
+    /// record (decision 0187, 22): `for_play = true` in its `[objectives]`
+    /// table. It changes no game; it changes the words over a result, the
+    /// batch file's header, and `sim-cli validate` refuses it.
+    pub for_play: bool,
+    /// The hex of each base an objective of either side names, so that a
+    /// side can be told where an objective is when the base is not on its
+    /// map (decision 0186, 17). Bases do not move. [`World::set_objectives`]
+    /// fills it from the bases of the scenario and replaces what it held.
+    ///
+    /// [`World::set_objectives`]: crate::World::set_objectives
+    pub base_hexes: BTreeMap<BaseId, Hex>,
 }
 
 impl Objectives {
@@ -306,6 +344,46 @@ pub struct Tally {
     pub bases_held: BTreeSet<BaseId>,
     /// Enemy men lost, by any cause (decision 0090, 26).
     pub men_lost: u32,
+    /// Men the side's ships landed in each base's hex and did not take off
+    /// again, counted unit by unit (decision 0186), by base.
+    pub men_landed: BTreeMap<BaseId, u32>,
+}
+
+/// The count of men landed (decision 0186, 15), kept unit by unit: for each
+/// land unit and each hex, the men of the unit landed in the hex by the
+/// side's ships, lowered by the men of the unit those ships embark in any
+/// hex, never below 0. One is kept for each side; the caller gives it only
+/// the events of that side's ships.
+#[derive(Clone, PartialEq, Eq, Debug, Default)]
+pub struct MenLandedCount {
+    numbers: BTreeMap<(LandUnitId, Hex), u32>,
+}
+
+impl MenLandedCount {
+    /// Men of `unit` landed in `hex`.
+    pub fn landed(&mut self, unit: LandUnitId, hex: Hex, men: u32) {
+        let number = self.numbers.entry((unit, hex)).or_insert(0);
+        *number = number.saturating_add(men);
+    }
+
+    /// Men of `unit` embarked, in any hex: each of the unit's numbers falls
+    /// by the men, and not below 0. A unit that has landed no one loses
+    /// nothing.
+    pub fn embarked(&mut self, unit: LandUnitId, men: u32) {
+        for ((of, _), number) in self.numbers.iter_mut() {
+            if *of == unit {
+                *number = number.saturating_sub(men);
+            }
+        }
+    }
+
+    /// The count in `hex`: the sum of the units' numbers there.
+    pub fn count(&self, hex: Hex) -> u32 {
+        self.numbers
+            .iter()
+            .filter(|((_, at), _)| *at == hex)
+            .fold(0u32, |sum, (_, men)| sum.saturating_add(*men))
+    }
 }
 
 /// One enemy ship's time away (decision 0088).
@@ -381,6 +459,9 @@ pub fn tallies(truth: &TruthState, log: &EventLog, ref_data: &RefData) -> BTreeM
     // The days of repair each ship left for a yard with, over every
     // departure in the log (decision 0088).
     let left_for_yard = left_for_yard_with(log);
+
+    // Men landed, unit by unit, for each side's ships (decision 0186).
+    let mut men_landed: BTreeMap<Side, MenLandedCount> = BTreeMap::new();
 
     // Bases held at the end (decision 0090, 25).
     for base in truth.bases.values() {
@@ -530,6 +611,32 @@ pub fn tallies(truth: &TruthState, log: &EventLog, ref_data: &RefData) -> BTreeM
                         .men_lost += *lost;
                 }
             }
+            // Men landed and taken off again by the side's own ships
+            // (decision 0186): the side is the ship's.
+            EventKind::MenLanded {
+                unit,
+                ship,
+                hex,
+                men,
+                ..
+            } => {
+                if let Some(ship) = truth.ships.get(ship) {
+                    men_landed
+                        .entry(ship.side)
+                        .or_default()
+                        .landed(*unit, *hex, *men);
+                }
+            }
+            EventKind::MenEmbarked {
+                unit, ship, men, ..
+            } => {
+                if let Some(ship) = truth.ships.get(ship) {
+                    men_landed
+                        .entry(ship.side)
+                        .or_default()
+                        .embarked(*unit, *men);
+                }
+            }
             // Bases: each day's end, for both sides, whichever side holds
             // them.
             EventKind::BaseAtDayEnd {
@@ -546,6 +653,16 @@ pub fn tallies(truth: &TruthState, log: &EventLog, ref_data: &RefData) -> BTreeM
                 }
             }
             _ => {}
+        }
+    }
+    // Each base's count is that of its hex, whoever holds the base.
+    for (side, count) in &men_landed {
+        let tally = out.get_mut(side).expect("both sides");
+        for base in truth.bases.values() {
+            let men = count.count(base.hex);
+            if men > 0 {
+                tally.men_landed.insert(base.id, men);
+            }
         }
     }
     out
@@ -581,13 +698,13 @@ fn is_crippled(ship: &Ship) -> bool {
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct ObjectiveScore {
     /// `ships_sunk`, `ships_crippled`, `ships_out_of_action`,
-    /// `aircraft_destroyed`, `cargo_landed`, `base_open`, `base_held` or
-    /// `men_lost`.
+    /// `aircraft_destroyed`, `cargo_landed`, `base_open`, `base_held`,
+    /// `men_lost` or `men_landed`.
     pub kind: &'static str,
     pub base: Option<BaseId>,
     /// For `base_open`: whether the side wanted the base shut.
     pub closed: bool,
-    /// Ships, aircraft, tons, or for a base the days it was as wanted.
+    /// Ships, aircraft, tons, men, or for a base the days it was as wanted.
     pub count: Fixed,
     /// For `base_open`: the days counted, which `count` is out of.
     pub days: Option<u32>,
@@ -738,6 +855,15 @@ fn score_side(side: &SideObjectives, tally: &Tally, horizon_days: u32) -> Vec<Ob
                     score.count = Fixed::from_int(i64::from(tally.men_lost));
                     score.points = men_lost_points(tally.men_lost, *points_per_100_men);
                 }
+                // The sum men lost uses (decision 0186, 6).
+                Objective::MenLanded {
+                    base,
+                    points_per_100_men,
+                } => {
+                    let men = tally.men_landed.get(base).copied().unwrap_or(0);
+                    score.count = Fixed::from_int(i64::from(men));
+                    score.points = men_lost_points(men, *points_per_100_men);
+                }
             }
             score
         })
@@ -865,14 +991,21 @@ impl Claimed {
 }
 
 /// The progress of one side's objectives from the events it may see
-/// (`events` is [`SideView::events`](crate::view::SideView::events)), and
-/// which bases are its own. Reads no truth.
+/// (`events` is [`SideView::events`](crate::view::SideView::events)), which
+/// bases are its own, and the hex of each base an objective names (from the
+/// scenario's objectives, [`Objectives::base_hexes`]). Reads no truth.
 pub fn known_progress(
     objectives: &SideObjectives,
     own_bases: &[BaseId],
+    base_hexes: &BTreeMap<BaseId, Hex>,
     events: &[SideEvent],
 ) -> Vec<KnownProgress> {
     use crate::side_events::SideEventKind;
+    // Men landed and taken off again by the side's own ships, unit by unit
+    // (decision 0186): a side sees its own units' men landed and embarked
+    // whole, and the enemy's not at all, so every such event it sees is of
+    // its own ships.
+    let mut men_landed = MenLandedCount::default();
     // Tons unloaded at each base by the side's own ships, less the tons they
     // loaded there: a side sees its own cargo events whole.
     let mut cargo: BTreeMap<BaseId, Fixed> = BTreeMap::new();
@@ -898,6 +1031,12 @@ pub fn known_progress(
                 }
                 EventKind::CargoLoaded { base, loaded_t, .. } => {
                     *cargo.entry(*base).or_insert(Fixed::ZERO) -= *loaded_t;
+                }
+                EventKind::MenLanded { unit, hex, men, .. } => {
+                    men_landed.landed(*unit, *hex, *men);
+                }
+                EventKind::MenEmbarked { unit, men, .. } => {
+                    men_landed.embarked(*unit, *men);
                 }
                 EventKind::BaseAtDayEnd {
                     base,
@@ -1002,6 +1141,16 @@ pub fn known_progress(
                 // The enemy's men are not something a side knows before the
                 // end (decision 0090, 26).
                 Objective::MenLost { .. } => {}
+                // Its own men landed, seen whole (decision 0186, 7).
+                Objective::MenLanded {
+                    base,
+                    points_per_100_men,
+                } => {
+                    known.basis = KnownBasis::Exact;
+                    let men = base_hexes.get(base).map_or(0, |hex| men_landed.count(*hex));
+                    known.count = Fixed::from_int(i64::from(men));
+                    known.points = Some(men_lost_points(men, *points_per_100_men));
+                }
             }
             known
         })
@@ -1148,6 +1297,8 @@ mod tests {
             levels: levels(),
             horizon_days: 1,
             history: None,
+            for_play: false,
+            base_hexes: BTreeMap::new(),
         }
     }
 
@@ -1195,13 +1346,13 @@ mod tests {
             base: BaseId::new(1),
             points_per_t: fx("0.5"),
         });
-        let known = known_progress(&objectives.allied, &[], &allied_events);
+        let known = known_progress(&objectives.allied, &[], &BTreeMap::new(), &allied_events);
         assert_eq!(known.len(), 1);
         assert_eq!(known[0].basis, KnownBasis::Exact);
         assert_eq!(known[0].count, n(140));
         assert_eq!(known[0].points, Some(n(70)));
         // The other side's events hold none of the Allied unloading.
-        let known = known_progress(&objectives.allied, &[], &japanese_events);
+        let known = known_progress(&objectives.allied, &[], &BTreeMap::new(), &japanese_events);
         assert_eq!(known[0].count, n(7), "only what its own ships landed");
     }
 
@@ -1316,6 +1467,8 @@ mod tests {
             levels: levels(),
             horizon_days: 1,
             history: None,
+            for_play: false,
+            base_hexes: BTreeMap::new(),
         }
     }
 
@@ -1415,7 +1568,12 @@ mod tests {
         let japanese = crate::side_events::project(Side::Japanese, log.from_index(0), &owners);
         let objectives = worked_objectives();
         // The Allied side: exact, and the umpire's own numbers.
-        let known = known_progress(&objectives.allied, &[BaseId::new(1)], &allied);
+        let known = known_progress(
+            &objectives.allied,
+            &[BaseId::new(1)],
+            &BTreeMap::new(),
+            &allied,
+        );
         assert_eq!(
             known
                 .iter()
@@ -1429,7 +1587,7 @@ mod tests {
         // The Japanese side is given none of base 1's days: it is not its
         // base.
         assert!(japanese.is_empty());
-        let known = known_progress(&objectives.japanese, &[], &japanese);
+        let known = known_progress(&objectives.japanese, &[], &BTreeMap::new(), &japanese);
         assert_eq!(
             (
                 known[0].basis,
@@ -1440,7 +1598,7 @@ mod tests {
             (KnownBasis::NotObservable, Fixed::ZERO, None, None)
         );
         // Before any day is resolved a side's own base has 0 days of 0.
-        let known = known_progress(&objectives.allied, &[BaseId::new(1)], &[]);
+        let known = known_progress(&objectives.allied, &[BaseId::new(1)], &BTreeMap::new(), &[]);
         assert_eq!(
             (
                 known[1].basis,
@@ -1485,7 +1643,7 @@ mod tests {
             hidden_causes: false,
             breakdown: None,
         };
-        let known = known_progress(&objectives, &[], &[claim]);
+        let known = known_progress(&objectives, &[], &BTreeMap::new(), &[claim]);
         assert_eq!(
             (known[0].basis, known[0].count, known[0].points),
             (KnownBasis::Claims, n(2), None)
@@ -1551,7 +1709,7 @@ mod tests {
             air_claim(2, 0, Some(ShipKind::Cruiser), 0, 0),
             air_claim(3, 0, None, 2, 20),
         ];
-        let known = known_progress(&objectives, &[], &events);
+        let known = known_progress(&objectives, &[], &BTreeMap::new(), &events);
         assert_eq!(
             (known[0].basis, known[0].count, known[0].points),
             (KnownBasis::Claims, n(1), Some(n(10)))
@@ -1579,13 +1737,19 @@ mod tests {
             ],
         };
         // Aircraft only: nothing is known of ships; no ship was attacked.
-        let known = known_progress(&objectives, &[], &[air_claim(1, 0, None, 3, 0)]);
+        let known = known_progress(
+            &objectives,
+            &[],
+            &BTreeMap::new(),
+            &[air_claim(1, 0, None, 3, 0)],
+        );
         assert_eq!(known[0].basis, KnownBasis::NotObservable);
         assert_eq!((known[1].basis, known[1].count), (KnownBasis::Claims, n(3)));
         // A raid on ships that claims none sunk: a count of 0, from claims.
         let known = known_progress(
             &objectives,
             &[],
+            &BTreeMap::new(),
             &[air_claim(1, 0, Some(ShipKind::Carrier), 0, 0)],
         );
         assert_eq!(
@@ -1628,6 +1792,8 @@ mod tests {
             levels: levels(),
             horizon_days: 1,
             history: None,
+            for_play: false,
+            base_hexes: BTreeMap::new(),
         }
     }
 
@@ -1913,7 +2079,7 @@ mod tests {
     #[test]
     fn known_progress_gives_nothing_for_ships_out_of_action() {
         let objectives = out_of_action_objectives(60);
-        let known = known_progress(&objectives.allied, &[], &[]);
+        let known = known_progress(&objectives.allied, &[], &BTreeMap::new(), &[]);
         assert_eq!(known.len(), 1);
         assert_eq!(
             (
@@ -1929,5 +2095,155 @@ mod tests {
                 None
             )
         );
+    }
+
+    // -----------------------------------------------------------------
+    // Men landed (decision 0186), on made-up logs read by `tallies`.
+    // -----------------------------------------------------------------
+
+    fn men_event(landing: bool, unit: u32, ship: u32, hex: Hex, men: u32) -> EventKind {
+        let (unit, ship, task_force) = (
+            LandUnitId::new(unit),
+            ShipId::new(ship),
+            TaskForceId::new(1),
+        );
+        if landing {
+            EventKind::MenLanded {
+                unit,
+                ship,
+                task_force,
+                hex,
+                men,
+                aboard: 0,
+                ashore: men,
+            }
+        } else {
+            EventKind::MenEmbarked {
+                unit,
+                ship,
+                task_force,
+                hex,
+                men,
+                aboard: men,
+                ashore: 0,
+            }
+        }
+    }
+
+    /// Base 1 in hex (2,0), held by the Allied side; ship 1 Allied, ships 2
+    /// and 3 Japanese. Each event is (landing, unit, ship, hex, men).
+    fn men_landed_tallies(events: &[(bool, u32, u32, Hex, u32)]) -> BTreeMap<Side, Tally> {
+        let mut truth = TruthState::default();
+        let mut taivu = base(1, Side::Allied, 0);
+        taivu.hex = Hex::new(2, 0);
+        truth.bases.insert(BaseId::new(1), taivu);
+        truth.ships.insert(ShipId::new(1), ship(1, Side::Allied));
+        truth.ships.insert(ShipId::new(2), ship(2, Side::Japanese));
+        truth.ships.insert(ShipId::new(3), ship(3, Side::Japanese));
+        let mut log = EventLog::default();
+        for (landing, unit, ship, hex, men) in events {
+            log.record(
+                1,
+                None,
+                men_event(*landing, *unit, *ship, *hex, *men),
+                Vec::new(),
+                None,
+            );
+        }
+        tallies(&truth, &log, &RefData::default())
+    }
+
+    fn men_landed_at(tallies: &BTreeMap<Side, Tally>, side: Side) -> u32 {
+        tallies[&side]
+            .men_landed
+            .get(&BaseId::new(1))
+            .copied()
+            .unwrap_or(0)
+    }
+
+    #[test]
+    fn men_landed_are_counted_for_the_side_of_the_ship_in_the_base_hex_alone() {
+        let (h, k) = (Hex::new(2, 0), Hex::new(3, 0));
+        let t = men_landed_tallies(&[
+            (true, 1, 2, h, 350),
+            (true, 2, 3, h, 152),
+            (true, 3, 2, k, 600),
+            (true, 4, 1, h, 200),
+            (false, 4, 1, h, 50),
+        ]);
+        // The Japanese ships: 350 + 152 in the base's hex, not the 600 in K.
+        assert_eq!(men_landed_at(&t, Side::Japanese), 502);
+        // The Allied ship: 200 landed, 50 taken off.
+        assert_eq!(men_landed_at(&t, Side::Allied), 150);
+    }
+
+    #[test]
+    fn men_taken_off_lower_the_count_unit_by_unit_and_never_below_nothing() {
+        let (h, k) = (Hex::new(2, 0), Hex::new(3, 0));
+        // Landed, marched off, embarked at K, landed again: 350, not 700.
+        let t = men_landed_tallies(&[
+            (true, 1, 2, h, 350),
+            (false, 1, 2, k, 350),
+            (true, 1, 2, h, 350),
+        ]);
+        assert_eq!(men_landed_at(&t, Side::Japanese), 350);
+        // Embarked before any landing lowers nothing; another unit's men
+        // embarked lower nothing; more embarked than landed stops at 0.
+        let t = men_landed_tallies(&[
+            (false, 1, 2, h, 100),
+            (true, 1, 2, h, 350),
+            (true, 2, 2, h, 600),
+            (false, 3, 3, h, 120),
+            (false, 1, 3, k, 400),
+        ]);
+        assert_eq!(men_landed_at(&t, Side::Japanese), 600);
+        // The other side's ship embarking these men changes nothing.
+        let t = men_landed_tallies(&[(true, 1, 2, h, 350), (false, 1, 1, h, 350)]);
+        assert_eq!(men_landed_at(&t, Side::Japanese), 350);
+        assert_eq!(men_landed_at(&t, Side::Allied), 0);
+    }
+
+    #[test]
+    fn men_landed_score_for_each_hundred_men_and_are_known_exactly() {
+        let h = Hex::new(2, 0);
+        let objective = Objective::MenLanded {
+            base: BaseId::new(1),
+            points_per_100_men: n(1),
+        };
+        let mut objectives = one_side(objective.clone());
+        objectives.japanese.objectives.push(objective);
+        let events = [
+            (true, 1, 2, h, 350),
+            (false, 1, 2, h, 120),
+            (true, 2, 3, h, 48),
+        ];
+        let result = score(&objectives, &men_landed_tallies(&events));
+        let line = &result.japanese.objectives[0];
+        assert_eq!((line.kind, line.base), ("men_landed", Some(BaseId::new(1))));
+        assert_eq!((line.count, line.points), (n(278), fx("2.78")));
+        // What the Japanese side sees of its own men, whole.
+        let seen: Vec<SideEvent> = events
+            .iter()
+            .enumerate()
+            .map(|(i, (landing, unit, ship, hex, men))| SideEvent {
+                id: crate::ids::EventId::new(i as u32 + 1),
+                number: i as u32 + 1,
+                order_number: None,
+                day: 1,
+                pulse: None,
+                kind: SideEventKind::Whole(men_event(*landing, *unit, *ship, *hex, *men)),
+                causes: Vec::new(),
+                hidden_causes: false,
+                breakdown: None,
+            })
+            .collect();
+        let hexes = BTreeMap::from([(BaseId::new(1), h)]);
+        let known = known_progress(&objectives.japanese, &[], &hexes, &seen);
+        assert_eq!(
+            (known[0].basis, known[0].count, known[0].points),
+            (KnownBasis::Exact, n(278), Some(fx("2.78")))
+        );
+        // A part of 100 scores its part, at another worth.
+        assert_eq!(men_lost_points(48, fx("0.5")), fx("0.24"));
     }
 }

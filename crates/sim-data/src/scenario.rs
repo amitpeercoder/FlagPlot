@@ -251,6 +251,9 @@ struct ObjectivesSpec {
     /// at least the scenario's days. Defaults to the scenario's days.
     horizon_days: Option<i64>,
     history: Option<String>,
+    /// Decision 0187, 22: `true` for a scenario for play, which has a scale
+    /// of its own; absent or `false`, the scenario is of record.
+    for_play: Option<bool>,
     allied: SideObjectivesSpec,
     japanese: SideObjectivesSpec,
 }
@@ -299,6 +302,12 @@ enum ObjectiveSpec {
     },
     /// Decision 0090, 26: points for each 100 enemy men lost.
     MenLost {
+        points_per_100_men: Quantity,
+    },
+    /// Decision 0186: points for each 100 men the side's ships land in the
+    /// base's hex and do not take off again.
+    MenLanded {
+        base: u32,
         points_per_100_men: Quantity,
     },
 }
@@ -1248,6 +1257,16 @@ fn build_objectives(
                         &format!("{what} points_per_100_men"),
                     )?,
                 },
+                ObjectiveSpec::MenLanded {
+                    base,
+                    points_per_100_men,
+                } => Objective::MenLanded {
+                    base: BaseId::new(*base),
+                    points_per_100_men: points_of(
+                        points_per_100_men,
+                        &format!("{what} points_per_100_men"),
+                    )?,
+                },
             });
         }
         Ok(SideObjectives {
@@ -1261,6 +1280,9 @@ fn build_objectives(
         levels,
         horizon_days,
         history: spec.history.clone(),
+        for_play: spec.for_play.unwrap_or(false),
+        // Filled by `World::set_objectives` from the scenario's bases.
+        base_hexes: BTreeMap::new(),
     })
 }
 
@@ -5812,6 +5834,53 @@ r = 0
     }
 
     const LEVELS: &str = "minor = 3\nmajor = 8\ndecisive = 16";
+
+    #[test]
+    fn men_landed_loads_with_its_base_and_points_and_is_refused_as_the_others_are() {
+        let body = "[[objectives.allied.objective]]\nkind = \"men_landed\"\nbase = 1\npoints_per_100_men = \"0.5\"\n";
+        let scenario = parse_with(&objectives(LEVELS, body)).expect("loads");
+        let found = scenario.world.objectives().expect("has objectives");
+        assert_eq!(
+            found.allied.objectives,
+            vec![Objective::MenLanded {
+                base: BaseId::new(1),
+                points_per_100_men: "0.5".parse().expect("a decimal"),
+            }]
+        );
+        // The world keeps the hex of the base named.
+        let hex = scenario.world.umpire().bases[&BaseId::new(1)].hex;
+        assert_eq!(found.base_hexes.get(&BaseId::new(1)), Some(&hex));
+        let message = error_of(&objectives(
+            LEVELS,
+            "[[objectives.allied.objective]]\nkind = \"men_landed\"\nbase = 1\npoints_per_100_men = -1\n",
+        ));
+        assert!(
+            message.contains("points_per_100_men is negative"),
+            "{message}"
+        );
+        let message = error_of(&objectives(
+            LEVELS,
+            "[[objectives.allied.objective]]\nkind = \"men_landed\"\nbase = 77\npoints_per_100_men = 1\n",
+        ));
+        assert!(message.contains("unknown base:77"), "{message}");
+    }
+
+    #[test]
+    fn a_scenario_is_of_record_unless_its_objectives_say_it_is_for_play() {
+        let of = |levels: &str| {
+            parse_with(&objectives(levels, ""))
+                .expect("loads")
+                .world
+                .objectives()
+                .expect("has objectives")
+                .for_play
+        };
+        assert!(!of(LEVELS));
+        assert!(!of(&format!("{LEVELS}\nfor_play = false")));
+        assert!(of(&format!("{LEVELS}\nfor_play = true")));
+        let message = error_of(&objectives(&format!("{LEVELS}\nfor_play = 1"), ""));
+        assert!(!message.is_empty());
+    }
 
     const ALL_KINDS: &str = r#"
 [[objectives.allied.objective]]

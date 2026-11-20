@@ -21,6 +21,10 @@ pub struct Batch {
     pub inputs: InputsIn,
     #[serde(default)]
     pub label: Option<String>,
+    /// True for a scenario for play (decision 0187); a file without the key
+    /// is of record.
+    #[serde(default)]
+    pub for_play: bool,
     pub runs: u64,
     pub first_seed: u64,
     pub ships: Vec<ShipIn>,

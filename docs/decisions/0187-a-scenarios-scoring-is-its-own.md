@@ -96,3 +96,19 @@ A reviewer who had not seen the plan written read it against the records and the
 28. **The band, on the sign of the margin,** from the second run's kept counts, no game replayed: the Allied side is ahead in 615 games and the Japanese in 385. Inside the band, by 35 games. Without the objective it was 984 and 16; at a half point, 884 and 116.
 29. **What that balance is, said plainly.** In the staffs' games the convoy lands in 997 of 1,000, so the objective is close to a flat 15 points to the Japanese side there. Against a person or an agent who strikes the convoy it is not flat: it is what the convoy is worth. The middle game is a stalemate (a margin of 2.51 against a minor level of 3), and 268 of the 1,000 are. The band says the staffs' games do not go one way; it does not say the scenario is a good game. The four games between agents are owed before it is called balanced.
 30. **The levels stay 3, 8 and 16.** They were set before any run and are not moved.
+
+## As built
+
+Rule 22 was built on Nov 20, 2026, with decision 0186, in one pull request.
+
+- **The key.** `for_play = true` in a scenario's `[objectives]` table loads into `Objectives::for_play`; absent or `false`, the scenario is of record. Only scenario 103's four files and their base have it.
+- **`sim-cli run`** prints the result of a scenario for play under "Result (the scenario's own scale, for play):", and of every other under the words it had.
+- **The batch file** has `"for_play"` in its header, always written, after `label` and before `runs`. Following `daily_supply_t_per_man`, the version stays 6; a file without the key is of record.
+- **`sim-cli validate`** refuses a batch whose header says for play, and one whose scenario on disk says so, before it writes anything: "FILE is a scenario for play (decision 0187): its results are not for the record, so validate does not judge it". It exits with an error. A scenario of record is judged as before.
+- **Documents.** Chapter 6 says the scale is each scenario's and names the two kinds; the glossary has "scenario of record", "scenario for play" and a new "level"; `docs/commands.md`, `docs/step3-spec.md`, `docs/engineering/roles-and-tests.md` (the three guards) and `docs/open-work.md` are changed.
+- **The band, read again** from the third count of file a's 1,000 games (decision 0186, As built): the Allied side ahead in 615 and the Japanese in 385, as rule 28 said. No game changed.
+- **Not done here:** scenario 103's hand calculation, where it says "the game's one scale", is the architect's (its test of the objectives is ignored until then); the four games between agents (guard three) are still owed.
+
+## The architect's rulings on the build
+
+Read on Nov 20, 2026. The key is built as rule 22 has it: `for_play` in a scenario's objectives, the words over a result, the batch file's header (its version unchanged, as when the daily supply figure was added), and `sim-cli validate` refusing. Scenario 103's base carries the key because it is the source its script reads; it is not played, and that stands. Scenario 103 is the first scenario for play. Its four games between agents are still owed.
