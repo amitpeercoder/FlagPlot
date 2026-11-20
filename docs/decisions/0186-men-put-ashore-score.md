@@ -4,6 +4,8 @@ Status: a plan by the architect, written on Nov 20, 2026, at the designer's aski
 
 Summary: The game scores the supply a side lands at a base and has no objective for the men it lands there. A convoy whose whole purpose is to put 1,500 men ashore scores for its 90 t of supply alone. This adds one kind of objective, men landed at a named base, counted as supply landed is counted and worth points for each hundred men as men lost are. Scenario 103 gives it to the Japanese side at the worth of a man lost, a placeholder for the designer to see.
 
+Standing: Planned on Nov 20, 2026 and amended on review; not yet built.
+
 ## Why
 
 Scenario 103, the Eastern Solomons over five days (decision 0184). In two runs of 1,000 games of staff against staff the Japanese convoy landed its 1,500 men at Taivu in 1,000 and in 997 games, and that scored 0.45 points each time, the points of its 90 t of supply. The Japanese side won 26 and then 5 games. Decision 0184's rulings, 5, and "The second version of the orders" put it to the designer whether men put ashore should score. He said to plan it.

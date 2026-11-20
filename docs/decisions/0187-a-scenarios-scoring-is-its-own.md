@@ -4,6 +4,8 @@ Status: a plan by the architect, written on Nov 20, 2026, on the designer's ruli
 
 Summary: The figures of the simulation are one set for every battle and stay so. What a side is scored for, and how much, is now each scenario's own. A scenario meant to be played against someone may be given objectives, points and levels that make it a contest, under three guards: the reason is written before the number, adjusting stops inside a stated band, and games between agents are played before it is called balanced. Scenarios that check the simulation against the record keep the common scale.
 
+Standing: In force from Nov 20, 2026 on the designer's ruling, amended on review; its one piece of code, the key that marks a scenario for play, is built with decision 0186.
+
 ## Why
 
 The designer, on Nov 20, 2026: "As a whole, it may be the case that different scenarios have different scoring for the sake of balance." The architect proposed the rules below and he said to go ahead.
