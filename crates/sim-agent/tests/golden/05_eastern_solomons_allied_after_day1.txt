@@ -15,6 +15,10 @@ OBJECTIVES
 - Objective: enemy aircraft destroyed, points for each: 0.05
   - What you know of your progress: 54 enemy aircraft claimed shot down or destroyed on the ground, worth 2.7 points (claims can be wrong)
 - Levels: the result is read from the margin, your points less the enemy's. A margin of 3 or more is a minor victory, 8 or more a major one, 16 or more a decisive one; the same margins against you are defeats; less than 3 either way is a stalemate
+- The enemy is scored for:
+  - your ships sunk, points for each: carrier 10, battleship 8, cruiser 4, destroyer 1, transport 2, auxiliary 1
+  - your ships left afloat with propulsion or flight deck out, points for each: carrier 5, battleship 4, cruiser 2, destroyer 0.5, transport 1, auxiliary 0.5
+  - your aircraft destroyed, points for each: 0.05
 
 ORDERS
 - Accepted yesterday: 11

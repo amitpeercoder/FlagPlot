@@ -773,6 +773,29 @@ impl<'a> SideView<'a> {
             .map_or(&[], |o| o.objectives.as_slice())
     }
 
+    /// What the other side is scored for (decision 0183): its objectives
+    /// alone, in the order the scenario gives them, and never its mission.
+    /// `None` if the scenario has no objectives, and at a seat at a command,
+    /// which is given no objectives; `Some` of an empty slice where the
+    /// other side has none.
+    ///
+    /// This is the scenario's scoring, fixed before play and read by no rule
+    /// of the simulation, of the same kind as [`SideView::levels`] and
+    /// [`SideView::horizon_days`]: a rule of the game both players may read.
+    /// It is no truth of the enemy's state and no precedent for a reading of
+    /// anything of the enemy's state, his progress or what he knows. No
+    /// staff, trial or rule reads it; a commander reads it and decides.
+    pub fn enemy_objectives(&self) -> Option<&'a [Objective]> {
+        if self.seat.is_some() {
+            return None;
+        }
+        let other = Side::ALL
+            .into_iter()
+            .find(|side| *side != self.side)
+            .expect("two sides");
+        self.objectives.map(|o| o.side(other).objectives.as_slice())
+    }
+
     /// The side's progress on each of its objectives, as far as it can know
     /// it (decision 7 of 0054): counted from its own units and from the
     /// events it may see, and from nothing else. In the order of

@@ -2,8 +2,10 @@
 //! (decision 0054).
 //!
 //! The part is made from a [`SideView`]: the side's own mission and
-//! objectives, and its progress as far as it can know it (decision 7). Never
-//! the enemy's mission or objectives. The result is handed in by whoever holds
+//! objectives, and its progress as far as it can know it (decision 7); and
+//! what the enemy is scored for, his objectives as the scenario gives them
+//! and nothing of his progress or state (decision 0183). Never the enemy's
+//! mission. The result is handed in by whoever holds
 //! the game, once the game is over (decision 8): this module only gives it
 //! words and numbers, and reads no truth.
 
@@ -26,6 +28,13 @@ pub struct ObjectivesPart {
     /// scenario has no objectives.
     pub levels: Option<LevelsPart>,
     pub result: Option<ResultPart>,
+    /// What the enemy is scored for (decision 0183): his objectives, in the
+    /// scenario's order, each with no more than its kind, its base, open or
+    /// shut and its worth. Never his mission, his progress or his state.
+    /// Left out where the scenario has no objectives and at a seat at a
+    /// command; empty where the enemy has none.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub enemy_objectives: Option<Vec<EnemyObjectiveLine>>,
     /// True at a seat at a task force or a base, which is not given the
     /// side's mission and objectives: they are the area command's (decision
     /// 0138, 5). Left out otherwise.
@@ -76,6 +85,31 @@ pub struct ObjectiveLine {
     /// facts now (decision 0110, item 4). Left out for every other kind.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub open_now: Option<OpenNow>,
+}
+
+/// One objective of the enemy's (decision 0183, amended 1): what it is and
+/// what it is worth, and nothing else. It has no field for a count, days
+/// counted, points earned, a basis or whether a base is open now, so that
+/// nothing of the enemy's progress or state can be written in it. Its fields
+/// are those of an [`ObjectiveLine`] of the same name and mean the same.
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct EnemyObjectiveLine {
+    /// As [`ObjectiveLine::kind`].
+    pub kind: &'static str,
+    /// The base of `cargo_landed`, `base_open` and `base_held`, by the map's
+    /// number and name.
+    pub base: Option<Handle>,
+    /// For `base_open`: true if the enemy is scored for the base being shut.
+    pub closed: Option<bool>,
+    /// For the ship objectives: the points for each kind of ship.
+    pub ship_points: Vec<ShipKindPoints>,
+    /// For `ships_out_of_action`: the days of the horizon. Left out for every
+    /// other kind.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub horizon_days: Option<u32>,
+    /// Points for one aircraft, one ton, the base as wanted on every day, the
+    /// base held at the end or each 100 men; `None` for the ship objectives.
+    pub points: Option<Dec>,
 }
 
 /// Whether a base counts as open at the end of today, from the side's own
@@ -275,6 +309,42 @@ fn line(
     line
 }
 
+/// One objective of the enemy's, from the scenario's configuration alone
+/// (decision 0183): nothing of the side's or the enemy's state is read.
+fn enemy_line(
+    ctx: &Ctx<'_>,
+    objective: &Objective,
+    horizon_days: Option<u32>,
+) -> EnemyObjectiveLine {
+    let mut line = EnemyObjectiveLine {
+        kind: objective.name(),
+        base: objective.base().map(|b| ctx.base(b)),
+        closed: None,
+        ship_points: Vec::new(),
+        horizon_days: None,
+        points: None,
+    };
+    match objective {
+        Objective::ShipsSunk(points) | Objective::ShipsCrippled(points) => {
+            line.ship_points = ship_points(points);
+        }
+        Objective::ShipsOutOfAction(points) => {
+            line.ship_points = ship_points(points);
+            line.horizon_days = horizon_days;
+        }
+        Objective::AircraftDestroyed { points } | Objective::BaseHeld { points, .. } => {
+            line.points = Some(Dec(*points))
+        }
+        Objective::CargoLanded { points_per_t, .. } => line.points = Some(Dec(*points_per_t)),
+        Objective::BaseOpen { closed, points, .. } => {
+            line.closed = Some(*closed);
+            line.points = Some(Dec(*points));
+        }
+        Objective::MenLost { points_per_100_men } => line.points = Some(Dec(*points_per_100_men)),
+    }
+    line
+}
+
 /// Whether the base would count as open today, from the side's own facts.
 fn open_now(ctx: &Ctx<'_>, base_id: sim_core::ids::BaseId, closed: bool) -> OpenNow {
     use sim_core::events::{base_is_open, EventKind};
@@ -331,7 +401,8 @@ fn open_now(ctx: &Ctx<'_>, base_id: sim_core::ids::BaseId, closed: bool) -> Open
     }
 }
 
-/// The part for one side's view. The side's own mission and objectives only.
+/// The part for one side's view: the side's own mission and objectives, and
+/// the enemy's objectives without his mission (decision 0183).
 pub(crate) fn objectives_part(ctx: &Ctx<'_>, view: &SideView<'_>) -> ObjectivesPart {
     let known = view.known_progress();
     ObjectivesPart {
@@ -348,6 +419,11 @@ pub(crate) fn objectives_part(ctx: &Ctx<'_>, view: &SideView<'_>) -> ObjectivesP
             decisive: Dec(l.decisive),
         }),
         result: None,
+        enemy_objectives: view.enemy_objectives().map(|list| {
+            list.iter()
+                .map(|objective| enemy_line(ctx, objective, view.horizon_days()))
+                .collect()
+        }),
         not_given_to_this_seat: view.seat().is_some(),
     }
 }
