@@ -3399,9 +3399,23 @@ impl Day<'_, '_> {
             !kept.is_empty(),
         );
         debug_assert!(nothing.is_some() || verdict != coming::Verdict::Committed);
-        let attack = verdict == coming::Verdict::Attack;
-        // Rule 12: once sent in, they stay in.
-        let committed = verdict == coming::Verdict::Committed;
+        // Decision 0194, 7 to 9: in the game's last days the staff begins no
+        // attack ashore, and a unit on attack whose side's attack at the
+        // place failed the day before is set to defend. With 3 days left or
+        // more, or in a world with no last day, nothing here changes.
+        let left = coming::days_left(view.game_days(), today);
+        let last_days = coming::in_last_days(left);
+        let failed = last_days && self.attack_failed(place, today - 1);
+        // An attack the judgement would begin, and does not (rule 8).
+        let held_back = last_days && verdict == coming::Verdict::Attack;
+        let attack = verdict == coming::Verdict::Attack && !last_days;
+        // Rule 12: once sent in, they stay in; in the last days, not after
+        // a failed day (decision 0194, 9).
+        let committed = verdict == coming::Verdict::Committed && !failed;
+        // Decision 0194, 9: the units on attack the staff takes out, where
+        // the judgement itself would not: after a failed day in the last
+        // days, whether it would attack or keep them in.
+        let pulled = failed && verdict != coming::Verdict::Wait;
         if let Some((w, words)) = &nothing {
             let per = coming::men_per_man_with_nothing_coming(risk);
             judged.push_str(&format!("; {words}"));
@@ -3420,6 +3434,15 @@ impl Day<'_, '_> {
                     } else {
                         format!(" against the {w} wanted, short by {}", w - fit)
                     }
+                ));
+            }
+        }
+        if let Some(left) = left.filter(|_| last_days) {
+            judged.push_str(&format!("; {}", coming::last_days_words(left)));
+            if failed {
+                judged.push_str(&format!(
+                    "; the side's attack at {place} failed on day {}",
+                    today - 1
                 ));
             }
         }
@@ -3466,18 +3489,29 @@ impl Day<'_, '_> {
                     reason,
                 });
             }
-        } else {
+        } else if !held_back || pulled {
             for a in ops.iter().filter(|a| {
                 a.unit.posture == Posture::Attack && !(committed && kept.contains(&a.unit.id))
             }) {
-                let reason = serving(end, plan)
-                    .evidence(judged.clone(), today)
-                    .worked(format!(
-                        "{judged}. The men that can attack are too few: the staff sets {} to defend, where it rests, and waits.",
-                        unit_words(&a.unit)
-                    ))
-                    .would_change("a smaller estimate, men rested, or more men landed")
-                    .done();
+                let reason = if pulled {
+                    serving(end, plan)
+                        .evidence(judged.clone(), today)
+                        .worked(format!(
+                            "{judged}. The side's attack failed yesterday and the game is in its last days: an attack so late only costs men, so the staff sets {} to defend, where it rests.",
+                            unit_words(&a.unit)
+                        ))
+                        .would_change("the place the side's")
+                        .done()
+                } else {
+                    serving(end, plan)
+                        .evidence(judged.clone(), today)
+                        .worked(format!(
+                            "{judged}. The men that can attack are too few: the staff sets {} to defend, where it rests, and waits.",
+                            unit_words(&a.unit)
+                        ))
+                        .would_change("a smaller estimate, men rested, or more men landed")
+                        .done()
+                };
                 if in_scope {
                     self.lines.push(format!("{} is set to defend.", a.unit.id));
                 }
@@ -3497,9 +3531,30 @@ impl Day<'_, '_> {
         // Rule 6 as amended (11): where it waits with nothing more coming,
         // the notice that it cannot bring enough, on each morning that
         // holds; once on a morning for the plan.
-        let waits_with_nothing = nothing.is_some() && !attack && !committed;
-        if orders.is_empty() || waits_with_nothing || committed {
-            let worked = if committed {
+        // A wait in the last days hands in no notice (decision 0194, 8): the
+        // notice is the judgement's own wait with nothing more coming.
+        let waits_with_nothing = nothing.is_some() && verdict == coming::Verdict::Wait;
+        if orders.is_empty() || waits_with_nothing || committed || held_back {
+            let worked = if held_back {
+                let on_attack: Vec<String> = ops
+                    .iter()
+                    .filter(|a| a.unit.posture == Posture::Attack && !pulled)
+                    .map(|a| a.unit.id.to_string())
+                    .collect();
+                format!(
+                    "{judged}. With fewer than {} days of the game left the staff begins no attack ashore, because an attack begun so late only costs men: it sets no unit on defend to attack{}.",
+                    coming::LAST_DAYS,
+                    if on_attack.is_empty() {
+                        String::new()
+                    } else {
+                        format!(
+                            ", and {} on attack, whose attack did not fail, {} in",
+                            on_attack.join(" and "),
+                            if on_attack.len() == 1 { "stays" } else { "stay" }
+                        )
+                    }
+                )
+            } else if committed {
                 format!(
                     "{judged}. The units on attack are committed: {} {} sent in with nothing more coming, and the staff does not set {} to defend; it sets no other unit to attack.",
                     kept.iter().map(ToString::to_string).collect::<Vec<_>>().join(" and "),
@@ -3525,7 +3580,9 @@ impl Day<'_, '_> {
             let reason = serving(end, plan)
                 .evidence(judged.clone(), today)
                 .worked(worked)
-                .would_change(if nothing.is_some() {
+                .would_change(if held_back {
+                    "the place the side's"
+                } else if nothing.is_some() {
                     "the place the side's, a new estimate, men rested, more men coming, or the risk"
                 } else {
                     "the place the side's, a new estimate, men rested or landed"

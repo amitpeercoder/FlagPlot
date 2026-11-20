@@ -160,11 +160,13 @@ impl Default for MadeIds {
 /// game saved under the old rules could not hold) and 24 from decision
 /// 0193 (men ashore with no more coming attack at balanced and at press,
 /// which changes games with a take whose men ashore wait with nothing more
-/// coming). A pull request
+/// coming) and 25 from decision 0194 (no attack ashore begun in a game's
+/// last days, and nothing coming after its end, which changes games with men
+/// ashore in their last days). A pull request
 /// raises it by one
 /// when it changes a rule in a way that changes what an existing game would do; a
 /// change that leaves every existing game as it was leaves it alone.
-pub const RULES_VERSION: u32 = 24;
+pub const RULES_VERSION: u32 = 25;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct SimConfig {
