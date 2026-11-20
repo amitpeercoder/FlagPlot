@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 20, 2026, at the designer's aski
 
 Summary: A second small scenario for play: the Coral Sea over five days, 6 to 10 May 1942. Two American carriers and a cruiser group against two Japanese fleet carriers and a light carrier, with a Japanese convoy bound for Port Moresby that lands on the last days if it is not stopped or turned back. It is built in three stages: the data is settled and derived first, then the scenario with its hand calculation, then its runs and games under the guards of decision 0187. Most of the ships and aircraft it needs the game already has.
 
-Standing: Confirmed by the designer on Nov 20, 2026, with his answers; stage A's table and research are in and ruled on; its derivation list is being built.
+Standing: Confirmed by the designer on Nov 20, 2026, with his answers; stage A's table and research are in and ruled on; its derivation list is built ("Stage A as built") and waits for the architect's reading of its exceptions.
 
 ## Why
 
@@ -222,3 +222,44 @@ Made on Nov 20, 2026 on stage A's table and research (`docs/research/coral-sea-s
 ### A fault in the work, recorded
 
 24. **Researchers saved pages and scans to a scratch folder** to search them, against their brief, which allowed reading and not saving. Nothing was committed and the files were deleted. The next brief says it again.
+
+## Stage A as built
+
+Built on Nov 20, 2026 by the list's lead (`data/derivation/coral_sea.toml`, as of 6 May 1942). The architect reads every exception before it merges.
+
+### What was built
+
+- **The list** derives 38 ships in 24 classes (ids 4000 to 4023) and 8 aircraft types (ids 4100 to 4107), and the experience of 32 ships. It writes `ship_classes_coral_sea.csv`, `aircraft_types_coral_sea.csv`, their sources and ships companions and `ship_experience_coral_sea.ships.csv`; the two figures files are also frozen in `data/reference/step1`, since `crates/sim-data/tests/frozen_figures.rs` asks a copy of every live figures file. No other list's output changed.
+- **Ships:** Lexington, Yorktown, the attack group (Minneapolis, New Orleans, Astoria, Chester, Portland, Phelps, Dewey, Farragut, Aylwin, Monaghan), Fitch's screen (Morris, Anderson, Hammann, Russell), the support group (Australia, Chicago, Hobart, Perkins, Walke), the Striking Force (Shokaku, Zuikaku, Myoko, Haguro, Akebono, Ushio, Ariake, Yugure, Shigure, Shiratsuyu), the Main Force (Shoho, Aoba, Kinugasa, Kako, Furutaka, Sazanami) and Yubari.
+- **Aircraft:** F4F-3, SBD-3, A6M2, D3A1, B5N2, B5N1, G4M1, G3M2.
+- **Surface fire** (ruling 5) is modelled for the support group, the Main Force's four cruisers and Yubari. The tool takes `surface_weapons_not_modelled` as a list of ships, so one list does it; the others are in that list. Hobart, Perkins, Walke and Yubari have no rounds-per-gun row and are in `main_gun_ammunition_not_limiting`.
+- **Exceptions:** 35, at the end of `rules.toml` under "Decision 0188", each with its row and its reason, dated 2026-11-20. One more is the list's own: the SBD-3's radius reads row 280 (`combat_radius_row`, ruling 14), since an exception cannot make a row dated 24 August hold on 6 May.
+- **New rows:** `fits.csv` 1310 to 1323 (loads of the SBD-2, TBD-1, B5N1 and G3M2; the torpedo marks and tubes of the Leander, Mahan and Sims classes; Lexington's 5-inch/25; Chicago's anti-aircraft; Yorktown's 1.1-inch), `aircraft_type_facts.csv` 637 to 639 (ranges of the G3M2, B5N1 and TBD-1), `ship_facts.csv` 3777 (Shoho's completion), `sources.csv` 1539 to 1541, and five entries at the end of `gaps.csv`. Each cites a page read in this pass; the quoted words were checked against the page fetched in memory, and nothing was saved to disk.
+
+### Readings where a ruling did not reach
+
+1. **Lexington (ruling 6).** Her twelve 5-inch/25 are a new ship row (fits 1316) from Navypedia's armament line and its list of changes, which removes them from Saratoga only. `oob-check` makes the row preferred, since the class row 239 agrees, so the exception ruling 6 asked for is not needed.
+2. **Yorktown (ruling 7).** Her report's rows (1215 to 1218) are dated 8 May only, and the tool cannot place them on 6 May. She is read from the class's eight 5-inch/38, a new ship row for her four 1.1-inch quadruple mounts (1323, Navypedia's armament line) and Navypedia's 24 of 20 mm (1221) by exception: the figures of her report. Her .50 calibre guns are machine guns, which the rule does not count.
+3. **Chicago's anti-aircraft.** Neither she nor her class had a `heavy_aa` or `light_aa` row that holds on 6 May, so her anti-aircraft figure came out 0 with no problem reported, the silent zero the stage A table warned of. Three ship rows were written from Navypedia's Northampton page (1320 to 1322, as Chester's are), the 20 mm of 1942 by exception, as Chester's and Astoria's are.
+4. **Australia's 2-pounders (ruling 11).** Navypedia's ship rows (573, 574) give eight barrels in two mounts of one gun; the tool reads one row for a gun, so it would count four. The class row 200 (eight, Wikipedia) is read for its count instead, which the better source's total supports.
+5. **Torpedoes of Hobart, Perkins and Walke.** Their tube rows named no torpedo, so no warhead could be read. New class rows name the mark from NavWeaps (Mark IX for Leander and later cruisers; Mark 15 for destroyers) and the tubes from Navypedia: eight for Hobart, twelve for Perkins, and eight for the Sims class from summer 1940, which also settles Walke, whose as-built twelve (272) were no longer aboard. All three are inferred.
+6. **Sims and Mahan classes (ruling 11).** Endurance, its speed, fuel and top speed are the Navy's fuel tables (FTP 218, grade A), read as holding on the date as the Farragut and Porter rows of the same tables are; displacement is Navypedia's, which states standard, over uboat.net's figure labelled BRT. Perkins's five 5-inch/38 (547) and seven 20 mm (549) are both read, though the same Navypedia line says most ships lost one gun when the 20 mm came: no row gives four or names her.
+7. **Shoho (ruling 9).** Displacement 11,262 tons (Navypedia, a treaty figure in long tons); fuel 2,559 long tons (Nishida's 2,600 metric tons, as Yubari's fuel is read). Her 25 mm read as eight with no exception: the rows of twelve are not preferred and do not hold over the eight.
+8. **Chester and Astoria (rulings 8 and 2).** Their 20 mm rows dated only to 1942 are read, as the Eastern Solomons list reads Portland's.
+9. **Chicago's tubes.** None, Navypedia's removal in 1931 (327), with which the one grade A row agrees.
+10. **The F4F-3's range (ruling 16).** Both rows are grade C and plain; the one read (747 nm) states the speed it is flown at. The radii differ by 4 nm.
+11. **Sazanami** is of the Main Force but was Shoho's screen; ruling 5 names its four cruisers, so her surface weapons are not modelled.
+12. **Worden** sailed with the fuelling group and is not in rule 4; she is left out with it.
+13. **The G4M1** attacks with the 250 kg bomb, as in the Rabaul list; its torpedo row is a lone low row with no exception. **The G3M2** also with the 250 kg bomb, by exception. What each carried against the support group on 7 May is a gap.
+14. **Experience** is measured by the tool to the engagement's first day, 4 May, not 6 May; no row falls between. Shokaku, Zuikaku and Shoho are new ships (1); the Japanese cruisers and destroyers take the navy's point (3); the rest are 2. Six ships are left out of the experience table because their one commissioned row is unconfirmed and the new-ship question cannot read it: Farragut, Akebono, Ushio, Sazanami, Shigure and Shiratsuyu. Shoho's date found a second source, so her two rows now stand preferred, as `oob-check` requires of agreeing rows: the one row on file whose standing this pass changed (ship facts 3461).
+
+### Left out, each to be named in the scenario's header
+
+- Neosho and Sims (ruling 12), Worden with them; Tsugaru, Tippecanoe, Tangier and Toho Maru (ruling 12); the Kamikaze and Mutsuki class destroyers, which stand as placeholder destroyers (ruling 13).
+- **The SBD-2 (VB-2), the TBD-1 (VT-2 and VT-5) and the A5M4 (Shoho's six A5M4)** (ruling 17). The research found loads for the SBD-2 and TBD-1 (Lexington's report of 7 May) and a second range for the TBD-1, but no page read gives the SBD-2's or the TBD-1's pilot armour, the A5M4's armour or tanks, or the SBD-2's range with a load. Without them Lexington has no dive bombers but VS-2's SBD-3s and neither carrier has torpedo planes: a large change to the battle, for the architect to weigh against waiting for the research (Lundstrom's The First Team, the Bureau of Aeronautics' characteristics sheets, which the American Aviation Historical Society's site refused).
+
+### Not done
+
+- `CLAUDE.md`'s list of commands before a commit does not name this list's `--check`; it is the only place the other lists' checks are run, and was left alone as the brief said.
+- No scenario, no class sides file, no change to the simulation's rules.
+

@@ -1,0 +1,206 @@
+# The ships and aircraft of the Coral Sea, as of 6 May 1942, for scenario 105
+# (decision 0188, rules 4, 5, 20 to 22, and "Stage A: the architect's
+# rulings"). The derivation tool turns this list into
+# data/reference/ship_classes_coral_sea.csv, aircraft_types_coral_sea.csv,
+# their sources and ships companions, and ship_experience_coral_sea.ships.csv.
+# Ships another list derives are derived again here for this date, with class
+# ids of this list. The exceptions this list rests on are at the end of
+# rules.toml, under "Decision 0188"; each names its row and reason. Written on
+# 2026-11-20 by the list's lead, for the architect to read before it merges.
+#
+# WHO IS LEFT OUT, and why (each to be named in the scenario's header):
+# - Neosho and Sims, the fuelling group (ruling 12): an oiler has no kind in
+#   the simulation and Neosho has no endurance or fuel in tons. Worden, also of
+#   the fuelling group in the sources, is not in rule 4 and is left out with it.
+# - Tsugaru (no fuel row), Tippecanoe, Tangier and Toho Maru (no class on
+#   file), ruling 12.
+# - The Kamikaze and Mutsuki class destroyers of the convoy's escort (Oite,
+#   Asanagi, Mutsuki, Mochizuki, Uzuki, Yayoi): no row gives the rounds their
+#   guns carried; they stand as "Placeholder destroyers" in the scenario
+#   (ruling 13), not here. The transports are of the placeholder class.
+# - The SBD-2 (Lexington's VB-2), the TBD-1 (VT-2 and VT-5) and the A5M4
+#   (Shoho's six Claudes): ruling 17. No page read gives the SBD-2's or the
+#   TBD-1's pilot armour, or the A5M4's armour and tanks, which the rules read;
+#   the SBD-2 also has no range or radius with a load. No type stands in for
+#   another. What was looked for is in gaps.csv.
+#
+# LEXINGTON'S GUNS (ruling 6): her twelve 5-inch/25 are read from a ship row
+# written in this pass (fits 1316, Navypedia's armament line with no removal
+# for her before her loss), which oob-check makes preferred because the class
+# row 239 agrees; so the exception ruling 6 asks for is not needed. Her 1.1-inch
+# (seven quadruple mounts, 1204) and 20 mm (32, 1206) are preferred rows that
+# hold on the date; her report's mount No. 8 (ship facts 3602) is a note.
+#
+# SURFACE FIRE (ruling 5) is modelled only where a surface fight is the
+# force's purpose: the support group (Australia, Chicago, Hobart, Perkins,
+# Walke), the Main Force's four cruisers and Yubari. Every other ship is in
+# surface_weapons_not_modelled, as in the Eastern Solomons list. Sazanami is
+# of the Main Force but was Shoho's screen, and ruling 5 names its four
+# cruisers only, so she is not modelled (the lead's reading). Where a modelled
+# ship has no rounds-per-gun row her ammunition is not limiting (ruling 5).
+#
+# The torpedo bombers of the fleet carriers are the B5N2 (ruling 15): the
+# order of battle of December 1941 and two undated rows; no source read names
+# the model for May 1942. It is the scenario's choice of type, so it needs no
+# exception here. The G4M1 attacks with the 250 kg bomb, as in the Rabaul list
+# (its torpedo row, 32, is a lone low row with no exception); the G3M2 with
+# the 250 kg bomb by exception. What each carried against the support group on
+# 7 May is a gap.
+
+name = "Coral Sea"
+date = "1942-05-06"
+rules = "rules.toml"
+output = "../reference/ship_classes_coral_sea.csv"
+aircraft_output = "../reference/aircraft_types_coral_sea.csv"
+first_class_id = 4000
+first_aircraft_type_id = 4100
+air_figures = true
+
+ships = [
+    # Task Force 17: the carriers (Fitch's air group) and their screen.
+    "cv-2-lexington", "cv-5-yorktown",
+    "dd-417-morris", "dd-411-anderson", "dd-412-hammann", "dd-414-russell",
+    # The attack group (Kinkaid).
+    "ca-36-minneapolis", "ca-32-new-orleans", "ca-34-astoria", "ca-27-chester", "ca-33-portland",
+    "dd-360-phelps", "dd-349-dewey", "dd-348-farragut", "dd-355-aylwin", "dd-354-monaghan",
+    # The support group (Crace).
+    "hmas-australia", "ca-29-chicago", "hmas-hobart", "dd-377-perkins", "dd-416-walke",
+    # The Striking Force (Takagi).
+    "shokaku", "zuikaku", "myoko", "haguro",
+    "akebono", "ushio", "ariake", "yugure", "shigure", "shiratsuyu",
+    # The Main Force (Goto).
+    "shoho", "aoba", "kinugasa", "kako", "furutaka", "sazanami",
+    # The invasion force's escort: Yubari alone is real (ruling 13).
+    "yubari",
+]
+
+# Assumption of the scenario, not a fact (decision 0029, 4; decision 0188,
+# ruling 5): the carriers, their screens, the attack group and Sazanami are
+# not sent to fight ships, so their surface weapons are written as 0.
+surface_weapons_not_modelled = [
+    "cv-2-lexington", "cv-5-yorktown",
+    "dd-417-morris", "dd-411-anderson", "dd-412-hammann", "dd-414-russell",
+    "ca-36-minneapolis", "ca-32-new-orleans", "ca-34-astoria", "ca-27-chester", "ca-33-portland",
+    "dd-360-phelps", "dd-349-dewey", "dd-348-farragut", "dd-355-aylwin", "dd-354-monaghan",
+    "shokaku", "zuikaku", "myoko", "haguro",
+    "akebono", "ushio", "ariake", "yugure", "shigure", "shiratsuyu",
+    "shoho", "sazanami",
+]
+
+# Working assumption, not a fact (decision 0023; decision 0188, ruling 5): no
+# row gives the rounds per gun of these ships' main guns, so their ammunition
+# is not limiting, as the Savo Island list reads Yubari's.
+main_gun_ammunition_not_limiting = ["hmas-hobart", "dd-377-perkins", "dd-416-walke", "yubari"]
+
+# Working assumption, not a fact (decision 0019, 5): no row says whether these
+# ships carried a search radar on 6 May, and they are treated as not fitted.
+# A sourced fit or a sourced none is read from the facts instead (Shokaku's
+# air-search row 117, by its exception, is such a fit).
+radar_unknown_means_none = [
+    "ca-36-minneapolis", "ca-32-new-orleans", "ca-34-astoria",
+    "dd-360-phelps", "dd-349-dewey", "dd-348-farragut", "dd-355-aylwin", "dd-354-monaghan",
+    "dd-417-morris", "dd-411-anderson", "dd-412-hammann", "dd-414-russell",
+    "hmas-hobart", "dd-377-perkins", "dd-416-walke",
+    "shokaku", "zuikaku", "myoko", "haguro", "akebono", "ushio", "ariake", "yugure", "shigure", "shiratsuyu",
+    "shoho", "aoba", "kinugasa", "kako", "furutaka", "sazanami", "yubari",
+]
+
+# The aircraft types, each with the load it attacks with (decision 0029, 7).
+# A fighter attacks nothing on the surface.
+
+# VF-2 and VF-42 (ruling 41 of the amended plan: both flew the F4F-3).
+[[aircraft]]
+type = "f4f-3"
+
+# VS-2, VB-5 and VS-5. Ruling 14: the radius is the 200 miles of the rows of
+# August, read for May.
+[[aircraft]]
+type = "sbd-3"
+load = "us-bomb-1000lb-gp"
+combat_radius_row = 280
+combat_radius_reason = "200 miles, the Eastern Solomons search and strike distance of 24 August 1942 (the row the Eastern Solomons list reads), read for 6 May by decision 0188, ruling 14: the same aircraft with the same load. No radius dated to May 1942 is on file; Lexington's report puts the enemy about 170 to 180 miles off when her strike of 7 May was launched."
+
+# The fighters of the 5th Carrier Division, Shoho and the Tainan group.
+[[aircraft]]
+type = "a6m2-21"
+
+[[aircraft]]
+type = "d3a1-11"
+load = "jp-bomb-250kg"
+
+# Shokaku's and Zuikaku's torpedo bombers (ruling 15).
+[[aircraft]]
+type = "b5n2"
+load = "jp-torpedo-type91"
+
+# Shoho's nine torpedo bombers (ruling 9).
+[[aircraft]]
+type = "b5n1"
+load = "jp-torpedo-type91"
+
+# The 4th Air Group at Rabaul.
+[[aircraft]]
+type = "g4m1-11"
+load = "jp-bomb-250kg"
+
+# The Motoyama Air Group at Rabaul.
+[[aircraft]]
+type = "g3m2"
+load = "jp-bomb-250kg"
+
+# The class ids, pinned (decision 0077): 4000 to 4023, which no other list
+# uses. Aircraft type ids start at 4100.
+[class_ids]
+4000 = ["cv-2-lexington"]
+4001 = ["cv-5-yorktown"]
+4002 = ["ca-32-new-orleans", "ca-36-minneapolis"]
+4003 = ["ca-34-astoria"]
+4004 = ["ca-27-chester"]
+4005 = ["ca-33-portland"]
+4006 = ["dd-348-farragut", "dd-349-dewey", "dd-354-monaghan", "dd-355-aylwin"]
+4007 = ["dd-360-phelps"]
+4008 = ["dd-411-anderson", "dd-412-hammann", "dd-414-russell", "dd-417-morris"]
+4009 = ["dd-416-walke"]
+4010 = ["hmas-australia"]
+4011 = ["ca-29-chicago"]
+4012 = ["hmas-hobart"]
+4013 = ["dd-377-perkins"]
+4014 = ["shokaku"]
+4015 = ["zuikaku"]
+4016 = ["myoko", "haguro"]
+4017 = ["akebono", "ushio", "sazanami"]
+4018 = ["ariake", "yugure"]
+4019 = ["shigure", "shiratsuyu"]
+4020 = ["shoho"]
+4021 = ["aoba", "kinugasa"]
+4022 = ["kako", "furutaka"]
+4023 = ["yubari"]
+
+# The experience values of the ships (decision 0064; the questions and their
+# thresholds are in rules.toml, under [experience]). The tool measures the
+# windows to the engagement's first day in engagements.csv, 4 May 1942 for
+# coral-sea, not to the list's 6 May: the three months are 4 February to 4
+# May 1942 and a new ship is one commissioned after 4 May 1941. The two days
+# change no answer: no row of these ships is dated between 4 and 6 May.
+# Answered from the rows as they stand: Shokaku, Zuikaku and Shoho are new
+# ships; the rows of 20 April 1942 for Aoba, Kinugasa, Kako and Furutaka (ship
+# facts 1094 to 1097) record a daytime practice and answer nothing; the
+# Japanese cruisers and destroyers
+# take the navy's point (training_facts 32 and 87). Australia's and
+# Chicago's night training rows (1020, 1021) are dated May to July 1942 and
+# fall after the window; they answer nothing here. No answer is written by
+# hand.
+[experience]
+engagement = "coral-sea"
+output = "../reference/ship_experience_coral_sea.ships.csv"
+ships = [
+    "cv-2-lexington", "cv-5-yorktown",
+    "dd-417-morris", "dd-411-anderson", "dd-412-hammann", "dd-414-russell",
+    "ca-36-minneapolis", "ca-32-new-orleans", "ca-34-astoria", "ca-27-chester", "ca-33-portland",
+    "dd-360-phelps", "dd-349-dewey", "dd-355-aylwin", "dd-354-monaghan",
+    "hmas-australia", "ca-29-chicago", "hmas-hobart", "dd-377-perkins", "dd-416-walke",
+    "shokaku", "zuikaku", "myoko", "haguro",
+    "ariake", "yugure",
+    "shoho", "aoba", "kinugasa", "kako", "furutaka",
+    "yubari",
+]
