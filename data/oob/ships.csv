@@ -127,9 +127,9 @@ id,key,name,nation,class,hull_number
 1123,bb-57-south-dakota,USS South Dakota,us,,BB-57
 1124,cl-47-boise,USS Boise,us,us-brooklyn-class,CL-47
 1125,ca-27-chester,USS Chester,us,us-northampton-class,CA-27
-1126,ca-24-pensacola,USS Pensacola,us,,CA-24
+1126,ca-24-pensacola,USS Pensacola,us,us-pensacola-class,CA-24
 1127,dd-378-smith,USS Smith,us,,DD-378
-1128,zuiho,Zuiho,jp,,
+1128,zuiho,Zuiho,jp,jp-zuiho-class,
 1129,yugiri,Yugiri,jp,jp-fubuki-class,
 1130,shirakumo,Shirakumo,jp,jp-fubuki-class,
 1131,hagikaze,Hagikaze,jp,jp-kagero-class,
@@ -229,7 +229,7 @@ id,key,name,nation,class,hull_number
 1229,china-maru,China Maru,jp,,
 1230,hibi-maru,Hibi Maru,jp,,
 1231,azumayama-maru,Azumayama Maru,jp,,
-1240,cv-8-hornet,USS Hornet,us,,CV-8
+1240,cv-8-hornet,USS Hornet,us,us-yorktown-class,CV-8
 1241,bb-56-washington,USS Washington,us,us-north-carolina-class,BB-56
 1242,cl-52-juneau,USS Juneau,us,us-atlanta-class,CL-52
 1243,cl-53-san-diego,USS San Diego,us,us-atlanta-class,CL-53
@@ -275,7 +275,7 @@ id,key,name,nation,class,hull_number
 1375,naganami,Naganami,jp,,
 1376,makinami,Makinami,jp,,
 1377,takanami,Takanami,jp,,
-1378,mikazuki,Mikazuki,jp,,
+1378,mikazuki,Mikazuki,jp,jp-mutsuki-class,
 1379,satsuki,Satsuki,jp,,
 1380,fumizuki,Fumizuki,jp,,
 1381,nagatsuki,Nagatsuki,jp,jp-mutsuki-class,
