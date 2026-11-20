@@ -29,7 +29,9 @@
 //!    number and name), whether a base is to be open or shut, and its
 //!    worth (points; points a ton; points for each kind of ship), equal
 //!    to the scenario file's own figures. On FS the Japanese objectives
-//!    name Lunga alone, and one is that it be shut. And at the Japanese seat, the Allied
+//!    name Lunga and Tulagi, and one is that Lunga be shut. (Corrected by
+//!    the architect on Nov 20, 2026, on the build's report: this said
+//!    Lunga alone, which the file does not bear out.) And at the Japanese seat, the Allied
 //!    side's, likewise.
 //! 2. **What a seat is shown of the enemy's is what the enemy is shown
 //!    of his own,** but for progress: for each objective, the kind, the
@@ -391,23 +393,6 @@ fn s1_the_enemys_objectives_are_listed_as_the_scenario_gives_them() {
         .enemy()
         .iter()
         .any(|l| l["kind"] == "base_open" && l["base"] == lunga && l["closed"] == true));
-}
-
-/// Statement 1's "On FS the Japanese objectives name Lunga alone", as
-/// written. It does not hold on `data/scenarios/07_full_slice.toml`: the
-/// Japanese side's objectives also name Tulagi (`base_held`, base 4), as
-/// the test above shows. Left to the architect; ignored so that the rest
-/// runs.
-#[test]
-#[ignore = "statement 1, 'the Japanese objectives name Lunga alone': the file's Japanese objectives also name Tulagi; goes back to the architect"]
-fn s1_on_fs_the_japanese_objectives_name_lunga_alone() {
-    let mut s = scripted(FS);
-    let r = read(&mut s, A);
-    for line in r.enemy() {
-        if !line["base"].is_null() {
-            assert_eq!(line["base"]["name"], "Lunga", "{line}");
-        }
-    }
 }
 
 // ---------------------------------------------------------------------

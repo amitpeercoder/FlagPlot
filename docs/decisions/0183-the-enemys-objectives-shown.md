@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 20, 2026, at the designer's aski
 
 Summary: A side has been shown its own mission and objectives and never the enemy's. Seven games of the 39 days played by agents, at the architect's asking on Nov 20, 2026, ended the same way: the Japanese commander bombed the airfield and chased warships, and never went for the transports, because nothing told him the Allied side is scored for every ton it lands. The scoring is a rule of the game, as the levels of victory are, and both players of a wargame read its victory conditions. A side is now shown what the enemy is scored for: the kinds of thing, the places named and what each is worth. It is not shown the enemy's mission, his progress or anything he knows
 
-Standing: A plan, written by the architect on Nov 20, 2026, at the designer's asking, and amended on review. Built on Nov 20, 2026; one clause of its test's statement 1 does not hold on the full slice and goes back to the architect
+Standing: Built on Nov 20, 2026, to the plan as amended on review, and ruled on. A person at the table reads the briefing's text whole, the enemy's lines now among them: whether he should is put to the designer
 
 ## Why
 
@@ -75,7 +75,7 @@ An independent reading of the plan and its test, against the code, confirmed tha
 7. **It discloses what the enemy is after, and that is the point.** An objective that he hold Lunga, or keep it shut, says in substance what his mission says. The mission's own words stay his, since they may also say what he believes of the reader. This is no leak of his state.
 8. **The table's situation sheet shows the briefing's text whole,** and so shows a side's own points today, against decision 0157's "a person is shown no points"; it will show the enemy's as well. This record does not change the sheet. Whether a person at the table should read either is put to the designer.
 9. **Also touched,** beyond what "What it costs" lists: the description of the tool `get_briefing`; the golden briefing of the agent's tests; the paragraph of the recorded games' README that says what they were remade after. The agent's source test bans nothing here and is not changed; it gains one case, that two worlds differing only in the enemy's mission give the same briefing.
-10. **The test, corrected:** the scenario with command levels on and objectives is `data/scenarios/stage-2b-proof/05a_eastern_solomons.toml`; a side "with no objectives" keeps its table and its mission and has no objective entries, since the loader requires both sides; on the full slice the Japanese side's objectives name Lunga alone; and Lunga changes side in the scripted run only where the session hands in the script's orders for both sides.
+10. **The test, corrected:** the scenario with command levels on and objectives is `data/scenarios/stage-2b-proof/05a_eastern_solomons.toml`; a side "with no objectives" keeps its table and its mission and has no objective entries, since the loader requires both sides; on the full slice the Japanese side's objectives name Lunga and Tulagi (corrected on the build's report: this said Lunga alone); and Lunga changes side in the scripted run only where the session hands in the script's orders for both sides.
 
 ## As built
 
@@ -112,3 +112,14 @@ Built on Nov 20, 2026, on the branch `enemy-objectives-build`, to the record as 
 **Test counts.** `cargo test --workspace --release --no-fail-fast`: 4,439 passed, 0 failed, 7 ignored (one of them statement 1's clause above), over 243 test binaries, read from the log. The first run failed four tests that pin the agent interface's version (`holds_and_preview`, `interrupts`, `play` and `validator` in `crates/sim-agent/tests`); their pin was raised from 31 to 32, as each earlier build raised it, and nothing else in them changed. `cargo fmt --all -- --check`, `cargo clippy --workspace --all-targets -- -D warnings`, `sh scripts/regenerate.sh --check` and `sh scripts/decisions-index.sh --check` pass.
 
 **Not verified by this build.** An agent reading the new lines through `mcp` end to end; the table's situation sheet, which is not changed and was not opened in a browser; whether the words help a commander decide, which only games will show.
+
+## The architect's rulings
+
+Read on Nov 20, 2026, with the build's core: the one new reading on a side's view, which gives the other side's objectives alone and nothing at a seat at a command, and its words that it is no precedent for anything of the enemy's state; the enemy's line, which has no field for progress; and that the agent's source test gained its one case and bans what it banned.
+
+1. **One clause of the test's first statement was the architect's mistake,** and is corrected by him: on the full slice the Japanese side's objectives name Lunga and Tulagi, not Lunga alone. The test the build left ignored is taken out; the test beside it already shows what the file gives.
+2. **The reading tells "no objectives" from "the enemy has none"** (reading 1). Stands: it is what the briefing's two cases need.
+3. **The agent interface's version rises** (reading 5), though a field added would not by itself raise it. Stands: every briefing an agent reads has changed, and a recorded game should say so.
+4. **A base reads `base:1 "Lunga"`** in the enemy's lines, as everywhere in a briefing. Stands.
+5. **The statements on hashes and results are played through a watched session with both seats the script's,** and a further check on a scenario where the staffs act shows the same orders, hashes and result whether the briefings are read or not (readings 6 to 8). Stand.
+6. **Not seen:** an agent deciding differently for it. Two games of agents on the 39 days are to be played to see whether a Japanese commander now goes for the transports.
