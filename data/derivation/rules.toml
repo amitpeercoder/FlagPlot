@@ -992,3 +992,327 @@ fact = "endurance_speed_kn"
 row = 2461
 reason = "14 knots, the speed of the 4,000 nm read from row 2460. The other reading, 6,000 nm at 15 knots (rows 2458, 2459), is left disputed and not read. Decision 0166, 11."
 agreed = "2026-11-19"
+
+# Decision 0188, "Stage A: the architect's rulings": the ships and aircraft of
+# the Coral Sea list (coral_sea.toml, as of 6 May 1942). Each reads a row the
+# preference rules cannot read on that day. Ruling 1 is the order a dispute
+# is read in: a ship's own report of the time, then the higher grade of
+# source, then a figure stated plainly before one hedged. Written by the
+# list's lead on 2026-11-20 for the architect to read before the list merges.
+# None of these classes' figures changes in another list: the other lists
+# read none of these rows on their own dates (checked by --check of every
+# list).
+
+[[exception]]
+entity = "ca-27-chester"
+fact = "light_aa"
+row = 1304
+reason = "Thirteen 20 mm guns, Navypedia's Chester line, dated only to 1942. Ruling 8 and ruling 2: read, since leaving the 20 mm out would be known wrong for the day, her own report confirming 20 mm in action on 8 May (ship facts 3704, 3705). Unconfirmed as to the count on 6 May; a dated count is to be found."
+agreed = "2026-11-20"
+
+[[exception]]
+entity = "us-new-orleans-class"
+fact = "light_aa"
+row = 532
+reason = "Six 20 mm guns, Navypedia's class refit line dated only to mid-1942, read for Astoria. Ruling 2: read as the Eastern Solomons list reads its like, Portland's 20 mm rows dated only to 1942 (rows 526, 527). Unconfirmed: whether Astoria had them by 6 May is not stated; a dated row for her is to be found."
+agreed = "2026-11-20"
+
+[[exception]]
+entity = "us-northampton-class"
+fact = "torpedo_tubes"
+row = 327
+reason = "No tubes, for Chicago (her own row 329 holds only on 8 August). Ruling 1: Navypedia (B) says they were removed in 1931, and the one A row (328) says cruiser torpedo use ended in 1936, also none; uboat.net's undated six (257) and Wikipedia's as-built six (258, to 1936) are the class as built."
+agreed = "2026-11-20"
+
+[[exception]]
+entity = "uk-county-kent-class"
+fact = "light_aa"
+row = 200
+reason = "Eight 2-pounder barrels, read for Australia. Ruling 1 prefers Navypedia's ship rows (573, 574, B), which give four single mounts and one quadruple, eight barrels in all on 6 May; the tool reads one row for each gun and the two share one, so it would count four. This row (Wikipedia, C) is read for its count, which the better source's total supports. The lead's reading where the ruling does not reach."
+agreed = "2026-11-20"
+
+
+[[exception]]
+entity = "us-sims-class"
+fact = "displacement_standard_lt"
+row = 958
+reason = "1,764 tons, Navypedia (B), which states standard. Ruling 1: of the two grade B rows, uboat.net's 1,720 (522) is labelled BRT and only taken as standard; Wikipedia's 1,570 (523) is grade C."
+agreed = "2026-11-20"
+
+[[exception]]
+entity = "us-sims-class"
+fact = "endurance_nm"
+row = 871
+reason = "5,010 nm at 15 knots, the Navy's fuel tables (FTP 218, A) for the class in war service, 1942 to 1943. Ruling 1, the highest grade; read as holding on 6 May as the Farragut and Porter rows of the same tables are (rows 846, 854)."
+agreed = "2026-11-20"
+
+[[exception]]
+entity = "us-sims-class"
+fact = "endurance_speed_kn"
+row = 872
+reason = "15 knots, the speed of row 871."
+agreed = "2026-11-20"
+
+[[exception]]
+entity = "us-sims-class"
+fact = "fuel_capacity_lt"
+row = 873
+reason = "453 tons full load, the same tables as row 871 (A), the pair of the endurance read."
+agreed = "2026-11-20"
+
+[[exception]]
+entity = "us-sims-class"
+fact = "max_speed_kn"
+row = 874
+reason = "34.7 knots, the same tables (A), an estimate at designed power; ruling 1 reads the higher grade before the 37 of uboat.net (531, B) and Wikipedia (532, C) and Navypedia's 35 (959, B)."
+agreed = "2026-11-20"
+
+[[exception]]
+entity = "us-sims-class"
+fact = "heavy_aa"
+row = 568
+reason = "Four 5-inch/38 from summer 1941, Navypedia (B), the one row dated to the period; the as-built five do not hold. Ruling 1."
+agreed = "2026-11-20"
+
+[[exception]]
+entity = "us-sims-class"
+fact = "light_aa"
+row = 570
+reason = "Six 20 mm from late 1941, Navypedia (B), the one row of 20 mm dated to the period. Ruling 1."
+agreed = "2026-11-20"
+
+[[exception]]
+entity = "us-mahan-class"
+fact = "displacement_standard_lt"
+row = 945
+reason = "1,488 tons, Navypedia (B), which states standard. Ruling 1: uboat.net's 1,500 (416, B) is labelled BRT and only taken as standard; Wikipedia's (417) is grade C. Read for Perkins."
+agreed = "2026-11-20"
+
+[[exception]]
+entity = "us-mahan-class"
+fact = "endurance_nm"
+row = 858
+reason = "6,080 nm at 15 knots, the Navy's fuel tables (FTP 218, A) for the class in war service, 1941 to 1943. Ruling 1, the highest grade; read as the Farragut and Porter rows of the same tables are. Read for Perkins."
+agreed = "2026-11-20"
+
+[[exception]]
+entity = "us-mahan-class"
+fact = "endurance_speed_kn"
+row = 859
+reason = "15 knots, the speed of row 858."
+agreed = "2026-11-20"
+
+[[exception]]
+entity = "us-mahan-class"
+fact = "fuel_capacity_lt"
+row = 860
+reason = "506 tons full load, the same tables as row 858 (A), the pair of the endurance read."
+agreed = "2026-11-20"
+
+[[exception]]
+entity = "us-mahan-class"
+fact = "max_speed_kn"
+row = 861
+reason = "34.7 knots, the same tables (A), an estimate at designed power; ruling 1 reads it before uboat.net's 36 (425, B), Navypedia's 36.5 (946, B) and Wikipedia's 37 (426, C)."
+agreed = "2026-11-20"
+
+[[exception]]
+entity = "us-mahan-class"
+fact = "heavy_aa"
+row = 547
+reason = "Five 5-inch/38, Navypedia (B), dated 1936 to 1942, read as holding on 6 May for Perkins. The same Navypedia line says most ships lost one gun in early 1942 when they gained seven 20 mm (row 549, also read), so four may be right for her; no row gives four or names Perkins. Unconfirmed; the lead's reading under ruling 2, for the architect."
+agreed = "2026-11-20"
+
+[[exception]]
+entity = "us-mahan-class"
+fact = "light_aa"
+row = 549
+reason = "Seven 20 mm added in early 1942 by Navypedia (B), dated only to 1942, read as holding on 6 May for Perkins under ruling 2: leaving the 20 mm out would give no light guns at all, which no row supports. Unconfirmed for her."
+agreed = "2026-11-20"
+
+
+[[exception]]
+entity = "jp-fubuki-class"
+fact = "light_aa"
+row = 732
+reason = "Four 25 mm from 1935 to 1937, Navypedia (B), the one row for the 25 mm; Nishida (148) and Wikipedia (733) give the 13 mm machine guns, which the anti-aircraft rule does not count. Ruling 1. Read for Akebono, Ushio and Sazanami."
+agreed = "2026-11-20"
+
+[[exception]]
+entity = "jp-zuiho-class"
+fact = "displacement_standard_lt"
+row = 2477
+reason = "11,262 tons, Navypedia (B). Ruling 1: Navypedia and Nishida (both B) print the same 11,262; Wikipedia (2478) says long tons, and a standard displacement is a treaty figure in long tons. Nishida's 11,084 (2479) is the conversion of 11,262 as if it were metric, which is our reading of his 't', not his statement. Read for Shoho."
+agreed = "2026-11-20"
+
+[[exception]]
+entity = "jp-zuiho-class"
+fact = "fuel_capacity_lt"
+row = 2492
+reason = "2,559 long tons, Nishida's 2,600 metric tons converted. Ruling 1 does not separate the two grade B rows, which print the same 2,600; the Japanese navy gave oil in metric tons, and the lists read Yubari's fuel so (row 243). Read for Shoho; the lead's reading."
+agreed = "2026-11-20"
+
+[[exception]]
+entity = "jp-myoko-class"
+fact = "endurance_nm"
+row = 2654
+reason = "7,500 nm at 14 knots, Navypedia (B), the better source of the two (ruling 10); Wikipedia's 8,000 (2656, C) says in its text that weight growth cut it."
+agreed = "2026-11-20"
+
+[[exception]]
+entity = "f4f-3"
+fact = "range_normal_nm"
+row = 589
+reason = "860 miles (747 nm) at 161 mph, pwencycl. Ruling 16 by ruling 1: both rows are grade C and neither hedges; this one states the speed the range is flown at, Wikipedia's 845 miles (588) states no condition. The two give strike radii 4 nm apart. A Navy characteristics sheet for the F4F-3 is to be found."
+agreed = "2026-11-20"
+
+[[exception]]
+entity = "f4f-3"
+fact = "pilot_armour"
+row = 593
+reason = "No: one low row (Wikipedia, as delivered). Ruling 3. Its text says squadron mechanics fitted armour later, not always before action; whether VF-2 and VF-42 had it by May 1942 is to be found (gaps.csv)."
+agreed = "2026-11-20"
+
+[[exception]]
+entity = "f4f-3"
+fact = "self_sealing_tanks"
+row = 594
+reason = "No: one low row (Wikipedia, as delivered). Ruling 3, with the same doubt as row 593."
+agreed = "2026-11-20"
+
+[[exception]]
+entity = "b5n1"
+fact = "range_normal_nm"
+row = 638
+reason = "679 miles (590 nm) on internal fuel, one low row (Pacific Eagles). Ruling 3. A range with the torpedo from a better source is to be found. Read for Shoho's torpedo planes."
+agreed = "2026-11-20"
+
+[[exception]]
+entity = "b5n1"
+fact = "torpedo_load"
+row = 1313
+reason = "One torpedo, the Type 91 inferred from the same page's account of the B5N in 1942. One low row. Ruling 3. What Shoho's B5Ns carried is to be found."
+agreed = "2026-11-20"
+
+[[exception]]
+entity = "b5n1"
+fact = "pilot_armour"
+row = 618
+reason = "No: one low row (Wikipedia). Ruling 3; nothing read says otherwise, and the B5N2's no is read the same way (row 477)."
+agreed = "2026-11-20"
+
+[[exception]]
+entity = "b5n1"
+fact = "self_sealing_tanks"
+row = 619
+reason = "No: one low row (Wikipedia). Ruling 3, as for the B5N2 (row 478)."
+agreed = "2026-11-20"
+
+[[exception]]
+entity = "g3m2"
+fact = "range_normal_nm"
+row = 637
+reason = "2,450 miles (2,129 nm) with the normal load at its best range speed, ONI 232 S of 1943, a wartime estimate of the enemy for the Type 96 Mk 4, read as the G3M2. Ruling 3. A Japanese figure for the G3M2 is to be found. Read for the Motoyama group's bombers at Rabaul."
+agreed = "2026-11-20"
+
+[[exception]]
+entity = "g3m2"
+fact = "bomb_load"
+row = 1314
+reason = "Four 250 kg bombs, one of the loads ONI 232 S lists for the Type 96 Mk 4. Ruling 3, as the G4M1's 250 kg bomb is read (row 28). What the G3M2s carried against the support group on 7 May is to be found (gaps.csv)."
+agreed = "2026-11-20"
+
+[[exception]]
+entity = "g3m2"
+fact = "pilot_armour"
+row = 634
+reason = "No: one low row (Wikipedia), said of the G3M in general. Ruling 3; nothing read says otherwise."
+agreed = "2026-11-20"
+
+[[exception]]
+entity = "g3m2"
+fact = "self_sealing_tanks"
+row = 635
+reason = "No: one low row (Wikipedia), said of the G3M in general. Ruling 3; nothing read says otherwise."
+agreed = "2026-11-20"
+
+[[exception]]
+entity = "ca-29-chicago"
+fact = "light_aa"
+row = 1322
+reason = "Fourteen 20 mm, Navypedia's 1942 line naming Chicago, dated only to the year. Ruling 2: read as this list reads Chester's and Astoria's 20 mm rows of 1942 and the Eastern Solomons list Portland's. Unconfirmed as to 6 May; a dated row is to be found."
+agreed = "2026-11-20"
+
+[[exception]]
+entity = "cv-5-yorktown"
+fact = "light_aa"
+row = 1221
+reason = "Twenty-four 20 mm, Navypedia's mid-1942 line, dated only to the year. Ruling 7 reads Yorktown from her own report, which counts 24 of 20 mm on 8 May (row 1216 to 1218, dated that day only, so the tool cannot place them on 6 May). This row gives the same count and is read in their place (ruling 2: her own report shows the guns aboard two days after the list's date). With the 1.1-inch row 1323 and the class's eight 5-inch/38 she has what her report gives; her .50 calibre guns are machine guns, which the rule does not count."
+agreed = "2026-11-20"
+
+# Decision 0188, stage A, the architect's rulings on the list's first build
+# (Nov 20, 2026): the TBD-1, SBD-2 and A5M4 are researched and derived, not
+# left out.
+
+[[exception]]
+entity = "sbd-2"
+fact = "pilot_armour"
+row = 640
+reason = "Yes: VB-2's SBD-2 BuNo 2106 received armoured seats and a bulletproof windscreen aboard Lexington before 10 March 1942 (Vintage Aviation News, C), read for VB-2's SBD-2s. One low row, an inference from one aircraft; ruling 3. Built without armour, by the sources that say armour came with the SBD-3. A record of the squadron's modifications is to be found."
+agreed = "2026-11-20"
+
+[[exception]]
+entity = "sbd-2"
+fact = "bomb_load"
+row = 1324
+reason = "One 1,000 lb bomb, aviation-history.com's SBD-2 armament (C), one undated row; ruling 3. Lexington's own report (fits 1310, A) has VB-2's SBD-2s carrying one each on 7 May, a row dated that day only, which the tool cannot place on 6 May."
+agreed = "2026-11-20"
+
+[[exception]]
+entity = "tbd-1"
+fact = "pilot_armour"
+row = 641
+reason = "No: 'lacking armor, self-sealing fuel tanks' by December 1941 (Modeling Madness, C), one low row; ruling 3. Nothing read says armour was fitted before May 1942. A record of VT-2's or VT-5's aircraft is to be found."
+agreed = "2026-11-20"
+
+[[exception]]
+entity = "tbd-1"
+fact = "torpedo_load"
+row = 1312
+reason = "One Mark 13 torpedo, historyofwar (C), one undated row; ruling 3. Lexington's report (fits 1311) has each of VT-2's TBDs with one torpedo on 7 May, a row dated that day only."
+agreed = "2026-11-20"
+
+[[exception]]
+entity = "a5m4"
+fact = "pilot_armour"
+row = 642
+reason = "No: Plane Dave (C), with which Migflug (row 644, C) agrees; two low rows, ruling 3. A book or a Japanese record is to be found."
+agreed = "2026-11-20"
+
+[[exception]]
+entity = "a5m4"
+fact = "pilot_armour"
+row = 644
+reason = "No: Migflug (C), the same as row 642."
+agreed = "2026-11-20"
+
+[[exception]]
+entity = "a5m4"
+fact = "self_sealing_tanks"
+row = 643
+reason = "No: Plane Dave (C), with which Migflug (row 645, C) agrees; two low rows, ruling 3."
+agreed = "2026-11-20"
+
+[[exception]]
+entity = "a5m4"
+fact = "self_sealing_tanks"
+row = 645
+reason = "No: Migflug (C), the same as row 643."
+agreed = "2026-11-20"
+
+[[exception]]
+entity = "a5m4"
+fact = "range_normal_nm"
+row = 616
+reason = "500 miles (434 nm) on internal fuel, pwencycl (C). Ruling 1: both rows are grade C; Pacific Eagles' 746 miles 'internal' (646) is the figure pwencycl gives with a drop tank (615) and Wikipedia's maximum (614), so its label is doubted, and the figure stated plainly for internal fuel is read."
+agreed = "2026-11-20"
