@@ -10,15 +10,17 @@
 use std::collections::BTreeMap;
 
 use sim_agent::{
-    AssumedNoteShown, AssumedShown, AssumedThing, BaseShown, CountShown, ForceShown, LiveIds,
-    MadeFrom, NeedsShown, OtherPlanShown, PartShown, PartingShown, PlanTaskShown, SizeAsked,
-    TaskShown, TrialAnswer, TrialAsked, TrialCosts, TrialRefused, TrialRunner, TrialSpread,
-    TrialStep, TrialUnderWay, TrialWent, WaitShown,
+    Answered, AssumedNoteShown, AssumedShown, AssumedThing, BaseShown, BesideOf, BesideShown,
+    ChosenShown, CountShown, CourseStep, CoverShown, DateShown, DatesAsked, Described,
+    DueDateShown, DueShown, DueThing, EnemyEveShown, ForceShown, LiveIds, MadeFrom, MatchedShown,
+    NeedsShown, OtherPlanShown, PartShown, PartingShown, PlanTaskShown, SizeAsked, TaskShown,
+    TrialAnswer, TrialAsked, TrialCosts, TrialRefused, TrialRunner, TrialSpread, TrialStep,
+    TrialUnderWay, TrialWent, WaitShown, WindowAnswer,
 };
 use sim_core::believed::Standing;
 use sim_core::command::{Awaited, IntentKind, WaitedFor};
 use sim_core::hex::Hex;
-use sim_core::ids::{BaseId, IntentId, TaskForceId};
+use sim_core::ids::{BaseId, EntityRef, IntentId, TaskForceId};
 use sim_core::map::Map;
 use sim_core::refdata::{RefData, ShipKind, TrialFigures, TrialSize};
 use sim_core::state::Side;
@@ -26,8 +28,9 @@ use sim_core::view::SideView;
 use sim_core::world_picture::PictureContact;
 use sim_data::Scenario;
 use sim_trial::{
-    begin_window, estimate, AssumedNote, AssumedOf, Believed, Costs, CourseCommand, Estimate,
-    PartSide, PartedBy, Played, PlayedWorld, Spread, Went, WindowAsked, WindowPlaying,
+    begin_window, estimate, given_dates, window, world_for_world, AssumedNote, AssumedOf, Believed,
+    Costs, CourseCommand, Due, DueKind, Estimate, PartSide, PartedBy, Played, PlayedWindow,
+    PlayedWorld, Spread, Went, WindowAsked, WindowPlaying, WorldForWorld,
 };
 
 /// What plays a seat's trials in one game.
@@ -90,56 +93,107 @@ struct Context {
 }
 
 /// A window being played, or played out.
-enum Stage {
-    Playing(Box<WindowPlaying>),
-    Played(Played),
+struct Stage {
+    playing: Option<Box<WindowPlaying>>,
+    played: Option<PlayedWindow>,
 }
 
 impl Stage {
+    fn new(playing: WindowPlaying) -> Stage {
+        Stage {
+            playing: Some(Box::new(playing)),
+            played: None,
+        }
+    }
+
     /// Plays one world; `true` where one was played.
     fn step(&mut self) -> bool {
-        match self {
-            Stage::Playing(playing) => {
-                if playing.step().is_some() {
-                    return true;
-                }
-                let Stage::Playing(playing) =
-                    std::mem::replace(self, Stage::Played(empty_played()))
-                else {
-                    unreachable!("the stage was playing")
-                };
-                let mut window = playing.play_out();
-                *self = Stage::Played(window.played.remove(0).played);
-                false
+        if let Some(playing) = &mut self.playing {
+            if playing.step().is_some() {
+                return true;
             }
-            Stage::Played(_) => false,
         }
+        if let Some(playing) = self.playing.take() {
+            self.played = Some(playing.play_out());
+        }
+        false
     }
 
-    fn played(&self) -> Option<&Played> {
-        match self {
-            Stage::Played(played) => Some(played),
-            Stage::Playing(_) => None,
-        }
+    fn played(&self) -> Option<&PlayedWindow> {
+        self.played.as_ref()
     }
 }
 
-fn empty_played() -> Played {
-    Played {
-        side: None,
-        worlds: Vec::new(),
-        uneven: false,
-        leaves_given: Vec::new(),
-    }
-}
-
-/// A seat's trial under way: the trial asked, then the second trial of
-/// things as they stand where one was asked, a world at a time.
+/// A seat's trial under way: the trial asked, then the second trial where
+/// one was asked, a world at a time.
 struct UnderWay {
     with: Stage,
-    without: Option<Stage>,
+    without: Option<(BesideOf, Stage)>,
+    /// Answered as a window: dates were asked.
+    window: bool,
     intent: IntentId,
     context: Context,
+}
+
+impl SeatTrials {
+    /// The size asked, by its name in the trial's figures or its numbers.
+    fn size(&self, asked: &TrialAsked) -> Result<(TrialSize, Option<String>), TrialRefused> {
+        match &asked.size {
+            SizeAsked::Named(name) => {
+                let found = self
+                    .figures
+                    .sizes()
+                    .into_iter()
+                    .find(|(n, _)| n == name)
+                    .map(|(_, size)| size);
+                match found {
+                    Some(size) => Ok((size, Some(name.clone()))),
+                    None => Err(TrialRefused(format!(
+                        "the trial's figures name no size \"{name}\": they name small, standard and full"
+                    ))),
+                }
+            }
+            SizeAsked::Numbers { worlds, days } => Ok((
+                TrialSize {
+                    worlds: *worlds,
+                    days: *days,
+                },
+                None,
+            )),
+        }
+    }
+}
+
+/// The course as `sim-trial` takes it.
+fn course_of(steps: &[CourseStep]) -> Vec<CourseCommand> {
+    steps
+        .iter()
+        .map(|step| CourseCommand {
+            day: step.day,
+            command: step.command.clone(),
+        })
+        .collect()
+}
+
+/// The dates as a window is asked them: the coming morning alone, `None`
+/// for the window to choose, or those given, each no later than the last
+/// day of the first date's play (decision 0181, amended 8).
+fn dates_of(
+    view: &SideView<'_>,
+    size: TrialSize,
+    dates: &DatesAsked,
+) -> Result<Option<Vec<u32>>, TrialRefused> {
+    let last = view.day() + size.days;
+    match dates {
+        DatesAsked::Coming => Ok(Some(vec![view.day() + 1])),
+        DatesAsked::Chosen => Ok(None),
+        DatesAsked::Given(days) => match days.iter().find(|d| **d > last) {
+            Some(late) => Err(TrialRefused(format!(
+                "\"dates\" gives day {late}, after the last day of the first date's play, day {last}: a later date is tried within the days of the size"
+            ))),
+            None => Ok(Some(days.clone())),
+        },
+    }
 }
 
 impl TrialRunner for SeatTrials {
@@ -149,46 +203,17 @@ impl TrialRunner for SeatTrials {
         asked: &TrialAsked,
     ) -> Result<Box<dyn TrialUnderWay>, TrialRefused> {
         let side = view.side();
-        let (size, size_name) = match &asked.size {
-            SizeAsked::Named(name) => {
-                let found = self
-                    .figures
-                    .sizes()
-                    .into_iter()
-                    .find(|(n, _)| n == name)
-                    .map(|(_, size)| size);
-                let Some(size) = found else {
-                    return Err(TrialRefused(format!(
-                        "the trial's figures name no size \"{name}\": they name small, standard and full"
-                    )));
-                };
-                (size, Some(name.clone()))
-            }
-            SizeAsked::Numbers { worlds, days } => (
-                TrialSize {
-                    worlds: *worlds,
-                    days: *days,
-                },
-                None,
-            ),
-        };
+        let (size, size_name) = self.size(asked)?;
+        let dates = dates_of(view, size, &asked.dates)?;
         let believed = self.believed.get(&side).cloned().unwrap_or_default();
-        let course: Vec<CourseCommand> = asked
-            .course
-            .iter()
-            .map(|step| CourseCommand {
-                day: step.day,
-                command: step.command.clone(),
-            })
-            .collect();
-        let window = |standing, course| WindowAsked {
+        let window = |standing, course, dates| WindowAsked {
             trial: asked.trial,
             worlds: size.worlds,
             days: size.days,
             intent: asked.intent,
             standing,
             course,
-            dates: Some(asked.dates.clone()),
+            dates,
         };
         let refused = |refused: sim_trial::Refused| {
             TrialRefused(format!("it cannot be tried: {}", refused.0))
@@ -199,21 +224,28 @@ impl TrialRunner for SeatTrials {
             &self.figures,
             &self.ref_data,
             &self.map,
-            window(asked.standing.clone(), course),
+            window(asked.standing.clone(), course_of(&asked.course), dates),
         )
         .map_err(refused)?;
-        let without = match &asked.as_they_stand {
-            Some(standing) => Some(Stage::Playing(Box::new(
-                begin_window(
-                    view,
-                    &believed,
-                    &self.figures,
-                    &self.ref_data,
-                    &self.map,
-                    window(standing.clone(), Vec::new()),
-                )
-                .map_err(refused)?,
-            ))),
+        let without = match &asked.second {
+            Some(second) => Some((
+                second.of,
+                Stage::new(
+                    begin_window(
+                        view,
+                        &believed,
+                        &self.figures,
+                        &self.ref_data,
+                        &self.map,
+                        window(
+                            second.standing.clone(),
+                            course_of(&second.course),
+                            Some(vec![view.day() + 1]),
+                        ),
+                    )
+                    .map_err(refused)?,
+                ),
+            )),
             None => None,
         };
         let contacts = view
@@ -221,19 +253,77 @@ impl TrialRunner for SeatTrials {
             .map(|half| half.belief.contacts)
             .unwrap_or_default();
         Ok(Box::new(UnderWay {
-            with: Stage::Playing(Box::new(with)),
+            with: Stage::new(with),
             without,
+            window: !matches!(asked.dates, DatesAsked::Coming),
             intent: asked.intent,
             context: Context {
                 side,
                 live: LiveIds::of(view),
                 size,
                 size_name,
-                first_day: asked.dates.first().copied().unwrap_or(view.day() + 1),
+                first_day: view.day() + 1,
                 contacts,
                 believed,
             },
         }))
+    }
+
+    fn describe(&self, view: &SideView<'_>, asked: &TrialAsked) -> Result<Described, TrialRefused> {
+        let (size, size_name) = self.size(asked)?;
+        let given = dates_of(view, size, &asked.dates)?;
+        let course = course_of(&asked.course);
+        let dates = match &given {
+            Some(days) => given_dates(view, &course, asked.intent, size.days, days),
+            None => Ok(sim_trial::dates(view, &course, asked.intent, size.days)),
+        }
+        .map_err(|refused| TrialRefused(format!("it cannot be tried: {}", refused.0)))?;
+        let live = LiveIds::of(view);
+        Ok(Described {
+            worlds: size.worlds,
+            days: size.days,
+            size: size_name,
+            first_day: dates.first_day,
+            last_day: dates.last_day,
+            dates: dates.dates.iter().map(|d| due_date(&live, d)).collect(),
+            given: matches!(asked.dates, DatesAsked::Given(_)),
+            not_tried: dates.not_tried.iter().map(|d| due_date(&live, d)).collect(),
+        })
+    }
+}
+
+/// What came due, by the live game's numbers: a thing the live view does
+/// not have is not named.
+fn due_shown(live: &LiveIds, due: &[Due]) -> Vec<DueShown> {
+    due.iter()
+        .filter_map(|d| {
+            let thing = match (d.unit, d.kind) {
+                (EntityRef::TaskForce(id), DueKind::BackFromYard) => {
+                    DueThing::BackFromYard(live.force(id)?)
+                }
+                (EntityRef::TaskForce(id), _) => DueThing::Force(live.force(id)?),
+                (EntityRef::LandUnit(id), _) => DueThing::LandUnit(live.land_unit(id)?),
+                _ => return None,
+            };
+            Some(DueShown { thing, day: d.day })
+        })
+        .collect()
+}
+
+fn due_date(live: &LiveIds, date: &sim_trial::Date) -> DueDateShown {
+    DueDateShown {
+        day: date.day,
+        due: due_shown(live, &date.due),
+    }
+}
+
+fn matched(w: &WorldForWorld) -> MatchedShown {
+    MatchedShown {
+        both: w.both.clone(),
+        first_alone: w.first_alone.clone(),
+        later_alone: w.later_alone.clone(),
+        neither: w.neither.clone(),
+        apart: w.apart.clone(),
     }
 }
 
@@ -242,15 +332,97 @@ impl TrialUnderWay for UnderWay {
         if self.with.step() {
             return TrialStep::Going;
         }
-        if let Some(without) = &mut self.without {
+        if let Some((_, without)) = &mut self.without {
             if without.step() {
                 return TrialStep::Going;
             }
         }
         let with = self.with.played().expect("played out");
-        let without = self.without.as_ref().and_then(Stage::played);
-        let estimate = estimate(with, self.intent, without);
-        TrialStep::Done(Box::new(fill(&self.context, &estimate, with)))
+        if self.window {
+            return TrialStep::Done(Box::new(Answered::Window(fill_window(&self.context, with))));
+        }
+        let first = &with.played[0].played;
+        let without = self
+            .without
+            .as_ref()
+            .and_then(|(of, stage)| stage.played().map(|p| (*of, &p.played[0].played)));
+        let estimate = estimate(first, self.intent, without.map(|(_, p)| p));
+        let mut answer = fill(&self.context, &estimate, first);
+        answer.beside = without.map(|(of, second)| {
+            let beside = sim_trial::estimate(second, self.intent, None);
+            let shown_went = of == BesideOf::AsItStands;
+            BesideShown {
+                of,
+                went: shown_went.then(|| went(&beside.went)),
+                last_day: beside.last_day,
+                could_not: beside.could_not.iter().map(|f| f.world).collect(),
+                side_costs: beside.side_costs.as_ref().map(costs),
+                enemy_costs: beside.enemy_costs.as_ref().map(costs),
+                matched: shown_went.then(|| matched(&world_for_world(&estimate, &beside))),
+            }
+        });
+        TrialStep::Done(Box::new(Answered::Trial(Box::new(answer))))
+    }
+}
+
+/// A window's answer, filled from its play (decision 0181, rule 13).
+fn fill_window(context: &Context, played: &PlayedWindow) -> WindowAnswer {
+    let read = window(played);
+    let dates = read
+        .dates
+        .iter()
+        .zip(&played.played)
+        .map(|(date, date_played)| DateShown {
+            day: date.day,
+            after_first: date.after_first,
+            taken_in: date.taken_in,
+            due: due_shown(&context.live, &date.due),
+            chosen: date.chosen.as_ref().map(|c| ChosenShown {
+                world: c.world,
+                units: c
+                    .units
+                    .iter()
+                    .filter_map(|(unit, men)| context.live.land_unit(*unit).map(|u| (u, *men)))
+                    .collect(),
+                men: c.men,
+                differs_in: c.differs_in.clone(),
+            }),
+            expected_ashore: date.expected_ashore,
+            enemy: date
+                .enemy
+                .iter()
+                .map(|e| EnemyEveShown {
+                    place: e.hex,
+                    eve: e.eve,
+                    men: e.men.map(spread),
+                    least_cover: e.least_cover.map(|c| CoverShown {
+                        lowest: c.lowest,
+                        middle: c.middle,
+                        highest: c.highest,
+                    }),
+                })
+                .collect(),
+            against_first: read
+                .against_first
+                .iter()
+                .find(|(day, _)| *day == date.day)
+                .map(|(_, w)| matched(w)),
+            trial: fill(context, &date.estimate, &date_played.played),
+        })
+        .collect();
+    WindowAnswer {
+        worlds: context.size.worlds,
+        days: context.size.days,
+        size: context.size_name.clone(),
+        given: read.given,
+        first_day: read.first_day,
+        last_day: read.last_day,
+        dates,
+        not_tried: read
+            .not_tried
+            .iter()
+            .map(|d| due_date(&context.live, d))
+            .collect(),
     }
 }
 
@@ -741,5 +913,6 @@ fn fill(context: &Context, estimate: &Estimate, played: &Played) -> TrialAnswer 
         leaves_given: estimate.leaves_given.clone(),
         uneven: estimate.uneven,
         partings,
+        beside: None,
     }
 }

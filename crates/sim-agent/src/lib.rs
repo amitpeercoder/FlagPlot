@@ -116,8 +116,11 @@ pub use staffing::{
 };
 pub use told::{told_as, DayPart, STOP_ON};
 pub use trial::{
-    AssumedNoteShown, AssumedShown, AssumedThing, BaseShown, CountShown, CourseStep, ForceShown,
-    LiveIds, MadeFrom, MapBase, NeedsShown, OtherPlanShown, OwnForce, OwnShip, OwnUnit, PartShown,
-    PartingShown, PlanTaskShown, SizeAsked, TaskShown, TrialAnswer, TrialAsked, TrialCosts,
+    Answered, AssumedNoteShown, AssumedShown, AssumedThing, BaseShown, BesideOf, BesideShown,
+    ChosenShown, CountShown, CourseStep, CoverShown, DateShown, DatesAsked, Described,
+    DueDateShown, DueShown, DueThing, EnemyEveShown, ForceShown, LiveIds, MadeFrom, MapBase,
+    MatchedShown, NeedsShown, OtherPlanShown, OwnForce, OwnShip, OwnUnit, PartShown, PartingShown,
+    PlanTaskShown, SecondAsked, SizeAsked, TaskShown, TrialAnswer, TrialAsked, TrialCosts,
     TrialRefused, TrialRunner, TrialSpread, TrialStep, TrialUnderWay, TrialWent, WaitShown,
+    WindowAnswer,
 };

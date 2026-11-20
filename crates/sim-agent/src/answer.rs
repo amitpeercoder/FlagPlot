@@ -100,8 +100,14 @@ pub const FORMAT: &str = "flagplot-agent";
 /// (`ground_types`), and who claims what (`claimed_by`: each unit with what
 /// it claims, a unit no longer in the game `since_dissolved`), with both in
 /// the claim's words, and to an air group's line its tally of its claims
-/// since the game began (`claimed_to_date`) (decisions 0179 and 0180).
-pub const VERSION: u32 = 30;
+/// since the game began (`claimed_to_date`) (decisions 0179 and 0180). 31
+/// adds to `trial` the arguments `compare`, `dates` and `describe`, to its
+/// answer the second trial beside the first (`beside`) and in what was asked
+/// `compare`, `beside`, `in_force` and `dates`; the answers `window`, the
+/// same order at the coming morning and later dates, and `trial_described`,
+/// what would be tried with nothing played; and to each estimate `trials`
+/// lists its `kind` (decision 0181).
+pub const VERSION: u32 = 31;
 
 /// The answer to a question about something the side does not know of: a
 /// unit of the enemy, a number that does not exist, an event the side may not

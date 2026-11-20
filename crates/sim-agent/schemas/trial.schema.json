@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "flagplot-agent/trial",
-  "title": "trial: the estimate of an intent of the commander's, or of a previewed draft, in counts of worlds",
-  "description": "Decision 0178: a seat's trial of an intent or a preview, played in several worlds from what the side believes. It gives how it went, what it cost the side and the trial's enemy, what the plan needs, what other plans it displaces, what was assumed and where the worlds part, all in counts of worlds and men, never chances or points. It changes nothing in the game and is kept with the session.",
+  "title": "trial: the estimate of an intent of the commander's, or of a previewed draft, in counts of worlds, alone or beside a second trial",
+  "description": "Decisions 0178 and 0181: a seat's trial of an intent or a preview, played in several worlds from what the side believes. It gives how it went, what it cost the side and the trial's enemy, what the plan needs, what other plans it displaces, what was assumed and where the worlds part, all in counts of worlds and men, never chances or points; and, where compare was asked, the second trial beside it: the plan as it stands without the draft (world for world), the side without the order, or the side with the order withdrawn on the coming morning. It changes nothing in the game and is kept with the session.",
   "type": "object",
   "required": [
     "format",
@@ -23,6 +23,7 @@
     "leaves_given_to_the_side",
     "uneven",
     "partings",
+    "beside",
     "text"
   ],
   "additionalProperties": false,
@@ -31,7 +32,7 @@
       "const": "flagplot-agent"
     },
     "version": {
-      "const": 30
+      "const": 31
     },
     "kind": {
       "const": "trial"
@@ -53,7 +54,11 @@
         "standing",
         "course",
         "second_trial",
-        "orders_not_tried"
+        "orders_not_tried",
+        "compare",
+        "beside",
+        "in_force",
+        "dates"
       ],
       "additionalProperties": false,
       "properties": {
@@ -101,9 +106,47 @@
         },
         "orders_not_tried": {
           "type": "integer"
+        },
+        "compare": {
+          "type": "boolean",
+          "description": "Whether a second trial was played beside the first (decision 0181)."
+        },
+        "beside": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "as_it_stands",
+            "without_it",
+            "withdrawn",
+            null
+          ],
+          "description": "What the second trial is of: the plan as it stands without the draft, the side without the order, or the side with the order withdrawn on the coming morning; null where none was played."
+        },
+        "in_force": {
+          "type": "boolean",
+          "description": "Whether the intent tried was in force on the evening asked."
+        },
+        "dates": {
+          "description": "The dates asked: null for the coming morning alone, \"chosen\", or the days given, the coming morning first.",
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "const": "chosen"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "integer"
+              }
+            }
+          ]
         }
       },
-      "description": "What was asked: the intent or the preview, the size, and what was taken in on the morning tried, in words."
+      "description": "What was asked: the intent or the preview, the size, what was taken in on the morning tried, in words, and what it was set beside or the dates asked."
     },
     "first_day": {
       "type": [
@@ -518,6 +561,130 @@
           }
         }
       }
+    },
+    "beside": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "of",
+            "how_it_went",
+            "last_day",
+            "could_not_be_played",
+            "cost",
+            "enemy_lost",
+            "world_for_world"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "of": {
+              "enum": [
+                "as_it_stands",
+                "without_it",
+                "withdrawn"
+              ]
+            },
+            "how_it_went": {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/went"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "How the intent went in the second trial; null where it is not there to have gone (the side without the order, or with it withdrawn)."
+            },
+            "last_day": {
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "could_not_be_played": {
+              "type": "array",
+              "items": {
+                "type": "integer"
+              }
+            },
+            "cost": {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/costs"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "enemy_lost": {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/costs"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "world_for_world": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "required": [
+                    "both",
+                    "with_the_draft_alone",
+                    "as_it_stands_alone",
+                    "neither",
+                    "apart"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "both": {
+                      "type": "array",
+                      "items": {
+                        "type": "integer"
+                      }
+                    },
+                    "with_the_draft_alone": {
+                      "type": "array",
+                      "items": {
+                        "type": "integer"
+                      }
+                    },
+                    "as_it_stands_alone": {
+                      "type": "array",
+                      "items": {
+                        "type": "integer"
+                      }
+                    },
+                    "neither": {
+                      "type": "array",
+                      "items": {
+                        "type": "integer"
+                      }
+                    },
+                    "apart": {
+                      "type": "array",
+                      "items": {
+                        "type": "integer"
+                      }
+                    }
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "The draft against the plan as it stands, world for world; null for any other second trial."
+            }
+          },
+          "description": "The second trial beside the first (decision 0181, rule 5)."
+        },
+        {
+          "type": "null"
+        }
+      ]
     },
     "text": {
       "type": "array",
