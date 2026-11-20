@@ -99,6 +99,32 @@ pub fn threat(risk: Risk, afloat: u32, contacts: &[Sighted]) -> Option<Sighted> 
         .copied()
 }
 
+/// The nearest contact within [`THREAT_HEXES`] of the station that reports
+/// more ships than the force has `afloat`, the lowest number on a tie: at
+/// preserve the force, a force with no home port does not go to its station
+/// while one stands there (decision 0192, 11).
+pub fn outnumbering(afloat: u32, contacts: &[Sighted]) -> Option<Sighted> {
+    contacts
+        .iter()
+        .filter(|c| c.hexes <= THREAT_HEXES && c.ships > afloat)
+        .min_by_key(|c| (c.hexes, c.number))
+        .copied()
+}
+
+/// The speed a force with no home port goes to its station at (decision
+/// 0192, 2): cruise where the engine's measure at cruise arrives within the
+/// night's [`NIGHT_HOURS`], else full where that arrives at all. Where only
+/// cruise arrives (the force would run dry at full), cruise; where neither
+/// does, none. `cruise` and `full` are the hours of each where it arrives.
+pub fn speed_from_sea(cruise: Option<Fixed>, full: Option<Fixed>) -> Option<SpeedSetting> {
+    match (cruise, full) {
+        (Some(h), _) if h <= Fixed::from_int(NIGHT_HOURS) => Some(SpeedSetting::Cruise),
+        (_, Some(_)) => Some(SpeedSetting::Full),
+        (Some(_), None) => Some(SpeedSetting::Cruise),
+        (None, None) => None,
+    }
+}
+
 /// The day from which a force that fuels where it lies may be used (rule
 /// 11): the day after it has fuelled, by `hours` of fuelling from the start
 /// of `today`.
@@ -174,6 +200,65 @@ pub(crate) fn home_of(view: &SideView<'_>, force: &TaskForce) -> Option<(BaseId,
         None if stopped(force) => own_base_at(view, force.position()).map(|b| (b, true)),
         None => None,
     }
+}
+
+/// Whether the force's route is done: no waypoint left to steam to.
+pub(crate) fn route_done(force: &TaskForce) -> bool {
+    force.route.next_index >= force.route.waypoints.len()
+}
+
+/// Where a force under way is bound: the last waypoint of its route, or the
+/// hex it steams toward where it has no waypoint left. `None` for a force
+/// that is stopped.
+pub(crate) fn bound_for(force: &TaskForce) -> Option<Hex> {
+    if stopped(force) {
+        return None;
+    }
+    if route_done(force) {
+        force.toward_hex
+    } else {
+        force.route.waypoints.last().copied()
+    }
+}
+
+/// Whether the engine would fuel a ship at the base in `hex` (decision 0192,
+/// 14, "gives a rate"): its port has a row, and the rate it fuels a ship at
+/// (at a berth where it has one, else by lighter) is given and above 0, or
+/// not given, which is fuelling with no limit (chapter 2, Port size), as
+/// [`fuelling_hours`] reads it.
+fn fuels_at(view: &SideView<'_>, hex: Hex) -> bool {
+    let Some(size) = view.hex(hex).map(|h| h.port_size) else {
+        return false;
+    };
+    let Some(port) = view.port_size(size) else {
+        return false;
+    };
+    let rate = if port.berths > 0 {
+        port.fuel_berth_rate_t_per_h
+    } else {
+        port.fuel_lighter_rate_t_per_h
+    };
+    rate.is_none_or(|r| r > Fixed::ZERO)
+}
+
+/// The base a force with no home port weighs its fuel to, and goes in to
+/// when short (decision 0192, 14): the nearest base of the side by the
+/// engine's sea route from `from` that holds fuel above its reserve and
+/// fuels a ship, the lower number on a tie. With its hex and the miles the
+/// engine charges to it.
+pub(crate) fn fuel_base(view: &SideView<'_>, from: Hex) -> Option<(BaseId, Hex, u32)> {
+    view.bases()
+        .filter(|b| b.fuel_t > b.fuel_reserve_t && fuels_at(view, b.hex))
+        .filter_map(|b| {
+            let nm = if b.hex == from {
+                0
+            } else {
+                crate::route::route_between(view, from, b.hex, None)?.out_nm
+            };
+            Some((nm, b.id, b.hex))
+        })
+        .min()
+        .map(|(nm, id, hex)| (id, hex, nm))
 }
 
 /// One ship's fuel against a passage: aboard, the engine's measure of the
@@ -331,6 +416,20 @@ struct Out {
     summary: Option<Reason>,
     /// The intent cannot be met: the notice rests on the summary.
     cannot: bool,
+}
+
+/// What the morning has read of a stand task whose force has no home port,
+/// for the branch that stands it from where it is (decision 0192).
+struct FromSea<'r> {
+    station: Hex,
+    risk: Risk,
+    threat_text: &'r str,
+    /// Whether it would sortie by the test of rule 10: its readiness.
+    sorties: bool,
+    /// At preserve the force, the contact that outnumbers it, in words.
+    outnumbered: Option<&'r str>,
+    /// The home port it has that is no longer the side's.
+    lost_home: Option<BaseId>,
 }
 
 impl Day<'_, '_> {
@@ -646,82 +745,8 @@ impl Day<'_, '_> {
             out.orders.push(order);
         }
 
-        // The home port (rule 12): the base it lies at when it has none, set
-        // by order.
-        let Some((home, set_home)) = home_of(view, &force) else {
-            let reason = serving(task, &plan)
-                .evidence(format!("{id} has no home port and lies at {here}, at no base of the side"), today)
-                .binding("the force must be stopped at its home port")
-                .worked(format!("{intent_words}: {id} has no home port and is not stopped at a base of the side, so the staff gives it no order."))
-                .would_change("a home port set, or the force stopped at a base")
-                .done();
-            out.summary = Some(reason);
-            self.hand_in_stand(task, &plan, id, out, in_scope, &intent_words);
-            return;
-        };
-        let home_text = base_words(view, home);
-        let Some(home_hex) = view.bases().find(|b| b.id == home).map(|b| b.hex) else {
-            return;
-        };
-        if set_home {
-            out.orders.push((
-                TaskForceOrder::SetHomePort(home),
-                serving(task, &plan)
-                    .evidence(format!("{id} has no home port and lies stopped at {home_text}"), today)
-                    .binding("the force's home port is the base it lies at when the task is formed")
-                    .worked(format!("{id} has no home port and lies stopped at {home_text}: its home port is set to {home_text}, where it sorties from and comes back to."))
-                    .would_change("a home port set by the commander")
-                    .done(),
-            ));
-        }
-
-        // Away from home (rule 14).
-        if !(stopped(&force) && here == home_hex) {
-            let reason = serving(task, &plan)
-                .evidence(format!("{id} is at {here}, not stopped at its home port {home_text}"), today)
-                .binding("the force sorties only from its home port")
-                .worked(format!(
-                    "{intent_words}: {id} is at {here}, not stopped at its home port {home_text}; {}. The staff gives it no order.",
-                    expected_words(view, id, home_hex)
-                ))
-                .would_change("the force stopped at its home port")
-                .done();
-            out.summary = Some(reason);
-            self.hand_in_stand(task, &plan, id, out, in_scope, &intent_words);
-            return;
-        }
-
-        // Rules of engagement, set once from the risk (rule 13).
-        let wanted_roe = RulesOfEngagement {
-            stance: Stance::Engage,
-            break_off: break_off(risk),
-            ..force.rules_of_engagement
-        };
-        if force.rules_of_engagement != wanted_roe {
-            out.orders.push((
-                TaskForceOrder::SetRulesOfEngagement {
-                    stance: wanted_roe.stance,
-                    break_off: wanted_roe.break_off,
-                    stragglers: wanted_roe.stragglers,
-                    keep_share: wanted_roe.keep_share,
-                },
-                serving(task, &plan)
-                    .evidence(format!(
-                        "{id} has the stance {} and a break-off level of {}",
-                        stance_words(force.rules_of_engagement.stance),
-                        force.rules_of_engagement.break_off
-                    ), today)
-                    .binding(format!("the break-off level of the {risk_text}: {}", break_off(risk)))
-                    .worked(format!(
-                        "A force that stands to meet the enemy by night engages: the rules of engagement of {id} are set to the stance engage and the break-off level of the {risk_text}, {}; its straggler instruction and keep share are left as they are.",
-                        break_off(risk)
-                    ))
-                    .would_change("a different risk level")
-                    .done(),
-            ));
-        }
-
-        // The threat (rule 9).
+        // The threat (rule 9), read before the home port: a force with no
+        // home port reads it too (decision 0192). Reading it gives no order.
         let afloat_count = u32::try_from(ships.len()).unwrap_or(u32::MAX);
         // The force's own picture: the command the task is addressed to
         // (decision 0134, 13).
@@ -766,6 +791,131 @@ impl Day<'_, '_> {
                 "at preserve the force it sorties on a threat it is not outnumbered by"
             }
         };
+        // At preserve the force, the nearest contact that outnumbers it within
+        // the threat's hexes (decision 0192, 11): a force with no home port
+        // keeps clear of it.
+        let outnumbered = (risk == Risk::Preserve)
+            .then(|| outnumbering(afloat_count, &sighted))
+            .flatten()
+            .map(|c| {
+                format!(
+                    "{} of {} ship(s) is {} hexes from the station {station}, within {THREAT_HEXES}, and outnumbers the {afloat_count} {id} has afloat",
+                    crate::picture::contact_words(&picture, c.number),
+                    c.ships,
+                    c.hexes
+                )
+            });
+
+        // The home port (rule 12): the base it lies at when it has none, set
+        // by order. A home port that is no longer the side's is treated as
+        // none (decision 0192, 16).
+        let lost_home = force
+            .home_port
+            .filter(|port| !view.bases().any(|b| b.id == *port));
+        let home = match force.home_port {
+            Some(port) if lost_home.is_none() => Some((port, false)),
+            _ if stopped(&force) => own_base_at(view, here).map(|b| (b, true)),
+            _ => None,
+        };
+        let Some((home, set_home)) = home else {
+            // No home port and not stopped at a base of the side: it stands
+            // from where it is (decision 0192).
+            let read = FromSea {
+                station,
+                risk,
+                threat_text: &threat_text,
+                sorties,
+                outnumbered: outnumbered.as_deref(),
+                lost_home,
+            };
+            self.serve_from_sea(task, &plan, &force, &read, out, in_scope, &intent_words);
+            return;
+        };
+        let home_text = base_words(view, home);
+        let Some(home_hex) = view.bases().find(|b| b.id == home).map(|b| b.hex) else {
+            return;
+        };
+        if set_home {
+            let mut reason = serving(task, &plan);
+            if let Some(lost) = lost_home {
+                reason = reason.evidence(
+                    format!("{id}'s home port {lost} is no longer its side's"),
+                    today,
+                );
+            }
+            out.orders.push((
+                TaskForceOrder::SetHomePort(home),
+                reason
+                    .evidence(format!("{id} has no home port and lies stopped at {home_text}"), today)
+                    .binding("the force's home port is the base it lies at when the task is formed")
+                    .worked(format!("{id} has no home port and lies stopped at {home_text}: its home port is set to {home_text}, where it sorties from and comes back to."))
+                    .would_change("a home port set by the commander")
+                    .done(),
+            ));
+        }
+
+        // Away from home (rule 14).
+        if !(stopped(&force) && here == home_hex) {
+            // Stopped at sea on no route, it goes home at cruise (decision
+            // 0192, 16).
+            if stopped(&force) && route_done(&force) && own_base_at(view, here).is_none() {
+                let forecast = view
+                    .forecast_passage(id, home_hex, Some(SpeedSetting::Cruise))
+                    .map(|f| f.end);
+                let when = match forecast {
+                    Some(PassageEnd::Arrives { day, pulse, .. }) => format!(
+                        "at cruise it is expected there in the {} of day {day}",
+                        pulse_words(pulse)
+                    ),
+                    _ => "it is not expected there by the engine's measure".to_string(),
+                };
+                if force.speed != SpeedSetting::Cruise {
+                    out.orders.push((
+                        TaskForceOrder::SetSpeed(SpeedSetting::Cruise),
+                        serving(task, &plan)
+                            .evidence(format!("{id} lies stopped at {here}, at sea on no route, away from its home port {home_text}"), today)
+                            .binding("a force stopped at sea goes home at cruise")
+                            .worked(format!("{id} lies stopped at sea away from its home port {home_text}: it is set to cruise to go home."))
+                            .would_change("the force at its home port")
+                            .done(),
+                    ));
+                }
+                out.orders.push((
+                    TaskForceOrder::SetRoute {
+                        waypoints: vec![home_hex],
+                        act_at: BTreeSet::new(),
+                        stand_at: BTreeSet::new(),
+                    },
+                    serving(task, &plan)
+                        .evidence(format!("{id} lies stopped at {here}, at sea on no route, away from its home port {home_text}"), today)
+                        .binding("a force stopped at sea goes home at cruise")
+                        .worked(format!(
+                            "{intent_words}: {id} lies stopped at {here}, at sea on no route, and is not at its home port {home_text}, so it would lie there for ever: it is routed home to {home_text} at cruise, and {when}. From there it stands as a force at its home port."
+                        ))
+                        .would_change("the force at its home port, or under way")
+                        .done(),
+                ));
+                self.hand_in_stand(task, &plan, id, out, in_scope, &intent_words);
+                return;
+            }
+            let reason = serving(task, &plan)
+                .evidence(format!("{id} is at {here}, not stopped at its home port {home_text}"), today)
+                .binding("the force sorties only from its home port")
+                .worked(format!(
+                    "{intent_words}: {id} is at {here}, not stopped at its home port {home_text}; {}. The staff gives it no order.",
+                    expected_words(view, id, home_hex)
+                ))
+                .would_change("the force stopped at its home port")
+                .done();
+            out.summary = Some(reason);
+            self.hand_in_stand(task, &plan, id, out, in_scope, &intent_words);
+            return;
+        }
+
+        // Rules of engagement, set once from the risk (rule 13).
+        if let Some(order) = roe_order(task, &plan, &force, risk, today) {
+            out.orders.push(order);
+        }
 
         let mut battle = false;
         let mut route: Option<(TaskForceOrder, Reason)> = None;
@@ -991,6 +1141,335 @@ impl Day<'_, '_> {
         self.hand_in_stand(task, &plan, id, out, in_scope, &intent_words);
     }
 
+    /// A stand task's force with no home port, not stopped at a base of the
+    /// side, stands from where it is (decision 0192, rules 1 to 9 as amended
+    /// on review by 11 to 16): it goes to its station, one way, on the first
+    /// morning it is not there and not under way to it, and lies stopped
+    /// there; its fuel is weighed to the nearest base that can fuel it, and
+    /// it goes in to that base, which becomes its home port, when a ship is
+    /// short of the passage there at cruise.
+    #[allow(clippy::too_many_arguments, clippy::too_many_lines)]
+    fn serve_from_sea(
+        &mut self,
+        task: &Intent,
+        plan: &Plan,
+        force: &TaskForce,
+        read: &FromSea<'_>,
+        mut out: Out,
+        in_scope: bool,
+        intent_words: &str,
+    ) {
+        let view = self.view;
+        let today = self.today;
+        let id = force.id;
+        let here = force.position();
+        let station = read.station;
+        let risk = read.risk;
+        let risk_text = risk_words(risk);
+        let threat_text = read.threat_text;
+        let at_station = here == station;
+        let under_way_to = !at_station && bound_for(force) == Some(station);
+        let lead = match read.lost_home {
+            Some(lost) => format!(
+                "{id}'s home port {lost} is no longer its side's, so it has no home port and stands from where it is"
+            ),
+            None => format!("{id} has no home port and stands from where it is"),
+        };
+        let lies = if stopped(force) {
+            format!("{id} has no home port and lies stopped at {here}, at no base of the side")
+        } else {
+            format!("{id} has no home port and is under way at {here}")
+        };
+        let lies = match read.lost_home {
+            Some(lost) => format!("{lies}; its home port {lost} is no longer its side's"),
+            None => lies,
+        };
+
+        // Preserve the force keeps clear of what outnumbers it (11).
+        if let (Some(outnumbered), false) = (read.outnumbered, under_way_to) {
+            let what = if at_station {
+                "it lies at its station and is given nothing"
+            } else {
+                "it does not go to its station"
+            };
+            out.summary = Some(
+                serving(task, plan)
+                    .evidence(lies.clone(), today)
+                    .evidence(outnumbered.to_string(), today)
+                    .binding("at preserve the force, a force with no home port does not go to its station, and is given nothing there, while a contact that outnumbers it is within 15 hexes of the station")
+                    .worked(format!("{intent_words}: {lead}; but {outnumbered}, so at preserve the force {what}."))
+                    .would_change("the contact farther or gone, fewer ships in it, or a bolder risk")
+                    .done(),
+            );
+            self.hand_in_stand(task, plan, id, out, in_scope, intent_words);
+            return;
+        }
+
+        // The base its fuel is weighed to (14), and ammunition in the same
+        // pass (15).
+        let base = fuel_base(view, station).filter(|(_, hex, _)| *hex != here);
+        let ammunition = crate::ammunition::short(view, id, risk);
+        let no_base_text = "no base of the side holds fuel above its reserve and can fuel it, so its fuel is not weighed";
+
+        let mut home_order: Option<(TaskForceOrder, Reason)> = None;
+        let mut speed_order: Option<(TaskForceOrder, Reason)> = None;
+        let mut route: Option<(TaskForceOrder, Reason)> = None;
+        if under_way_to {
+            // Under way, it is left alone (13).
+            out.summary = Some(
+                serving(task, plan)
+                    .evidence(lies.clone(), today)
+                    .binding("a force with no home port under way to its station is given no route")
+                    .worked(format!("{intent_words}: {lead}; it is under way to its station {station}, so it is given no route."))
+                    .would_change("the force at its station, or bound elsewhere")
+                    .done(),
+            );
+        } else if at_station {
+            // At the station it stays, or goes in for fuel (6, 14, 15).
+            let going_in = base.and_then(|(b, hex, nm)| {
+                let (needs, _) = fuel_needs(view, id, &[hex], Some(SpeedSetting::Cruise), margin(risk))?;
+                let short: Vec<ShipFuel> = needs.iter().copied().filter(|n| n.short()).collect();
+                if short.is_empty() && ammunition.is_none() {
+                    return None;
+                }
+                Some((b, hex, nm, needs, short))
+            });
+            match going_in {
+                Some((b, hex, nm, needs, short)) => {
+                    let base_text = base_words(view, b);
+                    let fuel_text = format!(
+                        "the passage from the station to {base_text}, {nm} nm, at cruise by the engine's measure, times the {} of the {risk_text}: {}",
+                        margin(risk),
+                        needs_words(&needs)
+                    );
+                    let why = match (short.is_empty(), &ammunition) {
+                        (false, Some(a)) => format!(
+                            "{} short of it, and {}",
+                            needs_words(&short),
+                            a.words
+                        ),
+                        (false, None) => format!("{} short of it", needs_words(&short)),
+                        (true, Some(a)) => a.words.clone(),
+                        (true, None) => String::new(),
+                    };
+                    home_order = Some((
+                        TaskForceOrder::SetHomePort(b),
+                        serving(task, plan)
+                            .evidence(lies.clone(), today)
+                            .evidence(fuel_text.clone(), today)
+                            .binding("a force with no home port that goes in for fuel or ammunition takes the base it goes to as its home port")
+                            .worked(format!("{id} goes in to {base_text}: its home port is set to {base_text}, and from there it stands as a force with a home port."))
+                            .would_change("a home port set by the commander")
+                            .done(),
+                    ));
+                    if force.speed != SpeedSetting::Cruise {
+                        speed_order = Some((
+                            TaskForceOrder::SetSpeed(SpeedSetting::Cruise),
+                            serving(task, plan)
+                                .evidence(fuel_text.clone(), today)
+                                .binding("a force going in for fuel goes at cruise")
+                                .worked(format!("{id} goes in to {base_text} at cruise: it is set to cruise."))
+                                .would_change("the ships' fuel and ammunition enough")
+                                .done(),
+                        ));
+                    }
+                    route = Some((
+                        TaskForceOrder::SetRoute {
+                            waypoints: vec![hex],
+                            act_at: BTreeSet::new(),
+                            stand_at: BTreeSet::new(),
+                        },
+                        serving(task, plan)
+                            .evidence(lies.clone(), today)
+                            .evidence(fuel_text.clone(), today)
+                            .binding("a force at its station with a ship short of the passage to the base its fuel is weighed to goes in to that base")
+                            .worked(format!(
+                                "{intent_words}: {lead}. It lies at its station {station}; {fuel_text}: {why}. It goes in: it is routed to {base_text}, the nearest base of the side by sea that holds fuel above its reserve and can fuel it, at cruise."
+                            ))
+                            .would_change("more fuel or ammunition aboard")
+                            .done(),
+                    ));
+                }
+                None => {
+                    let fuel_text = match base {
+                        Some((b, _, nm)) => format!(
+                            "its fuel is weighed to {}, {nm} nm from the station, and every ship has the passage there at cruise times the {} of the {risk_text}",
+                            base_words(view, b),
+                            margin(risk)
+                        ),
+                        None => no_base_text.to_string(),
+                    };
+                    let ammunition_text = match (&ammunition, base) {
+                        (Some(a), None) => format!(
+                            "; {}, but with no base to go in to it stays",
+                            a.words
+                        ),
+                        _ => String::new(),
+                    };
+                    out.summary = Some(
+                        serving(task, plan)
+                            .evidence(lies.clone(), today)
+                            .evidence(threat_text.to_string(), today)
+                            .evidence(fuel_text.clone(), today)
+                            .binding("a force with no home port lies stopped at its station")
+                            .worked(format!(
+                                "{intent_words}: {lead}. It lies stopped at its station {station} and is given no route; {fuel_text}{ammunition_text}; {threat_text}, so it is at {} readiness.",
+                                if read.sorties { "battle" } else { "normal" }
+                            ))
+                            .would_change("a ship short of fuel, or a contact near the station, or none")
+                            .done(),
+                    );
+                }
+            }
+        } else {
+            // Routed to the station, one way (11, 2, 5).
+            let cruise = hours_to(view, id, station, SpeedSetting::Cruise);
+            let full = hours_to(view, id, station, SpeedSetting::Full);
+            let hours_text = format!(
+                "the station is {} hours away at cruise and {} at full speed",
+                cruise.map_or_else(|| "no".to_string(), |h| h.to_string()),
+                full.map_or_else(|| "no".to_string(), |h| h.to_string())
+            );
+            let chosen = speed_from_sea(cruise, full);
+            let waypoints: Vec<Hex> = match base {
+                Some((_, hex, _)) if hex != station => vec![station, hex],
+                _ => vec![station],
+            };
+            let needs = chosen.and_then(|speed| {
+                base.map(|_| fuel_needs(view, id, &waypoints, Some(speed), margin(risk)))
+            });
+            match (chosen, needs) {
+                (None, _) | (Some(_), Some(None)) => {
+                    out.cannot = true;
+                    out.summary = Some(
+                        serving(task, plan)
+                            .evidence(lies.clone(), today)
+                            .evidence(hours_text.clone(), today)
+                            .binding("a force goes to its station by the engine's sea route")
+                            .worked(format!(
+                                "{intent_words}: {lead}, but {hours_text}: the engine's measure brings it to the station at no speed, so it is given no route and the staff cannot meet {}.",
+                                task.id
+                            ))
+                            .would_change("a station the force can reach")
+                            .done(),
+                    );
+                }
+                (Some(speed), needs) => {
+                    let needs = needs.flatten().map(|(n, _)| n);
+                    let speed_text = match speed {
+                        SpeedSetting::Full => "full speed",
+                        _ => "cruise",
+                    };
+                    let fuel_text = match (&needs, base) {
+                        (Some(needs), Some((b, _, nm))) => format!(
+                            "its fuel is weighed to {}, the nearest base of the side by sea that holds fuel above its reserve and can fuel it, {nm} nm from the station: the passage to the station and from there to {}, at {speed_text} by the engine's measure, times the {} of the {risk_text}: {}",
+                            base_words(view, b),
+                            base_words(view, b),
+                            margin(risk),
+                            needs_words(needs)
+                        ),
+                        _ => no_base_text.to_string(),
+                    };
+                    let short: Vec<ShipFuel> = needs
+                        .iter()
+                        .flatten()
+                        .copied()
+                        .filter(|n| n.short())
+                        .collect();
+                    if !short.is_empty() || ammunition.is_some() {
+                        let why = match (short.is_empty(), &ammunition) {
+                            (false, Some(a)) => format!(
+                                "{} short of it, and {}",
+                                needs_words(&short),
+                                a.words
+                            ),
+                            (false, None) => format!("{} short of it", needs_words(&short)),
+                            (true, Some(a)) => a.words.clone(),
+                            (true, None) => String::new(),
+                        };
+                        out.summary = Some(
+                            serving(task, plan)
+                                .evidence(lies.clone(), today)
+                                .evidence(fuel_text.clone(), today)
+                                .binding("fuel comes first: a force with a ship short of the fuel or the ammunition it needs does not go to its station")
+                                .worked(format!(
+                                    "{intent_words}: {lead}; {hours_text}; {fuel_text}: {why}, so it does not go to its station."
+                                ))
+                                .would_change("more fuel or ammunition aboard")
+                                .done(),
+                        );
+                    } else {
+                        if force.speed != speed {
+                            speed_order = Some((
+                                TaskForceOrder::SetSpeed(speed),
+                                serving(task, plan)
+                                    .evidence(hours_text.clone(), today)
+                                    .binding(format!("cruise where it reaches the station within {NIGHT_HOURS} hours, else full speed"))
+                                    .worked(format!("{hours_text}: {id} is set to {speed_text}."))
+                                    .would_change("a station nearer, or farther")
+                                    .done(),
+                            ));
+                        }
+                        route = Some((
+                            TaskForceOrder::SetRoute {
+                                waypoints: vec![station],
+                                act_at: BTreeSet::new(),
+                                stand_at: BTreeSet::new(),
+                            },
+                            serving(task, plan)
+                                .evidence(lies.clone(), today)
+                                .evidence(fuel_text.clone(), today)
+                                .evidence(hours_text.clone(), today)
+                                .binding("a force with no home port is routed to its station, one way, and lies stopped there")
+                                .worked(format!(
+                                    "{intent_words}: {lead}. It is not at its station and not under way to it; {fuel_text}: it has the fuel. It is routed to the station {station} at {speed_text}, one way: {hours_text}. It arrives and lies stopped there."
+                                ))
+                                .would_change("the force at its station, or under way to it, or less fuel aboard")
+                                .done(),
+                        ));
+                    }
+                }
+            }
+        }
+
+        // Home port, rules of engagement, readiness, speed, route (rule 15's
+        // order of the orders).
+        if let Some(order) = home_order {
+            out.orders.push(order);
+        }
+        if let Some(order) = roe_order(task, plan, force, risk, today) {
+            out.orders.push(order);
+        }
+        // Readiness by the test of a sortie, whether or not it goes (11).
+        let wanted = if read.sorties {
+            Readiness::Battle
+        } else {
+            Readiness::Normal
+        };
+        if force.readiness != wanted {
+            out.orders.push((
+                TaskForceOrder::SetReadiness(wanted),
+                serving(task, plan)
+                    .evidence(threat_text.to_string(), today)
+                    .binding("a force with no home port is at battle readiness on a day it would sortie, normal on one it would not")
+                    .worked(format!(
+                        "{intent_words}: {threat_text}; it {} sortie by the test of a stand, so {id} is set to {} readiness.",
+                        if read.sorties { "would" } else { "would not" },
+                        if read.sorties { "battle" } else { "normal" }
+                    ))
+                    .would_change("a threat near the station, or none")
+                    .done(),
+            ));
+        }
+        if let Some(order) = speed_order {
+            out.orders.push(order);
+        }
+        if let Some(order) = route {
+            out.orders.push(order);
+        }
+        self.hand_in_stand(task, plan, id, out, in_scope, intent_words);
+    }
+
     fn hand_in_stand(
         &mut self,
         task: &Intent,
@@ -1059,6 +1538,50 @@ pub(crate) fn silence_order(
             .binding("at preserve the force the force keeps radio silence")
             .worked(format!(
                 "At preserve the force, {force} keeps radio silence: it is set to it, and sends nothing until it fights, is attacked or strikes. What silence buys is not built: nothing listens to radio traffic yet (decision 0136, 19)."
+            ))
+            .would_change("a different risk level")
+            .done(),
+    ))
+}
+
+/// The order that sets a stand's rules of engagement once from the risk
+/// (decision 0124, 13): the stance engage and the risk's break-off level,
+/// the straggler instruction and keep share as they are. `None` where the
+/// force has them already.
+fn roe_order(
+    task: &Intent,
+    plan: &Plan,
+    force: &TaskForce,
+    risk: Risk,
+    today: u32,
+) -> Option<(TaskForceOrder, Reason)> {
+    let id = force.id;
+    let risk_text = risk_words(risk);
+    let wanted_roe = RulesOfEngagement {
+        stance: Stance::Engage,
+        break_off: break_off(risk),
+        ..force.rules_of_engagement
+    };
+    if force.rules_of_engagement == wanted_roe {
+        return None;
+    }
+    Some((
+        TaskForceOrder::SetRulesOfEngagement {
+            stance: wanted_roe.stance,
+            break_off: wanted_roe.break_off,
+            stragglers: wanted_roe.stragglers,
+            keep_share: wanted_roe.keep_share,
+        },
+        serving(task, plan)
+            .evidence(format!(
+                "{id} has the stance {} and a break-off level of {}",
+                stance_words(force.rules_of_engagement.stance),
+                force.rules_of_engagement.break_off
+            ), today)
+            .binding(format!("the break-off level of the {risk_text}: {}", break_off(risk)))
+            .worked(format!(
+                "A force that stands to meet the enemy by night engages: the rules of engagement of {id} are set to the stance engage and the break-off level of the {risk_text}, {}; its straggler instruction and keep share are left as they are.",
+                break_off(risk)
             ))
             .would_change("a different risk level")
             .done(),
