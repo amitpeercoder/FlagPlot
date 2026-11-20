@@ -18,7 +18,7 @@ Read on 2026-11-20 for a future scenario of the battle. This pass gathered facts
 | `places.csv`, `place_positions.csv` | 6, 5 (95 to 99) | Deboyne, Misima, Rossel Island, Jomard Passage, Townsville, Point ZED |
 | `gaps.csv` | 13 | What was looked for and not found |
 
-The class, aircraft and ship-fact rows were written by two researchers under this pass. Every one of their 357 rows was checked by script against the page it cites: the row's quoted fragment, or failing that each figure in it, was found in the page text. The pass's own 291 engagement and air unit rows were checked the same way.
+The class, aircraft and ship-fact rows were written by two researchers under this pass. Every one of their 357 rows was checked by script against the page it cites: the row's quoted fragment, or failing that each figure in it, was found in the page text. The pass's own 232 position, event, outcome and air unit rows were checked the same way; the 159 forces rows carry no quotation and were written straight from the appendices and task organizations read.
 
 ## Sources and how firm they are
 
