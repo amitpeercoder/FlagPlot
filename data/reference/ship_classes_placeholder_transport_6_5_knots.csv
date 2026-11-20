@@ -1,0 +1,14 @@
+# PLACEHOLDER DATA. One invented class for scenario 105, the Coral Sea
+# (decision 0188; the hand calculation of tests/scenario_105_the_coral_sea.rs,
+# "Its start and its speed"). It is not historical and must not be used for
+# validation.
+# Class 14, Placeholder transport, 6.5 knots, is class 10 of
+# ship_classes_placeholder_transports.csv (the placeholder troop transport)
+# with a cruise speed and a top speed of 6.5 kn in place of 10 and 12: a row
+# calls 6.5 kn the convoy's cruising speed and another its most
+# (engagement_events 2478; troop_lift_facts 759). No other figure of it rests
+# on a row. It is in a file of its own so that no other scenario's data files
+# change.
+# The columns are those of ship_classes.csv, and troop_capacity_men last.
+id,name,kind,cruise_speed_kn,max_speed_kn,fuel_capacity_t,endurance_nm,cargo_capacity_t,main_guns,gun_rounds_per_min,gun_rounds_per_gun,gun_damage,torpedo_tubes,torpedo_tubes_one_side,torpedo_damage,toughness,radar,aircraft_capacity,anti_aircraft,troop_capacity_men
+14,"Placeholder transport, 6.5 knots",transport,6.5,6.5,1000,10000,3000,0,0,0,0,0,0,0,300,0,0,0,600

@@ -1,0 +1,58 @@
+# FILE OF SIDES of scenario 105, the Coral Sea (decision 0188; decision 0173,
+# 1 to 3): whose each class of ship and type of aircraft of
+# ship_classes_coral_sea.csv, ship_classes.csv,
+# ship_classes_placeholder_transport_6_5_knots.csv and
+# aircraft_types_coral_sea.csv is. Written by hand; no generated file changes
+# for it. Columns: table (ship_class or aircraft_type), id, side (allied,
+# japanese or both), note.
+#
+# What a row rests on (decision 0173, 3): a class or type derived from the
+# order of battle takes the side of the ships or aircraft its derivation list
+# gives it, and its note names the list and the ships (Australia and Hobart
+# are Australian, of the Allied side). A placeholder class takes both: it is
+# invented and used by either side.
+table,id,side,note
+ship_class,1,both,"Placeholder cruiser: a placeholder class, used by either side"
+ship_class,2,both,"Placeholder destroyer: a placeholder class, used by either side"
+ship_class,3,both,"Placeholder cargo ship: a placeholder class, used by either side"
+ship_class,4,both,"Placeholder carrier: a placeholder class, used by either side"
+ship_class,5,both,"Placeholder carrier with guns: a placeholder class, used by either side"
+ship_class,6,both,"Placeholder cruiser with guns: a placeholder class, used by either side"
+ship_class,8,both,"Placeholder cruiser with wing tubes: a placeholder class, used by either side"
+ship_class,14,both,"Placeholder transport, 6.5 knots: a placeholder class, used by either side"
+ship_class,4000,allied,"Derived by data/derivation/coral_sea.toml, class_ids 4000: cv-2-lexington"
+ship_class,4001,allied,"Derived by data/derivation/coral_sea.toml, class_ids 4001: cv-5-yorktown"
+ship_class,4002,allied,"Derived by data/derivation/coral_sea.toml, class_ids 4002: ca-36-minneapolis, ca-32-new-orleans"
+ship_class,4003,allied,"Derived by data/derivation/coral_sea.toml, class_ids 4003: ca-34-astoria"
+ship_class,4004,allied,"Derived by data/derivation/coral_sea.toml, class_ids 4004: ca-27-chester"
+ship_class,4005,allied,"Derived by data/derivation/coral_sea.toml, class_ids 4005: ca-33-portland"
+ship_class,4006,allied,"Derived by data/derivation/coral_sea.toml, class_ids 4006: dd-349-dewey, dd-348-farragut, dd-355-aylwin, dd-354-monaghan"
+ship_class,4007,allied,"Derived by data/derivation/coral_sea.toml, class_ids 4007: dd-360-phelps"
+ship_class,4008,allied,"Derived by data/derivation/coral_sea.toml, class_ids 4008: dd-417-morris, dd-411-anderson, dd-412-hammann, dd-414-russell"
+ship_class,4009,allied,"Derived by data/derivation/coral_sea.toml, class_ids 4009: dd-416-walke"
+ship_class,4010,allied,"Derived by data/derivation/coral_sea.toml, class_ids 4010: hmas-australia"
+ship_class,4011,allied,"Derived by data/derivation/coral_sea.toml, class_ids 4011: ca-29-chicago"
+ship_class,4012,allied,"Derived by data/derivation/coral_sea.toml, class_ids 4012: hmas-hobart"
+ship_class,4013,allied,"Derived by data/derivation/coral_sea.toml, class_ids 4013: dd-377-perkins"
+ship_class,4014,japanese,"Derived by data/derivation/coral_sea.toml, class_ids 4014: shokaku"
+ship_class,4015,japanese,"Derived by data/derivation/coral_sea.toml, class_ids 4015: zuikaku"
+ship_class,4016,japanese,"Derived by data/derivation/coral_sea.toml, class_ids 4016: myoko, haguro"
+ship_class,4017,japanese,"Derived by data/derivation/coral_sea.toml, class_ids 4017: akebono, ushio"
+ship_class,4018,japanese,"Derived by data/derivation/coral_sea.toml, class_ids 4018: ariake, yugure"
+ship_class,4019,japanese,"Derived by data/derivation/coral_sea.toml, class_ids 4019: shigure, shiratsuyu"
+ship_class,4020,japanese,"Derived by data/derivation/coral_sea.toml, class_ids 4020: shoho"
+ship_class,4021,japanese,"Derived by data/derivation/coral_sea.toml, class_ids 4021: aoba, kinugasa"
+ship_class,4022,japanese,"Derived by data/derivation/coral_sea.toml, class_ids 4022: kako, furutaka"
+ship_class,4023,japanese,"Derived by data/derivation/coral_sea.toml, class_ids 4023: yubari"
+ship_class,4024,japanese,"Derived by data/derivation/coral_sea.toml, class_ids 4024: sazanami"
+aircraft_type,4100,allied,"Derived by data/derivation/coral_sea.toml, type 4100: the F4F-3, VF-2 and VF-42"
+aircraft_type,4101,allied,"Derived by data/derivation/coral_sea.toml, type 4101: the SBD-3, VS-2, VS-5 and VB-5"
+aircraft_type,4102,japanese,"Derived by data/derivation/coral_sea.toml, type 4102: the A6M2, the carriers' fighter units and the Tainan Air Group"
+aircraft_type,4103,japanese,"Derived by data/derivation/coral_sea.toml, type 4103: the D3A1, the Shokaku and Zuikaku bomber units"
+aircraft_type,4104,japanese,"Derived by data/derivation/coral_sea.toml, type 4104: the B5N2, the Shokaku and Zuikaku attack units"
+aircraft_type,4105,japanese,"Derived by data/derivation/coral_sea.toml, type 4105: the B5N1, Shoho's attack unit"
+aircraft_type,4106,japanese,"Derived by data/derivation/coral_sea.toml, type 4106: the G4M1, the 4th Air Group"
+aircraft_type,4107,japanese,"Derived by data/derivation/coral_sea.toml, type 4107: the G3M2, the Motoyama Air Group"
+aircraft_type,4108,allied,"Derived by data/derivation/coral_sea.toml, type 4108: the SBD-2, VB-2"
+aircraft_type,4109,allied,"Derived by data/derivation/coral_sea.toml, type 4109: the TBD-1, VT-2 and VT-5"
+aircraft_type,4110,japanese,"Derived by data/derivation/coral_sea.toml, type 4110: the A5M4, Shoho's fighters"

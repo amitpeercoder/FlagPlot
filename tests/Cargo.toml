@@ -557,6 +557,10 @@ name = "scenario_103_the_eastern_solomons_over_five_days"
 path = "scenario_103_the_eastern_solomons_over_five_days.rs"
 
 [[test]]
+name = "scenario_105_the_coral_sea"
+path = "scenario_105_the_coral_sea.rs"
+
+[[test]]
 name = "five_days_first_run"
 path = "five_days_first_run.rs"
 
