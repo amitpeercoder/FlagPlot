@@ -60,7 +60,7 @@ miles that can be a decimal, shots) is a decimal string such as `"12"` or
 
 ## The version rule
 
-`version` is 31. A field removed from an answer, or a field whose meaning
+`version` is 32. A field removed from an answer, or a field whose meaning
 changes, raises the version by one. A field added does not change it, so a
 reader must ignore fields it does not know. (The schemas here set
 `additionalProperties: false` because they describe this version exactly; a
@@ -1171,3 +1171,15 @@ the least cover at a place, the trial's own reckoning, never a unit), the fields
 `describe` true the answer is `trial_described`: what was asked, the dates with what is due on each, and `plays`, each
 trial it would play with its date, worlds and days. Neither holds a chance or points. A game with no trial lists the same
 tools as before, and its answers differ only in the version.
+
+## What the enemy is scored for (decision 0183)
+
+`version` is 32. The briefing's `objectives` part gains `enemy_objectives`: the other side's objectives, in the order the
+scenario gives them, each an `enemy_objective` (its own definition in `briefing.schema.json`) with `kind`, `base` (the
+map's handle and name, or `null`), `closed` (for `base_open`, whether the enemy is scored for the base being shut; `null`
+for the others), `ship_points`, `points` and, for `ships_out_of_action` only, `horizon_days`. The fields mean what those of
+an own objective of the same name mean. It has no field for a count, days counted, points earned, a basis or whether a base
+is open now, and nothing of the enemy's mission is given. The part is left out where the scenario has no objectives and at
+a seat at a command, so those briefings differ only in the version; it is an empty list where the side has objectives and
+the enemy none. The text adds, after the line of the levels, "The enemy is scored for:" and one line under it for each
+objective, in words from the reader's side, or one line that says the enemy has none.

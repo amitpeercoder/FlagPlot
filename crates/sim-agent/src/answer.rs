@@ -106,8 +106,11 @@ pub const FORMAT: &str = "flagplot-agent";
 /// `compare`, `beside`, `in_force` and `dates`; the answers `window`, the
 /// same order at the coming morning and later dates, and `trial_described`,
 /// what would be tried with nothing played; and to each estimate `trials`
-/// lists its `kind` (decision 0181).
-pub const VERSION: u32 = 31;
+/// lists its `kind` (decision 0181). 32 adds to the briefing's objectives
+/// part what the enemy is scored for, `enemy_objectives`: each of his
+/// objectives with its kind, its base, open or shut and its worth, and
+/// nothing of his mission, progress or state (decision 0183).
+pub const VERSION: u32 = 32;
 
 /// The answer to a question about something the side does not know of: a
 /// unit of the enemy, a number that does not exist, an event the side may not

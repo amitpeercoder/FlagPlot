@@ -509,6 +509,7 @@ Anything that plays the game is handed a side's view and never the truth. The tr
 | Its own orders | All of them, accepted or refused, with the causes it may see. |
 | Its own command state, commands, staff reasons, notices and interrupts | All of them, whole: its intents, limits, leaves, plans, runs, commitments, holds and interrupts, each command taken or refused with the reason, the reason of each decision its staff made, each notice its staff handed in and each interrupt that fired (chapter 8). The enemy's, none. |
 | Its own mission and objectives | Its own only (chapter 6, What a side knows of its progress). |
+| What the enemy is scored for | The enemy's objectives as the scenario gives them: each one's kind, the base it names, open or shut, and what it is worth, and for ships out of action the horizon. Not his mission, not his progress and nothing of his state. It is a rule of the game, as the levels are, and no rule of the simulation, staff or trial reads it (chapter 6, What a side sees of the enemy's objectives). Not at a seat at a command. [0183] |
 | What happened | The events it may see, cut as the next section says. |
 
 A side learns of what its forces did when a day is over. [0007, 0034, 0047, 0050, 0055]

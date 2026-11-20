@@ -13,7 +13,7 @@ use crate::briefing::{
     StrikeReport,
 };
 use crate::common::{Handle, Place};
-use crate::objectives::{ObjectiveLine, ResultPart, ShipKindPoints};
+use crate::objectives::{EnemyObjectiveLine, ObjectiveLine, ResultPart, ShipKindPoints};
 
 fn plain(word: &str) -> String {
     word.replace('_', " ")
@@ -155,6 +155,19 @@ impl Briefing {
                         "Levels: the result is read from the margin, your points less the enemy's. A margin of {} or more is a minor victory, {} or more a major one, {} or more a decisive one; the same margins against you are defeats; less than {} either way is a stalemate",
                         l.minor.0, l.major.0, l.decisive.0, l.minor.0
                     ));
+                }
+            }
+        }
+        match &ob.enemy_objectives {
+            None => {}
+            Some(list) if list.is_empty() => o.line(
+                "The enemy is scored for: nothing, this scenario gives the enemy no objectives"
+                    .to_string(),
+            ),
+            Some(list) => {
+                o.line("The enemy is scored for:".to_string());
+                for line in list {
+                    o.sub(enemy_objective_text(line));
                 }
             }
         }
@@ -2338,6 +2351,45 @@ fn ship_points_text(points: &[ShipKindPoints]) -> String {
         .map(|p| format!("{} {}", p.kind, p.points.0))
         .collect();
     list.join(", ")
+}
+
+/// One objective of the enemy's in words written from the reader's side
+/// (decision 0183, amended 5): what the enemy is scored for, and nothing of
+/// his progress or state.
+fn enemy_objective_text(line: &EnemyObjectiveLine) -> String {
+    let base = line.base.as_ref().map(Handle::text).unwrap_or_default();
+    let points = line.points.map(|p| p.0.to_string()).unwrap_or_default();
+    match line.kind {
+        "ships_sunk" => format!(
+            "your ships sunk, points for each: {}",
+            ship_points_text(&line.ship_points)
+        ),
+        "ships_crippled" => format!(
+            "your ships left afloat with propulsion or flight deck out, points for each: {}",
+            ship_points_text(&line.ship_points)
+        ),
+        "ships_out_of_action" => format!(
+            "your ships out of action, counted by the share of the {}-day horizon each is away for repair (her days of repair at the end plus those she left for a yard with), points for a ship away for the whole horizon: {}",
+            line.horizon_days.unwrap_or(0),
+            ship_points_text(&line.ship_points)
+        ),
+        "aircraft_destroyed" => format!("your aircraft destroyed, points for each: {points}"),
+        "cargo_landed" => format!(
+            "tons of supply and fuel the enemy unloads at {base} and does not load back, points for each ton: {points}"
+        ),
+        "base_held" => format!(
+            "{base} is the enemy's at the end of the game, points: {points}"
+        ),
+        "men_lost" => format!(
+            "your men lost, by any cause, points for each hundred men: {points}"
+        ),
+        _ if line.closed == Some(true) => format!(
+            "days {base} is shut at the end of the day (no supply, or no aircraft ready), points if shut every day: {points}, earned by the share of days"
+        ),
+        _ => format!(
+            "days {base} is open at the end of the day (supply and an aircraft ready), points if open every day: {points}, earned by the share of days"
+        ),
+    }
 }
 
 fn objective_text(o: &mut Out, line: &ObjectiveLine) {
