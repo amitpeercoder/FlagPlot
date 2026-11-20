@@ -1049,6 +1049,7 @@ fn an_order_in_force_compared_is_withdrawn_in_the_second() {
         a["how_it_went"], a["cost"]["men_lost_to_the_enemy"], a["enemy_lost"]["men_lost_to_the_enemy"],
         a["partings"][0]["with"], words(&a)
     );
+    println!("IN FORCE, COMPARED, BESIDE: {}", a["beside"]);
 }
 
 #[test]

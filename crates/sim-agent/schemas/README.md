@@ -26,7 +26,9 @@ Every answer is a JSON object with a top-level `"format": "flagplot-agent"`,
 | `propose` | `propose.schema.json` | `propose` |
 | `plan_order` | `plan_order.schema.json` | `order` (a seat whose side has a staff): the plan of one of the commander's intents, or of a take the staff formed, as the staff hands it in |
 | `trial` | `trial.schema.json` | `trial` (a seat with a staff that plays a whole side, in a game that has a trial): the estimate of an intent of the commander's, or of a draft he previewed, in a commander's words (decision 0178) |
-| `trials` | `trials.schema.json` | `trials` (the same seat): the estimates the seat was shown, each with what was asked and whether it still stands; given an `estimate`, the stored `trial` answer again by its number (decision 0178) |
+| `window` | `window.schema.json` | `trial` with `dates` (the same seat): the whole order tried at the coming morning and at later dates, in the same worlds, each date with what came due, the men its take chose, the enemy at the place on its eve and the estimate, and each later date against the first (decision 0181) |
+| `trial_described` | `trial_described.schema.json` | `trial` with `describe` true (the same seat): what would be tried, with nothing played and nothing kept (decision 0181) |
+| `trials` | `trials.schema.json` | `trials` (the same seat): the estimates the seat was shown, each with its kind, what was asked and whether it still stands; given an `estimate`, the stored `trial` or `window` answer again by its number (decisions 0178 and 0181) |
 | `staff_orders` | `staff_orders.schema.json` | `staff_orders` |
 | `why` | `why.schema.json` | `why` (or `not_known`) |
 | `run` | `run.schema.json` | `run` (offered where exactly one seat is held by a player) |
@@ -58,7 +60,7 @@ miles that can be a decimal, shots) is a decimal string such as `"12"` or
 
 ## The version rule
 
-`version` is 30. A field removed from an answer, or a field whose meaning
+`version` is 31. A field removed from an answer, or a field whose meaning
 changes, raises the version by one. A field added does not change it, so a
 reader must ignore fields it does not know. (The schemas here set
 `additionalProperties: false` because they describe this version exactly; a
@@ -1152,3 +1154,20 @@ out. `claimed_by` says who claims what: each of the side's own units whose fire 
 "on_ground", "hits"}`, with `"since_dissolved": true` for a unit no longer in the game. An air group's line (in
 `list_forces`, the briefing, `get_entity`) gains `claimed_to_date`, `{"shot_down", "on_ground", "hits"}`, its tally of its
 claims since the game began, left out while it has claimed nothing. The words of the claim say the same things.
+
+## What-ifs and the window from a seat (decision 0181)
+
+`version` is 31. `trial` takes three more arguments, `compare`, `dates` and `describe`. Its answer `trial` gains `beside`,
+the second trial where one was played (`null` otherwise): `of` (`as_it_stands`, `without_it` or `withdrawn`), its
+`how_it_went` (only for `as_it_stands`; `null` where the intent is not there to have gone), `last_day`,
+`could_not_be_played`, `cost`, `enemy_lost`, and `world_for_world` (`both`, `with_the_draft_alone`, `as_it_stands_alone`,
+`neither`, `apart`; only for `as_it_stands`). Its `asked` gains `compare`, `beside`, `in_force` and `dates` (`null`,
+`"chosen"` or the days given, the coming morning first); `trials` gives the same `asked` and each estimate's `kind`. With
+`dates` the answer is `window`: the dates, `given` or chosen, `first_day` and `last_day` (the bound of the dates), each date
+with `day`, `after_first`, `taken_in`, `due` (each thing of the side's own that came due, by its handle, with its kind and
+day), `chosen` (the side's own land units its take chose, with their men), `expected_ashore`, `enemy_on_the_eve` (men and
+the least cover at a place, the trial's own reckoning, never a unit), the fields of a trial's estimate but `other_plans`,
+`against_first` (world for world against the first date; `null` at the first) and its own `text`; and `not_tried`. With
+`describe` true the answer is `trial_described`: what was asked, the dates with what is due on each, and `plays`, each
+trial it would play with its date, worlds and days. Neither holds a chance or points. A game with no trial lists the same
+tools as before, and its answers differ only in the version.
