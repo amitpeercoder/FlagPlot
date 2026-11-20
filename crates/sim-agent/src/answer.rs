@@ -120,7 +120,7 @@ pub const FORMAT: &str = "flagplot-agent";
 /// `entered_yesterday` and `entry_waiting_yesterday`, `list_forces`' `to_enter`,
 /// and the entity answer `to_enter` for a held unit; and the refusal `is not on
 /// the map yet`.
-pub const VERSION: u32 = 36;
+pub const VERSION: u32 = 37;
 
 /// The answer to a question about something the side does not know of: a
 /// unit of the enemy, a number that does not exist, an event the side may not

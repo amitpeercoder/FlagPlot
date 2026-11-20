@@ -1261,6 +1261,7 @@ pub fn count(
             | EventKind::ForceEntered { .. }
             | EventKind::UnitEntered { .. }
             | EventKind::EntryWaiting { .. }
+            | EventKind::StockReceived { .. }
             | EventKind::AirfieldMended { .. }
             | EventKind::UnitFellBack { .. }
             | EventKind::MenSurrenderedAshore { .. }

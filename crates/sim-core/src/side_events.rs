@@ -4818,7 +4818,7 @@ mod tests {
     #[test]
     fn the_table_has_a_row_for_every_kind_of_event() {
         let all = event_kind_names();
-        assert_eq!(all.len(), 152, "the log has 152 kinds of event");
+        assert_eq!(all.len(), 153, "the log has 153 kinds of event");
         let covered: BTreeSet<String> = table()
             .iter()
             .map(|row| kind_name(&row.log[row.at]))

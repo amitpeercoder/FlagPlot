@@ -10,7 +10,7 @@
   "additionalProperties": false,
   "properties": {
     "format": { "const": "flagplot-agent" },
-    "version": { "const": 36 },
+    "version": { "const": 37 },
     "kind": { "const": "briefing" },
     "heading": { "$ref": "#/$defs/heading" },
     "objectives": { "$ref": "#/$defs/objectives" },
@@ -1900,6 +1900,22 @@
               "aircraft_type": { "type": "string" },
               "aircraft_per_day": { "type": "integer" },
               "pilots_per_day": { "type": "integer" }
+            }
+          }
+        },
+        "supply_lines": {
+          "description": "The side's own supply lines from off the map whose last day is today or later (decision 0196). Left out when none.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["base", "supply_t", "fuel_t", "first_day", "last_day"],
+            "additionalProperties": false,
+            "properties": {
+              "base": { "$ref": "defs.schema.json#/$defs/handle" },
+              "supply_t": { "description": "Tons of supply added a night.", "$ref": "defs.schema.json#/$defs/dec" },
+              "fuel_t": { "description": "Tons of fuel added a night.", "$ref": "defs.schema.json#/$defs/dec" },
+              "first_day": { "type": "integer" },
+              "last_day": { "type": "integer" }
             }
           }
         },
