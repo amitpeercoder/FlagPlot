@@ -364,6 +364,7 @@ One meaning for each word the rules use. The complexity review after scenario 5 
 | **Objective** | A count of something the engine records, taken for one side, with points (decision 0054) | An order |
 | **`base_held`** | An objective kind: whether a named base is the side's own at the end of the game; the points are the objective's, if it is (chapter 6, decision 0090) | `base_open`, which is counted by days |
 | **`men_lost`** | An objective kind: enemy men lost, by any cause (unfed, lost with a ship, lost in a fight, lost to fire and surrendered), scored for each 100 men. Never observable to a side before the end (chapter 6, decisions 0090, 0092, 0104) | Men lost to fire alone |
+| **What the enemy is scored for** | The enemy's objectives as a side is shown them in its briefing: each one's kind, the base it names, open or shut, and its worth, and for ships out of action the horizon. A rule of the game both sides read, like the levels; never his mission, his progress or anything of his state, and read by no staff, trial or rule (decision 0183) | The enemy's mission; his progress; a side's belief of what the enemy wants (decision 0161, rule 8) |
 | **Margin** | A side's points less the enemy's | |
 | **Level** | One of three sizes of margin, minor, major and decisive, that the scenario gives | A ship's level of damage |
 | **Outcome** | One of seven: a minor, major or decisive victory or defeat, or a stalemate | |

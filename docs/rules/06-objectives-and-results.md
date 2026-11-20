@@ -48,7 +48,17 @@ Each objective is a count of something the engine already records, taken for the
 
 Known limit: a kind of ship finer than the six waits for step 2. [0052, 0054]
 
-A side sees: its own mission and objectives from day 1. It never sees the enemy's. [0054]
+A side sees: its own mission and objectives from day 1, and what the enemy is scored for (below). It never sees the enemy's mission. [0054, 0183]
+
+### What a side sees of the enemy's objectives
+
+What each side is scored for is a rule of the game, and both sides read it, as both read the levels. From day 1 and on every day, the briefing's objectives part gives, after the side's own objectives and the line of the levels, the enemy's objectives, one for one in the order the scenario gives them: each one's kind; the base it names, where it names one, by the map's number and name; for `base_open`, whether the enemy is scored for the base being open or shut; and its worth (its points, its points a ton, its points for each kind of ship, or its points for each 100 men); and for `ships_out_of_action` the horizon in days. [0183]
+
+It is written in a form of its own, with no field for a count, days counted, points earned, a basis or whether a base is open now, so that nothing of the enemy's progress or state can be shown in it. The text puts it under the line "The enemy is scored for:", each objective in words from the reader's side: "your ships sunk", "tons of supply and fuel the enemy unloads at" a base, a base "is the enemy's at the end of the game", "days" a base "is shut" (or open). [0183]
+
+Not shown: the enemy's mission, which is his orders and may say what he believes of the reader; his progress on any objective, known or true; whether a base is open now for him; and anything else of his state. Every base an objective names is on both sides' maps (the loader refuses an objective naming a base the scenario does not have, and only a base a landing forms is off a map), so the enemy's objectives name no base a side does not already have on its map. [0183]
+
+A scenario with no objectives shows none, as before. Where the side has objectives and the enemy none, the part is there and empty, and the text says so in one line. A seat at a command is given no objectives, its side's or the enemy's. No staff, no trial and no rule of the simulation reads the enemy's objectives: a commander reads them and decides. They change no state, no event, no draw and no hash. [0183]
 
 ## Points and the result
 
@@ -112,7 +122,7 @@ During the game a side sees the progress of each of its objectives as far as it 
 
 Claims come from a surface fight (chapter 4, The report and the claim) and from a raid (chapter 5, The report and the claim). Chapter 3, Claims, says what a claim counts. A side learns of its own attacks only as claims. A claim is never below what really happened, which bounds the truth from above. [0056]
 
-A side sees: all of the above for its own objectives only. The briefing carries the mission, each objective with its points, and the known progress; for `ships_out_of_action` the points for each kind are for a ship away for the whole horizon, and the horizon in days is given with them. [0088] The text says none for a scenario without objectives. [0054]
+A side sees: all of the above for its own objectives only; of the enemy's it sees what he is scored for and nothing of his progress (What a side sees of the enemy's objectives, above). The briefing carries the mission, each objective with its points, and the known progress; for `ships_out_of_action` the points for each kind are for a ship away for the whole horizon, and the horizon in days is given with them. [0088] The text says none for a scenario without objectives. [0054]
 
 ## The result at the end
 
