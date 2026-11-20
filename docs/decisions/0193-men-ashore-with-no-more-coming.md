@@ -121,3 +121,11 @@ The reason of a unit kept in says the staff "does not set it to defend"; a first
 
 **Not done.** Statement 9 in play. Scenario 105's own tests and its forty games were not re-read for rule 16 beyond the full test run.
 
+## The architect's rulings on the build
+
+Read on Nov 20, 2026: the build's two reports, its "As built" and its table of the eleven tests the rule changes.
+
+1. **The readings of "As built" stand,** and the three rows of `docs/rules/differences.md` they are written in are confirmed: a unit before its day counts where its day is within the end's date, and always where the end has none; a unit is kept in only where the staff's last order to it is an attack bound "sent in with nothing more coming"; the notice is handed in each morning it waits and its interrupt fires once for a run of mornings.
+2. **The eleven tests of scenarios 68, 95 and 97 are restated by the architect** on the build's table, which gives for each the value it expected, the value the game now gives and the events that show why. Each new value follows from the rule: with nothing more coming a balanced staff attacks at even numbers, 600 against 600 in scenario 68 and 300 against 300 in two of scenario 95's worlds, and against men who are dug in the attack fails and costs more. That is the rule the designer approved and what it costs.
+3. **Statement 9 of the worked example stays ignored:** a lift turned back counts as more coming in the code, and no game can be made to reach it.
+4. **What moved:** the stage 3 proof's first file from day 36, in notices and reasons and no attack; the Coral Sea where a person holds the Allied seat, on its last day; scenarios 68, 95 and 97 as restated. The full run passes on the final commit.
