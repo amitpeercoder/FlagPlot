@@ -159,15 +159,22 @@
 //! On day 1, as commands of the scenario:
 //!
 //! - **Japanese:** hold Taivu, its forces the convoy and its three land
-//!   units; neutralise Lunga, its forces the bombers at Rabaul; operate
+//!   units, with Rabaul (base 2) the source the convoy returns to;
+//!   neutralise Lunga, its forces the bombers and the fighters at Rabaul
+//!   (groups 27 and 28); operate
 //!   task force 3 from (8,-11) and task force 4 from (7,-9), each with
 //!   its own air groups; leave to prepare and leave to launch given.
 //! - **Allied:** hold Lunga, its forces the four land units and the two
 //!   squadrons; operate task force 1 from (6,-3) and task force 2 from
-//!   (7,-3), each with its own air groups; leave to prepare and leave to
-//!   launch given.
+//!   (7,-3), each with its own air groups; deny the waters within 2
+//!   hexes of (3,-7), north of Guadalcanal, with no forces limit; leave to
+//!   prepare and leave to launch given.
 //!
 //! No risk is set: every order is at balanced.
+//!
+//! These are the second version of the orders (decision 0184, "The second
+//! version of the orders"). The first left out the source, the fighters
+//! and the deny; the first run's report keeps what it gave.
 //!
 //! ## The objectives
 //!
@@ -1083,7 +1090,8 @@ fn the_japanese_side_is_given_its_four_intents_and_both_leaves() {
             .expect("a forces limit");
         assert_eq!(f.task_forces, BTreeSet::from([tf(5)]));
         assert_eq!(f.land_units, BTreeSet::from([unit(27), unit(28), unit(29)]));
-        assert!(f.air_groups.is_empty() && f.ships.is_empty() && f.source.is_none());
+        assert!(f.air_groups.is_empty() && f.ships.is_empty());
+        assert_eq!(f.source, Some(base(2)));
         assert_eq!(
             intent(state, 2).kind,
             IntentKind::Neutralise { target: base(1) }
@@ -1093,7 +1101,7 @@ fn the_japanese_side_is_given_its_four_intents_and_both_leaves() {
             .forces
             .as_ref()
             .expect("a forces limit");
-        assert_eq!(f.air_groups, BTreeSet::from([group(27)]));
+        assert_eq!(f.air_groups, BTreeSet::from([group(27), group(28)]));
         assert!(f.task_forces.is_empty() && f.land_units.is_empty());
         assert_eq!(
             intent(state, 3).kind,
@@ -1122,7 +1130,7 @@ fn the_japanese_side_is_given_its_four_intents_and_both_leaves() {
 }
 
 #[test]
-fn the_allied_side_is_given_its_three_intents_and_both_leaves() {
+fn the_allied_side_is_given_its_four_intents_and_both_leaves() {
     for letter in ['a', 'c'] {
         let state = &played(letter).after_day_1[&A];
         assert_eq!(intent(state, 1).kind, IntentKind::Hold { base: base(1) });
@@ -1151,7 +1159,15 @@ fn the_allied_side_is_given_its_three_intents_and_both_leaves() {
                 hex: hex(7, -3)
             }
         );
-        for raw in 1..=3 {
+        assert_eq!(
+            intent(state, 4).kind,
+            IntentKind::Deny {
+                hex: hex(3, -7),
+                distance: 2
+            }
+        );
+        assert!(intent(state, 4).limits.forces.is_none());
+        for raw in 1..=4 {
             assert_eq!(intent(state, raw).limits.risk, None, "balanced");
             assert_eq!(intent(state, raw).set_day, 1);
         }

@@ -2,6 +2,8 @@
 
 Scenario 103, decision 0184, file a (`data/scenarios/five-days/01a_eastern_solomons.toml`): both sides given the orders of the hand calculation, staff against staff, on the live figures and the game's one scale of points. Made on Nov 20, 2026 at commit `824d65bb` (main merged in), state hash layout `flagplot-state-v49`, scenario file hash `2eb43713436ba48a`.
 
+**It is the run on the first version of the orders.** The orders in the files today are the second version (decision 0184, "The second version of the orders"), so the commands below now give the second run, which `five-days-eastern-solomons-second-run.md` reports; this one is reproduced at the commit named above.
+
 This report gives counts. It draws no conclusion about balance and changes no point, level or figure: what follows is for the architect to state and the designer to see before any scale of the scenario's own (decision 0184, "Points are not fitted to a run" and "Confirmed on Nov 20, 2026").
 
 ## How it was made
