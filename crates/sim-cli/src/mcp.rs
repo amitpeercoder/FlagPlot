@@ -390,6 +390,22 @@ fn seat_instructions(command: sim_core::pictures::CommandRef) -> String {
     )
 }
 
+/// The words an agent is given on taking the side's seat: the game's, and
+/// for a seat whose side has a staff how to command by intent. `mcp` gives
+/// them as its instructions and `serve --watched` on asking (decision 0182,
+/// amended 18).
+pub fn instructions_for(session: &Session, side: Side) -> String {
+    let mut text = match session.post(side) {
+        Post::At(command) => format!("{INSTRUCTIONS}{}", seat_instructions(command)),
+        _ if session.has_staff(side) => format!("{INSTRUCTIONS}{STAFF_INSTRUCTIONS}"),
+        _ => INSTRUCTIONS.to_string(),
+    };
+    if session.tools(side).contains(&"advance") {
+        text.push_str(INSIDE_DAY_INSTRUCTIONS);
+    }
+    text
+}
+
 impl Server {
     pub fn new(session: Session, side: Side) -> Server {
         Server {
@@ -402,17 +418,7 @@ impl Server {
     /// The instructions the server gives: the game's, and for a seat whose
     /// side has a staff how to command by intent.
     fn instructions(&self) -> String {
-        let mut text = match self.session.post(self.side) {
-            Post::At(command) => format!("{INSTRUCTIONS}{}", seat_instructions(command)),
-            _ if self.session.has_staff(self.side) => {
-                format!("{INSTRUCTIONS}{STAFF_INSTRUCTIONS}")
-            }
-            _ => INSTRUCTIONS.to_string(),
-        };
-        if self.session.tools(self.side).contains(&"advance") {
-            text.push_str(INSIDE_DAY_INSTRUCTIONS);
-        }
-        text
+        instructions_for(&self.session, self.side)
     }
 
     /// The answer to one line of input: `None` for a notification (and for a

@@ -9,7 +9,7 @@ mod events;
 mod export;
 mod mcp;
 mod play;
-mod save;
+use sim_cli::save;
 mod serve;
 mod staff_tools;
 mod timing;

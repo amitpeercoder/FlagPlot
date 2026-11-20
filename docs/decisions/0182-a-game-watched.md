@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 20, 2026, at the designer's aski
 
 Summary: The designer wants to watch a game on the table in which an agent commands a side, against the engine or against another agent. He gives no orders. He holds the clock: next pulse, carry on, stop, and he reads what a side's commander reads. This record gives a game a third party, the watcher, who holds the clock and can read and cannot order. A seat's own tools for moving time become its word that it is ready, and for how long. The table's bridge holds one such game, with a door for each agent
 
-Standing: A plan, written by the architect on Nov 20, 2026, at the designer's asking, and amended on review. Not built
+Standing: A plan, written by the architect on Nov 20, 2026, at the designer's asking, and amended on review. Step 1, the session and `serve`, is built and ruled on; step 2, the table, is not built
 
 ## Why
 
@@ -157,3 +157,59 @@ An independent reading of the plan and its test, against the code, found the fol
 ### The test, corrected
 
 25. Scenario 78 has no Japanese unit and nothing to stop on, and scenario 5 is one day. The statements that need two sides or a stop are made on `data/scenarios/orders-inside-proof/05_eastern_solomons_on.toml`; the one that needs days without orders inside a day on `data/scenarios/01_transit.toml`. The session is opened through `sim-cli`'s library on the live figures, as `serve` opens it; the function that opens a game moves there from the binary.
+
+## As built: step 1
+
+Built on Nov 20, 2026: the session and `serve --watched`, with both seats, and the test. Step 2 (the table's bridge, the doors, the seat's program and the page) is not built.
+
+### What was built
+
+- **In `sim-agent`** (`session.rs`): `Session::watched`, and in a watched game `seat_call` (a call of time held, or an answer now), `step`, `watch` (the watcher's read), `watcher_tools`, `standing` and `seat_calls`. `WATCHER_TOOLS` (`record.rs`) is amended 13's list. Each of `end_day`, `run` and `advance` is split into its call (`run_wait`, `advance_wait`), what each pulse or day closed does to it (`run_after_day`, `advance_after_pulse`) and its answer (`end_day_answer`, `run_answer`, `advance_answer`). The game not watched calls the same parts in its own loop, so the two answer alike by construction. `run` and `advance` are offered to every played seat of a watched game. `Session::call` in a game not watched is as it was.
+- **In `sim-cli`:** the function that opens a game (`game::open`, and `game::open_loaded` for a scenario already loaded) and the saved game (`save`) moved into the library. `serve --watched` and its requests (its doc comment and `docs/commands.md` give the shapes). `mcp::instructions_for` gives a seat's opening words to `mcp` and to `serve`.
+- **The test:** `tests/scenario_101_a_game_watched.rs`, 22 tests over statements 1 to 19 and 21, and `crates/sim-cli/tests/serve_watched.rs`, 2 tests, for statement 20. Every statement holds as written but statement 5, read as reading 11 below says.
+- **No game changes:** no state, no draw, no hash, no golden, saved game, baseline or recorded transcript. The agent interface's version is not raised: nothing a seat is given changes shape. `crates/sim-agent/tests/leaks.rs` is unchanged and passes.
+
+### Statement 13, the tripwire
+
+It holds. On ES at dusk, each read a seat has (the watcher's sixteen where the seat has them, with arguments, and two previews), asked with the other seat's queue empty and holding three orders and a leave (each seat's own intent queued in both games), is the same byte for byte, both ways. ES has no trial, so `trial` was not among them.
+
+### Readings the record did not make, for the architect to rule on
+
+1. `run`'s staff orders for its first day are worked at the call, not at the step that opens the day. With statement 13 holding, the other seat's later queue does not change them.
+2. A held call's transcript entry is placed when it is answered (amended 9) and keeps the days resolved when it was made, so a watched seat's transcript is the plain game's (statement 1 checks this).
+3. The watcher may read from a side whose seat is the script's, as its seat would be answered.
+4. A seat's calls "since its last stop" are those after its last call of time answered; the call it holds now is not in the transcript yet and is shown beside them as `held`.
+5. The step's answer is `{kind: "step", resolved: {day, pulses}, clock, stops, game_over, summary}`; `pulses` lists the three where a step is a day.
+6. A step is refused, in this order: the game not watched, stopped on an error, over, a played seat not ready.
+7. In a watched game `end_day` after the game is over is answered at once (`resolved` false), as today; `run` and `advance` are refused, as today.
+8. `Session::call` on a watched session holds a call of time as `seat_call` does and answers it with an error that says so; `serve` uses `seat_call`.
+9. The new requests of `serve` exist only with `--watched`. Without it each is answered as any request that is not a call was, by the old error. A seat's `tools` and `instructions` are refused for a seat the script holds.
+10. Only a watched game left inside a day is saved with `stopped_inside_day` (amended 19). A game not watched, left at 0600, is saved as before (no key), so that it behaves exactly as it did; the same is arguably true of it, and is the architect's to rule.
+11. **Statement 5.** On ES the Allied side is first told of a contact in the afternoon, the last pulse of the game. `advance` reads the end of the game before what a side was told, so the plain answer says `stopped: "game_over"`, with the contact under `told`. The test holds the rest as written: answered after the step of that pulse and not before, and byte for byte the plain game's answer. The test gives the seat the scenario's own Allied orders of day 1; other orders were not tried.
+12. Statement 9's interrupt is the standing one of a plan waiting for leave: a cover of Noumea set on S78, whose plan waits for the commander's leave to launch from the dusk before day 1, so `advance` stops at the dusk after day 1.
+13. Statement 10's seat at a command is on scenario 62 (`62_reports_between_commands.toml`, read and not changed): none of the three scenarios has command levels on.
+14. Statement 17's engine error is made as `leaks.rs` makes one: ES with an arrival in its starting state that overfills the Enterprise inside day 1, the world built in the test and opened through `game::open_loaded`.
+15. Statement 18's replay reads the saved game with `sim_cli::save::read` and replays it in the test as `replay` does; `serve_watched.rs` also runs `sim-cli replay` on a watched game's save.
+16. Statement 21's recorded games are replayed in the test through a session opened by `game::open`, each call's answer against its kept transcript; the harness in `crates/sim-cli/tests/mcp.rs` runs as before.
+17. The watcher's documents (`step`, `standing`, `seat_calls`) carry the interface's format and version and have no schema under `crates/sim-agent/schemas/`: no seat is given them.
+
+### Not verified
+
+- Anything of step 2: no bridge, door, key or page exists, and no agent has played a watched game.
+- A seat at a task force or a base in a watched game beyond its list of tools.
+- A watched game with a trial: none of the three scenarios names a trial's figures.
+
+## The architect's rulings on step 1
+
+Read on Nov 20, 2026, with the build's core: the watcher's read, which goes through a seat's own tools and only those of his list, and leaves no entry in a transcript; that `sim-core`, `sim-trial` and the agent's source test are untouched; and that the statements in `tests/scenario_101_a_game_watched.rs` are as the architect wrote them.
+
+1. **A seat's answers do not read the other seat's queue** (statement 13). It held, both ways, for every read a seat has at dusk and for two previews. No leak between seats was found. A dry run was not among the reads tried, since the scenario used has none: it is to be tried on a scenario with a trial before a game of two agents is called fair. Owed.
+2. **Statement 5 as tested stands.** On the scenario named, the first contact comes in the last pulse of the game, and `advance` says the game is over before it says what the side was told. The test holds what matters: the call is answered at that step and not before, with the plain game's answer byte for byte.
+3. **Each tool of time is a call, a check and an answer,** and the game not watched uses the same three in its own loop. Stands: the two cannot drift apart.
+4. **`run`'s staff orders are worked when the call is made.** Stands, as `run` does today.
+5. **A held call's entry in the transcript** is placed when it is answered and keeps the days resolved when it was made. Stands.
+6. **The watcher may read a side whose seat is the script's.** Stands: it is what watching an agent against the engine needs.
+7. **The watcher's requests exist only in a watched game.** Stands.
+8. **Only a watched game left inside a day is saved as stopped inside a day.** Stands.
+9. **The scenarios the build chose** for a seat at a command, an interrupt and an engine's stop stand.
+10. **The watcher's answers have no schema, and the agent interface's version is not raised.** Stands for step 1: nothing a seat is given changed shape. Step 2 is built against the shapes in "As built: step 1"; if the page needs them fixed, they are given schemas then.

@@ -55,6 +55,30 @@ pub const COMMAND_TOOLS: [&str; 19] = [
 /// has a trial (decision 0178, rule 7), listed after [`COMMAND_TOOLS`].
 pub const TRIAL_TOOLS: [&str; 2] = ["trial", "trials"];
 
+/// The tools a watcher reads with, from either side's seat (decision 0182,
+/// amended 13): a seat's reads that leave no mark in the session. Not
+/// `preview` and not `trial`, which are recorded, and none that orders,
+/// commands, acknowledges or moves time. He is given those of them the
+/// seat has.
+pub const WATCHER_TOOLS: [&str; 16] = [
+    "get_briefing",
+    "list_forces",
+    "list_bases",
+    "list_contacts",
+    "get_entity",
+    "measure",
+    "explain",
+    "events",
+    "command_state",
+    "plans",
+    "staff_orders",
+    "propose",
+    "order",
+    "why",
+    "report",
+    "trials",
+];
+
 /// The seat's name as the interface writes it: `allied` or `japanese`.
 pub fn seat_name(side: Side) -> &'static str {
     match side {
