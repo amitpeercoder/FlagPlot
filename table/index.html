@@ -268,6 +268,18 @@ button:disabled { opacity: 0.45; cursor: default; }
 .plot b { font-family: var(--f-ui); font-size: 15px; letter-spacing: 0.12em; }
 .plot .red { color: var(--enemy); }
 #fatal { position: fixed; inset: 0; display: grid; place-items: center; padding: 24px; text-align: center; font-size: 20px; background: var(--room); }
+/* A watched game (decision 0182): nothing on the table gives an order. */
+body.watched .gives { display: none !important; }
+.top .seg { pointer-events: auto; display: inline-flex; }
+.top .seg[hidden] { display: none; }
+.top .seg .intray + .intray { margin-left: 0; }
+.intray[aria-pressed="true"] { background: #6a513a; }
+#seatbox { display: flex; flex-direction: column; gap: 10px; }
+#seatbox:empty { display: none; }
+.slip .call { font-size: 13px; }
+.slip .call + .call { margin-top: 3px; }
+.slip .call.refused { color: var(--enemy); }
+.slip .call .said { display: block; font-style: italic; color: var(--paper-dim); }
 @media (max-width: 720px) {
   .tray { top: auto; bottom: 150px; left: 16px; width: auto; max-height: 30%; }
   .order { bottom: 150px; max-height: 55%; }
@@ -286,6 +298,7 @@ button:disabled { opacity: 0.45; cursor: default; }
 <div class="top">
   <h1>Flag Plot</h1>
   <p id="seat">The table</p>
+  <span id="watch-side" class="seg" role="group" aria-label="The side watched" hidden></span>
   <button type="button" id="btn-in" class="intray" hidden></button>
   <button type="button" id="btn-orders" class="intray menu" aria-expanded="false" aria-controls="pop-orders" title="Your orders in force, and your standing leave" hidden></button>
   <button type="button" id="btn-staff" class="intray menu" aria-expanded="false" aria-controls="pop-staff" title="The staff's standing papers" hidden></button>
@@ -299,11 +312,12 @@ button:disabled { opacity: 0.45; cursor: default; }
 </div>
 
 <aside class="tray" aria-label="Signals">
+  <div id="seatbox" aria-live="polite"></div>
   <h2>Signals</h2>
   <div id="signals"></div>
 </aside>
 
-<form class="order" id="order" hidden aria-label="Operation order">
+<form class="order gives" id="order" hidden aria-label="Operation order">
   <h2>OPERATION ORDER · DRAFT</h2>
   <div>To the staff. At <strong id="o-place">this place</strong> you are to:</div>
   <fieldset id="o-ends"><legend>END</legend></fieldset>
@@ -322,7 +336,7 @@ button:disabled { opacity: 0.45; cursor: default; }
   </div>
 </form>
 
-<form class="order" id="force" hidden aria-label="Order to a force">
+<form class="order gives" id="force" hidden aria-label="Order to a force">
   <h2>DIRECT ORDER · <span id="f-name"></span></h2>
   <div id="f-when"></div>
   <div class="frow"><span class="fl">Speed</span><span class="seg">
@@ -399,7 +413,7 @@ button:disabled { opacity: 0.45; cursor: default; }
   <div class="clock" id="clock">DAY 1</div>
   <div class="status" id="status" role="status">Laying the chart.</div>
   <div class="acts">
-    <button type="button" id="btn-intent">Give an order</button>
+    <button type="button" id="btn-intent" class="gives">Give an order</button>
     <button type="button" id="btn-day">One day</button>
     <button type="button" class="main" id="btn-go">Carry on</button>
   </div>
@@ -418,8 +432,12 @@ button:disabled { opacity: 0.45; cursor: default; }
   function commas(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
 
   // Every word the table shows of the game comes through this: one tool of the seat, one answer.
+  // In a watched game (decision 0182) the page is served under the watcher's key, and each call is
+  // the watcher's read from the side watched.
+  var BASE = (/^\/watch\/[^/]+/.exec(location.pathname) || [''])[0], WATCH = null;
   function api(tool, args) {
-    return fetch('/call', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tool: tool, arguments: args || {} }) })
+    var body = { tool: tool, arguments: args || {} }; if (WATCH) body.side = WATCH.side;
+    return fetch(BASE + '/call', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
       .then(function (r) { return r.json(); })
       .then(function (a) { if (a.refused != null) throw new Error(a.refused); return a.ok; });
   }
@@ -876,7 +894,7 @@ button:disabled { opacity: 0.45; cursor: default; }
     (s.holds || []).forEach(function (h) {
       var a = slip('HELD FROM THE STAFF', null, null, null), args = {}, what = null; ['ship', 'task_force', 'air_group', 'land_unit', 'setting'].forEach(function (k) { if (h.target && h.target[k] != null) { args[k] = h.target[k]; if (k !== 'setting' && !what) what = k + ':' + h.target[k]; } });
       var since = /day (\d+)/.exec(h.text || ''); a.appendChild(what ? rich('div', '', what + ', held by your direct order' + (since ? ' of day ' + since[1] : '')) : el('div', '', h.text));
-      button(a, 'RELEASE TO THE STAFF', false, function () { act('release', args, 'Released. The staff may use it again from dusk.'); });
+      if (!WATCH) button(a, 'RELEASE TO THE STAFF', false, function () { act('release', args, 'Released. The staff may use it again from dusk.'); });
     });
     // A plan that waits for the commander's leave has one notice, below, which
     // opens its order: the clock's own slip for it would say the same twice.
@@ -884,7 +902,7 @@ button:disabled { opacity: 0.45; cursor: default; }
       if (f.standing === 'waits_for_leave') return;
       var a = slip('FROM STAFF · DAY ' + f.day, 'STOPPED THE CLOCK', f.words.replace(/^standing \w+ fired: /, '').replace(/^./, function (c) { return c.toUpperCase(); }), null, true);
       if (f.why && f.why.length) button(a, 'WHY', true, function (b) { askWhy(a, f.why, b); });
-      if (f.standing) button(a, 'DO NOT STOP ME FOR THIS', false, function () { act('set_interrupt', { standing: f.standing, on: false }, 'The clock will not stop for that again.'); });
+      if (f.standing && !WATCH) button(a, 'DO NOT STOP ME FOR THIS', false, function () { act('set_interrupt', { standing: f.standing, on: false }, 'The clock will not stop for that again.'); });
     });
     var roots = s.intents.filter(function (i) { return i.in_force && !i.parent; });
     // With no intent stated the staff does nothing: the button that states one is marked, and nothing is said.
@@ -901,7 +919,7 @@ button:disabled { opacity: 0.45; cursor: default; }
       // names the plans it bears on today.
       var l = el('article', 'slip leave'), top = el('div', 'lv'), sw = el('div', 'seg'); l.title = 'Your standing leave, for every plan now and to come: whether the staff launches a plan as soon as it is ready, or waits for your word.';
       top.appendChild(el('span', '', 'PLANS LAUNCH')); sw.setAttribute('role', 'group'); sw.setAttribute('aria-label', 'When a plan of yours launches');
-      [['WHEN READY', true], ['ON MY WORD', false]].forEach(function (o) { var b = el('button', '', o[0]); b.type = 'button'; b.setAttribute('aria-pressed', String(!!s.leaves.launch === o[1])); if (!!s.leaves.launch !== o[1]) b.addEventListener('click', function () { act('set_leave', { leave: 'launch', given: o[1] }); }); sw.appendChild(b); });
+      [['WHEN READY', true], ['ON MY WORD', false]].forEach(function (o) { var b = el('button', '', o[0]); b.type = 'button'; b.setAttribute('aria-pressed', String(!!s.leaves.launch === o[1])); if (WATCH) b.disabled = true; else if (!!s.leaves.launch !== o[1]) b.addEventListener('click', function () { act('set_leave', { leave: 'launch', given: o[1] }); }); sw.appendChild(b); });
       top.appendChild(sw); l.appendChild(top); $('leave-slot').appendChild(l);
       (function () { var coming = s.plans.filter(function (p) { return p.state === 'draft' || p.state === 'preparing'; }); if (!coming.length) return; var d = el('div', 'lvnote', s.leaves.launch ? 'Getting ready: ' : 'Getting ready, and will wait: ');
         coming.forEach(function (p, k) { var po = planOf(p.number), b = el('button', 'ref', 'plan ' + p.number + (po.name ? ', ' + po.name : '')); b.type = 'button'; if (po.root != null) b.addEventListener('click', function () { readPlan(po.root); }); if (k) d.appendChild(document.createTextNode('; ')); d.appendChild(b); }); l.appendChild(d); })();
@@ -976,7 +994,7 @@ button:disabled { opacity: 0.45; cursor: default; }
     row.appendChild(seg); parent.appendChild(row); return row;
   }
   function airOrder(body, e, h) {
-    var x = e.summary, n = num(h); if (M.over || playing || x.available_from > M.day || x.lost_with_base) return;
+    var x = e.summary, n = num(h); if (WATCH || M.over || playing || x.available_from > M.day || x.lost_with_base) return;
     var held = ((M.state && M.state.holds) || []).some(function (o) { return o.target && o.target.air_group === n && !o.target.setting; });
     var kvg = body.querySelector('.kv'); if (kvg) { kvg.appendChild(el('span', '', 'In whose hands')); kvg.appendChild(el('span', '', held ? 'Yours' : 'The staff\'s')); var was = airSigned[h]; if (was && was.day === M.day && was.at === clock.at) { kvg.appendChild(el('span', '', 'Ordered')); kvg.appendChild(el('span', '', was.words + ' Not yet in effect.')); } }
     var can = [['rest', MISSION.rest]];
@@ -1231,7 +1249,7 @@ button:disabled { opacity: 0.45; cursor: default; }
       ['Shortest legs', f.least_fuelled ? f.least_fuelled.ship.name.replace(/^Placeholder /, '') + ': ' + commas(f.least_fuelled.fuel_t) + ' t, ' + commas(f.least_fuelled.range_nm) + ' miles at cruising speed' : null],
       ['In whose hands', held ? 'Yours, by your direct order. The staff plans round it.' : 'The staff\'s']]);
     // Ordering a force is done from its card, so the buttons stand at the head of it.
-    if (!M.over && !playing && !(f.available_from > M.day)) { var row = el('div', 'row'), b = el('button', '', 'GIVE A DIRECT ORDER'); b.type = 'button'; b.addEventListener('click', function () { orderForce(f); }); row.appendChild(b);
+    if (!WATCH && !M.over && !playing && !(f.available_from > M.day)) { var row = el('div', 'row'), b = el('button', '', 'GIVE A DIRECT ORDER'); b.type = 'button'; b.addEventListener('click', function () { orderForce(f); }); row.appendChild(b);
       if (held) { var r = el('button', '', 'RETURN IT TO THE STAFF'); r.type = 'button'; r.addEventListener('click', function () { act('release', { task_force: num(h) }, 'Released. The staff may use it again from dusk.').then(function () { $('card').hidden = true; }); }); row.appendChild(r); }
       body.appendChild(row); }
     var ships = el('div'); body.appendChild(ships);
@@ -1253,7 +1271,7 @@ button:disabled { opacity: 0.45; cursor: default; }
     airList(body, 'AIR GROUPS HERE', M.air.filter(function (x) { return x.location && x.location.handle === h; }));
     forcesHere(body, 'FORCES HERE', b.place, null);
     var port = el('div'); body.appendChild(port);
-    if (!M.over && !playing) api('get_entity', { handle: h }).then(function (a) {
+    if (!WATCH && !M.over && !playing) api('get_entity', { handle: h }).then(function (a) {
       var inPort = (a.entity && a.entity.ships_in_port) || []; if (!inPort.length) return;
       port.appendChild(el('div', 'sub', 'SHIPS IN PORT, IN NO FORCE'));
       inPort.forEach(function (x) { var l = el('label'), c = el('input'); c.type = 'checkbox'; c.value = num(x.handle); l.style.display = 'block'; l.appendChild(c); l.appendChild(document.createTextNode(' ' + String(x.name || x.handle).replace(/^Placeholder /, ''))); port.appendChild(l); });
@@ -1676,12 +1694,12 @@ button:disabled { opacity: 0.45; cursor: default; }
         if (off) n.appendChild(el('div', 'work', 'Cancelled by you today. It stops at 1800.'));
         else if (ok) n.appendChild(el('div', 'work', 'Approved by you today. The staff acts on it from 1800.'));
         else if (waits) n.appendChild(el('div', 'work', p.state === 'preparing' ? 'It is ready and waits for your leave to launch.' : 'It waits for your leave to prepare.'));
-        if (!off && !gone) { var row = el('div', 'row'), press = function (words, tool, done) { var x = el('button', '', words); x.type = 'button'; x.addEventListener('click', function () { act(tool, { plan: p.number }, done).then(function () { readPlan(root); }); }); row.appendChild(x); };
+        if (!off && !gone && !WATCH) { var row = el('div', 'row'), press = function (words, tool, done) { var x = el('button', '', words); x.type = 'button'; x.addEventListener('click', function () { act(tool, { plan: p.number }, done).then(function () { readPlan(root); }); }); row.appendChild(x); };
           if (waits) press('APPROVE PLAN ' + p.number, 'approve', 'Plan ' + p.number + ' approved.');
           press('CANCEL PLAN ' + p.number, 'cancel_plan', 'Plan ' + p.number + ' is cancelled from 1800.'); n.appendChild(row); }
         doc.appendChild(n);
       })(top.plan != null ? plans[top.plan] : null);
-      if (OFFERED.trial) dryBox(doc, root);
+      if (OFFERED.trial && !WATCH) dryBox(doc, root);
       // The brief: one line a task, with a word for where it stands. What
       // the staff decided today and why is one step down, under each line.
       var lines = [], tally = {};
@@ -1735,16 +1753,16 @@ button:disabled { opacity: 0.45; cursor: default; }
         n.appendChild(d);
         if (L.off) d.appendChild(el('div', 'work', 'Cancelled by you today. It stops at 1800.'));
         else if (L.ok) d.appendChild(el('div', 'work', 'Approved by you today. The staff acts on it from 1800.'));
-        if (L.live && !L.off) { var row = el('div', 'row'); (L.waits ? n : d).appendChild(row);
+        if (L.live && !L.off && !WATCH) { var row = el('div', 'row'); (L.waits ? n : d).appendChild(row);
           if (L.waits) { var ok = el('button', '', 'APPROVE PLAN ' + p.number); ok.type = 'button'; ok.addEventListener('click', function () { act('approve', { plan: p.number }, 'Plan ' + p.number + ' approved.').then(function () { readPlan(root); }); }); row.appendChild(ok); }
           var no = el('button', '', 'CANCEL PLAN ' + p.number); no.type = 'button'; no.addEventListener('click', function () { act('cancel_plan', { plan: p.number }, 'Plan ' + p.number + ' is cancelled from 1800.').then(function () { readPlan(root); }); }); row.appendChild(no); }
         doc.appendChild(n);
       });
-      doc.appendChild(el('h3', '', '2. Send it back to the staff'));
+      if (!WATCH) { doc.appendChild(el('h3', '', '2. Send it back to the staff'));
       var row = el('div', 'row'); doc.appendChild(row);
       ['preserve', 'balanced', 'press'].forEach(function (r) { var b = el('button', '', 'RISK: ' + r.toUpperCase() + ((lim.risk || 'balanced') === r ? ' ✓' : '')); b.type = 'button'; b.addEventListener('click', function () { act('set_limit', { limit: 'risk', intent: root, risk: r }, 'Risk set to ' + r + '. The staff plans again at 1800.').then(function () { readPlan(root); }); }); row.appendChild(b); });
-      var w = el('button', '', 'WITHDRAW THIS ORDER'); w.type = 'button'; w.addEventListener('click', function () { act('withdraw_intent', { intent: root }, 'The order is withdrawn from 1800.').then(function () { $('sheet').hidden = true; }); }); row.appendChild(w);
-      if (OFFERED.trial && top.in_force !== false) {
+      var w = el('button', '', 'WITHDRAW THIS ORDER'); w.type = 'button'; w.addEventListener('click', function () { act('withdraw_intent', { intent: root }, 'The order is withdrawn from 1800.').then(function () { $('sheet').hidden = true; }); }); row.appendChild(w); }
+      if (OFFERED.trial && top.in_force !== false && !WATCH) {
         doc.appendChild(el('h3', '', '3. What if'));
         var wrow = el('div', 'row'), wsays = el('div', 'work'), riskNow = lim.risk || 'balanced';
         ['preserve', 'balanced', 'press'].filter(function (r) { return r !== riskNow; }).forEach(function (r) { var b = el('button', '', 'RISK ' + r.toUpperCase() + '?'); b.type = 'button'; b.addEventListener('click', function () { whatIf(root, { limit: 'risk', risk: r }, 'risk ' + r, wsays, wrow.querySelectorAll('button')); }); wrow.appendChild(b); });
@@ -1753,7 +1771,7 @@ button:disabled { opacity: 0.45; cursor: default; }
         wrow.appendChild(nb); wrow.appendChild(nday); doc.appendChild(wrow); doc.appendChild(wsays);
         doc.appendChild(el('div', 'work', 'Each is played beside the plan as it stands, at the size chosen above. Nothing is given until you say so.'));
       }
-      doc.appendChild(el('div', 'foot', (a[2].inside_day ? 'Worked now, in the middle of the day; the staff is asked again at dusk and may then do otherwise. ' : '') + 'You change a plan by instruction: your leave, a limit, a cancel or a withdrawal. To keep a force out of it, touch the force and give it a direct order yourself.'));
+      if (!WATCH) doc.appendChild(el('div', 'foot', (a[2].inside_day ? 'Worked now, in the middle of the day; the staff is asked again at dusk and may then do otherwise. ' : '') + 'You change a plan by instruction: your leave, a limit, a cancel or a withdrawal. To keep a force out of it, touch the force and give it a direct order yourself.'));
       sheetAs('THE PLAN'); $('sheet-chart').hidden = false; $('sheet-chart').onclick = function () { $('sheet').hidden = true; showPlanOnChart(root); }; doc.hidden = false; $('sheet-text').hidden = true; $('sheet').hidden = false; $('sheet-close').focus();
     }).catch(function (e) { setStatus('The plan could not be read: ' + e.message); });
   }
@@ -1873,7 +1891,7 @@ button:disabled { opacity: 0.45; cursor: default; }
     }
     underneath(doc, 'THE STAFF\'S OWN WORDS', j.text || []);
     var back = el('div', 'row'); doc.appendChild(back);
-    if (draft && draft.preview != null && root != null) { var give = el('button', 'go', 'GIVE IT: ' + draft.words.toUpperCase()); give.type = 'button'; give.addEventListener('click', function () { api('approve', { preview: draft.preview }).then(function (a) { if (a.status && a.status !== 'queued') throw new Error(a.summary || 'refused'); setStatus('Given: ' + draft.words + '. The staff plans again at 1800.'); return refresh(); }).then(function () { readPlan(root); }).catch(function (e) { setStatus('Refused: ' + dryWords(e.message)); }); }); back.appendChild(give); }
+    if (draft && draft.preview != null && root != null && !WATCH) { var give = el('button', 'go', 'GIVE IT: ' + draft.words.toUpperCase()); give.type = 'button'; give.addEventListener('click', function () { api('approve', { preview: draft.preview }).then(function (a) { if (a.status && a.status !== 'queued') throw new Error(a.summary || 'refused'); setStatus('Given: ' + draft.words + '. The staff plans again at 1800.'); return refresh(); }).then(function () { readPlan(root); }).catch(function (e) { setStatus('Refused: ' + dryWords(e.message)); }); }); back.appendChild(give); }
     if (root != null) { var bb = el('button', '', 'BACK TO THE PLAN'); bb.type = 'button'; bb.addEventListener('click', function () { readPlan(root); }); back.appendChild(bb); }
     else { var bc = el('button', '', 'BACK TO THE DRAFT'); bc.type = 'button'; bc.addEventListener('click', function () { $('sheet').hidden = true; }); back.appendChild(bc); doc.appendChild(el('div', 'work', 'The draft is not signed. Sign it on the order, or tear it up.')); }
     doc.appendChild(el('div', 'foot', 'Played by your staff from what your side knows and believes. The game is as it was.'));
@@ -2075,6 +2093,7 @@ button:disabled { opacity: 0.45; cursor: default; }
   // Where the scenario lets a seat stop between pulses, time is advanced a pulse at a time and each pulse is
   // plotted as it is fought. Elsewhere a day is fought whole and then plotted.
   function go(until) {
+    if (WATCH) return watchGo(until);
     if (M.over) { setStatus('The game is over.'); return; }
     closeOrder(); closeForce(); playing = true; $('btn-go').textContent = 'Stop the clock'; $('btn-day').disabled = true;
     function rest(words) { playing = false; $('btn-go').textContent = 'Carry on'; $('btn-day').disabled = false; setStatus(words); }
@@ -2114,8 +2133,131 @@ button:disabled { opacity: 0.45; cursor: default; }
       } catch (e) { rest('Refused: ' + e.message); }
     })();
   }
-  $('btn-go').addEventListener('click', function () { if (playing) { playing = false; setStatus(OFFERED.advance ? 'The clock stops when this pulse is plotted.' : 'The clock stops when this day is plotted. This scenario does not let you stop inside a day.'); } else go(true); });
+  $('btn-go').addEventListener('click', function () { if (playing) { playing = false; setStatus(WATCH ? 'The clock stops when this step is plotted.' : OFFERED.advance ? 'The clock stops when this pulse is plotted.' : 'The clock stops when this day is plotted. This scenario does not let you stop inside a day.'); } else go(true); });
   $('btn-day').addEventListener('click', function () { go(false); });
+
+  // ---- a watched game (decision 0182): agents at the seats, the watcher at the clock ----
+  // The clock moves a step at a time, a pulse or a day, at the watcher's word and only when every
+  // seat is ready. Carry on is this page stepping whenever they are, until the watcher stops it or
+  // the side watched is told of something ticked. The bridge only passes the steps on.
+  var SIDE_NAME = { allied: 'Allied', japanese: 'Japanese' }, seatSeen = '', polling = false;
+  function watchGet(path) { return fetch(BASE + path).then(function (r) { return r.json(); }); }
+  function watchPost(path) { return fetch(BASE + path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }).then(function (r) { return r.json(); }); }
+  function waitWords(list) { return 'Waiting for the ' + list.map(function (s) { return SIDE_NAME[s] || s; }).join(' and the ') + ' commander' + (list.length > 1 ? 's' : '') + '.'; }
+  // What the side watched was told, as a seat's advance reads it: a new contact, an attack on its
+  // own, a ship lost or out of action, its strike away, its men ashore or fighting.
+  var TOLD_KIND = { air_attack_against: 'attack', base_attacked_against: 'attack', shore_bombardment_against: 'attack', salvo_against: 'attack', engagement_begun: 'attack', ship_sunk: 'loss', ship_lost_with_base: 'loss', strike_launched: 'strike', base_strike_launched: 'strike', men_landed: 'landing', ground_fight: 'landing' };
+  function toldAs(e) {
+    if (e.event_kind === 'report_received') return /: new /.test(e.text) ? 'contact' : null;
+    if (e.event_kind === 'system_hit') return /(propulsion|flight deck) hit, \w+ -> out/.test(e.text) ? 'loss' : null;
+    return TOLD_KIND[e.event_kind] || null;
+  }
+  function toldOf(evs, wanted) {
+    var by = {}; evs.forEach(function (e) { var t = toldAs(e); if (t && wanted.indexOf(t) >= 0) (by[t] = by[t] || []).push(sayEvent(e, true)); });
+    return ['contact', 'attack', 'loss', 'strike', 'landing'].filter(function (t) { return by[t]; }).map(function (t) { return { thing: t, lines: by[t] }; });
+  }
+  function watchGo(until) {
+    if (M.over) { setStatus('The game is over.'); return; }
+    closeOrder(); closeForce(); playing = true; $('btn-go').textContent = 'Stop'; $('btn-day').disabled = true;
+    function rest(words) { playing = false; $('btn-go').textContent = 'Carry on'; $('btn-day').disabled = false; setStatus(words); pollSeats(); }
+    (async function () {
+      try {
+        for (;;) {
+          var st = await watchGet('/standing'); if (st.refused != null) throw new Error(st.refused); st = st.ok;
+          if (st.game_over || st.stopped) { M.over = true; await refresh(); return rest(st.stopped || 'The game is over.'); }
+          if (st.waiting_for.length) {
+            if (!until) return rest(waitWords(st.waiting_for));
+            setStatus(waitWords(st.waiting_for)); await sleep(1500); if (!playing) return rest(''); continue;
+          }
+          setStatus('The clock runs.');
+          var a = await watchPost('/step');
+          if (a.refused != null) { if (!until) return rest(a.refused); await sleep(1500); if (!playing) return rest(''); continue; }
+          var s = a.ok, day = s.resolved.day, pulses = s.resolved.pulses, evs = [];
+          if (pulses.length === 1) {
+            if (pulses[0] === 'night') $('plot').textContent = '';
+            evs = await eventsOf(day, pulses[0]); await plotPhase(day, pulses[0], evs);
+            if (pulses[0] === 'afternoon') { var end = await eventsOf(day, 'end'); evs = evs.concat(end); await plotPhase(day, 'end', end); }
+          } else { setStatus('Day ' + day + ': the plot, pulse by pulse, from what the side was told.'); evs = await eventsOf(day); await plotDay(day, evs); }
+          lastTold = toldOf(evs, stopOn()); lastRun = { summary: s.summary }; if (s.game_over) M.over = true;
+          clock = { at: s.clock.at, day: s.clock.day }; await refresh();
+          if (!until || !playing || s.game_over || lastTold.length) {
+            var when = clock.at === 'dusk' ? 'at 1800' : 'at ' + clock.at + ' of day ' + clock.day;
+            return rest(s.game_over ? 'The game is over.' : lastTold.length ? 'The clock is stopped ' + when + '.' : '');
+          }
+        }
+      } catch (e) { rest('Refused: ' + e.message); }
+    })();
+  }
+  // A seat's calls in plain words, where the table has words for them.
+  var CALLED = { get_briefing: 'Reads the briefing', list_forces: 'Reads the forces', list_bases: 'Reads the bases', list_contacts: 'Reads the contacts', get_entity: 'Looks at', measure: 'Measures', explain: 'Asks after an event', why: 'Asks the staff why', events: 'Reads the war diary', command_state: 'Reads the orders in force', plans: 'Reads the plans', staff_orders: 'Reads the staff\'s orders for the day', propose: 'Asks the staff for a proposal', order: 'Reads the plan as ordered', report: 'Reads the report', trials: 'Reads the dry runs', preview: 'Asks the staff for a preview', trial: 'A dry run', approve: 'Gives an order', issue_orders: 'Direct orders', withdraw_intent: 'Withdraws an order', hold: 'Takes into own hands', release: 'Returns to the staff', set_limit: 'Sets a limit', set_leave: 'Leave', cancel_plan: 'Cancels a plan', set_interrupt: 'What stops the clock', acknowledge: 'Acknowledges', end_day: 'Ready until dusk', run: 'Ready for days', advance: 'Ready for pulses' };
+  function placeWords(a) {
+    var b = a.target != null ? baseByNumber(a.target) : a.base != null ? baseByNumber(a.base) : null;
+    if (b) return b.base.name; if (a.island != null) { var i = config.islands.filter(function (x) { return x.number === a.island; })[0]; return i ? i.name : 'island ' + a.island; }
+    if (a.hex) return hexWords({ q: a.hex[0], r: a.hex[1] }); return '';
+  }
+  function anOrder(o) {
+    var k = o.kind || '';
+    if (k === 'set_speed') return 'speed ' + o.speed; if (k === 'set_readiness') return o.readiness + ' readiness';
+    if (k === 'set_route') return 'a course of ' + (o.waypoints || []).length + ' legs'; if (k === 'set_air_mission') return 'mission: ' + (MISSION[o.mission] || o.mission).toLowerCase();
+    return k.replace(/^set_/, '').replace(/_/g, ' ');
+  }
+  function argWords(tool, a) {
+    a = a || {};
+    if (tool === 'issue_orders') return (a.orders || []).map(function (o) { return (o.unit ? nameOf(o.unit) + ': ' : '') + anOrder(o.order || {}); }).join('; ');
+    if (a.command === 'set_intent' || a.intent_kind) return ((WORD[a.intent_kind] || String(a.intent_kind || '').replace(/_/g, ' ')).toLowerCase() + ' ' + placeWords(a)).trim();
+    if (a.command) return String(a.command).replace(/_/g, ' ') + (a.limit ? ' ' + a.limit : '') + (a.risk ? ' ' + a.risk : '');
+    return Object.keys(a).filter(function (k) { return k !== 'reason' && k !== 'text'; }).map(function (k) { var v = a[k]; if (typeof v === 'string' && /^\w+:\d+$/.test(v)) v = nameOf(v); else if (typeof v === 'object') v = JSON.stringify(v); return k.replace(/_/g, ' ') + ' ' + v; }).join(', ');
+  }
+  function callLine(c, held) {
+    var d = el('div', 'call' + (c.refused ? ' refused' : '')), w = argWords(c.tool, c.arguments);
+    d.appendChild(rich('span', '', (held ? 'Waits for the clock: ' : '') + (CALLED[c.tool] || c.tool.replace(/_/g, ' ')) + (w ? ' · ' + w : '') + (c.refused ? ' · refused' : '')));
+    if (c.reason) d.appendChild(el('span', 'said', '“' + c.reason + '”'));
+    return d;
+  }
+  function showSeats(st, calls) {
+    if (!WATCH) return; var box = $('seatbox'); box.textContent = '';
+    WATCH.agents.forEach(function (side) {
+      var seat = (st.seats || []).filter(function (x) { return x.seat === side; })[0] || {}, a = el('article', 'slip'), f = el('div', 'from'), waited = !!seat.waited_for;
+      f.appendChild(el('span', '', 'THE ' + SIDE_NAME[side].toUpperCase() + ' COMMANDER')); f.appendChild(el('span', 'stamp' + (waited ? '' : ' ok'), st.game_over ? 'ENDED' : waited ? 'WAITED FOR' : 'READY'));
+      a.appendChild(f); if (seat.until && seat.until.words && !st.game_over) a.appendChild(el('div', '', plainWords('Ready ' + seat.until.words + '.')));
+      if (side === WATCH.side && calls) { var list = calls.calls || [];
+        if (list.length > 12) a.appendChild(el('div', 'call', 'And ' + (list.length - 12) + ' calls before these.'));
+        list.slice(-12).forEach(function (c) { a.appendChild(callLine(c, false)); });
+        if (calls.held) a.appendChild(callLine(calls.held, true)); }
+      box.appendChild(a);
+    });
+  }
+  // Who is waited for, and what the seat watched has done since its last stop, asked every two seconds.
+  function pollSeats() {
+    if (!WATCH || polling) return Promise.resolve(); polling = true;
+    return Promise.all([watchGet('/standing'), watchGet('/seat_calls?side=' + WATCH.side)]).then(function (a) {
+      if (a[0].refused != null || a[1].refused != null) return; var seen = JSON.stringify(a);
+      if (seen === seatSeen) return; var moved = seatSeen && JSON.stringify(a[1].ok.calls) !== JSON.stringify(JSON.parse(seatSeen)[1].ok.calls); seatSeen = seen;
+      showSeats(a[0].ok, a[1].ok); if (moved && !playing) return refresh();
+    }).catch(function () {}).then(function () { polling = false; });
+  }
+  function headSeat() { $('seat').textContent = WATCH ? 'Watching the ' + SIDE_NAME[WATCH.side] + ' commander' : 'Commander, ' + (config.seat === 'allied' ? 'the Allied side' : 'the Japanese side'); }
+  function watchTools() { return watchGet('/tools?side=' + WATCH.side).then(function (names) { OFFERED = {}; (names || []).forEach(function (n) { OFFERED[n] = true; }); }); }
+  function sideButtons() {
+    var box = $('watch-side'); box.textContent = ''; box.hidden = WATCH.agents.length < 2;
+    WATCH.agents.forEach(function (side) { var b = el('button', 'intray', SIDE_NAME[side]); b.type = 'button'; b.setAttribute('aria-pressed', String(side === WATCH.side)); b.addEventListener('click', function () { watchSide(side); }); box.appendChild(b); });
+  }
+  // Looking from the other side: its heading, its words for a base taken, its directives, its picture.
+  function watchSide(side) {
+    if (!WATCH || side === WATCH.side) return; if (playing) { setStatus('Stop the clock first.'); return; }
+    WATCH.side = side; config.seat = side; config.directives = WATCH.directives[side] || [];
+    KEPT = 'flagplot-directives-' + location.port + '-' + side; received = {}; readOnes = {}; recalled = false;
+    dayCache = {}; lastTold = []; lastRun = null; seatSeen = ''; $('plot').textContent = ''; $('plot').hidden = true;
+    $('sheet').hidden = true; $('card').hidden = true; clearPlan(); headSeat(); sideButtons();
+    watchTools().then(refresh).then(pollSeats).catch(function (e) { setStatus(e.message); });
+  }
+  function startWatch() {
+    var w = config.watch; WATCH = { side: config.seat, agents: w.agents, insideDay: w.inside_day, directives: w.directives || {} };
+    document.body.classList.add('watched'); KEPT = 'flagplot-directives-' + location.port + '-' + WATCH.side;
+    headSeat(); sideButtons(); $('btn-stops').hidden = false; $('btn-day').textContent = w.inside_day ? 'Next pulse' : 'Next day';
+    setInterval(pollSeats, 2000);
+    return watchTools().then(refresh).then(pollSeats);
+  }
 
   // ---- an order to a force at 0600 or 1200: touch the force, choose, sign (decision 0156) ----
   var force = null;
@@ -2233,7 +2375,7 @@ button:disabled { opacity: 0.45; cursor: default; }
     }).catch(function (err) { if (seq !== previewSeq) return; out.textContent = 'The staff refuses it: ' + err.message; $('o-pv-sum').textContent = 'THE STAFF REFUSES IT'; $('o-pv').open = true; });
   }
   $('order').addEventListener('change', function (e) { if (e.target.name === 'end') askPreview(); });
-  $('btn-intent').addEventListener('click', function () { if (playing) return; closeOrder(); closeForce(); picking = true; canvas.classList.add('picking'); setStatus('Touch the chart where you mean: a base, or open water.'); });
+  $('btn-intent').addEventListener('click', function () { if (playing || WATCH) return; closeOrder(); closeForce(); picking = true; canvas.classList.add('picking'); setStatus('Touch the chart where you mean: a base, or open water.'); });
   $('o-dry').addEventListener('click', function () {
     if (previewNo == null) return; var says = $('o-dry-says');
     playDry({ preview: previewNo, size: drySize }, says, [$('o-dry'), $('o-sign')], function (j) { if (chosen('risk') !== 'balanced') says.textContent = 'Played at balanced; your risk goes with the order.'; readEstimate(j, null, { preview: previewNo }); });
@@ -2331,7 +2473,7 @@ button:disabled { opacity: 0.45; cursor: default; }
     var b = this;
     if (!restartAsked) { var w = document.createElement('span'); w.textContent = 'again to restart'; b.appendChild(w); b.classList.add('ask'); setStatus('Touch it again to begin the game anew from its first evening. This game is not kept.'); restartAsked = setTimeout(function () { restartAsked = 0; b.classList.remove('ask'); if (b.lastChild.tagName === 'SPAN') b.removeChild(b.lastChild); }, 5000); return; }
     clearTimeout(restartAsked); b.disabled = true; setStatus('Beginning again.');
-    fetch('/restart', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }).then(function (r) { return r.json(); }).then(function (a) { if (a.refused != null) throw new Error(a.refused); try { history.replaceState(null, '', location.pathname); } catch (e) {} location.reload(); }).catch(function (e) { b.disabled = false; setStatus('It could not begin again: ' + e.message); });
+    fetch(BASE + '/restart', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }).then(function (r) { return r.json(); }).then(function (a) { if (a.refused != null) throw new Error(a.refused); try { history.replaceState(null, '', location.pathname); } catch (e) {} location.reload(); }).catch(function (e) { b.disabled = false; setStatus('It could not begin again: ' + e.message); });
   });
   $('btn-stops').addEventListener('click', function () { var f = $('stops'); f.hidden = !f.hidden; this.setAttribute('aria-expanded', String(!f.hidden)); });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !$('stops').hidden) { $('stops').hidden = true; $('btn-stops').setAttribute('aria-expanded', 'false'); } });
@@ -2367,10 +2509,10 @@ button:disabled { opacity: 0.45; cursor: default; }
     renderer.render(scene, camera); requestAnimationFrame(frame);
   }
 
-  Promise.all([fetch('/config').then(function (r) { return r.json(); }), fetch('/map').then(function (r) { return r.json(); }), fetch('/coast').then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }), fetch('/names').then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; })]).then(function (a) {
-    config = a[0]; hexes = a[1]; coast = a[2] && a[2].rings; chartNames = a[3]; $('seat').textContent = 'Commander, ' + (config.seat === 'allied' ? 'the Allied side' : 'the Japanese side');
+  Promise.all([fetch(BASE + '/config').then(function (r) { return r.json(); }), fetch(BASE + '/map').then(function (r) { return r.json(); }), fetch(BASE + '/coast').then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }), fetch(BASE + '/names').then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; })]).then(function (a) {
+    config = a[0]; hexes = a[1]; coast = a[2] && a[2].rings; chartNames = a[3]; headSeat();
     var ready = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
-    return ready.then(function () { layChart(); cur.zoom = 0; placeCamera(); requestAnimationFrame(frame); return fetch('/tools').then(function (r) { return r.json(); }).then(function (names) { names.forEach(function (n) { OFFERED[n] = true; }); $('btn-stops').hidden = !OFFERED.advance; if (OFFERED.advance) $('btn-day').textContent = 'Next pulse'; return refresh(); }); });
+    return ready.then(function () { layChart(); cur.zoom = 0; placeCamera(); requestAnimationFrame(frame); if (config.watch) return startWatch(); return fetch(BASE + '/tools').then(function (r) { return r.json(); }).then(function (names) { names.forEach(function (n) { OFFERED[n] = true; }); $('btn-stops').hidden = !OFFERED.advance; if (OFFERED.advance) $('btn-day').textContent = 'Next pulse'; return refresh(); }); });
   }).then(function () { var shown = true; try { shown = localStorage.getItem('flagplot.hint.look') === '1'; localStorage.setItem('flagplot.hint.look', '1'); } catch (e) {} setStatus(shown ? '' : 'Drag to look along the table; scroll to lean in.'); })
     .catch(function (e) { fatal('The table could not reach the game: ' + e.message); });
 })();
