@@ -69,3 +69,4 @@ id,key,name,nation,type
 1067,jp-zuiho-class,Zuiho class (converted from the Tsurugizaki-class submarine tenders),jp,light_carrier
 1068,us-cimarron-class,Cimarron class,us,oiler
 1069,jp-okinoshima-class,Okinoshima class,jp,minelayer
+1070,jp-tsugaru-class,"Tsugaru class (minelayer, single ship)",jp,minelayer
