@@ -266,7 +266,7 @@ A scenario may give a side replacements at a base (`[[replacement]]` entries in 
 4. A group that receives anything gets the aircraft as ready and the pilots added. `ReplacementsReceived` is recorded for it, with no cause.
 5. What no group can take is lost. Nothing is held over to the next day.
 
-Day 1 has nothing to replace. Replacement pilots are as good as the pilots they replace. Replacements cost the base no supply. No random number. [0038, 0039, 0041]
+Day 1 has nothing to replace. Replacement pilots are as good as the pilots they replace. Replacements cost the base no supply. No random number. The night's next step gives a base its supply lines (chapter 2, Stock from off the map). [0038, 0039, 0041, 0196]
 
 A side sees: `ReplacementsReceived` for its own groups, whole.
 
