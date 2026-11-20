@@ -26,6 +26,7 @@ Chapter 1 owns the sequence. This table is its summary. Each phase names the cha
 
 | Step | When | What runs | Where |
 | --- | --- | --- | --- |
+| 0 | Day start | What is held apart until this day enters: a task force with all aboard it at its hex, a land unit or an air group at its base, or it waits for its base. Before the commands, the staff and every order. It does nothing where nothing is held apart | Chapter 1, A unit not yet entered |
 | 1 | Day start | The commander's commands are taken in: intents, limits (a reserve set here binds from this morning, and so the day's refuelling), leaves, approvals, cancelling, holds and releases, interrupts and their acknowledgement | Chapter 8, Commands |
 | 2 | Day start | The override: the commander's order to a unit in an intent's forces limit is taken in and holds the unit. The code runs it after step 3, before the staff is asked | Chapter 8, Holds and the override |
 | 3 | Day start | Forces back from the yard are home. Nothing is refuelled here: refuelling is in the loading phase of each pulse (steps 17 and 24) | Chapter 4, Repair |

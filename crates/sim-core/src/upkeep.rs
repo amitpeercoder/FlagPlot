@@ -1044,7 +1044,9 @@ impl World {
     /// aircraft (no airfield, or its damage at the level, decision 5 of 0103)
     /// waits, whole: it is marked `waiting`, `ArrivalWaiting` is recorded,
     /// and it is considered again on each later night until the field takes
-    /// it. No random number.
+    /// it. No random number. An arrival due to a group that is held apart
+    /// until its day (decision 0195, 5) waits, silently, until the group is
+    /// on the map.
     pub(crate) fn receive_arrivals(&mut self, day: u32, pulse: Pulse) {
         for index in 0..self.truth.arrivals.len() {
             let arrival = self.truth.arrivals[index];
@@ -1052,6 +1054,18 @@ impl World {
                 continue;
             }
             let Some(group) = self.truth.air_groups.get(&arrival.air_group) else {
+                // A group held apart until its day (decision 0195, 5): the
+                // arrival waits, silently (its group's entry tells), and is
+                // delivered on the first night after the group has entered,
+                // as a waiting arrival is.
+                if self
+                    .truth
+                    .entry_of(EntityRef::AirGroup(arrival.air_group))
+                    .is_some()
+                {
+                    self.truth.arrivals[index].waiting = true;
+                    continue;
+                }
                 self.truth.arrivals[index].waiting = false;
                 continue;
             };

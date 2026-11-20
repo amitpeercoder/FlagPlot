@@ -21,25 +21,33 @@ impl World {
         kind: &OrderKind,
         day: u32,
     ) -> Option<RejectReason> {
-        let mut named = vec![kind.target()];
-        match kind {
-            OrderKind::Base {
-                order: BaseOrder::FormTaskForce { ships },
-                ..
-            } => named.extend(ships.iter().map(|ship| EntityRef::Ship(*ship))),
-            OrderKind::TaskForce {
-                order: TaskForceOrder::LoadUnit { unit, .. },
-                ..
-            } => named.push(EntityRef::LandUnit(*unit)),
-            _ => {}
-        }
-        named
+        named_units(kind)
             .into_iter()
             .filter(|unit| self.own(side, *unit))
             .find_map(|unit| {
                 let from = self.truth.available_from(unit)?;
                 (day < from).then_some(RejectReason::NotYetAvailable { unit, day: from })
             })
+    }
+
+    /// The refusal of an order of `side` that is to a unit of its own held
+    /// apart until its day, or names one (decision 0195, 8 and 15), or
+    /// `None`: the same named units as [`World::not_yet_available`]. Read
+    /// before it. The enemy's held unit is not here: it is in no state, and
+    /// the checks that refuse an order to a unit that is not the side's give
+    /// it, with nothing of a day.
+    pub(crate) fn not_yet_entered(&self, side: Side, kind: &OrderKind) -> Option<RejectReason> {
+        if self.truth.entering.is_empty() {
+            return None;
+        }
+        named_units(kind).into_iter().find_map(|unit| {
+            let entry = self.truth.entry_of(unit)?;
+            (entry.side == side).then_some(RejectReason::NotYetEntered {
+                unit,
+                day: entry.day,
+                waiting: entry.waiting,
+            })
+        })
     }
 
     fn own(&self, side: Side, unit: EntityRef) -> bool {
@@ -52,4 +60,22 @@ impl World {
             _ => false,
         }
     }
+}
+
+/// The units an order names for the day checks: its target; the ships a base
+/// forms a force from; the land unit a task force is to load.
+fn named_units(kind: &OrderKind) -> Vec<EntityRef> {
+    let mut named = vec![kind.target()];
+    match kind {
+        OrderKind::Base {
+            order: BaseOrder::FormTaskForce { ships },
+            ..
+        } => named.extend(ships.iter().map(|ship| EntityRef::Ship(*ship))),
+        OrderKind::TaskForce {
+            order: TaskForceOrder::LoadUnit { unit, .. },
+            ..
+        } => named.push(EntityRef::LandUnit(*unit)),
+        _ => {}
+    }
+    named
 }

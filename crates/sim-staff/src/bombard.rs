@@ -454,6 +454,15 @@ impl Day<'_, '_> {
         }
     }
 
+    /// Why the landing force is not on the map: it is held apart until its
+    /// day (decision 0195, 13), or it is not one of the side's forces.
+    fn not_on_the_map(&self, force: TaskForceId) -> String {
+        match crate::available::entering_on(self.view, sim_core::ids::EntityRef::TaskForce(force)) {
+            Some(day) => crate::available::enters_words(force, day),
+            None => format!("{force} is not one of the side's forces"),
+        }
+    }
+
     /// Item 5, under "take a place": the day the landing force is due at the
     /// place (decision 0142, 18), or why it is not known. On the morning it
     /// is routed it is that day plus the days of the passage at the cruise
@@ -477,7 +486,7 @@ impl Day<'_, '_> {
             || routed_this_morning(&self.scratch, end, force_id, place)
         {
             let Some(force) = self.view.task_forces().find(|f| f.id == force_id) else {
-                return Err(format!("{force_id} is not one of the side's forces"));
+                return Err(self.not_on_the_map(force_id));
             };
             let speed = self
                 .speed_of(force)
@@ -492,7 +501,7 @@ impl Day<'_, '_> {
             return Ok(self.today + passage - 1);
         }
         let Some(force) = self.view.task_forces().find(|f| f.id == force_id) else {
-            return Err(format!("{force_id} is not one of the side's forces"));
+            return Err(self.not_on_the_map(force_id));
         };
         let on_way = force.status == TaskForceStatus::Underway
             && force.route.act_at.contains(&place)
@@ -537,6 +546,25 @@ impl Day<'_, '_> {
             cannot: false,
         };
         let Some(force) = view.task_forces().find(|f| f.id == id).cloned() else {
+            if let Some(day) =
+                crate::available::entering_on(view, sim_core::ids::EntityRef::TaskForce(id))
+            {
+                // Held apart until its day (decision 0195, 13): one reason, no
+                // order, and the intent is neither failed nor finished.
+                out.summary = Some(
+                    serving(task, &plan)
+                        .evidence(crate::available::enters_words(id, day), today)
+                        .binding(format!("the day {id} enters, {day}"))
+                        .worked(format!(
+                            "{intent_words}: {} is to be served by {id}, which enters on day {day}, so the staff gives {id} no order.",
+                            task.id
+                        ))
+                        .would_change("the day come")
+                        .done(),
+                );
+                self.hand_in_bombard(task, &plan, id, out, in_scope, &intent_words);
+                return;
+            }
             out.summary = Some(
                 serving(task, &plan)
                     .evidence(format!("{id} is not one of the side's forces now"), today)

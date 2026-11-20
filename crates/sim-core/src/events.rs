@@ -2026,6 +2026,45 @@ pub enum EventKind {
     BuiltFromPicture {
         day: u32,
     },
+    /// A task force, with its ships, the air groups aboard them and the land
+    /// units aboard them, came onto the map at `hex` on its day (decision
+    /// 0195, 2 and 3): `base` is a base of its side in the hex, if any. The
+    /// lists are in number order. It cites no cause. Its own side's, whole.
+    /// Added at the end.
+    ForceEntered {
+        force: TaskForceId,
+        side: Side,
+        hex: Hex,
+        base: Option<BaseId>,
+        ships: Vec<ShipId>,
+        air_groups: Vec<AirGroupId>,
+        land_units: Vec<LandUnitId>,
+    },
+    /// A land unit or an air group came onto the map at its base on its day
+    /// (decision 0195, 2): `unit` is a land unit or an air group, `men` the
+    /// men ashore of a land unit and `aircraft` the ready and damaged
+    /// aircraft of a group, 0 for the other. It cites no cause. Its own
+    /// side's, whole. Added at the end.
+    UnitEntered {
+        unit: EntityRef,
+        side: Side,
+        base: BaseId,
+        hex: Hex,
+        men: u32,
+        aircraft: u32,
+    },
+    /// A land unit or an air group could not enter at its base on `day`, the
+    /// day the scenario named, or on a day after it (decision 0195, 2 and
+    /// 16): the base is not its side's, or takes no aircraft and the group
+    /// has some. Recorded on each day it waits, with no cause. Its own
+    /// side's, whole. Added at the end.
+    EntryWaiting {
+        unit: EntityRef,
+        side: Side,
+        base: BaseId,
+        day: u32,
+        wait: crate::entering::EntryWait,
+    },
 }
 
 impl EventKind {
@@ -2531,7 +2570,33 @@ impl EventKind {
                 entities.extend(units.iter().map(|unit| EntityRef::LandUnit(*unit)));
                 entities
             }
+            EventKind::ForceEntered {
+                force,
+                ships,
+                air_groups,
+                land_units,
+                ..
+            } => {
+                let mut entities = vec![EntityRef::TaskForce(*force)];
+                entities.extend(ships.iter().map(|ship| EntityRef::Ship(*ship)));
+                entities.extend(air_groups.iter().map(|group| EntityRef::AirGroup(*group)));
+                entities.extend(land_units.iter().map(|unit| EntityRef::LandUnit(*unit)));
+                entities
+            }
+            EventKind::UnitEntered { unit, base, .. }
+            | EventKind::EntryWaiting { unit, base, .. } => {
+                vec![*unit, EntityRef::Base(*base)]
+            }
         }
+    }
+}
+
+/// "s" for a count other than one.
+const fn plural(count: usize) -> &'static str {
+    if count == 1 {
+        ""
+    } else {
+        "s"
     }
 }
 
@@ -3989,6 +4054,69 @@ impl fmt::Display for EventKind {
                 f,
                 "{unit} of the {} side surrendered at {hex}: {men} men lost",
                 side.name()
+            ),
+            EventKind::ForceEntered {
+                force,
+                side,
+                hex,
+                base,
+                ships,
+                air_groups,
+                land_units,
+            } => {
+                write!(
+                    f,
+                    "{force} of the {} side entered at {hex} with {} ship{}",
+                    side.name(),
+                    ships.len(),
+                    if ships.len() == 1 { "" } else { "s" }
+                )?;
+                if !air_groups.is_empty() {
+                    write!(f, ", {} air group{}", air_groups.len(), plural(air_groups.len()))?;
+                }
+                if !land_units.is_empty() {
+                    write!(f, ", {} land unit{}", land_units.len(), plural(land_units.len()))?;
+                }
+                if let Some(base) = base {
+                    write!(f, " (at {base})")?;
+                }
+                Ok(())
+            }
+            EventKind::UnitEntered {
+                unit,
+                side,
+                base,
+                hex,
+                men,
+                aircraft,
+            } => {
+                write!(
+                    f,
+                    "{unit} of the {} side entered at {base} ({hex})",
+                    side.name()
+                )?;
+                if *men > 0 {
+                    write!(f, " with {men} men")?;
+                }
+                if *aircraft > 0 {
+                    write!(f, " with {aircraft} aircraft")?;
+                }
+                Ok(())
+            }
+            EventKind::EntryWaiting {
+                unit,
+                side,
+                base,
+                day,
+                wait,
+            } => write!(
+                f,
+                "{unit} of the {} side, to enter at {base} on day {day}, waits: {}",
+                side.name(),
+                match wait {
+                    crate::entering::EntryWait::NotTheSidesBase => "the base is not its side's",
+                    crate::entering::EntryWait::TakesNoAircraft => "the base takes no aircraft",
+                }
             ),
             EventKind::MenSurrenderedAshore { side, hex, men } => write!(
                 f,

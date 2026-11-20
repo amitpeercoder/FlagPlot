@@ -587,6 +587,9 @@ fn run(args: &[String], options: &LoadOptions) -> Result<(), String> {
             println!("PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.");
         }
         println!("seed {}", scenario.world.seed());
+        for line in held_apart_lines(scenario.world.umpire()) {
+            println!("{line}");
+        }
         println!();
     })?;
 
@@ -1106,4 +1109,55 @@ fn replay(args: &[String], options: &LoadOptions) -> Result<(), String> {
         );
     }
     Ok(())
+}
+
+/// One line for each unit the scenario holds apart until its day (decision
+/// 0195), in the state's order: the unit, its side, its day, its place and
+/// what comes with it. Empty for a scenario that holds nothing apart, so its
+/// output is what it was. The runner is the umpire: it prints both sides'.
+fn held_apart_lines(truth: &sim_core::state::TruthState) -> Vec<String> {
+    use sim_core::entering::EntryPlace;
+    let plural =
+        |n: usize, one: &str, many: &str| format!("{n} {}", if n == 1 { one } else { many });
+    truth
+        .entering
+        .iter()
+        .map(|(unit, entry)| {
+            let name = if let Some(force) = &entry.task_force {
+                force.name.clone()
+            } else if let Some(land) = entry.land_units.values().next() {
+                land.name.clone()
+            } else {
+                entry
+                    .air_groups
+                    .values()
+                    .next()
+                    .map_or_else(String::new, |group| group.name.clone())
+            };
+            let place = match entry.place {
+                EntryPlace::Hex(hex) => format!("at {hex}"),
+                EntryPlace::Base(base) => format!("at {base}"),
+            };
+            let mut with = Vec::new();
+            if entry.task_force.is_some() {
+                with.push(plural(entry.ships.len(), "ship", "ships"));
+            }
+            if entry.task_force.is_some() {
+                with.push(plural(entry.air_groups.len(), "air group", "air groups"));
+            }
+            if entry.task_force.is_some() {
+                with.push(plural(entry.land_units.len(), "land unit", "land units"));
+            }
+            let with = if with.is_empty() {
+                String::new()
+            } else {
+                format!(": {}", with.join(", "))
+            };
+            format!(
+                "held apart: {unit} \"{name}\", {}, enters on day {} {place}{with}",
+                entry.side.name().to_lowercase(),
+                entry.day,
+            )
+        })
+        .collect()
 }

@@ -16,6 +16,9 @@ pub mod choices;
 pub mod claims;
 pub mod command;
 pub mod commander;
+pub mod entering;
+#[cfg(test)]
+mod entering_tests;
 pub mod events;
 pub mod fixed;
 pub mod hash;

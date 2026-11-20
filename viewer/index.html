@@ -575,6 +575,8 @@ function sideReplay(replay, side) {
       air_groups: (initial.air_groups || []).filter(own),
       bases: (initial.bases || []).filter(own),
       land_units: (initial.land_units || []).filter(own),
+      // Decision 0195: what the side's own units hold apart until their day; the enemy's entries are not on the side's page.
+      entering: (initial.entering || []).filter(own),
     },
     events: sv.events.map(e => ({
       id: e.n, log_id: e.log_id, day: e.day, pulse: e.pulse, kind: e.kind, text: e.text, causes: e.causes || [],
@@ -1026,6 +1028,15 @@ function rebuildFromSteps(ctx) {
           for (const s of [...(d.ships || []), ...(d.escorts || [])]) shipForce.set(s, d.new_force);
           break;
         }
+        // Decision 0195: a force that enters starts at the hex of the event, with its ships.
+        case 'force_entered': {
+          if (!live.forces.has(d.force) && Array.isArray(d.hex)) {
+            live.forces.set(d.force, { q: d.hex[0], r: d.hex[1] });
+            trails.set(d.force, [[d.hex[0], d.hex[1]]]);
+          }
+          for (const sid of d.ships || []) shipForce.set(sid, d.force);
+          break;
+        }
         // Decision 0111: a formed force starts at its base; a joined or stood-down force's ships leave it.
         case 'task_force_formed': {
           const base = bases.get(d.base);
@@ -1343,12 +1354,22 @@ function buildModel(replay) {
   const bases = new Map();
   for (const b of replay.bases || []) bases.set(b.id, b);
   const airGroups = new Map();
+  const initShipsHeld = [];
   for (const g of initial.air_groups || []) airGroups.set(g.id, g);
   // Every air group the replay names: the starting ones, then any formed during the run (they are only in the final state).
   const groupTable = new Map();
   const addGroup = (g, formed) => groupTable.set(g.id, { id: g.id, name: g.name, side: g.side || null, base: g.base != null ? g.base : null, ship: g.ship != null ? g.ship : null,
     typeId: g.aircraft_type_id !== undefined ? g.aircraft_type_id : null, type: g.aircraft_type || null, mission: g.mission || null, reach0: g.reach === 'extended' ? 'extended' : 'normal', formedStep: formed ? -1 : undefined });
   for (const g of initial.air_groups || []) addGroup(g, false);
+  // Decision 0195: what is held apart until its day is in no hex before it enters. A group held at a base has none until its
+  // entry puts it there (the step's record, or a unit_entered event); one held aboard a ship has its ship, which is in no force.
+  const heldForce = new Map(), heldShip = new Map(), heldGroup = new Map(), heldLand = new Map();
+  for (const en of initial.entering || []) {
+    if (en.task_force) heldForce.set(en.task_force.id, en);
+    for (const sh of en.ships || []) { heldShip.set(sh.id, sh); initShipsHeld.push(sh); }
+    for (const g of en.air_groups || []) { heldGroup.set(g.id, en); airGroups.set(g.id, g); addGroup(Object.assign({}, g, { base: null }), false); }
+    for (const u of en.land_units || []) heldLand.set(u.id, { en, u });
+  }
   for (const g of (replay.final && replay.final.air_groups) || []) if (!groupTable.has(g.id)) addGroup(g, true);
   const aircraftTypes = new Map();
   for (const t of replay.aircraft_types || []) aircraftTypes.set(t.id, t);
@@ -1360,6 +1381,7 @@ function buildModel(replay) {
   }
   const initShips = new Map();
   for (const s of initial.ships || []) initShips.set(s.id, s);
+  for (const s of initShipsHeld) initShips.set(s.id, s);
 
   const eventById = new Map(), orderById = new Map(), ledTo = new Map();
   events.forEach(ev => eventById.set(ev.id, ev));
@@ -1470,6 +1492,34 @@ function buildModel(replay) {
             if (parent) parent.ships = parent.ships.filter(x => x !== s);
             if (!nf.ships.includes(s)) nf.ships.push(s);
             cur.shipForce.set(s, d.new_force);
+          }
+          break;
+        }
+        // Decision 0195: a force that enters is on the map from its day, at the hex of the event; a land unit or an air group at its base.
+        case 'force_entered': {
+          const en = heldForce.get(d.force), tf = en && en.task_force;
+          if (!cur.forces.has(d.force)) {
+            cur.forces.set(d.force, {
+              id: d.force, name: tf ? tf.name : 'TF ' + d.force, side: d.side,
+              q: d.hex[0], r: d.hex[1], ships: [], trail: [[d.hex[0], d.hex[1]]], detachedFrom: null, readiness: (tf && tf.readiness) || 'normal', alerted: !!(tf && tf.alerted),
+            });
+          }
+          const nf = cur.forces.get(d.force);
+          for (const sid of d.ships || []) { if (!nf.ships.includes(sid)) nf.ships.push(sid); cur.shipForce.set(sid, d.force); }
+          for (const uid of d.land_units || []) {
+            const h = heldLand.get(uid);
+            if (h && !cur.landUnits.has(uid)) cur.landUnits.set(uid, { id: uid, name: h.u.name, side: h.u.side, men_ashore: 0, hex: null, posture: 'defend', fatigue: 0, fieldworks: 0, fed_share: 1, march: null });
+          }
+          break;
+        }
+        case 'unit_entered': {
+          const p = parseEntity(d.unit);
+          if (!p) break;
+          if (p.type === 'land_unit') {
+            const h = heldLand.get(p.id);
+            if (h && !cur.landUnits.has(p.id)) cur.landUnits.set(p.id, { id: p.id, name: h.u.name, side: h.u.side, men_ashore: d.men, hex: Array.isArray(d.hex) ? d.hex.slice() : null, posture: h.u.posture || 'defend', fatigue: h.u.fatigue || 0, fieldworks: h.u.fieldworks || 0, fed_share: h.u.fed_share !== undefined ? h.u.fed_share : 1, march: null });
+          } else if (p.type === 'air_group') {
+            const m = new Map(cur.groupBase); m.set(p.id, d.base); cur.groupBase = m;
           }
           break;
         }

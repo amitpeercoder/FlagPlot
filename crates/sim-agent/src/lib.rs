@@ -38,6 +38,7 @@ mod choices;
 mod commands;
 mod common;
 mod deny;
+mod entries;
 mod explain;
 mod hold;
 mod island;
@@ -80,6 +81,9 @@ pub use commands::{
 };
 pub use common::{Dec, Handle, Place};
 pub use deny::{deny_measure, DenyMeasure};
+pub use entries::{
+    EnteredLine, EntryDetail, EntryGroup, EntryLandUnit, EntryLine, EntryShips, EntryWaitingLine,
+};
 pub use explain::{
     explain, Explain, ExplainAnswer, ExplainNode, Explainer, NodeBreakdown, NodeFactor, DEPTH_LIMIT,
 };

@@ -1308,6 +1308,13 @@ pub(crate) fn seen(kind: &EventKind, side: Side, owners: &Owners, knows_fight: b
         // of it (decision 11 of 0103).
         EventKind::AirfieldDamaged { side: owner, .. } => whole_if(*owner == side),
         EventKind::ArrivalWaiting { air_group, .. } => whole_if(own_group(air_group)),
+        // A side sees its own forces, land units and air groups come onto
+        // the map, and wait to, whole; the enemy is told nothing of it: he
+        // learns of a force as he learns of any, by sighting it (decision
+        // 0195, 3 and 24).
+        EventKind::ForceEntered { side: owner, .. }
+        | EventKind::UnitEntered { side: owner, .. }
+        | EventKind::EntryWaiting { side: owner, .. } => whole_if(*owner == side),
         EventKind::AirfieldMended { unit, .. } => whole_if(own_unit(unit)),
         // A side sees its own units' fieldworks and the wear on its own
         // defences whole; the enemy sees none of it (decision 14 of 0106).
@@ -1686,6 +1693,9 @@ fn first_known_round(side: Side, fight: &[Event], owners: &Owners) -> Option<u32
             | EventKind::AirfieldBuilt { .. }
             | EventKind::AirfieldDamaged { .. }
             | EventKind::ArrivalWaiting { .. }
+            | EventKind::ForceEntered { .. }
+            | EventKind::UnitEntered { .. }
+            | EventKind::EntryWaiting { .. }
             | EventKind::AirfieldMended { .. }
             | EventKind::UnitFellBack { .. }
             | EventKind::UnitSurrendered { .. }
@@ -1892,6 +1902,9 @@ fn fight_round(kind: &EventKind) -> Option<u32> {
         | EventKind::AirfieldBuilt { .. }
         | EventKind::AirfieldDamaged { .. }
         | EventKind::ArrivalWaiting { .. }
+        | EventKind::ForceEntered { .. }
+        | EventKind::UnitEntered { .. }
+        | EventKind::EntryWaiting { .. }
         | EventKind::AirfieldMended { .. }
         | EventKind::UnitFellBack { .. }
         | EventKind::UnitSurrendered { .. }
@@ -2242,6 +2255,9 @@ fn count_from_known_round(kind: SideEventKind, known: u32, round_minutes: u32) -
             | EventKind::AirfieldBuilt { .. }
             | EventKind::AirfieldDamaged { .. }
             | EventKind::ArrivalWaiting { .. }
+            | EventKind::ForceEntered { .. }
+            | EventKind::UnitEntered { .. }
+            | EventKind::EntryWaiting { .. }
             | EventKind::AirfieldMended { .. }
             | EventKind::UnitFellBack { .. }
             | EventKind::UnitSurrendered { .. }
@@ -2490,6 +2506,9 @@ fn whole_may_have_hidden_causes(kind: &EventKind) -> bool {
         | EventKind::FieldworksChanged { .. }
         | EventKind::DefencesWorn { .. }
         | EventKind::ArrivalWaiting { .. }
+        | EventKind::ForceEntered { .. }
+        | EventKind::UnitEntered { .. }
+        | EventKind::EntryWaiting { .. }
         | EventKind::AirfieldMended { .. }
         // A halt cites the side's own route order and steaming; steaming on
         // cites the halt, the route order, and the side's own bombardment
@@ -2768,6 +2787,9 @@ pub(crate) fn project(side: Side, log: &[Event], owners: &Owners) -> Vec<SideEve
                     | EventKind::AirfieldBuilt { .. }
                     | EventKind::AirfieldDamaged { .. }
                     | EventKind::ArrivalWaiting { .. }
+                    | EventKind::ForceEntered { .. }
+                    | EventKind::UnitEntered { .. }
+                    | EventKind::EntryWaiting { .. }
                     | EventKind::AirfieldMended { .. }
                     | EventKind::UnitFellBack { .. }
                     | EventKind::UnitSurrendered { .. }
@@ -4352,6 +4374,45 @@ mod tests {
                 Whole,
                 Nothing,
             ),
+            // A force, a land unit or an air group that enters, and one
+            // that waits to, are told to the side's own whole and to the
+            // enemy not at all (decision 0195, 3).
+            sided(row(
+                EventKind::ForceEntered {
+                    force: force(1),
+                    side: Side::Allied,
+                    hex: hex(),
+                    base: None,
+                    ships: vec![ship(1)],
+                    air_groups: vec![group(1)],
+                    land_units: vec![unit(1)],
+                },
+                Whole,
+                Nothing,
+            )),
+            sided(row(
+                EventKind::UnitEntered {
+                    unit: EntityRef::LandUnit(unit(1)),
+                    side: Side::Allied,
+                    base: base(1),
+                    hex: hex(),
+                    men: 100,
+                    aircraft: 0,
+                },
+                Whole,
+                Nothing,
+            )),
+            sided(row(
+                EventKind::EntryWaiting {
+                    unit: EntityRef::AirGroup(group(1)),
+                    side: Side::Allied,
+                    base: base(1),
+                    day: 3,
+                    wait: crate::entering::EntryWait::TakesNoAircraft,
+                },
+                Whole,
+                Nothing,
+            )),
             // A falling back is told to its own side only.
             sided(row(
                 EventKind::UnitFellBack {
@@ -4736,7 +4797,7 @@ mod tests {
     #[test]
     fn the_table_has_a_row_for_every_kind_of_event() {
         let all = event_kind_names();
-        assert_eq!(all.len(), 149, "the log has 149 kinds of event");
+        assert_eq!(all.len(), 152, "the log has 152 kinds of event");
         let covered: BTreeSet<String> = table()
             .iter()
             .map(|row| kind_name(&row.log[row.at]))

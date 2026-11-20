@@ -1416,6 +1416,13 @@ pub struct TruthState {
     /// The formations of land units (decision 0140, 7). Empty in a scenario
     /// without any. Added at the end.
     pub formations: BTreeMap<FormationId, Formation>,
+    /// What is held apart until its day (decision 0195), keyed by the unit
+    /// that enters: a task force with everything aboard it, or a land unit
+    /// or an air group at a base. In no hex, and walked by no rule of a day;
+    /// each is put on the map first thing on its day. Empty in a scenario
+    /// with no `enters`. Added at the end, and hashed last, only where it is
+    /// not empty.
+    pub entering: BTreeMap<EntityRef, crate::entering::Entering>,
 }
 
 /// A day's hits on the men of one side in one hex (decision 10 of 0106):
@@ -1441,9 +1448,17 @@ impl TruthState {
     /// - A land unit: the later of its own and that of each ship with its
     ///   men aboard.
     ///
+    /// - A unit held apart (decision 0195): the later of the day it is next
+    ///   tried and its own days, read inside what is held apart.
+    ///
     /// Bases have no day. The one place the rule is written: intake and the
     /// side's view both read it.
     pub fn available_from(&self, unit: EntityRef) -> Option<u32> {
+        // A unit held apart (decision 0195, 8 and 9): the later of the day it
+        // enters and its own days.
+        if let Some(day) = self.held_available_from(unit) {
+            return Some(day);
+        }
         match unit {
             EntityRef::Ship(id) => {
                 let ship = self.ships.get(&id)?;

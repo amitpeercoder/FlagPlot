@@ -436,7 +436,18 @@ impl<'a> SideView<'a> {
                 .is_some_and(|x| x.side == side),
             _ => false,
         };
-        own
+        // A unit held apart for the side until its day is the side's own
+        // (decision 0195, 13): the side knows what it has coming.
+        own || self.entry_of(unit).is_some()
+    }
+
+    /// The entry that holds `unit` apart for the side (decision 0195, 13):
+    /// the force, a ship of it, a group or a land unit aboard, or a unit at a
+    /// base. The side's own entries only: `None` for a unit that is on the
+    /// map, that does not exist, or that the enemy holds apart.
+    pub fn entry_of(&self, unit: EntityRef) -> Option<&'a crate::entering::Entering> {
+        let entry = self.truth.entry_of(unit)?;
+        (entry.side == self.side).then_some(entry)
     }
 
     /// Whether the side may use one of its own units on the day it now gives
@@ -444,7 +455,10 @@ impl<'a> SideView<'a> {
     /// no day, or its day has come. The one test every doctrine reads.
     /// False for a unit that is not the side's.
     pub fn may_use(&self, unit: EntityRef) -> bool {
-        self.owns_unit(unit)
+        // A unit held apart is not on the map, whatever the day (decision
+        // 0195, 13).
+        self.entry_of(unit).is_none()
+            && self.owns_unit(unit)
             && self
                 .truth
                 .available_from(unit)
@@ -460,6 +474,18 @@ impl<'a> SideView<'a> {
             .formations
             .values()
             .filter(move |formation| formation.side == side)
+    }
+
+    /// What is held apart for the side until its day (decision 0195, 13): its
+    /// own entries only, whole, in the order of their keys. The enemy's are
+    /// never here. (Added by the build of the state, as far as a half of a
+    /// picture needs it; the side's view of what is to come is built on it.)
+    pub fn entering(&self) -> impl Iterator<Item = &'a crate::entering::Entering> + '_ {
+        let side = self.side;
+        self.truth
+            .entering
+            .values()
+            .filter(move |entry| entry.side == side)
     }
 
     /// The cover of one of the side's own land units (decision 1 of 0106):
@@ -553,6 +579,10 @@ impl<'a> SideView<'a> {
                 .air_groups
                 .get(&arrival.air_group)
                 .is_some_and(|group| view.owns_group(group))
+                // Or to a group of the side's held apart (decision 0195, 13).
+                || view
+                    .entry_of(EntityRef::AirGroup(arrival.air_group))
+                    .is_some()
         })
     }
 

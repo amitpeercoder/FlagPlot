@@ -24,7 +24,7 @@ use std::fmt;
 
 use crate::belief::{AgeOutcome, ApplyOutcome, BeliefState, Report};
 use crate::commander::{Commander, NamedCommander};
-use crate::ids::{AirGroupId, BaseId, ContactId, EventId, LandUnitId, TaskForceId};
+use crate::ids::{AirGroupId, BaseId, ContactId, EntityRef, EventId, LandUnitId, TaskForceId};
 use crate::refdata::SearchFigures;
 use crate::state::{AirGroupLocation, ShipLocation, Side, TruthState};
 use crate::time::Pulse;
@@ -371,6 +371,10 @@ impl World {
             chain.insert(side, posts);
         }
         let mut placed: BTreeSet<(Side, CommandRef)> = BTreeSet::new();
+        // The superiors named for a force held apart until its day
+        // (decision 0195, 11): stored in its entry once every name is
+        // checked.
+        let mut held_superiors: Vec<(EntityRef, CommandRef)> = Vec::new();
         for entry in named {
             let describe = || {
                 format!(
@@ -385,6 +389,45 @@ impl World {
                     "{}: the area command is under no command",
                     describe()
                 )));
+            }
+            // A force held apart until its day is not a command at the
+            // start: its superior is kept in its entry and the command is
+            // formed when it enters (decision 0195, 11 and 19). The
+            // superior must be a command of the side at the start, and not
+            // the force itself.
+            let held_force = match entry.command {
+                CommandRef::TaskForce(id) => {
+                    let key = EntityRef::TaskForce(id);
+                    self.truth
+                        .entering
+                        .get(&key)
+                        .filter(|held| held.side == entry.side)
+                        .map(|_| key)
+                }
+                CommandRef::Area | CommandRef::Base(_) => None,
+            };
+            if let Some(key) = held_force {
+                if !posts.contains_key(&entry.superior) {
+                    return Err(SimError::InvalidSetup(format!(
+                        "{}: {} is not a command of the side at the start",
+                        describe(),
+                        entry.superior
+                    )));
+                }
+                if entry.superior == entry.command {
+                    return Err(SimError::InvalidSetup(format!(
+                        "{}: a command cannot be its own superior",
+                        describe()
+                    )));
+                }
+                if !placed.insert((entry.side, entry.command)) {
+                    return Err(SimError::InvalidSetup(format!(
+                        "{}: a superior is named for it twice",
+                        describe()
+                    )));
+                }
+                held_superiors.push((key, entry.superior));
+                continue;
             }
             if !posts.contains_key(&entry.command) {
                 return Err(SimError::InvalidSetup(format!(
@@ -434,6 +477,11 @@ impl World {
                 }
             }
         }
+        for (key, superior) in held_superiors {
+            if let Some(held) = self.truth.entering.get_mut(&key) {
+                held.superior = Some(superior);
+            }
+        }
         self.chain = Some(chain);
         // With report figures the area command holds each command under it,
         // exactly, as of the start (decision 0136, 4).
@@ -446,6 +494,10 @@ impl World {
     /// no commands and none is held: a commander is read only with them on.
     /// Fails if the game has begun, if a commander's note is empty, if his
     /// command is not a command of the side, or if a command is given two.
+    /// A commander named for a force held apart until its day (decision
+    /// 0195, 11) is kept in its entry, only with command levels on, and is
+    /// the command's when the force enters; naming the same commander again
+    /// changes nothing.
     pub fn name_commanders(&mut self, named: &[NamedCommander]) -> Result<(), SimError> {
         if self.truth.day > 0 || !self.events.is_empty() {
             return Err(SimError::InvalidSetup(
@@ -453,6 +505,7 @@ impl World {
             ));
         }
         let mut staged = self.chain.clone();
+        let mut staged_entries: Vec<(EntityRef, Commander)> = Vec::new();
         for entry in named {
             let describe = || {
                 format!(
@@ -471,6 +524,29 @@ impl World {
             let Some(chain) = staged.as_mut() else {
                 continue;
             };
+            let held_force = match entry.command {
+                CommandRef::TaskForce(id) => {
+                    let key = EntityRef::TaskForce(id);
+                    self.truth
+                        .entering
+                        .get(&key)
+                        .filter(|held| held.side == entry.side)
+                        .map(|held| (key, held.commander.as_ref()))
+                }
+                CommandRef::Area | CommandRef::Base(_) => None,
+            };
+            if let Some((key, have)) = held_force {
+                if have.is_some_and(|have| *have != entry.commander)
+                    || staged_entries.iter().any(|(other, _)| *other == key)
+                {
+                    return Err(SimError::InvalidSetup(format!(
+                        "{}: the command has a commander already",
+                        describe()
+                    )));
+                }
+                staged_entries.push((key, entry.commander.clone()));
+                continue;
+            }
             let Some(post) = chain
                 .get_mut(&entry.side)
                 .expect("both sides")
@@ -491,6 +567,11 @@ impl World {
             post.commander = Some(entry.commander.clone());
         }
         self.chain = staged;
+        for (key, commander) in staged_entries {
+            if let Some(held) = self.truth.entering.get_mut(&key) {
+                held.commander = Some(commander);
+            }
+        }
         Ok(())
     }
 

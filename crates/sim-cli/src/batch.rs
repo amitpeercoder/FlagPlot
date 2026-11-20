@@ -265,7 +265,7 @@ fn build(
             header = Some(batch_record::header(&executed.initial, world));
             let force_of: BTreeMap<ShipId, TaskForceId> =
                 batch_record::initial_force_of(&executed.initial);
-            for ship in executed.initial.ships.values() {
+            for ship in batch_record::initial_ships(&executed.initial) {
                 let class = &ref_data.ship_classes[&ship.class];
                 ships.push(ShipOut {
                     id: ship.id.raw(),
@@ -280,10 +280,8 @@ fn build(
             crippled_runs = vec![0; ships.len()];
             has_combat = ref_data.surface_combat.is_some();
             for side in SIDES {
-                let count = executed
-                    .initial
-                    .ships
-                    .values()
+                let count = batch_record::initial_ships(&executed.initial)
+                    .into_iter()
                     .filter(|ship| ship.side == side)
                     .count();
                 side_ships.push(count as u64);
@@ -304,8 +302,15 @@ fn build(
             .map(|figures| figures.crippled_flotation);
         let mut sunk_ids: BTreeSet<u32> = BTreeSet::new();
         let mut sunk_by_side = [0usize; 2];
-        for (position, ship) in executed.initial.ships.values().enumerate() {
-            let now = &truth.ships[&ship.id];
+        for (position, ship) in batch_record::initial_ships(&executed.initial)
+            .into_iter()
+            .enumerate()
+        {
+            // A ship held apart that never entered was never at risk
+            // (decision 0195, 10): in no count.
+            let Some(now) = truth.ships.get(&ship.id) else {
+                continue;
+            };
             if now.location == ShipLocation::Sunk {
                 sunk_ids.insert(ship.id.raw());
                 sunk_runs[position] += 1;

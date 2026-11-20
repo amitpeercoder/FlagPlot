@@ -25,7 +25,7 @@
           "const": "flagplot-agent"
         },
         "version": {
-          "const": 35
+          "const": 36
         },
         "kind": {
           "const": "entity"
@@ -52,6 +52,9 @@
             },
             {
               "$ref": "#/$defs/enemy_base"
+            },
+            {
+              "$ref": "#/$defs/to_enter"
             }
           ]
         }
@@ -416,6 +419,19 @@
         "last_report_event": {
           "$ref": "defs.schema.json#/$defs/count_or_null"
         }
+      }
+    },
+    "to_enter": {
+      "description": "A unit held apart until its day (decision 0195, 7): what it is, and when and where it enters.",
+      "type": "object",
+      "required": ["entity_kind", "held", "unit", "enters"],
+      "additionalProperties": false,
+      "properties": {
+        "entity_kind": { "const": "to_enter" },
+        "held": { "enum": ["task_force", "ship", "air_group", "land_unit"] },
+        "unit": { "$ref": "defs.schema.json#/$defs/handle" },
+        "class": { "description": "The class of a ship.", "type": "string" },
+        "enters": { "$ref": "defs.schema.json#/$defs/entry_line" }
       }
     },
     "enemy_base": {

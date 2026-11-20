@@ -269,6 +269,13 @@ impl Day<'_, '_> {
                 "with no date, a unit or force before its day counting from its day".to_string()
             }
         };
+        // Why a day is out of time, in the words the unit's own list uses.
+        let after_words = |day: u32| match game_last {
+            Some(last) if end_by.is_none_or(|by| day <= by) => {
+                format!("after the game's last day, day {last}")
+            }
+            _ => "after the latest day".to_string(),
+        };
         let mut found: Vec<String> = Vec::new();
         let mut not: Vec<String> = Vec::new();
 
@@ -296,6 +303,52 @@ impl Day<'_, '_> {
             if men > 0 {
                 found.push(format!(
                     "{id}, a lift of the take, has {men} fighting men aboard"
+                ));
+            }
+        }
+
+        // 1b. A force held apart until its day (decision 0195, 13) with
+        // fighting men aboard is a lift from its day, where the day is in
+        // time: those the limit names, or with none named every transport
+        // force. The men aboard are read from the entry that holds it.
+        for entry in view.entering() {
+            let Some(held_force) = entry.task_force.as_ref() else {
+                continue;
+            };
+            let id = held_force.id;
+            let counted = crate::available::counted_by_a_take(view, current.limits.forces.as_ref())
+                .task_forces
+                .iter()
+                .any(|f| f.id == id);
+            if !(own.contains(&id) || counted) {
+                continue;
+            }
+            let men: u32 = entry
+                .ships
+                .values()
+                .filter_map(|ship| ship.troops)
+                .filter(|t| {
+                    entry
+                        .land_units
+                        .get(&t.unit)
+                        .is_some_and(|unit| !unit.working)
+                })
+                .map(|t| t.men)
+                .sum();
+            if men == 0 {
+                continue;
+            }
+            let day =
+                crate::available::entering_on(view, EntityRef::TaskForce(id)).unwrap_or(entry.day);
+            if in_time(Some(day)) {
+                found.push(format!(
+                    "{id}, a lift of the take, enters on day {day} with {men} fighting men aboard"
+                ));
+            } else {
+                not.push(format!(
+                    "{} with {men} fighting men aboard, {}",
+                    crate::available::enters_words(id, day),
+                    after_words(day)
                 ));
             }
         }
@@ -344,6 +397,49 @@ impl Day<'_, '_> {
         let mut at_source: Vec<LandUnitId> = Vec::new();
         for id in units {
             let Some(unit) = view.land_units().find(|u| u.id == id) else {
+                // A fighting unit held apart until its day (decision 0195,
+                // 13): more is coming from its day where it enters at the
+                // source and the day is in time; where it enters elsewhere,
+                // or out of time, it is named in the list of what does not
+                // count.
+                if let Some(entry) = view.entry_of(EntityRef::LandUnit(id)) {
+                    let day = crate::available::entering_on(view, EntityRef::LandUnit(id))
+                        .unwrap_or(entry.day);
+                    let fighting = entry
+                        .land_units
+                        .get(&id)
+                        .is_some_and(|u| !u.working && u.men_ashore > 0);
+                    if !fighting {
+                        continue;
+                    }
+                    if entry.task_force.is_some() {
+                        // Aboard a held force: counted with that force's lift
+                        // where it is the take's, above.
+                        continue;
+                    }
+                    let at_source_base = matches!(
+                        entry.place,
+                        sim_core::entering::EntryPlace::Base(b)
+                            if view.bases().any(|x| x.id == b && x.hex == source_hex)
+                    );
+                    if !in_time(Some(day)) {
+                        not.push(format!(
+                            "{}, {}",
+                            crate::available::enters_words(id, day),
+                            after_words(day)
+                        ));
+                    } else if !at_source_base {
+                        not.push(format!(
+                            "{} not at the source {source}",
+                            crate::available::enters_words(id, day)
+                        ));
+                    } else {
+                        found.push(format!(
+                            "{id} enters at the source {source} on day {day}, to be carried by {}",
+                            force.id
+                        ));
+                    }
+                }
                 continue;
             };
             if unit.working || unit.men_ashore == 0 || unit.hex == Some(place) {

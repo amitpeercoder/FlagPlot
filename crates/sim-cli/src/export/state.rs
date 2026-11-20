@@ -1,6 +1,7 @@
 //! A snapshot of the truth (and, at the end, of each side's belief) as JSON.
 
 use serde::Serialize;
+use sim_core::entering::EntryPlace;
 use sim_core::hex::Hex;
 use sim_core::ids::UmpireKey;
 use sim_core::orders::{AirMission, Reach};
@@ -38,6 +39,43 @@ pub struct Snapshot {
     /// so a file made before land units is unchanged.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub land_units: Vec<LandUnitOut>,
+    /// What is held apart until its day (decision 0195), one entry each, in
+    /// the state's order, both sides' (the umpire's file). Left out when
+    /// nothing is held, so a file made before forces that arrive is
+    /// unchanged.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub entering: Vec<EntryOut>,
+}
+
+/// One unit held apart until its day (decision 0195): the force with its
+/// ships, groups and land units, or the one land unit or air group at a
+/// base.
+#[derive(Serialize)]
+pub struct EntryOut {
+    /// The unit that enters, as "task_force:3", "air_group:4" or
+    /// "land_unit:5".
+    unit: String,
+    /// The day the scenario names.
+    day: u32,
+    side: &'static str,
+    /// The hex a force enters at. Left out for a unit that enters at a base.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    hex: Option<Pos>,
+    /// The base a land unit or an air group enters at.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    base: Option<u32>,
+    /// True once its day has come and it waits for its base. Left out when
+    /// false.
+    #[serde(skip_serializing_if = "is_false")]
+    waiting: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    task_force: Option<TaskForceOut>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    ships: Vec<ShipOut>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    air_groups: Vec<AirGroupOut>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    land_units: Vec<LandUnitOut>,
 }
 
 /// A land unit: its men ashore and the hex they are in (null with none
@@ -468,6 +506,40 @@ pub fn snapshot(truth: &TruthState, ref_data: &RefData, key: &UmpireKey) -> Snap
             .values()
             .map(|unit| land_unit(unit, key))
             .collect(),
+        entering: truth
+            .entering
+            .iter()
+            .map(|(unit, entry)| EntryOut {
+                unit: unit.to_string(),
+                day: entry.day,
+                side: names::side(entry.side),
+                hex: match entry.place {
+                    EntryPlace::Hex(hex) => Some(Pos::from(hex)),
+                    EntryPlace::Base(_) => None,
+                },
+                base: match entry.place {
+                    EntryPlace::Hex(_) => None,
+                    EntryPlace::Base(base) => Some(base.raw()),
+                },
+                waiting: entry.waiting,
+                task_force: entry.task_force.as_ref().map(task_force),
+                ships: entry
+                    .ships
+                    .values()
+                    .map(|ship| self::ship(ship, ref_data))
+                    .collect(),
+                air_groups: entry
+                    .air_groups
+                    .values()
+                    .map(|group| air_group(group, ref_data))
+                    .collect(),
+                land_units: entry
+                    .land_units
+                    .values()
+                    .map(|unit| land_unit(unit, key))
+                    .collect(),
+            })
+            .collect(),
     }
 }
 
@@ -774,6 +846,9 @@ pub fn records(world: &World) -> Records {
         air_groups,
         bases,
         land_units,
+        // What is held apart is in the opening state; a step has what is on
+        // the map.
+        entering: _,
     } = snapshot(world.umpire(), world.ref_data(), &world.umpire_key());
     let key = world.umpire_key();
     // The holder's days of supply at each base, read through its own side's view.
