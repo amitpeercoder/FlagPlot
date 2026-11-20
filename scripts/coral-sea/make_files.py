@@ -80,8 +80,10 @@ HEADER = '''# SCENARIO 105, THE CORAL SEA (decision 0188).
 #   Allied: intent 1, hold Port Moresby (base 1), its forces the garrison
 #     (land unit 1); intent 2, operate task force 1 from (-12,1), with its
 #     own air groups (no forces limit); leave to prepare and leave to launch
-#     given; and two orders of the commander's own, both to task force 2:
-#     to move to (-12,-3), and to steam at 20 knots.
+#     given; intent 3, stand at (-13,-2) with task force 2 (decision 0192);
+#     intent 4, deny the waters within 1 hex of (-13,-2), its forces task
+#     force 1, with the targets limit transports first and the waters first
+#     (decision 0190). No order of a commander's own.
 #
 # Kept out of the loops that walk data/scenarios/*.toml by being in this
 # folder (decision 0072).
@@ -123,9 +125,15 @@ def allied(risk):
     text += command(s, 'set_intent', intent=2, intent_kind='"operate_carriers"',
                     task_force=1, hex='[-12, 1]')
     text += risk_limits(s, [1, 2], risk)
+    text += command(s, 'set_intent', intent=3, intent_kind='"stand_at"',
+                    task_force=2, hex='[-13, -2]')
+    text += command(s, 'set_intent', intent=4, intent_kind='"deny"', hex='[-13, -2]',
+                    distance=1)
+    text += command(s, 'set_limit', limit='"forces"', intent=4, task_forces='[1]')
+    text += command(s, 'set_limit', limit='"targets"', intent=4,
+                    kinds='["transport", "carrier", "battleship", "cruiser", "destroyer", "auxiliary"]',
+                    waters_first='true')
     text += leaves(s)
-    text += order(s, 'task_force = 2', 'set_route', waypoints='[[-12, -3]]')
-    text += order(s, 'task_force = 2', 'set_speed', knots=20)
     return text
 
 

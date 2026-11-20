@@ -300,19 +300,30 @@
 //!   root(0 + 16 + 0) = 160 nm; (-14,-2) is 40 x root(4 + 9 + 6) = 40 x
 //!   root 19 = 174.4 nm. Deboyne is 40 x root(4 + 9 - 6) = 40 x root 7 =
 //!   105.8 nm;
-//! - two orders to task force 2: to move to (-12,-3), on the convoy's
-//!   route at the tip, as the support group was sent to bar the way, and
-//!   to steam at 20 knots, since a force sent to bar a way is sent at
-//!   speed (589 nm at 20 kn is 29.5 hours; the figure is the
-//!   architect's, a placeholder). A staff stands a surface force only
-//!   from a home port, and this force has none, so no intent would move
-//!   it: the orders are the commander's own.
+//! - intent 3, stand at (-13,-2) with task force 2, on the convoy's
+//!   route at the tip, as the support group was sent to bar the way. The
+//!   force has no home port and is stood from where it is (decision
+//!   0192);
+//! - intent 4, deny the waters within 1 hex of (-13,-2), its forces task
+//!   force 1, with the targets limit transport, carrier, battleship,
+//!   cruiser, destroyer, auxiliary and the waters first (decision 0190).
+//!   The seven hexes hold (-12,-3) and (-14,-2), where the convoy passes,
+//!   and not the Main Force's station. The carriers keep their station by
+//!   intent 2; the deny has their bombers strike what is in those waters
+//!   before anything else, and the transports before the escort.
 //!
-//! 19. File a's commands and orders of day 1 are those, for each side,
-//!     with both leaves, and no other. After day 1 each side's command
-//!     state holds its intents with no risk set; no Allied air group
-//!     is held; and on the morning of day 2 task force 2 has a route to
-//!     (-12,-3) or has arrived there.
+//! These last two replace orders of the commander's own that the
+//! architect first gave by hand (a route and a speed for task force 2,
+//! and before that a list for each bomber group, which held the groups
+//! from the staff). Decisions 0190 and 0192 let the intents say it.
+//!
+//! 19. File a's commands of day 1 are those, for each side, with both
+//!     leaves, and no other, and it has no order of a commander's own.
+//!     After day 1 each side's command state holds its intents with no
+//!     risk set; no Allied air group or force is held; on the morning of
+//!     day 2 task force 2 has a route to (-13,-2) or has arrived there,
+//!     and each of the six Allied bomber groups has transports first on
+//!     its list and the deny's seven hexes as its waters to strike first.
 //! 20. From (-3,5), (-12,1) is 40 x root(9 x 9 + 4 x 4 + 9 x 4) = 40 x
 //!     root 133 = 461.3 nm by air; the game's sea measure is stated by
 //!     the test from the game and is not below that.
@@ -425,7 +436,7 @@ use sim_core::hex::Hex;
 use sim_core::ids::{AirGroupId, BaseId, IntentId, LandUnitId, ShipClassId, ShipId, TaskForceId};
 use sim_core::map::HexKind;
 use sim_core::objectives::{score, Level, Objective, Outcome, Tally};
-use sim_core::orders::{Issuer, Mission, OrderKind, SpeedSetting, TaskForceOrder};
+use sim_core::orders::{Issuer, Mission};
 use sim_core::refdata::ShipKind;
 use sim_core::state::{AirGroupLocation, Ship, ShipLocation, Side, TruthState};
 use sim_core::time::Pulse;
@@ -603,7 +614,18 @@ struct Played {
     end: World,
 }
 
+const TARGETS: [ShipKind; 6] = [
+    ShipKind::Transport,
+    ShipKind::Carrier,
+    ShipKind::Battleship,
+    ShipKind::Cruiser,
+    ShipKind::Destroyer,
+    ShipKind::Auxiliary,
+];
+
 struct Morning {
+    lists: BTreeMap<u32, Vec<ShipKind>>,
+    waters: BTreeMap<u32, BTreeSet<Hex>>,
     tf2_at: Hex,
     tf2_route: Vec<Hex>,
 }
@@ -627,6 +649,18 @@ fn play(letter: char) -> Played {
                     mornings.insert(
                         day,
                         Morning {
+                            lists: t
+                                .air_groups
+                                .iter()
+                                .map(|(id, g)| (id.raw(), g.target_priority.clone()))
+                                .collect(),
+                            waters: t
+                                .air_groups
+                                .iter()
+                                .map(|(id, g)| {
+                                    (id.raw(), g.strike_first_waters.iter().copied().collect())
+                                })
+                                .collect(),
                             tf2_at: t.task_forces[&tf(2)].position(),
                             tf2_route: t.task_forces[&tf(2)].route.waypoints.clone(),
                         },
@@ -1553,7 +1587,7 @@ fn s19_the_orders_of_file_a_on_day_1_and_what_stands_on_the_morning_of_day_2() {
 
     // The Allied commands.
     let state = &a.after_day_1[&A];
-    assert_eq!(commander_intents(state), BTreeSet::from([1, 2]));
+    assert_eq!(commander_intents(state), BTreeSet::from([1, 2, 3, 4]));
     assert_eq!(intent(state, 1).kind, IntentKind::Hold { base: base(1) });
     let f = intent(state, 1)
         .limits
@@ -1570,55 +1604,70 @@ fn s19_the_orders_of_file_a_on_day_1_and_what_stands_on_the_morning_of_day_2() {
         }
     );
     assert!(intent(state, 2).limits.forces.is_none());
-    for raw in 1..=2 {
+    assert_eq!(
+        intent(state, 3).kind,
+        IntentKind::StandAt {
+            force: tf(2),
+            hex: hex(-13, -2)
+        }
+    );
+    assert_eq!(
+        intent(state, 4).kind,
+        IntentKind::Deny {
+            hex: hex(-13, -2),
+            distance: 1
+        }
+    );
+    let f = intent(state, 4)
+        .limits
+        .forces
+        .as_ref()
+        .expect("a forces limit");
+    assert_eq!(f.task_forces, BTreeSet::from([tf(1)]));
+    assert!(f.air_groups.is_empty() && f.land_units.is_empty() && f.ships.is_empty());
+    let t = intent(state, 4)
+        .limits
+        .targets
+        .as_ref()
+        .expect("a targets limit");
+    assert_eq!(t.kinds, TARGETS.to_vec());
+    assert!(t.waters_first);
+    for raw in 1..=4 {
         assert_eq!(intent(state, raw).limits.risk, None, "balanced");
         assert_eq!(intent(state, raw).set_day, 1);
     }
     assert!(state.leaves.prepare && state.leaves.launch);
 
-    // The commander's orders of day 1: task force 2's route and its speed,
-    // and no other.
-    let given = |side: Side| -> Vec<&sim_core::orders::Order> {
-        a.orders
-            .iter()
-            .filter(|o| o.side == side && o.origin.issuer == Issuer::Player)
-            .collect()
-    };
+    // No order of a commander's own, and nothing held from the staff.
     assert!(
-        given(J).is_empty(),
-        "the Japanese side gives no order of its own"
+        a.orders.iter().all(|o| o.origin.issuer != Issuer::Player),
+        "no order of a commander's own"
     );
-    let allied = given(A);
-    assert_eq!(allied.len(), 2, "{allied:?}");
-    assert!(allied.iter().all(|o| o.day_issued == 1));
-    let mut speeds = Vec::new();
-    let mut routes = Vec::new();
-    for o in &allied {
-        match &o.kind {
-            OrderKind::TaskForce {
-                target,
-                order: TaskForceOrder::SetRoute { waypoints, .. },
-            } => routes.push((target.raw(), waypoints.clone())),
-            OrderKind::TaskForce {
-                target,
-                order: TaskForceOrder::SetSpeed(SpeedSetting::Knots(knots)),
-            } => speeds.push((target.raw(), *knots)),
-            other => panic!("an order the statement does not give: {other:?}"),
-        }
-    }
-    assert_eq!(routes, vec![(2, vec![hex(-12, -3)])]);
-    assert_eq!(speeds, vec![(2, n(20))]);
-    // No Allied air group is held from the staff.
-    let held = format!("{:?}", state.holds);
-    assert!(!held.contains("AirGroup"), "held: {held}");
+    assert!(state.holds.is_empty(), "held: {:?}", state.holds);
 
     let m = &a.mornings[&2];
     assert!(
-        m.tf2_at == hex(-12, -3) || m.tf2_route.last() == Some(&hex(-12, -3)),
+        m.tf2_at == hex(-13, -2) || m.tf2_route.last() == Some(&hex(-13, -2)),
         "task force 2 at {:?} with route {:?}",
         m.tf2_at,
         m.tf2_route
     );
+    let waters: BTreeSet<Hex> = [
+        (-13, -2),
+        (-12, -2),
+        (-14, -2),
+        (-13, -1),
+        (-13, -3),
+        (-12, -3),
+        (-14, -1),
+    ]
+    .into_iter()
+    .map(|(q, r)| hex(q, r))
+    .collect();
+    for raw in [2, 3, 4, 6, 7, 8] {
+        assert_eq!(m.lists[&raw], TARGETS.to_vec(), "group {raw}'s list");
+        assert_eq!(m.waters[&raw], waters, "group {raw}'s waters");
+    }
 }
 
 /// Statement 20: From (-3,5), (-12,1) is 40 x root(9 x 9 + 4 x 4 + 9 x 4) = 40 x root
@@ -1970,7 +2019,13 @@ fn where_the_japanese_side_is_given_no_orders_the_convoy_does_not_move_and_no_ma
             .filter_map(|s| s.troops)
             .map(|tr| tr.men)
             .sum();
-        assert_eq!(aboard, 5386, "file {letter}: every man still aboard");
+        // No man has gone ashore; the men aboard are all there are but for
+        // any lost with a transport sunk where the convoy lies (the Allied
+        // carriers, given orders in file c, may strike it there).
+        assert!(aboard <= 5386, "file {letter}: {aboard} aboard");
+        if letter == 'd' {
+            assert_eq!(aboard, 5386, "file d: every man still aboard");
+        }
         assert!(t.task_forces[&tf(5)].route.waypoints.is_empty());
     }
 }

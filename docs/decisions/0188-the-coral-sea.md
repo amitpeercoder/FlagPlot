@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 20, 2026, at the designer's aski
 
 Summary: A second small scenario for play: the Coral Sea over five days, 6 to 10 May 1942. Two American carriers and a cruiser group against two Japanese fleet carriers and a light carrier, with a Japanese convoy bound for Port Moresby that lands on the last days if it is not stopped or turned back. It is built in three stages: the data is settled and derived first, then the scenario with its hand calculation, then its runs and games under the guards of decision 0187. Most of the ships and aircraft it needs the game already has.
 
-Standing: Confirmed by the designer on Nov 20, 2026; built through its first run of 1,000 games, which is far outside the band (the Japanese side ahead in 982). It is not a contest between the engine's staffs, for two things a staff cannot yet do; that is with the designer.
+Standing: Confirmed by the designer on Nov 20, 2026; built, and with the staff's new rules (decisions 0190 to 0192) inside the band on its third run of 1,000 games: the Allied side ahead in 574, the Japanese in 426. Its four games between agents are owed before it is called balanced.
 
 ## Why
 
@@ -361,3 +361,15 @@ Made by the architect on Nov 20, 2026 (`docs/validation/coral-sea-first-run.md`)
    - two rules the scenario shows are wanted, each to be planned by its own record: a staff that puts the ships of a landing first when its order is to stop one, and a staff that turns a threatened convoy back (which he has already said to plan after this run);
    - whether to play the games between agents now, before either rule, to learn whether a commander who is not the staff can stop the convoy;
    - whether the scenario goes on the table's list meanwhile, said plainly to be one-sided against the engine.
+
+## Stage C, continued: the staff's rules, and two more runs
+
+Recorded by the architect on Nov 20, 2026 (`docs/validation/coral-sea-runs-with-the-staffs-rules.md`).
+
+1. **The designer had the two rules planned first** that the first run showed were wanted, and two more beside them (decisions 0190 to 0193). They are rules of the staff's for every scenario; none was written to this scenario's result, and what each was expected to do here was written in its record before any run.
+2. **The Allied orders are restated to use them,** in the hand calculation, by the architect: the support group is given "stand at (-13,-2)" in place of his order to it, and the carriers a deny of the waters within 1 hex of that hex with transports first and the waters first, in place of nothing. The Japanese orders are as first written. No point, level, figure or force changed.
+3. **Run 2, with a lift turned back alone: inside the band,** the Allied side ahead in 454 and the Japanese in 545. A reviewer had expected the convoy to land in a quarter to a third of games; it lands in 520 of 1,000.
+4. **Run 3, with the three rules: inside the band,** 574 and 426. A transport is sunk in 727 games, the convoy lands in part in 314, and every level of result is reached in numbers. It is a contest between the engine's staffs.
+5. **What it cost the Allied side to stop the convoy:** its carriers no longer sink a Japanese fleet carrier in any game, and Australia is sunk three times as often.
+6. **Still owed:** the four games between agents, before the scenario is called balanced (decision 0187, guard three); a run with decision 0193 once it is merged; the scenario on the table's list.
+7. **A test loosened.** The property that the convoy does not move and no man lands where the Japanese side is given no orders had a check beside it that every man was still aboard. With the Allied side given orders the carriers now find the idle convoy and sink a transport. The property stands; the check is kept for the file in which neither side is given orders.
