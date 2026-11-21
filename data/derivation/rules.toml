@@ -1609,7 +1609,7 @@ agreed = "2026-11-21"
 [[exception]]
 entity = "ao-22-cimarron"
 fact = "fuel_capacity_bbl"
-row = 14600
+row = 14700
 later = true
 reason = "Her own bunkers, 14,850 barrels, the Navy data book's line of 15 April 1945 (restating ship_facts 14303), read for 1942 as already so: they are her hull's bunkers, and no source read says they were altered (decision 0206, rule 12). Settled by the architect, Nov 21, 2026 (decision 0206)."
 agreed = "2026-11-21"
@@ -1617,7 +1617,7 @@ agreed = "2026-11-21"
 [[exception]]
 entity = "ao-24-platte"
 fact = "fuel_capacity_bbl"
-row = 14601
+row = 14701
 later = true
 reason = "Her own bunkers, 15,000 barrels, the Navy data book's line of 15 April 1945 (restating ship_facts 14314), read for 1942 as already so: they are her hull's bunkers, and no source read says they were altered (decision 0206, rule 12). Settled by the architect, Nov 21, 2026 (decision 0206)."
 agreed = "2026-11-21"
@@ -1625,7 +1625,7 @@ agreed = "2026-11-21"
 [[exception]]
 entity = "us-cimarron-class"
 fact = "fuel_capacity_bbl"
-row = 14320
+row = 14340
 later = true
 reason = "The class's 15,000 barrels, inferred from the four identical lines of the data book of 15 April 1945 (Platte, Sabine, Kaskaskia, Guadalupe), read for 1942 as already so: they are the hulls' bunkers, and no source read says they were altered. Neosho, lost in May 1942, has no line of her own (decision 0206, rules 12 and 14). Settled by the architect, Nov 21, 2026 (decision 0206)."
 agreed = "2026-11-21"
@@ -1633,7 +1633,7 @@ agreed = "2026-11-21"
 [[exception]]
 entity = "ao-22-cimarron"
 fact = "cargo_oil_capacity_bbl"
-row = 14605
+row = 14705
 later = true
 reason = "The cargo oil of November 1943, 103,233 barrels (Wildenberg's table, restating ship_facts 14366), read for 1942 as already so: it is the statement nearest in time that is a capacity, and the loads of July 1942 (93,000 barrels taken by Platte; 12,000 tons of fuel oil each) sit under it. The 1945 table of fuel-oil tanks (68,054 barrels) is an allotment in design by its own footnote and is not read (decision 0206, rule 13). Settled by the architect, Nov 21, 2026 (decision 0206)."
 agreed = "2026-11-21"
@@ -1641,7 +1641,7 @@ agreed = "2026-11-21"
 [[exception]]
 entity = "ao-24-platte"
 fact = "cargo_oil_capacity_bbl"
-row = 14606
+row = 14706
 later = true
 reason = "The cargo oil of November 1943, 101,638 barrels (Wildenberg's table, restating ship_facts 14367), read for 1942 as already so: it is the statement nearest in time that is a capacity, and the loads of July 1942 (93,000 barrels taken by Platte; 12,000 tons of fuel oil each) sit under it (decision 0206, rule 13). Settled by the architect, Nov 21, 2026 (decision 0206)."
 agreed = "2026-11-21"
@@ -1649,7 +1649,7 @@ agreed = "2026-11-21"
 [[exception]]
 entity = "ao-25-sabine"
 fact = "cargo_oil_capacity_bbl"
-row = 14607
+row = 14707
 later = true
 reason = "The cargo oil of November 1943, 104,938 barrels (Wildenberg's table, restating ship_facts 14368), read for 1942 as already so, as her sisters' are (decision 0206, rule 13). Read for the rule of the least of her sisters (rule 14): Sabine is in no scenario. Settled by the architect, Nov 21, 2026 (decision 0206)."
 agreed = "2026-11-21"
@@ -1657,7 +1657,7 @@ agreed = "2026-11-21"
 [[exception]]
 entity = "ao-32-guadalupe"
 fact = "cargo_oil_capacity_bbl"
-row = 14608
+row = 14708
 later = true
 reason = "The cargo oil of November 1943, 104,938 barrels (Wildenberg's table, restating ship_facts 14369), read for 1942 as already so, as her sisters' are (decision 0206, rule 13). Read for the rule of the least of her sisters (rule 14): Guadalupe is in no scenario. Settled by the architect, Nov 21, 2026 (decision 0206)."
 agreed = "2026-11-21"
