@@ -53,7 +53,7 @@ button:disabled { opacity: 0.45; cursor: default; }
 .view { position: fixed; top: 12px; right: 16px; display: flex; gap: 6px; }
 .view button svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; flex: none; }
 .view button { display: inline-flex; align-items: center; gap: 6px; min-width: 36px; justify-content: center; min-height: 34px; padding: 0 8px; background: rgba(0,0,0,0.35); color: var(--ink-dim); border: 1px solid var(--ink-dim); border-radius: 2px; font-size: 13px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; }
-.view button.ask { color: #fff; border-color: var(--enemy); background: var(--enemy); }
+.view button.ask, .pop .papers button.ask { color: #fff; border-color: var(--enemy); background: var(--enemy); }
 .view button:hover, .view button:focus-visible, .view button[aria-pressed="true"] { color: var(--ink); border-color: var(--ink); }
 .tray h2 { margin: 4px 0 0; font-size: 14px; font-weight: 600; letter-spacing: 0.16em; opacity: 0.85; text-transform: uppercase; text-shadow: 0 1px 6px #000; }
 #signals { display: flex; flex-direction: column; gap: 10px; }
@@ -430,9 +430,14 @@ body.watched .gives { display: none !important; }
   <button type="button" id="btn-hexes" aria-pressed="false" title="Hexes and their numbers" aria-label="Hexes"><svg viewBox="0 0 24 24"><path d="M7 3.5h10l5 8.5-5 8.5H7L2 12z"/></svg></button>
   <button type="button" id="btn-pieces"></button>
   <button type="button" id="btn-labels"></button>
-  <button type="button" id="btn-new" title="End this game and choose another" hidden>New game</button>
-  <button type="button" id="btn-restart" title="Begin the game again from its first evening" aria-label="Begin the game again"><svg viewBox="0 0 24 24"><path d="M4.5 12a7.5 7.5 0 1 0 2.4-5.5M4 3.5v4h4"/></svg></button>
-  <button type="button" id="btn-stops" aria-expanded="false" aria-controls="stops" hidden title="What stops the clock" aria-label="Clock stops"><svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 8.5V13l3 2M9.5 2.5h5"/></svg></button>
+  <button type="button" id="btn-game" class="menu" aria-expanded="false" aria-controls="pop-game" title="The game: a new one, this one again, what stops the clock">Game</button>
+</div>
+<div id="pop-game" class="pop" hidden>
+  <div class="papers stay">
+    <button type="button" id="btn-new" title="End this game and choose another" hidden>New game</button>
+    <button type="button" id="btn-restart" title="Begin the game again from its first evening">Begin this game again</button>
+    <button type="button" id="btn-stops" aria-expanded="false" aria-controls="stops" hidden title="What stops the clock">What stops the clock</button>
+  </div>
 </div>
 <fieldset class="stops" id="stops" hidden>
   <legend>THE CLOCK STOPS WHEN I AM TOLD OF</legend>
@@ -2740,11 +2745,11 @@ body.watched .gives { display: none !important; }
   $('btn-hexes').addEventListener('click', function () { showHexes = !showHexes; try { localStorage.setItem('flagplot.hexes', showHexes ? '1' : '0'); } catch (e) {} this.setAttribute('aria-pressed', String(showHexes)); paintBase(); if (g) drawMarks(); $('card').hidden = true; });
   // Your orders and the staff's papers hang from the top bar, so that the
   // side of the table is kept for what needs your eye: the signals.
-  var MENUS = [['btn-orders', 'pop-orders'], ['btn-staff', 'pop-staff']];
+  var MENUS = [['btn-orders', 'pop-orders'], ['btn-staff', 'pop-staff'], ['btn-game', 'pop-game']];
   function shutMenus(but) { MENUS.forEach(function (m) { if (m[1] !== but) { $(m[1]).hidden = true; $(m[0]).setAttribute('aria-expanded', 'false'); } }); }
   MENUS.forEach(function (m) {
     $(m[0]).addEventListener('click', function (e) { e.stopPropagation(); var pop = $(m[1]), open = pop.hidden; shutMenus(); if (!open) return; var r = this.getBoundingClientRect(); pop.style.left = Math.max(8, Math.min(r.left, window.innerWidth - 346)) + 'px'; pop.style.top = (r.bottom + 6) + 'px'; pop.hidden = false; this.setAttribute('aria-expanded', 'true'); });
-    $(m[1]).addEventListener('click', function (e) { e.stopPropagation(); if (e.target.closest('.papers button, .ref')) shutMenus(); });
+    $(m[1]).addEventListener('click', function (e) { e.stopPropagation(); if (e.target.closest('.papers:not(.stay) button, .ref')) shutMenus(); });
   });
   document.addEventListener('click', function () { shutMenus(); });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') shutMenus(); });
@@ -2774,7 +2779,7 @@ body.watched .gives { display: none !important; }
     fetch(BASE + '/new', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }).then(function (r) { return r.json(); }).then(function (a) { if (a.refused != null) throw new Error(a.refused); try { history.replaceState(null, '', location.pathname); } catch (e) {} location.reload(); }).catch(function (e) { b.disabled = false; setStatus('It could not end the game: ' + e.message); });
   });
   $('btn-agent').addEventListener('click', readAgentSeats);
-  $('btn-stops').addEventListener('click', function () { var f = $('stops'); f.hidden = !f.hidden; this.setAttribute('aria-expanded', String(!f.hidden)); });
+  $('btn-stops').addEventListener('click', function () { shutMenus(); var f = $('stops'); f.hidden = !f.hidden; this.setAttribute('aria-expanded', String(!f.hidden)); });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !$('stops').hidden) { $('stops').hidden = true; $('btn-stops').setAttribute('aria-expanded', 'false'); } });
   $('btn-back').addEventListener('click', function () { goal.x = 0; goal.z = 0; goal.zoom = 0; });
   function resize() { var w = window.innerWidth, h = window.innerHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
