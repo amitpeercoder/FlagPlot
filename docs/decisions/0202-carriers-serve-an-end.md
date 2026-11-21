@@ -88,3 +88,40 @@ Any game in which a side has a deny or a neutralise with no task force named, an
 
 1. **Carriers by default, or only when asked?** The plan has the staff use a free carrier force unless the commander says otherwise. The other way is a choice on the order, "with the carriers", off unless ticked. The architect proposes by default, with leave as the check: it is what a commander means by the order.
 2. **Preserve keeps carriers from raiding an airfield** (rule 11). The architect proposes it.
+
+## Amended on review
+
+A reviewer who had not seen the plan written read it against the code and the scenarios on Nov 21, 2026. Where this and the text above differ, this holds.
+
+**Closed proofs do not move (replaces rules 1 to 5 where they differ, and "What it changes in games on file").**
+
+21. **Rule 2 is withdrawn.** Letting the bases serve a deny that names only task forces would move eleven proof files and the Coral Sea's, and changes what the engine accepts for every order with such a limit. It stays as it is, a known oddity, written in the rulebook. The table sets no forces limit, so a player does not meet it.
+22. **A force the commander named keeps the hex it is in.** Decision 0125's rule 2 stands for a force named in the order's forces limit. The staff chooses a station only for a force it took by its own choice.
+23. **A carrier force is free only when nothing of the commander's speaks for it:** it has no carrier task, no intent in force is addressed to it, no forces limit in force names it, and it is not held. The staff hands free forces out in one pass over the denies and neutralises together, in priority order and then by number, so that a force given to one order is never taken by another first. This is the test the island's doctrine uses for its carriers today, and that routine is reused.
+24. **It is for the commander's own orders.** A deny or a neutralise the staff forms under an island keeps the island's rule for its carriers; this decision adds nothing there.
+25. **With rules 21 to 24 no closed proof is expected to move:** in each, every carrier force is named by an order or has an order of its own. The build checks every scenario and recorded game on file by playing them before and after. Any that moves is named to the designer before the change merges, and none is restated to make it pass.
+
+**The commander's word (replaces rules 14 and 15).**
+
+26. **Nothing is formed until the order's plan is released,** as for every order: with leave withheld the carriers stay where they are until the commander approves the plan. What he approves is shown first: the preview and the dry run are played as if released and name the force and its station.
+27. **A hold keeps a force out.** A carrier force the commander holds is not taken, and one taken and then held is let go the next morning. No new state is needed: holds exist. A direct order to a force the staff has tasked holds it by the override, as today; a direct order to a free force does not, and the plan paper's last line, which says it does, is corrected.
+28. **The staff withdraws its own carrier task** when an order of higher priority that names the force needs it, as it may withdraw a task of its own today.
+
+**The station and the raid (replaces rules 5, 7, 9, 10 and 12 where they differ).**
+
+29. **The reach for a deny** is the bombers' least normal strike radius less 40 nm for each hex of the waters' distance. Where the centre of the waters is a hex ships cannot enter, the way is found to the nearest sea hex of the waters.
+30. **A force already within that reach stays where it is,** which may be inside the waters. The plan's claim that the station is the least exposed place is withdrawn: it is the first place from which the task can be done.
+31. **No fuel test at forming.** The carrier doctrine already fuels in port before it sails, goes home when short and says when a force with no home port cannot be weighed.
+32. **The raid on a base is the take's routine given a target base** in place of a take's place. The neutralise's measure already counts any group's raid on the target, so it needs no change; the deny's is changed as rule 10 says.
+
+**Risk (replaces rules 11 and 13).**
+
+33. **At preserve a carrier force goes to neutralise a base only where the commander's standing leave to launch is given,** as the take's reconnaissance does at preserve. Approving the plan alone does not send it.
+34. **The reason names any enemy base on the side's map within the bombers' reach of the station.** Whether it has aircraft the staff cannot know and does not say.
+
+**At the table (replaces items 18 to 20).**
+
+35. **The order's draft and the plan paper read the preview,** which says whether a carrier force would be used and from where; the fixed words under the two orders say only what may be used. The station is drawn with the plan once it is released, as any force's task is. A plan that waits for leave says what approving it would send.
+36. **A carrier force's card offers a hold,** "keep this force out of the staff's plans", if it does not already.
+
+**Rule card, corrected:** it also reads holds, and every intent's addressee and forces limit. It allows the pair "operate carriers under neutralise". It adds no state.
