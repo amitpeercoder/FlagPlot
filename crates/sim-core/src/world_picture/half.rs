@@ -24,8 +24,8 @@ use crate::ids::{
 };
 use crate::orders::Order;
 use crate::state::{
-    AirGroup, Arrival, Base, Formation, LandUnit, Replacement, Ship, Side, SupplyLine, TaskForce,
-    TruthState,
+    AirGroup, Arrival, Base, Formation, LandUnit, MenReplacement, MenStream, Replacement, Ship,
+    Side, SupplyLine, TaskForce, TruthState,
 };
 use crate::view::SideView;
 use crate::world::SimError;
@@ -60,6 +60,10 @@ pub struct PictureHalf {
     /// The side's own supply lines (decision 0196, 7), in the order they
     /// give.
     pub supply_lines: Vec<SupplyLine>,
+    /// The side's own streams of replacement men, in the order they give,
+    /// and its own land units' strengths, those held apart among them
+    /// (decision 0197).
+    pub men_replacement: MenReplacement,
     /// The arrivals due to the side's air groups, in the order they are
     /// delivered.
     pub arrivals: Vec<Arrival>,
@@ -142,6 +146,7 @@ impl SideView<'_> {
                 .map(|entry| (entry.unit(), entry.clone()))
                 .collect(),
             supply_lines: self.supply_lines().copied().collect(),
+            men_replacement: self.own_men_replacement(),
         };
         let mut commands = BTreeMap::from([(side, self.command_state().clone())]);
 
@@ -215,6 +220,7 @@ impl SideView<'_> {
             formations,
             entering,
             supply_lines,
+            men_replacement,
         } = truth;
         let command = commands.remove(&side).expect("the side's command state");
         Ok(PictureHalf {
@@ -229,6 +235,7 @@ impl SideView<'_> {
             entering,
             replacements,
             supply_lines,
+            men_replacement,
             arrivals,
             orders,
             command,
@@ -239,6 +246,26 @@ impl SideView<'_> {
             },
             game_days: self.game_days(),
         })
+    }
+}
+
+impl SideView<'_> {
+    /// The side's own streams of replacement men and its own land units'
+    /// strengths, those held apart until their day among them (decision
+    /// 0197), for its half.
+    fn own_men_replacement(&self) -> MenReplacement {
+        let held = self
+            .entering()
+            .flat_map(|entry| entry.land_units.keys().copied());
+        MenReplacement {
+            streams: self.men_streams().copied().collect(),
+            units: self
+                .land_units()
+                .map(|unit| unit.id)
+                .chain(held)
+                .filter_map(|unit| self.strength(unit).map(|strength| (unit, *strength)))
+                .collect(),
+        }
     }
 }
 
@@ -317,6 +344,7 @@ impl WorldPicture {
             formations: BTreeMap::new(),
             entering: BTreeMap::new(),
             supply_lines: Vec::new(),
+            men_replacement: MenReplacement::default(),
         };
         let mut orders = Vec::new();
         let mut beliefs = BTreeMap::new();
@@ -335,6 +363,7 @@ impl WorldPicture {
                 entering,
                 replacements,
                 supply_lines,
+                men_replacement,
                 arrivals,
                 orders: own_orders,
                 command: own_command,
@@ -355,6 +384,7 @@ impl WorldPicture {
                 formations,
                 entering,
                 supply_lines,
+                men_replacement,
             };
             let mut commands = BTreeMap::from([(side, own_command)]);
             // Re-point the half's orders past those already joined, after
@@ -392,6 +422,7 @@ impl WorldPicture {
                 formations,
                 entering,
                 supply_lines,
+                men_replacement,
             } = own;
             join_units(&mut truth.ships, ships)?;
             join_units(&mut truth.task_forces, task_forces)?;
@@ -402,6 +433,11 @@ impl WorldPicture {
             join_units(&mut truth.entering, entering)?;
             truth.replacements.extend(replacements);
             truth.supply_lines.extend(supply_lines);
+            truth
+                .men_replacement
+                .streams
+                .extend(men_replacement.streams);
+            join_units(&mut truth.men_replacement.units, men_replacement.units)?;
             truth.arrivals.extend(arrivals);
             orders.extend(own_orders);
             beliefs.insert(side, belief);
@@ -421,6 +457,10 @@ impl WorldPicture {
             )
         });
         truth.supply_lines.sort_by_key(SupplyLine::order_key);
+        truth
+            .men_replacement
+            .streams
+            .sort_by_key(MenStream::order_key);
         truth.arrivals.sort_by_key(|arrival| {
             (
                 arrival.day,

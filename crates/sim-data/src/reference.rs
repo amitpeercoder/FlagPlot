@@ -976,6 +976,11 @@ struct GroundFile {
     strain_limit: Quantity,
     cover_from_strain: Quantity,
     cover_wear_per_hit: Quantity,
+    /// Replacement men (decision 0197, 14): a whole level from 0 to 4 and a
+    /// share. Placeholders; without them, 2 and a half, so that no older
+    /// file changes.
+    replacement_experience: Option<u32>,
+    replacement_share: Option<Quantity>,
 }
 
 /// Loads the ground figures from a TOML file (decision 0066).
@@ -1107,6 +1112,18 @@ fn parse_ground_figures(text: &str, path: &Path) -> Result<GroundFigures, DataEr
             "airfield_landing_refused_at",
             &file.airfield_landing_refused_at,
         )?,
+        replacement_experience: match file.replacement_experience {
+            None => GroundFigures::REPLACEMENT_EXPERIENCE,
+            Some(level) => u8::try_from(level).map_err(|_| {
+                fail(format!(
+                    "ground replacement_experience {level} is not between 0 and 4"
+                ))
+            })?,
+        },
+        replacement_share: match &file.replacement_share {
+            None => GroundFigures::REPLACEMENT_SHARE,
+            Some(share) => number("replacement_share", share)?,
+        },
     };
     if let Some(problem) = figures.problem() {
         return Err(fail(problem));
@@ -3030,6 +3047,34 @@ mod tests {
                     .contains(key),
                 "without {key}"
             );
+        }
+    }
+
+    #[test]
+    fn the_replacement_figures_default_to_the_standard_and_a_half_and_are_checked() {
+        // Decision 0197, 14: a file that names neither is read with 2 and a
+        // half, so that no older file changes.
+        let figures = parse_ground_figures(&ground_text(), here()).expect("parses");
+        assert_eq!(figures.replacement_experience, 2);
+        assert_eq!(figures.replacement_share, Fixed::from_ratio(1, 2));
+        let with = |extra: &str| format!("{}{extra}\n", ground_text());
+        let set = parse_ground_figures(
+            &with("replacement_experience = 3\nreplacement_share = \"0.25\""),
+            here(),
+        )
+        .expect("parses");
+        assert_eq!(set.replacement_experience, 3);
+        assert_eq!(set.replacement_share, Fixed::from_ratio(1, 4));
+        for (extra, key) in [
+            ("replacement_experience = 5", "replacement_experience"),
+            ("replacement_share = 0", "replacement_share"),
+            ("replacement_share = 2", "replacement_share"),
+            ("replacement_share = 0.5", "replacement_share"),
+        ] {
+            let message = parse_ground_figures(&with(extra), here())
+                .expect_err("refused")
+                .message;
+            assert!(message.contains(key), "{extra}: {message}");
         }
     }
 

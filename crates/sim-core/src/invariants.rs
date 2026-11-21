@@ -221,6 +221,15 @@ pub enum InvariantViolation {
     /// gives a negative tonnage, or whose days are not in order from day 1
     /// (decision 0196, 1 and 13). Added at the end of the enum.
     SupplyLineUnsound(BaseId),
+    /// A stream of replacement men that names a base that does not exist,
+    /// gives no men, or whose days are not in order from day 1 (decision
+    /// 0197, 2). Added at the end of the enum.
+    MenStreamUnsound(BaseId),
+    /// A land unit's strength kept for a unit that is neither in the state
+    /// nor held apart, or a unit with more men ashore and aboard than its
+    /// establishment (decision 0197, 1, 17 and 18). Added at the end of the
+    /// enum.
+    StrengthUnsound(LandUnitId),
 }
 
 impl fmt::Display for InvariantViolation {
@@ -253,6 +262,18 @@ impl fmt::Display for InvariantViolation {
             }
             InvariantViolation::ReplacementAtUnknownBase(base) => {
                 write!(f, "a replacement stream is at {base}, which does not exist")
+            }
+            InvariantViolation::MenStreamUnsound(base) => {
+                write!(
+                    f,
+                    "a stream of replacement men to {base} names no base, gives no men, or has its days out of order"
+                )
+            }
+            InvariantViolation::StrengthUnsound(unit) => {
+                write!(
+                    f,
+                    "{unit} has a strength kept but is not there, or has more men than its establishment"
+                )
             }
             InvariantViolation::SupplyLineUnsound(base) => {
                 write!(
@@ -928,6 +949,29 @@ pub(crate) fn check(truth: &TruthState, map: &Map, ref_data: &RefData) -> Vec<In
             || line.last_day < line.first_day
         {
             violations.push(InvariantViolation::SupplyLineUnsound(line.base));
+        }
+    }
+
+    for stream in &truth.men_replacement.streams {
+        if !truth.bases.contains_key(&stream.base)
+            || stream.men_per_day == 0
+            || stream.first_day < 1
+            || stream.last_day < stream.first_day
+        {
+            violations.push(InvariantViolation::MenStreamUnsound(stream.base));
+        }
+    }
+    for (id, strength) in &truth.men_replacement.units {
+        let held = truth
+            .entering
+            .values()
+            .any(|entry| entry.land_units.contains_key(id));
+        let sound = match truth.land_units.get(id) {
+            Some(unit) => unit.men_ashore + truth.men_aboard(*id) <= strength.establishment,
+            None => held,
+        };
+        if !sound {
+            violations.push(InvariantViolation::StrengthUnsound(*id));
         }
     }
 

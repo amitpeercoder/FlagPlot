@@ -10,7 +10,7 @@
   "additionalProperties": false,
   "properties": {
     "format": { "const": "flagplot-agent" },
-    "version": { "const": 37 },
+    "version": { "const": 38 },
     "kind": { "const": "briefing" },
     "heading": { "$ref": "#/$defs/heading" },
     "objectives": { "$ref": "#/$defs/objectives" },
@@ -1647,6 +1647,25 @@
             }
           }
         },
+        "men_joined_yesterday": {
+          "description": "Replacement men who joined the side's units yesterday (decision 0197), from its own MenJoined events. Left out when none.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["land_unit", "base", "men", "men_after", "experience_before", "experience_after", "joined", "event"],
+            "additionalProperties": false,
+            "properties": {
+              "land_unit": { "$ref": "defs.schema.json#/$defs/handle" },
+              "base": { "$ref": "defs.schema.json#/$defs/handle" },
+              "men": { "description": "Men who joined.", "type": "integer" },
+              "men_after": { "description": "The unit's men ashore afterwards.", "type": "integer" },
+              "experience_before": { "type": "integer" },
+              "experience_after": { "type": "integer" },
+              "joined": { "description": "Men who joined all nights together since the game began.", "type": "integer" },
+              "event": { "type": "integer" }
+            }
+          }
+        },
         "work_yesterday": {
           "description": "Work made yesterday by the side's units (decision 0099), from its own UnitWorked events. Left out when none.",
           "type": "array",
@@ -1914,6 +1933,21 @@
               "base": { "$ref": "defs.schema.json#/$defs/handle" },
               "supply_t": { "description": "Tons of supply added a night.", "$ref": "defs.schema.json#/$defs/dec" },
               "fuel_t": { "description": "Tons of fuel added a night.", "$ref": "defs.schema.json#/$defs/dec" },
+              "first_day": { "type": "integer" },
+              "last_day": { "type": "integer" }
+            }
+          }
+        },
+        "men_replacements": {
+          "description": "The side's own streams of replacement men whose last day is today or later (decision 0197). Left out when none.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["base", "men_per_day", "first_day", "last_day"],
+            "additionalProperties": false,
+            "properties": {
+              "base": { "$ref": "defs.schema.json#/$defs/handle" },
+              "men_per_day": { "description": "Men given a night.", "type": "integer" },
               "first_day": { "type": "integer" },
               "last_day": { "type": "integer" }
             }

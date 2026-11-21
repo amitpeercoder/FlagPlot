@@ -139,6 +139,7 @@
         "available_from": { "description": "The day from which the side may use the unit (decision 0140, 5), given only while that day has not come. Left out otherwise.", "type": "integer", "minimum": 1 },
         "land_unit": { "$ref": "#/$defs/handle" },
         "men_ashore": { "type": "integer" },
+        "establishment": { "description": "The unit's establishment: the men replacement fills it up to (decision 0197). Left out in a game with no stream of men and no establishment given.", "type": "integer" },
         "place": { "$ref": "#/$defs/place_or_null" },
         "men_aboard": { "type": "integer" },
         "aboard": {
@@ -915,7 +916,7 @@
           "const": "flagplot-agent"
         },
         "version": {
-          "const": 37
+          "const": 38
         },
         "kind": {
           "const": "not_known"

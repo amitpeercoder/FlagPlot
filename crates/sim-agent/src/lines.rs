@@ -1054,6 +1054,11 @@ pub struct LandUnitLine {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub available_from: Option<u32>,
     pub men_ashore: u32,
+    /// The unit's establishment: the men replacement fills it up to
+    /// (decision 0197). Left out in a game with no stream of men and no
+    /// establishment given.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub establishment: Option<u32>,
     /// The hex the men ashore are in; `None` when none is ashore.
     pub place: Option<Place>,
     /// The men aboard the side's ships, all together.
@@ -1365,6 +1370,7 @@ pub(crate) fn land_unit_line(
         land_unit: ctx.land_unit(unit.id),
         available_from: day_not_come(&ctx.view, EntityRef::LandUnit(unit.id)),
         men_ashore: unit.men_ashore,
+        establishment: ctx.view.strength(unit.id).map(|s| s.establishment),
         place: unit.hex.map(|hex| ctx.place(hex)),
         men_aboard,
         aboard: aboard_lines(ctx, unit),
