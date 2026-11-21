@@ -36,14 +36,14 @@ So a rule that takes a twentieth of the unfed on the first night is wrong in kin
 
 ### Rations landed
 
-4. **A landing that forms a base puts the men's rations into it:** the men that landing puts ashore, times `rations_landed_nights`, times the daily charge for a man, as supply in the stock of the base formed, at the moment it is formed. It is the mechanism of the supply a marching unit puts down where it arrives, used at a landing.
-5. **Only the landing that forms the base brings rations.** Men landed later at a base that stands bring none; that base feeds them or it does not. So men cannot be taken off and landed again to make food.
+4. **A landing that forms a base puts the men's rations into it:** the men aboard the ships of the force that forms the base, at the moment it is formed, times `rations_landed_nights`, times the daily charge for a man, as supply in the stock of the base formed. However many pulses the men take to go ashore, the rations are put down once, then. It is the mechanism of the supply a marching unit puts down where it arrives, used at a landing.
+5. **Only the force that forms the base brings rations.** A second force landing in the same pulse, and men landed later at a base that stands, bring none; that base feeds them or it does not. So men cannot be taken off and landed again to make food.
 6. **Nothing else of the feeding changes.** The fed share stays one for every unit of the side in the hex, and `MenFed` is as it is.
 
 ### Nights of hunger
 
-7. **A unit's nights of hunger are a count, new state of the unit.** On a night its fed share is below `hungry_below_share` the count rises by one. On a night it is fed in full the count falls by one, not below nothing. On any other night it stays. A unit with no man ashore keeps its count; a unit made by dividing another takes the count of the unit it came from.
-8. **Men are lost to hunger only from units whose count is above `hunger_nights_before_loss`.** The loss in a hex is worked as today, on the men of those units alone: their men times one less the fed share, cut, are their unfed; the loss is their unfed times `unfed_loss_share_per_day`, cut, and one man at least where any of them is unfed; it is taken from those units in proportion by today's rule. With no unit past the count nobody is lost.
+7. **A unit's nights of hunger are a count, new state of the unit.** On a night its fed share is below `hungry_below_share` the count rises by one. On a night it is fed in full the count falls by one, not below nothing. On any other night it stays. A unit with no man ashore keeps its count; a unit made by dividing another takes the count of the unit it came from. A scenario may give a unit the count it starts with; without it the count is nothing.
+8. **Men are lost to hunger only from units whose count is above `hunger_nights_before_loss`.** The counts are brought up for the night first, so with the figure at 14 the first men are lost on a unit's fifteenth hungry night. The loss in a hex is worked as today, on the men of those units alone: their men times one less the fed share, cut, are their unfed; the loss is their unfed times `unfed_loss_share_per_day`, cut, and one man at least where any of them is unfed; it is taken from those units in proportion by today's rule. With no unit past the count nobody is lost.
 
 ## Figures
 
