@@ -1177,8 +1177,16 @@ impl World {
                         if other.charge.is_some() {
                             return Err(RejectReason::ChargeIsAnEscort(*charge));
                         }
+                        // No chain of forces each following the next
+                        // (decision 0201, 5): neither the escort nor its
+                        // charge takes part in fuelling at sea.
+                        self.not_in_fuelling(*target)?;
+                        if other.fuel_from.is_some() || self.taker_of(*charge).is_some() {
+                            return Err(RejectReason::ChargeTakesPartInFuelling(*charge));
+                        }
                         Ok(())
                     }
+                    TaskForceOrder::FuelFrom(giver) => self.check_fuel_from(order, *target, *giver),
                     TaskForceOrder::SetSpeed(SpeedSetting::Knots(knots)) => {
                         if *knots <= Fixed::ZERO {
                             Err(RejectReason::SpeedNotAboveZero(*knots))
@@ -1525,7 +1533,7 @@ impl World {
     /// Why a force with no ship has ceased to be, if it was joined to
     /// another or stood down (decisions 13 and 14 of 0111), read from the
     /// log; `None` for a force emptied by sinking.
-    fn force_ceased(&self, force: TaskForceId) -> Option<RejectReason> {
+    pub(crate) fn force_ceased(&self, force: TaskForceId) -> Option<RejectReason> {
         self.events.iter().find_map(|event| match event.kind {
             EventKind::TaskForceJoined { joined, into, .. } if joined == force => {
                 Some(RejectReason::ForceWasJoined { into })
@@ -1579,11 +1587,15 @@ impl World {
                     // Decision 0121, 7: the escorts of the force joined have
                     // no charge from now. Its own charge goes with it.
                     let mut events = self.join_task_force(*target, *into);
-                    self.truth
+                    let ceased = self
+                        .truth
                         .task_forces
                         .get_mut(target)
-                        .expect("the force exists")
-                        .charge = None;
+                        .expect("the force exists");
+                    ceased.charge = None;
+                    // Its order to fuel at sea ends with it (decision 0201,
+                    // 7); the join or stand-down is the record.
+                    ceased.fuel_from = None;
                     for escort in self.escorts_of(*target) {
                         events.extend(self.lose_charge(escort));
                     }
@@ -1591,11 +1603,15 @@ impl World {
                 }
                 if let TaskForceOrder::StandDown = task_force_order {
                     let mut events = self.stand_down_task_force(*target);
-                    self.truth
+                    let ceased = self
+                        .truth
                         .task_forces
                         .get_mut(target)
-                        .expect("the force exists")
-                        .charge = None;
+                        .expect("the force exists");
+                    ceased.charge = None;
+                    // Its order to fuel at sea ends with it (decision 0201,
+                    // 7); the join or stand-down is the record.
+                    ceased.fuel_from = None;
                     for escort in self.escorts_of(*target) {
                         events.extend(self.lose_charge(escort));
                     }
@@ -1649,6 +1665,11 @@ impl World {
                     self.load_below_reserve(*target, task_force_order)
                 };
                 if let TaskForceOrder::SendToYard = task_force_order {
+                    // Its order to fuel at sea ends with it (decision 0201,
+                    // 7): the trip is the record.
+                    if let Some(force) = self.truth.task_forces.get_mut(target) {
+                        force.fuel_from = None;
+                    }
                     // The ships leave the force and the map; the caller
                     // records the event and notes its number in the trip.
                     return vec![self.send_force_to_yard(*target, order.day_issued)];
@@ -1689,6 +1710,7 @@ impl World {
                     .get_mut(target)
                     .expect("order was validated against this task force");
                 let mut follow_up = None;
+                let mut ended_fuelling = None;
                 match task_force_order {
                     TaskForceOrder::SetRoute {
                         waypoints,
@@ -1722,6 +1744,17 @@ impl World {
                         task_force.route_order = Some(order.id);
                         task_force.arrived_at_hours = None;
                         task_force.arrival_event = None;
+                        // And an order to fuel at sea (decision 0201, 7): the
+                        // force is at cruise on the route it was given.
+                        if let Some(fuel_from) = task_force.fuel_from.take() {
+                            task_force.speed = SpeedSetting::Cruise;
+                            task_force.speed_order = None;
+                            ended_fuelling = Some(EventKind::FuelOrderEnded {
+                                task_force: task_force.id,
+                                giver: fuel_from.giver,
+                                reason: crate::events::FuelOrderEnd::NewRoute,
+                            });
+                        }
                     }
                     TaskForceOrder::SetSpeed(speed) => {
                         task_force.speed = *speed;
@@ -1769,6 +1802,14 @@ impl World {
                             ..CargoOrder::new(CargoAction::load_of(*cargo), order.id, Some(*unit))
                         });
                     }
+                    TaskForceOrder::FuelFrom(giver) => {
+                        // Decision 0201, 4: the force's own field. It is
+                        // steered at the start of the movement step.
+                        task_force.fuel_from = Some(crate::state::FuelFrom {
+                            giver: *giver,
+                            order: order.id,
+                        });
+                    }
                     TaskForceOrder::JoinTo(_)
                     | TaskForceOrder::StandDown
                     | TaskForceOrder::Escort(_)
@@ -1808,7 +1849,11 @@ impl World {
                         unreachable!("yard orders are applied above")
                     }
                 }
-                follow_up.into_iter().chain(below_reserve).collect()
+                follow_up
+                    .into_iter()
+                    .chain(ended_fuelling)
+                    .chain(below_reserve)
+                    .collect()
             }
             OrderKind::Base {
                 target,
@@ -2079,6 +2124,7 @@ mod tests {
             aircraft_capacity: 0,
             anti_aircraft: 0,
             troop_capacity_men: 0,
+            fuels_at_sea: false,
         };
         let mut ref_data = RefData::default();
         ref_data.ship_classes.insert(class.id, class);

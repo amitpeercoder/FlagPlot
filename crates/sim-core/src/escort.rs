@@ -266,7 +266,11 @@ impl World {
     /// in `pulse`, and the speed in knots its slowest ship makes at its
     /// speed setting. `None` where the charge will not steam this pulse: it
     /// is stopped, halted, out of fuel, has no route left or makes no speed.
-    fn charge_passage(&self, charge: TaskForceId, pulse: Pulse) -> Option<(Vec<Hex>, Fixed)> {
+    pub(crate) fn charge_passage(
+        &self,
+        charge: TaskForceId,
+        pulse: Pulse,
+    ) -> Option<(Vec<Hex>, Fixed)> {
         let charged = &self.truth.task_forces[&charge];
         if charged.status != TaskForceStatus::Underway {
             return None;
@@ -300,7 +304,7 @@ impl World {
 /// back between centres where that is the shorter way, is under way, and
 /// any halt or arrival ends. Returns the `TaskForceTurnedBack` event to
 /// record where it turned back.
-fn set_route(
+pub(crate) fn set_route(
     force: &mut TaskForce,
     map: &crate::map::Map,
     waypoints: Vec<Hex>,
@@ -338,7 +342,7 @@ fn set_route(
 /// route and, if it was steaming or halted, is idle; between centres it is
 /// routed to the hex it is in, by the shorter way. Returns the
 /// `TaskForceTurnedBack` event to record where it turned back.
-fn stop_where_it_is(force: &mut TaskForce, map: &crate::map::Map) -> Option<EventKind> {
+pub(crate) fn stop_where_it_is(force: &mut TaskForce, map: &crate::map::Map) -> Option<EventKind> {
     if force.toward_hex.is_none() {
         force.route = Route::default();
         force.halt = None;

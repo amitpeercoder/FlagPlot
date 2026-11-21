@@ -147,6 +147,7 @@ fn world_with(figures: GroundFigures, tweak: impl FnOnce(&mut TruthState)) -> Wo
         aircraft_capacity: 0,
         anti_aircraft: 0,
         troop_capacity_men: 600,
+        fuels_at_sea: false,
     };
     let mut ref_data = RefData::default();
     ref_data.ship_classes.insert(class.id, class);

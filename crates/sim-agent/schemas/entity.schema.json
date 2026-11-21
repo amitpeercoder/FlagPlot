@@ -25,7 +25,7 @@
           "const": "flagplot-agent"
         },
         "version": {
-          "const": 38
+          "const": 39
         },
         "kind": {
           "const": "entity"
@@ -259,7 +259,8 @@
         "fuel_t": {
           "$ref": "defs.schema.json#/$defs/dec"
         },
-        "fuel_capacity_t": {
+        "fuels_at_sea": { "description": "Given (true) only for a ship whose class fuels others at sea, an oiler (decision 0201). Left out otherwise.", "const": true },
+                "fuel_capacity_t": {
           "$ref": "defs.schema.json#/$defs/dec"
         },
         "flotation_damage": {

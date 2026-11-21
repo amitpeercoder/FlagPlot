@@ -733,6 +733,19 @@ pub struct TaskForce {
     /// set by the scenario and never changed. `None`: from day 1. A force
     /// made in play has none. Added at the end.
     pub available_from: Option<u32>,
+    /// The order to fuel from another force of its side (decision 0201, 4):
+    /// the force's own field, not a charge. `None` for a force under no such
+    /// order. Added at the end.
+    pub fuel_from: Option<FuelFrom>,
+}
+
+/// A force's order to fuel from another force at sea (decision 0201, 4): the
+/// giver, whose ships with the mark give what they carry as cargo fuel, and
+/// the order that gave it.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct FuelFrom {
+    pub giver: TaskForceId,
+    pub order: OrderId,
 }
 
 /// A force's charge (decision 0121, 1): the task force it escorts and the
@@ -918,6 +931,7 @@ impl TaskForce {
             preparation: None,
             landing_at: None,
             charge: None,
+            fuel_from: None,
         }
     }
 }

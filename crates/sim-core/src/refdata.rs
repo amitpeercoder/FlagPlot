@@ -120,6 +120,12 @@ pub struct ShipClass {
     /// take no cargo room and cargo takes no berths. 0 for a ship that
     /// carries none, and wherever a class file does not give the column.
     pub troop_capacity_men: u32,
+    /// The class fuels others at sea (decision 0201, 1): its ships give the
+    /// fuel they carry as cargo to a force under the order to fuel from
+    /// theirs, and take none at sea themselves (3). An oiler is an auxiliary
+    /// with the mark. False wherever a class file does not give the column.
+    /// Added at the end.
+    pub fuels_at_sea: bool,
 }
 
 impl ShipClass {
@@ -467,6 +473,25 @@ pub struct SurfaceCombatFigures {
     /// The weights of rearming (decision 0122, 3): `[rearming]`. `None` where
     /// the file has no such table: no ship rearms. Added at the end.
     pub rearming: Option<RearmingFigures>,
+    /// The figures of fuelling at sea (decision 0201, 22 to 24):
+    /// `[fuelling_at_sea]`. `None` where the file has no such table: no
+    /// force fuels at sea. Added at the end.
+    pub fuelling_at_sea: Option<FuellingAtSeaFigures>,
+}
+
+/// The figures of fuelling at sea (decision 0201, 11 and 22 to 24), each a
+/// placeholder with what it rests on in the file.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct FuellingAtSeaFigures {
+    /// The most a force fuelling, and the force it fuels from, make in the
+    /// pulse, in knots (22).
+    pub speed_kn: Fixed,
+    /// Tons of fuel one line passes in an hour (23).
+    pub line_rate_t_per_h: Fixed,
+    /// Hours a ship is alongside before her fuel passes (24).
+    pub alongside_hours: Fixed,
+    /// Lines an oiler has (11): a destroyer takes one, any other ship all.
+    pub lines: u32,
 }
 
 /// The weights of ammunition a ship takes in port (decision 0122, 3).
@@ -582,6 +607,22 @@ impl SurfaceCombatFigures {
                 if weight <= Fixed::ZERO {
                     return Some(format!("the rearming weight of a {name} is not above 0"));
                 }
+            }
+        }
+        // Decision 0201: the speed, the rate and the lines above zero, the
+        // hours alongside not below it.
+        if let Some(fuelling) = &self.fuelling_at_sea {
+            if fuelling.speed_kn <= Fixed::ZERO {
+                return Some("the fuelling speed at sea is not above 0".to_string());
+            }
+            if fuelling.line_rate_t_per_h <= Fixed::ZERO {
+                return Some("the rate of a line at sea is not above 0".to_string());
+            }
+            if fuelling.alongside_hours < Fixed::ZERO {
+                return Some("the hours alongside at sea are below 0".to_string());
+            }
+            if fuelling.lines == 0 {
+                return Some("an oiler's lines are not above 0".to_string());
             }
         }
         if self.max_rounds == 0 {
@@ -2175,6 +2216,12 @@ impl SurfaceCombatFigures {
                 tons_per_round_others: hundredth(4),
                 tons_per_torpedo: Fixed::from_ratio(3, 2),
             }),
+            fuelling_at_sea: Some(FuellingAtSeaFigures {
+                speed_kn: Fixed::from_int(8),
+                line_rate_t_per_h: Fixed::from_int(250),
+                alongside_hours: Fixed::ONE,
+                lines: 2,
+            }),
         }
     }
 }
@@ -2661,6 +2708,7 @@ mod tests {
             aircraft_capacity: 0,
             anti_aircraft: 0,
             troop_capacity_men: 0,
+            fuels_at_sea: false,
         }
     }
 

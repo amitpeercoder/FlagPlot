@@ -47,7 +47,7 @@
     },
     {
       "file": "data/scenarios/../reference/surface_combat.toml",
-      "hash": "9a7e47460bcaff50"
+      "hash": "751b5e7548452496"
     },
     {
       "file": "data/scenarios/../reference/air_combat.toml",
@@ -74,28 +74,28 @@
       "hash": "7548c1b108bf6d74"
     }
   ],
-  "doctrine_version": "supply-50",
+  "doctrine_version": "supply-51",
   "format": "flagplot-saved-game",
   "hashes": [
     {
       "day": 1,
-      "hash": "84c717f10f18e714"
+      "hash": "376cb8a879813999"
     },
     {
       "day": 2,
-      "hash": "b1911c38390bd7b0"
+      "hash": "6b7362ef9f3ad117"
     },
     {
       "day": 3,
-      "hash": "6526d9d32f799a2c"
+      "hash": "66a76cee563bfe75"
     },
     {
       "day": 4,
-      "hash": "de8e9ecad43c8e1b"
+      "hash": "a5a0bc047a9d25ba"
     },
     {
       "day": 5,
-      "hash": "c3349a75a6f7dbd7"
+      "hash": "02768d576fc8025c"
     }
   ],
   "orders": [
@@ -863,7 +863,7 @@
       "unit": "task_force:26"
     }
   ],
-  "rules_version": 25,
+  "rules_version": 26,
   "scenario": {
     "file": "data/scenarios/07_full_slice.toml",
     "hash": "984de13e1d2a00a4"
@@ -874,6 +874,6 @@
   },
   "seed": 1942,
   "staff": [],
-  "state_version": "flagplot-state-v51",
+  "state_version": "flagplot-state-v52",
   "version": 23
 }

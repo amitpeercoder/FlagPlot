@@ -56,6 +56,7 @@ mod estimate;
 #[cfg(test)]
 mod falling_back_tests;
 mod forming;
+mod fuel_at_sea;
 mod ground;
 mod ground_combat;
 #[cfg(test)]

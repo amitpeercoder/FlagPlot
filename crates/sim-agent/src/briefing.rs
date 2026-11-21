@@ -1329,6 +1329,54 @@ pub struct ForceChangesPart {
     /// none.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub rearmed: Vec<RearmedLine>,
+    /// Ships that took fuel at sea from an oiler of another force (decision
+    /// 0201). Left out when none.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub fuelled_at_sea: Vec<FuelledAtSeaLine>,
+    /// Fuelling broken off by an attack or a surface action (decision
+    /// 0201). Left out when none.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub fuelling_broken_off: Vec<FuellingBrokenOffLine>,
+    /// Orders to fuel from another force that ended (decision 0201). Left
+    /// out when none.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub fuel_orders_ended: Vec<FuelOrderEndedLine>,
+}
+
+/// A ship that took fuel at sea from an oiler in one pulse (decision 0201).
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct FuelledAtSeaLine {
+    pub ship: Handle,
+    pub task_force: Handle,
+    pub oiler: Handle,
+    pub giver: Handle,
+    pub tons: Dec,
+    /// The fuel aboard the ship afterwards.
+    pub fuel_t: Dec,
+    /// The cargo fuel the oiler has left.
+    pub oiler_cargo_fuel_t: Dec,
+    /// True where the force was out of fuel and no longer is.
+    pub restored: bool,
+    pub event: u32,
+}
+
+/// Fuelling at sea that passed no fuel in a pulse (decision 0201).
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct FuellingBrokenOffLine {
+    pub task_force: Handle,
+    pub giver: Handle,
+    pub place: Place,
+    pub event: u32,
+}
+
+/// An order to fuel from another force that ended (decision 0201).
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct FuelOrderEndedLine {
+    pub task_force: Handle,
+    pub giver: Handle,
+    /// `full`, `giver_empty`, `no_oiler` or `new_route`.
+    pub reason: &'static str,
+    pub event: u32,
 }
 
 /// An escort that lost its charge and stopped where it was.
@@ -1362,6 +1410,9 @@ impl ForceChangesPart {
             && self.refuelling_held_at_reserve.is_empty()
             && self.charges_lost.is_empty()
             && self.rearmed.is_empty()
+            && self.fuelled_at_sea.is_empty()
+            && self.fuelling_broken_off.is_empty()
+            && self.fuel_orders_ended.is_empty()
     }
 }
 
@@ -3940,6 +3991,50 @@ impl Day {
                         escort: ctx.force(*escort),
                         charge: ctx.force(*charge),
                         place: ctx.place(*hex),
+                        event: id,
+                    }),
+                    // Fuel taken at sea changes the force's own fuel: the
+                    // side is told (decision 0201, 17).
+                    EventKind::ShipFuelledAtSea {
+                        ship,
+                        task_force,
+                        oiler,
+                        giver,
+                        tons,
+                        fuel_t,
+                        oiler_cargo_fuel_t,
+                        restored,
+                    } => force_changes.fuelled_at_sea.push(FuelledAtSeaLine {
+                        ship: ctx.ship(*ship),
+                        task_force: ctx.force(*task_force),
+                        oiler: ctx.ship(*oiler),
+                        giver: ctx.force(*giver),
+                        tons: Dec(*tons),
+                        fuel_t: Dec(*fuel_t),
+                        oiler_cargo_fuel_t: Dec(*oiler_cargo_fuel_t),
+                        restored: *restored,
+                        event: id,
+                    }),
+                    EventKind::FuellingBrokenOff {
+                        task_force,
+                        giver,
+                        hex,
+                    } => force_changes
+                        .fuelling_broken_off
+                        .push(FuellingBrokenOffLine {
+                            task_force: ctx.force(*task_force),
+                            giver: ctx.force(*giver),
+                            place: ctx.place(*hex),
+                            event: id,
+                        }),
+                    EventKind::FuelOrderEnded {
+                        task_force,
+                        giver,
+                        reason,
+                    } => force_changes.fuel_orders_ended.push(FuelOrderEndedLine {
+                        task_force: ctx.force(*task_force),
+                        giver: ctx.force(*giver),
+                        reason: reason.name(),
                         event: id,
                     }),
                     EventKind::ShipRearmed {

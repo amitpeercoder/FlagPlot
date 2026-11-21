@@ -586,6 +586,13 @@ pub enum TaskForceOrder {
     /// nothing else: a force that arrives at a base afterwards lands and
     /// loads nothing. Added at the end.
     NoCargoWork,
+    /// Fuel from the named force of the side, the giver (decision 0201, 4):
+    /// a field of the force's own, not an escort's charge. The force steers
+    /// for the giver's hex and, there, takes her route; both make no more
+    /// than the fuelling speed in a pulse in which they fuel, and her ships
+    /// with the mark pass it fuel (8 to 16). It ends of itself (7), and a
+    /// route order ends it. Added at the end.
+    FuelFrom(TaskForceId),
 }
 
 /// An order to a base of the side (decision 0111). Added with the first.
@@ -1065,6 +1072,43 @@ pub enum RejectReason {
         day: u32,
         waiting: bool,
     },
+    /// An order to fuel from a force that has no ship with the mark afloat
+    /// (decision 0201, 5). Names it. Added at the end of the enum.
+    GiverHasNoOiler(TaskForceId),
+    /// An order to fuel from the force it is given to (decision 0201, 5).
+    /// Added at the end of the enum.
+    CannotFuelFromItself,
+    /// An order to fuel from a force that is herself under the order to fuel
+    /// from another (decision 0201, 5). Names it. Added at the end of the
+    /// enum.
+    GiverIsFuelling(TaskForceId),
+    /// An order to fuel from a force that is an escort, with a charge
+    /// (decision 0201, 5). Names it. Added at the end of the enum.
+    GiverIsAnEscort(TaskForceId),
+    /// An order to fuel from a force that has an escort, `escort` (decision
+    /// 0201, 5). Added at the end of the enum.
+    GiverHasAnEscort {
+        giver: TaskForceId,
+        escort: TaskForceId,
+    },
+    /// An order to fuel given to a force that is the giver for another,
+    /// `taker` (decision 0201, 5), or an escort order given to one. Added at
+    /// the end of the enum.
+    IsAGiver { taker: TaskForceId },
+    /// An order to fuel given to a force that is an escort, with `charge`
+    /// (decision 0201, 5). Added at the end of the enum.
+    EscortCannotFuel { charge: TaskForceId },
+    /// An order to fuel given to a force that has an escort, `escort`
+    /// (decision 0201, 5). Added at the end of the enum.
+    HasAnEscort { escort: TaskForceId },
+    /// An escort order given to a force under the order to fuel from
+    /// `giver` (decision 0201, 5: no chain of forces each following the
+    /// next). Added at the end of the enum.
+    FuelsFrom(TaskForceId),
+    /// An escort order that names, as the charge, a force under the order to
+    /// fuel or the giver for another (decision 0201, 5). Names it. Added at
+    /// the end of the enum.
+    ChargeTakesPartInFuelling(TaskForceId),
 }
 
 impl RejectReason {
@@ -1281,6 +1325,38 @@ impl fmt::Display for RejectReason {
             } => write!(
                 f,
                 "{unit} is not on the map yet: it was to enter on day {day} and waits for its base"
+            ),
+            RejectReason::GiverHasNoOiler(giver) => {
+                write!(f, "{giver} has no ship afloat that fuels others at sea")
+            }
+            RejectReason::CannotFuelFromItself => {
+                f.write_str("a task force cannot fuel from itself")
+            }
+            RejectReason::GiverIsFuelling(giver) => {
+                write!(f, "{giver} is fuelling from another force herself")
+            }
+            RejectReason::GiverIsAnEscort(giver) => {
+                write!(f, "{giver} is an escort, keeping station on a charge")
+            }
+            RejectReason::GiverHasAnEscort { giver, escort } => {
+                write!(f, "{giver} has an escort, {escort}")
+            }
+            RejectReason::IsAGiver { taker } => {
+                write!(f, "the task force is the force {taker} fuels from")
+            }
+            RejectReason::EscortCannotFuel { charge } => write!(
+                f,
+                "the task force is an escort, keeping station on {charge}"
+            ),
+            RejectReason::HasAnEscort { escort } => {
+                write!(f, "the task force has an escort, {escort}")
+            }
+            RejectReason::FuelsFrom(giver) => {
+                write!(f, "the task force is fuelling from {giver}")
+            }
+            RejectReason::ChargeTakesPartInFuelling(charge) => write!(
+                f,
+                "{charge} is fuelling from another force or is the force another fuels from"
             ),
         }
     }

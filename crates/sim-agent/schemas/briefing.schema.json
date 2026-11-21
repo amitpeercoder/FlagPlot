@@ -10,7 +10,7 @@
   "additionalProperties": false,
   "properties": {
     "format": { "const": "flagplot-agent" },
-    "version": { "const": 38 },
+    "version": { "const": 39 },
     "kind": { "const": "briefing" },
     "heading": { "$ref": "#/$defs/heading" },
     "objectives": { "$ref": "#/$defs/objectives" },
@@ -953,6 +953,56 @@
               "rounds": { "type": "integer" },
               "torpedoes": { "type": "integer" },
               "tons": { "$ref": "defs.schema.json#/$defs/dec" },
+              "event": { "type": "integer" }
+            }
+          }
+        },
+        "fuelled_at_sea": {
+          "description": "Decision 0201: ships that took fuel at sea from an oiler of another force, one line for each ship and pulse. restored is true where the force was out of fuel and no longer is. Left out when none.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["ship", "task_force", "oiler", "giver", "tons", "fuel_t", "oiler_cargo_fuel_t", "restored", "event"],
+            "additionalProperties": false,
+            "properties": {
+              "ship": { "$ref": "defs.schema.json#/$defs/handle" },
+              "task_force": { "$ref": "defs.schema.json#/$defs/handle" },
+              "oiler": { "$ref": "defs.schema.json#/$defs/handle" },
+              "giver": { "$ref": "defs.schema.json#/$defs/handle" },
+              "tons": { "description": "Tons of fuel taken.", "$ref": "defs.schema.json#/$defs/dec" },
+              "fuel_t": { "description": "The fuel aboard the ship afterwards.", "$ref": "defs.schema.json#/$defs/dec" },
+              "oiler_cargo_fuel_t": { "description": "The cargo fuel the oiler has left.", "$ref": "defs.schema.json#/$defs/dec" },
+              "restored": { "type": "boolean" },
+              "event": { "type": "integer" }
+            }
+          }
+        },
+        "fuelling_broken_off": {
+          "description": "Decision 0201: fuelling at sea that passed no fuel in a pulse because a raid attacked a ship of either force or either fought a surface action. Left out when none.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["task_force", "giver", "place", "event"],
+            "additionalProperties": false,
+            "properties": {
+              "task_force": { "$ref": "defs.schema.json#/$defs/handle" },
+              "giver": { "$ref": "defs.schema.json#/$defs/handle" },
+              "place": { "$ref": "defs.schema.json#/$defs/place" },
+              "event": { "type": "integer" }
+            }
+          }
+        },
+        "fuel_orders_ended": {
+          "description": "Decision 0201: orders to fuel from another force that ended. Left out when none.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["task_force", "giver", "reason", "event"],
+            "additionalProperties": false,
+            "properties": {
+              "task_force": { "$ref": "defs.schema.json#/$defs/handle" },
+              "giver": { "$ref": "defs.schema.json#/$defs/handle" },
+              "reason": { "description": "full (every ship is full), giver_empty (the giver holds no cargo fuel), no_oiler (the giver has no ship afloat that fuels others at sea) or new_route (a new route was ordered).", "enum": ["full", "giver_empty", "no_oiler", "new_route"] },
               "event": { "type": "integer" }
             }
           }

@@ -515,7 +515,7 @@ fn the_full_slice_log_has_every_kind_of_event_the_engine_can_emit() {
     //
     // The kind of decision 0110, `GroundFoundEmpty`: the frozen copy has no
     // land unit. Scenario 38 records it, and its own test reads it.
-    const NOT_IN_THE_FULL_SLICE: [&str; 92] = [
+    const NOT_IN_THE_FULL_SLICE: [&str; 95] = [
         "AircraftDitched",
         "AircraftLandedElsewhere",
         "ShipRepaired",
@@ -628,6 +628,12 @@ fn the_full_slice_log_has_every_kind_of_event_the_engine_can_emit() {
         // existing scenario is given one (decision 0197). Scenario 113
         // records it.
         "MenJoined",
+        // No class of the full slice has the mark of a ship that fuels
+        // others at sea, so no force fuels at sea there (decision 0201,
+        // stage A). Scenario 115 records all three.
+        "ShipFuelledAtSea",
+        "FuellingBrokenOff",
+        "FuelOrderEnded",
     ];
     let missing: Vec<&String> = all
         .difference(&seen)

@@ -178,6 +178,9 @@ struct Mover {
     halt_at: Option<usize>,
     /// `TaskForceHalted` has been recorded for this mover.
     halt_recorded: bool,
+    /// The fuelling speed, where it is what the force makes this pulse
+    /// (decision 0201, 9). Only read for the segment's breakdown.
+    fuelling_speed_kn: Option<Fixed>,
 }
 
 impl Mover {
@@ -370,6 +373,7 @@ fn build_mover<'s>(
     ref_data: &RefData,
     pulse: Pulse,
     hours_used: Fixed,
+    cap_kn: Option<Fixed>,
 ) -> Option<Mover> {
     if task_force.status != TaskForceStatus::Underway {
         return None;
@@ -398,6 +402,9 @@ fn build_mover<'s>(
                 // factor) if that is lower.
                 SpeedSetting::Knots(knots) => knots.min(class.max_speed_kn * propulsion_factor),
             };
+            // A force fuelling at sea, and the force it fuels from, make no
+            // more than the fuelling speed this pulse (decision 0201, 9).
+            let speed_kn = cap_kn.map_or(speed_kn, |cap| speed_kn.min(cap));
             Steamer {
                 ship: *ship_id,
                 fuel_t: ship.fuel_t,
@@ -414,6 +421,7 @@ fn build_mover<'s>(
     let slowest = steamers.iter().min_by_key(|s| s.speed_kn)?;
     let speed_kn = slowest.speed_kn;
     let propulsion_factor = slowest.propulsion_factor;
+    let fuelling_speed_kn = cap_kn.filter(|cap| *cap == speed_kn);
     if speed_kn.is_zero() {
         // Dead in the water: no movement, no event, no fuel burned. The
         // force stays under way.
@@ -452,6 +460,7 @@ fn build_mover<'s>(
         arrival_recorded: false,
         halt_at: None,
         halt_recorded: false,
+        fuelling_speed_kn,
     })
 }
 
@@ -464,7 +473,15 @@ pub(crate) fn force_speed_kn<'s>(
     ship_of: impl Fn(ShipId) -> &'s Ship,
     ref_data: &RefData,
 ) -> Option<Fixed> {
-    build_mover(task_force, ship_of, ref_data, Pulse::Night, Fixed::ZERO).map(|m| m.speed_kn)
+    build_mover(
+        task_force,
+        ship_of,
+        ref_data,
+        Pulse::Night,
+        Fixed::ZERO,
+        None,
+    )
+    .map(|m| m.speed_kn)
 }
 
 /// How a meeting held in the step ended for each of its two forces, as the
@@ -500,6 +517,9 @@ struct Step {
     /// on a tie in time, an escort's change of position is taken before its
     /// charge's (decision 0121, 4).
     charges: BTreeSet<TaskForceId>,
+    /// Fuelling at sea this pulse: the pairs and the forces slowed for it
+    /// (decision 0201, 8 and 9). Local to the step, not state.
+    fuelling: crate::fuel_at_sea::FuellingPulse,
 }
 
 impl Step {
@@ -525,6 +545,9 @@ impl World {
         self.handle_stragglers(day, pulse);
         // Escorts take their station for the pulse (decision 0121, 3).
         self.keep_station(day, pulse);
+        // Forces fuelling at sea are paired and steered for their givers
+        // (decision 0201, 6, 8 and 15).
+        let fuelling = self.settle_fuelling(day, pulse);
         let charges: BTreeSet<TaskForceId> = self
             .truth
             .task_forces
@@ -541,13 +564,15 @@ impl World {
             alarms: BTreeMap::new(),
             outcomes: BTreeMap::new(),
             charges,
+            fuelling,
         };
 
         // Budgets. The list of forces is taken after the straggler pass, so a
         // force it makes moves in this same step.
         let ids: Vec<TaskForceId> = self.truth.task_forces.keys().copied().collect();
         for id in ids {
-            if let Some(mover) = self.new_mover(id, pulse, Fixed::ZERO) {
+            let cap = step.fuelling.cap_for(id);
+            if let Some(mover) = self.new_mover(id, pulse, Fixed::ZERO, cap) {
                 step.movers.insert(id, mover);
             }
         }
@@ -628,12 +653,22 @@ impl World {
         for id in ids {
             self.finish_steaming(&mut step, id);
         }
+
+        // The fuel passes at sea, now that every fight of the pulse is known
+        // (decision 0201, 10).
+        self.pass_fuel_at_sea(day, pulse, &step.fuelling);
     }
 
     /// A mover for the force, if it is under way with a ship afloat and a
     /// speed above zero ([`build_mover`]). It starts with `hours_used`
     /// already steamed.
-    fn new_mover(&self, id: TaskForceId, pulse: Pulse, hours_used: Fixed) -> Option<Mover> {
+    fn new_mover(
+        &self,
+        id: TaskForceId,
+        pulse: Pulse,
+        hours_used: Fixed,
+        cap_kn: Option<Fixed>,
+    ) -> Option<Mover> {
         let task_force = self.truth.task_forces.get(&id)?;
         let mut mover = build_mover(
             task_force,
@@ -641,6 +676,7 @@ impl World {
             &self.ref_data,
             pulse,
             hours_used,
+            cap_kn,
         )?;
         mover.halt_at = self.halt_index(task_force, pulse);
         Some(mover)
@@ -954,7 +990,7 @@ impl World {
         // of the pulse after the parent's hours.
         for (parent, new_force) in made {
             let hours_used = step.hours_used(parent);
-            if let Some(mover) = self.new_mover(new_force, step.pulse, hours_used) {
+            if let Some(mover) = self.new_mover(new_force, step.pulse, hours_used, None) {
                 step.movers.insert(new_force, mover);
             }
         }
@@ -1097,7 +1133,8 @@ impl World {
         let hours_used = step.hours_used(id);
         let last_steamed = step.movers.get(&id).and_then(|mover| mover.last_steamed);
 
-        let Some(mut mover) = self.new_mover(id, step.pulse, hours_used) else {
+        let cap = step.fuelling.cap_for(id);
+        let Some(mut mover) = self.new_mover(id, step.pulse, hours_used, cap) else {
             if let Some(mover) = step.movers.get_mut(&id) {
                 mover.active = false;
             }
@@ -1166,6 +1203,13 @@ impl World {
                 factors.push(Factor {
                     name: "fuel_limit_nm",
                     value: limit,
+                });
+            }
+            // The fuelling speed, where it set the speed (decision 0201, 9).
+            if let Some(knots) = mover.fuelling_speed_kn {
+                factors.push(Factor {
+                    name: "fuelling_speed_kn",
+                    value: knots,
                 });
             }
             // What each step begun in the segment is charged (decision
@@ -1586,9 +1630,14 @@ pub(crate) fn forecast_route(
     let mut last_mover: Option<Mover> = None;
     'days: for day in first_day..first_day.saturating_add(FORECAST_DAYS) {
         for pulse in Pulse::ALL {
-            let Some(mut mover) =
-                build_mover(&force, |id| &aboard[&id], ref_data, pulse, Fixed::ZERO)
-            else {
+            let Some(mut mover) = build_mover(
+                &force,
+                |id| &aboard[&id],
+                ref_data,
+                pulse,
+                Fixed::ZERO,
+                None,
+            ) else {
                 result.end = PassageEnd::CannotMove;
                 break 'days;
             };
@@ -1865,6 +1914,7 @@ mod tests {
                 aircraft_capacity: 0,
                 anti_aircraft: 0,
                 troop_capacity_men: 0,
+                fuels_at_sea: false,
             },
         );
         ref_data.port_sizes.insert(
@@ -2320,7 +2370,7 @@ mod tests {
             );
         }
         let mover = world
-            .new_mover(TaskForceId::new(1), Pulse::Night, Fixed::ZERO)
+            .new_mover(TaskForceId::new(1), Pulse::Night, Fixed::ZERO, None)
             .expect("the force is under way");
         (mover, world.map.clone())
     }
@@ -2434,6 +2484,7 @@ mod tests {
             arrival_recorded: mover.arrival_recorded,
             halt_at: mover.halt_at,
             halt_recorded: mover.halt_recorded,
+            fuelling_speed_kn: mover.fuelling_speed_kn,
         }
     }
 

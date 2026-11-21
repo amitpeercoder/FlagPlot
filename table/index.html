@@ -399,6 +399,10 @@ body.watched .gives { display: none !important; }
   <div class="frow"><span class="fl">Course</span><span class="seg">
     <label><input type="checkbox" id="f-crs"><span>Set a course on the chart</span></label></span>
   </div>
+  <div class="frow" id="f-fuelrow" hidden><span class="fl">Fuel</span><span class="seg">
+    <label><input type="checkbox" id="f-fuel"><span>Fuel at sea from a force with an oiler</span></label></span>
+  </div>
+  <fieldset id="f-fuelfrom" hidden><legend>FUEL FROM</legend></fieldset>
   <div class="frow" id="f-shp"><span class="fl">Its ships</span><span class="seg">
     <label><input type="radio" name="shp" value="" checked><span>As they are</span></label>
     <label id="f-l-detach"><input type="radio" name="shp" value="detach"><span>Detach some</span></label>
@@ -1449,6 +1453,9 @@ body.watched .gives { display: none !important; }
     else if (k === 'aircraft_landed_elsewhere' && R('^' + H + ' had no deck: (\\d+) aircraft landed at ' + H)) out = m[2] + ' aircraft of ' + N(m[1]) + ', with no deck to return to, landed aboard ' + N(m[3]);
     else if (k === 'aircraft_repaired' && R('^' + H + ' had (\\d+) aircraft repaired aboard ' + H + ', (\\d+) ready and (\\d+) damaged')) out = N(m[1]) + ': ' + m[2] + ' aircraft repaired aboard ' + N(m[3]) + '; ' + m[4] + ' ready, ' + m[5] + ' damaged';
     else if (k === 'base_supply_spent' && R('^' + H + ' spent ([\\d.]+) t of supply on (\\d+) men ashore for the day, ([\\d.]+) t left')) out = N(m[1]) + ' issued ' + fig(m[2]) + ' t of supply to ' + fig(m[3]) + ' men; ' + fig(m[4]) + ' t in stock';
+    else if (k === 'ship_fuelled_at_sea' && R('^' + H + ' took ([\\d.]+) t of fuel at sea from ' + H + ', [\\d.]+ t aboard, ' + H + ' has [\\d.]+ t of cargo fuel left(?:; ' + H + ' is no longer out of fuel)?')) out = N(m[1]) + ' took ' + fig(m[2]) + ' t of fuel at sea from ' + N(m[3]) + (m[5] ? '; ' + N(m[5]) + ' is no longer out of fuel' : '');
+    else if (k === 'fuelling_broken_off' && R('^' + H + ' took no fuel from ' + H + ' at ' + AT)) out = 'Fuelling broken off at ' + P(m[3], m[4]) + ': ' + N(m[1]) + ' took no fuel from ' + N(m[2]);
+    else if (k === 'fuel_order_ended' && R("^" + H + "'s order to fuel from " + H + ' ended: (.*)$')) out = 'Fuelling ended for ' + N(m[1]) + ': ' + m[3];
     else if (k === 'ship_refuelled' && R('^' + H + ' took ([\\d.]+) t of fuel at ' + H)) out = N(m[1]) + ' took ' + fig(m[2]) + ' t of fuel at ' + N(m[3]);
     else if (k === 'strike_mission_cleared' && R('^' + H + ' has no mission: the base it was to strike, ' + H)) out = N(m[1]) + ' stood down from its strike: ' + N(m[2]) + ' is ours';
     if (out == null) {
@@ -2444,7 +2451,7 @@ body.watched .gives { display: none !important; }
   }
   function anOrder(o) {
     var k = o.kind || '';
-    if (k === 'set_speed') return 'speed ' + o.speed; if (k === 'set_readiness') return o.readiness + ' readiness';
+    if (k === 'fuel_from') return 'fuel from ' + nameOf(o.giver); if (k === 'set_speed') return 'speed ' + o.speed; if (k === 'set_readiness') return o.readiness + ' readiness';
     if (k === 'set_route') return 'a course of ' + (o.waypoints || []).length + ' legs'; if (k === 'set_air_mission') return 'mission: ' + (MISSION[o.mission] || o.mission).toLowerCase();
     return k.replace(/^set_/, '').replace(/_/g, ' ');
   }
@@ -2652,6 +2659,14 @@ body.watched .gives { display: none !important; }
     var others = M.forces.filter(function (o) { return o !== fhere && sameHex(o.place, fhere.place) && !(o.available_from > M.day); }), atBase = M.bases.some(function (b) { return sameHex(b.place, fhere.place); });
     others.forEach(function (o, i) { var l = el('label'), c = el('input'); c.type = 'radio'; c.name = 'into'; c.value = o.task_force.handle; c.checked = i === 0; l.appendChild(c); l.appendChild(document.createTextNode(' ' + o.task_force.name.replace(/^Placeholder /, ''))); fj.appendChild(l); });
     $('f-l-join').hidden = !(atBase && others.length); $('f-l-down').hidden = !atBase; $('f-l-detach').hidden = false; $('f-shp').hidden = false;
+    // Fuel at sea (decision 0201): offered only where another force of the side has a ship that fuels others, as the entity's ship lines say.
+    var ff = $('f-fuelfrom'), fr = $('f-fuelrow'); $('f-fuel').checked = false; ff.hidden = true; fr.hidden = true; while (ff.children.length > 1) ff.removeChild(ff.lastChild);
+    M.forces.filter(function (o) { return o !== fhere && o.status !== 'away_at_yard' && !(o.available_from > M.day); }).forEach(function (o) {
+      api('get_entity', { handle: o.task_force.handle }).then(function (a) {
+        if (!force || force.f !== fhere || !a.entity || !(a.entity.ships || []).some(function (x) { return x.fuels_at_sea && !x.sunk; })) return;
+        var l = el('label'), c = el('input'); c.type = 'radio'; c.name = 'fuelfrom'; c.value = o.task_force.handle; c.checked = !ff.querySelector('input'); l.appendChild(c); l.appendChild(document.createTextNode(' ' + o.task_force.name.replace(/^Placeholder /, ''))); ff.appendChild(l); fr.hidden = false;
+      }).catch(function () {});
+    });
     $('force').hidden = false; setStatus('A draft of a direct order. Nothing is ordered until you sign.');
   }
   // The course: each touch of the chart adds a waypoint, in order. A waypoint
@@ -2679,6 +2694,8 @@ body.watched .gives { display: none !important; }
     if (rdy && rdy !== force.now.rdy) { orders.push({ unit: unit, order: { kind: 'set_readiness', readiness: rdy } }); words.push(rdy === 'battle' ? 'Battle readiness.' : 'Normal readiness.'); }
     if ($('f-crs').checked) { if (!force.route.length) return { error: 'Touch the chart for the first waypoint.', words: ['Course: touch the chart.'] }; var ro = { kind: 'set_route', waypoints: force.route.map(function (w) { return [w.q, w.r]; }) }, mid = force.route.slice(0, -1), acts = mid.filter(function (w) { return w.act; }), stands = mid.filter(function (w) { return w.stand; }); if (acts.length) ro.act_at = acts.map(function (w) { return [w.q, w.r]; }); if (stands.length) ro.stand_at = stands.map(function (w) { return [w.q, w.r]; });
       orders.push({ unit: unit, order: ro }); words.push('Steam for ' + force.route.map(function (w) { return wpName(w) + (w.act && mid.indexOf(w) >= 0 ? ' (act there)' : '') + (w.stand && mid.indexOf(w) >= 0 ? ' (stand the night)' : ''); }).join(', then ') + '.'); }
+    if ($('f-fuel').checked) { var giver = document.querySelector('#f-fuelfrom input:checked'); if (!giver) return { error: 'Choose the force to fuel from.', words: words.concat('Fuel at sea: choose the force.') }; if ($('f-crs').checked) return { error: 'A course ends the fuelling. Choose one of the two.', words: words };
+      orders.push({ unit: unit, order: { kind: 'fuel_from', giver: giver.value } }); words.push('Fuel at sea from ' + giver.parentNode.textContent.trim() + '.'); }
     if (shp === 'detach') { var picked = Array.prototype.map.call(document.querySelectorAll('#f-ships input:checked'), function (c) { return +c.value; }), all = document.querySelectorAll('#f-ships input').length;
       if (!picked.length) return { error: 'Tick the ships to detach.', words: words.concat('Detach: tick the ships.') }; if (picked.length === all) return { error: 'A force cannot detach every ship. Leave one.', words: words };
       orders.push({ unit: unit, order: { kind: 'detach', ships: picked } }); words.push('Detach ' + picked.length + (picked.length > 1 ? ' ships' : ' ship') + ' as a new force.'); }
@@ -2690,6 +2707,7 @@ body.watched .gives { display: none !important; }
   $('force').addEventListener('input', function (e) { if (e.target.id === 'f-kn') { $('f-kn-out').textContent = e.target.value; forceSummary(); } });
   $('force').addEventListener('change', function (e) {
     if (e.target.name === 'spd') $('f-kn').hidden = fPick('spd') !== 'knots';
+    if (e.target.id === 'f-fuel') $('f-fuelfrom').hidden = !$('f-fuel').checked;
     if (e.target.name === 'shp') { $('f-ships').hidden = fPick('shp') !== 'detach'; $('f-join').hidden = fPick('shp') !== 'join'; }
     if (e.target.id === 'f-crs') { if ($('f-crs').checked) { picking = 'route'; canvas.classList.add('picking'); setStatus('Touch the chart where the force is to steam for.'); } else { picking = false; canvas.classList.remove('picking'); force.route = []; } showRoute(); }
     forceSummary(); });

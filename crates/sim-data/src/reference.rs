@@ -52,6 +52,10 @@ struct ShipClassRow {
     /// the column is there, every row needs a whole number.
     #[serde(default)]
     troop_capacity_men: u32,
+    /// Optional column (decision 0201, 1): 1 for a class whose ships fuel
+    /// others at sea, else 0. A file without it gives no class the mark.
+    #[serde(default)]
+    fuels_at_sea: u8,
 }
 
 #[derive(Deserialize)]
@@ -143,6 +147,16 @@ fn parse_ship_classes(text: &str, path: &Path) -> Result<RefData, DataError> {
             anti_aircraft: row.anti_aircraft,
             name: row.name,
             troop_capacity_men: row.troop_capacity_men,
+            fuels_at_sea: match row.fuels_at_sea {
+                0 => false,
+                1 => true,
+                other => {
+                    return Err(DataError::in_file(
+                        path,
+                        format!("{id}: fuels_at_sea is {other}, not 0 or 1"),
+                    ))
+                }
+            },
         };
         if let Some(problem) = class.problem() {
             return Err(DataError::in_file(path, problem));
@@ -455,6 +469,20 @@ struct SurfaceCombatFile {
     /// Rearming (decision 0122, 3). Optional: a file with none loads as
     /// before and no ship rearms.
     rearming: Option<RearmingTable>,
+    /// Fuelling at sea (decision 0201, 22 to 24). Optional: a file with none
+    /// loads as before and no force fuels at sea.
+    fuelling_at_sea: Option<FuellingAtSeaTable>,
+}
+
+/// `[fuelling_at_sea]`: the fuelling speed, a line's rate, the hours
+/// alongside and the lines of an oiler (decision 0201, 11 and 22 to 24).
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct FuellingAtSeaTable {
+    speed_kn: Quantity,
+    line_rate_t_per_h: Quantity,
+    alongside_hours: Quantity,
+    lines: u32,
 }
 
 /// `[rearming]`: the weight of a torpedo and, in `[rearming.tons_per_round]`,
@@ -657,6 +685,18 @@ fn parse_surface_combat_figures(
                     &table.tons_per_round.others,
                 )?,
                 tons_per_torpedo: number("rearming tons_per_torpedo", &table.tons_per_torpedo)?,
+            }),
+        },
+        fuelling_at_sea: match &file.fuelling_at_sea {
+            None => None,
+            Some(table) => Some(sim_core::refdata::FuellingAtSeaFigures {
+                speed_kn: number("fuelling_at_sea speed_kn", &table.speed_kn)?,
+                line_rate_t_per_h: number(
+                    "fuelling_at_sea line_rate_t_per_h",
+                    &table.line_rate_t_per_h,
+                )?,
+                alongside_hours: number("fuelling_at_sea alongside_hours", &table.alongside_hours)?,
+                lines: table.lines,
             }),
         },
     };

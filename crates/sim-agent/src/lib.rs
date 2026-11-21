@@ -73,7 +73,8 @@ pub use briefing::{
     SupplyWarning, SystemChange, TiredWarning, UnitDestroyedLine, UnitDividedLine, Warnings,
 };
 pub use briefing::{
-    ForceChangesPart, FormedLine, JoinedLine, LoadReserveLine, RefuellingHeldLine, StoodDownLine,
+    ForceChangesPart, FormedLine, FuelOrderEndedLine, FuelledAtSeaLine, FuellingBrokenOffLine,
+    JoinedLine, LoadReserveLine, RefuellingHeldLine, StoodDownLine,
 };
 pub use choices::{ChoiceLine, Choices};
 pub use commands::{

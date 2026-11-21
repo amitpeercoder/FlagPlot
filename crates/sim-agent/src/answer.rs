@@ -122,8 +122,13 @@ pub const FORMAT: &str = "flagplot-agent";
 /// the map yet`. 37 adds the side's supply lines (decision 0196). 38 adds the
 /// side's streams of replacement men (decision 0197): the briefing's
 /// `arrivals.men_replacements` and `men_joined_yesterday`, and the
-/// `establishment` of a land unit's line.
-pub const VERSION: u32 = 38;
+/// `establishment` of a land unit's line. 39 adds fuelling at sea (decision
+/// 0201): the task force order `fuel_from` (`giver`), a force's `fuel_from`
+/// in its line where it is under that order, a ship line's `fuels_at_sea`
+/// for an oiler, and the briefing's
+/// `fuelled_at_sea`, `fuelling_broken_off` and `fuel_orders_ended` among the
+/// force changes.
+pub const VERSION: u32 = 39;
 
 /// The answer to a question about something the side does not know of: a
 /// unit of the enemy, a number that does not exist, an event the side may not

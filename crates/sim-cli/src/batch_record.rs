@@ -1287,7 +1287,10 @@ pub fn count(
             | EventKind::StationKept { .. }
             | EventKind::ChargeLost { .. }
             | EventKind::MeetingNotHeld { .. }
-            | EventKind::ShipRearmed { .. } => {}
+            | EventKind::ShipRearmed { .. }
+            | EventKind::ShipFuelledAtSea { .. }
+            | EventKind::FuellingBrokenOff { .. }
+            | EventKind::FuelOrderEnded { .. } => {}
         }
     }
 

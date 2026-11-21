@@ -1,0 +1,89 @@
+# Scenario 115: refuelling at sea (decision 0201, stage A).
+#
+# Proves, against the hand calculation in
+# tests/scenario_115_refuelling_at_sea.rs, that a force fuels from an oiler's
+# force while both steam slowly together, by day or by night, a few ships at
+# a time. The test builds the variants of each statement from this text.
+#
+# Task force 1 (F), Allied: a carrier and two destroyers, begins the night of
+# day 1 in (1,0) under the order to fuel from task force 2 (O), the oiler,
+# which lies stopped in (0,0). In the night F steers for O and reaches her
+# hex, steaming 40 nm at cruise, which burns 20 t of the carrier's fuel and 4
+# t of each destroyer's: it begins the morning in O's hex with the carrier at
+# 2,000 t, the first destroyer at 100 t and the second at 300 t, as the hand
+# calculation's statements 1 and 2 have them. There is no Japanese unit and
+# no base in the forces' hexes, and nothing is drawn.
+#
+# PLACEHOLDER DATA. The ships, classes, figures and map are invented.
+
+name = "Placeholder scenario 115: Refuelling at sea"
+placeholder = true
+seed = 1942
+days = 2
+map = "../../map/placeholder_refuelling_at_sea.toml"
+ship_classes = [
+    "../../reference/ship_classes.csv",
+    "../../reference/ship_classes_placeholder_scenario_115.csv",
+]
+port_sizes = "../../reference/port_sizes.csv"
+aircraft_types = "../../reference/aircraft_types.csv"
+search = "../../reference/search.toml"
+surface_combat = "../../reference/surface_combat.toml"
+
+# F: the carrier and two destroyers.
+[[task_force]]
+id = 1
+name = "Placeholder force F"
+side = "allied"
+q = 1
+r = 0
+mission = "surface_combat"
+
+# O: the oiler.
+[[task_force]]
+id = 2
+name = "Placeholder oiler force O"
+side = "allied"
+q = 0
+r = 0
+mission = "transport"
+
+[[ship]]
+id = 1
+name = "Placeholder carrier CV"
+class = 151
+side = "allied"
+fuel_t = 2020
+task_force = 1
+
+[[ship]]
+id = 2
+name = "Placeholder destroyer D1"
+class = 152
+side = "allied"
+fuel_t = 104
+task_force = 1
+
+[[ship]]
+id = 3
+name = "Placeholder destroyer D2"
+class = 152
+side = "allied"
+fuel_t = 304
+task_force = 1
+
+[[ship]]
+id = 4
+name = "Placeholder oiler"
+class = 153
+side = "allied"
+fuel_t = 2000
+cargo_fuel_t = 3000
+task_force = 2
+
+[[order]]
+day = 1
+side = "allied"
+task_force = 1
+kind = "fuel_from"
+giver = 2

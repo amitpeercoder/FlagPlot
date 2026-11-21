@@ -47,6 +47,10 @@ pub struct ForceLine {
     /// Given (true) only for a force on radio silence (decision 0136, 15).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub radio_silence: Option<bool>,
+    /// The force it is ordered to fuel from at sea (decision 0201): the
+    /// giver, written as a handle. Left out for a force under no such order.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fuel_from: Option<Handle>,
     /// `idle`, `underway`, `arrived`, `out_of_fuel` or `away_at_yard`
     /// (decision 0069).
     pub status: &'static str,
@@ -622,6 +626,7 @@ pub(crate) fn force_line(ctx: &Ctx<'_>, force: &TaskForce) -> ForceLine {
         as_of: held_as_of_text(ctx, CommandRef::TaskForce(force.id)),
         available_from: day_not_come(&ctx.view, EntityRef::TaskForce(force.id)),
         radio_silence: radio_silence_flag(ctx, force),
+        fuel_from: force.fuel_from.map(|f| ctx.force(f.giver)),
         status: words::status(force.status),
         mission: words::mission(force.mission),
         speed: words::speed(force.speed),
@@ -789,6 +794,7 @@ fn away_force_line(ctx: &Ctx<'_>, force: &TaskForce) -> ForceLine {
         as_of: held_as_of_text(ctx, CommandRef::TaskForce(force.id)),
         available_from: day_not_come(&ctx.view, EntityRef::TaskForce(force.id)),
         radio_silence: radio_silence_flag(ctx, force),
+        fuel_from: force.fuel_from.map(|f| ctx.force(f.giver)),
         status: "away_at_yard",
         mission: words::mission(force.mission),
         speed: words::speed(force.speed),

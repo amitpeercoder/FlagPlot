@@ -475,6 +475,7 @@ impl Making {
                 preparation: None,
                 landing_at: None,
                 charge: None,
+                fuel_from: None,
                 available_from: None,
             },
         );

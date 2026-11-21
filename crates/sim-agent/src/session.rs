@@ -134,6 +134,22 @@ fn unit_numbers_to_ids(ctx: &Ctx<'_>, body: &Value, stand_ins: &mut BTreeMap<u32
         }
         return body;
     }
+    // A fuel_from names the giver by the side's number, as an escort names
+    // its charge (decision 0201).
+    if body.get("kind").and_then(Value::as_str) == Some("fuel_from") {
+        if let Some(number) = body
+            .get("giver")
+            .and_then(Value::as_str)
+            .and_then(|handle| handle.strip_prefix("task_force:"))
+            .and_then(|number| number.parse::<u32>().ok())
+        {
+            let raw = ctx
+                .own_force(number)
+                .map_or(NO_SUCH_UNIT, |force| force.id.raw());
+            body["giver"] = json!(format!("task_force:{raw}"));
+        }
+        return body;
+    }
     if !matches!(
         body.get("kind").and_then(Value::as_str),
         Some("detach" | "form_task_force")

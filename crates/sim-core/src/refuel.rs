@@ -43,7 +43,7 @@ pub(crate) struct FuelStop<'a> {
 impl World {
     /// The lowest-numbered base of `side` in `hex` that has fuel above its
     /// reserve: it serves a ship, down to that reserve (decision 7 of 0111).
-    fn serving_base(&self, side: Side, hex: Hex) -> Option<BaseId> {
+    pub(crate) fn serving_base(&self, side: Side, hex: Hex) -> Option<BaseId> {
         self.truth
             .bases
             .values()
@@ -348,6 +348,7 @@ mod tests {
             aircraft_capacity: 0,
             anti_aircraft: 0,
             troop_capacity_men: 0,
+            fuels_at_sea: false,
         };
         let mut ref_data = RefData::default();
         ref_data.ship_classes.insert(class.id, class);

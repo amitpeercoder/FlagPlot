@@ -160,6 +160,7 @@ The orders that exist are the ones in the tables below. The spec lists more (add
 | Load with a land unit (`load` with a `unit` and a cargo of supply, fuel or none) | A standing cargo order to take the unit's men ashore here aboard, then the named cargo. It needs no base (chapter 7, The load order with a unit). | Cargo |
 | Unload | A standing cargo order to land all cargo, men first, then supply, then fuel. | Cargo |
 | Do no cargo work (`no_cargo_work`, no arguments) | Clears the force's cargo order: the force holds none, and works no cargo until it is given another (chapter 2, Cargo orders). It moves nothing, aboard or ashore. It is accepted from a force of the side whatever its status, under way, stopped, halted or out of fuel. Added at the end (decision 0191, amended in the build). | Cargo |
+| Fuel from (`fuel_from`, and `giver`, a force of the side with an oiler) | The force's own order to fuel at sea from the giver, and the order that set it (`fuel_from`). The force steers for the giver and takes her route; in a pulse the two are paired they make no more than the fuelling speed and her oilers pass it fuel. It ends of itself, and a route order ends it (chapter 2, Fuelling at sea). [0201] | Fuel from |
 | Set rules of engagement (stance, break-off level, straggler instruction, keep share) | All four figures together, and the order that set them. | Rules of engagement |
 | Set home port (a base) | The base a force heads for when it retires or sends stragglers home. | Home port |
 | Set readiness (normal or battle) | The readiness and the order that set it. It does not touch whether the force is alerted. | Readiness |
@@ -398,7 +399,18 @@ Then, by kind:
 | Escort | Cannot escort itself | The charge named is the force the order is for. [0121] |
 | Escort | Not your unit | The charge named does not exist or is not the issuer's. One reason for both. [0121] |
 | Escort | No ship afloat | The charge named lists no ships: the reasons of row 3, including the two for a force joined or stood down. [0121] |
-| Escort | Charge is an escort | The charge named has a charge of its own: "F has a charge of its own, and an escort cannot be a charge". Tried last. [0121] |
+| Escort | Charge is an escort | The charge named has a charge of its own: "F has a charge of its own, and an escort cannot be a charge". [0121] |
+| Escort | Fuels from, is a giver | The escort is under the order to fuel at sea from F ("the task force is fuelling from F"), or is the force F fuels from ("the task force is the force F fuels from"). [0201] |
+| Escort | Charge takes part in fuelling | The charge named is under the order to fuel at sea or is a giver: "F is fuelling from another force or is the force another fuels from". Tried last. [0201] |
+| Fuel from | Cannot fuel from itself | The giver named is the force the order is for. [0201] |
+| Fuel from | Not your unit, no ship afloat | The giver named does not exist, is not the issuer's or lists no ships: the reasons of row 3. [0201] |
+| Fuel from | Giver has no oiler | The giver has no ship afloat whose class fuels others at sea: "F has no ship afloat that fuels others at sea". [0201] |
+| Fuel from | Giver is fuelling | The giver is under the order to fuel from another herself. [0201] |
+| Fuel from | Giver is an escort | The giver has a charge. [0201] |
+| Fuel from | Giver has an escort | Another force has the giver as its charge, naming it. [0201] |
+| Fuel from | Is a giver | Another force is under the order to fuel from this one, naming it. [0201] |
+| Fuel from | Escort cannot fuel | The force has a charge: "the task force is an escort, keeping station on F". [0201] |
+| Fuel from | Has an escort | Another force has this one as its charge, naming it. Tried last. [0201] |
 | Set speed in knots | Speed not above zero | The speed is zero or below. |
 | Set speed (cruise, full), Set mission, Set readiness, Unload | None | Always accepted. |
 
@@ -717,6 +729,7 @@ No event a side may see names an enemy ship, task force or air group. The side's
 | Report sent | Own side, whole: the report, the sender and for each listener when it arrives. The enemy sees nothing (decision 0135) |
 | Task force joined | The force joined into is own. The enemy sees nothing |
 | Station kept, charge lost | The escort is own. The enemy sees nothing (decision 0121, 8) |
+| Ship fuelled at sea, fuelling broken off, fuel order ended | The force fuelling is own, whole. The enemy sees nothing (decision 0201, 17) |
 | Meeting not held | The charge is own. The enemy sees nothing: it is told nothing of a force it did not meet, and the fights of its own force with the escorts are told as any fight is (decision 0121, 8) |
 | Task force stood down in port, load below reserve, load held at reserve, refuelling held at reserve | Own force. The enemy sees nothing (decision 0111) |
 | Loading gained, loading lost, preparation shared | Own force. The enemy sees nothing of a force's preparation |
