@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 21, 2026 on the designer's word 
 
 Summary: Refuelling at sea is built on placeholder ships, and no scenario a person can play has an oiler. This makes the American fleet oiler of 1942 a real class, derived from fact rows as a warship is, and puts the oilers the record names into the Coral Sea and the five days of the Eastern Solomons, in scenario files beside the ones the closed proofs play. The Japanese oilers, Tippecanoe and the 39 days are left for later, each for a stated want of facts.
 
-Standing: Planned on Nov 21, 2026; its review folded in; waits for the research in hand, then its hand calculation and its build.
+Standing: Planned on Nov 21, 2026; its review and the research's second pass folded in; its hand calculation is scenario 120; waits for its build.
 
 ## Why
 
@@ -27,7 +27,7 @@ What is so today:
 5. **Speed is the official history's line,** 18 knots, as decision 0166, rule 7, has it where an official line and a later compilation differ, by a written exception for the class. Every speed row of the class is disputed, so nothing is read without one.
 6. **Her own fuel** is a new numeric attribute, the fuel a ship steams on stated in barrels, made tons by the factor of rule 8.
 7. **Her cargo of oil** is a new numeric attribute, the oil a ship can carry for others, in barrels, made tons by the same factor. It is a capacity: a load carried on one voyage is not read (decision 0166, rule 3).
-8. **Barrels are made tons by the Navy's own factor for its fuel oil, read from a row,** as decision 0166, rule 8, requires, with no other way. The factor has a file of its own, `data/oob/unit_facts.csv`, where one row is one source's statement of a factor between units. No oiler is derived until that row stands.
+8. **Barrels are made tons by the Navy's own factor for its fuel oil, read from a row,** as decision 0166, rule 8, requires, with no other way. The row is on the class: the attribute `fuel_oil_barrel_factor_lt`, 0.1516 long tons a barrel, from the Navy's fuelling manual of 1945, which gives it in so many words (ship_class_facts 14311). It is a later row read as already so: it is the weight of a barrel of the Navy's fuel oil. A file of its own for such factors was wanted and would need the row checker's code changed; the row on the class serves.
 9. **Endurance is read as any ship's is,** a distance with its speed, as numeric rows.
 10. **A row dated after the scenario is read only by a written exception** that says it was already so, as the data rules have it. There is no reading of "the nearest year".
 
@@ -39,7 +39,7 @@ Each of these is settled by the architect with its reason on the row or in the l
 12. **Her own fuel: 15,000 barrels; Cimarron's own 14,850 for her.** They are the Navy data book's lines of 1945, read by an exception as already so: they are her hull's bunkers, and no source read says they were altered.
 13. **Cargo of oil: the cargo oil of November 1943,** 101,638 barrels for Platte and 103,233 for Cimarron, read by an exception as already so. It is the statement nearest in time that is a capacity, and the loads of July 1942 sit under it: 93,000 barrels taken by Platte, and 12,000 tons of fuel oil each. The Navy's 1945 table of fuel-oil tanks, 68,054 barrels, is not read: by its own footnote it is how the tanks were allotted to products in design, and Platte carried more than it in 1942.
 14. **Neosho has no cargo row of her own;** she was lost in May 1942. She reads the least of her sisters' rows, 101,638 barrels, by a rule written in the list: a ship with no row of her own for a figure her sisters differ in reads the least of theirs. Her bunkers read the four ships' 15,000 barrels, filed as a row of the class marked inferred from identical lines.
-15. **Endurance: what the research in hand finds she did.** Failing that, the General Board's requirement of 1935, 10,000 miles at 16.5 knots, filed as numeric rows that say "requirement" and read by an exception. It sets what she burns a mile and her cruising speed, which would then be above a warship's 15 knots; over five days it matters little, and the class says what it rests on.
+15. **Endurance: 12,000 nautical miles at 16.5 knots,** the endurance built into the twelve tankers of the class as a feature of national defence (Wildenberg; row 14313), filed by the architect as numeric rows that cite it. The source says "mile"; it is read as nautical, as a naval design figure, and a compilation's 12,100 nautical miles with no speed stands beside it. No source gives what she burned a day. It sets what she burns a mile, 2,274 tons over 12,000 miles, and her cruising speed, 16.5 knots, above a warship's 15.
 16. **Cimarron is a class of her own** in the list, since her bunkers and her cargo differ from her sisters'.
 
 ### The ships and where they go
@@ -47,14 +47,16 @@ Each of these is settled by the architect with its reason on the row or in the l
 17. **Closed proofs are not touched.** Each scenario's oilers are in a new scenario file beside the old, with a derivation list of its own for the ships added, a class file of its own from it, a sides file of its own, and that class file named beside the scenario's others. A sides file must match its class files id for id, so nothing is added to a list or a sides file a closed proof reads.
 18. **The Coral Sea:** Neosho and the destroyer Sims as one force, of the mission transport, with no home port, in the hex of Task Force 17 at the start. Sims is not in the game today; she is derived as her sisters in that scenario are, in the new list. She is in Neosho's own force and not an escort to it, since the staff sends no force to an oiler's force that has an escort. Neosho carries her cargo full, as every ship in that file starts with her own fuel full; her true load on 5 May is a gap and the file says so.
 19. **No order is scripted for her.** The Coral Sea's files give no side a scripted order, and one for Neosho would bind the person in the Allied seat. She is the commander's to send, and the staff uses her by decision 0201, rule 20.
-20. **The five days of the Eastern Solomons:** Platte and Cimarron as one force. The record has them leaving "Roses" at daylight on 23 August and meeting the carriers at 0800 on 25 August at 13-04 S, 164-03.5 E, which is on the map. No row places them at the scenario's start or says what Roses was. They go in when the research in hand gives a start; if it gives none, they wait.
+20. **The five days of the Eastern Solomons:** Platte and Cimarron as one force, of the mission transport, with no home port and no escort, stopped in the hex of Efate, (7,10), at the start. The record has them at "Roses", which the fleet's own war diary says is Efate, until they sailed at daylight on 23 August, to meet the carriers at 0800 on 25 August at 13-04 S, 164-03.5 E, hex (5,2). No order is scripted for them, as for Neosho. Their escorts are named in no source read, and the file says so.
 21. **A force of oilers is not counted by a landing as lift.** The staff counts every transport force for a take whose forces are not named; a force whose every ship has the mark is left out of that count.
 22. **The table offers the new files:** a new base and its makers for each scenario, directives for each, and `table/scenarios.json` pointed at them. Their lines on the new game screen say the Allied side has an oiler and the Japanese side none.
+
+23. **The guns.** Neosho in May 1942: one 5-inch/51, three 3-inch/50 and eight 20 mm. Cimarron in August: four 5-inch/38 and eight 20 mm. Platte's fit of August 1942 is disputed between two lines of one source; the lesser is read, by an exception that says so. No source names a radar for any of the three, and the list's assumption that unknown means none stands for them.
 
 ## What is left out, and why
 
 - **Tippecanoe.** No endurance and no requirement for her class; and whether she was with the force on 6 May is disputed.
-- **Every Japanese oiler.** No row gives her bunkers, her displacement or her range. A Japanese carrier force therefore still has no oiler to go to. The research is asked for these; they follow when it finds them.
+- **Every Japanese oiler.** The research's second pass found their bunkers, their radius at a speed and their deadweight in a wartime American manual, of low confidence. It found no displacement, light or standard, for any of them, and toughness is read from nothing else. A Japanese carrier force therefore still has no oiler to go to. They follow when a displacement is found, or when a rule is made for a hull known only by her tonnage.
 - **Sabine, Kaskaskia and Guadalupe at the Eastern Solomons.** Where each was on the days played is disputed or not given.
 - **The 39 days of Guadalcanal.** Its oilers shuttled to Noumea and back to reload. Without a staff that sends an oiler to reload (stage D of decision 0201) they would sit empty after the first week.
 - **The staff placing an oiler.** Stage D. Until then several short forces may be sent to one oiler on the same morning, each by its own reckoning.
@@ -70,7 +72,7 @@ None moves. No list, class file or sides file that a scenario on file reads is c
 ## What it costs
 
 - **The derivation learns a kind of ship that is not a warship:** a type, two attributes in barrels, a factor in a file of its own, a toughness from light displacement, and no guns by kind. Decision 0166's transports can follow by the same road.
-- **More rows before any of it can be derived:** the factor, the class's guns of 1942, her endurance, Sims, and a start for the two oilers of August. The research in hand is after each.
+- **Rows the architect files before the build:** her bunkers, her cargo and her endurance as numeric rows citing the statements on file, and the exceptions that read them.
 - **A one-sided table for now:** an Allied commander has oilers and a Japanese one has none.
 - **An endurance that is a requirement and not a performance,** said on the class.
 - **Rulebook:** rule 21 is a line in chapter 8, where a take counts its lift. No other rule of the game changes. `data/oob/README.md` and `docs/engineering/data-rules.md` gain the new attributes and the oiler's derivation; the scenario files' own headers say what is in and what is left out.
@@ -90,4 +92,5 @@ A reviewer who had not seen the plan read it against the derivation, the loader,
 - **Her anti-aircraft guns are read, not left out,** as the decision the plan cited says; and "no guns" is by her kind, in the code, not by a scenario's assumption (rules 3 and 4).
 - **A scenario's order has a day and a pulse, not a clock,** and the Coral Sea's files script no order for anyone. Neosho gets none (rule 19). The two oilers of August have no start on record, and wait for one (rule 20).
 - **Sims is not in the game** and must be derived; **Cimarron differs from her sisters** and is a class of her own; **a take would have counted the oilers as lift** (rules 16, 18 and 21).
+- **The research's second pass, Nov 21, 2026** (pull request 632). The Navy's factor is on file in so many words (rule 8). The class's endurance is a stated design figure, 12,000 miles at 16.5 knots (rule 15). Roses is Efate, so the August oilers have a start (rule 20). The guns of 1942 are on file but for Platte's, which is disputed (rule 23). Sims lacks nothing her sisters have. The Japanese oilers have bunkers and radius now and still no displacement.
 
