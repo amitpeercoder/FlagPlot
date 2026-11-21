@@ -80,3 +80,5 @@ id,key,name,nation,type
 6107,jp-fuso-class,Fuso class,jp,battleship
 6108,jp-kuma-class,Kuma class,jp,light_cruiser
 14300,us-patoka-class,Patoka class,us,oiler
+14301,jp-shiretoko-class,Shiretoko class,jp,oiler
+14302,jp-ondo-class,Ondo class,jp,oiler
