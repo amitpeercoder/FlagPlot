@@ -166,3 +166,13 @@ What moves is the work of the Japanese working units cut off without food, which
 ### Not verified
 
 - The card's three states and the "Condition" row were not seen in a browser: no unit was hungry in a game reached at the table. `python3 table/check_screen.py` passes; it does not open a unit's card.
+
+## The architect's rulings
+
+Read on Nov 21, 2026: the one function in full (`sim-core`, `condition.rs`), its callers in the fight, the work and training, and the build's account of what moved.
+
+1. **The hand calculation holds in every statement,** and the build's seven readings are accepted.
+2. **The unit's line gives its fighting share as well as its condition,** left out when it is one. Rule 16 named only the condition; the card of rule 18 shows the share and cannot work it without the figures, so the line must give it. It is a side's own unit's and shows nothing of the enemy.
+3. **Scenario 119's property that no game on file moves is one test, not two.** Its words stand as written; the list of files that may give the figures of hunger, which is the test's and not the statement's, gains scenario 122's. The test set aside and its copy are made one.
+4. **What the rule does to the 39 days, in the table's copies:** no fight, no loss to hunger and no base's holder changes in any of the three. What changes is work: Japanese construction units that are cut off and fed nothing now make half their work, less their condition, where they made none. In one copy they finish an airfield west of the Lunga on day 21 that they did not finish before; no aircraft come to it. That men fed nothing do half a day's work for weeks is the weak side of a figure that rests on no source, and it is the first thing to look at if `unfed_fighting_share` is moved.
+5. **Not seen:** the card's "Hungry", "Short of food" and "Mending" rows and its "Condition" row in a browser. No unit was hungry in any game reached at the table.
