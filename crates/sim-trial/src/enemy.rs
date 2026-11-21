@@ -743,6 +743,9 @@ pub(crate) fn make(
                 supply_reserve_t: Fixed::ZERO,
                 fuel_reserve_t: Fixed::ZERO,
                 ammunition_t: Fixed::ZERO,
+                // Whether the enemy has landed rations there is not known:
+                // a base of the picture has had none (decision 0205, 5).
+                rations_landed: false,
             },
         );
         making.assumptions.push(Assumption::EnemyBase {

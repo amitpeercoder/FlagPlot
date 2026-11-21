@@ -391,6 +391,11 @@ pub struct Base {
     /// (decision 0122, 1). 0 unless the scenario gives some: a base with
     /// none rearms nobody. Added at the end.
     pub ammunition_t: Fixed,
+    /// Whether men's rations have been landed into the base (decision 0205,
+    /// 4 and 5): set by the first landing of men at it, where the hunger
+    /// figures are given, so that a base is given rations once. False at
+    /// the start for every base. Added at the end.
+    pub rations_landed: bool,
 }
 
 /// The work made at a base on one day for the two jobs the next day reads
@@ -430,6 +435,7 @@ impl Base {
             supply_reserve_t: Fixed::ZERO,
             fuel_reserve_t: Fixed::ZERO,
             ammunition_t: Fixed::ZERO,
+            rations_landed: false,
         }
     }
 

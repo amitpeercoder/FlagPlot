@@ -615,6 +615,10 @@ impl World {
                 .map(|base| base.id)
         });
         if let Some(base) = existing {
+            // A base that stands is given the men's rations at the first
+            // landing of men there, citing the unload order and the force's
+            // arrival (decision 0205, 4 and 5, as corrected).
+            self.land_rations(day, pulse, p, base, causes.to_vec());
             return (divided, None, base);
         }
         // Nothing held apart until its day is a base (decision 0195, 18): a
@@ -651,24 +655,28 @@ impl World {
             causes.to_vec(),
             None,
         );
-        self.land_rations(day, pulse, p, id, formed);
+        self.land_rations(day, pulse, p, id, vec![Cause::Event(formed)]);
         (divided, Some(formed), id)
     }
 
-    /// A landing that forms a base puts the men's rations into it (decision
-    /// 0205, 4, 5 and 10): the men aboard the ships of the force that forms
-    /// it, at this moment, times `rations_landed_nights` times each man's
-    /// daily charge, as supply in the stock of the base formed, once.
-    /// Recorded as `RationsLanded`, citing the base formed. Only where the
-    /// ground figures give the hunger figures, and only where it puts
-    /// something down.
+    /// The first landing of men at a base puts their rations into it
+    /// (decision 0205, 4, 5 and 10, as corrected by the architect on Nov 21,
+    /// 2026): the men aboard the ships of the force, at the moment its
+    /// first man lands there, times `rations_landed_nights` times each
+    /// man's daily charge, as supply in the base's stock, whether the
+    /// landing formed the base or it stood already. A base is given rations
+    /// once: the base's `rations_landed` is set, and a base that has it set
+    /// is given none. Recorded as `RationsLanded`, citing `causes`: the
+    /// `BaseFormed` where the base was formed, the unload order and the
+    /// force's arrival where it stood. Only where the ground figures give
+    /// the hunger figures, and only where it puts something down.
     fn land_rations(
         &mut self,
         day: u32,
         pulse: Pulse,
         p: &Participant,
         base: BaseId,
-        formed: EventId,
+        causes: Vec<Cause>,
     ) {
         let Some(figures) = self.ref_data.ground else {
             return;
@@ -676,6 +684,9 @@ impl World {
         let Some(hunger) = figures.hunger else {
             return;
         };
+        if self.truth.bases[&base].rations_landed {
+            return;
+        }
         // Each unit's men aboard the force's ships, in unit order.
         let mut aboard: BTreeMap<LandUnitId, u32> = BTreeMap::new();
         for ship in &p.ships {
@@ -698,11 +709,13 @@ impl World {
         if supply_t <= Fixed::ZERO {
             return;
         }
-        self.truth
+        let landed_into = self
+            .truth
             .bases
             .get_mut(&base)
-            .expect("the base formed exists")
-            .supply_t += supply_t;
+            .expect("the base landed at exists");
+        landed_into.supply_t += supply_t;
+        landed_into.rations_landed = true;
         let weighted = weighted_men != Fixed::from_int(i64::from(men));
         let breakdown = self.config.record_breakdowns.then(|| Breakdown {
             factors: [
@@ -739,7 +752,7 @@ impl World {
                 nights: hunger.rations_landed_nights,
                 supply_t,
             },
-            vec![Cause::Event(formed)],
+            causes,
             breakdown,
         );
     }

@@ -267,7 +267,8 @@ const fn speed_code(speed: SpeedSetting) -> u8 {
 /// `available_from`, and the task force order `fuel_from` (code 19, in the
 /// agent's table) (decision 0201);
 /// version 53 adds a land unit's nights of hunger, `hunger_nights`, after its
-/// formation (decision 0205, 11).
+/// formation, and a base's `rations_landed` after its `ammunition_t`
+/// (decision 0205, 11).
 ///
 /// What is held apart until its day (decision 0195, 23) does not raise the
 /// version: it is hashed last, after the domain, and only where something is
@@ -580,6 +581,7 @@ fn name_every_field(world: &World) {
             supply_reserve_t: _,
             fuel_reserve_t: _,
             ammunition_t: _,
+            rations_landed: _,
         } = base;
         if let Some(DayWork {
             day: _,
@@ -1760,6 +1762,8 @@ pub(crate) fn hash_base(h: &mut StateHasher, base: &Base) {
     h.i64(base.fuel_reserve_t.raw());
     // After the reserves (decision 0122).
     h.i64(base.ammunition_t.raw());
+    // After the ammunition (decision 0205, 11).
+    h.u8(u8::from(base.rations_landed));
 }
 
 /// One `AirGroup`, every field in one fixed order. Used for the truth state and for

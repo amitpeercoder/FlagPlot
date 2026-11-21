@@ -2035,6 +2035,8 @@ impl Scenario {
                     }
                     None => Fixed::ZERO,
                 },
+                // No men's rations landed yet (decision 0205, 5).
+                rations_landed: false,
                 ammunition_t: match &spec.ammunition_t {
                     Some(quantity) => {
                         let tons = quantity

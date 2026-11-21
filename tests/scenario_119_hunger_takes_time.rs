@@ -850,10 +850,10 @@ fn statement_10_whatever_number_of_men_are_ashore_by_then() {
     assert_eq!(played.stock(1, 2), n(45));
 }
 
-/// 11. A base that stands gets none: a second force with 1,000 men landing at
+/// 11. A base is given rations once: a second force with 1,000 men landing at
 /// P on a later day (day 3) adds nothing to P's stock but what it unloads.
 #[test]
-fn statement_11_a_base_that_stands_gets_none_at_p() {
+fn statement_11_a_base_is_given_rations_once_at_p() {
     // T2: two transports at (7,0) with W, 1,000 men, and 10 t of supply in
     // its first ship, going to P on day 3.
     let text = with_t_and_u(&text());
@@ -881,27 +881,58 @@ fn statement_11_a_base_that_stands_gets_none_at_p() {
     assert_eq!(played.formed().len(), 1);
 }
 
-/// 11, at Q: a force landing 600 men at Q, a base at the start, brings none:
-/// Q's stock is nothing after the landing, and no record of rations is made.
+/// 11, at Q: a force landing 1,000 men at Q, a base at the start at which no
+/// men have been landed, brings 15 t at its first man; a force landing men at
+/// Q after that brings none.
 #[test]
-fn statement_11_a_base_that_stands_gets_none_at_q() {
-    let text = with_force(&text(), 1, 1, 1, 9, 0);
-    let text = with_unit_aboard(&text, 4, 600, 1);
+fn statement_11_a_base_is_given_rations_once_at_q() {
+    // Force 1: two transports at (9,0) with X, 1,000 men (600 and 400),
+    // going to Q on day 1. Force 3: one transport at (9,0) with Y, 600
+    // men, going to Q on day 2.
+    let text = with_force(&text(), 1, 1, 2, 9, 0);
+    let text = with_unit_aboard(&text, 4, 1000, 1);
     let text = with_go(&text, 1, 1, 10);
-    let played = play(&with_days(&text, 2));
+    let text = with_force(&text, 3, 3, 1, 9, 0);
+    let text = with_unit_aboard(&text, 5, 600, 3);
+    let text = with_go(&text, 3, 2, 10);
+    let played = play(&with_days(&text, 3));
     assert!(played.formed().is_empty(), "no base is formed at Q");
-    assert!(played.rations().is_empty());
+    // One record of rations in the game: Q's, for force 1's 1,000 men at its
+    // first man: 1,000 x 3 x 0.005 t, 15 t.
+    let rations = played.rations();
+    assert_eq!(rations.len(), 1, "a base is given rations once");
+    let (event, at, men, nights, tons) = rations[0];
+    assert_eq!((at, men, nights, tons), (base(1), 1000, n(3), n(15)));
+    assert_eq!(event.day, 1);
+    // It cites the landing at a base that stands: the unload order (and the
+    // force's arrival), no base formed.
+    assert!(
+        event.causes.iter().any(|c| matches!(c, Cause::Order(_))),
+        "it cites the unload order"
+    );
+    assert!(cited(event)
+        .iter()
+        .all(|id| !matches!(played.event(*id).kind, EventKind::BaseFormed { .. })));
+    // The 15 t are in Q's stock from that pulse: nothing else came in and
+    // no night's charge has fallen since.
+    let pulse = event.pulse.expect("in a pulse");
+    let next = match pulse {
+        Pulse::Night => (1, Pulse::Morning),
+        Pulse::Morning => (1, Pulse::Afternoon),
+        Pulse::Afternoon => (2, Pulse::Night),
+    };
+    assert_eq!(
+        played.before(next.0, next.1).bases[&base(1)].supply_t,
+        n(15)
+    );
+    assert!(played.before(next.0, next.1).bases[&base(1)].rations_landed);
+    // Force 3's men are landed at Q after that and bring none.
     let landed = played
         .events
         .iter()
-        .any(|e| matches!(e.kind, EventKind::MenLanded { hex: Q, unit: u, .. } if u == unit(4)));
-    assert!(landed, "the men are landed at Q");
-    assert_eq!(
-        played.before(1, Pulse::Morning).land_units[&unit(4)].men_ashore,
-        600
-    );
-    assert_eq!(played.stock(1, 1), Fixed::ZERO);
-    assert_eq!(played.stock(2, 1), Fixed::ZERO);
+        .any(|e| matches!(e.kind, EventKind::MenLanded { hex: Q, unit: u, .. } if u == unit(5)));
+    assert!(landed, "force 3's men are landed at Q");
+    assert!(!played.end(0).bases[&base(1)].rations_landed);
 }
 
 /// 12. With the rations, the first nights are fed: with all of U ashore at P

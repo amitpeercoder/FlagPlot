@@ -1322,7 +1322,7 @@ pub(crate) fn seen(kind: &EventKind, side: Side, owners: &Owners, knows_fight: b
         // Replacement men joining a unit are told to the unit's side, whole,
         // and to the enemy not at all (decision 0197, 8).
         EventKind::MenJoined { side: owner, .. } => whole_if(*owner == side),
-        // Rations a landing put into its base and a unit's nights of hunger
+        // Rations a landing put into a base and a unit's nights of hunger
         // are the side's own, whole, and the enemy is told nothing of either
         // (decision 0205, 10).
         EventKind::RationsLanded { side: owner, .. } => whole_if(*owner == side),

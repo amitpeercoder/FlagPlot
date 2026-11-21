@@ -2166,12 +2166,14 @@ pub enum EventKind {
         giver: TaskForceId,
         reason: FuelOrderEnd,
     },
-    /// A landing that formed `base` put the rations of the men aboard the
-    /// ships of `task_force` into its stock (decision 0205, 4 and 10): the
-    /// `men` aboard at the moment it was formed, `nights` of their daily
-    /// charge, `supply_t` in all. Recorded only where the hunger figures are
-    /// given. Cites the `BaseFormed`. The side's own, whole; the enemy is
-    /// told nothing. Added at the end.
+    /// The first landing of men at `base` put the rations of the men aboard
+    /// the ships of `task_force` into its stock (decision 0205, 4, 5 and 10):
+    /// the `men` aboard at the moment its first man landed there, `nights` of
+    /// their daily charge, `supply_t` in all; a base is given them once.
+    /// Recorded only where the hunger figures are given. Cites the
+    /// `BaseFormed` where the landing formed the base, and the unload order
+    /// and the force's arrival where the base stood. The side's own, whole;
+    /// the enemy is told nothing. Added at the end.
     RationsLanded {
         base: BaseId,
         side: Side,
