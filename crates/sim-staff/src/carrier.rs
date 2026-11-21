@@ -838,6 +838,9 @@ impl Day<'_, '_> {
                                         .would_change("less fuel aboard")
                                         .done(),
                                 ));
+                                    // The way back to a station the staff
+                                    // chose (decision 0203, 1).
+                                    self.choose_the_way(task, force, hex, risk, &mut route);
                                 } else {
                                     fuelling = true;
                                     notes.push(
@@ -1316,7 +1319,37 @@ impl Day<'_, '_> {
                         }
                     }
                 }
+                // A way the staff gave to its station, kept while the force is
+                // under way on it (decision 0203, 24).
+                let kept = route.is_none()
+                    && !going_home
+                    && !at_hex
+                    && !at_home
+                    && !stays
+                    && !dry
+                    && at_sea_fuel.is_none()
+                    && self.chooses_way(task, risk)
+                    && crate::way::on_kept_way(force, hex);
+                if kept {
+                    let points = crate::way::remaining(force);
+                    let points_text = points
+                        .iter()
+                        .map(ToString::to_string)
+                        .collect::<Vec<_>>()
+                        .join(", ");
+                    let note = serving(task, &plan)
+                        .evidence(format!("{id} is at {here}, under way on its route through {points_text}"), today)
+                        .binding("a way given to a station the staff chose is kept while the force is under way on it")
+                        .worked(format!("{intent_words}: {id} is at {here}, under way to {hex} by the way the staff gave it, through {points_text}; the way is kept, so it is given no route and no speed."))
+                        .would_change("the force stopped, or its route ending elsewhere")
+                        .done();
+                    if close_words.is_some() && place_note.is_none() {
+                        place_note = Some(notes.len());
+                    }
+                    notes.push(note);
+                }
                 if route.is_none()
+                    && !kept
                     && !going_home
                     && !at_hex
                     && !at_home
@@ -1342,6 +1375,15 @@ impl Day<'_, '_> {
                             .would_change("the force in the hex")
                             .done(),
                     ));
+                    // The way, where the force is stopped or its route ends
+                    // elsewhere (decision 0203, 1 and 24); a force under way
+                    // on the one point of its station is routed as today.
+                    let on_its_way = !stopped(force)
+                        && force.route.waypoints.last() == Some(&hex)
+                        && force.route.next_index < force.route.waypoints.len();
+                    if !on_its_way {
+                        self.choose_the_way(task, force, hex, risk, &mut route);
+                    }
                 }
                 // The words on closing join the reason it stays on its task,
                 // or stand as a reason of their own.
@@ -1434,12 +1476,22 @@ impl Day<'_, '_> {
                 // Whether it goes to its station today, and at what speed:
                 // a route to it given this morning, or one it steams on.
                 let to_station: Option<SpeedSetting> = match &route {
-                    Some((waypoints, speed, _)) if waypoints.as_slice() == [hex] => {
+                    Some((waypoints, speed, _)) if waypoints.last() == Some(&hex) => {
                         Some(speed.unwrap_or(force.speed))
                     }
                     Some(_) => None,
                     None if crate::stand::bound_for(force) == Some(hex) => Some(force.speed),
                     None => None,
+                };
+                // The waypoints the search on the way reads (decision 0203,
+                // 25): the route given this morning, a way kept, or the
+                // station alone.
+                let ahead_points: Vec<Hex> = match &route {
+                    Some((waypoints, _, _)) => waypoints.clone(),
+                    None if crate::way::on_kept_way(force, hex) => {
+                        crate::way::remaining(force).to_vec()
+                    }
+                    None => vec![hex],
                 };
                 if let Some((waypoints, speed, reason)) = route {
                     if let Some(speed) = speed.filter(|s| *s != force.speed) {
@@ -1480,7 +1532,10 @@ impl Day<'_, '_> {
                     let knots = view
                         .forecast_passage(id, hex, Some(speed))
                         .map_or(Fixed::ZERO, |f| f.speed_kn);
-                    let path = view.sea_path(here, hex).unwrap_or_default();
+                    // The engine's path through the waypoints that remain
+                    // (decision 0203, 25): the route given this morning, a
+                    // way kept, or the station alone.
+                    let path = crate::way::path_through(view, here, &ahead_points);
                     for w in crate::station::way_ahead(&path, hex, knots) {
                         threats.push(Threat {
                             hex: w,

@@ -181,7 +181,7 @@ pub(crate) struct CarrierOutcome {
 }
 
 /// What the end is aimed at, as the choice reads it.
-struct Aim {
+pub(crate) struct Aim {
     /// The hex the reach is measured from: the base, or the centre of the
     /// waters (or its nearest sea hex).
     centre: Hex,
@@ -204,11 +204,11 @@ struct Chosen {
 }
 
 /// One candidate's fuel against its passage out and home (rule 11).
-struct FuelRead {
-    in_fuel: bool,
-    words: String,
+pub(crate) struct FuelRead {
+    pub(crate) in_fuel: bool,
+    pub(crate) words: String,
     /// The ships short, in words.
-    short: Vec<String>,
+    pub(crate) short: Vec<String>,
 }
 
 impl Day<'_, '_> {
@@ -476,7 +476,7 @@ impl Day<'_, '_> {
     }
 
     /// What `end` is aimed at, read from the side's map.
-    fn aim_of(&self, end: &Intent) -> Option<Aim> {
+    pub(crate) fn aim_of(&self, end: &Intent) -> Option<Aim> {
         match end.kind {
             IntentKind::Neutralise { target } => {
                 let hex = self
@@ -527,7 +527,7 @@ impl Day<'_, '_> {
 
     /// Rules 7 to 9: the circles of danger, as the area's picture holds the
     /// enemy, but for what the order is aimed at.
-    fn circles_for(&self, aim: &Aim) -> Vec<Circle> {
+    pub(crate) fn circles_for(&self, aim: &Aim) -> Vec<Circle> {
         let side = self.view.side();
         let mut circles: Vec<Circle> = self
             .view
@@ -785,7 +785,7 @@ impl Day<'_, '_> {
 
     /// Rule 11: a force stopped at a base of the side that can fuel it is
     /// weighed with its ships full.
-    fn weighed_full(&self, force: &TaskForce) -> bool {
+    pub(crate) fn weighed_full(&self, force: &TaskForce) -> bool {
         if !stopped(force) {
             return false;
         }
@@ -808,20 +808,10 @@ impl Day<'_, '_> {
         full: bool,
     ) -> FuelRead {
         let id = force.id;
-        let Some((home, home_hex)) = home else {
-            return FuelRead {
-                in_fuel: true,
-                words: format!("{id} has no home port the staff knows, so its fuel could not be measured against a passage home"),
-                short: Vec::new(),
-            };
-        };
-        let home_text = base_words(self.view, home);
+        if home.is_none() {
+            return no_home_read(id);
+        }
         let here = force.position();
-        let refused = |words: String| FuelRead {
-            in_fuel: false,
-            words,
-            short: vec![format!("{id} as a whole")],
-        };
         // The passage out (decision 0130, 1, as the carrier doctrine sails).
         let (out_nm, knots, speed) = if to == here && stopped(force) {
             (Fixed::ZERO, Fixed::ZERO, SpeedSetting::Cruise)
@@ -833,8 +823,50 @@ impl Day<'_, '_> {
             };
             match self.view.forecast_route(id, &[to], Some(speed)) {
                 Some(f) if f.refusal.is_none() => (f.route_nm, f.speed_kn, speed),
-                _ => return refused(format!("the engine refuses a passage of {id} to {to}")),
+                _ => {
+                    return FuelRead {
+                        in_fuel: false,
+                        words: format!("the engine refuses a passage of {id} to {to}"),
+                        short: vec![format!("{id} as a whole")],
+                    }
+                }
             }
+        };
+        self.fuel_read(
+            force,
+            to,
+            (out_nm, knots, speed),
+            risk,
+            home,
+            home_field,
+            full,
+        )
+    }
+
+    /// Rule 11 on a passage out already measured, `out` its charged miles,
+    /// the knots it is steamed at and the setting: what [`Day::fuel_for`]
+    /// reads, and decision 0203's rule 14 on a way's own miles.
+    #[allow(clippy::too_many_arguments)]
+    pub(crate) fn fuel_read(
+        &self,
+        force: &TaskForce,
+        to: Hex,
+        out: (Fixed, Fixed, SpeedSetting),
+        risk: Risk,
+        home: Option<(sim_core::ids::BaseId, Hex)>,
+        home_field: Option<&BTreeMap<Hex, u32>>,
+        full: bool,
+    ) -> FuelRead {
+        let id = force.id;
+        let (out_nm, knots, speed) = out;
+        let Some((home, home_hex)) = home else {
+            return no_home_read(id);
+        };
+        let home_text = base_words(self.view, home);
+        let refused = |words: String| FuelRead {
+            in_fuel: false,
+            words,
+            short: vec![format!("{id} as a whole")],
         };
         let Some(home_nm) = home_field
             .and_then(|field| self.view.sea_charged_nm_in(field, to, home_hex))
@@ -890,6 +922,18 @@ impl Day<'_, '_> {
             ),
             short,
         }
+    }
+
+    /// The home port of `force` as the fuel test reads it (rule 11): the
+    /// base and its hex, and the sea distances to it.
+    pub(crate) fn fuel_home(
+        &self,
+        force: &TaskForce,
+    ) -> (Option<HomePort>, Option<BTreeMap<Hex, u32>>) {
+        let home = home_of(self.view, force).map(|(b, _)| b);
+        let home_hex = home.and_then(|b| self.view.bases().find(|x| x.id == b).map(|x| x.hex));
+        let home_field = home_hex.map(|h| self.view.sea_distances_to(h));
+        (home.zip(home_hex), home_field)
     }
 
     /// Rule 18: the task to operate carriers at the station, formed under
@@ -1004,6 +1048,18 @@ impl Day<'_, '_> {
             of: format!("the base {} is to neutralise", parent.id),
             binding: "the base to neutralise".to_string(),
         })
+    }
+}
+
+/// A home port and its hex.
+pub(crate) type HomePort = (sim_core::ids::BaseId, Hex);
+
+/// The fuel read of a force with no home port the staff knows (rule 11).
+fn no_home_read(id: TaskForceId) -> FuelRead {
+    FuelRead {
+        in_fuel: true,
+        words: format!("{id} has no home port the staff knows, so its fuel could not be measured against a passage home"),
+        short: Vec::new(),
     }
 }
 
