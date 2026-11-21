@@ -508,7 +508,16 @@ fn digest(bytes: &[u8]) -> u64 {
 /// the numbers it works.
 #[test]
 fn the_map_arithmetic_puts_each_row_in_its_hex() {
-    use map_tool::projection::{hex_of, to_nm};
+    // The projection of the map the scenario is on, from the map's header
+    // (decision 0199): the present map's.
+    let projection = map_tool::frame::Frame::of_map(
+        &std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../data/map/south_pacific.csv"),
+    )
+    .unwrap()
+    .expect("the map has a frame")
+    .projection();
+    let to_nm = |lat: f64, lon: f64| projection.to_nm(lat, lon);
+    let hex_of = |lat: f64, lon: f64| projection.hex_of(lat, lon);
     let near = |a: f64, b: f64| (a - b).abs() < 0.01;
     // 10 S, 163 E: east 176.07, north 120; r -3.46, q 6.13.
     let (e, nn) = to_nm(-10.0, 163.0);

@@ -21,6 +21,16 @@ A side of a hex may be closed. A closed side is stored for each of the six direc
 
 A side sees: the map is common knowledge. Neither side's events change it.
 
+### Where a map lies
+
+A scenario names its own map file. There are two kinds. A generated map (`.csv`) is made by the map tool from public coastline data, and its header gives its frame: the latitude and longitude of the centre of hex (0,0), the factor for longitude (the cosine of the centre's latitude, as a literal to six places) and its extent. The game has two generated maps: the south-west Pacific (`data/map/south_pacific.csv`, centred at 12 S, 160 E) and the central Pacific about Midway (`data/map/midway.csv`, centred at 28 30 N, 178 30 E, from 18 N to 38 N and from 163 E across the date line to 166 W). A hand-written map (`.toml`, the placeholder maps) is on no sea and has no frame. [0017, 0199]
+
+No rule reads a map's frame. Distances are counted in hexes, darkness is by the clock (chapter 1) and a hex's latitude and longitude are stored and not read. The frame is for the tools that put a position on a map (the map tool, the check of passages, the export, the viewer and the table). A hex's longitude in the file, and as a side's tools give it, is west negative, from -180 to 180. [0199]
+
+A generated map is land where the sampling of the coastline finds it (decision 0017): a hex is coast when at least one of its sampled points, 2 miles apart, is land. A place too small for the sampling can be made land enough by a land mark of the map's frame: its hex, if no point of it is land, is coast with land percentage 0, and the header lists it under "Marked land". The Midway map marks Midway and Wake; the south-west Pacific map marks none. [0199]
+
+A side sees: the map is common knowledge, its frame with it.
+
 ### The six directions
 
 Hexes are pointy-topped, in axial coordinates (q, r), 40 miles between centres. The six neighbours of a hex, in the fixed order every tie is broken in, are east (1,0), north-east (1,-1), north-west (0,-1), west (-1,0), south-west (-1,1) and south-east (0,1). North is the direction of falling r. The 40 miles is a constant in `hex.rs`. The order is also fixed in `hex.rs` and changing it changes every route. [0005, 0017]

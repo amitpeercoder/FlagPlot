@@ -32,7 +32,7 @@ use sim_core::{DaySummary, Staffs, StartingContact, StartingEstimate, World};
 
 use crate::commands::{BelievedIntentSpec, CommandSpec};
 use crate::error::DataError;
-use crate::map::{load_land_links, load_map};
+use crate::map::{load_land_links, load_map, read_map_frame, MapFrame};
 use crate::quantity::Quantity;
 use crate::reference::{
     load_air_combat_figures, load_air_supply_figures, load_air_upkeep_figures, load_aircraft_types,
@@ -129,6 +129,8 @@ struct ScenarioFile {
     arrival: Vec<ArrivalSpec>,
     #[serde(default)]
     supply_line: Vec<SupplyLineSpec>,
+    #[serde(default)]
+    men_replacement: Vec<MenReplacementSpec>,
     #[serde(default)]
     task_force: Vec<TaskForceSpec>,
     #[serde(default)]
@@ -495,6 +497,9 @@ struct LandUnitSpec {
     /// The formation the unit belongs to (decision 0140, 7): a formation of
     /// its side.
     formation: Option<u32>,
+    /// The men the unit should have (decision 0197, 1 and 19): not below
+    /// its `men`. Without it, its `men`.
+    establishment: Option<u32>,
 }
 
 /// A land unit's skills (decision 0098), each optional, defaulting to 2:
@@ -589,6 +594,23 @@ struct SupplyLineSpec {
     /// Tons of fuel a day. Defaults to 0.
     fuel_t: Option<Quantity>,
     /// Defaults to 1.
+    first_day: Option<u32>,
+    /// Defaults to the game's last day.
+    last_day: Option<u32>,
+    /// Defaults to the base's side at the start.
+    side: Option<SideSpec>,
+}
+
+/// A stream of replacement men: so many men a day who join the land units
+/// of its side ashore at a base that are below their establishment
+/// (decision 0197).
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct MenReplacementSpec {
+    base: u32,
+    /// Men a day, a whole number above 0.
+    men: u32,
+    /// Defaults to 1; nothing is given on day 1.
     first_day: Option<u32>,
     /// Defaults to the game's last day.
     last_day: Option<u32>,
@@ -1643,6 +1665,10 @@ pub struct Scenario {
     /// A trial's figures (decision 0174), where the scenario names them:
     /// the scenario's, not the world's, never hashed and read by no rule.
     trial_figures: Option<TrialFigures>,
+    /// The frame of the map the scenario is played on, from the map's header
+    /// (decision 0199, 18): `None` for a hand-written map. The tools' and
+    /// the export's, never the world's, never hashed and read by no rule.
+    map_frame: Option<MapFrame>,
 }
 
 /// How a scenario is loaded, beyond the file itself.
@@ -1760,6 +1786,7 @@ impl Scenario {
             }
         };
         let mut map = load_map(&folder.join(&file.map))?;
+        let map_frame = read_map_frame(&folder.join(&file.map))?;
         let land_links_file = file.land_links.as_ref().map(|name| folder.join(name));
         if let Some(links) = &land_links_file {
             load_land_links(links, &mut map)?;
@@ -2315,6 +2342,10 @@ impl Scenario {
         // Units are put aboard in unit order, each over the force's ships in
         // ship order.
         let mut to_put_aboard: Vec<(LandUnitId, TaskForceId, u32)> = Vec::new();
+        // Each unit's establishment, kept below only where the scenario has
+        // a stream of men or names one (decision 0197, 1).
+        let mut establishments: BTreeMap<LandUnitId, u32> = BTreeMap::new();
+        let mut named_establishment = false;
         for spec in unit_specs {
             let id = LandUnitId::new(spec.id);
             if spec.id == 0 || spec.id >= MADE_IDS_FLOOR {
@@ -2328,6 +2359,15 @@ impl Scenario {
             if spec.men == 0 {
                 return Err(fail(format!("{id} has no men")));
             }
+            let establishment = spec.establishment.unwrap_or(spec.men);
+            if establishment < spec.men {
+                return Err(fail(format!(
+                    "{id} has an establishment of {establishment}, below its {} men",
+                    spec.men
+                )));
+            }
+            establishments.insert(id, establishment);
+            named_establishment |= spec.establishment.is_some();
             let side: Side = spec.side.into();
             let mut unit = LandUnit::new(id, spec.name.clone(), side, 0, None);
             unit.available_from = available_day(spec.available_from, id).map_err(&fail)?;
@@ -2773,6 +2813,68 @@ impl Scenario {
                 first_day,
                 last_day,
             });
+        }
+
+        // Streams of replacement men come after bases are known (decision
+        // 0197, 2).
+        for (index, spec) in file.men_replacement.iter().enumerate() {
+            let number = index + 1;
+            let base_id = BaseId::new(spec.base);
+            let base = truth.bases.get(&base_id).ok_or_else(|| {
+                fail(format!(
+                    "men replacement {number} is at unknown base {}",
+                    spec.base
+                ))
+            })?;
+            let side: Side = spec.side.map_or(base.side, Into::into);
+            if spec.men == 0 {
+                return Err(fail(format!(
+                    "men replacement {number} gives no men: men must be above 0"
+                )));
+            }
+            let first_day = spec.first_day.unwrap_or(1);
+            let last_day = spec.last_day.unwrap_or(file.days);
+            if first_day < 1 {
+                return Err(fail(format!(
+                    "men replacement {number} has a first day below 1"
+                )));
+            }
+            if first_day > file.days || last_day > file.days {
+                return Err(fail(format!(
+                    "men replacement {number} has days {first_day} to {last_day}, past the game's last day {}",
+                    file.days
+                )));
+            }
+            if last_day < first_day {
+                return Err(fail(format!(
+                    "men replacement {number} has its last day {last_day} before its first day {first_day}"
+                )));
+            }
+            truth
+                .men_replacement
+                .streams
+                .push(sim_core::state::MenStream {
+                    side,
+                    base: base_id,
+                    men_per_day: spec.men,
+                    first_day,
+                    last_day,
+                });
+        }
+        if !truth.men_replacement.streams.is_empty() || named_establishment {
+            truth.men_replacement.units = establishments
+                .into_iter()
+                .map(|(id, establishment)| {
+                    (
+                        id,
+                        sim_core::state::Strength {
+                            establishment,
+                            joined: 0,
+                            last_fought: None,
+                        },
+                    )
+                })
+                .collect();
         }
 
         // Arrivals come after the air groups are known (decision 0041).
@@ -3341,6 +3443,10 @@ impl Scenario {
         truth
             .supply_lines
             .sort_by_key(sim_core::state::SupplyLine::order_key);
+        truth
+            .men_replacement
+            .streams
+            .sort_by_key(sim_core::state::MenStream::order_key);
 
         // Islands are map data (decision 0151, 1); they are added before the
         // world is built, so both sides' maps have them.
@@ -3822,7 +3928,14 @@ impl Scenario {
             believed_intents,
             believed_men: believed_men_list,
             trial_figures,
+            map_frame,
         })
+    }
+
+    /// The frame of the scenario's map, from its header (decision 0199):
+    /// `None` for a hand-written map, which has none.
+    pub fn map_frame(&self) -> Option<&MapFrame> {
+        self.map_frame.as_ref()
     }
 
     /// A trial's figures (decision 0174), where the scenario names them.
@@ -3964,6 +4077,7 @@ impl Scenario {
             believed_intents: self.believed_intents.clone(),
             believed_men: self.believed_men.clone(),
             trial_figures: self.trial_figures.clone(),
+            map_frame: self.map_frame,
         })
     }
 

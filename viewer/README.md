@@ -20,6 +20,8 @@ Add `--seed N` for another seed, and `--labels data/map/south_pacific_anchors.cs
 
 `viewer/replays/` is git-ignored.
 
+**The map's frame (decision 0199).** A replay of a generated map has `map.frame`: `centre_lat`, `centre_lon` (where hex (0,0) is centred), `factor` (the map's factor for longitude, the cosine of the centre's latitude) and `west` and `east` (the longitudes of its edges), all numbers and all longitudes in the map's run: a map that crosses the date line gives longitudes above 180 (the Midway map's are 163 to 194). The viewer places a place name in the hex nearest to it by `factor`, with the label's and the hexes' longitudes both brought into the run (360 added west of `west` where `east` is above 180), and gives a hex's longitude as east or west. A replay with no `map.frame` (a placeholder map, or a file made before it) is placed by the cosine of 12 degrees as before. `check.js` recomputes the nearest hex with the replay's own factor and fails a version 6 replay of a real map that has no frame.
+
 ## Open it
 
 - Open `viewer/index.html` in a browser (straight from disk is fine), then pick a replay file with the button, or drop it on the page.
@@ -110,3 +112,4 @@ The events `force_entered` (`{ force, side, hex, base?, ships, air_groups, land_
 
 The event `stock_received` (`{ base, side, supply_t, fuel_t }`, decision 0196) is a base's stock from off the map, on a night a supply line names; it has no cause and is shown in the event list in the engine's words, and the viewer draws nothing for it.
 
+The event `men_joined` (`{ unit, side, base, men, men_after, experience_before, experience_after, joined }`, decision 0197) is replacement men joining a land unit at a base on a night a stream names; it has no cause and is shown in the event list in the engine's words, and the viewer draws nothing for it beyond the unit's men in the next state.

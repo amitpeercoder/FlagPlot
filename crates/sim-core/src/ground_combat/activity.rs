@@ -285,6 +285,8 @@ impl World {
         }
         unit.experience = experience;
         if raised {
+            // The count of men joined begins again (decision 0197, 12).
+            self.note_experience_raised(unit_id);
             self.events.record(
                 day,
                 None,

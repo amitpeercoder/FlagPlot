@@ -2077,6 +2077,24 @@ pub enum EventKind {
         supply_t: Fixed,
         fuel_t: Fixed,
     },
+    /// Replacement men from a base's stream joined a land unit ashore there
+    /// on a night (decision 0197, 3, 8 and 12): `men` joined, the unit has
+    /// `men_after` ashore and aboard together, its experience went from
+    /// `experience_before` to `experience_after` (one level less on the night
+    /// its count of men joined reached its share of the establishment, else
+    /// unchanged), and `joined` is its count after the night, 0 when it lost
+    /// a level. It cites no cause, as a stream of aircraft cites none. Its
+    /// own side's, whole; the enemy is told nothing. Added at the end.
+    MenJoined {
+        unit: LandUnitId,
+        side: Side,
+        base: BaseId,
+        men: u32,
+        men_after: u32,
+        experience_before: u8,
+        experience_after: u8,
+        joined: u32,
+    },
 }
 
 impl EventKind {
@@ -2600,6 +2618,9 @@ impl EventKind {
                 vec![*unit, EntityRef::Base(*base)]
             }
             EventKind::StockReceived { base, .. } => vec![EntityRef::Base(*base)],
+            EventKind::MenJoined { unit, base, .. } => {
+                vec![EntityRef::LandUnit(*unit), EntityRef::Base(*base)]
+            }
         }
     }
 }
@@ -4141,6 +4162,33 @@ impl fmt::Display for EventKind {
                 "{base} of the {} side received {supply_t} t of supply and {fuel_t} t of fuel by its supply line",
                 side.name()
             ),
+            EventKind::MenJoined {
+                unit,
+                side,
+                base,
+                men,
+                men_after,
+                experience_before,
+                experience_after,
+                joined,
+            } => {
+                write!(
+                    f,
+                    "{men} replacement men of the {} side joined {unit} at {base}: {men_after} men",
+                    side.name()
+                )?;
+                if experience_after == experience_before {
+                    write!(
+                        f,
+                        ", experience {experience_after}, {joined} joined since its experience last changed"
+                    )
+                } else {
+                    write!(
+                        f,
+                        ", experience from {experience_before} to {experience_after}"
+                    )
+                }
+            }
             EventKind::MenSurrenderedAshore { side, hex, men } => write!(
                 f,
                 "men of the {} side surrendered at {hex}: {men} men ashore in all",
