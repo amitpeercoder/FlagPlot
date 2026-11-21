@@ -631,6 +631,8 @@ struct RawException {
     row: i64,
     reason: String,
     agreed: String,
+    #[serde(default)]
+    later: bool,
 }
 
 /// One agreed exception to "read only preferred rows".
@@ -641,6 +643,10 @@ pub struct Exception {
     pub row: i64,
     pub reason: String,
     pub agreed: String,
+    /// The row begins after the list's date and the architect judged that
+    /// what it states was already so (decision 0200). It acts only on a list
+    /// dated before the row's `valid_from`, and never as a plain exception.
+    pub later: bool,
 }
 
 impl Exception {
@@ -743,6 +749,7 @@ fn parse_exceptions(
                 row: e.row,
                 reason: e.reason,
                 agreed: e.agreed,
+                later: e.later,
             });
         }
     }

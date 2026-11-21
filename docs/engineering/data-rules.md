@@ -17,6 +17,7 @@ Where figures come from, the order-of-battle facts, who settles them, and how th
 - **Cite what was read.** A figure a website quotes from a book cites the website. `docs/research/oob/source-policy.md` says which sources may be used.
 - **A source that disagrees gets its own row.** Rows are never overwritten to settle a disagreement. The architect settles it and writes the reason on the row (see "Who settles data" below).
 - **A value has to earn `preferred`.** A lone weak row is `unconfirmed`, and a rule may read it only if the rule says so.
+- **An exception is one row, one reason and the day it was agreed,** in `data/derivation/rules.toml`: it lets the derivation read a row the preference rules would not, and every figure resting on it says so in the sources file. The tool reads no row that begins after a list's date, so that a later fit does not leak back into an earlier battle. An exception may say `later = true` to read such a row for what did not change, with the reason it was already so; it acts only on a list dated before the row begins, it is refused where a row of the time can be read, and every figure resting on it is marked with the row's date (decision 0200).
 - **Engagement rows are history to test against.** A scenario may take starting positions, readiness and contacts already held from them. Its result is compared with the recorded outcome and is never scripted to match it.
 - **Run `oob-check` after any change to `data/oob`.**
 

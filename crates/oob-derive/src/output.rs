@@ -8,7 +8,7 @@ use crate::derive::{
     ShipResult, Value, AIR_FIGURES, AMMUNITION_NOT_LIMITING_ROUNDS, CARGO, FIGURES, KIND, RADAR,
     SURFACE_WEAPONS, WHOLE,
 };
-use crate::input::{List, Rules};
+use crate::input::{Exception, List, Rules};
 use crate::problem::{Kind, Problem};
 use crate::reading::Row;
 use crate::troops::{TROOP_FIGURE, TROOP_RULE};
@@ -341,6 +341,45 @@ pub struct Context<'a> {
     pub aircraft_used: &'a BTreeMap<(usize, String, u64), Row>,
     /// The achieved rates of fire (decision 0070), when the rules have them.
     pub fire_rate: Option<&'a crate::fire_rate::Achieved>,
+    /// Exceptions saying `later = true` that do nothing on this list
+    /// (decision 0200, 9).
+    pub idle_later: &'a [String],
+}
+
+/// One exception used, for the header: the row, its standing, the reason
+/// and the day agreed, and for one saying `later = true` the row's date.
+fn exception_line(e: &Exception, row: &Row) -> String {
+    let later = if e.later {
+        format!(
+            "; later = true: read from a row of a later date, valid from {} (decision 0200)",
+            row.from
+        )
+    } else {
+        String::new()
+    };
+    format!(
+        "  {} {}: {} row {} ({}); reason: {}; agreed {}{later}",
+        e.entity,
+        e.fact,
+        row.file,
+        row.id,
+        row.standing,
+        one_line(&e.reason),
+        e.agreed
+    )
+}
+
+/// The header lines for exceptions saying `later = true` that do nothing on
+/// this list; none when there are none.
+fn idle_lines(idle: &[String]) -> Vec<String> {
+    if idle.is_empty() {
+        return Vec::new();
+    }
+    let mut lines = vec![
+        "Exceptions saying later = true that do nothing on this list, the row they name not beginning after its date (decision 0200, 9):".to_string(),
+    ];
+    lines.extend(idle.iter().map(|text| format!("  {}", one_line(text))));
+    lines
 }
 
 pub fn render(ctx: &Context) -> Result<Outputs, Problem> {
@@ -446,16 +485,12 @@ pub fn render(ctx: &Context) -> Result<Outputs, Problem> {
         line("Exceptions used (decision 0020, 3):".to_string());
         for ((index, _, _), row) in used.iter() {
             let e = &rules.exceptions[*index];
-            line(format!(
-                "  {} {}: {} row {} ({}); reason: {}; agreed {}",
-                e.entity,
-                e.fact,
-                row.file,
-                row.id,
-                row.standing,
-                one_line(&e.reason),
-                e.agreed
-            ));
+            line(exception_line(e, row));
+        }
+    }
+    if !results.is_empty() {
+        for text in idle_lines(ctx.idle_later) {
+            line(text);
         }
     }
     if let (Some(block), Some(achieved), true) = (
@@ -682,6 +717,7 @@ fn aircraft_files(ctx: &Context) -> (Option<String>, Option<String>) {
         ctx.rules,
         ctx.aircraft,
         ctx.aircraft_used,
+        ctx.idle_later,
     );
     (Some(csv), Some(sources))
 }
@@ -693,6 +729,7 @@ fn render_aircraft(
     rules: &Rules,
     aircraft: &[AircraftResult],
     used: &BTreeMap<(usize, String, u64), Row>,
+    idle_later: &[String],
 ) -> (String, String) {
     let output = list.aircraft_output.as_deref().unwrap_or_default();
     let file_name = Path::new(output)
@@ -752,17 +789,11 @@ fn render_aircraft(
         line("Exceptions used (decision 0020, 3 and 0029, 5):".to_string());
         for ((index, _, _), row) in used.iter() {
             let e = &rules.exceptions[*index];
-            line(format!(
-                "  {} {}: {} row {} ({}); reason: {}; agreed {}",
-                e.entity,
-                e.fact,
-                row.file,
-                row.id,
-                row.standing,
-                one_line(&e.reason),
-                e.agreed
-            ));
+            line(exception_line(e, row));
         }
+    }
+    for text in idle_lines(idle_later) {
+        line(text);
     }
     if let Some(block) = &rules.search_radius {
         line(format!(
@@ -781,16 +812,7 @@ fn render_aircraft(
             line("Search radius exceptions used (decision 0075):".to_string());
             for ((index, _, _), row) in &own_used {
                 let e = &block.exceptions[*index];
-                line(format!(
-                    "  {} {}: {} row {} ({}); reason: {}; agreed {}",
-                    e.entity,
-                    e.fact,
-                    row.file,
-                    row.id,
-                    row.standing,
-                    one_line(&e.reason),
-                    e.agreed
-                ));
+                line(exception_line(e, row));
             }
         }
         let unsettled: Vec<(&str, &str)> = aircraft

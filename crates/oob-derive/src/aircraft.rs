@@ -449,8 +449,14 @@ impl Env<'_> {
         ))
     }
 
-    /// A yes or no fact as 1 or 0.
-    fn yes_no(&self, w: &mut Work, key: &str, attribute: &str) -> Option<(i64, Got<()>)> {
+    /// A yes or no fact as 1 or 0, and the note to give with it. For
+    /// `self_sealing_tanks`, `partial` reads as no (decision 0200, 12).
+    fn yes_no(
+        &self,
+        w: &mut Work,
+        key: &str,
+        attribute: &str,
+    ) -> Option<(i64, Got<()>, Option<String>)> {
         let read = match self.type_fact(key, attribute) {
             Ok(read) => read,
             Err(failure) => {
@@ -459,9 +465,17 @@ impl Env<'_> {
             }
         };
         let row = &read.rows[0];
+        let mut note = None;
         let value = match row.value.trim().to_ascii_lowercase().as_str() {
             "yes" => 1,
             "no" => 0,
+            "partial" if attribute == "self_sealing_tanks" => {
+                note = Some(
+                    "partial: only part of the fuel is in protected tanks, which reads as no (decision 0200, 12)"
+                        .to_string(),
+                );
+                0
+            }
             _ => {
                 w.fail(
                     Kind::BadValue,
@@ -484,6 +498,7 @@ impl Env<'_> {
                 excepted,
                 doubts: BTreeSet::new(),
             },
+            note,
         ))
     }
 
@@ -733,12 +748,14 @@ impl Env<'_> {
 
         // protection
         for (i, attribute) in [(ARMOUR, "pilot_armour"), (TANKS, "self_sealing_tanks")] {
-            if let Some((value, got)) = self.yes_no(&mut w, key, attribute) {
-                figs[i] = Some(figure(
+            if let Some((value, got, note)) = self.yes_no(&mut w, key, attribute) {
+                let mut fig = figure(
                     value.to_string(),
                     format!("{attribute} of the type: yes is 1, no is 0 (decision 0029, 11)"),
                     got,
-                ));
+                );
+                fig.notes.extend(note);
+                figs[i] = Some(fig);
             }
         }
 
@@ -749,7 +766,12 @@ impl Env<'_> {
             name: info.name.clone(),
             figures: figs
                 .into_iter()
-                .map(|f| f.expect("every figure is set when there is no problem"))
+                .map(|f| {
+                    let mut f = f.expect("every figure is set when there is no problem");
+                    let later = self.later_notes(&f.cites);
+                    f.notes.extend(later);
+                    f
+                })
                 .collect(),
             used: w.used,
             radius_choice: entry.radius_choice.as_ref().and_then(|choice| {

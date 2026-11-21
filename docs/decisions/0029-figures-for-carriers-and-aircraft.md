@@ -34,6 +34,8 @@ Decision 0020 derives a ship class's surface-combat figures from facts. Scenario
 9. **Role** follows the type's role in the facts: fighters are fighters; dive, torpedo, heavy and land attack bombers are bombers; flying boats and amphibians are patrol aircraft.
 10. **Sweep width** in search is one model parameter for every type, a placeholder. No source gives it.
 11. **How hard an aircraft is to bring down** comes from two sourced yes-or-no facts, pilot armour and self-sealing fuel tanks. Each one present multiplies the chance that a fighter's or a gun's shot brings the aircraft down by a factor in the air combat figures, a placeholder. Where a pool of targets holds several types, the pool's first group sets the factor.
+
+   *Nov 21, 2026: decision 0200, 12: `partial` is a value of `self_sealing_tanks`, and reads as no; and an exception may read a row of a later date (`later = true`), as the PBY-5A's armour and tanks are.*
 12. **Air group strengths, bases and positions are scenario inputs,** as decision 0015 allows for starting positions and readiness. The scenario file gives them and cites the fact rows. The tool does not generate them.
 
 ## What the architect settled for the Eastern Solomons

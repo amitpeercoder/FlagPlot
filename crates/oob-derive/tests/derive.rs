@@ -5540,3 +5540,285 @@ fn the_savo_island_list_gives_the_tubes_of_decision_0083() {
         ["yunagi (Kamikaze class (1922))"]
     );
 }
+
+// A row of a later date, read by exception (decision 0200). The list's
+// date is 8 August 1942.
+
+fn later_exception(block: &str, entity: &str, fact: &str, row: u32) -> String {
+    format!(
+        "\n[[{block}]]\nentity = \"{entity}\"\nfact = \"{fact}\"\nrow = {row}\nlater = true\n\
+         reason = \"The architect judged it already so\"\nagreed = \"2026-11-21\"\n"
+    )
+}
+
+/// The rules with the search block, the given top-level exceptions and the
+/// given search radius exceptions, in that order of the file.
+fn later_rules(top: &str, search: &str) -> String {
+    air_rules(&format!("{top}{SEARCH_BLOCK}{search}"))
+}
+
+#[test]
+fn a_later_range_is_read_for_the_search_radius_and_marked_with_its_date() {
+    // Hand calculation. Row 500, range_max_nm 1,500, disputed, valid from
+    // 1943-09-01, after the list's 1942-08-08: read by the later exception,
+    // 1500 / 3 = 500. The strike radius is not touched (175).
+    let mut files = search_base();
+    add_fact(
+        &mut files,
+        fact_row(
+            500,
+            "dive-a",
+            "range_max_nm",
+            "1500",
+            "1943-09-01",
+            "",
+            "low",
+            "disputed",
+        ),
+    );
+    // Without the exception the row does not hold: not settled, 175 kept.
+    let outputs = derive_text(
+        &plane_list(&[("dive-a", Some("bomb-a"))]),
+        &later_rules("", ""),
+        &files,
+    )
+    .unwrap_or_else(|p| panic!("{p:#?}"));
+    assert_eq!(
+        aircraft_lines(&outputs)[1],
+        "2000,Dive A,bomber,175,20,175,bomb,41.666666,1,1"
+    );
+    let search = later_exception("search_radius.exception", "dive-a", "range_max_nm", 500);
+    let outputs = derive_text(
+        &plane_list(&[("dive-a", Some("bomb-a"))]),
+        &later_rules("", &search),
+        &files,
+    )
+    .unwrap_or_else(|p| panic!("{p:#?}"));
+    assert_eq!(
+        aircraft_lines(&outputs)[1],
+        "2000,Dive A,bomber,500,20,175,bomb,41.666666,1,1"
+    );
+    let source = plane_source(&outputs, "2000", "search_range_nm");
+    assert_eq!(source[4], "aircraft_type_facts.csv:500");
+    assert!(source[5].contains("rests on an exception"), "{source:?}");
+    assert!(
+        source[5].contains(
+            "read from a row of a later date: aircraft_type_facts.csv:500, valid from 1943-09-01"
+        ),
+        "{source:?}"
+    );
+    let strike = plane_source(&outputs, "2000", "strike_range_nm");
+    assert!(!strike[5].contains("later"), "{strike:?}");
+    let header = comments(outputs.aircraft_csv.as_ref().unwrap());
+    assert!(
+        header.contains(
+            "dive-a range_max_nm: aircraft_type_facts.csv row 500 (disputed); reason: The architect judged it already so; agreed 2026-11-21; later = true: read from a row of a later date, valid from 1943-09-01 (decision 0200)"
+        ),
+        "{header}"
+    );
+    assert!(!header.contains("do nothing on this list"), "{header}");
+}
+
+#[test]
+fn a_preferred_later_row_is_listed_as_an_exception_and_marked() {
+    // Rule 11. dive-a's armour: row 5 (yes, preferred, undated) is replaced
+    // by row 600 (no, preferred, valid from 1943-01-01). Row 5 would be a
+    // row of the time, so it is taken out first.
+    let mut files = search_base();
+    remove_row(&mut files, "aircraft_type_facts.csv", 5);
+    add_fact(
+        &mut files,
+        fact_row(
+            600,
+            "dive-a",
+            "pilot_armour",
+            "no",
+            "1943-01-01",
+            "",
+            "medium",
+            "preferred",
+        ),
+    );
+    let top = later_exception("exception", "dive-a", "pilot_armour", 600);
+    let outputs = derive_text(
+        &plane_list(&[("dive-a", Some("bomb-a"))]),
+        &later_rules(&top, ""),
+        &files,
+    )
+    .unwrap_or_else(|p| panic!("{p:#?}"));
+    assert_eq!(
+        aircraft_lines(&outputs)[1],
+        "2000,Dive A,bomber,175,20,175,bomb,41.666666,0,1"
+    );
+    let armour = plane_source(&outputs, "2000", "pilot_armour");
+    assert!(armour[5].contains("rests on an exception"), "{armour:?}");
+    assert!(armour[5].contains("valid from 1943-01-01"), "{armour:?}");
+    let header = comments(outputs.aircraft_csv.as_ref().unwrap());
+    assert!(
+        header.contains("dive-a pilot_armour: aircraft_type_facts.csv row 600 (preferred)"),
+        "{header}"
+    );
+}
+
+#[test]
+fn a_later_row_is_refused_where_a_row_of_the_time_holds() {
+    // Rule 10: dive-a's armour row 5 (yes, preferred) holds on the date, so
+    // the later row 600 is refused, whatever it says.
+    let mut files = search_base();
+    add_fact(
+        &mut files,
+        fact_row(
+            600,
+            "dive-a",
+            "pilot_armour",
+            "yes",
+            "1943-01-01",
+            "",
+            "medium",
+            "preferred",
+        ),
+    );
+    let top = later_exception("exception", "dive-a", "pilot_armour", 600);
+    let problems = derive_text(
+        &plane_list(&[("dive-a", Some("bomb-a"))]),
+        &later_rules(&top, ""),
+        &files,
+    )
+    .expect_err("a problem");
+    assert_one(
+        &problems,
+        &[
+            "dive-a: exception: pilot_armour:",
+            "later = true for aircraft_type_facts.csv:600",
+            "aircraft_type_facts.csv:5",
+            "decision 0200, 10",
+        ],
+    );
+}
+
+#[test]
+fn a_later_exception_whose_row_is_not_later_does_nothing_and_the_header_says_so() {
+    // Rule 9. Row 500 (1,500, disputed) begins on 1942-01-01, before the
+    // list's date: the later exception does not read it, nor act as a plain
+    // one, so the search radius is not settled and the strike radius is kept.
+    let mut files = search_base();
+    add_fact(
+        &mut files,
+        fact_row(
+            500,
+            "dive-a",
+            "range_max_nm",
+            "1500",
+            "1942-01-01",
+            "",
+            "low",
+            "disputed",
+        ),
+    );
+    let search = later_exception("search_radius.exception", "dive-a", "range_max_nm", 500);
+    let outputs = derive_text(
+        &plane_list(&[("dive-a", Some("bomb-a"))]),
+        &later_rules("", &search),
+        &files,
+    )
+    .unwrap_or_else(|p| panic!("{p:#?}"));
+    assert_eq!(
+        aircraft_lines(&outputs)[1],
+        "2000,Dive A,bomber,175,20,175,bomb,41.666666,1,1"
+    );
+    assert_eq!(outputs.search_not_settled.len(), 1);
+    let header = comments(outputs.aircraft_csv.as_ref().unwrap());
+    assert!(
+        header.contains(
+            "Exceptions saying later = true that do nothing on this list, the row they name not beginning after its date (decision 0200, 9):\n#   dive-a range_max_nm: aircraft_type_facts.csv row 500 (valid from 1942-01-01) does not begin after 1942-08-08"
+        ),
+        "{header}"
+    );
+    assert!(
+        header.contains("Search radius exceptions used (decision 0075): none"),
+        "{header}"
+    );
+}
+
+#[test]
+fn a_later_class_fact_reaches_the_class_file_marked() {
+    // Rule 8 for a ship's class, and rule 5 in the class sources. The
+    // class's displacement row 5 is replaced by an unconfirmed row of
+    // 1943; the later exception reads it, and the toughness (10000 / 25 =
+    // 400) is that of the base row.
+    let mut files = base();
+    replace_row(
+        &mut files,
+        "ship_class_facts.csv",
+        5,
+        fact_row(
+            5,
+            "us-test-class",
+            "displacement_standard_lt",
+            "10000",
+            "1943-01-01",
+            "",
+            "low",
+            "unconfirmed",
+        ),
+    );
+    let fails_without = derive_with_rules(&["shp"], &[], RULES, &files).expect_err("a problem");
+    assert_one(&fails_without, &["shp: not-on-date: toughness:"]);
+    let rules = format!(
+        "{RULES}{}",
+        later_exception("exception", "us-test-class", "displacement_standard_lt", 5)
+    );
+    let outputs =
+        derive_with_rules(&["shp"], &[], &rules, &files).unwrap_or_else(|p| panic!("{p:#?}"));
+    assert_eq!(class_lines(&outputs), [BASE_ROW]);
+    let toughness = source_of(&outputs, "1000", "toughness");
+    assert!(
+        toughness[5].contains("rests on an exception"),
+        "{toughness:?}"
+    );
+    assert!(
+        toughness[5].contains(
+            "read from a row of a later date: ship_class_facts.csv:5, valid from 1943-01-01"
+        ),
+        "{toughness:?}"
+    );
+    assert!(
+        comments(&outputs.class_csv)
+            .contains("later = true: read from a row of a later date, valid from 1943-01-01"),
+        "{}",
+        comments(&outputs.class_csv)
+    );
+}
+
+#[test]
+fn partial_protected_tanks_read_as_no_and_say_so() {
+    // Rule 12: dive-a's tanks row 6 says partial: 0, with the note. The
+    // same word for armour is not yes or no.
+    let mut files = air_base();
+    replace_row(
+        &mut files,
+        "aircraft_type_facts.csv",
+        6,
+        fact(6, "dive-a", "self_sealing_tanks", "partial"),
+    );
+    let outputs = planes_ok(&[("dive-a", Some("bomb-a"))], &files);
+    assert!(
+        aircraft_lines(&outputs)[1].ends_with(",1,0"),
+        "{:?}",
+        aircraft_lines(&outputs)
+    );
+    let tanks = plane_source(&outputs, "2000", "self_sealing_tanks");
+    assert!(tanks[5].contains("partial"), "{tanks:?}");
+    assert!(tanks[5].contains("reads as no"), "{tanks:?}");
+    replace_row(
+        &mut files,
+        "aircraft_type_facts.csv",
+        5,
+        fact(5, "dive-a", "pilot_armour", "partial"),
+    );
+    let problems = planes(&[("dive-a", Some("bomb-a"))], &files).expect_err("a problem");
+    assert_one(
+        &problems,
+        &["dive-a: bad-value: pilot_armour:", "not yes or no"],
+    );
+}
