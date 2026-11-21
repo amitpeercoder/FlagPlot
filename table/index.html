@@ -2303,20 +2303,28 @@ body.watched .gives { display: none !important; }
         if (mine && mine.outcome) { var stamp = el('div', 'stamp ' + (!won ? 'tie' : won === config.seat ? 'win' : 'loss'), String(mine.outcome).toUpperCase()); box.appendChild(stamp); if (!won) box.appendChild(el('div', 'work', 'Neither side won.')); }
         else box.appendChild(el('div', 'big', won ? (r[won].outcome.replace(/^./, function (c) { return c.toUpperCase(); }) + ' for ' + SIDE_WORD[won] + '.') : 'A stalemate: neither side won.'));
         box.appendChild(el('div', 'work', 'Day ' + M.lastDay + ' of ' + M.lastDay + ' is fought.'));
-        var rows = [], seen = {};
-        [config.seat, other].forEach(function (side, col) { (r[side].objectives || []).forEach(function (o) { var c = endCount(o), key = o.kind + '|' + (o.base && o.base.handle || '') + '|' + (o.closed ? 1 : 0); if (seen[key] == null) { seen[key] = rows.length; rows.push([c[0], '–', '–']); } rows[seen[key]][col + 1] = c[1]; }); });
-        var t = el('table'), hr = el('tr'); hr.appendChild(el('th', '', '')); hr.appendChild(el('th', '', SIDE_WORD[config.seat].replace(/^the /, 'The '))); hr.appendChild(el('th', '', SIDE_WORD[other].replace(/^the /, 'The '))); t.appendChild(hr);
-        rows.forEach(function (x) { var tr = el('tr'); tr.appendChild(el('th', '', x[0])); tr.appendChild(el('td', '', x[1])); tr.appendChild(el('td', '', x[2])); t.appendChild(tr); });
-        box.appendChild(el('h3', '', 'What each side did')); box.appendChild(t);
+        // Each side's losses are told as its own, in its own column, and each
+        // line carries what the umpire gave for it: a loss scores for the
+        // other side, a thing done scores for the side that did it.
+        var LOST = { ships_sunk: 'Ships sunk', ships_crippled: 'Ships left afloat and out of action', ships_out_of_action: 'Ships out of action at the end', aircraft_destroyed: 'Aircraft lost', men_lost: 'Men lost' };
+        var lost = [], did = [], seen = {}, pts = function (v) { var n = Math.round(Number(v) * 10) / 10; return n ? String(n) : '\u2013'; };
+        [config.seat, other].forEach(function (side, col) { (r[side].objectives || []).forEach(function (o) {
+          var c = endCount(o), isLoss = !!LOST[o.kind], key = o.kind + '|' + (o.base && o.base.handle || '') + '|' + (o.closed ? 1 : 0), list = isLoss ? lost : did;
+          if (seen[key] == null) { seen[key] = list.length; list.push([isLoss ? LOST[o.kind] : c[0], '\u2013', '\u2013', '\u2013', '\u2013']); }
+          var row = list[seen[key]]; row[1 + (isLoss ? 1 - col : col)] = c[1]; row[3 + col] = pts(o.points);
+        }); });
+        var names = [SIDE_WORD[config.seat].replace(/^the /, 'The '), SIDE_WORD[other].replace(/^the /, 'The ')];
+        function tableOf(title, rows, total) {
+          if (!rows.length) return; var t = el('table'), hr = el('tr');
+          ['', names[0], names[1], 'Points to ' + SIDE_WORD[config.seat], 'Points to ' + SIDE_WORD[other]].forEach(function (h) { hr.appendChild(el('th', '', h)); }); t.appendChild(hr);
+          rows.forEach(function (x) { var tr = el('tr'); tr.appendChild(el('th', '', x[0])); x.slice(1).forEach(function (v) { tr.appendChild(el('td', '', v)); }); t.appendChild(tr); });
+          if (total) { var tt = el('tr'); tt.appendChild(el('th', '', 'Points in all')); ['', '', pts(r[config.seat].total), pts(r[other].total)].forEach(function (v) { var td = el('td', '', v); td.style.fontWeight = '700'; tt.appendChild(td); }); t.appendChild(tt); }
+          box.appendChild(el('h3', '', title)); box.appendChild(t);
+        }
+        tableOf('What each side lost', lost, !did.length); tableOf('What each side did', did, true);
+        box.appendChild(el('div', 'work', 'The margin is ' + (Math.round(Math.abs(Number(mine.margin)) * 10) / 10) + ' points' + (won ? ', which makes it ' + r[won].level + '.' : '.')));
         doc.appendChild(box);
         if (r.history) { doc.appendChild(el('h3', '', 'In the war itself')); doc.appendChild(rich('p', '', nameText(typeof r.history === 'string' ? r.history : (r.history.text || r.history.note || JSON.stringify(r.history))))); }
-        var d = document.createElement('details'), sm = document.createElement('summary'); sm.textContent = 'THE UMPIRE\'S RECKONING'; d.appendChild(sm);
-        [config.seat, other].forEach(function (side) {
-          d.appendChild(el('div', 'work', SIDE_WORD[side].replace(/^the /, 'The ') + ': ' + (Math.round(Number(r[side].total) * 10) / 10) + ' points.'));
-          (r[side].objectives || []).forEach(function (o) { if (Number(o.points) > 0) { var c = endCount(o); d.appendChild(el('div', 'work', '  ' + c[0] + ', ' + c[1] + ': ' + (Math.round(Number(o.points) * 10) / 10))); } });
-        });
-        d.appendChild(el('div', 'work', 'The margin is ' + (Math.round(Math.abs(Number(mine.margin)) * 10) / 10) + ' points' + (won ? ', which makes it ' + r[won].level + '.' : '.')));
-        doc.appendChild(d);
       }
       var row = el('div', 'row'), b = el('button', '', 'READ THE WAR DIARY'); b.type = 'button'; b.addEventListener('click', function () { readDiary(); }); row.appendChild(b); doc.appendChild(row);
       sheetAs('HOW IT ENDED'); doc.hidden = false; $('sheet-text').hidden = true; $('sheet').hidden = false; $('sheet-close').focus();
