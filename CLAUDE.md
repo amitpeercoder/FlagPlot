@@ -99,6 +99,7 @@ cargo run -p oob-check -- data/oob
 cargo run -p oob-derive -- data/derivation/savo_island.toml --check
 cargo run -p oob-derive -- data/derivation/rabaul_guadalcanal.toml --check
 cargo run -p oob-derive -- data/derivation/coral_sea.toml --check
+cargo run -p oob-derive -- data/derivation/midway.toml --check
 ```
 
 The first three must pass before a commit; CI runs them, then runs scenario 1, exports every scenario and runs the viewer's check, unless only Markdown files changed, when it skips them all. So success on a documents-only pull request means nothing was checked. `cargo test` includes the order-of-battle check, so a bad row in `data/oob` fails the build. `docs/commands.md` says what each command does and the options it takes.
