@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 20, 2026, on the designer's word
 
 Summary: A land unit's men only ever fall. Nothing in play adds a man. Over 39 days that is bearable; over a campaign of months every unit wastes away. This lets a scenario give a base a stream of replacement men, so many a day, who join the units ashore there that are under strength and not in a fight, and who bring the unit's experience down toward a recruit's.
 
-Standing: Planned on Nov 20, 2026 and amended on review; built on Nov 21, 2026 (scenario 113), awaiting the architect's reading of the build.
+Standing: Planned on Nov 20, 2026 and amended on review; built on Nov 21, 2026 (scenario 113) and confirmed by the architect's rulings below.
 
 ## Why
 
@@ -112,3 +112,17 @@ No statement of the hand calculation failed to hold; none is ignored.
 ### Not done
 
 Replacements that arrive in ships and can be sunk, new units by stream, and units rebuilt from nothing are not built. No figure is researched: every stream is a placeholder, and no scenario of history is given one.
+
+## The architect's rulings
+
+Made on Nov 21, 2026 on reading the build: the night's step, what it reads of a unit and a base, the event and who sees it, the hash and the loader. Every statement of the hand calculation holds.
+
+1. **The readings of "As built", a to k, are confirmed.** Three are worth saying again.
+   - **The count restarts at nothing when experience falls,** and men past the half on that night are not carried into the next count. A unit that takes a great draft in one night falls one level, not two.
+   - **A unit at the lowest level the rule reaches keeps its count,** and a level gained by training or fighting restarts it: the new men have been made into soldiers.
+   - **"In a fight" is every unit that shares the day's losses,** working units among them, on both sides.
+2. **The event names no cause,** as stock from off the map names none: a stream is a fact of the scenario and no order began it. The breakdown carries the figures it was worked from.
+3. **A stream gives only while its base is its side's,** and only to a unit standing at the base, not attacking and not on the march, that did not fight the day before. Men do not come to a base that has changed hands and nothing says so; the side that lost it knows why.
+4. **The staff does not yet count the men a stream will bring** when it forecasts a base's days of supply, so its forecast runs a little long. It is a gap of the staff's, beside the fuel of decision 0196, and is taken up with the long scenario that first uses streams.
+5. **No scenario of record is given a stream.** The figures for one (the long Guadalcanal scenario) are settled from rows when that scenario is planned.
+6. **The versions are as built:** agent interface 38; the rules label, the state's layout and the doctrine unchanged.
