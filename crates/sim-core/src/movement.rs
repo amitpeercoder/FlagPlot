@@ -1487,6 +1487,12 @@ pub struct PassageForecast {
     /// The hexes the force enters while it steams, in order, as the
     /// `hexes_entered` of its steaming events list them.
     pub hexes: Vec<Hex>,
+    /// The day and pulse each hex of `hexes` is entered in, one for each and
+    /// in the same order (decision 0203, 8): the pulse whose steaming the
+    /// movement rules enter it in, half-way along the step into it, a hex
+    /// entered at the very hour a pulse ends counted in that pulse. A report
+    /// of what the rules already do: nothing reads it to decide a move.
+    pub entered_in: Vec<(u32, Pulse)>,
     /// The whole route: `hexes`, and for a force that stops short for want of
     /// fuel, the hexes it would still have to enter to reach the destination.
     pub route_hexes: Vec<Hex>,
@@ -1562,6 +1568,7 @@ pub(crate) fn forecast_route(
         speed_kn: Fixed::ZERO,
         slowest: None,
         hexes: Vec::new(),
+        entered_in: Vec::new(),
         route_hexes: Vec::new(),
         route_nm: Fixed::ZERO,
         steamed_nm: Fixed::ZERO,
@@ -1652,6 +1659,9 @@ pub(crate) fn forecast_route(
             mover.steam_out(map);
             let travelled_nm = mover.segment_nm;
             let speed_kn = mover.speed_kn;
+            result
+                .entered_in
+                .extend(mover.segment_hexes.iter().map(|_| (day, pulse)));
             result.hexes.append(&mut mover.segment_hexes);
             result.steamed_nm += travelled_nm;
             for steamer in &mover.steamers {

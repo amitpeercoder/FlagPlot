@@ -185,6 +185,8 @@ A side sees: its own steaming events.
 
 A force steams from one waypoint to the next by the shortest sea path. The path is not stored. For the waypoint being steamed to, the engine works out for every reachable hex the fewest steps to the waypoint, by a search from the waypoint that takes neighbours in the fixed order and never crosses a closed side. The next hex from a hex is then the first neighbour, in the fixed order, whose fewest steps is one less and whose side is open. A hex that cannot reach the waypoint is not in the result. If the waypoint is off the map or not navigable, nothing can reach it. The field is worked out again when the force turns to the next waypoint, and is the same every time because the map never changes. On open water this is the straight greedy path. Around land it is the shortest way round. What each step of the path costs in miles is the rule of the next section. [0005 item 3 as replaced, 0017 items 10 to 13]
 
+**The forecast of a passage** (`PassageForecast`, which `SideView::forecast_route` and `forecast_passage` give) reports, for each hex it has the force enter, the day and pulse it is entered in, in the order of its `hexes`: the pulse whose steaming enters it, half-way along the step into it, a hex entered at the very hour a pulse ends counted in that pulse. It is a report of what these rules already do: it adds no state, changes no rule and does not change the hash, and `measure` is not changed. The staff reads it to say which hexes of a carrier force's way are entered by day (chapter 8, The way a force takes). [0203 item 8]
+
 A side sees: not an event.
 
 ### What a step is charged

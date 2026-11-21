@@ -57,6 +57,7 @@ pub mod targets;
 mod told;
 mod turn_back;
 mod units;
+pub mod way;
 
 pub use available::{counted_by_a_take, Counted};
 pub use projection::project;
@@ -357,7 +358,16 @@ use sim_core::view::SideView;
 /// stopped at sea whose order ended the day before and that has the fuel goes
 /// back to its station. A side with no such force gets the orders and reasons
 /// `supply-50` gave.
-pub const DOCTRINE_VERSION: &str = "supply-51";
+/// `supply-52` adds decision 0203, stage 1: a carrier force going to a
+/// station the staff chose, at balanced or preserve, is given the way of
+/// least danger by day among those that arrive within its risk's lateness and
+/// are in fuel, as the points of a route given once and kept while it is
+/// under way on it; where the shortest way is taken it is routed as before,
+/// its reason saying why where that way lies in the enemy's reach by day. A
+/// side with no such force, or whose force's shortest way is the one taken,
+/// gets the orders `supply-51` gave, and the same reasons where that way is
+/// in fuel and enters no hex inside a circle of danger by day.
+pub const DOCTRINE_VERSION: &str = "supply-52";
 
 /// The staff: the doctrine for keeping a base supplied (stage 1) and, after
 /// it, the air doctrine for holding a place and covering a base from the air

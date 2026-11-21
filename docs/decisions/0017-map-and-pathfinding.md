@@ -44,7 +44,7 @@ The spec asks for a hex map of the slice at 40 nm per hex, with a stored latitud
 
 10. **A task force follows a shortest path over hexes ships can enter, never crossing a closed side.** The distance from a hex to a target is the fewest such steps. From any hex, the next step is the neighbour whose distance to the target is one less, the first such neighbour in the fixed direction order.
 11. **On open water this is the path decision 0005 already gave.** The greedy step and the shortest-path step are the same when nothing is in the way. Every earlier scenario keeps its numbers.
-12. **The path is not stored.** The map does not change, so the next step is worked out from the map each time and always comes out the same. A route is still its waypoints.
+12. **The path is not stored.** The map does not change, so the next step is worked out from the map each time and always comes out the same. A route is still its waypoints. Since decision 0203 the staff may give a carrier force bound for its station more waypoints, to bend its way; the engine's pathfinding is unchanged.
 13. **A route is rejected if any waypoint cannot be reached** from the one before it: it is off the map, is land, or lies across land with no way round. This replaces the rejection for a straight path that crosses land.
 14. **The turn-back choice of decision 0005 uses path distance,** not straight-line hexes.
 15. **Search and other rules that measure distance still use straight-line hex distance.** An aircraft does not go round an island.

@@ -73,20 +73,62 @@ fn leg_nm(view: &SideView<'_>, start: Hex, waypoints: &[Hex]) -> Option<u32> {
     Some(miles)
 }
 
+/// The sea distances to each target a routine has asked for, worked out
+/// once: the map never changes, so a field read twice is the same field.
+#[derive(Default)]
+pub(crate) struct Fields {
+    to: BTreeMap<Hex, BTreeMap<Hex, u32>>,
+}
+
+impl Fields {
+    fn to<'f>(&'f mut self, view: &SideView<'_>, target: Hex) -> &'f BTreeMap<Hex, u32> {
+        self.to
+            .entry(target)
+            .or_insert_with(|| view.sea_distances_to(target))
+    }
+}
+
 /// Whether every hex of the engine's path from `from` to `to` is in `area`.
-fn path_stays_in(view: &SideView<'_>, from: Hex, to: Hex, area: &BTreeSet<Hex>) -> bool {
-    view.sea_path(from, to)
+fn path_stays_in(
+    view: &SideView<'_>,
+    fields: &mut Fields,
+    from: Hex,
+    to: Hex,
+    area: &BTreeSet<Hex>,
+) -> bool {
+    let field = fields.to(view, to);
+    view.sea_path_in(field, from)
         .is_some_and(|path| path.iter().all(|hex| area.contains(hex)))
 }
 
 /// Waypoints from `from` to `to` that keep the engine's path inside `area`:
 /// just `to` where its own path does, else points along the shortest path
 /// of single steps inside the area. `None` where there is none.
-fn legs_inside(view: &SideView<'_>, from: Hex, to: Hex, area: &BTreeSet<Hex>) -> Option<Vec<Hex>> {
+pub(crate) fn legs_inside(
+    view: &SideView<'_>,
+    from: Hex,
+    to: Hex,
+    area: &BTreeSet<Hex>,
+) -> Option<Vec<Hex>> {
+    legs_inside_with(view, &mut Fields::default(), from, to, area)
+}
+
+/// [`legs_inside`] with the sea distances it reads kept in `fields`, to be
+/// read again by the next call (decision 0203, 18, asks it of many ways).
+/// The same waypoints: a step is the engine's own test of a step
+/// ([`SideView::can_step`], which is what the engine's path of one step
+/// tests), and a path the engine's own, read from the same field.
+pub(crate) fn legs_inside_with(
+    view: &SideView<'_>,
+    fields: &mut Fields,
+    from: Hex,
+    to: Hex,
+    area: &BTreeSet<Hex>,
+) -> Option<Vec<Hex>> {
     if !area.contains(&from) || !area.contains(&to) {
         return None;
     }
-    if path_stays_in(view, from, to, area) {
+    if path_stays_in(view, fields, from, to, area) {
         return Some(vec![to]);
     }
     // The shortest path of single steps inside the area.
@@ -96,11 +138,11 @@ fn legs_inside(view: &SideView<'_>, from: Hex, to: Hex, area: &BTreeSet<Hex>) ->
         if here == to {
             break;
         }
-        for next in here.neighbors() {
+        for (direction, next) in here.neighbors().into_iter().enumerate() {
             if next == from || !area.contains(&next) || parent.contains_key(&next) {
                 continue;
             }
-            if view.sea_path(here, next) == Some(vec![next]) {
+            if view.can_step(here, direction) {
                 parent.insert(next, here);
                 queue.push_back(next);
             }
@@ -125,7 +167,7 @@ fn legs_inside(view: &SideView<'_>, from: Hex, to: Hex, area: &BTreeSet<Hex>) ->
     while index < steps.len() {
         let mut reach = index;
         for candidate in (index..steps.len()).rev() {
-            if path_stays_in(view, here, steps[candidate], area) {
+            if path_stays_in(view, fields, here, steps[candidate], area) {
                 reach = candidate;
                 break;
             }
