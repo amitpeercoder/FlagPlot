@@ -10,6 +10,9 @@ sim-core.workspace = true
 sim-data.workspace = true
 # The anchors file is read with the CSV reader sim-data already uses.
 csv.workspace = true
+# A frame file (decision 0199) is TOML, read with the reader sim-data uses.
+serde.workspace = true
+toml.workspace = true
 # Only the .shp geometry is read; no attribute (.dbf) files are opened.
 shapefile = { version = "0.9", default-features = false }
 

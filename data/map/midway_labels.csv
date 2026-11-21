@@ -1,0 +1,12 @@
+# Places named on the Midway map, data/map/midway.csv (decision 0199, 29),
+# for the export's labels: `sim-cli export SCENARIO --out FILE --labels
+# data/map/midway_labels.csv`. For the eye only: no map is made from this
+# file and the simulation reads none of it. Each position is its row's of
+# data/oob/place_positions.csv, west negative, as the row gives it.
+# Pearl and Hermes Reef is not here: place_positions.csv has no row for it.
+place,feature,lat,lon,row
+midway,the atoll (atoll feature),28.232,-177.370,5100
+kure-atoll,Kure Atoll,28.419,-178.325,5106
+lisianski,Lisianski Island,26.064,-173.966,5112
+french-frigate-shoals,French Frigate Shoals (atoll),23.756,-166.211,5110
+wake,Wake Island (atoll),19.299,166.624,5107
