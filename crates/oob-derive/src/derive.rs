@@ -4,9 +4,9 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use oob_check::table::Data;
 
-use crate::date::Day;
+use crate::date::{begins_after, Day};
 use crate::decimal::Dec;
-use crate::input::Rules;
+use crate::input::{Exception, Rules};
 use crate::problem::{Kind, Problem};
 use crate::reading::{
     resolve, resolve_over, resolve_slot, Failure, Index, Read, Row, SlotRead, Table,
@@ -201,6 +201,9 @@ pub struct Env<'a> {
     /// The runs and voyage of the troop figure, when the list asks for it
     /// (decision 0093, 8).
     pub(crate) troops: Option<crate::troops::TroopEnv>,
+    /// The rows read as of a later date on this list's date, with their
+    /// `valid_from` (decision 0200).
+    pub(crate) later: BTreeMap<Cite, String>,
 }
 
 /// A row of `aircraft_types.csv`.
@@ -374,7 +377,9 @@ impl<'a> Env<'a> {
             fire_rate: None,
             fire_rate_problems: Vec::new(),
             troops: None,
+            later: BTreeMap::new(),
         };
+        env.later = env.later_rows();
         if let Some(fire_rate) = &rules.fire_rate {
             let (achieved, problems) = crate::fire_rate::compute(&env, data, fire_rate);
             env.fire_rate = achieved;
@@ -383,17 +388,74 @@ impl<'a> Env<'a> {
         env
     }
 
-    /// Problems for exceptions that name no row of the facts.
-    pub fn exception_problems(&self) -> Vec<Problem> {
+    /// Every exception of the rules file, the top-level list and then the
+    /// search radius block's.
+    fn all_exceptions(&self) -> impl Iterator<Item = &Exception> {
         let search = self
             .rules
             .search_radius
             .as_ref()
             .map_or(&[][..], |s| s.exceptions.as_slice());
-        self.rules
-            .exceptions
+        self.rules.exceptions.iter().chain(search)
+    }
+
+    /// The rows an exception saying `later = true` reads on this list's
+    /// date, each with its `valid_from` (decision 0200, 5 and 9): a figure
+    /// citing one is marked as read from a row of a later date.
+    fn later_rows(&self) -> BTreeMap<Cite, String> {
+        let mut rows = BTreeMap::new();
+        for exception in self.all_exceptions().filter(|e| e.later) {
+            for row in self.index.named_by(exception) {
+                if begins_after(&row.from, self.date).unwrap_or(false) {
+                    rows.insert(row.cite_key(), row.from.clone());
+                }
+            }
+        }
+        rows
+    }
+
+    /// The exceptions saying `later = true` that do nothing on this list,
+    /// because the row they name does not begin after its date (decision
+    /// 0200, 9): one line each, for the derived files' header.
+    pub fn idle_later(&self) -> Vec<String> {
+        let mut lines = BTreeSet::new();
+        for exception in self.all_exceptions().filter(|e| e.later) {
+            for row in self.index.named_by(exception) {
+                if !begins_after(&row.from, self.date).unwrap_or(false) {
+                    lines.insert(format!(
+                        "{} {}: {} row {} (valid from {}) does not begin after {}",
+                        exception.entity,
+                        exception.fact,
+                        row.file,
+                        row.id,
+                        if row.from.is_empty() { "-" } else { &row.from },
+                        self.date
+                    ));
+                }
+            }
+        }
+        lines.into_iter().collect()
+    }
+
+    /// Marks each figure that cites a row read as of a later date (decision
+    /// 0200, 5): the words of the rule and the row's date.
+    pub(crate) fn later_notes(&self, cites: &BTreeSet<Cite>) -> Vec<String> {
+        cites
             .iter()
-            .chain(search)
+            .filter_map(|cite| {
+                self.later.get(cite).map(|from| {
+                    format!(
+                        "read from a row of a later date: {}:{}, valid from {from} (decision 0200)",
+                        cite.0, cite.1
+                    )
+                })
+            })
+            .collect()
+    }
+
+    /// Problems for exceptions that name no row of the facts.
+    pub fn exception_problems(&self) -> Vec<Problem> {
+        self.all_exceptions()
             .filter(|e| !self.index.has_row(e))
             .map(|e| {
                 Problem::new(
@@ -1014,7 +1076,12 @@ impl<'a> Env<'a> {
         }
         let figures = figs
             .into_iter()
-            .map(|f| f.expect("every figure is set when there is no problem"))
+            .map(|f| {
+                let mut f = f.expect("every figure is set when there is no problem");
+                let later = self.later_notes(&f.cites);
+                f.notes.extend(later);
+                f
+            })
             .collect();
         Ok(ShipResult {
             ship: ship.to_string(),

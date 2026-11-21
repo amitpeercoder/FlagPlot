@@ -202,6 +202,7 @@ pub fn derive_with(
             aircraft_used.insert((*index, row.file.clone(), row.cite_key().1), row.clone());
         }
     }
+    let idle_later = env.idle_later();
     let context = output::Context {
         list: &list,
         list_name,
@@ -211,6 +212,7 @@ pub fn derive_with(
         aircraft: &aircraft_results,
         aircraft_used: &aircraft_used,
         fire_rate: env.fire_rate.as_ref(),
+        idle_later: &idle_later,
     };
     let mut outputs = output::render(&context).map_err(|problem| vec![problem])?;
     outputs.search_not_settled = aircraft_results

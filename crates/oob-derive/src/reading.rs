@@ -10,12 +10,17 @@
 //!   when one of them is readable (preferred or excepted) and holds on the
 //!   date. Ship rows that hold but are not readable do not block the class
 //!   rows; they are passed back as doubts, for the sources file.
+//! - an exception that says `later = true` names a row that begins after
+//!   the date, and the row is read as a row that holds (decision 0200). On
+//!   a list whose date is not before the row's `valid_from` it does
+//!   nothing (the derived files' header says so); it is refused where
+//!   another row of the same thing can be read and holds on the date.
 
 use std::collections::BTreeMap;
 
 use oob_check::table::Data;
 
-use crate::date::{valid_on, Day, Tri};
+use crate::date::{begins_after, valid_on, Day, Tri};
 use crate::input::Exception;
 use crate::problem::Kind;
 
@@ -193,6 +198,15 @@ impl Index {
             .find(|row| row.id == id)
     }
 
+    /// Every row the exception names (one, unless two files share the id
+    /// for the same entity and attribute).
+    pub fn named_by<'a>(&'a self, exception: &'a Exception) -> impl Iterator<Item = &'a Row> + 'a {
+        self.rows
+            .values()
+            .flatten()
+            .filter(move |row| exception.matches(row))
+    }
+
     /// Whether some row of any facts file or fits.csv is the one named.
     pub fn has_row(&self, exception: &Exception) -> bool {
         let id = exception.row.to_string();
@@ -243,6 +257,30 @@ struct Seen<'a> {
     row: &'a Row,
     tri: Tri,
     excepted: Option<usize>,
+    /// Read through an exception saying `later = true`: the row begins after
+    /// the date (decision 0200).
+    later: bool,
+}
+
+/// Which exception names a row on this date, and whether it reads the row
+/// as of a later date (decision 0200, 8 and 9). An exception saying `later =
+/// true` acts only where the row begins after the date; elsewhere it does
+/// nothing, not even as a plain exception.
+fn naming(
+    row: &Row,
+    date: Day,
+    exceptions: &[Exception],
+) -> Result<(Option<usize>, bool), Failure> {
+    let Some(index) = exceptions.iter().position(|e| e.matches(row)) else {
+        return Ok((None, false));
+    };
+    if !exceptions[index].later {
+        return Ok((Some(index), false));
+    }
+    if begins_after(&row.from, date).map_err(|text| bad_date(row, &text))? {
+        return Ok((Some(index), true));
+    }
+    Ok((None, false))
 }
 
 impl Seen<'_> {
@@ -251,11 +289,15 @@ impl Seen<'_> {
     fn judged(&self) -> bool {
         self.excepted.is_some() && self.tri == Tri::CannotTell
     }
-}
 
-impl Seen<'_> {
     fn read(&self) -> bool {
         self.row.standing == "preferred" || self.excepted.is_some()
+    }
+
+    /// Read on the date: it holds, an exception judges that it holds, or an
+    /// exception reads it as of a later date.
+    fn counts(&self) -> bool {
+        self.read() && (self.tri == Tri::Yes || self.judged() || self.later)
     }
 }
 
@@ -270,8 +312,26 @@ pub fn resolve(
     let mut seen = Vec::new();
     for row in rows {
         let tri = valid_on(&row.from, &row.to, date).map_err(|text| bad_date(row, &text))?;
-        let excepted = exceptions.iter().position(|e| e.matches(row));
-        seen.push(Seen { row, tri, excepted });
+        let (excepted, later) = naming(row, date, exceptions)?;
+        seen.push(Seen {
+            row,
+            tri,
+            excepted,
+            later,
+        });
+    }
+    // A row of the time is read before a later one (decision 0200, 10).
+    let later: Vec<&Seen> = seen.iter().filter(|s| s.later).collect();
+    let of_the_time: Vec<&Seen> = seen.iter().filter(|s| !s.later && s.counts()).collect();
+    if !later.is_empty() && !of_the_time.is_empty() {
+        return Err(Failure::new(
+            Kind::Exception,
+            format!(
+                "{what}: an exception says later = true for {}, but a row of the same thing can be read and holds on {date}: {}; a row of the time is read before a later one (decision 0200, 10)",
+                list(later.iter().map(|s| s.row.cite())),
+                list(of_the_time.iter().map(|s| describe(s.row, s.tri)))
+            ),
+        ));
     }
     let unclear: Vec<&Seen> = seen
         .iter()
@@ -286,10 +346,7 @@ pub fn resolve(
             ),
         ));
     }
-    let mut read: Vec<&Seen> = seen
-        .iter()
-        .filter(|s| s.read() && (s.tri == Tri::Yes || s.judged()))
-        .collect();
+    let mut read: Vec<&Seen> = seen.iter().filter(|s| s.counts()).collect();
     if read.is_empty() {
         if seen.is_empty() {
             return Err(Failure::new(
@@ -337,7 +394,7 @@ pub fn resolve(
         rows: read.iter().map(|s| s.row.clone()).collect(),
         excepted: read
             .iter()
-            .filter(|s| s.row.standing != "preferred" || s.judged() || settled)
+            .filter(|s| s.row.standing != "preferred" || s.judged() || s.later || settled)
             .filter_map(|s| s.excepted.map(|i| (i, s.row.clone())))
             .collect(),
         doubts: Vec::new(),
@@ -369,9 +426,13 @@ fn ship_side(
     let mut doubts = Vec::new();
     for row in ship_rows {
         let tri = valid_on(&row.from, &row.to, date).map_err(|text| bad_date(row, &text))?;
-        let named = exceptions.iter().any(|e| e.matches(row));
+        let (named, later) = naming(row, date, exceptions)?;
+        let named = named.is_some();
         let readable = row.standing == "preferred" || named;
         match (tri, readable) {
+            // Read as of a later date (decision 0200, 8): the ship's rows
+            // are the ones read.
+            _ if later => holds = true,
             (Tri::No, _) => {}
             (Tri::Yes, true) => holds = true,
             (Tri::CannotTell, true) if named => holds = true,
@@ -498,4 +559,277 @@ pub fn resolve_slot(
         doubts,
         blank,
     })
+}
+
+#[cfg(test)]
+mod tests {
+    //! Rows read as of a later date (decision 0200, 8 to 11), on rows
+    //! written here. The list's date is 3 June 1942 throughout.
+    use super::*;
+
+    fn day(text: &str) -> Day {
+        Day::parse_full(text).unwrap()
+    }
+
+    const DATE: &str = "1942-06-03";
+
+    fn row(id: &str, entity: &str, value: &str, from: &str, to: &str, standing: &str) -> Row {
+        Row {
+            file: "aircraft_type_facts.csv".to_string(),
+            id: id.to_string(),
+            entity: entity.to_string(),
+            name: "range_max_nm".to_string(),
+            value: value.to_string(),
+            item: String::new(),
+            count: String::new(),
+            from: from.to_string(),
+            to: to.to_string(),
+            standing: standing.to_string(),
+        }
+    }
+
+    fn fit(id: &str, entity: &str, item: &str, from: &str, standing: &str) -> Row {
+        Row {
+            file: "fits.csv".to_string(),
+            id: id.to_string(),
+            entity: entity.to_string(),
+            name: "bomb_load".to_string(),
+            value: format!("{item} x 4"),
+            item: item.to_string(),
+            count: "4".to_string(),
+            from: from.to_string(),
+            to: String::new(),
+            standing: standing.to_string(),
+        }
+    }
+
+    fn exception(entity: &str, fact: &str, id: i64, later: bool) -> Exception {
+        Exception {
+            entity: entity.to_string(),
+            fact: fact.to_string(),
+            row: id,
+            reason: "The architect judged it".to_string(),
+            agreed: "2026-11-21".to_string(),
+            later,
+        }
+    }
+
+    fn later(entity: &str, id: i64) -> Exception {
+        exception(entity, "range_max_nm", id, true)
+    }
+
+    fn ids(read: &Read) -> Vec<&str> {
+        read.rows.iter().map(|r| r.id.as_str()).collect()
+    }
+
+    fn excepted_ids(read: &Read) -> Vec<&str> {
+        read.excepted.iter().map(|(_, r)| r.id.as_str()).collect()
+    }
+
+    #[test]
+    fn a_later_exception_reads_a_row_that_begins_after_the_date() {
+        let rows = [row("1", "boat", "2211", "1943-09-01", "", "disputed")];
+        let read = resolve(&rows, "boat", day(DATE), &[later("boat", 1)]).unwrap();
+        assert_eq!(ids(&read), ["1"]);
+        assert_eq!(excepted_ids(&read), ["1"]);
+        // Without the exception the row does not hold.
+        let failure = resolve(&rows, "boat", day(DATE), &[]).unwrap_err();
+        assert_eq!(failure.kind, Kind::NotOnDate);
+        // A plain exception cannot read it either.
+        let plain = exception("boat", "range_max_nm", 1, false);
+        let failure = resolve(&rows, "boat", day(DATE), &[plain]).unwrap_err();
+        assert_eq!(failure.kind, Kind::NotOnDate);
+    }
+
+    #[test]
+    fn a_preferred_row_read_as_of_a_later_date_is_listed_as_an_exception() {
+        // Rule 11: preferred or not, the row is listed, so its figure is
+        // marked.
+        let rows = [row("1", "boat", "yes", "1943-09-01", "", "preferred")];
+        let read = resolve(&rows, "boat", day(DATE), &[later("boat", 1)]).unwrap();
+        assert_eq!(excepted_ids(&read), ["1"]);
+    }
+
+    #[test]
+    fn a_row_of_one_later_date_is_later_like_any_other() {
+        let rows = [row(
+            "1",
+            "boat",
+            "2211",
+            "1942-06-10",
+            "1942-06-10",
+            "disputed",
+        )];
+        let read = resolve(&rows, "boat", day(DATE), &[later("boat", 1)]).unwrap();
+        assert_eq!(ids(&read), ["1"]);
+    }
+
+    #[test]
+    fn on_a_list_where_the_row_is_not_later_the_exception_does_nothing() {
+        // Rule 9. The row holds on the date and is disputed: a plain
+        // exception would read it, a later one does not.
+        let rows = [row("1", "boat", "2211", "1942-01-01", "", "disputed")];
+        let failure = resolve(&rows, "boat", day(DATE), &[later("boat", 1)]).unwrap_err();
+        assert_eq!(failure.kind, Kind::NotPreferred);
+        // Its date cannot be told: it is not judged to hold either.
+        let rows = [row("1", "boat", "2211", "1942-06", "", "disputed")];
+        let failure = resolve(&rows, "boat", day(DATE), &[later("boat", 1)]).unwrap_err();
+        assert_eq!(failure.kind, Kind::NotOnDate);
+        // It begins on the date itself: not later.
+        let rows = [row("1", "boat", "2211", DATE, "", "disputed")];
+        let failure = resolve(&rows, "boat", day(DATE), &[later("boat", 1)]).unwrap_err();
+        assert_eq!(failure.kind, Kind::NotPreferred);
+        // A preferred row that holds is read as it would be with no
+        // exception at all, and is not listed as one.
+        let rows = [row("1", "boat", "2211", "1942-01-01", "", "preferred")];
+        let read = resolve(&rows, "boat", day(DATE), &[later("boat", 1)]).unwrap();
+        assert_eq!(ids(&read), ["1"]);
+        assert!(read.excepted.is_empty());
+        // A row that ended before the date is not later and is not read.
+        let rows = [row(
+            "1",
+            "boat",
+            "2211",
+            "1941-01-01",
+            "1942-01-01",
+            "disputed",
+        )];
+        let failure = resolve(&rows, "boat", day(DATE), &[later("boat", 1)]).unwrap_err();
+        assert_eq!(failure.kind, Kind::NotOnDate);
+    }
+
+    #[test]
+    fn a_later_row_is_refused_where_a_preferred_row_of_the_time_holds() {
+        // Rule 10: a row of the time is read before a later one.
+        let rows = [
+            row("1", "boat", "2211", "1943-09-01", "", "disputed"),
+            row("2", "boat", "2190", "", "", "preferred"),
+        ];
+        let failure = resolve(&rows, "boat", day(DATE), &[later("boat", 1)]).unwrap_err();
+        assert_eq!(failure.kind, Kind::Exception);
+        assert!(
+            failure.message.contains("decision 0200, 10"),
+            "{}",
+            failure.message
+        );
+        assert!(
+            failure.message.contains("aircraft_type_facts.csv:2"),
+            "{}",
+            failure.message
+        );
+    }
+
+    #[test]
+    fn a_later_row_is_refused_where_an_excepted_row_of_the_time_holds() {
+        // Rule 10: named by a plain exception, holding or judged to hold.
+        for from in ["", "1942-06"] {
+            let rows = [
+                row("1", "boat", "2211", "1943-09-01", "", "disputed"),
+                row("2", "boat", "2190", from, "", "disputed"),
+            ];
+            let exceptions = [
+                later("boat", 1),
+                exception("boat", "range_max_nm", 2, false),
+            ];
+            let failure = resolve(&rows, "boat", day(DATE), &exceptions).unwrap_err();
+            assert_eq!(failure.kind, Kind::Exception, "from {from:?}");
+        }
+    }
+
+    #[test]
+    fn a_later_row_is_not_refused_for_rows_that_cannot_be_read() {
+        // A disputed row that holds and is not named, and a preferred row
+        // that does not hold, are not rows that can be read on the date.
+        let rows = [
+            row("1", "boat", "2211", "1943-09-01", "", "disputed"),
+            row("2", "boat", "2190", "", "", "disputed"),
+            row("3", "boat", "2000", "1941-01-01", "1942-01-01", "preferred"),
+        ];
+        let read = resolve(&rows, "boat", day(DATE), &[later("boat", 1)]).unwrap();
+        assert_eq!(ids(&read), ["1"]);
+    }
+
+    #[test]
+    fn a_later_ship_row_replaces_the_class_rows() {
+        // Rule 8, the choice between a ship's rows and her class's.
+        let ship = [row("1", "shp", "30", "1943-09-01", "", "disputed")];
+        let class = [row("2", "cls", "28", "", "", "preferred")];
+        let read = resolve_over(
+            &ship,
+            "ship",
+            &class,
+            "class",
+            day(DATE),
+            &[later("shp", 1)],
+        )
+        .unwrap();
+        assert_eq!(ids(&read), ["1"]);
+        // Not later on this list: the class rows are read.
+        let ship = [row("1", "shp", "30", "1942-01-01", "", "disputed")];
+        let read = resolve_over(
+            &ship,
+            "ship",
+            &class,
+            "class",
+            day(DATE),
+            &[later("shp", 1)],
+        )
+        .unwrap();
+        assert_eq!(ids(&read), ["2"]);
+        // The class is another entity, so its row does not refuse the ship's.
+        let ship = [row("1", "shp", "30", "1943-09-01", "", "disputed")];
+        assert!(resolve_over(
+            &ship,
+            "ship",
+            &class,
+            "class",
+            day(DATE),
+            &[later("shp", 1)]
+        )
+        .is_ok());
+    }
+
+    #[test]
+    fn a_later_fit_is_read_as_an_item_of_its_slot() {
+        // Rule 8, a slot's items; rule 10 for a fit is by entity, slot and
+        // item.
+        let fact = |id: i64, later: bool| exception("cls", "bomb_load", id, later);
+        let class = [
+            fit("1", "cls", "bomb-a", "", "preferred"),
+            fit("2", "cls", "bomb-b", "1943-09-01", "preferred"),
+        ];
+        let slot = resolve_slot(
+            &[],
+            "ship",
+            &class,
+            "class",
+            day(DATE),
+            &[fact(2, true)],
+            false,
+        )
+        .unwrap();
+        let items: Vec<&str> = slot.items.iter().map(|(i, _)| i.as_str()).collect();
+        assert_eq!(items, ["bomb-a", "bomb-b"]);
+        let (_, read) = &slot.items[1];
+        assert_eq!(excepted_ids(read.as_ref().unwrap()), ["2"]);
+        // Without the exception the later item was not fitted on the date.
+        let slot = resolve_slot(&[], "ship", &class, "class", day(DATE), &[], false).unwrap();
+        assert_eq!(slot.items.len(), 1);
+        // A row of the time for the same item refuses it.
+        let class = [
+            fit("1", "cls", "bomb-b", "", "preferred"),
+            fit("2", "cls", "bomb-b", "1943-09-01", "preferred"),
+        ];
+        let slot = resolve_slot(
+            &[],
+            "ship",
+            &class,
+            "class",
+            day(DATE),
+            &[fact(2, true)],
+            false,
+        )
+        .unwrap();
+        assert_eq!(slot.items[0].1.as_ref().unwrap_err().kind, Kind::Exception);
+    }
 }

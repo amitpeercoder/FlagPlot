@@ -62,6 +62,8 @@ Where one row states the range as a scout, that is the row the rule asks for. Wh
 | E13A1 | 493 (1,194, TAIC Manual 1 data sheet, medium) | 501 (1,796, Japanese Wikipedia, low) | It states its condition, maximum fuel, and is the sheet whose normal range (494) the derivation already reads; row 501 states no condition and cites a book not read |
 | PBY-5 | 313 (2,694, "patrol range", 1,478 gal) | 215 (2,190, PBY-5A, no condition); 323 (2,694, PBY-5A, the same source as 313) | In the record only: built when a scenario holds a PBY. The statute-mile assumption behind 2,694 is a gap to close first |
 
+*Nov 21, 2026: decision 0200 built the PBYs' search radius exceptions for the Midway list: the PBY-5 on row 313 (898 nm, decision 0198, rule 76) and the PBY-5A on the Navy's sheet of 1943 (row 12000, 737 nm), by an exception that says `later = true`, which a `[search_radius]` exception may say as any other may.*
+
 ## What it costs
 
 - `oob-derive` gains a second radius and `rules.toml` gains its rule text, a rule for the scouting condition and the exceptions above (four built; the PBY-5's waits for a scenario that holds the type). The derived aircraft files gain new search ranges; their strike ranges, sweep widths and everything else are unchanged.

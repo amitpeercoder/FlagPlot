@@ -211,7 +211,7 @@ Each aircraft type has these fields in `aircraft_types*.csv`:
 - `attack_damage`: the damage one hit does before the target's toughness. 0 for a type that attacks with nothing.
 - `pilot_armour` and `self_sealing_tanks`: yes or no.
 
-A type that attacks with a weapon must have a positive strike radius and attack damage. A type that attacks with nothing cannot be given a strike mission. The derivation of these figures (0029) reads each from sourced facts: the weapon is the load named for the type in the scenario's aircraft list, the damage uses the constants ships already use, the role follows the type's role in the facts, and each protection is a sourced yes or no. A ship class's `anti_aircraft` column is the number of anti-aircraft shots the ship fires, from its heavy guns and light barrels as the derivation sets (0029). [0026, 0029]
+A type that attacks with a weapon must have a positive strike radius and attack damage. A type that attacks with nothing cannot be given a strike mission. The derivation of these figures (0029) reads each from sourced facts: the weapon is the load named for the type in the scenario's aircraft list, the damage uses the constants ships already use, the role follows the type's role in the facts, and each protection is a sourced yes or no; a row that says a type's fuel tanks were only partly protected reads as no (0200). A ship class's `anti_aircraft` column is the number of anti-aircraft shots the ship fires, from its heavy guns and light barrels as the derivation sets (0029). [0026, 0029, 0200]
 
 ## Start of the day: the night pulse
 

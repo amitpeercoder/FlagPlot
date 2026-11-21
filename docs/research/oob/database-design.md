@@ -115,6 +115,7 @@ The first attribute list is written with the first data set, driven by what scen
 - `valid_from` is inclusive and `valid_to` is exclusive, so consecutive ranges do not overlap.
 - An event with a single date, such as `commissioned` or `sunk`, is a fact with `value_type` `date` and no range.
 - "True on this date, limits unknown" is written with `valid_from` and `valid_to` both set to that one date and a note. This is common: a source confirms a radar set aboard at Savo without saying when it was fitted.
+- A row is dated by its source, not by the battle it is read for. The derivation reads a row on a list's date only if it holds then; a row whose date is known only to the year or month is read there only by an exception, which says the architect judged it holds. A row that begins after the list's date is not read, unless an exception says `later = true`, with the reason that what the row states was already so (a range from a sheet of a later year, the airframe and its tanks being the same); every figure read so is marked with the row's date, and the row keeps its own date (decision 0200).
 
 ## Fits: what was mounted on what
 
