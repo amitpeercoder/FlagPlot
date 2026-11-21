@@ -2417,8 +2417,9 @@ body.watched .gives { display: none !important; }
         var lab = el('label', 'pick'), inp = el('input'), body = el('div'); inp.type = 'radio'; inp.name = 'ng-scenario'; inp.checked = s.id === pick.scenario;
         inp.addEventListener('change', function () { pick.scenario = s.id; pick.seat = null; settle(); draw(); });
         body.appendChild(el('strong', '', s.name)); body.appendChild(el('div', '', '')); body.lastChild.appendChild(el('small', '', s.dates + ' \u00B7 ' + (s.days === 1 ? 'one day' : s.days + ' days')));
-        (s.lines || []).forEach(function (t) { body.appendChild(el('div', '', t)); });
-        SIDES.forEach(function (side) { if (s.sides && s.sides[side]) { var d = el('div', 'to'); d.appendChild(el('b', '', SIDE_NAME[side].toUpperCase())); d.appendChild(document.createTextNode(s.sides[side])); body.appendChild(d); } });
+        // Only the scenario chosen is told in full; the others show their name and dates.
+        if (s.id === pick.scenario) (s.lines || []).forEach(function (t) { body.appendChild(el('div', '', t)); });
+        if (s.id === pick.scenario) SIDES.forEach(function (side) { if (s.sides && s.sides[side]) { var d = el('div', 'to'); d.appendChild(el('b', '', SIDE_NAME[side].toUpperCase())); d.appendChild(document.createTextNode(s.sides[side])); body.appendChild(d); } });
         lab.appendChild(inp); lab.appendChild(body); paper.appendChild(lab);
       });
       var ps = pairings(); if (!ps.length) return;

@@ -1,0 +1,34 @@
+{
+ "note": "Directives for the Allied seat of the Eastern Solomons over five days, 23 to 27 August 1942. Written for the game in its own words: these are not historical documents and quote none. Each gives the situation as the commander above has it and the mission with its purpose, and nothing the commander can find out for himself: what the enemy has, what is coming and what cannot be replaced are read elsewhere on the table. Decision 0157.",
+ "directives": [
+  {
+   "number": 1,
+   "when": "start",
+   "from": "Commander in Chief, U.S. Pacific Fleet",
+   "to": "Commander, South Pacific Area and South Pacific Force",
+   "subject": "Defence of Lunga Point",
+   "parts": [
+    {
+     "heading": "1. Situation",
+     "text": [
+      "Lunga Point and its airfield are in our hands and are held by the Marines ashore. The enemy is expected to land troops on Guadalcanal within days, and his carriers are believed at sea to cover the landing.",
+      "The airfield is the key to the island. While it operates the enemy cannot move by day within its reach."
+     ]
+    },
+    {
+     "heading": "2. Mission",
+     "text": [
+      "Keep the airfield at Lunga Point in operation, prevent the enemy landing his troops and supply on Guadalcanal, and destroy his carriers while keeping your own in action, to hold the island."
+     ]
+    },
+    {
+     "heading": "3. Execution",
+     "text": [
+      "Employ the forces assigned to your command as you judge necessary. The method is yours.",
+      "Your carriers and the forces ashore and at Lunga Point are yours to commit. Further direction will follow as the situation requires."
+     ]
+    }
+   ]
+  }
+ ]
+}

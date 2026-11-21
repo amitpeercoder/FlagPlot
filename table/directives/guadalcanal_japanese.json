@@ -1,0 +1,34 @@
+{
+ "note": "Directives for the Japanese seat of the 39 days of Guadalcanal, 7 August to 14 September 1942. Written for the game in its own words: these are not historical documents and quote none. Each gives the situation as the commander above has it and the mission with its purpose, and nothing the commander can find out for himself: what the enemy has, what is coming and what cannot be replaced are read elsewhere on the table. Decision 0157.",
+ "directives": [
+  {
+   "number": 1,
+   "when": "start",
+   "from": "Commander in Chief, Combined Fleet",
+   "to": "Commander, Southeast Area Force",
+   "subject": "Lunga Point and Tulagi",
+   "parts": [
+    {
+     "heading": "1. Situation",
+     "text": [
+      "Our forces hold Tulagi and are completing an airfield at Lunga Point, Guadalcanal. From that field our aircraft will command the sea routes between the enemy and Australia.",
+      "The enemy is expected to contest the southern Solomons. Where and in what strength he will come is not known."
+     ]
+    },
+    {
+     "heading": "2. Mission",
+     "text": [
+      "Hold Lunga Point and Tulagi, or retake them if they are lost. Keep the airfield out of the enemy's use, destroy the shipping that sustains him, and defeat his carriers when they offer battle, to keep the southern Solomons in our hands."
+     ]
+    },
+    {
+     "heading": "3. Execution",
+     "text": [
+      "Employ the forces assigned to your command as you judge necessary. The method is yours.",
+      "The forces at Rabaul and the fleet units assigned are yours to commit. Further direction will follow as the situation requires."
+     ]
+    }
+   ]
+  }
+ ]
+}

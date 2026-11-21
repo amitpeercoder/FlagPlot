@@ -71,3 +71,7 @@ Part 5 of the direction, drafted in the table. At dusk the tray offers the staff
 
 It states facts and what needs the commander, and makes no judgement, as agreed. Where the page does not know the shape of an entry it counts it and does not describe it: a fight at sea is "1 fight at sea" and no more. A report in the middle of a day is not made: the briefing is given at dusk.
 
+
+## Amended on Nov 21, 2026, on the designer's word
+
+**Every scenario on the table's list has a directive for each side at the start,** so that whoever sits down knows what is asked of him. Seven were written, in `table/directives/`, on the pattern of the first: the situation as the commander above has it, the mission with its purpose, and the method left to the commander; no points, no figures of the enemy, and no historical document quoted. A scenario added to the list comes with both. The screen's check holds each side of each scenario to it. Directives after the first, sent when something happens, exist only for the Allied side of the 39 days.
