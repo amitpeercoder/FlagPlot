@@ -504,25 +504,32 @@ impl<'a> SideView<'a> {
     }
 
     /// The men of one of the side's own land units who would fire if it
-    /// fought now (decision 6 of 0090): its men ashore, cut by its fed share
-    /// and by its fatigue, by the function the fight calls. The side's own
-    /// unit only: `None` for a unit that is not the side's, or where the
-    /// scenario has no ground figures.
+    /// fought now (decision 6 of 0090, decision 0208, 16): its men ashore,
+    /// cut by its fighting share and by its fatigue, by the functions the
+    /// fight calls. The side's own unit only: `None` for a unit that is not
+    /// the side's, or where the scenario has no ground figures.
     pub fn firing_men(&self, unit: LandUnitId) -> Option<u32> {
         let land_unit = self
             .truth
             .land_units
             .get(&unit)
             .filter(|unit| self.owns_land_unit(unit))?;
-        self.ref_data.ground.as_ref()?;
-        Some(
-            crate::ground_combat::firing_men(
-                land_unit.men_ashore,
-                land_unit.fed_share,
-                land_unit.fatigue,
-            )
-            .0,
-        )
+        let share = self.fighting_share(unit)?.share;
+        Some(crate::ground_combat::firing_men(land_unit.men_ashore, share, land_unit.fatigue).0)
+    }
+
+    /// The fighting share of one of the side's own land units and what it is
+    /// made of (decision 0208, 5 and 16), by the function the fight and the
+    /// work call. The side's own unit only: `None` for a unit that is not the
+    /// side's, or where the scenario has no ground figures.
+    pub fn fighting_share(&self, unit: LandUnitId) -> Option<crate::condition::FightingShare> {
+        let land_unit = self
+            .truth
+            .land_units
+            .get(&unit)
+            .filter(|unit| self.owns_land_unit(unit))?;
+        let figures = self.ref_data.ground.as_ref()?;
+        Some(crate::condition::unit_fighting_share(land_unit, figures))
     }
 
     /// The fatigue one of the side's own land units would have after one

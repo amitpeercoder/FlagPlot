@@ -186,7 +186,8 @@ impl World {
 
     /// A day of training for a unit set to train, if the conditions of
     /// decision 3 of 0097 hold: all its men ashore at a base of its side,
-    /// fed in full. At or above the ceiling nothing changes and nothing is
+    /// fed in full, and where the figures of 0208 are given with no night of
+    /// hunger on its count. At or above the ceiling nothing changes and nothing is
     /// recorded: the unit still spent the day.
     fn train_day(&mut self, day: u32, unit_id: LandUnitId, figures: &GroundFigures) {
         let unit = &self.truth.land_units[&unit_id];
@@ -199,7 +200,12 @@ impl World {
             .bases
             .values()
             .any(|base| base.side == side && base.hex == hex);
-        if self.truth.men_aboard(unit_id) > 0 || !in_base || unit.fed_share != Fixed::ONE {
+        // Men who are mending do not train (decision 0208, 8): where the
+        // figures of 0208 are given, a unit trains only with a count of
+        // nothing.
+        let mending = figures.hunger.is_some_and(|h| h.mending.is_some()) && unit.hunger_nights > 0;
+        if self.truth.men_aboard(unit_id) > 0 || !in_base || unit.fed_share != Fixed::ONE || mending
+        {
             return;
         }
         if u32::from(unit.experience) >= figures.training_ceiling {

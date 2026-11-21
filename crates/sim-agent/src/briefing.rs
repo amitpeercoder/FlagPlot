@@ -1688,7 +1688,8 @@ pub struct NoActivityLine {
     pub activity: &'static str,
     pub place: Place,
     /// `marched`, `contested`, `no_base`, `not_fed`, `men_aboard`,
-    /// `at_ceiling`, `rehearsal_full` or `force_not_ready`.
+    /// `mending` (fed in full, its nights of hunger above nothing: decision
+    /// 0208, 17), `at_ceiling`, `rehearsal_full` or `force_not_ready`.
     pub reason: &'static str,
     /// For `contested`: whose attack, `own_attack` or `enemy_attack`.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -2600,7 +2601,12 @@ fn no_activity_lines(
         if works {
             if !in_base {
                 out.push(line("no_base"));
-            } else if unit.fed_share.is_zero() {
+            } else if sim_core::condition::unit_fighting_share(unit, figures)
+                .share
+                .is_zero()
+            {
+                // Only where its fighting share is nothing (decision 0208,
+                // 17): the fed share where the figures of 0208 are not given.
                 out.push(NoActivityLine {
                     event: fed_event,
                     ..line("not_fed")
@@ -2615,6 +2621,14 @@ fn no_activity_lines(
                 out.push(NoActivityLine {
                     event: fed_event,
                     ..line("not_fed")
+                });
+            } else if unit.hunger_nights > 0 && figures.hunger.is_some_and(|h| h.mending.is_some())
+            {
+                // Fed in full, and its count is above nothing (decision 0208,
+                // 8 and 17).
+                out.push(NoActivityLine {
+                    event: fed_event,
+                    ..line("mending")
                 });
             } else if u32::from(unit.experience) >= figures.training_ceiling {
                 out.push(NoActivityLine {

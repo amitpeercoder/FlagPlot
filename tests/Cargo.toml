@@ -16,6 +16,8 @@ sim-agent = { path = "../crates/sim-agent" }
 # gives it (decision 0178).
 sim-cli = { path = "../crates/sim-cli" }
 serde_json.workspace = true
+# Statement 18 of scenario 122 reads the figures files as TOML.
+toml.workspace = true
 # Part 3 of scenario 4b reads the anchors file and places each position in a
 # hex with the map tool's own projection.
 csv.workspace = true
@@ -619,6 +621,10 @@ path = "scenario_118_a_dry_run_inside_a_day.rs"
 [[test]]
 name = "scenario_119_hunger_takes_time"
 path = "scenario_119_hunger_takes_time.rs"
+
+[[test]]
+name = "scenario_122_hungry_men_are_slow_to_mend"
+path = "scenario_122_hungry_men_are_slow_to_mend.rs"
 
 [[test]]
 name = "scenario_120_real_oilers"

@@ -1,0 +1,72 @@
+# Scenario 122: hungry men are slow to mend.
+#
+# Decision 0208. Scenario 119's setting, in a file of its own. Side A (the
+# Allied side) has a base Q, base 1, a coast hex at (10,0), with no aircraft,
+# no gun and no stock, and a land unit V, land unit 1, of 1,000 men ashore
+# there. Nothing fights and nothing is bombed. Side B (the Japanese side) has
+# nothing at all unless a statement adds it (statement 13 adds a unit E of
+# 1,000 men in Q's hex, set to attack). The game is 22 days, so that a unit
+# with a count of 120 at the start has its twenty-first night in it.
+#
+# The test builds its variants from the text of this file, at the marked
+# lines below: it gives Q's stock (the line `supply_t = 0` of base Q), adds
+# land units at the mark `units` and a count of hunger to V at the mark `v`,
+# adds orders at the mark `orders`, supply lines at the mark `lines` and
+# commands at the mark `commands`. The hand calculation is in
+# tests/scenario_122_hungry_men_are_slow_to_mend.rs. The test runs this file
+# on the frozen step 1 figures, with scenario 122's ground figures
+# (data/reference/ground_placeholder_scenario_122.toml): the daily supply for
+# a man is 0.005 t, `unfed_loss_share_per_day` 0.05, `rations_landed_nights`
+# 3, `hungry_below_share` 0.6, `hunger_nights_before_loss` 14,
+# `hunger_weakness_per_night` 0.01 and `unfed_fighting_share` 0.5. The map is
+# data/map/placeholder_landing.toml, scenario 21's.
+#
+# Kept out of the loops that walk data/scenarios/*.toml by being in this
+# folder (decision 0072).
+#
+# PLACEHOLDER DATA. The bases, units and figures are invented. Every name
+# below says "Placeholder".
+
+name = "Placeholder scenario 122: Hungry men are slow to mend"
+placeholder = true
+seed = 1942
+days = 22
+map = "../../map/placeholder_landing.toml"
+ship_classes = [
+    "../../reference/ship_classes.csv",
+    "../../reference/ship_classes_placeholder_transports.csv",
+]
+port_sizes = "../../reference/port_sizes.csv"
+aircraft_types = "../../reference/aircraft_types.csv"
+search = "../../reference/search.toml"
+surface_combat = "../../reference/surface_combat.toml"
+ground = "../../reference/ground_placeholder_scenario_122.toml"
+
+# Allied base 1, Q: no aircraft, no gun, and no stock; the men's charge there
+# is 5 t a night for V's 1,000 men.
+[[base]]
+id = 1
+name = "Placeholder base Q"
+side = "allied"
+q = 10
+r = 0
+supply_t = 0
+fuel_t = 0
+
+# V, 1,000 men, ashore at Q from the start.
+[[land_unit]]
+id = 1
+name = "Placeholder V"
+side = "allied"
+men = 1000
+q = 10
+r = 0
+# MARK: v
+
+# MARK: units
+
+# MARK: lines
+
+# MARK: commands
+
+# MARK: orders

@@ -853,9 +853,10 @@ impl Day<'_, '_> {
         // Item 12: the work still to do, the work the units make in a day,
         // and the days that comes to.
         let per_day = units.iter().fold(Fixed::ZERO, |sum, u| {
+            // The same fighting share the work reads (decision 0208, 19).
             sum + sim_core::works::unit_work(
                 u.men_ashore,
-                u.fed_share,
+                sim_core::condition::unit_fighting_share(u, figures).share,
                 u.skills.works,
                 u.working,
                 figures,

@@ -16,6 +16,7 @@ pub mod choices;
 pub mod claims;
 pub mod command;
 pub mod commander;
+pub mod condition;
 pub mod entering;
 #[cfg(test)]
 mod entering_tests;

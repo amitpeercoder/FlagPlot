@@ -48,17 +48,19 @@ pub fn default_job(base: &Base) -> Job {
     }
 }
 
-/// The work a unit makes in a day (decisions 3 and 3a of 0099): its men
-/// ashore, times its fed share, times `work_per_man_day`, times its works
-/// skill over 2, and for a fighting unit times `fighting_unit_work_share`.
+/// The work a unit makes in a day (decisions 3 and 3a of 0099, decision
+/// 0208, 7): its men ashore, times its fighting share (its fed share where
+/// the figures of 0208 are not given, `crate::condition::fighting_share`),
+/// times `work_per_man_day`, times its works skill over 2, and for a
+/// fighting unit times `fighting_unit_work_share`.
 pub fn unit_work(
     men_ashore: u32,
-    fed_share: Fixed,
+    fighting_share: Fixed,
     works: u8,
     working: bool,
     figures: &GroundFigures,
 ) -> Fixed {
-    let made = (Fixed::from_int(i64::from(men_ashore)) * fed_share * figures.work_per_man_day)
+    let made = (Fixed::from_int(i64::from(men_ashore)) * fighting_share * figures.work_per_man_day)
         .mul_div(
             Fixed::from_int(i64::from(works)),
             Fixed::from_int(i64::from(Skills::STANDARD)),
@@ -136,13 +138,13 @@ impl World {
         };
         let base_id = base.id;
         let job = job.unwrap_or_else(|| default_job(base));
-        let (men, fed_share, works, working) = (
+        let (men, fighting, works, working) = (
             unit.men_ashore,
-            unit.fed_share,
+            crate::condition::unit_fighting_share(unit, figures),
             unit.skills.works,
             unit.working,
         );
-        let work = unit_work(men, fed_share, works, working, figures);
+        let work = unit_work(men, fighting.share, works, working, figures);
         if work <= Fixed::ZERO {
             return;
         }
@@ -213,15 +215,15 @@ impl World {
             }
         };
         let breakdown = self.config.record_breakdowns.then(|| {
-            let mut factors = vec![
-                Factor {
-                    name: "men_ashore",
-                    value: Fixed::from_int(i64::from(men)),
-                },
-                Factor {
-                    name: "fed_share",
-                    value: fed_share,
-                },
+            // The fed share, and where the figures of 0208 are given the
+            // nights of hunger, the condition and the fighting share
+            // (decision 0208, 15).
+            let mut factors = vec![Factor {
+                name: "men_ashore",
+                value: Fixed::from_int(i64::from(men)),
+            }];
+            factors.extend(fighting.factors());
+            factors.extend([
                 Factor {
                     name: "work_per_man_day",
                     value: figures.work_per_man_day,
@@ -230,7 +232,7 @@ impl World {
                     name: "works_skill",
                     value: Fixed::from_int(i64::from(works)),
                 },
-            ];
+            ]);
             if !working {
                 factors.push(Factor {
                     name: "fighting_unit_work_share",

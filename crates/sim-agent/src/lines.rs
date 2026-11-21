@@ -1105,6 +1105,20 @@ pub struct LandUnitLine {
     /// full. Left out when 0. The unit's own side only.
     #[serde(skip_serializing_if = "is_zero_u32")]
     pub hunger_nights: u32,
+    /// The unit's condition, 0 to 1 (decision 0208, 3 and 16): one less its
+    /// nights of hunger times the ground figure `hunger_weakness_per_night`,
+    /// not below 0. Its firing men and its work are scaled by it times its
+    /// share from last night's meal. Left out when 1, and in every game
+    /// whose ground figures do not give the figures of 0208. The unit's own
+    /// side only.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub condition: Option<Dec>,
+    /// The unit's fighting share, 0 to 1 (decision 0208, 5): its condition
+    /// times its share from last night's meal, what its firing men and its
+    /// work are scaled by. Left out when 1, and in every game whose ground
+    /// figures do not give the figures of 0208. The unit's own side only.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fighting_share: Option<Dec>,
     /// For a fighting unit with men ashore: the men who would fire if it
     /// fought now, its men ashore cut by its fed share and its fatigue
     /// (decision 0110, item 3): `SideView::firing_men`. Left out for a
@@ -1401,6 +1415,18 @@ pub(crate) fn land_unit_line(
             .map(Dec),
         fed_share: Dec(unit.fed_share),
         hunger_nights: unit.hunger_nights,
+        condition: ctx
+            .view
+            .fighting_share(unit.id)
+            .and_then(|share| share.mending)
+            .map(|mending| mending.condition)
+            .filter(|condition| *condition != Fixed::ONE)
+            .map(Dec),
+        fighting_share: ctx
+            .view
+            .fighting_share(unit.id)
+            .filter(|share| share.mending.is_some() && share.share != Fixed::ONE)
+            .map(|share| Dec(share.share)),
         firing_men_now: (!unit.working && unit.men_ashore > 0)
             .then(|| ctx.view.firing_men(unit.id))
             .flatten(),

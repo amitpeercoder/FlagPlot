@@ -1229,9 +1229,11 @@ body.watched .gives { display: none !important; }
     if (kind === 'air_group' || kind === 'ship') return cardEntity(h);
     var none = openCard(nameOf(h).toUpperCase(), null); none.appendChild(el('div', '', 'Nothing is held of it.'));
   }
+  function hungerWord(u) { return parseFloat(u.fed_share) >= 1 ? 'Mending' : 'Short of food'; }
   function cardUnit(u) {
     var body = openCard(u.land_unit.name.toUpperCase(), 'YOURS', true);
-    kv(body, [['Men ashore', u.men_ashore ? commas(u.men_ashore) : null], ['Men aboard', u.men_aboard ? commas(u.men_aboard) : null], ['Where', u.place ? hexWords(u.place) : 'aboard ship'], ['Posture', u.posture], ['Doing', u.activity], ['Fatigue', u.fatigue], ['Fed last night', String(u.fed_last_night || '').replace(/_/g, ' ')], ['Hungry', u.hunger_nights ? u.hunger_nights + (u.hunger_nights === 1 ? ' night' : ' nights') : null], ['Experience', u.experience]]);
+    var kvu = kv(body, [['Men ashore', u.men_ashore ? commas(u.men_ashore) : null], ['Men aboard', u.men_aboard ? commas(u.men_aboard) : null], ['Where', u.place ? hexWords(u.place) : 'aboard ship'], ['Posture', u.posture], ['Doing', u.activity], ['Fatigue', u.fatigue], ['Fed last night', String(u.fed_last_night || '').replace(/_/g, ' ')], [hungerWord(u), u.hunger_nights ? u.hunger_nights + (u.hunger_nights === 1 ? ' night' : ' nights') : null], ['Condition', u.fighting_share != null ? Math.floor(parseFloat(u.fighting_share) * 100) + '%' : null], ['Experience', u.experience]]);
+    if (u.hunger_nights && parseFloat(u.fed_share) < 1) Promise.all([M.day, M.day - 1].map(dayEvents)).then(function (all) { var tonight = all[0].some(function (e) { return e.pulse === 'night'; }) ? all[0] : all[1], last = tonight.filter(function (e) { return e.event_kind === 'hunger_nights_changed' && e.pulse === 'night' && (e.entities || []).some(function (x) { return x.handle === u.land_unit.handle; }); }).pop(), m = last && /hungry (\d+) nights, from (\d+)/.exec(last.text); if (m && +m[1] > +m[2]) { [].slice.call(kvu.children).forEach(function (c) { if (c.textContent === 'Short of food') c.textContent = 'Hungry'; }); } });
     if ((u.aboard || []).length) { listOf(body, 'ABOARD', u.aboard.map(function (a) { return a.ship.handle + ': ' + commas(a.men); }), 'men'); }
    
   }

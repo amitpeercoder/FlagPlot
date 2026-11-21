@@ -1021,9 +1021,12 @@ fn ground_line(text: &str) -> Option<String> {
 }
 
 /// Properties: no game on file moves. No scenario on file names a ground file
-/// with the hunger figures but scenario 119's own and the table's copies, and
-/// none of the figures files in `data/reference` (live or frozen) has them but
-/// scenario 119's.
+/// with the hunger figures but scenario 119's own, scenario 122's own (decision
+/// 0208) and the table's copies, and none of the figures files in
+/// `data/reference` (live or frozen) has them but those scenarios' and
+/// `ground_hunger.toml`. (One test by the architect's ruling of Nov 21, 2026:
+/// the property's words stand, and the list of files that may give the figures
+/// gains scenario 122's.)
 #[test]
 fn property_no_game_on_file_moves() {
     let mut files = Vec::new();
@@ -1035,7 +1038,9 @@ fn property_no_game_on_file_moves() {
             .unwrap()
             .to_string_lossy()
             .into_owned();
-        let own = rel.starts_with("hunger-takes-time/") || rel.starts_with("table-hunger/");
+        let own = rel.starts_with("hunger-takes-time/")
+            || rel.starts_with("hungry-men-are-slow-to-mend/")
+            || rel.starts_with("table-hunger/");
         let text = std::fs::read_to_string(file).expect("the scenario reads");
         let Some(ground) = ground_line(&text) else {
             continue;
@@ -1063,7 +1068,10 @@ fn property_no_game_on_file_moves() {
             if !(name.starts_with("ground") && name.ends_with(".toml")) {
                 continue;
             }
-            if name == "ground_placeholder_scenario_119.toml" || name == "ground_hunger.toml" {
+            if name == "ground_placeholder_scenario_119.toml"
+                || name == "ground_placeholder_scenario_122.toml"
+                || name == "ground_hunger.toml"
+            {
                 continue;
             }
             let figures = sim_data::load_ground_figures(&path).expect("a ground file loads");

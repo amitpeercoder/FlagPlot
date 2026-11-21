@@ -1296,3 +1296,16 @@ unit's nights of hunger (up one on a night it is fed below the ground figure
 `hungry_below_share`, down one on a night fed in full), left out when 0, and so in every game
 whose ground figures give no hunger figures. The text adds "hungry N nights" to the unit's line
 where it is above 0. The side's own units only; the enemy is told none of it.
+
+## Hungry men are slow to mend (decision 0208)
+
+A field and a reason added only, so `version` does not change. A land unit line has `condition`,
+the unit's condition from 0 to 1 (one less its nights of hunger times the ground figure
+`hunger_weakness_per_night`, not below 0), left out when 1, and so in every game whose ground
+figures do not give the two figures of 0208, and `fighting_share`, its condition times its share
+from last night's meal (`unfed_fighting_share` plus one less it times the fed share), left out when 1
+and in the same games. `firing_men_now` and the work are scaled by the fighting share. The text adds "condition N" to the
+unit's line where it is below 1. A reason a unit did no training, `mending`, is added to
+`no_activity_yesterday`: fed in full, its nights of hunger above nothing. A working unit is given
+`not_fed` only where its fighting share is nothing. The side's own units only; the enemy is told
+none of it.
