@@ -1,0 +1,65 @@
+# The fuelling group of the Coral Sea, Neosho and Sims, as of 6 May 1942, for
+# the Coral Sea's files with the oiler (decision 0206, rules 17 to 19). The
+# derivation tool turns this list into
+# data/reference/ship_classes_coral_sea_oilers.csv with its sources and ships
+# companions, and ship_experience_coral_sea_oilers.ships.csv. It is a list of
+# its own so that no list, class file or sides file a scenario on file reads
+# changes (rule 17): the new scenario files name this class file beside the
+# Coral Sea's own.
+#
+# NEOSHO is of the type oiler: kind auxiliary, the mark that she fuels others
+# at sea, toughness from her light displacement, no main battery and no tubes
+# by her kind (rules 1 to 3), her anti-aircraft guns and radar read as any
+# ship's (rule 4). Her own fuel and her cargo of oil are read in barrels and
+# made long tons by the Navy's factor (rules 6 to 8). The exceptions she rests
+# on are at the end of rules.toml, under "Decision 0206".
+#
+# SIMS is derived as her sisters Anderson, Hammann, Russell and Morris are in
+# coral_sea.toml (decision 0206, rule 18): her class's rows and its
+# exceptions, her surface weapons not modelled and her radar unknown, read as
+# none, as theirs. Her radar row of 7 May 1942 (fits 14319) begins after this
+# list's date and is not read. She takes a class id of her own here.
+#
+# Settled by the architect, Nov 21, 2026 (decision 0206).
+
+name = "Coral Sea, the fuelling group"
+date = "1942-05-06"
+rules = "rules.toml"
+output = "../reference/ship_classes_coral_sea_oilers.csv"
+first_class_id = 4030
+air_figures = true
+
+ships = ["ao-23-neosho", "dd-409-sims"]
+
+# Assumption of the scenario, not a fact (decision 0029, 4; decision 0188,
+# ruling 5), as for Sims's sisters in coral_sea.toml: the carriers' screen is
+# not sent to fight ships. Neosho is not named: she has no surface weapons by
+# her kind.
+surface_weapons_not_modelled = ["dd-409-sims"]
+
+# Working assumption, not a fact (decision 0019, 5): no row says whether these
+# ships carried a search radar on 6 May, and they are treated as not fitted
+# (decision 0206, rules 4 and 23).
+radar_unknown_means_none = ["ao-23-neosho", "dd-409-sims"]
+
+# The list's rule (decision 0206, rule 14): a ship with no row of her own for
+# a figure her sisters differ in reads the least of theirs. Neosho, lost in
+# May 1942, has no cargo row; her sisters' cargo oil of November 1943 is
+# 101,638 (Platte), 103,233 (Cimarron) and 104,938 barrels (Sabine,
+# Guadalupe), so she reads 101,638.
+[least_of_sisters]
+facts = ["cargo_oil_capacity_bbl"]
+reason = "A ship with no row of her own for a figure her sisters differ in reads the least of theirs: Neosho was lost in May 1942 and no source gives her cargo, and the least of her sisters' is the figure the rows support for any ship of the class. Settled by the architect, Nov 21, 2026 (decision 0206, rule 14)."
+
+# The class ids, pinned (decision 0077): 4030 and 4031, which no other list
+# uses.
+[class_ids]
+4030 = ["ao-23-neosho"]
+4031 = ["dd-409-sims"]
+
+# The experience values of the two (decision 0064), as for the ships of
+# coral_sea.toml, on the same engagement.
+[experience]
+engagement = "coral-sea"
+output = "../reference/ship_experience_coral_sea_oilers.ships.csv"
+ships = ["ao-23-neosho", "dd-409-sims"]

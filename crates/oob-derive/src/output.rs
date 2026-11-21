@@ -5,8 +5,8 @@ use std::path::Path;
 
 use crate::aircraft::{AircraftResult, AIRCRAFT_FIGURES};
 use crate::derive::{
-    ShipResult, Value, AIR_FIGURES, AMMUNITION_NOT_LIMITING_ROUNDS, CARGO, FIGURES, KIND, RADAR,
-    SURFACE_WEAPONS, WHOLE,
+    ShipResult, Value, AIR_FIGURES, AMMUNITION_NOT_LIMITING_ROUNDS, FIGURES, KIND, MARK_FIGURE,
+    MARK_RULE, RADAR, SURFACE_WEAPONS, WHOLE,
 };
 use crate::input::{Exception, List, Rules};
 use crate::problem::{Kind, Problem};
@@ -34,31 +34,64 @@ const RULES: [&str; 17] = [
     "heavy guns (counts of the weapons in the heavy_aa slot) x anti_aircraft_heavy_weight + light barrels (light_aa slot) x anti_aircraft_light_weight, rounded down (decision 0029, 1); the slot of the ship if it has a readable row there, else of its class",
 ];
 
+/// Which columns a list's class file has beyond the 15 of decision 0020.
+#[derive(Clone, Copy)]
+pub(crate) struct Cols {
+    /// The two air figures (decision 0029).
+    pub air: bool,
+    /// The troop figure (decision 0093, 8).
+    pub troop: bool,
+    /// The mark that a class fuels others at sea, written only where the
+    /// list has an oiler (decision 0206, rule 1).
+    pub mark: bool,
+}
+
+impl Cols {
+    fn of(list: &List, mark: bool) -> Cols {
+        Cols {
+            air: list.air_figures,
+            troop: list.troop_figures,
+            mark,
+        }
+    }
+
+    fn count(self) -> usize {
+        FIGURES.len()
+            + if self.air { AIR_FIGURES.len() } else { 0 }
+            + usize::from(self.troop)
+            + usize::from(self.mark)
+    }
+}
+
 /// The name of figure `i` of a class row: the 15 of decision 0020, then
 /// the two air figures when the list has them, then the troop figure when
-/// the list has it. `air` says whether the list has the air figures.
-fn figure_name(i: usize, air: bool) -> &'static str {
+/// the list has it, then the mark when the list has an oiler.
+fn figure_name(i: usize, cols: Cols) -> &'static str {
+    let after_air = FIGURES.len() + if cols.air { AIR_FIGURES.len() } else { 0 };
     if i < FIGURES.len() {
         FIGURES[i]
-    } else if air && i < FIGURES.len() + AIR_FIGURES.len() {
+    } else if i < after_air {
         AIR_FIGURES[i - FIGURES.len()]
-    } else {
+    } else if cols.troop && i == after_air {
         TROOP_FIGURE
+    } else {
+        MARK_FIGURE
     }
 }
 
 /// Whether figure `i` is written as a whole number: the counts and rounds
-/// carried, and the troop figure, which is the last column wherever it falls.
-fn is_whole(i: usize, air: bool) -> bool {
-    WHOLE.contains(&i) || figure_name(i, air) == TROOP_FIGURE
+/// carried, and the troop figure, wherever it falls.
+fn is_whole(i: usize, cols: Cols) -> bool {
+    let name = figure_name(i, cols);
+    name == TROOP_FIGURE || (name != MARK_FIGURE && WHOLE.contains(&i))
 }
 
 /// The rule behind figure `i`, in words.
-fn rule_text(i: usize, air: bool) -> &'static str {
-    if figure_name(i, air) == TROOP_FIGURE {
-        TROOP_RULE
-    } else {
-        RULES[i]
+fn rule_text(i: usize, cols: Cols) -> &'static str {
+    match figure_name(i, cols) {
+        TROOP_FIGURE => TROOP_RULE,
+        MARK_FIGURE => MARK_RULE,
+        _ => RULES[i],
     }
 }
 
@@ -113,11 +146,11 @@ struct ClassRow {
     members: Vec<usize>,
 }
 
-fn cell(i: usize, air: bool, value: &Value) -> String {
+fn cell(i: usize, cols: Cols, value: &Value) -> String {
     match value {
         Value::Text(text) => text.clone(),
         Value::Flag(flag) => if *flag { "1" } else { "0" }.to_string(),
-        Value::Num(dec) if is_whole(i, air) => dec.whole().to_string(),
+        Value::Num(dec) if is_whole(i, cols) => dec.whole().to_string(),
         Value::Num(dec) => dec.to_string(),
     }
 }
@@ -184,9 +217,9 @@ fn troop_header_lines(list: &List) -> Vec<String> {
 /// The problems of the list's pinned class rows against the derived ships
 /// (decision 0077): ships pinned to one id must have one facts class and
 /// the same derived figures.
-pub fn check_pins(list: &List, results: &[ShipResult]) -> Vec<Problem> {
+pub fn check_pins(list: &List, results: &[ShipResult], mark: bool) -> Vec<Problem> {
     let mut problems = Vec::new();
-    let air = list.air_figures;
+    let air = Cols::of(list, mark);
     let Some(pins) = &list.class_ids else {
         return problems;
     };
@@ -233,12 +266,12 @@ pub fn check_pins(list: &List, results: &[ShipResult]) -> Vec<Problem> {
 
 /// One class row for each pinned id, in id order, holding the ships pinned
 /// to it (decision 0077); rows are never merged. Names them.
-fn class_rows(list: &List, results: &[ShipResult]) -> Result<Vec<ClassRow>, Problem> {
+fn class_rows(list: &List, results: &[ShipResult], mark: bool) -> Result<Vec<ClassRow>, Problem> {
     let pins = list
         .class_ids
         .as_ref()
         .ok_or_else(|| Problem::new("list", Kind::List, "class_ids", "required (decision 0077)"))?;
-    let air = list.air_figures;
+    let air = Cols::of(list, mark);
     let mut rows = Vec::new();
     for (&id, ships) in pins {
         let members: Vec<usize> = results
@@ -330,6 +363,9 @@ fn class_rows(list: &List, results: &[ShipResult]) -> Result<Vec<ClassRow>, Prob
 }
 
 pub struct Context<'a> {
+    /// The list has an oiler, so the class file has the column of the mark
+    /// (decision 0206, rule 1).
+    pub mark_column: bool,
     pub list: &'a List,
     pub list_name: &'a str,
     pub rules: &'a Rules,
@@ -391,6 +427,7 @@ pub fn render(ctx: &Context) -> Result<Outputs, Problem> {
         used,
         ..
     } = ctx;
+    let cols = Cols::of(list, ctx.mark_column);
     let air = list.air_figures;
     if results.is_empty() {
         // A list with no ships writes no class files.
@@ -408,16 +445,13 @@ pub fn render(ctx: &Context) -> Result<Outputs, Problem> {
         });
     }
     let troop = list.troop_figures;
-    let names: Vec<&str> =
-        (0..FIGURES.len() + if air { AIR_FIGURES.len() } else { 0 } + usize::from(troop))
-            .map(|i| figure_name(i, air))
-            .collect();
+    let names: Vec<&str> = (0..cols.count()).map(|i| figure_name(i, cols)).collect();
     let not_modelled: Vec<&str> = results
         .iter()
         .filter(|r| r.weapons_not_modelled)
         .map(|r| r.ship.as_str())
         .collect();
-    let rows = class_rows(list, results)?;
+    let rows = class_rows(list, results, ctx.mark_column)?;
     let (sources_name, ships_name) = companion_names(&list.output);
     let class_name = Path::new(&list.output)
         .file_name()
@@ -496,7 +530,9 @@ pub fn render(ctx: &Context) -> Result<Outputs, Problem> {
     if let (Some(block), Some(achieved), true) = (
         rules.fire_rate.as_ref(),
         ctx.fire_rate,
-        results.iter().any(|r| !r.weapons_not_modelled),
+        results
+            .iter()
+            .any(|r| !r.weapons_not_modelled && !r.unarmed_by_kind),
     ) {
         for text in crate::fire_rate::header_lines(block, achieved) {
             line(text);
@@ -541,6 +577,24 @@ pub fn render(ctx: &Context) -> Result<Outputs, Problem> {
             ));
         }
     }
+    let unarmed: Vec<&str> = results
+        .iter()
+        .filter(|r| r.unarmed_by_kind)
+        .map(|r| r.ship.as_str())
+        .collect();
+    if !unarmed.is_empty() {
+        line("No surface weapons by kind (decision 0166, rule 5; decision 0206, rule 3): an auxiliary has no main battery and no torpedo tubes, so main_guns, gun_rounds_per_min, gun_rounds_per_gun, gun_damage, torpedo_tubes, torpedo_tubes_one_side and torpedo_damage are 0 and no fit, shell or outfit is read, for:".to_string());
+        for ship in &unarmed {
+            line(format!("  {ship}"));
+        }
+    }
+    if let Some(rule) = &list.least_of_sisters {
+        line(format!(
+            "The least of her sisters (decision 0206, rule 14), the list's rule for {}: a ship with no row of her own or of her class for the fact reads the least of the values her sisters' own rows give; reason: {}",
+            rule.facts.iter().cloned().collect::<Vec<_>>().join(", "),
+            one_line(&rule.reason)
+        ));
+    }
     if !not_modelled.is_empty() {
         line("Surface weapons not modelled (decision 0029, 4): main_guns, gun_rounds_per_min, gun_rounds_per_gun, gun_damage, torpedo_tubes, torpedo_tubes_one_side and torpedo_damage are written as 0, an assumption of the scenario and not a fact, for:".to_string());
         for ship in &not_modelled {
@@ -570,7 +624,12 @@ pub fn render(ctx: &Context) -> Result<Outputs, Problem> {
         .iter()
         .map(|row| {
             let mut cells = vec![row.id.to_string(), row.name.clone()];
-            cells.extend(row.figures.iter().enumerate().map(|(i, v)| cell(i, air, v)));
+            cells.extend(
+                row.figures
+                    .iter()
+                    .enumerate()
+                    .map(|(i, v)| cell(i, cols, v)),
+            );
             cells
         })
         .collect();
@@ -603,7 +662,7 @@ pub fn render(ctx: &Context) -> Result<Outputs, Problem> {
                 .join(" ");
             let mut notes = Vec::new();
             if let Value::Num(exact) = &row.figures[i] {
-                if is_whole(i, air) && exact.has_fraction() {
+                if is_whole(i, cols) && exact.has_fraction() {
                     notes.push(format!("exact {exact}, truncated"));
                 }
             }
@@ -648,13 +707,15 @@ pub fn render(ctx: &Context) -> Result<Outputs, Problem> {
                     notes.push(format!("radar assumed none for {}", ships.join(", ")));
                 }
             }
-            debug_assert!(i != CARGO || facts.is_empty());
             let _ = KIND;
+            let rule = results[row.members[0]].figures[i]
+                .rule
+                .unwrap_or_else(|| rule_text(i, cols));
             source_rows.push(vec![
                 row.id.to_string(),
                 (*figure).to_string(),
-                cell(i, air, &row.figures[i]),
-                rule_text(i, air).to_string(),
+                cell(i, cols, &row.figures[i]),
+                rule.to_string(),
                 facts,
                 notes.join("; "),
             ]);

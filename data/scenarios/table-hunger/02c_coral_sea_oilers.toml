@@ -1,16 +1,16 @@
-# SCENARIO 105, THE CORAL SEA (decision 0188).
+# SCENARIO 105 WITH HER OILER, THE CORAL SEA (decision 0206).
 #
-# Made by scripts/coral-sea/make_files.py from the base,
-# data/scenarios/coral-sea/base_coral_sea.toml. Do not edit by hand: change
+# Made by scripts/coral-sea/make_oiler_files.py from the base,
+# data/scenarios/coral-sea/base_coral_sea_oilers.toml. Do not edit by hand: change
 # the base or the script and make the files again
-# (`python3 scripts/coral-sea/make_files.py --check` says whether each file is
+# (`python3 scripts/coral-sea/make_oiler_files.py --check` says whether each file is
 # still the one it makes). There are four files, one for each pairing the
 # table offers (decision 0185):
-#   01a: both sides given their orders (staff against staff);
-#   01b: the Japanese side given its orders, the Allied side none (a person
+#   02a: both sides given their orders (staff against staff);
+#   02b: the Japanese side given its orders, the Allied side none (a person
 #        or an agent takes the Allied seat);
-#   01c: the Allied side given its orders, the Japanese side none;
-#   01d: neither side given orders.
+#   02c: the Allied side given its orders, the Japanese side none;
+#   02d: neither side given orders.
 # Each is the base with this header, a name of its own and, at the end, the
 # `[[command]]` and `[[order]]` tables of the sides it gives orders, and
 # nothing else: with their names and those tables taken away the four are
@@ -35,13 +35,22 @@
 # Kept out of the loops that walk data/scenarios/*.toml by being in this
 # folder (decision 0072).
 #
-# THE BASE of scenario 105, the Coral Sea, 6 to 10 May 1942 (decision 0188,
-# as amended on review and confirmed on Nov 20, 2026). It is not played
-# itself: scripts/coral-sea/make_files.py makes the four files of
-# data/scenarios/coral-sea/ from it, each with this text, a name of its own
-# and the commands and orders of its pairing, and nothing else. Edit this
-# file or the script, never a file it makes, and make them again. The hand
-# calculation is the doc comment of tests/scenario_105_the_coral_sea.rs.
+# THE BASE of scenario 105 with her oiler, the Coral Sea, 6 to 10 May 1942
+# (decision 0206). It is not played itself: scripts/coral-sea/
+# make_oiler_files.py makes it from base_coral_sea.toml and makes the four
+# files of data/scenarios/coral-sea/ (02a to 02d) from it, each with this
+# text, a name of its own and the commands and orders of its pairing, and
+# nothing else. Edit the old base or the script, never a file it makes, and
+# make them again. The old base, and the four files of scenario 105 that
+# read it, are not touched (decision 0206, rule 17).
+#
+# It is the base of scenario 105 with one force more, the fuelling group
+# (Neosho and Sims, task force 6), with the class file of the oilers,
+# ship_classes_coral_sea_oilers.csv, named beside the others, and with a
+# sides file of its own, class_sides_coral_sea_oilers.csv. The rest is the
+# old base's, byte for byte. The hand calculation is the doc comment of
+# tests/scenario_105_the_coral_sea.rs; that of the oiler,
+# tests/scenario_120_real_oilers.rs.
 #
 # Two American carriers and a cruiser group against two Japanese fleet
 # carriers and a light carrier, with a Japanese convoy bound for Port
@@ -57,6 +66,13 @@
 #     ship_experience_coral_sea.ships.csv where it gives one. Each ship cites
 #     her rows of engagement_forces: both sources agree on the forces ship
 #     for ship.
+#   - The fuelling group: Neosho and Sims, derived by
+#     data/derivation/coral_sea_oilers.toml (classes 4030 and 4031), each
+#     with her experience from ship_experience_coral_sea_oilers.ships.csv.
+#     Neosho carries her cargo full, as every ship of the file starts with
+#     her own fuel full; her true load on 5 May is a gap. No order is
+#     scripted for her (decision 0206, rule 19): she is the commander's to
+#     send, and the staff uses her by decision 0201, rule 20.
 #   - The air groups' strengths: the rows of data/oob/air_unit_facts.csv
 #     the hand calculation names, beside each group.
 #   - Port Moresby (base 1) and its garrison; Rabaul (base 2) as the 39 days
@@ -65,11 +81,14 @@
 #     and ten placeholder transports of a placeholder class of this
 #     scenario's own, with the placeholder men of two land units aboard.
 #
-# LEFT OUT, and why (decision 0188, rule 6 and stage A's rulings 12 and 13):
-#   - The Allied fuelling group (Neosho, Sims, and Worden with them; Neosho
-#     cannot be rated: an oiler has no kind in the simulation) and the
-#     search group (Tangier); Tippecanoe; Tsugaru (no fuel row), Toho Maru
-#     and the Japanese oilers (no class on file).
+# LEFT OUT, and why (decision 0188, rule 6 and stage A's rulings 12 and 13;
+# decision 0206):
+#   - Of the Allied fuelling group, Worden (also of the group in the
+#     sources, and not in the list); and the search group (Tangier);
+#     Tippecanoe (whether she was with the force on 6 May is disputed, and
+#     there is no endurance for her class); Tsugaru, Toho Maru and every
+#     Japanese oiler: no displacement for any of them is on file, so the
+#     Japanese side has no oiler.
 #   - Uzuki, which one source alone puts with the convoy.
 #   - Allied aircraft on land (the designer's answer 2: left out of the
 #     first version; the Allied carriers are then the only Allied eyes).
@@ -94,16 +113,19 @@
 # A port size: the map gives every hex none, and a scenario cannot set one,
 # so Port Moresby and Rabaul have none.
 
-name = "Scenario 105, file c: the Coral Sea, 6 to 10 May 1942; the Allied side given its orders, the Japanese side none"
+name = "Scenario 105 with her oiler, file c: the Coral Sea, 6 to 10 May 1942; the Allied side given its orders, the Japanese side none"
 placeholder = true
 seed = 1942
 days = 5
 map = "../../map/south_pacific.csv"
 land_links = "../../map/south_pacific_land_links.csv"
-# The Coral Sea list's classes; the placeholder destroyer of ship_classes.csv
-# (class 2); and the convoy's placeholder transport (class 14).
+# The Coral Sea list's classes; the fuelling group's two (classes 4030 and
+# 4031, ship_classes_coral_sea_oilers.csv, decision 0206); the placeholder
+# destroyer of ship_classes.csv (class 2); and the convoy's placeholder
+# transport (class 14).
 ship_classes = [
     "../../reference/ship_classes_coral_sea.csv",
+    "../../reference/ship_classes_coral_sea_oilers.csv",
     "../../reference/ship_classes.csv",
     "../../reference/ship_classes_placeholder_transport_6_5_knots.csv",
 ]
@@ -121,9 +143,9 @@ fatigue = "../../reference/fatigue.toml"
 air_supply = "../../reference/air_supply.toml"
 ground = "../../reference/ground_hunger.toml"
 # Whose each class and type is (decision 0173, 1 to 3): this scenario's own
-# file of sides, which names every class and type of the three class files
-# and the type file above.
-class_sides = "../../reference/class_sides_coral_sea.csv"
+# file of sides with the oiler's (decision 0206, rule 17), which names every
+# class and type of the four class files and the type file above.
+class_sides = "../../reference/class_sides_coral_sea_oilers.csv"
 # The trial's figures (decision 0174): the live ones.
 trial = "../../reference/trial.toml"
 # A side may stop at 0600 and 1200 (decision 0156), as in scenario 103.
@@ -221,6 +243,21 @@ name = "Port Moresby invasion force"
 side = "japanese"
 q = -8
 r = -9
+mission = "transport"
+
+# The fuelling group, Neosho and Sims as one force (decision 0206, rule 18),
+# on the transport mission, with no home port, no route and no escort. Sims
+# is in the force and not an escort to it, since the staff sends no force to
+# an oiler's force that has an escort. PLACEHOLDER start (-3,5), the hex of
+# Task Force 17: the rows say Task Force 17 fuelled from Neosho through 5 May
+# (ship_facts 12908) and that the two were detached together only at 1725 on
+# 6 May (ship_facts 12910), so they were with Task Force 17 at 1800 on 5 May.
+[[task_force]]
+id = 6
+name = "Fuelling group"
+side = "allied"
+q = -3
+r = 5
 mission = "transport"
 
 # ---------------------------------------------------------------------------
@@ -866,6 +903,33 @@ side = "japanese"
 fuel_t = 1000
 supply_t = 41
 task_force = 5
+
+# USS Neosho (ao-23-neosho; engagement_forces 485, 512): class 4030, Cimarron
+# class, an oiler (ship_classes_coral_sea_oilers.ships.csv). Fuel and cargo
+# full, an assumption: her true load on 5 May is a gap. Experience 2:
+# ship_experience_coral_sea_oilers.ships.csv (ship_facts.csv:3384).
+[[ship]]
+id = 54
+name = "USS Neosho"
+class = 4030
+side = "allied"
+fuel_t = 2274
+cargo_fuel_t = "15408.3208"
+experience = 2
+task_force = 6
+
+# USS Sims (dd-409-sims; engagement_forces 487, 514): class 4031, Sims class,
+# surface weapons not modelled (ship_classes_coral_sea_oilers.ships.csv). Fuel
+# full, an assumption. Experience 2: ship_experience_coral_sea_oilers.ships.csv
+# (ship_facts.csv:3354).
+[[ship]]
+id = 55
+name = "USS Sims"
+class = 4031
+side = "allied"
+fuel_t = 453
+experience = 2
+task_force = 6
 
 # ---------------------------------------------------------------------------
 # AIR GROUPS. Each strength cites its row in data/oob/air_unit_facts.csv. No

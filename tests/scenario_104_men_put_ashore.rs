@@ -1189,7 +1189,10 @@ fn statement_23_the_key() {
     // statement's sense (reported by the build).
     for file in files.iter().filter(|f| {
         let name = f.file_name().and_then(|n| n.to_str());
-        name != Some("base_eastern_solomons.toml") && name != Some("base_coral_sea.toml")
+        name != Some("base_eastern_solomons.toml")
+            && name != Some("base_coral_sea.toml")
+            && name != Some("base_eastern_solomons_oilers.toml")
+            && name != Some("base_coral_sea_oilers.toml")
     }) {
         let text = std::fs::read_to_string(file).expect("reads");
         if text.lines().any(|l| l.trim_start().starts_with("for_play")) {
@@ -1202,16 +1205,21 @@ fn statement_23_the_key() {
             [
                 PathBuf::from(format!("scenarios/coral-sea/01{l}_coral_sea.toml")),
                 PathBuf::from(format!("scenarios/five-days/01{l}_eastern_solomons.toml")),
+                // The same two scenarios with their oilers (decision 0206).
+                PathBuf::from(format!("scenarios/coral-sea/02{l}_coral_sea_oilers.toml")),
+                PathBuf::from(format!(
+                    "scenarios/five-days/02{l}_eastern_solomons_oilers.toml"
+                )),
             ]
         })
         .collect();
     // The table's copies (decision 0205, 3).
     for l in ['b', 'c', 'd'] {
         want.push(PathBuf::from(format!(
-            "scenarios/table-hunger/01{l}_coral_sea.toml"
+            "scenarios/table-hunger/02{l}_coral_sea_oilers.toml"
         )));
         want.push(PathBuf::from(format!(
-            "scenarios/table-hunger/01{l}_eastern_solomons.toml"
+            "scenarios/table-hunger/02{l}_eastern_solomons_oilers.toml"
         )));
     }
     want.sort();

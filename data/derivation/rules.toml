@@ -1591,3 +1591,129 @@ fact = "range_normal_nm"
 row = 314
 reason = "1,245 nm (1,433 statute miles) with 2,000 lb of bombs, pwencycl's PBY-5 page: one low page that gives no sources, and the only range of the PBY-5 with a load; the tool's rule gives her strike radius from it (decision 0029, 6). A Navy sheet of her own was not found (gaps.csv) and stays a gap. Decision 0198, rule 76; decision 0200, 14. Settled by the architect."
 agreed = "2026-11-21"
+
+# Decision 0206: the real oilers, the Cimarron class (coral_sea_oilers.toml,
+# as of 6 May 1942, and five_days_oilers.toml, as of 23 August 1942). Each is
+# settled by the architect, Nov 21, 2026. Those saying `later = true` name rows
+# of 1943 and 1945, read for 1942 with the reason each was already so
+# (decision 0200).
+
+[[exception]]
+entity = "us-cimarron-class"
+fact = "fuel_oil_barrel_factor_lt"
+row = 14311
+later = true
+reason = "0.1516 long tons a barrel of the Navy's fuel oil, FTP 218 Appendix A, promulgated 1 September 1945, read for 1942: it is the weight of a barrel of the Navy's fuel oil, which was already so (decision 0206, rule 8). Decision 0166, rule 8 asks for the Navy's own factor read from a row and nothing else. Settled by the architect, Nov 21, 2026 (decision 0206)."
+agreed = "2026-11-21"
+
+[[exception]]
+entity = "ao-22-cimarron"
+fact = "fuel_capacity_bbl"
+row = 14700
+later = true
+reason = "Her own bunkers, 14,850 barrels, the Navy data book's line of 15 April 1945 (restating ship_facts 14303), read for 1942 as already so: they are her hull's bunkers, and no source read says they were altered (decision 0206, rule 12). Settled by the architect, Nov 21, 2026 (decision 0206)."
+agreed = "2026-11-21"
+
+[[exception]]
+entity = "ao-24-platte"
+fact = "fuel_capacity_bbl"
+row = 14701
+later = true
+reason = "Her own bunkers, 15,000 barrels, the Navy data book's line of 15 April 1945 (restating ship_facts 14314), read for 1942 as already so: they are her hull's bunkers, and no source read says they were altered (decision 0206, rule 12). Settled by the architect, Nov 21, 2026 (decision 0206)."
+agreed = "2026-11-21"
+
+[[exception]]
+entity = "us-cimarron-class"
+fact = "fuel_capacity_bbl"
+row = 14340
+later = true
+reason = "The class's 15,000 barrels, inferred from the four identical lines of the data book of 15 April 1945 (Platte, Sabine, Kaskaskia, Guadalupe), read for 1942 as already so: they are the hulls' bunkers, and no source read says they were altered. Neosho, lost in May 1942, has no line of her own (decision 0206, rules 12 and 14). Settled by the architect, Nov 21, 2026 (decision 0206)."
+agreed = "2026-11-21"
+
+[[exception]]
+entity = "ao-22-cimarron"
+fact = "cargo_oil_capacity_bbl"
+row = 14705
+later = true
+reason = "The cargo oil of November 1943, 103,233 barrels (Wildenberg's table, restating ship_facts 14366), read for 1942 as already so: it is the statement nearest in time that is a capacity, and the loads of July 1942 (93,000 barrels taken by Platte; 12,000 tons of fuel oil each) sit under it. The 1945 table of fuel-oil tanks (68,054 barrels) is an allotment in design by its own footnote and is not read (decision 0206, rule 13). Settled by the architect, Nov 21, 2026 (decision 0206)."
+agreed = "2026-11-21"
+
+[[exception]]
+entity = "ao-24-platte"
+fact = "cargo_oil_capacity_bbl"
+row = 14706
+later = true
+reason = "The cargo oil of November 1943, 101,638 barrels (Wildenberg's table, restating ship_facts 14367), read for 1942 as already so: it is the statement nearest in time that is a capacity, and the loads of July 1942 (93,000 barrels taken by Platte; 12,000 tons of fuel oil each) sit under it (decision 0206, rule 13). Settled by the architect, Nov 21, 2026 (decision 0206)."
+agreed = "2026-11-21"
+
+[[exception]]
+entity = "ao-25-sabine"
+fact = "cargo_oil_capacity_bbl"
+row = 14707
+later = true
+reason = "The cargo oil of November 1943, 104,938 barrels (Wildenberg's table, restating ship_facts 14368), read for 1942 as already so, as her sisters' are (decision 0206, rule 13). Read for the rule of the least of her sisters (rule 14): Sabine is in no scenario. Settled by the architect, Nov 21, 2026 (decision 0206)."
+agreed = "2026-11-21"
+
+[[exception]]
+entity = "ao-32-guadalupe"
+fact = "cargo_oil_capacity_bbl"
+row = 14708
+later = true
+reason = "The cargo oil of November 1943, 104,938 barrels (Wildenberg's table, restating ship_facts 14369), read for 1942 as already so, as her sisters' are (decision 0206, rule 13). Read for the rule of the least of her sisters (rule 14): Guadalupe is in no scenario. Settled by the architect, Nov 21, 2026 (decision 0206)."
+agreed = "2026-11-21"
+
+[[exception]]
+entity = "us-cimarron-class"
+fact = "displacement_light_lt"
+row = 14300
+reason = "7,256 tons light. The class's two rows are disputed, 7,256 and 7,470 (row 2512), and the official history prints each for a different ship; the 7,256 is read: the two differ by under 3 in 100 and toughness is their twenty-fifth part (decision 0206, rule 11). Settled by the architect, Nov 21, 2026 (decision 0206)."
+agreed = "2026-11-21"
+
+[[exception]]
+entity = "us-cimarron-class"
+fact = "max_speed_kn"
+row = 2516
+reason = "18 knots, the official history's line (DANFS), as decision 0166, rule 7 reads an official line where it and a later compilation differ; every speed row of the class is disputed (decision 0206, rule 5). Settled by the architect, Nov 21, 2026 (decision 0206)."
+agreed = "2026-11-21"
+
+[[exception]]
+entity = "ao-23-neosho"
+fact = "heavy_aa"
+row = 14305
+reason = "Three 3-inch/50, shipscribe's line of 1942, dated to the year only, read as holding on 6 May 1942: her captain's report of the action of 7 May has her 3-inch/50 guns firing (fits 14307). Decision 0206, rule 23. Settled by the architect, Nov 21, 2026 (decision 0206)."
+agreed = "2026-11-21"
+
+[[exception]]
+entity = "ao-23-neosho"
+fact = "light_aa"
+row = 14306
+reason = "Eight 20 mm, shipscribe's line of 1942, dated to the year only, read as holding on 6 May 1942: her captain's report of the action of 7 May has her 20 mm guns firing (fits 14308). Decision 0206, rule 23. Settled by the architect, Nov 21, 2026 (decision 0206)."
+agreed = "2026-11-21"
+
+[[exception]]
+entity = "ao-22-cimarron"
+fact = "light_aa"
+row = 14315
+reason = "Eight 20 mm, the line of 1942 (disputed with the 1942-43 line of two quadruple 1.1-inch and 8 to 16 20 mm, which has no month): the eight 20 mm of 1942 are read for August (decision 0206, rule 23). Settled by the architect, Nov 21, 2026 (decision 0206)."
+agreed = "2026-11-21"
+
+[[exception]]
+entity = "ao-22-cimarron"
+fact = "heavy_aa"
+row = 14320
+reason = "Four 5-inch/38, the line of 1942 (the heavy_aa row restating her main battery row 14314), dated to the year only, read as holding in August 1942: she had them from 1941 (fits 14318) and no source read says they were removed (decision 0206, rule 23). Settled by the architect, Nov 21, 2026 (decision 0206)."
+agreed = "2026-11-21"
+
+[[exception]]
+entity = "ao-24-platte"
+fact = "heavy_aa"
+row = 14310
+reason = "Three 3-inch/50 of line A (one 5-inch/51, three 3-inch/50, eight 20 mm). Platte's two lines of 1942 are disputed and no month is given for either; the lesser is read, by the figure and by the guns alike (line B: four 5-inch/38 and eight 20 mm). Decision 0206, rule 23. Settled by the architect, Nov 21, 2026 (decision 0206)."
+agreed = "2026-11-21"
+
+[[exception]]
+entity = "ao-24-platte"
+fact = "light_aa"
+row = 14311
+reason = "Eight 20 mm of line A (one 5-inch/51, three 3-inch/50, eight 20 mm). Platte's two lines of 1942 are disputed and no month is given for either; the lesser is read, by the figure and by the guns alike (line B: four 5-inch/38 and eight 20 mm). Decision 0206, rule 23. Settled by the architect, Nov 21, 2026 (decision 0206)."
+agreed = "2026-11-21"

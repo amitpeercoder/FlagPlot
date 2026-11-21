@@ -1,16 +1,17 @@
-# SCENARIO 103, THE EASTERN SOLOMONS OVER FIVE DAYS (decision 0184).
+# SCENARIO 103 WITH THEIR OILERS, THE EASTERN SOLOMONS OVER FIVE DAYS
+# (decision 0206).
 #
-# Made by scripts/five-days/make_files.py from the base,
-# data/scenarios/five-days/base_eastern_solomons.toml. Do not edit by hand:
+# Made by scripts/five-days/make_oiler_files.py from the base,
+# data/scenarios/five-days/base_eastern_solomons_oilers.toml. Do not edit by hand:
 # change the base or the script and make the files again
-# (`python3 scripts/five-days/make_files.py --check` says whether each file is
+# (`python3 scripts/five-days/make_oiler_files.py --check` says whether each file is
 # still the one it makes). There are four files, one for each pairing the
 # table offers (decision 0185):
-#   01a: both sides given their orders (staff against staff);
-#   01b: the Japanese side given its orders, the Allied side none (a person
+#   02a: both sides given their orders (staff against staff);
+#   02b: the Japanese side given its orders, the Allied side none (a person
 #        or an agent takes the Allied seat);
-#   01c: the Allied side given its orders, the Japanese side none;
-#   01d: neither side given orders.
+#   02c: the Allied side given its orders, the Japanese side none;
+#   02d: neither side given orders.
 # Each is the base with this header, a name of its own and, at the end, the
 # `[[command]]` tables of the sides it gives orders, and nothing else: with
 # their names and command tables taken away the four are the same, byte for
@@ -36,14 +37,23 @@
 # Kept out of the loops that walk data/scenarios/*.toml by being in this
 # folder (decision 0072).
 #
-# THE BASE of scenario 103, the Eastern Solomons over five days, 23 to 27
-# August 1942 (decision 0184, as amended on review and confirmed on Nov 20,
-# 2026). It is not played itself: scripts/five-days/make_files.py makes the
-# four files of data/scenarios/five-days/ from it, each with this text, a
-# name of its own and the commands of its pairing, and nothing else. Edit
-# this file or the script, never a file it makes, and make them again. The
-# hand calculation is the doc comment of
-# tests/scenario_103_the_eastern_solomons_over_five_days.rs.
+# THE BASE of scenario 103 with their oilers, the Eastern Solomons over five
+# days, 23 to 27 August 1942 (decision 0206). It is not played itself:
+# scripts/five-days/make_oiler_files.py makes it from
+# base_eastern_solomons.toml and makes the four files of
+# data/scenarios/five-days/ (02a to 02d) from it, each with this text, a name
+# of its own and the commands of its pairing, and nothing else. Edit the old
+# base or the script, never a file it makes, and make them again. The old
+# base, and the four files of scenario 103 that read it, are not touched
+# (decision 0206, rule 17). The hand calculation is the doc comment of
+# tests/scenario_103_the_eastern_solomons_over_five_days.rs; that of the
+# oilers, tests/scenario_120_real_oilers.rs.
+#
+# It is the base of scenario 103 with one force more, the oilers (Platte and
+# Cimarron, task force 6), with the class file of the oilers,
+# ship_classes_five_days_oilers.csv, named beside the others, and with a
+# sides file of its own, class_sides_five_days_oilers.csv. The rest is the
+# old base's, byte for byte.
 #
 # Three Japanese carriers against two American and an airfield, with a
 # Japanese convoy that must reach Guadalcanal. No scripted order: each side
@@ -64,6 +74,11 @@
 #   - Task force 5, the convoy: Kagero, Kawakaze, Umikaze and Suzukaze, of
 #     the classes the reference data already gives them, and three
 #     placeholder troop transports; the men of troop lift rows 8 and 9 aboard.
+#   - Task force 6, the oilers: Platte and Cimarron, derived by
+#     data/derivation/five_days_oilers.toml (classes 2030 and 2031). Their
+#     cargo is full, an assumption: their loads on 22 August are a gap. No
+#     order is scripted for them (decision 0206, rule 20): they are the
+#     commander's to send, and the staff uses them by decision 0201, rule 20.
 #
 # LEFT OUT, and why (decision 0184, rules 9 and 18 as amended):
 #   - Of the convoy: the light cruiser Jintsu, the four patrol boats (PB-1,
@@ -78,6 +93,11 @@
 #     cruisers: with them the scenario is neither small nor of ships the
 #     game can rate today.
 #   - No Allied supply ship comes in during the five days (rule 20).
+#   - Of the oilers (decision 0206): Sabine, Kaskaskia and Guadalupe, where
+#     each was on the days played being disputed or not given; every
+#     Japanese oiler, no displacement being on file for any, so the
+#     Japanese side has no oiler; and the oilers' escorts, named in no
+#     source read.
 #
 # NOT DONE BY DOCTRINE, and said here: a carrier's air groups do not raid an
 # airfield under the doctrine of "operate the carriers"; a commander may
@@ -89,16 +109,19 @@
 # the live placeholders. What each side believes of the other rests on no
 # source.
 
-name = "Scenario 103, file d: the Eastern Solomons over five days, 23 to 27 August 1942; neither side given orders"
+name = "Scenario 103 with their oilers, file c: the Eastern Solomons over five days, 23 to 27 August 1942; the Allied side given its orders, the Japanese side none"
 placeholder = true
 seed = 1942
 days = 5
 map = "../../map/south_pacific.csv"
 land_links = "../../map/south_pacific_land_links.csv"
 # The 39 days' class files, so that its file of sides (below) fits them; the
-# scenario uses classes of the first, third and fifth only.
+# scenario uses classes of the first, third and fifth only; and, beside the
+# first, the oilers' two classes (2030 and 2031, ship_classes_five_days_
+# oilers.csv, decision 0206).
 ship_classes = [
     "../../reference/ship_classes_eastern_solomons.csv",
+    "../../reference/ship_classes_five_days_oilers.csv",
     "../../reference/ship_classes.csv",
     "../../reference/ship_classes_placeholder_transports.csv",
     "../../reference/ship_classes_placeholder_fast_transport_cargo.csv",
@@ -119,8 +142,9 @@ fatigue = "../../reference/fatigue.toml"
 air_supply = "../../reference/air_supply.toml"
 ground = "../../reference/ground_hunger.toml"
 # Whose each class and type is (decision 0173, 1 to 3): the 39 days' file of
-# sides, which names every class and type this scenario uses.
-class_sides = "../../reference/class_sides_full_slice.csv"
+# sides with the oilers' two classes added (decision 0206, rule 17), which
+# names every class and type this scenario uses.
+class_sides = "../../reference/class_sides_five_days_oilers.csv"
 # The trial's figures (decision 0174): the live ones.
 trial = "../../reference/trial.toml"
 # A side may stop at 0600 and 1200 (decision 0156; decision 0184, rule 3).
@@ -258,6 +282,24 @@ name = "Reinforcement convoy"
 side = "japanese"
 q = 6
 r = -12
+mission = "transport"
+
+# The oilers, Platte and Cimarron as one force (decision 0206, rule 20), on
+# the transport mission, with no home port, no route (stopped) and no escort.
+# PLACEHOLDER start (7,10), the hex of Efate, at 1800 on 22 August. The record
+# has both at "Roses" until they sailed at daylight on 23 August: the
+# dispatch of 22 August sends them "from Roses" (ship_facts 14419 and 14420),
+# and the fleet's own war diary says Roses is Efate (place_facts 14306 and
+# 14307; the post-war list of code words, 14300, agrees). They were to meet
+# the carriers at 0800 on 25 August at 13-04 S, 164-03.5 E, hex (5,2)
+# (engagement_positions 14300 and 14301; row 279 gives the same point for the
+# force). Their escorts are named in no source read.
+[[task_force]]
+id = 6
+name = "Oilers"
+side = "allied"
+q = 7
+r = 10
 mission = "transport"
 
 # ---------------------------------------------------------------------------
@@ -635,6 +677,34 @@ class = 3012
 side = "japanese"
 fuel_t = 492
 task_force = 5
+
+# USS Platte (ao-24-platte; engagement_forces 14301 for the eastern-solomons
+# engagement): class 2030, Cimarron class, an oiler
+# (ship_classes_five_days_oilers.ships.csv). Fuel and cargo full, an
+# assumption: her load on 22 August is a gap. No experience: no ship of the
+# five days has one.
+[[ship]]
+id = 44
+name = "USS Platte"
+class = 2030
+side = "allied"
+fuel_t = 2274
+cargo_fuel_t = "15408.3208"
+task_force = 6
+
+# USS Cimarron (ao-22-cimarron; engagement_forces 14300 for the
+# eastern-solomons engagement): class 2031, Cimarron class, an oiler
+# (ship_classes_five_days_oilers.ships.csv), a class of her own: her bunkers
+# and cargo differ from Platte's. Fuel and cargo full, an
+# assumption: her load on 22 August is a gap. No experience.
+[[ship]]
+id = 45
+name = "USS Cimarron"
+class = 2031
+side = "allied"
+fuel_t = "2251.26"
+cargo_fuel_t = "15650.1228"
+task_force = 6
 
 # ---------------------------------------------------------------------------
 # AIR GROUPS. Groups 1 to 8 and 11 to 26 are scenario 5's, as it gives them,
@@ -1301,3 +1371,61 @@ points_per_t = "0.005"
 kind = "men_landed"
 base = 5
 points_per_100_men = 1
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_intent"
+intent = 1
+intent_kind = "hold"
+base = 1
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_limit"
+limit = "forces"
+intent = 1
+land_units = [1, 2, 3, 4]
+air_groups = [9, 10]
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_intent"
+intent = 2
+intent_kind = "operate_carriers"
+task_force = 1
+hex = [6, -3]
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_intent"
+intent = 3
+intent_kind = "operate_carriers"
+task_force = 2
+hex = [7, -3]
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_intent"
+intent = 4
+intent_kind = "deny"
+hex = [3, -7]
+distance = 2
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_leave"
+leave = "prepare"
+given = true
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_leave"
+leave = "launch"
+given = true

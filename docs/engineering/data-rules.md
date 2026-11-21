@@ -21,6 +21,16 @@ Where figures come from, the order-of-battle facts, who settles them, and how th
 - **Engagement rows are history to test against.** A scenario may take starting positions, readiness and contacts already held from them. Its result is compared with the recorded outcome and is never scripted to match it.
 - **Run `oob-check` after any change to `data/oob`.**
 
+### A ship that is not a warship
+
+The derivation makes one kind of ship besides the warships: the oiler (decision 0206).
+
+- **A class of the type `oiler` is of the kind auxiliary** and carries the mark that she fuels others at sea. A derived class file has the column `fuels_at_sea` only where its list has an oiler, so no class file of warships changes.
+- **No main battery and no torpedo tubes, by her kind,** not by a scenario's assumption: no fit, shell or outfit is read for them. Her anti-aircraft guns and her radar are read as any ship's.
+- **Toughness from the light displacement** (`displacement_light_lt`), by the same constant as a warship's standard displacement.
+- **Her own fuel and her cargo of oil are read in barrels,** `fuel_capacity_bbl` and `cargo_oil_capacity_bbl`, numeric attributes of a class and of a ship, and made long tons only by the factor of a row, `fuel_oil_barrel_factor_lt` (decision 0166, rule 8). The text notes of the same statements (`fuel_capacity_note`, `cargo_oil_note`) are not read; a numeric row restating one cites the same source and locator. A cargo is a capacity: a load on a voyage (`cargo_oil_load_note`) is never read.
+- **The least of her sisters.** A list may write the rule `[least_of_sisters]` for named facts, with its reason: a ship with no row of her own or of her class for one of them reads the least of the values her sisters' own rows give, each read as any ship's row is on the list's date; the sources file names every sister's row compared.
+
 ### The file of sides
 
 A scenario may name a file of sides (`class_sides`, decision 0173): a hand-written CSV in `data/reference` that gives each class of ship and type of aircraft its reference files give the side that uses it, `allied`, `japanese` or `both`, with a note on every row. It is a file of its own so that no generated class or type file changes for it.
