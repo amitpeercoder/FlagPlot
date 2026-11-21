@@ -81,3 +81,47 @@ Reads: a class's mark, room for cargo and fuel capacity; a ship's fuel and cargo
 
 1. **Stopped, not slow.** The plan has both forces stopped for the pulse they fuel in, which is simple and costs them a pulse of movement. The truer picture, steaming at ten knots on a steady course, needs forces to keep station on each other at sea, which is not built. The architect proposes stopped, for now.
 2. **Daylight only.** Night fuelling was done but was rare in 1942. The architect proposes daylight only.
+
+## Amended on review
+
+A reviewer who had not seen the plan written read it against the code and the rows on Nov 21, 2026. Where this and the text above differ, this holds.
+
+**No closed proof moves (replaces rule 15).**
+
+21. **The warning is all that applies where no oiler stands.** A force with no home port, on a station or a carrier force, whose ship is below a quarter of her class's fuel capacity is named in the staff's report each day. Nothing else changes for it: it is not sent to a base. The carrier forces of the Eastern Solomons and of both proofs have no home port, and sending them in would move measures that are closed.
+22. **A force is sent to fuel at sea only to an oiler that stands** (rule 14), and only when a ship is short of the passage to her times the margin of its risk. With no oiler on the map no existing game plays differently, and that is checked on the scenarios of record.
+
+**How it is built into the pulse (replaces rules 4, 5, 7 and 8 where they differ).**
+
+23. **Fuelling at sea is a pass of its own,** once in the loading work, after every force has done its cargo, its fuelling in port and its ammunition. The forces at sea that the loading work passes over today are taken into it.
+24. **It asks whether the hex is dark,** as every rule of light does; it does not read the pulse's name. A force halted at a mark that steams on in daylight is not stopped by day and so never fuels; a force that has arrived or is idle is.
+25. **An oiler that did cargo work in the pulse gives nothing in it.** She loads in one pulse and gives in another.
+26. **A ship fuelled by a base in the pulse takes nothing from an oiler in it,** even where the base's rate left her short. That is on purpose: a port and an oiler in one hex are not added together.
+27. **A ship with the mark takes nothing at sea.** Oilers do not fuel each other.
+28. **The hours** are those of the pulse left after the later of the two forces' stops, less the receiving ship's own cargo hours.
+
+**Places alongside (replaces rule 6's "places").**
+
+29. **An oiler has a number of pump lines, and each serves ships in turn.** In a pulse each line has the hours of rule 28; a ship uses the hours her tons take at the rate, of one line, and the next ship takes what is left of it. Ships of every force in the hex are taken in one order, that of rule 6. With two oilers a ship goes to the oiler of lower id that has hours left, and takes from one oiler in a pulse.
+30. **The figures are two, the same for every oiler,** kept with the fuelling rates of ports: the rate of a line at sea and the lines of an oiler. A scenario whose figures lack them has no fuelling at sea. They are placeholders, marked so. The rate is sized from the rows of fuel passed at sea with their hours, which run from 118 to 370 tons an hour and agree at about 265 for the two best timed (1854 and 1855). The lines are two, from the one statement on file, of 1945, that two large ships could be fuelled at once in good conditions; the rows of 1942 show one ship after another. Row 1831 has no hours and sizes nothing.
+
+**A force adrift (adds to rule 9).**
+
+31. **A force that ran dry between two hexes is not fuelled by this rule.** It is adrift and not at a hex's centre, as in port. It is the commonest way to run dry at sea, so the rule tops ships off before they are dry and does not rescue them. Said as a limit.
+
+**The events (replaces rule 11).**
+
+32. **A new kind of event for a ship fuelled at sea,** since the event of fuelling in port names a base. Its causes are the events that stopped the two forces, where there are any; a force idle since the game began has none. One event for each oiler in each pulse in which ships waited for her, naming them. Both are seen whole by their side and by no one else, and are placed in the list of who sees what, the briefing, the agent's tools, the export, the viewer and the table.
+
+**The staff (replaces rules 14 and 16 where they differ).**
+
+33. **An oiler stands when her force has arrived or is idle,** at sea, and she holds at least the fuel the force that needs her is short of. The staff reads her cargo fuel and her class's mark from its own side's view.
+34. **No home port is set for a force sent to an oiler.** Each morning the staff works it afresh, keeping nothing: a force beside an oiler that still holds fuel stays while a ship of it is short of what its task asks; otherwise it goes back. If the oiler has gone when it arrives, the next morning's weighing sends it on or back.
+35. **The staff places no oiler.** She is put where she waits by a route given to her force. An order for where oilers wait is a later decision.
+
+**The oilers of the record (replaces rule 18).**
+
+36. **This decision is built in two stages.** Stage A is the rule, on placeholder classes, with its scenario and hand calculation. Stage B makes real oilers: the derivation gains a ship type for an oiler, a class's room for cargo read from rows (it is written as nothing today), and the mark; and the rows are gathered that the Cimarron class lacks, her own bunkers and her endurance at a speed.
+37. **Her cargo of oil is read from a statement of the time:** 12,000 tons each loaded in Platte and Cimarron in July 1942, to be entered as rows from the research note, beside the figures of 1945, which are loadings of single ships and differ between sisters. Decision 0200 is not needed for it.
+
+**Also named for the build:** the mark is a column a class file may leave out, so no class file on file changes; the dropped route when a force is set going again is in the rule card; the agent's instructions say what an oiler is.
