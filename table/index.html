@@ -1937,7 +1937,7 @@ body.watched .gives { display: none !important; }
       var runs = (d.plays || []).map(function (x) { return x.worlds + ' runs of ' + x.days + ' days'; });
       if (runs.length) what = ': ' + runs.join(', then ');
       return api('trial', args);
-    }).then(function (j) { says.textContent = ''; done(j); }).catch(function (e) { says.style.color = 'var(--enemy)'; says.textContent = 'It cannot be tried: ' + dryWords(e.message) + '.'; })
+    }).then(function (j) { says.textContent = ''; done(j); }).catch(function (e) { says.style.color = 'var(--enemy)'; says.textContent = cannotTry(e.message); })
       .then(function () { clearInterval(tick); dryBusy = false; Array.prototype.forEach.call(lock, function (c) { c.disabled = false; }); });
   }
   // A what-if: a draft change to an order, previewed and then played beside
@@ -1945,7 +1945,7 @@ body.watched .gives { display: none !important; }
   function whatIf(root, command, words, says, lock) {
     if (dryBusy) return; var args = { command: 'set_limit', intent: root }, k; for (k in command) args[k] = command[k];
     api('preview', args).then(function (p) { return playDry({ preview: p.preview, size: drySize }, says, lock, function (j) { readEstimate(j, root, { preview: p.preview, words: words }); }); })
-      .catch(function (e) { says.style.color = 'var(--enemy)'; says.textContent = 'It cannot be tried: ' + dryWords(e.message) + '.'; });
+      .catch(function (e) { says.style.color = 'var(--enemy)'; says.textContent = cannotTry(e.message); });
   }
   var COSTS = [['men_lost_to_the_enemy', 'Men lost to the enemy'], ['men_lost_unfed', 'Men lost unfed'], ['ships_sunk', 'Ships sunk'], ['ships_out_of_action', 'Ships out of action at the end'], ['aircraft_lost', 'Aircraft lost']];
   function spreadOf(x) { if (!x) return '–'; var a = [x.lowest, x.middle, x.highest].map(function (v) { return commas(Math.round(Number(v))); }); return a[0] === a[2] ? a[0] : a[0] + ' to ' + a[2] + ', the middle ' + a[1]; }
@@ -1969,19 +1969,29 @@ body.watched .gives { display: none !important; }
   function estBody(box, e, lastDay) {
     var ends = e.has_end !== false;
     if (ends) wentWords(e.how_it_went, lastDay).forEach(function (w) { box.appendChild(el('div', 'big', w)); });
-    if (!ends) box.appendChild(el('div', 'work', 'This order has no end a dry run can read: only what it costs is given.'));
+    if (!ends) box.appendChild(el('div', 'work', 'An order of this kind has no finish to test for, so only its cost is given.'));
     if ((e.could_not_be_played || []).length) box.appendChild(el('div', 'work', e.could_not_be_played.length + ' run' + (e.could_not_be_played.length === 1 ? '' : 's') + ' could not be played and ' + (e.could_not_be_played.length === 1 ? 'is' : 'are') + ' left out.'));
     box.appendChild(el('h3', '', 'What it may cost'));
     box.appendChild(costTable([['Yours', e.cost], ['The enemy of the dry run', e.enemy_lost]]));
+    var held = heldHisGround(e.assumed || [], (e.asked || {}).worlds);
+    if (held) box.appendChild(el('div', 'work', held));
     (e.partings || []).forEach(function (pt) {
       box.appendChild(el('h3', '', 'Where the runs part'));
       var what = partedBy(pt.by, pt.from);
       [['If ' + what + ' are there', pt['with']], ['If not', pt.without]].forEach(function (side) {
         var h = side[1] && side[1].how_it_went; if (!h) return;
-        var w = ends ? wentWords(h, lastDay)[0].replace(/^Met/, 'met').replace(/\.$/, '') : '', lost = side[1].cost && side[1].cost.men_lost_to_the_enemy;
-        box.appendChild(rich('div', 'work', side[0] + ' (' + h.worlds.length + ' run' + (h.worlds.length === 1 ? '' : 's') + '): ' + w + (lost ? (w ? '; ' : '') + 'your men lost, ' + spreadOf(lost) : '') + '.'));
+        var w = ends ? wentWords(h, lastDay)[0].replace(/^Met/, 'met').replace(/\.$/, '') : '', c = side[1].cost || {};
+        var lost = COSTS.filter(function (k) { return c[k[0]] && Number(c[k[0]].highest) > 0; }).map(function (k) { return k[1].charAt(0).toLowerCase() + k[1].slice(1) + ' ' + spreadOf(c[k[0]]); }).join('; ') || 'nothing of ours lost';
+        box.appendChild(rich('div', 'work', side[0] + ' (' + h.worlds.length + ' run' + (h.worlds.length === 1 ? '' : 's') + '): ' + w + (w ? '; ' : '') + lost + '.'));
       });
     });
+  }
+  // Why a dry run was refused, in the table's words. One asked in the middle
+  // of a day is the common case and gets a plain sentence of its own.
+  function cannotTry(message) {
+    var m = /clock stands at (\d{4}) of day (\d+)/.exec(String(message));
+    if (m) return 'A dry run can only be asked at dusk, before a day begins. It is now ' + m[1] + ' of day ' + m[2] + '; ask again at 1800.';
+    return 'It cannot be tried: ' + dryWords(message) + '.';
   }
   function textOf(j, start) { return (j.text || []).filter(function (t) { return t.indexOf(start) === 0; }); }
   function underneath(doc, title, lines) { if (!lines.length) return; var d = document.createElement('details'), sm = document.createElement('summary'); sm.textContent = title; d.appendChild(sm); lines.forEach(function (t) { d.appendChild(rich('div', 'work', dryWords(t))); }); doc.appendChild(d); }
@@ -1989,63 +1999,56 @@ body.watched .gives { display: none !important; }
   // in every run says so once and lists no runs; the two assumptions that the
   // enemy knows nothing and plans nothing are told as one line.
   function assumedLines(list, of) {
-    var out = [], blind = null, idle = null;
+    var out = [];
     function runs(x) { var n = (x.made_in || []).length; return !of || n >= of ? '' : ', in ' + n + ' of ' + of + ' runs'; }
-    function tons(v) { var n = Number(v); return isFinite(n) ? n.toLocaleString('en-US') : String(v); }
     list.forEach(function (x) {
       var t = x.thing || {};
-      if (t.kind === 'no_belief') { blind = x; return; }
-      if (t.kind === 'no_intent') { idle = x; return; }
-      if (t.kind === 'enemy_base') {
-        var name = (t.base && t.base.name) || (t.place && t.place.name) || 'his base';
-        out.push('His base at ' + name + ', taken to hold ' + tons(t.supply_t) + ' t of supply and ' + tons(t.fuel_t) + ' t of fuel' + runs(x) + '.'); return;
-      }
-      out.push(String(x.text || '').replace(/, in (\d+) of \1 runs? \(runs? [^)]*\)/, '').replace(/ \(runs? [^)]*\)/, '').replace(/^./, function (c) { return c.toUpperCase(); }) + '.');
+      if (t.kind === 'no_belief' || t.kind === 'no_intent' || t.kind === 'enemy_base') return;
+      out.push(String(x.text || '').replace(/, in (\d+) of \1 (?:worlds?|runs?) \((?:worlds?|runs?) [^)]*\)/, '').replace(/ \((?:worlds?|runs?) [^)]*\)/g, '').replace(/^./, function (c) { return c.toUpperCase(); }) + '.');
     });
-    if (blind && idle && !runs(blind) && !runs(idle)) out.push('Played against an enemy who knows nothing of your forces and only holds what he has.');
-    else {
-      if (blind) out.push('The enemy played as knowing nothing of your forces' + runs(blind) + '.');
-      if (idle) out.push('The enemy played with no plan of his own, holding what he has' + runs(idle) + '.');
-    }
     return out;
+  }
+  // The one thing a commander must know of the enemy of a dry run: he does not
+  // come out, so what the runs cost is the least to expect.
+  function heldHisGround(list, of) {
+    var idle = list.filter(function (x) { return x.thing && x.thing.kind === 'no_intent'; })[0];
+    if (!idle) return '';
+    var n = (idle.made_in || []).length;
+    return (!of || n >= of ? 'In these runs' : 'In ' + n + ' of ' + of + ' runs') + ' the enemy held what he has and did not come after our forces. Expect more if he does.';
   }
   // The staff's report of a dry run, as the chief of staff would put it to the
   // commander: numbered paragraphs made from what the dry run gave. Anything
   // the dry run said that no paragraph covers follows in its own words.
   function staffBrief(doc, j, a, tried) {
     var d = document.createElement('details'), sm = document.createElement('summary'), paras = [], used = {};
-    sm.textContent = 'THE STAFF\'S REPORT'; d.appendChild(sm);
+    var ends = j.has_end !== false;
     function line(start) { var t = textOf(j, start)[0]; if (t) used[t] = true; return t ? dryWords(t).replace(/^[^:]*: /, '') : ''; }
-    function zero(c) { return !c || COSTS.every(function (k) { return !c[k[0]] || Number(c[k[0]].highest) === 0; }); }
-    function losses(c) { return COSTS.filter(function (k) { return c[k[0]] && Number(c[k[0]].highest) > 0; }).map(function (k) { return k[1].charAt(0).toLowerCase() + k[1].slice(1) + ' ' + spreadOf(c[k[0]]); }).join('; '); }
     var what = dryWords(tried).replace(/^preview \d+, /, '').replace(/^set order \d+: /, '').replace(/^order \d+, /, '');
     line('Tried');
-    paras.push('We played your order to ' + what + ' ' + a.worlds + ' times over, ' + a.days + ' days each, from the morning of day ' + j.first_day + '.');
+    if (ends) paras.push('We played your order to ' + what + ' ' + a.worlds + ' times over, ' + a.days + ' days each, from the morning of day ' + j.first_day + '.');
     var added = line('Added by'), leaves = (j.leaves_given_to_the_side || []).map(function (l) { return String(l).replace(/_/g, ' '); });
     textOf(j, 'Leave to').forEach(function (t) { used[t] = true; });
-    if (leaves.length) paras.push('To play it we took your leave to ' + leaves.join(' and to ') + ' as given, which you have not given. Given in earnest, it frees every plan of yours that waits on it, not this one alone.');
+    if (leaves.length) paras.push('This assumes your leave to ' + leaves.join(' and to ') + ', which you have not given. Giving it frees every plan of yours that waits on it.');
     else if (added) { var rest = added.split('; ').filter(function (x) { return !/^set order/.test(x); }); if (rest.length) paras.push('To play it we added what you have not ordered: ' + rest.join('; ').replace(/\.$/, '') + '.'); }
     var went = line('How it went');
-    if (j.has_end === false) paras.push('An order of this kind has no finish we can test for, so we report only what it cost.');
-    else if (went) paras.push('How it went: ' + went.replace(/\bthis intent\b/g, 'this order'));
-    line('What it cost'); line('What the trial'); line('What the enemy');
-    paras.push(zero(j.cost) ? 'It cost us nothing in any run: no man, ship or aircraft.' : 'Our losses over the runs, lowest to highest: ' + losses(j.cost) + '.');
-    paras.push(zero(j.enemy_lost) ? 'The enemy we played against lost nothing either.' : 'The enemy we played against lost, by our own reckoning and not by any claim or report: ' + losses(j.enemy_lost) + '.');
-    var needs = line('What it needs');
-    if (needs) paras.push(/it waits for nothing/.test(needs) ? 'The order waits for nothing.' : 'What it needs and has: ' + needs);
-    var others = textOf(j, 'What its other plans').concat(textOf(j, 'Your other')).concat(textOf(j, 'Your side has no other'));
-    others.forEach(function (t) { used[t] = true; });
-    if (textOf(j, 'Your side has no other').length) paras.push('You have no other order in force for it to compete with.');
-    else others.forEach(function (t) { paras.push(dryWords(t)); });
+    if (ends && went) paras.push('How it went: ' + went.replace(/\bthis intent\b/g, 'this order'));
+    // The table above carries the losses; an order that waits for nothing and
+    // one with no other order beside it are not worth a line.
+    line('What it cost'); line('What the trial'); line('What the enemy'); line('What it needs'); line('What was assumed');
+    textOf(j, 'Taken in').concat(textOf(j, 'Where the worlds part')).forEach(function (t) { used[t] = true; });
+    var others = textOf(j, 'What its other plans').concat(textOf(j, 'Your other')), none = textOf(j, 'Your side has no other');
+    others.concat(none).forEach(function (t) { used[t] = true; });
+    if (!none.length) others.forEach(function (t) { paras.push(dryWords(t)); });
     if (textOf(j, 'Your intent is in force').length) { line('Your intent is in force'); paras.push('Your order is already in force, so this shows it as things stand. To see what it costs your other plans, play it again with "and without this order".'); }
-    line('What was assumed');
-    var as = assumedLines(j.assumed || [], a.worlds);
-    if (as.length) paras.push('Of the enemy we assumed this. ' + as.join(' '));
     (j.text || []).forEach(function (t) { if (!used[t]) paras.push(dryWords(t)); });
-    var head = el('div', 'head');
-    [['From', 'Chief of Staff'], ['To', 'Commander'], ['Subject', 'Dry run number ' + j.estimate]].forEach(function (r) { head.appendChild(el('span', '', r[0])); head.appendChild(el('span', '', r[1])); });
-    d.appendChild(head);
-    paras.forEach(function (t, n) { d.appendChild(rich('div', 'work', (n + 1) + '. ' + t)); });
+    if (!paras.length) return;
+    sm.textContent = ends ? 'THE STAFF\'S REPORT' : 'STAFF NOTES'; d.appendChild(sm);
+    if (ends) {
+      var head = el('div', 'head');
+      [['From', 'Chief of Staff'], ['To', 'Commander'], ['Subject', 'Dry run number ' + j.estimate]].forEach(function (r) { head.appendChild(el('span', '', r[0])); head.appendChild(el('span', '', r[1])); });
+      d.appendChild(head);
+    }
+    paras.forEach(function (t, n) { d.appendChild(rich('div', 'work', (ends ? (n + 1) + '. ' : '') + t)); });
     doc.appendChild(d);
   }
   function readEstimate(j, root, draft) {
@@ -2066,8 +2069,8 @@ body.watched .gives { display: none !important; }
         if (b.of === 'withdrawn') box.appendChild(el('div', 'work', 'What was already ordered stands: the withdrawal is the dry run\'s, not yours.'));
       }
       (j.other_plans || []).length ? underneath(box, 'YOUR OTHER ORDERS', textOf(j, 'What its other plans').concat(textOf(j, 'Your other'))) : null;
-      underneath(doc, 'WHAT IT NEEDS AND HAS', textOf(j, 'What it needs').map(function (t) { return /take|land/i.test(tried) ? t : t.replace('; no day ashore can yet be given', ''); }));
-      underneath(doc, 'WHAT WAS ASSUMED OF THE ENEMY', assumedLines(j.assumed || [], a.worlds));
+      underneath(doc, 'WHAT IT WAITS FOR', textOf(j, 'What it needs').filter(function (t) { return !/it waits for nothing/.test(t); }).map(function (t) { return /take|land/i.test(tried) ? t : t.replace('; no day ashore can yet be given', ''); }));
+      underneath(doc, 'WHAT WE TOOK THE ENEMY TO HAVE', assumedLines(j.assumed || [], a.worlds));
     } else {
       var t = el('table'), add = function (label, f) { var r = el('tr'); r.appendChild(el('th', '', label)); var any = false; dates.forEach(function (d, n) { var v = f(d, n); if (v) any = true; var td = rich('td', '', v || '–'); r.appendChild(td); }); if (any) t.appendChild(r); };
       add('Order given on', function (d, n) { return 'day ' + d.day + (n ? '' : ', the coming morning'); });
