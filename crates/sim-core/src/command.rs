@@ -517,6 +517,9 @@ impl IntentKind {
                 IntentKind::Hold { .. },
             )
             | (IntentKind::OperateCarriers { .. }, IntentKind::Deny { .. }) => true,
+            // Decision 0202, 18: a free carrier force under neutralising a
+            // base, its bombers raiding the target.
+            (IntentKind::OperateCarriers { .. }, IntentKind::Neutralise { .. }) => true,
             // Decision 0126, 7: a covering force stands at the run's
             // destination, the base's hex, which intake checks.
             (IntentKind::StandAt { .. }, IntentKind::KeepSupplied { .. }) => true,

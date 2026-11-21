@@ -59,6 +59,17 @@ pub(crate) struct NoCoveringHex {
     pub(crate) sets: String,
 }
 
+/// The base a carrier task's bombers strike, with the words that say what
+/// it is to the task.
+pub(crate) struct StrikeAim {
+    pub(crate) base: sim_core::ids::BaseId,
+    pub(crate) hex: Hex,
+    /// After the base's name: "the enemy's at the place (q,r)".
+    pub(crate) of: String,
+    /// In the binding: "the enemy's base at the place".
+    pub(crate) binding: String,
+}
+
 /// What the strike on the place hands the carrier doctrine's morning.
 #[derive(Default)]
 pub(crate) struct CoverStrike {
@@ -688,22 +699,48 @@ impl Day<'_, '_> {
         air: &CarrierAir,
         targets: &crate::targets::StrikeTargets,
     ) -> CoverStrike {
-        let mut out = CoverStrike::default();
         let IntentKind::TakePlace { hex: place, .. } = end.kind else {
-            return out;
+            return CoverStrike::default();
         };
-        let view = self.view;
-        let today = self.today;
-        let side = view.side();
-        let Some(base) = view
+        let side = self.view.side();
+        let Some(base) = self
+            .view
             .enemy_bases()
             .filter(|b| b.hex == place && b.side != side)
             .map(|b| (b.id, b.hex))
             .min_by_key(|(id, _)| *id)
         else {
-            return out;
+            return CoverStrike::default();
         };
-        let (base, base_hex) = base;
+        let aim = StrikeAim {
+            base: base.0,
+            hex: base.1,
+            of: format!("the enemy's at the place {place}"),
+            binding: "the enemy's base at the place".to_string(),
+        };
+        self.strike_base(task, plan, &aim, here, risk, groups, reach_of, air, targets)
+    }
+
+    /// The strike on a base by the bombers of a carrier task: under a take,
+    /// the enemy's base at the place (decision 0148, 4 to 6); under a
+    /// neutralise, its target (decision 0202, 21). Ships come first.
+    #[allow(clippy::too_many_arguments, clippy::too_many_lines)]
+    pub(crate) fn strike_base(
+        &mut self,
+        task: &Intent,
+        plan: &Plan,
+        aim: &StrikeAim,
+        here: Hex,
+        risk: Risk,
+        groups: &[CarrierGroup],
+        reach_of: &BTreeMap<AirGroupId, Fixed>,
+        air: &CarrierAir,
+        targets: &crate::targets::StrikeTargets,
+    ) -> CoverStrike {
+        let mut out = CoverStrike::default();
+        let view = self.view;
+        let today = self.today;
+        let (base, base_hex) = (aim.base, aim.hex);
         let base_text = base_words(view, base);
         let distance = distance_nm(here, base_hex);
         let IntentKind::OperateCarriers { force: id, .. } = task.kind else {
@@ -819,7 +856,8 @@ impl Day<'_, '_> {
                 .evidence(weight_text.clone(), today)
                 .binding(format!("the least a raid sends, {}, at the {risk_text}", least_weight(risk)))
                 .worked(format!(
-                    "{intent_words}: {ships_text}; {base_text}, the enemy's at the place {place}, is {distance} nm from {here}, within the reach of its bombers: the raid on it does not go: {weight_text}. No group is set to strike the base, and the table's orders for ships stand."
+                    "{intent_words}: {ships_text}; {base_text}, {}, is {distance} nm from {here}, within the reach of its bombers: the raid on it does not go: {weight_text}. No group is set to strike the base, and the table's orders for ships stand.",
+                    aim.of
                 ))
                 .would_change("more bombers able to fly, a bolder risk level")
                 .done();
@@ -869,7 +907,8 @@ impl Day<'_, '_> {
                         mission_words(*mission)
                     ),
                     format!(
-                        "no fresh contact of ships in reach, the enemy's base at the place in reach, and the least a raid sends, {}, at the {risk_text}",
+                        "no fresh contact of ships in reach, {} in reach, and the least a raid sends, {}, at the {risk_text}",
+                        aim.binding,
                         morning.least
                     ),
                 ),

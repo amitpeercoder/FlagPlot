@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 21, 2026 on the designer's findi
 
 Summary: A commander who orders an end, "deny these waters" or "neutralise that airfield", expects his staff to use what he has, his carriers among it. Today those two orders use aircraft at bases and nothing else, and a carrier force moves only when told where to go. This has the staff count a free carrier force among the means of both orders, choose where it works from by the risk, the enemy and the fuel, search the way there, and have its aircraft do the task; and it leaves the commander the word on whether it goes.
 
-Standing: Planned on Nov 21, 2026, amended on two reviews and on the designer's word; waits for its hand calculation.
+Standing: Planned on Nov 21, 2026, amended on two reviews and on the designer's word, and built on Nov 21, 2026 ("As built"); the readings marked there, and the statements of scenario 116 that do not hold as written, are the architect's to confirm.
 
 ## Why
 
@@ -117,6 +117,33 @@ No closed proof is expected to move: in each, every carrier force is named by an
 1. **Carriers serve both orders, by default,** with the commander's leave as the check.
 2. **Their placement is settled by the risk, the enemy known and suspected, and fuel,** and the way they take is to be weighed too; the way as a second step is agreed.
 3. **A carrier on the move searches** for contacts and for what threatens it.
+
+## As built
+
+Built on Nov 21, 2026 on the branch `carriers-serve-build`, to rules 1 to 33. The code is `crates/sim-staff/src/station.rs` (the pass, the candidates, the circles, the margin, the choice, the fuel and the reasons), with the pair allowed in `may_stand_under`, the raid in `crates/sim-staff/src/cover.rs` (`strike_base`, the take's routine given a base), the way ahead in the carrier doctrine, the deny's measure in `crates/sim-agent/src/deny.rs`, the preview in `crates/sim-agent/src/staffing.rs` and the table in `table/index.html`. The doctrine version is `supply-50`. No state is added and no number is drawn. Scenario 116 (`data/scenarios/carriers-serve-an-end/`, a placeholder with its own classes and bomber, frozen beside the step 1 figures) and its tests prove it.
+
+**Games on file.** Every scenario file under `data/scenarios` but the frozen and scratch folders was played with `run --events` and `hash` on a build of `origin/main` and on this one: none moved. `sh scripts/regenerate.sh` changed no run baseline, agent golden, pinned hash or batch fixture, and no transcript; the five saves that record a doctrine version differ in that label alone.
+
+**Statements of scenario 116 that do not hold as written.** Each has its test marked `#[ignore]` with the reason, and a test of what holds beside it.
+
+- *Statements 5 and 11, the candidates "within 5 of (0,0)".* Rule 6 measures the reach in a straight line, as a strike's is (decision 0040). The six hexes at the middle of each side of the ring 6 steps out, such as (3,3) and (6,-3), are 208 nm from (0,0), within 210: the candidates are 97, not 91. Statement 5's station, (5,0), holds.
+- *Statement 13 at balanced.* Those six hexes are the least deep, inside E's circle by 9 and not 10; (3,3) and (6,-3) are 7 hexes of passage from C, and (3,3) comes first in hex order. C is sent to (3,3), and the reason says it stands in danger of E. At press it is sent to (5,0), as stated. Statement 14 is tested with C at (5,0) at press.
+- *Statement 8, "the four candidates equally deep".* Seven candidates are 13 hexes from E: (3,-3), (3,-2), (3,-1), (3,0), (2,1), (1,2) and (0,3). The station, (3,0), holds.
+- *Statements 16 and 17, the figures.* The engine charges a step of a clear way by the straight line (decision 0058): from (3,0) home to (10,2) is 327 nm, not 360, so the way home burns 81.75 t, the need at press is 361.75 t (not 370), at balanced 434.1 t (not 444), and at (2,1) 465 t (not 492). Every outcome holds: sent with 400 t at press, not sent at balanced with a destroyer at 400 t and the destroyer named, sent with it at 450 t; and statement 18's at preserve (227.6 t against 250).
+
+**Readings** (the architect's to confirm).
+
+1. *The orders.* A deny or neutralise the commander made (`Maker::Commander`) whose nearest forces limit names no task force and no ship. One whose limit names air groups alone takes free carriers too, as rule 1 reads.
+2. *A force with no station is left for the next order.* Rule 3's pass gives a force to an order only when a task is formed; one an order finds no station for (preserve, fuel, no sea route) may be taken by an order after it the same morning.
+3. *Rule 5.* The staff withdraws its own carrier task where an intent of another tree, ahead of the order in priority order, is addressed to the force or names it in a forces limit. One behind it does not: the task stands, and the later order's forming of its own says that one stands, as today.
+4. *A hold* withdraws the staff's task the next morning, so that, lifted, the force is free again and its station chosen afresh (rule 17). Statement 22's "lifted on day 3" is read as the commander's release at the end of day 3, a command of the file's day 4: a command of day N is taken in before the staff's morning of day N, so a release dated day 3 forms the task on day 3.
+5. *Fuel.* The way out is the engine's forecast of the passage at the doctrine's speed (its miles and the force's knots), burnt by the class's figures; the way home is the engine's charged miles at the class's cruise burn; the margin is the risk's on their sum. A force is weighed full where it lies stopped at a base of the side that holds fuel above its reserve and whose port fuels a ship, its home port or not. Candidates are tried for fuel only in the order of the choice, and the first in fuel is taken.
+6. *"Cannot meet".* The carrier part of its words is added only where the side has a carrier force with a carrier and a group aboard, so the words of a game with none are as before. A force that is not free is named there and in no reason of its own; a force taken by an order ahead in the pass this morning is named in a reason under each order after it.
+7. *The way ahead* is the sea path from the force's hex to its station, as many hexes as a day at the speed it goes covers (the engine's forecast of its knots, times 24 hours, over 40 nm), and the station; only while it is bound for the station, by a route given that morning or one it steams on, and not while it closes or goes home. Its words are "the way ahead to the station (q,r) at (q,r)".
+8. *The raid under a neutralise* is the take's routine, given the target: its words say "the base intent:N is to neutralise" where the take's say "the enemy's at the place".
+9. *The preview.* `preview` of a deny or a neutralise whose plan waits for a leave adds the proposal's reason (as if released, naming the force and its station) to the decisions to give no order with the change. No key is added, so the agent interface stays at version 38. The dry run plays with the leaves the course gives, so a free carrier force goes in it; whether its report names the station was not checked.
+10. *The table.* The draft shows the proposal as "If you approve it", and a plan that would form nothing or cannot meet the order in the enemy's colour; the plan paper asks `propose` where a plan waits and says what approving it would send, or that it would form nothing. The hold is offered on a carrier force's card only, and the card's "In whose hands" says which hold keeps it.
+11. *A force with no bomber group aboard* has no station, and the reason says so.
 
 ## How the plan was made
 

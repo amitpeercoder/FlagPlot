@@ -49,6 +49,7 @@ mod reasons;
 mod route;
 pub mod search;
 pub mod stand;
+pub mod station;
 pub mod strike;
 mod take;
 pub mod targets;
@@ -338,7 +339,14 @@ use sim_core::view::SideView;
 /// its projections of a base's stock and in the day a source falls to its
 /// reserve, and names them in its reasons. With no line its orders and
 /// reasons are those `supply-48` gave.
-pub const DOCTRINE_VERSION: &str = "supply-49";
+/// `supply-50` adds decision 0202: a commander's deny or neutralise whose
+/// forces limit names no task force takes every free carrier force of the
+/// side, in one pass over them in priority order, at a station chosen by the
+/// risk, the circles of danger of the enemy's bases and fresh carrier
+/// contacts, and the fuel; the force searches its way ahead while it goes
+/// there, and under a neutralise its bombers raid the target. A side with no
+/// such end, or no free carrier force, gets the orders `supply-49` gave.
+pub const DOCTRINE_VERSION: &str = "supply-50";
 
 /// The staff: the doctrine for keeping a base supplied (stage 1) and, after
 /// it, the air doctrine for holding a place and covering a base from the air

@@ -1331,6 +1331,16 @@ impl Day<'_, '_> {
                 {
                     give(&mut orders, order, reason);
                 }
+                // Whether it goes to its station today, and at what speed:
+                // a route to it given this morning, or one it steams on.
+                let to_station: Option<SpeedSetting> = match &route {
+                    Some((waypoints, speed, _)) if waypoints.as_slice() == [hex] => {
+                        Some(speed.unwrap_or(force.speed))
+                    }
+                    Some(_) => None,
+                    None if crate::stand::bound_for(force) == Some(hex) => Some(force.speed),
+                    None => None,
+                };
                 if let Some((waypoints, speed, reason)) = route {
                     if let Some(speed) = speed.filter(|s| *s != force.speed) {
                         give(&mut orders, TaskForceOrder::SetSpeed(speed), reason.clone());
@@ -1358,6 +1368,20 @@ impl Day<'_, '_> {
                         threats.push(Threat {
                             hex: *w,
                             words: format!("the waters to strike first of {} at {w}", d.deny),
+                        });
+                    }
+                }
+                // The way ahead to a station the staff chose, while the force
+                // is under way to it (decision 0202, 23).
+                if let Some(speed) = to_station.filter(|_| self.station_chosen(task) && !at_hex) {
+                    let knots = view
+                        .forecast_passage(id, hex, Some(speed))
+                        .map_or(Fixed::ZERO, |f| f.speed_kn);
+                    let path = view.sea_path(here, hex).unwrap_or_default();
+                    for w in crate::station::way_ahead(&path, hex, knots) {
+                        threats.push(Threat {
+                            hex: w,
+                            words: format!("the way ahead to the station {hex} at {w}"),
                         });
                     }
                 }
@@ -1431,10 +1455,24 @@ impl Day<'_, '_> {
                     .under_take(task)
                     .or_else(|| self.island_strike_take(task, here, &reach_of))
                     .filter(|_| released);
-                if let Some(end) = end {
-                    cover = self.cover_strike(
-                        task, &plan, &end, here, risk, &groups, &reach_of, &air, &targets,
-                    );
+                // Under a commander's "neutralise a base" the bombers raid its
+                // target when no fresh contact of ships is in their reach
+                // (decision 0202, 21): the take's routine, given that base.
+                let neutralise = if end.is_none() && released {
+                    self.neutralise_aim(task)
+                } else {
+                    None
+                };
+                if end.is_some() || neutralise.is_some() {
+                    cover = match (&end, &neutralise) {
+                        (Some(end), _) => self.cover_strike(
+                            task, &plan, end, here, risk, &groups, &reach_of, &air, &targets,
+                        ),
+                        (None, Some(aim)) => self.strike_base(
+                            task, &plan, aim, here, risk, &groups, &reach_of, &air, &targets,
+                        ),
+                        (None, None) => crate::cover::CoverStrike::default(),
+                    };
                     air.orders.retain(|(g, order)| {
                         !(cover.taken.contains(g)
                             && matches!(

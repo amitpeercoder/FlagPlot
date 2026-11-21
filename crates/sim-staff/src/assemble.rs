@@ -148,6 +148,26 @@ impl Day<'_, '_> {
         others
     }
 
+    /// What every intent in force names (decision 0202, 2): the forces
+    /// addressed or named in a forces limit, of every tree.
+    pub(crate) fn others_in_force(&self) -> Others {
+        let mut others = Others::default();
+        for id in self.in_priority_order(|_| true) {
+            let Some(intent) = self.state.intents.get(&id) else {
+                continue;
+            };
+            if let Addressee::TaskForce(force) = intent.addressee {
+                others.forces.entry(force).or_insert(id);
+            }
+            if let Some(forces) = self.state.forces_as_bound(intent) {
+                for force in &forces.task_forces {
+                    others.forces.entry(*force).or_insert(id);
+                }
+            }
+        }
+        others
+    }
+
     /// Item 5 for a task force: `Err(words)` where the staff may not take it.
     pub(crate) fn may_take_force(&self, force: &TaskForce, others: &Others) -> Result<(), String> {
         if let Some(day) = self.not_before_choice(EntityRef::TaskForce(force.id)) {

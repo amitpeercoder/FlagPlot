@@ -241,6 +241,10 @@ impl Day<'_, '_> {
             if self.form_force_tasks(&end, &plan, hex, in_scope, false) {
                 served_any = true;
             }
+            // A free carrier force the carrier pass gave it (decision 0202).
+            if self.carrier_ends.get(&id).is_some_and(|o| o.served) {
+                served_any = true;
+            }
             if !served_any {
                 self.cannot_deny(
                     &end,
@@ -389,11 +393,15 @@ impl Day<'_, '_> {
                 ));
             }
         }
-        let body = if lines.is_empty() {
+        let mut body = if lines.is_empty() {
             "the side has no base it may use".to_string()
         } else {
             lines.join("; ")
         };
+        // Decision 0202, 28: and no carrier force can serve it.
+        if let Some(words) = self.carrier_words(end.id) {
+            body = format!("{body}; {words}");
+        }
         let reason = serving(end, plan)
             .evidence(body.clone(), today)
             .binding("a bomber's normal reach or a search range must touch a hex of the waters")

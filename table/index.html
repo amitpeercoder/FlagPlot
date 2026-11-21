@@ -1309,10 +1309,11 @@ body.watched .gives { display: none !important; }
       ['Speed', f.speed], ['Readiness', f.readiness + (f.alert ? ', alert' : '')], ['Fatigue', f.fatigue],
       ['Cargo', f.cargo_supply_t != null ? commas(f.cargo_supply_t) + ' t supply, ' + commas(f.cargo_fuel_t || 0) + ' t fuel' : null],
       ['Shortest legs', f.least_fuelled ? f.least_fuelled.ship.name.replace(/^Placeholder /, '') + ': ' + commas(f.least_fuelled.fuel_t) + ' t, ' + commas(f.least_fuelled.range_nm) + ' miles at cruising speed' : null],
-      ['In whose hands', held ? 'Yours, by your direct order. The staff plans round it.' : 'The staff\'s']]);
+      ['In whose hands', held ? (held.made_by === 'command' ? 'Yours: you keep it out of the staff\'s plans.' : 'Yours, by your direct order. The staff plans round it.') : 'The staff\'s']]);
     // Ordering a force is done from its card, so the buttons stand at the head of it.
     if (!WATCH && !M.over && !playing && !(f.available_from > M.day)) { var row = el('div', 'row'), b = el('button', '', 'GIVE A DIRECT ORDER'); b.type = 'button'; b.addEventListener('click', function () { orderForce(f); }); row.appendChild(b);
       if (held) { var r = el('button', '', 'RETURN IT TO THE STAFF'); r.type = 'button'; r.addEventListener('click', function () { act('release', { task_force: num(h) }, 'Released. The staff may use it again from dusk.').then(function () { $('card').hidden = true; }); }); row.appendChild(r); }
+      else if (f.mission === 'carrier') { var k = el('button', '', 'KEEP THIS FORCE OUT OF THE STAFF\'S PLANS'); k.type = 'button'; k.addEventListener('click', function () { act('hold', { task_force: num(h) }, 'Held. The staff leaves it out of its plans from dusk.').then(function () { $('card').hidden = true; }); }); row.appendChild(k); }
       body.appendChild(row); }
     var ships = el('div'); body.appendChild(ships);
     api('get_entity', { handle: h }).then(function (a) {
@@ -1763,7 +1764,19 @@ body.watched .gives { display: none !important; }
         var tag = el('span', 'state', off ? 'CANCELLED FROM 1800' : ok ? 'APPROVED' : waits ? 'WAITS FOR YOU' : ''); if (waits) tag.style.color = 'var(--enemy)'; who.appendChild(tag); n.appendChild(who);
         if (off) n.appendChild(el('div', 'work', 'Cancelled by you today. It stops at 1800.'));
         else if (ok) n.appendChild(el('div', 'work', 'Approved by you today. The staff acts on it from 1800.'));
-        else if (waits) n.appendChild(el('div', 'work', p.state === 'preparing' ? 'It is ready and waits for your leave to launch.' : 'It waits for your leave to prepare.'));
+        else if (waits) {
+          var wline = n.appendChild(el('div', 'work', p.state === 'preparing' ? 'It is ready and waits for your leave to launch.' : 'It waits for your leave to prepare.'));
+          // What approving it would send, as the staff works it as if released;
+          // a plan that would form nothing, or cannot meet the order, says so.
+          api('propose', { intent: root }).then(function (pr) {
+            var t = String((pr && pr.reason && pr.reason.worked) || ''); if (!/^Taking plan/.test(t)) return;
+            var body = t.replace(/^Taking [\s\S]*? as released, the staff would (?:do this for the tree of \S+: )?/, '');
+            // What it would form and why, not the orders the task then gives.
+            body = body.split(/ intent:\d+, operating the carrier force /)[0];
+            if (/cannot meet|would form no intent and give no order/.test(t)) { wline.textContent = ''; wline.appendChild(rich('span', '', 'Approved as it stands, it would form nothing that serves the order: ' + body)); wline.style.color = 'var(--enemy)'; }
+            else { wline.textContent = ''; wline.appendChild(rich('span', '', (p.state === 'preparing' ? 'It waits for your leave to launch. ' : 'It waits for your leave to prepare. ') + 'Approved, it would send: ' + body)); }
+          }).catch(function () {});
+        }
         if (!off && !gone && !WATCH) { var row = el('div', 'row'), press = function (words, tool, done) { var x = el('button', tool === 'approve' ? 'primary' : 'quiet', words); x.type = 'button'; x.addEventListener('click', function () { act(tool, { plan: p.number }, done).then(function () { readPlan(root); }); }); row.appendChild(x); };
           if (waits) press('APPROVE PLAN ' + p.number, 'approve', 'Plan ' + p.number + ' approved.');
           press('CANCEL PLAN ' + p.number, 'cancel_plan', 'Plan ' + p.number + ' is cancelled from 1800.'); n.appendChild(row); }
@@ -1848,7 +1861,7 @@ body.watched .gives { display: none !important; }
         doc.appendChild(rk);
         var wl = el('div', 'line'), w = quiet('WITHDRAW THIS ORDER', 'danger'); w.addEventListener('click', function () { act('withdraw_intent', { intent: root }, 'The order is withdrawn from 1800.').then(function () { $('sheet').hidden = true; }); }); wl.appendChild(w); doc.appendChild(wl);
       }
-      if (!WATCH) doc.appendChild(el('div', 'foot', (a[2].inside_day ? 'Worked now, in the middle of the day; the staff is asked again at dusk and may then do otherwise. ' : '') + 'You change a plan by instruction: your leave, a limit, a cancel or a withdrawal. To keep a force out of it, touch the force and give it a direct order yourself.'));
+      if (!WATCH) doc.appendChild(el('div', 'foot', (a[2].inside_day ? 'Worked now, in the middle of the day; the staff is asked again at dusk and may then do otherwise. ' : '') + 'You change a plan by instruction: your leave, a limit, a cancel or a withdrawal. To keep a force out of it, touch the force and keep it out of the staff\'s plans; a direct order of yours keeps out a force the staff is already using, and only that one.'));
       sheetAs('THE PLAN'); $('sheet-chart').hidden = false; $('sheet-chart').onclick = function () { $('sheet').hidden = true; showPlanOnChart(root); }; doc.hidden = false; $('sheet-text').hidden = true; $('sheet').hidden = false; $('sheet-close').focus();
     }).catch(function (e) { setStatus('The plan could not be read: ' + e.message); });
   }
@@ -2660,9 +2673,9 @@ body.watched .gives { display: none !important; }
   function ends(target) {
     var list = [], n = target.base ? num(target.base.base.handle) : null;
     if (n != null) config.islands.forEach(function (i) { if (i.base === n) list.push(['Seize and hold ' + i.name, { intent_kind: 'control_island', island: i.number }, 'Capture its places, garrison and supply them, deny the waters round it, and keep its airfields out of the enemy\'s use.']); });
-    if (target.kind === 'enemy') list.push(['Capture ' + target.name + ' only', { intent_kind: 'take_place', base: n }, 'Land men and capture the place. Nothing is ordered for afterwards: no garrison, no supply.'], ['Neutralise ' + target.name, { intent_kind: 'neutralise', target: n }, 'Air raids on its airfield until it can fly no aircraft. No landing.']);
+    if (target.kind === 'enemy') list.push(['Capture ' + target.name + ' only', { intent_kind: 'take_place', base: n }, 'Land men and capture the place. Nothing is ordered for afterwards: no garrison, no supply.'], ['Neutralise ' + target.name, { intent_kind: 'neutralise', target: n }, 'Air raids on its airfield until it can fly no aircraft, by aircraft from your bases and a carrier force that is free. No landing.']);
     if (target.kind === 'own') list.push(['Hold ' + target.name, { intent_kind: 'hold', base: n }, 'Its men defend it; it is kept supplied and covered from the air.'], ['Keep it supplied, 30 days', { intent_kind: 'keep_supplied', base: n, floor_days: 30 }, 'Supply runs keep 30 days of stock there. Nothing else.'], ['Cover it from the air', { intent_kind: 'cover', base: n }, 'Fighters over it and searches round it. Nothing else.']);
-    if (target.kind === 'waters') list.push(['Deny these waters, ' + round(2), { intent_kind: 'deny', hex: [target.q, target.r], distance: 2 }, 'Search them and strike any enemy ship that enters.'], ['Deny these waters, ' + round(4), { intent_kind: 'deny', hex: [target.q, target.r], distance: 4 }, 'The same, over a wider circle.']);
+    if (target.kind === 'waters') list.push(['Deny these waters, ' + round(2), { intent_kind: 'deny', hex: [target.q, target.r], distance: 2 }, 'Search them and strike any enemy ship that enters, with aircraft from your bases and a carrier force that is free.'], ['Deny these waters, ' + round(4), { intent_kind: 'deny', hex: [target.q, target.r], distance: 4 }, 'The same, over a wider circle.']);
     // A force is moved by an order of its own: a carrier force is told where to work from, a surface force where to stand.
     if (target.kind === 'waters') M.forces.forEach(function (f) {
       var n = num(f.task_force.handle), name = f.task_force.name || f.task_force.handle;
@@ -2692,8 +2705,15 @@ body.watched .gives { display: none !important; }
       if (seq !== previewSeq) return; if (p.status === 'refused') throw new Error(p.reason || p.summary || 'refused');
       if (seq !== previewSeq) return; out.textContent = ''; var w = p.with_change || {};
       out.appendChild(rich('div', '', 'It would ' + p.shown + '. On the first morning the staff would give ' + (w.orders || []).length + ' orders and ' + (w.commands || []).length + ' commands of its own.'));
-      (w.no_orders || []).slice(0, 3).forEach(function (n) { out.appendChild(rich('div', '', 'It cannot yet: ' + (n.worked || (n.binding || []).join('; ')))); });
-      if ((w.no_orders || []).length > 3) out.appendChild(el('div', '', 'And ' + ((w.no_orders || []).length - 3) + ' more it cannot yet do.'));
+      // What approving it would send, worked as if released, and an order it
+      // cannot meet, said as such and not as ready (decision 0202, 31).
+      var said = (w.no_orders || []).map(function (n) { return n.worked || (n.binding || []).join('; '); });
+      var approving = said.filter(function (t) { return /^Taking plan/.test(t); }), rest = said.filter(function (t) { return !/^Taking plan/.test(t); });
+      approving.forEach(function (t) { var cannot = /cannot meet|would form no intent and give no order/.test(t); var d = rich('div', '', (cannot ? 'Approved, it would form nothing that serves the order: ' : 'If you approve it: ') + t.replace(/^Taking [\s\S]*? as released, the staff would (?:do this for the tree of \S+: )?/, '').split(/ intent:\d+, operating the carrier force /)[0]); if (cannot) d.style.color = 'var(--enemy)'; out.appendChild(d); });
+      rest.filter(function (t) { return /cannot meet/.test(t); }).forEach(function (t) { var d = rich('div', '', 'It cannot meet the order: ' + t); d.style.color = 'var(--enemy)'; out.appendChild(d); });
+      var yet = rest.filter(function (t) { return !/cannot meet/.test(t); });
+      yet.slice(0, 3).forEach(function (t) { out.appendChild(rich('div', '', 'It cannot yet: ' + t)); });
+      if (yet.length > 3) out.appendChild(el('div', '', 'And ' + (yet.length - 3) + ' more it cannot yet do.'));
       if (chosen('risk') !== 'balanced') out.appendChild(el('div', '', 'The preview is worked at balanced; your risk goes with the order.'));
       previewNo = p.preview; $('o-sign').disabled = false; $('o-dry').disabled = false;
     }).catch(function (err) { if (seq !== previewSeq) return; out.textContent = 'The staff refuses it: ' + err.message; $('o-pv-sum').textContent = 'THE STAFF REFUSES IT'; $('o-pv').open = true; });
