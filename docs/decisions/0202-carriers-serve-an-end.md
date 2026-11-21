@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 21, 2026 on the designer's findi
 
 Summary: A commander who orders an end, "deny these waters" or "neutralise that airfield", expects his staff to use what he has, his carriers among it. Today those two orders use aircraft at bases and nothing else, and a carrier force moves only when told where to go. This has the staff count a free carrier force among the means of both orders, choose where it works from by the risk, the enemy and the fuel, search the way there, and have its aircraft do the task; and it leaves the commander the word on whether it goes.
 
-Standing: Planned on Nov 21, 2026, amended on two reviews and on the designer's word, and built on Nov 21, 2026 ("As built"); the readings marked there, and the statements of scenario 116 that do not hold as written, are the architect's to confirm.
+Standing: Planned on Nov 21, 2026, amended on two reviews and on the designer's word; built the same day (scenario 116) and confirmed by the architect's rulings below. The way a force takes is decision 0203, to come.
 
 ## Why
 
@@ -148,3 +148,22 @@ Built on Nov 21, 2026 on the branch `carriers-serve-build`, to rules 1 to 33. Th
 ## How the plan was made
 
 Written as twenty rules; amended on a first review (closed proofs kept from moving, the test for a free force, the hold in place of new state, the raid routine); amended on the designer's word (the station by risk, enemy and fuel; the search on the way); amended on a second review (a wide deny's candidates, the carrier-only contact circle, the signed margin, the fuel test, the cheaper sea distance, the picture read, the reason's contents). This text replaces all of them.
+
+## The architect's rulings
+
+Made on Nov 21, 2026 on reading the build: the station routine (the circles, the signed margin, the choice by risk, the test for a free force), the tests of scenario 116, and the report of what moved.
+
+1. **Four statements of the hand calculation were wrong and are corrected,** each with its date in the test file. The rules stand; the arithmetic was mine.
+   - **The candidates of a wide deny and of a neutralise are 97, not the 91 within 5 hexes.** Reach is measured in a straight line, and the six hexes at the middle of each side of the ring 6 out are 208 nm away, inside 210.
+   - **So at balanced a neutralise's carriers stand 6 hexes from the base, not 5,** at (3,3): inside its circle by 9. At press they go to (5,0), the least passage.
+   - **Seven candidates are equally deep in statement 8, not four.** The station does not change.
+   - **The fuel figures.** The engine charges a clear way by the straight line (decision 0058), so the way home is 327 nm and not nine hexes of 40. The needs are 361.75 t, 434.1 t and 465 t. Every outcome is as it was.
+   The tests set aside for the old figures are removed; the tests of what holds are the tests of the statements.
+2. **The readings of "As built" are confirmed.** Worth saying again:
+   - **A forces limit that names only air groups still lets the order take a free carrier force.** Only naming a task force or a ship keeps the staff's choice out.
+   - **A force is weighed full when stopped at any base of its side that can fuel it,** not only its home port.
+   - **"Lifted on day 3" is a release that takes effect on day 4,** and the task is formed that morning.
+   - **The staff's task is withdrawn for a higher order only when that order is of another tree** and is addressed to the force or names it.
+3. **No game on file moved.** All 165 scenario files give the same events and final hashes before and after, the baselines and transcripts are unchanged, and the five recorded games replay with only the doctrine's label changed, `supply-49` to `supply-50`. One recorded game, `stage_2b_seat_sonnet`, does not replay on either build: it is a save of an old version, and that is owed a look of its own.
+4. **A day costs no more that can be measured.** The timings before and after differ by less than the machine's noise.
+5. **Three things are not verified and are owed:** that the dry run's report names the force and its station; that the station is drawn on the chart once the plan is released; and a test that a direct order to a free force does not hold it. They are checked at the table with the designer's next game, and the test is added with decision 0203.

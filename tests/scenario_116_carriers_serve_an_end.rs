@@ -54,7 +54,11 @@
 //!    is given no route.
 //! 5. **Waters wider than the bombers reach.** For "within 6 hexes of
 //!    (0,0)", 210 less 240 is less than one hex. The candidates are the
-//!    hexes within 5 of (0,0), and C is sent to (5,0), 5 hexes of passage.
+//!    hexes within 210 nm of (0,0) in a straight line: those within 5
+//!    hexes, and the six at the middle of each side of the ring 6 out,
+//!    such as (3,3), which is 208 nm away; 97 in all. C is sent to (5,0),
+//!    5 hexes of passage. (Corrected by the architect on Nov 21, 2026:
+//!    as first written it gave only the hexes within 5.)
 //! 6. **A carrier contact casts a circle.** A holds a fresh contact
 //!    reported as a carrier at (8,-6). (3,0) is 6 hexes from it and so
 //!    inside its circle, by 2. Of the candidates, (0,3) is 9 hexes from
@@ -78,8 +82,9 @@
 //!      staff hands in that it cannot meet the order, and names both the
 //!      bases and the carrier force.
 //!    - At balanced C is sent to (3,0): 13 hexes from E, inside by 2, the
-//!      least deep of any candidate, and of the four candidates equally
-//!      deep the one with the least passage. The reason says it stands
+//!      least deep of any candidate, and of the seven candidates equally
+//!      deep the one with the least passage. (Corrected by the architect
+//!      on Nov 21, 2026: as first written, four.) The reason says it stands
 //!      in danger of E.
 //!    - At press C is sent to (3,0), the least passage.
 //! 9. **The waters and the targets are read.** At its station under the
@@ -93,15 +98,19 @@
 //!
 //! B has a base E at (0,0) on A's map. The order is "neutralise E".
 //!
-//! 11. **The candidates** are the hexes within 5 of (0,0). Every one is
-//!     inside E's own circle.
+//! 11. **The candidates** are the 97 hexes within 210 nm of (0,0), as in
+//!     statement 5. Every one is inside E's own circle.
 //! 12. **At preserve the carriers do not go.** No task is formed for C,
 //!     and the reason says a raid on E is flown from inside E's circle.
-//! 13. **At balanced, the edge of the reach.** The candidates 5 hexes
-//!     from E are the least deep, inside by 10. Of those, (5,0) has the
-//!     least passage from C, 5 hexes. C is sent to (5,0), and the reason
-//!     says it stands in danger of E. At press it is sent to (5,0) too.
-//! 14. **The bombers raid the base.** At (5,0), with no fresh contact of
+//! 13. **At balanced, the edge of the reach.** The six candidates 6 hexes
+//!     from E are the least deep, inside by 9. Of those, (3,3) and (6,-3)
+//!     have the least passage from C, 7 hexes each, and (3,3) is first in
+//!     hex order. C is sent to (3,3), and the reason says it stands in
+//!     danger of E. At press it is sent to (5,0), the least passage, 5
+//!     hexes. (Corrected by the architect on Nov 21, 2026: as first
+//!     written it sent C to (5,0) at balanced too, having left out the
+//!     six hexes of statement 5.)
+//! 14. **The bombers raid the base.** At press, at (5,0), with no fresh contact of
 //!     ships within 210 nm, C's bombers are set to strike E. On a morning
 //!     A holds a fresh contact of ships 4 hexes from C, they are set to
 //!     strike ships and not E.
@@ -111,21 +120,25 @@
 //! # Statements: fuel
 //!
 //! The order is statement 2's deny, the station (3,0), and H at (10,2) is
-//! C's home port: 9 hexes from (3,0), 360 nm.
+//! C's home port. The engine charges a clear way by the straight line
+//! (decision 0058): from (3,0) to H is 327 nm, and from (10,0) to (3,0)
+//! is 280 nm. (Corrected by the architect on Nov 21, 2026: as first
+//! written the way home was counted as 9 hexes of 40 nm, 360 nm, and the
+//! figures of statements 16 to 18 followed from that.)
 //!
 //! 16. **What the passage takes.** Out at full speed, 280 nm at 1 t a
-//!     mile, 280 t; home at cruise, 360 nm at 0.25 t a mile, 90 t: 370 t.
-//!     At press, with every ship holding 400 t, C is sent, and the reason
-//!     gives 370 t needed against the least aboard.
-//! 17. **The margin.** At balanced the need is 370 times 1.2, 444 t. With
-//!     a destroyer at 400 t no candidate is in fuel: the cheapest other,
-//!     (2,1), is 8 hexes out and 9 home, 320 t and 90 t, 410 t, and 492 t
-//!     with the margin. No task is formed for C, and the reason says no
+//!     mile, 280 t; home at cruise, 327 nm at 0.25 t a mile, 81.75 t:
+//!     361.75 t. At press, with every ship holding 400 t, C is sent, and
+//!     the reason gives 361.75 t needed against the least aboard.
+//! 17. **The margin.** At balanced the need is 361.75 times 1.2, 434.1 t.
+//!     With a destroyer at 400 t no candidate is in fuel: the cheapest
+//!     other, (2,1), is 302 nm out and 342 nm home, 302 t and 85.5 t,
+//!     387.5 t, and 465 t with the margin. No task is formed for C, and the reason says no
 //!     candidate is in fuel and names the destroyer. With that destroyer
 //!     at 450 t C is sent to (3,0).
 //! 18. **Preserve sails at cruise.** At preserve the passage out is at
-//!     cruise: 70 t out and 90 t home, 160 t, and 240 t with the margin
-//!     of 1.5. With every ship at 250 t C is sent.
+//!     cruise: 70 t out and 81.75 t home, 151.75 t, and 227.6 t with the
+//!     margin of 1.5. With every ship at 250 t C is sent.
 //! 19. **In port, it is weighed full.** With C stopped at H, H its home
 //!     port, H holding fuel and able to fuel it, and its ships at 100 t:
 //!     the task is formed, the station chosen as if the ships were full,
@@ -176,10 +189,10 @@
 //! - **The staff reads its own side.** Nothing in a reason for a station
 //!   names what an enemy base holds.
 
-// The tests are written by the build under these statements. Where a
-// statement does not hold in the code as decision 0202's rules have it, its
-// test is marked `#[ignore]` with the reason, a test of what does hold stands
-// beside it, and the finding is reported to the architect.
+// Where the build found a statement of the first hand calculation did not
+// hold, the architect corrected the statement (each correction is dated in
+// the doc comment above) and the tests below are of the statements as they
+// now stand.
 
 // The architect's statement lists are list items in the doc comment above,
 // which is left as written.
@@ -690,15 +703,6 @@ fn statement_5_waters_wider_than_the_bombers_reach() {
 /// hold: the engine measures a strike's reach in a straight line (decision
 /// 0040), and the six hexes 6 steps from (0,0) at the middle of each side of
 /// that ring, such as (3,3), are 208 nm away, within 210.
-#[test]
-#[ignore = "does not hold: by air distance the six mid-side hexes of the ring of 6, such as (3,3) at 208 nm, are within 210 nm; the candidates are 97, not the 91 within 5. Reported to the architect"]
-fn statement_5_the_candidates_are_the_hexes_within_5() {
-    let played = play(&waters(&text(), 6), 1);
-    assert!(played
-        .station_reason(1)
-        .contains("The candidates, 91 of them,"));
-}
-
 /// What holds beside it: the 97 candidates, the 91 within 5 and six at 6.
 #[test]
 fn statement_5_as_it_holds_the_candidates_by_air_distance() {
@@ -803,16 +807,6 @@ fn statement_8_candidates() -> Vec<Candidate> {
 
 /// Statement 8's "of the four candidates equally deep" does not hold: seven
 /// candidates are 13 hexes from E.
-#[test]
-#[ignore = "does not hold: seven candidates within 3 of (0,0) are 13 hexes from E at (-10,0), not four: (3,-3), (3,-2), (3,-1), (3,0), (2,1), (1,2) and (0,3). The station, (3,0), holds. Reported to the architect"]
-fn statement_8_four_candidates_equally_deep() {
-    let deepest = statement_8_candidates()
-        .into_iter()
-        .filter(|c| c.margin == Some(-2))
-        .count();
-    assert_eq!(deepest, 4);
-}
-
 /// What holds beside it: seven equally deep, of which (3,0) has the least
 /// passage.
 #[test]
@@ -893,14 +887,6 @@ fn neutralise_candidates() -> Vec<Hex> {
         .collect()
 }
 
-#[test]
-#[ignore = "does not hold: by air distance the six mid-side hexes of the ring of 6 round E, such as (3,3) at 208 nm and (6,-3), are within 210 nm; the candidates are 97, not the hexes within 5. Reported to the architect"]
-fn statement_11_the_candidates_are_the_hexes_within_5() {
-    assert!(neutralise_candidates()
-        .iter()
-        .all(|h| h.distance(hex(0, 0)) <= 5));
-}
-
 /// Statement 11, as it holds: 97 candidates, every one inside E's circle.
 #[test]
 fn statement_11_as_it_holds_every_candidate_is_inside_es_circle() {
@@ -926,13 +912,6 @@ fn statement_12_at_preserve_the_carriers_do_not_go() {
 /// Statement 13 at balanced does not hold: the least deep candidates are
 /// the six of the ring of 6 within 210 nm, inside by 9, and of those (3,3)
 /// and (6,-3) have the least passage, 7; (3,3) comes first in hex order.
-#[test]
-#[ignore = "does not hold at balanced: the least deep candidates are 6 hexes from E (inside by 9, not 10), such as (3,3) and (6,-3), at 7 hexes of passage; C is sent to (3,3). At press it is sent to (5,0) as stated. Reported to the architect"]
-fn statement_13_at_balanced_the_edge_of_the_reach() {
-    let played = play(&at_risk(&neutralise_only(), "balanced"), 1);
-    assert_eq!(played.station(1), Some(hex(5, 0)));
-}
-
 /// Statement 13 as it holds: at balanced (3,3), inside by 9, in danger of E;
 /// at press (5,0).
 #[test]
@@ -1004,13 +983,6 @@ fn statement_15_the_pair_is_allowed() {
 /// all. The engine charges a step of a clear way as the straight line
 /// (decision 0058): from (3,0) to (10,2) is 327 nm, 81.75 t, and the need at
 /// press is 361.75 t.
-#[test]
-#[ignore = "does not hold: the engine charges the way home from (3,0) to (10,2) as 327 nm by air (decision 0058), not 9 x 40 = 360, so the need at press is 280 + 81.75 = 361.75 t, not 370. C is sent with 400 t aboard, as stated. Reported to the architect"]
-fn statement_16_what_the_passage_takes() {
-    let played = play(&all_fuel(&at_risk(&text(), "press"), 400), 1);
-    assert!(played.station_reason(1).contains("370 t"));
-}
-
 /// Statement 16 as it holds: at press with 400 t aboard each, C is sent, and
 /// the reason gives 280 t out, 81.75 t home and 361.75 t against the least
 /// aboard.
@@ -1032,13 +1004,6 @@ fn statement_16_as_it_holds() {
 }
 
 /// Statement 17 as written: 444 t and 492 t.
-#[test]
-#[ignore = "does not hold in its figures: with the way home charged by air (decision 0058) the need at (3,0) is 361.75 x 1.2 = 434.1 t, not 444, and at (2,1) (302 + 85.5) x 1.2 = 465 t, not 492. The outcomes hold. Reported to the architect"]
-fn statement_17_the_margin_figures() {
-    let played = play(&fuel(&text(), 2, 400), 1);
-    assert!(played.said(1).contains("444 t"));
-}
-
 /// Statement 17 as it holds: with a destroyer at 400 t no candidate is in
 /// fuel at balanced and the reason names it; at 450 t C is sent to (3,0).
 #[test]
