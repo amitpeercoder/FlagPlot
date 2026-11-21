@@ -118,7 +118,10 @@
 //! 23. **The key.** `for_play = true` in a scenario's `[objectives]` table
 //!     loads; with the key absent or `false` the scenario is of record.
 //!     Scenario 103's four files have it, and scenario 105's four
-//!     (decision 0188). No other scenario file has it.
+//!     (decision 0188). No other scenario file has it. (Amended by the
+//!     architect on Nov 21, 2026: the files of the same two scenarios with
+//!     their oilers, decision 0206, have it too, as do the table's copies
+//!     of files for play, decision 0205.)
 //! 24. **It changes no game.** File a's five daily hashes on seed 1942 are
 //!     the same with the key as with it taken out.
 //! 25. **The result's words.** `sim-cli run` on file a prints its result
@@ -1145,6 +1148,10 @@ fn all_scenario_files(dir: &Path, out: &mut Vec<PathBuf>) {
     }
 }
 
+/// Statement 23 as built with decision 0205: the eight files have the key,
+/// and so do the table's copies of six of them (files b, c and d of each) in
+/// data/scenarios/table-hunger, each its source but for the line that names
+/// the ground figures (decision 0205, 3). No other scenario file has it.
 #[test]
 fn statement_23_the_key() {
     // Loads with the key; absent or false, of record.
@@ -1198,6 +1205,15 @@ fn statement_23_the_key() {
             ]
         })
         .collect();
+    // The table's copies (decision 0205, 3).
+    for l in ['b', 'c', 'd'] {
+        want.push(PathBuf::from(format!(
+            "scenarios/table-hunger/01{l}_coral_sea.toml"
+        )));
+        want.push(PathBuf::from(format!(
+            "scenarios/table-hunger/01{l}_eastern_solomons.toml"
+        )));
+    }
     want.sort();
     with_key.sort();
     assert_eq!(with_key, want);

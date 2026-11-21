@@ -394,6 +394,10 @@ fn a_step_carries_only_the_pictures_that_changed() {
 /// `"frame":{"centre_lat":-12,"centre_lon":160,"factor":0.978148,"west":145,"east":172},`
 /// and nothing else: with that taken out it hashes as pinned before
 /// (0x090e_e743_ff55_2f54), and the other nine hash as they did.
+/// Remade again at the state layout v53 (decision 0205), which changes an
+/// export's state version and day hashes and nothing else: checked against
+/// the exports of the commit before, with those taken out, each of which
+/// hashes as pinned before.
 #[test]
 fn a_scenario_with_command_levels_off_exports_as_it_did() {
     fn fnv(bytes: &[u8]) -> u64 {
@@ -402,16 +406,16 @@ fn a_scenario_with_command_levels_off_exports_as_it_did() {
         })
     }
     let before: [(&str, u64); 10] = [
-        ("01_transit", 0x54bc_e0cc_ae83_e5eb),
-        ("04a_night_action", 0x9801_9145_66a7_9fe6),
-        ("05_eastern_solomons", 0xcdf9_cb1c_45a7_7d87),
-        ("21_landing", 0x73b4_0800_e053_b8ed),
-        ("23_fight_ashore", 0x3d7b_3644_d911_504d),
-        ("31_airfield_damage", 0x2c4d_6916_b7ff_f3c0),
-        ("36_one_convoy", 0x5b51_9085_619b_8c9d),
-        ("43_keep_two_bases_fed", 0x3302_25f8_3b1d_0a1d),
-        ("50_neutralise_a_base", 0x6ca8_2448_ff27_6987),
-        ("58_a_carrier_force_closes", 0xc6eb_3ef8_3ad1_ab28),
+        ("01_transit", 0x5b62_9475_1f41_20ca),
+        ("04a_night_action", 0xeaf8_146b_9889_2fea),
+        ("05_eastern_solomons", 0x15c2_b5c1_b9ec_f174),
+        ("21_landing", 0x7dfa_7e42_e318_b4e3),
+        ("23_fight_ashore", 0x8e99_c6c8_b055_2684),
+        ("31_airfield_damage", 0x9d11_9d23_75ee_02f2),
+        ("36_one_convoy", 0xa55c_3f2c_be9c_b33d),
+        ("43_keep_two_bases_fed", 0x350f_939c_6404_407d),
+        ("50_neutralise_a_base", 0x23b0_603d_7ed2_92fd),
+        ("58_a_carrier_force_closes", 0xc54d_71aa_4d32_6738),
     ];
     let prefix6 = br#"{"format":"flagplot-replay","version":6,"#;
     let prefix5 = br#"{"format":"flagplot-replay","version":5,"#;

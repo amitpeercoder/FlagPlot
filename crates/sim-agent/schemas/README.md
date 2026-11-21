@@ -1288,3 +1288,11 @@ order ends when every ship is full, the giver's oilers hold no cargo fuel or are
 briefing says so. It is refused where the giver has no oiler, is the force itself, is herself fuelling, is an escort or
 has an escort, and where the force is a giver, an escort or has an escort. A route or an escort order given to a force
 under the order is refused as the escort's is.
+
+## Hunger that takes time (decision 0205)
+
+A field added only, so `version` does not change. A land unit line has `hunger_nights`, the
+unit's nights of hunger (up one on a night it is fed below the ground figure
+`hungry_below_share`, down one on a night fed in full), left out when 0, and so in every game
+whose ground figures give no hunger figures. The text adds "hungry N nights" to the unit's line
+where it is above 0. The side's own units only; the enemy is told none of it.

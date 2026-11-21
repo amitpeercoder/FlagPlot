@@ -2,19 +2,19 @@ Placeholder scenario 81: Told to wait
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash c59d15f6488f4552  25 events
-day   2  hash 93f23494375483be  7 events
-day   3  hash 8bd39645f8a08c14  6 events
-day   4  hash e5ce43aa3212b886  6 events
-day   5  hash 87434a91a3f8c26f  6 events
-day   6  hash edf88b96a4770f15  12 events
-day   7  hash ea5d9350e5356a19  11 events
-day   8  hash 6e87d235bdebc359  11 events
-day   9  hash 5ebc8881d10b7b0f  27 events
-day  10  hash 6737f87e9151401a  19 events
-day  11  hash 4927f719fd5e5246  10 events
-day  12  hash 789994423479adce  6 events
-day  13  hash 2c8c2806490fca69  6 events
+day   1  hash fc2ec0f8b4a2c2cd  25 events
+day   2  hash 5a753da187668395  7 events
+day   3  hash 5178d3a3fdf06673  6 events
+day   4  hash 4b974f05116107e9  6 events
+day   5  hash 14ff61efc544bd50  6 events
+day   6  hash 007ce0fe195b6560  12 events
+day   7  hash 652a1f4a3ed68370  11 events
+day   8  hash 9a3cb4108a03b420  11 events
+day   9  hash b8a07487864c3e88  27 events
+day  10  hash 4fb0e777d32535a9  19 events
+day  11  hash 491aa0e3dcec098b  10 events
+day  12  hash b6731776f7140e31  6 events
+day  13  hash 7a7e34e605529494  6 events
 
 #1 D1 -         Allied the commander's command taken: set intent:1 to take the place at (4,0)
 #2 D1 -         Allied plan:1 drafted for intent:1  <- #1

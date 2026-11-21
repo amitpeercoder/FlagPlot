@@ -2,8 +2,8 @@ Placeholder scenario 53: Deny an area
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 8c93d10c8c87a134  68 events
-day   2  hash 8e44b2cf8198e6ac  7 events
+day   1  hash b28445c91b7f28c5  68 events
+day   2  hash 18e15fdd233359af  7 events
 
 air_group:1 "Placeholder dive bombers 1" (Allied) at base:1: 10 ready, mission NavalStrike, extended reach, no arc
 air_group:2 "Placeholder dive bombers 2" (Allied) at base:1: 10 ready, mission NavalStrike, extended reach, no arc

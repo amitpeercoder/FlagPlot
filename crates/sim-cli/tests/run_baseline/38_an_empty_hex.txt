@@ -2,12 +2,12 @@ Scenario 38: An empty hex
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash dec52920ab31922d  33 events
-day   2  hash 9855bd09e8e40b0c  23 events
-day   3  hash abb9666ab104a846  23 events
-day   4  hash 2c1964db5844ea1d  22 events
-day   5  hash 9429ee3ff98083bd  20 events
-day   6  hash 64a0221d3495fcc7  20 events
+day   1  hash 9dc01e4cd7fbaf94  33 events
+day   2  hash fd238d94337630fb  23 events
+day   3  hash d88e57f3c5643f95  23 events
+day   4  hash 8067cc0ca2d77806  22 events
+day   5  hash 09c0f0d35359dd74  20 events
+day   6  hash 3fff3aac3e59800c  20 events
 
 base:1 "Placeholder base 1, Japanese, at P" (Allied) at (0,0): 486.75 t of supply in stock
 base:2 "Placeholder base 2, Japanese, at R" (Japanese) at (1,0): 97.42 t of supply in stock

@@ -615,3 +615,7 @@ path = "scenario_117_the_way_a_force_takes.rs"
 [[test]]
 name = "scenario_118_a_dry_run_inside_a_day"
 path = "scenario_118_a_dry_run_inside_a_day.rs"
+
+[[test]]
+name = "scenario_119_hunger_takes_time"
+path = "scenario_119_hunger_takes_time.rs"

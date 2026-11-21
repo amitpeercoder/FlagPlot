@@ -2166,6 +2166,33 @@ pub enum EventKind {
         giver: TaskForceId,
         reason: FuelOrderEnd,
     },
+    /// The first landing of men at `base` put the rations of the men aboard
+    /// the ships of `task_force` into its stock (decision 0205, 4, 5 and 10):
+    /// the `men` aboard at the moment its first man landed there, `nights` of
+    /// their daily charge, `supply_t` in all; a base is given them once.
+    /// Recorded only where the hunger figures are given. Cites the
+    /// `BaseFormed` where the landing formed the base, and the unload order
+    /// and the force's arrival where the base stood. The side's own, whole;
+    /// the enemy is told nothing. Added at the end.
+    RationsLanded {
+        base: BaseId,
+        side: Side,
+        task_force: TaskForceId,
+        men: u32,
+        nights: Fixed,
+        supply_t: Fixed,
+    },
+    /// A land unit's nights of hunger changed at the night's charge
+    /// (decision 0205, 7 and 10): from `before` to `nights`, by one. Recorded
+    /// only when the count changes, and only where the hunger figures are
+    /// given. Cites the night's `MenFed` of its side and hex. The unit's own
+    /// side's, whole; the enemy is told nothing. Added at the end.
+    HungerNightsChanged {
+        unit: LandUnitId,
+        hex: Hex,
+        before: u32,
+        nights: u32,
+    },
 }
 
 impl EventKind {
@@ -2713,6 +2740,10 @@ impl EventKind {
                 EntityRef::TaskForce(*task_force),
                 EntityRef::TaskForce(*giver),
             ],
+            EventKind::RationsLanded {
+                base, task_force, ..
+            } => vec![EntityRef::Base(*base), EntityRef::TaskForce(*task_force)],
+            EventKind::HungerNightsChanged { unit, .. } => vec![EntityRef::LandUnit(*unit)],
         }
     }
 }
@@ -4675,6 +4706,26 @@ impl fmt::Display for EventKind {
                         "the giver has no ship afloat that fuels others at sea",
                     FuelOrderEnd::NewRoute => "a new route was ordered",
                 }
+            ),
+            EventKind::RationsLanded {
+                base,
+                task_force,
+                men,
+                nights,
+                supply_t,
+                ..
+            } => write!(
+                f,
+                "the landing of {task_force} put {supply_t} t of rations into {base}: {nights} nights for the {men} men aboard"
+            ),
+            EventKind::HungerNightsChanged {
+                unit,
+                hex,
+                before,
+                nights,
+            } => write!(
+                f,
+                "{unit} at {hex} has been hungry {nights} nights, from {before}"
             ),
         }
     }

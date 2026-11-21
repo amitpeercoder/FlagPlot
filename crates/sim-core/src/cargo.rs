@@ -27,7 +27,7 @@ use crate::preparation::landing_rate_factor;
 use crate::refdata::PortSize;
 use crate::refuel::FuelStop;
 use crate::state::{
-    Base, CargoOrder, LandUnit, ShipLocation, Side, TaskForce, TaskForceStatus, Troops,
+    Base, CargoOrder, LandUnit, ShipLocation, Side, Skills, TaskForce, TaskForceStatus, Troops,
 };
 use crate::time::{pulse_start, Pulse};
 use crate::world::World;
@@ -558,11 +558,12 @@ impl World {
             // counted, no activity, no roster (decision 6 of 0097, decision
             // 7 of 0098). A part of a working unit is a working unit, and
             // works at the default job (decision 1 of 0099, As built).
-            let (experience, skills, working, fieldworks) = (
+            let (experience, skills, working, fieldworks, hunger_nights) = (
                 land_unit.experience,
                 land_unit.skills,
                 land_unit.working,
                 land_unit.fieldworks,
+                land_unit.hunger_nights,
             );
             self.truth.land_units.insert(
                 new_id,
@@ -572,6 +573,8 @@ impl World {
                     working,
                     // With those of the unit it left (decision 6 of 0106).
                     fieldworks,
+                    // And its nights of hunger (decision 0205, 7).
+                    hunger_nights,
                     activity: if working {
                         Activity::Work(None)
                     } else {
@@ -612,6 +615,10 @@ impl World {
                 .map(|base| base.id)
         });
         if let Some(base) = existing {
+            // A base that stands is given the men's rations at the first
+            // landing of men there, citing the unload order and the force's
+            // arrival (decision 0205, 4 and 5, as corrected).
+            self.land_rations(day, pulse, p, base, causes.to_vec());
             return (divided, None, base);
         }
         // Nothing held apart until its day is a base (decision 0195, 18): a
@@ -648,7 +655,106 @@ impl World {
             causes.to_vec(),
             None,
         );
+        self.land_rations(day, pulse, p, id, vec![Cause::Event(formed)]);
         (divided, Some(formed), id)
+    }
+
+    /// The first landing of men at a base puts their rations into it
+    /// (decision 0205, 4, 5 and 10, as corrected by the architect on Nov 21,
+    /// 2026): the men aboard the ships of the force, at the moment its
+    /// first man lands there, times `rations_landed_nights` times each
+    /// man's daily charge, as supply in the base's stock, whether the
+    /// landing formed the base or it stood already. A base is given rations
+    /// once: the base's `rations_landed` is set, and a base that has it set
+    /// is given none. Recorded as `RationsLanded`, citing `causes`: the
+    /// `BaseFormed` where the base was formed, the unload order and the
+    /// force's arrival where it stood. Only where the ground figures give
+    /// the hunger figures, and only where it puts something down.
+    fn land_rations(
+        &mut self,
+        day: u32,
+        pulse: Pulse,
+        p: &Participant,
+        base: BaseId,
+        causes: Vec<Cause>,
+    ) {
+        let Some(figures) = self.ref_data.ground else {
+            return;
+        };
+        let Some(hunger) = figures.hunger else {
+            return;
+        };
+        if self.truth.bases[&base].rations_landed {
+            return;
+        }
+        // Each unit's men aboard the force's ships, in unit order.
+        let mut aboard: BTreeMap<LandUnitId, u32> = BTreeMap::new();
+        for ship in &p.ships {
+            if let Some(troops) = self.truth.ships[ship].troops.as_ref() {
+                *aboard.entry(troops.unit).or_insert(0) += troops.men;
+            }
+        }
+        let men: u32 = aboard.values().sum();
+        // The day's charge of the men aboard, by the one formula (decision 5
+        // of 0098): for standard units the men times the daily charge.
+        let mut charge = Fixed::ZERO;
+        let mut weighted_men = Fixed::ZERO;
+        for (unit, unit_men) in &aboard {
+            let skills = self.truth.land_units[unit].skills;
+            charge += crate::ground::daily_charge_t(&figures, &skills, *unit_men);
+            weighted_men +=
+                Skills::factor(skills.weight, figures.weight_strength) * i64::from(*unit_men);
+        }
+        let supply_t = charge * hunger.rations_landed_nights;
+        if supply_t <= Fixed::ZERO {
+            return;
+        }
+        let landed_into = self
+            .truth
+            .bases
+            .get_mut(&base)
+            .expect("the base landed at exists");
+        landed_into.supply_t += supply_t;
+        landed_into.rations_landed = true;
+        let weighted = weighted_men != Fixed::from_int(i64::from(men));
+        let breakdown = self.config.record_breakdowns.then(|| Breakdown {
+            factors: [
+                Factor {
+                    name: "men_aboard",
+                    value: Fixed::from_int(i64::from(men)),
+                },
+                Factor {
+                    name: "rations_landed_nights",
+                    value: hunger.rations_landed_nights,
+                },
+                Factor {
+                    name: "daily_supply_t_per_man",
+                    value: figures.daily_supply_t_per_man,
+                },
+            ]
+            .into_iter()
+            // Only where a unit's weight acts (decision 0098).
+            .chain(weighted.then_some(Factor {
+                name: "weighted_men",
+                value: weighted_men,
+            }))
+            .collect(),
+            result: supply_t,
+        });
+        self.events.record(
+            day,
+            Some(pulse),
+            EventKind::RationsLanded {
+                base,
+                side: p.side,
+                task_force: p.task_force,
+                men,
+                nights: hunger.rations_landed_nights,
+                supply_t,
+            },
+            causes,
+            breakdown,
+        );
     }
 
     /// Works the force's cargo, and records in `hours` for each ship the
