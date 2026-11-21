@@ -1024,15 +1024,17 @@ body.watched .gives { display: none !important; }
   // of hexes as miles.
   // The engine says intent; the table says order, as a commander would.
   function orderWords(t) { return String(t).replace(/\bcontrols island\b/g, 'seizes and holds island').replace(/\b([Cc])ontrol island\b/g, function (x, c) { return (c === 'C' ? 'Seize' : 'seize') + ' and hold island'; }).replace(/\btakes the place at\b/g, 'captures').replace(/\b([Tt])ake the place at\b/g, function (x, c) { return c === 'T' ? 'Capture' : 'capture'; }).replace(/\bintents\b/g, 'orders').replace(/\bIntents\b/g, 'Orders').replace(/\bintent\b/g, 'order').replace(/\bIntent\b/g, 'Order'); }
-  function plainWords(t) {
+  function plainWords(t, keepHex) {
     t = orderWords(String(t).replace(/(intent|plan):(\d+)/gi, '$1 $2')).replace(/island \d+ \(([^)]+)\)/g, '$1').replace(/Placeholder /g, '');
     t = t.replace(/\b0 pulse\(s\) old\b/g, 'just reported').replace(/\b(\d+) pulse\(s\)/g, function (m, n) { return n + (n === '1' ? ' pulse' : ' pulses'); })
       .replace(/\bat a share of 0\.25\b/g, 'with a quarter of its aircraft').replace(/\bat a share of 0\.5\b/g, 'with half its aircraft').replace(/\bat a share of 0\.75\b/g, 'with three quarters of its aircraft')
       .replace(/\b(\d+)\.(\d+) (miles|nm)\b/g, function (m, w, f, u) { return Math.round(parseFloat(w + '.' + f)) + ' ' + u; })
-      .replace(/\bfatigue (\d+)\.(\d+)\b/g, function (m, w, f) { return 'fatigue ' + Math.round(parseFloat(w + '.' + f)); });
+      .replace(/\bfatigue (\d+)\.(\d+)\b/g, function (m, w, f) { return 'fatigue ' + Math.round(parseFloat(w + '.' + f)); })
+      .replace(/\bhas no home port the staff knows\b/g, 'has no home port').replace(/(^|[;.] ?)([Tt])he rest are escorts\b/g, function (m, a, c) { return a + (c === 'T' ? 'Its' : 'its') + ' other fighters go as escorts'; });
     if (showHexes) return t;
-    return t.replace(/(\d+) hex(?:es)?\b(?! round)/g, function (m, n) { return (+n * hexMiles()) + ' miles'; })
-      .replace(/(?:hex )?\((-?\d+), ?(-?\d+)\)/g, function (m, q, r) { var pl = { q: +q, r: +r }; if (!hexAt[q + ',' + r]) return m; return M.hexNames[q + ',' + r] || whereIs(pl); });
+    t = t.replace(/(\d+) hex(?:es)?\b(?! round)/g, function (m, n) { return (+n * hexMiles()) + ' miles'; });
+    if (keepHex) return t;
+    return t.replace(/(?:hex )?\((-?\d+), ?(-?\d+)\)/g, function (m, q, r) { var pl = { q: +q, r: +r }; if (!hexAt[q + ',' + r]) return m; return M.hexNames[q + ',' + r] || whereIs(pl); });
   }
   function nameOf(h, given) { var n = M.names[h] || given; if (n) n = String(n).replace(/\((-?\d+),\s*(-?\d+)\)/g, function (x, q, r) { return M.hexNames[q + ',' + r] || whereIs({ q: parseInt(q, 10), r: parseInt(r, 10) }); }); return n ? n.replace(/^Placeholder /, '') : /^contact:/.test(h) ? 'contact ' + num(h) : h.replace('_', ' ').replace(':', ' '); }
   function refTo(h, given) { var b = el('button', 'ref' + (/^contact:/.test(h) || M.enemyBases.some(function (x) { return x.base.handle === h; }) ? ' enemy' : ''), nameOf(h, given)); b.type = 'button'; b.addEventListener('click', function (e) { e.stopPropagation(); see(h); }); return b; }
@@ -1533,10 +1535,10 @@ body.watched .gives { display: none !important; }
   // first, what it serves, then the cause and its points one to a line, and
   // what holds it and what would change it. Every word is the staff's own
   // (the tool `why`); only the order and the names are the table's.
-  function reasonWords(t, own, cap) {
+  function reasonWords(t, own, cap, keepHex) {
     function said(x, n) { n = parseInt(n, 10); if (n === own) return 'this task'; var w = intentWords(n); return w ? '"' + w + '"' : 'order ' + n; }
     t = String(t).replace(/intent:(\d+)/g, said);
-    t = nameText(plainWords(String(t).replace(/\bintent (\d+)\b/g, said)));
+    t = nameText(plainWords(String(t).replace(/\bintent (\d+)\b/g, said), keepHex));
     t = t.replace(/([A-Z][\w .'’-]*?) \(\1\)/g, '$1').replace(/(\d) nm\b/g, '$1 miles').replace(/\bfrom day (\d+)\b/g, function (x, n) { var d = dateOf(parseInt(n, 10) - 1); return d ? 'from ' + d : x; });
     // "a may be used from 20 AUG, b may be used from 20 AUG, c may be used from 30 AUG": gathered by the day.
     t = t.replace(/\(((?:[^()]*? may be used from [^,()]+)(?:, [^()]*? may be used from [^,()]+)+)\)/g, function (x, inner) { var by = {}, order = []; inner.split(', ').forEach(function (it) { var m = /^(.*?) may be used from (.+)$/.exec(it); if (!m) return; if (!by[m[2]]) { by[m[2]] = []; order.push(m[2]); } by[m[2]].push(m[1]); }); return '(not yet to hand: ' + order.map(function (d) { return by[d].join(', ') + ' from ' + d; }).join('; ') + ')'; });
@@ -1558,8 +1560,8 @@ body.watched .gives { display: none !important; }
       if (parts.length > 1) { var ul = el('ul', 'rpoints', ''); parts.forEach(function (pt) { var li = document.createElement('li'); li.appendChild(rich('span', '', reasonWords(pt, own, true) + '.')); ul.appendChild(li); }); into.appendChild(ul); }
       else if (parts.length) into.appendChild(rich('div', lead ? 'rpoint' : 'rlead', reasonWords(parts[0], own, true) + '.'));
     }
-    if ((r.binding || []).length) { var b = el('div', 'rmeta', ''); b.appendChild(el('span', '', 'Held by ')); b.appendChild(rich('span', '', reasonWords(r.binding.join('; ')) + '.')); into.appendChild(b); }
-    if ((r.would_change || []).length) { var c = el('div', 'rmeta', ''); c.appendChild(el('span', '', 'Would change with ')); c.appendChild(rich('span', '', reasonWords(r.would_change.join('; ')) + '.')); into.appendChild(c); }
+    if ((r.binding || []).length) { var b = el('div', 'rmeta', ''); b.appendChild(el('span', '', 'Held by ')); b.appendChild(rich('span', '', reasonWords(r.binding.join('; '), undefined, false, true) + '.')); into.appendChild(b); }
+    if ((r.would_change || []).length) { var c = el('div', 'rmeta', ''); c.appendChild(el('span', '', 'Would change with ')); c.appendChild(rich('span', '', reasonWords(r.would_change.join('; '), undefined, false, true) + '.')); into.appendChild(c); }
   }
   // The staff's working, laid out to be read: a sentence a line, what it
   // put in brackets as notes beneath, a list where it gave a list, and
@@ -1573,7 +1575,7 @@ body.watched .gives { display: none !important; }
       .replace(/(^|[^:\w.,])(\d{4,})\b(?!\.\d)/g, function (m, a, w) { return a + w.replace(/\B(?=(\d{3})+$)/g, ','); });
   }
   function workedView(into, verdict, r, own) {
-    var box = el('div', 'reason', ''), say = function (t) { return reasonWords(t, own, true); };
+    var box = el('div', 'reason', ''), say = function (t) { return reasonWords(t, own, true, true); };
     if (verdict) box.appendChild(el('div', 'rconcl', verdict + '.'));
     cutTop(tidyWorked(r.worked || ''), function (t, i) { return t.charAt(i) === '.' && /^\. [A-Z]/.test(t.substr(i, 3)) ? 2 : 0; }).forEach(function (sent) {
       sent = sent.replace(/\.$/, '');
@@ -1828,9 +1830,16 @@ body.watched .gives { display: none !important; }
         else (o.text || []).filter(function (t) { return /ashore\.$/.test(t); }).forEach(function (t) { box.appendChild(rich('div', 'work', nameText(t))); });
         doc.appendChild(box);
       })(a[3]);
+      var own = work[root] || [];
+      if (own.length) {
+        var on = el('div', 'node'), od = document.createElement('details'), osm = document.createElement('summary'), lastOwn = null;
+        osm.textContent = 'WHAT THE STAFF IS DOING, AND WHY'; od.appendChild(osm); od.open = !lines.length;
+        own.forEach(function (x) { workedView(od, x.verdict === lastOwn ? '' : x.verdict, x.r, root); lastOwn = x.verdict; });
+        on.appendChild(od); doc.appendChild(on);
+      }
       if (lines.length) doc.appendChild(el('h3', '', 'The brief'));
       var order = ['WAITS FOR YOU', 'APPROVED', 'CANCELLED FROM 1800', 'CANNOT BE MET', 'ORDERS TODAY', 'PREPARING', 'STANDING', 'DONE', 'ENDED'], sum = order.filter(function (k) { return tally[k]; }).map(function (k) { return tally[k] + ' ' + (k === 'WAITS FOR YOU' ? (tally[k] === 1 ? 'waits' : 'wait') + ' for you' : k.toLowerCase()); });
-      doc.appendChild(el(lines.length ? 'p' : 'div', lines.length ? '' : 'work', lines.length ? 'The staff has made ' + lines.length + ' task' + (lines.length === 1 ? '' : 's') + ' of it: ' + sum.join(', ') + '.' : 'The staff has made nothing of it yet. It plans at 1800.'));
+      doc.appendChild(el(lines.length ? 'p' : 'div', lines.length ? '' : 'work', lines.length ? 'The staff has made ' + lines.length + ' task' + (lines.length === 1 ? '' : 's') + ' of it: ' + sum.join(', ') + '.' : own.length ? 'The staff works this order itself and has made no tasks under it.' : 'The staff has made nothing of it yet. It plans at 1800.'));
       lines.forEach(function (L) {
         var n = el('div', 'node'), who = el('div', 'who'), i = L.i, p = L.p; n.style.marginLeft = (L.depth - 1) * 18 + 'px'; if (L.word === 'ENDED' || L.word === 'DONE') n.style.opacity = 0.6;
         who.appendChild(rich('strong', '', said[i.number] ? said[i.number].replace(/^./, function (c) { return c.toUpperCase(); }) : sayIntent(i, said))); var tag = el('span', 'state', L.word); if (L.word === 'WAITS FOR YOU' || L.word === 'CANNOT BE MET') tag.style.color = 'var(--enemy)'; who.appendChild(tag); n.appendChild(who);
@@ -1838,8 +1847,9 @@ body.watched .gives { display: none !important; }
         var d = document.createElement('details'), sm = document.createElement('summary'); sm.textContent = 'WHY, AND HOW IT STANDS'; d.appendChild(sm);
         d.appendChild(el('div', 'work', (i.maker === 'staff' ? 'The staff\'s' : 'Yours') + ' · order ' + i.number + (p ? ' · plan ' + p.number + ', ' + p.state : '')));
         if (i.measure && i.measure.text) d.appendChild(rich('div', '', 'So far: ' + tidyWorked(i.measure.text) + '.'));
+        var lastVerdict = null;
         L.w.forEach(function (x) {
-          workedView(d, x.verdict, x.r, i.number);
+          workedView(d, x.verdict === lastVerdict ? '' : x.verdict, x.r, i.number); lastVerdict = x.verdict;
         });
         if (p && p.amendments && p.amendments.length) d.appendChild(rich('div', 'work', 'Changed ' + p.amendments.length + ' time' + (p.amendments.length > 1 ? 's' : '') + ', last on day ' + p.amendments[p.amendments.length - 1].day + ': ' + p.amendments[p.amendments.length - 1].change + '.'));
         n.appendChild(d);
