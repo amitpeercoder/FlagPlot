@@ -77,6 +77,13 @@ What the record says (the research, 90 rows):
 26. **Stage B makes real oilers.** The derivation gains a ship type for an oiler, a class's room for cargo read from rows (it is written as nothing today), and the mark; and the rows are gathered that the Cimarron class lacks, her own bunkers and her endurance at a speed.
 27. **Stage C is warships fuelling their own destroyers,** which the record shows was common. It needs a rule for how far a warship draws down her own fuel, and no rate for it was found; it is planned when A and B are played.
 
+28. **Stage D is the staff planning fuel, on the designer's word of Nov 21, 2026.** Rules 18 and 19 are the least the staff does and are not where it ends. A staff plans a force's fuel as it plans its supply: it does not wait for a ship to run low. Stage D is a decision of its own, written when stage A is built, and is to give:
+    - **a forecast for every force the staff has tasked:** the day each ship reaches the margin of its risk on the movement the plan asks, the destroyers first since they have the shortest legs;
+    - **a fuelling planned before that day,** at a base or from an oiler, whichever the plan can reach, at a place outside the circles of danger of decision 0202;
+    - **oilers as means the staff may take,** as it takes free carriers: one sent with a force that has far to go, or to a meeting on its way, and sent to reload when she is empty;
+    - **the fuelling shown in the plan and in its dry run,** as a phase with its day and place, and what the plan cannot do without it;
+    - **long passages planned with their fuelling,** which meets decision 0203, the way a force takes.
+
 ## Rule card
 
 Reads: a class's mark, room for cargo and fuel capacity; a ship's fuel and cargo fuel; a force's order, place and route; whether a force was attacked in the pulse; the three figures. Writes: a ship's fuel, an oiler's cargo fuel, the distance two forces make in a pulse, a force's state when it is set going or its order ends. Draws no random number.
