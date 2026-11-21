@@ -153,7 +153,7 @@ Of another: scenario 119's `property_no_game_on_file_moves` checks that no scena
 
 ### Games on file
 
-Every one of the 194 scenario files under `data/scenarios` (`tmp-inside` aside) was run with `run --events` before the change and after it. The output of 191 is the same to the byte, events and daily hashes, the six short table copies among them. Only the three 39-day table copies differ, and in them only the work of units that are hungry:
+Every one of the scenario files under `data/scenarios` (`tmp-inside` and scenario 122's own folder aside) was run with `run --events` before the change and after it: 194 on the branch as first built, and again 199 after `main` was merged in with decision 0207's files (`main`'s code against the branch's, the table's copies read with `main`'s `ground_hunger.toml` before). The output of all but three is the same to the byte, events and daily hashes, the six short table copies among them. Only the three 39-day table copies differ, and in them only the work of units that are hungry:
 
 | Copy | Men lost in fights (Allied, Japanese) | Men lost to hunger (Allied, Japanese) | Bases at the end |
 | --- | --- | --- | --- |
