@@ -42,6 +42,6 @@
 # Surface weapons not modelled (decision 0029, 4): main_guns, gun_rounds_per_min, gun_rounds_per_gun, gun_damage, torpedo_tubes, torpedo_tubes_one_side and torpedo_damage are written as 0, an assumption of the scenario and not a fact, for:
 #   dd-409-sims
 # Torpedo tubes not split (decision 0074, 3): none
-id,name,kind,cruise_speed_kn,max_speed_kn,fuel_capacity_t,endurance_nm,cargo_capacity_t,main_guns,gun_rounds_per_min,gun_rounds_per_gun,gun_damage,torpedo_tubes,torpedo_tubes_one_side,torpedo_damage,toughness,radar,aircraft_capacity,anti_aircraft,fuels_at_sea
-4030,Cimarron class,auxiliary,16.5,18,2274,12000,15408.3208,0,0,0,0,0,0,0,290.24,0,0,5,1
-4031,Sims class,destroyer,15,34.7,453,5010,0,0,0,0,0,0,0,0,70.56,0,0,5,0
+id,name,kind,cruise_speed_kn,max_speed_kn,fuel_capacity_t,endurance_nm,cargo_capacity_t,main_guns,gun_rounds_per_min,gun_rounds_per_gun,gun_damage,torpedo_tubes,torpedo_tubes_one_side,torpedo_damage,toughness,radar,aircraft_capacity,anti_aircraft,fuels_at_sea,estimated
+4030,Cimarron class,auxiliary,16.5,18,2274,12000,15408.3208,0,0,0,0,0,0,0,290.24,0,0,5,1,cargo_capacity_t
+4031,Sims class,destroyer,15,34.7,453,5010,0,0,0,0,0,0,0,0,70.56,0,0,5,0,

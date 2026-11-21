@@ -54,12 +54,27 @@ pub fn derive(
     rules_text: &str,
     facts: &BTreeMap<String, String>,
 ) -> Result<Outputs, Vec<Problem>> {
+    derive_among(list_name, list_text, rules_text, facts, &BTreeMap::new())
+}
+
+/// As [`derive`], with the other lists of the same folder, file name to
+/// text, so that the check looks across the lists: a class with an attribute
+/// estimated in any of them is not a like class for it (decision 0207, rule
+/// 8). Only their `[[estimate]]` entries are read.
+pub fn derive_among(
+    list_name: &str,
+    list_text: &str,
+    rules_text: &str,
+    facts: &BTreeMap<String, String>,
+    other_lists: &BTreeMap<String, String>,
+) -> Result<Outputs, Vec<Problem>> {
     derive_with(
         list_name,
         list_text,
         RulesSource::Text(rules_text),
         facts,
         &[],
+        other_lists,
     )
 }
 
@@ -71,6 +86,7 @@ pub fn derive_with(
     rules: RulesSource,
     facts: &BTreeMap<String, String>,
     unread: &[oob_check::Problem],
+    other_lists: &BTreeMap<String, String>,
 ) -> Result<Outputs, Vec<Problem>> {
     let mut problems = Vec::new();
     let (list, list_problems) = input::parse_list(list_text);
@@ -115,7 +131,30 @@ pub fn derive_with(
     };
 
     let mut env = derive::Env::build(&data, list.date, &rules);
-    env.least_of_sisters = list.least_of_sisters.clone();
+    env.estimates = list.estimates.clone();
+    env.list_name = list_name.to_string();
+    env.all_estimates = list
+        .estimates
+        .iter()
+        .map(|e| {
+            (
+                list_name.to_string(),
+                e.subject.clone(),
+                e.attribute.clone(),
+            )
+        })
+        .collect();
+    for (name, text) in other_lists {
+        if name == list_name {
+            continue;
+        }
+        env.all_estimates.extend(
+            input::estimates_of_text(text)
+                .into_iter()
+                .map(|(subject, attribute)| (name.clone(), subject, attribute)),
+        );
+    }
+    problems.extend(env.estimate_entry_problems());
     // The column of the mark is written only where the list has an oiler
     // (decision 0206, rule 1), so that no class file of warships changes.
     let mark_column = list.ships.iter().any(|ship| env.is_oiler(ship));
@@ -176,6 +215,7 @@ pub fn derive_with(
             air_figures: air,
             surface_weapons_not_modelled: list.surface_weapons_not_modelled.contains(ship),
             mark_column,
+            assume_no_anti_aircraft: list.anti_aircraft_unknown_means_none.contains(ship),
         };
         match env.derive_ship(ship, opts) {
             Ok(result) => results.push(result),
@@ -187,6 +227,29 @@ pub fn derive_with(
         match env.derive_aircraft(entry) {
             Ok(result) => aircraft_results.push(result),
             Err(type_problems) => problems.extend(type_problems),
+        }
+    }
+    // An entry no figure reads is a problem: nothing is estimated without
+    // being used, and an entry is not left standing for nothing.
+    if problems.is_empty() {
+        for entry in &list.estimates {
+            let used = results.iter().any(|r| {
+                r.estimates
+                    .iter()
+                    .any(|u| u.subject == entry.subject && u.attribute == entry.attribute)
+            });
+            if !used {
+                problems.push(Problem::new(
+                    entry.subject.key(),
+                    Kind::Estimate,
+                    entry.attribute.clone(),
+                    format!(
+                        "the list's [[estimate]] entry for {} {} is read by no figure of a listed ship",
+                        entry.subject.words(),
+                        entry.attribute
+                    ),
+                ));
+            }
         }
     }
     if problems.is_empty() {
@@ -273,6 +336,9 @@ pub enum Outcome {
         /// 0074, 3), one line a ship. They are also in the header of the
         /// class file.
         torpedo_not_split: Vec<String>,
+        /// The attributes estimated (decision 0207, rule 13): the count and
+        /// the ships, then a line each; empty where none is.
+        estimated: Vec<String>,
     },
 }
 
@@ -318,14 +384,17 @@ pub fn run(list_path: &Path, facts_dir: &Path, check_only: bool) -> Result<Outco
         }
     };
     let (facts, unread) = oob_check::read_dir(facts_dir);
-    let mut outputs = match derive_with(&list_name, &list_text, rules, &facts, &unread) {
-        Ok(outputs) => outputs,
-        Err(problems) => return Ok(Outcome::Problems(problems)),
-    };
+    let other_lists = sibling_lists(dir, &list_name);
+    let mut outputs =
+        match derive_with(&list_name, &list_text, rules, &facts, &unread, &other_lists) {
+            Ok(outputs) => outputs,
+            Err(problems) => return Ok(Outcome::Problems(problems)),
+        };
     let list = list.expect("a list that derives has parsed");
     let unread = std::mem::take(&mut outputs.experience_unread);
     let not_settled = std::mem::take(&mut outputs.search_not_settled);
     let torpedo_not_split = std::mem::take(&mut outputs.torpedo_not_split);
+    let estimated = std::mem::take(&mut outputs.estimated);
     let mut files = Vec::new();
     if !list.ships.is_empty() {
         let class_path = dir.join(&list.output);
@@ -355,6 +424,7 @@ pub fn run(list_path: &Path, facts_dir: &Path, check_only: bool) -> Result<Outco
             unread,
             not_settled,
             torpedo_not_split,
+            estimated,
         });
     }
     let mut done: Vec<&Path> = Vec::new();
@@ -373,5 +443,27 @@ pub fn run(list_path: &Path, facts_dir: &Path, check_only: bool) -> Result<Outco
         unread,
         not_settled,
         torpedo_not_split,
+        estimated,
     })
+}
+
+/// The other `.toml` files of the list's folder, name to text, for the
+/// check across the lists (decision 0207, rule 8). A file that cannot be
+/// read is left out; one that is not a list has no `[[estimate]]` entries.
+fn sibling_lists(dir: &Path, list_name: &str) -> BTreeMap<String, String> {
+    let mut lists = BTreeMap::new();
+    let Ok(entries) = std::fs::read_dir(dir) else {
+        return lists;
+    };
+    for entry in entries.flatten() {
+        let path = entry.path();
+        let name = entry.file_name().to_string_lossy().into_owned();
+        if name == list_name || path.extension().is_none_or(|e| e != "toml") {
+            continue;
+        }
+        if let Ok(text) = std::fs::read_to_string(&path) {
+            lists.insert(name, text);
+        }
+    }
+    lists
 }

@@ -1717,3 +1717,61 @@ fact = "light_aa"
 row = 14311
 reason = "Eight 20 mm of line A (one 5-inch/51, three 3-inch/50, eight 20 mm). Platte's two lines of 1942 are disputed and no month is given for either; the lesser is read, by the figure and by the guns alike (line B: four 5-inch/38 and eight 20 mm). Decision 0206, rule 23. Settled by the architect, Nov 21, 2026 (decision 0206)."
 agreed = "2026-11-21"
+
+# Decision 0207: a figure estimated from like ships. Toho Maru at the Coral
+# Sea (coral_sea_japanese_oilers.toml, as of 6 May 1942). Her own rows are the
+# American manual's, filed as numbers of low confidence, and read by these
+# exceptions; the like classes' deadweight rows are of 1945 and say `later =
+# true`, with the reason each was already so (decision 0200). Each is settled
+# by the architect, Nov 21, 2026.
+
+[[exception]]
+entity = "toho-maru"
+fact = "deadweight_lt"
+row = 14709
+reason = "13,431 tons, the lower end of ONI 208-J's range for the group of Toa, Toho and Kyokuto Maru, as decision 0207, rule 7 has it; the manual's tons read as long tons, as an American naval manual's are. The one source of her deadweight; graded C, so of low confidence. It is the row her light displacement is estimated from (decision 0207, rule 5). Settled by the architect, Nov 21, 2026 (decision 0207)."
+agreed = "2026-11-21"
+
+[[exception]]
+entity = "toho-maru"
+fact = "fuel_capacity_lt"
+row = 14710
+reason = "Her own fuel, 1,100 tons, ONI 208-J; the manual's tons read as long tons, as an American naval manual's are. The one source of her bunkers; graded C, so of low confidence. Settled by the architect, Nov 21, 2026 (decision 0207)."
+agreed = "2026-11-21"
+
+[[exception]]
+entity = "toho-maru"
+fact = "endurance_nm"
+row = 14711
+reason = "15,000 miles at 16 knots, ONI 208-J's radius, its miles read as nautical, as an American naval manual's are; a Japanese compilation gives Kyokuto Maru the same 15,000 nautical miles at 16 knots (ship_facts 14557). Graded C, so of low confidence. Settled by the architect, Nov 21, 2026 (decision 0207)."
+agreed = "2026-11-21"
+
+[[exception]]
+entity = "toho-maru"
+fact = "endurance_speed_kn"
+row = 14712
+reason = "16 knots, the speed of ONI 208-J's radius of 15,000 miles (row 14711). Settled by the architect, Nov 21, 2026 (decision 0207)."
+agreed = "2026-11-21"
+
+[[exception]]
+entity = "toho-maru"
+fact = "max_speed_kn"
+row = 14545
+reason = "19 knots, ONI 208-J's maximum. The Toa Maru class page gives 19.5 (row 14437), inferred for her; where the manual gives 19 knots and a compilation 19.5, the lower is read. Settled by the architect, Nov 21, 2026 (decision 0207)."
+agreed = "2026-11-21"
+
+[[exception]]
+entity = "us-cimarron-class"
+fact = "deadweight_lt"
+row = 14343
+later = true
+reason = "The class's deadweight, 18,250 tons, inferred from the identical lines of her ships in FTP 218, promulgated 1 September 1945, read for 1942 as already so: it is the hulls' deadweight, and no source read says it was altered. Read only as a like class's row for an estimate by ratio (decision 0207, rules 5 and 6). Settled by the architect, Nov 21, 2026 (decision 0207)."
+agreed = "2026-11-21"
+
+[[exception]]
+entity = "us-patoka-class"
+fact = "deadweight_lt"
+row = 14344
+later = true
+reason = "The class's deadweight, 12,600 tons, from her one ship on file, Tippecanoe, in FTP 218, promulgated 1 September 1945, read for 1942 as already so: it is the hull's deadweight, and no source read says it was altered. Read only as a like class's row for an estimate by ratio (decision 0207, rules 5 and 6). Settled by the architect, Nov 21, 2026 (decision 0207)."
+agreed = "2026-11-21"

@@ -6,7 +6,7 @@ use oob_check::table::Data;
 
 use crate::date::{begins_after, valid_on, Day, Tri};
 use crate::decimal::Dec;
-use crate::input::{Exception, Rules};
+use crate::input::{Estimate, Exception, Method, Rules, Subject};
 use crate::problem::{Kind, Problem};
 use crate::reading::{
     resolve, resolve_over, resolve_slot, Failure, Index, Read, Row, SlotRead, Table,
@@ -89,7 +89,14 @@ const BARREL_FACTOR: &str = "fuel_oil_barrel_factor_lt";
 const LIGHT_DISPLACEMENT: &str = "displacement_light_lt";
 const OILER_KIND_RULE: &str = "type of the class in ship_classes.csv, mapped to a simulation kind (oiler: auxiliary; decision 0206, rule 1)";
 const OILER_FUEL_RULE: &str = "fuel_capacity_bbl of the ship, else of its class, x fuel_oil_barrel_factor_lt of the ship, else of its class: her own bunkers in barrels made long tons by the factor read from a row (decision 0206, rules 6 and 8; a simulation ton is a long ton)";
-const OILER_CARGO_RULE: &str = "cargo_oil_capacity_bbl of the ship, else of its class, else the least of her sisters' where the list writes that rule, x fuel_oil_barrel_factor_lt of the ship, else of its class: the oil she can carry for others, a capacity, made long tons by the factor read from a row (decision 0206, rules 7, 8 and 14)";
+const OILER_CARGO_RULE: &str = "cargo_oil_capacity_bbl of the ship, else of its class, x fuel_oil_barrel_factor_lt of the ship, else of its class: the oil she can carry for others, a capacity, made long tons by the factor read from a row (decision 0206, rules 7 and 8)";
+/// An oiler's cargo by weight, where no row gives it in barrels (decision
+/// 0207, as decision 0166, rule 3 has it for a transport).
+const CARGO_LT: &str = "cargo_capacity_lt";
+const OILER_CARGO_WEIGHT_RULE: &str = "cargo_capacity_lt of the ship, else of its class: the oil she can carry for others by weight, a capacity in long tons, read where no row gives it in barrels (decision 0166, rule 3; decision 0207)";
+/// The note on an anti-aircraft figure the list's assumption gives (decision
+/// 0207, first use).
+pub const AA_ASSUMED_NOTE: &str = "assumption of the scenario, not a fact: anti-aircraft guns unknown in the facts, treated as none";
 const UNARMED_RULE: &str = "0 by kind: a ship of a kind that is not a warship (auxiliary) has no main battery and no torpedo tubes (decision 0166, rule 5; decision 0206, rule 3)";
 const AUXILIARY_TOUGHNESS_RULE: &str = "displacement_light_lt of the ship, else of its class / displacement_lt_per_toughness, for a kind that is not a warship (decision 0166, rule 2; decision 0206, rule 2)";
 
@@ -162,6 +169,9 @@ pub struct Figure {
     /// The rule behind the figure in words, where it is not the figure's
     /// usual one (an oiler's, decision 0206).
     pub rule: Option<&'static str>,
+    /// The figure rests on an estimated attribute (decision 0207, rule 9):
+    /// the rule printed in place of the rule of a figure read.
+    pub estimate: Option<String>,
 }
 
 /// What the list says about one ship.
@@ -177,6 +187,9 @@ pub struct ShipOpts {
     /// Write the `fuels_at_sea` figure: the list has an oiler (decision
     /// 0206, rule 1).
     pub mark_column: bool,
+    /// The list's working assumption that unknown anti-aircraft guns mean
+    /// none (decision 0207, first use).
+    pub assume_no_anti_aircraft: bool,
 }
 
 #[derive(Clone, Debug)]
@@ -209,6 +222,26 @@ pub struct ShipResult {
     pub tubes_not_split: bool,
     /// Exceptions used: index into the rules' list, and the row read.
     pub used: Vec<(usize, Row)>,
+    /// Anti-aircraft guns were unknown and the list says to treat them as
+    /// none (decision 0207, first use).
+    pub anti_aircraft_assumed: bool,
+    /// The attributes estimated for this ship (decision 0207).
+    pub estimates: Vec<EstimateUse>,
+}
+
+/// One estimate a ship's figures rest on (decision 0207).
+#[derive(Clone, Debug)]
+pub struct EstimateUse {
+    /// The figure of the class file it gives.
+    pub figure: &'static str,
+    pub subject: Subject,
+    pub attribute: String,
+    /// The words of the method, for the rule column of the sources file.
+    pub method_words: String,
+    /// The working, for the note column of the sources file.
+    pub note: String,
+    /// One line for the check's count (rule 13), with the range (rule 6).
+    pub line: String,
 }
 
 pub(crate) struct ShipInfo {
@@ -243,8 +276,15 @@ pub struct Env<'a> {
     /// The rows read as of a later date on this list's date, with their
     /// `valid_from` (decision 0200).
     pub(crate) later: BTreeMap<Cite, String>,
-    /// The list's rule of the least of her sisters (decision 0206, rule 14).
-    pub(crate) least_of_sisters: Option<crate::input::LeastOfSisters>,
+    /// The list's estimates (decision 0207, rule 4).
+    pub(crate) estimates: Vec<Estimate>,
+    /// Every estimate of every list, this one's among them, by the list's
+    /// file name: subject and attribute (decision 0207, rule 8).
+    pub(crate) all_estimates: Vec<(String, Subject, String)>,
+    /// The rows of gaps.csv: entity type and the entities it names.
+    pub(crate) gaps: Vec<(String, Vec<String>)>,
+    /// The list's file name, as `all_estimates` names it.
+    pub(crate) list_name: String,
 }
 
 /// A row of `aircraft_types.csv`.
@@ -267,6 +307,8 @@ pub(crate) struct Work<'a> {
     pub subject: &'a str,
     pub problems: Vec<Problem>,
     pub used: Vec<(usize, Row)>,
+    /// The estimates read for this ship (decision 0207).
+    pub estimated: Vec<EstimateUse>,
 }
 
 impl Work<'_> {
@@ -330,6 +372,7 @@ fn put(figs: &mut [Option<Figure>], i: usize, value: Value, got: Got<()>) {
         doubts: got.doubts,
         notes: BTreeSet::new(),
         rule: None,
+        estimate: None,
     });
 }
 
@@ -352,6 +395,18 @@ impl<T> Got<T> {
             excepted: self.excepted,
             doubts: self.doubts.clone(),
         }
+    }
+}
+
+/// The step from an estimated attribute to the figure of the class file,
+/// for the rule column of the sources file (decision 0207, rule 9).
+fn estimate_step(figure: &str, attribute: &str) -> &'static str {
+    match (figure, attribute) {
+        ("toughness", _) => "toughness is it / displacement_lt_per_toughness",
+        (_, "fuel_capacity_bbl" | "cargo_oil_capacity_bbl") => {
+            "the figure is it x fuel_oil_barrel_factor_lt of the ship, else of its class (decision 0206, rule 8)"
+        }
+        _ => "the figure is it (a simulation ton is a long ton)",
     }
 }
 
@@ -420,7 +475,22 @@ impl<'a> Env<'a> {
             fire_rate_problems: Vec::new(),
             troops: None,
             later: BTreeMap::new(),
-            least_of_sisters: None,
+            estimates: Vec::new(),
+            all_estimates: Vec::new(),
+            list_name: String::new(),
+            gaps: data
+                .rows("gaps.csv")
+                .into_iter()
+                .map(|rec| {
+                    (
+                        rec.get("entity_type").to_string(),
+                        rec.get("entity")
+                            .split(',')
+                            .map(|e| e.trim().to_string())
+                            .collect(),
+                    )
+                })
+                .collect(),
         };
         env.later = env.later_rows();
         if let Some(fire_rate) = &rules.fire_rate {
@@ -522,6 +592,9 @@ impl<'a> Env<'a> {
         figure: &str,
     ) -> Option<Got<Dec>> {
         let (ship, class) = keys;
+        if let Some(entry) = self.estimate_for(ship, class, attribute) {
+            return self.estimated(w, keys, entry, figure);
+        }
         let read = resolve_over(
             self.index.rows(Table::ShipFacts, ship, attribute),
             &format!("{attribute} of ship {ship}"),
@@ -900,37 +973,408 @@ impl<'a> Env<'a> {
             .is_some_and(|c| c.kind_type == OILER_TYPE)
     }
 
-    /// A fact of the ship, else of her class, as [`Self::fact`]; but where
-    /// the list's rule of the least of her sisters names the fact and
-    /// neither she nor her class has a row of it at all, the least of the
-    /// values read from her sisters' own rows (decision 0206, rule 14). Her
-    /// sisters are the other ships of her class in ships.csv; each one's
-    /// rows are read as any ship's are, on the list's date, and a sister
-    /// with no readable row is passed over. Returns the value and, where the
-    /// rule was used, the note that says so.
-    fn fact_or_sisters(
+    /// An oiler's figure in barrels made long tons by the factor (decision
+    /// 0206, rules 6 to 8): the barrels and the factor are each read as any
+    /// fact is, and the figure cites both.
+    fn barrels_in_tons(
         &self,
         w: &mut Work,
         keys: (&str, &str),
         attribute: &str,
         figure: &str,
-    ) -> Option<(Got<Dec>, Option<String>)> {
-        let (ship, class) = keys;
-        let applies = self
-            .least_of_sisters
-            .as_ref()
-            .is_some_and(|rule| rule.facts.contains(attribute))
-            && self
-                .index
-                .rows(Table::ShipFacts, ship, attribute)
-                .is_empty()
-            && self
-                .index
-                .rows(Table::ClassFacts, class, attribute)
-                .is_empty();
-        if !applies {
-            return self.fact(w, keys, attribute, figure).map(|got| (got, None));
+        factor: &Option<Got<Dec>>,
+    ) -> Option<(Value, Got<()>, BTreeSet<String>)> {
+        let barrels = self.fact(w, keys, attribute, figure);
+        let (Some(barrels), Some(factor)) = (barrels, factor) else {
+            return None;
+        };
+        let Some(tons) = barrels.value.mul(factor.value) else {
+            w.failed(figure, overflow(figure));
+            return None;
+        };
+        let mut sources = barrels.bare();
+        sources.cites.extend(factor.cites.iter().cloned());
+        sources.excepted |= factor.excepted;
+        sources.doubts.extend(factor.doubts.iter().cloned());
+        let notes = BTreeSet::from([format!(
+            "{} barrels x {} long tons a barrel",
+            barrels.value, factor.value
+        )]);
+        Some((Value::Num(tons), sources, notes))
+    }
+
+    /// The list's estimate of `attribute` for the ship or her class, if it
+    /// has one (decision 0207, rule 4).
+    pub(crate) fn estimate_for(
+        &self,
+        ship: &str,
+        class: &str,
+        attribute: &str,
+    ) -> Option<&Estimate> {
+        self.estimates.iter().find(|e| {
+            e.attribute == attribute
+                && match &e.subject {
+                    Subject::Ship(key) => key == ship,
+                    Subject::Class(key) => key == class,
+                }
+        })
+    }
+
+    /// The list, of all the lists, that estimates one of `attributes` for the
+    /// class `class` or a ship of it (decision 0207, rule 8).
+    fn estimated_in(&self, class: &str, attributes: &[&str]) -> Option<&str> {
+        self.estimated_in_but(class, attributes, None)
+    }
+
+    /// As [`Self::estimated_in`], passing over one entry of this list's own.
+    fn estimated_in_but(
+        &self,
+        class: &str,
+        attributes: &[&str],
+        but: Option<&Estimate>,
+    ) -> Option<&str> {
+        self.all_estimates
+            .iter()
+            .find(|(list, subject, attribute)| {
+                let itself = but.is_some_and(|e| {
+                    *list == self.list_name && e.subject == *subject && e.attribute == *attribute
+                });
+                !itself
+                    && attributes.contains(&attribute.as_str())
+                    && match subject {
+                        Subject::Class(key) => key == class,
+                        Subject::Ship(key) => self.ships.get(key).is_some_and(|s| s.class == class),
+                    }
+            })
+            .map(|(list, _, _)| list.as_str())
+    }
+
+    /// Whether a row of gaps.csv says the attribute was looked for: one of
+    /// the subject's kind naming the subject (decision 0207, rule 2).
+    fn has_gap(&self, subject: &Subject) -> bool {
+        let kind = match subject {
+            Subject::Ship(_) => "ship",
+            Subject::Class(_) => "ship_class",
+        };
+        self.gaps
+            .iter()
+            .any(|(t, entities)| t == kind && entities.iter().any(|e| e == subject.key()))
+    }
+
+    /// Problems of the entries themselves, before any ship is derived: one
+    /// that names its like classes (rule 6), saying which of them rest on an
+    /// estimate (rule 8).
+    pub fn estimate_entry_problems(&self) -> Vec<Problem> {
+        let mut problems = Vec::new();
+        for entry in &self.estimates {
+            if entry.named_like.is_empty() {
+                continue;
+            }
+            let mut message = format!(
+                "{} {}: the entry names its like classes ({}); the like classes are not chosen: every class of the type on file with both rows is read (decision 0207, rule 6)",
+                entry.subject.words(),
+                entry.attribute,
+                entry.named_like.join(", ")
+            );
+            for class in &entry.named_like {
+                if let Some(list) =
+                    self.estimated_in_but(class, &[entry.attribute.as_str()], Some(entry))
+                {
+                    message.push_str(&format!(
+                        "; class {class} has its {} estimated in {list}, and an estimate never rests on an estimate (decision 0207, rule 8)",
+                        entry.attribute
+                    ));
+                }
+            }
+            problems.push(Problem::new(
+                entry.subject.key(),
+                Kind::Estimate,
+                entry.attribute.clone(),
+                message,
+            ));
         }
+        problems
+    }
+
+    /// An attribute the list estimates (decision 0207): refused where any
+    /// row of it is filed for the ship or her class (rule 11) or no gap row
+    /// says it was looked for (rule 2); otherwise worked by the entry's
+    /// method (rule 5) and noted for the figure.
+    fn estimated(
+        &self,
+        w: &mut Work,
+        keys: (&str, &str),
+        entry: &Estimate,
+        figure: &str,
+    ) -> Option<Got<Dec>> {
+        let (ship, class) = keys;
+        let attribute = entry.attribute.as_str();
+        let filed: Vec<String> = self
+            .index
+            .rows(Table::ShipFacts, ship, attribute)
+            .iter()
+            .chain(self.index.rows(Table::ClassFacts, class, attribute))
+            .map(Row::cite)
+            .collect();
+        if !filed.is_empty() {
+            w.fail(
+                Kind::Estimate,
+                figure,
+                format!(
+                    "{attribute} of ship {ship} or class {class}: a row is filed ({}), so a fact drives the estimate out: take out the list's [[estimate]] entry for {} {attribute} (decision 0207, rule 11)",
+                    filed.join(", "),
+                    entry.subject.words()
+                ),
+            );
+            return None;
+        }
+        if !self.has_gap(&entry.subject) {
+            w.fail(
+                Kind::Estimate,
+                figure,
+                format!(
+                    "{attribute} of {}: no row of gaps.csv names her as looked for, and an estimate is allowed only over a gap (decision 0207, rule 2)",
+                    entry.subject.words()
+                ),
+            );
+            return None;
+        }
+        let worked = match &entry.method {
+            Method::Ratio { from } => self.by_ratio(w, keys, entry, from, figure),
+            Method::Sisters => self.as_sisters(w, keys, entry, figure),
+        }?;
+        let (got, method_words, working, line) = worked;
+        let by = format!(
+            "entry by {}, {}; reason: {}",
+            entry.by,
+            entry.date,
+            crate::output::one_line(&entry.reason)
+        );
+        w.estimated.push(EstimateUse {
+            figure: FIGURES
+                .iter()
+                .chain(AIR_FIGURES.iter())
+                .copied()
+                .find(|f| *f == figure)
+                .unwrap_or("?"),
+            subject: entry.subject.clone(),
+            attribute: attribute.to_string(),
+            method_words,
+            note: format!("{working}; {by}"),
+            line: format!("{ship} {attribute}: {line}"),
+        });
+        Some(got)
+    }
+
+    /// By ratio (decision 0207, rules 5 and 6): her own row of `from`, times
+    /// the mean over every like class of its `attribute` over its `from`,
+    /// each division cut at the sixth place. The like classes are every
+    /// class of her class's type on file, her own left out, with class rows
+    /// of both; each is read as any row is, and one that cannot be read, or
+    /// that has either attribute estimated in any list (rule 8), fails the
+    /// estimate rather than being passed over.
+    #[allow(clippy::type_complexity)]
+    fn by_ratio(
+        &self,
+        w: &mut Work,
+        keys: (&str, &str),
+        entry: &Estimate,
+        from: &str,
+        figure: &str,
+    ) -> Option<(Got<Dec>, String, String, String)> {
+        let (ship, class) = keys;
+        let attribute = entry.attribute.as_str();
+        if self.estimate_for(ship, class, from).is_some() {
+            w.fail(
+                Kind::Estimate,
+                figure,
+                format!(
+                    "{attribute} of ship {ship}: it is worked from {from}, which the list also estimates, and an estimate never rests on an estimate (decision 0207, rule 8)"
+                ),
+            );
+            return None;
+        }
+        let own = resolve_over(
+            self.index.rows(Table::ShipFacts, ship, from),
+            &format!("{from} of ship {ship} (her own row, for an estimate by ratio)"),
+            self.index.rows(Table::ClassFacts, class, from),
+            &format!("{from} of class {class} (for an estimate by ratio)"),
+            self.date,
+            &self.rules.exceptions,
+        )
+        .and_then(|read| number(&read, from).map(|v| (read, v)));
+        let (own_read, own) = match own {
+            Ok(pair) => pair,
+            Err(failure) => {
+                w.failed(figure, failure);
+                return None;
+            }
+        };
+        let kind_type = self
+            .classes
+            .get(class)
+            .map(|c| c.kind_type.clone())
+            .unwrap_or_default();
+        let mut likes: Vec<(String, Dec, Dec, Dec, Read, Read)> = Vec::new();
+        let mut ok = true;
+        for (key, info) in &self.classes {
+            if info.kind_type != kind_type || key == class {
+                continue;
+            }
+            let a_rows = self.index.rows(Table::ClassFacts, key, attribute);
+            let f_rows = self.index.rows(Table::ClassFacts, key, from);
+            if a_rows.is_empty() || f_rows.is_empty() {
+                continue;
+            }
+            if let Some(list) = self.estimated_in(key, &[attribute, from]) {
+                w.fail(
+                    Kind::Estimate,
+                    figure,
+                    format!(
+                        "{attribute} of ship {ship}: class {key} is of the type {kind_type} with rows of both {attribute} and {from}, and has one of them estimated in {list}: an estimate never rests on an estimate (decision 0207, rule 8)"
+                    ),
+                );
+                ok = false;
+                continue;
+            }
+            let read = |rows: &[Row], what: &str| {
+                resolve(
+                    rows,
+                    &format!("{what} of class {key} (a like class of {ship})"),
+                    self.date,
+                    &self.rules.exceptions,
+                )
+                .and_then(|read| number(&read, what).map(|v| (read, v)))
+            };
+            match (read(a_rows, attribute), read(f_rows, from)) {
+                (Ok((a_read, a)), Ok((f_read, f))) => {
+                    match a.div(f) {
+                        Some(ratio) if f.is_positive() => {
+                            likes.push((key.clone(), a, f, ratio, a_read, f_read));
+                        }
+                        _ => {
+                            w.fail(
+                            Kind::BadValue,
+                            figure,
+                            format!("like class {key}: {attribute} {a} / {from} {f} cannot be worked"),
+                        );
+                            ok = false;
+                        }
+                    }
+                }
+                (a, f) => {
+                    for failure in [a.err(), f.err()].into_iter().flatten() {
+                        w.fail(
+                            failure.kind,
+                            figure,
+                            format!(
+                                "{}; the like classes are not chosen, every one with both rows is read (decision 0207, rule 6)",
+                                failure.message
+                            ),
+                        );
+                    }
+                    ok = false;
+                }
+            }
+        }
+        if !ok {
+            return None;
+        }
+        if likes.is_empty() {
+            w.fail(
+                Kind::Missing,
+                figure,
+                format!(
+                    "{attribute} of ship {ship}: no like class: no other class of the type {kind_type} on file has rows of both {attribute} and {from} (decision 0207, rule 2)"
+                ),
+            );
+            return None;
+        }
+        let sum = likes
+            .iter()
+            .try_fold(Dec::ZERO, |sum, like| sum.checked_add(like.3));
+        let n = Dec::from_int(likes.len() as i64);
+        let Some(mean) = sum.zip(n).and_then(|(sum, n)| sum.div(n)) else {
+            w.failed(figure, overflow("the mean of the like classes' ratios"));
+            return None;
+        };
+        let least = likes.iter().min_by_key(|l| l.3).expect("one like class");
+        let greatest = likes.iter().max_by_key(|l| l.3).expect("one like class");
+        let (Some(value), Some(low), Some(high)) =
+            (own.mul(mean), own.mul(least.3), own.mul(greatest.3))
+        else {
+            w.failed(figure, overflow("the estimate"));
+            return None;
+        };
+        let mut got = Got {
+            value,
+            cites: BTreeSet::new(),
+            excepted: false,
+            doubts: BTreeSet::new(),
+        };
+        let cite_list = |read: &Read| {
+            read.rows
+                .iter()
+                .map(Row::cite)
+                .collect::<Vec<_>>()
+                .join(" ")
+        };
+        let own_cites = cite_list(&own_read);
+        let mut reads: Vec<&Read> = vec![&own_read];
+        let mut said = Vec::new();
+        for (key, a, f, ratio, a_read, f_read) in &likes {
+            said.push(format!(
+                "{key} {a} / {f} = {ratio} ({} {})",
+                cite_list(a_read),
+                cite_list(f_read)
+            ));
+            reads.push(a_read);
+            reads.push(f_read);
+        }
+        for read in reads {
+            let (cites, excepted, doubts) = w.take(read);
+            got.cites.extend(cites);
+            got.excepted |= excepted;
+            got.doubts.extend(doubts);
+        }
+        let method_words = format!(
+            "estimated, not read from a row (decision 0207): {attribute} is {from} of the ship, else of its class, x the mean of {attribute} / {from} over every like class, each class of the type {kind_type} on file with class rows of both, her own left out (rules 5 and 6)"
+        );
+        let working = format!(
+            "estimated by ratio: her {from} {own} ({own_cites}) x {mean}, the mean over {} like classes of {}; {attribute} {value}; least {low} ({}), greatest {high} ({})",
+            likes.len(),
+            said.join(", "),
+            least.0,
+            greatest.0
+        );
+        let line = format!(
+            "by ratio, from her {from} {own}, x the mean {mean} over {} like classes ({}): {value}; least {low} ({}), greatest {high} ({})",
+            likes.len(),
+            likes
+                .iter()
+                .map(|l| format!("{} {}", l.0, l.3))
+                .collect::<Vec<_>>()
+                .join(", "),
+            least.0,
+            greatest.0
+        );
+        Some((got, method_words, working, line))
+    }
+
+    /// As her sisters (decision 0207, rule 5): the least of the values the
+    /// other ships of her class in ships.csv give in rows of their own, each
+    /// read as any ship's row is on the list's date; a sister whose row
+    /// cannot be read on it is passed over.
+    #[allow(clippy::type_complexity)]
+    fn as_sisters(
+        &self,
+        w: &mut Work,
+        keys: (&str, &str),
+        entry: &Estimate,
+        figure: &str,
+    ) -> Option<(Got<Dec>, String, String, String)> {
+        let (ship, class) = keys;
+        let attribute = entry.attribute.as_str();
         let mut read_sisters: Vec<(String, Dec, Read)> = Vec::new();
         for (sister, info) in &self.ships {
             if sister == ship || info.class != class {
@@ -969,7 +1413,7 @@ impl<'a> Env<'a> {
                 Kind::Missing,
                 figure,
                 format!(
-                    "{attribute} of ship {ship}: no rows of her own or of class {class}, and no sister of her class has a readable row (the list's rule of the least of her sisters, decision 0206, rule 14)"
+                    "{attribute} of ship {ship}: no row of her own or of class {class}, and no sister of her class has a readable row (an estimate as her sisters, decision 0207, rule 5)"
                 ),
             );
             return None;
@@ -995,42 +1439,15 @@ impl<'a> Env<'a> {
             got.excepted |= excepted;
             got.doubts.extend(doubts);
         }
-        let note = format!(
-            "no row of her own or of her class: the least of her sisters' rows, {least}, by the list's rule (decision 0206, rule 14), of {}",
+        let method_words = format!(
+            "estimated, not read from a row (decision 0207): {attribute} is the least of the rows of the other ships of her class in ships.csv, as her sisters, where she and her class have none (rule 5)"
+        );
+        let working = format!(
+            "estimated as her sisters: no row of her own or of her class; the least of her sisters' rows, {least}, of {}",
             said.join(", ")
         );
-        Some((got, Some(note)))
-    }
-
-    /// An oiler's figure in barrels made long tons by the factor (decision
-    /// 0206, rules 6 to 8): the barrels and the factor are each read as any
-    /// fact is, and the figure cites both.
-    fn barrels_in_tons(
-        &self,
-        w: &mut Work,
-        keys: (&str, &str),
-        attribute: &str,
-        figure: &str,
-        factor: &Option<Got<Dec>>,
-    ) -> Option<(Value, Got<()>, BTreeSet<String>)> {
-        let barrels = self.fact_or_sisters(w, keys, attribute, figure);
-        let (Some((barrels, note)), Some(factor)) = (barrels, factor) else {
-            return None;
-        };
-        let Some(tons) = barrels.value.mul(factor.value) else {
-            w.failed(figure, overflow(figure));
-            return None;
-        };
-        let mut sources = barrels.bare();
-        sources.cites.extend(factor.cites.iter().cloned());
-        sources.excepted |= factor.excepted;
-        sources.doubts.extend(factor.doubts.iter().cloned());
-        let mut notes = BTreeSet::from([format!(
-            "{} barrels x {} long tons a barrel",
-            barrels.value, factor.value
-        )]);
-        notes.extend(note);
-        Some((Value::Num(tons), sources, notes))
+        let line = format!("as her sisters, the least of {}: {least}", said.join(", "));
+        Some((got, method_words, working, line))
     }
 
     /// Derives every figure of a ship. All problems are returned, not the
@@ -1042,11 +1459,13 @@ impl<'a> Env<'a> {
             air_figures,
             surface_weapons_not_modelled,
             mark_column,
+            assume_no_anti_aircraft,
         } = opts;
         let mut w = Work {
             subject: ship,
             problems: Vec::new(),
             used: Vec::new(),
+            estimated: Vec::new(),
         };
         let Some(ship_info) = self.ships.get(ship) else {
             w.fail(
@@ -1122,7 +1541,7 @@ impl<'a> Env<'a> {
             (4, "endurance_nm"),
         ] {
             if oiler && i == 3 {
-                // Her own fuel is read in barrels, below.
+                // Her own fuel is read below, in barrels or by weight.
                 continue;
             }
             if let Some(got) = self.fact(&mut w, keys, attribute, FIGURES[i]) {
@@ -1132,19 +1551,48 @@ impl<'a> Env<'a> {
         }
         if oiler {
             // Her own fuel and her cargo of oil, in barrels made tons by the
-            // Navy's factor (decision 0206, rules 6 to 8 and 14).
-            let factor = self.fact(&mut w, keys, BARREL_FACTOR, FIGURES[3]);
-            for (i, attribute, rule) in [
-                (3, FUEL_BBL, OILER_FUEL_RULE),
-                (CARGO, CARGO_BBL, OILER_CARGO_RULE),
+            // Navy's factor where a row (or the list's estimate) gives them
+            // in barrels (decision 0206, rules 6 to 8), else by weight in
+            // long tons (decision 0207).
+            let in_barrels = |attribute: &str| {
+                !self
+                    .index
+                    .rows(Table::ShipFacts, ship, attribute)
+                    .is_empty()
+                    || !self
+                        .index
+                        .rows(Table::ClassFacts, class_key, attribute)
+                        .is_empty()
+                    || self.estimate_for(ship, class_key, attribute).is_some()
+            };
+            let mut factor: Option<Option<Got<Dec>>> = None;
+            for (i, barrels, tons, barrels_rule, tons_rule) in [
+                (3, FUEL_BBL, "fuel_capacity_lt", OILER_FUEL_RULE, None),
+                (
+                    CARGO,
+                    CARGO_BBL,
+                    CARGO_LT,
+                    OILER_CARGO_RULE,
+                    Some(OILER_CARGO_WEIGHT_RULE),
+                ),
             ] {
-                if let Some((value, sources, notes)) =
-                    self.barrels_in_tons(&mut w, keys, attribute, FIGURES[i], &factor)
-                {
-                    put(&mut figs, i, value, sources);
+                if in_barrels(barrels) {
+                    let factor = factor
+                        .get_or_insert_with(|| self.fact(&mut w, keys, BARREL_FACTOR, FIGURES[3]));
+                    if let Some((value, sources, notes)) =
+                        self.barrels_in_tons(&mut w, keys, barrels, FIGURES[i], factor)
+                    {
+                        put(&mut figs, i, value, sources);
+                        if let Some(figure) = figs[i].as_mut() {
+                            figure.notes = notes;
+                            figure.rule = Some(barrels_rule);
+                        }
+                    }
+                } else if let Some(got) = self.fact(&mut w, keys, tons, FIGURES[i]) {
+                    let (v, sources) = num(got);
+                    put(&mut figs, i, v, sources);
                     if let Some(figure) = figs[i].as_mut() {
-                        figure.notes = notes;
-                        figure.rule = Some(rule);
+                        figure.rule = tons_rule;
                     }
                 }
             }
@@ -1311,9 +1759,11 @@ impl<'a> Env<'a> {
         }
 
         // aircraft capacity and anti-aircraft shots (decision 0029)
+        let mut anti_aircraft_assumed = false;
         if air_figures {
             self.aircraft_capacity(&mut w, keys, class, &mut figs);
-            self.anti_aircraft(&mut w, keys, &mut figs);
+            anti_aircraft_assumed =
+                self.anti_aircraft(&mut w, keys, &mut figs, assume_no_anti_aircraft);
         }
 
         // troop capacity (decision 0093, 8)
@@ -1352,12 +1802,26 @@ impl<'a> Env<'a> {
         if !w.problems.is_empty() {
             return Err(w.problems);
         }
+        let names: Vec<&str> = FIGURES.to_vec();
         let figures = figs
             .into_iter()
-            .map(|f| {
+            .enumerate()
+            .map(|(i, f)| {
                 let mut f = f.expect("every figure is set when there is no problem");
                 let later = self.later_notes(&f.cites);
                 f.notes.extend(later);
+                // A figure that rests on an estimate says so in place of the
+                // rule of a figure read (decision 0207, rule 9).
+                if let Some(name) = names.get(i) {
+                    for used in w.estimated.iter().filter(|u| u.figure == *name) {
+                        f.estimate = Some(format!(
+                            "{}; {}",
+                            used.method_words,
+                            estimate_step(name, &used.attribute)
+                        ));
+                        f.notes.insert(used.note.clone());
+                    }
+                }
                 f
             })
             .collect();
@@ -1375,6 +1839,8 @@ impl<'a> Env<'a> {
             unarmed_by_kind: unarmed,
             tubes_not_split,
             used: w.used,
+            anti_aircraft_assumed,
+            estimates: w.estimated,
         })
     }
 
@@ -1680,7 +2146,21 @@ impl<'a> Env<'a> {
     /// Anti-aircraft shots (decision 0029, 1): heavy guns x heavy weight +
     /// light barrels x light weight, rounded down. Each slot holds several
     /// weapons, added; a slot with no rows is 0.
-    fn anti_aircraft(&self, w: &mut Work, keys: (&str, &str), figs: &mut [Option<Figure>]) {
+    /// Returns whether the list's assumption that unknown anti-aircraft guns
+    /// mean none was used: it is, for a ship it names, where no row of either
+    /// slot exists for her or her class.
+    fn anti_aircraft(
+        &self,
+        w: &mut Work,
+        keys: (&str, &str),
+        figs: &mut [Option<Figure>],
+        assume_none: bool,
+    ) -> bool {
+        let unknown = AA_SLOTS.iter().all(|slot| {
+            self.index.rows(Table::ShipFits, keys.0, slot).is_empty()
+                && self.index.rows(Table::ClassFits, keys.1, slot).is_empty()
+        });
+        let assumed = assume_none && unknown;
         let name = AIR_FIGURES[1];
         let slot_index = FIGURES.len() + 1;
         let mut sums = [0i64; 2];
@@ -1786,10 +2266,10 @@ impl<'a> Env<'a> {
             self.rules.anti_aircraft_heavy_weight,
             self.rules.anti_aircraft_light_weight,
         ) else {
-            return;
+            return assumed;
         };
         if !ok {
-            return;
+            return assumed;
         }
         let total = Dec::from_int(sums[0])
             .and_then(|h| h.mul(heavy_weight))
@@ -1797,20 +2277,24 @@ impl<'a> Env<'a> {
             .and_then(|(h, l)| h.checked_add(l));
         let Some(total) = total else {
             w.failed(name, overflow("anti-aircraft shots"));
-            return;
+            return assumed;
         };
         let Some(whole) = Dec::from_int(total.whole()) else {
             w.failed(name, overflow("anti-aircraft shots"));
-            return;
+            return assumed;
         };
         notes.insert(format!("{} heavy, {} light", sums[0], sums[1]));
         if total.has_fraction() {
             notes.insert(format!("exact {total}, rounded down"));
         }
         put(figs, slot_index, Value::Num(whole), sources);
+        if assumed {
+            notes.insert(AA_ASSUMED_NOTE.to_string());
+        }
         if let Some(figure) = figs[slot_index].as_mut() {
             figure.notes = notes;
         }
+        assumed
     }
 
     /// Radar (decision 0020 as changed by decision 0029, 3 and decision

@@ -56,7 +56,41 @@ struct ShipClassRow {
     /// others at sea, else 0. A file without it gives no class the mark.
     #[serde(default)]
     fuels_at_sea: u8,
+    /// Optional column (decision 0207, rule 10): the figures of the class
+    /// that rest on an estimate, by their column names, separated by spaces;
+    /// empty for a class with none. A file without it marks no class. It is
+    /// a mark for the reader and the tests and is read by no rule.
+    #[serde(default)]
+    estimated: String,
 }
+
+/// The figure columns of a class file an `estimated` cell may name.
+const ESTIMABLE_COLUMNS: [&str; 19] = [
+    "kind",
+    "cruise_speed_kn",
+    "max_speed_kn",
+    "fuel_capacity_t",
+    "endurance_nm",
+    "cargo_capacity_t",
+    "main_guns",
+    "gun_rounds_per_min",
+    "gun_rounds_per_gun",
+    "gun_damage",
+    "torpedo_tubes",
+    "torpedo_tubes_one_side",
+    "torpedo_damage",
+    "toughness",
+    "radar",
+    "aircraft_capacity",
+    "anti_aircraft",
+    "troop_capacity_men",
+    "fuels_at_sea",
+];
+
+/// The figures of each class that rest on an estimate (decision 0207, rule
+/// 10): the classes with a non-empty `estimated` cell, each with the column
+/// names it gives.
+pub type EstimatedFigures = BTreeMap<ShipClassId, Vec<String>>;
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -95,21 +129,55 @@ pub(crate) fn parse_kind(text: &str) -> Option<ShipKind> {
 
 /// Loads ship classes from a CSV file.
 pub fn load_ship_classes(path: &Path) -> Result<RefData, DataError> {
+    load_ship_classes_marked(path).map(|(ref_data, _)| ref_data)
+}
+
+/// Loads ship classes from a CSV file with the figures of each that rest on
+/// an estimate (decision 0207, rule 10).
+pub fn load_ship_classes_marked(path: &Path) -> Result<(RefData, EstimatedFigures), DataError> {
     let text = fs::read_to_string(path).map_err(|e| DataError::in_file(path, e.to_string()))?;
-    parse_ship_classes(&text, path)
+    parse_ship_classes_marked(&text, path)
 }
 
 /// Parses ship classes from CSV text. `path` is only used in messages.
+#[cfg(test)]
 fn parse_ship_classes(text: &str, path: &Path) -> Result<RefData, DataError> {
+    parse_ship_classes_marked(text, path).map(|(ref_data, _)| ref_data)
+}
+
+/// Parses ship classes from CSV text with the figures each rests on an
+/// estimate for. `path` is only used in messages.
+fn parse_ship_classes_marked(
+    text: &str,
+    path: &Path,
+) -> Result<(RefData, EstimatedFigures), DataError> {
     let mut reader = csv::ReaderBuilder::new()
         .comment(Some(b'#'))
         .trim(csv::Trim::All)
         .from_reader(text.as_bytes());
 
     let mut ref_data = RefData::default();
+    let mut estimated = EstimatedFigures::new();
     for row in reader.deserialize::<ShipClassRow>() {
         let row = row.map_err(|e| DataError::in_file(path, e.to_string()))?;
         let id = ShipClassId::new(row.id);
+        let marked: Vec<String> = row
+            .estimated
+            .split_whitespace()
+            .map(str::to_string)
+            .collect();
+        if let Some(bad) = marked
+            .iter()
+            .find(|m| !ESTIMABLE_COLUMNS.contains(&m.as_str()))
+        {
+            return Err(DataError::in_file(
+                path,
+                format!("{id}: estimated names `{bad}`, which is not a figure of a class"),
+            ));
+        }
+        if !marked.is_empty() {
+            estimated.insert(id, marked);
+        }
         let number = |field: &str, text: &str| -> Result<Fixed, DataError> {
             text.parse::<Fixed>().map_err(|e| {
                 DataError::in_file(path, format!("{id}: {field} \"{text}\" is invalid: {e}"))
@@ -165,7 +233,7 @@ fn parse_ship_classes(text: &str, path: &Path) -> Result<RefData, DataError> {
             return Err(DataError::in_file(path, format!("{id} appears twice")));
         }
     }
-    Ok(ref_data)
+    Ok((ref_data, estimated))
 }
 
 /// The port sizes the table must cover, inclusive.
