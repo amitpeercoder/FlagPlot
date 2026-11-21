@@ -1,0 +1,34 @@
+{
+ "note": "Directives for the Allied seat of the Coral Sea, 6 to 10 May 1942. Written for the game in its own words: these are not historical documents and quote none. Each gives the situation as the commander above has it and the mission with its purpose, and nothing the commander can find out for himself: what the enemy has, what is coming and what cannot be replaced are read elsewhere on the table. Decision 0157.",
+ "directives": [
+  {
+   "number": 1,
+   "when": "start",
+   "from": "Commander in Chief, U.S. Pacific Fleet",
+   "to": "Commander, Task Force 17",
+   "subject": "Port Moresby",
+   "parts": [
+    {
+     "heading": "1. Situation",
+     "text": [
+      "The enemy is expected to move by sea against Port Moresby within days, with transports covered by carriers. The time and the route of the movement are not known.",
+      "Port Moresby is held by its garrison. In enemy hands it would bring northern Australia under his aircraft."
+     ]
+    },
+    {
+     "heading": "2. Mission",
+     "text": [
+      "Prevent the landing at Port Moresby and destroy the enemy carriers, to hold the approaches to Australia."
+     ]
+    },
+    {
+     "heading": "3. Execution",
+     "text": [
+      "Employ the forces assigned to your command as you judge necessary. The method is yours.",
+      "Your carriers cannot soon be replaced. Further direction will follow as the situation requires."
+     ]
+    }
+   ]
+  }
+ ]
+}
