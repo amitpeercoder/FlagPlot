@@ -69,8 +69,8 @@ pub use briefing::{
     NotThere, OrdersPart, OutOfReachWarning, PilotWarning, PropulsionWarning, Raid, RebasedLine,
     RefusedOrder, RepairedShip, ReplacementStream, ReportedContact, ReturnedForce,
     ShipLostWithBaseLine, ShipRangeWarning, SteamedOnLine, StocksYesterday, Strike,
-    StrikeClearedLine, SunkShip, SupplyChange, SupplyWarning, SystemChange, TiredWarning,
-    UnitDestroyedLine, UnitDividedLine, Warnings,
+    StrikeClearedLine, SunkShip, SupplyChange, SupplyLineDue, SupplyWarning, SystemChange,
+    TiredWarning, UnitDestroyedLine, UnitDividedLine, Warnings,
 };
 pub use briefing::{
     ForceChangesPart, FormedLine, JoinedLine, LoadReserveLine, RefuellingHeldLine, StoodDownLine,

@@ -14,6 +14,11 @@
 //! marked to act at, and nowhere once that is passed; with no mark at all,
 //! at the intent's base.
 //!
+//! The side's supply lines (decision 0196, 10) are counted too: a line to a
+//! base of the side in the hex adds its supply tons a day to the landings of
+//! each day it gives on, before that day's use, as a run's landing is. Fuel
+//! is not projected here, so a line's fuel is not counted.
+//!
 //! Everything is whole numbers of tons and days in `Fixed`.
 
 use sim_core::command::{CommandState, IntentKind, ProjectedReading, SupplyProjection};
@@ -25,6 +30,52 @@ use sim_core::view::SideView;
 use crate::fleet::{run_state, Fleet, RunStatus};
 use crate::morning::Morning;
 use crate::units::{over, whole};
+
+/// The side's supply lines to a base of its own in `hex`.
+fn own_lines_in<'a>(
+    view: &'a SideView<'a>,
+    hex: Hex,
+) -> impl Iterator<Item = &'a sim_core::state::SupplyLine> + 'a {
+    view.supply_lines()
+        .filter(move |line| view.bases().any(|b| b.id == line.base && b.hex == hex))
+}
+
+/// The side's supply lines to its own base `base`.
+pub(crate) fn own_lines_to<'a>(
+    view: &'a SideView<'a>,
+    base: sim_core::ids::BaseId,
+) -> Vec<sim_core::state::SupplyLine> {
+    let own = view.bases().any(|b| b.id == base);
+    if !own {
+        return Vec::new();
+    }
+    view.supply_lines()
+        .filter(|l| l.base == base)
+        .copied()
+        .collect()
+}
+
+/// The clause that names the lines to `base` beside "holds X and uses Y a
+/// day", empty where the side has none.
+pub(crate) fn line_clause(view: &SideView<'_>, base: sim_core::ids::BaseId) -> String {
+    let mut out = String::new();
+    for line in own_lines_to(view, base) {
+        let gives = match (line.supply_t > Fixed::ZERO, line.fuel_t > Fixed::ZERO) {
+            (true, true) => format!(
+                "{} of supply and {} of fuel",
+                crate::units::tons(line.supply_t),
+                crate::units::tons(line.fuel_t)
+            ),
+            (false, true) => format!("{} of fuel", crate::units::tons(line.fuel_t)),
+            _ => format!("{} of supply", crate::units::tons(line.supply_t)),
+        };
+        out.push_str(&format!(
+            " and is given {gives} a day by a supply line from day {} to day {}",
+            line.first_day, line.last_day
+        ));
+    }
+    out
+}
 
 /// The stock, the planned use and the landings of each day from today on.
 #[derive(Clone, Debug)]
@@ -105,6 +156,14 @@ impl Readings {
             let index = day.saturating_sub(today) as usize;
             if index < len {
                 landing_t[index] += tons;
+            }
+        }
+        for line in own_lines_in(view, hex) {
+            for (i, slot) in landing_t.iter_mut().enumerate() {
+                let day = today + u32::try_from(i).unwrap_or(0);
+                if line.gives_on(day) {
+                    *slot += line.supply_t;
+                }
             }
         }
         let mut readings = Readings {

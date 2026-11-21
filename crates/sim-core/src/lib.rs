@@ -35,6 +35,8 @@ pub mod repair;
 pub mod rng;
 pub mod side_events;
 pub mod state;
+#[cfg(test)]
+mod supply_lines_tests;
 pub mod time;
 pub mod view;
 pub mod world;

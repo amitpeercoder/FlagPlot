@@ -60,7 +60,7 @@ miles that can be a decimal, shots) is a decimal string such as `"12"` or
 
 ## The version rule
 
-`version` is 36. A field removed from an answer, or a field whose meaning
+`version` is 37. A field removed from an answer, or a field whose meaning
 changes, raises the version by one. A field added does not change it, so a
 reader must ignore fields it does not know. (The schemas here set
 `additionalProperties: false` because they describe this version exactly; a
@@ -170,6 +170,12 @@ order is refused with "... is not on the map yet: it enters on day N" (or "was
 to enter on day N and waits for its base"). Every new field is left out when
 nothing is held, so a game with nothing held reads as before. Only the side's
 own entries are ever given.
+
+Version 37 (decision 0196) adds the side's supply lines. The briefing's
+`arrivals` part gains `supply_lines` (each line of the side whose last day is not
+before today: `base`, `supply_t`, `fuel_t`, `first_day`, `last_day`), left out
+where the side has none; the text briefing gains a "Supply line:" line for each.
+Only the side's own lines are ever given.
 
 The fight ashore (decision 0090, see "The fight ashore" below) adds only fields
 and values, so `version` stays 3.

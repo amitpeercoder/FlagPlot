@@ -1,0 +1,74 @@
+# Scenario 112: stock from off the map.
+#
+# Decision 0196. A placeholder scenario of ten days on the placeholder map
+# data/map/placeholder_forces_that_arrive.toml. Side A (Allied) has base 1,
+# B, at (0,0), with 1,000 t of supply and 2,000 t of fuel and no supply line.
+# Side J (Japanese) has base 2, R, at (14,0) with 100 t of supply and 50 t of
+# fuel, and a supply line to R of 30 t of supply and 12.5 t of fuel a day
+# from day 3 to day 6, with no side given, so it is J's. There is no unit,
+# no ship, no aircraft and no order in the file, so nothing draws on R: the
+# tests add what they want at the marks below, as scenario 111's test does.
+# The hand calculation is in tests/scenario_112_stock_from_off_the_map.rs.
+# The test runs this file on the frozen step 1 figures.
+#
+# Kept out of the loops that walk data/scenarios/*.toml by being in this
+# folder (decision 0072).
+#
+# PLACEHOLDER DATA. The bases, the line and the map are invented. Every name
+# below says "Placeholder".
+
+name = "Placeholder scenario 112: Stock from off the map"
+placeholder = true
+seed = 1942
+days = 10
+map = "../../map/placeholder_forces_that_arrive.toml"
+ship_classes = ["../../reference/ship_classes.csv"]
+port_sizes = "../../reference/port_sizes.csv"
+aircraft_types = "../../reference/aircraft_types.csv"
+search = "../../reference/search.toml"
+surface_combat = "../../reference/surface_combat.toml"
+air_combat = "../../reference/air_combat.toml"
+ground = "../../reference/ground.toml"
+
+# Allied base 1, B: no line.
+[[base]]
+id = 1
+name = "Placeholder base B"
+side = "allied"
+q = 0
+r = 0
+supply_t = 1000
+fuel_t = 2000
+
+# Japanese base 2, R.
+[[base]]
+id = 2
+name = "Placeholder base R"
+side = "japanese"
+q = 14
+r = 0
+supply_t = 100
+fuel_t = 50
+
+# MARK: bases
+
+# J's supply line to R: 30 t of supply and 12.5 t of fuel a night, nights of
+# days 3 to 6; the side is the base's at the start, J.
+[[supply_line]]
+base = 2
+supply_t = 30
+fuel_t = "12.5"
+first_day = 3
+last_day = 6
+
+# MARK: lines
+
+# MARK: forces
+
+# MARK: units
+
+# MARK: groups
+
+# MARK: orders
+
+# MARK: commands
