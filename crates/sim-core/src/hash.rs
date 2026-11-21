@@ -26,7 +26,7 @@ use crate::refdata::ShipKind;
 use crate::state::Side;
 use crate::state::{
     AirGroup, AirGroupLocation, Arrival, Base, CargoOrder, Charge, ClaimTally, DayWork, Formation,
-    Halt, HaltWork, HitsOnMen, LandUnit, March, MenReplacement, MenStream, Preparation,
+    FuelFrom, Halt, HaltWork, HitsOnMen, LandUnit, March, MenReplacement, MenStream, Preparation,
     Replacement, Route, RulesOfEngagement, SearchArc, Ship, ShipLocation, ShipSystem, ShipSystems,
     Skills, Strength, SupplyLine, TaskForce, Troops, TruthState, YardTrip,
 };
@@ -261,7 +261,11 @@ const fn speed_code(speed: SpeedSetting) -> u8 {
 /// for none, else 1, the count of kinds, each kind's code and
 /// `waters_first`), and to a limit set by a command the code 11 for it, and
 /// an air group's `strike_first_waters` (the count, then each hex) and
-/// `waters_order` after its `claims` (decision 0190).
+/// `waters_order` after its `claims` (decision 0190);
+/// version 52 adds a task force's order to fuel from another, `fuel_from`
+/// (0 for none, else 1, the giver and the order), after its
+/// `available_from`, and the task force order `fuel_from` (code 19, in the
+/// agent's table) (decision 0201).
 ///
 /// What is held apart until its day (decision 0195, 23) does not raise the
 /// version: it is hashed last, after the domain, and only where something is
@@ -272,7 +276,7 @@ const fn speed_code(speed: SpeedSetting) -> u8 {
 /// replacement men and each land unit's strength (decision 0197, 21), after
 /// the supply lines, only where a scenario gives a stream or an
 /// establishment.
-pub const STATE_VERSION: &[u8] = b"flagplot-state-v51";
+pub const STATE_VERSION: &[u8] = b"flagplot-state-v52";
 
 /// Names every field of the state, with no `..` in any pattern. It does
 /// nothing when it runs. It is here so that a field added to the state does
@@ -501,8 +505,10 @@ fn name_every_field(world: &World) {
             landing_at: _,
             charge,
             available_from: _,
+            fuel_from,
         } = task_force;
         if let Some(Charge { force: _, order: _ }) = charge {}
+        if let Some(FuelFrom { giver: _, order: _ }) = fuel_from {}
         let Route {
             waypoints: _,
             next_index: _,
@@ -1698,6 +1704,15 @@ pub(crate) fn hash_task_force(h: &mut StateHasher, task_force: &TaskForce) {
     }
     // After the charge (decision 0140).
     h.optional_u32(task_force.available_from);
+    // After the day it may be used from (decision 0201, 18).
+    match task_force.fuel_from {
+        Some(fuel_from) => {
+            h.u8(1);
+            h.u32(fuel_from.giver.raw());
+            h.u32(fuel_from.order.raw());
+        }
+        None => h.u8(0),
+    }
 }
 
 /// One `Base`, every field in one fixed order. Used for the truth state and for

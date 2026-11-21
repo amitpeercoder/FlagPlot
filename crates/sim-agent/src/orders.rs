@@ -114,6 +114,12 @@ pub fn order_to_json(kind: &OrderKind) -> Value {
             }),
             // Decision 0191.
             TaskForceOrder::NoCargoWork => json!({ "kind": "no_cargo_work" }),
+            // The giver as the engine's handle, as a charge is (decision
+            // 0201).
+            TaskForceOrder::FuelFrom(giver) => json!({
+                "kind": "fuel_from",
+                "giver": format!("task_force:{}", giver.raw()),
+            }),
             TaskForceOrder::SetRulesOfEngagement {
                 stance,
                 break_off,
@@ -614,6 +620,14 @@ pub fn order_from_json(unit: &str, value: &Value) -> Result<OrderKind, String> {
                     )),
                 }),
                 "no_cargo_work" => TaskForceOrder::NoCargoWork,
+                "fuel_from" => TaskForceOrder::FuelFrom(TaskForceId::new(
+                    value
+                        .get("giver")
+                        .and_then(Value::as_str)
+                        .and_then(|handle| handle.strip_prefix("task_force:"))
+                        .and_then(|number| number.parse().ok())
+                        .ok_or("\"giver\" must be a task force written \"task_force:N\"")?,
+                )),
                 "set_radio_silence" => TaskForceOrder::SetRadioSilence {
                     on: value
                         .get("on")

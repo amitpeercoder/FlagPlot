@@ -1572,6 +1572,7 @@ mod tests {
                 aircraft_capacity: 0,
                 anti_aircraft: 0,
                 troop_capacity_men: 0,
+                fuels_at_sea: false,
             },
         );
         ref_data.search = Some(SearchFigures::from_search_toml());

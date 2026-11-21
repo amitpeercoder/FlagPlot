@@ -316,6 +316,7 @@ fn cited_by_force(force: &TaskForce, out: &mut Vec<(String, Cited)>) {
         landing_at: _,
         charge,
         available_from: _,
+        fuel_from,
     } = force;
     let mut order = |what: &str, held: Option<OrderId>| {
         if let Some(held) = held {
@@ -326,6 +327,7 @@ fn cited_by_force(force: &TaskForce, out: &mut Vec<(String, Cited)>) {
     order("speed", *speed_order);
     order("readiness", *readiness_order);
     order("rules", *rules_order);
+    order("fuel-from", fuel_from.map(|fuel_from| fuel_from.order));
     if let Some(CargoOrder {
         action: _,
         order: held,

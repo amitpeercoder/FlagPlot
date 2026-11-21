@@ -1562,6 +1562,7 @@ mod tests {
                 aircraft_capacity: 0,
                 anti_aircraft: 0,
                 troop_capacity_men: 0,
+                fuels_at_sea: false,
             },
         );
         // Propulsion may be damaged.
@@ -1603,6 +1604,7 @@ mod tests {
             aircraft_capacity: 0,
             anti_aircraft: 0,
             troop_capacity_men: 0,
+            fuels_at_sea: false,
         };
         // A class with a second side: the flag on a ship with torpedoes ready
         // is sound; with none ready it is caught.
@@ -1657,6 +1659,7 @@ mod tests {
                 aircraft_capacity: 0,
                 anti_aircraft: 0,
                 troop_capacity_men: 0,
+                fuels_at_sea: false,
             },
         );
         // A full tank is fine.
@@ -1703,6 +1706,7 @@ mod tests {
                 aircraft_capacity: 0,
                 anti_aircraft: 0,
                 troop_capacity_men: 0,
+                fuels_at_sea: false,
             },
         );
         ship_mut(&mut truth).supply_t = Fixed::from_int(60);
@@ -1879,6 +1883,7 @@ mod tests {
                 aircraft_capacity: 10,
                 anti_aircraft: 0,
                 troop_capacity_men: 0,
+                fuels_at_sea: false,
             },
         );
         truth

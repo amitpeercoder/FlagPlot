@@ -38,8 +38,8 @@ use crate::orders::{Order, OrderKind, Origin};
 use crate::refdata::{RefData, ShipKind};
 use crate::rng::{Domain, Stream};
 use crate::state::{
-    AirGroup, CargoOrder, Charge, Halt, HitsOnMen, LandUnit, March, Preparation, Side, TaskForce,
-    TruthState, YardTrip,
+    AirGroup, CargoOrder, Charge, FuelFrom, Halt, HitsOnMen, LandUnit, March, Preparation, Side,
+    TaskForce, TruthState, YardTrip,
 };
 use crate::time::Pulse;
 use crate::world::{MadeIds, SimError, World, MADE_IDS_FLOOR};
@@ -309,6 +309,7 @@ fn walk_task_force(force: &mut TaskForce, visit: &mut dyn FnMut(String, HeldId<'
         landing_at: _,
         charge,
         available_from: _,
+        fuel_from,
     } = force;
     let id = *id;
     let mut order = |what: &str, order: &mut OrderId| {
@@ -350,6 +351,13 @@ fn walk_task_force(force: &mut TaskForce, visit: &mut dyn FnMut(String, HeldId<'
     }) = charge
     {
         order("escort", held);
+    }
+    if let Some(FuelFrom {
+        giver: _,
+        order: held,
+    }) = fuel_from
+    {
+        order("fuel-from", held);
     }
     let mut event = |what: &str, event: &mut EventId| {
         visit(format!("{id}'s {what}"), HeldId::Event(event));

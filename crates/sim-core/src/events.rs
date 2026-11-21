@@ -254,6 +254,43 @@ impl FieldworksChange {
     }
 }
 
+/// Why a force's order to fuel from another ended (decision 0201, 7).
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum FuelOrderEnd {
+    /// Every ship of the force is full.
+    Full,
+    /// The giver's ships with the mark hold no cargo fuel.
+    GiverEmpty,
+    /// The giver has no ship with the mark afloat in her force: sunk,
+    /// detached, joined to another force, stood down or sent to the yard.
+    NoOiler,
+    /// A new route order was given to the force.
+    NewRoute,
+}
+
+impl FuelOrderEnd {
+    /// A stable number for the reason. Never renumber it; add new reasons at
+    /// the end.
+    pub const fn code(self) -> u8 {
+        match self {
+            FuelOrderEnd::Full => 0,
+            FuelOrderEnd::GiverEmpty => 1,
+            FuelOrderEnd::NoOiler => 2,
+            FuelOrderEnd::NewRoute => 3,
+        }
+    }
+
+    /// The reason as the event log writes it.
+    pub const fn name(self) -> &'static str {
+        match self {
+            FuelOrderEnd::Full => "full",
+            FuelOrderEnd::GiverEmpty => "giver_empty",
+            FuelOrderEnd::NoOiler => "no_oiler",
+            FuelOrderEnd::NewRoute => "new_route",
+        }
+    }
+}
+
 /// Why a force lost loading (decision 0095, 5, 7, 8 and 10).
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum LoadingLoss {
@@ -2095,6 +2132,40 @@ pub enum EventKind {
         experience_after: u8,
         joined: u32,
     },
+    /// A ship of `task_force` took `tons` of fuel at sea from `oiler`, a
+    /// ship with the mark of the force it fuels from, `giver` (decision
+    /// 0201, 17): `fuel_t` is the ship's fuel after it, `oiler_cargo_fuel_t`
+    /// the oiler's cargo fuel left, and `restored` whether it set a force
+    /// out of fuel idle (15). Its breakdown holds what she lacked, what the
+    /// oiler held, the hours she had the lines and their rate. Cites the
+    /// order. The side's own. Added at the end.
+    ShipFuelledAtSea {
+        ship: ShipId,
+        task_force: TaskForceId,
+        oiler: ShipId,
+        giver: TaskForceId,
+        tons: Fixed,
+        fuel_t: Fixed,
+        oiler_cargo_fuel_t: Fixed,
+        restored: bool,
+    },
+    /// No fuel passed at sea between `task_force` and `giver` at `hex` in
+    /// the pulse: a raid attacked a ship of either, or either fought a
+    /// surface action (decision 0201, 10 and 17). Cites the order and the
+    /// attacks. The side's own. Added at the end.
+    FuellingBrokenOff {
+        task_force: TaskForceId,
+        giver: TaskForceId,
+        hex: Hex,
+    },
+    /// The order of `task_force` to fuel from `giver` ended, for `reason`
+    /// (decision 0201, 7 and 17). Cites the order, and the order or event
+    /// that ended it where there is one. The side's own. Added at the end.
+    FuelOrderEnded {
+        task_force: TaskForceId,
+        giver: TaskForceId,
+        reason: FuelOrderEnd,
+    },
 }
 
 impl EventKind {
@@ -2621,6 +2692,27 @@ impl EventKind {
             EventKind::MenJoined { unit, base, .. } => {
                 vec![EntityRef::LandUnit(*unit), EntityRef::Base(*base)]
             }
+            EventKind::ShipFuelledAtSea {
+                ship,
+                task_force,
+                oiler,
+                giver,
+                ..
+            } => vec![
+                EntityRef::Ship(*ship),
+                EntityRef::TaskForce(*task_force),
+                EntityRef::Ship(*oiler),
+                EntityRef::TaskForce(*giver),
+            ],
+            EventKind::FuellingBrokenOff {
+                task_force, giver, ..
+            }
+            | EventKind::FuelOrderEnded {
+                task_force, giver, ..
+            } => vec![
+                EntityRef::TaskForce(*task_force),
+                EntityRef::TaskForce(*giver),
+            ],
         }
     }
 }
@@ -4541,6 +4633,48 @@ impl fmt::Display for EventKind {
             EventKind::BuiltFromPicture { day } => write!(
                 f,
                 "the world was built from a picture of the evening of day {day}"
+            ),
+            EventKind::ShipFuelledAtSea {
+                ship,
+                task_force,
+                oiler,
+                tons,
+                fuel_t,
+                oiler_cargo_fuel_t,
+                restored,
+                ..
+            } => {
+                write!(
+                    f,
+                    "{ship} took {tons} t of fuel at sea from {oiler}, {fuel_t} t aboard, {oiler} has {oiler_cargo_fuel_t} t of cargo fuel left"
+                )?;
+                if *restored {
+                    write!(f, "; {task_force} is no longer out of fuel")?;
+                }
+                Ok(())
+            }
+            EventKind::FuellingBrokenOff {
+                task_force,
+                giver,
+                hex,
+            } => write!(
+                f,
+                "{task_force} took no fuel from {giver} at {hex}: the fuelling was broken off by an attack"
+            ),
+            EventKind::FuelOrderEnded {
+                task_force,
+                giver,
+                reason,
+            } => write!(
+                f,
+                "{task_force}'s order to fuel from {giver} ended: {}",
+                match reason {
+                    FuelOrderEnd::Full => "every ship is full",
+                    FuelOrderEnd::GiverEmpty => "the giver holds no cargo fuel",
+                    FuelOrderEnd::NoOiler =>
+                        "the giver has no ship afloat that fuels others at sea",
+                    FuelOrderEnd::NewRoute => "a new route was ordered",
+                }
             ),
         }
     }

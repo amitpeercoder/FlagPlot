@@ -658,6 +658,9 @@ impl Briefing {
                     )),
                 }
             }
+            if let Some(giver) = &f.fuel_from {
+                s.push_str(&format!(", fuelling from {}", giver.text()));
+            }
             if let Some(lacked) = &f.ammunition_lacked {
                 s.push_str(&format!(
                     ", lacks {} rounds and {} torpedoes, {} t of ammunition",
@@ -844,6 +847,49 @@ impl Briefing {
                     r.tons.0,
                     r.base.text(),
                     ev(r.event)
+                ));
+            }
+            for f in &c.fuelled_at_sea {
+                o.line(format!(
+                    "Fuelled at sea yesterday: {} of {} took {} t from {} of {}, {} t aboard, {} t of cargo fuel left in {}{}{}",
+                    f.ship.text(),
+                    f.task_force.text(),
+                    f.tons.0,
+                    f.oiler.text(),
+                    f.giver.text(),
+                    f.fuel_t.0,
+                    f.oiler_cargo_fuel_t.0,
+                    f.oiler.text(),
+                    if f.restored {
+                        format!("; {} is no longer out of fuel", f.task_force.text())
+                    } else {
+                        String::new()
+                    },
+                    ev(f.event)
+                ));
+            }
+            for b in &c.fuelling_broken_off {
+                o.line(format!(
+                    "Fuelling broken off yesterday: {} took no fuel from {} at {}{}",
+                    b.task_force.text(),
+                    b.giver.text(),
+                    b.place.text(),
+                    ev(b.event)
+                ));
+            }
+            for e in &c.fuel_orders_ended {
+                let why = match e.reason {
+                    "full" => "every ship is full",
+                    "giver_empty" => "the giver holds no cargo fuel",
+                    "no_oiler" => "the giver has no ship afloat that fuels others at sea",
+                    _ => "a new route was ordered",
+                };
+                o.line(format!(
+                    "Fuelling ended yesterday: {} no longer fuels from {}: {}{}",
+                    e.task_force.text(),
+                    e.giver.text(),
+                    why,
+                    ev(e.event)
                 ));
             }
             for j in &c.joined {

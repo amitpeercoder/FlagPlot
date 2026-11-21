@@ -316,6 +316,10 @@
           "description": "Given (true) only for a force on radio silence (decision 0136, 15).",
           "const": true
         },
+        "fuel_from": {
+          "description": "The force it is ordered to fuel from at sea (decision 0201), written \"task_force:N\". Given only for a force under that order. Left out otherwise.",
+          "$ref": "#/$defs/handle"
+        },
         "status": {
           "enum": [
             "idle",
@@ -916,7 +920,7 @@
           "const": "flagplot-agent"
         },
         "version": {
-          "const": 38
+          "const": 39
         },
         "kind": {
           "const": "not_known"

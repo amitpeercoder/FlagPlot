@@ -387,6 +387,10 @@ pub struct ShipLine {
     /// Left out where her class is not known.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub fuel_capacity_t: Option<Dec>,
+    /// Given (true) only for a ship whose class fuels others at sea, an
+    /// oiler (decision 0201). Left out otherwise.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fuels_at_sea: Option<bool>,
     pub flotation_damage: Dec,
     pub fire_damage: Dec,
     /// As in [`ShipDetail`]: shown only when it is not 2.
@@ -608,6 +612,10 @@ fn entity_of(view: &SideView<'_>, handle: &str) -> Option<Detail> {
                         sunk: s.location == ShipLocation::Sunk,
                         fuel_t: Dec(s.fuel_t),
                         fuel_capacity_t: view.ship_class(s.class).map(|c| Dec(c.fuel_capacity_t)),
+                        fuels_at_sea: view
+                            .ship_class(s.class)
+                            .is_some_and(|c| c.fuels_at_sea)
+                            .then_some(true),
                         flotation_damage: Dec(s.flotation_damage),
                         fire_damage: Dec(s.fire_damage),
                         experience: shown_experience(s),

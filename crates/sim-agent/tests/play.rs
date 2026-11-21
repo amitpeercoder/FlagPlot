@@ -160,9 +160,10 @@ fn tf_index(order: &TaskForceOrder) -> usize {
         TaskForceOrder::Escort(_) => 16,
         TaskForceOrder::SetRadioSilence { .. } => 17,
         TaskForceOrder::NoCargoWork => 18,
+        TaskForceOrder::FuelFrom(_) => 19,
     }
 }
-const TF_KINDS: usize = 19;
+const TF_KINDS: usize = 20;
 
 fn ag_index(order: &AirGroupOrder) -> usize {
     match order {
@@ -234,6 +235,8 @@ fn examples() -> Vec<OrderKind> {
         tf(TaskForceOrder::SetRadioSilence { on: false }),
         // Decision 0191: do no cargo work.
         tf(TaskForceOrder::NoCargoWork),
+        // Decision 0201: fuel from another force at sea.
+        tf(TaskForceOrder::FuelFrom(TaskForceId::new(4))),
         OrderKind::Base {
             target: BaseId::new(2),
             order: BaseOrder::FormTaskForce {
@@ -958,7 +961,7 @@ fn with_two_players_the_day_waits_for_both_and_the_order_does_not_matter() {
         assert!(result["allied"]["margin"].is_string(), "{result}");
         assert_eq!(
             last,
-            json!({"format": "flagplot-agent", "version": 38, "kind": "end_day", "resolved": true, "day": 1, "game_over": true})
+            json!({"format": "flagplot-agent", "version": 39, "kind": "end_day", "resolved": true, "day": 1, "game_over": true})
         );
         assert_eq!(session.day_hashes(), hashes, "variant {variant}");
         let world = session.into_world();

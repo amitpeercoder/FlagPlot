@@ -60,7 +60,7 @@ miles that can be a decimal, shots) is a decimal string such as `"12"` or
 
 ## The version rule
 
-`version` is 38. A field removed from an answer, or a field whose meaning
+`version` is 39. A field removed from an answer, or a field whose meaning
 changes, raises the version by one. A field added does not change it, so a
 reader must ignore fields it does not know. (The schemas here set
 `additionalProperties: false` because they describe this version exactly; a
@@ -186,6 +186,16 @@ whose last day is not before today: `base`, `men_per_day`, `first_day`,
 there is nothing to say, so a game with no stream and no establishment reads
 as before; the text briefing gains "Replacement men:" and "Men joined
 yesterday:" lines. Only the side's own are ever given.
+
+Version 39 (decision 0201) adds fuelling at sea: the task force order `fuel_from` (see "Fuelling at sea" below), a
+ship line's `fuels_at_sea` (true for an oiler, in a task force's entity), a force's `fuel_from` (the giver's handle, in a force's line and so in `list_forces` and the task force entity, left out
+for a force under no such order), and three lists among the briefing's `force_changes`, each left out where empty:
+`fuelled_at_sea` (`ship`, `task_force`, `oiler`, `giver`, `tons`, `fuel_t` aboard afterwards, `oiler_cargo_fuel_t` left,
+`restored`, `event`), `fuelling_broken_off` (`task_force`, `giver`, `place`, `event`) and `fuel_orders_ended`
+(`task_force`, `giver`, `reason` and `event`; the reason is `full`, `giver_empty`, `no_oiler` or `new_route`). The text
+briefing gains "Fuelled at sea yesterday:", "Fuelling broken off yesterday:" and "Fuelling ended yesterday:" lines and
+a force's line says "fuelling from task_force:N". Only the side's own are ever given. The refusals of the order are
+ten new ones, worded in `issue_orders`' answer.
 
 The fight ashore (decision 0090, see "The fight ashore" below) adds only fields
 and values, so `version` stays 3.
@@ -1261,3 +1271,14 @@ is open now, and nothing of the enemy's mission is given. The part is left out w
 a seat at a command, so those briefings differ only in the version; it is an empty list where the side has objectives and
 the enemy none. The text adds, after the line of the levels, "The enemy is scored for:" and one line under it for each
 objective, in words from the reader's side, or one line that says the enemy has none.
+
+## Fuelling at sea (decision 0201)
+
+The task force order `fuel_from` (`{"kind": "fuel_from", "giver": "task_force:N"}`) has a force fuel from another force
+of the side whose ships with the class mark that they fuel others at sea (oilers) pass it their cargo fuel. `giver` is
+a task force in the side's numbers at every seat, as an escort's `charge` is. The force steers for the giver, then
+follows her route; fuel passes in a pulse when the two are in one hex and no raid or surface action touched either. The
+order ends when every ship is full, the giver's oilers hold no cargo fuel or are gone, or a route order is given, and the
+briefing says so. It is refused where the giver has no oiler, is the force itself, is herself fuelling, is an escort or
+has an escort, and where the force is a giver, an escort or has an escort. A route or an escort order given to a force
+under the order is refused as the escort's is.

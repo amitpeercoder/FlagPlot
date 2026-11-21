@@ -159,6 +159,7 @@ fn escort_class() -> ShipClass {
         aircraft_capacity: 20,
         anti_aircraft: 0,
         troop_capacity_men: 600,
+        fuels_at_sea: false,
     }
 }
 

@@ -214,3 +214,25 @@ battleship = "1"
 cruiser = "0.15"
 destroyer = "0.04"
 others = "0.04"
+
+# Fuelling at sea (decision 0201, 22 to 24). All four are placeholders in the
+# game's sense. No class of a battle on file has the mark, so no battle reads
+# them.
+[fuelling_at_sea]
+# The most a force fuelling, and the force it fuels from, make in the pulse.
+# The Pacific Fleet's instructions of 28 August 1942 set 8 knots as standard
+# for the approach (docs/research/fuelling-at-sea.md); for the Japanese side
+# it is a placeholder: the record gives "slow speed" and, once, 14 knots.
+speed_kn = 8
+# Tons of fuel one line passes in an hour. The instructions plan for 1,500 to
+# 2,000 barrels an hour a hose (227 to 303 tons); a ship on both lines takes
+# 500, against the 465 Enterprise took on 8 June 1942 and the 400 of 1944. It
+# is more than the Japanese cruisers of 1942 took, 200 to 310.
+line_rate_t_per_h = 250
+# Hours a ship is alongside before her fuel passes, for the approach and the
+# rig. A figure of the game, sized from the days on record (a cruiser and two
+# destroyers in three and a half hours; five ships in fifteen and a half):
+# without it two lines would fill ten destroyers in a pulse.
+alongside_hours = 1
+# Lines an oiler has: a destroyer takes one, any other ship both.
+lines = 2

@@ -218,6 +218,23 @@ fn reject_reason(reason: &RejectReason) -> Data {
             .with("unit", Field::Str(unit.to_string()))
             .int("day", *day)
             .flag("waiting", *waiting),
+        // Decision 0201, 5.
+        RejectReason::GiverHasNoOiler(giver) => base("giver_has_no_oiler").id("giver", *giver),
+        RejectReason::CannotFuelFromItself => base("cannot_fuel_from_itself"),
+        RejectReason::GiverIsFuelling(giver) => base("giver_is_fuelling").id("giver", *giver),
+        RejectReason::GiverIsAnEscort(giver) => base("giver_is_an_escort").id("giver", *giver),
+        RejectReason::GiverHasAnEscort { giver, escort } => base("giver_has_an_escort")
+            .id("giver", *giver)
+            .id("escort", *escort),
+        RejectReason::IsAGiver { taker } => base("is_a_giver").id("taker", *taker),
+        RejectReason::EscortCannotFuel { charge } => {
+            base("escort_cannot_fuel").id("charge", *charge)
+        }
+        RejectReason::HasAnEscort { escort } => base("has_an_escort").id("escort", *escort),
+        RejectReason::FuelsFrom(giver) => base("fuels_from").id("giver", *giver),
+        RejectReason::ChargeTakesPartInFuelling(charge) => {
+            base("charge_takes_part_in_fuelling").id("charge", *charge)
+        }
     }
 }
 
@@ -2336,6 +2353,46 @@ pub(super) fn describe(
                 },
             )
         }
+        EventKind::ShipFuelledAtSea {
+            ship,
+            task_force,
+            oiler,
+            giver,
+            tons,
+            fuel_t,
+            oiler_cargo_fuel_t,
+            restored,
+        } => (
+            "ship_fuelled_at_sea",
+            d.id("ship", *ship)
+                .id("task_force", *task_force)
+                .id("oiler", *oiler)
+                .id("giver", *giver)
+                .num("tons", *tons)
+                .num("fuel_t", *fuel_t)
+                .num("oiler_cargo_fuel_t", *oiler_cargo_fuel_t)
+                .flag("restored", *restored),
+        ),
+        EventKind::FuellingBrokenOff {
+            task_force,
+            giver,
+            hex,
+        } => (
+            "fuelling_broken_off",
+            d.id("task_force", *task_force)
+                .id("giver", *giver)
+                .hex("hex", *hex),
+        ),
+        EventKind::FuelOrderEnded {
+            task_force,
+            giver,
+            reason,
+        } => (
+            "fuel_order_ended",
+            d.id("task_force", *task_force)
+                .id("giver", *giver)
+                .text("reason", reason.name()),
+        ),
         EventKind::ChargeLost {
             escort,
             charge,

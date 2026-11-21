@@ -1363,6 +1363,7 @@ mod tests {
             aircraft_capacity: 0,
             anti_aircraft: 0,
             troop_capacity_men: 0,
+            fuels_at_sea: false,
         };
         let mut ref_data = RefData::default();
         ref_data.ship_classes.insert(class.id, class);

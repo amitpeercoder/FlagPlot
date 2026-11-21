@@ -274,6 +274,34 @@ pub(crate) fn refusal(reason: &sim_core::orders::RejectReason) -> String {
         R::IsACharge { .. } => {
             " (this force is another force's charge, and a charge cannot be an escort)"
         }
+        R::GiverHasNoOiler(_) => {
+            " (fuel_from names a force of your side with a ship afloat that fuels others at sea, an oiler; list_forces shows what each force carries as cargo fuel)"
+        }
+        R::CannotFuelFromItself => " (fuel_from names another force of your side, written giver: task_force:N)",
+        R::GiverIsFuelling(_) => {
+            " (the force named is itself fuelling from another force; name the force that has the oiler)"
+        }
+        R::GiverIsAnEscort(_) => {
+            " (the force named is an escort keeping station on a charge; clear its escort order first or name another force)"
+        }
+        R::GiverHasAnEscort { .. } => {
+            " (the force named has an escort keeping station on it; name a force with none)"
+        }
+        R::IsAGiver { .. } => {
+            " (another force fuels from this one, so it takes no order to fuel and no escort order; give that force a route order to end its fuelling first)"
+        }
+        R::EscortCannotFuel { .. } => {
+            " (this force is an escort with a charge; give it an escort order with no charge first)"
+        }
+        R::HasAnEscort { .. } => {
+            " (an escort keeps station on this force; clear that escort's charge first)"
+        }
+        R::FuelsFrom(_) => {
+            " (a force fuelling from another takes no escort order; give it a route order to end the fuelling first)"
+        }
+        R::ChargeTakesPartInFuelling(_) => {
+            " (the force named is fuelling from another force or is the force another fuels from, and so cannot be a charge)"
+        }
         R::NotYetAvailable { .. } => {
             " (the unit is still there and the rules act on it, but its side may not use it before that day: list_forces and get_entity show a unit's available_from while its day is to come)"
         }

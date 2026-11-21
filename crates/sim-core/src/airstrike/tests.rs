@@ -66,6 +66,7 @@ fn class(id: u32, kind: ShipKind, toughness: i64, capacity: u32) -> ShipClass {
         aircraft_capacity: capacity,
         anti_aircraft: 0,
         troop_capacity_men: 0,
+        fuels_at_sea: false,
     }
 }
 
