@@ -913,15 +913,32 @@ body.watched .gives { display: none !important; }
       }).catch(function () {});
     }));
   }
+  // The air groups are read from the briefing, which is made at dusk only.
+  // Inside a day each group is asked for by itself, so that a card shows what
+  // a group has now, and a page opened in the middle of a day has its groups
+  // at all: found, where they are not yet known, through the bases and the
+  // ships they fly from.
+  var AIR_HANDLES = [];
+  function airInsideDay(a) {
+    if (a[4].refused == null) { AIR_HANDLES = (a[4].air_groups || []).map(function (x) { return x.air_group.handle; }); return Promise.resolve(null); }
+    function ask(h) { return api('get_entity', { handle: h }).then(function (e) { return e.entity || {}; }).catch(function () { return {}; }); }
+    var find = Promise.resolve(AIR_HANDLES);
+    if (!AIR_HANDLES.length) {
+      var from = (a[1].bases || []).map(function (b) { return b.base.handle; });
+      (a[0].task_forces || []).forEach(function (f) { from = from.concat(FORCE_SHIPS[f.task_force.handle] || []); });
+      find = Promise.all(from.map(ask)).then(function (list) { var seen = {}; list.forEach(function (e) { (e.air_groups || []).forEach(function (g) { seen[g.handle] = true; }); }); AIR_HANDLES = Object.keys(seen).sort(function (x, y) { return num(x) - num(y); }); return AIR_HANDLES; });
+    }
+    return find.then(function (hs) { return Promise.all(hs.map(ask)); }).then(function (list) { return list.map(function (e) { return e.summary; }).filter(function (x) { return x && x.air_group; }); });
+  }
   function refresh() {
     return Promise.all([api('list_forces'), api('list_bases'), api('list_contacts'), api('command_state'), api('get_briefing', { text: false }).catch(function (e) { return { refused: e.message }; })]).then(function (a) {
-      return learnShips(a[0].task_forces || []).then(function () { return a; });
+      return learnShips(a[0].task_forces || []).then(function () { return airInsideDay(a); }).then(function (air) { a.air = air; return a; });
     }).then(function (a) {
       M.forces = a[0].task_forces || []; M.units = a[0].land_units || [];
       M.bases = a[1].bases || []; M.enemyBases = a[1].enemy_bases || [];
       M.contacts = a[2].contacts || []; M.estimates = a[2].ground_estimates || [];
       M.state = a[3];
-      if (a[4].refused != null) { var at = /stands at (\d{4}) of day (\d+)/.exec(a[4].refused); if (at) clock = { at: at[1], day: parseInt(at[2], 10) }; M.day = clock.day; }
+      if (a[4].refused != null) { var at = /stands at (\d{4}) of day (\d+)/.exec(a[4].refused); if (at) clock = { at: at[1], day: parseInt(at[2], 10) }; M.day = clock.day; if (a.air) M.air = a.air; }
       else { M.day = a[4].heading.day; M.lastDay = a[4].heading.last_day; if (M.day > M.lastDay) M.over = true; M.air = a[4].air_groups || []; M.arrivals = (a[4].arrivals && a[4].arrivals.due) || []; clock = { at: 'dusk', day: M.day }; }
       M.names = {}; M.hexNames = {};
       Object.keys(SHIP_NAMES).forEach(function (h) { M.names[h] = SHIP_NAMES[h]; });
