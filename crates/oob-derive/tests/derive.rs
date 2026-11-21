@@ -5822,3 +5822,305 @@ fn partial_protected_tanks_read_as_no_and_say_so() {
         &["dive-a: bad-value: pilot_armour:", "not yes or no"],
     );
 }
+
+// An oiler (decision 0206). The class `us-oiler-class` is of the type oiler;
+// its ships `oil1`, `oil2` and `oil3`. On the list's date, 1942-08-08:
+//
+// | Figure | Rows | Working | oil1 | oil2 | oil3 |
+// | --- | --- | --- | --- | --- | --- |
+// | kind | type oiler | auxiliary | auxiliary | auxiliary | auxiliary |
+// | cruise_speed_kn | class endurance_speed_kn 16.5 | | 16.5 | 16.5 | 16.5 |
+// | max_speed_kn | class 18 | | 18 | 18 | 18 |
+// | fuel_capacity_t | fuel_capacity_bbl x factor 0.1516 | class 15,000; oil2's own 14,850 | 2274 | 2251.26 | 2274 |
+// | endurance_nm | class 12,000 | | 12000 | 12000 | 12000 |
+// | cargo_capacity_t | cargo_oil_capacity_bbl x 0.1516 | oil1 101,638; oil2 103,233; oil3 none, the least of her sisters' | 15408.3208 | 15650.1228 | 15408.3208 |
+// | surface weapons | none by kind; oil1's main battery fit is not read | | 0 | 0 | 0 |
+// | toughness | displacement_light_lt 7,256 / 25 | | 290.24 | 290.24 | 290.24 |
+// | radar | none on file, assumed none | | 0 | 0 | 0 |
+// | anti_aircraft | oil1: 3 heavy x 1 + 8 light x 0.25 | others no fit | 5 | 0 | 0 |
+// | fuels_at_sea | type oiler | | 1 | 1 | 1 |
+
+fn oiler_base() -> Files {
+    let mut files = air_base();
+    append_lines(
+        &mut files,
+        "ship_classes.csv",
+        "1003,us-oiler-class,Oiler class,us,oiler\n",
+    );
+    append_lines(
+        &mut files,
+        "ships.csv",
+        "1004,oil1,Oil 1,us,us-oiler-class,\n\
+         1005,oil2,Oil 2,us,us-oiler-class,\n\
+         1006,oil3,Oil 3,us,us-oiler-class,\n",
+    );
+    append_lines(
+        &mut files,
+        "attributes.csv",
+        "displacement_light_lt,ship_class,integer,one\n\
+         fuel_oil_barrel_factor_lt,ship_class,decimal,one\n\
+         fuel_capacity_bbl,ship_class,integer,one\n\
+         fuel_capacity_bbl,ship,integer,one\n\
+         cargo_oil_capacity_bbl,ship_class,integer,one\n\
+         cargo_oil_capacity_bbl,ship,integer,one\n",
+    );
+    append_lines(
+        &mut files,
+        "ship_class_facts.csv",
+        &[
+            fact(101, "us-oiler-class", "max_speed_kn", "18"),
+            fact(102, "us-oiler-class", "endurance_speed_kn", "16.5"),
+            fact(103, "us-oiler-class", "endurance_nm", "12000"),
+            fact(104, "us-oiler-class", "displacement_light_lt", "7256"),
+            fact(105, "us-oiler-class", "fuel_oil_barrel_factor_lt", "0.1516"),
+            fact(106, "us-oiler-class", "fuel_capacity_bbl", "15000"),
+        ]
+        .map(|l| l + "\n")
+        .concat(),
+    );
+    append_lines(
+        &mut files,
+        "ship_facts.csv",
+        &[
+            fact(101, "oil1", "cargo_oil_capacity_bbl", "101638"),
+            fact(102, "oil2", "cargo_oil_capacity_bbl", "103233"),
+            fact(103, "oil2", "fuel_capacity_bbl", "14850"),
+        ]
+        .map(|l| l + "\n")
+        .concat(),
+    );
+    append_lines(
+        &mut files,
+        "fits.csv",
+        &[
+            ship_fit(101, "oil1", "heavy_aa", "weapon", "aa-h", "3"),
+            ship_fit(102, "oil1", "light_aa", "weapon", "aa-l", "8"),
+            ship_fit(103, "oil1", "main_battery", "weapon", "gun", "1"),
+        ]
+        .map(|l| l + "\n")
+        .concat(),
+    );
+    files
+}
+
+const OILERS: [&str; 3] = ["oil1", "oil2", "oil3"];
+
+const LEAST: &str = "[least_of_sisters]\nfacts = [\"cargo_oil_capacity_bbl\"]\nreason = \"The least the rows support\"\n";
+
+fn oiler_list(ships: &[&str], tables: &str) -> String {
+    each_ship_has_its_own_id();
+    format!("{}air_figures = true\n\n{tables}", list(ships, ships))
+}
+
+#[test]
+fn an_oiler_is_an_auxiliary_with_the_mark_her_fuel_and_cargo_in_barrels_and_no_guns() {
+    let outputs = ok_text(&oiler_list(&OILERS, LEAST), &air_rules(""), &oiler_base());
+    let header = outputs
+        .class_csv
+        .lines()
+        .find(|l| !l.starts_with('#'))
+        .expect("a header");
+    assert!(header.ends_with(",aircraft_capacity,anti_aircraft,fuels_at_sea"));
+    let rows: Vec<Vec<String>> = records(&outputs.class_csv)
+        .into_iter()
+        .map(|r| r[2..].to_vec())
+        .collect();
+    let row = |fuel: &str, cargo: &str, aa: &str| -> Vec<String> {
+        [
+            "auxiliary",
+            "16.5",
+            "18",
+            fuel,
+            "12000",
+            cargo,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "290.24",
+            "0",
+            "0",
+            aa,
+            "1",
+        ]
+        .map(str::to_string)
+        .to_vec()
+    };
+    assert_eq!(
+        rows,
+        vec![
+            row("2274", "15408.3208", "5"),
+            row("2251.26", "15650.1228", "0"),
+            row("2274", "15408.3208", "0"),
+        ]
+    );
+    // The fuel cites the barrels and the factor; the cargo of oil3 cites
+    // her sisters' rows and says it is the least of theirs.
+    let fuel = source_of(&outputs, "1000", "fuel_capacity_t");
+    assert_eq!(fuel[4], "ship_class_facts.csv:105 ship_class_facts.csv:106");
+    assert!(fuel[5].contains("15000 barrels x 0.1516"), "{fuel:?}");
+    let cargo = source_of(&outputs, "1002", "cargo_capacity_t");
+    assert_eq!(
+        cargo[4],
+        "ship_class_facts.csv:105 ship_facts.csv:101 ship_facts.csv:102"
+    );
+    assert!(
+        cargo[5].contains("the least of her sisters' rows, 101638"),
+        "{cargo:?}"
+    );
+    // No main battery by kind: oil1's fit is not read.
+    let guns = source_of(&outputs, "1000", "main_guns");
+    assert_eq!(guns[4], "");
+    assert!(guns[3].starts_with("0 by kind"), "{guns:?}");
+    let toughness = source_of(&outputs, "1000", "toughness");
+    assert_eq!(toughness[4], "ship_class_facts.csv:104");
+    assert!(comments(&outputs.class_csv).contains("No surface weapons by kind"));
+    assert!(comments(&outputs.class_csv).contains("The least of her sisters"));
+}
+
+#[test]
+fn without_the_list_s_rule_a_ship_with_no_cargo_row_is_missing() {
+    let problems = derive_text(&oiler_list(&OILERS, ""), &air_rules(""), &oiler_base())
+        .expect_err("oil3 has no cargo row");
+    assert_one(
+        &problems,
+        &[
+            "oil3",
+            "cargo_capacity_t",
+            "cargo_oil_capacity_bbl of class us-oiler-class: no rows",
+        ],
+    );
+}
+
+#[test]
+fn the_least_of_her_sisters_reads_no_row_her_sisters_cannot_read() {
+    // oil1's row disputed: only oil2's is read, so oil3 has 103,233.
+    let mut files = oiler_base();
+    replace_row(
+        &mut files,
+        "ship_facts.csv",
+        101,
+        fact_row(
+            101,
+            "oil1",
+            "cargo_oil_capacity_bbl",
+            "101638",
+            "",
+            "",
+            "medium",
+            "disputed",
+        ),
+    );
+    let outputs = ok_text(
+        &oiler_list(&["oil2", "oil3"], LEAST),
+        &air_rules(""),
+        &files,
+    );
+    let cargo = records(&outputs.class_csv)
+        .into_iter()
+        .map(|r| r[7].clone())
+        .collect::<Vec<_>>();
+    assert_eq!(cargo, vec!["15650.1228", "15650.1228"]);
+}
+
+#[test]
+fn a_list_with_no_oiler_has_no_column_of_the_mark() {
+    let outputs = ok_text(
+        &air_list(&["shp"], "air_figures = true\n", ""),
+        &air_rules(""),
+        &oiler_base(),
+    );
+    let header = outputs
+        .class_csv
+        .lines()
+        .find(|l| !l.starts_with('#'))
+        .expect("a header");
+    assert!(
+        header.ends_with(",aircraft_capacity,anti_aircraft"),
+        "{header}"
+    );
+}
+
+#[test]
+fn a_gun_of_another_kind_in_an_anti_aircraft_row_that_does_not_hold_is_no_problem() {
+    // A gun of kind `gun` in oil1's heavy_aa slot for 1941 only: the list's
+    // date is 1942-08-08, so the row is not read and its kind is not asked.
+    let mut files = oiler_base();
+    add_row(
+        &mut files,
+        "fits.csv",
+        fit_row(
+            104,
+            "ship",
+            "oil1",
+            "heavy_aa",
+            "weapon",
+            "odd-w",
+            "3",
+            ("1941", "1941"),
+            "a",
+            "preferred",
+        ),
+    );
+    let outputs = ok_text(&oiler_list(&["oil1", "oil2"], ""), &air_rules(""), &files);
+    assert_eq!(records(&outputs.class_csv)[0][18], "5");
+    // The same row holding on the date is still refused.
+    replace_row(
+        &mut files,
+        "fits.csv",
+        104,
+        fit_row(
+            104,
+            "ship",
+            "oil1",
+            "heavy_aa",
+            "weapon",
+            "odd-w",
+            "3",
+            ("1942-01-01", ""),
+            "a",
+            "preferred",
+        ),
+    );
+    let problems = derive_text(&oiler_list(&["oil1", "oil2"], ""), &air_rules(""), &files)
+        .expect_err("a gun of kind gun that holds");
+    assert_one(&problems, &["anti_aircraft", "odd-w", "has kind `gun`"]);
+}
+
+/// The two lists of the oilers (decision 0206) derive exactly their files.
+#[test]
+fn the_lists_of_the_oilers_derive_exactly_the_files_in_data_reference() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+    let read = |path: &str| std::fs::read_to_string(root.join(path)).expect(path);
+    let (facts, unread) = oob_check::read_dir(&root.join("data/oob"));
+    assert!(unread.is_empty());
+    for (list, experience) in [("coral_sea_oilers", true), ("five_days_oilers", false)] {
+        let outputs = derive(
+            &format!("{list}.toml"),
+            &read(&format!("data/derivation/{list}.toml")),
+            &read("data/derivation/rules.toml"),
+            &facts,
+        )
+        .unwrap_or_else(|p| panic!("{p:#?}"));
+        assert_eq!(
+            outputs.class_csv,
+            read(&format!("data/reference/ship_classes_{list}.csv"))
+        );
+        assert_eq!(
+            outputs.sources_csv,
+            read(&format!("data/reference/ship_classes_{list}.sources.csv"))
+        );
+        assert_eq!(
+            outputs.ships_csv,
+            read(&format!("data/reference/ship_classes_{list}.ships.csv"))
+        );
+        assert_eq!(outputs.aircraft_csv, None);
+        assert_eq!(
+            outputs.experience_csv,
+            experience.then(|| read(&format!("data/reference/ship_experience_{list}.ships.csv")))
+        );
+    }
+}
