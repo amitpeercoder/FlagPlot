@@ -105,3 +105,46 @@ Reads: a class's mark, room for cargo and fuel capacity; a ship's fuel and cargo
 ## The designer's word, Nov 21, 2026
 
 He held that fuelling at night was done when operations required it, and that ships did not lie stopped to fuel once submarines made that deadly, and asked for research before the rule was settled. The research bears him out on the night in full. On stopping, it found that ships fuelled under way throughout this war and before it, so the rule is slow steaming from the first day of every scenario.
+
+## Amended on the second review
+
+A reviewer who had not seen the rewritten plan read it against the engine's movement code, the staff and the research on Nov 21, 2026. Where this and the text above differ, this holds. The rules are folded into one statement before the hand calculation is written.
+
+**The order is its own, not an escort's (replaces rules 5 and 6 where they differ).**
+
+29. **A force under the order holds the giver's force in a field of its own.** It is not made an escort or a charge: those words bring the escort's place in a raid and its guns, which are not meant here. Only the escort's way of steering for a force and taking its route is reused.
+30. **It is refused where the forces are tied to others:** the giver is herself under the order, is an escort or has an escort; the force is the giver for another, is an escort or has an escort. So no chain of forces each following the next can form. Fuelling with escorts in company waits for a later decision.
+31. **The order also ends when the giver has no ship with the mark afloat in her force,** as when she is detached, joined to another force or sent to the yard. When it ends the force is at cruise with no route.
+
+**When in the pulse (replaces rules 7 to 9).**
+
+32. **Which forces fuel is settled when the ships move,** at the start of that step: the two forces are in one hex, the force is under the order, a ship of it lacks fuel and the giver holds cargo fuel.
+33. **Both then make no more than the fuelling speed for the whole pulse,** on the giver's route, whether or not the fuelling is broken off. The slow speed is the speed the force reports, so anything that reads a force's speed reads it.
+34. **The fuel passes at the end of that step,** when every fight of the pulse is known. It does not pass if a raid attacked a ship of either force in the pulse, or either force fought a surface action in it.
+
+**A force that has run dry (replaces rule 13).**
+
+35. **A force out of fuel is fuelled only in a pulse in which the giver lies still in its hex,** with no route or halted there. An oiler steaming through at any speed leaves a ship that cannot move behind. The first ship fuelled sets the force idle where it is, its route dropped, as in port.
+36. **The staff cannot rescue such a force,** since it places no oiler; that is the commander's until stage D.
+
+**The lines and the rate (replaces rules 10 to 12, 21 and 22).**
+
+37. **An oiler has two lines of 250 tons an hour each.** A destroyer takes one. Any other ship takes both, as the instructions give a large ship two hoses: 500 tons an hour, against the 465 Enterprise took on 8 June 1942 and the 400 of 1944. It is more than the Japanese cruisers of 1942 took, 200 to 310, and that is said.
+38. **Each ship is an hour alongside before her fuel passes,** for the approach and the rig. It is a figure of the game, sized from the days on record: a cruiser and two destroyers in three and a half hours, five ships in fifteen and a half. Without it two lines would fill ten destroyers in a pulse, which no day on record shows.
+39. **Ships are taken in one order across the force:** the smallest share of capacity aboard first, then by id. A destroyer starts on a line when one is free; another ship when both are. A ship whose hour and fuel do not fit in what is left of the pulse takes what fits and is first in the next.
+
+**State (replaces rule 16).**
+
+40. **The order is new state:** a field of a task force, hashed in its place and named, with the state's layout raised and the golden files remade. What is worked within a pulse, which pairs fuel and the hours used, is kept only for the pulse.
+
+**The staff (replaces rule 18 where it differs).**
+
+41. **"Short" is the doctrine's own measure.** For the carrier doctrine and the stand doctrine: a force that would be sent home for fuel today is sent to an oiler instead where the passage to her present place, as the command's picture has it, is less than the passage home; and a force with no home port is sent to her when a ship is below a quarter. While the order stands the staff gives the force no route, as it gives none while a force fuels in port.
+42. **The warning of rule 17 may change the staff's words in games on file.** The build plays every scenario and recorded game before and after and says which words moved; no game's events or hashes may.
+
+**Figures (replaces rules 20 and 23).**
+
+43. **8 knots is the American standard for the approach; the instructions allow 12 for the fast oilers.** For the Japanese side it is a placeholder: their record gives "slow speed" and, once, 14 knots.
+44. **An oiler's cargo of oil is settled in stage B,** by a rule across rows that disagree: a load of 12,000 tons in July 1942, and capacities of 10,317, 13,226 and about 15,900 tons. Stage A's oilers are placeholders.
+
+**Stage B also needs,** beyond what rule 26 names: a ship type the derivation can map to an auxiliary; an attribute for cargo oil; and the loader accepting a class file with no column for the mark.
