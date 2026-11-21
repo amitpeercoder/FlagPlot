@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 20, 2026. It is stage 0 of decis
 
 Summary: The game has one map, of the south-west Pacific, and the tool that makes it, the table that draws it and several other tools have that map's place on the earth written into them. The engine has not: it counts in hexes. This makes a map's place on the earth a thing each map says of itself, makes a second map for Midway that crosses the date line, lets an atoll too small for the sampling be land enough to land on, and has the table, the viewer and the tools read the map a game is played on.
 
-Standing: Built on Nov 21, 2026, to the plan as amended on review; waits for the architect's reading.
+Standing: Planned and amended on review on Nov 20, 2026; the designer confirmed on Nov 21, 2026 that the present map's chart is drawn true, 2 in 100 narrower east to west; built on Nov 21, 2026 to the plan as amended, and waits for the architect's reading.
 
 ## Why
 

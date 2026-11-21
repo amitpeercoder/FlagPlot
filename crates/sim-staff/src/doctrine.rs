@@ -1003,11 +1003,12 @@ fn new_run(
         let mut b = serving(intent, plan)
             .evidence(
                 format!(
-                    "{}{} holds {} and uses {} a day",
+                    "{}{} holds {} and uses {} a day{}",
                     params.destination,
                     as_of_note(planner.view, CommandRef::Base(params.destination)),
                     tons(stock_today),
-                    tons(use_today)
+                    tons(use_today),
+                    crate::projection::line_clause(planner.view, params.destination)
                 ),
                 today,
             )
@@ -1380,11 +1381,12 @@ fn idle_reason(
     let next = planner.next_needed(readings, from, &units, idle.pending_t);
     let mut builder = serving(params.intent, params.plan).evidence(
         format!(
-            "{}{} holds {} and uses {} a day",
+            "{}{} holds {} and uses {} a day{}",
             params.destination,
             as_of_note(planner.view, CommandRef::Base(params.destination)),
             tons(stock),
-            tons(used)
+            tons(used),
+            crate::projection::line_clause(planner.view, params.destination)
         ),
         today,
     );
@@ -1475,8 +1477,16 @@ pub(crate) fn shortfall(
     };
     let rate = readings.use_on(readings.today).unwrap_or(Fixed::ZERO) + own_use;
     let (available, _, _) = planner.source_available(pending_t);
-    let source_dry_day =
-        (!rate.is_zero()).then(|| readings.today + crate::units::floor_whole(available / rate));
+    let source_lines = crate::projection::own_lines_to(planner.view, params.source);
+    let source_dry_day = if source_lines.is_empty() {
+        (!rate.is_zero()).then(|| readings.today + crate::units::floor_whole(available / rate))
+    } else {
+        // With a line the forecast is worked day by day, and a day past the
+        // game's last is no day (decision 0196, 10): the source does not
+        // fall to its reserve in the game.
+        dry_day_with_lines(readings.today, available, rate, &source_lines)
+            .filter(|day| planner.view.game_days().is_none_or(|last| *day <= last))
+    };
     let displaced_by = units.map_or_else(Vec::new, |units| displacements(planner, ev, units));
     Shortfall {
         binds,
@@ -1484,6 +1494,38 @@ pub(crate) fn shortfall(
         source_dry_day,
         check_day: ev.check_day,
         displaced_by,
+    }
+}
+
+/// The day a source falls to its reserve when lines feed it (decision 0196,
+/// 10): from `today`, each day's stock is the last less `rate` plus what the
+/// lines give that day; the first day it goes below 0 is the dry day. After
+/// the lines' last day the closed form finishes it. `None` at no rate, or
+/// where the stock never runs out.
+pub(crate) fn dry_day_with_lines(
+    today: u32,
+    available: Fixed,
+    rate: Fixed,
+    lines: &[sim_core::state::SupplyLine],
+) -> Option<u32> {
+    if rate <= Fixed::ZERO {
+        return None;
+    }
+    let last = lines.iter().map(|l| l.last_day).max().unwrap_or(0);
+    let mut s = available;
+    let mut day = today;
+    loop {
+        for line in lines.iter().filter(|l| l.gives_on(day)) {
+            s += line.supply_t;
+        }
+        s -= rate;
+        if s < Fixed::ZERO {
+            return Some(day);
+        }
+        if day >= last {
+            return Some(day + 1 + crate::units::floor_whole(s / rate));
+        }
+        day += 1;
     }
 }
 
@@ -2026,5 +2068,83 @@ fn night_dispatch(
             });
             Ok((Some(words), order))
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::dry_day_with_lines;
+    use sim_core::fixed::Fixed;
+    use sim_core::ids::BaseId;
+    use sim_core::state::{Side, SupplyLine};
+
+    fn n(whole: i64) -> Fixed {
+        Fixed::from_int(whole)
+    }
+
+    fn line(supply: i64, first: u32, last: u32) -> SupplyLine {
+        SupplyLine {
+            side: Side::Allied,
+            base: BaseId::new(1),
+            supply_t: n(supply),
+            fuel_t: Fixed::ZERO,
+            first_day: first,
+            last_day: last,
+        }
+    }
+
+    /// Hand calculation: 100 t available, a rate of 20 a day, today 10.
+    /// With no line the source is dry on 10 + floor(100 / 20) = day 15.
+    /// A line of 30 on days 10 to 12 only: after day 10 s = 100 + 30 - 20 =
+    /// 110, after 11 120, after 12 130; then the closed form from day 13:
+    /// 12 + 1 + floor(130 / 20) = 19.
+    #[test]
+    fn the_dry_day_with_a_line_is_worked_day_by_day_then_closed() {
+        let none = 10 + crate::units::floor_whole(n(100) / n(20));
+        assert_eq!(none, 15);
+        // A line that ends: day 19.
+        assert_eq!(
+            dry_day_with_lines(10, n(100), n(20), &[line(30, 10, 12)]),
+            Some(19)
+        );
+        // A line that gives nothing is the closed form.
+        assert_eq!(
+            dry_day_with_lines(10, n(100), n(20), &[line(0, 1, 50)]),
+            Some(15)
+        );
+        // A line that ends before today is the closed form too.
+        assert_eq!(
+            dry_day_with_lines(10, n(100), n(20), &[line(30, 1, 5)]),
+            Some(15)
+        );
+        // A line of 30 to day 12 beside one that gives 5 on day 10 only:
+        // s after 10 = 100 + 35 - 20 = 115, 11 = 125, 12 = 135, then
+        // 12 + 1 + floor(135 / 20) = 19.
+        assert_eq!(
+            dry_day_with_lines(10, n(100), n(20), &[line(30, 10, 12), line(5, 10, 10)]),
+            Some(19)
+        );
+        // No rate, no dry day.
+        assert_eq!(
+            dry_day_with_lines(10, n(100), n(0), &[line(30, 10, 12)]),
+            None
+        );
+    }
+
+    /// 100 t, rate 20, a line of 20 a day for the rest of the game (to day
+    /// 40) holds the stock at 100 until it ends: after day 40 s = 100, then
+    /// 40 + 1 + floor(100 / 20) = 46. With 30 a day the stock grows and the
+    /// same closed form after day 40 gives a day beyond the line's end.
+    #[test]
+    fn a_line_that_keeps_up_gives_a_dry_day_only_after_it_ends() {
+        assert_eq!(
+            dry_day_with_lines(10, n(100), n(20), &[line(20, 1, 40)]),
+            Some(46)
+        );
+        // s after day 40 = 100 + 31 x 10 = 410: 41 + floor(410/20) = 41 + 20.
+        assert_eq!(
+            dry_day_with_lines(10, n(100), n(20), &[line(30, 1, 40)]),
+            Some(61)
+        );
     }
 }

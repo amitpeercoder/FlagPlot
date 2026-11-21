@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 20, 2026, on the designer's word
 
 Summary: A base's supply and fuel come only from what ships unload there. Nothing refills a rear base, so a long game drains Rabaul and Espiritu Santo to nothing. This lets a scenario give a base a supply line: so many tons of supply and of fuel a day, from a day to a day, added to its stock at night while the base is its side's. It is the simple form. The form the design note asks for, cargo that arrives in real ships that can be attacked, is begun by decision 0195, which lets the ships come; nothing yet lets them leave, and that waits for a record of its own.
 
-Standing: Planned on Nov 20, 2026 and amended on review; not yet built.
+Standing: Planned on Nov 20, 2026 and amended on review; built on Nov 21, 2026 (scenario 112) and confirmed by the architect's rulings below.
 
 ## Why
 
@@ -55,3 +55,48 @@ A reviewer read the plan against the design note, the rules of a day and the cod
 ### A question for the designer
 
 His design note says the slice's supply lines arrive "in real ships that can be attacked" (`docs/design/economy.md`, answer 5). The same note says arrivals "should stay a rate fed from outside the theatre", and that a route the enemy cannot reach is a pool of tonnage and not named ships (answer 4). This rule is the second: a rate, for a base whose own line runs away from the fighting. Nothing in the game stops a scenario giving Lunga a line, which would undo the war on shipping. So: **a line is given only to a rear base, and each scenario's record says for each line why the enemy could not have cut it.** Where he could, the cargo comes in ships that enter by date (decision 0195). Is that acceptable, or should a line be refused by the game anywhere but at a base the scenario marks as a rear base? The architect proposes the first: a rule of scenarios, written in `docs/engineering/roles-and-tests.md`, and no new marking.
+
+## As built
+
+Built on Nov 21, 2026, on the branch `stock-from-off-the-map`, on decision 0195's build. No figure changed. Every scenario under `data/scenarios` (163 files, the frozen copies apart) was played before and after with `sim-cli run --events` and `sim-cli hash`: no event and no daily hash moved. No existing scenario is given a line.
+
+### What was built
+
+- **The state** (`crates/sim-core/src/state.rs`). `TruthState::supply_lines`, hashed last and only where not empty, each field named in `hash::name_every_field`. A `SupplyLine` is the side, the base, `supply_t`, `fuel_t`, `first_day` and `last_day`. The state's layout (`flagplot-state-v51`) is not raised and no golden file was remade, since a game with no line hashes as before.
+- **The night step** (`crates/sim-core/src/upkeep.rs`, `resolve.rs`). `SupplyLines`, its own step right after aircraft replacements and before aircraft upkeep and the men's supply, with its moment for a watcher of the day. A line whose days hold the day and whose base is held by the line's side adds its tons to the base's supply and fuel; otherwise nothing, and nothing is kept. It draws no random number.
+- **The event** (`events.rs`, `side_events.rs`). `StockReceived { base, side, supply_t, fuel_t }`, one for each line that gives, with no cause, seen whole by the line's side and by nobody else.
+- **The invariant** (`invariants.rs`). `SupplyLineUnsound`: a line names a base the state has, gives tons that are not negative and more than 0 of supply or fuel, and has a first day of at least 1 and a last day not before the first. The game's last day is checked by the loader, not by the invariant.
+- **The view and the halves** (`view.rs`, `view/seat_view.rs`, `world_picture.rs`, `world_picture/half.rs`). A side's view gives it its own lines; from a seat at a base, that base's only, as with replacement streams. A picture holds the lines and a side's half its own.
+- **The loader** (`crates/sim-data/src/scenario.rs`). The table `[[supply_line]]` with `base`, `supply_t`, `fuel_t`, `first_day`, `last_day` and `side`. Refused: an unknown base, tons below 0, a line that gives nothing, a first day below 1, a first or last day past the game's last, a last day before the first. Several lines to a base are allowed and are kept in one order, whatever the file's.
+- **The staff** (`crates/sim-staff`, doctrine `supply-49`). The projection of a hex's supply adds a line's supply tons on each of its days, as a landing before that day's use. The day a source falls to its reserve is worked day by day where the side has a line to the source. The reason's "holds ... and uses ... a day" sentences gain the line's clause.
+- **The agent** (interface version 37). The briefing's `arrivals.supply_lines` (`base`, `supply_t`, `fuel_t`, `first_day`, `last_day`), and a "Supply line:" line in the text briefing.
+- **The umpire's readers** (`sim-cli`: the batch record and the export's events) and **the trial** (`sim-trial/src/enemy.rs`).
+- **Scenario 112** (`data/scenarios/stock-from-off-the-map/112_stock_from_off_the_map.toml`) and its tests (`tests/scenario_112_stock_from_off_the_map.rs`): 24 pass and 1 is left ignored, below.
+- **Versions.** The rules label stays 25: no existing game plays differently. The state's layout stays v51. The saved game's version stays 23: its format did not change. The doctrine version is `supply-49` (from `supply-48`) and the agent interface 37 (from 36, the briefing gained a field); the recorded games were remade for these two labels alone.
+
+### Readings taken
+
+a. **The event also names the line's side,** and there is one for each line that gives, not one for each base.
+b. **From a seat at a base** a view gives only that base's lines, as it gives only that base's replacement streams.
+c. **The step is in every night's order,** so a watcher of the day sees one more moment each night, even in a game with no line. No output and no hash moved.
+d. **A line's side may differ from its base's at the start,** and the loader does not refuse it. Such a line gives on a night its base is that side's.
+e. **The staff projects supply only,** so a line's fuel is counted in no forecast and is only named in a reason.
+f. **The dry day with a line** counts the day's use and the day's tons from the staff's today (the view's day plus 1), and a day past the game's last is none ("no day on which R falls to its reserve"). Without a line the old formula is kept, so nothing moves.
+g. **The reason's clause is added** to the destination's "holds ... and uses ... a day" sentences. No reason sentence states the source's stock, so none was added there.
+h. **The briefing lists the lines whose last day is not before today;** the text briefing gains a line. No "stock received yesterday" part was added.
+i. **In a trial the enemy's half holds no line:** what the side does not know is coming is not made up.
+j. **A new invariant,** `SupplyLineUnsound`.
+k. **Statement 8a** of scenario 112 ("with the line taken out it gives day 5 (100 / 20)") does not hold as written. The code gives day 7 on the view after day 1 (today is 2, plus 100 / 20 whole days); it cannot give 5 on any view, since today is at least 1. The test is ignored, and a passing test beside it asserts 7. It is owed to the architect.
+
+### Not done
+
+Cargo that comes in ships the enemy can sink, and that leaves, is not built (this record's own scope; nothing leaves the map, decision 0195). No existing scenario is given a line. No figure is researched: every line is a placeholder.
+
+## The architect's rulings
+
+Made on Nov 21, 2026 on reading the build: the step in the night, the event and who sees it, the hash, the loader's refusals and the staff's forecast.
+
+1. **Statement 8a was wrong and is corrected.** "Day 5" counted from a day 0 that no view has. The staff counts from its today: with 100 t and 20 t a day and no line it gives today and five days more, day 7 on the view after day 1. The hand calculation says so now, and the test that was set aside for the old figure is removed; the test of day 7 stands.
+2. **The ten readings of "As built" are confirmed.** Two are worth saying again. A line's fuel is in no forecast, since the staff forecasts supply alone: a base on a fuel line can still be reported short of fuel by nothing, and that is a gap of the staff's, not of this rule. And a line gives only while its base is its side's: a base taken stops receiving and the taker gets nothing from it, with no event; the side that lost it learns of it by losing the base.
+3. **No briefing part for stock received yesterday.** The line is told under what is due, and the stock is in the base's figures. If a long game shows a player surprised by it, it is added then.
+4. **The versions are as built:** doctrine `supply-49`, agent interface 37, the rules label and the state's layout unchanged, since no existing game has a line.

@@ -334,7 +334,11 @@ use sim_core::view::SideView;
 /// "{force} enters on day {day}", and a force or land unit held apart counts
 /// as coming where a take counts what it may use and where more is coming.
 /// With nothing held apart its orders and reasons are those `supply-47` gave.
-pub const DOCTRINE_VERSION: &str = "supply-48";
+/// `supply-49` adds decision 0196: the staff counts the side's supply lines in
+/// its projections of a base's stock and in the day a source falls to its
+/// reserve, and names them in its reasons. With no line its orders and
+/// reasons are those `supply-48` gave.
+pub const DOCTRINE_VERSION: &str = "supply-49";
 
 /// The staff: the doctrine for keeping a base supplied (stage 1) and, after
 /// it, the air doctrine for holding a place and covering a base from the air

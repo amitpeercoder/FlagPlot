@@ -1214,6 +1214,18 @@ pub(super) fn describe(
                     },
                 ),
         ),
+        EventKind::StockReceived {
+            base,
+            side,
+            supply_t,
+            fuel_t,
+        } => (
+            "stock_received",
+            d.id("base", *base)
+                .text("side", names::side(*side))
+                .num("supply_t", *supply_t)
+                .num("fuel_t", *fuel_t),
+        ),
         EventKind::AirfieldMended {
             unit,
             base,

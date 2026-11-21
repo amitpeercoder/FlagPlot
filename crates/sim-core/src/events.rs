@@ -2065,6 +2065,18 @@ pub enum EventKind {
         day: u32,
         wait: crate::entering::EntryWait,
     },
+    /// A supply line gave its base its tons of supply and fuel on a night
+    /// of its days, the base being the line's side's (decision 0196, 2 and
+    /// 3): one for each line that gave. `side` is the line's side, which
+    /// holds the base. It cites no cause: nothing in the game led to it
+    /// (rule 11). Its own side's, whole; the enemy is told nothing. Added at
+    /// the end.
+    StockReceived {
+        base: BaseId,
+        side: Side,
+        supply_t: Fixed,
+        fuel_t: Fixed,
+    },
 }
 
 impl EventKind {
@@ -2587,6 +2599,7 @@ impl EventKind {
             | EventKind::EntryWaiting { unit, base, .. } => {
                 vec![*unit, EntityRef::Base(*base)]
             }
+            EventKind::StockReceived { base, .. } => vec![EntityRef::Base(*base)],
         }
     }
 }
@@ -4117,6 +4130,16 @@ impl fmt::Display for EventKind {
                     crate::entering::EntryWait::NotTheSidesBase => "the base is not its side's",
                     crate::entering::EntryWait::TakesNoAircraft => "the base takes no aircraft",
                 }
+            ),
+            EventKind::StockReceived {
+                base,
+                side,
+                supply_t,
+                fuel_t,
+            } => write!(
+                f,
+                "{base} of the {} side received {supply_t} t of supply and {fuel_t} t of fuel by its supply line",
+                side.name()
             ),
             EventKind::MenSurrenderedAshore { side, hex, men } => write!(
                 f,

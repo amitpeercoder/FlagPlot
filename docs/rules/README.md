@@ -38,6 +38,7 @@ Chapter 1 owns the sequence. This table is its summary. Each phase names the cha
 | 9 | Night pulse | Aircraft repair | Chapter 5, Repair |
 | 10 | Night pulse | Aircraft arrivals (one due at a field that takes no aircraft waits) | Chapter 5, Aircraft that arrive on a day |
 | 11 | Night pulse | Replacements, from day 2 | Chapter 5, Replacements |
+| 11a | Night pulse | Supply lines: each line whose days hold the day, and whose base is its side's, adds its tons of supply and fuel to the base's stock, before the aircraft and the men are paid for | Chapter 2, Stock from off the map |
 | 12 | Night pulse | Daily supply for aircraft | Chapter 5, Daily supply |
 | 13 | Night pulse | Men's supply: the men ashore are fed from every base of their side in the hex, the unfed are lost in part | Chapter 7, The men's supply |
 | 14 | Night pulse | Stand-down and return of tired air groups | Chapter 5, Stand-down and return |

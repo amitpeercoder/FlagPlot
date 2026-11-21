@@ -108,6 +108,18 @@
 //! group that receives anything, with no cause (nothing orders it). No
 //! random number.
 //!
+//! # Supply lines (0196)
+//!
+//! [`World::receive_supply_lines`] runs in the night pulse, a step of its
+//! own after the replacements and before the supply upkeep, so that a
+//! night's aircraft and men are paid for from that night's tons (rule 8),
+//! from day 1 on. For each of the scenario's lines, in the order the state
+//! keeps them, whose days hold the day and whose base is held by the line's
+//! side: its tons of supply and of fuel are added to the base's stock and
+//! `StockReceived` is recorded, with no cause (rule 11). A line whose base
+//! is not its side's that night gives nothing, and nothing is kept for
+//! later. No random number.
+//!
 //! # Repair
 //!
 //! [`World::repair_aircraft`] runs first in the night pulse, the start of the
@@ -1221,6 +1233,37 @@ impl World {
                     None,
                 );
             }
+        }
+    }
+
+    /// The supply line step (decision 0196, rules 2, 3, 7, 8 and 11). See
+    /// the module comment.
+    pub(crate) fn receive_supply_lines(&mut self, day: u32, pulse: Pulse) {
+        let lines = self.truth.supply_lines.clone();
+        for line in lines {
+            if !line.gives_on(day) {
+                continue;
+            }
+            let Some(base) = self.truth.bases.get_mut(&line.base) else {
+                continue;
+            };
+            if base.side != line.side {
+                continue;
+            }
+            base.supply_t += line.supply_t;
+            base.fuel_t += line.fuel_t;
+            self.events.record(
+                day,
+                Some(pulse),
+                EventKind::StockReceived {
+                    base: line.base,
+                    side: line.side,
+                    supply_t: line.supply_t,
+                    fuel_t: line.fuel_t,
+                },
+                Vec::new(),
+                None,
+            );
         }
     }
 }
