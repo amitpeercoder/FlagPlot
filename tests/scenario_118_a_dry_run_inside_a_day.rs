@@ -47,8 +47,14 @@
 //!    words also say that what is ashore is a day behind.
 //! 6. **Described.** A trial of order 1 described at 0600 gives the first
 //!    day as day 2 and the same `inside_day`. It does not give day 1.
-//! 7. **At later dates.** A trial of order 1 at later dates, asked at
-//!    0600, has day 2 as its first date.
+//! 7. **At later dates.** Order 1 is in force by 0600, and an order in
+//!    force has no later date to try (decision 0181), so a trial of it at
+//!    later dates is refused for that reason, at 0600 as at dusk. A second
+//!    order stated at 0600, "deny the waters within 1 hex of (2,2)", is
+//!    not yet in force: a trial of it at later dates, asked at 0600, has
+//!    day 2 as its first date. (Corrected by the architect on Nov 21,
+//!    2026: as first written it tried order 1 at later dates, which an
+//!    order in force cannot be.)
 //!
 //! # Statements: asked at 1200
 //!
@@ -417,21 +423,6 @@ fn statement_6_described() {
     assert_eq!(a["asked"]["inside_day"], inside(1, "0600"));
     assert_eq!(a["first_day"], 2);
     assert_ne!(a["first_day"], 1);
-    checked(&a);
-}
-
-#[test]
-#[ignore = "cannot arise as set: order 1, stated at the dusk before day 1, is taken in at the start of day 1 and is in force at 0600, and an order in force has no later date (decision 0181, amended 5), so the window is refused; statement_7_at_later_dates_as_built tries an order queued at 0600"]
-fn statement_7_at_later_dates() {
-    let mut s = at_0600();
-    let a = ask(
-        &mut s,
-        "trial",
-        json!({"intent": 1, "size": "small", "dates": "chosen"}),
-    );
-    assert_eq!(a["kind"], "window");
-    assert_eq!(a["asked"]["inside_day"], inside(1, "0600"));
-    assert_eq!(a["dates"][0]["day"], 2, "{a}");
     checked(&a);
 }
 

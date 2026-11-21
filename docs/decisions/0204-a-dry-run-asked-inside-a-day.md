@@ -113,3 +113,16 @@ Rules 1 to 13 are built on Nov 21, 2026. Rule 14, stage 2, is not.
 - *Statement 13's "at both"* is read as in the game and in the trial: a contact reported in the night just resolved is 0 pulses old in the game's list at 0600 and is read as 0 hours by the trial. At 1200 the same contact is a pulse old, the morning having passed with no sighting.
 - Every other statement and property holds as written. The property "a state never built from before" is tested on the 39 days of `stage-3-proof/07a_slice.toml`, with orders inside a day and the trial's figures added, at 0600 and 1200 of day 18, when Allied men are ashore at Lunga and the hits of the night's bombardment by Japanese task force 6 wait for that day's fight ashore; the trial is answered at both.
 
+## The architect's rulings
+
+Read on Nov 21, 2026: the session's changes in full, the answer's words, and the build's account of what moved.
+
+1. **The build is what the plan asked for, and small.** A trial is begun on the copy a preview already uses; the runner needed no change, since on that copy the day counter is the open day and the first day played comes out as the day after.
+2. **Statement 7 is corrected, not the code.** An order in force has no later date to try, and order 1 is in force by 0600. The statement now says that it is refused for that reason, and tries at later dates a second order stated at 0600. The test the build wrote is of that. The correction is dated in the test file.
+3. **The property that the game is as it was** is tested with a trial and a trial beside another, where the build first tried a trial at later dates and met the same refusal. The property never named a form of trial; it holds.
+4. **Scenario 97's statement that a trial is refused while a day is open is superseded by this decision.** Its test is set aside with that reason and its doc comment carries a dated note. The plan said no test rested on the refusal's words; one did, and the review missed it.
+5. **The interface's version is raised** although one added field alone would not raise it, because a refusal an agent could meet is withdrawn.
+6. **A trial asked earlier in the same day is listed as "asked at an earlier hour",** under the same standing as one asked on an earlier evening. One standing serves both: in either case the state has moved on since.
+7. **Statements 3 and 8 are tested by building the trial's worlds from the copy's view** with the trial's own routines, since an answer does not show its worlds. Statement 2, the first day, is what shows that the session uses the copy. That is accepted.
+8. **Not seen by the build:** the paper at 1200, the paper of a trial at later dates asked inside a day, and the paper at dusk after the change. The words under test are the answer's; the table's are checked by its screen checks and by one look at 0600.
+

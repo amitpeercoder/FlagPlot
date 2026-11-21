@@ -159,6 +159,9 @@
 //!   - while a day is open, after the night pulse of day 1 with the
 //!     clock stopped (in a copy of the scenario with orders inside a
 //!     day on);
+//!     (Superseded on Nov 21, 2026 by decision 0204: a trial asked
+//!     while a day is open is answered, scenario 118. Noted by the
+//!     architect; the test of this line is set aside.)
 //!   - after the last day, the game being over;
 //!   - intent 1 once its withdrawal is queued;
 //!   - with both `intent` and `preview`, and with neither;
