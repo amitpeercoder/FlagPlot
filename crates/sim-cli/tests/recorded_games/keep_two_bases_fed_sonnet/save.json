@@ -109,99 +109,99 @@
     },
     {
       "file": "data/scenarios/../reference/surface_combat.toml",
-      "hash": "9a7e47460bcaff50"
+      "hash": "751b5e7548452496"
     },
     {
       "file": "data/scenarios/../reference/ground.toml",
       "hash": "3b3353e3ccc0e0d7"
     }
   ],
-  "doctrine_version": "supply-50",
+  "doctrine_version": "supply-51",
   "format": "flagplot-saved-game",
   "hashes": [
     {
       "day": 1,
-      "hash": "5025da95e951d496"
+      "hash": "435e802a9e1fc0f3"
     },
     {
       "day": 2,
-      "hash": "d5ff0d3d185fe573"
+      "hash": "1dc31c652649653a"
     },
     {
       "day": 3,
-      "hash": "6eaaf00307e2467b"
+      "hash": "2644d929e8fe18b8"
     },
     {
       "day": 4,
-      "hash": "66f201f8b8e02821"
+      "hash": "c718bfdca4056d12"
     },
     {
       "day": 5,
-      "hash": "844a437d3aadad7b"
+      "hash": "e2c7c4f4bce53388"
     },
     {
       "day": 6,
-      "hash": "7d046578d0ecb585"
+      "hash": "74895eeca806fd6e"
     },
     {
       "day": 7,
-      "hash": "237a71cc184dea6f"
+      "hash": "2bbfbed8d7ddcb88"
     },
     {
       "day": 8,
-      "hash": "5d96e89b017f17b1"
+      "hash": "476846d80f65eb12"
     },
     {
       "day": 9,
-      "hash": "95aec8e37173a43b"
+      "hash": "5c00cea1fd76f864"
     },
     {
       "day": 10,
-      "hash": "5f9dc35ff2d8618b"
+      "hash": "438d2cbc9cde1f08"
     },
     {
       "day": 11,
-      "hash": "66c7600a63f75add"
+      "hash": "7d2eed4105bcacf6"
     },
     {
       "day": 12,
-      "hash": "89fe998044db899f"
+      "hash": "9b658127d46a271c"
     },
     {
       "day": 13,
-      "hash": "ad5991165c9cfb61"
+      "hash": "fd06739f217ea522"
     },
     {
       "day": 14,
-      "hash": "03ae882dc0059a5f"
+      "hash": "71fbda312177a26c"
     },
     {
       "day": 15,
-      "hash": "797433dc7cc65405"
+      "hash": "a163bc1b3bd64e42"
     },
     {
       "day": 16,
-      "hash": "faea6220a54f8f16"
+      "hash": "b54e19d29a618e39"
     },
     {
       "day": 17,
-      "hash": "1c66baff663c7dd5"
+      "hash": "832020a2d7b2b674"
     },
     {
       "day": 18,
-      "hash": "1a95c5041621ace6"
+      "hash": "e73189b8791ee469"
     },
     {
       "day": 19,
-      "hash": "7c3a9f933541aec0"
+      "hash": "da9e6100dc1ab2ab"
     },
     {
       "day": 20,
-      "hash": "cf17cb5b68da9caa"
+      "hash": "15350a423e0e6b45"
     }
   ],
   "orders": [],
-  "rules_version": 25,
+  "rules_version": 26,
   "scenario": {
     "file": "data/scenarios/43_keep_two_bases_fed.toml",
     "hash": "0a6c6a34dbb4fcd2"
@@ -2123,6 +2123,6 @@
       "side": "allied"
     }
   ],
-  "state_version": "flagplot-state-v51",
+  "state_version": "flagplot-state-v52",
   "version": 23
 }

@@ -2,20 +2,20 @@ Placeholder scenario 85: A night's load spread over its ships
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash ebb9aa1ded2120ae  18 events
-day   2  hash c373ea837ce90091  7 events
-day   3  hash 4fe07446a21d75e0  7 events
-day   4  hash f1d7280040edb0bd  6 events
-day   5  hash cf549586c9ac7a6a  15 events
-day   6  hash e0b74e36d271ac0c  28 events
-day   7  hash d494e60e217a8470  6 events
-day   8  hash 1ffb6c231eb82209  6 events
-day   9  hash d98ae36c6b5058ab  6 events
-day  10  hash c3381aa09895765e  6 events
-day  11  hash c15292ea65f86ec2  6 events
-day  12  hash 3beff56d8befc725  6 events
-day  13  hash 2ad5439b71018e71  6 events
-day  14  hash 7026ed4b153bb72a  6 events
+day   1  hash 140739bebc4b5755  18 events
+day   2  hash c3ade51f92f0d2fc  7 events
+day   3  hash a6ef974190328857  7 events
+day   4  hash ca1cbb5f84893880  6 events
+day   5  hash 0d12cdc3f306badf  15 events
+day   6  hash 454aa5fd1da18635  28 events
+day   7  hash 4fc7a34dc1c18894  7 events
+day   8  hash 6d2cccd1514a01d2  7 events
+day   9  hash ed529624abc3f301  7 events
+day  10  hash f3158e653894fdf3  7 events
+day  11  hash 5485fd3d86dee9e2  7 events
+day  12  hash c4917e6858ceec6a  7 events
+day  13  hash 92e5a4e2349e89cf  7 events
+day  14  hash 52a39d879e6d3267  7 events
 
 #1 D1 -         Allied the commander's command taken: set intent:1 to keep base:2 supplied at 5 days
 #2 D1 -         Allied plan:1 drafted for intent:1  <- #1
@@ -99,53 +99,61 @@ day  14  hash 7026ed4b153bb72a  6 events
 #80 D6 -         base:2 at the end of the day: 160 t of supply, 0 aircraft ready: not open
 #81 D6 -         base:3 at the end of the day: 0 t of supply, 0 aircraft ready: not open
 #82 D7 -         Allied staff's reason for giving no order [serves intent 1: keep base:2 (Placeholder garrison B) at 5 days of supply, no interval set (the staff takes 15 days); plan 1; decided at the level of the area]: Reading today at base:2: 160 t over 10 t a day = 16 days, against a floor of 5 days (50 t). A run ordered today would be due on day 8; the reading of day 9 is projected at 140 t against 5 days x 10 t = 50 t: not below the floor, so no run is needed. The next run waits for the reading of day 19 to fall below 5 days (50 t); it is expected to be ordered on day 17, due on day 18.
-#83 D7 night     base:2 spent 10 t of supply on 2000 men ashore for the day, 150 t left
-#84 D7 night     Allied men ashore at (4,0): 2000 of 2000 fed from base:2, 0 unfed  <- #83
-#85 D7 -         base:1 at the end of the day: 880 t of supply, 0 aircraft ready: not open
-#86 D7 -         base:2 at the end of the day: 150 t of supply, 0 aircraft ready: not open
-#87 D7 -         base:3 at the end of the day: 0 t of supply, 0 aircraft ready: not open
-#88 D8 -         Allied staff's reason for giving no order [serves intent 1: keep base:2 (Placeholder garrison B) at 5 days of supply, no interval set (the staff takes 15 days); plan 1; decided at the level of the area]: Reading today at base:2: 150 t over 10 t a day = 15 days, against a floor of 5 days (50 t). A run ordered today would be due on day 9; the reading of day 10 is projected at 130 t against 5 days x 10 t = 50 t: not below the floor, so no run is needed. The next run waits for the reading of day 19 to fall below 5 days (50 t); it is expected to be ordered on day 17, due on day 18.
-#89 D8 night     base:2 spent 10 t of supply on 2000 men ashore for the day, 140 t left
-#90 D8 night     Allied men ashore at (4,0): 2000 of 2000 fed from base:2, 0 unfed  <- #89
-#91 D8 -         base:1 at the end of the day: 880 t of supply, 0 aircraft ready: not open
-#92 D8 -         base:2 at the end of the day: 140 t of supply, 0 aircraft ready: not open
-#93 D8 -         base:3 at the end of the day: 0 t of supply, 0 aircraft ready: not open
-#94 D9 -         Allied staff's reason for giving no order [serves intent 1: keep base:2 (Placeholder garrison B) at 5 days of supply, no interval set (the staff takes 15 days); plan 1; decided at the level of the area]: Reading today at base:2: 140 t over 10 t a day = 14 days, against a floor of 5 days (50 t). A run ordered today would be due on day 10; the reading of day 11 is projected at 120 t against 5 days x 10 t = 50 t: not below the floor, so no run is needed. The next run waits for the reading of day 19 to fall below 5 days (50 t); it is expected to be ordered on day 17, due on day 18.
-#95 D9 night     base:2 spent 10 t of supply on 2000 men ashore for the day, 130 t left
-#96 D9 night     Allied men ashore at (4,0): 2000 of 2000 fed from base:2, 0 unfed  <- #95
-#97 D9 -         base:1 at the end of the day: 880 t of supply, 0 aircraft ready: not open
-#98 D9 -         base:2 at the end of the day: 130 t of supply, 0 aircraft ready: not open
-#99 D9 -         base:3 at the end of the day: 0 t of supply, 0 aircraft ready: not open
-#100 D10 -         Allied staff's reason for giving no order [serves intent 1: keep base:2 (Placeholder garrison B) at 5 days of supply, no interval set (the staff takes 15 days); plan 1; decided at the level of the area]: Reading today at base:2: 130 t over 10 t a day = 13 days, against a floor of 5 days (50 t). A run ordered today would be due on day 11; the reading of day 12 is projected at 110 t against 5 days x 10 t = 50 t: not below the floor, so no run is needed. The next run waits for the reading of day 19 to fall below 5 days (50 t); it is expected to be ordered on day 17, due on day 18.
-#101 D10 night     base:2 spent 10 t of supply on 2000 men ashore for the day, 120 t left
-#102 D10 night     Allied men ashore at (4,0): 2000 of 2000 fed from base:2, 0 unfed  <- #101
-#103 D10 -         base:1 at the end of the day: 880 t of supply, 0 aircraft ready: not open
-#104 D10 -         base:2 at the end of the day: 120 t of supply, 0 aircraft ready: not open
-#105 D10 -         base:3 at the end of the day: 0 t of supply, 0 aircraft ready: not open
-#106 D11 -         Allied staff's reason for giving no order [serves intent 1: keep base:2 (Placeholder garrison B) at 5 days of supply, no interval set (the staff takes 15 days); plan 1; decided at the level of the area]: Reading today at base:2: 120 t over 10 t a day = 12 days, against a floor of 5 days (50 t). A run ordered today would be due on day 12; the reading of day 13 is projected at 100 t against 5 days x 10 t = 50 t: not below the floor, so no run is needed. The next run waits for the reading of day 19 to fall below 5 days (50 t); it is expected to be ordered on day 17, due on day 18.
-#107 D11 night     base:2 spent 10 t of supply on 2000 men ashore for the day, 110 t left
-#108 D11 night     Allied men ashore at (4,0): 2000 of 2000 fed from base:2, 0 unfed  <- #107
-#109 D11 -         base:1 at the end of the day: 880 t of supply, 0 aircraft ready: not open
-#110 D11 -         base:2 at the end of the day: 110 t of supply, 0 aircraft ready: not open
-#111 D11 -         base:3 at the end of the day: 0 t of supply, 0 aircraft ready: not open
-#112 D12 -         Allied staff's reason for giving no order [serves intent 1: keep base:2 (Placeholder garrison B) at 5 days of supply, no interval set (the staff takes 15 days); plan 1; decided at the level of the area]: Reading today at base:2: 110 t over 10 t a day = 11 days, against a floor of 5 days (50 t). A run ordered today would be due on day 13; the reading of day 14 is projected at 90 t against 5 days x 10 t = 50 t: not below the floor, so no run is needed. The next run waits for the reading of day 19 to fall below 5 days (50 t); it is expected to be ordered on day 17, due on day 18.
-#113 D12 night     base:2 spent 10 t of supply on 2000 men ashore for the day, 100 t left
-#114 D12 night     Allied men ashore at (4,0): 2000 of 2000 fed from base:2, 0 unfed  <- #113
-#115 D12 -         base:1 at the end of the day: 880 t of supply, 0 aircraft ready: not open
-#116 D12 -         base:2 at the end of the day: 100 t of supply, 0 aircraft ready: not open
-#117 D12 -         base:3 at the end of the day: 0 t of supply, 0 aircraft ready: not open
-#118 D13 -         Allied staff's reason for giving no order [serves intent 1: keep base:2 (Placeholder garrison B) at 5 days of supply, no interval set (the staff takes 15 days); plan 1; decided at the level of the area]: Reading today at base:2: 100 t over 10 t a day = 10 days, against a floor of 5 days (50 t). A run ordered today would be due on day 14; the reading of day 15 is projected at 80 t against 5 days x 10 t = 50 t: not below the floor, so no run is needed. The next run waits for the reading of day 19 to fall below 5 days (50 t); it is expected to be ordered on day 17, due on day 18.
-#119 D13 night     base:2 spent 10 t of supply on 2000 men ashore for the day, 90 t left
-#120 D13 night     Allied men ashore at (4,0): 2000 of 2000 fed from base:2, 0 unfed  <- #119
-#121 D13 -         base:1 at the end of the day: 880 t of supply, 0 aircraft ready: not open
-#122 D13 -         base:2 at the end of the day: 90 t of supply, 0 aircraft ready: not open
-#123 D13 -         base:3 at the end of the day: 0 t of supply, 0 aircraft ready: not open
-#124 D14 -         Allied staff's reason for giving no order [serves intent 1: keep base:2 (Placeholder garrison B) at 5 days of supply, no interval set (the staff takes 15 days); plan 1; decided at the level of the area]: Reading today at base:2: 90 t over 10 t a day = 9 days, against a floor of 5 days (50 t). A run ordered today would be due on day 15; the reading of day 16 is projected at 70 t against 5 days x 10 t = 50 t: not below the floor, so no run is needed. The next run waits for the reading of day 19 to fall below 5 days (50 t); it is expected to be ordered on day 17, due on day 18.
-#125 D14 night     base:2 spent 10 t of supply on 2000 men ashore for the day, 80 t left
-#126 D14 night     Allied men ashore at (4,0): 2000 of 2000 fed from base:2, 0 unfed  <- #125
-#127 D14 -         base:1 at the end of the day: 880 t of supply, 0 aircraft ready: not open
-#128 D14 -         base:2 at the end of the day: 80 t of supply, 0 aircraft ready: not open
-#129 D14 -         base:3 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#83 D7 -         Allied staff's reason for giving no order: task_force:1, at (0,0), has no home port, and ship:1 holds 110 t of 500, ship:2 holds 110 t of 500, ship:3 holds 110 t of 500: below a quarter of capacity. Its fuel is weighed against no passage home.
+#84 D7 night     base:2 spent 10 t of supply on 2000 men ashore for the day, 150 t left
+#85 D7 night     Allied men ashore at (4,0): 2000 of 2000 fed from base:2, 0 unfed  <- #84
+#86 D7 -         base:1 at the end of the day: 880 t of supply, 0 aircraft ready: not open
+#87 D7 -         base:2 at the end of the day: 150 t of supply, 0 aircraft ready: not open
+#88 D7 -         base:3 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#89 D8 -         Allied staff's reason for giving no order [serves intent 1: keep base:2 (Placeholder garrison B) at 5 days of supply, no interval set (the staff takes 15 days); plan 1; decided at the level of the area]: Reading today at base:2: 150 t over 10 t a day = 15 days, against a floor of 5 days (50 t). A run ordered today would be due on day 9; the reading of day 10 is projected at 130 t against 5 days x 10 t = 50 t: not below the floor, so no run is needed. The next run waits for the reading of day 19 to fall below 5 days (50 t); it is expected to be ordered on day 17, due on day 18.
+#90 D8 -         Allied staff's reason for giving no order: task_force:1, at (0,0), has no home port, and ship:1 holds 110 t of 500, ship:2 holds 110 t of 500, ship:3 holds 110 t of 500: below a quarter of capacity. Its fuel is weighed against no passage home.
+#91 D8 night     base:2 spent 10 t of supply on 2000 men ashore for the day, 140 t left
+#92 D8 night     Allied men ashore at (4,0): 2000 of 2000 fed from base:2, 0 unfed  <- #91
+#93 D8 -         base:1 at the end of the day: 880 t of supply, 0 aircraft ready: not open
+#94 D8 -         base:2 at the end of the day: 140 t of supply, 0 aircraft ready: not open
+#95 D8 -         base:3 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#96 D9 -         Allied staff's reason for giving no order [serves intent 1: keep base:2 (Placeholder garrison B) at 5 days of supply, no interval set (the staff takes 15 days); plan 1; decided at the level of the area]: Reading today at base:2: 140 t over 10 t a day = 14 days, against a floor of 5 days (50 t). A run ordered today would be due on day 10; the reading of day 11 is projected at 120 t against 5 days x 10 t = 50 t: not below the floor, so no run is needed. The next run waits for the reading of day 19 to fall below 5 days (50 t); it is expected to be ordered on day 17, due on day 18.
+#97 D9 -         Allied staff's reason for giving no order: task_force:1, at (0,0), has no home port, and ship:1 holds 110 t of 500, ship:2 holds 110 t of 500, ship:3 holds 110 t of 500: below a quarter of capacity. Its fuel is weighed against no passage home.
+#98 D9 night     base:2 spent 10 t of supply on 2000 men ashore for the day, 130 t left
+#99 D9 night     Allied men ashore at (4,0): 2000 of 2000 fed from base:2, 0 unfed  <- #98
+#100 D9 -         base:1 at the end of the day: 880 t of supply, 0 aircraft ready: not open
+#101 D9 -         base:2 at the end of the day: 130 t of supply, 0 aircraft ready: not open
+#102 D9 -         base:3 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#103 D10 -         Allied staff's reason for giving no order [serves intent 1: keep base:2 (Placeholder garrison B) at 5 days of supply, no interval set (the staff takes 15 days); plan 1; decided at the level of the area]: Reading today at base:2: 130 t over 10 t a day = 13 days, against a floor of 5 days (50 t). A run ordered today would be due on day 11; the reading of day 12 is projected at 110 t against 5 days x 10 t = 50 t: not below the floor, so no run is needed. The next run waits for the reading of day 19 to fall below 5 days (50 t); it is expected to be ordered on day 17, due on day 18.
+#104 D10 -         Allied staff's reason for giving no order: task_force:1, at (0,0), has no home port, and ship:1 holds 110 t of 500, ship:2 holds 110 t of 500, ship:3 holds 110 t of 500: below a quarter of capacity. Its fuel is weighed against no passage home.
+#105 D10 night     base:2 spent 10 t of supply on 2000 men ashore for the day, 120 t left
+#106 D10 night     Allied men ashore at (4,0): 2000 of 2000 fed from base:2, 0 unfed  <- #105
+#107 D10 -         base:1 at the end of the day: 880 t of supply, 0 aircraft ready: not open
+#108 D10 -         base:2 at the end of the day: 120 t of supply, 0 aircraft ready: not open
+#109 D10 -         base:3 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#110 D11 -         Allied staff's reason for giving no order [serves intent 1: keep base:2 (Placeholder garrison B) at 5 days of supply, no interval set (the staff takes 15 days); plan 1; decided at the level of the area]: Reading today at base:2: 120 t over 10 t a day = 12 days, against a floor of 5 days (50 t). A run ordered today would be due on day 12; the reading of day 13 is projected at 100 t against 5 days x 10 t = 50 t: not below the floor, so no run is needed. The next run waits for the reading of day 19 to fall below 5 days (50 t); it is expected to be ordered on day 17, due on day 18.
+#111 D11 -         Allied staff's reason for giving no order: task_force:1, at (0,0), has no home port, and ship:1 holds 110 t of 500, ship:2 holds 110 t of 500, ship:3 holds 110 t of 500: below a quarter of capacity. Its fuel is weighed against no passage home.
+#112 D11 night     base:2 spent 10 t of supply on 2000 men ashore for the day, 110 t left
+#113 D11 night     Allied men ashore at (4,0): 2000 of 2000 fed from base:2, 0 unfed  <- #112
+#114 D11 -         base:1 at the end of the day: 880 t of supply, 0 aircraft ready: not open
+#115 D11 -         base:2 at the end of the day: 110 t of supply, 0 aircraft ready: not open
+#116 D11 -         base:3 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#117 D12 -         Allied staff's reason for giving no order [serves intent 1: keep base:2 (Placeholder garrison B) at 5 days of supply, no interval set (the staff takes 15 days); plan 1; decided at the level of the area]: Reading today at base:2: 110 t over 10 t a day = 11 days, against a floor of 5 days (50 t). A run ordered today would be due on day 13; the reading of day 14 is projected at 90 t against 5 days x 10 t = 50 t: not below the floor, so no run is needed. The next run waits for the reading of day 19 to fall below 5 days (50 t); it is expected to be ordered on day 17, due on day 18.
+#118 D12 -         Allied staff's reason for giving no order: task_force:1, at (0,0), has no home port, and ship:1 holds 110 t of 500, ship:2 holds 110 t of 500, ship:3 holds 110 t of 500: below a quarter of capacity. Its fuel is weighed against no passage home.
+#119 D12 night     base:2 spent 10 t of supply on 2000 men ashore for the day, 100 t left
+#120 D12 night     Allied men ashore at (4,0): 2000 of 2000 fed from base:2, 0 unfed  <- #119
+#121 D12 -         base:1 at the end of the day: 880 t of supply, 0 aircraft ready: not open
+#122 D12 -         base:2 at the end of the day: 100 t of supply, 0 aircraft ready: not open
+#123 D12 -         base:3 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#124 D13 -         Allied staff's reason for giving no order [serves intent 1: keep base:2 (Placeholder garrison B) at 5 days of supply, no interval set (the staff takes 15 days); plan 1; decided at the level of the area]: Reading today at base:2: 100 t over 10 t a day = 10 days, against a floor of 5 days (50 t). A run ordered today would be due on day 14; the reading of day 15 is projected at 80 t against 5 days x 10 t = 50 t: not below the floor, so no run is needed. The next run waits for the reading of day 19 to fall below 5 days (50 t); it is expected to be ordered on day 17, due on day 18.
+#125 D13 -         Allied staff's reason for giving no order: task_force:1, at (0,0), has no home port, and ship:1 holds 110 t of 500, ship:2 holds 110 t of 500, ship:3 holds 110 t of 500: below a quarter of capacity. Its fuel is weighed against no passage home.
+#126 D13 night     base:2 spent 10 t of supply on 2000 men ashore for the day, 90 t left
+#127 D13 night     Allied men ashore at (4,0): 2000 of 2000 fed from base:2, 0 unfed  <- #126
+#128 D13 -         base:1 at the end of the day: 880 t of supply, 0 aircraft ready: not open
+#129 D13 -         base:2 at the end of the day: 90 t of supply, 0 aircraft ready: not open
+#130 D13 -         base:3 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#131 D14 -         Allied staff's reason for giving no order [serves intent 1: keep base:2 (Placeholder garrison B) at 5 days of supply, no interval set (the staff takes 15 days); plan 1; decided at the level of the area]: Reading today at base:2: 90 t over 10 t a day = 9 days, against a floor of 5 days (50 t). A run ordered today would be due on day 15; the reading of day 16 is projected at 70 t against 5 days x 10 t = 50 t: not below the floor, so no run is needed. The next run waits for the reading of day 19 to fall below 5 days (50 t); it is expected to be ordered on day 17, due on day 18.
+#132 D14 -         Allied staff's reason for giving no order: task_force:1, at (0,0), has no home port, and ship:1 holds 110 t of 500, ship:2 holds 110 t of 500, ship:3 holds 110 t of 500: below a quarter of capacity. Its fuel is weighed against no passage home.
+#133 D14 night     base:2 spent 10 t of supply on 2000 men ashore for the day, 80 t left
+#134 D14 night     Allied men ashore at (4,0): 2000 of 2000 fed from base:2, 0 unfed  <- #133
+#135 D14 -         base:1 at the end of the day: 880 t of supply, 0 aircraft ready: not open
+#136 D14 -         base:2 at the end of the day: 80 t of supply, 0 aircraft ready: not open
+#137 D14 -         base:3 at the end of the day: 0 t of supply, 0 aircraft ready: not open
 
 task_force:1 "Placeholder transport force 1" (Allied): Arrived at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 ship:1 "Placeholder fast transport 1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 110 t of fuel, 0 t of supply

@@ -2,37 +2,38 @@ Scenario 44: Refuelling that takes time
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 3f801a8e704ce621  16 events
-day   2  hash aa89ac164123d1a1  12 events
+day   1  hash 869e59d2ba35945f  17 events
+day   2  hash 6fd7a41c300d045a  12 events
 
-#1 D1 -         order:1 accepted for task_force:1  <- order:1
-#2 D1 night     ship:1 loaded 500 t from base:1, 500 t aboard, 1500 t in stock  <- order:1
-#3 D1 night     task_force:1 completed loading at base:1 at D1 04:00  <- #2
-#4 D1 night     ship:1 took 200 t of fuel at base:1, 800 t aboard, base:1 has 4800 t left
-#5 D1 night     ship:2 took 480 t of fuel at base:1, 1280 t aboard, base:1 has 4320 t left
-#6 D1 night     ship:3 took 480 t of fuel at base:2, 980 t aboard, base:2 has 2520 t left
-#7 D1 night     ship:4 took 200 t of fuel at base:3, 200 t aboard, base:3 has 100 t left
-#8 D1 night     ship:4 of task_force:4 is 300 t short of full: the fuel at (0,5) is at its reserve  <- #7
-#9 D1 morning   ship:1 took 200 t of fuel at base:1, 1000 t aboard, base:1 has 4120 t left
-#10 D1 morning   ship:2 took 240 t of fuel at base:1, 1520 t aboard, base:1 has 3880 t left
-#11 D1 morning   ship:3 took 240 t of fuel at base:2, 1220 t aboard, base:2 has 2280 t left
-#12 D1 afternoon ship:2 took 480 t of fuel at base:1, 2000 t aboard, base:1 has 3400 t left
-#13 D1 afternoon ship:3 took 240 t of fuel at base:2, 1460 t aboard, base:2 has 2040 t left
-#14 D1 -         base:1 at the end of the day: 1500 t of supply, 0 aircraft ready: not open
-#15 D1 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
-#16 D1 -         base:3 at the end of the day: 0 t of supply, 0 aircraft ready: not open
-#17 D2 -         order:2 accepted for task_force:3  <- order:2
-#18 D2 -         order:3 accepted for task_force:3  <- order:3
-#19 D2 night     task_force:3 steamed 192 nm at 16 kn from (5,0) to (0,0)  <- order:2, order:3
-#20 D2 night     ship:3 burned 48 t, 1412 t remaining  <- #19
-#21 D2 morning   task_force:3 steamed 8 nm at 16 kn from (0,0) to (0,0)  <- order:2, order:3
-#22 D2 morning   ship:3 burned 2 t, 1410 t remaining  <- #21
-#23 D2 morning   task_force:3 arrived at (0,0) at D2 06:30  <- #21
-#24 D2 morning   ship:3 took 550 t of fuel at base:1, 1960 t aboard, base:1 has 2850 t left  <- #23
-#25 D2 afternoon ship:3 took 40 t of fuel at base:1, 2000 t aboard, base:1 has 2810 t left  <- #23
-#26 D2 -         base:1 at the end of the day: 1500 t of supply, 0 aircraft ready: not open
-#27 D2 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
-#28 D2 -         base:3 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#1 D1 -         Allied staff's reason for giving no order: task_force:4, at (0,5), has no home port, and ship:4 holds 0 t of 500: below a quarter of capacity. Its fuel is weighed against no passage home.
+#2 D1 -         order:1 accepted for task_force:1  <- order:1
+#3 D1 night     ship:1 loaded 500 t from base:1, 500 t aboard, 1500 t in stock  <- order:1
+#4 D1 night     task_force:1 completed loading at base:1 at D1 04:00  <- #3
+#5 D1 night     ship:1 took 200 t of fuel at base:1, 800 t aboard, base:1 has 4800 t left
+#6 D1 night     ship:2 took 480 t of fuel at base:1, 1280 t aboard, base:1 has 4320 t left
+#7 D1 night     ship:3 took 480 t of fuel at base:2, 980 t aboard, base:2 has 2520 t left
+#8 D1 night     ship:4 took 200 t of fuel at base:3, 200 t aboard, base:3 has 100 t left
+#9 D1 night     ship:4 of task_force:4 is 300 t short of full: the fuel at (0,5) is at its reserve  <- #8
+#10 D1 morning   ship:1 took 200 t of fuel at base:1, 1000 t aboard, base:1 has 4120 t left
+#11 D1 morning   ship:2 took 240 t of fuel at base:1, 1520 t aboard, base:1 has 3880 t left
+#12 D1 morning   ship:3 took 240 t of fuel at base:2, 1220 t aboard, base:2 has 2280 t left
+#13 D1 afternoon ship:2 took 480 t of fuel at base:1, 2000 t aboard, base:1 has 3400 t left
+#14 D1 afternoon ship:3 took 240 t of fuel at base:2, 1460 t aboard, base:2 has 2040 t left
+#15 D1 -         base:1 at the end of the day: 1500 t of supply, 0 aircraft ready: not open
+#16 D1 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#17 D1 -         base:3 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#18 D2 -         order:2 accepted for task_force:3  <- order:2
+#19 D2 -         order:3 accepted for task_force:3  <- order:3
+#20 D2 night     task_force:3 steamed 192 nm at 16 kn from (5,0) to (0,0)  <- order:2, order:3
+#21 D2 night     ship:3 burned 48 t, 1412 t remaining  <- #20
+#22 D2 morning   task_force:3 steamed 8 nm at 16 kn from (0,0) to (0,0)  <- order:2, order:3
+#23 D2 morning   ship:3 burned 2 t, 1410 t remaining  <- #22
+#24 D2 morning   task_force:3 arrived at (0,0) at D2 06:30  <- #22
+#25 D2 morning   ship:3 took 550 t of fuel at base:1, 1960 t aboard, base:1 has 2850 t left  <- #24
+#26 D2 afternoon ship:3 took 40 t of fuel at base:1, 2000 t aboard, base:1 has 2810 t left  <- #24
+#27 D2 -         base:1 at the end of the day: 1500 t of supply, 0 aircraft ready: not open
+#28 D2 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#29 D2 -         base:3 at the end of the day: 0 t of supply, 0 aircraft ready: not open
 
 task_force:1 "Placeholder cargo force 1" (Allied): Idle at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Placeholder cruiser force 2" (Allied): Idle at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port

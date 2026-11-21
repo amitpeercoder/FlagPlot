@@ -2,26 +2,26 @@ Placeholder scenario 43: Keep two bases fed
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 2f73c5da19bfe2ef  9 events
-day   2  hash 8ce17288f116d689  9 events
-day   3  hash 353639dfc199770d  9 events
-day   4  hash 7eb38d46c572c54b  7 events
-day   5  hash 8b05fe5b5c9e4eb5  7 events
-day   6  hash d5571095087404d7  7 events
-day   7  hash aa6d58274fb0c6f1  7 events
-day   8  hash 6235969d94cbf057  7 events
-day   9  hash f42591398e2f2665  7 events
-day  10  hash f4a6ca25072ab69f  7 events
-day  11  hash bbcfed791472f68d  7 events
-day  12  hash 0a260be6dfcba19b  7 events
-day  13  hash 08c0970776560731  7 events
-day  14  hash d94d55ed1d54b055  7 events
-day  15  hash c44d874b25971965  7 events
-day  16  hash 18414dc4876a96b3  7 events
-day  17  hash f2375f0659704601  7 events
-day  18  hash 244e069d30d31493  7 events
-day  19  hash eb4801c30312c343  7 events
-day  20  hash 7b169aa4180956d3  7 events
+day   1  hash 878e0e2cad5f2db4  9 events
+day   2  hash 8cb7f8af28018b9a  9 events
+day   3  hash b49892d480155b2a  9 events
+day   4  hash f5c2a59681520474  7 events
+day   5  hash 7006e45b9def7a52  7 events
+day   6  hash 6a5d3c98b3e50000  7 events
+day   7  hash 691a1563d3aab332  7 events
+day   8  hash 59e0fe061144fc60  7 events
+day   9  hash 91b13433778b11d6  7 events
+day  10  hash 3a20233f74baeb58  7 events
+day  11  hash 6317718a9667741e  7 events
+day  12  hash b792c1571ae6a288  7 events
+day  13  hash 4632f2c9c904535a  7 events
+day  14  hash b02d7cd16616432a  7 events
+day  15  hash 58f101e755e60fba  7 events
+day  16  hash dba3aa0683502730  7 events
+day  17  hash c10db84de59ba3ce  7 events
+day  18  hash 84bd48a52938a338  7 events
+day  19  hash e7aaf9d3d432279c  7 events
+day  20  hash eab8e1aee707095c  7 events
 
 #1 D1 night     base:3 spent 1 t of supply on 200 men ashore for the day, 9 t left
 #2 D1 night     Allied men ashore at (0,5): 200 of 200 fed from base:3, 0 unfed  <- #1
