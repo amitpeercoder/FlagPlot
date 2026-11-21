@@ -157,3 +157,23 @@ Six researchers read the web under this lead, each writing staged rows and savin
 - **Rule 30's 8.8 kn** for the transports is not stated by any source read; it stands on the positions alone, as the rule says.
 - **Zuiho,** named in no force of the decision, sailed with the Second Fleet's main body by two sources and with the Aleutians Support Group by Bates.
 - **Every American surface ship is of a class the game has** (rule 37) holds once Hornet's and Pensacola's classes are filled, which this pass did; Pensacola's class is derived by no list today.
+
+## The second pass
+
+Read on 2026-11-21 for decision 0198, rules 68 and 70, and the derivation list `data/derivation/midway.toml`. Three researchers read the web; the lead checked every quotation by script against the saved pages (all found) and merged the rows. Rows added: `fits.csv` 14000 to 14007, `ship_class_facts.csv` 14000, `air_unit_facts.csv` 14100 to 14109 and 14200 to 14224 (not 14208, a sum of the researcher's, dropped), `air_units.csv` 14100, `place_facts.csv` 14100 to 14117, `land_units.csv` 14100 to 14101, `land_unit_facts.csv` 14100 to 14110, `sources.csv` 14020 to 14022 and 14040, and 16 entries of `gaps.csv`. A fit row that joined two dated statements into a range of its own (Type 93 for the Mogami class from March 1942 to October 1944) was not merged: the range is no source's. No row on file changed standing.
+
+What was found:
+
+- **The torpedoes.** Mogami fired Type 93s at Sunda Strait on 1 March 1942 (combinedfleet, and Japanese Wikipedia; fits 14000, 14001), and Suzuya carried them at Samar in October 1944 (14002). Japanese Wikipedia gives the Nagara class, Abukuma apart, the Type 90 at the outbreak of war (14004, ship class facts 14000), against the interrogation's 8th Year Type for Nagara in November 1942 (1359). The Naval Technical Mission's Table I gives the four triple mounts of Tone, Chikuma, Suzuya and Mikuma, a mount type and no torpedo (14005 to 14007). Japanese Wikipedia confirms Jintsu's quadruple mounts of 1940-41 (14003). Each row keeps its source's date, and none holds on 3 June 1942 with a model named, so the Mogami, Tone and Nagara classes stay blocked on the model.
+- **Wake.** One runway in operation and a seaplane base before the battle (Bates); the Chitose Air Group there from 31 May, 13 fighters and 15 attack planes of it with 9 of the Misawa group on 6 June, 8 of the 1st Air Group arriving that evening and 17 fighters and 50 attack planes on 7 June (Bates), 51 and 18 on 8 June (Japanese Monograph 93). The 65th Guard Unit was there in June (the monograph); about 2,700 men in December 1942 and 3,100 early in 1943 (Spennemann); 1,990 repatriated in 1945 (JACAR).
+- **The carriers' aircraft.** combinedfleet's records of 27 May (B): Akagi 18 fighters, 18 bombers and 18 attack planes with six of the 6th Air Group; Kaga 18, 18 and two spare, 27, with nine of the 6th; Soryu 18, 16 and 18, with three of the 6th and one or two D4Y1. Nothing for Hiryu. With the 6th Air Group's fighters counted in, Akagi's and Kaga's are the readings of rule 50; Soryu's fighters would be 21. The ONI translation of the Nagumo report (OPNAV P32-1002) has no scan on archive.org; NHHC's text of Part II lists only the units of 5 June.
+- **Zuiho.** combinedfleet gives six A5M, six A6M and twelve B5N on 29 May (B), the reading English Wikipedia gives; the Naval Historical Society of Australia a total of 24; Pacific Wrecks 12 A6M2 and 11 D3A (C, the type apparently wrong).
+
+What stays a gap:
+
+- The torpedo model of the Mogami, Tone and Nagara classes on 3 June 1942.
+- Rounds per gun of the 14 cm/50 (Nagara and Sendai classes) and the 12 cm/45 (Mutsuki class): NavWeaps prints none, nor do Japanese Wikipedia, combinedfleet or Navypedia; the Naval Technical Mission's O-47 reports were not found online.
+- Wake's runway in June 1942 (lengths are only for later or undated states), its fuel and stores, its garrison in May to June 1942, the types of the aircraft based there, and any flying boats.
+- Hiryu's aircraft by type before 4 June, a primary record by carrier, and Zuiho's in her unit's own report.
+
+The list is in `data/derivation/midway.toml`. Its header says what is in it, what is left out and why; its exceptions are at the end of `data/derivation/rules.toml`.

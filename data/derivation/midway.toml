@@ -1,0 +1,292 @@
+# The ships and aircraft of Midway, as of 3 June 1942, for scenario 114
+# (decision 0198, rules 4 to 7, 35 to 37 as amended, and "Stage A: the
+# architect's rulings", rules 50 to 72). The derivation tool turns this list
+# into data/reference/ship_classes_midway.csv, aircraft_types_midway.csv and
+# their sources and ships companions. Ships another list derives are derived
+# again here for this date, with class ids of this list. The exceptions this
+# list rests on are at the end of rules.toml, under "Decision 0198"; each
+# names its row, its reason and the rule it rests on. Written on 2026-11-21 by
+# the list's lead, for the architect to read before it merges.
+#
+# WHO IS HERE. Allied: Task Force 16 (Enterprise, Hornet, the cruiser and
+# destroyer groups) and Task Force 17 (Yorktown, Portland, Astoria and the
+# destroyer screen, Gwin with them). Japanese: the First Carrier Striking
+# Force (the four carriers, the Supporting Group and the screen), the
+# transports' close screen (Jintsu and Destroyer Divisions 15, 16 and 18), the
+# Close Support Group (Cruiser Division 7 and Destroyer Division 8), and the
+# Second Fleet's main body with Zuiho and Mikazuki (rules 35 and 66).
+#
+# WHO IS LEFT OUT, and why (each to be named in the scenario's header):
+# - Natsushio, listed in Destroyer Division 15 by Bates (engagement_forces
+#   5884): she was sunk on 8 February 1942 (ship_facts 9252).
+# - The fuelling group of TF 16 (Cimarron, Platte, Dewey, Monssen), as the
+#   Coral Sea's was (decision 0188, ruling 12), and the auxiliaries and
+#   submarines (rule 6). The Main Body, the Aleutians forces and the seaplane
+#   tender group (rules 6 and 35).
+# - Patrol Boats 1, 2 and 34: no class on file (rule 64). The transports are
+#   of the scenario's placeholder class (rules 7, 33 and 64), not here.
+# - Aircraft: the B-26, the D4Y1-C and the E8N2 (rule 60). The PBY-5 and the
+#   PBY-5A are not in this list: rules 58 and 59 cannot be carried out as
+#   written (see THE FLYING BOATS below), and their ids are not taken. Nor is
+#   the TBF-1 of VT-8's detachment (see THE LOADS).
+#
+# SURFACE FIRE (rule 68) is modelled for the Second Fleet's main body (Atago,
+# Chokai, Myoko, Haguro, Kongo, Hiei, Yura, Destroyer Divisions 2 and 9,
+# Mikazuki) and the Close Support Group (the four Mogami class and Destroyer
+# Division 8). Within them, the Mogami, Nagara (Yura) and Mutsuki (Mikazuki)
+# classes are still blocked after the second pass and are in
+# surface_weapons_not_modelled (rule 68): no row names the torpedo the Mogami
+# class or Yura carried on 3 June (fits 14000 and 14001 state the Type 93 for
+# Mogami on 1 March 1942 only, fits 14004 the Type 90 for the Nagara class in
+# December 1941 only), and no row gives rounds per gun for the 14 cm/50 or the
+# Mutsuki class's 12 cm/45. Every other ship (the carriers and their screens
+# of both sides, rule 69, and the transports' close screen, which rule 68 does
+# not name) is in surface_weapons_not_modelled, as at the Coral Sea; Jintsu's
+# class (Sendai) is blocked on rounds besides.
+#
+# THE JAPANESE CARRIERS' AIRCRAFT (rules 50 to 54), for the scenario, not for
+# this list: Akagi 24 fighters, 18 bombers, 18 attack planes; Kaga 27, 20,
+# 27; Hiryu 18, 18, 18; Soryu 18, 18 (rule 51) and 18. The 6th Air Group's
+# fighters are in the fighters (rule 52). The sum is 87 fighters, 74 bombers
+# and 81 attack planes, 242 in all, beside the 234 of Bates (90, 72 and 72,
+# air_unit_facts 5864 to 5867): 8 more, the difference left in sight (rule 53).
+# The second pass found combinedfleet's records of 27 May (air_unit_facts
+# 14200 to 14216, B): Akagi 18, 18, 18 and six of the 6th Air Group, Kaga 18,
+# 18 (and two spare), 27 and nine of the 6th, Soryu 18, 16, 18 and three of
+# the 6th; nothing for Hiryu. With the 6th's fighters in, Akagi and Kaga are
+# the readings of rule 50; Soryu's fighters would be 21, not 18. These rows
+# do not change the rulings; they are for the architect.
+#
+# ZUIHO'S AIR GROUP (rule 66), by the rule for disagreements: six A5M4, six
+# A6M2 and twelve B5N2, combinedfleet's record of 29 May (air_unit_facts 14220
+# to 14222, B), with which English Wikipedia (12452 to 12454) agrees, before
+# Wikipedia's 12 and 12 (12458, 12459, C), Japanese Wikipedia's establishment
+# of 6, 6 and 9 (12460 to 12462, C) and Pacific Wrecks' D3As (14223, 14224,
+# C). So the A5M4 is derived here. The B5N2 is the order of battle's mark
+# (12457); combinedfleet writes only B5N.
+#
+# THE LOADS each type attacks with (decision 0029, 7):
+# - SBD-3, SBD-2: the 1,000 lb bomb. The SBD-2s of VMSB-241 carried 500 lb
+#   bombs on 4 and 5 June (fits 12203 to 12205, Bates), rows dated those days
+#   only, which the tool cannot read on 3 June; VB-6's SBD-2s are the carrier
+#   aircraft the 1,000 lb rows describe (fits 6818, 1324).
+# - SB2U-3: the 500 lb bomb, its maker's sheet (fits 6802), by the exception
+#   for the bomb's weight.
+# - B-17E: the 600 lb bomb, four each, the load of the attack of 3 June on the
+#   transports (fits 6819, ONI, a row of the list's own day).
+# - TBD-1: the Mark 13; D3A1: the 250 kg bomb; B5N2: the Type 91, as in the
+#   Coral Sea list.
+# - TBF-1, stopped and reported: its torpedo cannot be read on 3 June. Bates's
+#   row (fits 12206) and the Eastern Solomons row (410) are dated their days
+#   only, and the two undated rows (52, 409) are grade C and unconfirmed. An
+#   exception for them is read by every list, and it changes the sources file
+#   of the Eastern Solomons list (which reads row 410), which this list may not
+#   do; a bomb load would not be what the detachment carried. Six aircraft.
+#
+# THE FLYING BOATS (rules 36, 58, 59), stopped and reported, not improvised:
+# - PBY-5A. Rule 58 reads the Navy's sheet of 1 September 1943 (aircraft type
+#   facts 12000 to 12004) for June 1942 by exception. The tool reads an
+#   excepted row only if it holds on the list's date or its date is known only
+#   to the year or month; the sheet's rows are dated from 1943-09-01 and do
+#   not hold on 1942-06-03, so the exception cannot be written. The type has
+#   no other armour row (pilot_armour); its radius can be read (12009, the
+#   night attack of 3 to 4 June).
+# - PBY-5. Rule 59 reads the PBY-5A's sheet for her by a second exception. An
+#   exception names a row of the type it is written for, and the sheet's rows
+#   are the PBY-5A's; it cannot be written either. Her own rows are grade C
+#   (armour 12005 and tanks 12006, dated to June 1942; range 314, disputed).
+#
+# RADAR: as in the other lists, where no row says whether a ship carried a
+# search radar on 3 June she is treated as not fitted (radar_unknown_means_none).
+
+name = "Midway"
+date = "1942-06-03"
+rules = "rules.toml"
+output = "../reference/ship_classes_midway.csv"
+aircraft_output = "../reference/aircraft_types_midway.csv"
+first_class_id = 5000
+first_aircraft_type_id = 5100
+air_figures = true
+
+ships = [
+    # Task Force 16.
+    "cv-6-enterprise", "cv-8-hornet",
+    "ca-24-pensacola", "ca-26-northampton", "ca-32-new-orleans", "ca-36-minneapolis", "ca-44-vincennes", "cl-51-atlanta",
+    "dd-352-worden", "dd-354-monaghan", "dd-355-aylwin", "dd-360-phelps", "dd-363-balch",
+    "dd-371-conyngham", "dd-397-benham", "dd-398-ellet", "dd-401-maury",
+    # Task Force 17.
+    "cv-5-yorktown", "ca-33-portland", "ca-34-astoria",
+    "dd-410-hughes", "dd-411-anderson", "dd-412-hammann", "dd-414-russell", "dd-417-morris", "dd-433-gwin",
+    # The First Carrier Striking Force.
+    "akagi", "kaga", "soryu", "hiryu",
+    "tone", "chikuma", "haruna", "kirishima", "nagara",
+    "akigumo", "kazagumo", "makigumo", "yugumo",
+    "hamakaze", "isokaze", "tanikaze", "urakaze", "arashi", "hagikaze", "maikaze", "nowaki",
+    # The transports' close screen.
+    "jintsu", "kuroshio", "oyashio", "amatsukaze", "hatsukaze", "tokitsukaze", "yukikaze",
+    "arare", "kagero", "kasumi", "shiranui",
+    # The Close Support Group.
+    "kumano", "suzuya", "mikuma", "mogami", "asashio", "arashio", "michishio", "oshio",
+    # The Second Fleet's main body, with Zuiho and Mikazuki.
+    "atago", "chokai", "myoko", "haguro", "kongo", "hiei", "yura",
+    "harusame", "murasame", "samidare", "yudachi", "asagumo", "minegumo", "natsugumo",
+    "zuiho", "mikazuki",
+]
+
+# Assumption of the scenario, not a fact (decision 0029, 4; decision 0198,
+# rules 68 and 69): these ships are not sent to fight ships, or their class
+# is still blocked for surface fire, so their surface weapons are written as 0.
+surface_weapons_not_modelled = [
+    "cv-6-enterprise", "cv-8-hornet",
+    "ca-24-pensacola", "ca-26-northampton", "ca-32-new-orleans", "ca-36-minneapolis", "ca-44-vincennes", "cl-51-atlanta",
+    "dd-352-worden", "dd-354-monaghan", "dd-355-aylwin", "dd-360-phelps", "dd-363-balch",
+    "dd-371-conyngham", "dd-397-benham", "dd-398-ellet", "dd-401-maury",
+    "cv-5-yorktown", "ca-33-portland", "ca-34-astoria",
+    "dd-410-hughes", "dd-411-anderson", "dd-412-hammann", "dd-414-russell", "dd-417-morris", "dd-433-gwin",
+    "akagi", "kaga", "soryu", "hiryu",
+    "tone", "chikuma", "haruna", "kirishima", "nagara",
+    "akigumo", "kazagumo", "makigumo", "yugumo",
+    "hamakaze", "isokaze", "tanikaze", "urakaze", "arashi", "hagikaze", "maikaze", "nowaki",
+    "jintsu", "kuroshio", "oyashio", "amatsukaze", "hatsukaze", "tokitsukaze", "yukikaze",
+    "arare", "kagero", "kasumi", "shiranui",
+    # Blocked for surface fire after the second pass (rule 68).
+    "kumano", "suzuya", "mikuma", "mogami", "yura", "mikazuki",
+    "zuiho",
+]
+
+# Working assumption, not a fact (decision 0019, 5): no row says whether these
+# ships carried a search radar on 3 June, and they are treated as not fitted.
+radar_unknown_means_none = [
+    "ca-24-pensacola", "ca-26-northampton", "ca-32-new-orleans", "ca-36-minneapolis", "ca-44-vincennes",
+    "dd-352-worden", "dd-354-monaghan", "dd-355-aylwin", "dd-360-phelps", "dd-363-balch",
+    "dd-371-conyngham", "dd-397-benham", "dd-398-ellet", "dd-401-maury",
+    "ca-34-astoria", "dd-410-hughes", "dd-411-anderson", "dd-412-hammann", "dd-414-russell", "dd-417-morris", "dd-433-gwin",
+    "akagi", "kaga", "soryu", "hiryu",
+    "tone", "chikuma", "haruna", "kirishima", "nagara",
+    "akigumo", "kazagumo", "makigumo", "yugumo",
+    "hamakaze", "isokaze", "tanikaze", "urakaze", "arashi", "hagikaze", "maikaze", "nowaki",
+    "jintsu", "kuroshio", "oyashio", "amatsukaze", "hatsukaze", "tokitsukaze", "yukikaze",
+    "arare", "kagero", "kasumi", "shiranui",
+    "kumano", "suzuya", "mikuma", "mogami", "asashio", "arashio", "michishio", "oshio",
+    "atago", "chokai", "myoko", "haguro", "kongo", "hiei", "yura",
+    "harusame", "murasame", "samidare", "yudachi", "asagumo", "minegumo", "natsugumo",
+    "zuiho", "mikazuki",
+]
+
+# The aircraft types, each with the load it attacks with (decision 0029, 7).
+# A fighter attacks nothing on the surface. Their ids follow this order from
+# 5100 (5100 to 5112); a type added later goes at the end so that none moves.
+
+# VF-3, VF-6 and VF-8.
+[[aircraft]]
+type = "f4f-4"
+
+# VMF-221's seven F4F-3.
+[[aircraft]]
+type = "f4f-3"
+
+# VMF-221's twenty-one F2A-3 (rule 71).
+[[aircraft]]
+type = "f2a-3"
+
+# VB-3, VS-5, VS-6, VB-8, VS-8 and part of VB-6. No radius of the type holds
+# on 3 June: the Midway rows are launches of 4 June (550, about 155 miles to
+# a target estimated) and 5 June (549, 278 miles, Hornet's report), different
+# events, not a dispute. The Coral Sea list's reading is kept, so that the
+# type has one radius in every list.
+[[aircraft]]
+type = "sbd-3"
+load = "us-bomb-1000lb-gp"
+combat_radius_row = 280
+combat_radius_reason = "200 miles, the Eastern Solomons search and strike distance of 24 August 1942, which the Eastern Solomons and Coral Sea lists read, read for 3 June: the same aircraft with the same load. The Midway rows are a launch to a target estimated at about 155 miles on 4 June (550) and Hornet's launch at 278 miles on 5 June (549); neither is a stated radius, and neither holds on 3 June."
+
+# VMSB-241's nineteen SBD-2 and part of VB-6 (rule 55).
+[[aircraft]]
+type = "sbd-2"
+load = "us-bomb-1000lb-gp"
+combat_radius_row = 12203
+combat_radius_reason = "About 180 miles, the distance of the enemy carriers given to VMSB-241's sixteen SBD-2 and eleven SB2U-3 at about 0645 on 4 June 1942, which they flew and attacked (Bates, medium), read for 3 June. It is the 180 miles of Lexington's launch of 7 May (647), which the Coral Sea list reads."
+
+# VMSB-241's seventeen SB2U-3 (rules 55 and 71). Its radius is the maker's
+# stated 486 nm with a 1,000 lb bomb (aircraft type facts 12200, preferred),
+# which the tool reads with no exception.
+[[aircraft]]
+type = "sb2u-3"
+load = "us-bomb-500lb-gp"
+
+# VT-3, VT-6 and VT-8.
+[[aircraft]]
+type = "tbd-1"
+load = "us-torpedo-mk13"
+combat_radius_row = 12210
+combat_radius_reason = "About 175 miles, the combat radius of Task Force 16's torpedo planes that the Naval War College analysis names as the controlling factor on the morning of 4 June 1942 (Bates, medium), read for 3 June. It is a stated radius of the type on the day, before the 180 miles of Lexington's launch of 7 May (648), which the Coral Sea list reads."
+
+# The Army's B-17E at Midway (rule 71).
+[[aircraft]]
+type = "b-17e"
+load = "us-bomb-600lb-gp"
+
+# The fighters, bombers and attack planes of the four carriers and Zuiho.
+[[aircraft]]
+type = "a6m2-21"
+
+[[aircraft]]
+type = "d3a1-11"
+load = "jp-bomb-250kg"
+
+[[aircraft]]
+type = "b5n2"
+load = "jp-torpedo-type91"
+
+# Tone's and Chikuma's Type 0 floatplanes, which fly the Japanese search
+# (rule 60).
+[[aircraft]]
+type = "e13a1"
+
+# Zuiho's six A5M4 (rule 66, by the rule for disagreements: see the header).
+[[aircraft]]
+type = "a5m4"
+
+# The class ids, pinned (decision 0077): 5000 to 5036, which no other list
+# uses. Aircraft type ids start at 5100.
+[class_ids]
+5000 = ["akagi"]
+5001 = ["kaga"]
+5002 = ["soryu"]
+5003 = ["hiryu"]
+5004 = ["zuiho"]
+5005 = ["cv-6-enterprise"]
+5006 = ["cv-5-yorktown"]
+5007 = ["cv-8-hornet"]
+5008 = ["ca-24-pensacola"]
+5009 = ["ca-26-northampton"]
+5010 = ["ca-32-new-orleans", "ca-36-minneapolis"]
+5011 = ["ca-44-vincennes"]
+5012 = ["ca-34-astoria"]
+5013 = ["ca-33-portland"]
+5014 = ["cl-51-atlanta"]
+5015 = ["dd-352-worden", "dd-354-monaghan", "dd-355-aylwin"]
+5016 = ["dd-360-phelps", "dd-363-balch"]
+5017 = ["dd-371-conyngham"]
+5018 = ["dd-397-benham", "dd-398-ellet"]
+5019 = ["dd-401-maury"]
+5020 = ["dd-410-hughes", "dd-411-anderson", "dd-412-hammann", "dd-414-russell", "dd-417-morris"]
+5021 = ["dd-433-gwin"]
+5022 = ["tone", "chikuma"]
+5023 = ["haruna", "kirishima"]
+5024 = ["kongo", "hiei"]
+5025 = ["nagara", "yura"]
+5026 = ["jintsu"]
+5027 = ["kumano", "suzuya", "mikuma", "mogami"]
+5028 = ["atago"]
+5029 = ["chokai"]
+5030 = ["myoko", "haguro"]
+5031 = [
+    "akigumo", "hamakaze", "isokaze", "tanikaze", "urakaze", "arashi", "hagikaze", "maikaze", "nowaki",
+    "kuroshio", "oyashio", "amatsukaze", "hatsukaze", "tokitsukaze", "yukikaze", "kagero", "shiranui",
+]
+5032 = ["kazagumo", "makigumo", "yugumo"]
+5033 = ["harusame", "murasame", "samidare", "yudachi"]
+5034 = ["asashio", "arashio", "michishio", "oshio", "asagumo", "minegumo", "natsugumo"]
+5035 = ["arare", "kasumi"]
+5036 = ["mikazuki"]
