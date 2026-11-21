@@ -1322,6 +1322,11 @@ pub(crate) fn seen(kind: &EventKind, side: Side, owners: &Owners, knows_fight: b
         // Replacement men joining a unit are told to the unit's side, whole,
         // and to the enemy not at all (decision 0197, 8).
         EventKind::MenJoined { side: owner, .. } => whole_if(*owner == side),
+        // Rations a landing put into a base and a unit's nights of hunger
+        // are the side's own, whole, and the enemy is told nothing of either
+        // (decision 0205, 10).
+        EventKind::RationsLanded { side: owner, .. } => whole_if(*owner == side),
+        EventKind::HungerNightsChanged { unit, .. } => whole_if(own_unit(unit)),
         // Fuelling at sea is the side's own, whole: a ship fuelled, fuelling
         // broken off and the order ended; the enemy is told nothing of any
         // (decision 0201, 17).
@@ -1711,6 +1716,8 @@ fn first_known_round(side: Side, fight: &[Event], owners: &Owners) -> Option<u32
             | EventKind::EntryWaiting { .. }
             | EventKind::StockReceived { .. }
             | EventKind::MenJoined { .. }
+            | EventKind::RationsLanded { .. }
+            | EventKind::HungerNightsChanged { .. }
             | EventKind::ShipFuelledAtSea { .. }
             | EventKind::FuellingBrokenOff { .. }
             | EventKind::FuelOrderEnded { .. }
@@ -1925,6 +1932,8 @@ fn fight_round(kind: &EventKind) -> Option<u32> {
         | EventKind::EntryWaiting { .. }
         | EventKind::StockReceived { .. }
         | EventKind::MenJoined { .. }
+        | EventKind::RationsLanded { .. }
+        | EventKind::HungerNightsChanged { .. }
         | EventKind::ShipFuelledAtSea { .. }
         | EventKind::FuellingBrokenOff { .. }
         | EventKind::FuelOrderEnded { .. }
@@ -2283,6 +2292,8 @@ fn count_from_known_round(kind: SideEventKind, known: u32, round_minutes: u32) -
             | EventKind::EntryWaiting { .. }
             | EventKind::StockReceived { .. }
             | EventKind::MenJoined { .. }
+            | EventKind::RationsLanded { .. }
+            | EventKind::HungerNightsChanged { .. }
             | EventKind::ShipFuelledAtSea { .. }
             | EventKind::FuellingBrokenOff { .. }
             | EventKind::FuelOrderEnded { .. }
@@ -2539,6 +2550,8 @@ fn whole_may_have_hidden_causes(kind: &EventKind) -> bool {
         | EventKind::EntryWaiting { .. }
         | EventKind::StockReceived { .. }
         | EventKind::MenJoined { .. }
+        | EventKind::RationsLanded { .. }
+        | EventKind::HungerNightsChanged { .. }
             | EventKind::ShipFuelledAtSea { .. }
             | EventKind::FuellingBrokenOff { .. }
             | EventKind::FuelOrderEnded { .. }
@@ -2825,6 +2838,8 @@ pub(crate) fn project(side: Side, log: &[Event], owners: &Owners) -> Vec<SideEve
                     | EventKind::EntryWaiting { .. }
                     | EventKind::StockReceived { .. }
                     | EventKind::MenJoined { .. }
+                    | EventKind::RationsLanded { .. }
+                    | EventKind::HungerNightsChanged { .. }
                     | EventKind::ShipFuelledAtSea { .. }
                     | EventKind::FuellingBrokenOff { .. }
                     | EventKind::FuelOrderEnded { .. }
@@ -4479,6 +4494,31 @@ mod tests {
                 Whole,
                 Nothing,
             )),
+            // Rations a landing put into its base and a unit's nights of
+            // hunger are told to their own side, whole, and to the enemy not
+            // at all (decision 0205, 10).
+            sided(row(
+                EventKind::RationsLanded {
+                    base: base(1),
+                    side: Side::Allied,
+                    task_force: force(1),
+                    men: 3000,
+                    nights: fx(3),
+                    supply_t: fx(45),
+                },
+                Whole,
+                Nothing,
+            )),
+            sided(row(
+                EventKind::HungerNightsChanged {
+                    unit: unit(1),
+                    hex: hex(),
+                    before: 4,
+                    nights: 5,
+                },
+                Whole,
+                Nothing,
+            )),
             // A falling back is told to its own side only.
             sided(row(
                 EventKind::UnitFellBack {
@@ -4897,7 +4937,7 @@ mod tests {
     #[test]
     fn the_table_has_a_row_for_every_kind_of_event() {
         let all = event_kind_names();
-        assert_eq!(all.len(), 157, "the log has 157 kinds of event");
+        assert_eq!(all.len(), 159, "the log has 159 kinds of event");
         let covered: BTreeSet<String> = table()
             .iter()
             .map(|row| kind_name(&row.log[row.at]))

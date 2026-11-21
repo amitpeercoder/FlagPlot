@@ -2,20 +2,20 @@ Placeholder scenario 68: Ashore
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash ef9fd0e759cf8162  26 events
-day   2  hash d3332fed56e2b651  15 events
-day   3  hash fdfc9f54d1247a1c  13 events
-day   4  hash 2816a3fce5db82e5  13 events
-day   5  hash 80566df2aa6c3edd  44 events
-day   6  hash bbda1e4dfabf9ce9  27 events
-day   7  hash 79c2e156af18f39c  18 events
-day   8  hash 055cfa2a5f4d0853  19 events
-day   9  hash 7b847df469a0440b  16 events
-day  10  hash 7b3167f4bc5d3897  24 events
-day  11  hash db77480de21f5bb9  41 events
-day  12  hash c00ee28105e72364  16 events
-day  13  hash a9f52dd12ba48c7e  9 events
-day  14  hash e93b0ea0bedf9216  6 events
+day   1  hash b280d4e279dfbdfd  26 events
+day   2  hash 6034ee6715909b92  15 events
+day   3  hash c9622275025e03af  13 events
+day   4  hash ec0b3956ef1260c4  13 events
+day   5  hash f2bb9c0415b05460  44 events
+day   6  hash 1b5c7eb8c1f672a4  27 events
+day   7  hash 09a0024f1748abcb  18 events
+day   8  hash 481d151f0c3fc63e  19 events
+day   9  hash c67e8a8830a5a932  16 events
+day  10  hash f5a7c8ef6bd619e6  24 events
+day  11  hash e53e0fe6df5a23c6  41 events
+day  12  hash 1d4b7a77611ef429  16 events
+day  13  hash 758fe23a8c2e88cd  9 events
+day  14  hash 381ba8c93564809b  6 events
 
 task_force:1 "Placeholder transport force 1" (Allied): Arrived at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 ship:1 "Placeholder troop transport 1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 936 t of fuel, 0 t of supply

@@ -479,6 +479,7 @@ fn walk_land_unit(unit: &mut LandUnit, visit: &mut dyn FnMut(String, HeldId<'_>)
         fieldworks: _,
         available_from: _,
         formation: _,
+        hunger_nights: _,
     } = unit;
     for (what, held) in [("posture", posture_order), ("activity", activity_order)] {
         if let Some(held) = held {

@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 21, 2026 on the designer's quest
 
 Summary: Today a twentieth of the men a base cannot feed are lost every night, from the first night ashore. The record says otherwise: men landed carrying food, lived for weeks on short rations with no such loss, and died of hunger only after weeks on almost nothing. This puts the rations men land with into the base their landing forms, counts for each unit the nights it goes hungry, and takes men only from a unit that has been hungry for many nights. It runs where a scenario's ground figures give its figures, so no game on file moves; the table plays copies of its scenarios that have them.
 
-Standing: Planned on Nov 21, 2026; its review folded in; waits for its hand calculation and its build.
+Standing: Planned on Nov 21, 2026; its review folded in; its hand calculation written; built on Nov 21, 2026 (As built, below), for the architect's review.
 
 ## Why
 
@@ -36,8 +36,8 @@ So a rule that takes a twentieth of the unfed on the first night is wrong in kin
 
 ### Rations landed
 
-4. **A landing that forms a base puts the men's rations into it:** the men aboard the ships of the force that forms the base, at the moment it is formed, times `rations_landed_nights`, times the daily charge for a man, as supply in the stock of the base formed. However many pulses the men take to go ashore, the rations are put down once, then. It is the mechanism of the supply a marching unit puts down where it arrives, used at a landing.
-5. **Only the force that forms the base brings rations.** A second force landing in the same pulse, and men landed later at a base that stands, bring none; that base feeds them or it does not. So men cannot be taken off and landed again to make food.
+4. **The first landing of men at a base puts their rations into it:** the men aboard the ships of the force, at the moment its first man lands there, times `rations_landed_nights`, times the daily charge for a man, as supply in the base's stock. However many pulses the men take to go ashore, the rations are put down once, then. It is the mechanism of the supply a marching unit puts down where it arrives, used at a landing. It is so whether the landing forms the base or the base stands already, as the Allied base at Lunga stands before the landing in the 39 days.
+5. **A base is given rations once.** That it has had them is new state of the base. A second force landing in the same pulse, and men landed there on any later day, bring none; that base feeds them or it does not. So men cannot be taken off and landed again to make food.
 6. **Nothing else of the feeding changes.** The fed share stays one for every unit of the side in the hex, and `MenFed` is as it is.
 
 ### Nights of hunger
@@ -61,7 +61,7 @@ The march's `march_supply_days` stays 5; the rows of men setting out with three,
 ## What is recorded and who knows
 
 10. **The rations a landing brings are recorded** with the base formed: the men, the nights and the tons, citing the landing. **A unit's count changing is recorded** in an event for the unit and the night, citing that night's `MenFed`, and only when the count changes. `MenLostUnfed` gains the factors of rule 8. Each side sees its own and nothing of the enemy's.
-11. **One field is new state of a land unit,** hashed in its place and named, with the layout raised and the golden files remade. A side sees it for its own units; the table's card says "Hungry 5 nights" where it is above nothing. The rules label does not rise, since no game on file plays differently.
+11. **One field is new state of a land unit and one of a base,** each hashed in its place and named, with the layout raised and the golden files remade. A side sees it for its own units; the table's card says "Hungry 5 nights" where it is above nothing. The rules label does not rise, since no game on file plays differently.
 
 ## Rule card
 
@@ -76,11 +76,11 @@ None moves: the figures are in a file no scenario on file names, and the live fi
 - It does not model sickness. The record's sick lists are far larger than any loss to hunger and are a rule of their own.
 - It does not let a unit forage or eat captured stores, which the record says fed the marines in August (405, 707). A base taken with its stock already gives that stock to the taker.
 - It does not change the daily supply a man costs, nor the fed share's effect on a fight, on work or on training.
-- It does not give rations to a unit that starts ashore, that enters ashore on its day, or that lands at a base which stands.
+- It does not give rations to a unit that starts ashore or that enters ashore on its day, nor to men landed at a base that has had its rations.
 
 ## What it costs
 
-- **One field of state for each land unit, two events, and a landing that creates supply.** The supply is small: 3,000 men bring 45 tons at the live charge.
+- **One field of state for each land unit and one for each base, two events, and a landing that creates supply.** The supply is small: 3,000 men bring 45 tons at the live charge.
 - **A table that plays by a rule the proofs do not,** from copies of the scenarios. A game at the table and the same scenario in a closed proof will differ ashore until the proofs take the rule.
 - **Rulebook:** chapter 7 (Landing men and a base formed by a landing, The men's supply, The unfed are lost, A unit divided); the glossary's "Fed, unfed"; chapter 1's list of who sees what.
 
@@ -97,3 +97,74 @@ A reviewer who had not seen the plan read it against the feeding's code, the bri
 - **The count could be held at one for ever** by a full meal every other night on a quarter ration. It now falls only on a night fed in full (rule 7).
 - **The loss was not defined for a unit, and the one man at least was dropped without a word.** Rule 8 defines it and keeps him.
 - **The rows said less than the plan claimed.** One row is of a landing; three are of marches. One row does date deaths from hunger, which the plan had said none did. The figures' reasons are rewritten from the rows as they are.
+
+## As built
+
+Built on Nov 21, 2026, on the branch `hunger-build`, from the hand calculation of `tests/scenario_119_hunger_takes_time.rs`. Every statement and property of it holds as written; none is ignored.
+
+### What was built, and where
+
+- **The three figures and the gate (rule 1).** `sim_core::refdata::HungerFigures` (`rations_landed_nights`, `hungry_below_share`, `hunger_nights_before_loss`) is `GroundFigures::hunger`, an `Option`, last in the struct. The loader (`sim-data/src/reference.rs`) reads the three keys all together or none; one or two alone is refused, and the checks are `rations_landed_nights` 0 or more and `hungry_below_share` from 0 to 1. Every rule below runs only where it is `Some`.
+- **The files of figures (rules 2 and 3).** The live `data/reference/ground.toml` and its frozen copy are not changed. `data/reference/ground_hunger.toml` is the live `ground.toml` with the three figures added at the end and a header saying so; its frozen counterpart `data/reference/step1/ground_hunger.toml` is the frozen `ground.toml` with the same three. Scenario 119 has its own pair, `ground_placeholder_scenario_119.toml`, the frozen `ground.toml` with the three figures and no other change.
+- **Rations landed (rules 4, 5 and 10).** `World::land_rations` in `sim-core/src/cargo.rs`, called by `prepare_landing` when a force is about to land its first men at a base of its side, after any division and any base formed and before any man lands: if the base has not had its rations, the men aboard the force's ships, their day's charge by `ground::daily_charge_t` (the one formula), times the nights, go into its stock, and the base's new field `rations_landed` is set. `EventKind::RationsLanded { base, side, task_force, men, nights, supply_t }` records it, with a breakdown of `men_aboard`, `rations_landed_nights`, `daily_supply_t_per_man` and, only where a unit's weight acts, `weighted_men`. It cites the `BaseFormed` where the landing formed the base, and the unload order and the force's arrival event (the causes the landing's own events cite) where the base stood. (As first built, before the ruling below, only a base formed by the landing was given rations.)
+- **The count (rule 7).** `LandUnit::hunger_nights: u32`, last in the struct, 0 from `LandUnit::new`. `World::count_nights_of_hunger` in `sim-core/src/ground.rs` runs in `feed_men_ashore` after each hex's `MenFed`, for every unit of the side with men ashore there, and records `EventKind::HungerNightsChanged { unit, hex, before, nights }` only when the count changes, citing the `MenFed`, with a breakdown of `nights_before`, `fed_share` and `hungry_below_share`. A unit divided at a landing takes its parent's count (`cargo.rs`, with the experience and fieldworks it already took). A scenario's `[[land_unit]]` may give `hunger_nights`, a whole number.
+- **The loss (rule 8).** In `feed_men_ashore`, with the figures, the loss is worked on the units past the count alone; without them, on every unit of the side in the hex, by the code as it was. `MenLostUnfed` keeps its fields; its breakdown gains `fed_share`, `hunger_nights`, `hunger_nights_before_loss`, `men_past_count` and `unfed_past_count`.
+- **The hash (rule 11).** `hunger_nights` is named in `hash::name_every_field` and hashed after the formation, and the base's `rations_landed` after its `ammunition_t`; `STATE_VERSION` is `flagplot-state-v53`, raised once in this pull request for both fields (v53 was never on main, so it did not need to rise again). The rules label is not raised.
+- **Who sees what (rule 10).** `side_events.rs`: `RationsLanded` whole to the side that formed the base, `HungerNightsChanged` whole to the unit's side, nothing to the enemy; both cite only the side's own events, so neither may have hidden causes. The test table has a row for each (159 kinds).
+- **The agent and the table.** A land unit line (`sim-agent/src/lines.rs`) gains `hunger_nights`, left out when 0, so no answer of a game without the figures changes; the text adds "hungry N nights" to the unit's line. The schema (`defs.schema.json`) and its README gain the field; the version is not raised, a field added only. The briefing lists neither new event; they are in the side's events and its explain. The table's card of a unit (`table/index.html`) shows "Hungry" with "N nights" where the count is above 0, and its diary words the two events plainly ("landed 45 t of rations at ...", "... hungry 5 nights"), the count's changes among the routine lines. `sim-cli`'s export names them `rations_landed` and `hunger_nights_changed`; the batch record counts neither.
+- **The table's copies (rule 3).** `python3 scripts/table-copies/make_copies.py [--check]` writes each scenario of `table/scenarios.json` that names `../../reference/ground.toml` to `data/scenarios/table-hunger/` under its own name, with that one line changed to `ground_hunger.toml`; `--check` writes nothing and fails where a copy is not the one it makes or the folder holds anything else. `table/scenarios.json` points at the nine copies. Scenario 119's test runs the check.
+- **Scenario 119.** `data/scenarios/hunger-takes-time/119_hunger_takes_time.toml`, its ground figures above, and `tests/scenario_119_hunger_takes_time.rs`, 22 tests.
+
+### The readings
+
+1. **The daily charge for a man** in rule 4 is read as each unit's own, by the one formula, so a unit whose weight is not the standard brings the nights of its own charge, as a march carries. Every unit of scenario 119 is standard.
+2. **The record of the rations is an event of its own,** `RationsLanded`, citing `BaseFormed`, and not new fields of `BaseFormed`: so no `BaseFormed` of a game on file changes. A landing that would put down nothing (no man aboard, or 0 nights) records nothing and sets no mark, so the next landing there is still the first that brings rations.
+3. **"The men aboard the ships of the force"** is every man of every unit aboard the force's ships at that moment, after any division, which moves no man.
+4. **The unfed of the units past the count** are their men times 1 less the fed share as the state holds it (the men fed over the men charged, cut at six decimals), cut to a whole man, and never above their men. Where every unit of the hex is past the count this is the hex's unfed exactly, since the share is cut down and the excess is below a man.
+5. **The breakdown of `MenLostUnfed`** keeps `unfed_in_hex` and `men_ashore_in_hex` as the hex's, and works `in_proportion` over the men of the units past the count, which is what the loss is shared over.
+6. **Without the figures the count is never moved,** and a scenario may still give a unit one: it is state, shown on the unit's line, and read by no rule.
+7. **The table plays the copies of the files that name the live ground figures only.** The Eastern Solomons in one day (`second-proof/05c` and `05e`) has no land unit and names no ground file, so it has no line to change; the table plays the file on file. The copies are in a folder two deep under `data/`, as each source's folder is, so every `../../` path in them resolves to the file the source names; no source names a file in its own folder. The table's bridge passes the scenario's path to `sim-cli` and reads nothing else of it, so nothing else needed a change.
+8. **Force T of statement 10 is five transports, not two.** The one placeholder class with berths, class 10 of `ship_classes_placeholder_transports.csv`, carries 600 men, so 3,000 men need five; no class file was made for the test. Nothing in the statements depends on the number of ships.
+9. **Statement 9's division** is set so that V is still at 5 when it is divided: Q holds 3 t at the start and a supply line gives 1.5 t on day 2, so V's fed share stays between a half and 1 and its count stays 5; a transport takes 600 of V on night 1 and lands them at P on night 2.
+
+10. **The mark of rations is the base's,** kept when the base changes side, so a base taken from the enemy after his men landed there gives the taker none; it is set only where the hunger figures are given, so in a game without them no base's state changes. A trial's picture of an enemy base (sim-trial) is built without the mark, since a side does not know whether the enemy landed rations there.
+
+### Changed on the architect's ruling of Nov 21, 2026
+
+As first built, only a landing that formed a base brought rations, as rules 4 and 5 then said. The build's first report said that in the 39-day copy no base was formed by a landing, read as the landings going into bases that stand; the architect corrected rules 4 and 5 and statement 11 on that report. Looked at again after the correction, the report was wrong in what it implied: in `staff/07_full_slice.toml`, which gives neither side a command, no man is landed at all, and in the stage 3 proof's `07c_slice.toml` the landings of 7 August formed bases of their own (Lunga and Tulagi are Japanese at the start), which got their rations under the first rule too (the figures are under "The table's copies", below). The rule as corrected: the first landing of men at a base puts their rations into it, formed or standing, and a base is given them once, which is new state of the base. In the code: `Base::rations_landed` (`state.rs`), false at the start for every base (the loader, `Base::new` and the trial's enemy bases), hashed and named; `land_rations` called in `prepare_landing` for a base that stands as for one formed, returning at once for a base that has had its rations, and setting the mark; the record's causes as above. Statement 11's test is rewritten to the statement as it now stands (`statement_11_a_base_is_given_rations_once_at_q`: 15 t at Q at force 1's first man, citing the unload order and no `BaseFormed`, and nothing for force 3 landing at Q the next day; and, at P, nothing for the second force); statements 10, 12 and 13 hold as before.
+
+### The table's copies, after the correction
+
+Of the nine copies, run with `run --events` (39 days for the three slices):
+
+- `staff/07_full_slice` (no command for either side): no man lands, no rations; every unfed loss is Japanese, 231 men in 30 events (333 by today's rule).
+- `stage-3-proof/07b_slice`: no Allied man is landed. A Japanese landing of 200 men at Lunga, a Japanese base that stands, on day 10 brings 3 t, which the correction adds; the next Japanese landing there, on day 13, brings none. No man is lost to hunger (114, all Japanese, by today's rule).
+- `stage-3-proof/07c_slice`: the landing of 7 August forms base 8 at (3,-5), Tulagi's side, with 91.125 t for 6,075 men, and base 9 at (2,-4), Lunga's, with 163.5 t for 10,900 men; on day 9 a landing of 123 men at Lunga, taken by then, brings 1.845 t, the one landing the correction adds. The marines are fed in full on the nights of days 2, 3 and 4 (10,880 of 10,880 and 6,015 of 6,015, from bases 1 and 4), as they are by today's rule; no Allied man is ever unfed. 993 Japanese men are lost to hunger (1,515 by today's rule).
+- The six one- and five-day copies: one landing brings rations in the Coral Sea (01b) and one in the Eastern Solomons (01b); nobody is lost to hunger.
+
+### What did not hold
+
+Of scenario 119's hand calculation, nothing: no statement or property needed an `_as_built` test.
+
+Of another: scenario 104's statement 23 says that scenarios 103's and 105's eight files have the key `for_play` and "no other scenario file has it". The table's copies of six of them (files b, c and d of each, in `data/scenarios/table-hunger/`) carry it too, since they are those files but for the ground line. Its test is left as written and ignored with that reason, and `statement_23_the_key_as_built` beside it asserts the eight files and the six copies.
+
+### Pins remade for the layout
+
+Besides what `regenerate.sh` remakes: the ten export pins of `crates/sim-cli/tests/export_pictures.rs` (each export checked against the export of the commit before with the state version and the day hashes taken out: the same in every one, and the old export hashes as pinned before), and scenario 110's `PRE_RULE` and day-7 hash in `tests/scenario_110_the_last_day_ashore.rs`, daily hashes of scenario 109's file on the frozen figures, remade at version 53 as they were at version 52.
+
+### Games on file
+
+Every one of the 174 scenario files under `data/scenarios` (all but scenario 119's folder and the table's copies) was run with `run --events` before the change and after it: the events are the same in every one, and only the daily hashes differ, by the layout. The generated files were remade by `sh scripts/regenerate.sh` for the layout alone.
+
+## The architect's rulings
+
+Read on Nov 21, 2026: the feeding and the loss in full (`ground.rs`), the rations (`cargo.rs`), and the build's account of what moved.
+
+1. **The hand calculation holds in every statement,** and the build's nine readings are accepted.
+2. **Rules 4 and 5 were changed after the first build, on a report that proved wrong.** The build first said that in the 39 days the landings went into bases that already stood, so that the marines got no rations; the architect took that as the case the designer had asked about and changed the rule so that the first landing at any base brings rations. The build then found its report was mistaken: in the file with a landing, Lunga and Tulagi are the enemy's when the marines land, the landing forms two bases, and the first rule fed them. A summary is a lead and not a fact, and this one was not checked before a rule was moved on it.
+3. **The changed rule stands all the same.** It is the better rule: men who land at a base of their own that has nothing in it eat what they carried, as men who land on an empty shore do. In the files on file it adds two small landings of rations and changes no loss.
+4. **What the rule does to the 39 days, in the table's copies:** the losses to hunger are all Japanese, and fall from 333 men to 231 with no command given, from 114 to none in one staffed file and from 1,515 to 993 in the other. No Allied man is unfed in any of them by either rule.
+5. **The mark that a base has had its rations is the base's,** kept when the base changes side, and not set on a dry run's picture of an enemy base, since a side does not know it of the enemy.
+6. **Scenario 104's statement 23 is amended:** the table's copies of files for play carry the key that marks a file for play, as their sources do. There is one test of it, not set aside.
+7. **Not seen:** the "Hungry N nights" line on a unit's card in the browser. The count was read from the game's own answer on a throwaway table.
+

@@ -1826,6 +1826,12 @@ fn land_units_text(o: &mut Out, land: &LandUnitsPart) {
             "; posture {}, fatigue {}, fed share {}",
             u.posture, u.fatigue.0, u.fed_share.0
         ));
+        if u.hunger_nights > 0 {
+            s.push_str(&format!(
+                "; hungry {}",
+                plural(u.hunger_nights, "night", "nights")
+            ));
+        }
         if let Some(men) = u.firing_men_now {
             s.push_str(&format!(
                 "; {} would fire today at its fatigue",

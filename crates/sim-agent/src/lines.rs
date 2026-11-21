@@ -1100,6 +1100,11 @@ pub struct LandUnitLine {
     /// (decision 0090, 8): 1 until the first night and for a unit that had
     /// no man ashore at the charge.
     pub fed_share: Dec,
+    /// The unit's nights of hunger (decision 0205, 7): up one on a night it
+    /// is fed below the hunger figure's share, down one on a night fed in
+    /// full. Left out when 0. The unit's own side only.
+    #[serde(skip_serializing_if = "is_zero_u32")]
+    pub hunger_nights: u32,
     /// For a fighting unit with men ashore: the men who would fire if it
     /// fought now, its men ashore cut by its fed share and its fatigue
     /// (decision 0110, item 3): `SideView::firing_men`. Left out for a
@@ -1395,6 +1400,7 @@ pub(crate) fn land_unit_line(
             .filter(|cover| *cover > Fixed::ZERO)
             .map(Dec),
         fed_share: Dec(unit.fed_share),
+        hunger_nights: unit.hunger_nights,
         firing_men_now: (!unit.working && unit.men_ashore > 0)
             .then(|| ctx.view.firing_men(unit.id))
             .flatten(),
@@ -1519,4 +1525,9 @@ pub(crate) fn halt_work_words(work: sim_core::state::HaltWork) -> Vec<&'static s
     .into_iter()
     .filter_map(|(on, word)| on.then_some(word))
     .collect()
+}
+
+/// For `skip_serializing_if`: a count of nothing is left out.
+fn is_zero_u32(n: &u32) -> bool {
+    *n == 0
 }

@@ -7,9 +7,16 @@
 //! sides in the order of their codes. There is no randomness.
 //!
 //! Reads: each land unit's men ashore, hex and weight (decision 0098), the
-//! bases of the side in the hex and their supply stock, the ground figures.
-//! Writes: a base's
-//! supply stock, a land unit's men ashore and hex, and the events.
+//! bases of the side in the hex and their supply stock, each unit's nights
+//! of hunger (decision 0205), the ground figures.
+//! Writes: a base's supply stock, a land unit's men ashore and hex, its fed
+//! share and its nights of hunger, and the events.
+//!
+//! Where the ground figures give the hunger figures (decision 0205, 1),
+//! each unit counts its nights of hunger at the charge (7), and men are lost
+//! only from the units whose count is past `hunger_nights_before_loss` (8).
+//! Without them every unit's count stays as it is and the loss is worked on
+//! every unit of the side in the hex, as decision 0066 has it.
 
 use std::collections::BTreeMap;
 
@@ -72,7 +79,9 @@ impl World {
     /// pays what it can of the daily charge of every man still owed; the
     /// tons paid over the charge for a man, cut, are fed, and the rest
     /// unfed. A share of the unfed is lost, cut, and one man at least, taken
-    /// from the side's units there in proportion. Each unit ashore takes the
+    /// from the side's units there in proportion (with the hunger figures,
+    /// only from the units past the count, on their own unfed: decision
+    /// 0205, 7 and 8). Each unit ashore takes the
     /// men fed over the men charged as its fed share (decision 8 of 0090); a
     /// unit with men aboard and none ashore has a fed share of 1.
     pub(crate) fn feed_men_ashore(&mut self, day: u32, pulse: Pulse) {
@@ -274,21 +283,61 @@ impl World {
                 fed_causes,
                 breakdown,
             );
+            // Each unit's nights of hunger (decision 0205, 7), counted for the
+            // night before the loss is worked.
+            if let Some(hunger) = figures.hunger {
+                self.count_nights_of_hunger(day, pulse, hex, &units, fed_share, hunger, fed_event);
+            }
             if unfed == 0 {
+                continue;
+            }
+
+            // Who the loss is worked on: every unit of the side in the hex
+            // (decision 19 of 0066) or, with the hunger figures, only the
+            // units whose nights of hunger are past the figure (decision
+            // 0205, 8).
+            let past = figures.hunger.map(|hunger| {
+                let losing: Vec<LandUnitId> = units
+                    .iter()
+                    .copied()
+                    .filter(|unit| {
+                        self.truth.land_units[unit].hunger_nights > hunger.hunger_nights_before_loss
+                    })
+                    .collect();
+                let past_men: u32 = losing
+                    .iter()
+                    .map(|unit| self.truth.land_units[unit].men_ashore)
+                    .sum();
+                // Their men times one less the fed share, cut.
+                let past_unfed = u32::try_from(
+                    ((Fixed::ONE - fed_share) * i64::from(past_men))
+                        .trunc()
+                        .max(0),
+                )
+                .unwrap_or(u32::MAX)
+                .min(past_men);
+                (hunger, losing, past_men, past_unfed)
+            });
+            let (losing, losing_men, losing_unfed) = match &past {
+                None => (units.clone(), men, unfed),
+                Some((_, losing, past_men, past_unfed)) => (losing.clone(), *past_men, *past_unfed),
+            };
+            if losing_unfed == 0 {
                 continue;
             }
 
             // The loss (decision 19): the unfed times the share, cut, and one
             // man at least.
             let share = figures.unfed_loss_share_per_day;
-            let cut = u32::try_from((share * i64::from(unfed)).trunc().max(0)).unwrap_or(u32::MAX);
-            let loss = cut.max(1).min(unfed);
-            let unit_men: Vec<u32> = units
+            let cut =
+                u32::try_from((share * i64::from(losing_unfed)).trunc().max(0)).unwrap_or(u32::MAX);
+            let loss = cut.max(1).min(losing_unfed);
+            let unit_men: Vec<u32> = losing
                 .iter()
                 .map(|unit| self.truth.land_units[unit].men_ashore)
                 .collect();
             let parts = take_in_proportion(loss, &unit_men);
-            for ((unit, unit_men), part) in units.iter().zip(&unit_men).zip(parts) {
+            for ((unit, unit_men), part) in losing.iter().zip(&unit_men).zip(parts) {
                 if part == 0 {
                     continue;
                 }
@@ -302,8 +351,9 @@ impl World {
                     land_unit.hex = None;
                 }
                 let left = land_unit.men_ashore;
-                let breakdown = self.config.record_breakdowns.then(|| Breakdown {
-                    factors: vec![
+                let nights = land_unit.hunger_nights;
+                let breakdown = self.config.record_breakdowns.then(|| {
+                    let mut factors = vec![
                         Factor {
                             name: "unfed_in_hex",
                             value: Fixed::from_int(i64::from(unfed)),
@@ -327,11 +377,40 @@ impl World {
                         Factor {
                             name: "in_proportion",
                             value: Fixed::from_int(
-                                i64::from(loss) * i64::from(*unit_men) / i64::from(men),
+                                i64::from(loss) * i64::from(*unit_men) / i64::from(losing_men),
                             ),
                         },
-                    ],
-                    result: Fixed::from_int(i64::from(part)),
+                    ];
+                    // The factors of decision 0205, 8, only where the hunger
+                    // figures are given.
+                    if let Some((hunger, _, past_men, past_unfed)) = &past {
+                        factors.extend([
+                            Factor {
+                                name: "fed_share",
+                                value: fed_share,
+                            },
+                            Factor {
+                                name: "hunger_nights",
+                                value: Fixed::from_int(i64::from(nights)),
+                            },
+                            Factor {
+                                name: "hunger_nights_before_loss",
+                                value: Fixed::from_int(i64::from(hunger.hunger_nights_before_loss)),
+                            },
+                            Factor {
+                                name: "men_past_count",
+                                value: Fixed::from_int(i64::from(*past_men)),
+                            },
+                            Factor {
+                                name: "unfed_past_count",
+                                value: Fixed::from_int(i64::from(*past_unfed)),
+                            },
+                        ]);
+                    }
+                    Breakdown {
+                        factors,
+                        result: Fixed::from_int(i64::from(part)),
+                    }
                 });
                 let lost = self.events.record(
                     day,
@@ -347,6 +426,71 @@ impl World {
                 );
                 self.destroy_if_no_men(day, Some(pulse), *unit, lost);
             }
+        }
+    }
+
+    /// Counts each unit's nights of hunger at the night's charge (decision
+    /// 0205, 7): up one where the fed share is below `hungry_below_share`,
+    /// down one, not below 0, where it is 1, and kept otherwise. Each change
+    /// records `HungerNightsChanged`, citing the night's `MenFed`.
+    #[allow(clippy::too_many_arguments)]
+    fn count_nights_of_hunger(
+        &mut self,
+        day: u32,
+        pulse: Pulse,
+        hex: Hex,
+        units: &[LandUnitId],
+        fed_share: Fixed,
+        hunger: crate::refdata::HungerFigures,
+        fed_event: EventId,
+    ) {
+        for unit in units {
+            let land_unit = self
+                .truth
+                .land_units
+                .get_mut(unit)
+                .expect("the land unit exists");
+            let before = land_unit.hunger_nights;
+            let nights = if fed_share < hunger.hungry_below_share {
+                before.saturating_add(1)
+            } else if fed_share == Fixed::ONE {
+                before.saturating_sub(1)
+            } else {
+                before
+            };
+            if nights == before {
+                continue;
+            }
+            land_unit.hunger_nights = nights;
+            let breakdown = self.config.record_breakdowns.then(|| Breakdown {
+                factors: vec![
+                    Factor {
+                        name: "nights_before",
+                        value: Fixed::from_int(i64::from(before)),
+                    },
+                    Factor {
+                        name: "fed_share",
+                        value: fed_share,
+                    },
+                    Factor {
+                        name: "hungry_below_share",
+                        value: hunger.hungry_below_share,
+                    },
+                ],
+                result: Fixed::from_int(i64::from(nights)),
+            });
+            self.events.record(
+                day,
+                Some(pulse),
+                EventKind::HungerNightsChanged {
+                    unit: *unit,
+                    hex,
+                    before,
+                    nights,
+                },
+                vec![Cause::Event(fed_event)],
+                breakdown,
+            );
         }
     }
 

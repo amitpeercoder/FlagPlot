@@ -4211,7 +4211,12 @@ impl Day {
                     // side's events and its explain, not the briefing's fold:
                     // the force lines say where each force is (decision 0121).
                     | EventKind::StationKept { .. }
-                    | EventKind::MeetingNotHeld { .. } => {}
+                    | EventKind::MeetingNotHeld { .. }
+                    // Rations landed and a unit's nights of hunger are in the
+                    // side's events and its explain; the base's stock and the
+                    // unit's line say where they stand (decision 0205, 10).
+                    | EventKind::RationsLanded { .. }
+                    | EventKind::HungerNightsChanged { .. } => {}
                 },
                 SideEventKind::EnemySurrendered { hex, men } => {
                     ground.prisoners.push(PrisonersLine {

@@ -2,10 +2,10 @@ Placeholder scenario 35c: Days of supply, repairs
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash d0a2c61286c63524  4 events
-day   2  hash 4a66a08cc35acf70  4 events
-day   3  hash ee2b523174e8ea60  2 events
-day   4  hash 3334eafdf1b78db9  2 events
+day   1  hash 7ceb75364a396b79  4 events
+day   2  hash b588f624cdad6f5d  4 events
+day   3  hash 608ea0df03daa851  2 events
+day   4  hash 8251eff54641492e  2 events
 
 air_group:2 "Placeholder fighter group 2" (Allied) at base:6: 15 ready, mission Rest, no arc
 base:6 "Placeholder base 6" (Allied) at (15,4): 83 t of supply in stock, repairs 3 aircraft a day

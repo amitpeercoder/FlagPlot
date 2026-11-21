@@ -469,6 +469,7 @@ fn cited_by_land_unit(unit: &LandUnit, out: &mut Vec<(String, Cited)>) {
         fieldworks: _,
         available_from: _,
         formation: _,
+        hunger_nights: _,
     } = unit;
     for (what, held) in [("posture", posture_order), ("activity", activity_order)] {
         if let Some(held) = held {

@@ -743,6 +743,9 @@ pub(crate) fn make(
                 supply_reserve_t: Fixed::ZERO,
                 fuel_reserve_t: Fixed::ZERO,
                 ammunition_t: Fixed::ZERO,
+                // Whether the enemy has landed rations there is not known:
+                // a base of the picture has had none (decision 0205, 5).
+                rations_landed: false,
             },
         );
         making.assumptions.push(Assumption::EnemyBase {
@@ -971,7 +974,7 @@ pub(crate) fn make(
 
 /// A fighting unit of `men` men at `hex`, on defend, as rule 6 makes the
 /// unit of an estimate: the standard experience and every skill at the
-/// standard, fed, rested, with no fieldworks, no rehearsal, no march, no
+/// standard, fed, rested, with no nights of hunger, no fieldworks, no rehearsal, no march, no
 /// formation and no standing order.
 fn men_unit(id: LandUnitId, name: String, side: Side, hex: Hex, men: u32) -> LandUnit {
     LandUnit {
@@ -998,6 +1001,7 @@ fn men_unit(id: LandUnitId, name: String, side: Side, hex: Hex, men: u32) -> Lan
         fieldworks: Fixed::ZERO,
         available_from: None,
         formation: None,
+        hunger_nights: 0,
     }
 }
 
