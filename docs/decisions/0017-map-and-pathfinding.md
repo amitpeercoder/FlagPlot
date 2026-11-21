@@ -22,6 +22,8 @@ The spec asks for a hex map of the slice at 40 nm per hex, with a stored latitud
 
    0.978148 is the cosine of 12 degrees. Hexes are pointy-topped and 40 nm between centres, and north is decreasing r (decision 0012), so a hex centre (q, r) lies 40 x (q + r/2) nm east and 34.641016 x r nm south of the origin. A point belongs to the hex whose centre is nearest.
 3. **This projection is for the slice only.** East-west distances are true at 12 degrees south and up to about 5 percent off at the northern and southern edges. The whole Pacific needs its own scheme, in step 5.
+
+   *Amended by decision 0199:* each map now says where it is, in its header's lines of projection and extent (its frame), and every tool reads that; the present map's frame is the one above and its file is unchanged. A second map, of the central Pacific about Midway, has its own frame and a larger error, accepted there.
 4. **Extent.** Every hex whose centre lies from 1 to 24 degrees south and from 145 to 172 degrees east.
 5. **A hex's type comes from the share of its area that is land,** measured on one lattice of points 2 nm apart laid over the whole map. Each point belongs to the hex whose centre is nearest:
    - 80 percent or more: land. Ships cannot enter.

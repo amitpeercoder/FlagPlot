@@ -85,9 +85,11 @@ name = "map-tool"
 version = "0.1.0"
 dependencies = [
  "csv",
+ "serde",
  "shapefile",
  "sim-core",
  "sim-data",
+ "toml",
 ]
 
 [[package]]

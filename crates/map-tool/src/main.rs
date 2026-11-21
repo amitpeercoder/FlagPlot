@@ -4,8 +4,9 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
-use map_tool::generate::{csv_text, generate_with_anchors, parse_anchors, Kind};
-use map_tool::projection::{centre_of, degrees_text, hex_of};
+use map_tool::frame::Frame;
+use map_tool::generate::{csv_text, generate_with_anchors, into_run, parse_anchors, Kind};
+use map_tool::projection::degrees_text;
 use map_tool::{render, shp, water};
 use sim_core::hex::{Hex, HEX_NM};
 use sim_core::map::{HexKind, Map};
@@ -13,14 +14,19 @@ use sim_core::map::{HexKind, Map};
 const DEFAULT_MAP: &str = "data/map/south_pacific.csv";
 
 const USAGE: &str = "usage:
-  map-tool generate --land <shp> --minor-islands <shp> --out <csv> [--anchors <csv>]
+  map-tool generate --land <shp> --minor-islands <shp> --out <csv> [--anchors <csv>] [--frame <toml>]
   map-tool render [--map <csv>] [--mark q,r=X ...]
   map-tool locate --lat <deg> --lon <deg> [--map <csv>]
   map-tool path --from q,r --to q,r [--map <csv>]
   map-tool sides --hex q,r [--map <csv>]
-  map-tool water --lat <deg> --lon <deg> [--land <shp>] [--minor-islands <shp>]
+  map-tool water --lat <deg> --lon <deg> [--map <csv>] [--land <shp>] [--minor-islands <shp>]
                  (defaults: references/natural-earth/ne_10m_land/ne_10m_land.shp and
                   references/natural-earth/ne_10m_minor_islands/ne_10m_minor_islands.shp)
+
+generate makes the map of the frame file given (decision 0199); with none, the
+present map, data/map/south_pacific.csv. locate and water read the frame of
+the map they are given from its header; a longitude is west negative, and one
+west of the map's western edge is counted on across the date line.
 
 render marks coast hexes with a closed side toward water as % (+ otherwise).
 Each row is labelled with its r and the q of its first hex.";
@@ -105,7 +111,11 @@ fn parse_degrees(flags: &Flags, name: &str) -> Result<f64, String> {
 }
 
 fn run_generate(flags: &Flags, command_line: &str) -> Result<(), String> {
-    flags.check_known(&["--land", "--minor-islands", "--out", "--anchors"])?;
+    flags.check_known(&["--land", "--minor-islands", "--out", "--anchors", "--frame"])?;
+    let frame = match flags.get("--frame") {
+        Some(file) => Frame::read(Path::new(file))?,
+        None => Frame::south_pacific(),
+    };
     let anchors_file = flags.get("--anchors");
     let anchors = match anchors_file {
         Some(file) => {
@@ -120,11 +130,17 @@ fn run_generate(flags: &Flags, command_line: &str) -> Result<(), String> {
     ))?);
     let out = flags.require("--out")?;
     println!("read {} polygon records", polygons.len());
-    let map = generate_with_anchors(polygons, &anchors)?;
+    let map = generate_with_anchors(polygons, &anchors, &frame)?;
     for note in &map.anchors {
         println!("anchorage {}", note.text().trim_start());
     }
-    let text = csv_text(&map, command_line, anchors_file);
+    for mark in &map.marked {
+        println!(
+            "land mark {}: hex ({},{}) made coast",
+            mark.name, mark.hex.0, mark.hex.1
+        );
+    }
+    let text = csv_text(&map, &frame, command_line, anchors_file);
     std::fs::write(out, text).map_err(|e| format!("{out}: {e}"))?;
     let count = |kind: Kind| map.hexes.iter().filter(|h| h.kind == kind).count();
     println!(
@@ -157,13 +173,18 @@ fn run_locate(flags: &Flags) -> Result<(), String> {
     flags.check_known(&["--lat", "--lon", "--map"])?;
     let lat = parse_degrees(flags, "--lat")?;
     let lon = parse_degrees(flags, "--lon")?;
-    let (q, r) = hex_of(lat, lon);
-    let (clat, clon) = centre_of(q, r);
+    // A map that cannot be read is said so below; its hex is then worked on
+    // the default frame, as before decision 0199.
+    let frame =
+        Frame::of_map_or_default(&flags.map_path()).unwrap_or_else(|_| Frame::south_pacific());
+    let projection = frame.projection();
+    let (q, r) = projection.hex_of(lat, frame.lon_in_run(lon));
+    let (clat, clon) = projection.centre_of(q, r);
     println!("lat {lat}, lon {lon} is hex ({q},{r})");
     println!(
         "centre: lat {}, lon {}",
         degrees_text(clat),
-        degrees_text(clon)
+        degrees_text(frame.lon_for_file(clon))
     );
     match load(flags) {
         Ok(map) => match map.get(Hex::new(q, r)) {
@@ -254,9 +275,10 @@ fn run_sides(flags: &Flags) -> Result<(), String> {
 }
 
 fn run_water(flags: &Flags) -> Result<(), String> {
-    flags.check_known(&["--lat", "--lon", "--land", "--minor-islands"])?;
+    flags.check_known(&["--lat", "--lon", "--map", "--land", "--minor-islands"])?;
     let lat = parse_degrees(flags, "--lat")?;
     let lon = parse_degrees(flags, "--lon")?;
+    let frame = Frame::of_map_or_default(&flags.map_path())?;
     let land = flags
         .get("--land")
         .unwrap_or("references/natural-earth/ne_10m_land/ne_10m_land.shp");
@@ -266,8 +288,8 @@ fn run_water(flags: &Flags) -> Result<(), String> {
     let mut polygons = shp::read_polygons(Path::new(land))?;
     polygons.extend(shp::read_polygons(Path::new(minor))?);
     // Only the polygons near the point are indexed.
-    let polygons = water::keep_near_point(polygons, lat, lon);
-    print!("{}", water::report(lat, lon, &polygons));
+    let polygons = water::keep_near_point(into_run(polygons, &frame), lat, frame.lon_in_run(lon));
+    print!("{}", water::report(&frame, lat, lon, &polygons));
     Ok(())
 }
 

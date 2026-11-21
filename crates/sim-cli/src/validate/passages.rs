@@ -121,18 +121,59 @@ const DECIMALS: usize = 8;
 const UNIT: i128 = 100_000_000;
 
 /// The projection of decision 0017, 2, as `map-tool`'s `projection.rs` has it,
-/// with each constant a whole number over a power of ten:
+/// in the frame of the map the passages are measured on, read from its
+/// header (decision 0199, 18), with each quantity a whole number over a
+/// power of ten:
 ///
-/// - `cos 12 deg = 0.978148` is 978148 / 10^6;
+/// - the factor for longitude (`0.978148`, the cosine of 12 degrees, for the
+///   present map) is its millionths, as the header's literal;
+/// - the origin, hex (0,0)'s centre (12 S, 160 E for the present map), is in
+///   10^-8 degree, the longitude in the frame's run;
 /// - the row spacing `34.641016` nm is 34641016 / 10^6;
-/// - the hex spacing is 40 nm; the origin is 12 S, 160 E, whole degrees;
-/// - nm per degree of latitude is 60, and of longitude `60 x 0.978148`.
+/// - the hex spacing is 40 nm;
+/// - nm per degree of latitude is 60, and of longitude `60 x factor`.
 ///
-/// east = dlon x 60 x 978148 / (UNIT x 10^6); north = dlat x 60 / UNIT, in
+/// east = dlon x 60 x factor / (UNIT x 10^6); north = dlat x 60 / UNIT, in
 /// nm, with dlat and dlon in 10^-8 degree from the origin. Then, as there,
 /// `r = -north / row` and `q = east / 40 - r / 2` as exact fractions, rounded
 /// by cube rounding.
-const COS_12_MILLIONTHS: i128 = 978_148;
+#[derive(Clone, Copy, Debug)]
+struct Frame {
+    /// Hex (0,0)'s centre, in 10^-8 degree.
+    origin_lat: i128,
+    origin_lon: i128,
+    /// The factor for longitude, in millionths.
+    factor_millionths: i128,
+    /// The western edge, in 10^-8 degree, and whether the map crosses the
+    /// date line: a longitude west of the edge is then raised by 360.
+    west: i128,
+    crosses: bool,
+}
+
+impl Frame {
+    /// From a map's frame as `sim-data` reads it: `Fixed` is millionths, and
+    /// a degree here is 10^8 units, so each is a hundred times its raw value.
+    fn of(frame: &sim_data::MapFrame) -> Frame {
+        let units = |value: sim_core::fixed::Fixed| i128::from(value.raw()) * (UNIT / MILLION);
+        Frame {
+            origin_lat: units(frame.centre_lat),
+            origin_lon: units(frame.centre_lon),
+            factor_millionths: i128::from(frame.factor.raw()),
+            west: units(frame.west),
+            crosses: frame.crosses_date_line(),
+        }
+    }
+
+    /// A longitude, west negative, brought into the frame's run.
+    fn in_run(&self, lon: i128) -> i128 {
+        if self.crosses && lon < self.west {
+            lon + 360 * UNIT
+        } else {
+            lon
+        }
+    }
+}
+
 const ROW_MILLIONTHS: i128 = 34_641_016;
 const HEX_NM: i128 = 40;
 const NM_PER_DEG_LAT: i128 = 60;
@@ -193,17 +234,19 @@ fn round_div(n: i128, d: i128) -> i128 {
 /// rounds away from zero, and equal errors fall to the last branch (z is put
 /// right). `map-tool` does the same on floats, where such a point is decided
 /// by rounding noise; no table of this tool's depends on a tie.
-fn hex_of(lat: i128, lon: i128) -> Hex {
-    let dlat = lat + 12 * UNIT;
-    let dlon = lon - 160 * UNIT;
+fn hex_of(frame: &Frame, lat: i128, lon: i128) -> Hex {
+    let dlat = lat - frame.origin_lat;
+    let dlon = frame.in_run(lon) - frame.origin_lon;
     // r_f = -(dlat x 60 / UNIT) / (ROW / 10^6)
     //     = -dlat x 15 x 10^6 / (UNIT x 8660254), as 60 / 4 and ROW / 4.
     let b = UNIT * (ROW_MILLIONTHS / 4);
     let rn = -dlat * (NM_PER_DEG_LAT / 4) * MILLION;
-    // east / 40 = dlon x 60 x 978148 / (UNIT x 10^6 x 40)
-    //           = dlon x 1467222 / (UNIT x 10^6).
-    let a = UNIT * MILLION;
-    let qe = dlon * (NM_PER_DEG_LAT * COS_12_MILLIONTHS / HEX_NM);
+    // east / 40 = dlon x 60 x factor / (UNIT x 10^6 x 40)
+    //           = dlon x 3 x factor / (2 x UNIT x 10^6), whole for any factor
+    //           (for 0.978148 it is the same fraction as dlon x 1467222 /
+    //           (UNIT x 10^6)).
+    let a = 2 * UNIT * MILLION;
+    let qe = dlon * (NM_PER_DEG_LAT * frame.factor_millionths / (HEX_NM / 2));
     let den = 2 * a * b;
     let x_n = 2 * qe * b - rn * a;
     let z_n = 2 * rn * a;
@@ -357,7 +400,12 @@ pub struct Request<'a> {
     pub out: Option<PathBuf>,
 }
 
-fn end_of(passage: &Passage, which: &str, places: &BTreeMap<u64, PlaceRow>) -> Result<End, String> {
+fn end_of(
+    frame: &Frame,
+    passage: &Passage,
+    which: &str,
+    places: &BTreeMap<u64, PlaceRow>,
+) -> Result<End, String> {
     let id = &passage.id;
     let (place, row, lat, lon) = if which == "from" {
         (
@@ -408,7 +456,7 @@ fn end_of(passage: &Passage, which: &str, places: &BTreeMap<u64, PlaceRow>) -> R
                     ))
                 })?,
             );
-            let hex = hex_of(la, lo);
+            let hex = hex_of(frame, la, lo);
             Ok(End {
                 hex,
                 text: format!("row {row}, {}, ({},{})", found.place, hex.q, hex.r),
@@ -421,7 +469,7 @@ fn end_of(passage: &Passage, which: &str, places: &BTreeMap<u64, PlaceRow>) -> R
                 parse_degrees(lon)
                     .ok_or_else(|| bad(format!("longitude \"{lon}\" is not a decimal")))?,
             );
-            let hex = hex_of(la, lo);
+            let hex = hex_of(frame, la, lo);
             Ok(End {
                 hex,
                 text: format!("position {lat}, {lon}, ({},{})", hex.q, hex.r),
@@ -456,6 +504,15 @@ pub fn command(request: &Request) -> Result<(), String> {
     let map_bytes = fs::read(map_path).map_err(|e| format!("{map_path}: {e}"))?;
     let map_hash = crate::save::hash_hex(&map_bytes);
     let map = sim_data::load_map(Path::new(map_path)).map_err(|e| e.to_string())?;
+    // A map with no frame (a hand-written map) is measured as before
+    // decision 0199: in the present map's frame, read from its header.
+    let frame = match sim_data::read_map_frame(Path::new(map_path)).map_err(|e| e.to_string())? {
+        Some(frame) => frame,
+        None => sim_data::read_map_frame(Path::new(MAP))
+            .map_err(|e| e.to_string())?
+            .ok_or_else(|| format!("{MAP}: the present map has no frame in its header"))?,
+    };
+    let frame = Frame::of(&frame);
     let places_bytes = fs::read(places_path).map_err(|e| format!("{places_path}: {e}"))?;
     let places_hash = crate::save::hash_hex(&places_bytes);
     let places_text =
@@ -509,8 +566,8 @@ pub fn command(request: &Request) -> Result<(), String> {
             }
             last = *minute;
         }
-        let from = end_of(passage, "from", &places)?;
-        let to = end_of(passage, "to", &places)?;
+        let from = end_of(&frame, passage, "from", &places)?;
+        let to = end_of(&frame, passage, "to", &places)?;
         let short = passage.to_short_by_nm.unwrap_or(0);
         let speed = speed_words(passage.speed_kn, &passage.speed_changes);
         let record = record_text(passage.record_low, passage.record_high);
@@ -574,6 +631,18 @@ pub fn command(request: &Request) -> Result<(), String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// The present map's frame, read from its header as the command reads it.
+    fn present() -> Frame {
+        let path = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../")
+            .join(MAP);
+        Frame::of(
+            &sim_data::read_map_frame(&path)
+                .unwrap()
+                .expect("the map has a frame"),
+        )
+    }
 
     /// 50 positions and the hexes `map-tool locate` gave them, made with
     ///
@@ -645,7 +714,11 @@ mod tests {
     #[test]
     fn positions_become_the_hexes_map_tool_gives() {
         for (lat, lon, q, r) in TABLE {
-            let hex = hex_of(parse_degrees(lat).unwrap(), parse_degrees(lon).unwrap());
+            let hex = hex_of(
+                &present(),
+                parse_degrees(lat).unwrap(),
+                parse_degrees(lon).unwrap(),
+            );
             assert_eq!((hex.q, hex.r), (q, r), "at {lat}, {lon}");
         }
     }
@@ -667,15 +740,57 @@ mod tests {
         // south of the origin; to the nearest 10^-8 degree it falls in its own
         // hex. Worked in integers: latitude = -12 - r x 34641016 / (60 x 10^6),
         // longitude = 160 + 40 x (q + r/2) x 10^6 / (60 x 978148).
+        let frame = present();
+        assert_eq!(
+            (frame.origin_lat, frame.origin_lon, frame.factor_millionths),
+            (-12 * UNIT, 160 * UNIT, 978_148)
+        );
         for r in -30..=30i128 {
             for q in -40..=40i128 {
                 let lat = -12 * UNIT - round_div(r * 34_641_016 * UNIT, 60 * MILLION);
                 let lon = 160 * UNIT
-                    + round_div((2 * q + r) * 20 * MILLION * UNIT, 60 * COS_12_MILLIONTHS);
-                let hex = hex_of(lat, lon);
+                    + round_div(
+                        (2 * q + r) * 20 * MILLION * UNIT,
+                        60 * frame.factor_millionths,
+                    );
+                let hex = hex_of(&frame, lat, lon);
                 assert_eq!((i128::from(hex.q), i128::from(hex.r)), (q, r));
             }
         }
+    }
+
+    /// On the Midway map, whose frame crosses the date line (decision 0199),
+    /// the centre each row of the map file gives, its longitude west
+    /// negative and to four places, falls in that row's own hex.
+    #[test]
+    fn a_hex_centre_on_the_midway_map_is_in_its_own_hex() {
+        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data/map/midway.csv");
+        let frame = Frame::of(&sim_data::read_map_frame(&path).unwrap().expect("a frame"));
+        assert!(frame.crosses);
+        let text = fs::read_to_string(&path).unwrap();
+        let mut west_of_the_line = 0;
+        for line in text.lines().filter(|l| !l.starts_with('#')).skip(1) {
+            let fields: Vec<&str> = line.split(',').collect();
+            let (q, r): (i32, i32) = (fields[0].parse().unwrap(), fields[1].parse().unwrap());
+            let (lat, lon) = (
+                parse_degrees(fields[4]).unwrap(),
+                parse_degrees(fields[5]).unwrap(),
+            );
+            if lon < 0 {
+                west_of_the_line += 1;
+            }
+            let hex = hex_of(&frame, lat, lon);
+            assert_eq!((hex.q, hex.r), (q, r), "{line}");
+        }
+        assert!(west_of_the_line > 500, "{west_of_the_line}");
+        // Midway's atoll, row 5100 of place_positions.csv, is the hex the
+        // map tool marked, (5,1).
+        let hex = hex_of(
+            &frame,
+            parse_degrees("28.232").unwrap(),
+            parse_degrees("-177.370").unwrap(),
+        );
+        assert_eq!((hex.q, hex.r), (5, 1));
     }
 
     #[test]

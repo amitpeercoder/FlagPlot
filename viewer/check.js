@@ -699,15 +699,27 @@ function checkReplay(file) {
     for (const fgt of st.fights) assert(model.hexByKey.has(fgt.q + ',' + fgt.r), 'step ' + i + ': fight hex off the map');
   });
 
+  // The map's frame (decision 0199): a replay of a real map of the current format (version 6) carries it, in numbers; an older file may not.
+  {
+    const fr = replay.map.frame;
+    if (fr !== undefined || (replay.map.real && replay.version >= 6)) {
+      assert(fr && typeof fr === 'object', 'a replay of a real map carries no map.frame (re-export it)');
+      if (fr) for (const k of ['centre_lat', 'centre_lon', 'factor', 'west', 'east']) assert(typeof fr[k] === 'number' && Number.isFinite(fr[k]), 'map.frame.' + k + ' is not a number');
+      if (fr) assert(fr.factor > 0 && fr.factor <= 1 && fr.east > fr.west, 'map.frame is not a frame: ' + JSON.stringify(fr));
+    }
+  }
+
   // Labels
   if (model.hasLatLon) {
     for (const p of model.placements) {
       assert(model.hexByKey.has(p.q + ',' + p.r), 'label ' + p.label.place + ' placed off the map');
-      // independent recomputation of the nearest hex
+      // independent recomputation of the nearest hex, in the map's own frame (decision 0199)
+      const fr = replay.map.frame, factor = fr && Number.isFinite(fr.factor) ? fr.factor : Math.cos(12 * Math.PI / 180);
+      const runOf = (lon) => (fr && fr.east > 180 && lon < fr.west ? lon + 360 : lon);
       let best = null, bd = Infinity;
       for (const h of replay.map.hexes) {
         if (typeof h.lat !== 'number') continue;
-        const dx = (p.label.lon - h.lon) * Math.cos(12 * Math.PI / 180), dy = p.label.lat - h.lat;
+        const dx = (runOf(p.label.lon) - runOf(h.lon)) * factor, dy = p.label.lat - h.lat;
         const d = dx * dx + dy * dy;
         if (d < bd) { bd = d; best = h; }
       }
