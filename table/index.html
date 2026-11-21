@@ -1792,7 +1792,15 @@ body.watched .gives { display: none !important; }
         var mine = all[k].filter(function (e) { return !D_ROUTINE[e.event_kind] && e.event_kind !== 'staff_reason' && !emptyClaim(e) && (e.entities || []).some(function (x) { return x && x.handle === h; }); });
         if (!mine.length) continue; any = true;
         var sec = el('div', 'phase'); sec.appendChild(el('b', '', (dateOf(days[k] - 1) || 'day ' + days[k])));
-        mine.forEach(function (e) { sec.appendChild(diaryRow(sayEvent(e, true), e.number, null)); }); doc.appendChild(sec);
+        // A staff order is tied to the order of yours it serves by the staff's
+        // reason for it, and the line links to that order's plan.
+        var serves = {}, byNo = {}; ((M.state || {}).intents || []).forEach(function (i) { byNo[i.number] = i; });
+        all[k].forEach(function (e) { var m = e.event_kind === 'staff_reason' && /reason for order:(\d+) \[serves intent (\d+)/.exec(e.text); if (m) serves[m[1]] = parseInt(m[2], 10); });
+        mine.forEach(function (e) {
+          var words = sayEvent(e, true), root = null, m = e.event_kind === 'order_accepted' && /^order:(\d+) /.exec(e.text);
+          if (m) { words = words.replace(/^Staff order \d+ accepted for /, 'Staff order to '); words = words.replace(/set air mission, mission ([a-z ]+)/, function (x, mi) { return 'air mission, ' + (MISSION[mi.replace(/ /g, '_')] || mi).toLowerCase(); }); var i = byNo[serves[m[1]]]; while (i && i.parent != null && byNo[i.parent]) i = byNo[i.parent]; if (i) root = i.number; }
+          sec.appendChild(diaryRow(words, e.number, root));
+        }); doc.appendChild(sec);
       }
       if (!any) doc.appendChild(el('p', '', 'The diary holds nothing of it yet.'));
       sheetAs('WAR DIARY'); doc.hidden = false; $('sheet-text').hidden = true; $('card').hidden = true; $('sheet').hidden = false; $('sheet-close').focus(); setStatus('');
