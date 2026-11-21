@@ -71,17 +71,22 @@
 //!
 //! # Statements: the limit on engaged men
 //!
-//! The same scenario on a ground file whose `engagement_ratio` is 0.5.
+//! The same scenario with V of 500 men and Q starting with 17.5 t of
+//! supply, on a ground file whose `engagement_ratio` is 1, the least the
+//! game takes. The night takes 2.5 t and leaves 15. V's firing men are
+//! 500 and E's 891. (Corrected by the architect on Nov 22, 2026: as first
+//! written the ratio was 0.5, which no ground file may give, decision
+//! 0105.)
 //!
-//! 8. **Only the men at grips are paid for.** The limit for A is 0.5
-//!    times E's 1,000 fighting men, 500, below V's 1,000 firing men: A's
-//!    men at grips are 500 and its want 5 t. Q starts with 20 t of
-//!    supply: 5 are charged and Q has 10 t after the fight's charge. V's
-//!    shots are 10 times 500 over 1,000, 5, times a fire share of 1: 5.
-//! 9. **The cut is on the shots after the limit.** The limit for B is 0.5
-//!    times V's 1,000, 500, below E's 891 firing men: B's men at grips
-//!    are 500 and its want 5 t, of which nothing is charged. E's shots
-//!    are 8.91 times 500 over 891, 5, times 0.25: 1.25.
+//! 8. **A side inside its limit pays for all who fire.** The limit for A
+//!    is E's fighting men, above V's 500 firing men: A's men at grips are
+//!    500 and its want 5 t. All is charged and Q has 10 t after the
+//!    fight's charge. V's shots are 5.
+//! 9. **Only the men at grips are paid for, and the cut is on the shots
+//!    after the limit.** The limit for B is V's 500 fighting men, below
+//!    E's 891 firing men: B's men at grips are 500 and its want 5 t, of
+//!    which nothing is charged. E's shots are 8.91 times 500 over 891, 5,
+//!    times 0.25: 1.25.
 //!
 //! # Statements: what a landing brings
 //!
@@ -106,8 +111,10 @@
 //!     world's setting that takes B as supplied, in statement 1: E's fire
 //!     share is 1 and its shots 8.91, nothing is charged to B and no
 //!     charge is recorded for B. A is charged as in statement 1.
-//! 14. **Without the three figures,** on scenario 122's ground file, in
-//!     statement 1's setting: V's shots are 10 and E's 8.91, Q has 15 t
+//! 14. **Without the three figures,** on this scenario's ground file
+//!     with the three taken out, in statement 1's setting (corrected by
+//!     the architect on Nov 22, 2026: scenario 122's file, as first
+//!     written, has another `unfed_fighting_share`): V's shots are 10 and E's 8.91, Q has 15 t
 //!     after the fight, nothing is recorded of a fight's charge, and the
 //!     landing of statement 10 brings 45 t of supply and no ammunition.
 //! 15. **The loader.** A ground file with one or two of the three figures
@@ -327,22 +334,6 @@ fn without_the_three() -> LoadOptions {
     })
 }
 
-/// The scenario's ground figures with the limit on engaged men at a half,
-/// as statements 8 and 9 say. The loader refuses it (the ratio is 1 or
-/// more), so a test on it cannot load.
-fn engagement_half() -> LoadOptions {
-    common::altered_reference("engagement_half", |root| {
-        common::edit_file_by(
-            root,
-            OWN_GROUND,
-            &[(
-                "engagement_ratio = 1000000\n",
-                "engagement_ratio = \"0.5\"\n",
-            )],
-        );
-    })
-}
-
 /// The scenario's ground figures with the limit on engaged men at 1, the
 /// least the loader takes.
 fn engagement_one() -> LoadOptions {
@@ -353,15 +344,6 @@ fn engagement_one() -> LoadOptions {
             &[("engagement_ratio = 1000000\n", "engagement_ratio = 1\n")],
         );
     })
-}
-
-/// The scenario's text with its ground line pointed at scenario 122's file.
-fn on_122_ground(text: &str) -> String {
-    changed(
-        text,
-        "ground = \"../../reference/ground_placeholder_scenario_123.toml\"\n",
-        "ground = \"../../reference/ground_placeholder_scenario_122.toml\"\n",
-    )
 }
 
 // ---------------------------------------------------------------- Playing
@@ -868,30 +850,7 @@ fn statement_7_no_fight_no_charge() {
 
 // ---------------------------------------------------------------- Statements: the limit on engaged men
 
-/// 8. Only the men at grips are paid for.
-#[test]
-#[ignore = "the loader refuses an engagement_ratio below 1, so the ground file of 0.5 does not load"]
-fn statement_8_only_the_men_at_grips_are_paid_for() {
-    let played = play_with(&fight("20", "0"), &engagement_half());
-    assert_eq!(played.firing_men_of_fire(V, 1), 1000);
-    assert_charge(&played, Side::Allied, 1, ("500", "5", "0", "5", "1"));
-    assert_eq!(played.q(1), (n(10), Fixed::ZERO));
-    // 10 times 500 over 1,000, times a fire share of 1.
-    assert_fire(&played, V, 1, "5", "1", "1");
-}
-
-/// 9. The cut is on the shots after the limit.
-#[test]
-#[ignore = "the loader refuses an engagement_ratio below 1, so the ground file of 0.5 does not load"]
-fn statement_9_the_cut_is_on_the_shots_after_the_limit() {
-    let played = play_with(&fight("20", "0"), &engagement_half());
-    assert_eq!(played.firing_men_of_fire(E, 1), 891);
-    assert_charge(&played, Side::Japanese, 1, ("500", "5", "0", "0", "0"));
-    // 8.91 times 500 over 891, 5, times 0.25.
-    assert_fire(&played, E, 1, "1.25", "0", "0.25");
-}
-
-/// The setting of 8 and 9 as the loader allows it: the ratio at its least,
+/// The setting of 8 and 9: the ratio at its least,
 /// 1, and V of 500 men (the night takes 2.5 t of Q's 17.5, leaving the 15 t
 /// of the statements). The limit for A is E's 891 fighting men, above V's
 /// 500; the limit for B is V's 500, below E's 891: the figures are those of
@@ -903,7 +862,7 @@ fn limited() -> Played {
 }
 
 #[test]
-fn statement_8_as_built_only_the_men_at_grips_are_paid_for() {
+fn statement_8_only_the_men_at_grips_are_paid_for() {
     let played = limited();
     assert_eq!(
         played.before(1, Pulse::Morning).bases[&base(1)].supply_t,
@@ -916,7 +875,7 @@ fn statement_8_as_built_only_the_men_at_grips_are_paid_for() {
 }
 
 #[test]
-fn statement_9_as_built_the_cut_is_on_the_shots_after_the_limit() {
+fn statement_9_the_cut_is_on_the_shots_after_the_limit() {
     let played = limited();
     assert_eq!(played.firing_men_of_fire(E, 1), 891);
     assert_charge(&played, Side::Japanese, 1, ("500", "5", "0", "0", "0"));
@@ -1055,30 +1014,11 @@ fn statement_13_a_side_a_dry_run_makes_up_is_taken_as_supplied() {
     assert_fire(&played, V, 1, "10", "1", "1");
 }
 
-/// 14, as written: without the three figures, on scenario 122's ground file,
-/// in statement 1's setting.
-#[test]
-#[ignore = "scenario 122's ground file gives unfed_fighting_share 0.5, so E's firing men there are 495, not 891, and E's shots are 4.95, not 8.91"]
-fn statement_14_without_the_three_figures_on_scenario_122s_ground_file() {
-    let played = play(&on_122_ground(&fight("20", "0")));
-    assert_eq!(played.shots(V, 1), n(10));
-    assert_eq!(played.shots(E, 1), fx("8.91"));
-    assert_eq!(played.q(1).0, n(15));
-    assert_eq!(fight_records(&played), 0);
-    assert!(!has_factor(played.fire(V, 1), "fire_share"));
-    // The landing of statement 10 brings 45 t of supply and no ammunition.
-    let landing = play(&on_122_ground(&landing(2)));
-    assert_eq!(landing.rations().len(), 1);
-    assert_eq!(landing.rations()[0].4, n(45));
-    assert!(landing.landed().is_empty());
-    assert_eq!(landing.at_p(1), (n(45), Fixed::ZERO));
-}
-
-/// 14, as built: on scenario 123's own ground file with the three figures of
+/// 14. On scenario 123's own ground file with the three figures of
 /// 0209 removed. (Its `unfed_fighting_share` is 0.9, so E's 891 firing men
 /// are as in statement 1.)
 #[test]
-fn statement_14_as_built_without_the_three_figures() {
+fn statement_14_without_the_three_figures() {
     let played = play_with(&fight("20", "0"), &without_the_three());
     assert_eq!(played.shots(V, 1), n(10));
     assert_eq!(played.shots(E, 1), fx("8.91"));

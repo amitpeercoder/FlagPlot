@@ -171,3 +171,13 @@ In `07c_slice` the Allied landings of day 1 bring 243 t and 436 t of ammunition,
 
 - The diary's two sentences and the card's "Ammunition" row were not seen in a browser; the patterns were checked against the events' text by script, and `python3 table/check_screen.py --port 8796` passes (174 checks), which does not open the diary of a fight or a base card.
 - A seat's dry run on a game with the figures was not asked, so the assumed line was not seen on the paper; the chain to it compiles and is exhaustive.
+
+## The architect's rulings
+
+Read on Nov 22, 2026: the charge in full (`sim-core`, `ground_combat/fight.rs`, `charge_fight` and where the fire share meets the shots), the landing's ammunition, the dry run's setting, and the build's account of what moved.
+
+1. **Three statements of the hand calculation were wrong, and the fault was the architect's.** Statements 8 and 9 asked for a limit on engaged men of a half, which no ground file may give (decision 0105): they are restated at a ratio of 1 with V of 500 men, where the limit bites on B and not on A, and the numbers they assert are the ones first written. Statement 14 named scenario 122's ground file, whose `unfed_fighting_share` is another: it is restated on scenario 123's own file with the three figures taken out. Each is one test, not set aside; the build's tests of what the code does became the tests.
+2. **The build's seven readings are accepted.** A landing over several pulses brings its ammunition once, and a force that lands again after its unloading is complete brings it again; a side taken as supplied shows both shares as one and records no charge; a base's line shows ammunition only where it has some, so no answer on file changes.
+3. **What the rule does to the 39 days, in the table's copies:** no loss, no sortie and no base's holder changes. In the one copy with fights, both on the first day, the Allied side used 14.22 t of the 679 t of ammunition its landings brought, and the Japanese 4.74 t of supply; no side fired short. So the rule is in the game and these games do not yet test it: the landings bring far more than two fights use, and the Japanese counter-attacks that would run a side short do not happen in these files.
+4. **A sortie not flown for want of supply is not recorded,** so the plan's ask to count them could not be met; bases that ran out of supply are the same before and after.
+5. **Not seen:** the diary's two new sentences and the card's ammunition row in a browser, and the dry run paper's line that the enemy is taken as supplied.
