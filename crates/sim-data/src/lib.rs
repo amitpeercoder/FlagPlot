@@ -85,7 +85,7 @@ mod reference;
 mod scenario;
 
 pub use error::DataError;
-pub use map::load_map;
+pub use map::{load_map, parse_map_frame, read_map_frame, MapFrame};
 pub use reference::{
     load_air_combat_figures, load_air_supply_figures, load_air_upkeep_figures, load_aircraft_types,
     load_class_sides, load_fatigue_figures, load_ground_figures, load_port_sizes,

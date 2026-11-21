@@ -800,3 +800,56 @@ fn the_steps_cover_every_phase_and_end_at_the_final_state() {
         }
     }
 }
+
+/// Decision 0199, 30: a generated map's export carries its frame, as its
+/// header gives it, exactly; a hand-written map's carries none.
+#[test]
+fn a_generated_map_carries_its_frame() {
+    let real = parse(&export(
+        "frame",
+        "data/scenarios/04b_santo_to_lunga.toml",
+        &[],
+    ));
+    assert_eq!(
+        real["map"]["frame"],
+        serde_json::json!({"centre_lat": -12, "centre_lon": 160, "factor": 0.978148, "west": 145, "east": 172})
+    );
+    let bytes = export("frame-text", "data/scenarios/04b_santo_to_lunga.toml", &[]);
+    let text = String::from_utf8(bytes).expect("UTF-8");
+    assert!(text.contains("\"factor\":0.978148,"));
+    let placeholder = parse(&export("no-frame", "data/scenarios/01_transit.toml", &[]));
+    assert!(placeholder["map"].get("frame").is_none());
+}
+
+/// The Midway map's labels (decision 0199, 29) are read as any labels file
+/// is, each position its row's of `data/oob/place_positions.csv`, exactly.
+#[test]
+fn the_midway_labels_are_the_rows_positions() {
+    let labels_file = "data/map/midway_labels.csv";
+    let with = parse(&export(
+        "midway-labels",
+        "data/scenarios/04b_santo_to_lunga.toml",
+        &["--labels", labels_file],
+    ));
+    let labels = with["labels"].as_array().expect("labels is a list");
+    let places = fs::read_to_string(Path::new(ROOT).join("data/oob/place_positions.csv"))
+        .expect("place positions");
+    let text = fs::read_to_string(Path::new(ROOT).join(labels_file)).expect("labels");
+    let rows: Vec<Vec<&str>> = text
+        .lines()
+        .filter(|l| !l.starts_with('#'))
+        .skip(1)
+        .map(|l| l.split(',').collect())
+        .collect();
+    assert_eq!(labels.len(), 5);
+    assert_eq!(labels.len(), rows.len());
+    for (label, row) in labels.iter().zip(&rows) {
+        assert_eq!(label["place"], row[0]);
+        let source = places
+            .lines()
+            .find(|l| l.starts_with(&format!("{},", row[4])))
+            .expect("the row is in place_positions.csv");
+        let fields: Vec<&str> = source.split(',').collect();
+        assert_eq!((fields[1], fields[3], fields[4]), (row[0], row[2], row[3]));
+    }
+}

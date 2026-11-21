@@ -3,9 +3,10 @@
 
 use std::collections::BTreeMap;
 
+use crate::frame::Frame;
 use crate::generate::{analyse_hex, lattice_hex, lattice_nm, lattice_point_is_land, HexAnalysis};
 use crate::land::{LandIndex, Polygon};
-use crate::projection::{degrees_text, hex_of, to_nm};
+use crate::projection::degrees_text;
 
 /// How far from the position to look for the nearest sea point, in nm.
 pub const SEARCH_NM: f64 = 6.0;
@@ -64,11 +65,16 @@ pub fn nearest_sea_point(
     best
 }
 
-/// The report of the `water` command, as text. `polygons` may be all the
-/// land or only what is near the point.
-pub fn report(lat: f64, lon: f64, polygons: &[Polygon]) -> String {
+/// The report of the `water` command, as text, on a map's frame (decision
+/// 0199). `polygons` may be all the land or only what is near the point,
+/// and are in the frame's run (`generate::into_run`); `lon` is brought into
+/// the run here, and shown as it was given.
+pub fn report(frame: &Frame, lat: f64, lon: f64, polygons: &[Polygon]) -> String {
+    let projection = frame.projection();
+    let given_lon = lon;
+    let lon = frame.lon_in_run(lon);
     let index = LandIndex::new(&keep_near_point(polygons.to_vec(), lat, lon));
-    let is_land = |i: i32, j: i32| lattice_point_is_land(&index, i, j);
+    let is_land = |i: i32, j: i32| lattice_point_is_land(&projection, &index, i, j);
     let mut cache: BTreeMap<(i32, i32), HexAnalysis> = BTreeMap::new();
     let mut analysis_of = |hex: (i32, i32)| -> HexAnalysis {
         cache
@@ -77,13 +83,13 @@ pub fn report(lat: f64, lon: f64, polygons: &[Polygon]) -> String {
             .clone()
     };
 
-    let (east, north) = to_nm(lat, lon);
-    let hex = hex_of(lat, lon);
+    let (east, north) = projection.to_nm(lat, lon);
+    let hex = projection.hex_of(lat, lon);
     let mut out = String::new();
     out.push_str(&format!(
         "lat {}, lon {}: east {east:.3} nm, north {north:.3} nm from hex (0,0)\n",
         degrees_text(lat),
-        degrees_text(lon)
+        degrees_text(given_lon)
     ));
     let here = analysis_of(hex);
     let points = here.points.len();
@@ -174,7 +180,15 @@ pub fn report(lat: f64, lon: f64, polygons: &[Polygon]) -> String {
 mod tests {
     use super::*;
     use crate::land::Ring;
-    use crate::projection::from_nm;
+
+    // The tests are on the present map's frame, the tool's default.
+    fn from_nm(east: f64, north: f64) -> (f64, f64) {
+        Frame::south_pacific().projection().from_nm(east, north)
+    }
+
+    fn report(lat: f64, lon: f64, polygons: &[Polygon]) -> String {
+        super::report(&Frame::south_pacific(), lat, lon, polygons)
+    }
 
     fn rect_nm(east: (f64, f64), north: (f64, f64)) -> Polygon {
         let corner = |e: f64, n: f64| {

@@ -270,6 +270,220 @@ fn parse_land_links(text: &str, path: &Path, map: &mut Map) -> Result<(), DataEr
     Ok(())
 }
 
+/// A generated map's frame (decision 0199): where it lies on the earth, as
+/// its header says. Every quantity is a `Fixed`, read from the header's
+/// decimal text exactly. Longitudes are in the frame's run: a map that
+/// crosses the date line has its eastern edge above 180 (163 to 194 for 163 E
+/// to 166 W), while its file's longitude column stays west negative, from
+/// -180 to 180.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct MapFrame {
+    /// The latitude of the centre of hex (0,0), north positive.
+    pub centre_lat: Fixed,
+    /// The longitude of the centre of hex (0,0), in the run.
+    pub centre_lon: Fixed,
+    /// The factor for longitude: the cosine of the centre's latitude, as the
+    /// header's literal.
+    pub factor: Fixed,
+    pub north: Fixed,
+    pub south: Fixed,
+    /// The western edge.
+    pub west: Fixed,
+    /// The eastern edge, in the run.
+    pub east: Fixed,
+}
+
+impl MapFrame {
+    /// A longitude, west negative, brought into the frame's run: raised by
+    /// 360 when it is west of the western edge and the frame crosses the
+    /// date line.
+    pub fn in_run(&self, lon: Fixed) -> Fixed {
+        if self.crosses_date_line() && lon < self.west {
+            lon + Fixed::from_int(360)
+        } else {
+            lon
+        }
+    }
+
+    /// Whether the frame crosses the date line: its eastern edge is above
+    /// 180.
+    pub fn crosses_date_line(&self) -> bool {
+        self.east > Fixed::from_int(180)
+    }
+}
+
+/// Reads a generated map's frame from its header (decision 0199, 18): the
+/// lines "Projection: hex (0,0) is centred at ...", "east_nm = ...",
+/// "north_nm = ..." and "Extent: every hex whose centre lies from ... to
+/// ... and from ... to ...". `None` for a hand-written `.toml` map, or a map
+/// whose header has none of these lines: it has no frame.
+pub fn read_map_frame(path: &Path) -> Result<Option<MapFrame>, DataError> {
+    if path.extension().and_then(|e| e.to_str()) != Some("csv") {
+        return Ok(None);
+    }
+    let text = fs::read_to_string(path).map_err(|e| DataError::in_file(path, e.to_string()))?;
+    parse_map_frame(&text).map_err(|message| DataError::in_file(path, message))
+}
+
+/// A number of degrees with its hemisphere, as "12 S" or "178.5 E".
+fn hemisphere_degrees(text: &str, positive: char, negative: char) -> Result<Fixed, String> {
+    let text = text.trim();
+    let (number, letter) = text
+        .rsplit_once(' ')
+        .ok_or_else(|| format!("\"{text}\" is not degrees and a hemisphere"))?;
+    let value: Fixed = number
+        .parse()
+        .map_err(|e| format!("\"{number}\" is not a number of degrees: {e}"))?;
+    if value.is_negative() {
+        return Err(format!("\"{text}\": the hemisphere gives the sign"));
+    }
+    match letter.chars().collect::<Vec<_>>()[..] {
+        [c] if c == positive => Ok(value),
+        [c] if c == negative => Ok(-value),
+        _ => Err(format!(
+            "\"{text}\" does not end in {positive} or {negative}"
+        )),
+    }
+}
+
+/// Parses the frame from a generated map's text; see [`read_map_frame`].
+/// The lines must agree: the centre of the projection line is the one the
+/// two formulas use.
+pub fn parse_map_frame(text: &str) -> Result<Option<MapFrame>, String> {
+    let header: Vec<&str> = text
+        .lines()
+        .take_while(|line| line.starts_with('#'))
+        .map(|line| line.trim_start_matches('#').trim())
+        .collect();
+    let find = |start: &str| header.iter().find(|line| line.starts_with(start)).copied();
+    let projection = find("Projection: hex (0,0) is centred at ");
+    let east_line = find("east_nm  = (lon - ");
+    let north_line = find("north_nm = (lat ");
+    let extent = find("Extent: every hex whose centre lies from ");
+    let found = [projection, east_line, north_line, extent];
+    if found.iter().all(Option::is_none) {
+        return Ok(None);
+    }
+    let (Some(projection), Some(east_line), Some(north_line), Some(extent)) =
+        (projection, east_line, north_line, extent)
+    else {
+        return Err(
+            "the header has some of the lines of a frame (Projection, east_nm, north_nm, Extent) but not all"
+                .to_string(),
+        );
+    };
+    let bad = |line: &str| format!("the header line \"{line}\" is not as a frame writes it");
+
+    // Projection: hex (0,0) is centred at 28.5 N, 178.5 E.
+    let centre = projection
+        .strip_prefix("Projection: hex (0,0) is centred at ")
+        .and_then(|rest| rest.strip_suffix('.'))
+        .ok_or_else(|| bad(projection))?;
+    let (lat_text, lon_text) = centre.split_once(", ").ok_or_else(|| bad(projection))?;
+    let centre_lat = hemisphere_degrees(lat_text, 'N', 'S')?;
+    let centre_lon_given = hemisphere_degrees(lon_text, 'E', 'W')?;
+
+    // east_nm  = (lon - 178.5) * 60 * 0.878817   (0.878817 is cos 28.5 degrees)
+    let rest = east_line
+        .strip_prefix("east_nm  = (lon - ")
+        .ok_or_else(|| bad(east_line))?;
+    let (centre_lon_text, rest) = rest.split_once(") * 60 * ").ok_or_else(|| bad(east_line))?;
+    let (factor_text, rest) = rest.split_once("   (").ok_or_else(|| bad(east_line))?;
+    let (factor_again, rest) = rest.split_once(" is cos ").ok_or_else(|| bad(east_line))?;
+    let cos_of = rest
+        .strip_suffix(" degrees)")
+        .ok_or_else(|| bad(east_line))?;
+    let number = |text: &str| -> Result<Fixed, String> {
+        text.parse::<Fixed>()
+            .map_err(|e| format!("\"{text}\" in the header is not a number: {e}"))
+    };
+    let centre_lon = number(centre_lon_text)?;
+    let factor = number(factor_text)?;
+    if factor_again != factor_text {
+        return Err(bad(east_line));
+    }
+    let centre_magnitude = if centre_lat.is_negative() {
+        -centre_lat
+    } else {
+        centre_lat
+    };
+    if number(cos_of)? != centre_magnitude {
+        return Err(format!(
+            "the factor is said to be the cosine of {cos_of} degrees, not of the centre's latitude"
+        ));
+    }
+    if factor <= Fixed::ZERO || factor > Fixed::ONE {
+        return Err(format!("the factor {factor_text} is not between 0 and 1"));
+    }
+
+    // north_nm = (lat + 12) * 60, or (lat - 28.5) * 60
+    let rest = north_line
+        .strip_prefix("north_nm = (lat ")
+        .and_then(|rest| rest.strip_suffix(") * 60"))
+        .ok_or_else(|| bad(north_line))?;
+    let north_centre = if let Some(value) = rest.strip_prefix("+ ") {
+        -number(value)?
+    } else if let Some(value) = rest.strip_prefix("- ") {
+        number(value)?
+    } else {
+        return Err(bad(north_line));
+    };
+    if north_centre != centre_lat {
+        return Err(format!(
+            "the north_nm line's centre is {north_centre}, the projection line's {centre_lat}"
+        ));
+    }
+
+    // Extent: every hex whose centre lies from 1 S to 24 S and from 145 E to 172 E.
+    let rest = extent
+        .strip_prefix("Extent: every hex whose centre lies from ")
+        .and_then(|rest| rest.strip_suffix('.'))
+        .ok_or_else(|| bad(extent))?;
+    let (lats, lons) = rest.split_once(" and from ").ok_or_else(|| bad(extent))?;
+    let (north_text, south_text) = lats.split_once(" to ").ok_or_else(|| bad(extent))?;
+    let (west_text, east_text) = lons.split_once(" to ").ok_or_else(|| bad(extent))?;
+    let north = hemisphere_degrees(north_text, 'N', 'S')?;
+    let south = hemisphere_degrees(south_text, 'N', 'S')?;
+    let west = hemisphere_degrees(west_text, 'E', 'W')?;
+    let east_given = hemisphere_degrees(east_text, 'E', 'W')?;
+    if north <= south {
+        return Err(format!(
+            "the extent's north, {north}, is not north of its south, {south}"
+        ));
+    }
+    let three_sixty = Fixed::from_int(360);
+    let east = if east_given < west {
+        east_given + three_sixty
+    } else {
+        east_given
+    };
+    let in_run = |lon: Fixed| {
+        if east_given < west && lon < west {
+            lon + three_sixty
+        } else {
+            lon
+        }
+    };
+    if in_run(centre_lon_given) != centre_lon {
+        return Err(format!(
+            "the east_nm line's centre is {centre_lon}, the projection line's {centre_lon_given}"
+        ));
+    }
+    let frame = MapFrame {
+        centre_lat,
+        centre_lon,
+        factor,
+        north,
+        south,
+        west,
+        east,
+    };
+    if centre_lat < south || centre_lat > north || centre_lon < west || centre_lon > east {
+        return Err("the centre of hex (0,0) is not inside the extent".to_string());
+    }
+    Ok(Some(frame))
+}
+
 /// The columns of a generated map, in order.
 const CSV_COLUMNS: [&str; 8] = [
     "q",
@@ -432,6 +646,78 @@ mod tests {
 
     fn parse(body: &str) -> Result<Map, DataError> {
         parse_csv_map(&format!("{HEADER}{body}"), Path::new("test.csv"))
+    }
+
+    const PRESENT_FRAME: &str = "# Projection: hex (0,0) is centred at 12 S, 160 E.\n\
+        #   east_nm  = (lon - 160) * 60 * 0.978148   (0.978148 is cos 12 degrees)\n\
+        #   north_nm = (lat + 12) * 60\n\
+        # Extent: every hex whose centre lies from 1 S to 24 S and from 145 E to 172 E.\n";
+
+    const MIDWAY_FRAME: &str = "# Projection: hex (0,0) is centred at 28.5 N, 178.5 E.\n\
+        #   east_nm  = (lon - 178.5) * 60 * 0.878817   (0.878817 is cos 28.5 degrees)\n\
+        #   north_nm = (lat - 28.5) * 60\n\
+        # Extent: every hex whose centre lies from 38 N to 18 N and from 163 E to 166 W.\n";
+
+    fn fixed(text: &str) -> Fixed {
+        text.parse().unwrap()
+    }
+
+    /// Decision 0199, 17 and 18: the header's lines are the frame, read
+    /// exactly as fixed-point values, longitudes in the run.
+    #[test]
+    fn a_frame_is_read_from_the_header() {
+        let present = parse_map_frame(&format!("# a title\n{PRESENT_FRAME}{HEADER}"))
+            .unwrap()
+            .unwrap();
+        assert_eq!(
+            present,
+            MapFrame {
+                centre_lat: fixed("-12"),
+                centre_lon: fixed("160"),
+                factor: fixed("0.978148"),
+                north: fixed("-1"),
+                south: fixed("-24"),
+                west: fixed("145"),
+                east: fixed("172"),
+            }
+        );
+        assert!(!present.crosses_date_line());
+        assert_eq!(present.in_run(fixed("-170")), fixed("-170"));
+        let midway = parse_map_frame(MIDWAY_FRAME).unwrap().unwrap();
+        assert_eq!(
+            (midway.centre_lat, midway.centre_lon, midway.factor),
+            (fixed("28.5"), fixed("178.5"), fixed("0.878817"))
+        );
+        assert_eq!(
+            (midway.north, midway.south, midway.west, midway.east),
+            (fixed("38"), fixed("18"), fixed("163"), fixed("194"))
+        );
+        assert!(midway.crosses_date_line());
+        assert_eq!(midway.in_run(fixed("-177.4")), fixed("182.6"));
+        assert_eq!(midway.in_run(fixed("170")), fixed("170"));
+    }
+
+    #[test]
+    fn a_map_with_no_frame_lines_has_none_and_a_part_of_one_is_an_error() {
+        assert_eq!(parse_map_frame(HEADER).unwrap(), None);
+        let partial: String = PRESENT_FRAME
+            .lines()
+            .take(3)
+            .map(|l| format!("{l}\n"))
+            .collect();
+        assert!(parse_map_frame(&partial).is_err());
+        // The lines must agree with one another.
+        for (from, to) in [
+            ("(lon - 160)", "(lon - 161)"),
+            ("(lat + 12)", "(lat - 12)"),
+            ("is cos 12 degrees", "is cos 13 degrees"),
+            ("0.978148   (0.978148", "0.978148   (0.97815"),
+            ("from 1 S to 24 S", "from 24 S to 1 S"),
+            ("12 S, 160 E.", "12 Q, 160 E."),
+        ] {
+            let text = PRESENT_FRAME.replace(from, to);
+            assert!(parse_map_frame(&text).is_err(), "{text}");
+        }
     }
 
     #[test]

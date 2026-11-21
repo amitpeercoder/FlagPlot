@@ -32,7 +32,7 @@ use sim_core::{DaySummary, Staffs, StartingContact, StartingEstimate, World};
 
 use crate::commands::{BelievedIntentSpec, CommandSpec};
 use crate::error::DataError;
-use crate::map::{load_land_links, load_map};
+use crate::map::{load_land_links, load_map, read_map_frame, MapFrame};
 use crate::quantity::Quantity;
 use crate::reference::{
     load_air_combat_figures, load_air_supply_figures, load_air_upkeep_figures, load_aircraft_types,
@@ -1622,6 +1622,10 @@ pub struct Scenario {
     /// A trial's figures (decision 0174), where the scenario names them:
     /// the scenario's, not the world's, never hashed and read by no rule.
     trial_figures: Option<TrialFigures>,
+    /// The frame of the map the scenario is played on, from the map's header
+    /// (decision 0199, 18): `None` for a hand-written map. The tools' and
+    /// the export's, never the world's, never hashed and read by no rule.
+    map_frame: Option<MapFrame>,
 }
 
 /// How a scenario is loaded, beyond the file itself.
@@ -1739,6 +1743,7 @@ impl Scenario {
             }
         };
         let mut map = load_map(&folder.join(&file.map))?;
+        let map_frame = read_map_frame(&folder.join(&file.map))?;
         let land_links_file = file.land_links.as_ref().map(|name| folder.join(name));
         if let Some(links) = &land_links_file {
             load_land_links(links, &mut map)?;
@@ -3740,7 +3745,14 @@ impl Scenario {
             believed_intents,
             believed_men: believed_men_list,
             trial_figures,
+            map_frame,
         })
+    }
+
+    /// The frame of the scenario's map, from its header (decision 0199):
+    /// `None` for a hand-written map, which has none.
+    pub fn map_frame(&self) -> Option<&MapFrame> {
+        self.map_frame.as_ref()
     }
 
     /// A trial's figures (decision 0174), where the scenario names them.
@@ -3882,6 +3894,7 @@ impl Scenario {
             believed_intents: self.believed_intents.clone(),
             believed_men: self.believed_men.clone(),
             trial_figures: self.trial_figures.clone(),
+            map_frame: self.map_frame,
         })
     }
 

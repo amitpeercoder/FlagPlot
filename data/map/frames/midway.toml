@@ -1,0 +1,37 @@
+# The frame of the Midway map, data/map/midway.csv (decision 0199, rules 20,
+# 24 and 27). Read by the map tool alone, which makes the map from it and
+# writes its projection and extent in the map's header; every other reader
+# takes the frame from that header. Every quantity is a string. Longitudes
+# are west negative, as data/oob/place_positions.csv gives them: the eastern
+# edge, 166 W, is -166, and the tool counts it on across the date line as 194.
+
+title = "Flag Plot map of the central Pacific about Midway (decision 0199)."
+date = "2026-11-21"
+
+# Hex (0,0) is centred at 28 30 N, 178 30 E. The factor for longitude is the
+# cosine of 28.5 degrees to six places (0.8788171...).
+centre_lat = "28.5"
+centre_lon = "178.5"
+factor = "0.878817"
+
+# Every hex whose centre lies from 38 N to 18 N and from 163 E to 166 W. The
+# south edge is 18 N so that Wake (19 17 N) is not in the last row (rule 24).
+north = "38"
+south = "18"
+west = "163"
+east = "-166"
+
+# The places that hold a base, made coast with land percentage 0 where no
+# lattice point of their hex is land (rules 11, 27 and 28). Each position is
+# its row's, as the row gives it.
+[[land_mark]]
+name = "midway"
+lat = "28.232"
+lon = "-177.370"
+row = "5100"
+
+[[land_mark]]
+name = "wake"
+lat = "19.299"
+lon = "166.624"
+row = "5107"
