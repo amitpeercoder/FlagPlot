@@ -332,10 +332,30 @@ body.watched .gives { display: none !important; }
 .slip .call + .call { margin-top: 3px; }
 .slip .call.refused { color: var(--enemy); }
 .slip .call .said { display: block; font-style: italic; color: var(--paper-dim); }
+/* A narrow screen (a tablet, a phone): the view's buttons take a row of their
+   own across the top, the heading and the trays go under them, and the clock
+   may wrap. A desktop window is wider than this and is not touched. */
+@media (max-width: 820px) {
+  .view { left: 16px; right: 16px; top: 8px; justify-content: flex-end; flex-wrap: wrap; }
+  .top { padding: 52px 16px 8px 16px; gap: 4px 12px; }
+  .top h1 { font-size: 20px; }
+  .top p { font-size: 15px; }
+  .bar { gap: 6px 12px; padding: 8px 16px 10px; }
+  .clock { font-size: 16px; white-space: normal; }
+  .tray, .plot { top: 100px; max-height: calc(100% - 220px); }
+}
+@media (max-width: 520px) {
+  .view { gap: 4px; }
+  .view button { min-width: 32px; min-height: 32px; padding: 0 6px; font-size: 12px; letter-spacing: 0.05em; }
+  #btn-pieces svg, #btn-labels svg { display: none; }
+  .acts { gap: 6px; }
+  .acts button { min-height: 40px; padding: 0 10px; font-size: 14px; }
+  .acts button.main { padding: 0 14px; }
+}
 @media (max-width: 720px) {
   .tray { top: auto; bottom: 150px; left: 16px; width: auto; max-height: 30%; }
   .order { bottom: 150px; max-height: 55%; }
-  .plot { top: 56px; max-height: 26%; }
+  .plot { top: 100px; max-height: 26%; }
   .acts { margin-left: 0; }
 }
 </style>
@@ -454,7 +474,7 @@ body.watched .gives { display: none !important; }
 </div>
 
 <div class="view" role="group" aria-label="Your view of the table">
-  <button type="button" id="btn-back" title="Sit back: the whole table" aria-label="Sit back"><svg viewBox="0 0 24 24"><circle cx="10" cy="10" r="6.5"/><path d="M15 15l6 6M7 10h6"/></svg></button>
+  <button type="button" id="btn-back" title="Sit back" aria-label="Sit back"><svg viewBox="0 0 24 24"><circle cx="10" cy="10" r="6.5"/><path d="M15 15l6 6M7 10h6"/></svg></button>
   <button type="button" id="btn-lean" title="Lean in" aria-label="Lean in"><svg viewBox="0 0 24 24"><circle cx="10" cy="10" r="6.5"/><path d="M15 15l6 6M7 10h6M10 7v6"/></svg></button>
   <button type="button" id="btn-view"></button>
   <button type="button" id="btn-hexes" aria-pressed="false" title="Hexes and their numbers" aria-label="Hexes"><svg viewBox="0 0 24 24"><path d="M7 3.5h10l5 8.5-5 8.5H7L2 12z"/></svg></button>
@@ -500,12 +520,12 @@ body.watched .gives { display: none !important; }
   function setStatus(s) { $('status').textContent = s; }
   function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
   function num(handle) { return parseInt(String(handle).split(':')[1], 10); }
-  // A figure with its thousands marked. A quantity the game holds to many
-  // places is shown whole, or to one place where it is small: nobody at the
-  // table needs a ton to six places.
+  // A figure with its thousands marked. A quantity the game holds to places
+  // is shown whole, cut and not rounded up: nobody at the table reads a
+  // decimal. A quantity above nought and under one is "under 1".
   function commas(n) {
     var t = String(n);
-    if (/^-?\d+\.\d+$/.test(t)) { var v = Number(t); t = Math.abs(v) >= 100 ? String(Math.round(v)) : String(Math.round(v * 10) / 10); }
+    if (/^-?\d+\.\d+$/.test(t)) { var v = Number(t); t = v > 0 && v < 1 ? 'under 1' : String(Math.trunc(v)); }
     var at = t.indexOf('.'), whole = at < 0 ? t : t.slice(0, at);
     return whole.replace(/\B(?=(\d{3})+(?!\d))/g, ',') + (at < 0 ? '' : t.slice(at));
   }
@@ -895,7 +915,7 @@ body.watched .gives { display: none !important; }
     M.bases.forEach(function (b) {
       var v = placeOf(b.place);
       fixed(tile('own', 'base', true, 0.17), v, 0, -0.16, { kind: 'base', base: b });
-      var d = b.days_of_supply && b.days_of_supply.days; label([b.base.name.toUpperCase(), 'Your base · supply ' + Math.round(parseFloat(b.supply_t)) + ' t' + (d != null ? ', ' + d + ' days' : '')], OWN, function () { return v; }, 0.85, 1, [-0.35, 0.1]);
+      var d = b.days_of_supply && b.days_of_supply.days; label([b.base.name.toUpperCase(), 'Your base · supply ' + Math.round(parseFloat(b.supply_t)) + ' t' + (d != null ? ', ' + dayCount(d) : '')], OWN, function () { return v; }, 0.85, 1, [-0.35, 0.1]);
     });
     {
       M.enemyBases.forEach(function (b) { var v = placeOf(b.place); if (v) fixed(tile('enemy', 'base', true, 0.17), v, 0, -0.16, { kind: 'place', place: b.place, base: b }); });
@@ -965,8 +985,13 @@ body.watched .gives { display: none !important; }
       M.bases = a[1].bases || []; M.enemyBases = a[1].enemy_bases || [];
       M.contacts = a[2].contacts || []; M.estimates = a[2].ground_estimates || [];
       M.state = a[3];
-      if (a[4].refused != null) { var at = /stands at (\d{4}) of day (\d+)/.exec(a[4].refused); if (at) clock = { at: at[1], day: parseInt(at[2], 10) }; M.day = clock.day; if (a.air) M.air = a.air; }
-      else { M.day = a[4].heading.day; M.lastDay = a[4].heading.last_day; if (M.day > M.lastDay) M.over = true; M.air = a[4].air_groups || []; M.arrivals = (a[4].arrivals && a[4].arrivals.due) || []; clock = { at: 'dusk', day: M.day }; }
+      if (a[4].refused != null) { var at = /stands at (\d{4}) of day (\d+)/.exec(a[4].refused); if (at) clock = { at: at[1], day: parseInt(at[2], 10) }; M.day = clock.day; if (a.air) M.air = a.air;
+        // Inside a day there is no briefing to give the game's last day. A page loaded then asks the
+        // measure of a yard order for any force of the side, whose answer carries it, and says it on the clock.
+        if (!M.lastDay && M.forces.length) api('measure', { question: 'yard', task_force: M.forces[0].task_force.handle }).then(function (y) { if (y && y.last_day && !M.lastDay) { M.lastDay = y.last_day; showClock(); } }).catch(function () {}); }
+      else { M.day = a[4].heading.day; M.lastDay = a[4].heading.last_day; if (M.day > M.lastDay) M.over = true;
+        // The final briefing carries the umpire's result, so a page loaded after the end has it too.
+        if (M.over && !M.result && a[4].objectives && a[4].objectives.result) M.result = a[4].objectives.result; M.air = a[4].air_groups || []; M.arrivals = (a[4].arrivals && a[4].arrivals.due) || []; clock = { at: 'dusk', day: M.day }; }
       M.names = {}; M.hexNames = {};
       Object.keys(SHIP_NAMES).forEach(function (h) { M.names[h] = SHIP_NAMES[h]; });
       M.forces.forEach(function (f) { M.names[f.task_force.handle] = f.task_force.name.replace(/^Placeholder /, ''); });
@@ -1027,7 +1052,10 @@ body.watched .gives { display: none !important; }
     lastTold.forEach(function (t) { var a = slip('FROM THE PLOT · ' + (clock.at === 'dusk' ? '1800' : clock.at), 'STOPPED THE CLOCK', TOLD[t.thing] || t.thing, null, true); t.lines.slice(0, 10).forEach(function (l) { a.appendChild(rich('div', 'told', l)); }); if (t.lines.length > 10) a.appendChild(el('div', 'told', 'And ' + (t.lines.length - 10) + ' more: see the war diary.')); });
     (s.holds || []).forEach(function (h) {
       var a = slip('HELD FROM THE STAFF', null, null, null), args = {}, what = null; ['ship', 'task_force', 'air_group', 'land_unit', 'setting'].forEach(function (k) { if (h.target && h.target[k] != null) { args[k] = h.target[k]; if (k !== 'setting' && !what) what = k + ':' + h.target[k]; } });
-      var since = /day (\d+)/.exec(h.text || ''); a.appendChild(what ? rich('div', '', what + ', held by your direct order' + (since ? ' of day ' + since[1] : '')) : el('div', '', h.text));
+      // A hold is made by the commander's hold (made_by "command") or by his direct order to the unit: the words say which.
+      var since = h.day != null ? String(h.day) : (/day (\d+)/.exec(h.text || '') || [])[1];
+      var how = h.made_by === 'command' ? ', kept out of the staff\'s plans by you' + (since ? ' from day ' + since : '') : ', held by your direct order' + (since ? ' of day ' + since : '');
+      a.appendChild(what ? rich('div', '', what + how) : el('div', '', h.text));
       if (!WATCH) button(a, 'RELEASE TO THE STAFF', false, function () { act('release', args, 'Released. The staff may use it again from dusk.'); });
     });
     // A plan that waits for the commander's leave has one notice, below, which
@@ -1229,10 +1257,19 @@ body.watched .gives { display: none !important; }
     if (kind === 'air_group' || kind === 'ship') return cardEntity(h);
     var none = openCard(nameOf(h).toUpperCase(), null); none.appendChild(el('div', '', 'Nothing is held of it.'));
   }
+  // How the unit was fed last night. The side's own report of the night is
+  // the first word; where it holds none for the hex (no base of the side
+  // there fed anyone) the unit's own fed share says it, once it is below whole.
+  function fedWords(u) {
+    var said = u.fed_last_night, share = parseFloat(u.fed_share), pct = Math.floor(share * 100);
+    if (said === 'fed') return 'fed in full';
+    if (said === 'partly_fed' || said === 'unfed' || (said === 'not_known' && share < 1)) return !(share > 0) ? 'not fed' : share >= 1 ? 'fed in full' : (pct < 1 ? 'under 1' : pct) + '% of the men fed';
+    return String(said || '').replace(/_/g, ' ');
+  }
   function hungerWord(u) { return parseFloat(u.fed_share) >= 1 ? 'Mending' : 'Short of food'; }
   function cardUnit(u) {
     var body = openCard(u.land_unit.name.toUpperCase(), 'YOURS', true);
-    var kvu = kv(body, [['Men ashore', u.men_ashore ? commas(u.men_ashore) : null], ['Men aboard', u.men_aboard ? commas(u.men_aboard) : null], ['Where', u.place ? hexWords(u.place) : 'aboard ship'], ['Posture', u.posture], ['Doing', u.activity], ['Fatigue', u.fatigue], ['Fed last night', String(u.fed_last_night || '').replace(/_/g, ' ')], [hungerWord(u), u.hunger_nights ? u.hunger_nights + (u.hunger_nights === 1 ? ' night' : ' nights') : null], ['Condition', u.fighting_share != null ? Math.floor(parseFloat(u.fighting_share) * 100) + '%' : null], ['Experience', u.experience]]);
+    var kvu = kv(body, [['Men ashore', u.men_ashore ? commas(u.men_ashore) : null], ['Men aboard', u.men_aboard ? commas(u.men_aboard) : null], ['Where', u.place ? hexWords(u.place) : 'aboard ship'], ['Posture', u.posture], ['Doing', u.activity], ['Fatigue', u.fatigue], ['Fed last night', fedWords(u)], [hungerWord(u), u.hunger_nights ? u.hunger_nights + (u.hunger_nights === 1 ? ' night' : ' nights') : null], ['Condition', u.fighting_share != null ? Math.floor(parseFloat(u.fighting_share) * 100) + '%' : null], ['Experience', u.experience]]);
     if (u.hunger_nights && parseFloat(u.fed_share) < 1) Promise.all([M.day, M.day - 1].map(dayEvents)).then(function (all) { var tonight = all[0].some(function (e) { return e.pulse === 'night'; }) ? all[0] : all[1], last = tonight.filter(function (e) { return e.event_kind === 'hunger_nights_changed' && e.pulse === 'night' && (e.entities || []).some(function (x) { return x.handle === u.land_unit.handle; }); }).pop(), m = last && /hungry (\d+) nights, from (\d+)/.exec(last.text); if (m && +m[1] > +m[2]) { [].slice.call(kvu.children).forEach(function (c) { if (c.textContent === 'Short of food') c.textContent = 'Hungry'; }); } });
     if ((u.aboard || []).length) { listOf(body, 'ABOARD', u.aboard.map(function (a) { return a.ship.handle + ': ' + commas(a.men); }), 'men'); }
    
@@ -1246,7 +1283,7 @@ body.watched .gives { display: none !important; }
         if (x.location) siblings(M.air.filter(function (y) { return y.location && y.location.handle === x.location.handle; }).map(function (y) { return y.air_group.handle; }), h, 'of the groups there');
         airOrder(body, e, h); return; }
       if (e.entity_kind === 'ship') { var b2 = openCard(e.ship.name.replace(/^Placeholder /, '').toUpperCase(), 'YOURS', true), sys = e.systems || {}, out = Object.keys(sys).filter(function (k) { return sys[k] !== 'working'; }); turnTo(e.place);
-        kv(b2, [['Class', e.class], ['Kind', String(e.ship_kind).replace(/_/g, ' ')], ['State', e.sunk ? 'SUNK' : (+e.flotation_damage || +e.fire_damage) ? 'damaged' : 'sound'], ['Out of action', out.length ? out.map(function (k) { return k.replace(/_/g, ' ') + ' ' + sys[k]; }).join(', ') : null], ['Own fuel', commas(e.fuel_t) + (+e.fuel_capacity_t > 0 ? ' of ' + commas(e.fuel_capacity_t) : '') + ' t, ' + commas(e.range_nm) + ' miles'], ['Cargo', (+e.supply_t || +e.cargo_fuel_t) ? commas(e.supply_t) + ' t supply, ' + commas(e.cargo_fuel_t) + ' t fuel' : null]]);
+        kv(b2, [['Class', shipClass(e.class)], ['Kind', String(e.ship_kind).replace(/_/g, ' ')], ['State', e.sunk ? 'SUNK' : (+e.flotation_damage || +e.fire_damage) ? 'damaged' : 'sound'], ['Out of action', out.length ? out.map(function (k) { return k.replace(/_/g, ' ') + ' ' + sys[k]; }).join(', ') : null], ['Own fuel', commas(e.fuel_t) + (+e.fuel_capacity_t > 0 ? ' of ' + commas(e.fuel_capacity_t) : '') + ' t, ' + commas(e.range_nm) + ' miles'], ['Cargo', (+e.supply_t || +e.cargo_fuel_t) ? commas(e.supply_t) + ' t supply, ' + commas(e.cargo_fuel_t) + ' t fuel' : null]]);
         if (e.troops || e.troop_capacity_men) { b2.appendChild(el('div', 'sub', 'MEN ABOARD')); b2.appendChild(rich('div', '', (e.troops ? e.troops.land_unit.handle + ': ' + commas(e.troops.men) + ' men' : 'None') + (e.troop_capacity_men ? ' (room for ' + commas(e.troop_capacity_men) + ')' : ''))); }
         if (e.task_force) { var of = b2.querySelector('.kv'); if (of) { of.appendChild(el('span', '', 'Part of')); of.appendChild(rich('span', '', e.task_force.handle)); } siblings(FORCE_SHIPS[e.task_force.handle], h, 'of the ships of her force'); }
         if ((e.air_groups || []).length) { e.air_groups.forEach(function (g) { M.names[g.handle] = g.name; }); airList(b2, 'AIR GROUPS ABOARD', e.air_groups.map(function (g) { return M.air.filter(function (y) { return y.air_group.handle === g.handle; })[0]; }).filter(Boolean)); }
@@ -1452,7 +1489,11 @@ body.watched .gives { display: none !important; }
   function cardForce(t) {
     var f = t.force, h = f.task_force.handle, body = openCard(f.task_force.name.replace(/^Placeholder /, '').toUpperCase(), 'YOURS', true);
     var held = ((M.state && M.state.holds) || []).filter(function (x) { return x.target && x.target.task_force === num(h); })[0];
-    kv(body, [['Kind', f.mission.replace(/_/g, ' ')], ['Where', hexWords(f.place)], ['Doing', f.status.replace(/_/g, ' ') + (f.destination ? ', for ' + hexWords(f.destination) : '')],
+    // Under an order to fuel at sea (decision 0201) the force steams to the giver, and takes fuel in the giver's hex.
+    var giver = f.fuel_from && M.forces.filter(function (o) { return o.task_force.handle === f.fuel_from.handle; })[0], giverName = f.fuel_from && nameOf(f.fuel_from.handle, f.fuel_from.name);
+    var doing = !f.fuel_from ? f.status.replace(/_/g, ' ') + (f.destination ? ', for ' + hexWords(f.destination) : '')
+      : giver && sameHex(giver.place, f.place) ? 'fuelling at sea from ' + giverName : 'steaming to ' + giverName + ', to fuel at sea from it';
+    kv(body, [['Kind', f.mission.replace(/_/g, ' ')], ['Where', hexWords(f.place)], ['Doing', doing],
       ['Not before', f.available_from > M.day ? dateOf(f.available_from - 1) + ' (day ' + f.available_from + ')' : null],
       ['Speed', f.speed], ['Readiness', f.readiness + (f.alert ? ', alert' : '')], ['Fatigue', f.fatigue],
       ['Cargo', f.cargo_supply_t != null ? commas(f.cargo_supply_t) + ' t supply, ' + commas(f.cargo_fuel_t || 0) + ' t fuel' : null],
@@ -1468,7 +1509,7 @@ body.watched .gives { display: none !important; }
       var list = (a.entity && a.entity.ships) || [], mine = {}; FORCE_SHIPS[h] = list.map(function (x) { return x.ship.handle; }); list.forEach(function (x) { mine[x.ship.handle] = true; if (x.ship.name) M.names[x.ship.handle] = x.ship.name.replace(/^Placeholder /, ''); });
       listOf(ships, 'MEN ABOARD', M.units.filter(function (u) { return (u.aboard || []).some(function (b) { return mine[b.ship.handle]; }); }).map(function (u) { return u.land_unit.handle + ': ' + commas(u.men_aboard); }), 'men');
       airList(ships, 'AIR GROUPS ABOARD', M.air.filter(function (x) { return x.location && mine[x.location.handle]; }));
-      listOf(ships, 'SHIPS', list.map(function (x) { var hurt = (+x.flotation_damage || +x.fire_damage) ? ', damaged' : ''; var cls = String(x.class || '').replace(/^Placeholder /, ''); return x.ship.handle + (cls && String(x.ship.name || '').toLowerCase().indexOf(cls.toLowerCase()) < 0 ? ', ' + cls : '') + ': ' + (x.sunk ? 'SUNK' : commas(x.fuel_t) + ' t' + hurt); }), (function () { var have = 0, room = 0; list.forEach(function (x) { if (x.sunk) return; have += +x.fuel_t || 0; room += +x.fuel_capacity_t || 0; }); return room > 0 ? 'own fuel, ' + commas(Math.round(have)) + ' of ' + commas(Math.round(room)) + ' t' : 'own fuel'; })(), list.map(function (x) { return x.sunk || !(+x.fuel_capacity_t > 0) ? null : +x.fuel_t / +x.fuel_capacity_t; }));
+      listOf(ships, 'SHIPS', list.map(function (x) { var hurt = (+x.flotation_damage || +x.fire_damage) ? ', damaged' : ''; var cls = shipClass(x.class); return x.ship.handle + (cls && String(x.ship.name || '').toLowerCase().indexOf(cls.toLowerCase()) < 0 ? ', ' + cls : '') + ': ' + (x.sunk ? 'SUNK' : commas(x.fuel_t) + ' t' + hurt); }), (function () { var have = 0, room = 0; list.forEach(function (x) { if (x.sunk) return; have += +x.fuel_t || 0; room += +x.fuel_capacity_t || 0; }); return room > 0 ? 'own fuel, ' + commas(Math.round(have)) + ' of ' + commas(Math.round(room)) + ' t' : 'own fuel'; })(), list.map(function (x) { return x.sunk || !(+x.fuel_capacity_t > 0) ? null : +x.fuel_t / +x.fuel_capacity_t; }));
     }).catch(function (e) { ships.appendChild(el('div', '', 'The ships could not be listed: ' + e.message)); });
     forcesHere(body, 'ALSO HERE', f.place, f);
    
@@ -1476,7 +1517,7 @@ body.watched .gives { display: none !important; }
   function cardBase(t) {
     var b = t.base, h = b.base.handle, dos = b.days_of_supply || {}, body = openCard(b.base.name.toUpperCase(), 'YOURS', true);
     kv(body, [['Where', whereIs(b.place)], ['Supply', commas(b.supply_t) + ' t'], ['Fuel for ships', commas(b.fuel_t) + ' t'],
-      ['Days of supply', dos.days != null ? dos.days + ' at ' + commas(dos.planned_use_t) + ' t a day' : 'No figure: nothing is planned to be used here today'],
+      ['Days of supply', dos.days != null ? dayCount(dos.days) + ' at ' + aboutTons(dos.planned_use_t) + ' t a day' : 'No figure: nothing is planned to be used here today'],
       ['Airfield', b.airfield_size ? 'size ' + b.airfield_size : 'none'], ['Port', b.port_size ? 'size ' + b.port_size : 'none']]);
     listOf(body, 'MEN ASHORE', M.units.filter(function (u) { return u.men_ashore && sameHex(u.place, b.place); }).map(function (u) { return u.land_unit.handle + ': ' + commas(u.men_ashore) + ' men, ' + u.posture; }));
     airList(body, 'AIR GROUPS HERE', M.air.filter(function (x) { return x.location && x.location.handle === h; }));
@@ -1500,7 +1541,15 @@ body.watched .gives { display: none !important; }
   // for handles (from the event's own list, then what the table has seen), a
   // place by its name, a clock time for "D10 20:30", figures rounded. A kind
   // with no sentence of its own is said as the game has it, tidied.
-  function fig(x) { var n = parseFloat(x); if (isNaN(n)) return x; return commas(Math.abs(n) >= 100 ? Math.round(n) : Math.round(n * 10) / 10); }
+  // A ship's class as a staff writes it: the data's notes after the name
+  // (a field with its figure, what the game leaves out) are not for the table.
+  // Whole days, cut: 7.28 days of supply are 7 days. A rate is whole tons,
+  // and a rate that is not whole is given as about the nearest: 9.8 t a day
+  // is about 10, not 9.
+  function dayCount(d) { var n = Math.trunc(parseFloat(d)); return isNaN(n) ? String(d) : commas(n) + (n === 1 ? ' day' : ' days'); }
+  function aboutTons(t) { var v = parseFloat(t); if (isNaN(v)) return String(t); return v === Math.round(v) ? commas(v) : v < 0.5 ? 'under 1' : 'about ' + commas(Math.round(v)); }
+  function shipClass(c) { return String(c || '').replace(/^Placeholder /, '').split(', ').filter(function (part, i) { return i === 0 || !/_|\bnot modelled\b|\bunknown\b|\d/.test(part); }).join(', '); }
+  function fig(x) { var n = parseFloat(x); if (isNaN(n)) return x; return commas(n); }
   // A count of the enemy ashore as a staff would pass it on: rounded, with
   // the size of force it makes. The count is the game's; the round figure
   // and the word are the table's.
@@ -1576,7 +1625,7 @@ body.watched .gives { display: none !important; }
     else if (k === 'fuelling_broken_off' && R('^' + H + ' took no fuel from ' + H + ' at ' + AT)) out = 'Fuelling broken off at ' + P(m[3], m[4]) + ': ' + N(m[1]) + ' took no fuel from ' + N(m[2]);
     else if (k === 'fuel_order_ended' && R("^" + H + "'s order to fuel from " + H + ' ended: (.*)$')) out = 'Fuelling ended for ' + N(m[1]) + ': ' + m[3];
     else if (k === 'ship_refuelled' && R('^' + H + ' took ([\\d.]+) t of fuel at ' + H)) out = N(m[1]) + ' took ' + fig(m[2]) + ' t of fuel at ' + N(m[3]);
-    else if (k === 'rations_landed' && R('^the landing of ' + H + ' put ([\\d.]+) t of rations into ' + H + ': ([\\d.]+) nights for the (\\d+) men aboard')) out = N(m[1]) + ' landed ' + fig(m[2]) + ' t of rations at ' + N(m[3]) + ', ' + m[4] + ' days for ' + fig(m[5]) + ' men';
+    else if (k === 'rations_landed' && R('^the landing of ' + H + ' put ([\\d.]+) t of rations into ' + H + ': ([\\d.]+) nights for the (\\d+) men aboard')) out = N(m[1]) + ' landed ' + fig(m[2]) + ' t of rations at ' + N(m[3]) + ', ' + fig(m[4]) + ' days for ' + fig(m[5]) + ' men';
     else if (k === 'hunger_nights_changed' && R('^' + H + ' at ' + AT + ' has been hungry (\\d+) nights')) out = N(m[1]) + ' at ' + P(m[2], m[3]) + (m[4] === '0' ? ': no longer hungry' : ': hungry ' + m[4] + (m[4] === '1' ? ' night' : ' nights'));
     else if (k === 'strike_mission_cleared' && R('^' + H + ' has no mission: the base it was to strike, ' + H)) out = N(m[1]) + ' stood down from its strike: ' + N(m[2]) + ' is ours';
     if (out == null) {
@@ -1594,7 +1643,7 @@ body.watched .gives { display: none !important; }
       else if (k === 'ship_damaged' && R('^' + H + ' took (\\d+) hits? on (\\w+)')) out = N(m[1]) + ' took ' + m[2] + (m[2] === '1' ? ' hit' : ' hits') + (m[3] === 'fire' ? ', starting fires' : m[3] === 'flotation' ? ' on the hull' : ' on ' + m[3]);
       else if (k === 'system_hit' && R('^' + H + ' (.*) hit, (?:no change, still (\\w+)|(\\w+) -> (\\w+))')) { var same = m[3] || (m[4] === m[5] ? m[5] : ''); out = N(m[1]) + ': ' + m[2] + ' hit, ' + (same ? (same === 'working' ? 'still in action' : same === 'out' ? 'already out of action' : 'still ' + same) : 'now ' + (m[5] === 'working' ? 'in action' : m[5] === 'out' ? 'out of action' : m[5])); }
     }
-    if (out == null) out = t.replace(new RegExp(H, 'g'), function (h) { return N(h); }).replace(new RegExp(AT, 'g'), function (x, q, r) { return P(q, r); }).replace(/D\d+ (\d\d):(\d\d)/g, '$1$2').replace(/\d+\.\d{2,}/g, function (x) { return fig(x); }).replace(/order:(\d+)/g, 'staff order $1').replace(/(intent|plan|contact):(\d+)/g, '$1 $2').replace(/_(?![a-z]*:\d)/g, ' '); out = orderWords(out);
+    if (out == null) out = t.replace(new RegExp(H, 'g'), function (h) { return N(h); }).replace(new RegExp(AT, 'g'), function (x, q, r) { return P(q, r); }).replace(/D\d+ (\d\d):(\d\d)/g, '$1$2').replace(/\d+\.\d+/g, function (x) { return +x >= 1 ? fig(x) : x; }).replace(/order:(\d+)/g, 'staff order $1').replace(/(intent|plan|contact):(\d+)/g, '$1 $2').replace(/_(?![a-z]*:\d)/g, ' '); out = orderWords(out);
     if (!/^(?:task_force|base|ship|air_group|land_unit):\d/.test(out)) out = out.charAt(0).toUpperCase() + out.slice(1); return /[.!?]$/.test(out) ? out : out + '.';
   }
 
@@ -1897,7 +1946,7 @@ body.watched .gives { display: none !important; }
     usable.forEach(function (f) {
       branch(doc, f.task_force.handle + ' · ' + String(f.mission).replace(/_/g, ' ') + ' · ' + hexWords(f.place), (f.ships_afloat || 0) + (f.ships_afloat === 1 ? ' ship' : ' ships'), function (body) {
         body.textContent = 'Asking.'; api('get_entity', { handle: f.task_force.handle }).then(function (a) { body.textContent = ''; var list = (a.entity && a.entity.ships) || []; if (!list.length) body.appendChild(el('div', 'orow', 'No ship is listed.'));
-          list.forEach(function (x) { if (x.ship.name) M.names[x.ship.handle] = x.ship.name.replace(/^Placeholder /, ''); var kind = typeof x.class === 'string' ? x.class.replace(/^Placeholder /, '') : (x.kind || ''); leaf(body, x.ship.handle + (kind ? ' · ' + String(kind).replace(/_/g, ' ') : ''), x.sunk ? 'sunk' : ''); var sub = el('div', 'obody'); airAt(sub, x.ship.handle); if (sub.children.length) body.appendChild(sub); }); }).catch(function (e) { body.textContent = e.message; });
+          list.forEach(function (x) { if (x.ship.name) M.names[x.ship.handle] = x.ship.name.replace(/^Placeholder /, ''); var kind = typeof x.class === 'string' ? shipClass(x.class) : (x.kind || ''); leaf(body, x.ship.handle + (kind ? ' · ' + String(kind).replace(/_/g, ' ') : ''), x.sunk ? 'sunk' : ''); var sub = el('div', 'obody'); airAt(sub, x.ship.handle); if (sub.children.length) body.appendChild(sub); }); }).catch(function (e) { body.textContent = e.message; });
       });
     });
     doc.appendChild(el('h3', '', 'Ashore'));
@@ -2091,7 +2140,8 @@ body.watched .gives { display: none !important; }
   // through, from what the side knows, and hands in an estimate. Nothing
   // in the game is changed by it. ----
   var drySize = 'small', dryBusy = false;
-  function dryWords(t) { return nameText(String(t).replace(/\((-?\d+),(-?\d+)\)/g, function (m, q, r) { return hexWords({ q: Number(q), r: Number(r) }); }).replace(/\bworlds\b/g, 'runs').replace(/\bworld\b/g, 'run').replace(/\bintent (\d+)/g, 'order $1').replace(/\b[Tt]he trial's enemy/g, function (m) { return (m.charAt(0) === 'T' ? 'The' : 'the') + ' enemy of the dry run'; }).replace(/\bthe trial\b/g, 'the dry run').replace(/\ba trial\b/g, 'a dry run').replace(/\bsecond trial\b/g, 'second run')); }
+  // A distance the staff gives in hexes is given in miles, as the draft gave it, unless the hexes are shown.
+  function dryWords(t) { return nameText(String(t).replace(/\b(\d+) hex(?:es)?\b(?! round)/g, function (m, n) { return showHexes ? m : (+n * hexMiles()) + ' miles'; }).replace(/\((-?\d+),(-?\d+)\)/g, function (m, q, r) { return hexWords({ q: Number(q), r: Number(r) }); }).replace(/\bworlds\b/g, 'runs').replace(/\bworld\b/g, 'run').replace(/\bintent (\d+)/g, 'order $1').replace(/\b[Tt]he trial's enemy/g, function (m) { return (m.charAt(0) === 'T' ? 'The' : 'the') + ' enemy of the dry run'; }).replace(/\bthe trial\b/g, 'the dry run').replace(/\ba trial\b/g, 'a dry run').replace(/\bsecond trial\b/g, 'second run')); }
   function dryBox(doc, root) {
     var box = el('div', 'planorder dryrun'), sizes = el('span', 'seg sizes'), row = el('div', 'line'), more = el('div', 'line'), says = el('div', 'work'), all = [];
     ['small', 'standard', 'full'].forEach(function (z) { var b = el('button', z === drySize ? 'on' : '', z.toUpperCase()); b.type = 'button'; b.addEventListener('click', function () { drySize = z; Array.prototype.forEach.call(sizes.children, function (c) { c.className = c === b ? 'on' : ''; }); }); sizes.appendChild(b); });
@@ -2334,7 +2384,7 @@ body.watched .gives { display: none !important; }
       sheetAs('HOW IT ENDED'); doc.hidden = false; $('sheet-text').hidden = true; $('sheet').hidden = false; $('sheet-close').focus();
     };
     if (M.result && M.result.allied) { show(); return; }
-    api('get_briefing').then(function (b) { var r = b && (b.result || (b.objectives && b.objectives.result)); if (r) M.result = r; show(); }).catch(function () { show(); });
+    api('get_briefing', { text: false }).then(function (b) { var r = b && (b.result || (b.objectives && b.objectives.result)); if (r) M.result = r; show(); }).catch(function () { show(); });
   }
 
   // ---- directives from the commander above ----
@@ -3012,7 +3062,11 @@ body.watched .gives { display: none !important; }
     // From the chair the table is seen at an angle; from above, as a chart is
     // read, straight down with north up. `flat` goes from one to the other.
     flat += ((chartView ? 1 : 0) - flat) * k; if (Math.abs((chartView ? 1 : 0) - flat) < 0.002) flat = chartView ? 1 : 0;
-    var half = Math.tan(camera.fov * Math.PI / 360), above = Math.max((TD / 2 + 0.9) / half, (TW / 2 + 0.3) / (half * camera.aspect)), d0 = far * Math.pow(1.5 / far, e), d1 = above * Math.pow(1.5 / above, e); camDist = d0 + (d1 - d0) * flat; var elv = ((32 + 38 * e) * (1 - flat) + 89.9 * flat) * Math.PI / 180;
+    var half = Math.tan(camera.fov * Math.PI / 360), above = Math.max((TD / 2 + 0.9) / half, (TW / 2 + 0.3) / (half * camera.aspect)), d0 = far * Math.pow(1.5 / far, e), d1 = above * Math.pow(1.5 / above, e); camDist = d0 + (d1 - d0) * flat;
+    // On a screen taller than it is wide the chair stands higher over the table, or the chart is a sliver.
+    // There the chair is also further back, and the haze of the room is set back with it.
+    var back = camera.aspect < 1 ? Math.max(0, camDist - 12.5) : 0; scene.fog.near = 16 + back; scene.fog.far = 36 + back;
+    var tall = camera.aspect < 1 ? Math.min(28, (1 - camera.aspect) * 50) * (1 - e) : 0, elv = ((32 + tall + 38 * e) * (1 - flat) + 89.9 * flat) * Math.PI / 180;
     camera.position.set(cur.x, camDist * Math.sin(elv), cur.z + camDist * Math.cos(elv)); camera.lookAt(cur.x, 0, cur.z - (1 - e) * 0.6 * (1 - flat));
   }
   var ray = new THREE.Raycaster(), plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
@@ -3040,10 +3094,14 @@ body.watched .gives { display: none !important; }
     // (marked with the control key): the pull toward the pointer is in
     // proportion to the step, so that a gesture does not slide the table away.
     var dz = -e.deltaY * (e.ctrlKey ? 0.008 : 0.0012), p = dz > 0 ? onTable(e.clientX, e.clientY) : null, pull = Math.min(0.18, Math.abs(dz) * 1.1); goal.zoom += dz; if (p && goal.zoom < 1) { goal.x += (p.x - goal.x) * pull; goal.z += (p.z - goal.z) * pull; } clampGoal(); }, { passive: false });
-  $('btn-lean').addEventListener('click', function () {
-    if (goal.zoom < 0.2) { var f = null; M.forces.forEach(function (x) { if (x.place && x.mission === 'carrier' && !f) f = x; }); var v = f ? placeOf(f.place) : new THREE.Vector3(); goal.x = v.x; goal.z = v.z; goal.zoom = 0.55; }
-    else goal.zoom += 0.2; clampGoal();
-  });
+  // The buttons lean in and sit back about the middle of what is in view: the
+  // point the chair looks at stays where it is. Sat right back, the whole table.
+  function leanBy(step) {
+    var off = function (zm) { return (1 - ease(zm)) * 0.6 * (chartView ? 0 : 1); }, cz = goal.z - off(goal.zoom), z = Math.max(0, Math.min(1, goal.zoom + step));
+    if (z === 0) { goal.x = 0; goal.z = 0; } else goal.z = cz + off(z);
+    goal.zoom = z; clampGoal();
+  }
+  $('btn-lean').addEventListener('click', function () { leanBy(0.25); });
   // The view's buttons are signs, with a word only where a sign cannot say which of several it is on.
   var SIGN = { table: '<svg viewBox="0 0 24 24"><path d="M6 7h12l4 11H2z"/></svg>', chart: '<svg viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15"/><path d="M9 4.5v15M15 4.5v15M3.5 12h17"/></svg>', pieces: '<svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12"/><path d="M3 6l18 12M21 6L3 18"/></svg>', labels: '<svg viewBox="0 0 24 24"><path d="M3 5h10l8 7-8 7H3z"/><circle cx="8" cy="12" r="1.3"/></svg>' };
   function sign(b, svg, word, title) { b.innerHTML = svg; if (word) { var w = document.createElement('span'); w.textContent = word; b.appendChild(w); } b.title = title; b.setAttribute('aria-label', title); }
@@ -3099,7 +3157,7 @@ body.watched .gives { display: none !important; }
   $('btn-agent').addEventListener('click', readAgentSeats);
   $('btn-stops').addEventListener('click', function () { shutMenus(); var f = $('stops'); f.hidden = !f.hidden; this.setAttribute('aria-expanded', String(!f.hidden)); });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !$('stops').hidden) { $('stops').hidden = true; $('btn-stops').setAttribute('aria-expanded', 'false'); } });
-  $('btn-back').addEventListener('click', function () { goal.x = 0; goal.z = 0; goal.zoom = 0; });
+  $('btn-back').addEventListener('click', function () { leanBy(-0.25); });
   function resize() { var w = window.innerWidth, h = window.innerHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
   window.addEventListener('resize', resize); resize();
 

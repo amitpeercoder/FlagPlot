@@ -203,6 +203,19 @@ def every_game(bridge, listed):
                 end = Person(bridge.table).call("end_day")["ok"]
                 check(brief["heading"]["side"] == person and end["resolved"] is True and config["seat"] == person,
                       f"{name}: the person's briefing, and a day resolved")
+                page = Person(bridge.table)
+                if end.get("game_over"):
+                    # A page loaded after the end reads the umpire's result from the final briefing.
+                    final = page.call("get_briefing", {"text": False})["ok"]
+                    check(final["objectives"].get("result") == end.get("result"),
+                          f"{name}: after the end the briefing carries end_day's result, as a page loaded then reads it")
+                elif "advance" in get(bridge.table + "/tools"):
+                    # A page loaded inside a day, with no briefing, reads the game's last day from a yard measure.
+                    page.call("advance", {"pulses": 1})
+                    handle = page.call("list_forces")["ok"]["task_forces"][0]["task_force"]["handle"]
+                    yard = page.call("measure", {"question": "yard", "task_force": handle})["ok"]
+                    check("refused" in page.raw("get_briefing", {"text": False}) and yard["last_day"] == brief["heading"]["last_day"],
+                          f"{name}: inside a day a yard measure gives the last day ({yard['last_day']}), as a page loaded then reads it")
             elif person:
                 agent = Agent(doors[agents[0]])
                 a = later(agent.through, "end_day")
