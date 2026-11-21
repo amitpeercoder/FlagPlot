@@ -1263,6 +1263,34 @@ pub(super) fn describe(
                 .int("experience_after", u32::from(*experience_after))
                 .int("joined", *joined),
         ),
+        EventKind::RationsLanded {
+            base,
+            side,
+            task_force,
+            men,
+            nights,
+            supply_t,
+        } => (
+            "rations_landed",
+            d.id("base", *base)
+                .text("side", names::side(*side))
+                .id("task_force", *task_force)
+                .int("men", *men)
+                .num("nights", *nights)
+                .num("supply_t", *supply_t),
+        ),
+        EventKind::HungerNightsChanged {
+            unit,
+            hex,
+            before,
+            nights,
+        } => (
+            "hunger_nights_changed",
+            d.id("unit", *unit)
+                .hex("hex", *hex)
+                .int("before", *before)
+                .int("nights", *nights),
+        ),
         EventKind::AirfieldMended {
             unit,
             base,

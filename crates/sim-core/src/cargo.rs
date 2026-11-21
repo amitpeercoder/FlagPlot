@@ -27,7 +27,7 @@ use crate::preparation::landing_rate_factor;
 use crate::refdata::PortSize;
 use crate::refuel::FuelStop;
 use crate::state::{
-    Base, CargoOrder, LandUnit, ShipLocation, Side, TaskForce, TaskForceStatus, Troops,
+    Base, CargoOrder, LandUnit, ShipLocation, Side, Skills, TaskForce, TaskForceStatus, Troops,
 };
 use crate::time::{pulse_start, Pulse};
 use crate::world::World;
@@ -558,11 +558,12 @@ impl World {
             // counted, no activity, no roster (decision 6 of 0097, decision
             // 7 of 0098). A part of a working unit is a working unit, and
             // works at the default job (decision 1 of 0099, As built).
-            let (experience, skills, working, fieldworks) = (
+            let (experience, skills, working, fieldworks, hunger_nights) = (
                 land_unit.experience,
                 land_unit.skills,
                 land_unit.working,
                 land_unit.fieldworks,
+                land_unit.hunger_nights,
             );
             self.truth.land_units.insert(
                 new_id,
@@ -572,6 +573,8 @@ impl World {
                     working,
                     // With those of the unit it left (decision 6 of 0106).
                     fieldworks,
+                    // And its nights of hunger (decision 0205, 7).
+                    hunger_nights,
                     activity: if working {
                         Activity::Work(None)
                     } else {
@@ -648,7 +651,97 @@ impl World {
             causes.to_vec(),
             None,
         );
+        self.land_rations(day, pulse, p, id, formed);
         (divided, Some(formed), id)
+    }
+
+    /// A landing that forms a base puts the men's rations into it (decision
+    /// 0205, 4, 5 and 10): the men aboard the ships of the force that forms
+    /// it, at this moment, times `rations_landed_nights` times each man's
+    /// daily charge, as supply in the stock of the base formed, once.
+    /// Recorded as `RationsLanded`, citing the base formed. Only where the
+    /// ground figures give the hunger figures, and only where it puts
+    /// something down.
+    fn land_rations(
+        &mut self,
+        day: u32,
+        pulse: Pulse,
+        p: &Participant,
+        base: BaseId,
+        formed: EventId,
+    ) {
+        let Some(figures) = self.ref_data.ground else {
+            return;
+        };
+        let Some(hunger) = figures.hunger else {
+            return;
+        };
+        // Each unit's men aboard the force's ships, in unit order.
+        let mut aboard: BTreeMap<LandUnitId, u32> = BTreeMap::new();
+        for ship in &p.ships {
+            if let Some(troops) = self.truth.ships[ship].troops.as_ref() {
+                *aboard.entry(troops.unit).or_insert(0) += troops.men;
+            }
+        }
+        let men: u32 = aboard.values().sum();
+        // The day's charge of the men aboard, by the one formula (decision 5
+        // of 0098): for standard units the men times the daily charge.
+        let mut charge = Fixed::ZERO;
+        let mut weighted_men = Fixed::ZERO;
+        for (unit, unit_men) in &aboard {
+            let skills = self.truth.land_units[unit].skills;
+            charge += crate::ground::daily_charge_t(&figures, &skills, *unit_men);
+            weighted_men +=
+                Skills::factor(skills.weight, figures.weight_strength) * i64::from(*unit_men);
+        }
+        let supply_t = charge * hunger.rations_landed_nights;
+        if supply_t <= Fixed::ZERO {
+            return;
+        }
+        self.truth
+            .bases
+            .get_mut(&base)
+            .expect("the base formed exists")
+            .supply_t += supply_t;
+        let weighted = weighted_men != Fixed::from_int(i64::from(men));
+        let breakdown = self.config.record_breakdowns.then(|| Breakdown {
+            factors: [
+                Factor {
+                    name: "men_aboard",
+                    value: Fixed::from_int(i64::from(men)),
+                },
+                Factor {
+                    name: "rations_landed_nights",
+                    value: hunger.rations_landed_nights,
+                },
+                Factor {
+                    name: "daily_supply_t_per_man",
+                    value: figures.daily_supply_t_per_man,
+                },
+            ]
+            .into_iter()
+            // Only where a unit's weight acts (decision 0098).
+            .chain(weighted.then_some(Factor {
+                name: "weighted_men",
+                value: weighted_men,
+            }))
+            .collect(),
+            result: supply_t,
+        });
+        self.events.record(
+            day,
+            Some(pulse),
+            EventKind::RationsLanded {
+                base,
+                side: p.side,
+                task_force: p.task_force,
+                men,
+                nights: hunger.rations_landed_nights,
+                supply_t,
+            },
+            vec![Cause::Event(formed)],
+            breakdown,
+        );
     }
 
     /// Works the force's cargo, and records in `hours` for each ship the

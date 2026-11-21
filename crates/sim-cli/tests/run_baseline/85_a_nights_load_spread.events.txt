@@ -2,20 +2,20 @@ Placeholder scenario 85: A night's load spread over its ships
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 140739bebc4b5755  18 events
-day   2  hash c3ade51f92f0d2fc  7 events
-day   3  hash a6ef974190328857  7 events
-day   4  hash ca1cbb5f84893880  6 events
-day   5  hash 0d12cdc3f306badf  15 events
-day   6  hash 454aa5fd1da18635  28 events
-day   7  hash 28a3148d0e4c8f7b  6 events
-day   8  hash 2f373ebf3b6b6d90  6 events
-day   9  hash 4a42eb3fcc91d164  6 events
-day  10  hash 6f00aa8964522677  6 events
-day  11  hash 1d0ddf0d825e92d9  6 events
-day  12  hash 0ab0d43217332fa4  6 events
-day  13  hash 5052ee37efc8b3d6  6 events
-day  14  hash 4a79d5cff5e7836f  6 events
+day   1  hash 118b2bc5f114fcc0  18 events
+day   2  hash 4edc99e401a1f905  7 events
+day   3  hash 66bdf23de39fb282  7 events
+day   4  hash 0bab319d0f93d2b9  6 events
+day   5  hash be88eeda93fb5b84  15 events
+day   6  hash 3d0e68dbfd14ff3e  28 events
+day   7  hash 4b5913774654e7f8  6 events
+day   8  hash a8a065ae95bc9467  6 events
+day   9  hash 02900573300a556b  6 events
+day  10  hash a450fdb79836a20c  6 events
+day  11  hash 4b1c74c99da8bdfa  6 events
+day  12  hash 51d42b632255ce27  6 events
+day  13  hash d5f0c13cd3b8b641  6 events
+day  14  hash a5ba22b2c9af2dbc  6 events
 
 #1 D1 -         Allied the commander's command taken: set intent:1 to keep base:2 supplied at 5 days
 #2 D1 -         Allied plan:1 drafted for intent:1  <- #1

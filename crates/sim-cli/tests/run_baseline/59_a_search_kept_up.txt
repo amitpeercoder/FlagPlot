@@ -2,18 +2,18 @@ Placeholder scenario 59: A search kept up
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash adadcc1895219295  24 events
-day   2  hash a81943da4b668e21  7 events
-day   3  hash e5411be62eaeaa9d  7 events
-day   4  hash 4bb679d52e07eb09  7 events
-day   5  hash 03165435bc74b51d  7 events
-day   6  hash 60f4613ecdfdc301  7 events
-day   7  hash b04e7ff32821bdf5  7 events
-day   8  hash facfb0111d348ca9  7 events
-day   9  hash dc0ed3603f23eb15  7 events
-day  10  hash 541e9bc48a61f501  7 events
-day  11  hash c689006015bb470d  7 events
-day  12  hash 8e8cb14e64a7d339  7 events
+day   1  hash 6d6f41e78dd020ca  24 events
+day   2  hash 043f6ece4c843cbe  7 events
+day   3  hash 801564f2db3a1bfa  7 events
+day   4  hash e5546a129a301b3e  7 events
+day   5  hash 99840057deca8d22  7 events
+day   6  hash 331cd7c5501fcf3e  7 events
+day   7  hash 7354c4f3c74a69e2  7 events
+day   8  hash 748f0ae1202b00be  7 events
+day   9  hash d3ba7431eeed31ea  7 events
+day  10  hash ea97a162e9837efe  7 events
+day  11  hash 301b6c40f7895efa  7 events
+day  12  hash 89fd1701a6838bde  7 events
 
 air_group:1 "Placeholder flying boats 1" (Allied) at base:1: 6 ready, mission Search, arc 050-120 to 600 nm
 base:1 "Placeholder base 1" (Allied) at (0,0): 1000 t of supply in stock

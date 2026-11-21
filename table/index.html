@@ -1231,7 +1231,7 @@ body.watched .gives { display: none !important; }
   }
   function cardUnit(u) {
     var body = openCard(u.land_unit.name.toUpperCase(), 'YOURS', true);
-    kv(body, [['Men ashore', u.men_ashore ? commas(u.men_ashore) : null], ['Men aboard', u.men_aboard ? commas(u.men_aboard) : null], ['Where', u.place ? hexWords(u.place) : 'aboard ship'], ['Posture', u.posture], ['Doing', u.activity], ['Fatigue', u.fatigue], ['Fed last night', String(u.fed_last_night || '').replace(/_/g, ' ')], ['Experience', u.experience]]);
+    kv(body, [['Men ashore', u.men_ashore ? commas(u.men_ashore) : null], ['Men aboard', u.men_aboard ? commas(u.men_aboard) : null], ['Where', u.place ? hexWords(u.place) : 'aboard ship'], ['Posture', u.posture], ['Doing', u.activity], ['Fatigue', u.fatigue], ['Fed last night', String(u.fed_last_night || '').replace(/_/g, ' ')], ['Hungry', u.hunger_nights ? u.hunger_nights + (u.hunger_nights === 1 ? ' night' : ' nights') : null], ['Experience', u.experience]]);
     if ((u.aboard || []).length) { listOf(body, 'ABOARD', u.aboard.map(function (a) { return a.ship.handle + ': ' + commas(a.men); }), 'men'); }
    
   }
@@ -1574,6 +1574,8 @@ body.watched .gives { display: none !important; }
     else if (k === 'fuelling_broken_off' && R('^' + H + ' took no fuel from ' + H + ' at ' + AT)) out = 'Fuelling broken off at ' + P(m[3], m[4]) + ': ' + N(m[1]) + ' took no fuel from ' + N(m[2]);
     else if (k === 'fuel_order_ended' && R("^" + H + "'s order to fuel from " + H + ' ended: (.*)$')) out = 'Fuelling ended for ' + N(m[1]) + ': ' + m[3];
     else if (k === 'ship_refuelled' && R('^' + H + ' took ([\\d.]+) t of fuel at ' + H)) out = N(m[1]) + ' took ' + fig(m[2]) + ' t of fuel at ' + N(m[3]);
+    else if (k === 'rations_landed' && R('^the landing of ' + H + ' put ([\\d.]+) t of rations into ' + H + ': ([\\d.]+) nights for the (\\d+) men aboard')) out = N(m[1]) + ' landed ' + fig(m[2]) + ' t of rations at ' + N(m[3]) + ', ' + m[4] + ' days for ' + fig(m[5]) + ' men';
+    else if (k === 'hunger_nights_changed' && R('^' + H + ' at ' + AT + ' has been hungry (\\d+) nights')) out = N(m[1]) + ' at ' + P(m[2], m[3]) + (m[4] === '0' ? ': no longer hungry' : ': hungry ' + m[4] + (m[4] === '1' ? ' night' : ' nights'));
     else if (k === 'strike_mission_cleared' && R('^' + H + ' has no mission: the base it was to strike, ' + H)) out = N(m[1]) + ' stood down from its strike: ' + N(m[2]) + ' is ours';
     if (out == null) {
       if (k === 'engagement_begun' && R('^' + H + ' met the enemy at ' + AT + ' at ' + CL)) out = N(m[1]) + ' met the enemy at ' + P(m[2], m[3]) + ', ' + m[4] + m[5] + '. Action joined';
@@ -1639,7 +1641,7 @@ body.watched .gives { display: none !important; }
   // what was ordered, what was done and what was reported. It is the seat's
   // own events (the tool `events`), in its own words; an entry opens what led
   // to it (the tool `explain`). What the staff does every day is folded.
-  var D_ROUTINE = { air_group_fatigue: 1, land_unit_fatigue: 1, task_force_fatigue: 1, aircraft_worn: 1, aircraft_repaired: 1, fieldworks_changed: 1, unit_worked: 1, base_supply_spent: 1, men_fed: 1, base_at_day_end: 1, search_flown: 1, fuel_burned: 1, ship_refuelled: 1, contact_aged: 1, fight_day_counted: 1, left_roster: 1, loading_lost: 1, ground_fire: 1, task_force_steamed: 1, escorts_sent: 1, airfield_mended: 1, base_anti_aircraft_fire: 1, anti_aircraft_fire: 1, salvo: 1, salvo_against: 1 }, diaryLast = 0;
+  var D_ROUTINE = { hunger_nights_changed: 1, air_group_fatigue: 1, land_unit_fatigue: 1, task_force_fatigue: 1, aircraft_worn: 1, aircraft_repaired: 1, fieldworks_changed: 1, unit_worked: 1, base_supply_spent: 1, men_fed: 1, base_at_day_end: 1, search_flown: 1, fuel_burned: 1, ship_refuelled: 1, contact_aged: 1, fight_day_counted: 1, left_roster: 1, loading_lost: 1, ground_fire: 1, task_force_steamed: 1, escorts_sent: 1, airfield_mended: 1, base_anti_aircraft_fire: 1, anti_aircraft_fire: 1, salvo: 1, salvo_against: 1 }, diaryLast = 0;
   function diaryWords(t) { t = nameText(plainWords(String(t).replace(/^(Allied|Japanese) /, ''))).replace(/_/g, ' '); t = t.charAt(0).toUpperCase() + t.slice(1); return /[.!?]$/.test(t) ? t : t + '.'; }
   // A plan said by what it is for, and the intent of the commander's it comes under.
   // Whether the commander has signed this already, for the staff at 1800.

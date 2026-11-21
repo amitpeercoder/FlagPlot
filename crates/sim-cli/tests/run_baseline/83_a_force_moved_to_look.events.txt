@@ -2,15 +2,15 @@ Placeholder scenario 83: A force moved to look
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash efbf575f967b6917  49 events
-day   2  hash f039371f97b315d9  15 events
-day   3  hash 2b27ca9f78239cc6  17 events
-day   4  hash 8b2e19b587c78473  23 events
-day   5  hash 3bc72971aff9c3fc  20 events
-day   6  hash 451eb5185f41f300  27 events
-day   7  hash 6bee6a838f8d29d9  32 events
-day   8  hash 993fa1346498f57c  29 events
-day   9  hash d2800a3e17409b6e  19 events
+day   1  hash 6a3e1d449492a9c8  49 events
+day   2  hash 603419ffdde93eb8  15 events
+day   3  hash 5ce40817aecf471d  17 events
+day   4  hash 739980d6d21d6f06  23 events
+day   5  hash 2c3c0abf95eb5b11  20 events
+day   6  hash c4ac950b5352cee5  27 events
+day   7  hash a272fbd8a0dc2896  32 events
+day   8  hash ed84fb20739efe71  29 events
+day   9  hash 4c52807f75e26b83  19 events
 
 #1 D1 -         Allied the commander's command taken: set intent:1 to take the place at (10,0)
 #2 D1 -         Allied plan:1 drafted for intent:1  <- #1

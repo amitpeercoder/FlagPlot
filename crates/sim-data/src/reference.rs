@@ -7,9 +7,9 @@ use sim_core::fixed::Fixed;
 use sim_core::ids::{AircraftTypeId, ShipClassId};
 use sim_core::refdata::{
     AirCombatFigures, AirSupplyFigures, AirUpkeepFigures, AircraftRole, AircraftType, AttackWeapon,
-    BombardmentFigures, ClassSide, ClassSides, FatigueFigures, GroundFigures, PassingChances,
-    PortSize, RefData, ReportError, ReportFigures, SearchFigures, ShipClass, ShipKind,
-    SurfaceCombatFigures, TrialFigures, TrialSize,
+    BombardmentFigures, ClassSide, ClassSides, FatigueFigures, GroundFigures, HungerFigures,
+    PassingChances, PortSize, RefData, ReportError, ReportFigures, SearchFigures, ShipClass,
+    ShipKind, SurfaceCombatFigures, TrialFigures, TrialSize,
 };
 use sim_core::state::ShipSystem;
 
@@ -1021,6 +1021,13 @@ struct GroundFile {
     /// file changes.
     replacement_experience: Option<u32>,
     replacement_share: Option<Quantity>,
+    /// Hunger that takes time (decision 0205, 1 and 9): all three or none.
+    /// Without them a landing brings no rations and the unfed are lost from
+    /// the first night, so that no older file changes. The count of nights
+    /// is a whole number, read as one.
+    rations_landed_nights: Option<Quantity>,
+    hungry_below_share: Option<Quantity>,
+    hunger_nights_before_loss: Option<u32>,
 }
 
 /// Loads the ground figures from a TOML file (decision 0066).
@@ -1163,6 +1170,24 @@ fn parse_ground_figures(text: &str, path: &Path) -> Result<GroundFigures, DataEr
         replacement_share: match &file.replacement_share {
             None => GroundFigures::REPLACEMENT_SHARE,
             Some(share) => number("replacement_share", share)?,
+        },
+        hunger: match (
+            &file.rations_landed_nights,
+            &file.hungry_below_share,
+            file.hunger_nights_before_loss,
+        ) {
+            (None, None, None) => None,
+            (Some(rations), Some(below), Some(nights)) => Some(HungerFigures {
+                rations_landed_nights: number("rations_landed_nights", rations)?,
+                hungry_below_share: number("hungry_below_share", below)?,
+                hunger_nights_before_loss: nights,
+            }),
+            _ => {
+                return Err(fail(
+                    "give rations_landed_nights, hungry_below_share and hunger_nights_before_loss together, or none of them"
+                        .to_string(),
+                ))
+            }
         },
     };
     if let Some(problem) = figures.problem() {
@@ -3115,6 +3140,61 @@ mod tests {
                 .expect_err("refused")
                 .message;
             assert!(message.contains(key), "{extra}: {message}");
+        }
+    }
+
+    #[test]
+    fn the_hunger_figures_are_all_three_or_none_and_are_checked() {
+        // Decision 0205, 1 and 9: a file that names none of them has no
+        // hunger rule, so that no older file changes.
+        let figures = parse_ground_figures(&ground_text(), here()).expect("parses");
+        assert_eq!(figures.hunger, None);
+        let with = |extra: &str| format!("{}{extra}\n", ground_text());
+        let all = "rations_landed_nights = 3\nhungry_below_share = \"0.5\"\nhunger_nights_before_loss = 14";
+        let set = parse_ground_figures(&with(all), here()).expect("parses");
+        assert_eq!(
+            set.hunger,
+            Some(HungerFigures {
+                rations_landed_nights: Fixed::from_int(3),
+                hungry_below_share: Fixed::from_ratio(1, 2),
+                hunger_nights_before_loss: 14,
+            })
+        );
+        for extra in [
+            "rations_landed_nights = 3",
+            "rations_landed_nights = 3\nhungry_below_share = \"0.5\"",
+            "hunger_nights_before_loss = 14",
+        ] {
+            let message = parse_ground_figures(&with(extra), here())
+                .expect_err("refused")
+                .message;
+            assert!(message.contains("together, or none"), "{extra}: {message}");
+        }
+        for (changed, key) in [
+            ("rations_landed_nights = -1", "rations_landed_nights"),
+            ("hungry_below_share = 2", "hungry_below_share"),
+            ("hungry_below_share = 0.5", "hungry_below_share"),
+            (
+                "hunger_nights_before_loss = \"14\"",
+                "hunger_nights_before_loss",
+            ),
+        ] {
+            let name = changed.split(' ').next().expect("a key");
+            let text = all
+                .lines()
+                .map(|line| {
+                    if line.starts_with(name) {
+                        changed
+                    } else {
+                        line
+                    }
+                })
+                .collect::<Vec<_>>()
+                .join("\n");
+            let message = parse_ground_figures(&with(&text), here())
+                .expect_err("refused")
+                .message;
+            assert!(message.contains(key), "{changed}: {message}");
         }
     }
 

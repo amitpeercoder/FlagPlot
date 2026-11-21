@@ -1,0 +1,79 @@
+# Scenario 119: hunger takes time.
+#
+# Decision 0205. Side A (the Allied side) has a base Q, base 1, a coast hex at
+# (10,0), with no aircraft, no gun and no stock, and a land unit V, land unit
+# 1, of 1,000 men ashore there. Nothing fights and nothing is bombed. Side B
+# (the Japanese side) has nothing at all, and the game does not end for want
+# of it (no unit of either side fights, searches or is seen). The game is 16
+# days, so that a unit hungry from the first night has its fifteenth and
+# sixteenth nights in it.
+#
+# The empty hex P at (8,0), two hexes from Q, is a coast hex where A has no
+# base. The statements of landing give A a force T, task force 1, of five
+# placeholder troop transports (600 men each, so 3,000 men in all) with a
+# land unit U, land unit 2, of 3,000 men aboard, stopped at sea at (7,0), one
+# hex from P, with an order to go to P and unload. It is not in this file as it
+# stands: a variant of the test adds it at the mark `forces`.
+#
+# The test builds its variants from the text of this file, at the marked
+# lines below: it gives Q's stock (the line `supply_t = 0` of base Q), adds
+# land units at the mark `units` and a count of hunger to V at the mark `v`,
+# adds forces at the mark `forces`, orders at the mark `orders` and supply
+# lines at the mark `lines`. The hand calculation is in
+# tests/scenario_119_hunger_takes_time.rs. The test runs this file on the
+# frozen step 1 figures, with scenario 119's ground figures
+# (data/reference/ground_placeholder_scenario_119.toml): the daily supply for
+# a man is 0.005 t, `unfed_loss_share_per_day` 0.05, `rations_landed_nights` 3,
+# `hungry_below_share` 0.5 and `hunger_nights_before_loss` 14. The map is
+# data/map/placeholder_landing.toml, scenario 21's: a strip of open sea with
+# three coast hexes of port size 0 or 5, (0,0), (8,0) and (10,0).
+#
+# Kept out of the loops that walk data/scenarios/*.toml by being in this
+# folder (decision 0072).
+#
+# PLACEHOLDER DATA. The bases, ships, units and figures are invented. Every
+# name below says "Placeholder".
+
+name = "Placeholder scenario 119: Hunger takes time"
+placeholder = true
+seed = 1942
+days = 16
+map = "../../map/placeholder_landing.toml"
+ship_classes = [
+    "../../reference/ship_classes.csv",
+    "../../reference/ship_classes_placeholder_transports.csv",
+]
+port_sizes = "../../reference/port_sizes.csv"
+aircraft_types = "../../reference/aircraft_types.csv"
+search = "../../reference/search.toml"
+surface_combat = "../../reference/surface_combat.toml"
+ground = "../../reference/ground_placeholder_scenario_119.toml"
+
+# Allied base 1, Q: no aircraft, no gun, and no stock; the men's charge there
+# is 5 t a night for V's 1,000 men.
+[[base]]
+id = 1
+name = "Placeholder base Q"
+side = "allied"
+q = 10
+r = 0
+supply_t = 0
+fuel_t = 0
+
+# V, 1,000 men, ashore at Q from the start.
+[[land_unit]]
+id = 1
+name = "Placeholder V"
+side = "allied"
+men = 1000
+q = 10
+r = 0
+# MARK: v
+
+# MARK: units
+
+# MARK: forces
+
+# MARK: lines
+
+# MARK: orders

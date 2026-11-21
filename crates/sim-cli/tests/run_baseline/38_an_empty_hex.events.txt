@@ -2,12 +2,12 @@ Scenario 38: An empty hex
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash dec52920ab31922d  33 events
-day   2  hash 9855bd09e8e40b0c  23 events
-day   3  hash abb9666ab104a846  23 events
-day   4  hash 2c1964db5844ea1d  22 events
-day   5  hash 9429ee3ff98083bd  20 events
-day   6  hash 64a0221d3495fcc7  20 events
+day   1  hash bf9705e8cf83c2ba  33 events
+day   2  hash 180a1eaa94673117  23 events
+day   3  hash 3a49bb96259626c5  23 events
+day   4  hash 9e2230a49806e846  22 events
+day   5  hash e19b879a6725fdde  20 events
+day   6  hash 810bb5376a13227c  20 events
 
 #1 D0 -         Allied ground report at (10,0): 400 enemy men ashore (told)
 #2 D0 -         Allied ground report at (20,0): 400 enemy men ashore (told)

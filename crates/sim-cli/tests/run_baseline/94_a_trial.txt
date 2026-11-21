@@ -2,14 +2,14 @@ Placeholder scenario 94: A trial
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash d460b255f9e69e1e  3 events
-day   2  hash 6d713d67bcc079ce  3 events
-day   3  hash 5ad9981a21962cfa  3 events
-day   4  hash 8be5f10a70d0ed4a  3 events
-day   5  hash 22ea609f590de056  3 events
-day   6  hash e129ac88d579bb56  3 events
-day   7  hash f775ee939bada6ba  3 events
-day   8  hash c7cdbf655d6292fa  3 events
+day   1  hash ecc948b8e8eaf01f  3 events
+day   2  hash 5e2979dd087b3b97  3 events
+day   3  hash 689d9772a87be557  3 events
+day   4  hash 8a74e0c17fbefb07  3 events
+day   5  hash b74821b89ce051ef  3 events
+day   6  hash 301f8d8f38b5dce7  3 events
+day   7  hash 176120215a7a1237  3 events
+day   8  hash 034d336d3867abd7  3 events
 
 task_force:1 "Placeholder transport force 1" (Allied): Idle at (2,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; home port base:4
 ship:1 "Placeholder troop transport 1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1000 t of fuel, 30 t of supply, 600 men of land_unit:1 aboard

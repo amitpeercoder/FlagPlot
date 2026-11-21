@@ -1,0 +1,213 @@
+# PLACEHOLDER DATA. The ground figures of scenario 119, "Hunger takes time"
+# (decision 0205, tests/scenario_119_hunger_takes_time.rs): the frozen step 1
+# figures (data/reference/step1/ground.toml) with the three figures of hunger
+# added, and no other change: handling_t_per_man 0.25, daily_supply_t_per_man
+# 0.005 and unfed_loss_share_per_day 0.05 are the frozen figures'. Invented so
+# the hand calculation runs; not historical, and not to be used for validation.
+# PLACEHOLDER DATA. Every figure is invented so the engine has something to
+# run. They are not historical and must not be used for validation. They are
+# the first values, for scenario 21
+# (docs/decisions/0066-land-units-carried-and-fed.md, "Placeholder figures").
+
+placeholder = true
+
+# The tons of a ship's work in a pulse that moving one man takes. Placeholder:
+# rests on no source.
+handling_t_per_man = "0.25"
+
+# Supply a man ashore costs his base a day, in tons. Placeholder: rests on no
+# source. The record's one hint, 120 tons for about three and a half days, is
+# of rations alone for a force whose size on that day is disputed.
+daily_supply_t_per_man = "0.005"
+
+# The share of unfed men lost in a day. Placeholder: rests on no source.
+unfed_loss_share_per_day = "0.05"
+
+# Hunger takes time (decision 0205). The three figures are given together or
+# not at all; with them the rule runs, without them the game plays as before.
+# Nights of the daily charge for the men aboard that a landing which forms a
+# base puts into it.
+# PLACEHOLDER: rests on one row, three days' rations at a landing (data/oob
+# land_unit_facts 538), decision 0205.
+rations_landed_nights = 3
+
+# A night whose fed share is below this is a night of hunger.
+# PLACEHOLDER: a judgement: half rations weakened men (31); two meals of three
+# are above it and cost no loss (403 to 406), decision 0205.
+hungry_below_share = "0.5"
+
+# Men are lost to hunger only from a unit whose nights of hunger are above
+# this.
+# PLACEHOLDER: a judgement between two rows: no loss in six weeks on two meals;
+# "many" dead about three weeks after a force with three days' rations broke
+# (188), decision 0205.
+hunger_nights_before_loss = 14
+
+# The fight ashore and a base that changes side (decision 0090, "Placeholder
+# figures"). Every one is a placeholder set by the architect and rests on no
+# source; stage 4 sets them against the attacks on the airfield.
+
+# Firing men to one shot.
+men_per_shot = 100
+
+# The chance a shot hits, for a side that attacks.
+hit_chance = "0.3"
+
+# The chance a shot hits, for a side that defends.
+defender_hit_chance = "0.6"
+
+# Men a hit removes.
+men_per_hit = 20
+
+# Fatigue a unit gains on a day it attacks.
+fatigue_per_attack_day = 20
+
+# Fatigue a unit ashore loses on any other day.
+rest_per_day = 5
+
+# Above this a unit on attack goes back to defend.
+attack_fatigue_limit = 60
+
+# A side attacked is beaten below this share of the attacker's men.
+beaten_share = "0.2"
+
+# The share of a base's supply and fuel its taker keeps.
+captured_stock_share = "0.5"
+
+# Placeholders set by the architect for decision 0092, resting on no source.
+# Men a bomb or shell hit removes.
+men_lost_per_base_hit = 10
+
+# The least and the most a ground report can be, as a share of the truth.
+report_error_low = "0.5"
+report_error_high = "1.5"
+
+# Marching overland (decision 0094). Placeholders set by the architect, resting
+# on no source. The record has two marches inside the period, both from Taivu
+# to the airfield: about two days in August and about a week in September
+# inland. One figure cannot be both, so it is tuned in stage 4.
+# Days to march from a hex to a neighbour, a whole number of 1 or more.
+march_days_per_hex = 3
+
+# Fatigue a unit gains on a day it marches.
+fatigue_per_march_day = 10
+
+# Days of its daily charge a marching unit takes with it.
+march_supply_days = 5
+
+# Preparing a landing (decision 0095) and the experience of a land unit
+# (decision 0097). Placeholders set by the architect, resting on no source.
+# In the frozen figures the first values switch both rules off: a landing is
+# as fast as it was and tires no one more, and experience does nothing to a
+# shot. The live values are in data/reference/ground.toml.
+# Preparation (loading and rehearsal) a force and each unit of its roster gain
+# for a day in port with the order, from 0 to 100.
+preparation_per_day = 5
+
+# The share of a ship's unloading rate a force with no loading works at while
+# it lands men, from 0 to 1.
+unprepared_landing_share = 1
+
+# The share of its loading a force keeps when a unit is added to its roster,
+# from 0 to 1.
+preparation_kept_on_change = "0.5"
+
+# Fatigue a unit gains on landing with no rehearsal, from 0 to 100.
+unprepared_landing_fatigue = 0
+
+# How much a step of experience moves the chance a shot hits, from 0 to 0.5.
+experience_fire_strength = 0
+
+# Days of training for one step of experience, a whole number of 1 or more.
+training_days_per_level = 30
+
+# The experience training cannot pass, a whole number from 0 to 4.
+training_ceiling = 2
+
+# Days of firing in a fight for one step of experience, a whole number of 1 or
+# more.
+fight_days_per_level = 10
+
+# The strengths of a land unit's skills (decision 0098). Placeholders set by
+# the architect, resting on no source. In the frozen figures every strength is
+# 0, so no skill does anything and the hand calculations of the earlier
+# stages stand. The live values are in data/reference/ground.toml.
+# How much a step of the assault skill moves the rehearsal gained in a day.
+assault_skill_strength = 0
+
+# How much a step of a movement skill moves a day's march.
+movement_skill_strength = 0
+
+# How much a step of the holding skill moves a defender's chance to hit.
+holding_skill_strength = 0
+
+# How much a step of weight moves a unit's shots and the supply each of its
+# men costs.
+weight_strength = 0
+
+# The figures of work and what it builds (decision 0099). Placeholders set by
+# the architect, resting on no source. No frozen scenario has a working unit, so these do nothing here. The live values are the same, in data/reference/ground.toml.
+# Work a man of a standard working unit makes in a day, 0 or more.
+work_per_man_day = 1
+
+# Work to build an airfield on a base that has none, above 0.
+airfield_work = 20000
+
+# Work in a day that doubles the next day's unloading at a base, above 0.
+work_to_double_unloading = 1000
+
+# Work in a day for one more aircraft repaired the next night, above 0.
+work_per_aircraft_repair = 200
+
+# Work for one point of a base's defences, which run from 0 to 100, above 0.
+work_per_defence_point = 200
+
+# How much full defences raise a defender's chance to hit, from 0 to 1. 0
+# switches defences off in the fight.
+defences_strength = "0.5"
+
+# The share of a working unit's work that a fighting unit set to work makes,
+# from 0 to 1.
+fighting_unit_work_share = "0.5"
+
+# The figures of an airfield damaged and mended (decision 0103). Placeholders
+# set by the architect for decision 0103, resting on no source.
+# Damage one hit on an airfield adds, 0 or more; the damage runs from 0 to 100.
+airfield_damage_per_hit = 2
+
+# Work to mend one point of an airfield's damage, above 0.
+work_per_airfield_damage_point = 50
+
+# The damage at or above which a field takes no aircraft (no rebase to it, no
+# landing, no arrival), from 0 to 100.
+airfield_landing_refused_at = 50
+
+# The fatigue of defeat (decision 0104). Placeholder set by the architect for
+# decision 0104, resting on no source: a unit whose side is beaten in a hex and
+# that falls back gains this much fatigue at once, to 100 at most, beside the
+# fatigue of each day's march.
+beaten_fatigue = 30
+
+# Who is engaged in a fight ashore, and an attack that fails (decision 0105).
+# The frozen values switch both off: the limit never cuts and a failed day
+# costs nothing.
+engagement_ratio = 1000000
+
+failed_attack_fatigue = 0
+
+# Cover, men who dig in, and a place under bombardment (decision 0106). The
+# frozen values switch the rule off: cover saves nobody, nobody digs, every
+# grade costs what a point cost before, and fire neither strains nor wears.
+cover_from_fire = 0
+cover_in_fight = 0
+fieldworks_per_day = 0
+fieldworks_limit = 0
+prepared_from = 30
+fortified_from = 60
+prepared_work_factor = 1
+fortified_work_factor = 1
+strain_per_hit = 0
+strain_per_day = 0
+strain_limit = 60
+cover_from_strain = 0
+cover_wear_per_hit = 0

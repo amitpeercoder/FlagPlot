@@ -2,8 +2,8 @@ Placeholder scenario 93: The enemy's half
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash b6d79c3f297fb790  2 events
-day   2  hash 027b42ed833eb55b  2 events
+day   1  hash 90d8f202c0f94ef9  2 events
+day   2  hash 3dbc0be2e169a60a  2 events
 
 task_force:1 "Placeholder task force 1" (Allied): Idle at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 ship:1 "Placeholder cruiser 1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 800 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply

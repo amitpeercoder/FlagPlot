@@ -265,7 +265,9 @@ const fn speed_code(speed: SpeedSetting) -> u8 {
 /// version 52 adds a task force's order to fuel from another, `fuel_from`
 /// (0 for none, else 1, the giver and the order), after its
 /// `available_from`, and the task force order `fuel_from` (code 19, in the
-/// agent's table) (decision 0201).
+/// agent's table) (decision 0201);
+/// version 53 adds a land unit's nights of hunger, `hunger_nights`, after its
+/// formation (decision 0205, 11).
 ///
 /// What is held apart until its day (decision 0195, 23) does not raise the
 /// version: it is hashed last, after the domain, and only where something is
@@ -276,7 +278,7 @@ const fn speed_code(speed: SpeedSetting) -> u8 {
 /// replacement men and each land unit's strength (decision 0197, 21), after
 /// the supply lines, only where a scenario gives a stream or an
 /// establishment.
-pub const STATE_VERSION: &[u8] = b"flagplot-state-v52";
+pub const STATE_VERSION: &[u8] = b"flagplot-state-v53";
 
 /// Names every field of the state, with no `..` in any pattern. It does
 /// nothing when it runs. It is here so that a field added to the state does
@@ -691,6 +693,7 @@ fn name_every_field(world: &World) {
         fieldworks: _,
         available_from: _,
         formation: _,
+        hunger_nights: _,
     }) = land_units.values().next()
     {}
     if let Some(Some(March {
@@ -1935,6 +1938,8 @@ pub(crate) fn hash_land_unit(h: &mut StateHasher, unit: &LandUnit) {
     // After the fieldworks (decision 0140).
     h.optional_u32(unit.available_from);
     h.optional_u32(unit.formation.map(|id| id.raw()));
+    // After the formation (decision 0205, 11).
+    h.u32(unit.hunger_nights);
 }
 
 /// Hashes everything that defines the state of a game. When a field is added

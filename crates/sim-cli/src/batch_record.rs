@@ -1290,7 +1290,9 @@ pub fn count(
             | EventKind::ShipRearmed { .. }
             | EventKind::ShipFuelledAtSea { .. }
             | EventKind::FuellingBrokenOff { .. }
-            | EventKind::FuelOrderEnded { .. } => {}
+            | EventKind::FuelOrderEnded { .. }
+            | EventKind::RationsLanded { .. }
+            | EventKind::HungerNightsChanged { .. } => {}
         }
     }
 

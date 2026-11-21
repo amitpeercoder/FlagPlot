@@ -1615,6 +1615,26 @@ pub struct GroundFigures {
     /// 0197, 12 and 14), above 0 and not above 1. A placeholder; a file that
     /// names none gives a half.
     pub replacement_share: Fixed,
+    /// The figures of hunger that takes time (decision 0205, 1 and 9).
+    /// `None` when the file names none of the three: then a landing brings
+    /// no rations, no unit counts its nights of hunger and the unfed are lost
+    /// as decision 0066 has it. Added at the end.
+    pub hunger: Option<HungerFigures>,
+}
+
+/// The three figures of hunger that takes time (decision 0205, 9), given
+/// together or not at all.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct HungerFigures {
+    /// Nights of the daily charge for the men aboard that a landing which
+    /// forms a base puts into it (decision 0205, 4), 0 or more.
+    pub rations_landed_nights: Fixed,
+    /// A night whose fed share is below this is a night of hunger (decision
+    /// 0205, 7), from 0 to 1.
+    pub hungry_below_share: Fixed,
+    /// Men are lost to hunger only from a unit whose nights of hunger are
+    /// above this (decision 0205, 8).
+    pub hunger_nights_before_loss: u32,
 }
 
 /// The least and the most a ground report can be, as a share of the truth
@@ -1692,6 +1712,7 @@ impl GroundFigures {
         cover_wear_per_hit: Fixed::ZERO,
         replacement_experience: GroundFigures::REPLACEMENT_EXPERIENCE,
         replacement_share: GroundFigures::REPLACEMENT_SHARE,
+        hunger: None,
     };
 
     /// The experience of replacement men where a ground file names none
@@ -1970,6 +1991,21 @@ impl GroundFigures {
                 "ground replacement_share {} is not above 0 and not above 1",
                 self.replacement_share
             ));
+        }
+        // Hunger that takes time (decision 0205, 9).
+        if let Some(hunger) = self.hunger {
+            if hunger.rations_landed_nights.is_negative() {
+                return Some(format!(
+                    "ground rations_landed_nights {} is not 0 or more",
+                    hunger.rations_landed_nights
+                ));
+            }
+            if hunger.hungry_below_share.is_negative() || hunger.hungry_below_share > Fixed::ONE {
+                return Some(format!(
+                    "ground hungry_below_share {} is not between 0 and 1",
+                    hunger.hungry_below_share
+                ));
+            }
         }
         None
     }

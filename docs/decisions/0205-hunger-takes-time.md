@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 21, 2026 on the designer's quest
 
 Summary: Today a twentieth of the men a base cannot feed are lost every night, from the first night ashore. The record says otherwise: men landed carrying food, lived for weeks on short rations with no such loss, and died of hunger only after weeks on almost nothing. This puts the rations men land with into the base their landing forms, counts for each unit the nights it goes hungry, and takes men only from a unit that has been hungry for many nights. It runs where a scenario's ground figures give its figures, so no game on file moves; the table plays copies of its scenarios that have them.
 
-Standing: Planned on Nov 21, 2026; its review folded in; waits for its hand calculation and its build.
+Standing: Planned on Nov 21, 2026; its review folded in; its hand calculation written; built on Nov 21, 2026 (As built, below), for the architect's review.
 
 ## Why
 
@@ -97,3 +97,41 @@ A reviewer who had not seen the plan read it against the feeding's code, the bri
 - **The count could be held at one for ever** by a full meal every other night on a quarter ration. It now falls only on a night fed in full (rule 7).
 - **The loss was not defined for a unit, and the one man at least was dropped without a word.** Rule 8 defines it and keeps him.
 - **The rows said less than the plan claimed.** One row is of a landing; three are of marches. One row does date deaths from hunger, which the plan had said none did. The figures' reasons are rewritten from the rows as they are.
+
+## As built
+
+Built on Nov 21, 2026, on the branch `hunger-build`, from the hand calculation of `tests/scenario_119_hunger_takes_time.rs`. Every statement and property of it holds as written; none is ignored.
+
+### What was built, and where
+
+- **The three figures and the gate (rule 1).** `sim_core::refdata::HungerFigures` (`rations_landed_nights`, `hungry_below_share`, `hunger_nights_before_loss`) is `GroundFigures::hunger`, an `Option`, last in the struct. The loader (`sim-data/src/reference.rs`) reads the three keys all together or none; one or two alone is refused, and the checks are `rations_landed_nights` 0 or more and `hungry_below_share` from 0 to 1. Every rule below runs only where it is `Some`.
+- **The files of figures (rules 2 and 3).** The live `data/reference/ground.toml` and its frozen copy are not changed. `data/reference/ground_hunger.toml` is the live `ground.toml` with the three figures added at the end and a header saying so; its frozen counterpart `data/reference/step1/ground_hunger.toml` is the frozen `ground.toml` with the same three. Scenario 119 has its own pair, `ground_placeholder_scenario_119.toml`, the frozen `ground.toml` with the three figures and no other change.
+- **Rations landed (rules 4, 5 and 10).** `World::land_rations` in `sim-core/src/cargo.rs`, called by `prepare_landing` right after `BaseFormed`, before any man lands: the men aboard the ships of the force that formed the base, their day's charge by `ground::daily_charge_t` (the one formula), times the nights, into the new base's stock. `EventKind::RationsLanded { base, side, task_force, men, nights, supply_t }` records it, citing the `BaseFormed`, with a breakdown of `men_aboard`, `rations_landed_nights`, `daily_supply_t_per_man` and, only where a unit's weight acts, `weighted_men`. A base that stands forms nothing and so brings nothing; a second force in the same pulse finds the base and forms none.
+- **The count (rule 7).** `LandUnit::hunger_nights: u32`, last in the struct, 0 from `LandUnit::new`. `World::count_nights_of_hunger` in `sim-core/src/ground.rs` runs in `feed_men_ashore` after each hex's `MenFed`, for every unit of the side with men ashore there, and records `EventKind::HungerNightsChanged { unit, hex, before, nights }` only when the count changes, citing the `MenFed`, with a breakdown of `nights_before`, `fed_share` and `hungry_below_share`. A unit divided at a landing takes its parent's count (`cargo.rs`, with the experience and fieldworks it already took). A scenario's `[[land_unit]]` may give `hunger_nights`, a whole number.
+- **The loss (rule 8).** In `feed_men_ashore`, with the figures, the loss is worked on the units past the count alone; without them, on every unit of the side in the hex, by the code as it was. `MenLostUnfed` keeps its fields; its breakdown gains `fed_share`, `hunger_nights`, `hunger_nights_before_loss`, `men_past_count` and `unfed_past_count`.
+- **The hash (rule 11).** `hunger_nights` is named in `hash::name_every_field` and hashed after the formation; `STATE_VERSION` is `flagplot-state-v53`. The rules label is not raised.
+- **Who sees what (rule 10).** `side_events.rs`: `RationsLanded` whole to the side that formed the base, `HungerNightsChanged` whole to the unit's side, nothing to the enemy; both cite only the side's own events, so neither may have hidden causes. The test table has a row for each (159 kinds).
+- **The agent and the table.** A land unit line (`sim-agent/src/lines.rs`) gains `hunger_nights`, left out when 0, so no answer of a game without the figures changes; the text adds "hungry N nights" to the unit's line. The schema (`defs.schema.json`) and its README gain the field; the version is not raised, a field added only. The briefing lists neither new event; they are in the side's events and its explain. The table's card of a unit (`table/index.html`) shows "Hungry" with "N nights" where the count is above 0, and its diary words the two events plainly ("landed 45 t of rations at ...", "... hungry 5 nights"), the count's changes among the routine lines. `sim-cli`'s export names them `rations_landed` and `hunger_nights_changed`; the batch record counts neither.
+- **The table's copies (rule 3).** `python3 scripts/table-copies/make_copies.py [--check]` writes each scenario of `table/scenarios.json` that names `../../reference/ground.toml` to `data/scenarios/table-hunger/` under its own name, with that one line changed to `ground_hunger.toml`; `--check` writes nothing and fails where a copy is not the one it makes or the folder holds anything else. `table/scenarios.json` points at the nine copies. Scenario 119's test runs the check.
+- **Scenario 119.** `data/scenarios/hunger-takes-time/119_hunger_takes_time.toml`, its ground figures above, and `tests/scenario_119_hunger_takes_time.rs`, 22 tests.
+
+### The readings
+
+1. **The daily charge for a man** in rule 4 is read as each unit's own, by the one formula, so a unit whose weight is not the standard brings the nights of its own charge, as a march carries. Every unit of scenario 119 is standard.
+2. **The record of the rations is an event of its own,** `RationsLanded`, citing `BaseFormed`, and not new fields of `BaseFormed`: so no `BaseFormed` of a game on file changes. A landing that would put down nothing (no man aboard, or 0 nights) records nothing.
+3. **"The men aboard the ships of the force"** is every man of every unit aboard the force's ships at that moment, after any division, which moves no man.
+4. **The unfed of the units past the count** are their men times 1 less the fed share as the state holds it (the men fed over the men charged, cut at six decimals), cut to a whole man, and never above their men. Where every unit of the hex is past the count this is the hex's unfed exactly, since the share is cut down and the excess is below a man.
+5. **The breakdown of `MenLostUnfed`** keeps `unfed_in_hex` and `men_ashore_in_hex` as the hex's, and works `in_proportion` over the men of the units past the count, which is what the loss is shared over.
+6. **Without the figures the count is never moved,** and a scenario may still give a unit one: it is state, shown on the unit's line, and read by no rule.
+7. **The table plays the copies of the files that name the live ground figures only.** The Eastern Solomons in one day (`second-proof/05c` and `05e`) has no land unit and names no ground file, so it has no line to change; the table plays the file on file. The copies are in a folder two deep under `data/`, as each source's folder is, so every `../../` path in them resolves to the file the source names; no source names a file in its own folder. The table's bridge passes the scenario's path to `sim-cli` and reads nothing else of it, so nothing else needed a change.
+8. **Force T of statement 10 is five transports, not two.** The one placeholder class with berths, class 10 of `ship_classes_placeholder_transports.csv`, carries 600 men, so 3,000 men need five; no class file was made for the test. Nothing in the statements depends on the number of ships.
+9. **Statement 9's division** is set so that V is still at 5 when it is divided: Q holds 3 t at the start and a supply line gives 1.5 t on day 2, so V's fed share stays between a half and 1 and its count stays 5; a transport takes 600 of V on night 1 and lands them at P on night 2.
+
+### What did not hold
+
+Nothing. No statement or property needed an `_as_built` test.
+
+### Games on file
+
+Every one of the 174 scenario files under `data/scenarios` (all but scenario 119's folder and the table's copies) was run with `run --events` before the change and after it: the events are the same in every one, and only the daily hashes differ, by the layout. The generated files were remade by `sh scripts/regenerate.sh` for the layout alone.
+

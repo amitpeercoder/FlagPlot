@@ -500,6 +500,9 @@ struct LandUnitSpec {
     /// The men the unit should have (decision 0197, 1 and 19): not below
     /// its `men`. Without it, its `men`.
     establishment: Option<u32>,
+    /// The unit's nights of hunger at the start (decision 0205, 7): a whole
+    /// number. Without it, 0. Only the hunger figures read it.
+    hunger_nights: Option<u32>,
 }
 
 /// A land unit's skills (decision 0098), each optional, defaulting to 2:
@@ -2474,6 +2477,8 @@ impl Scenario {
                 }
                 unit.fight_days = days;
             }
+            // The count it starts with (decision 0205, 7).
+            unit.hunger_nights = spec.hunger_nights.unwrap_or(0);
             if let Some(skills) = &spec.skills {
                 let standard = Skills::STANDARD_ALL;
                 let mut set = Skills::STANDARD_ALL;
@@ -7467,6 +7472,26 @@ task_force = 3
             (two.experience, two.training_days, two.fight_days),
             (4, 29, 9)
         );
+    }
+
+    #[test]
+    fn a_land_unit_takes_its_nights_of_hunger() {
+        // Decision 0205, 7: a scenario may give the count a unit starts
+        // with; without it the count is nothing.
+        let scenario = landing(
+            true,
+            &format!(
+                "{}{}",
+                unit_ashore(1, 100, 0, 0),
+                unit_with(2, "hunger_nights = 14")
+            ),
+        )
+        .expect("loads");
+        let truth = scenario.world.umpire();
+        assert_eq!(truth.land_units[&LandUnitId::new(1)].hunger_nights, 0);
+        assert_eq!(truth.land_units[&LandUnitId::new(2)].hunger_nights, 14);
+        let message = landing_error(true, &unit_with(1, "hunger_nights = -1"));
+        assert!(message.contains("hunger_nights"), "{message}");
     }
 
     #[test]
