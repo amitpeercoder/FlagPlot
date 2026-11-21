@@ -159,6 +159,9 @@
 //!   - while a day is open, after the night pulse of day 1 with the
 //!     clock stopped (in a copy of the scenario with orders inside a
 //!     day on);
+//!     (Superseded on Nov 21, 2026 by decision 0204: a trial asked
+//!     while a day is open is answered, scenario 118. Noted by the
+//!     architect; the test of this line is set aside.)
 //!   - after the last day, the game being over;
 //!   - intent 1 once its withdrawal is queued;
 //!   - with both `intent` and `preview`, and with neither;
@@ -938,6 +941,7 @@ fn refused_after_the_last_day() {
 }
 
 #[test]
+#[ignore = "superseded by decision 0204: a trial is answered inside a day, at 0600 and 1200 (scenario 118)"]
 fn refused_while_a_day_is_open() {
     let open = format!("orders_inside_a_day = true\n{}", text());
     let mut s = session_with(load(&open), &[ALLIED]);

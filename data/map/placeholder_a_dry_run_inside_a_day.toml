@@ -1,0 +1,28 @@
+# PLACEHOLDER MAP used by scenario 118 (decision 0204). Open sea round the
+# origin, q -16 to 16 and r -16 to 16, with two coast hexes: (10,2), where
+# Allied base H lies, and (-10,0), where Japanese base E lies. The geography
+# is invented.
+
+placeholder = true
+
+# Ranges are inclusive.
+[[region]]
+kind = "deep_sea"
+q = [-16, 16]
+r = [-16, 16]
+
+# Allied base H's hex.
+[[hex]]
+q = 10
+r = 2
+kind = "coast"
+port_size = 3
+anchorage = true
+
+# Japanese base E's hex.
+[[hex]]
+q = -10
+r = 0
+kind = "coast"
+port_size = 3
+anchorage = true

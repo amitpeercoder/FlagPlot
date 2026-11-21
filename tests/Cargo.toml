@@ -611,3 +611,7 @@ path = "scenario_115_refuelling_at_sea.rs"
 [[test]]
 name = "scenario_117_the_way_a_force_takes"
 path = "scenario_117_the_way_a_force_takes.rs"
+
+[[test]]
+name = "scenario_118_a_dry_run_inside_a_day"
+path = "scenario_118_a_dry_run_inside_a_day.rs"

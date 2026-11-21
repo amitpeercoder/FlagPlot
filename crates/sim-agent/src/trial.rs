@@ -137,8 +137,9 @@ pub trait TrialUnderWay: Send {
 }
 
 /// What plays a seat's trials (rules 1, 3 and 5), handed to the session by
-/// its caller. To begin takes a side's whole view, on an evening, and what
-/// is asked; it answers with a trial under way, or why it cannot be tried.
+/// its caller. To begin takes a side's whole view, on an evening (inside a
+/// day, the view of the state as it stands with the open day treated as
+/// closed, decision 0204), and what is asked; it answers with a trial under way, or why it cannot be tried.
 /// To describe takes the same and plays nothing: it says the size and the
 /// dates, with what is due on each (decision 0181, amended 9).
 pub trait TrialRunner: Send {
@@ -1293,9 +1294,16 @@ pub(crate) struct AskedShown {
     pub orders_queued: usize,
     /// What the second trial is of, where one is played.
     pub beside: Option<BesideOf>,
-    /// The intent tried is in force on the evening asked.
+    /// The intent tried is in force on the evening asked, or at the hour
+    /// asked inside a day.
     pub in_force: bool,
     pub dates: DatesAsked,
+    /// The day open and the hour, "0600" or "1200", where the trial was
+    /// asked inside a day (decision 0204, 8); `None` at dusk.
+    pub inside_day: Option<(u32, &'static str)>,
+    /// The side has men ashore: what is ashore is a day behind in a trial
+    /// asked inside a day (decision 0204, 4).
+    pub ashore: bool,
 }
 
 impl AskedShown {
@@ -1321,18 +1329,54 @@ impl AskedShown {
                 DatesAsked::Chosen => json!("chosen"),
                 DatesAsked::Given(days) => json!(days),
             },
+            "inside_day": self.inside_day_json(),
         })
     }
 
-    /// "You have 2 orders to units queued: ...", where any are.
+    /// `inside_day` as a field: `null` at dusk, else the day and the hour.
+    pub(crate) fn inside_day_json(&self) -> Value {
+        match self.inside_day {
+            Some((day, clock)) => json!({"day": day, "clock": clock}),
+            None => Value::Null,
+        }
+    }
+
+    /// "You have 2 orders to units queued: ...", where any are. Inside a day
+    /// the count takes in the orders given for the day's pulses, and the
+    /// words say the holds they make are not in it either (decision 0204,
+    /// 5).
     fn orders_line(&self) -> Option<String> {
         (self.orders_queued > 0).then(|| {
-            format!(
-                "You have {} order{} to units queued: a trial does not try orders to units, and they are not in it.",
-                self.orders_queued,
-                if self.orders_queued == 1 { "" } else { "s" }
-            )
+            let s = if self.orders_queued == 1 { "" } else { "s" };
+            if self.inside_day.is_some() {
+                format!(
+                    "You have {} order{s} to units given for the day's pulses or queued for the coming day: a trial does not try orders to units, and they and the holds they make are not in it.",
+                    self.orders_queued
+                )
+            } else {
+                format!(
+                    "You have {} order{s} to units queued: a trial does not try orders to units, and they are not in it.",
+                    self.orders_queued
+                )
+            }
         })
+    }
+
+    /// The one sentence of a trial asked inside a day (decision 0204, 8):
+    /// the hour, that the rest of the day was not played, and where the
+    /// side has men ashore that what is ashore is a day behind. `played` is
+    /// false for a trial described.
+    fn inside_line(&self, played: bool) -> Option<String> {
+        let (day, clock) = self.inside_day?;
+        Some(format!(
+            "Asked at {clock} of day {day}, from things as they stand at that hour: the rest of day {day} {} not played{}.",
+            if played { "was" } else { "is" },
+            if self.ashore {
+                ", and what is ashore is a day behind"
+            } else {
+                ""
+            }
+        ))
     }
 }
 
@@ -1761,6 +1805,7 @@ pub(crate) fn answer_fields(
         answer.days,
         asked.size
     ));
+    text.extend(asked.inside_line(true));
     if !asked.standing.is_empty() {
         text.push(format!(
             "Taken in on that morning as you have it: {}.",
@@ -1884,6 +1929,7 @@ pub(crate) fn window_fields(
             .collect::<Vec<_>>()
             .join(", ")
     ));
+    text.extend(asked.inside_line(true));
     if !asked.standing.is_empty() {
         text.push(format!(
             "Taken in on the coming morning, day {first}, at every date, as you have it: {}.",
@@ -1968,12 +2014,18 @@ pub(crate) fn window_fields(
         }
         for enemy in &date.enemy {
             lines.push(format!(
-                "The enemy at {} on the evening {}, the trial's own reckoning of an enemy it made, the lowest, the middle and the highest: men ashore {}; the least cover {}.",
+                "The enemy at {} {}, the trial's own reckoning of an enemy it made, the lowest, the middle and the highest: men ashore {}; the least cover {}.",
                 n.place(enemy.place),
-                if enemy.eve + 1 == answer.first_day {
-                    format!("before day {}", answer.first_day)
-                } else {
-                    format!("of day {}", enemy.eve)
+                match asked.inside_day {
+                    // The first eve of a trial asked inside a day is the
+                    // state at the hour asked (decision 0204, 9).
+                    Some((day, clock)) if enemy.eve + 1 == answer.first_day => {
+                        format!("as things stood at {clock} of day {day}")
+                    }
+                    _ if enemy.eve + 1 == answer.first_day => {
+                        format!("on the evening before day {}", answer.first_day)
+                    }
+                    _ => format!("on the evening of day {}", enemy.eve),
                 },
                 enemy
                     .men
@@ -2094,6 +2146,7 @@ pub(crate) fn described_fields(
         asked.for_day,
         asked.size
     )];
+    text.extend(asked.inside_line(false));
     if !asked.standing.is_empty() {
         text.push(format!(
             "Taken in on the coming morning{}, as you have it: {}.",

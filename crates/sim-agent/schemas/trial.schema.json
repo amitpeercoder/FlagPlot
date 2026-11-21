@@ -32,7 +32,7 @@
       "const": "flagplot-agent"
     },
     "version": {
-      "const": 39
+      "const": 40
     },
     "kind": {
       "const": "trial"
@@ -58,7 +58,8 @@
         "compare",
         "beside",
         "in_force",
-        "dates"
+        "dates",
+        "inside_day"
       ],
       "additionalProperties": false,
       "properties": {
@@ -126,7 +127,34 @@
         },
         "in_force": {
           "type": "boolean",
-          "description": "Whether the intent tried was in force on the evening asked."
+          "description": "Whether the intent tried was in force on the evening asked, or at the hour asked inside a day."
+        },
+        "inside_day": {
+          "description": "Decision 0204: null for a trial asked at dusk; for one asked inside a day, the day open and the hour, \"0600\" or \"1200\". Such a trial is played from the state as it stands at that hour, as if the day were closed: its first day is the day after, and the rest of that day is not played.",
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "required": [
+                "day",
+                "clock"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "day": {
+                  "type": "integer"
+                },
+                "clock": {
+                  "enum": [
+                    "0600",
+                    "1200"
+                  ]
+                }
+              }
+            }
+          ]
         },
         "dates": {
           "description": "The dates asked: null for the coming morning alone, \"chosen\", or the days given, the coming morning first.",

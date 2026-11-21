@@ -1,0 +1,95 @@
+# Scenario 118: a dry run asked inside a day.
+#
+# Decision 0204. Side A, the Allied side, has a carrier force C, task force 1:
+# one placeholder carrier and two placeholder destroyers (ships 1 to 3, of 15
+# knots at cruise, 1,000 t of fuel and an endurance of 4,000 nm, full), on the
+# carrier mission, stopped at sea at (10,0), with no home port. Allied base H
+# (base 1) lies at (10,2). Side B, the Japanese side, has a base E (base 2) at
+# (-10,0) and nothing at sea. The seat may stop the clock inside a day, and the
+# scenario names a trial's figures. The commander's commands are given from the
+# seat. The hand calculation is in
+# tests/scenario_118_a_dry_run_inside_a_day.rs, which builds its variants from
+# the text of this file at the marked lines: keys, contacts, and land units.
+#
+# Kept out of the loops that walk data/scenarios/*.toml by being in this folder
+# (decision 0072).
+#
+# PLACEHOLDER DATA. The bases, ships, figures and map are invented. Every name
+# below says "Placeholder".
+
+name = "Placeholder scenario 118: A dry run inside a day"
+placeholder = true
+seed = 1942
+days = 4
+orders_inside_a_day = true
+map = "../../map/placeholder_a_dry_run_inside_a_day.toml"
+ship_classes = [
+    "../../reference/ship_classes.csv",
+    "../../reference/ship_classes_placeholder_scenario_116.csv",
+]
+port_sizes = "../../reference/port_sizes.csv"
+aircraft_types = "../../reference/aircraft_types.csv"
+search = "../../reference/search.toml"
+surface_combat = "../../reference/surface_combat.toml"
+air_combat = "../../reference/air_combat.toml"
+class_sides = "../../reference/class_sides_placeholder_scenario_118.csv"
+trial = "../../reference/trial_placeholder_scenario_96.toml"
+# MARK: keys
+
+# Allied base H.
+[[base]]
+id = 1
+name = "Placeholder base H"
+side = "allied"
+q = 10
+r = 2
+supply_t = 1000
+fuel_t = 5000
+
+# Japanese base E.
+[[base]]
+id = 2
+name = "Placeholder base E"
+side = "japanese"
+q = -10
+r = 0
+supply_t = 200
+fuel_t = 0
+
+# Task force 1, C: one placeholder carrier and two placeholder destroyers,
+# stopped at sea at (10,0), with no home port.
+[[task_force]]
+id = 1
+name = "Placeholder carrier force C"
+side = "allied"
+q = 10
+r = 0
+mission = "carrier"
+
+[[ship]]
+id = 1
+name = "Placeholder carrier 1"
+class = 17
+side = "allied"
+fuel_t = 1000
+task_force = 1
+
+[[ship]]
+id = 2
+name = "Placeholder destroyer 2"
+class = 18
+side = "allied"
+fuel_t = 1000
+task_force = 1
+
+[[ship]]
+id = 3
+name = "Placeholder destroyer 3"
+class = 18
+side = "allied"
+fuel_t = 1000
+task_force = 1
+
+# MARK: land units
+
+# MARK: contacts
