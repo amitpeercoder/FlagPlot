@@ -35,7 +35,8 @@
       "days": 5,
       "start": "1942-05-06",
       "lines": [
-        "Two American carriers and a cruiser group meet two Japanese fleet carriers and a light carrier in the Coral Sea, while a Japanese convoy makes for Port Moresby with the men to take it."
+        "Two American carriers and a cruiser group meet two Japanese fleet carriers and a light carrier in the Coral Sea, while a Japanese convoy makes for Port Moresby with the men to take it.",
+        "The Allied side has an oiler, the Neosho, with its carriers. The Japanese side has none."
       ],
       "sides": {
         "allied": "Stop the landing at Port Moresby and sink the Japanese carriers.",
@@ -49,13 +50,13 @@
         "japanese": "table/directives/coral_sea_japanese.json"
       },
       "pairings": [
-        {"allied": "person", "japanese": "engine", "engine": "staff", "file": "data/scenarios/coral-sea/01b_coral_sea.toml"},
-        {"allied": "engine", "japanese": "person", "engine": "staff", "file": "data/scenarios/coral-sea/01c_coral_sea.toml"},
-        {"allied": "person", "japanese": "agent", "file": "data/scenarios/coral-sea/01d_coral_sea.toml"},
-        {"allied": "agent", "japanese": "person", "file": "data/scenarios/coral-sea/01d_coral_sea.toml"},
-        {"allied": "agent", "japanese": "engine", "engine": "staff", "file": "data/scenarios/coral-sea/01b_coral_sea.toml"},
-        {"allied": "engine", "japanese": "agent", "engine": "staff", "file": "data/scenarios/coral-sea/01c_coral_sea.toml"},
-        {"allied": "agent", "japanese": "agent", "file": "data/scenarios/coral-sea/01d_coral_sea.toml"}
+        {"allied": "person", "japanese": "engine", "engine": "staff", "file": "data/scenarios/coral-sea/02b_coral_sea_oilers.toml"},
+        {"allied": "engine", "japanese": "person", "engine": "staff", "file": "data/scenarios/coral-sea/02c_coral_sea_oilers.toml"},
+        {"allied": "person", "japanese": "agent", "file": "data/scenarios/coral-sea/02d_coral_sea_oilers.toml"},
+        {"allied": "agent", "japanese": "person", "file": "data/scenarios/coral-sea/02d_coral_sea_oilers.toml"},
+        {"allied": "agent", "japanese": "engine", "engine": "staff", "file": "data/scenarios/coral-sea/02b_coral_sea_oilers.toml"},
+        {"allied": "engine", "japanese": "agent", "engine": "staff", "file": "data/scenarios/coral-sea/02c_coral_sea_oilers.toml"},
+        {"allied": "agent", "japanese": "agent", "file": "data/scenarios/coral-sea/02d_coral_sea_oilers.toml"}
       ]
     
     },
@@ -67,7 +68,8 @@
       "days": 5,
       "start": "1942-08-23",
       "lines": [
-        "The Eastern Solomons fought over five days. Two American carrier forces and the Marines at Lunga face a Japanese convoy bound for Guadalcanal, covered by the carrier striking force and the Ryujo detachment."
+        "The Eastern Solomons fought over five days. Two American carrier forces and the Marines at Lunga face a Japanese convoy bound for Guadalcanal, covered by the carrier striking force and the Ryujo detachment.",
+        "The Allied side has two oilers, the Platte and the Cimarron, at Efate. The Japanese side has none."
       ],
       "sides": {
         "allied": "Keep the airfield at Lunga open, stop the convoy, and sink the Japanese carriers while keeping your own.",
@@ -82,13 +84,13 @@
         "japanese": "table/directives/eastern_solomons_five_days_japanese.json"
       },
       "pairings": [
-        {"allied": "person", "japanese": "engine", "engine": "staff", "file": "data/scenarios/five-days/01b_eastern_solomons.toml"},
-        {"allied": "engine", "japanese": "person", "engine": "staff", "file": "data/scenarios/five-days/01c_eastern_solomons.toml"},
-        {"allied": "person", "japanese": "agent", "file": "data/scenarios/five-days/01d_eastern_solomons.toml"},
-        {"allied": "agent", "japanese": "person", "file": "data/scenarios/five-days/01d_eastern_solomons.toml"},
-        {"allied": "agent", "japanese": "engine", "engine": "staff", "file": "data/scenarios/five-days/01b_eastern_solomons.toml"},
-        {"allied": "engine", "japanese": "agent", "engine": "staff", "file": "data/scenarios/five-days/01c_eastern_solomons.toml"},
-        {"allied": "agent", "japanese": "agent", "file": "data/scenarios/five-days/01d_eastern_solomons.toml"}
+        {"allied": "person", "japanese": "engine", "engine": "staff", "file": "data/scenarios/five-days/02b_eastern_solomons_oilers.toml"},
+        {"allied": "engine", "japanese": "person", "engine": "staff", "file": "data/scenarios/five-days/02c_eastern_solomons_oilers.toml"},
+        {"allied": "person", "japanese": "agent", "file": "data/scenarios/five-days/02d_eastern_solomons_oilers.toml"},
+        {"allied": "agent", "japanese": "person", "file": "data/scenarios/five-days/02d_eastern_solomons_oilers.toml"},
+        {"allied": "agent", "japanese": "engine", "engine": "staff", "file": "data/scenarios/five-days/02b_eastern_solomons_oilers.toml"},
+        {"allied": "engine", "japanese": "agent", "engine": "staff", "file": "data/scenarios/five-days/02c_eastern_solomons_oilers.toml"},
+        {"allied": "agent", "japanese": "agent", "file": "data/scenarios/five-days/02d_eastern_solomons_oilers.toml"}
       ]
     },
     {
