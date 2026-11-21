@@ -125,3 +125,47 @@ A reviewer who had not seen the plan written read it against the code and the sc
 36. **A carrier force's card offers a hold,** "keep this force out of the staff's plans", if it does not already.
 
 **Rule card, corrected:** it also reads holds, and every intent's addressee and forces limit. It allows the pair "operate carriers under neutralise". It adds no state.
+
+## Amended on the designer's word: the station is chosen by risk, the enemy and fuel
+
+On Nov 21, 2026 the designer answered the two questions and set the station's rule. Carriers serve both orders, by default. Their placement is to be settled by the risk, by the enemy known and suspected, and by fuel; and the way they take is to be weighed too. The way is a decision of its own, to follow this one (0203): here a force goes to its station by the shortest way by sea, as every ship does. Where this and the text above differ, this holds; it replaces rules 5, 12, 29, 30 and 33.
+
+**Where the task can be done from**
+
+37. **The candidates are every hex ships can enter from which the task can be done:** for a deny, within the reach of rule 29 of the centre of the waters, or of their nearest sea hex where the centre is land; for a neutralise, within the bombers' least normal strike radius of the base. The hex the force is in is a candidate like any other when it qualifies.
+
+**The enemy, known and suspected**
+
+38. **Each of these casts a circle of danger,** from what the side knows and believes and nothing else:
+   - an enemy base on the side's map, to 15 hexes: the distance within which the island's doctrine already treats an enemy base as one that matters. What the base holds the staff does not know, so every enemy base casts it;
+   - a fresh contact of ships, of any kind, to 8 hexes: the distance at which a lift is turned back from a carrier contact today (decision 0191). Fresh is as the carrier doctrine has it.
+   Both are figures of the doctrine, reused and not new. A candidate is in danger when it lies inside any circle, and its margin is its distance to the nearest edge.
+
+**Fuel**
+
+39. **A candidate is in fuel when every ship of the force has the fuel for the passage to it and from it to the place it fuels, times the margin of the risk:** its home port, or with none the nearest base that can fuel it. A force with no place to fuel is not weighed, and the reason says so, as the carrier doctrine says today. A force in port that lacks the fuel fuels first: the test is made on the morning it would sail.
+
+**The choice, by risk**
+
+40. **Preserve:** only candidates in fuel and out of danger. Of those, the least passage from where the force is. With none, no task is formed for the force, and the reason says which circle or what fuel ruled every candidate out.
+41. **Balanced:** as preserve where any candidate is out of danger. With none, the candidate in fuel with the greatest margin, that is, the least deep in danger; and the reason says it stands in danger and of what.
+42. **Press:** the candidate in fuel with the least passage, in danger or out.
+43. **Ties** go to the greater margin, then to the hex first in the map's order.
+44. **So a neutralise is never served by carriers at preserve:** the base's own circle holds every candidate. At balanced the carriers stand at the edge of their reach from it.
+
+**When it is chosen**
+
+45. **The station is chosen on the morning the task is formed and kept.** It is not chosen again when a contact comes or goes, or the force would wander with every sighting; what the force does about a contact is the carrier doctrine's, as it stands. It is chosen again only when the task is formed again. Said as a limit, to be looked at when games have been played with it.
+
+**What the staff says**
+
+46. **The reason gives what was weighed:** the station and its distance and bearing from the target; each circle it lies outside or inside, by name; the passage there and to the place it fuels, the fuel that takes and the margin; and, where the risk ruled candidates out, how many and by what.
+
+**Rule card, as it now stands**
+
+Reads: the side's own task forces, their ships' fuel, class figures and place; the side's own intents, limits and holds; the enemy bases on the side's map, by place alone; the side's contacts, by place, kind and age; the map's sea paths; the bombers' normal strike radius; the two reused figures and the fuel margins by risk. Writes: a task to operate carriers under a deny or a neutralise, with its hex. Draws no random number. Adds no state.
+
+**What it costs, added**
+
+- **A way by sea is found to every candidate,** some hundreds for a wide deny, once when the task is formed. The build measures the day's time with `sim-cli time` before and after and says what it cost.
+- **Every enemy base is feared alike.** A base the side has beaten flat casts the same circle as Rabaul. It makes preserve and balanced cautious near any enemy ground, and is the price of the staff knowing only where a base is.
