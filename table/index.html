@@ -1577,7 +1577,7 @@ body.watched .gives { display: none !important; }
     else if (k === 'strike_mission_cleared' && R('^' + H + ' has no mission: the base it was to strike, ' + H)) out = N(m[1]) + ' stood down from its strike: ' + N(m[2]) + ' is ours';
     if (out == null) {
       if (k === 'engagement_begun' && R('^' + H + ' met the enemy at ' + AT + ' at ' + CL)) out = N(m[1]) + ' met the enemy at ' + P(m[2], m[3]) + ', ' + m[4] + m[5] + '. Action joined';
-      else if (k === 'men_lost_unfed' && R('^' + H + ' lost (\\d+) men unfed at ' + AT + ', (\\d+) left')) out = N(m[1]) + ' lost ' + fig(m[2]) + (m[2] === '1' ? ' man' : ' men') + ' for want of food at ' + P(m[3], m[4]) + '; ' + fig(m[5]) + ' remain ashore';
+      else if (k === 'men_lost_unfed' && R('^' + H + ' lost (\\d+) men unfed at ' + AT + ', (\\d+) left')) out = N(m[1]) + ' lost ' + fig(m[2]) + (m[2] === '1' ? ' man' : ' men') + ' to hunger at ' + P(m[3], m[4]) + ', where the stock could not feed them; ' + fig(m[5]) + ' remain ashore';
       else if (k === 'men_lost_with_ship' && R('^(\\d+) men of ' + H + ' were lost with ' + H)) out = fig(m[1]) + (m[1] === '1' ? ' man' : ' men') + ' of ' + N(m[2]) + ' were lost with ' + N(m[3]);
       else if (k === 'unit_surrendered' && R('^' + H + ' of the \\w+ side surrendered at ' + AT + ': (\\d+) men lost')) out = N(m[1]) + ' surrendered at ' + P(m[2], m[3]) + ': ' + fig(m[4]) + ' men lost';
       else if (k === 'force_surprised' && R('^' + H + ' was surprised')) out = N(m[1]) + ' was taken by surprise';
@@ -1625,7 +1625,7 @@ body.watched .gives { display: none !important; }
       function row(label, a, b) { if (!a && !b) return; var r = el('div', 'crow'); r.appendChild(el('span', '', label)); r.appendChild(el('span', '', a ? commas(a) : '–')); r.appendChild(el('span', '', b ? commas(b) : '–')); box.appendChild(r); }
       if (!total.men && !total.pilots && !total.aircraft && !total.sunk.length) { box.appendChild(el('p', '', 'No loss is returned.')); return; }
       var hd = el('div', 'crow chead'); hd.appendChild(el('span', '', '')); hd.appendChild(el('span', '', dateOf(d - 1) || 'day ' + d)); hd.appendChild(el('span', '', 'Since ' + (dateOf(0) || 'day 1'))); box.appendChild(hd);
-      row('In the fighting ashore', today.fight, total.fight); row('To bombing and shellfire', today.fire, total.fire); row('For want of food', today.unfed, total.unfed); row('Lost at sea with their ships', today.sea, total.sea); row('Surrendered', today.surrendered, total.surrendered);
+      row('In the fighting ashore', today.fight, total.fight); row('To bombing and shellfire', today.fire, total.fire); row('To hunger', today.unfed, total.unfed); row('Lost at sea with their ships', today.sea, total.sea); row('Surrendered', today.surrendered, total.surrendered);
       var tot = el('div', 'crow ctotal'); tot.appendChild(el('span', '', 'Men lost')); tot.appendChild(el('span', '', today.men ? commas(today.men) : '–')); tot.appendChild(el('span', '', total.men ? commas(total.men) : '–')); box.appendChild(tot);
       row('Pilots', today.pilots, total.pilots); row('Aircraft', today.aircraft, total.aircraft);
       if (total.sunk.length) { var sk = el('div', 'cnote', ''); sk.appendChild(document.createTextNode('Ships sunk' + (today.sunk.length ? ' this day: ' + today.sunk.join(', ') + '.' : ': none this day.') + ' Since the start: ' + total.sunk.length + '. Ships\' companies are not returned.')); box.appendChild(sk); }
