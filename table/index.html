@@ -486,7 +486,15 @@ body.watched .gives { display: none !important; }
   function setStatus(s) { $('status').textContent = s; }
   function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
   function num(handle) { return parseInt(String(handle).split(':')[1], 10); }
-  function commas(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+  // A figure with its thousands marked. A quantity the game holds to many
+  // places is shown whole, or to one place where it is small: nobody at the
+  // table needs a ton to six places.
+  function commas(n) {
+    var t = String(n);
+    if (/^-?\d+\.\d+$/.test(t)) { var v = Number(t); t = Math.abs(v) >= 100 ? String(Math.round(v)) : String(Math.round(v * 10) / 10); }
+    var at = t.indexOf('.'), whole = at < 0 ? t : t.slice(0, at);
+    return whole.replace(/\B(?=(\d{3})+(?!\d))/g, ',') + (at < 0 ? '' : t.slice(at));
+  }
 
   // Every word the table shows of the game comes through this: one tool of the seat, one answer.
   // In a watched game (decision 0182) the page is served under the watcher's key, and each call is
@@ -892,8 +900,23 @@ body.watched .gives { display: none !important; }
   function ease(x) { x = Math.max(0, Math.min(1, x)); return x * x * (3 - 2 * x); }
 
   // ---- reading the picture ----
+  // A ship is told of by her name, not her number. The list of forces does
+  // not carry its ships, so each force is asked for them once, and the names
+  // are kept for the game: a ship's number never changes.
+  var SHIP_NAMES = {}, SHIPS_ASKED = {};
+  function learnShips(forces) {
+    var ask = forces.map(function (f) { return f.task_force.handle; }).filter(function (h) { return !SHIPS_ASKED[h]; });
+    return Promise.all(ask.map(function (h) {
+      return api('get_entity', { handle: h }).then(function (e) {
+        SHIPS_ASKED[h] = true;
+        ((e.entity && e.entity.ships) || []).forEach(function (x) { if (x.ship && x.ship.name) SHIP_NAMES[x.ship.handle] = String(x.ship.name).replace(/^Placeholder /, ''); });
+      }).catch(function () {});
+    }));
+  }
   function refresh() {
     return Promise.all([api('list_forces'), api('list_bases'), api('list_contacts'), api('command_state'), api('get_briefing', { text: false }).catch(function (e) { return { refused: e.message }; })]).then(function (a) {
+      return learnShips(a[0].task_forces || []).then(function () { return a; });
+    }).then(function (a) {
       M.forces = a[0].task_forces || []; M.units = a[0].land_units || [];
       M.bases = a[1].bases || []; M.enemyBases = a[1].enemy_bases || [];
       M.contacts = a[2].contacts || []; M.estimates = a[2].ground_estimates || [];
@@ -901,6 +924,7 @@ body.watched .gives { display: none !important; }
       if (a[4].refused != null) { var at = /stands at (\d{4}) of day (\d+)/.exec(a[4].refused); if (at) clock = { at: at[1], day: parseInt(at[2], 10) }; M.day = clock.day; }
       else { M.day = a[4].heading.day; M.lastDay = a[4].heading.last_day; if (M.day > M.lastDay) M.over = true; M.air = a[4].air_groups || []; M.arrivals = (a[4].arrivals && a[4].arrivals.due) || []; clock = { at: 'dusk', day: M.day }; }
       M.names = {}; M.hexNames = {};
+      Object.keys(SHIP_NAMES).forEach(function (h) { M.names[h] = SHIP_NAMES[h]; });
       M.forces.forEach(function (f) { M.names[f.task_force.handle] = f.task_force.name.replace(/^Placeholder /, ''); });
       M.units.forEach(function (u) { M.names[u.land_unit.handle] = u.land_unit.name; });
       M.air.forEach(function (x) { M.names[x.air_group.handle] = x.air_group.name; });
