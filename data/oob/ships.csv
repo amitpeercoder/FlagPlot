@@ -206,7 +206,7 @@ id,key,name,nation,class,hull_number
 1206,akebono,Akebono,jp,jp-fubuki-class,
 1207,shigure,Shigure,jp,jp-shiratsuyu-class,
 1208,shiratsuyu,Shiratsuyu,jp,jp-shiratsuyu-class,
-1209,toho-maru,Toho Maru (oiler),jp,,
+1209,toho-maru,Toho Maru (oiler),jp,jp-toa-maru-class,
 1210,okinoshima,Okinoshima,jp,jp-okinoshima-class,
 1211,kikuzuki,Kikuzuki,jp,jp-mutsuki-class,
 1212,yuzuki,Yuzuki,jp,jp-mutsuki-class,
@@ -300,7 +300,7 @@ id,key,name,nation,class,hull_number
 1433,shinanogawa-maru,Shinanogawa Maru,jp,,
 1434,arizona-maru,Arizona Maru,jp,,
 1435,kumagawa-maru,Kumagawa Maru,jp,,
-1480,kyokuto-maru,Kyokuto Maru,jp,,
+1480,kyokuto-maru,Kyokuto Maru,jp,jp-toa-maru-class,
 1481,kokuyo-maru,Kokuyo Maru,jp,,
 1482,toei-maru,Toei Maru,jp,,
 1483,dd-361-clark,USS Clark,us,,
@@ -417,7 +417,7 @@ id,key,name,nation,class,hull_number
 6438,i-123,I-123,jp,,
 14300,ao-25-sabine,USS Sabine,us,us-cimarron-class,AO-25
 14301,ao-27-kaskaskia,USS Kaskaskia,us,us-cimarron-class,AO-27
-14302,toa-maru,Toa Maru (oiler),jp,,
+14302,toa-maru,Toa Maru (oiler),jp,jp-toa-maru-class,
 14303,shinkoku-maru,Shinkoku Maru (oiler),jp,,
 14304,shiriya,Shiriya (oiler),jp,jp-shiretoko-class,
 14305,shiretoko,Shiretoko (oiler),jp,jp-shiretoko-class,

@@ -42,14 +42,20 @@ surface_weapons_not_modelled = ["dd-409-sims"]
 # (decision 0206, rules 4 and 23).
 radar_unknown_means_none = ["ao-23-neosho", "dd-409-sims"]
 
-# The list's rule (decision 0206, rule 14): a ship with no row of her own for
-# a figure her sisters differ in reads the least of theirs. Neosho, lost in
-# May 1942, has no cargo row; her sisters' cargo oil of November 1943 is
-# 101,638 (Platte), 103,233 (Cimarron) and 104,938 barrels (Sabine,
-# Guadalupe), so she reads 101,638.
-[least_of_sisters]
-facts = ["cargo_oil_capacity_bbl"]
-reason = "A ship with no row of her own for a figure her sisters differ in reads the least of theirs: Neosho was lost in May 1942 and no source gives her cargo, and the least of her sisters' is the figure the rows support for any ship of the class. Settled by the architect, Nov 21, 2026 (decision 0206, rule 14)."
+# Neosho's cargo, estimated as her sisters (decision 0207, rule 5, the second
+# method; it was decision 0206's rule 14, the least of her sisters, which
+# decision 0207, rule 20 makes an entry of the second method). Neosho, lost in
+# May 1942, has no cargo row of her own or of her class, and a gap row says
+# it was looked for; her sisters' cargo oil of November 1943 is 101,638
+# (Platte), 103,233 (Cimarron) and 104,938 barrels (Sabine, Guadalupe), so she
+# reads 101,638, as before, and the figure is marked estimated.
+[[estimate]]
+ship = "ao-23-neosho"
+attribute = "cargo_oil_capacity_bbl"
+method = "sisters"
+by = "the architect"
+date = "2026-11-21"
+reason = "Neosho was lost in May 1942 and no source gives her cargo; a ship with no row of her own for a figure her sisters differ in reads the least of theirs, the figure the rows support for any ship of the class. Settled by the architect, Nov 21, 2026 (decision 0206, rule 14; decision 0207, rule 20)."
 
 # The class ids, pinned (decision 0077): 4030 and 4031, which no other list
 # uses.

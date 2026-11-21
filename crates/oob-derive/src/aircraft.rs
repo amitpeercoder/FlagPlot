@@ -636,6 +636,7 @@ impl Env<'_> {
             subject: key,
             problems: Vec::new(),
             used: Vec::new(),
+            estimated: Vec::new(),
         };
         let Some(info) = self.aircraft.get(key) else {
             w.fail(

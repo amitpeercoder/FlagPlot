@@ -259,6 +259,7 @@ impl Env<'_> {
                 doubts,
                 notes,
                 rule: None,
+                estimate: None,
             })
         };
 

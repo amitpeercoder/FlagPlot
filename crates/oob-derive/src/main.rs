@@ -51,11 +51,23 @@ fn main() -> ExitCode {
             unread,
             not_settled,
             torpedo_not_split,
+            estimated,
         }) => {
             println!("{list}: no problems");
             println!("{}", if written { "wrote:" } else { "would write:" });
             for file in files {
                 println!("  {}", file.display());
+            }
+            // The count of the estimates (decision 0207, rule 13), printed
+            // for every list.
+            match estimated.split_first() {
+                None => println!("estimated (decision 0207): none"),
+                Some((count, lines)) => {
+                    println!("{count}:");
+                    for line in lines {
+                        println!("  {line}");
+                    }
+                }
             }
             if !unread.is_empty() {
                 println!("rows of the listed ships that no question read (not in the file):");

@@ -117,7 +117,16 @@ pub struct Outputs {
     /// tubes on one side are all of them (decision 0074, 3), one line a
     /// ship; they are also in the class file's header.
     pub torpedo_not_split: Vec<String>,
+    /// The attributes estimated (decision 0207, rule 13): a first line with
+    /// the count and the ships, then one line an attribute with its method,
+    /// working and range (rule 6). Empty for a list with no estimate.
+    pub estimated: Vec<String>,
 }
+
+/// The name of the column of a class file that names the estimated figures
+/// of each class, written only where the list has an estimate (decision
+/// 0207, rule 10).
+pub const ESTIMATED_COLUMN: &str = "estimated";
 
 /// `<stem>.sources.csv`, the sources file beside an aircraft CSV.
 pub fn aircraft_sources_name(output: &str) -> String {
@@ -163,7 +172,7 @@ fn shown(value: &Value) -> String {
     }
 }
 
-fn one_line(text: &str) -> String {
+pub(crate) fn one_line(text: &str) -> String {
     text.split_whitespace().collect::<Vec<_>>().join(" ")
 }
 
@@ -442,6 +451,7 @@ pub fn render(ctx: &Context) -> Result<Outputs, Problem> {
             experience_unread: Vec::new(),
             search_not_settled: Vec::new(),
             torpedo_not_split: Vec::new(),
+            estimated: Vec::new(),
         });
     }
     let troop = list.troop_figures;
@@ -588,12 +598,30 @@ pub fn render(ctx: &Context) -> Result<Outputs, Problem> {
             line(format!("  {ship}"));
         }
     }
-    if let Some(rule) = &list.least_of_sisters {
-        line(format!(
-            "The least of her sisters (decision 0206, rule 14), the list's rule for {}: a ship with no row of her own or of her class for the fact reads the least of the values her sisters' own rows give; reason: {}",
-            rule.facts.iter().cloned().collect::<Vec<_>>().join(", "),
-            one_line(&rule.reason)
-        ));
+    let estimates: Vec<&crate::derive::EstimateUse> =
+        results.iter().flat_map(|r| r.estimates.iter()).collect();
+    if !list.estimates.is_empty() {
+        line("Estimated, not read (decision 0207): a figure of a real ship worked by a written rule from the rows of like ships, where the record has none; the column `estimated` names the figures of each class that rest on one, and the sources file gives the method, the rows and the range. An estimate is never evidence (rule 12):".to_string());
+        for used in &estimates {
+            line(format!("  {} ({})", one_line(&used.line), used.figure));
+        }
+    }
+    let aa_assumed: Vec<&str> = results
+        .iter()
+        .filter(|r| r.anti_aircraft_assumed)
+        .map(|r| r.ship.as_str())
+        .collect();
+    if !list.anti_aircraft_unknown_means_none.is_empty() {
+        if aa_assumed.is_empty() {
+            line("Anti-aircraft assumptions used (decision 0207): none".to_string());
+        } else {
+            line("Anti-aircraft assumptions used (decision 0207):".to_string());
+            for ship in &aa_assumed {
+                line(format!(
+                    "  {ship}: anti-aircraft guns unknown in the facts, treated as none, an assumption of the scenario and not a fact"
+                ));
+            }
+        }
     }
     if !not_modelled.is_empty() {
         line("Surface weapons not modelled (decision 0029, 4): main_guns, gun_rounds_per_min, gun_rounds_per_gun, gun_damage, torpedo_tubes, torpedo_tubes_one_side and torpedo_damage are written as 0, an assumption of the scenario and not a fact, for:".to_string());
@@ -619,7 +647,11 @@ pub fn render(ctx: &Context) -> Result<Outputs, Problem> {
             line(text);
         }
     }
-    let class_header: Vec<&str> = [&["id", "name"][..], &names[..]].concat();
+    let estimate_column = !list.estimates.is_empty();
+    let mut class_header: Vec<&str> = [&["id", "name"][..], &names[..]].concat();
+    if estimate_column {
+        class_header.push(ESTIMATED_COLUMN);
+    }
     let class_body: Vec<Vec<String>> = rows
         .iter()
         .map(|row| {
@@ -630,6 +662,19 @@ pub fn render(ctx: &Context) -> Result<Outputs, Problem> {
                     .enumerate()
                     .map(|(i, v)| cell(i, cols, v)),
             );
+            if estimate_column {
+                let marked: Vec<&str> = names
+                    .iter()
+                    .enumerate()
+                    .filter(|(i, _)| {
+                        row.members
+                            .iter()
+                            .any(|&m| results[m].figures[*i].estimate.is_some())
+                    })
+                    .map(|(_, name)| *name)
+                    .collect();
+                cells.push(marked.join(" "));
+            }
             cells
         })
         .collect();
@@ -708,9 +753,15 @@ pub fn render(ctx: &Context) -> Result<Outputs, Problem> {
                 }
             }
             let _ = KIND;
-            let rule = results[row.members[0]].figures[i]
-                .rule
-                .unwrap_or_else(|| rule_text(i, cols));
+            let estimate = row
+                .members
+                .iter()
+                .find_map(|&m| results[m].figures[i].estimate.as_deref());
+            let rule = estimate.unwrap_or_else(|| {
+                results[row.members[0]].figures[i]
+                    .rule
+                    .unwrap_or_else(|| rule_text(i, cols))
+            });
             source_rows.push(vec![
                 row.id.to_string(),
                 (*figure).to_string(),
@@ -765,7 +816,27 @@ pub fn render(ctx: &Context) -> Result<Outputs, Problem> {
         experience_unread: Vec::new(),
         search_not_settled: Vec::new(),
         torpedo_not_split,
+        estimated: estimated_lines(&estimates),
     })
+}
+
+/// The check's count of the estimates (decision 0207, rule 13).
+fn estimated_lines(estimates: &[&crate::derive::EstimateUse]) -> Vec<String> {
+    if estimates.is_empty() {
+        return Vec::new();
+    }
+    let ships: BTreeSet<&str> = estimates
+        .iter()
+        .filter_map(|u| u.line.split_once(' ').map(|(ship, _)| ship))
+        .collect();
+    let n = estimates.len();
+    let mut lines = vec![format!(
+        "{n} {} estimated (decision 0207), for {}",
+        if n == 1 { "attribute" } else { "attributes" },
+        ships.into_iter().collect::<Vec<_>>().join(", ")
+    )];
+    lines.extend(estimates.iter().map(|u| one_line(&u.line)));
+    lines
 }
 
 fn aircraft_files(ctx: &Context) -> (Option<String>, Option<String>) {

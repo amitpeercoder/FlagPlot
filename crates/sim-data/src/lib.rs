@@ -89,7 +89,7 @@ pub use map::{load_map, parse_map_frame, read_map_frame, MapFrame};
 pub use reference::{
     load_air_combat_figures, load_air_supply_figures, load_air_upkeep_figures, load_aircraft_types,
     load_class_sides, load_fatigue_figures, load_ground_figures, load_port_sizes,
-    load_report_figures, load_search_figures, load_ship_classes, load_surface_combat_figures,
-    load_trial_figures,
+    load_report_figures, load_search_figures, load_ship_classes, load_ship_classes_marked,
+    load_surface_combat_figures, load_trial_figures, EstimatedFigures,
 };
 pub use scenario::{LoadOptions, Scenario, ScriptInsideDay, FROZEN_REFERENCE_DIR};
