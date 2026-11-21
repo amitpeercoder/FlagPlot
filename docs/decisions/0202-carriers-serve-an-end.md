@@ -169,3 +169,8 @@ Reads: the side's own task forces, their ships' fuel, class figures and place; t
 
 - **A way by sea is found to every candidate,** some hundreds for a wide deny, once when the task is formed. The build measures the day's time with `sim-cli time` before and after and says what it cost.
 - **Every enemy base is feared alike.** A base the side has beaten flat casts the same circle as Rabaul. It makes preserve and balanced cautious near any enemy ground, and is the price of the staff knowing only where a base is.
+
+**The search on the way, added on the designer's word**
+
+47. **A carrier force on passage to its station searches the way ahead.** Today the force's search arc is set each morning from where it is, toward every enemy base on the side's map, every contact in its picture and the waters of a deny above it. To those are added, while the force is under way to a station the staff chose: the hexes of its way for the coming day, and the station itself. At the station the arc is as today. So the force looks where it is about to be as well as where the enemy is known to be.
+48. **The reason for the arc names what it covers,** as it does today for each base, contact and water: "the way ahead to the station at …".
