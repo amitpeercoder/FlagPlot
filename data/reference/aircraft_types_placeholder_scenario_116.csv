@@ -1,0 +1,10 @@
+# PLACEHOLDER DATA. This type is invented for scenario 116 (decision 0202,
+# tests/scenario_116_carriers_serve_an_end.rs), whose hand calculation needs a
+# bomber of a normal strike radius of 210 nm. It is not historical and must
+# not be used for validation. Type 5 is type 3 of aircraft_types.csv, the
+# placeholder dive bomber, with a strike radius of 210 nm, every other column
+# as the type it copies. Only scenario 116 names this file, so that no other
+# scenario's data hashes move. The columns are those of aircraft_types.csv,
+# which says what each is.
+id,name,role,search_range_nm,sweep_width_nm,strike_range_nm,attack_weapon,attack_damage,pilot_armour,self_sealing_tanks
+5,"Placeholder dive bomber, 210 nm",bomber,0,0,210,bomb,60,0,0

@@ -160,7 +160,10 @@ impl Day<'_, '_> {
             };
             let candidates = self.candidates(&end, target_hex);
             let qualifying: Vec<&Candidate> = candidates.iter().filter(|c| c.reaches()).collect();
-            if qualifying.is_empty() {
+            // A free carrier force the carrier pass gave it serves it too
+            // (decision 0202, 28).
+            let carriers = self.carrier_ends.get(&id).is_some_and(|o| o.served);
+            if qualifying.is_empty() && !carriers {
                 self.cannot_neutralise(&end, &plan, &target_text, &candidates, in_scope);
                 continue;
             }
@@ -288,11 +291,15 @@ impl Day<'_, '_> {
                 candidate.distance
             ));
         }
-        let body = if lines.is_empty() {
+        let mut body = if lines.is_empty() {
             "the side has no base it may use".to_string()
         } else {
             lines.join("; ")
         };
+        // Decision 0202, 28: and no carrier force can serve it.
+        if let Some(words) = self.carrier_words(end.id) {
+            body = format!("{body}; {words}");
+        }
         let reason = serving(end, plan)
             .evidence(body.clone(), today)
             .binding("a bomber must reach the target on normal reach")

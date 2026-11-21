@@ -1,0 +1,151 @@
+# Scenario 116: carriers serve an order for an end.
+#
+# Decision 0202. Side A, the Allied side, has a carrier force C, task force 1:
+# one placeholder carrier and two placeholder destroyers (ships 1 to 3, of 15
+# knots at cruise and 30 at full speed, 1,000 t of fuel and an endurance of
+# 4,000 nm, full), on the carrier mission, stopped at sea at (10,0), its home
+# port Allied base H (base 1) at (10,2), a coast hex with a port that fuels.
+# Aboard the carrier are a bomber group (group 1, 12 placeholder dive bombers
+# of a normal strike radius of 210 nm), a fighter group (group 2) and a group
+# that searches (group 3, placeholder carrier scouts). A has no aircraft at any
+# base. Side B, the Japanese side, has nothing on the map but what a variant
+# gives it. The Allied commander states "deny the waters within 2 hexes of
+# (0,0)" as intent 1, at the balanced risk by default and with no forces
+# limit, and gives both leaves. The hand calculation is in
+# tests/scenario_116_carriers_serve_an_end.rs.
+#
+# The test builds its variants from the text of this file, at the marked
+# lines below: the risk, the waters, C's hex and fuel, its home port, B's base
+# E at (-10,0) or (0,0), the contacts A holds, a neutralise of E, the
+# targets limit, another order's limit, a hold, the leaves and a direct
+# order. The test runs this file on the frozen step 1 figures, with the
+# classes of data/reference/ship_classes_placeholder_scenario_116.csv and the
+# bomber of data/reference/aircraft_types_placeholder_scenario_116.csv. The map
+# is data/map/placeholder_carriers_serve_an_end.toml.
+#
+# Kept out of the loops that walk data/scenarios/*.toml by being in this
+# folder (decision 0072).
+#
+# PLACEHOLDER DATA. The bases, ships, aircraft, figures and map are invented.
+# Every name below says "Placeholder".
+
+name = "Placeholder scenario 116: Carriers serve an order for an end"
+placeholder = true
+seed = 1942
+days = 4
+map = "../../map/placeholder_carriers_serve_an_end.toml"
+ship_classes = [
+    "../../reference/ship_classes.csv",
+    "../../reference/ship_classes_placeholder_scenario_116.csv",
+]
+port_sizes = "../../reference/port_sizes.csv"
+aircraft_types = [
+    "../../reference/aircraft_types.csv",
+    "../../reference/aircraft_types_placeholder_scenario_116.csv",
+]
+search = "../../reference/search.toml"
+surface_combat = "../../reference/surface_combat.toml"
+air_combat = "../../reference/air_combat.toml"
+
+# Allied base H, C's home port.
+[[base]]
+id = 1
+name = "Placeholder base H"
+side = "allied"
+q = 10
+r = 2
+supply_t = 1000
+fuel_t = 5000
+
+# MARK: bases
+
+# Task force 1, C: one placeholder carrier and two placeholder destroyers,
+# stopped at sea at (10,0).
+[[task_force]]
+id = 1
+name = "Placeholder carrier force C"
+side = "allied"
+q = 10
+r = 0
+mission = "carrier"
+home_port = 1
+
+[[ship]]
+id = 1
+name = "Placeholder carrier 1"
+class = 17
+side = "allied"
+fuel_t = 1000
+task_force = 1
+
+[[ship]]
+id = 2
+name = "Placeholder destroyer 2"
+class = 18
+side = "allied"
+fuel_t = 1000
+task_force = 1
+
+[[ship]]
+id = 3
+name = "Placeholder destroyer 3"
+class = 18
+side = "allied"
+fuel_t = 1000
+task_force = 1
+
+# The groups aboard the carrier.
+[[air_group]]
+id = 1
+name = "Placeholder dive bombers 1"
+side = "allied"
+ship = 1
+aircraft_type = 5
+ready = 12
+
+[[air_group]]
+id = 2
+name = "Placeholder fighters 2"
+side = "allied"
+ship = 1
+aircraft_type = 4
+ready = 12
+
+[[air_group]]
+id = 3
+name = "Placeholder carrier scouts 3"
+side = "allied"
+ship = 1
+aircraft_type = 2
+ready = 6
+
+# MARK: forces
+
+# The contacts the Allied side holds.
+# MARK: contacts
+
+# The Allied commander's commands.
+[[command]]
+day = 1
+side = "allied"
+kind = "set_intent"
+intent = 1
+intent_kind = "deny"
+hex = [0, 0]
+distance = 2
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_leave"
+leave = "prepare"
+given = true
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_leave"
+leave = "launch"
+given = true
+
+# MARK: commands

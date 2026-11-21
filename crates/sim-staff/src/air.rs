@@ -369,6 +369,9 @@ pub(crate) struct Day<'v, 'a> {
     /// What each take that waits for men found this morning (decision 0159,
     /// rule B), kept for the plan order and stored nowhere.
     pub(crate) men_waits: BTreeMap<IntentId, crate::take::MenWait>,
+    /// What the carrier pass found for each commander's deny and neutralise
+    /// this morning (decision 0202), stored nowhere.
+    pub(crate) carrier_ends: BTreeMap<IntentId, crate::station::CarrierOutcome>,
 }
 
 /// The kinds the air doctrine serves: hold, cover, neutralise, raid, deny,
@@ -539,11 +542,15 @@ impl<'v, 'a> Day<'v, 'a> {
             needs: Vec::new(),
             looking_groups: std::collections::BTreeSet::new(),
             men_waits: BTreeMap::new(),
+            carrier_ends: BTreeMap::new(),
         };
         day.leaves();
         // Decision 0151: the tree of an island, formed before the doctrines
         // that serve what it forms.
         day.islands();
+        // Decision 0202: the free carrier forces handed out to the
+        // commander's denies and neutralises, in one pass.
+        day.carriers_for_ends();
         day.holds();
         day.neutralises();
         day.denials();
