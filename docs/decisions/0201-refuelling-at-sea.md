@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 21, 2026 for the designer's queu
 
 Summary: A ship takes fuel only in a port of her side. A force with no port in reach goes home or runs dry, and the oilers that kept the carriers at sea in 1942 are left out of every scenario because they could do nothing. This gives a ship that can fuel others at sea a mark on her class, and an order by which a force fuels from her force while both steam on together at a slow speed, by day or by night, a few ships at a time. A force attacked while fuelling takes no fuel that pulse. The staff warns of a force running low and sends it to an oiler where one is nearer than home.
 
-Standing: Planned on Nov 21, 2026, rewritten on the research and amended on two reviews; waits for its build. Stage A is this decision's build; stages B, C and D follow.
+Standing: Planned on Nov 21, 2026, rewritten on the research and amended on two reviews. Stage A is built (Nov 21, 2026; As built, below); stages B, C and D follow.
 
 ## Why
 
@@ -116,3 +116,26 @@ He held that fuelling at night was done when operations required it, and that sh
 ## How the plan was made
 
 Written with forces stopped and fuelling by day; read by a first reviewer; rewritten on the research (under way, by day or night, an order of its own); read by a second reviewer (the order not an escort's, the timing within a pulse, both lines for a large ship, the hour alongside, a force that has run dry). This text replaces all of them.
+
+## As built (stage A)
+
+Built on Nov 21, 2026, to rules 1 to 26, with scenario 115 (`data/scenarios/refuelling-at-sea/115_refuelling_at_sea.toml`) and its hand calculation (`tests/scenario_115_refuelling_at_sea.rs`). The rules as built are in chapter 2, Fuelling at sea, and chapter 8, Fuelling at sea, as the staff reads it. The engine's code is `crates/sim-core/src/fuel_at_sea.rs`; the staff's is `crates/sim-staff/src/fuelling.rs`, with its use in the carrier and stand doctrines. The state's layout is version 52, the rules label 26, the doctrine `supply-51`, the agent interface 39; the saved game's version is unchanged (23), as for decision 0191.
+
+Readings of the build:
+
+1. **Where the four figures are.** In `surface_combat.toml` as an optional table `[fuelling_at_sea]` (`speed_kn`, `line_rate_t_per_h`, `alongside_hours`, `lines`), beside the weights of rearming, since the other fuelling figures are rates by port size and these are not. The live file has them; the frozen step 1 figures do not, so the test of scenario 115 runs on the frozen figures with the table added in a copy of its own. Without the table the order is taken and the force steers for its giver, but no pair forms and nothing passes.
+2. **The mark.** An optional class column `fuels_at_sea`, 0 or 1, as radar is written.
+3. **Steering records no event of its own.** The steering writes the force's route and speed where they change, with the order to fuel as its route order and speed order, so the force's steaming cites the order, and a turning back is recorded citing it. Rule 17 names three events and no steering event.
+4. **A speed order** to a force under the order is taken and replaced by the steering at the next movement step, as for an escort. Only a route order is "an order to move" that ends it. A join, stand-down or yard order to the force itself ends the order silently with the force: that order is the record.
+5. **The escort order is refused too** where its escort or its charge takes part in fuelling at sea (reasons `FuelsFrom`, `IsAGiver` and `ChargeTakesPartInFuelling`), so that no chain forms from either side.
+6. **When the ends are tested.** At the start of each movement step, before the pairing, and again after the fuel has passed. A force with no ship afloat is passed by. "Full" counts only the ships that may take fuel at sea, so an oiler of the force's own at half does not hold the order open.
+7. **The pair at the end.** The fuel passes only where both forces are still afloat and in one hex at the end of the movement step; a pair parted in the step passes nothing and records nothing.
+8. **A port before an oiler (16)** is read at the end of the movement step, before the loading phase it speaks of, by the loading phase's own tests: the force's ships take nothing from an oiler where the force is stopped at the centre of a hex in which a base of its side holds fuel above its reserve and did not run dry in the pulse; the oiler gives nothing where her force is stopped there with cargo work by the cargo rule.
+9. **The hours.** Every ship's hours run from the start of the pulse across the whole pulse; the fuel burned steaming in it is burned first. The lines' hours are kept across all the pairs of a pulse, so two forces fuelling from one oiler share her lines. A ship that starts and is still alongside when the pulse ends takes nothing and records nothing; her lines are held to the end.
+10. **The warning (19)** is a reason that serves no intent, handed in each morning for every force of the side with no home port the side holds and a ship below a quarter, whether or not the staff has a task for it. It is therefore an event (`StaffReason`) of games with no intent, and moves the games on file that have such a force (below).
+11. **The staff's oiler's force** is the nearest by the charged sea miles from the force's hex among the side's forces whose ships with the mark hold cargo fuel and that the order may name; the side's own forces are read from the side's view, not a command's picture. In the stand doctrine the measure of being short, for a force with a home port stopped at sea, is the passage to the station and home at cruise with the risk's margin; a force with no home port at its station is sent to an oiler's force where it would go in to a base and the oiler's force is nearer, or where a ship is below a quarter.
+
+Statements not held as written, sent back to the architect:
+
+- **Statement 19, last sentence.** "On the morning after the order ends it is routed back to its station." The stand doctrine routes a force with a home port that lies stopped at sea home (decision 0192, 16), and rule 20 says only that it goes back to its task: the force is routed home, from where it sorties. The test of the sentence is ignored with that reason, and a test of what holds stands beside it.
+- **Games on file (Properties).** The warning of rule 19 adds reasons to the games on file with a force with no home port running low (the full slice's dry destroyer, the soaks, scenario 44, 85 and the weeks and slices of the proofs), and in the stage 2b proof's week the events that follow are numbered differently, so draws keyed on them differ: that game moves. What moved is listed in the pull request.

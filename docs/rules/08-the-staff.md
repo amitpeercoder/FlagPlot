@@ -1033,6 +1033,22 @@ A task already standing is not withdrawn when the force's carrier is lost: item 
 
 A side sees: its own orders, their acceptance or refusal, reasons and notices, whole. The enemy sees none of it. The staff reads only the side's own view: the contacts it holds, its own forces, the map and the engine's forecasts of its own passages. [0125, 0130]
 
+## Fuelling at sea, as the staff reads it
+
+The staff's half of decision 0201. It draws no random number. The engine's half is chapter 2, Fuelling at sea. [0201 items 19 to 21]
+
+**The warning.** Each morning, after every doctrine, each force of the side with a ship afloat and no home port the side holds, one of whose ships holds less than a quarter of her class's fuel capacity, is named in the staff's report: a reason that serves no intent and gives no order, naming the force, where it is and each ship below a quarter with her fuel and her capacity. It is given whether or not the staff has a task for the force, and on every morning the ship is below. A quarter is a figure of the doctrine, a placeholder. [0201 items 19 and 25]
+
+**An oiler's force is a place to fuel.** An oiler's force, for the staff, is a force of the side other than the force, with a ship afloat, whose ships with the mark hold cargo fuel, that is not under the order to fuel herself, not an escort and has no escort: one the order may name. The nearest by the engine's charged sea miles from the force's hex is taken, the lower number on a tie; the side's own forces are read from the side's view. [0201 item 20]
+
+- **The carrier doctrine** (Operating a carrier force): where a ship has less fuel than the passage home needs with the margin and the force would be routed home to fuel, it is given the order to fuel from the oiler's force instead where the passage there is less than the passage home; and a force with no home port the staff knows, with a ship below a quarter, is given it where there is any oiler's force. The reason gives the fuel, the oiler's cargo fuel and both passages.
+- **The stand doctrine** (Standing at a hex by night): a force with a home port that lies stopped at sea on no route away from it, and is short of the fuel the passage to the station and home needs at cruise with the risk's margin, is given the order to fuel from the oiler's force instead of the route home where the passage there is less than the passage home; and a force with no home port lying at its station is given it where it would go in to a base for fuel and the oiler's force is nearer than that base, or where a ship is below a quarter.
+- **While the order stands** the staff gives the force no route, as it gives none while a force fuels in port: the carrier doctrine notes it and sets nothing of its place, its fuel or its closing; the stand doctrine gives it no order at all. When the order ends the force goes back to its task by the doctrine as it is; a stand force with a home port, stopped at sea, is then routed home (decision 0192, 16).
+
+**What it does not do.** The staff places no oiler and cannot rescue a force that has run dry: an oiler is where her commander's route puts her. Planning fuel before a ship runs low is stage D of decision 0201. [0201 item 21]
+
+A side sees: the warning and the reasons, whole, in its own staff's report. The enemy sees none of it.
+
 ## Carriers serving an order for an end
 
 Decision 0202. A commander's "deny an area" or "neutralise a base" uses a free carrier force of his side, and the staff chooses where it works from by the risk, the enemy and the fuel. It runs at the area's level, in one pass right after the island doctrine (The day's order, below), and forms, keeps or withdraws carrier tasks; the force's morning is then the carrier doctrine's (Operating a carrier force, above). It adds no state and no rule of the engine, and draws no random number. The doctrine version is `supply-50`. [0202]
