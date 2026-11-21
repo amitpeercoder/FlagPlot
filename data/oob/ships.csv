@@ -198,7 +198,7 @@ id,key,name,nation,class,hull_number
 1198,dd-416-walke,USS Walke,us,us-sims-class,DD-416
 1199,dd-417-morris,USS Morris,us,us-sims-class,DD-417
 1200,ao-23-neosho,USS Neosho,us,us-cimarron-class,AO-23
-1201,ao-21-tippecanoe,USS Tippecanoe,us,,AO-21
+1201,ao-21-tippecanoe,USS Tippecanoe,us,us-patoka-class,AO-21
 1202,av-8-tangier,USS Tangier,us,,AV-8
 1203,shoho,Shoho,jp,jp-zuiho-class,
 1204,sazanami,Sazanami,jp,jp-fubuki-class,
@@ -415,3 +415,8 @@ id,key,name,nation,class,hull_number
 6436,i-121,I-121,jp,,
 6437,i-122,I-122,jp,,
 6438,i-123,I-123,jp,,
+14300,ao-25-sabine,USS Sabine,us,us-cimarron-class,AO-25
+14301,ao-27-kaskaskia,USS Kaskaskia,us,us-cimarron-class,AO-27
+14302,toa-maru,Toa Maru (oiler),jp,,
+14303,shinkoku-maru,Shinkoku Maru (oiler),jp,,
+14304,shiriya,Shiriya (oiler),jp,,
