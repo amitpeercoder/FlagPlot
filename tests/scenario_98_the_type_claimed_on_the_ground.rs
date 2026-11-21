@@ -39,7 +39,11 @@
 //! the 13 false are shared over the field, which is type 3 alone. On
 //! days 1 and 3 every claimed aircraft is false and of type 3.
 //!
-//! The Allied claims, of aircraft shot down, name no type at any setting.
+//! The Allied claims, of aircraft shot down, name no type on the ground
+//! at any setting. (Amended by the architect on Nov 22, 2026, with
+//! decision 0210: they now name types in the air where made out, and so
+//! does the Japanese claim of the patrol's aircraft; scenario 124 has
+//! the numbers. As first written: "name no type at any setting".)
 //!
 //! The claim's words, day 2, false 1 and made out 1: they hold "15
 //! aircraft destroyed on the ground" and name type 3 as decision 0167
@@ -59,8 +63,8 @@
 //!
 //! At each setting of the false chances, between made out 0 and made out
 //! 1: every claim's numbers are the same, and the event logs are the same
-//! but for the Japanese claims' types and words and the events that
-//! decision 0167's recognition records. With made out 0 the logs are
+//! but for the claims' types and words, of both sides since decision
+//! 0210, and the events that decision 0167's recognition records. With made out 0 the logs are
 //! those of scenario 11's variants as they run today, but for that
 //! clause.
 //!
