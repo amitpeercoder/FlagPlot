@@ -1,0 +1,88 @@
+# The Japanese fuelling group of the Coral Sea, Toho Maru, as of 6 May 1942,
+# for the Coral Sea's files with both oilers (decision 0207, "The first use,
+# settled for its hand calculation"). The derivation tool turns this list
+# into data/reference/ship_classes_coral_sea_japanese_oilers.csv with its
+# sources and ships companions, and
+# ship_experience_coral_sea_japanese_oilers.ships.csv. It is a list of its own
+# so that no list, class file or sides file a scenario on file reads changes
+# (decision 0206, rule 17): the new scenario files name this class file beside
+# the Coral Sea's own and the fuelling group's.
+#
+# TOHO MARU is of the Toa Maru class, with Toa Maru and Kyokuto Maru, of the
+# type oiler (ship_classes.csv 14303): the American manual groups the three,
+# and one of the two class pages that claim her agrees. Settled by the
+# architect, Nov 21, 2026 (decision 0207). She is derived as decision 0206's
+# oilers are: kind auxiliary, the mark that she fuels others at sea, no main
+# battery and no tubes by her kind, toughness from her light displacement.
+#
+# Read from her own rows: her own fuel, 1,100 tons, read by weight since no
+# row gives it in barrels; her endurance, 15,000 nautical miles at 16 knots;
+# her maximum speed, 19 knots, the lower of the manual's 19 and a
+# compilation's 19.5. Each is the American manual's (ONI 208-J), filed as a
+# number of low confidence and read by an exception at the end of rules.toml,
+# under "Decision 0207".
+#
+# ESTIMATED, NOT READ (decision 0207), each with its entry below:
+#   - her light displacement, by ratio from her deadweight (13,431 tons, the
+#     lower end of the manual's range), over every like class: every class of
+#     the type oiler on file with rows of both;
+#   - her cargo of oil, as her sister's: Toa Maru's 12,487 long tons, her
+#     class page's capacity by weight, read by weight since no row gives it
+#     in barrels.
+# An estimate is never evidence (decision 0207, rule 12): the class file
+# names the figures that rest on one, and a scenario file that loads it says
+# so in its header.
+#
+# Settled by the architect, Nov 21, 2026 (decision 0207).
+
+name = "Coral Sea, the Japanese fuelling group"
+date = "1942-05-06"
+rules = "rules.toml"
+output = "../reference/ship_classes_coral_sea_japanese_oilers.csv"
+first_class_id = 4032
+air_figures = true
+
+ships = ["toho-maru"]
+
+# Working assumption, not a fact (decision 0019, 5): no row says whether she
+# carried a search radar on 6 May, and she is treated as not fitted.
+radar_unknown_means_none = ["toho-maru"]
+
+# Working assumption, not a fact, as radar's is (decision 0207, first use):
+# no source read gives her guns, which are never estimated (decision 0207,
+# rules 3 and 19), and anti-aircraft guns unknown are treated as none.
+anti_aircraft_unknown_means_none = ["toho-maru"]
+
+# Her light displacement, estimated by ratio (decision 0207, rule 5, the
+# first method): her deadweight times the mean, over every like class, of a
+# like class's light displacement over the deadweight of its ships on file.
+# The like classes are found by the tool, not named here (rule 6).
+[[estimate]]
+ship = "toho-maru"
+attribute = "displacement_light_lt"
+method = "ratio"
+from = "deadweight_lt"
+by = "the architect"
+date = "2026-11-21"
+reason = "The record of a merchant hull requisitioned in 1941 holds no displacement, and three passes of research found none for any Japanese fast tanker; her toughness is read from nothing else. Her deadweight is on file, and two classes of the type oiler have both rows. Settled by the architect, Nov 21, 2026 (decision 0207)."
+
+# Her cargo of oil, estimated as her sisters (decision 0207, rule 5, the
+# second method): Toa Maru is the one ship of her class with a cargo row.
+[[estimate]]
+ship = "toho-maru"
+attribute = "cargo_capacity_lt"
+method = "sisters"
+by = "the architect"
+date = "2026-11-21"
+reason = "No source gives Toho Maru's cargo in a form that can be read; the Toa Maru class page gives her sister Toa Maru's capacity by weight, 12,687 metric tons, under her deadweight, and her barrels cannot be made tons, since no factor for her oil is on file. Settled by the architect, Nov 21, 2026 (decision 0207)."
+
+# The class id, pinned (decision 0077): 4032, which no other list uses.
+[class_ids]
+4032 = ["toho-maru"]
+
+# Her experience value (decision 0064), as for the ships of coral_sea.toml, on
+# the same engagement.
+[experience]
+engagement = "coral-sea"
+output = "../reference/ship_experience_coral_sea_japanese_oilers.ships.csv"
+ships = ["toho-maru"]

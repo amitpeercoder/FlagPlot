@@ -5833,7 +5833,7 @@ fn partial_protected_tanks_read_as_no_and_say_so() {
 // | max_speed_kn | class 18 | | 18 | 18 | 18 |
 // | fuel_capacity_t | fuel_capacity_bbl x factor 0.1516 | class 15,000; oil2's own 14,850 | 2274 | 2251.26 | 2274 |
 // | endurance_nm | class 12,000 | | 12000 | 12000 | 12000 |
-// | cargo_capacity_t | cargo_oil_capacity_bbl x 0.1516 | oil1 101,638; oil2 103,233; oil3 none, the least of her sisters' | 15408.3208 | 15650.1228 | 15408.3208 |
+// | cargo_capacity_t | cargo_oil_capacity_bbl x 0.1516 | oil1 101,638; oil2 103,233; oil3 none, estimated as her sisters: the least, 101,638 (decision 0207) | 15408.3208 | 15650.1228 | 15408.3208 |
 // | surface weapons | none by kind; oil1's main battery fit is not read | | 0 | 0 | 0 |
 // | toughness | displacement_light_lt 7,256 / 25 | | 290.24 | 290.24 | 290.24 |
 // | radar | none on file, assumed none | | 0 | 0 | 0 |
@@ -5878,6 +5878,8 @@ fn oiler_base() -> Files {
         .map(|l| l + "\n")
         .concat(),
     );
+    // The gap row that lets oil3's cargo be estimated (decision 0207, rule 2).
+    append_lines(&mut files, "gaps.csv", "ship,oil3,cargo_oil_capacity_bbl\n");
     append_lines(
         &mut files,
         "ship_facts.csv",
@@ -5905,7 +5907,8 @@ fn oiler_base() -> Files {
 
 const OILERS: [&str; 3] = ["oil1", "oil2", "oil3"];
 
-const LEAST: &str = "[least_of_sisters]\nfacts = [\"cargo_oil_capacity_bbl\"]\nreason = \"The least the rows support\"\n";
+/// The list's entry for oil3's cargo, as her sisters (decision 0207, rule 5).
+const LEAST: &str = "[[estimate]]\nship = \"oil3\"\nattribute = \"cargo_oil_capacity_bbl\"\nmethod = \"sisters\"\nby = \"the architect\"\ndate = \"2026-11-21\"\nreason = \"The least the rows support\"\n";
 
 fn oiler_list(ships: &[&str], tables: &str) -> String {
     each_ship_has_its_own_id();
@@ -5920,12 +5923,17 @@ fn an_oiler_is_an_auxiliary_with_the_mark_her_fuel_and_cargo_in_barrels_and_no_g
         .lines()
         .find(|l| !l.starts_with('#'))
         .expect("a header");
-    assert!(header.ends_with(",aircraft_capacity,anti_aircraft,fuels_at_sea"));
+    // The list has an entry, so the class file ends with the column of the
+    // estimated figures (decision 0207, rule 10).
+    assert!(
+        header.ends_with(",aircraft_capacity,anti_aircraft,fuels_at_sea,estimated"),
+        "{header}"
+    );
     let rows: Vec<Vec<String>> = records(&outputs.class_csv)
         .into_iter()
         .map(|r| r[2..].to_vec())
         .collect();
-    let row = |fuel: &str, cargo: &str, aa: &str| -> Vec<String> {
+    let row = |fuel: &str, cargo: &str, aa: &str, estimated: &str| -> Vec<String> {
         [
             "auxiliary",
             "16.5",
@@ -5945,6 +5953,7 @@ fn an_oiler_is_an_auxiliary_with_the_mark_her_fuel_and_cargo_in_barrels_and_no_g
             "0",
             aa,
             "1",
+            estimated,
         ]
         .map(str::to_string)
         .to_vec()
@@ -5952,9 +5961,9 @@ fn an_oiler_is_an_auxiliary_with_the_mark_her_fuel_and_cargo_in_barrels_and_no_g
     assert_eq!(
         rows,
         vec![
-            row("2274", "15408.3208", "5"),
-            row("2251.26", "15650.1228", "0"),
-            row("2274", "15408.3208", "0"),
+            row("2274", "15408.3208", "5", ""),
+            row("2251.26", "15650.1228", "0", ""),
+            row("2274", "15408.3208", "0", "cargo_capacity_t"),
         ]
     );
     // The fuel cites the barrels and the factor; the cargo of oil3 cites
@@ -5967,8 +5976,14 @@ fn an_oiler_is_an_auxiliary_with_the_mark_her_fuel_and_cargo_in_barrels_and_no_g
         cargo[4],
         "ship_class_facts.csv:105 ship_facts.csv:101 ship_facts.csv:102"
     );
+    // The rule column says estimated, not read; the note gives the working.
     assert!(
-        cargo[5].contains("the least of her sisters' rows, 101638"),
+        cargo[3].starts_with("estimated, not read from a row (decision 0207)"),
+        "{cargo:?}"
+    );
+    assert!(
+        cargo[5].contains("estimated as her sisters")
+            && cargo[5].contains("the least of her sisters' rows, 101638"),
         "{cargo:?}"
     );
     // No main battery by kind: oil1's fit is not read.
@@ -5978,7 +5993,7 @@ fn an_oiler_is_an_auxiliary_with_the_mark_her_fuel_and_cargo_in_barrels_and_no_g
     let toughness = source_of(&outputs, "1000", "toughness");
     assert_eq!(toughness[4], "ship_class_facts.csv:104");
     assert!(comments(&outputs.class_csv).contains("No surface weapons by kind"));
-    assert!(comments(&outputs.class_csv).contains("The least of her sisters"));
+    assert!(comments(&outputs.class_csv).contains("Estimated, not read (decision 0207)"));
 }
 
 #[test]
@@ -5990,7 +6005,8 @@ fn without_the_list_s_rule_a_ship_with_no_cargo_row_is_missing() {
         &[
             "oil3",
             "cargo_capacity_t",
-            "cargo_oil_capacity_bbl of class us-oiler-class: no rows",
+            // No barrels row and no entry: the cargo is read by weight.
+            "cargo_capacity_lt of class us-oiler-class: no rows",
         ],
     );
 }
@@ -6090,14 +6106,19 @@ fn a_gun_of_another_kind_in_an_anti_aircraft_row_that_does_not_hold_is_no_proble
     assert_one(&problems, &["anti_aircraft", "odd-w", "has kind `gun`"]);
 }
 
-/// The two lists of the oilers (decision 0206) derive exactly their files.
+/// The lists of the oilers (decisions 0206 and 0207) derive exactly their
+/// files.
 #[test]
 fn the_lists_of_the_oilers_derive_exactly_the_files_in_data_reference() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
     let read = |path: &str| std::fs::read_to_string(root.join(path)).expect(path);
     let (facts, unread) = oob_check::read_dir(&root.join("data/oob"));
     assert!(unread.is_empty());
-    for (list, experience) in [("coral_sea_oilers", true), ("five_days_oilers", false)] {
+    for (list, experience) in [
+        ("coral_sea_oilers", true),
+        ("coral_sea_japanese_oilers", true),
+        ("five_days_oilers", false),
+    ] {
         let outputs = derive(
             &format!("{list}.toml"),
             &read(&format!("data/derivation/{list}.toml")),
@@ -6122,5 +6143,940 @@ fn the_lists_of_the_oilers_derive_exactly_the_files_in_data_reference() {
             outputs.experience_csv,
             experience.then(|| read(&format!("data/reference/ship_experience_{list}.ships.csv")))
         );
+    }
+}
+
+// A figure estimated from like ships (decision 0207). The ship `tk1` is of
+// the class `jp-tk-class`, of the type oiler, with no light displacement
+// row of its own or its class's. Her figures on 1942-08-08:
+//
+// | Figure | Rows | Working |
+// | --- | --- | --- |
+// | cruise / max speed | class 16 / 19 | read |
+// | fuel_capacity_t | fuel_capacity_lt 1100 | by weight: no barrels row, no barrels entry |
+// | endurance_nm | class 15,000 | read |
+// | cargo_capacity_t | cargo_capacity_lt 12,487 | by weight |
+// | toughness | displacement_light_lt, ESTIMATED | the estimate / 25 |
+//
+// Her light displacement, by ratio from deadweight_lt (her own ship row,
+// 10,000; the class row 12,345 is replaced by it). The like classes are the
+// other classes of the type oiler with class rows of both attributes:
+//
+// | Class | light | deadweight | ratio |
+// | --- | --- | --- | --- |
+// | like-a-class | 6,000 | 15,000 | 0.4 |
+// | like-b-class | 4,000 | 16,000 | 0.25 |
+//
+// The mean is (0.4 + 0.25) / 2 = 0.325, so 10,000 x 0.325 = 3,250; the
+// least is 10,000 x 0.25 = 2,500 and the greatest 10,000 x 0.4 = 4,000.
+// Toughness is 3,250 / 25 = 130. A class `like-half-class` with a light
+// displacement and no deadweight, and the carrier class with both rows,
+// are not like classes.
+
+const TK_ENTRY: &str = "[[estimate]]\nship = \"tk1\"\nattribute = \"displacement_light_lt\"\nmethod = \"ratio\"\nfrom = \"deadweight_lt\"\nby = \"the architect\"\ndate = \"2026-11-21\"\nreason = \"No row, the like classes' mean\"\n";
+
+fn estimate_base() -> Files {
+    let mut files = air_base();
+    append_lines(
+        &mut files,
+        "ship_classes.csv",
+        "1010,jp-tk-class,Tk class,jp,oiler\n\
+         1011,like-a-class,Like A class,us,oiler\n\
+         1012,like-b-class,Like B class,us,oiler\n\
+         1013,like-half-class,Like half class,us,oiler\n",
+    );
+    append_lines(
+        &mut files,
+        "ships.csv",
+        "1020,tk1,Tk 1,jp,jp-tk-class,\n\
+         1021,tk2,Tk 2,jp,jp-tk-class,\n\
+         1022,tk3,Tk 3,jp,jp-tk-class,\n\
+         1023,lb1,Lb 1,us,like-b-class,\n",
+    );
+    append_lines(
+        &mut files,
+        "attributes.csv",
+        "displacement_light_lt,ship_class,integer,one\n\
+         displacement_light_lt,ship,integer,one\n\
+         deadweight_lt,ship_class,integer,one\n\
+         deadweight_lt,ship,integer,one\n\
+         cargo_capacity_lt,ship_class,integer,one\n\
+         cargo_capacity_lt,ship,integer,one\n\
+         cargo_oil_capacity_bbl,ship_class,integer,one\n\
+         cargo_oil_capacity_bbl,ship,integer,one\n\
+         fuel_oil_barrel_factor_lt,ship_class,decimal,one\n",
+    );
+    append_lines(&mut files, "gaps.csv", "ship,tk1,displacement_light_lt\n");
+    append_lines(
+        &mut files,
+        "ship_class_facts.csv",
+        &[
+            fact(201, "jp-tk-class", "max_speed_kn", "19"),
+            fact(202, "jp-tk-class", "endurance_speed_kn", "16"),
+            fact(203, "jp-tk-class", "endurance_nm", "15000"),
+            fact(204, "jp-tk-class", "fuel_capacity_lt", "1100"),
+            fact(205, "jp-tk-class", "cargo_capacity_lt", "12487"),
+            fact(206, "jp-tk-class", "deadweight_lt", "12345"),
+            fact(211, "like-a-class", "displacement_light_lt", "6000"),
+            fact(212, "like-a-class", "deadweight_lt", "15000"),
+            fact(213, "like-b-class", "displacement_light_lt", "4000"),
+            fact(214, "like-b-class", "deadweight_lt", "16000"),
+            fact(215, "like-half-class", "displacement_light_lt", "100"),
+            // Another type, with both rows and a very different ratio.
+            fact(216, "us-carrier-class", "displacement_light_lt", "9000"),
+            fact(217, "us-carrier-class", "deadweight_lt", "10000"),
+        ]
+        .map(|l| l + "\n")
+        .concat(),
+    );
+    append_lines(
+        &mut files,
+        "ship_facts.csv",
+        &(fact(201, "tk1", "deadweight_lt", "10000") + "\n"),
+    );
+    files
+}
+
+fn tk_list(keys: &str, tables: &str) -> String {
+    each_ship_has_its_own_id();
+    format!(
+        "{}air_figures = true\n{keys}\n{tables}",
+        list(&["tk1"], &["tk1"])
+    )
+}
+
+fn tk_ok(tables: &str, files: &Files) -> Outputs {
+    ok_text(&tk_list("", tables), &air_rules(""), files)
+}
+
+fn tk_fails(tables: &str, files: &Files) -> Vec<String> {
+    derive_text(&tk_list("", tables), &air_rules(""), files).expect_err("problems expected")
+}
+
+fn header_line(outputs: &Outputs) -> &str {
+    outputs
+        .class_csv
+        .lines()
+        .find(|l| l.starts_with("id,"))
+        .expect("a header")
+}
+
+#[test]
+fn the_estimate_base_passes_the_checker() {
+    let report = oob_check::check_files(&estimate_base());
+    assert!(report.is_clean(), "{:#?}", report.problems);
+}
+
+// Rules 5 and 6: by ratio, the mean over every like class, her own row read
+// ship over class; the least and the greatest in the note.
+#[test]
+fn a_ratio_estimate_is_her_own_row_times_the_mean_of_the_like_classes_ratios() {
+    let outputs = tk_ok(TK_ENTRY, &estimate_base());
+    let toughness = source_of(&outputs, "1000", "toughness");
+    // 10,000 x 0.325 = 3,250; / 25 = 130.
+    assert_eq!(toughness[2], "130", "{toughness:?}");
+    let note = &toughness[5];
+    assert!(note.contains("estimated by ratio"), "{note}");
+    assert!(note.contains("her deadweight_lt 10000"), "{note}");
+    assert!(note.contains("x 0.325"), "{note}");
+    assert!(note.contains("over 2 like classes"), "{note}");
+    assert!(note.contains("like-a-class 6000 / 15000 = 0.4"), "{note}");
+    assert!(note.contains("like-b-class 4000 / 16000 = 0.25"), "{note}");
+    assert!(
+        note.contains("displacement_light_lt 3250"),
+        "the value: {note}"
+    );
+    assert!(note.contains("least 2500 (like-b-class)"), "{note}");
+    assert!(note.contains("greatest 4000 (like-a-class)"), "{note}");
+    // The ship's own row, not the class's 12,345, is cited with the like
+    // classes' rows.
+    assert!(note.contains("ship_facts.csv:201"), "{note}");
+    assert!(
+        !toughness[4].contains("ship_class_facts.csv:206"),
+        "{toughness:?}"
+    );
+    assert!(toughness[4].contains("ship_facts.csv:201"), "{toughness:?}");
+    // Rows of both like classes are cited.
+    for row in ["211", "212", "213", "214"] {
+        assert!(
+            toughness[4].contains(&format!("ship_class_facts.csv:{row}")),
+            "{toughness:?}"
+        );
+    }
+    // Never the other type or the class with one row.
+    for row in ["215", "216", "217"] {
+        assert!(
+            !toughness[4].contains(&format!("ship_class_facts.csv:{row}")),
+            "{toughness:?}"
+        );
+    }
+    // Rule 9: the rule column of the figure says estimated; any other
+    // figure keeps its usual rule.
+    assert!(
+        toughness[3].starts_with("estimated, not read from a row (decision 0207)"),
+        "{toughness:?}"
+    );
+    assert!(
+        toughness[3].contains("toughness is it / displacement_lt_per_toughness"),
+        "{toughness:?}"
+    );
+    let speed = source_of(&outputs, "1000", "max_speed_kn");
+    assert!(!speed[3].starts_with("estimated"), "{speed:?}");
+    assert_eq!(speed[2], "19");
+    // Weight, since no row gives her fuel or cargo in barrels.
+    assert_eq!(source_of(&outputs, "1000", "fuel_capacity_t")[2], "1100");
+    assert_eq!(source_of(&outputs, "1000", "cargo_capacity_t")[2], "12487");
+}
+
+// Rule 10: the `estimated` column, only where the list has an entry, naming
+// the figures that rest on one; rule 13: the check's count.
+#[test]
+fn the_estimated_column_names_the_figures_and_is_there_only_with_an_entry() {
+    let with = tk_ok(TK_ENTRY, &estimate_base());
+    assert!(
+        header_line(&with).ends_with(",fuels_at_sea,estimated"),
+        "{}",
+        header_line(&with)
+    );
+    assert_eq!(records(&with.class_csv)[0].last().unwrap(), "toughness");
+    // The header says so too.
+    let header = comments(&with.class_csv);
+    assert!(
+        header.contains("Estimated, not read (decision 0207)"),
+        "{header}"
+    );
+    assert!(
+        header.contains("tk1 displacement_light_lt: by ratio, from her deadweight_lt 10000"),
+        "{header}"
+    );
+    // The check's lines.
+    assert_eq!(with.estimated.len(), 2, "{:?}", with.estimated);
+    assert_eq!(
+        with.estimated[0],
+        "1 attribute estimated (decision 0207), for tk1"
+    );
+    assert!(with.estimated[1].contains("least 2500 (like-b-class)"));
+    assert!(with.estimated[1].contains("greatest 4000 (like-a-class)"));
+
+    let without = tk_ok("", &estimate_base_with_light());
+    assert!(
+        !header_line(&without).contains("estimated"),
+        "{}",
+        header_line(&without)
+    );
+    assert!(without.estimated.is_empty());
+    assert!(!comments(&without.class_csv).contains("Estimated, not read"));
+}
+
+/// The base with a light displacement row for the class, so that nothing
+/// needs estimating.
+fn estimate_base_with_light() -> Files {
+    let mut files = estimate_base();
+    append_lines(
+        &mut files,
+        "ship_class_facts.csv",
+        &(fact(230, "jp-tk-class", "displacement_light_lt", "5000") + "\n"),
+    );
+    files
+}
+
+// Rule 5: each division is cut toward zero at the sixth place: 1000 / 3000 is
+// 0.333333, and 9 x 0.333333 is 2.999997; toughness is that / 25 = 0.11999988,
+// cut at six places to 0.119999.
+#[test]
+fn each_division_of_the_ratio_is_cut_at_the_sixth_place() {
+    let mut files = estimate_base();
+    replace_row(
+        &mut files,
+        "ship_class_facts.csv",
+        211,
+        fact(211, "like-a-class", "displacement_light_lt", "1000"),
+    );
+    replace_row(
+        &mut files,
+        "ship_class_facts.csv",
+        212,
+        fact(212, "like-a-class", "deadweight_lt", "3000"),
+    );
+    remove_row(&mut files, "ship_class_facts.csv", 213);
+    remove_row(&mut files, "ship_class_facts.csv", 214);
+    replace_row(
+        &mut files,
+        "ship_facts.csv",
+        201,
+        fact(201, "tk1", "deadweight_lt", "9"),
+    );
+    let outputs = tk_ok(TK_ENTRY, &files);
+    let toughness = source_of(&outputs, "1000", "toughness");
+    assert!(
+        toughness[5].contains("like-a-class 1000 / 3000 = 0.333333"),
+        "{toughness:?}"
+    );
+    assert!(
+        toughness[5].contains("displacement_light_lt 2.999997"),
+        "{toughness:?}"
+    );
+    assert_eq!(toughness[2], "0.119999", "{toughness:?}");
+    assert!(
+        toughness[5].contains("over 1 like classes"),
+        "{toughness:?}"
+    );
+}
+
+// Rule 6: a class of the same type with only one of the two rows is not a
+// like class, nor is one of another type: the answer is as without them.
+// (The base holds both already; here the half class gets its deadweight
+// too, so that it is a like class, and the mean moves: 6000/15000 = 0.4,
+// 4000/16000 = 0.25, 100/1000 = 0.1; the mean is 0.75 / 3 = 0.25, so
+// 10,000 x 0.25 = 2,500 and toughness is 100.)
+#[test]
+fn a_class_with_one_row_is_no_like_class_until_it_has_both() {
+    let files = estimate_base();
+    let before = source_of(&tk_ok(TK_ENTRY, &files), "1000", "toughness");
+    assert_eq!(before[2], "130");
+    assert!(before[5].contains("over 2 like classes"), "{before:?}");
+    // Only a deadweight, no light displacement: not a like class either.
+    let mut other = estimate_base();
+    append_lines(
+        &mut other,
+        "ship_class_facts.csv",
+        &(fact(231, "like-half-class", "deadweight_lt", "1000") + "\n"),
+    );
+    let both = source_of(&tk_ok(TK_ENTRY, &other), "1000", "toughness");
+    assert_eq!(both[2], "100", "{both:?}");
+    assert!(both[5].contains("over 3 like classes"), "{both:?}");
+    assert!(
+        both[5].contains("like-half-class 100 / 1000 = 0.1"),
+        "{both:?}"
+    );
+    // A class with a deadweight only.
+    let mut only_dw = estimate_base();
+    append_lines(
+        &mut only_dw,
+        "ship_class_facts.csv",
+        &(fact(232, "like-half-class", "deadweight_lt", "7") + "\n"),
+    );
+    remove_row(&mut only_dw, "ship_class_facts.csv", 215);
+    let outputs = source_of(&tk_ok(TK_ENTRY, &only_dw), "1000", "toughness");
+    assert_eq!(outputs[2], "130", "{outputs:?}");
+}
+
+// Rule 6: a like class whose row cannot be read fails the estimate, naming
+// it; it is not passed over.
+#[test]
+fn a_like_class_whose_row_cannot_be_read_fails_the_estimate() {
+    let mut files = estimate_base();
+    replace_row(
+        &mut files,
+        "ship_class_facts.csv",
+        213,
+        fact_row(
+            213,
+            "like-b-class",
+            "displacement_light_lt",
+            "4000",
+            "",
+            "",
+            "low",
+            "unconfirmed",
+        ),
+    );
+    let problems = tk_fails(TK_ENTRY, &files);
+    assert!(
+        problems
+            .iter()
+            .any(|p| p.contains("tk1") && p.contains("toughness") && p.contains("like-b-class")),
+        "{problems:#?}"
+    );
+}
+
+// Rule 2: no like class at all fails the estimate.
+#[test]
+fn no_like_class_fails_the_estimate() {
+    let mut files = estimate_base();
+    for id in [211, 212, 213, 214] {
+        remove_row(&mut files, "ship_class_facts.csv", id);
+    }
+    let problems = tk_fails(TK_ENTRY, &files);
+    assert_one(&problems, &["tk1", "toughness", "no like class", "oiler"]);
+}
+
+// Rule 11: a row of the attribute, of any standing, for the ship or her
+// class drives the estimate out: the check fails until the entry is taken
+// out.
+#[test]
+fn a_row_of_the_estimated_attribute_drives_the_estimate_out() {
+    for (file, row) in [
+        (
+            "ship_facts.csv",
+            fact_row(
+                240,
+                "tk1",
+                "displacement_light_lt",
+                "5000",
+                "",
+                "",
+                "low",
+                "unconfirmed",
+            ),
+        ),
+        (
+            "ship_class_facts.csv",
+            fact_row(
+                240,
+                "jp-tk-class",
+                "displacement_light_lt",
+                "5000",
+                "",
+                "",
+                "low",
+                "unconfirmed",
+            ),
+        ),
+        // A row of another date counts too.
+        (
+            "ship_class_facts.csv",
+            fact_row(
+                240,
+                "jp-tk-class",
+                "displacement_light_lt",
+                "5000",
+                "1930",
+                "1931",
+                "medium",
+                "preferred",
+            ),
+        ),
+    ] {
+        let mut files = estimate_base();
+        add_row(&mut files, file, row);
+        let problems = tk_fails(TK_ENTRY, &files);
+        assert_one(
+            &problems,
+            &[
+                "tk1",
+                "estimate:",
+                "a row is filed",
+                "take out the list's [[estimate]] entry",
+                "(decision 0207, rule 11)",
+            ],
+        );
+        // Without the entry the row is read in the usual way (or refused as
+        // an unconfirmed row would be): the entry is what fails.
+    }
+}
+
+// Rule 2: an estimate needs a gap row naming the ship.
+#[test]
+fn an_estimate_with_no_gap_row_fails() {
+    let mut files = estimate_base();
+    files.insert(
+        "gaps.csv".to_string(),
+        "entity_type,entity,what\n".to_string(),
+    );
+    let problems = tk_fails(TK_ENTRY, &files);
+    assert_one(
+        &problems,
+        &["tk1", "no row of gaps.csv", "(decision 0207, rule 2)"],
+    );
+    // A gap row of another kind of entity, for the same key, is no gap row.
+    let mut other = estimate_base();
+    files_set_gaps(&mut other, "ship_class,tk1,displacement_light_lt\n");
+    assert_one(&tk_fails(TK_ENTRY, &other), &["tk1", "no row of gaps.csv"]);
+}
+
+fn files_set_gaps(files: &mut Files, rows: &str) {
+    files.insert(
+        "gaps.csv".to_string(),
+        format!("entity_type,entity,what\n{rows}"),
+    );
+}
+
+// Rule 3: only what a ship is may be estimated.
+#[test]
+fn an_attribute_that_may_not_be_estimated_is_refused_at_parse() {
+    for attribute in ["aircraft_capacity", "main_rounds_per_gun", "anti_aircraft"] {
+        let entry = TK_ENTRY.replace("displacement_light_lt", attribute);
+        let problems = tk_fails(&entry, &estimate_base());
+        assert!(
+            problems.iter().any(|p| p.contains(attribute)
+                && p.contains("may not be estimated")
+                && p.contains("rule 3")),
+            "{attribute}: {problems:#?}"
+        );
+    }
+}
+
+// Rule 5: the methods and what each takes.
+#[test]
+fn entries_that_do_not_fit_their_method_are_refused() {
+    // Sisters is for a ship, not a class.
+    let class_sisters = "[[estimate]]\nclass = \"jp-tk-class\"\nattribute = \"cargo_capacity_lt\"\nmethod = \"sisters\"\nby = \"a\"\ndate = \"2026-11-21\"\nreason = \"r\"\n";
+    assert!(tk_fails(class_sisters, &estimate_base())
+        .iter()
+        .any(|p| p.contains("as her sisters is for a ship, not a class")));
+    // Ratio without `from`.
+    let no_from = TK_ENTRY.replace("from = \"deadweight_lt\"\n", "");
+    assert!(tk_fails(&no_from, &estimate_base())
+        .iter()
+        .any(|p| p.contains("by ratio names `from`")));
+    // `from` the attribute itself.
+    let same = TK_ENTRY.replace(
+        "from = \"deadweight_lt\"",
+        "from = \"displacement_light_lt\"",
+    );
+    assert!(tk_fails(&same, &estimate_base())
+        .iter()
+        .any(|p| p.contains("by ratio names `from`")));
+    // Sisters with a `from`.
+    let sisters_from = "[[estimate]]\nship = \"tk1\"\nattribute = \"cargo_capacity_lt\"\nmethod = \"sisters\"\nfrom = \"x\"\nby = \"a\"\ndate = \"2026-11-21\"\nreason = \"r\"\n";
+    assert!(tk_fails(sisters_from, &estimate_base())
+        .iter()
+        .any(|p| p.contains("names no `from`")));
+    // A third method is not one of the two.
+    let third = TK_ENTRY.replace("\"ratio\"", "\"rate\"");
+    assert!(tk_fails(&third, &estimate_base())
+        .iter()
+        .any(|p| p.contains("not one of the two")));
+    // A date that is not a full date; an empty `by`.
+    let bad_date = TK_ENTRY.replace("2026-11-21", "2026-11");
+    assert!(tk_fails(&bad_date, &estimate_base())
+        .iter()
+        .any(|p| p.contains("not a full date")));
+    let no_by = TK_ENTRY.replace("by = \"the architect\"", "by = \"\"");
+    assert!(tk_fails(&no_by, &estimate_base())
+        .iter()
+        .any(|p| p.contains("`by` must not be empty")));
+}
+
+// Rule 6: an entry does not name its like classes; rule 8 is said when a
+// class it names has the attribute estimated in another list.
+#[test]
+fn an_entry_naming_its_like_classes_is_refused_and_says_rule_8_where_one_is_estimated() {
+    let named = format!("{TK_ENTRY}like_classes = [\"like-a-class\", \"like-b-class\"]\n");
+    let problems = tk_fails(&named, &estimate_base());
+    assert_one(
+        &problems,
+        &["tk1", "names its like classes", "(decision 0207, rule 6)"],
+    );
+    assert!(!problems[0].contains("rule 8"), "{problems:#?}");
+    // Another list estimates like-b-class's light displacement: the message
+    // adds the rule-8 sentence for that class, not for the other.
+    let others = BTreeMap::from([(
+        "other.toml".to_string(),
+        "[[estimate]]\nclass = \"like-b-class\"\nattribute = \"displacement_light_lt\"\nmethod = \"ratio\"\nfrom = \"deadweight_lt\"\nby = \"a\"\ndate = \"2026-11-21\"\nreason = \"r\"\n".to_string(),
+    )]);
+    let problems: Vec<String> = oob_derive::derive_among(
+        "list.toml",
+        &tk_list("", &named),
+        &air_rules(""),
+        &estimate_base(),
+        &others,
+    )
+    .expect_err("problems")
+    .iter()
+    .map(ToString::to_string)
+    .collect();
+    // Two problems: the entry's own, and the like class the tool finds
+    // with an estimated attribute (rule 8 again, for the figure).
+    assert_eq!(problems.len(), 2, "{problems:#?}");
+    for want in [
+        "names its like classes",
+        "class like-b-class has its displacement_light_lt estimated in other.toml",
+        "an estimate never rests on an estimate (decision 0207, rule 8)",
+    ] {
+        assert!(problems[0].contains(want), "`{want}` in {problems:#?}");
+    }
+    assert!(
+        !problems[0].contains("class like-a-class has"),
+        "{problems:#?}"
+    );
+}
+
+// Rule 8: a like class the tool finds that has either attribute estimated in
+// another list fails the estimate (a class entry, or an entry for a ship of
+// the class; either attribute).
+#[test]
+fn a_like_class_with_an_attribute_estimated_in_another_list_fails_the_estimate() {
+    let cases = [
+        ("class", "like-b-class", "displacement_light_lt"),
+        ("class", "like-b-class", "deadweight_lt"),
+        ("ship", "lb1", "displacement_light_lt"),
+        ("ship", "lb1", "deadweight_lt"),
+    ];
+    for (kind, subject, attribute) in cases {
+        let other = format!(
+            "[[estimate]]\n{kind} = \"{subject}\"\nattribute = \"{attribute}\"\nmethod = \"ratio\"\nfrom = \"x_lt\"\nby = \"a\"\ndate = \"2026-11-21\"\nreason = \"r\"\n"
+        );
+        let others = BTreeMap::from([("other.toml".to_string(), other)]);
+        let result = oob_derive::derive_among(
+            "list.toml",
+            &tk_list("", TK_ENTRY),
+            &air_rules(""),
+            &estimate_base(),
+            &others,
+        );
+        let problems: Vec<String> = result
+            .expect_err("rule 8")
+            .iter()
+            .map(ToString::to_string)
+            .collect();
+        assert!(
+            problems.iter().any(|p| p.contains("tk1")
+                && p.contains("class like-b-class")
+                && p.contains("estimated in other.toml")
+                && p.contains("rule 8")),
+            "{kind} {subject} {attribute}: {problems:#?}"
+        );
+    }
+    // The list's own text among the others changes nothing, and an unrelated
+    // estimate in another list changes nothing.
+    let unrelated = BTreeMap::from([
+        ("list.toml".to_string(), TK_ENTRY.to_string()),
+        (
+            "other.toml".to_string(),
+            "[[estimate]]\nclass = \"like-b-class\"\nattribute = \"max_speed_kn\"\nmethod = \"ratio\"\nfrom = \"x\"\nby = \"a\"\ndate = \"2026-11-21\"\nreason = \"r\"\n"
+                .to_string(),
+        ),
+        ("not_a_list.toml".to_string(), "this is not = toml = at all".to_string()),
+    ]);
+    let outputs = oob_derive::derive_among(
+        "list.toml",
+        &tk_list("", TK_ENTRY),
+        &air_rules(""),
+        &estimate_base(),
+        &unrelated,
+    )
+    .expect("clean");
+    assert_eq!(source_of(&outputs, "1000", "toughness")[2], "130");
+}
+
+// Rule 8, within the list: an estimate worked from an attribute the list also
+// estimates for her.
+#[test]
+fn an_estimate_does_not_rest_on_another_estimate_of_the_same_ship() {
+    // Her cargo by ratio from her light displacement, which is itself
+    // estimated: refused. (No class cargo row and a gap row, so that the
+    // entry is otherwise allowed.)
+    let mut files = estimate_base();
+    remove_row(&mut files, "ship_class_facts.csv", 205);
+    append_lines(&mut files, "gaps.csv", "ship,tk1,cargo_capacity_lt\n");
+    let both = format!(
+        "{TK_ENTRY}\n[[estimate]]\nship = \"tk1\"\nattribute = \"cargo_capacity_lt\"\nmethod = \"ratio\"\nfrom = \"displacement_light_lt\"\nby = \"a\"\ndate = \"2026-11-21\"\nreason = \"r\"\n"
+    );
+    let problems = tk_fails(&both, &files);
+    assert!(
+        problems
+            .iter()
+            .any(|p| p.contains("which the list also estimates") && p.contains("rule 8")),
+        "{problems:#?}"
+    );
+}
+
+// An entry no figure reads is a problem.
+#[test]
+fn an_entry_read_by_no_figure_is_a_problem() {
+    // displacement_standard_lt is not read for an oiler, whose toughness is
+    // from her light displacement.
+    let unused = format!(
+        "{TK_ENTRY}\n[[estimate]]\nship = \"tk1\"\nattribute = \"displacement_standard_lt\"\nmethod = \"ratio\"\nfrom = \"deadweight_lt\"\nby = \"a\"\ndate = \"2026-11-21\"\nreason = \"r\"\n"
+    );
+    let problems = tk_fails(&unused, &estimate_base());
+    assert_one(
+        &problems,
+        &[
+            "tk1",
+            "displacement_standard_lt",
+            "read by no figure of a listed ship",
+        ],
+    );
+}
+
+// An entry naming a ship that is not on the list is refused.
+#[test]
+fn an_entry_for_a_ship_not_in_the_list_is_refused() {
+    let entry = TK_ENTRY.replace("\"tk1\"", "\"tk2\"");
+    let problems = tk_fails(&entry, &estimate_base());
+    assert!(
+        problems
+            .iter()
+            .any(|p| p.contains("ship `tk2` is not in ships")),
+        "{problems:#?}"
+    );
+}
+
+// Rule 5, as her sisters: the least of the readable rows of the other ships
+// of her class; a sister whose row cannot be read on the date is passed
+// over. Two entries make "2 attributes" in the check's line.
+// tk2 12,000, tk3 11,000 -> the least 11,000; with tk3's row unconfirmed it
+// is 12,000.
+#[test]
+fn as_her_sisters_is_the_least_of_the_rows_her_sisters_can_be_read_to_give() {
+    let mut files = estimate_base();
+    // No class cargo row: the cargo is hers by her sisters.
+    remove_row(&mut files, "ship_class_facts.csv", 205);
+    append_lines(&mut files, "gaps.csv", "ship,tk1,cargo_capacity_lt\n");
+    append_lines(
+        &mut files,
+        "ship_facts.csv",
+        &[
+            fact(202, "tk2", "cargo_capacity_lt", "12000"),
+            fact(203, "tk3", "cargo_capacity_lt", "11000"),
+        ]
+        .map(|l| l + "\n")
+        .concat(),
+    );
+    let sisters = "[[estimate]]\nship = \"tk1\"\nattribute = \"cargo_capacity_lt\"\nmethod = \"sisters\"\nby = \"the architect\"\ndate = \"2026-11-21\"\nreason = \"her sisters\"\n";
+    let tables = format!("{TK_ENTRY}\n{sisters}");
+    let outputs = tk_ok(&tables, &files);
+    let cargo = source_of(&outputs, "1000", "cargo_capacity_t");
+    assert_eq!(cargo[2], "11000", "{cargo:?}");
+    assert!(
+        cargo[3].starts_with("estimated, not read from a row (decision 0207)"),
+        "{cargo:?}"
+    );
+    assert!(cargo[5].contains("estimated as her sisters"), "{cargo:?}");
+    assert!(
+        cargo[5].contains("tk2 12000") && cargo[5].contains("tk3 11000"),
+        "{cargo:?}"
+    );
+    assert_eq!(cargo[4], "ship_facts.csv:202 ship_facts.csv:203");
+    assert_eq!(
+        records(&outputs.class_csv)[0].last().unwrap(),
+        "cargo_capacity_t toughness"
+    );
+    assert_eq!(
+        outputs.estimated[0],
+        "2 attributes estimated (decision 0207), for tk1"
+    );
+    assert_eq!(outputs.estimated.len(), 3);
+    // tk3's row unconfirmed: passed over, and tk2's 12,000 is the least.
+    replace_row(
+        &mut files,
+        "ship_facts.csv",
+        203,
+        fact_row(
+            203,
+            "tk3",
+            "cargo_capacity_lt",
+            "11000",
+            "",
+            "",
+            "low",
+            "unconfirmed",
+        ),
+    );
+    let outputs = tk_ok(&tables, &files);
+    assert_eq!(source_of(&outputs, "1000", "cargo_capacity_t")[2], "12000");
+    // No sister with a readable row: the estimate fails.
+    remove_row(&mut files, "ship_facts.csv", 202);
+    let problems = tk_fails(&tables, &files);
+    assert_one(
+        &problems,
+        &[
+            "tk1",
+            "cargo_capacity_t",
+            "no sister of her class has a readable row",
+        ],
+    );
+}
+
+// An oiler with no barrels row, and no entry for barrels, reads her fuel and
+// cargo by weight and needs no barrel factor (decision 0207); an entry for
+// the barrels attribute makes the cargo be read in barrels: the least of her
+// sisters', 80,000, x 0.1516 = 12,128, while her fuel is still by weight.
+#[test]
+fn an_oiler_reads_weight_unless_a_row_or_an_entry_gives_barrels() {
+    let by_weight = tk_ok(TK_ENTRY, &estimate_base());
+    assert_eq!(source_of(&by_weight, "1000", "fuel_capacity_t")[2], "1100");
+    assert_eq!(
+        source_of(&by_weight, "1000", "cargo_capacity_t")[2],
+        "12487"
+    );
+    assert!(
+        source_of(&by_weight, "1000", "cargo_capacity_t")[3].starts_with("cargo_capacity_lt"),
+        "the cargo's rule is the weight rule"
+    );
+    assert!(
+        !source_of(&by_weight, "1000", "cargo_capacity_t")[3].contains("fuel_oil_barrel_factor_lt"),
+        "no barrel factor is read"
+    );
+    let mut files = estimate_base();
+    append_lines(&mut files, "gaps.csv", "ship,tk1,cargo_oil_capacity_bbl\n");
+    append_lines(
+        &mut files,
+        "ship_facts.csv",
+        &[
+            fact(202, "tk2", "cargo_oil_capacity_bbl", "100000"),
+            fact(203, "tk3", "cargo_oil_capacity_bbl", "80000"),
+        ]
+        .map(|l| l + "\n")
+        .concat(),
+    );
+    let barrels = "[[estimate]]\nship = \"tk1\"\nattribute = \"cargo_oil_capacity_bbl\"\nmethod = \"sisters\"\nby = \"a\"\ndate = \"2026-11-21\"\nreason = \"her sisters\"\n";
+    let tables = format!("{TK_ENTRY}\n{barrels}");
+    // The factor is wanted now and there is none.
+    let problems = tk_fails(&tables, &files);
+    assert!(
+        problems
+            .iter()
+            .any(|p| p.contains("fuel_oil_barrel_factor_lt")),
+        "{problems:#?}"
+    );
+    append_lines(
+        &mut files,
+        "ship_class_facts.csv",
+        &(fact(240, "jp-tk-class", "fuel_oil_barrel_factor_lt", "0.1516") + "\n"),
+    );
+    let outputs = tk_ok(&tables, &files);
+    let cargo = source_of(&outputs, "1000", "cargo_capacity_t");
+    // 80,000 x 0.1516 = 12,128.
+    assert_eq!(cargo[2], "12128", "{cargo:?}");
+    assert!(
+        cargo[3].starts_with("estimated, not read from a row (decision 0207)"),
+        "{cargo:?}"
+    );
+    assert!(cargo[3].contains("fuel_oil_barrel_factor_lt"), "{cargo:?}");
+    // Her fuel stays by weight: no barrels row for it.
+    assert_eq!(source_of(&outputs, "1000", "fuel_capacity_t")[2], "1100");
+    assert_eq!(
+        records(&outputs.class_csv)[0].last().unwrap(),
+        "cargo_capacity_t toughness"
+    );
+}
+
+// `anti_aircraft_unknown_means_none`: a ship with no fit row of either slot
+// has the figure 0 with the assumption's note and a line in the header; with
+// a fit row, or with no such key, nothing is noted.
+#[test]
+fn the_anti_aircraft_assumption_is_noted_where_used_and_not_where_a_fit_exists() {
+    let keys = "anti_aircraft_unknown_means_none = [\"tk1\"]";
+    let outputs = ok_text(&tk_list(keys, TK_ENTRY), &air_rules(""), &estimate_base());
+    let aa = source_of(&outputs, "1000", "anti_aircraft");
+    assert_eq!(aa[2], "0", "{aa:?}");
+    assert!(
+        aa[5].contains("assumption of the scenario, not a fact: anti-aircraft guns unknown in the facts, treated as none"),
+        "{aa:?}"
+    );
+    let header = comments(&outputs.class_csv);
+    assert!(
+        header.contains("Anti-aircraft assumptions used (decision 0207):"),
+        "{header}"
+    );
+    assert!(
+        header.contains("tk1: anti-aircraft guns unknown in the facts, treated as none"),
+        "{header}"
+    );
+    // No such key: no note and no header line.
+    let plain = tk_ok(TK_ENTRY, &estimate_base());
+    assert!(!source_of(&plain, "1000", "anti_aircraft")[5].contains("assumption"));
+    assert!(!comments(&plain.class_csv).contains("Anti-aircraft assumptions"));
+    // A fit row of her class: counted (2 heavy x 1 = 2), and not an
+    // assumption.
+    let mut files = estimate_base();
+    add_row(
+        &mut files,
+        "fits.csv",
+        fit_row(
+            40,
+            "ship_class",
+            "jp-tk-class",
+            "heavy_aa",
+            "weapon",
+            "aa-h",
+            "2",
+            ("", ""),
+            "a",
+            "preferred",
+        ),
+    );
+    let outputs = ok_text(&tk_list(keys, TK_ENTRY), &air_rules(""), &files);
+    let aa = source_of(&outputs, "1000", "anti_aircraft");
+    assert_eq!(aa[2], "2", "{aa:?}");
+    assert!(!aa[5].contains("assumption"), "{aa:?}");
+    assert!(comments(&outputs.class_csv)
+        .contains("Anti-aircraft assumptions used (decision 0207): none"));
+    // A ship the key names must be in ships.
+    let problems = derive_text(
+        &tk_list("anti_aircraft_unknown_means_none = [\"nobody\"]", TK_ENTRY),
+        &air_rules(""),
+        &estimate_base(),
+    )
+    .expect_err("a problem");
+    assert!(
+        problems
+            .iter()
+            .any(|p| p.contains("`nobody` is not in ships")),
+        "{problems:#?}"
+    );
+}
+
+// `run` gives the check's lines for the list on disk and reads the other
+// lists of its folder for rule 8; a list with no entry gives none.
+#[test]
+fn run_gives_the_estimated_lines_and_reads_the_lists_beside_it() {
+    let dir = scratch("estimates");
+    let files = estimate_base();
+    std::fs::write(dir.join("derivation/rules.toml"), air_rules("")).unwrap();
+    for (name, text) in &files {
+        std::fs::write(dir.join("oob").join(name), text).unwrap();
+    }
+    let list_path = dir.join("derivation/list.toml");
+    std::fs::write(&list_path, tk_list("", TK_ENTRY)).unwrap();
+    match run(&list_path, &dir.join("oob"), true).expect("run") {
+        Outcome::Clean {
+            estimated, written, ..
+        } => {
+            assert!(!written);
+            assert_eq!(estimated.len(), 2, "{estimated:?}");
+            assert_eq!(
+                estimated[0],
+                "1 attribute estimated (decision 0207), for tk1"
+            );
+            assert!(estimated[1].starts_with("tk1 displacement_light_lt: by ratio"));
+        }
+        other => panic!("{other:?}"),
+    }
+    // A list with no entry (and a row, so nothing needs one).
+    let mut with_row = estimate_base();
+    append_lines(
+        &mut with_row,
+        "ship_class_facts.csv",
+        &(fact(230, "jp-tk-class", "displacement_light_lt", "5000") + "\n"),
+    );
+    std::fs::write(
+        dir.join("oob/ship_class_facts.csv"),
+        &with_row["ship_class_facts.csv"],
+    )
+    .unwrap();
+    std::fs::write(&list_path, tk_list("", "")).unwrap();
+    match run(&list_path, &dir.join("oob"), true).expect("run") {
+        Outcome::Clean { estimated, .. } => assert!(estimated.is_empty(), "{estimated:?}"),
+        other => panic!("{other:?}"),
+    }
+    // Rule 8 across the files of the folder: a list beside it estimates
+    // like-b-class's deadweight.
+    std::fs::write(
+        dir.join("oob/ship_class_facts.csv"),
+        &estimate_base()["ship_class_facts.csv"],
+    )
+    .unwrap();
+    std::fs::write(&list_path, tk_list("", TK_ENTRY)).unwrap();
+    std::fs::write(
+        dir.join("derivation/other.toml"),
+        "[[estimate]]\nship = \"lb1\"\nattribute = \"deadweight_lt\"\nmethod = \"ratio\"\nfrom = \"displacement_light_lt\"\nby = \"a\"\ndate = \"2026-11-21\"\nreason = \"r\"\n",
+    )
+    .unwrap();
+    match run(&list_path, &dir.join("oob"), true).expect("run") {
+        Outcome::Problems(problems) => {
+            let text: Vec<String> = problems.iter().map(ToString::to_string).collect();
+            assert!(
+                text.iter().any(|p| p.contains("class like-b-class")
+                    && p.contains("estimated in other.toml")
+                    && p.contains("rule 8")),
+                "{text:#?}"
+            );
+        }
+        other => panic!("{other:?}"),
     }
 }

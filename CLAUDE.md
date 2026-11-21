@@ -61,9 +61,9 @@ Each of these fails with no error and no failing test if it is missed. The page 
 
 **Data** (`docs/engineering/data-rules.md`)
 
-- Do not invent a historical figure. Anything made up is marked `placeholder` and named "Placeholder". No real ship, aircraft or weapon gets an invented rating: its figures are derived from fact rows by a written rule (`oob-derive`).
+- Do not invent a historical figure. Anything made up is marked `placeholder` and named "Placeholder". No real ship, aircraft or weapon gets an invented rating: its figures are derived from fact rows by a written rule (`oob-derive`), or, where the record has none, estimated from like ships by a written rule that marks the figure as estimated (decision 0207). An estimate is never evidence.
 - Nothing from the War in the Pacific: Admiral's Edition database, and nothing from `references/` is ever committed. Its manuals teach mechanics and lessons, not numbers.
-- One fact row is one source's statement, citing what was read. A source that disagrees gets its own row; rows are never overwritten. A missing fact is a gap, not a guess.
+- One fact row is one source's statement, citing what was read. A source that disagrees gets its own row; rows are never overwritten. A missing fact is a gap, not a guess; a gap stays open under an estimate.
 - Entity IDs in data files are stable. Never renumber or reuse one. Files `oob-derive` generates are never edited by hand.
 - Class ids are pinned in each derivation list's `[class_ids]` table, each id with its ships; a new class takes a new id there.
 

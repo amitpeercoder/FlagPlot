@@ -629,3 +629,11 @@ path = "scenario_122_hungry_men_are_slow_to_mend.rs"
 [[test]]
 name = "scenario_120_real_oilers"
 path = "scenario_120_real_oilers.rs"
+
+[[test]]
+name = "scenario_121_a_japanese_oiler_by_estimate"
+path = "scenario_121_a_japanese_oiler_by_estimate.rs"
+
+[[test]]
+name = "estimates_never_evidence"
+path = "estimates_never_evidence.rs"

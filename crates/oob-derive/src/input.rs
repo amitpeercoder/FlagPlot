@@ -43,24 +43,244 @@ struct RawList {
     #[serde(default)]
     troops: Option<RawTroops>,
     #[serde(default)]
-    least_of_sisters: Option<RawLeastOfSisters>,
+    anti_aircraft_unknown_means_none: Vec<String>,
+    #[serde(default)]
+    estimate: Vec<RawEstimate>,
 }
 
-/// The `[least_of_sisters]` table of a list (decision 0206, rule 14).
+/// An `[[estimate]]` entry of a list (decision 0207, rule 4).
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
-struct RawLeastOfSisters {
-    facts: Vec<String>,
+struct RawEstimate {
+    #[serde(default)]
+    ship: Option<String>,
+    #[serde(default)]
+    class: Option<String>,
+    attribute: String,
+    method: String,
+    /// The attribute of her own row an estimate by ratio is worked from.
+    #[serde(default)]
+    from: Option<String>,
+    by: String,
+    date: String,
     reason: String,
+    /// Read only to refuse it: an entry does not name its like classes
+    /// (decision 0207, rule 6).
+    #[serde(default)]
+    like_classes: Option<Vec<String>>,
 }
 
-/// The list's written rule that a ship with no row of her own or of her
-/// class for one of `facts` reads the least of her sisters' rows (decision
-/// 0206, rule 14).
+/// The attributes of the rows that may be estimated: what a ship is, never
+/// what happened (decision 0207, rule 3).
+pub const ESTIMABLE: [&str; 10] = [
+    "displacement_light_lt",
+    "displacement_standard_lt",
+    "displacement_normal_lt",
+    "fuel_capacity_lt",
+    "fuel_capacity_bbl",
+    "endurance_nm",
+    "endurance_speed_kn",
+    "max_speed_kn",
+    "cargo_capacity_lt",
+    "cargo_oil_capacity_bbl",
+];
+
+/// What an estimate is of: a ship, or a class.
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub enum Subject {
+    Ship(String),
+    Class(String),
+}
+
+impl Subject {
+    pub fn key(&self) -> &str {
+        match self {
+            Subject::Ship(key) | Subject::Class(key) => key,
+        }
+    }
+
+    pub fn words(&self) -> String {
+        match self {
+            Subject::Ship(key) => format!("ship {key}"),
+            Subject::Class(key) => format!("class {key}"),
+        }
+    }
+}
+
+/// The two methods of decision 0207, rule 5.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum Method {
+    /// Her own row of `from`, times the mean over every like class of the
+    /// ratio of the attribute to `from`.
+    Ratio { from: String },
+    /// The least of the rows of the ships of her own class.
+    Sisters,
+}
+
+/// An `[[estimate]]` entry, checked (decision 0207, rule 4).
 #[derive(Clone, Debug)]
-pub struct LeastOfSisters {
-    pub facts: BTreeSet<String>,
+pub struct Estimate {
+    pub subject: Subject,
+    pub attribute: String,
+    pub method: Method,
+    pub by: String,
+    pub date: String,
     pub reason: String,
+    /// Like classes the entry names, which it may not (rule 6): kept so
+    /// that the problem can say which of them rest on an estimate (rule 8).
+    pub named_like: Vec<String>,
+}
+
+/// The estimates of another list, for the check across the lists (decision
+/// 0207, rule 8): each entry's subject and attribute, read from the list's
+/// text without checking the rest of it. A text that is not TOML, or has no
+/// `estimate` array, gives none.
+pub fn estimates_of_text(text: &str) -> Vec<(Subject, String)> {
+    let Ok(value) = text.parse::<toml::Table>() else {
+        return Vec::new();
+    };
+    let Some(toml::Value::Array(entries)) = value.get("estimate") else {
+        return Vec::new();
+    };
+    entries
+        .iter()
+        .filter_map(|entry| {
+            let entry = entry.as_table()?;
+            let attribute = entry.get("attribute")?.as_str()?.to_string();
+            let subject = match (
+                entry.get("ship").and_then(toml::Value::as_str),
+                entry.get("class").and_then(toml::Value::as_str),
+            ) {
+                (Some(ship), None) => Subject::Ship(ship.to_string()),
+                (None, Some(class)) => Subject::Class(class.to_string()),
+                _ => return None,
+            };
+            Some((subject, attribute))
+        })
+        .collect()
+}
+
+fn parse_estimates(
+    raw: &[RawEstimate],
+    ships: &[String],
+    problems: &mut Vec<Problem>,
+) -> Vec<Estimate> {
+    let mut estimates: Vec<Estimate> = Vec::new();
+    for entry in raw {
+        let field = "estimate";
+        let subject = match (&entry.ship, &entry.class) {
+            (Some(ship), None) => {
+                if !ships.contains(ship) {
+                    problems.push(list_problem(
+                        field,
+                        format!("ship `{ship}` is not in ships"),
+                    ));
+                    continue;
+                }
+                Subject::Ship(ship.clone())
+            }
+            (None, Some(class)) => Subject::Class(class.clone()),
+            _ => {
+                problems.push(list_problem(
+                    field,
+                    format!(
+                        "`{}`: an entry names one ship or one class (decision 0207, rule 4)",
+                        entry.attribute
+                    ),
+                ));
+                continue;
+            }
+        };
+        let who = format!("{} {}", subject.words(), entry.attribute);
+        let mut ok = true;
+        if !ESTIMABLE.contains(&entry.attribute.as_str()) {
+            problems.push(list_problem(
+                field,
+                format!(
+                    "{who}: `{}` may not be estimated: an estimate is for what a ship is, a displacement, her own fuel, her range, her speed or the weight of cargo she can carry, never for what happened or what was aboard (decision 0207, rule 3)",
+                    entry.attribute
+                ),
+            ));
+            ok = false;
+        }
+        let method = match (entry.method.as_str(), &entry.from) {
+            ("ratio", Some(from)) if !from.trim().is_empty() && *from != entry.attribute => {
+                Some(Method::Ratio { from: from.clone() })
+            }
+            ("ratio", _) => {
+                problems.push(list_problem(
+                    field,
+                    format!("{who}: an estimate by ratio names `from`, the attribute of her own row it is worked from, other than the one estimated (decision 0207, rule 5)"),
+                ));
+                None
+            }
+            ("sisters", None) if matches!(subject, Subject::Ship(_)) => Some(Method::Sisters),
+            ("sisters", None) => {
+                problems.push(list_problem(
+                    field,
+                    format!("{who}: an estimate as her sisters is for a ship, not a class (decision 0207, rule 5)"),
+                ));
+                None
+            }
+            ("sisters", Some(_)) => {
+                problems.push(list_problem(
+                    field,
+                    format!(
+                        "{who}: an estimate as her sisters names no `from` (decision 0207, rule 5)"
+                    ),
+                ));
+                None
+            }
+            (other, _) => {
+                problems.push(list_problem(
+                    field,
+                    format!("{who}: method `{other}` is not one of the two, `ratio` and `sisters`; a new one is a change to decision 0207 (rule 5)"),
+                ));
+                None
+            }
+        };
+        if entry.by.trim().is_empty() {
+            problems.push(list_problem(
+                field,
+                format!("{who}: `by` must not be empty"),
+            ));
+            ok = false;
+        }
+        if Day::parse_full(&entry.date).is_none() {
+            problems.push(list_problem(
+                field,
+                format!("{who}: date `{}` is not a full date", entry.date),
+            ));
+            ok = false;
+        }
+        if entry.reason.trim().is_empty() {
+            problems.push(list_problem(
+                field,
+                format!("{who}: `reason` must not be empty"),
+            ));
+            ok = false;
+        }
+        if estimates
+            .iter()
+            .any(|e| e.subject == subject && e.attribute == entry.attribute)
+        {
+            problems.push(list_problem(field, format!("{who}: estimated twice")));
+            ok = false;
+        }
+        let (Some(method), true) = (method, ok) else {
+            continue;
+        };
+        estimates.push(Estimate {
+            subject,
+            attribute: entry.attribute.clone(),
+            method,
+            by: entry.by.clone(),
+            date: entry.date.clone(),
+            reason: entry.reason.clone(),
+            named_like: entry.like_classes.clone().unwrap_or_default(),
+        });
+    }
+    estimates
 }
 
 /// The `[troops]` table of a list: the voyage whose loads are read and the
@@ -185,9 +405,12 @@ pub struct List {
     pub troop_figures: bool,
     /// The voyage and the runs the troop figure is read from.
     pub troops: TroopsInput,
-    /// The rule of the least of her sisters, when the list writes it
-    /// (decision 0206, rule 14).
-    pub least_of_sisters: Option<LeastOfSisters>,
+    /// Ships whose anti-aircraft guns, where no row gives them, are taken
+    /// as none: an assumption of the scenario, as radar's is (decision 0207,
+    /// first use).
+    pub anti_aircraft_unknown_means_none: BTreeSet<String>,
+    /// The list's estimates (decision 0207, rule 4).
+    pub estimates: Vec<Estimate>,
 }
 
 /// Checks the `[troops]` table against the list.
@@ -582,28 +805,15 @@ pub fn parse_list(text: &str) -> (Option<List>, Vec<Problem>) {
         Some(table) => parse_troops(table, &ships, &mut problems),
         None => TroopsInput::default(),
     };
-    let least_of_sisters = raw.least_of_sisters.as_ref().and_then(|raw| {
-        let mut ok = true;
-        if raw.facts.is_empty() {
-            problems.push(list_problem("least_of_sisters", "`facts` is empty"));
-            ok = false;
-        }
-        if raw.facts.iter().any(|f| f.trim().is_empty()) {
-            problems.push(list_problem("least_of_sisters", "a fact is empty"));
-            ok = false;
-        }
-        if raw.reason.trim().is_empty() {
+    let estimates = parse_estimates(&raw.estimate, &ships, &mut problems);
+    for ship in &raw.anti_aircraft_unknown_means_none {
+        if !ships.contains(ship) {
             problems.push(list_problem(
-                "least_of_sisters",
-                "`reason` must not be empty",
+                "anti_aircraft_unknown_means_none",
+                format!("`{ship}` is not in ships"),
             ));
-            ok = false;
         }
-        ok.then(|| LeastOfSisters {
-            facts: raw.facts.iter().cloned().collect(),
-            reason: raw.reason.clone(),
-        })
-    });
+    }
     let Some(date) = date else {
         return (None, problems);
     };
@@ -629,7 +839,11 @@ pub fn parse_list(text: &str) -> (Option<List>, Vec<Problem>) {
         experience,
         troop_figures: raw.troop_figures,
         troops,
-        least_of_sisters,
+        anti_aircraft_unknown_means_none: raw
+            .anti_aircraft_unknown_means_none
+            .into_iter()
+            .collect(),
+        estimates,
     };
     (Some(list), problems)
 }

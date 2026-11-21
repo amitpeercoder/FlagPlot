@@ -22,6 +22,7 @@ pub enum Kind {
     Exception,
     UnknownType,
     Experience,
+    Estimate,
 }
 
 impl Kind {
@@ -44,6 +45,7 @@ impl Kind {
             Kind::Exception => "exception",
             Kind::UnknownType => "unknown-type",
             Kind::Experience => "experience",
+            Kind::Estimate => "estimate",
         }
     }
 }

@@ -37,8 +37,8 @@ use crate::quantity::Quantity;
 use crate::reference::{
     load_air_combat_figures, load_air_supply_figures, load_air_upkeep_figures, load_aircraft_types,
     load_class_sides, load_fatigue_figures, load_ground_figures, load_port_sizes,
-    load_report_figures, load_search_figures, load_ship_classes, load_surface_combat_figures,
-    load_trial_figures, parse_kind,
+    load_report_figures, load_search_figures, load_ship_classes_marked,
+    load_surface_combat_figures, load_trial_figures, parse_kind,
 };
 
 /// One file name or a list of them (decision 0043).
@@ -1661,6 +1661,10 @@ pub struct Scenario {
     /// Every file the scenario names, as the paths it reads them from, in a
     /// fixed order (decision 0043, 9).
     data_files: Vec<PathBuf>,
+    /// The figures of each class that rest on an estimate, from the class
+    /// files' `estimated` column (decision 0207, rule 10): never hashed and
+    /// read by no rule.
+    estimated_figures: crate::reference::EstimatedFigures,
     /// The enemy forces each side believed in (decision 0173, 5): the
     /// scenario's, not the world's, never hashed and read by no rule.
     believed_forces: Vec<BelievedForce>,
@@ -1809,9 +1813,12 @@ impl Scenario {
         }
         let mut ref_data = RefData::default();
         let mut class_owner: BTreeMap<ShipClassId, PathBuf> = BTreeMap::new();
+        let mut estimated_figures = crate::reference::EstimatedFigures::new();
         for name in &class_files {
             let file_path = reference(name)?;
-            for (id, class) in load_ship_classes(&file_path)?.ship_classes {
+            let (classes, marked) = load_ship_classes_marked(&file_path)?;
+            estimated_figures.extend(marked);
+            for (id, class) in classes.ship_classes {
                 if let Some(first) = class_owner.insert(id, file_path.clone()) {
                     return Err(fail(format!(
                         "ship class {id} is in both {} and {}",
@@ -3939,6 +3946,7 @@ impl Scenario {
             radio_silent,
             commanders,
             data_files,
+            estimated_figures,
             believed_forces,
             believed_intents,
             believed_men: believed_men_list,
@@ -3990,6 +3998,12 @@ impl Scenario {
 
     /// The files the scenario names (map, ship classes, port sizes, aircraft
     /// types, then the figures files it has), as the paths they are read from.
+    /// The classes the scenario loads with figures that rest on an estimate,
+    /// each with the figures (decision 0207, rule 10).
+    pub fn estimated_figures(&self) -> &crate::reference::EstimatedFigures {
+        &self.estimated_figures
+    }
+
     pub fn data_files(&self) -> &[PathBuf] {
         &self.data_files
     }
@@ -4088,6 +4102,7 @@ impl Scenario {
             radio_silent: self.radio_silent.clone(),
             commanders: self.commanders.clone(),
             data_files: self.data_files.clone(),
+            estimated_figures: self.estimated_figures.clone(),
             believed_forces: self.believed_forces.clone(),
             believed_intents: self.believed_intents.clone(),
             believed_men: self.believed_men.clone(),

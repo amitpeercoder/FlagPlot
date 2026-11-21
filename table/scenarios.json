@@ -36,7 +36,7 @@
       "start": "1942-05-06",
       "lines": [
         "Two American carriers and a cruiser group meet two Japanese fleet carriers and a light carrier in the Coral Sea, while a Japanese convoy makes for Port Moresby with the men to take it.",
-        "The Allied side has an oiler, the Neosho, with its carriers. The Japanese side has none."
+        "Each side has an oiler with its carriers: the Neosho for the Allied side, the Toho Maru for the Japanese."
       ],
       "sides": {
         "allied": "Stop the landing at Port Moresby and sink the Japanese carriers.",
@@ -50,13 +50,13 @@
         "japanese": "table/directives/coral_sea_japanese.json"
       },
       "pairings": [
-        {"allied": "person", "japanese": "engine", "engine": "staff", "file": "data/scenarios/table-hunger/02b_coral_sea_oilers.toml"},
-        {"allied": "engine", "japanese": "person", "engine": "staff", "file": "data/scenarios/table-hunger/02c_coral_sea_oilers.toml"},
-        {"allied": "person", "japanese": "agent", "file": "data/scenarios/table-hunger/02d_coral_sea_oilers.toml"},
-        {"allied": "agent", "japanese": "person", "file": "data/scenarios/table-hunger/02d_coral_sea_oilers.toml"},
-        {"allied": "agent", "japanese": "engine", "engine": "staff", "file": "data/scenarios/table-hunger/02b_coral_sea_oilers.toml"},
-        {"allied": "engine", "japanese": "agent", "engine": "staff", "file": "data/scenarios/table-hunger/02c_coral_sea_oilers.toml"},
-        {"allied": "agent", "japanese": "agent", "file": "data/scenarios/table-hunger/02d_coral_sea_oilers.toml"}
+        {"allied": "person", "japanese": "engine", "engine": "staff", "file": "data/scenarios/table-hunger/03b_coral_sea_both_oilers.toml"},
+        {"allied": "engine", "japanese": "person", "engine": "staff", "file": "data/scenarios/table-hunger/03c_coral_sea_both_oilers.toml"},
+        {"allied": "person", "japanese": "agent", "file": "data/scenarios/table-hunger/03d_coral_sea_both_oilers.toml"},
+        {"allied": "agent", "japanese": "person", "file": "data/scenarios/table-hunger/03d_coral_sea_both_oilers.toml"},
+        {"allied": "agent", "japanese": "engine", "engine": "staff", "file": "data/scenarios/table-hunger/03b_coral_sea_both_oilers.toml"},
+        {"allied": "engine", "japanese": "agent", "engine": "staff", "file": "data/scenarios/table-hunger/03c_coral_sea_both_oilers.toml"},
+        {"allied": "agent", "japanese": "agent", "file": "data/scenarios/table-hunger/03d_coral_sea_both_oilers.toml"}
       ]
     
     },
