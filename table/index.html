@@ -1026,16 +1026,38 @@ body.watched .gives { display: none !important; }
   function orderWords(t) { return String(t).replace(/\bcontrols island\b/g, 'seizes and holds island').replace(/\b([Cc])ontrol island\b/g, function (x, c) { return (c === 'C' ? 'Seize' : 'seize') + ' and hold island'; }).replace(/\btakes the place at\b/g, 'captures').replace(/\b([Tt])ake the place at\b/g, function (x, c) { return c === 'T' ? 'Capture' : 'capture'; }).replace(/\bintents\b/g, 'orders').replace(/\bIntents\b/g, 'Orders').replace(/\bintent\b/g, 'order').replace(/\bIntent\b/g, 'Order'); }
   function plainWords(t) {
     t = orderWords(String(t).replace(/(intent|plan):(\d+)/gi, '$1 $2')).replace(/island \d+ \(([^)]+)\)/g, '$1').replace(/Placeholder /g, '');
+    t = t.replace(/\b0 pulse\(s\) old\b/g, 'just reported').replace(/\b(\d+) pulse\(s\)/g, function (m, n) { return n + (n === '1' ? ' pulse' : ' pulses'); })
+      .replace(/\bat a share of 0\.25\b/g, 'with a quarter of its aircraft').replace(/\bat a share of 0\.5\b/g, 'with half its aircraft').replace(/\bat a share of 0\.75\b/g, 'with three quarters of its aircraft')
+      .replace(/\b(\d+)\.(\d+) (miles|nm)\b/g, function (m, w, f, u) { return Math.round(parseFloat(w + '.' + f)) + ' ' + u; })
+      .replace(/\bfatigue (\d+)\.(\d+)\b/g, function (m, w, f) { return 'fatigue ' + Math.round(parseFloat(w + '.' + f)); });
     if (showHexes) return t;
     return t.replace(/(\d+) hex(?:es)?\b(?! round)/g, function (m, n) { return (+n * hexMiles()) + ' miles'; })
       .replace(/(?:hex )?\((-?\d+), ?(-?\d+)\)/g, function (m, q, r) { var pl = { q: +q, r: +r }; if (!hexAt[q + ',' + r]) return m; return M.hexNames[q + ',' + r] || whereIs(pl); });
   }
   function nameOf(h, given) { var n = M.names[h] || given; if (n) n = String(n).replace(/\((-?\d+),\s*(-?\d+)\)/g, function (x, q, r) { return M.hexNames[q + ',' + r] || whereIs({ q: parseInt(q, 10), r: parseInt(r, 10) }); }); return n ? n.replace(/^Placeholder /, '') : /^contact:/.test(h) ? 'contact ' + num(h) : h.replace('_', ' ').replace(':', ' '); }
   function refTo(h, given) { var b = el('button', 'ref' + (/^contact:/.test(h) || M.enemyBases.some(function (x) { return x.base.handle === h; }) ? ' enemy' : ''), nameOf(h, given)); b.type = 'button'; b.addEventListener('click', function (e) { e.stopPropagation(); see(h); }); return b; }
+  // What the staff names in plain words is linked too: a force or an air group
+  // by its name, a contact by its number, and a hex, which turns the table to it.
+  function hexRef(q, r) { var pl = { q: q, r: r }, b = el('button', 'ref', plainWords('(' + q + ',' + r + ')')); b.type = 'button'; b.title = showHexes ? whereIs(pl) : 'hex ' + q + ', ' + r; b.addEventListener('click', function (e) { e.stopPropagation(); see('hex:' + q + ',' + r); }); return b; }
+  function plainLinks(e, text) {
+    var names = {}, list = [];
+    Object.keys(M.names || {}).forEach(function (h) { var n = M.names[h]; if (/^(task_force|air_group):/.test(h) && n && n.length > 2 && !names[n]) { names[n] = h; list.push(n); } });
+    list.sort(function (a, b) { return b.length - a.length; });
+    var re = new RegExp('\\((-?\\d+), ?(-?\\d+)\\)|\\bcontact (\\d+)\\b' + (list.length ? '|(?<![\\w-])(' + list.map(function (n) { return n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }).join('|') + ')(?![\\w-])' : ''), 'g'), last = 0, m;
+    while ((m = re.exec(text))) {
+      var node = null;
+      if (m[1] != null) { if (hexAt[m[1] + ',' + m[2]]) node = hexRef(+m[1], +m[2]); }
+      else if (m[3] != null) { if (M.contacts.some(function (c) { return c.contact.handle === 'contact:' + m[3]; })) node = refTo('contact:' + m[3]); }
+      else if (m[4] != null) node = refTo(names[m[4]]);
+      if (!node) continue;
+      if (m.index > last) e.appendChild(document.createTextNode(plainWords(text.slice(last, m.index)))); e.appendChild(node); last = re.lastIndex;
+    }
+    if (last < text.length) e.appendChild(document.createTextNode(plainWords(text.slice(last))));
+  }
   function rich(tag, cls, text) {
     var e = el(tag, cls), last = 0, m; text = String(text == null ? '' : text); MENTION.lastIndex = 0;
-    while ((m = MENTION.exec(text))) { if (m.index > last) e.appendChild(document.createTextNode(plainWords(text.slice(last, m.index)))); e.appendChild(refTo(m[1], m[2])); last = MENTION.lastIndex; }
-    if (last < text.length) e.appendChild(document.createTextNode(plainWords(text.slice(last)))); return e;
+    while ((m = MENTION.exec(text))) { if (m.index > last) plainLinks(e, text.slice(last, m.index)); e.appendChild(refTo(m[1], m[2])); last = MENTION.lastIndex; }
+    if (last < text.length) plainLinks(e, text.slice(last)); return e;
   }
   function turnTo(pl) { var v = pl && placeOf(pl); if (!v) return; goal.x = v.x; goal.z = v.z; if (goal.zoom < 0.55) goal.zoom = 0.55; clampGoal(); }
   // The order to an air group, on its own card: its mission as a switch with
@@ -1113,6 +1135,7 @@ body.watched .gives { display: none !important; }
   function seeIt(h) {
     var kind = h.split(':')[0], n = num(h), found; if (!$('sheet').hidden) { forget(); trailAt = stamp(); shown = function () { $('card').hidden = true; $('sheet').hidden = false; }; } $('sheet').hidden = true;
     try { history.replaceState(null, '', '#see=' + h); } catch (e) {}
+    if (kind === 'hex') { var qr = h.slice(4).split(','), hpl = { q: +qr[0], r: +qr[1] }; turnTo(hpl); var hc = openCard((M.hexNames[hpl.q + ',' + hpl.r] || whereIs(hpl)).toUpperCase(), null); hc.appendChild(el('div', '', 'Hex ' + hpl.q + ', ' + hpl.r + '.')); return; }
     if (kind === 'task_force') { found = M.forces.filter(function (f) { return f.task_force.handle === h; })[0]; if (found) { turnTo(found.place); return cardForce({ force: found }); } }
     if (kind === 'base') { found = M.bases.filter(function (b) { return b.base.handle === h; })[0]; if (found) { turnTo(found.place); return cardBase({ base: found }); } found = M.enemyBases.filter(function (b) { return b.base.handle === h; })[0]; if (found) { turnTo(found.place); return cardPlace({ place: found.place, base: found }); } }
     if (kind === 'contact') { found = M.contacts.filter(function (c) { return c.contact.handle === h; })[0]; if (found) { turnTo(found.place); return cardContact({ contact: found }); } var gone = openCard('CONTACT ' + n, 'ENEMY'); gone.appendChild(el('div', '', 'This contact is no longer held: its report grew too old, or it was looked for and not found.')); return; }
