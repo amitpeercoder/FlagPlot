@@ -1886,11 +1886,35 @@ body.watched .gives { display: none !important; }
   }
   function textOf(j, start) { return (j.text || []).filter(function (t) { return t.indexOf(start) === 0; }); }
   function underneath(doc, title, lines) { if (!lines.length) return; var d = document.createElement('details'), sm = document.createElement('summary'); sm.textContent = title; d.appendChild(sm); lines.forEach(function (t) { d.appendChild(rich('div', 'work', dryWords(t))); }); doc.appendChild(d); }
+  // What a dry run assumed of the enemy, in the table's words. A thing assumed
+  // in every run says so once and lists no runs; the two assumptions that the
+  // enemy knows nothing and plans nothing are told as one line.
+  function assumedLines(list, of) {
+    var out = [], blind = null, idle = null;
+    function runs(x) { var n = (x.made_in || []).length; return !of || n >= of ? '' : ', in ' + n + ' of ' + of + ' runs'; }
+    function tons(v) { var n = Number(v); return isFinite(n) ? n.toLocaleString('en-US') : String(v); }
+    list.forEach(function (x) {
+      var t = x.thing || {};
+      if (t.kind === 'no_belief') { blind = x; return; }
+      if (t.kind === 'no_intent') { idle = x; return; }
+      if (t.kind === 'enemy_base') {
+        var name = (t.base && t.base.name) || (t.place && t.place.name) || 'his base';
+        out.push('His base at ' + name + ', taken to hold ' + tons(t.supply_t) + ' t of supply and ' + tons(t.fuel_t) + ' t of fuel' + runs(x) + '.'); return;
+      }
+      out.push(String(x.text || '').replace(/, in (\d+) of \1 runs? \(runs? [^)]*\)/, '').replace(/ \(runs? [^)]*\)/, '').replace(/^./, function (c) { return c.toUpperCase(); }) + '.');
+    });
+    if (blind && idle && !runs(blind) && !runs(idle)) out.push('Played against an enemy who knows nothing of your forces and only holds what he has.');
+    else {
+      if (blind) out.push('The enemy played as knowing nothing of your forces' + runs(blind) + '.');
+      if (idle) out.push('The enemy played with no plan of his own, holding what he has' + runs(idle) + '.');
+    }
+    return out;
+  }
   function readEstimate(j, root, draft) {
     var doc = $('sheet-doc'), a = j.asked || {}; doc.textContent = '';
     var head = el('div', 'head'), box = el('div', 'est'), dates = j.kind === 'window' ? j.dates || [] : null;
     var tried = (textOf(j, 'Tried')[0] || '').replace(/^Tried[^:]*: /, '').split(', as it would go')[0].split(', the whole order')[0];
-    [['Dry run of', dryWords(tried).replace(/^preview \d+, /, '').replace(/^order \d+, /, '').replace(/^./, function (c) { return c.toUpperCase(); })], ['From', 'the morning of day ' + j.first_day], ['Played', a.worlds + ' runs of ' + a.days + ' days each' + (dates && dates.length > 1 ? ', at ' + dates.length + ' dates' : '')], ['Estimate', String(j.estimate)]].forEach(function (r) { head.appendChild(el('span', '', r[0])); head.appendChild(el('span', '', r[1])); });
+    [['Dry run of', dryWords(tried).replace(/^preview \d+, /, '').replace(/^order \d+, /, '').replace(/^./, function (c) { return c.toUpperCase(); })], ['From', 'the morning of day ' + j.first_day], ['Played', a.worlds + ' runs of ' + a.days + ' days each' + (dates && dates.length > 1 ? ', at ' + dates.length + ' dates' : '')], ['Number', String(j.estimate)]].forEach(function (r) { head.appendChild(el('span', '', r[0])); head.appendChild(el('span', '', r[1])); });
     doc.appendChild(head); doc.appendChild(box);
     if (!dates) {
       estBody(box, j, j.last_day);
@@ -1904,8 +1928,8 @@ body.watched .gives { display: none !important; }
         if (b.of === 'withdrawn') box.appendChild(el('div', 'work', 'What was already ordered stands: the withdrawal is the dry run\'s, not yours.'));
       }
       (j.other_plans || []).length ? underneath(box, 'YOUR OTHER ORDERS', textOf(j, 'What its other plans').concat(textOf(j, 'Your other'))) : null;
-      underneath(doc, 'WHAT IT NEEDS AND HAS', textOf(j, 'What it needs'));
-      underneath(doc, 'WHAT WAS ASSUMED OF THE ENEMY', (j.assumed || []).map(function (x) { return x.text; }));
+      underneath(doc, 'WHAT IT NEEDS AND HAS', textOf(j, 'What it needs').map(function (t) { return /take|land/i.test(tried) ? t : t.replace('; no day ashore can yet be given', ''); }));
+      underneath(doc, 'WHAT WAS ASSUMED OF THE ENEMY', assumedLines(j.assumed || [], a.worlds));
     } else {
       var t = el('table'), add = function (label, f) { var r = el('tr'); r.appendChild(el('th', '', label)); var any = false; dates.forEach(function (d, n) { var v = f(d, n); if (v) any = true; var td = rich('td', '', v || '–'); r.appendChild(td); }); if (any) t.appendChild(r); };
       add('Order given on', function (d, n) { return 'day ' + d.day + (n ? '' : ', the coming morning'); });
