@@ -205,6 +205,8 @@ fn walk_held_ids(
         entering,
         // A supply line holds no order and no event.
         supply_lines: _,
+        // Nor does a stream of men or a unit's strength.
+        men_replacement: _,
     } = truth;
     for force in task_forces.values_mut() {
         walk_task_force(force, visit);

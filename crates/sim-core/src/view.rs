@@ -51,8 +51,8 @@ use crate::refdata::{
 };
 use crate::side_events::{self, Owners, SideEvent};
 use crate::state::{
-    AirGroup, Arrival, Base, Formation, LandUnit, Replacement, Ship, Side, SupplyLine, TaskForce,
-    TruthState,
+    AirGroup, Arrival, Base, Formation, LandUnit, MenStream, Replacement, Ship, Side, Strength,
+    SupplyLine, TaskForce, TruthState,
 };
 use crate::upkeep::Sortie;
 
@@ -580,6 +580,39 @@ impl<'a> SideView<'a> {
             .supply_lines
             .iter()
             .filter(move |line| view.owns_line(line))
+    }
+
+    /// The side's own streams of replacement men (decision 0197), known
+    /// exactly, in the order the state keeps them: those whose side is the
+    /// side's, whoever holds the base now; from a seat at a base, that
+    /// base's only. The enemy's are not visible.
+    pub fn men_streams(&self) -> impl Iterator<Item = &'a MenStream> + '_ {
+        let view = *self;
+        self.truth
+            .men_replacement
+            .streams
+            .iter()
+            .filter(move |stream| view.owns_men_stream(stream))
+    }
+
+    /// What the rule of replacement men keeps of one of the side's own land
+    /// units (decision 0197): its establishment, its count of men joined and
+    /// its last day fought. `None` for a unit that is not the side's, or in a
+    /// scenario with no stream and no establishment. A unit held apart until
+    /// its day is the side's.
+    pub fn strength(&self, unit: LandUnitId) -> Option<&'a Strength> {
+        let own = self
+            .truth
+            .land_units
+            .get(&unit)
+            .is_some_and(|found| self.owns_land_unit(found))
+            || self
+                .entering()
+                .any(|entry| entry.land_units.contains_key(&unit));
+        if !own {
+            return None;
+        }
+        self.truth.men_replacement.units.get(&unit)
     }
 
     /// The arrivals due to the side's own air groups (decision 0041), known

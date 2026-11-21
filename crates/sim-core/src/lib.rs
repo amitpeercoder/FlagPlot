@@ -32,6 +32,9 @@ pub mod pictures;
 pub mod rearm;
 pub mod refdata;
 pub mod repair;
+mod replacement_men;
+#[cfg(test)]
+mod replacement_men_tests;
 pub mod rng;
 pub mod side_events;
 pub mod state;

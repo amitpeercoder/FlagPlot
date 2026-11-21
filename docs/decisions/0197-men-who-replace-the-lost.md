@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 20, 2026, on the designer's word
 
 Summary: A land unit's men only ever fall. Nothing in play adds a man. Over 39 days that is bearable; over a campaign of months every unit wastes away. This lets a scenario give a base a stream of replacement men, so many a day, who join the units ashore there that are under strength and not in a fight, and who bring the unit's experience down toward a recruit's.
 
-Standing: Planned on Nov 20, 2026 and amended on review; not yet built.
+Standing: Planned on Nov 20, 2026 and amended on review; built on Nov 21, 2026 (scenario 113) and confirmed by the architect's rulings below.
 
 ## Why
 
@@ -73,3 +73,56 @@ A reviewer read the plan against the rules of a land unit and the code. He found
 ### The question for the designer, restated
 
 Replacements above the standard level cost a veteran unit a level once they are half its strength. The architect proposes it. The simpler rule leaves experience alone, as decision 0097 had it.
+
+## As built
+
+Built on Nov 21, 2026, on the branch `men-who-replace-the-lost`, on decision 0196's build, to the plan as amended on review. No figure changed. Every scenario under `data/scenarios` (164 files, the frozen copies and `tmp-inside` apart) was played before and after with `sim-cli run --events` and `sim-cli hash`: no event and no daily hash moved. No existing scenario is given a stream or an establishment.
+
+### What was built
+
+- **The state** (`crates/sim-core/src/state.rs`). `TruthState::men_replacement`, a `MenReplacement` of the `streams` (each a `MenStream`: side, base, `men_per_day`, `first_day`, `last_day`, kept in one order) and `units`, a map from each land unit to its `Strength` (`establishment`, `joined`, `last_fought`). It is filled only where the scenario has a stream or names an establishment, and then for every unit, those held apart until their day among them. It is hashed last, after the supply lines, and only where it is not empty, each field named in `hash::name_every_field`; the state's layout (`flagplot-state-v51`) is not raised and no golden file was remade, since a game without the rule hashes as before.
+- **The night step** (`crates/sim-core/src/replacement_men.rs`, `resolve.rs`). `MenReplacement`, its own step right after the supply lines and before aircraft upkeep and the men's supply, with its moment for a watcher of the day. It draws no random number.
+- **A fight, noted** (`ground_combat/fight.rs`): every unit in a day's fight (the units that share its losses, on either side) has its last day fought set. **Division** (`cargo.rs`): the new unit's establishment is its men, the parent's is lowered by as many, the parent keeps its count and day fought. **Experience raised** by training or fighting begins the count again (`ground_combat/activity.rs`).
+- **The event** (`events.rs`, `side_events.rs`). `MenJoined { unit, side, base, men, men_after, experience_before, experience_after, joined }`, one for each unit that takes men, with no cause and a breakdown, seen whole by the unit's side and by nobody else.
+- **The figures** (`refdata.rs`, `sim-data/src/reference.rs`). `replacement_experience` (2) and `replacement_share` (0.5), optional keys of the ground file, placeholders; neither file in the repository names them.
+- **The invariants**: `MenStreamUnsound` and `StrengthUnsound` (a strength kept for a unit neither in the state nor held apart, or a unit with more men ashore and aboard than its establishment).
+- **The view and the halves** (`view.rs`, `view/seat_view.rs`, `world_picture/half.rs`). `SideView::men_streams` (the side's own; from a seat at a base, that base's) and `SideView::strength` (its own units', held ones among them). A side's half holds its own streams and its own units' strengths; the halves join them.
+- **The loader** (`crates/sim-data/src/scenario.rs`). `[[men_replacement]]` with `base`, `men`, `first_day`, `last_day` and `side`, and a land unit's `establishment`. Refused: an unknown base, a stream of no men, a first day below 1, a first or last day past the game's last, a last day before the first, and an establishment below the unit's men.
+- **The agent** (interface version 38): the briefing's `arrivals.men_replacements` and `land_units.men_joined_yesterday`, a land unit's `establishment` where one is kept, and their lines in the text briefing. The schemas are updated.
+- **The umpire's readers** (`sim-cli`: the export's `men_joined` and the batch record) and **the trial** (`sim-trial/src/enemy.rs`: the enemy's made half holds no stream and no strength).
+- **Scenario 113** (`data/scenarios/men-who-replace-the-lost/113_men_who_replace_the_lost.toml`) and its tests (`tests/scenario_113_men_who_replace_the_lost.rs`, 22 pass; and `crates/sim-core/src/replacement_men_tests.rs`, `crates/sim-agent/tests/men_replacements.rs`).
+- **Versions.** The rules label stays 25, the state's layout v51 and the saved game's version 23. The doctrine version stays `supply-49`: the staff is not changed. The agent interface is 38 (from 37); the recorded games' transcripts were remade for that label alone and are otherwise byte for byte what they were; no save changed.
+
+### Readings taken
+
+a. **Where the state is kept.** The establishment, the count and the day fought are kept in a table of their own in the state, not as fields of a land unit, so that a game without the rule holds and hashes nothing of it and no unit's hash moves. It is kept for every unit where the scenario has a stream or names any establishment, and for none otherwise.
+b. **"In a fight"** is read as the units of the side in a day's fight in their hex, those that share the fight's losses (correction 1 of decision 0109), attacking or defending; a unit falling back that is out of the fight is not in it. A working unit in the hex is among them.
+c. **"On a march or falling back takes none"** is read as a unit with any march standing, by order or by falling back.
+d. **The count on a fall begins from nothing**: men over the share that night are not carried over (statement 3a's count of 100 on the night after the fall reads so). The event's `joined` is the count after the night, 0 on the night of a fall.
+e. **A unit at or below the replacements' level** keeps counting the men who join it, though they never cost it a level; a rise by training or fighting begins the count again.
+f. **The share is compared exactly**: the men joined against the establishment times the share, in fixed point, with no cut.
+g. **A stream's first day** is 1 where the file gives none, as a supply line's is; nothing is given on day 1 whatever the stream says, as aircraft replacements begin on day 2.
+h. **The step is in every night's order,** so a watcher of the day sees one more moment each night, even in a game with no stream. No output and no hash moved.
+i. **The staff is not changed.** The men who join raise a base's daily charge, and the staff's days of supply read the men there today, so its forecast at such a base is low by the stream's men for the days ahead. That is a gap of the staff's, as a supply line's fuel is in decision 0196; the doctrine version is not raised.
+j. **Statements 6 (a unit destroyed) and 6a (men aboard)** are proved in sim-core, in a world built by hand, since no scenario file can give a unit no men, or men both ashore and aboard at once. The scenario test of statement 5a finds the first seed on which day 1's shells kill men of unit 1; statement 9 is checked with all three units (1,250 men fed) and with unit 1 alone (500 men, 2.5 t).
+k. **The briefing** lists the side's streams whose last day is not before today, a line for each unit that took men yesterday, and a unit's establishment only where the rule is kept, so no existing answer changes but for the version.
+
+No statement of the hand calculation failed to hold; none is ignored.
+
+### Not done
+
+Replacements that arrive in ships and can be sunk, new units by stream, and units rebuilt from nothing are not built. No figure is researched: every stream is a placeholder, and no scenario of history is given one.
+
+## The architect's rulings
+
+Made on Nov 21, 2026 on reading the build: the night's step, what it reads of a unit and a base, the event and who sees it, the hash and the loader. Every statement of the hand calculation holds.
+
+1. **The readings of "As built", a to k, are confirmed.** Three are worth saying again.
+   - **The count restarts at nothing when experience falls,** and men past the half on that night are not carried into the next count. A unit that takes a great draft in one night falls one level, not two.
+   - **A unit at the lowest level the rule reaches keeps its count,** and a level gained by training or fighting restarts it: the new men have been made into soldiers.
+   - **"In a fight" is every unit that shares the day's losses,** working units among them, on both sides.
+2. **The event names no cause,** as stock from off the map names none: a stream is a fact of the scenario and no order began it. The breakdown carries the figures it was worked from.
+3. **A stream gives only while its base is its side's,** and only to a unit standing at the base, not attacking and not on the march, that did not fight the day before. Men do not come to a base that has changed hands and nothing says so; the side that lost it knows why.
+4. **The staff does not yet count the men a stream will bring** when it forecasts a base's days of supply, so its forecast runs a little long. It is a gap of the staff's, beside the fuel of decision 0196, and is taken up with the long scenario that first uses streams.
+5. **No scenario of record is given a stream.** The figures for one (the long Guadalcanal scenario) are settled from rows when that scenario is planned.
+6. **The versions are as built:** agent interface 38; the rules label, the state's layout and the doctrine unchanged.

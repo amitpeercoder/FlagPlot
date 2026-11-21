@@ -26,9 +26,9 @@ use crate::refdata::ShipKind;
 use crate::state::Side;
 use crate::state::{
     AirGroup, AirGroupLocation, Arrival, Base, CargoOrder, Charge, ClaimTally, DayWork, Formation,
-    Halt, HaltWork, HitsOnMen, LandUnit, March, Preparation, Replacement, Route, RulesOfEngagement,
-    SearchArc, Ship, ShipLocation, ShipSystem, ShipSystems, Skills, SupplyLine, TaskForce, Troops,
-    TruthState, YardTrip,
+    Halt, HaltWork, HitsOnMen, LandUnit, March, MenReplacement, MenStream, Preparation,
+    Replacement, Route, RulesOfEngagement, SearchArc, Ship, ShipLocation, ShipSystem, ShipSystems,
+    Skills, Strength, SupplyLine, TaskForce, Troops, TruthState, YardTrip,
 };
 use crate::world::World;
 
@@ -268,7 +268,10 @@ const fn speed_code(speed: SpeedSetting) -> u8 {
 /// held, so a game with nothing held apart writes nothing new and its hash is
 /// what it was, as the domain's is (decision 0170, 12). The supply lines
 /// (decision 0196, 7) are hashed after it in the same way, only where a
-/// scenario gives one, and do not raise it either.
+/// scenario gives one, and do not raise it either; and so are the streams of
+/// replacement men and each land unit's strength (decision 0197, 21), after
+/// the supply lines, only where a scenario gives a stream or an
+/// establishment.
 pub const STATE_VERSION: &[u8] = b"flagplot-state-v51";
 
 /// Names every field of the state, with no `..` in any pattern. It does
@@ -371,7 +374,23 @@ fn name_every_field(world: &World) {
         formations,
         entering,
         supply_lines,
+        men_replacement,
     } = truth;
+    let MenReplacement { streams, units } = men_replacement;
+    if let Some(MenStream {
+        side: _,
+        base: _,
+        men_per_day: _,
+        first_day: _,
+        last_day: _,
+    }) = streams.first()
+    {}
+    if let Some(Strength {
+        establishment: _,
+        joined: _,
+        last_fought: _,
+    }) = units.values().next()
+    {}
     if let Some(SupplyLine {
         side: _,
         base: _,
@@ -2156,6 +2175,31 @@ pub(crate) fn hash_world(world: &World) -> u64 {
             h.i64(line.fuel_t.raw());
             h.u32(line.first_day);
             h.u32(line.last_day);
+        }
+    }
+
+    // Last of all, and only where a scenario gives a stream of men or an
+    // establishment (decision 0197, 21): each stream in the order the state
+    // keeps them, its side, base, men a day and first and last days; then
+    // each unit's strength in unit order, its number, establishment, count
+    // of men joined and last day fought. A game with neither writes nothing
+    // here, and its hash is what it was.
+    if !truth.men_replacement.is_empty() {
+        let replacement = &truth.men_replacement;
+        h.count(replacement.streams.len());
+        for stream in &replacement.streams {
+            h.u8(stream.side.code());
+            h.u32(stream.base.raw());
+            h.u32(stream.men_per_day);
+            h.u32(stream.first_day);
+            h.u32(stream.last_day);
+        }
+        h.count(replacement.units.len());
+        for (unit, strength) in &replacement.units {
+            h.u32(unit.raw());
+            h.u32(strength.establishment);
+            h.u32(strength.joined);
+            h.optional_u32(strength.last_fought);
         }
     }
 

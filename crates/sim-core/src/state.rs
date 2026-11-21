@@ -1470,6 +1470,87 @@ pub struct TruthState {
     /// Empty in a scenario with no `[[supply_line]]`. Added at the end, and
     /// hashed last, only where it is not empty.
     pub supply_lines: Vec<SupplyLine>,
+    /// The streams of replacement men a scenario gives its bases, and each
+    /// land unit's establishment, count of men joined and last day fought
+    /// (decision 0197). Empty in a scenario with no `[[men_replacement]]`
+    /// and no `establishment`. Added at the end, and hashed last, only where
+    /// it is not empty.
+    pub men_replacement: MenReplacement,
+}
+
+/// A stream of replacement men a scenario gives a base (decision 0197,
+/// rules 2 and 3): on each night from `first_day` to `last_day`, both
+/// counted, and from day 2, while the base is `side`'s, `men_per_day` men
+/// join the side's land units ashore in the base's hex that are below their
+/// establishment and not in a fight, in unit order. Men not given that night
+/// are lost. Static: never changed by the rules.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct MenStream {
+    pub side: Side,
+    pub base: BaseId,
+    /// Men a day, above 0.
+    pub men_per_day: u32,
+    /// The first day it gives, at least 1. Nothing is given on day 1.
+    pub first_day: u32,
+    /// The last day it gives, not before `first_day`.
+    pub last_day: u32,
+}
+
+impl MenStream {
+    /// Whether the stream's days hold `day`.
+    pub const fn gives_on(&self, day: u32) -> bool {
+        self.first_day <= day && day <= self.last_day
+    }
+
+    /// The one order the state keeps streams of men in, whatever order they
+    /// are given in: by side, base, first day, last day, then men a day.
+    pub fn order_key(&self) -> (u8, BaseId, u32, u32, u32) {
+        (
+            self.side.code(),
+            self.base,
+            self.first_day,
+            self.last_day,
+            self.men_per_day,
+        )
+    }
+}
+
+/// What the rule of replacement men keeps of a land unit (decision 0197,
+/// rules 1, 12, 15 and 21).
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct Strength {
+    /// The men the unit should have: those it had when the game began,
+    /// ashore and aboard together, or the scenario's `establishment`; for a
+    /// unit made by division the men it was made with, and its parent's
+    /// lowered by as many (rule 18). Replacements never take its men above
+    /// it.
+    pub establishment: u32,
+    /// The men who have joined it since its experience last changed (rule
+    /// 12). Begins again from nothing when it loses a level by this rule or
+    /// gains one by fighting or training.
+    pub joined: u32,
+    /// The last day on which the unit took part in a fight ashore,
+    /// attacking or defending (rule 15). `None` before its first.
+    pub last_fought: Option<u32>,
+}
+
+/// The state of the rule of replacement men (decision 0197). Empty, and so
+/// hashed as nothing, in a scenario with no stream and no establishment.
+#[derive(Clone, PartialEq, Eq, Debug, Default)]
+pub struct MenReplacement {
+    /// The streams, in the order [`MenStream::order_key`] gives.
+    pub streams: Vec<MenStream>,
+    /// Each land unit's strength, those held apart until their day among
+    /// them; a unit made by division is added when it is made.
+    pub units: BTreeMap<LandUnitId, Strength>,
+}
+
+impl MenReplacement {
+    /// Whether the scenario has no stream and no unit's strength: then the
+    /// rule does nothing and nothing of it is hashed.
+    pub fn is_empty(&self) -> bool {
+        self.streams.is_empty() && self.units.is_empty()
+    }
 }
 
 /// A day's hits on the men of one side in one hex (decision 10 of 0106):

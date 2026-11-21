@@ -592,6 +592,9 @@ impl World {
                 causes.to_vec(),
                 None,
             );
+            // The new unit's establishment is its men, and its parent's is
+            // lowered by as many (decision 0197, 18).
+            self.note_division(*unit, new_id, men);
             divided.insert(new_id, event);
         }
 
