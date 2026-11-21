@@ -837,8 +837,12 @@ agreed = "2026-11-13"
 # decision 0029 has it. Where the exceptions below and the preference rules
 # cannot settle a type's range, the type keeps its strike radius as its
 # search radius and the run lists it as not settled. The exceptions below are
-# read only for this; they do not widen any other reading. No exception is
-# written for the PBY-5: no list derives it yet (decision 0075, "Disputes").
+# read only for this; they do not widen any other reading. The PBY-5's and the
+# PBY-5A's, the last two, are the Midway list's (decision 0200, 13 and 14):
+# the PBY-5A's names a row of the Navy's sheet of 1943 and says `later = true`,
+# so it reads that row only on a list dated before the row begins, and every
+# figure it gives is marked as read from a row of a later date (decision
+# 0200; the rule is in docs/research/oob/database-design.md, "Dates").
 # divisor_of_scouting_range: sized from a source, the method of the Bureau of
 # Aeronautics' sheets, which call the scouting radius a third of the range in
 # that condition (decision 0075, "The source of the method"; the note on
@@ -873,6 +877,21 @@ fact = "range_max_nm"
 row = 493
 reason = "It states its condition, maximum fuel, and is the sheet whose normal range (row 494) the derivation already reads; row 501 states no condition and cites a book not read."
 agreed = "2026-11-13"
+
+[[search_radius.exception]]
+entity = "pby-5a"
+fact = "range_max_nm"
+row = 12000
+later = true
+reason = "2,211 nm (2,545 statute miles at 117 mph, patrol loading, 1,463 gallons), the patrol range of the Navy's characteristics sheet of 1 September 1943, read for 3 June 1942. The fact did not change: the airframe and its tanks were the same, the R-1830-92 engines of the sheet (the row's note) and the 1,478 gallons that pwencycl's page gives the boat (row 313); no sheet of 1942 was found (the sheet of 13 August 1942 it supersedes was not seen). Her search radius is 737 nm, against the 700 miles (608 nm) the boats flew from Midway (12007), which is reported and not fitted. Decision 0200, 13. Settled by the architect."
+agreed = "2026-11-21"
+
+[[search_radius.exception]]
+entity = "pby-5"
+fact = "range_max_nm"
+row = 313
+reason = "2,694 nm (3,100 statute miles), the patrol range of pwencycl's PBY-5 page: one low page that gives no sources, read for the PBY-5 on her own rows (decision 0198, rule 76). Her search radius is 898 nm. A Navy sheet of her own was not found (gaps.csv) and stays a gap. Decision 0200, 14. Settled by the architect."
+agreed = "2026-11-21"
 
 # Which radar sets give a class its radar figure (decision 0077). The figure
 # is 1 only if a read surface_search_radar fit has a count above 0 and the
@@ -1522,4 +1541,53 @@ entity = "us-bomb-500lb-gp"
 fact = "weight_kg"
 row = 367
 reason = "226.8 kg, the nominal weight of the 500 lb class from its designation, one low row and the only weight on file. Read so that the SB2U-3 attacks with the 500 lb bomb its maker's sheet gives it (fits 6802) and which VMSB-241 carried on 4 and 5 June (fits 12200 to 12202, dated those days only). Rules 55 and 71."
+agreed = "2026-11-21"
+
+# Decision 0200, 13 and 14: the flying boats of the Midway list (midway.toml,
+# as of 3 June 1942), the PBY-5A as type 5113 and the PBY-5 as type 5114.
+# Their ranges are in the [search_radius] block above. The PBY-5A's two below
+# say `later = true`: they name rows of the Navy's sheet of 1 September 1943,
+# read for June 1942, each with the reason the architect judged the fact
+# already so; on a list dated on or after the row's start they do nothing.
+# Her strike radius is the 434 nm flown on the night of 3 June (row 12009),
+# which holds and is preferred, and her torpedo is the fit of that night
+# (fits 6822); the sheet's radii (12001, 12002) are not read. The PBY-5 is
+# read from her own rows by plain exceptions (decision 0198, rule 76). A
+# protected tank that is only partial reads as no (decision 0200, 12).
+
+[[exception]]
+entity = "pby-5a"
+fact = "pilot_armour"
+row = 12003
+later = true
+reason = "Yes: armour for the pilot and co-pilot, 120 lb, on the Navy's sheet of 1 September 1943, read for 3 June 1942. Armour does change: it was fitted to boats in service. It is read because the one page of the time, of mid-1942 (12005, low and unconfirmed, of the PBY-5 or of both, the page does not say), says most of the boats had some armour by then. The weakest reading in the list; when the PBY-5A was fitted is a gap (gaps.csv). Decision 0200, 13. Settled by the architect."
+agreed = "2026-11-21"
+
+[[exception]]
+entity = "pby-5a"
+fact = "self_sealing_tanks"
+row = 12004
+later = true
+reason = "Partial: 603 of 1,478 gallons in protected cells, the Navy's sheet of 1 September 1943, read for 3 June 1942, and partial reads as no (decision 0200, 12). The page of mid-1942 (12006, low) says most of the boats had protected tanks by then, and the PBY-5's rows of the time (12006, 486) say partial too; Wikipedia's yes (487, low) is disputed against the sheet. When they were fitted is a gap (gaps.csv). Decision 0200, 13. Settled by the architect."
+agreed = "2026-11-21"
+
+[[exception]]
+entity = "pby-5"
+fact = "pilot_armour"
+row = 12005
+reason = "Yes: most PBY-5s had some armour for pilots and gunners by mid-1942, warintheskies (C), the one row of the time, read for 3 June 1942 (its date is known to the month). Decision 0198, rule 76; decision 0200, 14. Settled by the architect."
+agreed = "2026-11-21"
+
+[[exception]]
+entity = "pby-5"
+fact = "self_sealing_tanks"
+row = 12006
+reason = "Partial, which reads as no (decision 0200, 12): most PBY-5s had protected tanks by mid-1942 and the protection covered only part of the fuel, warintheskies (C) with the PBY-5A's sheet, the one row of the time, read for 3 June 1942 (its date is known to the month). Wikipedia's partial (486, low) agrees. Decision 0198, rule 76; decision 0200, 14. Settled by the architect."
+agreed = "2026-11-21"
+
+[[exception]]
+entity = "pby-5"
+fact = "range_normal_nm"
+row = 314
+reason = "1,245 nm (1,433 statute miles) with 2,000 lb of bombs, pwencycl's PBY-5 page: one low page that gives no sources, and the only range of the PBY-5 with a load; the tool's rule gives her strike radius from it (decision 0029, 6). A Navy sheet of her own was not found (gaps.csv) and stays a gap. Decision 0198, rule 76; decision 0200, 14. Settled by the architect."
 agreed = "2026-11-21"
