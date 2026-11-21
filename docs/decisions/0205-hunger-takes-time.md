@@ -156,3 +156,15 @@ Besides what `regenerate.sh` remakes: the ten export pins of `crates/sim-cli/tes
 
 Every one of the 174 scenario files under `data/scenarios` (all but scenario 119's folder and the table's copies) was run with `run --events` before the change and after it: the events are the same in every one, and only the daily hashes differ, by the layout. The generated files were remade by `sh scripts/regenerate.sh` for the layout alone.
 
+## The architect's rulings
+
+Read on Nov 21, 2026: the feeding and the loss in full (`ground.rs`), the rations (`cargo.rs`), and the build's account of what moved.
+
+1. **The hand calculation holds in every statement,** and the build's nine readings are accepted.
+2. **Rules 4 and 5 were changed after the first build, on a report that proved wrong.** The build first said that in the 39 days the landings went into bases that already stood, so that the marines got no rations; the architect took that as the case the designer had asked about and changed the rule so that the first landing at any base brings rations. The build then found its report was mistaken: in the file with a landing, Lunga and Tulagi are the enemy's when the marines land, the landing forms two bases, and the first rule fed them. A summary is a lead and not a fact, and this one was not checked before a rule was moved on it.
+3. **The changed rule stands all the same.** It is the better rule: men who land at a base of their own that has nothing in it eat what they carried, as men who land on an empty shore do. In the files on file it adds two small landings of rations and changes no loss.
+4. **What the rule does to the 39 days, in the table's copies:** the losses to hunger are all Japanese, and fall from 333 men to 231 with no command given, from 114 to none in one staffed file and from 1,515 to 993 in the other. No Allied man is unfed in any of them by either rule.
+5. **The mark that a base has had its rations is the base's,** kept when the base changes side, and not set on a dry run's picture of an enemy base, since a side does not know it of the enemy.
+6. **Scenario 104's statement 23 is amended:** the table's copies of files for play carry the key that marks a file for play, as their sources do. There is one test of it, not set aside.
+7. **Not seen:** the "Hungry N nights" line on a unit's card in the browser. The count was read from the game's own answer on a throwaway table.
+

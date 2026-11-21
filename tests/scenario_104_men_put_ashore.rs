@@ -118,7 +118,10 @@
 //! 23. **The key.** `for_play = true` in a scenario's `[objectives]` table
 //!     loads; with the key absent or `false` the scenario is of record.
 //!     Scenario 103's four files have it, and scenario 105's four
-//!     (decision 0188). No other scenario file has it.
+//!     (decision 0188). No other scenario file has it. (Amended by the
+//!     architect on Nov 21, 2026: the files of the same two scenarios with
+//!     their oilers, decision 0206, have it too, as do the table's copies
+//!     of files for play, decision 0205.)
 //! 24. **It changes no game.** File a's five daily hashes on seed 1942 are
 //!     the same with the key as with it taken out.
 //! 25. **The result's words.** `sim-cli run` on file a prints its result
@@ -1145,74 +1148,12 @@ fn all_scenario_files(dir: &Path, out: &mut Vec<PathBuf>) {
     }
 }
 
-#[test]
-#[ignore = "decision 0205, 3: the table plays copies of scenarios 103's and 105's files b, c and d in data/scenarios/table-hunger, which carry the key; see statement_23_the_key_as_built"]
-fn statement_23_the_key() {
-    // Loads with the key; absent or false, of record.
-    let text = five_days_text('a');
-    let with = load_text(&text, 'a').expect("loads");
-    assert!(with.world.objectives().expect("objectives").for_play);
-    let absent = common::replace_once(&text, "[objectives]\nfor_play = true\n", "[objectives]\n");
-    let absent = load_text(&absent, 'a').expect("loads");
-    assert!(!absent.world.objectives().expect("objectives").for_play);
-    let false_ = common::replace_once(
-        &text,
-        "[objectives]\nfor_play = true\n",
-        "[objectives]\nfor_play = false\n",
-    );
-    let false_ = load_text(&false_, 'a').expect("loads");
-    assert!(!false_.world.objectives().expect("objectives").for_play);
-    // Scenario 103's four files have it, and load.
-    for letter in ['a', 'b', 'c', 'd'] {
-        let scenario = common::load_live(&five_days(letter)).expect("loads");
-        assert!(
-            scenario.world.objectives().expect("objectives").for_play,
-            "file {letter}"
-        );
-    }
-    // No other scenario file has it: every file under data/scenarios (the
-    // tmp- folders are someone's trials) is read as text for a line that
-    // writes the key. Scenario 5 is loaded as well.
-    let mut files = Vec::new();
-    all_scenario_files(&common::data_dir().join("scenarios"), &mut files);
-    assert!(files.len() > 100, "{} files", files.len());
-    let mut with_key = Vec::new();
-    // The one file left out is the script's base, which is not played itself
-    // ("base_eastern_solomons.toml", the text the four files are made from)
-    // and carries the key as they do: it is not a scenario file in the
-    // statement's sense (reported by the build).
-    for file in files.iter().filter(|f| {
-        let name = f.file_name().and_then(|n| n.to_str());
-        name != Some("base_eastern_solomons.toml") && name != Some("base_coral_sea.toml")
-    }) {
-        let text = std::fs::read_to_string(file).expect("reads");
-        if text.lines().any(|l| l.trim_start().starts_with("for_play")) {
-            with_key.push(file.strip_prefix(common::data_dir()).unwrap().to_owned());
-        }
-    }
-    let mut want: Vec<PathBuf> = ['a', 'b', 'c', 'd']
-        .iter()
-        .flat_map(|l| {
-            [
-                PathBuf::from(format!("scenarios/coral-sea/01{l}_coral_sea.toml")),
-                PathBuf::from(format!("scenarios/five-days/01{l}_eastern_solomons.toml")),
-            ]
-        })
-        .collect();
-    want.sort();
-    with_key.sort();
-    assert_eq!(with_key, want);
-    let five = common::load_live(&common::data_dir().join("scenarios/05_eastern_solomons.toml"))
-        .expect("scenario 5 loads");
-    assert!(!five.world.objectives().expect("objectives").for_play);
-}
-
 /// Statement 23 as built with decision 0205: the eight files have the key,
 /// and so do the table's copies of six of them (files b, c and d of each) in
 /// data/scenarios/table-hunger, each its source but for the line that names
 /// the ground figures (decision 0205, 3). No other scenario file has it.
 #[test]
-fn statement_23_the_key_as_built() {
+fn statement_23_the_key() {
     // Loads with the key; absent or false, of record.
     let text = five_days_text('a');
     let with = load_text(&text, 'a').expect("loads");
