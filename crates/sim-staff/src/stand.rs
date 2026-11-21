@@ -941,6 +941,56 @@ impl Day<'_, '_> {
                     self.hand_in_stand(task, &plan, id, out, in_scope, &intent_words);
                     return;
                 }
+                // Fuelled at an oiler since the staff was last asked, and not
+                // short: it goes back to its station by the sortie's own rule
+                // (decision 0201, 20, on the architect's ruling of Nov 21,
+                // 2026). Short, or not fuelled at sea, it goes home.
+                let fuelled_from = (!short)
+                    .then(|| crate::fuelling::fuel_order_ended(view, id))
+                    .flatten();
+                if let (Some(giver), Some((needs, _))) = (fuelled_from, needs.as_ref()) {
+                    let cruise = hours_to(view, id, station, SpeedSetting::Cruise);
+                    let night = Fixed::from_int(NIGHT_HOURS);
+                    let (speed, speed_text) = match cruise {
+                        Some(h) if h <= night => (SpeedSetting::Cruise, "cruise"),
+                        _ => (SpeedSetting::Full, "full speed"),
+                    };
+                    let fuel_text = format!(
+                        "the passage to the station and home, at cruise by the engine's measure, times the {} of the {risk_text}: {}",
+                        margin(risk),
+                        needs_words(needs)
+                    );
+                    let evidence = format!("{id} fuelled at sea from {giver}, and its order to fuel ended; it lies stopped at {here}, at sea on no route");
+                    if force.speed != speed {
+                        out.orders.push((
+                            TaskForceOrder::SetSpeed(speed),
+                            serving(task, &plan)
+                                .evidence(evidence.clone(), today)
+                                .binding(format!("cruise where it reaches the station within the night's {NIGHT_HOURS} hours, else full speed"))
+                                .worked(format!("{id} goes back to its station {station}: it is set to {speed_text}."))
+                                .would_change("a station nearer, or farther")
+                                .done(),
+                        ));
+                    }
+                    out.orders.push((
+                        TaskForceOrder::SetRoute {
+                            waypoints: vec![station, home_hex],
+                            act_at: BTreeSet::new(),
+                            stand_at: BTreeSet::from([station]),
+                        },
+                        serving(task, &plan)
+                            .evidence(evidence, today)
+                            .evidence(fuel_text.clone(), today)
+                            .binding("a force that has fuelled at an oiler's force goes back to its station")
+                            .worked(format!(
+                                "{intent_words}: {id} has fuelled from {giver} at sea and lies stopped at {here}; {fuel_text}: it has the fuel. It goes back to its station {station} at {speed_text}, the station marked to stand at, and home to {home_text} from there."
+                            ))
+                            .would_change("less fuel aboard, or the force at its home port")
+                            .done(),
+                    ));
+                    self.hand_in_stand(task, &plan, id, out, in_scope, &intent_words);
+                    return;
+                }
                 let forecast = view
                     .forecast_passage(id, home_hex, Some(SpeedSetting::Cruise))
                     .map(|f| f.end);

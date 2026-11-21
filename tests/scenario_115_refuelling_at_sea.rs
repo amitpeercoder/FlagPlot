@@ -1529,7 +1529,6 @@ fn statement_19_sent_to_the_oiler() {
 }
 
 #[test]
-#[ignore = "the hand calculation's statement 19 has the force routed back to its station on the morning after the order ends; the stand doctrine as built (decision 0192, 16) routes a force with a home port that lies stopped at sea home, and the plan's rule 20 says only that it goes back to its task: sent back to the architect"]
 fn statement_19_on_the_morning_after_it_is_routed_back_to_its_station() {
     let scenario = run_staffed(&stand_force(-4, 3000));
     let log = events(&scenario);
@@ -1540,16 +1539,20 @@ fn statement_19_on_the_morning_after_it_is_routed_back_to_its_station() {
 }
 
 #[test]
-fn statement_19_as_built_on_the_morning_after_it_goes_back_to_its_task() {
-    // What holds: the morning after the order ends the force, stopped at sea
-    // away from its home port, is routed home, from where it stands.
-    let scenario = run_staffed(&stand_force(-4, 3000));
+fn statement_19_a_force_still_short_when_the_giver_runs_empty_goes_home() {
+    // O holds 20 t: the destroyer takes it and is still short of the
+    // passage to the station and home; the order ends for a giver that holds
+    // no cargo fuel, and on the morning after it the force is routed home,
+    // as today (decision 0192, 16).
+    let scenario = run_staffed(&stand_force(-4, 20));
     let log = events(&scenario);
-    let end_day = ended(&log).first().expect("the order ends").0;
-    assert!(routed_home(
-        &staff_orders(&log, &scenario.world),
-        end_day + 1
-    ));
+    let ends = ended(&log);
+    let (end_day, _, reason, _) = ends.first().expect("the order ends");
+    assert_eq!(*reason, FuelOrderEnd::GiverEmpty);
+    let orders = staff_orders(&log, &scenario.world);
+    assert!(routed_home(&orders, end_day + 1), "routed home: {orders:?}");
+    assert!(!orders.iter().any(|(d, o)| *d == end_day + 1
+        && matches!(o, TaskForceOrder::SetRoute { waypoints, .. } if waypoints.first() == Some(&Hex::new(0, 0)))));
 }
 
 #[test]

@@ -141,3 +141,20 @@ pub(crate) fn oiler_for(view: &SideView<'_>, force: &TaskForce) -> Option<OilerF
 pub(crate) fn fuelling_from(force: &TaskForce) -> Option<TaskForceId> {
     force.fuel_from.map(|f| f.giver)
 }
+
+/// The giver of `force`'s order to fuel at sea, where that order ended since
+/// the staff was last asked: on the day just resolved, read from the side's
+/// own events (decision 0201, 20).
+pub(crate) fn fuel_order_ended(view: &SideView<'_>, force: TaskForceId) -> Option<TaskForceId> {
+    view.events_on_day(view.day())
+        .iter()
+        .rev()
+        .find_map(|event| match &event.kind {
+            sim_core::side_events::SideEventKind::Whole(
+                sim_core::events::EventKind::FuelOrderEnded {
+                    task_force, giver, ..
+                },
+            ) if *task_force == force => Some(*giver),
+            _ => None,
+        })
+}
