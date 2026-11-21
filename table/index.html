@@ -165,6 +165,15 @@ button:disabled { opacity: 0.45; cursor: default; }
 .est th, .est td { text-align: left; padding: 3px 14px 3px 0; vertical-align: top; border-bottom: 1px dotted #8d8672; }
 .est th { font-weight: 400; color: var(--paper-dim); }
 .est .big { font-size: 15px; line-height: 1.45; }
+.sheet .doc p.lead { margin: 0 0 12px; padding-bottom: 10px; border-bottom: 1px solid #8d8672; font-size: 14px; line-height: 1.5; color: var(--paper-dim); }
+.sheet .doc p.lead strong { color: var(--paper-ink); font-size: 15px; }
+.sheet .doc details.fold { margin-top: 10px; }
+.sheet .doc details.fold .planorder.dryrun { border: 0; padding: 0; margin: 6px 0 0; }
+.sheet .doc details.fold .planorder.dryrun h3 { display: none; }
+.est .stamp { display: inline-block; margin: 4px 0 10px 2px; padding: 6px 14px 5px; border: 3px double currentColor; border-radius: 3px; font-family: var(--f-ui); font-size: 24px; font-weight: 700; letter-spacing: 0.14em; line-height: 1.1; transform: rotate(-2.5deg); opacity: 0.88; }
+.est .stamp.win { color: #2f6b3a; }
+.est .stamp.loss { color: var(--enemy); }
+.est .stamp.tie { color: var(--paper-ink, #2b2a26); }
 .dryrun .sizes button.on { font-weight: 700; text-decoration: underline; }
 .planorder { border: 1px solid #8d8672; padding: 8px 12px; margin: 10px 0 14px; }
 .planorder h3 { margin-top: 0; }
@@ -1713,8 +1722,13 @@ body.watched .gives { display: none !important; }
       var byNum = {}; st.intents.forEach(function (i) { byNum[i.number] = i; });
       var top = byNum[root]; if (!top) { setStatus('That order is no longer held.'); return; }
       var lim = top.limits_read_up || {}, head = el('div', 'head');
-      [['Your order', plainWords(sayIntent(top, said))], ['Given', 'day ' + top.set_day], ['Risk', lim.risk || 'balanced'], ['Forces', top.limits && top.limits.forces ? 'limited by you' : 'the staff\'s choice'], ['Leave to launch', st.leaves.launch ? 'given: a plan that is ready goes' : 'withheld: each plan waits for your word']].forEach(function (r) { head.appendChild(el('span', '', r[0])); head.appendChild(el('span', '', r[1])); });
+      // The order in one line: what it is, when given, its risk and its forces.
+      // Leave to launch is said only when given; a plan that waits says so itself, below.
+      head = el('p', 'lead'); head.appendChild(rich('strong', '', plainWords(sayIntent(top, said)).replace(/^./, function (c) { return c.toUpperCase(); })));
+      head.appendChild(document.createTextNode(' \u00B7 given day ' + top.set_day + ' \u00B7 risk ' + (lim.risk || 'balanced') + ' \u00B7 forces ' + (top.limits && top.limits.forces ? 'limited by you' : 'of the staff\'s choosing') + (st.leaves.launch ? ' \u00B7 leave to launch given' : '')));
       doc.appendChild(head);
+      // What is not asked of the commander now is folded away, to be opened when wanted.
+      function fold(title) { var d = document.createElement('details'), sm = document.createElement('summary'); sm.textContent = title; d.appendChild(sm); d.className = 'fold'; return d; }
       // What must be known before a take goes (decision 0159, 13): one line
       // under the take, where the staff works the need this morning.
       function need(p) { var k = p && p.need_to_know; if (!k) return null; var d = rich('div', 'work', needWords(k)); if (!k.met) d.style.color = 'var(--enemy)'; return d; }
@@ -1734,7 +1748,6 @@ body.watched .gives { display: none !important; }
           press('CANCEL PLAN ' + p.number, 'cancel_plan', 'Plan ' + p.number + ' is cancelled from 1800.'); n.appendChild(row); }
         doc.appendChild(n);
       })(top.plan != null ? plans[top.plan] : null);
-      if (OFFERED.trial && !WATCH) dryBox(doc, root);
       // The brief: one line a task, with a word for where it stands. What
       // the staff decided today and why is one step down, under each line.
       var lines = [], tally = {};
@@ -1771,9 +1784,9 @@ body.watched .gives { display: none !important; }
         else (o.text || []).filter(function (t) { return /ashore\.$/.test(t); }).forEach(function (t) { box.appendChild(rich('div', 'work', nameText(t))); });
         doc.appendChild(box);
       })(a[3]);
-      doc.appendChild(el('h3', '', '1. The brief'));
+      if (lines.length) doc.appendChild(el('h3', '', 'The brief'));
       var order = ['WAITS FOR YOU', 'APPROVED', 'CANCELLED FROM 1800', 'CANNOT BE MET', 'ORDERS TODAY', 'PREPARING', 'STANDING', 'DONE', 'ENDED'], sum = order.filter(function (k) { return tally[k]; }).map(function (k) { return tally[k] + ' ' + (k === 'WAITS FOR YOU' ? (tally[k] === 1 ? 'waits' : 'wait') + ' for you' : k.toLowerCase()); });
-      doc.appendChild(el('p', '', lines.length ? 'The staff has made ' + lines.length + ' task' + (lines.length === 1 ? '' : 's') + ' of it: ' + sum.join(', ') + '.' : 'The staff has made nothing of it yet. It plans at 1800.'));
+      doc.appendChild(el(lines.length ? 'p' : 'div', lines.length ? '' : 'work', lines.length ? 'The staff has made ' + lines.length + ' task' + (lines.length === 1 ? '' : 's') + ' of it: ' + sum.join(', ') + '.' : 'The staff has made nothing of it yet. It plans at 1800.'));
       lines.forEach(function (L) {
         var n = el('div', 'node'), who = el('div', 'who'), i = L.i, p = L.p; n.style.marginLeft = (L.depth - 1) * 18 + 'px'; if (L.word === 'ENDED' || L.word === 'DONE') n.style.opacity = 0.6;
         who.appendChild(rich('strong', '', said[i.number] ? said[i.number].replace(/^./, function (c) { return c.toUpperCase(); }) : sayIntent(i, said))); var tag = el('span', 'state', L.word); if (L.word === 'WAITS FOR YOU' || L.word === 'CANNOT BE MET') tag.style.color = 'var(--enemy)'; who.appendChild(tag); n.appendChild(who);
@@ -1793,18 +1806,19 @@ body.watched .gives { display: none !important; }
           var no = el('button', '', 'CANCEL PLAN ' + p.number); no.type = 'button'; no.addEventListener('click', function () { act('cancel_plan', { plan: p.number }, 'Plan ' + p.number + ' is cancelled from 1800.').then(function () { readPlan(root); }); }); row.appendChild(no); }
         doc.appendChild(n);
       });
-      if (!WATCH) { doc.appendChild(el('h3', '', '2. Send it back to the staff'));
-      var row = el('div', 'row'); doc.appendChild(row);
+      if (OFFERED.trial && !WATCH) { var dryFold = fold('DRY RUN'); dryBox(dryFold, root); doc.appendChild(dryFold); }
+      if (!WATCH) { var back = fold('CHANGE THE ORDER'); doc.appendChild(back);
+      var row = el('div', 'row'); back.appendChild(row);
       ['preserve', 'balanced', 'press'].forEach(function (r) { var b = el('button', '', 'RISK: ' + r.toUpperCase() + ((lim.risk || 'balanced') === r ? ' ✓' : '')); b.type = 'button'; b.addEventListener('click', function () { act('set_limit', { limit: 'risk', intent: root, risk: r }, 'Risk set to ' + r + '. The staff plans again at 1800.').then(function () { readPlan(root); }); }); row.appendChild(b); });
       var w = el('button', '', 'WITHDRAW THIS ORDER'); w.type = 'button'; w.addEventListener('click', function () { act('withdraw_intent', { intent: root }, 'The order is withdrawn from 1800.').then(function () { $('sheet').hidden = true; }); }); row.appendChild(w); }
       if (OFFERED.trial && top.in_force !== false && !WATCH) {
-        doc.appendChild(el('h3', '', '3. What if'));
+        var iff = fold('WHAT IF'); doc.appendChild(iff);
         var wrow = el('div', 'row'), wsays = el('div', 'work'), riskNow = lim.risk || 'balanced';
         ['preserve', 'balanced', 'press'].filter(function (r) { return r !== riskNow; }).forEach(function (r) { var b = el('button', '', 'RISK ' + r.toUpperCase() + '?'); b.type = 'button'; b.addEventListener('click', function () { whatIf(root, { limit: 'risk', risk: r }, 'risk ' + r, wsays, wrow.querySelectorAll('button')); }); wrow.appendChild(b); });
         var nb = el('button', '', 'NOT BEFORE DAY \u2026?'), nday = el('input'); nday.type = 'number'; nday.min = String(M.day + 2); nday.value = String(M.day + 3); nday.style.width = '4.5em'; nday.setAttribute('aria-label', 'The day it is not to go before'); nb.type = 'button';
         nb.addEventListener('click', function () { var d = parseInt(nday.value, 10); if (!(d > 0)) return; whatIf(root, { limit: 'not_before', from_day: d }, 'not before day ' + d, wsays, wrow.querySelectorAll('button')); });
-        wrow.appendChild(nb); wrow.appendChild(nday); doc.appendChild(wrow); doc.appendChild(wsays);
-        doc.appendChild(el('div', 'work', 'Each is played beside the plan as it stands, at the size chosen above. Nothing is given until you say so.'));
+        wrow.appendChild(nb); wrow.appendChild(nday); iff.appendChild(wrow); iff.appendChild(wsays);
+        iff.appendChild(el('div', 'work', 'Each is played beside the plan as it stands, at the size chosen under Dry run. Nothing is given until you say so.'));
       }
       if (!WATCH) doc.appendChild(el('div', 'foot', (a[2].inside_day ? 'Worked now, in the middle of the day; the staff is asked again at dusk and may then do otherwise. ' : '') + 'You change a plan by instruction: your leave, a limit, a cancel or a withdrawal. To keep a force out of it, touch the force and give it a direct order yourself.'));
       sheetAs('THE PLAN'); $('sheet-chart').hidden = false; $('sheet-chart').onclick = function () { $('sheet').hidden = true; showPlanOnChart(root); }; doc.hidden = false; $('sheet-text').hidden = true; $('sheet').hidden = false; $('sheet-close').focus();
@@ -1938,6 +1952,7 @@ body.watched .gives { display: none !important; }
     others.forEach(function (t) { used[t] = true; });
     if (textOf(j, 'Your side has no other').length) paras.push('You have no other order in force for it to compete with.');
     else others.forEach(function (t) { paras.push(dryWords(t)); });
+    if (textOf(j, 'Your intent is in force').length) { line('Your intent is in force'); paras.push('Your order is already in force, so this shows it as things stand. To see what it costs your other plans, play it again with "and without this order".'); }
     line('What was assumed');
     var as = assumedLines(j.assumed || [], a.worlds);
     if (as.length) paras.push('Of the enemy we assumed this. ' + as.join(' '));
@@ -2006,6 +2021,7 @@ body.watched .gives { display: none !important; }
     switch (o.kind) {
       case 'ships_sunk': return ['Enemy ships sunk', n ? commas(n) + ((o.ships || []).length ? ' (' + o.ships.map(function (x) { return x.ships + ' ' + x.kind.replace(/_/g, ' '); }).join(', ') + ')' : '') : 'none'];
       case 'ships_crippled': return ['Enemy ships left afloat and out of action', n ? commas(n) + ((o.ships || []).length ? ' (' + o.ships.map(function (x) { return x.ships + ' ' + x.kind.replace(/_/g, ' '); }).join(', ') + ')' : '') : 'none'];
+      case 'ships_out_of_action': return ['Enemy ships out of action at the end', commas(n)];
       case 'aircraft_destroyed': return ['Enemy aircraft destroyed', commas(n)];
       case 'men_lost': return ['Enemy men lost', commas(n)];
       case 'cargo_landed': return ['Supply and fuel landed at ' + base, commas(Math.round(n)) + ' t'];
@@ -2022,7 +2038,9 @@ body.watched .gives { display: none !important; }
       else {
         var mine = r[config.seat], other = config.seat === 'allied' ? 'japanese' : 'allied', won = r.allied.result === 'victory' ? 'allied' : r.japanese.result === 'victory' ? 'japanese' : null;
         var box = el('div', 'est');
-        box.appendChild(el('div', 'big', won ? (r[won].outcome.replace(/^./, function (c) { return c.toUpperCase(); }) + ' for ' + SIDE_WORD[won] + '.') : 'A stalemate: neither side won.'));
+        // The result is stamped as the seat's own: a victory in green, a defeat in red, a stalemate in black.
+        if (mine && mine.outcome) { var stamp = el('div', 'stamp ' + (!won ? 'tie' : won === config.seat ? 'win' : 'loss'), String(mine.outcome).toUpperCase()); box.appendChild(stamp); if (!won) box.appendChild(el('div', 'work', 'Neither side won.')); }
+        else box.appendChild(el('div', 'big', won ? (r[won].outcome.replace(/^./, function (c) { return c.toUpperCase(); }) + ' for ' + SIDE_WORD[won] + '.') : 'A stalemate: neither side won.'));
         box.appendChild(el('div', 'work', 'Day ' + M.lastDay + ' of ' + M.lastDay + ' is fought.'));
         var rows = [], seen = {};
         [config.seat, other].forEach(function (side, col) { (r[side].objectives || []).forEach(function (o) { var c = endCount(o), key = o.kind + '|' + (o.base && o.base.handle || '') + '|' + (o.closed ? 1 : 0); if (seen[key] == null) { seen[key] = rows.length; rows.push([c[0], '–', '–']); } rows[seen[key]][col + 1] = c[1]; }); });
