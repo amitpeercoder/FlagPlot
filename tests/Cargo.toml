@@ -603,3 +603,7 @@ path = "scenario_113_men_who_replace_the_lost.rs"
 [[test]]
 name = "scenario_116_carriers_serve_an_end"
 path = "scenario_116_carriers_serve_an_end.rs"
+
+[[test]]
+name = "scenario_115_refuelling_at_sea"
+path = "scenario_115_refuelling_at_sea.rs"

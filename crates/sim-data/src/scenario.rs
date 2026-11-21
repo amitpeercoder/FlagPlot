@@ -811,6 +811,11 @@ enum ActionSpec {
     Escort {
         charge: Option<u32>,
     },
+    /// Fuel at sea from another task force of the side by number, the giver
+    /// (decision 0201, 4).
+    FuelFrom {
+        giver: u32,
+    },
     /// An order to a base: form the ships, lying in port there in no force,
     /// into a task force (decision 0111).
     FormTaskForce {
@@ -3104,6 +3109,9 @@ impl Scenario {
                         }
                         ActionSpec::StandDown {} => TaskForceOrder::StandDown,
                         ActionSpec::NoCargoWork {} => TaskForceOrder::NoCargoWork,
+                        ActionSpec::FuelFrom { giver } => {
+                            TaskForceOrder::FuelFrom(TaskForceId::new(*giver))
+                        }
                         ActionSpec::Escort { charge } => {
                             TaskForceOrder::Escort(charge.map(TaskForceId::new))
                         }

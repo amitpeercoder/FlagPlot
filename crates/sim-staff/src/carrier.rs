@@ -800,8 +800,24 @@ impl Day<'_, '_> {
                 let mut place_note: Option<usize> = None;
                 let margin = margin(risk);
                 let fuel_words = |needs: &[crate::stand::ShipFuel]| needs_words(needs);
+                // Under the order to fuel at sea it is given no route while
+                // the order stands (decision 0201, 20).
+                let at_sea_fuel = crate::fuelling::fuelling_from(force);
+                if let Some(giver) = at_sea_fuel.filter(|_| !dry) {
+                    notes.push(
+                        serving(task, &plan)
+                            .evidence(format!("{id} is under the order to fuel from {giver} at sea"), today)
+                            .binding("a force fuelling at sea is given no route while the order stands")
+                            .worked(format!("{intent_words}: {id} fuels from {giver} at sea, so it is given no route; when the order ends it goes back to its task."))
+                            .would_change("the order ended")
+                            .done(),
+                    );
+                }
+                // The order to fuel from an oiler's force, where the staff
+                // sends it there for fuel in place of home (decision 0201, 20).
+                let mut fuel_order: Option<(TaskForceId, Reason)> = None;
                 // Fuel (rule 8) and its place (rule 7).
-                if !dry {
+                if !dry && at_sea_fuel.is_none() {
                     match home_hex {
                         Some(home_at) if at_home && !at_hex => {
                             // The speed of the passage back (decision 0130, 1),
@@ -853,7 +869,30 @@ impl Day<'_, '_> {
                                 .as_ref()
                                 .map_or_else(String::new, |(n, _)| fuel_words(n));
                             let fuel_text = format!("the passage home to {home_text}, by the engine's measure, times the {margin} of the {risk_text}, for the ship with least against its need: {text}");
-                            if short {
+                            let oiler = crate::fuelling::oiler_for(view, force);
+                            let home_nm = view.sea_charged_nm(here, home_at);
+                            let nearer = oiler.filter(|o| home_nm.is_some_and(|h| o.nm < h));
+                            if let (true, Some(oiler)) = (short, nearer) {
+                                going_home = true;
+                                let passages = format!(
+                                    "the passage to {} at {} is {} nm, and home to {home_text} {} nm",
+                                    oiler.giver,
+                                    oiler.hex,
+                                    oiler.nm,
+                                    home_nm.unwrap_or(0)
+                                );
+                                fuel_order = Some((
+                                    oiler.giver,
+                                    serving(task, &plan)
+                                        .evidence(fuel_text.clone(), today)
+                                        .evidence(format!("{} holds {} t of cargo fuel in ships that fuel others at sea", oiler.giver, oiler.cargo_fuel_t), today)
+                                        .evidence(passages.clone(), today)
+                                        .binding("an oiler's force nearer than home is a place to fuel")
+                                        .worked(format!("{intent_words}: {fuel_text}: a ship has less than it needs; {passages}, so {id} is given the order to fuel from {} at sea in place of going home.", oiler.giver))
+                                        .would_change("more fuel aboard, or the oiler's force farther than home or empty")
+                                        .done(),
+                                ));
+                            } else if short {
                                 going_home = true;
                                 route = Some((
                                 vec![home_at],
@@ -885,6 +924,29 @@ impl Day<'_, '_> {
                                 .done(),
                         );
                         }
+                        _ if home_hex.is_none()
+                            && !crate::fuelling::below_a_quarter(view, id).is_empty()
+                            && crate::fuelling::oiler_for(view, force).is_some() =>
+                        {
+                            // No home port and a ship below a quarter
+                            // (decision 0201, 20).
+                            let below = crate::fuelling::below_words(
+                                &crate::fuelling::below_a_quarter(view, id),
+                            );
+                            let oiler =
+                                crate::fuelling::oiler_for(view, force).expect("an oiler's force");
+                            going_home = true;
+                            fuel_order = Some((
+                                oiler.giver,
+                                serving(task, &plan)
+                                    .evidence(format!("{id} has no home port the staff knows, and {below}"), today)
+                                    .evidence(format!("{} holds {} t of cargo fuel in ships that fuel others at sea, {} nm away at {}", oiler.giver, oiler.cargo_fuel_t, oiler.nm, oiler.hex), today)
+                                    .binding("a force with no home port with a ship below a quarter of her capacity fuels from an oiler's force")
+                                    .worked(format!("{intent_words}: {id} has no home port the staff knows, and {below}: below a quarter of capacity. {} holds cargo fuel {} nm away at {}, so {id} is given the order to fuel from it at sea.", oiler.giver, oiler.nm, oiler.hex))
+                                    .would_change("a home port set, or more fuel aboard")
+                                    .done(),
+                            ));
+                        }
                         _ => {
                             if home_hex.is_none() {
                                 place_note = Some(notes.len());
@@ -912,7 +974,7 @@ impl Day<'_, '_> {
                         .waypoints
                         .last()
                         .is_some_and(|w| *w != hex && Some(*w) != home_hex);
-                if !going_home && !fuelling && !dry {
+                if !going_home && !fuelling && !dry && at_sea_fuel.is_none() {
                     // The reach: the least strike radius among the bomber
                     // groups aboard that can fly.
                     let reach = aboard
@@ -1240,7 +1302,14 @@ impl Day<'_, '_> {
                         }
                     }
                 }
-                if route.is_none() && !going_home && !at_hex && !at_home && !stays && !dry {
+                if route.is_none()
+                    && !going_home
+                    && !at_hex
+                    && !at_home
+                    && !stays
+                    && !dry
+                    && at_sea_fuel.is_none()
+                {
                     // Its place (decision 0125, 7), at the speed of decision
                     // 0130, 1.
                     let (speed, speed_text) = passage_speed(view, id, risk, hex);
@@ -1363,6 +1432,9 @@ impl Day<'_, '_> {
                         give(&mut orders, TaskForceOrder::SetSpeed(speed), reason.clone());
                     }
                     give(&mut orders, TaskForceOrder::route(waypoints), reason);
+                }
+                if let Some((giver, reason)) = fuel_order {
+                    give(&mut orders, TaskForceOrder::FuelFrom(giver), reason);
                 }
 
                 // The groups aboard (rules 3 to 6).

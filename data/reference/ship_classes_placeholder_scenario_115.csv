@@ -1,0 +1,18 @@
+# PLACEHOLDER DATA. These classes are invented for scenario 115 (decision
+# 0201, stage A, tests/scenario_115_refuelling_at_sea.rs), whose hand
+# calculation needs a carrier of 4,000 t of fuel, a destroyer of 500 t, and an
+# oiler with the mark and room for 3,000 t of cargo, each cruising at 15
+# knots. They are not historical and must not be used for validation. The
+# endurances are set so that a mile at cruise burns a whole tenth of a ton or
+# a half: 0.5 t for the carrier, 0.1 t for the destroyer, 0.2 t for the oiler.
+# Class 151 carries aircraft so that a carrier task can be formed for it;
+# class 154 is a placeholder cruiser for the enemy's surface force. Only
+# scenario 115 names this file, so that no other scenario's data hashes move.
+# The columns are those of ship_classes.csv, which says what each is, and
+# fuels_at_sea, 1 for a class whose ships fuel others at sea (decision 0201,
+# 1).
+id,name,kind,cruise_speed_kn,max_speed_kn,fuel_capacity_t,endurance_nm,cargo_capacity_t,main_guns,gun_rounds_per_min,gun_rounds_per_gun,gun_damage,torpedo_tubes,torpedo_tubes_one_side,torpedo_damage,toughness,radar,aircraft_capacity,anti_aircraft,fuels_at_sea
+151,"Placeholder carrier, scenario 115",carrier,15,30,4000,8000,0,0,0,0,0,0,0,0,600,0,36,0,0
+152,"Placeholder destroyer, scenario 115",destroyer,15,35,500,5000,0,4,6,150,5,8,8,200,100,0,0,0,0
+153,"Placeholder oiler, scenario 115",auxiliary,15,18,2000,10000,3000,0,0,0,0,0,0,0,300,0,0,0,1
+154,"Placeholder cruiser, scenario 115",cruiser,15,32,2000,8000,0,8,3,100,20,8,8,200,400,0,0,0,0

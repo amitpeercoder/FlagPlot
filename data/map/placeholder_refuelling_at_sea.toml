@@ -1,0 +1,24 @@
+# PLACEHOLDER MAP. Open sea for scenario 115 (refuelling at sea, decision
+# 0201), with two coast hexes for bases: (0,3), where a statement fuels in
+# port beside an oiler, and (10,0), a home port ten hexes east of (0,0) along
+# one axis. The geography is invented.
+
+placeholder = true
+
+# Ranges are inclusive.
+[[region]]
+kind = "deep_sea"
+q = [-14, 14]
+r = [-4, 4]
+
+[[hex]]
+q = 0
+r = 3
+kind = "coast"
+port_size = 0
+
+[[hex]]
+q = 10
+r = 0
+kind = "coast"
+port_size = 0

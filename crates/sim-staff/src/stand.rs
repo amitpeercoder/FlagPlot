@@ -826,6 +826,21 @@ impl Day<'_, '_> {
                 )
             });
 
+        // Under the order to fuel at sea it is given no route while the
+        // order stands (decision 0201, 20).
+        if let Some(giver) = crate::fuelling::fuelling_from(&force) {
+            out.summary = Some(
+                serving(task, &plan)
+                    .evidence(format!("{id} is under the order to fuel from {giver} at sea"), today)
+                    .binding("a force fuelling at sea is given no route while the order stands")
+                    .worked(format!("{intent_words}: {id} fuels from {giver} at sea, so it is given no route; when the order ends it goes back to its task."))
+                    .would_change("the order ended")
+                    .done(),
+            );
+            self.hand_in_stand(task, &plan, id, out, in_scope, &intent_words);
+            return;
+        }
+
         // The home port (rule 12): the base it lies at when it has none, set
         // by order. A home port that is no longer the side's is treated as
         // none (decision 0192, 16).
@@ -879,6 +894,53 @@ impl Day<'_, '_> {
             // Stopped at sea on no route, it goes home at cruise (decision
             // 0192, 16).
             if stopped(&force) && route_done(&force) && own_base_at(view, here).is_none() {
+                // Short of fuel by the measure of a sortie from here, with an
+                // oiler's force nearer than home: it fuels from her in place
+                // of going home (decision 0201, 20).
+                let needs = fuel_needs(
+                    view,
+                    id,
+                    &[station, home_hex],
+                    Some(SpeedSetting::Cruise),
+                    margin(risk),
+                );
+                let short = needs
+                    .as_ref()
+                    .is_some_and(|(n, _)| n.iter().any(|n| n.short()));
+                let home_nm = view.sea_charged_nm(here, home_hex);
+                let oiler = crate::fuelling::oiler_for(view, &force)
+                    .filter(|o| home_nm.is_some_and(|h| o.nm < h));
+                if let (true, Some(oiler), Some((needs, _))) = (short, oiler, needs.as_ref()) {
+                    let fuel_text = format!(
+                        "the passage to the station and home, at cruise by the engine's measure, times the {} of the {risk_text}: {}",
+                        margin(risk),
+                        needs_words(needs)
+                    );
+                    let passages = format!(
+                        "the passage to {} at {} is {} nm, and home to {home_text} {} nm",
+                        oiler.giver,
+                        oiler.hex,
+                        oiler.nm,
+                        home_nm.unwrap_or(0)
+                    );
+                    out.orders.push((
+                        TaskForceOrder::FuelFrom(oiler.giver),
+                        serving(task, &plan)
+                            .evidence(format!("{id} lies stopped at {here}, at sea on no route, away from its home port {home_text}"), today)
+                            .evidence(fuel_text.clone(), today)
+                            .evidence(format!("{} holds {} t of cargo fuel in ships that fuel others at sea", oiler.giver, oiler.cargo_fuel_t), today)
+                            .evidence(passages.clone(), today)
+                            .binding("an oiler's force nearer than home is a place to fuel")
+                            .worked(format!(
+                                "{intent_words}: {id} lies stopped at sea away from its home port, and {fuel_text}: a ship has less than it needs; {passages}, so {id} is given the order to fuel from {} at sea in place of going home.",
+                                oiler.giver
+                            ))
+                            .would_change("more fuel aboard, or the oiler's force farther than home or empty")
+                            .done(),
+                    ));
+                    self.hand_in_stand(task, &plan, id, out, in_scope, &intent_words);
+                    return;
+                }
                 let forecast = view
                     .forecast_passage(id, home_hex, Some(SpeedSetting::Cruise))
                     .map(|f| f.end);
@@ -1255,6 +1317,47 @@ impl Day<'_, '_> {
                 }
                 Some((b, hex, nm, needs, short))
             });
+            // An oiler's force nearer than the base it would go in to, or,
+            // with a ship below a quarter, any (decision 0201, 20).
+            let below = crate::fuelling::below_a_quarter(view, id);
+            let oiler = crate::fuelling::oiler_for(view, force).filter(|o| match going_in {
+                Some((_, _, nm, _, ref short)) => !short.is_empty() && o.nm < nm,
+                None => !below.is_empty(),
+            });
+            if let Some(oiler) = oiler {
+                let why = match going_in {
+                    Some((b, _, nm, ref needs, _)) => format!(
+                        "it would go in to {} for fuel, {nm} nm, short of the fuel it needs: {}; {} lies {} nm away at {}",
+                        base_words(view, b),
+                        needs_words(needs),
+                        oiler.giver,
+                        oiler.nm,
+                        oiler.hex
+                    ),
+                    None => format!(
+                        "{}: below a quarter of capacity; {} lies {} nm away at {}",
+                        crate::fuelling::below_words(&below),
+                        oiler.giver,
+                        oiler.nm,
+                        oiler.hex
+                    ),
+                };
+                out.orders.push((
+                    TaskForceOrder::FuelFrom(oiler.giver),
+                    serving(task, plan)
+                        .evidence(lies.clone(), today)
+                        .evidence(format!("{} holds {} t of cargo fuel in ships that fuel others at sea", oiler.giver, oiler.cargo_fuel_t), today)
+                        .binding("an oiler's force is a place to fuel")
+                        .worked(format!(
+                            "{intent_words}: {lead}. It lies at its station {station}; {why}, so it is given the order to fuel from {} at sea.",
+                            oiler.giver
+                        ))
+                        .would_change("more fuel aboard, or the oiler's force farther or empty")
+                        .done(),
+                ));
+                self.hand_in_stand(task, plan, id, out, in_scope, intent_words);
+                return;
+            }
             match going_in {
                 Some((b, hex, nm, needs, short)) => {
                     let base_text = base_words(view, b);
