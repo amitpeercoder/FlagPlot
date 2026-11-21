@@ -938,6 +938,7 @@ fn refused_after_the_last_day() {
 }
 
 #[test]
+#[ignore = "superseded by decision 0204: a trial is answered inside a day, at 0600 and 1200 (scenario 118)"]
 fn refused_while_a_day_is_open() {
     let open = format!("orders_inside_a_day = true\n{}", text());
     let mut s = session_with(load(&open), &[ALLIED]);

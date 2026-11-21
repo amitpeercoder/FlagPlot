@@ -138,7 +138,7 @@ Built on Nov 20, 2026, on the branch `what-ifs-build`, to the record as amended 
 **Readings the record did not make.**
 
 1. *A change to an intent that stands* is a preview of a `set_intent` whose number is in force in the game or set among the standing commands; a `set_intent` of any other number is a new intent. A preview of a limit is "of a limit" whatever the limit, a reserve included.
-2. *In force* is read on the game as it stands at dusk: an intent taken in on an earlier morning. An intent only queued, set among the standing commands, is queued, even where the coming world holds it.
+2. *In force* is read on the game as it stands at dusk, or at the hour asked inside a day (decision 0204): an intent taken in on an earlier morning. An intent only queued, set among the standing commands, is queued, even where the coming world holds it.
 3. *The second trial's course.* For the plan as it stands and for the side without the order it is the leaves the first is given, on day 1; for an order in force it is the withdrawal and then the leaves, on day 1, after the standing commands.
 4. *What names the intent* (amended 7) is a limit "after" whose other intent is the one tried. No other command is read as naming it. The check is made only where the commands that set the intent move or go: a window of an intent not in force, and the second trial of a queued intent. A new intent previewed has no command among the standing ones to name it.
 5. *The bounds of `dates`.* An empty list, or one that holds the coming morning alone, is refused ("gives 0 days after the coming morning"), as are a day before the coming morning and a value that is neither `chosen` nor a list of whole numbers. The game's last day is checked by the session; the last day of the first date's play by the runner, which knows the size. Chosen dates are bound by the first date's play alone, as the record says.
@@ -179,7 +179,7 @@ Compared is about 1.4 to 1.7 times one trial. A window from a seat is decision 0
 
 Read on Nov 20, 2026, with the build's core: the session's reading of what is tried and what it is compared with, the commands each trial is handed, and that `sim-core`, `sim-trial` and the agent's source test are untouched. The hand calculation in `tests/scenario_100_what_ifs_from_a_seat.rs` is as the architect wrote it; no number was changed, and every statement held at the first run.
 
-1. **What a "change" is, and "in force"** (reading 1): a previewed `set_intent` whose number is in force or queued, with "in force" read on the game as it stands at dusk. Stands.
+1. **What a "change" is, and "in force"** (reading 1): a previewed `set_intent` whose number is in force or queued, with "in force" read on the game as it stands at dusk, or at the hour asked inside a day (decision 0204). Stands.
 2. **The second trial's course is the leaves,** and for an order in force the withdrawal and then the leaves (reading 2). Stands.
 3. **Only an "after" is looked for** among the standing commands left behind (reading 3). Stands: it is the one limit of another intent that names an intent. If another is added, this check is to read it too.
 4. **Dates are bound in two places,** the game's last day by the session and the first date's play by the runner (reading 4). Stands; an empty list is refused.

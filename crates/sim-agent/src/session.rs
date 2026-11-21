@@ -9,6 +9,7 @@
 //! source lint of `tests/leaks.rs` allows the word `World` in this file alone
 //! and holds this file to a shorter list of what it may call.
 
+use std::borrow::Cow;
 use std::collections::BTreeMap;
 
 use serde_json::{json, Value};
@@ -2382,7 +2383,9 @@ impl Session {
     /// thing tried; with `dates` it is a window; with `describe` nothing is
     /// played and the answer says what would be (decision 0181). It changes
     /// nothing in the game: no command is queued, no preview is spent, and
-    /// the hash is what it was (rule 14).
+    /// the hash is what it was (rule 14). Asked inside a day, at 0600 or
+    /// 1200, it is begun on the state as it stands with the open day treated
+    /// as closed, and its first day is the day after (decision 0204).
     fn trial_tool(
         &mut self,
         side: Side,
@@ -2399,12 +2402,6 @@ impl Session {
             return Err(CallError::new(
                 "the game is over: there is no coming morning to try",
             ));
-        }
-        if self.open_day().is_some() {
-            return Err(CallError::new(format!(
-                "a trial is asked at dusk, between days, and the clock stands at {}: ask it at dusk",
-                self.clock_words()
-            )));
         }
         let number = |key: &str| -> Result<Option<u32>, CallError> {
             match args.get(key) {
@@ -2583,10 +2580,13 @@ impl Session {
             }
             (None, None) => unreachable!("one of the two is given"),
         };
+        // The world a trial is begun on (decision 0204, 2): the game as it
+        // stands, with an open day treated as closed. The command state is
+        // the same on it as in the game.
+        let closed = self.closed_world();
         // Whether the intent tried stands already: in force in the game this
-        // evening, or set among the standing commands.
-        let in_force = self
-            .world
+        // evening, or at the hour asked, or set among the standing commands.
+        let in_force = closed
             .side_view(side)
             .command_state()
             .intents
@@ -2651,7 +2651,7 @@ impl Session {
         // The leaves the course gives (rule 9): each the side neither holds
         // nor has among the standing commands. Both trials are given them
         // (decision 0181, rule 4).
-        let held = self.world.side_view(side).command_state().leaves;
+        let held = closed.side_view(side).command_state().leaves;
         let mut leaves = Vec::new();
         for (leave, has) in [(Leave::Prepare, held.prepare), (Leave::Launch, held.launch)] {
             let standing_gives = standing.iter().any(
@@ -2735,17 +2735,35 @@ impl Session {
             standing: standing_words,
             course: course_words,
             second_trial: asked.second.is_some(),
-            orders_queued: self.seats[&side].queued.len(),
+            // Inside a day the orders given for the day's pulses are left
+            // out as well as those queued for the coming day (decision 0204,
+            // 5).
+            orders_queued: self.seats[&side].queued.len() + self.seats[&side].queued_inside.len(),
             beside: asked.second.as_ref().map(|s| s.of),
             in_force,
             dates,
+            inside_day: self.open_day().map(|(day, pulse)| {
+                (
+                    day,
+                    if pulse == Pulse::Afternoon {
+                        "1200"
+                    } else {
+                        "0600"
+                    },
+                )
+            }),
+            ashore: closed
+                .side_view(side)
+                .land_units()
+                .any(|unit| unit.men_ashore > 0),
         };
         if describe {
-            let described = self.describe_trial(side, &asked)?;
+            let described = self.describe_trial(&closed, side, &asked)?;
             let fields = described_fields(&self.world.side_view(side), &shown, &described);
             return Ok(staffing::answer("trial_described", fields));
         }
-        let answered = self.play_trial(side, &asked)?;
+        let answered = self.play_trial(&closed, side, &asked)?;
+        drop(closed);
         let number = u32::try_from(self.trials_shown.iter().filter(|t| t.side == side).count() + 1)
             .expect("few trials");
         let out = match &answered {
@@ -2769,14 +2787,33 @@ impl Session {
         Ok(out)
     }
 
-    /// Begins a trial on the side's whole view (rule 10), taken here, out of
-    /// the dispatch of tools, and steps it to its end (rule 3).
-    fn play_trial(&self, side: Side, asked: &TrialAsked) -> Result<Answered, CallError> {
+    /// The world a trial is begun on (decision 0204, 2): the game itself at
+    /// dusk, and inside a day the copy a preview is worked on, the state as
+    /// it stands with the open day treated as closed
+    /// ([`World::as_if_day_closed`]). The copy is never resolved and never
+    /// hashed.
+    fn closed_world(&self) -> Cow<'_, World> {
+        if self.open_day().is_some() {
+            Cow::Owned(self.world.as_if_day_closed())
+        } else {
+            Cow::Borrowed(&self.world)
+        }
+    }
+
+    /// Begins a trial on the side's whole view of `world` (rule 10; the
+    /// world of [`Session::closed_world`]), taken here, out of the dispatch
+    /// of tools, and steps it to its end (rule 3).
+    fn play_trial(
+        &self,
+        world: &World,
+        side: Side,
+        asked: &TrialAsked,
+    ) -> Result<Answered, CallError> {
         let runner = self
             .trial
             .as_ref()
             .ok_or_else(|| CallError::new("this game has no trial"))?;
-        let view = self.world.side_view(side);
+        let view = world.side_view(side);
         let mut under_way = runner
             .begin(&view, asked)
             .map_err(|refused| CallError::new(refused.0))?;
@@ -2787,10 +2824,12 @@ impl Session {
         }
     }
 
-    /// What a trial would play, on the side's whole view, with nothing
-    /// played (decision 0181, amended 9).
+    /// What a trial would play, on the side's whole view of `world` (the
+    /// world of [`Session::closed_world`]), with nothing played (decision
+    /// 0181, amended 9; decision 0204, 2).
     fn describe_trial(
         &self,
+        world: &World,
         side: Side,
         asked: &TrialAsked,
     ) -> Result<crate::trial::Described, CallError> {
@@ -2799,7 +2838,7 @@ impl Session {
             .as_ref()
             .ok_or_else(|| CallError::new("this game has no trial"))?;
         runner
-            .describe(&self.world.side_view(side), asked)
+            .describe(&world.side_view(side), asked)
             .map_err(|refused| CallError::new(refused.0))
     }
 
@@ -2843,20 +2882,35 @@ impl Session {
         }
         let now = self.moment();
         let revision = self.revision(side);
+        let inside_now = self.open_day().is_some();
         let mut text = Vec::new();
         let listed: Vec<Value> = self
             .trials_shown
             .iter()
             .filter(|t| t.side == side)
             .map(|t| {
+                // A trial asked at an earlier hour of the same day is
+                // counted as one asked on an earlier evening (decision 0204,
+                // 9).
+                let inside = &t.asked["inside_day"];
                 let (standing, note) = if t.moment.0 != now.0 || t.moment.1 != now.1 {
-                    ("earlier_evening", "asked on an earlier evening")
+                    if t.moment.1.is_some() {
+                        ("earlier_evening", "asked at an earlier hour")
+                    } else {
+                        ("earlier_evening", "asked on an earlier evening")
+                    }
                 } else if t.revision != revision {
                     ("queue_changed", "asked before your queue changed")
+                } else if inside_now {
+                    ("current", "asked at this hour, on the queue as it stands")
                 } else {
                     ("current", "asked this evening, on the queue as it stands")
                 };
                 let for_day = t.asked["for_day"].as_u64().unwrap_or(0);
+                let when = match (inside["day"].as_u64(), inside["clock"].as_str()) {
+                    (Some(day), Some(clock)) => format!("asked at {clock} of day {day}"),
+                    _ => format!("asked on the evening before day {for_day}"),
+                };
                 let how = if t.answer["kind"] == "window" {
                     ", at later dates"
                 } else if t.asked["second_trial"] == true {
@@ -2865,7 +2919,7 @@ impl Session {
                     ""
                 };
                 text.push(format!(
-                    "Estimate {}: {}{how}, asked on the evening before day {for_day}, at the size {}; {note}.",
+                    "Estimate {}: {}{how}, {when}, at the size {}; {note}.",
                     t.number,
                     match (t.asked["intent"].as_u64(), t.asked["preview"].as_u64()) {
                         (Some(intent), _) => format!("intent {intent}"),
@@ -2878,6 +2932,7 @@ impl Session {
                     "estimate": t.number,
                     "kind": t.answer["kind"],
                     "asked_on": {"days_resolved": t.moment.0, "for_day": for_day},
+                    "inside_day": inside,
                     "asked": t.asked,
                     "standing": standing,
                 })

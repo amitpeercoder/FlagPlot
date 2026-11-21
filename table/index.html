@@ -1997,6 +1997,7 @@ body.watched .gives { display: none !important; }
     if ((e.could_not_be_played || []).length) box.appendChild(el('div', 'work', e.could_not_be_played.length + ' run' + (e.could_not_be_played.length === 1 ? '' : 's') + ' could not be played and ' + (e.could_not_be_played.length === 1 ? 'is' : 'are') + ' left out.'));
     box.appendChild(el('h3', '', 'What it may cost'));
     box.appendChild(costTable([['Yours', e.cost], ['The enemy of the dry run', e.enemy_lost]]));
+    restNote(box, e);
     var held = heldHisGround(e.assumed || [], (e.asked || {}).worlds);
     if (held) box.appendChild(el('div', 'work', held));
     (e.partings || []).forEach(function (pt) {
@@ -2010,13 +2011,12 @@ body.watched .gives { display: none !important; }
       });
     });
   }
-  // Why a dry run was refused, in the table's words. One asked in the middle
-  // of a day is the common case and gets a plain sentence of its own.
+  // Why a dry run was refused, in the table's words.
   function cannotTry(message) {
-    var m = /clock stands at (\d{4}) of day (\d+)/.exec(String(message));
-    if (m) return 'A dry run can only be asked at dusk, before a day begins. It is now ' + m[1] + ' of day ' + m[2] + '; ask again at 1800.';
     return 'It cannot be tried: ' + dryWords(message) + '.';
   }
+  // A dry run asked inside a day (decision 0204): the rest of that day was not played.
+  function restNote(box, j) { if (!(j.asked && j.asked.inside_day)) return; var ash = textOf(j, 'Asked at').some(function (t) { return t.indexOf('what is ashore is a day behind') >= 0; }); box.appendChild(el('div', 'work', 'The rest of today is not played' + (ash ? ', and what is ashore is a day behind' : '') + '.')); }
   function textOf(j, start) { return (j.text || []).filter(function (t) { return t.indexOf(start) === 0; }); }
   function underneath(doc, title, lines) { if (!lines.length) return; var d = document.createElement('details'), sm = document.createElement('summary'); sm.textContent = title; d.appendChild(sm); lines.forEach(function (t) { d.appendChild(rich('div', 'work', dryWords(t))); }); doc.appendChild(d); }
   // What a dry run assumed of the enemy, in the table's words. A thing assumed
@@ -2048,7 +2048,7 @@ body.watched .gives { display: none !important; }
     var ends = j.has_end !== false;
     function line(start) { var t = textOf(j, start)[0]; if (t) used[t] = true; return t ? dryWords(t).replace(/^[^:]*: /, '') : ''; }
     var what = dryWords(tried).replace(/^preview \d+, /, '').replace(/^set order \d+: /, '').replace(/^order \d+, /, '');
-    line('Tried');
+    line('Tried'); textOf(j, 'Asked at').forEach(function (t) { used[t] = true; });
     if (ends) paras.push('We played your order to ' + what + ' ' + a.worlds + ' times over, ' + a.days + ' days each, from the morning of day ' + j.first_day + '.');
     var added = line('Added by'), leaves = (j.leaves_given_to_the_side || []).map(function (l) { return String(l).replace(/_/g, ' '); });
     textOf(j, 'Leave to').forEach(function (t) { used[t] = true; });
@@ -2079,7 +2079,7 @@ body.watched .gives { display: none !important; }
     var doc = $('sheet-doc'), a = j.asked || {}; doc.textContent = '';
     var head = el('div', 'head'), box = el('div', 'est'), dates = j.kind === 'window' ? j.dates || [] : null;
     var tried = (textOf(j, 'Tried')[0] || '').replace(/^Tried[^:]*: /, '').split(', as it would go')[0].split(', the whole order')[0];
-    [['Dry run of', dryWords(tried).replace(/^preview \d+, /, '').replace(/^order \d+, /, '').replace(/^./, function (c) { return c.toUpperCase(); })], ['From', 'the morning of day ' + j.first_day], ['Played', a.worlds + ' runs of ' + a.days + ' days each' + (dates && dates.length > 1 ? ', at ' + dates.length + ' dates' : '')], ['Number', String(j.estimate)]].forEach(function (r) { head.appendChild(el('span', '', r[0])); head.appendChild(el('span', '', r[1])); });
+    [['Dry run of', dryWords(tried).replace(/^preview \d+, /, '').replace(/^order \d+, /, '').replace(/^./, function (c) { return c.toUpperCase(); })], ['From', 'the morning of day ' + j.first_day + (a.inside_day ? ', as things stand at ' + a.inside_day.clock + ' of day ' + a.inside_day.day : '')], ['Played', a.worlds + ' runs of ' + a.days + ' days each' + (dates && dates.length > 1 ? ', at ' + dates.length + ' dates' : '')], ['Number', String(j.estimate)]].forEach(function (r) { head.appendChild(el('span', '', r[0])); head.appendChild(el('span', '', r[1])); });
     doc.appendChild(head); doc.appendChild(box);
     if (!dates) {
       estBody(box, j, j.last_day);
@@ -2107,7 +2107,7 @@ body.watched .gives { display: none !important; }
       COSTS.forEach(function (c) { add('Your ' + c[1].charAt(0).toLowerCase() + c[1].slice(1), function (d) { return d.cost && Number(d.cost[c[0]].highest) > 0 ? spreadOf(d.cost[c[0]]) : ''; }); });
       add('The enemy\'s men lost, in the dry run', function (d) { return d.enemy_lost && Number(d.enemy_lost.men_lost_to_the_enemy.highest) > 0 ? spreadOf(d.enemy_lost.men_lost_to_the_enemy) : ''; });
       add('Against the first date, run for run', function (d) { var w = d.against_first; if (!w) return ''; var n = function (x) { return x.length; }; return 'met at both in ' + n(w.both) + '; at the first alone in ' + n(w.first_alone) + '; at this date alone in ' + n(w.later_alone) + '; at neither in ' + n(w.neither); });
-      box.appendChild(t);
+      box.appendChild(t); restNote(box, j);
       if (dates.length < 2) box.appendChild(el('div', 'work', 'Nothing of yours that the order may use comes due in the days played, so there is no later date to try.'));
       else box.appendChild(el('div', 'work', 'At a later date nothing of the order is done before that day: the units it would take lie idle in between.'));
       if ((j.not_tried || []).length) underneath(doc, 'DUE LATER AND NOT TRIED', j.not_tried.map(function (x) { return x.text || JSON.stringify(x); }));

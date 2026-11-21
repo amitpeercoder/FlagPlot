@@ -17,7 +17,7 @@
       "const": "flagplot-agent"
     },
     "version": {
-      "const": 39
+      "const": 40
     },
     "kind": {
       "const": "trials"
@@ -30,6 +30,7 @@
           "estimate",
           "kind",
           "asked_on",
+          "inside_day",
           "asked",
           "standing"
         ],
@@ -59,6 +60,9 @@
                 "type": "integer"
               }
             }
+          },
+          "inside_day": {
+            "$ref": "trial.schema.json#/properties/asked/properties/inside_day"
           },
           "asked": {
             "$ref": "trial.schema.json#/properties/asked"
