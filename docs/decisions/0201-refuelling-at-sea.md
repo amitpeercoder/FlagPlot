@@ -139,3 +139,16 @@ What held:
 
 - **Statement 19 holds:** a stand force with a home port whose order to fuel ended the day before, stopped at sea and not short of the passage to the station and home, is routed back to its station by the sortie's rule; short, or with no such event, it is routed home as decision 0192, 16 has it.
 - **Games on file (Properties)** hold: every scenario on file gives the events it gave before, and every recorded game its answers, but for the version numbers; the generated files are remade for the layout, the versions and the data-file hash of `surface_combat.toml`. Tests that pin a hash or a digest taken before this build were remade for the layout alone (the pull request names them).
+
+## The architect's rulings (stage A)
+
+Read on Nov 21, 2026: the rule's code in full (`fuel_at_sea.rs`), the mend to the stand doctrine, and every remade file.
+
+1. **Statement 19 stands, and the stand doctrine was mended to hold it.** As first built, a force that had fuelled from an oiler's force was then routed home, because a force with a home port stopped at sea is routed home (decision 0192, 16). That makes the fuelling pointless. Rule 20's "goes back to its task" means its station. The mend is narrow so that no game on file moves: only a force whose order to fuel ended on the day just resolved, and that is not short of the passage to its station and home, goes back to its station. Short, as when the giver ran empty, it goes home as before; that has its own test.
+2. **Rule 19 as narrowed is the rule.** The warning is a reason of the carrier or the stand task for a force of that task with no home port and a ship below a quarter, where no oiler's force holds fuel to send it to. A warning for every force of the side moved the closed stage 2b proof's week by renumbering events, and was rightly withdrawn. A force the staff has no task for is the commander's own to watch.
+3. **A speed order to a force under the order is taken and then replaced by the steering,** as for an escort. The mechanism is the escort's and is reused as it is; only a route order ends the order to fuel.
+4. **An escort order is refused where its escort or its charge takes part in fuelling at sea.** The plan refused the chain from one side only; the build closed it from both, and that is right.
+5. **The figures are in `surface_combat.toml`,** and are placeholders as the plan's table says. The frozen step 1 figures do not have them; scenario 115 adds them to a copy of its own.
+6. **`fuels_at_sea` on a ship's line of the entity answer is kept.** It is the side's own ship.
+7. **The remade files were checked.** Of 254 generated files, every one differs from main only in hash lines and in the four version numbers. The pinned hashes of scenario 110 and of the ten export pictures changed for the layout alone. No record of a closed proof changed.
+8. **Not seen working:** the table's "Fuel from" row and its picker, since no scenario the table offers has an oiler; and a seat's view of a raid that hits only the oiler (statement 11). Both wait for stage B, which brings real oilers.
