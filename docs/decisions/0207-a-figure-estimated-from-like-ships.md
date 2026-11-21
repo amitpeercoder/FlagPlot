@@ -109,3 +109,15 @@ A reviewer who had not seen the plan read it against the derivation, the rows an
 - **The first use is blocked by much more than a displacement:** no class, no numeric rows, no guns on file, and a cargo in barrels that cannot be made tons. It is now planned in full (rules 15 to 19).
 - **More sentences of the rules pages would be false than the one the plan amended.** They are listed, and change when the tool can do it (rule 14).
 
+## The first use, settled for its hand calculation
+
+Written on Nov 21, 2026, from the rows as they stand. Where this and rules 15 to 19 differ, this holds; the hand calculation is scenario 121.
+
+- **The first ship is Toho Maru at the Coral Sea,** alone. The record has her with the Striking Force from 1 May and fuelling it on 6 May (ship_facts 3503; engagement_forces 414, 450). In August the oilers that served the carriers were north of the map on the days played, so the five days wait.
+- **Her class is the Toa Maru class,** with Toa Maru and Kyokuto Maru: the American manual groups the three, and one of the two class pages that claim her agrees. A class is filed for them, of the type oiler.
+- **Her cargo is read from her sister and not from a ratio.** Rule 18 said her cargo in barrels could not be made tons. The class page gives it in tons itself: 93,000 barrels, "about 12,687 metric tons". That is a stated capacity by weight for Toa Maru, and it is under her deadweight. It is filed as 12,487 long tons, and Toho Maru reads it by the second method, as her sister's.
+- **Her own fuel, her radius and her speeds are read:** 1,100 tons, 15,000 miles at 16 knots, 19 knots at most, from the American manual of the war, filed as numeric rows of low confidence. Its tons are read as long tons and its miles as nautical, as an American naval manual's are; a Japanese compilation gives Kyokuto Maru the same 15,000 nautical miles at 16 knots. Where the manual gives 19 knots and a compilation 19.5, the lower is read.
+- **Her deadweight is 13,431 tons,** the lower end of the manual's range for the three.
+- **Her light displacement is estimated by ratio.** A like class's ratio is its light displacement over the deadweight of its ships on file. The Cimarron class: 7,256 over 18,250. The Patoka class: 5,375 over 12,600. Each division is cut at the sixth place, as the derivation cuts: 0.397589 and 0.426587, their mean 0.412088, times 13,431 is 5,534.753928 tons, and toughness is that over 25, 221.390157. The least and the greatest are 5,340.018 and 5,729.489.
+- **An oiler's cargo is read by weight where no row gives it in barrels:** the derivation reads the stated cargo capacity in tons, as decision 0166, rule 3, has it for a transport.
+
