@@ -724,7 +724,7 @@ body.watched .gives { display: none !important; }
     });
     g.restore();
   }
-  var WORD = { control_island: 'SEIZE AND HOLD', take_place: 'CAPTURE', hold: 'HOLD', neutralise: 'NEUTRALISE', deny: 'DENY THESE WATERS', keep_supplied: 'KEEP SUPPLIED', cover: 'COVER FROM THE AIR' };
+  var WORD = { control_island: 'SEIZE AND HOLD', take_place: 'CAPTURE', hold: 'HOLD', neutralise: 'NEUTRALISE', deny: 'DENY THESE WATERS', keep_supplied: 'KEEP SUPPLIED', cover: 'COVER FROM THE AIR', operate_carriers: 'OPERATE CARRIERS FROM', stand_at: 'STATION A FORCE AT' };
 
   function drawMarks() {
     g.setTransform(1, 0, 0, 1, 0, 0); g.drawImage(baseCanvas, 0, 0);
@@ -1727,6 +1727,9 @@ body.watched .gives { display: none !important; }
     if (where && i.kind === 'keep_supplied') return 'Keep ' + where + ' supplied';
     if (where && i.kind === 'cover') return 'Cover ' + where + ' from the air';
     if (where && i.kind === 'deny') return 'Deny the waters round ' + where;
+    var tfn = i.task_force != null && ((M.forces.filter(function (f) { return num(f.task_force.handle) === Number(i.task_force.handle ? num(i.task_force.handle) : i.task_force); })[0] || {}).task_force || {}).name;
+    if (where && i.kind === 'operate_carriers') return 'Operate ' + (tfn || 'the carrier force') + ' from ' + where;
+    if (where && i.kind === 'stand_at') return 'Station ' + (tfn || 'the force') + ' at ' + where;
     var w = (WORD[i.kind] || i.kind.replace(/_/g, ' ')).toLowerCase(); return (w.charAt(0).toUpperCase() + w.slice(1) + ' ' + where).trim();
   }
   function readPlan(root) {
@@ -2660,6 +2663,12 @@ body.watched .gives { display: none !important; }
     if (target.kind === 'enemy') list.push(['Capture ' + target.name + ' only', { intent_kind: 'take_place', base: n }, 'Land men and capture the place. Nothing is ordered for afterwards: no garrison, no supply.'], ['Neutralise ' + target.name, { intent_kind: 'neutralise', target: n }, 'Air raids on its airfield until it can fly no aircraft. No landing.']);
     if (target.kind === 'own') list.push(['Hold ' + target.name, { intent_kind: 'hold', base: n }, 'Its men defend it; it is kept supplied and covered from the air.'], ['Keep it supplied, 30 days', { intent_kind: 'keep_supplied', base: n, floor_days: 30 }, 'Supply runs keep 30 days of stock there. Nothing else.'], ['Cover it from the air', { intent_kind: 'cover', base: n }, 'Fighters over it and searches round it. Nothing else.']);
     if (target.kind === 'waters') list.push(['Deny these waters, ' + round(2), { intent_kind: 'deny', hex: [target.q, target.r], distance: 2 }, 'Search them and strike any enemy ship that enters.'], ['Deny these waters, ' + round(4), { intent_kind: 'deny', hex: [target.q, target.r], distance: 4 }, 'The same, over a wider circle.']);
+    // A force is moved by an order of its own: a carrier force is told where to work from, a surface force where to stand.
+    if (target.kind === 'waters') M.forces.forEach(function (f) {
+      var n = num(f.task_force.handle), name = f.task_force.name || f.task_force.handle;
+      if (f.mission === 'carrier') list.push(['Operate ' + name + ' from here', { intent_kind: 'operate_carriers', task_force: n, hex: [target.q, target.r] }, 'The carrier force goes there and works from it: it searches, and strikes the enemy ships it finds.']);
+      else if (f.mission === 'surface_combat') list.push(['Station ' + name + ' here', { intent_kind: 'stand_at', task_force: n, hex: [target.q, target.r] }, 'The force goes there and waits, to meet enemy ships that come within its reach.']);
+    });
     return list;
   }
   function pick(p) {
