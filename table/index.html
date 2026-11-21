@@ -53,7 +53,7 @@ button:disabled { opacity: 0.45; cursor: default; }
 .view { position: fixed; top: 12px; right: 16px; display: flex; gap: 6px; }
 .view button svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; flex: none; }
 .view button { display: inline-flex; align-items: center; gap: 6px; min-width: 36px; justify-content: center; min-height: 34px; padding: 0 8px; background: rgba(0,0,0,0.35); color: var(--ink-dim); border: 1px solid var(--ink-dim); border-radius: 2px; font-size: 13px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; }
-.view button.ask { color: #fff; border-color: var(--enemy); background: var(--enemy); }
+.view button.ask, .pop .papers button.ask { color: #fff; border-color: var(--enemy); background: var(--enemy); }
 .view button:hover, .view button:focus-visible, .view button[aria-pressed="true"] { color: var(--ink); border-color: var(--ink); }
 .tray h2 { margin: 4px 0 0; font-size: 14px; font-weight: 600; letter-spacing: 0.16em; opacity: 0.85; text-transform: uppercase; text-shadow: 0 1px 6px #000; }
 #signals { display: flex; flex-direction: column; gap: 10px; }
@@ -165,6 +165,28 @@ button:disabled { opacity: 0.45; cursor: default; }
 .est th, .est td { text-align: left; padding: 3px 14px 3px 0; vertical-align: top; border-bottom: 1px dotted #8d8672; }
 .est th { font-weight: 400; color: var(--paper-dim); }
 .est .big { font-size: 15px; line-height: 1.45; }
+.sheet .doc p.lead { margin: 0 0 12px; padding-bottom: 10px; border-bottom: 1px solid #8d8672; font-size: 14px; line-height: 1.5; color: var(--paper-dim); }
+.sheet .doc p.lead strong { color: var(--paper-ink); font-size: 15px; }
+.sheet .doc details.fold { margin-top: 10px; }
+.sheet .doc .row { align-items: center; }
+.sheet .doc button.primary { background: var(--own); border-color: var(--own); color: #fff; }
+.sheet .doc button.quiet { min-height: 0; padding: 2px 0; border: 0; background: none; box-shadow: none; color: var(--own); font-size: 12px; letter-spacing: 0.1em; text-decoration: underline; text-underline-offset: 3px; }
+.sheet .doc button.quiet.danger { color: var(--enemy); }
+.sheet .doc button.quiet:disabled { opacity: 0.45; }
+.sheet .doc .line { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; margin: 8px 0; font-family: var(--f-type); font-size: 13px; }
+.sheet .doc .line .fl { min-width: 7.5em; color: var(--paper-dim); }
+.sheet .doc .line .fl + .seg { margin-left: -8px; }
+.sheet .doc .line input[type=number] { background: var(--paper); color: var(--paper-ink); border: 1px solid #8d8672; border-radius: 2px; padding: 3px 6px; font-family: var(--f-type); font-size: 13px; }
+.sheet .doc .seg { display: inline-flex; }
+.sheet .doc .seg button { min-height: 26px; padding: 0 9px; font-size: 11px; border-radius: 0; margin-left: -1px; text-decoration: none; }
+.sheet .doc .seg button.on { background: var(--paper-ink); color: var(--paper); font-weight: 700; text-decoration: none; }
+.sheet .doc .line > .fl:not(:first-child) { min-width: 0; }
+.sheet .doc details.fold .planorder.dryrun { border: 0; padding: 0; margin: 6px 0 0; }
+.sheet .doc details.fold .planorder.dryrun h3 { display: none; }
+.est .stamp { display: inline-block; margin: 4px 0 10px 2px; padding: 6px 14px 5px; border: 3px double currentColor; border-radius: 3px; font-family: var(--f-ui); font-size: 24px; font-weight: 700; letter-spacing: 0.14em; line-height: 1.1; transform: rotate(-2.5deg); opacity: 0.88; }
+.est .stamp.win { color: #2f6b3a; }
+.est .stamp.loss { color: var(--enemy); }
+.est .stamp.tie { color: var(--paper-ink, #2b2a26); }
 .dryrun .sizes button.on { font-weight: 700; text-decoration: underline; }
 .planorder { border: 1px solid #8d8672; padding: 8px 12px; margin: 10px 0 14px; }
 .planorder h3 { margin-top: 0; }
@@ -421,9 +443,14 @@ body.watched .gives { display: none !important; }
   <button type="button" id="btn-hexes" aria-pressed="false" title="Hexes and their numbers" aria-label="Hexes"><svg viewBox="0 0 24 24"><path d="M7 3.5h10l5 8.5-5 8.5H7L2 12z"/></svg></button>
   <button type="button" id="btn-pieces"></button>
   <button type="button" id="btn-labels"></button>
-  <button type="button" id="btn-new" title="End this game and choose another" hidden>New game</button>
-  <button type="button" id="btn-restart" title="Begin the game again from its first evening" aria-label="Begin the game again"><svg viewBox="0 0 24 24"><path d="M4.5 12a7.5 7.5 0 1 0 2.4-5.5M4 3.5v4h4"/></svg></button>
-  <button type="button" id="btn-stops" aria-expanded="false" aria-controls="stops" hidden title="What stops the clock" aria-label="Clock stops"><svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 8.5V13l3 2M9.5 2.5h5"/></svg></button>
+  <button type="button" id="btn-game" class="menu" aria-expanded="false" aria-controls="pop-game" title="The game: a new one, this one again, what stops the clock">Game</button>
+</div>
+<div id="pop-game" class="pop" hidden>
+  <div class="papers stay">
+    <button type="button" id="btn-new" title="End this game and choose another" hidden>New game</button>
+    <button type="button" id="btn-restart" title="Begin the game again from its first evening">Restart</button>
+    <button type="button" id="btn-stops" aria-expanded="false" aria-controls="stops" hidden title="What stops the clock">What stops the clock</button>
+  </div>
 </div>
 <fieldset class="stops" id="stops" hidden>
   <legend>THE CLOCK STOPS WHEN I AM TOLD OF</legend>
@@ -697,7 +724,7 @@ body.watched .gives { display: none !important; }
     });
     g.restore();
   }
-  var WORD = { control_island: 'SEIZE AND HOLD', take_place: 'CAPTURE', hold: 'HOLD', neutralise: 'NEUTRALISE', deny: 'DENY THESE WATERS', keep_supplied: 'KEEP SUPPLIED', cover: 'COVER FROM THE AIR' };
+  var WORD = { control_island: 'SEIZE AND HOLD', take_place: 'CAPTURE', hold: 'HOLD', neutralise: 'NEUTRALISE', deny: 'DENY THESE WATERS', keep_supplied: 'KEEP SUPPLIED', cover: 'COVER FROM THE AIR', operate_carriers: 'OPERATE CARRIERS FROM', stand_at: 'STATION A FORCE AT' };
 
   function drawMarks() {
     g.setTransform(1, 0, 0, 1, 0, 0); g.drawImage(baseCanvas, 0, 0);
@@ -1700,6 +1727,9 @@ body.watched .gives { display: none !important; }
     if (where && i.kind === 'keep_supplied') return 'Keep ' + where + ' supplied';
     if (where && i.kind === 'cover') return 'Cover ' + where + ' from the air';
     if (where && i.kind === 'deny') return 'Deny the waters round ' + where;
+    var tfn = i.task_force != null && ((M.forces.filter(function (f) { return num(f.task_force.handle) === Number(i.task_force.handle ? num(i.task_force.handle) : i.task_force); })[0] || {}).task_force || {}).name;
+    if (where && i.kind === 'operate_carriers') return 'Operate ' + (tfn || 'the carrier force') + ' from ' + where;
+    if (where && i.kind === 'stand_at') return 'Station ' + (tfn || 'the force') + ' at ' + where;
     var w = (WORD[i.kind] || i.kind.replace(/_/g, ' ')).toLowerCase(); return (w.charAt(0).toUpperCase() + w.slice(1) + ' ' + where).trim();
   }
   function readPlan(root) {
@@ -1713,8 +1743,13 @@ body.watched .gives { display: none !important; }
       var byNum = {}; st.intents.forEach(function (i) { byNum[i.number] = i; });
       var top = byNum[root]; if (!top) { setStatus('That order is no longer held.'); return; }
       var lim = top.limits_read_up || {}, head = el('div', 'head');
-      [['Your order', plainWords(sayIntent(top, said))], ['Given', 'day ' + top.set_day], ['Risk', lim.risk || 'balanced'], ['Forces', top.limits && top.limits.forces ? 'limited by you' : 'the staff\'s choice'], ['Leave to launch', st.leaves.launch ? 'given: a plan that is ready goes' : 'withheld: each plan waits for your word']].forEach(function (r) { head.appendChild(el('span', '', r[0])); head.appendChild(el('span', '', r[1])); });
+      // The order in one line: what it is, when given, its risk and its forces.
+      // Leave to launch is said only when given; a plan that waits says so itself, below.
+      head = el('p', 'lead'); head.appendChild(rich('strong', '', plainWords(sayIntent(top, said)).replace(/^./, function (c) { return c.toUpperCase(); })));
+      head.appendChild(document.createTextNode(' \u00B7 given day ' + top.set_day + ' \u00B7 risk ' + (lim.risk || 'balanced') + ' \u00B7 forces ' + (top.limits && top.limits.forces ? 'limited by you' : 'of the staff\'s choosing') + (st.leaves.launch ? ' \u00B7 leave to launch given' : '')));
       doc.appendChild(head);
+      // What is not asked of the commander now is folded away, to be opened when wanted.
+      function fold(title) { var d = document.createElement('details'), sm = document.createElement('summary'); sm.textContent = title; d.appendChild(sm); d.className = 'fold'; return d; }
       // What must be known before a take goes (decision 0159, 13): one line
       // under the take, where the staff works the need this morning.
       function need(p) { var k = p && p.need_to_know; if (!k) return null; var d = rich('div', 'work', needWords(k)); if (!k.met) d.style.color = 'var(--enemy)'; return d; }
@@ -1729,12 +1764,11 @@ body.watched .gives { display: none !important; }
         if (off) n.appendChild(el('div', 'work', 'Cancelled by you today. It stops at 1800.'));
         else if (ok) n.appendChild(el('div', 'work', 'Approved by you today. The staff acts on it from 1800.'));
         else if (waits) n.appendChild(el('div', 'work', p.state === 'preparing' ? 'It is ready and waits for your leave to launch.' : 'It waits for your leave to prepare.'));
-        if (!off && !gone && !WATCH) { var row = el('div', 'row'), press = function (words, tool, done) { var x = el('button', '', words); x.type = 'button'; x.addEventListener('click', function () { act(tool, { plan: p.number }, done).then(function () { readPlan(root); }); }); row.appendChild(x); };
+        if (!off && !gone && !WATCH) { var row = el('div', 'row'), press = function (words, tool, done) { var x = el('button', tool === 'approve' ? 'primary' : 'quiet', words); x.type = 'button'; x.addEventListener('click', function () { act(tool, { plan: p.number }, done).then(function () { readPlan(root); }); }); row.appendChild(x); };
           if (waits) press('APPROVE PLAN ' + p.number, 'approve', 'Plan ' + p.number + ' approved.');
           press('CANCEL PLAN ' + p.number, 'cancel_plan', 'Plan ' + p.number + ' is cancelled from 1800.'); n.appendChild(row); }
         doc.appendChild(n);
       })(top.plan != null ? plans[top.plan] : null);
-      if (OFFERED.trial && !WATCH) dryBox(doc, root);
       // The brief: one line a task, with a word for where it stands. What
       // the staff decided today and why is one step down, under each line.
       var lines = [], tally = {};
@@ -1771,9 +1805,9 @@ body.watched .gives { display: none !important; }
         else (o.text || []).filter(function (t) { return /ashore\.$/.test(t); }).forEach(function (t) { box.appendChild(rich('div', 'work', nameText(t))); });
         doc.appendChild(box);
       })(a[3]);
-      doc.appendChild(el('h3', '', '1. The brief'));
+      if (lines.length) doc.appendChild(el('h3', '', 'The brief'));
       var order = ['WAITS FOR YOU', 'APPROVED', 'CANCELLED FROM 1800', 'CANNOT BE MET', 'ORDERS TODAY', 'PREPARING', 'STANDING', 'DONE', 'ENDED'], sum = order.filter(function (k) { return tally[k]; }).map(function (k) { return tally[k] + ' ' + (k === 'WAITS FOR YOU' ? (tally[k] === 1 ? 'waits' : 'wait') + ' for you' : k.toLowerCase()); });
-      doc.appendChild(el('p', '', lines.length ? 'The staff has made ' + lines.length + ' task' + (lines.length === 1 ? '' : 's') + ' of it: ' + sum.join(', ') + '.' : 'The staff has made nothing of it yet. It plans at 1800.'));
+      doc.appendChild(el(lines.length ? 'p' : 'div', lines.length ? '' : 'work', lines.length ? 'The staff has made ' + lines.length + ' task' + (lines.length === 1 ? '' : 's') + ' of it: ' + sum.join(', ') + '.' : 'The staff has made nothing of it yet. It plans at 1800.'));
       lines.forEach(function (L) {
         var n = el('div', 'node'), who = el('div', 'who'), i = L.i, p = L.p; n.style.marginLeft = (L.depth - 1) * 18 + 'px'; if (L.word === 'ENDED' || L.word === 'DONE') n.style.opacity = 0.6;
         who.appendChild(rich('strong', '', said[i.number] ? said[i.number].replace(/^./, function (c) { return c.toUpperCase(); }) : sayIntent(i, said))); var tag = el('span', 'state', L.word); if (L.word === 'WAITS FOR YOU' || L.word === 'CANNOT BE MET') tag.style.color = 'var(--enemy)'; who.appendChild(tag); n.appendChild(who);
@@ -1789,22 +1823,30 @@ body.watched .gives { display: none !important; }
         if (L.off) d.appendChild(el('div', 'work', 'Cancelled by you today. It stops at 1800.'));
         else if (L.ok) d.appendChild(el('div', 'work', 'Approved by you today. The staff acts on it from 1800.'));
         if (L.live && !L.off && !WATCH) { var row = el('div', 'row'); (L.waits ? n : d).appendChild(row);
-          if (L.waits) { var ok = el('button', '', 'APPROVE PLAN ' + p.number); ok.type = 'button'; ok.addEventListener('click', function () { act('approve', { plan: p.number }, 'Plan ' + p.number + ' approved.').then(function () { readPlan(root); }); }); row.appendChild(ok); }
-          var no = el('button', '', 'CANCEL PLAN ' + p.number); no.type = 'button'; no.addEventListener('click', function () { act('cancel_plan', { plan: p.number }, 'Plan ' + p.number + ' is cancelled from 1800.').then(function () { readPlan(root); }); }); row.appendChild(no); }
+          if (L.waits) { var ok = el('button', 'primary', 'APPROVE PLAN ' + p.number); ok.type = 'button'; ok.addEventListener('click', function () { act('approve', { plan: p.number }, 'Plan ' + p.number + ' approved.').then(function () { readPlan(root); }); }); row.appendChild(ok); }
+          var no = el('button', 'quiet', 'CANCEL PLAN ' + p.number); no.type = 'button'; no.addEventListener('click', function () { act('cancel_plan', { plan: p.number }, 'Plan ' + p.number + ' is cancelled from 1800.').then(function () { readPlan(root); }); }); row.appendChild(no); }
         doc.appendChild(n);
       });
-      if (!WATCH) { doc.appendChild(el('h3', '', '2. Send it back to the staff'));
-      var row = el('div', 'row'); doc.appendChild(row);
-      ['preserve', 'balanced', 'press'].forEach(function (r) { var b = el('button', '', 'RISK: ' + r.toUpperCase() + ((lim.risk || 'balanced') === r ? ' ✓' : '')); b.type = 'button'; b.addEventListener('click', function () { act('set_limit', { limit: 'risk', intent: root, risk: r }, 'Risk set to ' + r + '. The staff plans again at 1800.').then(function () { readPlan(root); }); }); row.appendChild(b); });
-      var w = el('button', '', 'WITHDRAW THIS ORDER'); w.type = 'button'; w.addEventListener('click', function () { act('withdraw_intent', { intent: root }, 'The order is withdrawn from 1800.').then(function () { $('sheet').hidden = true; }); }); row.appendChild(w); }
-      if (OFFERED.trial && top.in_force !== false && !WATCH) {
-        doc.appendChild(el('h3', '', '3. What if'));
-        var wrow = el('div', 'row'), wsays = el('div', 'work'), riskNow = lim.risk || 'balanced';
-        ['preserve', 'balanced', 'press'].filter(function (r) { return r !== riskNow; }).forEach(function (r) { var b = el('button', '', 'RISK ' + r.toUpperCase() + '?'); b.type = 'button'; b.addEventListener('click', function () { whatIf(root, { limit: 'risk', risk: r }, 'risk ' + r, wsays, wrow.querySelectorAll('button')); }); wrow.appendChild(b); });
-        var nb = el('button', '', 'NOT BEFORE DAY \u2026?'), nday = el('input'); nday.type = 'number'; nday.min = String(M.day + 2); nday.value = String(M.day + 3); nday.style.width = '4.5em'; nday.setAttribute('aria-label', 'The day it is not to go before'); nb.type = 'button';
-        nb.addEventListener('click', function () { var d = parseInt(nday.value, 10); if (!(d > 0)) return; whatIf(root, { limit: 'not_before', from_day: d }, 'not before day ' + d, wsays, wrow.querySelectorAll('button')); });
-        wrow.appendChild(nb); wrow.appendChild(nday); doc.appendChild(wrow); doc.appendChild(wsays);
-        doc.appendChild(el('div', 'work', 'Each is played beside the plan as it stands, at the size chosen above. Nothing is given until you say so.'));
+      if (OFFERED.trial && !WATCH) { var dryFold = fold('DRY RUN'); dryBox(dryFold, root); doc.appendChild(dryFold); }
+      // Risk and timing: one line a choice, with what may be done about it as quiet words beside it.
+      if (!WATCH) {
+        var riskNow = lim.risk || 'balanced', can = OFFERED.trial && top.in_force !== false, rk = fold('RISK AND TIMING'), wsays = el('div', 'work'), tries = [];
+        function quiet(words, cls) { var b = el('button', 'quiet' + (cls ? ' ' + cls : ''), words); b.type = 'button'; return b; }
+        function choice(label) { var l = el('div', 'line'); l.appendChild(el('span', 'fl', label)); rk.appendChild(l); return l; }
+        rk.appendChild(el('div', 'work', 'The risk is ' + riskNow + '.'));
+        ['preserve', 'balanced', 'press'].filter(function (r) { return r !== riskNow; }).forEach(function (r) {
+          var l = choice(r.charAt(0).toUpperCase() + r.slice(1));
+          if (can) { var t = quiet('TRY IT FIRST'); tries.push(t); t.addEventListener('click', function () { whatIf(root, { limit: 'risk', risk: r }, 'risk ' + r, wsays, tries); }); l.appendChild(t); }
+          var set = quiet('SET IT'); set.addEventListener('click', function () { act('set_limit', { limit: 'risk', intent: root, risk: r }, 'Risk set to ' + r + '. The staff plans again at 1800.').then(function () { readPlan(root); }); }); l.appendChild(set);
+        });
+        if (can) {
+          var nl = choice('Not before day'), nday = el('input'), nb = quiet('TRY IT FIRST'); nday.type = 'number'; nday.min = String(M.day + 2); nday.value = String(M.day + 3); nday.style.width = '4.5em'; nday.setAttribute('aria-label', 'The day it is not to go before'); tries.push(nb);
+          nb.addEventListener('click', function () { var d = parseInt(nday.value, 10); if (!(d > 0)) return; whatIf(root, { limit: 'not_before', from_day: d }, 'not before day ' + d, wsays, tries); });
+          nl.insertBefore(nday, null); nl.appendChild(nb);
+          rk.appendChild(wsays); rk.appendChild(el('div', 'work', 'A try is played beside the plan as it stands, at the size chosen under Dry run. Nothing is given until you say so.'));
+        }
+        doc.appendChild(rk);
+        var wl = el('div', 'line'), w = quiet('WITHDRAW THIS ORDER', 'danger'); w.addEventListener('click', function () { act('withdraw_intent', { intent: root }, 'The order is withdrawn from 1800.').then(function () { $('sheet').hidden = true; }); }); wl.appendChild(w); doc.appendChild(wl);
       }
       if (!WATCH) doc.appendChild(el('div', 'foot', (a[2].inside_day ? 'Worked now, in the middle of the day; the staff is asked again at dusk and may then do otherwise. ' : '') + 'You change a plan by instruction: your leave, a limit, a cancel or a withdrawal. To keep a force out of it, touch the force and give it a direct order yourself.'));
       sheetAs('THE PLAN'); $('sheet-chart').hidden = false; $('sheet-chart').onclick = function () { $('sheet').hidden = true; showPlanOnChart(root); }; doc.hidden = false; $('sheet-text').hidden = true; $('sheet').hidden = false; $('sheet-close').focus();
@@ -1817,15 +1859,15 @@ body.watched .gives { display: none !important; }
   var drySize = 'small', dryBusy = false;
   function dryWords(t) { return nameText(String(t).replace(/\((-?\d+),(-?\d+)\)/g, function (m, q, r) { return hexWords({ q: Number(q), r: Number(r) }); }).replace(/\bworlds\b/g, 'runs').replace(/\bworld\b/g, 'run').replace(/\bintent (\d+)/g, 'order $1').replace(/\b[Tt]he trial's enemy/g, function (m) { return (m.charAt(0) === 'T' ? 'The' : 'the') + ' enemy of the dry run'; }).replace(/\bthe trial\b/g, 'the dry run').replace(/\ba trial\b/g, 'a dry run').replace(/\bsecond trial\b/g, 'second run')); }
   function dryBox(doc, root) {
-    var box = el('div', 'planorder dryrun'), sizes = el('div', 'row sizes'), row = el('div', 'row'), says = el('div', 'work');
-    box.appendChild(el('h3', '', 'Dry run'));
+    var box = el('div', 'planorder dryrun'), sizes = el('span', 'seg sizes'), row = el('div', 'line'), more = el('div', 'line'), says = el('div', 'work'), all = [];
     ['small', 'standard', 'full'].forEach(function (z) { var b = el('button', z === drySize ? 'on' : '', z.toUpperCase()); b.type = 'button'; b.addEventListener('click', function () { drySize = z; Array.prototype.forEach.call(sizes.children, function (c) { c.className = c === b ? 'on' : ''; }); }); sizes.appendChild(b); });
-    function go(words, more) {
-      var b = el('button', '', words); b.type = 'button'; row.appendChild(b);
-      b.addEventListener('click', function () { var args = { intent: root, size: drySize }, k; for (k in more) args[k] = more[k]; playDry(args, says, row.children, function (j) { readEstimate(j, root); }); });
+    function go(words, args0, cls, into) {
+      var b = el('button', cls, words); b.type = 'button'; into.appendChild(b); all.push(b);
+      b.addEventListener('click', function () { var args = { intent: root, size: drySize }, k; for (k in args0) args[k] = args0[k]; playDry(args, says, all, function (j) { readEstimate(j, root); }); });
     }
-    go('DRY RUN', {}); go('… AND WITHOUT THIS ORDER', { compare: true }); go('… AT LATER DATES', { dates: 'chosen' });
-    box.appendChild(sizes); box.appendChild(row); box.appendChild(says); doc.appendChild(box);
+    go('DRY RUN', {}, '', row); row.appendChild(el('span', 'fl', 'size')); row.appendChild(sizes);
+    go('ALSO WITHOUT THIS ORDER', { compare: true }, 'quiet', more); go('AT LATER DATES', { dates: 'chosen' }, 'quiet', more);
+    box.appendChild(row); box.appendChild(more); box.appendChild(says); doc.appendChild(box);
   }
   // Plays a dry run: says what it will play, counts the seconds, and locks
   // the buttons given until it is answered or refused.
@@ -1886,11 +1928,74 @@ body.watched .gives { display: none !important; }
   }
   function textOf(j, start) { return (j.text || []).filter(function (t) { return t.indexOf(start) === 0; }); }
   function underneath(doc, title, lines) { if (!lines.length) return; var d = document.createElement('details'), sm = document.createElement('summary'); sm.textContent = title; d.appendChild(sm); lines.forEach(function (t) { d.appendChild(rich('div', 'work', dryWords(t))); }); doc.appendChild(d); }
+  // What a dry run assumed of the enemy, in the table's words. A thing assumed
+  // in every run says so once and lists no runs; the two assumptions that the
+  // enemy knows nothing and plans nothing are told as one line.
+  function assumedLines(list, of) {
+    var out = [], blind = null, idle = null;
+    function runs(x) { var n = (x.made_in || []).length; return !of || n >= of ? '' : ', in ' + n + ' of ' + of + ' runs'; }
+    function tons(v) { var n = Number(v); return isFinite(n) ? n.toLocaleString('en-US') : String(v); }
+    list.forEach(function (x) {
+      var t = x.thing || {};
+      if (t.kind === 'no_belief') { blind = x; return; }
+      if (t.kind === 'no_intent') { idle = x; return; }
+      if (t.kind === 'enemy_base') {
+        var name = (t.base && t.base.name) || (t.place && t.place.name) || 'his base';
+        out.push('His base at ' + name + ', taken to hold ' + tons(t.supply_t) + ' t of supply and ' + tons(t.fuel_t) + ' t of fuel' + runs(x) + '.'); return;
+      }
+      out.push(String(x.text || '').replace(/, in (\d+) of \1 runs? \(runs? [^)]*\)/, '').replace(/ \(runs? [^)]*\)/, '').replace(/^./, function (c) { return c.toUpperCase(); }) + '.');
+    });
+    if (blind && idle && !runs(blind) && !runs(idle)) out.push('Played against an enemy who knows nothing of your forces and only holds what he has.');
+    else {
+      if (blind) out.push('The enemy played as knowing nothing of your forces' + runs(blind) + '.');
+      if (idle) out.push('The enemy played with no plan of his own, holding what he has' + runs(idle) + '.');
+    }
+    return out;
+  }
+  // The staff's report of a dry run, as the chief of staff would put it to the
+  // commander: numbered paragraphs made from what the dry run gave. Anything
+  // the dry run said that no paragraph covers follows in its own words.
+  function staffBrief(doc, j, a, tried) {
+    var d = document.createElement('details'), sm = document.createElement('summary'), paras = [], used = {};
+    sm.textContent = 'THE STAFF\'S REPORT'; d.appendChild(sm);
+    function line(start) { var t = textOf(j, start)[0]; if (t) used[t] = true; return t ? dryWords(t).replace(/^[^:]*: /, '') : ''; }
+    function zero(c) { return !c || COSTS.every(function (k) { return !c[k[0]] || Number(c[k[0]].highest) === 0; }); }
+    function losses(c) { return COSTS.filter(function (k) { return c[k[0]] && Number(c[k[0]].highest) > 0; }).map(function (k) { return k[1].charAt(0).toLowerCase() + k[1].slice(1) + ' ' + spreadOf(c[k[0]]); }).join('; '); }
+    var what = dryWords(tried).replace(/^preview \d+, /, '').replace(/^set order \d+: /, '').replace(/^order \d+, /, '');
+    line('Tried');
+    paras.push('We played your order to ' + what + ' ' + a.worlds + ' times over, ' + a.days + ' days each, from the morning of day ' + j.first_day + '.');
+    var added = line('Added by'), leaves = (j.leaves_given_to_the_side || []).map(function (l) { return String(l).replace(/_/g, ' '); });
+    textOf(j, 'Leave to').forEach(function (t) { used[t] = true; });
+    if (leaves.length) paras.push('To play it we took your leave to ' + leaves.join(' and to ') + ' as given, which you have not given. Given in earnest, it frees every plan of yours that waits on it, not this one alone.');
+    else if (added) { var rest = added.split('; ').filter(function (x) { return !/^set order/.test(x); }); if (rest.length) paras.push('To play it we added what you have not ordered: ' + rest.join('; ').replace(/\.$/, '') + '.'); }
+    var went = line('How it went');
+    if (j.has_end === false) paras.push('An order of this kind has no finish we can test for, so we report only what it cost.');
+    else if (went) paras.push('How it went: ' + went.replace(/\bthis intent\b/g, 'this order'));
+    line('What it cost'); line('What the trial'); line('What the enemy');
+    paras.push(zero(j.cost) ? 'It cost us nothing in any run: no man, ship or aircraft.' : 'Our losses over the runs, lowest to highest: ' + losses(j.cost) + '.');
+    paras.push(zero(j.enemy_lost) ? 'The enemy we played against lost nothing either.' : 'The enemy we played against lost, by our own reckoning and not by any claim or report: ' + losses(j.enemy_lost) + '.');
+    var needs = line('What it needs');
+    if (needs) paras.push(/it waits for nothing/.test(needs) ? 'The order waits for nothing.' : 'What it needs and has: ' + needs);
+    var others = textOf(j, 'What its other plans').concat(textOf(j, 'Your other')).concat(textOf(j, 'Your side has no other'));
+    others.forEach(function (t) { used[t] = true; });
+    if (textOf(j, 'Your side has no other').length) paras.push('You have no other order in force for it to compete with.');
+    else others.forEach(function (t) { paras.push(dryWords(t)); });
+    if (textOf(j, 'Your intent is in force').length) { line('Your intent is in force'); paras.push('Your order is already in force, so this shows it as things stand. To see what it costs your other plans, play it again with "and without this order".'); }
+    line('What was assumed');
+    var as = assumedLines(j.assumed || [], a.worlds);
+    if (as.length) paras.push('Of the enemy we assumed this. ' + as.join(' '));
+    (j.text || []).forEach(function (t) { if (!used[t]) paras.push(dryWords(t)); });
+    var head = el('div', 'head');
+    [['From', 'Chief of Staff'], ['To', 'Commander'], ['Subject', 'Dry run number ' + j.estimate]].forEach(function (r) { head.appendChild(el('span', '', r[0])); head.appendChild(el('span', '', r[1])); });
+    d.appendChild(head);
+    paras.forEach(function (t, n) { d.appendChild(rich('div', 'work', (n + 1) + '. ' + t)); });
+    doc.appendChild(d);
+  }
   function readEstimate(j, root, draft) {
     var doc = $('sheet-doc'), a = j.asked || {}; doc.textContent = '';
     var head = el('div', 'head'), box = el('div', 'est'), dates = j.kind === 'window' ? j.dates || [] : null;
     var tried = (textOf(j, 'Tried')[0] || '').replace(/^Tried[^:]*: /, '').split(', as it would go')[0].split(', the whole order')[0];
-    [['Dry run of', dryWords(tried).replace(/^preview \d+, /, '').replace(/^order \d+, /, '').replace(/^./, function (c) { return c.toUpperCase(); })], ['From', 'the morning of day ' + j.first_day], ['Played', a.worlds + ' runs of ' + a.days + ' days each' + (dates && dates.length > 1 ? ', at ' + dates.length + ' dates' : '')], ['Estimate', String(j.estimate)]].forEach(function (r) { head.appendChild(el('span', '', r[0])); head.appendChild(el('span', '', r[1])); });
+    [['Dry run of', dryWords(tried).replace(/^preview \d+, /, '').replace(/^order \d+, /, '').replace(/^./, function (c) { return c.toUpperCase(); })], ['From', 'the morning of day ' + j.first_day], ['Played', a.worlds + ' runs of ' + a.days + ' days each' + (dates && dates.length > 1 ? ', at ' + dates.length + ' dates' : '')], ['Number', String(j.estimate)]].forEach(function (r) { head.appendChild(el('span', '', r[0])); head.appendChild(el('span', '', r[1])); });
     doc.appendChild(head); doc.appendChild(box);
     if (!dates) {
       estBody(box, j, j.last_day);
@@ -1904,8 +2009,8 @@ body.watched .gives { display: none !important; }
         if (b.of === 'withdrawn') box.appendChild(el('div', 'work', 'What was already ordered stands: the withdrawal is the dry run\'s, not yours.'));
       }
       (j.other_plans || []).length ? underneath(box, 'YOUR OTHER ORDERS', textOf(j, 'What its other plans').concat(textOf(j, 'Your other'))) : null;
-      underneath(doc, 'WHAT IT NEEDS AND HAS', textOf(j, 'What it needs'));
-      underneath(doc, 'WHAT WAS ASSUMED OF THE ENEMY', (j.assumed || []).map(function (x) { return x.text; }));
+      underneath(doc, 'WHAT IT NEEDS AND HAS', textOf(j, 'What it needs').map(function (t) { return /take|land/i.test(tried) ? t : t.replace('; no day ashore can yet be given', ''); }));
+      underneath(doc, 'WHAT WAS ASSUMED OF THE ENEMY', assumedLines(j.assumed || [], a.worlds));
     } else {
       var t = el('table'), add = function (label, f) { var r = el('tr'); r.appendChild(el('th', '', label)); var any = false; dates.forEach(function (d, n) { var v = f(d, n); if (v) any = true; var td = rich('td', '', v || '–'); r.appendChild(td); }); if (any) t.appendChild(r); };
       add('Order given on', function (d, n) { return 'day ' + d.day + (n ? '' : ', the coming morning'); });
@@ -1924,7 +2029,8 @@ body.watched .gives { display: none !important; }
       if ((j.not_tried || []).length) underneath(doc, 'DUE LATER AND NOT TRIED', j.not_tried.map(function (x) { return x.text || JSON.stringify(x); }));
       dates.forEach(function (d) { underneath(doc, 'DAY ' + d.day + ' IN FULL', d.text || []); });
     }
-    underneath(doc, 'THE STAFF\'S OWN WORDS', j.text || []);
+    if (dates) underneath(doc, 'THE STAFF\'S OWN WORDS', j.text || []);
+    else staffBrief(doc, j, a, tried);
     var back = el('div', 'row'); doc.appendChild(back);
     if (draft && draft.preview != null && root != null && !WATCH) { var give = el('button', 'go', 'GIVE IT: ' + draft.words.toUpperCase()); give.type = 'button'; give.addEventListener('click', function () { api('approve', { preview: draft.preview }).then(function (a) { if (a.status && a.status !== 'queued') throw new Error(a.summary || 'refused'); setStatus('Given: ' + draft.words + '. The staff plans again at 1800.'); return refresh(); }).then(function () { readPlan(root); }).catch(function (e) { setStatus('Refused: ' + dryWords(e.message)); }); }); back.appendChild(give); }
     if (root != null) { var bb = el('button', '', 'BACK TO THE PLAN'); bb.type = 'button'; bb.addEventListener('click', function () { readPlan(root); }); back.appendChild(bb); }
@@ -1943,6 +2049,7 @@ body.watched .gives { display: none !important; }
     switch (o.kind) {
       case 'ships_sunk': return ['Enemy ships sunk', n ? commas(n) + ((o.ships || []).length ? ' (' + o.ships.map(function (x) { return x.ships + ' ' + x.kind.replace(/_/g, ' '); }).join(', ') + ')' : '') : 'none'];
       case 'ships_crippled': return ['Enemy ships left afloat and out of action', n ? commas(n) + ((o.ships || []).length ? ' (' + o.ships.map(function (x) { return x.ships + ' ' + x.kind.replace(/_/g, ' '); }).join(', ') + ')' : '') : 'none'];
+      case 'ships_out_of_action': return ['Enemy ships out of action at the end', commas(n)];
       case 'aircraft_destroyed': return ['Enemy aircraft destroyed', commas(n)];
       case 'men_lost': return ['Enemy men lost', commas(n)];
       case 'cargo_landed': return ['Supply and fuel landed at ' + base, commas(Math.round(n)) + ' t'];
@@ -1959,7 +2066,9 @@ body.watched .gives { display: none !important; }
       else {
         var mine = r[config.seat], other = config.seat === 'allied' ? 'japanese' : 'allied', won = r.allied.result === 'victory' ? 'allied' : r.japanese.result === 'victory' ? 'japanese' : null;
         var box = el('div', 'est');
-        box.appendChild(el('div', 'big', won ? (r[won].outcome.replace(/^./, function (c) { return c.toUpperCase(); }) + ' for ' + SIDE_WORD[won] + '.') : 'A stalemate: neither side won.'));
+        // The result is stamped as the seat's own: a victory in green, a defeat in red, a stalemate in black.
+        if (mine && mine.outcome) { var stamp = el('div', 'stamp ' + (!won ? 'tie' : won === config.seat ? 'win' : 'loss'), String(mine.outcome).toUpperCase()); box.appendChild(stamp); if (!won) box.appendChild(el('div', 'work', 'Neither side won.')); }
+        else box.appendChild(el('div', 'big', won ? (r[won].outcome.replace(/^./, function (c) { return c.toUpperCase(); }) + ' for ' + SIDE_WORD[won] + '.') : 'A stalemate: neither side won.'));
         box.appendChild(el('div', 'work', 'Day ' + M.lastDay + ' of ' + M.lastDay + ' is fought.'));
         var rows = [], seen = {};
         [config.seat, other].forEach(function (side, col) { (r[side].objectives || []).forEach(function (o) { var c = endCount(o), key = o.kind + '|' + (o.base && o.base.handle || '') + '|' + (o.closed ? 1 : 0); if (seen[key] == null) { seen[key] = rows.length; rows.push([c[0], '–', '–']); } rows[seen[key]][col + 1] = c[1]; }); });
@@ -2417,8 +2526,9 @@ body.watched .gives { display: none !important; }
         var lab = el('label', 'pick'), inp = el('input'), body = el('div'); inp.type = 'radio'; inp.name = 'ng-scenario'; inp.checked = s.id === pick.scenario;
         inp.addEventListener('change', function () { pick.scenario = s.id; pick.seat = null; settle(); draw(); });
         body.appendChild(el('strong', '', s.name)); body.appendChild(el('div', '', '')); body.lastChild.appendChild(el('small', '', s.dates + ' \u00B7 ' + (s.days === 1 ? 'one day' : s.days + ' days')));
-        (s.lines || []).forEach(function (t) { body.appendChild(el('div', '', t)); });
-        SIDES.forEach(function (side) { if (s.sides && s.sides[side]) { var d = el('div', 'to'); d.appendChild(el('b', '', SIDE_NAME[side].toUpperCase())); d.appendChild(document.createTextNode(s.sides[side])); body.appendChild(d); } });
+        // Only the scenario chosen is told in full; the others show their name and dates.
+        if (s.id === pick.scenario) (s.lines || []).forEach(function (t) { body.appendChild(el('div', '', t)); });
+        if (s.id === pick.scenario) SIDES.forEach(function (side) { if (s.sides && s.sides[side]) { var d = el('div', 'to'); d.appendChild(el('b', '', SIDE_NAME[side].toUpperCase())); d.appendChild(document.createTextNode(s.sides[side])); body.appendChild(d); } });
         lab.appendChild(inp); lab.appendChild(body); paper.appendChild(lab);
       });
       var ps = pairings(); if (!ps.length) return;
@@ -2553,6 +2663,12 @@ body.watched .gives { display: none !important; }
     if (target.kind === 'enemy') list.push(['Capture ' + target.name + ' only', { intent_kind: 'take_place', base: n }, 'Land men and capture the place. Nothing is ordered for afterwards: no garrison, no supply.'], ['Neutralise ' + target.name, { intent_kind: 'neutralise', target: n }, 'Air raids on its airfield until it can fly no aircraft. No landing.']);
     if (target.kind === 'own') list.push(['Hold ' + target.name, { intent_kind: 'hold', base: n }, 'Its men defend it; it is kept supplied and covered from the air.'], ['Keep it supplied, 30 days', { intent_kind: 'keep_supplied', base: n, floor_days: 30 }, 'Supply runs keep 30 days of stock there. Nothing else.'], ['Cover it from the air', { intent_kind: 'cover', base: n }, 'Fighters over it and searches round it. Nothing else.']);
     if (target.kind === 'waters') list.push(['Deny these waters, ' + round(2), { intent_kind: 'deny', hex: [target.q, target.r], distance: 2 }, 'Search them and strike any enemy ship that enters.'], ['Deny these waters, ' + round(4), { intent_kind: 'deny', hex: [target.q, target.r], distance: 4 }, 'The same, over a wider circle.']);
+    // A force is moved by an order of its own: a carrier force is told where to work from, a surface force where to stand.
+    if (target.kind === 'waters') M.forces.forEach(function (f) {
+      var n = num(f.task_force.handle), name = f.task_force.name || f.task_force.handle;
+      if (f.mission === 'carrier') list.push(['Operate ' + name + ' from here', { intent_kind: 'operate_carriers', task_force: n, hex: [target.q, target.r] }, 'The carrier force goes there and works from it: it searches, and strikes the enemy ships it finds.']);
+      else if (f.mission === 'surface_combat') list.push(['Station ' + name + ' here', { intent_kind: 'stand_at', task_force: n, hex: [target.q, target.r] }, 'The force goes there and waits, to meet enemy ships that come within its reach.']);
+    });
     return list;
   }
   function pick(p) {
@@ -2658,11 +2774,11 @@ body.watched .gives { display: none !important; }
   $('btn-hexes').addEventListener('click', function () { showHexes = !showHexes; try { localStorage.setItem('flagplot.hexes', showHexes ? '1' : '0'); } catch (e) {} this.setAttribute('aria-pressed', String(showHexes)); paintBase(); if (g) drawMarks(); $('card').hidden = true; });
   // Your orders and the staff's papers hang from the top bar, so that the
   // side of the table is kept for what needs your eye: the signals.
-  var MENUS = [['btn-orders', 'pop-orders'], ['btn-staff', 'pop-staff']];
+  var MENUS = [['btn-orders', 'pop-orders'], ['btn-staff', 'pop-staff'], ['btn-game', 'pop-game']];
   function shutMenus(but) { MENUS.forEach(function (m) { if (m[1] !== but) { $(m[1]).hidden = true; $(m[0]).setAttribute('aria-expanded', 'false'); } }); }
   MENUS.forEach(function (m) {
     $(m[0]).addEventListener('click', function (e) { e.stopPropagation(); var pop = $(m[1]), open = pop.hidden; shutMenus(); if (!open) return; var r = this.getBoundingClientRect(); pop.style.left = Math.max(8, Math.min(r.left, window.innerWidth - 346)) + 'px'; pop.style.top = (r.bottom + 6) + 'px'; pop.hidden = false; this.setAttribute('aria-expanded', 'true'); });
-    $(m[1]).addEventListener('click', function (e) { e.stopPropagation(); if (e.target.closest('.papers button, .ref')) shutMenus(); });
+    $(m[1]).addEventListener('click', function (e) { e.stopPropagation(); if (e.target.closest('.papers:not(.stay) button, .ref')) shutMenus(); });
   });
   document.addEventListener('click', function () { shutMenus(); });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') shutMenus(); });
@@ -2692,7 +2808,7 @@ body.watched .gives { display: none !important; }
     fetch(BASE + '/new', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }).then(function (r) { return r.json(); }).then(function (a) { if (a.refused != null) throw new Error(a.refused); try { history.replaceState(null, '', location.pathname); } catch (e) {} location.reload(); }).catch(function (e) { b.disabled = false; setStatus('It could not end the game: ' + e.message); });
   });
   $('btn-agent').addEventListener('click', readAgentSeats);
-  $('btn-stops').addEventListener('click', function () { var f = $('stops'); f.hidden = !f.hidden; this.setAttribute('aria-expanded', String(!f.hidden)); });
+  $('btn-stops').addEventListener('click', function () { shutMenus(); var f = $('stops'); f.hidden = !f.hidden; this.setAttribute('aria-expanded', String(!f.hidden)); });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !$('stops').hidden) { $('stops').hidden = true; $('btn-stops').setAttribute('aria-expanded', 'false'); } });
   $('btn-back').addEventListener('click', function () { goal.x = 0; goal.z = 0; goal.zoom = 0; });
   function resize() { var w = window.innerWidth, h = window.innerHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
