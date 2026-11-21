@@ -1568,6 +1568,10 @@ body.watched .gives { display: none !important; }
   // figures as a person writes them.
   function cutTop(t, at) { var out = [], depth = 0, cur = '', i, n; for (i = 0; i < t.length; i++) { var ch = t.charAt(i); if (ch === '(') depth += 1; if (ch === ')') depth = Math.max(0, depth - 1); n = depth === 0 ? at(t, i) : 0; if (n) { out.push(cur.trim()); cur = ''; i += n - 1; } else cur += ch; } if (cur.trim()) out.push(cur.trim()); return out; }
   function tidyWorked(t) {
+    // The carrier doctrine's two longest sentences, said in shorter ones.
+    function kinds(k) { return k === 'any kind' ? 'a contact of any kind' : k; }
+    t = String(t).replace(/ left its hex (\(-?\d+,-?\d+\)) to close, and (.*?), within the ([\d.]+) nm normal reach of its bombers, the first of the contacts it closes on \(([^)]*)\) within the (.*?): it stays where it is and is given no route\./g, function (m, hex, held, reach, k, within) { return ' left ' + hex + ' to close and now stays where it is, with no route: ' + held + ', inside the ' + reach + ' nm its bombers reach. It closes on ' + kinds(k) + ' within ' + within + '.'; })
+      .replace(/ does not close: (.*?), within the ([\d.]+) nm normal reach of its bombers, the first of the contacts it closes on \(([^)]*)\) within the (.*?)\.(?= |$)/g, function (m, held, reach, k, within) { return ' does not close: ' + held + ', already inside the ' + reach + ' nm its bombers reach. It closes on ' + kinds(k) + ' within ' + within + '.'; });
     return String(t).replace(/((?:the waters to deny at \(-?\d+,-?\d+\)(?:, )?){4,})/g, function (run) { var n = run.match(/the waters/g).length, tail = /, $/.test(run) ? ', ' : ''; return 'the waters to deny in ' + n + ' places' + tail; })
       .replace(/ \(\d+ hex\(es\) on the map\)/g, '').replace(/(base:\d+ \([^)]*\)) at \(-?\d+,-?\d+\)/g, '$1')
       .replace(/hex\(es\)/g, 'hexes').replace(/ x (?=[\d(])/g, ' \u00D7 ')
