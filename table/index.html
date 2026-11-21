@@ -103,6 +103,9 @@ button:disabled { opacity: 0.45; cursor: default; }
 .order .wp label { min-height: 30px; font-size: 12px; }
 .order .wp .wpx { min-height: 28px; padding: 0 8px; border: 0; font-size: 13px; color: var(--paper-dim); }
 .wphint { font-size: 12px; color: var(--paper-dim); }
+#course { width: min(320px, calc(100% - 32px)); display: flex; flex-direction: column; gap: 8px; }
+#course[hidden] { display: none; }
+.order .wpchange { min-height: 30px; padding: 0 10px; font-size: 12px; align-self: flex-start; }
 .frow { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
 .frow .fl { flex: 0 0 82px; font-size: 12px; color: var(--paper-dim); }
 .seg { display: inline-flex; flex-wrap: wrap; gap: 0; }
@@ -424,6 +427,11 @@ body.watched .gives { display: none !important; }
     <button type="button" id="f-cancel">TEAR UP</button>
   </div>
 </form>
+<aside class="order" id="course" hidden aria-label="The course you are setting">
+  <h2 id="c-title">COURSE</h2>
+  <div id="c-route"></div>
+  <div class="row"><button type="button" class="go" id="c-ok">ACCEPT</button><button type="button" id="c-cancel">CANCEL</button></div>
+</aside>
 
 <aside class="order card" id="card" hidden aria-label="What is known of what you touched" aria-live="polite">
   <div class="cardnav"><button type="button" id="card-back" hidden>&#8592; BACK</button><button type="button" id="card-find" hidden title="Turn the table to where it is">ON CHART</button><button type="button" id="card-diary" hidden title="What the war diary holds of it">ITS DIARY</button><span id="card-step" hidden><button type="button" id="card-prev" title="The one before, of those at this place" aria-label="The one before">&#8249;</button><span id="card-step-n"></span><button type="button" id="card-next" title="The next, of those at this place" aria-label="The next">&#8250;</button></span><button type="button" id="card-close" title="Close (Esc)" aria-label="Close">&#10005;</button></div>
@@ -1089,7 +1097,7 @@ body.watched .gives { display: none !important; }
       .replace(/\bat a share of 0\.25\b/g, 'with a quarter of its aircraft').replace(/\bat a share of 0\.5\b/g, 'with half its aircraft').replace(/\bat a share of 0\.75\b/g, 'with three quarters of its aircraft')
       .replace(/\b(\d+)\.(\d+) (miles|nm)\b/g, function (m, w, f, u) { return Math.round(parseFloat(w + '.' + f)) + ' ' + u; })
       .replace(/\bfatigue (\d+)\.(\d+)\b/g, function (m, w, f) { return 'fatigue ' + Math.round(parseFloat(w + '.' + f)); })
-      .replace(/\bhas no home port the staff knows\b/g, 'has no home port').replace(/(^|[;.] ?)([Tt])he rest are escorts\b/g, function (m, a, c) { return a + (c === 'T' ? 'Its' : 'its') + ' other fighters go as escorts'; });
+      .replace(/\bhas no home port the staff knows\b/g, 'has no home port').replace(/, 0 sunk\b/g, '').replace(/(^|[;.] ?)([Tt])he rest are escorts\b/g, function (m, a, c) { return a + (c === 'T' ? 'Its' : 'its') + ' other fighters go as escorts'; });
     if (showHexes) return t;
     t = t.replace(/(\d+) hex(?:es)?\b(?! round)/g, function (m, n) { return (+n * hexMiles()) + ' miles'; });
     if (keepHex) return t;
@@ -2763,7 +2771,7 @@ body.watched .gives { display: none !important; }
 
   // ---- an order to a force at 0600 or 1200: touch the force, choose, sign (decision 0156) ----
   var force = null;
-  function closeForce() { $('force').hidden = true; force = null; if (g) drawMarks(); if (picking === 'force' || picking === 'route') { picking = false; canvas.classList.remove('picking'); } }
+  function closeForce() { $('force').hidden = true; $('course').hidden = true; force = null; if (g) drawMarks(); if (picking === 'force' || picking === 'route') { picking = false; canvas.classList.remove('picking'); } }
   function pickForce(p) {
     var best = null, bd = 0.4; Object.keys(pieces).forEach(function (h) { var d = pieces[h].grp.position.distanceTo(p); if (d < bd) { bd = d; best = pieces[h]; } });
     if (!best) { setStatus('No force of yours is there. Touch one of your tiles.'); return; }
@@ -2798,11 +2806,28 @@ body.watched .gives { display: none !important; }
   // (wait out the night there).
   function wpName(w) { return M.hexNames[w.q + ',' + w.r] || whereIs({ q: w.q, r: w.r }); }
   function showRoute() {
-    var box = $('f-route'); box.textContent = ''; if (!force) return; box.hidden = !$('f-crs').checked;
+    var setting = !$('course').hidden, box = $(setting ? 'c-route' : 'f-route'); $('f-route').textContent = ''; $('c-route').textContent = ''; if (!force) return; $('f-route').hidden = setting || !$('f-crs').checked; $('c-ok').disabled = !force.route.length;
     force.route.forEach(function (w, n) { var row = el('div', 'wp'), last = n === force.route.length - 1; row.appendChild(el('span', '', (n + 1) + '. ' + wpName(w)));
       if (!last) [['act', 'act there'], ['stand', 'stand the night']].forEach(function (k) { var l = el('label'), c = el('input'); c.type = 'checkbox'; c.checked = !!w[k[0]]; c.addEventListener('change', function () { w[k[0]] = c.checked; forceSummary(); }); l.appendChild(c); l.appendChild(document.createTextNode(' ' + k[1])); row.appendChild(l); });
       var x = el('button', 'wpx', '\u2715'); x.type = 'button'; x.title = 'Take this waypoint out'; x.setAttribute('aria-label', 'Take waypoint ' + (n + 1) + ' out'); x.addEventListener('click', function () { force.route.splice(n, 1); showRoute(); forceSummary(); }); row.appendChild(x); box.appendChild(row); });
-    box.appendChild(el('div', 'wphint', force.route.length ? 'Touch the chart to add another.' : 'Touch the chart for the first waypoint.')); if (g) drawMarks();
+    if (setting) box.appendChild(el('div', 'wphint', force.route.length ? 'Touch the chart to add another.' : 'Touch the chart for the first waypoint.'));
+    else if ($('f-crs').checked) { var ch = el('button', 'wpchange', 'CHANGE ON THE CHART'); ch.type = 'button'; ch.addEventListener('click', openCourse); box.appendChild(ch); }
+    if (g) drawMarks();
+  }
+  // Setting a course: the order's form steps aside for a small paper that
+  // fills with the waypoints as the chart is touched, and is accepted or
+  // cancelled. Cancelled, the course is as it was before.
+  var courseWas = null;
+  function openCourse() {
+    if (!force) return; courseWas = force.route.map(function (w) { return { q: w.q, r: w.r, act: w.act, stand: w.stand }; });
+    $('force').hidden = true; $('course').hidden = false; $('c-title').textContent = 'COURSE \u00B7 ' + nameOf(force.f.task_force.handle).toUpperCase();
+    picking = 'route'; canvas.classList.add('picking'); setStatus('Touch the chart where the force is to steam for.'); showRoute();
+  }
+  function closeCourse(keep) {
+    $('course').hidden = true; if (picking === 'route') { picking = false; canvas.classList.remove('picking'); }
+    if (!force) return; if (!keep) force.route = courseWas || [];
+    if (!force.route.length) $('f-crs').checked = false;
+    $('force').hidden = false; showRoute(); forceSummary(); setStatus(keep ? 'The course is in the draft. Nothing is ordered until you sign.' : 'The course is as it was.');
   }
   function pickRoute(p) {
     var hd = 1e9, hh = null; hexes.forEach(function (h) { var d = world(h[3], h[4]).distanceTo(p); if (d < hd) { hd = d; hh = h; } });
@@ -2833,9 +2858,11 @@ body.watched .gives { display: none !important; }
     if (e.target.name === 'spd') $('f-kn').hidden = fPick('spd') !== 'knots';
     if (e.target.id === 'f-fuel') $('f-fuelfrom').hidden = !$('f-fuel').checked;
     if (e.target.name === 'shp') { $('f-ships').hidden = fPick('shp') !== 'detach'; $('f-join').hidden = fPick('shp') !== 'join'; }
-    if (e.target.id === 'f-crs') { if ($('f-crs').checked) { picking = 'route'; canvas.classList.add('picking'); setStatus('Touch the chart where the force is to steam for.'); } else { picking = false; canvas.classList.remove('picking'); force.route = []; } showRoute(); }
+    if (e.target.id === 'f-crs') { if ($('f-crs').checked) openCourse(); else { force.route = []; showRoute(); } }
     forceSummary(); });
   $('f-cancel').addEventListener('click', function () { closeForce(); setStatus('The draft is torn up. Nothing was ordered.'); });
+  $('c-ok').addEventListener('click', function () { closeCourse(true); });
+  $('c-cancel').addEventListener('click', function () { closeCourse(false); });
   $('force').addEventListener('submit', function (e) {
     e.preventDefault(); if (!force) return;
     var d = forceDraft(); if (d.error) { $('f-result').textContent = d.error; return; }
