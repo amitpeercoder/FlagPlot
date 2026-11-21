@@ -132,6 +132,7 @@ pub fn derive_with(
 
     let mut env = derive::Env::build(&data, list.date, &rules);
     env.estimates = list.estimates.clone();
+    env.list_name = list_name.to_string();
     env.all_estimates = list
         .estimates
         .iter()

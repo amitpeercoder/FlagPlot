@@ -30,9 +30,9 @@ NEW = 'ground = "../../reference/ground_hunger.toml"\n'
 
 # The scenarios of table/scenarios.json that name the live ground figures.
 SOURCES = [
-    'data/scenarios/coral-sea/02b_coral_sea_oilers.toml',
-    'data/scenarios/coral-sea/02c_coral_sea_oilers.toml',
-    'data/scenarios/coral-sea/02d_coral_sea_oilers.toml',
+    'data/scenarios/coral-sea/03b_coral_sea_both_oilers.toml',
+    'data/scenarios/coral-sea/03c_coral_sea_both_oilers.toml',
+    'data/scenarios/coral-sea/03d_coral_sea_both_oilers.toml',
     'data/scenarios/five-days/02b_eastern_solomons_oilers.toml',
     'data/scenarios/five-days/02c_eastern_solomons_oilers.toml',
     'data/scenarios/five-days/02d_eastern_solomons_oilers.toml',

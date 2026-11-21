@@ -35,7 +35,11 @@
 #     Neosho carries her cargo full, as every ship of the file starts with
 #     her own fuel full; her true load on 5 May is a gap. No order is
 #     scripted for her (decision 0206, rule 19): she is the commander's to
-#     send, and the staff uses her by decision 0201, rule 20.
+#     send, and the staff uses her by decision 0201, rule 20. HER CARGO IS
+#     ESTIMATED, NOT READ (decision 0207): no row gives it, and she reads
+#     the least of her sisters' as an entry of the second method; her class
+#     file names the figure in its column `estimated`. An estimate is never
+#     evidence (decision 0207, rule 12).
 #   - The air groups' strengths: the rows of data/oob/air_unit_facts.csv
 #     the hand calculation names, beside each group.
 #   - Port Moresby (base 1) and its garrison; Rabaul (base 2) as the 39 days

@@ -283,6 +283,8 @@ pub struct Env<'a> {
     pub(crate) all_estimates: Vec<(String, Subject, String)>,
     /// The rows of gaps.csv: entity type and the entities it names.
     pub(crate) gaps: Vec<(String, Vec<String>)>,
+    /// The list's file name, as `all_estimates` names it.
+    pub(crate) list_name: String,
 }
 
 /// A row of `aircraft_types.csv`.
@@ -475,6 +477,7 @@ impl<'a> Env<'a> {
             later: BTreeMap::new(),
             estimates: Vec::new(),
             all_estimates: Vec::new(),
+            list_name: String::new(),
             gaps: data
                 .rows("gaps.csv")
                 .into_iter()
@@ -1020,10 +1023,24 @@ impl<'a> Env<'a> {
     /// The list, of all the lists, that estimates one of `attributes` for the
     /// class `class` or a ship of it (decision 0207, rule 8).
     fn estimated_in(&self, class: &str, attributes: &[&str]) -> Option<&str> {
+        self.estimated_in_but(class, attributes, None)
+    }
+
+    /// As [`Self::estimated_in`], passing over one entry of this list's own.
+    fn estimated_in_but(
+        &self,
+        class: &str,
+        attributes: &[&str],
+        but: Option<&Estimate>,
+    ) -> Option<&str> {
         self.all_estimates
             .iter()
-            .find(|(_, subject, attribute)| {
-                attributes.contains(&attribute.as_str())
+            .find(|(list, subject, attribute)| {
+                let itself = but.is_some_and(|e| {
+                    *list == self.list_name && e.subject == *subject && e.attribute == *attribute
+                });
+                !itself
+                    && attributes.contains(&attribute.as_str())
                     && match subject {
                         Subject::Class(key) => key == class,
                         Subject::Ship(key) => self.ships.get(key).is_some_and(|s| s.class == class),
@@ -1060,7 +1077,9 @@ impl<'a> Env<'a> {
                 entry.named_like.join(", ")
             );
             for class in &entry.named_like {
-                if let Some(list) = self.estimated_in(class, &[entry.attribute.as_str()]) {
+                if let Some(list) =
+                    self.estimated_in_but(class, &[entry.attribute.as_str()], Some(entry))
+                {
                     message.push_str(&format!(
                         "; class {class} has its {} estimated in {list}, and an estimate never rests on an estimate (decision 0207, rule 8)",
                         entry.attribute

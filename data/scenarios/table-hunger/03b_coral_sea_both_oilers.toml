@@ -1,16 +1,22 @@
-# SCENARIO 105 WITH HER OILER, THE CORAL SEA (decision 0206).
+# SCENARIO 105 WITH BOTH OILERS, THE CORAL SEA (decisions 0206 and 0207).
 #
-# Made by scripts/coral-sea/make_oiler_files.py from the base,
-# data/scenarios/coral-sea/base_coral_sea_oilers.toml. Do not edit by hand: change
+# Made by scripts/coral-sea/make_both_oilers_files.py from the base,
+# data/scenarios/coral-sea/base_coral_sea_both_oilers.toml. Do not edit by hand: change
 # the base or the script and make the files again
-# (`python3 scripts/coral-sea/make_oiler_files.py --check` says whether each file is
+# (`python3 scripts/coral-sea/make_both_oilers_files.py --check` says whether each file is
 # still the one it makes). There are four files, one for each pairing the
 # table offers (decision 0185):
-#   02a: both sides given their orders (staff against staff);
-#   02b: the Japanese side given its orders, the Allied side none (a person
+#   03a: both sides given their orders (staff against staff);
+#   03b: the Japanese side given its orders, the Allied side none (a person
 #        or an agent takes the Allied seat);
-#   02c: the Allied side given its orders, the Japanese side none;
-#   02d: neither side given orders.
+#   03c: the Allied side given its orders, the Japanese side none;
+#   03d: neither side given orders.
+# The file loads a class with ESTIMATED figures: Toho Maru's light
+# displacement (so her toughness) and her cargo (decision 0207; her class
+# file names them in its column `estimated`), and Neosho's cargo is marked
+# too. An estimate is never evidence. Toho Maru's load on 5 May is not
+# known: she starts full, as every ship of the file does.
+#
 # Each is the base with this header, a name of its own and, at the end, the
 # `[[command]]` and `[[order]]` tables of the sides it gives orders, and
 # nothing else: with their names and those tables taken away the four are
@@ -35,22 +41,23 @@
 # Kept out of the loops that walk data/scenarios/*.toml by being in this
 # folder (decision 0072).
 #
-# THE BASE of scenario 105 with her oiler, the Coral Sea, 6 to 10 May 1942
-# (decision 0206). It is not played itself: scripts/coral-sea/
-# make_oiler_files.py makes it from base_coral_sea.toml and makes the four
-# files of data/scenarios/coral-sea/ (02a to 02d) from it, each with this
-# text, a name of its own and the commands and orders of its pairing, and
-# nothing else. Edit the old base or the script, never a file it makes, and
-# make them again. The old base, and the four files of scenario 105 that
-# read it, are not touched (decision 0206, rule 17).
+# THE BASE of scenario 105 with both oilers, the Coral Sea, 6 to 10 May 1942
+# (decisions 0206 and 0207). It is not played itself: scripts/coral-sea/
+# make_both_oilers_files.py makes it from base_coral_sea_oilers.toml and makes
+# the four files of data/scenarios/coral-sea/ (03a to 03d) from it, each with
+# this text, a name of its own and the commands and orders of its pairing, and
+# nothing else. Edit the oilers' base or the scripts, never a file they make,
+# and make them again. The old base, the oilers' base, and the files of
+# scenario 105 that read them, are not touched.
 #
-# It is the base of scenario 105 with one force more, the fuelling group
-# (Neosho and Sims, task force 6), with the class file of the oilers,
-# ship_classes_coral_sea_oilers.csv, named beside the others, and with a
-# sides file of its own, class_sides_coral_sea_oilers.csv. The rest is the
-# old base's, byte for byte. The hand calculation is the doc comment of
-# tests/scenario_105_the_coral_sea.rs; that of the oiler,
-# tests/scenario_120_real_oilers.rs.
+# It is the oilers' base with one force more, the Japanese fuelling group
+# (Toho Maru, task force 7), with the class file of her class,
+# ship_classes_coral_sea_japanese_oilers.csv, named after the oilers' class
+# file, and with a sides file of its own, class_sides_coral_sea_both_oilers.csv.
+# The rest is the oilers' base's, byte for byte. The hand calculation of the
+# base is the doc comment of tests/scenario_105_the_coral_sea.rs; that of the
+# first oiler, tests/scenario_120_real_oilers.rs; that of the second,
+# tests/scenario_121_a_japanese_oiler_by_estimate.rs.
 #
 # Two American carriers and a cruiser group against two Japanese fleet
 # carriers and a light carrier, with a Japanese convoy bound for Port
@@ -66,13 +73,34 @@
 #     ship_experience_coral_sea.ships.csv where it gives one. Each ship cites
 #     her rows of engagement_forces: both sources agree on the forces ship
 #     for ship.
-#   - The fuelling group: Neosho and Sims, derived by
+#   - The Allied fuelling group: Neosho and Sims, derived by
 #     data/derivation/coral_sea_oilers.toml (classes 4030 and 4031), each
 #     with her experience from ship_experience_coral_sea_oilers.ships.csv.
 #     Neosho carries her cargo full, as every ship of the file starts with
-#     her own fuel full; her true load on 5 May is a gap. No order is
-#     scripted for her (decision 0206, rule 19): she is the commander's to
-#     send, and the staff uses her by decision 0201, rule 20.
+#     her own fuel full; her true load on 5 May is a gap. Neosho's cargo
+#     capacity is an estimate too (the least of her sisters', decision
+#     0207), marked in her class file.
+#   - The Japanese fuelling group: Toho Maru, derived by
+#     data/derivation/coral_sea_japanese_oilers.toml, class 4032, with her
+#     experience (2) from ship_experience_coral_sea_japanese_oilers.ships.csv.
+#     HER LIGHT DISPLACEMENT, AND SO HER TOUGHNESS, IS ESTIMATED BY RATIO
+#     FROM LIKE SHIPS, AND HER CARGO IS ESTIMATED AS HER SISTER TOA MARU'S
+#     (decision 0207): no source gives either for her. Her class file names
+#     the estimated figures in its column `estimated`, and her sources file
+#     says how each was worked. AN ESTIMATE IS NEVER EVIDENCE (decision 0207,
+#     rule 12): nothing in this scenario or in a measure that names it may
+#     be taken as the record of her toughness or her cargo. HER LOAD ON 5
+#     MAY IS NOT KNOWN, a gap: she starts full, as every ship of the file
+#     does. Her anti-aircraft guns are unknown and are taken as none, and her
+#     radar is unknown and is taken as none: assumptions of the scenario, not
+#     history. The record has her with the Striking Force from 1 May (she
+#     sortied from Truk with it) and fuelling Takagi's ships on 4 May and
+#     Carrier Division 5 on 6 May (ship_facts 3503, a combinedfleet record of
+#     her movements; engagement_forces 414, Bates' organization of the
+#     Japanese 4th Fleet, which lists her with the Striking Force, and 450,
+#     the combinedfleet Zuikaku record of the sortie of 1 May). No order is
+#     scripted for her: she is the Japanese commander's to send, and the staff
+#     uses her by decision 0201, rule 20.
 #   - The air groups' strengths: the rows of data/oob/air_unit_facts.csv
 #     the hand calculation names, beside each group.
 #   - Port Moresby (base 1) and its garrison; Rabaul (base 2) as the 39 days
@@ -82,13 +110,14 @@
 #     scenario's own, with the placeholder men of two land units aboard.
 #
 # LEFT OUT, and why (decision 0188, rule 6 and stage A's rulings 12 and 13;
-# decision 0206):
+# decisions 0206 and 0207):
 #   - Of the Allied fuelling group, Worden (also of the group in the
 #     sources, and not in the list); and the search group (Tangier);
 #     Tippecanoe (whether she was with the force on 6 May is disputed, and
-#     there is no endurance for her class); Tsugaru, Toho Maru and every
-#     Japanese oiler: no displacement for any of them is on file, so the
-#     Japanese side has no oiler.
+#     there is no endurance for her class).
+#   - Tsugaru and every other Japanese oiler but Toho Maru: none is derived
+#     (no list names one); Toho Maru is the one the first use of estimates
+#     settled (decision 0207).
 #   - Uzuki, which one source alone puts with the convoy.
 #   - Allied aircraft on land (the designer's answer 2: left out of the
 #     first version; the Allied carriers are then the only Allied eyes).
@@ -113,19 +142,22 @@
 # A port size: the map gives every hex none, and a scenario cannot set one,
 # so Port Moresby and Rabaul have none.
 
-name = "Scenario 105 with her oiler, file b: the Coral Sea, 6 to 10 May 1942; the Japanese side given its orders, the Allied side none"
+name = "Scenario 105 with both oilers, file b: the Coral Sea, 6 to 10 May 1942; the Japanese side given its orders, the Allied side none"
 placeholder = true
 seed = 1942
 days = 5
 map = "../../map/south_pacific.csv"
 land_links = "../../map/south_pacific_land_links.csv"
-# The Coral Sea list's classes; the fuelling group's two (classes 4030 and
-# 4031, ship_classes_coral_sea_oilers.csv, decision 0206); the placeholder
-# destroyer of ship_classes.csv (class 2); and the convoy's placeholder
-# transport (class 14).
+# The Coral Sea list's classes; the Allied fuelling group's two (classes 4030
+# and 4031, ship_classes_coral_sea_oilers.csv, decision 0206); the Japanese
+# fuelling group's one (class 4032, ship_classes_coral_sea_japanese_oilers.csv,
+# decision 0207, with figures estimated and named in its column `estimated`);
+# the placeholder destroyer of ship_classes.csv (class 2); and the convoy's
+# placeholder transport (class 14).
 ship_classes = [
     "../../reference/ship_classes_coral_sea.csv",
     "../../reference/ship_classes_coral_sea_oilers.csv",
+    "../../reference/ship_classes_coral_sea_japanese_oilers.csv",
     "../../reference/ship_classes.csv",
     "../../reference/ship_classes_placeholder_transport_6_5_knots.csv",
 ]
@@ -143,9 +175,9 @@ fatigue = "../../reference/fatigue.toml"
 air_supply = "../../reference/air_supply.toml"
 ground = "../../reference/ground_hunger.toml"
 # Whose each class and type is (decision 0173, 1 to 3): this scenario's own
-# file of sides with the oiler's (decision 0206, rule 17), which names every
-# class and type of the four class files and the type file above.
-class_sides = "../../reference/class_sides_coral_sea_oilers.csv"
+# file of sides with the oilers' (decisions 0206 and 0207), which names every
+# class and type of the five class files and the type file above.
+class_sides = "../../reference/class_sides_coral_sea_both_oilers.csv"
 # The trial's figures (decision 0174): the live ones.
 trial = "../../reference/trial.toml"
 # A side may stop at 0600 and 1200 (decision 0156), as in scenario 103.
@@ -258,6 +290,20 @@ name = "Fuelling group"
 side = "allied"
 q = -3
 r = 5
+mission = "transport"
+
+# The Japanese fuelling group, Toho Maru by herself as one force (decision
+# 0207), on the transport mission, with no home port, no route and no escort.
+# PLACEHOLDER start (4,-2), the hex of the Striking Force: the rows put her
+# with the Striking Force from 1 May, fuelling Takagi's ships on 4 May and
+# Carrier Division 5 on 6 May (ship_facts 3503; engagement_forces 414, 450),
+# so she was with it at 1800 on 5 May. No order is scripted for her.
+[[task_force]]
+id = 7
+name = "Japanese fuelling group"
+side = "japanese"
+q = 4
+r = -2
 mission = "transport"
 
 # ---------------------------------------------------------------------------
@@ -930,6 +976,23 @@ side = "allied"
 fuel_t = 453
 experience = 2
 task_force = 6
+
+# Toho Maru (toho-maru; engagement_forces 414, 450): class 4032, Toa Maru
+# class, an oiler (ship_classes_coral_sea_japanese_oilers.ships.csv). Her
+# light displacement (so her toughness) and her cargo are ESTIMATED, not read
+# (decision 0207): the class file's column `estimated` names them. Fuel and
+# cargo full, an assumption: her true load on 5 May is a gap. Experience 2:
+# ship_experience_coral_sea_japanese_oilers.ships.csv (rows ship_facts.csv:3476
+# and 3499).
+[[ship]]
+id = 56
+name = "Toho Maru"
+class = 4032
+side = "japanese"
+fuel_t = 1100
+cargo_fuel_t = 12487
+experience = 2
+task_force = 7
 
 # ---------------------------------------------------------------------------
 # AIR GROUPS. Each strength cites its row in data/oob/air_unit_facts.csv. No
