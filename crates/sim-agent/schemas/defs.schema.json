@@ -702,6 +702,10 @@
         "fuel_t": {
           "$ref": "#/$defs/dec"
         },
+        "ammunition_t": {
+          "description": "The base's ammunition (decision 0122), which its side's fights ashore spend first (decision 0209, 5). Left out while the base has none.",
+          "$ref": "#/$defs/dec"
+        },
         "port_size": {
           "description": "The map's port size of the hex, 0 where the map gives none. In the rules as built it sets only how fast cargo is worked: a port of size 0 has no berths and ships load and unload by lighter at that size's rate. Any ship may stop at a base of any size, and refuelling does not depend on it.",
           "type": "integer"

@@ -531,6 +531,10 @@ impl World {
         landing: &BTreeSet<LandUnitId>,
         causes: &[Cause],
     ) -> (BTreeMap<LandUnitId, EventId>, Option<EventId>, BaseId) {
+        // Whether the force begins to land men here in this pulse: it has
+        // no landing begun at the hex yet (decision 5 of 0095, and decision
+        // 0209, 10).
+        let begins = self.truth.task_forces[&p.task_force].landing_at != Some(p.hex);
         let mut divided: BTreeMap<LandUnitId, EventId> = BTreeMap::new();
         for unit in landing {
             let land_unit = &self.truth.land_units[unit];
@@ -619,6 +623,7 @@ impl World {
             // landing of men there, citing the unload order and the force's
             // arrival (decision 0205, 4 and 5, as corrected).
             self.land_rations(day, pulse, p, base, causes.to_vec());
+            self.land_ammunition(day, pulse, p, base, begins, causes.to_vec());
             return (divided, None, base);
         }
         // Nothing held apart until its day is a base (decision 0195, 18): a
@@ -656,6 +661,7 @@ impl World {
             None,
         );
         self.land_rations(day, pulse, p, id, vec![Cause::Event(formed)]);
+        self.land_ammunition(day, pulse, p, id, begins, vec![Cause::Event(formed)]);
         (divided, Some(formed), id)
     }
 
@@ -751,6 +757,83 @@ impl World {
                 men,
                 nights: hunger.rations_landed_nights,
                 supply_t,
+            },
+            causes,
+            breakdown,
+        );
+    }
+
+    /// Each time a force begins to land men at a base of its side, it puts
+    /// days of fighting into the base's ammunition (decision 0209, 10 and
+    /// 16): the men aboard the ships of the force at that moment, times
+    /// `fight_days_landed`, times `fight_supply_t_per_man`; a unit's weight
+    /// does not change it. Given at every landing, not once for a base as
+    /// rations are; `begins` is false for a landing already begun, which
+    /// puts down nothing more. Recorded as `AmmunitionLanded`, citing
+    /// `causes`, as the rations' record does. Only where the ground figures
+    /// give the figures of 0209, and only where it puts something down.
+    fn land_ammunition(
+        &mut self,
+        day: u32,
+        pulse: Pulse,
+        p: &Participant,
+        base: BaseId,
+        begins: bool,
+        causes: Vec<Cause>,
+    ) {
+        let Some(fight) = self
+            .ref_data
+            .ground
+            .and_then(|figures| figures.hunger)
+            .and_then(|hunger| hunger.fight_supply)
+        else {
+            return;
+        };
+        if !begins {
+            return;
+        }
+        let men: u32 = p
+            .ships
+            .iter()
+            .filter_map(|ship| self.truth.ships[ship].troops.as_ref())
+            .map(|troops| troops.men)
+            .sum();
+        let ammunition_t = fight.fight_supply_t_per_man * fight.fight_days_landed * i64::from(men);
+        if ammunition_t <= Fixed::ZERO {
+            return;
+        }
+        self.truth
+            .bases
+            .get_mut(&base)
+            .expect("the base landed at exists")
+            .ammunition_t += ammunition_t;
+        let breakdown = self.config.record_breakdowns.then(|| Breakdown {
+            factors: vec![
+                Factor {
+                    name: "men_aboard",
+                    value: Fixed::from_int(i64::from(men)),
+                },
+                Factor {
+                    name: "fight_days_landed",
+                    value: fight.fight_days_landed,
+                },
+                Factor {
+                    name: "fight_supply_t_per_man",
+                    value: fight.fight_supply_t_per_man,
+                },
+            ],
+            result: ammunition_t,
+        });
+        self.events.record(
+            day,
+            Some(pulse),
+            EventKind::AmmunitionLanded {
+                base,
+                side: p.side,
+                task_force: p.task_force,
+                men,
+                days: fight.fight_days_landed,
+                ammunition_t,
             },
             causes,
             breakdown,

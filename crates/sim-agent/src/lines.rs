@@ -404,6 +404,11 @@ pub struct BaseLine {
     pub as_of: Option<String>,
     pub supply_t: Dec,
     pub fuel_t: Dec,
+    /// The base's ammunition (decision 0122), which its side's fights
+    /// ashore spend first (decision 0209, 5). Left out while the base has
+    /// none.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ammunition_t: Option<Dec>,
     /// 0 if the hex has no port.
     pub port_size: u8,
     /// 0 if the hex has no airfield.
@@ -927,6 +932,7 @@ pub(crate) fn base_line(ctx: &Ctx<'_>, base: &Base) -> BaseLine {
         as_of: held_as_of_text(ctx, CommandRef::Base(base.id)),
         supply_t: Dec(base.supply_t),
         fuel_t: Dec(base.fuel_t),
+        ammunition_t: (base.ammunition_t > Fixed::ZERO).then_some(Dec(base.ammunition_t)),
         port_size: data.map_or(0, |d| d.port_size),
         airfield_size: data.map_or(0, |d| d.airfield_size),
         works: base_works_line(ctx, base),

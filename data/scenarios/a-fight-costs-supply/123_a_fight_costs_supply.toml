@@ -1,0 +1,86 @@
+# Scenario 123: a fight costs supply.
+#
+# Decision 0209. Scenario 122's setting, in a file of its own. Side A (the
+# Allied side) has a base Q, base 1, a coast hex at (10,0), with no aircraft,
+# no gun and no stock, and a land unit V, land unit 1, of 1,000 men ashore
+# there, on defence. Side B (the Japanese side) has nothing at all unless a
+# statement adds it (statements 1 to 6 and 8 to 9, 13, 14, 17 to 19 add a unit
+# E of 1,000 men in Q's hex, set to attack, with no base there). The game is
+# 16 days.
+#
+# The empty hex P at (8,0), two hexes from Q, is a coast hex where A has no
+# base. The statements of landing give A a force T, task force 1, of five
+# placeholder troop transports (600 men each, so 3,000 men in all) with a land
+# unit U, land unit 2, of 3,000 men aboard, stopped at sea at (7,0), one hex
+# from P, with an order to go to P and unload, as scenario 119's do. It is not
+# in this file as it stands: a variant of the test adds it at the mark
+# `forces`.
+#
+# The test builds its variants from the text of this file, at the marked
+# lines below: it gives Q's stock (the lines `supply_t = 0` and
+# `ammunition_t = 0` of base Q), adds land units at the mark `units` and a
+# count of hunger to V at the mark `v`, adds forces at the mark `forces`,
+# supply lines at the mark `lines`, commands at the mark `commands` and orders
+# at the mark `orders`. The hand calculation is in
+# tests/scenario_123_a_fight_costs_supply.rs. The test runs this file on the
+# frozen step 1 figures, with scenario 123's ground figures
+# (data/reference/ground_placeholder_scenario_123.toml): the daily supply for
+# a man is 0.005 t, `men_per_shot` 100, `engagement_ratio` 1,000,000,
+# `rations_landed_nights` 3, `hungry_below_share` 0.6,
+# `hunger_nights_before_loss` 14, `hunger_weakness_per_night` 0.01,
+# `unfed_fighting_share` 0.9, `fight_supply_t_per_man` 0.01,
+# `unsupplied_fire_share` 0.25 and `fight_days_landed` 4. The map is
+# data/map/placeholder_landing.toml, scenario 21's.
+#
+# Kept out of the loops that walk data/scenarios/*.toml by being in this
+# folder (decision 0072).
+#
+# PLACEHOLDER DATA. The bases, ships, units and figures are invented. Every
+# name below says "Placeholder".
+
+name = "Placeholder scenario 123: A fight costs supply"
+placeholder = true
+seed = 1942
+days = 16
+map = "../../map/placeholder_landing.toml"
+ship_classes = [
+    "../../reference/ship_classes.csv",
+    "../../reference/ship_classes_placeholder_transports.csv",
+]
+port_sizes = "../../reference/port_sizes.csv"
+aircraft_types = "../../reference/aircraft_types.csv"
+search = "../../reference/search.toml"
+surface_combat = "../../reference/surface_combat.toml"
+ground = "../../reference/ground_placeholder_scenario_123.toml"
+
+# Allied base 1, Q: no aircraft, no gun, and no stock; the men's charge there
+# is 5 t a night for V's 1,000 men.
+[[base]]
+id = 1
+name = "Placeholder base Q"
+side = "allied"
+q = 10
+r = 0
+supply_t = 0
+fuel_t = 0
+ammunition_t = 0
+
+# V, 1,000 men, ashore at Q from the start, on defence.
+[[land_unit]]
+id = 1
+name = "Placeholder V"
+side = "allied"
+men = 1000
+q = 10
+r = 0
+# MARK: v
+
+# MARK: units
+
+# MARK: forces
+
+# MARK: lines
+
+# MARK: commands
+
+# MARK: orders

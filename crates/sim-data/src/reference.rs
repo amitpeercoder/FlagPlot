@@ -7,9 +7,9 @@ use sim_core::fixed::Fixed;
 use sim_core::ids::{AircraftTypeId, ShipClassId};
 use sim_core::refdata::{
     AirCombatFigures, AirSupplyFigures, AirUpkeepFigures, AircraftRole, AircraftType, AttackWeapon,
-    BombardmentFigures, ClassSide, ClassSides, FatigueFigures, GroundFigures, HungerFigures,
-    MendingFigures, PassingChances, PortSize, RefData, ReportError, ReportFigures, SearchFigures,
-    ShipClass, ShipKind, SurfaceCombatFigures, TrialFigures, TrialSize,
+    BombardmentFigures, ClassSide, ClassSides, FatigueFigures, FightSupplyFigures, GroundFigures,
+    HungerFigures, MendingFigures, PassingChances, PortSize, RefData, ReportError, ReportFigures,
+    SearchFigures, ShipClass, ShipKind, SurfaceCombatFigures, TrialFigures, TrialSize,
 };
 use sim_core::state::ShipSystem;
 
@@ -1100,6 +1100,11 @@ struct GroundFile {
     /// only with the three above.
     hunger_weakness_per_night: Option<Quantity>,
     unfed_fighting_share: Option<Quantity>,
+    /// A fight costs supply (decision 0209, 1): all three or none, and only
+    /// with the three of 0205.
+    fight_supply_t_per_man: Option<Quantity>,
+    unsupplied_fire_share: Option<Quantity>,
+    fight_days_landed: Option<Quantity>,
 }
 
 /// Loads the ground figures from a TOML file (decision 0066).
@@ -1256,6 +1261,15 @@ fn parse_ground_figures(text: &str, path: &Path) -> Result<GroundFigures, DataEr
                             .to_string(),
                     ));
                 }
+                if file.fight_supply_t_per_man.is_some()
+                    || file.unsupplied_fire_share.is_some()
+                    || file.fight_days_landed.is_some()
+                {
+                    return Err(fail(
+                        "give fight_supply_t_per_man, unsupplied_fire_share and fight_days_landed only with rations_landed_nights, hungry_below_share and hunger_nights_before_loss"
+                            .to_string(),
+                    ));
+                }
                 None
             }
             (Some(rations), Some(below), Some(nights)) => Some(HungerFigures {
@@ -1271,6 +1285,24 @@ fn parse_ground_figures(text: &str, path: &Path) -> Result<GroundFigures, DataEr
                     _ => {
                         return Err(fail(
                             "give hunger_weakness_per_night and unfed_fighting_share together, or neither of them"
+                                .to_string(),
+                        ))
+                    }
+                },
+                fight_supply: match (
+                    &file.fight_supply_t_per_man,
+                    &file.unsupplied_fire_share,
+                    &file.fight_days_landed,
+                ) {
+                    (None, None, None) => None,
+                    (Some(per_man), Some(share), Some(days)) => Some(FightSupplyFigures {
+                        fight_supply_t_per_man: number("fight_supply_t_per_man", per_man)?,
+                        unsupplied_fire_share: number("unsupplied_fire_share", share)?,
+                        fight_days_landed: number("fight_days_landed", days)?,
+                    }),
+                    _ => {
+                        return Err(fail(
+                            "give fight_supply_t_per_man, unsupplied_fire_share and fight_days_landed together, or none of them"
                                 .to_string(),
                         ))
                     }
@@ -3317,6 +3349,7 @@ mod tests {
                 hungry_below_share: Fixed::from_ratio(1, 2),
                 hunger_nights_before_loss: 14,
                 mending: None,
+                fight_supply: None,
             })
         );
         for extra in [

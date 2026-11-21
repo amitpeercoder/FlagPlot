@@ -361,6 +361,10 @@ fn name_every_field(world: &World) {
         // game is made, read by no rule of the engine and by the staff only
         // through a side's view (decision 0194, 12), as the objectives are.
         game_days: _,
+        // Not hashed: the side a dry run takes as supplied in full is a
+        // setting of the world the dry run builds, set once there and never
+        // changed by play (decision 0209, 12).
+        supplied_in_full: _,
         // Not state: the trace of choices, how to record, never what
         // happens (decision 0100, 7).
         choice_trace: _,

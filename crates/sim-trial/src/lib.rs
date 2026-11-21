@@ -212,6 +212,10 @@ pub fn pictures_from_half(
 /// intent nothing is handed in. Refused as the constructor refuses.
 pub fn build_world(picture: &TrialPicture, ref_data: RefData, map: Map) -> Result<World, SimError> {
     let mut built = World::from_picture(picture.picture.clone(), ref_data, map, picture.stream)?;
+    // The side the picture makes up is taken as supplied in full in its
+    // fights ashore, and charged nothing (decision 0209, 12): the side does
+    // not know his stocks. It acts only where the figures of 0209 are given.
+    built.set_supplied_in_full(enemy::other(picture.side));
     if !picture.enemy_intents.is_empty() {
         let mut commands = vec![
             CommandKind::SetLeave {
