@@ -1658,10 +1658,10 @@
               "land_unit": { "$ref": "defs.schema.json#/$defs/handle" },
               "base": { "$ref": "defs.schema.json#/$defs/handle" },
               "men": { "description": "Men who joined.", "type": "integer" },
-              "men_after": { "description": "The unit's men ashore afterwards.", "type": "integer" },
+              "men_after": { "description": "The unit's men afterwards, ashore and aboard together.", "type": "integer" },
               "experience_before": { "type": "integer" },
               "experience_after": { "type": "integer" },
-              "joined": { "description": "Men who joined all nights together since the game began.", "type": "integer" },
+              "joined": { "description": "The unit's count of men joined since its experience last changed, after the night: 0 on the night it lost a level.", "type": "integer" },
               "event": { "type": "integer" }
             }
           }

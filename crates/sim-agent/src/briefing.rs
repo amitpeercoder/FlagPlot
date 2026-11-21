@@ -1131,11 +1131,12 @@ pub struct MenJoinedLine {
     pub land_unit: Handle,
     pub base: Handle,
     pub men: u32,
-    /// The unit's men ashore afterwards.
+    /// The unit's men afterwards, ashore and aboard together.
     pub men_after: u32,
     pub experience_before: u32,
     pub experience_after: u32,
-    /// The men who joined, all nights together, since the game began.
+    /// The unit's count of men joined since its experience last changed,
+    /// after the night: 0 on the night it lost a level.
     pub joined: u32,
     pub event: u32,
 }
