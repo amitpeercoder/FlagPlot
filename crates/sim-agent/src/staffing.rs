@@ -2889,8 +2889,28 @@ fn staff_side_json(
     view: &SideView<'_>,
     intent: Option<IntentId>,
 ) -> (Value, StaffDecisions, Option<Proposal>) {
-    let decisions = decisions_for(&staff.decide(*view), intent);
+    let all = staff.decide(*view);
+    let mut decisions = decisions_for(&all, intent);
     let proposal = intent.and_then(|i| staff.propose(*view, i));
+    // Decision 0202, 24: a deny or a neutralise whose plan waits for a leave
+    // is shown as if released too, so that what approving it would send (a
+    // carrier force and its station among it) is read before it is approved.
+    if let (Some(found), Some(p)) = (
+        intent.and_then(|i| view.command_state().intents.get(&i)),
+        proposal.as_ref(),
+    ) {
+        let end = matches!(
+            found.kind,
+            IntentKind::Deny { .. } | IntentKind::Neutralise { .. }
+        );
+        let waits = all.notices.iter().any(|notice| {
+            notice.plan == found.plan
+                && matches!(notice.kind, sim_core::command::NoticeKind::WaitsForLeave(_))
+        });
+        if end && waits {
+            decisions.no_orders.push(p.reason.clone());
+        }
+    }
     let shown = decisions_json(n, &decisions);
     let runs: Vec<Value> = proposal
         .iter()

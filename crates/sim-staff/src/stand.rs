@@ -227,7 +227,7 @@ pub(crate) fn bound_for(force: &TaskForce) -> Option<Hex> {
 /// (at a berth where it has one, else by lighter) is given and above 0, or
 /// not given, which is fuelling with no limit (chapter 2, Port size), as
 /// [`fuelling_hours`] reads it.
-fn fuels_at(view: &SideView<'_>, hex: Hex) -> bool {
+pub(crate) fn fuels_at(view: &SideView<'_>, hex: Hex) -> bool {
     let Some(size) = view.hex(hex).map(|h| h.port_size) else {
         return false;
     };

@@ -1,0 +1,12 @@
+# PLACEHOLDER DATA. These two classes are invented for scenario 116
+# (decision 0202, tests/scenario_116_carriers_serve_an_end.rs), whose hand
+# calculation needs a cruise of 15 knots, a full speed of 30 knots, a fuel
+# capacity of 1,000 t and an endurance of 4,000 nm for every ship. They are
+# not historical and must not be used for validation. Class 17 is class 4 of
+# ship_classes.csv and class 18 is class 2, each with those four figures and
+# every other column as the class it copies. Only scenario 116 names this
+# file, so that no other scenario's data hashes move. The columns are those
+# of ship_classes.csv, which says what each is.
+id,name,kind,cruise_speed_kn,max_speed_kn,fuel_capacity_t,endurance_nm,cargo_capacity_t,main_guns,gun_rounds_per_min,gun_rounds_per_gun,gun_damage,torpedo_tubes,torpedo_tubes_one_side,torpedo_damage,toughness,radar,aircraft_capacity,anti_aircraft
+17,"Placeholder carrier, scenario 116",carrier,15,30,1000,4000,0,0,0,0,0,0,0,0,600,0,36,0
+18,"Placeholder destroyer, scenario 116",destroyer,15,30,1000,4000,0,4,6,150,5,8,8,200,100,0,0,0

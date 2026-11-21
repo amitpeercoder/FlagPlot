@@ -599,3 +599,7 @@ path = "scenario_112_stock_from_off_the_map.rs"
 [[test]]
 name = "scenario_113_men_who_replace_the_lost"
 path = "scenario_113_men_who_replace_the_lost.rs"
+
+[[test]]
+name = "scenario_116_carriers_serve_an_end"
+path = "scenario_116_carriers_serve_an_end.rs"
