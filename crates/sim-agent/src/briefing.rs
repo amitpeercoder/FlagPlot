@@ -913,6 +913,10 @@ pub struct LandUnitsPart {
     /// Steps of experience gained yesterday. Left out when none.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub experience_raised_yesterday: Vec<ExperienceRaisedLine>,
+    /// Replacement men who joined the side's units yesterday (decision
+    /// 0197). Left out when none.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub men_joined_yesterday: Vec<MenJoinedLine>,
     /// Work made yesterday by the side's units (decision 0099). Left out
     /// when none.
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -1118,6 +1122,22 @@ pub struct ExperienceRaisedLine {
     pub experience: u32,
     /// `training` or `fighting`.
     pub by: &'static str,
+    pub event: u32,
+}
+
+/// Replacement men joined a unit (decision 0197).
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct MenJoinedLine {
+    pub land_unit: Handle,
+    pub base: Handle,
+    pub men: u32,
+    /// The unit's men afterwards, ashore and aboard together.
+    pub men_after: u32,
+    pub experience_before: u32,
+    pub experience_after: u32,
+    /// The unit's count of men joined since its experience last changed,
+    /// after the night: 0 on the night it lost a level.
+    pub joined: u32,
     pub event: u32,
 }
 
@@ -1663,6 +1683,11 @@ pub struct ArrivalsPart {
     /// none; the enemy's are never given.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub supply_lines: Vec<SupplyLineDue>,
+    /// The side's own streams of replacement men whose last day is today or
+    /// later (decision 0197), in the state's order. Left out when none; the
+    /// enemy's are never given.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub men_replacements: Vec<MenReplacementDue>,
     /// The side's own forces and units held apart until their day, each with
     /// its day, its place and what it is (decision 0195, 7): not on the map,
     /// not in `list_forces`' forces. Left out when none is held.
@@ -1705,6 +1730,20 @@ pub struct SupplyLineDue {
     pub supply_t: Dec,
     /// Tons of fuel added a night.
     pub fuel_t: Dec,
+    /// The first day it gives.
+    pub first_day: u32,
+    /// The last day it gives.
+    pub last_day: u32,
+}
+
+/// A stream of men given each night to the units ashore at a base that are
+/// below their establishment (decision 0197).
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct MenReplacementDue {
+    /// The base whose units receive the men.
+    pub base: Handle,
+    /// Men given a night.
+    pub men_per_day: u32,
     /// The first day it gives.
     pub first_day: u32,
     /// The last day it gives.
@@ -2042,6 +2081,16 @@ pub fn briefing_for_game(view: &SideView<'_>, scenario: &str, last_day: Option<u
                 last_day: l.last_day,
             })
             .collect(),
+        men_replacements: view
+            .men_streams()
+            .filter(|s| s.last_day >= today)
+            .map(|s| MenReplacementDue {
+                base: ctx.base(s.base),
+                men_per_day: s.men_per_day,
+                first_day: s.first_day,
+                last_day: s.last_day,
+            })
+            .collect(),
         to_enter: crate::entries::entry_lines(&ctx),
         entered_yesterday: std::mem::take(&mut day.entries.entered),
         entry_waiting_yesterday: std::mem::take(&mut day.entries.waiting),
@@ -2253,6 +2302,7 @@ fn land_units_part(
         preparation_shared_yesterday: ground.preparation_shared,
         experience_days_yesterday: ground.experience_days,
         experience_raised_yesterday: ground.experience_raised,
+        men_joined_yesterday: ground.men_joined,
         work_yesterday: ground.work,
         airfields_built_yesterday: ground.airfields_built,
         supply_by_hex,
@@ -2624,6 +2674,7 @@ struct GroundDay {
     preparation_shared: Vec<PreparationSharedLine>,
     experience_days: Vec<ExperienceDayLine>,
     experience_raised: Vec<ExperienceRaisedLine>,
+    men_joined: Vec<MenJoinedLine>,
     work: Vec<WorkDayLine>,
     airfields_built: Vec<AirfieldBuiltLine>,
 }
@@ -3518,6 +3569,25 @@ impl Day {
                         land_unit: ctx.land_unit(*unit),
                         experience: u32::from(*experience),
                         by: by.name(),
+                        event: id,
+                    }),
+                    EventKind::MenJoined {
+                        unit,
+                        base,
+                        men,
+                        men_after,
+                        experience_before,
+                        experience_after,
+                        joined,
+                        ..
+                    } => ground.men_joined.push(MenJoinedLine {
+                        land_unit: ctx.land_unit(*unit),
+                        base: ctx.base(*base),
+                        men: *men,
+                        men_after: *men_after,
+                        experience_before: u32::from(*experience_before),
+                        experience_after: u32::from(*experience_after),
+                        joined: *joined,
                         event: id,
                     }),
                     EventKind::UnitWorked {

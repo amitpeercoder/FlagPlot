@@ -1226,6 +1226,26 @@ pub(super) fn describe(
                 .num("supply_t", *supply_t)
                 .num("fuel_t", *fuel_t),
         ),
+        EventKind::MenJoined {
+            unit,
+            side,
+            base,
+            men,
+            men_after,
+            experience_before,
+            experience_after,
+            joined,
+        } => (
+            "men_joined",
+            d.id("unit", *unit)
+                .text("side", names::side(*side))
+                .id("base", *base)
+                .int("men", *men)
+                .int("men_after", *men_after)
+                .int("experience_before", u32::from(*experience_before))
+                .int("experience_after", u32::from(*experience_after))
+                .int("joined", *joined),
+        ),
         EventKind::AirfieldMended {
             unit,
             base,

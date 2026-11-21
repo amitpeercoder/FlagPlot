@@ -148,6 +148,10 @@ impl World {
             self.in_fight(&units.units[0], attacks[1]),
             self.in_fight(&units.units[1], attacks[0]),
         ];
+        // Each unit in the fight took part in it, attacking or defending
+        // (decision 0197, 15).
+        self.note_fought(day, &engaged_units[0]);
+        self.note_fought(day, &engaged_units[1]);
         let mut planned: [Vec<PlannedFire>; 2] = [Vec::new(), Vec::new()];
         let mut fed_today: [Option<EventId>; 2] = [None, None];
         for side in Side::ALL {

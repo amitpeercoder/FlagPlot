@@ -65,12 +65,12 @@ pub use briefing::{
     ContactsPart, DamagedShip, DefencesWornLine, DroppedContact, DueArrival, FatigueLine, FedLine,
     FedShareRestoredLine, FieldworksLine, Fight, FightLine, FireLine, Fired, FuelChange,
     FuelWarning, GroupLostWithBaseLine, HaltedLine, HaltsPart, Heading, HexSupply,
-    HomePortLostLine, LandUnitsPart, LoadingCompleteLine, LossesPart, MenLostLine, MenMoved,
-    NotThere, OrdersPart, OutOfReachWarning, PilotWarning, PropulsionWarning, Raid, RebasedLine,
-    RefusedOrder, RepairedShip, ReplacementStream, ReportedContact, ReturnedForce,
-    ShipLostWithBaseLine, ShipRangeWarning, SteamedOnLine, StocksYesterday, Strike,
-    StrikeClearedLine, SunkShip, SupplyChange, SupplyLineDue, SupplyWarning, SystemChange,
-    TiredWarning, UnitDestroyedLine, UnitDividedLine, Warnings,
+    HomePortLostLine, LandUnitsPart, LoadingCompleteLine, LossesPart, MenJoinedLine, MenLostLine,
+    MenMoved, MenReplacementDue, NotThere, OrdersPart, OutOfReachWarning, PilotWarning,
+    PropulsionWarning, Raid, RebasedLine, RefusedOrder, RepairedShip, ReplacementStream,
+    ReportedContact, ReturnedForce, ShipLostWithBaseLine, ShipRangeWarning, SteamedOnLine,
+    StocksYesterday, Strike, StrikeClearedLine, SunkShip, SupplyChange, SupplyLineDue,
+    SupplyWarning, SystemChange, TiredWarning, UnitDestroyedLine, UnitDividedLine, Warnings,
 };
 pub use briefing::{
     ForceChangesPart, FormedLine, JoinedLine, LoadReserveLine, RefuellingHeldLine, StoodDownLine,

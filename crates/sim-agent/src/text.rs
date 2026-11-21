@@ -1175,6 +1175,18 @@ impl Briefing {
             });
         }
 
+        if !self.arrivals.men_replacements.is_empty() {
+            o.each("Replacement men", &self.arrivals.men_replacements, |x| {
+                format!(
+                    "Replacement men: {} gives {} men a night to the units ashore there below their establishment, days {} to {}",
+                    x.base.text(),
+                    x.men_per_day,
+                    x.first_day,
+                    x.last_day
+                )
+            });
+        }
+
         o.heading("WARNINGS");
         let w = &self.warnings;
         o.each("Ships that cannot reach a base", &w.ship_cannot_reach_base, |x| {
@@ -2334,6 +2346,18 @@ fn land_units_text(o: &mut Out, land: &LandUnitsPart) {
             r.experience,
             r.by,
             ev(r.event)
+        ));
+    }
+    for m in &land.men_joined_yesterday {
+        o.line(format!(
+            "Men joined yesterday: {} men joined {} at {}, {} men now, experience {} to {}{}",
+            m.men,
+            m.land_unit.text(),
+            m.base.text(),
+            m.men_after,
+            m.experience_before,
+            m.experience_after,
+            ev(m.event)
         ));
     }
     for w in &land.work_yesterday {
