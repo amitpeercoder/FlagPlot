@@ -482,17 +482,23 @@ body.watched .gives { display: none !important; }
   // ---- the chart, drawn from the game's own map ----
   var config = { islands: [], start: '', seat: 'allied' }, hexes = [], hexAt = {};
   var TW = 10, TD = 8, K = 1, lonMid = 0, latMid = 0, HEXR = 0.05, PX = 200;
-  var chartCanvas = document.createElement('canvas'), baseCanvas = document.createElement('canvas'), g, chartTex, chartMesh, paintBase = function () {}, showHexes = false, coast = null, chartNames = null;
+  var chartCanvas = document.createElement('canvas'), baseCanvas = document.createElement('canvas'), g, chartTex, chartMesh, paintBase = function () {}, showHexes = false, coast = null, chartNames = null, mapFrame = null, FX = 1;
   try { showHexes = localStorage.getItem('flagplot.hexes') === '1'; } catch (e) {}
-  function world(lat, lon, y) { return new THREE.Vector3((lon - lonMid) * K, y || 0, (latMid - lat) * K); }
+  // The map's own frame (decision 0199): the factor for longitude (FX, 1 with no frame), so that the
+  // hexes are drawn true, and the run, in which a longitude west of the frame's western edge has 360
+  // added where the map crosses the date line. Every longitude is brought into the run before it is drawn.
+  function runLon(lon) { return mapFrame && mapFrame.east > 180 && lon < mapFrame.west ? lon + 360 : lon; }
+  function dmLon(v) { return dm(v > 180 ? v - 360 : v, 'E', 'W'); }
+  function lonLabel(v) { return v > 180 ? (360 - v) + '\u00B0 W' : v < 0 ? (-v) + '\u00B0 W' : v === 180 ? '180\u00B0' : v + '\u00B0 E'; }
+  function world(lat, lon, y) { return new THREE.Vector3((lon - lonMid) * K * FX, y || 0, (latMid - lat) * K); }
   function cpx(v) { return [(v.x + TW / 2) * PX, (v.z + TD / 2) * PX]; }
-  function placeOf(p) { return p ? world(parseFloat(p.lat), parseFloat(p.lon)) : null; }
+  function placeOf(p) { return p ? world(parseFloat(p.lat), runLon(parseFloat(p.lon))) : null; }
 
   function layChart() {
     var lo = 1e9, hi = -1e9, la = 1e9, ha = -1e9, step = 1;
     hexes.forEach(function (h) { lo = Math.min(lo, h[4]); hi = Math.max(hi, h[4]); la = Math.min(la, h[3]); ha = Math.max(ha, h[3]); hexAt[h[0] + ',' + h[1]] = h; });
     var a = hexAt['0,0'], b = hexAt['1,0']; if (a && b) step = Math.abs(b[4] - a[4]);
-    K = TW / (hi - lo + step); lonMid = (lo + hi) / 2; latMid = (la + ha) / 2; TD = (ha - la + step) * K; HEXR = step * K / Math.sqrt(3);
+    K = TW / ((hi - lo + step) * FX); lonMid = (lo + hi) / 2; latMid = (la + ha) / 2; TD = (ha - la + step) * K; HEXR = step * FX * K / Math.sqrt(3);
     PX = Math.min(200, Math.floor(4096 / Math.max(TW, TD)));
     [chartCanvas, baseCanvas].forEach(function (c) { c.width = Math.round(TW * PX); c.height = Math.round(TD * PX); });
     paintBase = function () {
@@ -503,7 +509,7 @@ body.watched .gives { display: none !important; }
     b2.strokeStyle = 'rgba(40,75,100,0.14)'; b2.lineWidth = 3; b2.beginPath(); b2.moveTo(W / 2, 0); b2.lineTo(W / 2, H); b2.moveTo(0, H / 2); b2.lineTo(W, H / 2); b2.stroke();
     // a line every two degrees
     b2.strokeStyle = 'rgba(45,85,110,0.32)'; b2.lineWidth = 1.2; b2.fillStyle = '#2f5268'; b2.font = "600 20px 'Barlow Condensed', sans-serif";
-    for (var lon = Math.ceil(lo / 2) * 2; lon <= hi; lon += 2) { var x = cpx(world(latMid, lon))[0]; b2.beginPath(); b2.moveTo(x, 0); b2.lineTo(x, H); b2.stroke(); b2.fillText(lon + '° E', x + 6, H - 14); }
+    for (var lon = Math.ceil(lo / 2) * 2; lon <= hi; lon += 2) { var x = cpx(world(latMid, lon))[0]; b2.beginPath(); b2.moveTo(x, 0); b2.lineTo(x, H); b2.stroke(); b2.fillText(lonLabel(lon), x + 6, H - 14); }
     for (var lat = Math.ceil(la / 2) * 2; lat <= ha; lat += 2) { var y = cpx(world(lat, lonMid))[1]; b2.beginPath(); b2.moveTo(0, y); b2.lineTo(W, y); b2.stroke(); b2.fillText(Math.abs(lat) + '° ' + (lat < 0 ? 'S' : 'N'), W - 70, y - 6); }
     // the scale along the border: a short tick each half degree, a long one each degree
     var border = function () {
@@ -698,7 +704,7 @@ body.watched .gives { display: none !important; }
     var u = PX / 100;
     function ring(v, r, colour, alpha, dash, width) { var c = cpx(v); g.save(); g.globalAlpha = alpha; g.strokeStyle = colour; g.lineWidth = (width || 2.4) * u; g.setLineDash(dash ? [6 * u, 5 * u] : []); g.beginPath(); g.arc(c[0], c[1], r * u, 0.15, 6.5); g.stroke(); g.restore(); return c; }
     if (arcDraft && !$('card').hidden) { (function (a) {
-      var at = function (b, d) { var rad = b * Math.PI / 180; return cpx(world(a.lat + d * Math.cos(rad) / 60, a.lon + d * Math.sin(rad) / (60 * Math.cos(a.lat * Math.PI / 180)))); }, c = at(0, 0), w = a.from === a.to ? 360 : ((a.to - a.from) % 360 + 360) % 360;
+      var at = function (b, d) { var rad = b * Math.PI / 180; return cpx(world(a.lat + d * Math.cos(rad) / 60, a.lon + d * Math.sin(rad) / (60 * (mapFrame ? mapFrame.factor : Math.cos(a.lat * Math.PI / 180))))); }, c = at(0, 0), w = a.from === a.to ? 360 : ((a.to - a.from) % 360 + 360) % 360;
       g.save(); g.beginPath(); if (w < 360) g.moveTo(c[0], c[1]); for (var k = 0; k <= w; k += 5) { var p = at(a.from + k, a.range); g[k || w < 360 ? 'lineTo' : 'moveTo'](p[0], p[1]); } g.closePath();
       g.fillStyle = 'rgba(31,78,140,0.13)'; g.fill(); g.strokeStyle = 'rgba(18,51,92,0.7)'; g.lineWidth = 2 * u; g.setLineDash([7 * u, 5 * u]); g.stroke(); g.restore(); })(arcDraft); }
     if (force && force.route && force.route.length) { g.save(); g.strokeStyle = 'rgba(18,51,92,0.85)'; g.fillStyle = '#12335c'; g.lineWidth = 2.4 * u; g.setLineDash([8 * u, 6 * u]); g.beginPath(); var st = cpx(placeOf(force.f.place)); g.moveTo(st[0], st[1]);
@@ -1122,7 +1128,7 @@ body.watched .gives { display: none !important; }
   // Where a place is: its latitude and longitude as a chart gives them, or
   // its hex where the hexes are shown or the map has no latitudes.
   function dm(v, pos, neg) { var a = Math.abs(v), d = Math.floor(a), m = Math.round((a - d) * 60); if (m === 60) { d += 1; m = 0; } return d + '\u00B0' + (m < 10 ? '0' : '') + m + '\u2032' + (v < 0 ? neg : pos); }
-  function whereIs(pl) { var h = hexAt[pl.q + ',' + pl.r], lat = pl.lat != null ? pl.lat : h && h[3], lon = pl.lon != null ? pl.lon : h && h[4]; return showHexes || lat == null || lon == null ? '(' + pl.q + ', ' + pl.r + ')' : dm(lat, 'N', 'S') + ' ' + dm(lon, 'E', 'W'); }
+  function whereIs(pl) { var h = hexAt[pl.q + ',' + pl.r], lat = pl.lat != null ? pl.lat : h && h[3], lon = pl.lon != null ? pl.lon : h && h[4]; return showHexes || lat == null || lon == null ? '(' + pl.q + ', ' + pl.r + ')' : dm(lat, 'N', 'S') + ' ' + dmLon(runLon(lon)); }
   // A distance the game counts in hexes, as a chart gives it: in nautical
   // miles, or in hexes where the hexes are shown. A hex's width is read
   // from the map itself.
@@ -2724,8 +2730,10 @@ body.watched .gives { display: none !important; }
   var onScreen = false;
   fetch(BASE + '/config').then(function (r) { return r.json(); }).then(function (c) {
     if (c.screen) { onScreen = true; showScreen(); return; }
-    return Promise.all([c, fetch(BASE + '/map').then(function (r) { return r.json(); }), fetch(BASE + '/coast').then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }), fetch(BASE + '/names').then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; })]).then(function (a) {
-    config = a[0]; hexes = a[1]; coast = a[2] && a[2].rings; chartNames = a[3]; headSeat();
+    return Promise.all([c, fetch(BASE + '/map').then(function (r) { return r.json(); }), fetch(BASE + '/coast').then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }), fetch(BASE + '/names').then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }), fetch(BASE + '/frame').then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; })]).then(function (a) {
+    config = a[0]; hexes = a[1]; coast = a[2] && a[2].rings; mapFrame = a[4]; FX = mapFrame ? mapFrame.factor : 1;
+    // The hexes and the names are brought into the frame's run; the coast file is stored in it already.
+    hexes.forEach(function (h) { h[4] = runLon(h[4]); }); chartNames = a[3] && a[3].map(function (n) { return { name: n.name, kind: n.kind, lat: n.lat, lon: runLon(n.lon) }; }); headSeat();
     var ready = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
     if (config.home) { KEPT_ROOT += BASE + '-' + config.home.number; KEPT = KEPT_ROOT; $('btn-new').hidden = false; $('btn-agent').hidden = !config.home.agents.length; }
     return ready.then(function () { layChart(); cur.zoom = 0; placeCamera(); requestAnimationFrame(frame); if (config.watch) return startWatch(); if (config.versus) startVersus(); return fetch(BASE + '/tools').then(function (r) { return r.json(); }).then(function (names) { names.forEach(function (n) { OFFERED[n] = true; }); $('btn-stops').hidden = !OFFERED.advance; if (OFFERED.advance) $('btn-day').textContent = 'Next pulse'; return refresh().catch(function (e) { if (!VERSUS || !/waits for the clock/.test(e.message)) throw e; }).then(function () { if (VERSUS) resumeVersus(); }); }); });

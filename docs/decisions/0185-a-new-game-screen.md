@@ -185,6 +185,7 @@ Read on Nov 20, 2026, and looked at in a browser twice: the screen, and a game o
 4. **The one-day Eastern Solomons is offered against the engine alone,** since every file of it gives a side its orders. Stands; the five-day scenario brings files for every pairing (decision 0184).
 5. **Owed, small:** after the clock moves, the other commander's slip reads "waited for" though the person himself has not yet finished, which reads as if he were the one waiting; it should say that the other commander has not finished. And the standard and full sizes of a dry run, a restart, and "How it ended" in a game against an agent were not looked at.
 
+**Amended by decision 0199 (rule 12), Nov 21, 2026:** the list also names each scenario's map, key `map`; an entry with none is on the present map. The bridge serves the chart of the game in hand, and the screen still reads nothing else of a scenario.
 ## Amended on Nov 21, 2026, on the designer's word
 
 1. **Only the scenario chosen is told in full.** The others show their name, dates and length; the lines of the scenario and of each side appear when it is chosen. The screen had become a wall of text with four scenarios on it.

@@ -1001,7 +1001,17 @@ fn within(value: f64, expected: f64, tolerance: f64) -> bool {
 /// Part 3 tests besides the distance check below.
 #[test]
 fn the_anchorages_fall_in_the_hexes_the_table_gives() {
-    use map_tool::projection::{centre_nm, hex_of, to_nm};
+    use map_tool::projection::centre_nm;
+    // The projection of the map the scenario is on, from the map's header
+    // (decision 0199): the present map's.
+    let projection = map_tool::frame::Frame::of_map(
+        &std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../data/map/south_pacific.csv"),
+    )
+    .unwrap()
+    .expect("the map has a frame")
+    .projection();
+    let to_nm = |lat: f64, lon: f64| projection.to_nm(lat, lon);
+    let hex_of = |lat: f64, lon: f64| projection.hex_of(lat, lon);
     let scenario = load_real();
     let map = scenario.world.map();
     let anchors = anchor_positions();
@@ -1115,7 +1125,15 @@ fn the_real_map_is_open_and_closed_where_the_geography_says() {
 /// positions are in `f64` from the map tool's projection.
 #[test]
 fn sea_distances_between_anchorages_are_near_the_straight_line() {
-    use map_tool::projection::to_nm;
+    // The projection of the map the scenario is on, from the map's header
+    // (decision 0199): the present map's.
+    let projection = map_tool::frame::Frame::of_map(
+        &std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../data/map/south_pacific.csv"),
+    )
+    .unwrap()
+    .expect("the map has a frame")
+    .projection();
+    let to_nm = |lat: f64, lon: f64| projection.to_nm(lat, lon);
     let scenario = load_real();
     let map = scenario.world.map();
     let anchors = anchor_positions();

@@ -4,18 +4,13 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use sim_core::hex::Hex;
 
-use crate::land::{LandIndex, Polygon};
+use crate::frame::Frame;
+use crate::land::{LandIndex, Polygon, Ring};
 use crate::projection::{
-    centre_nm, centre_of, degrees_text, from_nm, hex_of, hex_of_nm, to_nm, NM_PER_DEG_LAT,
-    NM_PER_DEG_LON,
+    centre_nm, degrees_text, hex_of_nm, Projection, HEX_NM, NM_PER_DEG_LAT, ROW_NM,
 };
 use crate::water::{nearest_sea_point, SEARCH_NM};
 
-/// Extent: every hex whose centre lies in these bounds, in degrees.
-pub const LAT_MIN: f64 = -24.0;
-pub const LAT_MAX: f64 = -1.0;
-pub const LON_MIN: f64 = 145.0;
-pub const LON_MAX: f64 = 172.0;
 /// Distance between lattice points, in nm.
 pub const LATTICE_NM: i32 = 2;
 /// Inradius of a hexagon (centre to flat side), in nm.
@@ -24,8 +19,6 @@ pub const INRADIUS_NM: f64 = 20.0;
 const HALF_HEIGHT_BOUND_NM: f64 = 24.0;
 /// Land percentage at which a hex is land.
 pub const LAND_FROM_PERCENT: u32 = 80;
-/// The date written in the file header. A literal: no wall clock.
-pub const GENERATED_ON: &str = "2026-11-10";
 
 /// What a hex is.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -60,6 +53,7 @@ pub struct MapHex {
     pub water_bodies: u32,
     /// Points in the main body of water; 0 when the hex has no sea point.
     pub main_body_points: u32,
+    /// The centre, as the file writes it: west negative, -180 to 180.
     pub lat: f64,
     pub lon: f64,
     /// Closed sides, indexed like [`Hex::DIRECTIONS`] (decision 0017,
@@ -76,6 +70,17 @@ pub struct GeneratedMap {
     /// What each anchorage did, in the order of the anchors file; empty when
     /// no anchors were given.
     pub anchors: Vec<AnchorNote>,
+    /// The hexes the frame's land marks made coast (decision 0199, 28), in
+    /// the order of the frame file.
+    pub marked: Vec<MarkNote>,
+}
+
+/// A hex a land mark made coast with land percentage 0.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct MarkNote {
+    pub name: String,
+    pub row: String,
+    pub hex: (i32, i32),
 }
 
 impl GeneratedMap {
@@ -277,13 +282,25 @@ pub fn classify(land_points: u32, points: u32) -> (u32, Kind) {
     (percent, kind)
 }
 
-/// Every hex whose centre lies in the extent, sorted by r then q.
-pub fn extent_hexes() -> Vec<(i32, i32)> {
+/// Every hex whose centre lies in the frame's extent, sorted by r then q.
+/// The rows and columns searched are worked from the extent, with a hex to
+/// spare on every side; the extent alone decides which hexes are taken.
+pub fn extent_hexes(frame: &Frame) -> Vec<(i32, i32)> {
+    let projection = frame.projection();
+    let (lat_min, lat_max) = (frame.south.value, frame.north.value);
+    let (lon_min, lon_max) = (frame.west_run(), frame.east_run());
+    let (west, north) = projection.to_nm(lat_max, lon_min);
+    let (east, south) = projection.to_nm(lat_min, lon_max);
+    let r_low = (-north / ROW_NM).floor() as i32 - 1;
+    let r_high = (-south / ROW_NM).ceil() as i32 + 1;
     let mut hexes = Vec::new();
-    for r in -40..=40 {
-        for q in -60..=60 {
-            let (lat, lon) = centre_of(q, r);
-            if (LAT_MIN..=LAT_MAX).contains(&lat) && (LON_MIN..=LON_MAX).contains(&lon) {
+    for r in r_low..=r_high {
+        let half = f64::from(r) / 2.0;
+        let q_low = (west / HEX_NM - half).floor() as i32 - 1;
+        let q_high = (east / HEX_NM - half).ceil() as i32 + 1;
+        for q in q_low..=q_high {
+            let (lat, lon) = projection.centre_of(q, r);
+            if (lat_min..=lat_max).contains(&lat) && (lon_min..=lon_max).contains(&lon) {
                 hexes.push((q, r));
             }
         }
@@ -293,18 +310,54 @@ pub fn extent_hexes() -> Vec<(i32, i32)> {
 
 /// Keeps the polygons whose bounding box touches the extent padded by one
 /// hex (40 nm of latitude and of longitude).
-pub fn keep_near_extent(polygons: Vec<Polygon>) -> Vec<Polygon> {
+pub fn keep_near_extent(polygons: Vec<Polygon>, frame: &Frame) -> Vec<Polygon> {
     let pad_lat = 40.0 / NM_PER_DEG_LAT;
-    let pad_lon = 40.0 / NM_PER_DEG_LON;
+    let pad_lon = 40.0 / frame.projection().nm_per_deg_lon();
+    let (lat_min, lat_max) = (frame.south.value, frame.north.value);
+    let (lon_min, lon_max) = (frame.west_run(), frame.east_run());
     polygons
         .into_iter()
         .filter(|polygon| {
             polygon.bbox().is_some_and(|b| {
-                b.2 >= LON_MIN - pad_lon
-                    && b.0 <= LON_MAX + pad_lon
-                    && b.3 >= LAT_MIN - pad_lat
-                    && b.1 <= LAT_MAX + pad_lat
+                b.2 >= lon_min - pad_lon
+                    && b.0 <= lon_max + pad_lon
+                    && b.3 >= lat_min - pad_lat
+                    && b.1 <= lat_max + pad_lat
             })
+        })
+        .collect()
+}
+
+/// Brings the source's shapes into the frame's run (decision 0199, 23): for
+/// a frame that crosses the date line, each ring that lies wholly west of
+/// the frame's western edge is moved 360 degrees east, whole. A frame that
+/// does not cross leaves every ring as it is.
+pub fn into_run(polygons: Vec<Polygon>, frame: &Frame) -> Vec<Polygon> {
+    if !frame.crosses_date_line() {
+        return polygons;
+    }
+    let west = frame.west_run();
+    polygons
+        .into_iter()
+        .map(|polygon| Polygon {
+            rings: polygon
+                .rings
+                .into_iter()
+                .map(|ring| {
+                    let east_most = ring
+                        .points
+                        .iter()
+                        .map(|p| p.0)
+                        .fold(f64::NEG_INFINITY, f64::max);
+                    if east_most < west {
+                        Ring {
+                            points: ring.points.iter().map(|&(x, y)| (x + 360.0, y)).collect(),
+                        }
+                    } else {
+                        ring
+                    }
+                })
+                .collect(),
         })
         .collect()
 }
@@ -312,9 +365,9 @@ pub fn keep_near_extent(polygons: Vec<Polygon>) -> Vec<Polygon> {
 /// Whether lattice point (i, j) is land in the index. The one place a
 /// lattice point is turned into a position: projected nm to latitude and
 /// longitude, never the other way.
-pub fn lattice_point_is_land(index: &LandIndex, i: i32, j: i32) -> bool {
+pub fn lattice_point_is_land(projection: &Projection, index: &LandIndex, i: i32, j: i32) -> bool {
     let (east, north) = lattice_nm(i, j);
-    let (lat, lon) = from_nm(east, north);
+    let (lat, lon) = projection.from_nm(east, north);
     index.contains(lon, lat)
 }
 
@@ -468,10 +521,12 @@ impl AnchorNote {
 /// one is ignored. Two anchorages of one hex whose bodies both qualify and
 /// differ are an error.
 fn apply_anchors(
+    frame: &Frame,
     extent: &[(i32, i32)],
     analyses: &mut [HexAnalysis],
     anchors: &[Anchorage],
 ) -> Result<Vec<AnchorNote>, String> {
+    let projection = frame.projection();
     struct Pick {
         hex_index: usize,
         body: usize,
@@ -479,7 +534,8 @@ fn apply_anchors(
     }
     let mut picks: Vec<Pick> = Vec::new();
     for anchor in anchors {
-        let hex = hex_of(anchor.lat, anchor.lon);
+        let lon = frame.lon_in_run(anchor.lon);
+        let hex = projection.hex_of(anchor.lat, lon);
         let Some(hex_index) = extent.iter().position(|e| *e == hex) else {
             return Err(format!(
                 "{} is in hex ({},{}), outside the extent",
@@ -497,7 +553,7 @@ fn apply_anchors(
                 hex.1
             ));
         }
-        let (east, north) = to_nm(anchor.lat, anchor.lon);
+        let (east, north) = projection.to_nm(anchor.lat, lon);
         let mut is_sea = |i: i32, j: i32| analysis.body_of.contains_key(&(i, j));
         let Some((point, _)) = nearest_sea_point(east, north, &mut is_sea) else {
             return Err(format!(
@@ -565,31 +621,56 @@ fn apply_anchors(
     Ok(notes)
 }
 
-/// Generates the map from land polygons (longitude, latitude), without
-/// anchorages.
-pub fn generate(polygons: Vec<Polygon>) -> GeneratedMap {
-    match generate_with_anchors(polygons, &[]) {
+/// Generates the map of a frame from land polygons (longitude, latitude),
+/// without anchorages.
+pub fn generate(polygons: Vec<Polygon>, frame: &Frame) -> GeneratedMap {
+    match generate_with_anchors(polygons, &[], frame) {
         Ok(map) => map,
-        // With no anchorages there is nothing to reject.
+        // With no anchorages there is nothing to reject, and a frame's land
+        // marks are checked when the frame is read.
         Err(message) => unreachable!("{message}"),
     }
 }
 
-/// Generates the map from land polygons (longitude, latitude), and the
-/// anchorages that decide some hexes' main bodies of water (decision 0017,
-/// decision 6). An anchorage that cannot be placed is an error.
+/// Generates the map of a frame from land polygons (longitude, latitude),
+/// and the anchorages that decide some hexes' main bodies of water
+/// (decision 0017, decision 6). An anchorage that cannot be placed is an
+/// error, and so is a land mark outside the extent.
 pub fn generate_with_anchors(
     polygons: Vec<Polygon>,
     anchors: &[Anchorage],
+    frame: &Frame,
 ) -> Result<GeneratedMap, String> {
-    let index = LandIndex::new(&keep_near_extent(polygons));
-    let is_land = |i: i32, j: i32| lattice_point_is_land(&index, i, j);
-    let extent = extent_hexes();
+    let projection = frame.projection();
+    let index = LandIndex::new(&keep_near_extent(into_run(polygons, frame), frame));
+    let is_land = |i: i32, j: i32| lattice_point_is_land(&projection, &index, i, j);
+    let extent = extent_hexes(frame);
     let mut analyses: Vec<HexAnalysis> = extent
         .iter()
         .map(|&(q, r)| analyse_hex(q, r, &is_land))
         .collect();
-    let anchor_notes = apply_anchors(&extent, &mut analyses, anchors)?;
+    let anchor_notes = apply_anchors(frame, &extent, &mut analyses, anchors)?;
+
+    // Land marks (decision 0199, 27 and 28): the hex a mark's position falls
+    // in, when no lattice point of it is land, is coast with land
+    // percentage 0. Its body of water is the hex's whole sea, as it was.
+    let mut marked = Vec::new();
+    for mark in &frame.marks {
+        let hex = projection.hex_of(mark.lat.value, frame.lon_in_run(mark.lon.value));
+        let Some(h) = extent.iter().position(|e| *e == hex) else {
+            return Err(format!(
+                "land mark {} at lat {}, lon {} is in hex ({},{}), outside the extent",
+                mark.name, mark.lat.text, mark.lon.text, hex.0, hex.1
+            ));
+        };
+        if analyses[h].land_points == 0 {
+            marked.push(MarkNote {
+                name: mark.name.clone(),
+                row: mark.row.clone(),
+                hex,
+            });
+        }
+    }
 
     // Closed sides (decision 0017, decision 7): a side is open when a point
     // of one hex's main body is next to (north, south, east or west on the
@@ -629,11 +710,15 @@ pub fn generate_with_anchors(
     for (h, analysis) in analyses.iter().enumerate() {
         let (q, r) = extent[h];
         let points = analysis.points.len() as u32;
-        let (land_percent, kind) = classify(analysis.land_points, points);
+        let (land_percent, mut kind) = classify(analysis.land_points, points);
         if kind == Kind::Coast && land_percent == 0 {
             zero_percent_coast += 1;
         }
-        let (lat, lon) = centre_of(q, r);
+        if marked.iter().any(|m| m.hex == (q, r)) {
+            kind = Kind::Coast;
+        }
+        let (lat, lon) = projection.centre_of(q, r);
+        let lon = frame.lon_for_file(lon);
         // A side toward a hex outside the extent has no partner: closed.
         let closed_sides = open[h].map(|is_open| !is_open);
         for (direction, (dq, dr)) in Hex::DIRECTIONS.iter().enumerate() {
@@ -663,6 +748,7 @@ pub fn generate_with_anchors(
         hexes,
         zero_percent_coast,
         anchors: anchor_notes,
+        marked,
     })
 }
 
@@ -683,7 +769,16 @@ pub fn closed_sides_text(closed: &[bool; 6]) -> String {
 /// `anchors_file` is the anchors file's name when one was used: the header
 /// then names it and gives one line per anchorage. Without it the header is
 /// as it was before anchorages.
-pub fn csv_text(map: &GeneratedMap, command_line: &str, anchors_file: Option<&str>) -> String {
+///
+/// The title, the projection, the extent and the date are the frame's
+/// (decision 0199, 17); a frame with land marks gains a line "Marked land:"
+/// listing the hexes they made coast (28).
+pub fn csv_text(
+    map: &GeneratedMap,
+    frame: &Frame,
+    command_line: &str,
+    anchors_file: Option<&str>,
+) -> String {
     let count = |kind: Kind| map.hexes.iter().filter(|h| h.kind == kind).count();
     let smallest = map.hexes.iter().map(|h| h.points).min().unwrap_or(0);
     let largest = map.hexes.iter().map(|h| h.points).max().unwrap_or(0);
@@ -693,16 +788,16 @@ pub fn csv_text(map: &GeneratedMap, command_line: &str, anchors_file: Option<&st
         out.push_str(text);
         out.push('\n');
     };
-    line("Flag Plot map of the south-west Pacific slice (decision 0017).");
+    line(&frame.title);
     line("Source: Natural Earth 1:10m land and minor islands, version 5.1.1, public domain, naturalearthdata.com");
     line("  ne_10m_land.zip          SHA-256 e547d749445eaa0964aba76738090ec88f5e63c4585122170f98c67a7ea922dc");
     line("  ne_10m_minor_islands.zip SHA-256 47c0b3ce26df7b4dbabdbb251023918cb2f5c83462a426288f1f253da7284db2");
-    line("Projection: hex (0,0) is centred at 12 S, 160 E.");
-    line("  east_nm  = (lon - 160) * 60 * 0.978148   (0.978148 is cos 12 degrees)");
-    line("  north_nm = (lat + 12) * 60");
+    for text in frame.projection_lines() {
+        line(&text);
+    }
     line("  hex (q,r) centre: east = 40 * (q + r/2) nm, south = 34.641016 * r nm (north is decreasing r)");
     line("  a point belongs to the hex whose centre is nearest.");
-    line("Extent: every hex whose centre lies from 1 S to 24 S and from 145 E to 172 E.");
+    line(&frame.extent_line());
     line("Lattice: one global square lattice, 2 nm apart in projected nm, with a point at the origin (east = 2i nm, north = 2j nm for whole i and j).");
     line(&format!(
         "  Each point belongs to the hex whose centre is nearest (cube rounding); a point exactly on a vertical side of a hexagon goes to the hex to its east. {smallest} to {largest} points per hex."
@@ -713,6 +808,22 @@ pub fn csv_text(map: &GeneratedMap, command_line: &str, anchors_file: Option<&st
         "  A hex with at least one land point but 0 percent after rounding counts as coast with land_percent 0: {} such hexes.",
         map.zero_percent_coast
     ));
+    if !map.marked.is_empty() {
+        let list: Vec<String> = map
+            .marked
+            .iter()
+            .map(|m| {
+                format!(
+                    "{} (data/oob/place_positions.csv row {}) hex ({},{})",
+                    m.name, m.row, m.hex.0, m.hex.1
+                )
+            })
+            .collect();
+        line(&format!(
+            "Marked land: {}. Each is coast with land_percent 0 though no lattice point of it is land: a land mark of the frame (decision 0199); its body of water is the hex's whole sea. They are not counted among the hexes above.",
+            list.join("; ")
+        ));
+    }
     line("Bodies of water: a hex's sea points joined N/S/E/W within the hex; the main body is the largest (tie: holds the northernmost, then westernmost point).");
     if let Some(file) = anchors_file {
         line(&format!(
@@ -737,7 +848,8 @@ pub fn csv_text(map: &GeneratedMap, command_line: &str, anchors_file: Option<&st
     ));
     line("lat and lon are the centre of the hex in degrees, south and west negative. water_bodies is the number of bodies of water in the hex.");
     line(&format!(
-        "Generated {GENERATED_ON} by `cargo run --release -p map-tool -- {command_line}`"
+        "Generated {} by `cargo run --release -p map-tool -- {command_line}`",
+        frame.date
     ));
     out.push_str("q,r,kind,land_percent,lat,lon,water_bodies,closed_sides\n");
     for hex in &map.hexes {
@@ -759,8 +871,43 @@ pub fn csv_text(map: &GeneratedMap, command_line: &str, anchors_file: Option<&st
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::land::Ring;
     use sim_core::map::{HexData, HexKind, Map};
+
+    // The tests are on the present map's frame, the tool's default.
+    fn frame() -> Frame {
+        Frame::south_pacific()
+    }
+
+    fn generate(polygons: Vec<Polygon>) -> GeneratedMap {
+        super::generate(polygons, &frame())
+    }
+
+    fn generate_with_anchors(
+        polygons: Vec<Polygon>,
+        anchors: &[Anchorage],
+    ) -> Result<GeneratedMap, String> {
+        super::generate_with_anchors(polygons, anchors, &frame())
+    }
+
+    fn extent_hexes() -> Vec<(i32, i32)> {
+        super::extent_hexes(&frame())
+    }
+
+    fn keep_near_extent(polygons: Vec<Polygon>) -> Vec<Polygon> {
+        super::keep_near_extent(polygons, &frame())
+    }
+
+    fn csv_text(map: &GeneratedMap, command_line: &str, anchors_file: Option<&str>) -> String {
+        super::csv_text(map, &frame(), command_line, anchors_file)
+    }
+
+    fn from_nm(east: f64, north: f64) -> (f64, f64) {
+        frame().projection().from_nm(east, north)
+    }
+
+    fn centre_of(q: i32, r: i32) -> (f64, f64) {
+        frame().projection().centre_of(q, r)
+    }
 
     /// A rectangle given in projected nm, as a polygon in lon/lat.
     fn rect_nm(east: (f64, f64), north: (f64, f64)) -> Ring {

@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 20, 2026. It is stage 0 of decis
 
 Summary: The game has one map, of the south-west Pacific, and the tool that makes it, the table that draws it and several other tools have that map's place on the earth written into them. The engine has not: it counts in hexes. This makes a map's place on the earth a thing each map says of itself, makes a second map for Midway that crosses the date line, lets an atoll too small for the sampling be land enough to land on, and has the table, the viewer and the tools read the map a game is played on.
 
-Standing: Planned and amended on review on Nov 20, 2026; the designer confirmed on Nov 21, 2026 that the present map's chart is drawn true, 2 in 100 narrower east to west; being built.
+Standing: Planned and amended on review on Nov 20, 2026; the designer confirmed on Nov 21, 2026 that the present map's chart is drawn true, 2 in 100 narrower east to west; built on Nov 21, 2026 to the plan as amended, and waits for the architect's reading.
 
 ## Why
 
@@ -102,3 +102,78 @@ A reviewer who had not seen the plan written read it against the code on Nov 20,
 30. **The export's map gains the frame** (centre, factor, western and eastern edge), and the viewer and its check read it there instead of the cosine of 12 degrees.
 31. **Named for the build,** beyond what the plan listed: the map tool's search box and padding for the extent; `water`, which is given a map to read its frame from; the three tests that call the tool's projection; the check of passages' constants; the table bridge's default map and its chart loaded once at start; the clipping script's fixed box; the tool server's opening words.
 32. **Decision 0185 is amended** where it has the table's list name a scenario without its map (rule 12 here).
+
+## As built
+
+Built on Nov 21, 2026, to the plan as amended on review: rules 4, 10 to 16 and 17 to 32. No rule of the simulation and nothing in `sim-core` changed.
+
+**The map tool** (`crates/map-tool`). A new module, `frame.rs`, holds a map's frame: title, date, centre, factor, extent and land marks. `Frame::south_pacific()` is the present map's frame, the tool's default and the one place a map's frame is in code. `Frame::read` reads a frame file (TOML, every quantity a string, longitudes west negative as the place rows give them, unknown keys refused). `Frame::of_map` reads a map's frame from its header through `sim-data`. The projection is a value of its frame (`Projection`), not constants. `generate` takes `--frame FILE`. With none it makes the present map, so its command line and header are unchanged. The extent's search box is worked from the frame. For a frame across the date line, each ring of the source lying wholly west of the western edge is moved 360 degrees east, whole (`into_run`); a frame that does not cross leaves every ring alone. `locate` and `water` read the frame of the map they are given (`water` gains `--map`). A map with no frame is read on the default frame, as before. `render` needs no frame.
+
+**The byte-for-byte check (rule 21).** The source's archives on this machine have the SHA-256 the present header records (`e547d749…` and `47c0b3ce…`). In a scratch folder with `references` linked to the source and a copy of the anchors file, the present map's own command line was run with the changed tool:
+
+```
+map-tool generate --land references/natural-earth/ne_10m_land/ne_10m_land.shp --minor-islands references/natural-earth/ne_10m_minor_islands/ne_10m_minor_islands.shp --out data/map/south_pacific.csv --anchors data/map/south_pacific_anchors.csv
+cmp data/map/south_pacific.csv <worktree>/data/map/south_pacific.csv
+```
+
+`cmp` found no difference: both files have SHA-256 `dde3e8e9f09f22ab…`. The unchanged tool, run the same way before any change, gave the same result. The committed file was never written over.
+
+**The Midway map.** The frame file is `data/map/frames/midway.toml`, and the map is `data/map/midway.csv`, made by the command in its header. It has 1,418 hexes: 0 land, 3 coast and 1,415 deep sea, in rows -16 to 18. Its longitude column runs from 163.36 E across to -166.33. The land marks are Midway (row 5100, the atoll, at 28.232, -177.370), in hex (5,1), and Wake (row 5107, at 19.299, 166.624), in hex (-24,16). Wake is two rows from the south edge. Neither hex has a land point, so each is coast with land percentage 0 and is listed in the header's "Marked land" line. The third coast hex is (16,8), at French Frigate Shoals. One of its lattice points is land, so the sampling makes it coast with land percentage 0; it is not a mark. That is the sampling's own result, not a departure from rule 11. No hex has more than one body of water, and no side between two hexes that are not land is closed.
+
+**`sim-data`.** `read_map_frame` and `parse_map_frame` read the header's four lines into a `MapFrame` of `Fixed` values: the centre, the factor and the four edges, the eastern edge in the run (194 for 166 W). The lines must agree with one another: the same centre in the projection line and both formulas, and "cos" of the centre's latitude. A map with none of the lines has no frame. One that has some of them but not all is an error. A scenario keeps its map's frame (`Scenario::map_frame`), never in the world and never hashed.
+
+**The readers.**
+- The check of passages takes its centre, factor and run from the map's header, in whole numbers. The longitude term is put over `2 x UNIT x 10^6` so that any factor in millionths divides exactly. For 0.978148 this is the same fraction as before. A hand-written map, which has none, is read in the present map's frame, taken from that map's header, as before (rule 18).
+- The export's map gains `frame`: the centre, the factor and the western and eastern edges, in the run.
+- The viewer and `viewer/check.js` read the factor and the run from `map.frame`, and fall back to cos 12 degrees for a file without one. `check.js` requires the frame of a real map's replay at version 6. The viewer's hex readout letters longitude E or W.
+- The table: each entry of `table/scenarios.json` names its map. The bridge reads a map's frame from its header (`read_frame`), and loads each map's chart, frame, coast and names once (`load_chart`). It serves the frame at `/frame` in all three modes. At the new game screen it serves the chart of the game in hand. The page draws longitude scaled by the factor, brings hexes and names into the run, and letters meridians and positions E or W.
+- `table/chart/clip_coast.py` takes `--map CSV`, reads the frame from that map's header and clips to the extent with 3 degrees spare, moving rings into the run. It also reads `.shp` files with the standard library, since no GeoJSON of the source is kept. Without `--map` it keeps its fixed box. It made `table/chart/midway_coast.json`, 38 rings and 263 points, its longitudes in the run. `table/chart/midway_names.json` names Midway, Kure, Lisianski, French Frigate Shoals and Wake at their rows' positions.
+- `data/map/midway_labels.csv` gives the same five places, as rows, for the export's `--labels`.
+- The tool server's opening words now say "a hex map of the sea the scenario is fought in, which its briefing describes".
+
+**Departs from the plan, or settles what it left open.**
+- The rulebook's account of what a map is was in chapter 2 ("The map as the rules read it"), not chapter 1. The new section, "Where a map lies", is there.
+- The frame file gives its longitudes west negative (`east = "-166"`), as the place rows do, and the tool counts them on. The plan's original rule 3 would have written them above 180. Rule 22 keeps west negative for the map file, and the frame file now follows the same rule as the rows its land marks cite.
+- A crossing frame is not written in the header beyond the four lines (rule 17). A reader brings a longitude into the run from the extent alone: the eastern edge is given west of the western one.
+- Pearl and Hermes Reef has no row in `data/oob/place_positions.csv`, so it is left out of the names file and the labels. Laysan has a row but is not among the places rule 29 names, so it is left out too.
+- The names file has no sea names, since their positions would rest on no row.
+- No replay under `viewer/replays/` is committed, so none changed. `viewer/measure_fixture.json` holds no map and is unchanged.
+- Pearl and Hermes Reef is entered in `data/oob/gaps.csv` as a missing position.
+
+**A test that fails, left for a ruling.** `a_scenario_with_command_levels_off_exports_as_it_did` (`crates/sim-cli/tests/export_pictures.rs`) pins a hash of the export of several scenarios. 05_eastern_solomons is on the present map, so its export gained the frame of rule 30, these bytes after `"real":true,` in the map:
+
+```
+"frame":{"centre_lat":-12,"centre_lon":160,"factor":0.978148,"west":145,"east":172},
+```
+
+Its hash went from 652713275247898452 (the expected number) to 2335432407430775620. The test is left as it is, failing: its expected number is for the designer and the architect to settle.
+
+**Tests added.**
+- `crates/map-tool/src/frame.rs`: the default frame writes the present header lines; a frame across the date line; bad frames refused.
+- `crates/map-tool/tests/committed_map.rs`: the well-formed and the load tests now run on every committed generated map, each in its own header's frame. Three new tests: `the_midway_frame_file_and_the_header_agree`, `midway_and_wake_are_marked_land`, `sim_data_loads_the_midway_map`.
+- `crates/sim-data/src/map.rs`: a frame is read from the header; no lines give no frame, and a part of one, or lines that disagree, are an error.
+- `crates/sim-cli/src/validate/passages.rs`: `a_hex_centre_on_the_midway_map_is_in_its_own_hex`.
+- `crates/sim-cli/tests/export.rs`: `a_generated_map_carries_its_frame`, `the_midway_labels_are_the_rows_positions`.
+- The three tests outside the tool that call its projection (scenarios 4b and 103) now take it from the present map's header.
+
+No expected number of any existing test changed.
+
+**The checks.**
+- `cargo fmt`, clippy and `oob-check` pass.
+- `cargo test --workspace --release --no-fail-fast` passes except two tests:
+  - the export test above;
+  - `timing`'s `time_reports_its_sections_and_changes_nothing`, which did not finish. Its `sim-cli time` ran over 80 minutes on this branch and was stopped. Built from `origin/main` (b0f16165) and run alone with the same arguments, it had not finished after 31 minutes either, with about 1.5 minutes of CPU. So the slowness is the machine's (load average 10 to 27 throughout) or `main`'s, not this change's. That test reads a hand-written map, which has no frame.
+- `sh scripts/regenerate.sh --check`: every generated file is what the engine gives.
+- Every command under "Before a commit" passes, and so does `node viewer/check.js` on a fresh export.
+- Every recorded game replays except `stage_2b_seat_sonnet`. That one is refused as a saved game of version 13 (now 23), exactly as on `main`.
+
+## The architect's rulings
+
+Made on Nov 21, 2026 on reading the build: the frame file and the header of the Midway map, the loader's reading of a frame, the export, and what changed in the tool, the table and the viewer. `sim-core` is not touched.
+
+1. **The present map is proved unchanged** by the tool's own command line and a comparison of bytes, as "As built" says. That is the proof rule 21 asked for.
+2. **The departures of "As built" are confirmed.** The frame file's longitudes west negative, as the place rows have them; the check of passages reading a map with no frame as the present one, which is rule 18's "as it does today"; the labels file; the clipping script reading the source's own shapes; the rulebook's chapter 2, where a map is described, not chapter 1.
+3. **French Frigate Shoals is coast by the sampling,** one land point, not by a mark. It stays so: the rule for marks is for a place the sampling misses, and no scenario puts anything there.
+4. **Pearl and Hermes Reef and Laysan are not on the chart** until a row gives the one a position and a rule names the other. No sea is named on the Midway chart. That is right: a name rests on a row.
+5. **One pinned number is changed, on the designer's word of Nov 21, 2026.** `a_scenario_with_command_levels_off_exports_as_it_did` pins the bytes of ten exports, and an export on a generated map now carries the frame of rule 30. The architect exported all ten on this branch: nine hash as pinned; scenario 5, the one on the present map, gains the frame's field and nothing else, and with the field taken out hashes as it was pinned. Its number is pinned again, with that written beside it.
+6. **The timing test did not finish on a loaded machine, on this branch or on main.** It is not this change. It is run again when the machine is quiet, and CI's own run is the check.
