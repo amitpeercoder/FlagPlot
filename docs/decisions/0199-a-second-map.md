@@ -162,4 +162,7 @@ No expected number of any existing test changed.
 - `cargo fmt`, clippy and `oob-check` pass.
 - `cargo test --workspace --release --no-fail-fast` passes except two tests:
   - the export test above;
-  - `timing`'s `time_reports_its_sections_and_changes_nothing`, which did not finish on a heavily loaded machine (see the pull request for how it compares with `main`).
+  - `timing`'s `time_reports_its_sections_and_changes_nothing`, which did not finish. Its `sim-cli time` ran over 80 minutes on this branch and was stopped. Built from `origin/main` (b0f16165) and run alone with the same arguments, it had not finished after 31 minutes either, with about 1.5 minutes of CPU. So the slowness is the machine's (load average 10 to 27 throughout) or `main`'s, not this change's. That test reads a hand-written map, which has no frame.
+- `sh scripts/regenerate.sh --check`: every generated file is what the engine gives.
+- Every command under "Before a commit" passes, and so does `node viewer/check.js` on a fresh export.
+- Every recorded game replays except `stage_2b_seat_sonnet`. That one is refused as a saved game of version 13 (now 23), exactly as on `main`.
