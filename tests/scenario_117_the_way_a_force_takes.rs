@@ -199,9 +199,14 @@
 //!     commander's own for C to operate carriers from (3,0), at preserve
 //!     and with K held as in statement 5, C is given the route (3,0): the
 //!     way is chosen only for a station the staff chose.
-//! 21. **Home for fuel.** In statement 11's setting with C at its station
-//!     and short of fuel by the carrier doctrine's measure, C is routed
-//!     home by the one point H.
+//! 21. **Home for fuel.** With C at its station (3,0), H its home port,
+//!     K held and every ship at 110 t: at balanced the passage home, 81.75
+//!     t times 1.2, is 98.1 t, and C stays. With the order set to preserve
+//!     on day 2 the passage home needs 122.6 t, C is short, and it is
+//!     routed home by the one point H. The reason says nothing of a way.
+//!     (Corrected by the architect on Nov 21, 2026: as first written it
+//!     took statement 11's setting, in which a force at its station is
+//!     never short, since its way out was weighed with the same margin.)
 //!
 //! # Properties
 //!
