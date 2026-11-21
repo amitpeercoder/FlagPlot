@@ -81,3 +81,46 @@ Stage 1 touches only forces the staff stationed under decision 0202, and no game
 
 1. **How far a cautious force may go round.** The plan allows a quarter longer at balanced and twice as long at preserve. They are judgements; the architect proposes them and expects to change them after games.
 2. **Stage 2 will move closed proofs.** The architect proposes to build stage 1, play it, and bring the list of proofs that would move before stage 2 is built.
+
+## Amended on review
+
+A reviewer who had not seen the plan written read it against the engine's pathfinding, the carrier doctrine and the station routine on Nov 21, 2026. Where this and the text above differ, this holds. The rules are folded into one statement before the hand calculation is written.
+
+**Kept, and how (replaces rule 13).**
+
+20. **The staff gives no route to a force that is under way and whose route ends at its station.** The engine's route holds the way, so nothing new is kept. Today the carrier doctrine gives the route afresh every morning the force is not at its hex; built on that, the bend would be thrown away each day, and chosen afresh from partway it could differ and the force would wander.
+21. **The search on the way** reads the engine's path through the waypoints that remain, and the doctrine knows a force is bound for its station by the last waypoint of its route, not by a route of one point.
+
+**The bound is in miles (replaces rules 6, 7 and 10 where they differ).**
+
+22. **The search counts steps; the bound is tested on the miles the engine charges.** A clear shortest way is charged by the straight line, and a way held by waypoints runs along the hexes at 40 nm a step, so a way a quarter longer in steps can be near half as long again in miles. A way is within the bound when the charged miles of its waypoints, as the engine forecasts them, are no more than a quarter above the shortest way's at balanced, or twice at preserve. Where the best way by steps fails that, the step bound is lowered until one passes.
+23. **Both figures are placeholders.** Nothing in the record bears on how far a carrier force went round.
+
+**Fuel (replaces rule 8).**
+
+24. **Each way tried is weighed at the speed the doctrine's rule gives that way.** A longer way may be past twelve hours at cruise and so be sailed at full speed, at four times the fuel a mile; at preserve it is always cruise.
+25. **The fuel is for the way and from its end to the force's home port,** times the margin, as decision 0202 has it. A force stopped at a base that can fuel it is weighed with its ships full. Where no way is in fuel, the shortest is taken, as today, and the reason says so.
+26. **The way home for fuel is always the shortest.** A force turns home when it is short, so no longer way home is ever in fuel. Rule 1 names the way to the station, and the way back to it after closing or after fuelling.
+27. **Closing on a contact takes the shortest way,** as today.
+
+**The circles and the ties (adds to rules 3, 4 and 9).**
+
+28. **A contact inside the waters of the deny the force serves casts no circle,** as in decision 0202.
+29. **The search is over a hex and the steps taken to it,** on hexes ships can enter, comparing ways first by hexes in danger and then by length. Ways equal in both are parted by the engine's order of directions at the first step from the start at which they differ. It starts from the hex the force is in.
+30. **Hexes in danger are counted, not how deep each lies.** The station is chosen by depth and the way by count; that is known and looked at after games.
+
+**How the way is given (adds to rule 11).**
+
+31. **The routine that keeps a route inside an area is given the way's own hexes as the area.** Inside that set the only path is the way itself, and the farthest hex the engine reaches along it is taken each time, which gives the fewest waypoints. Any way can be held, at worst a waypoint a hex. What the staff forecasts for those waypoints is what the engine will charge.
+
+**The station and the way are chosen apart (new).**
+
+32. **Decision 0202 ranks stations by the shortest way to each.** A station whose shortest way crosses a circle may be chosen over one whose way is clear. Stage 1 leaves that as it is and says so; choosing them together is taken up in stage 2, where the same search gives the best way to every candidate at once.
+
+**Games on file (replaces that section).**
+
+33. **One scenario has such a force: scenario 116, decision 0202's own.** Where a circle lies across the shortest way to the station it chose, as in its statement 6, the way now bends and that scenario's events move. Its statements name stations and not ways, and are checked to hold. No other game on file has a carrier force stationed by the staff, and none of those may move.
+
+**Stage 2 (adds to rules 17 and 18).**
+
+34. **Not every route is built by the one routine.** A stand's route to its station and on to a base, and the covering carriers' way, are built apart. The routine is also used to measure which base is nearest, so bending it would change which base is chosen. The arrival timed by night (0145) and the turn-back test (0191) each work the way out again for themselves, and must be made to read the way actually given. All of this is stage 2's, and is why it is planned on its own.
