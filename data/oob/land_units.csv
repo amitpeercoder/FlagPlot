@@ -1,5 +1,5 @@
 # Land units: formations, echelons and task groupings the sources name, and each side's whole force at a place. Identity only; see land_unit_facts.csv.
-# kind: formation, echelon, task-group, garrison, construction, patrol, or forces-at-place (everything a side had ashore there). parent is given only where a unit's own name or a fact row states it.
+# kind: formation, echelon, task-group, garrison, construction, patrol, forces-at-place (everything a side had ashore there), or study (the men of a measured study, such as the Minnesota Experiment; service civilian). parent is given only where a unit's own name or a fact row states it.
 # Format and rules: docs/research/oob/database-design.md and docs/research/oob/land-forces.md. oob-check does not yet know this file.
 id,key,name,nation,service,kind,parent
 1000,jp-11th-construction-unit,11th Naval Construction Unit,jp,ijn,construction,
@@ -195,3 +195,19 @@ id,key,name,nation,service,kind,parent
 6226,jp-12th-construction-unit-midway,12th Naval Construction Battalion (Midway plan),jp,ijn,construction,
 14100,jp-forces-wake,"Japanese forces at Wake Island, 1942 (65th Guard Unit, army detachments, naval pioneers, air wing personnel)",jp,mixed,forces-at-place,
 14101,jp-65th-guard-unit-wake,"65th Guard Unit (65th Keibitai), Wake Island",jp,ijn,garrison,
+14900,us-forces-bataan,"US and Philippine forces on Bataan, January to April 1942 (Luzon Force from 12 March)",us,mixed,forces-at-place,
+14901,us-i-corps-bataan,"I Philippine Corps, Bataan",us,mixed,formation,
+14902,us-ii-corps-bataan,"II Philippine Corps, Bataan",us,mixed,formation,
+14903,us-31st-infantry,"31st Infantry (US), Philippines",us,us-army,formation,
+14904,jp-forces-bataan,"Japanese forces on Bataan (14th Army), January to April 1942",jp,ija,forces-at-place,
+14905,jp-forces-papua-beachhead,"Japanese forces at the Buna, Gona and Sanananda beachhead, November 1942 to January 1943",jp,mixed,forces-at-place,
+14906,au-forces-kokoda-trail,"Australian forces on the Kokoda trail, July to November 1942",au,army,forces-at-place,
+14907,au-2-14th-battalion,2/14th Infantry Battalion (AIF),au,army,formation,
+14908,au-2-1st-battalion,2/1st Infantry Battalion (AIF),au,army,formation,
+14909,au-2-2nd-battalion,2/2nd Infantry Battalion (AIF),au,army,formation,
+14910,au-16th-brigade,16th Infantry Brigade (AIF),au,army,formation,
+14911,us-32d-division,32d Infantry Division,us,us-army,formation,
+14912,us-2d-battalion-126th-infantry,"2d Battalion, 126th Infantry",us,us-army,formation,
+14913,us-minnesota-starvation-experiment,"Minnesota Starvation Experiment, Laboratory of Physiological Hygiene, University of Minnesota, 1944-1945 (the men studied)",us,civilian,study,
+14914,us-army-all-theatres,"US Army forces in all theatres, 1942-1945 (general statements of the Army's medical histories)",us,us-army,forces-at-place,
+14915,us-37th-division,37th Infantry Division,us,us-army,formation,
