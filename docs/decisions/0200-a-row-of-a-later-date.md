@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 21, 2026, for decision 0198's ru
 
 Summary: The derivation tool reads no fact row dated after a list's date, so that a later fit does not leak back into an earlier battle. Some facts do not change with the years, and the only good source for them may be dated later: the Navy's sheet for the PBY-5A is of September 1943, and Midway is June 1942. This lets an exception say, row by row and with its reason, that a later row is read for an earlier date, and marks every figure that rests on one.
 
-Standing: Planned on Nov 21, 2026, amended on review and built on Nov 21, 2026 ("As built", below); its readings and the wording of the PBYs' reasons are the architect's to confirm.
+Standing: Planned and amended on review on Nov 21, 2026; built the same day and confirmed by the architect's rulings below.
 
 ## Why
 
@@ -99,3 +99,14 @@ Both search radii are above the 700 miles (608 nm) the boats flew from Midway (1
 **Rule 6.** With the code changed and before the data, and again after, `oob-derive data/derivation/<list>.toml --check` passed for Cape Esperance, the Coral Sea, the Eastern Solomons, the landings, Rabaul and Guadalcanal and Savo Island, with their derived files unchanged byte for byte; of the Midway files only the aircraft file and its sources gained the two types and their exceptions. The frozen copy in `data/reference/step1` keeps types 5100 to 5112 as first derived: the frozen figures test asks for the columns, not the rows, and no column was added.
 
 **Documents:** `docs/commands.md`, `docs/research/oob/database-design.md` ("Dates"), `docs/engineering/data-rules.md`, chapter 5 of the rulebook (each protection a sourced yes or no, partial reading as no), the glossary ("Row of a later date"), and a pointing line in decisions 0020, 0029 and 0075.
+
+## The architect's rulings
+
+Made on Nov 21, 2026 on reading the build: how the tool names a later row, where it refuses one, the mark on a figure, and the eight exceptions of the two flying boats with their reasons.
+
+1. **The six readings of "As built" are confirmed.** A date known only to the month that holds the list's date is not later: it cannot be told, and the plain exception is for it. A ship and her class are different entities, so a class's row of the time does not refuse a ship's later row. A refusal stops the run.
+2. **The reasons written for the eight exceptions are read and stand.** Each says what it rests on and how weak that is. The PBY-5A's armour is called the weakest reading in the list, which it is.
+3. **The figures are as the plan expected:** the PBY-5A searches to 737 nm and strikes to 434 with a torpedo; the PBY-5 searches to 898 nm and strikes to 414.
+4. **The PBY-5 carries nothing,** since her fits on file are unconfirmed and no exception was granted for them. That stands: at Midway the torpedo attack of the night of 3 June was flown by PBY-5As, and the flying boats are in the scenario to search.
+5. **Both search radii are above the 700 miles flown** (608 nm), the PBY-5's by nearly half. They are the tool's rule on the rows and are not fitted to the battle. The PBY-5's rests on one page whose miles are read as statute, which decision 0075 names as a gap to close; it stays open, and the first game's report says how far the boats searched.
+6. **The frozen copy of Midway's aircraft types is made again when scenario 114 is built,** so that it holds the two new types; nothing reads it until then.
