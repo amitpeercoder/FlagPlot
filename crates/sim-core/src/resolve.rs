@@ -176,7 +176,8 @@ impl World {
 
     /// A copy of the world with the open day treated as closed, for checking
     /// a command or working a preview while a day is open, at 0600 or 1200
-    /// (decision 0156, step 3). On a world with no day open it is a plain
+    /// (decision 0156, step 3), and for the side's view a trial asked then is
+    /// begun on (decision 0204, 2). On a world with no day open it is a plain
     /// clone.
     ///
     /// The copy is the state as it stands: it has run no end-of-day phase
@@ -192,7 +193,9 @@ impl World {
     /// does the copy. Nothing of this world changes.
     ///
     /// It must never be resolved further or hashed for a game: it is for
-    /// [`World::at_staff_step`] and the check of a command, nothing else.
+    /// [`World::at_staff_step`], the check of a command and the side's view
+    /// a trial is begun on (whose worlds are the trial's own), nothing
+    /// else.
     pub fn as_if_day_closed(&self) -> World {
         let mut copy = self.clone();
         if let Some(in_hand) = copy.day_in_hand.take() {
