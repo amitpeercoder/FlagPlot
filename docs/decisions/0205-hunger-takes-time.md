@@ -36,8 +36,8 @@ So a rule that takes a twentieth of the unfed on the first night is wrong in kin
 
 ### Rations landed
 
-4. **A landing that forms a base puts the men's rations into it:** the men aboard the ships of the force that forms the base, at the moment it is formed, times `rations_landed_nights`, times the daily charge for a man, as supply in the stock of the base formed. However many pulses the men take to go ashore, the rations are put down once, then. It is the mechanism of the supply a marching unit puts down where it arrives, used at a landing.
-5. **Only the force that forms the base brings rations.** A second force landing in the same pulse, and men landed later at a base that stands, bring none; that base feeds them or it does not. So men cannot be taken off and landed again to make food.
+4. **The first landing of men at a base puts their rations into it:** the men aboard the ships of the force, at the moment its first man lands there, times `rations_landed_nights`, times the daily charge for a man, as supply in the base's stock. However many pulses the men take to go ashore, the rations are put down once, then. It is the mechanism of the supply a marching unit puts down where it arrives, used at a landing. It is so whether the landing forms the base or the base stands already, as the Allied base at Lunga stands before the landing in the 39 days.
+5. **A base is given rations once.** That it has had them is new state of the base. A second force landing in the same pulse, and men landed there on any later day, bring none; that base feeds them or it does not. So men cannot be taken off and landed again to make food.
 6. **Nothing else of the feeding changes.** The fed share stays one for every unit of the side in the hex, and `MenFed` is as it is.
 
 ### Nights of hunger
@@ -61,7 +61,7 @@ The march's `march_supply_days` stays 5; the rows of men setting out with three,
 ## What is recorded and who knows
 
 10. **The rations a landing brings are recorded** with the base formed: the men, the nights and the tons, citing the landing. **A unit's count changing is recorded** in an event for the unit and the night, citing that night's `MenFed`, and only when the count changes. `MenLostUnfed` gains the factors of rule 8. Each side sees its own and nothing of the enemy's.
-11. **One field is new state of a land unit,** hashed in its place and named, with the layout raised and the golden files remade. A side sees it for its own units; the table's card says "Hungry 5 nights" where it is above nothing. The rules label does not rise, since no game on file plays differently.
+11. **One field is new state of a land unit and one of a base,** each hashed in its place and named, with the layout raised and the golden files remade. A side sees it for its own units; the table's card says "Hungry 5 nights" where it is above nothing. The rules label does not rise, since no game on file plays differently.
 
 ## Rule card
 
@@ -76,11 +76,11 @@ None moves: the figures are in a file no scenario on file names, and the live fi
 - It does not model sickness. The record's sick lists are far larger than any loss to hunger and are a rule of their own.
 - It does not let a unit forage or eat captured stores, which the record says fed the marines in August (405, 707). A base taken with its stock already gives that stock to the taker.
 - It does not change the daily supply a man costs, nor the fed share's effect on a fight, on work or on training.
-- It does not give rations to a unit that starts ashore, that enters ashore on its day, or that lands at a base which stands.
+- It does not give rations to a unit that starts ashore or that enters ashore on its day, nor to men landed at a base that has had its rations.
 
 ## What it costs
 
-- **One field of state for each land unit, two events, and a landing that creates supply.** The supply is small: 3,000 men bring 45 tons at the live charge.
+- **One field of state for each land unit and one for each base, two events, and a landing that creates supply.** The supply is small: 3,000 men bring 45 tons at the live charge.
 - **A table that plays by a rule the proofs do not,** from copies of the scenarios. A game at the table and the same scenario in a closed proof will differ ashore until the proofs take the rule.
 - **Rulebook:** chapter 7 (Landing men and a base formed by a landing, The men's supply, The unfed are lost, A unit divided); the glossary's "Fed, unfed"; chapter 1's list of who sees what.
 

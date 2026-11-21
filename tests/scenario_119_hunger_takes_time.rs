@@ -70,10 +70,15 @@
 //!     supply, are in its stock at that moment, whatever number of men
 //!     are ashore by then. The record of it names 3,000 men, 3 nights and
 //!     45 t, and cites the landing.
-//! 11. **A base that stands gets none.** A second force with 1,000 men
+//! 11. **A base is given rations once.** A second force with 1,000 men
 //!     landing at P on a later day adds nothing to P's stock but what it
-//!     unloads. A force landing men at Q, a base at the start, brings
-//!     none.
+//!     unloads. A force landing 1,000 men at Q, a base at the start at
+//!     which no men have been landed, brings 1,000 times 3 times 0.005
+//!     t, 15 t, at its first man; a force landing men at Q after that
+//!     brings none. (Corrected by the architect on Nov 21, 2026: as first
+//!     written a base that stood got none, which left the 39 days'
+//!     landing at Lunga, where the Allied base stands before the men
+//!     land, with no rations at all.)
 //! 12. **With the rations, the first nights are fed.** With all of U
 //!     ashore at P before the first night, the charge is 15 t a night:
 //!     the three nights after the landing are fed in full, the stock is
