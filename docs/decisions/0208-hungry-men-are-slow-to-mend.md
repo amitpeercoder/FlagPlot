@@ -176,3 +176,16 @@ Read on Nov 21, 2026: the one function in full (`sim-core`, `condition.rs`), its
 3. **Scenario 119's property that no game on file moves is one test, not two.** Its words stand as written; the list of files that may give the figures of hunger, which is the test's and not the statement's, gains scenario 122's. The test set aside and its copy are made one.
 4. **What the rule does to the 39 days, in the table's copies:** no fight, no loss to hunger and no base's holder changes in any of the three. What changes is work: Japanese construction units that are cut off and fed nothing now make half their work, less their condition, where they made none. In one copy they finish an airfield west of the Lunga on day 21 that they did not finish before; no aircraft come to it. That men fed nothing do half a day's work for weeks is the weak side of a figure that rests on no source, and it is the first thing to look at if `unfed_fighting_share` is moved.
 5. **Not seen:** the card's "Hungry", "Short of food" and "Mending" rows and its "Condition" row in a browser. No unit was hungry in any game reached at the table.
+
+## The figure moved on research, Nov 21, 2026
+
+The designer doubted that one day without food would halve a unit, and asked for research. It is in `docs/research/a-day-without-food.md` (rows 15026 to 15081).
+
+- **The one measured first day without food, with water, is 91 percent of fed men's time at maximal work,** a difference the study did not find significant; the same men were at 99 percent on the fourth day and 100 on the tenth (15028, a postwar study of the US Army's nutrition laboratory, six men; the architect read the table on the page image).
+- **Men fasting at hard work fell faster:** physical fitness scores down 40 percent in four days, in a study known here only at second hand (15031).
+- **In the field, units attacked after a day or two unfed,** and where one failed the source names ammunition first. Every field case mixes food with water, sleep or ammunition.
+- **The sources put water before food.**
+
+So `unfed_fighting_share` is 0.9, from 0.5, in `ground_hunger.toml` and its frozen counterpart. With `hunger_weakness_per_night` at 0.01, a unit fed nothing fires 89 men in 100 after one night, 87 after three and 83 after seven, inside what the research's reader puts as the record's range (90 to 100, 80 to 95, 70 to 100). Scenario 122's own file keeps 0.5 and its statements stand; statement 18, of the table's file, is corrected.
+
+What this gives up: the figure no longer stands in for ammunition. A unit cut off from supply now fights at nearly full strength until men begin to die on the fifteenth night. Ammunition for men ashore is a rule to be planned.
