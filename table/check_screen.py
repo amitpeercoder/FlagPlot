@@ -269,7 +269,68 @@ def orders_on_the_card(bridge):
           "the commander's direct order is accepted with no staff's reason after it")
     check(any(staffs(nx) for e, nx in accepted if "task_force:2" in e["text"]),
           "each staff order to Task Force 11 is accepted with the staff's reason straight after it, naming the order it serves")
+    check(page_supply_limit(person, 3, "keep_supplied") is None,
+          "with no other base of the side to be a source, the page sets no forces limit on a keep-supplied order")
+
+    # The men put ashore at Lunga, and a keep-supplied order signed as the page
+    # signs it: its forces limit names a source and a pool the staff can send.
+    person.call("issue_orders", {"orders": [
+        {"unit": "task_force:9", "order": {"kind": "set_route", "waypoints": [[2, -4]], "act_at": [[2, -4]]}},
+        {"unit": "task_force:9", "order": {"kind": "unload"}}]})
+    person.call("end_day")
+    signed = person.call("set_intent", {"intent_kind": "keep_supplied", "base": 1, "floor_days": 30})["ok"]
+    limit = page_supply_limit(person, 1, "keep_supplied")
+    check(limit is not None and limit["source"] == 3 and limit["task_forces"],
+          f"with men ashore at Lunga the page names Espiritu Santo as the source and the free transports as the pool ({limit})")
+    limit["intent"] = signed["intent"]
+    check(person.call("set_limit", limit)["ok"]["status"] == "queued", "the forces limit is taken")
+    said = person.call("staff_orders")["ok"]
+    mine = [r for r in said["no_orders"] if r.get("serves", {}).get("intent") == signed["intent"]]
+    check(not any("no forces limit" in r["worked"] or "No ship of the pool" in r["worked"] for r in mine)
+          and any(c["kind"] == "approve" and c["reason"]["serves"]["intent"] == signed["intent"] for c in said["commands"]),
+          "the staff takes the order up: it makes the plan ready, and does not say it has no forces or no ship")
     check(post(bridge.table + "/new") == {"ok": True}, "the game is put away")
+
+
+def page_supply_limit(person, base, kind):
+    """The forces limit index.html sets when a keep-supplied or hold order is
+    signed (supplyForces), worked from the same answers, or None."""
+    st = person.call("command_state")["ok"]
+    bases = person.call("list_bases")["ok"]["bases"]
+    forces = person.call("list_forces")["ok"]
+    num = lambda h: int(h.split(":")[1])
+    same = lambda a, b: a and b and a["q"] == b["q"] and a["r"] == b["r"]
+    dest = next((b for b in bases if num(b["base"]["handle"]) == base), None)
+    if dest is None:
+        return None
+    named = set()
+    for i in st["intents"]:
+        f = i["in_force"] and i["kind"] not in ("keep_supplied", "hold") and i["limits"]["forces"]
+        for t in (f or {}).get("task_forces", []) if f else []:
+            named.add(num(t["handle"]) if isinstance(t, dict) else int(t))
+    for h in st.get("holds", []):
+        if h.get("target", {}).get("task_force") is not None:
+            named.add(int(h["target"]["task_force"]))
+    reserve = {r["base"]["handle"]: float(r["supply_reserve_t"]) for r in st.get("reserves", [])}
+    above = lambda b: float(b["supply_t"]) - reserve.get(b["base"]["handle"], 0)
+    sources = [b for b in bases if b is not dest and not same(b["place"], dest["place"]) and above(b) > 0]
+    if not sources:
+        return None
+    aboard = {a["ship"]["handle"] for u in forces["land_units"] for a in u.get("aboard", [])}
+    free = [f for f in forces["task_forces"] if f["mission"] == "transport" and num(f["task_force"]["handle"]) not in named
+            and not any(s["ship"]["handle"] in aboard for s in person.call("get_entity", {"handle": f["task_force"]["handle"]})["ok"]["entity"].get("ships", []))]
+    in_port = {b["base"]["handle"]: [num(s["handle"]) for s in person.call("get_entity", {"handle": b["base"]["handle"]})["ok"]["entity"].get("ships_in_port") or []] for b in sources}
+    day = st["for_day"]
+    manned = lambda b: any(u["men_ashore"] and same(u["place"], b["place"]) for u in forces["land_units"])
+    ready = lambda b: bool(in_port[b["base"]["handle"]]) or any(same(f["place"], b["place"]) and not f.get("destination") and not (f.get("available_from") or 0) > day for f in free)
+    source = sorted(sources, key=lambda b: (manned(b), not ready(b), -above(b), num(b["base"]["handle"])))[0]
+    if not free and not in_port[source["base"]["handle"]]:
+        return None
+    limit = {"limit": "forces", "source": num(source["base"]["handle"]), "task_forces": [num(f["task_force"]["handle"]) for f in free],
+             "ships": in_port[source["base"]["handle"]]}
+    if kind == "hold":
+        limit["air_groups"] = []
+    return limit
 
 
 def person_against_agent(bridge, hold):
