@@ -388,6 +388,12 @@ fn a_step_carries_only_the_pictures_that_changed() {
 /// Remade again at the state layout v51 (decision 0190), which changes an
 /// export's state version and day hashes and nothing else: checked against
 /// the exports of the commit before, with those taken out.
+/// Remade for decision 0199, on the designer's word of Nov 21, 2026: an
+/// export of a game on a generated map carries the map's frame (rule 30).
+/// Of the ten, only scenario 5 is on such a map; its export gains
+/// `"frame":{"centre_lat":-12,"centre_lon":160,"factor":0.978148,"west":145,"east":172},`
+/// and nothing else: with that taken out it hashes as pinned before
+/// (0x090e_e743_ff55_2f54), and the other nine hash as they did.
 #[test]
 fn a_scenario_with_command_levels_off_exports_as_it_did() {
     fn fnv(bytes: &[u8]) -> u64 {
@@ -398,7 +404,7 @@ fn a_scenario_with_command_levels_off_exports_as_it_did() {
     let before: [(&str, u64); 10] = [
         ("01_transit", 0xe655_655c_8352_3288),
         ("04a_night_action", 0x5637_dfd5_cf15_c69e),
-        ("05_eastern_solomons", 0x090e_e743_ff55_2f54),
+        ("05_eastern_solomons", 0x2069_1f66_a1d8_c344),
         ("21_landing", 0xd66c_eca9_8ce1_7acf),
         ("23_fight_ashore", 0x0de8_e434_7b30_9670),
         ("31_airfield_damage", 0x4c28_e0f2_51f3_f343),

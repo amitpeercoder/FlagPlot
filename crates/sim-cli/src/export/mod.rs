@@ -211,7 +211,7 @@ fn build(
             path: scenario_path.to_string(),
         },
         inputs,
-        map: map::map(world.map()),
+        map: map::map(world.map(), scenario.map_frame()),
         directions: map::directions(),
         labels,
         bases: state::bases(&executed.initial, world.ref_data()),

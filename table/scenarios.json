@@ -1,8 +1,99 @@
 {
-  "note": "The scenarios offered for play on the table's new game screen (decision 0185). The screen reads nothing else of a scenario. For each, a game is offered only where a file makes it one: the engine's side given orders to its units (\"script\") or orders for its staff to carry out (\"staff\"), and a side played by a person or an agent given nothing. Each pairing names who holds each side (person, agent or engine) and the file. Kept by hand: a scenario renamed or moved is changed here.",
+  "note": "The scenarios offered for play on the table's new game screen (decision 0185). The screen reads nothing else of a scenario. For each, a game is offered only where a file makes it one: the engine's side given orders to its units (\"script\") or orders for its staff to carry out (\"staff\"), and a side played by a person or an agent given nothing. Each pairing names who holds each side (person, agent or engine) and the file. Each scenario names its map, key \"map\", a repository path, and the table draws the chart of that map (decision 0199); an entry with none is on the present map, data/map/south_pacific.csv, and every present entry names it. Kept by hand: a scenario renamed or moved is changed here. Listed simplest first: by its length and by how much a side has to run.",
   "scenarios": [
     {
+      "id": "eastern-solomons",
+      "map": "data/map/south_pacific.csv",
+      "name": "The Eastern Solomons",
+      "dates": "24 August 1942",
+      "days": 1,
+      "start": "1942-08-24",
+      "lines": [
+        "One day of carrier battle. Two American carrier forces lie east of Guadalcanal; the Japanese carrier striking force and the Ryujo detachment come down from the north."
+      ],
+      "sides": {
+        "allied": "Find and sink the Japanese carriers supporting the reinforcement of Guadalcanal, and keep your own carriers in action.",
+        "japanese": "Destroy the American carriers east of Guadalcanal, and keep your own in action."
+      },
+      "islands": [],
+      "directives": {
+        "allied": "table/directives/eastern_solomons_allied.json",
+        "japanese": "table/directives/eastern_solomons_japanese.json"
+      },
+      "pairings": [
+        {"allied": "person", "japanese": "engine", "engine": "script", "file": "data/scenarios/second-proof/05c_eastern_solomons.toml"},
+        {"allied": "engine", "japanese": "person", "engine": "script", "file": "data/scenarios/second-proof/05e_eastern_solomons.toml"},
+        {"allied": "agent", "japanese": "engine", "engine": "script", "file": "data/scenarios/second-proof/05c_eastern_solomons.toml"},
+        {"allied": "engine", "japanese": "agent", "engine": "script", "file": "data/scenarios/second-proof/05e_eastern_solomons.toml"}
+      ]
+    },
+    {
+      "id": "coral-sea",
+      "map": "data/map/south_pacific.csv",
+      "name": "The Coral Sea",
+      "dates": "6 to 10 May 1942",
+      "days": 5,
+      "start": "1942-05-06",
+      "lines": [
+        "Two American carriers and a cruiser group meet two Japanese fleet carriers and a light carrier in the Coral Sea, while a Japanese convoy makes for Port Moresby with the men to take it."
+      ],
+      "sides": {
+        "allied": "Stop the landing at Port Moresby and sink the Japanese carriers.",
+        "japanese": "Land the convoy's men at Port Moresby and sink the American carriers."
+      },
+      "islands": [
+        {"number": 1, "name": "New Guinea", "base": 1}
+      ],
+      "directives": {
+        "allied": "table/directives/coral_sea_allied.json",
+        "japanese": "table/directives/coral_sea_japanese.json"
+      },
+      "pairings": [
+        {"allied": "person", "japanese": "engine", "engine": "staff", "file": "data/scenarios/coral-sea/01b_coral_sea.toml"},
+        {"allied": "engine", "japanese": "person", "engine": "staff", "file": "data/scenarios/coral-sea/01c_coral_sea.toml"},
+        {"allied": "person", "japanese": "agent", "file": "data/scenarios/coral-sea/01d_coral_sea.toml"},
+        {"allied": "agent", "japanese": "person", "file": "data/scenarios/coral-sea/01d_coral_sea.toml"},
+        {"allied": "agent", "japanese": "engine", "engine": "staff", "file": "data/scenarios/coral-sea/01b_coral_sea.toml"},
+        {"allied": "engine", "japanese": "agent", "engine": "staff", "file": "data/scenarios/coral-sea/01c_coral_sea.toml"},
+        {"allied": "agent", "japanese": "agent", "file": "data/scenarios/coral-sea/01d_coral_sea.toml"}
+      ]
+    
+    },
+    {
+      "id": "eastern-solomons-five-days",
+      "map": "data/map/south_pacific.csv",
+      "name": "The Eastern Solomons: five days",
+      "dates": "23 to 27 August 1942",
+      "days": 5,
+      "start": "1942-08-23",
+      "lines": [
+        "The Eastern Solomons fought over five days. Two American carrier forces and the Marines at Lunga face a Japanese convoy bound for Guadalcanal, covered by the carrier striking force and the Ryujo detachment."
+      ],
+      "sides": {
+        "allied": "Keep the airfield at Lunga open, stop the convoy, and sink the Japanese carriers while keeping your own.",
+        "japanese": "Land the convoy's men and supply on Guadalcanal, shut the airfield at Lunga, and sink the American carriers."
+      },
+      "islands": [
+        {"number": 1, "name": "Guadalcanal", "base": 1},
+        {"number": 2, "name": "Tulagi", "base": 4}
+      ],
+      "directives": {
+        "allied": "table/directives/eastern_solomons_five_days_allied.json",
+        "japanese": "table/directives/eastern_solomons_five_days_japanese.json"
+      },
+      "pairings": [
+        {"allied": "person", "japanese": "engine", "engine": "staff", "file": "data/scenarios/five-days/01b_eastern_solomons.toml"},
+        {"allied": "engine", "japanese": "person", "engine": "staff", "file": "data/scenarios/five-days/01c_eastern_solomons.toml"},
+        {"allied": "person", "japanese": "agent", "file": "data/scenarios/five-days/01d_eastern_solomons.toml"},
+        {"allied": "agent", "japanese": "person", "file": "data/scenarios/five-days/01d_eastern_solomons.toml"},
+        {"allied": "agent", "japanese": "engine", "engine": "staff", "file": "data/scenarios/five-days/01b_eastern_solomons.toml"},
+        {"allied": "engine", "japanese": "agent", "engine": "staff", "file": "data/scenarios/five-days/01c_eastern_solomons.toml"},
+        {"allied": "agent", "japanese": "agent", "file": "data/scenarios/five-days/01d_eastern_solomons.toml"}
+      ]
+    },
+    {
       "id": "guadalcanal-39-days",
+      "map": "data/map/south_pacific.csv",
       "name": "Guadalcanal: the first thirty-nine days",
       "dates": "7 August to 14 September 1942",
       "days": 39,
@@ -19,7 +110,8 @@
         {"number": 2, "name": "Tulagi", "base": 4}
       ],
       "directives": {
-        "allied": "table/directives/guadalcanal_allied.json"
+        "allied": "table/directives/guadalcanal_allied.json",
+        "japanese": "table/directives/guadalcanal_japanese.json"
       },
       "pairings": [
         {"allied": "person", "japanese": "engine", "engine": "staff", "file": "data/scenarios/stage-3-proof/07b_slice.toml"},
@@ -29,83 +121,6 @@
         {"allied": "agent", "japanese": "engine", "engine": "staff", "file": "data/scenarios/stage-3-proof/07b_slice.toml"},
         {"allied": "engine", "japanese": "agent", "engine": "staff", "file": "data/scenarios/stage-3-proof/07c_slice.toml"},
         {"allied": "agent", "japanese": "agent", "file": "data/scenarios/staff/07_full_slice.toml"}
-      ]
-    },
-    {
-      "id": "eastern-solomons",
-      "name": "The Eastern Solomons",
-      "dates": "24 August 1942",
-      "days": 1,
-      "start": "1942-08-24",
-      "lines": [
-        "One day of carrier battle. Two American carrier forces lie east of Guadalcanal; the Japanese carrier striking force and the Ryujo detachment come down from the north."
-      ],
-      "sides": {
-        "allied": "Find and sink the Japanese carriers supporting the reinforcement of Guadalcanal, and keep your own carriers in action.",
-        "japanese": "Destroy the American carriers east of Guadalcanal, and keep your own in action."
-      },
-      "islands": [],
-      "directives": {},
-      "pairings": [
-        {"allied": "person", "japanese": "engine", "engine": "script", "file": "data/scenarios/second-proof/05c_eastern_solomons.toml"},
-        {"allied": "engine", "japanese": "person", "engine": "script", "file": "data/scenarios/second-proof/05e_eastern_solomons.toml"},
-        {"allied": "agent", "japanese": "engine", "engine": "script", "file": "data/scenarios/second-proof/05c_eastern_solomons.toml"},
-        {"allied": "engine", "japanese": "agent", "engine": "script", "file": "data/scenarios/second-proof/05e_eastern_solomons.toml"}
-      ]
-    },
-    {
-      "id": "eastern-solomons-five-days",
-      "name": "The Eastern Solomons: five days",
-      "dates": "23 to 27 August 1942",
-      "days": 5,
-      "start": "1942-08-23",
-      "lines": [
-        "The Eastern Solomons fought over five days. Two American carrier forces and the Marines at Lunga face a Japanese convoy bound for Guadalcanal, covered by the carrier striking force and the Ryujo detachment."
-      ],
-      "sides": {
-        "allied": "Keep the airfield at Lunga open, stop the convoy, and sink the Japanese carriers while keeping your own.",
-        "japanese": "Land the convoy's men and supply on Guadalcanal, shut the airfield at Lunga, and sink the American carriers."
-      },
-      "islands": [
-        {"number": 1, "name": "Guadalcanal", "base": 1},
-        {"number": 2, "name": "Tulagi", "base": 4}
-      ],
-      "directives": {},
-      "pairings": [
-        {"allied": "person", "japanese": "engine", "engine": "staff", "file": "data/scenarios/five-days/01b_eastern_solomons.toml"},
-        {"allied": "engine", "japanese": "person", "engine": "staff", "file": "data/scenarios/five-days/01c_eastern_solomons.toml"},
-        {"allied": "person", "japanese": "agent", "file": "data/scenarios/five-days/01d_eastern_solomons.toml"},
-        {"allied": "agent", "japanese": "person", "file": "data/scenarios/five-days/01d_eastern_solomons.toml"},
-        {"allied": "agent", "japanese": "engine", "engine": "staff", "file": "data/scenarios/five-days/01b_eastern_solomons.toml"},
-        {"allied": "engine", "japanese": "agent", "engine": "staff", "file": "data/scenarios/five-days/01c_eastern_solomons.toml"},
-        {"allied": "agent", "japanese": "agent", "file": "data/scenarios/five-days/01d_eastern_solomons.toml"}
-      ]
-    },
-    {
-      "id": "coral-sea",
-      "name": "The Coral Sea",
-      "dates": "6 to 10 May 1942",
-      "days": 5,
-      "start": "1942-05-06",
-      "lines": [
-        "Two American carriers and a cruiser group meet two Japanese fleet carriers and a light carrier in the Coral Sea, while a Japanese convoy makes for Port Moresby with the men to take it."
-      ],
-      "sides": {
-        "allied": "Stop the landing at Port Moresby and sink the Japanese carriers.",
-        "japanese": "Land the convoy's men at Port Moresby and sink the American carriers."
-      },
-      "islands": [
-        {"number": 1, "name": "New Guinea", "base": 1}
-      ],
-      "directives": {},
-      "pairings": [
-        {"allied": "person", "japanese": "engine", "engine": "staff", "file": "data/scenarios/coral-sea/01b_coral_sea.toml"},
-        {"allied": "engine", "japanese": "person", "engine": "staff", "file": "data/scenarios/coral-sea/01c_coral_sea.toml"},
-        {"allied": "person", "japanese": "agent", "file": "data/scenarios/coral-sea/01d_coral_sea.toml"},
-        {"allied": "agent", "japanese": "person", "file": "data/scenarios/coral-sea/01d_coral_sea.toml"},
-        {"allied": "agent", "japanese": "engine", "engine": "staff", "file": "data/scenarios/coral-sea/01b_coral_sea.toml"},
-        {"allied": "engine", "japanese": "agent", "engine": "staff", "file": "data/scenarios/coral-sea/01c_coral_sea.toml"},
-        {"allied": "agent", "japanese": "agent", "file": "data/scenarios/coral-sea/01d_coral_sea.toml"}
       ]
     }
   ]

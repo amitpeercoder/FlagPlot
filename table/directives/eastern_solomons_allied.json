@@ -1,0 +1,34 @@
+{
+ "note": "Directives for the Allied seat of the Eastern Solomons, 24 August 1942. Written for the game in its own words: these are not historical documents and quote none. Each gives the situation as the commander above has it and the mission with its purpose, and nothing the commander can find out for himself: what the enemy has, what is coming and what cannot be replaced are read elsewhere on the table. Decision 0157.",
+ "directives": [
+  {
+   "number": 1,
+   "when": "start",
+   "from": "Commander, South Pacific Area and South Pacific Force",
+   "to": "Commander, Task Force 61",
+   "subject": "Enemy carriers north of the Solomons",
+   "parts": [
+    {
+     "heading": "1. Situation",
+     "text": [
+      "The enemy is moving to reinforce Guadalcanal. His carriers are believed at sea to the north, covering the movement. Their position is not known.",
+      "The Marines at Lunga Point depend on the airfield and on what reaches them by sea."
+     ]
+    },
+    {
+     "heading": "2. Mission",
+     "text": [
+      "Find and destroy the enemy carriers supporting the reinforcement of Guadalcanal, and keep your own carriers in action, to hold the sea approaches to Lunga Point."
+     ]
+    },
+    {
+     "heading": "3. Execution",
+     "text": [
+      "Employ the forces assigned to your command as you judge necessary. The method is yours.",
+      "The day is short. Your carriers are not to be risked beyond what the destruction of his justifies."
+     ]
+    }
+   ]
+  }
+ ]
+}

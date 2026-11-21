@@ -25,10 +25,8 @@
 #   tender group (rules 6 and 35).
 # - Patrol Boats 1, 2 and 34: no class on file (rule 64). The transports are
 #   of the scenario's placeholder class (rules 7, 33 and 64), not here.
-# - Aircraft: the B-26, the D4Y1-C and the E8N2 (rule 60). The PBY-5 and the
-#   PBY-5A are not in this list: rules 58 and 59 cannot be carried out as
-#   written (see THE FLYING BOATS below), and their ids are not taken. Nor is
-#   the TBF-1 of VT-8's detachment (see THE LOADS).
+# - Aircraft: the B-26, the D4Y1-C and the E8N2 (rule 60). Nor is the TBF-1
+#   of VT-8's detachment (see THE LOADS).
 #
 # SURFACE FIRE (rule 68) is modelled for the Second Fleet's main body (Atago,
 # Chokai, Myoko, Haguro, Kongo, Hiei, Yura, Destroyer Divisions 2 and 9,
@@ -83,18 +81,23 @@
 #   of the Eastern Solomons list (which reads row 410), which this list may not
 #   do; a bomb load would not be what the detachment carried. Six aircraft.
 #
-# THE FLYING BOATS (rules 36, 58, 59), stopped and reported, not improvised:
-# - PBY-5A. Rule 58 reads the Navy's sheet of 1 September 1943 (aircraft type
-#   facts 12000 to 12004) for June 1942 by exception. The tool reads an
-#   excepted row only if it holds on the list's date or its date is known only
-#   to the year or month; the sheet's rows are dated from 1943-09-01 and do
-#   not hold on 1942-06-03, so the exception cannot be written. The type has
-#   no other armour row (pilot_armour); its radius can be read (12009, the
-#   night attack of 3 to 4 June).
-# - PBY-5. Rule 59 reads the PBY-5A's sheet for her by a second exception. An
-#   exception names a row of the type it is written for, and the sheet's rows
-#   are the PBY-5A's; it cannot be written either. Her own rows are grade C
-#   (armour 12005 and tanks 12006, dated to June 1942; range 314, disputed).
+# THE FLYING BOATS (decision 0198, rules 57, 58, 76 and 77; decision 0200, 13
+# and 14), types 5113 and 5114 at the end of the list:
+# - PBY-5A. Read from the Navy's sheet of 1 September 1943 by exceptions that
+#   say `later = true` (decision 0200): its range (12000, in the search radius
+#   block), armour (12003) and partly protected tanks (12004, read as no). Each
+#   figure resting on one is marked in the sources file as read from a row of a
+#   later date. Armour is the weakest reading of the list: when the PBY-5A was
+#   fitted is a gap (gaps.csv). Her strike radius is the 434 nm flown on the
+#   night of 3 June (12009), which holds and is preferred, and she attacks with
+#   the Mark 13 torpedo of that night (fits 6822).
+# - PBY-5. Read from her own rows by plain exceptions (rule 76): armour
+#   12005, tanks 12006 (partial, so no), range 313 for the search radius and
+#   range with bombs 314 for the strike radius. Both ranges are one low page
+#   with no sources; the gap for a sheet of her own stays open. No row of the
+#   time gives her a load that can be read, so she attacks with nothing.
+# The searches flown to 700 miles (12007, 12008) are the check on both: the
+#   search radii the tool gives, 737 and 898 nm, are above them.
 #
 # RADAR: as in the other lists, where no row says whether a ship carried a
 # search radar on 3 June she is treated as not fitted (radar_unknown_means_none).
@@ -175,7 +178,7 @@ radar_unknown_means_none = [
 
 # The aircraft types, each with the load it attacks with (decision 0029, 7).
 # A fighter attacks nothing on the surface. Their ids follow this order from
-# 5100 (5100 to 5112); a type added later goes at the end so that none moves.
+# 5100 (5100 to 5114); a type added later goes at the end so that none moves.
 
 # VF-3, VF-6 and VF-8.
 [[aircraft]]
@@ -247,8 +250,19 @@ type = "e13a1"
 [[aircraft]]
 type = "a5m4"
 
+# The sixteen PBY-5A of Midway (decision 0198, rules 57 and 77; decision 0200,
+# 13): type 5113, with the torpedo of the night attack of 3 June.
+[[aircraft]]
+type = "pby-5a"
+load = "us-torpedo-mk13"
+
+# The fourteen PBY-5 of Midway (decision 0198, rules 57 and 76; decision 0200,
+# 14): type 5114, attacking with nothing.
+[[aircraft]]
+type = "pby-5"
+
 # The class ids, pinned (decision 0077): 5000 to 5036, which no other list
-# uses. Aircraft type ids start at 5100.
+# uses. Aircraft type ids start at 5100 (5100 to 5114).
 [class_ids]
 5000 = ["akagi"]
 5001 = ["kaga"]

@@ -16,8 +16,24 @@ pub struct MapOut {
     /// True when every hex has a latitude and longitude, which only the
     /// generated CSV maps give.
     real: bool,
+    /// Where the map lies on the earth (decision 0199, 30): left out for a
+    /// map with no frame.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    frame: Option<FrameOut>,
     /// Sorted by r, then q.
     hexes: Vec<HexOut>,
+}
+
+/// A map's frame, as its header gives it. Longitudes are in the frame's run:
+/// a map across the date line has its eastern edge above 180, while each
+/// hex's `lon` stays west negative, from -180 to 180.
+#[derive(Serialize)]
+struct FrameOut {
+    centre_lat: Num,
+    centre_lon: Num,
+    factor: Num,
+    west: Num,
+    east: Num,
 }
 
 #[derive(Serialize)]
@@ -38,7 +54,7 @@ struct HexOut {
     terrain: Option<&'static str>,
 }
 
-pub fn map(map: &Map) -> MapOut {
+pub fn map(map: &Map, frame: Option<&sim_data::MapFrame>) -> MapOut {
     let mut hexes: Vec<(&Hex, HexOut)> = map
         .iter()
         .map(|(hex, data)| {
@@ -72,6 +88,13 @@ pub fn map(map: &Map) -> MapOut {
     MapOut {
         hex_nm: HEX_NM,
         real,
+        frame: frame.map(|f| FrameOut {
+            centre_lat: Num(f.centre_lat),
+            centre_lon: Num(f.centre_lon),
+            factor: Num(f.factor),
+            west: Num(f.west),
+            east: Num(f.east),
+        }),
         hexes,
     }
 }

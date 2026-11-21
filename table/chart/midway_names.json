@@ -1,0 +1,10 @@
+{
+  "note": "Names lettered on the chart of the Midway map, for the eye only. The game reads none of it. kind: sea, water (a strait or sound), land (a large island or mainland), island, group. Positions are degrees, west negative as data/oob/place_positions.csv gives them (the page brings them into the map's run). Each is the position of its row of that file: Midway 5100, Kure 5106, Lisianski 5112, French Frigate Shoals 5110, Wake 5107. Pearl and Hermes Reef has no row and is not here; no sea is named, for none has a row.",
+  "names": [
+    {"name": "Midway", "kind": "island", "lat": 28.232, "lon": -177.37},
+    {"name": "Kure", "kind": "island", "lat": 28.419, "lon": -178.325},
+    {"name": "Lisianski", "kind": "island", "lat": 26.064, "lon": -173.966},
+    {"name": "French Frigate Shoals", "kind": "group", "lat": 23.756, "lon": -166.211},
+    {"name": "Wake", "kind": "island", "lat": 19.299, "lon": 166.624}
+  ]
+}

@@ -182,9 +182,34 @@ pub fn valid_on(from: &str, to: &str, date: Day) -> Result<Tri, String> {
     })
 }
 
+/// Whether a row with this `valid_from` begins after `date`: every day its
+/// `valid_from` can stand for is later than the date (decision 0200, 9). An
+/// empty `valid_from` is open, so never later. The error is the text that
+/// is not a date.
+pub fn begins_after(from: &str, date: Day) -> Result<bool, String> {
+    if from.is_empty() {
+        return Ok(false);
+    }
+    let span = Span::parse(from).ok_or_else(|| from.to_string())?;
+    Ok(span.first > date)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_row_begins_after_a_date_only_when_every_day_of_its_start_is_later() {
+        let day = Day::parse_full("1942-06-03").unwrap();
+        assert_eq!(begins_after("1943-09-01", day), Ok(true));
+        assert_eq!(begins_after("1942-06-04", day), Ok(true));
+        assert_eq!(begins_after("1942-07", day), Ok(true));
+        assert_eq!(begins_after("1942-06-03", day), Ok(false));
+        assert_eq!(begins_after("1942-06", day), Ok(false));
+        assert_eq!(begins_after("1942", day), Ok(false));
+        assert_eq!(begins_after("", day), Ok(false));
+        assert!(begins_after("1942-13", day).is_err());
+    }
 
     fn on(from: &str, to: &str, date: &str) -> Tri {
         valid_on(from, to, Day::parse_full(date).unwrap()).unwrap()

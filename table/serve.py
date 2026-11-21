@@ -5,7 +5,7 @@ It starts `sim-cli mcp SCENARIO --seat SIDE` and passes the page's tool calls
 to it, one at a time. The page gets what the seat's tools answer and nothing
 else: this file never reads a replay, a save, a batch or the event log, and it
 does not read the scenario. It reads one data file, the map (for drawing the
-coast), which both sides know.
+chart and its coast), which both sides know.
 
 Run from the top of the repository:
 
@@ -45,6 +45,7 @@ import argparse
 import csv
 import json
 import os
+import re
 import secrets
 import shlex
 import signal
@@ -334,6 +335,9 @@ def seat_call(game, door, tool, arguments, hold, sent=None):
     return slot.answer()
 
 
+DEFAULT_MAP = "data/map/south_pacific.csv"
+
+
 def read_map(path):
     hexes = []
     with open(path, newline="") as handle:
@@ -350,6 +354,76 @@ def read_map(path):
                 ]
             )
     return hexes
+
+
+def read_frame(path):
+    """A map's place on the earth, from the lines of its header (decision 0199):
+    the centre of hex (0,0), the factor for longitude and the extent, every
+    longitude in the run (above 180 where the map crosses the date line), as
+    the export's map.frame has it. None for a map with no such lines."""
+    both = read_frame_and_edges(path)
+    return both[0] if both else None
+
+
+def read_frame_and_edges(path):
+    """The frame of read_frame and the extent's north and south edges in
+    degrees (the clipping script wants them), or None."""
+    head = []
+    with open(path) as handle:
+        for line in handle:
+            if not line.startswith("#"):
+                break
+            head.append(line)
+    text = "".join(head)
+    centre = re.search(r"hex \(0,0\) is centred at ([\d.]+) ([NS]), ([\d.]+) ([EW])", text)
+    factor = re.search(r"east_nm\s*=\s*\(lon - [\d.]+\) \* 60 \* ([\d.]+)", text)
+    extent = re.search(
+        r"Extent: every hex whose centre lies from ([\d.]+) ([NS]) to ([\d.]+) ([NS]) and from ([\d.]+) ([EW]) to ([\d.]+) ([EW])",
+        text,
+    )
+    if not (centre and factor and extent):
+        return None
+
+    def signed(value, letter):
+        return -float(value) if letter in "SW" else float(value)
+
+    west = signed(extent.group(5), extent.group(6))
+    east = signed(extent.group(7), extent.group(8))
+    centre_lon = signed(centre.group(3), centre.group(4))
+    if east < west:
+        east += 360
+        if centre_lon < west:
+            centre_lon += 360
+    frame = {
+        "centre_lat": signed(centre.group(1), centre.group(2)),
+        "centre_lon": centre_lon,
+        "factor": float(factor.group(1)),
+        "west": west,
+        "east": east,
+    }
+    return frame, signed(extent.group(1), extent.group(2)), signed(extent.group(3), extent.group(4))
+
+
+CHARTS = {}
+
+
+def load_chart(path):
+    """The chart of a map file: its hexes, its frame, and the coast and names
+    beside this script in chart/ that are named for the map file (for the eye
+    only: the game plays on the hexes and reads none of them). Loaded once for
+    each map."""
+    key = os.path.abspath(path)
+    if key not in CHARTS:
+        base = os.path.join(HERE, "chart", os.path.splitext(os.path.basename(path))[0])
+        coast = names = None
+        if os.path.exists(base + "_coast.json"):
+            with open(base + "_coast.json") as handle:
+                coast = json.load(handle)
+        if os.path.exists(base + "_names.json"):
+            with open(base + "_names.json") as handle:
+                names = json.load(handle)["names"]
+        CHARTS[key] = {"hexes": read_map(path), "frame": read_frame(path), "coast": coast, "names": names}
+    return CHARTS[key]
 
 
 def read_directives(path):
@@ -370,7 +444,7 @@ def main():
         choices=list(SIDES),
         help="the side played: one, or with --watch each side an agent plays",
     )
-    parser.add_argument("--map", default="data/map/south_pacific.csv")
+    parser.add_argument("--map", default=DEFAULT_MAP)
     parser.add_argument("--start", default="", help="the date of day 1, as 1942-08-07")
     parser.add_argument(
         "--island",
@@ -434,26 +508,12 @@ def main():
         number, rest = item.split("=", 1)
         name, base = rest.rsplit("@", 1)
         islands.append({"number": int(number), "name": name, "base": int(base)})
-    chart = read_map(args.map)
-    # The coastline drawn on the chart, where the map has one beside this
-    # script: for the eye only. The game plays on the hexes and reads none of it.
-    coast = None
-    coast_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "chart", os.path.splitext(os.path.basename(args.map))[0] + "_coast.json")
-    if os.path.exists(coast_path):
-        with open(coast_path) as handle:
-            coast = json.load(handle)
-    # The names lettered on the chart, where the map has a file of them: for
-    # the eye only, as the coastline is.
-    names = None
-    names_path = coast_path.replace("_coast.json", "_names.json")
-    if os.path.exists(names_path):
-        with open(names_path) as handle:
-            names = json.load(handle)["names"]
+    chart = load_chart(args.map)
     if args.scenario is None:
-        home(args, chart, coast, names)
+        home(args, load_chart)
         return
     if args.watch:
-        watch(args, islands, chart, coast, names)
+        watch(args, islands, chart)
         return
     if args.seat and len(args.seat) > 1:
         sys.exit("one --seat only: two seats are a watched game (--watch)")
@@ -496,11 +556,13 @@ def main():
             elif self.path == "/tools":
                 self.json(held["game"].tools())
             elif self.path == "/map":
-                self.json(chart)
-            elif self.path == "/coast" and coast is not None:
-                self.json(coast)
-            elif self.path == "/names" and names is not None:
-                self.json(names)
+                self.json(chart["hexes"])
+            elif self.path == "/frame":
+                self.json(chart["frame"])
+            elif self.path == "/coast" and chart["coast"] is not None:
+                self.json(chart["coast"])
+            elif self.path == "/names" and chart["names"] is not None:
+                self.json(chart["names"])
             else:
                 self.answer(404, "text/plain", b"not found")
 
@@ -549,7 +611,7 @@ def main():
         held["game"].process.terminate()
 
 
-def watch(args, islands, chart, coast, names):
+def watch(args, islands, chart):
     """A watched game: the page holds the clock and reads, each agent has a door."""
     agents = []
     for side in args.seat or []:
@@ -732,11 +794,13 @@ def watch(args, islands, chart, coast, names):
                 elif path == "/tools":
                     self.json(watcher_tools(self.side_of(query)))
                 elif path == "/map":
-                    self.json(chart)
-                elif path == "/coast" and coast is not None:
-                    self.json(coast)
-                elif path == "/names" and names is not None:
-                    self.json(names)
+                    self.json(chart["hexes"])
+                elif path == "/frame":
+                    self.json(chart["frame"])
+                elif path == "/coast" and chart["coast"] is not None:
+                    self.json(chart["coast"])
+                elif path == "/names" and chart["names"] is not None:
+                    self.json(chart["names"])
                 elif path == "/standing":
                     self.json(game.ask({"watcher": "standing"}))
                 elif path == "/seat_calls":
@@ -892,6 +956,8 @@ def load_scenarios(path):
                 sys.exit(f"{path}: {entry['id']}: a pairing with no one playing")
             if not os.path.exists(os.path.join(ROOT, pairing["file"])):
                 sys.exit(f"{path}: {entry['id']}: no file {pairing['file']}")
+        if not os.path.exists(os.path.join(ROOT, entry.get("map", DEFAULT_MAP))):
+            sys.exit(f"{path}: {entry['id']}: no map file {entry['map']}")
         for side, file in entry.get("directives", {}).items():
             if not os.path.exists(os.path.join(ROOT, file)):
                 sys.exit(f"{path}: {entry['id']}: no directives file {file}")
@@ -936,7 +1002,7 @@ class Hand:
         self.poke = threading.Event()
 
 
-def home(args, chart, coast, names):
+def home(args, load_chart):
     """The bridge started with no scenario: the new game screen, and the game
     begun from it, held as its seats need (decision 0185)."""
     listed = load_scenarios(args.scenarios)
@@ -956,6 +1022,15 @@ def home(args, chart, coast, names):
     def same(given, key):
         return secrets.compare_digest(given.encode(), key.encode())
 
+    def map_of(entry):
+        """The map file of a scenario of the list: named by its entry, else the present map."""
+        return os.path.join(ROOT, (entry or {}).get("map", DEFAULT_MAP))
+
+    def chart_in_hand():
+        """The chart of the game in hand, loaded when the game opened; with
+        none in hand, that of --map."""
+        return load_chart(map_of(state["hand"].entry) if state["hand"] else args.map)
+
     def directives_of(entry, side):
         file = entry.get("directives", {}).get(side)
         return read_directives(os.path.join(ROOT, file)) if file else []
@@ -969,6 +1044,7 @@ def home(args, chart, coast, names):
         """Starts the game in hand as its seats need. Gives words of refusal,
         or None."""
         entry, file = hand.entry, os.path.join(ROOT, hand.pairing["file"])
+        load_chart(map_of(entry))
         kept = folder(hand.number) if keep else ""
         common = {
             "start": entry.get("start", ""),
@@ -1303,11 +1379,13 @@ def home(args, chart, coast, names):
                         raise ValueError("an agent's seat is asked with a side and a scenario")
                     self.json({"ok": agent_seat(side, entry)})
                 elif path == "/map":
-                    self.json(chart)
-                elif path == "/coast" and coast is not None:
-                    self.json(coast)
-                elif path == "/names" and names is not None:
-                    self.json(names)
+                    self.json(chart_in_hand()["hexes"])
+                elif path == "/frame":
+                    self.json(chart_in_hand()["frame"])
+                elif path == "/coast" and chart_in_hand()["coast"] is not None:
+                    self.json(chart_in_hand()["coast"])
+                elif path == "/names" and chart_in_hand()["names"] is not None:
+                    self.json(chart_in_hand()["names"])
                 elif hand is None:
                     self.json({"refused": "no game is in hand: choose one on the new game screen"}, 409)
                 elif path == "/tools":

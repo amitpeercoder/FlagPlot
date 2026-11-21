@@ -158,11 +158,11 @@ def the_screen(bridge):
     check("<html" in get(bridge.table + "/"), "the page is served under the table's key")
     check(get(bridge.table + "/config") == {"screen": True}, "with no game in hand the page is told to show the screen")
     listed = get(bridge.table + "/scenarios")["scenarios"]
-    check([s["id"] for s in listed] == ["guadalcanal-39-days", "eastern-solomons", "eastern-solomons-five-days", "coral-sea"],
-          "the screen lists the 39 days, the Eastern Solomons, the Eastern Solomons over five days and the Coral Sea")
+    check([s["id"] for s in listed] == ["eastern-solomons", "coral-sea", "eastern-solomons-five-days", "guadalcanal-39-days"],
+          "the screen lists the scenarios simplest first: the Eastern Solomons, the Coral Sea, the Eastern Solomons over five days and the 39 days")
     check(all("file" not in p for s in listed for p in s["pairings"]), "the list given to the screen names no file")
-    check([len(s["pairings"]) for s in listed] == [7, 4, 7, 7],
-          "the 39 days offers 7 games, the Eastern Solomons 4, the five-day Eastern Solomons 7 and the Coral Sea 7")
+    check([len(s["pairings"]) for s in listed] == [4, 7, 7, 7],
+          "the Eastern Solomons offers 4 games, the Coral Sea 7, the five-day Eastern Solomons 7 and the 39 days 7")
     seat = get(bridge.table + "/agent?side=allied&scenario=guadalcanal-39-days")["ok"]
     program = os.path.join(HERE, "seat_mcp.py")
     check(seat["claude"].startswith("claude mcp add flag-plot-allied -- python3 " + program + " --url " + bridge.root + "/seat/"),
@@ -173,8 +173,14 @@ def the_screen(bridge):
           "the brief gives the side, its directive, to play to the end and to read nothing else")
     check(len(seat["notes"]) == 3 and "fifty seconds" in seat["notes"][2], "the person is told the three things beside them")
     jap = get(bridge.table + "/agent?side=japanese&scenario=guadalcanal-39-days")["ok"]
-    check("directive" not in jap["brief"] and "Your mission: Hold Lunga and Tulagi" in jap["brief"],
-          "a side with no directive is given the scenario's mission for it in its brief")
+    check("Hold Lunga Point and Tulagi, or retake them" in jap["brief"] and "Commander in Chief, Combined Fleet" in jap["brief"],
+          "the other side's brief gives its own directive, from its own commander above")
+    for entry in json.load(open(os.path.join(HERE, "scenarios.json")))["scenarios"]:
+        for side in ("allied", "japanese"):
+            file = entry.get("directives", {}).get(side)
+            first = json.load(open(os.path.join(os.path.dirname(HERE), file)))["directives"][0] if file else {}
+            check(first.get("when") == "start" and any("mission" in p["heading"].lower() for p in first.get("parts", [])),
+                  entry["id"] + ": the " + side + " side has a directive at the start, with a mission")
     check("no game is in hand" in Agent(seat["door"]).call("list_forces")["refused"], "a door with no game in hand refuses")
     check("not offered" in begin(bridge, "eastern-solomons", "person", "agent")["refused"],
           "a game the list does not offer is refused (the Eastern Solomons, a person against an agent)")
