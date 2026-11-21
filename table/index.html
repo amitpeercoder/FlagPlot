@@ -103,6 +103,9 @@ button:disabled { opacity: 0.45; cursor: default; }
 .order .wp label { min-height: 30px; font-size: 12px; }
 .order .wp .wpx { min-height: 28px; padding: 0 8px; border: 0; font-size: 13px; color: var(--paper-dim); }
 .wphint { font-size: 12px; color: var(--paper-dim); }
+#course { width: min(320px, calc(100% - 32px)); display: flex; flex-direction: column; gap: 8px; }
+#course[hidden] { display: none; }
+.order .wpchange { min-height: 30px; padding: 0 10px; font-size: 12px; align-self: flex-start; }
 .frow { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
 .frow .fl { flex: 0 0 82px; font-size: 12px; color: var(--paper-dim); }
 .seg { display: inline-flex; flex-wrap: wrap; gap: 0; }
@@ -424,6 +427,11 @@ body.watched .gives { display: none !important; }
     <button type="button" id="f-cancel">TEAR UP</button>
   </div>
 </form>
+<aside class="order" id="course" hidden aria-label="The course you are setting">
+  <h2 id="c-title">COURSE</h2>
+  <div id="c-route"></div>
+  <div class="row"><button type="button" class="go" id="c-ok">ACCEPT</button><button type="button" id="c-cancel">CANCEL</button></div>
+</aside>
 
 <aside class="order card" id="card" hidden aria-label="What is known of what you touched" aria-live="polite">
   <div class="cardnav"><button type="button" id="card-back" hidden>&#8592; BACK</button><button type="button" id="card-find" hidden title="Turn the table to where it is">ON CHART</button><button type="button" id="card-diary" hidden title="What the war diary holds of it">ITS DIARY</button><span id="card-step" hidden><button type="button" id="card-prev" title="The one before, of those at this place" aria-label="The one before">&#8249;</button><span id="card-step-n"></span><button type="button" id="card-next" title="The next, of those at this place" aria-label="The next">&#8250;</button></span><button type="button" id="card-close" title="Close (Esc)" aria-label="Close">&#10005;</button></div>
@@ -445,6 +453,7 @@ body.watched .gives { display: none !important; }
   <button type="button" id="btn-lean" title="Lean in" aria-label="Lean in"><svg viewBox="0 0 24 24"><circle cx="10" cy="10" r="6.5"/><path d="M15 15l6 6M7 10h6M10 7v6"/></svg></button>
   <button type="button" id="btn-view"></button>
   <button type="button" id="btn-hexes" aria-pressed="false" title="Hexes and their numbers" aria-label="Hexes"><svg viewBox="0 0 24 24"><path d="M7 3.5h10l5 8.5-5 8.5H7L2 12z"/></svg></button>
+  <button type="button" id="btn-plans" aria-pressed="false" title="Your plans on the chart: all of them, or none" aria-label="Plans on the chart"><svg viewBox="0 0 24 24"><path d="M3 19c3-9 8-13 15-13M13 4l5 2-2 5"/></svg></button>
   <button type="button" id="btn-pieces"></button>
   <button type="button" id="btn-labels"></button>
   <button type="button" id="btn-game" class="menu" aria-expanded="false" aria-controls="pop-game" title="The game: a new one, this one again, what stops the clock">Game</button>
@@ -531,7 +540,16 @@ body.watched .gives { display: none !important; }
   function lonLabel(v) { return v > 180 ? (360 - v) + '\u00B0 W' : v < 0 ? (-v) + '\u00B0 W' : v === 180 ? '180\u00B0' : v + '\u00B0 E'; }
   function world(lat, lon, y) { return new THREE.Vector3((lon - lonMid) * K * FX, y || 0, (latMid - lat) * K); }
   function cpx(v) { return [(v.x + TW / 2) * PX, (v.z + TD / 2) * PX]; }
-  function placeOf(p) { return p ? world(parseFloat(p.lat), runLon(parseFloat(p.lon))) : null; }
+  // Where a place lies on the table. A place given by its hex alone is found
+  // through the chart; one that cannot be found is no place, so that nothing
+  // turns the table to nowhere.
+  function placeOf(p) {
+    if (!p) return null;
+    var lat = parseFloat(p.lat), lon = parseFloat(p.lon), h;
+    if ((isNaN(lat) || isNaN(lon)) && p.q != null && (h = hexAt[p.q + ',' + p.r])) { lat = parseFloat(h[3]); lon = parseFloat(h[4]); }
+    if (isNaN(lat) || isNaN(lon)) return null;
+    var v = world(lat, runLon(lon)); return v && !isNaN(v.x) && !isNaN(v.z) ? v : null;
+  }
 
   function layChart() {
     var lo = 1e9, hi = -1e9, la = 1e9, ha = -1e9, step = 1;
@@ -642,12 +660,16 @@ body.watched .gives { display: none !important; }
   // from the seat's own tools (command_state, staff_orders, measure).
   var planShown = null, planMarks = null;
   function hexV(q, r) { var h = hexAt[q + ',' + r]; return h ? world(h[3], h[4]) : null; }
-  function clearPlan() { planShown = null; planMarks = null; $('planchip').hidden = true; if (g) drawMarks(); }
+  // The switch for every plan at once: 'all' stands where one order's number
+  // stands when a single plan is shown, and is kept from one sitting to the next.
+  function plansSwitch() { var on = planShown === 'all'; $('btn-plans').setAttribute('aria-pressed', String(on)); try { localStorage.setItem('flagplot.plans', on ? '1' : '0'); } catch (e) {} }
+  function clearPlan() { planShown = null; planMarks = null; $('planchip').hidden = true; plansSwitch(); if (g) drawMarks(); }
   function buildPlan(root) {
     var st = M.state; if (!st) return Promise.resolve();
     var by = {}, plans = {}; st.intents.forEach(function (i) { by[i.number] = i; }); (st.plans || []).forEach(function (p) { plans[p.number] = p; });
-    var top = by[root]; if (!top || !top.in_force) { clearPlan(); return Promise.resolve(); }
-    var tree = [], inTree = {}; (function walk(i) { tree.push(i); inTree[i.number] = i; st.intents.filter(function (c) { return c.parent === i.number && c.in_force; }).forEach(walk); })(top);
+    var all = root === 'all', top = by[root], roots = all ? st.intents.filter(function (i) { return i.in_force && i.parent == null; }) : [top];
+    if (!all && (!top || !top.in_force)) { clearPlan(); return Promise.resolve(); }
+    var tree = [], inTree = {}; roots.forEach(function walk(i) { tree.push(i); inTree[i.number] = i; st.intents.filter(function (c) { return c.parent === i.number && c.in_force; }).forEach(walk); });
     var marks = { root: root, moves: [], rings: [] }, asks = [], seen = {}, stand = {};
     function pending(i) { var p = i.plan != null ? plans[i.plan] : null; return !p || p.state === 'draft' || p.state === 'preparing'; }
     function baseOf(o) { return o ? M.bases.concat(M.enemyBases).filter(function (b) { return b.base.handle === o.handle; })[0] : null; }
@@ -689,7 +711,7 @@ body.watched .gives { display: none !important; }
     }).catch(function () {}));
     return Promise.all(asks).then(function () {
       if (planShown !== root) return;
-      planMarks = marks; $('planchip-text').textContent = 'PLAN ON CHART · ' + plainWords(sayIntent(top, {})); $('planchip').hidden = false; if (g) drawMarks();
+      planMarks = marks; $('planchip-text').textContent = all ? 'ALL PLANS ON CHART · ' + (roots.length ? roots.length + ' order' + (roots.length === 1 ? '' : 's') : 'no order in force') : 'PLAN ON CHART · ' + plainWords(sayIntent(top, {})); $('planchip-read').hidden = all; $('planchip').hidden = false; plansSwitch(); if (g) drawMarks();
     });
   }
   var planDrawnAt = 0;
@@ -1075,7 +1097,7 @@ body.watched .gives { display: none !important; }
       .replace(/\bat a share of 0\.25\b/g, 'with a quarter of its aircraft').replace(/\bat a share of 0\.5\b/g, 'with half its aircraft').replace(/\bat a share of 0\.75\b/g, 'with three quarters of its aircraft')
       .replace(/\b(\d+)\.(\d+) (miles|nm)\b/g, function (m, w, f, u) { return Math.round(parseFloat(w + '.' + f)) + ' ' + u; })
       .replace(/\bfatigue (\d+)\.(\d+)\b/g, function (m, w, f) { return 'fatigue ' + Math.round(parseFloat(w + '.' + f)); })
-      .replace(/\bhas no home port the staff knows\b/g, 'has no home port').replace(/(^|[;.] ?)([Tt])he rest are escorts\b/g, function (m, a, c) { return a + (c === 'T' ? 'Its' : 'its') + ' other fighters go as escorts'; });
+      .replace(/\bhas no home port the staff knows\b/g, 'has no home port').replace(/, 0 sunk\b/g, '').replace(/(^|[;.] ?)([Tt])he rest are escorts\b/g, function (m, a, c) { return a + (c === 'T' ? 'Its' : 'its') + ' other fighters go as escorts'; });
     if (showHexes) return t;
     t = t.replace(/(\d+) hex(?:es)?\b(?! round)/g, function (m, n) { return (+n * hexMiles()) + ' miles'; });
     if (keepHex) return t;
@@ -1189,10 +1211,11 @@ body.watched .gives { display: none !important; }
   }
   var backSheet = '', findAt = null;
   function backWords() { $('card-back').textContent = '\u2190 BACK' + (trail.length === 1 && backSheet ? ' TO ' + backSheet.toUpperCase() : ''); }
+  var cardHex = function (hpl) { var hc = openCard((M.hexNames[hpl.q + ',' + hpl.r] || whereIs(hpl)).toUpperCase(), null); hc.appendChild(el('div', '', 'Hex ' + hpl.q + ', ' + hpl.r + '.')); };
   function seeIt(h) {
     var kind = h.split(':')[0], n = num(h), found; if (!$('sheet').hidden) { forget(); trailAt = stamp(); shown = function () { $('card').hidden = true; $('sheet').hidden = false; }; } $('sheet').hidden = true;
     try { history.replaceState(null, '', '#see=' + h); } catch (e) {}
-    if (kind === 'hex') { var qr = h.slice(4).split(','), hpl = { q: +qr[0], r: +qr[1] }; turnTo(hpl); var hc = openCard((M.hexNames[hpl.q + ',' + hpl.r] || whereIs(hpl)).toUpperCase(), null); hc.appendChild(el('div', '', 'Hex ' + hpl.q + ', ' + hpl.r + '.')); return; }
+    if (kind === 'hex') { var qr = h.slice(4).split(','), hpl = { q: +qr[0], r: +qr[1] }; turnTo(hpl); return cardHex(hpl); }
     if (kind === 'task_force') { found = M.forces.filter(function (f) { return f.task_force.handle === h; })[0]; if (found) { turnTo(found.place); return cardForce({ force: found }); } }
     if (kind === 'base') { found = M.bases.filter(function (b) { return b.base.handle === h; })[0]; if (found) { turnTo(found.place); return cardBase({ base: found }); } found = M.enemyBases.filter(function (b) { return b.base.handle === h; })[0]; if (found) { turnTo(found.place); return cardPlace({ place: found.place, base: found }); } }
     if (kind === 'contact') { found = M.contacts.filter(function (c) { return c.contact.handle === h; })[0]; if (found) { turnTo(found.place); return cardContact({ contact: found }); } var gone = openCard('CONTACT ' + n, 'ENEMY'); gone.appendChild(el('div', '', 'This contact is no longer held: its report grew too old, or it was looked for and not found.')); return; }
@@ -1338,7 +1361,7 @@ body.watched .gives { display: none !important; }
     shown = function () { $('sheet').hidden = true; f(a); };
     $('card-back').hidden = !trail.length; backWords(); return f(a);
   }; }
-  cardUnit = remember(cardUnit); cardEntity = remember(cardEntity); cardContact = remember(cardContact); cardPlace = remember(cardPlace); cardForce = remember(cardForce); cardBase = remember(cardBase);
+  cardUnit = remember(cardUnit); cardEntity = remember(cardEntity); cardContact = remember(cardContact); cardPlace = remember(cardPlace); cardForce = remember(cardForce); cardBase = remember(cardBase); cardHex = remember(cardHex);
   $('card-back').addEventListener('click', function () { var was = trail.pop(); if (!was) return; shown = was; $('card-back').hidden = !trail.length; backWords(); was(); });
   $('card-find').addEventListener('click', function () { if (findAt) turnTo(findAt); });
   $('card-diary').addEventListener('click', function () { if (cardHandle) readUnitDiary(cardHandle); });
@@ -1769,7 +1792,15 @@ body.watched .gives { display: none !important; }
         var mine = all[k].filter(function (e) { return !D_ROUTINE[e.event_kind] && e.event_kind !== 'staff_reason' && !emptyClaim(e) && (e.entities || []).some(function (x) { return x && x.handle === h; }); });
         if (!mine.length) continue; any = true;
         var sec = el('div', 'phase'); sec.appendChild(el('b', '', (dateOf(days[k] - 1) || 'day ' + days[k])));
-        mine.forEach(function (e) { sec.appendChild(diaryRow(sayEvent(e, true), e.number, null)); }); doc.appendChild(sec);
+        // A staff order is tied to the order of yours it serves by the staff's
+        // reason for it, and the line links to that order's plan.
+        var serves = {}, byNo = {}; ((M.state || {}).intents || []).forEach(function (i) { byNo[i.number] = i; });
+        all[k].forEach(function (e) { var m = e.event_kind === 'staff_reason' && /reason for order:(\d+) \[serves intent (\d+)/.exec(e.text); if (m) serves[m[1]] = parseInt(m[2], 10); });
+        mine.forEach(function (e) {
+          var words = sayEvent(e, true), root = null, m = e.event_kind === 'order_accepted' && /^order:(\d+) /.exec(e.text);
+          if (m) { words = words.replace(/^Staff order \d+ accepted for /, 'Staff order to '); words = words.replace(/set air mission, mission ([a-z ]+)/, function (x, mi) { return 'air mission, ' + (MISSION[mi.replace(/ /g, '_')] || mi).toLowerCase(); }); var i = byNo[serves[m[1]]]; while (i && i.parent != null && byNo[i.parent]) i = byNo[i.parent]; if (i) root = i.number; }
+          sec.appendChild(diaryRow(words, e.number, root));
+        }); doc.appendChild(sec);
       }
       if (!any) doc.appendChild(el('p', '', 'The diary holds nothing of it yet.'));
       sheetAs('WAR DIARY'); doc.hidden = false; $('sheet-text').hidden = true; $('card').hidden = true; $('sheet').hidden = false; $('sheet-close').focus(); setStatus('');
@@ -2748,7 +2779,7 @@ body.watched .gives { display: none !important; }
 
   // ---- an order to a force at 0600 or 1200: touch the force, choose, sign (decision 0156) ----
   var force = null;
-  function closeForce() { $('force').hidden = true; force = null; if (g) drawMarks(); if (picking === 'force' || picking === 'route') { picking = false; canvas.classList.remove('picking'); } }
+  function closeForce() { $('force').hidden = true; $('course').hidden = true; force = null; if (g) drawMarks(); if (picking === 'force' || picking === 'route') { picking = false; canvas.classList.remove('picking'); } }
   function pickForce(p) {
     var best = null, bd = 0.4; Object.keys(pieces).forEach(function (h) { var d = pieces[h].grp.position.distanceTo(p); if (d < bd) { bd = d; best = pieces[h]; } });
     if (!best) { setStatus('No force of yours is there. Touch one of your tiles.'); return; }
@@ -2783,11 +2814,28 @@ body.watched .gives { display: none !important; }
   // (wait out the night there).
   function wpName(w) { return M.hexNames[w.q + ',' + w.r] || whereIs({ q: w.q, r: w.r }); }
   function showRoute() {
-    var box = $('f-route'); box.textContent = ''; if (!force) return; box.hidden = !$('f-crs').checked;
+    var setting = !$('course').hidden, box = $(setting ? 'c-route' : 'f-route'); $('f-route').textContent = ''; $('c-route').textContent = ''; if (!force) return; $('f-route').hidden = setting || !$('f-crs').checked; $('c-ok').disabled = !force.route.length;
     force.route.forEach(function (w, n) { var row = el('div', 'wp'), last = n === force.route.length - 1; row.appendChild(el('span', '', (n + 1) + '. ' + wpName(w)));
       if (!last) [['act', 'act there'], ['stand', 'stand the night']].forEach(function (k) { var l = el('label'), c = el('input'); c.type = 'checkbox'; c.checked = !!w[k[0]]; c.addEventListener('change', function () { w[k[0]] = c.checked; forceSummary(); }); l.appendChild(c); l.appendChild(document.createTextNode(' ' + k[1])); row.appendChild(l); });
       var x = el('button', 'wpx', '\u2715'); x.type = 'button'; x.title = 'Take this waypoint out'; x.setAttribute('aria-label', 'Take waypoint ' + (n + 1) + ' out'); x.addEventListener('click', function () { force.route.splice(n, 1); showRoute(); forceSummary(); }); row.appendChild(x); box.appendChild(row); });
-    box.appendChild(el('div', 'wphint', force.route.length ? 'Touch the chart to add another.' : 'Touch the chart for the first waypoint.')); if (g) drawMarks();
+    if (setting) box.appendChild(el('div', 'wphint', force.route.length ? 'Touch the chart to add another.' : 'Touch the chart for the first waypoint.'));
+    else if ($('f-crs').checked) { var ch = el('button', 'wpchange', 'CHANGE ON THE CHART'); ch.type = 'button'; ch.addEventListener('click', openCourse); box.appendChild(ch); }
+    if (g) drawMarks();
+  }
+  // Setting a course: the order's form steps aside for a small paper that
+  // fills with the waypoints as the chart is touched, and is accepted or
+  // cancelled. Cancelled, the course is as it was before.
+  var courseWas = null;
+  function openCourse() {
+    if (!force) return; courseWas = force.route.map(function (w) { return { q: w.q, r: w.r, act: w.act, stand: w.stand }; });
+    $('force').hidden = true; $('course').hidden = false; $('c-title').textContent = 'COURSE \u00B7 ' + nameOf(force.f.task_force.handle).toUpperCase();
+    picking = 'route'; canvas.classList.add('picking'); setStatus('Touch the chart where the force is to steam for.'); showRoute();
+  }
+  function closeCourse(keep) {
+    $('course').hidden = true; if (picking === 'route') { picking = false; canvas.classList.remove('picking'); }
+    if (!force) return; if (!keep) force.route = courseWas || [];
+    if (!force.route.length) $('f-crs').checked = false;
+    $('force').hidden = false; showRoute(); forceSummary(); setStatus(keep ? 'The course is in the draft. Nothing is ordered until you sign.' : 'The course is as it was.');
   }
   function pickRoute(p) {
     var hd = 1e9, hh = null; hexes.forEach(function (h) { var d = world(h[3], h[4]).distanceTo(p); if (d < hd) { hd = d; hh = h; } });
@@ -2818,9 +2866,11 @@ body.watched .gives { display: none !important; }
     if (e.target.name === 'spd') $('f-kn').hidden = fPick('spd') !== 'knots';
     if (e.target.id === 'f-fuel') $('f-fuelfrom').hidden = !$('f-fuel').checked;
     if (e.target.name === 'shp') { $('f-ships').hidden = fPick('shp') !== 'detach'; $('f-join').hidden = fPick('shp') !== 'join'; }
-    if (e.target.id === 'f-crs') { if ($('f-crs').checked) { picking = 'route'; canvas.classList.add('picking'); setStatus('Touch the chart where the force is to steam for.'); } else { picking = false; canvas.classList.remove('picking'); force.route = []; } showRoute(); }
+    if (e.target.id === 'f-crs') { if ($('f-crs').checked) openCourse(); else { force.route = []; showRoute(); } }
     forceSummary(); });
   $('f-cancel').addEventListener('click', function () { closeForce(); setStatus('The draft is torn up. Nothing was ordered.'); });
+  $('c-ok').addEventListener('click', function () { closeCourse(true); });
+  $('c-cancel').addEventListener('click', function () { closeCourse(false); });
   $('force').addEventListener('submit', function (e) {
     e.preventDefault(); if (!force) return;
     var d = forceDraft(); if (d.error) { $('f-result').textContent = d.error; return; }
@@ -2957,6 +3007,8 @@ body.watched .gives { display: none !important; }
   $('btn-labels').addEventListener('click', function () { labelsShown = LABELS[(LABELS.indexOf(labelsShown) + 1) % LABELS.length]; try { localStorage.setItem('flagplot.labels', labelsShown); } catch (e) {} signs(); });
   signs();
   $('btn-view').addEventListener('click', function () { chartView = !chartView; try { localStorage.setItem('flagplot.view', chartView ? 'chart' : 'table'); } catch (e) {} signs(); });
+  $('btn-plans').addEventListener('click', function () { if (planShown === 'all') clearPlan(); else showPlanOnChart('all'); });
+  try { if (localStorage.getItem('flagplot.plans') === '1') { planShown = 'all'; $('btn-plans').setAttribute('aria-pressed', 'true'); } } catch (e) {}
   $('btn-hexes').setAttribute('aria-pressed', String(showHexes));
   $('btn-hexes').addEventListener('click', function () { showHexes = !showHexes; try { localStorage.setItem('flagplot.hexes', showHexes ? '1' : '0'); } catch (e) {} this.setAttribute('aria-pressed', String(showHexes)); paintBase(); if (g) drawMarks(); $('card').hidden = true; });
   // Your orders and the staff's papers hang from the top bar, so that the
@@ -3013,7 +3065,7 @@ body.watched .gives { display: none !important; }
     if (g && Math.abs(camDist - planDrawnAt) > planDrawnAt * 0.06) drawMarks();
     Object.keys(pieces).forEach(function (h) { pieces[h].grp.visible = sideShown('own'); }); statics.forEach(function (m) { m.visible = sideShown(m.userData.side); });
     // With a plan on the chart the pieces and their slips stand back, so that the plan is read.
-    var faint = !!planMarks; if (faint !== ghosted) { ghosted = faint; var dim = function (grp) { var mats = grp.children[0].material, base = grp.userData.alpha == null ? 1 : grp.userData.alpha; (mats.length ? mats : [mats]).forEach(function (mt) { mt.transparent = faint || base < 1; mt.opacity = faint ? base * 0.3 : base; mt.needsUpdate = true; }); grp.children[0].castShadow = !faint; }; Object.keys(pieces).forEach(function (h) { dim(pieces[h].grp); }); statics.forEach(dim); labels.forEach(function (L) { L.sp.material.opacity = faint ? 0.3 : 1; L.pin.material.transparent = true; L.pin.material.opacity = faint ? 0.25 : 1; }); }
+    var faint = !!planMarks && planShown !== 'all'; if (faint !== ghosted) { ghosted = faint; var dim = function (grp) { var mats = grp.children[0].material, base = grp.userData.alpha == null ? 1 : grp.userData.alpha; (mats.length ? mats : [mats]).forEach(function (mt) { mt.transparent = faint || base < 1; mt.opacity = faint ? base * 0.3 : base; mt.needsUpdate = true; }); grp.children[0].castShadow = !faint; }; Object.keys(pieces).forEach(function (h) { dim(pieces[h].grp); }); statics.forEach(dim); labels.forEach(function (L) { L.sp.material.opacity = faint ? 0.3 : 1; L.pin.material.transparent = true; L.pin.material.opacity = faint ? 0.25 : 1; }); }
     flashes = flashes.filter(function (f) { f.userData.t += dt / 1.3; var k = f.userData.t; f.scale.setScalar(0.08 + k * 0.42); f.material.opacity = 0.9 * (1 - k); if (k >= 1) { scene.remove(f); f.geometry.dispose(); f.material.dispose(); return false; } return true; });
     placeCamera();
     var near = 0.6 * HEXR * Math.sqrt(3);
