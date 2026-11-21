@@ -166,3 +166,14 @@ No expected number of any existing test changed.
 - `sh scripts/regenerate.sh --check`: every generated file is what the engine gives.
 - Every command under "Before a commit" passes, and so does `node viewer/check.js` on a fresh export.
 - Every recorded game replays except `stage_2b_seat_sonnet`. That one is refused as a saved game of version 13 (now 23), exactly as on `main`.
+
+## The architect's rulings
+
+Made on Nov 21, 2026 on reading the build: the frame file and the header of the Midway map, the loader's reading of a frame, the export, and what changed in the tool, the table and the viewer. `sim-core` is not touched.
+
+1. **The present map is proved unchanged** by the tool's own command line and a comparison of bytes, as "As built" says. That is the proof rule 21 asked for.
+2. **The departures of "As built" are confirmed.** The frame file's longitudes west negative, as the place rows have them; the check of passages reading a map with no frame as the present one, which is rule 18's "as it does today"; the labels file; the clipping script reading the source's own shapes; the rulebook's chapter 2, where a map is described, not chapter 1.
+3. **French Frigate Shoals is coast by the sampling,** one land point, not by a mark. It stays so: the rule for marks is for a place the sampling misses, and no scenario puts anything there.
+4. **Pearl and Hermes Reef and Laysan are not on the chart** until a row gives the one a position and a rule names the other. No sea is named on the Midway chart. That is right: a name rests on a row.
+5. **One test is failing and is not yet settled.** `a_scenario_with_command_levels_off_exports_as_it_did` pins the bytes of an export, and the export now carries the frame that rule 30 adds. The number is not changed by this pull request's build. Whether it is pinned again or the test is told to set the frame aside is put to the designer, since an edit of it was refused to the build; this record is completed when he answers, and the pull request is not merged before.
+6. **The timing test did not finish on a loaded machine, on this branch or on main.** It is not this change. It is run again when the machine is quiet, and CI's own run is the check.
