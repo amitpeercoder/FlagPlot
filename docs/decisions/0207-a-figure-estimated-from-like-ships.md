@@ -159,3 +159,15 @@ Built on Nov 21, 2026, on branch `estimates-build`.
 **Statements.** Scenario 121's sixteen statements and three properties are tested in `tests/scenario_121_a_japanese_oiler_by_estimate.rs`, and all hold. The derivation's figures to the sixth place: the ratios 0.397589 and 0.426587, their mean 0.412088, the light displacement 5,534.753928, toughness 221.390157, the least 5,340.017859 and the greatest 5,729.489997. Statement 5 gives the last two to the third place, one rounded (5,340.018) and one cut (5,729.489); its test holds each within a thousandth. Statement 8's "no class file on file has the column" is read with statement 13: the oilers' class file has it, for Neosho, and no other. Statement 11 is tested as written, a second list whose entry names her class as a like class: rule 6 refuses any entry that names one, and the refusal says the class has its light displacement estimated in her list (rule 8). The case the tool finds for itself, a like class with an estimate in another list, is the unit test `a_like_class_with_an_attribute_estimated_in_another_list_fails_the_estimate`. Statement 12's measure, on file 03a, must also name the Cimarron class, since that file loads Neosho's marked class too.
 
 **Games on file.** No event and no hash moved; see the build's report for how it was checked.
+
+## The architect's rulings
+
+Read on Nov 21, 2026: the estimate in full (`oob-derive`, `derive.rs`: the refusals, the ratio and the sisters), Toho Maru's list and class file, and the build's account of what moved.
+
+1. **The hand calculation holds in every statement,** and the build's eight readings are accepted. The figures are the ones worked by hand: a mean ratio of 0.412088, 5,534.753928 tons light, a toughness of 221.390157, between 5,340.017859 and 5,729.489997.
+2. **Statement 8 said no class file on file has the column, and statement 13 gives it to Neosho's.** The two cannot both hold as written; statement 13 is the rule, and the test of statement 8 is right to name the two files that have it.
+3. **The Coral Sea files with Neosho say in their headers that her cargo is estimated.** Rule 12 asks it, and the three lines are accepted. Those files' own bytes change and their events do not; a game saved on them before will not load, and none is on file.
+4. **Scenario 104's statement 23 covers the Coral Sea with both oilers:** its four files and the table's copies of them carry the key that marks a file for play, as the files they replace at the table did.
+5. **Her own fuel is read by weight,** as her cargo is. The brief named only the cargo; the reading is right, since no factor for her oil is on file.
+6. **The two lines of `CLAUDE.md` are changed by the architect in this pull request,** as rule 14 says.
+7. **Not seen:** a fuelling from Toho Maru played at the table, and her piece on the chart. `sim-cli validate` does not itself refuse a measure that rests on an estimate; the tests do.
