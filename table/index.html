@@ -223,6 +223,12 @@ button:disabled { opacity: 0.45; cursor: default; }
 .card .kv span:nth-child(odd) { color: var(--paper-dim); font-size: 12px; padding-top: 2px; }
 .card .ohere .row { gap: 6px; margin-top: 4px; }
 .card .ohere button { min-height: 32px; padding: 0 10px; font-size: 13px; letter-spacing: 0.04em; text-align: left; }
+.card .ohere button.main { min-height: 38px; padding: 0 14px; font-size: 14px; font-weight: 700; border-width: 2px; }
+.card .ohere .parts { margin: 6px 0 4px 12px; padding-left: 10px; border-left: 1px solid var(--paper-dim); }
+.card .ohere .parts .sub { margin-top: 0; font-size: 11px; }
+.card .ohere button.lesser { min-height: 26px; padding: 0 8px; font-size: 12px; letter-spacing: 0.02em; }
+.card .ohere .given { padding: 3px 0; font-size: 13px; }
+.card .ohere .given.covered { color: var(--paper-dim); }
 .card .sub { font-family: var(--f-ui); font-size: 12px; font-weight: 700; letter-spacing: 0.12em; color: var(--paper-dim); margin-top: 4px; }
 .card .headline { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
 .sheet .doc .node { border-left: 2px solid #8d8672; padding: 2px 0 2px 12px; display: flex; flex-direction: column; gap: 5px; }
@@ -1416,12 +1422,62 @@ body.watched .gives { display: none !important; }
   // supplied, waters to be denied or worked from. Each opens the draft of
   // that order, which the staff previews and nothing sends until it is signed.
   function watersAt(pl) { var h = hexAt[pl.q + ',' + pl.r]; return h ? { kind: 'waters', q: pl.q, r: pl.r, name: 'the waters about ' + (showHexes ? 'hex ' + pl.q + ', ' + pl.r : whereIs({ q: pl.q, r: pl.r })), v: world(h[3], h[4]) } : null; }
+  // The order in force that is this end: an intent in force of the same kind
+  // and the same place, the commander's own before one the staff formed.
+  function endInForce(e, target) {
+    var a = e[1], hex = target.base ? target.base.place : target.kind === 'waters' ? { q: target.q, r: target.r } : null;
+    var tf = function (i) { return i.task_force == null ? null : typeof i.task_force === 'object' ? num(i.task_force.handle) : Number(i.task_force); };
+    var found = (((M.state || {}).intents) || []).filter(function (i) {
+      if (!i.in_force || i.kind !== a.intent_kind) return false;
+      if (a.island != null) return i.island === a.island;
+      if (i.kind === 'neutralise') return !!i.target && num(i.target.handle) === a.target;
+      if (i.kind === 'take_place') return !!i.hex && !!hex && i.hex[0] === hex.q && i.hex[1] === hex.r;
+      if (i.kind === 'deny') return !!i.hex && i.hex[0] === a.hex[0] && i.hex[1] === a.hex[1] && i.distance === a.distance;
+      if (i.kind === 'operate_carriers' || i.kind === 'stand_at') return tf(i) === a.task_force && !!i.hex && i.hex[0] === a.hex[0] && i.hex[1] === a.hex[1];
+      return !!i.base && num(i.base.handle) === a.base;
+    });
+    found.sort(function (x, y) { return (x.maker === 'commander' ? 0 : 1) - (y.maker === 'commander' ? 0 : 1) || x.number - y.number; });
+    return found[0] || null;
+  }
+  function rootIntent(i) { var by = {}; (((M.state || {}).intents) || []).forEach(function (x) { by[x.number] = x; }); while (i && i.parent != null && by[i.parent]) i = by[i.parent]; return i; }
+  // An order in force said as what is being done, in a line of its own.
+  function doingWords(i, target) {
+    var tfn = ((M.forces.filter(function (f) { return num(f.task_force.handle) === Number(typeof i.task_force === 'object' && i.task_force ? num(i.task_force.handle) : i.task_force); })[0] || {}).task_force || {}).name;
+    tfn = tfn ? tfn.replace(/^Placeholder /, '') : 'The force';
+    var island = i.island != null && (config.islands.filter(function (x) { return x.number === i.island; })[0] || {}).name;
+    return { hold: 'Holding ' + target.name, keep_supplied: 'Kept supplied' + (i.floor_days ? ', ' + dayCount(i.floor_days) : ''), cover: 'Covered from the air', control_island: 'Seizing and holding ' + island, take_place: 'Capturing ' + target.name, neutralise: 'Neutralising ' + target.name, deny: 'Denying these waters, ' + round(i.distance), operate_carriers: 'Operating ' + tfn + ' from here', stand_at: tfn + ' stationed here' }[i.kind] || sayIntent(i, {});
+  }
+  // The orders a card offers: a wider order on a line of its own, the parts
+  // of it beneath it as lesser ones, and orders that stand apart as equal
+  // buttons. An order in force is shown as given, with its paper, and so is
+  // each part of a wider order in force: covered by it, not offered again.
   function ordersHere(target) {
     if (!target || WATCH || M.over || playing) return;
     var list = ends(target), body = $('card-body'), after = body.querySelector('.kv') || body.querySelector('.headline'); if (!list.length || !after) return;
-    var box = el('div', 'ohere'), row = el('div', 'row'); box.appendChild(el('div', 'sub', 'ORDERS YOU CAN GIVE'));
-    list.forEach(function (e, i) { var b = el('button', '', e[0]); b.type = 'button'; if (e[2]) b.title = e[2]; b.addEventListener('click', function () { $('card').hidden = true; forget(); openDraft(target, i); }); row.appendChild(b); });
-    box.appendChild(row); body.insertBefore(box, after.nextSibling);
+    var given = list.map(function (e) { return endInForce(e, target); }), offered = 0;
+    var box = el('div', 'ohere'), head = el('div', 'sub', ''); box.appendChild(head);
+    function paperLink(row, words, i, cap) { var r = rootIntent(i); row.appendChild(document.createTextNode(words)); var b = el('button', 'ref', (cap ? 'Order ' : 'order ') + r.number); b.type = 'button'; b.addEventListener('click', function () { readPlan(r.number); }); row.appendChild(b); }
+    function givenLine(i) { var row = el('div', 'given'); if (rootIntent(i) === i) paperLink(row, doingWords(i, target) + ' \u00B7 ', i, true); else paperLink(row, doingWords(i, target) + ', under ', i); return row; }
+    function offer(e, k, cls) { offered++; var b = el('button', cls, e[0]); b.type = 'button'; if (e[2]) b.title = e[2]; b.addEventListener('click', function () { $('card').hidden = true; forget(); openDraft(target, k); }); return b; }
+    var plain = null;
+    list.forEach(function (e, k) {
+      if (e[3] != null) return;
+      var parts = []; list.forEach(function (p, j) { if (p[3] === k) parts.push(j); });
+      if (!parts.length) { if (given[k]) { plain = null; box.appendChild(givenLine(given[k])); return; } if (!plain) { plain = el('div', 'row'); box.appendChild(plain); } plain.appendChild(offer(e, k, '')); return; }
+      plain = null;
+      if (given[k]) box.appendChild(givenLine(given[k])); else { var r = el('div', 'row'); r.appendChild(offer(e, k, 'main')); box.appendChild(r); }
+      var under = el('div', 'parts'), lesser = el('div', 'row');
+      if (!given[k]) under.appendChild(el('div', 'sub', 'OR ONLY'));
+      parts.forEach(function (j) {
+        if (given[j]) under.appendChild(givenLine(given[j]));
+        else if (given[k]) { var c = el('div', 'given covered'); paperLink(c, list[j][0] + ': part of ', given[k]); under.appendChild(c); }
+        else lesser.appendChild(offer(list[j], j, 'lesser'));
+      });
+      if (lesser.children.length) under.appendChild(lesser);
+      box.appendChild(under);
+    });
+    head.textContent = offered ? 'ORDERS YOU CAN GIVE' : 'ORDERS IN FORCE';
+    body.insertBefore(box, after.nextSibling);
   }
   (function () { var c = cardContact, p = cardPlace, b = cardBase, x = cardHex;
     cardContact = function (t) { var r = c.apply(this, arguments); ordersHere(watersAt(t.contact.place)); return r; };
@@ -1700,11 +1756,26 @@ body.watched .gives { display: none !important; }
   function planOf(n) { var st = M.state || {}, p = (st.plans || []).filter(function (x) { return x.number === n; })[0], by = {}; (st.intents || []).forEach(function (i) { by[i.number] = i; }); var i = p && by[p.intent]; if (!i) return { name: '', root: null }; var r = i; while (r.parent != null && by[r.parent]) r = by[r.parent]; var w = sayIntent(i, {}); return { name: w.charAt(0).toLowerCase() + w.slice(1), root: r.number }; }
   function intentWords(n) { var i = ((M.state || {}).intents || []).filter(function (x) { return x.number === n; })[0]; if (!i) return ''; var w = sayIntent(i, {}); return w.charAt(0).toLowerCase() + w.slice(1); }
   function planWords(t) { return t.replace(/plan:(\d+)('s)?/g, function (x, n, own) { var p = planOf(parseInt(n, 10)); return 'plan ' + n + (p.name ? (own ? ' (' + p.name + ')' : ', ' + p.name + ',') : '') + (own || ''); }).replace(/,( cannot|\.|$)/, function (x, y) { return y === ' cannot' ? ', cannot' : y; }); }
+  // Whose an accepted order was. The staff's reason for an order it handed
+  // in is recorded straight after the order is taken in, so an accepted order
+  // the side's next event gives the staff's reason for is the staff's; one
+  // with none is the commander's own direct order. Kept by event number, and
+  // with it the order of the commander's that a staff order serves.
+  var ORDER_BY = {}, ORDER_SERVES = {};
+  function whoseOrders(evs) {
+    evs.forEach(function (e, j) {
+      if (e.event_kind !== 'order_accepted' && e.event_kind !== 'order_rejected') return;
+      var nx = evs[j + 1], m = nx && nx.event_kind === 'staff_reason' && /staff's reason for order:\d+ \[serves intent (\d+)/.exec(nx.text);
+      ORDER_BY[e.number] = m ? 'staff' : 'commander'; if (m) ORDER_SERVES[e.number] = parseInt(m[1], 10);
+    });
+  }
+  // An accepted order in the diary's words: whose it was, to whom, and what.
+  function acceptedWords(t, number) { var by = ORDER_BY[number]; return t.replace(/fuel from, giver /, 'fuel at sea from ').replace(/fuel_from, giver /, 'fuel at sea from ').replace(/^(?:[Ss]taff order |order:)\d+ accepted for ([a-z_]+:\d+|[^:]+): /, function (x, to) { return (by === 'commander' ? 'Your direct order to ' : by === 'staff' ? 'Staff order to ' : 'Order to ') + to + ': '; }); }
   function diaryLine(e) {
     var t = String(e.text).replace(/^(Allied|Japanese) /, ''), m;
     if (e.event_kind === 'command_taken' && (m = /^the (commander|staff)'s command taken: (.*)$/.exec(t))) { var w = m[2], si = /^set intent:(\d+) to (.*)$/.exec(w), fo = /^form under intent:(\d+) an intent to (.*)$/.exec(w); t = m[1] === 'commander' ? (si ? 'Commander gave an order: ' + (intentWords(parseInt(si[1], 10)) || si[2]) : 'Commander directed: ' + planWords(w)) : (fo ? 'Staff formed a task' + (intentWords(parseInt(fo[1], 10)) ? ' under "' + intentWords(parseInt(fo[1], 10)) + '"' : '') + ': ' + fo[2] : 'Staff: ' + planWords(w)); }
     else if (e.event_kind === 'staff_notice') { var met = /^staff's notice: intent:(\d+) is met$/.exec(t); t = met && intentWords(parseInt(met[1], 10)) ? 'Staff reported: "' + intentWords(parseInt(met[1], 10)) + '" is met' : planWords(t.replace(/^staff's notice: /, 'Staff reported: ')).replace(/cannot meet its intent/, 'cannot be met as it stands'); }
-    else if (e.event_kind === 'order_accepted') t = t.replace(/^order:\d+ accepted for ([a-z_]+:\d+): /, 'Order to $1: ');
+    else if (e.event_kind === 'order_accepted') t = acceptedWords(t, e.number);
     else return sayEvent(e, true);
     return diaryWords(t);
   }
@@ -1876,11 +1947,11 @@ body.watched .gives { display: none !important; }
         var sec = el('div', 'phase'); sec.appendChild(el('b', '', (dateOf(days[k] - 1) || 'day ' + days[k])));
         // A staff order is tied to the order of yours it serves by the staff's
         // reason for it, and the line links to that order's plan.
-        var serves = {}, byNo = {}; ((M.state || {}).intents || []).forEach(function (i) { byNo[i.number] = i; });
-        all[k].forEach(function (e) { var m = e.event_kind === 'staff_reason' && /reason for order:(\d+) \[serves intent (\d+)/.exec(e.text); if (m) serves[m[1]] = parseInt(m[2], 10); });
+        var byNo = {}; ((M.state || {}).intents || []).forEach(function (i) { byNo[i.number] = i; });
+        whoseOrders(all[k]);
         mine.forEach(function (e) {
           var words = sayEvent(e, true), root = null, m = e.event_kind === 'order_accepted' && /^order:(\d+) /.exec(e.text);
-          if (m) { words = words.replace(/^Staff order \d+ accepted for /, 'Staff order to '); words = words.replace(/set air mission, mission ([a-z ]+)/, function (x, mi) { return 'air mission, ' + (MISSION[mi.replace(/ /g, '_')] || mi).toLowerCase(); }); var i = byNo[serves[m[1]]]; while (i && i.parent != null && byNo[i.parent]) i = byNo[i.parent]; if (i) root = i.number; }
+          if (m) { words = acceptedWords(words, e.number); words = words.replace(/set air mission, mission ([a-z ]+)/, function (x, mi) { return 'air mission, ' + (MISSION[mi.replace(/ /g, '_')] || mi).toLowerCase(); }); var i = byNo[ORDER_SERVES[e.number]]; while (i && i.parent != null && byNo[i.parent]) i = byNo[i.parent]; if (i) root = i.number; }
           sec.appendChild(diaryRow(words, e.number, root));
         }); doc.appendChild(sec);
       }
@@ -1890,7 +1961,7 @@ body.watched .gives { display: none !important; }
   }
   function readDiary(day) {
     api('events', day ? { day: day } : {}).then(function (a) {
-      var doc = $('sheet-doc'), d = a.day, evs = a.events || []; doc.textContent = ''; if (!day) diaryLast = d;
+      var doc = $('sheet-doc'), d = a.day, evs = a.events || []; doc.textContent = ''; if (!day) diaryLast = d; whoseOrders(evs);
       var blocks = { dusk: [], night: [], morning: [], afternoon: [], close: [] };
       evs.forEach(function (e) { if (emptyClaim(e) || e.event_kind === 'staff_reason' || e.event_kind === 'intent_formed' || e.event_kind === 'interrupt_fired') return; blocks[e.pulse || (D_ROUTINE[e.event_kind] ? 'close' : 'dusk')].push(e); });
       var head = el('div', 'head'), who = (config.directives && config.directives[0] && config.directives[0].to) || (config.seat === 'allied' ? 'the Allied command' : 'the Japanese command');
@@ -1909,7 +1980,7 @@ body.watched .gives { display: none !important; }
           if (e.event_kind === 'plan_drafted' || e.event_kind === 'plan_state_changed' || e.event_kind === 'plan_amended') { var pm = /plan:(\d+) (drafted|went from \w+ to (\w+)|amended, amendment (\d+))/.exec(e.text); if (pm) { var pk = 'plan' + pm[1]; if (!landed[pk]) { landed[pk] = { plan: parseInt(pm[1], 10), n: e.number }; order.push(landed[pk]); } if (pm[2] === 'drafted') landed[pk].drafted = true; else if (pm[3]) landed[pk].state = pm[3]; else landed[pk].amended = pm[4]; return; } }
           if (D_ROUTINE[e.event_kind]) { routine.push(e); return; }
           if (e.event_kind === 'command_taken' && /the staff's command taken: approve plan:\d+$/.test(e.text)) return;
-          if (e.event_kind === 'order_accepted' || (e.event_kind === 'command_taken' && /the staff's command/.test(e.text))) { staff.push(e); return; }
+          if ((e.event_kind === 'order_accepted' && ORDER_BY[e.number] !== 'commander') || (e.event_kind === 'command_taken' && /the staff's command/.test(e.text))) { staff.push(e); return; }
           order.push(e);
         });
         // One entry for each thing said; the same words again are counted, not repeated.
@@ -2982,11 +3053,18 @@ body.watched .gives { display: none !important; }
   // ---- stating an intent: touch the chart, fill the order, read the staff's preview, sign ----
   var picking = false, previewNo = null, previewSeq = 0;
   function closeOrder() { $('order').hidden = true; draft = null; picking = false; canvas.classList.remove('picking'); if (g) drawMarks(); }
+  // Each end is [words, the intent, its note, and the index of the wider end
+  // that includes it, or none]. An end includes another only where the staff
+  // forms that other under it by itself: an island's tree forms the take of
+  // each place, the neutralising of the enemy's bases near, the hold of each
+  // place and, under the hold, its cover and its supply (from a source the
+  // staff names); a hold forms its cover, and forms supply only from a source
+  // named in its forces limit, which the table does not set.
   function ends(target) {
-    var list = [], n = target.base ? num(target.base.base.handle) : null;
-    if (n != null) config.islands.forEach(function (i) { if (i.base === n) list.push(['Seize and hold ' + i.name, { intent_kind: 'control_island', island: i.number }, 'Capture its places, garrison and supply them, deny the waters round it, and keep its airfields out of the enemy\'s use.']); });
-    if (target.kind === 'enemy') list.push(['Capture ' + target.name + ' only', { intent_kind: 'take_place', base: n }, 'Land men and capture the place. Nothing is ordered for afterwards: no garrison, no supply.'], ['Neutralise ' + target.name, { intent_kind: 'neutralise', target: n }, 'Air raids on its airfield until it can fly no aircraft, by aircraft from your bases and a carrier force that is free. No landing.']);
-    if (target.kind === 'own') list.push(['Hold ' + target.name, { intent_kind: 'hold', base: n }, 'Its men defend it; it is kept supplied and covered from the air.'], ['Keep it supplied, 30 days', { intent_kind: 'keep_supplied', base: n, floor_days: 30 }, 'Supply runs keep 30 days of stock there. Nothing else.'], ['Cover it from the air', { intent_kind: 'cover', base: n }, 'Fighters over it and searches round it. Nothing else.']);
+    var list = [], n = target.base ? num(target.base.base.handle) : null, wide = null;
+    if (n != null) config.islands.forEach(function (i) { if (i.base === n) { if (wide == null) wide = list.length; list.push(['Seize and hold ' + i.name, { intent_kind: 'control_island', island: i.number }, 'Capture its places, garrison and supply them, deny the waters round it, and keep its airfields out of the enemy\'s use.', null]); } });
+    if (target.kind === 'enemy') list.push(['Capture ' + target.name + ' only', { intent_kind: 'take_place', base: n }, 'Land men and capture the place. Nothing is ordered for afterwards: no garrison, no supply.', wide], ['Neutralise ' + target.name, { intent_kind: 'neutralise', target: n }, 'Air raids on its airfield until it can fly no aircraft, by aircraft from your bases and a carrier force that is free. No landing.', wide]);
+    if (target.kind === 'own') { var hold = list.length; list.push(['Hold ' + target.name, { intent_kind: 'hold', base: n }, 'Its men defend it, and it is covered from the air.', wide], ['Keep it supplied, 30 days', { intent_kind: 'keep_supplied', base: n, floor_days: 30 }, 'Supply runs keep 30 days of stock there. Nothing else.', wide], ['Cover it from the air', { intent_kind: 'cover', base: n }, 'Fighters over it and searches round it. Nothing else.', wide != null ? wide : hold]); }
     if (target.kind === 'waters') list.push(['Deny these waters, ' + round(2), { intent_kind: 'deny', hex: [target.q, target.r], distance: 2 }, 'Search them and strike any enemy ship that enters, with aircraft from your bases and a carrier force that is free.'], ['Deny these waters, ' + round(4), { intent_kind: 'deny', hex: [target.q, target.r], distance: 4 }, 'The same, over a wider circle.']);
     // A force is moved by an order of its own: a carrier force is told where to work from, a surface force where to stand.
     if (target.kind === 'waters') M.forces.forEach(function (f) {

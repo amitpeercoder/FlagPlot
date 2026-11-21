@@ -241,6 +241,37 @@ def every_game(bridge, listed):
           "New game ends the game in hand and the screen is shown again")
 
 
+def orders_on_the_card(bridge):
+    """What the page reads to show an order in force on a place's card, and to
+    tell the commander's own direct order from a staff order in the diary."""
+    print("-- orders in force, and whose an accepted order was: the 39 days, the person Allied", flush=True)
+    check(begin(bridge, "guadalcanal-39-days", "person", "engine") == {"ok": True}, "begun")
+    person = Person(bridge.table)
+    page = get(bridge.table + "/")
+    check("OR ONLY" in page and "Your direct order to " in page and "Staff order to " in page,
+          "the page groups a wider order above its parts, and words a direct order as the commander's")
+    person.call("set_leave", {"leave": "launch", "given": True})
+    person.call("set_intent", {"intent_kind": "hold", "base": 3})
+    person.call("set_intent", {"intent_kind": "operate_carriers", "task_force": 2, "hex": [6, -3]})
+    held = [i for i in person.call("command_state")["ok"]["intents"] if i["kind"] == "hold"]
+    check(len(held) == 1 and held[0]["base"]["handle"] == "base:3" and held[0]["in_force"] is True
+          and held[0]["maker"] == "commander" and held[0]["parent"] is None,
+          "a signed hold is in command_state at once, in force, by its kind, base, maker and parent, as the card reads it")
+    person.call("end_day")
+    queued = person.call("issue_orders", {"orders": [{"unit": "task_force:1", "order": {"kind": "set_speed", "speed": "cruise"}}]})["ok"]
+    check(queued["results"][0]["status"] == "queued", "a direct order to Task Force 16 is queued")
+    person.call("end_day")
+    events = person.call("events", {"day": 2})["ok"]["events"]
+    accepted = [(e, events[k + 1] if k + 1 < len(events) else None) for k, e in enumerate(events) if e["event_kind"] == "order_accepted"]
+    staffs = lambda nx: nx is not None and nx["event_kind"] == "staff_reason" and "staff's reason for order:" in nx["text"] and "[serves intent " in nx["text"]
+    own = [e for e, nx in accepted if "task_force:1" in e["text"] and "set_speed" in e["text"]]
+    check(len(own) == 1 and not any(staffs(nx) for e, nx in accepted if e is own[0]),
+          "the commander's direct order is accepted with no staff's reason after it")
+    check(any(staffs(nx) for e, nx in accepted if "task_force:2" in e["text"]),
+          "each staff order to Task Force 11 is accepted with the staff's reason straight after it, naming the order it serves")
+    check(post(bridge.table + "/new") == {"ok": True}, "the game is put away")
+
+
 def person_against_agent(bridge, hold):
     print("-- a person against an agent: the 39 days, the person Allied", flush=True)
     check(begin(bridge, "guadalcanal-39-days", "person", "agent") == {"ok": True}, "begun")
@@ -390,6 +421,7 @@ def main():
         try:
             listed = the_screen(bridge)
             every_game(bridge, listed)
+            orders_on_the_card(bridge)
             person_against_agent(bridge, args.hold)
             seat_mcp(bridge)
         finally:
