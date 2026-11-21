@@ -295,6 +295,23 @@ pub fn decide(
     }
 }
 
+/// The line for a group aboard that the staff rests today: a fighter (one
+/// other fighter group can fly), a group that searches, or a bomber group
+/// whose fatigue is above the level of the risk, which `strike::decide` sets
+/// to rest. `None` for a group of no role.
+fn resting_words(role: CarrierRole, id: AirGroupId, fatigue: &str) -> Option<String> {
+    match role {
+        CarrierRole::Fighter => Some(format!(
+            "{id}, a fighter group, has {fatigue} and another fighter group can fly: it rests"
+        )),
+        CarrierRole::Searcher => Some(format!(
+            "{id}, a group that searches, has {fatigue}: it rests"
+        )),
+        CarrierRole::Striker => Some(format!("{id}, a bomber group, has {fatigue}: it rests")),
+        CarrierRole::Other => None,
+    }
+}
+
 /// Why a group that can search and attack a ship takes the search this
 /// morning (decision 0131, 7), with the numbers of each such group.
 fn turn_words(groups: &[CarrierGroup], chosen: AirGroupId) -> String {
@@ -1515,10 +1532,14 @@ impl Day<'_, '_> {
                             "not above"
                         }
                     );
+                    let resting = if rests {
+                        resting_words(role, g.id, &fatigue)
+                    } else {
+                        None
+                    };
                     let line = match role {
-                        CarrierRole::Fighter if rests => format!("{}, a fighter group, has {fatigue} and another fighter group can fly: it rests", g.id),
+                        _ if resting.is_some() => resting.unwrap_or_default(),
                         CarrierRole::Fighter => format!("{}, a fighter group, has {fatigue}: it flies the patrol at a share of {} ({share_note}); the rest are escorts", g.id, air.share),
-                        CarrierRole::Searcher if rests => format!("{}, a group that searches, has {fatigue}: it rests", g.id),
                         CarrierRole::Searcher => format!(
                             "{}, a group that {} searches, has {fatigue}: it searches {} out to {} nm from {here} ({arc_text}); {}",
                             g.id,
@@ -1864,6 +1885,36 @@ mod tests {
             SpeedSetting::Cruise
         );
         assert_eq!(speed_for(Risk::Press, None), SpeedSetting::Full);
+    }
+
+    #[test]
+    fn a_bomber_group_above_the_level_rests_and_says_so() {
+        // Balanced: the level is 45. A bomber group at fatigue 50 is rested
+        // and set to rest, and its line says it rests, as the fighter's and
+        // the searcher's do.
+        let mut tired = group(3, false, true, true);
+        tired.fatigue = Fixed::from_int(50);
+        tired.mission = AirMission::NavalStrike;
+        let groups = [group(2, false, true, false), tired];
+        let air = decide(
+            Risk::Balanced,
+            0,
+            false,
+            0,
+            360,
+            &StrikeTargets::default(),
+            &groups,
+        );
+        assert!(air.rested.contains(&AirGroupId::new(3)));
+        assert!(air.orders.contains(&(
+            AirGroupId::new(3),
+            AirGroupOrder::SetAirMission(AirMission::Rest)
+        )));
+        let fatigue = "fatigue 50 above the 45 of the balanced risk";
+        assert_eq!(
+            resting_words(CarrierRole::Striker, AirGroupId::new(3), fatigue).as_deref(),
+            Some("air_group:3, a bomber group, has fatigue 50 above the 45 of the balanced risk: it rests")
+        );
     }
 
     #[test]
