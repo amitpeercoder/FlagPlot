@@ -1316,3 +1316,210 @@ fact = "range_normal_nm"
 row = 616
 reason = "500 miles (434 nm) on internal fuel, pwencycl (C). Ruling 1: both rows are grade C; Pacific Eagles' 746 miles 'internal' (646) is the figure pwencycl gives with a drop tank (615) and Wikipedia's maximum (614), so its label is doubted, and the figure stated plainly for internal fuel is read."
 agreed = "2026-11-20"
+
+# Decision 0198, "Stage A: the architect's rulings" (rules 50 to 72): the
+# ships and aircraft of the Midway list (midway.toml, as of 3 June 1942).
+# Each reads a row the preference rules cannot read on that day. Where a
+# ruling leaves the choice to the list's rule for disagreements, it is the
+# Coral Sea list's ruling 1 (decision 0188): a ship's own report of the time,
+# then the higher grade of source, then a figure stated plainly before one
+# hedged; and the readings the lists already make of the same kind of row
+# (standard displacement as printed, in long tons; Japanese oil in metric tons
+# converted, as for the Zuiho class, rows 2477 and 2492). Written by the
+# list's lead on 2026-11-21 for the architect to read before the list merges.
+
+[[exception]]
+entity = "jp-akagi-class"
+fact = "max_speed_kn"
+row = 7716
+reason = "31.2 knots after the 1938 rebuild, Navypedia (B), with which Nishida (7717, B) agrees; Wikipedia's 31.5 (7718) is grade C. Rule 67 by the rule for disagreements: the higher grade."
+agreed = "2026-11-21"
+
+[[exception]]
+entity = "jp-akagi-class"
+fact = "fuel_capacity_lt"
+row = 7726
+reason = "5,905 long tons, Nishida's 6,000 metric tons of oil converted. Rule 67: Navypedia (7725) prints the same 6,000 unqualified; the Japanese navy gave oil in metric tons, and the lists read the Zuiho class's and Yubari's oil so (rows 2492, 243)."
+agreed = "2026-11-21"
+
+[[exception]]
+entity = "jp-akagi-class"
+fact = "endurance_nm"
+row = 7727
+reason = "8,200 nm at 16 knots after the rebuild, Navypedia (B); Wikipedia's 10,000 at 16 (7728) is grade C. Rule 67 by the rule for disagreements: the higher grade."
+agreed = "2026-11-21"
+
+[[exception]]
+entity = "jp-akagi-class"
+fact = "displacement_standard_lt"
+row = 7700
+reason = "36,500 tons standard, Navypedia (B), with which Wikipedia (7702) agrees in long tons. Rule 67: a standard displacement is a treaty figure in long tons, read as printed, as the Zuiho class's is (row 2477); Nishida's 35,924 (7701) is our conversion of the same 36,500 as if it were metric."
+agreed = "2026-11-21"
+
+[[exception]]
+entity = "jp-kaga-class"
+fact = "max_speed_kn"
+row = 7758
+reason = "28.3 knots after the 1935 rebuild, Navypedia (B). Rule 67: Nishida's 28.34 (7759, B) is the same figure to one more place, and the two agree to the first decimal; Navypedia's figure is read, as it is for the other three carriers. Wikipedia's 28 (7760, C) is a rounding."
+agreed = "2026-11-21"
+
+[[exception]]
+entity = "jp-kaga-class"
+fact = "endurance_speed_kn"
+row = 7770
+reason = "16 knots, the speed of Navypedia's 10,000 nm (B); Wikipedia gives 15 for the same distance (7771, C). Rule 67 by the rule for disagreements: the higher grade."
+agreed = "2026-11-21"
+
+[[exception]]
+entity = "jp-kaga-class"
+fact = "fuel_capacity_lt"
+row = 7768
+reason = "5,217 long tons, Nishida's 5,300 metric tons of oil converted. Rule 67, as for Akagi (row 7726)."
+agreed = "2026-11-21"
+
+[[exception]]
+entity = "jp-kaga-class"
+fact = "displacement_standard_lt"
+row = 7742
+reason = "38,200 tons standard, Navypedia (B), with which Wikipedia (7744) agrees in long tons. Rule 67, as for Akagi (row 7700); Nishida's 37,597 (7743) is our conversion."
+agreed = "2026-11-21"
+
+[[exception]]
+entity = "jp-soryu-class"
+fact = "max_speed_kn"
+row = 7796
+reason = "34.5 knots, Navypedia (B), with which Nishida (7797, B) agrees; Wikipedia's 34 (7798, C) is a rounding. Rule 67."
+agreed = "2026-11-21"
+
+[[exception]]
+entity = "jp-soryu-class"
+fact = "fuel_capacity_lt"
+row = 7803
+reason = "3,612 long tons, Nishida's 3,670 metric tons of oil converted. Rule 67, as for Akagi (row 7726)."
+agreed = "2026-11-21"
+
+[[exception]]
+entity = "jp-soryu-class"
+fact = "displacement_standard_lt"
+row = 7784
+reason = "15,900 tons standard, Navypedia (B), with which Wikipedia (7786) agrees in long tons. Rule 67, as for Akagi (row 7700); Nishida's 15,649 (7785) is our conversion."
+agreed = "2026-11-21"
+
+[[exception]]
+entity = "jp-hiryu-class"
+fact = "max_speed_kn"
+row = 7829
+reason = "34.3 knots, Navypedia (B), with which Nishida (7830, B) agrees; Wikipedia's 34 (7831, C) is a rounding. Rule 67."
+agreed = "2026-11-21"
+
+[[exception]]
+entity = "jp-hiryu-class"
+fact = "fuel_capacity_lt"
+row = 7836
+reason = "4,331 long tons, Nishida's 4,400 metric tons of oil converted. Rule 67, as for Akagi (row 7726)."
+agreed = "2026-11-21"
+
+[[exception]]
+entity = "jp-hiryu-class"
+fact = "displacement_standard_lt"
+row = 7817
+reason = "17,300 tons standard, Navypedia (B), with which Wikipedia (7819) agrees in long tons. Rule 67, as for Akagi (row 7700); Nishida's 17,027 (7818) is our conversion."
+agreed = "2026-11-21"
+
+[[exception]]
+entity = "jp-sendai-class"
+fact = "endurance_nm"
+row = 12800
+reason = "6,000 nm at 15 knots, Navypedia (B); Wikipedia's 5,000 at 14 (168, 169) is grade C. Rule 67 by the rule for disagreements: the higher grade. Read for Jintsu."
+agreed = "2026-11-21"
+
+[[exception]]
+entity = "jp-sendai-class"
+fact = "endurance_speed_kn"
+row = 12801
+reason = "15 knots, the speed of row 12800."
+agreed = "2026-11-21"
+
+[[exception]]
+entity = "jp-mutsuki-class"
+fact = "endurance_nm"
+row = 108
+reason = "3,600 nm at 14 knots, one low row (Wikipedia), read for Mikazuki, whom rule 66 puts in. No other figure is on file; the Coral Sea's ruling 3 reads a lone low row so where nothing else exists. A better source is to be found."
+agreed = "2026-11-21"
+
+[[exception]]
+entity = "jp-mutsuki-class"
+fact = "endurance_speed_kn"
+row = 109
+reason = "14 knots, the speed of row 108."
+agreed = "2026-11-21"
+
+[[exception]]
+entity = "jp-asashio-class"
+fact = "main_rounds_per_gun"
+row = 13107
+reason = "150 rounds a gun, the figure given for the 12.7 cm/50 gun, not for a class. Rule 68 gives the Second Fleet's main body and the Close Support Group surface figures, and their Asashio-class destroyers need rounds; it follows the exception already made for the Kagero, Shiratsuyu and Hatsuharu classes (rows 2450 to 2452, decision 0166, 9): a gun's stated outfit is read for a class that mounts it where nothing nearer exists."
+agreed = "2026-11-21"
+
+[[exception]]
+entity = "jp-myoko-class"
+fact = "torpedo_tubes"
+row = 13006
+reason = "Sixteen 61 cm tubes in four quadruple mounts with the Type 93, from the 1939-41 modernization (Nishida). Rule 68: the tubes are the 16 of the fits dated from the refit of 1941 (13006 to 13008, which agree), not the 8 of the class rows, which name no date or speak of the first refit (ship_class_facts 1313, 1314, 1351). The Type 93 is the row's inference from Wikipedia; no source read names the model in June 1942."
+agreed = "2026-11-21"
+
+[[exception]]
+entity = "cv-8-hornet"
+fact = "light_aa"
+row = 6507
+reason = "Twenty-four 20 mm, Navypedia's mid-1942 line for Yorktown and Hornet, dated only to the year. Rule 67 by the rule for disagreements: Navypedia (B) before Wikipedia's 30 from January 1942 (6509, C). Read as the Coral Sea list reads Yorktown's row of the same line (1221); the 32 of 6508 came in August, after Midway."
+agreed = "2026-11-21"
+
+[[exception]]
+entity = "us-pensacola-class"
+fact = "aircraft_capacity"
+row = 1013
+reason = "Four aircraft, DANFS, with which NavSource (1012) and Navypedia (1014) agree; Wikipedia's two (1015) is grade C. Rule 71 (the Pensacola class is new to the lists) by the rule for disagreements: the higher grade. Read for Pensacola."
+agreed = "2026-11-21"
+
+[[exception]]
+entity = "us-pensacola-class"
+fact = "light_aa"
+row = 678
+reason = "Sixteen 1.1-inch, four quadruple mounts, Navypedia (B), whose line adds the second pair of mounts in 1942 with no month. Rule 67: read as holding on 3 June, as the Coral Sea list reads the 1942 lines of Chester and Astoria (rows 1304, 532); unconfirmed as to the month. A dated row is to be found."
+agreed = "2026-11-21"
+
+[[exception]]
+entity = "us-pensacola-class"
+fact = "light_aa"
+row = 679
+reason = "Eight 20 mm, Navypedia (B), the same 1942 line with no month. Rule 67, as row 678; leaving the 20 mm out would give the ship a light battery no row supports."
+agreed = "2026-11-21"
+
+[[exception]]
+entity = "f2a-3"
+fact = "range_normal_nm"
+row = 5722
+reason = "965 miles (839 nm), Wikipedia (C), the one row that gives a range short of the maximum; historyofwar's 1,680 miles (5713) states no condition and is filed as a maximum. Rule 71 (the F2A-3 is new); the Coral Sea's ruling 3 reads a lone low row where nothing better exists. A Navy characteristics sheet is to be found."
+agreed = "2026-11-21"
+
+[[exception]]
+entity = "f2a-3"
+fact = "self_sealing_tanks"
+row = 5725
+reason = "Yes: Wikipedia (C), with which The Armory Life (12207, C) agrees; two low rows, read as the Coral Sea reads the A5M4's (rows 642 to 645). Rule 71."
+agreed = "2026-11-21"
+
+[[exception]]
+entity = "f2a-3"
+fact = "self_sealing_tanks"
+row = 12207
+reason = "Yes: The Armory Life (C), the same as row 5725."
+agreed = "2026-11-21"
+
+[[exception]]
+entity = "us-bomb-500lb-gp"
+fact = "weight_kg"
+row = 367
+reason = "226.8 kg, the nominal weight of the 500 lb class from its designation, one low row and the only weight on file. Read so that the SB2U-3 attacks with the 500 lb bomb its maker's sheet gives it (fits 6802) and which VMSB-241 carried on 4 and 5 June (fits 12200 to 12202, dated those days only). Rules 55 and 71."
+agreed = "2026-11-21"
