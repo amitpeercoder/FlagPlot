@@ -123,11 +123,14 @@
 //!     0205 is refused. One with either below 0 or above 1 is refused. 0
 //!     and 1 are taken.
 //! 18. **The files.** `data/reference/ground_hunger.toml` gives
-//!     `hunger_weakness_per_night` 0.01, `unfed_fighting_share` 0.5 and
+//!     `hunger_weakness_per_night` 0.01, `unfed_fighting_share` 0.9 and
 //!     `hungry_below_share` 0.6, and no other figure of it differs from
 //!     the live `ground.toml`'s. Its frozen counterpart gives the two new
 //!     figures with the same values. Scenario 119's own files are as they
-//!     were, and its tests pass unchanged.
+//!     were, and its tests pass unchanged. (Corrected by the architect on
+//!     Nov 21, 2026: the table's figure was 0.5 as first written, and was
+//!     moved to 0.9 on research into a day without food. This scenario's
+//!     own file keeps 0.5, and no other statement moves.)
 //!
 //! # Properties
 //!
@@ -1322,7 +1325,7 @@ fn statement_18_the_files() {
     let hunger = toml_of("reference/ground_hunger.toml");
     let live = toml_of("reference/ground.toml");
     assert_eq!(hunger["hunger_weakness_per_night"].as_str(), Some("0.01"));
-    assert_eq!(hunger["unfed_fighting_share"].as_str(), Some("0.5"));
+    assert_eq!(hunger["unfed_fighting_share"].as_str(), Some("0.9"));
     assert_eq!(hunger["hungry_below_share"].as_str(), Some("0.6"));
     // No other figure of it differs from the live ground.toml's, and the
     // only keys it adds are the five.

@@ -226,8 +226,11 @@ hunger_nights_before_loss = 14
 # with disease) and 44.3 percent at 84 days in the Minnesota experiment (14977;
 # 0.0066 a night), set a little above both, decision 0208.
 hunger_weakness_per_night = "0.01"
-# A unit's share from last night's meal where it was fed nothing. PLACEHOLDER:
-# rests on no source. The record has men very weak after days on little (14954,
-# 14955, 14959) and gives no share; it also stands, roughly, for the want of
-# ammunition ashore, which nothing models, decision 0208.
-unfed_fighting_share = "0.5"
+# A unit's share from last night's meal where it was fed nothing. PLACEHOLDER,
+# 0.9 from 0.5 on Nov 21, 2026, on the designer's doubt and the research that
+# followed (docs/research/a-day-without-food.md): the one measured first day
+# without food, with water, is 91 percent of the work time of fed men, a
+# difference the study did not find significant (land_unit_facts 15028), and
+# units in the field attacked after a day or two unfed. It no longer stands
+# for the want of ammunition ashore, which nothing models, decision 0208.
+unfed_fighting_share = "0.9"
