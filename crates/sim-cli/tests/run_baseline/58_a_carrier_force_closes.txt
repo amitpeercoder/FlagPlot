@@ -2,9 +2,9 @@ Placeholder scenario 58: A carrier force closes
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 3a7be310eb9c382e  47 events
-day   2  hash 684073ac9f67fe43  12 events
-day   3  hash 10d2c79aec8a06f9  5 events
+day   1  hash b01c7f1646b19d24  47 events
+day   2  hash f72535bfe7526cb3  12 events
+day   3  hash e4a20c7ff874d00b  5 events
 
 task_force:1 "Placeholder carrier force 1" (Allied): Arrived at (0,0); readiness battle, alert, rules of engagement: avoid, break off at 0.75, stragglers: keep, keep 0; home port base:1
 air_group:1 "Placeholder fighters 1" (Allied) aboard ship:1: 12 ready, mission CombatAirPatrol, patrol share 0.25, no arc

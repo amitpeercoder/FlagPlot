@@ -2,11 +2,11 @@ Placeholder scenario 40b: One stock and two plans
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash bc07e1f86312ccc3  56 events
-day   2  hash c2984846d0b27c37  39 events
-day   3  hash 72bfd1e4df074c5f  20 events
-day   4  hash 60f0d01d872c274a  10 events
-day   5  hash 2a957c2610cfd79c  10 events
+day   1  hash 0292cefd37cf2ac3  56 events
+day   2  hash 23f41f7600ba64ab  39 events
+day   3  hash 2638ecb6a239369b  20 events
+day   4  hash 957fc0bc609ac39a  10 events
+day   5  hash b2364dca2d1e039c  10 events
 
 #1 D1 -         Allied the commander's command taken: set intent:1 to keep base:2 supplied at 30 days, a run every 5 days
 #2 D1 -         Allied plan:1 drafted for intent:1  <- #1

@@ -406,16 +406,16 @@ fn a_scenario_with_command_levels_off_exports_as_it_did() {
         })
     }
     let before: [(&str, u64); 10] = [
-        ("01_transit", 0x8bc1_8b6c_e4ae_b78b),
+        ("01_transit", 0x5b62_9475_1f41_20ca),
         ("04a_night_action", 0xeaf8_146b_9889_2fea),
-        ("05_eastern_solomons", 0x0414_5eac_952d_1cd4),
-        ("21_landing", 0x212b_8225_6624_4d84),
-        ("23_fight_ashore", 0x7d7c_7119_8ea3_2f04),
-        ("31_airfield_damage", 0xcb0e_caa9_efd5_1749),
-        ("36_one_convoy", 0x2732_7152_1f3a_0c52),
-        ("43_keep_two_bases_fed", 0xcd66_0120_8212_f71b),
-        ("50_neutralise_a_base", 0x95d5_f42d_eb36_a6c2),
-        ("58_a_carrier_force_closes", 0xac7d_ed67_d30a_379c),
+        ("05_eastern_solomons", 0x15c2_b5c1_b9ec_f174),
+        ("21_landing", 0x7dfa_7e42_e318_b4e3),
+        ("23_fight_ashore", 0x8e99_c6c8_b055_2684),
+        ("31_airfield_damage", 0x9d11_9d23_75ee_02f2),
+        ("36_one_convoy", 0xa55c_3f2c_be9c_b33d),
+        ("43_keep_two_bases_fed", 0x350f_939c_6404_407d),
+        ("50_neutralise_a_base", 0x23b0_603d_7ed2_92fd),
+        ("58_a_carrier_force_closes", 0xc54d_71aa_4d32_6738),
     ];
     let prefix6 = br#"{"format":"flagplot-replay","version":6,"#;
     let prefix5 = br#"{"format":"flagplot-replay","version":5,"#;

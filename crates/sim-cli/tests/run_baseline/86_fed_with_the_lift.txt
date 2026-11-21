@@ -2,14 +2,14 @@ Placeholder scenario 86: Fed with the lift
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash bcd65a9a0e76d13e  73 events
-day   2  hash 008d4bb3ec5af0dd  33 events
-day   3  hash d58dff7fc821bb35  24 events
-day   4  hash f1789deef38db013  16 events
-day   5  hash b5e80d55bf3d5ba9  26 events
-day   6  hash d0b7fd16d1b83ff7  25 events
-day   7  hash 3f7c2b2f425b9062  20 events
-day   8  hash 38ace25e70453228  12 events
+day   1  hash eeb89e17e8c2a3b4  73 events
+day   2  hash a10b0e14bbeffd9d  33 events
+day   3  hash 3ab29116c489a6e1  24 events
+day   4  hash 96347788a2ad19d5  16 events
+day   5  hash 2ea6b48bb6934d8b  26 events
+day   6  hash f14cba4e7471a135  25 events
+day   7  hash 559e841d74212596  20 events
+day   8  hash 2d48da05af15b6e6  12 events
 
 task_force:1 "Placeholder transport force 1" (Allied): Arrived at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; home port base:4
 ship:1 "Placeholder troop transport 1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 944 t of fuel, 0 t of supply

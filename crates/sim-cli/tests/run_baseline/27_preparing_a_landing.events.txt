@@ -2,18 +2,18 @@ Scenario 27: Preparing a landing
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 49c534befaa41a52  17 events
-day   2  hash a2b43a0e217c9cd0  13 events
-day   3  hash 3ba0852e83776da4  14 events
-day   4  hash 5ccba052f92e766d  12 events
-day   5  hash 4bf719a3e9218c56  12 events
-day   6  hash 178b4e9d6941fba5  18 events
-day   7  hash 3051cd93c2f79741  13 events
-day   8  hash b177a7bf003cc607  13 events
-day   9  hash 275c07b3a48c7b95  13 events
-day  10  hash e338d5dea3f784ce  13 events
-day  11  hash 30c6e41c62fda468  58 events
-day  12  hash 1f94d3efaa9b0bf2  19 events
+day   1  hash 461341117c68d76a  17 events
+day   2  hash 6ae2ff67f5602388  13 events
+day   3  hash 1ed81a48b5d5ec0c  14 events
+day   4  hash b32068e4ecc8ce59  12 events
+day   5  hash 61ac53f07158212e  12 events
+day   6  hash 51083b38be82cd49  18 events
+day   7  hash 89fc34eac2ddb6ed  13 events
+day   8  hash ebd43df5c8ee587f  13 events
+day   9  hash 684449a08a30200d  13 events
+day  10  hash ae483614fabfa8da  13 events
+day  11  hash bdd46d3cb306f242  58 events
+day  12  hash ad6064e0966914ee  19 events
 
 #1 D1 -         order:1 accepted for task_force:1  <- order:1
 #2 D1 -         order:2 accepted for task_force:3  <- order:2

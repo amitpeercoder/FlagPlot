@@ -2,10 +2,10 @@ Placeholder scenario 54: A force that stands by night
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash b88bc52cdf246bb4  40 events
-day   2  hash 33156aa27ac532c2  20 events
-day   3  hash dc2f49f42f7b5788  5 events
-day   4  hash 67978b8a928976c8  3 events
+day   1  hash 657a07b7e94262a8  40 events
+day   2  hash 80c12c216057c732  20 events
+day   3  hash 8c7b0c70164e2c72  5 events
+day   4  hash 16bd24709a567878  3 events
 
 task_force:1 "Placeholder cruiser force 1" (Allied): Arrived at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; home port base:1
 ship:1 "Placeholder cruiser 1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 800 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply
