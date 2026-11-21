@@ -193,3 +193,5 @@ id,key,name,nation,service,kind,parent
 6224,jp-kure-snlf-midway,"Kure Special Naval Landing Force element of the 2nd Combined SNLF (printed ""2 KURE SNLF"")",jp,ijn,formation,jp-2nd-combined-snlf
 6225,jp-11th-construction-unit-midway,11th Naval Construction Battalion (Midway plan),jp,ijn,construction,
 6226,jp-12th-construction-unit-midway,12th Naval Construction Battalion (Midway plan),jp,ijn,construction,
+14100,jp-forces-wake,"Japanese forces at Wake Island, 1942 (65th Guard Unit, army detachments, naval pioneers, air wing personnel)",jp,mixed,forces-at-place,
+14101,jp-65th-guard-unit-wake,"65th Guard Unit (65th Keibitai), Wake Island",jp,ijn,garrison,

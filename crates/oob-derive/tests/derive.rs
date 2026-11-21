@@ -3842,6 +3842,52 @@ fn the_rabaul_guadalcanal_list_still_derives_exactly_the_files_in_data_reference
     );
 }
 
+/// The class and aircraft files of a list with air figures, as generated,
+/// against the committed ones.
+fn assert_air_list_derives_the_files_in_data_reference(list: &str) {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+    let read = |path: &str| std::fs::read_to_string(root.join(path)).expect(path);
+    let (facts, unread) = oob_check::read_dir(&root.join("data/oob"));
+    assert!(unread.is_empty());
+    let outputs = derive(
+        &format!("{list}.toml"),
+        &read(&format!("data/derivation/{list}.toml")),
+        &read("data/derivation/rules.toml"),
+        &facts,
+    )
+    .unwrap_or_else(|p| panic!("{p:#?}"));
+    assert_eq!(
+        outputs.class_csv,
+        read(&format!("data/reference/ship_classes_{list}.csv"))
+    );
+    assert_eq!(
+        outputs.sources_csv,
+        read(&format!("data/reference/ship_classes_{list}.sources.csv"))
+    );
+    assert_eq!(
+        outputs.ships_csv,
+        read(&format!("data/reference/ship_classes_{list}.ships.csv"))
+    );
+    assert_eq!(
+        outputs.aircraft_csv.as_deref(),
+        Some(read(&format!("data/reference/aircraft_types_{list}.csv")).as_str())
+    );
+    assert_eq!(
+        outputs.aircraft_sources_csv.as_deref(),
+        Some(read(&format!("data/reference/aircraft_types_{list}.sources.csv")).as_str())
+    );
+}
+
+#[test]
+fn the_coral_sea_list_still_derives_exactly_the_files_in_data_reference() {
+    assert_air_list_derives_the_files_in_data_reference("coral_sea");
+}
+
+#[test]
+fn the_midway_list_still_derives_exactly_the_files_in_data_reference() {
+    assert_air_list_derives_the_files_in_data_reference("midway");
+}
+
 #[test]
 fn the_savo_island_list_still_derives_exactly_the_files_in_data_reference() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");

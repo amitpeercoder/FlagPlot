@@ -212,3 +212,16 @@ Made on Nov 21, 2026 on the data team's report, `docs/research/midway-stage-a.md
 
 71. **Rule 37's list is corrected:** new classes are Akagi, Kaga, Soryu, Hiryu, Sendai (Jintsu), Asashio (nine destroyers) and Mutsuki (Mikazuki), and Pensacola, which no list derives. New aircraft types are the F2A-3, the SB2U-3, the B-17E, the PBY-5 and the PBY-5A. The SBD-2, the F4F-3 and the Type 0 floatplane are derived already.
 72. **Class ids from 5000 and aircraft type ids from 5100,** pinned in `data/derivation/midway.toml`.
+
+## Stage A: rulings on the second pass
+
+Made on Nov 21, 2026 on the second pass of research and the derivation list (`data/derivation/midway.toml`, 37 classes from 5000, 13 aircraft types from 5100, 28 exceptions). The list is read and stands as written. These rulings amend rules 50 to 72 where the new rows or the tool require it.
+
+73. **The Japanese carriers' aircraft are restated on a better source** (air unit facts 14200 to 14216, grade B, a count of 27 May): each carrier's own 18 fighters with the 6th Air Group's beside them. Fighters are Akagi 24, Kaga 27, Soryu 21 and Hiryu 21; bombers 18, 18, 16 and 18; attack planes 18, 27, 18 and 18. Kaga's two spare bombers are not flown. Hiryu has no row in that source and keeps rule 50's rows, with the 6th's three fighters added as her sister's are. This replaces rule 50's figures.
+74. **Rule 51 is withdrawn: Soryu's bombers are 16.** Two sources now state 16 aboard, one of grade B. The 18 of the striking force's report is an inferred reading of an organization table, which may give the planned strength and not a count; a stated count outweighs it. The row stays, disputed.
+75. **Zuiho's group is 6 A5M4, 6 A6M2 and 12 B5N2** (14220 to 14222), the higher grade of source, as the list has it.
+76. **The PBY-5 is rated from her own rows** (aircraft type facts 12005, 12006 and 314), grade C, by exception. Rule 59 is withdrawn: an exception cannot read another type's row, and should not.
+77. **The PBY-5A waits for a rule of the tool.** The Navy's sheet is of 1943 and the tool reads no row dated after a list's date, rightly: a later fit must not leak back. Reading a later row for what did not change (an airframe's range) needs a way to say so, row by row, with its reason. That is decision 0200, a small change to the derivation, planned next. Until it is built the sixteen PBY-5As are not in the list, and the scenario is not built without them.
+78. **The six TBF-1s at Midway are left out,** with the B-26s of rule 60. Their torpedo can be read only by an exception that would change the Eastern Solomons' derived sources, and six aircraft are not worth that.
+79. **The transports' close screen fights no surface action** (surface weapons not modelled), with the carriers' screens. Of the night threat of rule 68, the Second Fleet's main body is modelled in full but for Yura and Mikazuki; the four cruisers of the Close Support Group are not, since no row names their torpedo in June 1942. The first game's report says what that took away.
+80. **Wake stays out of the scenario file.** The second pass found its air units by day but no garrison figure for June and nothing on its runway. The Japanese forces start at sea, as rule 29 has them; what they do for a port is the hand calculation's to say.
