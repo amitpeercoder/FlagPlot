@@ -8,8 +8,8 @@ use sim_core::ids::{AircraftTypeId, ShipClassId};
 use sim_core::refdata::{
     AirCombatFigures, AirSupplyFigures, AirUpkeepFigures, AircraftRole, AircraftType, AttackWeapon,
     BombardmentFigures, ClassSide, ClassSides, FatigueFigures, GroundFigures, HungerFigures,
-    PassingChances, PortSize, RefData, ReportError, ReportFigures, SearchFigures, ShipClass,
-    ShipKind, SurfaceCombatFigures, TrialFigures, TrialSize,
+    MendingFigures, PassingChances, PortSize, RefData, ReportError, ReportFigures, SearchFigures,
+    ShipClass, ShipKind, SurfaceCombatFigures, TrialFigures, TrialSize,
 };
 use sim_core::state::ShipSystem;
 
@@ -1028,6 +1028,10 @@ struct GroundFile {
     rations_landed_nights: Option<Quantity>,
     hungry_below_share: Option<Quantity>,
     hunger_nights_before_loss: Option<u32>,
+    /// Men who are slow to mend (decision 0208, 1): both or neither, and
+    /// only with the three above.
+    hunger_weakness_per_night: Option<Quantity>,
+    unfed_fighting_share: Option<Quantity>,
 }
 
 /// Loads the ground figures from a TOML file (decision 0066).
@@ -1176,11 +1180,33 @@ fn parse_ground_figures(text: &str, path: &Path) -> Result<GroundFigures, DataEr
             &file.hungry_below_share,
             file.hunger_nights_before_loss,
         ) {
-            (None, None, None) => None,
+            (None, None, None) => {
+                if file.hunger_weakness_per_night.is_some() || file.unfed_fighting_share.is_some()
+                {
+                    return Err(fail(
+                        "give hunger_weakness_per_night and unfed_fighting_share only with rations_landed_nights, hungry_below_share and hunger_nights_before_loss"
+                            .to_string(),
+                    ));
+                }
+                None
+            }
             (Some(rations), Some(below), Some(nights)) => Some(HungerFigures {
                 rations_landed_nights: number("rations_landed_nights", rations)?,
                 hungry_below_share: number("hungry_below_share", below)?,
                 hunger_nights_before_loss: nights,
+                mending: match (&file.hunger_weakness_per_night, &file.unfed_fighting_share) {
+                    (None, None) => None,
+                    (Some(weakness), Some(unfed)) => Some(MendingFigures {
+                        hunger_weakness_per_night: number("hunger_weakness_per_night", weakness)?,
+                        unfed_fighting_share: number("unfed_fighting_share", unfed)?,
+                    }),
+                    _ => {
+                        return Err(fail(
+                            "give hunger_weakness_per_night and unfed_fighting_share together, or neither of them"
+                                .to_string(),
+                        ))
+                    }
+                },
             }),
             _ => {
                 return Err(fail(
@@ -3144,6 +3170,70 @@ mod tests {
     }
 
     #[test]
+    fn the_mending_figures_are_both_or_neither_and_only_with_the_three() {
+        // Decision 0208, 1: both or neither, only with the three of 0205,
+        // each from 0 to 1 inclusive.
+        let with = |extra: &str| format!("{}{extra}\n", ground_text());
+        let three = "rations_landed_nights = 3\nhungry_below_share = \"0.6\"\nhunger_nights_before_loss = 14\n";
+        let set = parse_ground_figures(
+            &with(&format!(
+                "{three}hunger_weakness_per_night = \"0.01\"\nunfed_fighting_share = \"0.5\""
+            )),
+            here(),
+        )
+        .expect("parses");
+        assert_eq!(
+            set.hunger.and_then(|h| h.mending),
+            Some(MendingFigures {
+                hunger_weakness_per_night: Fixed::from_ratio(1, 100),
+                unfed_fighting_share: Fixed::from_ratio(1, 2),
+            })
+        );
+        let three_only = parse_ground_figures(&with(three), here()).expect("parses");
+        assert_eq!(three_only.hunger.and_then(|h| h.mending), None);
+        for (extra, says) in [
+            (
+                format!("{three}hunger_weakness_per_night = \"0.01\""),
+                "together, or neither",
+            ),
+            (
+                format!("{three}unfed_fighting_share = \"0.5\""),
+                "together, or neither",
+            ),
+            (
+                "hunger_weakness_per_night = \"0.01\"\nunfed_fighting_share = \"0.5\"".to_string(),
+                "only with",
+            ),
+            (
+                format!(
+                    "{three}hunger_weakness_per_night = \"-0.01\"\nunfed_fighting_share = \"0.5\""
+                ),
+                "hunger_weakness_per_night",
+            ),
+            (
+                format!(
+                    "{three}hunger_weakness_per_night = \"0.01\"\nunfed_fighting_share = \"1.5\""
+                ),
+                "unfed_fighting_share",
+            ),
+        ] {
+            let message = parse_ground_figures(&with(&extra), here())
+                .expect_err("refused")
+                .message;
+            assert!(message.contains(says), "{extra}: {message}");
+        }
+        for (weakness, unfed) in [("0", "0"), ("1", "1")] {
+            parse_ground_figures(
+                &with(&format!(
+                    "{three}hunger_weakness_per_night = {weakness}\nunfed_fighting_share = {unfed}"
+                )),
+                here(),
+            )
+            .expect("0 and 1 are taken");
+        }
+    }
+
+    #[test]
     fn the_hunger_figures_are_all_three_or_none_and_are_checked() {
         // Decision 0205, 1 and 9: a file that names none of them has no
         // hunger rule, so that no older file changes.
@@ -3158,6 +3248,7 @@ mod tests {
                 rations_landed_nights: Fixed::from_int(3),
                 hungry_below_share: Fixed::from_ratio(1, 2),
                 hunger_nights_before_loss: 14,
+                mending: None,
             })
         );
         for extra in [

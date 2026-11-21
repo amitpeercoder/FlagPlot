@@ -1832,6 +1832,9 @@ fn land_units_text(o: &mut Out, land: &LandUnitsPart) {
                 plural(u.hunger_nights, "night", "nights")
             ));
         }
+        if let Some(condition) = &u.condition {
+            s.push_str(&format!("; condition {}", condition.0));
+        }
         if let Some(men) = u.firing_men_now {
             s.push_str(&format!(
                 "; {} would fire today at its fatigue",
@@ -1988,6 +1991,7 @@ fn land_units_text(o: &mut Out, land: &LandUnitsPart) {
             ("contested", _) => "its hex was contested by the enemy's attack".to_string(),
             ("no_base", _) => "your side holds no base in its hex".to_string(),
             ("not_fed", _) => "it was not fed".to_string(),
+            ("mending", _) => "its men are still mending from hunger".to_string(),
             ("men_aboard", _) => "some of its men are still aboard".to_string(),
             ("at_ceiling", _) => format!(
                 "its experience is at the level training stops at ({})",

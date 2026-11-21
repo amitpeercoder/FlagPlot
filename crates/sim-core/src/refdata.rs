@@ -1635,6 +1635,21 @@ pub struct HungerFigures {
     /// Men are lost to hunger only from a unit whose nights of hunger are
     /// above this (decision 0205, 8).
     pub hunger_nights_before_loss: u32,
+    /// The two figures of men who are slow to mend (decision 0208, 1),
+    /// given both or neither, and only with the three above. Without them a
+    /// unit fights and works by its fed share alone, as before.
+    pub mending: Option<MendingFigures>,
+}
+
+/// The two figures of decision 0208 (rule 1), each from 0 to 1.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct MendingFigures {
+    /// What a unit's condition loses for each night of hunger (decision
+    /// 0208, 3).
+    pub hunger_weakness_per_night: Fixed,
+    /// A unit's share from last night's meal where it was fed nothing
+    /// (decision 0208, 4).
+    pub unfed_fighting_share: Fixed,
 }
 
 /// The least and the most a ground report can be, as a share of the truth
@@ -2005,6 +2020,20 @@ impl GroundFigures {
                     "ground hungry_below_share {} is not between 0 and 1",
                     hunger.hungry_below_share
                 ));
+            }
+            // Men who are slow to mend (decision 0208, 1).
+            if let Some(mending) = hunger.mending {
+                for (name, value) in [
+                    (
+                        "hunger_weakness_per_night",
+                        mending.hunger_weakness_per_night,
+                    ),
+                    ("unfed_fighting_share", mending.unfed_fighting_share),
+                ] {
+                    if value.is_negative() || value > Fixed::ONE {
+                        return Some(format!("ground {name} {value} is not between 0 and 1"));
+                    }
+                }
             }
         }
         None

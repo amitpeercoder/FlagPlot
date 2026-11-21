@@ -1,6 +1,7 @@
 # THE GROUND FIGURES THE TABLE PLAYS (decision 0205, 2 and 3): a copy of
 # data/reference/ground.toml with the three figures of hunger that takes time
-# added at the end, and nothing else changed. The live ground.toml does not
+# and the two of men who are slow to mend (decision 0208, 2) added at the end,
+# and nothing else changed. The live ground.toml does not
 # gain them, since its bytes are in the saves of recorded games; the table's
 # copies of its scenarios (data/scenarios/table-hunger, made by
 # scripts/table-copies/make_copies.py) name this file instead. Keep every other
@@ -258,11 +259,30 @@ cover_wear_per_hit = "0.2"
 # landing (data/oob land_unit_facts 538), decision 0205.
 rations_landed_nights = 3
 # A night whose fed share is below this is a night of hunger. PLACEHOLDER: a
-# judgement: half rations weakened men (31); two meals of three are above it
-# and cost no loss (403 to 406), decision 0205.
-hungry_below_share = "0.5"
+# judgement: half rations weakened men (31, and 14907); two meals of three are
+# above it and cost no loss (403 to 406), decision 0205. 0.6 from 0.5 by
+# decision 0208, so that a night on exactly half a ration is a night of hunger;
+# scenario 119's own file and the frozen counterpart keep 0.5.
+hungry_below_share = "0.6"
 # Men are lost to hunger only from a unit whose nights of hunger are above
 # this. PLACEHOLDER: a judgement between two rows: no loss in six weeks on two
 # meals; "many" dead about three weeks after a force with three days' rations
 # broke (188), decision 0205.
 hunger_nights_before_loss = 14
+
+# Hungry men are slow to mend (decision 0208): the two figures, given both or
+# neither, and only with the three above. With them a unit's condition falls
+# with each night on its count of hunger, and last night's meal counts for
+# part of its fire and work.
+#
+# What a unit's condition loses for each night of hunger. PLACEHOLDER: a
+# judgement from two cases on about half a ration, a little below 45 percent
+# after about 68 days on Bataan (land_unit_facts 14912; 0.0081 a night, mixed
+# with disease) and 44.3 percent at 84 days in the Minnesota experiment (14977;
+# 0.0066 a night), set a little above both, decision 0208.
+hunger_weakness_per_night = "0.01"
+# A unit's share from last night's meal where it was fed nothing. PLACEHOLDER:
+# rests on no source. The record has men very weak after days on little (14954,
+# 14955, 14959) and gives no share; it also stands, roughly, for the want of
+# ammunition ashore, which nothing models, decision 0208.
+unfed_fighting_share = "0.5"

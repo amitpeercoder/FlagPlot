@@ -1,5 +1,6 @@
 use std::collections::BTreeMap;
 
+use crate::condition::{unit_fighting_share, FightingShare};
 use crate::damage::roll_shots;
 use crate::events::{Breakdown, Cause, EventKind, Factor};
 use crate::fixed::Fixed;
@@ -14,13 +15,14 @@ use crate::world::World;
 
 use super::{at, other, FightOutcome, HexUnits};
 
-/// A unit's firing men (decision 6): its men ashore, times its fed share,
-/// times 100 less its fatigue over 100, cut to a whole man. Returns the
-/// firing men and the fatigue factor.
-pub(crate) fn firing_men(men_ashore: u32, fed_share: Fixed, fatigue: Fixed) -> (u32, Fixed) {
+/// A unit's firing men (decision 6, and decision 0208, 6): its men ashore,
+/// times its fighting share (its fed share where the figures of 0208 are not
+/// given), times 100 less its fatigue over 100, cut once to a whole man.
+/// Returns the firing men and the fatigue factor.
+pub(crate) fn firing_men(men_ashore: u32, fighting_share: Fixed, fatigue: Fixed) -> (u32, Fixed) {
     let hundred = Fixed::from_int(100);
     let fatigue_factor = (hundred - fatigue) / hundred;
-    let firing = (Fixed::from_int(i64::from(men_ashore)) * fed_share)
+    let firing = (Fixed::from_int(i64::from(men_ashore)) * fighting_share)
         .mul_div(hundred - fatigue, hundred)
         .trunc()
         .max(0);
@@ -93,7 +95,7 @@ pub(crate) fn engaged_shots(shots: Fixed, side_firing: u32, engaged: Fixed) -> F
 struct PlannedFire {
     unit: LandUnitId,
     men_ashore: u32,
-    fed_share: Fixed,
+    fighting: FightingShare,
     fatigue_factor: Fixed,
     firing: u32,
     shots_before_limit: Fixed,
@@ -192,9 +194,9 @@ impl World {
                 if unit.working {
                     continue;
                 }
-                let (men_ashore, fed_share, fatigue, posture, experience, skills) = (
+                let (men_ashore, fighting, fatigue, posture, experience, skills) = (
                     unit.men_ashore,
-                    unit.fed_share,
+                    unit_fighting_share(unit, figures),
                     unit.fatigue,
                     unit.posture,
                     unit.experience,
@@ -215,7 +217,7 @@ impl World {
                     experience,
                     holding_factor * defences_factor,
                 );
-                let (firing, fatigue_factor) = firing_men(men_ashore, fed_share, fatigue);
+                let (firing, fatigue_factor) = firing_men(men_ashore, fighting.share, fatigue);
                 // Its shots, times its weight factor (decision 2 of 0098).
                 let weight_factor = Skills::factor(skills.weight, figures.weight_strength);
                 let shots =
@@ -223,7 +225,7 @@ impl World {
                 planned[at(side)].push(PlannedFire {
                     unit: unit_id,
                     men_ashore,
-                    fed_share,
+                    fighting,
                     fatigue_factor,
                     firing,
                     shots_before_limit: shots,
@@ -274,7 +276,7 @@ impl World {
                 let PlannedFire {
                     unit: unit_id,
                     men_ashore,
-                    fed_share,
+                    fighting,
                     fatigue_factor,
                     firing,
                     shots_before_limit,
@@ -300,15 +302,15 @@ impl World {
                 let unit_hits = roll_shots(&mut stream, shots, chance);
                 hits[at(side)] += unit_hits;
                 let breakdown = self.config.record_breakdowns.then(|| {
-                    let mut factors = vec![
-                        Factor {
-                            name: "men_ashore",
-                            value: Fixed::from_int(i64::from(men_ashore)),
-                        },
-                        Factor {
-                            name: "fed_share",
-                            value: fed_share,
-                        },
+                    // The fed share, and where the figures of 0208 are
+                    // given the nights of hunger, the condition and the
+                    // fighting share (decision 0208, 15).
+                    let mut factors = vec![Factor {
+                        name: "men_ashore",
+                        value: Fixed::from_int(i64::from(men_ashore)),
+                    }];
+                    factors.extend(fighting.factors());
+                    factors.extend([
                         Factor {
                             name: "fatigue_factor",
                             value: fatigue_factor,
@@ -321,7 +323,7 @@ impl World {
                             name: "men_per_shot",
                             value: figures.men_per_shot,
                         },
-                    ];
+                    ]);
                     // Each skill only where it acts, so a breakdown of a
                     // standard unit is as it was (decision 0098).
                     if weight_factor != Fixed::ONE {

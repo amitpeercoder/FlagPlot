@@ -1249,7 +1249,7 @@
               "land_unit": { "$ref": "defs.schema.json#/$defs/handle" },
               "activity": { "enum": ["work", "training", "rehearsal"] },
               "place": { "$ref": "defs.schema.json#/$defs/place" },
-              "reason": { "enum": ["marched", "contested", "no_base", "not_fed", "men_aboard", "at_ceiling", "rehearsal_full", "force_not_ready"] },
+              "reason": { "enum": ["marched", "contested", "no_base", "not_fed", "men_aboard", "mending", "at_ceiling", "rehearsal_full", "force_not_ready"] },
               "by": { "description": "For contested: whose attack.", "enum": ["own_attack", "enemy_attack"] },
               "up_to": { "description": "For at_ceiling: the experience training stops at.", "type": "integer" },
               "event": { "description": "The side's number of the event that shows the reason (the march, the fight or the feeding), where one does.", "type": "integer" }

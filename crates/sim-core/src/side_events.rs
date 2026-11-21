@@ -1442,6 +1442,11 @@ fn own_factors(kind: &SideEventKind) -> &'static [&'static str] {
         SideEventKind::GroundFire { .. } => &[
             "men_ashore",
             "fed_share",
+            // Its own unit's nights of hunger, condition and fighting share,
+            // where the figures of 0208 are given (decision 0208, 15).
+            "hunger_nights",
+            "condition",
+            "fighting_share",
             "fatigue_factor",
             "firing_men",
             "men_per_shot",
@@ -5398,6 +5403,55 @@ mod tests {
                 result: Some(fx(1)),
             })
         );
+    }
+
+    #[test]
+    fn a_ground_fire_cut_keeps_the_units_condition_and_fighting_share() {
+        // Decision 0208, 15: a side sees its own unit's nights of hunger,
+        // condition and fighting share; the enemy is given nothing of it.
+        let factor = |name, value| Factor { name, value };
+        let mut events = log(vec![EventKind::GroundFire {
+            unit: unit(1),
+            hex: hex(),
+            firing_men: 470,
+            shots: Fixed::from_ratio(47, 10),
+            chance: Fixed::from_ratio(3, 10),
+            hits: 1,
+        }]);
+        events[0].breakdown = Some(Breakdown {
+            factors: vec![
+                factor("men_ashore", fx(1000)),
+                factor("fed_share", fx(0)),
+                factor("hunger_nights", fx(6)),
+                factor("condition", Fixed::from_ratio(94, 100)),
+                factor("fighting_share", Fixed::from_ratio(47, 100)),
+                factor("fatigue_factor", fx(1)),
+                factor("firing_men", fx(470)),
+                factor("men_per_shot", fx(100)),
+                factor("shots", Fixed::from_ratio(47, 10)),
+                factor("side_chance", Fixed::from_ratio(3, 10)),
+                factor("chance", Fixed::from_ratio(3, 10)),
+            ],
+            result: Fixed::from_ratio(141, 100),
+        });
+        let shown = project(Side::Allied, &events, &owners(false));
+        let breakdown = shown[0].breakdown.as_ref().expect("a breakdown");
+        let names: Vec<&str> = breakdown.factors.iter().map(|f| f.name).collect();
+        assert_eq!(
+            names,
+            vec![
+                "men_ashore",
+                "fed_share",
+                "hunger_nights",
+                "condition",
+                "fighting_share",
+                "fatigue_factor",
+                "firing_men",
+                "men_per_shot",
+                "shots",
+            ]
+        );
+        assert!(project(Side::Japanese, &events, &owners(false)).is_empty());
     }
 
     #[test]

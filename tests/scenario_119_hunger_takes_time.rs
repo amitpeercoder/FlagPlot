@@ -1025,6 +1025,7 @@ fn ground_line(text: &str) -> Option<String> {
 /// none of the figures files in `data/reference` (live or frozen) has them but
 /// scenario 119's.
 #[test]
+#[ignore = "decision 0208: scenario 122's own folder and ground file give the figures of hunger too; property_no_game_on_file_moves_as_built allows them"]
 fn property_no_game_on_file_moves() {
     let mut files = Vec::new();
     tomls_under(&scenarios_dir(), &mut files);
@@ -1064,6 +1065,72 @@ fn property_no_game_on_file_moves() {
                 continue;
             }
             if name == "ground_placeholder_scenario_119.toml" || name == "ground_hunger.toml" {
+                continue;
+            }
+            let figures = sim_data::load_ground_figures(&path).expect("a ground file loads");
+            assert!(
+                figures.hunger.is_none(),
+                "{} gives the figures",
+                path.display()
+            );
+        }
+    }
+    // Scenario 119's own file has all three.
+    let own = sim_data::load_ground_figures(
+        &common::data_dir().join("reference/ground_placeholder_scenario_119.toml"),
+    )
+    .unwrap();
+    assert!(own.hunger.is_some());
+}
+
+/// The same, as built with decision 0208: scenario 122's own folder and its
+/// ground file, live and frozen, give the figures of hunger as scenario
+/// 119's do.
+#[test]
+fn property_no_game_on_file_moves_as_built() {
+    let mut files = Vec::new();
+    tomls_under(&scenarios_dir(), &mut files);
+    let mut named = 0;
+    for file in &files {
+        let rel = file
+            .strip_prefix(scenarios_dir())
+            .unwrap()
+            .to_string_lossy()
+            .into_owned();
+        let own = rel.starts_with("hunger-takes-time/")
+            || rel.starts_with("hungry-men-are-slow-to-mend/")
+            || rel.starts_with("table-hunger/");
+        let text = std::fs::read_to_string(file).expect("the scenario reads");
+        let Some(ground) = ground_line(&text) else {
+            continue;
+        };
+        let ground_path = file.parent().unwrap().join(&ground);
+        let figures = sim_data::load_ground_figures(&ground_path)
+            .unwrap_or_else(|e| panic!("{rel} names {ground}: {}", e.message));
+        named += 1;
+        if !own {
+            assert!(
+                figures.hunger.is_none(),
+                "{rel} names {ground}, which gives the figures of hunger"
+            );
+        }
+    }
+    assert!(named > 50, "{named} scenarios name a ground file");
+    // The figures files themselves.
+    for dir in [
+        common::data_dir().join("reference"),
+        common::data_dir().join("reference/step1"),
+    ] {
+        for entry in std::fs::read_dir(&dir).expect("the folder reads") {
+            let path = entry.expect("an entry reads").path();
+            let name = path.file_name().unwrap().to_string_lossy().into_owned();
+            if !(name.starts_with("ground") && name.ends_with(".toml")) {
+                continue;
+            }
+            if name == "ground_placeholder_scenario_119.toml"
+                || name == "ground_placeholder_scenario_122.toml"
+                || name == "ground_hunger.toml"
+            {
                 continue;
             }
             let figures = sim_data::load_ground_figures(&path).expect("a ground file loads");

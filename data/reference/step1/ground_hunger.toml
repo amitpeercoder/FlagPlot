@@ -214,3 +214,20 @@ hungry_below_share = "0.5"
 # meals; "many" dead about three weeks after a force with three days' rations
 # broke (188), decision 0205.
 hunger_nights_before_loss = 14
+
+# Hungry men are slow to mend (decision 0208): the two figures, given both or
+# neither, and only with the three above. With them a unit's condition falls
+# with each night on its count of hunger, and last night's meal counts for
+# part of its fire and work.
+#
+# What a unit's condition loses for each night of hunger. PLACEHOLDER: a
+# judgement from two cases on about half a ration, a little below 45 percent
+# after about 68 days on Bataan (land_unit_facts 14912; 0.0081 a night, mixed
+# with disease) and 44.3 percent at 84 days in the Minnesota experiment (14977;
+# 0.0066 a night), set a little above both, decision 0208.
+hunger_weakness_per_night = "0.01"
+# A unit's share from last night's meal where it was fed nothing. PLACEHOLDER:
+# rests on no source. The record has men very weak after days on little (14954,
+# 14955, 14959) and gives no share; it also stands, roughly, for the want of
+# ammunition ashore, which nothing models, decision 0208.
+unfed_fighting_share = "0.5"
