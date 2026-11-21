@@ -1,9 +1,9 @@
 //! Fuelling at sea as the staff reads it (decision 0201, rules 19 to 21).
 //!
-//! **The warning (19).** Each morning every force of the side with a ship
-//! afloat and no home port, one of whose ships holds less than a quarter of
-//! her class's fuel capacity, is named in the staff's report: a reason that
-//! serves no intent and gives no order.
+//! **The warning (19).** Each morning every force of the side that an intent
+//! in force names (its task's force, or in its forces limit), with a ship afloat and no home port, one of whose
+//! ships holds less than a quarter of her class's fuel capacity, is named in
+//! the staff's report: a reason that serves no intent and gives no order.
 //!
 //! **An oiler's force is a place to fuel (20).** The carrier and stand
 //! doctrines ask [`oiler_for`] where they would send a force home for fuel,
@@ -13,7 +13,7 @@
 //! hold cargo fuel. While the order stands the staff gives the force no
 //! route ([`fuelling_from`]). The staff places no oiler (21).
 
-use sim_core::command::{Reason, Serves};
+use sim_core::command::Reason;
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
 use sim_core::ids::{ShipId, TaskForceId};
@@ -49,50 +49,27 @@ pub(crate) fn below_words(below: &[(ShipId, Fixed, Fixed)]) -> String {
         .join(", ")
 }
 
-/// Whether `force` has a home port the side holds.
-fn has_home_port(view: &SideView<'_>, force: &TaskForce) -> bool {
-    force
-        .home_port
-        .is_some_and(|port| view.bases().any(|base| base.id == port))
-}
-
-/// The warning of rule 19, for every force of the side in force order.
-pub(crate) fn warnings(view: &SideView<'_>) -> Vec<Reason> {
-    let mut forces: Vec<&TaskForce> = view
-        .task_forces()
-        .filter(|force| !force.ships.is_empty() && !has_home_port(view, force))
-        .collect();
-    forces.sort_by_key(|force| force.id);
-    forces
-        .into_iter()
-        .filter_map(|force| {
-            let below = below_a_quarter(view, force.id);
-            if below.is_empty() {
-                return None;
-            }
-            let id = force.id;
-            let ships = below_words(&below);
-            let here = force.position();
-            Some(Reason {
-                serves: Serves::default(),
-                evidence: vec![sim_core::command::Evidence {
-                    what: format!("{id} has no home port, and {ships}"),
-                    day: view.day() + 1,
-                }],
-                binding: vec![
-                    "a ship of a force with no home port below a quarter of her capacity"
-                        .to_string(),
-                ],
-                worked: format!(
-                    "{id}, at {here}, has no home port, and {ships}: below a quarter of capacity. Its fuel is weighed against no passage home."
-                ),
-                would_change: vec![
-                    "a home port set".to_string(),
-                    "the ship fuelled".to_string(),
-                ],
-            })
-        })
-        .collect()
+/// The warning of rule 19: `force`, with no home port, has ships below a
+/// quarter of capacity, and no oiler's force holds cargo fuel for it. A
+/// reason of the doctrine that serves the force's task, and gives no order.
+pub(crate) fn warning(
+    builder: crate::reasons::ReasonBuilder,
+    force: &TaskForce,
+    below: &[(ShipId, Fixed, Fixed)],
+    intent_words: &str,
+    today: u32,
+) -> Reason {
+    let id = force.id;
+    let here = force.position();
+    let ships = below_words(below);
+    builder
+        .evidence(format!("{id} has no home port, and {ships}"), today)
+        .binding("a ship of a force with no home port below a quarter of her capacity")
+        .worked(format!(
+            "{intent_words}: {id}, at {here}, has no home port, and {ships}: below a quarter of capacity, with no oiler's force holding cargo fuel to send it to."
+        ))
+        .would_change("a home port set, an oiler's force with cargo fuel, or the ship fuelled")
+        .done()
 }
 
 /// The ships of `force` afloat with the mark, in ship order.

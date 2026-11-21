@@ -373,87 +373,87 @@
   "hashes": [
     {
       "day": 1,
-      "hash": "b91f0f76ab5def9d"
+      "hash": "d9b73a0ebaf05bb5"
     },
     {
       "day": 2,
-      "hash": "5c85e6a1a70c4bcc"
+      "hash": "30660db3c487054b"
     },
     {
       "day": 3,
-      "hash": "da0a4b0291e76c66"
+      "hash": "e62f12563c9d63f4"
     },
     {
       "day": 4,
-      "hash": "d2a9b34322dd3f80"
+      "hash": "d6ae4b477b7b9c9f"
     },
     {
       "day": 5,
-      "hash": "e2b1e0ac035277ba"
+      "hash": "b3391eedfc408088"
     },
     {
       "day": 6,
-      "hash": "534d600cddef10a8"
+      "hash": "f0185ee91d5e553d"
     },
     {
       "day": 7,
-      "hash": "fd124568028fe3ef"
+      "hash": "f91facb6f775550f"
     },
     {
       "day": 8,
-      "hash": "66dfdb29d9c269e2"
+      "hash": "a877b9e45546f8dd"
     },
     {
       "day": 9,
-      "hash": "55dda7fddd97934a"
+      "hash": "f83bc424233202a9"
     },
     {
       "day": 10,
-      "hash": "284b00810ab1e121"
+      "hash": "4b9f1b7b0b1cc318"
     },
     {
       "day": 11,
-      "hash": "b1e142786ba30657"
+      "hash": "c3297f6a7988b165"
     },
     {
       "day": 12,
-      "hash": "daed1414a7c6ba39"
+      "hash": "dbe6522e88ffda82"
     },
     {
       "day": 13,
-      "hash": "c60ad718841aadbb"
+      "hash": "27e8138f2ba43305"
     },
     {
       "day": 14,
-      "hash": "1e4ad7e237cbceed"
+      "hash": "a2aa9b34a0ab76cc"
     },
     {
       "day": 15,
-      "hash": "11eee154306954c5"
+      "hash": "bc4124fe72de368c"
     },
     {
       "day": 16,
-      "hash": "b3a2fd41a87c5f3a"
+      "hash": "18819a669086e532"
     },
     {
       "day": 17,
-      "hash": "90575e0ef2d58fa3"
+      "hash": "8a4c6929be6890de"
     },
     {
       "day": 18,
-      "hash": "1c40ac426cbcbca9"
+      "hash": "f206966638232423"
     },
     {
       "day": 19,
-      "hash": "6a513cb3782584ed"
+      "hash": "8a6a1d51ad55729d"
     },
     {
       "day": 20,
-      "hash": "6c1f5d0f43f30fca"
+      "hash": "bea94c481004f3ed"
     },
     {
       "day": 21,
-      "hash": "51234aa12d8e82f8"
+      "hash": "1f800ea23be347a3"
     }
   ],
   "orders": [
@@ -987,384 +987,6 @@
   },
   "seed": 1,
   "staff": [
-    {
-      "day": 1,
-      "decisions": {
-        "commands": [],
-        "no_orders": [
-          {
-            "binding": [
-              "a ship of a force with no home port below a quarter of her capacity"
-            ],
-            "evidence": [
-              {
-                "day": 1,
-                "what": "task_force:9 has no home port, and ship:45 holds 5 t of 500"
-              }
-            ],
-            "serves": {},
-            "worked": "task_force:9, at (4,12), has no home port, and ship:45 holds 5 t of 500: below a quarter of capacity. Its fuel is weighed against no passage home.",
-            "would_change": [
-              "a home port set",
-              "the ship fuelled"
-            ]
-          }
-        ],
-        "orders": []
-      },
-      "side": "allied"
-    },
-    {
-      "day": 2,
-      "decisions": {
-        "commands": [],
-        "no_orders": [
-          {
-            "binding": [
-              "a ship of a force with no home port below a quarter of her capacity"
-            ],
-            "evidence": [
-              {
-                "day": 2,
-                "what": "task_force:9 has no home port, and ship:45 holds 5 t of 500"
-              }
-            ],
-            "serves": {},
-            "worked": "task_force:9, at (4,12), has no home port, and ship:45 holds 5 t of 500: below a quarter of capacity. Its fuel is weighed against no passage home.",
-            "would_change": [
-              "a home port set",
-              "the ship fuelled"
-            ]
-          }
-        ],
-        "orders": []
-      },
-      "side": "allied"
-    },
-    {
-      "day": 3,
-      "decisions": {
-        "commands": [],
-        "no_orders": [
-          {
-            "binding": [
-              "a ship of a force with no home port below a quarter of her capacity"
-            ],
-            "evidence": [
-              {
-                "day": 3,
-                "what": "task_force:9 has no home port, and ship:45 holds 5 t of 500"
-              }
-            ],
-            "serves": {},
-            "worked": "task_force:9, at (4,12), has no home port, and ship:45 holds 5 t of 500: below a quarter of capacity. Its fuel is weighed against no passage home.",
-            "would_change": [
-              "a home port set",
-              "the ship fuelled"
-            ]
-          }
-        ],
-        "orders": []
-      },
-      "side": "allied"
-    },
-    {
-      "day": 4,
-      "decisions": {
-        "commands": [],
-        "no_orders": [
-          {
-            "binding": [
-              "a ship of a force with no home port below a quarter of her capacity"
-            ],
-            "evidence": [
-              {
-                "day": 4,
-                "what": "task_force:9 has no home port, and ship:45 holds 5 t of 500"
-              }
-            ],
-            "serves": {},
-            "worked": "task_force:9, at (4,12), has no home port, and ship:45 holds 5 t of 500: below a quarter of capacity. Its fuel is weighed against no passage home.",
-            "would_change": [
-              "a home port set",
-              "the ship fuelled"
-            ]
-          }
-        ],
-        "orders": []
-      },
-      "side": "allied"
-    },
-    {
-      "day": 5,
-      "decisions": {
-        "commands": [],
-        "no_orders": [
-          {
-            "binding": [
-              "a ship of a force with no home port below a quarter of her capacity"
-            ],
-            "evidence": [
-              {
-                "day": 5,
-                "what": "task_force:9 has no home port, and ship:45 holds 5 t of 500"
-              }
-            ],
-            "serves": {},
-            "worked": "task_force:9, at (4,12), has no home port, and ship:45 holds 5 t of 500: below a quarter of capacity. Its fuel is weighed against no passage home.",
-            "would_change": [
-              "a home port set",
-              "the ship fuelled"
-            ]
-          }
-        ],
-        "orders": []
-      },
-      "side": "allied"
-    },
-    {
-      "day": 6,
-      "decisions": {
-        "commands": [],
-        "no_orders": [
-          {
-            "binding": [
-              "a ship of a force with no home port below a quarter of her capacity"
-            ],
-            "evidence": [
-              {
-                "day": 6,
-                "what": "task_force:9 has no home port, and ship:45 holds 5 t of 500"
-              }
-            ],
-            "serves": {},
-            "worked": "task_force:9, at (4,12), has no home port, and ship:45 holds 5 t of 500: below a quarter of capacity. Its fuel is weighed against no passage home.",
-            "would_change": [
-              "a home port set",
-              "the ship fuelled"
-            ]
-          }
-        ],
-        "orders": []
-      },
-      "side": "allied"
-    },
-    {
-      "day": 7,
-      "decisions": {
-        "commands": [],
-        "no_orders": [
-          {
-            "binding": [
-              "a ship of a force with no home port below a quarter of her capacity"
-            ],
-            "evidence": [
-              {
-                "day": 7,
-                "what": "task_force:9 has no home port, and ship:45 holds 5 t of 500"
-              }
-            ],
-            "serves": {},
-            "worked": "task_force:9, at (4,12), has no home port, and ship:45 holds 5 t of 500: below a quarter of capacity. Its fuel is weighed against no passage home.",
-            "would_change": [
-              "a home port set",
-              "the ship fuelled"
-            ]
-          }
-        ],
-        "orders": []
-      },
-      "side": "allied"
-    },
-    {
-      "day": 8,
-      "decisions": {
-        "commands": [],
-        "no_orders": [
-          {
-            "binding": [
-              "a ship of a force with no home port below a quarter of her capacity"
-            ],
-            "evidence": [
-              {
-                "day": 8,
-                "what": "task_force:9 has no home port, and ship:45 holds 5 t of 500"
-              }
-            ],
-            "serves": {},
-            "worked": "task_force:9, at (4,12), has no home port, and ship:45 holds 5 t of 500: below a quarter of capacity. Its fuel is weighed against no passage home.",
-            "would_change": [
-              "a home port set",
-              "the ship fuelled"
-            ]
-          }
-        ],
-        "orders": []
-      },
-      "side": "allied"
-    },
-    {
-      "day": 9,
-      "decisions": {
-        "commands": [],
-        "no_orders": [
-          {
-            "binding": [
-              "a ship of a force with no home port below a quarter of her capacity"
-            ],
-            "evidence": [
-              {
-                "day": 9,
-                "what": "task_force:9 has no home port, and ship:45 holds 5 t of 500"
-              }
-            ],
-            "serves": {},
-            "worked": "task_force:9, at (4,12), has no home port, and ship:45 holds 5 t of 500: below a quarter of capacity. Its fuel is weighed against no passage home.",
-            "would_change": [
-              "a home port set",
-              "the ship fuelled"
-            ]
-          }
-        ],
-        "orders": []
-      },
-      "side": "allied"
-    },
-    {
-      "day": 10,
-      "decisions": {
-        "commands": [],
-        "no_orders": [
-          {
-            "binding": [
-              "a ship of a force with no home port below a quarter of her capacity"
-            ],
-            "evidence": [
-              {
-                "day": 10,
-                "what": "task_force:9 has no home port, and ship:45 holds 5 t of 500"
-              }
-            ],
-            "serves": {},
-            "worked": "task_force:9, at (4,12), has no home port, and ship:45 holds 5 t of 500: below a quarter of capacity. Its fuel is weighed against no passage home.",
-            "would_change": [
-              "a home port set",
-              "the ship fuelled"
-            ]
-          }
-        ],
-        "orders": []
-      },
-      "side": "allied"
-    },
-    {
-      "day": 11,
-      "decisions": {
-        "commands": [],
-        "no_orders": [
-          {
-            "binding": [
-              "a ship of a force with no home port below a quarter of her capacity"
-            ],
-            "evidence": [
-              {
-                "day": 11,
-                "what": "task_force:9 has no home port, and ship:45 holds 5 t of 500"
-              }
-            ],
-            "serves": {},
-            "worked": "task_force:9, at (4,12), has no home port, and ship:45 holds 5 t of 500: below a quarter of capacity. Its fuel is weighed against no passage home.",
-            "would_change": [
-              "a home port set",
-              "the ship fuelled"
-            ]
-          }
-        ],
-        "orders": []
-      },
-      "side": "allied"
-    },
-    {
-      "day": 12,
-      "decisions": {
-        "commands": [],
-        "no_orders": [
-          {
-            "binding": [
-              "a ship of a force with no home port below a quarter of her capacity"
-            ],
-            "evidence": [
-              {
-                "day": 12,
-                "what": "task_force:9 has no home port, and ship:45 holds 5 t of 500"
-              }
-            ],
-            "serves": {},
-            "worked": "task_force:9, at (4,12), has no home port, and ship:45 holds 5 t of 500: below a quarter of capacity. Its fuel is weighed against no passage home.",
-            "would_change": [
-              "a home port set",
-              "the ship fuelled"
-            ]
-          }
-        ],
-        "orders": []
-      },
-      "side": "allied"
-    },
-    {
-      "day": 13,
-      "decisions": {
-        "commands": [],
-        "no_orders": [
-          {
-            "binding": [
-              "a ship of a force with no home port below a quarter of her capacity"
-            ],
-            "evidence": [
-              {
-                "day": 13,
-                "what": "task_force:9 has no home port, and ship:45 holds 5 t of 500"
-              }
-            ],
-            "serves": {},
-            "worked": "task_force:9, at (4,12), has no home port, and ship:45 holds 5 t of 500: below a quarter of capacity. Its fuel is weighed against no passage home.",
-            "would_change": [
-              "a home port set",
-              "the ship fuelled"
-            ]
-          }
-        ],
-        "orders": []
-      },
-      "side": "allied"
-    },
-    {
-      "day": 14,
-      "decisions": {
-        "commands": [],
-        "no_orders": [
-          {
-            "binding": [
-              "a ship of a force with no home port below a quarter of her capacity"
-            ],
-            "evidence": [
-              {
-                "day": 14,
-                "what": "task_force:9 has no home port, and ship:45 holds 5 t of 500"
-              }
-            ],
-            "serves": {},
-            "worked": "task_force:9, at (4,12), has no home port, and ship:45 holds 5 t of 500: below a quarter of capacity. Its fuel is weighed against no passage home.",
-            "would_change": [
-              "a home port set",
-              "the ship fuelled"
-            ]
-          }
-        ],
-        "orders": []
-      },
-      "side": "allied"
-    },
     {
       "day": 15,
       "decisions": {
@@ -1991,23 +1613,6 @@
             "worked": "intent:5, operating the carrier force task_force:1 from (4,-3): task_force:1 has no home port the staff knows, so its fuel is not measured against a passage home. task_force:1 does not close: the side holds no contact of ships 3 pulses old or less.",
             "would_change": [
               "a home port set"
-            ]
-          },
-          {
-            "binding": [
-              "a ship of a force with no home port below a quarter of her capacity"
-            ],
-            "evidence": [
-              {
-                "day": 15,
-                "what": "task_force:9 has no home port, and ship:45 holds 5 t of 500"
-              }
-            ],
-            "serves": {},
-            "worked": "task_force:9, at (4,12), has no home port, and ship:45 holds 5 t of 500: below a quarter of capacity. Its fuel is weighed against no passage home.",
-            "would_change": [
-              "a home port set",
-              "the ship fuelled"
             ]
           }
         ],
@@ -5752,23 +5357,6 @@
             "would_change": [
               "a home port set"
             ]
-          },
-          {
-            "binding": [
-              "a ship of a force with no home port below a quarter of her capacity"
-            ],
-            "evidence": [
-              {
-                "day": 16,
-                "what": "task_force:9 has no home port, and ship:45 holds 5 t of 500"
-              }
-            ],
-            "serves": {},
-            "worked": "task_force:9, at (4,12), has no home port, and ship:45 holds 5 t of 500: below a quarter of capacity. Its fuel is weighed against no passage home.",
-            "would_change": [
-              "a home port set",
-              "the ship fuelled"
-            ]
           }
         ],
         "orders": [
@@ -7412,23 +7000,6 @@
             "would_change": [
               "a group whose fatigue or standing orders differ from what the doctrine wants"
             ]
-          },
-          {
-            "binding": [
-              "a ship of a force with no home port below a quarter of her capacity"
-            ],
-            "evidence": [
-              {
-                "day": 17,
-                "what": "task_force:9 has no home port, and ship:45 holds 5 t of 500"
-              }
-            ],
-            "serves": {},
-            "worked": "task_force:9, at (4,12), has no home port, and ship:45 holds 5 t of 500: below a quarter of capacity. Its fuel is weighed against no passage home.",
-            "would_change": [
-              "a home port set",
-              "the ship fuelled"
-            ]
           }
         ],
         "orders": [
@@ -8525,23 +8096,6 @@
             "would_change": [
               "a group whose fatigue or standing orders differ from what the doctrine wants"
             ]
-          },
-          {
-            "binding": [
-              "a ship of a force with no home port below a quarter of her capacity"
-            ],
-            "evidence": [
-              {
-                "day": 18,
-                "what": "task_force:9 has no home port, and ship:45 holds 5 t of 500"
-              }
-            ],
-            "serves": {},
-            "worked": "task_force:9, at (4,12), has no home port, and ship:45 holds 5 t of 500: below a quarter of capacity. Its fuel is weighed against no passage home.",
-            "would_change": [
-              "a home port set",
-              "the ship fuelled"
-            ]
           }
         ],
         "orders": [
@@ -9537,23 +9091,6 @@
             "would_change": [
               "a group whose fatigue or standing orders differ from what the doctrine wants"
             ]
-          },
-          {
-            "binding": [
-              "a ship of a force with no home port below a quarter of her capacity"
-            ],
-            "evidence": [
-              {
-                "day": 19,
-                "what": "task_force:9 has no home port, and ship:45 holds 5 t of 500"
-              }
-            ],
-            "serves": {},
-            "worked": "task_force:9, at (4,12), has no home port, and ship:45 holds 5 t of 500: below a quarter of capacity. Its fuel is weighed against no passage home.",
-            "would_change": [
-              "a home port set",
-              "the ship fuelled"
-            ]
           }
         ],
         "orders": [
@@ -10461,23 +9998,6 @@
             "worked": "No order is given for these groups for intent:8, operating the carrier force task_force:2 from (5,-3) this morning: air_group:105, a fighter group, has fatigue 24 not above the 45 of the balanced risk: it flies the patrol at a share of 0.5 (0.5 at balanced, the force not attacked from the air on the three days before); the rest are escorts; air_group:108, a bomber group, has fatigue 0 not above the 45 of the balanced risk: it strikes ships by the table of the balanced risk, with its strikes sized; air_group:126, a bomber group, has fatigue 0 not above the 45 of the balanced risk: it strikes ships by the table of the balanced risk, with its strikes sized.",
             "would_change": [
               "a group whose fatigue or standing orders differ from what the doctrine wants"
-            ]
-          },
-          {
-            "binding": [
-              "a ship of a force with no home port below a quarter of her capacity"
-            ],
-            "evidence": [
-              {
-                "day": 20,
-                "what": "task_force:9 has no home port, and ship:45 holds 5 t of 500"
-              }
-            ],
-            "serves": {},
-            "worked": "task_force:9, at (4,12), has no home port, and ship:45 holds 5 t of 500: below a quarter of capacity. Its fuel is weighed against no passage home.",
-            "would_change": [
-              "a home port set",
-              "the ship fuelled"
             ]
           }
         ],
@@ -11435,23 +10955,6 @@
             "worked": "No order is given for these groups for intent:8, operating the carrier force task_force:2 from (5,-3) this morning: air_group:105, a fighter group, has fatigue 30 not above the 45 of the balanced risk: it flies the patrol at a share of 0.5 (0.5 at balanced, the force not attacked from the air on the three days before); the rest are escorts; air_group:108, a bomber group, has fatigue 0 not above the 45 of the balanced risk: it strikes ships by the table of the balanced risk, with its strikes sized; air_group:126, a bomber group, has fatigue 0 not above the 45 of the balanced risk: it strikes ships by the table of the balanced risk, with its strikes sized.",
             "would_change": [
               "a group whose fatigue or standing orders differ from what the doctrine wants"
-            ]
-          },
-          {
-            "binding": [
-              "a ship of a force with no home port below a quarter of her capacity"
-            ],
-            "evidence": [
-              {
-                "day": 21,
-                "what": "task_force:9 has no home port, and ship:45 holds 5 t of 500"
-              }
-            ],
-            "serves": {},
-            "worked": "task_force:9, at (4,12), has no home port, and ship:45 holds 5 t of 500: below a quarter of capacity. Its fuel is weighed against no passage home.",
-            "would_change": [
-              "a home port set",
-              "the ship fuelled"
             ]
           }
         ],

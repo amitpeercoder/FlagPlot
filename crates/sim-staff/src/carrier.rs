@@ -948,6 +948,20 @@ impl Day<'_, '_> {
                             ));
                         }
                         _ => {
+                            // The warning where nothing can be done: no home
+                            // port and a ship below a quarter, with no
+                            // oiler's force to send it to (decision 0201,
+                            // 19).
+                            let below = crate::fuelling::below_a_quarter(view, id);
+                            if home_hex.is_none() && !below.is_empty() {
+                                notes.push(crate::fuelling::warning(
+                                    serving(task, &plan),
+                                    force,
+                                    &below,
+                                    &intent_words,
+                                    today,
+                                ));
+                            }
                             if home_hex.is_none() {
                                 place_note = Some(notes.len());
                                 notes.push(

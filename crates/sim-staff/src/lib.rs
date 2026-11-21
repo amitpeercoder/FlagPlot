@@ -347,9 +347,9 @@ use sim_core::view::SideView;
 /// contacts, and the fuel; the force searches its way ahead while it goes
 /// there, and under a neutralise its bombers raid the target. A side with no
 /// such end, or no free carrier force, gets the orders `supply-49` gave.
-/// `supply-51` adds decision 0201, stage A: each morning a force of the side
-/// with no home port and a ship below a quarter of her capacity is named in
-/// the staff's report; and in the carrier and stand doctrines a force that
+/// `supply-51` adds decision 0201, stage A: each morning a carrier or stand
+/// task's force with no home port and a ship below a quarter of her capacity,
+/// and no oiler's force to send it to, is named in a reason of the task; and in the carrier and stand doctrines a force that
 /// would go home for fuel is given the order to fuel from an oiler's force
 /// nearer than home, and a force with no home port one with a ship below a
 /// quarter, and while the order stands it is given no route. A side with no
@@ -370,9 +370,6 @@ impl Staff for SupplyStaff {
         reasons::state_intents(&view, &mut decisions);
         // The air doctrine states its own reasons on the state it planned.
         decisions.append(air::decide(&view));
-        // A force with no home port running low is named each day (decision
-        // 0201, 19): a reason that serves no intent and gives no order.
-        decisions.no_orders.extend(fuelling::warnings(&view));
         decisions
     }
 

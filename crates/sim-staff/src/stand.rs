@@ -1267,6 +1267,15 @@ impl Day<'_, '_> {
             None => lies,
         };
 
+        // The warning where nothing can be done: a ship below a quarter and
+        // no oiler's force holding cargo fuel (decision 0201, 19).
+        let below = crate::fuelling::below_a_quarter(view, id);
+        if !below.is_empty() && crate::fuelling::oiler_for(view, force).is_none() {
+            let warning =
+                crate::fuelling::warning(serving(task, plan), force, &below, intent_words, today);
+            self.target(in_scope).no_orders.push(warning);
+        }
+
         // Preserve the force keeps clear of what outnumbers it (11).
         if let (Some(outnumbered), false) = (read.outnumbered, under_way_to) {
             let what = if at_station {
@@ -1319,7 +1328,6 @@ impl Day<'_, '_> {
             });
             // An oiler's force nearer than the base it would go in to, or,
             // with a ship below a quarter, any (decision 0201, 20).
-            let below = crate::fuelling::below_a_quarter(view, id);
             let oiler = crate::fuelling::oiler_for(view, force).filter(|o| match going_in {
                 Some((_, _, nm, _, ref short)) => !short.is_empty() && o.nm < nm,
                 None => !below.is_empty(),
