@@ -4,7 +4,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use oob_check::table::Data;
 
-use crate::date::{begins_after, Day};
+use crate::date::{begins_after, valid_on, Day, Tri};
 use crate::decimal::Dec;
 use crate::input::{Exception, Rules};
 use crate::problem::{Kind, Problem};
@@ -53,15 +53,45 @@ pub const RADAR: usize = 14;
 /// rounds carried. The rest are written as exact decimals.
 pub const WHOLE: [usize; 6] = [6, 8, 10, 11, 15, 16];
 
-/// The class types the simulation has a kind for.
-const KIND_FOR_TYPE: [(&str, &str); 6] = [
+/// The class types the simulation has a kind for. An oiler is the one type
+/// that is not a warship (decision 0206, rule 1).
+const KIND_FOR_TYPE: [(&str, &str); 7] = [
     ("heavy_cruiser", "cruiser"),
     ("light_cruiser", "cruiser"),
     ("destroyer", "destroyer"),
     ("battleship", "battleship"),
     ("carrier", "carrier"),
     ("light_carrier", "carrier"),
+    ("oiler", "auxiliary"),
 ];
+
+/// The class type whose ships fuel others at sea (decision 0206, rule 1).
+pub const OILER_TYPE: &str = "oiler";
+/// The simulation kinds that are not warships: a ship of one carries no
+/// main battery and no torpedo tubes, by her kind (decision 0166, rule 5;
+/// decision 0206, rule 3).
+const UNARMED_KINDS: [&str; 1] = ["auxiliary"];
+/// The figure written after the others when the list has an oiler: 1 for a
+/// class whose ships fuel others at sea (decision 0201, 1; decision 0206,
+/// rule 1).
+pub const MARK_FIGURE: &str = "fuels_at_sea";
+pub const MARK_RULE: &str = "1 for a class of the type oiler in ship_classes.csv, whose ships fuel others at sea; else 0 (decision 0201, 1; decision 0206, rule 1). The column is written only where the list has an oiler";
+/// The note on the surface weapon figures of a ship of a kind that is not a
+/// warship.
+pub const UNARMED_NOTE: &str = "by her kind: an auxiliary has no main battery and no torpedo tubes, and no fit, shell or outfit is read (decision 0166, rule 5; decision 0206, rule 3)";
+/// Her own fuel and her cargo of oil in barrels, and the factor that makes
+/// them tons (decision 0206, rules 6 to 8).
+const FUEL_BBL: &str = "fuel_capacity_bbl";
+const CARGO_BBL: &str = "cargo_oil_capacity_bbl";
+const BARREL_FACTOR: &str = "fuel_oil_barrel_factor_lt";
+/// The displacement an auxiliary's toughness is read from (decision 0166,
+/// rule 2; decision 0206, rule 2).
+const LIGHT_DISPLACEMENT: &str = "displacement_light_lt";
+const OILER_KIND_RULE: &str = "type of the class in ship_classes.csv, mapped to a simulation kind (oiler: auxiliary; decision 0206, rule 1)";
+const OILER_FUEL_RULE: &str = "fuel_capacity_bbl of the ship, else of its class, x fuel_oil_barrel_factor_lt of the ship, else of its class: her own bunkers in barrels made long tons by the factor read from a row (decision 0206, rules 6 and 8; a simulation ton is a long ton)";
+const OILER_CARGO_RULE: &str = "cargo_oil_capacity_bbl of the ship, else of its class, else the least of her sisters' where the list writes that rule, x fuel_oil_barrel_factor_lt of the ship, else of its class: the oil she can carry for others, a capacity, made long tons by the factor read from a row (decision 0206, rules 7, 8 and 14)";
+const UNARMED_RULE: &str = "0 by kind: a ship of a kind that is not a warship (auxiliary) has no main battery and no torpedo tubes (decision 0166, rule 5; decision 0206, rule 3)";
+const AUXILIARY_TOUGHNESS_RULE: &str = "displacement_light_lt of the ship, else of its class / displacement_lt_per_toughness, for a kind that is not a warship (decision 0166, rule 2; decision 0206, rule 2)";
 
 /// Sensor items that stand for "no radar of any kind" (`data/oob/README.md`,
 /// "Known limits of the format"). A count of 0 of anything else only says
@@ -129,6 +159,9 @@ pub struct Figure {
     pub doubts: BTreeSet<String>,
     /// Other things to say beside the figure in the sources file.
     pub notes: BTreeSet<String>,
+    /// The rule behind the figure in words, where it is not the figure's
+    /// usual one (an oiler's, decision 0206).
+    pub rule: Option<&'static str>,
 }
 
 /// What the list says about one ship.
@@ -141,6 +174,9 @@ pub struct ShipOpts {
     pub air_figures: bool,
     /// Write the surface weapon figures as 0 without reading any fact.
     pub surface_weapons_not_modelled: bool,
+    /// Write the `fuels_at_sea` figure: the list has an oiler (decision
+    /// 0206, rule 1).
+    pub mark_column: bool,
 }
 
 #[derive(Clone, Debug)]
@@ -165,6 +201,9 @@ pub struct ShipResult {
     pub designed_rate: bool,
     /// The surface weapon figures are the scenario's assumption of 0.
     pub weapons_not_modelled: bool,
+    /// The surface weapon figures are 0 by the ship's kind (decision 0206,
+    /// rule 3).
+    pub unarmed_by_kind: bool,
     /// The ship has tubes and no readable row says how they bear, so the
     /// tubes on one side are all of them (decision 0074, 3).
     pub tubes_not_split: bool,
@@ -204,6 +243,8 @@ pub struct Env<'a> {
     /// The rows read as of a later date on this list's date, with their
     /// `valid_from` (decision 0200).
     pub(crate) later: BTreeMap<Cite, String>,
+    /// The list's rule of the least of her sisters (decision 0206, rule 14).
+    pub(crate) least_of_sisters: Option<crate::input::LeastOfSisters>,
 }
 
 /// A row of `aircraft_types.csv`.
@@ -288,6 +329,7 @@ fn put(figs: &mut [Option<Figure>], i: usize, value: Value, got: Got<()>) {
         excepted: got.excepted,
         doubts: got.doubts,
         notes: BTreeSet::new(),
+        rule: None,
     });
 }
 
@@ -378,6 +420,7 @@ impl<'a> Env<'a> {
             fire_rate_problems: Vec::new(),
             troops: None,
             later: BTreeMap::new(),
+            least_of_sisters: None,
         };
         env.later = env.later_rows();
         if let Some(fire_rate) = &rules.fire_rate {
@@ -848,6 +891,148 @@ impl<'a> Env<'a> {
             .map(|got| (got, false))
     }
 
+    /// Whether the ship's class is of the type oiler (decision 0206, rule 1).
+    /// A ship or class not on file is not.
+    pub fn is_oiler(&self, ship: &str) -> bool {
+        self.ships
+            .get(ship)
+            .and_then(|s| self.classes.get(&s.class))
+            .is_some_and(|c| c.kind_type == OILER_TYPE)
+    }
+
+    /// A fact of the ship, else of her class, as [`Self::fact`]; but where
+    /// the list's rule of the least of her sisters names the fact and
+    /// neither she nor her class has a row of it at all, the least of the
+    /// values read from her sisters' own rows (decision 0206, rule 14). Her
+    /// sisters are the other ships of her class in ships.csv; each one's
+    /// rows are read as any ship's are, on the list's date, and a sister
+    /// with no readable row is passed over. Returns the value and, where the
+    /// rule was used, the note that says so.
+    fn fact_or_sisters(
+        &self,
+        w: &mut Work,
+        keys: (&str, &str),
+        attribute: &str,
+        figure: &str,
+    ) -> Option<(Got<Dec>, Option<String>)> {
+        let (ship, class) = keys;
+        let applies = self
+            .least_of_sisters
+            .as_ref()
+            .is_some_and(|rule| rule.facts.contains(attribute))
+            && self
+                .index
+                .rows(Table::ShipFacts, ship, attribute)
+                .is_empty()
+            && self
+                .index
+                .rows(Table::ClassFacts, class, attribute)
+                .is_empty();
+        if !applies {
+            return self.fact(w, keys, attribute, figure).map(|got| (got, None));
+        }
+        let mut read_sisters: Vec<(String, Dec, Read)> = Vec::new();
+        for (sister, info) in &self.ships {
+            if sister == ship || info.class != class {
+                continue;
+            }
+            let rows = self.index.rows(Table::ShipFacts, sister, attribute);
+            if rows.is_empty() {
+                continue;
+            }
+            match resolve(
+                rows,
+                &format!("{attribute} of ship {sister} (a sister of {ship})"),
+                self.date,
+                &self.rules.exceptions,
+            ) {
+                Ok(read) => match number(&read, attribute) {
+                    Ok(value) => read_sisters.push((sister.clone(), value, read)),
+                    Err(failure) => {
+                        w.failed(figure, failure);
+                        return None;
+                    }
+                },
+                Err(failure)
+                    if matches!(
+                        failure.kind,
+                        Kind::Missing | Kind::NotPreferred | Kind::NotOnDate
+                    ) => {}
+                Err(failure) => {
+                    w.failed(figure, failure);
+                    return None;
+                }
+            }
+        }
+        let Some(least) = read_sisters.iter().map(|(_, v, _)| *v).min() else {
+            w.fail(
+                Kind::Missing,
+                figure,
+                format!(
+                    "{attribute} of ship {ship}: no rows of her own or of class {class}, and no sister of her class has a readable row (the list's rule of the least of her sisters, decision 0206, rule 14)"
+                ),
+            );
+            return None;
+        };
+        let mut got = Got {
+            value: least,
+            cites: BTreeSet::new(),
+            excepted: false,
+            doubts: BTreeSet::new(),
+        };
+        let mut said = Vec::new();
+        for (sister, value, read) in &read_sisters {
+            let (cites, excepted, doubts) = w.take(read);
+            said.push(format!(
+                "{sister} {value} ({})",
+                read.rows
+                    .iter()
+                    .map(Row::cite)
+                    .collect::<Vec<_>>()
+                    .join(" ")
+            ));
+            got.cites.extend(cites);
+            got.excepted |= excepted;
+            got.doubts.extend(doubts);
+        }
+        let note = format!(
+            "no row of her own or of her class: the least of her sisters' rows, {least}, by the list's rule (decision 0206, rule 14), of {}",
+            said.join(", ")
+        );
+        Some((got, Some(note)))
+    }
+
+    /// An oiler's figure in barrels made long tons by the factor (decision
+    /// 0206, rules 6 to 8): the barrels and the factor are each read as any
+    /// fact is, and the figure cites both.
+    fn barrels_in_tons(
+        &self,
+        w: &mut Work,
+        keys: (&str, &str),
+        attribute: &str,
+        figure: &str,
+        factor: &Option<Got<Dec>>,
+    ) -> Option<(Value, Got<()>, BTreeSet<String>)> {
+        let barrels = self.fact_or_sisters(w, keys, attribute, figure);
+        let (Some((barrels, note)), Some(factor)) = (barrels, factor) else {
+            return None;
+        };
+        let Some(tons) = barrels.value.mul(factor.value) else {
+            w.failed(figure, overflow(figure));
+            return None;
+        };
+        let mut sources = barrels.bare();
+        sources.cites.extend(factor.cites.iter().cloned());
+        sources.excepted |= factor.excepted;
+        sources.doubts.extend(factor.doubts.iter().cloned());
+        let mut notes = BTreeSet::from([format!(
+            "{} barrels x {} long tons a barrel",
+            barrels.value, factor.value
+        )]);
+        notes.extend(note);
+        Some((Value::Num(tons), sources, notes))
+    }
+
     /// Derives every figure of a ship. All problems are returned, not the
     /// first. `assume_no_radar` is the list's working assumption.
     pub fn derive_ship(&self, ship: &str, opts: ShipOpts) -> Result<ShipResult, Vec<Problem>> {
@@ -856,6 +1041,7 @@ impl<'a> Env<'a> {
             assume_ammunition_not_limiting,
             air_figures,
             surface_weapons_not_modelled,
+            mark_column,
         } = opts;
         let mut w = Work {
             subject: ship,
@@ -885,7 +1071,15 @@ impl<'a> Env<'a> {
         };
         let keys = (ship, class_key);
         let troop_index = FIGURES.len() + if air_figures { AIR_FIGURES.len() } else { 0 };
-        let figure_count = troop_index + usize::from(self.troops.is_some());
+        let mark_index = troop_index + usize::from(self.troops.is_some());
+        let figure_count = mark_index + usize::from(mark_column);
+        let oiler = class.kind_type == OILER_TYPE;
+        let unarmed = KIND_FOR_TYPE
+            .iter()
+            .any(|(t, kind)| *t == class.kind_type && UNARMED_KINDS.contains(kind));
+        // A list may not also call an oiler's weapons an assumption of the
+        // scenario: she has none by her kind.
+        let surface_weapons_not_modelled = surface_weapons_not_modelled && !unarmed;
         let mut figs: Vec<Option<Figure>> = vec![None; figure_count];
         let num = |got: Got<Dec>| (Value::Num(got.value), got.bare());
 
@@ -906,6 +1100,9 @@ impl<'a> Env<'a> {
                     doubts: BTreeSet::new(),
                 };
                 put(&mut figs, KIND, Value::Text((*kind).to_string()), got);
+                if let (true, Some(figure)) = (oiler, figs[KIND].as_mut()) {
+                    figure.rule = Some(OILER_KIND_RULE);
+                }
             }
             None => w.fail(
                 Kind::UnmappedType,
@@ -924,28 +1121,70 @@ impl<'a> Env<'a> {
             (3, "fuel_capacity_lt"),
             (4, "endurance_nm"),
         ] {
+            if oiler && i == 3 {
+                // Her own fuel is read in barrels, below.
+                continue;
+            }
             if let Some(got) = self.fact(&mut w, keys, attribute, FIGURES[i]) {
                 let (v, sources) = num(got);
                 put(&mut figs, i, v, sources);
             }
         }
-        put(
-            &mut figs,
-            CARGO,
-            Value::Num(Dec::ZERO),
-            Got {
-                value: (),
-                cites: BTreeSet::new(),
-                excepted: false,
-                doubts: BTreeSet::new(),
-            },
-        );
+        if oiler {
+            // Her own fuel and her cargo of oil, in barrels made tons by the
+            // Navy's factor (decision 0206, rules 6 to 8 and 14).
+            let factor = self.fact(&mut w, keys, BARREL_FACTOR, FIGURES[3]);
+            for (i, attribute, rule) in [
+                (3, FUEL_BBL, OILER_FUEL_RULE),
+                (CARGO, CARGO_BBL, OILER_CARGO_RULE),
+            ] {
+                if let Some((value, sources, notes)) =
+                    self.barrels_in_tons(&mut w, keys, attribute, FIGURES[i], &factor)
+                {
+                    put(&mut figs, i, value, sources);
+                    if let Some(figure) = figs[i].as_mut() {
+                        figure.notes = notes;
+                        figure.rule = Some(rule);
+                    }
+                }
+            }
+        } else {
+            put(
+                &mut figs,
+                CARGO,
+                Value::Num(Dec::ZERO),
+                Got {
+                    value: (),
+                    cites: BTreeSet::new(),
+                    excepted: false,
+                    doubts: BTreeSet::new(),
+                },
+            );
+        }
 
         // main battery, ammunition and torpedoes
         let mut designed_rate = false;
         let mut ammunition_assumed = false;
         let mut tubes_not_split = false;
-        if surface_weapons_not_modelled {
+        if unarmed {
+            for i in SURFACE_WEAPONS {
+                put(
+                    &mut figs,
+                    i,
+                    Value::Num(Dec::ZERO),
+                    Got {
+                        value: (),
+                        cites: BTreeSet::new(),
+                        excepted: false,
+                        doubts: BTreeSet::new(),
+                    },
+                );
+                if let Some(figure) = figs[i].as_mut() {
+                    figure.notes.insert(UNARMED_NOTE.to_string());
+                    figure.rule = Some(UNARMED_RULE);
+                }
+            }
+        } else if surface_weapons_not_modelled {
             for i in SURFACE_WEAPONS {
                 put(
                     &mut figs,
@@ -1028,18 +1267,29 @@ impl<'a> Env<'a> {
             }
         }
 
-        // toughness
-        if let Some(got) = self.fact(&mut w, keys, "displacement_standard_lt", FIGURES[13]) {
+        // toughness: from the standard displacement of a warship, the light
+        // displacement of a ship of another kind (decision 0206, rule 2)
+        let displacement = if unarmed {
+            LIGHT_DISPLACEMENT
+        } else {
+            "displacement_standard_lt"
+        };
+        if let Some(got) = self.fact(&mut w, keys, displacement, FIGURES[13]) {
             match got.value.div(self.rules.displacement_lt_per_toughness) {
                 Some(toughness) if !toughness.is_positive() => w.fail(
                     Kind::ZeroToughness,
                     FIGURES[13],
                     format!(
-                        "displacement_standard_lt {} / {} = {toughness}, which is not above zero",
+                        "{displacement} {} / {} = {toughness}, which is not above zero",
                         got.value, self.rules.displacement_lt_per_toughness
                     ),
                 ),
-                Some(toughness) => put(&mut figs, 13, Value::Num(toughness), got.bare()),
+                Some(toughness) => {
+                    put(&mut figs, 13, Value::Num(toughness), got.bare());
+                    if let (true, Some(figure)) = (unarmed, figs[13].as_mut()) {
+                        figure.rule = Some(AUXILIARY_TOUGHNESS_RULE);
+                    }
+                }
                 None => w.failed(FIGURES[13], overflow("toughness")),
             }
         }
@@ -1071,6 +1321,34 @@ impl<'a> Env<'a> {
             figs[troop_index] = self.troop_capacity(&mut w, ship, class_key, &class.kind_type);
         }
 
+        // the mark that she fuels others at sea (decision 0206, rule 1)
+        if mark_column {
+            let cites = BTreeSet::from([
+                (
+                    "ships.csv".to_string(),
+                    ship_info.row_id.parse().unwrap_or(0),
+                ),
+                (
+                    "ship_classes.csv".to_string(),
+                    class.row_id.parse().unwrap_or(0),
+                ),
+            ]);
+            put(
+                &mut figs,
+                mark_index,
+                Value::Flag(oiler),
+                Got {
+                    value: (),
+                    cites,
+                    excepted: false,
+                    doubts: BTreeSet::new(),
+                },
+            );
+            if let Some(figure) = figs[mark_index].as_mut() {
+                figure.rule = Some(MARK_RULE);
+            }
+        }
+
         if !w.problems.is_empty() {
             return Err(w.problems);
         }
@@ -1094,6 +1372,7 @@ impl<'a> Env<'a> {
             ammunition_assumed,
             designed_rate,
             weapons_not_modelled: surface_weapons_not_modelled,
+            unarmed_by_kind: unarmed,
             tubes_not_split,
             used: w.used,
         })
@@ -1429,6 +1708,11 @@ impl<'a> Env<'a> {
                         Some("machine_gun") => {
                             passed.insert(row.cite_key());
                         }
+                        // A weapon of another kind in a row that does not
+                        // hold on the list's date is not read and is no
+                        // problem (decision 0206: Neosho's 3-inch/23 of
+                        // 1941).
+                        _ if matches!(valid_on(&row.from, &row.to, self.date), Ok(Tri::No)) => {}
                         other => {
                             w.fail(
                                 Kind::UnknownType,

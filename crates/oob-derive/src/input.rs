@@ -42,6 +42,25 @@ struct RawList {
     troop_figures: bool,
     #[serde(default)]
     troops: Option<RawTroops>,
+    #[serde(default)]
+    least_of_sisters: Option<RawLeastOfSisters>,
+}
+
+/// The `[least_of_sisters]` table of a list (decision 0206, rule 14).
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct RawLeastOfSisters {
+    facts: Vec<String>,
+    reason: String,
+}
+
+/// The list's written rule that a ship with no row of her own or of her
+/// class for one of `facts` reads the least of her sisters' rows (decision
+/// 0206, rule 14).
+#[derive(Clone, Debug)]
+pub struct LeastOfSisters {
+    pub facts: BTreeSet<String>,
+    pub reason: String,
 }
 
 /// The `[troops]` table of a list: the voyage whose loads are read and the
@@ -166,6 +185,9 @@ pub struct List {
     pub troop_figures: bool,
     /// The voyage and the runs the troop figure is read from.
     pub troops: TroopsInput,
+    /// The rule of the least of her sisters, when the list writes it
+    /// (decision 0206, rule 14).
+    pub least_of_sisters: Option<LeastOfSisters>,
 }
 
 /// Checks the `[troops]` table against the list.
@@ -560,6 +582,28 @@ pub fn parse_list(text: &str) -> (Option<List>, Vec<Problem>) {
         Some(table) => parse_troops(table, &ships, &mut problems),
         None => TroopsInput::default(),
     };
+    let least_of_sisters = raw.least_of_sisters.as_ref().and_then(|raw| {
+        let mut ok = true;
+        if raw.facts.is_empty() {
+            problems.push(list_problem("least_of_sisters", "`facts` is empty"));
+            ok = false;
+        }
+        if raw.facts.iter().any(|f| f.trim().is_empty()) {
+            problems.push(list_problem("least_of_sisters", "a fact is empty"));
+            ok = false;
+        }
+        if raw.reason.trim().is_empty() {
+            problems.push(list_problem(
+                "least_of_sisters",
+                "`reason` must not be empty",
+            ));
+            ok = false;
+        }
+        ok.then(|| LeastOfSisters {
+            facts: raw.facts.iter().cloned().collect(),
+            reason: raw.reason.clone(),
+        })
+    });
     let Some(date) = date else {
         return (None, problems);
     };
@@ -585,6 +629,7 @@ pub fn parse_list(text: &str) -> (Option<List>, Vec<Problem>) {
         experience,
         troop_figures: raw.troop_figures,
         troops,
+        least_of_sisters,
     };
     (Some(list), problems)
 }

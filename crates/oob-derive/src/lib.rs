@@ -115,6 +115,10 @@ pub fn derive_with(
     };
 
     let mut env = derive::Env::build(&data, list.date, &rules);
+    env.least_of_sisters = list.least_of_sisters.clone();
+    // The column of the mark is written only where the list has an oiler
+    // (decision 0206, rule 1), so that no class file of warships changes.
+    let mark_column = list.ships.iter().any(|ship| env.is_oiler(ship));
     if list.troop_figures {
         let (troops, troop_problems) = troops::build(&list.troops, &data);
         problems.extend(troop_problems);
@@ -171,6 +175,7 @@ pub fn derive_with(
             assume_ammunition_not_limiting: list.main_gun_ammunition_not_limiting.contains(ship),
             air_figures: air,
             surface_weapons_not_modelled: list.surface_weapons_not_modelled.contains(ship),
+            mark_column,
         };
         match env.derive_ship(ship, opts) {
             Ok(result) => results.push(result),
@@ -185,7 +190,7 @@ pub fn derive_with(
         }
     }
     if problems.is_empty() {
-        problems.extend(output::check_pins(&list, &results));
+        problems.extend(output::check_pins(&list, &results, mark_column));
     }
     if !problems.is_empty() {
         return Err(problems);
@@ -204,6 +209,7 @@ pub fn derive_with(
     }
     let idle_later = env.idle_later();
     let context = output::Context {
+        mark_column,
         list: &list,
         list_name,
         rules: &rules,

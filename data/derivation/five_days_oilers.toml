@@ -1,0 +1,37 @@
+# The oilers of the five days of the Eastern Solomons, Platte and Cimarron, as
+# of 23 August 1942, day 1 of those files, for the five days' files with the
+# oilers (decision 0206, rules 17 and 20). The derivation tool turns this list
+# into data/reference/ship_classes_five_days_oilers.csv with its sources and
+# ships companions. It is a list of its own so that no list, class file or
+# sides file a scenario on file reads changes (rule 17); the five days share
+# their classes and sides with the 39 days.
+#
+# Both are of the type oiler: kind auxiliary, the mark, toughness from the
+# light displacement, no main battery and no tubes by kind (rules 1 to 3),
+# anti-aircraft guns and radar read as any ship's (rule 4), her own fuel and
+# her cargo in barrels made long tons by the Navy's factor (rules 6 to 8).
+# Cimarron is a class of her own, since her bunkers and her cargo differ from
+# her sisters' (rule 16). Platte's guns are the lesser of her two lines of
+# 1942 (rule 23). The exceptions are at the end of rules.toml, under
+# "Decision 0206".
+#
+# Settled by the architect, Nov 21, 2026 (decision 0206).
+
+name = "Eastern Solomons over five days, the oilers"
+date = "1942-08-23"
+rules = "rules.toml"
+output = "../reference/ship_classes_five_days_oilers.csv"
+first_class_id = 2030
+air_figures = true
+
+ships = ["ao-24-platte", "ao-22-cimarron"]
+
+# Working assumption, not a fact (decision 0019, 5): no source names a radar
+# for either, or says none (decision 0206, rule 23).
+radar_unknown_means_none = ["ao-24-platte", "ao-22-cimarron"]
+
+# The class ids, pinned (decision 0077): 2030 and 2031, which no other list
+# uses.
+[class_ids]
+2030 = ["ao-24-platte"]
+2031 = ["ao-22-cimarron"]

@@ -258,6 +258,7 @@ impl Env<'_> {
                 excepted,
                 doubts,
                 notes,
+                rule: None,
             })
         };
 

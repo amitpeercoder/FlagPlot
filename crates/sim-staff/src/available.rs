@@ -11,7 +11,7 @@
 use sim_core::command::ForcesLimit;
 use sim_core::ids::{AirGroupId, EntityRef, ShipId, TaskForceId};
 use sim_core::orders::Mission;
-use sim_core::state::{LandUnit, TaskForce};
+use sim_core::state::{LandUnit, Ship, ShipLocation, TaskForce};
 use sim_core::view::SideView;
 
 /// What a take counts as its to use, whether now or later (decision 0159,
@@ -24,7 +24,9 @@ use sim_core::view::SideView;
 /// The one notion: the take reads it where it names the units it may use
 /// later and not today, and a trial's window reads it for the days on which
 /// something the course may use first becomes usable (decision 0177,
-/// amended 3).
+/// amended 3). A force whose every ship has the mark that she fuels others
+/// at sea is a force of oilers and is not counted where the limit names no
+/// task force (decision 0206, rule 21).
 #[derive(Clone, Debug, Default)]
 pub struct Counted<'a> {
     pub task_forces: Vec<&'a TaskForce>,
@@ -35,20 +37,34 @@ pub struct Counted<'a> {
 pub fn counted_by_a_take<'a>(view: &SideView<'a>, limit: Option<&ForcesLimit>) -> Counted<'a> {
     let named_forces = limit.filter(|f| !f.task_forces.is_empty());
     let named_units = limit.filter(|f| !f.land_units.is_empty());
-    let force_counts = |force: &TaskForce| {
-        named_forces.map_or(force.mission == Mission::Transport, |f| {
+    let force_counts = |force: &TaskForce, oilers: bool| {
+        named_forces.map_or(force.mission == Mission::Transport && !oilers, |f| {
             f.task_forces.contains(&force.id)
         })
+    };
+    let on_map = |force: &TaskForce| {
+        oilers_only(
+            view,
+            view.ships()
+                .filter(|ship| ship.location == ShipLocation::TaskForce(force.id)),
+        )
     };
     let unit_counts = |unit: &LandUnit| {
         !unit.working && named_units.is_none_or(|f| f.land_units.contains(&unit.id))
     };
-    let mut task_forces: Vec<&'a TaskForce> =
-        view.task_forces().filter(|f| force_counts(f)).collect();
+    let mut task_forces: Vec<&'a TaskForce> = view
+        .task_forces()
+        .filter(|f| force_counts(f, on_map(f)))
+        .collect();
     let mut land_units: Vec<&'a LandUnit> = view.land_units().filter(|u| unit_counts(u)).collect();
     // What is held apart for the side, from its entries (decision 0195, 13).
     for entry in view.entering() {
-        if let Some(force) = entry.task_force.as_ref().filter(|f| force_counts(f)) {
+        let oilers = oilers_only(view, entry.ships.values());
+        if let Some(force) = entry
+            .task_force
+            .as_ref()
+            .filter(|f| force_counts(f, oilers))
+        {
             task_forces.push(force);
         }
         land_units.extend(entry.land_units.values().filter(|u| unit_counts(u)));
@@ -59,6 +75,20 @@ pub fn counted_by_a_take<'a>(view: &SideView<'a>, limit: Option<&ForcesLimit>) -
         task_forces,
         land_units,
     }
+}
+
+/// Whether `ships`, the ships of one force, are a force of oilers: at least
+/// one, and every one of a class with the mark that she fuels others at sea
+/// (decision 0206, rule 21). A force with no ship is not.
+fn oilers_only<'s>(view: &SideView<'_>, ships: impl Iterator<Item = &'s Ship>) -> bool {
+    let mut any = false;
+    for ship in ships {
+        if !view.ship_class(ship.class).is_some_and(|c| c.fuels_at_sea) {
+            return false;
+        }
+        any = true;
+    }
+    any
 }
 
 /// The day from which `unit` may be used, where the side may not use it yet
