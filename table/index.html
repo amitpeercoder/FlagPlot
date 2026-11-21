@@ -218,6 +218,8 @@ button:disabled { opacity: 0.45; cursor: default; }
 .card .lmore[open] summary { border-bottom: 1px dotted rgba(90,85,72,0.35); }
 .card .kv { display: grid; grid-template-columns: auto 1fr; gap: 3px 12px; }
 .card .kv span:nth-child(odd) { color: var(--paper-dim); font-size: 12px; padding-top: 2px; }
+.card .ohere .row { gap: 6px; margin-top: 4px; }
+.card .ohere button { min-height: 32px; padding: 0 10px; font-size: 13px; letter-spacing: 0.04em; text-align: left; }
 .card .sub { font-family: var(--f-ui); font-size: 12px; font-weight: 700; letter-spacing: 0.12em; color: var(--paper-dim); margin-top: 4px; }
 .card .headline { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
 .sheet .doc .node { border-left: 2px solid #8d8672; padding: 2px 0 2px 12px; display: flex; flex-direction: column; gap: 5px; }
@@ -1271,7 +1273,13 @@ body.watched .gives { display: none !important; }
   function openCard(title, stamp, own) { if (arcDraft) { arcDraft = null; if (g) drawMarks(); }
     var body = $('card-body'), head = el('div', 'headline'); body.textContent = '';
     head.appendChild(el('h2', '', title)); if (stamp) head.appendChild(el('span', 'stamp' + (own ? ' ok' : ''), stamp)); body.appendChild(head);
-    cardHandle = wantDiary; wantDiary = null; $('card-diary').hidden = !cardHandle;
+    cardHandle = wantDiary; wantDiary = null; $('card-diary').hidden = true;
+    // The way to the unit's diary is a plain link under what is known of it:
+    // the top of a card is for finding one's way about.
+    if (cardHandle) { var of = cardHandle; setTimeout(function () {
+      if (cardHandle !== of || body.querySelector('.dlink')) return; var after = body.querySelector('.kv') || body.querySelector('.headline'); if (!after) return;
+      var row = el('div', ''), dl = el('button', 'ref dlink', 'Diary'); dl.type = 'button'; dl.title = 'What the war diary holds of it'; dl.addEventListener('click', function () { readUnitDiary(of); }); row.appendChild(dl); body.insertBefore(row, after.nextSibling);
+    }, 0); }
     $('card').hidden = false; $('card-find').hidden = true; if (!stackShowing) { stack = null; sibs = null; $('card-step').hidden = true; } return body;
   }
   // Pieces that share a place lie on one another. A touch opens the one
@@ -1361,6 +1369,24 @@ body.watched .gives { display: none !important; }
     shown = function () { $('sheet').hidden = true; f(a); };
     $('card-back').hidden = !trail.length; backWords(); return f(a);
   }; }
+  // A card offers the orders that can be given about what it shows: an enemy
+  // base to be captured or beaten down, a base of yours to be held or
+  // supplied, waters to be denied or worked from. Each opens the draft of
+  // that order, which the staff previews and nothing sends until it is signed.
+  function watersAt(pl) { var h = hexAt[pl.q + ',' + pl.r]; return h ? { kind: 'waters', q: pl.q, r: pl.r, name: 'the waters about ' + (showHexes ? 'hex ' + pl.q + ', ' + pl.r : whereIs({ q: pl.q, r: pl.r })), v: world(h[3], h[4]) } : null; }
+  function ordersHere(target) {
+    if (!target || WATCH || M.over || playing) return;
+    var list = ends(target), body = $('card-body'), after = body.querySelector('.kv') || body.querySelector('.headline'); if (!list.length || !after) return;
+    var box = el('div', 'ohere'), row = el('div', 'row'); box.appendChild(el('div', 'sub', 'ORDERS YOU CAN GIVE'));
+    list.forEach(function (e, i) { var b = el('button', '', e[0]); b.type = 'button'; if (e[2]) b.title = e[2]; b.addEventListener('click', function () { $('card').hidden = true; forget(); openDraft(target, i); }); row.appendChild(b); });
+    box.appendChild(row); body.insertBefore(box, after.nextSibling);
+  }
+  (function () { var c = cardContact, p = cardPlace, b = cardBase, x = cardHex;
+    cardContact = function (t) { var r = c.apply(this, arguments); ordersHere(watersAt(t.contact.place)); return r; };
+    cardPlace = function (t) { var r = p.apply(this, arguments); ordersHere(t.base ? { kind: 'enemy', base: t.base, name: t.base.base.name, v: placeOf(t.place) } : watersAt(t.place)); return r; };
+    cardBase = function (t) { var r = b.apply(this, arguments); ordersHere({ kind: 'own', base: t.base, name: t.base.base.name, v: placeOf(t.base.place) }); return r; };
+    cardHex = function (hpl) { var r = x.apply(this, arguments); ordersHere(watersAt(hpl)); return r; };
+  })();
   cardUnit = remember(cardUnit); cardEntity = remember(cardEntity); cardContact = remember(cardContact); cardPlace = remember(cardPlace); cardForce = remember(cardForce); cardBase = remember(cardBase); cardHex = remember(cardHex);
   $('card-back').addEventListener('click', function () { var was = trail.pop(); if (!was) return; shown = was; $('card-back').hidden = !trail.length; backWords(); was(); });
   $('card-find').addEventListener('click', function () { if (findAt) turnTo(findAt); });
@@ -2906,10 +2932,15 @@ body.watched .gives { display: none !important; }
     M.bases.forEach(function (b) { var d = placeOf(b.place).distanceTo(p); if (d < bd) { bd = d; best = { kind: 'own', base: b, name: b.base.name, v: placeOf(b.place) }; } });
     M.enemyBases.forEach(function (b) { var d = placeOf(b.place).distanceTo(p); if (d < bd) { bd = d; best = { kind: 'enemy', base: b, name: b.base.name, v: placeOf(b.place) }; } });
     if (!best) { var hd = 1e9, hh = null; hexes.forEach(function (h) { var d = world(h[3], h[4]).distanceTo(p); if (d < hd) { hd = d; hh = h; } }); if (!hh) return; best = { kind: 'waters', q: hh[0], r: hh[1], name: 'the waters about ' + (showHexes ? 'hex ' + hh[0] + ', ' + hh[1] : whereIs({ q: hh[0], r: hh[1] })), v: world(hh[3], hh[4]) }; }
+    openDraft(best, 0);
+  }
+  // The draft of an order about `best`, a base or waters, with its end
+  // numbered `first` picked: from a touch on the chart, or from a card.
+  function openDraft(best, first) {
     draft = best; draft.ends = ends(best); picking = false; canvas.classList.remove('picking');
     $('o-place').textContent = best.name;
     var box = $('o-ends'); while (box.children.length > 1) box.removeChild(box.lastChild);
-    draft.ends.forEach(function (e, i) { var l = el('label'), r = el('input'); r.type = 'radio'; r.name = 'end'; r.value = String(i); r.id = 'o-end-' + i; r.checked = i === 0; l.appendChild(r); var t = el('span', 'endw'); t.appendChild(el('b', '', e[0])); if (e[2]) t.appendChild(el('small', '', e[2])); l.appendChild(t); box.appendChild(l); });
+    draft.ends.forEach(function (e, i) { var l = el('label'), r = el('input'); r.type = 'radio'; r.name = 'end'; r.value = String(i); r.id = 'o-end-' + i; r.checked = i === (first || 0); l.appendChild(r); var t = el('span', 'endw'); t.appendChild(el('b', '', e[0])); if (e[2]) t.appendChild(el('small', '', e[2])); l.appendChild(t); box.appendChild(l); });
     $('o-risk-balanced').checked = true; $('order').hidden = false; drawMarks(); askPreview();
     setStatus('A draft. Nothing is ordered until you sign.');
   }
