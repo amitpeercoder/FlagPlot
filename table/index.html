@@ -144,6 +144,9 @@ button:disabled { opacity: 0.45; cursor: default; }
 .sheetnav button { min-height: 30px; padding: 0 8px; border: 0; background: transparent; color: var(--paper-dim); font-family: var(--f-ui); font-size: 12px; font-weight: 700; letter-spacing: 0.12em; cursor: pointer; }
 .sheetnav button:hover, .sheetnav button:focus-visible { color: var(--paper-ink); }
 .sheetnav #sheet-chart { margin-left: auto; color: var(--own); }
+.sheetnav #sheet-step { display: inline-flex; align-items: center; gap: 2px; margin-left: 8px; font-family: var(--f-ui); font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--paper-dim); }
+.sheetnav #sheet-step[hidden] { display: none; }
+.sheetnav #sheet-step button { font-size: 18px; letter-spacing: 0; min-width: 28px; }
 .sheetnav #sheet-close { font-size: 15px; letter-spacing: 0; min-width: 30px; }
 .sheetnav #sheet-chart[hidden] + #sheet-close { margin-left: auto; }
 .sheetnav + .sheet { border-radius: 0 0 2px 2px; }
@@ -441,7 +444,7 @@ body.watched .gives { display: none !important; }
 </aside>
 
 <div class="sheetwrap" id="sheet" hidden>
-  <div class="sheetnav"><button type="button" id="sheet-back" hidden>&#8592; BACK</button><span id="sheet-note" hidden></span><button type="button" id="sheet-chart" hidden>SHOW ON CHART</button><button type="button" id="sheet-close" title="Close (Esc)" aria-label="Close">&#10005;</button></div>
+  <div class="sheetnav"><button type="button" id="sheet-back" hidden>&#8592; BACK</button><span id="sheet-note" hidden></span><span id="sheet-step" hidden><button type="button" id="sheet-prev" title="The plan of the order before" aria-label="The plan before">&#8249;</button><span id="sheet-step-n"></span><button type="button" id="sheet-next" title="The plan of the next order" aria-label="The next plan">&#8250;</button></span><button type="button" id="sheet-chart" hidden>SHOW ON CHART</button><button type="button" id="sheet-close" title="Close (Esc)" aria-label="Close">&#10005;</button></div>
   <section class="sheet" id="sheet-paper" aria-label="The paper you are reading" tabindex="0">
     <div class="label" id="sheet-label" hidden></div>
     <h2 id="sheet-title">THE BRIEFING</h2>
@@ -2072,7 +2075,11 @@ body.watched .gives { display: none !important; }
         var wl = el('div', 'line'), w = quiet('WITHDRAW THIS ORDER', 'danger'); w.addEventListener('click', function () { act('withdraw_intent', { intent: root }, 'The order is withdrawn from 1800.').then(function () { $('sheet').hidden = true; }); }); wl.appendChild(w); doc.appendChild(wl);
       }
       if (!WATCH) doc.appendChild(el('div', 'foot', (a[2].inside_day ? 'Worked now, in the middle of the day; the staff is asked again at dusk and may then do otherwise. ' : '') + 'You change a plan by instruction: your leave, a limit, a cancel or a withdrawal. To keep a force out of it, touch the force and keep it out of the staff\'s plans; a direct order of yours keeps out a force the staff is already using, and only that one.'));
-      sheetAs('THE PLAN'); $('sheet-chart').hidden = false; $('sheet-chart').onclick = function () { $('sheet').hidden = true; showPlanOnChart(root); }; doc.hidden = false; $('sheet-text').hidden = true; $('sheet').hidden = false; $('sheet-close').focus();
+      sheetAs('THE PLAN');
+      // The plans of the orders in force are paged through from one another.
+      var roots = st.intents.filter(function (i) { return i.parent == null && i.in_force; }).map(function (i) { return i.number; }).sort(function (x, y) { return x - y; }), at = roots.indexOf(root);
+      if (at >= 0 && roots.length > 1) { $('sheet-step').hidden = false; $('sheet-step-n').textContent = (at + 1) + ' of ' + roots.length; $('sheet-prev').onclick = function () { readPlan(roots[(at - 1 + roots.length) % roots.length]); }; $('sheet-next').onclick = function () { readPlan(roots[(at + 1) % roots.length]); }; }
+      $('sheet-chart').hidden = false; $('sheet-chart').onclick = function () { $('sheet').hidden = true; showPlanOnChart(root); }; doc.hidden = false; $('sheet-text').hidden = true; $('sheet').hidden = false; $('sheet-close').focus();
     }).catch(function (e) { setStatus('The plan could not be read: ' + e.message); });
   }
 
@@ -2363,7 +2370,7 @@ body.watched .gives { display: none !important; }
   }
   // What the sheet is: its title, and for a directive the small label above
   // it and the line outside the paper that says what the paper is.
-  function sheetAs(title, label, note) { $('sheet-title').textContent = title; $('sheet-label').textContent = label || ''; $('sheet-label').hidden = !label; $('sheet-note').textContent = note || ''; $('sheet').classList.toggle('dispatch', !!label); $('sheet-paper').scrollTop = 0; $('sheet-chart').hidden = true; $('sheet-doc').classList.remove('diary'); $('sheet-doc').classList.remove('oob'); $('sheet-back').hidden = !sheetTrail.length; }
+  function sheetAs(title, label, note) { $('sheet-title').textContent = title; $('sheet-label').textContent = label || ''; $('sheet-label').hidden = !label; $('sheet-note').textContent = note || ''; $('sheet').classList.toggle('dispatch', !!label); $('sheet-paper').scrollTop = 0; $('sheet-chart').hidden = true; $('sheet-step').hidden = true; $('sheet-doc').classList.remove('diary'); $('sheet-doc').classList.remove('oob'); $('sheet-back').hidden = !sheetTrail.length; }
   function readDirective(d) {
     var doc = $('sheet-doc'), head = el('div', 'head'); doc.textContent = '';
     [['From', d.from], ['To', d.to], ['Date', dateOf(received[d.number] - 2, true) || 'Day ' + received[d.number]], ['Subject', d.subject]].forEach(function (r) { head.appendChild(el('span', '', r[0])); head.appendChild(el('span', '', r[1])); });
