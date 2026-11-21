@@ -118,7 +118,7 @@
 //! 23. **The key.** `for_play = true` in a scenario's `[objectives]` table
 //!     loads; with the key absent or `false` the scenario is of record.
 //!     Scenario 103's four files have it, and scenario 105's four
-//!     (decision 0188). No other scenario file has it.
+//!     (decision 0188). No other scenario file has it. (Amended by the architect on Nov 21, 2026: the files of the same two scenarios with their oilers, decision 0206, have it too, as do the table's copies of files for play, decision 0205.)
 //! 24. **It changes no game.** File a's five daily hashes on seed 1942 are
 //!     the same with the key as with it taken out.
 //! 25. **The result's words.** `sim-cli run` on file a prints its result
@@ -1182,7 +1182,10 @@ fn statement_23_the_key() {
     // statement's sense (reported by the build).
     for file in files.iter().filter(|f| {
         let name = f.file_name().and_then(|n| n.to_str());
-        name != Some("base_eastern_solomons.toml") && name != Some("base_coral_sea.toml")
+        name != Some("base_eastern_solomons.toml")
+            && name != Some("base_coral_sea.toml")
+            && name != Some("base_eastern_solomons_oilers.toml")
+            && name != Some("base_coral_sea_oilers.toml")
     }) {
         let text = std::fs::read_to_string(file).expect("reads");
         if text.lines().any(|l| l.trim_start().starts_with("for_play")) {
@@ -1195,6 +1198,11 @@ fn statement_23_the_key() {
             [
                 PathBuf::from(format!("scenarios/coral-sea/01{l}_coral_sea.toml")),
                 PathBuf::from(format!("scenarios/five-days/01{l}_eastern_solomons.toml")),
+                // The same two scenarios with their oilers (decision 0206).
+                PathBuf::from(format!("scenarios/coral-sea/02{l}_coral_sea_oilers.toml")),
+                PathBuf::from(format!(
+                    "scenarios/five-days/02{l}_eastern_solomons_oilers.toml"
+                )),
             ]
         })
         .collect();
