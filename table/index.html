@@ -1069,16 +1069,26 @@ body.watched .gives { display: none !important; }
   // What the staff names in plain words is linked too: a force or an air group
   // by its name, a contact by its number, and a hex, which turns the table to it.
   function hexRef(q, r) { var pl = { q: q, r: r }, b = el('button', 'ref', plainWords('(' + q + ',' + r + ')')); b.type = 'button'; b.title = showHexes ? whereIs(pl) : 'hex ' + q + ', ' + r; b.addEventListener('click', function (e) { e.stopPropagation(); see('hex:' + q + ',' + r); }); return b; }
+  // A place written as latitude and longitude, back to its hex, so that it
+  // can be touched: the table writes each hex's place one way, and this reads
+  // that writing back.
+  var PLACE_HEX = null;
+  function placeHex(words) {
+    if (showHexes) return null;
+    if (!PLACE_HEX) { PLACE_HEX = {}; hexes.forEach(function (h) { var w = whereIs({ q: h[0], r: h[1] }); if (!PLACE_HEX[w]) PLACE_HEX[w] = [h[0], h[1]]; }); }
+    return PLACE_HEX[words] || null;
+  }
   function plainLinks(e, text) {
     var names = {}, list = [];
     Object.keys(M.names || {}).forEach(function (h) { var n = M.names[h]; if (/^(task_force|air_group):/.test(h) && n && n.length > 2 && !names[n]) { names[n] = h; list.push(n); } });
     list.sort(function (a, b) { return b.length - a.length; });
-    var re = new RegExp('\\((-?\\d+), ?(-?\\d+)\\)|\\bcontact (\\d+)\\b' + (list.length ? '|(?<![\\w-])(' + list.map(function (n) { return n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }).join('|') + ')(?![\\w-])' : ''), 'g'), last = 0, m;
+    var re = new RegExp('\\((-?\\d+), ?(-?\\d+)\\)|\\bcontact (\\d+)\\b|(\\d+\u00b0\\d+\u2032[NS] \\d+\u00b0\\d+\u2032[EW])' + (list.length ? '|(?<![\\w-])(' + list.map(function (n) { return n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }).join('|') + ')(?![\\w-])' : ''), 'g'), last = 0, m;
     while ((m = re.exec(text))) {
       var node = null;
       if (m[1] != null) { if (hexAt[m[1] + ',' + m[2]]) node = hexRef(+m[1], +m[2]); }
       else if (m[3] != null) { if (M.contacts.some(function (c) { return c.contact.handle === 'contact:' + m[3]; })) node = refTo('contact:' + m[3]); }
-      else if (m[4] != null) node = refTo(names[m[4]]);
+      else if (m[4] != null) { var at = placeHex(m[4]); if (at) node = hexRef(at[0], at[1]); }
+      else if (m[5] != null) node = refTo(names[m[5]]);
       if (!node) continue;
       if (m.index > last) e.appendChild(document.createTextNode(plainWords(text.slice(last, m.index)))); e.appendChild(node); last = re.lastIndex;
     }
@@ -1610,7 +1620,7 @@ body.watched .gives { display: none !important; }
       .replace(/(^|[^:\w.])(\d+)\.(\d{3,})\b/g, function (m, a, w, f) { return a + (Math.round(parseFloat(w + '.' + f) * 10) / 10); })
       .replace(/(^|[^:\w.,])(\d{4,})\b(?!\.\d)/g, function (m, a, w) { return a + w.replace(/\B(?=(\d{3})+$)/g, ','); });
   }
-  function workedView(into, verdict, r, own) {
+  function workedView(into, verdict, r, own, bare) {
     var box = el('div', 'reason', ''), say = function (t) { return reasonWords(t, own, true, true); };
     if (verdict) box.appendChild(el('div', 'rconcl', verdict + '.'));
     cutTop(tidyWorked(r.worked || ''), function (t, i) { return t.charAt(i) === '.' && /^\. [A-Z]/.test(t.substr(i, 3)) ? 2 : 0; }).forEach(function (sent) {
@@ -1633,9 +1643,56 @@ body.watched .gives { display: none !important; }
       } else box.appendChild(rich('div', 'rlead', say(main) + '.'));
       if (notes.length) { var nl = el('ul', 'rnotes', ''); notes.forEach(function (nt) { cutTop(nt, function (t, k) { return t.charAt(k) === ';' ? 1 : 0; }).forEach(function (pt) { var li = document.createElement('li'); li.appendChild(rich('span', '', say(pt) + '.')); nl.appendChild(li); }); }); box.appendChild(nl); }
     });
-    if ((r.binding || []).length) { var b = el('div', 'rmeta', ''); b.appendChild(el('span', '', 'Held by ')); b.appendChild(rich('span', '', reasonWords(r.binding.join('; ')) + '.')); box.appendChild(b); }
-    if ((r.would_change || []).length) { var c = el('div', 'rmeta', ''); c.appendChild(el('span', '', 'Would change with ')); c.appendChild(rich('span', '', reasonWords(r.would_change.join('; ')) + '.')); box.appendChild(c); }
+    if (!bare && (r.binding || []).length) { var b = el('div', 'rmeta', ''); b.appendChild(el('span', '', 'Held by ')); b.appendChild(rich('span', '', reasonWords(r.binding.join('; ')) + '.')); box.appendChild(b); }
+    if (!bare && (r.would_change || []).length) { var c = el('div', 'rmeta', ''); c.appendChild(el('span', '', 'Would change with ')); c.appendChild(rich('span', '', reasonWords(r.would_change.join('; ')) + '.')); box.appendChild(c); }
     into.appendChild(box);
+  }
+  // What the staff is doing under one order or task, as a commander would be
+  // told it: what each force and each air group is set to, once; then what
+  // the staff decided not to do, with what holds it; then what of his own he
+  // could change. The staff gives a reason for every single order, so a route
+  // and its speed, or a mission and its share, say one thing twice: the
+  // working in full is kept, each reason once, under a fold.
+  var CAN_CHANGE = /risk|leave|home port|limit|priority|approv|releas|withdr|forces|hold/;
+  function staffWork(into, list, own) {
+    var orders = list.filter(function (x) { return x.o && x.o.order && x.o.unit; }), moves = list.filter(function (x) { return x.o && !x.o.order; }), rest = list.filter(function (x) { return !x.o; });
+    var units = [], by = {}, lines = [], odd = [];
+    orders.forEach(function (x) { var u = x.o.unit; if (!by[u]) { by[u] = {}; units.push(u); } by[u][x.o.order.kind] = x.o.order; });
+    function say(t) { into.appendChild(rich('div', 'work', reasonWords(t, own, true, true))); }
+    function listed(a) { return a.length < 2 ? a.join('') : a.slice(0, -1).join(', ') + ' and ' + a[a.length - 1]; }
+    var SPEED = { full: 'full speed', cruise: 'cruise' }, known = { set_route: 1, set_speed: 1, set_rules_of_engagement: 1, set_air_mission: 1, set_patrol_share: 1, set_search_arc: 1, set_strike_sizing: 1 };
+    units.filter(function (u) { return /^task_force:/.test(u); }).forEach(function (u) {
+      var k = by[u], bits = [];
+      if (k.set_route && (k.set_route.waypoints || []).length) { var w = k.set_route.waypoints, to = w[w.length - 1]; bits.push('sails for (' + to[0] + ',' + to[1] + ')' + (k.set_speed ? ' at ' + (SPEED[k.set_speed.speed] || k.set_speed.speed) : '') + (w.length > 1 ? ', by ' + (w.length - 1) + ' turn' + (w.length > 2 ? 's' : '') + ' on the way' : '')); }
+      else if (k.set_speed) bits.push('goes to ' + (SPEED[k.set_speed.speed] || k.set_speed.speed));
+      if (k.set_rules_of_engagement) bits.push(k.set_rules_of_engagement.stance === 'avoid' ? 'avoids a gun action' : k.set_rules_of_engagement.stance === 'seek' ? 'seeks a gun action' : 'fights by the stance ' + String(k.set_rules_of_engagement.stance).replace(/_/g, ' '));
+      if (bits.length) say(u + ' ' + listed(bits) + '.');
+    });
+    var flying = {}, order = [];
+    units.filter(function (u) { return /^air_group:/.test(u); }).forEach(function (u) { var m = by[u].set_air_mission; if (!m) return; if (!flying[m.mission]) { flying[m.mission] = []; order.push(m.mission); } flying[m.mission].push(u); });
+    order.forEach(function (m) {
+      var g = flying[m], t = (MISSION[m] || String(m).replace(/_/g, ' ')) + ': ' + listed(g);
+      if (m === 'combat_air_patrol') { var sh = g.map(function (u) { return by[u].set_patrol_share ? Number(by[u].set_patrol_share.share) : null; }); if (sh[0] != null && sh.every(function (v) { return v === sh[0]; })) t += ', with ' + (sh[0] === 0.5 ? 'half' : Math.round(sh[0] * 100) + ' in 100') + ' of ' + (g.length > 1 ? 'their' : 'its') + ' fighters' + (sh[0] < 1 ? '; the others go as escorts' : ''); }
+      if (m === 'search') { var arcs = g.filter(function (u) { return by[u].set_search_arc; }).map(function (u) { var a = by[u].set_search_arc; return deg3(+a.from_deg) + ' round to ' + deg3(+a.to_deg) + ', out to ' + commas(a.range_nm) + ' miles'; }); if (arcs.length && arcs.every(function (v) { return v === arcs[0]; })) t += ', ' + arcs[0]; }
+      say(t + '.');
+    });
+    // An order of a kind not told above is told by its reason, once.
+    var seen = {};
+    orders.forEach(function (x) { if (known[x.o.order.kind]) return; var w = String(x.r.worked || ''); if (seen[w]) return; seen[w] = true; odd.push(x); });
+    odd.forEach(function (x) { workedView(into, '', x.r, own, true); });
+    var lastVerdict = null, told = {};
+    rest.forEach(function (x) { var w = String(x.r.worked || ''); if (told[w]) return; told[w] = true; workedView(into, x.verdict === lastVerdict ? '' : x.verdict, x.r, own); lastVerdict = x.verdict; });
+    var can = [], has = {};
+    orders.forEach(function (x) { (x.r.would_change || []).forEach(function (c) { if (CAN_CHANGE.test(c) && !/fatigue|contact/.test(c) && !has[c]) { has[c] = true; can.push(c); } }); });
+    if (can.length) { var cc = el('div', 'reason', ''), m = el('div', 'rmeta', ''); m.appendChild(el('span', '', 'You could change this with ')); m.appendChild(rich('span', '', reasonWords(can.join('; ')) + '.')); cc.appendChild(m); into.appendChild(cc); }
+    // The working in full: each reason once, and the longer of two where one
+    // only begins the other; the staff's own moves on the plan come first.
+    var all = moves.concat(orders), texts = all.map(function (x) { return String(x.r.worked || ''); });
+    if (all.length) {
+      var full = document.createElement('details'), fs = document.createElement('summary'), once = {}; fs.textContent = 'THE STAFF\'S WORKING IN FULL'; full.appendChild(fs);
+      all.forEach(function (x, n) { var w = texts[n]; if (once[w] || texts.some(function (o) { return o.length > w.length && o.indexOf(w) === 0; })) return; once[w] = true; workedView(full, '', x.r, own, true); });
+      into.appendChild(full);
+    }
   }
   // What the staff wants to know before a landing goes, said plainly.
   function needWords(k) {
@@ -1797,9 +1854,9 @@ body.watched .gives { display: none !important; }
     Promise.all([api('command_state'), api('plans'), api('staff_orders').catch(function () { return {}; }), api('order', { intent: root }).catch(function () { return null; })]).then(function (a) {
       var st = a[0], plans = {}, said = {}, work = {}, doc = $('sheet-doc'); doc.textContent = '';
       (a[1].plans || []).forEach(function (p) { plans[p.number] = p; });
-      function note(r, verdict) { if (!r || !r.serves) return; var n = r.serves.intent; if (r.serves.statement) said[n] = r.serves.statement; (r.serves.chain || []).forEach(function (c) { said[c.intent] = c.statement; }); (work[n] = work[n] || []).push({ verdict: verdict, r: r }); }
-      (a[2].orders || []).forEach(function (o) { note(o.reason, 'An order goes out'); });
-      (a[2].commands || []).forEach(function (o) { note(o.reason, 'The staff adjusts'); });
+      function note(r, verdict, o) { if (!r || !r.serves) return; var n = r.serves.intent; if (r.serves.statement) said[n] = r.serves.statement; (r.serves.chain || []).forEach(function (c) { said[c.intent] = c.statement; }); (work[n] = work[n] || []).push({ verdict: verdict, r: r, o: o }); }
+      (a[2].orders || []).forEach(function (o) { note(o.reason, 'An order goes out', o); });
+      (a[2].commands || []).forEach(function (o) { note(o.reason, 'The staff adjusts', o); });
       (a[2].no_orders || []).forEach(function (o) { note(o, 'No order today'); });
       var byNum = {}; st.intents.forEach(function (i) { byNum[i.number] = i; });
       var top = byNum[root]; if (!top) { setStatus('That order is no longer held.'); return; }
@@ -1882,7 +1939,7 @@ body.watched .gives { display: none !important; }
       if (own.length) {
         var on = el('div', 'node'), od = document.createElement('details'), osm = document.createElement('summary'), lastOwn = null;
         osm.textContent = 'WHAT THE STAFF IS DOING, AND WHY'; od.appendChild(osm); od.open = !lines.length;
-        own.forEach(function (x) { workedView(od, x.verdict === lastOwn ? '' : x.verdict, x.r, root); lastOwn = x.verdict; });
+        staffWork(od, own, root);
         on.appendChild(od); doc.appendChild(on);
       }
       if (lines.length) doc.appendChild(el('h3', '', 'The brief'));
@@ -1895,10 +1952,7 @@ body.watched .gives { display: none !important; }
         var d = document.createElement('details'), sm = document.createElement('summary'); sm.textContent = 'WHY, AND HOW IT STANDS'; d.appendChild(sm);
         d.appendChild(el('div', 'work', (i.maker === 'staff' ? 'The staff\'s' : 'Yours') + ' · order ' + i.number + (p ? ' · plan ' + p.number + ', ' + p.state : '')));
         if (i.measure && i.measure.text) d.appendChild(rich('div', '', 'So far: ' + tidyWorked(i.measure.text) + '.'));
-        var lastVerdict = null;
-        L.w.forEach(function (x) {
-          workedView(d, x.verdict === lastVerdict ? '' : x.verdict, x.r, i.number); lastVerdict = x.verdict;
-        });
+        staffWork(d, L.w, i.number);
         if (p && p.amendments && p.amendments.length) d.appendChild(rich('div', 'work', 'Changed ' + p.amendments.length + ' time' + (p.amendments.length > 1 ? 's' : '') + ', last on day ' + p.amendments[p.amendments.length - 1].day + ': ' + p.amendments[p.amendments.length - 1].change + '.'));
         n.appendChild(d);
         if (L.off) d.appendChild(el('div', 'work', 'Cancelled by you today. It stops at 1800.'));
