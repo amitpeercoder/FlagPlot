@@ -110,3 +110,4 @@ The events `force_entered` (`{ force, side, hex, base?, ships, air_groups, land_
 
 The event `stock_received` (`{ base, side, supply_t, fuel_t }`, decision 0196) is a base's stock from off the map, on a night a supply line names; it has no cause and is shown in the event list in the engine's words, and the viewer draws nothing for it.
 
+The event `men_joined` (`{ unit, side, base, men, men_after, experience_before, experience_after, joined }`, decision 0197) is replacement men joining a land unit at a base on a night a stream names; it has no cause and is shown in the event list in the engine's words, and the viewer draws nothing for it beyond the unit's men in the next state.
