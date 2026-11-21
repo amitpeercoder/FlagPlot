@@ -129,7 +129,13 @@ Built on Nov 21, 2026, on the branch `hunger-build`, from the hand calculation o
 
 ### What did not hold
 
-Nothing. No statement or property needed an `_as_built` test.
+Of scenario 119's hand calculation, nothing: no statement or property needed an `_as_built` test.
+
+Of another: scenario 104's statement 23 says that scenarios 103's and 105's eight files have the key `for_play` and "no other scenario file has it". The table's copies of six of them (files b, c and d of each, in `data/scenarios/table-hunger/`) carry it too, since they are those files but for the ground line. Its test is left as written and ignored with that reason, and `statement_23_the_key_as_built` beside it asserts the eight files and the six copies.
+
+### Pins remade for the layout
+
+Besides what `regenerate.sh` remakes: the ten export pins of `crates/sim-cli/tests/export_pictures.rs` (each export checked against the export of the commit before with the state version and the day hashes taken out: the same in every one, and the old export hashes as pinned before), and scenario 110's `PRE_RULE` and day-7 hash in `tests/scenario_110_the_last_day_ashore.rs`, daily hashes of scenario 109's file on the frozen figures, remade at version 53 as they were at version 52.
 
 ### Games on file
 

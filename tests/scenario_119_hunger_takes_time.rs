@@ -1129,18 +1129,16 @@ fn repo() -> PathBuf {
 }
 
 /// Properties: the table's copies are true copies. Each scenario in
-/// `data/scenarios/table-hunger/` differs from the one file of its name
-/// elsewhere under `data/scenarios` in the line that names its ground figures
+/// `data/scenarios/table-hunger/` differs from the one file of its name in
+/// another folder of `data/scenarios` (not the folder itself, whose files are
+/// of the proofs' scenarios at the top, and not `step2-frozen/`, which holds
+/// frozen copies for the tests) in the line that names its ground figures
 /// and in nothing else, and the script that makes them, asked to check, says
 /// they are what it makes.
 #[test]
 fn property_the_tables_copies_are_true_copies() {
     let folder = scenarios_dir().join("table-hunger");
-    if !folder.is_dir() {
-        // The copies are not on file yet; nothing to compare.
-        eprintln!("data/scenarios/table-hunger is not there yet");
-        return;
-    }
+    assert!(folder.is_dir(), "the table's copies are on file");
     let mut all = Vec::new();
     tomls_under(&scenarios_dir(), &mut all);
     let mut copies = Vec::new();
@@ -1150,7 +1148,12 @@ fn property_the_tables_copies_are_true_copies() {
         let name = copy.file_name().unwrap();
         let sources: Vec<&PathBuf> = all
             .iter()
-            .filter(|p| p.file_name() == Some(name) && !p.starts_with(&folder))
+            .filter(|p| {
+                p.file_name() == Some(name)
+                    && !p.starts_with(&folder)
+                    && p.parent() != Some(scenarios_dir().as_path())
+                    && !p.starts_with(scenarios_dir().join("step2-frozen"))
+            })
             .collect();
         assert_eq!(sources.len(), 1, "one source for {name:?}: {sources:?}");
         let source_text = std::fs::read_to_string(sources[0]).expect("the source reads");
