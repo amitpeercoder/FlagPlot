@@ -119,8 +119,11 @@ pub const FORMAT: &str = "flagplot-agent";
 /// for the side until its day (decision 0195): the briefing's `arrivals.to_enter`,
 /// `entered_yesterday` and `entry_waiting_yesterday`, `list_forces`' `to_enter`,
 /// and the entity answer `to_enter` for a held unit; and the refusal `is not on
-/// the map yet`.
-pub const VERSION: u32 = 37;
+/// the map yet`. 37 adds the side's supply lines (decision 0196). 38 adds the
+/// side's streams of replacement men (decision 0197): the briefing's
+/// `arrivals.men_replacements` and `men_joined_yesterday`, and the
+/// `establishment` of a land unit's line.
+pub const VERSION: u32 = 38;
 
 /// The answer to a question about something the side does not know of: a
 /// unit of the enemy, a number that does not exist, an event the side may not

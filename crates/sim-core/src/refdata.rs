@@ -1564,6 +1564,16 @@ pub struct GroundFigures {
     /// The cover a hit on men wears away (decision 12 of 0106), from 0 to
     /// 100.
     pub cover_wear_per_hit: Fixed,
+    /// The experience of replacement men (decision 0197, 12 and 14), from 0
+    /// to 4: a unit above it loses a level as they join, one at or below it
+    /// is not changed. A placeholder; a file that names none gives 2, the
+    /// standard.
+    pub replacement_experience: u8,
+    /// The share of a unit's establishment that the men joined since its
+    /// experience last changed must reach for it to lose a level (decision
+    /// 0197, 12 and 14), above 0 and not above 1. A placeholder; a file that
+    /// names none gives a half.
+    pub replacement_share: Fixed,
 }
 
 /// The least and the most a ground report can be, as a share of the truth
@@ -1639,7 +1649,16 @@ impl GroundFigures {
         strain_limit: Fixed::from_int(60),
         cover_from_strain: Fixed::ZERO,
         cover_wear_per_hit: Fixed::ZERO,
+        replacement_experience: GroundFigures::REPLACEMENT_EXPERIENCE,
+        replacement_share: GroundFigures::REPLACEMENT_SHARE,
     };
+
+    /// The experience of replacement men where a ground file names none
+    /// (decision 0197, 14): the standard, 2.
+    pub const REPLACEMENT_EXPERIENCE: u8 = 2;
+    /// The share of the establishment where a ground file names none
+    /// (decision 0197, 14): a half.
+    pub const REPLACEMENT_SHARE: Fixed = Fixed::from_raw(500_000);
 
     /// Describes what is wrong with the figures, if anything. The weight of
     /// a man, his daily charge and the men to a shot divide, so they must be
@@ -1897,6 +1916,19 @@ impl GroundFigures {
                     error.low, error.high
                 ));
             }
+        }
+        // Replacement men (decision 0197, 14).
+        if self.replacement_experience > 4 {
+            return Some(format!(
+                "ground replacement_experience {} is not between 0 and 4",
+                self.replacement_experience
+            ));
+        }
+        if self.replacement_share <= Fixed::ZERO || self.replacement_share > Fixed::ONE {
+            return Some(format!(
+                "ground replacement_share {} is not above 0 and not above 1",
+                self.replacement_share
+            ));
         }
         None
     }

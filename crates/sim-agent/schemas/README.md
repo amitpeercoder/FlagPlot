@@ -60,7 +60,7 @@ miles that can be a decimal, shots) is a decimal string such as `"12"` or
 
 ## The version rule
 
-`version` is 37. A field removed from an answer, or a field whose meaning
+`version` is 38. A field removed from an answer, or a field whose meaning
 changes, raises the version by one. A field added does not change it, so a
 reader must ignore fields it does not know. (The schemas here set
 `additionalProperties: false` because they describe this version exactly; a
@@ -176,6 +176,16 @@ Version 37 (decision 0196) adds the side's supply lines. The briefing's
 before today: `base`, `supply_t`, `fuel_t`, `first_day`, `last_day`), left out
 where the side has none; the text briefing gains a "Supply line:" line for each.
 Only the side's own lines are ever given.
+
+Version 38 (decision 0197) adds the side's streams of replacement men. The
+briefing's `arrivals` part gains `men_replacements` (each stream of the side
+whose last day is not before today: `base`, `men_per_day`, `first_day`,
+`last_day`), and its ground part gains `men_joined_yesterday` (`land_unit`,
+`base`, `men`, `men_after`, `experience_before`, `experience_after`, `joined`,
+`event`); a land unit's line gains `establishment`. Each is left out where
+there is nothing to say, so a game with no stream and no establishment reads
+as before; the text briefing gains "Replacement men:" and "Men joined
+yesterday:" lines. Only the side's own are ever given.
 
 The fight ashore (decision 0090, see "The fight ashore" below) adds only fields
 and values, so `version` stays 3.

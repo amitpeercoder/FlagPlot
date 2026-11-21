@@ -1,0 +1,105 @@
+# Scenario 113: men who replace the lost.
+#
+# Decision 0197. A placeholder scenario of eight days on the placeholder map
+# data/map/placeholder_forces_that_arrive.toml. Side A (Allied) has base 1,
+# B, at (0,0). Side J (Japanese) has base 2, R, at (14,0), with ample
+# supply, and a stream of 100 replacement men a day to R from day 2, with no
+# side given, so it is J's. At R, ashore, on defend, with no enemy in the
+# hex: J's unit 1, 400 men, an establishment of 600 by the scenario's key,
+# experience 4; unit 2, 500 men with no key, so an establishment of 500,
+# experience 2; unit 3, 250 men, an establishment of 300, experience 3.
+# There is no ship, no aircraft and no order in the file: the tests add what
+# they want at the marks below, as scenario 112's test does. The hand
+# calculation is in tests/scenario_113_men_who_replace_the_lost.rs. The test
+# runs this file on the frozen step 1 figures.
+#
+# Kept out of the loops that walk data/scenarios/*.toml by being in this
+# folder (decision 0072).
+#
+# PLACEHOLDER DATA. The bases, the units, the stream and the map are
+# invented. Every name below says "Placeholder".
+
+name = "Placeholder scenario 113: Men who replace the lost"
+placeholder = true
+seed = 1942
+days = 8
+map = "../../map/placeholder_forces_that_arrive.toml"
+ship_classes = [
+    "../../reference/ship_classes.csv",
+    "../../reference/ship_classes_placeholder_transports.csv",
+]
+port_sizes = "../../reference/port_sizes.csv"
+aircraft_types = "../../reference/aircraft_types.csv"
+search = "../../reference/search.toml"
+surface_combat = "../../reference/surface_combat.toml"
+air_combat = "../../reference/air_combat.toml"
+ground = "../../reference/ground.toml"
+
+# Allied base 1, B.
+[[base]]
+id = 1
+name = "Placeholder base B"
+side = "allied"
+q = 0
+r = 0
+supply_t = 1000
+fuel_t = 2000
+
+# Japanese base 2, R: ample supply.
+[[base]]
+id = 2
+name = "Placeholder base R"
+side = "japanese"
+q = 14
+r = 0
+supply_t = 5000
+fuel_t = 500
+
+# MARK: bases
+
+# J's stream of replacement men to R: 100 men a night from day 2; the side is
+# the base's at the start, J.
+[[men_replacement]]
+base = 2
+men = 100
+first_day = 2
+
+# MARK: streams
+
+# MARK: forces
+
+# Unit 1: 400 men, an establishment of 600, experience 4.
+[[land_unit]]
+id = 1
+name = "Placeholder J unit 1"
+side = "japanese"
+men = 400
+establishment = 600
+experience = 4
+q = 14
+r = 0
+
+# Unit 2: 500 men, no key, so an establishment of 500; experience 2.
+[[land_unit]]
+id = 2
+name = "Placeholder J unit 2"
+side = "japanese"
+men = 500
+experience = 2
+q = 14
+r = 0
+
+# Unit 3: 250 men, an establishment of 300, experience 3.
+[[land_unit]]
+id = 3
+name = "Placeholder J unit 3"
+side = "japanese"
+men = 250
+establishment = 300
+experience = 3
+q = 14
+r = 0
+
+# MARK: units
+
+# MARK: orders
