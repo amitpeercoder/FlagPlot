@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 21, 2026 on the designer's word 
 
 Summary: A dry run (a trial, decisions 0175, 0178 and 0181) is refused while a day is open, at 0600 and at 1200. This lets it be asked there. It is played from the state as it stands at that hour, taken as if it were this evening: the first day played is tomorrow, when the order would in truth be taken up, and the hours of today still to come are not played. The paper says so. Playing the rest of today inside the dry run is left as a second stage.
 
-Standing: Planned on Nov 21, 2026; its review folded in; waits for its hand calculation and its build.
+Standing: Planned on Nov 21, 2026; its review folded in; its hand calculation written (scenario 118); rules 1 to 13 built on Nov 21, 2026 ("As built", below); stage 2 (rule 14) not built.
 
 ## Why
 
@@ -81,3 +81,48 @@ A reviewer who had not seen the plan read it against the session, the trial, the
 - **Contacts.** The plan had the error in hours on the wrong contacts and left out that the ages in pulses are younger than they will be at dusk. Rule 7.
 - **A trial described** would not have been refused on the game itself and would have started a day early. It is begun on the copy too. Rules 2 and 3.
 - **The field, the list of trials, the promise of the same answer, and the places to change** are named. Rules 8 to 10 and 12.
+
+## As built
+
+Rules 1 to 13 are built on Nov 21, 2026. Rule 14, stage 2, is not.
+
+**Where.**
+
+- `crates/sim-agent/src/session.rs`: the refusal "a trial is asked at dusk" is gone from `trial_tool`. A new `Session::closed_world` gives the game itself at dusk and `World::as_if_day_closed` inside a day; `trial_tool` reads "in force" and the leaves held on it, and `play_trial` and `describe_trial` are handed it and begin the runner on its side's view (rules 2 and 3). The count of orders to units not tried is the seat's queue for the coming day and its orders given for the day's pulses together (rule 5). `trials` gives each row `inside_day` and its words (rule 9).
+- `crates/sim-agent/src/trial.rs`: what was asked gains `inside_day` (rule 8) and whether the side has men ashore. The sentence of rule 8 follows the line "Tried" in a trial's, a window's and a described trial's words. The orders line inside a day says they and the holds they make are not in it. A window's line of the enemy on the first eve says "as things stood at 0600 of day 1" in place of "on the evening before day 2" (rule 9).
+- `crates/sim-cli/src/seat_trial.rs` is unchanged: it reads the first day and the dates from the view it is handed (`view.day() + 1`), which on the copy is the open day, so day 2 comes out with no change there (rule 3).
+- `crates/sim-cli/src/staff_tools.rs`: `TRIAL_DESCRIPTION` says a trial may be asked inside a day and what it then leaves out, rewords the promise (rule 10) and drops "refused at an open day" (rule 12).
+- `crates/sim-core/src/resolve.rs`: the doc comment of `as_if_day_closed` names the trial's view among its uses. Decision 0156's and 0181's lines are widened as "What it costs" says.
+- The schemas: `trial.schema.json`'s `asked` gains `inside_day`, which `window` and `trial_described` take by reference, and `trials.schema.json`'s row gains it. The agent interface is version 40.
+- `table/index.html` (rule 13): the head of the paper and the line under the costs, and `cannotTry` loses its sentence for a refusal at mid-day. The staff's report does not repeat the sentence of rule 8.
+- The rulebook: chapter 9, A seat's trial, rules 6, 8, 11 and 13 and a new rule 14; chapter 1, At the tools and A world built from a picture, item 2 (where what may be done at 0600 and 1200 is said; chapter 8 says it of the override alone, and gains a line there); the glossary's "Trial".
+- Scenario 118: `data/scenarios/a-dry-run-inside-a-day/`, with a placeholder map, a file of sides (`class_sides_placeholder_scenario_118.csv`, and its frozen copy) and the trial's figures of scenario 96; its tests in `tests/scenario_118_a_dry_run_inside_a_day.rs`.
+
+**Readings.**
+
+1. *The words of rule 8.* "Asked at 0600 of day 1, from things as they stand at that hour: the rest of day 1 was not played." with ", and what is ashore is a day behind" before the stop where the side has men ashore; a trial described says "is not played". "Men ashore" is a land unit of the side's with men ashore, read on the copy.
+2. *The orders line.* At dusk it is as it was, word for word, so no answer at dusk changes. Inside a day: "You have 1 order to units given for the day's pulses or queued for the coming day: a trial does not try orders to units, and they and the holds they make are not in it."
+3. *The list of trials.* A trial asked inside a day keeps the standing `earlier_evening` once the clock has moved, as rule 9 says, and its note is "asked at an earlier hour", wherever the clock now stands; one asked at this stop is "asked at this hour, on the queue as it stands". The row's `inside_day` is a copy of what was asked's.
+4. *The interface's version.* The schemas' README says an added field does not raise the version; the plan raises it, since the refusal is no longer given, and it is raised.
+5. *The copy at dusk.* At dusk `closed_world` borrows the game and makes no copy, so a trial at dusk costs what it did.
+6. *Scenario 97.* Its test `refused_while_a_day_is_open` rests on the refusal, against the plan's "no test rests on the refusal's words". It is kept, ignored with the reason that decision 0204 supersedes it; scenario 97's doc comment is not touched.
+
+**What did not hold.**
+
+- *Statement 7 cannot arise as set.* Order 1, stated at the dusk before day 1, is taken in at the start of day 1 and so is in force at 0600, and an order in force has no later date (decision 0181, amended 5): the window is refused. Its test stands as written and is ignored; `statement_7_at_later_dates_as_built` checks that refusal and tries instead a second order queued at 0600, whose window's first date is day 2.
+- *Statement 13's "at both"* is read as in the game and in the trial: a contact reported in the night just resolved is 0 pulses old in the game's list at 0600 and is read as 0 hours by the trial. At 1200 the same contact is a pulse old, the morning having passed with no sighting.
+- Every other statement and property holds as written. The property "a state never built from before" is tested on the 39 days of `stage-3-proof/07a_slice.toml`, with orders inside a day and the trial's figures added, at 0600 and 1200 of day 18, when Allied men are ashore at Lunga and the hits of the night's bombardment by Japanese task force 6 wait for that day's fight ashore; the trial is answered at both.
+
+## The architect's rulings
+
+Read on Nov 21, 2026: the session's changes in full, the answer's words, and the build's account of what moved.
+
+1. **The build is what the plan asked for, and small.** A trial is begun on the copy a preview already uses; the runner needed no change, since on that copy the day counter is the open day and the first day played comes out as the day after.
+2. **Statement 7 is corrected, not the code.** An order in force has no later date to try, and order 1 is in force by 0600. The statement now says that it is refused for that reason, and tries at later dates a second order stated at 0600. The test the build wrote is of that. The correction is dated in the test file.
+3. **The property that the game is as it was** is tested with a trial and a trial beside another, where the build first tried a trial at later dates and met the same refusal. The property never named a form of trial; it holds.
+4. **Scenario 97's statement that a trial is refused while a day is open is superseded by this decision.** Its test is set aside with that reason and its doc comment carries a dated note. The plan said no test rested on the refusal's words; one did, and the review missed it.
+5. **The interface's version is raised** although one added field alone would not raise it, because a refusal an agent could meet is withdrawn.
+6. **A trial asked earlier in the same day is listed as "asked at an earlier hour",** under the same standing as one asked on an earlier evening. One standing serves both: in either case the state has moved on since.
+7. **Statements 3 and 8 are tested by building the trial's worlds from the copy's view** with the trial's own routines, since an answer does not show its worlds. Statement 2, the first day, is what shows that the session uses the copy. That is accepted.
+8. **Not seen by the build:** the paper at 1200, the paper of a trial at later dates asked inside a day, and the paper at dusk after the change. The words under test are the answer's; the table's are checked by its screen checks and by one look at 0600.
+

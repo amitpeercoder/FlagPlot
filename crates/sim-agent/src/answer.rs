@@ -127,8 +127,12 @@ pub const FORMAT: &str = "flagplot-agent";
 /// in its line where it is under that order, a ship line's `fuels_at_sea`
 /// for an oiler, and the briefing's
 /// `fuelled_at_sea`, `fuelling_broken_off` and `fuel_orders_ended` among the
-/// force changes.
-pub const VERSION: u32 = 39;
+/// force changes. 40 lets a trial be asked inside a day, at 0600 and 1200
+/// (decision 0204): the refusal "a trial is asked at dusk" is no longer
+/// given, and what was asked gains `inside_day` (`null` at dusk, else the
+/// day and the clock) in the answers `trial`, `window` and
+/// `trial_described` and in each row of `trials`.
+pub const VERSION: u32 = 40;
 
 /// The answer to a question about something the side does not know of: a
 /// unit of the enemy, a number that does not exist, an event the side may not

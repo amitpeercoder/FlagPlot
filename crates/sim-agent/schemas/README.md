@@ -60,7 +60,7 @@ miles that can be a decimal, shots) is a decimal string such as `"12"` or
 
 ## The version rule
 
-`version` is 39. A field removed from an answer, or a field whose meaning
+`version` is 40. A field removed from an answer, or a field whose meaning
 changes, raises the version by one. A field added does not change it, so a
 reader must ignore fields it does not know. (The schemas here set
 `additionalProperties: false` because they describe this version exactly; a
@@ -186,6 +186,12 @@ whose last day is not before today: `base`, `men_per_day`, `first_day`,
 there is nothing to say, so a game with no stream and no establishment reads
 as before; the text briefing gains "Replacement men:" and "Men joined
 yesterday:" lines. Only the side's own are ever given.
+
+Version 40 (decision 0204) lets a trial be asked inside a day, at 0600 and 1200: the refusal "a trial is asked at dusk"
+is no longer given, and what was asked (`asked`, in `trial`, `window` and `trial_described`) gains `inside_day`, `null`
+at dusk and inside a day `{"day": 1, "clock": "0600"}`; each row of `trials` gains it beside `asked_on`. Such a trial is
+begun on the side's view of the state as it stands with the open day treated as closed, and its first day is the day
+after the open day.
 
 Version 39 (decision 0201) adds fuelling at sea: the task force order `fuel_from` (see "Fuelling at sea" below), a
 ship line's `fuels_at_sea` (true for an oiler, in a task force's entity), a force's `fuel_from` (the giver's handle, in a force's line and so in `list_forces` and the task force entity, left out

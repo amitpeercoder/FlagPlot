@@ -144,6 +144,9 @@ button:disabled { opacity: 0.45; cursor: default; }
 .sheetnav button { min-height: 30px; padding: 0 8px; border: 0; background: transparent; color: var(--paper-dim); font-family: var(--f-ui); font-size: 12px; font-weight: 700; letter-spacing: 0.12em; cursor: pointer; }
 .sheetnav button:hover, .sheetnav button:focus-visible { color: var(--paper-ink); }
 .sheetnav #sheet-chart { margin-left: auto; color: var(--own); }
+.sheetnav #sheet-step { display: inline-flex; align-items: center; gap: 2px; margin-left: 8px; font-family: var(--f-ui); font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--paper-dim); }
+.sheetnav #sheet-step[hidden] { display: none; }
+.sheetnav #sheet-step button { font-size: 18px; letter-spacing: 0; min-width: 28px; }
 .sheetnav #sheet-close { font-size: 15px; letter-spacing: 0; min-width: 30px; }
 .sheetnav #sheet-chart[hidden] + #sheet-close { margin-left: auto; }
 .sheetnav + .sheet { border-radius: 0 0 2px 2px; }
@@ -441,7 +444,7 @@ body.watched .gives { display: none !important; }
 </aside>
 
 <div class="sheetwrap" id="sheet" hidden>
-  <div class="sheetnav"><button type="button" id="sheet-back" hidden>&#8592; BACK</button><span id="sheet-note" hidden></span><button type="button" id="sheet-chart" hidden>SHOW ON CHART</button><button type="button" id="sheet-close" title="Close (Esc)" aria-label="Close">&#10005;</button></div>
+  <div class="sheetnav"><button type="button" id="sheet-back" hidden>&#8592; BACK</button><span id="sheet-note" hidden></span><span id="sheet-step" hidden><button type="button" id="sheet-prev" title="The plan of the order before" aria-label="The plan before">&#8249;</button><span id="sheet-step-n"></span><button type="button" id="sheet-next" title="The plan of the next order" aria-label="The next plan">&#8250;</button></span><button type="button" id="sheet-chart" hidden>SHOW ON CHART</button><button type="button" id="sheet-close" title="Close (Esc)" aria-label="Close">&#10005;</button></div>
   <section class="sheet" id="sheet-paper" aria-label="The paper you are reading" tabindex="0">
     <div class="label" id="sheet-label" hidden></div>
     <h2 id="sheet-title">THE BRIEFING</h2>
@@ -1574,7 +1577,7 @@ body.watched .gives { display: none !important; }
     else if (k === 'strike_mission_cleared' && R('^' + H + ' has no mission: the base it was to strike, ' + H)) out = N(m[1]) + ' stood down from its strike: ' + N(m[2]) + ' is ours';
     if (out == null) {
       if (k === 'engagement_begun' && R('^' + H + ' met the enemy at ' + AT + ' at ' + CL)) out = N(m[1]) + ' met the enemy at ' + P(m[2], m[3]) + ', ' + m[4] + m[5] + '. Action joined';
-      else if (k === 'men_lost_unfed' && R('^' + H + ' lost (\\d+) men unfed at ' + AT + ', (\\d+) left')) out = N(m[1]) + ' lost ' + fig(m[2]) + (m[2] === '1' ? ' man' : ' men') + ' for want of food at ' + P(m[3], m[4]) + '; ' + fig(m[5]) + ' remain ashore';
+      else if (k === 'men_lost_unfed' && R('^' + H + ' lost (\\d+) men unfed at ' + AT + ', (\\d+) left')) out = N(m[1]) + ' lost ' + fig(m[2]) + (m[2] === '1' ? ' man' : ' men') + ' to hunger at ' + P(m[3], m[4]) + ', where the stock could not feed them; ' + fig(m[5]) + ' remain ashore';
       else if (k === 'men_lost_with_ship' && R('^(\\d+) men of ' + H + ' were lost with ' + H)) out = fig(m[1]) + (m[1] === '1' ? ' man' : ' men') + ' of ' + N(m[2]) + ' were lost with ' + N(m[3]);
       else if (k === 'unit_surrendered' && R('^' + H + ' of the \\w+ side surrendered at ' + AT + ': (\\d+) men lost')) out = N(m[1]) + ' surrendered at ' + P(m[2], m[3]) + ': ' + fig(m[4]) + ' men lost';
       else if (k === 'force_surprised' && R('^' + H + ' was surprised')) out = N(m[1]) + ' was taken by surprise';
@@ -1622,7 +1625,7 @@ body.watched .gives { display: none !important; }
       function row(label, a, b) { if (!a && !b) return; var r = el('div', 'crow'); r.appendChild(el('span', '', label)); r.appendChild(el('span', '', a ? commas(a) : '–')); r.appendChild(el('span', '', b ? commas(b) : '–')); box.appendChild(r); }
       if (!total.men && !total.pilots && !total.aircraft && !total.sunk.length) { box.appendChild(el('p', '', 'No loss is returned.')); return; }
       var hd = el('div', 'crow chead'); hd.appendChild(el('span', '', '')); hd.appendChild(el('span', '', dateOf(d - 1) || 'day ' + d)); hd.appendChild(el('span', '', 'Since ' + (dateOf(0) || 'day 1'))); box.appendChild(hd);
-      row('In the fighting ashore', today.fight, total.fight); row('To bombing and shellfire', today.fire, total.fire); row('For want of food', today.unfed, total.unfed); row('Lost at sea with their ships', today.sea, total.sea); row('Surrendered', today.surrendered, total.surrendered);
+      row('In the fighting ashore', today.fight, total.fight); row('To bombing and shellfire', today.fire, total.fire); row('To hunger', today.unfed, total.unfed); row('Lost at sea with their ships', today.sea, total.sea); row('Surrendered', today.surrendered, total.surrendered);
       var tot = el('div', 'crow ctotal'); tot.appendChild(el('span', '', 'Men lost')); tot.appendChild(el('span', '', today.men ? commas(today.men) : '–')); tot.appendChild(el('span', '', total.men ? commas(total.men) : '–')); box.appendChild(tot);
       row('Pilots', today.pilots, total.pilots); row('Aircraft', today.aircraft, total.aircraft);
       if (total.sunk.length) { var sk = el('div', 'cnote', ''); sk.appendChild(document.createTextNode('Ships sunk' + (today.sunk.length ? ' this day: ' + today.sunk.join(', ') + '.' : ': none this day.') + ' Since the start: ' + total.sunk.length + '. Ships\' companies are not returned.')); box.appendChild(sk); }
@@ -2072,7 +2075,11 @@ body.watched .gives { display: none !important; }
         var wl = el('div', 'line'), w = quiet('WITHDRAW THIS ORDER', 'danger'); w.addEventListener('click', function () { act('withdraw_intent', { intent: root }, 'The order is withdrawn from 1800.').then(function () { $('sheet').hidden = true; }); }); wl.appendChild(w); doc.appendChild(wl);
       }
       if (!WATCH) doc.appendChild(el('div', 'foot', (a[2].inside_day ? 'Worked now, in the middle of the day; the staff is asked again at dusk and may then do otherwise. ' : '') + 'You change a plan by instruction: your leave, a limit, a cancel or a withdrawal. To keep a force out of it, touch the force and keep it out of the staff\'s plans; a direct order of yours keeps out a force the staff is already using, and only that one.'));
-      sheetAs('THE PLAN'); $('sheet-chart').hidden = false; $('sheet-chart').onclick = function () { $('sheet').hidden = true; showPlanOnChart(root); }; doc.hidden = false; $('sheet-text').hidden = true; $('sheet').hidden = false; $('sheet-close').focus();
+      sheetAs('THE PLAN');
+      // The plans of the orders in force are paged through from one another.
+      var roots = st.intents.filter(function (i) { return i.parent == null && i.in_force; }).map(function (i) { return i.number; }).sort(function (x, y) { return x - y; }), at = roots.indexOf(root);
+      if (at >= 0 && roots.length > 1) { $('sheet-step').hidden = false; $('sheet-step-n').textContent = (at + 1) + ' of ' + roots.length; $('sheet-prev').onclick = function () { readPlan(roots[(at - 1 + roots.length) % roots.length]); }; $('sheet-next').onclick = function () { readPlan(roots[(at + 1) % roots.length]); }; }
+      $('sheet-chart').hidden = false; $('sheet-chart').onclick = function () { $('sheet').hidden = true; showPlanOnChart(root); }; doc.hidden = false; $('sheet-text').hidden = true; $('sheet').hidden = false; $('sheet-close').focus();
     }).catch(function (e) { setStatus('The plan could not be read: ' + e.message); });
   }
 
@@ -2139,6 +2146,7 @@ body.watched .gives { display: none !important; }
     if ((e.could_not_be_played || []).length) box.appendChild(el('div', 'work', e.could_not_be_played.length + ' run' + (e.could_not_be_played.length === 1 ? '' : 's') + ' could not be played and ' + (e.could_not_be_played.length === 1 ? 'is' : 'are') + ' left out.'));
     box.appendChild(el('h3', '', 'What it may cost'));
     box.appendChild(costTable([['Yours', e.cost], ['The enemy of the dry run', e.enemy_lost]]));
+    restNote(box, e);
     var held = heldHisGround(e.assumed || [], (e.asked || {}).worlds);
     if (held) box.appendChild(el('div', 'work', held));
     (e.partings || []).forEach(function (pt) {
@@ -2152,13 +2160,12 @@ body.watched .gives { display: none !important; }
       });
     });
   }
-  // Why a dry run was refused, in the table's words. One asked in the middle
-  // of a day is the common case and gets a plain sentence of its own.
+  // Why a dry run was refused, in the table's words.
   function cannotTry(message) {
-    var m = /clock stands at (\d{4}) of day (\d+)/.exec(String(message));
-    if (m) return 'A dry run can only be asked at dusk, before a day begins. It is now ' + m[1] + ' of day ' + m[2] + '; ask again at 1800.';
     return 'It cannot be tried: ' + dryWords(message) + '.';
   }
+  // A dry run asked inside a day (decision 0204): the rest of that day was not played.
+  function restNote(box, j) { if (!(j.asked && j.asked.inside_day)) return; var ash = textOf(j, 'Asked at').some(function (t) { return t.indexOf('what is ashore is a day behind') >= 0; }); box.appendChild(el('div', 'work', 'The rest of today is not played' + (ash ? ', and what is ashore is a day behind' : '') + '.')); }
   function textOf(j, start) { return (j.text || []).filter(function (t) { return t.indexOf(start) === 0; }); }
   function underneath(doc, title, lines) { if (!lines.length) return; var d = document.createElement('details'), sm = document.createElement('summary'); sm.textContent = title; d.appendChild(sm); lines.forEach(function (t) { d.appendChild(rich('div', 'work', dryWords(t))); }); doc.appendChild(d); }
   // What a dry run assumed of the enemy, in the table's words. A thing assumed
@@ -2190,7 +2197,7 @@ body.watched .gives { display: none !important; }
     var ends = j.has_end !== false;
     function line(start) { var t = textOf(j, start)[0]; if (t) used[t] = true; return t ? dryWords(t).replace(/^[^:]*: /, '') : ''; }
     var what = dryWords(tried).replace(/^preview \d+, /, '').replace(/^set order \d+: /, '').replace(/^order \d+, /, '');
-    line('Tried');
+    line('Tried'); textOf(j, 'Asked at').forEach(function (t) { used[t] = true; });
     if (ends) paras.push('We played your order to ' + what + ' ' + a.worlds + ' times over, ' + a.days + ' days each, from the morning of day ' + j.first_day + '.');
     var added = line('Added by'), leaves = (j.leaves_given_to_the_side || []).map(function (l) { return String(l).replace(/_/g, ' '); });
     textOf(j, 'Leave to').forEach(function (t) { used[t] = true; });
@@ -2221,7 +2228,7 @@ body.watched .gives { display: none !important; }
     var doc = $('sheet-doc'), a = j.asked || {}; doc.textContent = '';
     var head = el('div', 'head'), box = el('div', 'est'), dates = j.kind === 'window' ? j.dates || [] : null;
     var tried = (textOf(j, 'Tried')[0] || '').replace(/^Tried[^:]*: /, '').split(', as it would go')[0].split(', the whole order')[0];
-    [['Dry run of', dryWords(tried).replace(/^preview \d+, /, '').replace(/^order \d+, /, '').replace(/^./, function (c) { return c.toUpperCase(); })], ['From', 'the morning of day ' + j.first_day], ['Played', a.worlds + ' runs of ' + a.days + ' days each' + (dates && dates.length > 1 ? ', at ' + dates.length + ' dates' : '')], ['Number', String(j.estimate)]].forEach(function (r) { head.appendChild(el('span', '', r[0])); head.appendChild(el('span', '', r[1])); });
+    [['Dry run of', dryWords(tried).replace(/^preview \d+, /, '').replace(/^order \d+, /, '').replace(/^./, function (c) { return c.toUpperCase(); })], ['From', 'the morning of day ' + j.first_day + (a.inside_day ? ', as things stand at ' + a.inside_day.clock + ' of day ' + a.inside_day.day : '')], ['Played', a.worlds + ' runs of ' + a.days + ' days each' + (dates && dates.length > 1 ? ', at ' + dates.length + ' dates' : '')], ['Number', String(j.estimate)]].forEach(function (r) { head.appendChild(el('span', '', r[0])); head.appendChild(el('span', '', r[1])); });
     doc.appendChild(head); doc.appendChild(box);
     if (!dates) {
       estBody(box, j, j.last_day);
@@ -2249,7 +2256,7 @@ body.watched .gives { display: none !important; }
       COSTS.forEach(function (c) { add('Your ' + c[1].charAt(0).toLowerCase() + c[1].slice(1), function (d) { return d.cost && Number(d.cost[c[0]].highest) > 0 ? spreadOf(d.cost[c[0]]) : ''; }); });
       add('The enemy\'s men lost, in the dry run', function (d) { return d.enemy_lost && Number(d.enemy_lost.men_lost_to_the_enemy.highest) > 0 ? spreadOf(d.enemy_lost.men_lost_to_the_enemy) : ''; });
       add('Against the first date, run for run', function (d) { var w = d.against_first; if (!w) return ''; var n = function (x) { return x.length; }; return 'met at both in ' + n(w.both) + '; at the first alone in ' + n(w.first_alone) + '; at this date alone in ' + n(w.later_alone) + '; at neither in ' + n(w.neither); });
-      box.appendChild(t);
+      box.appendChild(t); restNote(box, j);
       if (dates.length < 2) box.appendChild(el('div', 'work', 'Nothing of yours that the order may use comes due in the days played, so there is no later date to try.'));
       else box.appendChild(el('div', 'work', 'At a later date nothing of the order is done before that day: the units it would take lie idle in between.'));
       if ((j.not_tried || []).length) underneath(doc, 'DUE LATER AND NOT TRIED', j.not_tried.map(function (x) { return x.text || JSON.stringify(x); }));
@@ -2296,20 +2303,28 @@ body.watched .gives { display: none !important; }
         if (mine && mine.outcome) { var stamp = el('div', 'stamp ' + (!won ? 'tie' : won === config.seat ? 'win' : 'loss'), String(mine.outcome).toUpperCase()); box.appendChild(stamp); if (!won) box.appendChild(el('div', 'work', 'Neither side won.')); }
         else box.appendChild(el('div', 'big', won ? (r[won].outcome.replace(/^./, function (c) { return c.toUpperCase(); }) + ' for ' + SIDE_WORD[won] + '.') : 'A stalemate: neither side won.'));
         box.appendChild(el('div', 'work', 'Day ' + M.lastDay + ' of ' + M.lastDay + ' is fought.'));
-        var rows = [], seen = {};
-        [config.seat, other].forEach(function (side, col) { (r[side].objectives || []).forEach(function (o) { var c = endCount(o), key = o.kind + '|' + (o.base && o.base.handle || '') + '|' + (o.closed ? 1 : 0); if (seen[key] == null) { seen[key] = rows.length; rows.push([c[0], '–', '–']); } rows[seen[key]][col + 1] = c[1]; }); });
-        var t = el('table'), hr = el('tr'); hr.appendChild(el('th', '', '')); hr.appendChild(el('th', '', SIDE_WORD[config.seat].replace(/^the /, 'The '))); hr.appendChild(el('th', '', SIDE_WORD[other].replace(/^the /, 'The '))); t.appendChild(hr);
-        rows.forEach(function (x) { var tr = el('tr'); tr.appendChild(el('th', '', x[0])); tr.appendChild(el('td', '', x[1])); tr.appendChild(el('td', '', x[2])); t.appendChild(tr); });
-        box.appendChild(el('h3', '', 'What each side did')); box.appendChild(t);
+        // Each side's losses are told as its own, in its own column, and each
+        // line carries what the umpire gave for it: a loss scores for the
+        // other side, a thing done scores for the side that did it.
+        var LOST = { ships_sunk: 'Ships sunk', ships_crippled: 'Ships left afloat and out of action', ships_out_of_action: 'Ships out of action at the end', aircraft_destroyed: 'Aircraft lost', men_lost: 'Men lost' };
+        var lost = [], did = [], seen = {}, pts = function (v) { var n = Math.round(Number(v) * 10) / 10; return n ? String(n) : '\u2013'; };
+        [config.seat, other].forEach(function (side, col) { (r[side].objectives || []).forEach(function (o) {
+          var c = endCount(o), isLoss = !!LOST[o.kind], key = o.kind + '|' + (o.base && o.base.handle || '') + '|' + (o.closed ? 1 : 0), list = isLoss ? lost : did;
+          if (seen[key] == null) { seen[key] = list.length; list.push([isLoss ? LOST[o.kind] : c[0], '\u2013', '\u2013', '\u2013', '\u2013']); }
+          var row = list[seen[key]]; row[1 + (isLoss ? 1 - col : col)] = c[1]; row[3 + col] = pts(o.points);
+        }); });
+        var names = [SIDE_WORD[config.seat].replace(/^the /, 'The '), SIDE_WORD[other].replace(/^the /, 'The ')];
+        function tableOf(title, rows, total) {
+          if (!rows.length) return; var t = el('table'), hr = el('tr');
+          ['', names[0], names[1], 'Points to ' + SIDE_WORD[config.seat], 'Points to ' + SIDE_WORD[other]].forEach(function (h) { hr.appendChild(el('th', '', h)); }); t.appendChild(hr);
+          rows.forEach(function (x) { var tr = el('tr'); tr.appendChild(el('th', '', x[0])); x.slice(1).forEach(function (v) { tr.appendChild(el('td', '', v)); }); t.appendChild(tr); });
+          if (total) { var tt = el('tr'); tt.appendChild(el('th', '', 'Points in all')); ['', '', pts(r[config.seat].total), pts(r[other].total)].forEach(function (v) { var td = el('td', '', v); td.style.fontWeight = '700'; tt.appendChild(td); }); t.appendChild(tt); }
+          box.appendChild(el('h3', '', title)); box.appendChild(t);
+        }
+        tableOf('What each side lost', lost, !did.length); tableOf('What each side did', did, true);
+        box.appendChild(el('div', 'work', 'The margin is ' + (Math.round(Math.abs(Number(mine.margin)) * 10) / 10) + ' points' + (won ? ', which makes it ' + r[won].level + '.' : '.')));
         doc.appendChild(box);
         if (r.history) { doc.appendChild(el('h3', '', 'In the war itself')); doc.appendChild(rich('p', '', nameText(typeof r.history === 'string' ? r.history : (r.history.text || r.history.note || JSON.stringify(r.history))))); }
-        var d = document.createElement('details'), sm = document.createElement('summary'); sm.textContent = 'THE UMPIRE\'S RECKONING'; d.appendChild(sm);
-        [config.seat, other].forEach(function (side) {
-          d.appendChild(el('div', 'work', SIDE_WORD[side].replace(/^the /, 'The ') + ': ' + (Math.round(Number(r[side].total) * 10) / 10) + ' points.'));
-          (r[side].objectives || []).forEach(function (o) { if (Number(o.points) > 0) { var c = endCount(o); d.appendChild(el('div', 'work', '  ' + c[0] + ', ' + c[1] + ': ' + (Math.round(Number(o.points) * 10) / 10))); } });
-        });
-        d.appendChild(el('div', 'work', 'The margin is ' + (Math.round(Math.abs(Number(mine.margin)) * 10) / 10) + ' points' + (won ? ', which makes it ' + r[won].level + '.' : '.')));
-        doc.appendChild(d);
       }
       var row = el('div', 'row'), b = el('button', '', 'READ THE WAR DIARY'); b.type = 'button'; b.addEventListener('click', function () { readDiary(); }); row.appendChild(b); doc.appendChild(row);
       sheetAs('HOW IT ENDED'); doc.hidden = false; $('sheet-text').hidden = true; $('sheet').hidden = false; $('sheet-close').focus();
@@ -2363,7 +2378,7 @@ body.watched .gives { display: none !important; }
   }
   // What the sheet is: its title, and for a directive the small label above
   // it and the line outside the paper that says what the paper is.
-  function sheetAs(title, label, note) { $('sheet-title').textContent = title; $('sheet-label').textContent = label || ''; $('sheet-label').hidden = !label; $('sheet-note').textContent = note || ''; $('sheet').classList.toggle('dispatch', !!label); $('sheet-paper').scrollTop = 0; $('sheet-chart').hidden = true; $('sheet-doc').classList.remove('diary'); $('sheet-doc').classList.remove('oob'); $('sheet-back').hidden = !sheetTrail.length; }
+  function sheetAs(title, label, note) { $('sheet-title').textContent = title; $('sheet-label').textContent = label || ''; $('sheet-label').hidden = !label; $('sheet-note').textContent = note || ''; $('sheet').classList.toggle('dispatch', !!label); $('sheet-paper').scrollTop = 0; $('sheet-chart').hidden = true; $('sheet-step').hidden = true; $('sheet-doc').classList.remove('diary'); $('sheet-doc').classList.remove('oob'); $('sheet-back').hidden = !sheetTrail.length; }
   function readDirective(d) {
     var doc = $('sheet-doc'), head = el('div', 'head'); doc.textContent = '';
     [['From', d.from], ['To', d.to], ['Date', dateOf(received[d.number] - 2, true) || 'Day ' + received[d.number]], ['Subject', d.subject]].forEach(function (r) { head.appendChild(el('span', '', r[0])); head.appendChild(el('span', '', r[1])); });
