@@ -220,3 +220,883 @@
 // The architect's statement lists are list items in the doc comment above,
 // which is left as written.
 #![allow(clippy::doc_lazy_continuation)]
+
+mod common;
+
+use std::collections::BTreeMap;
+use std::path::PathBuf;
+
+use sim_core::command::{Reason, Risk, StaffDecisions};
+use sim_core::fixed::Fixed;
+use sim_core::hex::Hex;
+use sim_core::ids::{IntentId, TaskForceId};
+use sim_core::orders::{OrderKind, SpeedSetting, TaskForceOrder};
+use sim_core::state::{Side, TruthState};
+use sim_core::time::Pulse;
+use sim_core::{PassageEnd, PassageForecast};
+use sim_data::Scenario;
+use sim_staff::station::Circle;
+use sim_staff::way::{latest_pulse, weigh_hexes, Inside};
+use sim_staff::{as_staffs, staffs};
+
+// ---------------------------------------------------------------- The harness
+
+fn path() -> PathBuf {
+    common::data_dir().join("scenarios/the-way-a-force-takes/117_the_way_a_force_takes.toml")
+}
+
+fn text() -> String {
+    std::fs::read_to_string(path()).expect("the scenario file reads")
+}
+
+fn hex(q: i32, r: i32) -> Hex {
+    Hex { q, r }
+}
+
+fn c() -> TaskForceId {
+    TaskForceId::new(1)
+}
+
+/// Adds `what` at the mark `# MARK: name`; the mark stays.
+fn at(text: &str, name: &str, what: &str) -> String {
+    let mark = format!("# MARK: {name}\n");
+    common::replace_once(text, &mark, &format!("{what}{mark}"))
+}
+
+fn command(day: u32, body: &str) -> String {
+    format!("[[command]]\nday = {day}\nside = \"allied\"\n{body}\n\n")
+}
+
+/// The risk set on intent 1 on `day`.
+fn risk_on(text: &str, day: u32, level: &str) -> String {
+    at(
+        text,
+        "commands",
+        &command(
+            day,
+            &format!("kind = \"set_limit\"\nlimit = \"risk\"\nintent = 1\nrisk = \"{level}\""),
+        ),
+    )
+}
+
+fn at_risk(text: &str, level: &str) -> String {
+    risk_on(text, 1, level)
+}
+
+/// C stopped at `(q, r)` instead of (16,0).
+fn c_at(text: &str, q: i32, r: i32) -> String {
+    common::replace_once(
+        text,
+        "q = 16\nr = 0\nmission = \"carrier\"",
+        &format!("q = {q}\nr = {r}\nmission = \"carrier\""),
+    )
+}
+
+/// C with base H for its home port.
+fn home_h(text: &str) -> String {
+    common::replace_once(
+        text,
+        "mission = \"carrier\"\n",
+        "mission = \"carrier\"\nhome_port = 1\n",
+    )
+}
+
+/// The deny's waters within 2 hexes of `(q, r)` instead of (0,0).
+fn waters_at(text: &str, q: i32, r: i32) -> String {
+    common::replace_once(
+        text,
+        "hex = [0, 0]\ndistance = 2",
+        &format!("hex = [{q}, {r}]\ndistance = 2"),
+    )
+}
+
+/// Every ship of C at `tons` instead of 1,000.
+fn all_fuel(text: &str, tons: i64) -> String {
+    let mut t = text.to_string();
+    for id in 1..=3 {
+        let name = if id == 1 { "carrier" } else { "destroyer" };
+        let class = if id == 1 { 17 } else { 18 };
+        let head =
+            format!("name = \"Placeholder {name} {id}\"\nclass = {class}\nside = \"allied\"\n");
+        t = common::replace_once(
+            &t,
+            &format!("{head}fuel_t = 1000"),
+            &format!("{head}fuel_t = {tons}"),
+        );
+    }
+    t
+}
+
+/// B's base E, base 2, at (9,-15).
+fn base_e(text: &str) -> String {
+    at(
+        text,
+        "bases",
+        "[[base]]\nid = 2\nname = \"Placeholder base E\"\nside = \"japanese\"\nq = 9\nr = -15\nsupply_t = 0\n\n",
+    )
+}
+
+/// A contact A holds at `(q, r)`, of one ship reported as a carrier, `age`
+/// pulses old.
+fn contact(text: &str, q: i32, r: i32, age: u32) -> String {
+    at(
+        text,
+        "contacts",
+        &format!(
+            "[[contact]]\nside = \"allied\"\nq = {q}\nr = {r}\nship_count = 1\nkind = \"carrier\"\nage_pulses = {age}\n\n"
+        ),
+    )
+}
+
+/// The setting of the statements of a carrier contact: K at (13,-7).
+fn with_k(level: &str) -> String {
+    at_risk(&contact(&text(), 13, -7, 0), level)
+}
+
+/// The setting of the statements of an enemy base: E at (9,-15) and the
+/// waters round (-10,0).
+fn with_e(level: &str) -> String {
+    at_risk(&waters_at(&base_e(&text()), -10, 0), level)
+}
+
+fn k_circle() -> Vec<Circle> {
+    vec![Circle {
+        centre: hex(13, -7),
+        hexes: 8,
+        words: String::new(),
+    }]
+}
+
+fn e_circle() -> Vec<Circle> {
+    vec![Circle {
+        centre: hex(9, -15),
+        hexes: 15,
+        words: String::new(),
+    }]
+}
+
+fn load(text: &str) -> Scenario {
+    common::from_text_with(text, &path(), &common::frozen()).expect("the scenario loads")
+}
+
+/// The engine's forecast of C given `waypoints` at `speed`, from the start.
+fn forecast(text: &str, waypoints: &[Hex], speed: SpeedSetting) -> PassageForecast {
+    load(text)
+        .world
+        .side_view(Side::Allied)
+        .forecast_route(c(), waypoints, Some(speed))
+        .expect("C is the side's own")
+}
+
+/// The pulse the forecast enters `h` in.
+fn entered(f: &PassageForecast, h: Hex) -> (u32, Pulse) {
+    let at = f
+        .hexes
+        .iter()
+        .position(|x| *x == h)
+        .expect("the hex is entered");
+    f.entered_in[at]
+}
+
+fn arrives(f: &PassageForecast) -> (u32, Pulse, Fixed) {
+    match f.end {
+        PassageEnd::Arrives {
+            day,
+            pulse,
+            elapsed_hours,
+        } => (day, pulse, elapsed_hours),
+        ref other => panic!("does not arrive: {other:?}"),
+    }
+}
+
+fn inside(f: &PassageForecast, circles: &[Circle]) -> Inside {
+    weigh_hexes(&f.hexes, &f.entered_in, circles).1[0]
+}
+
+/// The charged miles of each leg from (16,0) through `waypoints`.
+fn legs(text: &str, waypoints: &[Hex]) -> Vec<u32> {
+    let s = load(text);
+    let view = s.world.side_view(Side::Allied);
+    let mut here = hex(16, 0);
+    waypoints
+        .iter()
+        .map(|w| {
+            let nm = view.sea_charged_nm(here, *w).expect("a leg by sea");
+            here = *w;
+            nm
+        })
+        .collect()
+}
+
+fn hours(n: i64, d: i64) -> Fixed {
+    Fixed::from_ratio(n, d)
+}
+
+/// A game played with the doctrine's staffs: what the Allied staff handed in
+/// each day, and the truth at the end of each day (index 0 is the start).
+struct Played {
+    handed: BTreeMap<u32, StaffDecisions>,
+    truth: Vec<TruthState>,
+}
+
+fn play(text: &str, days: u32) -> Played {
+    let mut scenario = load(text);
+    let held = staffs();
+    let mut handed = BTreeMap::new();
+    let mut truth = vec![scenario.world.umpire().clone()];
+    for day in 1..=days {
+        let summary = scenario
+            .next_day_watched(as_staffs(&held), &mut |_, _| {})
+            .expect("a day resolves");
+        if summary.is_none() {
+            break;
+        }
+        handed.insert(
+            day,
+            scenario
+                .world
+                .staff_handed_in()
+                .get(&Side::Allied)
+                .cloned()
+                .unwrap_or_default(),
+        );
+        truth.push(scenario.world.umpire().clone());
+    }
+    Played { handed, truth }
+}
+
+/// A reason's text: its calculation, its evidence and its bindings.
+fn words(reason: &Reason) -> String {
+    let evidence: Vec<&str> = reason.evidence.iter().map(|e| e.what.as_str()).collect();
+    format!(
+        "{} | {} | {}",
+        reason.worked,
+        evidence.join(" | "),
+        reason.binding.join(" | ")
+    )
+}
+
+impl Played {
+    fn decisions(&self, day: u32) -> &StaffDecisions {
+        &self.handed[&day]
+    }
+
+    fn force_orders(&self, day: u32) -> Vec<TaskForceOrder> {
+        self.decisions(day)
+            .orders
+            .iter()
+            .filter_map(|o| match &o.kind {
+                OrderKind::TaskForce { target, order } if *target == c() => Some(order.clone()),
+                _ => None,
+            })
+            .collect()
+    }
+
+    fn route_of(&self, day: u32) -> Option<Vec<Hex>> {
+        self.force_orders(day).into_iter().find_map(|o| match o {
+            TaskForceOrder::SetRoute { waypoints, .. } => Some(waypoints),
+            _ => None,
+        })
+    }
+
+    fn speed_of(&self, day: u32) -> Option<SpeedSetting> {
+        self.force_orders(day).into_iter().find_map(|o| match o {
+            TaskForceOrder::SetSpeed(s) => Some(s),
+            _ => None,
+        })
+    }
+
+    /// The reason of the route given on `day`.
+    fn route_reason(&self, day: u32) -> String {
+        self.decisions(day)
+            .orders
+            .iter()
+            .find(|o| {
+                matches!(
+                    &o.kind,
+                    OrderKind::TaskForce {
+                        order: TaskForceOrder::SetRoute { .. },
+                        ..
+                    }
+                )
+            })
+            .map(|o| words(&o.reason))
+            .unwrap_or_default()
+    }
+
+    /// The part of the route's reason that speaks of the way.
+    fn way_words(&self, day: u32) -> String {
+        let r = self.route_reason(day);
+        r.find("The way:")
+            .map_or_else(String::new, |i| r[i..].to_string())
+    }
+
+    /// Every reason of a day as one text.
+    fn said(&self, day: u32) -> String {
+        let d = self.decisions(day);
+        d.orders
+            .iter()
+            .map(|o| &o.reason)
+            .chain(d.no_orders.iter())
+            .chain(d.commands.iter().map(|c| &c.reason))
+            .map(words)
+            .collect::<Vec<_>>()
+            .join("\n")
+    }
+
+    fn position(&self, day: usize) -> Hex {
+        self.truth[day].task_forces[&c()].position()
+    }
+
+    fn station(&self) -> Option<Hex> {
+        self.decisions(1)
+            .commands
+            .iter()
+            .find_map(|c| match c.kind {
+                sim_core::command::CommandKind::FormIntent {
+                    kind: sim_core::command::IntentKind::OperateCarriers { hex, .. },
+                    ..
+                } => Some(hex),
+                _ => None,
+            })
+    }
+}
+
+const RISKS: [&str; 3] = ["preserve", "balanced", "press"];
+
+// ---------------------------------------------------------------- The setting
+
+#[test]
+fn the_file_is_the_setting_the_doc_comment_describes() {
+    let s = load(&text());
+    let t = s.world.umpire();
+    let force = &t.task_forces[&c()];
+    assert_eq!(force.position(), hex(16, 0));
+    assert_eq!(force.home_port, None);
+    assert_eq!(force.ships.len(), 3);
+    assert_eq!(t.bases[&sim_core::ids::BaseId::new(1)].hex, hex(10, 2));
+    let view = s.world.side_view(Side::Allied);
+    for ship in &force.ships {
+        let class = view.ship_class(t.ships[ship].class).expect("a class");
+        assert_eq!(class.cruise_speed_kn, Fixed::from_int(15));
+        assert_eq!(class.max_speed_kn, Fixed::from_int(30));
+        assert_eq!(class.fuel_capacity_t, Fixed::from_int(1000));
+        assert_eq!(class.endurance_nm, Fixed::from_int(4000));
+    }
+    for (q, r) in [(-16, -16), (16, 16), (-16, 16), (16, -16)] {
+        assert!(view.hex(hex(q, r)).is_some_and(|h| h.is_navigable()));
+    }
+}
+
+// ------------------------------------------------- Statements: no enemy known
+
+/// Statement 1.
+#[test]
+fn statement_1_one_point_as_today() {
+    for level in RISKS {
+        let played = play(&at_risk(&text(), level), 1);
+        assert_eq!(played.station(), Some(hex(3, 0)), "{level}");
+        assert_eq!(played.route_of(1), Some(vec![hex(3, 0)]), "{level}");
+        let speed = played.speed_of(1);
+        if level == "preserve" {
+            assert_eq!(speed, None, "{level}: cruise, as it has");
+            assert_eq!(
+                played.truth[1].task_forces[&c()].speed,
+                SpeedSetting::Cruise
+            );
+        } else {
+            assert_eq!(speed, Some(SpeedSetting::Full), "{level}");
+        }
+        assert!(
+            played.way_words(1).is_empty(),
+            "{level}: {}",
+            played.route_reason(1)
+        );
+    }
+}
+
+/// Statement 2.
+#[test]
+fn statement_2_routed_each_morning_as_today() {
+    let played = play(&at_risk(&text(), "preserve"), 2);
+    assert_ne!(played.position(1), hex(3, 0));
+    assert_eq!(played.route_of(2), Some(vec![hex(3, 0)]));
+}
+
+// --------------------------------------- Statements: a carrier contact, preserve
+
+/// Statement 3.
+#[test]
+fn statement_3_the_shortest_way_by_the_engines_clock() {
+    let f = forecast(&with_k("preserve"), &[hex(3, 0)], SpeedSetting::Cruise);
+    let row: Vec<Hex> = (3..=15).rev().map(|q| hex(q, 0)).collect();
+    assert_eq!(f.hexes, row);
+    for q in 11..=15 {
+        assert_eq!(entered(&f, hex(q, 0)), (1, Pulse::Night), "({q},0)");
+    }
+    for q in [10, 9] {
+        assert_eq!(entered(&f, hex(q, 0)), (1, Pulse::Morning), "({q},0)");
+    }
+    for q in [8, 7] {
+        assert_eq!(entered(&f, hex(q, 0)), (1, Pulse::Afternoon), "({q},0)");
+    }
+    for q in 3..=6 {
+        assert_eq!(entered(&f, hex(q, 0)), (2, Pulse::Night), "({q},0)");
+    }
+    assert_eq!(arrives(&f), (2, Pulse::Night, hours(104, 3)));
+    let i = inside(&f, &k_circle());
+    assert_eq!((i.by_day, i.nearest_by_day, i.by_night), (4, Some(7), 6));
+}
+
+/// Statement 4.
+#[test]
+fn statement_4_how_late_it_may_be() {
+    assert_eq!(
+        latest_pulse(Risk::Preserve, 2, Pulse::Night),
+        (3, Pulse::Night)
+    );
+}
+
+fn statement_5_route() -> Vec<Hex> {
+    vec![hex(10, 2), hex(6, 2), hex(3, 0)]
+}
+
+/// Statement 5.
+#[test]
+fn statement_5_the_way_taken() {
+    let t = with_k("preserve");
+    let played = play(&t, 1);
+    assert_eq!(played.station(), Some(hex(3, 0)));
+    assert_eq!(played.route_of(1), Some(statement_5_route()));
+    assert_eq!(played.speed_of(1), None, "cruise, as it has");
+    assert_eq!(legs(&t, &statement_5_route()), vec![212, 160, 174]);
+    let f = forecast(&t, &statement_5_route(), SpeedSetting::Cruise);
+    assert_eq!(f.route_nm, Fixed::from_int(546));
+    let way = [
+        (15, 0),
+        (14, 0),
+        (13, 0),
+        (12, 0),
+        (11, 1),
+        (10, 2),
+        (9, 2),
+        (8, 2),
+        (7, 2),
+        (6, 2),
+        (6, 1),
+        (6, 0),
+        (5, 0),
+        (4, 0),
+        (3, 0),
+    ];
+    assert_eq!(
+        f.hexes,
+        way.iter().map(|(q, r)| hex(*q, *r)).collect::<Vec<_>>()
+    );
+    assert_eq!(arrives(&f), (2, Pulse::Morning, hours(364, 10)));
+    for (h, p) in [
+        ((11, 1), (1, Pulse::Night)),
+        ((10, 2), (1, Pulse::Morning)),
+        ((9, 2), (1, Pulse::Morning)),
+        ((8, 2), (1, Pulse::Afternoon)),
+        ((6, 2), (1, Pulse::Afternoon)),
+        ((6, 1), (2, Pulse::Night)),
+        ((3, 0), (2, Pulse::Night)),
+    ] {
+        assert_eq!(entered(&f, hex(h.0, h.1)), p, "{h:?}");
+    }
+    let i = inside(&f, &k_circle());
+    assert_eq!((i.by_day, i.by_night), (0, 7));
+}
+
+/// Statement 6.
+#[test]
+fn statement_6_the_reason() {
+    let played = play(&with_k("preserve"), 1);
+    let said = played.way_words(1);
+    assert!(
+        said.contains("it arrives in the morning of day 2"),
+        "{said}"
+    );
+    assert!(
+        said.contains("contact 1, reported as a carrier, 0 pulse(s) old, at (13,-7)"),
+        "{said}"
+    );
+    assert!(
+        said.contains("where the shortest way, the one point (3,0), 520 nm at cruise, arrives in the night of day 2 and enters, inside the reach of contact 1, reported as a carrier, 0 pulse(s) old, at (13,-7), 4 hexes by day, the nearest 7 hexes from it, and 6 by night"),
+        "{said}"
+    );
+    assert!(said.contains("none by day, and 7 by night"), "{said}");
+    assert!(!said.contains("danger"), "{said}");
+}
+
+/// Statement 7.
+#[test]
+fn statement_7_kept() {
+    let played = play(&with_k("preserve"), 2);
+    assert_eq!(played.position(1), hex(6, 2));
+    assert_eq!(played.route_of(2), None);
+    assert_eq!(played.speed_of(2), None);
+    assert!(played
+        .said(2)
+        .contains("the way is kept, so it is given no route and no speed"));
+    assert_eq!(
+        played.truth[1].task_forces[&c()].route.waypoints.last(),
+        Some(&hex(3, 0))
+    );
+    let arrived = played.truth[2].task_forces[&c()].arrived_at_hours;
+    assert_eq!(arrived, Some(hours(364, 10)));
+    assert_eq!(played.position(2), hex(3, 0));
+}
+
+/// Statement 8.
+#[test]
+fn statement_8_the_search_on_the_way() {
+    let played = play(&with_k("preserve"), 2);
+    let said = played.said(1);
+    for (q, r) in [
+        (15, 0),
+        (14, 0),
+        (13, 0),
+        (12, 0),
+        (11, 1),
+        (10, 2),
+        (9, 2),
+        (8, 2),
+        (7, 2),
+        (3, 0),
+    ] {
+        assert!(
+            said.contains(&format!("the way ahead to the station (3,0) at ({q},{r})")),
+            "({q},{r}): {said}"
+        );
+    }
+    for (q, r) in [(6, 2), (6, 1), (11, 0)] {
+        assert!(
+            !said.contains(&format!("the way ahead to the station (3,0) at ({q},{r})")),
+            "({q},{r})"
+        );
+    }
+    assert!(said.contains("the waters to deny at (0,0)"));
+    let said = played.said(2);
+    for (q, r) in [(6, 1), (6, 0), (5, 0), (4, 0), (3, 0)] {
+        assert!(
+            said.contains(&format!("the way ahead to the station (3,0) at ({q},{r})")),
+            "({q},{r}): {said}"
+        );
+    }
+    assert!(!said.contains("the way ahead to the station (3,0) at (7,2)"));
+}
+
+/// Statement 9.
+#[test]
+fn statement_9_a_contact_grown_old_casts_no_circle() {
+    let t = at_risk(&contact(&text(), 13, -7, 4), "preserve");
+    let played = play(&t, 1);
+    assert_eq!(played.route_of(1), Some(vec![hex(3, 0)]));
+    assert!(played.way_words(1).is_empty());
+}
+
+// --------------------------------------------------- Statements: fuel, preserve
+
+fn fuelled(tons: i64) -> String {
+    all_fuel(&home_h(&with_k("preserve")), tons)
+}
+
+/// Statement 10.
+#[test]
+fn statement_10_what_each_way_takes() {
+    let played = play(&fuelled(330), 1);
+    let said = played.said(1);
+    assert!(
+        said.contains("ship:1 needs 327.375 t (136.5 t out and 81.75 t home, times 1.5)"),
+        "{said}"
+    );
+    assert!(
+        said.contains("ship:1 needs 317.625 t (130 t out and 81.75 t home, times 1.5)"),
+        "{said}"
+    );
+    assert!(
+        said.contains("home to base:1 (Placeholder base H), 327 nm at cruise"),
+        "{said}"
+    );
+}
+
+/// Statement 11.
+#[test]
+fn statement_11_in_fuel_the_way_of_statement_5() {
+    assert_eq!(
+        play(&fuelled(330), 1).route_of(1),
+        Some(statement_5_route())
+    );
+}
+
+/// Statement 12.
+#[test]
+fn statement_12_fuel_takes_the_clearest_way_away() {
+    let t = fuelled(325);
+    let played = play(&t, 1);
+    let route = vec![hex(10, 1), hex(6, 1), hex(3, 0)];
+    assert_eq!(played.route_of(1), Some(route.clone()));
+    assert_eq!(legs(&t, &route), vec![223, 160, 144]);
+    let f = forecast(&t, &route, SpeedSetting::Cruise);
+    assert_eq!(f.route_nm, Fixed::from_int(527));
+    assert_eq!(arrives(&f), (2, Pulse::Night, hours(527, 15)));
+    let i = inside(&f, &k_circle());
+    assert_eq!((i.by_day, i.nearest_by_day), (4, Some(8)));
+    for q in 7..=10 {
+        assert!(Pulse::Night != entered(&f, hex(q, 1)).1, "({q},1)");
+    }
+    let said = played.way_words(1);
+    assert!(
+        said.contains("ship:1 needs 320.25 t (131.75 t out and 81.75 t home, times 1.5)"),
+        "{said}"
+    );
+    assert!(
+        said.contains("4 hexes by day, the nearest 8 hexes from it"),
+        "{said}"
+    );
+    assert!(
+        said.contains("4 hexes by day, the nearest 7 hexes from it"),
+        "{said}"
+    );
+    assert!(
+        said.contains("A clearer way that arrives in time is out of fuel."),
+        "{said}"
+    );
+}
+
+/// Statement 13.
+#[test]
+fn statement_13_no_clearer_way_in_fuel() {
+    let played = play(&fuelled(319), 2);
+    assert_eq!(played.route_of(1), Some(vec![hex(3, 0)]));
+    let said = played.way_words(1);
+    assert!(
+        said.contains("it lies in the enemy's reach by day"),
+        "{said}"
+    );
+    assert!(
+        said.contains("no clearer way that arrives in time is in fuel"),
+        "{said}"
+    );
+    assert_eq!(played.route_of(2), Some(vec![hex(3, 0)]));
+}
+
+// ------------------------------------------ Statements: an enemy base beside it
+
+/// Statement 14.
+#[test]
+fn statement_14_at_press_as_today() {
+    let played = play(&with_e("press"), 1);
+    assert_eq!(played.station(), Some(hex(-7, 0)));
+    assert_eq!(played.route_of(1), Some(vec![hex(-7, 0)]));
+    assert_eq!(played.speed_of(1), Some(SpeedSetting::Full));
+    assert!(played.way_words(1).is_empty());
+}
+
+/// Statement 15.
+#[test]
+fn statement_15_at_balanced_the_shortest_way() {
+    let f = forecast(&with_e("balanced"), &[hex(-7, 0)], SpeedSetting::Full);
+    assert_eq!(f.hexes.len(), 23);
+    for q in 7..=15 {
+        assert_eq!(entered(&f, hex(q, 0)), (1, Pulse::Night), "({q},0)");
+    }
+    for q in 2..=6 {
+        assert_eq!(entered(&f, hex(q, 0)), (1, Pulse::Morning), "({q},0)");
+    }
+    for q in -2..=1 {
+        assert_eq!(entered(&f, hex(q, 0)), (1, Pulse::Afternoon), "({q},0)");
+    }
+    for q in -7..=-3 {
+        assert_eq!(entered(&f, hex(q, 0)), (2, Pulse::Night), "({q},0)");
+    }
+    assert_eq!(arrives(&f), (2, Pulse::Night, hours(92, 3)));
+    let i = inside(&f, &e_circle());
+    assert_eq!((i.by_day, i.nearest_by_day, i.by_night), (9, Some(15), 7));
+    assert_eq!(
+        latest_pulse(Risk::Balanced, 2, Pulse::Night),
+        (2, Pulse::Morning)
+    );
+}
+
+fn statement_16_route() -> Vec<Hex> {
+    vec![hex(6, 1), hex(-3, 1), hex(-7, 0)]
+}
+
+/// Statement 16.
+#[test]
+fn statement_16_at_balanced_the_way_taken() {
+    let t = with_e("balanced");
+    let played = play(&t, 1);
+    assert_eq!(played.route_of(1), Some(statement_16_route()));
+    assert_eq!(played.speed_of(1), Some(SpeedSetting::Full));
+    assert_eq!(legs(&t, &statement_16_route()), vec![382, 360, 183]);
+    let f = forecast(&t, &statement_16_route(), SpeedSetting::Full);
+    assert_eq!(f.route_nm, Fixed::from_int(925));
+    let mut way: Vec<Hex> = (7..=15).rev().map(|q| hex(q, 0)).collect();
+    way.extend((-3..=6).rev().map(|q| hex(q, 1)));
+    way.extend((-7..=-3).rev().map(|q| hex(q, 0)));
+    assert_eq!(f.hexes, way);
+    assert_eq!(entered(&f, hex(7, 0)), (1, Pulse::Night));
+    assert_eq!(entered(&f, hex(6, 1)), (1, Pulse::Morning));
+    assert_eq!(entered(&f, hex(-2, 1)), (1, Pulse::Afternoon));
+    assert_eq!(entered(&f, hex(-3, 1)), (2, Pulse::Night));
+    assert_eq!(arrives(&f), (2, Pulse::Night, hours(185, 6)));
+    let i = inside(&f, &e_circle());
+    assert_eq!((i.by_day, i.by_night), (0, 7));
+}
+
+/// Statement 17.
+#[test]
+fn statement_17_at_balanced_kept_and_reasoned() {
+    let played = play(&with_e("balanced"), 2);
+    let said = played.way_words(1);
+    assert!(said.contains("it arrives in the night of day 2"), "{said}");
+    assert!(
+        said.contains("920 nm at full speed, arrives in the night of day 2"),
+        "{said}"
+    );
+    assert!(
+        said.contains(
+            "base:2 (Placeholder base E) at (9,-15), 9 hexes by day, the nearest 15 hexes from it"
+        ),
+        "{said}"
+    );
+    assert!(
+        said.contains("base:2 (Placeholder base E) at (9,-15), none by day"),
+        "{said}"
+    );
+    assert_eq!(played.route_of(2), None);
+    assert_eq!(played.speed_of(2), None);
+}
+
+/// Statement 18.
+#[test]
+fn statement_18_at_preserve() {
+    let t = with_e("preserve");
+    let f = forecast(&t, &[hex(-7, 0)], SpeedSetting::Cruise);
+    assert_eq!(arrives(&f), (3, Pulse::Morning, hours(184, 3)));
+    let by_day: Vec<Hex> = f
+        .hexes
+        .iter()
+        .zip(&f.entered_in)
+        .take(f.hexes.len() - 1)
+        .filter(|(h, (_, p))| *p != Pulse::Night && h.distance(hex(9, -15)) <= 15)
+        .map(|(h, _)| *h)
+        .collect();
+    let mut want = vec![hex(9, 0), hex(8, 0), hex(7, 0)];
+    want.extend((-2..=1).rev().map(|q| hex(q, 0)));
+    assert_eq!(by_day, want);
+    let played = play(&t, 1);
+    let route = vec![hex(9, 1), hex(-3, 1), hex(-7, 0)];
+    assert_eq!(played.route_of(1), Some(route.clone()));
+    assert_eq!(played.speed_of(1), None, "cruise, as it has");
+    assert_eq!(legs(&t, &route), vec![262, 480, 183]);
+    let f = forecast(&t, &route, SpeedSetting::Cruise);
+    assert_eq!(f.route_nm, Fixed::from_int(925));
+    assert_eq!(arrives(&f), (3, Pulse::Morning, hours(185, 3)));
+    assert_eq!(inside(&f, &e_circle()).by_day, 0);
+}
+
+/// Statement 19.
+#[test]
+fn statement_19_in_the_dark_the_shortest_way() {
+    let t = c_at(&with_e("balanced"), 0, 0);
+    let played = play(&t, 1);
+    assert_eq!(played.station(), Some(hex(-7, 0)));
+    assert_eq!(played.route_of(1), Some(vec![hex(-7, 0)]));
+    assert!(played.way_words(1).is_empty(), "{}", played.route_reason(1));
+    let f = forecast(&t, &[hex(-7, 0)], SpeedSetting::Full);
+    assert!(f.entered_in.iter().all(|p| *p == (1, Pulse::Night)));
+    let i = inside(&f, &e_circle());
+    assert_eq!((i.by_day, i.by_night), (0, 6));
+}
+
+// --------------------------------------------- Statements: nothing is chosen
+
+/// Statement 20.
+#[test]
+fn statement_20_a_station_of_the_commanders() {
+    let t = common::replace_once(
+        &contact(&text(), 13, -7, 0),
+        "intent_kind = \"deny\"\nhex = [0, 0]\ndistance = 2",
+        "intent_kind = \"operate_carriers\"\ntask_force = 1\nhex = [3, 0]",
+    );
+    let played = play(&at_risk(&t, "preserve"), 1);
+    assert_eq!(played.station(), None);
+    assert_eq!(played.route_of(1), Some(vec![hex(3, 0)]));
+    assert!(played.way_words(1).is_empty());
+}
+
+/// Statement 21. C waits at its station (3,0) with 110 t a ship, in fuel at
+/// balanced (81.75 t home, times 1.2, is 98.1 t); on day 2 the order is set
+/// to preserve, at which the passage home needs 122.625 t, so it is short.
+#[test]
+fn statement_21_home_for_fuel() {
+    let t = all_fuel(&home_h(&c_at(&contact(&text(), 13, -7, 0), 3, 0)), 110);
+    let t = risk_on(&at_risk(&t, "balanced"), 2, "preserve");
+    let played = play(&t, 2);
+    assert_eq!(played.station(), Some(hex(3, 0)));
+    assert_eq!(played.route_of(1), None);
+    assert_eq!(played.route_of(2), Some(vec![hex(10, 2)]));
+    assert!(played.way_words(2).is_empty());
+}
+
+// ---------------------------------------------------------------- Properties
+
+/// The forecast's pulses are one for each hex entered, and a game played
+/// twice gives the same hashes: the report changes nothing.
+#[test]
+fn property_the_forecast_only_reports() {
+    let t = with_k("preserve");
+    let f = forecast(&t, &statement_5_route(), SpeedSetting::Cruise);
+    assert_eq!(f.entered_in.len(), f.hexes.len());
+    let a = play(&t, 2);
+    let b = play(&t, 2);
+    for d in 0..=2 {
+        assert_eq!(a.truth[d], b.truth[d]);
+    }
+}
+
+/// The way draws no random number: the same view gives the same way,
+/// whatever the seed.
+#[test]
+fn property_nothing_is_drawn() {
+    let t = with_k("preserve");
+    let a = play(&t, 1);
+    let b = play(&common::replace_once(&t, "seed = 1942", "seed = 7"), 1);
+    assert_eq!(a.route_of(1), b.route_of(1));
+    assert_eq!(a.route_reason(1), b.route_reason(1));
+}
+
+/// A reason for a way names no holding of an enemy base and gives no figure
+/// of danger.
+#[test]
+fn property_the_staff_reads_its_own_side() {
+    for t in [
+        with_e("balanced"),
+        with_e("preserve"),
+        with_k("preserve"),
+        fuelled(319),
+    ] {
+        let played = play(&t, 1);
+        let said = played.way_words(1);
+        assert!(!said.is_empty());
+        assert!(!said.contains("danger"), "{said}");
+        for word in ["supply", "aircraft", "fuel_t"] {
+            assert!(!said.contains(word), "{word}: {said}");
+        }
+    }
+}
+
+#[test]
+fn the_intent_is_the_deny() {
+    let played = play(&with_k("preserve"), 1);
+    assert!(played
+        .decisions(1)
+        .commands
+        .iter()
+        .any(|c| matches!(c.kind, sim_core::command::CommandKind::FormIntent { parent, .. } if parent == IntentId::new(1))));
+}

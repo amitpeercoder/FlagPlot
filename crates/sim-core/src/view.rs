@@ -1067,6 +1067,28 @@ impl<'a> SideView<'a> {
         self.map.sea_charged_nm_in(field, from, to)
     }
 
+    /// [`SideView::sea_path`] with the field of [`SideView::sea_distances_to`]
+    /// of its target already worked out: the same hexes, in order, or `None`
+    /// where `from` cannot reach the target.
+    pub fn sea_path_in(&self, field: &BTreeMap<Hex, u32>, from: Hex) -> Option<Vec<Hex>> {
+        field.get(&from)?;
+        let mut hexes = Vec::new();
+        let mut here = from;
+        while let Some(next) = self.map.next_step_in(field, here) {
+            hexes.push(next);
+            here = next;
+        }
+        Some(hexes)
+    }
+
+    /// Whether a ship can step from `from` to its neighbour in `direction`
+    /// (an index into [`Hex::DIRECTIONS`]): the engine's one test of a step
+    /// ([`crate::map::Map::can_step`], decision 0017). The map is common
+    /// knowledge, so this is not enemy truth.
+    pub fn can_step(&self, from: Hex, direction: usize) -> bool {
+        self.map.can_step(from, direction)
+    }
+
     /// The hexes a force steams through from `from` to `to`, in order and
     /// ending at `to` (decision 0017), or `None` when ships cannot get from
     /// one to the other. The map is common knowledge, so this is not enemy
