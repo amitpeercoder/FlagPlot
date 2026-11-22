@@ -1796,8 +1796,8 @@ body.watched .gives { display: none !important; }
       var tot = el('div', 'crow ctotal'); tot.appendChild(el('span', '', 'Men lost')); tot.appendChild(el('span', '', today.men ? commas(today.men) : '–')); tot.appendChild(el('span', '', total.men ? commas(total.men) : '–')); box.appendChild(tot);
       row('Pilots', today.pilots, total.pilots); row('Aircraft', today.aircraft, total.aircraft);
       if (total.sunk.length) { var sk = el('div', 'cnote', ''); sk.appendChild(document.createTextNode('Ships sunk' + (today.sunk.length ? ' this day: ' + today.sunk.join(', ') + '.' : ': none this day.') + ' Since the start: ' + total.sunk.length + '. Ships\' companies are not returned.')); box.appendChild(sk); }
-      var units = Object.keys(total.units).map(function (h) { return total.units[h]; }).sort(function (a, b) { return b.lost - a.lost; });
-      if (units.length) { var f = document.createElement('details'), sm = document.createElement('summary'); sm.textContent = 'By unit, since the start (' + units.length + ')'; f.appendChild(sm); units.forEach(function (u) { var r = el('div', 'crow'); r.appendChild(el('span', '', u.name)); r.appendChild(el('span', '', '')); r.appendChild(el('span', '', commas(u.lost))); f.appendChild(r); }); box.appendChild(f); }
+      var units = Object.keys(total.units).map(function (h) { var u = total.units[h]; u.handle = h; return u; }).sort(function (a, b) { return b.lost - a.lost; });
+      if (units.length) { var f = document.createElement('details'), sm = document.createElement('summary'); sm.textContent = 'By unit, since the start (' + units.length + ')'; f.appendChild(sm); units.forEach(function (u) { var r = el('div', 'crow'), nm = el('span', ''); if (/^[a-z_]+:\d+$/.test(u.handle)) nm.appendChild(refTo(u.handle, u.name)); else nm.textContent = u.name; r.appendChild(nm); r.appendChild(el('span', '', '')); r.appendChild(el('span', '', commas(u.lost))); f.appendChild(r); }); box.appendChild(f); }
     }).catch(function () { box.appendChild(el('p', '', 'The return could not be made up.')); });
   }
 
