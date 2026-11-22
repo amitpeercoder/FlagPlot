@@ -314,6 +314,13 @@ impl ReasonBuilder {
         self
     }
 
+    /// What the commander should weigh before he approves, said apart from
+    /// the working (decision 0217, rules 4 and 5).
+    pub(crate) fn cautions(mut self, cautions: Vec<sim_core::command::Caution>) -> Self {
+        self.reason.cautions = cautions;
+        self
+    }
+
     pub(crate) fn done(self) -> Reason {
         self.reason
     }

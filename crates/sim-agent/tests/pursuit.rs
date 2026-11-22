@@ -58,6 +58,7 @@ impl Staff for AskingStaff {
                 worked: "400 / 30 hours".to_string(),
                 would_change: vec!["leave to pursue".to_string()],
                 answer_of: None,
+                cautions: Vec::new(),
             }],
             notices: vec![StaffNotice {
                 kind: NoticeKind::AsksLeaveToPursue,

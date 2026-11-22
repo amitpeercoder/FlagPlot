@@ -10,7 +10,7 @@
   "additionalProperties": false,
   "properties": {
     "format": { "const": "flagplot-agent" },
-    "version": { "const": 44 },
+    "version": { "const": 45 },
     "kind": { "const": "briefing" },
     "heading": { "$ref": "#/$defs/heading" },
     "objectives": { "$ref": "#/$defs/objectives" },
@@ -2048,6 +2048,16 @@
           "description": "Units that could not enter yesterday and wait for their base. Left out when none.",
           "type": "array",
           "items": { "$ref": "defs.schema.json#/$defs/entry_waiting_line" }
+        },
+        "came_today": {
+          "description": "What came today (decision 0215): the side's own forces and units that entered in the day just played, air groups that received aircraft, and units whose day to be used it was, each with what the staff did with it. Empty on day 1; left out when none.",
+          "type": "array",
+          "items": { "$ref": "defs.schema.json#/$defs/arrival_told_line" }
+        },
+        "comes_tomorrow": {
+          "description": "What comes tomorrow (decision 0215): what enters, receives aircraft or may first be used on the day the briefing is for. Left out when none.",
+          "type": "array",
+          "items": { "$ref": "defs.schema.json#/$defs/arrival_told_line" }
         }
       }
     },

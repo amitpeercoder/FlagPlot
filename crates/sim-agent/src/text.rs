@@ -1212,6 +1212,12 @@ impl Briefing {
                 format!("{words} (event {})", x.event)
             });
         }
+        for x in &self.arrivals.came_today {
+            o.line(told_text("Came today", x, "entered"));
+        }
+        for x in &self.arrivals.comes_tomorrow {
+            o.line(told_text("Comes tomorrow", x, "enters"));
+        }
         if !self.arrivals.entry_waiting_yesterday.is_empty() {
             o.each(
                 "Waiting to enter",
@@ -2858,6 +2864,78 @@ fn entry_wait_text(word: &str) -> &'static str {
 }
 
 /// A unit held apart for the side, in words (decision 0195, 7).
+/// One line of `came_today` or `comes_tomorrow` in words (decision 0215).
+fn told_text(label: &str, x: &crate::arrivals_told::ArrivalToldLine, enter: &str) -> String {
+    let at = match (&x.place, &x.at) {
+        (Some(place), Some(base)) => format!("{} ({})", place.text(), base.text()),
+        (Some(place), None) => place.text(),
+        (None, Some(base)) => base.text(),
+        (None, None) => String::new(),
+    };
+    let mut what = Vec::new();
+    for ships in &x.ships {
+        what.push(format!("{} {}", ships.ships, ships.kind));
+    }
+    if let Some(men) = x.men {
+        what.push(format!("{men} men"));
+    }
+    let aboard: Vec<String> = x
+        .air_groups
+        .iter()
+        .map(Handle::text)
+        .chain(
+            x.land_units
+                .iter()
+                .map(|u| format!("{} ({} men)", u.handle.text(), u.men)),
+        )
+        .collect();
+    if !aboard.is_empty() {
+        what.push(format!("with {} aboard", aboard.join(" and ")));
+    }
+    if let Some(aircraft) = x.aircraft {
+        what.push(format!("{aircraft} aircraft"));
+    }
+    if let Some(received) = x.aircraft_received {
+        what.push(format!(
+            "{} {received} aircraft",
+            if label == "Came today" {
+                "received"
+            } else {
+                "receives"
+            }
+        ));
+    }
+    if let Some(mission) = x.mission {
+        match &x.target {
+            Some(target) => what.push(format!(
+                "on the {mission} mission against {}",
+                target.text()
+            )),
+            None => what.push(format!("on the {mission} mission")),
+        }
+    }
+    let how: Vec<&str> = x
+        .how
+        .iter()
+        .filter_map(|h| match *h {
+            "enter" => Some(enter),
+            "usable" => Some("may first be used"),
+            _ => None,
+        })
+        .collect();
+    let mut words = format!("{label}: {} at {at}", x.unit.text());
+    if !how.is_empty() {
+        words.push_str(&format!(" ({})", how.join(", ")));
+    }
+    if !what.is_empty() {
+        words.push_str(&format!(": {}", what.join(", ")));
+    }
+    if let Some(staff) = &x.staff {
+        words.push_str(&format!("; {}", crate::arrivals_told::staff_words(staff)));
+    }
+    words
+}
+
 pub(crate) fn entry_text(x: &crate::entries::EntryLine) -> String {
     let at = match (&x.hex, &x.base) {
         (Some(place), _) => place.text(),

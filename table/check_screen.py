@@ -52,6 +52,27 @@ def check(holds, words):
     print("ok  " + words, flush=True)
 
 
+def page_scripts_parse():
+    """Every inline <script> of the page parses: each one's text is written to a temporary file and
+    `node --check` is run on it. A syntax error once passed every other check."""
+    import re
+    import shutil
+    node = shutil.which("node")
+    check(node is not None, "node is found, to check that the page's scripts parse")
+    with open(os.path.join(HERE, "index.html"), encoding="utf-8") as page:
+        text = page.read()
+    scripts = [body for attrs, body in re.findall(r"<script([^>]*)>(.*?)</script>", text, re.S)
+               if "src=" not in attrs and body.strip()]
+    check(scripts, "the page has inline scripts")
+    with tempfile.TemporaryDirectory() as folder:
+        for number, body in enumerate(scripts, 1):
+            path = os.path.join(folder, f"script{number}.js")
+            with open(path, "w", encoding="utf-8") as out:
+                out.write(body)
+            done = subprocess.run([node, "--check", path], capture_output=True, text=True)
+            check(done.returncode == 0, f"inline script {number} of the page parses" + ("" if done.returncode == 0 else ": " + done.stderr.strip()))
+
+
 def http(method, url, body=None):
     """(status, answer) of one request; an answer that is not JSON is its text."""
     data = None if body is None else json.dumps(body).encode()
@@ -289,7 +310,33 @@ def orders_on_the_card(bridge):
     check(not any("no forces limit" in r["worked"] or "No ship of the pool" in r["worked"] for r in mine)
           and any(c["kind"] == "approve" and c["reason"]["serves"]["intent"] == signed["intent"] for c in said["commands"]),
           "the staff takes the order up: it makes the plan ready, and does not say it has no forces or no ship")
+    land_unit_orders(bridge, person)
     check(post(bridge.table + "/new") == {"ok": True}, "the game is put away")
+
+
+def land_unit_orders(bridge, person):
+    """The order form on a land unit's card (decision 0216), as far as a script can reach it: the page
+    holds the form and its words, and the three orders go to the tool in the shapes the form sends them,
+    after the hold the form sends first. The form itself is drawn in a browser and is not run here."""
+    page = get(bridge.table + "/")
+    check("'landorder'" in page and "NOT SENT" in page and "Acts at 1800, for the coming day." in page,
+          "the page holds the land unit's order form, the line for a refusal and the line for an order kept to dusk")
+    units = person.call("list_forces")["ok"]["land_units"]
+    fighting = [u for u in units if u["men_ashore"] and u.get("march_to") and not u.get("working")]
+    check(fighting, "a fighting unit with men ashore lists the places it can march to (march_to)")
+    unit = fighting[0]
+    handle, number, hex_to = unit["land_unit"]["handle"], int(unit["land_unit"]["handle"].split(":")[1]), unit["march_to"][0]
+    check(person.call("hold", {"land_unit": number})["ok"]["status"] == "queued", "the hold the form sends first is taken for a land unit")
+    sent = person.call("issue_orders", {"orders": [
+        {"unit": handle, "order": {"kind": "set_posture", "posture": "attack", "when_spent": "hold"}},
+        {"unit": handle, "order": {"kind": "march", "hex": [hex_to["q"], hex_to["r"]]}},
+        {"unit": handle, "order": {"kind": "set_activity", "activity": "work", "job": "port"}}]})["ok"]
+    check([r["status"] for r in sent["results"]] == ["queued"] * 3, "a posture with when spent, a march and a work order with a job are taken, as the form sends them")
+    held = [h for h in person.call("command_state")["ok"]["holds"] if h["target"].get("land_unit") == number]
+    check(len(held) == 1, "the unit is held from the staff, as its card says")
+    refused = person.call("issue_orders", {"orders": [{"unit": handle, "order": {"kind": "march", "hex": [unit["place"]["q"] + 50, unit["place"]["r"]]}}]})["ok"]["results"][0]
+    check(refused["status"] == "refused", "a march to a place no land link joins is refused, for the form to show as NOT SENT")
+    check(person.call("release", {"land_unit": number})["ok"]["status"] == "queued", "the unit is released to the staff by the button the card has")
 
 
 def midway_on_its_chart(bridge):
@@ -510,6 +557,7 @@ def main():
     parser.add_argument("--port", type=int, default=8780, help="the first of six ports used")
     parser.add_argument("--hold", type=float, default=3, help="the doors' wait, shortened for the check")
     args = parser.parse_args()
+    page_scripts_parse()
     if not os.path.exists(args.sim_cli):
         sys.exit(f"{args.sim_cli} is not built: cargo build --release -p sim-cli")
     with tempfile.TemporaryDirectory() as keep:

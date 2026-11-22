@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 22, 2026, on the designer's ques
 
 Summary: The engine takes three orders for a land unit: its posture, a march, and what it does on a quiet day. The table offers none of them: a player moves his men only through an operation order that the staff carries out. This puts the three on a land unit's card, as a force's and an air group's cards have theirs, and says on the card whose hands the unit is in.
 
-Standing: Planned on Nov 22, 2026; to be reviewed.
+Standing: Planned on Nov 22, 2026; reviewed and amended the same day; the three orders built on Nov 22, 2026 (see "As built"), rest not yet built.
 
 ## Why
 
@@ -104,3 +104,20 @@ Rule card for rest: reads a rest-held unit's fatigue and its kind's `rested_fati
 Rulebook: chapter 8 (holds; a rest hold and when it ends) and the glossary ("Hold", "Rest hold").
 
 A scenario of its own and its hand calculation are written by the architect before the rest is delegated. The form for the three orders needs none and may be built first.
+
+## As built, Nov 22, 2026: the three orders
+
+Built: "Orders to a land unit" as amended on review. Rest is not built: it waits for the architect's scenario and hand calculation.
+
+- **The card** of a land unit of the player's own (`landOrder` in `table/index.html`) says "In whose hands" as the force's card does, with "Return it to the staff" where it is held, and carries an ORDER form: posture (defend, or attack with "when spent": hold, fall back, left to supply), march ("Not marching" or "Marching to" where it is, a list of the places of the tool's `march_to` by name and compass word, and halt where it marches), and activity (stand ready, train, work with the four jobs and "the staff's choice of job"). What stands is marked.
+- **The chart** marks the `march_to` hexes while a march is chosen; a touch on one chooses it.
+- **What is offered:** a working unit, defend and work; a unit with no man ashore, the activity alone; a unit with no man ashore and none aboard, one before its day and one held apart, no form. Work says where the unit's hex has no base of its side that it makes no work there. The costs are said before signing where they apply: that an attack or a march leaves its fieldworks (only where it has fieldworks), and that a march takes only the men ashore (only where men are aboard).
+- **Holding first:** at dusk the form sends the hold of the land unit and then the order, as the force's and the air group's forms do. A refusal is said "NOT SENT" with the engine's reason cut short.
+- **The tools lacked nothing.** `table/check_screen.py` tries the form's calls (hold, posture with when spent, march, work with a job, a refusal and the release) against the tool.
+- **With decision 0219** an order given at 0600 or 1200 that is not a posture is kept for 1800, and the form says "Acts at 1800, for the coming day." before and after signing.
+
+## The architect's rulings, Nov 22, 2026
+
+- **The three orders are built; rest is not,** and waits for its scenario and hand calculation.
+- **The line the form says before signing, that the order takes the unit out of the staff's hands, stays** until decision 0221's fourth stage words every such line as a fact of the order.
+- **The sentence above that an order signed is not taken back singly is withdrawn by decision 0221,** rule 18.

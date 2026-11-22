@@ -1789,18 +1789,19 @@ impl Session {
             None | Some(Value::Null) | Some(Value::String(_)) => {}
             Some(_) => return Err(CallError::new("\"reason\" must be text")),
         }
-        // While a day is open the orders are given inside it, for its next
-        // pulse, and only the seven kinds that may be (decision 0156).
+        // While a day is open the orders are given inside it. The seven kinds
+        // that may act inside a day are queued for its next pulse (decision
+        // 0156); any other is kept for the next dusk and handed in there as
+        // if given then (decision 0219).
         let inside = self.open_day();
         if clear {
             let state = self.seats.get_mut(&side).expect("both seats exist");
-            let queued = if inside.is_some() {
-                &mut state.queued_inside
-            } else {
-                &mut state.queued
-            };
-            if !queued.is_empty() {
-                queued.clear();
+            // Inside a day clearing empties the orders for the pulse and the
+            // kept orders both (decision 0219, rule 5); at dusk, the queue.
+            let had = !state.queued.is_empty() || !state.queued_inside.is_empty();
+            if had {
+                state.queued.clear();
+                state.queued_inside.clear();
                 self.bump(side);
             }
         }
@@ -1810,28 +1811,47 @@ impl Session {
         // an order to the force a queued forming order makes is accepted. A
         // forming order after the order that names its force does not
         // help it: orders are judged in the order given.
-        let mut accepted: Vec<OrderRequest> = Vec::new();
+        // Orders for the next pulse of the open day and orders kept for dusk
+        // are judged each beside its own queue and the orders of this call
+        // before it that go to the same queue; at dusk there is the one.
+        let mut accepted_pulse: Vec<OrderRequest> = Vec::new();
+        let mut accepted_dusk: Vec<OrderRequest> = Vec::new();
         let mut results = Vec::new();
         {
             let view = self.view_of(side)?;
             let ctx = Ctx::new(view);
-            let seat_queue = if inside.is_some() {
-                self.seats[&side].queued_inside.clone()
-            } else {
-                self.seats[&side].queued.clone()
-            };
+            let pulse_queue = self.seats[&side].queued_inside.clone();
+            let dusk_queue = self.seats[&side].queued.clone();
             for (index, entry) in entries.iter().enumerate() {
-                let queued: Vec<OrderRequest> =
-                    seat_queue.iter().chain(accepted.iter()).cloned().collect();
-                match self.judge(side, &ctx, entry, &queued, inside.is_some()) {
+                let for_pulse: Vec<OrderRequest> = pulse_queue
+                    .iter()
+                    .chain(accepted_pulse.iter())
+                    .cloned()
+                    .collect();
+                let for_dusk: Vec<OrderRequest> = dusk_queue
+                    .iter()
+                    .chain(accepted_dusk.iter())
+                    .cloned()
+                    .collect();
+                match self.judge(side, &ctx, entry, (&for_pulse, &for_dusk), inside.is_some()) {
                     Ok(request) => {
+                        let kept = inside.is_some() && !request.kind.may_be_given_inside_a_day();
                         // A yard order's acceptance states the day of return,
                         // worked by the function the order itself uses on the
                         // state as it stands (decision 0069).
                         let mut result = json!({ "index": index, "status": "queued" });
                         if let Some((day, pulse)) = inside {
-                            result["for"] =
-                                json!(format!("the {} pulse of day {day}", pulse.name()));
+                            if kept {
+                                // Decision 0219, rule 4.
+                                result["kept"] = json!(true);
+                                result["acts"] = json!(format!(
+                                    "kept: it is given at 1800 for the coming day, day {}",
+                                    day + 1
+                                ));
+                            } else {
+                                result["for"] =
+                                    json!(format!("the {} pulse of day {day}", pulse.name()));
+                            }
                         }
                         if let OrderKind::TaskForce {
                             target,
@@ -1839,7 +1859,7 @@ impl Session {
                         } = &request.kind
                         {
                             if let Some(plan) = view.yard_plan(*target) {
-                                let day = plan.return_day(self.world.day() + 1);
+                                let day = plan.return_day(self.command_day());
                                 result["day_of_return"] = json!(day);
                                 result["returns"] = json!(day <= self.days());
                             }
@@ -1850,7 +1870,11 @@ impl Session {
                         if let Some(below) = crate::orders::below_reserve(&ctx, &request.kind) {
                             result["below_reserve"] = below;
                         }
-                        accepted.push(request);
+                        if inside.is_some() && !kept {
+                            accepted_pulse.push(request);
+                        } else {
+                            accepted_dusk.push(request);
+                        }
                         results.push(result);
                     }
                     Err(reason) => {
@@ -1860,15 +1884,17 @@ impl Session {
                 }
             }
         }
-        if !accepted.is_empty() {
+        let kept_in_call = if inside.is_some() {
+            accepted_dusk.len()
+        } else {
+            0
+        };
+        if !accepted_pulse.is_empty() || !accepted_dusk.is_empty() {
             self.bump(side);
         }
         let state = self.seats.get_mut(&side).expect("both seats exist");
-        if inside.is_some() {
-            state.queued_inside.extend(accepted);
-        } else {
-            state.queued.extend(accepted);
-        }
+        state.queued_inside.extend(accepted_pulse);
+        state.queued.extend(accepted_dusk);
         let refused = results.iter().filter(|r| r["status"] == "refused").count();
         let accepted = results.len() - refused;
         let (queued, for_what, for_day) = match inside {
@@ -1888,11 +1914,21 @@ impl Session {
             results.len(),
             if queued == 1 { "order is" } else { "orders are" },
         );
+        let kept_total = if inside.is_some() {
+            self.seats[&side].queued.len()
+        } else {
+            0
+        };
         if inside.is_some() {
             summary.push_str(&format!(
-                " Given at {}: each is taken in at the start of that pulse and checked again then, on the state as it stands; one to a unit an intent's forces limit holds holds it from the staff. Commands to the staff are taken in at dusk.",
+                " Given at {}: each of the seven kinds that act inside a day is taken in at the start of that pulse and checked again then, on the state as it stands; one to a unit an intent's forces limit holds holds it from the staff. Any other is kept: it is given at 1800 with your orders of that dusk, for the coming day, and checked again then. Commands to the staff are taken in at dusk.",
                 self.clock_words()
             ));
+            if kept_in_call > 0 {
+                summary.push_str(&format!(
+                    " {kept_in_call} kept for 1800 in this call ({kept_total} kept in all)."
+                ));
+            }
         }
         let mut answer = json!({
             "format": FORMAT,
@@ -1908,6 +1944,8 @@ impl Session {
         });
         if let Some((_, pulse)) = inside {
             answer["for_pulse"] = json!(pulse.name());
+            answer["kept_in_call"] = json!(kept_in_call);
+            answer["kept"] = json!(kept_total);
         }
         Ok(answer)
     }
@@ -1923,9 +1961,24 @@ impl Session {
         side: Side,
         ctx: &Ctx<'_>,
         entry: &Value,
-        queued: &[OrderRequest],
+        queues: (&[OrderRequest], &[OrderRequest]),
         inside_day: bool,
     ) -> Result<OrderRequest, String> {
+        // The orders queued for the next pulse, and the orders queued for
+        // dusk. Inside a day an order of a kind that cannot act inside it is
+        // kept for dusk and judged beside the dusk queue (decision 0219).
+        let (pulse_queue, dusk_queue) = queues;
+        let acts_inside = inside_day
+            && entry
+                .get("unit")
+                .and_then(Value::as_str)
+                .and_then(|unit| unit.split_once(':'))
+                .zip(entry.get("order"))
+                .and_then(|((kind_of_unit, _), body)| {
+                    order_from_json(&format!("{kind_of_unit}:{NO_SUCH_UNIT}"), body).ok()
+                })
+                .is_some_and(|kind| kind.may_be_given_inside_a_day());
+        let queued: &[OrderRequest] = if acts_inside { pulse_queue } else { dusk_queue };
         // At a seat at a command the one refusal is its own words (decision
         // 0138, 5); everywhere else it is the side's.
         let at_seat = ctx.view.seat().is_some();
@@ -2012,12 +2065,6 @@ impl Session {
             kind,
             origin: Origin::PLAYER,
         };
-        // Inside a day only seven kinds may be given; any other is refused
-        // there as given at dusk, as the engine refuses it at intake
-        // (decision 0156).
-        if inside_day && !request.kind.may_be_given_inside_a_day() {
-            return Err(crate::words::refusal(&RejectReason::GivenAtDusk));
-        }
         match self.world.check_order_queued(side, &request, queued) {
             Ok(()) => Ok(request),
             Err(RejectReason::NotYourUnit) => Err(not_known()),

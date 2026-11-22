@@ -261,6 +261,71 @@
           "items": {
             "type": "string"
           }
+        },
+        "answer_of": {
+          "description": "Decision 0214: the number of the task force whose leave to pursue the decision rests on. Left out where none.",
+          "type": "integer"
+        },
+        "cautions": {
+          "description": "Decision 0217: what the commander should weigh before he approves, each with the unit or place it is of. Left out where there are none.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/caution"
+          }
+        }
+      }
+    },
+    "caution": {
+      "description": "One caution of a reason (decision 0217): its kind, the unit it is of as a handle, the place it is of as a hex (each left out where there is none) and its words.",
+      "type": "object",
+      "required": [
+        "kind",
+        "words"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "station_in_danger",
+            "fuel_not_measured"
+          ]
+        },
+        "of": {
+          "type": "object",
+          "required": [
+            "handle"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "handle": {
+              "type": "string"
+            },
+            "name": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        },
+        "hex": {
+          "type": "object",
+          "required": [
+            "q",
+            "r"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "q": {
+              "type": "integer"
+            },
+            "r": {
+              "type": "integer"
+            }
+          }
+        },
+        "words": {
+          "type": "string"
         }
       }
     },

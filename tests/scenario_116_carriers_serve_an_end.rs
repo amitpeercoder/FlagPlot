@@ -188,6 +188,31 @@
 //!   the same view gives the same station.
 //! - **The staff reads its own side.** Nothing in a reason for a station
 //!   names what an enemy base holds.
+//!
+//! # Decision 0217
+//!
+//! A deny that a carrier force serves is met, and a plan's cautions are
+//! said apart. The statements are the architect's (decision 0217):
+//!
+//! 1. A deny with no base in reach of its waters and one free carrier
+//!    force: the carrier task is formed as today; on no day is the notice
+//!    that the order cannot be met handed in; the standing interrupt for
+//!    it does not fire; the reason for the bases names the carrier force
+//!    first and has no "cannot meet".
+//! 2. The same with no carrier force on the side: the notice and today's
+//!    words, unchanged, each day.
+//! 3. The same with the one carrier force held by the commander: the
+//!    notice, and the words that no carrier force can serve it, as today.
+//! 4. A deny with a base in reach: every order, reason and notice as
+//!    before this ruling.
+//! 5. A station inside an enemy circle: the reason of the task that
+//!    stations the force has the caution that the station stands in
+//!    danger, naming the enemy place, and the tool's list for that task
+//!    holds it. A station outside every circle has none.
+//! 6. A force with no home port: the caution that its fuel was not
+//!    measured. A force with one: none.
+//! 7. Every staffed scenario built before this gives the orders it gave
+//!    (proved by the suites and the recorded games on file).
 
 // Where the build found a statement of the first hand calculation did not
 // hold, the architect corrected the statement (each correction is dated in
@@ -1297,4 +1322,318 @@ fn property_the_staff_reads_its_own_side() {
             assert!(!line.contains("fuel_t"), "{line}");
         }
     }
+}
+
+// ------------------------------------------------------------ Decision 0217
+
+/// The text with no carrier force: the task force, its ships and its air
+/// groups are removed, so the side has no carrier force at all.
+fn no_carrier_force(text: &str) -> String {
+    let from = text.find("[[task_force]]").expect("the task force table");
+    let to = text.find("[[command]]").expect("the first command");
+    let mut cut = text[..from].to_string();
+    // Keep the comment marks that stand between the tables and the commands.
+    for mark in ["# MARK: forces\n", "# MARK: contacts\n"] {
+        if text[from..to].contains(mark) {
+            cut.push_str(mark);
+        }
+    }
+    cut.push_str(&text[to..]);
+    cut
+}
+
+/// How many times the standing interrupt for an order that cannot be met
+/// fired in the game played.
+fn cannot_meet_interrupts(played: &Played) -> usize {
+    played
+        .scenario
+        .world
+        .events()
+        .iter()
+        .filter(|e| {
+            matches!(
+                e.kind,
+                sim_core::events::EventKind::InterruptFired {
+                    interrupt: sim_core::command::InterruptRef::Standing {
+                        kind: sim_core::command::StandingKind::CannotMeet,
+                        ..
+                    },
+                    ..
+                }
+            )
+        })
+        .count()
+}
+
+/// The reasons for giving no order that stand for intent 1's bases: the
+/// ones that give a decision of the deny.
+fn bases_reasons(played: &Played, day: u32) -> Vec<String> {
+    played
+        .decisions(day)
+        .no_orders
+        .iter()
+        .filter(|r| r.worked.contains("No base intent:1 may use"))
+        .map(|r| r.worked.clone())
+        .collect()
+}
+
+/// Decision 0217, statement 1.
+#[test]
+fn decision_0217_statement_1_a_carrier_serves_the_deny() {
+    let played = play(&text(), 4);
+    // The carrier task is formed on day 1, as today.
+    assert_eq!(played.formed(1), vec![(IntentId::new(1), c(), hex(3, 0))]);
+    for day in 1..=4 {
+        assert!(!played.cannot_meet(day), "day {day}");
+        let reasons = bases_reasons(&played, day);
+        assert_eq!(reasons.len(), 1, "day {day}: {reasons:?}");
+        let worked = &reasons[0];
+        assert!(
+            !worked.to_lowercase().contains("cannot meet"),
+            "day {day}: {worked}"
+        );
+        assert!(
+            !worked.contains("no carrier force can serve it"),
+            "day {day}: {worked}"
+        );
+        // The carrier force comes first, then the bases.
+        assert!(
+            worked.starts_with(
+                "intent:2, to operate the carrier force task_force:1 from (3,0), serves intent:1."
+            ),
+            "day {day}: {worked}"
+        );
+        let carrier = worked.find("task_force:1").expect("names the force");
+        let bases = worked.find("base:1").expect("names the base");
+        assert!(carrier < bases, "day {day}: {worked}");
+    }
+    // The standing interrupt for an order that cannot be met does not fire.
+    assert_eq!(cannot_meet_interrupts(&played), 0);
+}
+
+/// Decision 0217, statement 2.
+#[test]
+fn decision_0217_statement_2_no_carrier_force_the_notice_as_today() {
+    let played = play(&no_carrier_force(&text()), 4);
+    assert!(played.scenario.world.umpire().task_forces.is_empty());
+    for day in 1..=4 {
+        assert!(played.cannot_meet(day), "day {day}");
+        let cannot = played.cannot_meet_reason(day);
+        assert!(
+            cannot.contains("cannot meet intent:1"),
+            "day {day}: {cannot}"
+        );
+        assert!(
+            cannot.contains("base:1 (Placeholder base H)"),
+            "day {day}: {cannot}"
+        );
+        // The side has no carrier force, so the words of rule 28 are not
+        // said, as today.
+        assert!(
+            !cannot.contains("no carrier force can serve it"),
+            "day {day}: {cannot}"
+        );
+    }
+    assert_eq!(cannot_meet_interrupts(&played), 1);
+}
+
+/// Decision 0217, statement 3.
+#[test]
+fn decision_0217_statement_3_the_carrier_force_held_the_notice_as_today() {
+    let played = play(&hold_c(&text(), 1), 4);
+    for day in 1..=4 {
+        assert_eq!(played.station(day), None, "day {day}");
+        assert!(played.cannot_meet(day), "day {day}");
+        let cannot = played.cannot_meet_reason(day);
+        assert!(
+            cannot.contains("cannot meet intent:1"),
+            "day {day}: {cannot}"
+        );
+        assert!(
+            cannot.contains("no carrier force can serve it: task_force:1"),
+            "day {day}: {cannot}"
+        );
+    }
+    assert_eq!(cannot_meet_interrupts(&played), 1);
+}
+
+/// A base of A's at (1,0) with a group of the 210 nm dive bombers.
+fn with_a_base_in_reach(text: &str) -> String {
+    let t = at(
+        text,
+        "bases",
+        "[[base]]\nid = 3\nname = \"Placeholder base N\"\nside = \"allied\"\nq = 1\nr = 0\nsupply_t = 1000\nfuel_t = 1000\n\n",
+    );
+    at(
+        &t,
+        "forces",
+        "[[air_group]]\nid = 4\nname = \"Placeholder land bombers 4\"\nside = \"allied\"\nbase = 3\naircraft_type = 5\nready = 12\n\n",
+    )
+}
+
+/// Decision 0217, statement 4: with a base in reach the base path is as it
+/// was: the deny forms its strike task at the base and hands in no notice.
+/// (The change reads `base_served` and goes on, as the old test of
+/// `served_any` did, where a base serves.)
+#[test]
+fn decision_0217_statement_4_a_base_in_reach_forms_its_tasks_and_no_notice() {
+    let played = play(&with_a_base_in_reach(&text()), 4);
+    let strike = IntentKind::StrikeShips {
+        base: BaseId::new(3),
+    };
+    let formed: Vec<(u32, IntentKind)> = (1..=4)
+        .flat_map(|day| {
+            played
+                .decisions(day)
+                .commands
+                .iter()
+                .filter_map(move |c| match c.kind {
+                    CommandKind::FormIntent { parent, kind }
+                        if parent == IntentId::new(1) && kind == strike =>
+                    {
+                        Some((day, kind))
+                    }
+                    _ => None,
+                })
+        })
+        .collect();
+    assert_eq!(formed, vec![(1, strike)]);
+    for day in 1..=4 {
+        assert!(!played.cannot_meet(day), "day {day}");
+        // The carrier force's reason for the bases is not given where a
+        // base serves.
+        assert!(bases_reasons(&played, day).is_empty(), "day {day}");
+        assert!(
+            !played.said(day).contains("serves intent:1."),
+            "day {day}: {}",
+            played.said(day)
+        );
+    }
+    assert_eq!(cannot_meet_interrupts(&played), 0);
+}
+
+/// The cautions of the reason of the carrier task formed on `day`.
+fn station_cautions(played: &Played, day: u32) -> Vec<sim_core::command::Caution> {
+    played
+        .decisions(day)
+        .commands
+        .iter()
+        .find(|c| {
+            matches!(
+                c.kind,
+                CommandKind::FormIntent {
+                    kind: IntentKind::OperateCarriers { .. },
+                    ..
+                }
+            )
+        })
+        .map(|c| c.reason.cautions.clone())
+        .unwrap_or_default()
+}
+
+/// The `propose` answer of the agent for intent 1 on the morning of day 1.
+fn proposed(text: &str) -> serde_json::Value {
+    let mut scenario = load(text);
+    let held = staffs();
+    let mut answer = None;
+    scenario
+        .next_day_watched(as_staffs(&held), &mut |world, moment| {
+            if moment == (Moment::Orders { day: 1 }) {
+                let view = world.side_view(Side::Allied);
+                answer = Some(
+                    sim_agent::propose(&view, held[&Side::Allied].as_ref(), 1).expect("a proposal"),
+                );
+            }
+        })
+        .expect("day 1");
+    answer.expect("the orders moment")
+}
+
+/// The cautions of the carrier task in a `propose` answer.
+fn proposed_cautions(answer: &serde_json::Value) -> Vec<serde_json::Value> {
+    answer["tree"]["sub_intents"]
+        .as_array()
+        .expect("sub-intents")
+        .iter()
+        .find(|s| s["kind"] == "operate_carriers")
+        .expect("the carrier task")["cautions"]
+        .as_array()
+        .expect("a list of cautions")
+        .clone()
+}
+
+/// Decision 0217, statement 5.
+#[test]
+fn decision_0217_statement_5_a_station_in_danger_is_a_caution() {
+    use sim_core::command::CautionKind;
+    use sim_core::ids::EntityRef;
+    let t = at_risk(&base_e(&text(), -10, 0), "balanced");
+    let played = play(&t, 1);
+    assert_eq!(played.station(1), Some(hex(3, 0)));
+    let cautions = station_cautions(&played, 1);
+    assert_eq!(cautions.len(), 1, "{cautions:?}");
+    let caution = &cautions[0];
+    assert_eq!(caution.kind, CautionKind::StationInDanger);
+    assert_eq!(caution.of, Some(EntityRef::Base(BaseId::new(2))));
+    assert_eq!(caution.hex, Some(hex(-10, 0)));
+    assert!(
+        caution.words.contains(
+            "the station (3,0) lies inside the circle of 15 hexes round base:2 (Placeholder base E) at (-10,0)"
+        ),
+        "{}",
+        caution.words
+    );
+    // The working keeps its sentence.
+    assert!(played
+        .station_reason(1)
+        .contains("it stands in danger: it lies inside the circle of 15 hexes round base:2"));
+    // The agent's tool gives the task its cautions.
+    let answer = proposed(&t);
+    let listed = proposed_cautions(&answer);
+    assert_eq!(listed.len(), 1, "{listed:?}");
+    assert_eq!(listed[0]["kind"], "station_in_danger");
+    assert_eq!(listed[0]["of"]["handle"], "base:2");
+    assert_eq!(listed[0]["hex"]["q"], -10);
+    assert_eq!(listed[0]["hex"]["r"], 0);
+    assert!(listed[0]["words"]
+        .as_str()
+        .expect("words")
+        .contains("lies inside the circle of 15 hexes round base:2"));
+
+    // A station outside every circle has none: the default text, and a
+    // base too far to hold the station.
+    let outside = play(&text(), 1);
+    assert!(station_cautions(&outside, 1).is_empty());
+    assert!(proposed_cautions(&proposed(&text())).is_empty());
+}
+
+/// Decision 0217, statement 6.
+#[test]
+fn decision_0217_statement_6_no_home_port_is_a_caution() {
+    use sim_core::command::CautionKind;
+    use sim_core::ids::EntityRef;
+    for level in RISKS {
+        let played = play(&no_home(&at_risk(&text(), level)), 1);
+        let cautions = station_cautions(&played, 1);
+        assert_eq!(cautions.len(), 1, "{level}: {cautions:?}");
+        assert_eq!(cautions[0].kind, CautionKind::FuelNotMeasured);
+        assert_eq!(cautions[0].of, Some(EntityRef::TaskForce(c())));
+        assert_eq!(cautions[0].hex, None);
+        assert_eq!(
+            cautions[0].words,
+            "task_force:1 has no home port the staff knows, so its fuel was not measured"
+        );
+        // The working keeps its sentence.
+        assert!(played
+            .station_reason(1)
+            .contains("its fuel could not be measured against a passage home"));
+        // With a home port: none.
+        let homed = play(&at_risk(&text(), level), 1);
+        assert!(station_cautions(&homed, 1).is_empty(), "{level}");
+    }
+    let listed = proposed_cautions(&proposed(&no_home(&text())));
+    assert_eq!(listed.len(), 1);
+    assert_eq!(listed[0]["kind"], "fuel_not_measured");
+    assert_eq!(listed[0]["of"]["handle"], "task_force:1");
+    assert!(listed[0].get("hex").is_none());
 }

@@ -368,7 +368,7 @@
       "hash": "3b3353e3ccc0e0d7"
     }
   ],
-  "doctrine_version": "supply-53",
+  "doctrine_version": "supply-54",
   "format": "flagplot-saved-game",
   "hashes": [
     {
@@ -429,31 +429,31 @@
     },
     {
       "day": 15,
-      "hash": "620f5783d9f3c9bb"
+      "hash": "6caf88705d0678bd"
     },
     {
       "day": 16,
-      "hash": "74f5d901cdaa80ae"
+      "hash": "0fa1695854f6877e"
     },
     {
       "day": 17,
-      "hash": "78f3719ae599b690"
+      "hash": "9d15c6adc58923fb"
     },
     {
       "day": 18,
-      "hash": "746ddcb59fcae8b7"
+      "hash": "1bbd3a63822979b1"
     },
     {
       "day": 19,
-      "hash": "6bba6ea8da2f68f2"
+      "hash": "a4eabfccd4277b3b"
     },
     {
       "day": 20,
-      "hash": "dd4294fcdb2c2a91"
+      "hash": "9fd2b510ace77491"
     },
     {
       "day": 21,
-      "hash": "341ef2f933ab5915"
+      "hash": "8e6a09e937755e61"
     }
   ],
   "orders": [
@@ -3219,6 +3219,33 @@
             "worked": "intent:2 holds base:2 (Rabaul), which is the side's. The forces with men aboard: task_force:32 is not in the forces limit of intent:2; task_force:33 is not in the forces limit of intent:2; task_force:34 is not in the forces limit of intent:2; task_force:35 is not in the forces limit of intent:2; task_force:36 is not in the forces limit of intent:2; task_force:37 is not in the forces limit of intent:2; task_force:38 is not in the forces limit of intent:2; task_force:39 is not in the forces limit of intent:2. The staff sends none to base:2 (Rabaul).",
             "would_change": [
               "a force with men aboard that no take can use, free and usable"
+            ]
+          },
+          {
+            "binding": [
+              "a carrier force under the order serves its waters",
+              "a bomber's normal reach or a search range must touch a hex of the waters"
+            ],
+            "evidence": [
+              {
+                "day": 15,
+                "what": "intent:8, to operate the carrier force task_force:3 from (9,-19), serves intent:5; intent:9, to operate the carrier force task_force:4 from (7,-18), serves intent:5"
+              },
+              {
+                "day": 15,
+                "what": "the side has no base it may use"
+              }
+            ],
+            "serves": {
+              "intent": 5,
+              "level": "area",
+              "plan": 5,
+              "statement": "deny the waters within 10 hexes of (2,-4)"
+            },
+            "worked": "intent:8, to operate the carrier force task_force:3 from (9,-19), serves intent:5; intent:9, to operate the carrier force task_force:4 from (7,-18), serves intent:5. No base intent:5 may use has a bomber whose normal reach, or a group whose search range, touches the waters within 10 hexes of (2,-4) (331 hex(es) on the map), so the staff forms no task at a base: the side has no base it may use.",
+            "would_change": [
+              "a bomber or a search group at a base within reach of the waters",
+              "the carrier task withdrawn"
             ]
           },
           {
@@ -6297,6 +6324,33 @@
           },
           {
             "binding": [
+              "a carrier force under the order serves its waters",
+              "a bomber's normal reach or a search range must touch a hex of the waters"
+            ],
+            "evidence": [
+              {
+                "day": 16,
+                "what": "intent:8, to operate the carrier force task_force:3 from (9,-19), serves intent:5; intent:9, to operate the carrier force task_force:4 from (7,-18), serves intent:5"
+              },
+              {
+                "day": 16,
+                "what": "the side has no base it may use"
+              }
+            ],
+            "serves": {
+              "intent": 5,
+              "level": "area",
+              "plan": 5,
+              "statement": "deny the waters within 10 hexes of (2,-4)"
+            },
+            "worked": "intent:8, to operate the carrier force task_force:3 from (9,-19), serves intent:5; intent:9, to operate the carrier force task_force:4 from (7,-18), serves intent:5. No base intent:5 may use has a bomber whose normal reach, or a group whose search range, touches the waters within 10 hexes of (2,-4) (331 hex(es) on the map), so the staff forms no task at a base: the side has no base it may use.",
+            "would_change": [
+              "a bomber or a search group at a base within reach of the waters",
+              "the carrier task withdrawn"
+            ]
+          },
+          {
+            "binding": [
               "the patrol share of the balanced risk: 0.5 at balanced, the base not attacked from the air on the three days before",
               "rest above fatigue 45 at balanced risk",
               "search arc: threats: base:1 (Lunga) at (2,-4), base:3 (Espiritu Santo) at (7,6), base:4 (Tulagi) at (3,-5), base:8 (Landing at (2,-4)) at (2,-4); the narrowest arc that holds them is 110 to 130, widened by 30 degrees at each end to 080 to 160"
@@ -7556,6 +7610,33 @@
           },
           {
             "binding": [
+              "a carrier force under the order serves its waters",
+              "a bomber's normal reach or a search range must touch a hex of the waters"
+            ],
+            "evidence": [
+              {
+                "day": 17,
+                "what": "intent:8, to operate the carrier force task_force:3 from (9,-19), serves intent:5; intent:9, to operate the carrier force task_force:4 from (7,-18), serves intent:5"
+              },
+              {
+                "day": 17,
+                "what": "the side has no base it may use"
+              }
+            ],
+            "serves": {
+              "intent": 5,
+              "level": "area",
+              "plan": 5,
+              "statement": "deny the waters within 10 hexes of (2,-4)"
+            },
+            "worked": "intent:8, to operate the carrier force task_force:3 from (9,-19), serves intent:5; intent:9, to operate the carrier force task_force:4 from (7,-18), serves intent:5. No base intent:5 may use has a bomber whose normal reach, or a group whose search range, touches the waters within 10 hexes of (2,-4) (331 hex(es) on the map), so the staff forms no task at a base: the side has no base it may use.",
+            "would_change": [
+              "a bomber or a search group at a base within reach of the waters",
+              "the carrier task withdrawn"
+            ]
+          },
+          {
+            "binding": [
               "the patrol share of the balanced risk: 0.5 at balanced, the base not attacked from the air on the three days before",
               "rest above fatigue 45 at balanced risk",
               "search arc: threats: base:1 (Lunga) at (2,-4), base:3 (Espiritu Santo) at (7,6), base:4 (Tulagi) at (3,-5), base:8 (Landing at (2,-4)) at (2,-4); the narrowest arc that holds them is 110 to 130, widened by 30 degrees at each end to 080 to 160"
@@ -8499,6 +8580,33 @@
             "worked": "intent:9 (operate the carrier force task_force:4 from (7,-18)) stands under intent:5: the staff forms no other for task_force:4. task_force:4 is on the carrier mission with 1 carrier(s) afloat and 2 air group(s) aboard, and lies at (7,-18).",
             "would_change": [
               "intent:9 withdrawn"
+            ]
+          },
+          {
+            "binding": [
+              "a carrier force under the order serves its waters",
+              "a bomber's normal reach or a search range must touch a hex of the waters"
+            ],
+            "evidence": [
+              {
+                "day": 18,
+                "what": "intent:8, to operate the carrier force task_force:3 from (9,-19), serves intent:5; intent:9, to operate the carrier force task_force:4 from (7,-18), serves intent:5"
+              },
+              {
+                "day": 18,
+                "what": "the side has no base it may use"
+              }
+            ],
+            "serves": {
+              "intent": 5,
+              "level": "area",
+              "plan": 5,
+              "statement": "deny the waters within 10 hexes of (2,-4)"
+            },
+            "worked": "intent:8, to operate the carrier force task_force:3 from (9,-19), serves intent:5; intent:9, to operate the carrier force task_force:4 from (7,-18), serves intent:5. No base intent:5 may use has a bomber whose normal reach, or a group whose search range, touches the waters within 10 hexes of (2,-4) (331 hex(es) on the map), so the staff forms no task at a base: the side has no base it may use.",
+            "would_change": [
+              "a bomber or a search group at a base within reach of the waters",
+              "the carrier task withdrawn"
             ]
           },
           {
@@ -9459,6 +9567,33 @@
           },
           {
             "binding": [
+              "a carrier force under the order serves its waters",
+              "a bomber's normal reach or a search range must touch a hex of the waters"
+            ],
+            "evidence": [
+              {
+                "day": 19,
+                "what": "intent:8, to operate the carrier force task_force:3 from (9,-19), serves intent:5; intent:9, to operate the carrier force task_force:4 from (7,-18), serves intent:5"
+              },
+              {
+                "day": 19,
+                "what": "the side has no base it may use"
+              }
+            ],
+            "serves": {
+              "intent": 5,
+              "level": "area",
+              "plan": 5,
+              "statement": "deny the waters within 10 hexes of (2,-4)"
+            },
+            "worked": "intent:8, to operate the carrier force task_force:3 from (9,-19), serves intent:5; intent:9, to operate the carrier force task_force:4 from (7,-18), serves intent:5. No base intent:5 may use has a bomber whose normal reach, or a group whose search range, touches the waters within 10 hexes of (2,-4) (331 hex(es) on the map), so the staff forms no task at a base: the side has no base it may use.",
+            "would_change": [
+              "a bomber or a search group at a base within reach of the waters",
+              "the carrier task withdrawn"
+            ]
+          },
+          {
+            "binding": [
               "the patrol share of the balanced risk: 0.5 at balanced, the base not attacked from the air on the three days before",
               "rest above fatigue 45 at balanced risk",
               "search arc: threats: base:1 (Lunga) at (2,-4), base:3 (Espiritu Santo) at (7,6), base:4 (Tulagi) at (3,-5), base:8 (Landing at (2,-4)) at (2,-4), contact 2 at (3,-5); the narrowest arc that holds them is 110 to 130, widened by 30 degrees at each end to 080 to 160"
@@ -10363,6 +10498,33 @@
             "worked": "intent:9 (operate the carrier force task_force:4 from (7,-18)) stands under intent:5: the staff forms no other for task_force:4. task_force:4 is on the carrier mission with 1 carrier(s) afloat and 2 air group(s) aboard, and lies at (7,-18).",
             "would_change": [
               "intent:9 withdrawn"
+            ]
+          },
+          {
+            "binding": [
+              "a carrier force under the order serves its waters",
+              "a bomber's normal reach or a search range must touch a hex of the waters"
+            ],
+            "evidence": [
+              {
+                "day": 20,
+                "what": "intent:8, to operate the carrier force task_force:3 from (9,-19), serves intent:5; intent:9, to operate the carrier force task_force:4 from (7,-18), serves intent:5"
+              },
+              {
+                "day": 20,
+                "what": "the side has no base it may use"
+              }
+            ],
+            "serves": {
+              "intent": 5,
+              "level": "area",
+              "plan": 5,
+              "statement": "deny the waters within 10 hexes of (2,-4)"
+            },
+            "worked": "intent:8, to operate the carrier force task_force:3 from (9,-19), serves intent:5; intent:9, to operate the carrier force task_force:4 from (7,-18), serves intent:5. No base intent:5 may use has a bomber whose normal reach, or a group whose search range, touches the waters within 10 hexes of (2,-4) (331 hex(es) on the map), so the staff forms no task at a base: the side has no base it may use.",
+            "would_change": [
+              "a bomber or a search group at a base within reach of the waters",
+              "the carrier task withdrawn"
             ]
           },
           {
@@ -11318,6 +11480,33 @@
             "worked": "intent:9 (operate the carrier force task_force:4 from (7,-18)) stands under intent:5: the staff forms no other for task_force:4. task_force:4 is on the carrier mission with 1 carrier(s) afloat and 2 air group(s) aboard, and lies at (7,-18).",
             "would_change": [
               "intent:9 withdrawn"
+            ]
+          },
+          {
+            "binding": [
+              "a carrier force under the order serves its waters",
+              "a bomber's normal reach or a search range must touch a hex of the waters"
+            ],
+            "evidence": [
+              {
+                "day": 21,
+                "what": "intent:8, to operate the carrier force task_force:3 from (9,-19), serves intent:5; intent:9, to operate the carrier force task_force:4 from (7,-18), serves intent:5"
+              },
+              {
+                "day": 21,
+                "what": "the side has no base it may use"
+              }
+            ],
+            "serves": {
+              "intent": 5,
+              "level": "area",
+              "plan": 5,
+              "statement": "deny the waters within 10 hexes of (2,-4)"
+            },
+            "worked": "intent:8, to operate the carrier force task_force:3 from (9,-19), serves intent:5; intent:9, to operate the carrier force task_force:4 from (7,-18), serves intent:5. No base intent:5 may use has a bomber whose normal reach, or a group whose search range, touches the waters within 10 hexes of (2,-4) (331 hex(es) on the map), so the staff forms no task at a base: the side has no base it may use.",
+            "would_change": [
+              "a bomber or a search group at a base within reach of the waters",
+              "the carrier task withdrawn"
             ]
           },
           {

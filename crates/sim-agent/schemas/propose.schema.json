@@ -31,7 +31,7 @@
       "const": "flagplot-agent"
     },
     "version": {
-      "const": 44
+      "const": 45
     },
     "kind": {
       "const": "propose"
@@ -252,6 +252,7 @@
                   "maker",
                   "text",
                   "reason",
+                  "cautions",
                   "kind",
                   "base",
                   "target",
@@ -281,6 +282,13 @@
                   },
                   "reason": {
                     "$ref": "command_defs.schema.json#/$defs/reason"
+                  },
+                  "cautions": {
+                    "description": "Decision 0217: what the commander should weigh before he approves this task, from its reason; an empty list where there is none.",
+                    "type": "array",
+                    "items": {
+                      "$ref": "command_defs.schema.json#/$defs/caution"
+                    }
                   },
                   "kind": {
                     "enum": [

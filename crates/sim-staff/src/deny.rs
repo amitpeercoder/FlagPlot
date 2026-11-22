@@ -166,7 +166,7 @@ impl Day<'_, '_> {
                 waters_hexes.len()
             );
             let candidates = self.deny_candidates(&end);
-            let mut served_any = false;
+            let mut base_served = false;
             for candidate in &candidates {
                 let base = candidate.base;
                 let base_text = base_held_words(self.area, base);
@@ -183,7 +183,7 @@ impl Day<'_, '_> {
                     .map(|(g, name, reach)| format!("{g} ({name}, a reach of {reach} nm)"))
                     .collect();
                 if !reaching.is_empty() {
-                    served_any = true;
+                    base_served = true;
                     let reach_text = format!(
                         "{near_text}; its bombers whose normal reach touches them: {}",
                         reaching.join(", ")
@@ -201,7 +201,7 @@ impl Day<'_, '_> {
                 if searching.is_empty() {
                     continue;
                 }
-                served_any = true;
+                base_served = true;
                 let search_text = format!(
                     "{near_text}; its groups whose search range touches them: {}",
                     searching.join(", ")
@@ -238,14 +238,28 @@ impl Day<'_, '_> {
             // The tasks of the forces its forces limit names (decisions
             // 0124, 8, and 0125, 2): standing at the centre of the waters,
             // and carriers.
-            if self.form_force_tasks(&end, &plan, hex, in_scope, false) {
-                served_any = true;
+            let force_served = self.form_force_tasks(&end, &plan, hex, in_scope, false);
+            // Decision 0217: a carrier task under the deny serves it, whoever
+            // made the deny: one in force, one formed this morning by the
+            // carrier pass, by the island or just above, and a free carrier
+            // force the carrier pass gave it (decision 0202).
+            let carrier_tasks = self.carrier_tasks_of(id);
+            let carrier_served =
+                !carrier_tasks.is_empty() || self.carrier_ends.get(&id).is_some_and(|o| o.served);
+            if base_served {
+                continue;
             }
-            // A free carrier force the carrier pass gave it (decision 0202).
-            if self.carrier_ends.get(&id).is_some_and(|o| o.served) {
-                served_any = true;
-            }
-            if !served_any {
+            if carrier_served {
+                self.carriers_serve_deny(
+                    &end,
+                    &plan,
+                    &waters_text,
+                    &waters_hexes,
+                    &candidates,
+                    &carrier_tasks,
+                    in_scope,
+                );
+            } else if !force_served {
                 self.cannot_deny(
                     &end,
                     &plan,
@@ -255,6 +269,126 @@ impl Day<'_, '_> {
                     in_scope,
                 );
             }
+        }
+    }
+
+    /// The carrier tasks in force under `end`, in intent number order, with
+    /// the words that say each (decision 0217, 1): "intent:6, to operate the
+    /// carrier force task_force:2 from (0,0)".
+    fn carrier_tasks_of(
+        &self,
+        end: sim_core::ids::IntentId,
+    ) -> Vec<(sim_core::ids::IntentId, String)> {
+        let mut found = Vec::new();
+        for child in self.state.children_in_force(end) {
+            let Some(task) = self.state.intents.get(&child) else {
+                continue;
+            };
+            if let IntentKind::OperateCarriers { force, hex } = task.kind {
+                found.push((
+                    task.id,
+                    format!(
+                        "{}, to operate the carrier force {force} from {hex}",
+                        task.id
+                    ),
+                ));
+            }
+        }
+        found.sort_by_key(|(id, _)| *id);
+        found
+    }
+
+    /// The staff's words on each base for a deny no base serves: its
+    /// distance from the waters, the reach and the range of each type it
+    /// has, and the groups that are coming. One line per base, joined by
+    /// "; " (decision 0123, 2, and decision 0217, 1).
+    fn base_lines(&self, waters_hexes: &[Hex], candidates: &[Candidate]) -> String {
+        let mut lines: Vec<String> = Vec::new();
+        for candidate in candidates {
+            let base_text = base_held_words(self.area, candidate.base);
+            let near = nearest_nm(candidate.hex, waters_hexes).map_or_else(
+                || "no hex of the waters is on the map".to_string(),
+                |nm| format!("{nm} nm from the nearest hex of the waters"),
+            );
+            let mut types: Vec<String> = Vec::new();
+            for (_, name, reach) in &candidate.bombers {
+                let text = format!("a reach of {reach} nm ({name})");
+                if !types.contains(&text) {
+                    types.push(text);
+                }
+            }
+            for (_, name, range) in &candidate.searchers {
+                let text = format!("a search range of {range} nm ({name})");
+                if !types.contains(&text) {
+                    types.push(text);
+                }
+            }
+            let later = if candidate.waiting.is_empty() {
+                String::new()
+            } else {
+                format!(" ({})", crate::available::list_words(&candidate.waiting))
+            };
+            if types.is_empty() {
+                lines.push(format!(
+                    "{base_text} is {near} and has no bomber and no group that can search that the intent may use{later}"
+                ));
+            } else {
+                lines.push(format!(
+                    "{base_text} is {near}: {}{later}",
+                    types.join(", ")
+                ));
+            }
+        }
+        if lines.is_empty() {
+            "the side has no base it may use".to_string()
+        } else {
+            lines.join("; ")
+        }
+    }
+
+    /// No base reaches the waters but a carrier task serves the deny: the
+    /// reason for giving the bases no task, naming the carrier forces first,
+    /// and no notice (decision 0217, 1).
+    #[allow(clippy::too_many_arguments)]
+    fn carriers_serve_deny(
+        &mut self,
+        end: &Intent,
+        plan: &sim_core::command::Plan,
+        waters_text: &str,
+        waters_hexes: &[Hex],
+        candidates: &[Candidate],
+        carrier_tasks: &[(sim_core::ids::IntentId, String)],
+        in_scope: bool,
+    ) {
+        let today = self.today;
+        let serving_words = if carrier_tasks.is_empty() {
+            format!("a carrier force the staff stationed serves {}", end.id)
+        } else {
+            carrier_tasks
+                .iter()
+                .map(|(_, words)| format!("{words}, serves {}", end.id))
+                .collect::<Vec<_>>()
+                .join("; ")
+        };
+        let body = self.base_lines(waters_hexes, candidates);
+        let reason = serving(end, plan)
+            .evidence(serving_words.clone(), today)
+            .evidence(body.clone(), today)
+            .binding("a carrier force under the order serves its waters")
+            .binding("a bomber's normal reach or a search range must touch a hex of the waters")
+            .worked(format!(
+                "{serving_words}. No base {} may use has a bomber whose normal reach, or a group whose search range, touches {waters_text}, so the staff forms no task at a base: {body}.",
+                end.id
+            ))
+            .would_change("a bomber or a search group at a base within reach of the waters")
+            .would_change("the carrier task withdrawn")
+            .done();
+        self.target(in_scope).no_orders.push(reason);
+        if in_scope {
+            self.lines.push(format!(
+                "{} is to deny {waters_text}: {serving_words}; it would give the bases no task ({body}).",
+                end.id
+            ));
         }
     }
 
@@ -357,47 +491,7 @@ impl Day<'_, '_> {
         in_scope: bool,
     ) {
         let today = self.today;
-        let mut lines: Vec<String> = Vec::new();
-        for candidate in candidates {
-            let base_text = base_held_words(self.area, candidate.base);
-            let near = nearest_nm(candidate.hex, waters_hexes).map_or_else(
-                || "no hex of the waters is on the map".to_string(),
-                |nm| format!("{nm} nm from the nearest hex of the waters"),
-            );
-            let mut types: Vec<String> = Vec::new();
-            for (_, name, reach) in &candidate.bombers {
-                let text = format!("a reach of {reach} nm ({name})");
-                if !types.contains(&text) {
-                    types.push(text);
-                }
-            }
-            for (_, name, range) in &candidate.searchers {
-                let text = format!("a search range of {range} nm ({name})");
-                if !types.contains(&text) {
-                    types.push(text);
-                }
-            }
-            let later = if candidate.waiting.is_empty() {
-                String::new()
-            } else {
-                format!(" ({})", crate::available::list_words(&candidate.waiting))
-            };
-            if types.is_empty() {
-                lines.push(format!(
-                    "{base_text} is {near} and has no bomber and no group that can search that the intent may use{later}"
-                ));
-            } else {
-                lines.push(format!(
-                    "{base_text} is {near}: {}{later}",
-                    types.join(", ")
-                ));
-            }
-        }
-        let mut body = if lines.is_empty() {
-            "the side has no base it may use".to_string()
-        } else {
-            lines.join("; ")
-        };
+        let mut body = self.base_lines(waters_hexes, candidates);
         // Decision 0202, 28: and no carrier force can serve it.
         if let Some(words) = self.carrier_words(end.id) {
             body = format!("{body}; {words}");

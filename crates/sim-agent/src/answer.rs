@@ -142,8 +142,15 @@ pub const FORMAT: &str = "flagplot-agent";
 /// 0212): a ship line's and the ship entity's `on_fire_among_aircraft` (true,
 /// left out otherwise), the briefing's `losses.aircraft_fires` and a sunk
 /// ship's `cause` (`fire_among_aircraft`), and `advance`'s "loss" taking in a
-/// fire set.
-pub const VERSION: u32 = 44;
+/// fire set. 45 adds a reason's `cautions` (decision 0217: each with its
+/// `kind`, `station_in_danger` or `fuel_not_measured`, an optional `of` and
+/// `hex`, and its `words`; left out where there is none) and each sub-intent's
+/// `cautions` in `propose`'s tree; the briefing's `arrivals.came_today` and
+/// `arrivals.comes_tomorrow` (decision 0215); and, inside a day, an order not
+/// of the seven kinds kept for the next dusk rather than refused (decision
+/// 0219): its result's `kept` and `acts`, and the answer's `kept_in_call` and
+/// `kept`.
+pub const VERSION: u32 = 45;
 
 /// The answer to a question about something the side does not know of: a
 /// unit of the enemy, a number that does not exist, an event the side may not

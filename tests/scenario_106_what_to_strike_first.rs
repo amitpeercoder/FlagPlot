@@ -210,7 +210,16 @@ mod record {
 /// 0211 and 0212 (a strike spread over the ships of its kind and fire among
 /// a carrier's aircraft, which run in every battle): the four games with
 /// carrier strikes move in their play; the 39 days' first week, which has
-/// none, keeps its digest.
+/// none, keeps its digest. Remade for decision 0217 (a deny a carrier task
+/// serves is met; a reason's cautions): every reason gains `cautions`, empty
+/// in these games; with those taken out the five-day and the second proof's
+/// Eastern Solomons are the text of the commit before, line for line, and
+/// scenario 5 did not move. In the 39 days' first week the island's deny,
+/// which its carrier task serves, no longer hands in the notice that it
+/// cannot be met nor fires the standing interrupt, and its reason for the
+/// bases names the carrier task first; in the second proof's week a deny the
+/// carrier forces serve gains that reason each day. No order or command
+/// moved in either, and no other event.
 #[test]
 fn s12_no_game_without_the_limit_changes() {
     let games: [(&str, Option<u32>, u64); 5] = [
@@ -218,19 +227,19 @@ fn s12_no_game_without_the_limit_changes() {
         (
             "five-days/01a_eastern_solomons.toml",
             None,
-            0x66d9_de0e_df37_8249,
+            0x0ad2_e5bf_5f21_76e5,
         ),
         (
             "stage-3-proof/07a_slice.toml",
             Some(7),
-            0x3c6a_6053_4166_f6ab,
+            0x60bf_33fb_0ca7_3116,
         ),
         (
             "second-proof/05a_eastern_solomons.toml",
             None,
-            0xfce4_2251_78d4_456f,
+            0xbbd4_8dc4_b18e_dc37,
         ),
-        ("second-proof/07a_week.toml", None, 0x91a7_9ab7_cf7f_24d9),
+        ("second-proof/07a_week.toml", None, 0xd252_0a19_d0d1_594d),
     ];
     let write_to = std::env::var("FLAGPILOT_106_RECORD").ok();
     let mut moved = Vec::new();

@@ -29,11 +29,12 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use sim_core::command::{
-    CommandKind, Intent, IntentKind, IntentLimits, Maker, Plan, Risk, StaffCommand,
+    Caution, CautionKind, CommandKind, Intent, IntentKind, IntentLimits, Maker, Plan, Risk,
+    StaffCommand,
 };
 use sim_core::fixed::Fixed;
 use sim_core::hex::{Hex, HEX_NM};
-use sim_core::ids::{IntentId, TaskForceId};
+use sim_core::ids::{BaseId, EntityRef, IntentId, TaskForceId};
 use sim_core::orders::{Mission, SpeedSetting};
 use sim_core::refdata::ShipKind;
 use sim_core::state::{AirGroupLocation, TaskForce};
@@ -201,6 +202,8 @@ struct Chosen {
     words: String,
     evidence: Vec<String>,
     would_change: Vec<String>,
+    /// What the commander should weigh, apart from the words (decision 0217).
+    cautions: Vec<Caution>,
 }
 
 /// One candidate's fuel against its passage out and home (rule 11).
@@ -525,18 +528,28 @@ impl Day<'_, '_> {
         }
     }
 
+    /// The enemy bases on the side's map, in the order their circles stand
+    /// first among the circles of [`Day::circles_for`]: the base of circle
+    /// `i` is entry `i` (decision 0217, rule 4).
+    fn circle_bases(&self) -> Vec<(BaseId, Hex)> {
+        let side = self.view.side();
+        self.view
+            .enemy_bases()
+            .filter(|b| b.side != side)
+            .map(|b| (b.id, b.hex))
+            .collect()
+    }
+
     /// Rules 7 to 9: the circles of danger, as the area's picture holds the
     /// enemy, but for what the order is aimed at.
     pub(crate) fn circles_for(&self, aim: &Aim) -> Vec<Circle> {
-        let side = self.view.side();
         let mut circles: Vec<Circle> = self
-            .view
-            .enemy_bases()
-            .filter(|b| b.side != side)
-            .map(|b| Circle {
-                centre: b.hex,
+            .circle_bases()
+            .into_iter()
+            .map(|(id, hex)| Circle {
+                centre: hex,
                 hexes: THREAT_HEXES,
-                words: format!("{} at {}", base_words(self.view, b.id), b.hex),
+                words: format!("{} at {}", base_words(self.view, id), hex),
             })
             .collect();
         let picture = crate::picture::picture_of(self.view, sim_core::command::Addressee::Area);
@@ -772,6 +785,32 @@ impl Day<'_, '_> {
                 .push("the contact reported as a carrier growing old or dropped".to_string());
         }
         would_change.push("more fuel aboard".to_string());
+        // Decision 0217, rule 4: the cautions, said apart from the words.
+        let bases = self.circle_bases();
+        let mut cautions: Vec<Caution> = circles
+            .iter()
+            .enumerate()
+            .filter(|(_, c)| station.hex.distance(c.centre) <= c.hexes)
+            .map(|(i, c)| Caution {
+                kind: CautionKind::StationInDanger,
+                of: bases.get(i).map(|(id, _)| EntityRef::Base(*id)),
+                hex: Some(c.centre),
+                words: format!(
+                    "the station {} lies inside the circle of {} hexes round {}",
+                    station.hex, c.hexes, c.words
+                ),
+            })
+            .collect();
+        if home.is_none() {
+            cautions.push(Caution {
+                kind: CautionKind::FuelNotMeasured,
+                of: Some(EntityRef::TaskForce(id)),
+                hex: None,
+                words: format!(
+                    "{id} has no home port the staff knows, so its fuel was not measured"
+                ),
+            });
+        }
         Ok(Chosen {
             hex: station.hex,
             words,
@@ -780,6 +819,7 @@ impl Day<'_, '_> {
                 format!("the candidates within {within} nm of {}: {}", aim.words, candidates.len()),
             ],
             would_change,
+            cautions,
         })
     }
 
@@ -989,6 +1029,7 @@ impl Day<'_, '_> {
         }
         let reason = builder
             .would_change(format!("{force} held, or named by another order"))
+            .cautions(chosen.cautions.clone())
             .done();
         self.target(in_scope).commands.push(StaffCommand {
             kind: CommandKind::FormIntent {

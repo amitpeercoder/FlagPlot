@@ -375,7 +375,14 @@ use sim_core::view::SideView;
 /// pursues; and at the first dusk it has neither a find nor a contact to close
 /// on the pursuit is ended in a notice. A side with no such find, or with the
 /// leave at stay, gets the orders and reasons `supply-52` gave.
-pub const DOCTRINE_VERSION: &str = "supply-53";
+/// `supply-54` adds decision 0217: a deny that no base can serve but a
+/// carrier task under it does, whoever made the deny (the staff's own under
+/// "control an island" included), hands in no notice that it cannot be met,
+/// and its reason for giving the bases no task names the carrier tasks
+/// first; and the reason of a carrier station the staff chose carries its
+/// cautions (the station stands in danger; the fuel was not measured). It
+/// gives the orders `supply-53` gave.
+pub const DOCTRINE_VERSION: &str = "supply-54";
 
 /// The staff: the doctrine for keeping a base supplied (stage 1) and, after
 /// it, the air doctrine for holding a place and covering a base from the air

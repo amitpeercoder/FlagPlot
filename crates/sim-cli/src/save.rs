@@ -1235,6 +1235,7 @@ mod tests {
             worked: "10 days x 12 t = 120 t".to_string(),
             would_change: vec!["a second ship in the pool".to_string()],
             answer_of: None,
+            cautions: Vec::new(),
         };
         // A reason that cites the commander's answer (decision 0214).
         let cited = Reason {
