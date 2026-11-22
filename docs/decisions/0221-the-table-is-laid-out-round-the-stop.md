@@ -263,3 +263,15 @@ Read on the team's report, its screenshots and the page's checks before merging.
 `table/check_screen.py` checks each part: YOUR ORDERS and its empty fact, the launch line, SIGNED from `queued` with TAKE BACK, the outcomes' homes, that the removed parts are gone, the drawer, the chevron and the strip, the trail, and that no card text shows a handle. `PAGE_LOAD_CALLS` gains `queued`.
 
 Left for later stages: an air group's mission and its arc are two entries under SIGNED; SINCE still names an aircraft type in full and gives a position without its hex; the prompt while a place is picked covers the zoom-in control in a narrow window.
+
+## The architect's rulings on stage 2, Nov 22, 2026
+
+Read on the session's code for `queued` and `take_back`, the team's report and its screenshots before merging.
+
+- **A take back is tried and judged again:** the entry and what goes with it are taken out, what is left is judged as it was when queued, and where an entry that passed now fails the queues are put back and the refusal names it. That is the right way: no second set of rules says what rests on what.
+- **The two tools are not a watcher's,** and a seat whose call of time is held cannot read what it signed until the other commander has played. Accepted.
+- **The drawer closes when the clock starts,** the strip with STOP THE CLOCK staying in sight. Accepted.
+- **A slip's heading says what its events say,** and the general heading stays only for a slip of several kinds. The headings for a loss and for a landing were proved on sample events and not seen in play; they are owed a look when a game gives one.
+- **Not tried, and owed before stage 4 closes:** a refusal by the engine shown as NOT SENT (the forms offer only what it takes; force one in the check); an air attack's row under HOW WE KNOW.
+- **For stage 3:** an air group's mission and its arc are one entry under SIGNED, not two. **For stage 4:** SINCE says an aircraft type short and a position with its hex, as the slips now do; in a narrow window the prompt while a place is picked does not cover a control.
+- **One test failed once under the full parallel run and passes alone** (scenario 120, statement 6, which runs the derivation command inside itself). It is not of this change; it is a row of open work to stop it running a build inside a test run.
