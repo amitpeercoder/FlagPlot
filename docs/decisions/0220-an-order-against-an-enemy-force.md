@@ -88,3 +88,81 @@ None moves: no game on file gives either order. Recorded games are remade for th
 ## Questions for the designer
 
 None before the review.
+
+## Amended on review, Nov 22, 2026
+
+Read by a reviewer who had not seen it written. What follows is the plan as it now stands and replaces the rules, the figures and the table's part above.
+
+### What the review found
+
+- **A force on the move rarely keeps its contact's number from one day to the next.** A report refreshes a contact only within `merge_distance_hexes`, 2, of one no older than `fresh_contact_max_age_pulses`, 2; a hex is 40 miles, and a force at 15 to 20 knots makes 9 to 12 hexes in a day. A bases' search at balanced risk flies once a day. So each day's sighting is most often a new contact, while the old one is held, stale, for a day and a half more. The plan as written would have served waters round the stale one, refused the new one for having been made before the old was dropped, and ended "not found" with the force on the chart.
+- **The staff never withdraws a deny's tasks and re-forms none.** The tasks to strike ships and to search waters name a base and read the waters each dusk, so they need no forming again; a stand task stands at the centre and would chase a point the force left in the night; a free carrier force's station is chosen once and kept.
+- **Decision 0214's leave is a force's, not a contact's,** and lifting the bound for an order is its setting "go", which exists.
+- **At balanced risk a carrier force closes on a carrier and on nothing else,** so an order to destroy a force taken for cruisers would have moved no carrier. A base under a deny's task strikes what its target list reaches, with no preference for the force named.
+- **A contact's kind is wrong on some three reports in ten and is replaced by each,** so a notice on every change would have stopped the clock about once a day for each order.
+- **With command levels on, a command's picture numbers its own contacts and records no event of making or dropping one.** A world made for a dry run numbers its contacts anew.
+- **Shadow as written was a deny with the bombers left out.**
+
+### The order
+
+1. **One root order is new: destroy a force.** It names a contact of the commander's picture and a distance in whole hexes, the commander's choice as a deny's is. It is given to the area and stands until it ends or is withdrawn. It may be given as search only, which is the shadow of the first plan.
+2. **It is a deny whose centre is read from the force it follows, each time the staff is asked.** All that serves a deny serves it, with these differences:
+   - its waters are to be struck first, by the mechanism of decision 0190, for the bases and the carrier forces that serve it: a base's bombers take a contact in them before another, and a carrier force closes on a contact in them of any kind, at balanced risk and at press;
+   - its leave to pursue is "go" unless the commander sets another;
+   - no stand task is formed under it. A surface force is not sent after a force on the move;
+   - a free carrier force's station is chosen again at a dusk at which the waters' centre lies more than `station_rechosen_hexes` from where it was chosen;
+   - a task at a base that has not reached the waters at two dusks running is withdrawn by the staff, and formed again when the base reaches them.
+3. **Search only** forms the tasks to search waters and no other, sets no waters to be struck first and gives no leave. Its searches fly in both daylight pulses at any risk.
+4. **Where nothing can serve it the order says so,** as a deny does, by the notice a deny uses.
+
+### Following
+
+5. **The order keeps, for the force it follows: the contact's number in the commander's picture, the hex and the day and pulse of its last report, and whether it was taken for a carrier.** These are kept when the order is given and at each change of rule 7.
+6. **While the followed contact is fresh, the order follows it:** the centre is its estimated hex.
+7. **At a dusk at which it is not fresh, the order takes another contact** of the commander's picture, where one qualifies:
+   - its last report is later than the followed contact's;
+   - its hex is within the distance a force at `followed_force_knots` steams in the hours since the followed contact's last report, counted in hexes from that report's hex;
+   - no other order to destroy follows it.
+   Of those that qualify it takes one taken for a carrier where the followed was, and one not where it was not, before another; then the nearest; then the lowest number. Orders are worked by priority, then by number.
+8. **A taking is recorded and told on the order's paper,** and is no stop of the clock, but where the contact taken is of the other sort (a carrier for a force that was not, or the other way): then the staff's notice says so and may stop the clock.
+9. **Where none qualifies the order is lost-contact:** its centre stays the last report's hex and it is served by the tasks to search waters alone. The staff hands in a notice, once.
+10. **It ends at the dusk `lost_contact_days` days after the last report** with nothing taken, by a notice that the force was not found. It never ends because the force is believed sunk.
+11. **A contact's kind changing is not a notice.** The paper shows what the force is taken for.
+
+### What the order cannot do, said plainly
+
+- **The staff aims at where the force was last reported.** It is asked at dusk; by morning a force has gone six hexes or more. The waters to strike first may not hold it then, and the groups strike what they reach. A wider distance holds more of where it may be.
+- **By night nothing serves it.** A force that comes and goes in the dark is not met by this order.
+- **It adds most against a force that is found each day:** the searches turn to it, a free carrier force is stationed for it and closes on it of any kind, and the bombers take it first.
+
+### Pictures, seats and dry runs
+
+12. **The number is the commander's picture's.** With command levels on that is the area command's; a seat at a task force names a contact of its own picture, matched to the area's by hex and kind as decision 0214 does. A contact is later than another by its last report, which a picture holds; nothing is read from events.
+13. **Given inside a day, the order keeps what rule 5 keeps at once,** and acts at 1800 (decision 0219): if the contact is no longer fresh then, rule 7 is worked from what was kept.
+14. **In a dry run the followed contact is found again by its place in the order of the picture's contacts,** which a made world keeps.
+
+### What is recorded
+
+- **One kind of order, its code at the end,** with the distance and whether it is search only. What rule 5 keeps is state of the side's command, by order, not part of the order's kind, so that following is no amendment of a plan. It is written by the engine when it records the staff's notices of a taking and of a loss. All is hashed and named; the layout rises.
+- **Three notices, their codes at the end:** follows another contact; contact lost; ended, not found. A refusal is new: the contact is not held.
+- **Figures, placeholders and judgements, in the staff's figures:** `followed_force_knots` 20; `lost_contact_days` 2; `station_rechosen_hexes` 3.
+- **The stops of the table are keys of the tool that runs time,** so that an agent has them: a taking of the other sort, lost, ended.
+- **The doctrine's version, the rules label and the agent's interface rise.** The frozen copies do not gain the order.
+
+### Rule card
+
+Reads: the commander's picture's contacts, each one's hex, kind, age and last report; the order's kept state; the figures; all that the deny doctrine, the targets and the carrier doctrine read, with the order's waters taken from the followed force. Writes: the kept state, by the engine on a notice; sub-orders formed and withdrawn; notices. Draws: none.
+
+### At the table
+
+- **A contact's card offers DESTROY THIS FORCE,** with the distance, 2 or 4 hexes round, and SHADOW IT for search only.
+- **The order's paper says what it follows now,** by the report: where, how many, taken for what, how old; and each taking in the order it happened.
+- **The chart draws the waters round the followed force,** dashed where the contact is lost.
+
+### Before it is built
+
+A count is made on the games for play, of sightings of one force that refresh a contact against those that make a new one, day by day. It is a check of the review's first finding and of `followed_force_knots`, and tunes nothing.
+
+### The scenario's statements
+
+A force at 20 knots seen on two mornings, the second a new contact while the first is held, and the order follows it. Two forces in reach, a carrier and not, and the sort decides. Two orders and one new contact. A contact dropped by a strike that found nothing. A kind that changes and stops nothing. A carrier force that closes on a force taken for cruisers at balanced. A base that falls out of reach and its task withdrawn. A free carrier force's station chosen again. Lost, then ended. Search only forming no strike. Command levels on with the area's picture late, and a seat at a task force. A dry run of a side with the order. The frozen figures untouched.
