@@ -2,11 +2,11 @@ Placeholder scenario 82: How much must be known
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash bec8a3d98d03e205  31 events
-day   2  hash 69cc9faa9d8b32f0  15 events
-day   3  hash 4625faff39222263  13 events
-day   4  hash 135b7feba1acd5ef  16 events
-day   5  hash 8ed2001a80807a60  13 events
+day   1  hash e7bdf327381427f0  31 events
+day   2  hash 4e37b1cd3123bb5b  15 events
+day   3  hash 346dfe818ca165fc  13 events
+day   4  hash 1d1aeea902b7be1a  16 events
+day   5  hash fd33b2f1c4f577f9  13 events
 
 task_force:1 "Placeholder transport force 1" (Allied): Idle at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 air_group:1 "Placeholder scout squadron" (Allied) at base:1: 6 ready, mission Rest, no arc

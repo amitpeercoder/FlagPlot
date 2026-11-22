@@ -1,0 +1,19 @@
+Placeholder scenario 125: A force asks leave to pursue
+PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
+seed 1942
+
+day   1  hash 9ca18063baaee930  38 events
+day   2  hash 112118dcb21b1a2e  9 events
+day   3  hash af8f9accc88f46e6  7 events
+day   4  hash 65f8d36f073b503e  5 events
+
+task_force:1 "Placeholder carrier force 1" (Allied): Idle at (0,0); readiness battle, alert, rules of engagement: avoid, break off at 0.5, stragglers: keep, keep 0; home port base:1
+air_group:1 "Placeholder fighters 1" (Allied) aboard ship:1: 12 ready, mission CombatAirPatrol, patrol share 0.5, no arc
+air_group:2 "Placeholder carrier scouts 2" (Allied) aboard ship:1: 6 ready, mission Search, arc 000-000 to 300 nm
+air_group:3 "Placeholder dive bombers 3" (Allied) aboard ship:1: 10 ready, mission NavalStrike, no arc
+ship:1 "Placeholder carrier 1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 3000 t of fuel, 0 t of supply
+base:1 "Placeholder base 1" (Allied) at (0,5): 1000 t of supply in stock, 5000 t of fuel in stock
+Allied: no contacts
+Allied: no battle claims
+Japanese: no contacts
+Japanese: no battle claims

@@ -2,11 +2,11 @@ Scenario 6b: Wear and repair
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 9c32f216d9585d41  32 events
-day   2  hash 2e8b5e6387164ebc  29 events
-day   3  hash e5e47ef19f36addd  30 events
-day   4  hash c9e045d98c641df1  28 events
-day   5  hash 057b2389369c1040  27 events
+day   1  hash 4441104fe9480310  32 events
+day   2  hash 6a1188a1a69232e9  29 events
+day   3  hash a011392c923b7490  30 events
+day   4  hash 89b5010ce530da44  28 events
+day   5  hash 290e4a87b32942c7  27 events
 
 #1 D1 -         order:1 accepted for air_group:3  <- order:1
 #2 D1 -         order:2 accepted for air_group:5  <- order:2

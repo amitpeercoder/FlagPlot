@@ -2,14 +2,14 @@ Placeholder scenario 77: Forces with men aboard
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash cdf3e85b6ffd7b1d  73 events
-day   2  hash 2c741465fcb034a7  23 events
-day   3  hash b7e7491cc83ba532  35 events
-day   4  hash f09deee05d02d3ff  39 events
-day   5  hash 7329b748c847b1df  24 events
-day   6  hash 732892c99d79c02b  12 events
-day   7  hash eb436f356ab3b137  12 events
-day   8  hash 8666eac4db94f04d  12 events
+day   1  hash 0eab3e23e194b610  73 events
+day   2  hash efeb531fc84f09f0  23 events
+day   3  hash e749f6be1619a537  35 events
+day   4  hash 9535841e4a75db6a  39 events
+day   5  hash 04e89d133a291aa6  24 events
+day   6  hash 4235ed8c28b764de  12 events
+day   7  hash 1238a57e7be7aebe  12 events
+day   8  hash bbb0ea78299ab964  12 events
 
 task_force:1 "Placeholder transport force 1" (Allied): Arrived at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; home port base:1
 task_force:2 "Placeholder transport force 2" (Allied): Arrived at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; home port base:1
