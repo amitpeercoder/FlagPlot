@@ -649,3 +649,11 @@ path = "estimates_never_evidence.rs"
 [[test]]
 name = "scenario_124_the_type_claimed_shot_down"
 path = "scenario_124_the_type_claimed_shot_down.rs"
+
+[[test]]
+name = "scenario_126_fire_among_aircraft"
+path = "scenario_126_fire_among_aircraft.rs"
+
+[[test]]
+name = "scenario_127_a_strike_is_spread"
+path = "scenario_127_a_strike_is_spread.rs"
