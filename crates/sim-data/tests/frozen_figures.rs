@@ -133,6 +133,17 @@ const FROZEN_WITHOUT: &[&str] = &[
     // The figures of fuelling at sea (decision 0201, 22 to 24): the frozen
     // step 1 figures give none, so no force fuels at sea, as in step 1.
     "fuelling_at_sea",
+    // The strike spread among ships (decision 0211): without it a strike
+    // spreads nothing, as in step 1.
+    "strike_is_spread",
+    // The fire among a carrier's aircraft (decision 0212): the frozen step 1
+    // figures give none, so no such fire is set.
+    "aircraft_fire_chance",
+    "fire_spreads_chance",
+    "aircraft_fire_levels",
+    // The figures given by side (decision 0213): the frozen figures give
+    // none, and none by side.
+    "by_side",
 ];
 
 #[test]

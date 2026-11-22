@@ -6,12 +6,13 @@ use serde::Deserialize;
 use sim_core::fixed::Fixed;
 use sim_core::ids::{AircraftTypeId, ShipClassId};
 use sim_core::refdata::{
-    AirCombatFigures, AirSupplyFigures, AirUpkeepFigures, AircraftRole, AircraftType, AttackWeapon,
-    BombardmentFigures, ClassSide, ClassSides, FatigueFigures, FightSupplyFigures, GroundFigures,
-    HungerFigures, MendingFigures, PassingChances, PortSize, RefData, ReportError, ReportFigures,
-    SearchFigures, ShipClass, ShipKind, SurfaceCombatFigures, TrialFigures, TrialSize,
+    AirCombatFigures, AirSupplyFigures, AirUpkeepFigures, AircraftFireFigures, AircraftRole,
+    AircraftType, AttackWeapon, BombardmentFigures, BySide, ClassSide, ClassSides, FatigueFigures,
+    FightSupplyFigures, GroundFigures, HungerFigures, MendingFigures, PassingChances, PortSize,
+    RefData, ReportError, ReportFigures, SearchFigures, ShipClass, ShipKind, SurfaceCombatFigures,
+    TrialFigures, TrialSize,
 };
-use sim_core::state::ShipSystem;
+use sim_core::state::{ShipSystem, Side};
 
 use crate::error::DataError;
 use crate::quantity::Quantity;
@@ -817,6 +818,35 @@ struct AirCombatFile {
     /// Decision 0118, 2. Optional: a file without it gives no figure for
     /// any kind, and sizing a strike does nothing.
     strike_aircraft_per_ship: Option<StrikeAircraftTable>,
+    /// Decision 0211. Optional: absent is `false`, as in the frozen figures.
+    strike_is_spread: Option<bool>,
+    /// Decision 0212: all three of these or none.
+    aircraft_fire_chance: Option<Quantity>,
+    fire_spreads_chance: Option<Quantity>,
+    aircraft_fire_levels: Option<u8>,
+    /// Decision 0213: figures given by side. Optional.
+    by_side: Option<Vec<BySideEntry>>,
+}
+
+/// The figures of the air combat file that a decision record names as
+/// given by side (decision 0213). A figure is added here only by a decision
+/// record, each with its own doc comment naming it. Only this file has
+/// `[[by_side]]`: the other figures files refuse it, their
+/// `deny_unknown_fields` leaving it no place.
+const GIVEN_BY_SIDE: &[&str] = &[
+    // Decision 0212, by decision 0213: the chance a bomb sets a carrier's
+    // aircraft alight.
+    "aircraft_fire_chance",
+];
+
+/// One `[[by_side]]` entry (decision 0213).
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct BySideEntry {
+    figure: String,
+    side: String,
+    value: Quantity,
+    rests_on: String,
 }
 
 /// The aircraft a naval strike needs for each ship reported, by kind
@@ -954,13 +984,100 @@ fn parse_air_combat_figures(text: &str, path: &Path) -> Result<AirCombatFigures,
             "raid_recognised_experience_strength",
             &file.raid_recognised_experience_strength,
         )?,
-        strike_is_spread: false,
-        aircraft_fire: None,
+        strike_is_spread: file.strike_is_spread.unwrap_or(false),
+        aircraft_fire: parse_aircraft_fire(&file, &number, &fail)?,
     };
     if let Some(problem) = figures.problem() {
         return Err(fail(problem));
     }
     Ok(figures)
+}
+
+/// The figures of fire among aircraft (decision 0212), with the entries by
+/// side (decision 0213) resolved: a side's value is its entry where it has
+/// one, else the plain value.
+fn parse_aircraft_fire(
+    file: &AirCombatFile,
+    number: &dyn Fn(&str, &Quantity) -> Result<Fixed, DataError>,
+    fail: &dyn Fn(String) -> DataError,
+) -> Result<Option<AircraftFireFigures>, DataError> {
+    let entries = file.by_side.as_deref().unwrap_or_default();
+    // The entries first, so one for a figure the file does not hold is
+    // refused whatever else the file has.
+    let mut given: BTreeMap<(&str, Side), Fixed> = BTreeMap::new();
+    for entry in entries {
+        let name = &entry.figure;
+        if !GIVEN_BY_SIDE.contains(&name.as_str()) {
+            return Err(fail(format!(
+                "by_side entry for \"{name}\": no decision record names this figure as given by side"
+            )));
+        }
+        let side = match entry.side.as_str() {
+            "allied" => Side::Allied,
+            "japanese" => Side::Japanese,
+            other => {
+                return Err(fail(format!(
+                    "by_side entry for \"{name}\": unknown side \"{other}\", not allied or japanese"
+                )))
+            }
+        };
+        if entry.rests_on.trim().is_empty() {
+            return Err(fail(format!(
+                "by_side entry for \"{name}\" ({}): rests_on is empty, and an entry gives its reason",
+                entry.side
+            )));
+        }
+        let value = number(&format!("by_side {name} ({})", entry.side), &entry.value)?;
+        if given.insert((name.as_str(), side), value).is_some() {
+            return Err(fail(format!(
+                "by_side has two entries for \"{name}\" for the {} side",
+                entry.side
+            )));
+        }
+    }
+    let (chance, spreads, levels) = match (
+        &file.aircraft_fire_chance,
+        &file.fire_spreads_chance,
+        file.aircraft_fire_levels,
+    ) {
+        (None, None, None) => {
+            if let Some(((name, _), _)) = given.iter().next() {
+                return Err(fail(format!(
+                    "by_side entry for \"{name}\": the file does not hold {name}"
+                )));
+            }
+            return Ok(None);
+        }
+        (Some(chance), Some(spreads), Some(levels)) => (chance, spreads, levels),
+        (chance, spreads, levels) => {
+            let mut missing = Vec::new();
+            if chance.is_none() {
+                missing.push("aircraft_fire_chance");
+            }
+            if spreads.is_none() {
+                missing.push("fire_spreads_chance");
+            }
+            if levels.is_none() {
+                missing.push("aircraft_fire_levels");
+            }
+            return Err(fail(format!(
+                "the figures of fire among aircraft are given all or none: {} missing",
+                missing.join(", ")
+            )));
+        }
+    };
+    let plain = number("aircraft_fire_chance", chance)?;
+    let of = |side: Side| {
+        given
+            .get(&("aircraft_fire_chance", side))
+            .copied()
+            .unwrap_or(plain)
+    };
+    Ok(Some(AircraftFireFigures {
+        chance: BySide::new(of(Side::Allied), of(Side::Japanese)),
+        spreads_chance: number("fire_spreads_chance", spreads)?,
+        levels,
+    }))
 }
 
 #[derive(Deserialize)]
@@ -1735,6 +1852,199 @@ mod tests {
         let path =
             Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data/reference/air_combat.toml");
         fs::read_to_string(path).expect("the shipped file reads")
+    }
+
+    /// The live air combat file with `extra` appended.
+    fn air_with(extra: &str) -> String {
+        format!("{}\n{extra}\n", air_combat_text())
+    }
+
+    fn air_error(text: &str) -> String {
+        parse_air_combat_figures(text, here())
+            .expect_err("rejected")
+            .message
+    }
+
+    const FIRE_ENTRY: &str = "[[by_side]]\nfigure = \"aircraft_fire_chance\"\n";
+
+    /// The live file without the spread switch, the fire figures and the
+    /// entries by side.
+    fn air_without_new_keys() -> String {
+        let text = air_combat_text();
+        let from = text
+            .find("# A strike is spread (decision 0211")
+            .expect("the new keys are in the file");
+        let to = text
+            .find("# Whether a bomb or torpedo hit also")
+            .expect("the next comment is in the file");
+        let tail = text
+            .find("# Figures by side (decision 0213)")
+            .expect("entries");
+        format!("{}{}", &text[..from], &text[to..tail])
+    }
+
+    /// The same with the three fire figures given plainly, and no entries.
+    fn air_with_plain_fire() -> String {
+        let text = air_without_new_keys();
+        let at = text
+            .find("# Whether a bomb or torpedo hit also")
+            .expect("the comment is in the file");
+        format!(
+            "{}strike_is_spread = true\naircraft_fire_chance = \"0.3\"\nfire_spreads_chance = \"0.5\"\naircraft_fire_levels = 3\n\n{}",
+            &text[..at],
+            &text[at..]
+        )
+    }
+
+    #[test]
+    fn the_live_file_loads_the_spread_switch_and_fire_by_side() {
+        let figures = parse_air_combat_figures(&air_combat_text(), here()).expect("parses");
+        assert!(figures.strike_is_spread);
+        let fire = figures.aircraft_fire.expect("held");
+        assert_eq!(fire.chance.of(Side::Allied), Fixed::from_ratio(15, 100));
+        assert_eq!(fire.chance.of(Side::Japanese), Fixed::from_ratio(6, 10));
+        assert_eq!(fire.spreads_chance, Fixed::from_ratio(1, 2));
+        assert_eq!(fire.levels, 3);
+    }
+
+    #[test]
+    fn a_file_without_the_new_keys_spreads_nothing_and_sets_no_fire() {
+        let figures = parse_air_combat_figures(&air_without_new_keys(), here()).expect("parses");
+        assert!(!figures.strike_is_spread);
+        assert_eq!(figures.aircraft_fire, None);
+        let path = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../data/reference/step1/air_combat.toml");
+        let frozen = load_air_combat_figures(&path).expect("the frozen file loads");
+        assert!(!frozen.strike_is_spread);
+        assert_eq!(frozen.aircraft_fire, None);
+    }
+
+    #[test]
+    fn one_side_given_an_entry_reads_it_and_the_other_the_plain_value() {
+        let base = air_with_plain_fire();
+        let text = format!(
+            "{base}{FIRE_ENTRY}side = \"japanese\"\nvalue = \"0.6\"\nrests_on = \"a reason\"\n"
+        );
+        let fire = parse_air_combat_figures(&text, here())
+            .expect("parses")
+            .aircraft_fire
+            .expect("held");
+        assert_eq!(fire.chance.of(Side::Allied), Fixed::from_ratio(3, 10));
+        assert_eq!(fire.chance.of(Side::Japanese), Fixed::from_ratio(6, 10));
+        let none = parse_air_combat_figures(&base, here())
+            .expect("parses")
+            .aircraft_fire
+            .expect("held");
+        assert_eq!(none.chance, BySide::both(Fixed::from_ratio(3, 10)));
+    }
+
+    #[test]
+    fn the_fire_figures_are_all_given_or_none() {
+        for (key, line) in [
+            ("aircraft_fire_chance", "aircraft_fire_chance = \"0.3\""),
+            ("fire_spreads_chance", "fire_spreads_chance = \"0.5\""),
+            ("aircraft_fire_levels", "aircraft_fire_levels = 3"),
+        ] {
+            let text = air_combat_text();
+            let line_in_file = text
+                .lines()
+                .find(|l| l.starts_with(&format!("{key} =")))
+                .expect("in the file");
+            assert_eq!(line_in_file, line);
+            let cut = text.replace(&format!("{line}\n"), "");
+            // The entries by side would then name a figure the file lacks;
+            // drop them to test this refusal alone.
+            let cut = cut[..cut.find("[[by_side]]").expect("entries")].to_string();
+            let message = air_error(&cut);
+            assert!(
+                message.contains("all or none") && message.contains(key),
+                "{message}"
+            );
+        }
+    }
+
+    #[test]
+    fn an_entry_by_side_for_a_figure_no_decision_names_is_refused() {
+        let text = air_with(
+            "[[by_side]]\nfigure = \"bomb_hit_chance\"\nside = \"allied\"\nvalue = \"0.1\"\nrests_on = \"x\"",
+        );
+        let message = air_error(&text);
+        assert!(
+            message.contains("bomb_hit_chance") && message.contains("no decision record"),
+            "{message}"
+        );
+    }
+
+    #[test]
+    fn an_entry_by_side_with_an_unknown_side_is_refused() {
+        let text = air_with(&format!(
+            "{FIRE_ENTRY}side = \"german\"\nvalue = \"0.1\"\nrests_on = \"x\""
+        ));
+        let message = air_error(&text);
+        assert!(message.contains("unknown side \"german\""), "{message}");
+    }
+
+    #[test]
+    fn two_entries_for_one_figure_and_side_are_refused() {
+        // The live file has one for the Japanese side already.
+        let text = air_with(&format!(
+            "{FIRE_ENTRY}side = \"japanese\"\nvalue = \"0.1\"\nrests_on = \"x\""
+        ));
+        let message = air_error(&text);
+        assert!(
+            message.contains("two entries") && message.contains("aircraft_fire_chance"),
+            "{message}"
+        );
+    }
+
+    #[test]
+    fn an_entry_by_side_for_a_figure_the_file_does_not_hold_is_refused() {
+        let text = format!(
+            "{}\n{FIRE_ENTRY}side = \"allied\"\nvalue = \"0.1\"\nrests_on = \"x\"\n",
+            air_without_new_keys()
+        );
+        let message = air_error(&text);
+        assert!(
+            message.contains("does not hold aircraft_fire_chance"),
+            "{message}"
+        );
+    }
+
+    #[test]
+    fn an_entry_by_side_out_of_range_or_a_float_is_refused() {
+        let live = air_combat_text();
+        let out = live.replace("value = \"0.6\"", "value = \"1.5\"");
+        assert_ne!(out, live);
+        let message = air_error(&out);
+        assert!(
+            message.contains("aircraft fire chance") && message.contains("not between 0 and 1"),
+            "{message}"
+        );
+        let float = live.replace("value = \"0.6\"", "value = 0.6");
+        let message = air_error(&float);
+        assert!(!message.is_empty());
+        assert!(parse_air_combat_figures(&float, here()).is_err());
+    }
+
+    #[test]
+    fn an_entry_by_side_with_no_reason_is_refused() {
+        let live = air_combat_text();
+        let at = live.find("[[by_side]]").expect("entries");
+        let (head, tail) = live.split_at(at);
+        // Missing, then empty, then only spaces.
+        let first_rests = tail.find("rests_on").expect("a reason");
+        let line_end = tail[first_rests..].find('\n').expect("a line") + first_rests;
+        let missing = format!("{head}{}{}", &tail[..first_rests], &tail[line_end..]);
+        assert!(parse_air_combat_figures(&missing, here()).is_err());
+        for reason in ["\"\"", "\"   \""] {
+            let text = format!(
+                "{head}{}rests_on = {reason}{}",
+                &tail[..first_rests],
+                &tail[line_end..]
+            );
+            let message = air_error(&text);
+            assert!(message.contains("rests_on is empty"), "{message}");
+        }
     }
 
     #[test]
