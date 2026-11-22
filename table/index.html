@@ -100,6 +100,8 @@ button:disabled { opacity: 0.45; cursor: default; }
 #paper .frow .fl { flex-basis: 64px; }
 #paper .frow input[type=range] { flex: 1 1 90px; min-width: 90px; }
 #paper .frow .sval { flex: 0 0 84px; text-align: right; }
+#paper #o-patrol .fl { flex: 0 0 auto; }
+#paper #o-patrol .sval { flex: 1 1 auto; text-align: left; }
 #p-says { display: flex; flex-direction: column; gap: 4px; font-size: 14px; }
 #p-says .sentline { color: var(--paper-dim); }
 #p-says .ask { border-top: 1px dashed #8d8672; padding-top: 8px; display: flex; flex-direction: column; gap: 8px; }
@@ -548,7 +550,7 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
     <div id="p-staff" hidden>
       <div>At <strong id="o-place">this place</strong> you are to:</div>
       <fieldset id="o-ends"><legend>END</legend></fieldset>
-      <div class="frow" id="o-patrol" hidden><span class="fl">Round</span><input type="number" id="o-dist" min="1" max="6" step="1" value="2" aria-label="Hexes round the place"><span class="sval" id="o-dist-out"></span></div>
+      <div class="frow" id="o-patrol" hidden><span class="fl">Patrol these waters,</span><input type="number" id="o-dist" min="1" max="6" step="1" value="2" aria-label="Hexes round the place"><span class="sval" id="o-dist-out"></span></div>
       <fieldset><legend>RISK</legend>
         <label><input type="radio" name="risk" id="o-risk-preserve" value="preserve"> Preserve</label>
         <label><input type="radio" name="risk" id="o-risk-balanced" value="balanced" checked> Balanced</label>
@@ -1880,6 +1882,8 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
   // was: the card says where to go back to, and has a button to find the
   // thing on the chart. A name touched elsewhere turns the table to it.
   function see(h) {
+    // At a narrow width the stop paper is a drawer laid over the chart; a card opened from a link in it would lie under it, unseen.
+    if (document.body.classList.contains('drawer-open')) setDrawer(false);
     if (paper) { if (!paperChosen()) { closePaper(); return seeNow(h); } return paperAsk('Tear up this order to read about ' + nameOf(h) + '?', function () { closePaper(); seeNow(h); }); }
     return seeNow(h);
   }
@@ -2972,7 +2976,7 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
     if (where && i.kind === 'keep_supplied') return 'Keep ' + where + ' supplied';
     if (where && i.kind === 'cover') return 'Cover ' + where + ' from the air';
     if (where && i.kind === 'deny') return 'Deny the waters round ' + where;
-    if (where && i.kind === 'patrol') return 'Patrol the waters round ' + where + ' with submarines';
+    if (where && i.kind === 'patrol') return i.distance ? 'Patrol the waters within ' + i.distance + (+i.distance === 1 ? ' hex' : ' hexes') + ' of ' + where + ' with submarines' : 'Patrol the waters round ' + where + ' with submarines';
     var tfn = i.task_force != null && ((M.forces.filter(function (f) { return num(f.task_force.handle) === Number(i.task_force.handle ? num(i.task_force.handle) : i.task_force); })[0] || {}).task_force || {}).name;
     if (where && i.kind === 'operate_carriers') return 'Operate ' + (tfn || 'the carrier force') + ' from ' + where;
     if (where && i.kind === 'strike_ships') return 'Strike ships from ' + where;

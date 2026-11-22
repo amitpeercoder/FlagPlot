@@ -517,8 +517,17 @@ def the_submarines():
           and "stationDraft = null; patrolStations = null; stationPicked = null;" in text and "pd + 0.5) * hexMiles()" in text,
           "while a patrol is drafted the waters and the stations the staff would give are drawn, each named, from the preview, and are cleared when the paper closes")
     check("if (top.kind === 'patrol') (pr.stations || []).forEach(" in text and "if (i.kind === 'patrol') (M.boats || []).filter(function (b) { return b.hands && b.hands.by === 'staff' && b.hands.intent === i.number" in text
-          and "if (k === 'station')" in text and "case 'station': text('take station at ')" in text and "patrol: 'PATROL WITH SUBMARINES'" in text and "'Patrol the waters round '" in text,
+          and "if (k === 'station')" in text and "case 'station': text('take station at ')" in text and "patrol: 'PATROL WITH SUBMARINES'" in text and "'Patrol the waters within '" in text,
           "a patrol signed is in the plan's paper as the tree shows any task, each boat under it with her station, in YOUR ORDERS and SIGNED and on the chart as an order")
+    check('<span class="fl">Patrol these waters,</span><input type="number" id="o-dist"' in text
+          and "' hex' : ' hexes') + ' of ' + where + ' with submarines'" in text,
+          "the patrol paper labels its distance as the deny order's choices are labelled (\"these waters\"), and the signed line says it: within 2 hexes of <place>, 1 hex for 1")
+    # A link to a boat, a force, a base, a contact, a hex or any other `#see=` kind goes through see(); at a narrow width the stop
+    # paper is a drawer over the chart, and a card opened from a link in it lay under the drawer, so the first click seemed to do nothing.
+    check("function see(h) {" in text and "if (document.body.classList.contains('drawer-open')) setDrawer(false);\n    if (paper)" in text
+          and "refTo(h, given) { var b = el('button'" in text and "see(h); }); return b; }" in text and "see('hex:' + q + ',' + r)" in text
+          and "var m = /^#see=(.+)$/.exec(location.hash); if (m) see(decodeURIComponent(m[1]))" in text,
+          "every link to a card (a boat, a force, a base, a contact, a hex) goes through see(), which shuts the narrow layout's drawer so that the card opened is in sight")
     # 5. the stop and its slips
     check('id="stop-submarine"' in text and "a submarine attacks us" in text and "submarine: 'We are attacked by a submarine', boat: 'We have lost a boat'" in text,
           "the fold WHAT STOPS THE CLOCK has the tick \"a submarine attacks us\", and the general headings say \"we\"")
