@@ -1184,7 +1184,7 @@ pub(crate) fn check_command(
         // A plan subject is not checked: a staff notice may name a plan the
         // side does not have, and the engine records its firing all the same.
         let subject_ok = match subject {
-            StandingSubject::Plan(_) => true,
+            StandingSubject::Plan(_) | StandingSubject::TaskForce(_) => true,
             StandingSubject::Ship(ship) => own_ship(ship),
         };
         if !subject_ok || !status_sound(status) {

@@ -14,8 +14,8 @@ use crate::claims::UnitClaim;
 use crate::command::{
     Addressee, Amendment, AmendmentChange, Awaited, Baseline, CommandState, Commitment,
     ForcesLimit, Hold, HoldMaker, HoldTarget, Intent, IntentKind, IntentLimits, InterruptCondition,
-    InterruptStatus, Knowledge, Leaves, Limit, Maker, Plan, Run, RunDays, SetInterrupt,
-    StandingSubject, TargetsLimit,
+    InterruptStatus, Knowledge, Leaves, Limit, Maker, Plan, Pursuit, PursuitBy, Run, RunDays,
+    SetInterrupt, StandingSubject, TargetsLimit,
 };
 use crate::commander::Commander;
 use crate::entering::{Entering, EntryPlace};
@@ -271,7 +271,13 @@ const fn speed_code(speed: SpeedSetting) -> u8 {
 /// (decision 0205, 11);
 /// version 54 adds a claim's `air_types` (the count, then each type and its
 /// number) after its `by_unit`, in a side's belief, a command's picture and a
-/// report in flight alike (decision 0210, 1).
+/// report in flight alike (decision 0210, 1);
+/// version 55 adds to a side's command state, after `next_plan`, the leave
+/// to pursue on each order (with its code), each force's pursuit (by answer
+/// with the answer's event, or taken, with its contact and day) and the
+/// commander's refusals by force and contact, the standing kind
+/// `asks_leave_to_pursue` (code 6) and the standing subject task force (code
+/// 3), the notice kinds codes 10 to 12 and the two commands (decision 0214).
 ///
 /// What is held apart until its day (decision 0195, 23) does not raise the
 /// version: it is hashed last, after the domain, and only where something is
@@ -282,7 +288,7 @@ const fn speed_code(speed: SpeedSetting) -> u8 {
 /// replacement men and each land unit's strength (decision 0197, 21), after
 /// the supply lines, only where a scenario gives a stream or an
 /// establishment.
-pub const STATE_VERSION: &[u8] = b"flagplot-state-v54";
+pub const STATE_VERSION: &[u8] = b"flagplot-state-v55";
 
 /// Names every field of the state, with no `..` in any pattern. It does
 /// nothing when it runs. It is here so that a field added to the state does
@@ -723,6 +729,9 @@ fn name_every_field(world: &World) {
             interrupts,
             standing,
             standing_off,
+            pursue_leaves,
+            pursuits,
+            pursuit_refusals,
         } = state;
         if let Some(Intent {
             id: _,
@@ -836,7 +845,9 @@ fn name_every_field(world: &World) {
         }
         if let Some(((_, subject), status)) = standing.iter().next() {
             match subject {
-                StandingSubject::Plan(_) | StandingSubject::Ship(_) => {}
+                StandingSubject::Plan(_)
+                | StandingSubject::Ship(_)
+                | StandingSubject::TaskForce(_) => {}
             }
             let InterruptStatus {
                 armed: _,
@@ -845,6 +856,21 @@ fn name_every_field(world: &World) {
             } = status;
         }
         let _ = standing_off.iter().next();
+        let _ = pursue_leaves.iter().next();
+        if let Some((
+            _,
+            Pursuit {
+                by,
+                contact: _,
+                since_day: _,
+            },
+        )) = pursuits.iter().next()
+        {
+            match by {
+                PursuitBy::Answer(_) | PursuitBy::Taken => {}
+            }
+        }
+        let _ = pursuit_refusals.iter().next();
     }
     // Each command's post (decisions 0134 to 0137), hashed after the command
     // states.
@@ -1469,6 +1495,28 @@ fn hash_command_state(h: &mut StateHasher, state: &CommandState) {
         h.u8(kind.code());
     }
     h.u32(state.next_plan);
+    // Decision 0214: the leave to pursue on each order, each force's pursuit
+    // and the commander's refusals, after everything else of the state.
+    h.count(state.pursue_leaves.len());
+    for (intent, leave) in &state.pursue_leaves {
+        h.u32(intent.raw());
+        h.u8(leave.code());
+    }
+    h.count(state.pursuits.len());
+    for (force, pursuit) in &state.pursuits {
+        h.u32(force.raw());
+        h.u8(pursuit.by.code());
+        if let PursuitBy::Answer(event) = pursuit.by {
+            h.u32(event.raw());
+        }
+        h.u32(pursuit.contact);
+        h.u32(pursuit.since_day);
+    }
+    h.count(state.pursuit_refusals.len());
+    for (force, contact) in &state.pursuit_refusals {
+        h.u32(force.raw());
+        h.u32(*contact);
+    }
 }
 
 /// Hashes where an interrupt stands: armed, the day it last fired,

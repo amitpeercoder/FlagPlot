@@ -184,6 +184,11 @@ impl<'a> Names<'a> {
         }
     }
 
+    /// The side's number of one of its task forces.
+    pub(crate) fn force(&self, id: TaskForceId) -> u32 {
+        self.ctx.force_number(id).unwrap_or_else(|| id.raw())
+    }
+
     pub(crate) fn ship(&self, id: ShipId) -> u32 {
         self.ctx.ship_number(id).unwrap_or_else(|| id.raw())
     }

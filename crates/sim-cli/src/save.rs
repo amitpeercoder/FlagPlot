@@ -102,8 +102,8 @@ use std::path::{Path, PathBuf};
 
 use serde_json::{json, Value};
 use sim_agent::{
-    command_from_json, command_to_json, order_from_json, order_to_json, staff_decisions_from_json,
-    staff_decisions_to_json, unit_text, SeatKind,
+    command_from_json, command_to_json, order_from_json, order_to_json,
+    staff_decisions_from_json_for_save, staff_decisions_to_json_for_save, unit_text, SeatKind,
 };
 use sim_core::command::{CommandKind, StaffDecisions};
 use sim_core::hash::StateHasher;
@@ -181,8 +181,13 @@ pub const FORMAT: &str = "flagplot-saved-game";
 /// version lacks it and is refused, not converted. Version 23 (decision 0162)
 /// adds to the load order with a weight the level `each_t`, the most a ship
 /// is to hold; its state version is v48. A game of an older version is
-/// refused, not converted.
-pub const VERSION: u32 = 23;
+/// refused, not converted. Version 24 (decision 0214) adds in `"commands"`
+/// the kinds `set_pursuit` (`intent` and an optional `leave`) and
+/// `answer_pursuit` (`task_force`, `contact`, `allow`), in a hand-in's
+/// notices an optional `"pursuit"` and in a hand-in's reasons an optional
+/// `"cites"` (event numbers); its state version is v55. A game of an older
+/// version is refused, not converted.
+pub const VERSION: u32 = 24;
 
 pub type Script = BTreeMap<u32, Vec<(Side, OrderRequest)>>;
 
@@ -399,7 +404,10 @@ pub fn write(
                     json!({
                         "day": day,
                         "side": side_name(*side),
-                        "decisions": staff_decisions_to_json(decisions),
+                        "decisions": staff_decisions_to_json_for_save(
+                            decisions,
+                            &sim_core::ids::UmpireKey::for_saved_games(),
+                        ),
                     })
                 })
         })
@@ -630,10 +638,11 @@ pub fn read(file: &str) -> Result<Saved, String> {
     {
         let day = small(entry, "day").map_err(&bad)?;
         let side = side_from(text(entry, "side").map_err(&bad)?).map_err(&bad)?;
-        let decisions = staff_decisions_from_json(
+        let decisions = staff_decisions_from_json_for_save(
             entry
                 .get("decisions")
                 .ok_or_else(|| bad("a staff entry has no decisions".into()))?,
+            &sim_core::ids::UmpireKey::for_saved_games(),
         )
         .map_err(|e| bad(format!("staff hand-in on day {day}: {e}")))?;
         if staff
@@ -1153,6 +1162,40 @@ mod tests {
                         ),
                     },
                 ),
+                // Decision 0214: the leave to pursue and the commander's answer.
+                (
+                    Side::Allied,
+                    CommandKind::SetPursuit {
+                        intent: IntentId::new(7),
+                        leave: Some(sim_core::command::PursueLeave::Go),
+                    },
+                ),
+                (
+                    Side::Allied,
+                    CommandKind::SetPursuit {
+                        intent: IntentId::new(7),
+                        leave: None,
+                    },
+                ),
+                (
+                    Side::Allied,
+                    CommandKind::AnswerPursuit {
+                        force: sim_core::ids::TaskForceId::new(2),
+                        contact: 5,
+                        allow: true,
+                    },
+                ),
+                (
+                    Side::Allied,
+                    CommandKind::Acknowledge {
+                        interrupt: sim_core::command::InterruptRef::Standing {
+                            kind: sim_core::command::StandingKind::AsksLeaveToPursue,
+                            subject: sim_core::command::StandingSubject::TaskForce(
+                                sim_core::ids::TaskForceId::new(2),
+                            ),
+                        },
+                    },
+                ),
                 (
                     Side::Allied,
                     CommandKind::Acknowledge {
@@ -1195,6 +1238,15 @@ mod tests {
             binding: vec!["the pool holds ship 3".to_string()],
             worked: "10 days x 12 t = 120 t".to_string(),
             would_change: vec!["a second ship in the pool".to_string()],
+            cites: Vec::new(),
+        };
+        // A reason that cites the commander's answer (decision 0214).
+        let cited = Reason {
+            cites: vec![sim_core::ids::EventId::for_umpire(
+                17,
+                &sim_core::ids::UmpireKey::for_saved_games(),
+            )],
+            ..reason.clone()
         };
         let decisions = StaffDecisions {
             orders: vec![StaffOrder {
@@ -1236,43 +1288,97 @@ mod tests {
                     reason: reason.clone(),
                 },
             ],
-            no_orders: vec![reason],
+            no_orders: vec![reason, cited],
             notices: vec![
                 sim_core::command::StaffNotice {
                     kind: sim_core::command::NoticeKind::CannotMeet,
                     plan: PlanId::new(1),
                     run: None,
                     rests_on: sim_core::command::NoticeBasis::NoOrder(0),
+                    pursuit: None,
                 },
                 sim_core::command::StaffNotice {
                     kind: sim_core::command::NoticeKind::CannotBringEnough,
                     plan: PlanId::new(2),
                     run: None,
                     rests_on: sim_core::command::NoticeBasis::NoOrder(0),
+                    pursuit: None,
                 },
                 sim_core::command::StaffNotice {
                     kind: sim_core::command::NoticeKind::RunEnded,
                     plan: PlanId::new(1),
                     run: Some(2),
                     rests_on: sim_core::command::NoticeBasis::Command(0),
+                    pursuit: None,
                 },
                 sim_core::command::StaffNotice {
                     kind: sim_core::command::NoticeKind::Ready,
                     plan: PlanId::new(2),
                     run: None,
                     rests_on: sim_core::command::NoticeBasis::NoOrder(0),
+                    pursuit: None,
                 },
                 sim_core::command::StaffNotice {
                     kind: sim_core::command::NoticeKind::Late,
                     plan: PlanId::new(2),
                     run: None,
                     rests_on: sim_core::command::NoticeBasis::NoOrder(0),
+                    pursuit: None,
                 },
                 sim_core::command::StaffNotice {
                     kind: sim_core::command::NoticeKind::Met,
                     plan: PlanId::new(3),
                     run: None,
                     rests_on: sim_core::command::NoticeBasis::NoOrder(0),
+                    pursuit: None,
+                },
+                // Decision 0214: the three notices of a pursuit.
+                sim_core::command::StaffNotice {
+                    kind: sim_core::command::NoticeKind::AsksLeaveToPursue,
+                    plan: PlanId::new(1),
+                    run: None,
+                    rests_on: sim_core::command::NoticeBasis::NoOrder(1),
+                    pursuit: Some(sim_core::command::PursuitNotice {
+                        force: sim_core::ids::TaskForceId::new(2),
+                        intent: IntentId::new(7),
+                        find: Some(sim_core::command::PursuitFind {
+                            contact: 5,
+                            kind: sim_core::refdata::ShipKind::Carrier,
+                            age: 3,
+                            reported_at: sim_core::hex::Hex::new(4, -2),
+                            to: sim_core::hex::Hex::new(3, -1),
+                            hours: Some(Fixed::from_raw(7_500_000)),
+                        }),
+                    }),
+                },
+                sim_core::command::StaffNotice {
+                    kind: sim_core::command::NoticeKind::Pursues,
+                    plan: PlanId::new(1),
+                    run: None,
+                    rests_on: sim_core::command::NoticeBasis::NoOrder(0),
+                    pursuit: Some(sim_core::command::PursuitNotice {
+                        force: sim_core::ids::TaskForceId::new(2),
+                        intent: IntentId::new(7),
+                        find: Some(sim_core::command::PursuitFind {
+                            contact: 5,
+                            kind: sim_core::refdata::ShipKind::Cruiser,
+                            age: 0,
+                            reported_at: sim_core::hex::Hex::new(0, 0),
+                            to: sim_core::hex::Hex::new(1, 1),
+                            hours: None,
+                        }),
+                    }),
+                },
+                sim_core::command::StaffNotice {
+                    kind: sim_core::command::NoticeKind::PursuitEnded,
+                    plan: PlanId::new(1),
+                    run: None,
+                    rests_on: sim_core::command::NoticeBasis::NoOrder(0),
+                    pursuit: Some(sim_core::command::PursuitNotice {
+                        force: sim_core::ids::TaskForceId::new(2),
+                        intent: IntentId::new(7),
+                        find: None,
+                    }),
                 },
             ],
         };
@@ -1314,9 +1420,9 @@ mod tests {
         .expect("writes");
         let written: Value = serde_json::from_str(&fs::read_to_string(&file).expect("reads"))
             .expect("the file is JSON");
-        assert_eq!(written["version"], 23);
+        assert_eq!(written["version"], 24);
         assert_eq!(written["doctrine_version"], sim_staff::DOCTRINE_VERSION);
-        assert_eq!(written["commands"].as_array().expect("commands").len(), 29);
+        assert_eq!(written["commands"].as_array().expect("commands").len(), 33);
         assert_eq!(written["staff"].as_array().expect("staff").len(), 1);
         let saved = read(&file).expect("reads");
         assert_eq!(saved.commands, commands);

@@ -171,6 +171,14 @@ impl UmpireKey {
     pub(crate) const fn new() -> Self {
         Self { _private: () }
     }
+
+    /// The key a saved game's reader and writer use, where no world is at
+    /// hand yet: a saved game is the umpire's (decision 0214, 11: a reason
+    /// cites the event of the commander's answer, and the save writes its
+    /// number). Nothing that plays the game may call it.
+    pub const fn for_saved_games() -> Self {
+        Self::new()
+    }
 }
 
 define_id!(

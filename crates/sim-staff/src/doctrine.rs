@@ -1777,6 +1777,7 @@ fn free_ended(view: &SideView<'_>, out: &mut Out) {
                 ships.iter().map(|s| s.to_string()).collect::<Vec<_>>().join(", ")
             ),
             would_change: vec!["a plan that was not ended".to_string()],
+            cites: Vec::new(),
         };
         out.command(
             CommandKind::FreeShips {

@@ -307,6 +307,14 @@ impl ReasonBuilder {
         self
     }
 
+    /// An event the decision rests on beyond its order (decision 0214, rule
+    /// 10: the commander's answer).
+    #[allow(dead_code)]
+    pub(crate) fn cites(mut self, event: sim_core::ids::EventId) -> Self {
+        self.reason.cites.push(event);
+        self
+    }
+
     pub(crate) fn done(self) -> Reason {
         self.reason
     }

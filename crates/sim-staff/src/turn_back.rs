@@ -604,6 +604,7 @@ impl Day<'_, '_> {
             plan: plan.id,
             run: None,
             rests_on: NoticeBasis::NoOrder(index),
+            pursuit: None,
         });
     }
 }

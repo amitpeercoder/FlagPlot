@@ -78,7 +78,8 @@ pub use briefing::{
 };
 pub use choices::{ChoiceLine, Choices};
 pub use commands::{
-    command_from_json, command_to_json, staff_decisions_from_json, staff_decisions_to_json,
+    command_from_json, command_to_json, staff_decisions_from_json,
+    staff_decisions_from_json_for_save, staff_decisions_to_json, staff_decisions_to_json_for_save,
 };
 pub use common::{Dec, Handle, Place};
 pub use deny::{deny_measure, DenyMeasure};

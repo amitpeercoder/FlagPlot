@@ -20,8 +20,8 @@ use crate::command::{
     Addressee, Amendment, AmendmentChange, Awaited, Baseline, Command, CommandKind, CommandRefusal,
     CommandState, Commitment, ForcesLimit, Hold, HoldMaker, HoldTarget, Intent, IntentKind,
     IntentLimits, InterruptCondition, InterruptRef, InterruptSetting, InterruptStatus, Knowledge,
-    Leave, Limit, Maker, NoticeBasis, NoticeKind, Plan, PlanId, PlanOutcome, PlanState, Reason,
-    Run, SetInterrupt, StaffDecisions, StaffNotice, Staffs, StandingSubject,
+    Leave, Limit, Maker, NoticeBasis, NoticeKind, Plan, PlanId, PlanOutcome, PlanState, Pursuit,
+    PursuitBy, Reason, Run, SetInterrupt, StaffDecisions, StaffNotice, Staffs, StandingSubject,
 };
 use crate::events::{Cause, EventKind};
 use crate::fixed::Fixed;
@@ -72,6 +72,12 @@ impl World {
             ),
             Ok(()) => {
                 let follow_ups = self.apply_command(day, side, &kind);
+                let answered = match &kind {
+                    CommandKind::AnswerPursuit {
+                        force, allow: true, ..
+                    } => Some(*force),
+                    _ => None,
+                };
                 let taken = self.events.record(
                     day,
                     None,
@@ -83,6 +89,17 @@ impl World {
                     Vec::new(),
                     None,
                 );
+                // An answer to a pursuit names its own event: set it now it
+                // is recorded (decision 0214, rule 8).
+                if let Some(force) = answered {
+                    if let Some(pursuit) = self
+                        .command
+                        .get_mut(&side)
+                        .and_then(|state| state.pursuits.get_mut(&force))
+                    {
+                        pursuit.by = PursuitBy::Answer(taken);
+                    }
+                }
                 for follow_up in follow_ups {
                     self.events
                         .record(day, None, follow_up, vec![Cause::Event(taken)], None);
@@ -743,6 +760,20 @@ impl World {
                 Ok(())
             }
             CommandKind::SetLeave { .. } => Ok(()),
+            // Decision 0214, rule 4: the intent must be in force. Not an
+            // amendment of a plan.
+            CommandKind::SetPursuit { intent, .. } => {
+                self.in_force_intent(side, *intent).map(|_| ())
+            }
+            // Decision 0214, rule 8: the force is the side's own, as any
+            // command checks it (an enemy force is refused as one that does
+            // not exist).
+            CommandKind::AnswerPursuit { force, .. } => {
+                if self.own_force(side, *force).is_none() {
+                    return Err(CommandRefusal::NotYourForce(*force));
+                }
+                Ok(())
+            }
             CommandKind::Approve { plan } => {
                 let found = state
                     .plans
@@ -960,6 +991,11 @@ impl World {
                                     .is_some_and(|found| found.side == side);
                                 if !own {
                                     return Err(CommandRefusal::NotYourShip(*ship));
+                                }
+                            }
+                            StandingSubject::TaskForce(force) => {
+                                if self.own_force(side, *force).is_none() {
+                                    return Err(CommandRefusal::NotYourForce(*force));
                                 }
                             }
                         }
@@ -1276,6 +1312,40 @@ impl World {
                 match leave {
                     Leave::Prepare => state.leaves.prepare = *given,
                     Leave::Launch => state.leaves.launch = *given,
+                }
+            }
+            CommandKind::SetPursuit { intent, leave } => {
+                let state = self.command.get_mut(&side).expect("side has command state");
+                match leave {
+                    Some(leave) => {
+                        state.pursue_leaves.insert(*intent, *leave);
+                    }
+                    None => {
+                        state.pursue_leaves.remove(intent);
+                    }
+                }
+            }
+            CommandKind::AnswerPursuit {
+                force,
+                contact,
+                allow,
+            } => {
+                let state = self.command.get_mut(&side).expect("side has command state");
+                if *allow {
+                    // The event of the answer is filled in once the
+                    // `CommandTaken` is recorded (`take_in_command`).
+                    state.pursuits.insert(
+                        *force,
+                        Pursuit {
+                            by: PursuitBy::Taken,
+                            contact: *contact,
+                            since_day: day,
+                        },
+                    );
+                    state.pursuit_refusals.remove(&(*force, *contact));
+                } else {
+                    state.pursuit_refusals.insert((*force, *contact));
+                    state.pursuits.remove(force);
                 }
             }
             CommandKind::Approve { plan } => {
@@ -1609,10 +1679,31 @@ impl World {
                         plan: notice.plan,
                         run: notice.run,
                         intent,
+                        pursuit: notice.pursuit,
                     },
                     reason.map(|id| Cause::Event(*id)).into_iter().collect(),
                     None,
                 );
+                // A pursuit the staff took, or one it ended (decision 0214,
+                // rules 10 and 12). The notice's event is the event of the
+                // change; asking leave changes nothing.
+                if let Some(pursuit) = notice.pursuit {
+                    if let Some(state) = self.command.get_mut(side) {
+                        match (notice.kind, pursuit.find) {
+                            (NoticeKind::Pursues, Some(find)) => {
+                                state.pursuits.entry(pursuit.force).or_insert(Pursuit {
+                                    by: PursuitBy::Taken,
+                                    contact: find.contact,
+                                    since_day: day,
+                                });
+                            }
+                            (NoticeKind::PursuitEnded, _) => {
+                                state.pursuits.remove(&pursuit.force);
+                            }
+                            _ => {}
+                        }
+                    }
+                }
                 notices.push((*notice, event));
             }
             if !notices.is_empty() {
@@ -1650,8 +1741,14 @@ impl World {
         } else {
             Some(RejectReason::OutsideForcesLimit)
         };
+        // Events the decision rests on beyond its order, such as the
+        // commander's answer to a pursuit (decision 0214, rule 10), are
+        // causes of the order and of its reason.
+        let cites: Vec<Cause> = reason.cites.iter().copied().map(Cause::Event).collect();
         let (order, answer, _accepted) =
-            self.take_in_order_checked(day, None, side, request, Vec::new(), forced);
+            self.take_in_order_checked(day, None, side, request, cites.clone(), forced);
+        let mut causes = vec![Cause::Order(order), Cause::Event(answer)];
+        causes.extend(cites);
         self.events.record(
             day,
             None,
@@ -1661,7 +1758,7 @@ impl World {
                 command: None,
                 reason: Box::new(reason.clone()),
             },
-            vec![Cause::Order(order), Cause::Event(answer)],
+            causes,
             None,
         );
     }

@@ -134,6 +134,11 @@ fn subject_json(n: &Names<'_>, subject: StandingSubject) -> (&'static str, u32, 
     match subject {
         StandingSubject::Plan(plan) => ("plan", plan.raw(), format!("plan:{}", plan.raw())),
         StandingSubject::Ship(ship) => ("ship", n.ship(ship), format!("ship:{}", n.ship(ship))),
+        StandingSubject::TaskForce(force) => (
+            "task_force",
+            n.force(force),
+            format!("task_force:{}", n.force(force)),
+        ),
     }
 }
 
@@ -146,6 +151,7 @@ fn standing_words(kind: StandingKind, subject_words: &str) -> String {
             format!("{subject_words} cannot bring the men it wants")
         }
         StandingKind::LiftTurnedBack => format!("{subject_words}'s lift is turned back"),
+        StandingKind::AsksLeaveToPursue => format!("{subject_words} asks leave to pursue"),
     }
 }
 
@@ -336,6 +342,13 @@ fn matter_words(
             ),
             None => format!("plan:{}: its lift is turned back", plan.raw()),
         },
+        // Decision 0214: the three notices of a pursuit. The agent's full
+        // tools for them come later; the plain words are here.
+        (NoticeKind::AsksLeaveToPursue, _) => {
+            format!("plan:{} asks leave to pursue a find", plan.raw())
+        }
+        (NoticeKind::Pursues, _) => format!("plan:{} pursues a find", plan.raw()),
+        (NoticeKind::PursuitEnded, _) => format!("plan:{}: a pursuit is ended", plan.raw()),
         (NoticeKind::WaitsForLeave(leave), _) => {
             format!("plan:{} waits for leave to {}", plan.raw(), leave.name())
         }

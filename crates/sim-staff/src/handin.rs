@@ -93,6 +93,7 @@ impl Out {
             plan,
             run,
             rests_on,
+            pursuit: None,
         });
     }
 
