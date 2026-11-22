@@ -191,3 +191,44 @@ A scenario with no boat and no patrol order plays as it does, byte for byte. Boa
 
 1. **The first stage as amended:** boats as units of their own on stations, a patrol order the staff carries out for either side, one chance of attack that grows with the hours a force spends in a boat's waters, and the hunt. Aircraft against boats, boats that report and move on reports, and the war on shipping come after.
 2. **An enemy boat is never shown until she attacks,** and then only as a report of a submarine near where the ship was hit.
+
+## The designer's answers, Nov 22, 2026, and what they add
+
+Asked one question at a time, on the plan as amended.
+
+1. **The first stage, with aircraft against boats in it.** He chose to add aircraft now.
+2. **Enemy boats: the waters where they are suspected are shown.** He chose that a side be told the waters where enemy boats are believed to be working, as intelligence told commanders then, over boats wholly unseen.
+
+What follows is added to the plan as amended, and is to be read by a reviewer before it is built.
+
+### Aircraft against boats
+
+17. **A boat on her station is on the surface part of the time,** by night to charge and at times by day: the rows have boats caught on the surface at 0630 and after dawn near their stations (events 16024, 16025) as well as on passage. A boat on passage is on the surface.
+18. **A search by aircraft may sight her.** In a daylight pulse a group on the search mission whose arc and range hold her hex sights her by the chance it has of sighting one ship there, times `submarine_surfaced_share` for a boat on her station, and whole for one on passage. Rule 2 is amended so far: no other rule of search touches her, and she is never a force in the search's lists.
+19. **A boat sighted is reported and driven down.** Her enemy is given a report of one submarine, through the report and its error. She is held down for the rest of that pulse and the next.
+20. **The aircraft that sight her attack her,** in the same pulse, by one draw: under `air_attack_damages_chance` she is damaged, and of those, by a second draw under `air_attack_sinks_share`, sunk. No strike is launched at a submarine and no group's mission is changed for one.
+21. **A boat damaged goes home.** She leaves her station for the base her scenario names, attacks nothing, and is taken off the map there. Her side is told. This is state: a boat is sound, damaged or sunk.
+22. **The hunt of rule 9 gains the same middle:** by one draw under `hunt_damages_chance` she is damaged, and of those under `hunt_sinks_share` sunk. `hunt_sinks_chance` is withdrawn. The rows have, of the boats that fired, one sunk and three damaged (I-168, Flying Fish, S-42).
+
+### Suspected waters
+
+23. **A scenario may give a side the waters where it believes enemy submarines work:** a hex, a distance, the words of the belief and the rows it rests on. It is what that side's command believed at the start, right or wrong, and is not made from where the boats are. The rows hold such beliefs: CINCPAC from 9 August that Japanese boats were concentrating against the Solomons (events 16298, 16303); the Japanese that one or two Allied boats were in the Bismarcks when there were four (event 16257); the Japanese staff's count of fourteen or sixteen American boats round Midway (events 16200 to 16202).
+24. **The side is shown them:** in its briefing, in words, and on its chart as waters marked faintly, with no boat drawn.
+25. **In play the belief is added to by what the side learns:** each report of a submarine (rules 14 and 19) is shown as a contact of its own sort for as long as a contact is held. The suspected waters themselves do not change in this stage.
+26. **A side with no such entry is shown nothing** until a boat is reported.
+
+### Figures added
+
+| Figure | Rests on |
+| --- | --- |
+| `submarine_surfaced_share` | a judgement: boats charged by night and were seen at times by day |
+| `air_attack_damages_chance`, `air_attack_sinks_share` | counted, on few cases: five boats caught by carrier aircraft in August 1942, two damaged, none sunk (events 16024 to 16029); one figure each for both sides |
+| `hunt_damages_chance`, `hunt_sinks_share` | counted, on few cases: of the boats that fired at a warship or her charge, three damaged and one sunk; one figure each for both sides |
+
+Two draws are added to the three, each with its own value at the end: the aircraft's attack and its sinking share are one stream of the boat and the group; the hunt's two are one stream of the boat and the force. A boat's state gains whether she is damaged.
+
+### What it still does not do
+
+- **Aircraft do not hunt a boat from a report,** patrol against submarines by order, or keep a boat down by flying over a force. A force's own patrol does not move a boat's chance to attack it. The rows have Japanese captains fearing aircraft most and give no size.
+- **A boat does not report what she sees or move on a report.** The second stage.
+- **Suspected waters are not worked out in play** from attacks and sightings; they are the scenario's.
