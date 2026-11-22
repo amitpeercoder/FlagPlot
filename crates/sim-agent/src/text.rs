@@ -465,7 +465,10 @@ impl Briefing {
                 "out" => "the fire among her aircraft is out; she can fly aircraft again",
                 _ => "lost to the fire among her aircraft",
             };
-            format!("Carrier {} of {}: {}{}", x.ship.text(), x.task_force.text(), what, ev(x.event))
+            match &x.task_force {
+                Some(force) => format!("Carrier {} of {}: {}{}", x.ship.text(), force.text(), what, ev(x.event)),
+                None => format!("Carrier {}: {}{}", x.ship.text(), what, ev(x.event)),
+            }
         });
         }
         o.each("Ships damaged", &l.ships_damaged, |x| {

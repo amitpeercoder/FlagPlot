@@ -106,7 +106,8 @@
 //! - **The other navy.** With the sides exchanged, so that the carrier
 //!   bombed is Allied with 20 bombers aboard: 0.15 for 1 hit, 0.2775 for
 //!   2, 0.385875 for 3; with 10 of 20 flying, 0.075, 0.144375 and
-//!   0.208546875.
+//!   0.208547: 1 - 0.925^3 = 0.208546875, which the game holds to six
+//!   places as 0.208547. (Restated by the architect on Nov 22, 2026.)
 //! - **Not a carrier.** A cruiser of task force 2 with a floatplane group
 //!   aboard, bombed: no draw, no record, nothing of this rule.
 //! - **A torpedo and a shell set no such fire.** With the attackers
@@ -1316,14 +1317,13 @@ fn the_other_navy_reads_its_own_figure_0_15_and_the_chances_follow() {
         assert!(seen.contains(&hits));
     }
 
-    // With 10 of 20 flying: 0.075, 0.144375 and (see the next test) 0.208546875.
+    // With 10 of 20 flying: 0.075, 0.144375 and (see the next test) 0.208547.
     let half = build(Figures::Fire, &[], |text| {
         exchange_sides(strike_back(text, "0.5"))
     });
     let runs = batch_of(&half, SEEDS);
     let seen = check_rolls_against_launches(&runs, m(150_000), |flying, hits| {
-        // The chance 0.208546875 for 3 hits cannot be held in the game's
-        // fixed point: it is asserted by the ignored test below.
+        // The chance for 3 hits, 0.208547, is asserted by the next test.
         flying == 10 && hits == 3
     });
     for hits in [1, 2, 3] {
@@ -1346,8 +1346,10 @@ fn the_other_navy_reads_its_own_figure_0_15_and_the_chances_follow() {
 }
 
 #[test]
-#[ignore = "mismatch with the hand calculation, back to the architect: 0.208546875 has nine decimals and the game's fixed point holds six; the game multiplies (1 - 0.075) three times, each product cut to millionths (0.925 x 0.925 = 0.855625; x 0.925 = 0.791453125 cut to 0.791453), and gives 0.208547"]
-fn the_other_navy_half_away_3_hits_is_0_208546875() {
+fn the_other_navy_half_away_3_hits_is_0_208547() {
+    // 1 - 0.925^3 = 0.208546875, which the game holds to six places as
+    // 0.208547 (restated by the architect): each product cut to millionths,
+    // 0.925 x 0.925 = 0.855625, x 0.925 = 0.791453.
     let half = build(Figures::Fire, &[], |text| {
         exchange_sides(strike_back(text, "0.5"))
     });
@@ -1360,14 +1362,7 @@ fn the_other_navy_half_away_3_hits_is_0_208546875() {
             .filter(|r| r.flying == 10 && r.bombs == 3)
         {
             seen += 1;
-            // 0.208546875 in nanounits: the fixed point has millionths, so
-            // no value it holds is this one.
-            assert_eq!(
-                roll.chance.raw() * 1000,
-                208_546_875,
-                "the game gives {}",
-                roll.chance
-            );
+            assert_eq!(roll.chance, m(208_547), "the game gives {}", roll.chance);
         }
     }
     assert!(seen > 0);

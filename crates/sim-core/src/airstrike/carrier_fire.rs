@@ -32,9 +32,11 @@
 //! # Fighting it
 //!
 //! [`World::fight_aircraft_fires`], the last phase of every pulse, night
-//! too: for each ship in a task force, in ship order, whose fire was not set
-//! in this pulse, one draw on a stream keyed on the ship, by day and pulse
-//! ([`Draw::AircraftFireFought`]).
+//! too: for each ship afloat with a fire, in a task force, in port or at a
+//! yard, in ship order, whose fire was not set in this pulse, one draw on a
+//! stream keyed on the ship, by day and pulse ([`Draw::AircraftFireFought`]).
+//! A carrier lost out of a force has no `ShipSunk`: the fought record is her
+//! loss.
 
 use super::*;
 use crate::state::{AircraftFire, ShipLocation};
@@ -244,14 +246,18 @@ impl World {
         let Some(figures) = self.aircraft_fire_figures() else {
             return;
         };
-        let burning: Vec<(ShipId, TaskForceId, AircraftFire)> = self
+        // Every carrier afloat with a fire, wherever she is: in a force, in
+        // port or at a yard (the architect's ruling of Nov 22, 2026).
+        let burning: Vec<(ShipId, Option<TaskForceId>, AircraftFire)> = self
             .truth
             .ships
             .values()
             .filter_map(|ship| {
                 let fire = ship.aircraft_fire?;
-                let ShipLocation::TaskForce(force) = ship.location else {
-                    return None;
+                let force = match ship.location {
+                    ShipLocation::TaskForce(force) => Some(force),
+                    ShipLocation::Port(_) | ShipLocation::Yard(_) => None,
+                    ShipLocation::Sunk => return None,
                 };
                 Some((ship.id, force, fire))
             })
@@ -319,7 +325,18 @@ impl World {
                     pulse,
                     round: 0,
                 };
-                self.sink_ship(site, task_force, ship, event);
+                match task_force {
+                    Some(force) => {
+                        self.sink_ship(site, force, ship, event);
+                    }
+                    None => {
+                        // Out of a force there is no `ShipSunk`: this record
+                        // is her loss, and what goes down with her cites it.
+                        let state = self.truth.ships.get_mut(&ship).expect("the ship exists");
+                        state.location = ShipLocation::Sunk;
+                        self.lose_all_aboard(site, ship, event);
+                    }
+                }
             }
         }
     }

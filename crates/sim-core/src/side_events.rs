@@ -3401,7 +3401,7 @@ mod tests {
             row(
                 EventKind::AircraftFireFought {
                     ship: ship(1),
-                    task_force: force(1),
+                    task_force: Some(force(1)),
                     level_before: 3,
                     draw: Fixed::from_ratio(3, 4),
                     level_after: 2,

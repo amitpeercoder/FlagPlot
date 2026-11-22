@@ -271,9 +271,9 @@ Where the build reads the record, and where it departs from it:
 - **A carrier lost to fire** is sunk by the ordinary `ShipSunk`, unchanged in its fields; "fire as its cause" is its cause, the `AircraftFireFought` record that rose above the top (marked `lost`). No field was added to `ShipSunk`.
 - **The raid's record** names the carrier and her force, not the raid's group, which is the enemy's; it cites the raid's attacks on her, which the carrier's side is given cut.
 - **The bombers counted** are each bomber group's ready aircraft less those the pulse's count has flying, plus its damaged aircraft, aboard; and the ready ones flying. Aircraft away from an earlier sortie and not back count in neither. Where none is aboard no draw is made and nothing is recorded.
-- **The chance** is worked in the game's six decimals, each product cut in turn: scenario 126's 0.208546875 (the Allied side, half away, three bombs) is 0.208547 in the game, and that one statement is an ignored test, back to the architect.
+- **The chance** is worked in the game's six decimals, each product cut in turn: scenario 126's 1 - 0.925^3 = 0.208546875 (the Allied side, half away, three bombs) is held as 0.208547, as the architect restated it.
 - **A fire set closes her deck at once,** as a deck that goes out does: her aircraft in the air in that pulse look for another deck or a base.
-- **A fire is fought only in a task force.** A burning carrier sent to a yard keeps her fire there, unfought, and it is fought again when she is back in a force (`docs/rules/differences.md`, row 57, to be ruled).
+- **A fire is fought wherever she is afloat,** in a force, in port or at a yard, by the architect's ruling below (`docs/rules/differences.md`, row 57, ruled and mended). A carrier lost to it out of a force has no `ShipSunk`: the fought record, naming no force, is her loss, and what goes down with her cites it.
 - **A side's view and a dry run** read the side's own `aircraft_fire_chance` for both sides (decision 0213).
 
 ### The scenarios for play, 1,000 games each, as built
@@ -286,4 +286,23 @@ Where the build reads the record, and where it departs from it:
 
 Carriers lost, games of 1,000, to flooding and to fire (measured in brackets): Akagi 53 and 632 (59, 627); Kaga 56 and 650 (48, 635); Soryu 274 and 422 (269, 414); Hiryu 232 and 481 (245, 445); Enterprise at Midway 70 and 152 (83, 145); Hornet 79 and 172 (69, 196); Yorktown at Midway 30 and 0 (33, 1); Yorktown at the Coral Sea 19 and 95 (15, 86); Lexington 0 and 149 (0, 134); Shoho 870 and 41 (871, 39); Shokaku at the Coral Sea 0 and 4; Zuikaku at the Coral Sea 0 and 3; Shokaku in the five days 7 and 304 (10, 291); Zuikaku 9 and 302 (11, 285); Ryujo 228 and 507 (232, 510); Enterprise in the five days 220 and 70 (217, 72); Saratoga 7 and 82 (6, 86). No ship that is not a carrier is lost to fire.
 
-The difference from the measured numbers has one cause found: the first raid of a kind at a force draws its ship as scenario 127's hand calculation has it, a draw d below one and the place floor(n x d), where the throwaway drew a whole number below n. The same seed therefore takes another ship in some pulses, and the games that follow differ. Nothing was moved. These are the scenarios' new numbers, in place of those recorded in decision 0198 and its like before these rules: Midway is inside the band of decision 0187 (neither side in more than 650); the Coral Sea is outside it by 29 games and the five days by 177, both toward the Allied side, as measured. The five days' balance is work of its own, by the designer's word above.
+The difference from the measured numbers has one cause found: the first raid of a kind at a force draws its ship as scenario 127's hand calculation has it, a draw d below one and the place floor(n x d), where the throwaway drew a whole number below n. The same seed therefore takes another ship in some pulses, and the games that follow differ. Nothing was moved. These are the scenarios' new numbers, in place of those recorded in decision 0198 and its like before these rules: Midway is inside the band of decision 0187 (neither side in more than 650); the Coral Sea is outside it by 29 games and the five days by 177, both toward the Allied side, as measured. The five days' balance is work of its own, by the designer's word above ("The designer's word, and the readings ruled").
+
+Scenario 104's statement 19, a game of the five days' file a on one seed, was moved by both rules and is restated by the architect: without the objective the Japanese side has 2.67 and the Allied side 42.59, a margin of 39.92; with it 17.67 and 42.59, a margin of 24.92, a decisive victory each way.
+
+### The architect's rulings, Nov 22, 2026
+
+Read on pull request 675. Accepted as built:
+
+- No cause field on `ShipSunk`: the fought record marked lost is its cause.
+- The roll record does not name the raiding group, which is the enemy's.
+- Aircraft still away from an earlier sortie are counted neither aboard nor flying.
+- The deck is closed at once when a fire is set: her aircraft in the air look for another deck or a base.
+- Scenario 126's figures are built in the test, from the frozen copy, with no committed figures file.
+- `advance`'s "loss" stop takes in a fire set, and the Eastern Solomons expectation in `crates/sim-agent/tests/advance.rs` that follows from it.
+
+Ruled and mended:
+
+- **A burning carrier out of a task force:** the fire is fought at the end of every pulse while she is afloat, wherever she is, in a force, in port or at a yard. Setting a fire stays as built, a raid's on a carrier. Tested in `crates/sim-core/src/airstrike/tests.rs`; chapter 4 says so.
+- **Scenario 126, "The other navy":** the last figure is restated as 0.208547, 1 - 0.925^3 = 0.208546875 held to six places, and asserted.
+- **Scenario 104, statement 19:** restated as above.

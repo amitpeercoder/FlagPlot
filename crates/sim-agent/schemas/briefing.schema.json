@@ -711,11 +711,11 @@
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["ship", "task_force", "change", "event"],
+            "required": ["ship", "change", "event"],
             "additionalProperties": false,
             "properties": {
               "ship": { "$ref": "defs.schema.json#/$defs/handle" },
-              "task_force": { "$ref": "defs.schema.json#/$defs/handle" },
+              "task_force": { "$ref": "defs.schema.json#/$defs/handle", "description": "Left out for a carrier in port or at a yard." },
               "change": { "enum": ["set", "grew", "died_down", "out", "lost"] },
               "event": { "type": "integer" }
             }

@@ -1858,7 +1858,7 @@ pub(super) fn describe(
         } => (
             "aircraft_fire_fought",
             d.id("ship", *ship)
-                .id("task_force", *task_force)
+                .id_when_some("task_force", *task_force)
                 .int("level_before", u32::from(*level_before))
                 .num("draw", *draw)
                 .int("level_after", u32::from(*level_after))

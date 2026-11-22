@@ -248,6 +248,15 @@ impl World {
             hex: sank_at,
             cause: sunk,
         });
+        self.lose_all_aboard(site, ship, sunk);
+        sunk
+    }
+
+    /// What goes down with a ship sunk by the record `sunk`: every air group
+    /// aboard, but for its aircraft in the air in this pulse, with their
+    /// pilots, and the men aboard. The ship's sinking, in a force or out of
+    /// one, comes here.
+    pub(crate) fn lose_all_aboard(&mut self, site: DamageSite, ship: ShipId, sunk: EventId) {
         // The group stays aboard in the state, with no position. It keeps
         // only the aircraft that are in the air in this pulse (decisions 7
         // and 10 of 0059): those are dealt with when they come home. All the
@@ -301,7 +310,6 @@ impl World {
         }
         // The men aboard go down with her (decision 0066, 15).
         self.lose_men_with_ship(site.day, Some(site.pulse), ship, sunk);
-        sunk
     }
 
     fn record_at(&mut self, site: DamageSite, kind: EventKind, causes: Vec<Cause>) -> EventId {

@@ -126,3 +126,11 @@ Built with decisions 0212 and 0213 in one pull request, to the rules of "Measure
 - **A group of another kind than its raid's** attacks the first ship of its kind by the order, those that do not look lost first, by ship number, as rule 6 above and scenario 127 have it; the throwaway took the first by ship number alone. They differ only where the lowest-numbered ship of that kind looks lost.
 - **The breakdown** of each attack of a raid of the raid's kind carries the choice: for the first raid `spread_could_draw` (each ship it could have drawn), `spread_draw` and `spread_ship_drawn`; for a later raid `spread_ship_by_turn` and `spread_after_ship`.
 - The games of 1,000 are in decision 0212, "As built".
+
+### The architect's rulings, Nov 22, 2026
+
+Read on pull request 675. Accepted as built:
+
+- A group of another kind than its raid's takes the first ship of its kind that does not look lost.
+- Scenario 127's contact-age orders (`set_strike_contact_age` 1 for each group, the live figures' age being 0), and its dive bombers for group 3, with the torpedo case tested on a copy of the types.
+- The first raid's draw as place floor(n x d); the difference of the as-built numbers from the throwaway's is that and nothing else.

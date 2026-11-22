@@ -9731,3 +9731,89 @@ mod choices {
         )));
     }
 }
+
+/// A burning carrier out of a task force, at a yard, `level` her fire: the
+/// world on `seed` with the fire figures of decision 0212 loaded.
+fn burning_at_a_yard(seed: u64, level: u8) -> World {
+    let mut world = world(seed, Vec::new());
+    air_figures(&mut world).aircraft_fire = Some(AircraftFireFigures {
+        chance: crate::refdata::BySide::new(fixed(15, 100), fixed(6, 10)),
+        spreads_chance: fixed(1, 2),
+        levels: 3,
+    });
+    let carrier = ShipId::new(2);
+    world
+        .truth
+        .task_forces
+        .get_mut(&FORCE_B)
+        .expect("force B")
+        .ships
+        .remove(&carrier);
+    let state = ship_mut(&mut world, 2);
+    state.location = ShipLocation::Yard(FORCE_B);
+    state.aircraft_fire = Some(crate::state::AircraftFire {
+        level,
+        set_day: 1,
+        set_pulse: Pulse::Morning,
+        record: EventId::new(1),
+    });
+    world
+}
+
+/// The architect's ruling of Nov 22, 2026 on decision 0212: a fire among a
+/// carrier's aircraft is fought at the end of every pulse while she is
+/// afloat, wherever she is. At a yard it rises or falls as in a force, the
+/// record naming no force; lost there, she sinks with her aircraft, and the
+/// fought record, which is her loss, is what they cite. No `ShipSunk`.
+#[test]
+fn a_fire_is_fought_at_a_yard_and_a_carrier_lost_there_goes_down_with_her_aircraft() {
+    let mut rose = false;
+    let mut fell = false;
+    for seed in 1..=40 {
+        let mut world = burning_at_a_yard(seed, 3);
+        world.fight_aircraft_fires(1, Pulse::Afternoon);
+        let fought = events_where(&world, |kind| {
+            matches!(kind, EventKind::AircraftFireFought { .. })
+        });
+        assert_eq!(fought.len(), 1, "one draw on seed {seed}");
+        let EventKind::AircraftFireFought {
+            task_force,
+            level_before,
+            level_after,
+            lost,
+            ..
+        } = fought[0].kind
+        else {
+            unreachable!()
+        };
+        assert_eq!((task_force, level_before), (None, 3));
+        if lost {
+            rose = true;
+            assert_eq!(level_after, 4);
+            assert_eq!(ship_of(&world, 2).location, ShipLocation::Sunk);
+            assert_eq!(ship_of(&world, 2).aircraft_fire, None);
+            assert!(events_where(&world, |k| matches!(k, EventKind::ShipSunk { .. })).is_empty());
+            let lost_groups = events_where(
+                &world,
+                |k| matches!(k, EventKind::AirGroupLost { air_group, .. } if *air_group == ENEMY_BOMBERS),
+            );
+            assert_eq!(lost_groups.len(), 1);
+            assert_eq!(lost_groups[0].causes, vec![Cause::Event(fought[0].id)]);
+            assert_eq!(world.truth.air_groups[&ENEMY_BOMBERS].ready, 0);
+        } else {
+            fell = true;
+            assert_eq!(level_after, 2);
+            assert_eq!(ship_of(&world, 2).location, ShipLocation::Yard(FORCE_B));
+            assert_eq!(ship_of(&world, 2).aircraft_fire.map(|f| f.level), Some(2));
+        }
+    }
+    assert!(rose && fell, "both happen on some seed");
+    // Not fought in the pulse a raid set it, there as in a force.
+    let mut world = burning_at_a_yard(1, 3);
+    world.fight_aircraft_fires(1, Pulse::Morning);
+    assert!(events_where(&world, |k| matches!(
+        k,
+        EventKind::AircraftFireFought { .. }
+    ))
+    .is_empty());
+}

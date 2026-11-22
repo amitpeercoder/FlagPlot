@@ -515,7 +515,9 @@ pub struct SunkShip {
 #[derive(Clone, PartialEq, Eq, Debug, Serialize)]
 pub struct AircraftFireLine {
     pub ship: Handle,
-    pub task_force: Handle,
+    /// Her task force; left out for a carrier in port or at a yard.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub task_force: Option<Handle>,
     /// `set` (a raid's bombs set her aircraft alight), `grew`, `died_down`,
     /// `out` or `lost` (she was lost to it).
     pub change: &'static str,
@@ -3102,7 +3104,7 @@ impl Day {
                         ..
                     } => aircraft_fires.push(AircraftFireLine {
                         ship: ctx.ship(*ship),
-                        task_force: ctx.force(*task_force),
+                        task_force: Some(ctx.force(*task_force)),
                         change: "set",
                         event: id,
                     }),
@@ -3116,7 +3118,7 @@ impl Day {
                         ..
                     } => aircraft_fires.push(AircraftFireLine {
                         ship: ctx.ship(*ship),
-                        task_force: ctx.force(*task_force),
+                        task_force: task_force.map(|force| ctx.force(force)),
                         change: if *lost {
                             "lost"
                         } else if *level_after == 0 {
