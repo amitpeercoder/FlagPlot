@@ -232,3 +232,91 @@ Two draws are added to the three, each with its own value at the end: the aircra
 - **Aircraft do not hunt a boat from a report,** patrol against submarines by order, or keep a boat down by flying over a force. A force's own patrol does not move a boat's chance to attack it. The rows have Japanese captains fearing aircraft most and give no size.
 - **A boat does not report what she sees or move on a report.** The second stage.
 - **Suspected waters are not worked out in play** from attacks and sightings; they are the scenario's.
+
+## Amended on a second review, Nov 22, 2026
+
+Read by a second reviewer who had not seen it written, on rules 1 to 26. Where this differs from what is above, this holds. The architect checked the review's findings on the rows and the search rule before ruling.
+
+### What the review found
+
+- **The rows do not hold what rule 1 needs for the boats this stage is about.** No American class has its torpedoes carried; three Japanese groups have none; no row ties a class to a torpedo; which Japanese boats carried which torpedo in 1942 is a listed gap; a passage speed is on file for the Japanese groups alone.
+- **A unit of a new kind touches every place a land unit does,** some sixty files, and the plan counted few of them.
+- **The hours a force spends in a hex exist only inside the movement step,** and the plan named neither where the attack is worked nor how a part of an hour is counted.
+- **A submarine contact kept among the contacts of ships would be read by 46 places,** each of which would have to leave it out, and a report of "nothing there" would delete one.
+- **Rule 13 gave the boat's side a report of the force,** which is the boat reporting what she sees: the second stage.
+- **A search that starts in a boat's hex sights at a chance of one,** so a boat under a searching carrier would be found at the surfaced share every daylight pulse: a patrol over the force, which the plan said it did not make.
+- **The history was miscounted in four places.** I-11 was damaged by a destroyer of the force she fired on, so four boats that fired were damaged, not three. All five boats caught by carrier aircraft were caught by day, three of them on passage. CINCPAC's order of kinds (event 16224) has no destroyer, and the Japanese order was "supply ships or capital ships" (event 16281). The rows of beliefs round Midway are of other waters, and CINCPAC's belief of the Solomons is dated 9 August, after the 39 days begin.
+- **The staff would have done nothing about submarines,** so that keeping carriers out of marked waters would be a task only the player can do.
+
+### The data, before anything else is built
+
+27. **Research is commissioned for what the rows lack:** each class's torpedoes carried and the tubes that bear forward, its passage speed on the surface, and the torpedo each boat carried in 1942. What is found is added as rows.
+28. **The derivation is by written rules, in the submarines' rules file:**
+    - a salvo is the class's tubes that bear forward;
+    - the salvoes carried are its torpedoes carried over its salvo, rounded down;
+    - the passage speed is the class's speed of endurance on the surface;
+    - the damage of a hit is by the torpedo's warhead, by the figure the ships' torpedoes use.
+29. **A figure still missing after the research is estimated from like boats by the written rule of decision 0207, and marked estimated.** A boat whose torpedo no row states takes the torpedo stated for the boats of her group, or of the group nearest in date, and is marked. A boat is left out of a scenario only where no like boat gives the figure.
+30. **`submarine_hit_chance` stays a figure of the weapon,** counted from the salvoes whose weapon is stated or is estimated by rule 29, the count saying which.
+
+### The boat as a unit
+
+31. **Her reference is a new kind, its code after the last.** The boats are a field of the state, hashed and named, and hashed only where a scenario has one, as the units held apart are: a game with no boat keeps its hash.
+32. **She is not a kind of ship.** Her classes are a table of their own; the kinds of ship and every table keyed on them are as they are. The objectives gain one entry, the points for a submarine sunk. A boat sent home damaged scores nothing in this stage.
+33. **She may be held apart and enter on a day, and may have a day to be used from,** as any unit.
+34. **An order's forces limit may name boats, and a hold may hold one.**
+35. **With command levels on she is under her side's highest command,** which knows her exactly and holds her reports first. That a boat's own word came late or not at all is the second stage's.
+36. **Every step that walks each unit gains her case,** and the build lists them before it writes any: the invariants, the pictures and the world built from a picture, the briefing, the side's view and a seat's, the agent's tools, the export and the viewer, a saved game, the events' reader, and the table's cards and chart. A dry run builds the side's own boats and no enemy boat.
+
+### Meeting and attacking, restated
+
+37. **The attack is worked at the end of the movement step, in each pulse,** while the step's own times are in hand, and nothing of them is kept. By night that is before a bombardment and before loading and unloading: a force hit then goes on with what it has.
+38. **A force's hours in a boat's hex in a pulse are:** all the pulse where it did not move; from when it entered to when it left where it crossed; from when it entered to the end where it stopped or was left dead there; from when it was made where it was detached in the hex. A force with no ship left has none.
+39. **The chance for the pulse is one less the chance that every hour fails,** worked so: one less the hourly chance, multiplied by itself for each whole hour, and once more by one less the hourly chance times the part of an hour left over.
+40. **The order of kinds is one for both sides: carrier, battleship, transport, auxiliary, cruiser.** A force with none of these is not attacked. It rests on CINCPAC's order and the Japanese one (events 16224 and 16281); neither names a destroyer.
+41. **A force lying in a hex that holds a base of its own side is not attacked.** A judgement, marked: no harbour is in the game, and the war on shipping will rule on it again.
+42. **Each torpedo's draw is of the boat and the ship aimed at, by the torpedo's place in the salvo.**
+43. **She goes to a station by the sea route a force would take, at her passage speed,** and is on station from the pulse after she arrives. A boat with no salvo left goes home as a damaged one does, and scores nothing.
+
+### What a side knows, restated
+
+44. **Reports of submarines are a list of their own in a side's belief,** as the estimate of the enemy ashore is: a report of its own kind, taken in by the one way a belief changes, aged and dropped by its own figures, copied into each command's picture. Nothing that reads the contacts of ships reads it. Two reports in one hex are one, the newer; a report of nothing there removes none.
+45. **Rule 13's report of the force is withdrawn.** Her side is told that she fired, the kind she took her target for, and her claim, which is made as a raid's claim is, its hits raised by a draw, and marked as a submarine's.
+46. **The side fired on is told of every salvo, hit or miss,** as a ship's salvo against it is told, with no boat named, and is given the report of a submarine at her hex through the report's error. A salvo that misses is hunted as one that hits.
+47. **Suspected waters are a belief told on a day,** as the opening estimates are (decision 0160): taken in as a report, recorded, hashed, and in every picture. An entry carries its day, so that CINCPAC's of 9 August is told on the third day of the 39. Its hex and distance are the architect's reading of the row's words and are marked so. The rows of beliefs round Midway are withdrawn as examples.
+
+### Aircraft, restated
+
+48. **The chance of sighting a boat takes its distance as at least one hex.** `submarine_surfaced_share` stands for both the time she is up and how much harder she is to see than a ship; it is a judgement.
+49. **There is no search by night, and rule 17's words on the night are withdrawn.** Three of the five boats caught were on passage; nothing rests on boats caught near their stations.
+50. **The attack is a draw and nothing else:** no bomb is used, no aircraft lost, no extra sortie flown.
+51. **Any group on the search mission may sight and attack,** flying boats too. `air_attack_damages_chance` rests on the six attacks by carrier aircraft on five boats, two damaged, and the Catalinas' attacks that did none (events 16021, 16022, 16306); `air_attack_sinks_share` is a judgement, none having been sunk.
+52. **A boat damaged goes home.** I-121 went on working damaged; the rule is simpler than the row and says so.
+53. **`hunt_damages_chance` is restated on four boats damaged and one sunk** of some fifteen that fired; RO-33's target was a merchant ship and is counted.
+
+### The staff and the player
+
+54. **The patrol order is a new root kind of order.** With no boats named it uses every boat of the side that is not held. Its stations are given so: the first is the waters' centre, or the navigable hex of the waters nearest it; each next is the navigable hex of the waters farthest from the nearest station already given, the lowest hex where they tie; boats beyond the hexes share stations from the first again. Its preview and reasons say each boat's station. The words on sending a boat out again are withdrawn: a boat that has gone home is off the map.
+55. **The staff keeps a standing force out of submarine waters where another place serves.** A doctrine that chooses where a force is to stand or wait (the carriers' position, a station, a place to stand at) passes over a hex inside the side's suspected waters or within one hex of a report of a submarine it holds, and says so in its reason; where no other hex serves it takes the hex and says that. Routes are not changed. The doctrine's version rises.
+56. **The table may stop the clock on a submarine's attack,** by a stop of its own as for reinforcements. No interrupt of the engine is added.
+57. **What a player can do is then:** keep forces out of the waters by an order's area, go faster, not stand in them, keep searches flying, send his own boats, and leave the rest to the staff. Escorts, a zigzag and a patrol over a force move nothing in this stage; a destroyer counts in the hunt.
+
+### Draws and records, in full
+
+Each a new value at the end, in a subsystem of its own: the attack (boat and force); each torpedo (boat, ship and place in the salvo); the hunt's two (boat and force, one stream); the search's sighting of a boat (boat and group); the aircraft's attack and its share (boat and group, one stream); the error of a report of a submarine; the claim. With breakdowns on, each attack chance is recorded with its hours and factors.
+
+### How it is built
+
+Three pull requests, each its own stage:
+
+1. **The data:** the research, the rows, the derivation rules and the classes derived.
+2. **The rule:** the boat and her state, the hours and the attack, the hunt, the list of reports, aircraft, the station order, holds, suspected waters, with the scenario and its hand calculation, which uses placeholder boats.
+3. **The staff, the agent and the table:** the patrol order and its stations, the staff's regard for submarine waters, the tools, the cards and the chart.
+
+### A simpler way, considered and not taken
+
+Waters kept by a side with a count of boats in them, and no boat as a unit, would cost far less. It is not taken: the table names every ship, and the second and third stages need a boat that moves, reports and is sunk.
+
+### Rule card, restated
+
+Reads: each boat's hex, station, passage, salvoes, state and held-down count, her class and torpedo; each enemy force's hours in her hex in the pulse, its ships, their kinds, which are dead in the water, and whether the hex holds a base of its side; each searching group's arc, range and aircraft; the figures; the side's suspected waters and reports of submarines, for the staff. Writes: torpedo hits through chapter 4; the boat's salvoes, state, held-down count, station and passage; reports of submarines and their ageing; claims. Draws: the seven above.
