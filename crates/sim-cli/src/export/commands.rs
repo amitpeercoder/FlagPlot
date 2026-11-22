@@ -220,20 +220,22 @@ fn intent_kind(kind: &IntentKind) -> IntentKindOut {
             wants: None,
             defences: None,
         },
-        IntentKind::Deny { hex, distance } => IntentKindOut {
-            kind: "deny",
-            island: None,
-            base: None,
-            target: None,
-            hex: Some([hex.q, hex.r]),
-            distance: Some(*distance),
-            task_force: None,
-            floor_days: None,
-            interval_days: None,
-            by_day: None,
-            wants: None,
-            defences: None,
-        },
+        IntentKind::Deny { hex, distance } | IntentKind::Patrol { hex, distance } => {
+            IntentKindOut {
+                kind: kind.name(),
+                island: None,
+                base: None,
+                target: None,
+                hex: Some([hex.q, hex.r]),
+                distance: Some(*distance),
+                task_force: None,
+                floor_days: None,
+                interval_days: None,
+                by_day: None,
+                wants: None,
+                defences: None,
+            }
+        }
     }
 }
 
@@ -247,6 +249,9 @@ struct ForcesOut {
     /// Left out where the limit names none (decision 0141).
     #[serde(skip_serializing_if = "Vec::is_empty")]
     land_units: Vec<u32>,
+    /// Left out where the limit names none (decision 0218, 12).
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    submarines: Vec<u32>,
     /// Left out where the limit names none (a cover or hold intent's need
     /// not).
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -333,6 +338,7 @@ fn limits(limits: &IntentLimits) -> LimitsOut {
             task_forces: forces.task_forces.iter().map(|f| f.raw()).collect(),
             air_groups: forces.air_groups.iter().map(|g| g.raw()).collect(),
             land_units: forces.land_units.iter().map(|u| u.raw()).collect(),
+            submarines: forces.submarines.iter().map(|b| b.raw()).collect(),
             source: forces.source.map(|source| source.raw()),
         }),
         area: limits
@@ -472,6 +478,7 @@ fn limit(limit: &Limit) -> LimitOut {
                 task_forces: limit.task_forces.iter().map(|f| f.raw()).collect(),
                 air_groups: limit.air_groups.iter().map(|g| g.raw()).collect(),
                 land_units: limit.land_units.iter().map(|u| u.raw()).collect(),
+                submarines: limit.submarines.iter().map(|b| b.raw()).collect(),
                 source: limit.source.map(|source| source.raw()),
             }),
             ..blank("forces")

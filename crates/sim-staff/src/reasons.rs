@@ -117,6 +117,8 @@ pub(crate) fn aim(view: &SideView<'_>, intent: &Intent) -> String {
             base_words(view, base)
         ),
         IntentKind::Deny { hex, distance } => waters_words(hex, distance),
+        // Decision 0218, 11.
+        IntentKind::Patrol { hex, distance } => sim_core::command::patrol_words(hex, distance),
         IntentKind::StrikeShips { base } => {
             format!("strike ships from {}", base_words(view, base))
         }

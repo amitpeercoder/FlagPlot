@@ -565,6 +565,7 @@ fn kind_json(n: &Names<'_>, kind: IntentKind) -> Value {
         | IntentKind::Neutralise { .. }
         | IntentKind::Raid { .. }
         | IntentKind::Deny { .. }
+        | IntentKind::Patrol { .. }
         | IntentKind::StrikeShips { .. }
         | IntentKind::SearchWaters { .. }
         | IntentKind::StandAt { .. }
@@ -1044,6 +1045,8 @@ fn hold_target_json(n: &Names<'_>, target: HoldTarget, request: Option<&Request>
                 .or_else(|| n.ctx.group_number(group))
                 .unwrap_or_else(|| group.raw()),
         }),
+        // Decision 0218, 34: a boat is written by her number.
+        HoldTarget::Submarine(boat) => json!({ "submarine": boat.raw() }),
     }
 }
 
@@ -1164,6 +1167,7 @@ fn hold_target_words(n: &Names<'_>, target: HoldTarget) -> String {
             "air group {}",
             n.ctx.group_number(group).unwrap_or_else(|| group.raw())
         ),
+        HoldTarget::Submarine(boat) => format!("submarine {}", boat.raw()),
     }
 }
 
@@ -1622,6 +1626,8 @@ fn task_words(view: &SideView<'_>, kind: IntentKind) -> String {
         IntentKind::Deny { hex, distance } => {
             format!("deny the waters within {distance} hexes of {hex}")
         }
+        // Decision 0218, 11.
+        IntentKind::Patrol { hex, distance } => sim_core::command::patrol_words(hex, distance),
         IntentKind::StrikeShips { base } => {
             format!("strike ships from {}", base_words(view, base))
         }

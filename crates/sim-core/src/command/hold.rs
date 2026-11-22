@@ -184,6 +184,19 @@ impl World {
                 .any(|intent| self.may_use_land_unit(side, intent.id, *target));
             return usable.then(|| vec![HoldTarget::LandUnit(*target)]);
         }
+        // A submarine some intent in force may use (a patrol, decision 0218,
+        // 12) or names in its forces limit (decision 0218, 34).
+        if let OrderKind::Submarine { target, .. } = &request.kind {
+            let usable = self.command[&side].intents_in_force().any(|intent| {
+                self.may_use_submarine(side, intent.id, *target)
+                    || intent
+                        .limits
+                        .forces
+                        .as_ref()
+                        .is_some_and(|forces| forces.submarines.contains(target))
+            });
+            return usable.then(|| vec![HoldTarget::Submarine(*target)]);
+        }
         match &request.kind {
             // A word about the radio does not take a force out of the
             // staff's hands (decision 0136, 15).

@@ -226,6 +226,7 @@ fn forces(ship_list: &[u32], force_list: &[u32]) -> ForcesLimit {
         air_groups: BTreeSet::new(),
         land_units: BTreeSet::new(),
         source: Some(base(1)),
+        submarines: Default::default(),
     }
 }
 
@@ -2204,6 +2205,7 @@ fn two_worlds_differing_in_the_other_side(other: Side) -> (World, World) {
                 air_groups: BTreeSet::new(),
                 land_units: BTreeSet::new(),
                 source: Some(base(enemy_base)),
+                submarines: Default::default(),
             },
         }),
     );
@@ -5125,4 +5127,460 @@ fn a_reasons_cites_become_causes_of_its_order_and_its_reason() {
         })
         .expect("the order is answered");
     assert!(order_event.causes.contains(&Cause::Event(answered)));
+}
+
+// ---------------------------------------------------------------------------
+// Decision 0218, stage 3: the patrol order, a hold on a boat and a forces
+// limit naming boats, and the override of a direct order to a boat.
+// ---------------------------------------------------------------------------
+
+fn sub(n: u32) -> crate::ids::SubmarineId {
+    crate::ids::SubmarineId::new(n)
+}
+
+/// A boat of `side` at (5,0), sound, with base 1 or base 9 as her home.
+fn boat_of_side(n: u32, side: Side) -> crate::state::Submarine {
+    crate::state::Submarine {
+        id: sub(n),
+        name: format!("Boat {n}"),
+        side,
+        class: crate::ids::SubmarineClassId::new(1),
+        hex: Hex::new(5, 0),
+        station: Hex::new(5, 0),
+        passage: None,
+        salvoes: 2,
+        held_down_until: None,
+        condition: crate::state::SubmarineCondition::Sound,
+        home: if side == A { base(1) } else { base(9) },
+        leave_day: None,
+        enters_day: None,
+        available_from: None,
+        station_order: None,
+    }
+}
+
+const PATROL_HEX: Hex = Hex::new(5, 0);
+
+fn patrol_kind() -> IntentKind {
+    IntentKind::Patrol {
+        hex: PATROL_HEX,
+        distance: 3,
+    }
+}
+
+fn set_patrol(n: u32) -> CommandKind {
+    CommandKind::SetIntent {
+        intent: intent(n),
+        kind: patrol_kind(),
+    }
+}
+
+fn boat_limit(boats: &[u32]) -> ForcesLimit {
+    ForcesLimit {
+        submarines: boats.iter().map(|b| sub(*b)).collect(),
+        source: None,
+        ..forces(&[], &[])
+    }
+}
+
+fn station_order(boat: u32) -> OrderKind {
+    OrderKind::Submarine {
+        target: sub(boat),
+        order: crate::orders::SubmarineOrder::Station(Hex::new(6, 0)),
+    }
+}
+
+/// The Allied boats 1 and 2 and the Japanese boat 3, in `world()`.
+fn world_with_boats() -> World {
+    let mut world = world();
+    for (n, side) in [(1, A), (2, A), (3, J)] {
+        world.truth.submarines.insert(sub(n), boat_of_side(n, side));
+    }
+    world
+}
+
+/// A world whose Allied side states a patrol as intent 1 and has approved
+/// its plan twice, so it is released.
+fn world_patrolling() -> World {
+    let mut world = world_with_boats();
+    player(&mut world, set_patrol(1)).unwrap();
+    player(&mut world, CommandKind::Approve { plan: plan(1) }).unwrap();
+    player(&mut world, CommandKind::Approve { plan: plan(1) }).unwrap();
+    world
+}
+
+#[test]
+fn a_patrol_is_a_root_the_commander_states_and_it_is_refused_off_the_map() {
+    let mut world = world_with_boats();
+    player(&mut world, set_patrol(1)).unwrap();
+    let found = &state(&world, A).intents[&intent(1)];
+    assert_eq!(found.kind, patrol_kind());
+    assert_eq!(found.maker, Maker::Commander);
+    assert_eq!(found.addressee, Addressee::Area);
+    assert_eq!(found.parent, None);
+    assert_eq!(patrol_kind().code(), 16);
+    assert_eq!(patrol_kind().name(), "patrol");
+    // Its figures may change and not its kind.
+    player(
+        &mut world,
+        CommandKind::SetIntent {
+            intent: intent(1),
+            kind: IntentKind::Patrol {
+                hex: Hex::new(6, 0),
+                distance: 1,
+            },
+        },
+    )
+    .unwrap();
+    refused(
+        &mut world,
+        Issuer::Player,
+        CommandKind::SetIntent {
+            intent: intent(1),
+            kind: keep_supplied(1),
+        },
+        CommandRefusal::KindCannotChange(intent(1)),
+    );
+    // A hex off the map.
+    let mut world = world_with_boats();
+    let off = Hex::new(99, 99);
+    refused(
+        &mut world,
+        Issuer::Player,
+        CommandKind::SetIntent {
+            intent: intent(1),
+            kind: IntentKind::Patrol {
+                hex: off,
+                distance: 2,
+            },
+        },
+        CommandRefusal::NotOnMap(off),
+    );
+}
+
+#[test]
+fn a_patrol_is_worded_with_its_hexes_and_the_staff_cannot_form_it() {
+    assert_eq!(
+        crate::command::patrol_words(Hex::new(5, 0), 3),
+        "patrol the waters within 3 hexes of (5,0) with submarines"
+    );
+    assert_eq!(
+        crate::command::patrol_words(Hex::new(5, 0), 1),
+        "patrol the waters within 1 hex of (5,0) with submarines"
+    );
+    assert!(
+        set_patrol(1).to_string().contains("with submarines"),
+        "{}",
+        set_patrol(1)
+    );
+    // The staff cannot form one under an intent in force with a released
+    // plan: it stands under nothing.
+    let mut world = staffed_world();
+    refused(
+        &mut world,
+        Issuer::Staff,
+        CommandKind::FormIntent {
+            parent: intent(1),
+            kind: patrol_kind(),
+        },
+        CommandRefusal::CannotStandUnder(intent(1)),
+    );
+    // Nothing stands under a patrol.
+    let mut world = world_patrolling();
+    refused(
+        &mut world,
+        Issuer::Staff,
+        CommandKind::FormIntent {
+            parent: intent(1),
+            kind: keep_supplied(1),
+        },
+        CommandRefusal::CannotStandUnder(intent(1)),
+    );
+    refused(
+        &mut world,
+        Issuer::Staff,
+        CommandKind::FormIntent {
+            parent: intent(1),
+            kind: patrol_kind(),
+        },
+        CommandRefusal::CannotStandUnder(intent(1)),
+    );
+}
+
+#[test]
+fn a_hold_may_hold_a_boat_and_a_release_frees_her() {
+    let mut world = world_with_boats();
+    let held = HoldTarget::Submarine(sub(1));
+    assert_eq!(held.code(), 6);
+    assert_eq!(held.to_string(), "submarine:1");
+    player(&mut world, hold(held)).unwrap();
+    assert_eq!(
+        state(&world, A).holds[&held],
+        Hold {
+            day: 1,
+            by: HoldMaker::Command
+        }
+    );
+    refused(
+        &mut world,
+        Issuer::Player,
+        hold(held),
+        CommandRefusal::AlreadyHeld(held),
+    );
+    player(&mut world, release(held)).unwrap();
+    assert!(state(&world, A).holds.is_empty());
+    refused(
+        &mut world,
+        Issuer::Player,
+        release(held),
+        CommandRefusal::NotHeld(held),
+    );
+    // An enemy boat, one that does not exist, and a sunk one: one reason.
+    let mut world = world_with_boats();
+    world.truth.submarines.get_mut(&sub(2)).unwrap().condition =
+        crate::state::SubmarineCondition::Sunk;
+    for boat in [3, 99, 2] {
+        refused(
+            &mut world,
+            Issuer::Player,
+            hold(HoldTarget::Submarine(sub(boat))),
+            CommandRefusal::NotYourSubmarine(sub(boat)),
+        );
+    }
+}
+
+#[test]
+fn a_forces_limit_may_name_boats_and_refuses_one_not_the_sides() {
+    let mut world = world_with_boats();
+    player(&mut world, set_patrol(1)).unwrap();
+    player(&mut world, set_forces(1, boat_limit(&[1]))).unwrap();
+    let set = state(&world, A).intents[&intent(1)]
+        .limits
+        .forces
+        .clone()
+        .unwrap();
+    assert_eq!(set.submarines, [sub(1)].into_iter().collect());
+    // Not the side's (the enemy's, or none), or sunk: refused in boat order,
+    // after the other kinds.
+    world.truth.submarines.get_mut(&sub(2)).unwrap().condition =
+        crate::state::SubmarineCondition::Sunk;
+    for boat in [3, 99, 2] {
+        refused(
+            &mut world,
+            Issuer::Player,
+            set_forces(1, boat_limit(&[1, boat])),
+            CommandRefusal::NotYourSubmarine(sub(boat)),
+        );
+    }
+    // A land unit refusal comes before a boat's.
+    let mut both = boat_limit(&[99]);
+    both.land_units = [LandUnitId::new(77)].into_iter().collect();
+    refused(
+        &mut world,
+        Issuer::Player,
+        set_forces(1, both),
+        CommandRefusal::NotYourLandUnit(LandUnitId::new(77)),
+    );
+}
+
+#[test]
+fn a_boat_in_a_forces_limit_is_inside_the_parents_limit_or_the_parent_names_none() {
+    // The narrowing check is on an intent with a parent: a "take a place"
+    // is the one root under which the staff may form tasks with forces, so
+    // the check is read on the function itself.
+    let mut world = world_patrolling();
+    let parent = intent(1);
+    // No limit naming a boat on the parent's chain: any boat of the side.
+    assert!(world.command[&A].submarines_on_chain(parent).is_none());
+    let any = boat_limit(&[1, 2]);
+    assert!(world.forces_narrow(A, parent, &any));
+    // A limit naming boat 1 only: boat 2 is wider.
+    player(&mut world, set_forces(1, boat_limit(&[1]))).unwrap();
+    assert!(world.forces_narrow(A, parent, &boat_limit(&[1])));
+    assert!(!world.forces_narrow(A, parent, &boat_limit(&[1, 2])));
+    assert!(!world.forces_narrow(A, parent, &boat_limit(&[2])));
+}
+
+#[test]
+fn a_staffs_station_order_to_a_boat_is_inside_a_patrol_that_may_use_her() {
+    // A patrol with no limit naming a boat may use every boat of the side.
+    let mut world = world_patrolling();
+    assert_eq!(staff_order_answer(&mut world, station_order(1)), None);
+    assert_eq!(staff_order_answer(&mut world, station_order(2)), None);
+    // Not the enemy's boat: it is not the side's.
+    assert_eq!(
+        staff_order_answer(&mut world, station_order(3)),
+        Some(RejectReason::OutsideForcesLimit)
+    );
+    // A limit naming boat 1 binds: boat 2 is outside it.
+    player(&mut world, set_forces(1, boat_limit(&[1]))).unwrap();
+    assert_eq!(staff_order_answer(&mut world, station_order(1)), None);
+    assert_eq!(
+        staff_order_answer(&mut world, station_order(2)),
+        Some(RejectReason::OutsideForcesLimit)
+    );
+    // A limit naming only ships or groups does not bind the boats.
+    let mut world = world_patrolling();
+    player(&mut world, set_forces(1, forces(&[5], &[1]))).unwrap();
+    assert_eq!(staff_order_answer(&mut world, station_order(2)), None);
+    // A held boat: the staff's order to her is refused as held.
+    let mut world = world_patrolling();
+    player(&mut world, hold(HoldTarget::Submarine(sub(1)))).unwrap();
+    assert_eq!(
+        staff_order_answer(&mut world, station_order(1)),
+        Some(RejectReason::Held(HoldTarget::Submarine(sub(1))))
+    );
+    assert_eq!(staff_order_answer(&mut world, station_order(2)), None);
+    // Released, she is free for the staff again.
+    player(&mut world, release(HoldTarget::Submarine(sub(1)))).unwrap();
+    assert_eq!(staff_order_answer(&mut world, station_order(1)), None);
+}
+
+#[test]
+fn a_staffs_order_to_a_boat_under_any_other_intent_is_outside_the_forces_limit() {
+    // Intent 1 is a "keep supplied", with a forces limit that names a boat
+    // all the same: only a patrol may use a boat.
+    let mut world = staffed_world();
+    world.truth.submarines.insert(sub(1), boat_of_side(1, A));
+    let mut limit = forces(&[5, 6], &[1]);
+    limit.submarines = [sub(1)].into_iter().collect();
+    player(&mut world, set_forces(1, limit)).unwrap();
+    assert_eq!(
+        staff_order_answer(&mut world, station_order(1)),
+        Some(RejectReason::OutsideForcesLimit)
+    );
+}
+
+#[test]
+fn a_direct_order_to_a_boat_a_patrol_may_use_is_taken_in_at_once_and_holds_her() {
+    let mut world = world_patrolling();
+    world.submit_orders(A, vec![commander_order(station_order(1))]);
+    let at_step = world.at_staff_step();
+    let id = *at_step.orders.keys().next().expect("the order is numbered");
+    assert!(at_step.pending[&A].is_empty());
+    assert_eq!(
+        state(&at_step, A).holds,
+        BTreeMap::from([(
+            HoldTarget::Submarine(sub(1)),
+            Hold {
+                day: 1,
+                by: HoldMaker::Order(id)
+            }
+        )])
+    );
+    let accepted = events_of(&at_step, |k| matches!(k, EventKind::OrderAccepted { .. }));
+    assert_eq!(accepted.len(), 1);
+    let held = events_of(&at_step, held_by_order);
+    assert_eq!(held.len(), 1);
+    assert_eq!(
+        held[0].kind,
+        EventKind::HeldByOrder {
+            side: A,
+            target: HoldTarget::Submarine(sub(1)),
+            order: id
+        }
+    );
+    assert_eq!(
+        held[0].causes,
+        vec![Cause::Order(id), Cause::Event(accepted[0].id)]
+    );
+    // The original world is untouched.
+    assert!(state(&world, A).holds.is_empty());
+    // A boat already held gets no second hold.
+    let mut world = world_patrolling();
+    player(&mut world, hold(HoldTarget::Submarine(sub(1)))).unwrap();
+    world.submit_orders(A, vec![commander_order(station_order(1))]);
+    let at_step = world.at_staff_step();
+    assert!(events_of(&at_step, held_by_order).is_empty());
+    assert_eq!(
+        state(&at_step, A).holds[&HoldTarget::Submarine(sub(1))].by,
+        HoldMaker::Command
+    );
+}
+
+#[test]
+fn a_direct_order_to_a_boat_no_intent_names_or_may_use_holds_nothing() {
+    // A side with no intent in force is untouched.
+    let mut world = world_with_boats();
+    world.submit_orders(A, vec![commander_order(station_order(1))]);
+    let pending = world.pending.clone();
+    let at_step = world.at_staff_step();
+    assert_eq!(at_step.pending, pending);
+    assert!(events_of(&at_step, held_by_order).is_empty());
+    // A patrol whose limit names boat 1 does not hold boat 2: the order to
+    // her stays pending for step 5.
+    let mut world = world_patrolling();
+    player(&mut world, set_forces(1, boat_limit(&[1]))).unwrap();
+    world.submit_orders(A, vec![commander_order(station_order(2))]);
+    let at_step = world.at_staff_step();
+    assert!(state(&at_step, A).holds.is_empty());
+    assert_eq!(at_step.pending[&A].len(), 1);
+    // A "keep supplied" that names the boat in its forces limit holds her.
+    let mut world = staffed_world();
+    world.truth.submarines.insert(sub(1), boat_of_side(1, A));
+    let mut limit = forces(&[5, 6], &[1]);
+    limit.submarines = [sub(1)].into_iter().collect();
+    player(&mut world, set_forces(1, limit)).unwrap();
+    world.submit_orders(A, vec![commander_order(station_order(1))]);
+    let at_step = world.at_staff_step();
+    assert!(state(&at_step, A)
+        .holds
+        .contains_key(&HoldTarget::Submarine(sub(1))));
+}
+
+#[test]
+fn a_forces_limit_with_no_boat_hashes_as_it_did_and_one_with_a_boat_does_not() {
+    let base_world = world_with_boats();
+    let plain = |boats: &[u32]| {
+        let mut world = base_world.clone();
+        player(&mut world, set_patrol(1)).unwrap();
+        player(&mut world, set_forces(1, boat_limit(boats))).unwrap();
+        world.state_hash()
+    };
+    // The bytes written for a limit with no boat are the ones the layout
+    // wrote before: a hasher fed the limit's fields and nothing more.
+    assert_eq!(plain(&[]), plain(&[]));
+    assert_ne!(plain(&[]), plain(&[1]));
+    assert_ne!(plain(&[1]), plain(&[2]));
+    assert_ne!(plain(&[1]), plain(&[1, 2]));
+    // A patrol hashes by its hex and its distance.
+    let hash_of = |kind: IntentKind| {
+        let mut world = base_world.clone();
+        player(
+            &mut world,
+            CommandKind::SetIntent {
+                intent: intent(1),
+                kind,
+            },
+        )
+        .unwrap();
+        world.state_hash()
+    };
+    assert_ne!(
+        hash_of(patrol_kind()),
+        hash_of(IntentKind::Patrol {
+            hex: PATROL_HEX,
+            distance: 4
+        })
+    );
+    assert_ne!(
+        hash_of(patrol_kind()),
+        hash_of(IntentKind::Patrol {
+            hex: Hex::new(6, 0),
+            distance: 3
+        })
+    );
+}
+
+#[test]
+fn a_hold_on_a_boat_changes_the_hash() {
+    let base_world = world_with_boats();
+    let hash = base_world.state_hash();
+    let mut world = base_world.clone();
+    player(&mut world, hold(HoldTarget::Submarine(sub(1)))).unwrap();
+    let held = world.state_hash();
+    assert_ne!(held, hash);
+    let mut other = base_world;
+    player(&mut other, hold(HoldTarget::Submarine(sub(2)))).unwrap();
+    assert_ne!(other.state_hash(), held);
 }

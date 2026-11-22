@@ -353,6 +353,11 @@ pub enum TaskShown {
         hex: Hex,
         distance: u32,
     },
+    /// Decision 0218, 11: patrol the waters with submarines.
+    Patrol {
+        hex: Hex,
+        distance: u32,
+    },
     StrikeShips {
         base: BaseShown,
     },
@@ -882,6 +887,13 @@ impl<'a> Naming<'a> {
                 "deny the waters within {distance} hexes of {}",
                 self.place(*hex)
             ),
+            TaskShown::Patrol { hex, distance } => {
+                let hexes = if *distance == 1 { "hex" } else { "hexes" };
+                format!(
+                    "patrol the waters within {distance} {hexes} of {} with submarines",
+                    self.place(*hex)
+                )
+            }
             TaskShown::StrikeShips { base } => {
                 format!("strike ships from {}", self.base_shown(base))
             }
@@ -952,6 +964,7 @@ impl<'a> Naming<'a> {
             TaskShown::Neutralise { target } => ("neutralise", None, None, None, vec![target]),
             TaskShown::Raid { base, target } => ("raid", None, None, None, vec![base, target]),
             TaskShown::Deny { hex, .. } => ("deny", Some(*hex), None, None, vec![]),
+            TaskShown::Patrol { hex, .. } => ("patrol", Some(*hex), None, None, vec![]),
             TaskShown::StrikeShips { base } => ("strike_ships", None, None, None, vec![base]),
             TaskShown::SearchWaters { base } => ("search_waters", None, None, None, vec![base]),
             TaskShown::StandAt { force, hex } => {

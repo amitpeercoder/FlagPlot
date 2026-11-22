@@ -754,8 +754,9 @@ pub enum OrderKind {
     },
 }
 
-/// An order to a submarine (decision 0218). The patrol order, holds and
-/// forces limits that name a boat are the third stage's.
+/// An order to a submarine (decision 0218). The patrol order, a hold on a
+/// boat and a forces limit that names boats are stage 3's (see
+/// [`crate::command::IntentKind::Patrol`]).
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum SubmarineOrder {
     /// Go to this hex and keep it (rules 3, 43). Accepted for a boat of the

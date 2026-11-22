@@ -868,7 +868,8 @@ fn name_every_field(world: &World) {
                 HoldTarget::Ship(_)
                 | HoldTarget::TaskForce(_)
                 | HoldTarget::AirGroup(_)
-                | HoldTarget::LandUnit(_) => {}
+                | HoldTarget::LandUnit(_)
+                | HoldTarget::Submarine(_) => {}
                 HoldTarget::Setting {
                     group: _,
                     setting: _,
@@ -1046,6 +1047,10 @@ fn name_intent_kind(kind: IntentKind) {
         | IntentKind::ControlIsland {
             island: _,
             by_day: _,
+        }
+        | IntentKind::Patrol {
+            hex: _,
+            distance: _,
         } => {}
     }
 }
@@ -1075,6 +1080,7 @@ fn name_limits(limits: &IntentLimits) {
         air_groups: _,
         source: _,
         land_units: _,
+        submarines: _,
     }) = forces
     {}
 }
@@ -1145,6 +1151,13 @@ fn hash_intent_kind(h: &mut StateHasher, kind: IntentKind) {
         IntentKind::ControlIsland { island, by_day } => {
             h.u32(island);
             h.optional_u32(by_day);
+        }
+        // Decision 0218, 11: the hex, then the distance. A game with no
+        // patrol never writes it.
+        IntentKind::Patrol { hex, distance } => {
+            h.i32(hex.q);
+            h.i32(hex.r);
+            h.u32(distance);
         }
     }
 }
@@ -1248,6 +1261,17 @@ fn hash_forces(h: &mut StateHasher, forces: &ForcesLimit) {
     h.count(forces.land_units.len());
     for unit in &forces.land_units {
         h.u32(unit.raw());
+    }
+    // Decision 0218, 12 and 34, written only where the set is not empty (a
+    // tag byte, the count, then each boat), so that a game with no boat in a
+    // forces limit writes nothing here and its hash is what it was, and the
+    // layout's version is not raised.
+    if !forces.submarines.is_empty() {
+        h.u8(6);
+        h.count(forces.submarines.len());
+        for boat in &forces.submarines {
+            h.u32(boat.raw());
+        }
     }
 }
 
@@ -1611,6 +1635,7 @@ fn hash_command_state(h: &mut StateHasher, state: &CommandState) {
             }
             HoldTarget::AirGroup(group) => h.u32(group.raw()),
             HoldTarget::LandUnit(unit) => h.u32(unit.raw()),
+            HoldTarget::Submarine(boat) => h.u32(boat.raw()),
         }
         h.u32(hold.day);
         match hold.by {
@@ -2635,5 +2660,49 @@ mod tests {
         let mut present = StateHasher::new();
         present.optional_u32(Some(0));
         assert_ne!(absent.finish(), present.finish());
+    }
+
+    /// Decision 0218, 12 and 34: a forces limit naming no boat writes the
+    /// bytes it wrote before boats could be named (the five fields, in their
+    /// order, and nothing after), so no game without a boat in a limit
+    /// changes its hash; one naming boats appends a tag, the count and the
+    /// boats.
+    #[test]
+    fn a_forces_limit_with_no_boat_writes_what_it_wrote_before_boats() {
+        use crate::ids::{AirGroupId, BaseId, LandUnitId, ShipId, SubmarineId, TaskForceId};
+        let mut limit = ForcesLimit {
+            ships: [ShipId::new(5)].into_iter().collect(),
+            task_forces: [TaskForceId::new(2)].into_iter().collect(),
+            air_groups: [AirGroupId::new(7)].into_iter().collect(),
+            source: Some(BaseId::new(1)),
+            land_units: [LandUnitId::new(9)].into_iter().collect(),
+            submarines: std::collections::BTreeSet::new(),
+        };
+        // The layout as it was: ships, task forces, air groups, the source,
+        // the land units.
+        let mut before = StateHasher::new();
+        before.count(1);
+        before.u32(5);
+        before.count(1);
+        before.u32(2);
+        before.count(1);
+        before.u32(7);
+        before.optional_u32(Some(1));
+        before.count(1);
+        before.u32(9);
+        let mut now = StateHasher::new();
+        hash_forces(&mut now, &limit);
+        assert_eq!(now.finish(), before.finish());
+        // With boats: the same bytes, then a tag, the count and each boat.
+        limit.submarines = [SubmarineId::new(4), SubmarineId::new(2)]
+            .into_iter()
+            .collect();
+        before.u8(6);
+        before.count(2);
+        before.u32(2);
+        before.u32(4);
+        let mut with = StateHasher::new();
+        hash_forces(&mut with, &limit);
+        assert_eq!(with.finish(), before.finish());
     }
 }

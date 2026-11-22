@@ -25,13 +25,13 @@
 //! | `add_run` | `plan`, `ships`, `load_t`, `days` (`load`, `sail`, `arrive`, `free`) |
 //! | `time_run` | `plan`, `run`, `days` |
 //! | `mark_plan` | `plan`, `outcome` (`complete` or `failed`) |
-//! | `hold`, `release` | one of `ship`, `task_force`, `air_group` or `land_unit`; with `air_group`, `setting` (`search_arc`) holds that setting alone and no `setting` holds the whole group |
+//! | `hold`, `release` | one of `ship`, `task_force`, `air_group`, `land_unit` or `submarine`; with `air_group`, `setting` (`search_arc`) holds that setting alone and no `setting` holds the whole group |
 //! | `end_run` | `plan`, `run` |
 //! | `set_interrupt` | `interrupt`, `base`, `below_days` (a threshold set), or `standing` (`cannot_meet`, `waits_for_leave`, `ship_lost`, `cannot_bring_enough`, `lift_turned_back` or `asks_leave_to_pursue`) and `on` |
 //! | `acknowledge` | `interrupt`, or `standing` with one of `plan`, `ship` or `task_force` |
 //!
 //! The limits: `forces` has `intent` and `ships`, `task_forces`, `air_groups`,
-//! `land_units` and `source` (each left out when empty or not set, and each read as empty
+//! `land_units`, `submarines` and `source` (each left out when empty or not set, and each read as empty
 //! or not set when absent);
 //! `area` has `intent`, `hexes` as `[[q, r], ...]`; `priority` has `intent`
 //! and `rank` (`null` for unranked); `protected` has `intent`, `ships`;
@@ -73,7 +73,8 @@ use sim_core::command::{
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
 use sim_core::ids::{
-    AirGroupId, BaseId, EntityRef, IntentId, InterruptId, LandUnitId, ShipId, TaskForceId,
+    AirGroupId, BaseId, EntityRef, IntentId, InterruptId, LandUnitId, ShipId, SubmarineId,
+    TaskForceId,
 };
 use sim_core::refdata::ShipKind;
 
@@ -311,6 +312,7 @@ fn target_to_json(body: &mut Value, target: HoldTarget) {
         HoldTarget::Ship(ship) => body["ship"] = json!(ship.raw()),
         HoldTarget::TaskForce(force) => body["task_force"] = json!(force.raw()),
         HoldTarget::LandUnit(unit) => body["land_unit"] = json!(unit.raw()),
+        HoldTarget::Submarine(boat) => body["submarine"] = json!(boat.raw()),
         HoldTarget::Setting { group, setting } => {
             body["air_group"] = json!(group.raw());
             body["setting"] = json!(setting.name());
@@ -319,7 +321,7 @@ fn target_to_json(body: &mut Value, target: HoldTarget) {
 }
 
 fn target_from_json(value: &Value) -> Result<HoldTarget, String> {
-    let named: Vec<&str> = ["ship", "task_force", "air_group", "land_unit"]
+    let named: Vec<&str> = ["ship", "task_force", "air_group", "land_unit", "submarine"]
         .into_iter()
         .filter(|key| value.get(key).is_some())
         .collect();
@@ -333,6 +335,10 @@ fn target_from_json(value: &Value) -> Result<HoldTarget, String> {
             value,
             "land_unit",
         )?))),
+        ["submarine"] => Ok(HoldTarget::Submarine(SubmarineId::new(small(
+            value,
+            "submarine",
+        )?))),
         ["air_group"] => {
             let group = AirGroupId::new(small(value, "air_group")?);
             match value.get("setting") {
@@ -344,11 +350,11 @@ fn target_from_json(value: &Value) -> Result<HoldTarget, String> {
             }
         }
         [] => Err(
-            "a hold names one of \"ship\", \"task_force\", \"air_group\" or \"land_unit\""
+            "a hold names one of \"ship\", \"task_force\", \"air_group\", \"land_unit\" or \"submarine\""
                 .to_string(),
         ),
         _ => Err(
-            "a hold names only one of \"ship\", \"task_force\", \"air_group\" and \"land_unit\""
+            "a hold names only one of \"ship\", \"task_force\", \"air_group\", \"land_unit\" and \"submarine\""
                 .to_string(),
         ),
     }
@@ -453,6 +459,11 @@ fn limit_to_json(limit: &Limit) -> Value {
             if !limit.land_units.is_empty() {
                 body["land_units"] =
                     json!(limit.land_units.iter().map(|u| u.raw()).collect::<Vec<_>>());
+            }
+            // Decision 0218, 12: left out when empty.
+            if !limit.submarines.is_empty() {
+                body["submarines"] =
+                    json!(limit.submarines.iter().map(|b| b.raw()).collect::<Vec<_>>());
             }
             if let Some(source) = limit.source {
                 body["source"] = json!(source.raw());
@@ -573,6 +584,10 @@ fn limit_from_json(value: &Value) -> Result<Limit, String> {
                     .map(LandUnitId::new)
                     .collect(),
                 source: small_opt(value, "source")?.map(BaseId::new),
+                submarines: numbers_or_none(value, "submarines")?
+                    .into_iter()
+                    .map(SubmarineId::new)
+                    .collect(),
             },
         }),
         "area" => Ok(Limit::Area {
@@ -663,6 +678,12 @@ fn intent_kind_to_json(body: &mut Value, kind: IntentKind) {
             body["target"] = json!(target.raw());
         }
         IntentKind::Deny { hex, distance } => {
+            body["intent_kind"] = json!(kind.name());
+            body["hex"] = json!([hex.q, hex.r]);
+            body["distance"] = json!(distance);
+        }
+        // Decision 0218, 11.
+        IntentKind::Patrol { hex, distance } => {
             body["intent_kind"] = json!(kind.name());
             body["hex"] = json!([hex.q, hex.r]);
             body["distance"] = json!(distance);
@@ -783,6 +804,10 @@ fn intent_kind_from_json(value: &Value) -> Result<IntentKind, String> {
                 hex: hex_pair(value, "hex")?,
                 distance: small(value, "distance")?,
             }),
+            "patrol" => Ok(IntentKind::Patrol {
+                hex: hex_pair(value, "hex")?,
+                distance: small(value, "distance")?,
+            }),
             "strike_ships" => Ok(IntentKind::StrikeShips { base: base()? }),
             "search_waters" => Ok(IntentKind::SearchWaters { base: base()? }),
             "stand_at" => Ok(IntentKind::StandAt {
@@ -815,7 +840,7 @@ fn intent_kind_from_json(value: &Value) -> Result<IntentKind, String> {
                 target: target()?,
             }),
             other => Err(format!(
-                "unknown intent kind \"{other}\" (keep_supplied, cover, hold, neutralise, raid, deny, strike_ships, search_waters, stand_at, operate_carriers, ready_landing, build_up, take_place, control_island or bombard)"
+                "unknown intent kind \"{other}\" (keep_supplied, cover, hold, neutralise, raid, deny, strike_ships, search_waters, stand_at, operate_carriers, ready_landing, build_up, take_place, control_island, bombard or patrol)"
             )),
         },
     }
@@ -1636,6 +1661,34 @@ mod tests {
             CommandKind::Release {
                 target: HoldTarget::LandUnit(LandUnitId::new(4)),
             },
+            // Decision 0218, stage 3: the patrol, a hold on a boat and a
+            // forces limit naming boats.
+            CommandKind::SetIntent {
+                intent,
+                kind: IntentKind::Patrol {
+                    hex: Hex::new(-3, 4),
+                    distance: 2,
+                },
+            },
+            CommandKind::Hold {
+                target: HoldTarget::Submarine(SubmarineId::new(6)),
+            },
+            CommandKind::Release {
+                target: HoldTarget::Submarine(SubmarineId::new(6)),
+            },
+            CommandKind::SetLimit(Limit::Forces {
+                intent,
+                limit: ForcesLimit {
+                    ships: BTreeSet::new(),
+                    task_forces: BTreeSet::new(),
+                    air_groups: BTreeSet::new(),
+                    land_units: BTreeSet::new(),
+                    source: None,
+                    submarines: [SubmarineId::new(6), SubmarineId::new(2)]
+                        .into_iter()
+                        .collect(),
+                },
+            }),
             CommandKind::WithdrawIntent { intent },
             CommandKind::SetLimit(Limit::Forces {
                 intent,
@@ -1647,6 +1700,7 @@ mod tests {
                     air_groups: BTreeSet::new(),
                     land_units: BTreeSet::new(),
                     source: Some(BaseId::new(2)),
+                    submarines: Default::default(),
                 },
             }),
             CommandKind::SetLimit(Limit::Forces {
@@ -1659,6 +1713,7 @@ mod tests {
                         .collect(),
                     land_units: BTreeSet::new(),
                     source: None,
+                    submarines: Default::default(),
                 },
             }),
             CommandKind::SetLimit(Limit::Forces {
@@ -1671,6 +1726,7 @@ mod tests {
                         .into_iter()
                         .collect(),
                     source: Some(BaseId::new(1)),
+                    submarines: Default::default(),
                 },
             }),
             CommandKind::SetLimit(Limit::Area {
@@ -2170,6 +2226,7 @@ mod tests {
                     air_groups: BTreeSet::new(),
                     land_units: BTreeSet::new(),
                     source: Some(BaseId::new(2)),
+                    submarines: Default::default(),
                 }
             }))
         );
@@ -2183,6 +2240,7 @@ mod tests {
                     .collect(),
                 land_units: BTreeSet::new(),
                 source: None,
+                submarines: Default::default(),
             },
         }));
         assert_eq!(

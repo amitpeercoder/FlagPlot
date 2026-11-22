@@ -946,8 +946,48 @@ mod tests {
                             air_groups: [sim_core::ids::AirGroupId::new(5)].into_iter().collect(),
                             land_units: [sim_core::ids::LandUnitId::new(2)].into_iter().collect(),
                             source: Some(BaseId::new(1)),
+                            submarines: Default::default(),
                         },
                     }),
+                ),
+                // Decision 0218, stage 3: the patrol, a limit naming boats
+                // and a hold on a boat.
+                (
+                    Side::Japanese,
+                    CommandKind::SetIntent {
+                        intent: IntentId::new(7),
+                        kind: IntentKind::Patrol {
+                            hex: Hex::new(4, -1),
+                            distance: 3,
+                        },
+                    },
+                ),
+                (
+                    Side::Japanese,
+                    CommandKind::SetLimit(Limit::Forces {
+                        intent: IntentId::new(7),
+                        limit: ForcesLimit {
+                            ships: Default::default(),
+                            task_forces: Default::default(),
+                            air_groups: Default::default(),
+                            land_units: Default::default(),
+                            source: None,
+                            submarines: [
+                                sim_core::ids::SubmarineId::new(2),
+                                sim_core::ids::SubmarineId::new(5),
+                            ]
+                            .into_iter()
+                            .collect(),
+                        },
+                    }),
+                ),
+                (
+                    Side::Japanese,
+                    CommandKind::Hold {
+                        target: sim_core::command::HoldTarget::Submarine(
+                            sim_core::ids::SubmarineId::new(5),
+                        ),
+                    },
                 ),
             ],
         );
@@ -1416,7 +1456,7 @@ mod tests {
             .expect("the file is JSON");
         assert_eq!(written["version"], 24);
         assert_eq!(written["doctrine_version"], sim_staff::DOCTRINE_VERSION);
-        assert_eq!(written["commands"].as_array().expect("commands").len(), 33);
+        assert_eq!(written["commands"].as_array().expect("commands").len(), 36);
         assert_eq!(written["staff"].as_array().expect("staff").len(), 1);
         let saved = read(&file).expect("reads");
         assert_eq!(saved.commands, commands);
