@@ -1,127 +1,127 @@
 # 0214: A force asks leave to go after what it has found
 
-Status: a plan by the architect, written on Nov 22, 2026, on the designer's idea at the table: "If a unit finds something that it believes should be getting its attention, it could be very interesting (and realistic) if it changes its plans to the thing it finds more important. For example, a carrier task force that had an assigned order to deny water at a certain location found a carrier force in another location while searching all around. It could then have a plan proposed to the commander, and if accepted, it will delay or cancel the previous order and prioritize the new order." Asked whether to plan it he said yes. It is to be read by a reviewer who has not seen it written before anything is built.
+Status: a plan by the architect, written on Nov 22, 2026, on the designer's idea at the table: "If a unit finds something that it believes should be getting its attention, it could be very interesting (and realistic) if it changes its plans to the thing it finds more important. For example, a carrier task force that had an assigned order to deny water at a certain location found a carrier force in another location while searching all around. It could then have a plan proposed to the commander, and if accepted, it will delay or cancel the previous order and prioritize the new order." Asked whether to plan it he said yes. It was read by a reviewer who had not seen it written; two of the designer's three first answers rested on things the review showed to be wrong, they were put to him again, and this is the plan rewritten on the review and his answers.
 
-Summary: Today a carrier force goes after a carrier it has found only as far as its order lets it, and what lies past that it leaves alone without a word. This has the staff say so: where a force has found something it would go after but for its order, the staff tells the commander what was found, where the force would go and what it would leave, and stops the clock. On his yes the force goes after that one contact, and when the contact is lost it goes back to its order by itself. How bold the order is decides whether the staff asks, goes and reports, or stays. It is the first use of a thing the step 3 spec has had from the start and that was never built: the staff proposes, and raises an interrupt.
+Summary: Today a carrier force goes after a carrier it has found only as far as its order lets it, and what lies past that it leaves alone without a word. This has the staff say so in the evening, before the day is played: where a force has found something it would go after but for how far it is or for the waters its order puts first, the staff tells the commander what was found, where the force would go and what order it would leave, and stops the clock. On his yes the force sails that night, and when it has nothing left to go after it goes back to its order by itself. Each order has a setting of its own for this: ask, go and report, or stay.
 
-Standing: Planned on Nov 22, 2026; to be reviewed.
+Standing: Planned on Nov 22, 2026; reviewed and rewritten the same day; confirmed by the designer on the points put to him. To be built.
 
 ## Why
 
-What is so today (rules chapter 8; `sim-staff`, `carrier.rs`):
+What is so today (rules chapters 1 and 8; `sim-staff`, `carrier.rs`):
 
-- **A carrier force already closes on what it finds, inside bounds.** Each morning a force with a bomber that can fly closes on a fresh contact, three pulses old or less, of a kind its risk lets it close on (a carrier at balanced, any kind at press, nothing at preserve), if the contact is within a night's steaming at full speed and its bombers' reach.
+- **A carrier force already closes on what it finds, inside bounds.** At each dusk a force with a bomber that can fly closes on a fresh contact, three pulses old or less, of a kind its risk lets it close on (a carrier at balanced, any kind at press, nothing at preserve), if the contact is within a night's steaming at full speed and its bombers' reach.
 - **Past the bounds it does nothing and says nothing:**
   - a contact too far for one night is left;
-  - where the order says its waters come first, a contact in the waters is preferred to a carrier outside them, "that is what the order says";
-  - a force at a station the staff chose for it is "not chosen again when a contact comes or goes, or the force would wander with every sighting" (decision 0202, rule 17);
-  - at balanced a contact that is not a carrier is not closed on.
-- **The commander is told nothing of any of it** but in the reason beside the day's orders. No notice of the staff's speaks of a contact found, and no interrupt stops on one.
-- **The staff is asked once a day, at dawn.** A sighting of the morning waits for the next dawn (decision 0130; decision 0155, item 4, ruled out asking the staff every pulse).
-- **The staff cannot ask the commander anything,** change an order of his, or form an order of its own. The nearest it comes is a plan that waits for leave to launch, and one rule that waits for leave and says each morning what it would do: a carrier force that could go and look, at preserve.
-- **The spec asked for more and it was never built:** "What needs the commander: an objective, an objective's date, and cancelling. The staff proposes it and raises an interrupt. A proposal never crosses a hard limit" and "While a proposal waits, the forces in it go on with the approved plan" (`docs/step3-spec.md`, the command contract).
+  - where the order says its waters come first, a contact in the waters is preferred to a carrier outside them.
+- **The staff is asked once a day, at dusk,** so a sighting of the morning or the afternoon is weighed that same evening. Commands to the staff given inside a day wait for the next dusk (decision 0156, rule 6).
+- **An interrupt stops a seat only after the day has been played.** A thing the staff says at dusk of one day is answered at dusk of the next, when the contact is four pulses old or more and no longer fresh.
+- **The commander is told nothing of a contact left alone** but in the reason beside the day's orders.
+- **Leaves exist:** leave to prepare and leave to launch, each a permission the commander gives or withholds on an order; "with no commander, as for the enemy, both are allowed" (`docs/step3-spec.md`).
 
 What the rows hold (`engagement_events.csv`):
 
-- **Commanders on the spot said what they had found and what they meant to do, and superiors answered.** At Midway the second carrier division's admiral signalled his plan for a dusk attack and the order followed (7632, 7633); Fletcher told Spruance to "proceed southwesterly and attack enemy carriers when definitely located" (2141); on 5 June Spruance chose between two contacts, "I chose the one to the northwest" (2160).
-- **They also held a strike for better word:** Fletcher at the Eastern Solomons, "pending more definite word" (155); Yorktown's group at Midway, "pending receipt of information on additional enemy carriers" (2151).
-- **A change on a sighting cost time.** The Tone plane's report reached Nagumo half an hour late, and his orders changed three times in the two hours after it (7640 to 7644, 7615 to 7618).
-- **And a force was turned from its task by its superior on what was found:** the convoy for Port Moresby (2503, 2518), Tanaka's at the Eastern Solomons (249, 390).
+- **A standing word given beforehand:** Fletcher told Spruance to "proceed southwesterly and attack enemy carriers when definitely located" (2141).
+- **Commanders on the spot chose for themselves** among what was found: on 5 June Spruance, "I chose the one to the northwest" (2160); the second carrier division announced its dusk attack and ordered it (7632, 7633).
+- **They held a strike for better word:** Fletcher at the Eastern Solomons, "pending more definite word" (155); Yorktown's group at Midway (2151).
+- **A superior turned a force from its task on what was found:** the convoy for Port Moresby (2503, 2518), Tanaka's at the Eastern Solomons (249, 390).
+- **No row here shows a commander asking a superior and being answered.** The rows support a word given beforehand at least as well as an asking each time; the setting of rule 4 is that word, and the asking is the table's.
 
 ## The rules
 
 ### What a force would go after
 
-1. **A find is a contact a carrier force would close on today but for a bound of its order.** At the staff's asking, for a carrier force that is not held, not on its way home and has a bomber that can fly, a find is a fresh contact of ships of a kind on the force's target list, as its order's limits give it, that the closing rule does not take up for one of these reasons and no other:
-   - **too far:** it lies beyond a night's steaming and reach, and within `pursuit_nights` nights of it;
-   - **the waters first:** the order prefers a contact in its waters and this one, of a more important kind, lies outside them;
-   - **a station kept:** the force is at a station the staff chose for it under a commander's order, and the contact is one the closing rule would take from a station of the commander's own;
-   - **the kind:** at balanced, a contact of a kind on the target list that is not a carrier.
-2. **Where a force has several finds it takes one:** the most important kind, then the nearest.
-3. **Nothing here crosses a hard limit.** A force that is held, a ship protected for another order, an order's forces limit and the fuel to go and come back at the risk's margin bind as they do today. A find the force has not the fuel for is not a find.
+1. **A find is the contact the closing rule would take were one bound of the order lifted.** It is looked for at dusk, for a carrier force where the closing rule runs (not held, not going home, not fuelling, with a bomber that can fly), under an order to operate carriers or to deny waters, and only where the rule as it stands closes on nothing and has nothing in reach. The rule is then worked again whole, with one bound lifted, and the contact it takes is the find:
+   - **too far:** the night's steaming taken as `pursuit_nights` nights;
+   - **the waters first:** the order's preference for its waters set aside.
+   Where both give a contact the too-far one is the find. Nothing else of the rule is lifted: the kinds a risk closes on, the fuel to go and come back at the risk's margin, and freshness are as they are.
+2. **A find never crosses a hard limit.** A contact outside the order's area limit, read up the tree, is not a find. A force that is held has none. The forces limit binds as today.
+3. **A force covering a landing has no find.** A carrier force that serves a take or an island stays with it.
 
 ### Ask, go, or stay
 
-4. **The order's risk says which,** read up the tree as risk is:
-   - **preserve: stay.** Nothing changes from today.
-   - **balanced: ask.** The staff asks leave (rules 6 to 9).
-   - **press: go and report.** The staff takes the leave as given and tells the commander (rule 10).
-5. **With command levels on, the force's commander moves it one step,** as his rating already moves the closing rule: a cautious man asks where the order says go, and stays where it says ask; a bold man goes where it says ask. With command levels off there is no such man and the order's risk stands.
+4. **Each order has a leave to pursue,** a third leave beside the leaves to prepare and to launch, set by the commander and read up the tree as they are. It has three values:
+   - **ask:** the staff asks leave for each find (rules 6 to 9);
+   - **go:** the staff takes the leave as given and tells the commander (rule 10);
+   - **stay:** nothing changes from today.
+   For a player it is ask unless he says otherwise. With no commander it is go, as the other leaves are given.
+5. **A find by the waters first is asked about even at go.** The preference is a limit the commander set, and only he sets it aside. With no commander nobody answers and the force stays.
 
 ### Asking leave
 
-6. **The staff hands in a notice that it asks leave to pursue:** the force; the contact, as the side holds it, with its kind, its age and where it was reported; the hex the force would close to and when it would be there by the engine's own forecast; which bound of rule 1 it is; and the order the force would leave.
-7. **That notice fires a standing interrupt,** new, which stops the clock as the others do and which the commander may switch off.
-8. **While it waits, the force goes on with its order,** as the spec says.
-9. **The commander answers for that force and that contact:** yes or no, by a command that is his alone. A yes is leave to pursue. A no is remembered: the staff does not ask again of that contact for that force. No answer is no leave, and the staff asks again each time it is asked while the find is still a find.
+6. **The staff hands in a notice that the force asks leave to pursue:** the force; the contact, with its kind, its age and where it was reported; the hex the force would close to and the hours to it by the engine's forecast; and the order the force would leave. It is raised only for a contact the commander's own picture holds.
+7. **That notice fires a standing interrupt,** new, whose subject is the force, and which the commander may switch off. **It stops the clock in the evening, before the day is played:** a seat that runs time is stopped at the dusk at which the staff would ask, with the day not yet resolved.
+8. **The commander answers for that force and that contact,** yes or no, by a command that is his alone. Given at that stop it is taken in at the same dusk, before the staff is asked, so the force sails that night. A no is kept for that contact while the side holds it. No answer is no leave; the force goes on with its order and the staff asks again at the next dusk if the find still stands.
+9. **Switching the interrupt off does not give leave.** It leaves the asking in the notices and the force where it is. The setting of rule 4 is what gives or withholds leave, and the table offers that, not the switch, where a player wants to stop being asked.
 
 ### Going after it
 
-10. **With leave, given or taken, the closing rule takes up that contact as if the bound were not there,** and nothing else of the rule changes: where it closes to, that it does not close when the contact is in reach, the fuel it must have. The staff's reason says it is a pursuit, by whose leave, and what order waits. Where the leave was taken (rule 4, press), the staff hands in a notice that the force pursues, which tells the commander and does not stop the clock unless he has asked that it should.
-11. **The order the force leaves is not withdrawn and not changed.** It waits. The force's other tasks under it are as the staff's rules leave them when a force is elsewhere.
-12. **The leave ends when the contact does:** when the side no longer holds it, or it is no longer fresh and the force has no newer word of it. The force then goes back to its hex by the rule that sends it back today, and the staff hands in a notice that the pursuit is ended. The commander may end it sooner by taking his leave back.
-13. **Cancelling the old order is the commander's to do,** by withdrawing it, as now. The staff never proposes that, and never withdraws an order of his.
-
-### When the staff is asked
-
-14. **In a scenario whose orders may be given inside a day, the staff is asked again at each stop of the clock inside the day, for this rule alone.** It may then hand in a notice of rule 6, 10 or 12 and the orders of a pursuit that has leave, and nothing else: it plans nothing again, forms nothing and changes no other order. Decision 0155, item 4, is amended so far and no further. In a scenario with no orders inside a day the staff is asked at dawn only, as now.
+10. **With leave, given or taken, the closing rule runs with that bound lifted for that force,** and takes what it then takes. The staff's reason says it is a pursuit, by whose leave (the answer's own event is a cause of the order), and what order waits. Where the leave was taken the staff hands in a notice that the force pursues, which stops nothing.
+11. **The order the force leaves is not withdrawn and not changed.** The force is away from its hex; its search and the order's other forces are as the staff's rules leave them.
+12. **A leave by answer ends at the first dusk at which the force has neither a find nor a contact to close on.** The force goes back to its hex by the rule that sends it back today, and the staff hands in a notice that the pursuit is ended. A contact seen again under a new number within the bound keeps the pursuit; the leave is the force's, not the number's. The commander may end it sooner.
+13. **Cancelling or changing the old order is the commander's,** as now. The staff does not propose it.
 
 ## Figures
 
-15. One, a placeholder.
+14. One, a placeholder.
 
 | Figure | Value | Rests on |
 | --- | --- | --- |
-| `pursuit_nights` | 2 | a judgement: a force is not sent after a contact it could not reach in two nights, since the contact will not be where it was. On 5 June Task Force 16 steamed through the day and night after a contact of the morning (2160) |
+| `pursuit_nights` | 2 | a judgement, with no row: a force is not sent after a contact it could not reach in two nights. As freshness stands a pursuit steams one night on a report and goes on only if the contact is seen again |
 
 ## What is recorded and who knows
 
-16. **A leave to pursue is new state of a side's command:** the force and the contact, and for a refusal the same with a no. It is hashed in its place and named, and the layout rises.
-17. **Three notices are new** (asks leave to pursue, pursues, pursuit ended) and **one standing interrupt** (asks leave to pursue), each with its code added at the end; **one command is new,** the commander's answer. A side sees its own and nothing of the enemy's.
-18. **The table** shows the staff's asking as a slip "FROM STAFF · FOR DECISION", as a plan that waits for leave is shown: what was found and where, where the force would go and when, and the order that would wait, with ALLOW and REFUSE. The chart draws the force's way to the hex it would close to. A pursuit under way is said on the force's card and in the diary; the order that waits says on its paper that its force is away and why.
-19. **The doctrine's version rises,** and the agent's interface, for the new command, notices and interrupt.
+15. **New state of a side's command:** the leave to pursue on an order; for each force, a leave by answer; and the refusals, by force and contact. Each is hashed in its place and named, and the layout rises.
+16. **Three notices are new** (asks leave to pursue, pursues, pursuit ended), **one standing interrupt** with a force as its subject, and **two commands,** the setting of the leave and the answer; each code is added at the end. A side sees its own and nothing of the enemy's.
+17. **The table** shows the asking as a slip "FROM STAFF · FOR DECISION": what was found and where, where the force would go and in how many hours (whole), and the order that would wait, with ALLOW and REFUSE. It does not say which bound. The chart draws the way. The order's paper has the setting, in the words "Pursuit: ask me / go and report / stay". A pursuit under way is said on the force's card and in the diary.
+18. **The doctrine's version, the rules label and the agent's interface rise.** The tools gain the two commands, the finds and leaves in the command state, the interrupt, the notices and the stop before the day.
 
 ## Rule card
 
-Reads: the side's picture of contacts; each carrier force's task, the order it is under and that order's risk, targets and waters read up the tree; the force's fuel and the engine's forecasts of passage; the leaves to pursue; with command levels on, the force's commander's rating. Writes: the leaves to pursue (by the commander's command, or by the staff where rule 4 says go); the force's orders, by the closing rule. Draws: none.
+Reads: the side's picture of contacts; each carrier force's task, its order's risk, waters, area and leave to pursue read up the tree; the force's fuel and the engine's forecasts; the leaves by answer and the refusals. Writes: the leaves by answer and the refusals (by the commander's command); the force's orders, by the closing rule. Draws: none.
 
 ## Who answers where no one is there
 
-- **A side the engine plays** has no one to say yes. At balanced its staff asks, is not answered, and the force stays, as it does today; at press it goes. A scenario's orders say their risk, as they do now.
-- **In a dry run** no seat plays. The side tried is answered by its course: a yes or a no the commander has given stands, and a course may give one; a find that arises inside the dry run at balanced is not answered and the force stays. The made-up enemy goes or stays by the risk of the orders he is believed to have.
-- **A player who runs time and does not answer** gets no leave.
+- **A side with no commander** has the leave at go: its forces pursue a find that is too far, and stay for one by the waters first.
+- **In a dry run** the side tried carries its orders' settings; an answer given to a numbered contact is not carried into a made-up world, whose contacts are numbered anew. The made-up enemy has no commander and goes.
+- **A player who runs time and does not answer** gives no leave.
 
 ## Games on file
 
-- **A side at preserve, and a side at balanced that no one answers, play as today.** Every scenario on file gives its orders at balanced but where it says otherwise, so the proofs and bands move only where an order is at press and a find arises. The build plays every scenario and recorded game before and after and names any that moves to the designer before anything merges, as decision 0202 did.
-- **Recorded games are remade** for the doctrine's version and the interface's; the records of closed proofs are not altered.
+- **A side with no commander now pursues,** so games move wherever a carrier force of such a side holds a fresh contact beyond a night and within two. The build plays every scenario, band, validation batch and recorded game before and after and names each that moves to the designer before anything merges.
+- **A recorded game played with `run`** is rebuilt from its calls, and a new stop would shift them. Such a game is remade with the interrupt switched off in its first call where that keeps it the same game; where it does not, it goes to the designer. The records of closed proofs are not altered.
 
 ## What it does not do
 
-- **It is of carrier forces alone.** A surface force that stands at a hex, a base's bombers and a lift each have their own rules for what they find.
-- **It does not let the staff weigh one order's worth against another's.** The staff does not read the directive or the objectives, and it is not shown points. The commander says what matters more, each time he answers, or once by the risk he sets.
-- **It does not let the staff form an order of its own, change or cancel one of the commander's,** or pursue two contacts with one force.
-- **It does not ask the staff again every pulse,** nor let it re-plan inside a day.
-- **It does not change the closing rule inside its bounds.** A force that closes today still closes without asking.
+- **It is of carrier forces alone,** and not of one covering a landing.
+- **It does not ask about a contact of a kind the order's risk does not close on.** A commander who wants every kind closed on says press, as now.
+- **It does not let a commander's rating move ask, go or stay.** A man who goes without leave is the question of refusal that decision 0119 left to the designer.
+- **It does not let the staff weigh one order against another,** form an order of its own, or change or cancel one of the commander's.
+- **It does not ask the staff again inside a day.** Decision 0155, item 4, stands.
 - **It does not make an unanswered asking lapse into a yes.**
+- **It does not mend the closing rule's not reading the area limit,** which the review found; that is noted in `docs/rules/differences.md` for a ruling of its own.
 
 ## What it costs
 
-- **One figure; a command, three notices and an interrupt; state for the leaves; the staff asked inside a day for one thing; and the table's slip, card and chart.**
-- **More stops of the clock.** A side with several carrier forces and a wide search may be asked often. The interrupt can be switched off, and an order set to preserve or to press does not ask.
-- **Rulebook:** chapter 8 (operating a carrier force, the notices, the interrupts, the commands and who may give them, when the staff is asked, what is not built); chapter 1 (the day's order with orders inside a day, who sees what); the glossary gains "Find", "Leave to pursue" and "Pursuit".
+- **One figure; a leave, two commands, three notices and an interrupt; state for the answers; a stop before the day; and the table's slip, setting, card and chart.**
+- **Rulebook:** chapter 8 (operating a carrier force, the leaves, the notices, the interrupts, the commands, what is not built); chapter 1 (when a seat is stopped); the glossary gains "Find", "Leave to pursue" and "Pursuit".
 - **A scenario of its own and its hand calculation,** written by the architect before any code is delegated.
-
-## Questions for the designer
-
-1. **Ask at balanced, go at press, stay at preserve.** The architect proposes it. It makes risk mean one more thing, and an order at balanced now stops the clock where it did not.
-2. **The staff asked inside a day for this alone** (rule 14), which decision 0155 had left out. Without it a sighting of the morning is asked about the next dawn.
-3. **Carrier forces first,** and other forces after it is played.
 
 ## Confirmed on Nov 22, 2026
 
-The designer was asked the three questions one at a time and took the architect's proposal on each.
+The designer was asked one question at a time.
 
-1. **By risk:** an order at preserve stays, at balanced asks, at press goes and reports.
-2. **The staff is asked at the stops inside a day, for this alone.**
-3. **Carrier forces first.**
+1. **Carrier forces first.**
+2. **The clock stops in the evening, before the day is played.** He had first said the staff should be asked inside a day; the review showed the staff is already asked each evening and the delay lay in when the seat is stopped. Asked again, he chose the evening.
+3. **Ask, go or stay is a setting of its own on each order,** ask for a player and go where no one commands. He had first said by risk; the review showed that every order left at its default would then stop the clock, that press would set aside a limit he had set, and that a side with no commander would never pursue. Asked again, he chose the setting.
+
+## How the plan changed on review
+
+- **It said the staff is asked at dawn.** It is asked at dusk. The stops inside a day are dropped and the stop moved before the day.
+- **It tied ask, go and stay to risk** and to the commander's rating. It is now a leave of its own, and the rating is left out.
+- **It had four kinds of find.** "A station kept" was no bound (decision 0202, rule 19: "not a fence"). "The kind" would have asked about every ship sighted at balanced. Two are left.
+- **It read a find contact by contact.** It is now the closing rule worked again whole with one bound lifted, and only where the rule as it stands does nothing.
+- **It keyed a leave on a contact's number,** which changes when a force is seen again a day later. The leave is the force's.
+- **It named the wrong hard limits.** It now reads the area.
+- **It had a side with no commander ask and stay.** It goes.
+- **It cited rows for a superior answering** that show a word given beforehand or a commander choosing for himself, and row 2160 for a figure it does not support.
