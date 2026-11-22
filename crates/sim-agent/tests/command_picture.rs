@@ -205,7 +205,8 @@ fn with_command_levels_off_command_state_gives_no_picture_and_no_forces_held() {
     let a = call(&mut s, "command_state");
     assert!(a.get("picture").is_none(), "{a}");
     assert!(a.get("forces_held").is_none(), "{a}");
-    // The keys are exactly those the answer had before this change.
+    // The keys are exactly those the answer had before this change, and the
+    // two of decision 0214.
     let mut keys: Vec<&str> = a.as_object().unwrap().keys().map(String::as_str).collect();
     keys.sort_unstable();
     assert_eq!(
@@ -222,6 +223,8 @@ fn with_command_levels_off_command_state_gives_no_picture_and_no_forces_held() {
             "leaves",
             "notes",
             "plans",
+            "pursuit_refusals",
+            "pursuits",
             "queued",
             "reserves",
             "staff_decisions_yesterday",
