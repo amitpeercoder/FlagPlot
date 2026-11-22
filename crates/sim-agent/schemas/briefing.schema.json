@@ -10,7 +10,7 @@
   "additionalProperties": false,
   "properties": {
     "format": { "const": "flagplot-agent" },
-    "version": { "const": 42 },
+    "version": { "const": 43 },
     "kind": { "const": "briefing" },
     "heading": { "$ref": "#/$defs/heading" },
     "objectives": { "$ref": "#/$defs/objectives" },
@@ -701,6 +701,22 @@
             "properties": {
               "ship": { "$ref": "defs.schema.json#/$defs/handle" },
               "task_force": { "$ref": "defs.schema.json#/$defs/handle" },
+              "cause": { "description": "Given only for a ship lost to a fire among her aircraft (decision 0212).", "const": "fire_among_aircraft" },
+              "event": { "type": "integer" }
+            }
+          }
+        },
+        "aircraft_fires": {
+          "description": "Fires among a carrier's aircraft in the day just resolved (decision 0212): the side's own carriers only. While one burns she can fly no aircraft off or on. Left out when none.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["ship", "task_force", "change", "event"],
+            "additionalProperties": false,
+            "properties": {
+              "ship": { "$ref": "defs.schema.json#/$defs/handle" },
+              "task_force": { "$ref": "defs.schema.json#/$defs/handle" },
+              "change": { "enum": ["set", "grew", "died_down", "out", "lost"] },
               "event": { "type": "integer" }
             }
           }

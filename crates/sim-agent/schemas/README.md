@@ -1328,6 +1328,8 @@ none of it.
 
 `version` is 42. An air group's line gains `attack_weapon`, "bombs" or "torpedoes": what its aircraft attack ships with, left out for a type that carries neither. Nothing else changed from 41.
 
+`version` is 43. A ship entity and a ship line gain `on_fire_among_aircraft` (true, left out otherwise): a carrier with a fire among her aircraft, which flies no aircraft off and lands none on while it burns (decision 0212). The briefing's `losses` gains `aircraft_fires` (`ship`, `task_force`, `change` one of `set`, `grew`, `died_down`, `out`, `lost`, `event`; left out when none) and a sunk ship's line gains `cause` (`fire_among_aircraft`, left out otherwise). The side's own carriers only; the enemy is told nothing of a fire.
+
 (Version 41:) A claim in the briefing's `claims` gains `air_types`, left out when empty: the types of the aircraft
 claimed shot down, each `{"aircraft_type", "aircraft"}` with the type's name, where the men who fired made them out (the
 one draw that already decides `ground_types`). A type named was among the enemy aircraft that firing was at; its number may
