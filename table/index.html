@@ -6,8 +6,9 @@
 <title>Flag Plot Table</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Courier+Prime:wght@400;700&family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&display=swap">
 <style>
-/* The table fills the room; the commander's papers lie flat at its edges: signals right, clock below. */
+/* The table fills the room; the commander's papers lie flat on it: the stop paper down the left, cards at the right, the chart's controls at its foot. */
 :root {
+  --sp-w: 360px;
   color-scheme: dark;
   --room: #121816; --panel: rgba(22, 30, 27, 0.9); --rule: #3b4843;
   --ink: #ece6d3; --ink-dim: #bdb69f;
@@ -16,6 +17,7 @@
   --f-ui: 'Barlow Condensed', 'Arial Narrow', sans-serif;
   --f-type: 'Courier Prime', 'Courier New', monospace;
 }
+@media (min-width: 1440px) { :root { --sp-w: 400px; } }
 html, body { height: 100%; margin: 0; }
 body { background: var(--room); color: var(--ink); font-family: var(--f-ui); overflow: hidden; }
 [hidden] { display: none !important; }
@@ -28,8 +30,6 @@ button { font-family: var(--f-ui); cursor: pointer; }
 button:focus-visible { outline: 3px solid #f0c36a; outline-offset: 2px; }
 button:disabled { opacity: 0.45; cursor: default; }
 
-.top { position: fixed; top: 0; left: 0; right: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 22px; padding: 10px 270px 8px 16px; pointer-events: none; text-shadow: 0 1px 6px #000; }
-.top h1 { margin: 0; font-size: 24px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; }
 .intray { pointer-events: auto; position: relative; display: inline-flex; align-items: center; gap: 9px; min-height: 30px; padding: 0 12px; margin-left: 6px; background: #4d3a28; color: var(--paper); border: 1px solid #241a12; border-radius: 2px; font-family: var(--f-ui); font-size: 14px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; text-shadow: none; cursor: pointer; box-shadow: inset 0 -3px 0 rgba(0,0,0,0.28), 0 2px 6px rgba(0,0,0,0.4); }
 .intray[hidden] { display: none; }
 .intray.menu::before { display: none; }
@@ -44,23 +44,27 @@ button:disabled { opacity: 0.45; cursor: default; }
 .intray::before { content: ''; position: absolute; left: 9px; right: 9px; top: -4px; height: 5px; background: var(--paper-old); border-radius: 1px 1px 0 0; box-shadow: 0 -1px 2px rgba(0,0,0,0.35); }
 .intray.new::before { left: 14px; right: 30px; top: -9px; height: 10px; background: var(--paper); transform: rotate(-2deg); }
 .intray .stamp { background: var(--paper); font-size: 12px; }
+.menus { position: fixed; top: 12px; right: 16px; z-index: 20; display: flex; gap: 6px; }
+.menus .intray { margin: 0; min-height: 36px; padding: 0 12px; background: rgba(22,30,27,0.88); color: var(--ink); border: 1px solid var(--rule); border-radius: 2px; font-size: 14px; font-weight: 600; letter-spacing: 0.1em; box-shadow: none; }
+.menus .intray::before { display: none; }
+.menus .intray.menu[aria-expanded="true"] { background: #2b3833; }
 .inlist { border-top: 1px solid #8d8672; padding: 9px 0; cursor: pointer; display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; }
 .inlist:hover strong, .inlist:focus-visible strong { text-decoration: underline; }
 .inlist small { color: var(--paper-dim); grid-column: 1; }
-.top p { margin: 0; font-size: 17px; letter-spacing: 0.05em; color: var(--ink-dim); }
 
-.tray { position: fixed; top: 60px; right: 16px; width: min(350px, calc(100% - 32px)); max-height: calc(100% - 170px); overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-bottom: 6px; }
-.view { position: fixed; top: 12px; right: 16px; display: flex; gap: 6px; }
-.view button svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; flex: none; }
-.view button { display: inline-flex; align-items: center; gap: 6px; min-width: 36px; justify-content: center; min-height: 34px; padding: 0 8px; background: rgba(0,0,0,0.35); color: var(--ink-dim); border: 1px solid var(--ink-dim); border-radius: 2px; font-size: 13px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; }
-.view button.ask, .pop .papers button.ask { color: #fff; border-color: var(--enemy); background: var(--enemy); }
-.view button:hover, .view button:focus-visible, .view button[aria-pressed="true"] { color: var(--ink); border-color: var(--ink); }
-.tray h2 { margin: 4px 0 0; font-size: 14px; font-weight: 600; letter-spacing: 0.16em; opacity: 0.85; text-transform: uppercase; text-shadow: 0 1px 6px #000; }
-#signals { display: flex; flex-direction: column; gap: 10px; }
+.view { position: fixed; bottom: 16px; right: 16px; z-index: 6; display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: flex-end; gap: 10px; max-width: calc(100% - var(--sp-w) - 32px); }
+.view .vg { display: flex; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+.view .vg.col { flex-direction: column; }
+.view button { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; padding: 0 12px; background: rgba(22,30,27,0.9); color: var(--ink); border: 1px solid var(--rule); border-radius: 0; font-family: var(--f-ui); font-size: 14px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; white-space: nowrap; cursor: pointer; }
+.view .vg:not(.col) button + button { border-left: 0; }
+.view .vg.col button + button { border-top: 0; }
+.view .vg.col button { font-size: 22px; font-weight: 700; padding: 0; letter-spacing: 0; }
+.view button[aria-pressed="true"] { background: var(--ink); color: #161e1b; font-weight: 700; }
+.view button:hover, .view button:focus-visible { border-color: var(--ink); }
+.pop .papers button.ask { color: #fff; border-color: var(--enemy); background: var(--enemy); }
+#signals, #why { display: flex; flex-direction: column; }
 .papers { display: flex; flex-wrap: wrap; gap: 6px; }
 .papers:empty { display: none; }
-.tray h2:has(+ .papers:empty), .tray h2:has(+ #signals:empty) { display: none; }
-.tray h2 + .papers, .tray h2 + #signals { margin-top: -4px; }
 .papers .mark { display: inline-block; min-width: 18px; height: 18px; margin-left: 8px; padding: 0 5px; border-radius: 9px; background: var(--enemy); color: #fff; font-size: 12px; line-height: 18px; text-align: center; letter-spacing: 0; vertical-align: 1px; }
 .papers button { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-height: 34px; padding: 0 12px; background: var(--paper-old); color: var(--paper-ink); border: 0; border-radius: 2px; font-size: 14px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; box-shadow: 0 3px 8px rgba(0,0,0,0.4); }
 .slip { background: var(--paper-old); color: var(--paper-ink); font-family: var(--f-type); font-size: 14px; line-height: 1.38; padding: 11px 14px; border-radius: 2px; box-shadow: 0 4px 12px rgba(0,0,0,0.45); display: flex; flex-direction: column; gap: 7px; overflow-wrap: anywhere; }
@@ -86,7 +90,7 @@ button:disabled { opacity: 0.45; cursor: default; }
 .slip button, .order button, .sheet button { min-height: 42px; padding: 0 14px; border-radius: 2px; font-size: 16px; font-weight: 600; letter-spacing: 0.08em; background: transparent; color: var(--paper-ink); border: 1.5px solid var(--paper-ink); }
 .slip button.go, .order button.go { background: var(--own); color: var(--paper); border-color: var(--own); }
 
-.order { position: fixed; left: 16px; bottom: 92px; width: min(420px, calc(100% - 32px)); max-height: calc(100% - 170px); overflow-y: auto; background: var(--paper); color: var(--paper-ink); font-family: var(--f-type); font-size: 14px; line-height: 1.38; padding: 14px 16px; border-radius: 2px; box-shadow: 0 8px 24px rgba(0,0,0,0.55); display: flex; flex-direction: column; gap: 10px; }
+.order { position: fixed; right: 16px; left: auto; top: 60px; bottom: auto; width: min(360px, calc(100% - var(--sp-w) - 48px)); max-height: calc(100% - 60px - 124px); overflow-y: auto; background: var(--paper); color: var(--paper-ink); font-family: var(--f-type); font-size: 14px; line-height: 1.38; padding: 14px 16px; border-radius: 2px; box-shadow: 0 8px 24px rgba(0,0,0,0.55); display: flex; flex-direction: column; gap: 10px; }
 .order h2, .sheet h2 { margin: 0; font-family: var(--f-ui); font-size: 19px; font-weight: 700; letter-spacing: 0.12em; }
 .order fieldset { border: 0; border-top: 1px dashed #8d8672; margin: 0; padding: 8px 0 0; display: flex; flex-wrap: wrap; gap: 4px 14px; }
 .airorder { display: flex; flex-direction: column; gap: 8px; }
@@ -109,7 +113,7 @@ button:disabled { opacity: 0.45; cursor: default; }
 .order .wp label { min-height: 30px; font-size: 12px; }
 .order .wp .wpx { min-height: 28px; padding: 0 8px; border: 0; font-size: 13px; color: var(--paper-dim); }
 .wphint { font-size: 12px; color: var(--paper-dim); }
-#course { width: min(320px, calc(100% - 32px)); display: flex; flex-direction: column; gap: 8px; }
+#course { display: flex; flex-direction: column; gap: 8px; }
 #course[hidden] { display: none; }
 .order .wpchange { min-height: 30px; padding: 0 10px; font-size: 12px; align-self: flex-start; }
 .frow { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
@@ -143,9 +147,9 @@ button:disabled { opacity: 0.45; cursor: default; }
 .order details.pv { display: block; }
 .order details.pv summary { font-size: 12px; color: var(--paper-dim); cursor: pointer; min-height: 28px; }
 .order details.pv > div { display: flex; flex-direction: column; gap: 6px; padding-top: 4px; }
-.sheetwrap { z-index: 40; position: fixed; left: 50%; top: 56px; transform: translateX(-50%); width: min(760px, calc(100% - 32px)); max-height: calc(100% - max(150px, var(--bar-h, 70px) + 68px)); display: flex; flex-direction: column; gap: 10px; }
+.sheetwrap { z-index: 40; position: fixed; left: calc(var(--sp-w) + (100% - var(--sp-w)) / 2); top: 56px; transform: translateX(-50%); width: min(760px, calc(100% - var(--sp-w) - 32px)); max-height: calc(100% - 56px - 84px); display: flex; flex-direction: column; gap: 10px; }
 .sheetwrap[hidden] { display: none; }
-.sheetwrap.dispatch { width: min(620px, calc(100% - 32px)); }
+.sheetwrap.dispatch { width: min(620px, calc(100% - var(--sp-w) - 32px)); }
 .sheetbar { flex: none; background: rgba(22,28,26,0.88); padding: 8px 8px 8px 14px; border-radius: 2px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
 .sheetnav { flex: none; display: flex; align-items: center; gap: 4px; margin-bottom: -10px; padding: 4px 8px 2px; background: var(--paper); border-bottom: 1px solid rgba(90,85,72,0.22); border-radius: 2px 2px 0 0; position: relative; z-index: 1; }
 .sheetnav button { min-height: 30px; padding: 0 8px; border: 0; background: transparent; color: var(--paper-dim); font-family: var(--f-ui); font-size: 12px; font-weight: 700; letter-spacing: 0.12em; cursor: pointer; }
@@ -157,7 +161,7 @@ button:disabled { opacity: 0.45; cursor: default; }
 .sheetnav #sheet-close { font-size: 15px; letter-spacing: 0; min-width: 30px; }
 .sheetnav #sheet-chart[hidden] + #sheet-close { margin-left: auto; }
 .sheetnav + .sheet { border-radius: 0 0 2px 2px; }
-#planchip { position: fixed; top: 54px; left: 50%; transform: translateX(-50%); z-index: 6; display: flex; align-items: center; gap: 10px; max-width: calc(100% - 32px); background: var(--paper); color: var(--paper-ink); padding: 6px 6px 6px 12px; border-radius: 2px; font-size: 14px; letter-spacing: 0.04em; box-shadow: 0 2px 10px rgba(0,0,0,0.4); }
+#planchip { position: fixed; top: 54px; left: calc(var(--sp-w) + (100% - var(--sp-w)) / 2); transform: translateX(-50%); z-index: 6; display: flex; align-items: center; gap: 10px; max-width: calc(100% - var(--sp-w) - 32px); background: var(--paper); color: var(--paper-ink); padding: 6px 6px 6px 12px; border-radius: 2px; font-size: 14px; letter-spacing: 0.04em; box-shadow: 0 2px 10px rgba(0,0,0,0.4); }
 #planchip[hidden] { display: none; }
 .holds { margin-top: 2px; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 8px; color: #e6dfc9; }
 .holds[hidden] { display: none; }
@@ -175,11 +179,10 @@ button:disabled { opacity: 0.45; cursor: default; }
 .dispatch .sheet .doc .head { border-bottom: 1px solid #8d8672; color: var(--paper-ink); font-size: 14px; }
 .dispatch .sheet .doc .head span:nth-child(odd) { color: var(--paper-dim); }
 .dispatch .sheet .doc p b { font-weight: 700; }
-@media (max-width: 520px) { .dispatch .sheet { padding: 18px 16px; } .sheetwrap { top: 12px; max-height: calc(100% - var(--bar-h, 70px) - 24px); } }
+@media (max-width: 520px) { .dispatch .sheet { padding: 18px 16px; } .sheetwrap { top: 12px; } }
 #sheet-paper { padding-bottom: 28px; scroll-padding-bottom: 28px; }
 .sheet { min-height: 0; overflow: auto; background: var(--paper); color: var(--paper-ink); padding: 16px 18px; border-radius: 2px; box-shadow: 0 10px 34px rgba(0,0,0,0.6); display: flex; flex-direction: column; gap: 10px; }
 .sheet .doc { font-family: var(--f-type); font-size: 15px; line-height: 1.5; display: flex; flex-direction: column; gap: 10px; max-width: 62ch; }
-.card { left: 16px; bottom: auto; top: 60px; width: min(340px, calc(100% - 32px)); max-height: calc(100% - 170px); }
 .est table { border-collapse: collapse; font-size: 13px; margin: 4px 0 2px; }
 .est th, .est td { text-align: left; padding: 3px 14px 3px 0; vertical-align: top; border-bottom: 1px dotted #8d8672; }
 .est th { font-weight: 400; color: var(--paper-dim); }
@@ -261,6 +264,7 @@ button:disabled { opacity: 0.45; cursor: default; }
 .sheet .doc .head { font-size: 13px; color: var(--paper-dim); border-bottom: 1px solid #8d8672; padding-bottom: 8px; display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; }
 .sheet .doc h3 { margin: 6px 0 0; font-family: var(--f-ui); font-size: 14px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--paper-dim); }
 .sheet .doc p { margin: 0; }
+.sheet .doc .red { color: var(--enemy); }
 .diary .dnav { display: flex; gap: 8px; align-items: center; justify-content: space-between; }
 .diary .dnav button { min-height: 30px; padding: 0 10px; background: transparent; color: inherit; border: 1px solid #8d8672; border-radius: 2px; font: inherit; cursor: pointer; }
 .diary .dnav button:disabled { opacity: 0.35; cursor: default; }
@@ -314,30 +318,53 @@ button:disabled { opacity: 0.45; cursor: default; }
 .sheet .doc .foot { font-size: 12px; color: var(--paper-dim); border-top: 1px dashed #8d8672; padding-top: 8px; }
 .sheet pre { margin: 0; font-family: var(--f-type); font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
 
-.bar { position: fixed; left: 0; right: 0; bottom: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; background: var(--panel); border-top: 1px solid var(--rule); padding: 10px 16px 12px; }
-.clock { font-family: var(--f-type); font-size: 21px; font-weight: 700; letter-spacing: 0.03em; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.status { font-size: 17px; color: var(--ink-dim); letter-spacing: 0.03em; flex: 1 1 200px; min-width: 0; }
+/* The stop paper: one column down the left. Its head and foot do not scroll; what lies between them does, as one. */
+.stoppaper { position: fixed; left: 0; top: 0; bottom: 0; width: var(--sp-w); z-index: 12; display: flex; flex-direction: column; background: var(--paper); color: var(--paper-ink); box-shadow: 4px 0 18px rgba(0,0,0,0.4); }
+.sp-head { flex: none; background: #161e1b; color: var(--ink); padding: 12px 18px 12px; display: flex; flex-direction: column; gap: 2px; }
+.sp-row { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.sp-name { font-family: var(--f-ui); font-size: 20px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; }
+#seat { font-family: var(--f-ui); font-size: 14px; font-weight: 500; color: var(--ink-dim); text-align: right; }
+.clock { font-family: var(--f-type); font-size: 19px; font-weight: 700; letter-spacing: 0; font-variant-numeric: tabular-nums; margin-top: 4px; overflow-wrap: anywhere; }
+.sp-state { font-family: var(--f-ui); font-size: 14px; font-weight: 500; letter-spacing: 0.08em; color: var(--ink-dim); text-transform: uppercase; }
+.sp-body { flex: 1; min-height: 0; overflow-y: auto; padding: 0 18px; font-family: var(--f-type); font-size: 13.5px; line-height: 1.45; overflow-wrap: anywhere; }
+.sp-body:focus { outline: none; }
+.sp-body section { border-top: 1px solid #cfc6a8; padding: 12px 0 14px; }
+.sp-body h2 { margin: 0 0 6px; font-family: var(--f-ui); font-size: 13px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--paper-dim); }
+.sp-body #sp-why h2 { color: var(--enemy); }
+#sp-seats { padding: 12px 0; display: flex; flex-direction: column; gap: 10px; }
+#sp-seats:not(:has(#seatbox:not(:empty))):has(#watch-side[hidden]) { display: none; }
+#sp-seats .seg { display: inline-flex; flex-wrap: wrap; }
+#sp-seats .intray { margin: 0 6px 0 0; background: transparent; color: var(--paper-ink); border: 1.5px solid var(--paper-ink); box-shadow: none; }
+#sp-seats .intray::before { display: none; }
+#sp-seats .intray[aria-pressed="true"] { background: var(--paper-ink); color: var(--paper); }
+#since .sp-ph { display: block; margin-top: 8px; font-family: var(--f-ui); font-size: 13px; font-weight: 700; letter-spacing: 0.12em; color: var(--paper-dim); }
+#since .sp-ph:first-child { margin-top: 0; }
+#since .red { color: var(--enemy); }
+#since > div { margin-top: 2px; }
+#since .ref.more, #why .ref.more, #signals .ref.more { display: inline-block; margin-top: 4px; font-size: 13px; }
+#stop .slip { background: none; box-shadow: none; border-radius: 0; padding: 8px 0; }
+#stop .slip + .slip { border-top: 1px dotted #8d8672; }
+#stop .slip:first-child { padding-top: 0; }
+#stop .slip:last-child { padding-bottom: 0; }
+#stop .slip.opens:hover, #stop .slip.opens:focus-visible { outline-offset: 2px; }
+.sp-foot { flex: none; background: var(--paper); border-top: 1px solid #cfc6a8; padding: 10px 18px 14px; display: flex; flex-direction: column; gap: 8px; }
+.status { font-family: var(--f-type); font-size: 13px; line-height: 1.4; color: var(--paper-dim); min-width: 0; overflow-wrap: anywhere; }
 .status:empty { display: none; }
-.acts { display: flex; flex-wrap: wrap; gap: 8px; margin-left: auto; }
-.acts button { min-height: 46px; padding: 0 16px; background: transparent; color: var(--ink); border: 1.5px solid var(--ink); border-radius: 2px; font-size: 17px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; }
-.acts button.cue { border-color: #e9c46a; color: #f4dc9a; box-shadow: 0 0 0 0 rgba(233,196,106,0.7); animation: cue 2.2s ease-out infinite; }
-@keyframes cue { 0% { box-shadow: 0 0 0 0 rgba(233,196,106,0.65); } 70% { box-shadow: 0 0 0 12px rgba(233,196,106,0); } 100% { box-shadow: 0 0 0 0 rgba(233,196,106,0); } }
-@media (prefers-reduced-motion: reduce) { .acts button.cue { animation: none; box-shadow: 0 0 0 3px rgba(233,196,106,0.5); } }
-.acts button.main { background: var(--ink); color: var(--room); border-color: var(--ink); font-weight: 700; padding: 0 24px; }
-.plot { position: fixed; left: 16px; top: 60px; width: min(330px, calc(100% - 32px)); max-height: calc(100% - 180px); overflow-y: auto; background: var(--paper-old); color: var(--paper-ink); font-family: var(--f-type); font-size: 13px; line-height: 1.36; padding: 10px 14px; border-radius: 2px; box-shadow: 0 4px 12px rgba(0,0,0,0.45); display: flex; flex-direction: column; gap: 8px; overflow-wrap: anywhere; }
-.plot .phase { display: flex; flex-direction: column; gap: 3px; }
-.plot b { font-family: var(--f-ui); font-size: 15px; letter-spacing: 0.12em; }
-.plot .red { color: var(--enemy); }
-#fatal { position: fixed; inset: 0; display: grid; place-items: center; padding: 24px; text-align: center; font-size: 20px; background: var(--room); }
+.acts { display: flex; flex-wrap: wrap; gap: 8px; }
+.acts button { min-height: 46px; padding: 0 16px; background: transparent; color: var(--paper-ink); border: 2px solid var(--paper-ink); border-radius: 0; font-size: 16px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
+.acts button.gives, .acts button#btn-end { flex: 1 1 100%; }
+.acts button.cue { border-color: #a8791c; color: #7a5712; box-shadow: 0 0 0 0 rgba(168,121,28,0.7); animation: cue 2.2s ease-out infinite; }
+@keyframes cue { 0% { box-shadow: 0 0 0 0 rgba(168,121,28,0.6); } 70% { box-shadow: 0 0 0 10px rgba(168,121,28,0); } 100% { box-shadow: 0 0 0 0 rgba(168,121,28,0); } }
+@media (prefers-reduced-motion: reduce) { .acts button.cue { animation: none; box-shadow: 0 0 0 3px rgba(168,121,28,0.45); } }
+.acts button.main, .acts button#btn-end { flex: 1; background: var(--paper-ink); color: var(--paper); font-weight: 700; padding: 0 24px; }
+.acts button#btn-end { flex: 1 1 100%; }
+#fatal { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 24px; text-align: center; font-size: 20px; background: var(--room); }
 /* A watched game (decision 0182): nothing on the table gives an order. */
 body.watched .gives { display: none !important; }
-.top .seg { pointer-events: auto; display: inline-flex; }
-.top .seg[hidden] { display: none; }
-.top .seg .intray + .intray { margin-left: 0; }
 .intray[aria-pressed="true"] { background: #6a513a; }
 #seatbox { display: flex; flex-direction: column; gap: 10px; }
 /* The new game screen (decision 0185): a sheet on the table before a game is begun. */
-#newgame { top: 24px; max-height: calc(100% - 48px); }
+#newgame { left: 50%; width: min(760px, calc(100% - 32px)); top: 24px; max-height: calc(100% - 48px); }
 #newgame .sheet { gap: 12px; }
 #newgame h3 { margin: 6px 0 0; font-family: var(--f-ui); font-size: 14px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--paper-dim); }
 #newgame .pick { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; align-items: start; padding: 9px 0; border-top: 1px solid #8d8672; font-family: var(--f-type); font-size: 14px; line-height: 1.4; cursor: pointer; }
@@ -363,31 +390,28 @@ body.watched .gives { display: none !important; }
 .slip .call + .call { margin-top: 3px; }
 .slip .call.refused { color: var(--enemy); }
 .slip .call .said { display: block; font-style: italic; color: var(--paper-dim); }
-/* A narrow screen (a tablet, a phone): the view's buttons take a row of their
-   own across the top, the heading and the trays go under them, and the clock
-   may wrap. A desktop window is wider than this and is not touched. */
-@media (max-width: 1180px) {
-  .view { left: 16px; right: 16px; top: 8px; justify-content: flex-end; flex-wrap: wrap; }
-  .top { padding: 52px 16px 8px 16px; gap: 4px 12px; }
-  .top h1 { font-size: 20px; }
-  .top p { font-size: 15px; }
-  .bar { gap: 6px 12px; padding: 8px 16px 10px; }
-  .clock { font-size: 16px; white-space: normal; }
-  .tray, .plot { top: 100px; max-height: calc(100% - 220px); }
+/* A narrow window (under 1100): the stop paper is a drawer. Closed, only its head shows, at the top left; open, it is the full
+   column and covers the chart. The cards and forms keep the right, and the papers for reading are centred in the whole window. */
+@media (max-width: 1099px) {
+  :root { --sp-w: 0px; }
+  .stoppaper { left: 16px; top: 12px; bottom: auto; width: min(360px, calc(100% - 32px)); }
+  .stoppaper .sp-body, .stoppaper .sp-foot { display: none; }
+  .sp-head { cursor: pointer; }
+  .sp-head:focus-visible { outline: 3px solid #f0c36a; outline-offset: -3px; }
+  body.drawer-open .stoppaper { left: 0; top: 0; bottom: 0; width: min(400px, 100%); }
+  body.drawer-open .stoppaper .sp-body { display: block; }
+  body.drawer-open .stoppaper .sp-foot { display: flex; }
+  body.drawer-open .menus, body.drawer-open .view { z-index: 11; }
+  .order { width: min(360px, calc(100% - 32px)); }
+  .view { max-width: calc(100% - 32px); }
+}
+@media (max-width: 760px) {
+  .menus { top: 112px; }
+  .order { top: 160px; max-height: calc(100% - 160px - 124px); }
+  #stops { top: 156px; }
 }
 @media (max-width: 520px) {
-  .view { gap: 4px; }
-  .view button { min-width: 32px; min-height: 32px; padding: 0 6px; font-size: 12px; letter-spacing: 0.05em; }
-  #btn-pieces svg, #btn-labels svg { display: none; }
-  .acts { gap: 6px; }
-  .acts button { min-height: 40px; padding: 0 10px; font-size: 14px; }
-  .acts button.main { padding: 0 14px; }
-}
-@media (max-width: 720px) {
-  .tray { top: auto; bottom: 150px; left: 16px; width: auto; max-height: 30%; }
-  .order { bottom: 150px; max-height: 55%; }
-  .plot { top: 100px; max-height: 26%; }
-  .acts { margin-left: 0; }
+  .view button { min-width: 40px; padding: 0 8px; font-size: 13px; letter-spacing: 0.05em; }
 }
 </style>
 </head>
@@ -398,16 +422,35 @@ body.watched .gives { display: none !important; }
 
 <div class="sheetwrap" id="newgame" hidden><section class="sheet" id="newgame-paper" aria-label="A new game"></section></div>
 
-<aside class="plot" id="plot" hidden aria-label="The plot of the day" aria-live="polite"></aside>
-
-<div class="top">
-  <h1>Flag Plot</h1>
-  <p id="seat">The table</p>
-  <span id="watch-side" class="seg" role="group" aria-label="The side watched" hidden></span>
-  <button type="button" id="btn-in" class="intray" hidden></button>
+<aside id="stop" class="stoppaper" aria-label="The stop paper">
+  <header class="sp-head" id="sp-head">
+    <div class="sp-row"><span class="sp-name">Flag Plot</span><span id="seat">The table</span></div>
+    <div class="clock" id="clock">DAY 1</div>
+    <div class="sp-state" id="clock-state"></div>
+  </header>
+  <div class="sp-body" id="sp-body" tabindex="-1">
+    <div id="sp-seats">
+      <span id="watch-side" class="seg" role="group" aria-label="The side watched" hidden></span>
+      <div id="seatbox" aria-live="polite"></div>
+    </div>
+    <section id="sp-why" hidden><h2>WHY THE CLOCK STOPPED</h2><div id="why"></div></section>
+    <section id="sp-decide" hidden><h2 id="sp-decide-h">FOR YOUR DECISION</h2><div id="signals"></div></section>
+    <section id="sp-since" hidden><h2 id="sp-since-h">SINCE</h2><div id="since" aria-live="off"></div></section>
+  </div>
+  <footer class="sp-foot" id="sp-foot">
+    <div class="status" id="status" role="status">Laying the chart.</div>
+    <div class="acts">
+      <button type="button" id="btn-intent" class="gives">Give an order</button>
+      <button type="button" id="btn-day">Next day</button>
+      <button type="button" class="main" id="btn-go">Carry on</button>
+      <button type="button" id="btn-end" hidden>Read how it ended</button>
+    </div>
+  </footer>
+</aside>
+<div class="menus">
   <button type="button" id="btn-orders" class="intray menu" aria-expanded="false" aria-controls="pop-orders" title="Your orders in force, and your standing leave" hidden></button>
-  <button type="button" id="btn-staff" class="intray menu" aria-expanded="false" aria-controls="pop-staff" title="The staff's standing papers" hidden></button>
-  <button type="button" id="btn-agent" class="intray" hidden>The agent's seat</button>
+  <button type="button" id="btn-staff" class="intray menu" aria-expanded="false" aria-controls="pop-staff" title="The staff's standing papers" hidden>Staff</button>
+  <button type="button" id="btn-game" class="intray menu" aria-expanded="false" aria-controls="pop-game" title="The game: a new one, this one again, what stops the clock">Game</button>
 </div>
 <div id="pop-orders" class="pop" hidden>
   <div id="papers" class="papers" role="toolbar" aria-label="Your directives, orders and what you have signed"></div>
@@ -417,12 +460,6 @@ body.watched .gives { display: none !important; }
   <div id="papers-staff" class="papers" role="toolbar" aria-label="The staff's standing papers"></div>
   <details id="holds-staff" class="holds" hidden><summary></summary><div id="holds-list"></div></details>
 </div>
-
-<aside class="tray" aria-label="Signals">
-  <div id="seatbox" aria-live="polite"></div>
-  <h2>Signals</h2>
-  <div id="signals"></div>
-</aside>
 
 <form class="order gives" id="order" hidden aria-label="Operation order">
   <h2>OPERATION ORDER · DRAFT</h2>
@@ -507,18 +544,25 @@ body.watched .gives { display: none !important; }
 </div>
 
 <div class="view" role="group" aria-label="Your view of the table">
-  <button type="button" id="btn-back" title="Sit back" aria-label="Sit back"><svg viewBox="0 0 24 24"><circle cx="10" cy="10" r="6.5"/><path d="M15 15l6 6M7 10h6"/></svg></button>
-  <button type="button" id="btn-lean" title="Lean in" aria-label="Lean in"><svg viewBox="0 0 24 24"><circle cx="10" cy="10" r="6.5"/><path d="M15 15l6 6M7 10h6M10 7v6"/></svg></button>
-  <button type="button" id="btn-view"></button>
-  <button type="button" id="btn-hexes" aria-pressed="false" title="Hexes and their numbers" aria-label="Hexes"><svg viewBox="0 0 24 24"><path d="M7 3.5h10l5 8.5-5 8.5H7L2 12z"/></svg></button>
-  <button type="button" id="btn-plans" aria-pressed="false" title="Your plans on the chart: all of them, or none" aria-label="Plans on the chart"><svg viewBox="0 0 24 24"><path d="M3 19c3-9 8-13 15-13M13 4l5 2-2 5"/></svg></button>
-  <button type="button" id="btn-pieces"></button>
-  <button type="button" id="btn-labels"></button>
-  <button type="button" id="btn-game" class="menu" aria-expanded="false" aria-controls="pop-game" title="The game: a new one, this one again, what stops the clock">Game</button>
+  <div class="vg">
+    <button type="button" id="btn-plans" aria-pressed="false" title="Your plans on the chart: all of them, or none" aria-label="Plans on the chart">Plans</button>
+    <button type="button" id="btn-pieces"></button>
+    <button type="button" id="btn-labels"></button>
+    <button type="button" id="btn-hexes" aria-pressed="false" title="Hexes and their numbers" aria-label="Hexes">Hexes</button>
+  </div>
+  <div class="vg">
+    <button type="button" id="btn-view" aria-pressed="false"></button>
+    <button type="button" id="btn-above" aria-pressed="false"></button>
+  </div>
+  <div class="vg col">
+    <button type="button" id="btn-lean" title="Lean in" aria-label="Lean in">+</button>
+    <button type="button" id="btn-back" title="Sit back" aria-label="Sit back">&#8722;</button>
+  </div>
 </div>
 <div id="pop-game" class="pop" hidden>
   <div class="papers stay">
     <button type="button" id="btn-new" title="End this game and choose another" hidden>New game</button>
+    <button type="button" id="btn-agent" hidden>The agent's seat</button>
     <button type="button" id="btn-restart" title="Begin the game again from its first evening">Restart</button>
     <button type="button" id="btn-stops" aria-expanded="false" aria-controls="stops" hidden title="What stops the clock">What stops the clock</button>
   </div>
@@ -534,16 +578,6 @@ body.watched .gives { display: none !important; }
 </fieldset>
 
 <div id="planchip" hidden><span id="planchip-text"></span><button type="button" id="planchip-read">READ</button><button type="button" id="planchip-off" title="Take the plan off the chart" aria-label="Take the plan off the chart">✕</button></div>
-<footer class="bar">
-  <div class="clock" id="clock">DAY 1</div>
-  <div class="status" id="status" role="status">Laying the chart.</div>
-  <div class="acts">
-    <button type="button" id="btn-intent" class="gives">Give an order</button>
-    <button type="button" id="btn-day">One day</button>
-    <button type="button" class="main" id="btn-go">Carry on</button>
-  </div>
-</footer>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 (function () {
@@ -711,7 +745,7 @@ body.watched .gives { display: none !important; }
   }
 
   // ---- what the side knows, as the tools gave it ----
-  var OFFERED = {}, clock = { at: 'dusk', day: 1 }, lastTold = [];
+  var OFFERED = {}, clock = { at: 'dusk', day: 1 }, lastTold = [], stopArrive = '', since = { from: '', phases: [] }, versusWaited = false;
   var M = { air: [], names: {}, hexNames: {}, day: 1, lastDay: 0, forces: [], units: [], bases: [], enemyBases: [], contacts: [], estimates: [], state: null, over: false, result: null, asking: [] };
   var lastRun = null, draft = null;
   function baseByNumber(n) { var all = M.bases.concat(M.enemyBases), i; for (i = 0; i < all.length; i++) if (num(all[i].base.handle) === n) return all[i]; return null; }
@@ -1067,10 +1101,19 @@ body.watched .gives { display: none !important; }
   var MONTHS = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
   // The date `days` after the daylight of day 1. A game day runs from 1800 to 1800: the night, the morning, the afternoon.
   function dateOf(days, year) { if (!config.start) return ''; var d = new Date(config.start + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + days); return d.getUTCDate() + ' ' + MONTHS[d.getUTCMonth()] + (year ? ' ' + d.getUTCFullYear() : ''); }
+  // The state of the clock, in the head of the stop paper: stopped, running, or waited on.
+  function clockState() {
+    if (M.over) return 'THE GAME IS OVER';
+    if (VERSUS && playing && versusWaited) return 'WAITING FOR THE ' + SIDE_NAME[VERSUS.other].toUpperCase() + ' COMMANDER';
+    return playing ? 'THE CLOCK RUNS' : 'THE CLOCK IS STOPPED';
+  }
   function showClock() {
-    if (clock.at !== 'dusk') { var today = dateOf(M.day - 1, true); $('clock').textContent = (today ? today + ' · ' : '') + clock.at + ' · DAY ' + M.day + (M.lastDay ? ' OF ' + M.lastDay : ''); return; }
-    var day = M.lastDay ? Math.min(M.day, M.lastDay) : M.day, dusk = dateOf(M.day - 2, true);
-    $('clock').textContent = (dusk ? dusk + ' · ' : '') + '1800 · ' + (M.over ? 'THE LAST DAY IS FOUGHT' : 'ORDERS FOR DAY ' + day + ' OF ' + M.lastDay);
+    var state = clockState(), cl = $('clock'), st = $('clock-state');
+    if (clock.at !== 'dusk') { var today = dateOf(M.day - 1, true); cl.textContent = (today ? today + ' \u00b7 ' : '') + clock.at; st.textContent = 'DAY ' + M.day + (M.lastDay ? ' OF ' + M.lastDay : '') + ' \u00b7 ' + state; }
+    else { var day = M.lastDay ? Math.min(M.day, M.lastDay) : M.day, dusk = dateOf(M.day - 2, true); cl.textContent = (dusk ? dusk + ' \u00b7 ' : '') + '1800'; st.textContent = (M.over ? 'THE LAST DAY IS FOUGHT' : 'ORDERS FOR DAY ' + day + (M.lastDay ? ' OF ' + M.lastDay : '')) + ' \u00b7 ' + state; }
+    // At the game's end the foot has one control, to read how it ended; while the other commander is waited for nothing more is ordered.
+    $('btn-intent').hidden = M.over; $('btn-day').hidden = M.over; $('btn-go').hidden = M.over; $('btn-end').hidden = !M.over;
+    $('btn-intent').disabled = !!(VERSUS && playing && versusWaited);
   }
   // A pulse by its date and its hours: "12-13 AUG · NIGHT · 1800-0600". The
   // hours are the theatre's own, one clock for the whole chart.
@@ -1082,9 +1125,42 @@ body.watched .gives { display: none !important; }
     return when + ' \u00b7 ' + phase.toUpperCase() + ' \u00b7 ' + HOURS[phase];
   }
   function showPhase(day, phase) {
-    var t = 'DAY ' + day + ' \u00b7 ' + phaseWords(day, phase);
-    $('clock').textContent = t;
+    $('clock').textContent = phaseWords(day, phase); $('clock-state').textContent = 'DAY ' + day + (M.lastDay ? ' OF ' + M.lastDay : '') + ' \u00b7 THE CLOCK RUNS';
   }
+  // What has been reported since the clock last stopped: the phases of the pulses played, and their lines, as data. The
+  // stop paper says the latest three under SINCE; the rest are read on a paper.
+  function sinceFrom() { var dusk = clock.at === 'dusk', d = dateOf(dusk ? M.day - 2 : M.day - 1); return (dusk ? '1800' : clock.at) + (d ? ', ' + d : ''); }
+  function showSince() {
+    var box = $('since'), all = [], n, lp;
+    // The count is of the reports, those folded under one line among them; the three shown are the latest reports, not a fold.
+    var folded = 0; since.phases.forEach(function (ph) { ph.lines.forEach(function (l) { if (l.more) folded += l.more; else all.push({ ph: ph, l: l }); }); }); n = all.length + folded; box.textContent = '';
+    // On the first evening nothing has been played: the part is left out.
+    $('sp-since').hidden = !since.from && !since.phases.length;
+    $('sp-since-h').textContent = 'SINCE' + (since.from ? ' ' + since.from : '') + (n ? ' \u00b7 ' + n + (n === 1 ? ' REPORT' : ' REPORTS') : '');
+    if (!n) { lp = since.phases[since.phases.length - 1]; box.appendChild(el('div', '', (lp && lp.empty) || 'Nothing is reported.')); return; }
+    all.slice(-3).forEach(function (x, k, list) {
+      if (!k || list[k - 1].ph !== x.ph) box.appendChild(el('b', 'sp-ph', x.ph.title));
+      var node = rich('div', x.l.red ? 'red' : '', x.l.text); box.appendChild(node); whoClaimed(node, x.l.text, x.l.number);
+    });
+    if (n > Math.min(3, all.length)) { var more = el('button', 'ref more', 'and ' + (n - Math.min(3, all.length)) + ' more'); more.type = 'button'; more.addEventListener('click', function () { readSince(); }); box.appendChild(more); }
+  }
+  // A page loaded between stops has what the day reported, plotted at once: at dusk the day just fought, inside a day the pulses so far.
+  function loadSince() {
+    var dusk = clock.at === 'dusk'; if (dusk && M.day <= 1) { showSince(); return Promise.resolve(); }
+    var day = dusk ? M.day - 1 : M.day, date = dateOf(dusk ? M.day - 3 : M.day - 2);
+    return eventsOf(day).then(function (events) {
+      var groups = { night: [], morning: [], afternoon: [], end: [] }, out = [];
+      events.forEach(function (e) { groups[isEntry(e) ? 'night' : e.pulse || 'end'].push(e); });
+      ['night', 'morning', 'afternoon', 'end'].forEach(function (ph) {
+        if (!dusk && !groups[ph].length) return;
+        var lines = digest(groups[ph]).map(function (l) { return { text: l.text, red: !!l.red, number: l.number, more: l.more || 0 }; });
+        out.push({ title: phaseWords(day, ph), lines: lines, empty: lines.length ? null : 'Nothing is reported.' });
+      });
+      since = { from: '1800' + (date ? ', ' + date : ''), phases: out }; showSince();
+    }).catch(function () {});
+  }
+  // The clock starts from a stop: what was told and what was reported are cleared, and shown again from the data at the next stop.
+  function startRun() { lastTold = []; lastRun = null; stopArrive = ''; since = { from: sinceFrom(), phases: [] }; showSince(); showWhy(); }
 
   // ---- the signals tray ----
   // A standing paper the commander may read at any time: a button in the
@@ -1092,21 +1168,13 @@ body.watched .gives { display: none !important; }
   function paper(text, fn, staff) { var b = el('button', '', text); b.type = 'button'; b.addEventListener('click', fn); $(staff ? 'papers-staff' : 'papers').appendChild(b); return b; }
   // A mark on a paper that wants the commander: a count, and what it counts.
   function mark(b, n, words) { if (!n) return; var m = el('span', 'mark', String(n)); b.appendChild(m); b.title = (b.title ? b.title + '. ' : '') + words; b.setAttribute('aria-label', b.textContent.replace(/\d+$/, '').trim() + ': ' + words); }
-  function slip(from, stamp, title, body, decide) {
-    var a = el('article', 'slip' + (decide ? ' decide' : '')), f = el('div', 'from'); f.appendChild(el('span', '', from)); if (stamp) f.appendChild(el('span', 'stamp' + (stamp === 'FOR DECISION' || stamp === 'STOPPED THE CLOCK' ? '' : ' ok'), stamp));
-    a.appendChild(f); if (title) a.appendChild(el('strong', '', plainWords(title))); if (body) a.appendChild(el('div', '', plainWords(body))); $('signals').appendChild(a); return a;
+  // A slip goes into the part of the stop paper it is for: WHY THE CLOCK STOPPED (`into` the why box) or FOR YOUR DECISION (the default).
+  function slip(from, stamp, title, body, decide, into) {
+    var a = el('article', 'slip' + (decide ? ' decide' : '')), f = el('div', 'from'); f.appendChild(el('span', '', from)); if (stamp) f.appendChild(el('span', 'stamp ok', stamp));
+    a.appendChild(f); if (title) a.appendChild(el('strong', '', plainWords(title))); if (body) a.appendChild(el('div', '', plainWords(body))); (into || $('signals')).appendChild(a); return a;
   }
   function button(parent, text, go, fn) { var row = parent.querySelector('.row') || parent.appendChild(el('div', 'row')), b = el('button', go ? 'go' : '', text); b.type = 'button'; b.addEventListener('click', function () { fn(b); }); row.appendChild(b); return b; }
   function act(tool, args, done) { return api(tool, args).then(function (a) { say('signed', done || a.summary || 'Done.'); return refresh(); }).catch(function (e) { say('refused', 'Refused: ' + e.message); }); }
-  function askWhy(a, numbers, b) {
-    b.disabled = true; var box = a.appendChild(el('div', 'why'));
-    numbers.slice(0, 3).reduce(function (p, n) {
-      return p.then(function () { return api('why', { number: n }); }).then(function (w) {
-        // The reason laid out as the war diary lays it out: what the staff came to, what it is for, the cause, what would change it.
-        var one = box.appendChild(el('div', 'reason')); reasonView(one, w);
-      });
-    }, Promise.resolve()).catch(function (e) { box.appendChild(el('div', '', e.message)); });
-  }
   var TOLD = { contact: 'A contact is reported', attack: 'You are attacked', loss: 'A ship is lost or out of action', strike: 'Your strike is away', landing: 'Your men are ashore, or fighting' };
   // ---- a force asks leave to go after what it has found (decision 0214) ----
   function wholeHours(h) { var v = parseFloat(h); return isNaN(v) ? null : Math.round(v); }
@@ -1129,7 +1197,7 @@ body.watched .gives { display: none !important; }
   function askingSlips() {
     M.asking.forEach(function (a) {
       var h = wholeHours(a.hours), age = a.age_pulses ? ', reported ' + a.age_pulses + (a.age_pulses === 1 ? ' pulse' : ' pulses') + ' ago' : ', just reported';
-      var s = slip('FROM STAFF', 'FOR DECISION', 'Leave to go after ' + askingWhat(a), null, true);
+      var s = slip('FROM STAFF', null, 'Leave to go after ' + askingWhat(a), null, true);
       s.appendChild(rich('div', '', 'Found ' + hexWords(a.reported_at) + age + '. task_force:' + a.task_force + (a.contact != null ? ' (contact:' + a.contact + ')' : '') + ' would go to ' + hexWords(a.to) + (h != null ? ', ' + (h < 1 ? 'under 1 hour' : h + (h === 1 ? ' hour' : ' hours')) : '') + '. ' + askingOrder(a).replace(/^./, function (c) { return c.toUpperCase(); }) + ' would wait.'));
       if (!WATCH) { button(s, 'ALLOW', true, function () { answerPursuit(a, true); }); button(s, 'REFUSE', false, function () { answerPursuit(a, false); }); }
     });
@@ -1137,8 +1205,6 @@ body.watched .gives { display: none !important; }
   function pursuitOf(h) { var n = num(h); return ((M.state && M.state.pursuits) || []).filter(function (p) { return p.task_force === n; })[0]; }
   function showSignals() {
     var box = $('signals'), s = M.state; box.textContent = ''; $('papers').textContent = ''; $('papers-staff').textContent = ''; $('leave-slot').textContent = ''; $('holds-list').textContent = '';
-    if (M.over) { var endSlip = slip('THE UMPIRE', 'ENDED', 'The campaign is over', endLine(), true); endSlip.classList.add('opens'); endSlip.tabIndex = 0; endSlip.setAttribute('role', 'button'); endSlip.addEventListener('click', readEnd); endSlip.appendChild(el('div', 'told', 'READ HOW IT ENDED \u203A')); if (!endShown) { endShown = true; readEnd(); } }
-    lastTold.forEach(function (t) { var a = slip('FROM THE PLOT · ' + (clock.at === 'dusk' ? '1800' : clock.at), 'STOPPED THE CLOCK', TOLD[t.thing] || t.thing, null, true); t.lines.slice(0, 10).forEach(function (l) { a.appendChild(rich('div', 'told', l)); }); if (t.lines.length > 10) a.appendChild(el('div', 'told', 'And ' + (t.lines.length - 10) + ' more: see the war diary.')); });
     // What is held from the staff is kept in the Staff menu, folded, with its count: it is a standing state, not a signal.
     (s.holds || []).forEach(function (h) {
       var a = el('div', 'hold'), args = {}, what = null; ['ship', 'task_force', 'air_group', 'land_unit', 'setting'].forEach(function (k) { if (h.target && h.target[k] != null) { args[k] = h.target[k]; if (k !== 'setting' && !what) what = k + ':' + h.target[k]; } });
@@ -1150,14 +1216,6 @@ body.watched .gives { display: none !important; }
       $('holds-list').appendChild(a);
     });
     (function () { var n = (s.holds || []).length, d = $('holds-staff'); d.hidden = !n; d.querySelector('summary').textContent = 'Held from the staff \u00B7 ' + n; })();
-    // A plan that waits for the commander's leave has one notice, below, which
-    // opens its order: the clock's own slip for it would say the same twice.
-    if (lastRun && lastRun.fired) lastRun.fired.forEach(function (f) {
-      if (f.standing === 'waits_for_leave') return;
-      var a = slip('FROM STAFF · DAY ' + f.day, 'STOPPED THE CLOCK', f.words.replace(/^standing \w+ fired: /, '').replace(/^./, function (c) { return c.toUpperCase(); }), null, true);
-      if (f.why && f.why.length) button(a, 'WHY', true, function (b) { askWhy(a, f.why, b); });
-      if (f.standing && !WATCH) button(a, 'DO NOT STOP ME FOR THIS', false, function () { act('set_interrupt', { standing: f.standing, on: false }, 'The clock will not stop for that again.'); });
-    });
     askingSlips();
     var roots = s.intents.filter(function (i) { return i.in_force && !i.parent; });
     // With no intent stated the staff does nothing: the button that states one is marked, and nothing is said.
@@ -1165,7 +1223,7 @@ body.watched .gives { display: none !important; }
     s.plans.forEach(function (p) {
       var waits = (p.state === 'preparing' && !s.leaves.launch) || (p.state === 'draft' && !s.leaves.prepare); if (!waits || signed('approve', 'plan', p.number)) return;
       var po = planOf(p.number), name = po.name ? po.name.charAt(0).toUpperCase() + po.name.slice(1) : 'Plan ' + p.number, root = po.root != null ? po.root : p.intent;
-      var a = slip('FROM STAFF', 'FOR DECISION', name, p.state === 'preparing' ? 'The plan is ready and waits for your leave to launch.' : 'The plan waits for your leave to prepare.', true);
+      var a = slip('FROM STAFF', null, name, p.state === 'preparing' ? 'The plan is ready and waits for your leave to launch.' : 'The plan waits for your leave to prepare.', true);
       a.appendChild(el('div', 'more', 'Open the order \u203A')); a.classList.add('opens'); a.tabIndex = 0; a.setAttribute('role', 'button'); a.setAttribute('aria-label', name + ': open the order to give or withhold your leave');
       var open = function () { readPlan(root); }; a.addEventListener('click', open); a.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
     });
@@ -1207,6 +1265,54 @@ body.watched .gives { display: none !important; }
     if (clock.at === 'dusk') paper('Report', readReport, true); else paper('Situation', readBriefing, true);
     // What the staff decided is in the war diary, entry by entry.
     if (M.day > 1 || clock.at !== 'dusk') paper('War diary', function () { readDiary(); }, true);
+    // FOR YOUR DECISION holds what waits for the commander, with its count; a watched game has none. WHY THE CLOCK STOPPED is made from the stop's data.
+    var waiting = $('signals').children.length; $('sp-decide-h').textContent = 'FOR YOUR DECISION' + (waiting ? ' \u00b7 ' + waiting : ''); $('sp-decide').hidden = !!WATCH || !waiting;
+    showWhy();
+  }
+  // WHY THE CLOCK STOPPED: each reason of this stop, one slip for each kind of reason. It is not shown while the clock runs, nor where
+  // the stop was the commander's own. What was told and what fired are shown again from the data at each stop.
+  function showWhy() {
+    var box = $('why'); box.textContent = '';
+    if (M.over) {
+      var endSlip = slip('THE UMPIRE', 'ENDED', 'The campaign is over', endLine(), false, box), rd = el('button', 'ref more', 'Read how it ended'); rd.type = 'button'; rd.addEventListener('click', function () { readEnd(); }); endSlip.appendChild(rd);
+      if (!endShown) { endShown = true; readEnd(); }
+    }
+    lastTold.forEach(function (t) {
+      var a = slip('FROM THE PLOT \u00b7 ' + (clock.at === 'dusk' ? '1800' : clock.at), null, TOLD[t.thing] || t.thing, null, false, box); t.lines.slice(0, 3).forEach(function (l) { a.appendChild(rich('div', 'told', l)); });
+      if (t.lines.length > 3) { var more = el('button', 'ref more', 'and ' + (t.lines.length - 3) + ' more'); more.type = 'button'; more.addEventListener('click', function () { readTold(t); }); a.appendChild(more); }
+    });
+    // A plan that waits for the commander's leave has one notice, under FOR YOUR DECISION: the clock's own slip for it would say the same twice.
+    if (lastRun && lastRun.fired) lastRun.fired.forEach(function (f) {
+      if (f.standing === 'waits_for_leave') return;
+      var a = slip('FROM STAFF \u00b7 DAY ' + f.day, null, f.words.replace(/^standing \w+ fired: /, '').replace(/^./, function (c) { return c.toUpperCase(); }), null, false, box);
+      if (f.why && f.why.length) button(a, 'WHY', true, function () { readFired(f); });
+      if (f.standing && !WATCH) button(a, 'DO NOT STOP ME FOR THIS', false, function () { act('set_interrupt', { standing: f.standing, on: false }, 'The clock will not stop for that again.'); });
+    });
+    if (lastRun && lastRun.fired && lastRun.fired.some(function (f) { return f.standing === 'waits_for_leave'; })) slip('FROM STAFF', null, 'A plan waits for your leave.', null, false, box);
+    if (stopArrive) slip('FROM THE PLOT \u00b7 ' + (clock.at === 'dusk' ? '1800' : clock.at), null, stopArrive.replace(/^./, function (c) { return c.toUpperCase(); }), null, false, box);
+    if (lastRun && lastRun.stopped === 'asks_leave' && M.asking.length) slip('FROM STAFF', null, 'The staff asks your leave.', null, false, box);
+    $('sp-why').hidden = playing || !box.children.length;
+  }
+  // The rest of what was told at this stop, and the reasons of an interrupt, are read on a paper over the chart.
+  function readTold(t) {
+    var doc = $('sheet-doc'); doc.textContent = ''; t.lines.forEach(function (l) { doc.appendChild(rich('p', '', l)); });
+    sheetAs(TOLD[t.thing] || t.thing); doc.hidden = false; $('sheet-text').hidden = true; $('sheet').hidden = false; $('sheet-close').focus();
+  }
+  function readFired(f) {
+    var doc = $('sheet-doc'); doc.textContent = '';
+    sheetAs('WHY THE CLOCK STOPPED'); doc.hidden = false; $('sheet-text').hidden = true; $('sheet').hidden = false; $('sheet-close').focus();
+    // The reason laid out as the war diary lays it out: what the staff came to, what it is for, the cause, what would change it.
+    f.why.slice(0, 3).reduce(function (q, n) {
+      return q.then(function () { return api('why', { number: n }); }).then(function (w) { var node = doc.appendChild(el('div', 'node')); reasonView(node.appendChild(el('div', 'reason')), w); });
+    }, Promise.resolve()).catch(function (e) { doc.appendChild(el('p', '', e.message)); });
+  }
+  function readSince() {
+    var doc = $('sheet-doc'); doc.textContent = '';
+    since.phases.forEach(function (ph) {
+      doc.appendChild(el('h3', '', ph.title)); if (!ph.lines.length) { if (ph.empty) doc.appendChild(el('p', '', ph.empty)); return; }
+      ph.lines.forEach(function (l) { var node = rich('p', l.red ? 'red' : '', l.text); doc.appendChild(node); whoClaimed(node, l.text, l.number); });
+    });
+    sheetAs('SINCE' + (since.from ? ' ' + since.from : '')); doc.hidden = false; $('sheet-text').hidden = true; $('sheet').hidden = false; $('sheet-close').focus();
   }
   // ---- a mention of a thing is a link to what is known of it ----
   // Wherever a force, a base, a ship, an air group, a land unit or a contact
@@ -2244,9 +2350,11 @@ body.watched .gives { display: none !important; }
   }
   // Who made a claim: the side's own units whose fire it rests on, asked of
   // the game, and put in place of "Pilots" or "Ships" once it answers.
+  var EXPLAINED = {};
   function whoClaimed(node, text, number) {
     if (number == null || !/^(Pilots|Ships) report /.test(text)) return;
-    api('explain', { event: number }).then(function (x) {
+    // The reports are drawn again as they come in: a claim is asked after once.
+    (EXPLAINED[number] = EXPLAINED[number] || api('explain', { event: number })).then(function (x) {
       var who = []; (x.nodes || []).forEach(function (n) { if (n.depth !== 1) return; (n.entities || []).forEach(function (en) { var h = en && en.handle; if (!h || who.indexOf(h) >= 0) return; var ours = /^air_group:/.test(h) ? M.air.some(function (a) { return a.air_group.handle === h; }) : /^task_force:/.test(h) ? M.forces.some(function (f) { return f.task_force.handle === h; }) : false; if (ours) { if (!M.names[h] && en.name) M.names[h] = cleanName(en.name); who.push(h); } }); });
       if (!who.length || !node.parentNode) return;
       var shown = who.slice(0, 3), said = (shown.length > 1 ? shown.slice(0, -1).join(', ') + ' and ' + shown[shown.length - 1] : shown[0]) + (who.length > 3 ? ' and others' : '') + (who.length > 1 ? ' report ' : ' reports ');
@@ -2901,12 +3009,12 @@ body.watched .gives { display: none !important; }
       var a = slip('FROM ' + d.from.toUpperCase(), 'NEW', 'Directive ' + d.number + ': ' + d.subject, null, true);
       button(a, 'READ THE DIRECTIVE', true, function () { readDirective(d); });
     });
-    // The in-tray on the top of the table: what has come from above. A paper
-    // stands up out of it, stamped, while one lies unread.
-    var tray = $('btn-in'); tray.hidden = !got.length; tray.textContent = ''; tray.classList.toggle('new', unread > 0);
-    tray.appendChild(el('span', '', 'In \u00B7 ' + got.length + (got.length === 1 ? ' directive' : ' directives'))); if (unread) tray.appendChild(el('span', 'stamp', 'RECEIVED'));
-    tray.title = unread ? unread + ' not yet read' : 'Directives from the commander above';
-    tray.onclick = function () { if (got.length === 1) readDirective(got[0]); else readInTray(got); };
+    // What has come from above is a paper in the Staff menu, marked with the count of what is unread; while one is unread it is also under FOR YOUR DECISION.
+    if (got.length) {
+      var tray = paper('Directives \u00B7 ' + got.length, function () { if (got.length === 1) readDirective(got[0]); else readInTray(got); }, true);
+      tray.title = unread ? unread + ' not yet read' : 'Directives from the commander above';
+      mark(tray, unread, unread + ' not yet read'); if (unread) tray.setAttribute('aria-label', 'Directives, ' + got.length + ': ' + unread + ' not yet read');
+    }
     keep(); if (fresh && $('sheet').hidden) setTimeout(function () { readDirective(fresh); }, 0);
   }
   function readInTray(got) {
@@ -3035,12 +3143,13 @@ body.watched .gives { display: none !important; }
   var sheetTrail = [], sheetHere = null, sheetBacking = false;
   function tracked(name, fn, keyOf) { var w = function () { var args = arguments, key = name + (keyOf ? ':' + keyOf.apply(null, args) : ''), again = function () { w.apply(null, args); }; if ($('sheet').hidden) sheetTrail = []; else if (sheetHere && sheetHere.key !== key && !sheetBacking) sheetTrail.push(sheetHere); sheetBacking = false; sheetHere = { key: key, fn: again }; return fn.apply(null, args); }; return w; }
   readDiary = tracked('diary', readDiary); readEnd = tracked('end', readEnd); readUnitDiary = tracked('unitdiary', readUnitDiary, function (h) { return h; }); readSchedule = tracked('schedule', readSchedule); readPlan = tracked('plan', readPlan, function (root) { return root; }); readEstimate = tracked('estimate', readEstimate, function (j) { return j.estimate + ':' + j.kind; });
+  readTold = tracked('told', readTold, function (t) { return t.thing; }); readFired = tracked('fired', readFired, function (f) { return (f.why || []).join(','); }); readSince = tracked('since', readSince);
   readOob = tracked('oob', readOob); readInTray = tracked('in', readInTray); readDirective = tracked('directive', readDirective, function (d) { return d.number; }); readReport = tracked('report', readReport); readBriefing = tracked('situation', readBriefing);
   $('sheet-back').addEventListener('click', function () { var p = sheetTrail.pop(); if (!p) return; sheetBacking = true; p.fn(); });
   $('sheet-close').addEventListener('click', function () { $('sheet').hidden = true; });
   $('planchip-off').addEventListener('click', clearPlan);
   $('planchip-read').addEventListener('click', function () { if (planShown != null) readPlan(planShown); });
-  document.addEventListener('keydown', function (e) { if (e.key !== 'Escape') return; if (!$('sheet').hidden) { $('sheet').hidden = true; } else if (!$('card').hidden) { $('card-close').click(); } });
+  document.addEventListener('keydown', function (e) { if (e.key !== 'Escape') return; if (!$('sheet').hidden) { $('sheet').hidden = true; } else if (!$('card').hidden) { $('card-close').click(); } else if (document.body.classList.contains('drawer-open')) { shutDrawer(); } });
 
   // ---- time: you watch a day played out, and may stop between days ----
   // The seat's tools answer between days, so a day is fought and then plotted: the table plays the three
@@ -3072,11 +3181,11 @@ body.watched .gives { display: none !important; }
       lines.push({ text: sayEvent(e, true), number: e.event_kind === 'claim_received' ? e.number : null, hex: hexIn(e.text), red: /enemy|attack|bomb|sunk|hit|lost|contact|fight|surrender/.test(e.text) });
     });
     Object.keys(landed).forEach(function (k) { lines.unshift({ text: commas(landed[k]) + ' men landed at ' + named(k), hex: hexIn(k), red: false }); });
-    Object.keys(perKind).forEach(function (k) { var n = perKind[k] - 3; if (n > 0) lines.push({ text: 'and ' + n + ' more ' + (n === 1 ? 'report' : 'reports') + ' of ' + (MORE_OF[k] || k.replace(/_/g, ' ')) }); });
+    Object.keys(perKind).forEach(function (k) { var n = perKind[k] - 3; if (n > 0) lines.push({ text: 'and ' + n + ' more ' + (n === 1 ? 'report' : 'reports') + ' of ' + (MORE_OF[k] || k.replace(/_/g, ' ')), more: n }); });
     return lines;
   }
   async function plotPhase(day, ph, evs) {
-    var log = $('plot'), far = 0.04, any = false; log.hidden = false; showPhase(day, ph); mover = null;
+    var far = 0.04, any = false; showPhase(day, ph); mover = null;
     Object.keys(pieces).forEach(function (h) { var p = pieces[h]; p.from = p.grp.position.clone(); p.to = p.from.clone(); });
     evs.forEach(function (e) {
       if (e.event_kind !== 'task_force_steamed') return; var m = /^(task_force:\d+) .* to \((-?\d+),(-?\d+)\)/.exec(e.text); if (!m) return;
@@ -3084,9 +3193,10 @@ body.watched .gives { display: none !important; }
       p.to = world(h[3], h[4]); any = true; var d = p.from.distanceTo(p.to); if (d > far) { far = d; mover = p; }
     });
     moveT = any ? 0 : 1;
-    var lines = digest(evs), box = el('div', 'phase'); box.appendChild(el('b', '', phaseWords(day, ph))); log.appendChild(box); log.scrollTop = log.scrollHeight;
-    if (!lines.length) box.appendChild(el('div', '', any ? 'Your forces steam on. Nothing else is reported.' : 'Nothing is reported.'));
-    for (var k = 0; k < lines.length; k++) { var made = rich('div', lines[k].red ? 'red' : '', lines[k].text); box.appendChild(made); whoClaimed(made, lines[k].text, lines[k].number); flash(lines[k].hex, lines[k].red ? 0xa3211a : 0x1f4e8c); log.scrollTop = log.scrollHeight; if (!calm) await sleep(Math.min(420, 2400 / lines.length)); }
+    // The reports are kept as data, a phase and its lines; SINCE on the stop paper says the latest of them as they come.
+    var lines = digest(evs), phase = { title: phaseWords(day, ph), lines: [], empty: null }; since.phases.push(phase);
+    if (!lines.length) { phase.empty = any ? 'Your forces steam on. Nothing else is reported.' : 'Nothing is reported.'; showSince(); }
+    for (var k = 0; k < lines.length; k++) { phase.lines.push({ text: lines[k].text, red: !!lines[k].red, number: lines[k].number, more: lines[k].more || 0 }); showSince(); flash(lines[k].hex, lines[k].red ? 0xa3211a : 0x1f4e8c); if (!calm) await sleep(Math.min(420, 2400 / lines.length)); }
     if (!calm) await sleep(any || lines.length ? 1500 : 500);
   }
   // A force or unit that came onto the map did so at the start of its day, though the engine gives the event no pulse.
@@ -3101,7 +3211,6 @@ body.watched .gives { display: none !important; }
   async function plotDay(day, events) {
     var groups = { night: [], morning: [], afternoon: [], end: [] }, phases = ['night', 'morning', 'afternoon', 'end'];
     events.forEach(function (e) { groups[isEntry(e) ? 'night' : e.pulse || 'end'].push(e); });
-    $('plot').textContent = '';
     for (var i = 0; i < phases.length; i++) await plotPhase(day, phases[i], groups[phases[i]]);
   }
   var calm = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -3113,17 +3222,16 @@ body.watched .gives { display: none !important; }
   function go(until) {
     if (WATCH) return watchGo(until);
     if (M.over) { say('stopped', 'The game is over.'); return; }
-    closeOrder(); closeForce(); playing = true; $('btn-go').textContent = 'Stop the clock'; $('btn-day').disabled = true;
-    function rest(words, kind) { playing = false; $('btn-go').textContent = 'Carry on'; $('btn-day').disabled = false; say(kind || 'stopped', words); }
+    closeOrder(); closeForce(); playing = true; $('btn-go').textContent = 'Stop the clock'; $('btn-day').disabled = true; startRun(); showClock();
+    function rest(words, kind) { playing = false; $('btn-go').textContent = 'Carry on'; $('btn-day').disabled = false; showClock(); showWhy(); say(kind || 'stopped', words); }
     (async function () {
       try {
         for (;;) {
           if (OFFERED.advance) {
             say('running', VERSUS ? finishedWords() : 'The clock runs.');
             var r = await api('advance', { pulses: 1, stop_on: stopOn() }), done = r.pulses_resolved[0], byNumber = {};
-            lastRun = { fired: r.fired || [], summary: r.summary }; lastTold = []; takeAsking(r.stopped === 'asks_leave' ? r.asking : []); if (r.game_over) { M.over = true; M.result = r.result; }
+            lastRun = { fired: r.fired || [], summary: r.summary, stopped: r.stopped }; lastTold = []; takeAsking(r.stopped === 'asks_leave' ? r.asking : []); if (r.game_over) { M.over = true; M.result = r.result; }
             if (done) {
-              if (done.pulse === 'night') $('plot').textContent = '';
               var evs = await pulseEvents(done.day, done.pulse); evs.forEach(function (e) { byNumber[e.number] = e; });
               await plotPhase(done.day, done.pulse, evs);
               if (done.pulse === 'afternoon') { var end = await pulseEvents(done.day, 'end'); end.forEach(function (e) { byNumber[e.number] = e; }); await plotPhase(done.day, 'end', end); }
@@ -3137,6 +3245,7 @@ body.watched .gives { display: none !important; }
             clock = { at: r.clock.at, day: r.clock.day }; await refresh();
             var arrive = arrivalsStop();
             if (!until || !playing || r.game_over || r.stopped !== 'pulses' || arrive) {
+              stopArrive = arrive;
               var when = clock.at === 'dusk' ? 'at 1800' : 'at ' + clock.at + ' of day ' + clock.day;
               return rest(r.game_over ? 'The game is over.' : r.stopped === 'asks_leave' ? 'The clock is stopped ' + when + ': the staff asks your leave.' : r.stopped === 'told' ? 'The clock is stopped ' + when + ': you were told something you asked to be stopped for.' : r.stopped === 'interrupt' ? 'The clock is stopped ' + when + ': the staff has a signal for you.' : arrive ? 'The clock is stopped ' + when + ': ' + arrive + '.' : '');
             }
@@ -3148,7 +3257,7 @@ body.watched .gives { display: none !important; }
             say('running', 'Day ' + day + ': the reports come in.');
             await plotDay(day, await eventsOf(day)); await refresh();
             var fired = d.fired && d.fired.length, arrive = arrivalsStop();
-            if (!until || !playing || d.game_over || fired || arrive) return rest(d.game_over ? 'The game is over.' : arrive && !fired ? 'The clock is stopped: ' + arrive + '.' : fired ? 'The clock is stopped: ' + d.fired.length + ' signal' + (d.fired.length > 1 ? 's wait' : ' waits') + ' for you.' : '');
+            if (!until || !playing || d.game_over || fired || arrive) { stopArrive = arrive; return rest(d.game_over ? 'The game is over.' : arrive && !fired ? 'The clock is stopped: ' + arrive + '.' : fired ? 'The clock is stopped: ' + d.fired.length + ' signal' + (d.fired.length > 1 ? 's wait' : ' waits') + ' for you.' : ''); }
           }
         }
       } catch (e) { rest('Refused: ' + e.message, 'refused'); }
@@ -3180,8 +3289,8 @@ body.watched .gives { display: none !important; }
   }
   function watchGo(until) {
     if (M.over) { say('stopped', 'The game is over.'); return; }
-    closeOrder(); closeForce(); playing = true; $('btn-go').textContent = 'Stop'; $('btn-day').disabled = true;
-    function rest(words, kind) { playing = false; $('btn-go').textContent = 'Carry on'; $('btn-day').disabled = false; say(kind || 'stopped', words); pollSeats(); }
+    closeOrder(); closeForce(); playing = true; $('btn-go').textContent = 'Stop'; $('btn-day').disabled = true; startRun(); showClock();
+    function rest(words, kind) { playing = false; $('btn-go').textContent = 'Carry on'; $('btn-day').disabled = false; showClock(); showWhy(); say(kind || 'stopped', words); pollSeats(); }
     (async function () {
       try {
         for (;;) {
@@ -3196,7 +3305,6 @@ body.watched .gives { display: none !important; }
           if (a.refused != null) { if (!until) return rest(a.refused, 'refused'); await sleep(1500); if (!playing) return rest(''); continue; }
           var s = a.ok, day = s.resolved.day, pulses = s.resolved.pulses, evs = [];
           if (pulses.length === 1) {
-            if (pulses[0] === 'night') $('plot').textContent = '';
             evs = await pulseEvents(day, pulses[0]); await plotPhase(day, pulses[0], evs);
             if (pulses[0] === 'afternoon') { var end = await pulseEvents(day, 'end'); evs = evs.concat(end); await plotPhase(day, 'end', end); }
           } else { say('running', 'Day ' + day + ': the reports come in.'); evs = await eventsOf(day); await plotDay(day, evs); }
@@ -3204,6 +3312,7 @@ body.watched .gives { display: none !important; }
           clock = { at: s.clock.at, day: s.clock.day }; await refresh();
           var arrive = arrivalsStop();
           if (!until || !playing || s.game_over || lastTold.length || arrive) {
+            stopArrive = arrive;
             var when = clock.at === 'dusk' ? 'at 1800' : 'at ' + clock.at + ' of day ' + clock.day;
             return rest(s.game_over ? 'The game is over.' : lastTold.length ? 'The clock is stopped ' + when + '.' : arrive ? 'The clock is stopped ' + when + ': ' + arrive + '.' : '');
           }
@@ -3270,7 +3379,7 @@ body.watched .gives { display: none !important; }
     if (!WATCH || side === WATCH.side) return; if (playing) { say('stopped', 'Stop the clock first.'); return; }
     WATCH.side = side; config.seat = side; config.directives = WATCH.directives[side] || [];
     KEPT = KEPT_ROOT + '-' + side; received = {}; readOnes = {}; recalled = false;
-    dayCache = {}; lastTold = []; lastRun = null; seatSeen = ''; $('plot').textContent = ''; $('plot').hidden = true;
+    dayCache = {}; lastTold = []; lastRun = null; stopArrive = ''; seatSeen = ''; since = { from: '', phases: [] }; showSince();
     $('sheet').hidden = true; $('card').hidden = true; clearPlan(); headSeat(); sideButtons();
     watchTools().then(refresh).then(pollSeats).catch(function (e) { say('failed', e.message); });
   }
@@ -3292,18 +3401,20 @@ body.watched .gives { display: none !important; }
     var word = st.game_over ? 'ENDED' : !seat.at_seat ? 'NOT YET AT HIS SEAT' : seat.waited_for ? 'WAITED FOR' : 'READY';
     f.appendChild(el('span', '', 'THE ' + SIDE_NAME[VERSUS.other].toUpperCase() + ' COMMANDER')); f.appendChild(el('span', 'stamp' + (word === 'READY' ? ' ok' : ''), word));
     a.appendChild(f); box.appendChild(a);
+    var waited = !!seat.waited_for && !st.game_over; if (waited !== versusWaited) { versusWaited = waited; showClock(); }
   }
   function pollVersus() { return fetch(BASE + '/standing').then(function (r) { return r.json(); }).then(function (a) { if (a.ok) showVersus(a.ok); }).catch(function () {}); }
   // A page loaded while its call of time is held picks the wait up again, and draws the answer's day once it comes.
   function resumeVersus() {
     return fetch(BASE + '/standing').then(function (r) { return r.json(); }).then(function (a) {
       var mine = ((a.ok && a.ok.seats) || []).filter(function (x) { return x.seat === config.seat; })[0];
-      if (!mine || !mine.held || (a.ok && a.ok.game_over)) return;
-      playing = true; $('btn-go').textContent = 'Stop the clock'; $('btn-day').disabled = true; say('running', finishedWords());
-      var rest = function (words, kind) { playing = false; $('btn-go').textContent = 'Carry on'; $('btn-day').disabled = false; say(kind || 'stopped', words); };
-      return api('wait').then(function (r) { if (r && r.game_over) { M.over = true; M.result = r.result; } return refresh(); }).then(function () { rest(M.over ? 'The game is over.' : 'The clock has moved.'); })
+      if (!mine || !mine.held || (a.ok && a.ok.game_over)) return false;
+      playing = true; $('btn-go').textContent = 'Stop the clock'; $('btn-day').disabled = true; startRun(); showClock(); say('running', finishedWords());
+      var rest = function (words, kind) { playing = false; $('btn-go').textContent = 'Carry on'; $('btn-day').disabled = false; showClock(); showWhy(); say(kind || 'stopped', words); };
+      api('wait').then(function (r) { if (r && r.game_over) { M.over = true; M.result = r.result; } return refresh(); }).then(function () { rest(M.over ? 'The game is over.' : 'The clock has moved.'); })
         .catch(function (e) { rest(''); return refresh().catch(function () {}); });
-    }).catch(function () {});
+      return true;
+    }).catch(function () { return false; });
   }
   function startVersus() {
     VERSUS = { other: config.versus.other, insideDay: config.versus.inside_day };
@@ -3337,7 +3448,7 @@ body.watched .gives { display: none !important; }
   }
   function showScreen() {
     var paper = $('newgame-paper'), pick = { scenario: null, seat: null, allied: 'engine', japanese: 'engine' }, list = [];
-    $('newgame').hidden = false; document.querySelector('.top').hidden = true; document.querySelector('.bar').hidden = true; document.querySelector('.view').hidden = true; document.querySelector('.tray').hidden = true;
+    $('newgame').hidden = false; $('stop').hidden = true; document.querySelector('.menus').hidden = true; document.querySelector('.view').hidden = true;
     paper.textContent = ''; paper.appendChild(el('h2', '', 'A NEW GAME')); paper.appendChild(el('div', 'says', 'Asking the table for its scenarios.'));
     function pairings() { var s = list.filter(function (x) { return x.id === pick.scenario; })[0]; return s ? s.pairings : []; }
     function holderOf(p, side) { return pick.seat === side ? 'person' : p[side]; }
@@ -3685,19 +3796,20 @@ body.watched .gives { display: none !important; }
     goal.zoom = z; clampGoal();
   }
   $('btn-lean').addEventListener('click', function () { leanBy(0.25); });
-  // The view's buttons are signs, with a word only where a sign cannot say which of several it is on.
-  var SIGN = { table: '<svg viewBox="0 0 24 24"><path d="M6 7h12l4 11H2z"/></svg>', chart: '<svg viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15"/><path d="M9 4.5v15M15 4.5v15M3.5 12h17"/></svg>', pieces: '<svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12"/><path d="M3 6l18 12M21 6L3 18"/></svg>', labels: '<svg viewBox="0 0 24 24"><path d="M3 5h10l8 7-8 7H3z"/><circle cx="8" cy="12" r="1.3"/></svg>' };
-  function sign(b, svg, word, title) { b.innerHTML = svg; if (word) { var w = document.createElement('span'); w.textContent = word; b.appendChild(w); } b.title = title; b.setAttribute('aria-label', title); }
+  // The chart's controls are words, each lit when what it shows is on.
+  function sign(b, word, title, lit) { b.textContent = word; b.title = title; b.setAttribute('aria-label', title); b.setAttribute('aria-pressed', String(!!lit)); }
   function signs() {
-    sign($('btn-view'), chartView ? SIGN.chart : SIGN.table, '', chartView ? 'The chart from above. Touch for the table from the chair' : 'The table from the chair. Touch for the chart from above');
-    sign($('btn-pieces'), SIGN.pieces, { all: 'all', own: 'ours', enemy: 'enemy', none: 'off' }[piecesShown], PIECE_WORD[piecesShown]);
-    sign($('btn-labels'), SIGN.labels, { pointer: 'pointer', all: 'all', off: 'off' }[labelsShown], LABEL_WORD[labelsShown] + ': the slips over the pieces');
+    sign($('btn-view'), 'TABLE', 'The table from the chair', !chartView);
+    sign($('btn-above'), 'FROM ABOVE', 'The chart from above', chartView);
+    sign($('btn-pieces'), 'PIECES \u00b7 ' + { all: 'ALL', own: 'OURS', enemy: 'ENEMY', none: 'OFF' }[piecesShown], PIECE_WORD[piecesShown], piecesShown !== 'none');
+    sign($('btn-labels'), 'NAMES \u00b7 ' + { pointer: 'POINTER', all: 'ALL', off: 'OFF' }[labelsShown], LABEL_WORD[labelsShown] + ': the slips over the pieces', labelsShown !== 'off');
   }
   $('btn-pieces').addEventListener('click', function () { piecesShown = PIECES[(PIECES.indexOf(piecesShown) + 1) % PIECES.length]; try { localStorage.setItem('flagplot.pieces', piecesShown); } catch (e) {} signs(); if (g) drawMarks(); });
   $('card-prev').addEventListener('click', function () { stepStack(-1); }); $('card-next').addEventListener('click', function () { stepStack(1); });
   $('btn-labels').addEventListener('click', function () { labelsShown = LABELS[(LABELS.indexOf(labelsShown) + 1) % LABELS.length]; try { localStorage.setItem('flagplot.labels', labelsShown); } catch (e) {} signs(); });
   signs();
-  $('btn-view').addEventListener('click', function () { chartView = !chartView; try { localStorage.setItem('flagplot.view', chartView ? 'chart' : 'table'); } catch (e) {} signs(); });
+  function setView(chart) { if (chartView === chart) return; chartView = chart; try { localStorage.setItem('flagplot.view', chartView ? 'chart' : 'table'); } catch (e) {} signs(); }
+  $('btn-view').addEventListener('click', function () { setView(false); }); $('btn-above').addEventListener('click', function () { setView(true); });
   $('btn-plans').addEventListener('click', function () { if (planShown === 'all') clearPlan(); else showPlanOnChart('all'); });
   try { if (localStorage.getItem('flagplot.plans') === '1') { planShown = 'all'; $('btn-plans').setAttribute('aria-pressed', 'true'); } } catch (e) {}
   $('btn-hexes').setAttribute('aria-pressed', String(showHexes));
@@ -3737,12 +3849,38 @@ body.watched .gives { display: none !important; }
     clearTimeout(newAsked); b.disabled = true; playing = false; say('running', 'Ending this game.');
     fetch(BASE + '/new', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }).then(function (r) { return r.json(); }).then(function (a) { if (a.refused != null) throw new Error(a.refused); try { history.replaceState(null, '', location.pathname); } catch (e) {} location.reload(); }).catch(function (e) { b.disabled = false; say('failed', 'It could not end the game: ' + e.message); });
   });
-  $('btn-agent').addEventListener('click', readAgentSeats);
+  $('btn-agent').addEventListener('click', function () { shutMenus(); readAgentSeats(); });
   $('btn-stops').addEventListener('click', function () { shutMenus(); var f = $('stops'); f.hidden = !f.hidden; this.setAttribute('aria-expanded', String(!f.hidden)); });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !$('stops').hidden) { $('stops').hidden = true; $('btn-stops').setAttribute('aria-expanded', 'false'); } });
   $('btn-back').addEventListener('click', function () { leanBy(-0.25); });
-  function resize() { var w = window.innerWidth, h = window.innerHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
+  // The chair looks at the middle of the part of the window no panel covers: the stop paper where it is a column, and a card or an
+  // order form where one shows. The picture is shifted so, eased as the chair is; a paper for reading does not count.
+  var viewX = null;
+  function applyView() { var w = window.innerWidth, h = window.innerHeight; camera.setViewOffset(w, h, viewX || 0, 0, w, h); camera.updateProjectionMatrix(); }
+  function coverLeft() { return window.innerWidth >= 1100 && !$('stop').hidden ? $('stop').offsetWidth : 0; }
+  function coverRight() { var r = 0; ['card', 'order', 'force', 'course'].forEach(function (id) { var n = $(id); if (!n.hidden) r = Math.max(r, 16 + n.offsetWidth); }); return r; }
+  function easeView() {
+    var w = window.innerWidth, want = w / 2 - (coverLeft() + (w - coverRight())) / 2;
+    if (viewX === null) { viewX = want; applyView(); return; }
+    if (Math.abs(want - viewX) < 0.3) { if (viewX !== want) { viewX = want; applyView(); } return; }
+    viewX += (want - viewX) * 0.12; applyView();
+  }
+  function resize() { var w = window.innerWidth, h = window.innerHeight; renderer.setSize(w, h, false); camera.aspect = w / h; applyView(); }
   window.addEventListener('resize', resize); resize();
+  // In a window under 1100 the stop paper is a drawer: its head, always in sight, opens it and shuts it.
+  var narrow = window.matchMedia('(max-width: 1099px)');
+  function shutDrawer() { document.body.classList.remove('drawer-open'); $('sp-head').setAttribute('aria-expanded', 'false'); $('sp-head').focus(); }
+  function toggleDrawer() { if (!narrow.matches) return; var open = !document.body.classList.contains('drawer-open'); document.body.classList.toggle('drawer-open', open); $('sp-head').setAttribute('aria-expanded', String(open)); if (open) $('sp-body').focus(); }
+  function wireDrawer() {
+    var h = $('sp-head');
+    if (narrow.matches) { h.setAttribute('role', 'button'); h.tabIndex = 0; h.setAttribute('aria-controls', 'stop'); h.setAttribute('aria-expanded', String(document.body.classList.contains('drawer-open'))); }
+    else { document.body.classList.remove('drawer-open'); ['role', 'aria-controls', 'aria-expanded', 'tabindex'].forEach(function (a) { h.removeAttribute(a); }); }
+  }
+  $('sp-head').addEventListener('click', toggleDrawer);
+  $('sp-head').addEventListener('keydown', function (e) { if (narrow.matches && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); toggleDrawer(); } });
+  if (narrow.addEventListener) narrow.addEventListener('change', wireDrawer); else if (narrow.addListener) narrow.addListener(wireDrawer);
+  wireDrawer();
+  $('btn-end').addEventListener('click', function () { readEnd(); });
 
   var tmp = new THREE.Vector3(), last = performance.now();
   function frame(now) {
@@ -3758,7 +3896,7 @@ body.watched .gives { display: none !important; }
     // With a plan on the chart the pieces and their slips stand back, so that the plan is read.
     var faint = !!planMarks && planShown !== 'all'; if (faint !== ghosted) { ghosted = faint; var dim = function (grp) { var mats = grp.children[0].material, base = grp.userData.alpha == null ? 1 : grp.userData.alpha; (mats.length ? mats : [mats]).forEach(function (mt) { mt.transparent = faint || base < 1; mt.opacity = faint ? base * 0.3 : base; mt.needsUpdate = true; }); grp.children[0].castShadow = !faint; }; Object.keys(pieces).forEach(function (h) { dim(pieces[h].grp); }); statics.forEach(dim); labels.forEach(function (L) { L.sp.material.opacity = faint ? 0.3 : 1; L.pin.material.transparent = true; L.pin.material.opacity = faint ? 0.25 : 1; }); }
     flashes = flashes.filter(function (f) { f.userData.t += dt / 1.3; var k = f.userData.t; f.scale.setScalar(0.08 + k * 0.42); f.material.opacity = 0.9 * (1 - k); if (k >= 1) { scene.remove(f); f.geometry.dispose(); f.material.dispose(); return false; } return true; });
-    placeCamera();
+    placeCamera(); easeView();
     var near = 0.6 * HEXR * Math.sqrt(3);
     labels.forEach(function (L) {
       var a = L.anchor(), show = sideShown(L.side) && (labelsShown === 'all' ? (L.tier === 0 || (L.tier === 1 && cur.zoom > 0.3) || (L.tier === -1 && cur.zoom <= 0.3)) : labelsShown === 'pointer' && !!hoverAt && Math.hypot(a.x - hoverAt.x, a.z - hoverAt.z) < near);
@@ -3781,12 +3919,10 @@ body.watched .gives { display: none !important; }
     hexes.forEach(function (h) { h[4] = runLon(h[4]); }); chartNames = a[3] && a[3].map(function (n) { return { name: n.name, kind: n.kind, lat: n.lat, lon: runLon(n.lon) }; }); headSeat();
     var ready = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
     if (config.home) { KEPT_ROOT += BASE + '-' + config.home.number; KEPT = KEPT_ROOT; $('btn-new').hidden = false; $('btn-agent').hidden = !config.home.agents.length; }
-    return ready.then(function () { layChart(); cur.zoom = 0; placeCamera(); requestAnimationFrame(frame); if (config.watch) return startWatch(); if (config.versus) startVersus(); return fetch(BASE + '/tools').then(function (r) { return r.json(); }).then(function (names) { names.forEach(function (n) { OFFERED[n] = true; }); $('btn-stops').hidden = false; $('stops').classList.toggle('daily', !OFFERED.advance); if (OFFERED.advance) $('btn-day').textContent = 'Next pulse'; return refresh().catch(function (e) { if (!VERSUS || !/waits for the clock/.test(e.message)) throw e; }).then(function () { if (VERSUS) resumeVersus(); }); }); });
+    return ready.then(function () { layChart(); cur.zoom = 0; placeCamera(); requestAnimationFrame(frame); if (config.watch) return startWatch(); if (config.versus) startVersus(); return fetch(BASE + '/tools').then(function (r) { return r.json(); }).then(function (names) { names.forEach(function (n) { OFFERED[n] = true; }); $('btn-stops').hidden = false; $('stops').classList.toggle('daily', !OFFERED.advance); if (OFFERED.advance) $('btn-day').textContent = 'Next pulse'; return refresh().catch(function (e) { if (!VERSUS || !/waits for the clock/.test(e.message)) throw e; }).then(function () { return VERSUS ? resumeVersus() : false; }).then(function (held) { if (!held && !playing && !WATCH) return loadSince(); }); }); });
   });
   }).then(function () { if (onScreen) return; var shown = true; try { shown = localStorage.getItem('flagplot.hint.look') === '1'; localStorage.setItem('flagplot.hint.look', '1'); } catch (e) {} say('hint', shown ? '' : 'Drag to look along the table; scroll to lean in.'); })
     .catch(function (e) { fatal('The table could not reach the game: ' + e.message); });
-  // The footer bar's height, so that a paper never reaches under it and the last line of a scrolled paper can be touched.
-  (function () { var bar = document.querySelector('.bar'); if (!bar) return; function size() { document.documentElement.style.setProperty('--bar-h', bar.offsetHeight + 'px'); } size(); window.addEventListener('resize', size); if (window.ResizeObserver) new ResizeObserver(size).observe(bar); })();
 })();
 </script>
 </body>
