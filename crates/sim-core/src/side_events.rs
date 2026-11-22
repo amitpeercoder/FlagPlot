@@ -3380,6 +3380,36 @@ mod tests {
                 Whole,
                 Nothing,
             ),
+            // A fire among a carrier's aircraft, set or fought, is her side's
+            // own, whole; the enemy is told nothing of it (decision 0212).
+            row(
+                EventKind::AircraftFireRoll {
+                    ship: ship(1),
+                    task_force: force(1),
+                    bombs: 2,
+                    aboard: 20,
+                    flying: 0,
+                    share: fx(1),
+                    chance: Fixed::from_ratio(84, 100),
+                    draw: Fixed::from_ratio(1, 2),
+                    set: true,
+                    level_after: 3,
+                },
+                Whole,
+                Nothing,
+            ),
+            row(
+                EventKind::AircraftFireFought {
+                    ship: ship(1),
+                    task_force: force(1),
+                    level_before: 3,
+                    draw: Fixed::from_ratio(3, 4),
+                    level_after: 2,
+                    lost: false,
+                },
+                Whole,
+                Nothing,
+            ),
             row(
                 EventKind::ForceBecameAlert {
                     round: 1,
@@ -5024,7 +5054,7 @@ mod tests {
     #[test]
     fn the_table_has_a_row_for_every_kind_of_event() {
         let all = event_kind_names();
-        assert_eq!(all.len(), 162, "the log has 162 kinds of event");
+        assert_eq!(all.len(), 164, "the log has 164 kinds of event");
         let covered: BTreeSet<String> = table()
             .iter()
             .map(|row| kind_name(&row.log[row.at]))

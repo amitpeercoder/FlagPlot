@@ -164,11 +164,14 @@ impl Default for MadeIds {
 /// last days, and nothing coming after its end, which changes games with men
 /// ashore in their last days) and 26 from decision 0201 (fuelling at sea: an
 /// order and a task force's field that a game saved under the old rules
-/// could not hold). A pull request
-/// raises it by one
+/// could not hold) and 27 from decisions 0211 and 0212 (a strike spread over
+/// the ships of its kind and fire among a carrier's aircraft, which change
+/// every game in which raids attack a force or a carrier is bombed, and a
+/// ship's field a game saved under the old rules could not hold). A pull
+/// request raises it by one
 /// when it changes a rule in a way that changes what an existing game would do; a
 /// change that leaves every existing game as it was leaves it alone.
-pub const RULES_VERSION: u32 = 26;
+pub const RULES_VERSION: u32 = 27;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct SimConfig {
