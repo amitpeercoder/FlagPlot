@@ -2767,10 +2767,11 @@ pub struct Reason {
     pub worked: String,
     /// What, if different, would give a different decision.
     pub would_change: Vec<String>,
-    /// Events the decision rests on beyond its order (decision 0214, rule
-    /// 10: the commander's answer). Intake makes them causes of the order
-    /// and of the reason's event. Added at the end.
-    pub cites: Vec<EventId>,
+    /// The decision rests on the commander's answer for this force's leave
+    /// to pursue (decision 0214, rule 10). Intake resolves the answer's event
+    /// from the side's state and makes it a cause of the order and of its
+    /// reason. Added at the end.
+    pub answer_of: Option<TaskForceId>,
 }
 
 // ---------------------------------------------------------------------------

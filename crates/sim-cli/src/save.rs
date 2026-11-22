@@ -102,8 +102,8 @@ use std::path::{Path, PathBuf};
 
 use serde_json::{json, Value};
 use sim_agent::{
-    command_from_json, command_to_json, order_from_json, order_to_json,
-    staff_decisions_from_json_for_save, staff_decisions_to_json_for_save, unit_text, SeatKind,
+    command_from_json, command_to_json, order_from_json, order_to_json, staff_decisions_from_json,
+    staff_decisions_to_json, unit_text, SeatKind,
 };
 use sim_core::command::{CommandKind, StaffDecisions};
 use sim_core::hash::StateHasher;
@@ -185,7 +185,7 @@ pub const FORMAT: &str = "flagplot-saved-game";
 /// the kinds `set_pursuit` (`intent` and an optional `leave`) and
 /// `answer_pursuit` (`task_force`, `contact`, `allow`), in a hand-in's
 /// notices an optional `"pursuit"` and in a hand-in's reasons an optional
-/// `"cites"` (event numbers); its state version is v55. A game of an older
+/// `"answer_of"` (a force number); its state version is v55. A game of an older
 /// version is refused, not converted.
 pub const VERSION: u32 = 24;
 
@@ -404,10 +404,7 @@ pub fn write(
                     json!({
                         "day": day,
                         "side": side_name(*side),
-                        "decisions": staff_decisions_to_json_for_save(
-                            decisions,
-                            &sim_core::ids::UmpireKey::for_saved_games(),
-                        ),
+                        "decisions": staff_decisions_to_json(decisions),
                     })
                 })
         })
@@ -638,11 +635,10 @@ pub fn read(file: &str) -> Result<Saved, String> {
     {
         let day = small(entry, "day").map_err(&bad)?;
         let side = side_from(text(entry, "side").map_err(&bad)?).map_err(&bad)?;
-        let decisions = staff_decisions_from_json_for_save(
+        let decisions = staff_decisions_from_json(
             entry
                 .get("decisions")
                 .ok_or_else(|| bad("a staff entry has no decisions".into()))?,
-            &sim_core::ids::UmpireKey::for_saved_games(),
         )
         .map_err(|e| bad(format!("staff hand-in on day {day}: {e}")))?;
         if staff
@@ -1238,14 +1234,11 @@ mod tests {
             binding: vec!["the pool holds ship 3".to_string()],
             worked: "10 days x 12 t = 120 t".to_string(),
             would_change: vec!["a second ship in the pool".to_string()],
-            cites: Vec::new(),
+            answer_of: None,
         };
         // A reason that cites the commander's answer (decision 0214).
         let cited = Reason {
-            cites: vec![sim_core::ids::EventId::for_umpire(
-                17,
-                &sim_core::ids::UmpireKey::for_saved_games(),
-            )],
+            answer_of: Some(sim_core::ids::TaskForceId::new(2)),
             ..reason.clone()
         };
         let decisions = StaffDecisions {

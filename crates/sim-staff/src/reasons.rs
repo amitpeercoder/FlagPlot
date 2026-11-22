@@ -307,11 +307,11 @@ impl ReasonBuilder {
         self
     }
 
-    /// An event the decision rests on beyond its order (decision 0214, rule
-    /// 10: the commander's answer).
+    /// The decision rests on the commander's answer for this force's leave
+    /// to pursue (decision 0214, rule 10).
     #[allow(dead_code)]
-    pub(crate) fn cites(mut self, event: sim_core::ids::EventId) -> Self {
-        self.reason.cites.push(event);
+    pub(crate) fn answer_of(mut self, force: sim_core::ids::TaskForceId) -> Self {
+        self.reason.answer_of = Some(force);
         self
     }
 

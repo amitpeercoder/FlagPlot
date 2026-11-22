@@ -2357,13 +2357,10 @@ pub(super) fn describe(
                 .with("binding", Field::Str(reason.binding.join("; ")))
                 .with("worked", Field::Str(reason.worked.clone()))
                 .with("would_change", Field::Str(reason.would_change.join("; ")));
-            // The events the decision rests on beyond its order (decision
-            // 0214); written only where there are some.
-            if !reason.cites.is_empty() {
-                data = data.with(
-                    "cites",
-                    Field::Ids(reason.cites.iter().map(|e| e.umpire_raw(key)).collect()),
-                );
+            // The force whose answer the decision rests on (decision 0214);
+            // written only where there is one.
+            if let Some(force) = reason.answer_of {
+                data = data.id("answer_of", force);
             }
             ("staff_reason", data)
         }

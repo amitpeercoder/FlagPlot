@@ -1741,10 +1741,18 @@ impl World {
         } else {
             Some(RejectReason::OutsideForcesLimit)
         };
-        // Events the decision rests on beyond its order, such as the
-        // commander's answer to a pursuit (decision 0214, rule 10), are
-        // causes of the order and of its reason.
-        let cites: Vec<Cause> = reason.cites.iter().copied().map(Cause::Event).collect();
+        // The commander's answer a decision rests on (decision 0214, rule
+        // 10), read from the side's state, is a cause of the order and of
+        // its reason.
+        let cites: Vec<Cause> = reason
+            .answer_of
+            .and_then(|force| self.command.get(&side)?.pursuits.get(&force))
+            .and_then(|pursuit| match pursuit.by {
+                PursuitBy::Answer(event) => Some(Cause::Event(event)),
+                PursuitBy::Taken => None,
+            })
+            .into_iter()
+            .collect();
         let (order, answer, _accepted) =
             self.take_in_order_checked(day, None, side, request, cites.clone(), forced);
         let mut causes = vec![Cause::Order(order), Cause::Event(answer)];

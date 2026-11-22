@@ -71,9 +71,7 @@ use sim_core::command::{
 };
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
-use sim_core::ids::{
-    AirGroupId, BaseId, EventId, IntentId, InterruptId, LandUnitId, ShipId, TaskForceId, UmpireKey,
-};
+use sim_core::ids::{AirGroupId, BaseId, IntentId, InterruptId, LandUnitId, ShipId, TaskForceId};
 use sim_core::refdata::ShipKind;
 
 use crate::orders::{order_from_json, order_to_json, unit_text};
@@ -1104,14 +1102,9 @@ pub fn command_from_json(value: &Value) -> Result<CommandKind, String> {
 // Reasons and a staff's decisions.
 // ---------------------------------------------------------------------------
 
+/// A reason as JSON. `answer_of` (decision 0214) is written, as the force's
+/// number, only where there is one.
 pub(crate) fn reason_to_json(reason: &Reason) -> Value {
-    reason_to_json_with(reason, None)
-}
-
-/// A reason as JSON. `cites` (the events a decision rests on beyond its
-/// order, decision 0214) are written, as event numbers, only where `key` is
-/// given and there are some: the saved game's, the umpire's.
-fn reason_to_json_with(reason: &Reason, key: Option<&UmpireKey>) -> Value {
     let mut serves = Map::new();
     if let Some(intent) = reason.serves.intent {
         serves.insert("intent".into(), json!(intent.raw()));
@@ -1166,24 +1159,13 @@ fn reason_to_json_with(reason: &Reason, key: Option<&UmpireKey>) -> Value {
         "worked": reason.worked,
         "would_change": reason.would_change,
     });
-    if let (Some(key), false) = (key, reason.cites.is_empty()) {
-        body["cites"] = Value::Array(
-            reason
-                .cites
-                .iter()
-                .map(|event| json!(event.umpire_raw(key)))
-                .collect(),
-        );
+    if let Some(force) = reason.answer_of {
+        body["answer_of"] = json!(force.raw());
     }
     body
 }
 
-#[cfg(test)]
 fn reason_from_json(value: &Value) -> Result<Reason, String> {
-    reason_from_json_with(value, None)
-}
-
-fn reason_from_json_with(value: &Value, key: Option<&UmpireKey>) -> Result<Reason, String> {
     let serves = value
         .get("serves")
         .ok_or_else(|| "\"serves\" is missing".to_string())?;
@@ -1254,37 +1236,13 @@ fn reason_from_json_with(value: &Value, key: Option<&UmpireKey>) -> Result<Reaso
         binding: texts(value, "binding")?,
         worked: text(value, "worked")?.to_string(),
         would_change: texts(value, "would_change")?,
-        // Read only where a key is given (a saved game's); a reason with no
-        // "cites" cites nothing.
-        cites: match (key, value.get("cites")) {
-            (Some(key), Some(Value::Array(items))) => items
-                .iter()
-                .map(|n| {
-                    n.as_u64()
-                        .and_then(|n| u32::try_from(n).ok())
-                        .map(|n| EventId::for_umpire(n, key))
-                        .ok_or_else(|| "\"cites\" holds something that is not a number".to_string())
-                })
-                .collect::<Result<_, String>>()?,
-            (Some(_), Some(Value::Null) | None) | (None, _) => Vec::new(),
-            (Some(_), Some(_)) => return Err("\"cites\" is not a list".to_string()),
-        },
+        answer_of: small_opt(value, "answer_of")?.map(TaskForceId::new),
     })
 }
 
 /// What a staff handed in for a day, as JSON: its orders with their intents
 /// and reasons, its commands, and its decisions to give no order.
 pub fn staff_decisions_to_json(decisions: &StaffDecisions) -> Value {
-    staff_decisions_to_json_with(decisions, None)
-}
-
-/// As [`staff_decisions_to_json`], for a saved game: the events a reason
-/// cites are written too (decision 0214).
-pub fn staff_decisions_to_json_for_save(decisions: &StaffDecisions, key: &UmpireKey) -> Value {
-    staff_decisions_to_json_with(decisions, Some(key))
-}
-
-fn staff_decisions_to_json_with(decisions: &StaffDecisions, key: Option<&UmpireKey>) -> Value {
     let mut body = json!({
         "orders": decisions
             .orders
@@ -1293,7 +1251,7 @@ fn staff_decisions_to_json_with(decisions: &StaffDecisions, key: Option<&UmpireK
                 "unit": unit_text(&order.kind),
                 "order": order_to_json(&order.kind),
                 "intent": order.intent.raw(),
-                "reason": reason_to_json_with(&order.reason, key),
+                "reason": reason_to_json(&order.reason),
             }))
             .collect::<Vec<_>>(),
         "commands": decisions
@@ -1304,7 +1262,7 @@ fn staff_decisions_to_json_with(decisions: &StaffDecisions, key: Option<&UmpireK
                 if let Some(object) = value.as_object_mut() {
                     object.insert(
                         "reason".to_string(),
-                        reason_to_json_with(&command.reason, key),
+                        reason_to_json(&command.reason),
                     );
                 }
                 value
@@ -1313,7 +1271,7 @@ fn staff_decisions_to_json_with(decisions: &StaffDecisions, key: Option<&UmpireK
         "no_orders": decisions
             .no_orders
             .iter()
-            .map(|reason| reason_to_json_with(reason, key))
+            .map(reason_to_json)
             .collect::<Vec<_>>(),
     });
     // Left out when there is none, so that a hand-in without notices is
@@ -1415,22 +1373,6 @@ fn notice_from_json(value: &Value) -> Result<StaffNotice, String> {
 
 /// Reads what a staff handed in from its JSON.
 pub fn staff_decisions_from_json(value: &Value) -> Result<StaffDecisions, String> {
-    staff_decisions_from_json_with(value, None)
-}
-
-/// As [`staff_decisions_from_json`], for a saved game: the events a reason
-/// cites are read too (decision 0214).
-pub fn staff_decisions_from_json_for_save(
-    value: &Value,
-    key: &UmpireKey,
-) -> Result<StaffDecisions, String> {
-    staff_decisions_from_json_with(value, Some(key))
-}
-
-fn staff_decisions_from_json_with(
-    value: &Value,
-    key: Option<&UmpireKey>,
-) -> Result<StaffDecisions, String> {
     let mut decisions = StaffDecisions::default();
     for entry in list(value, "orders")? {
         let unit = text(entry, "unit")?;
@@ -1441,27 +1383,25 @@ fn staff_decisions_from_json_with(
         decisions.orders.push(StaffOrder {
             kind,
             intent: IntentId::new(small(entry, "intent")?),
-            reason: reason_from_json_with(
+            reason: reason_from_json(
                 entry
                     .get("reason")
                     .ok_or_else(|| "an order has no \"reason\"".to_string())?,
-                key,
             )?,
         });
     }
     for entry in list(value, "commands")? {
         decisions.commands.push(StaffCommand {
             kind: command_from_json(entry)?,
-            reason: reason_from_json_with(
+            reason: reason_from_json(
                 entry
                     .get("reason")
                     .ok_or_else(|| "a command has no \"reason\"".to_string())?,
-                key,
             )?,
         });
     }
     for entry in list(value, "no_orders")? {
-        decisions.no_orders.push(reason_from_json_with(entry, key)?);
+        decisions.no_orders.push(reason_from_json(entry)?);
     }
     // A hand-in saved before notices has no key: it has none.
     if value.get("notices").is_some() {
@@ -2250,7 +2190,7 @@ mod tests {
             binding: vec!["the forces limit holds ship 5".to_string()],
             worked: "12 days x 10 t = 120 t".to_string(),
             would_change: vec!["a second ship in the pool".to_string()],
-            cites: Vec::new(),
+            answer_of: None,
         };
         let decisions = StaffDecisions {
             orders: vec![StaffOrder {

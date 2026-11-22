@@ -313,7 +313,7 @@ fn reason(intent_n: u32, worked: &str) -> Reason {
         binding: vec!["a limit".to_string()],
         worked: worked.to_string(),
         would_change: vec!["more stock".to_string()],
-        cites: Vec::new(),
+        answer_of: None,
     }
 }
 
@@ -5092,7 +5092,7 @@ fn a_reasons_cites_become_causes_of_its_order_and_its_reason() {
     player(&mut world, answer(2, 3, true)).unwrap();
     let answered = last_answer_event(&world);
     let mut cited = reason(1, "a pursuit by leave");
-    cited.cites = vec![answered];
+    cited.answer_of = Some(tf(2));
     let decisions = StaffDecisions {
         orders: vec![StaffOrder {
             kind: OrderKind::TaskForce {
