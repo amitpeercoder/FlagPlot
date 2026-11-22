@@ -7,3 +7,4 @@ torpedo_id,figure,value,rule,facts,note
 6101,damage,90.72,"warhead_kg of the torpedo x torpedo_damage_per_warhead_kg (decision 0218, rule 28)",weapon_facts.csv:16013,
 6102,damage,120,"warhead_kg of the torpedo x torpedo_damage_per_warhead_kg (decision 0218, rule 28)",weapon_facts.csv:16054,rests on an exception
 6103,damage,162,"warhead_kg of the torpedo x torpedo_damage_per_warhead_kg (decision 0218, rule 28)",weapon_facts.csv:16056,rests on an exception
+6104,damage,162,"warhead_kg of the torpedo x torpedo_damage_per_warhead_kg (decision 0218, rule 28)",weapon_facts.csv:16063,rests on an exception

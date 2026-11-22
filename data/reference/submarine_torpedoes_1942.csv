@@ -7,13 +7,14 @@
 #   torpedo_damage_per_warhead_kg = 0.4
 # damage is an exact decimal of up to six places, trailing zeros trimmed.
 # Exceptions used (decision 0020, 3):
-#   jp-53cm-torpedo-type95 warhead_kg: weapon_facts.csv row 16056 (unconfirmed); reason: 405 kg, the Technical Mission's O-01-1 (OCR of a scan, hence low); NavWeaps's performance note (row 16062) gives the same 405 kg. A lone weak row of the figure, no row against it. PROPOSED by the stage 1 lead of decision 0218 on Nov 22, 2026, for the architect's ruling; not agreed until he rules.; agreed 2026-11-22
-#   jp-53cm-torpedo-type89 warhead_kg: weapon_facts.csv row 16054 (unconfirmed); reason: 300 kg, the Technical Mission's O-01-1 (OCR of a scan, hence low), valid to 1942; a lone weak row, no row against it, judged to hold on 7 August 1942: the Type 89 served to the end of 1942 (row 16052). PROPOSED by the stage 1 lead of decision 0218 on Nov 22, 2026, for the architect's ruling; not agreed until he rules.; agreed 2026-11-22
+#   jp-53cm-torpedo-type95 warhead_kg: weapon_facts.csv row 16056 (unconfirmed); reason: 405 kg, the Technical Mission's O-01-1 (OCR of a scan, hence low); NavWeaps's performance note (row 16062) gives the same 405 kg; a lone weak row, no row against it, read and marked; it gives way to a better row when one is filed. Settled by the architect, Nov 22, 2026 (decision 0218, stage 1); agreed 2026-11-22
+#   jp-53cm-torpedo-type89 warhead_kg: weapon_facts.csv row 16054 (unconfirmed); reason: 300 kg, the Technical Mission's O-01-1 (OCR of a scan, hence low), valid to 1942; a lone weak row, no row against it, read and marked; it gives way to a better row when one is filed; judged to hold on 7 August 1942: the Type 89 served to the end of 1942 (row 16052). Settled by the architect, Nov 22, 2026 (decision 0218, stage 1); agreed 2026-11-22
+#   jp-53cm-torpedo-type96 warhead_kg: weapon_facts.csv row 16063 (disputed); reason: 405 kg, the Technical Mission's O-01-1, over NavWeaps's 550 kg (row 16064): the Technical Mission examined the weapon and derives it from the Type 95 Model 1, whose charge is 405 kg; the other figure names another explosive and no document. Settled by the architect, Nov 22, 2026 (decision 0218, stage 1); agreed 2026-11-22
 # Left out (decision 0218, rule 1), each torpedo of weapons.csv not derived, with its reason:
-#   jp-53cm-torpedo-type96: Warhead disputed with no preferred row: 405 kg (the Technical Mission, 16063) against 550 kg (NavWeaps, 16064). No class on file is said to carry it; I-4 fired two on 6 April 1942 (16431).
 #   jp-53cm-torpedo-type92: No warhead_kg row. No class on file is said to carry it in 1942.
 id,name,damage
 6100,US 21in torpedo Mark 14 (submarine),92
 6101,US 21in torpedo Mark 10 (S-boats),90.72
 6102,53 cm Type 89 submarine torpedo (air),120
 6103,53 cm Type 95 submarine torpedo (oxygen),162
+6104,53 cm Type 96 submarine torpedo (38 percent oxygen),162
