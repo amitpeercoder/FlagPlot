@@ -78,11 +78,14 @@
 //!
 //! ## The type is that of the group fired on
 //!
-//! The same three mornings with group 2, the escorts, given aircraft type
-//! 2 in the scenario's text. The fight is the same, shot for shot, which
-//! is asserted. Day 1, false 1, made out 1: the Allied claim names type
-//! 2: 6 and type 3: 26, and no type 4. The Japanese claim still names
-//! type 4: 6, the patrol's.
+//! The same three mornings with group 2, the escorts, given a fighter
+//! type of its own, type 5, a copy of type 4 made for the test. The fight
+//! is the same, shot for shot, which is asserted. Day 1, false 1, made
+//! out 1: the Allied claim names type 3: 26 and type 5: 6, and no type
+//! 4. The Japanese claim still names type 4: 6, the patrol's. (Corrected
+//! by the architect on Nov 22, 2026: as first written the escorts were
+//! given type 2, which in the frozen figures is a scout that does not
+//! escort, so the fight was not the same.)
 //!
 //! ## Guns name no escort
 //!
@@ -483,33 +486,13 @@ fn the_words_of_day_2_give_the_types_after_the_number() {
 // The type is that of the group fired on.
 // ---------------------------------------------------------------------
 
+/// The statement as corrected: the escorts are given a fighter type of
+/// their own, type 5, a copy of type 4 in the test's own copy of the frozen
+/// types (a placeholder). It also shows why type 2 would not do: the frozen
+/// type 2 is a scout, a group of it sends no escort, and nothing fights in
+/// the air.
 #[test]
-#[ignore = "does not hold as written: aircraft type 2 is a patrol aircraft in the \
-            frozen types, and group 2 given it no longer escorts, so the fight is not \
-            the same; see the as-built test beside it and the build's report"]
 fn the_type_named_is_that_of_the_group_fired_on() {
-    let plain = run(ALL, "1", &[]);
-    let other = run(ALL, "1", &[ESCORTS_OF_TYPE_2]);
-    // The fight is the same, shot for shot.
-    assert_eq!(shots(&plain), shots(&other));
-    let claims = air_claims(&other);
-    let allied = claim_on(&claims, Side::Allied, 1);
-    assert_eq!(allied.air, vec![(2, 6), (3, 26)], "{}", allied.text);
-    assert!(allied.air.iter().all(|(t, _)| *t != 4));
-    assert_eq!(claim_on(&claims, Side::Japanese, 1).air, vec![(4, 6)]);
-}
-
-/// As built, beside the statement above, which does not hold as written.
-/// With group 2 of type 2, the frozen figures' carrier scout (role patrol),
-/// no escort flies with the raid: no fighter fights in the air, and the
-/// Allied claim names only the bombers' type 3. The statement's own case is
-/// then shown with a fighter type of its own, a copy of type 4 as type 5 in
-/// the test's own copy of the frozen types (placeholder): the fight is the
-/// same shot for shot, and day 1, false 1, made out 1, the Allied claim
-/// names type 3: 26 and type 5: 6 and no type 4, and the Japanese claim
-/// type 4: 6.
-#[test]
-fn the_type_named_is_that_of_the_group_fired_on_as_built() {
     let plain = run(ALL, "1", &[]);
     let scouts = run(ALL, "1", &[ESCORTS_OF_TYPE_2]);
     assert_ne!(shots(&plain), shots(&scouts), "type 2 does not escort");
