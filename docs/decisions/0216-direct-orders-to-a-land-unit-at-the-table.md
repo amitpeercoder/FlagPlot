@@ -115,3 +115,9 @@ Built: "Orders to a land unit" as amended on review. Rest is not built: it waits
 - **Holding first:** at dusk the form sends the hold of the land unit and then the order, as the force's and the air group's forms do. A refusal is said "NOT SENT" with the engine's reason cut short.
 - **The tools lacked nothing.** `table/check_screen.py` tries the form's calls (hold, posture with when spent, march, work with a job, a refusal and the release) against the tool.
 - **With decision 0219** an order given at 0600 or 1200 that is not a posture is kept for 1800, and the form says "Acts at 1800, for the coming day." before and after signing.
+
+## The architect's rulings, Nov 22, 2026
+
+- **The three orders are built; rest is not,** and waits for its scenario and hand calculation.
+- **The line the form says before signing, that the order takes the unit out of the staff's hands, stays** until decision 0221's fourth stage words every such line as a fact of the order.
+- **The sentence above that an order signed is not taken back singly is withdrawn by decision 0221,** rule 18.

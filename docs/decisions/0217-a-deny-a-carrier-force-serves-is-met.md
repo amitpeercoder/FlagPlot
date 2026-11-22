@@ -62,3 +62,11 @@ The island's neutralise, which says it cannot be met while the carrier's bombers
 - **"Enemy base or landing"** in rule 4 is read as the circles the station rule casts: an enemy base on the side's map, and a fresh contact reported as a carrier.
 - **Tests:** `tests/scenario_116_carriers_serve_an_end.rs`, `decision_0217_statement_1` to `_6` (statement 1 also counts the standing interrupt's firings: none, and one in statements 2 and 3); `tests/scenario_76_controlling_an_island.rs`, `decision_0217_statement_8`. For statement 8 every order and command of the 14 days was dumped before and after the change and the two were the same; only the deny's notice and its reason changed. Statement 7: the order-bearing events of `sim-cli run --events` on the games whose pins moved (scenario 55, the five days' and the second proof's Eastern Solomons, the 39 days' first week, the second proof's week) were compared with a build of the commit before: the same, line for line. Their pins moved by the reason's new field and the reason added or the notice removed.
 - **Versions:** doctrine `supply-54`; the agent interface 45, once for the batch with decisions 0215 and 0219.
+
+## The architect's rulings, Nov 22, 2026
+
+Read on `deny.rs` and `station.rs` before merging.
+
+- **"An enemy base or landing" read as the circles the station rule casts** (an enemy base; a fresh contact reported as a carrier) is right: a caution says what the staff weighed, and it weighed those.
+- **Cautions are given by the station's reason alone for now.** The carrier doctrine's own sentences of the same sort gain them when that doctrine is next changed; nothing reads a caution but the table and an agent.
+- **A commander's deny served by the carrier pass now has a reason for its bases** where it had none. That is a mend and is kept.

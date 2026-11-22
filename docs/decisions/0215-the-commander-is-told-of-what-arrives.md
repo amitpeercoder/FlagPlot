@@ -100,3 +100,9 @@ Tests are the briefing's, in the agent's crate, on a scenario that has each kind
 - **The table:** the evening report has two parts, "Reinforcements came today" and "Reinforcements due tomorrow", one line each by name ("12 aircraft joined VMF-223 at Henderson Field, on patrol"), with the staff's part in the page's words. The panel of what stops the clock is offered in every game now and gains "reinforcements arriving", off until ticked: with it ticked, time run from the table stops at the evening whose briefing has a line in either list. In a game played a day at a time the panel shows this stop alone. The day's plot shows an entry under the night of its day, in words ("Carrier force K arrived at ..., 3 ships"), not at the day's end.
 - **Tests:** `crates/sim-agent/tests/told_of_arrivals.rs`, on scenario 72 made to have a force that enters and is first usable on one day, a land unit that enters, a land unit whose day comes with no entry, aircraft due on days 1, 3 and 5 (three arrivals on day 3), and on scenario 21 with a force entering with two land units aboard; the staff's parts, the text, the enemy's briefing, and every briefing against its schema. Not tested: a group aboard that receives aircraft with no entry of its own.
 - **Versions:** the agent interface 45, once for the batch. No state, hash, doctrine or rules label changes.
+
+## The architect's rulings, Nov 22, 2026
+
+- **Arrivals on day 1 are delivered and not told,** as the plan has it.
+- **No test has a carrier's group that receives aircraft with no entry of its own.** It is owed, and is a row of open work.
+- **The stop for reinforcements is offered in games run by days too,** which the plan did not say and is right.

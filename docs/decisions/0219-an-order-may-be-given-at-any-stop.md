@@ -60,3 +60,11 @@ Written by the architect; a test that disagrees comes back to him.
 - **Games on file:** no recorded game has an order refused inside a day as given at dusk, so none moves for this.
 - **The table:** every form offers every order at every stop; an order not of the seven kinds says "Acts at 1800, for the coming day." in the form before signing, in the status line and among what has been signed. The page keeps that list itself, and a reload forgets it, though the session still holds the orders: no tool lists a seat's queued orders.
 - **Versions:** the agent interface 45, once for the batch with decisions 0215 and 0217.
+
+## The architect's rulings, Nov 22, 2026
+
+Read on the session's code before merging.
+
+- **Statement 5 is accepted as proved on a stand-in.** No scenario loses a whole force in an afternoon; the test has a kept order refused at dusk because its force was stood down that morning, which is the same path. A test on a sinking is owed when a scenario gives one.
+- **A kept order's list at the table lives in the page and is lost at a reload,** no tool listing what a seat has queued. Decision 0221, rule 15, adds that tool; until it is built the orders are still queued and still act.
+- **A watched game saved inside a day keeps neither queue,** as before this change. It stays so and is a row of the differences when a watched game is next worked on.
