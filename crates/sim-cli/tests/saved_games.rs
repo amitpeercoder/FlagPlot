@@ -654,7 +654,7 @@ fn a_saved_game_of_version_2_is_refused_not_converted() {
         map.remove("staff");
         map.remove("doctrine_version");
     });
-    assert!(error.contains("saved game version 2, now 23"), "{error}");
+    assert!(error.contains("saved game version 2, now 24"), "{error}");
     assert!(error.contains("not converted"), "{error}");
 }
 
