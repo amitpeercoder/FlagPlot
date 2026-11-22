@@ -231,8 +231,13 @@
 //!   group, the SB2U-3 group and the B-17E group (14, 15 and 18); what to
 //!   strike first: carriers, then transports, battleships, cruisers,
 //!   destroyers (rule 98).
-//! - **Operate** task force 1 from (14,-6), Point Luck (place positions
-//!   5113), and task force 2 from (15,-6) (rule 99).
+//! - **Operate** task forces 1 and 2 from (9,-5), the hex of 31 30 N, 176
+//!   30 W, the launching position chosen for dawn on 4 June, 202 miles
+//!   north of Midway (engagement positions 5744 and 5745; rule 103).
+//!   (Amended by the architect on Nov 22, 2026, on the designer's word
+//!   after the first run of 1,000 games: as first written, task force 1
+//!   from (14,-6), Point Luck, and task force 2 from (15,-6), where they
+//!   waited on 2 and 3 June.)
 //!
 //! 17. Each order is accepted on day 1 as given, and none is refused.
 //! 18. In the file in which the Japanese side is given its orders, by the
@@ -1560,14 +1565,14 @@ fn s17_each_order_is_accepted_on_day_1_as_given_and_none_is_refused() {
         intent(state, 3).kind,
         IntentKind::OperateCarriers {
             force: tf(1),
-            hex: hex(14, -6)
+            hex: hex(9, -5)
         }
     );
     assert_eq!(
         intent(state, 4).kind,
         IntentKind::OperateCarriers {
             force: tf(2),
-            hex: hex(15, -6)
+            hex: hex(9, -5)
         }
     );
     for raw in 1..=4 {

@@ -1,5 +1,7 @@
 # Midway: one game before the thousand
 
+> This is the game of seed 1 as the scenario was first built, with the American carriers ordered to operate from Point Luck. On Nov 22, 2026 their station was moved to (9,-5) (decision 0198, rule 103), and seed 1 no longer plays this way. The report is kept as the record of what the first orders did.
+
 Scenario 114, decision 0198, file a (`data/scenarios/midway/01a_midway.toml`): both sides given the orders of the hand calculation, staff against staff, on the live figures. Played once at seed 1 with `cargo run --release -p sim-cli -- run data/scenarios/midway/01a_midway.toml --events --seed 1`, on the branch `midway-build`, state hash layout `flagplot-state-v53`. The five daily hashes: `e25e607fbb678425`, `8c01064710f34956`, `31f82cb636b0d8bc`, `eaa7e178a5235b73`, `9b662804a517d799`.
 
 This is the report the hand calculation asks for ("One game before the thousand", rule 41). It is not a test, and no run of 1,000 has been made. It changes no order, figure or point: what follows is for the architect to read before any batch. Event numbers are the game's (`#N`).
