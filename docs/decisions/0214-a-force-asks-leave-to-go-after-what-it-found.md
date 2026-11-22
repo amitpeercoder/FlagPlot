@@ -135,18 +135,43 @@ Built on Nov 22, 2026 (branch `pursuit-team`). State layout 55, rules label 27, 
 - **Commands:** `set_pursuit` (intent, ask, go, stay or none) and `answer_pursuit` (task force, contact, yes or no), the commander's alone. A no also ends a pursuit under way (rule 12, "the commander may end it sooner").
 - **Notices** `asks_leave_to_pursue`, `pursues` and `pursuit_ended` (codes 10 to 12) carry the force, the order left and, for the first two, the contact (by the commander's number), its kind, age and hex, the hex the force would close to and the hours. **The standing interrupt** `asks_leave_to_pursue` (code 6) has a task force as its subject (code 3).
 - **The answer is among the route's causes** through `Reason::answer_of`: the reason names the force, and intake cites that force's answer from the state, so a saved game carries no event number.
-- **The find** is looked for only where the closing rule gives "too far" (every fresh contact of a kind it closes on beyond a night and the reach), and not for a force under a take or an island. It must pass the route and the fuel as a closing does. The area limit is read on the contact the lifted rule takes. The commander's number is his own picture's (the area command's), matched by hex and kind where reports travel; where he does not hold it there is no asking, and a go still pursues. A pursuit also ends at a dusk at which the closing rule does not run (going home, fuelling, no bomber able to fly).
+- **The find** (of one kind, too far) is looked for only where the closing rule gives "too far" (every fresh contact of a kind it closes on beyond a night and the reach), and not for a force under a take or an island. It must pass the route and the fuel as a closing does. The area limit is read on the contact the lifted rule takes. The commander's number is his own picture's (the area command's), matched by hex and kind where reports travel; where he does not hold it there is no asking, and a go still pursues. A pursuit also ends at a dusk at which the closing rule does not run (going home, fuelling, no bomber able to fly).
 - **The stop** is worked in `sim-agent` on the preview before a day is opened, for `run`, `advance` and a watched game's steps, where the interrupt would fire (not switched off, and armed); nothing changes in the world, and the next call plays that day. A firing of this interrupt on a day played does not stop `run` again after the day. `end_day` does not stop.
 - **The frozen figures** have `pursuit_nights = 1`, at which no find is made, so every frozen test is as it was. Scenario 125's test sets 2.
 - **Dry runs:** the side tried is given its orders' settings as `set_pursuit` commands where the course gives leave to launch, and answers and refusals are cleared from a made-up world.
 
-### Where the build met the plan's words
+### What is withdrawn
 
-- **The waters first cannot arise.** The closing rule takes the first contact within a night and the reach before it prefers the waters, so where it is too far there is nothing the waters' lift could bring within. The lift is built and unit-tested; scenario 125's property "The waters first" is ignored, the code closing on the carrier at (12,0) with no asking. `docs/rules/differences.md` row 58, for the architect.
-- **"Seen again under a new number"** cannot be written: no scenario or test hook hands a side a contact after the start. Ignored, for the architect.
-- **"A force covering a landing"** is built (no find under a take or an island) but not tested in scenario 125: it needs a take, a landing and a map long enough for a find. Ignored.
-- The closing rule does not read the area limit (row 57), as the review found; not mended.
+- **Rule 1's second kind of find, the waters first, and rule 5 are withdrawn** by the architect on Nov 22, 2026, on the build's finding: the closing rule keeps the contacts within a night and the reach first and prefers the waters only among those, so no find by the waters can arise where the rule as it stands does nothing. A find is of one kind, too far: the closing rule worked again with the night as `pursuit_nights` nights. Scenario 125's property "The waters first" is replaced by a line saying so.
+
+### What no test proves
+
+- **"Seen again under a new number"**: no scenario or test hook hands a side a contact after the start. The test is ignored with that note.
+- **"A force covering a landing"**: built (no find under a take or an island) but not tested in scenario 125: it needs a take, a landing and a map long enough for a find. The test is ignored with that note.
+- The closing rule does not read the area limit (`docs/rules/differences.md`, row 57), as the review found; not mended, to be ruled apart.
+
+### The architect's rulings
+
+Accepted as built, on Nov 22, 2026:
+
+1. **The default follows the side's leave to launch:** ask where it is withheld, go where it is given (the leaves to prepare and to launch are a seat's, not an order's).
+2. **A taken pursuit is state,** as a pursuit by answer is, so that its end can be told and the table can show it.
+3. **Refusals are not pruned:** contact numbers are never reused, so one for a contact no longer held binds nothing.
+4. **The commander's picture is the area command's,** matched to the force's by hex and kind where reports travel; where he does not hold the contact there is no asking, and go still pursues.
+5. **A pursuit ends where the closing rule does not run** (going home, fuelling, no bomber able to fly), as well as where there is neither a find nor a contact to close on.
+6. **A pursuit under way goes on at stay, an answered one despite a refusal, and a refusal beats go.**
+7. **A no ends a pursuit under way** (rule 12, "the commander may end it sooner").
+8. **No second stop after the day:** a firing of this interrupt on a day played does not stop `run` again after that day, the stop having come before it.
+9. **The notices rest on their own no-order reasons.**
+10. **The frozen figure `pursuit_nights` = 1** is the off value: no find is made, and every frozen test is as it was.
 
 ### Games on file
 
-Batches of 200 seeds of every scenario with a carrier or deny order, before and after: all the same in every run but Midway file a (4 runs differ; Japanese ships sunk 219 to 216, Allied 61 to 60; outcomes unchanged), Midway file c and its copy in `table-hunger` (40 runs differ; Japanese ships sunk 0 to 11; stalemate 200 to 189, with 9 minor and 2 major Allied victories), and the second proof's week file b (1 run differs; Japanese ships sunk 325 to 327; outcomes unchanged). No recorded game became a different game.
+Batches of 200 seeds of every scenario with a carrier or deny order, before and after; nothing tuned:
+
+- **Midway file c and its copy in `table-hunger`:** 40 of 200 runs differ; Japanese ships sunk 0 to 11; 200 stalemates to 189 stalemates, 9 minor and 2 major Allied victories.
+- **Midway file a:** 4 runs differ (Japanese ships sunk 219 to 216, Allied 61 to 60); the outcomes are as they were.
+- **The second proof's week, file b:** 1 run differs (Japanese ships sunk 325 to 327); the outcomes are as they were.
+- **All others:** identical in every run.
+
+No recorded game became a different game.
