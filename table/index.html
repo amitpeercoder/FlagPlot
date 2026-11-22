@@ -321,6 +321,7 @@ button:disabled { opacity: 0.45; cursor: default; }
 #seat { font-family: var(--f-ui); font-size: 14px; font-weight: 500; color: var(--ink-dim); text-align: right; }
 .clock { font-family: var(--f-type); font-size: 19px; font-weight: 700; letter-spacing: 0; font-variant-numeric: tabular-nums; margin-top: 4px; overflow-wrap: anywhere; }
 .sp-state { font-family: var(--f-ui); font-size: 14px; font-weight: 500; letter-spacing: 0.08em; color: var(--ink-dim); text-transform: uppercase; }
+.sp-tail { display: none; }
 .sp-body { flex: 1; min-height: 0; overflow-y: auto; padding: 0 18px; font-family: var(--f-type); font-size: 13.5px; line-height: 1.45; overflow-wrap: anywhere; }
 .sp-body:focus { outline: none; }
 .sp-body section { border-top: 1px solid #cfc6a8; padding: 12px 0 14px; }
@@ -384,12 +385,21 @@ body.watched .gives { display: none !important; }
 @media (max-width: 1099px) {
   :root { --sp-w: 0px; }
   .stoppaper { left: 16px; top: 12px; bottom: auto; width: min(360px, calc(100% - 32px)); }
-  .stoppaper .sp-body, .stoppaper .sp-foot { display: none; }
+  /* Closed, the head shows and the two controls that run time hang under it as a strip: the same buttons as the foot's. */
+  .stoppaper .sp-body { display: none; }
+  .stoppaper .sp-foot { padding: 8px 18px 12px; }
   .sp-head { cursor: pointer; }
   .sp-head:focus-visible { outline: 3px solid #f0c36a; outline-offset: -3px; }
+  .sp-tail { display: flex; justify-content: flex-end; align-items: center; gap: 10px; min-height: 22px; }
+  #sp-count { font-family: var(--f-ui); font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #f0c36a; }
+  #sp-count:empty { display: none; }
+  .sp-chev { width: 20px; height: 20px; position: relative; flex: none; }
+  .sp-chev::before { content: ''; position: absolute; left: 5px; top: 3px; width: 8px; height: 8px; border-right: 2.5px solid var(--ink); border-bottom: 2.5px solid var(--ink); transform: rotate(45deg); }
+  body.drawer-open .sp-chev::before { top: 7px; transform: rotate(-135deg); }
+  body.drawer-open #sp-count { display: none; }
   body.drawer-open .stoppaper { left: 0; top: 0; bottom: 0; width: min(400px, 100%); }
   body.drawer-open .stoppaper .sp-body { display: block; }
-  body.drawer-open .stoppaper .sp-foot { display: flex; }
+  body.drawer-open .stoppaper .sp-foot { padding: 10px 18px 14px; }
   body.drawer-open .menus, body.drawer-open .view { z-index: 11; }
   .order { width: min(360px, calc(100% - 32px)); }
   .view { max-width: calc(100% - 32px); }
@@ -441,6 +451,7 @@ body.watched .gives { display: none !important; }
     <div class="clock" id="clock">DAY 1</div>
     <div class="sp-state" id="clock-state"></div>
     <div class="sp-doing" id="clock-doing" aria-live="polite"></div>
+    <div class="sp-tail"><span id="sp-count"></span><span class="sp-chev" id="sp-chev" role="img" aria-label=""></span></div>
   </header>
   <div class="sp-body" id="sp-body" tabindex="-1">
     <div id="sp-seats">
@@ -1201,7 +1212,7 @@ body.watched .gives { display: none !important; }
     }).catch(function () {});
   }
   // The clock starts from a stop: what was told and what was reported are cleared, and shown again from the data at the next stop.
-  function startRun() { stopNote = ''; lastTold = []; lastRun = null; stopArrive = ''; since = { from: sinceFrom(), phases: [] }; showSince(); showWhy(); }
+  function startRun() { setDrawer(false); stopNote = ''; lastTold = []; lastRun = null; stopArrive = ''; since = { from: sinceFrom(), phases: [] }; showSince(); showWhy(); }
 
   // ---- the signals tray ----
   // A standing paper the commander may read at any time: a button in the
@@ -1279,7 +1290,7 @@ body.watched .gives { display: none !important; }
     // What the staff decided is in the war diary, entry by entry.
     if (M.day > 1 || clock.at !== 'dusk') paper('War diary', function () { readDiary(); }, true);
     // FOR YOUR DECISION holds what waits for the commander, with its count; a watched game has none. WHY THE CLOCK STOPPED is made from the stop's data.
-    var waiting = $('signals').children.length; $('sp-decide-h').textContent = 'FOR YOUR DECISION' + (waiting ? ' \u00b7 ' + waiting : ''); $('sp-decide').hidden = !!WATCH || !waiting;
+    var waiting = $('signals').children.length; $('sp-decide-h').textContent = 'FOR YOUR DECISION' + (waiting ? ' \u00b7 ' + waiting : ''); $('sp-decide').hidden = !!WATCH || !waiting; $('sp-count').textContent = WATCH || !waiting ? '' : waiting + ' for your decision';
     showWhy(); showOrders();
   }
   // ---- YOUR ORDERS and SIGNED, in the stop paper ----
@@ -1317,7 +1328,7 @@ body.watched .gives { display: none !important; }
     function text(w) { node.appendChild(rich('span', '', w)); }
     function place(h) { node.appendChild(placeLink({ q: h[0], r: h[1] })); }
     function ref(h) { node.appendChild(refTo(h)); }
-    function who(h) { ref(h); text(': '); }
+    function who(h) { ref(h); text('\u2060: '); }
     function units(c) { var k = ['task_force', 'air_group', 'land_unit', 'ship', 'base'].filter(function (x) { return c[x] != null; })[0]; return k ? k + ':' + c[k] : null; }
     function handle(v, kind) { return typeof v === 'string' && v.indexOf(':') > 0 ? v : kind + ':' + v; }
     var plural = function (n, w) { return n + ' ' + w + (n === 1 ? '' : 's'); };
@@ -1363,7 +1374,10 @@ body.watched .gives { display: none !important; }
   var signedSeen = null, freshSigned = false, backRefused = null, freshKeys = [], signedAsOf = null;
   function showSigned() {
     var box = $('signed'), wrap = $('sp-signed'); if (!box) return;
-    var list = (M.queue && !WATCH && !playing && !M.over ? M.queue.entries : []).filter(function (e) { return !(e.rests_on && e.rests_on.length); });
+    // An entry that goes with another (a hold sent before a unit's order, the limits queued with an order) is not a line of its own.
+    var all = M.queue && !WATCH && !playing && !M.over ? M.queue.entries : [], with_ = {};
+    all.forEach(function (e) { (e.goes_with || []).forEach(function (g) { with_[g.queue + ':' + g.number] = true; }); });
+    var list = all.filter(function (e) { return !(e.rests_on && e.rests_on.length) && !with_[e.place.queue + ':' + e.place.number]; });
     box.textContent = ''; wrap.hidden = !list.length;
     var keys = list.map(function (e) { return e.place.queue + '|' + e.text; });
     // What is new since the queue last changed is marked, until it changes again.
@@ -3355,7 +3369,7 @@ body.watched .gives { display: none !important; }
     if (WATCH) return watchGo(until);
     if (M.over) { say('stopped', 'The game is over.'); return; }
     closeOrder(); closeForce(); playing = true; $('btn-go').textContent = 'Stop the clock'; $('btn-day').disabled = true; startRun(); showClock();
-    function rest(words, kind) { playing = false; $('btn-go').textContent = 'Carry on'; $('btn-day').disabled = false; showClock(); showWhy(); say(kind || 'stopped', words, $('clock-doing')); }
+    function rest(words, kind) { playing = false; $('btn-go').textContent = 'Carry on'; $('btn-day').disabled = false; showClock(); showWhy(); atStop(); say(kind || 'stopped', words, $('clock-doing')); }
     (async function () {
       try {
         for (;;) {
@@ -3421,7 +3435,7 @@ body.watched .gives { display: none !important; }
   function watchGo(until) {
     if (M.over) { say('stopped', 'The game is over.'); return; }
     closeOrder(); closeForce(); playing = true; $('btn-go').textContent = 'Stop'; $('btn-day').disabled = true; startRun(); showClock();
-    function rest(words, kind) { playing = false; $('btn-go').textContent = 'Carry on'; $('btn-day').disabled = false; showClock(); showWhy(); say(kind || 'stopped', words, $('clock-doing')); pollSeats(); }
+    function rest(words, kind) { playing = false; $('btn-go').textContent = 'Carry on'; $('btn-day').disabled = false; showClock(); showWhy(); atStop(); say(kind || 'stopped', words, $('clock-doing')); pollSeats(); }
     (async function () {
       try {
         for (;;) {
@@ -3540,7 +3554,7 @@ body.watched .gives { display: none !important; }
       var mine = ((a.ok && a.ok.seats) || []).filter(function (x) { return x.seat === config.seat; })[0];
       if (!mine || !mine.held || (a.ok && a.ok.game_over)) return false;
       playing = true; $('btn-go').textContent = 'Stop the clock'; $('btn-day').disabled = true; startRun(); showClock(); say('running', finishedWords());
-      var rest = function (words, kind) { playing = false; $('btn-go').textContent = 'Carry on'; $('btn-day').disabled = false; showClock(); showWhy(); say(kind || 'stopped', words, $('clock-doing')); };
+      var rest = function (words, kind) { playing = false; $('btn-go').textContent = 'Carry on'; $('btn-day').disabled = false; showClock(); showWhy(); atStop(); say(kind || 'stopped', words, $('clock-doing')); };
       api('wait').then(function (r) { if (r && r.game_over) { M.over = true; M.result = r.result; } return refresh(); }).then(function () { rest(''); })
         .catch(function (e) { rest(''); return refresh().catch(function () {}); });
       return true;
@@ -3984,12 +3998,23 @@ body.watched .gives { display: none !important; }
   window.addEventListener('resize', resize); resize();
   // In a window under 1100 the stop paper is a drawer: its head, always in sight, opens it and shuts it.
   var narrow = window.matchMedia('(max-width: 1099px)');
-  function shutDrawer() { document.body.classList.remove('drawer-open'); $('sp-head').setAttribute('aria-expanded', 'false'); $('sp-head').focus(); }
-  function toggleDrawer() { if (!narrow.matches) return; var open = !document.body.classList.contains('drawer-open'); document.body.classList.toggle('drawer-open', open); $('sp-head').setAttribute('aria-expanded', String(open)); if (open) $('sp-body').focus(); }
+  // The drawer is open at load and opens itself at every stop of the clock; the player may close it to see the chart, and it stays as he
+  // left it until the next stop. The clock's starting closes it, so that what is played is seen; the controls that run time stay in
+  // sight under the head either way.
+  function drawerWords() {
+    var open = document.body.classList.contains('drawer-open'), h = $('sp-head');
+    $('sp-chev').setAttribute('aria-label', open ? 'The stop paper is open: close it' : 'The stop paper is closed: open it');
+    if (narrow.matches) h.setAttribute('aria-expanded', String(open));
+  }
+  function setDrawer(open) { if (!narrow.matches) return; document.body.classList.toggle('drawer-open', open); drawerWords(); }
+  function shutDrawer() { setDrawer(false); $('sp-head').focus(); }
+  function toggleDrawer() { if (!narrow.matches) return; var open = !document.body.classList.contains('drawer-open'); setDrawer(open); if (open) $('sp-body').focus(); }
+  function atStop() { setDrawer(true); }
   function wireDrawer() {
     var h = $('sp-head');
-    if (narrow.matches) { h.setAttribute('role', 'button'); h.tabIndex = 0; h.setAttribute('aria-controls', 'stop'); h.setAttribute('aria-expanded', String(document.body.classList.contains('drawer-open'))); }
+    if (narrow.matches) { h.setAttribute('role', 'button'); h.tabIndex = 0; h.setAttribute('aria-controls', 'stop'); }
     else { document.body.classList.remove('drawer-open'); ['role', 'aria-controls', 'aria-expanded', 'tabindex'].forEach(function (a) { h.removeAttribute(a); }); }
+    drawerWords();
   }
   $('sp-head').addEventListener('click', toggleDrawer);
   $('sp-head').addEventListener('keydown', function (e) { if (narrow.matches && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); toggleDrawer(); } });
@@ -4036,7 +4061,7 @@ body.watched .gives { display: none !important; }
     if (config.home) { KEPT_ROOT += BASE + '-' + config.home.number; KEPT = KEPT_ROOT; $('btn-new').hidden = false; $('btn-agent').hidden = !config.home.agents.length; }
     return ready.then(function () { layChart(); cur.zoom = 0; placeCamera(); requestAnimationFrame(frame); if (config.watch) return startWatch(); if (config.versus) startVersus(); return fetch(BASE + '/tools').then(function (r) { return r.json(); }).then(function (names) { names.forEach(function (n) { OFFERED[n] = true; }); $('btn-stops').hidden = false; $('stops').classList.toggle('daily', !OFFERED.advance); if (OFFERED.advance) $('btn-day').textContent = 'Next pulse'; return refresh().catch(function (e) { if (!VERSUS || !/waits for the clock/.test(e.message)) throw e; }).then(function () { return VERSUS ? resumeVersus() : false; }).then(function (held) { if (!held && !playing && !WATCH) return loadSince(); }); }); });
   });
-  }).then(function () { if (onScreen) return; var shown = true; try { shown = localStorage.getItem('flagplot.hint.look') === '1'; localStorage.setItem('flagplot.hint.look', '1'); } catch (e) {} say('hint', shown ? '' : 'Drag to look along the table; scroll to lean in.'); })
+  }).then(function () { if (onScreen) return; atStop(); var shown = true; try { shown = localStorage.getItem('flagplot.hint.look') === '1'; localStorage.setItem('flagplot.hint.look', '1'); } catch (e) {} say('hint', shown ? '' : 'Drag to look along the table; scroll to lean in.'); })
     .catch(function (e) { fatal('The table could not reach the game: ' + e.message); });
 })();
 </script>
