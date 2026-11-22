@@ -30,6 +30,18 @@ What is so today (decisions 0090, 0094, 0097, 0099, 0105 and 0156; rules chapter
 6. **A direct order takes the unit out of the staff's hands, as it does a force,** and the card says so before the player signs, in the words the force's form uses. The unit goes back to the staff when the player releases it. Whether the engine does this for a land unit today is the reviewer's first question; if it does not, that is a change to the staff's rules, with its own rule card, and is added to this plan before it is built.
 7. **Nothing of a rule changes otherwise.** The table gives what the tool already takes.
 
+### Rest
+
+Added the same day on the designer's word: "near the fatigue mark, should such a command exist as rest, allow the player to give that command. That will take the unit out of staff hands until it is recovered enough."
+
+8. **A card that shows fatigue offers REST beside it,** for a land unit, an air group and a task force of the player's own.
+9. **Rest is the orders under which that kind of unit loses fatigue, and a hold with an end.** For a land unit: defend, no march, stand ready. For an air group: the rest mission. For a task force: normal readiness, as the rules of its fatigue have it. With them the unit is held from the staff, as "keep this force out of the staff's plans" holds it.
+10. **The hold ends by itself when the unit is rested:** at the first dusk at which its fatigue is at or below `rested_fatigue`. The unit is then the staff's again, and the day's report says it is rested and released. The commander may end the rest sooner by releasing it or by giving it another order.
+11. **A unit that cannot rest where it is says so and is not offered it:** a land unit under fire or in a fight takes no rest (decision 0106), and the card says that it is in contact.
+12. **This is a rule and not the table's alone.** A hold that ends on a condition is new to the command state: it is hashed and named, the hold's kind is added at the end, an agent's tool takes it, and the staff's rules say what a held unit's order does while it rests. One figure is new, `rested_fatigue`, a placeholder, 10: the fatigue below which the table calls a unit fresh.
+
+Rule card for rest: reads a held unit's fatigue and `rested_fatigue`. Writes the hold's end. Draws: none.
+
 ## What a side learns by it
 
 Nothing new. A player sees his own units' orders as he sees them now in the diary.
@@ -40,7 +52,7 @@ None, unless rule 6 needs the staff changed. The table reads the unit, its order
 
 ## Games on file
 
-None moves: no rule changes, and no game on file is played from the table's new form.
+None moves: no game on file gives a rest, and the form is the table's. The layout rises for the hold's end and recorded games are remade for it.
 
 ## What it does not do
 
@@ -52,7 +64,7 @@ None moves: no rule changes, and no game on file is played from the table's new 
 ## What it costs
 
 - **The card's form, the chart's marks for a march, and the words for whose hands a unit is in.** The table's screen checks gain the form.
-- **No change to the rulebook,** unless rule 6 needs the staff changed.
+- **Rulebook:** chapter 8 (holds, a hold that ends when a unit is rested) and the glossary's "Hold"; and more if rule 6 needs the staff changed.
 
 ## Questions for the designer
 
