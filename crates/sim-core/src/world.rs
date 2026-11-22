@@ -402,6 +402,12 @@ pub struct World {
     /// not the objectives' horizon (decision 0088), which is the days the
     /// result is judged over.
     pub(crate) game_days: Option<u32>,
+    /// The side a dry run makes up, taken as supplied in full in its fights
+    /// and charged nothing for them (decision 0209, 12). A setting of the
+    /// world the dry run builds, like the game's days: set once there and
+    /// never changed by play, so it is not state and is not hashed. `None`
+    /// for a live game.
+    pub(crate) supplied_in_full: Option<Side>,
     /// The trace of the choices made, while it is on (decision 0100, 7).
     /// Not state: how to record, never what happens, like `config`. A cell,
     /// because the choices are made by functions that only read the world.
@@ -608,6 +614,7 @@ impl World {
             deck_losses: Vec::new(),
             objectives: None,
             game_days: None,
+            supplied_in_full: None,
             choice_trace: TraceCell::default(),
             domain: None,
         })
@@ -625,6 +632,21 @@ impl World {
     /// given none.
     pub fn game_days(&self) -> Option<u32> {
         self.game_days
+    }
+
+    /// Takes `side` as supplied in full in its fights ashore, and charges it
+    /// nothing for them (decision 0209, 12): the setting a dry run gives the
+    /// side it makes up, since a side does not know the enemy's stocks.
+    /// Changes no state, no event and no hash; it acts only where the
+    /// figures of decision 0209 are given.
+    pub fn set_supplied_in_full(&mut self, side: Side) {
+        self.supplied_in_full = Some(side);
+    }
+
+    /// The side taken as supplied in full (decision 0209, 12), `None` for a
+    /// live game.
+    pub fn supplied_in_full(&self) -> Option<Side> {
+        self.supplied_in_full
     }
 
     /// Gives the game its missions and objectives (decision 0054). Fails if

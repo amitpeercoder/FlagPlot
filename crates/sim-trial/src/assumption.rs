@@ -168,6 +168,10 @@ pub enum Assumption {
         standing: Standing,
         why: SetAside,
     },
+    /// Decision 0209, rule 12: the enemy's men ashore are taken as supplied
+    /// in full in their fights and charged nothing, for the side does not
+    /// know his stocks. Made only where the figures of 0209 are given.
+    EnemySupplied,
 }
 
 /// Why believed men were set aside (decision 0176, amended 6).
@@ -201,6 +205,7 @@ impl Assumption {
             | Assumption::BelievedMenRuledOut { .. }
             | Assumption::BelievedMenNotInWorld { .. }
             | Assumption::BelievedMenSetAside { .. } => 176,
+            Assumption::EnemySupplied => 209,
             _ => 174,
         }
     }
@@ -213,6 +218,7 @@ impl Assumption {
             | Assumption::BelievedMenRuledOut { .. }
             | Assumption::BelievedMenNotInWorld { .. }
             | Assumption::BelievedMenSetAside { .. } => 2,
+            Assumption::EnemySupplied => 12,
             Assumption::EnemyBase { .. } => 5,
             Assumption::MenAshore { .. } => 6,
             Assumption::KindRaised { .. } => 11,
@@ -438,6 +444,11 @@ impl fmt::Display for Assumption {
                      the side's"
                 ),
             },
+            Assumption::EnemySupplied => write!(
+                f,
+                "the enemy's men ashore are taken as supplied in full in their fights, and \
+                 charged nothing for them"
+            ),
         }
     }
 }

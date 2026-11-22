@@ -1475,6 +1475,11 @@ fn base_text(o: &mut Out, b: &BriefingBase, rules: Rules, nested: bool) {
                     s.arrived_with_marches_t
                         .map_or(sim_core::fixed::Fixed::ZERO, |d| d.0),
                 ),
+                (
+                    "used in fights",
+                    s.used_in_fights_t
+                        .map_or(sim_core::fixed::Fixed::ZERO, |d| d.0),
+                ),
             ]);
             sub(
                 o,
@@ -1520,10 +1525,13 @@ fn base_text(o: &mut Out, b: &BriefingBase, rules: Rules, nested: bool) {
         top(
             o,
             format!(
-                "{}{at_place}: supply {} t, fuel {} t (for ships; aircraft do not use it){formed}",
+                "{}{at_place}: supply {} t, fuel {} t (for ships; aircraft do not use it){}{formed}",
                 b.base.text(),
                 b.supply_t.0,
-                b.fuel_t.0
+                b.fuel_t.0,
+                b.ammunition_t
+                    .map(|a| format!(", ammunition {} t", a.0))
+                    .unwrap_or_default()
             ),
         );
         let lasts = match b.days_of_supply {

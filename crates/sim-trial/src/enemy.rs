@@ -959,6 +959,17 @@ pub(crate) fn make(
         });
     }
 
+    // Decision 0209, rule 12: where a fight costs supply, the enemy made is
+    // taken as supplied in full, for the side does not know his stocks.
+    if view
+        .ground_figures()
+        .and_then(|figures| figures.hunger)
+        .and_then(|hunger| hunger.fight_supply)
+        .is_some()
+    {
+        making.assumptions.push(Assumption::EnemySupplied);
+    }
+
     // Rules 18 and 19.
     making.assumptions.push(Assumption::EnemyGivenNoBelief);
     if believed.intents.is_empty() {

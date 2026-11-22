@@ -234,3 +234,31 @@ hunger_weakness_per_night = "0.01"
 # units in the field attacked after a day or two unfed. It no longer stands
 # for the want of ammunition ashore, which nothing models, decision 0208.
 unfed_fighting_share = "0.9"
+
+# A fight costs supply (decision 0209): the three figures, given all or none,
+# and only with the three of hunger that takes time above; they do not need
+# the two of men who are slow to mend. With them a day's fight charges each
+# side's bases in the hex for its men at grips, their ammunition first and
+# then their supply; a side short of both fires short; and every landing of
+# men puts days of fighting into its base's ammunition.
+#
+# The tons a man at grips costs in a day's fight. PLACEHOLDER: a judgement
+# inside a wide range. By a reader's arithmetic on the rows (not a row) the
+# manual's rates come to about 35 to 50 tons for a thousand men for a day of
+# attack or defence (land_unit_facts 15083, 15084, 15086) and the nights of
+# heavy firing on Guadalcanal to about 5 to 15 for the men ashore (15113,
+# 15114, 15123). Ten tons for a thousand men at grips is two days of their
+# food, decision 0209.
+fight_supply_t_per_man = "0.01"
+# A side's fire share where its fight was supplied with nothing. PLACEHOLDER:
+# a judgement, and the weakest of the three: the weight of fire is in the guns
+# and mortars (15083, 15084), which is a share of weight and not of effect,
+# and men still have what they carry, a day or so of it (15105, 15186). The
+# record gives no share, decision 0209.
+unsupplied_fire_share = "0.25"
+# The days of fighting a landing puts into its base's ammunition for the men
+# aboard. PLACEHOLDER: about four units of fire ashore on 9 August (464, 777),
+# read as four days of the landed men all at grips; by the manual a unit of
+# fire is far more than a game's day of fighting costs here, so this is a
+# floor on what was landed, not a measure of it, decision 0209.
+fight_days_landed = 4

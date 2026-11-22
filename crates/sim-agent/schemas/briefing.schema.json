@@ -1807,6 +1807,7 @@
         "as_of": { "description": "The moment the area command's held state of the base is of, where that is not the pulse just ended (decision 0136, 11). Left out otherwise.", "type": "string" },
         "supply_t": { "$ref": "defs.schema.json#/$defs/dec" },
         "fuel_t": { "$ref": "defs.schema.json#/$defs/dec" },
+        "ammunition_t": { "description": "The base's ammunition (decision 0122), which its side's fights ashore spend first (decision 0209, 5). Left out while the base has none.", "$ref": "defs.schema.json#/$defs/dec" },
         "spent_yesterday_t": { "$ref": "defs.schema.json#/$defs/dec" },
         "destroyed_yesterday_t": { "$ref": "defs.schema.json#/$defs/dec" },
         "days_of_supply": { "$ref": "defs.schema.json#/$defs/dec_or_null" },
@@ -1903,7 +1904,8 @@
                         "destroyed_by_raids_t": { "$ref": "defs.schema.json#/$defs/dec" },
                         "men_fed_t": { "description": "Paid to feed men ashore (decision 0066, 16). Present only when something was paid for men.", "$ref": "defs.schema.json#/$defs/dec" },
                         "taken_by_marches_t": { "description": "Taken out by units that marched out of the base's hex (decision 0094, 9). Present only when something was taken.", "$ref": "defs.schema.json#/$defs/dec" },
-                        "arrived_with_marches_t": { "description": "Put in by units that marched into the base's hex. Present only when something was put in.", "$ref": "defs.schema.json#/$defs/dec" }
+                        "arrived_with_marches_t": { "description": "Put in by units that marched into the base's hex. Present only when something was put in.", "$ref": "defs.schema.json#/$defs/dec" },
+                        "used_in_fights_t": { "description": "Spent on the side's men at grips in fights in the base's hex, where the base's ammunition did not cover them (decision 0209, 5). Present only when something was spent so.", "$ref": "defs.schema.json#/$defs/dec" }
                       }
                     },
                     { "type": "null" }

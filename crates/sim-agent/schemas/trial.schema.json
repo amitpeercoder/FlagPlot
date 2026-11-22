@@ -1100,9 +1100,21 @@
               "const": "no_intent"
             }
           }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "enemy_supplied"
+            }
+          }
         }
       ],
-      "description": "What the trial assumed or parted the worlds by: an enemy base, men at a place, a force, no belief of the enemy's, an intent of the enemy's, or no intent."
+      "description": "What the trial assumed or parted the worlds by: an enemy base, men at a place, a force, no belief of the enemy's, an intent of the enemy's, no intent, or the enemy's men ashore taken as supplied in full in their fights (decision 0209, 12)."
     },
     "from": {
       "oneOf": [
