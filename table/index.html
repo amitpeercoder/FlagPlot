@@ -2102,6 +2102,8 @@ body.watched .gives { display: none !important; }
     if (where && i.kind === 'deny') return 'Deny the waters round ' + where;
     var tfn = i.task_force != null && ((M.forces.filter(function (f) { return num(f.task_force.handle) === Number(i.task_force.handle ? num(i.task_force.handle) : i.task_force); })[0] || {}).task_force || {}).name;
     if (where && i.kind === 'operate_carriers') return 'Operate ' + (tfn || 'the carrier force') + ' from ' + where;
+    if (where && i.kind === 'strike_ships') return 'Strike ships from ' + where;
+    if (where && i.kind === 'search_waters') return 'Search the waters from ' + where;
     if (where && i.kind === 'stand_at') return 'Station ' + (tfn || 'the force') + ' at ' + where;
     var w = (WORD[i.kind] || i.kind.replace(/_/g, ' ')).toLowerCase(); return (w.charAt(0).toUpperCase() + w.slice(1) + ' ' + where).trim();
   }
@@ -2138,6 +2140,7 @@ body.watched .gives { display: none !important; }
         else if (ok) n.appendChild(el('div', 'work', 'Approved by you today. The staff acts on it from 1800.'));
         else if (waits) {
           var wline = n.appendChild(el('div', 'work', p.state === 'preparing' ? 'It is ready and waits for your leave to launch.' : 'It waits for your leave to prepare.'));
+          var more = n.appendChild(el('div', ''));
           // What approving it would send, as the staff works it as if released;
           // a plan that would form nothing, or cannot meet the order, says so.
           api('propose', { intent: root }).then(function (pr) {
@@ -2145,8 +2148,18 @@ body.watched .gives { display: none !important; }
             var body = t.replace(/^Taking [\s\S]*? as released, the staff would (?:do this for the tree of \S+: )?/, '');
             // What it would form and why, not the orders the task then gives.
             body = body.split(/ intent:\d+, operating the carrier force /)[0];
-            if (/cannot meet|would form no intent and give no order/.test(t)) { wline.textContent = ''; wline.appendChild(rich('span', '', 'Approved as it stands, it would form nothing that serves the order: ' + body)); wline.style.color = 'var(--enemy)'; }
-            else { wline.textContent = ''; wline.appendChild(rich('span', '', (p.state === 'preparing' ? 'It waits for your leave to launch. ' : 'It waits for your leave to prepare. ') + 'Approved, it would send: ' + body)); }
+            // The short of it first: one line for each task the plan would
+            // form, with the groups it would use. The staff's working in
+            // full is folded under it for whoever wants to check it.
+            var lead = p.state === 'preparing' ? 'It waits for your leave to launch.' : 'It waits for your leave to prepare.', none = /cannot meet|would form no intent and give no order/.test(t);
+            var subs = (pr.tree && pr.tree.sub_intents) || [], uses = {}; ((pr.tree && pr.tree.groups) || []).forEach(function (g) { uses[g.intent] = g.air_groups || []; });
+            wline.textContent = none ? 'Approved as it stands, it would form nothing that serves the order.' : subs.length ? lead + ' Approved, it would:' : lead;
+            if (none) wline.style.color = 'var(--enemy)';
+            if (!none) subs.forEach(function (sub) {
+              var with_ = sub.kind === 'operate_carriers' ? 0 : (uses[sub.number] || []).length;
+              more.appendChild(rich('div', 'work', '\u2022 ' + sayIntent(sub, {}) + (with_ ? ' \u00B7 ' + with_ + ' air group' + (with_ === 1 ? '' : 's') : '')));
+            });
+            var fold = el('details', 'working'), head = el('summary', 'work', 'Staff\u2019s working'); head.style.cursor = 'pointer'; fold.appendChild(head); fold.appendChild(rich('div', 'work', body.replace(/^./, function (c) { return c.toUpperCase(); }))); more.appendChild(fold);
           }).catch(function () {});
         }
         if (!off && !gone && !WATCH) { var row = el('div', 'row'), press = function (words, tool, done) { var x = el('button', tool === 'approve' ? 'primary' : 'quiet', words); x.type = 'button'; x.addEventListener('click', function () { act(tool, { plan: p.number }, done).then(function () { readPlan(root); }); }); row.appendChild(x); };
