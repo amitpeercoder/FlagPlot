@@ -42,10 +42,16 @@ PAGE_LOAD_CALLS = [
     ("list_contacts", {}),
     ("command_state", {}),
     ("get_briefing", {"text": False}),
+    # On every refresh, not in a watched game: what the seat has queued, for SIGNED (showSigned).
+    ("queued", {}),
     # Once at load, not on refresh: the day's reports for the stop paper's SINCE (loadSince). Its day is the
     # day just fought at dusk, or the day in hand inside one.
     ("events", {"day": 1}),
 ]
+
+
+# What the page asks at load that a seat whose call is held is not answered (not a watcher's read, decision 0182).
+NOT_WHILE_HELD = {"queued"}
 
 
 def check(holds, words):
@@ -82,7 +88,7 @@ def outcomes_said_one_way():
     import re
     with open(os.path.join(HERE, "index.html"), encoding="utf-8") as page:
         text = page.read()
-    check("function say(kind, words)" in text and "setStatus" not in text,
+    check("function say(kind, words, home)" in text and "setStatus" not in text,
           "the page says every outcome through say(kind, words), and nothing else writes the status line")
     kinds = set(re.findall(r"\b(\w+): 1", re.search(r"var SAY_KINDS = \{([^}]*)\}", text).group(1)))
     used = set(re.findall(r"\bsay\('(\w+)'", text))
@@ -100,13 +106,13 @@ def the_stop_paper():
     start = text.index('<aside id="stop"')
     column = text[start:text.index("</aside>", start)]
     parts = ['id="sp-head"', 'id="clock"', 'id="clock-state"', 'id="sp-body"', 'id="sp-seats"', "WHY THE CLOCK STOPPED",
-             "FOR YOUR DECISION", 'id="sp-since"', 'id="sp-foot"']
+             "FOR YOUR DECISION", 'id="sp-since"', 'id="sp-orders"', "YOUR ORDERS", 'id="sp-signed"', "SIGNED", 'id="sp-foot"']
     at = [column.find(p) for p in parts]
     check(all(a >= 0 for a in at) and at == sorted(at),
-          "the stop paper holds, in order: the head with the clock and its state, the seats, WHY THE CLOCK STOPPED, FOR YOUR DECISION, SINCE, the foot")
+          "the stop paper holds, in order: the head with the clock and its state, the seats, WHY THE CLOCK STOPPED, FOR YOUR DECISION, SINCE, YOUR ORDERS with SIGNED, the foot")
     foot = column[column.index('id="sp-foot"'):]
-    check(all(f'id="{b}"' in foot for b in ("status", "btn-intent", "btn-day", "btn-go", "btn-end")),
-          "its foot holds the outcomes' line, Give an order, the step, Carry on and Read how it ended")
+    check(all(f'id="{b}"' in foot for b in ("btn-day", "btn-go", "btn-end")) and not any(f'id="{g}"' in column for g in ("status", "btn-intent")),
+          "its foot holds the step, Carry on and Read how it ended, and no outcomes' line and no Give an order")
     check(">Next day<" in foot and "'Next pulse'" in text, "the step is named for the game: Next day, or Next pulse where the game is played by pulses")
     css = lambda selector: (re.search(re.escape(selector) + r" \{([^}]*)\}", text) or [None, ""])[1]
     check("flex: none" in css(".sp-head") and "flex: none" in css(".sp-foot") and "overflow-y: auto" in css(".sp-body"),
@@ -114,8 +120,9 @@ def the_stop_paper():
     check("--sp-w: 360px" in text and re.search(r"@media \(min-width: 1440px\) \{[^}]*--sp-w: 400px", text)
           and "@media (max-width: 1099px)" in text and "drawer-open" in text,
           "it is 360 wide, 400 from 1440, and a drawer under 1100")
-    check(not any(old in text for old in ('id="plot"', 'class="tray"', 'class="bar"', 'id="btn-in"', "--bar-h")),
-          "the reports panel, the signals tray, the bar at the foot and the in-tray button are gone")
+    check(not any(old in text for old in ('id="plot"', 'class="tray"', 'class="bar"', 'id="btn-in"', "--bar-h", 'id="btn-intent"', 'id="btn-orders"', 'id="pop-orders"',
+                                          'id="planchip"', 'id="status"', "$('status')", "#planchip")),
+          "the reports panel, the signals tray, the bar at the foot, the in-tray button, Give an order, the Orders menu, the plan chip and the outcomes' line are gone")
     view = text[text.index('<div class="view"'):]
     view = view[:view.index("</div>\n</div>") if "</div>\n</div>" in view else 2000]
     check(all(f'id="{b}"' in view for b in ("btn-plans", "btn-pieces", "btn-labels", "btn-hexes", "btn-view", "btn-above", "btn-lean", "btn-back"))
@@ -123,12 +130,200 @@ def the_stop_paper():
           "the chart's controls are at its foot: plans, pieces, names, hexes, table or from above, and the zoom")
     menus = text[text.index('<div class="menus"'):]
     menus = menus[:menus.index("</div>")]
-    check(all(f'id="{b}"' in menus for b in ("btn-orders", "btn-staff", "btn-game")) and 'id="btn-agent"' in text[text.index('id="pop-game"'):],
-          "the menus at the top right are Orders, Staff and Game, and the agent's seat is under Game")
+    check(all(f'id="{b}"' in menus for b in ("btn-staff", "btn-game")) and 'id="btn-orders"' not in menus and 'id="btn-agent"' in text[text.index('id="pop-game"'):],
+          "the menus at the top right are Staff and Game, and the agent's seat is under Game")
     check("right: 16px" in css(".order") and "setViewOffset" in text,
           "cards and order forms open at the right, and the chart turns to the middle of what is not covered")
-    check("pressed[p.number] = true" in text and "!pressed[p.number]" in text and "needSaid[" in text and "taskWords('strong'" in text,
-          "the plan's paper gives a plan's APPROVE and CANCEL once, at the topmost task on it, says a need once, and names a task's places")
+    check("pressed[p.number]" in text and text.count("press('APPROVE PLAN '") == 1 and text.count("press('CANCEL PLAN '") == 1
+          and text.index("doc.appendChild(first)") < text.index("doc.appendChild(shown)") and "needSaid[" in text and "taskWords('strong'" in text,
+          "the plan's paper gives each plan's APPROVE and CANCEL once, under the plan's line at the top and before the tree, says a need once, and names a task's places")
+
+
+def orders_and_signed():
+    """YOUR ORDERS and SIGNED (decision 0221, stage 2), by the page's text: the orders in force with their empty fact
+    and the leave to launch; SIGNED read from `queued` with TAKE BACK through `take_back`; each outcome in its place; the
+    drawer open at load, with its chevron and its count, and the two controls that run time in sight with it closed."""
+    import re
+    with open(os.path.join(HERE, "index.html"), encoding="utf-8") as page:
+        text = page.read()
+    check("YOUR ORDERS" in text and "'No order in force.'" in text and "i.in_force && !i.parent" in text,
+          "YOUR ORDERS lists the orders in force, each a link to its plan's paper, and says \"No order in force.\" when there is none")
+    check("'Plans launch: ' + (given ? 'when ready' : 'on my word')" in text and "act('set_leave', { leave: 'launch', given: !given }" in text,
+          "it says \"Plans launch: when ready\" or \"on my word\", with the switch that gives and withholds the leave")
+    check("api('queued').catch(function () { return null; })" in text and "api('take_back', { queue: one.place.queue, number: one.place.number, as_of: M.queue.as_of })" in text
+          and "'TAKE BACK'" in text and "NOT TAKEN BACK" in text,
+          "SIGNED is read from queued at each refresh, TAKE BACK withdraws one entry by its place and as_of, and a refusal is said beside the entry")
+    check("function canSign() { return !WATCH && !M.over && !playing; }" in text and "if (canSign()) {" in text and "(e.goes_with || [])" in text,
+          "TAKE BACK is offered only while the clock is stopped and the seat may sign; what goes with an entry is not a line of its own")
+    check("'Acts at '" in text and "'Waits for 1800'" in text, "each entry says when it acts, \"Acts at 1200\" or \"Waits for 1800\"")
+    check("refusedIn(home, words)" in text and "'NOT SENT'" in text and "act(tool, args, done, home)" in text,
+          "a refusal is said as NOT SENT in the form, paper or entry that was signed")
+    check("else if (kind === 'confirm') $('game-says')" in text and "else if (kind === 'running')" in text and "'clock-doing'" in text
+          and "showPrompt(kind, words)" in text and "else if (kind === 'draft') $('sr')" in text,
+          "a confirm is said in the GAME menu, what the clock is doing under the head's state, a pick and the first hint in a prompt by the chart's controls, a draft to the live region")
+    check("act(tool, { plan: p.number }, done, row)" in text and "tallied[word]" not in text and "el('h3', '', 'The brief')" not in text,
+          "the plan's paper has no tally and no brief: the plan's line is one, the tree is the rest")
+    paper = text[text.index("// ---- the plan's paper as one tree ----"):text.index("// ---- the dry run (decisions")]
+    check("function paperNode(t)" in paper and "t.kids.forEach(function (k) { n.appendChild(paperNode(k)); })" in paper
+          and "function proposedTree(top, said, pr)" in paper and "pr.tree" in paper and "tr.sub_intents" in paper and "s.parent" in paper
+          and "st.intents.filter(function (c) { return c.parent === i.number; })" in paper,
+          "the plan's paper is one tree: a plan that waits from propose's tree (each task under its parent), a plan in force from command_state's intents under the root")
+    css = lambda selector: (re.search(re.escape(selector) + r" \{([^}]*)\}", text) or [None, ""])[1]
+    check("border-left: 2px solid" in css(".sheet .doc .node") and "node ptask" in paper,
+          "each task is a node with the rule down its left, the brief's own look, nested in its parent's")
+    check("'order ' + i.number" not in paper and "'Order ' + top.number" in paper and "PAPER_TASKS[n]" in text,
+          "a task is named by what it is, never by its number; the root keeps the player's own order number")
+    check(paper.count("sm.textContent = 'WHY'") == 1 and "'WEIGHED'" in paper and "'CHOSE'" in paper and "'HOLDS IT BACK'" in paper and "paperArcsDraw()" in paper and "mouseenter" in paper,
+          "each task has one fold, WHY, with what was weighed, what was chosen and what holds it back, and its search arc is drawn on the chart while the fold is open or the task is hovered")
+    last = text.index("if (working) doc.appendChild(working);")
+    check("fold('THE STAFF\\'S WORKING IN FULL')" in text and last > text.index("rk = fold('RISK AND TIMING')") and last < text.index("'WITHDRAW THIS ORDER'", last),
+          "the staff's working in full is the last fold, closed, before the withdrawal")
+    column = text[text.index('<aside id="stop"'):text.index("</aside>", text.index('<aside id="stop"'))]
+    check('id="sp-chev"' in column and "The stop paper is closed: open it" in text and "The stop paper is open: close it" in text
+          and "' for your decision'" in text and "role=\"img\"" in column,
+          "the head has a chevron whose label says the paper is open or closed, and the count of what waits for a decision")
+    check("function atStop() { setDrawer(true); }" in text and text.count("atStop();") >= 4 and "function startRun() { setDrawer(false);" in text,
+          "the drawer opens at load and at every stop of the clock; the clock's starting closes it")
+    check(re.search(r"\.stoppaper \.sp-body \{ display: none; \}", text) and not re.search(r"\.stoppaper \.sp-foot \{ display: none", text)
+          and 'id="sp-foot"' in column and 'id="btn-day"' in column and 'id="btn-go"' in column,
+          "with the drawer closed the two controls that run time stay in sight under the head: the same buttons of the foot")
+
+
+def one_order_paper():
+    """The one order paper (decision 0221, stage 3), by the page's text: the three forms and the forms inside the cards
+    are folded into one paper with the same parts in the same places; it opens in the card's place with a way back, asks before
+    Escape tears up a draft with something chosen, lets the chart draw what is drafted while it is open, says NOT SENT line by
+    line, takes the hold back where nothing of the order went, and gives an air group's mission and arc as one entry under
+    SIGNED. (Tried in a browser, not here.)"""
+    import re
+    with open(os.path.join(HERE, "index.html"), encoding="utf-8") as page:
+        text = page.read()
+    check('<form class="order gives" id="paper"' in text and not any(f'id="{old}"' in text for old in ("order", "force", "course"))
+          and "'airorder'" not in text and "'landorder'" not in text and "function orderForce(" not in text and "function closeForce(" not in text and "function closeOrder(" not in text,
+          "one order paper: the forms #order, #force and #course and the forms inside the air group's and the land unit's cards are gone")
+    check(text.count("openPaper('force'") == 1 and text.count("openPaper('staff'") == 1 and text.count("openPaper('air'") == 1 and text.count("openPaper('land'") == 1,
+          "every way to an order opens the one paper: a force's card, an air group's, a land unit's, and a card's orders you can give")
+    start = text.index('<form class="order gives" id="paper"')
+    form = text[start:text.index("</form>", start)]
+    parts = ['id="p-to"', "THE ORDER", "IN WHOSE HANDS", "ACTS", 'id="o-pv"', "THE STAFF'S READING", 'id="p-says"', "SIGN AND SEND", "TEAR UP"]
+    at = [form.find(p) for p in parts]
+    check(all(a >= 0 for a in at) and at == sorted(at), "the paper's parts are in order: TO, THE ORDER, IN WHOSE HANDS, ACTS, the staff's reading, what was sent, SIGN AND SEND, TEAR UP")
+    check('id="o-pv" open' in form and "$('o-pv').open = true" in text and 'id="p-dry"' in form and "OFFERED.trial" in text,
+          "the staff's reading is shown open, with DRY RUN where the game has a trial")
+    check("function actsText(orders)" in text and "'Acts at once, at '" in text and "'Acts at 1800, for the coming day'" in text and "'Acts at once: '" in text,
+          "ACTS says before signing when the order acts: at once, at 1800 for the coming day, or each part by itself")
+    check("function handsText(d)" in text and "STAFF_HANDS = 'you keep it out of the staff\u2019s plans'" in text and "'The staff\u2019s now. Yours once signed: '" in text,
+          "IN WHOSE HANDS says, for a unit, whose it is now and whose it will be once signed, in decision 0216's words")
+    check('id="p-back"' in form and "'\u2190 BACK TO '" in text and "from.go()" in text and "from: from" in text,
+          "the paper has a way back to the card it was opened from")
+    check("function paperAsk(words, yes)" in text and "'KEEP WRITING'" in text and "function tearUpAsking(then, words)" in text and "if (!paperChosen())" in text
+          and "e.key !== 'Escape' || !paper" in text and "}, true);" in text[text.index("e.key !== 'Escape' || !paper"):text.index("e.key !== 'Escape' || !paper") + 700],
+          "Escape tears up a draft with nothing chosen, and asks in the paper where something is chosen")
+    check("arcDraft && (!$('card').hidden || paper)" in text and "marchDraft && (!$('card').hidden || paper)" in text and "$('card').hidden && !paper &&" in text
+          and "else if (!picking && !paper && !playing" in text and "if (draft) ring(draft.v" in text and "force && force.route" in text,
+          "the chart draws what is drafted while the paper is open (a course, an arc, a march, the deny circle) and a touch on it opens no card")
+    check("function paperLines(lines)" in text and "el('b', '', 'NOT SENT')" in text and "' \\u2014 '" in text and "ORDER_LABEL" in text and "createTextNode('sent.')" in text,
+          "a refusal keeps the paper open and says NOT SENT line by line: \"Speed: sent.\" and \"Course: NOT SENT\" with the engine's reason")
+    check("function takeBackHold(p)" in text and "e.command.kind === 'hold'" in text and "api('take_back', { queue: mine.place.queue" in text and "nothing && p.holdSent ? takeBackHold(p)" in text,
+          "where nothing of a unit's order went, the hold sent before it is taken back with take_back")
+    check("also[arc.place.queue" in text and "x.order.kind === 'set_search_arc' && x.unit === e.unit" in text and "var group = [e].concat(also[" in text,
+          "an air group's mission and its search arc, signed together, are one entry under SIGNED, taken back together")
+    check(not any(w in text for w in ("BEFORE YOU SIGN", "f-when", "your direct order takes it out of the staff")),
+          "the captions before signing are gone: what a unit's order does to whose hands it is in is said as a fact, in IN WHOSE HANDS")
+
+
+def stops_speak_as_the_staff():
+    """The stops of the clock speak as the commander's own staff (decision 0221, stage 2): "we" and "our" for the side, "you"
+    only for what is the commander's to do; an aircraft type is said as the cards say it (the maker left off, a Japanese
+    type cut after its designation), by the page's text."""
+    with open(os.path.join(HERE, "index.html"), encoding="utf-8") as page:
+        text = page.read()
+    told = text[text.index("var TOLD = {"):text.index("\n", text.index("var TOLD = {"))]
+    check("'We are attacked'" in told and "'Our strike is away'" in told and "'Our men are ashore, or fighting'" in told
+          and not any(w in told for w in ("You ", "Your ")), "what the clock was stopped for is said as \"we\" and \"our\", never \"you\" for the side")
+    check("'We ask your leave.'" in text and "'A plan waits for your leave.'" in text and "'our reinforcements '" in text and "the commander's/g, 'your'" in text,
+          "a leave asked or waited for is the commander's own: \"your\"; the side's reinforcements are \"our\"")
+    check("function toldHead(t)" in text and "'We have lost '" in text and "' is on fire among her aircraft'" in text and "'Our men are ashore at '" in text
+          and "'Our men are fighting at '" in text and "'We have a contact: '" in text and "' bombed'" in text and "events: told.map(" in text,
+          "where a slip's own events say which it is, its heading says so (a ship lost or out of action, men ashore or fighting, the contact, the base bombed); the general heading stays for a mix")
+    check("function shortType(name)" in text and "' by ' + shortType(seen[1]) + ' aircraft'" in text,
+          "an aircraft type in a stop's line is the short designation, not the data's long name")
+
+
+def cards_show_no_handle():
+    """A contact's HOW WE KNOW is said in the table's words, not the engine's raw lines (decision 0221, stage 2), by the
+    page's text: its rows are a when and the words, units by name, places linked, and a handle of the form word:number is
+    never put on a card (the page is drawn in a browser; the same was read there for every kind of card)."""
+    import re
+    with open(os.path.join(HERE, "index.html"), encoding="utf-8") as page:
+        text = page.read()
+    check("howWeKnow(how, " in text and "listOf(how, 'HOW WE KNOW'" not in text and ".replace(/\\bcontact:\\d+/g, 'it')" in text,
+          "a contact's HOW WE KNOW is built by howWeKnow, which has no handle of its own: a contact is \"it\"")
+    css = (re.search(r"#card \.how \.hrow \.words \{([^}]*)\}", text) or [None, ""])[1]
+    check("text-align: left" in css and "#card .how .hrow .when { display: block;" in text,
+          "each row is the when on its own small line and the words beneath it, left-aligned, with no figure column")
+
+
+def the_plan_paper_has_no_rule_caption():
+    """The plan's paper (the plan as one tree): no caption at its foot explains how a plan is changed (agreed Nov 19, 2026);
+    inside a day it says only when it was worked."""
+    with open(os.path.join(HERE, "index.html"), encoding="utf-8") as page:
+        text = page.read()
+    check("You change a plan by instruction" not in text
+          and "if (!WATCH && a[2].inside_day) doc.appendChild(el('div', 'foot', 'Worked now, inside the day; the staff works it again at 1800.'));" in text,
+          "the plan's paper has no caption explaining how a plan is changed; inside a day its foot says when it was worked")
+
+
+def the_trail_holds_no_duplicate():
+    """The trail of cards (decision 0221, stage 2), by the page's text: a card is the thing it shows by its handle; opening the
+    card of the thing already shown changes nothing in the trail; the trail never holds one thing twice running; stepping
+    replaces the card; a link from the stop paper starts a new trail. (Tried in a browser, not here.)"""
+    with open(os.path.join(HERE, "index.html"), encoding="utf-8") as page:
+        text = page.read()
+    check("function remember(f, keyOf)" in text and "same = !!key && key === shownKey;" in text
+          and "trail[trail.length - 1].key === shownKey" in text,
+          "opening the card of the thing whose card is open leaves the trail as it is, and the trail never holds one thing twice running")
+    check("while (key && trail.length && trail[trail.length - 1].key === key) trail.pop();" in text,
+          "BACK never leads to the thing about to be shown, as after a form closed its card and the thing is touched again")
+    check("stepping = true; try { stepStackIn(by); }" in text and "if (!stepping && viaStop && !(same && !$('card').hidden)) trail = [];" in text and "closest('#stop')" in text,
+          "stepping through a stack replaces the card without growing the trail, and a link from the stop paper starts a new trail")
+    check(all("remember(" + c + ", function" in text for c in ("cardContact", "cardForce", "cardBase", "cardPlace", "cardHex", "cardUnit", "cardEntity", "cardGone")),
+          "every way a card opens names the thing it shows")
+
+
+def queue_through_the_bridge(bridge):
+    """The two tools SIGNED rests on, as the page calls them: queued lists what was signed, with a unit's hold going with
+    its order, and take_back withdraws one entry and what goes with it, refused with the token out of date."""
+    print("-- queued and take_back, as the page calls them: the Eastern Solomons over five days, the person Allied", flush=True)
+    check(begin(bridge, "eastern-solomons-five-days", "person", "engine") == {"ok": True}, "begun")
+    person = Person(bridge.table)
+    nothing = person.call("queued")["ok"]
+    check(nothing["entries"] == [] and nothing["as_of"], "with nothing signed, queued lists no entry")
+    person.call("hold", {"task_force": 1})
+    person.call("issue_orders", {"orders": [{"unit": "task_force:1", "order": {"kind": "set_speed", "speed": "full"}}]})
+    person.call("set_leave", {"leave": "launch", "given": True})
+    listed = person.call("queued")["ok"]
+    by = {(e["place"]["queue"], e["place"]["number"]): e for e in listed["entries"]}
+    order = [e for e in listed["entries"] if e["what"] == "order"][0]
+    hold = [e for e in listed["entries"] if e.get("tool") == "hold"][0]
+    check(len(listed["entries"]) == 3 and hold["rests_on"] == [order["place"]] and hold["place"] in order["goes_with"],
+          "queued lists the order, the hold that rests on it (which goes with it) and the leave")
+    check("refused" in person.raw("take_back", {"queue": "dusk", "number": 1, "as_of": "not this"}), "a take back with an out of date token is refused")
+    taken = person.call("take_back", {"queue": order["place"]["queue"], "number": order["place"]["number"], "as_of": listed["as_of"]})["ok"]
+    check(len(taken["taken_back"]) == 2 and [e["tool"] for e in taken["queued"]] == ["set_leave"],
+          "take_back withdraws the order and the hold that goes with it, and lists what is left")
+    again = person.call("take_back", {"queue": "commands", "number": 1, "as_of": taken["as_of"]})["ok"]
+    check(again["queued"] == [] and person.call("queued")["ok"]["entries"] == [], "and the leave is taken back too: nothing is queued")
+    # A unit's order refused by the engine after the hold the paper sends first at dusk: the hold is taken back, nothing is left queued.
+    person.call("hold", {"task_force": 1})
+    refused = person.call("issue_orders", {"orders": [{"unit": "task_force:1", "order": {"kind": "join", "into": "task_force:99"}}]})["ok"]
+    check(refused["results"][0]["status"] == "refused", "an order the engine refuses leaves the hold sent before it queued")
+    queued = person.call("queued")["ok"]
+    hold = [e for e in queued["entries"] if e.get("command", {}).get("kind") == "hold" and e["command"].get("task_force") == 1]
+    check(len(hold) == 1, "the page finds that hold in queued, as a command of kind hold naming the force")
+    person.call("take_back", {"queue": hold[0]["place"]["queue"], "number": hold[0]["place"]["number"], "as_of": queued["as_of"]})
+    check(person.call("queued")["ok"]["entries"] == [], "and takes it back: nothing of the refused order is left queued")
+    check(post(bridge.table + "/new") == {"ok": True}, "the game is put away")
 
 
 def http(method, url, body=None):
@@ -377,8 +572,8 @@ def land_unit_orders(bridge, person):
     holds the form and its words, and the three orders go to the tool in the shapes the form sends them,
     after the hold the form sends first. The form itself is drawn in a browser and is not run here."""
     page = get(bridge.table + "/")
-    check("'landorder'" in page and "NOT SENT" in page and "Acts at 1800, for the coming day." in page,
-          "the page holds the land unit's order form, the line for a refusal and the line for an order kept to dusk")
+    check("function landControls(form, u, held)" in page and "NOT SENT" in page and "Acts at 1800, for the coming day" in page,
+          "the page holds the land unit's controls for the one order paper, the line for a refusal and the line for an order kept to dusk")
     units = person.call("list_forces")["ok"]["land_units"]
     fighting = [u for u in units if u["men_ashore"] and u.get("march_to") and not u.get("working")]
     check(fighting, "a fighting unit with men ashore lists the places it can march to (march_to)")
@@ -395,6 +590,58 @@ def land_unit_orders(bridge, person):
     refused = person.call("issue_orders", {"orders": [{"unit": handle, "order": {"kind": "march", "hex": [unit["place"]["q"] + 50, unit["place"]["r"]]}}]})["ok"]["results"][0]
     check(refused["status"] == "refused", "a march to a place no land link joins is refused, for the form to show as NOT SENT")
     check(person.call("release", {"land_unit": number})["ok"]["status"] == "queued", "the unit is released to the staff by the button the card has")
+
+
+def the_paper_in_words(bridge):
+    """The plan's paper, as its words are made from a real proposal (the 39 days, the order to control Guadalcanal):
+    the tree is given by the tool, each task with its parent and each order with the task it serves, and the staff's
+    words, run through the page's own cleaning in node, hold no engine phrase (a hex count, "nearest hex", a raw
+    fatigue figure, a plural in brackets)."""
+    import re
+    import shutil
+    print("-- the plan's paper: the tree from propose, and the staff's words made plain", flush=True)
+    check(begin(bridge, "guadalcanal-39-days", "person", "engine") == {"ok": True}, "begun")
+    person = Person(bridge.table)
+    shown = person.call("preview", {"command": "set_intent", "intent_kind": "control_island", "island": 1})["ok"]
+    person.call("approve", {"preview": shown["preview"]})
+    proposal = person.call("propose", {"intent": 1})["ok"]
+    tree = proposal["tree"]
+    numbers = {1} | {s["number"] for s in tree["sub_intents"]}
+    check(tree["sub_intents"] and all(isinstance(s["parent"], int) and s["parent"] in numbers for s in tree["sub_intents"]),
+          f"propose gives the tree: {len(tree['sub_intents'])} tasks, each with its parent in the tree")
+    hand = proposal["would_hand_in"]["orders"]
+    check(hand and all(x["intent"] in numbers and x["unit"] and x["order"]["kind"] for x in hand),
+          f"each of the {len(hand)} orders it would hand in names the task it serves, the unit and the order")
+    check(any(a["from_deg"] is not None and a["range_nm"] for a in tree["arcs"]) and all(a["intent"] in numbers for a in tree["arcs"]),
+          "a search arc is a bearing range and a range, with the task it serves")
+    texts = [proposal["reason"]["worked"]] + list(tree["no_orders"]) + [a["how"] for a in tree["arcs"]]
+    for sub in tree["sub_intents"]:
+        r = sub["reason"]
+        texts += [r["worked"]] + [e["what"] for e in r["evidence"]] + r["binding"] + r["would_change"]
+    for x in hand:
+        texts += [x["reason"]["worked"]] + [e["what"] for e in x["reason"]["evidence"]] + x["reason"]["binding"]
+    for g in tree["groups"]:
+        texts += [o["worked"] for o in g["orders"]]
+    node = shutil.which("node")
+    with open(os.path.join(HERE, "index.html"), encoding="utf-8") as page:
+        text = page.read()
+    code = text[text.index("  function shareWords"):text.index("  function paperText")] + text[text.index("  function cutTop"):text.index("  function workedView")]
+    with tempfile.TemporaryDirectory() as folder:
+        path = os.path.join(folder, "words.js")
+        with open(path, "w", encoding="utf-8") as out:
+            out.write(code + "\nconst t = JSON.parse(require('fs').readFileSync(process.argv[2], 'utf8')); console.log(JSON.stringify(t.map(x => tidyWorked(paperPre(x)))));\n")
+        data = os.path.join(folder, "texts.json")
+        with open(data, "w", encoding="utf-8") as out:
+            json.dump(texts, out)
+        done = subprocess.run([node, path, data], capture_output=True, text=True)
+        check(done.returncode == 0, "the page's cleaning of the staff's words runs in node" + ("" if done.returncode == 0 else ": " + done.stderr.strip()[:300]))
+        said = json.loads(done.stdout)
+    phrases = r"hex\(es\)|nearest hex|\bfatigue \d|\w\(s\)"
+    raw = [t for t in texts if re.search(phrases, t)]
+    check(raw, f"the staff's own words do hold the phrases the paper replaces ({len(raw)} of {len(texts)} texts)")
+    left = [t for t in said if re.search(phrases + r"|\b(25|50|75) in 100\b", t)]
+    check(not left, "made plain, none holds a hex count, \"nearest hex\", a raw fatigue figure, a plural in brackets or a share as N in 100 where a word says it" + (": " + left[0][:160] if left else ""))
+    check(post(bridge.table + "/new") == {"ok": True}, "the game is put away")
 
 
 def midway_on_its_chart(bridge):
@@ -525,7 +772,11 @@ def person_against_agent(bridge, hold):
             check(http("GET", bridge.table + path)[0] == 200, f"on load while held ({when}): {path} answered")
         for tool, arguments in PAGE_LOAD_CALLS:
             answer = person.raw(tool, arguments)
-            check("ok" in answer, f"on load and refresh while held ({when}): {tool} answered")
+            if tool in NOT_WHILE_HELD:
+                # Not a watcher's read: refused while held, and the page does without (SIGNED is empty then; nothing can be signed).
+                check("refused" in answer, f"on load and refresh while held ({when}): {tool} is refused, and the page does without it")
+            else:
+                check("ok" in answer, f"on load and refresh while held ({when}): {tool} answered")
     check(t.answer.get("waiting") is True, f"the person's run, the agent not finished, answers that it waits after {min(hold, 20)} s")
     # A page loaded again picks the wait up, and is answered when the clock moves.
     reloaded = later(person.call, "wait")
@@ -618,6 +869,12 @@ def main():
     page_scripts_parse()
     outcomes_said_one_way()
     the_stop_paper()
+    orders_and_signed()
+    one_order_paper()
+    stops_speak_as_the_staff()
+    cards_show_no_handle()
+    the_trail_holds_no_duplicate()
+    the_plan_paper_has_no_rule_caption()
     if not os.path.exists(args.sim_cli):
         sys.exit(f"{args.sim_cli} is not built: cargo build --release -p sim-cli")
     with tempfile.TemporaryDirectory() as keep:
@@ -626,6 +883,8 @@ def main():
             listed = the_screen(bridge)
             every_game(bridge, listed)
             orders_on_the_card(bridge)
+            queue_through_the_bridge(bridge)
+            the_paper_in_words(bridge)
             midway_on_its_chart(bridge)
             person_against_agent(bridge, args.hold)
             seat_mcp(bridge)

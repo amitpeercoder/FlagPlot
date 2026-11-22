@@ -68,7 +68,7 @@ impl<'a> Names<'a> {
 
     /// The side's number of a task force: one it has, or one its next
     /// forming order makes (the next number past its last, and so on).
-    fn force_number(&self, raw: u32) -> Option<u32> {
+    pub(crate) fn force_number(&self, raw: u32) -> Option<u32> {
         self.ctx.force_number(TaskForceId::new(raw)).or_else(|| {
             let made = raw.checked_sub(self.next_force)?;
             (made < MADE_IDS_FLOOR).then(|| self.ctx.force_count() + 1 + made)
@@ -1048,7 +1048,11 @@ fn hold_target_json(n: &Names<'_>, target: HoldTarget, request: Option<&Request>
 }
 
 /// A command as the interface writes it, in the side's numbers.
-fn command_json(n: &Names<'_>, command: &CommandKind, request: Option<&Request>) -> Value {
+pub(crate) fn command_json(
+    n: &Names<'_>,
+    command: &CommandKind,
+    request: Option<&Request>,
+) -> Value {
     let target = match command {
         CommandKind::Hold { target } | CommandKind::Release { target } => Some(*target),
         _ => None,
@@ -1122,7 +1126,11 @@ fn written_force(n: &Names<'_>, force: TaskForceId, request: Option<&Request>) -
 }
 
 /// A command in words, in the side's numbers.
-fn command_text(n: &Names<'_>, command: &CommandKind, request: Option<&Request>) -> String {
+pub(crate) fn command_text(
+    n: &Names<'_>,
+    command: &CommandKind,
+    request: Option<&Request>,
+) -> String {
     match request {
         Some(r) => n.text_with(
             &command.to_string(),

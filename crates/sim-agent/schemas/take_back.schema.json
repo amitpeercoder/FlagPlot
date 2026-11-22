@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "flagplot-agent/take_back",
+  "title": "take_back: one queued entry withdrawn, with what goes with it",
+  "description": "The answer of take_back (decision 0221, rules 15 and 16). taken_back lists the entry named first and then what went with it, each as queued listed it before; queued lists the entries left, renumbered, and as_of is the new token for the next take_back. A take back that is refused (as the whole call) is an error, and nothing is changed.",
+  "type": "object",
+  "required": ["format", "version", "kind", "taken_back", "as_of", "queued", "summary"],
+  "additionalProperties": false,
+  "properties": {
+    "format": { "const": "flagplot-agent" },
+    "version": { "const": 46 },
+    "kind": { "const": "take_back" },
+    "taken_back": { "type": "array", "minItems": 1, "items": { "$ref": "queued.schema.json#/$defs/entry" } },
+    "as_of": { "type": "string" },
+    "queued": { "type": "array", "items": { "$ref": "queued.schema.json#/$defs/entry" } },
+    "summary": { "type": "string" }
+  }
+}
