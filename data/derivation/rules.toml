@@ -1775,3 +1775,282 @@ row = 14344
 later = true
 reason = "The class's deadweight, 12,600 tons, from her one ship on file, Tippecanoe, in FTP 218, promulgated 1 September 1945, read for 1942 as already so: it is the hull's deadweight, and no source read says it was altered. Read only as a like class's row for an estimate by ratio (decision 0207, rules 5 and 6). Settled by the architect, Nov 21, 2026 (decision 0207)."
 agreed = "2026-11-21"
+
+# Decision 0218, stage 1: the submarine classes of 1942 (data/derivation/submarines_1942.toml).
+# The written rules of decision 0218, rule 28, which oob-derive applies to a list's [[submarine]] entries:
+#   - a salvo is the class's tubes that bear forward (torpedo_tubes_bow);
+#   - the salvoes carried are its torpedoes carried (torpedoes_carried) over its salvo, rounded down;
+#   - the passage speed is the class's speed of endurance on the surface (endurance_speed_kn);
+#   - the damage of a hit is by the torpedo's warhead (warhead_kg) x torpedo_damage_per_warhead_kg, the
+#     figure the ships' torpedoes use, above.
+# And rule 29: a figure still missing is estimated from like boats by decision 0207 ([[estimate]]) and
+# marked; a class whose torpedo no row states takes the torpedo stated for the boats of her group, or of
+# the group nearest in date, by the list's torpedo_from entry, and is marked. The group nearest in date
+# is the one whose boats were built nearest in year to hers, by the year the Technical Mission's
+# headings and the classes' names give (settled by the architect, Nov 22, 2026).
+# Each exception below is the architect's ruling of Nov 22, 2026, with its reason.
+
+[[exception]]
+entity = "jp-i-15-group"
+fact = "torpedo_tubes_bow"
+row = 16020
+reason = "6 bow tubes. The Technical Mission's S-01-1 table gives the block as built (built 1940) and dates nothing within 1942; judged to hold on 7 August 1942. Settled by the architect, Nov 22, 2026 (decision 0218, stage 1)"
+agreed = "2026-11-22"
+
+[[exception]]
+entity = "jp-i-15-group"
+fact = "endurance_speed_kn"
+row = 16022
+reason = "16 knots, the speed of the block's 14,000 miles. The Technical Mission's S-01-1 table gives the block as built (built 1940) and dates nothing within 1942; judged to hold on 7 August 1942. Settled by the architect, Nov 22, 2026 (decision 0218, stage 1)"
+agreed = "2026-11-22"
+
+[[exception]]
+entity = "jp-i-15-group"
+fact = "max_speed_kn"
+row = 16019
+reason = "22 knots, read as a like class's row for decision 0207's estimate by ratio. The Technical Mission's S-01-1 table gives the block as built (built 1940) and dates nothing within 1942; judged to hold on 7 August 1942. Settled by the architect, Nov 22, 2026 (decision 0218, stage 1)"
+agreed = "2026-11-22"
+
+[[exception]]
+entity = "jp-i-15-group"
+fact = "torpedoes_carried"
+row = 16051
+later = true
+reason = "16 torpedoes. ONI 222-J (June 1945) gives the class as built, read for 1942 as already so: a class's tubes and torpedo stowage are her design, and no row says they were altered. Settled by the architect, Nov 22, 2026 (decision 0218, stage 1)"
+agreed = "2026-11-22"
+
+[[exception]]
+entity = "jp-i-168-group"
+fact = "torpedo_tubes_bow"
+row = 16011
+reason = "4 bow tubes (Wikipedia's row 16223 agrees). The Technical Mission's S-01-1 table gives the block as built (built 1934) and dates nothing within 1942; judged to hold on 7 August 1942. Settled by the architect, Nov 22, 2026 (decision 0218, stage 1)"
+agreed = "2026-11-22"
+
+[[exception]]
+entity = "jp-i-168-group"
+fact = "endurance_speed_kn"
+row = 16014
+reason = "10 knots, the speed of the block's 14,000 miles. The Technical Mission's S-01-1 table gives the block as built (built 1934) and dates nothing within 1942; judged to hold on 7 August 1942. Settled by the architect, Nov 22, 2026 (decision 0218, stage 1)"
+agreed = "2026-11-22"
+
+[[exception]]
+entity = "jp-i-168-group"
+fact = "max_speed_kn"
+row = 16009
+reason = "23 knots, read as a like class's row for decision 0207's estimate by ratio. The Technical Mission's S-01-1 table gives the block as built (built 1934) and dates nothing within 1942; judged to hold on 7 August 1942. Settled by the architect, Nov 22, 2026 (decision 0218, stage 1)"
+agreed = "2026-11-22"
+
+[[exception]]
+entity = "jp-i-168-group"
+fact = "torpedoes_carried"
+row = 16222
+reason = "14 torpedoes, Wikipedia's I-168 page, with the I-171, I-174 and I-175 pages and the Kaidai table agreeing; a lone weak row, no row against it, read and marked; it gives way to a better row when one is filed (ONI has no sheet for the class). Settled by the architect, Nov 22, 2026 (decision 0218, stage 1)"
+agreed = "2026-11-22"
+
+[[exception]]
+entity = "jp-i-168-group"
+fact = "torpedo_model"
+row = 16225
+reason = "Type 89, Wikipedia's Kaidai table, 'Armament (initial)', undated; a lone weak row, no row against it, read and marked; it gives way to a better row when one is filed. Settled by the architect, Nov 22, 2026 (decision 0218, stage 1)"
+agreed = "2026-11-22"
+
+[[exception]]
+entity = "jp-i-176-group"
+fact = "torpedo_tubes_bow"
+row = 16028
+reason = "6 bow tubes. The Technical Mission's S-01-1 table gives the block as built (built 1942) and dates nothing within 1942; judged to hold on 7 August 1942. Settled by the architect, Nov 22, 2026 (decision 0218, stage 1)"
+agreed = "2026-11-22"
+
+[[exception]]
+entity = "jp-i-176-group"
+fact = "endurance_speed_kn"
+row = 16030
+reason = "16 knots, the speed of the block's 8,000 miles. The Technical Mission's S-01-1 table gives the block as built (built 1942) and dates nothing within 1942; judged to hold on 7 August 1942. Settled by the architect, Nov 22, 2026 (decision 0218, stage 1)"
+agreed = "2026-11-22"
+
+[[exception]]
+entity = "jp-i-176-group"
+fact = "max_speed_kn"
+row = 16026
+reason = "23 knots, read as a like class's row for decision 0207's estimate by ratio. The Technical Mission's S-01-1 table gives the block as built (built 1942) and dates nothing within 1942; judged to hold on 7 August 1942. Settled by the architect, Nov 22, 2026 (decision 0218, stage 1)"
+agreed = "2026-11-22"
+
+[[exception]]
+entity = "jp-i-176-group"
+fact = "torpedoes_carried"
+row = 16056
+later = true
+reason = "12 torpedoes. ONI 222-J (June 1945) gives the class as built, read for 1942 as already so: a class's tubes and torpedo stowage are her design, and no row says they were altered. Settled by the architect, Nov 22, 2026 (decision 0218, stage 1)"
+agreed = "2026-11-22"
+
+[[exception]]
+entity = "jp-i-153-group"
+fact = "endurance_speed_kn"
+row = 16039
+reason = "10 knots, the speed of the block's 10,000 miles. The Technical Mission's S-01-1 table gives the block as built (built 1927) and dates nothing within 1942; judged to hold on 7 August 1942. Settled by the architect, Nov 22, 2026 (decision 0218, stage 1)"
+agreed = "2026-11-22"
+
+[[exception]]
+entity = "jp-i-153-group"
+fact = "torpedo_tubes_bow"
+row = 16063
+later = true
+reason = "6 bow tubes. ONI 222-J (June 1945) gives the class as built, read for 1942 as already so: a class's tubes and torpedo stowage are her design, and no row says they were altered. Settled by the architect, Nov 22, 2026 (decision 0218, stage 1)"
+agreed = "2026-11-22"
+
+[[exception]]
+entity = "jp-i-153-group"
+fact = "torpedoes_carried"
+row = 16064
+later = true
+reason = "16 torpedoes. ONI 222-J (June 1945) gives the class as built, read for 1942 as already so: a class's tubes and torpedo stowage are her design, and no row says they were altered. Settled by the architect, Nov 22, 2026 (decision 0218, stage 1)"
+agreed = "2026-11-22"
+
+[[exception]]
+entity = "jp-i-121-group"
+fact = "torpedo_tubes_bow"
+row = 16032
+reason = "4 bow tubes (ONI 222-J's row 16059 agrees). The Technical Mission's S-01-1 table gives the block as built (built 1927) and dates nothing within 1942; judged to hold on 7 August 1942. Settled by the architect, Nov 22, 2026 (decision 0218, stage 1)"
+agreed = "2026-11-22"
+
+[[exception]]
+entity = "jp-i-121-group"
+fact = "endurance_speed_kn"
+row = 16035
+reason = "12 knots, the speed of the block's 8,000 miles. The Technical Mission's S-01-1 table gives the block as built (built 1927) and dates nothing within 1942; judged to hold on 7 August 1942. Settled by the architect, Nov 22, 2026 (decision 0218, stage 1)"
+agreed = "2026-11-22"
+
+[[exception]]
+entity = "jp-i-121-group"
+fact = "torpedoes_carried"
+row = 16033
+reason = "8 torpedoes, the Technical Mission's row of the time, over ONI 222-J's 20 of 1945 (row 16060), pending research. The Technical Mission's S-01-1 table gives the block as built (built 1927) and dates nothing within 1942; judged to hold on 7 August 1942. Settled by the architect, Nov 22, 2026 (decision 0218, stage 1)"
+agreed = "2026-11-22"
+
+[[exception]]
+entity = "jp-i-1-group"
+fact = "max_speed_kn"
+row = 16001
+reason = "17 knots, read as a like class's row for decision 0207's estimate by ratio (the block itself is left out). The Technical Mission's S-01-1 table gives the block as built (built 1926) and dates nothing within 1942; judged to hold on 7 August 1942. Settled by the architect, Nov 22, 2026 (decision 0218, stage 1)"
+agreed = "2026-11-22"
+
+[[exception]]
+entity = "jp-i-1-group"
+fact = "endurance_speed_kn"
+row = 16006
+reason = "10 knots, the speed of the block's 20,000 miles, read as a like class's row for decision 0207's estimate by ratio (the block itself is left out). The Technical Mission's S-01-1 table gives the block as built (built 1926) and dates nothing within 1942; judged to hold on 7 August 1942. Settled by the architect, Nov 22, 2026 (decision 0218, stage 1)"
+agreed = "2026-11-22"
+
+[[exception]]
+entity = "jp-i-9-group"
+fact = "torpedoes_carried"
+row = 16214
+later = true
+reason = "20 torpedoes, ONI 222-J's class sheet, over Wikipedia's 18 (rows 16218, 16220): a class sheet of naval intelligence over a tertiary page; either gives 3 salvoes of 6. ONI 222-J (June 1945) gives the class as built, read for 1942 as already so: a class's tubes and torpedo stowage are her design, and no row says they were altered. The class stays out until its speed is found. Settled by the architect, Nov 22, 2026 (decision 0218, stage 1)"
+agreed = "2026-11-22"
+
+[[exception]]
+entity = "jp-i-5-group"
+fact = "torpedo_tubes_bow"
+row = 16206
+later = true
+reason = "4 bow tubes, ONI 222-J, over Wikipedia's 6 (row 16210): two sources of the time agree, ONI and the Technical Mission's block for I-1 to I-6 (rows 16004, 16187: four forward, two aft). The class stays out until its speed is found. Settled by the architect, Nov 22, 2026 (decision 0218, stage 1)"
+agreed = "2026-11-22"
+
+[[exception]]
+entity = "jp-ro-33-group"
+fact = "torpedo_tubes_bow"
+row = 16045
+reason = "4 bow tubes (Wikipedia's row 16228 agrees). The Technical Mission's S-01-1 table gives the block as built (built 1935) and dates nothing within 1942; judged to hold on 7 August 1942. Settled by the architect, Nov 22, 2026 (decision 0218, stage 1)"
+agreed = "2026-11-22"
+
+[[exception]]
+entity = "jp-ro-33-group"
+fact = "endurance_speed_kn"
+row = 16047
+reason = "16 knots, the speed of the block's 3,000 miles. The Technical Mission's S-01-1 table gives the block as built (built 1935) and dates nothing within 1942; judged to hold on 7 August 1942. Settled by the architect, Nov 22, 2026 (decision 0218, stage 1)"
+agreed = "2026-11-22"
+
+[[exception]]
+entity = "jp-ro-33-group"
+fact = "max_speed_kn"
+row = 16043
+reason = "18.9 knots, read as a like class's row for decision 0207's estimate by ratio. The Technical Mission's S-01-1 table gives the block as built (built 1935) and dates nothing within 1942; judged to hold on 7 August 1942. Settled by the architect, Nov 22, 2026 (decision 0218, stage 1)"
+agreed = "2026-11-22"
+
+[[exception]]
+entity = "jp-ro-33-group"
+fact = "torpedoes_carried"
+row = 16226
+reason = "10 torpedoes, Wikipedia's RO-33 page (its RO-34 page, row 16227, agrees); a lone weak row, no row against it, read and marked; it gives way to a better row when one is filed. Settled by the architect, Nov 22, 2026 (decision 0218, stage 1)"
+agreed = "2026-11-22"
+
+[[exception]]
+entity = "jp-ro-33-group"
+fact = "torpedo_model"
+row = 16229
+reason = "Type 95, Wikipedia's Kaichu page; a lone weak row, no row against it, read and marked; it gives way to a better row when one is filed. Its doubt is on the row: the page calls the Type 95 'Long Lance', the name of the 61 cm Type 93. Settled by the architect, Nov 22, 2026 (decision 0218, stage 1)"
+agreed = "2026-11-22"
+
+[[exception]]
+entity = "us-sargo-class"
+fact = "torpedo_tubes_bow"
+row = 16151
+reason = "4 bow tubes, HyperWar's Sargo page (4 bow and 4 stern); a lone weak row, no row against it, read and marked; it gives way to a better row when one is filed; the 8 tubes in all of FM 30-50 and DANFS (rows 16156, 16111) agree. Settled by the architect, Nov 22, 2026 (decision 0218, stage 1)"
+agreed = "2026-11-22"
+
+[[exception]]
+entity = "us-sargo-class"
+fact = "endurance_speed_kn"
+row = 16158
+reason = "10 knots, Wikipedia's speed of 11,000 miles; a lone weak row, no row against it, read and marked; it gives way to a better row when one is filed. Gato's 10 knots (rows 16176, 16177) agree. Settled by the architect, Nov 22, 2026 (decision 0218, stage 1)"
+agreed = "2026-11-22"
+
+[[exception]]
+entity = "us-tambor-class"
+fact = "endurance_speed_kn"
+row = 16169
+reason = "10 knots, Wikipedia's speed of 11,000 miles (row 16122); a lone weak row, no row against it, read and marked; it gives way to a better row when one is filed. Gato's 10 knots (rows 16176, 16177) agree. Settled by the architect, Nov 22, 2026 (decision 0218, stage 1)"
+agreed = "2026-11-22"
+
+[[exception]]
+entity = "us-gato-class"
+fact = "max_speed_kn"
+row = 16105
+reason = "20 knots, DANFS for Finback, over DANFS's 20.25 for Gato (row 16100): the lower of two rows of one source, as decision 0207's first use read the lower of two speeds; it agrees with the Sargo and Tambor classes' 20. Settled by the architect, Nov 22, 2026 (decision 0218, stage 1)"
+agreed = "2026-11-22"
+
+[[exception]]
+entity = "us-s-boat-s-1-group"
+fact = "torpedo_tubes_bow"
+row = 16131
+reason = "4 bow tubes, HyperWar's S-38 page; a lone weak row, no row against it, read and marked; it gives way to a better row when one is filed; FM 30-50's 4 tubes in all (row 16128) and DANFS's 4 21-inch tubes (row 16076) agree. Settled by the architect, Nov 22, 2026 (decision 0218, stage 1)"
+agreed = "2026-11-22"
+
+[[exception]]
+entity = "us-s-boat-s-42-group"
+fact = "torpedo_tubes_bow"
+row = 16135
+reason = "4 bow tubes, HyperWar's S-44 page; a lone weak row, no row against it, read and marked; it gives way to a better row when one is filed; FM 30-50's 4 tubes in all (row 16130) and DANFS's 4 21-inch tubes (row 16082) agree. Settled by the architect, Nov 22, 2026 (decision 0218, stage 1)"
+agreed = "2026-11-22"
+
+[[exception]]
+entity = "jp-53cm-torpedo-type95"
+fact = "warhead_kg"
+row = 16056
+reason = "405 kg, the Technical Mission's O-01-1 (OCR of a scan, hence low); NavWeaps's performance note (row 16062) gives the same 405 kg; a lone weak row, no row against it, read and marked; it gives way to a better row when one is filed. Settled by the architect, Nov 22, 2026 (decision 0218, stage 1)"
+agreed = "2026-11-22"
+
+[[exception]]
+entity = "jp-53cm-torpedo-type89"
+fact = "warhead_kg"
+row = 16054
+reason = "300 kg, the Technical Mission's O-01-1 (OCR of a scan, hence low), valid to 1942; a lone weak row, no row against it, read and marked; it gives way to a better row when one is filed; judged to hold on 7 August 1942: the Type 89 served to the end of 1942 (row 16052). Settled by the architect, Nov 22, 2026 (decision 0218, stage 1)"
+agreed = "2026-11-22"
+
+[[exception]]
+entity = "jp-53cm-torpedo-type96"
+fact = "warhead_kg"
+row = 16063
+reason = "405 kg, the Technical Mission's O-01-1, over NavWeaps's 550 kg (row 16064): the Technical Mission examined the weapon and derives it from the Type 95 Model 1, whose charge is 405 kg; the other figure names another explosive and no document. Settled by the architect, Nov 22, 2026 (decision 0218, stage 1)"
+agreed = "2026-11-22"
