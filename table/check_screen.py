@@ -310,7 +310,33 @@ def orders_on_the_card(bridge):
     check(not any("no forces limit" in r["worked"] or "No ship of the pool" in r["worked"] for r in mine)
           and any(c["kind"] == "approve" and c["reason"]["serves"]["intent"] == signed["intent"] for c in said["commands"]),
           "the staff takes the order up: it makes the plan ready, and does not say it has no forces or no ship")
+    land_unit_orders(bridge, person)
     check(post(bridge.table + "/new") == {"ok": True}, "the game is put away")
+
+
+def land_unit_orders(bridge, person):
+    """The order form on a land unit's card (decision 0216), as far as a script can reach it: the page
+    holds the form and its words, and the three orders go to the tool in the shapes the form sends them,
+    after the hold the form sends first. The form itself is drawn in a browser and is not run here."""
+    page = get(bridge.table + "/")
+    check("'landorder'" in page and "NOT SENT" in page and "Acts at 1800, for the coming day." in page,
+          "the page holds the land unit's order form, the line for a refusal and the line for an order kept to dusk")
+    units = person.call("list_forces")["ok"]["land_units"]
+    fighting = [u for u in units if u["men_ashore"] and u.get("march_to") and not u.get("working")]
+    check(fighting, "a fighting unit with men ashore lists the places it can march to (march_to)")
+    unit = fighting[0]
+    handle, number, hex_to = unit["land_unit"]["handle"], int(unit["land_unit"]["handle"].split(":")[1]), unit["march_to"][0]
+    check(person.call("hold", {"land_unit": number})["ok"]["status"] == "queued", "the hold the form sends first is taken for a land unit")
+    sent = person.call("issue_orders", {"orders": [
+        {"unit": handle, "order": {"kind": "set_posture", "posture": "attack", "when_spent": "hold"}},
+        {"unit": handle, "order": {"kind": "march", "hex": [hex_to["q"], hex_to["r"]]}},
+        {"unit": handle, "order": {"kind": "set_activity", "activity": "work", "job": "port"}}]})["ok"]
+    check([r["status"] for r in sent["results"]] == ["queued"] * 3, "a posture with when spent, a march and a work order with a job are taken, as the form sends them")
+    held = [h for h in person.call("command_state")["ok"]["holds"] if h["target"].get("land_unit") == number]
+    check(len(held) == 1, "the unit is held from the staff, as its card says")
+    refused = person.call("issue_orders", {"orders": [{"unit": handle, "order": {"kind": "march", "hex": [unit["place"]["q"] + 50, unit["place"]["r"]]}}]})["ok"]["results"][0]
+    check(refused["status"] == "refused", "a march to a place no land link joins is refused, for the form to show as NOT SENT")
+    check(person.call("release", {"land_unit": number})["ok"]["status"] == "queued", "the unit is released to the staff by the button the card has")
 
 
 def midway_on_its_chart(bridge):
