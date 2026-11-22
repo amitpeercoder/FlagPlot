@@ -49,10 +49,12 @@ air_attack_damages_chance = "0.25"
 # PLACEHOLDER, a judgement, none having been sunk (decision 0218, rule 51).
 air_attack_sinks_share = "0.2"
 
-# PLACEHOLDER, the team lead's choice, not a count: the chance that a torpedo
-# that missed is claimed a hit, so that a boat's claim runs above what she did
-# (decision 0218, rule 45).
-submarine_false_hit_chance = "0.25"
+# PLACEHOLDER, set by the architect's ruling on stage 2: the chance that a
+# torpedo that missed is claimed a hit, so that a boat's claim runs above what
+# she did (decision 0218, rule 45). It stands where a raid's claim figure
+# stands (`bomb_false_claim_chance` in air_combat.toml, the chance a bomb that
+# missed is claimed a hit) and takes that figure's value. No row sizes it.
+submarine_false_hit_chance = "0.1"
 
 # PLACEHOLDER, the team lead's choice (decision 0218, rule 44's "own
 # figures"): the age in pulses at which a report of a submarine is dropped.
@@ -60,14 +62,18 @@ submarine_report_drop_age_pulses = 6
 
 # PLACEHOLDER, one for each torpedo of submarine_torpedoes_1942.csv: the
 # chance that one torpedo hits (decision 0218, rules 8 and 30), a figure of the
-# weapon. To be set from the count in data/derivation/submarines_1942.toml's
-# closing notes (rule 30): the torpedoes fired and the hits in the attacks on
-# file, the Mark 10 from the S-boats' salvoes (16 fired, 9 to 11 hits), the
-# Mark 14 from the fleet boats' (26 fired, 0 to 7 hits), the Japanese
-# torpedoes from the six salvoes there. Until then each is a placeholder.
+# weapon. Set by the architect's ruling on stage 2 from the count in
+# data/derivation/submarines_1942.toml's closing notes (rule 30), each still a
+# placeholder.
 [hit_chance]
-6100 = "0.2"
+# Mark 14: 0 to 7 hits of 26 fired, several only heard.
+6100 = "0.15"
+# Mark 10: 9 to 11 hits of 16 fired.
 6101 = "0.6"
-6102 = "0.5"
-6103 = "0.5"
-6104 = "0.5"
+# Type 89: 2 to 3 hits of 7 or 8 fired.
+6102 = "0.3"
+# Type 95: 3 to 4 hits of 12 fired.
+6103 = "0.3"
+# Type 96: no firing on file; taken as the Type 95 it was made from, and
+# marked so.
+6104 = "0.3"
