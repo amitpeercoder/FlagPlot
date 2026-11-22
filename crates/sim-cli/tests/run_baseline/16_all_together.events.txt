@@ -2,7 +2,7 @@ Scenario 16: All together
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 5726e3236cbbcba8  152 events
+day   1  hash df96a42ed87f308e  152 events
 
 #1 D1 -         order:1 accepted for task_force:3  <- order:1
 #2 D1 -         order:2 accepted for air_group:1  <- order:2
@@ -139,7 +139,7 @@ day   1  hash 5726e3236cbbcba8  152 events
 #133 D1 afternoon ship:1 took 1 hit on flotation, 10 points, now 10  <- #127
 #134 D1 afternoon Japanese report: 1 ship, carrier, at (2,0): refreshed contact:2  <- #127
 #135 D1 afternoon Allied claim at (9,0): 1 hit on a carrier, 0 sunk; claimed by air_group:2: 1 hit  <- #126
-#136 D1 afternoon Japanese claim at (2,0): 2 hits on a cruiser, 0 sunk, 12 aircraft shot down; claimed by air_group:7: 12 shot down; by air_group:5: 2 hits  <- #120, #127
+#136 D1 afternoon Japanese claim at (2,0): 2 hits on a cruiser, 0 sunk, 12 aircraft shot down (12 of aircraft_type:4); claimed by air_group:7: 12 shot down; by air_group:5: 2 hits  <- #120, #127
 #137 D1 afternoon Allied claim over (2,0): 10 aircraft shot down; claimed by air_group:3: 10 shot down  <- #121, #122, #129
 #138 D1 afternoon Japanese claim over (9,-6): 0 aircraft shot down  <- #128
 #139 D1 afternoon air_group:2 strike sortie of 280 nm, 30 beyond its radius of 250: 1 aircraft x 0.24 = 0.24 expected out of fuel, 0 ditched, 0 crews recovered, 0 pilots lost, 1 ready left  <- #116
@@ -185,7 +185,7 @@ Allied claim over (2,0): 10 aircraft shot down; claimed by air_group:3: 10 shot 
 Japanese contact:1 at (1,-4): 2 ships, cruiser, age 2 pulses
 Japanese contact:2 at (2,0): 1 ships, carrier, age 0 pulses
 Japanese claims 2 enemy ships sunk at (2,-4), day 1 night
-Japanese claim at (2,0): 2 hits on a cruiser, 0 sunk, 12 aircraft shot down; claimed by air_group:7: 12 shot down; by air_group:5: 2 hits, day 1 afternoon
+Japanese claim at (2,0): 2 hits on a cruiser, 0 sunk, 12 aircraft shot down (12 of aircraft_type:4); claimed by air_group:7: 12 shot down; by air_group:5: 2 hits, day 1 afternoon
 Japanese claim over (9,-6): 0 aircraft shot down, day 1 afternoon
 
 Result (the placeholder scale of decision 0054):

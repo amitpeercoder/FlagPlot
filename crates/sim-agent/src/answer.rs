@@ -131,8 +131,11 @@ pub const FORMAT: &str = "flagplot-agent";
 /// (decision 0204): the refusal "a trial is asked at dusk" is no longer
 /// given, and what was asked gains `inside_day` (`null` at dusk, else the
 /// day and the clock) in the answers `trial`, `window` and
-/// `trial_described` and in each row of `trials`.
-pub const VERSION: u32 = 40;
+/// `trial_described` and in each row of `trials`. 41 adds to a claim from
+/// the air the types of the aircraft claimed shot down, by name, where its
+/// men made them out (`air_types`), with them in the claim's words (decision
+/// 0210).
+pub const VERSION: u32 = 41;
 
 /// The answer to a question about something the side does not know of: a
 /// unit of the enemy, a number that does not exist, an event the side may not

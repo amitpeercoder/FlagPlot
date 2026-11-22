@@ -2,14 +2,14 @@ Placeholder scenario 73: Carrier cover
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 1d479fa2cd2864f4  24 events
-day   2  hash 0867f18bf536d8e9  38 events
-day   3  hash 09845ba2e1ef2d0e  25 events
-day   4  hash 3d1f6be4e77797ff  20 events
-day   5  hash 423c207c92a6d009  25 events
-day   6  hash 3f587a63c16ac0ab  33 events
-day   7  hash 6491261d7e86f391  27 events
-day   8  hash 31e59a8406560ce6  17 events
+day   1  hash 818a9f6e1ae233e9  24 events
+day   2  hash 69d60f7d86cd3d92  38 events
+day   3  hash 89e93e163253a659  25 events
+day   4  hash 969c4d7da54913b0  20 events
+day   5  hash 50f0a7501f597aea  25 events
+day   6  hash d1e93b3c2716f686  33 events
+day   7  hash 47438006423e8f9a  27 events
+day   8  hash bece5528aa0644fd  17 events
 
 task_force:1 "Placeholder carrier force 1" (Allied): Arrived at (0,0); readiness battle, alert, rules of engagement: avoid, break off at 0.5, stragglers: keep, keep 0; home port base:1
 task_force:2 "Placeholder transport force 2" (Allied): Underway at (1,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port

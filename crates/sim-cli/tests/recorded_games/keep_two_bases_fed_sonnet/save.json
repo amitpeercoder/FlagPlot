@@ -121,83 +121,83 @@
   "hashes": [
     {
       "day": 1,
-      "hash": "14cdf683a0049c8c"
+      "hash": "e4705912b8000501"
     },
     {
       "day": 2,
-      "hash": "7017ca6d1bc076c1"
+      "hash": "8ce50fec7010b560"
     },
     {
       "day": 3,
-      "hash": "ed71128a50ad9fb3"
+      "hash": "85bc9b332210e85a"
     },
     {
       "day": 4,
-      "hash": "ebe59fd2cd50f749"
+      "hash": "3a1d06391650cda8"
     },
     {
       "day": 5,
-      "hash": "076a5318030de417"
+      "hash": "f05a9682a6748fee"
     },
     {
       "day": 6,
-      "hash": "f8fb444544edd971"
+      "hash": "338778bb51794838"
     },
     {
       "day": 7,
-      "hash": "46f6f5f9673d124f"
+      "hash": "fa75d359b21aef6e"
     },
     {
       "day": 8,
-      "hash": "b7175167b672837d"
+      "hash": "bc77a4fa88ceae64"
     },
     {
       "day": 9,
-      "hash": "54222f8ea441d3ef"
+      "hash": "6a7eb68e73441aa6"
     },
     {
       "day": 10,
-      "hash": "883e9f9720ff9711"
+      "hash": "1ab426efb802e010"
     },
     {
       "day": 11,
-      "hash": "0e52d404b72c4b17"
+      "hash": "c63b6b558dee7086"
     },
     {
       "day": 12,
-      "hash": "353a78309b122b6d"
+      "hash": "c027a8edd0a0166c"
     },
     {
       "day": 13,
-      "hash": "4f7ccad1dfb04817"
+      "hash": "5389c62d77b8b44e"
     },
     {
       "day": 14,
-      "hash": "fd8c0add0dea0259"
+      "hash": "2c07c6610da9faf8"
     },
     {
       "day": 15,
-      "hash": "1242e7cb504ffe8b"
+      "hash": "ee96504a337184f2"
     },
     {
       "day": 16,
-      "hash": "9848775a648095fa"
+      "hash": "364263b7ec00c7eb"
     },
     {
       "day": 17,
-      "hash": "a8f65740f3292eff"
+      "hash": "2d4bceba68add456"
     },
     {
       "day": 18,
-      "hash": "e09c1728b02b8018"
+      "hash": "8f1d5d1d6196c86d"
     },
     {
       "day": 19,
-      "hash": "63070e2cc2d1c0ea"
+      "hash": "49dcab46566261df"
     },
     {
       "day": 20,
-      "hash": "37ed7b9505bb42d8"
+      "hash": "e60e5d2d7233cb4d"
     }
   ],
   "orders": [],
@@ -2123,6 +2123,6 @@
       "side": "allied"
     }
   ],
-  "state_version": "flagplot-state-v53",
+  "state_version": "flagplot-state-v54",
   "version": 23
 }

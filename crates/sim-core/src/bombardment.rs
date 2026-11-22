@@ -865,6 +865,7 @@ impl World {
             // A bombardment's claim names no type and no unit (decisions 0179, 6 and 0180, 8).
             ground_types: Vec::new(),
             by_unit: Vec::new(),
+            air_types: Vec::new(),
         };
         // The bombarding force holds its claim first (decision 0135, 1).
         let holders = Holders::Commands {
@@ -912,6 +913,7 @@ impl World {
                 from_bombardment: true,
                 ground_types: Vec::new(),
                 by_unit: Vec::new(),
+                air_types: Vec::new(),
             },
             causes,
             breakdown,

@@ -593,6 +593,11 @@ pub struct Claim {
     /// 0179). Left out where none is named.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub ground_types: Vec<ClaimedType>,
+    /// The types of the aircraft claimed shot down, by name, each with its
+    /// number, where the claim's men made them out (decision 0210). Left out
+    /// where none is named.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub air_types: Vec<ClaimedType>,
     /// Who claims what (decision 0180): each own unit whose fire the claim
     /// rests on, with what it claims, in the order it first fired. Left out
     /// for a claim that names no unit.
@@ -3237,9 +3242,17 @@ impl Day {
                         from_bombardment,
                         ground_types,
                         by_unit,
+                        air_types,
                         ..
                     } => claims.push(Claim {
                         ground_types: ground_types
+                            .iter()
+                            .map(|(aircraft_type, aircraft)| ClaimedType {
+                                aircraft_type: ctx.aircraft_type_name(*aircraft_type),
+                                aircraft: *aircraft,
+                            })
+                            .collect(),
+                        air_types: air_types
                             .iter()
                             .map(|(aircraft_type, aircraft)| ClaimedType {
                                 aircraft_type: ctx.aircraft_type_name(*aircraft_type),

@@ -3371,6 +3371,7 @@ mod tests {
             received_event: EventId::new(7),
             ground_types: Vec::new(),
             by_unit: Vec::new(),
+            air_types: Vec::new(),
         };
         let with_claim = |claim: &BattleClaim| {
             let mut world = base.clone();

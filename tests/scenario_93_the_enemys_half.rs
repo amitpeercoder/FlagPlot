@@ -611,6 +611,7 @@ fn claim(q: i32, r: i32, sunk: u32, hits: u32, kind: ShipKind) -> PictureClaim {
         from_bombardment: false,
         ground_types: Vec::new(),
         by_unit: Vec::new(),
+        air_types: Vec::new(),
     }
 }
 

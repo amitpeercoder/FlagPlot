@@ -1888,6 +1888,7 @@ pub(super) fn describe(
             from_bombardment,
             ground_types,
             by_unit,
+            air_types,
         } => {
             let d = d
                 .text("side", names::side(*side))
@@ -1950,6 +1951,25 @@ pub(super) fn describe(
                                     .int("shot_down", line.shot_down)
                                     .int("on_ground", line.on_ground)
                                     .int("hits", line.hits)
+                            })
+                            .collect(),
+                    ),
+                )
+            };
+            // The types claimed shot down (decision 0210), only where the
+            // claim has any, as the types on the ground are.
+            let d = if air_types.is_empty() {
+                d
+            } else {
+                d.with(
+                    "air_types",
+                    Field::Objs(
+                        air_types
+                            .iter()
+                            .map(|(aircraft_type, aircraft)| {
+                                Data::new()
+                                    .int("aircraft_type", aircraft_type.raw())
+                                    .int("aircraft", *aircraft)
                             })
                             .collect(),
                     ),

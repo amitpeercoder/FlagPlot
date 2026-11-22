@@ -121,6 +121,8 @@ pub struct PictureClaim {
     /// Who claims what (decision 0180): every unit named is of the claim's
     /// side.
     pub by_unit: Vec<UnitClaim>,
+    /// The types claimed shot down (decision 0210).
+    pub air_types: Vec<(AircraftTypeId, u32)>,
 }
 
 /// An estimate of the enemy's men ashore in a picture: a
@@ -676,6 +678,7 @@ fn belief_of<'a>(
                     received_event: _,
                     ground_types,
                     by_unit,
+                    air_types,
                 } = claim.clone();
                 PictureClaim {
                     hex,
@@ -690,6 +693,7 @@ fn belief_of<'a>(
                     from_bombardment,
                     ground_types,
                     by_unit,
+                    air_types,
                 }
             })
             .collect(),
@@ -977,6 +981,7 @@ fn build(
                     received_event: picture_event,
                     ground_types: c.ground_types.clone(),
                     by_unit: c.by_unit.clone(),
+                    air_types: c.air_types.clone(),
                 }),
                 given.estimates.iter().map(|e| GroundEstimate {
                     hex: e.hex,

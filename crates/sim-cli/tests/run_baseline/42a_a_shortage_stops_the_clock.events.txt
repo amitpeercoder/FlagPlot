@@ -2,24 +2,24 @@ Placeholder scenario 42a: A shortage stops the clock
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 968a827d6c44a1e7  30 events
-day   2  hash 131d18688d561e8b  17 events
-day   3  hash 71f7becda981ce93  12 events
-day   4  hash a7c6a62aab77668e  11 events
-day   5  hash 4554f71c65bcd09a  5 events
-day   6  hash a48e654e63300398  5 events
-day   7  hash 3035c572ceec407c  5 events
-day   8  hash a874274d9d231857  5 events
-day   9  hash 9a94c8fb954acad7  5 events
-day  10  hash e4b4b0c278dc3dfe  5 events
-day  11  hash 8f00e00365ba0459  5 events
-day  12  hash d79bfdeb91c55132  5 events
-day  13  hash 4bd38f1e70eb91c6  6 events
-day  14  hash 1e9171ec45dc4f55  5 events
-day  15  hash a109fc2b2b71cdf1  5 events
-day  16  hash f3a40fd712d03a55  12 events
-day  17  hash 1c8af97b9e9b52e8  16 events
-day  18  hash c05ca0ff961e2961  12 events
+day   1  hash 00700164eee3fdd8  30 events
+day   2  hash 82581dd4aaef5ade  17 events
+day   3  hash 50467880140e8bb0  12 events
+day   4  hash b2677a62bdfab361  11 events
+day   5  hash e1a7ef026b577e61  5 events
+day   6  hash 72e8f12d4eb37e3f  5 events
+day   7  hash fa94a64ed769cf2b  5 events
+day   8  hash b3db6dd1a5692288  5 events
+day   9  hash e52df5fe87fb4dbc  5 events
+day  10  hash cd5a66157d06a799  5 events
+day  11  hash 6c135cb0e1d6a226  5 events
+day  12  hash 742871d33f5059bd  5 events
+day  13  hash 9d272b2aa43e5e91  6 events
+day  14  hash c009af8f1aa7bf82  5 events
+day  15  hash d7054594db786716  5 events
+day  16  hash fb417fbc736397da  12 events
+day  17  hash fefd58faafe4248d  16 events
+day  18  hash d29c06bdbfa1297a  12 events
 
 #1 D1 -         Allied the commander's command taken: set intent:1 to keep base:2 supplied at 30 days, a run every 15 days
 #2 D1 -         Allied plan:1 drafted for intent:1  <- #1

@@ -1654,9 +1654,9 @@ body.watched .gives { display: none !important; }
     else if (k === 'base_attacked' && R('^' + H + ' bombs at ' + H)) out = N(m[1]) + ' bombed ' + N(m[2]);
     else if (k === 'air_attack' && R('^' + H + ' (bombs|torpedoes) at a ship')) out = N(m[1]) + ' attacked a ship with ' + m[2];
     else if (k === 'claim_received' && R('claim (?:from the sea )?(at|over) ' + AT + ': (.*)$')) out = (function (words) {
-      // Who claims what, where the game says (decision 0180), and the types made out on the ground (decision 0179).
+      // Who claims what, where the game says (decision 0180), and the types made out on the ground and in the air (decisions 0179 and 0210): each bracketed list is reworded.
       var c = words.indexOf('; claimed by '), by = c >= 0 ? words.slice(c + 13).split('; by ') : [], where = ' ' + m[1] + ' ' + P(m[2], m[3]); if (c >= 0) words = words.slice(0, c);
-      words = words.replace(/\b0 aircraft/g, 'no aircraft').replace(/\b(\d+|no) aircraft (shot|destroyed)/g, '$1 enemy aircraft $2').replace(/ \(([^)]*\d+ of [^)]*)\)/, function (x, list) { return ' (' + list.replace(/(\d+) of /g, '$1 ').replace(/Placeholder /g, '') + ')'; });
+      words = words.replace(/\b0 aircraft/g, 'no aircraft').replace(/\b(\d+|no) aircraft (shot|destroyed)/g, '$1 enemy aircraft $2').replace(/ \(([^)]*\d+ of [^)]*)\)/g, function (x, list) { return ' (' + list.replace(/(\d+) of /g, '$1 ').replace(/Placeholder /g, '') + ')'; });
       var who = by.map(function (line) { var u = /^((?:air_group|task_force|base|ship):\d+)(?: "[^"]*")?: (.*)$/.exec(line); return u ? { unit: (/^air_group:/.test(u[1]) ? '' : 'the guns of ') + N(u[1]), what: u[2] } : null; }).filter(Boolean);
       if (who.length === 1) return who[0].unit.replace(/^t/, 'T') + (/^the guns/.test(who[0].unit) ? ' report ' : ' reports ') + words + where;
       if (who.length > 1) return 'Reported' + where + ': ' + words + '. ' + who.map(function (w) { return w.unit + ', ' + w.what; }).join('; ').replace(/^t/, 'T');

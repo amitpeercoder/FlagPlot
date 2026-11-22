@@ -568,6 +568,11 @@ impl Briefing {
                     .iter()
                     .map(|t| (t.aircraft_type.clone(), t.aircraft))
                     .collect();
+                let in_the_air: Vec<(String, u32)> = x
+                    .air_types
+                    .iter()
+                    .map(|t| (t.aircraft_type.clone(), t.aircraft))
+                    .collect();
                 let (place, words) = sim_core::events::air_claim_words(
                     x.claimed_sunk,
                     x.claimed_hits,
@@ -575,6 +580,7 @@ impl Briefing {
                     x.claimed_shot_down,
                     x.claimed_on_ground,
                     &types,
+                    &in_the_air,
                 );
                 format!(
                     "Claim {place} {}: {words}{}{}",
