@@ -3566,11 +3566,33 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
   }
   // The situation is the engine's own text, and it is said as the other papers are: sections for its parts, units by name and linked,
   // a place as its position with the hex in brackets, a figure whole. No handle, bare hex or decimal reaches the screen.
+  // No points while the game is in play (the designer's standing rule; decision 0221, the ruling after stage 4): the mission and each
+  // objective are said in words without their worth, the levels of victory are left out, and what is known of progress is kept in words.
+  // The points belong to HOW IT ENDED alone.
+  function noPoints(line) {
+    var t = String(line);
+    if (/^\s*(?:- )?Levels:/.test(t)) return null;
+    t = t.replace(/^(\s*(?:- )?Objective: .*?), points\b.*$/, '$1')
+      .replace(/^(\s*(?:- )?)The enemy is scored for: nothing, this scenario gives the enemy no objectives$/, '$1What the enemy is after: nothing this scenario names')
+      .replace(/^(\s*(?:- )?)The enemy is scored for:/, '$1What the enemy is after:')
+      .replace(/, so no points yet \(worth [\d.]+ if it is yours at the end\)/, '')
+      .replace(/, worth [\d.]+ points(?: if it stays so| for the kinds you attacked)?/, '');
+    if (!/What you know of your progress/.test(t)) t = t.replace(/, points\b.*$/, '');
+    return t;
+  }
+  // One line of the situation as the table shows it: in play, the objectives without their worth; and the note under the estimates,
+  // which says how a rule works and not what the commander knows, is left out. Null where the line is not shown.
+  function situationLine(line, part, over) {
+    if (/^\s*(?:- )?These are estimates from reports, not counts/.test(line)) return null;
+    return part === 'OBJECTIVES' && !over ? noPoints(line) : line;
+  }
   function situationDoc(doc, text) {
     doc.textContent = '';
+    var part = '';
     String(text).split('\n').forEach(function (line) {
       if (!line.trim() || /^FLAG PLOT BRIEFING$/.test(line)) return;
-      if (/^[A-Z][A-Z ]+$/.test(line)) { doc.appendChild(el('h3', '', line)); return; }
+      if (/^[A-Z][A-Z ]+$/.test(line)) { part = line; doc.appendChild(el('h3', '', line)); return; }
+      line = situationLine(line, part, M.over); if (line == null) return;
       var depth = (/^ */.exec(line)[0].length / 2) | 0, t = line.trim().replace(/^- /, '').replace(/\b((?:task_force|base|ship|air_group|land_unit|contact):\d+) \"([^\"]*)\"/g, '$1 ($2)');
       var d = rich('div', 'work', t); if (depth) d.style.marginLeft = (depth * 14) + 'px'; doc.appendChild(d);
     });
