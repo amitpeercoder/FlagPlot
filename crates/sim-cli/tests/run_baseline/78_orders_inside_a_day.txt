@@ -2,9 +2,9 @@ Scenario 78: Orders inside a day, Noumea to Espiritu Santo
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 5da86d5d183b6797  14 events
-day   2  hash ad9b1118d17f026b  9 events
-day   3  hash df4514838b3b0ff2  2 events
+day   1  hash 17aa4c418ef6737a  14 events
+day   2  hash f2485d9396d0db46  9 events
+day   3  hash ca02ba8b2c8b3ed3  2 events
 
 task_force:1 "Placeholder transit force" (Allied): Arrived at (8,3); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 ship:1 "Placeholder cruiser 1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 800 gun rounds, torpedoes ready; 1901.5 t of fuel, 0 t of supply

@@ -2,10 +2,10 @@ Placeholder scenario 72: Reconnaissance
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 5188ad612d103323  31 events
-day   2  hash d50ff8f8408eb7f2  15 events
-day   3  hash 2800be5970f7f03b  15 events
-day   4  hash e508e324cf22c687  13 events
+day   1  hash 456a3fb8c330f264  31 events
+day   2  hash 81f72cc3cf0bce73  15 events
+day   3  hash 6080c9ca790e22d4  15 events
+day   4  hash e17a45e204ed957c  13 events
 
 task_force:1 "Placeholder transport force 1" (Allied): Idle at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 air_group:1 "Placeholder scout squadron" (Allied) at base:1: 6 ready, mission Rest, no arc

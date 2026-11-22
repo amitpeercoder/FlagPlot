@@ -51,7 +51,7 @@
     },
     {
       "file": "data/scenarios/../reference/air_combat.toml",
-      "hash": "f997be10a773ff2f"
+      "hash": "35c82226c11bacbc"
     },
     {
       "file": "data/scenarios/../reference/air_upkeep.toml",
@@ -79,23 +79,23 @@
   "hashes": [
     {
       "day": 1,
-      "hash": "80f70b4c37c0255f"
+      "hash": "da0425a0e9902e20"
     },
     {
       "day": 2,
-      "hash": "725ee7a86f70ce51"
+      "hash": "d8ed95751ab48c5a"
     },
     {
       "day": 3,
-      "hash": "3d8113c1a3d70f43"
+      "hash": "4ee732fcdb980fbc"
     },
     {
       "day": 4,
-      "hash": "203cda42b52cf912"
+      "hash": "5210f649dd8bea0d"
     },
     {
       "day": 5,
-      "hash": "fe04837f43a22640"
+      "hash": "0cebc5830144458d"
     }
   ],
   "orders": [
@@ -863,7 +863,7 @@
       "unit": "task_force:26"
     }
   ],
-  "rules_version": 26,
+  "rules_version": 27,
   "scenario": {
     "file": "data/scenarios/07_full_slice.toml",
     "hash": "984de13e1d2a00a4"
@@ -874,6 +874,6 @@
   },
   "seed": 1942,
   "staff": [],
-  "state_version": "flagplot-state-v54",
+  "state_version": "flagplot-state-v55",
   "version": 23
 }

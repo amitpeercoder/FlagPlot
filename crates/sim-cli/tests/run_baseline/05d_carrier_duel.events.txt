@@ -2,8 +2,8 @@ Scenario 5d: Carrier duel
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 4ed9b1ff3c59f13e  42 events
-day   2  hash c0c2ad0c0cf25f01  7 events
+day   1  hash dded300b44e7bd83  43 events
+day   2  hash b7bea80e87288ed7  10 events
 
 #1 D1 -         order:1 accepted for air_group:1  <- order:1
 #2 D1 -         order:2 accepted for air_group:1  <- order:2
@@ -43,17 +43,21 @@ day   2  hash c0c2ad0c0cf25f01  7 events
 #36 D1 afternoon ship:4 flight deck hit, degraded -> out  <- #27
 #37 D1 afternoon ship:4 flight deck hit, no change, still out  <- #27
 #38 D1 afternoon Allied report: 3 ships, battleship, at (9,0): refreshed contact:1  <- #27
-#39 D1 afternoon Allied claim at (9,0): 9 hits on a carrier, 0 sunk, 6 aircraft shot down (6 of aircraft_type:4); claimed by air_group:3: 6 shot down; by air_group:2: 9 hits  <- #22, #27
-#40 D1 afternoon Japanese claim over (9,0): 7 aircraft shot down (7 of aircraft_type:3); claimed by air_group:6: 5 shot down; by task_force:2: 2 shot down  <- #23, #24, #28, #30
-#41 D1 afternoon air_group:4 had no deck: 8 aircraft came down in the sea at (9,0), beside ships of its own side (chance 0.95), 0 ready left  <- #36, #18
-#42 D1 afternoon air_group:6 had no deck: 2 aircraft came down in the sea at (9,0), beside ships of its own side (chance 0.95), 6 ready left  <- #36, order:9, order:10
-#43 D2 night     Allied contact:1 aged to 1 pulses  <- #38
-#44 D2 morning   air_group:1 searched 040-130 out to 300 nm from ship:1 at (4,0) with 8 aircraft  <- order:1, order:2
-#45 D2 morning   air_group:1 searched for task_force:2 at 200 nm, chance 0.509295: not sighted  <- #44
-#46 D2 morning   Allied contact:1 aged to 2 pulses  <- #38
-#47 D2 afternoon air_group:1 searched 040-130 out to 300 nm from ship:1 at (4,0) with 8 aircraft  <- order:1, order:2
-#48 D2 afternoon air_group:1 searched for task_force:2 at 200 nm, chance 0.509295: not sighted  <- #47
-#49 D2 afternoon Allied contact:1 aged to 3 pulses  <- #38
+#39 D1 afternoon ship:4 of task_force:2: 5 bomb hits with 18 bombers aboard and 0 flying (share 1), chance 0.98976 of a fire among her aircraft, draw 0.010883: set, fire 3  <- #27
+#40 D1 afternoon Allied claim at (9,0): 9 hits on a carrier, 0 sunk, 6 aircraft shot down (6 of aircraft_type:4); claimed by air_group:3: 6 shot down; by air_group:2: 9 hits  <- #22, #27
+#41 D1 afternoon Japanese claim over (9,0): 7 aircraft shot down (7 of aircraft_type:3); claimed by air_group:6: 5 shot down; by task_force:2: 2 shot down  <- #23, #24, #28, #30
+#42 D1 afternoon air_group:4 had no deck: 8 aircraft came down in the sea at (9,0), beside ships of its own side (chance 0.95), 0 ready left  <- #39, #18
+#43 D1 afternoon air_group:6 had no deck: 2 aircraft came down in the sea at (9,0), beside ships of its own side (chance 0.95), 6 ready left  <- #39, order:9, order:10
+#44 D2 night     ship:4 of task_force:2: the fire among her aircraft went from 3 to 2 (draw 0.671906)  <- #39
+#45 D2 night     Allied contact:1 aged to 1 pulses  <- #38
+#46 D2 morning   air_group:1 searched 040-130 out to 300 nm from ship:1 at (4,0) with 8 aircraft  <- order:1, order:2
+#47 D2 morning   air_group:1 searched for task_force:2 at 200 nm, chance 0.509295: not sighted  <- #46
+#48 D2 morning   ship:4 of task_force:2: the fire among her aircraft went from 2 to 3 (draw 0.250801)  <- #44
+#49 D2 morning   Allied contact:1 aged to 2 pulses  <- #38
+#50 D2 afternoon air_group:1 searched 040-130 out to 300 nm from ship:1 at (4,0) with 8 aircraft  <- order:1, order:2
+#51 D2 afternoon air_group:1 searched for task_force:2 at 200 nm, chance 0.509295: not sighted  <- #50
+#52 D2 afternoon ship:4 of task_force:2: the fire among her aircraft went from 3 to 2 (draw 0.64891)  <- #48
+#53 D2 afternoon Allied contact:1 aged to 3 pulses  <- #38
 
 task_force:1 "Placeholder carrier force A" (Allied): Idle at (4,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Placeholder carrier force B" (Japanese): Idle at (9,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port

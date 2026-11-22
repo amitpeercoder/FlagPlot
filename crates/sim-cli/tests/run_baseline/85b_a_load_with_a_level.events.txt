@@ -2,7 +2,7 @@ Placeholder scenario 85b: A load with a level
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 50bb69c746f27d7b  5 events
+day   1  hash 6a45f130faa8227e  5 events
 
 #1 D1 -         order:1 accepted for task_force:1  <- order:1
 #2 D1 night     ship:1 loaded 30 t from base:1, 40 t aboard, 970 t in stock  <- order:1

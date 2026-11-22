@@ -1,0 +1,70 @@
+Scenario 126: Fire among a carrier's aircraft
+PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
+seed 1942
+
+day   1  hash c1e4627fec474567  16 events
+day   2  hash 2acf75bfdc3fa6b2  10 events
+day   3  hash ea2e5f3df10d457c  19 events
+
+#1 D1 -         order:1 accepted for air_group:1  <- order:1
+#2 D1 -         order:2 accepted for air_group:1  <- order:2
+#3 D1 -         order:3 accepted for air_group:2  <- order:3
+#4 D1 morning   air_group:1 searched 040-130 out to 300 nm from ship:1 at (4,0) with 8 aircraft  <- order:1, order:2
+#5 D1 morning   air_group:1 searched for task_force:2 at 200 nm, chance 0.509295: not sighted  <- #4
+#6 D1 afternoon air_group:1 searched 040-130 out to 300 nm from ship:1 at (4,0) with 8 aircraft  <- order:1, order:2
+#7 D1 afternoon air_group:1 searched for task_force:2 at 200 nm, chance 0.509295: sighted  <- #6
+#8 D1 afternoon Allied report: 3 ships, carrier, at (9,0): new contact:1  <- #7
+#9 D1 afternoon air_group:2 launched 18 aircraft at contact:1 at (9,0), 200 nm  <- order:3, #8
+#10 D1 afternoon air_group:2 bombs at ship:3: 18 shots x 0.2 = 3.6 expected, 5 hits; recognised as aircraft_type:3  <- #9
+#11 D1 afternoon ship:3 took 5 hits on flotation, 50 points, now 50  <- #10
+#12 D1 afternoon ship:3 propulsion hit, working -> degraded  <- #10
+#13 D1 afternoon ship:3 main battery hit, no change, still working  <- #10
+#14 D1 afternoon Allied report: 3 ships, cruiser, at (9,0): refreshed contact:1  <- #10
+#15 D1 afternoon ship:3 of task_force:2: 5 bomb hits with 20 bombers aboard and 0 flying (share 1), chance 0.98976 of a fire among her aircraft, draw 0.628872: set, fire 3  <- #10
+#16 D1 afternoon Allied claim at (9,0): 6 hits on a carrier, 0 sunk; claimed by air_group:2: 6 hits  <- #10
+#17 D2 night     ship:3 of task_force:2: the fire among her aircraft went from 3 to 2 (draw 0.948044)  <- #15
+#18 D2 night     Allied contact:1 aged to 1 pulses  <- #14
+#19 D2 morning   air_group:1 searched 040-130 out to 300 nm from ship:1 at (4,0) with 8 aircraft  <- order:1, order:2
+#20 D2 morning   air_group:1 searched for task_force:2 at 200 nm, chance 0.509295: not sighted  <- #19
+#21 D2 morning   ship:3 of task_force:2: the fire among her aircraft went from 2 to 1 (draw 0.682707)  <- #17
+#22 D2 morning   Allied contact:1 aged to 2 pulses  <- #14
+#23 D2 afternoon air_group:1 searched 040-130 out to 300 nm from ship:1 at (4,0) with 8 aircraft  <- order:1, order:2
+#24 D2 afternoon air_group:1 searched for task_force:2 at 200 nm, chance 0.509295: not sighted  <- #23
+#25 D2 afternoon ship:3 of task_force:2: the fire among her aircraft is out (from 1, draw 0.991214)  <- #21
+#26 D2 afternoon Allied contact:1 aged to 3 pulses  <- #14
+#27 D3 night     Allied contact:1 aged to 4 pulses  <- #14
+#28 D3 morning   air_group:1 searched 040-130 out to 300 nm from ship:1 at (4,0) with 8 aircraft  <- order:1, order:2
+#29 D3 morning   air_group:1 searched for task_force:2 at 200 nm, chance 0.509295: sighted  <- #28
+#30 D3 morning   Allied report: 3 ships, carrier, at (10,0): new contact:2  <- #29
+#31 D3 morning   air_group:2 launched 18 aircraft at contact:2 at (10,0), 240 nm  <- order:3, #30
+#32 D3 morning   air_group:2 found nothing at (10,0)  <- #31
+#33 D3 morning   Allied contact:2 not there at (10,0): dropped  <- #32
+#34 D3 morning   Allied contact:1 dropped at 5 pulses  <- #14
+#35 D3 afternoon air_group:1 searched 040-130 out to 300 nm from ship:1 at (4,0) with 8 aircraft  <- order:1, order:2
+#36 D3 afternoon air_group:1 searched for task_force:2 at 200 nm, chance 0.509295: sighted  <- #35
+#37 D3 afternoon Allied report: 2 ships, carrier, at (9,0): new contact:3  <- #36
+#38 D3 afternoon air_group:2 launched 18 aircraft at contact:3 at (9,0), 200 nm  <- order:3, #37
+#39 D3 afternoon air_group:2 bombs at ship:3: 18 shots x 0.2 = 3.6 expected, 3 hits  <- #38
+#40 D3 afternoon ship:3 took 3 hits on flotation, 30 points, now 80  <- #39
+#41 D3 afternoon ship:3 flight deck hit, working -> degraded  <- #39
+#42 D3 afternoon ship:3 fire control hit, no change, still working  <- #39
+#43 D3 afternoon Allied report: 3 ships, carrier, at (9,-1): refreshed contact:3  <- #39
+#44 D3 afternoon ship:3 of task_force:2: 3 bomb hits with 20 bombers aboard and 0 flying (share 1), chance 0.936 of a fire among her aircraft, draw 0.715801: set, fire 3  <- #39
+#45 D3 afternoon Allied claim at (9,0): 6 hits on a carrier, 0 sunk; claimed by air_group:2: 6 hits  <- #39
+
+task_force:1 "Placeholder carrier force" (Allied): Idle at (4,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+task_force:2 "Placeholder enemy carrier force" (Japanese): Idle at (9,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+air_group:1 "Placeholder scouting squadron" (Allied) aboard ship:1: 8 ready, mission Search, arc 040-130 to 300 nm
+air_group:2 "Placeholder bombing squadron" (Allied) aboard ship:1: 18 ready, mission NavalStrike, no arc
+air_group:3 "Placeholder bombing squadron B" (Japanese) aboard ship:3: 20 ready, mission Rest, no arc
+air_group:4 "Placeholder fighter squadron B" (Japanese) aboard ship:3: 10 ready, mission Rest, no arc
+ship:1 "Placeholder carrier A": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 3000 t of fuel, 0 t of supply
+ship:2 "Placeholder destroyer A": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 600 gun rounds, torpedoes ready; 500 t of fuel, 0 t of supply
+ship:3 "Placeholder carrier B": afloat in task_force:2; damage flotation 80, fire 0; propulsion degraded, flight deck degraded; 0 gun rounds, torpedoes gone; 3000 t of fuel, 0 t of supply
+ship:4 "Placeholder cruiser B1": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 800 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply
+ship:5 "Placeholder cruiser B2": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 800 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply
+Allied contact:3 at (9,-1): 3 ships, carrier, age 0 pulses
+Allied claim at (9,0): 6 hits on a carrier, 0 sunk; claimed by air_group:2: 6 hits, day 1 afternoon
+Allied claim at (9,0): 6 hits on a carrier, 0 sunk; claimed by air_group:2: 6 hits, day 3 afternoon
+Japanese: no contacts
+Japanese: no battle claims
