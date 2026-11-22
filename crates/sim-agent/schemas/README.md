@@ -21,7 +21,7 @@ Every answer is a JSON object with a top-level `"format": "flagplot-agent"`,
 | `issue_orders` | `issue_orders.schema.json` | `issue_orders` (its arguments: `issue_orders_arguments.schema.json`) |
 | `command_state` | `command_state.schema.json` | `command_state` (a seat whose side has a staff) |
 | `plans` | `plans.schema.json` | `plans` |
-| `command` | `command.schema.json` | `set_intent`, `withdraw_intent`, `set_limit`, `set_leave`, `hold`, `release`, `set_interrupt`, `acknowledge`, `approve` (of a plan or of a preview), `cancel_plan`: queued or refused; also `preview` of a command the tool refuses, and `approve` of a void preview |
+| `command` | `command.schema.json` | `set_intent`, `withdraw_intent`, `set_limit`, `set_leave`, `set_pursuit`, `answer_pursuit`, `hold`, `release`, `set_interrupt`, `acknowledge`, `approve` (of a plan or of a preview), `cancel_plan`: queued or refused; also `preview` of a command the tool refuses, and `approve` of a void preview |
 | `preview` | `preview.schema.json` | `preview` |
 | `propose` | `propose.schema.json` | `propose` |
 | `plan_order` | `plan_order.schema.json` | `order` (a seat whose side has a staff): the plan of one of the commander's intents, or of a take the staff formed, as the staff hands it in |
@@ -1334,3 +1334,11 @@ one draw that already decides `ground_types`). A type named was among the enemy 
 be above the truth. The words of the claim name them after the number of aircraft shot down, "4 aircraft shot down (3 of T,
 1 of U)". A unit's line in `claimed_by` and a group's `claimed_to_date` are not parted by type. The side's own claims only;
 the enemy is told none of it.
+
+## A force asks leave to go after what it has found (decision 0214)
+
+`version` is 43. Two tools join the command tools, after `cancel_plan`: `set_pursuit` (`intent`, `leave`: "ask", "go" or "stay", null or left out to clear it) and `answer_pursuit` (`task_force`, `contact`, `allow`). Both are queued and refused as `set_leave` and `hold` are, and answered as `command`.
+
+`run` and `advance` gain the stop `"asks_leave"`: at dusk, before a day is opened, where the staff would hand in a notice that a force asks leave to pursue a find and the standing interrupt `asks_leave_to_pursue` is not switched off and is armed for that force, the call stops there. Nothing in the game changes at the stop. The answer then has `asking` (present only for this stop), each asking giving `task_force`, `intent` (the order the force would leave), `contact`, `kind`, `age_pulses`, `reported_at` and `to` as `{q, r}`, `hours` (the game's decimal text, or null) and the `interrupt`. In `run`, `days_resolved` has `count` 0 where it stopped before the first day (`first` the day not played, `last` the day before) and `fired` is empty; in `advance`, `clock` is at dusk. The next call of time by the side plays that day without stopping before it again; an `answer_pursuit` queued at the stop is taken in at that dusk before the staff is asked, so the staff then gives the pursuit and hands in no asking. `end_day` does not stop. A firing of the standing interrupt on a day is no stop after that day (the stop was before it); it is still listed in `fired`. In a watched game a held `run` or `advance` stops the same way at the watcher's next step, which resolves nothing.
+
+`command_state` gains, for each intent, `pursue` (`leave`, `from`: the intent it is read from or "default", and `set`), the top-level `pursuits` (each force's leave under way: `task_force`, `by` "answer" or "taken", `contact`, `since_day`) and `pursuit_refusals` (`task_force`, `contact`), and `leaves.pursue_meaning`. The notices `asks_leave_to_pursue`, `pursues` and `pursuit_ended` appear in `staff_orders`' notices (with `pursuit`: `force` (your number), `intent` and `find`) and, as one matter for each force, in `report` (`task_force`, `pursuit_intent` and `contact` on the matter). The standing interrupt `asks_leave_to_pursue` is named by `task_force` in `set_interrupt`' `standing`, in `acknowledge` and in the firings and standing records.

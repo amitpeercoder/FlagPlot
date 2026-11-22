@@ -812,7 +812,7 @@
       }
     },
     "command_body": {
-      "description": "A command as the interface writes it: its kind and the keys that kind has (see set_intent, form_intent (which may form keep_supplied under a hold, with floor_days, which may be 0, and an optional interval_days, decision 0144), set_limit, set_leave, hold, release, approve, cancel_plan, set_interrupt and acknowledge), ships and task forces in your numbers.",
+      "description": "A command as the interface writes it: its kind and the keys that kind has (see set_intent, form_intent (which may form keep_supplied under a hold, with floor_days, which may be 0, and an optional interval_days, decision 0144), set_limit, set_leave, set_pursuit, answer_pursuit, hold, release, approve, cancel_plan, set_interrupt and acknowledge), ships and task forces in your numbers.",
       "type": "object",
       "required": [
         "kind"
@@ -836,8 +836,167 @@
             "end_run",
             "set_interrupt",
             "acknowledge",
-            "form_intent"
+            "form_intent",
+            "set_pursuit",
+            "answer_pursuit"
           ]
+        }
+      }
+    },
+    "staff_notice_pursuit": {
+      "type": "object",
+      "description": "Decision 0214: for the three notices of a pursuit, the force (your number), the intent it would leave (or leaves) and the find; left out for every other notice.",
+      "required": [
+        "force",
+        "intent"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "force": {
+          "type": "integer"
+        },
+        "intent": {
+          "type": "integer"
+        },
+        "find": {
+          "type": "object",
+          "description": "Left out for a notice that a pursuit is ended.",
+          "required": [
+            "contact",
+            "kind",
+            "age",
+            "reported_at",
+            "to",
+            "hours"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "contact": {
+              "type": "integer"
+            },
+            "kind": {
+              "type": "string"
+            },
+            "age": {
+              "type": "integer"
+            },
+            "reported_at": {
+              "type": "array",
+              "items": {
+                "type": "integer"
+              },
+              "minItems": 2,
+              "maxItems": 2
+            },
+            "to": {
+              "type": "array",
+              "items": {
+                "type": "integer"
+              },
+              "minItems": 2,
+              "maxItems": 2
+            },
+            "hours": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "The hours to the hex by the engine's forecast, a decimal string; null where it has none."
+            }
+          }
+        }
+      }
+    },
+    "hex_qr": {
+      "type": "object",
+      "required": [
+        "q",
+        "r"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "q": {
+          "type": "integer"
+        },
+        "r": {
+          "type": "integer"
+        }
+      }
+    },
+    "asking": {
+      "description": "Decision 0214, rule 7: a force's asking leave to pursue a find, as the stop in the evening gives it: what the staff would hand in for the coming day and would fire the standing interrupt. Hexes are {q, r}.",
+      "type": "object",
+      "required": [
+        "task_force",
+        "intent",
+        "contact",
+        "kind",
+        "age_pulses",
+        "reported_at",
+        "to",
+        "hours",
+        "interrupt",
+        "words"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "task_force": {
+          "type": "integer",
+          "description": "Your task force's number."
+        },
+        "intent": {
+          "type": "integer",
+          "description": "The order the force would leave: it is not withdrawn or changed."
+        },
+        "contact": {
+          "type": "integer",
+          "description": "The contact's number, which answer_pursuit takes."
+        },
+        "kind": {
+          "enum": [
+            "carrier",
+            "battleship",
+            "cruiser",
+            "destroyer",
+            "transport",
+            "auxiliary"
+          ]
+        },
+        "age_pulses": {
+          "type": "integer"
+        },
+        "reported_at": {
+          "$ref": "#/$defs/hex_qr"
+        },
+        "to": {
+          "$ref": "#/$defs/hex_qr",
+          "description": "The hex the force would close to."
+        },
+        "hours": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The hours to it by the engine's forecast, as the game's decimal text; null where it has none."
+        },
+        "interrupt": {
+          "type": "object",
+          "required": [
+            "kind",
+            "task_force"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "asks_leave_to_pursue"
+            },
+            "task_force": {
+              "type": "integer"
+            }
+          }
+        },
+        "words": {
+          "type": "string"
         }
       }
     },
@@ -932,11 +1091,17 @@
                   "late",
                   "met",
                   "cannot_bring_enough",
-                  "lift_turned_back"
+                  "lift_turned_back",
+                  "asks_leave_to_pursue",
+                  "pursues",
+                  "pursuit_ended"
                 ]
               },
               "plan": {
                 "type": "integer"
+              },
+              "pursuit": {
+                "$ref": "#/$defs/staff_notice_pursuit"
               },
               "run": {
                 "type": [
@@ -1130,7 +1295,8 @@
             "waits_for_leave",
             "ship_lost",
             "cannot_bring_enough",
-            "lift_turned_back"
+            "lift_turned_back",
+            "asks_leave_to_pursue"
           ]
         },
         "plan": {
@@ -1138,6 +1304,10 @@
         },
         "ship": {
           "type": "integer"
+        },
+        "task_force": {
+          "type": "integer",
+          "description": "Decision 0214: with standing asks_leave_to_pursue, your task force's number."
         }
       }
     },
@@ -1223,13 +1393,17 @@
                   "waits_for_leave",
                   "ship_lost",
                   "cannot_bring_enough",
-                  "lift_turned_back"
+                  "lift_turned_back",
+                  "asks_leave_to_pursue"
                 ]
               },
               "plan": {
                 "type": "integer"
               },
               "ship": {
+                "type": "integer"
+              },
+              "task_force": {
                 "type": "integer"
               },
               "armed": {
@@ -1262,7 +1436,8 @@
               "waits_for_leave",
               "ship_lost",
               "cannot_bring_enough",
-              "lift_turned_back"
+              "lift_turned_back",
+              "asks_leave_to_pursue"
             ]
           }
         },

@@ -27,7 +27,7 @@
       "const": "flagplot-agent"
     },
     "version": {
-      "const": 42
+      "const": 43
     },
     "kind": {
       "const": "report"
@@ -79,8 +79,23 @@
               "late",
               "met",
               "cannot_bring_enough",
-              "lift_turned_back"
+              "lift_turned_back",
+              "asks_leave_to_pursue",
+              "pursues",
+              "pursuit_ended"
             ]
+          },
+          "task_force": {
+            "type": "integer",
+            "description": "Decision 0214: for the three notices of a pursuit, your task force's number; each force's pursuit is a matter of its own."
+          },
+          "pursuit_intent": {
+            "type": "integer",
+            "description": "Decision 0214: for a pursuit notice, the intent the force would leave or has left."
+          },
+          "contact": {
+            "type": "integer",
+            "description": "Decision 0214: for a pursuit notice that names a find, the contact's number."
           },
           "words": {
             "type": "string"
