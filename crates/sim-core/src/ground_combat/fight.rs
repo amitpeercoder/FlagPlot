@@ -2,13 +2,13 @@ use std::collections::BTreeMap;
 
 use crate::condition::{unit_fighting_share, FightingShare};
 use crate::damage::roll_shots;
-use crate::events::{Breakdown, Cause, EventKind, Factor};
+use crate::events::{Breakdown, Cause, EventKind, Factor, SupplyUse};
 use crate::fixed::Fixed;
 use crate::ground::take_in_proportion;
 use crate::hex::Hex;
-use crate::ids::{EntityRef, EventId, LandUnitId};
+use crate::ids::{BaseId, EntityRef, EventId, LandUnitId};
 use crate::orders::Posture;
-use crate::refdata::GroundFigures;
+use crate::refdata::{FightSupplyFigures, GroundFigures};
 use crate::rng::{Draw, Subsystem};
 use crate::state::{Side, Skills};
 use crate::world::World;
@@ -88,6 +88,38 @@ pub(crate) fn engaged_shots(shots: Fixed, side_firing: u32, engaged: Fixed) -> F
     }
 }
 
+/// A side's share of what its fight wanted that was charged (decision
+/// 0209, 6): `charged` over `wanted`, a division cut at the sixth place, and
+/// one where nothing was wanted.
+pub(crate) fn supplied_share(charged: Fixed, wanted: Fixed) -> Fixed {
+    if wanted > Fixed::ZERO {
+        (charged / wanted).min(Fixed::ONE)
+    } else {
+        Fixed::ONE
+    }
+}
+
+/// A side's fire share (decision 0209, 7): `unsupplied` plus one less it
+/// times the supplied share.
+pub(crate) fn fire_share(unsupplied: Fixed, supplied: Fixed) -> Fixed {
+    unsupplied + (Fixed::ONE - unsupplied) * supplied
+}
+
+/// What a side's fight was supplied with (decision 0209): its supplied
+/// share, its fire share, and the event of its charge where one was
+/// recorded.
+#[derive(Clone, Copy)]
+struct SideSupplied {
+    supplied_share: Fixed,
+    fire_share: Fixed,
+    charge: Option<EventId>,
+}
+
+/// What a base gave a fight's charge (decision 0209, 5): the base, what was
+/// charged before it, what was asked of it, what it paid and what it has
+/// left.
+type StockTaken = (BaseId, Fixed, Fixed, Fixed, Fixed);
+
 /// One unit's fire in a day's fight, worked out before any die is rolled
 /// (decision 4 of 0105): what it fires with, its shots before and after the
 /// limit on engaged men, and its chance.
@@ -113,6 +145,166 @@ struct PlannedFire {
 }
 
 impl World {
+    /// Charges a side's men at grips in the day's fight at `hex` (decision
+    /// 0209, 4 to 7 and 14): its want, the men at grips times
+    /// `fight_supply_t_per_man`, taken from the ammunition of each of its
+    /// bases in the hex in base order, then from the supply of each, as far
+    /// as they go. A side the world takes as supplied in full (rule 12) is
+    /// charged nothing and records nothing, with a supplied share of one.
+    /// Otherwise, where anything was wanted, the charge is recorded citing
+    /// the fight, and each base charged records its stock spent citing the
+    /// charge: its ammunition first, then its supply. Draws nothing.
+    fn charge_fight(
+        &mut self,
+        day: u32,
+        hex: Hex,
+        side: Side,
+        at_grips: Fixed,
+        figures: &FightSupplyFigures,
+        fight: EventId,
+    ) -> SideSupplied {
+        let unsupplied = figures.unsupplied_fire_share;
+        let wanted = at_grips * figures.fight_supply_t_per_man;
+        if self.supplied_in_full == Some(side) || wanted <= Fixed::ZERO {
+            return SideSupplied {
+                supplied_share: Fixed::ONE,
+                fire_share: fire_share(unsupplied, Fixed::ONE),
+                charge: None,
+            };
+        }
+        // The side's bases in the hex, in the order the night's charge takes
+        // them (decision 0066, 16).
+        let bases: Vec<BaseId> = self
+            .truth
+            .bases
+            .values()
+            .filter(|base| base.side == side && base.hex == hex)
+            .map(|base| base.id)
+            .collect();
+        // What each base gives, ammunition first then supply: (base, charged
+        // before it, asked, paid, left).
+        let mut from_ammunition: Vec<StockTaken> = Vec::new();
+        let mut from_supply: Vec<StockTaken> = Vec::new();
+        let mut charged = Fixed::ZERO;
+        for base_id in &bases {
+            let base = self.truth.bases.get_mut(base_id).expect("the base exists");
+            if base.ammunition_t <= Fixed::ZERO || charged >= wanted {
+                continue;
+            }
+            let asked = wanted - charged;
+            let paid = asked.min(base.ammunition_t);
+            base.ammunition_t -= paid;
+            from_ammunition.push((*base_id, charged, asked, paid, base.ammunition_t));
+            charged += paid;
+        }
+        let ammunition_t = charged;
+        for base_id in &bases {
+            if self.truth.bases[base_id].supply_t <= Fixed::ZERO || charged >= wanted {
+                continue;
+            }
+            let asked = wanted - charged;
+            let (paid, left) = self.take_supply(*base_id, asked);
+            from_supply.push((*base_id, charged, asked, paid, left));
+            charged += paid;
+        }
+        let supply_t = charged - ammunition_t;
+        let supplied = supplied_share(charged, wanted);
+        let fire = fire_share(unsupplied, supplied);
+        let breakdown = self.config.record_breakdowns.then(|| Breakdown {
+            factors: vec![
+                Factor {
+                    name: "men_at_grips",
+                    value: at_grips,
+                },
+                Factor {
+                    name: "fight_supply_t_per_man",
+                    value: figures.fight_supply_t_per_man,
+                },
+                Factor {
+                    name: "wanted_t",
+                    value: wanted,
+                },
+                Factor {
+                    name: "from_ammunition_t",
+                    value: ammunition_t,
+                },
+                Factor {
+                    name: "from_supply_t",
+                    value: supply_t,
+                },
+            ],
+            result: supplied,
+        });
+        let charge = self.events.record(
+            day,
+            None,
+            EventKind::FightSupplyCharged {
+                side,
+                hex,
+                men_at_grips: at_grips,
+                wanted_t: wanted,
+                from_ammunition_t: ammunition_t,
+                from_supply_t: supply_t,
+                supplied_share: supplied,
+            },
+            vec![Cause::Event(fight)],
+            breakdown,
+        );
+        // What was asked of a base: the want less what was charged before it.
+        let asked_breakdown = |record: bool, before: Fixed, asked: Fixed| {
+            record.then(|| Breakdown {
+                factors: vec![
+                    Factor {
+                        name: "wanted_t",
+                        value: wanted,
+                    },
+                    Factor {
+                        name: "charged_before_t",
+                        value: before,
+                    },
+                ],
+                result: asked,
+            })
+        };
+        let record = self.config.record_breakdowns;
+        for (base, before, asked_t, paid_t, left_t) in from_ammunition {
+            self.events.record(
+                day,
+                None,
+                EventKind::BaseAmmunitionSpent {
+                    base,
+                    asked_t,
+                    paid_t,
+                    left_t,
+                },
+                vec![Cause::Event(charge)],
+                asked_breakdown(record, before, asked_t),
+            );
+        }
+        for (base, before, asked_t, paid_t, left_t) in from_supply {
+            self.events.record(
+                day,
+                None,
+                EventKind::BaseSupplySpent {
+                    base,
+                    reason: SupplyUse::Fight,
+                    aircraft: 0,
+                    men: 0,
+                    asked_t,
+                    paid_t,
+                    left_t,
+                },
+                vec![Cause::Event(charge)],
+                asked_breakdown(record, before, asked_t),
+            );
+        }
+        SideSupplied {
+            supplied_share: supplied,
+            fire_share: fire,
+            charge: Some(charge),
+        }
+    }
+
     /// The day's fight in a contested hex (decisions 4 to 10 of 0090, 1 and
     /// 4 of 0105, and correction 1 of 0109).
     pub(super) fn fight(
@@ -252,15 +444,40 @@ impl World {
             self.fighting_men_ashore(&engaged_units[1]),
         ];
         let mut limits: [Option<(u32, Fixed)>; 2] = [None, None];
-        let mut weights = [Fixed::ZERO; 2];
+        let mut at_grips = [Fixed::ZERO; 2];
         for side in Side::ALL {
             let side_firing: u32 = planned[at(side)].iter().map(|fire| fire.firing).sum();
             let engaged = figures.engagement_ratio * i64::from(fighting[at(other(side))]);
-            if Fixed::from_int(i64::from(side_firing)) > engaged {
+            let firing = Fixed::from_int(i64::from(side_firing));
+            if firing > engaged {
                 limits[at(side)] = Some((side_firing, engaged));
             }
+            // The side's men at grips (decision 0209, 3): its firing men, no
+            // more than the limit, a quantity not cut to a whole man.
+            at_grips[at(side)] = firing.min(engaged);
             for fire in &mut planned[at(side)] {
                 fire.shots = engaged_shots(fire.shots_before_limit, side_firing, engaged);
+            }
+        }
+
+        // What the fight costs (decision 0209, 3 to 8): each side's men at
+        // grips charged to its bases in the hex, Allied first, on the stocks
+        // as they stand before any die is rolled; then each unit's shots,
+        // after the limit, times its side's fire share.
+        let mut supplied: [Option<SideSupplied>; 2] = [None, None];
+        if let Some(fight_figures) = figures.hunger.and_then(|hunger| hunger.fight_supply) {
+            for side in Side::ALL {
+                let side_supplied =
+                    self.charge_fight(day, hex, side, at_grips[at(side)], &fight_figures, fight);
+                for fire in &mut planned[at(side)] {
+                    fire.shots = fire.shots * side_supplied.fire_share;
+                }
+                supplied[at(side)] = Some(side_supplied);
+            }
+        }
+        let mut weights = [Fixed::ZERO; 2];
+        for side in Side::ALL {
+            for fire in &planned[at(side)] {
                 weights[at(side)] += fire.shots * fire.chance;
             }
         }
@@ -272,6 +489,7 @@ impl World {
         let mut fired_any: BTreeMap<LandUnitId, EventId> = BTreeMap::new();
         for side in Side::ALL {
             let limit = limits[at(side)];
+            let side_supplied = supplied[at(side)];
             for fire in planned[at(side)].clone() {
                 let PlannedFire {
                     unit: unit_id,
@@ -346,6 +564,18 @@ impl World {
                             value: engaged,
                         });
                     }
+                    // The side's supplied share and fire share, only where
+                    // the figures of 0209 are given (decision 0209, 15).
+                    if let Some(side_supplied) = side_supplied {
+                        factors.push(Factor {
+                            name: "supplied_share",
+                            value: side_supplied.supplied_share,
+                        });
+                        factors.push(Factor {
+                            name: "fire_share",
+                            value: side_supplied.fire_share,
+                        });
+                    }
                     factors.push(Factor {
                         name: "shots",
                         value: shots,
@@ -401,6 +631,12 @@ impl World {
                     }
                 });
                 let mut causes = vec![Cause::Event(fight)];
+                // Its side's charge for the fight (decision 0209, 14).
+                causes.extend(
+                    side_supplied
+                        .and_then(|side_supplied| side_supplied.charge)
+                        .map(Cause::Event),
+                );
                 causes.extend(fed_today[at(side)].map(Cause::Event));
                 let event = self.events.record(
                     day,

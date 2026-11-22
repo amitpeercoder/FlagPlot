@@ -460,6 +460,9 @@ pub enum AssumedThing {
     },
     /// The enemy given no intent.
     NoIntent,
+    /// The enemy's men ashore taken as supplied in full in their fights
+    /// (decision 0209, 12).
+    Supplied,
 }
 
 /// What else was assumed of a thing, with the count of worlds.
@@ -1044,6 +1047,10 @@ impl<'a> Naming<'a> {
             AssumedThing::NoIntent => {
                 "the enemy given no intent: he holds what he holds".to_string()
             }
+            AssumedThing::Supplied => {
+                "the enemy's men ashore taken to have all they need to fight, at no cost to his stocks"
+                    .to_string()
+            }
         }
     }
 
@@ -1117,6 +1124,7 @@ impl<'a> Naming<'a> {
                 "base": base.map(|b| self.ctx.base(b.id())),
             }),
             AssumedThing::NoIntent => json!({"kind": "no_intent"}),
+            AssumedThing::Supplied => json!({"kind": "enemy_supplied"}),
         }
     }
 

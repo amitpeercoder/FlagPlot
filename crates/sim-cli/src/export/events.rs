@@ -1291,6 +1291,52 @@ pub(super) fn describe(
                 .int("before", *before)
                 .int("nights", *nights),
         ),
+        EventKind::FightSupplyCharged {
+            side,
+            hex,
+            men_at_grips,
+            wanted_t,
+            from_ammunition_t,
+            from_supply_t,
+            supplied_share,
+        } => (
+            "fight_supply_charged",
+            d.text("side", names::side(*side))
+                .hex("hex", *hex)
+                .num("men_at_grips", *men_at_grips)
+                .num("wanted_t", *wanted_t)
+                .num("from_ammunition_t", *from_ammunition_t)
+                .num("from_supply_t", *from_supply_t)
+                .num("supplied_share", *supplied_share),
+        ),
+        EventKind::BaseAmmunitionSpent {
+            base,
+            asked_t,
+            paid_t,
+            left_t,
+        } => (
+            "base_ammunition_spent",
+            d.id("base", *base)
+                .num("asked_t", *asked_t)
+                .num("paid_t", *paid_t)
+                .num("left_t", *left_t),
+        ),
+        EventKind::AmmunitionLanded {
+            base,
+            side,
+            task_force,
+            men,
+            days,
+            ammunition_t,
+        } => (
+            "ammunition_landed",
+            d.id("base", *base)
+                .text("side", names::side(*side))
+                .id("task_force", *task_force)
+                .int("men", *men)
+                .num("days", *days)
+                .num("ammunition_t", *ammunition_t),
+        ),
         EventKind::AirfieldMended {
             unit,
             base,

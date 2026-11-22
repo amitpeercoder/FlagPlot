@@ -657,6 +657,7 @@ impl Context {
                 )
             }
             AssumedOf::EnemyGivenNoIntent => (AssumedThing::NoIntent, MadeFrom::Trial),
+            AssumedOf::EnemySupplied => (AssumedThing::Supplied, MadeFrom::Trial),
         }
     }
 

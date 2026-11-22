@@ -1165,6 +1165,9 @@ pub fn count(
                     // What a marching unit took with it (decision 0094) is
                     // not aircraft upkeep either.
                     SupplyUse::March => {}
+                    // What a fight ashore cost (decision 0209) is not
+                    // aircraft upkeep either.
+                    SupplyUse::Fight => {}
                 }
             }
             // Nothing is meant for each of these kinds, and none is taken by default:
@@ -1292,7 +1295,10 @@ pub fn count(
             | EventKind::FuellingBrokenOff { .. }
             | EventKind::FuelOrderEnded { .. }
             | EventKind::RationsLanded { .. }
-            | EventKind::HungerNightsChanged { .. } => {}
+            | EventKind::HungerNightsChanged { .. }
+            | EventKind::FightSupplyCharged { .. }
+            | EventKind::BaseAmmunitionSpent { .. }
+            | EventKind::AmmunitionLanded { .. } => {}
         }
     }
 
