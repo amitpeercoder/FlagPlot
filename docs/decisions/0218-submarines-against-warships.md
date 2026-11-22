@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 22, 2026, on the designer's ques
 
 Summary: The game has no submarines. In the battles on file they torpedoed Saratoga twice, sank Wasp, Yorktown and Kako, and hit North Carolina and O'Brien. This puts a submarine on the map as a boat on a station. A force that comes into her waters may be met; a boat that meets one fires at a ship of the kind she wants, the likelier to hit the slower and steadier the force and the thinner its screen; the escorts then hunt her, hold her down and may damage or sink her. A side knows its own boats and knows an enemy boat only by her torpedoes or a sighting. Scouting by submarines and patrol lines kept by the staff are the second stage, and the war on shipping the third.
 
-Standing: Ruled and amended on Nov 22, 2026; stage 1 (the data) built; stage 2 (the rule) built on branch `submarine-rule`, to be reviewed by the architect; stage 3 not built.
+Standing: Ruled and amended on Nov 22, 2026; stage 1 (the data) built; stage 2 (the rule) built and merged (pull request 690); stage 3 (the staff, the agent and the table) built on branch `submarine-3`, to be reviewed by the architect.
 
 ## Why
 
@@ -437,3 +437,33 @@ Read on the attack's code, the side's view, the pinned hashes and the scenario's
 - **Row 67** (a boat before her day to be used attacks nothing): accepted. A boat not yet to be used is not on patrol; a force before its day is still fired on because the enemy does the firing.
 - **Row 68** (a home base no ship can reach is not checked): the loader is to refuse it, in stage 3. Open until then.
 - **Not checked by the team and owed:** reports of submarines passing between commands where reports can be late or lost; the briefing's words read through; the viewer by eye.
+
+## As built: stage 3, the staff, the agent and the table
+
+Built on Nov 22, 2026, on branch `submarine-3`, by a team lead for the architect. The hand calculation is scenario 129 (`tests/scenario_129_submarines_the_staff_and_the_patrol.rs`, the architect's text kept as written), with its scenario `data/scenarios/129_submarines_the_staff_and_the_patrol.toml` and the placeholder map `data/map/placeholder_patrol.toml`. The rules as built are in chapter 8 (Patrolling waters with submarines, and the regard in the carriers' sections), chapter 10, chapter 1 and the glossary; `docs/rules/differences.md` rows 61, 62 and 68 are closed and rows 69 to 73 added.
+
+**Where it is.**
+
+- `sim-core`: `command.rs` (`IntentKind::Patrol { hex, distance }`, code 16, name `patrol`; `ForcesLimit::submarines`; `HoldTarget::Submarine`, code 6; `CommandRefusal::NotYourSubmarine`; `CautionKind::StationInSubmarineWaters`, code 3; `Proposal::stations` of `PatrolStation`; a `Debug` of the forces limit that writes the boats only where it names one, so that no event's words move); `command/intake.rs` (`may_use_submarine`, the one test of the boats a patrol may use, read by the staff's forces check and the override; the refusals); `command/hold.rs` (the override holds a boat); `hash.rs` (the patrol in its place; a limit's boats after its land units, only where it names one); `world.rs` (a home base whose hex ships cannot enter or no sea route reaches from her station is refused).
+- `sim-data`: a boat with `salvoes = 0` is refused with her number; scenario commands take the patrol, a boat's hold and release, and boats in a forces limit.
+- `sim-staff`: `patrol.rs` (the doctrine, run last in the morning), `waters.rs` (submarine waters and the regard), `station.rs` and `cover.rs` (the regard in the carrier station, the covering hex and the hex moved to look), `air.rs` (the patrol's leaves).
+- `sim-agent` and `sim-cli`: the tools take the patrol, a boat's hold and release and boats in a forces limit; `list_forces` gives each boat's hands; `list_contacts` gives `submarine_reports` and `suspected_waters` apart from the contacts; `propose` and `preview` give `stations`.
+- The table (`table/index.html`): a boat's piece and card with the direct order "Station" and a hold, a report of a submarine's mark and card, suspected waters drawn faintly with a card and in the situation, the patrol order offered on a hex's card with its distance and its stations drawn while drafted and in the plan's paper, the stop "a submarine attacks us" and the slips "We are torpedoed: …, by a submarine" and "Lost: …", the diary's and SINCE's words. Its checks are in `table/check_screen.py` and `table/check_watch.py`, on the table's copies of scenarios 128 and 129 in `data/scenarios/table-submarines/`.
+
+**Choices the plan did not make, each named in the rulebook or the differences.**
+
+1. The boats of a patrol are those the forces limits on its chain that name a boat all name; a limit that names no boat does not bind the boats (row 70).
+2. A boat keeps her place in the order when she cannot serve, whatever the reason: sunk, home, damaged, going home, held, held apart or before her day, or, for a patrol that names no boat, named by another intent's forces limit or given a station by a higher patrol that morning (rows 69, 71 and 72).
+3. A commander's order to a boat holds her where a patrol in force may use her or a forces limit in force names her.
+4. The regard is had in three choices: the carrier station of decision 0202, the covering hex of decision 0148 and the hex moved to look of decision 0159. No doctrine chooses the hex a force stands at by night (the stand's hex is the order's), so statement 18's half on standing by night has no doctrine to prove it on (row 73). The station tries candidates in fuel only, as before: a candidate outside the waters that is out of fuel is not preferred.
+5. Where the regard takes a hex inside the waters for want of another, the station's reason carries the caution `station_in_submarine_waters`.
+
+**The versions.** The rules label is 30 (29 before it), for state a game saved under the old rules could not hold. The doctrine is `supply-55`. The agent interface is 48. The state layout is `flagplot-state-v56`, unchanged: no game without a patrol, a boat in a limit or a hold on a boat changes its hash. The recorded games were remade by `scripts/regenerate.sh`, their transcripts moving only in the interface version and their saves only in the rules label and the doctrine version; the closed proofs' records were not touched. Every run baseline but scenario 129's new one is as it was (statement 22), and `scripts/compare-scenarios.sh --live-only` finds no scenario on file changed.
+
+**Owed to the architect.** Scenario 128's game A13 gives a boat `salvoes = 0`, which the ruling on row 61 now has the loader refuse: its test `statement_04` fails, and the statement or the game is the architect's to change. Statement 18's half on standing by night (choice 4).
+
+### Rule card, stage 3
+
+- **Reads:** the side's boats from its view (condition, passage, station, holds, the day she may be used, her entry); the intents in force, their forces limits read up the tree and their plans; the waters of a patrol on the map; the suspected waters and reports of submarines in the deciding command's picture; for the regard, the candidates and the route of the doctrines of decisions 0148, 0159 and 0202.
+- **Writes:** station orders to boats (through the engine's station order, chapter 10); reasons and decisions to give no order; holds by command or by the override; a forces limit's boats; cautions. No state of its own.
+- **Draws:** none.
