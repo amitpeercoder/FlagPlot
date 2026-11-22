@@ -370,8 +370,7 @@ use sim_core::view::SideView;
 /// `supply-53` adds decision 0214: a carrier force whose closing rule gives
 /// nothing, because every fresh contact of a kind it closes on is beyond a
 /// night and its bombers' reach, looks for a find within `pursuit_nights`
-/// nights, or with the order's waters first set aside, inside the order's
-/// area; with the order's leave to pursue at go it pursues the find and says
+/// nights, inside the order's area; with the order's leave to pursue at go it pursues the find and says
 /// so, at ask it asks leave in a notice, and on the commander's yes it
 /// pursues; and at the first dusk it has neither a find nor a contact to close
 /// on the pursuit is ended in a notice. A side with no such find, or with the

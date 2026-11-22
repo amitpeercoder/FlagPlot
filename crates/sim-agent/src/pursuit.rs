@@ -155,7 +155,7 @@ pub(crate) fn pursuits_json(n: &Names<'_>, state: &CommandState) -> Value {
 }
 
 /// The meaning of the three settings, for `command_state`.
-pub(crate) const PURSUIT_MEANING: &str = "ask: the staff asks your leave for each find (a carrier force it would send after what it has found beyond a night's steaming or outside the waters its order puts first), and the clock stops in the evening before the day is played; go: the staff takes the leave as given and tells you, except for a find outside the waters your order puts first, which it still asks about; stay: the staff does not look for such a find. Default: ask, or go where the leave to launch is given.";
+pub(crate) const PURSUIT_MEANING: &str = "ask: the staff asks your leave for each find (a carrier force it would send after what it has found beyond a night's steaming), and the clock stops in the evening before the day is played; go: the staff takes the leave as given and tells you; stay: the staff does not look for such a find. Default: ask, or go where the leave to launch is given.";
 
 /// The leave to pursue of each order of the side's, as a dry run carries it
 /// (decision 0214, "Who answers where no one is there"): where a course gives

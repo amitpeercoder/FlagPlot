@@ -140,15 +140,9 @@
 //! - **Something in reach.** With a second contact, a carrier at (5,0),
 //!   200 nm: she has a contact in reach, the rule as it stands stays, and
 //!   no find is looked for.
-//! - **The waters first.** At press, the order's waters first and holding
-//!   (20,0) and not (12,0); a destroyer contact at (20,0), 800 nm, and a
-//!   carrier contact at (12,0), 480 nm. As it stands the destroyer, in the
-//!   waters, is first and is too far: she closes on nothing. With the
-//!   night as two the rule takes the destroyer; with the waters set aside
-//!   it takes the carrier. The more important kind is the find: the
-//!   carrier, to (6,0). With the leave at ask the staff asks. With the
-//!   leave at go the staff still asks and does not go, the waters being a
-//!   limit the commander set. On a yes she closes to (6,0).
+//! - **The waters first:** withdrawn by the architect on Nov 22, 2026; the
+//!   closing rule prefers the waters only among contacts within a night, so no
+//!   such find arises.
 //! - **Seen again under a new number.** In the game as answered, with a
 //!   new contact handed to the side at dusk of day 3, contact 2, a carrier
 //!   at (26,0), 640 nm from (10,0): the leave stands without a new asking
@@ -607,12 +601,6 @@ fn with_second_contact(text: &str, q: i32, kind: &str) -> String {
         &text[..at],
         &text[at..]
     )
-}
-
-fn without_contact(text: &str) -> String {
-    let from = text.find(CONTACT_MARKER).expect("the contact");
-    let to = text.find(COMMANDS_MARKER).expect("the commands");
-    format!("{}{}", &text[..from], &text[to..])
 }
 
 fn levels_on(text: &str) -> String {
@@ -1263,56 +1251,6 @@ fn something_in_reach_the_rule_as_it_stands_stays_and_no_find_is_looked_for() {
     assert!(played.no_notice_on_any_day());
     assert!(!played.orders(1).iter().any(is_route));
     played.never_leaves_its_hex();
-}
-
-fn waters_game(leave: &str, answer: Option<&str>) -> String {
-    // A destroyer at (20,0) in a deny's waters that the targets limit puts
-    // first, and a carrier at (12,0); press.
-    let base = without_contact(&text());
-    let at = base.find(COMMANDS_MARKER).expect("the commands");
-    let contacts = "[[contact]]\nside = \"allied\"\nq = 20\nr = 0\nship_count = 1\nkind = \"destroyer\"\nage_pulses = 0\n\n[[contact]]\nside = \"allied\"\nq = 12\nr = 0\nship_count = 1\nkind = \"carrier\"\nage_pulses = 0\n\n";
-    let t = format!("{}{}{}", &base[..at], contacts, &base[at..]);
-    let t = at_risk(&t, "press");
-    let t = pursuit_leave(&t, leave);
-    let mut extra = String::new();
-    extra += &command_table(
-        1,
-        "kind = \"set_intent\"\nintent = 2\nintent_kind = \"deny\"\nhex = [20, 0]\ndistance = 0",
-    );
-    extra += &command_table(
-        1,
-        "kind = \"set_limit\"\nlimit = \"forces\"\nintent = 2\ntask_forces = [1]",
-    );
-    extra += &command_table(1, "kind = \"set_limit\"\nlimit = \"targets\"\nintent = 2\nkinds = [\"carrier\"]\nwaters_first = true");
-    if let Some(a) = answer {
-        extra += &command_table(1, a);
-    }
-    format!("{t}{extra}")
-}
-
-#[test]
-#[ignore = "mismatch reported to the architect: the closing rule takes the first of the contacts within a night and the reach; the carrier at (12,0), 480 nm, is within 610 nm, so she closes on it with no asking"]
-fn the_waters_first_the_carrier_is_the_find_at_ask_and_at_go_and_on_a_yes_she_closes_to_6_0() {
-    for leave in ["ask", "go"] {
-        let played = play(&waters_game(leave, None));
-        assert_eq!(
-            played.notice_kinds(1),
-            vec![NoticeKind::AsksLeaveToPursue],
-            "{leave}"
-        );
-        let find = find_of(&played.notices(1)[0]);
-        assert_eq!(find.kind, ShipKind::Carrier);
-        assert_eq!(find.reported_at, hex(12, 0));
-        assert_eq!(find.to, hex(6, 0));
-        assert!(!played.orders(1).iter().any(is_route), "{leave}");
-    }
-    let played = play(&waters_game(
-        "ask",
-        Some(YES.replace("contact = 1", "contact = 2").as_str()),
-    ));
-    assert!(played
-        .orders(1)
-        .contains(&Given::Force(1, route(&[(6, 0)]))));
 }
 
 #[test]

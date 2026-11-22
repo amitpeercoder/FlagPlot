@@ -522,24 +522,12 @@ pub fn close_to(path: &[Hex], contact: Hex, reach: Fixed) -> Option<Hex> {
         .find(|h| Fixed::from_int(i64::from(h.air_distance_nm(contact))) <= reach)
 }
 
-/// Which bound of the closing rule a find lifts (decision 0214, rule 1).
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub enum Bound {
-    /// The night's steaming taken as `pursuit_nights` nights.
-    TooFar,
-    /// The order's preference for its waters set aside.
-    WatersFirst,
-}
-
 /// The find of a carrier force (decision 0214, rule 1): the contact the
-/// closing rule would take were one bound lifted, and which bound. The
+/// closing rule would take were the night taken as `nights` nights. The
 /// caller asks only where the rule as it stands gives [`Closing::TooFar`].
-/// With the night taken as `nights` nights the rule is worked again whole;
-/// with the waters set aside (where some contact is in them) it is worked
-/// again with the night as it stands. Where both give a contact, the one of
-/// the more important kind, then the nearer, then the lower number; the same
-/// contact either way is `TooFar`. With `nights` of 1 the first bound lifts
-/// nothing.
+/// The rule is worked again whole with the night so taken; the contact it
+/// closes on is the find. With `nights` of 1 the rule is as it stands and
+/// there is no find.
 pub fn find(
     risk: Risk,
     weigh: &dyn Fn(&Held) -> Risk,
@@ -547,49 +535,19 @@ pub fn find(
     night_nm: Fixed,
     nights: u32,
     contacts: &[Held],
-) -> Option<(Held, Bound)> {
-    let far = if nights > 1 {
-        match closing_by(
-            risk,
-            weigh,
-            reach,
-            night_nm * Fixed::from_int(i64::from(nights)),
-            contacts,
-        ) {
-            Closing::CloseOn(c) => Some((c, Bound::TooFar)),
-            _ => None,
-        }
-    } else {
-        None
-    };
-    let waters = if contacts.iter().any(|c| c.in_waters) {
-        let lifted: Vec<Held> = contacts
-            .iter()
-            .map(|c| Held {
-                in_waters: false,
-                ..*c
-            })
-            .collect();
-        match closing_by(risk, weigh, reach, night_nm, &lifted) {
-            Closing::CloseOn(c) => contacts
-                .iter()
-                .find(|o| o.number == c.number)
-                .map(|o| (*o, Bound::WatersFirst)),
-            _ => None,
-        }
-    } else {
-        None
-    };
-    match (far, waters) {
-        (Some(a), Some(b)) => {
-            let key = |c: &Held| (c.kind, c.distance_nm, c.number);
-            if a.0.number == b.0.number || key(&a.0) <= key(&b.0) {
-                Some(a)
-            } else {
-                Some(b)
-            }
-        }
-        (a, b) => a.or(b),
+) -> Option<Held> {
+    if nights <= 1 {
+        return None;
+    }
+    match closing_by(
+        risk,
+        weigh,
+        reach,
+        night_nm * Fixed::from_int(i64::from(nights)),
+        contacts,
+    ) {
+        Closing::CloseOn(c) => Some(c),
+        _ => None,
     }
 }
 
@@ -1472,7 +1430,7 @@ impl Day<'_, '_> {
                                         ));
                                     // A find (decision 0214, rules 1 to 3): a
                                     // force not under a take or an island works
-                                    // the rule again with a bound lifted; the
+                                    // the rule again with the night lifted; the
                                     // find must pass the rest of the rule and
                                     // lie inside the order's area limit.
                                     let free = self.under_take(task).is_none()
@@ -1489,12 +1447,12 @@ impl Day<'_, '_> {
                                             )
                                         })
                                         .flatten()
-                                        .filter(|(f, _)| {
+                                        .filter(|f| {
                                             self.state
                                                 .area_read_up(task.id)
                                                 .is_none_or(|area| area.contains(&f.hex))
                                         });
-                                    if let Some((f, bound)) = found {
+                                    if let Some(f) = found {
                                         let probe = close_on(f, Some(&Pursuing::Asking));
                                         if let (true, Some((to, hours, _))) =
                                             (probe.closes, probe.place)
@@ -1523,7 +1481,7 @@ impl Day<'_, '_> {
                                                         false,
                                                     )
                                                 }
-                                                Some(_) if bound == Bound::TooFar => Act::Pursue(
+                                                Some(_) => Act::Pursue(
                                                     Pursuing::Taken(
                                                         "on leave the staff took earlier"
                                                             .to_string(),
@@ -1539,16 +1497,14 @@ impl Day<'_, '_> {
                                                     {
                                                         Act::Refused(n)
                                                     }
-                                                    _ => match (leave, bound, number) {
-                                                        (PursueLeave::Stay, _, _) => Act::Nothing,
-                                                        (PursueLeave::Go, Bound::TooFar, _) => {
-                                                            Act::Pursue(
-                                                                Pursuing::Taken(source.clone()),
-                                                                before.is_none(),
-                                                            )
-                                                        }
-                                                        (_, _, Some(_)) => Act::Ask,
-                                                        (_, _, None) => Act::Nothing,
+                                                    _ => match (leave, number) {
+                                                        (PursueLeave::Stay, _) => Act::Nothing,
+                                                        (PursueLeave::Go, _) => Act::Pursue(
+                                                            Pursuing::Taken(source.clone()),
+                                                            before.is_none(),
+                                                        ),
+                                                        (_, Some(_)) => Act::Ask,
+                                                        (_, None) => Act::Nothing,
                                                     },
                                                 },
                                             };
@@ -1575,14 +1531,9 @@ impl Day<'_, '_> {
                                                 f.hex,
                                                 f.distance_nm
                                             );
-                                            let bound_words = match bound {
-                                                Bound::TooFar => format!(
-                                                    "beyond a night's steaming and the reach, within {pursuit_nights} nights"
-                                                ),
-                                                Bound::WatersFirst => format!(
-                                                    "outside the waters {id}'s order puts first, with the waters set aside"
-                                                ),
-                                            };
+                                            let bound_words = format!(
+                                                "beyond a night's steaming and the reach, within {pursuit_nights} nights"
+                                            );
                                             match act {
                                                 Act::Nothing => {}
                                                 Act::Refused(n) => {
@@ -1602,7 +1553,7 @@ impl Day<'_, '_> {
                                                             "{intent_words}: {id} asks leave to pursue contact {n}: {found_words}, {bound_words}. It would close to {to}, {} nm from {here}, {hours_text}, and {} would wait. The leave to pursue is {} ({source}), so the staff asks and the force is given no route and no speed order today.",
                                                             here.air_distance_nm(to),
                                                             task.id,
-                                                            if bound == Bound::WatersFirst && leave == PursueLeave::Go { "go, but the waters first are a limit the commander set and only he sets them aside" } else { leave.name() }
+                                                            leave.name()
                                                         ))
                                                         .would_change("leave given, or the contact older, dropped or beyond two nights")
                                                         .done();
@@ -2280,7 +2231,7 @@ mod tests {
     }
 
     #[test]
-    fn a_find_is_the_contact_the_rule_takes_with_a_bound_lifted() {
+    fn a_find_is_the_contact_the_rule_takes_with_the_night_lifted() {
         let reach = Fixed::from_int(250);
         let night = Fixed::from_int(360);
         let f = |risk: Risk, nights: u32, contacts: &[Held]| {
@@ -2292,7 +2243,7 @@ mod tests {
             closing(Risk::Balanced, reach, night, &[far]),
             Closing::TooFar(far)
         );
-        assert_eq!(f(Risk::Balanced, 2, &[far]), Some((far, Bound::TooFar)));
+        assert_eq!(f(Risk::Balanced, 2, &[far]), Some(far));
         // One night is the rule as it stands: no find.
         assert_eq!(f(Risk::Balanced, 1, &[far]), None);
         // 25 hexes, 1000 nm: beyond 970.
@@ -2300,15 +2251,12 @@ mod tests {
         assert_eq!(f(Risk::Balanced, 2, &[beyond]), None);
         // 24 hexes, 960 nm, is within.
         let edge = held(1, 24, ShipKind::Carrier, 0);
-        assert_eq!(f(Risk::Balanced, 2, &[edge]), Some((edge, Bound::TooFar)));
+        assert_eq!(f(Risk::Balanced, 2, &[edge]), Some(edge));
         // A kind the risk does not close on is no find at balanced, and is
         // one at press.
         let cruiser = held(1, 16, ShipKind::Cruiser, 0);
         assert_eq!(f(Risk::Balanced, 2, &[cruiser]), None);
-        assert_eq!(
-            f(Risk::Press, 2, &[cruiser]),
-            Some((cruiser, Bound::TooFar))
-        );
+        assert_eq!(f(Risk::Press, 2, &[cruiser]), Some(cruiser));
         // Preserve closes on nothing, so finds nothing.
         assert_eq!(f(Risk::Preserve, 2, &[far]), None);
         // An old contact is none.
@@ -2317,83 +2265,11 @@ mod tests {
         // The more important kind, then the nearer, then the lower number.
         let near_cruiser = held(2, 14, ShipKind::Cruiser, 0);
         let carrier = held(3, 20, ShipKind::Carrier, 0);
-        assert_eq!(
-            f(Risk::Press, 2, &[near_cruiser, carrier]),
-            Some((carrier, Bound::TooFar))
-        );
+        assert_eq!(f(Risk::Press, 2, &[near_cruiser, carrier]), Some(carrier));
         let nearer = held(4, 18, ShipKind::Carrier, 0);
-        assert_eq!(
-            f(Risk::Press, 2, &[carrier, nearer]),
-            Some((nearer, Bound::TooFar))
-        );
+        assert_eq!(f(Risk::Press, 2, &[carrier, nearer]), Some(nearer));
         let twin = held(2, 18, ShipKind::Carrier, 0);
-        assert_eq!(
-            f(Risk::Press, 2, &[nearer, twin]),
-            Some((twin, Bound::TooFar))
-        );
-    }
-
-    #[test]
-    fn the_waters_lift_and_the_tie_between_the_bounds() {
-        let reach = Fixed::from_int(250);
-        let night = Fixed::from_int(360);
-        // A destroyer in the waters, 800 nm, and a carrier outside them,
-        // 480 nm, at press (scenario 125's waters first).
-        let destroyer = Held {
-            in_waters: true,
-            ..held(1, 20, ShipKind::Destroyer, 0)
-        };
-        let carrier = held(2, 12, ShipKind::Carrier, 0);
-        let found = find(
-            Risk::Press,
-            &|_| Risk::Press,
-            reach,
-            night,
-            2,
-            &[destroyer, carrier],
-        );
-        // The nights lifted take the waters destroyer; the waters lifted
-        // take the carrier; the carrier is the more important kind.
-        assert_eq!(found, Some((carrier, Bound::WatersFirst)));
-        // With one night only the waters bound can give a find.
-        let found = find(
-            Risk::Press,
-            &|_| Risk::Press,
-            reach,
-            night,
-            1,
-            &[destroyer, carrier],
-        );
-        assert_eq!(found, Some((carrier, Bound::WatersFirst)));
-        // With no contact in the waters the second bound is not worked.
-        let plain = held(1, 20, ShipKind::Destroyer, 0);
-        assert_eq!(
-            find(
-                Risk::Press,
-                &|_| Risk::Press,
-                reach,
-                night,
-                1,
-                &[plain, carrier]
-            ),
-            None
-        );
-        // The same contact either way is the too-far find.
-        let both = Held {
-            in_waters: true,
-            ..held(1, 16, ShipKind::Carrier, 0)
-        };
-        assert_eq!(
-            find(
-                Risk::Balanced,
-                &|_| Risk::Balanced,
-                reach,
-                night,
-                2,
-                &[both]
-            ),
-            Some((both, Bound::TooFar))
-        );
+        assert_eq!(f(Risk::Press, 2, &[nearer, twin]), Some(twin));
     }
 
     #[test]
