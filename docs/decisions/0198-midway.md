@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 20, 2026, on the designer's word
 
 Summary: A third small scenario for play: Midway over four days, 3 to 6 June 1942. Three American carriers and the aircraft of Midway against four Japanese carriers, with a Japanese force bound to land on the atoll. It needs what no scenario has needed: a second map, in another sea. It is built in four stages: the map, the data, the scenario, and whether it is a contest. It uses the rules the Coral Sea called for, which are built.
 
-Standing: Confirmed by the designer on Nov 20, 2026; stage 0, the map, is decision 0199, and stage A, the data, is gathered and ruled on (rules 50 to 72), with a second pass of research and the derivation list to come.
+Standing: Confirmed by the designer on Nov 20, 2026; stage 0, the map, is decision 0199, built; stage A, the data, is gathered, ruled on (rules 50 to 80) and derived (`data/derivation/midway.toml`); stage B's rulings are rules 81 to 99 and its hand calculation is `tests/scenario_114_midway.rs`, written on Nov 22, 2026.
 
 ## Why
 
@@ -225,3 +225,44 @@ Made on Nov 21, 2026 on the second pass of research and the derivation list (`da
 78. **The six TBF-1s at Midway are left out,** with the B-26s of rule 60. Their torpedo can be read only by an exception that would change the Eastern Solomons' derived sources, and six aircraft are not worth that.
 79. **The transports' close screen fights no surface action** (surface weapons not modelled), with the carriers' screens. Of the night threat of rule 68, the Second Fleet's main body is modelled in full but for Yura and Mikazuki; the four cruisers of the Close Support Group are not, since no row names their torpedo in June 1942. The first game's report says what that took away.
 80. **Wake stays out of the scenario file.** The second pass found its air units by day but no garrison figure for June and nothing on its runway. The Japanese forces start at sea, as rule 29 has them; what they do for a port is the hand calculation's to say.
+
+## Stage B: the architect's rulings for the hand calculation
+
+Made on Nov 22, 2026, on a brief of what the repository holds for the scenario, gathered by a team and checked against the staff's code. They settle what rules 26 to 49 and 80 left to the hand calculation.
+
+### A base for the Japanese side
+
+81. **Wake is in the scenario, as a Japanese base. Rule 80 is withdrawn.** Rule 29 said a lift needs a base of its side to come back to, and the staff's code agrees: with no Japanese base on the map the take forms no order at all (`sim-staff`, `lifts.rs`, `take.rs`). Rule 80 kept Wake out for want of rows and left the port to this calculation; there is no other way to give the side a port. Wake has its name and place from a row (5107) and nothing else: no aircraft, no land unit, and a stock that is a marked placeholder. Its air units of June are on file by day and are left out, their type being in no list; the header says so.
+82. **The landing force did not sail from Wake,** but from Saipan and Guam, which are off the map. Wake is where a lift that is turned back goes, and where the staff counts the take's way home from. The header says so.
+
+### The starts
+
+83. **The transports and their close screen start at hex (-17,4),** worked from rows 7699 and 7706 as rule 33 says: 700 miles on bearing 261 from Midway at 0925 on 3 June and 560 miles at 0120 on 4 June are 140 miles in 15 hours 55 minutes, 8.8 kn; back 15 hours 25 minutes from 0925 to 1800 on 2 June is 135.7 nm more, 835.7 nm from Midway on bearing 261. In the map's own frame that point is 607.6 nm west and 146.8 nm south of hex (0,0), in hex (-17,4). The miles are read as nautical. Row 7706 gives no bearing and is read on row 7699's. The pilot's "speed 19" in row 7699 is his estimate and is not the speed made good, which is rule 65's.
+84. **The Close Support Group starts at hex (-16,4), a marked placeholder:** a row has it "about 50-75 miles ahead" of the transports with no bearing (9296); 62.5 nm on the transports' course of 081 from their start is in that hex.
+85. **The Second Fleet's main body starts at hex (-16,2), a marked placeholder.** No row places it before noon on 4 June, when it was at 28 N, 175 E (5716), hex (-5,1). From (-16,2) that hex is 11 hexes, 440 nm: at the 10 kn its slowest class cruises at, 44 hours, about 1400 that day.
+86. **The American carriers start together at the rendezvous of 2 June, hex (15,-6)** (rows 5737 to 5739), which is rule 34's point.
+87. **Gwin is left out.** Both rows have her joining on 5 June (8582, 8663), and where she was on 2 June is on no row; she came from Pearl Harbor, which is off the map.
+
+### The forces
+
+88. **Zuiho and Mikazuki are a carrier force of their own,** starting with the Second Fleet's main body, where rule 66 puts her. A carrier in a force on a surface mission has no orders for her aircraft; a force of her own is operated as any carrier force is, and Mikazuki is her plane guard.
+89. **The transports and their close screen are one task force,** as the Coral Sea's convoy and its escort are, at the 8.8 kn of the placeholder transport class.
+90. **The thirteenth transport is Seicho Maru,** by the row of the source the other twelve rest on (5880); the other reading (5968) stays disputed.
+91. **The two land units are aboard that force,** 4,507 men in thirteen transports of 600 berths; which ship carries which men is not said.
+92. **VB-6 flies the SBD-3.** Its rows say SBD-2 and SBD-3 mixed with no split (12600 to 12603); the other three dive bomber squadrons of the two sister carriers flew the SBD-3, and one type for a group is what the game holds. The header says the split is a gap.
+93. **Tone and Chikuma carry three Type 0 floatplanes each,** the only rows that count them (12466 to 12488, low). They are the Japanese carrier force's search.
+94. **No experience is derived for this battle:** the list has no experience block, and every ship has the value the loader gives where none is set. The veteran Japanese air groups are so no better than the American ones, and the header says it among what the game does not model here.
+
+### The bases' stocks
+
+95. **Midway's supply is 2,000 t, a marked placeholder.** The rows say the island was heavily stocked with bombs and fuel (6008, 6031) and give no tons. The figure is set so that the stock is not what stops an aircraft: 111 aircraft flying twice a day for five days are charged about 1,500 t at the game's figures, and the garrison eats 54 t. Wake's is 100 t, a placeholder, enough to be a base.
+
+### The orders
+
+96. **The take of Midway is at risk "press", with no need to know.** At balanced a take wants twice the men it believes are there and an estimate from the air before it sails. The Japanese plan sought neither: it sailed with no reconnaissance of the atoll, the flight that was to give it having failed, and against a garrison it put at about 750 in May (6908). The side is given that estimate at the start if a scenario file can give a side an estimate of the men at a place; if it cannot, it is given none, and a take with none held takes all its ships carry. At press the take wants as many men as it believes are there, so the 4,507 land against any estimate the game can form of 2,178.
+97. **Midway's hold names its garrison, its fighters and its two groups of flying boats.** A hold whose forces limit names only the men leaves the fighters with no patrol, and a flying boat that carries a torpedo is taken for a bomber by any order to strike ships that may use her. Named in the hold, the fighters patrol and the flying boats search. **The order to deny the waters round Midway names the dive bombers and the B-17s,** which strike ships under it (rule 40). The night torpedo attack of the flying boats on 3 June is so not in the game.
+98. **The two surface forces stand at hexes on the transports' way:** the Second Fleet's main body at (-5,1), where row 5716 has it at noon on 4 June, and the Close Support Group at (-3,1), ahead of it. Zuiho's force operates from (-6,1).
+
+### The levels
+
+99. **Minor 5, major 15, decisive 30, over a horizon of 66 days.** Five points are a carrier out of action; fifteen are a third of the landing force ashore, or lost; thirty are two thirds. The horizon is the days from the game's beginning to the landings on Guadalcanal, the next battle: a carrier out for those days missed it. They are set before any game is played and are not moved to enter the band.
