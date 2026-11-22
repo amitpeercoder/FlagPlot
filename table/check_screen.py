@@ -134,8 +134,9 @@ def the_stop_paper():
           "the menus at the top right are Staff and Game, and the agent's seat is under Game")
     check("right: 16px" in css(".order") and "setViewOffset" in text,
           "cards and order forms open at the right, and the chart turns to the middle of what is not covered")
-    check("pressed[p.number] = true" in text and "!pressed[p.number]" in text and "needSaid[" in text and "taskWords('strong'" in text,
-          "the plan's paper gives a plan's APPROVE and CANCEL once, at the topmost task on it, says a need once, and names a task's places")
+    check("pressed[p.number]" in text and text.count("press('APPROVE PLAN '") == 1 and text.count("press('CANCEL PLAN '") == 1
+          and text.index("doc.appendChild(first)") < text.index("doc.appendChild(shown)") and "needSaid[" in text and "taskWords('strong'" in text,
+          "the plan's paper gives each plan's APPROVE and CANCEL once, under the plan's line at the top and before the tree, says a need once, and names a task's places")
 
 
 def orders_and_signed():
@@ -160,8 +161,23 @@ def orders_and_signed():
     check("else if (kind === 'confirm') $('game-says')" in text and "else if (kind === 'running')" in text and "'clock-doing'" in text
           and "showPrompt(kind, words)" in text and "else if (kind === 'draft') $('sr')" in text,
           "a confirm is said in the GAME menu, what the clock is doing under the head's state, a pick and the first hint in a prompt by the chart's controls, a draft to the live region")
-    check("act(tool, { plan: p.number }, done, row)" in text and "tallied[word]" in text,
-          "the plan paper's tally counts plans, not the tasks under them")
+    check("act(tool, { plan: p.number }, done, row)" in text and "tallied[word]" not in text and "el('h3', '', 'The brief')" not in text,
+          "the plan's paper has no tally and no brief: the plan's line is one, the tree is the rest")
+    paper = text[text.index("// ---- the plan's paper as one tree ----"):text.index("// ---- the dry run (decisions")]
+    check("function paperNode(t)" in paper and "t.kids.forEach(function (k) { n.appendChild(paperNode(k)); })" in paper
+          and "function proposedTree(top, said, pr)" in paper and "pr.tree" in paper and "tr.sub_intents" in paper and "s.parent" in paper
+          and "st.intents.filter(function (c) { return c.parent === i.number; })" in paper,
+          "the plan's paper is one tree: a plan that waits from propose's tree (each task under its parent), a plan in force from command_state's intents under the root")
+    css = lambda selector: (re.search(re.escape(selector) + r" \{([^}]*)\}", text) or [None, ""])[1]
+    check("border-left: 2px solid" in css(".sheet .doc .node") and "node ptask" in paper,
+          "each task is a node with the rule down its left, the brief's own look, nested in its parent's")
+    check("'order ' + i.number" not in paper and "'Order ' + top.number" in paper and "PAPER_TASKS[n]" in text,
+          "a task is named by what it is, never by its number; the root keeps the player's own order number")
+    check(paper.count("sm.textContent = 'WHY'") == 1 and "'WEIGHED'" in paper and "'CHOSE'" in paper and "'HOLDS IT BACK'" in paper and "paperArcsDraw()" in paper and "mouseenter" in paper,
+          "each task has one fold, WHY, with what was weighed, what was chosen and what holds it back, and its search arc is drawn on the chart while the fold is open or the task is hovered")
+    last = text.index("if (working) doc.appendChild(working);")
+    check("fold('THE STAFF\\'S WORKING IN FULL')" in text and last > text.index("rk = fold('RISK AND TIMING')") and last < text.index("'WITHDRAW THIS ORDER'", last),
+          "the staff's working in full is the last fold, closed, before the withdrawal")
     column = text[text.index('<aside id="stop"'):text.index("</aside>", text.index('<aside id="stop"'))]
     check('id="sp-chev"' in column and "The stop paper is closed: open it" in text and "The stop paper is open: close it" in text
           and "' for your decision'" in text and "role=\"img\"" in column,
@@ -514,6 +530,58 @@ def land_unit_orders(bridge, person):
     check(person.call("release", {"land_unit": number})["ok"]["status"] == "queued", "the unit is released to the staff by the button the card has")
 
 
+def the_paper_in_words(bridge):
+    """The plan's paper, as its words are made from a real proposal (the 39 days, the order to control Guadalcanal):
+    the tree is given by the tool, each task with its parent and each order with the task it serves, and the staff's
+    words, run through the page's own cleaning in node, hold no engine phrase (a hex count, "nearest hex", a raw
+    fatigue figure, a plural in brackets)."""
+    import re
+    import shutil
+    print("-- the plan's paper: the tree from propose, and the staff's words made plain", flush=True)
+    check(begin(bridge, "guadalcanal-39-days", "person", "engine") == {"ok": True}, "begun")
+    person = Person(bridge.table)
+    shown = person.call("preview", {"command": "set_intent", "intent_kind": "control_island", "island": 1})["ok"]
+    person.call("approve", {"preview": shown["preview"]})
+    proposal = person.call("propose", {"intent": 1})["ok"]
+    tree = proposal["tree"]
+    numbers = {1} | {s["number"] for s in tree["sub_intents"]}
+    check(tree["sub_intents"] and all(isinstance(s["parent"], int) and s["parent"] in numbers for s in tree["sub_intents"]),
+          f"propose gives the tree: {len(tree['sub_intents'])} tasks, each with its parent in the tree")
+    hand = proposal["would_hand_in"]["orders"]
+    check(hand and all(x["intent"] in numbers and x["unit"] and x["order"]["kind"] for x in hand),
+          f"each of the {len(hand)} orders it would hand in names the task it serves, the unit and the order")
+    check(any(a["from_deg"] is not None and a["range_nm"] for a in tree["arcs"]) and all(a["intent"] in numbers for a in tree["arcs"]),
+          "a search arc is a bearing range and a range, with the task it serves")
+    texts = [proposal["reason"]["worked"]] + list(tree["no_orders"]) + [a["how"] for a in tree["arcs"]]
+    for sub in tree["sub_intents"]:
+        r = sub["reason"]
+        texts += [r["worked"]] + [e["what"] for e in r["evidence"]] + r["binding"] + r["would_change"]
+    for x in hand:
+        texts += [x["reason"]["worked"]] + [e["what"] for e in x["reason"]["evidence"]] + x["reason"]["binding"]
+    for g in tree["groups"]:
+        texts += [o["worked"] for o in g["orders"]]
+    node = shutil.which("node")
+    with open(os.path.join(HERE, "index.html"), encoding="utf-8") as page:
+        text = page.read()
+    code = text[text.index("  function shareWords"):text.index("  function paperText")] + text[text.index("  function cutTop"):text.index("  function workedView")]
+    with tempfile.TemporaryDirectory() as folder:
+        path = os.path.join(folder, "words.js")
+        with open(path, "w", encoding="utf-8") as out:
+            out.write(code + "\nconst t = JSON.parse(require('fs').readFileSync(process.argv[2], 'utf8')); console.log(JSON.stringify(t.map(x => tidyWorked(paperPre(x)))));\n")
+        data = os.path.join(folder, "texts.json")
+        with open(data, "w", encoding="utf-8") as out:
+            json.dump(texts, out)
+        done = subprocess.run([node, path, data], capture_output=True, text=True)
+        check(done.returncode == 0, "the page's cleaning of the staff's words runs in node" + ("" if done.returncode == 0 else ": " + done.stderr.strip()[:300]))
+        said = json.loads(done.stdout)
+    phrases = r"hex\(es\)|nearest hex|\bfatigue \d|\w\(s\)"
+    raw = [t for t in texts if re.search(phrases, t)]
+    check(raw, f"the staff's own words do hold the phrases the paper replaces ({len(raw)} of {len(texts)} texts)")
+    left = [t for t in said if re.search(phrases + r"|\b(25|50|75) in 100\b", t)]
+    check(not left, "made plain, none holds a hex count, \"nearest hex\", a raw fatigue figure, a plural in brackets or a share as N in 100 where a word says it" + (": " + left[0][:160] if left else ""))
+    check(post(bridge.table + "/new") == {"ok": True}, "the game is put away")
+
+
 def midway_on_its_chart(bridge):
     """What the Midway game gives the page that the old map's games did not, and
     that the page words as it should (the mends of "Table: Midway on its own chart").
@@ -752,6 +820,7 @@ def main():
             every_game(bridge, listed)
             orders_on_the_card(bridge)
             queue_through_the_bridge(bridge)
+            the_paper_in_words(bridge)
             midway_on_its_chart(bridge)
             person_against_agent(bridge, args.hold)
             seat_mcp(bridge)
