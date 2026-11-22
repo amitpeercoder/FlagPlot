@@ -25,7 +25,7 @@ use crate::orders::{Activity, AirMission, Job, Mission, SpeedSetting, WhenSpent}
 use crate::refdata::ShipKind;
 use crate::state::Side;
 use crate::state::{
-    AirGroup, AirGroupLocation, Arrival, Base, CargoOrder, Charge, ClaimTally, DayWork, Formation,
+    AirGroup, AirGroupLocation, AircraftFire, Arrival, Base, CargoOrder, Charge, ClaimTally, DayWork, Formation,
     FuelFrom, Halt, HaltWork, HitsOnMen, LandUnit, March, MenReplacement, MenStream, Preparation,
     Replacement, Route, RulesOfEngagement, SearchArc, Ship, ShipLocation, ShipSystem, ShipSystems,
     Skills, Strength, SupplyLine, TaskForce, Troops, TruthState, YardTrip,
@@ -271,7 +271,10 @@ const fn speed_code(speed: SpeedSetting) -> u8 {
 /// (decision 0205, 11);
 /// version 54 adds a claim's `air_types` (the count, then each type and its
 /// number) after its `by_unit`, in a side's belief, a command's picture and a
-/// report in flight alike (decision 0210, 1).
+/// report in flight alike (decision 0210, 1);
+/// version 55 adds a ship's `aircraft_fire` (0 for none, else 1, its level,
+/// the day and the pulse's code, 64 bits, it was set and its record) after her
+/// `available_from` (decision 0212).
 ///
 /// What is held apart until its day (decision 0195, 23) does not raise the
 /// version: it is hashed last, after the domain, and only where something is
@@ -282,7 +285,7 @@ const fn speed_code(speed: SpeedSetting) -> u8 {
 /// replacement men and each land unit's strength (decision 0197, 21), after
 /// the supply lines, only where a scenario gives a stream or an
 /// establishment.
-pub const STATE_VERSION: &[u8] = b"flagplot-state-v54";
+pub const STATE_VERSION: &[u8] = b"flagplot-state-v55";
 
 /// Names every field of the state, with no `..` in any pattern. It does
 /// nothing when it runs. It is here so that a field added to the state does
@@ -472,8 +475,16 @@ fn name_every_field(world: &World) {
             system_repair_points: _,
             troops,
             available_from: _,
+            aircraft_fire,
         } = ship;
         if let Some(Troops { unit: _, men: _ }) = troops {}
+        if let Some(AircraftFire {
+            level: _,
+            set_day: _,
+            set_pulse: _,
+            record: _,
+        }) = aircraft_fire
+        {}
         let ShipSystems {
             propulsion: _,
             fire_control: _,
@@ -1569,6 +1580,18 @@ pub(crate) fn hash_ship(h: &mut StateHasher, ship: &Ship) {
     }
     // After the troops (decision 0140).
     h.optional_u32(ship.available_from);
+    // After the day she may be used (decision 0212): a fire among her
+    // aircraft, its level, the day and pulse it was set and its record.
+    match ship.aircraft_fire {
+        Some(fire) => {
+            h.u8(1);
+            h.u8(fire.level);
+            h.u32(fire.set_day);
+            h.u64(fire.set_pulse.code());
+            h.u32(fire.record.raw());
+        }
+        None => h.u8(0),
+    }
 }
 
 /// One `TaskForce`, every field in one fixed order. Used for the truth state and for

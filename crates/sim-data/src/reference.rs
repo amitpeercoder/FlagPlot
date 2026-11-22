@@ -954,6 +954,8 @@ fn parse_air_combat_figures(text: &str, path: &Path) -> Result<AirCombatFigures,
             "raid_recognised_experience_strength",
             &file.raid_recognised_experience_strength,
         )?,
+        strike_is_spread: false,
+        aircraft_fire: None,
     };
     if let Some(problem) = figures.problem() {
         return Err(fail(problem));

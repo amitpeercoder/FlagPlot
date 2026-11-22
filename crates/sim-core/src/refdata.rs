@@ -14,7 +14,7 @@ use crate::events::SortieKind;
 use crate::fixed::Fixed;
 use crate::ids::{AircraftTypeId, ShipClassId};
 use crate::orders::Reach;
-use crate::state::{Ship, ShipSystem, SystemState};
+use crate::state::{Ship, ShipSystem, Side, SystemState};
 
 /// Broad type of a ship class.
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
@@ -886,6 +886,84 @@ pub struct AirCombatFigures {
     /// strength and the ship's experience, and 1 at most. From 0 to 0.5. At
     /// 0 the chance is the plain figure. A raid on a base is not moved.
     pub raid_recognised_experience_strength: Fixed,
+    /// Whether the raids at a force are spread over the ships of the kind
+    /// they want (decision 0211, as measured): the file's
+    /// `strike_is_spread`. A file without it gives `false`, and every group
+    /// chooses its ship as before, as in the frozen step 1 figures.
+    pub strike_is_spread: bool,
+    /// The figures of fire among a carrier's aircraft (decision 0212, as
+    /// measured). `None` where the file gives none of them, and then no
+    /// such fire is set, as in the frozen step 1 figures.
+    pub aircraft_fire: Option<AircraftFireFigures>,
+}
+
+/// A figure that may differ by side (decision 0213): one value for each
+/// side, resolved when the scenario is read. A rule reads the value of the
+/// side whose unit it works on with [`BySide::of`]. A side's view holds its
+/// own value in both places ([`BySide::as_seen_by`]): it is not told the
+/// enemy's.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct BySide<T> {
+    allied: T,
+    japanese: T,
+}
+
+impl<T: Copy> BySide<T> {
+    /// The two values, Allied then Japanese.
+    pub const fn new(allied: T, japanese: T) -> BySide<T> {
+        BySide { allied, japanese }
+    }
+
+    /// One value for both sides.
+    pub const fn both(value: T) -> BySide<T> {
+        BySide {
+            allied: value,
+            japanese: value,
+        }
+    }
+
+    /// The value the units of `side` read.
+    pub const fn of(&self, side: Side) -> T {
+        match side {
+            Side::Allied => self.allied,
+            Side::Japanese => self.japanese,
+        }
+    }
+
+    /// The figure as `side` knows it: its own value in both places
+    /// (decision 0213, as reviewed, 3). A commander takes the enemy to do as
+    /// his own navy does.
+    pub const fn as_seen_by(&self, side: Side) -> BySide<T> {
+        BySide::both(self.of(side))
+    }
+}
+
+/// The figures of fire among a carrier's aircraft (decision 0212, as
+/// measured): given all three or none.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct AircraftFireFigures {
+    /// The chance one bomb that hits a carrier with all her bombers aboard
+    /// sets them alight, by side (decision 0213): `aircraft_fire_chance`.
+    pub chance: BySide<Fixed>,
+    /// The chance a fire among aircraft rises a level at a pulse's end,
+    /// rather than falls one: `fire_spreads_chance`.
+    pub spreads_chance: Fixed,
+    /// The top of a fire among aircraft, the level a raid sets it at:
+    /// `aircraft_fire_levels`. At least 1.
+    pub levels: u8,
+}
+
+impl AirCombatFigures {
+    /// The figures as `side` knows them (decision 0213, as reviewed, 3):
+    /// every figure given by side holds the side's own value in both
+    /// places.
+    pub fn as_seen_by(&self, side: Side) -> AirCombatFigures {
+        let mut seen = self.clone();
+        if let Some(fire) = seen.aircraft_fire.as_mut() {
+            fire.chance = fire.chance.as_seen_by(side);
+        }
+        seen
+    }
 }
 
 impl AirCombatFigures {
@@ -1057,6 +1135,26 @@ impl AirCombatFigures {
                 "air combat base supply destroyed per hit {} is negative",
                 self.base_supply_destroyed_per_hit_t
             ));
+        }
+        if let Some(fire) = &self.aircraft_fire {
+            for side in [Side::Allied, Side::Japanese] {
+                let chance = fire.chance.of(side);
+                if !in_unit(chance) {
+                    return Some(format!(
+                        "air combat aircraft fire chance {chance} for the {} side is not between 0 and 1",
+                        side.name()
+                    ));
+                }
+            }
+            if !in_unit(fire.spreads_chance) {
+                return Some(format!(
+                    "air combat fire spreads chance {} is not between 0 and 1",
+                    fire.spreads_chance
+                ));
+            }
+            if fire.levels == 0 {
+                return Some("air combat aircraft fire levels is 0, not 1 or more".to_string());
+            }
         }
         None
     }
@@ -1275,6 +1373,18 @@ impl TrialFigures {
 }
 
 impl RefData {
+    /// The reference data as `side` knows it (decision 0213, as reviewed,
+    /// 3): every figure given by side holds the side's own value for both
+    /// sides. What a dry run of the side's is built on, so that the enemy
+    /// it makes up does as the side's own navy does.
+    pub fn as_seen_by(&self, side: Side) -> RefData {
+        let mut seen = self.clone();
+        if let Some(air) = seen.air_combat.as_mut() {
+            *air = air.as_seen_by(side);
+        }
+        seen
+    }
+
     /// Whose the class of ship `id` is (decision 0173, 4): `None` when the
     /// scenario names no file of sides or the class is not in it.
     pub fn ship_class_side(&self, id: ShipClassId) -> Option<ClassSide> {
@@ -2237,6 +2347,10 @@ impl AirCombatFigures {
             raid_recognised_chance: Fixed::ZERO,
             // Step 1's rule (decision 0168): experience moves nothing.
             raid_recognised_experience_strength: Fixed::ZERO,
+            // Step 1's rules: no strike is spread (decision 0211) and no
+            // fire among aircraft is set (decision 0212).
+            strike_is_spread: false,
+            aircraft_fire: None,
         }
     }
 }

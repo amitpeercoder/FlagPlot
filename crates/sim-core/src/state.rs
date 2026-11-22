@@ -26,6 +26,7 @@ use crate::orders::{
     SpeedSetting, Stance, StragglerInstruction, WhenSpent,
 };
 use crate::refdata::ShipKind;
+use crate::time::Pulse;
 
 /// One of the two sides.
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
@@ -120,6 +121,27 @@ pub struct Ship {
     /// the later of this and her task force's day no order to her is taken
     /// ([`TruthState::available_from`]). Added at the end.
     pub available_from: Option<u32>,
+    /// A fire among the carrier's aircraft (decision 0212, as measured):
+    /// `None` where none burns. Set by a raid's bombs, fought at each
+    /// pulse's end, and gone when it is out or she sinks. While it burns she
+    /// flies nothing off and lands nothing on ([`Ship::deck_for_flying`]).
+    /// Added at the end.
+    pub aircraft_fire: Option<AircraftFire>,
+}
+
+/// A fire among a carrier's aircraft (decision 0212, as measured).
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct AircraftFire {
+    /// From 1 to the figures' `aircraft_fire_levels`, the top, which a raid
+    /// sets it at.
+    pub level: u8,
+    /// The day and pulse a raid last set it at the top: no draw is made at
+    /// the end of that pulse.
+    pub set_day: u32,
+    pub set_pulse: Pulse,
+    /// The record of the fire last made, a raid's setting or a pulse's
+    /// fighting: the cause of the next.
+    pub record: EventId,
 }
 
 /// Men of one land unit aboard a ship (decision 0066, 2).
@@ -150,6 +172,19 @@ impl Ship {
     /// side, that have fired and are not loaded (decision 0122, 8): all of
     /// them with no torpedo ready; else at least the first side's once it has
     /// fired, and at least the count kept.
+    /// The flight deck as flying reads it (decision 0212, as measured, 6):
+    /// out while a fire burns among her aircraft, else her deck's own
+    /// state. Every launch, landing and patrol from her reads this; her
+    /// deck's own state, the repair of it, whether she is crippled and
+    /// whether she looks lost to a raid do not.
+    pub fn deck_for_flying(&self) -> SystemState {
+        if self.aircraft_fire.is_some() {
+            SystemState::Out
+        } else {
+            self.systems.get(ShipSystem::FlightDeck)
+        }
+    }
+
     pub fn tubes_fired(&self, tubes: u32, one_side: u32) -> u32 {
         if !self.torpedoes_ready {
             return tubes;
@@ -176,6 +211,7 @@ impl Ship {
     ) -> Ship {
         Ship {
             available_from: None,
+            aircraft_fire: None,
             id,
             name,
             class,
