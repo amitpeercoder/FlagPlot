@@ -80,11 +80,17 @@ fn shape(file: &str, text: &str) -> BTreeSet<String> {
 /// decision 0134. A scenario names the file where it is, as it does its map,
 /// and `LoadOptions::reference_root` does not redirect it.
 /// Scenario 62's and scenario 63's own report figures likewise.
+/// The submarine figures (decision 0218) likewise: the frozen step 1 figures
+/// give none, a frozen game has no boat, and a scenario names them with its
+/// `submarines` key as it does its map; the class and torpedo tables are
+/// frozen as the class files are.
 const LIVE_ONLY: &[&str] = &[
     "reports.toml",
     "reports_placeholder_scenario_62.toml",
     "reports_placeholder_scenario_63.toml",
     "reports_placeholder_scenario_64.toml",
+    "submarines.toml",
+    "submarines_placeholder_scenario_128.toml",
 ];
 
 #[test]

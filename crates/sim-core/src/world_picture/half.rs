@@ -20,12 +20,13 @@ use std::collections::{BTreeMap, BTreeSet};
 use crate::command::CommandState;
 use crate::entering::Entering;
 use crate::ids::{
-    AirGroupId, BaseId, EntityRef, EventId, FormationId, LandUnitId, OrderId, ShipId, TaskForceId,
+    AirGroupId, BaseId, EntityRef, EventId, FormationId, LandUnitId, OrderId, ShipId, SubmarineId,
+    TaskForceId,
 };
 use crate::orders::Order;
 use crate::state::{
     AirGroup, Arrival, Base, Formation, LandUnit, MenReplacement, MenStream, Replacement, Ship,
-    Side, SupplyLine, TaskForce, TruthState,
+    Side, Submarine, SupplyLine, TaskForce, TruthState,
 };
 use crate::view::SideView;
 use crate::world::SimError;
@@ -64,6 +65,10 @@ pub struct PictureHalf {
     /// and its own land units' strengths, those held apart among them
     /// (decision 0197).
     pub men_replacement: MenReplacement,
+    /// The side's own submarines, as they are (decision 0218, 36): the
+    /// enemy's half holds none of the other side's, and a world built from
+    /// a picture has no enemy boat.
+    pub submarines: BTreeMap<SubmarineId, Submarine>,
     /// The arrivals due to the side's air groups, in the order they are
     /// delivered.
     pub arrivals: Vec<Arrival>,
@@ -147,6 +152,14 @@ impl SideView<'_> {
                 .collect(),
             supply_lines: self.supply_lines().copied().collect(),
             men_replacement: self.own_men_replacement(),
+            // The waters a side is yet to be told are not its own to know:
+            // a world built from a picture has none waiting (decision 0218,
+            // 47).
+            waters_waiting: Vec::new(),
+            submarines: self
+                .own_submarines()
+                .map(|boat| (boat.id, boat.clone()))
+                .collect(),
         };
         let mut commands = BTreeMap::from([(side, self.command_state().clone())]);
 
@@ -221,6 +234,8 @@ impl SideView<'_> {
             entering,
             supply_lines,
             men_replacement,
+            submarines,
+            waters_waiting: _,
         } = truth;
         let command = commands.remove(&side).expect("the side's command state");
         Ok(PictureHalf {
@@ -236,10 +251,19 @@ impl SideView<'_> {
             replacements,
             supply_lines,
             men_replacement,
+            submarines,
             arrivals,
             orders,
             command,
-            belief: belief_of(self.contacts(), self.claims(), self.ground_estimates()),
+            // The enemy's half reads no report of a submarine as a force: its
+            // own reports are the side's (decision 0218, 44).
+            belief: belief_of(
+                self.contacts(),
+                self.claims(),
+                self.ground_estimates(),
+                self.submarine_reports(),
+                self.suspected_waters(),
+            ),
             counters: PictureCounters {
                 next_task_force: self.next_task_force_id().raw(),
                 next_air_group: self.next_air_group_id().raw(),
@@ -345,6 +369,8 @@ impl WorldPicture {
             entering: BTreeMap::new(),
             supply_lines: Vec::new(),
             men_replacement: MenReplacement::default(),
+            submarines: BTreeMap::new(),
+            waters_waiting: Vec::new(),
         };
         let mut orders = Vec::new();
         let mut beliefs = BTreeMap::new();
@@ -364,6 +390,7 @@ impl WorldPicture {
                 replacements,
                 supply_lines,
                 men_replacement,
+                submarines,
                 arrivals,
                 orders: own_orders,
                 command: own_command,
@@ -385,6 +412,8 @@ impl WorldPicture {
                 entering,
                 supply_lines,
                 men_replacement,
+                submarines,
+                waters_waiting: Vec::new(),
             };
             let mut commands = BTreeMap::from([(side, own_command)]);
             // Re-point the half's orders past those already joined, after
@@ -423,6 +452,8 @@ impl WorldPicture {
                 entering,
                 supply_lines,
                 men_replacement,
+                submarines,
+                waters_waiting: _,
             } = own;
             join_units(&mut truth.ships, ships)?;
             join_units(&mut truth.task_forces, task_forces)?;
@@ -431,6 +462,7 @@ impl WorldPicture {
             join_units(&mut truth.land_units, land_units)?;
             join_units(&mut truth.formations, formations)?;
             join_units(&mut truth.entering, entering)?;
+            join_units(&mut truth.submarines, submarines)?;
             truth.replacements.extend(replacements);
             truth.supply_lines.extend(supply_lines);
             truth

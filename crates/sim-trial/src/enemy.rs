@@ -703,6 +703,8 @@ pub(crate) fn make(
             supply_lines: Vec::new(),
             // Decision 0197: nor a stream of men or a unit's strength.
             men_replacement: Default::default(),
+            // Decision 0218, 36: the enemy's made picture holds no boat.
+            submarines: BTreeMap::new(),
             arrivals: Vec::new(),
             orders: Vec::new(),
             command: CommandState::new(),

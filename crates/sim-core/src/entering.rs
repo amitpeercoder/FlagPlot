@@ -454,8 +454,39 @@ impl World {
     ///   if the group has aircraft, takes aircraft
     ///   ([`crate::landing::takes_aircraft`]); else it waits. `UnitEntered`.
     ///
-    /// The three events cite no cause and have no pulse.
+    /// - A submarine whose `enters_day` is `day` comes onto the map where
+    ///   she lies, her own field being what holds her apart (decision 0218,
+    ///   33): `SubmarineEntered`, boats in number order, after the rest.
+    ///
+    /// The events cite no cause and have no pulse.
     pub(crate) fn bring_in(&mut self, day: u32) {
+        self.bring_in_units(day);
+        self.bring_in_submarines(day);
+    }
+
+    /// A submarine held apart until `day` is on the map from this day: she
+    /// is in no hex for any rule before it (`Submarine::on_map`), and her
+    /// entering is recorded first thing on it.
+    fn bring_in_submarines(&mut self, day: u32) {
+        let due: Vec<(crate::ids::SubmarineId, crate::hex::Hex)> = self
+            .truth
+            .submarines
+            .values()
+            .filter(|boat| boat.enters_day == Some(day))
+            .map(|boat| (boat.id, boat.hex))
+            .collect();
+        for (submarine, hex) in due {
+            self.events.record(
+                day,
+                None,
+                EventKind::SubmarineEntered { submarine, hex },
+                Vec::new(),
+                None,
+            );
+        }
+    }
+
+    fn bring_in_units(&mut self, day: u32) {
         if self.truth.entering.is_empty() {
             return;
         }

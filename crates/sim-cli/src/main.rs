@@ -74,7 +74,7 @@ Usage: sim-cli run <scenario.toml> [--events] [--seed N] [--save <game.json>] [-
             as `day N <hash>`, and nothing else.
   events    The umpire's questions to a finished run (a scenario run to its
             end, or a saved game replayed). --unit HANDLE (ship:N,
-            task_force:N, air_group:N, base:N, land_unit:N, contact:N or allied:contact:N)
+            task_force:N, air_group:N, base:N, land_unit:N, submarine:N, contact:N or allied:contact:N)
             prints every event that names the unit, as `run --events` prints
             it; for a ship it also prints the events of the task force it was
             in, marked `via task_force:N`. --day N keeps one day. --why EVENT
@@ -898,6 +898,25 @@ fn run(args: &[String], options: &LoadOptions) -> Result<(), String> {
             unit.id,
             unit.name,
             unit.side.name()
+        );
+    }
+    // Submarines are listed only where a scenario has any (decision 0218):
+    // the umpire's truth, as the land units' lines are.
+    for boat in truth.submarines.values() {
+        let place = match (&boat.passage, boat.enters_day) {
+            (_, Some(day)) if day > truth.day => format!("held apart until day {day}"),
+            (Some(passage), _) if passage.home => format!("on passage home to {}", passage.to),
+            (Some(passage), _) => format!("on passage to {}", passage.to),
+            (None, _) => format!("on station at {}", boat.station),
+        };
+        println!(
+            "{} \"{}\" ({}): {}, at {}, {place}, {} salvoes",
+            boat.id,
+            boat.name,
+            boat.side.name(),
+            boat.condition.name(),
+            boat.hex,
+            boat.salvoes
         );
     }
     for side in [Side::Allied, Side::Japanese] {

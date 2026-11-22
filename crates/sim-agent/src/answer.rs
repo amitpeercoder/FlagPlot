@@ -155,8 +155,13 @@ pub const FORMAT: &str = "flagplot-agent";
 /// order or its tool and command in the side's numbers, when it acts, what
 /// goes with it and what a hold rests on, with an `as_of`; `take_back`
 /// withdraws one entry by its place and what goes with it, given that
-/// `as_of`, and is refused where another queued entry rests on it.
-pub const VERSION: u32 = 46;
+/// `as_of`, and is refused where another queued entry rests on it. 47 adds
+/// submarines (decision 0218, stage 2): the briefing's `submarines` part (the
+/// side's own boats, its reports of submarines and its suspected waters, left
+/// out where it has none), `list_forces`' `submarines`, the entity answer for
+/// a boat of the side's own (`submarine:N`), the order `station` of a boat,
+/// a claim's `from_submarine`, and the objective `submarines_sunk`.
+pub const VERSION: u32 = 47;
 
 /// The answer to a question about something the side does not know of: a
 /// unit of the enemy, a number that does not exist, an event the side may not

@@ -1,0 +1,7 @@
+# PLACEHOLDER DATA. The class is invented for scenario 128 (decision 0218,
+# tests/scenario_128_submarines_against_warships.rs), whose hand calculation
+# needs a salvo of 4, 2 salvoes carried and a passage speed of 10 knots. It is
+# not historical and must not be used for validation. The submarine classes
+# of the game are in submarine_classes_1942.csv.
+id,name,salvo,salvoes_carried,passage_speed_kn,torpedo_id,estimated
+6900,Placeholder submarine class,4,2,10,6950,

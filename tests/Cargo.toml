@@ -661,3 +661,7 @@ path = "scenario_126_fire_among_aircraft.rs"
 [[test]]
 name = "scenario_127_a_strike_is_spread"
 path = "scenario_127_a_strike_is_spread.rs"
+
+[[test]]
+name = "scenario_128_submarines_against_warships"
+path = "scenario_128_submarines_against_warships.rs"

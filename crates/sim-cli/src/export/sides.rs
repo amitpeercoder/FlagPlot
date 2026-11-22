@@ -40,6 +40,21 @@ pub struct SideOut {
     /// out when the side has none.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     land_units: Vec<LandUnitOut>,
+    /// The side's own submarines, known exactly (decision 0218, 13). Left
+    /// out when the side has none; never an enemy boat.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    submarines: Vec<SubmarineOut>,
+}
+
+/// One of the side's own submarines, known exactly (decision 0218, 13).
+#[derive(Serialize)]
+pub struct SubmarineOut {
+    id: u32,
+    name: String,
+    hex: (i32, i32),
+    station: (i32, i32),
+    condition: &'static str,
+    salvoes: u32,
 }
 
 /// One of the side's own land units, known exactly (decision 0066, 21).
@@ -108,6 +123,18 @@ fn side(world: &World, side: Side) -> SideOut {
                 name: unit.name.clone(),
                 men_ashore: unit.men_ashore,
                 hex: unit.hex.map(|hex| (hex.q, hex.r)),
+            })
+            .collect(),
+        submarines: world
+            .side_view(side)
+            .own_submarines()
+            .map(|boat| SubmarineOut {
+                id: boat.id.raw(),
+                name: boat.name.clone(),
+                hex: (boat.hex.q, boat.hex.r),
+                station: (boat.station.q, boat.station.r),
+                condition: boat.condition.name(),
+                salvoes: boat.salvoes,
             })
             .collect(),
     }
@@ -434,6 +461,57 @@ fn describe_side(kind: &SideEventKind, key: &UmpireKey, at: (u32, Option<Pulse>)
                 .int("hits_on_men", *hits_on_men),
             true,
         ),
+        SideEventKind::OwnSubmarineFired {
+            submarine,
+            hex,
+            torpedoes,
+            taken_for,
+        } => (
+            d.id("submarine", *submarine)
+                .hex("hex", *hex)
+                .int("torpedoes", *torpedoes)
+                .text("taken_for", taken_for.name()),
+            true,
+        ),
+        SideEventKind::SalvoFromSubmarine {
+            task_force,
+            ship,
+            hex,
+        } => (
+            d.id("task_force", *task_force)
+                .id("ship", *ship)
+                .hex("hex", *hex),
+            true,
+        ),
+        SideEventKind::OwnSubmarineHunted {
+            submarine,
+            hex,
+            held_down_until,
+            damaged,
+        } => (
+            d.id("submarine", *submarine)
+                .hex("hex", *hex)
+                .int("held_down_until_day", held_down_until.0)
+                .text("held_down_until_pulse", held_down_until.1.name())
+                .flag("damaged", *damaged),
+            true,
+        ),
+        SideEventKind::SubmarineHuntedBy { task_force, hex } => {
+            (d.id("task_force", *task_force).hex("hex", *hex), true)
+        }
+        SideEventKind::OwnSubmarineAttackedFromAir {
+            submarine,
+            hex,
+            damaged,
+        } => (
+            d.id("submarine", *submarine)
+                .hex("hex", *hex)
+                .flag("damaged", *damaged),
+            true,
+        ),
+        SideEventKind::AttackedSubmarineFromAir { air_group, hex } => {
+            (d.id("air_group", *air_group).hex("hex", *hex), true)
+        }
         SideEventKind::BaseChangedSide {
             base,
             hex,

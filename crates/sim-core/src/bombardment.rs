@@ -861,6 +861,7 @@ impl World {
             claimed_on_ground,
             from_air: false,
             from_bombardment: true,
+            from_submarine: false,
             received_event: self.events.next_id(),
             // A bombardment's claim names no type and no unit (decisions 0179, 6 and 0180, 8).
             ground_types: Vec::new(),
@@ -911,6 +912,7 @@ impl World {
                 claimed_on_ground,
                 from_air: false,
                 from_bombardment: true,
+                from_submarine: false,
                 ground_types: Vec::new(),
                 by_unit: Vec::new(),
                 air_types: Vec::new(),

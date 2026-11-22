@@ -16,7 +16,7 @@ An optional `[objectives]` table holds the three levels, an optional `history` n
 
 The loader refuses levels that are not above zero and rising, negative points, an unknown kind of objective or ship or field, an objective naming a base the scenario does not have, an empty mission, a missing side, a `horizon_days` that is not a whole number of at least 1 or is shorter than the scenario's days, and a scenario in which any side has `ships_out_of_action` and any side has `ships_crippled`: a scenario counts damaged ships one way. In a ship table a kind that is left out is worth nothing. The same kind may be given more than once, and each entry is scored on its own. Objectives are kept in the file's order. [0054]
 
-### The nine kinds
+### The ten kinds
 
 Each objective is a count of something the engine already records, taken for the side that holds the objective (`base_held` is read from the final truth). A side's own losses are not a separate objective: a ship lost gives the enemy its points. [0054]
 
@@ -31,8 +31,9 @@ Each objective is a count of something the engine already records, taken for the
 | `base_held` | Whether a named base is the side's own at the end of the game | The objective's points, if it is. Scenario keys `base` and `points` |
 | `men_lost` | Enemy men lost, by any cause: unfed, lost with a ship, lost in a fight, lost to fire or surrendered | For each 100 men. A part of 100 scores its part. Scenario key `points_per_100_men` |
 | `men_landed` | Men the side's own ships land in the hex of a named base and do not take off again, kept unit by unit | For each 100 men. A part of 100 scores its part. Scenario keys `base` and `points_per_100_men` |
+| `submarines_sunk` | Enemy submarines whose condition is sunk, by any cause. A boat sent home, damaged or for want of a salvo or on her leave day scores nothing | For each boat. Scenario key `points` [0218] |
 
-[0054, 0090, 0186]
+[0054, 0090, 0186, 0218]
 
 - **Enemy** means the other side from the ship's, or the air group's, side, whoever did the damage. A ship counts for the other side if it sank, whatever sank it. [0054]
 - **A ship at the yard is afloat.** A ship away at the yard (chapter 4, Repair) is not sunk and is counted as any ship not sunk, from the damage she left with, which does not change until she returns: at the end of the game one away with propulsion or the flight deck out counts as crippled, and one back from the yard counts as whole. Repair adds no objective of its own; `ships_out_of_action` reads its days of repair (below). [0069, 0088]
@@ -46,6 +47,7 @@ Each objective is a count of something the engine already records, taken for the
 - **Base held** scores the objective's points to the side that holds the named base when the game ends, read from the base's side in the final state. A base that changed side during the game scores for the side that has it at the end, however often it changed. The two sides may each hold the objective for one base, and then the base is worth its points to its holder. [0090 item 25]
 - **Men lost** is the men in the `MenLostWithShip`, `MenLostUnfed`, `MenLostInFight`, `MenLostToFire` and `UnitSurrendered` events of the enemy's land units (the men who surrendered are lost; decision 0104), counted for the side whose enemy lost them, by any cause. The points are the objective's points times the men over 100, in one fixed-point product, so a part of 100 scores its part. [0090 item 26, 0092 item 20, 0104 item 7]
 - **Ships lost with a base** count as sunk ships for the enemy of their side, since their location is sunk, whatever sank them (chapter 7, A base that changes side). [0090 item 21]
+- **Submarines sunk** counts, through the side of each boat sunk, the boats whose condition is sunk when the game ends, for the other side, whoever sank them: the hunt of the force she fired on and the aircraft that sighted her (chapter 10, The hunt; Aircraft and the boat). A boat gone home scores nothing, and a boat damaged and still afloat scores nothing. Chapter 10, The objective. [0218, rule 32]
 - **Ryujo counts as a carrier.** Points go by the six kinds of ship the engine has (chapter 3, What a report holds). [0054]
 
 Known limit: a kind of ship finer than the six waits for step 2. [0052, 0054]
@@ -54,7 +56,7 @@ A side sees: its own mission and objectives from day 1, and what the enemy is sc
 
 ### What a side sees of the enemy's objectives
 
-What each side is scored for is a rule of the game, and both sides read it, as both read the levels. From day 1 and on every day, the briefing's objectives part gives, after the side's own objectives and the line of the levels, the enemy's objectives, one for one in the order the scenario gives them: each one's kind; the base it names, where it names one, by the map's number and name; for `base_open`, whether the enemy is scored for the base being open or shut; and its worth (its points, its points a ton, its points for each kind of ship, or its points for each 100 men); and for `ships_out_of_action` the horizon in days. The kinds are all nine: `ships_sunk`, `ships_crippled`, `ships_out_of_action`, `aircraft_destroyed`, `cargo_landed`, `base_open`, `base_held`, `men_lost` and `men_landed`. [0183, 0186]
+What each side is scored for is a rule of the game, and both sides read it, as both read the levels. From day 1 and on every day, the briefing's objectives part gives, after the side's own objectives and the line of the levels, the enemy's objectives, one for one in the order the scenario gives them: each one's kind; the base it names, where it names one, by the map's number and name; for `base_open`, whether the enemy is scored for the base being open or shut; and its worth (its points, its points a ton, its points for each kind of ship, or its points for each 100 men); and for `ships_out_of_action` the horizon in days. The kinds are all ten: `ships_sunk`, `ships_crippled`, `ships_out_of_action`, `aircraft_destroyed`, `cargo_landed`, `base_open`, `base_held`, `men_lost`, `men_landed` and `submarines_sunk` (in words, "your submarines sunk", points for each). [0183, 0186, 0218]
 
 It is written in a form of its own, with no field for a count, days counted, points earned, a basis or whether a base is open now, so that nothing of the enemy's progress or state can be shown in it. The text puts it under the line "The enemy is scored for:", each objective in words from the reader's side: "your ships sunk", "tons of supply and fuel the enemy unloads at" a base, a base "is the enemy's at the end of the game", "days" a base "is shut" (or open), "men the enemy lands from ships at" a base "and does not take off again". A base that is not on the reader's map (a base that is off a side's map, such as Taivu, base 5, for the Allied side in scenario 103) is named by its hex, "(3,-4)", in the enemy's objective lines, in the side's own objective lines and in the result lines, for supply landed and men landed alike. [0183, 0186]
 
@@ -120,10 +122,11 @@ During the game a side sees the progress of each of its objectives as far as it 
 | `aircraft_destroyed` | Basis `claims` once the side has any claim from the air, even one claiming none. The count is the aircraft claimed shot down plus those claimed destroyed on the ground. Points are the count times the points for one. Otherwise `not_observable` |
 | `ships_crippled` | Always `not_observable`: no claim says crippled |
 | `ships_out_of_action` | Always `not_observable`: the enemy's damage is not something a side knows [0088] |
+| `submarines_sunk` | Always `not_observable`: the side that hunted or searched is told nothing of the result, and a boat's own side is told of her sinking but not the enemy [0218, rule 15] |
 
 [0054, 0056, 0088, 0090, 0186]
 
-Claims come from a surface fight (chapter 4, The report and the claim) and from a raid (chapter 5, The report and the claim). Chapter 3, Claims, says what a claim counts. A side learns of its own attacks only as claims. A claim is never below what really happened, which bounds the truth from above. [0056]
+Claims come from a surface fight (chapter 4, The report and the claim), from a raid (chapter 5, The report and the claim) and from a submarine's salvo (chapter 3, The claim after a submarine's salvo); a submarine's claim names the kind of ship she took her target for and feeds `ships_sunk` as any claim that names a kind does. Chapter 3, Claims, says what a claim counts. A side learns of its own attacks only as claims. A claim is never below what really happened, which bounds the truth from above. [0056]
 
 A side sees: all of the above for its own objectives only; of the enemy's it sees what he is scored for and nothing of his progress (What a side sees of the enemy's objectives, above). The briefing carries the mission, each objective with its points, and the known progress; for `ships_out_of_action` the points for each kind are for a ship away for the whole horizon, and the horizon in days is given with them. [0088] The text says none for a scenario without objectives. [0054]
 

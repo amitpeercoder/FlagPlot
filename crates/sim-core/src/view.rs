@@ -30,14 +30,16 @@ mod surface_choices;
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::airstrike::{NavalStrike, StrikeChoice, StrikeInFlight};
-use crate::belief::{BattleClaim, BeliefState, Contact, GroundEstimate};
+use crate::belief::{
+    BattleClaim, BeliefState, Contact, GroundEstimate, SubmarineReport, SuspectedWaters,
+};
 use crate::choices::{Answer, Question};
 use crate::events::EventLog;
 use crate::fixed::Fixed;
 use crate::hex::Hex;
 use crate::ids::{
     AirGroupId, AircraftTypeId, BaseId, ContactId, EntityRef, EventId, LandUnitId, OrderId,
-    ShipClassId, ShipId, TaskForceId,
+    ShipClassId, ShipId, SubmarineId, TaskForceId,
 };
 use crate::landing::DeckLoss;
 use crate::map::{HexData, Map};
@@ -52,7 +54,7 @@ use crate::refdata::{
 use crate::side_events::{self, Owners, SideEvent};
 use crate::state::{
     AirGroup, Arrival, Base, Formation, LandUnit, MenStream, Replacement, Ship, Side, Strength,
-    SupplyLine, TaskForce, TruthState,
+    Submarine, SupplyLine, TaskForce, TruthState,
 };
 use crate::upkeep::Sortie;
 
@@ -401,6 +403,28 @@ impl<'a> SideView<'a> {
             .filter(move |unit| view.owns_land_unit(unit))
     }
 
+    /// The side's own submarines, known exactly (decision 0218, 13 and 35):
+    /// those held apart until their day among them, as the own land units
+    /// held apart are shown, and those sunk or home, with their condition.
+    /// The enemy's boats are not here, nor anywhere else in the view. From a
+    /// seat, only the area command (the side's highest) knows her.
+    pub fn own_submarines(&self) -> impl Iterator<Item = &'a Submarine> + '_ {
+        let view = *self;
+        self.truth
+            .submarines
+            .values()
+            .filter(move |boat| view.owns_submarine(boat))
+    }
+
+    /// One of the side's own submarines. `None` for a boat that is not the
+    /// side's: no enemy boat is ever given.
+    pub fn submarine(&self, id: SubmarineId) -> Option<&'a Submarine> {
+        self.truth
+            .submarines
+            .get(&id)
+            .filter(|boat| self.owns_submarine(boat))
+    }
+
     /// The day from which the side may use one of its own units (decision
     /// 0140, 5): a task force, a ship, an air group or a land unit, the
     /// later of its own day and those of what carries it, as intake reads it
@@ -435,6 +459,11 @@ impl<'a> SideView<'a> {
                 .land_units
                 .get(&id)
                 .is_some_and(|x| x.side == side),
+            EntityRef::Submarine(id) => self
+                .truth
+                .submarines
+                .get(&id)
+                .is_some_and(|boat| self.owns_submarine(boat)),
             _ => false,
         };
         // A unit held apart for the side until its day is the side's own
@@ -661,6 +690,20 @@ impl<'a> SideView<'a> {
     /// The side's estimate of the enemy's men ashore in `hex`, if it has one.
     pub fn ground_estimate(&self, hex: Hex) -> Option<&'a GroundEstimate> {
         self.own_belief().ground_estimate(hex)
+    }
+
+    /// What the side believes of submarines at sea: one report for a hex, in
+    /// hex order, each as old as it is (decision 0218, 44). A report may be
+    /// wrong in its place; the boat is not shown.
+    pub fn submarine_reports(&self) -> impl Iterator<Item = &'a SubmarineReport> + '_ {
+        self.own_belief().submarine_reports()
+    }
+
+    /// The waters the side believes enemy submarines work, in the order told
+    /// (decision 0218, 23 and 47): a belief the side was given, right or
+    /// wrong, never made from where the boats are and never changed in play.
+    pub fn suspected_waters(&self) -> &'a [SuspectedWaters] {
+        self.own_belief().suspected_waters()
     }
 
     /// The figures of shore bombardment, if a force can bombard (decision
@@ -1199,6 +1242,19 @@ impl<'a> SideView<'a> {
     /// Reference data is common knowledge.
     pub fn ship_class(&self, id: ShipClassId) -> Option<&'a ShipClass> {
         self.ref_data.ship_classes.get(&id)
+    }
+
+    /// A class of submarine (decision 0218): reference data, so common
+    /// knowledge. `None` where the scenario names no submarine data or the
+    /// class.
+    pub fn submarine_class(
+        &self,
+        id: crate::ids::SubmarineClassId,
+    ) -> Option<&'a crate::refdata::SubmarineClass> {
+        self.ref_data
+            .submarines
+            .as_ref()
+            .and_then(|data| data.classes.get(&id))
     }
 
     /// Aircraft types are reference data, so common knowledge.

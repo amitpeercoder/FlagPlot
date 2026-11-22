@@ -122,7 +122,7 @@ The scale (item 2 above) is not a condition of step 3's stages 0 to 2.
 ## Not planned
 
 - `docs/rules-comparison.md` (the designer's, Nov 14, 2026, checked against the code) sets Flag Plot's rules against another game's manual and is the list of gaps to triage. Decision 0102 rules on each gap (build, defer or decline); the rows it marks "To be written" are decision records still to come.
-- Submarines are not modelled and have no plan yet. The designer asked about them on Nov 14, 2026. No rule, ship class or scenario has a submarine, and nothing has been decided of how a side would command one or find one.
+- Submarines against warships are planned in three stages (decision 0218): the data (stage 1) and the rule (stage 2) are built; the patrol order, the staff's regard for submarine waters, the agent's tools and the table are stage 3, still to come.
 
 ## Decisions still to make
 

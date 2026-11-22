@@ -19,12 +19,12 @@ use crate::map::HexKind;
 use crate::orders::{
     Activity, AirGroupOrder, AirMission, BaseOrder, CargoAction, Issuer, LandUnitOrder, Mission,
     Order, OrderKind, OrderRequest, Origin, Posture, Reach, RejectReason, SpeedSetting,
-    TaskForceOrder,
+    SubmarineOrder, TaskForceOrder,
 };
 use crate::refdata::{AircraftRole, AttackWeapon};
 use crate::state::{
     CargoOrder, March, Preparation, Route, RulesOfEngagement, SearchArc, ShipLocation, Side,
-    TaskForce, TaskForceStatus,
+    SubmarineCondition, SubmarinePassage, TaskForce, TaskForceStatus,
 };
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -427,6 +427,10 @@ impl World {
         // after its end phases, so that the area command holds the state the
         // staff is asked on (decision 0136, 2).
         self.make_state_reports(day, Pulse::Afternoon);
+        // The waters a side is to be told on the next day are told now, so
+        // that day's briefing and view hold them and this day's do not
+        // (decision 0218, 47).
+        self.tell_waters_due(day);
         self.pulse_in_hand = None;
 
         // The invariants are checked before the day counter advances, so a
@@ -568,6 +572,29 @@ impl World {
         // afternoon's are made at the end of the day.
         if pulse != Pulse::Afternoon {
             self.make_state_reports(day, pulse);
+        }
+        // Reports of submarines age by their own figure (decision 0218, 44):
+        // with no submarine data there are none.
+        if let Some(drop_age) = self
+            .ref_data
+            .submarines
+            .as_ref()
+            .map(|data| data.figures.report_drop_age_pulses)
+        {
+            for side in Side::ALL {
+                for outcome in self.age_submarine_pictures(side, drop_age) {
+                    self.events.record(
+                        day,
+                        Some(pulse),
+                        EventKind::SubmarineReportDropped {
+                            side,
+                            hex: outcome.hex,
+                        },
+                        vec![Cause::Event(outcome.received_event)],
+                        None,
+                    );
+                }
+            }
         }
         // With no search figures there are no air groups, so no contacts.
         let Some(figures) = self.ref_data.search.clone() else {
@@ -1513,6 +1540,36 @@ impl World {
                 }
                 Ok(())
             }
+            OrderKind::Submarine {
+                target,
+                order: SubmarineOrder::Station(hex),
+            } => {
+                // Decision 0218, 3 and 43, in this order: the side's own
+                // boat (one reason for a boat that does not exist and an
+                // enemy's); on the map; sound and not going home; a hex on
+                // the map, navigable and reachable by sea from where she is,
+                // as a route's waypoint is checked. A boat held apart or
+                // before her day was refused before this, as a force is.
+                let boat = match self.truth.submarines.get(target) {
+                    Some(boat) if boat.side == order.side => boat,
+                    _ => return Err(RejectReason::NotYourUnit),
+                };
+                if !boat.on_map(order.day_issued) {
+                    return Err(RejectReason::SubmarineOffTheMap);
+                }
+                if boat.condition != SubmarineCondition::Sound
+                    || boat.passage.is_some_and(|passage| passage.home)
+                {
+                    return Err(RejectReason::SubmarineGoingHome);
+                }
+                if !self.map.contains(*hex) {
+                    return Err(RejectReason::WaypointOffMap(*hex));
+                }
+                if !self.map.is_navigable(*hex) || self.map.sea_distance(boat.hex, *hex).is_none() {
+                    return Err(RejectReason::WaypointUnreachable(*hex));
+                }
+                Ok(())
+            }
         }
     }
 
@@ -2000,6 +2057,42 @@ impl World {
                         left_fieldworks(unit, true)
                     }
                 }
+            }
+            OrderKind::Submarine {
+                target,
+                order: SubmarineOrder::Station(hex),
+            } => {
+                // Decision 0218, 3 and 43: the hex is her station, and she
+                // goes to it by the passage a force would take, finishing a
+                // leg she is on first, as a force finishes its leg when its
+                // route changes. She has none if she is there.
+                let boat = self
+                    .truth
+                    .submarines
+                    .get_mut(target)
+                    .expect("order was validated against this submarine");
+                boat.station = *hex;
+                boat.station_order = Some(order.id);
+                let (toward_hex, progress_nm, leg_nm) = match boat.passage {
+                    Some(passage) if passage.toward_hex.is_some() => {
+                        (passage.toward_hex, passage.progress_nm, passage.leg_nm)
+                    }
+                    _ => (None, Fixed::ZERO, Fixed::ZERO),
+                };
+                boat.passage =
+                    (toward_hex.is_some() || boat.hex != *hex).then_some(SubmarinePassage {
+                        to: *hex,
+                        home: false,
+                        toward_hex,
+                        progress_nm,
+                        leg_nm,
+                        arrived: false,
+                        order: Some(order.id),
+                    });
+                vec![EventKind::SubmarineOrderedToStation {
+                    submarine: *target,
+                    station: *hex,
+                }]
             }
         }
     }
@@ -3374,6 +3467,7 @@ mod tests {
             claimed_on_ground: 0,
             from_air: false,
             from_bombardment: false,
+            from_submarine: false,
             received_event: EventId::new(7),
             ground_types: Vec::new(),
             by_unit: Vec::new(),
@@ -3435,6 +3529,7 @@ mod tests {
             BattleClaim {
                 from_air: true,
                 from_bombardment: false,
+                from_submarine: false,
                 ..claim.clone()
             },
             BattleClaim {

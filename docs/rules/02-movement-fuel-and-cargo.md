@@ -8,7 +8,7 @@ Where these rules run in a day (chapter 1, The order in which a day resolves, gi
 | --- | --- |
 | Start of the day, after the staff is asked | Orders are taken in, the commander's and the staff's, including route, speed, readiness, cargo, detach, form, join and stand-down orders (chapter 1, Orders; chapter 8) |
 | Start of each pulse | Alert from belief, then fatigue of the task forces (chapter 3, Readiness, alertness and fatigue of a force) |
-| Movement phase of each pulse | Halted forces whose work is done steam on, then stragglers, then escorts keep station (Keeping station), then forces under the order to fuel at sea are paired and steered (Fuelling at sea), then movement, meetings and fights, then the fuel passed at sea |
+| Movement phase of each pulse | Halted forces whose work is done steam on, then stragglers, then escorts keep station (Keeping station), then forces under the order to fuel at sea are paired and steered (Fuelling at sea), then movement, meetings and fights, then the fuel passed at sea, then, where a boat is on the map, the hours each force spent in each hex and the submarines' passage and attack (chapter 10) |
 | Loading phase, last in each pulse | Cargo handling, then refuelling in port, then rearming, from one queue of berths (decisions 0112 and 0122) |
 
 ## The map as the rules read it
@@ -219,6 +219,12 @@ A side sees: its own position changes in `TaskForceSteamed` events (the `from` a
 Within one pulse forces move in order of clock time. The engine works out, for each force that can still steam, the distance to its next change of position: the rest of the way to half the charge of its leg or, if it is already at half or past it, the rest of the leg plus half the charge of the next, if the path has a next hex. It considers only a change that its remaining budget reaches. For each such force the time of the change is its hours used so far, plus the open segment plus that distance divided by its speed. The force with the earliest time is advanced to that point, and the lower task force number wins a tie, except that a force that is some force's charge comes after every force that is not (Keeping station). This repeats until no force has a change within its budget. Each force then steams out what is left of its budget. [0022 items 1 and 2]
 
 A side sees: not an event.
+
+### The hours in a hex, and a boat's passage
+
+Where a submarine is on the map, the movement step also counts the hours each force with a ship afloat spent in each hex of the pulse, from the segments it steamed: the miles in the hex over the segment's speed, one division for each hex of each segment, and, for a force that did not steam the pulse out, the rest of the pulse in the hex it ended in. The count changes nothing a force does, is kept nowhere and is read only by the boats' attack (chapter 10, The hours a force spends in her hex). With no boat on the map it is not made. [0218, rules 37 and 38]
+
+A submarine's passage uses this chapter's sea route, step charge and legs, and enters a hex at half a leg as a force does. She is not a task force: she has no budget of fuel, no halt, no meeting and no order but her station (chapter 10, Passage and station). [0218, rule 43]
 
 ### Meeting
 
@@ -546,6 +552,7 @@ A task force's readiness, whether it is alert, the alarm, and the fatigue that a
 - Which events each side may see, in full: chapter 1, What a side sees of an event.
 - Objectives, missions and results: chapter 6. The only rule of the engine that reads a task force's mission is shore bombardment (chapter 4), and the halt for it (above); the staff reads it to form a task (chapter 8, A task force as an addressee).
 - Ship repair, forward and at the yard, and a force away at the yard: chapter 4, Repair.
+- A submarine's passage and station, and the attack she makes on a force in her hex: chapter 10.
 - The bombardment a halted force makes: chapter 4, Shore bombardment.
 - Land units, men worked as cargo, troop capacity, the men's supply, marching overland and preparing a landing, whose loading scales the rate of a landing: chapter 7.
 - Base orders other than forming a task force, and port damage: not built (0052, 0066, 0111). Forming is in The task force formed, joined and stood down. The fight ashore and a base that changes side: chapter 7. Shore bombardment: chapter 4.

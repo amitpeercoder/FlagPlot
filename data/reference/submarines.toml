@@ -1,0 +1,80 @@
+# Submarine figures (decision 0218, stage 2). EVERY FIGURE IS A PLACEHOLDER:
+# a judgement or a count not yet written, each with what it rests on in the
+# note beside it. None is set to enter a band. The classes and torpedoes are
+# in submarine_classes_1942.csv and submarine_torpedoes_1942.csv, derived from
+# the fact rows; a scenario names all three files with `submarine_classes`,
+# `submarine_torpedoes` and `submarines`. The loader does not redirect this
+# file to the frozen step 1 figures: a frozen game has no boat
+# (crates/sim-data/tests/frozen_figures.rs, LIVE_ONLY).
+
+# Required by the loader and ignored once read: the scenario carries the flag.
+placeholder = true
+
+# PLACEHOLDER, a judgement (decision 0218, "Figures"): the chance of an attack
+# in each hour a force is in the boat's hex. No source gives a rate, and the
+# stations it would be counted on are gaps. To be checked, not set, against
+# the count the rows allow: four attacks, or nine or ten with the reports of
+# forces met, on some 190 to 500 boat-days east of the Solomons from 20 August
+# to 20 September.
+submarine_attacks_per_hour = "0.02"
+
+# PLACEHOLDER, one case and a captain's word: Yorktown under tow (outcome
+# 16097). The hourly chance is multiplied by this where a ship of the force is
+# dead in the water.
+attacks_ship_dead_in_water = "5"
+
+# PLACEHOLDER, from the hunts on file (three to ten hours and more): the
+# pulses a boat is held down after the pulse of a hunt, which she is held
+# down for as well.
+held_down_pulses = 2
+
+# PLACEHOLDER, counted on few cases (decision 0218, rule 53): of some fifteen
+# boats that fired, four were damaged and one sunk. One figure for both sides.
+hunt_damages_chance = "0.3"
+
+# PLACEHOLDER, one boat sunk of the five damaged or sunk by the hunt of the
+# ship she hit; a judgement on one case.
+hunt_sinks_share = "0.2"
+
+# PLACEHOLDER, a judgement: boats charged by night and were seen at times by
+# day. It stands for both the time she is up and how much harder she is to see
+# than a ship (decision 0218, rule 48).
+submarine_surfaced_share = "0.25"
+
+# PLACEHOLDER, counted on few cases (decision 0218, rule 51): six attacks by
+# carrier aircraft on five boats in August 1942, two damaged, none sunk
+# (events 16024 to 16029), and the Catalinas' attacks that did none (events
+# 16021, 16022, 16306).
+air_attack_damages_chance = "0.25"
+
+# PLACEHOLDER, a judgement, none having been sunk (decision 0218, rule 51).
+air_attack_sinks_share = "0.2"
+
+# PLACEHOLDER, set by the architect's ruling on stage 2: the chance that a
+# torpedo that missed is claimed a hit, so that a boat's claim runs above what
+# she did (decision 0218, rule 45). It stands where a raid's claim figure
+# stands (`bomb_false_claim_chance` in air_combat.toml, the chance a bomb that
+# missed is claimed a hit) and takes that figure's value. No row sizes it.
+submarine_false_hit_chance = "0.1"
+
+# PLACEHOLDER, the team lead's choice (decision 0218, rule 44's "own
+# figures"): the age in pulses at which a report of a submarine is dropped.
+submarine_report_drop_age_pulses = 6
+
+# PLACEHOLDER, one for each torpedo of submarine_torpedoes_1942.csv: the
+# chance that one torpedo hits (decision 0218, rules 8 and 30), a figure of the
+# weapon. Set by the architect's ruling on stage 2 from the count in
+# data/derivation/submarines_1942.toml's closing notes (rule 30), each still a
+# placeholder.
+[hit_chance]
+# Mark 14: 0 to 7 hits of 26 fired, several only heard.
+6100 = "0.15"
+# Mark 10: 9 to 11 hits of 16 fired.
+6101 = "0.6"
+# Type 89: 2 to 3 hits of 7 or 8 fired.
+6102 = "0.3"
+# Type 95: 3 to 4 hits of 12 fired.
+6103 = "0.3"
+# Type 96: no firing on file; taken as the Type 95 it was made from, and
+# marked so.
+6104 = "0.3"

@@ -81,7 +81,11 @@ mod resolve;
 mod search;
 mod start;
 mod stragglers;
+mod submarine;
+#[cfg(test)]
+mod submarine_tests;
 mod surface;
+mod suspected_waters;
 mod upkeep;
 pub mod works;
 

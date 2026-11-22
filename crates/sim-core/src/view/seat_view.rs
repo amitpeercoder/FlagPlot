@@ -44,7 +44,8 @@ use crate::orders::Order;
 use crate::pictures::{self, CommandRef};
 use crate::side_events::{SideCause, SideEvent, SideEventKind};
 use crate::state::{
-    AirGroup, Base, LandUnit, MenStream, Replacement, Ship, ShipLocation, SupplyLine, TaskForce,
+    AirGroup, Base, LandUnit, MenStream, Replacement, Ship, ShipLocation, Submarine, SupplyLine,
+    TaskForce,
 };
 
 use super::{CommandView, SideView};
@@ -185,6 +186,17 @@ impl<'a> SideView<'a> {
             }
     }
 
+    /// Whether a submarine is the view's (decision 0218, 35): the side's
+    /// own, and from a seat only the area command's, the side's highest,
+    /// which knows her exactly.
+    pub(super) fn owns_submarine(&self, boat: &Submarine) -> bool {
+        boat.side == self.side
+            && match self.seat {
+                None => true,
+                Some(seat) => seat == CommandRef::Area,
+            }
+    }
+
     pub(super) fn owns_stream(&self, stream: &Replacement) -> bool {
         stream.side == self.side
             && match self.seat {
@@ -303,6 +315,10 @@ impl<'a> SideView<'a> {
                         own = true;
                     }
                 }
+                EntityRef::Submarine(id) => match self.truth.submarines.get(&id) {
+                    Some(boat) if self.owns_submarine(boat) => own = true,
+                    _ => return false,
+                },
                 EntityRef::Contact(_) | EntityRef::Event(_) => {}
                 EntityRef::Pilot(_) | EntityRef::Place(_) => return false,
             }

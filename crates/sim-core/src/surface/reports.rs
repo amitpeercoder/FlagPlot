@@ -144,6 +144,7 @@ impl World {
             claimed_on_ground: 0,
             from_air: false,
             from_bombardment: false,
+            from_submarine: false,
             received_event: self.events.next_id(),
             // A surface fight's claim names no type and no unit (decision 0180, 8).
             ground_types: Vec::new(),
@@ -176,6 +177,7 @@ impl World {
                 claimed_on_ground: 0,
                 from_air: false,
                 from_bombardment: false,
+                from_submarine: false,
                 ground_types: Vec::new(),
                 by_unit: Vec::new(),
                 air_types: Vec::new(),

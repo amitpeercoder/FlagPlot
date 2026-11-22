@@ -25,7 +25,10 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use crate::belief::{BattleClaim, BeliefState, Contact, GroundEstimate, GroundGrade};
+use crate::belief::{
+    BattleClaim, BeliefState, Contact, GroundEstimate, GroundGrade, SubmarineReport,
+    SuspectedWaters,
+};
 use crate::claims::UnitClaim;
 use crate::command::{CommandState, Hold, HoldMaker, PursuitBy};
 use crate::entering::Entering;
@@ -39,7 +42,7 @@ use crate::refdata::{RefData, ShipKind};
 use crate::rng::{Domain, Stream};
 use crate::state::{
     AirGroup, CargoOrder, Charge, FuelFrom, Halt, HitsOnMen, LandUnit, March, Preparation, Side,
-    TaskForce, TruthState, YardTrip,
+    Submarine, SubmarinePassage, TaskForce, TruthState, YardTrip,
 };
 use crate::time::Pulse;
 use crate::world::{MadeIds, SimError, World, MADE_IDS_FLOOR};
@@ -91,6 +94,32 @@ pub struct PictureBelief {
     pub claims: Vec<PictureClaim>,
     /// Its estimates of the enemy's men ashore, at most one for a hex.
     pub estimates: Vec<PictureEstimate>,
+    /// Its reports of submarines, at most one for a hex (decision 0218,
+    /// 44).
+    pub submarine_reports: Vec<PictureSubmarineReport>,
+    /// Its suspected waters, in the order told (decision 0218, 47).
+    pub suspected_waters: Vec<PictureWaters>,
+}
+
+/// Suspected waters in a picture: a [`SuspectedWaters`] without its event.
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct PictureWaters {
+    pub hex: Hex,
+    pub distance_hexes: u32,
+    pub words: String,
+    pub rows: String,
+    pub reading: String,
+    pub day: u32,
+}
+
+/// A report of a submarine in a picture: a [`SubmarineReport`] without its
+/// event.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct PictureSubmarineReport {
+    pub hex: Hex,
+    pub day: u32,
+    pub pulse: Option<Pulse>,
+    pub age_pulses: u32,
 }
 
 /// A contact in a picture: where, how many ships, taken for what kind, and
@@ -116,6 +145,8 @@ pub struct PictureClaim {
     pub claimed_on_ground: u32,
     pub from_air: bool,
     pub from_bombardment: bool,
+    /// True for the claim of a submarine (decision 0218, 45).
+    pub from_submarine: bool,
     /// The types claimed on the ground (decision 0179).
     pub ground_types: Vec<(AircraftTypeId, u32)>,
     /// Who claims what (decision 0180): every unit named is of the claim's
@@ -209,7 +240,13 @@ fn walk_held_ids(
         supply_lines: _,
         // Nor does a stream of men or a unit's strength.
         men_replacement: _,
+        submarines,
+        // Waters waiting to be told hold no order and no event.
+        waters_waiting: _,
     } = truth;
+    for boat in submarines.values_mut() {
+        walk_submarine(boat, visit);
+    }
     for force in task_forces.values_mut() {
         walk_task_force(force, visit);
     }
@@ -405,6 +442,43 @@ fn walk_task_force(force: &mut TaskForce, visit: &mut dyn FnMut(String, HeldId<'
         if let Some(held) = cargo_completed {
             event("cargo completed since its halt", held);
         }
+    }
+}
+
+/// A submarine holds the order that gave her station and the one that
+/// sent her on a passage (decision 0218).
+fn walk_submarine(boat: &mut Submarine, visit: &mut dyn FnMut(String, HeldId<'_>)) {
+    let Submarine {
+        id,
+        name: _,
+        side: _,
+        class: _,
+        hex: _,
+        station: _,
+        passage,
+        salvoes: _,
+        held_down_until: _,
+        condition: _,
+        home: _,
+        leave_day: _,
+        enters_day: _,
+        available_from: _,
+        station_order,
+    } = boat;
+    if let Some(held) = station_order {
+        visit(format!("{id}'s station order"), HeldId::Order(held));
+    }
+    if let Some(SubmarinePassage {
+        to: _,
+        home: _,
+        toward_hex: _,
+        progress_nm: _,
+        leg_nm: _,
+        arrived: _,
+        order: Some(held),
+    }) = passage
+    {
+        visit(format!("{id}'s passage order"), HeldId::Order(held));
     }
 }
 
@@ -652,6 +726,8 @@ fn picture_belief(belief: &BeliefState) -> PictureBelief {
         belief.contacts(),
         belief.claims(),
         belief.ground_estimates(),
+        belief.submarine_reports(),
+        belief.suspected_waters(),
     )
 }
 
@@ -663,6 +739,8 @@ fn belief_of<'a>(
     contacts: impl Iterator<Item = &'a Contact>,
     claims: &[BattleClaim],
     estimates: impl Iterator<Item = &'a GroundEstimate>,
+    submarine_reports: impl Iterator<Item = &'a SubmarineReport>,
+    suspected_waters: &[SuspectedWaters],
 ) -> PictureBelief {
     PictureBelief {
         contacts: contacts
@@ -687,6 +765,7 @@ fn belief_of<'a>(
                     claimed_on_ground,
                     from_air,
                     from_bombardment,
+                    from_submarine,
                     received_event: _,
                     ground_types,
                     by_unit,
@@ -703,6 +782,7 @@ fn belief_of<'a>(
                     claimed_on_ground,
                     from_air,
                     from_bombardment,
+                    from_submarine,
                     ground_types,
                     by_unit,
                     air_types,
@@ -715,6 +795,25 @@ fn belief_of<'a>(
                 men: estimate.men,
                 day: estimate.day,
                 grade: estimate.grade,
+            })
+            .collect(),
+        submarine_reports: submarine_reports
+            .map(|report| PictureSubmarineReport {
+                hex: report.hex,
+                day: report.day,
+                pulse: report.pulse,
+                age_pulses: report.age_pulses,
+            })
+            .collect(),
+        suspected_waters: suspected_waters
+            .iter()
+            .map(|waters| PictureWaters {
+                hex: waters.hex,
+                distance_hexes: waters.distance_hexes,
+                words: waters.words.clone(),
+                rows: waters.rows.clone(),
+                reading: waters.reading.clone(),
+                day: waters.day,
             })
             .collect(),
     }
@@ -990,6 +1089,7 @@ fn build(
                     claimed_on_ground: c.claimed_on_ground,
                     from_air: c.from_air,
                     from_bombardment: c.from_bombardment,
+                    from_submarine: c.from_submarine,
                     received_event: picture_event,
                     ground_types: c.ground_types.clone(),
                     by_unit: c.by_unit.clone(),
@@ -1001,6 +1101,22 @@ fn build(
                     day: e.day,
                     report_event: picture_event,
                     grade: e.grade,
+                }),
+                given.submarine_reports.iter().map(|r| SubmarineReport {
+                    hex: r.hex,
+                    day: r.day,
+                    pulse: r.pulse,
+                    received_event: picture_event,
+                    age_pulses: r.age_pulses,
+                }),
+                given.suspected_waters.iter().map(|w| SuspectedWaters {
+                    hex: w.hex,
+                    distance_hexes: w.distance_hexes,
+                    words: w.words.clone(),
+                    rows: w.rows.clone(),
+                    reading: w.reading.clone(),
+                    day: w.day,
+                    received_event: picture_event,
                 }),
                 picture_event,
             );

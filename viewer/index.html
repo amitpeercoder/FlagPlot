@@ -200,6 +200,10 @@ svg text { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, san
 .basemark.side-allied { fill: var(--allied); stroke: var(--edge); }
 .basemark.side-japanese { fill: var(--japanese); stroke: var(--edge); }
 .base { cursor: pointer; }
+/* Submarines (decision 0218): the umpire's truth, a small hull and conning tower beside the hex centre, hollow while she is damaged; a dashed line runs to her station while she is not on it. */
+.subhull { fill: var(--sc); stroke: var(--edge); stroke-width: 1.4; }
+.subhull.damaged { fill: var(--panel); stroke: var(--sc); stroke-width: 2; stroke-dasharray: 3 2; }
+.subst { fill: none; stroke: var(--sc); stroke-width: 1.4; stroke-dasharray: 4 3; pointer-events: none; }
 
 /* Air layer: lines and marks sit under the counters, the tally boxes and their labels above them */
 .air-line { fill: none; stroke: var(--sc); stroke-linecap: round; pointer-events: none; }
@@ -588,6 +592,7 @@ function sideReplay(replay, side) {
       air_groups: (initial.air_groups || []).filter(own),
       bases: (initial.bases || []).filter(own),
       land_units: (initial.land_units || []).filter(own),
+      submarines: (initial.submarines || []).filter(own), // Decision 0218: the side's own boats only; an enemy boat is not on the side's page.
       // Decision 0195: what the side's own units hold apart until their day; the enemy's entries are not on the side's page.
       entering: (initial.entering || []).filter(own),
     },
@@ -603,6 +608,7 @@ function sideReplay(replay, side) {
       air_groups: (final.air_groups || []).filter(own),
       bases: (final.bases || []).filter(own),
       land_units: (final.land_units || []).filter(own),
+      submarines: (final.submarines || []).filter(own),
       contacts: { [side]: (final.contacts && final.contacts[side]) || [] },
       claims: { [side]: (final.claims && final.claims[side]) || [] },
       ground_estimates: { [side]: (final.ground_estimates && final.ground_estimates[side]) || [] },
@@ -858,7 +864,7 @@ function finishAirStep(airCtx, aux, idxs, si) {
 // applies them in order and takes what the page draws of the state from the records. Versions 1 to 3 have no such
 // list and are rebuilt from their events by the loop in buildModel, which stays as it was for them.
 const STEP_PHASES = ['start', 'orders', 'night', 'morning', 'afternoon', 'end'];
-const STEP_KINDS = ['task_forces', 'ships', 'air_groups', 'bases', 'land_units'];
+const STEP_KINDS = ['task_forces', 'ships', 'air_groups', 'bases', 'land_units', 'submarines'];
 const stepKey = (day, phase) => day + ':' + phase;
 
 /** The first problem with a replay's `steps`, or null. */
@@ -956,7 +962,7 @@ function rebuildFromSteps(ctx) {
   const entries = replay.steps;
   const entryAt = new Map();
   entries.forEach((e, j) => entryAt.set(stepKey(e.day, e.phase), j));
-  const rec = { task_forces: new Map(), ships: new Map(), air_groups: new Map(), bases: new Map(), land_units: new Map(), contacts: { allied: new Map(), japanese: new Map() }, ground_estimates: { allied: new Map(), japanese: new Map() }, pictures: { allied: new Map(), japanese: new Map() } };
+  const rec = { task_forces: new Map(), ships: new Map(), air_groups: new Map(), bases: new Map(), land_units: new Map(), submarines: new Map(), contacts: { allied: new Map(), japanese: new Map() }, ground_estimates: { allied: new Map(), japanese: new Map() }, pictures: { allied: new Map(), japanese: new Map() } };
   const hexOf = h => h[0] + ',' + h[1];
   const applyEntry = e => {
     const ch = e.changed || {}, rm = e.removed || {};
@@ -1160,7 +1166,7 @@ function rebuildFromSteps(ctx) {
       }
     }
     states.push({
-      forces, contacts, estimates, landUnits, formedBases: new Map(formedBases), baseSide: new Map(baseSide), pictures,
+      forces, contacts, estimates, landUnits, subs: [...rec.submarines.values()], formedBases: new Map(formedBases), baseSide: new Map(baseSide), pictures,
       sunk: new Set(sunk), shipForce: new Map(shipForce),
       moves: aux.moves, fights: aux.fights, searches: aux.searches, land: aux.land,
       air: aux.air, reach, mission, groupBase,
@@ -3080,7 +3086,20 @@ function renderScreen() {
       else if (sh.type === 'route' && sh.path.length > 1) { const a = pos(sh.path[0][0], sh.path[0][1]), b = pos(sh.path[sh.path.length - 1][0], sh.path[sh.path.length - 1][1]); if (visible(b, 80) || visible(a, 80)) gIntent.append(sv('text', { class: cls, x: b[0], y: b[1] + 16, text: 'run ' + sh.run.number })); }
     }
   }
-  gScreen.append(gFeat, gLbl, gAirLow, gBase, gGhost, gCtr, gLand, gAirTop, gTag, gIntent);
+  // Submarines (decision 0218): the umpire's truth. A boat off the map (sunk or home) or held apart until a later day than the step's is not drawn.
+  const gSub = sv('g');
+  const stepDay = m.steps[S.step] ? m.steps[S.step].day : 0;
+  for (const b of st.subs || []) {
+    if (b.condition === 'sunk' || b.condition === 'home' || (b.enters_day && b.enters_day > stepDay)) continue;
+    const side = b.side === 'japanese' ? 'japanese' : 'allied', p = pos(b.hex.q, b.hex.r);
+    if (!visible(p, 40)) continue;
+    const g = sv('g', { class: 'sub side-' + side, transform: 'translate(' + (p[0] + 15) + ' ' + (p[1] + 13) + ')', 'data-kind': 'submarine', 'data-id': b.id });
+    if (b.station.q !== b.hex.q || b.station.r !== b.hex.r) { const s = pos(b.station.q, b.station.r); gSub.append(sv('line', { class: 'subst side-' + side, x1: p[0], y1: p[1], x2: s[0], y2: s[1] })); }
+    g.append(sv('path', { class: 'subhull side-' + side + (b.condition === 'damaged' ? ' damaged' : ''), d: 'M-9 2Q-9 -3 -4 -3L-2 -3L-1 -6L2 -6L3 -3L6 -3Q10 -3 10 2Q10 5 6 5L-5 5Q-9 5 -9 2Z' }));
+    g.append(sv('title', { text: b.name + ' (' + b.side + ', submarine:' + b.id + '), ' + b.condition + ', at (' + b.hex.q + ', ' + b.hex.r + '), station (' + b.station.q + ', ' + b.station.r + '), ' + b.salvoes + ' salvoes' + (b.on_passage ? ', on passage' : '') }));
+    gSub.append(g);
+  }
+  gScreen.append(gFeat, gLbl, gAirLow, gBase, gGhost, gCtr, gLand, gSub, gAirTop, gTag, gIntent);
 }
 
 /** For each base the trouble to mark beside it at a step (its airfield closed, or its supply below a week), kept for the step shown. */

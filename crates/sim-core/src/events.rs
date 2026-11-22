@@ -17,7 +17,7 @@ use crate::held::AsOf;
 use crate::hex::Hex;
 use crate::ids::{
     AirGroupId, AircraftTypeId, BaseId, ContactId, EntityRef, EventId, IntentId, LandUnitId,
-    OrderId, ShipId, TaskForceId,
+    OrderId, ShipId, SubmarineId, TaskForceId,
 };
 use crate::orders::{Cargo, Issuer, Job, RejectReason};
 use crate::pictures::CommandRef;
@@ -525,6 +525,38 @@ impl DetachReason {
     }
 }
 
+/// Why a submarine left for home (decision 0218, 3, 21 and 43).
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+pub enum SubmarineLeftReason {
+    /// Her scenario's leave day came.
+    LeaveDay,
+    /// She was damaged.
+    Damaged,
+    /// She has no salvo left.
+    NoSalvo,
+}
+
+impl SubmarineLeftReason {
+    /// A stable number for the reason. Never renumber it; add new reasons at
+    /// the end.
+    pub const fn code(self) -> u8 {
+        match self {
+            SubmarineLeftReason::LeaveDay => 1,
+            SubmarineLeftReason::Damaged => 2,
+            SubmarineLeftReason::NoSalvo => 3,
+        }
+    }
+
+    /// The reason as the event log writes it.
+    pub const fn name(self) -> &'static str {
+        match self {
+            SubmarineLeftReason::LeaveDay => "her leave day came",
+            SubmarineLeftReason::Damaged => "she was damaged",
+            SubmarineLeftReason::NoSalvo => "she had no salvo left",
+        }
+    }
+}
+
 /// The way a report is passed between commands (decision 0135, 3 to 5).
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Debug)]
 pub enum Direction {
@@ -825,6 +857,8 @@ pub enum EventKind {
         from_air: bool,
         /// True for the claim of a shore bombardment (decision 0092, 17).
         from_bombardment: bool,
+        /// True for the claim of a submarine (decision 0218, 45).
+        from_submarine: bool,
         /// The types of the aircraft claimed destroyed on the ground, each
         /// with its number, in order of the type's number (decision 0179):
         /// empty, or adding to `claimed_on_ground`.
@@ -2294,6 +2328,153 @@ pub enum EventKind {
         level_after: u8,
         lost: bool,
     },
+    /// A submarine came onto the map at `hex` on her day (decision 0218,
+    /// 33), first thing, where the units held apart enter. It cites no
+    /// cause. Her own side's, whole; the enemy is told nothing. Added at
+    /// the end.
+    SubmarineEntered {
+        submarine: SubmarineId,
+        hex: Hex,
+    },
+    /// A submarine on passage steamed in the pulse (decision 0218, 43): from
+    /// the hex she was in to the hex she is in. Cites the order that sent
+    /// her, or the event that sent her home, if there is one. Her own
+    /// side's, whole; the enemy is told nothing. Added at the end.
+    SubmarineSteamed {
+        submarine: SubmarineId,
+        from: Hex,
+        to: Hex,
+    },
+    /// A submarine reached her station (decision 0218, 43): she is on
+    /// station from the next pulse. Cites her steaming. Her own side's,
+    /// whole; the enemy is told nothing. Added at the end.
+    SubmarineOnStation {
+        submarine: SubmarineId,
+        hex: Hex,
+    },
+    /// A submarine left her station for the base her scenario names
+    /// (decision 0218, 3, 21 and 43), for `reason`. Her own side's, whole;
+    /// the enemy is told nothing. Added at the end.
+    SubmarineLeftForHome {
+        submarine: SubmarineId,
+        base: BaseId,
+        reason: SubmarineLeftReason,
+    },
+    /// A submarine reached her home base and is taken off the map
+    /// (decision 0218, 43). Cites her steaming. Her own side's, whole; the
+    /// enemy is told nothing. Added at the end.
+    SubmarineReachedHome {
+        submarine: SubmarineId,
+        base: BaseId,
+    },
+    /// The chance that a submarine attacks a task force that spent `hours`
+    /// of a pulse in her hex (decision 0218, 37 to 39): `attacks` is the
+    /// hourly chance used, with the breakdown of the factors, and `chance`
+    /// is one less the chance that every hour fails. The draw is made on it.
+    /// Cites her station order, if she has one. Neither side is told it: it
+    /// names the enemy force. Added at the end.
+    SubmarineAttackChance {
+        submarine: SubmarineId,
+        task_force: TaskForceId,
+        hex: Hex,
+        hours: Fixed,
+        chance: Fixed,
+        attacks: Fixed,
+    },
+    /// A submarine's salvo at `ship` of `task_force` (decision 0218, 7, 8
+    /// and 42): `torpedoes` fired, `hits` of them hitting; each torpedo's
+    /// chance and result is in the breakdown. `taken_for` is the kind her
+    /// side takes the ship for. Cites the attack chance it was drawn on.
+    /// Each side is given its cut of it: the boat's side that she fired and
+    /// at what kind, the side fired on that its ship was fired at, with no
+    /// boat named. Added at the end.
+    SubmarineSalvo {
+        submarine: SubmarineId,
+        task_force: TaskForceId,
+        ship: ShipId,
+        hex: Hex,
+        torpedoes: u32,
+        hits: u32,
+        taken_for: ShipKind,
+    },
+    /// The force fired on hunts the boat that fired (decision 0218, 9, 10,
+    /// 22 and 53): she is held down to the pulse `held_down_until`, and the
+    /// hunt's draws damaged her or sank her or neither. Cites the salvo.
+    /// Her side is told of it cut of the force, and the force's side that
+    /// it hunted and nothing of the result. Added at the end.
+    SubmarineHunted {
+        submarine: SubmarineId,
+        task_force: TaskForceId,
+        hex: Hex,
+        held_down_until: (u32, Pulse),
+        damaged: bool,
+        sunk: bool,
+    },
+    /// A submarine was sunk (decision 0218, 9 and 22) and is gone from the
+    /// map. Cites the hunt. Her own side's, whole; the enemy is told
+    /// nothing. Added at the end.
+    SubmarineSunk {
+        submarine: SubmarineId,
+    },
+    /// A report of a submarine reached `side`'s belief (decision 0218, 44
+    /// and 46): at `hex`, through the report's error. `replaced` is true if
+    /// the side held a report of one there before. Cites the salvo (or the
+    /// sighting) it rests on. Seen whole by `side` and not at all by the
+    /// other. Added at the end.
+    SubmarineReported {
+        side: Side,
+        hex: Hex,
+        replaced: bool,
+    },
+    /// A report of a submarine at `hex` was dropped from `side`'s belief for
+    /// its age (decision 0218, 44). Cites the report that made it. Seen
+    /// whole by `side`. Added at the end.
+    SubmarineReportDropped {
+        side: Side,
+        hex: Hex,
+    },
+    /// An air group's chance of sighting a submarine in its arc (decision
+    /// 0218, 17, 18 and 48): `chance` over `distance_nm` (at least one hex),
+    /// lessened by her surfaced share when she is on station. Cites the
+    /// flight. Seen by neither side: the report that follows tells the
+    /// searchers. Added at the end.
+    SubmarineSearchAttempt {
+        air_group: AirGroupId,
+        submarine: SubmarineId,
+        distance_nm: Fixed,
+        chance: Fixed,
+        sighted: bool,
+    },
+    /// The aircraft that sighted a submarine attack her (decision 0218, 20,
+    /// 50 and 51): `damaged` under the air attack's chance, `sunk` of those
+    /// under its share. Cites the search attempt. Her side is told it cut
+    /// of the group, the group's side that its aircraft attacked a boat and
+    /// nothing of the result. Added at the end.
+    SubmarineAttackedFromAir {
+        air_group: AirGroupId,
+        submarine: SubmarineId,
+        hex: Hex,
+        damaged: bool,
+        sunk: bool,
+    },
+    /// A station order was taken in for a submarine (decision 0218, 3 and
+    /// 43): she goes to `station` and keeps it. Cites the order. Her own
+    /// side's, whole; the enemy is told nothing. Added at the end.
+    SubmarineOrderedToStation {
+        submarine: SubmarineId,
+        station: Hex,
+    },
+    /// `side` was told the waters where it believes enemy submarines work
+    /// (decision 0218, 23 and 47): a hex and a distance, with the words of
+    /// the belief, told on `day`. Seen whole by `side` and not at all by the
+    /// other. Added at the end.
+    SuspectedWatersTold {
+        side: Side,
+        hex: Hex,
+        distance: u32,
+        day: u32,
+        words: String,
+    },
 }
 
 impl EventKind {
@@ -2480,6 +2661,55 @@ impl EventKind {
                 .into_iter()
                 .chain(task_force.map(EntityRef::TaskForce))
                 .collect(),
+            EventKind::SubmarineEntered { submarine, .. }
+            | EventKind::SubmarineSunk { submarine }
+            | EventKind::SubmarineOrderedToStation { submarine, .. }
+            | EventKind::SubmarineSteamed { submarine, .. }
+            | EventKind::SubmarineOnStation { submarine, .. } => {
+                vec![EntityRef::Submarine(*submarine)]
+            }
+            EventKind::SubmarineLeftForHome {
+                submarine, base, ..
+            }
+            | EventKind::SubmarineReachedHome { submarine, base } => {
+                vec![EntityRef::Submarine(*submarine), EntityRef::Base(*base)]
+            }
+            EventKind::SubmarineAttackChance {
+                submarine,
+                task_force,
+                ..
+            }
+            | EventKind::SubmarineHunted {
+                submarine,
+                task_force,
+                ..
+            } => vec![
+                EntityRef::Submarine(*submarine),
+                EntityRef::TaskForce(*task_force),
+            ],
+            EventKind::SubmarineSearchAttempt {
+                air_group,
+                submarine,
+                ..
+            }
+            | EventKind::SubmarineAttackedFromAir {
+                air_group,
+                submarine,
+                ..
+            } => vec![
+                EntityRef::AirGroup(*air_group),
+                EntityRef::Submarine(*submarine),
+            ],
+            EventKind::SubmarineSalvo {
+                submarine,
+                task_force,
+                ship,
+                ..
+            } => vec![
+                EntityRef::Submarine(*submarine),
+                EntityRef::TaskForce(*task_force),
+                EntityRef::Ship(*ship),
+            ],
             EventKind::ForceBecameAlert { task_force, .. }
             | EventKind::ForceBrokeOff { task_force, .. } => {
                 vec![EntityRef::TaskForce(*task_force)]
@@ -2742,6 +2972,9 @@ impl EventKind {
                 vec![EntityRef::LandUnit(*unit), EntityRef::Base(*base)]
             }
             EventKind::GroundReportReceived { .. } => Vec::new(),
+            EventKind::SubmarineReported { .. }
+            | EventKind::SubmarineReportDropped { .. }
+            | EventKind::SuspectedWatersTold { .. } => Vec::new(),
             EventKind::ReconnaissanceFlown {
                 air_group, from, ..
             } => std::iter::once(EntityRef::AirGroup(*air_group))
@@ -3613,6 +3846,134 @@ impl fmt::Display for EventKind {
                     )
                 }
             }
+            EventKind::SubmarineEntered { submarine, hex } => {
+                write!(f, "{submarine} came onto the map at {hex}")
+            }
+            EventKind::SubmarineSteamed {
+                submarine,
+                from,
+                to,
+            } => write!(f, "{submarine} steamed from {from} to {to}"),
+            EventKind::SubmarineOnStation { submarine, hex } => {
+                write!(f, "{submarine} reached her station at {hex}")
+            }
+            EventKind::SubmarineLeftForHome {
+                submarine,
+                base,
+                reason,
+            } => write!(
+                f,
+                "{submarine} left for {base}, her home: {}",
+                reason.name()
+            ),
+            EventKind::SubmarineReachedHome { submarine, base } => {
+                write!(f, "{submarine} reached {base}, her home, and left the map")
+            }
+            EventKind::SubmarineAttackChance {
+                submarine,
+                task_force,
+                hex,
+                hours,
+                chance,
+                attacks,
+            } => write!(
+                f,
+                "{submarine} had a chance of {chance} to attack {task_force} at {hex}: \
+                 {hours} hours at {attacks} an hour"
+            ),
+            EventKind::SubmarineSalvo {
+                submarine,
+                task_force,
+                ship,
+                hex,
+                torpedoes,
+                hits,
+                taken_for,
+            } => write!(
+                f,
+                "{submarine} fired {torpedoes} torpedoes at {ship} of {task_force} at {hex}, \
+                 taken for a {}: {hits} hit",
+                taken_for.name()
+            ),
+            EventKind::SubmarineHunted {
+                submarine,
+                task_force,
+                hex,
+                held_down_until,
+                damaged,
+                sunk,
+            } => write!(
+                f,
+                "{task_force} hunted {submarine} at {hex}: she is held down to day {} {}{}",
+                held_down_until.0,
+                held_down_until.1.name(),
+                if *sunk {
+                    ", and she was sunk"
+                } else if *damaged {
+                    ", and she was damaged"
+                } else {
+                    ""
+                }
+            ),
+            EventKind::SubmarineSunk { submarine } => write!(f, "{submarine} was sunk"),
+            EventKind::SubmarineSearchAttempt {
+                air_group,
+                submarine,
+                distance_nm,
+                chance,
+                sighted,
+            } => write!(
+                f,
+                "{air_group} had a chance of {chance} to sight {submarine}, {distance_nm} nm away: {}",
+                if *sighted { "sighted" } else { "not sighted" }
+            ),
+            EventKind::SubmarineAttackedFromAir {
+                air_group,
+                submarine,
+                hex,
+                damaged,
+                sunk,
+            } => write!(
+                f,
+                "{air_group} attacked {submarine} at {hex}{}",
+                if *sunk {
+                    ", and she was sunk"
+                } else if *damaged {
+                    ", and she was damaged"
+                } else {
+                    ""
+                }
+            ),
+            EventKind::SubmarineReported {
+                side,
+                hex,
+                replaced,
+            } => write!(
+                f,
+                "{} report of a submarine at {hex}{}",
+                side.name(),
+                if *replaced { ", replacing the report held" } else { "" }
+            ),
+            EventKind::SubmarineReportDropped { side, hex } => write!(
+                f,
+                "{} dropped its report of a submarine at {hex}, grown too old",
+                side.name()
+            ),
+            EventKind::SubmarineOrderedToStation {
+                submarine,
+                station,
+            } => write!(f, "{submarine} was ordered to her station at {station}"),
+            EventKind::SuspectedWatersTold {
+                side,
+                hex,
+                distance,
+                day,
+                words,
+            } => write!(
+                f,
+                "{} told on day {day} of waters where enemy submarines are suspected, {distance} hexes round {hex}: {words}",
+                side.name()
+            ),
             EventKind::ShipSunk {
                 round,
                 ship,
@@ -3658,6 +4019,7 @@ impl fmt::Display for EventKind {
                 claimed_on_ground,
                 from_air,
                 from_bombardment,
+                from_submarine,
                 ground_types,
                 by_unit,
                 air_types,
@@ -3671,6 +4033,7 @@ impl fmt::Display for EventKind {
                 *claimed_on_ground,
                 *from_air,
                 *from_bombardment,
+                *from_submarine,
                 ground_types,
                 by_unit,
                 air_types,
@@ -5216,6 +5579,7 @@ pub fn claim_text(
     claimed_on_ground: u32,
     from_air: bool,
     from_bombardment: bool,
+    from_submarine: bool,
     ground_types: &[(AircraftTypeId, u32)],
     by_unit: &[UnitClaim],
     air_types: &[(AircraftTypeId, u32)],
@@ -5241,6 +5605,7 @@ pub fn claim_text(
         claimed_on_ground,
         from_air,
         from_bombardment,
+        from_submarine,
         &types,
         &units,
         &in_the_air,
@@ -5261,6 +5626,7 @@ pub fn claim_words(
     claimed_on_ground: u32,
     from_air: bool,
     from_bombardment: bool,
+    from_submarine: bool,
     types: &[(String, u32)],
     units: &[(String, UnitClaim)],
     air_types: &[(String, u32)],
@@ -5270,6 +5636,20 @@ pub fn claim_words(
             "{} claim from the sea at {hex}: {claimed_on_ground} aircraft destroyed on the ground",
             side.name()
         );
+    }
+    // A submarine's claim (decision 0218, 45): the hits believed scored on
+    // the kind she took her target for, and the ships they sank.
+    if from_submarine {
+        let (_, words) = air_claim_words(
+            claimed_sunk,
+            claimed_hits,
+            claimed_kind.map(ShipKind::name),
+            0,
+            0,
+            &[],
+            &[],
+        );
+        return format!("{} claim from a submarine at {hex}: {words}", side.name());
     }
     if !from_air {
         return format!(

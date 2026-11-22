@@ -163,6 +163,7 @@ pub fn told_as(event: &SideEvent) -> Option<&'static str> {
         | SideEventKind::BaseAttackedAgainst { .. }
         | SideEventKind::ShoreBombardmentAgainst { .. }
         | SideEventKind::SalvoAgainst { .. }
+        | SideEventKind::SalvoFromSubmarine { .. }
         | SideEventKind::EngagementBegun { .. } => Some("attack"),
         SideEventKind::Whole(EventKind::ShipSunk { .. } | EventKind::ShipLostWithBase { .. }) => {
             Some("loss")

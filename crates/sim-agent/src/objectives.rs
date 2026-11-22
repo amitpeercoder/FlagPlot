@@ -57,7 +57,7 @@ pub struct LevelsPart {
 pub struct ObjectiveLine {
     /// `ships_sunk`, `ships_crippled`, `ships_out_of_action`,
     /// `aircraft_destroyed`, `cargo_landed`, `base_open`, `base_held`,
-    /// `men_lost` or `men_landed`.
+    /// `men_lost`, `men_landed` or `submarines_sunk`.
     pub kind: &'static str,
     /// The base of `cargo_landed`, `base_open`, `base_held` and
     /// `men_landed`; a base not on the side's map is given by its hex
@@ -77,7 +77,8 @@ pub struct ObjectiveLine {
     /// Points for one aircraft (`aircraft_destroyed`), one ton
     /// (`cargo_landed`) or the base being as wanted on every day
     /// (`base_open`, which earns the share of the days it was); the base
-    /// being the side's own at the end (`base_held`); each 100 enemy men
+    /// being the side's own at the end (`base_held`); one enemy submarine
+    /// sunk (`submarines_sunk`, decision 0218, 32); each 100 enemy men
     /// lost (`men_lost`, decision 0090, 26); or each 100 men landed
     /// (`men_landed`, decision 0186).
     pub points: Option<Dec>,
@@ -322,7 +323,9 @@ fn line(
             line.points = Some(Dec(*points));
             line.open_now = Some(open_now(ctx, *base, *closed));
         }
-        Objective::BaseHeld { points, .. } => line.points = Some(Dec(*points)),
+        Objective::BaseHeld { points, .. } | Objective::SubmarinesSunk { points } => {
+            line.points = Some(Dec(*points))
+        }
         Objective::MenLost { points_per_100_men }
         | Objective::MenLanded {
             points_per_100_men, ..
@@ -372,9 +375,9 @@ fn enemy_line(
             line.ship_points = ship_points(points);
             line.horizon_days = horizon_days;
         }
-        Objective::AircraftDestroyed { points } | Objective::BaseHeld { points, .. } => {
-            line.points = Some(Dec(*points))
-        }
+        Objective::AircraftDestroyed { points }
+        | Objective::BaseHeld { points, .. }
+        | Objective::SubmarinesSunk { points } => line.points = Some(Dec(*points)),
         Objective::CargoLanded { points_per_t, .. } => {
             line.points = Some(Dec(*points_per_t));
             line.points_per_1000_t = Some(Dec(*points_per_t * 1000));

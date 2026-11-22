@@ -4,13 +4,13 @@ use std::path::Path;
 
 use serde::Deserialize;
 use sim_core::fixed::Fixed;
-use sim_core::ids::{AircraftTypeId, ShipClassId};
+use sim_core::ids::{AircraftTypeId, ShipClassId, SubmarineClassId, SubmarineTorpedoId};
 use sim_core::refdata::{
     AirCombatFigures, AirSupplyFigures, AirUpkeepFigures, AircraftFireFigures, AircraftRole,
     AircraftType, AttackWeapon, BombardmentFigures, BySide, ClassSide, ClassSides, FatigueFigures,
     FightSupplyFigures, GroundFigures, HungerFigures, MendingFigures, PassingChances, PortSize,
-    RefData, ReportError, ReportFigures, SearchFigures, ShipClass, ShipKind, SurfaceCombatFigures,
-    TrialFigures, TrialSize,
+    RefData, ReportError, ReportFigures, SearchFigures, ShipClass, ShipKind, SubmarineClass,
+    SubmarineFigures, SubmarineTorpedo, SurfaceCombatFigures, TrialFigures, TrialSize,
 };
 use sim_core::state::{ShipSystem, Side};
 
@@ -1569,6 +1569,210 @@ struct ReportsFile {
     sideways: ReportChancesFile,
     down: ReportChancesFile,
     radio_reach_nm: ReportReachFile,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct SubmarineClassRow {
+    id: u32,
+    name: String,
+    salvo: u32,
+    salvoes_carried: u32,
+    passage_speed_kn: String,
+    torpedo_id: u32,
+    /// The marked figures of the class, as the generated file names them
+    /// (decision 0218, 29). Read, and kept by nothing.
+    #[allow(dead_code)]
+    #[serde(default)]
+    estimated: String,
+}
+
+/// Loads a file of submarine classes (decision 0218): a CSV with the
+/// columns `id`, `name`, `salvo`, `salvoes_carried`, `passage_speed_kn`,
+/// `torpedo_id` and, as the generated file has it, `estimated`. A class
+/// given twice is refused; whether its torpedo is in the torpedo file is
+/// checked when the two are joined.
+pub fn load_submarine_classes(
+    path: &Path,
+) -> Result<BTreeMap<SubmarineClassId, SubmarineClass>, DataError> {
+    let text = fs::read_to_string(path).map_err(|e| DataError::in_file(path, e.to_string()))?;
+    parse_submarine_classes(&text, path)
+}
+
+/// Parses submarine classes from CSV text. `path` is only used in messages.
+fn parse_submarine_classes(
+    text: &str,
+    path: &Path,
+) -> Result<BTreeMap<SubmarineClassId, SubmarineClass>, DataError> {
+    let fail = |message: String| DataError::in_file(path, message);
+    let mut reader = csv::ReaderBuilder::new()
+        .comment(Some(b'#'))
+        .trim(csv::Trim::All)
+        .from_reader(text.as_bytes());
+    let mut classes = BTreeMap::new();
+    for row in reader.deserialize::<SubmarineClassRow>() {
+        let row = row.map_err(|e| fail(e.to_string()))?;
+        let id = SubmarineClassId::new(row.id);
+        let passage_speed_kn = row
+            .passage_speed_kn
+            .parse::<Fixed>()
+            .map_err(|e| fail(format!("submarine class {}: passage_speed_kn {e}", row.id)))?;
+        if row.salvo == 0 || row.salvoes_carried == 0 {
+            return Err(fail(format!(
+                "submarine class {} has a salvo or salvoes carried of 0: a boat that cannot fire is not put in a scenario",
+                row.id
+            )));
+        }
+        if passage_speed_kn <= Fixed::ZERO {
+            return Err(fail(format!(
+                "submarine class {} has no positive passage speed",
+                row.id
+            )));
+        }
+        let class = SubmarineClass {
+            id,
+            name: row.name,
+            salvo: row.salvo,
+            salvoes_carried: row.salvoes_carried,
+            passage_speed_kn,
+            torpedo: SubmarineTorpedoId::new(row.torpedo_id),
+        };
+        if classes.insert(id, class).is_some() {
+            return Err(fail(format!("submarine class {} is given twice", row.id)));
+        }
+    }
+    Ok(classes)
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct SubmarineTorpedoRow {
+    id: u32,
+    name: String,
+    damage: String,
+}
+
+/// Loads a file of submarine torpedoes (decision 0218): a CSV with the
+/// columns `id`, `name` and `damage`, the damage of one hit.
+pub fn load_submarine_torpedoes(
+    path: &Path,
+) -> Result<BTreeMap<SubmarineTorpedoId, SubmarineTorpedo>, DataError> {
+    let text = fs::read_to_string(path).map_err(|e| DataError::in_file(path, e.to_string()))?;
+    parse_submarine_torpedoes(&text, path)
+}
+
+/// Parses submarine torpedoes from CSV text. `path` is only used in
+/// messages.
+fn parse_submarine_torpedoes(
+    text: &str,
+    path: &Path,
+) -> Result<BTreeMap<SubmarineTorpedoId, SubmarineTorpedo>, DataError> {
+    let fail = |message: String| DataError::in_file(path, message);
+    let mut reader = csv::ReaderBuilder::new()
+        .comment(Some(b'#'))
+        .trim(csv::Trim::All)
+        .from_reader(text.as_bytes());
+    let mut torpedoes = BTreeMap::new();
+    for row in reader.deserialize::<SubmarineTorpedoRow>() {
+        let row = row.map_err(|e| fail(e.to_string()))?;
+        let id = SubmarineTorpedoId::new(row.id);
+        let damage = row
+            .damage
+            .parse::<Fixed>()
+            .map_err(|e| fail(format!("submarine torpedo {}: damage {e}", row.id)))?;
+        if damage.is_negative() {
+            return Err(fail(format!(
+                "submarine torpedo {} has a negative damage",
+                row.id
+            )));
+        }
+        let torpedo = SubmarineTorpedo {
+            id,
+            name: row.name,
+            damage,
+        };
+        if torpedoes.insert(id, torpedo).is_some() {
+            return Err(fail(format!("submarine torpedo {} is given twice", row.id)));
+        }
+    }
+    Ok(torpedoes)
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct SubmarinesFile {
+    /// Required, and ignored once read: the scenario carries the flag.
+    #[allow(dead_code)]
+    placeholder: bool,
+    submarine_attacks_per_hour: Quantity,
+    attacks_ship_dead_in_water: Quantity,
+    held_down_pulses: u32,
+    hunt_damages_chance: Quantity,
+    hunt_sinks_share: Quantity,
+    submarine_surfaced_share: Quantity,
+    air_attack_damages_chance: Quantity,
+    air_attack_sinks_share: Quantity,
+    submarine_false_hit_chance: Quantity,
+    submarine_report_drop_age_pulses: u32,
+    /// The chance that a torpedo hits, by the torpedo's number (decisions
+    /// 8 and 30 of 0218).
+    hit_chance: BTreeMap<String, Quantity>,
+}
+
+/// Loads the submarine figures from a TOML file (decision 0218). The class
+/// and torpedo tables are joined to them by the scenario.
+pub fn load_submarine_figures(path: &Path) -> Result<SubmarineFigures, DataError> {
+    let text = fs::read_to_string(path).map_err(|e| DataError::in_file(path, e.to_string()))?;
+    parse_submarine_figures(&text, path)
+}
+
+/// Parses submarine figures from TOML text. `path` is only used in
+/// messages.
+fn parse_submarine_figures(text: &str, path: &Path) -> Result<SubmarineFigures, DataError> {
+    let fail = |message: String| DataError::in_file(path, message);
+    let file: SubmarinesFile = toml::from_str(text).map_err(|e| fail(e.to_string()))?;
+    let number = |field: &str, quantity: &Quantity| -> Result<Fixed, DataError> {
+        quantity
+            .to_fixed()
+            .map_err(|e| fail(format!("{field} {e}")))
+    };
+    let mut hit_chance = BTreeMap::new();
+    for (key, quantity) in &file.hit_chance {
+        let raw: u32 = key
+            .parse()
+            .map_err(|_| fail(format!("hit_chance \"{key}\" is not a torpedo number")))?;
+        hit_chance.insert(
+            SubmarineTorpedoId::new(raw),
+            number(&format!("hit_chance {key}"), quantity)?,
+        );
+    }
+    let figures = SubmarineFigures {
+        attacks_per_hour: number(
+            "submarine_attacks_per_hour",
+            &file.submarine_attacks_per_hour,
+        )?,
+        attacks_ship_dead_in_water: number(
+            "attacks_ship_dead_in_water",
+            &file.attacks_ship_dead_in_water,
+        )?,
+        held_down_pulses: file.held_down_pulses,
+        hunt_damages_chance: number("hunt_damages_chance", &file.hunt_damages_chance)?,
+        hunt_sinks_share: number("hunt_sinks_share", &file.hunt_sinks_share)?,
+        surfaced_share: number("submarine_surfaced_share", &file.submarine_surfaced_share)?,
+        air_attack_damages_chance: number(
+            "air_attack_damages_chance",
+            &file.air_attack_damages_chance,
+        )?,
+        air_attack_sinks_share: number("air_attack_sinks_share", &file.air_attack_sinks_share)?,
+        false_hit_chance: number(
+            "submarine_false_hit_chance",
+            &file.submarine_false_hit_chance,
+        )?,
+        report_drop_age_pulses: file.submarine_report_drop_age_pulses,
+        hit_chance,
+    };
+    figures.validate().map_err(fail)?;
+    Ok(figures)
 }
 
 #[derive(Deserialize)]
@@ -4579,5 +4783,177 @@ mod trial_figures_tests {
             let error = parse_trial_figures(&text, path).expect_err(&text);
             assert!(error.to_string().contains(words), "{error} names {words}");
         }
+    }
+}
+
+/// The submarine loaders (decision 0218).
+#[cfg(test)]
+mod submarine_tests {
+    use super::*;
+
+    // Submarines (decision 0218).
+
+    fn here() -> &'static Path {
+        Path::new("test.file")
+    }
+
+    const SUBMARINE_CLASS_HEADER: &str =
+        "id,name,salvo,salvoes_carried,passage_speed_kn,torpedo_id,estimated\n";
+
+    fn data_file(name: &str) -> std::path::PathBuf {
+        Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../data/reference")
+            .join(name)
+    }
+
+    #[test]
+    fn submarine_classes_parse_with_or_without_the_estimated_column() {
+        let classes = parse_submarine_classes(
+            &format!("# c\n{SUBMARINE_CLASS_HEADER}6000, A class ,4,6,10,6100,torpedo_id\n6001,B,6,4,\"8.5\",6100,\n"),
+            here(),
+        )
+        .expect("parses");
+        let a = &classes[&SubmarineClassId::new(6000)];
+        assert_eq!(a.name, "A class");
+        assert_eq!((a.salvo, a.salvoes_carried), (4, 6));
+        assert_eq!(a.passage_speed_kn, Fixed::from_int(10));
+        assert_eq!(a.torpedo, SubmarineTorpedoId::new(6100));
+        assert_eq!(
+            classes[&SubmarineClassId::new(6001)].passage_speed_kn,
+            "8.5".parse::<Fixed>().expect("fixed")
+        );
+        let plain = parse_submarine_classes(
+            "id,name,salvo,salvoes_carried,passage_speed_kn,torpedo_id\n1,A,4,2,10,3\n",
+            here(),
+        )
+        .expect("a file without the column parses");
+        assert_eq!(plain.len(), 1);
+    }
+
+    #[test]
+    fn a_bad_submarine_class_row_is_refused_with_its_class() {
+        for (row, words) in [
+            (
+                "6000,A,4,6,10,6100,\n6000,B,4,6,10,6100,\n",
+                "6000 is given twice",
+            ),
+            ("6000,A,0,6,10,6100,\n", "a salvo or salvoes carried of 0"),
+            ("6000,A,4,0,10,6100,\n", "a salvo or salvoes carried of 0"),
+            ("6000,A,4,6,0,6100,\n", "no positive passage speed"),
+            ("6000,A,4,6,fast,6100,\n", "passage_speed_kn"),
+            ("6000,A,4,six,10,6100,\n", "invalid digit"),
+        ] {
+            let error = parse_submarine_classes(&format!("{SUBMARINE_CLASS_HEADER}{row}"), here())
+                .expect_err("refused");
+            assert!(error.message.contains(words), "{row}: {error}");
+        }
+    }
+
+    #[test]
+    fn submarine_torpedoes_parse_and_refuse_a_twin_or_a_negative_damage() {
+        let torpedoes = parse_submarine_torpedoes(
+            "# c\nid,name,damage\n6100,Mark 14,92\n6101,Mark 10,90.72\n",
+            here(),
+        )
+        .expect("parses");
+        assert_eq!(
+            torpedoes[&SubmarineTorpedoId::new(6100)].damage,
+            Fixed::from_int(92)
+        );
+        assert_eq!(
+            torpedoes[&SubmarineTorpedoId::new(6101)].damage,
+            "90.72".parse::<Fixed>().expect("fixed")
+        );
+        for (rows, words) in [
+            ("1,A,5\n1,B,5\n", "given twice"),
+            ("1,A,-5\n", "negative damage"),
+            ("1,A,heavy\n", "damage"),
+        ] {
+            let error = parse_submarine_torpedoes(&format!("id,name,damage\n{rows}"), here())
+                .expect_err("refused");
+            assert!(error.message.contains(words), "{rows}: {error}");
+        }
+    }
+
+    const SUBMARINE_FIGURES: &str = "placeholder = true\nsubmarine_attacks_per_hour = \"0.02\"\nattacks_ship_dead_in_water = 5\nheld_down_pulses = 2\nhunt_damages_chance = \"0.3\"\nhunt_sinks_share = \"0.2\"\nsubmarine_surfaced_share = \"0.25\"\nair_attack_damages_chance = \"0.25\"\nair_attack_sinks_share = \"0.2\"\nsubmarine_false_hit_chance = \"0.25\"\nsubmarine_report_drop_age_pulses = 6\n[hit_chance]\n6950 = \"0.5\"\n";
+
+    #[test]
+    fn submarine_figures_parse_in_whole_numbers_and_decimal_strings_and_refuse_floats() {
+        let figures = parse_submarine_figures(SUBMARINE_FIGURES, here()).expect("parses");
+        assert_eq!(figures.attacks_per_hour, Fixed::from_ratio(2, 100));
+        assert_eq!(figures.attacks_ship_dead_in_water, Fixed::from_int(5));
+        assert_eq!(figures.held_down_pulses, 2);
+        assert_eq!(figures.report_drop_age_pulses, 6);
+        assert_eq!(
+            figures.hit_chance[&SubmarineTorpedoId::new(6950)],
+            Fixed::from_ratio(1, 2)
+        );
+        // A TOML float is refused, in a figure and in the hit chance table.
+        for (from, to) in [
+            ("\"0.02\"", "0.02"),
+            ("\"0.5\"", "0.5"),
+            ("= 5\n", "= 5.5\n"),
+        ] {
+            let error = parse_submarine_figures(&SUBMARINE_FIGURES.replacen(from, to, 1), here())
+                .expect_err("a float is refused");
+            assert!(!error.message.is_empty());
+        }
+        // Each figure is needed, and a chance is from 0 to 1.
+        let error = parse_submarine_figures(
+            &SUBMARINE_FIGURES.replace("held_down_pulses = 2\n", ""),
+            here(),
+        )
+        .expect_err("a missing figure");
+        assert!(error.message.contains("held_down_pulses"), "{error}");
+        let error =
+            parse_submarine_figures(&SUBMARINE_FIGURES.replace("\"0.3\"", "\"1.3\""), here())
+                .expect_err("a chance over 1");
+        assert!(error.message.contains("hunt_damages_chance"), "{error}");
+        let error =
+            parse_submarine_figures(&SUBMARINE_FIGURES.replace("6950 = ", "heavy = "), here())
+                .expect_err("a torpedo that is no number");
+        assert!(error.message.contains("heavy"), "{error}");
+        let error = parse_submarine_figures(
+            &SUBMARINE_FIGURES.replace(
+                "submarine_report_drop_age_pulses = 6",
+                "submarine_report_drop_age_pulses = 0",
+            ),
+            here(),
+        )
+        .expect_err("an age of 0");
+        assert!(error.message.contains("less than 1"), "{error}");
+    }
+
+    #[test]
+    fn the_submarine_files_on_disk_load_and_fit_together() {
+        use sim_core::refdata::SubmarineData;
+        // The generated 1942 classes and torpedoes, with the live figures:
+        // each class's torpedo is in the table and has a hit chance.
+        let data = SubmarineData {
+            classes: load_submarine_classes(&data_file("submarine_classes_1942.csv"))
+                .expect("the 1942 classes load"),
+            torpedoes: load_submarine_torpedoes(&data_file("submarine_torpedoes_1942.csv"))
+                .expect("the 1942 torpedoes load"),
+            figures: load_submarine_figures(&data_file("submarines.toml"))
+                .expect("the live figures load"),
+        };
+        assert_eq!(data.classes.len(), 12);
+        assert_eq!(data.torpedoes.len(), 5);
+        data.validate()
+            .expect("the 1942 data fits the live figures");
+        // The placeholder files of scenario 128 likewise.
+        let data = SubmarineData {
+            classes: load_submarine_classes(&data_file(
+                "submarine_classes_placeholder_scenario_128.csv",
+            ))
+            .expect("loads"),
+            torpedoes: load_submarine_torpedoes(&data_file(
+                "submarine_torpedoes_placeholder_scenario_128.csv",
+            ))
+            .expect("loads"),
+            figures: load_submarine_figures(&data_file("submarines_placeholder_scenario_128.toml"))
+                .expect("loads"),
+        };
+        data.validate().expect("fits");
     }
 }

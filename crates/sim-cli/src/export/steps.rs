@@ -55,6 +55,9 @@ struct Lists<R, E, P> {
     bases: Vec<R>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     land_units: Vec<R>,
+    /// The submarines (decision 0218): left out where there are none.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    submarines: Vec<R>,
     #[serde(skip_serializing_if = "PerSide::is_empty")]
     contacts: PerSide<R>,
     #[serde(skip_serializing_if = "PerSide::is_empty")]
@@ -72,6 +75,7 @@ impl<R, E, P> Lists<R, E, P> {
             && self.air_groups.is_empty()
             && self.bases.is_empty()
             && self.land_units.is_empty()
+            && self.submarines.is_empty()
             && self.contacts.is_empty()
             && self.ground_estimates.is_empty()
             && self.pictures.is_empty()
@@ -132,6 +136,7 @@ pub struct StepRecorder {
     air_groups: Seen<u32>,
     bases: Seen<u32>,
     land_units: Seen<u32>,
+    submarines: Seen<u32>,
     contacts: [Seen<u32>; 2],
     estimates: [Seen<(i32, i32)>; 2],
     pictures: [Seen<String>; 2],
@@ -150,6 +155,7 @@ impl StepRecorder {
             air_groups: Seen(BTreeMap::new()),
             bases: Seen(BTreeMap::new()),
             land_units: Seen(BTreeMap::new()),
+            submarines: Seen(BTreeMap::new()),
             contacts: [Seen(BTreeMap::new()), Seen(BTreeMap::new())],
             estimates: [Seen(BTreeMap::new()), Seen(BTreeMap::new())],
             pictures: [Seen(BTreeMap::new()), Seen(BTreeMap::new())],
@@ -206,6 +212,7 @@ impl StepRecorder {
             air_groups,
             bases,
             land_units,
+            submarines,
             contacts,
             ground_estimates,
             pictures,
@@ -215,6 +222,7 @@ impl StepRecorder {
         let (air_groups_changed, air_groups_removed) = self.air_groups.diff(air_groups);
         let (bases_changed, bases_removed) = self.bases.diff(bases);
         let (land_units_changed, land_units_removed) = self.land_units.diff(land_units);
+        let (submarines_changed, submarines_removed) = self.submarines.diff(submarines);
         let (allied_contacts, allied_contacts_gone) = self.contacts[0].diff(contacts.allied);
         let (japanese_contacts, japanese_contacts_gone) = self.contacts[1].diff(contacts.japanese);
         let (allied_estimates, allied_estimates_gone) =
@@ -233,6 +241,7 @@ impl StepRecorder {
                 air_groups: air_groups_changed,
                 bases: bases_changed,
                 land_units: land_units_changed,
+                submarines: submarines_changed,
                 contacts: PerSide {
                     allied: allied_contacts,
                     japanese: japanese_contacts,
@@ -252,6 +261,7 @@ impl StepRecorder {
                 air_groups: air_groups_removed,
                 bases: bases_removed,
                 land_units: land_units_removed,
+                submarines: submarines_removed,
                 contacts: PerSide {
                     allied: allied_contacts_gone,
                     japanese: japanese_contacts_gone,

@@ -11,11 +11,11 @@ use std::collections::BTreeSet;
 use serde_json::{json, Map, Value};
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
-use sim_core::ids::{AirGroupId, BaseId, LandUnitId, ShipId, TaskForceId};
+use sim_core::ids::{AirGroupId, BaseId, LandUnitId, ShipId, SubmarineId, TaskForceId};
 use sim_core::orders::{
     Activity, AirGroupOrder, AirMission, BaseOrder, Cargo, LandUnitOrder, Mission, OrderKind,
-    Posture, Reach, Readiness, SpeedSetting, Stance, StragglerInstruction, TaskForceOrder,
-    WhenSpent,
+    Posture, Reach, Readiness, SpeedSetting, Stance, StragglerInstruction, SubmarineOrder,
+    TaskForceOrder, WhenSpent,
 };
 use sim_core::refdata::ShipKind;
 
@@ -26,6 +26,7 @@ pub fn unit_text(kind: &OrderKind) -> String {
         OrderKind::AirGroup { target, .. } => format!("air_group:{}", target.raw()),
         OrderKind::LandUnit { target, .. } => format!("land_unit:{}", target.raw()),
         OrderKind::Base { target, .. } => format!("base:{}", target.raw()),
+        OrderKind::Submarine { target, .. } => format!("submarine:{}", target.raw()),
     }
 }
 
@@ -268,6 +269,13 @@ pub fn order_to_json(kind: &OrderKind) -> Value {
                 }),
             },
         },
+        // Decision 0218: a boat's station, written as a march's hex is.
+        OrderKind::Submarine { order, .. } => match order {
+            SubmarineOrder::Station(hex) => json!({
+                "kind": "station",
+                "hex": [hex.q, hex.r],
+            }),
+        },
     }
 }
 
@@ -428,11 +436,11 @@ fn fixed(value: &Value, key: &str) -> Result<Fixed, String> {
 }
 
 /// Whether `unit` is written as a unit an order can be for:
-/// `task_force:N`, `air_group:N`, `land_unit:N` or `base:N` with `N` a whole
-/// number.
+/// `task_force:N`, `air_group:N`, `land_unit:N`, `base:N` or `submarine:N`
+/// with `N` a whole number.
 pub fn is_orderable_unit(unit: &str) -> bool {
     match unit.split_once(':') {
-        Some(("task_force" | "air_group" | "land_unit" | "base", number)) => {
+        Some(("task_force" | "air_group" | "land_unit" | "base" | "submarine", number)) => {
             number.parse::<u32>().is_ok()
         }
         _ => false,
@@ -873,6 +881,31 @@ pub fn order_from_json(unit: &str, value: &Value) -> Result<OrderKind, String> {
             };
             Ok(OrderKind::LandUnit {
                 target: LandUnitId::new(raw),
+                order,
+            })
+        }
+        "submarine" => {
+            let order = match kind {
+                "station" => {
+                    let pair = value
+                        .get("hex")
+                        .and_then(Value::as_array)
+                        .ok_or("\"hex\" is missing")?;
+                    let get = |i: usize| {
+                        pair.get(i)
+                            .and_then(Value::as_i64)
+                            .and_then(|n| i32::try_from(n).ok())
+                            .ok_or("\"hex\" is not a pair of whole numbers")
+                    };
+                    if pair.len() != 2 {
+                        return Err("\"hex\" is not a pair of whole numbers".to_string());
+                    }
+                    SubmarineOrder::Station(Hex::new(get(0)?, get(1)?))
+                }
+                other => return Err(format!("unknown submarine order \"{other}\"")),
+            };
+            Ok(OrderKind::Submarine {
+                target: SubmarineId::new(raw),
                 order,
             })
         }

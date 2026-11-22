@@ -176,6 +176,9 @@ pub(crate) fn state_of(truth: &TruthState, command: CommandRef, as_of: AsOf) -> 
 /// no held state names (a ship in port in no force, a land unit aboard ship,
 /// a group lost) stays as the truth. The enemy's entries are untouched.
 pub(crate) fn held_truth(truth: &TruthState, held: &BTreeMap<CommandRef, HeldState>) -> TruthState {
+    // A submarine is no command and has no held state: her side's highest
+    // command knows her exactly, so the boats are copied as they are
+    // (decision 0218, 35).
     let mut overlay = truth.clone();
     let mut states: Vec<(AsOf, CommandRef, &HeldState)> = held
         .iter()
@@ -484,7 +487,7 @@ impl World {
         // what the area command holds.
         // A unit of its own held apart until its day (decision 0195, 8 and
         // 15) is refused before that.
-        if let Some(refused) = self.not_yet_entered(order.side, &order.kind) {
+        if let Some(refused) = self.not_yet_entered(order.side, &order.kind, order.day_issued) {
             return Err(refused);
         }
         if let Some(refused) = self.not_yet_available(order.side, &order.kind, order.day_issued) {

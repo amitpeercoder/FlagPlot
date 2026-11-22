@@ -366,6 +366,10 @@ fn examples() -> Vec<OrderKind> {
             order: LandUnitOrder::SetActivity(activity),
         });
     }
+    out.push(OrderKind::Submarine {
+        target: sim_core::ids::SubmarineId::new(2),
+        order: sim_core::orders::SubmarineOrder::Station(sim_core::hex::Hex::new(5, 0)),
+    });
     out
 }
 
@@ -378,6 +382,7 @@ fn every_kind_of_order_the_engine_has_is_in_the_schema_and_round_trips() {
     let mut seen_posture = false;
     let mut seen_march = false;
     let mut seen_activity = false;
+    let mut seen_station = false;
     for kind in examples() {
         match &kind {
             OrderKind::TaskForce { order, .. } => seen_tf[tf_index(order)] = true,
@@ -388,6 +393,7 @@ fn every_kind_of_order_the_engine_has_is_in_the_schema_and_round_trips() {
                 LandUnitOrder::March(_) => seen_march = true,
                 LandUnitOrder::SetActivity(_) => seen_activity = true,
             },
+            OrderKind::Submarine { .. } => seen_station = true,
         }
         let request = OrderRequest {
             kind: kind.clone(),
@@ -408,6 +414,7 @@ fn every_kind_of_order_the_engine_has_is_in_the_schema_and_round_trips() {
     assert!(seen_posture, "the land unit order is in the examples");
     assert!(seen_march, "the march order is in the examples");
     assert!(seen_activity, "the activity order is in the examples");
+    assert!(seen_station, "the station order is in the examples");
     // Every scripted order of every scenario is in the schema too.
     for name in [
         "05_eastern_solomons.toml",
@@ -961,7 +968,7 @@ fn with_two_players_the_day_waits_for_both_and_the_order_does_not_matter() {
         assert!(result["allied"]["margin"].is_string(), "{result}");
         assert_eq!(
             last,
-            json!({"format": "flagplot-agent", "version": 46, "kind": "end_day", "resolved": true, "day": 1, "game_over": true})
+            json!({"format": "flagplot-agent", "version": 47, "kind": "end_day", "resolved": true, "day": 1, "game_over": true})
         );
         assert_eq!(session.day_hashes(), hashes, "variant {variant}");
         let world = session.into_world();

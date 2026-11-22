@@ -8,7 +8,8 @@ use std::collections::{BTreeMap, BTreeSet};
 use sim_core::choices::{Moment, PulsePhase};
 use sim_core::events::{Cause, Event, EventKind};
 use sim_core::ids::{
-    AirGroupId, BaseId, ContactId, EntityRef, LandUnitId, ShipId, TaskForceId, UmpireKey,
+    AirGroupId, BaseId, ContactId, EntityRef, LandUnitId, ShipId, SubmarineId, TaskForceId,
+    UmpireKey,
 };
 use sim_core::pictures::CommandRef;
 use sim_core::state::Side;
@@ -27,7 +28,7 @@ Usage: sim-cli events <scenario.toml | game.json> --unit HANDLE [--day N] [--see
        sim-cli events <scenario.toml | game.json> --report EVENT [--command COMMAND] [--seed N] [--json]
        sim-cli events <scenario.toml | game.json> --strike air_group:N --day D --pulse night|morning|afternoon
                       [--report EVENT] [--seed N] [--json]
-  HANDLE is ship:N, task_force:N, air_group:N, base:N, land_unit:N or contact:N. Contact
+  HANDLE is ship:N, task_force:N, air_group:N, base:N, land_unit:N, submarine:N or contact:N. Contact
   numbers are kept by each side, so a contact may be written allied:contact:N
   or japanese:contact:N; without a side it lists both sides' contact N.
   EVENT is an event number, 42 or #42. With --report it is the event a report is known by
@@ -68,6 +69,7 @@ enum Handle {
     AirGroup(u32),
     Base(u32),
     LandUnit(u32),
+    Submarine(u32),
     Contact(u32),
 }
 
@@ -79,6 +81,7 @@ impl Handle {
             Handle::AirGroup(n) => EntityRef::AirGroup(AirGroupId::new(n)),
             Handle::Base(n) => EntityRef::Base(BaseId::new(n)),
             Handle::LandUnit(n) => EntityRef::LandUnit(LandUnitId::new(n)),
+            Handle::Submarine(n) => EntityRef::Submarine(SubmarineId::new(n)),
             Handle::Contact(n) => EntityRef::Contact(ContactId::for_umpire(n, key)),
         }
     }
@@ -407,7 +410,7 @@ fn parse_handle(text: &str) -> Result<(Handle, Option<Side>), String> {
     };
     let bad = || {
         format!(
-            "\"{text}\" is not a unit handle: write ship:N, task_force:N, air_group:N, base:N, land_unit:N or contact:N"
+            "\"{text}\" is not a unit handle: write ship:N, task_force:N, air_group:N, base:N, land_unit:N, submarine:N or contact:N"
         )
     };
     let (kind, number) = rest.split_once(':').ok_or_else(bad)?;
@@ -418,6 +421,7 @@ fn parse_handle(text: &str) -> Result<(Handle, Option<Side>), String> {
         "air_group" => Handle::AirGroup(n),
         "base" => Handle::Base(n),
         "land_unit" => Handle::LandUnit(n),
+        "submarine" => Handle::Submarine(n),
         "contact" => Handle::Contact(n),
         _ => return Err(bad()),
     };
@@ -445,6 +449,9 @@ fn contact_side(world: &World, event: &Event) -> Option<Side> {
         EventKind::ReportReceived { side, .. }
         | EventKind::ContactAged { side, .. }
         | EventKind::ContactDropped { side, .. }
+        | EventKind::SubmarineReported { side, .. }
+        | EventKind::SubmarineReportDropped { side, .. }
+        | EventKind::SuspectedWatersTold { side, .. }
         | EventKind::ContactNotThere { side, .. } => return Some(*side),
         _ => {}
     }
@@ -454,6 +461,7 @@ fn contact_side(world: &World, event: &Event) -> Option<Side> {
             EntityRef::TaskForce(id) => truth.task_forces.get(&id).map(|t| t.side),
             EntityRef::AirGroup(id) => truth.air_groups.get(&id).map(|g| g.side),
             EntityRef::Ship(id) => truth.ships.get(&id).map(|s| s.side),
+            EntityRef::Submarine(id) => truth.submarines.get(&id).map(|b| b.side),
             _ => None,
         }
         // A unit still held apart (decision 0195) has its entry's side.
@@ -480,6 +488,7 @@ fn list_unit(
         EntityRef::AirGroup(id) => truth.air_groups.contains_key(&id),
         EntityRef::Base(id) => truth.bases.contains_key(&id),
         EntityRef::LandUnit(id) => truth.land_units.contains_key(&id),
+        EntityRef::Submarine(id) => truth.submarines.contains_key(&id),
         _ => false,
     } || truth.entry_of(unit).is_some()
         || world.events().iter().any(names_unit);

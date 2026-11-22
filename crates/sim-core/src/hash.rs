@@ -28,7 +28,8 @@ use crate::state::{
     AirGroup, AirGroupLocation, AircraftFire, Arrival, Base, CargoOrder, Charge, ClaimTally,
     DayWork, Formation, FuelFrom, Halt, HaltWork, HitsOnMen, LandUnit, March, MenReplacement,
     MenStream, Preparation, Replacement, Route, RulesOfEngagement, SearchArc, Ship, ShipLocation,
-    ShipSystem, ShipSystems, Skills, Strength, SupplyLine, TaskForce, Troops, TruthState, YardTrip,
+    ShipSystem, ShipSystems, Skills, Strength, Submarine, SubmarinePassage, SupplyLine, TaskForce,
+    Troops, TruthState, YardTrip,
 };
 use crate::world::World;
 
@@ -398,7 +399,47 @@ fn name_every_field(world: &World) {
         entering,
         supply_lines,
         men_replacement,
+        submarines,
+        waters_waiting,
     } = truth;
+    if let Some(crate::state::WatersWaiting {
+        side: _,
+        hex: _,
+        distance_hexes: _,
+        words: _,
+        rows: _,
+        reading: _,
+        day: _,
+    }) = waters_waiting.first()
+    {}
+    if let Some(Submarine {
+        id: _,
+        // Not hashed: a name changes nothing that happens.
+        name: _,
+        side: _,
+        class: _,
+        hex: _,
+        station: _,
+        passage:
+            Some(SubmarinePassage {
+                to: _,
+                home: _,
+                toward_hex: _,
+                progress_nm: _,
+                leg_nm: _,
+                arrived: _,
+                order: _,
+            }),
+        salvoes: _,
+        held_down_until: _,
+        condition: _,
+        home: _,
+        leave_day: _,
+        enters_day: _,
+        available_from: _,
+        station_order: _,
+    }) = submarines.values().find(|boat| boat.passage.is_some())
+    {}
     let MenReplacement { streams, units } = men_replacement;
     if let Some(MenStream {
         side: _,
@@ -918,6 +959,10 @@ fn name_every_field(world: &World) {
             claimed_on_ground: _,
             from_air: _,
             from_bombardment: _,
+            // Not in the claim's own hash (decision 0218, 45): where a claim
+            // is marked a submarine's, its place in the list is hashed in
+            // the submarine block at the end of the state.
+            from_submarine: _,
             received_event: _,
             // After `from_bombardment` (decisions 0179 and 0180).
             ground_types: _,
@@ -941,6 +986,28 @@ fn name_every_field(world: &World) {
             report_event: _,
             grade: _,
         }) = belief.ground_estimates().next()
+        {}
+        // Hashed in the submarine block at the end of the state (decision
+        // 0218, 47).
+        if let Some(crate::belief::SuspectedWaters {
+            hex: _,
+            distance_hexes: _,
+            words: _,
+            rows: _,
+            reading: _,
+            day: _,
+            received_event: _,
+        }) = belief.suspected_waters().first()
+        {}
+        // Hashed in the submarine block at the end of the state (decision
+        // 0218, 44).
+        if let Some(crate::belief::SubmarineReport {
+            hex: _,
+            day: _,
+            pulse: _,
+            received_event: _,
+            age_pulses: _,
+        }) = belief.submarine_reports().next()
         {}
     }
 }
@@ -1379,6 +1446,79 @@ fn hash_report(h: &mut StateHasher, report: &crate::belief::Report) {
             h.u32(none.day);
             h.u32(none.received_event.raw());
         }
+        // After the last (decision 0218).
+        Report::Submarine(submarine) => {
+            h.u8(6);
+            hash_submarine_report(h, submarine);
+        }
+        Report::SuspectedWaters(waters) => {
+            h.u8(7);
+            hash_waters(h, waters);
+        }
+    }
+}
+
+/// A text: its length, then its bytes.
+fn hash_text(h: &mut StateHasher, text: &str) {
+    h.count(text.len());
+    h.bytes(text.as_bytes());
+}
+
+/// One suspected waters (decision 0218, 47): hex, distance, the words, the
+/// rows, the reading, the day and the event that told it.
+fn hash_waters(h: &mut StateHasher, waters: &crate::belief::SuspectedWaters) {
+    h.i32(waters.hex.q);
+    h.i32(waters.hex.r);
+    h.u32(waters.distance_hexes);
+    hash_text(h, &waters.words);
+    hash_text(h, &waters.rows);
+    hash_text(h, &waters.reading);
+    h.u32(waters.day);
+    h.u32(waters.received_event.raw());
+}
+
+/// One report of a submarine (decision 0218, 44): hex, day, pulse (0 for
+/// none), event and age.
+fn hash_submarine_report(h: &mut StateHasher, report: &crate::belief::SubmarineReport) {
+    h.i32(report.hex.q);
+    h.i32(report.hex.r);
+    h.u32(report.day);
+    h.u64(report.pulse.map_or(0, crate::time::Pulse::code));
+    h.u32(report.received_event.raw());
+    h.u32(report.age_pulses);
+}
+
+/// Whether a belief holds anything of a submarine: a report of one, suspected
+/// waters or a claim marked a submarine's (decision 0218).
+fn holds_submarine_state(belief: &crate::belief::BeliefState) -> bool {
+    belief.submarine_reports().next().is_some()
+        || !belief.suspected_waters().is_empty()
+        || belief.claims().iter().any(|claim| claim.from_submarine)
+}
+
+/// What one belief holds of a submarine, for the block at the end of
+/// [`hash_world`]: its reports of submarines in hex order, its suspected
+/// waters in the order told, then the places in its claims of the claims
+/// marked a submarine's.
+fn hash_belief_submarine_state(h: &mut StateHasher, belief: &crate::belief::BeliefState) {
+    h.count(belief.submarine_reports().count());
+    for report in belief.submarine_reports() {
+        hash_submarine_report(h, report);
+    }
+    h.count(belief.suspected_waters().len());
+    for waters in belief.suspected_waters() {
+        hash_waters(h, waters);
+    }
+    let marked: Vec<usize> = belief
+        .claims()
+        .iter()
+        .enumerate()
+        .filter(|(_, claim)| claim.from_submarine)
+        .map(|(place, _)| place)
+        .collect();
+    h.count(marked.len());
+    for place in marked {
+        h.count(place);
     }
 }
 
@@ -2313,7 +2453,105 @@ pub(crate) fn hash_world(world: &World) -> u64 {
         }
     }
 
+    // Last of all (decision 0218), and only where the game has a submarine:
+    // the boats in number order, each its number, side, class, hex, station,
+    // passage (0, or 1 then its fields), salvoes, held down (0, or 1 then
+    // the day and the pulse's code), condition, home base, leave day, entry
+    // day, day to be used from and station order; the name is not hashed.
+    // A game with no boat writes nothing here and its hash is what it was,
+    // so the layout's version is not raised. The later phases of the rule
+    // (the belief lists of reports of submarines and suspected waters, and
+    // the claims marked a submarine's) append to this same block, after the
+    // boats, and the block is then written where any of them is held.
+    // Appended (phase 3): for each side's belief, then each command's
+    // picture in the order the chain is hashed, its reports of submarines
+    // (hex, day, pulse's code, event, age) and the places in its claims of
+    // the claims marked a submarine's.
+    let chain_pictures = || {
+        world.chain.iter().flat_map(|chain| {
+            Side::ALL
+                .into_iter()
+                .flat_map(move |side| chain[&side].values().map(|post| post.picture()))
+        })
+    };
+    if !truth.submarines.is_empty()
+        || !truth.waters_waiting.is_empty()
+        || world.beliefs.values().any(holds_submarine_state)
+        || chain_pictures().any(holds_submarine_state)
+    {
+        h.count(truth.submarines.len());
+        for boat in truth.submarines.values() {
+            hash_submarine(&mut h, boat);
+        }
+        // The waters still waiting to be told, in the order kept (decision
+        // 0218, 47): side, hex, distance, words, rows, reading and day.
+        h.count(truth.waters_waiting.len());
+        for waiting in &truth.waters_waiting {
+            h.u8(waiting.side.code());
+            h.i32(waiting.hex.q);
+            h.i32(waiting.hex.r);
+            h.u32(waiting.distance_hexes);
+            hash_text(&mut h, &waiting.words);
+            hash_text(&mut h, &waiting.rows);
+            hash_text(&mut h, &waiting.reading);
+            h.u32(waiting.day);
+        }
+        for belief in world.beliefs.values() {
+            hash_belief_submarine_state(&mut h, belief);
+        }
+        for picture in chain_pictures() {
+            hash_belief_submarine_state(&mut h, picture);
+        }
+    }
+
     h.finish()
+}
+
+/// One submarine (decision 0218): see the block in [`hash_world`].
+fn hash_submarine(h: &mut StateHasher, boat: &Submarine) {
+    h.u32(boat.id.raw());
+    h.u8(boat.side.code());
+    h.u32(boat.class.raw());
+    h.i32(boat.hex.q);
+    h.i32(boat.hex.r);
+    h.i32(boat.station.q);
+    h.i32(boat.station.r);
+    match &boat.passage {
+        Some(passage) => {
+            h.u8(1);
+            h.i32(passage.to.q);
+            h.i32(passage.to.r);
+            h.u8(u8::from(passage.home));
+            match passage.toward_hex {
+                Some(hex) => {
+                    h.u8(1);
+                    h.i32(hex.q);
+                    h.i32(hex.r);
+                }
+                None => h.u8(0),
+            }
+            h.i64(passage.progress_nm.raw());
+            h.i64(passage.leg_nm.raw());
+            h.u8(u8::from(passage.arrived));
+            h.optional_u32(passage.order.map(|order| order.raw()));
+        }
+        None => h.u8(0),
+    }
+    h.u32(boat.salvoes);
+    match boat.held_down_until {
+        Some((day, pulse)) => {
+            h.u8(1);
+            h.u32(day);
+            h.u64(pulse.code());
+        }
+        None => h.u8(0),
+    }
+    h.u8(boat.condition.code());
+    h.u32(boat.home.raw());
+    h.optional_u32(boat.leave_day);
+    h.optional_u32(boat.enters_day);
+    h.optional_u32(boat.available_from);
+    h.optional_u32(boat.station_order.map(|order| order.raw()));
 }
 
 /// One unit held apart (decision 0195, 23): the key's kind code and number,

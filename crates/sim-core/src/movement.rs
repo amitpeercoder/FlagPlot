@@ -128,6 +128,33 @@ fn ordered(a: TaskForceId, b: TaskForceId) -> (TaskForceId, TaskForceId) {
     }
 }
 
+/// Adds `amount` to `hex`'s entry of `list`, or makes one; nothing for
+/// nothing.
+fn add_in_hex(list: &mut Vec<(Hex, Fixed)>, hex: Hex, amount: Fixed) {
+    if amount.is_zero() {
+        return;
+    }
+    match list.iter_mut().find(|(at, _)| *at == hex) {
+        Some((_, total)) => *total += amount,
+        None => list.push((hex, amount)),
+    }
+}
+
+/// The hours each task force with a ship afloat spent in each hex in a
+/// pulse (decision 0218, 38), in the order it was in them. Worked in the
+/// movement step for the submarines' attack and kept nowhere.
+pub(crate) type HoursInHex = BTreeMap<TaskForceId, Vec<(Hex, Fixed)>>;
+
+/// What the step has counted so far of the hours in a hex.
+#[derive(Default)]
+struct HoursLedger {
+    /// The hours of the segments recorded so far.
+    hours: HoursInHex,
+    /// When in the pulse (hours from its start) a force made in the step was
+    /// made.
+    made_at: BTreeMap<TaskForceId, Fixed>,
+}
+
 /// One moving task force's working state for the step.
 struct Mover {
     /// Has a budget and can still steam. A force that has none left (sunk,
@@ -181,6 +208,11 @@ struct Mover {
     /// The fuelling speed, where it is what the force makes this pulse
     /// (decision 0201, 9). Only read for the segment's breakdown.
     fuelling_speed_kn: Option<Fixed>,
+    /// The miles the open segment steamed in each hex the force was in
+    /// (positions, as `position` tells them), for the hours ledger (decision
+    /// 0218, 38). `None` unless a boat is on the map: nothing is worked out
+    /// for a game without one.
+    hex_nm: Option<Vec<(Hex, Fixed)>>,
 }
 
 impl Mover {
@@ -276,6 +308,14 @@ impl Mover {
             };
             let half_leg = self.half_leg();
             let to_centre_nm = self.leg_nm - self.progress_nm;
+            if let Some(list) = self.hex_nm.as_mut() {
+                // The piece of this leg steamed now: in the hex the force
+                // is in up to half the leg, and in the hex ahead after it.
+                let piece_nm = remaining_nm.min(to_centre_nm);
+                let before_half_nm = (half_leg - self.progress_nm).max(Fixed::ZERO).min(piece_nm);
+                add_in_hex(list, self.from_hex, before_half_nm);
+                add_in_hex(list, leg_end, piece_nm - before_half_nm);
+            }
             if remaining_nm >= to_centre_nm {
                 travelled_nm += to_centre_nm;
                 if self.progress_nm < half_leg {
@@ -461,6 +501,7 @@ fn build_mover<'s>(
         halt_at: None,
         halt_recorded: false,
         fuelling_speed_kn,
+        hex_nm: None,
     })
 }
 
@@ -520,6 +561,9 @@ struct Step {
     /// Fuelling at sea this pulse: the pairs and the forces slowed for it
     /// (decision 0201, 8 and 9). Local to the step, not state.
     fuelling: crate::fuel_at_sea::FuellingPulse,
+    /// The hours in a hex, where a boat is on the map (decision 0218, 38).
+    /// Local to the step, not state.
+    ledger: Option<HoursLedger>,
 }
 
 impl Step {
@@ -541,6 +585,25 @@ impl Step {
 impl World {
     /// The movement step of one pulse. See the module notes.
     pub(crate) fn move_task_forces(&mut self, day: u32, pulse: Pulse) {
+        // With no boat on the map the hours in a hex are not counted, and
+        // nothing else changes (decision 0218, 38).
+        let boats = self.truth.submarines.values().any(|boat| boat.on_map(day));
+        let ledger = self.move_forces(day, pulse, boats);
+        // The submarines, last: their passage and their attack read where
+        // the forces ended and the hours each spent in each hex.
+        if boats {
+            self.submarines_after_movement(day, pulse, &ledger);
+        }
+    }
+
+    /// The forces' movement of one pulse, and, if `count_hours`, the hours
+    /// each force with a ship afloat spent in each hex in it (decision 0218,
+    /// 38): a force that did not move, all the pulse in its hex; one that
+    /// crossed a hex, from its change of position into it to its change out,
+    /// worked as the miles steamed in it over the speed, one division for
+    /// each segment; one that stopped, its steaming in the hex and the rest
+    /// of the pulse; one made in the step, from when it was made.
+    pub(crate) fn move_forces(&mut self, day: u32, pulse: Pulse, count_hours: bool) -> HoursInHex {
         self.steam_on_from_halts(day, pulse);
         self.handle_stragglers(day, pulse);
         // Escorts take their station for the pulse (decision 0121, 3).
@@ -565,6 +628,7 @@ impl World {
             outcomes: BTreeMap::new(),
             charges,
             fuelling,
+            ledger: count_hours.then(HoursLedger::default),
         };
 
         // Budgets. The list of forces is taken after the straggler pass, so a
@@ -572,7 +636,7 @@ impl World {
         let ids: Vec<TaskForceId> = self.truth.task_forces.keys().copied().collect();
         for id in ids {
             let cap = step.fuelling.cap_for(id);
-            if let Some(mover) = self.new_mover(id, pulse, Fixed::ZERO, cap) {
+            if let Some(mover) = self.new_mover(id, pulse, Fixed::ZERO, cap, count_hours) {
                 step.movers.insert(id, mover);
             }
         }
@@ -657,6 +721,48 @@ impl World {
         // The fuel passes at sea, now that every fight of the pulse is known
         // (decision 0201, 10).
         self.pass_fuel_at_sea(day, pulse, &step.fuelling);
+        self.hours_in_hexes(&mut step)
+    }
+
+    /// The hours of the pulse each force with a ship afloat spent in each
+    /// hex (decision 0218, 38): what its segments counted, and, where it
+    /// stopped before the pulse was out or was not moving, the rest of the
+    /// pulse in the hex it is in. A force that was made in the step is
+    /// counted from when it was made. A force with no ship afloat has none.
+    fn hours_in_hexes(&self, step: &mut Step) -> HoursInHex {
+        let Some(mut ledger) = step.ledger.take() else {
+            return HoursInHex::new();
+        };
+        let pulse_hours = Fixed::from_int(step.pulse.hours());
+        let mut counted = HoursInHex::new();
+        for force in self.truth.task_forces.values() {
+            if force.ships.is_empty() {
+                continue;
+            }
+            let mut list = ledger.hours.remove(&force.id).unwrap_or_default();
+            let (covered, steamed_it_out) = match step.movers.get(&force.id) {
+                Some(mover) => (
+                    mover.hours_done,
+                    mover.active && mover.left_nm.is_zero() && !mover.fuel_is_the_limit,
+                ),
+                None => (
+                    ledger
+                        .made_at
+                        .get(&force.id)
+                        .copied()
+                        .unwrap_or(Fixed::ZERO),
+                    false,
+                ),
+            };
+            if !steamed_it_out {
+                add_in_hex(&mut list, force.position(), pulse_hours - covered);
+            }
+            list.retain(|(_, hours)| *hours > Fixed::ZERO);
+            if !list.is_empty() {
+                counted.insert(force.id, list);
+            }
+        }
+        counted
     }
 
     /// A mover for the force, if it is under way with a ship afloat and a
@@ -668,6 +774,7 @@ impl World {
         pulse: Pulse,
         hours_used: Fixed,
         cap_kn: Option<Fixed>,
+        count_hours: bool,
     ) -> Option<Mover> {
         let task_force = self.truth.task_forces.get(&id)?;
         let mut mover = build_mover(
@@ -679,6 +786,7 @@ impl World {
             cap_kn,
         )?;
         mover.halt_at = self.halt_index(task_force, pulse);
+        mover.hex_nm = count_hours.then(Vec::new);
         Some(mover)
     }
 
@@ -990,7 +1098,17 @@ impl World {
         // of the pulse after the parent's hours.
         for (parent, new_force) in made {
             let hours_used = step.hours_used(parent);
-            if let Some(mover) = self.new_mover(new_force, step.pulse, hours_used, None) {
+            let count_hours = step.ledger.is_some();
+            // A force is made at the moment of the fight, which a parent
+            // that was not moving has no hours steamed to tell.
+            if let Some(ledger) = step.ledger.as_mut() {
+                ledger
+                    .made_at
+                    .insert(new_force, elapsed_hours - pulse_start(step.day, step.pulse));
+            }
+            if let Some(mover) =
+                self.new_mover(new_force, step.pulse, hours_used, None, count_hours)
+            {
                 step.movers.insert(new_force, mover);
             }
         }
@@ -1134,7 +1252,8 @@ impl World {
         let last_steamed = step.movers.get(&id).and_then(|mover| mover.last_steamed);
 
         let cap = step.fuelling.cap_for(id);
-        let Some(mut mover) = self.new_mover(id, step.pulse, hours_used, cap) else {
+        let count_hours = step.ledger.is_some();
+        let Some(mut mover) = self.new_mover(id, step.pulse, hours_used, cap, count_hours) else {
             if let Some(mover) = step.movers.get_mut(&id) {
                 mover.active = false;
             }
@@ -1179,6 +1298,15 @@ impl World {
         let travelled_nm = mover.segment_nm;
         let speed_kn = mover.speed_kn;
         let to = mover.position();
+        // The hours the segment spent in each hex: the miles in it over the
+        // speed, one division for each (decision 0218, 38). Never a
+        // difference of two times.
+        if let (Some(list), Some(ledger)) = (mover.hex_nm.as_mut(), step.ledger.as_mut()) {
+            let counted = ledger.hours.entry(id).or_default();
+            for (hex, nm) in std::mem::take(list) {
+                add_in_hex(counted, hex, nm / speed_kn);
+            }
+        }
 
         let breakdown = self.config.record_breakdowns.then(|| {
             let mut factors = vec![
@@ -1883,6 +2011,11 @@ mod tests {
             self
         }
 
+        fn ships(mut self, ships: usize) -> Force {
+            self.ships = ships;
+            self
+        }
+
         fn propulsion(mut self, state: SystemState) -> Force {
             self.propulsion = state;
             self
@@ -2380,7 +2513,7 @@ mod tests {
             );
         }
         let mover = world
-            .new_mover(TaskForceId::new(1), Pulse::Night, Fixed::ZERO, None)
+            .new_mover(TaskForceId::new(1), Pulse::Night, Fixed::ZERO, None, false)
             .expect("the force is under way");
         (mover, world.map.clone())
     }
@@ -2495,6 +2628,7 @@ mod tests {
             halt_at: mover.halt_at,
             halt_recorded: mover.halt_recorded,
             fuelling_speed_kn: mover.fuelling_speed_kn,
+            hex_nm: mover.hex_nm.clone(),
         }
     }
 
@@ -2522,5 +2656,213 @@ mod tests {
         // More than the straight line, at most a hex a step.
         assert!(mover.segment_nm > Fixed::from_int(480));
         assert!(mover.segment_nm <= Fixed::from_int(40 * charges.len() as i64));
+    }
+
+    // ---- the hours a force spends in each hex (decision 0218, 38) ----
+    //
+    // Each game is the movement step of day 1 run once, with the hours
+    // counted, on the strip of open sea of the fixture. Cruisers; the hexes
+    // are 40 nm apart, a force enters a hex 20 nm before its centre and
+    // leaves it 20 nm after. A morning is 6 hours and a night 12. Each
+    // figure is one division of the miles in the hex by the speed, cut at
+    // the sixth place, and never the difference of two clock times.
+
+    fn hours(world: &mut World, pulse: Pulse, force: u32) -> Vec<(Hex, Fixed)> {
+        world
+            .move_forces(1, pulse, true)
+            .get(&TaskForceId::new(force))
+            .cloned()
+            .unwrap_or_default()
+    }
+
+    fn in_hex(list: &[(Hex, Fixed)], at: Hex) -> Option<Fixed> {
+        list.iter().find(|(hex, _)| *hex == at).map(|(_, h)| *h)
+    }
+
+    fn fx(text: &str) -> Fixed {
+        text.parse().expect("a fixed number")
+    }
+
+    #[test]
+    fn a_force_that_does_not_move_has_the_whole_pulse_in_its_hex() {
+        let mut night = world(1, &[Force::new(1, Side::Allied, hex(5))]);
+        assert_eq!(
+            hours(&mut night, Pulse::Night, 1),
+            vec![(hex(5), Fixed::from_int(12))]
+        );
+        let mut morning = world(1, &[Force::new(1, Side::Allied, hex(5))]);
+        assert_eq!(
+            hours(&mut morning, Pulse::Morning, 1),
+            vec![(hex(5), Fixed::from_int(6))]
+        );
+        // The hours are not counted where none is asked for.
+        let mut world = world(1, &[Force::new(1, Side::Allied, hex(5))]);
+        assert!(world.move_forces(1, Pulse::Night, false).is_empty());
+    }
+
+    #[test]
+    fn a_force_that_crosses_a_hex_has_the_miles_in_it_over_the_speed_one_division_a_segment() {
+        // Starting at the centre of (4,0) on a route to (20,0): 20 nm in
+        // (4,0), 40 in (5,0).
+        let route = [hex(20)];
+        // 30 knots: 40/30 = 1.333333 (not 2.000000 - 0.666666 = 1.333334).
+        let mut thirty = world(
+            1,
+            &[Force::new(1, Side::Allied, hex(4)).route(&route).knots(30)],
+        );
+        let list = hours(&mut thirty, Pulse::Morning, 1);
+        assert_eq!(in_hex(&list, hex(4)), Some(fx("0.666666")));
+        assert_eq!(in_hex(&list, hex(5)), Some(fx("1.333333")));
+        // 20 knots: 40/20 = 2.
+        let mut twenty = world(
+            1,
+            &[Force::new(1, Side::Allied, hex(4)).route(&route).knots(20)],
+        );
+        let list = hours(&mut twenty, Pulse::Morning, 1);
+        assert_eq!(in_hex(&list, hex(5)), Some(Fixed::from_int(2)));
+        // 15 knots: 40/15 = 2.666666.
+        let mut fifteen = world(
+            1,
+            &[Force::new(1, Side::Allied, hex(4)).route(&route).knots(15)],
+        );
+        let list = hours(&mut fifteen, Pulse::Morning, 1);
+        assert_eq!(in_hex(&list, hex(4)), Some(fx("1.333333")));
+        assert_eq!(in_hex(&list, hex(5)), Some(fx("2.666666")));
+        // 90 nm in the pulse: 20 in (4,0), 40 in (5,0), 30 in (6,0).
+        assert_eq!(in_hex(&list, hex(6)), Some(Fixed::from_int(2)));
+    }
+
+    #[test]
+    fn a_force_that_enters_a_hex_at_the_last_moment_has_no_hours_in_it() {
+        // 10 knots from the centre of (3,0): 60 nm, which is the moment it
+        // enters (5,0). It is in (3,0) 2 hours and in (4,0) 4, and has no
+        // hours in (5,0).
+        let mut world = world(
+            1,
+            &[Force::new(1, Side::Allied, hex(3))
+                .route(&[hex(20)])
+                .knots(10)],
+        );
+        let list = hours(&mut world, Pulse::Morning, 1);
+        assert_eq!(in_hex(&list, hex(3)), Some(Fixed::from_int(2)));
+        assert_eq!(in_hex(&list, hex(4)), Some(Fixed::from_int(4)));
+        assert_eq!(in_hex(&list, hex(5)), None);
+        assert_eq!(
+            world.truth.task_forces[&TaskForceId::new(1)].position(),
+            hex(5)
+        );
+    }
+
+    #[test]
+    fn a_force_that_arrives_has_its_steaming_in_the_hex_and_the_rest_of_the_pulse() {
+        // 20 knots from the centre of (3,0) to the centre of (5,0), 80 nm,
+        // 4 hours: 1 hour in (3,0), 2 in (4,0), then 1 in (5,0) before the
+        // centre and the 2 hours left after: 3.
+        let mut world = world(
+            1,
+            &[Force::new(1, Side::Allied, hex(3))
+                .route(&[hex(5)])
+                .knots(20)],
+        );
+        let list = hours(&mut world, Pulse::Morning, 1);
+        assert_eq!(in_hex(&list, hex(3)), Some(Fixed::from_int(1)));
+        assert_eq!(in_hex(&list, hex(4)), Some(Fixed::from_int(2)));
+        assert_eq!(in_hex(&list, hex(5)), Some(Fixed::from_int(3)));
+        let total = list.iter().fold(Fixed::ZERO, |sum, (_, h)| sum + *h);
+        assert_eq!(total, Fixed::from_int(6));
+    }
+
+    #[test]
+    fn a_force_that_runs_out_of_fuel_has_the_rest_of_the_pulse_where_it_stopped() {
+        // 20 t at 0.25 t a nm is 80 nm, at 16 knots 5 hours: 1.25 hours in
+        // (0,0), 2.5 in (1,0), 1.25 in (2,0) and the sixth hour there too.
+        let mut world = world(
+            1,
+            &[Force::new(1, Side::Allied, hex(0))
+                .route(&[hex(20)])
+                .knots(16)],
+        );
+        for ship in world.truth.ships.values_mut() {
+            ship.fuel_t = Fixed::from_int(20);
+        }
+        let list = hours(&mut world, Pulse::Morning, 1);
+        assert_eq!(in_hex(&list, hex(0)), Some(fx("1.25")));
+        assert_eq!(in_hex(&list, hex(1)), Some(fx("2.5")));
+        assert_eq!(in_hex(&list, hex(2)), Some(fx("2.25")));
+        assert_eq!(
+            world.truth.task_forces[&TaskForceId::new(1)].status,
+            TaskForceStatus::OutOfFuel
+        );
+    }
+
+    #[test]
+    fn a_force_with_no_ship_afloat_has_no_hours() {
+        let mut world = world(
+            1,
+            &[
+                Force::new(1, Side::Allied, hex(5)),
+                Force::new(2, Side::Allied, hex(6)),
+            ],
+        );
+        world
+            .truth
+            .task_forces
+            .get_mut(&TaskForceId::new(2))
+            .expect("force")
+            .ships
+            .clear();
+        let counted = world.move_forces(1, Pulse::Night, true);
+        assert!(counted.contains_key(&TaskForceId::new(1)));
+        assert!(!counted.contains_key(&TaskForceId::new(2)));
+    }
+
+    #[test]
+    fn a_force_made_in_a_fight_has_the_hours_from_when_it_was_made() {
+        // Two forces of three cruisers meet at (4,0) 8.75 hours into the
+        // night. Over seeds some fight leaves ships that cannot steam, which
+        // the straggler pass detaches into a force of their own, made at the
+        // moment of the fight (decision 0016): it has the 12 - 8.75 hours
+        // left in the hex it was made in, and nothing before.
+        let mut checked = 0;
+        for seed in 1..=200 {
+            let mut world = world(
+                seed,
+                &[
+                    Force::new(1, Side::Japanese, hex(0))
+                        .route(&[hex(10)])
+                        .ships(3),
+                    Force::new(2, Side::Allied, hex(6))
+                        .route(&[hex(0)])
+                        .knots(8)
+                        .ships(3),
+                ],
+            );
+            for force in world.truth.task_forces.values_mut() {
+                force.rules_of_engagement.stragglers = crate::orders::StragglerInstruction::Leave;
+            }
+            let counted = world.move_forces(1, Pulse::Night, true);
+            let made: Vec<(TaskForceId, TaskForceId)> = world
+                .events()
+                .iter()
+                .filter_map(|e| match e.kind {
+                    EventKind::ShipsDetached {
+                        parent, new_force, ..
+                    } => Some((parent, new_force)),
+                    _ => None,
+                })
+                .collect();
+            for (_, new_force) in made {
+                let force = &world.truth.task_forces[&new_force];
+                if force.ships.is_empty() {
+                    continue;
+                }
+                let list = counted.get(&new_force).expect("hours of a force made");
+                let total = list.iter().fold(Fixed::ZERO, |sum, (_, h)| sum + *h);
+                assert_eq!(total, fx("3.25"), "seed {seed}");
+                assert_eq!(list.last().map(|(hex, _)| *hex), Some(force.position()));
+                checked += 1;
+            }
+        }
+        assert!(checked > 0, "no seed made a force in a fight");
     }
 }

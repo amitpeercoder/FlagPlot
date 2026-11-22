@@ -1,0 +1,32 @@
+# Submarine figures of scenario 128 (decision 0218, stage 2). Every figure is
+# a PLACEHOLDER, invented for the scenario's hand calculation
+# (tests/scenario_128_submarines_against_warships.rs, "The figures"): the
+# architect's table, except the last two figures, which are the team lead's
+# placeholders (the architect's table gives neither). Not historical, and
+# not to be used for validation. The live figures are in submarines.toml.
+# Scenario 128 names this file with its `submarines` key; the loader does not
+# redirect it to the frozen step 1 figures.
+
+# Required by the loader and ignored once read: the scenario carries the flag.
+placeholder = true
+
+submarine_attacks_per_hour = "0.02"
+attacks_ship_dead_in_water = "5"
+# Held down for the rest of the pulse of the hunt and two pulses after it.
+held_down_pulses = 2
+hunt_damages_chance = "0.3"
+hunt_sinks_share = "0.2"
+submarine_surfaced_share = "0.25"
+air_attack_damages_chance = "0.25"
+air_attack_sinks_share = "0.2"
+
+# The team lead's placeholders: the chance that a torpedo that missed is
+# claimed a hit, and the age in pulses at which a report of a submarine is
+# dropped.
+submarine_false_hit_chance = "0.25"
+submarine_report_drop_age_pulses = 6
+
+# The placeholder torpedo of submarine_torpedoes_placeholder_scenario_128.csv
+# hits at 0.5.
+[hit_chance]
+6950 = "0.5"

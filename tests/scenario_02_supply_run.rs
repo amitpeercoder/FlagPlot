@@ -749,7 +749,8 @@ fn the_event_log_explains_an_unload() {
                 OrderKind::TaskForce { order, .. } => Some(order),
                 OrderKind::AirGroup { .. }
                 | OrderKind::LandUnit { .. }
-                | OrderKind::Base { .. } => None,
+                | OrderKind::Base { .. }
+                | OrderKind::Submarine { .. } => None,
             },
             Cause::Event(_) => None,
         })

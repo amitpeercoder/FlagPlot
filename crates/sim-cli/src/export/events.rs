@@ -235,6 +235,8 @@ fn reject_reason(reason: &RejectReason) -> Data {
         RejectReason::ChargeTakesPartInFuelling(charge) => {
             base("charge_takes_part_in_fuelling").id("charge", *charge)
         }
+        RejectReason::SubmarineOffTheMap => base("submarine_off_the_map"),
+        RejectReason::SubmarineGoingHome => base("submarine_going_home"),
     }
 }
 
@@ -910,6 +912,38 @@ pub(super) fn describe(
                 .int("lost", *lost)
                 .int("ashore", *ashore),
         ),
+        EventKind::SubmarineReported {
+            side,
+            hex,
+            replaced,
+        } => (
+            "submarine_reported",
+            d.text("side", names::side(*side))
+                .hex("hex", *hex)
+                .flag("replaced", *replaced),
+        ),
+        EventKind::SubmarineReportDropped { side, hex } => (
+            "submarine_report_dropped",
+            d.text("side", names::side(*side)).hex("hex", *hex),
+        ),
+        EventKind::SubmarineOrderedToStation { submarine, station } => (
+            "submarine_ordered_to_station",
+            d.id("submarine", *submarine).hex("station", *station),
+        ),
+        EventKind::SuspectedWatersTold {
+            side,
+            hex,
+            distance,
+            day,
+            words,
+        } => (
+            "suspected_waters_told",
+            d.text("side", names::side(*side))
+                .hex("hex", *hex)
+                .int("distance", *distance)
+                .int("day", *day)
+                .with("words", Field::Str(words.clone())),
+        ),
         EventKind::GroundReportReceived {
             side,
             hex,
@@ -1194,6 +1228,118 @@ pub(super) fn describe(
                 .ids("ships", ships)
                 .ids("air_groups", air_groups)
                 .ids("land_units", land_units),
+        ),
+        EventKind::SubmarineEntered { submarine, hex } => (
+            "submarine_entered",
+            d.id("submarine", *submarine).hex("hex", *hex),
+        ),
+        EventKind::SubmarineSteamed {
+            submarine,
+            from,
+            to,
+        } => (
+            "submarine_steamed",
+            d.id("submarine", *submarine)
+                .hex("from", *from)
+                .hex("to", *to),
+        ),
+        EventKind::SubmarineOnStation { submarine, hex } => (
+            "submarine_on_station",
+            d.id("submarine", *submarine).hex("hex", *hex),
+        ),
+        EventKind::SubmarineLeftForHome {
+            submarine,
+            base,
+            reason,
+        } => (
+            "submarine_left_for_home",
+            d.id("submarine", *submarine)
+                .id("base", *base)
+                .text("reason", reason.name()),
+        ),
+        EventKind::SubmarineAttackChance {
+            submarine,
+            task_force,
+            hex,
+            hours,
+            chance,
+            attacks,
+        } => (
+            "submarine_attack_chance",
+            d.id("submarine", *submarine)
+                .id("task_force", *task_force)
+                .hex("hex", *hex)
+                .num("hours", *hours)
+                .num("chance", *chance)
+                .num("attacks", *attacks),
+        ),
+        EventKind::SubmarineSalvo {
+            submarine,
+            task_force,
+            ship,
+            hex,
+            torpedoes,
+            hits,
+            taken_for,
+        } => (
+            "submarine_salvo",
+            d.id("submarine", *submarine)
+                .id("task_force", *task_force)
+                .id("ship", *ship)
+                .hex("hex", *hex)
+                .int("torpedoes", *torpedoes)
+                .int("hits", *hits)
+                .text("taken_for", taken_for.name()),
+        ),
+        EventKind::SubmarineHunted {
+            submarine,
+            task_force,
+            hex,
+            held_down_until,
+            damaged,
+            sunk,
+        } => (
+            "submarine_hunted",
+            d.id("submarine", *submarine)
+                .id("task_force", *task_force)
+                .hex("hex", *hex)
+                .int("held_down_until_day", held_down_until.0)
+                .text("held_down_until_pulse", held_down_until.1.name())
+                .flag("damaged", *damaged)
+                .flag("sunk", *sunk),
+        ),
+        EventKind::SubmarineSearchAttempt {
+            air_group,
+            submarine,
+            distance_nm,
+            chance,
+            sighted,
+        } => (
+            "submarine_search_attempt",
+            d.id("air_group", *air_group)
+                .id("submarine", *submarine)
+                .num("distance_nm", *distance_nm)
+                .num("chance", *chance)
+                .flag("sighted", *sighted),
+        ),
+        EventKind::SubmarineAttackedFromAir {
+            air_group,
+            submarine,
+            hex,
+            damaged,
+            sunk,
+        } => (
+            "submarine_attacked_from_air",
+            d.id("air_group", *air_group)
+                .id("submarine", *submarine)
+                .hex("hex", *hex)
+                .flag("damaged", *damaged)
+                .flag("sunk", *sunk),
+        ),
+        EventKind::SubmarineSunk { submarine } => ("submarine_sunk", d.id("submarine", *submarine)),
+        EventKind::SubmarineReachedHome { submarine, base } => (
+            "submarine_reached_home",
+            d.id("submarine", *submarine).id("base", *base),
         ),
         EventKind::UnitEntered {
             unit,
@@ -1926,6 +2072,7 @@ pub(super) fn describe(
             claimed_on_ground,
             from_air,
             from_bombardment,
+            from_submarine,
             ground_types,
             by_unit,
             air_types,
@@ -1940,6 +2087,19 @@ pub(super) fn describe(
             let d = if *from_bombardment {
                 d.int("claimed_on_ground", *claimed_on_ground)
                     .flag("from_bombardment", true)
+            } else {
+                d
+            };
+            // A submarine's claim (decision 0218, 45) says the hits believed
+            // scored and the kind taken for, and is marked.
+            let d = if *from_submarine {
+                let d = d
+                    .int("claimed_hits", *claimed_hits)
+                    .flag("from_submarine", true);
+                match claimed_kind {
+                    Some(kind) => d.text("claimed_kind", kind.name()),
+                    None => d,
+                }
             } else {
                 d
             };

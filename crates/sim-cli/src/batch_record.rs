@@ -1265,6 +1265,21 @@ pub fn count(
             | EventKind::ArrivalWaiting { .. }
             | EventKind::ForceEntered { .. }
             | EventKind::UnitEntered { .. }
+            | EventKind::SubmarineEntered { .. }
+            | EventKind::SubmarineSteamed { .. }
+            | EventKind::SubmarineOnStation { .. }
+            | EventKind::SubmarineLeftForHome { .. }
+            | EventKind::SubmarineReachedHome { .. }
+            | EventKind::SubmarineAttackChance { .. }
+            | EventKind::SubmarineSalvo { .. }
+            | EventKind::SubmarineHunted { .. }
+            | EventKind::SubmarineSearchAttempt { .. }
+            | EventKind::SubmarineAttackedFromAir { .. }
+            | EventKind::SubmarineSunk { .. }
+            | EventKind::SubmarineReported { .. }
+            | EventKind::SubmarineReportDropped { .. }
+            | EventKind::SubmarineOrderedToStation { .. }
+            | EventKind::SuspectedWatersTold { .. }
             | EventKind::EntryWaiting { .. }
             | EventKind::StockReceived { .. }
             | EventKind::MenJoined { .. }

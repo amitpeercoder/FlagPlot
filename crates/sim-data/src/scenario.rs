@@ -11,20 +11,21 @@ use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
 use sim_core::ids::{
     AirGroupId, AircraftTypeId, BaseId, EntityRef, FormationId, IntentId, LandUnitId, ShipClassId,
-    ShipId, TaskForceId,
+    ShipId, SubmarineClassId, SubmarineId, TaskForceId,
 };
 use sim_core::map::{HexKind, Island, IslandPlace};
 use sim_core::objectives::{Levels, Objective, Objectives, ShipPoints, SideObjectives};
 use sim_core::orders::{
     Activity, AirGroupOrder, AirMission, BaseOrder, Cargo, Issuer, Job, LandUnitOrder, Mission,
     OrderKind, OrderRequest, Origin, Posture, Reach, Readiness, SpeedSetting, Stance,
-    StragglerInstruction, TaskForceOrder, WhenSpent,
+    StragglerInstruction, SubmarineOrder, TaskForceOrder, WhenSpent,
 };
 use sim_core::pictures::{CommandRef, NamedSuperior};
-use sim_core::refdata::{RefData, ShipKind, TrialFigures};
+use sim_core::refdata::{RefData, ShipKind, SubmarineData, TrialFigures};
 use sim_core::state::{
     AirGroup, AirGroupLocation, Arrival, Base, Formation, LandUnit, Replacement, Ship,
-    ShipLocation, ShipSystem, ShipSystems, Side, Skills, SystemState, TaskForce, TruthState,
+    ShipLocation, ShipSystem, ShipSystems, Side, Skills, Submarine, SubmarineCondition,
+    SubmarinePassage, SystemState, TaskForce, TruthState, WatersWaiting,
 };
 use sim_core::time::Pulse;
 use sim_core::world::MADE_IDS_FLOOR;
@@ -37,8 +38,9 @@ use crate::quantity::Quantity;
 use crate::reference::{
     load_air_combat_figures, load_air_supply_figures, load_air_upkeep_figures, load_aircraft_types,
     load_class_sides, load_fatigue_figures, load_ground_figures, load_port_sizes,
-    load_report_figures, load_search_figures, load_ship_classes_marked,
-    load_surface_combat_figures, load_trial_figures, parse_kind,
+    load_report_figures, load_search_figures, load_ship_classes_marked, load_submarine_classes,
+    load_submarine_figures, load_submarine_torpedoes, load_surface_combat_figures,
+    load_trial_figures, parse_kind,
 };
 
 /// One file name or a list of them (decision 0043).
@@ -117,10 +119,28 @@ struct ScenarioFile {
     /// reference file, redirected by `LoadOptions::reference_root` as the
     /// class files are. Kept with the scenario, never put into the world.
     trial: Option<String>,
+    /// Path to the submarine class file, relative to the scenario file
+    /// (decision 0218). A reference file, redirected by
+    /// `LoadOptions::reference_root` as the class files are. A scenario
+    /// names all of `submarine_classes`, `submarine_torpedoes` and
+    /// `submarines`, or none.
+    submarine_classes: Option<String>,
+    /// Path to the submarine torpedo file (decision 0218): a reference file,
+    /// redirected as the class files are.
+    submarine_torpedoes: Option<String>,
+    /// Path to the submarine figures, relative to the scenario file
+    /// (decision 0218). Not a reference file redirected by
+    /// `LoadOptions::reference_root`: it is read where the scenario names
+    /// it, as `reports` is, since the frozen step 1 figures give none and a
+    /// frozen game has no boat.
+    submarines: Option<String>,
     #[serde(default)]
     base: Vec<BaseSpec>,
     #[serde(default)]
     land_unit: Vec<LandUnitSpec>,
+    /// Submarines (decision 0218): units of their own kind.
+    #[serde(default)]
+    submarine: Vec<SubmarineSpec>,
     #[serde(default)]
     air_group: Vec<AirGroupSpec>,
     #[serde(default)]
@@ -145,6 +165,10 @@ struct ScenarioFile {
     /// Opening estimates of the enemy's men ashore (decision 0092, 16).
     #[serde(default)]
     estimate: Vec<EstimateSpec>,
+    /// The waters where a side suspects enemy submarines work (decision
+    /// 0218, 23 and 47).
+    #[serde(default)]
+    suspected_waters: Vec<SuspectedWatersSpec>,
     /// The enemy forces a side believes in and holds no contact of
     /// (decision 0173, 5).
     #[serde(default)]
@@ -314,6 +338,10 @@ enum ObjectiveSpec {
         base: u32,
         points_per_100_men: Quantity,
     },
+    /// Decision 0218, 32: points for each enemy submarine sunk.
+    SubmarinesSunk {
+        points: Quantity,
+    },
 }
 
 /// A contact a side holds when the game begins (decision 8 of
@@ -347,6 +375,23 @@ struct EstimateSpec {
     q: i32,
     r: i32,
     men: u32,
+}
+
+/// The waters where a side believes enemy submarines work (decision 0218, 23
+/// and 47): a hex and a distance round it, the day the side is told (the
+/// first day by default), the words of the belief, the rows it rests on and
+/// the architect's reading of the rows into this hex and distance, marked.
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct SuspectedWatersSpec {
+    side: SideSpec,
+    q: i32,
+    r: i32,
+    distance: u32,
+    day: Option<u32>,
+    words: String,
+    rows: String,
+    reading: String,
 }
 
 /// A force of the enemy's a side believes in and holds no contact of
@@ -503,6 +548,42 @@ struct LandUnitSpec {
     /// The unit's nights of hunger at the start (decision 0205, 7): a whole
     /// number. Without it, 0. Only the hunger figures read it.
     hunger_nights: Option<u32>,
+}
+
+/// A submarine (decision 0218): a unit of her own kind with a station.
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct SubmarineSpec {
+    id: u32,
+    name: String,
+    side: SideSpec,
+    class: u32,
+    /// The hex she starts in.
+    q: i32,
+    r: i32,
+    /// Her station. Without it, her hex. A station that is not her hex
+    /// means she starts on passage to it.
+    station_q: Option<i32>,
+    station_r: Option<i32>,
+    /// The base she goes home to: required.
+    home: u32,
+    /// The day she leaves for home (rule 3): a whole number from 1.
+    leave_day: Option<u32>,
+    /// The day she enters the game (decision 0218, 33): a whole number from
+    /// 2 up to the scenario's `days`. Until then she is held apart, in no
+    /// hex for any rule.
+    enters: Option<u32>,
+    /// The day from which her side may use her: a whole number from 1.
+    available_from: Option<u32>,
+    /// Salvoes at the start: from 0, at most her class's. Without it, her
+    /// class's.
+    salvoes: Option<u32>,
+    /// `sound` or `damaged`. A damaged boat starts going home. Without it,
+    /// sound.
+    condition: Option<String>,
+    /// Pulses she starts held down, counted from the first, the night:
+    /// 0 for none. Without it, 0.
+    held_down_pulses: Option<u32>,
 }
 
 /// A land unit's skills (decision 0098), each optional, defaulting to 2:
@@ -732,14 +813,16 @@ struct OrderSpec {
     /// The day the order takes effect. Day 1 is the first day.
     day: u32,
     side: SideSpec,
-    /// Exactly one of `task_force`, `air_group`, `land_unit` and `base` must
-    /// be given.
+    /// Exactly one of `task_force`, `air_group`, `land_unit`, `base` and
+    /// `submarine` must be given.
     task_force: Option<u32>,
     air_group: Option<u32>,
     /// A base, for a `form_task_force` order (decision 0111).
     base: Option<u32>,
     /// A land unit, for a `set_posture`, `march` or `set_activity` order.
     land_unit: Option<u32>,
+    /// A submarine, for a `station` order (decision 0218).
+    submarine: Option<u32>,
     #[serde(default)]
     issuer: IssuerSpec,
     intent: Option<u32>,
@@ -937,6 +1020,11 @@ enum ActionSpec {
     /// Do no cargo work: clear the force's cargo order (decision 0191). No
     /// other key.
     NoCargoWork {},
+    /// Send a submarine to a station and keep it (decision 0218). The hex is
+    /// `[q, r]`.
+    Station {
+        hex: [i32; 2],
+    },
 }
 
 #[derive(Deserialize, Clone, Copy)]
@@ -1348,6 +1436,9 @@ fn build_objectives(
                         &format!("{what} points_per_100_men"),
                     )?,
                 },
+                ObjectiveSpec::SubmarinesSunk { points } => Objective::SubmarinesSunk {
+                    points: points_of(points, &format!("{what} points"))?,
+                },
             });
         }
         Ok(SideObjectives {
@@ -1649,6 +1740,9 @@ pub struct Scenario {
     contacts: Vec<(StartingContact, Option<CommandRef>)>,
     /// The opening estimates, kept for the same reason (decision 0092, 16).
     estimates: Vec<StartingEstimate>,
+    /// The suspected waters the scenario gives, kept for the same reason
+    /// (decision 0218, 47).
+    waters: Vec<WatersWaiting>,
     /// The superiors the scenario names, when command levels are on
     /// (decision 0134); `None` when they are off.
     command_levels: Option<Vec<NamedSuperior>>,
@@ -1949,6 +2043,47 @@ impl Scenario {
             None => None,
         };
         data_files.extend(trial_file);
+
+        // The submarine files (decision 0218): all three or none. The class
+        // and torpedo files are reference files; the figures are read where
+        // the scenario names them.
+        match (
+            &file.submarine_classes,
+            &file.submarine_torpedoes,
+            &file.submarines,
+        ) {
+            (None, None, None) => {
+                if !file.submarine.is_empty() {
+                    return Err(fail(
+                        "there are submarines but the scenario names no submarine_classes, submarine_torpedoes and submarines files (decision 0218)"
+                            .to_string(),
+                    ));
+                }
+            }
+            (Some(classes), Some(torpedoes), Some(figures)) => {
+                let classes_path = reference(classes)?;
+                let torpedoes_path = reference(torpedoes)?;
+                let figures_path = folder.join(figures);
+                let data = SubmarineData {
+                    classes: load_submarine_classes(&classes_path)?,
+                    torpedoes: load_submarine_torpedoes(&torpedoes_path)?,
+                    figures: load_submarine_figures(&figures_path)?,
+                };
+                data.validate().map_err(|message| {
+                    fail(format!("the submarine files do not fit together: {message}"))
+                })?;
+                ref_data.submarines = Some(data);
+                data_files.push(classes_path);
+                data_files.push(torpedoes_path);
+                data_files.push(figures_path);
+            }
+            _ => {
+                return Err(fail(
+                    "a scenario names all of submarine_classes, submarine_torpedoes and submarines, or none of them (decision 0218)"
+                        .to_string(),
+                ))
+            }
+        }
 
         let mut truth = TruthState::default();
 
@@ -3013,8 +3148,9 @@ impl Scenario {
                 &spec.air_group,
                 &spec.land_unit,
                 &target_base,
+                &spec.submarine,
             ) {
-                (Some(raw), None, None, None) => {
+                (Some(raw), None, None, None, None) => {
                     let order = match &spec.action {
                         ActionSpec::SetRoute {
                             waypoints,
@@ -3204,6 +3340,9 @@ impl Scenario {
                         ActionSpec::SetActivity { .. } => {
                             return Err(wrong_target("set_activity", "land_unit"))
                         }
+                        ActionSpec::Station { .. } => {
+                            return Err(wrong_target("station", "submarine"))
+                        }
                         ActionSpec::PrepareLanding { hex: [q, r], roster } => {
                             TaskForceOrder::PrepareLanding {
                                 hex: Hex::new(*q, *r),
@@ -3216,7 +3355,7 @@ impl Scenario {
                         order,
                     }
                 }
-                (None, Some(raw), None, None) => {
+                (None, Some(raw), None, None, None) => {
                     let order = match &spec.action {
                         ActionSpec::SetAirMission {
                             mission,
@@ -3353,7 +3492,7 @@ impl Scenario {
                         order,
                     }
                 }
-                (None, None, Some(raw), None) => {
+                (None, None, Some(raw), None, None) => {
                     let order = match &spec.action {
                         ActionSpec::SetPosture {
                             posture,
@@ -3405,7 +3544,7 @@ impl Scenario {
                         order,
                     }
                 }
-                (None, None, None, Some(raw)) => {
+                (None, None, None, Some(raw), None) => {
                     let order = match &spec.action {
                         ActionSpec::FormTaskForce { ships } => BaseOrder::FormTaskForce {
                             ships: ships.iter().map(|raw| ShipId::new(*raw)).collect(),
@@ -3421,9 +3560,25 @@ impl Scenario {
                         order,
                     }
                 }
+                (None, None, None, None, Some(raw)) => {
+                    let order = match &spec.action {
+                        ActionSpec::Station { hex: [q, r] } => {
+                            SubmarineOrder::Station(Hex::new(*q, *r))
+                        }
+                        _ => {
+                            return Err(fail(format!(
+                                "an order on day {day} for a submarine must be station"
+                            )))
+                        }
+                    };
+                    OrderKind::Submarine {
+                        target: SubmarineId::new(*raw),
+                        order,
+                    }
+                }
                 _ => {
                     return Err(fail(format!(
-                        "the order on day {day} needs exactly one of task_force, air_group, land_unit and base"
+                        "the order on day {day} needs exactly one of task_force, air_group, land_unit and base (or submarine, for a station order)"
                     )))
                 }
             };
@@ -3557,6 +3712,130 @@ impl Scenario {
                     }
                 }
             }
+        }
+
+        // Submarines (decision 0218): built against the data and the bases;
+        // the world's own checks then see that each is whole.
+        for spec in &file.submarine {
+            let id = SubmarineId::new(spec.id);
+            if truth.submarines.contains_key(&id) {
+                return Err(fail(format!("submarine {} is given twice", spec.id)));
+            }
+            let what = format!("submarine {}", spec.id);
+            let class_id = SubmarineClassId::new(spec.class);
+            let class = ref_data
+                .submarines
+                .as_ref()
+                .and_then(|data| data.classes.get(&class_id))
+                .ok_or_else(|| {
+                    fail(format!(
+                        "{what} has class {}, which the submarine class file does not give",
+                        spec.class
+                    ))
+                })?;
+            let hex = Hex::new(spec.q, spec.r);
+            let station = match (spec.station_q, spec.station_r) {
+                (None, None) => hex,
+                (Some(q), Some(r)) => Hex::new(q, r),
+                _ => {
+                    return Err(fail(format!(
+                        "{what} gives one of station_q and station_r: give both or neither"
+                    )))
+                }
+            };
+            let salvoes = spec.salvoes.unwrap_or(class.salvoes_carried);
+            if salvoes > class.salvoes_carried {
+                return Err(fail(format!(
+                    "{what} has salvoes = {salvoes}, more than her class carries ({})",
+                    class.salvoes_carried
+                )));
+            }
+            let condition = match spec.condition.as_deref() {
+                None | Some("sound") => SubmarineCondition::Sound,
+                Some("damaged") => SubmarineCondition::Damaged,
+                Some(other) => {
+                    return Err(fail(format!(
+                        "{what} has condition \"{other}\": sound or damaged"
+                    )))
+                }
+            };
+            for (key, day) in [
+                ("leave_day", spec.leave_day),
+                ("available_from", spec.available_from),
+            ] {
+                if day == Some(0) {
+                    return Err(fail(format!("{what} has {key} = 0: days count from 1")));
+                }
+            }
+            if let Some(day) = spec.enters {
+                if day < 2 {
+                    return Err(fail(format!(
+                        "{what} has enters = {day}: a unit there on day 1 needs no `enters`, and a unit enters on day 2 or later (decision 0195, 1)"
+                    )));
+                }
+                if day > file.days {
+                    return Err(fail(format!(
+                        "{what} has enters = {day}, after the last day of the scenario ({}): it would never enter",
+                        file.days
+                    )));
+                }
+            }
+            let home = BaseId::new(spec.home);
+            // A damaged boat starts going home; a boat whose station is not
+            // her hex starts on passage to it (decision 0218, 43).
+            let passage = match (condition, truth.bases.get(&home)) {
+                (SubmarineCondition::Damaged, Some(base)) => Some(SubmarinePassage {
+                    to: base.hex,
+                    home: true,
+                    toward_hex: None,
+                    progress_nm: Fixed::ZERO,
+                    leg_nm: Fixed::ZERO,
+                    arrived: false,
+                    order: None,
+                }),
+                (SubmarineCondition::Damaged, None) => None,
+                _ if station != hex => Some(SubmarinePassage {
+                    to: station,
+                    home: false,
+                    toward_hex: None,
+                    progress_nm: Fixed::ZERO,
+                    leg_nm: Fixed::ZERO,
+                    arrived: false,
+                    order: None,
+                }),
+                _ => None,
+            };
+            // Held down for that many pulses from the first, the night
+            // counted as the first: the last pulse she is held is that many
+            // pulses after the night of day 1, the night included.
+            let held_down_until = match spec.held_down_pulses.unwrap_or(0) {
+                0 => None,
+                pulses => {
+                    let place = usize::try_from(pulses - 1).expect("a count of pulses");
+                    let day = 1 + u32::try_from(place / 3).expect("a count of days");
+                    Some((day, Pulse::ALL[place % 3]))
+                }
+            };
+            truth.submarines.insert(
+                id,
+                Submarine {
+                    id,
+                    name: spec.name.clone(),
+                    side: spec.side.into(),
+                    class: class_id,
+                    hex,
+                    station,
+                    passage,
+                    salvoes,
+                    held_down_until,
+                    condition,
+                    home,
+                    leave_day: spec.leave_day,
+                    enters_day: spec.enters,
+                    available_from: spec.available_from,
+                    station_order: None,
+                },
+            );
         }
 
         // Units that enter later (decision 0195, 1, 16 to 19): checked here,
@@ -3916,6 +4195,40 @@ impl Scenario {
         world
             .hold_starting_estimates(estimates.clone())
             .map_err(|e| fail(e.to_string()))?;
+        // The waters a side suspects enemy submarines work (decision 0218,
+        // 47): told on their days.
+        let mut waters = Vec::new();
+        for (index, spec) in file.suspected_waters.iter().enumerate() {
+            let what = format!("suspected waters {}", index + 1);
+            let day = spec.day.unwrap_or(1);
+            if day == 0 || day > file.days {
+                return Err(fail(format!(
+                    "{what} are told on day {day}, which is not a day of the game (1 to {})",
+                    file.days
+                )));
+            }
+            for (name, text) in [
+                ("words", &spec.words),
+                ("rows", &spec.rows),
+                ("reading", &spec.reading),
+            ] {
+                if text.trim().is_empty() {
+                    return Err(fail(format!("{what} have no {name}")));
+                }
+            }
+            waters.push(WatersWaiting {
+                side: spec.side.into(),
+                hex: Hex::new(spec.q, spec.r),
+                distance_hexes: spec.distance,
+                words: spec.words.clone(),
+                rows: spec.rows.clone(),
+                reading: spec.reading.clone(),
+                day,
+            });
+        }
+        world
+            .hold_suspected_waters(waters.clone())
+            .map_err(|e| fail(e.to_string()))?;
 
         // What each side believed of the enemy (decision 0173, 5 to 9):
         // checked and kept with the scenario, never put into the world.
@@ -3943,6 +4256,7 @@ impl Scenario {
             commands,
             contacts,
             estimates,
+            waters,
             command_levels,
             radio_silent,
             commanders,
@@ -4082,6 +4396,7 @@ impl Scenario {
         }
         world.hold_starting_contacts_seen(self.contacts.clone())?;
         world.hold_starting_estimates(self.estimates.clone())?;
+        world.hold_suspected_waters(self.waters.clone())?;
         if let Some(objectives) = self.world.objectives() {
             world.set_objectives(objectives.clone())?;
         }
@@ -4099,6 +4414,7 @@ impl Scenario {
             commands: self.commands.clone(),
             contacts: self.contacts.clone(),
             estimates: self.estimates.clone(),
+            waters: self.waters.clone(),
             command_levels: self.command_levels.clone(),
             radio_silent: self.radio_silent.clone(),
             commanders: self.commanders.clone(),
@@ -6385,6 +6701,26 @@ r = 0
             "[[objectives.allied.objective]]\nkind = \"men_landed\"\nbase = 77\npoints_per_100_men = 1\n",
         ));
         assert!(message.contains("unknown base:77"), "{message}");
+    }
+
+    #[test]
+    fn submarines_sunk_loads_with_its_points_and_is_refused_as_the_others_are() {
+        let body =
+            "[[objectives.allied.objective]]\nkind = \"submarines_sunk\"\npoints = \"2.5\"\n";
+        let scenario = parse_with(&objectives(LEVELS, body)).expect("loads");
+        let found = scenario.world.objectives().expect("has objectives");
+        assert_eq!(
+            found.allied.objectives,
+            vec![Objective::SubmarinesSunk {
+                points: "2.5".parse().expect("a decimal"),
+            }]
+        );
+        assert_eq!(found.allied.objectives[0].name(), "submarines_sunk");
+        let message = error_of(&objectives(
+            LEVELS,
+            "[[objectives.allied.objective]]\nkind = \"submarines_sunk\"\npoints = -1\n",
+        ));
+        assert!(message.contains("points is negative"), "{message}");
     }
 
     #[test]
@@ -9653,5 +9989,242 @@ task_force = 3
             .expect_err("refused")
             .message;
         assert!(message.contains("command"), "{message}");
+    }
+
+    // Submarines (decision 0218): the three file keys and the `[[submarine]]`
+    // table.
+
+    const SUBMARINE_KEYS: &str = "submarine_classes = \"../reference/submarine_classes_placeholder_scenario_128.csv\"\nsubmarine_torpedoes = \"../reference/submarine_torpedoes_placeholder_scenario_128.csv\"\nsubmarines = \"../reference/submarines_placeholder_scenario_128.toml\"\n";
+
+    /// `HEAD` with the submarine file keys given after the surface combat
+    /// key and `extra` after it, read with `options`.
+    fn with_submarines(
+        keys: &str,
+        extra: &str,
+        options: &LoadOptions,
+    ) -> Result<Scenario, DataError> {
+        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data/scenarios/test.toml");
+        let head = HEAD.replace(
+            "surface_combat = \"../reference/surface_combat.toml\"\n",
+            &format!("surface_combat = \"../reference/surface_combat.toml\"\n{keys}"),
+        );
+        Scenario::parse_with(&format!("{head}{extra}"), &path, options)
+    }
+
+    fn submarine(extra: &str) -> String {
+        format!(
+            "[[submarine]]\nid = 1\nname = \"Boat\"\nside = \"japanese\"\nclass = 6900\nq = 5\nr = 0\nhome = 2\n{extra}"
+        )
+    }
+
+    fn boat_of(extra: &str) -> sim_core::state::Submarine {
+        let scenario = with_submarines(SUBMARINE_KEYS, &submarine(extra), &LoadOptions::default())
+            .expect("loads");
+        scenario
+            .world
+            .umpire()
+            .submarines
+            .get(&SubmarineId::new(1))
+            .expect("the boat")
+            .clone()
+    }
+
+    fn submarine_error(keys: &str, extra: &str) -> String {
+        match with_submarines(keys, extra, &LoadOptions::default()) {
+            Ok(_) => panic!("the scenario was accepted"),
+            Err(error) => error.to_string(),
+        }
+    }
+
+    #[test]
+    fn the_three_submarine_keys_load_the_data_and_the_boat_with_its_defaults() {
+        let scenario = with_submarines(SUBMARINE_KEYS, &submarine(""), &LoadOptions::default())
+            .expect("loads");
+        let data = scenario
+            .world
+            .ref_data()
+            .submarines
+            .as_ref()
+            .expect("the data");
+        let class = &data.classes[&SubmarineClassId::new(6900)];
+        assert_eq!((class.salvo, class.salvoes_carried), (4, 2));
+        assert_eq!(class.passage_speed_kn, Fixed::from_int(10));
+        let torpedo = &data.torpedoes[&class.torpedo];
+        assert_eq!(torpedo.damage, Fixed::from_int(200));
+        assert_eq!(
+            data.figures.hit_chance[&class.torpedo],
+            Fixed::from_ratio(1, 2)
+        );
+        assert_eq!(data.figures.held_down_pulses, 2);
+        assert_eq!(data.figures.attacks_per_hour, Fixed::from_ratio(2, 100));
+        // All three are among the files the scenario records as its inputs.
+        for name in [
+            "submarine_classes_placeholder_scenario_128.csv",
+            "submarine_torpedoes_placeholder_scenario_128.csv",
+            "submarines_placeholder_scenario_128.toml",
+        ] {
+            assert!(
+                scenario.data_files.iter().any(|file| file.ends_with(name)),
+                "{name}"
+            );
+        }
+        let boat = &scenario.world.umpire().submarines[&SubmarineId::new(1)];
+        assert_eq!(boat.name, "Boat");
+        assert_eq!(boat.side, Side::Japanese);
+        assert_eq!(boat.class, SubmarineClassId::new(6900));
+        assert_eq!((boat.hex, boat.station), (Hex::new(5, 0), Hex::new(5, 0)));
+        assert_eq!(boat.passage, None);
+        assert_eq!(boat.salvoes, 2);
+        assert_eq!(boat.held_down_until, None);
+        assert_eq!(boat.condition, SubmarineCondition::Sound);
+        assert_eq!(boat.home, BaseId::new(2));
+        assert_eq!(
+            (boat.leave_day, boat.enters_day, boat.available_from),
+            (None, None, None)
+        );
+        // Without the keys there is no submarine data.
+        assert!(parse_with("")
+            .expect("loads")
+            .world
+            .ref_data()
+            .submarines
+            .is_none());
+    }
+
+    #[test]
+    fn a_scenario_names_all_three_submarine_files_or_none() {
+        let words = submarine_error(
+            &SUBMARINE_KEYS.replace("submarines = ", "# submarines = "),
+            "",
+        );
+        assert!(words.contains("all of submarine_classes"), "{words}");
+        let one = "submarines = \"../reference/submarines.toml\"\n";
+        assert!(submarine_error(one, "").contains("all of submarine_classes"));
+        // A boat with none of the keys is refused.
+        let words = submarine_error("", &submarine(""));
+        assert!(words.contains("no submarine_classes"), "{words}");
+        // A file that is not there is named.
+        let words = submarine_error(
+            &SUBMARINE_KEYS.replace("scenario_128.toml", "nothing.toml"),
+            "",
+        );
+        assert!(words.contains("nothing.toml"), "{words}");
+    }
+
+    #[test]
+    fn the_class_and_torpedo_files_follow_the_reference_root_and_the_figures_do_not() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+        let frozen = with_submarines(
+            SUBMARINE_KEYS,
+            &submarine(""),
+            &LoadOptions::frozen_step1(&root),
+        )
+        .expect("loads");
+        let live = with_submarines(SUBMARINE_KEYS, &submarine(""), &LoadOptions::default())
+            .expect("loads");
+        assert_eq!(
+            frozen.world.ref_data().submarines,
+            live.world.ref_data().submarines
+        );
+        // The class and torpedo files are the frozen copies; the figures are
+        // the scenario's own.
+        for (name, folder) in [
+            ("submarine_classes_placeholder_scenario_128.csv", "step1"),
+            ("submarine_torpedoes_placeholder_scenario_128.csv", "step1"),
+        ] {
+            assert!(
+                frozen
+                    .data_files
+                    .iter()
+                    .any(|file| file.ends_with(format!("{folder}/{name}"))),
+                "{name}"
+            );
+        }
+        assert!(frozen
+            .data_files
+            .iter()
+            .any(|file| file.ends_with("reference/submarines_placeholder_scenario_128.toml")));
+    }
+
+    #[test]
+    fn a_boat_takes_a_station_a_condition_salvoes_and_days() {
+        // A station that is not her hex: she starts on passage to it.
+        let boat = boat_of("station_q = 7\nstation_r = 0\n");
+        assert_eq!(boat.station, Hex::new(7, 0));
+        let passage = boat.passage.expect("a passage");
+        assert_eq!(
+            (passage.to, passage.home, passage.arrived),
+            (Hex::new(7, 0), false, false)
+        );
+        // Damaged: she starts going home, to the base's hex.
+        let boat = boat_of("condition = \"damaged\"\n");
+        assert_eq!(boat.condition, SubmarineCondition::Damaged);
+        let passage = boat.passage.expect("a passage");
+        assert_eq!((passage.to, passage.home), (Hex::new(5, 0), true));
+        // Salvoes, at most her class's.
+        assert_eq!(boat_of("salvoes = 1\n").salvoes, 1);
+        assert_eq!(boat_of("salvoes = 0\n").salvoes, 0);
+        // Days.
+        let boat = boat_of("leave_day = 2\navailable_from = 2\nenters = 2\n");
+        assert_eq!(
+            (boat.leave_day, boat.available_from, boat.enters_day),
+            (Some(2), Some(2), Some(2))
+        );
+        // Held down for that many pulses, the night counted as the first.
+        for (pulses, until) in [
+            (0, None),
+            (1, Some((1, Pulse::Night))),
+            (2, Some((1, Pulse::Morning))),
+            (3, Some((1, Pulse::Afternoon))),
+            (4, Some((2, Pulse::Night))),
+        ] {
+            assert_eq!(
+                boat_of(&format!("held_down_pulses = {pulses}\n")).held_down_until,
+                until,
+                "{pulses} pulses"
+            );
+        }
+    }
+
+    #[test]
+    fn a_bad_boat_is_refused_with_its_reason() {
+        for (extra, words) in [
+            ("salvoes = 3\n", "more than her class carries"),
+            ("condition = \"afloat\"\n", "sound or damaged"),
+            ("enters = 1\n", "enters = 1"),
+            ("enters = 3\n", "after the last day"),
+            ("leave_day = 0\n", "leave_day = 0"),
+            ("available_from = 0\n", "available_from = 0"),
+            ("station_q = 7\n", "give both or neither"),
+            ("station_r = 7\n", "give both or neither"),
+            ("station_q = 99\nstation_r = 0\n", "station"),
+        ] {
+            let message = submarine_error(SUBMARINE_KEYS, &submarine(extra));
+            assert!(message.contains(words), "{extra}: {message}");
+        }
+        // A class the file does not give.
+        let message = submarine_error(
+            SUBMARINE_KEYS,
+            &submarine("").replace("class = 6900", "class = 1"),
+        );
+        assert!(message.contains("class 1"), "{message}");
+        // A base that is not there.
+        let message = submarine_error(
+            SUBMARINE_KEYS,
+            &submarine("").replace("home = 2", "home = 99"),
+        );
+        assert!(message.contains("home base"), "{message}");
+        // The home base is required.
+        let message = submarine_error(SUBMARINE_KEYS, &submarine("").replace("home = 2\n", ""));
+        assert!(message.contains("home"), "{message}");
+        // Two boats of one number.
+        let message = submarine_error(
+            SUBMARINE_KEYS,
+            &format!("{}{}", submarine(""), submarine("")),
+        );
+        assert!(message.contains("given twice"), "{message}");
+        // An unknown key.
+        let message = submarine_error(SUBMARINE_KEYS, &submarine("speed = 5\n"));
+        assert!(message.contains("speed"), "{message}");
     }
 }

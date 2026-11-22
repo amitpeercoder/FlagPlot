@@ -96,6 +96,12 @@ pub struct Briefing {
     /// has no land unit, so a scenario without any is briefed as it was.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub land_units: Option<LandUnitsPart>,
+    /// 8b2. The side's own submarines, its reports of enemy submarines and
+    /// the waters it suspects they work in (decision 0218). Left out of the
+    /// data and the text when the side has none of the three, so a scenario
+    /// without any is briefed as it was.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub submarines: Option<crate::submarines::SubmarinesPart>,
     /// 8c. Bases that changed side yesterday and what went with them
     /// (decision 0090, 29 and 30). Left out of the data and the text when no
     /// base changed side and nothing was lost with one.
@@ -611,6 +617,11 @@ pub struct Claim {
     /// false. Left out when false.
     #[serde(skip_serializing_if = "is_false")]
     pub from_bombardment: bool,
+    /// True for the claim of a submarine (decision 0218, 45): hits believed
+    /// scored on the kind of ship she took her target for, and the ships
+    /// believed sunk. `from_air` is then false. Left out when false.
+    #[serde(skip_serializing_if = "is_false")]
+    pub from_submarine: bool,
     /// The types of the aircraft claimed destroyed on the ground, by name,
     /// each with its number, where the raiders made them out (decision
     /// 0179). Left out where none is named.
@@ -2106,6 +2117,7 @@ pub fn briefing_for_game(view: &SideView<'_>, scenario: &str, last_day: Option<u
     let shared_hexes = shared_hexes(&ctx);
     let free_forces = free_forces(&ctx, &day.finished);
     let land_units = land_units_part(&ctx, view, std::mem::take(&mut day.ground), &day.landing);
+    let submarines = crate::submarines::submarines_part(&ctx, view, today);
     let base_changes = Some(std::mem::take(&mut day.base_changes)).filter(|c| !c.is_empty());
     let halts = Some(std::mem::take(&mut day.halts)).filter(|h| !h.is_empty());
     let force_changes = Some(std::mem::take(&mut day.force_changes)).filter(|c| !c.is_empty());
@@ -2237,6 +2249,7 @@ pub fn briefing_for_game(view: &SideView<'_>, scenario: &str, last_day: Option<u
         bases,
         shared_hexes,
         land_units,
+        submarines,
         base_changes,
         arrivals,
         warnings,
@@ -3009,6 +3022,23 @@ impl Day {
             match &e.kind {
                 SideEventKind::Whole(kind) => match kind {
                     EventKind::OrderAccepted { .. } => orders.accepted += 1,
+                    // The briefing's part for a side's own boats is a later
+                    // phase of decision 0218.
+                    EventKind::SubmarineEntered { .. }
+                    | EventKind::SubmarineSteamed { .. }
+                    | EventKind::SubmarineOnStation { .. }
+                    | EventKind::SubmarineLeftForHome { .. }
+                    | EventKind::SubmarineReachedHome { .. }
+                    | EventKind::SubmarineAttackChance { .. }
+                    | EventKind::SubmarineSalvo { .. }
+                    | EventKind::SubmarineHunted { .. }
+                    | EventKind::SubmarineSearchAttempt { .. }
+                    | EventKind::SubmarineAttackedFromAir { .. }
+                    | EventKind::SubmarineSunk { .. }
+                    | EventKind::SubmarineReported { .. }
+                    | EventKind::SubmarineReportDropped { .. }
+                    | EventKind::SubmarineOrderedToStation { .. }
+                    | EventKind::SuspectedWatersTold { .. } => {}
                     EventKind::ForceEntered { .. }
                     | EventKind::UnitEntered { .. }
                     | EventKind::EntryWaiting { .. } => {
@@ -3326,6 +3356,7 @@ impl Day {
                         claimed_on_ground,
                         from_air,
                         from_bombardment,
+                        from_submarine,
                         ground_types,
                         by_unit,
                         air_types,
@@ -3363,6 +3394,7 @@ impl Day {
                         claimed_on_ground: *claimed_on_ground,
                         from_air: *from_air,
                         from_bombardment: *from_bombardment,
+                        from_submarine: *from_submarine,
                         event: id,
                     }),
                     EventKind::BaseSupplySpent {
@@ -4530,6 +4562,14 @@ impl Day {
                     weighed_shots: Dec(*weighed_shots),
                     event: id,
                 }),
+                // The briefing's part for a side's own boats and what was
+                // fired at it from the sea is a later phase of decision 0218.
+                SideEventKind::OwnSubmarineFired { .. }
+                | SideEventKind::SalvoFromSubmarine { .. }
+                | SideEventKind::OwnSubmarineHunted { .. }
+                | SideEventKind::SubmarineHuntedBy { .. }
+                | SideEventKind::OwnSubmarineAttackedFromAir { .. }
+                | SideEventKind::AttackedSubmarineFromAir { .. } => {}
                 SideEventKind::ShoreBombardmentAgainst {
                     base,
                     hex,
@@ -4727,6 +4767,7 @@ fn reports_of(
                 claimed_sunk,
                 from_air: false,
                 from_bombardment: false,
+                from_submarine: false,
                 ..
             }) => StrikeReport {
                 result: "claim",

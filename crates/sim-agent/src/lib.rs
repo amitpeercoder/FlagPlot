@@ -56,6 +56,7 @@ mod record;
 mod reporting;
 mod session;
 mod staffing;
+mod submarines;
 mod text;
 mod told;
 mod trial;
@@ -123,6 +124,9 @@ pub use record::{
 pub use session::{Called, OrdersInsideDay, Session, Stepped, NOT_KNOWN};
 pub use staffing::{
     command_state, plan_order, plans, propose, staff_orders, why, STAFF_DEFAULT_INTERVAL_DAYS,
+};
+pub use submarines::{
+    HeldDownUntil, SubmarineLine, SubmarineReportLine, SubmarinesPart, SuspectedWatersLine,
 };
 pub use told::{told_as, DayPart, STOP_ON};
 pub use trial::{
