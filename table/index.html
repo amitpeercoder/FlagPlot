@@ -2338,12 +2338,29 @@ body.watched .gives { display: none !important; }
       into.appendChild(full);
     }
   }
+  // A task's name with each hex in it said as a place: by the name of the base there, or by its position with the
+  // hex in brackets, as a card says it; each a link to it.
+  function taskWords(tag, text) {
+    var e = el(tag, ''), re = /\((-?\d+), ?(-?\d+)\)/g, last = 0, m; text = String(text);
+    while ((m = re.exec(text))) {
+      var q = +m[1], r = +m[2], h = hexAt[q + ',' + r]; if (!h) continue;
+      if (m.index > last) e.appendChild(rich('span', '', text.slice(last, m.index)));
+      var pl = { q: q, r: r }, base = M.bases.concat(M.enemyBases).filter(function (b) { return sameHex(b.place, pl) && !/^Landing at/.test(b.base.name); })[0], known = M.hexNames[q + ',' + r];
+      var b = el('button', 'ref', known || dm(h[3], 'N', 'S') + ' ' + dmLon(runLon(h[4]))); b.type = 'button'; b.title = 'Show on the chart';
+      b.addEventListener('click', function (x) { return function (ev) { ev.stopPropagation(); see(x); }; }(base ? base.base.handle : 'hex:' + q + ',' + r)); e.appendChild(b);
+      if (!known) e.appendChild(document.createTextNode(' (' + q + ', ' + r + ')'));
+      last = re.lastIndex;
+    }
+    if (last < text.length) e.appendChild(rich('span', '', text.slice(last)));
+    return e;
+  }
   // What the staff wants to know before a landing goes, said plainly.
   function needWords(k) {
     if (!k.asked || k.asked.setting !== 'count') return nameText(k.text);
     var pl = k.place || {}, where = pl.name || (pl.q != null && (M.hexNames[pl.q + ',' + pl.r] || whereIs({ q: pl.q, r: pl.r }))) || 'the place', h = k.held, days = function (n) { return n + ' day' + (n === 1 ? '' : 's'); };
     var t = 'Before it lands, the staff wants a count of the enemy at ' + where + (k.asked.within_days != null ? ' no more than ' + days(k.asked.within_days) + ' old' : '') + '. ';
-    t += h ? 'It holds one of ' + h.men + ' men, ' + String(h.grade || '').replace(/_/g, ' ') + ', ' + days(h.age_days) + ' old' + (h.could_be ? (h.could_be.highest != null ? ' (it could be ' + h.could_be.lowest + ' to ' + h.could_be.highest + ')' : ' (it could be ' + h.could_be.lowest + ' or more)') : '') : 'It holds none';
+    var from = { told: 'as it was told', 'seen from the air': 'seen from the air', 'men in contact': 'from men in contact' }[h && h.came_from];
+    t += h ? 'It holds one of ' + commas(h.men) + ' men, ' + (from ? from + ', ' : '') + days(h.age_days) + ' old' + (h.could_be ? (h.could_be.highest != null ? ' (it could be ' + h.could_be.lowest + ' to ' + h.could_be.highest + ')' : ' (it could be ' + h.could_be.lowest + ' or more)') : '') : 'It holds none';
     t += k.looking ? '; air_group:' + k.looking.air_group + ' is looking' + (k.looking.since_day != null ? ', since day ' + k.looking.since_day : '') : h ? '; no one is looking for a newer one' : ', and no one is looking for one';
     if (k.moved_to_look) t += '; task_force:' + k.moved_to_look.task_force + ' has moved to look';
     return t + '. ' + (k.met ? 'That is enough.' : 'That is not enough yet.');
@@ -2597,9 +2614,10 @@ body.watched .gives { display: none !important; }
       // What must be known before a take goes (decision 0159, 13): one line
       // under the take, where the staff works the need this morning.
       function need(p) { var k = p && p.need_to_know; if (!k) return null; var d = rich('div', 'work', needWords(k)); if (!k.met) d.style.color = 'var(--enemy)'; return d; }
-      var topNeed = need(top.plan != null ? plans[top.plan] : null); if (topNeed) doc.appendChild(topNeed);
+      var topNeed = need(top.plan != null ? plans[top.plan] : null), needSaid = {}; if (topNeed) doc.appendChild(topNeed); needSaid[root] = topNeed ? topNeed.textContent : null;
       // The order's own plan: where it stands, and the commander's word on
-      // it, given here and nowhere else.
+      // it, given here and nowhere else. A plan's controls are given once, at the topmost task on it.
+      var pressed = {};
       (function (p) {
         if (!p || p.state === 'complete' || p.state === 'cancelled') return;
         var gone = p.state === 'released', ok = signed('approve', 'plan', p.number), off = signed('cancel_plan', 'plan', p.number), waits = !ok && !off && ((p.state === 'preparing' && !st.leaves.launch) || (p.state === 'draft' && !st.leaves.prepare));
@@ -2634,7 +2652,7 @@ body.watched .gives { display: none !important; }
             var fold = el('details', 'working'), head = el('summary', 'work', 'Staff\u2019s working'); head.style.cursor = 'pointer'; fold.appendChild(head); fold.appendChild(rich('div', 'work', body.replace(/^./, function (c) { return c.toUpperCase(); }))); more.appendChild(fold);
           }).catch(function () {});
         }
-        if (!off && !gone && !WATCH) { var row = el('div', 'row'), press = function (words, tool, done) { var x = el('button', tool === 'approve' ? 'primary' : 'quiet', words); x.type = 'button'; x.addEventListener('click', function () { act(tool, { plan: p.number }, done).then(function () { readPlan(root); }); }); row.appendChild(x); };
+        if (!off && !gone && !WATCH) { pressed[p.number] = true; var row = el('div', 'row'), press = function (words, tool, done) { var x = el('button', tool === 'approve' ? 'primary' : 'quiet', words); x.type = 'button'; x.addEventListener('click', function () { act(tool, { plan: p.number }, done).then(function () { readPlan(root); }); }); row.appendChild(x); };
           if (waits) press('APPROVE PLAN ' + p.number, 'approve', 'Plan ' + p.number + ' approved.');
           press('CANCEL PLAN ' + p.number, 'cancel_plan', 'Plan ' + p.number + ' is cancelled from 1800.'); n.appendChild(row); }
         doc.appendChild(n);
@@ -2687,8 +2705,9 @@ body.watched .gives { display: none !important; }
       doc.appendChild(el(lines.length ? 'p' : 'div', lines.length ? '' : 'work', lines.length ? 'The staff has made ' + lines.length + ' task' + (lines.length === 1 ? '' : 's') + ' of it: ' + sum.join(', ') + '.' : own.length ? 'The staff works this order itself and has made no tasks under it.' : 'The staff has made nothing of it yet. It plans at 1800.'));
       lines.forEach(function (L) {
         var n = el('div', 'node'), who = el('div', 'who'), i = L.i, p = L.p; n.style.marginLeft = (L.depth - 1) * 18 + 'px'; if (L.word === 'ENDED' || L.word === 'DONE') n.style.opacity = 0.6;
-        who.appendChild(rich('strong', '', said[i.number] ? said[i.number].replace(/^./, function (c) { return c.toUpperCase(); }) : sayIntent(i, said))); var tag = el('span', 'state', L.word); if (L.word === 'WAITS FOR YOU' || L.word === 'CANNOT BE MET') tag.style.color = 'var(--enemy)'; who.appendChild(tag); n.appendChild(who);
-        var known = need(p); if (known) n.appendChild(known);
+        who.appendChild(taskWords('strong', said[i.number] ? said[i.number].replace(/^./, function (c) { return c.toUpperCase(); }) : sayIntent(i, said))); var tag = el('span', 'state', L.word); if (L.word === 'WAITS FOR YOU' || L.word === 'CANNOT BE MET') tag.style.color = 'var(--enemy)'; who.appendChild(tag); n.appendChild(who);
+        var known = need(p), above = i.parent; while (known && above != null && above !== root) { if (needSaid[above] === known.textContent) known = null; else above = byNum[above] && byNum[above].parent; }
+        if (known && needSaid[root] === known.textContent) known = null; needSaid[i.number] = known ? known.textContent : (needSaid[i.parent] || null); if (known) n.appendChild(known);
         var d = document.createElement('details'), sm = document.createElement('summary'); sm.textContent = 'WHY, AND HOW IT STANDS'; d.appendChild(sm);
         d.appendChild(el('div', 'work', (i.maker === 'staff' ? 'The staff\'s' : 'Yours') + ' · order ' + i.number + (p ? ' · plan ' + p.number + ', ' + p.state : '')));
         if (i.measure && i.measure.text) d.appendChild(rich('div', '', 'So far: ' + tidyWorked(i.measure.text) + '.'));
@@ -2697,7 +2716,7 @@ body.watched .gives { display: none !important; }
         n.appendChild(d);
         if (L.off) d.appendChild(el('div', 'work', 'Cancelled by you today. It stops at 1800.'));
         else if (L.ok) d.appendChild(el('div', 'work', 'Approved by you today. The staff acts on it from 1800.'));
-        if (L.live && !L.off && !WATCH) { var row = el('div', 'row'); (L.waits ? n : d).appendChild(row);
+        if (L.live && !L.off && !WATCH && !pressed[p.number]) { pressed[p.number] = true; var row = el('div', 'row'); (L.waits ? n : d).appendChild(row);
           if (L.waits) { var ok = el('button', 'primary', 'APPROVE PLAN ' + p.number); ok.type = 'button'; ok.addEventListener('click', function () { act('approve', { plan: p.number }, 'Plan ' + p.number + ' approved.').then(function () { readPlan(root); }); }); row.appendChild(ok); }
           var no = el('button', 'quiet', 'CANCEL PLAN ' + p.number); no.type = 'button'; no.addEventListener('click', function () { act('cancel_plan', { plan: p.number }, 'Plan ' + p.number + ' is cancelled from 1800.').then(function () { readPlan(root); }); }); row.appendChild(no); }
         doc.appendChild(n);

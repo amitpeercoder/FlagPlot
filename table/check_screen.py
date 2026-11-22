@@ -127,6 +127,8 @@ def the_stop_paper():
           "the menus at the top right are Orders, Staff and Game, and the agent's seat is under Game")
     check("right: 16px" in css(".order") and "setViewOffset" in text,
           "cards and order forms open at the right, and the chart turns to the middle of what is not covered")
+    check("pressed[p.number] = true" in text and "!pressed[p.number]" in text and "needSaid[" in text and "taskWords('strong'" in text,
+          "the plan's paper gives a plan's APPROVE and CANCEL once, at the topmost task on it, says a need once, and names a task's places")
 
 
 def http(method, url, body=None):
