@@ -2749,7 +2749,7 @@ body.watched .gives { display: none !important; }
           } else {
             var day = M.day; setStatus(VERSUS ? finishedWords() : 'Day ' + day + ' is being fought.');
             var d = await api('run', { days: 1 }); lastRun = d; if (d.game_over) { M.over = true; M.result = d.result; }
-            setStatus('Day ' + day + ': the plot, pulse by pulse, from what your side was told.');
+            setStatus('Day ' + day + ': the reports come in.');
             await plotDay(day, await eventsOf(day)); await refresh();
             var fired = d.fired && d.fired.length;
             if (!until || !playing || d.game_over || fired) return rest(d.game_over ? 'The game is over.' : fired ? 'The clock is stopped: ' + d.fired.length + ' signal' + (d.fired.length > 1 ? 's wait' : ' waits') + ' for you.' : '');
@@ -2802,7 +2802,7 @@ body.watched .gives { display: none !important; }
             if (pulses[0] === 'night') $('plot').textContent = '';
             evs = await eventsOf(day, pulses[0]); await plotPhase(day, pulses[0], evs);
             if (pulses[0] === 'afternoon') { var end = await eventsOf(day, 'end'); evs = evs.concat(end); await plotPhase(day, 'end', end); }
-          } else { setStatus('Day ' + day + ': the plot, pulse by pulse, from what the side was told.'); evs = await eventsOf(day); await plotDay(day, evs); }
+          } else { setStatus('Day ' + day + ': the reports come in.'); evs = await eventsOf(day); await plotDay(day, evs); }
           lastTold = toldOf(evs, stopOn()); lastRun = { summary: s.summary }; if (s.game_over) M.over = true;
           clock = { at: s.clock.at, day: s.clock.day }; await refresh();
           if (!until || !playing || s.game_over || lastTold.length) {
