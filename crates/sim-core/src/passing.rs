@@ -88,6 +88,7 @@ fn report_hex(report: &Report) -> Hex {
         Report::Ground(ground) => ground.hex,
         Report::NoneFound(none) => none.hex,
         Report::Submarine(submarine) => submarine.hex,
+        Report::SuspectedWaters(waters) => waters.hex,
     }
 }
 

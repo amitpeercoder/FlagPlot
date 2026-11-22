@@ -880,3 +880,369 @@ fn a_report_of_nothing_there_removes_no_report_of_a_submarine_in_the_world() {
     assert_eq!(world.side_view(Side::Allied).contacts().count(), 0);
     assert_eq!(world.side_view(Side::Allied).submarine_reports().count(), 1);
 }
+
+// ---------------------------------------------------------------------
+// Phase 5: the station order and the suspected waters.
+// ---------------------------------------------------------------------
+
+use crate::map::{HexData, HexKind};
+use crate::orders::{OrderKind, OrderRequest, Origin, RejectReason, SubmarineOrder};
+use crate::state::WatersWaiting;
+
+fn station_order(boat: u32, hex: Hex) -> OrderRequest {
+    OrderRequest {
+        kind: OrderKind::Submarine {
+            target: SubmarineId::new(boat),
+            order: SubmarineOrder::Station(hex),
+        },
+        origin: Origin::PLAYER,
+    }
+}
+
+/// A world of the Japanese boats given, with a land hex at (8,2).
+fn world_with_land(boats: Vec<Submarine>) -> World {
+    let (ref_data, mut map, truth) = parts(boats);
+    map.insert(
+        hx(8, 2),
+        HexData {
+            kind: HexKind::Land,
+            ..HexData::open_sea()
+        },
+    );
+    World::new(7, ref_data, map, truth).expect("a valid setup")
+}
+
+fn check(world: &World, side: Side, boat: u32, hex: Hex) -> Result<(), RejectReason> {
+    world.check_order(side, &station_order(boat, hex))
+}
+
+#[test]
+fn a_station_order_is_accepted_for_a_sound_boat_of_the_side_to_a_hex_she_can_reach_by_sea() {
+    let world = world_with_land(vec![boat(1)]);
+    assert_eq!(check(&world, Side::Japanese, 1, hx(6, 0)), Ok(()));
+    // The hex she is at is accepted too: she goes nowhere.
+    assert_eq!(check(&world, Side::Japanese, 1, hx(3, 0)), Ok(()));
+}
+
+#[test]
+fn a_station_order_is_refused_with_a_reason_for_each_way_it_can_be_wrong() {
+    let mut sunk = boat(2);
+    sunk.condition = SubmarineCondition::Sunk;
+    let mut home = boat(3);
+    home.condition = SubmarineCondition::Home;
+    let mut damaged = boat(4);
+    damaged.condition = SubmarineCondition::Damaged;
+    let mut going_home = boat(5);
+    going_home.passage = Some(SubmarinePassage {
+        to: hx(5, 0),
+        home: true,
+        toward_hex: None,
+        progress_nm: Fixed::ZERO,
+        leg_nm: Fixed::ZERO,
+        arrived: false,
+        order: None,
+    });
+    let mut apart = boat(6);
+    apart.enters_day = Some(3);
+    let mut later = boat(7);
+    later.available_from = Some(4);
+    let world = world_with_land(vec![boat(1), sunk, home, damaged, going_home, apart, later]);
+    let japanese = |boat: u32, hex: Hex| check(&world, Side::Japanese, boat, hex);
+    // Not the side's own: an enemy boat and one that is not there are
+    // refused alike.
+    assert_eq!(
+        check(&world, Side::Allied, 1, hx(6, 0)),
+        Err(RejectReason::NotYourUnit)
+    );
+    assert_eq!(japanese(99, hx(6, 0)), Err(RejectReason::NotYourUnit));
+    // Off the map: sunk or home.
+    assert_eq!(japanese(2, hx(6, 0)), Err(RejectReason::SubmarineOffTheMap));
+    assert_eq!(japanese(3, hx(6, 0)), Err(RejectReason::SubmarineOffTheMap));
+    // Damaged, or going home.
+    assert_eq!(japanese(4, hx(6, 0)), Err(RejectReason::SubmarineGoingHome));
+    assert_eq!(japanese(5, hx(6, 0)), Err(RejectReason::SubmarineGoingHome));
+    // A hex off the map, and one no ship can enter.
+    assert_eq!(
+        japanese(1, hx(50, 0)),
+        Err(RejectReason::WaypointOffMap(hx(50, 0)))
+    );
+    assert_eq!(
+        japanese(1, hx(8, 2)),
+        Err(RejectReason::WaypointUnreachable(hx(8, 2)))
+    );
+    // Held apart until a day (the order of day 1 is refused as a force's is,
+    // with the day), and before her day.
+    assert!(matches!(
+        japanese(6, hx(6, 0)),
+        Err(RejectReason::NotYetEntered {
+            day: 3,
+            waiting: false,
+            ..
+        })
+    ));
+    assert!(matches!(
+        japanese(7, hx(6, 0)),
+        Err(RejectReason::NotYetAvailable { day: 4, .. })
+    ));
+}
+
+fn ordered(boat_hex: Hex, to: Hex) -> World {
+    let mut one = boat(1);
+    one.hex = boat_hex;
+    one.station = boat_hex;
+    let mut world = world_with_land(vec![one]);
+    world.submit_orders(Side::Japanese, vec![station_order(1, to)]);
+    world.resolve_day().expect("day 1");
+    world
+}
+
+#[test]
+fn an_accepted_station_order_sets_her_station_and_a_passage_and_is_told_to_her_side_alone() {
+    // Ten knots is 120 nm in the night, three hexes: from (3,0) to (9,0) she
+    // is still on the way after the night and arrives in the morning.
+    let mut one = boat(1);
+    one.hex = hx(3, 0);
+    let mut world = world_with_land(vec![one]);
+    world.submit_orders(Side::Japanese, vec![station_order(1, hx(9, 0))]);
+    world
+        .open_day(crate::Staffs::none(), &mut |_, _| {})
+        .expect("opens");
+    let boat_now = &world.truth.submarines[&SubmarineId::new(1)];
+    assert_eq!(boat_now.station, hx(9, 0));
+    let passage = boat_now.passage.expect("a passage to her station");
+    assert_eq!(
+        (passage.to, passage.home, passage.arrived),
+        (hx(9, 0), false, false)
+    );
+    let order = boat_now.station_order.expect("the order is kept");
+    assert_eq!(passage.order, Some(order));
+    let event = world
+        .events()
+        .from_index(0)
+        .iter()
+        .find(|event| matches!(event.kind, EventKind::SubmarineOrderedToStation { .. }))
+        .cloned()
+        .expect("the order's event");
+    assert_eq!(
+        event.kind,
+        EventKind::SubmarineOrderedToStation {
+            submarine: SubmarineId::new(1),
+            station: hx(9, 0),
+        }
+    );
+    assert_eq!(event.causes, vec![Cause::Order(order)]);
+    assert_eq!(
+        event.kind.entities(),
+        vec![EntityRef::Submarine(SubmarineId::new(1))]
+    );
+    let told = |side: Side| {
+        world
+            .side_view(side)
+            .events()
+            .iter()
+            .filter(|e| {
+                matches!(
+                    e.kind,
+                    SideEventKind::Whole(EventKind::SubmarineOrderedToStation { .. })
+                )
+            })
+            .count()
+    };
+    assert_eq!((told(Side::Japanese), told(Side::Allied)), (1, 0));
+}
+
+#[test]
+fn a_boat_ordered_to_the_hex_she_is_at_has_no_passage() {
+    let mut world = world_with_land(vec![boat(1)]);
+    world.submit_orders(Side::Japanese, vec![station_order(1, hx(3, 0))]);
+    world
+        .open_day(crate::Staffs::none(), &mut |_, _| {})
+        .expect("opens");
+    let boat_now = &world.truth.submarines[&SubmarineId::new(1)];
+    assert_eq!(boat_now.station, hx(3, 0));
+    assert!(boat_now.passage.is_none());
+    assert!(boat_now.station_order.is_some());
+}
+
+#[test]
+fn a_boat_ordered_a_new_station_goes_there_and_is_on_station_the_pulse_after_she_arrives() {
+    let world = ordered(hx(3, 0), hx(6, 0));
+    let boat_now = &world.truth.submarines[&SubmarineId::new(1)];
+    assert_eq!(boat_now.station, hx(6, 0));
+    assert_eq!(boat_now.hex, hx(6, 0));
+    assert!(boat_now.on_station(1));
+}
+
+fn waters(side: Side, day: u32) -> WatersWaiting {
+    WatersWaiting {
+        side,
+        hex: hx(5, 0),
+        distance_hexes: 2,
+        words: "Boats are about.".to_string(),
+        rows: "Placeholder rows.".to_string(),
+        reading: "Placeholder reading.".to_string(),
+        day,
+    }
+}
+
+fn held_waters(world: &World, side: Side) -> Vec<(Hex, u32, String, u32)> {
+    world
+        .side_view(side)
+        .suspected_waters()
+        .iter()
+        .map(|w| (w.hex, w.distance_hexes, w.words.clone(), w.day))
+        .collect()
+}
+
+#[test]
+fn waters_of_day_1_are_told_at_setup_and_those_of_a_later_day_at_the_close_of_the_day_before() {
+    let mut world = world_with(vec![boat(1)]);
+    world
+        .hold_suspected_waters(vec![waters(Side::Allied, 1), waters(Side::Allied, 3)])
+        .expect("held");
+    // Day 1's is held at setup; day 3's waits.
+    assert_eq!(held_waters(&world, Side::Allied).len(), 1);
+    assert_eq!(world.truth.waters_waiting.len(), 1);
+    assert!(held_waters(&world, Side::Japanese).is_empty());
+    world.resolve_day().expect("day 1");
+    assert_eq!(held_waters(&world, Side::Allied).len(), 1);
+    world.resolve_day().expect("day 2");
+    // Told at the close of day 2, for day 3.
+    let held = held_waters(&world, Side::Allied);
+    assert_eq!(held.len(), 2);
+    assert_eq!(held[1], (hx(5, 0), 2, "Boats are about.".to_string(), 3));
+    assert!(world.truth.waters_waiting.is_empty());
+    assert!(held_waters(&world, Side::Japanese).is_empty());
+    // The event: whole for the side, absent for the other.
+    let told = |side: Side| {
+        world
+            .side_view(side)
+            .events()
+            .iter()
+            .filter(|e| {
+                matches!(
+                    e.kind,
+                    SideEventKind::Whole(EventKind::SuspectedWatersTold { .. })
+                )
+            })
+            .count()
+    };
+    assert_eq!((told(Side::Allied), told(Side::Japanese)), (2, 0));
+}
+
+#[test]
+fn waters_are_in_every_commands_picture_and_in_the_world_made_from_a_picture() {
+    use crate::pictures::CommandRef;
+    let mut world = crate::pictures_tests::world_with_levels(&[]);
+    world
+        .hold_suspected_waters(vec![waters(Side::Allied, 1)])
+        .expect("held");
+    let commands = world.commands(Side::Allied).expect("levels on");
+    assert!(!commands.is_empty());
+    for (command, post) in commands {
+        assert_eq!(post.picture().suspected_waters().len(), 1, "{command:?}");
+    }
+    assert!(world
+        .commands(Side::Japanese)
+        .expect("levels on")
+        .values()
+        .all(|post| post.picture().suspected_waters().is_empty()));
+    let area = world
+        .side_view(Side::Allied)
+        .command(CommandRef::Area)
+        .expect("the area command");
+    assert_eq!(area.suspected_waters().len(), 1);
+}
+
+#[test]
+fn waters_are_hashed_only_where_there_are_some_and_each_field_counts() {
+    let plain = world_with(Vec::new());
+    let mut with = world_with(Vec::new());
+    with.hold_suspected_waters(vec![waters(Side::Allied, 1)])
+        .expect("held");
+    assert_ne!(hash_world(&plain), hash_world(&with));
+    let mut other_words = world_with(Vec::new());
+    let mut edited = waters(Side::Allied, 1);
+    edited.words = "Other words.".to_string();
+    other_words
+        .hold_suspected_waters(vec![edited])
+        .expect("held");
+    assert_ne!(hash_world(&with), hash_world(&other_words));
+    // Waiting entries count too.
+    let mut waiting = world_with(Vec::new());
+    waiting
+        .hold_suspected_waters(vec![waters(Side::Allied, 2)])
+        .expect("held");
+    assert_ne!(hash_world(&plain), hash_world(&waiting));
+}
+
+#[test]
+fn waters_are_refused_off_the_map_on_day_0_with_no_search_figures_or_after_day_1_begins() {
+    let mut world = world_with(Vec::new());
+    let mut off = waters(Side::Allied, 1);
+    off.hex = hx(50, 0);
+    assert!(world.hold_suspected_waters(vec![off]).is_err());
+    assert!(world
+        .hold_suspected_waters(vec![waters(Side::Allied, 0)])
+        .is_err());
+    // A refusal changes nothing.
+    assert!(world.truth.waters_waiting.is_empty());
+    assert!(held_waters(&world, Side::Allied).is_empty());
+    let mut bare = world_with(Vec::new());
+    bare.ref_data.search = None;
+    assert!(bare
+        .hold_suspected_waters(vec![waters(Side::Allied, 1)])
+        .is_err());
+    world.resolve_day().expect("day 1");
+    assert!(world
+        .hold_suspected_waters(vec![waters(Side::Allied, 1)])
+        .is_err());
+}
+
+#[test]
+fn a_belief_keeps_waters_in_the_order_told_and_a_report_of_a_submarine_leaves_them() {
+    let mut world = world_with(Vec::new());
+    world
+        .hold_suspected_waters(vec![waters(Side::Allied, 1)])
+        .expect("held");
+    let before = held_waters(&world, Side::Allied);
+    tell(&mut world, Side::Allied, &submarine_report(hx(9, 1), 3));
+    assert_eq!(held_waters(&world, Side::Allied), before);
+}
+
+#[test]
+fn a_picture_carries_the_waters_told_and_a_half_carries_its_own_and_none_waiting() {
+    let mut world = world_with(vec![boat(1)]);
+    world
+        .hold_suspected_waters(vec![
+            waters(Side::Allied, 1),
+            waters(Side::Japanese, 1),
+            waters(Side::Allied, 4),
+        ])
+        .expect("held");
+    world.resolve_day().expect("day 1");
+    let key = world.umpire_key();
+    let picture = world.whole_picture(&key).expect("a picture");
+    // The umpire's picture holds the waters told in each side's belief, and
+    // the one still waiting in the state.
+    assert_eq!(picture.beliefs[&Side::Allied].suspected_waters.len(), 1);
+    assert_eq!(picture.beliefs[&Side::Japanese].suspected_waters.len(), 1);
+    assert_eq!(picture.truth.waters_waiting.len(), 1);
+    let rebuilt =
+        World::rebuild_from_picture(picture, world.ref_data.clone(), world.map.clone(), 7, &key)
+            .expect("a sound picture");
+    assert_eq!(
+        held_waters(&rebuilt, Side::Allied),
+        held_waters(&world, Side::Allied)
+    );
+    assert_eq!(
+        held_waters(&rebuilt, Side::Japanese),
+        held_waters(&world, Side::Japanese)
+    );
+    assert_eq!(rebuilt.truth.waters_waiting, world.truth.waters_waiting);
+    // A side's half holds its own told waters and nothing it is yet to be
+    // told: that is no knowledge of the side's.
+    let half = world.side_view(Side::Allied).own_half().expect("its half");
+    assert_eq!(half.belief.suspected_waters.len(), 1);
+    assert!(half.belief.suspected_waters.iter().all(|w| w.day == 1));
+}

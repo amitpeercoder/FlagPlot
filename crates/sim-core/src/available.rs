@@ -36,11 +36,29 @@ impl World {
     /// before it. The enemy's held unit is not here: it is in no state, and
     /// the checks that refuse an order to a unit that is not the side's give
     /// it, with nothing of a day.
-    pub(crate) fn not_yet_entered(&self, side: Side, kind: &OrderKind) -> Option<RejectReason> {
-        if self.truth.entering.is_empty() {
+    ///
+    /// A submarine held apart is her own field's, not an entry (decision
+    /// 0218, 33): her order of a day before the day she enters is refused as
+    /// an entry's is, with the day she enters.
+    pub(crate) fn not_yet_entered(
+        &self,
+        side: Side,
+        kind: &OrderKind,
+        day: u32,
+    ) -> Option<RejectReason> {
+        if self.truth.entering.is_empty() && self.truth.submarines.is_empty() {
             return None;
         }
         named_units(kind).into_iter().find_map(|unit| {
+            if let EntityRef::Submarine(id) = unit {
+                let boat = self.truth.submarines.get(&id)?;
+                let enters = boat.enters_day.filter(|enters| *enters > day)?;
+                return (boat.side == side).then_some(RejectReason::NotYetEntered {
+                    unit,
+                    day: enters,
+                    waiting: false,
+                });
+            }
             let entry = self.truth.entry_of(unit)?;
             (entry.side == side).then_some(RejectReason::NotYetEntered {
                 unit,
@@ -57,6 +75,7 @@ impl World {
             EntityRef::TaskForce(id) => truth.task_forces.get(&id).is_some_and(|x| x.side == side),
             EntityRef::AirGroup(id) => truth.air_groups.get(&id).is_some_and(|x| x.side == side),
             EntityRef::LandUnit(id) => truth.land_units.get(&id).is_some_and(|x| x.side == side),
+            EntityRef::Submarine(id) => truth.submarines.get(&id).is_some_and(|x| x.side == side),
             _ => false,
         }
     }

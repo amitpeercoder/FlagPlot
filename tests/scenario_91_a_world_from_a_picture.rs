@@ -250,6 +250,7 @@ fn case_one() -> (WorldPicture, RefData, Map) {
             grade: GroundGrade::SeenFromAir,
         }],
         submarine_reports: Vec::new(),
+        suspected_waters: Vec::new(),
     };
     let picture = WorldPicture {
         day: 4,

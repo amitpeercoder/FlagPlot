@@ -285,7 +285,9 @@ fn expected_line(world: &World, objective: &Objective, horizon: u32) -> Value {
             line["ship_points"] = ship_points(p);
             line["horizon_days"] = json!(horizon);
         }
-        Objective::AircraftDestroyed { points } | Objective::BaseHeld { points, .. } => {
+        Objective::AircraftDestroyed { points }
+        | Objective::BaseHeld { points, .. }
+        | Objective::SubmarinesSunk { points } => {
             line["points"] = dec(*points);
         }
         Objective::CargoLanded { points_per_t, .. } => {

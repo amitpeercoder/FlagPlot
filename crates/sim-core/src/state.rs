@@ -1544,6 +1544,29 @@ pub struct TruthState {
     /// `enters_day` set. Empty in a scenario with no `[[submarine]]`. Added
     /// at the end, and hashed last, only where it is not empty.
     pub submarines: BTreeMap<SubmarineId, Submarine>,
+    /// The waters a side is to be told it suspects enemy submarines work,
+    /// each on its day (decision 0218, 23 and 47), in the order the scenario
+    /// gives them: those not yet told. An entry leaves the list as it is told
+    /// (at setup if it is of day 1, else at the close of the day before its
+    /// day). Empty in a scenario with no `[[suspected_waters]]` and once all
+    /// are told. Added at the end, and hashed last, only where the game has
+    /// a boat or waters.
+    pub waters_waiting: Vec<WatersWaiting>,
+}
+
+/// Suspected waters waiting to be told to a side (decision 0218, 47): the
+/// entry of a scenario, with the day it is told.
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct WatersWaiting {
+    pub side: Side,
+    pub hex: Hex,
+    pub distance_hexes: u32,
+    pub words: String,
+    pub rows: String,
+    pub reading: String,
+    /// The day from which the side holds it, at least 2 here (an entry of day
+    /// 1 is told at setup and never waits).
+    pub day: u32,
 }
 
 /// What a submarine is in (decision 0218, 1 and 43). `Sunk` and `Home` are

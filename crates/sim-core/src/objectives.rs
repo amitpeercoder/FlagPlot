@@ -34,6 +34,10 @@
 //!   is what she left with) plus the days of repair she left with each time
 //!   she left for a yard. Her share is the days out, at most the horizon,
 //!   over the horizon; her points are her kind's points times her share.
+//! - `submarines_sunk`: enemy submarines whose condition is sunk (decision
+//!   0218, 32), points for each. A boat sent home scores nothing. The side
+//!   that hunted is told nothing of the result, so its known progress is
+//!   not observable.
 //! - `aircraft_destroyed`: the aircraft of the enemy's air groups lost for
 //!   good, from these events: `AircraftLost` (shot down, in the air),
 //!   `AirGroupLost` (lost with a sunk ship, ready and damaged),
@@ -134,6 +138,10 @@ pub enum Objective {
         base: BaseId,
         points_per_100_men: Fixed,
     },
+    /// Enemy submarines sunk, points for each (decision 0218, 32). A boat
+    /// sent home, damaged or for want of a salvo or on her leave day, scores
+    /// nothing. Added at the end of the enum.
+    SubmarinesSunk { points: Fixed },
 }
 
 impl Objective {
@@ -149,6 +157,7 @@ impl Objective {
             Objective::BaseHeld { .. } => "base_held",
             Objective::MenLost { .. } => "men_lost",
             Objective::MenLanded { .. } => "men_landed",
+            Objective::SubmarinesSunk { .. } => "submarines_sunk",
         }
     }
 
@@ -165,7 +174,8 @@ impl Objective {
             | Objective::ShipsCrippled(_)
             | Objective::AircraftDestroyed { .. }
             | Objective::ShipsOutOfAction(_)
-            | Objective::MenLost { .. } => None,
+            | Objective::MenLost { .. }
+            | Objective::SubmarinesSunk { .. } => None,
         }
     }
 }
@@ -347,6 +357,9 @@ pub struct Tally {
     /// Men the side's ships landed in each base's hex and did not take off
     /// again, counted unit by unit (decision 0186), by base.
     pub men_landed: BTreeMap<BaseId, u32>,
+    /// Enemy submarines sunk (decision 0218, 32): boats of the other side
+    /// with condition Sunk. A boat gone home scores nothing.
+    pub submarines_sunk: u32,
 }
 
 /// The count of men landed (decision 0186, 15), kept unit by unit: for each
@@ -502,6 +515,16 @@ pub fn tallies(truth: &TruthState, log: &EventLog, ref_data: &RefData) -> BTreeM
             if line.days_out() > 0 {
                 tally.out_of_action.insert(ship.id, line);
             }
+        }
+    }
+
+    // Submarines: a side's tally holds the enemy boats sunk (decision 0218,
+    // 32). A boat gone home is not counted.
+    for boat in truth.submarines.values() {
+        if boat.condition == crate::state::SubmarineCondition::Sunk {
+            out.get_mut(&other(boat.side))
+                .expect("both sides")
+                .submarines_sunk += 1;
         }
     }
 
@@ -699,7 +722,7 @@ fn is_crippled(ship: &Ship) -> bool {
 pub struct ObjectiveScore {
     /// `ships_sunk`, `ships_crippled`, `ships_out_of_action`,
     /// `aircraft_destroyed`, `cargo_landed`, `base_open`, `base_held`,
-    /// `men_lost` or `men_landed`.
+    /// `men_lost`, `men_landed` or `submarines_sunk`.
     pub kind: &'static str,
     pub base: Option<BaseId>,
     /// For `base_open`: whether the side wanted the base shut.
@@ -863,6 +886,10 @@ fn score_side(side: &SideObjectives, tally: &Tally, horizon_days: u32) -> Vec<Ob
                     let men = tally.men_landed.get(base).copied().unwrap_or(0);
                     score.count = Fixed::from_int(i64::from(men));
                     score.points = men_lost_points(men, *points_per_100_men);
+                }
+                Objective::SubmarinesSunk { points } => {
+                    score.count = Fixed::from_int(i64::from(tally.submarines_sunk));
+                    score.points = score.count * *points;
                 }
             }
             score
@@ -1096,6 +1123,9 @@ pub fn known_progress(
                 }
                 // The enemy's damage is not something a side knows.
                 Objective::ShipsCrippled(_) | Objective::ShipsOutOfAction(_) => {}
+                // The side that hunted is told nothing of the result
+                // (decision 0218, 15 and 32): not observable.
+                Objective::SubmarinesSunk { .. } => {}
                 Objective::AircraftDestroyed { points } => {
                     // Any claim from the air tells the side something of
                     // aircraft, if only that it claims none.
@@ -2096,6 +2126,81 @@ mod tests {
             ),
             (
                 "ships_out_of_action",
+                KnownBasis::NotObservable,
+                Fixed::ZERO,
+                None
+            )
+        );
+    }
+
+    // -----------------------------------------------------------------
+    // Submarines sunk (decision 0218, 32).
+    // -----------------------------------------------------------------
+
+    fn boat_of(
+        id: u32,
+        side: Side,
+        condition: crate::state::SubmarineCondition,
+    ) -> crate::state::Submarine {
+        crate::state::Submarine {
+            id: crate::ids::SubmarineId::new(id),
+            name: format!("Boat {id}"),
+            side,
+            class: crate::ids::SubmarineClassId::new(1),
+            hex: Hex::new(0, 0),
+            station: Hex::new(0, 0),
+            passage: None,
+            salvoes: 0,
+            held_down_until: None,
+            condition,
+            home: BaseId::new(1),
+            leave_day: None,
+            enters_day: None,
+            available_from: None,
+            station_order: None,
+        }
+    }
+
+    #[test]
+    fn submarines_sunk_counts_the_enemy_boats_sunk_and_a_boat_sent_home_scores_nothing() {
+        use crate::state::SubmarineCondition::{Damaged, Home, Sound, Sunk};
+        let mut truth = TruthState::default();
+        for (id, side, condition) in [
+            (1, Side::Japanese, Sunk),
+            (2, Side::Japanese, Sunk),
+            (3, Side::Japanese, Home),
+            (4, Side::Japanese, Damaged),
+            (5, Side::Japanese, Sound),
+            (6, Side::Allied, Sunk),
+            (7, Side::Allied, Home),
+        ] {
+            truth.submarines.insert(
+                crate::ids::SubmarineId::new(id),
+                boat_of(id, side, condition),
+            );
+        }
+        let log = EventLog::default();
+        let tallies = tallies(&truth, &log, &RefData::default());
+        // A side's tally holds the enemy's boats it sank.
+        assert_eq!(tallies[&Side::Allied].submarines_sunk, 2);
+        assert_eq!(tallies[&Side::Japanese].submarines_sunk, 1);
+        let objectives = one_side(Objective::SubmarinesSunk { points: fx("2.5") });
+        let result = score(&objectives, &tallies);
+        let line = &result.allied.objectives[0];
+        assert_eq!(line.kind, "submarines_sunk");
+        assert_eq!((line.count, line.points), (n(2), n(5)));
+        assert_eq!(result.japanese.total, Fixed::ZERO);
+        // The side that hunted is told nothing of the result.
+        let known = known_progress(&objectives.allied, &[], &BTreeMap::new(), &[]);
+        assert_eq!(
+            (
+                known[0].kind,
+                known[0].basis,
+                known[0].count,
+                known[0].points
+            ),
+            (
+                "submarines_sunk",
                 KnownBasis::NotObservable,
                 Fixed::ZERO,
                 None

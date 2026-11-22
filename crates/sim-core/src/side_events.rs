@@ -1535,7 +1535,11 @@ pub(crate) fn seen(kind: &EventKind, side: Side, owners: &Owners, knows_fight: b
         // 46).
         EventKind::SubmarineReported { side: owner, .. }
         | EventKind::SubmarineReportDropped { side: owner, .. } => whole_if(*owner == side),
-        EventKind::SubmarineEntered { submarine, .. }
+        // The waters a side is told are its own belief, whole to it and not
+        // at all to the enemy (decision 0218, 47).
+        EventKind::SuspectedWatersTold { side: owner, .. } => whole_if(*owner == side),
+        EventKind::SubmarineOrderedToStation { submarine, .. }
+        | EventKind::SubmarineEntered { submarine, .. }
         | EventKind::SubmarineSteamed { submarine, .. }
         | EventKind::SubmarineOnStation { submarine, .. }
         | EventKind::SubmarineLeftForHome { submarine, .. }
@@ -1977,6 +1981,8 @@ fn first_known_round(side: Side, fight: &[Event], owners: &Owners) -> Option<u32
             | EventKind::SubmarineSunk { .. }
             | EventKind::SubmarineReported { .. }
             | EventKind::SubmarineReportDropped { .. }
+            | EventKind::SubmarineOrderedToStation { .. }
+            | EventKind::SuspectedWatersTold { .. }
             | EventKind::EntryWaiting { .. }
             | EventKind::StockReceived { .. }
             | EventKind::MenJoined { .. }
@@ -2211,6 +2217,8 @@ fn fight_round(kind: &EventKind) -> Option<u32> {
         | EventKind::SubmarineSunk { .. }
         | EventKind::SubmarineReported { .. }
         | EventKind::SubmarineReportDropped { .. }
+        | EventKind::SubmarineOrderedToStation { .. }
+        | EventKind::SuspectedWatersTold { .. }
         | EventKind::EntryWaiting { .. }
         | EventKind::StockReceived { .. }
         | EventKind::MenJoined { .. }
@@ -2589,6 +2597,8 @@ fn count_from_known_round(kind: SideEventKind, known: u32, round_minutes: u32) -
             | EventKind::SubmarineSunk { .. }
             | EventKind::SubmarineReported { .. }
             | EventKind::SubmarineReportDropped { .. }
+            | EventKind::SubmarineOrderedToStation { .. }
+            | EventKind::SuspectedWatersTold { .. }
             | EventKind::EntryWaiting { .. }
             | EventKind::StockReceived { .. }
             | EventKind::MenJoined { .. }
@@ -2880,6 +2890,8 @@ fn whole_may_have_hidden_causes(kind: &EventKind) -> bool {
         | EventKind::SubmarineSunk { .. }
         | EventKind::SubmarineReported { .. }
         | EventKind::SubmarineReportDropped { .. }
+        | EventKind::SubmarineOrderedToStation { .. }
+        | EventKind::SuspectedWatersTold { .. }
         | EventKind::EntryWaiting { .. }
         | EventKind::StockReceived { .. }
         | EventKind::MenJoined { .. }
@@ -3186,6 +3198,8 @@ pub(crate) fn project(side: Side, log: &[Event], owners: &Owners) -> Vec<SideEve
                     | EventKind::SubmarineSunk { .. }
                     | EventKind::SubmarineReported { .. }
                     | EventKind::SubmarineReportDropped { .. }
+                    | EventKind::SubmarineOrderedToStation { .. }
+                    | EventKind::SuspectedWatersTold { .. }
                     | EventKind::EntryWaiting { .. }
                     | EventKind::StockReceived { .. }
                     | EventKind::MenJoined { .. }
@@ -5479,6 +5493,28 @@ mod tests {
                 Whole,
                 Nothing,
             )),
+            // A station order and the waters a side is told are its own,
+            // whole, and the enemy is told nothing of them (decision 0218,
+            // 3, 43 and 47).
+            row(
+                EventKind::SubmarineOrderedToStation {
+                    submarine: SubmarineId::new(1),
+                    station: hex(),
+                },
+                Whole,
+                Nothing,
+            ),
+            sided(row(
+                EventKind::SuspectedWatersTold {
+                    side: Side::Allied,
+                    hex: hex(),
+                    distance: 2,
+                    day: 2,
+                    words: String::new(),
+                },
+                Whole,
+                Nothing,
+            )),
         ];
         // Every row is also run in the mirror, with the sides' units swapped.
         rows.shrink_to_fit();
@@ -5519,7 +5555,7 @@ mod tests {
     #[test]
     fn the_table_has_a_row_for_every_kind_of_event() {
         let all = event_kind_names();
-        assert_eq!(all.len(), 177, "the log has 177 kinds of event");
+        assert_eq!(all.len(), 179, "the log has 179 kinds of event");
         let covered: BTreeSet<String> = table()
             .iter()
             .map(|row| kind_name(&row.log[row.at]))

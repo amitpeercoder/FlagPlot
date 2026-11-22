@@ -235,6 +235,8 @@ fn reject_reason(reason: &RejectReason) -> Data {
         RejectReason::ChargeTakesPartInFuelling(charge) => {
             base("charge_takes_part_in_fuelling").id("charge", *charge)
         }
+        RejectReason::SubmarineOffTheMap => base("submarine_off_the_map"),
+        RejectReason::SubmarineGoingHome => base("submarine_going_home"),
     }
 }
 
@@ -923,6 +925,24 @@ pub(super) fn describe(
         EventKind::SubmarineReportDropped { side, hex } => (
             "submarine_report_dropped",
             d.text("side", names::side(*side)).hex("hex", *hex),
+        ),
+        EventKind::SubmarineOrderedToStation { submarine, station } => (
+            "submarine_ordered_to_station",
+            d.id("submarine", *submarine).hex("station", *station),
+        ),
+        EventKind::SuspectedWatersTold {
+            side,
+            hex,
+            distance,
+            day,
+            words,
+        } => (
+            "suspected_waters_told",
+            d.text("side", names::side(*side))
+                .hex("hex", *hex)
+                .int("distance", *distance)
+                .int("day", *day)
+                .with("words", Field::Str(words.clone())),
         ),
         EventKind::GroundReportReceived {
             side,

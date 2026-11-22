@@ -250,6 +250,8 @@ fn cited(truth: &TruthState, commands: &BTreeMap<Side, CommandState>) -> Vec<(St
         // A boat holds an order, walked by the engine's own walk; this
         // test's scenarios have none (decision 0218).
         submarines: _,
+        // Waters waiting to be told hold no order (decision 0218, 47).
+        waters_waiting: _,
     } = truth;
     for force in task_forces.values() {
         cited_by_force(force, &mut out);
@@ -524,6 +526,7 @@ fn cited_by_half(half: &PictureHalf) -> Vec<(String, Cited)> {
         supply_lines: half.supply_lines.clone(),
         men_replacement: half.men_replacement.clone(),
         submarines: half.submarines.clone(),
+        waters_waiting: Vec::new(),
     };
     cited(&truth, &BTreeMap::from([(half.side, half.command.clone())]))
 }

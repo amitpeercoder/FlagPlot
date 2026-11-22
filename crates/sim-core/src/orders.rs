@@ -13,7 +13,7 @@ use std::collections::BTreeSet;
 use crate::fixed::Fixed;
 use crate::hex::Hex;
 use crate::ids::{
-    AirGroupId, BaseId, EntityRef, IntentId, LandUnitId, OrderId, ShipId, TaskForceId,
+    AirGroupId, BaseId, EntityRef, IntentId, LandUnitId, OrderId, ShipId, SubmarineId, TaskForceId,
 };
 use crate::refdata::ShipKind;
 use crate::state::Side;
@@ -747,6 +747,21 @@ pub enum OrderKind {
     },
     /// Added at the end (decision 0111).
     Base { target: BaseId, order: BaseOrder },
+    /// Added at the end (decision 0218, 31).
+    Submarine {
+        target: SubmarineId,
+        order: SubmarineOrder,
+    },
+}
+
+/// An order to a submarine (decision 0218). The patrol order, holds and
+/// forces limits that name a boat are the third stage's.
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub enum SubmarineOrder {
+    /// Go to this hex and keep it (rules 3, 43). Accepted for a boat of the
+    /// side's own that is on the map, sound and not going home, to a hex
+    /// that is navigable and reachable by sea from where she is.
+    Station(Hex),
 }
 
 impl OrderKind {
@@ -757,6 +772,7 @@ impl OrderKind {
             OrderKind::AirGroup { target, .. } => EntityRef::AirGroup(*target),
             OrderKind::LandUnit { target, .. } => EntityRef::LandUnit(*target),
             OrderKind::Base { target, .. } => EntityRef::Base(*target),
+            OrderKind::Submarine { target, .. } => EntityRef::Submarine(*target),
         }
     }
 
@@ -1109,6 +1125,13 @@ pub enum RejectReason {
     /// fuel or the giver for another (decision 0201, 5). Names it. Added at
     /// the end of the enum.
     ChargeTakesPartInFuelling(TaskForceId),
+    /// An order to a submarine of the side's own that is sunk or home: she is
+    /// off the map (decision 0218, 3 and 21). Added at the end of the enum.
+    SubmarineOffTheMap,
+    /// An order to a submarine that is going home, damaged or for her leave
+    /// day or for want of a salvo (decision 0218, 3 and 21). Added at the end
+    /// of the enum.
+    SubmarineGoingHome,
 }
 
 impl RejectReason {
@@ -1358,6 +1381,8 @@ impl fmt::Display for RejectReason {
                 f,
                 "{charge} is fuelling from another force or is the force another fuels from"
             ),
+            RejectReason::SubmarineOffTheMap => f.write_str("the submarine is off the map"),
+            RejectReason::SubmarineGoingHome => f.write_str("the submarine is going home"),
         }
     }
 }

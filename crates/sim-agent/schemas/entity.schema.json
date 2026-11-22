@@ -45,6 +45,9 @@
               "$ref": "#/$defs/land_unit"
             },
             {
+              "$ref": "#/$defs/submarine"
+            },
+            {
               "$ref": "#/$defs/base"
             },
             {
@@ -233,6 +236,15 @@
         },
         "entity_kind": { "const": "land_unit" },
         "summary": { "$ref": "defs.schema.json#/$defs/land_unit_line" }
+      }
+    },
+    "submarine": {
+      "type": "object",
+      "required": ["entity_kind", "summary"],
+      "additionalProperties": false,
+      "properties": {
+        "entity_kind": { "const": "submarine" },
+        "summary": { "$ref": "defs.schema.json#/$defs/submarine_line" }
       }
     },
     "ship_line": {

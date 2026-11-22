@@ -2457,6 +2457,24 @@ pub enum EventKind {
         damaged: bool,
         sunk: bool,
     },
+    /// A station order was taken in for a submarine (decision 0218, 3 and
+    /// 43): she goes to `station` and keeps it. Cites the order. Her own
+    /// side's, whole; the enemy is told nothing. Added at the end.
+    SubmarineOrderedToStation {
+        submarine: SubmarineId,
+        station: Hex,
+    },
+    /// `side` was told the waters where it believes enemy submarines work
+    /// (decision 0218, 23 and 47): a hex and a distance, with the words of
+    /// the belief, told on `day`. Seen whole by `side` and not at all by the
+    /// other. Added at the end.
+    SuspectedWatersTold {
+        side: Side,
+        hex: Hex,
+        distance: u32,
+        day: u32,
+        words: String,
+    },
 }
 
 impl EventKind {
@@ -2645,6 +2663,7 @@ impl EventKind {
                 .collect(),
             EventKind::SubmarineEntered { submarine, .. }
             | EventKind::SubmarineSunk { submarine }
+            | EventKind::SubmarineOrderedToStation { submarine, .. }
             | EventKind::SubmarineSteamed { submarine, .. }
             | EventKind::SubmarineOnStation { submarine, .. } => {
                 vec![EntityRef::Submarine(*submarine)]
@@ -2953,9 +2972,9 @@ impl EventKind {
                 vec![EntityRef::LandUnit(*unit), EntityRef::Base(*base)]
             }
             EventKind::GroundReportReceived { .. } => Vec::new(),
-            EventKind::SubmarineReported { .. } | EventKind::SubmarineReportDropped { .. } => {
-                Vec::new()
-            }
+            EventKind::SubmarineReported { .. }
+            | EventKind::SubmarineReportDropped { .. }
+            | EventKind::SuspectedWatersTold { .. } => Vec::new(),
             EventKind::ReconnaissanceFlown {
                 air_group, from, ..
             } => std::iter::once(EntityRef::AirGroup(*air_group))
@@ -3938,6 +3957,21 @@ impl fmt::Display for EventKind {
             EventKind::SubmarineReportDropped { side, hex } => write!(
                 f,
                 "{} dropped its report of a submarine at {hex}, grown too old",
+                side.name()
+            ),
+            EventKind::SubmarineOrderedToStation {
+                submarine,
+                station,
+            } => write!(f, "{submarine} was ordered to her station at {station}"),
+            EventKind::SuspectedWatersTold {
+                side,
+                hex,
+                distance,
+                day,
+                words,
+            } => write!(
+                f,
+                "{} told on day {day} of waters where enemy submarines are suspected, {distance} hexes round {hex}: {words}",
                 side.name()
             ),
             EventKind::ShipSunk {

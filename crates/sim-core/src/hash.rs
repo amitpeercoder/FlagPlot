@@ -400,7 +400,18 @@ fn name_every_field(world: &World) {
         supply_lines,
         men_replacement,
         submarines,
+        waters_waiting,
     } = truth;
+    if let Some(crate::state::WatersWaiting {
+        side: _,
+        hex: _,
+        distance_hexes: _,
+        words: _,
+        rows: _,
+        reading: _,
+        day: _,
+    }) = waters_waiting.first()
+    {}
     if let Some(Submarine {
         id: _,
         // Not hashed: a name changes nothing that happens.
@@ -977,6 +988,18 @@ fn name_every_field(world: &World) {
         }) = belief.ground_estimates().next()
         {}
         // Hashed in the submarine block at the end of the state (decision
+        // 0218, 47).
+        if let Some(crate::belief::SuspectedWaters {
+            hex: _,
+            distance_hexes: _,
+            words: _,
+            rows: _,
+            reading: _,
+            day: _,
+            received_event: _,
+        }) = belief.suspected_waters().first()
+        {}
+        // Hashed in the submarine block at the end of the state (decision
         // 0218, 44).
         if let Some(crate::belief::SubmarineReport {
             hex: _,
@@ -1428,7 +1451,30 @@ fn hash_report(h: &mut StateHasher, report: &crate::belief::Report) {
             h.u8(6);
             hash_submarine_report(h, submarine);
         }
+        Report::SuspectedWaters(waters) => {
+            h.u8(7);
+            hash_waters(h, waters);
+        }
     }
+}
+
+/// A text: its length, then its bytes.
+fn hash_text(h: &mut StateHasher, text: &str) {
+    h.count(text.len());
+    h.bytes(text.as_bytes());
+}
+
+/// One suspected waters (decision 0218, 47): hex, distance, the words, the
+/// rows, the reading, the day and the event that told it.
+fn hash_waters(h: &mut StateHasher, waters: &crate::belief::SuspectedWaters) {
+    h.i32(waters.hex.q);
+    h.i32(waters.hex.r);
+    h.u32(waters.distance_hexes);
+    hash_text(h, &waters.words);
+    hash_text(h, &waters.rows);
+    hash_text(h, &waters.reading);
+    h.u32(waters.day);
+    h.u32(waters.received_event.raw());
 }
 
 /// One report of a submarine (decision 0218, 44): hex, day, pulse (0 for
@@ -1442,20 +1488,26 @@ fn hash_submarine_report(h: &mut StateHasher, report: &crate::belief::SubmarineR
     h.u32(report.age_pulses);
 }
 
-/// Whether a belief holds anything of a submarine: a report of one or a
-/// claim marked a submarine's (decision 0218).
+/// Whether a belief holds anything of a submarine: a report of one, suspected
+/// waters or a claim marked a submarine's (decision 0218).
 fn holds_submarine_state(belief: &crate::belief::BeliefState) -> bool {
     belief.submarine_reports().next().is_some()
+        || !belief.suspected_waters().is_empty()
         || belief.claims().iter().any(|claim| claim.from_submarine)
 }
 
 /// What one belief holds of a submarine, for the block at the end of
-/// [`hash_world`]: its reports of submarines in hex order, then the places
-/// in its claims of the claims marked a submarine's.
+/// [`hash_world`]: its reports of submarines in hex order, its suspected
+/// waters in the order told, then the places in its claims of the claims
+/// marked a submarine's.
 fn hash_belief_submarine_state(h: &mut StateHasher, belief: &crate::belief::BeliefState) {
     h.count(belief.submarine_reports().count());
     for report in belief.submarine_reports() {
         hash_submarine_report(h, report);
+    }
+    h.count(belief.suspected_waters().len());
+    for waters in belief.suspected_waters() {
+        hash_waters(h, waters);
     }
     let marked: Vec<usize> = belief
         .claims()
@@ -2423,12 +2475,26 @@ pub(crate) fn hash_world(world: &World) -> u64 {
         })
     };
     if !truth.submarines.is_empty()
+        || !truth.waters_waiting.is_empty()
         || world.beliefs.values().any(holds_submarine_state)
         || chain_pictures().any(holds_submarine_state)
     {
         h.count(truth.submarines.len());
         for boat in truth.submarines.values() {
             hash_submarine(&mut h, boat);
+        }
+        // The waters still waiting to be told, in the order kept (decision
+        // 0218, 47): side, hex, distance, words, rows, reading and day.
+        h.count(truth.waters_waiting.len());
+        for waiting in &truth.waters_waiting {
+            h.u8(waiting.side.code());
+            h.i32(waiting.hex.q);
+            h.i32(waiting.hex.r);
+            h.u32(waiting.distance_hexes);
+            hash_text(&mut h, &waiting.words);
+            hash_text(&mut h, &waiting.rows);
+            hash_text(&mut h, &waiting.reading);
+            h.u32(waiting.day);
         }
         for belief in world.beliefs.values() {
             hash_belief_submarine_state(&mut h, belief);

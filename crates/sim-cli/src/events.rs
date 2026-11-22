@@ -451,6 +451,7 @@ fn contact_side(world: &World, event: &Event) -> Option<Side> {
         | EventKind::ContactDropped { side, .. }
         | EventKind::SubmarineReported { side, .. }
         | EventKind::SubmarineReportDropped { side, .. }
+        | EventKind::SuspectedWatersTold { side, .. }
         | EventKind::ContactNotThere { side, .. } => return Some(*side),
         _ => {}
     }

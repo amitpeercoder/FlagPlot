@@ -3,7 +3,8 @@
 use serde::Serialize;
 use sim_core::ids::UmpireKey;
 use sim_core::orders::{
-    AirGroupOrder, AirMission, BaseOrder, LandUnitOrder, Order, OrderKind, TaskForceOrder,
+    AirGroupOrder, AirMission, BaseOrder, LandUnitOrder, Order, OrderKind, SubmarineOrder,
+    TaskForceOrder,
 };
 
 use super::names;
@@ -179,6 +180,9 @@ fn text(kind: &OrderKind) -> String {
             ),
             LandUnitOrder::March(hex) => format!("march to {hex}"),
             LandUnitOrder::SetActivity(activity) => format!("activity {}", activity.name()),
+        },
+        OrderKind::Submarine { order, .. } => match order {
+            SubmarineOrder::Station(hex) => format!("station at {hex}"),
         },
     }
 }

@@ -61,6 +61,33 @@ pub enum Report {
     /// own kind, held in a list of its own and read by no rule that reads
     /// contacts.
     Submarine(SubmarineReport),
+    /// Waters where the side believes enemy submarines work (decision 0218,
+    /// 23 and 47): told on a day, as an opening estimate is, held by every
+    /// command at once and never changed in play.
+    SuspectedWaters(SuspectedWaters),
+}
+
+/// The waters a side believes enemy submarines work (decision 0218, 23 and
+/// 47): what the side's command believed, right or wrong, and not made
+/// from where the boats are. A hex and a distance, the words of the belief
+/// and the rows it rests on, and the architect's reading of them, marked.
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct SuspectedWaters {
+    /// The centre of the waters.
+    pub hex: Hex,
+    /// The distance round it, in hexes.
+    pub distance_hexes: u32,
+    /// The belief in words.
+    pub words: String,
+    /// The rows the belief rests on.
+    pub rows: String,
+    /// The reading that gave the hex and the distance, marked as the
+    /// architect's.
+    pub reading: String,
+    /// The day it was told: the day from which the side holds it.
+    pub day: u32,
+    /// The event that records its being told.
+    pub received_event: EventId,
 }
 
 /// What a report of a submarine says (decision 0218, 44): where, and when.
@@ -303,6 +330,8 @@ pub enum ApplyOutcome {
     /// because the side holds a newer one for the hex. `replaced` is true if
     /// the side held one for the hex before (decision 0218, 44).
     SubmarineReport { replaced: bool },
+    /// Suspected waters were taken in (decision 0218, 47).
+    SuspectedWaters,
 }
 
 /// What [`BeliefState::age_contacts`] did to one contact.
@@ -330,6 +359,9 @@ pub struct BeliefState {
     /// Aged and dropped by [`BeliefState::age_submarine_reports`]; read by
     /// nothing that reads contacts.
     submarine_reports: BTreeMap<Hex, SubmarineReport>,
+    /// The waters the side believes enemy submarines work, in the order
+    /// told (decision 0218, 47). They never age and never change.
+    suspected_waters: Vec<SuspectedWaters>,
     /// Contacts created or refreshed since the last ageing. Always empty
     /// between pulses, so not hashed.
     refreshed_this_pulse: BTreeSet<ContactId>,
@@ -347,6 +379,7 @@ impl BeliefState {
             claims: Vec::new(),
             ground_estimates: BTreeMap::new(),
             submarine_reports: BTreeMap::new(),
+            suspected_waters: Vec::new(),
             refreshed_this_pulse: BTreeSet::new(),
             submarine_refreshed_this_pulse: BTreeSet::new(),
         }
@@ -365,6 +398,7 @@ impl BeliefState {
         claims: impl IntoIterator<Item = BattleClaim>,
         estimates: impl IntoIterator<Item = GroundEstimate>,
         submarine_reports: impl IntoIterator<Item = SubmarineReport>,
+        suspected_waters: impl IntoIterator<Item = SuspectedWaters>,
         event: EventId,
     ) -> BeliefState {
         let mut belief = BeliefState::new(side);
@@ -413,6 +447,13 @@ impl BeliefState {
                 )
             })
             .collect();
+        belief.suspected_waters = suspected_waters
+            .into_iter()
+            .map(|waters| SuspectedWaters {
+                received_event: event,
+                ..waters
+            })
+            .collect();
         belief
     }
 
@@ -447,6 +488,12 @@ impl BeliefState {
     /// The side's reports of submarines, in hex order (decision 0218, 44).
     pub fn submarine_reports(&self) -> impl Iterator<Item = &SubmarineReport> {
         self.submarine_reports.values()
+    }
+
+    /// The waters the side believes enemy submarines work, in the order told
+    /// (decision 0218, 23 and 47).
+    pub fn suspected_waters(&self) -> &[SuspectedWaters] {
+        &self.suspected_waters
     }
 
     /// The raw value the next contact ID will have. Part of the state hash.
@@ -543,6 +590,11 @@ impl BeliefState {
                 self.submarine_reports.insert(submarine.hex, *submarine);
                 self.submarine_refreshed_this_pulse.insert(submarine.hex);
                 ApplyOutcome::SubmarineReport { replaced }
+            }
+            // Told, and held in the order told; it never ages.
+            Report::SuspectedWaters(waters) => {
+                self.suspected_waters.push(waters.clone());
+                ApplyOutcome::SuspectedWaters
             }
         }
     }
@@ -1533,6 +1585,7 @@ mod tests {
                 age_pulses: 2,
                 ..submarine_report(5, 0, 1)
             }],
+            Vec::new(),
             EventId::new(7),
         );
         assert_eq!(held_submarines(&belief), vec![(Hex::new(5, 0), 7, 2)]);

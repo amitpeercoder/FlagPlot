@@ -18,14 +18,14 @@ use sim_core::objectives::{Levels, Objective, Objectives, ShipPoints, SideObject
 use sim_core::orders::{
     Activity, AirGroupOrder, AirMission, BaseOrder, Cargo, Issuer, Job, LandUnitOrder, Mission,
     OrderKind, OrderRequest, Origin, Posture, Reach, Readiness, SpeedSetting, Stance,
-    StragglerInstruction, TaskForceOrder, WhenSpent,
+    StragglerInstruction, SubmarineOrder, TaskForceOrder, WhenSpent,
 };
 use sim_core::pictures::{CommandRef, NamedSuperior};
 use sim_core::refdata::{RefData, ShipKind, SubmarineData, TrialFigures};
 use sim_core::state::{
     AirGroup, AirGroupLocation, Arrival, Base, Formation, LandUnit, Replacement, Ship,
     ShipLocation, ShipSystem, ShipSystems, Side, Skills, Submarine, SubmarineCondition,
-    SubmarinePassage, SystemState, TaskForce, TruthState,
+    SubmarinePassage, SystemState, TaskForce, TruthState, WatersWaiting,
 };
 use sim_core::time::Pulse;
 use sim_core::world::MADE_IDS_FLOOR;
@@ -165,6 +165,10 @@ struct ScenarioFile {
     /// Opening estimates of the enemy's men ashore (decision 0092, 16).
     #[serde(default)]
     estimate: Vec<EstimateSpec>,
+    /// The waters where a side suspects enemy submarines work (decision
+    /// 0218, 23 and 47).
+    #[serde(default)]
+    suspected_waters: Vec<SuspectedWatersSpec>,
     /// The enemy forces a side believes in and holds no contact of
     /// (decision 0173, 5).
     #[serde(default)]
@@ -334,6 +338,10 @@ enum ObjectiveSpec {
         base: u32,
         points_per_100_men: Quantity,
     },
+    /// Decision 0218, 32: points for each enemy submarine sunk.
+    SubmarinesSunk {
+        points: Quantity,
+    },
 }
 
 /// A contact a side holds when the game begins (decision 8 of
@@ -367,6 +375,23 @@ struct EstimateSpec {
     q: i32,
     r: i32,
     men: u32,
+}
+
+/// The waters where a side believes enemy submarines work (decision 0218, 23
+/// and 47): a hex and a distance round it, the day the side is told (the
+/// first day by default), the words of the belief, the rows it rests on and
+/// the architect's reading of the rows into this hex and distance, marked.
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct SuspectedWatersSpec {
+    side: SideSpec,
+    q: i32,
+    r: i32,
+    distance: u32,
+    day: Option<u32>,
+    words: String,
+    rows: String,
+    reading: String,
 }
 
 /// A force of the enemy's a side believes in and holds no contact of
@@ -788,14 +813,16 @@ struct OrderSpec {
     /// The day the order takes effect. Day 1 is the first day.
     day: u32,
     side: SideSpec,
-    /// Exactly one of `task_force`, `air_group`, `land_unit` and `base` must
-    /// be given.
+    /// Exactly one of `task_force`, `air_group`, `land_unit`, `base` and
+    /// `submarine` must be given.
     task_force: Option<u32>,
     air_group: Option<u32>,
     /// A base, for a `form_task_force` order (decision 0111).
     base: Option<u32>,
     /// A land unit, for a `set_posture`, `march` or `set_activity` order.
     land_unit: Option<u32>,
+    /// A submarine, for a `station` order (decision 0218).
+    submarine: Option<u32>,
     #[serde(default)]
     issuer: IssuerSpec,
     intent: Option<u32>,
@@ -993,6 +1020,11 @@ enum ActionSpec {
     /// Do no cargo work: clear the force's cargo order (decision 0191). No
     /// other key.
     NoCargoWork {},
+    /// Send a submarine to a station and keep it (decision 0218). The hex is
+    /// `[q, r]`.
+    Station {
+        hex: [i32; 2],
+    },
 }
 
 #[derive(Deserialize, Clone, Copy)]
@@ -1404,6 +1436,9 @@ fn build_objectives(
                         &format!("{what} points_per_100_men"),
                     )?,
                 },
+                ObjectiveSpec::SubmarinesSunk { points } => Objective::SubmarinesSunk {
+                    points: points_of(points, &format!("{what} points"))?,
+                },
             });
         }
         Ok(SideObjectives {
@@ -1705,6 +1740,9 @@ pub struct Scenario {
     contacts: Vec<(StartingContact, Option<CommandRef>)>,
     /// The opening estimates, kept for the same reason (decision 0092, 16).
     estimates: Vec<StartingEstimate>,
+    /// The suspected waters the scenario gives, kept for the same reason
+    /// (decision 0218, 47).
+    waters: Vec<WatersWaiting>,
     /// The superiors the scenario names, when command levels are on
     /// (decision 0134); `None` when they are off.
     command_levels: Option<Vec<NamedSuperior>>,
@@ -3110,8 +3148,9 @@ impl Scenario {
                 &spec.air_group,
                 &spec.land_unit,
                 &target_base,
+                &spec.submarine,
             ) {
-                (Some(raw), None, None, None) => {
+                (Some(raw), None, None, None, None) => {
                     let order = match &spec.action {
                         ActionSpec::SetRoute {
                             waypoints,
@@ -3301,6 +3340,9 @@ impl Scenario {
                         ActionSpec::SetActivity { .. } => {
                             return Err(wrong_target("set_activity", "land_unit"))
                         }
+                        ActionSpec::Station { .. } => {
+                            return Err(wrong_target("station", "submarine"))
+                        }
                         ActionSpec::PrepareLanding { hex: [q, r], roster } => {
                             TaskForceOrder::PrepareLanding {
                                 hex: Hex::new(*q, *r),
@@ -3313,7 +3355,7 @@ impl Scenario {
                         order,
                     }
                 }
-                (None, Some(raw), None, None) => {
+                (None, Some(raw), None, None, None) => {
                     let order = match &spec.action {
                         ActionSpec::SetAirMission {
                             mission,
@@ -3450,7 +3492,7 @@ impl Scenario {
                         order,
                     }
                 }
-                (None, None, Some(raw), None) => {
+                (None, None, Some(raw), None, None) => {
                     let order = match &spec.action {
                         ActionSpec::SetPosture {
                             posture,
@@ -3502,7 +3544,7 @@ impl Scenario {
                         order,
                     }
                 }
-                (None, None, None, Some(raw)) => {
+                (None, None, None, Some(raw), None) => {
                     let order = match &spec.action {
                         ActionSpec::FormTaskForce { ships } => BaseOrder::FormTaskForce {
                             ships: ships.iter().map(|raw| ShipId::new(*raw)).collect(),
@@ -3518,9 +3560,25 @@ impl Scenario {
                         order,
                     }
                 }
+                (None, None, None, None, Some(raw)) => {
+                    let order = match &spec.action {
+                        ActionSpec::Station { hex: [q, r] } => {
+                            SubmarineOrder::Station(Hex::new(*q, *r))
+                        }
+                        _ => {
+                            return Err(fail(format!(
+                                "an order on day {day} for a submarine must be station"
+                            )))
+                        }
+                    };
+                    OrderKind::Submarine {
+                        target: SubmarineId::new(*raw),
+                        order,
+                    }
+                }
                 _ => {
                     return Err(fail(format!(
-                        "the order on day {day} needs exactly one of task_force, air_group, land_unit and base"
+                        "the order on day {day} needs exactly one of task_force, air_group, land_unit and base (or submarine, for a station order)"
                     )))
                 }
             };
@@ -4137,6 +4195,40 @@ impl Scenario {
         world
             .hold_starting_estimates(estimates.clone())
             .map_err(|e| fail(e.to_string()))?;
+        // The waters a side suspects enemy submarines work (decision 0218,
+        // 47): told on their days.
+        let mut waters = Vec::new();
+        for (index, spec) in file.suspected_waters.iter().enumerate() {
+            let what = format!("suspected waters {}", index + 1);
+            let day = spec.day.unwrap_or(1);
+            if day == 0 || day > file.days {
+                return Err(fail(format!(
+                    "{what} are told on day {day}, which is not a day of the game (1 to {})",
+                    file.days
+                )));
+            }
+            for (name, text) in [
+                ("words", &spec.words),
+                ("rows", &spec.rows),
+                ("reading", &spec.reading),
+            ] {
+                if text.trim().is_empty() {
+                    return Err(fail(format!("{what} have no {name}")));
+                }
+            }
+            waters.push(WatersWaiting {
+                side: spec.side.into(),
+                hex: Hex::new(spec.q, spec.r),
+                distance_hexes: spec.distance,
+                words: spec.words.clone(),
+                rows: spec.rows.clone(),
+                reading: spec.reading.clone(),
+                day,
+            });
+        }
+        world
+            .hold_suspected_waters(waters.clone())
+            .map_err(|e| fail(e.to_string()))?;
 
         // What each side believed of the enemy (decision 0173, 5 to 9):
         // checked and kept with the scenario, never put into the world.
@@ -4164,6 +4256,7 @@ impl Scenario {
             commands,
             contacts,
             estimates,
+            waters,
             command_levels,
             radio_silent,
             commanders,
@@ -4303,6 +4396,7 @@ impl Scenario {
         }
         world.hold_starting_contacts_seen(self.contacts.clone())?;
         world.hold_starting_estimates(self.estimates.clone())?;
+        world.hold_suspected_waters(self.waters.clone())?;
         if let Some(objectives) = self.world.objectives() {
             world.set_objectives(objectives.clone())?;
         }
@@ -4320,6 +4414,7 @@ impl Scenario {
             commands: self.commands.clone(),
             contacts: self.contacts.clone(),
             estimates: self.estimates.clone(),
+            waters: self.waters.clone(),
             command_levels: self.command_levels.clone(),
             radio_silent: self.radio_silent.clone(),
             commanders: self.commanders.clone(),
@@ -6606,6 +6701,26 @@ r = 0
             "[[objectives.allied.objective]]\nkind = \"men_landed\"\nbase = 77\npoints_per_100_men = 1\n",
         ));
         assert!(message.contains("unknown base:77"), "{message}");
+    }
+
+    #[test]
+    fn submarines_sunk_loads_with_its_points_and_is_refused_as_the_others_are() {
+        let body =
+            "[[objectives.allied.objective]]\nkind = \"submarines_sunk\"\npoints = \"2.5\"\n";
+        let scenario = parse_with(&objectives(LEVELS, body)).expect("loads");
+        let found = scenario.world.objectives().expect("has objectives");
+        assert_eq!(
+            found.allied.objectives,
+            vec![Objective::SubmarinesSunk {
+                points: "2.5".parse().expect("a decimal"),
+            }]
+        );
+        assert_eq!(found.allied.objectives[0].name(), "submarines_sunk");
+        let message = error_of(&objectives(
+            LEVELS,
+            "[[objectives.allied.objective]]\nkind = \"submarines_sunk\"\npoints = -1\n",
+        ));
+        assert!(message.contains("points is negative"), "{message}");
     }
 
     #[test]

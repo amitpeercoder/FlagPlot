@@ -8,10 +8,12 @@ use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
 use sim_core::ids::{
     AirGroupId, AircraftTypeId, BaseId, EntityRef, EventId, LandUnitId, OrderId, ShipId,
-    TaskForceId,
+    SubmarineId, TaskForceId,
 };
 use sim_core::side_events::{SideEvent, SideEventKind};
-use sim_core::state::{AirGroup, AirGroupLocation, Base, LandUnit, Ship, ShipLocation, TaskForce};
+use sim_core::state::{
+    AirGroup, AirGroupLocation, Base, LandUnit, Ship, ShipLocation, Submarine, TaskForce,
+};
 use sim_core::view::{PublicBase, SideView};
 
 /// A [`Fixed`] written as a decimal string, exactly: `"12"`, `"0.25"`. No
@@ -84,6 +86,9 @@ pub(crate) struct Ctx<'a> {
     pub bases: BTreeMap<BaseId, &'a Base>,
     /// The side's own land units (decision 0066), destroyed ones too.
     pub land_units: BTreeMap<LandUnitId, &'a LandUnit>,
+    /// The side's own submarines (decision 0218), held apart ones too, by
+    /// the side's own number. Never an enemy's.
+    pub submarines: BTreeMap<SubmarineId, &'a Submarine>,
     /// The public facts of the bases the side does not own.
     pub enemy_bases: BTreeMap<BaseId, PublicBase>,
     /// The side's own units held apart until their day (decision 0195, 13):
@@ -112,10 +117,11 @@ pub(crate) struct Ctx<'a> {
     force_ids: Vec<TaskForceId>,
     group_ids: Vec<AirGroupId>,
     land_unit_ids: Vec<LandUnitId>,
+    submarine_ids: Vec<SubmarineId>,
 }
 
 /// The unit kinds whose numbers are the side's own.
-const OWN_KINDS: [&str; 4] = ["ship", "task_force", "air_group", "land_unit"];
+const OWN_KINDS: [&str; 5] = ["ship", "task_force", "air_group", "land_unit", "submarine"];
 
 impl<'a> Ctx<'a> {
     pub fn new(view: SideView<'a>) -> Ctx<'a> {
@@ -124,6 +130,7 @@ impl<'a> Ctx<'a> {
         let groups: BTreeMap<_, _> = view.air_groups().map(|g| (g.id, g)).collect();
         let bases: BTreeMap<_, _> = view.bases().map(|b| (b.id, b)).collect();
         let land_units: BTreeMap<_, _> = view.land_units().map(|u| (u.id, u)).collect();
+        let submarines: BTreeMap<_, _> = view.own_submarines().map(|b| (b.id, b)).collect();
         let enemy_bases: BTreeMap<_, _> = view.enemy_bases().map(|b| (b.id, b)).collect();
         let mut place_names: BTreeMap<Hex, String> = BTreeMap::new();
         for base in bases.values() {
@@ -159,6 +166,7 @@ impl<'a> Ctx<'a> {
         let force_ids = sorted_ids(forces.keys().chain(held_forces.keys()));
         let group_ids = sorted_ids(groups.keys().chain(held_groups.keys()));
         let land_unit_ids = sorted_ids(land_units.keys().chain(held_land_units.keys()));
+        let submarine_ids = sorted_ids(submarines.keys());
         Ctx {
             held_ships,
             held_forces,
@@ -171,6 +179,8 @@ impl<'a> Ctx<'a> {
             force_ids,
             group_ids,
             land_unit_ids,
+            submarine_ids,
+            submarines,
             land_units,
             ships,
             forces,
@@ -429,6 +439,22 @@ impl<'a> Ctx<'a> {
             .map(position_number)
     }
 
+    /// The side's number of one of its own submarines, sunk and gone home
+    /// ones counted (decision 0218).
+    pub fn submarine_number(&self, id: SubmarineId) -> Option<u32> {
+        self.submarine_ids
+            .binary_search(&id)
+            .ok()
+            .map(position_number)
+    }
+
+    /// The own submarine a side number names; `None` for a number that
+    /// names none.
+    pub fn own_submarine(&self, number: u32) -> Option<&'a Submarine> {
+        let id = *self.submarine_ids.get(number_position(number)?)?;
+        self.submarines.get(&id).copied()
+    }
+
     /// The own land unit a side number names; `None` for a number that
     /// names none.
     pub fn own_land_unit(&self, number: u32) -> Option<&'a LandUnit> {
@@ -499,6 +525,7 @@ impl<'a> Ctx<'a> {
             "ship" => self.ship_number(ShipId::new(raw)),
             "task_force" => self.force_number(TaskForceId::new(raw)),
             "land_unit" => self.land_unit_number(LandUnitId::new(raw)),
+            "submarine" => self.submarine_number(SubmarineId::new(raw)),
             _ => self.group_number(AirGroupId::new(raw)),
         })
     }
@@ -566,6 +593,16 @@ impl<'a> Ctx<'a> {
         }
     }
 
+    /// An own submarine's handle, `submarine:N` by the side's number.
+    pub fn submarine(&self, id: SubmarineId) -> Handle {
+        Handle {
+            handle: self
+                .submarine_number(id)
+                .map_or_else(|| id.to_string(), |n| format!("submarine:{n}")),
+            name: self.submarines.get(&id).map(|b| b.name.clone()),
+        }
+    }
+
     pub fn base(&self, id: BaseId) -> Handle {
         Handle {
             handle: id.to_string(),
@@ -608,9 +645,7 @@ impl<'a> Ctx<'a> {
             // Only a trial's draw's key (decision 0174, 3); no event names
             // it.
             EntityRef::Place(place) => bare(format!("place:{place}")),
-            // The briefing's part for a side's own boats is a later phase
-            // of decision 0218; until then she is named by her number.
-            EntityRef::Submarine(id) => bare(id.to_string()),
+            EntityRef::Submarine(id) => self.submarine(id),
         }
     }
 

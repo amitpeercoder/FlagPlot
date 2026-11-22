@@ -14,6 +14,7 @@ use crate::briefing::{
 };
 use crate::common::{Handle, Place};
 use crate::objectives::{EnemyObjectiveLine, ObjectiveLine, ResultPart, ShipKindPoints};
+use crate::submarines::SubmarinesPart;
 
 fn plain(word: &str) -> String {
     word.replace('_', " ")
@@ -1169,6 +1170,10 @@ impl Briefing {
             land_units_text(&mut o, land);
         }
 
+        if let Some(submarines) = &self.submarines {
+            submarines_text(&mut o, submarines);
+        }
+
         if let Some(changes) = &self.base_changes {
             base_changes_text(&mut o, changes);
         }
@@ -1777,6 +1782,65 @@ fn enemy_ashore_text(o: &mut Out, a: &EnemyAshorePart) {
             b.base.text(),
             at(&b.place),
             ev(b.event)
+        ));
+    }
+}
+
+/// The side's submarines, its reports of enemy submarines and the waters it
+/// suspects them in, in plain words (decision 0218).
+fn submarines_text(o: &mut Out, part: &SubmarinesPart) {
+    o.heading("SUBMARINES");
+    for boat in &part.boats {
+        let class = &boat.class;
+        let name = boat.submarine.text();
+        let salvoes = plural(boat.salvoes_left, "salvo", "salvoes");
+        let mut line = match boat.state {
+            "held apart" => format!(
+                "Your submarine {name}, {class}: comes on day {}, to keep station at {}, {salvoes} left",
+                boat.comes_on_day.unwrap_or(0),
+                at(&boat.station)
+            ),
+            "sunk" => format!("Your submarine {name}, {class}: sunk"),
+            "home" => format!("Your submarine {name}, {class}: gone home"),
+            state => {
+                let here = boat.place.as_ref().map_or(String::new(), at);
+                let doing = match (state, &boat.bound_for) {
+                    ("on station", _) => format!("on station at {here}"),
+                    ("going home", Some(to)) => format!("at {here}, going home to {}", at(to)),
+                    (_, Some(to)) => format!("at {here}, on passage to {}", at(to)),
+                    _ => format!("at {here}"),
+                };
+                format!("Your submarine {name}, {class}: {doing}, {salvoes} left")
+            }
+        };
+        if let Some(held) = &boat.held_down_until {
+            line.push_str(&format!(
+                ", held down until the {} of day {}",
+                held.pulse, held.day
+            ));
+        }
+        if boat.damaged {
+            line.push_str(", damaged");
+        }
+        o.line(line);
+    }
+    for report in &part.reports {
+        o.line(format!(
+            "Report of an enemy submarine: at {}, made day {}, {} old{}",
+            at(&report.place),
+            report.day,
+            plural(report.age_pulses, "pulse", "pulses"),
+            report.event.map_or(String::new(), ev)
+        ));
+    }
+    for waters in &part.suspected_waters {
+        o.line(format!(
+            "Waters where enemy submarines are thought to work: within {} of {}, told on day {}: {}{}",
+            plural(waters.distance_hexes, "hex", "hexes"),
+            at(&waters.place),
+            waters.told_day,
+            waters.words,
+            waters.event.map_or(String::new(), ev)
         ));
     }
 }
@@ -2608,6 +2672,7 @@ fn enemy_objective_text(line: &EnemyObjectiveLine) -> String {
         "men_landed" => format!(
             "men the enemy lands from ships at {base} and does not take off again, points for each hundred men: {points}"
         ),
+        "submarines_sunk" => format!("your submarines sunk, points for each: {points}"),
         "base_open" if line.closed == Some(true) => format!(
             "days {base} is shut at the end of the day (no supply, or no aircraft ready), points if shut every day: {points}, earned by the share of days"
         ),
@@ -2651,6 +2716,9 @@ fn objective_text(o: &mut Out, line: &ObjectiveLine) {
         "men_landed" => format!(
             "Objective: men you land from ships at {base} and do not take off again, points for each hundred men: {points}"
         ),
+        "submarines_sunk" => {
+            format!("Objective: enemy submarines sunk, points for each: {points}")
+        }
         "base_open" if line.closed == Some(true) => format!(
             "Objective: {base} shut at the end of each day (no supply, or no aircraft ready), points if shut every day: {points}, earned by the share of days"
         ),

@@ -10,7 +10,9 @@
 
 use std::collections::BTreeSet;
 
-use crate::belief::{BattleClaim, BeliefState, Contact, GroundEstimate, SubmarineReport};
+use crate::belief::{
+    BattleClaim, BeliefState, Contact, GroundEstimate, SubmarineReport, SuspectedWaters,
+};
 use crate::commander::Commander;
 use crate::hex::Hex;
 use crate::ids::{AirGroupId, ContactId, LandUnitId, TaskForceId};
@@ -140,6 +142,12 @@ impl<'a> CommandView<'a> {
     /// 44).
     pub fn submarine_reports(&self) -> impl Iterator<Item = &'a SubmarineReport> + 'a {
         self.picture.submarine_reports()
+    }
+
+    /// The command's suspected waters, in the order told (decision 0218,
+    /// 47).
+    pub fn suspected_waters(&self) -> &'a [SuspectedWaters] {
+        self.picture.suspected_waters()
     }
 }
 

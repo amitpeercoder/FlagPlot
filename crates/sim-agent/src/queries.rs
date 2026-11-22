@@ -49,6 +49,11 @@ pub struct ListForces {
     /// unit is listed (it keeps its number) and is in no area.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub land_units: Vec<LandUnitLine>,
+    /// The side's own submarines (decision 0218), in `area` if one is given:
+    /// a boat on the map is where she is; one held apart, sunk or gone home
+    /// is in no area. Left out when the side has none.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub submarines: Vec<crate::submarines::SubmarineLine>,
     /// The side's own forces and units held apart until their day (decision
     /// 0195, 7): not on the map, so not in `task_forces` or `land_units`. In
     /// `area` if one is given, an entry at a base by the base's hex where
@@ -122,6 +127,18 @@ pub fn list_forces(view: &SideView<'_>, area: Option<(Hex, u32)>) -> ListForces 
             .values()
             .filter(|f| is_listed(&ctx, f) && within(area, f.position()))
             .map(|f| force_line(&ctx, f))
+            .collect(),
+        submarines: ctx
+            .submarines
+            .values()
+            .map(|boat| crate::submarines::boat_line(&ctx, view, boat, view.day() + 1))
+            .filter(|line| {
+                area.is_none()
+                    || line
+                        .place
+                        .as_ref()
+                        .is_some_and(|p| within(area, Hex::new(p.q, p.r)))
+            })
             .collect(),
         land_units: {
             let fed = fed_last_night(&ctx);
@@ -245,11 +262,19 @@ pub enum Detail {
     TaskForce(ForceDetail),
     AirGroup(AirGroupDetail),
     LandUnit(LandUnitDetail),
+    /// One of the side's own submarines (decision 0218).
+    Submarine(SubmarineDetail),
     Base(BaseDetail),
     EnemyBase(EnemyBaseDetail),
     Contact(ContactDetail),
     /// A unit held apart until its day (decision 0195, 7).
     ToEnter(crate::entries::EntryDetail),
+}
+
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct SubmarineDetail {
+    pub entity_kind: &'static str,
+    pub summary: crate::submarines::SubmarineLine,
 }
 
 #[derive(Clone, PartialEq, Eq, Debug, Serialize)]
@@ -585,6 +610,13 @@ fn entity_of(view: &SideView<'_>, handle: &str) -> Option<Detail> {
                     .ship_class(ship.class)
                     .map(|c| c.troop_capacity_men)
                     .filter(|men| *men > 0),
+            }))
+        }
+        "submarine" => {
+            let boat = ctx.own_submarine(id)?;
+            Some(Detail::Submarine(SubmarineDetail {
+                entity_kind: "submarine",
+                summary: crate::submarines::boat_line(&ctx, view, boat, view.day() + 1),
             }))
         }
         "land_unit" => {

@@ -3,6 +3,30 @@
   "$id": "flagplot-agent/defs",
   "title": "Shared definitions of the flagplot-agent answers, version 1",
   "$defs": {
+    "submarine_line": {
+      "description": "One of the side's own submarines (decision 0218), known exactly to her side.",
+      "type": "object",
+      "required": ["submarine", "class", "state", "station", "salvoes_left", "damaged"],
+      "additionalProperties": false,
+      "properties": {
+        "submarine": { "$ref": "#/$defs/handle" },
+        "class": { "type": "string", "description": "The name of her class." },
+        "place": { "description": "Where she is. Left out for a boat held apart, sunk or gone home.", "$ref": "#/$defs/place" },
+        "state": { "enum": ["on station", "on passage", "going home", "held apart", "sunk", "home"] },
+        "station": { "$ref": "#/$defs/place" },
+        "bound_for": { "description": "Where she is bound on a passage. Left out otherwise.", "$ref": "#/$defs/place" },
+        "salvoes_left": { "type": "integer" },
+        "held_down_until": {
+          "description": "The last pulse she is held down, if she still is today. Left out otherwise.",
+          "type": "object",
+          "required": ["day", "pulse"],
+          "additionalProperties": false,
+          "properties": { "day": { "type": "integer" }, "pulse": { "enum": ["night", "morning", "afternoon"] } }
+        },
+        "damaged": { "type": "boolean" },
+        "comes_on_day": { "description": "The day a boat held apart comes onto the map. Left out otherwise.", "type": "integer" }
+      }
+    },
     "dec": {
       "description": "A fixed-point quantity as an exact decimal string, such as \"12\" or \"0.25\". Never a float.",
       "type": "string",

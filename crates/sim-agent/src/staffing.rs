@@ -95,6 +95,9 @@ impl<'a> Names<'a> {
                 .get(&raw)
                 .copied()
                 .or_else(|| self.ctx.land_unit_number(LandUnitId::new(raw))),
+            "submarine" => self
+                .ctx
+                .submarine_number(sim_core::ids::SubmarineId::new(raw)),
             _ => groups
                 .get(&raw)
                 .copied()

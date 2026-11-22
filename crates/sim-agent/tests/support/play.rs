@@ -41,6 +41,7 @@ struct Numbering {
     forces: BTreeMap<u32, (Side, u32)>,
     groups: BTreeMap<u32, (Side, u32)>,
     land_units: BTreeMap<u32, (Side, u32)>,
+    submarines: BTreeMap<u32, (Side, u32)>,
 }
 
 thread_local! {
@@ -81,6 +82,14 @@ fn register_numbering(world: &sim_core::World) {
                 (side, number(super::land_unit_handle(&view, unit.id))),
             );
         }
+        // A boat is numbered in her side's own order of numbers, as a land
+        // unit is.
+        for (place, boat) in view.own_submarines().enumerate() {
+            numbering.submarines.insert(
+                boat.id.raw(),
+                (side, u32::try_from(place + 1).expect("few")),
+            );
+        }
     }
     NUMBERING.with(|n| *n.borrow_mut() = numbering);
 }
@@ -101,11 +110,13 @@ pub fn served_json(side: Side, request: &OrderRequest) -> Value {
             sim_core::orders::OrderKind::LandUnit { target, .. } => ("land_unit", target.raw()),
             // A base keeps its number (decision 0086): the scenario's.
             sim_core::orders::OrderKind::Base { target, .. } => ("base", target.raw()),
+            sim_core::orders::OrderKind::Submarine { target, .. } => ("submarine", target.raw()),
         };
         let (owner, number) = match kind {
             "base" => (side, raw),
             "task_force" => n.forces[&raw],
             "land_unit" => n.land_units[&raw],
+            "submarine" => n.submarines[&raw],
             _ => n.groups[&raw],
         };
         let number = if owner == side { number } else { 90_000 + raw };

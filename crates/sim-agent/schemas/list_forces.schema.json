@@ -16,6 +16,11 @@
       "type": "array",
       "items": { "$ref": "defs.schema.json#/$defs/land_unit_line" }
     },
+    "submarines": {
+      "description": "The side's own submarines (decision 0218), those held apart, sunk or gone home among them. Left out when the side has none.",
+      "type": "array",
+      "items": { "$ref": "defs.schema.json#/$defs/submarine_line" }
+    },
     "to_enter": {
       "description": "The side's own forces and units held apart until their day (decision 0195, 7): not on the map, so not in task_forces or land_units. In the area if one is given. Left out when none is held.",
       "type": "array",

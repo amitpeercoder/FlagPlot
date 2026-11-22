@@ -487,7 +487,7 @@ impl World {
         // what the area command holds.
         // A unit of its own held apart until its day (decision 0195, 8 and
         // 15) is refused before that.
-        if let Some(refused) = self.not_yet_entered(order.side, &order.kind) {
+        if let Some(refused) = self.not_yet_entered(order.side, &order.kind, order.day_issued) {
             return Err(refused);
         }
         if let Some(refused) = self.not_yet_available(order.side, &order.kind, order.day_issued) {

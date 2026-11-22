@@ -17,7 +17,7 @@ use sim_core::command::{
     CommandKind, IntentKind, Leave, Limit, Maker, Staff, StaffDecisions, Staffs,
 };
 use sim_core::hex::Hex;
-use sim_core::ids::{AirGroupId, BaseId, IntentId, LandUnitId, ShipId, TaskForceId};
+use sim_core::ids::{AirGroupId, BaseId, IntentId, LandUnitId, ShipId, SubmarineId, TaskForceId};
 use sim_core::orders::{OrderKind, OrderRequest, Origin, RejectReason, TaskForceOrder};
 use sim_core::pictures::CommandRef;
 use sim_core::state::Side;
@@ -2043,6 +2043,7 @@ impl Session {
                     Some(raw)
                 }),
             "land_unit" => ctx.own_land_unit_or_held(number).map(|u| u.id.raw()),
+            "submarine" => ctx.own_submarine(number).map(|b| b.id.raw()),
             _ => ctx.own_group_or_held(number).map(|g| g.id.raw()),
         }
         .unwrap_or(NO_SUCH_UNIT);
@@ -2088,6 +2089,7 @@ impl Session {
                         new_force.and_then(|(made, number)| (made == raw).then_some(number))
                     }),
                     "land_unit" => ctx.land_unit_number(LandUnitId::new(raw)),
+                    "submarine" => ctx.submarine_number(SubmarineId::new(raw)),
                     _ => ctx.group_number(AirGroupId::new(raw)),
                 }))
             }

@@ -152,6 +152,10 @@ impl SideView<'_> {
                 .collect(),
             supply_lines: self.supply_lines().copied().collect(),
             men_replacement: self.own_men_replacement(),
+            // The waters a side is yet to be told are not its own to know:
+            // a world built from a picture has none waiting (decision 0218,
+            // 47).
+            waters_waiting: Vec::new(),
             submarines: self
                 .own_submarines()
                 .map(|boat| (boat.id, boat.clone()))
@@ -231,6 +235,7 @@ impl SideView<'_> {
             supply_lines,
             men_replacement,
             submarines,
+            waters_waiting: _,
         } = truth;
         let command = commands.remove(&side).expect("the side's command state");
         Ok(PictureHalf {
@@ -257,6 +262,7 @@ impl SideView<'_> {
                 self.claims(),
                 self.ground_estimates(),
                 self.submarine_reports(),
+                self.suspected_waters(),
             ),
             counters: PictureCounters {
                 next_task_force: self.next_task_force_id().raw(),
@@ -364,6 +370,7 @@ impl WorldPicture {
             supply_lines: Vec::new(),
             men_replacement: MenReplacement::default(),
             submarines: BTreeMap::new(),
+            waters_waiting: Vec::new(),
         };
         let mut orders = Vec::new();
         let mut beliefs = BTreeMap::new();
@@ -406,6 +413,7 @@ impl WorldPicture {
                 supply_lines,
                 men_replacement,
                 submarines,
+                waters_waiting: Vec::new(),
             };
             let mut commands = BTreeMap::from([(side, own_command)]);
             // Re-point the half's orders past those already joined, after
@@ -445,6 +453,7 @@ impl WorldPicture {
                 supply_lines,
                 men_replacement,
                 submarines,
+                waters_waiting: _,
             } = own;
             join_units(&mut truth.ships, ships)?;
             join_units(&mut truth.task_forces, task_forces)?;

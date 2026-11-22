@@ -2520,3 +2520,633 @@ fn statement_20_a_boat_held_down_longer_is_held_the_later_of_the_two() {
         assert_eq!(run.boat().held_down_until, start, "seed {seed}");
     }
 }
+
+// ---------------------------------------------------------------------
+// Phase 5: the station order, suspected waters, nothing else moves.
+// ---------------------------------------------------------------------
+
+/// The wording of Allied waters at (5,0), 2 hexes round, told on `day`, as
+/// the scenario gives them (a scenario's `[[suspected_waters]]`).
+fn allied_waters_at_5_0(day: u32) -> String {
+    format!(
+        "\n[[suspected_waters]]\nside = \"allied\"\nq = 5\nr = 0\ndistance = 2\nday = {day}\n\
+         words = \"Placeholder belief: enemy submarines are thought to work off (5,0).\"\n\
+         rows = \"Placeholder rows: none, the belief is made up for the proof.\"\n\
+         reading = \"Placeholder reading by the architect: (5,0) and 2 hexes.\"\n"
+    )
+}
+
+const WATERS_WORDS: &str = "Placeholder belief: enemy submarines are thought to work off (5,0).";
+
+/// Game F1: the Allied side is given suspected waters at (5,0), 2 hexes
+/// round, told on day 2, in a game of two days. Boat 1 lies at (7,0), where
+/// Allied air group 1 (the search group of game D1, at a base at (0,0))
+/// searches an arc that holds her: she is sighted and reported on some
+/// seeds, at (7,0) or a neighbour and never at (5,0).
+fn game_f1() -> Scenario {
+    let mut text = game(Vec::new()).days(2).text();
+    text = common::replace_once(
+        &text,
+        "class = 6900\nq = 5\nr = 0\nhome = 1\n",
+        "class = 6900\nq = 7\nr = 0\nhome = 1\n",
+    );
+    text.push_str(
+        "\n[[base]]\nid = 2\nname = \"Placeholder Allied air base\"\nside = \"allied\"\nq = 0\nr = 0\n\
+         \n[[air_group]]\nid = 1\nname = \"Placeholder search group\"\nside = \"allied\"\nbase = 2\naircraft_type = 2\nready = 6\n\
+         \n[[order]]\nday = 1\nside = \"allied\"\nair_group = 1\nkind = \"set_air_mission\"\nmission = \"search\"\n\
+         \n[[order]]\nday = 1\nside = \"allied\"\nair_group = 1\nkind = \"set_search_arc\"\nfrom_deg = 60\nto_deg = 120\nrange_nm = 300\n",
+    );
+    text.push_str(&allied_waters_at_5_0(2));
+    common::from_text_with(&text, &scenario_path(), &common::frozen()).expect("game F1 loads")
+}
+
+fn waters_of(world: &World, side: Side) -> Vec<(i32, i32, u32, String, u32)> {
+    world
+        .side_view(side)
+        .suspected_waters()
+        .iter()
+        .map(|w| (w.hex.q, w.hex.r, w.distance_hexes, w.words.clone(), w.day))
+        .collect()
+}
+
+#[test]
+fn statement_26_suspected_waters_are_told_on_their_day_to_their_side_and_never_move() {
+    let f1 = game_f1();
+    let told = vec![(5, 0, 2, WATERS_WORDS.to_string(), 2)];
+    let (mut reported_elsewhere, mut sunk_or_home) = (0, 0);
+    for seed in 1..=300 {
+        let mut run = f1.with_seed(seed).expect("a seed");
+        let allied_briefing =
+            |world: &World| sim_agent::briefing(&world.side_view(Side::Allied), "scenario 128 F1");
+        let japanese_briefing = |world: &World| {
+            sim_agent::briefing(&world.side_view(Side::Japanese), "scenario 128 F1")
+        };
+        // Before day 1: no waters in the Allied view or briefing, and
+        // nothing of submarines in the Allied briefing at all.
+        assert!(
+            waters_of(&run.world, Side::Allied).is_empty(),
+            "seed {seed}"
+        );
+        assert!(allied_briefing(&run.world).submarines.is_none());
+        // Day 1, at every moment of it: still none, in the view and in the
+        // briefing the view gives.
+        let mut moments = 0;
+        run.next_day_watched(sim_core::Staffs::none(), &mut |world, moment| {
+            moments += 1;
+            assert_eq!(moment.day(), 1);
+            assert!(waters_of(world, Side::Allied).is_empty(), "seed {seed}");
+            assert!(waters_of(world, Side::Japanese).is_empty(), "seed {seed}");
+        })
+        .expect("day 1")
+        .expect("a day");
+        assert!(moments > 3);
+        // From day 2: held, with the words of the belief, in the view and in
+        // the briefing, and its event is the side's own.
+        assert_eq!(waters_of(&run.world, Side::Allied), told, "seed {seed}");
+        let briefing = allied_briefing(&run.world);
+        let part = briefing.submarines.as_ref().expect("the submarines part");
+        assert_eq!(part.suspected_waters.len(), 1);
+        let line = &part.suspected_waters[0];
+        assert_eq!((line.place.q, line.place.r), (5, 0));
+        assert_eq!((line.distance_hexes, line.told_day), (2, 2));
+        assert_eq!(line.words, WATERS_WORDS);
+        assert!(briefing.to_text().contains(WATERS_WORDS), "seed {seed}");
+        assert!(part.boats.is_empty());
+        // The Japanese side, given none, holds none; its briefing has its
+        // boat and no waters.
+        assert!(waters_of(&run.world, Side::Japanese).is_empty());
+        let japanese = japanese_briefing(&run.world);
+        let part = japanese.submarines.as_ref().expect("her boat");
+        assert!(part.suspected_waters.is_empty());
+        assert!(!japanese.to_text().contains(WATERS_WORDS));
+        let told_events = |side: Side| {
+            run.world
+                .side_view(side)
+                .events()
+                .iter()
+                .filter(|e| {
+                    matches!(
+                        e.kind,
+                        SideEventKind::Whole(EventKind::SuspectedWatersTold { .. })
+                    )
+                })
+                .count()
+        };
+        assert_eq!(
+            (told_events(Side::Allied), told_events(Side::Japanese)),
+            (1, 0)
+        );
+        // Day 2 is played: the waters are as they were told, whatever is
+        // reported elsewhere.
+        run.next_day().expect("day 2").expect("a day");
+        assert_eq!(waters_of(&run.world, Side::Allied), told, "seed {seed}");
+        let allied = run.world.side_view(Side::Allied);
+        if allied.submarine_reports().next().is_some() {
+            reported_elsewhere += 1;
+            // Where the boat lies, not at the waters' centre.
+            assert!(allied
+                .submarine_reports()
+                .all(|r| (r.hex.q, r.hex.r) != (5, 0)));
+        }
+        if run.world.umpire().submarines[&BOAT].condition != SubmarineCondition::Sound {
+            sunk_or_home += 1;
+        }
+    }
+    assert!(reported_elsewhere > 20, "{reported_elsewhere}");
+    assert!(sunk_or_home > 0);
+}
+
+#[test]
+fn statement_26_a_side_given_no_waters_is_shown_nothing_until_a_boat_is_reported() {
+    // Game D1 has no waters and no Allied boat: the Allied briefing has no
+    // submarines part until a sighting is reported, and then only the
+    // report.
+    let d1 = game_d1((5, 0), "");
+    let mut shown_empty = 0;
+    let mut shown_report = 0;
+    for seed in 1..=200 {
+        let run = play(&d1, seed);
+        let allied = run.world.side_view(Side::Allied);
+        assert!(allied.suspected_waters().is_empty());
+        let briefing = sim_agent::briefing(&allied, "scenario 128 D1");
+        match (&briefing.submarines, allied.submarine_reports().count()) {
+            (None, 0) => shown_empty += 1,
+            (Some(part), n) if n > 0 => {
+                assert_eq!(part.reports.len(), n);
+                assert!(part.boats.is_empty() && part.suspected_waters.is_empty());
+                shown_report += 1;
+            }
+            other => panic!("seed {seed}: {other:?}"),
+        }
+    }
+    assert!(shown_empty > 0 && shown_report > 0);
+}
+
+/// The first line of a baseline written by the repository for `name`'s
+/// day 1: `day   1  hash <hex>`.
+fn baseline_hash(name: &str) -> u64 {
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../crates/sim-cli/tests/run_baseline")
+        .join(format!("{name}.txt"));
+    let text = fs::read_to_string(&path).expect("the run baseline");
+    let line = text
+        .lines()
+        .find(|line| line.starts_with("day   1  hash "))
+        .expect("a hash line");
+    let hex = line
+        .strip_prefix("day   1  hash ")
+        .and_then(|rest| rest.split_whitespace().next())
+        .expect("the hash");
+    u64::from_str_radix(hex, 16).expect("hex")
+}
+
+#[test]
+fn statement_27_a_scenario_with_no_boat_and_no_waters_has_the_hash_it_had() {
+    for (name, file) in [
+        ("scenario_04a", "04a_night_action"),
+        ("scenario_05b", "05b_strike"),
+    ] {
+        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../data/scenarios")
+            .join(format!("{file}.toml"));
+        // On the frozen figures the hand-calculation tests use: the hash
+        // pinned in the repository's file of pinned hashes.
+        let mut frozen = common::load(&path).expect("the scenario loads");
+        assert!(frozen.world.umpire().submarines.is_empty());
+        assert!(frozen.world.umpire().waters_waiting.is_empty());
+        frozen.run_to_end().expect("runs");
+        let hash = frozen.world.state_hash();
+        assert_eq!(
+            hash,
+            common::pinned_hash(&format!("scenario_128_statement_27_{name}"), hash),
+            "{file} on the frozen figures"
+        );
+        // On the live figures, the hash the repository's run baseline gives
+        // for the file's own seed, written before the rule was built.
+        let mut live = common::load_live(&path).expect("the scenario loads");
+        live.run_to_end().expect("runs");
+        assert_eq!(
+            live.world.state_hash(),
+            baseline_hash(file),
+            "{file} on the live figures"
+        );
+    }
+}
+
+/// Game of statement 28: an Allied force of a carrier and a destroyer at
+/// battle readiness lies stopped in boat 1's hex all the night.
+fn battle_readiness_game() -> Game {
+    game(vec![carrier_and_destroyer()])
+}
+
+fn battle_readiness_text(game: &Game, extra: &str) -> String {
+    let mut text = game.text();
+    // A group can strike only where the scenario has the air combat figures.
+    if extra.contains("[[air_group]]") {
+        text = common::replace_once(
+            &text,
+            "surface_combat = \"../reference/surface_combat.toml\"\n",
+            "surface_combat = \"../reference/surface_combat.toml\"\nair_combat = \"../reference/air_combat.toml\"\n",
+        );
+    }
+    text = common::replace_once(
+        &text,
+        "mission = \"surface_combat\"\n\n[[ship]]",
+        "mission = \"surface_combat\"\nreadiness = \"battle\"\n\n[[ship]]",
+    );
+    text.push_str(extra);
+    text
+}
+
+fn is_surface_fight(kind: &EventKind) -> bool {
+    matches!(
+        kind,
+        EventKind::EngagementBegun { .. }
+            | EventKind::SightingRoll { .. }
+            | EventKind::Salvo { .. }
+            | EventKind::ForceBrokeOff { .. }
+            | EventKind::EngagementEnded { .. }
+    )
+}
+
+/// The strikes a group launched at ships or a base, and the contact ones.
+fn strikes(run: &Run) -> usize {
+    run.events
+        .iter()
+        .filter(|e| matches!(e.kind, EventKind::StrikeLaunched { .. }))
+        .count()
+}
+
+#[test]
+fn statement_28_no_rule_made_for_a_task_force_touches_a_boat() {
+    // Part 1: a force at battle readiness lies in her hex all a night.
+    let text = battle_readiness_text(&battle_readiness_game(), "");
+    let part_1 =
+        common::from_text_with(&text, &scenario_path(), &common::frozen()).expect("the game loads");
+    let (mut fired, mut quiet) = (0, 0);
+    for seed in 1..=SEEDS {
+        let run = play(&part_1, seed);
+        // No surface fight is recorded, whether she fires or not.
+        assert!(
+            !run.events.iter().any(|e| is_surface_fight(&e.kind)),
+            "seed {seed}"
+        );
+        // The force is not given a contact of her, and she is in no force's
+        // alert or contact list.
+        assert_eq!(
+            run.world.side_view(Side::Allied).contacts().count(),
+            0,
+            "seed {seed}"
+        );
+        if run.salvos().is_empty() {
+            quiet += 1;
+        } else {
+            fired += 1;
+        }
+    }
+    assert!(fired > 0 && quiet > 0, "{fired} fired, {quiet} did not");
+
+    // Part 2: the carrier's group on naval strike, in reach of her report.
+    // The group's aircraft are ready; the boat's salvo is reported to the
+    // side at her hex, which the group is within 250 nm of. No strike is
+    // launched at it.
+    let group = "\n[[air_group]]\nid = 1\nname = \"Placeholder strike group\"\nside = \"allied\"\nship = 1\naircraft_type = 3\nready = 6\n\
+                 \n[[order]]\nday = 1\nside = \"allied\"\nair_group = 1\nkind = \"set_air_mission\"\nmission = \"naval_strike\"\n";
+    let text = battle_readiness_text(&battle_readiness_game().days(2), group);
+    let part_2 =
+        common::from_text_with(&text, &scenario_path(), &common::frozen()).expect("the game loads");
+    let mut reported = 0;
+    for seed in 1..=300 {
+        let run = play(&part_2, seed);
+        assert_eq!(strikes(&run), 0, "seed {seed}");
+        if run
+            .world
+            .side_view(Side::Allied)
+            .submarine_reports()
+            .count()
+            > 0
+            || run
+                .events
+                .iter()
+                .any(|e| matches!(e.kind, EventKind::SubmarineReported { .. }))
+        {
+            reported += 1;
+        }
+    }
+    assert!(reported > 50, "{reported}");
+
+    // The same group does launch at a contact of ships in reach: the
+    // control that the group could have struck had there been a target.
+    let contact = "\n[[contact]]\nside = \"allied\"\nq = 2\nr = 0\nship_count = 1\nkind = \"cruiser\"\nage_pulses = 0\n\
+                   \n[[order]]\nday = 1\nside = \"allied\"\nair_group = 1\nkind = \"set_strike_contact_age\"\npulses = 4\n";
+    let text = battle_readiness_text(
+        &battle_readiness_game().days(2),
+        &format!("{group}{contact}"),
+    );
+    let control =
+        common::from_text_with(&text, &scenario_path(), &common::frozen()).expect("the game loads");
+    let launched = (1..=50)
+        .filter(|seed| strikes(&play(&control, *seed)) > 0)
+        .count();
+    assert!(launched > 0, "the control launched no strike");
+}
+
+#[test]
+fn statement_29_every_draw_of_the_rule_has_its_own_value_in_a_subsystem_of_its_own() {
+    let rule_draws = [
+        Draw::SubmarineAttack,
+        Draw::SubmarineTorpedo,
+        Draw::SubmarineHunt,
+        Draw::SubmarineSighted,
+        Draw::SubmarineAirAttack,
+        Draw::SubmarineReportError,
+        Draw::SubmarineClaim,
+    ];
+    // Each has a code of its own, among the codes of all the draws.
+    let all: Vec<u64> = Draw::ALL.iter().map(|d| d.code()).collect();
+    let mut codes: Vec<u64> = rule_draws.iter().map(|d| d.code()).collect();
+    for code in &codes {
+        assert_eq!(all.iter().filter(|c| *c == code).count(), 1, "{code}");
+    }
+    codes.sort_unstable();
+    codes.dedup();
+    assert_eq!(codes.len(), rule_draws.len());
+    assert_eq!(codes, (22..=28).collect::<Vec<u64>>());
+    let mut every = all.clone();
+    every.sort_unstable();
+    every.dedup();
+    assert_eq!(every.len(), all.len(), "no two draws share a code");
+    // The subsystem is a value of its own.
+    assert_eq!(Subsystem::Submarine.code(), 10);
+    // And the draws are made in it: the attack's draw replayed under the
+    // boat, the force and `Subsystem::Submarine` gives the result the log
+    // has, for each chance of each seed of game A1.
+    let a1 = game(vec![carrier_and_destroyer()]).scenario();
+    let mut checked = 0;
+    for seed in 1..=300 {
+        let run = play(&a1, seed);
+        for chance in run.chances() {
+            let attacked = run
+                .salvos()
+                .iter()
+                .any(|s| (s.day, s.pulse, s.force) == (chance.day, chance.pulse, chance.force));
+            assert_eq!(
+                run.attack_draw_succeeds(chance.day, chance.pulse, chance.force, chance.chance),
+                attacked,
+                "seed {seed}"
+            );
+            checked += 1;
+        }
+    }
+    assert!(checked > 100);
+}
+
+/// What an event is, for comparing two logs whose numbers differ: its day,
+/// pulse, kind and breakdown.
+fn shape(event: &Event) -> String {
+    format!(
+        "{} {:?} {:?} {:?}",
+        event.day, event.pulse, event.kind, event.breakdown
+    )
+}
+
+fn names_boat_2(event: &Event) -> bool {
+    event
+        .kind
+        .entities()
+        .contains(&EntityRef::Submarine(SubmarineId::new(2)))
+}
+
+/// Game of statement 29: game A1 with a second Japanese boat that never
+/// meets a force: she lies at (10,1), far from the force at (5,0), or, with
+/// `sails`, is sent by a scripted station order to (11,1).
+fn with_a_second_boat(sails: bool) -> Scenario {
+    let mut text = game(vec![carrier_and_destroyer()]).text();
+    text.push_str(
+        "\n[[submarine]]\nid = 2\nname = \"Placeholder submarine 2\"\nside = \"japanese\"\nclass = 6900\nq = 10\nr = 1\nhome = 1\n",
+    );
+    if sails {
+        text.push_str(
+            "\n[[order]]\nday = 1\nside = \"japanese\"\nsubmarine = 2\nkind = \"station\"\nhex = [11, 1]\n",
+        );
+    }
+    common::from_text_with(&text, &scenario_path(), &common::frozen()).expect("the game loads")
+}
+
+#[test]
+fn statement_29_two_games_that_differ_only_in_a_boat_that_never_meets_a_force_draw_alike() {
+    let one_boat = game(vec![carrier_and_destroyer()]).scenario();
+    for sails in [false, true] {
+        let two_boats = with_a_second_boat(sails);
+        let mut fired = 0;
+        for seed in 1..=SEEDS {
+            let alone = play(&one_boat, seed);
+            let with = play(&two_boats, seed);
+            if !alone.salvos().is_empty() {
+                fired += 1;
+            }
+            // Every event but the second boat's own is the same, in order,
+            // with the same breakdown of every chance.
+            let rest: Vec<String> = with
+                .events
+                .iter()
+                .filter(|e| !names_boat_2(e))
+                .map(shape)
+                .collect();
+            let first: Vec<String> = alone.events.iter().map(shape).collect();
+            assert_eq!(first, rest, "seed {seed}, sails {sails}");
+            // Where she lies quiet she has no event at all, so the logs
+            // are the same event for event, numbers and causes too.
+            if !sails {
+                assert_eq!(alone.events, with.events, "seed {seed}");
+            } else {
+                assert!(with.events.iter().any(names_boat_2), "seed {seed}");
+            }
+            // The outcomes: the ships, the forces, the first boat and the
+            // claims of both sides.
+            let (a, w) = (alone.world.umpire(), with.world.umpire());
+            assert_eq!(a.ships, w.ships, "seed {seed}");
+            assert_eq!(a.task_forces, w.task_forces, "seed {seed}");
+            assert_eq!(a.submarines[&BOAT], w.submarines[&BOAT], "seed {seed}");
+            for side in Side::ALL {
+                // The claims, but for the number of the event that gave
+                // them, which the second boat's events move.
+                let claims = |run: &Run| -> Vec<sim_core::belief::BattleClaim> {
+                    run.world
+                        .side_view(side)
+                        .claims()
+                        .iter()
+                        .map(|c| sim_core::belief::BattleClaim {
+                            received_event: alone.events[0].id,
+                            ..c.clone()
+                        })
+                        .collect()
+                };
+                assert_eq!(claims(&alone), claims(&with), "seed {seed}");
+                assert_eq!(
+                    alone
+                        .world
+                        .side_view(side)
+                        .submarine_reports()
+                        .map(|r| (r.hex, r.age_pulses))
+                        .collect::<Vec<_>>(),
+                    with.world
+                        .side_view(side)
+                        .submarine_reports()
+                        .map(|r| (r.hex, r.age_pulses))
+                        .collect::<Vec<_>>(),
+                    "seed {seed}"
+                );
+            }
+        }
+        assert!(fired > 100, "{fired}");
+    }
+}
+
+#[test]
+fn a_scripted_station_order_sends_a_boat_to_a_new_station() {
+    // Boat 1 lies at (5,0), 4 hexes from (9,0): 120 nm in the night, 40
+    // more in the morning, where she arrives and is on station from the
+    // afternoon.
+    let mut text = game(Vec::new()).text();
+    text.push_str(
+        "\n[[order]]\nday = 1\nside = \"japanese\"\nsubmarine = 1\nkind = \"station\"\nhex = [9, 0]\n",
+    );
+    let scenario =
+        common::from_text_with(&text, &scenario_path(), &common::frozen()).expect("the game loads");
+    // The order is in the script as the engine's order.
+    let scripted = &scenario.scripted_orders()[&1];
+    assert_eq!(scripted.len(), 1);
+    assert_eq!(scripted[0].0, Side::Japanese);
+    assert_eq!(
+        scripted[0].1.kind,
+        sim_core::orders::OrderKind::Submarine {
+            target: BOAT,
+            order: sim_core::orders::SubmarineOrder::Station(sim_core::hex::Hex::new(9, 0)),
+        }
+    );
+    let run = play(&scenario, 1);
+    let boat = run.boat();
+    assert_eq!((boat.station.q, boat.station.r), (9, 0));
+    assert_eq!((boat.hex.q, boat.hex.r), (9, 0));
+    assert!(boat.on_station(1));
+    let order = boat.station_order.expect("her order is kept");
+    let ordered: Vec<&Event> = run
+        .events
+        .iter()
+        .filter(|e| matches!(e.kind, EventKind::SubmarineOrderedToStation { .. }))
+        .collect();
+    assert_eq!(ordered.len(), 1);
+    assert_eq!(
+        ordered[0].causes,
+        vec![sim_core::events::Cause::Order(order)]
+    );
+    // She steamed in the night and the morning and reached her station in
+    // the morning.
+    let steamed: Vec<(Pulse, (i32, i32))> = run
+        .events
+        .iter()
+        .filter_map(|e| match e.kind {
+            EventKind::SubmarineSteamed { to, .. } => {
+                Some((e.pulse.expect("a pulse"), (to.q, to.r)))
+            }
+            _ => None,
+        })
+        .collect();
+    assert_eq!(
+        steamed,
+        vec![(Pulse::Night, (8, 0)), (Pulse::Morning, (9, 0))]
+    );
+    assert!(run
+        .events
+        .iter()
+        .any(|e| matches!(e.kind, EventKind::SubmarineOnStation { .. })
+            && e.pulse == Some(Pulse::Morning)));
+    // Her side is told of the order; the other side is not.
+    let seen = |side: Side| {
+        run.world
+            .side_view(side)
+            .events()
+            .iter()
+            .filter(|e| {
+                matches!(
+                    e.kind,
+                    SideEventKind::Whole(EventKind::SubmarineOrderedToStation { .. })
+                )
+            })
+            .count()
+    };
+    assert_eq!((seen(Side::Japanese), seen(Side::Allied)), (1, 0));
+}
+
+#[test]
+fn a_scripted_station_order_names_exactly_one_unit_and_a_submarine_takes_only_station() {
+    let bad = |extra: &str| {
+        let mut text = game(Vec::new()).text();
+        text.push_str(extra);
+        match common::from_text_with(&text, &scenario_path(), &common::frozen()) {
+            Ok(_) => panic!("the game was accepted"),
+            Err(error) => error.to_string(),
+        }
+    };
+    let two = bad(
+        "\n[[order]]\nday = 1\nside = \"japanese\"\nsubmarine = 1\ntask_force = 1\nkind = \"station\"\nhex = [9, 0]\n",
+    );
+    assert!(two.contains("exactly one of"), "{two}");
+    let other = bad(
+        "\n[[order]]\nday = 1\nside = \"japanese\"\nsubmarine = 1\nkind = \"march\"\nhex = [9, 0]\n",
+    );
+    assert!(other.contains("must be station"), "{other}");
+    let wrong = bad(
+        "\n[[order]]\nday = 1\nside = \"japanese\"\ntask_force = 1\nkind = \"station\"\nhex = [9, 0]\n",
+    );
+    assert!(wrong.contains("submarine"), "{wrong}");
+}
+
+#[test]
+fn suspected_waters_in_a_scenario_are_refused_off_the_map_on_day_0_or_after_the_last_day() {
+    let bad = |extra: &str| {
+        let mut text = game(Vec::new()).text();
+        text.push_str(extra);
+        match common::from_text_with(&text, &scenario_path(), &common::frozen()) {
+            Ok(_) => panic!("the game was accepted"),
+            Err(error) => error.to_string(),
+        }
+    };
+    let waters = |q: i32, day: u32| {
+        format!(
+            "\n[[suspected_waters]]\nside = \"allied\"\nq = {q}\nr = 0\ndistance = 2\nday = {day}\nwords = \"W.\"\nrows = \"R.\"\nreading = \"A.\"\n"
+        )
+    };
+    assert!(bad(&waters(500, 1)).contains("off the map"));
+    assert!(bad(&waters(5, 0)).contains("not a day of the game"));
+    assert!(bad(&waters(5, 2)).contains("not a day of the game"));
+    // Words, rows and a reading are all required.
+    let empty = "\n[[suspected_waters]]\nside = \"allied\"\nq = 5\nr = 0\ndistance = 2\nwords = \" \"\nrows = \"R.\"\nreading = \"A.\"\n";
+    assert!(bad(empty).contains("no words"));
+    // Day 1 is the default.
+    let mut text = game(Vec::new()).text();
+    text.push_str(
+        "\n[[suspected_waters]]\nside = \"allied\"\nq = 5\nr = 0\ndistance = 2\nwords = \"W.\"\nrows = \"R.\"\nreading = \"A.\"\n",
+    );
+    let scenario =
+        common::from_text_with(&text, &scenario_path(), &common::frozen()).expect("the game loads");
+    assert_eq!(
+        scenario
+            .world
+            .side_view(Side::Allied)
+            .suspected_waters()
+            .len(),
+        1
+    );
+    // A world made again for another seed holds them too.
+    let other = scenario.with_seed(77).expect("a seed");
+    assert_eq!(
+        other.world.side_view(Side::Allied).suspected_waters().len(),
+        1
+    );
+    assert_eq!(other.world.state_hash(), {
+        let again = scenario.with_seed(77).expect("a seed");
+        again.world.state_hash()
+    });
+}

@@ -52,6 +52,10 @@
       "description": "The side's land units and what yesterday's events say happened to their men (decision 0066, 21). Left out when the side has no land unit.",
       "$ref": "#/$defs/land_units"
     },
+    "submarines": {
+      "description": "The side's own submarines, its reports of enemy submarines and the waters it suspects they work in (decision 0218). Left out when the side has none of the three.",
+      "$ref": "#/$defs/submarines"
+    },
     "base_changes": {
       "description": "Bases that changed side yesterday and what went with them (decision 0090, 29 and 30). Left out when no base changed side and nothing was lost with one.",
       "$ref": "#/$defs/base_changes"
@@ -123,7 +127,7 @@
       "required": ["kind", "base", "closed", "ship_points", "points"],
       "additionalProperties": false,
       "properties": {
-        "kind": { "enum": ["ships_sunk", "ships_crippled", "ships_out_of_action", "aircraft_destroyed", "cargo_landed", "base_open", "base_held", "men_lost", "men_landed"] },
+        "kind": { "enum": ["ships_sunk", "ships_crippled", "ships_out_of_action", "aircraft_destroyed", "cargo_landed", "base_open", "base_held", "men_lost", "men_landed", "submarines_sunk"] },
         "base": {
           "description": "The base of cargo_landed, base_open, base_held and men_landed, by the map's number and name; a base not on the reader's map is given by its hex, handle \"(q,r)\" and name null; null for the others.",
           "$ref": "defs.schema.json#/$defs/handle_or_null"
@@ -192,7 +196,7 @@
             }
           }
         },
-        "kind": { "enum": ["ships_sunk", "ships_crippled", "ships_out_of_action", "aircraft_destroyed", "cargo_landed", "base_open", "base_held", "men_lost", "men_landed"] },
+        "kind": { "enum": ["ships_sunk", "ships_crippled", "ships_out_of_action", "aircraft_destroyed", "cargo_landed", "base_open", "base_held", "men_lost", "men_landed", "submarines_sunk"] },
         "base": {
           "description": "The base of cargo_landed, base_open, base_held and men_landed; a base not on the reader's map is given by its hex, handle \"(q,r)\" and name null. Null for the others.",
           "$ref": "defs.schema.json#/$defs/handle_or_null"
@@ -266,7 +270,7 @@
             "required": ["kind", "base", "closed", "count", "days", "ships", "points"],
             "additionalProperties": false,
             "properties": {
-              "kind": { "enum": ["ships_sunk", "ships_crippled", "ships_out_of_action", "aircraft_destroyed", "cargo_landed", "base_open", "base_held", "men_lost", "men_landed"] },
+              "kind": { "enum": ["ships_sunk", "ships_crippled", "ships_out_of_action", "aircraft_destroyed", "cargo_landed", "base_open", "base_held", "men_lost", "men_landed", "submarines_sunk"] },
               "base": {
                 "description": "As for an objective line: a base not on the reader's map is given by its hex, handle \"(q,r)\" and name null.",
                 "$ref": "defs.schema.json#/$defs/handle_or_null"
@@ -452,6 +456,48 @@
         "place": { "$ref": "defs.schema.json#/$defs/place_or_null" },
         "claimed_sunk": { "$ref": "defs.schema.json#/$defs/count_or_null" },
         "event": { "type": "integer" }
+      }
+    },
+    "submarines": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "boats": {
+          "description": "The side's own boats, in number order, those held apart, sunk or gone home among them. Left out when none.",
+          "type": "array",
+          "items": { "$ref": "defs.schema.json#/$defs/submarine_line" }
+        },
+        "reports": {
+          "description": "The side's reports of enemy submarines, in hex order, each possibly out of place. Left out when none.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["place", "day", "age_pulses"],
+            "additionalProperties": false,
+            "properties": {
+              "place": { "$ref": "defs.schema.json#/$defs/place" },
+              "day": { "type": "integer", "description": "The day it was made." },
+              "age_pulses": { "type": "integer", "description": "The pulses since it was made." },
+              "event": { "type": "integer" }
+            }
+          }
+        },
+        "suspected_waters": {
+          "description": "The waters where the side suspects enemy submarines work, in the order it was told. Left out when none.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["place", "distance_hexes", "words", "told_day"],
+            "additionalProperties": false,
+            "properties": {
+              "place": { "$ref": "defs.schema.json#/$defs/place" },
+              "distance_hexes": { "type": "integer", "description": "How many hexes round the centre." },
+              "words": { "type": "string", "description": "The belief, in words." },
+              "told_day": { "type": "integer" },
+              "event": { "type": "integer" }
+            }
+          }
+        }
       }
     },
     "enemy_ashore": {

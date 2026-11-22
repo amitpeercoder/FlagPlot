@@ -1278,6 +1278,8 @@ pub fn count(
             | EventKind::SubmarineSunk { .. }
             | EventKind::SubmarineReported { .. }
             | EventKind::SubmarineReportDropped { .. }
+            | EventKind::SubmarineOrderedToStation { .. }
+            | EventKind::SuspectedWatersTold { .. }
             | EventKind::EntryWaiting { .. }
             | EventKind::StockReceived { .. }
             | EventKind::MenJoined { .. }

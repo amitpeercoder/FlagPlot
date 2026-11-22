@@ -27,6 +27,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use crate::belief::{
     BattleClaim, BeliefState, Contact, GroundEstimate, GroundGrade, SubmarineReport,
+    SuspectedWaters,
 };
 use crate::claims::UnitClaim;
 use crate::command::{CommandState, Hold, HoldMaker, PursuitBy};
@@ -96,6 +97,19 @@ pub struct PictureBelief {
     /// Its reports of submarines, at most one for a hex (decision 0218,
     /// 44).
     pub submarine_reports: Vec<PictureSubmarineReport>,
+    /// Its suspected waters, in the order told (decision 0218, 47).
+    pub suspected_waters: Vec<PictureWaters>,
+}
+
+/// Suspected waters in a picture: a [`SuspectedWaters`] without its event.
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct PictureWaters {
+    pub hex: Hex,
+    pub distance_hexes: u32,
+    pub words: String,
+    pub rows: String,
+    pub reading: String,
+    pub day: u32,
 }
 
 /// A report of a submarine in a picture: a [`SubmarineReport`] without its
@@ -227,6 +241,8 @@ fn walk_held_ids(
         // Nor does a stream of men or a unit's strength.
         men_replacement: _,
         submarines,
+        // Waters waiting to be told hold no order and no event.
+        waters_waiting: _,
     } = truth;
     for boat in submarines.values_mut() {
         walk_submarine(boat, visit);
@@ -711,6 +727,7 @@ fn picture_belief(belief: &BeliefState) -> PictureBelief {
         belief.claims(),
         belief.ground_estimates(),
         belief.submarine_reports(),
+        belief.suspected_waters(),
     )
 }
 
@@ -723,6 +740,7 @@ fn belief_of<'a>(
     claims: &[BattleClaim],
     estimates: impl Iterator<Item = &'a GroundEstimate>,
     submarine_reports: impl Iterator<Item = &'a SubmarineReport>,
+    suspected_waters: &[SuspectedWaters],
 ) -> PictureBelief {
     PictureBelief {
         contacts: contacts
@@ -785,6 +803,17 @@ fn belief_of<'a>(
                 day: report.day,
                 pulse: report.pulse,
                 age_pulses: report.age_pulses,
+            })
+            .collect(),
+        suspected_waters: suspected_waters
+            .iter()
+            .map(|waters| PictureWaters {
+                hex: waters.hex,
+                distance_hexes: waters.distance_hexes,
+                words: waters.words.clone(),
+                rows: waters.rows.clone(),
+                reading: waters.reading.clone(),
+                day: waters.day,
             })
             .collect(),
     }
@@ -1079,6 +1108,15 @@ fn build(
                     pulse: r.pulse,
                     received_event: picture_event,
                     age_pulses: r.age_pulses,
+                }),
+                given.suspected_waters.iter().map(|w| SuspectedWaters {
+                    hex: w.hex,
+                    distance_hexes: w.distance_hexes,
+                    words: w.words.clone(),
+                    rows: w.rows.clone(),
+                    reading: w.reading.clone(),
+                    day: w.day,
+                    received_event: picture_event,
                 }),
                 picture_event,
             );

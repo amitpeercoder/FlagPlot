@@ -1728,7 +1728,7 @@ impl World {
         // The guard of a hold comes first (decision 0107, rulings 18 and 30).
         let forced = if let Some(target) = self.held_order_target(side, &request.kind) {
             Some(RejectReason::Held(target))
-        } else if let Some(refused) = self.not_yet_entered(side, &request.kind) {
+        } else if let Some(refused) = self.not_yet_entered(side, &request.kind, day) {
             // A unit of its own not on the map yet (decision 0195, 8): the
             // refusal gives the day it enters.
             Some(refused)
@@ -1826,6 +1826,8 @@ impl World {
                 let whole = HoldTarget::LandUnit(*target);
                 state.holds.contains_key(&whole).then_some(whole)
             }
+            // A hold on a boat is the third stage's (decision 0218, 34).
+            OrderKind::Submarine { .. } => None,
         }
     }
 

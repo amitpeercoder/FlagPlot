@@ -30,7 +30,9 @@ mod surface_choices;
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::airstrike::{NavalStrike, StrikeChoice, StrikeInFlight};
-use crate::belief::{BattleClaim, BeliefState, Contact, GroundEstimate, SubmarineReport};
+use crate::belief::{
+    BattleClaim, BeliefState, Contact, GroundEstimate, SubmarineReport, SuspectedWaters,
+};
 use crate::choices::{Answer, Question};
 use crate::events::EventLog;
 use crate::fixed::Fixed;
@@ -697,6 +699,13 @@ impl<'a> SideView<'a> {
         self.own_belief().submarine_reports()
     }
 
+    /// The waters the side believes enemy submarines work, in the order told
+    /// (decision 0218, 23 and 47): a belief the side was given, right or
+    /// wrong, never made from where the boats are and never changed in play.
+    pub fn suspected_waters(&self) -> &'a [SuspectedWaters] {
+        self.own_belief().suspected_waters()
+    }
+
     /// The figures of shore bombardment, if a force can bombard (decision
     /// 0092): public rules, not intelligence.
     pub fn bombardment_figures(&self) -> Option<&'a BombardmentFigures> {
@@ -1233,6 +1242,19 @@ impl<'a> SideView<'a> {
     /// Reference data is common knowledge.
     pub fn ship_class(&self, id: ShipClassId) -> Option<&'a ShipClass> {
         self.ref_data.ship_classes.get(&id)
+    }
+
+    /// A class of submarine (decision 0218): reference data, so common
+    /// knowledge. `None` where the scenario names no submarine data or the
+    /// class.
+    pub fn submarine_class(
+        &self,
+        id: crate::ids::SubmarineClassId,
+    ) -> Option<&'a crate::refdata::SubmarineClass> {
+        self.ref_data
+            .submarines
+            .as_ref()
+            .and_then(|data| data.classes.get(&id))
     }
 
     /// Aircraft types are reference data, so common knowledge.
