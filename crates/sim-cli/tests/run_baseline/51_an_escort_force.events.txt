@@ -2,8 +2,8 @@ Placeholder scenario 51: An escort force
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash cf46f5fa71feba67  21 events
-day   2  hash 0f3244aadd45fd9a  0 events
+day   1  hash dfd690e95f5f104f  21 events
+day   2  hash fd9f722068e145d0  0 events
 
 #1 D1 -         order:1 accepted for task_force:1  <- order:1
 #2 D1 -         order:2 accepted for task_force:1  <- order:2

@@ -846,6 +846,8 @@ fn s12_the_watcher_can_change_nothing() {
         "withdraw_intent",
         "set_limit",
         "set_leave",
+        "set_pursuit",
+        "answer_pursuit",
         "hold",
         "release",
         "preview",

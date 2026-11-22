@@ -349,7 +349,7 @@
     },
     {
       "file": "data/scenarios/second-proof/../../reference/air_combat.toml",
-      "hash": "35c82226c11bacbc"
+      "hash": "60bed4440a5f1083"
     },
     {
       "file": "data/scenarios/second-proof/../../reference/air_upkeep.toml",
@@ -368,92 +368,92 @@
       "hash": "3b3353e3ccc0e0d7"
     }
   ],
-  "doctrine_version": "supply-52",
+  "doctrine_version": "supply-53",
   "format": "flagplot-saved-game",
   "hashes": [
     {
       "day": 1,
-      "hash": "ccb8fa3f8f7934c4"
+      "hash": "56d8e007902cdfec"
     },
     {
       "day": 2,
-      "hash": "fafeeb3ce2d3b180"
+      "hash": "5c9f9eb349da29e2"
     },
     {
       "day": 3,
-      "hash": "3c7e174f911dbf57"
+      "hash": "56cf7bfb0e0b762b"
     },
     {
       "day": 4,
-      "hash": "b096bc3fe5447cac"
+      "hash": "dc0678b0a296a186"
     },
     {
       "day": 5,
-      "hash": "a95d12efb32ac0ef"
+      "hash": "1c7a2e5309faadb7"
     },
     {
       "day": 6,
-      "hash": "5a4c60969db4568e"
+      "hash": "42415e593c060b30"
     },
     {
       "day": 7,
-      "hash": "76d538ed5fd6ed94"
+      "hash": "b0ab96d120e04cf0"
     },
     {
       "day": 8,
-      "hash": "b0c354cd414857d2"
+      "hash": "b1227dc798599650"
     },
     {
       "day": 9,
-      "hash": "a02554ab3ec5abba"
+      "hash": "def88ee83f701194"
     },
     {
       "day": 10,
-      "hash": "ffe5ef598ce1123f"
+      "hash": "543ae81cd19fff29"
     },
     {
       "day": 11,
-      "hash": "2b8d72da384b0c06"
+      "hash": "350082ebf327b870"
     },
     {
       "day": 12,
-      "hash": "07874afa4e027f25"
+      "hash": "d4ff171ca3e41143"
     },
     {
       "day": 13,
-      "hash": "07e7b0e04d52f1fa"
+      "hash": "e4214f66f1043ebe"
     },
     {
       "day": 14,
-      "hash": "3bc31af0987d47e5"
+      "hash": "1033efb423fb5cab"
     },
     {
       "day": 15,
-      "hash": "4a58829bb030167a"
+      "hash": "25e6b336d0365832"
     },
     {
       "day": 16,
-      "hash": "4cea9caa7f6d7f89"
+      "hash": "b49e267d47318fad"
     },
     {
       "day": 17,
-      "hash": "d3965d545f979e49"
+      "hash": "18d26d31f76f7d02"
     },
     {
       "day": 18,
-      "hash": "c6bab5f1414d45b4"
+      "hash": "8508daf5780c0f7b"
     },
     {
       "day": 19,
-      "hash": "9a9e77460f8c200b"
+      "hash": "de87ec49d2e8fbf7"
     },
     {
       "day": 20,
-      "hash": "c65dbe612ee795fa"
+      "hash": "54ea7d2c659b789d"
     },
     {
       "day": 21,
-      "hash": "f760116629edaade"
+      "hash": "95903301e7cab3f5"
     }
   ],
   "orders": [
@@ -8375,10 +8375,10 @@
               "plan": 4,
               "statement": "keep base:6 (Placeholder Japanese stock west of the Lunga) at 15 days of supply, no interval set (the staff takes 15 days)"
             },
-            "worked": "Reading today at base:6: 0 t over 7.64 t a day = 0 days, against a floor of 15 days (114.6 t). A run ordered today would be due on day 20; the reading of day 21 is projected at 0 t against 15 days x 7.64 t = 114.6 t: below the floor. It cannot be met: no ship of the pool is free until day 21. Short 15 days at the reading of day 21: 0 t against 114.6 t. It is displaced by ship:101, ship:102, ship:104, ship:105 committed to run 1 of plan:3 (intent:3) from day 15 to day 20. The next run waits for the reading of day 24 to fall below 15 days (114.6 t); it is expected to be ordered on day 21, due on day 23.",
+            "worked": "Reading today at base:6: 0 t over 7.64 t a day = 0 days, against a floor of 15 days (114.6 t). A run ordered today would be due on day 20; the reading of day 21 is projected at 0 t against 15 days x 7.64 t = 114.6 t: below the floor. It cannot be met: no ship of the pool is free until day 21. Short 15 days at the reading of day 21: 0 t against 114.6 t. It is displaced by ship:102, ship:103, ship:104, ship:105 committed to run 1 of plan:3 (intent:3) from day 15 to day 20. The next run waits for the reading of day 24 to fall below 15 days (114.6 t); it is expected to be ordered on day 21, due on day 23.",
             "would_change": [
               "a reading of day 24 below 114.6 t would call a run on day 21",
-              "plan:3's commitment ending: ship:101, ship:102, ship:104, ship:105 free on day 21",
+              "plan:3's commitment ending: ship:102, ship:103, ship:104, ship:105 free on day 21",
               "a larger use at the destination would bring the next run forward"
             ]
           },
@@ -8761,7 +8761,7 @@
             "evidence": [
               {
                 "day": 19,
-                "what": "base:1 holds 2857.275 t and uses 70.225 t a day"
+                "what": "base:1 holds 2871.105 t and uses 69.425 t a day"
               }
             ],
             "serves": {
@@ -8770,9 +8770,9 @@
               "plan": 3,
               "statement": "keep base:1 (Lunga) at 30 days of supply, a run every 10 days"
             },
-            "worked": "Reading today at base:1: 2857.275 t over 70.225 t a day = 40.687433 days, against a floor of 30 days (2106.75 t). Run 1 is under way with 1282.05 t aboard, due at base:1 on day 19. A run ordered today would be due on day 23; the reading of day 24 is projected at 3788.2 t against 30 days x 70.225 t = 2106.75 t: not below the floor, so no run is needed. The next run waits for the reading of day 48 to fall below 30 days (2106.75 t); it is expected to be ordered on day 43, due on day 47.",
+            "worked": "Reading today at base:1: 2871.105 t over 69.425 t a day = 41.355491 days, against a floor of 30 days (2082.75 t). Run 1 is under way with 1282.05 t aboard, due at base:1 on day 19. A run ordered today would be due on day 23; the reading of day 24 is projected at 3806.03 t against 30 days x 69.425 t = 2082.75 t: not below the floor, so no run is needed. The next run waits for the reading of day 49 to fall below 30 days (2082.75 t); it is expected to be ordered on day 44, due on day 48.",
             "would_change": [
-              "a reading of day 48 below 2106.75 t would call a run on day 43",
+              "a reading of day 49 below 2082.75 t would call a run on day 44",
               "a larger use at the destination would bring the next run forward"
             ]
           },
@@ -8964,7 +8964,7 @@
               "plan": 1,
               "statement": "cover base:1 (Lunga) from the air"
             },
-            "worked": "No order is given for these groups for intent:6, the cover of base:1 (Lunga) from the air this morning: air_group:11 is the strike task's: intent:7 may use it as a bomber (fatigue 12.56), so the cover gives it no order; air_group:14 is the strike task's: intent:7 may use it as a bomber (fatigue 0), so the cover gives it no order; air_group:17 is the strike task's: intent:7 may use it as a bomber (fatigue 0), so the cover gives it no order; air_group:10, a fighter group, has fatigue 25.6 against the 45 of the balanced risk; it is not above the level, so it flies; mission combat air patrol, patrol share 0.75 (wanted 0.75: 0.5 at balanced raised by 0.25 because base:1 (Lunga) was attacked from the air on day 17); air_group:13, a fighter group, has fatigue 0 against the 45 of the balanced risk; it is not above the level, so it flies; mission combat air patrol, patrol share 0.75 (wanted 0.75: 0.5 at balanced raised by 0.25 because base:1 (Lunga) was attacked from the air on day 17); air_group:15, a fighter group, has fatigue 0 against the 45 of the balanced risk; it is not above the level, so it flies; mission combat air patrol, patrol share 0.75 (wanted 0.75: 0.5 at balanced raised by 0.25 because base:1 (Lunga) was attacked from the air on day 17); air_group:16, a fighter group, has fatigue 0 against the 45 of the balanced risk; it is not above the level, so it flies; mission combat air patrol, patrol share 0.75 (wanted 0.75: 0.5 at balanced raised by 0.25 because base:1 (Lunga) was attacked from the air on day 17). The share is 0.75 (0.5 at balanced raised by 0.25 because base:1 (Lunga) was attacked from the air on day 17); the arc is 260 to 060 (threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-8), contact 5 at (3,-5); the narrowest arc that holds them is 290 to 030, widened by 30 degrees at each end to 260 to 060).",
+            "worked": "No order is given for these groups for intent:6, the cover of base:1 (Lunga) from the air this morning: air_group:11 is the strike task's: intent:7 may use it as a bomber (fatigue 0), so the cover gives it no order; air_group:14 is the strike task's: intent:7 may use it as a bomber (fatigue 0), so the cover gives it no order; air_group:17 is the strike task's: intent:7 may use it as a bomber (fatigue 0), so the cover gives it no order; air_group:10, a fighter group, has fatigue 25.6 against the 45 of the balanced risk; it is not above the level, so it flies; mission combat air patrol, patrol share 0.75 (wanted 0.75: 0.5 at balanced raised by 0.25 because base:1 (Lunga) was attacked from the air on day 17); air_group:13, a fighter group, has fatigue 0 against the 45 of the balanced risk; it is not above the level, so it flies; mission combat air patrol, patrol share 0.75 (wanted 0.75: 0.5 at balanced raised by 0.25 because base:1 (Lunga) was attacked from the air on day 17); air_group:15, a fighter group, has fatigue 0 against the 45 of the balanced risk; it is not above the level, so it flies; mission combat air patrol, patrol share 0.75 (wanted 0.75: 0.5 at balanced raised by 0.25 because base:1 (Lunga) was attacked from the air on day 17); air_group:16, a fighter group, has fatigue 0 against the 45 of the balanced risk; it is not above the level, so it flies; mission combat air patrol, patrol share 0.75 (wanted 0.75: 0.5 at balanced raised by 0.25 because base:1 (Lunga) was attacked from the air on day 17). The share is 0.75 (0.5 at balanced raised by 0.25 because base:1 (Lunga) was attacked from the air on day 17); the arc is 260 to 060 (threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-8), contact 5 at (3,-5); the narrowest arc that holds them is 290 to 030, widened by 30 degrees at each end to 260 to 060).",
             "would_change": [
               "a group whose fatigue or mission differs from what the doctrine wants",
               "a strike intent for the groups left for it"
@@ -8995,7 +8995,7 @@
               "plan": 4,
               "statement": "strike ships from base:1 (Lunga)"
             },
-            "worked": "No order is given for intent:7, striking ships from base:1 (Lunga) this morning: air_group:10, a fighter group, is the cover's: no order, and its escorts are what its patrol share leaves; air_group:11, a bomber group, has fatigue 12.56, not above the 45 of the balanced risk; air_group:13, a fighter group, is the cover's: no order, and its escorts are what its patrol share leaves; air_group:14, a bomber group, has fatigue 0, not above the 45 of the balanced risk; air_group:15, a fighter group, is the cover's: no order, and its escorts are what its patrol share leaves; air_group:16, a fighter group, is the cover's: no order, and its escorts are what its patrol share leaves; air_group:17, a bomber group, has fatigue 0, not above the 45 of the balanced risk. at the balanced risk a bomber flies the naval strike mission up to a fatigue of 45, launches on a contact up to 0 pulse(s) old, goes for every kind, on normal reach, holding back 0, and sizes its strikes.",
+            "worked": "No order is given for intent:7, striking ships from base:1 (Lunga) this morning: air_group:10, a fighter group, is the cover's: no order, and its escorts are what its patrol share leaves; air_group:11, a bomber group, has fatigue 0, not above the 45 of the balanced risk; air_group:13, a fighter group, is the cover's: no order, and its escorts are what its patrol share leaves; air_group:14, a bomber group, has fatigue 0, not above the 45 of the balanced risk; air_group:15, a fighter group, is the cover's: no order, and its escorts are what its patrol share leaves; air_group:16, a fighter group, is the cover's: no order, and its escorts are what its patrol share leaves; air_group:17, a bomber group, has fatigue 0, not above the 45 of the balanced risk. at the balanced risk a bomber flies the naval strike mission up to a fatigue of 45, launches on a contact up to 0 pulse(s) old, goes for every kind, on normal reach, holding back 0, and sizes its strikes.",
             "would_change": [
               "a group whose fatigue or standing orders differ from what the doctrine wants"
             ]
@@ -9331,10 +9331,10 @@
               "plan": 4,
               "statement": "keep base:6 (Placeholder Japanese stock west of the Lunga) at 15 days of supply, no interval set (the staff takes 15 days)"
             },
-            "worked": "Reading today at base:6: 0 t over 7.26 t a day = 0 days, against a floor of 15 days (108.9 t). A run ordered today would be due on day 21; the reading of day 22 is projected at 0 t against 15 days x 7.26 t = 108.9 t: below the floor. It cannot be met: no ship of the pool is free until day 21. Short 15 days at the reading of day 22: 0 t against 108.9 t. It is displaced by ship:101, ship:102, ship:104, ship:105 committed to run 1 of plan:3 (intent:3) from day 15 to day 20. The next run waits for the reading of day 24 to fall below 15 days (108.9 t); it is expected to be ordered on day 21, due on day 23.",
+            "worked": "Reading today at base:6: 0 t over 7.26 t a day = 0 days, against a floor of 15 days (108.9 t). A run ordered today would be due on day 21; the reading of day 22 is projected at 0 t against 15 days x 7.26 t = 108.9 t: below the floor. It cannot be met: no ship of the pool is free until day 21. Short 15 days at the reading of day 22: 0 t against 108.9 t. It is displaced by ship:102, ship:103, ship:104, ship:105 committed to run 1 of plan:3 (intent:3) from day 15 to day 20. The next run waits for the reading of day 24 to fall below 15 days (108.9 t); it is expected to be ordered on day 21, due on day 23.",
             "would_change": [
               "a reading of day 24 below 108.9 t would call a run on day 21",
-              "plan:3's commitment ending: ship:101, ship:102, ship:104, ship:105 free on day 21",
+              "plan:3's commitment ending: ship:102, ship:103, ship:104, ship:105 free on day 21",
               "a larger use at the destination would bring the next run forward"
             ]
           },
@@ -9669,7 +9669,7 @@
             "evidence": [
               {
                 "day": 20,
-                "what": "base:1 holds 3435.47 t and uses 68.225 t a day"
+                "what": "base:1 holds 3450.1 t and uses 68.425 t a day"
               }
             ],
             "serves": {
@@ -9678,9 +9678,9 @@
               "plan": 3,
               "statement": "keep base:1 (Lunga) at 30 days of supply, a run every 10 days"
             },
-            "worked": "Reading today at base:1: 3435.47 t over 68.225 t a day = 50.355001 days, against a floor of 30 days (2046.75 t). Run 1 is under way with 634.13 t aboard, due at base:1 on day 19. A run ordered today would be due on day 24; the reading of day 25 is projected at 3728.475 t against 30 days x 68.225 t = 2046.75 t: not below the floor, so no run is needed. The next run waits for the reading of day 50 to fall below 30 days (2046.75 t); it is expected to be ordered on day 45, due on day 49.",
+            "worked": "Reading today at base:1: 3450.1 t over 68.425 t a day = 50.421629 days, against a floor of 30 days (2052.75 t). Run 1 is under way with 634.13 t aboard, due at base:1 on day 19. A run ordered today would be due on day 24; the reading of day 25 is projected at 3742.105 t against 30 days x 68.425 t = 2052.75 t: not below the floor, so no run is needed. The next run waits for the reading of day 50 to fall below 30 days (2052.75 t); it is expected to be ordered on day 45, due on day 49.",
             "would_change": [
-              "a reading of day 50 below 2046.75 t would call a run on day 45",
+              "a reading of day 50 below 2052.75 t would call a run on day 45",
               "a larger use at the destination would bring the next run forward"
             ]
           },
@@ -9872,7 +9872,7 @@
               "plan": 1,
               "statement": "cover base:1 (Lunga) from the air"
             },
-            "worked": "No order is given for these groups for intent:6, the cover of base:1 (Lunga) from the air this morning: air_group:11 is the strike task's: intent:7 may use it as a bomber (fatigue 2.56), so the cover gives it no order; air_group:14 is the strike task's: intent:7 may use it as a bomber (fatigue 0), so the cover gives it no order; air_group:17 is the strike task's: intent:7 may use it as a bomber (fatigue 0), so the cover gives it no order; air_group:10, a fighter group, has fatigue 31.6 against the 45 of the balanced risk; it is not above the level, so it flies; mission combat air patrol, patrol share 0.75 (wanted 0.75: 0.5 at balanced raised by 0.25 because base:1 (Lunga) was attacked from the air on day 17); air_group:13, a fighter group, has fatigue 0 against the 45 of the balanced risk; it is not above the level, so it flies; mission combat air patrol, patrol share 0.75 (wanted 0.75: 0.5 at balanced raised by 0.25 because base:1 (Lunga) was attacked from the air on day 17); air_group:15, a fighter group, has fatigue 0 against the 45 of the balanced risk; it is not above the level, so it flies; mission combat air patrol, patrol share 0.75 (wanted 0.75: 0.5 at balanced raised by 0.25 because base:1 (Lunga) was attacked from the air on day 17); air_group:16, a fighter group, has fatigue 0 against the 45 of the balanced risk; it is not above the level, so it flies; mission combat air patrol, patrol share 0.75 (wanted 0.75: 0.5 at balanced raised by 0.25 because base:1 (Lunga) was attacked from the air on day 17). The share is 0.75 (0.5 at balanced raised by 0.25 because base:1 (Lunga) was attacked from the air on day 17); the arc is 260 to 340 (threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-8); the narrowest arc that holds them is 290 to 310, widened by 30 degrees at each end to 260 to 340).",
+            "worked": "No order is given for these groups for intent:6, the cover of base:1 (Lunga) from the air this morning: air_group:11 is the strike task's: intent:7 may use it as a bomber (fatigue 0), so the cover gives it no order; air_group:14 is the strike task's: intent:7 may use it as a bomber (fatigue 0), so the cover gives it no order; air_group:17 is the strike task's: intent:7 may use it as a bomber (fatigue 0), so the cover gives it no order; air_group:10, a fighter group, has fatigue 31.6 against the 45 of the balanced risk; it is not above the level, so it flies; mission combat air patrol, patrol share 0.75 (wanted 0.75: 0.5 at balanced raised by 0.25 because base:1 (Lunga) was attacked from the air on day 17); air_group:13, a fighter group, has fatigue 0 against the 45 of the balanced risk; it is not above the level, so it flies; mission combat air patrol, patrol share 0.75 (wanted 0.75: 0.5 at balanced raised by 0.25 because base:1 (Lunga) was attacked from the air on day 17); air_group:15, a fighter group, has fatigue 0 against the 45 of the balanced risk; it is not above the level, so it flies; mission combat air patrol, patrol share 0.75 (wanted 0.75: 0.5 at balanced raised by 0.25 because base:1 (Lunga) was attacked from the air on day 17); air_group:16, a fighter group, has fatigue 0 against the 45 of the balanced risk; it is not above the level, so it flies; mission combat air patrol, patrol share 0.75 (wanted 0.75: 0.5 at balanced raised by 0.25 because base:1 (Lunga) was attacked from the air on day 17). The share is 0.75 (0.5 at balanced raised by 0.25 because base:1 (Lunga) was attacked from the air on day 17); the arc is 260 to 340 (threats: base:2 (Rabaul) at (-5,-13), base:7 (Shortland) at (-2,-8), base:10 (Dump at (2,-4)) at (2,-4), contact 2 at (-2,-8); the narrowest arc that holds them is 290 to 310, widened by 30 degrees at each end to 260 to 340).",
             "would_change": [
               "a group whose fatigue or mission differs from what the doctrine wants",
               "a strike intent for the groups left for it"
@@ -9903,7 +9903,7 @@
               "plan": 4,
               "statement": "strike ships from base:1 (Lunga)"
             },
-            "worked": "No order is given for intent:7, striking ships from base:1 (Lunga) this morning: air_group:10, a fighter group, is the cover's: no order, and its escorts are what its patrol share leaves; air_group:11, a bomber group, has fatigue 2.56, not above the 45 of the balanced risk; air_group:13, a fighter group, is the cover's: no order, and its escorts are what its patrol share leaves; air_group:14, a bomber group, has fatigue 0, not above the 45 of the balanced risk; air_group:15, a fighter group, is the cover's: no order, and its escorts are what its patrol share leaves; air_group:16, a fighter group, is the cover's: no order, and its escorts are what its patrol share leaves; air_group:17, a bomber group, has fatigue 0, not above the 45 of the balanced risk. at the balanced risk a bomber flies the naval strike mission up to a fatigue of 45, launches on a contact up to 0 pulse(s) old, goes for every kind, on normal reach, holding back 0, and sizes its strikes.",
+            "worked": "No order is given for intent:7, striking ships from base:1 (Lunga) this morning: air_group:10, a fighter group, is the cover's: no order, and its escorts are what its patrol share leaves; air_group:11, a bomber group, has fatigue 0, not above the 45 of the balanced risk; air_group:13, a fighter group, is the cover's: no order, and its escorts are what its patrol share leaves; air_group:14, a bomber group, has fatigue 0, not above the 45 of the balanced risk; air_group:15, a fighter group, is the cover's: no order, and its escorts are what its patrol share leaves; air_group:16, a fighter group, is the cover's: no order, and its escorts are what its patrol share leaves; air_group:17, a bomber group, has fatigue 0, not above the 45 of the balanced risk. at the balanced risk a bomber flies the naval strike mission up to a fatigue of 45, launches on a contact up to 0 pulse(s) old, goes for every kind, on normal reach, holding back 0, and sizes its strikes.",
             "would_change": [
               "a group whose fatigue or standing orders differ from what the doctrine wants"
             ]
@@ -10215,7 +10215,7 @@
               "plan": 3,
               "statement": "keep base:5 (Placeholder Japanese stock at Taivu) at 15 days of supply, no interval set (the staff takes 15 days)"
             },
-            "worked": "Reading today at base:5: 89.08 t over 0 t a day (no figure), against a floor of 15 days (0 t). Run 1 is under way with 0 t aboard, due at base:5 on day 17. A run ordered today would be due on day 22; the reading of day 23 is projected at 89.08 t against 15 days x 0 t = 0 t: not below the floor, so no run is needed. No run is expected within 120 days of the projection.",
+            "worked": "Reading today at base:5: 89.08 t over 0 t a day (no figure), against a floor of 15 days (0 t). A run ordered today would be due on day 22; the reading of day 23 is projected at 89.08 t against 15 days x 0 t = 0 t: not below the floor, so no run is needed. No run is expected within 120 days of the projection.",
             "would_change": [
               "a larger use at the destination would bring the next run forward"
             ]
@@ -10239,10 +10239,10 @@
               "plan": 4,
               "statement": "keep base:6 (Placeholder Japanese stock west of the Lunga) at 15 days of supply, no interval set (the staff takes 15 days)"
             },
-            "worked": "Reading today at base:6: 0 t over 9.58 t a day = 0 days, against a floor of 15 days (143.7 t). A run ordered today would be due on day 22; the reading of day 23 is projected at 0 t against 15 days x 9.58 t = 143.7 t: below the floor. It cannot be met: no ship of the pool is free until day 21. Short 15 days at the reading of day 23: 0 t against 143.7 t. It is displaced by ship:101, ship:102, ship:104, ship:105 committed to run 1 of plan:3 (intent:3) from day 15 to day 20. The next run waits for the reading of day 24 to fall below 15 days (143.7 t); it is expected to be ordered on day 21, due on day 23.",
+            "worked": "Reading today at base:6: 0 t over 9.58 t a day = 0 days, against a floor of 15 days (143.7 t). A run ordered today would be due on day 22; the reading of day 23 is projected at 0 t against 15 days x 9.58 t = 143.7 t: below the floor. It cannot be met: no ship of the pool is free until day 21. Short 15 days at the reading of day 23: 0 t against 143.7 t. It is displaced by ship:102, ship:103, ship:104, ship:105 committed to run 1 of plan:3 (intent:3) from day 15 to day 20. The next run waits for the reading of day 24 to fall below 15 days (143.7 t); it is expected to be ordered on day 21, due on day 23.",
             "would_change": [
               "a reading of day 24 below 143.7 t would call a run on day 21",
-              "plan:3's commitment ending: ship:101, ship:102, ship:104, ship:105 free on day 21",
+              "plan:3's commitment ending: ship:102, ship:103, ship:104, ship:105 free on day 21",
               "a larger use at the destination would bring the next run forward"
             ]
           },
@@ -10626,7 +10626,7 @@
             "evidence": [
               {
                 "day": 21,
-                "what": "base:1 holds 3901.375 t and uses 66.16 t a day"
+                "what": "base:1 holds 3915.805 t and uses 66.36 t a day"
               }
             ],
             "serves": {
@@ -10635,9 +10635,9 @@
               "plan": 3,
               "statement": "keep base:1 (Lunga) at 30 days of supply, a run every 10 days"
             },
-            "worked": "Reading today at base:1: 3901.375 t over 66.16 t a day = 58.968787 days, against a floor of 30 days (1984.8 t). Run 1 is under way with 0 t aboard, due at base:1 on day 19. A run ordered today would be due on day 25; the reading of day 26 is projected at 3570.575 t against 30 days x 66.16 t = 1984.8 t: not below the floor, so no run is needed. The next run waits for the reading of day 50 to fall below 30 days (1984.8 t); it is expected to be ordered on day 45, due on day 49.",
+            "worked": "Reading today at base:1: 3915.805 t over 66.36 t a day = 59.008514 days, against a floor of 30 days (1990.8 t). Run 1 is under way with 0 t aboard, due at base:1 on day 19. A run ordered today would be due on day 25; the reading of day 26 is projected at 3584.005 t against 30 days x 66.36 t = 1990.8 t: not below the floor, so no run is needed. The next run waits for the reading of day 51 to fall below 30 days (1990.8 t); it is expected to be ordered on day 46, due on day 50.",
             "would_change": [
-              "a reading of day 50 below 1984.8 t would call a run on day 45",
+              "a reading of day 51 below 1990.8 t would call a run on day 46",
               "a larger use at the destination would bring the next run forward"
             ]
           },
@@ -11195,7 +11195,7 @@
               "plan": 4,
               "statement": "keep base:6 (Placeholder Japanese stock west of the Lunga) at 15 days of supply, no interval set (the staff takes 15 days)"
             },
-            "worked": "Reading today at base:6: 0 t over 9.105 t a day = 0 days, against a floor of 15 days (136.575 t). A run ordered today would be due on day 23; the reading of day 24 is projected at 0 t against 15 days x 9.105 t = 136.575 t: below the floor. It cannot be met: ships without the fuel for the round trip (ship:101, ship:102, ship:104, ship:105 lack the fuel for the round trip). Short 15 days at the reading of day 24: 0 t against 136.575 t. The next run waits for the reading of day 25 to fall below 15 days (136.575 t); it is expected to be ordered on day 22, due on day 24.",
+            "worked": "Reading today at base:6: 0 t over 9.105 t a day = 0 days, against a floor of 15 days (136.575 t). A run ordered today would be due on day 23; the reading of day 24 is projected at 0 t against 15 days x 9.105 t = 136.575 t: below the floor. It cannot be met: ships without the fuel for the round trip (ship:102, ship:103, ship:104, ship:105 lack the fuel for the round trip). Short 15 days at the reading of day 24: 0 t against 136.575 t. The next run waits for the reading of day 25 to fall below 15 days (136.575 t); it is expected to be ordered on day 22, due on day 24.",
             "would_change": [
               "a reading of day 25 below 136.575 t would call a run on day 22",
               "a larger use at the destination would bring the next run forward"
@@ -11569,5 +11569,5 @@
     }
   ],
   "state_version": "flagplot-state-v55",
-  "version": 23
+  "version": 24
 }

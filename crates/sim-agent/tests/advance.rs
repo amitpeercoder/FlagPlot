@@ -601,7 +601,7 @@ fn with_the_key_off_advance_is_not_a_tool_and_events_is() {
     let tools = s.tools(ALLIED);
     assert!(!tools.contains(&"advance"));
     assert!(tools.contains(&"events"));
-    assert_eq!(tools.len(), 29);
+    assert_eq!(tools.len(), 31);
     let e = refused(&mut s, ALLIED, "advance", json!({"pulses": 1}));
     assert!(e.message.contains("is not a tool"), "{e}");
     assert!(!e.allowed.contains(&"advance".to_string()));
@@ -613,9 +613,9 @@ fn with_the_key_off_advance_is_not_a_tool_and_events_is() {
         ALLIED,
     );
     let tools_on = on.tools(ALLIED);
-    assert_eq!(tools_on.len(), 30);
+    assert_eq!(tools_on.len(), 32);
     assert_eq!(tools_on.last(), Some(&"advance"));
-    assert_eq!(&tools_on[..29], tools.as_slice());
+    assert_eq!(&tools_on[..31], tools.as_slice());
     // With two players, as for run, no advance.
     let both = scenario("78_orders_inside_a_day.toml", &case_c_text());
     let name = both.name.clone();

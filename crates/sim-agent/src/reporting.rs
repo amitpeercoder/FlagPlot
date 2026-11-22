@@ -12,7 +12,7 @@ use std::collections::BTreeMap;
 use serde_json::{json, Value};
 use sim_core::command::{
     IntentKind, InterruptCondition, InterruptRef, InterruptStatus, NoticeKind, PlanId,
-    StandingKind, StandingSubject,
+    PursuitNotice, StandingKind, StandingSubject,
 };
 use sim_core::events::EventKind;
 use sim_core::fixed::Fixed;
@@ -68,9 +68,20 @@ fn firings_on(view: &SideView<'_>, events: &[SideEvent], day: u32) -> Vec<Firing
         .collect()
 }
 
-/// Whether any interrupt of the side fired on `day`: what stops a run.
+/// Whether any interrupt of the side fired on `day`: what stops a run. A
+/// force asking leave to pursue is not counted (decision 0214, rule 7): the
+/// clock stopped for it in the evening before the day, and a stop after the
+/// day for the same asking would be a second one.
 pub(crate) fn fired_on_day(view: &SideView<'_>, day: u32) -> bool {
-    !firings_on(view, &view.events(), day).is_empty()
+    firings_on(view, &view.events(), day).iter().any(|firing| {
+        !matches!(
+            firing.interrupt,
+            InterruptRef::Standing {
+                kind: StandingKind::AsksLeaveToPursue,
+                ..
+            }
+        )
+    })
 }
 
 fn event_at(events: &[SideEvent], number: u32) -> Option<&SideEvent> {
@@ -134,6 +145,11 @@ fn subject_json(n: &Names<'_>, subject: StandingSubject) -> (&'static str, u32, 
     match subject {
         StandingSubject::Plan(plan) => ("plan", plan.raw(), format!("plan:{}", plan.raw())),
         StandingSubject::Ship(ship) => ("ship", n.ship(ship), format!("ship:{}", n.ship(ship))),
+        StandingSubject::TaskForce(force) => (
+            "task_force",
+            n.force(force),
+            format!("task_force:{}", n.force(force)),
+        ),
     }
 }
 
@@ -146,6 +162,7 @@ fn standing_words(kind: StandingKind, subject_words: &str) -> String {
             format!("{subject_words} cannot bring the men it wants")
         }
         StandingKind::LiftTurnedBack => format!("{subject_words}'s lift is turned back"),
+        StandingKind::AsksLeaveToPursue => format!("{subject_words} asks leave to pursue"),
     }
 }
 
@@ -336,6 +353,14 @@ fn matter_words(
             ),
             None => format!("plan:{}: its lift is turned back", plan.raw()),
         },
+        // Decision 0214: the three notices of a pursuit say the force and the
+        // find (`pursuit_words`); these are the words of one that carries
+        // none.
+        (NoticeKind::AsksLeaveToPursue, _) => {
+            format!("plan:{} asks leave to pursue a find", plan.raw())
+        }
+        (NoticeKind::Pursues, _) => format!("plan:{} pursues a find", plan.raw()),
+        (NoticeKind::PursuitEnded, _) => format!("plan:{}: a pursuit is ended", plan.raw()),
         (NoticeKind::WaitsForLeave(leave), _) => {
             format!("plan:{} waits for leave to {}", plan.raw(), leave.name())
         }
@@ -351,10 +376,45 @@ fn matter_words(
     }
 }
 
+/// A pursuit notice in words, in the side's numbers (decision 0214, 6).
+fn pursuit_words(kind: NoticeKind, force: u32, notice: &PursuitNotice) -> String {
+    let find = notice.find.map(|find| {
+        let mut words = format!(
+            "contact {}, a {} reported at ({},{}), to ({},{})",
+            find.contact,
+            find.kind.name(),
+            find.reported_at.q,
+            find.reported_at.r,
+            find.to.q,
+            find.to.r
+        );
+        if let Some(hours) = find.hours {
+            words.push_str(&format!(", {hours} hours"));
+        }
+        words
+    });
+    match (kind, find) {
+        (NoticeKind::AsksLeaveToPursue, Some(find)) => format!(
+            "task force {force} asks leave to pursue {find}; intent:{} would wait",
+            notice.intent.raw()
+        ),
+        (NoticeKind::Pursues, Some(find)) => format!(
+            "task force {force} pursues {find}; intent:{} waits",
+            notice.intent.raw()
+        ),
+        (NoticeKind::PursuitEnded, _) => format!("task force {force}'s pursuit is ended"),
+        (NoticeKind::AsksLeaveToPursue, None) => format!("task force {force} asks leave to pursue"),
+        _ => format!("task force {force} pursues"),
+    }
+}
+
 struct Matter {
     kind: NoticeKind,
     plan: PlanId,
     run: Option<u32>,
+    /// What a pursuit notice says, as the last day's gave it (decision
+    /// 0214): each force's pursuit is a matter of its own.
+    pursuit: Option<PursuitNotice>,
     /// The days it was handed in, each with the `why` number of the reason
     /// that day's notice cites.
     history: Vec<(u32, Option<u32>)>,
@@ -363,13 +423,14 @@ struct Matter {
 /// The matters of the side, worked from its events: a plan, a run where
 /// there is one and a notice kind, with the days it was handed in.
 fn matters(events: &[SideEvent], side: sim_core::state::Side) -> Vec<Matter> {
-    let mut found: BTreeMap<(u32, Option<u32>, u8), Matter> = BTreeMap::new();
+    let mut found: BTreeMap<(u32, Option<u32>, u8, u32), Matter> = BTreeMap::new();
     for event in events {
         let SideEventKind::Whole(EventKind::StaffNotice {
             side: owner,
             kind,
             plan,
             run,
+            pursuit,
             ..
         }) = &event.kind
         else {
@@ -379,13 +440,22 @@ fn matters(events: &[SideEvent], side: sim_core::state::Side) -> Vec<Matter> {
             continue;
         }
         let matter = found
-            .entry((plan.raw(), *run, kind.code()))
+            .entry((
+                plan.raw(),
+                *run,
+                kind.code(),
+                pursuit.map_or(0, |p| p.force.raw()),
+            ))
             .or_insert_with(|| Matter {
                 kind: *kind,
                 plan: *plan,
                 run: *run,
+                pursuit: *pursuit,
                 history: Vec::new(),
             });
+        if pursuit.is_some() {
+            matter.pursuit = *pursuit;
+        }
         if matter.history.last().map(|(day, _)| *day) != Some(event.day) {
             matter
                 .history
@@ -488,6 +558,7 @@ pub(crate) fn report(view: &SideView<'_>) -> Value {
             m.plan.raw(),
             m.run,
             m.kind.code(),
+            m.pursuit.map_or(0, |p| p.force.raw()),
         )
     });
     let mut open_words: Vec<String> = Vec::new();
@@ -501,13 +572,16 @@ pub(crate) fn report(view: &SideView<'_>) -> Value {
             let intent = state.plans.get(&m.plan).map(|p| p.intent);
             let intent_kind = intent.and_then(|id| state.intents.get(&id)).map(|i| i.kind);
             let intent = intent.map(|id| id.raw());
-            let words = matter_words(m.kind, m.plan, intent.zip(intent_kind), m.run);
+            let words = match &m.pursuit {
+                Some(pursuit) => pursuit_words(m.kind, n.force(pursuit.force), pursuit),
+                None => matter_words(m.kind, m.plan, intent.zip(intent_kind), m.run),
+            };
             if open {
                 open_words.push(format!("{words} (since day {opened})"));
             } else {
                 closed += 1;
             }
-            json!({
+            let mut body = json!({
                 "plan": m.plan.raw(),
                 "intent": intent,
                 "run": m.run,
@@ -520,7 +594,17 @@ pub(crate) fn report(view: &SideView<'_>) -> Value {
                     .iter()
                     .map(|(day, why)| json!({"day": day, "why": why}))
                     .collect::<Vec<_>>(),
-            })
+            });
+            // A pursuit notice names its force and, where it has one, the
+            // contact (decision 0214).
+            if let Some(pursuit) = &m.pursuit {
+                body["task_force"] = json!(n.force(pursuit.force));
+                body["pursuit_intent"] = json!(pursuit.intent.raw());
+                if let Some(find) = pursuit.find {
+                    body["contact"] = json!(find.contact);
+                }
+            }
+            body
         })
         .collect();
     let interrupts = interrupts_json(&n, view);

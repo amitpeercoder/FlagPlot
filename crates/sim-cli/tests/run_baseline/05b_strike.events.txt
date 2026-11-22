@@ -2,7 +2,7 @@ Scenario 5b: Unopposed strike
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash ca378fc086c249a8  15 events
+day   1  hash ce978a75cb794224  15 events
 
 #1 D1 -         order:1 accepted for air_group:1  <- order:1
 #2 D1 -         order:2 accepted for air_group:1  <- order:2

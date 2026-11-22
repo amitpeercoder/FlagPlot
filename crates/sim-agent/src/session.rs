@@ -33,6 +33,7 @@ use crate::explain::explain;
 use crate::measure::{measure_in, MeasureContext, Question};
 use crate::objectives::result_part;
 use crate::orders::{is_orderable_unit, land_unit_number, order_from_json};
+use crate::pursuit;
 use crate::queries::{get_entity, list_bases, list_contacts, list_forces};
 use crate::record::{
     seat_name, CallError, Post, Seat, SeatKind, TranscriptEntry, COMMAND_TOOLS, TOOLS, TRIAL_TOOLS,
@@ -288,6 +289,8 @@ struct RunWait {
     /// The staff's orders for the first day, worked at the call.
     staff_orders: Value,
     stopped: Option<&'static str>,
+    /// The askings that stopped it before a day (decision 0214, rule 7).
+    asking: Vec<Value>,
 }
 
 /// What a call of `advance` is answered from.
@@ -301,6 +304,9 @@ struct AdvanceWait {
     told: Vec<Value>,
     last_closed: Option<u32>,
     stopped: Option<&'static str>,
+    /// The askings that stopped it at dusk, before a day (decision 0214,
+    /// rule 7).
+    asking: Vec<Value>,
 }
 
 /// What a seat's call in a watched game gives (decision 0182, rule 6): an
@@ -377,6 +383,10 @@ pub struct Session {
     /// Whether the game is watched: a third party, the watcher, holds the
     /// clock, and a seat's calls of time wait on his steps (decision 0182).
     watched: bool,
+    /// For each side, the day a stop in the evening was last given before
+    /// (decision 0214, rule 7): that day is played the next time the side
+    /// calls time, so an asking left unanswered does not stop it again.
+    pursuit_stops: BTreeMap<Side, u32>,
 }
 
 /// The arguments of a call as a map: an object, or nothing.
@@ -437,6 +447,7 @@ impl Session {
             trial: None,
             trials_shown: Vec::new(),
             watched: false,
+            pursuit_stops: BTreeMap::new(),
         }
     }
 
@@ -972,6 +983,64 @@ impl Session {
                 if waited.len() == 1 { "it is" } else { "they are" }
             )));
         }
+        // Decision 0214, rule 7: at dusk, before a day is opened, a held
+        // call of `run` or `advance` whose side has a force asking leave to
+        // pursue stops there: the seat is answered and nothing is resolved.
+        if self.open_day().is_none() {
+            let mut answered = Vec::new();
+            for side in Side::ALL {
+                let Some(mut held) = self.take_held(side) else {
+                    continue;
+                };
+                let asking = match held.wait {
+                    Wait::Run(_) | Wait::Advance(_) => self.stop_before_day(side),
+                    Wait::EndDay => None,
+                };
+                let Some(asking) = asking else {
+                    self.seats.get_mut(&side).expect("both seats exist").held = Some(held);
+                    continue;
+                };
+                let answer = match &mut held.wait {
+                    Wait::Run(wait) => {
+                        wait.asking = asking;
+                        wait.stopped = Some("asks_leave");
+                        self.run_answer(side, wait)
+                    }
+                    Wait::Advance(wait) => {
+                        wait.asking = asking;
+                        wait.stopped = Some("asks_leave");
+                        self.advance_answer(side, wait)
+                    }
+                    Wait::EndDay => unreachable!("end_day is not stopped by an asking"),
+                };
+                let answer = self.answer_held(side, held, answer);
+                answered.push((side, answer));
+            }
+            if !answered.is_empty() {
+                let stops: Vec<&str> = answered.iter().map(|(side, _)| seat_name(*side)).collect();
+                let summary = format!(
+                    "Resolved nothing; the clock stands at {}. {} stop came before the day: a force asks leave to pursue.",
+                    self.clock_words(),
+                    match stops.as_slice() {
+                        [one] => format!("The {one} seat's"),
+                        _ => format!("The {} seats'", stops.join(" and ")),
+                    }
+                );
+                return Stepped {
+                    answer: Ok(json!({
+                        "format": FORMAT,
+                        "version": VERSION,
+                        "kind": "step",
+                        "resolved": {"day": self.world.day(), "pulses": Vec::<&str>::new()},
+                        "clock": self.clock(),
+                        "stops": stops,
+                        "game_over": self.is_over(),
+                        "summary": summary,
+                    })),
+                    answered,
+                };
+            }
+        }
         // What each side held before the step: what it is told in the pulse
         // is its events after these, as `advance` reads them.
         let before: BTreeMap<Side, usize> = Side::ALL
@@ -1494,6 +1563,12 @@ impl Session {
             // its events after these.
             let before = self.view_of(side).map_or(0, |view| view.events().len());
             if self.open_day().is_none() {
+                // Decision 0214, rule 7: at dusk, before the day opens.
+                if let Some(asking) = self.stop_before_day(side) {
+                    wait.asking = asking;
+                    wait.stopped = Some("asks_leave");
+                    break;
+                }
                 self.begin_day()?;
             }
             let (day, pulse) = self.resolve_pulse()?;
@@ -1569,6 +1644,7 @@ impl Session {
             told: Vec::new(),
             last_closed: None,
             stopped: None,
+            asking: Vec::new(),
         })
     }
 
@@ -1650,6 +1726,7 @@ impl Session {
             }
             "interrupt" => format!("an interrupt fired: {}", staffing::firing_words(&fired)),
             "game_over" => "the game is over".to_string(),
+            "asks_leave" => pursuit::asking_words(&wait.asking),
             _ => format!(
                 "the {pulses} pulse{} asked for {} resolved",
                 if pulses == 1 { "" } else { "s" },
@@ -1661,7 +1738,7 @@ impl Session {
             if count == 1 { "" } else { "s" },
             self.clock_words()
         );
-        Ok(json!({
+        let mut body = json!({
             "format": FORMAT,
             "version": VERSION,
             "kind": "advance",
@@ -1674,7 +1751,11 @@ impl Session {
             "game_over": self.is_over(),
             "result": result,
             "summary": summary,
-        }))
+        });
+        if stopped == "asks_leave" {
+            body["asking"] = json!(wait.asking);
+        }
+        Ok(body)
     }
 
     // -----------------------------------------------------------------
@@ -2009,6 +2090,35 @@ impl Session {
             world.submit_commands(side, vec![command.clone()]);
         }
         world.at_staff_step()
+    }
+
+    /// The stop in the evening (decision 0214, rule 7): at dusk, before a
+    /// day is opened, the askings of a force to go after what it has found
+    /// that the staff would hand in for the coming day, worked on the preview
+    /// with the side's queued commands taken in, where one would fire the
+    /// standing interrupt. `None` where nothing stops the clock. Nothing in
+    /// the world changes; the day it stopped before is kept, so the next call
+    /// of time plays that day.
+    fn stop_before_day(&mut self, side: Side) -> Option<Vec<Value>> {
+        if self.open_day().is_some() || self.is_over() || self.at_a_command(side) {
+            return None;
+        }
+        let day = self.world.day() + 1;
+        if self.pursuit_stops.get(&side) == Some(&day) {
+            return None;
+        }
+        let staff = self.staffs.get(&side)?;
+        let world = self.preview();
+        let asking = pursuit::askings(
+            &self.world.side_view(side),
+            &world.side_view(side),
+            staff.as_ref(),
+        );
+        if asking.is_empty() {
+            return None;
+        }
+        self.pursuit_stops.insert(side, day);
+        Some(asking)
     }
 
     /// The world as the coming day will find it, with what is queued.
@@ -2661,11 +2771,37 @@ impl Session {
                 leaves.push(CommandKind::SetLeave { leave, given: true });
             }
         }
+        // The side tried carries its orders' settings (decision 0214, "Who
+        // answers where no one is there"): where the course gives leave to
+        // launch, the leave to pursue of an order with none set would read
+        // as go, where it reads as ask in the game. Each is set as it reads
+        // now, after the commands that make the order.
+        let gives_launch = leaves.iter().any(|c| {
+            matches!(
+                c,
+                CommandKind::SetLeave {
+                    leave: Leave::Launch,
+                    ..
+                }
+            )
+        });
+        let drafted = match &draft {
+            Some(CommandKind::SetIntent { intent, .. }) => Some(*intent),
+            _ => None,
+        };
+        let settings = |also: Option<IntentId>, except: Option<IntentId>| -> Vec<CommandKind> {
+            if gives_launch {
+                pursuit::trial_pursuit_settings(state, also, except)
+            } else {
+                Vec::new()
+            }
+        };
         let (first_standing, course): (Vec<CommandKind>, Vec<CommandKind>) = if window {
             let mut course: Vec<CommandKind> =
                 standing.iter().filter(|c| sets(c)).cloned().collect();
             course.extend(draft.iter().cloned());
             course.extend(leaves.iter().cloned());
+            course.extend(settings(drafted, None));
             (
                 standing.iter().filter(|c| !sets(c)).cloned().collect(),
                 course,
@@ -2673,6 +2809,7 @@ impl Session {
         } else {
             let mut course: Vec<CommandKind> = draft.iter().cloned().collect();
             course.extend(leaves.iter().cloned());
+            course.extend(settings(drafted, None));
             (standing.clone(), course)
         };
         let second = compare.then(|| {
@@ -2688,6 +2825,11 @@ impl Session {
                 ),
             };
             second_course.extend(leaves.iter().cloned());
+            // The second world has the order as it stands, or has it out.
+            second_course.extend(settings(
+                None,
+                (of != BesideOf::AsItStands).then_some(tried),
+            ));
             SecondAsked {
                 of,
                 standing: second_standing,
@@ -2701,8 +2843,11 @@ impl Session {
             .iter()
             .map(|c| command_words(&coming_view, c))
             .collect();
+        // The settings carried are the side's own, not something tried: they
+        // are in the worlds and left out of the words (decision 0214).
         let course_words: Vec<String> = course
             .iter()
+            .filter(|c| !matches!(c, CommandKind::SetPursuit { .. }))
             .map(|c| command_words(&coming_view, c))
             .collect();
         drop(coming);
@@ -3003,6 +3148,13 @@ impl Session {
     ) -> Result<Value, CallError> {
         let mut wait = self.run_wait(side, args)?;
         loop {
+            // Decision 0214, rule 7: before a day is opened, the evening's
+            // stop for a force asking leave to pursue.
+            if let Some(asking) = self.stop_before_day(side) {
+                wait.asking = asking;
+                wait.stopped = Some("asks_leave");
+                break;
+            }
             self.resolve()?;
             if self.run_after_day(side, &mut wait) {
                 break;
@@ -3060,6 +3212,7 @@ impl Session {
             count: 0,
             staff_orders,
             stopped: None,
+            asking: Vec::new(),
         })
     }
 
@@ -3086,12 +3239,20 @@ impl Session {
         let (days, first, count) = (wait.days, wait.first, wait.count);
         let stopped = wait.stopped.unwrap_or("days");
         let last = self.world.day();
-        let fired = staffing::firings_json(&self.world.side_view(side), last);
+        // A stop before the first day has resolved none: the firings of the
+        // day before it are not this call's.
+        let fired = if count == 0 {
+            Vec::new()
+        } else {
+            staffing::firings_json(&self.world.side_view(side), last)
+        };
         let result = match self.final_result() {
             Some(result) => to_value(&result_part(&self.world.side_view(side), &result))?,
             None => Value::Null,
         };
-        let resolved = if count == 1 {
+        let resolved = if count == 0 {
+            "Resolved no day".to_string()
+        } else if count == 1 {
             format!("Resolved day {first} (1 day)")
         } else {
             format!("Resolved days {first} to {last} ({count} days)")
@@ -3099,16 +3260,24 @@ impl Session {
         let why_stopped = match stopped {
             "interrupt" => staffing::firing_words(&fired),
             "game_over" => "the game is over".to_string(),
+            "asks_leave" => pursuit::asking_words(&wait.asking),
             _ => format!("the {days} days asked for are resolved"),
         };
-        let mut summary = format!("{resolved}; stopped after day {last}: {why_stopped}.");
+        let mut summary = if stopped == "asks_leave" {
+            format!(
+                "{resolved}; stopped at dusk before day {}: {why_stopped}.",
+                last + 1
+            )
+        } else {
+            format!("{resolved}; stopped after day {last}: {why_stopped}.")
+        };
         if stopped == "game_over" && !fired.is_empty() {
             summary.push_str(&format!(
                 " Fired on that day: {}.",
                 staffing::firing_words(&fired)
             ));
         }
-        Ok(json!({
+        let mut body = json!({
             "format": FORMAT,
             "version": VERSION,
             "kind": "run",
@@ -3120,7 +3289,11 @@ impl Session {
             "day": last,
             "result": result,
             "summary": summary,
-        }))
+        });
+        if stopped == "asks_leave" {
+            body["asking"] = json!(wait.asking);
+        }
+        Ok(body)
     }
 
     /// The umpire's result, once the game is over and only then, if the

@@ -273,7 +273,20 @@ fn cited(truth: &TruthState, commands: &BTreeMap<Side, CommandState>) -> Vec<(St
             interrupts: _,
             standing: _,
             standing_off: _,
+            pursue_leaves: _,
+            pursuits,
+            pursuit_refusals: _,
         } = command;
+        // A leave to pursue by answer names the event of the answer
+        // (decision 0214).
+        for (force, pursuit) in pursuits {
+            if let sim_core::command::PursuitBy::Answer(event) = pursuit.by {
+                out.push((
+                    format!("{side:?} leave to pursue of {force}"),
+                    Cited::Event(event),
+                ));
+            }
+        }
         for (target, Hold { day: _, by }) in holds {
             if let HoldMaker::Order(order) = by {
                 out.push((format!("{side:?} hold on {target}"), Cited::Order(*order)));

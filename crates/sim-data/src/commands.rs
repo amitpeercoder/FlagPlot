@@ -4,7 +4,7 @@
 //!
 //! Only the commander's kinds are written here: `set_intent`,
 //! `withdraw_intent`, `set_limit`, `set_leave`, `approve`, `cancel_plan`,
-//! `hold`, `release`, `set_interrupt` and `acknowledge`. The staff's kinds (`commit_ships`, `end_run` and the
+//! `hold`, `release`, `set_interrupt`, `acknowledge`, `set_pursuit` and `answer_pursuit`. The staff's kinds (`commit_ships`, `end_run` and the
 //! rest) are the staff's to give and a scenario cannot state
 //! them. Every table has `day`, `side` and `kind`, and the keys its kind
 //! takes; a key the kind does not take, a key that is not a key of any
@@ -16,11 +16,13 @@
 //! | `withdraw_intent` | `intent` |
 //! | `set_limit` | `limit` and its keys, below |
 //! | `set_leave` | `leave` (`"prepare"` or `"launch"`), `given` |
+//! | `set_pursuit` | `intent` and `leave` (`"ask"`, `"go"` or `"stay"`; left out clears the setting so that it is read up the tree again), decision 0214 |
+//! | `answer_pursuit` | `task_force`, `contact` (the commander's number of the contact) and `allow` (a bool), decision 0214 |
 //! | `approve`, `cancel_plan` | `plan` |
 //! | `hold`, `release` | exactly one of `ship`, `task_force`, `air_group` and `land_unit`; with `air_group`, `setting` (`"search_arc"`) holds that setting alone, and with no `setting` the whole group is held; no other target takes `setting` |
 //!
-//! | `set_interrupt` | either `interrupt`, `base`, `below_days` (a threshold set), or `standing` (`"cannot_meet"`, `"waits_for_leave"`, `"ship_lost"`, `"cannot_bring_enough"` or `"lift_turned_back"`) and `on` (switch a standing kind off or on); never a mixture of the two |
-//! | `acknowledge` | either `interrupt`, or `standing` with exactly one of `plan` and `ship`; never a mixture |
+//! | `set_interrupt` | either `interrupt`, `base`, `below_days` (a threshold set), or `standing` (`"cannot_meet"`, `"waits_for_leave"`, `"ship_lost"`, `"cannot_bring_enough"`, `"lift_turned_back"` or `"asks_leave_to_pursue"`) and `on` (switch a standing kind off or on); never a mixture of the two |
+//! | `acknowledge` | either `interrupt`, or `standing` with exactly one of `plan`, `ship` and `task_force`; never a mixture |
 //!
 //! The limits: `limit = "forces"` has `intent` and, each optional (a list
 //! not given is empty), `ships`, `task_forces`, `air_groups` and `land_units`, and `source`
@@ -44,8 +46,8 @@ use std::collections::BTreeSet;
 use serde::Deserialize;
 use sim_core::command::{
     Awaited, CommandKind, ForcesLimit, HeldSetting, HoldTarget, IntentKind, InterruptCondition,
-    InterruptRef, InterruptSetting, Knowledge, Leave, Limit, PlanId, Risk, StandingKind,
-    StandingSubject, TargetsLimit, Want, Wants,
+    InterruptRef, InterruptSetting, Knowledge, Leave, Limit, PlanId, PursueLeave, Risk,
+    StandingKind, StandingSubject, TargetsLimit, Want, Wants,
 };
 use sim_core::hex::Hex;
 use sim_core::ids::{AirGroupId, BaseId, IntentId, InterruptId, LandUnitId, ShipId, TaskForceId};
@@ -104,6 +106,10 @@ pub(crate) struct CommandSpec {
     below_days: Option<u32>,
     standing: Option<String>,
     on: Option<bool>,
+    /// A contact's number in the side's series (`answer_pursuit`).
+    contact: Option<u32>,
+    /// Yes or no to a force's asking leave to pursue (`answer_pursuit`).
+    allow: Option<bool>,
 }
 
 impl CommandSpec {
@@ -157,6 +163,8 @@ impl CommandSpec {
         note(self.below_days.is_some(), "below_days");
         note(self.standing.is_some(), "standing");
         note(self.on.is_some(), "on");
+        note(self.contact.is_some(), "contact");
+        note(self.allow.is_some(), "allow");
         keys
     }
 
@@ -241,6 +249,8 @@ impl CommandSpec {
                 return Err(format!("{what} needs a limit"));
             }
             ("set_leave", _) => &["leave", "given"],
+            ("set_pursuit", _) => &["intent", "leave"],
+            ("answer_pursuit", _) => &["task_force", "contact", "allow"],
             ("approve" | "cancel_plan", _) => &["plan"],
             ("hold" | "release", _) => &["ship", "task_force", "air_group", "land_unit", "setting"],
             ("set_interrupt" | "acknowledge", _) => {
@@ -257,7 +267,10 @@ impl CommandSpec {
                 } else {
                     (
                         self.interrupt.is_some(),
-                        self.standing.is_some() || self.plan.is_some() || self.ship.is_some(),
+                        self.standing.is_some()
+                            || self.plan.is_some()
+                            || self.ship.is_some()
+                            || self.task_force.is_some(),
                     )
                 };
                 if set_form && standing_form {
@@ -269,12 +282,12 @@ impl CommandSpec {
                     ("set_interrupt", false) => &["interrupt", "base", "below_days"],
                     ("set_interrupt", true) => &["standing", "on"],
                     ("acknowledge", false) => &["interrupt"],
-                    (_, _) => &["standing", "plan", "ship"],
+                    (_, _) => &["standing", "plan", "ship", "task_force"],
                 }
             }
             (other, _) => {
                 return Err(format!(
-                    "the command on day {day} is \"{other}\", which is not set_intent, withdraw_intent, set_limit, set_leave, approve, cancel_plan, hold, release, set_interrupt or acknowledge (the staff's commands are the staff's to give)"
+                    "the command on day {day} is \"{other}\", which is not set_intent, withdraw_intent, set_limit, set_leave, approve, cancel_plan, hold, release, set_interrupt, acknowledge, set_pursuit or answer_pursuit (the staff's commands are the staff's to give)"
                 ))
             }
         };
@@ -303,7 +316,7 @@ impl CommandSpec {
         let standing_kind = |name: &str| {
             StandingKind::from_name(name).ok_or_else(|| {
                 format!(
-                    "{what} has standing kind \"{name}\", which is not cannot_meet, waits_for_leave, ship_lost, cannot_bring_enough or lift_turned_back"
+                    "{what} has standing kind \"{name}\", which is not cannot_meet, waits_for_leave, ship_lost, cannot_bring_enough, lift_turned_back or asks_leave_to_pursue"
                 )
             })
         };
@@ -592,6 +605,24 @@ impl CommandSpec {
                     .given
                     .ok_or_else(|| format!("{what} needs \"given\""))?,
             },
+            // Decision 0214, rule 4: `leave` left out clears the setting.
+            "set_pursuit" => CommandKind::SetPursuit {
+                intent: intent()?,
+                leave: match self.leave.as_deref() {
+                    None => None,
+                    Some(name) => Some(PursueLeave::from_name(name).ok_or_else(|| {
+                        format!("{what} has leave \"{name}\", which is not ask, go or stay")
+                    })?),
+                },
+            },
+            // Decision 0214, rule 8.
+            "answer_pursuit" => CommandKind::AnswerPursuit {
+                force: TaskForceId::new(need(self.task_force, "task_force")?),
+                contact: need(self.contact, "contact")?,
+                allow: self
+                    .allow
+                    .ok_or_else(|| format!("{what} needs \"allow\""))?,
+            },
             "approve" => CommandKind::Approve {
                 plan: PlanId::new(need(self.plan, "plan")?),
             },
@@ -659,11 +690,20 @@ impl CommandSpec {
                 interrupt: match self.standing.as_deref() {
                     Some(name) => {
                         let subject = match (self.plan, self.ship) {
-                            (Some(plan), None) => StandingSubject::Plan(PlanId::new(plan)),
-                            (None, Some(ship)) => StandingSubject::Ship(ShipId::new(ship)),
+                            (Some(plan), None) if self.task_force.is_none() => {
+                                StandingSubject::Plan(PlanId::new(plan))
+                            }
+                            (None, Some(ship)) if self.task_force.is_none() => {
+                                StandingSubject::Ship(ShipId::new(ship))
+                            }
+                            (None, None) if self.task_force.is_some() => {
+                                StandingSubject::TaskForce(TaskForceId::new(
+                                    self.task_force.unwrap_or_default(),
+                                ))
+                            }
                             _ => {
                                 return Err(format!(
-                                    "{what} needs exactly one of \"plan\" and \"ship\" with \"standing\""
+                                    "{what} needs exactly one of \"plan\", \"ship\" and \"task_force\" with \"standing\""
                                 ))
                             }
                         };
@@ -776,6 +816,8 @@ impl BelievedIntentSpec {
             below_days: None,
             standing: None,
             on: None,
+            contact: None,
+            allow: None,
         };
         match command.build_kind(what)? {
             CommandKind::SetIntent { kind, .. } => Ok(kind),

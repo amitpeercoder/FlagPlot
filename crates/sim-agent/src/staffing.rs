@@ -184,6 +184,11 @@ impl<'a> Names<'a> {
         }
     }
 
+    /// The side's number of one of its task forces.
+    pub(crate) fn force(&self, id: TaskForceId) -> u32 {
+        self.ctx.force_number(id).unwrap_or_else(|| id.raw())
+    }
+
     pub(crate) fn ship(&self, id: ShipId) -> u32 {
         self.ctx.ship_number(id).unwrap_or_else(|| id.raw())
     }
@@ -707,6 +712,7 @@ fn intent_json(n: &Names<'_>, staff: &dyn Staff, view: &SideView<'_>, intent: &I
         "depth": state.ancestors(intent.id).len(),
         "limits": limits_json(n, &intent.limits),
         "limits_read_up": limits_read_up_json(n, state, intent),
+        "pursue": crate::pursuit::pursue_read_up_json(state, intent.id),
         "projection": projection,
         "served": served,
         "displaced_by": displaced_by,
@@ -995,6 +1001,7 @@ fn leaves_json(view: &SideView<'_>) -> Value {
         "prepare": leaves.prepare,
         "launch": leaves.launch,
         "meaning": "prepare: the staff may approve a draft plan that is inside your limits (given by default). launch: the staff may release a plan that is preparing (withheld by default: until you give it, you release a plan yourself with approve).",
+        "pursue_meaning": crate::pursuit::PURSUIT_MEANING,
     })
 }
 
@@ -1057,6 +1064,25 @@ fn command_json(n: &Names<'_>, command: &CommandKind, request: Option<&Request>)
         body["ship"] = json!(request
             .and_then(|r| r.ship_stand_ins.get(&ship.raw()).copied())
             .unwrap_or_else(|| n.ship(*ship)));
+        return body;
+    }
+    // The same for a force: an acknowledgement of a force's asking to pursue
+    // and the answer to one name the force in the side's number, or the
+    // number the side wrote for one that is not its own.
+    let asked_force = match command {
+        CommandKind::Acknowledge {
+            interrupt:
+                InterruptRef::Standing {
+                    subject: StandingSubject::TaskForce(force),
+                    ..
+                },
+        }
+        | CommandKind::AnswerPursuit { force, .. } => Some(*force),
+        _ => None,
+    };
+    if let Some(force) = asked_force {
+        let mut body = n.value(&command_to_json(command));
+        body["task_force"] = json!(written_force(n, force, request));
         return body;
     }
     match target {
@@ -1346,6 +1372,7 @@ pub fn command_state(view: &SideView<'_>, staff: &dyn Staff, queued: &[CommandKi
             _ => {}
         }
     }
+    let pursuits = crate::pursuit::pursuits_json(&n, state);
     let mut fields = json!({
         "for_day": today,
         "as_at": format!("the start of day {today}, with the commands you have queued taken in"),
@@ -1384,6 +1411,8 @@ pub fn command_state(view: &SideView<'_>, staff: &dyn Staff, queued: &[CommandKi
             .collect::<Vec<_>>(),
         "holds": holds_json(&n, view),
         "interrupts": crate::reporting::interrupts_json(&n, view),
+        "pursuits": pursuits["pursuits"],
+        "pursuit_refusals": pursuits["refusals"],
         "queued": queued
             .iter()
             .enumerate()
@@ -2082,7 +2111,17 @@ fn displaces_text(n: &Names<'_>, proposal: &Proposal) -> String {
 }
 
 fn decisions_json(n: &Names<'_>, decisions: &StaffDecisions) -> Value {
-    n.value(&staff_decisions_to_json(decisions))
+    let mut body = n.value(&staff_decisions_to_json(decisions));
+    // A pursuit notice names its force by the umpire's number in the saved
+    // form; the side is shown its own (decision 0214).
+    if let Some(Value::Array(written)) = body.get_mut("notices") {
+        for (json, notice) in written.iter_mut().zip(&decisions.notices) {
+            if let (Some(pursuit), Some(read)) = (json.get_mut("pursuit"), notice.pursuit) {
+                pursuit["force"] = json!(n.force(read.force));
+            }
+        }
+    }
+    body
 }
 
 /// `staff_orders`: what the staff would hand in for the coming day.
@@ -2239,10 +2278,12 @@ fn allowed_keys(tool: &str) -> &'static [&'static str] {
             "waters_first",
         ],
         "set_leave" => &["leave", "given"],
+        "set_pursuit" => &["intent", "leave"],
+        "answer_pursuit" => &["task_force", "contact", "allow"],
         "approve" | "cancel_plan" => &["plan"],
         "hold" | "release" => &["ship", "task_force", "air_group", "land_unit", "setting"],
         "set_interrupt" => &["interrupt", "base", "below_days", "standing", "on"],
-        "acknowledge" => &["interrupt", "standing", "plan", "ship"],
+        "acknowledge" => &["interrupt", "standing", "plan", "ship", "task_force"],
         _ => &[],
     }
 }
@@ -2519,6 +2560,7 @@ pub(crate) fn request(
     if tool == "hold"
         || tool == "release"
         || tool == "acknowledge"
+        || tool == "answer_pursuit"
         || (tool == "set_limit" && body.get("limit").and_then(Value::as_str) == Some("wait_for"))
     {
         if body.contains_key("setting") && !body.contains_key("air_group") {
@@ -2718,6 +2760,31 @@ pub(crate) fn command_answer(
                     "Acknowledging marks the last firing seen. It does not arm the interrupt again: that happens on a morning its condition does not hold."
                         .to_string(),
                 ),
+                CommandKind::SetPursuit { intent, leave } => notes.push(match leave {
+                    Some(leave) => format!(
+                        "The leave to pursue on intent:{} is {} from the start of day {day}.",
+                        intent.raw(),
+                        leave.name()
+                    ),
+                    None => format!(
+                        "The leave to pursue on intent:{} is cleared from the start of day {day}: it is read up the tree again, and where none is set it is ask, or go where the leave to launch is given.",
+                        intent.raw()
+                    ),
+                }),
+                CommandKind::AnswerPursuit {
+                    force,
+                    contact,
+                    allow,
+                } => notes.push(format!(
+                    "Your answer for task force {} and contact {contact} is {} at the start of day {day}, before the staff is asked.{}",
+                    written_force(&n, *force, Some(request)),
+                    if *allow { "yes" } else { "no" },
+                    if *allow {
+                        " The force may go after that find; the pursuit ends when it has nothing left to go after."
+                    } else {
+                        " The no is kept for that contact while your side holds it."
+                    }
+                )),
                 CommandKind::Hold { target } => notes.push(format!(
                     "{} is held from the start of day {day}: the staff gives no order to it and plans without it. release lifts the hold.",
                     hold_target_words(&n, *target)

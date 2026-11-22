@@ -2,15 +2,15 @@ Placeholder scenario 83: A force moved to look
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash f9e8eb7ab90117e6  49 events
-day   2  hash 682aa274a3f6f318  15 events
-day   3  hash 1a3b679e6a0fd8c7  17 events
-day   4  hash fcd43a928c8509de  23 events
-day   5  hash d9c1467911d346b7  20 events
-day   6  hash 349b2fc267218353  27 events
-day   7  hash 622b5c3e7cc5a560  32 events
-day   8  hash dc1ef4c65cb87f95  29 events
-day   9  hash b11109946961691b  19 events
+day   1  hash d3992f248dc736f6  49 events
+day   2  hash d87f7c8959df5222  15 events
+day   3  hash 5ab87432f91a5553  17 events
+day   4  hash b00d63c2cc6ceb78  23 events
+day   5  hash 12f05cbddc849033  20 events
+day   6  hash bc8315be6e367883  27 events
+day   7  hash 873e207a092ac650  32 events
+day   8  hash 6437ef2a39130f29  29 events
+day   9  hash dc15f3e52224b177  19 events
 
 task_force:1 "Placeholder carrier force 1" (Allied): Arrived at (0,0); readiness battle, alert, rules of engagement: avoid, break off at 0.5, stragglers: keep, keep 0; home port base:1
 task_force:2 "Placeholder transport force 2" (Allied): Underway at (1,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port

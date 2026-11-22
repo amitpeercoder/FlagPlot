@@ -2,7 +2,7 @@ Scenario 46: Two strike settings
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 4c55fb956d3ba65f  24 events
+day   1  hash 21f6e107f19f70df  24 events
 
 #1 D0 -         Allied report: 1 ship, carrier, at (0,4), held at the start: new contact:1
 #2 D0 -         Allied contact:1 aged to 1 pulses  <- #1

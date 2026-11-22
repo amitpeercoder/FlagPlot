@@ -17,6 +17,8 @@
 //! | `withdraw_intent` | `intent` |
 //! | `set_limit` | `limit` (`forces`, `area`, `priority`, `protected`, `reserve`, `risk`, `not_before`, `wait_for`, `after`, `knowledge` or `targets`) and its keys, below |
 //! | `set_leave` | `leave` (`prepare` or `launch`), `given` |
+//! | `set_pursuit` | `intent`, `leave` (`ask`, `go` or `stay`; left out clears it), decision 0214 |
+//! | `answer_pursuit` | `task_force`, `contact`, `allow` (true or false), decision 0214 |
 //! | `approve`, `cancel_plan` | `plan` |
 //! | `commit_ships` | `plan`, `run` (left out when none), `ships`, `from_day`, `to_day` |
 //! | `free_ships` | `plan`, `ships` |
@@ -25,8 +27,8 @@
 //! | `mark_plan` | `plan`, `outcome` (`complete` or `failed`) |
 //! | `hold`, `release` | one of `ship`, `task_force`, `air_group` or `land_unit`; with `air_group`, `setting` (`search_arc`) holds that setting alone and no `setting` holds the whole group |
 //! | `end_run` | `plan`, `run` |
-//! | `set_interrupt` | `interrupt`, `base`, `below_days` (a threshold set), or `standing` (`cannot_meet`, `waits_for_leave`, `ship_lost`, `cannot_bring_enough` or `lift_turned_back`) and `on` |
-//! | `acknowledge` | `interrupt`, or `standing` with one of `plan` or `ship` |
+//! | `set_interrupt` | `interrupt`, `base`, `below_days` (a threshold set), or `standing` (`cannot_meet`, `waits_for_leave`, `ship_lost`, `cannot_bring_enough`, `lift_turned_back` or `asks_leave_to_pursue`) and `on` |
+//! | `acknowledge` | `interrupt`, or `standing` with one of `plan`, `ship` or `task_force` |
 //!
 //! The limits: `forces` has `intent` and `ships`, `task_forces`, `air_groups`,
 //! `land_units` and `source` (each left out when empty or not set, and each read as empty
@@ -63,9 +65,9 @@ use serde_json::{json, Map, Value};
 use sim_core::command::{
     Addressee, Awaited, ChainLink, CommandKind, Evidence, ForcesLimit, HeldSetting, HoldTarget,
     IntentKind, InterruptCondition, InterruptRef, InterruptSetting, Knowledge, Leave, Limit, Maker,
-    NoticeBasis, NoticeKind, PlanId, PlanOutcome, Reason, Risk, RunDays, RunSpec, Serves,
-    StaffCommand, StaffDecisions, StaffNotice, StaffOrder, StandingKind, StandingSubject,
-    TargetsLimit, Want, Wants,
+    NoticeBasis, NoticeKind, PlanId, PlanOutcome, PursueLeave, PursuitFind, PursuitNotice, Reason,
+    Risk, RunDays, RunSpec, Serves, StaffCommand, StaffDecisions, StaffNotice, StaffOrder,
+    StandingKind, StandingSubject, TargetsLimit, Want, Wants,
 };
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
@@ -363,6 +365,7 @@ fn interrupt_ref_to_json(body: &mut Value, interrupt: InterruptRef) {
             match subject {
                 StandingSubject::Plan(plan) => body["plan"] = json!(plan.raw()),
                 StandingSubject::Ship(ship) => body["ship"] = json!(ship.raw()),
+                StandingSubject::TaskForce(force) => body["task_force"] = json!(force.raw()),
             }
         }
     }
@@ -376,12 +379,23 @@ fn interrupt_ref_from_json(value: &Value) -> Result<InterruptRef, String> {
         )?))),
         (None, Some(_)) => {
             let kind = standing_from(text(value, "standing")?)?;
-            let subject = match (value.get("plan"), value.get("ship")) {
-                (Some(_), None) => StandingSubject::Plan(PlanId::new(small(value, "plan")?)),
-                (None, Some(_)) => StandingSubject::Ship(ShipId::new(small(value, "ship")?)),
+            let subject = match (
+                value.get("plan"),
+                value.get("ship"),
+                value.get("task_force"),
+            ) {
+                (Some(_), None, None) => {
+                    StandingSubject::Plan(PlanId::new(small(value, "plan")?))
+                }
+                (None, Some(_), None) => {
+                    StandingSubject::Ship(ShipId::new(small(value, "ship")?))
+                }
+                (None, None, Some(_)) => {
+                    StandingSubject::TaskForce(TaskForceId::new(small(value, "task_force")?))
+                }
                 _ => {
                     return Err(
-                        "a standing interrupt names exactly one of \"plan\" and \"ship\""
+                        "a standing interrupt names exactly one of \"plan\", \"ship\" and \"task_force\""
                             .to_string(),
                     )
                 }
@@ -871,6 +885,23 @@ pub fn command_to_json(command: &CommandKind) -> Value {
         CommandKind::SetLeave { leave, given } => {
             json!({ "kind": "set_leave", "leave": leave.name(), "given": given })
         }
+        CommandKind::SetPursuit { intent, leave } => {
+            let mut body = json!({ "kind": "set_pursuit", "intent": intent.raw() });
+            if let Some(leave) = leave {
+                body["leave"] = json!(leave.name());
+            }
+            body
+        }
+        CommandKind::AnswerPursuit {
+            force,
+            contact,
+            allow,
+        } => json!({
+            "kind": "answer_pursuit",
+            "task_force": force.raw(),
+            "contact": contact,
+            "allow": allow,
+        }),
         CommandKind::Approve { plan } => json!({ "kind": "approve", "plan": plan.raw() }),
         CommandKind::CancelPlan { plan } => json!({ "kind": "cancel_plan", "plan": plan.raw() }),
         CommandKind::CommitShips {
@@ -987,6 +1018,23 @@ pub fn command_from_json(value: &Value) -> Result<CommandKind, String> {
             leave: leave_from(text(value, "leave")?)?,
             given: flag(value, "given")?,
         }),
+        "set_pursuit" => Ok(CommandKind::SetPursuit {
+            intent: IntentId::new(small(value, "intent")?),
+            leave: match value.get("leave") {
+                None | Some(Value::Null) => None,
+                Some(_) => {
+                    let name = text(value, "leave")?;
+                    Some(PursueLeave::from_name(name).ok_or_else(|| {
+                        format!("unknown leave to pursue \"{name}\" (ask, go or stay)")
+                    })?)
+                }
+            },
+        }),
+        "answer_pursuit" => Ok(CommandKind::AnswerPursuit {
+            force: TaskForceId::new(small(value, "task_force")?),
+            contact: small(value, "contact")?,
+            allow: flag(value, "allow")?,
+        }),
         "approve" => Ok(CommandKind::Approve { plan: plan()? }),
         "cancel_plan" => Ok(CommandKind::CancelPlan { plan: plan()? }),
         "commit_ships" => Ok(CommandKind::CommitShips {
@@ -1054,6 +1102,8 @@ pub fn command_from_json(value: &Value) -> Result<CommandKind, String> {
 // Reasons and a staff's decisions.
 // ---------------------------------------------------------------------------
 
+/// A reason as JSON. `answer_of` (decision 0214) is written, as the force's
+/// number, only where there is one.
 pub(crate) fn reason_to_json(reason: &Reason) -> Value {
     let mut serves = Map::new();
     if let Some(intent) = reason.serves.intent {
@@ -1098,7 +1148,7 @@ pub(crate) fn reason_to_json(reason: &Reason) -> Value {
             ),
         );
     }
-    json!({
+    let mut body = json!({
         "serves": Value::Object(serves),
         "evidence": reason
             .evidence
@@ -1108,7 +1158,11 @@ pub(crate) fn reason_to_json(reason: &Reason) -> Value {
         "binding": reason.binding,
         "worked": reason.worked,
         "would_change": reason.would_change,
-    })
+    });
+    if let Some(force) = reason.answer_of {
+        body["answer_of"] = json!(force.raw());
+    }
+    body
 }
 
 fn reason_from_json(value: &Value) -> Result<Reason, String> {
@@ -1182,6 +1236,7 @@ fn reason_from_json(value: &Value) -> Result<Reason, String> {
         binding: texts(value, "binding")?,
         worked: text(value, "worked")?.to_string(),
         would_change: texts(value, "would_change")?,
+        answer_of: small_opt(value, "answer_of")?.map(TaskForceId::new),
     })
 }
 
@@ -1205,12 +1260,19 @@ pub fn staff_decisions_to_json(decisions: &StaffDecisions) -> Value {
             .map(|command| {
                 let mut value = command_to_json(&command.kind);
                 if let Some(object) = value.as_object_mut() {
-                    object.insert("reason".to_string(), reason_to_json(&command.reason));
+                    object.insert(
+                        "reason".to_string(),
+                        reason_to_json(&command.reason),
+                    );
                 }
                 value
             })
             .collect::<Vec<_>>(),
-        "no_orders": decisions.no_orders.iter().map(reason_to_json).collect::<Vec<_>>(),
+        "no_orders": decisions
+            .no_orders
+            .iter()
+            .map(reason_to_json)
+            .collect::<Vec<_>>(),
     });
     // Left out when there is none, so that a hand-in without notices is
     // written as it always was.
@@ -1225,11 +1287,59 @@ fn notice_to_json(notice: &StaffNotice) -> Value {
         NoticeBasis::Command(i) => json!({ "command": i }),
         NoticeBasis::NoOrder(i) => json!({ "no_order": i }),
     };
-    json!({
+    let mut body = json!({
         "kind": notice.kind.name(),
         "plan": notice.plan.raw(),
         "run": notice.run,
         "rests_on": rests_on,
+    });
+    // Written only for a pursuit notice (decision 0214), so every other
+    // notice is written as it always was.
+    if let Some(pursuit) = &notice.pursuit {
+        let mut out = json!({
+            "force": pursuit.force.raw(),
+            "intent": pursuit.intent.raw(),
+        });
+        if let Some(find) = &pursuit.find {
+            out["find"] = json!({
+                "contact": find.contact,
+                "kind": find.kind.name(),
+                "age": find.age,
+                "reported_at": [find.reported_at.q, find.reported_at.r],
+                "to": [find.to.q, find.to.r],
+                "hours": find.hours.map(|hours| hours.to_string()),
+            });
+        }
+        body["pursuit"] = out;
+    }
+    body
+}
+
+fn pursuit_from_json(value: &Value) -> Result<PursuitNotice, String> {
+    let find = match value.get("find") {
+        None | Some(Value::Null) => None,
+        Some(find) => {
+            let name = text(find, "kind")?;
+            Some(PursuitFind {
+                contact: small(find, "contact")?,
+                kind: ShipKind::ALL
+                    .into_iter()
+                    .find(|kind| kind.name() == name)
+                    .ok_or_else(|| format!("unknown kind of ship \"{name}\""))?,
+                age: small(find, "age")?,
+                reported_at: hex_pair(find, "reported_at")?,
+                to: hex_pair(find, "to")?,
+                hours: match find.get("hours") {
+                    None | Some(Value::Null) => None,
+                    Some(_) => Some(fixed(find, "hours")?),
+                },
+            })
+        }
+    };
+    Ok(PursuitNotice {
+        force: TaskForceId::new(small(value, "force")?),
+        intent: IntentId::new(small(value, "intent")?),
+        find,
     })
 }
 
@@ -1254,6 +1364,10 @@ fn notice_from_json(value: &Value) -> Result<StaffNotice, String> {
         plan: PlanId::new(small(value, "plan")?),
         run: small_opt(value, "run")?,
         rests_on,
+        pursuit: match value.get("pursuit") {
+            None | Some(Value::Null) => None,
+            Some(pursuit) => Some(pursuit_from_json(pursuit)?),
+        },
     })
 }
 
@@ -2076,6 +2190,7 @@ mod tests {
             binding: vec!["the forces limit holds ship 5".to_string()],
             worked: "12 days x 10 t = 120 t".to_string(),
             would_change: vec!["a second ship in the pool".to_string()],
+            answer_of: None,
         };
         let decisions = StaffDecisions {
             orders: vec![StaffOrder {
@@ -2111,54 +2226,63 @@ mod tests {
                     plan: PlanId::new(1),
                     run: None,
                     rests_on: NoticeBasis::Command(0),
+                    pursuit: None,
                 },
                 StaffNotice {
                     kind: NoticeKind::WaitsForLeave(Leave::Prepare),
                     plan: PlanId::new(2),
                     run: None,
                     rests_on: NoticeBasis::NoOrder(1),
+                    pursuit: None,
                 },
                 StaffNotice {
                     kind: NoticeKind::WaitsForLeave(Leave::Launch),
                     plan: PlanId::new(2),
                     run: None,
                     rests_on: NoticeBasis::NoOrder(0),
+                    pursuit: None,
                 },
                 StaffNotice {
                     kind: NoticeKind::RunEnded,
                     plan: PlanId::new(1),
                     run: Some(3),
                     rests_on: NoticeBasis::NoOrder(0),
+                    pursuit: None,
                 },
                 StaffNotice {
                     kind: NoticeKind::Ready,
                     plan: PlanId::new(1),
                     run: None,
                     rests_on: NoticeBasis::Command(0),
+                    pursuit: None,
                 },
                 StaffNotice {
                     kind: NoticeKind::Late,
                     plan: PlanId::new(1),
                     run: None,
                     rests_on: NoticeBasis::Command(0),
+                    pursuit: None,
                 },
                 StaffNotice {
                     kind: NoticeKind::Met,
                     plan: PlanId::new(1),
                     run: None,
                     rests_on: NoticeBasis::Command(0),
+                    pursuit: None,
                 },
                 StaffNotice {
                     kind: NoticeKind::CannotBringEnough,
                     plan: PlanId::new(3),
                     run: None,
                     rests_on: NoticeBasis::Command(0),
+                    pursuit: None,
                 },
                 StaffNotice {
                     kind: NoticeKind::LiftTurnedBack,
                     plan: PlanId::new(3),
                     run: None,
                     rests_on: NoticeBasis::Command(0),
+                    pursuit: None,
                 },
             ],
         };

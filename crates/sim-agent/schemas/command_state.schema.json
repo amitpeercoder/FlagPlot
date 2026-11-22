@@ -18,6 +18,8 @@
     "commitments",
     "holds",
     "interrupts",
+    "pursuits",
+    "pursuit_refusals",
     "queued",
     "staff_decisions_yesterday"
   ],
@@ -31,7 +33,7 @@
       "const": "flagplot-agent"
     },
     "version": {
-      "const": 43
+      "const": 44
     },
     "kind": {
       "const": "command_state"
@@ -53,7 +55,8 @@
       "required": [
         "prepare",
         "launch",
-        "meaning"
+        "meaning",
+        "pursue_meaning"
       ],
       "additionalProperties": false,
       "properties": {
@@ -65,6 +68,10 @@
         },
         "meaning": {
           "type": "string"
+        },
+        "pursue_meaning": {
+          "type": "string",
+          "description": "What ask, go and stay say of the leave to pursue (decision 0214); each intent's own is its pursue."
         }
       }
     },
@@ -101,7 +108,8 @@
           "addressee",
           "children",
           "depth",
-          "limits_read_up"
+          "limits_read_up",
+          "pursue"
         ],
         "additionalProperties": false,
         "properties": {
@@ -294,6 +302,17 @@
           },
           "limits_read_up": {
             "$ref": "command_defs.schema.json#/$defs/limits_read_up"
+          },
+          "pursue": {
+            "type": "object",
+            "description": "The intent's leave to pursue as it is read up the tree (decision 0214, rule 4): the setting, the intent it is set on (\"default\" where none is set on the chain) and whether one is set.",
+            "required": ["leave", "from", "set"],
+            "additionalProperties": false,
+            "properties": {
+              "leave": { "enum": ["ask", "go", "stay"] },
+              "from": { "oneOf": [{ "type": "integer" }, { "const": "default" }] },
+              "set": { "type": "boolean" }
+            }
           },
           "measure": {
             "oneOf": [
@@ -533,6 +552,34 @@
     },
     "interrupts": {
       "$ref": "command_defs.schema.json#/$defs/interrupts"
+    },
+    "pursuits": {
+      "type": "array",
+      "description": "Each force's leave to pursue under way (decision 0214): by answer (your yes) or taken (the staff took it, at go), the contact it began on and the day it began.",
+      "items": {
+        "type": "object",
+        "required": ["task_force", "by", "contact", "since_day"],
+        "additionalProperties": false,
+        "properties": {
+          "task_force": { "type": "integer" },
+          "by": { "enum": ["answer", "taken"] },
+          "contact": { "type": "integer" },
+          "since_day": { "type": "integer" }
+        }
+      }
+    },
+    "pursuit_refusals": {
+      "type": "array",
+      "description": "Your no, by force and contact (decision 0214, rule 8).",
+      "items": {
+        "type": "object",
+        "required": ["task_force", "contact"],
+        "additionalProperties": false,
+        "properties": {
+          "task_force": { "type": "integer" },
+          "contact": { "type": "integer" }
+        }
+      }
     }
   }
 }

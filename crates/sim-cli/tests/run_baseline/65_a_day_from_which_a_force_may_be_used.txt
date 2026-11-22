@@ -2,10 +2,10 @@ Placeholder scenario 65: A day from which a force may be used
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash ed0d6dce20af251b  12 events
-day   2  hash 58db6b14649d5d61  25 events
-day   3  hash ecd48dd5ef4b8c2f  7 events
-day   4  hash 7b4696b055323b33  5 events
+day   1  hash 177730d0298ea7f9  12 events
+day   2  hash 8af39a4f1ee06253  25 events
+day   3  hash 9dfdab43e17d26af  7 events
+day   4  hash b743fbd7475f4b5d  5 events
 
 task_force:1 "Placeholder carrier force 1" (Allied): Arrived at (6,0); readiness battle, alert, rules of engagement: avoid, break off at 0.5, stragglers: keep, keep 0; home port base:1
 air_group:1 "Placeholder fighters 1" (Allied) aboard ship:1: 12 ready, mission CombatAirPatrol, patrol share 0.5, no arc

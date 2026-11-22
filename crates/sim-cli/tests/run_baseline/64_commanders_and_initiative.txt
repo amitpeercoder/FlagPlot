@@ -2,9 +2,9 @@ Placeholder scenario 64: Commanders and initiative
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 3f6163711c78e893  40 events
-day   2  hash 214eb64e2c127941  7 events
-day   3  hash 3d58d582c539d29c  12 events
+day   1  hash 09742bf86fc6fc33  40 events
+day   2  hash a9b9e371c79542e3  7 events
+day   3  hash aa7a2c97c26d0cda  12 events
 
 task_force:1 "Placeholder carrier force 1" (Allied): Arrived at (0,0); readiness battle, alert, rules of engagement: avoid, break off at 0.5, stragglers: keep, keep 0; home port base:1
 air_group:1 "Placeholder fighters 1" (Allied) aboard ship:1: 12 ready, mission CombatAirPatrol, patrol share 0.5, no arc

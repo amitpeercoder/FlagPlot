@@ -1091,6 +1091,24 @@ fn seat_trials(s: &Settings, options: &LoadOptions) -> Result<Vec<SeatTrialTime>
             });
         }
     }
+    // The side tried carries its orders' settings (decision 0214): where the
+    // course gives leave to launch, each order with no leave to pursue set
+    // keeps the value it has, ask, and does not read as go.
+    if course.iter().any(|step| {
+        matches!(
+            step.command,
+            CommandKind::SetLeave {
+                leave: Leave::Launch,
+                ..
+            }
+        )
+    }) {
+        course.extend(
+            sim_agent::trial_pursuit_settings(view.command_state(), None, None)
+                .into_iter()
+                .map(|command| CourseStep { day: 1, command }),
+        );
+    }
     let as_they_stand: Vec<CommandKind> = standing
         .iter()
         .filter(|c| match c {

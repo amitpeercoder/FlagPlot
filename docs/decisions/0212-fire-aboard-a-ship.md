@@ -264,7 +264,7 @@ The hand calculations are scenarios 126 (this rule) and 127 (decision 0211).
 
 ## As built, Nov 22, 2026
 
-Built with decisions 0211 and 0213 in one pull request, to the rules of "Measured and reviewed again" and the readings ruled above. The code is `crates/sim-core/src/airstrike/carrier_fire.rs`, with the state `Ship::aircraft_fire` (its level, the day and pulse a raid last set it, and its record; hashed after `available_from`, the layout `flagplot-state-v55`), the last phase of every pulse `PulsePhase::AircraftFires`, the records `AircraftFireRoll` and `AircraftFireFought`, the draws `AircraftFireSet` (20) and `AircraftFireFought` (21), and `Ship::deck_for_flying`, which every launch, patrol, landing and the side's view of them read. The rules label is 27. Scenario 126 is its hand calculation.
+Built with decisions 0211 and 0213 in one pull request, to the rules of "Measured and reviewed again" and the readings ruled above. The code is `crates/sim-core/src/airstrike/carrier_fire.rs`, with the state `Ship::aircraft_fire` (its level, the day and pulse a raid last set it, and its record; hashed after `available_from`, the layout `flagplot-state-v56`), the last phase of every pulse `PulsePhase::AircraftFires`, the records `AircraftFireRoll` and `AircraftFireFought`, the draws `AircraftFireSet` (20) and `AircraftFireFought` (21), and `Ship::deck_for_flying`, which every launch, patrol, landing and the side's view of them read. The rules label is 28 (decision 0214, merged first, took 27 and the layout v55). Scenario 126 is its hand calculation.
 
 Where the build reads the record, and where it departs from it:
 
@@ -273,7 +273,7 @@ Where the build reads the record, and where it departs from it:
 - **The bombers counted** are each bomber group's ready aircraft less those the pulse's count has flying, plus its damaged aircraft, aboard; and the ready ones flying. Aircraft away from an earlier sortie and not back count in neither. Where none is aboard no draw is made and nothing is recorded.
 - **The chance** is worked in the game's six decimals, each product cut in turn: scenario 126's 1 - 0.925^3 = 0.208546875 (the Allied side, half away, three bombs) is held as 0.208547, as the architect restated it.
 - **A fire set closes her deck at once,** as a deck that goes out does: her aircraft in the air in that pulse look for another deck or a base.
-- **A fire is fought wherever she is afloat,** in a force, in port or at a yard, by the architect's ruling below (`docs/rules/differences.md`, row 57, ruled and mended). A carrier lost to it out of a force has no `ShipSunk`: the fought record, naming no force, is her loss, and what goes down with her cites it.
+- **A fire is fought wherever she is afloat,** in a force, in port or at a yard, by the architect's ruling below (`docs/rules/differences.md`, row 58, ruled and mended). A carrier lost to it out of a force has no `ShipSunk`: the fought record, naming no force, is her loss, and what goes down with her cites it.
 - **A side's view and a dry run** read the side's own `aircraft_fire_chance` for both sides (decision 0213).
 
 ### The scenarios for play, 1,000 games each, as built

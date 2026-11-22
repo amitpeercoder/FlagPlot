@@ -4858,6 +4858,7 @@ mod tests {
                     plan: crate::command::PlanId::new(1),
                     run: None,
                     intent: None,
+                    pursuit: None,
                 },
                 Whole,
                 Nothing,

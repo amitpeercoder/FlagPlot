@@ -8040,6 +8040,91 @@ task_force = 3
     }
 
     #[test]
+    fn the_pursuit_commands_load_and_refuse_what_they_do_not_take() {
+        use sim_core::command::{
+            InterruptRef, InterruptSetting, PursueLeave, StandingKind, StandingSubject,
+        };
+        use sim_core::ids::TaskForceId;
+        for (name, leave) in [
+            ("ask", PursueLeave::Ask),
+            ("go", PursueLeave::Go),
+            ("stay", PursueLeave::Stay),
+        ] {
+            assert_eq!(
+                only(&command(&format!(
+                    "kind = \"set_pursuit\"\nintent = 4\nleave = \"{name}\""
+                ))),
+                CommandKind::SetPursuit {
+                    intent: IntentId::new(4),
+                    leave: Some(leave),
+                }
+            );
+        }
+        // Left out, the setting is cleared.
+        assert_eq!(
+            only(&command("kind = \"set_pursuit\"\nintent = 4")),
+            CommandKind::SetPursuit {
+                intent: IntentId::new(4),
+                leave: None,
+            }
+        );
+        assert!(error_of(&command(
+            "kind = \"set_pursuit\"\nintent = 4\nleave = \"maybe\""
+        ))
+        .contains("not ask, go or stay"));
+        assert!(error_of(&command("kind = \"set_pursuit\"\nleave = \"go\""))
+            .contains("needs \"intent\""));
+        assert!(
+            error_of(&command("kind = \"set_pursuit\"\nintent = 4\nbase = 1"))
+                .contains("does not take \"base\"")
+        );
+        for allow in [true, false] {
+            assert_eq!(
+                only(&command(&format!(
+                    "kind = \"answer_pursuit\"\ntask_force = 2\ncontact = 7\nallow = {allow}"
+                ))),
+                CommandKind::AnswerPursuit {
+                    force: TaskForceId::new(2),
+                    contact: 7,
+                    allow,
+                }
+            );
+        }
+        for missing in [
+            "kind = \"answer_pursuit\"\ncontact = 7\nallow = true",
+            "kind = \"answer_pursuit\"\ntask_force = 2\nallow = true",
+            "kind = \"answer_pursuit\"\ntask_force = 2\ncontact = 7",
+        ] {
+            assert!(error_of(&command(missing)).contains("needs"), "{missing}");
+        }
+        assert!(error_of(&command(
+            "kind = \"answer_pursuit\"\ntask_force = 2\ncontact = 7\nallow = true\nintent = 1"
+        ))
+        .contains("does not take \"intent\""));
+        // The interrupt's standing kind and its subject.
+        assert_eq!(
+            only(&command(
+                "kind = \"acknowledge\"\nstanding = \"asks_leave_to_pursue\"\ntask_force = 2"
+            )),
+            CommandKind::Acknowledge {
+                interrupt: InterruptRef::Standing {
+                    kind: StandingKind::AsksLeaveToPursue,
+                    subject: StandingSubject::TaskForce(TaskForceId::new(2)),
+                }
+            }
+        );
+        assert_eq!(
+            only(&command(
+                "kind = \"set_interrupt\"\nstanding = \"asks_leave_to_pursue\"\non = false"
+            )),
+            CommandKind::SetInterrupt(InterruptSetting::Standing {
+                kind: StandingKind::AsksLeaveToPursue,
+                on: false
+            })
+        );
+    }
+
+    #[test]
     fn the_targets_limit_loads_with_kind_names_and_clears_with_none() {
         use sim_core::command::{Limit, TargetsLimit};
         use sim_core::refdata::ShipKind;

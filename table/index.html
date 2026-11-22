@@ -682,7 +682,7 @@ body.watched .gives { display: none !important; }
 
   // ---- what the side knows, as the tools gave it ----
   var OFFERED = {}, clock = { at: 'dusk', day: 1 }, lastTold = [];
-  var M = { air: [], names: {}, hexNames: {}, day: 1, lastDay: 0, forces: [], units: [], bases: [], enemyBases: [], contacts: [], estimates: [], state: null, over: false, result: null };
+  var M = { air: [], names: {}, hexNames: {}, day: 1, lastDay: 0, forces: [], units: [], bases: [], enemyBases: [], contacts: [], estimates: [], state: null, over: false, result: null, asking: [] };
   var lastRun = null, draft = null;
   function baseByNumber(n) { var all = M.bases.concat(M.enemyBases), i; for (i = 0; i < all.length; i++) if (num(all[i].base.handle) === n) return all[i]; return null; }
   function intentPlace(it) {
@@ -819,6 +819,7 @@ body.watched .gives { display: none !important; }
     M.enemyBases.forEach(function (b) { var v = placeOf(b.place), c = ring(v, 9, '#a3211a', 0.6, false, 2); g.save(); g.globalAlpha = 0.6; g.beginPath(); g.arc(c[0], c[1], 9 * u, 0, 7); g.clip(); g.strokeStyle = '#a3211a'; g.lineWidth = u; g.beginPath(); for (var k = -20; k < 20; k += 4) { g.moveTo(c[0] + k * u, c[1] - 10 * u); g.lineTo(c[0] + (k + 10) * u, c[1] + 10 * u); } g.stroke(); g.restore(); });
     M.contacts.forEach(function (c) { var v = placeOf(c.place); if (!v) return; var a = Math.max(0.25, 1 - (c.age_pulses || 0) / 9), p = ring(v, 11, '#a3211a', a, (c.age_pulses || 0) > 3, 2.6); g.save(); g.globalAlpha = a; g.fillStyle = '#8a2019'; g.fillText(String(c.ship_count), p[0] - 4 * u, p[1] + 4 * u); g.restore(); });
     M.estimates.forEach(function (e) { var v = placeOf(e.place); if (v) ring(v, 16, '#a3211a', Math.max(0.3, 1 - (e.age_days || 0) / 6), (e.age_days || 0) > 1, 2); });
+    M.asking.forEach(function (a) { var pts = (a.pts || []).filter(Boolean); if (pts.length < 2) return; g.save(); g.strokeStyle = 'rgba(18,51,92,0.85)'; g.fillStyle = '#12335c'; g.lineWidth = 2.4 * u; g.setLineDash([8 * u, 6 * u]); g.beginPath(); pts.forEach(function (v, k) { var c = cpx(v); if (k) g.lineTo(c[0], c[1]); else g.moveTo(c[0], c[1]); }); g.stroke(); g.setLineDash([]); var e = cpx(pts[pts.length - 1]); g.beginPath(); g.arc(e[0], e[1], 5 * u, 0, 7); g.fill(); g.restore(); });
     var intents = M.state ? M.state.intents.filter(function (i) { return i.in_force && !i.parent; }) : [];
     // The intents' own rings and words give way to a plan shown on the chart, and their words keep their size as the commander leans in.
     var iz = planZoom(); g.save(); g.font = '700 ' + Math.round(12 * u * iz) + "px 'Courier Prime', monospace";
@@ -1065,6 +1066,33 @@ body.watched .gives { display: none !important; }
     }, Promise.resolve()).catch(function (e) { box.appendChild(el('div', '', e.message)); });
   }
   var TOLD = { contact: 'A contact is reported', attack: 'You are attacked', loss: 'A ship is lost or out of action', strike: 'Your strike is away', landing: 'Your men are ashore, or fighting' };
+  // ---- a force asks leave to go after what it has found (decision 0214) ----
+  function wholeHours(h) { var v = parseFloat(h); return isNaN(v) ? null : Math.round(v); }
+  function askingWhat(a) { var k = String(a.kind || 'force').replace(/_/g, ' '); return (/^[aeiou]/i.test(k) ? 'an ' : 'a ') + k; }
+  function askingOrder(a) { var i = M.state && M.state.intents.filter(function (x) { return x.number === a.intent; })[0]; return i ? 'order ' + i.number + ', ' + sayIntent(i, {}).replace(/^./, function (c) { return c.toLowerCase(); }) : 'order ' + a.intent; }
+  function takeAsking(asking) {
+    M.asking = (asking || []).map(function (a) { return a; });
+    M.asking.forEach(function (a) {
+      var h = 'task_force:' + a.task_force, f = M.forces.filter(function (x) { return x.task_force.handle === h; })[0]; if (!f || !f.place) return;
+      a.pts = [placeOf(f.place), placeOf(a.to)];
+      api('measure', { question: 'passage', task_force: h, to: { q: a.to.q, r: a.to.r } }).then(function (m) { if (m.route && m.route.length) { a.pts = [placeOf(f.place)].concat(m.route.map(placeOf)); if (g) drawMarks(); } }).catch(function () {});
+    });
+  }
+  function answerPursuit(a, allow) {
+    return api('answer_pursuit', { task_force: a.task_force, contact: a.contact, allow: allow }).then(function () {
+      M.asking = M.asking.filter(function (x) { return x !== a; });
+      setStatus(allow ? 'Leave given. The force goes after it when the day is played.' : 'Leave refused. The force keeps to its order.'); return refresh();
+    }).catch(function (e) { setStatus('Refused: ' + e.message); });
+  }
+  function askingSlips() {
+    M.asking.forEach(function (a) {
+      var h = wholeHours(a.hours), age = a.age_pulses ? ', reported ' + a.age_pulses + (a.age_pulses === 1 ? ' pulse' : ' pulses') + ' ago' : ', just reported';
+      var s = slip('FROM STAFF', 'FOR DECISION', 'Leave to go after ' + askingWhat(a), null, true);
+      s.appendChild(rich('div', '', 'Found ' + hexWords(a.reported_at) + age + '. task_force:' + a.task_force + (a.contact != null ? ' (contact:' + a.contact + ')' : '') + ' would go to ' + hexWords(a.to) + (h != null ? ', ' + (h < 1 ? 'under 1 hour' : h + (h === 1 ? ' hour' : ' hours')) : '') + '. ' + askingOrder(a).replace(/^./, function (c) { return c.toUpperCase(); }) + ' would wait.'));
+      if (!WATCH) { button(s, 'ALLOW', true, function () { answerPursuit(a, true); }); button(s, 'REFUSE', false, function () { answerPursuit(a, false); }); }
+    });
+  }
+  function pursuitOf(h) { var n = num(h); return ((M.state && M.state.pursuits) || []).filter(function (p) { return p.task_force === n; })[0]; }
   function showSignals() {
     var box = $('signals'), s = M.state; box.textContent = ''; $('papers').textContent = ''; $('papers-staff').textContent = ''; $('leave-slot').textContent = ''; $('holds-list').textContent = '';
     if (M.over) { var endSlip = slip('THE UMPIRE', 'ENDED', 'The campaign is over', endLine(), true); endSlip.classList.add('opens'); endSlip.tabIndex = 0; endSlip.setAttribute('role', 'button'); endSlip.addEventListener('click', readEnd); endSlip.appendChild(el('div', 'told', 'READ HOW IT ENDED \u203A')); if (!endShown) { endShown = true; readEnd(); } }
@@ -1088,6 +1116,7 @@ body.watched .gives { display: none !important; }
       if (f.why && f.why.length) button(a, 'WHY', true, function (b) { askWhy(a, f.why, b); });
       if (f.standing && !WATCH) button(a, 'DO NOT STOP ME FOR THIS', false, function () { act('set_interrupt', { standing: f.standing, on: false }, 'The clock will not stop for that again.'); });
     });
+    askingSlips();
     var roots = s.intents.filter(function (i) { return i.in_force && !i.parent; });
     // With no intent stated the staff does nothing: the button that states one is marked, and nothing is said.
     $('btn-intent').classList.toggle('cue', !roots.length && !M.over);
@@ -1602,6 +1631,7 @@ body.watched .gives { display: none !important; }
       ['Speed', f.speed], ['Readiness', f.readiness + (f.alert ? ', alert' : '')], ['Fatigue', tiredWords(f.fatigue)],
       ['Cargo', f.cargo_supply_t != null ? commas(f.cargo_supply_t) + ' t supply, ' + commas(f.cargo_fuel_t || 0) + ' t fuel' : null],
       ['Range', f.least_fuelled ? commas(f.least_fuelled.range_nm) + ' miles at cruise \u00B7 ' + f.least_fuelled.ship.name.replace(/^Placeholder /, '').replace(/^./, function (c) { return c.toUpperCase(); }) + ' runs dry first' : null],
+      ['Pursuing', (function (p) { return p ? 'Going after ' + (M.contacts.some(function (c) { return c.contact.handle === 'contact:' + p.contact; }) ? 'contact ' + p.contact : 'what it found') + ', since day ' + p.since_day : null; })(pursuitOf(h))],
       ['In whose hands', held ? (held.made_by === 'command' ? 'Yours: you keep it out of the staff\'s plans.' : 'Yours, by your direct order. The staff plans round it.') : 'The staff\'s']]);
     // Ordering a force is done from its card, so the buttons stand at the head of it.
     if (!WATCH && !M.over && !playing && !(f.available_from > M.day)) { var row = el('div', 'row'), b = el('button', '', 'GIVE A DIRECT ORDER'); b.type = 'button'; b.addEventListener('click', function () { orderForce(f); }); row.appendChild(b);
@@ -2263,6 +2293,8 @@ body.watched .gives { display: none !important; }
           if (can) { var t = quiet('TRY IT FIRST'); tries.push(t); t.addEventListener('click', function () { whatIf(root, { limit: 'risk', risk: r }, 'risk ' + r, wsays, tries); }); l.appendChild(t); }
           var set = quiet('SET IT'); set.addEventListener('click', function () { act('set_limit', { limit: 'risk', intent: root, risk: r }, 'Risk set to ' + r + '. The staff plans again at 1800.').then(function () { readPlan(root); }); }); l.appendChild(set);
         });
+        if (top.pursue) { var pl = choice('Pursuit'), ps = el('div', 'seg'); ps.setAttribute('role', 'group'); ps.setAttribute('aria-label', 'Pursuit');
+          [['ask', 'ASK ME'], ['go', 'GO AND REPORT'], ['stay', 'STAY']].forEach(function (o) { var b = el('button', '', o[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(top.pursue.leave === o[0])); if (top.pursue.leave !== o[0]) b.addEventListener('click', function () { act('set_pursuit', { intent: root, leave: o[0] }, 'Pursuit: ' + o[1].toLowerCase() + '.').then(function () { readPlan(root); }); }); ps.appendChild(b); }); pl.appendChild(ps); }
         if (can) {
           var nl = choice('Not before day'), nday = el('input'), nb = quiet('TRY IT FIRST'); nday.type = 'number'; nday.min = String(M.day + 2); nday.value = String(M.day + 3); nday.style.width = '4.5em'; nday.setAttribute('aria-label', 'The day it is not to go before'); tries.push(nb);
           nb.addEventListener('click', function () { var d = parseInt(nday.value, 10); if (!(d > 0)) return; whatIf(root, { limit: 'not_before', from_day: d }, 'not before day ' + d, wsays, tries); });
@@ -2739,7 +2771,7 @@ body.watched .gives { display: none !important; }
           if (OFFERED.advance) {
             setStatus(VERSUS ? finishedWords() : 'The clock runs.');
             var r = await api('advance', { pulses: 1, stop_on: stopOn() }), done = r.pulses_resolved[0], byNumber = {};
-            lastRun = { fired: r.fired || [], summary: r.summary }; lastTold = []; if (r.game_over) { M.over = true; M.result = r.result; }
+            lastRun = { fired: r.fired || [], summary: r.summary }; lastTold = []; takeAsking(r.stopped === 'asks_leave' ? r.asking : []); if (r.game_over) { M.over = true; M.result = r.result; }
             if (done) {
               if (done.pulse === 'night') $('plot').textContent = '';
               var evs = await eventsOf(done.day, done.pulse); evs.forEach(function (e) { byNumber[e.number] = e; });
@@ -2755,11 +2787,13 @@ body.watched .gives { display: none !important; }
             clock = { at: r.clock.at, day: r.clock.day }; await refresh();
             if (!until || !playing || r.game_over || r.stopped !== 'pulses') {
               var when = clock.at === 'dusk' ? 'at 1800' : 'at ' + clock.at + ' of day ' + clock.day;
-              return rest(r.game_over ? 'The game is over.' : r.stopped === 'told' ? 'The clock is stopped ' + when + ': you were told something you asked to be stopped for.' : r.stopped === 'interrupt' ? 'The clock is stopped ' + when + ': the staff has a signal for you.' : '');
+              return rest(r.game_over ? 'The game is over.' : r.stopped === 'asks_leave' ? 'The clock is stopped ' + when + ': the staff asks your leave.' : r.stopped === 'told' ? 'The clock is stopped ' + when + ': you were told something you asked to be stopped for.' : r.stopped === 'interrupt' ? 'The clock is stopped ' + when + ': the staff has a signal for you.' : '');
             }
           } else {
             var day = M.day; setStatus(VERSUS ? finishedWords() : 'Day ' + day + ' is being fought.');
             var d = await api('run', { days: 1 }); lastRun = d; if (d.game_over) { M.over = true; M.result = d.result; }
+            if (d.stopped === 'asks_leave') { takeAsking(d.asking); await refresh(); return rest('The clock is stopped: the staff asks your leave.'); }
+            takeAsking([]);
             setStatus('Day ' + day + ': the reports come in.');
             await plotDay(day, await eventsOf(day)); await refresh();
             var fired = d.fired && d.fired.length;
@@ -2826,7 +2860,7 @@ body.watched .gives { display: none !important; }
     })();
   }
   // A seat's calls in plain words, where the table has words for them.
-  var CALLED = { get_briefing: 'Reads the briefing', list_forces: 'Reads the forces', list_bases: 'Reads the bases', list_contacts: 'Reads the contacts', get_entity: 'Looks at', measure: 'Measures', explain: 'Asks after an event', why: 'Asks the staff why', events: 'Reads the war diary', command_state: 'Reads the orders in force', plans: 'Reads the plans', staff_orders: 'Reads the staff\'s orders for the day', propose: 'Asks the staff for a proposal', order: 'Reads the plan as ordered', report: 'Reads the report', trials: 'Reads the dry runs', preview: 'Asks the staff for a preview', trial: 'A dry run', approve: 'Gives an order', issue_orders: 'Direct orders', withdraw_intent: 'Withdraws an order', hold: 'Takes into own hands', release: 'Returns to the staff', set_limit: 'Sets a limit', set_leave: 'Leave', cancel_plan: 'Cancels a plan', set_interrupt: 'What stops the clock', acknowledge: 'Acknowledges', end_day: 'Ready until dusk', run: 'Ready for days', advance: 'Ready for pulses' };
+  var CALLED = { get_briefing: 'Reads the briefing', list_forces: 'Reads the forces', list_bases: 'Reads the bases', list_contacts: 'Reads the contacts', get_entity: 'Looks at', measure: 'Measures', explain: 'Asks after an event', why: 'Asks the staff why', events: 'Reads the war diary', command_state: 'Reads the orders in force', plans: 'Reads the plans', staff_orders: 'Reads the staff\'s orders for the day', propose: 'Asks the staff for a proposal', order: 'Reads the plan as ordered', report: 'Reads the report', trials: 'Reads the dry runs', preview: 'Asks the staff for a preview', trial: 'A dry run', approve: 'Gives an order', issue_orders: 'Direct orders', withdraw_intent: 'Withdraws an order', hold: 'Takes into own hands', release: 'Returns to the staff', set_limit: 'Sets a limit', set_leave: 'Leave', cancel_plan: 'Cancels a plan', set_interrupt: 'What stops the clock', acknowledge: 'Acknowledges', end_day: 'Ready until dusk', run: 'Ready for days', advance: 'Ready for pulses', answer_pursuit: 'Answers the staff about a pursuit', set_pursuit: 'Sets the leave to pursue' };
   function placeWords(a) {
     var b = a.target != null ? baseByNumber(a.target) : a.base != null ? baseByNumber(a.base) : null;
     if (b) return b.base.name; if (a.island != null) { var i = config.islands.filter(function (x) { return x.number === a.island; })[0]; return i ? i.name : 'island ' + a.island; }

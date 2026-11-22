@@ -134,11 +134,16 @@ pub const FORMAT: &str = "flagplot-agent";
 /// `trial_described` and in each row of `trials`. 41 adds to a claim from
 /// the air the types of the aircraft claimed shot down, by name, where its
 /// men made them out (`air_types`), with them in the claim's words (decision
-/// 0210). 43 adds a fire among a carrier's aircraft (decision 0212): a ship
-/// line's and the ship entity's `on_fire_among_aircraft` (true, left out
-/// otherwise), the briefing's `losses.aircraft_fires` and a sunk ship's
-/// `cause` (`fire_among_aircraft`).
-pub const VERSION: u32 = 43;
+/// 0210). 43 adds the pursuit of decision 0214: the commands `set_pursuit`
+/// and `answer_pursuit`, the stop `asks_leave` of `run` and `advance` with
+/// the `asking` it gives, the leave to pursue, the pursuits and the
+/// refusals in `command_state`, the three notices in the report and the
+/// briefing, and `acknowledge` of the standing interrupt by task force. 44 adds a fire among a carrier's aircraft (decision
+/// 0212): a ship line's and the ship entity's `on_fire_among_aircraft` (true,
+/// left out otherwise), the briefing's `losses.aircraft_fires` and a sunk
+/// ship's `cause` (`fire_among_aircraft`), and `advance`'s "loss" taking in a
+/// fire set.
+pub const VERSION: u32 = 44;
 
 /// The answer to a question about something the side does not know of: a
 /// unit of the enemy, a number that does not exist, an event the side may not

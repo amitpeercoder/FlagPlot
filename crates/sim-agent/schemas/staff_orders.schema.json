@@ -24,7 +24,7 @@
       "const": "flagplot-agent"
     },
     "version": {
-      "const": 43
+      "const": 44
     },
     "kind": {
       "const": "staff_orders"
@@ -89,7 +89,10 @@
               "late",
               "met",
               "cannot_bring_enough",
-              "lift_turned_back"
+              "lift_turned_back",
+              "asks_leave_to_pursue",
+              "pursues",
+              "pursuit_ended"
             ]
           },
           "plan": {
@@ -100,6 +103,9 @@
               "integer",
               "null"
             ]
+          },
+          "pursuit": {
+            "$ref": "command_defs.schema.json#/$defs/staff_notice_pursuit"
           },
           "rests_on": {
             "type": "object",

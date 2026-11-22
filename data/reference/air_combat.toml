@@ -165,6 +165,15 @@ raid_recognised_chance = "0.75"
 # step 1 figures.
 raid_recognised_experience_strength = "0.25"
 
+# The nights' steaming a find is looked for within (decision 0214, rule 1): a
+# carrier force that has found a contact the closing rule leaves because it is
+# too far for one night is looked at again with this many nights. Placeholder
+# (decision 0214): a judgement, with no row. A force is not sent after a
+# contact it could not reach in two nights. As freshness stands a pursuit
+# steams one night on a report and goes on only if the contact is seen again.
+# 1 in the frozen step 1 figures: one night is the closing rule as it stands.
+pursuit_nights = 2
+
 # A strike is spread (decision 0211, as measured). Where several raids attack
 # one force in a pulse and want one kind of ship, the first draws its ship
 # among those of the kind that do not look lost and each after it takes the

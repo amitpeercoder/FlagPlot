@@ -80,7 +80,10 @@ impl<'a, 'v> RunContext<'a, 'v> {
     }
 }
 
-/// What the doctrine decided for a run about to be routed.
+/// What the doctrine decided for a run about to be routed. (`Reason` grew a
+/// list of cited events with decision 0214, which tipped the size of the
+/// variants apart; the value is made once a run.)
+#[allow(clippy::large_enum_variant)]
 pub(crate) enum ForRun {
     /// It sails. `words` is said in the route's reason (none where no task
     /// force is named); `escort`, the escort it takes and the reason of its

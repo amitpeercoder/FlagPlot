@@ -1953,6 +1953,10 @@ pub enum EventKind {
         plan: PlanId,
         run: Option<u32>,
         intent: Option<IntentId>,
+        /// What a pursuit notice says (decision 0214): the force, the
+        /// order it would leave and the find. `None` for every other
+        /// notice. Added at the end.
+        pursuit: Option<crate::command::PursuitNotice>,
     },
     /// An interrupt fired at the morning's test (decision 0107, rulings 31
     /// to 33). A set one carries its condition and the figure it was
@@ -4640,6 +4644,7 @@ impl fmt::Display for EventKind {
                 plan,
                 run,
                 intent,
+                pursuit,
             } => {
                 write!(f, "{side:?} staff's notice: ")?;
                 match (kind, run) {
@@ -4665,6 +4670,24 @@ impl fmt::Display for EventKind {
                     (NoticeKind::LiftTurnedBack, _) => {
                         write!(f, "{plan}'s lift is turned back")
                     }
+                    (NoticeKind::AsksLeaveToPursue, _) => match pursuit {
+                        Some(notice) => {
+                            write!(f, "{} asks leave to pursue", notice.force)?;
+                            write_pursuit_find(f, notice)
+                        }
+                        None => write!(f, "{plan} asks leave to pursue"),
+                    },
+                    (NoticeKind::Pursues, _) => match pursuit {
+                        Some(notice) => {
+                            write!(f, "{} pursues", notice.force)?;
+                            write_pursuit_find(f, notice)
+                        }
+                        None => write!(f, "{plan} pursues"),
+                    },
+                    (NoticeKind::PursuitEnded, _) => match pursuit {
+                        Some(notice) => write!(f, "{}'s pursuit is ended", notice.force),
+                        None => write!(f, "{plan}'s pursuit is ended"),
+                    },
                 }
             }
             EventKind::InterruptFired {
@@ -4700,6 +4723,9 @@ impl fmt::Display for EventKind {
                         }
                         (StandingKind::LiftTurnedBack, subject) => {
                             write!(f, "{subject}'s lift is turned back")
+                        }
+                        (StandingKind::AsksLeaveToPursue, subject) => {
+                            write!(f, "{subject} asks leave to pursue")
                         }
                     }
                 }
@@ -5348,6 +5374,30 @@ pub fn air_claim_words(
         "at"
     };
     (place, parts.join(", "))
+}
+
+/// The find of a pursuit notice in words: "contact 3, a carrier, 2 pulses
+/// old, reported at (4, 5); would close to (3, 4) in 7 hours".
+fn write_pursuit_find(
+    f: &mut fmt::Formatter<'_>,
+    notice: &crate::command::PursuitNotice,
+) -> fmt::Result {
+    if let Some(find) = &notice.find {
+        write!(
+            f,
+            " contact {}, {}, {} pulses old, reported at {}; would close to {}",
+            find.contact,
+            find.kind.name(),
+            find.age,
+            find.reported_at,
+            find.to
+        )?;
+        if let Some(hours) = find.hours {
+            write!(f, " in {hours} hours")?;
+        }
+        write!(f, ", leaving {}", notice.intent)?;
+    }
+    Ok(())
 }
 
 #[cfg(test)]

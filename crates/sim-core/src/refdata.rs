@@ -895,6 +895,10 @@ pub struct AirCombatFigures {
     /// measured). `None` where the file gives none of them, and then no
     /// such fire is set, as in the frozen step 1 figures.
     pub aircraft_fire: Option<AircraftFireFigures>,
+    /// The nights' steaming a find is looked for within (decision 0214, rule
+    /// 1); a placeholder. 1 is the closing rule as it stands (one night), so
+    /// no find is ever made; the live file has 2.
+    pub pursuit_nights: u32,
 }
 
 /// A figure that may differ by side (decision 0213): one value for each
@@ -2351,6 +2355,8 @@ impl AirCombatFigures {
             // fire among aircraft is set (decision 0212).
             strike_is_spread: false,
             aircraft_fire: None,
+            // One night: the closing rule as it stands (decision 0214).
+            pursuit_nights: 1,
         }
     }
 }

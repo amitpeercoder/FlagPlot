@@ -27,15 +27,15 @@
     },
     {
       "file": "data/scenarios/../reference/air_combat.toml",
-      "hash": "35c82226c11bacbc"
+      "hash": "60bed4440a5f1083"
     }
   ],
-  "doctrine_version": "supply-52",
+  "doctrine_version": "supply-53",
   "format": "flagplot-saved-game",
   "hashes": [
     {
       "day": 1,
-      "hash": "93337443ed62b091"
+      "hash": "73ce0b0c7d418e42"
     }
   ],
   "orders": [
@@ -525,5 +525,5 @@
   "seed": 1942,
   "staff": [],
   "state_version": "flagplot-state-v55",
-  "version": 23
+  "version": 24
 }

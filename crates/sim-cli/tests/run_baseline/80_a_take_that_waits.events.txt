@@ -2,18 +2,18 @@ Placeholder scenario 80: A take that waits
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash c47b21197da2dbca  10 events
-day   2  hash b061377a3d4d5520  5 events
-day   3  hash c76ee66d783cd31d  5 events
-day   4  hash e77dfe3fe00001cc  19 events
-day   5  hash 10e5eadc9720f0ca  13 events
-day   6  hash a6788d28379c3eeb  11 events
-day   7  hash 28334f2762000dd6  11 events
-day   8  hash 9aa43cd0d735125f  28 events
-day   9  hash 0796f2cc4fb61145  19 events
-day  10  hash f735a9703fcb6969  10 events
-day  11  hash f749a4e49b28aac5  6 events
-day  12  hash 22d224451de3d6c2  6 events
+day   1  hash 49dee334ec963840  10 events
+day   2  hash a767aedf16786f62  5 events
+day   3  hash c30ceaec2fdc3003  5 events
+day   4  hash fd9c53f30f5fc0c2  19 events
+day   5  hash 54a5b7e4788364d4  13 events
+day   6  hash c8cebff5f739706d  11 events
+day   7  hash 503c8b64745c59de  11 events
+day   8  hash f2f4fc799c05fa3f  28 events
+day   9  hash f4c68b614f5979e7  19 events
+day  10  hash e1cb4ba965169827  10 events
+day  11  hash c00381978d0d8b93  6 events
+day  12  hash 47756124245f1f28  6 events
 
 #1 D0 -         Allied ground report at (4,0): 600 enemy men ashore (told)
 #2 D1 -         Allied the commander's command taken: set intent:1 to take the place at (4,0)

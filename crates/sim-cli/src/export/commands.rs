@@ -15,9 +15,9 @@ use serde::Serialize;
 use serde_json::value::RawValue;
 use sim_core::command::{
     Amendment, AmendmentChange, Awaited, Baseline, CommandState, Commitment, Intent, IntentKind,
-    IntentLimits, Knowledge, Limit, Maker, Plan, Run, RunDays, TargetsLimit,
+    IntentLimits, Knowledge, Limit, Maker, Plan, PursuitBy, Run, RunDays, TargetsLimit,
 };
-use sim_core::ids::ShipId;
+use sim_core::ids::{ShipId, UmpireKey};
 use sim_core::state::Side;
 use sim_core::World;
 
@@ -669,9 +669,45 @@ pub struct CommandStateOut {
     plans: Vec<PlanOut>,
     commitments: Vec<CommitmentOut>,
     next_plan: u32,
+    /// The leave to pursue set on each order (decision 0214), written only
+    /// where one is set.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pursue_leaves: Vec<PursueLeaveOut>,
+    /// Each force's leave to pursue under way, by answer or taken (decision
+    /// 0214), written only where there is one.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pursuits: Vec<PursuitOut>,
+    /// The commander's refusals, by force and contact (decision 0214),
+    /// written only where there are some.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pursuit_refusals: Vec<PursuitRefusalOut>,
 }
 
-fn state(state: &CommandState) -> CommandStateOut {
+#[derive(Serialize)]
+struct PursueLeaveOut {
+    intent: u32,
+    leave: &'static str,
+}
+
+#[derive(Serialize)]
+struct PursuitOut {
+    task_force: u32,
+    /// `"answer"` or `"taken"`.
+    by: &'static str,
+    /// The event of the commander's answer, for `"answer"`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    answer: Option<u32>,
+    contact: u32,
+    since_day: u32,
+}
+
+#[derive(Serialize)]
+struct PursuitRefusalOut {
+    task_force: u32,
+    contact: u32,
+}
+
+fn state(state: &CommandState, key: &UmpireKey) -> CommandStateOut {
     CommandStateOut {
         intents: state.intents.values().map(intent).collect(),
         leaves: LeavesOut {
@@ -685,6 +721,39 @@ fn state(state: &CommandState) -> CommandStateOut {
             .flat_map(|(ship, list)| list.iter().map(move |c| commitment(*ship, c)))
             .collect(),
         next_plan: state.next_plan,
+        pursue_leaves: state
+            .pursue_leaves
+            .iter()
+            .map(|(intent, leave)| PursueLeaveOut {
+                intent: intent.raw(),
+                leave: leave.name(),
+            })
+            .collect(),
+        pursuits: state
+            .pursuits
+            .iter()
+            .map(|(force, pursuit)| PursuitOut {
+                task_force: force.raw(),
+                by: match pursuit.by {
+                    PursuitBy::Answer(_) => "answer",
+                    PursuitBy::Taken => "taken",
+                },
+                answer: match pursuit.by {
+                    PursuitBy::Answer(event) => Some(event.umpire_raw(key)),
+                    PursuitBy::Taken => None,
+                },
+                contact: pursuit.contact,
+                since_day: pursuit.since_day,
+            })
+            .collect(),
+        pursuit_refusals: state
+            .pursuit_refusals
+            .iter()
+            .map(|(force, contact)| PursuitRefusalOut {
+                task_force: force.raw(),
+                contact: *contact,
+            })
+            .collect(),
     }
 }
 
@@ -707,7 +776,7 @@ impl CommandsOut {
 pub fn commands(world: &World) -> CommandsOut {
     let of = |side: Side| {
         let held = world.command_state(side);
-        (!held.is_empty()).then(|| state(held))
+        (!held.is_empty()).then(|| state(held, &world.umpire_key()))
     };
     CommandsOut {
         allied: of(Side::Allied),
@@ -720,8 +789,10 @@ pub fn commands(world: &World) -> CommandsOut {
 pub fn texts(world: &World) -> [Option<String>; 2] {
     let of = |side: Side| {
         let held = world.command_state(side);
-        (!held.is_empty())
-            .then(|| serde_json::to_string(&state(held)).expect("a command state serialises"))
+        (!held.is_empty()).then(|| {
+            serde_json::to_string(&state(held, &world.umpire_key()))
+                .expect("a command state serialises")
+        })
     };
     [of(Side::Allied), of(Side::Japanese)]
 }

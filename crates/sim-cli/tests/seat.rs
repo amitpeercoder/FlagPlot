@@ -308,7 +308,7 @@ fn mcp_at_the_area_seat_still_offers_the_staff_tools() {
             json!({"jsonrpc": "2.0", "id": 2, "method": "tools/list", "params": {}}),
         ],
     );
-    assert_eq!(answers[1]["result"]["tools"].as_array().unwrap().len(), 29);
+    assert_eq!(answers[1]["result"]["tools"].as_array().unwrap().len(), 31);
 }
 
 fn play(game: &Path, args: &[&str]) -> Output {

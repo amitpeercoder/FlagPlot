@@ -94,6 +94,12 @@ raid_recognised_chance = "0"
 # calculation on these figures holds as written.
 raid_recognised_experience_strength = "0"
 
+# The nights' steaming a find is looked for within (decision 0214, rule 1).
+# FROZEN at 1 (the live figure being 2, a placeholder): one night is the
+# closing rule as it stands, so no find is ever made and step 1's results are
+# as they were.
+pursuit_nights = 1
+
 # Whether a bomb or torpedo hit also knocks a system down one level follows
 # surface_combat.toml's system_hit_chance_per_point (decision 0033).
 

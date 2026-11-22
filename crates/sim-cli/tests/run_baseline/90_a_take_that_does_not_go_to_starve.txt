@@ -2,14 +2,14 @@ Placeholder scenario 90: A take that does not go to starve
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash c3ac58ec37059ddd  41 events
-day   2  hash 7b1d846ed724d4f0  9 events
-day   3  hash bedc9eaca7575750  9 events
-day   4  hash f38ec8bb1dcdae8c  9 events
-day   5  hash 2ae22fec2d5947cc  9 events
-day   6  hash c7fd716245fadb38  9 events
-day   7  hash 7e9d5357fbbc5208  9 events
-day   8  hash 92c96540f97503dc  9 events
+day   1  hash 3c58fc71878ebc67  41 events
+day   2  hash 3aa144db5bedabfa  9 events
+day   3  hash fc9b265438526456  9 events
+day   4  hash 6c60635e571b7f6a  9 events
+day   5  hash c6cbe6e972ba8ec6  9 events
+day   6  hash 80faf3797dc61d92  9 events
+day   7  hash 66f82d1d0895d1f6  9 events
+day   8  hash c9b904d3ca738092  9 events
 
 task_force:1 "Placeholder transport force 1" (Allied): Idle at (2,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; home port base:4
 ship:1 "Placeholder troop transport 1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1000 t of fuel, 10 t of supply, 600 men of land_unit:1 aboard

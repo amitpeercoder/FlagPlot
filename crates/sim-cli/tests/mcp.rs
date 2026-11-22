@@ -234,7 +234,7 @@ fn a_scripted_client_plays_scenario_5_through_the_protocol() {
 
     let listed = c.request("tools/list", json!({}));
     let tools = listed["result"]["tools"].as_array().expect("tools");
-    assert_eq!(tools.len(), 29);
+    assert_eq!(tools.len(), 31);
     let names: Vec<&str> = tools.iter().map(|t| t["name"].as_str().unwrap()).collect();
     assert_eq!(
         names,
@@ -261,6 +261,8 @@ fn a_scripted_client_plays_scenario_5_through_the_protocol() {
             "preview",
             "approve",
             "cancel_plan",
+            "set_pursuit",
+            "answer_pursuit",
             "propose",
             "order",
             "staff_orders",
@@ -682,7 +684,7 @@ fn the_modern_revision_is_served_by_per_request_metadata() {
     assert!(d["result"]["instructions"].is_string());
     assert!(d["result"]["_meta"]["io.modelcontextprotocol/serverInfo"]["name"].is_string());
     let l = c.request("tools/list", json!({"_meta": meta}));
-    assert_eq!(l["result"]["tools"].as_array().unwrap().len(), 29);
+    assert_eq!(l["result"]["tools"].as_array().unwrap().len(), 31);
     assert_eq!(l["result"]["resultType"], "complete");
     let r = c.request(
         "tools/call",

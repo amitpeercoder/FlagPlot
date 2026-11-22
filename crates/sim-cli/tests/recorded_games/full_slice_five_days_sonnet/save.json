@@ -51,7 +51,7 @@
     },
     {
       "file": "data/scenarios/../reference/air_combat.toml",
-      "hash": "35c82226c11bacbc"
+      "hash": "60bed4440a5f1083"
     },
     {
       "file": "data/scenarios/../reference/air_upkeep.toml",
@@ -74,28 +74,28 @@
       "hash": "7548c1b108bf6d74"
     }
   ],
-  "doctrine_version": "supply-52",
+  "doctrine_version": "supply-53",
   "format": "flagplot-saved-game",
   "hashes": [
     {
       "day": 1,
-      "hash": "da0425a0e9902e20"
+      "hash": "fe7a8d71803401c8"
     },
     {
       "day": 2,
-      "hash": "d8ed95751ab48c5a"
+      "hash": "28fb6f6766582f40"
     },
     {
       "day": 3,
-      "hash": "4ee732fcdb980fbc"
+      "hash": "481423d77bfaf252"
     },
     {
       "day": 4,
-      "hash": "5210f649dd8bea0d"
+      "hash": "638ac6667fcef14f"
     },
     {
       "day": 5,
-      "hash": "0cebc5830144458d"
+      "hash": "427c8c6e0ffb6401"
     }
   ],
   "orders": [
@@ -875,5 +875,5 @@
   "seed": 1942,
   "staff": [],
   "state_version": "flagplot-state-v55",
-  "version": 23
+  "version": 24
 }

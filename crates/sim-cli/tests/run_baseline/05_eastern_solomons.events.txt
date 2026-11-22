@@ -2,7 +2,7 @@ Scenario 5: Eastern Solomons, 24 August 1942
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash e2f3624d6feea1ec  179 events
+day   1  hash e8616bd87b9a66a0  174 events
 
 #1 D1 -         order:1 accepted for air_group:1  <- order:1
 #2 D1 -         order:2 accepted for air_group:2  <- order:2
@@ -166,38 +166,33 @@ day   1  hash e2f3624d6feea1ec  179 events
 #160 D1 afternoon ship:1 main battery hit, no change, still working  <- #129
 #161 D1 afternoon Japanese report: 9 ships, carrier, at (7,-4): refreshed contact:1  <- #129
 #162 D1 afternoon Japanese report: 10 ships, carrier, at (7,-5): refreshed contact:1  <- #130
-#163 D1 afternoon ship:1 of task_force:1: 5 bomb hits with 24 bombers aboard and 23 flying (share 0.510638), chance 0.328633 of a fire among her aircraft, draw 0.100531: set, fire 3  <- #129
-#164 D1 afternoon Allied claim at (7,-9): 8 hits on a carrier, 1 sunk; claimed by air_group:6: 3 hits; by air_group:7: 3 hits; by air_group:8: 2 hits  <- #126, #127, #128
-#165 D1 afternoon Japanese claim over (7,-9): 6 aircraft shot down (6 of aircraft_type:2001); claimed by air_group:18: 5 shot down; by task_force:4: 1 shot down  <- #104, #132, #133
-#166 D1 afternoon Japanese claim at (7,-5): 6 hits on a transport, 0 sunk, 2 aircraft shot down (2 of aircraft_type:2000); claimed by air_group:11: 2 shot down; by air_group:12: 6 hits  <- #107, #129
-#167 D1 afternoon Allied claim over (7,-5): 44 aircraft shot down (4 of aircraft_type:2003, 40 of aircraft_type:2004); claimed by air_group:1: 14 shot down; by air_group:5: 15 shot down; by task_force:1: 15 shot down  <- #108, #109, #134, #136
-#168 D1 afternoon Japanese claim at (7,-5): 1 hit on a transport, 0 sunk, 5 aircraft shot down (5 of aircraft_type:2000); claimed by air_group:14: 5 shot down; by air_group:15: 1 hit  <- #114, #130
-#169 D1 afternoon Allied claim over (7,-5): 25 aircraft shot down (5 of aircraft_type:2003, 20 of aircraft_type:2004); claimed by air_group:1: 9 shot down; by air_group:5: 8 shot down; by task_force:1: 8 shot down  <- #115, #116, #138, #140
-#170 D1 afternoon Japanese claim at (2,-4): 14 aircraft shot down (14 of aircraft_type:2000), 1 aircraft destroyed on the ground (1 of aircraft_type:2001); claimed by air_group:18: 14 shot down; by air_group:19: 1 on the ground  <- #121, #131
-#171 D1 afternoon Allied claim over (2,-4): 9 aircraft shot down (8 of aircraft_type:2003, 1 of aircraft_type:2005); claimed by air_group:9: 9 shot down  <- #122, #123, #142
-#172 D1 afternoon air_group:19 base strike sortie of 200 nm, 25 beyond its radius of 175: 6 aircraft x 0.285714 = 1.714284 expected out of fuel, 3 ditched, 3 ready left  <- #103
-#173 D1 afternoon air_group:1 had no deck: 21 aircraft landed at ship:11, joining air_group:5  <- #163, order:1
-#174 D1 afternoon air_group:1 had no deck: 4 aircraft came down in the sea at (7,-5), beside ships of its own side (chance 0.95), 0 ready left  <- #163, order:1
-#175 D1 afternoon air_group:3 had no deck: 16 aircraft landed at base:1, joining air_group:10  <- #163, #86
-#176 D1 afternoon air_group:4 had no deck: 7 aircraft landed at base:1, forming air_group:1000001  <- #163, #91
-#177 D1 afternoon air_group:18 had no deck: 21 aircraft came down in the sea at (7,-9), beside ships of its own side (chance 0.95), 0 ready left  <- #146, order:31, order:32, #120
-#178 D1 afternoon air_group:19 had no deck: 3 aircraft came down in the sea at (7,-9), beside ships of its own side (chance 0.95), 0 ready left  <- #146, #103
-#179 D1 -         base:1 at the end of the day: 0 t of supply, 45 aircraft ready: not open
+#163 D1 afternoon Allied claim at (7,-9): 8 hits on a carrier, 1 sunk; claimed by air_group:6: 3 hits; by air_group:7: 3 hits; by air_group:8: 2 hits  <- #126, #127, #128
+#164 D1 afternoon Japanese claim over (7,-9): 6 aircraft shot down (6 of aircraft_type:2001); claimed by air_group:18: 5 shot down; by task_force:4: 1 shot down  <- #104, #132, #133
+#165 D1 afternoon Japanese claim at (7,-5): 6 hits on a transport, 0 sunk, 2 aircraft shot down (2 of aircraft_type:2000); claimed by air_group:11: 2 shot down; by air_group:12: 6 hits  <- #107, #129
+#166 D1 afternoon Allied claim over (7,-5): 44 aircraft shot down (4 of aircraft_type:2003, 40 of aircraft_type:2004); claimed by air_group:1: 14 shot down; by air_group:5: 15 shot down; by task_force:1: 15 shot down  <- #108, #109, #134, #136
+#167 D1 afternoon Japanese claim at (7,-5): 1 hit on a transport, 0 sunk, 5 aircraft shot down (5 of aircraft_type:2000); claimed by air_group:14: 5 shot down; by air_group:15: 1 hit  <- #114, #130
+#168 D1 afternoon Allied claim over (7,-5): 25 aircraft shot down (5 of aircraft_type:2003, 20 of aircraft_type:2004); claimed by air_group:1: 9 shot down; by air_group:5: 8 shot down; by task_force:1: 8 shot down  <- #115, #116, #138, #140
+#169 D1 afternoon Japanese claim at (2,-4): 14 aircraft shot down (14 of aircraft_type:2000), 1 aircraft destroyed on the ground (1 of aircraft_type:2001); claimed by air_group:18: 14 shot down; by air_group:19: 1 on the ground  <- #121, #131
+#170 D1 afternoon Allied claim over (2,-4): 9 aircraft shot down (8 of aircraft_type:2003, 1 of aircraft_type:2005); claimed by air_group:9: 9 shot down  <- #122, #123, #142
+#171 D1 afternoon air_group:19 base strike sortie of 200 nm, 25 beyond its radius of 175: 6 aircraft x 0.285714 = 1.714284 expected out of fuel, 3 ditched, 3 ready left  <- #103
+#172 D1 afternoon air_group:18 had no deck: 21 aircraft came down in the sea at (7,-9), beside ships of its own side (chance 0.95), 0 ready left  <- #146, order:31, order:32, #120
+#173 D1 afternoon air_group:19 had no deck: 3 aircraft came down in the sea at (7,-9), beside ships of its own side (chance 0.95), 0 ready left  <- #146, #103
+#174 D1 -         base:1 at the end of the day: 0 t of supply, 22 aircraft ready: not open
 
 task_force:1 "Task Force 16" (Allied): Idle at (7,-5); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Task Force 11" (Allied): Idle at (7,-5); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:3 "Carrier striking force" (Japanese): Arrived at (8,-11); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:4 "Ryujo detachment" (Japanese): Arrived at (7,-9); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
-air_group:1 "VF-6" (Allied) aboard ship:1: 0 ready, mission CombatAirPatrol, patrol share 1, no arc
+air_group:1 "VF-6" (Allied) aboard ship:1: 25 ready, mission CombatAirPatrol, patrol share 1, no arc
 air_group:2 "VB-6" (Allied) aboard ship:1: 17 ready, mission Rest, no arc
-air_group:3 "VS-5" (Allied) aboard ship:1: 0 ready, mission Search, arc 290-090 to 250 nm
-air_group:4 "VT-3" (Allied) aboard ship:1: 0 ready, mission Search, arc 290-090 to 250 nm
-air_group:5 "VF-5" (Allied) aboard ship:11: 48 ready, mission CombatAirPatrol, patrol share 1, no arc
+air_group:3 "VS-5" (Allied) aboard ship:1: 16 ready, mission Search, arc 290-090 to 250 nm
+air_group:4 "VT-3" (Allied) aboard ship:1: 7 ready, mission Search, arc 290-090 to 250 nm
+air_group:5 "VF-5" (Allied) aboard ship:11: 27 ready, mission CombatAirPatrol, patrol share 1, no arc
 air_group:6 "VB-3" (Allied) aboard ship:11: 14 ready, mission NavalStrike, no arc
 air_group:7 "VS-3" (Allied) aboard ship:11: 15 ready, mission NavalStrike, no arc
 air_group:8 "VT-8" (Allied) aboard ship:11: 8 ready, mission NavalStrike, no arc
 air_group:9 "VMF-223" (Allied) at base:1: 11 ready, mission CombatAirPatrol, patrol share 1, no arc
-air_group:10 "VMSB-232" (Allied) at base:1: 27 ready, mission Rest, no arc
+air_group:10 "VMSB-232" (Allied) at base:1: 11 ready, mission Rest, no arc
 air_group:11 "Shokaku fighter unit" (Japanese) aboard ship:19: 21 ready, mission CombatAirPatrol, patrol share 0.83, no arc
 air_group:12 "Shokaku bomber unit" (Japanese) aboard ship:19: 2 ready, mission NavalStrike, no arc
 air_group:13 "Shokaku attack unit" (Japanese) aboard ship:19: 18 ready, mission NavalStrike, no arc
@@ -214,7 +209,6 @@ air_group:23 "Shokaku fighter unit, second wave escort" (Japanese) aboard ship:1
 air_group:24 "Zuikaku fighter unit, second wave escort" (Japanese) aboard ship:20: 6 ready, mission Rest, no arc
 air_group:25 "VT-3, attack group" (Allied) aboard ship:1: 7 ready, mission Rest, no arc
 air_group:26 "VT-8, second group" (Allied) aboard ship:11: 5 ready, mission Rest, no arc
-air_group:1000001 "VT-3 landed at base:1" (Allied) at base:1: 7 ready, mission Rest, no arc
 ship:1 "USS Enterprise": afloat in task_force:1; damage flotation 15.782826, fire 10.521884; flight deck degraded; 0 gun rounds, torpedoes gone; 4360 t of fuel, 0 t of supply
 ship:2 "USS North Carolina": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 5550 t of fuel, 0 t of supply
 ship:3 "USS Portland": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 2614 t of fuel, 0 t of supply
@@ -265,6 +259,6 @@ Japanese claim at (7,-5): 1 hit on a transport, 0 sunk, 5 aircraft shot down (5 
 Japanese claim at (2,-4): 14 aircraft shot down (14 of aircraft_type:2000), 1 aircraft destroyed on the ground (1 of aircraft_type:2001); claimed by air_group:18: 14 shot down; by air_group:19: 1 on the ground, day 1 afternoon
 
 Result (the placeholder scale of decision 0054):
-Allied: 7.85 points (ships_sunk 0 = 0; ships_crippled 1 = 5; aircraft_destroyed 57 = 2.85), margin 7.4, minor victory
-Japanese: 0.45 points (ships_sunk 0 = 0; ships_crippled 0 = 0; aircraft_destroyed 9 = 0.45), margin -7.4, minor defeat
+Allied: 7.85 points (ships_sunk 0 = 0; ships_crippled 1 = 5; aircraft_destroyed 57 = 2.85), margin 7.6, minor victory
+Japanese: 0.25 points (ships_sunk 0 = 0; ships_crippled 0 = 0; aircraft_destroyed 5 = 0.25), margin -7.6, minor defeat
 History: Ryujo was sunk and Enterprise was damaged and withdrew for repair; Japanese aircraft losses were several times the American. Usually judged a limited American victory. (The architect's reading; not yet scored from the order-of-battle facts.)
