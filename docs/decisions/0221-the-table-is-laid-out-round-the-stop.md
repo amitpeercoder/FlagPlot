@@ -338,3 +338,70 @@ Left for stage 4:
 - Escape on an empty draft closes the card it came from too, rather than going back to it.
 - The order to the staff's descriptions under each end are old wording.
 - Once, SIGNED was not read again after a signing when the bridge reset the page's connections; the next refresh showed it. The page says nothing when a refresh fails.
+
+## The architect's rulings on stage 3, Nov 22, 2026
+
+- **The paper at the right, with its parts as built, is accepted.**
+- **A refusal forced by a malformed order stands as the proof of NOT SENT** until the engine refuses something the paper offers.
+- **Stage 4 takes in five more things:**
+  - The prompt while a place is picked lies over neither the paper nor a control.
+  - ACTS and SIGNED say one wording.
+  - Escape on an empty draft goes back to its card.
+  - The descriptions of each end are reworded as facts or dropped.
+  - A refresh that fails after a signing is said, never left silently stale.
+
+## As built: stage 4
+
+**What stops the clock** (amended rules 19 to 21):
+
+- **The fold WHAT STOPS THE CLOCK** is closed by default and sits in the stop paper's foot, above the controls that run time; it scrolls inside itself.
+- **What it holds.**
+  - The table's ticks: a contact, an attack on mine, a ship lost, my strike away, men ashore, reinforcements arriving and each evening. The first three are ticked at the start, and "each evening" is off.
+  - Under THE STAFF STOPS IT WHEN, the six standing interrupts, read from `command_state` and set or cleared with `set_interrupt`. A tick changed inside a day shows "from 1800".
+- **What went.** The old panel of what stops the clock and its button under GAME are gone, so a standing interrupt switched off by a slip's DO NOT STOP ME FOR THIS can be ticked back on here.
+- **"Each evening".** CARRY ON stops at dusk when it is ticked, and WHY says "It is evening."
+- **What is kept in the browser.**
+  - The table's ticks are kept for the game, under the same key as the directives, and cleared by New game and Restart.
+  - WHY THE CLOCK STOPPED is kept the same way, a force's asking included, and dropped once the clock moves.
+  - A page that cannot keep them plays as before.
+
+**Keys and reading aloud** (amended rules 24 to 27):
+
+- **One listener answers Escape**, topmost first: a place being picked, a paper for reading, a draft, a card, a menu, the fold, the drawer. A paper for reading comes before a draft because it lies over one. An empty draft, or one torn up, goes back to the card it came from.
+- **Focus.** At a stop the focus goes to the first thing that waits, or to WHY, and is never taken from a draft or a paper. A card, paper or draft that closes gives the focus back. Ctrl+Enter signs the order paper.
+- **What is said aloud.** The clock's state is said once at each change. While the clock runs, SINCE says a count of reports. A card is not one live region, and its title is its label.
+- **The keyboard.** An order on a hex is begun through any link to a place.
+
+**The words** (amended rules 22 and 23, plan rules 15 and 16):
+
+- **A unit the player holds** is "Yours: you keep it out of the staff's plans." everywhere. "Release" became "Return to the staff".
+- **ACTS and SIGNED say one wording:**
+  - "Acts at 1800, with tonight's orders" at dusk.
+  - "Acts at once" inside a day, for an order that acts at the next pulse.
+  - "Acts at 1800, for the coming day" for one that waits.
+- **Captions that explain a rule are gone or said as facts:**
+  - the notes under each end of an order to the staff;
+  - the dry run's "Sign it on the order, or tear it up" and its foot;
+  - the leave line's "Giving it frees every plan…";
+  - the reading's "your risk goes with the order", which is now "This reading is worked at balanced risk.";
+  - the evening report's "A claim is what they believe";
+  - the fuel and course note, now "A force fuels at sea or steams a course, not both.".
+- **The situation is a paper of its parts,** each line in the table's words: units by name, places linked with the hex, no decimals. An interrupt's slip words go through the same.
+- **SINCE, the war diary and the evening report** name an aircraft type short, and give a position with its hex, linked.
+- **In a task's WHY in the plan's paper,** a place said once in full is "there" after.
+- **The prompt while a place is picked** sits at the top centre of the chart's free part, under the head and its strip in a narrow window, over neither the paper nor a control.
+- **A read after signing or taking back that fails** says "Could not read what is signed." with READ AGAIN, where SIGNED is.
+
+**Tried, owed since stage 1:**
+
+- A force asking leave to pursue, in scenario 125: WHY, and FOR YOUR DECISION with ALLOW and REFUSE, both kept across a reload.
+- An interrupt's reasons opened as a paper, in scenario 40a and the 39 days.
+- The keyboard alone.
+
+**Checks.** `table/check_screen.py` checks each part. It also forces a refusal through the page's own wording: a real refused `issue_orders` answer from the bridge is run through the page's NOT SENT functions.
+
+**Left open.**
+
+- The situation still shows the scoring's lines and the note on estimates. Against "no points during play" this is the designer's to rule.
+- "for the coming day" under SIGNED was not seen live.
+- The per-order pursuit setting is not linked from the fold. The amended rules leave it out; the staff's standing tick for a force asking leave is in it.
