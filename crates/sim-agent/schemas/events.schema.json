@@ -8,7 +8,7 @@
   "additionalProperties": false,
   "properties": {
     "format": { "const": "flagplot-agent" },
-    "version": { "const": 40 },
+    "version": { "const": 41 },
     "kind": { "const": "events" },
     "day": { "type": "integer", "description": "The day asked for, or the day the clock is in." },
     "pulse": {

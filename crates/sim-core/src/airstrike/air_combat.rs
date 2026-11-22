@@ -235,17 +235,22 @@ impl World {
                     _ => None,
                 };
                 let mut real = 0;
+                // What it really took, by the type of the group each was
+                // taken from (decision 0210, 3).
+                let mut real_by_type: BTreeMap<AircraftTypeId, u32> = BTreeMap::new();
                 for (group, lost) in lost_list {
+                    let aircraft_type = self.truth.air_groups[group].aircraft_type;
                     if let Some((event, taken)) =
                         self.lose_aircraft(day, pulse, *group, *lost, lost_from, cause, firer)
                     {
                         losses_of.push((*group, event));
                         self.note_loss(*group, lost_from, *lost);
                         real += taken;
+                        *real_by_type.entry(aircraft_type).or_insert(0) += taken;
                     }
                 }
                 if let Some(tally) = tally.as_mut() {
-                    tally.note_roll(roll, cause, real);
+                    tally.note_roll(roll, cause, real, by_type_list(real_by_type));
                 }
             }
             if tally.is_some() {
@@ -474,16 +479,19 @@ impl World {
                 _ => None,
             };
             let mut real = 0;
+            let mut real_by_type: BTreeMap<AircraftTypeId, u32> = BTreeMap::new();
             for (group, lost) in &roll.lost {
+                let aircraft_type = self.truth.air_groups[group].aircraft_type;
                 if let Some((_, taken)) =
                     self.lose_aircraft(day, pulse, *group, *lost, SortieKind::Strike, cause, firer)
                 {
                     self.note_loss(*group, SortieKind::Strike, *lost);
                     real += taken;
+                    *real_by_type.entry(aircraft_type).or_insert(0) += taken;
                 }
             }
             if let Some(index) = tally_index {
-                tallies[index].note_roll(&roll, cause, real);
+                tallies[index].note_roll(&roll, cause, real, by_type_list(real_by_type));
             }
         }
 
@@ -665,6 +673,11 @@ impl World {
         // the raid is resolved (decision 0056).
         self.record_raid_claims(day, pulse, tallies);
     }
+}
+
+/// A count by type as a list in order of the type's number, none with 0.
+fn by_type_list(counts: BTreeMap<AircraftTypeId, u32>) -> Vec<(AircraftTypeId, u32)> {
+    counts.into_iter().filter(|(_, n)| *n > 0).collect()
 }
 
 impl World {

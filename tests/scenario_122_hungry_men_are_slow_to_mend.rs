@@ -1583,7 +1583,9 @@ fn property_one_function_in_statement_13() {
 /// change loads and replays to its hashes.
 #[test]
 fn property_no_new_state() {
-    assert_eq!(sim_core::hash::STATE_VERSION, b"flagplot-state-v53");
+    // v53 when this was built; decision 0210 raised it to v54 since, for a
+    // claim's types in the air, which this rule does not touch.
+    assert_eq!(sim_core::hash::STATE_VERSION, b"flagplot-state-v54");
     assert_eq!(sim_core::world::RULES_VERSION, 26);
     let root = common::data_dir().join("..");
     let file = root.join("crates/sim-cli/tests/recorded_games/eastern_solomons_haiku/save.json");

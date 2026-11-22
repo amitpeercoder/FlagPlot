@@ -177,6 +177,35 @@ pub fn ground_claim_types(
     list.into_iter().filter(|(_, n)| *n > 0).collect()
 }
 
+/// One firing a claim of aircraft shot down rests on (decision 0210, 2 and
+/// 3): what it really shot down, by the type of the group each was taken
+/// from; the aircraft it claims falsely; and the pool it fired at, by type,
+/// as first counted when the air combat step began.
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct FiringTypes {
+    pub real: Vec<(AircraftTypeId, u32)>,
+    pub false_claimed: u32,
+    pub pool: Vec<(AircraftTypeId, u32)>,
+}
+
+/// The types of the aircraft a claim says were shot down, when they are
+/// made out (decision 0210, 3): each firing's list is [`ground_claim_types`]
+/// of what it really shot down, its false ones and its pool, and the claim's
+/// list is the sum of its firings' lists, type by type. No draw.
+///
+/// Gives the list in order of the type's number, with no pair of 0.
+pub fn air_claim_types(firings: &[FiringTypes]) -> Vec<(AircraftTypeId, u32)> {
+    let mut list: std::collections::BTreeMap<AircraftTypeId, u32> =
+        std::collections::BTreeMap::new();
+    for firing in firings {
+        for (kind, aircraft) in ground_claim_types(&firing.real, firing.false_claimed, &firing.pool)
+        {
+            *list.entry(kind).or_insert(0) += aircraft;
+        }
+    }
+    list.into_iter().filter(|(_, n)| *n > 0).collect()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

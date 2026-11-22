@@ -575,14 +575,13 @@ fn end_of_day(world: &World) -> String {
     )
 }
 
-fn days_of(base: &Scenario, seed: u64) -> (Vec<String>, Vec<u64>) {
+fn days_of(base: &Scenario, seed: u64) -> Vec<String> {
     let mut scenario = base.with_seed(seed).expect("a seed can be set");
     let mut states = Vec::new();
     while scenario.next_day().expect("the day resolves").is_some() {
         states.push(end_of_day(&scenario.world));
     }
-    let hashes = scenario.world.day_hashes().to_vec();
-    (states, hashes)
+    states
 }
 
 /// No fight is resolved differently: the ships, air groups and bases end
@@ -594,18 +593,16 @@ fn no_fight_is_resolved_differently() {
         ("6a", [load_6a("0"), load_6a("0.75"), load_6a("1")]),
     ] {
         for seed in 1..=PROPERTY_SEEDS {
-            let (states, hashes) = days_of(&loads[0], seed);
+            let states = days_of(&loads[0], seed);
             assert!(!states.is_empty());
             for other in &loads[1..] {
-                let (s, h) = days_of(other, seed);
+                // Since decisions 0179 and 0210 every raid's claim names the
+                // types its men made out, at this same chance, and the hash
+                // counts a claim's types: the daily hashes move with it, and
+                // no fight does, so the ships, air groups and bases are
+                // compared and not the hashes.
+                let s = days_of(other, seed);
                 assert_eq!(s, states, "scenario {name}, seed {seed}");
-                // Since decision 0179 the raiders' claim on a base names the
-                // types they made out, at this same chance (its rule 11), and
-                // the hash counts a claim's types: scenario 6a's hashes move
-                // with it, and no fight does.
-                if name == "19a" {
-                    assert_eq!(h, hashes, "scenario {name}, seed {seed}");
-                }
             }
         }
     }

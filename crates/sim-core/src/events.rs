@@ -833,6 +833,10 @@ pub enum EventKind {
         /// a raid's claim rests on and that claims something, in the order
         /// it first fired. Empty for a surface fight's and a bombardment's.
         by_unit: Vec<UnitClaim>,
+        /// The types of the aircraft claimed shot down, each with its
+        /// number, in order of the type's number (decision 0210): empty, or
+        /// adding to `claimed_shot_down`.
+        air_types: Vec<(AircraftTypeId, u32)>,
     },
     /// A hit knocked, or tried to knock, one named system of a ship down one
     /// level (decision 0016). `before == after` when the ship lacks the
@@ -3557,6 +3561,7 @@ impl fmt::Display for EventKind {
                 from_bombardment,
                 ground_types,
                 by_unit,
+                air_types,
             } => f.write_str(&claim_text(
                 *side,
                 *hex,
@@ -3569,6 +3574,7 @@ impl fmt::Display for EventKind {
                 *from_bombardment,
                 ground_types,
                 by_unit,
+                air_types,
             )),
             EventKind::ShipsDetached {
                 parent,
@@ -5091,11 +5097,15 @@ pub fn claim_text(
     from_bombardment: bool,
     ground_types: &[(AircraftTypeId, u32)],
     by_unit: &[UnitClaim],
+    air_types: &[(AircraftTypeId, u32)],
 ) -> String {
-    let types: Vec<(String, u32)> = ground_types
-        .iter()
-        .map(|(aircraft_type, aircraft)| (aircraft_type.to_string(), *aircraft))
-        .collect();
+    let named = |list: &[(AircraftTypeId, u32)]| -> Vec<(String, u32)> {
+        list.iter()
+            .map(|(aircraft_type, aircraft)| (aircraft_type.to_string(), *aircraft))
+            .collect()
+    };
+    let types = named(ground_types);
+    let in_the_air = named(air_types);
     let units: Vec<(String, UnitClaim)> = by_unit
         .iter()
         .map(|line| (line.unit.to_string(), *line))
@@ -5112,6 +5122,7 @@ pub fn claim_text(
         from_bombardment,
         &types,
         &units,
+        &in_the_air,
     )
 }
 
@@ -5131,6 +5142,7 @@ pub fn claim_words(
     from_bombardment: bool,
     types: &[(String, u32)],
     units: &[(String, UnitClaim)],
+    air_types: &[(String, u32)],
 ) -> String {
     if from_bombardment {
         return format!(
@@ -5152,6 +5164,7 @@ pub fn claim_words(
         claimed_shot_down,
         claimed_on_ground,
         types,
+        air_types,
     );
     format!(
         "{} claim {place} {hex}: {words}{}",
@@ -5197,7 +5210,20 @@ pub fn air_claim_words(
     claimed_shot_down: u32,
     claimed_on_ground: u32,
     ground_types: &[(String, u32)],
+    air_types: &[(String, u32)],
 ) -> (&'static str, String) {
+    // The types made out, after the number (decisions 0179, 8, and 0210,
+    // 8): " (3 of T, 2 of U)", or nothing where the list is empty.
+    let types_of = |list: &[(String, u32)]| -> String {
+        if list.is_empty() {
+            return String::new();
+        }
+        let each: Vec<String> = list
+            .iter()
+            .map(|(aircraft_type, aircraft)| format!("{aircraft} of {aircraft_type}"))
+            .collect();
+        format!(" ({})", each.join(", "))
+    };
     let mut parts: Vec<String> = Vec::new();
     if let Some(kind) = claimed_kind {
         parts.push(format!(
@@ -5209,22 +5235,15 @@ pub fn air_claim_words(
     // Aircraft shot down are always told, if only as none, when the claim
     // says nothing else of what was hit.
     if claimed_shot_down != 0 || (claimed_kind.is_none() && claimed_on_ground == 0) {
-        parts.push(format!("{claimed_shot_down} aircraft shot down"));
+        parts.push(format!(
+            "{claimed_shot_down} aircraft shot down{}",
+            types_of(air_types)
+        ));
     }
     if claimed_on_ground != 0 {
-        // The types made out, after the number (decision 0179, 8): "5
-        // aircraft destroyed on the ground (3 of T, 2 of U)".
-        let types = if ground_types.is_empty() {
-            String::new()
-        } else {
-            let each: Vec<String> = ground_types
-                .iter()
-                .map(|(aircraft_type, aircraft)| format!("{aircraft} of {aircraft_type}"))
-                .collect();
-            format!(" ({})", each.join(", "))
-        };
         parts.push(format!(
-            "{claimed_on_ground} aircraft destroyed on the ground{types}"
+            "{claimed_on_ground} aircraft destroyed on the ground{}",
+            types_of(ground_types)
         ));
     }
     // Only aircraft shot down: a claim over the hex.

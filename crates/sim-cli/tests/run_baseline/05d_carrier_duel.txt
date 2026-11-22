@@ -2,8 +2,8 @@ Scenario 5d: Carrier duel
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 3ef7231e3bc3101f  42 events
-day   2  hash bda38e8324a57ab8  7 events
+day   1  hash 4ed9b1ff3c59f13e  42 events
+day   2  hash c0c2ad0c0cf25f01  7 events
 
 task_force:1 "Placeholder carrier force A" (Allied): Idle at (4,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Placeholder carrier force B" (Japanese): Idle at (9,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
@@ -20,6 +20,6 @@ ship:4 "Placeholder carrier B": afloat in task_force:2; damage flotation 40, fir
 ship:5 "Placeholder cruiser B1": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 800 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply
 ship:6 "Placeholder cruiser B2": afloat in task_force:2; damage flotation 0, fire 0; all systems working; 800 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply
 Allied contact:1 at (9,0): 3 ships, battleship, age 3 pulses
-Allied claim at (9,0): 9 hits on a carrier, 0 sunk, 6 aircraft shot down; claimed by air_group:3: 6 shot down; by air_group:2: 9 hits, day 1 afternoon
+Allied claim at (9,0): 9 hits on a carrier, 0 sunk, 6 aircraft shot down (6 of aircraft_type:4); claimed by air_group:3: 6 shot down; by air_group:2: 9 hits, day 1 afternoon
 Japanese: no contacts
-Japanese claim over (9,0): 7 aircraft shot down; claimed by air_group:6: 5 shot down; by task_force:2: 2 shot down, day 1 afternoon
+Japanese claim over (9,0): 7 aircraft shot down (7 of aircraft_type:3); claimed by air_group:6: 5 shot down; by task_force:2: 2 shot down, day 1 afternoon

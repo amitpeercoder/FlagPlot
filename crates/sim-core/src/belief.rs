@@ -192,6 +192,12 @@ pub struct BattleClaim {
     /// aircraft on the ground and hits. Empty for a surface fight's claim
     /// and a bombardment's.
     pub by_unit: Vec<UnitClaim>,
+    /// The types of the aircraft claimed shot down, each with its number,
+    /// in order of the type's number and none with 0 (decision 0210, 1):
+    /// empty, or adding to `claimed_shot_down`. Only a raid's claim whose
+    /// men made the types out names any, and each type named was in a pool
+    /// one of the claim's firings was at.
+    pub air_types: Vec<(AircraftTypeId, u32)>,
 }
 
 impl BattleClaim {
@@ -209,6 +215,7 @@ impl BattleClaim {
             self.from_bombardment,
             &self.ground_types,
             &self.by_unit,
+            &self.air_types,
         )
     }
 }
@@ -890,6 +897,7 @@ mod tests {
             received_event: EventId::new(40),
             ground_types: Vec::new(),
             by_unit: Vec::new(),
+            air_types: Vec::new(),
         };
         let outcome = belief.apply_report(&Report::BattleClaim(claim.clone()), &figures());
         assert_eq!(outcome, ApplyOutcome::Claim);
@@ -915,6 +923,7 @@ mod tests {
             received_event: EventId::new(90),
             ground_types: Vec::new(),
             by_unit: Vec::new(),
+            air_types: Vec::new(),
         };
         belief.apply_report(&Report::BattleClaim(later.clone()), &figures());
         assert_eq!(belief.claims().len(), 2);
@@ -936,6 +945,7 @@ mod tests {
             received_event: _,
             ground_types: _,
             by_unit: _,
+            air_types: _,
         } = belief.claims()[0].clone();
     }
 

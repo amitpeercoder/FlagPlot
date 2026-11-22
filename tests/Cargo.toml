@@ -645,3 +645,7 @@ path = "scenario_121_a_japanese_oiler_by_estimate.rs"
 [[test]]
 name = "estimates_never_evidence"
 path = "estimates_never_evidence.rs"
+
+[[test]]
+name = "scenario_124_the_type_claimed_shot_down"
+path = "scenario_124_the_type_claimed_shot_down.rs"

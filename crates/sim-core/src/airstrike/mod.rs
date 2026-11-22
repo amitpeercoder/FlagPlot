@@ -458,6 +458,12 @@ struct FireRoll {
     /// The shots that hit, counted from 1 in the order drawn (decision
     /// 0180, 3).
     hit_shots: Vec<u32>,
+    /// The pool the roll fires at, by the type of each group in it, in
+    /// order of the type's number, as first counted when the step began
+    /// (decision 0210, 2): the patrol over the hex for the escorts' fire,
+    /// the raid's escorts for the patrol's fire at them, and the raid's
+    /// strike aircraft for the patrol's fire at the bombers and the guns'.
+    pool: Vec<(AircraftTypeId, u32)>,
 }
 
 /// Everything one raid does in the air combat step, worked out on the state
@@ -496,6 +502,20 @@ enum MissKind {
 /// and its whole shots that missed (decision 0180, 3 and 4).
 type FiringLine = (EntityRef, u32, u32);
 
+/// One firing event of fighters or guns that a side's claim rests on.
+struct Firing {
+    /// The false claim chance its missed shots are claimed at.
+    kind: MissKind,
+    /// For each unit it is parted among, in order, what its shots really
+    /// shot down and its whole shots that missed (decision 0180, 3 and 4).
+    parts: Vec<FiringLine>,
+    /// The pool it fired at, by type, as first counted (decision 0210, 2).
+    pool: Vec<(AircraftTypeId, u32)>,
+    /// The aircraft it really took from each group, added up by the
+    /// group's type, in order of the type's number (decision 0210, 3).
+    real_by_type: Vec<(AircraftTypeId, u32)>,
+}
+
 /// What one side's firing in one raid adds up to, for its claim (decision 2
 /// of 0056): the firing events of its own, the aircraft it really shot down
 /// and the whole shots that missed.
@@ -510,11 +530,9 @@ struct SideTally {
     causes: Vec<EventId>,
     /// Aircraft really lost to this side's fighters and guns in the raid.
     real_shot_down: u32,
-    /// Each firing event of fighters or guns, in event order: the false
-    /// claim chance its missed shots are claimed at, and for each unit it
-    /// is parted among, in order, what its shots really shot down and its
-    /// whole shots that missed (decision 0180, 3 and 4).
-    firings: Vec<(MissKind, Vec<FiringLine>)>,
+    /// Each firing event of fighters or guns, in event order (decision
+    /// 0180, 3 and 4, and 0210, 2).
+    firings: Vec<Firing>,
     /// The units that claim, in the order they first fired, a firing of
     /// several groups giving them in the order of their numbers (decision
     /// 0180, 1). Not the holders of the claim, which are `units`.
@@ -580,8 +598,15 @@ struct RaidTally {
 
 impl RaidTally {
     /// Adds a roll of fighters or guns, recorded as `event`, which really
-    /// shot down `real` aircraft.
-    fn note_roll(&mut self, roll: &FireRoll, event: EventId, real: u32) {
+    /// shot down `real` aircraft, `real_by_type` of them by the type of the
+    /// group each was taken from.
+    fn note_roll(
+        &mut self,
+        roll: &FireRoll,
+        event: EventId,
+        real: u32,
+        real_by_type: Vec<(AircraftTypeId, u32)>,
+    ) {
         let (by_attacker, kind, unit) = match &roll.fire {
             Fire::Fighters { firer, firing, .. } => (
                 *firing == AirFirer::Escorts,
@@ -614,7 +639,12 @@ impl RaidTally {
         for (unit, _, _) in &parts {
             side.claims_for(*unit);
         }
-        side.firings.push((kind, parts));
+        side.firings.push(Firing {
+            kind,
+            parts,
+            pool: roll.pool.clone(),
+            real_by_type,
+        });
     }
 }
 

@@ -142,11 +142,14 @@ pub enum Draw {
     /// At which base of the enemy's a believed force of no known place is
     /// (decision 0174, 17): keyed as [`Draw::TrialBelievedHex`] is.
     TrialBelievedBase,
-    /// Whether the raiders make out the types of the aircraft they claim
-    /// destroyed on the ground (decision 0179, 4 and 5): one draw for the
-    /// claim, on a stream keyed as the claim's own is (the intelligence
-    /// subsystem, the raiding side's first unit to fire and the raid's
-    /// first strike group), with this value.
+    /// Whether the men of a raid's claim make out the types of the aircraft
+    /// they claim, destroyed on the ground and shot down alike (decisions
+    /// 0179, 4 and 5, and 0210, 5): one draw for the claim, deciding both of
+    /// its lists, on a stream keyed as the claim's own is (the intelligence
+    /// subsystem, the claiming side's first unit to fire and the raid's
+    /// first strike group), with this value. It is the claiming side's,
+    /// raiding or raided, and is made only where the chance is above 0 and
+    /// the claim has something to name.
     ClaimType,
 }
 

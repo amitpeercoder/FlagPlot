@@ -1323,3 +1323,12 @@ stocks. The events `fight_supply_charged`, `base_ammunition_spent` and `ammuniti
 things gain `enemy_supplied`: the enemy's men ashore taken as supplied in full in their fights,
 for the side does not know his stocks. The side's own bases and fights only; the enemy is told
 none of it.
+
+## The types claimed shot down (decision 0210)
+
+`version` is 41. A claim in the briefing's `claims` gains `air_types`, left out when empty: the types of the aircraft
+claimed shot down, each `{"aircraft_type", "aircraft"}` with the type's name, where the men who fired made them out (the
+one draw that already decides `ground_types`). A type named was among the enemy aircraft that firing was at; its number may
+be above the truth. The words of the claim name them after the number of aircraft shot down, "4 aircraft shot down (3 of T,
+1 of U)". A unit's line in `claimed_by` and a group's `claimed_to_date` are not parted by type. The side's own claims only;
+the enemy is told none of it.

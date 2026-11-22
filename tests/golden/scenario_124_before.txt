@@ -1,0 +1,624 @@
+# Recorded from the commit before decision 0210 (89a56b8d) for scenario 124's test: each Japanese
+# claim's types on the ground over seeds 1 to 200 at made out 0.75, and every claim's breakdown on
+# the frozen figures. Not edited by hand.
+ground 1 1 
+ground 1 2 3:2
+ground 1 3 
+ground 2 1 3:4
+ground 2 2 3:3
+ground 2 3 
+ground 3 1 3:5
+ground 3 2 
+ground 3 3 3:1
+ground 4 1 3:2
+ground 4 2 
+ground 4 3 3:2
+ground 5 1 3:3
+ground 5 2 
+ground 5 3 
+ground 6 1 3:3
+ground 6 2 
+ground 6 3 3:2
+ground 7 1 3:2
+ground 7 2 3:5
+ground 7 3 
+ground 8 1 3:4
+ground 8 2 3:8
+ground 8 3 3:3
+ground 9 1 3:2
+ground 9 2 3:4
+ground 9 3 
+ground 10 1 
+ground 10 2 3:2
+ground 10 3 
+ground 11 1 3:2
+ground 11 2 
+ground 11 3 
+ground 12 1 
+ground 12 2 3:1
+ground 12 3 
+ground 13 1 3:1
+ground 13 2 3:4
+ground 13 3 3:1
+ground 14 1 
+ground 14 2 3:1
+ground 14 3 3:2
+ground 15 1 3:1
+ground 15 2 
+ground 15 3 3:6
+ground 16 1 3:1
+ground 16 2 3:1
+ground 16 3 3:2
+ground 17 1 3:2
+ground 17 2 
+ground 17 3 
+ground 18 1 3:1
+ground 18 2 3:3
+ground 18 3 3:1
+ground 19 1 
+ground 19 2 3:3
+ground 19 3 
+ground 20 1 
+ground 20 2 3:3
+ground 20 3 
+ground 21 1 
+ground 21 2 3:4
+ground 21 3 3:1
+ground 22 1 3:3
+ground 22 2 3:1
+ground 22 3 
+ground 23 1 
+ground 23 2 
+ground 23 3 3:1
+ground 24 1 3:2
+ground 24 2 3:1
+ground 24 3 3:3
+ground 25 1 3:5
+ground 25 2 3:1
+ground 25 3 3:2
+ground 26 1 
+ground 26 2 3:1
+ground 26 3 3:1
+ground 27 1 3:3
+ground 27 2 
+ground 27 3 3:2
+ground 28 1 3:2
+ground 28 2 
+ground 28 3 3:5
+ground 29 1 3:2
+ground 29 2 3:2
+ground 29 3 3:3
+ground 30 1 3:5
+ground 30 2 3:1
+ground 30 3 3:2
+ground 31 1 3:3
+ground 31 2 3:1
+ground 31 3 
+ground 32 1 
+ground 32 2 
+ground 32 3 3:2
+ground 33 1 3:2
+ground 33 2 
+ground 33 3 3:1
+ground 34 1 3:3
+ground 34 2 3:3
+ground 34 3 3:4
+ground 35 1 3:2
+ground 35 2 
+ground 35 3 
+ground 36 1 3:4
+ground 36 2 3:2
+ground 36 3 3:1
+ground 37 1 
+ground 37 2 3:2
+ground 37 3 
+ground 38 1 3:4
+ground 38 2 3:3
+ground 38 3 3:3
+ground 39 1 3:1
+ground 39 2 
+ground 39 3 
+ground 40 1 
+ground 40 2 
+ground 40 3 3:2
+ground 41 1 3:5
+ground 41 2 3:1
+ground 41 3 3:1
+ground 42 1 3:4
+ground 42 2 3:1
+ground 42 3 3:1
+ground 43 1 3:2
+ground 43 2 3:1
+ground 43 3 3:1
+ground 44 1 
+ground 44 2 
+ground 44 3 3:1
+ground 45 1 
+ground 45 2 
+ground 45 3 
+ground 46 1 3:2
+ground 46 2 
+ground 46 3 
+ground 47 1 3:2
+ground 47 2 
+ground 47 3 
+ground 48 1 3:3
+ground 48 2 3:1
+ground 48 3 3:3
+ground 49 1 3:1
+ground 49 2 
+ground 49 3 3:1
+ground 50 1 
+ground 50 2 3:2
+ground 50 3 3:3
+ground 51 1 
+ground 51 2 
+ground 51 3 
+ground 52 1 
+ground 52 2 
+ground 52 3 
+ground 53 1 3:3
+ground 53 2 
+ground 53 3 3:2
+ground 54 1 3:2
+ground 54 2 
+ground 54 3 
+ground 55 1 3:1
+ground 55 2 3:1
+ground 55 3 
+ground 56 1 3:4
+ground 56 2 
+ground 56 3 3:1
+ground 57 1 
+ground 57 2 3:4
+ground 57 3 3:2
+ground 58 1 3:1
+ground 58 2 3:2
+ground 58 3 3:1
+ground 59 1 3:1
+ground 59 2 3:1
+ground 59 3 3:2
+ground 60 1 
+ground 60 2 
+ground 60 3 3:2
+ground 61 1 3:3
+ground 61 2 3:3
+ground 61 3 
+ground 62 1 3:1
+ground 62 2 3:2
+ground 62 3 3:3
+ground 63 1 3:3
+ground 63 2 3:1
+ground 63 3 
+ground 64 1 
+ground 64 2 3:1
+ground 64 3 3:3
+ground 65 1 
+ground 65 2 3:4
+ground 65 3 3:3
+ground 66 1 
+ground 66 2 3:2
+ground 66 3 3:3
+ground 67 1 3:5
+ground 67 2 3:3
+ground 67 3 
+ground 68 1 
+ground 68 2 3:1
+ground 68 3 
+ground 69 1 3:3
+ground 69 2 3:3
+ground 69 3 3:1
+ground 70 1 
+ground 70 2 3:4
+ground 70 3 3:2
+ground 71 1 3:1
+ground 71 2 
+ground 71 3 3:2
+ground 72 1 3:2
+ground 72 2 3:2
+ground 72 3 3:1
+ground 73 1 3:2
+ground 73 2 
+ground 73 3 3:1
+ground 74 1 3:2
+ground 74 2 3:2
+ground 74 3 3:1
+ground 75 1 3:2
+ground 75 2 3:1
+ground 75 3 
+ground 76 1 
+ground 76 2 3:1
+ground 76 3 3:2
+ground 77 1 3:1
+ground 77 2 3:1
+ground 77 3 
+ground 78 1 
+ground 78 2 3:3
+ground 78 3 3:1
+ground 79 1 
+ground 79 2 3:2
+ground 79 3 3:2
+ground 80 1 
+ground 80 2 3:3
+ground 80 3 3:5
+ground 81 1 3:3
+ground 81 2 
+ground 81 3 
+ground 82 1 
+ground 82 2 3:2
+ground 82 3 3:1
+ground 83 1 
+ground 83 2 3:2
+ground 83 3 
+ground 84 1 3:1
+ground 84 2 3:3
+ground 84 3 
+ground 85 1 3:1
+ground 85 2 3:3
+ground 85 3 3:1
+ground 86 1 
+ground 86 2 
+ground 86 3 
+ground 87 1 3:2
+ground 87 2 
+ground 87 3 3:1
+ground 88 1 3:2
+ground 88 2 3:1
+ground 88 3 
+ground 89 1 3:2
+ground 89 2 
+ground 89 3 3:3
+ground 90 1 3:5
+ground 90 2 3:1
+ground 90 3 3:2
+ground 91 1 3:1
+ground 91 2 3:4
+ground 91 3 3:2
+ground 92 1 3:4
+ground 92 2 
+ground 92 3 
+ground 93 1 3:3
+ground 93 2 
+ground 93 3 3:5
+ground 94 1 3:1
+ground 94 2 
+ground 94 3 3:1
+ground 95 1 3:3
+ground 95 2 3:2
+ground 95 3 
+ground 96 1 3:2
+ground 96 2 3:3
+ground 96 3 3:1
+ground 97 1 3:1
+ground 97 2 3:1
+ground 97 3 3:1
+ground 98 1 3:1
+ground 98 2 3:1
+ground 98 3 3:4
+ground 99 1 3:2
+ground 99 2 
+ground 99 3 
+ground 100 1 3:4
+ground 100 2 3:2
+ground 100 3 3:1
+ground 101 1 
+ground 101 2 
+ground 101 3 3:2
+ground 102 1 3:5
+ground 102 2 3:3
+ground 102 3 
+ground 103 1 3:5
+ground 103 2 3:2
+ground 103 3 
+ground 104 1 3:5
+ground 104 2 3:4
+ground 104 3 
+ground 105 1 
+ground 105 2 3:1
+ground 105 3 3:2
+ground 106 1 
+ground 106 2 
+ground 106 3 3:1
+ground 107 1 3:9
+ground 107 2 
+ground 107 3 3:1
+ground 108 1 
+ground 108 2 3:1
+ground 108 3 3:1
+ground 109 1 3:2
+ground 109 2 3:1
+ground 109 3 3:2
+ground 110 1 3:4
+ground 110 2 3:1
+ground 110 3 3:2
+ground 111 1 3:2
+ground 111 2 3:2
+ground 111 3 
+ground 112 1 
+ground 112 2 
+ground 112 3 3:2
+ground 113 1 3:1
+ground 113 2 3:2
+ground 113 3 
+ground 114 1 3:3
+ground 114 2 3:1
+ground 114 3 3:1
+ground 115 1 
+ground 115 2 3:2
+ground 115 3 3:1
+ground 116 1 
+ground 116 2 3:5
+ground 116 3 
+ground 117 1 3:2
+ground 117 2 3:1
+ground 117 3 
+ground 118 1 
+ground 118 2 3:1
+ground 118 3 3:2
+ground 119 1 
+ground 119 2 3:3
+ground 119 3 
+ground 120 1 3:3
+ground 120 2 
+ground 120 3 
+ground 121 1 
+ground 121 2 3:1
+ground 121 3 3:3
+ground 122 1 3:5
+ground 122 2 3:2
+ground 122 3 3:4
+ground 123 1 
+ground 123 2 3:4
+ground 123 3 3:2
+ground 124 1 3:4
+ground 124 2 
+ground 124 3 
+ground 125 1 3:3
+ground 125 2 3:1
+ground 125 3 3:1
+ground 126 1 
+ground 126 2 3:2
+ground 126 3 
+ground 127 1 3:1
+ground 127 2 
+ground 127 3 
+ground 128 1 3:4
+ground 128 2 
+ground 128 3 
+ground 129 1 
+ground 129 2 
+ground 129 3 
+ground 130 1 3:2
+ground 130 2 3:1
+ground 130 3 
+ground 131 1 
+ground 131 2 3:2
+ground 131 3 
+ground 132 1 3:5
+ground 132 2 3:1
+ground 132 3 3:3
+ground 133 1 
+ground 133 2 3:2
+ground 133 3 3:4
+ground 134 1 3:3
+ground 134 2 3:4
+ground 134 3 3:3
+ground 135 1 3:4
+ground 135 2 
+ground 135 3 3:4
+ground 136 1 
+ground 136 2 
+ground 136 3 3:3
+ground 137 1 3:4
+ground 137 2 
+ground 137 3 3:1
+ground 138 1 3:2
+ground 138 2 3:1
+ground 138 3 3:2
+ground 139 1 
+ground 139 2 3:3
+ground 139 3 3:3
+ground 140 1 3:4
+ground 140 2 
+ground 140 3 3:2
+ground 141 1 3:2
+ground 141 2 
+ground 141 3 
+ground 142 1 3:2
+ground 142 2 3:1
+ground 142 3 3:2
+ground 143 1 
+ground 143 2 
+ground 143 3 
+ground 144 1 3:3
+ground 144 2 
+ground 144 3 3:2
+ground 145 1 3:5
+ground 145 2 3:2
+ground 145 3 3:2
+ground 146 1 3:2
+ground 146 2 3:2
+ground 146 3 3:1
+ground 147 1 3:2
+ground 147 2 
+ground 147 3 3:5
+ground 148 1 
+ground 148 2 3:1
+ground 148 3 3:1
+ground 149 1 
+ground 149 2 3:1
+ground 149 3 3:2
+ground 150 1 3:1
+ground 150 2 
+ground 150 3 3:2
+ground 151 1 3:3
+ground 151 2 3:3
+ground 151 3 
+ground 152 1 3:2
+ground 152 2 
+ground 152 3 3:2
+ground 153 1 3:3
+ground 153 2 
+ground 153 3 3:1
+ground 154 1 3:3
+ground 154 2 3:2
+ground 154 3 3:3
+ground 155 1 3:2
+ground 155 2 3:2
+ground 155 3 
+ground 156 1 
+ground 156 2 
+ground 156 3 
+ground 157 1 3:1
+ground 157 2 
+ground 157 3 3:3
+ground 158 1 3:1
+ground 158 2 3:1
+ground 158 3 3:1
+ground 159 1 3:5
+ground 159 2 3:3
+ground 159 3 3:1
+ground 160 1 3:2
+ground 160 2 3:3
+ground 160 3 
+ground 161 1 
+ground 161 2 3:2
+ground 161 3 3:1
+ground 162 1 3:2
+ground 162 2 
+ground 162 3 
+ground 163 1 
+ground 163 2 3:1
+ground 163 3 3:1
+ground 164 1 3:4
+ground 164 2 
+ground 164 3 
+ground 165 1 3:3
+ground 165 2 3:4
+ground 165 3 
+ground 166 1 3:3
+ground 166 2 
+ground 166 3 
+ground 167 1 
+ground 167 2 3:1
+ground 167 3 3:1
+ground 168 1 3:1
+ground 168 2 3:2
+ground 168 3 3:2
+ground 169 1 3:1
+ground 169 2 3:1
+ground 169 3 
+ground 170 1 3:1
+ground 170 2 3:2
+ground 170 3 
+ground 171 1 
+ground 171 2 3:2
+ground 171 3 3:2
+ground 172 1 3:3
+ground 172 2 3:1
+ground 172 3 3:1
+ground 173 1 3:2
+ground 173 2 3:4
+ground 173 3 
+ground 174 1 
+ground 174 2 
+ground 174 3 
+ground 175 1 3:1
+ground 175 2 
+ground 175 3 
+ground 176 1 
+ground 176 2 
+ground 176 3 3:1
+ground 177 1 
+ground 177 2 3:3
+ground 177 3 
+ground 178 1 
+ground 178 2 
+ground 178 3 
+ground 179 1 3:2
+ground 179 2 
+ground 179 3 3:3
+ground 180 1 3:2
+ground 180 2 3:2
+ground 180 3 
+ground 181 1 3:4
+ground 181 2 3:2
+ground 181 3 
+ground 182 1 3:1
+ground 182 2 3:2
+ground 182 3 
+ground 183 1 
+ground 183 2 3:2
+ground 183 3 
+ground 184 1 
+ground 184 2 3:2
+ground 184 3 
+ground 185 1 
+ground 185 2 3:4
+ground 185 3 3:1
+ground 186 1 
+ground 186 2 3:2
+ground 186 3 3:1
+ground 187 1 3:3
+ground 187 2 3:1
+ground 187 3 3:1
+ground 188 1 
+ground 188 2 3:1
+ground 188 3 
+ground 189 1 3:3
+ground 189 2 3:1
+ground 189 3 3:2
+ground 190 1 3:2
+ground 190 2 
+ground 190 3 
+ground 191 1 
+ground 191 2 
+ground 191 3 
+ground 192 1 3:3
+ground 192 2 
+ground 192 3 
+ground 193 1 3:6
+ground 193 2 3:3
+ground 193 3 3:3
+ground 194 1 3:3
+ground 194 2 3:1
+ground 194 3 
+ground 195 1 3:4
+ground 195 2 
+ground 195 3 
+ground 196 1 3:1
+ground 196 2 3:2
+ground 196 3 3:2
+ground 197 1 
+ground 197 2 3:2
+ground 197 3 3:5
+ground 198 1 3:2
+ground 198 2 3:3
+ground 198 3 3:1
+ground 199 1 3:1
+ground 199 2 
+ground 199 3 
+ground 200 1 
+ground 200 2 3:1
+ground 200 3 
+breakdown 06a_base_raid.toml 0 real_shot_down=3 fighter_misses=3 fighter_false_claim_chance=0.1 gun_misses=0 anti_aircraft_false_claim_chance=0.05 false_shot_down=1 bombs=16 real_on_ground=0 bomb_false_claim_chance=0.1 false_on_ground=1 field_type=3 field_aircraft=10 false_type=3 false_aircraft=1 raid_recognised_chance=0 types_made_out=0 result=5
+breakdown 06a_base_raid.toml 1 real_shot_down=3 fighter_misses=9 fighter_false_claim_chance=0.1 gun_misses=20 anti_aircraft_false_claim_chance=0.05 false_shot_down=2 result=5
+breakdown 06a_base_raid.toml 2 real_shot_down=2 fighter_misses=4 fighter_false_claim_chance=0.1 gun_misses=0 anti_aircraft_false_claim_chance=0.05 false_shot_down=0 bombs=15 real_on_ground=2 bomb_false_claim_chance=0.1 false_on_ground=2 field_type=3 field_aircraft=10 real_type=3 real_aircraft=2 false_type=3 false_aircraft=2 raid_recognised_chance=0 types_made_out=0 result=6
+breakdown 06a_base_raid.toml 3 real_shot_down=2 fighter_misses=7 fighter_false_claim_chance=0.1 gun_misses=20 anti_aircraft_false_claim_chance=0.05 false_shot_down=1 result=3
+breakdown 06a_base_raid.toml 4 real_shot_down=0 fighter_misses=5 fighter_false_claim_chance=0.1 gun_misses=0 anti_aircraft_false_claim_chance=0.05 false_shot_down=0 bombs=11 real_on_ground=0 bomb_false_claim_chance=0.1 false_on_ground=0 result=0
+breakdown 06a_base_raid.toml 5 real_shot_down=5 fighter_misses=5 fighter_false_claim_chance=0.1 gun_misses=17 anti_aircraft_false_claim_chance=0.05 false_shot_down=1 result=6
+breakdown 05b_strike.toml 0 real_shot_down=0 fighter_misses=0 fighter_false_claim_chance=0.1 gun_misses=0 anti_aircraft_false_claim_chance=0.05 false_shot_down=0 real_hits=5 missed_bombs=13 bomb_false_claim_chance=0.1 false_hits=1 real_sunk=0 burning=0 result=6
+breakdown 05c_air_combat.toml 0 real_shot_down=4 fighter_misses=2 fighter_false_claim_chance=0.1 gun_misses=0 anti_aircraft_false_claim_chance=0.05 false_shot_down=0 real_hits=5 missed_bombs=11 bomb_false_claim_chance=0.1 false_hits=4 real_sunk=0 burning=0 result=13
+breakdown 05c_air_combat.toml 1 real_shot_down=4 fighter_misses=10 fighter_false_claim_chance=0.1 gun_misses=34 anti_aircraft_false_claim_chance=0.05 false_shot_down=2 result=6
+breakdown 05d_carrier_duel.toml 0 real_shot_down=4 fighter_misses=2 fighter_false_claim_chance=0.1 gun_misses=0 anti_aircraft_false_claim_chance=0.05 false_shot_down=0 real_hits=5 missed_bombs=11 bomb_false_claim_chance=0.1 false_hits=4 real_sunk=0 burning=0 result=13
+breakdown 05d_carrier_duel.toml 1 real_shot_down=4 fighter_misses=4 fighter_false_claim_chance=0.1 gun_misses=34 anti_aircraft_false_claim_chance=0.05 false_shot_down=0 result=4
+breakdown 05d_carrier_duel.toml 2 real_shot_down=0 fighter_misses=4 fighter_false_claim_chance=0.1 gun_misses=0 anti_aircraft_false_claim_chance=0.05 false_shot_down=0 real_hits=2 missed_bombs=10 bomb_false_claim_chance=0.1 false_hits=1 real_sunk=0 burning=0 result=3
+breakdown 05d_carrier_duel.toml 3 real_shot_down=6 fighter_misses=4 fighter_false_claim_chance=0.1 gun_misses=31 anti_aircraft_false_claim_chance=0.05 false_shot_down=3 result=9
+breakdown 05d_carrier_duel.toml 4 real_shot_down=0 fighter_misses=4 fighter_false_claim_chance=0.1 gun_misses=0 anti_aircraft_false_claim_chance=0.05 false_shot_down=0 real_hits=4 missed_bombs=8 bomb_false_claim_chance=0.1 false_hits=2 real_sunk=0 burning=0 result=6
+breakdown 05d_carrier_duel.toml 5 real_shot_down=1 fighter_misses=4 fighter_false_claim_chance=0.1 gun_misses=36 anti_aircraft_false_claim_chance=0.05 false_shot_down=1 result=2
+breakdown 06a_false_1_made_out_0 0 real_shot_down=3 fighter_misses=3 fighter_false_claim_chance=1 gun_misses=0 anti_aircraft_false_claim_chance=1 false_shot_down=3 bombs=16 real_on_ground=0 bomb_false_claim_chance=1 false_on_ground=16 field_type=3 field_aircraft=10 false_type=3 false_aircraft=16 raid_recognised_chance=0 types_made_out=0 result=22
+breakdown 06a_false_1_made_out_0 1 real_shot_down=3 fighter_misses=9 fighter_false_claim_chance=1 gun_misses=20 anti_aircraft_false_claim_chance=1 false_shot_down=29 result=32
+breakdown 06a_false_1_made_out_0 2 real_shot_down=2 fighter_misses=4 fighter_false_claim_chance=1 gun_misses=0 anti_aircraft_false_claim_chance=1 false_shot_down=4 bombs=15 real_on_ground=2 bomb_false_claim_chance=1 false_on_ground=13 field_type=3 field_aircraft=10 real_type=3 real_aircraft=2 false_type=3 false_aircraft=13 raid_recognised_chance=0 types_made_out=0 result=21
+breakdown 06a_false_1_made_out_0 3 real_shot_down=2 fighter_misses=7 fighter_false_claim_chance=1 gun_misses=20 anti_aircraft_false_claim_chance=1 false_shot_down=27 result=29
+breakdown 06a_false_1_made_out_0 4 real_shot_down=0 fighter_misses=5 fighter_false_claim_chance=1 gun_misses=0 anti_aircraft_false_claim_chance=1 false_shot_down=5 bombs=11 real_on_ground=0 bomb_false_claim_chance=1 false_on_ground=11 field_type=3 field_aircraft=8 false_type=3 false_aircraft=11 raid_recognised_chance=0 types_made_out=0 result=16
+breakdown 06a_false_1_made_out_0 5 real_shot_down=5 fighter_misses=5 fighter_false_claim_chance=1 gun_misses=17 anti_aircraft_false_claim_chance=1 false_shot_down=22 result=27

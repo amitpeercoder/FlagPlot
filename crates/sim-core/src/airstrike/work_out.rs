@@ -4,6 +4,20 @@
 use super::*;
 
 impl World {
+    /// A pool of aircraft added up by the type of each group, in order of
+    /// the type's number, none with 0 (decision 0210, 2).
+    pub(super) fn pool_by_type(&self, pool: &[(AirGroupId, u32)]) -> Vec<(AircraftTypeId, u32)> {
+        let mut by_type: BTreeMap<AircraftTypeId, u32> = BTreeMap::new();
+        for (group, aircraft) in pool {
+            if *aircraft > 0 {
+                *by_type
+                    .entry(self.truth.air_groups[group].aircraft_type)
+                    .or_insert(0) += aircraft;
+            }
+        }
+        by_type.into_iter().collect()
+    }
+
     /// Works out one raid on the state at the start of the step: the
     /// escorts it has, the fights in the air, the guns, and then what each
     /// strike group that has bombers left does. Reads truth, which the
@@ -87,6 +101,11 @@ impl World {
             })
             .map(|group| (group.air_group, group.patrol))
             .collect();
+        // The pools fired at, by type, as first counted (decision 0210, 2):
+        // the escorts' hits are taken from the whole patrol over the hex.
+        let patrol_pool = self.pool_by_type(&patrol);
+        let escort_pool = self.pool_by_type(&escorts);
+        let bomber_pool = self.pool_by_type(&bombers);
         let escort_count: u32 = escorts.iter().map(|(_, aircraft)| aircraft).sum();
         // The raid meets its share of the patrol and no more (decision 0033).
         let patrol_count = meets.share;
@@ -212,6 +231,7 @@ impl World {
                 breakdown: breakdown(shots, shot, expected),
                 in_firing: escorts.clone(),
                 hit_shots,
+                pool: patrol_pool.clone(),
             });
         }
         if let Some((first_patrol, _)) = patrol.first().copied() {
@@ -245,6 +265,7 @@ impl World {
                     breakdown: patrol_breakdown(breakdown(shots, shot, expected)),
                     in_firing: patrol.clone(),
                     hit_shots,
+                    pool: escort_pool.clone(),
                 });
             }
             let at_bombers = split.at_bombers;
@@ -307,6 +328,7 @@ impl World {
                         breakdown: bombers_breakdown(shots, expected),
                         in_firing: patrol.clone(),
                         hit_shots,
+                        pool: bomber_pool.clone(),
                     });
                 }
                 let after_shots = at_bombers - before_shots;
@@ -326,6 +348,7 @@ impl World {
                         breakdown: bombers_breakdown(shots, expected),
                         in_firing: patrol.clone(),
                         hit_shots,
+                        pool: bomber_pool.clone(),
                     });
                 }
             }
@@ -429,6 +452,7 @@ impl World {
                         breakdown: guns_breakdown(shots, expected),
                         in_firing: Vec::new(),
                         hit_shots,
+                        pool: bomber_pool.clone(),
                     });
                 }
                 let after_shots = gun_shots - before_shots;
@@ -448,6 +472,7 @@ impl World {
                         breakdown: guns_breakdown(shots, expected),
                         in_firing: Vec::new(),
                         hit_shots,
+                        pool: bomber_pool.clone(),
                     });
                 }
             }
