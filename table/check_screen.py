@@ -42,6 +42,9 @@ PAGE_LOAD_CALLS = [
     ("list_contacts", {}),
     ("command_state", {}),
     ("get_briefing", {"text": False}),
+    # Once at load, not on refresh: the day's reports for the stop paper's SINCE (loadSince). Its day is the
+    # day just fought at dusk, or the day in hand inside one.
+    ("events", {"day": 1}),
 ]
 
 
@@ -84,6 +87,48 @@ def outcomes_said_one_way():
     kinds = set(re.findall(r"\b(\w+): 1", re.search(r"var SAY_KINDS = \{([^}]*)\}", text).group(1)))
     used = set(re.findall(r"\bsay\('(\w+)'", text))
     check(used and used <= kinds, f"every say names a kind of SAY_KINDS ({', '.join(sorted(used))})")
+
+
+def the_stop_paper():
+    """The stop paper (decision 0221, stage 1): one column down the left with a head and a foot that do not
+    scroll, its parts in order, the outcomes' line and the controls that run time in its foot; cards and
+    forms at the right; the chart's controls at the chart's foot; the tray, the reports panel and the bar
+    gone. The page is drawn in a browser and is not run here: these read the page's text."""
+    import re
+    with open(os.path.join(HERE, "index.html"), encoding="utf-8") as page:
+        text = page.read()
+    start = text.index('<aside id="stop"')
+    column = text[start:text.index("</aside>", start)]
+    parts = ['id="sp-head"', 'id="clock"', 'id="clock-state"', 'id="sp-body"', 'id="sp-seats"', "WHY THE CLOCK STOPPED",
+             "FOR YOUR DECISION", 'id="sp-since"', 'id="sp-foot"']
+    at = [column.find(p) for p in parts]
+    check(all(a >= 0 for a in at) and at == sorted(at),
+          "the stop paper holds, in order: the head with the clock and its state, the seats, WHY THE CLOCK STOPPED, FOR YOUR DECISION, SINCE, the foot")
+    foot = column[column.index('id="sp-foot"'):]
+    check(all(f'id="{b}"' in foot for b in ("status", "btn-intent", "btn-day", "btn-go", "btn-end")),
+          "its foot holds the outcomes' line, Give an order, the step, Carry on and Read how it ended")
+    check(">Next day<" in foot and "'Next pulse'" in text, "the step is named for the game: Next day, or Next pulse where the game is played by pulses")
+    css = lambda selector: (re.search(re.escape(selector) + r" \{([^}]*)\}", text) or [None, ""])[1]
+    check("flex: none" in css(".sp-head") and "flex: none" in css(".sp-foot") and "overflow-y: auto" in css(".sp-body"),
+          "the head and the foot do not scroll; what lies between scrolls as one")
+    check("--sp-w: 360px" in text and re.search(r"@media \(min-width: 1440px\) \{[^}]*--sp-w: 400px", text)
+          and "@media (max-width: 1099px)" in text and "drawer-open" in text,
+          "it is 360 wide, 400 from 1440, and a drawer under 1100")
+    check(not any(old in text for old in ('id="plot"', 'class="tray"', 'class="bar"', 'id="btn-in"', "--bar-h")),
+          "the reports panel, the signals tray, the bar at the foot and the in-tray button are gone")
+    view = text[text.index('<div class="view"'):]
+    view = view[:view.index("</div>\n</div>") if "</div>\n</div>" in view else 2000]
+    check(all(f'id="{b}"' in view for b in ("btn-plans", "btn-pieces", "btn-labels", "btn-hexes", "btn-view", "btn-above", "btn-lean", "btn-back"))
+          and "bottom: 16px" in css(".view"),
+          "the chart's controls are at its foot: plans, pieces, names, hexes, table or from above, and the zoom")
+    menus = text[text.index('<div class="menus"'):]
+    menus = menus[:menus.index("</div>")]
+    check(all(f'id="{b}"' in menus for b in ("btn-orders", "btn-staff", "btn-game")) and 'id="btn-agent"' in text[text.index('id="pop-game"'):],
+          "the menus at the top right are Orders, Staff and Game, and the agent's seat is under Game")
+    check("right: 16px" in css(".order") and "setViewOffset" in text,
+          "cards and order forms open at the right, and the chart turns to the middle of what is not covered")
+    check("pressed[p.number] = true" in text and "!pressed[p.number]" in text and "needSaid[" in text and "taskWords('strong'" in text,
+          "the plan's paper gives a plan's APPROVE and CANCEL once, at the topmost task on it, says a need once, and names a task's places")
 
 
 def http(method, url, body=None):
@@ -572,6 +617,7 @@ def main():
     args = parser.parse_args()
     page_scripts_parse()
     outcomes_said_one_way()
+    the_stop_paper()
     if not os.path.exists(args.sim_cli):
         sys.exit(f"{args.sim_cli} is not built: cargo build --release -p sim-cli")
     with tempfile.TemporaryDirectory() as keep:

@@ -181,3 +181,44 @@ Every place that wrote the status line now calls `say(kind, words)` in `table/in
 - `failed`: a paper that could not be read.
 
 The status line carries the kind as `data-kind`. `table/check_screen.py` checks that the old writer is gone and that every call names a known kind.
+
+## As built: stage 1
+
+The stop paper, the clock and the chart's controls are built in `table/index.html`, as the amended section's rules 1 to 9 say.
+
+- **The column** is fixed at the left: 360 wide under 1440 and 400 from there. Its head holds the name, the seat, the date and hour, and a state line: the day of how many, and THE CLOCK IS STOPPED, THE CLOCK RUNS, WAITING FOR THE … COMMANDER, or THE GAME IS OVER. Below the head come, in order:
+  - the seat slips and the switch of sides of a watched game, and the other commander's slip in a game against an agent;
+  - WHY THE CLOCK STOPPED;
+  - FOR YOUR DECISION · n;
+  - SINCE.
+
+  The foot holds the outcomes' line, Give an order, the step, and Carry on. The step is "Next pulse", or "Next day" where the game is played by days; it was "One day". The head and the foot do not scroll.
+- **WHY** has one slip for each kind of reason: what the table's ticks were told, with at most three lines; each fired interrupt, with WHY and DO NOT STOP ME FOR THIS; reinforcements; the staff asking leave; a plan that waits for leave; and the game's end, with a link to how it ended. "And n more" opens the rest as a paper for reading, and so does an interrupt's WHY. WHY is empty, and so not shown, when the stop is the player's own. It is not kept across a reload.
+- **FOR YOUR DECISION** holds a force asking leave, a plan that waits, and a directive unread. It is left out when nothing waits, and in a watched game.
+- **SINCE** is kept as data. It is cleared when the clock starts from a stop, and its heading says the count of the reports: "SINCE 1800, 3 JUN · 38 REPORTS". It shows the three latest reports under their pulse's heading, and "and n more" opens all of them as a paper. A line that folds the rest of a kind ("and 5 more reports of bombing of a base") is counted for what it folds and is shown only on the paper. After a reload SINCE holds the day's reports, read once with `events`. On the first evening it is left out.
+- **Cards and the order forms** (`#card`, `#order`, `#force`, `#course`) open at the right. A paper for reading is centred over the chart's part of the window, and wins over a card as before.
+- **The chart's controls** sit at the foot of the chart on the right: PLANS, PIECES · ALL/OURS/ENEMY/OFF, NAMES · POINTER/ALL/OFF, HEXES, TABLE | FROM ABOVE, and + and −. Each does what it did. At the top right are the Orders menu (until stage 2), STAFF and GAME. The in-tray of directives became "Directives · n" in STAFF, and the agent's seat is under GAME.
+- **The chart turns to the middle of what is not covered.** The camera's view is offset, by `setViewOffset`, to the middle of the window less the column and less a card or form at the right, and the offset eases as panels open and close.
+- **Under 1100 wide** the column is a drawer. Its head stays at the top left and opens it, Escape closes it, and the chart is then centred in the whole window.
+- **At the game's end** the foot has READ HOW IT ENDED, and New game and Restart stay under GAME. **Against an agent**, while the other commander is waited for, Give an order is disabled and the foot's line says so.
+- **Gone:** the signals tray, the reports panel `#plot`, the bar at the foot and `--bar-h`, and the in-tray button.
+- `table/check_screen.py` checks the column's parts and their order, the foot's controls, which parts do not scroll, the widths and the drawer, that the old panels are gone, the chart's controls and the menus, and that cards open at the right. `PAGE_LOAD_CALLS` gains the one call made at load for SINCE (`events`).
+
+In the same pull request, the plan's paper was mended on the designer's word:
+
+- A plan's APPROVE and CANCEL are given once, at the topmost task on that plan.
+- What the staff wants to know before a landing is said once, on the highest task that says it.
+- The held count names where it came from ("as it was told", "seen from the air", "from men in contact"). The page had read a field the tool does not send, which left an empty part between two commas.
+- A task's name says a place by its base's name, or by its position with the hex in brackets, as a card does, linked.
+
+## The architect's rulings on stages 0 and 1, Nov 22, 2026
+
+Read on the team's report, its screenshots and the page's checks before merging.
+
+- **WHY gains "A plan waits for your leave." and "The staff asks your leave."** where that is why the clock stopped. Right: an empty WHY at a stop is worse than a line that FOR YOUR DECISION repeats.
+- **WHY is not kept across a reload.** It is kept with the game in stage 4, with the table's ticks.
+- **SINCE is left out on the first evening,** and the column is then nearly empty until stage 2 gives it YOUR ORDERS and "No order in force."
+- **Cards and forms stop above the chart's controls,** and the chart's turning does not allow for a paper for reading. Both stand.
+- **The step control reads NEXT DAY** where the game is played by days. It read "One day"; the plan's word is kept.
+- **The plan paper's tally still counts a waiting plan once for each task under it** ("2 wait for you" for one plan). It is to count plans, and is mended in stage 2 with the plan's line under YOUR ORDERS.
+- **Not tried by the team and owed before stage 4 closes:** a force asking leave to pursue in the column; an interrupt's reasons opened as a paper; the keyboard alone.
