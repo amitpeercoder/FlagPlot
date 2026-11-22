@@ -45,6 +45,7 @@ So a directive is now three numbered paragraphs:
 1. **Situation.** What the commander above knows that bears on the mission, with its source where it is intelligence. No estimate of strength.
 2. **Mission.** The task and its purpose in one sentence ("Take and hold Tulagi and Lunga, to keep the line to Australia open").
 3. **Execution.** The method is the commander's. Further direction follows as the situation requires.
+   (Amended on Nov 22, 2026, on the designer's word at the table: the third part is headed **Guidance** and holds only what the superior says of risk and of what the operation is for. The two sentences every directive opened it with, that the forces are the commander's to employ and the method his, said nothing and are dropped; that further direction will follow is said only where a later directive does follow.)
 
 "What depends on you" and "what you may risk" are taken out. This supersedes parts 1 and 4 of the direction above where they differ: priorities are no longer spelled out in words, and the purpose is what the commander goes by.
 
