@@ -2433,6 +2433,30 @@ pub enum EventKind {
         side: Side,
         hex: Hex,
     },
+    /// An air group's chance of sighting a submarine in its arc (decision
+    /// 0218, 17, 18 and 48): `chance` over `distance_nm` (at least one hex),
+    /// lessened by her surfaced share when she is on station. Cites the
+    /// flight. Seen by neither side: the report that follows tells the
+    /// searchers. Added at the end.
+    SubmarineSearchAttempt {
+        air_group: AirGroupId,
+        submarine: SubmarineId,
+        distance_nm: Fixed,
+        chance: Fixed,
+        sighted: bool,
+    },
+    /// The aircraft that sighted a submarine attack her (decision 0218, 20,
+    /// 50 and 51): `damaged` under the air attack's chance, `sunk` of those
+    /// under its share. Cites the search attempt. Her side is told it cut
+    /// of the group, the group's side that its aircraft attacked a boat and
+    /// nothing of the result. Added at the end.
+    SubmarineAttackedFromAir {
+        air_group: AirGroupId,
+        submarine: SubmarineId,
+        hex: Hex,
+        damaged: bool,
+        sunk: bool,
+    },
 }
 
 impl EventKind {
@@ -2643,6 +2667,19 @@ impl EventKind {
             } => vec![
                 EntityRef::Submarine(*submarine),
                 EntityRef::TaskForce(*task_force),
+            ],
+            EventKind::SubmarineSearchAttempt {
+                air_group,
+                submarine,
+                ..
+            }
+            | EventKind::SubmarineAttackedFromAir {
+                air_group,
+                submarine,
+                ..
+            } => vec![
+                EntityRef::AirGroup(*air_group),
+                EntityRef::Submarine(*submarine),
             ],
             EventKind::SubmarineSalvo {
                 submarine,
@@ -3860,6 +3897,34 @@ impl fmt::Display for EventKind {
                 }
             ),
             EventKind::SubmarineSunk { submarine } => write!(f, "{submarine} was sunk"),
+            EventKind::SubmarineSearchAttempt {
+                air_group,
+                submarine,
+                distance_nm,
+                chance,
+                sighted,
+            } => write!(
+                f,
+                "{air_group} had a chance of {chance} to sight {submarine}, {distance_nm} nm away: {}",
+                if *sighted { "sighted" } else { "not sighted" }
+            ),
+            EventKind::SubmarineAttackedFromAir {
+                air_group,
+                submarine,
+                hex,
+                damaged,
+                sunk,
+            } => write!(
+                f,
+                "{air_group} attacked {submarine} at {hex}{}",
+                if *sunk {
+                    ", and she was sunk"
+                } else if *damaged {
+                    ", and she was damaged"
+                } else {
+                    ""
+                }
+            ),
             EventKind::SubmarineReported {
                 side,
                 hex,

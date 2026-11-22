@@ -16,12 +16,12 @@ use crate::belief::{ApplyOutcome, Report, SightingReport};
 use crate::events::{Breakdown, Cause, EventKind, Factor, SortieKind};
 use crate::fixed::Fixed;
 use crate::hex::Hex;
-use crate::ids::{EntityRef, EventId, TaskForceId};
+use crate::ids::{AirGroupId, EntityRef, EventId, TaskForceId};
 use crate::map::Map;
 use crate::pictures::Holders;
 use crate::refdata::{SearchFigures, ShipKind};
 use crate::rng::{Draw, RngStream, Subsystem};
-use crate::state::Side;
+use crate::state::{SearchArc, Side};
 use crate::time::{self, Pulse};
 use crate::upkeep::Sortie;
 use crate::world::World;
@@ -29,7 +29,7 @@ use crate::world::World;
 /// Degrees in one radian, 57.295779 to six decimals (decision 0012,
 /// decision 5). It turns "miles of sea swept over miles of arc" into a
 /// number that can be worked in degrees.
-const DEGREES_PER_RADIAN: Fixed = Fixed::from_raw(57_295_779);
+pub(crate) const DEGREES_PER_RADIAN: Fixed = Fixed::from_raw(57_295_779);
 
 /// The chance that `aircraft` aircraft with sweep width `sweep_width_nm`
 /// sight a task force `distance_nm` away, in an arc `arc_deg` degrees wide
@@ -190,6 +190,18 @@ struct Target {
     ship_count: u32,
     /// The most important kind aboard.
     kind: ShipKind,
+}
+
+/// One group's flight, as it looks for boats (decision 0218, 48).
+pub(crate) struct SubmarineSearch {
+    pub(crate) group: AirGroupId,
+    pub(crate) side: Side,
+    pub(crate) origin: Hex,
+    pub(crate) aircraft: u32,
+    pub(crate) sweep_width_nm: Fixed,
+    pub(crate) arc: SearchArc,
+    pub(crate) arc_deg: u32,
+    pub(crate) flown: EventId,
 }
 
 impl World {
@@ -404,6 +416,24 @@ impl World {
                 );
                 self.pass_report(group.side, &Report::Sighting(report), &holders);
             }
+
+            // The boats in the arc (decision 0218, 17 to 20 and 48 to 52).
+            // A boat is no force of the lists above and no contact.
+            self.search_for_submarines(
+                day,
+                pulse,
+                &SubmarineSearch {
+                    group: group.id,
+                    side: group.side,
+                    origin,
+                    aircraft: flown_aircraft,
+                    sweep_width_nm,
+                    arc,
+                    arc_deg,
+                    flown,
+                },
+                &figures,
+            );
         }
     }
 }

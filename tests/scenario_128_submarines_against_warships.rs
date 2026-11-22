@@ -2087,3 +2087,436 @@ fn statement_25_a_report_ages_and_is_dropped_by_its_own_figures_and_is_in_every_
     }
     assert!(checked_held > 20 && checked_dropped > 20);
 }
+
+// ---------------------------------------------------------------------
+// Part D: aircraft.
+// ---------------------------------------------------------------------
+
+const GROUP: sim_core::ids::AirGroupId = sim_core::ids::AirGroupId::new(1);
+
+/// Game D1: the head of the scenario with boat 1 put where `boat_at` says
+/// and given `boat_lines` (a station, a held-down count), and Allied air
+/// group 1 at a base at (0,0): 6 aircraft of the frozen reference's type 2,
+/// the placeholder carrier scout (a sweep width of 20 nm, a range of 300 nm;
+/// no new type is added), on the search mission with an arc from 60 to 120
+/// degrees and a range of 300 nm (the type's own limit). No ship of either side.
+fn game_d1(boat_at: (i32, i32), boat_lines: &str) -> Scenario {
+    let mut text = game(Vec::new()).boat(boat_lines).text();
+    text = common::replace_once(
+        &text,
+        "class = 6900\nq = 5\nr = 0\nhome = 1\n",
+        &format!(
+            "class = 6900\nq = {}\nr = {}\nhome = 1\n",
+            boat_at.0, boat_at.1
+        ),
+    );
+    text.push_str(
+        "\n[[base]]\nid = 2\nname = \"Placeholder Allied air base\"\nside = \"allied\"\nq = 0\nr = 0\n\
+         \n[[air_group]]\nid = 1\nname = \"Placeholder search group\"\nside = \"allied\"\nbase = 2\naircraft_type = 2\nready = 6\n\
+         \n[[order]]\nday = 1\nside = \"allied\"\nair_group = 1\nkind = \"set_air_mission\"\nmission = \"search\"\n\
+         \n[[order]]\nday = 1\nside = \"allied\"\nair_group = 1\nkind = \"set_search_arc\"\nfrom_deg = 60\nto_deg = 120\nrange_nm = 300\n",
+    );
+    common::from_text_with(&text, &scenario_path(), &common::frozen()).expect("game D1 loads")
+}
+
+/// One search attempt for boat 1.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+struct Attempt {
+    id: EventId,
+    day: u32,
+    pulse: Pulse,
+    distance_nm: Fixed,
+    chance: Fixed,
+    sighted: bool,
+}
+
+impl Run {
+    fn attempts(&self) -> Vec<Attempt> {
+        self.events
+            .iter()
+            .filter_map(|event| match event.kind {
+                EventKind::SubmarineSearchAttempt {
+                    air_group,
+                    submarine,
+                    distance_nm,
+                    chance,
+                    sighted,
+                } if submarine == BOAT && air_group == GROUP => Some(Attempt {
+                    id: event.id,
+                    day: event.day,
+                    pulse: event.pulse.expect("in a pulse"),
+                    distance_nm,
+                    chance,
+                    sighted,
+                }),
+                _ => None,
+            })
+            .collect()
+    }
+
+    fn attempts_in(&self, pulse: Pulse) -> Vec<Attempt> {
+        self.attempts()
+            .into_iter()
+            .filter(|a| a.pulse == pulse)
+            .collect()
+    }
+
+    /// The attack from the air in `(day, pulse)`: damaged and sunk.
+    fn air_attacks(&self) -> Vec<(EventId, u32, Pulse, bool, bool)> {
+        self.events
+            .iter()
+            .filter_map(|event| match event.kind {
+                EventKind::SubmarineAttackedFromAir {
+                    submarine,
+                    damaged,
+                    sunk,
+                    ..
+                } if submarine == BOAT => Some((
+                    event.id,
+                    event.day,
+                    event.pulse.expect("in a pulse"),
+                    damaged,
+                    sunk,
+                )),
+                _ => None,
+            })
+            .collect()
+    }
+}
+
+#[test]
+fn statement_16_on_her_station_the_chance_is_the_surfaced_share_of_the_forces_in_each_daylight_pulse(
+) {
+    let d1 = game_d1((5, 0), "");
+    let mut afternoons = 0;
+    let mut sighted_seen = (false, false);
+    for seed in 1..=SEEDS {
+        let run = play(&d1, seed);
+        // The night: none.
+        assert!(run.attempts_in(Pulse::Night).is_empty(), "seed {seed}");
+        // The morning: one, of 0.572957 x 0.25.
+        let morning = run.attempts_in(Pulse::Morning);
+        assert_eq!(morning.len(), 1, "seed {seed}");
+        assert_eq!(morning[0].chance, fx("0.143239"), "seed {seed}");
+        assert_eq!(morning[0].distance_nm, Fixed::from_int(200), "seed {seed}");
+        sighted_seen.0 |= morning[0].sighted;
+        sighted_seen.1 |= !morning[0].sighted;
+        // The afternoon: one, while she is still on her station.
+        let afternoon = run.attempts_in(Pulse::Afternoon);
+        let left = run.events.iter().any(|e| {
+            matches!(
+                e.kind,
+                EventKind::SubmarineLeftForHome { .. } | EventKind::SubmarineSunk { .. }
+            )
+        });
+        if !left {
+            assert_eq!(afternoon.len(), 1, "seed {seed}");
+            assert_eq!(afternoon[0].chance, fx("0.143239"), "seed {seed}");
+            afternoons += 1;
+        }
+        // The breakdown: the forces' chance and her share.
+        let attempt = run
+            .events
+            .iter()
+            .find(|e| e.id == morning[0].id)
+            .expect("the attempt");
+        let breakdown = attempt.breakdown.as_ref().expect("breakdowns are on");
+        let factor = |name: &str| {
+            breakdown
+                .factors
+                .iter()
+                .find(|f| f.name == name)
+                .unwrap_or_else(|| panic!("factor {name}"))
+                .value
+        };
+        assert_eq!(factor("chance_of_a_force"), fx("0.572957"));
+        assert_eq!(factor("surfaced_share"), fx("0.25"));
+        assert_eq!(breakdown.result, fx("0.143239"));
+    }
+    assert!(sighted_seen.0 && sighted_seen.1);
+    assert!(afternoons > 0);
+}
+
+#[test]
+fn statement_17_on_passage_through_the_hex_the_chance_is_whole() {
+    // She starts at (2,0) bound for (9,0): after the night's steaming she
+    // is at (5,0) as the morning's search looks.
+    let d1 = game_d1((2, 0), "station_q = 9\nstation_r = 0");
+    let mut checked = 0;
+    for seed in 1..=SEEDS {
+        let run = play(&d1, seed);
+        assert!(run.attempts_in(Pulse::Night).is_empty(), "seed {seed}");
+        let morning = run.attempts_in(Pulse::Morning);
+        assert_eq!(morning.len(), 1, "seed {seed}");
+        assert_eq!(morning[0].distance_nm, Fixed::from_int(200), "seed {seed}");
+        assert_eq!(morning[0].chance, fx("0.572957"), "seed {seed}");
+        checked += 1;
+    }
+    assert_eq!(checked, SEEDS);
+}
+
+#[test]
+fn statement_18_in_the_groups_own_hex_the_distance_is_one_hex_and_the_chance_is_not_one() {
+    let d1 = game_d1((0, 0), "");
+    for seed in 1..=SEEDS {
+        let run = play(&d1, seed);
+        let morning = run.attempts_in(Pulse::Morning);
+        assert_eq!(morning.len(), 1, "seed {seed}");
+        assert_eq!(morning[0].distance_nm, Fixed::from_int(40), "seed {seed}");
+        assert_eq!(morning[0].chance, fx("0.25"), "seed {seed}");
+        assert_ne!(morning[0].chance, Fixed::ONE);
+        let attempt = run
+            .events
+            .iter()
+            .find(|e| e.id == morning[0].id)
+            .expect("the attempt");
+        let breakdown = attempt.breakdown.as_ref().expect("breakdowns are on");
+        let of_a_force = breakdown
+            .factors
+            .iter()
+            .find(|f| f.name == "chance_of_a_force")
+            .expect("the forces' chance")
+            .value;
+        // 6875.493480 / 2400 = 2.86, cut to 1.
+        assert_eq!(of_a_force, Fixed::ONE, "seed {seed}");
+    }
+}
+
+#[test]
+fn statement_19_sighted_she_is_reported_in_its_own_list_and_nothing_else_is_told() {
+    let d1 = game_d1((5, 0), "");
+    let search = d1.clone().with_seed(1).expect("a seed");
+    let search = search
+        .world
+        .ref_data()
+        .search
+        .clone()
+        .expect("search figures");
+    let (mut sighted_runs, mut struck, mut at_her_hex) = (0, 0, 0);
+    for seed in 1..=SEEDS {
+        let run = play(&d1, seed);
+        let sightings: Vec<Attempt> = run.attempts().into_iter().filter(|a| a.sighted).collect();
+        let reports: Vec<&Event> = run
+            .events
+            .iter()
+            .filter(|e| matches!(e.kind, EventKind::SubmarineReported { .. }))
+            .collect();
+        assert_eq!(reports.len(), sightings.len(), "seed {seed}");
+        let allied = run.world.side_view(Side::Allied);
+        // No contact of a ship and no force alerted, ever.
+        assert_eq!(allied.contacts().count(), 0, "seed {seed}");
+        assert!(
+            !run.events.iter().any(|e| matches!(
+                e.kind,
+                EventKind::ReportReceived { .. } | EventKind::ForceBecameAlert { .. }
+            )),
+            "seed {seed}"
+        );
+        // The Japanese side is told no report.
+        assert_eq!(
+            run.world
+                .side_view(Side::Japanese)
+                .submarine_reports()
+                .count(),
+            0,
+            "seed {seed}"
+        );
+        if sightings.is_empty() {
+            assert_eq!(allied.submarine_reports().count(), 0, "seed {seed}");
+            continue;
+        }
+        sighted_runs += 1;
+        // Each report cites its attempt, at her hex or a neighbour where the
+        // error struck, as the rule draws it.
+        for (sighting, report) in sightings.iter().zip(&reports) {
+            let EventKind::SubmarineReported { side, hex, .. } = report.kind else {
+                unreachable!("filtered");
+            };
+            assert_eq!(side, Side::Allied);
+            assert_eq!(
+                report.causes,
+                vec![sim_core::events::Cause::Event(sighting.id)],
+                "seed {seed}"
+            );
+            // Where she truly was: the hex of the attack that cites the same
+            // attempt (a boat damaged in the morning is on her way home by
+            // the afternoon).
+            let truly = run
+                .events
+                .iter()
+                .find_map(|e| match e.kind {
+                    EventKind::SubmarineAttackedFromAir { hex, .. }
+                        if e.causes == vec![sim_core::events::Cause::Event(sighting.id)] =>
+                    {
+                        Some((hex.q, hex.r))
+                    }
+                    _ => None,
+                })
+                .expect("the attack");
+            let mut stream = run.world.rng_pair(
+                sighting.day,
+                Some(sighting.pulse),
+                Subsystem::Submarine,
+                Draw::SubmarineReportError,
+                EntityRef::Submarine(BOAT),
+                EntityRef::AirGroup(GROUP),
+            );
+            let expected = if stream.chance(search.position_error_chance) {
+                let index = usize::try_from(stream.below(6)).expect("below 6");
+                let (dq, dr) = sim_core::hex::Hex::DIRECTIONS[index];
+                let neighbour = sim_core::hex::Hex::new(truly.0 + dq, truly.1 + dr);
+                if run.world.map().is_navigable(neighbour) {
+                    (neighbour.q, neighbour.r)
+                } else {
+                    truly
+                }
+            } else {
+                truly
+            };
+            assert_eq!((hex.q, hex.r), expected, "seed {seed}");
+            if expected == truly {
+                at_her_hex += 1;
+            } else {
+                struck += 1;
+            }
+        }
+        // One report in the side's own list per hex named.
+        let held: BTreeSet<(i32, i32)> = allied
+            .submarine_reports()
+            .map(|r| (r.hex.q, r.hex.r))
+            .collect();
+        assert!(!held.is_empty(), "seed {seed}");
+    }
+    assert!(sighted_runs > 0 && struck > 0 && at_her_hex > 0);
+}
+
+#[test]
+fn statement_20_sighted_she_is_held_down_and_attacked_in_the_same_pulse_and_nothing_is_spent() {
+    let d1 = game_d1((5, 0), "");
+    let figures = d1.clone().with_seed(1).expect("a seed");
+    let sub = figures
+        .world
+        .ref_data()
+        .submarines
+        .as_ref()
+        .expect("submarine figures")
+        .figures
+        .clone();
+    assert_eq!(sub.air_attack_damages_chance, fx("0.25"));
+    assert_eq!(sub.air_attack_sinks_share, fx("0.2"));
+    let (mut sunk, mut damaged, mut untouched) = (0u32, 0u32, 0u32);
+    let sorties_of = |run: &Run| {
+        run.events
+            .iter()
+            .filter(|e| matches!(e.kind, EventKind::SearchFlown { .. }))
+            .count()
+    };
+    for seed in 1..=SEEDS {
+        let run = play(&d1, seed);
+        let sightings: Vec<Attempt> = run.attempts().into_iter().filter(|a| a.sighted).collect();
+        let attacks = run.air_attacks();
+        // One attack for each sighting, in the same pulse, citing it.
+        assert_eq!(attacks.len(), sightings.len(), "seed {seed}");
+        for (sighting, attack) in sightings.iter().zip(&attacks) {
+            assert_eq!((attack.1, attack.2), (sighting.day, sighting.pulse));
+            assert_eq!(
+                run.event(attack.0).causes,
+                vec![sim_core::events::Cause::Event(sighting.id)],
+                "seed {seed}"
+            );
+            // One stream of the boat and the group: a first draw under 0.25
+            // damages, a second under 0.2 sinks.
+            let mut stream = run.world.rng_pair(
+                sighting.day,
+                Some(sighting.pulse),
+                Subsystem::Submarine,
+                Draw::SubmarineAirAttack,
+                EntityRef::Submarine(BOAT),
+                EntityRef::AirGroup(GROUP),
+            );
+            let expected_damaged = stream.chance(fx("0.25"));
+            let expected_sunk = expected_damaged && stream.chance(fx("0.2"));
+            assert_eq!((attack.3, attack.4), (expected_damaged, expected_sunk));
+            if attack.4 {
+                sunk += 1;
+            } else if attack.3 {
+                damaged += 1;
+            } else {
+                untouched += 1;
+            }
+        }
+        // Held down to the end of the next pulse after the last sighting.
+        let boat = run.boat();
+        match sightings.last() {
+            Some(last) => {
+                let next = index_of(last.day, last.pulse) + 1;
+                let expected = pulses(2)[next];
+                assert_eq!(boat.held_down_until, Some(expected), "seed {seed}");
+            }
+            None => assert_eq!(boat.held_down_until, None, "seed {seed}"),
+        }
+        // The end she came to: sunk if any attack sank her, else damaged (or
+        // home again) if any damaged her, else sound.
+        if attacks.iter().any(|a| a.4) {
+            assert_eq!(boat.condition, SubmarineCondition::Sunk, "seed {seed}");
+        } else if attacks.iter().any(|a| a.3) {
+            assert!(
+                matches!(
+                    boat.condition,
+                    SubmarineCondition::Damaged | SubmarineCondition::Home
+                ),
+                "seed {seed}: {:?}",
+                boat.condition
+            );
+        } else {
+            assert_eq!(boat.condition, SubmarineCondition::Sound, "seed {seed}");
+        }
+        // No aircraft lost, no bomb, no sortie added: the group is as it
+        // was, one flight in each daylight pulse she was searched.
+        assert_eq!(
+            run.world.umpire().air_groups[&GROUP].ready,
+            6,
+            "seed {seed}"
+        );
+        assert!(sorties_of(&run) <= 2, "seed {seed}");
+        assert!(
+            !run.events.iter().any(|e| matches!(
+                e.kind,
+                EventKind::StrikeLaunched { .. } | EventKind::AircraftLost { .. }
+            )),
+            "seed {seed}"
+        );
+    }
+    // Each end occurs, near its share of 0.05, 0.2 and 0.75.
+    assert!(
+        sunk > 0 && damaged > 0 && untouched > 0,
+        "{sunk} {damaged} {untouched}"
+    );
+    let total = f64::from(sunk + damaged + untouched);
+    let share = |n: u32| f64::from(n) / total;
+    assert!((share(sunk) - 0.05).abs() < 0.08, "sunk {}", share(sunk));
+    assert!(
+        (share(damaged) - 0.2).abs() < 0.1,
+        "damaged {}",
+        share(damaged)
+    );
+    assert!(
+        (share(untouched) - 0.75).abs() < 0.12,
+        "untouched {}",
+        share(untouched)
+    );
+}
+
+#[test]
+fn statement_20_a_boat_held_down_longer_is_held_the_later_of_the_two() {
+    // Held for 5 pulses from the start: a sighting's next pulse is earlier,
+    // so she is held to the same pulse as before.
+    let held = game_d1((5, 0), "held_down_pulses = 5");
+    let none = game_d1((5, 0), "held_down_pulses = 5");
+    let start = none.with_seed(1).expect("a seed").world.umpire().submarines[&BOAT].held_down_until;
+    assert!(start.is_some());
+    for seed in 1..=200 {
+        let run = play(&held, seed);
+        assert_eq!(run.boat().held_down_until, start, "seed {seed}");
+    }
+}

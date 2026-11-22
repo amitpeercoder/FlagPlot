@@ -1273,6 +1273,8 @@ pub fn count(
             | EventKind::SubmarineAttackChance { .. }
             | EventKind::SubmarineSalvo { .. }
             | EventKind::SubmarineHunted { .. }
+            | EventKind::SubmarineSearchAttempt { .. }
+            | EventKind::SubmarineAttackedFromAir { .. }
             | EventKind::SubmarineSunk { .. }
             | EventKind::SubmarineReported { .. }
             | EventKind::SubmarineReportDropped { .. }

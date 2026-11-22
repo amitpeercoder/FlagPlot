@@ -3024,6 +3024,8 @@ impl Day {
                     | EventKind::SubmarineAttackChance { .. }
                     | EventKind::SubmarineSalvo { .. }
                     | EventKind::SubmarineHunted { .. }
+                    | EventKind::SubmarineSearchAttempt { .. }
+                    | EventKind::SubmarineAttackedFromAir { .. }
                     | EventKind::SubmarineSunk { .. }
                     | EventKind::SubmarineReported { .. }
                     | EventKind::SubmarineReportDropped { .. } => {}
@@ -4555,7 +4557,9 @@ impl Day {
                 SideEventKind::OwnSubmarineFired { .. }
                 | SideEventKind::SalvoFromSubmarine { .. }
                 | SideEventKind::OwnSubmarineHunted { .. }
-                | SideEventKind::SubmarineHuntedBy { .. } => {}
+                | SideEventKind::SubmarineHuntedBy { .. }
+                | SideEventKind::OwnSubmarineAttackedFromAir { .. }
+                | SideEventKind::AttackedSubmarineFromAir { .. } => {}
                 SideEventKind::ShoreBombardmentAgainst {
                     base,
                     hex,

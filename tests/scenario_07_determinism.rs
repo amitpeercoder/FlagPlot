@@ -515,7 +515,7 @@ fn the_full_slice_log_has_every_kind_of_event_the_engine_can_emit() {
     //
     // The kind of decision 0110, `GroundFoundEmpty`: the frozen copy has no
     // land unit. Scenario 38 records it, and its own test reads it.
-    const NOT_IN_THE_FULL_SLICE: [&str; 113] = [
+    const NOT_IN_THE_FULL_SLICE: [&str; 115] = [
         "AircraftDitched",
         "AircraftLandedElsewhere",
         "ShipRepaired",
@@ -662,6 +662,8 @@ fn the_full_slice_log_has_every_kind_of_event_the_engine_can_emit() {
         "SubmarineSunk",
         "SubmarineReported",
         "SubmarineReportDropped",
+        "SubmarineSearchAttempt",
+        "SubmarineAttackedFromAir",
     ];
     let missing: Vec<&String> = all
         .difference(&seen)

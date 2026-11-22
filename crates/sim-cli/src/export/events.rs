@@ -1288,6 +1288,34 @@ pub(super) fn describe(
                 .flag("damaged", *damaged)
                 .flag("sunk", *sunk),
         ),
+        EventKind::SubmarineSearchAttempt {
+            air_group,
+            submarine,
+            distance_nm,
+            chance,
+            sighted,
+        } => (
+            "submarine_search_attempt",
+            d.id("air_group", *air_group)
+                .id("submarine", *submarine)
+                .num("distance_nm", *distance_nm)
+                .num("chance", *chance)
+                .flag("sighted", *sighted),
+        ),
+        EventKind::SubmarineAttackedFromAir {
+            air_group,
+            submarine,
+            hex,
+            damaged,
+            sunk,
+        } => (
+            "submarine_attacked_from_air",
+            d.id("air_group", *air_group)
+                .id("submarine", *submarine)
+                .hex("hex", *hex)
+                .flag("damaged", *damaged)
+                .flag("sunk", *sunk),
+        ),
         EventKind::SubmarineSunk { submarine } => ("submarine_sunk", d.id("submarine", *submarine)),
         EventKind::SubmarineReachedHome { submarine, base } => (
             "submarine_reached_home",

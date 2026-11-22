@@ -19,18 +19,21 @@
 //! - At the end of a passage she is on station, or, going home, she is
 //!   taken off the map at her base's hex.
 
+use crate::bearing;
 use crate::belief::{ApplyOutcome, BattleClaim, Report, SubmarineReport};
 use crate::damage::{damage_per_hit, system_for_draw, system_hit_chance, DamageSite, HitSet};
 use crate::events::{Breakdown, Cause, DamageTrack, EventKind, Factor, SubmarineLeftReason};
 use crate::fixed::Fixed;
-use crate::hex::Hex;
+use crate::hex::{Hex, HEX_NM};
 use crate::ids::{EntityRef, EventId, ShipId, SubmarineId, TaskForceId};
 use crate::map::Map;
 use crate::movement::HoursInHex;
 use crate::pictures::{CommandRef, Holders};
 use crate::refdata::ShipKind;
 use crate::rng::{Draw, Subsystem};
-use crate::search::{report_hex, reported_kind};
+use crate::search::{
+    report_hex, reported_kind, sighting_chance, SubmarineSearch, DEGREES_PER_RADIAN,
+};
 use crate::state::{ShipSystem, SubmarineCondition, SubmarinePassage};
 use crate::time::Pulse;
 use crate::world::World;
@@ -704,6 +707,270 @@ impl World {
             "the report cites the event that records it"
         );
         self.pass_report(fired_on, &Report::Submarine(report), &holders);
+    }
+
+    /// An air group's look for boats in its arc (decision 0218, 17 to 20 and
+    /// 48 to 52), after its look for forces: for each boat on the map in
+    /// number order whose hex is in the arc and the range, the chance of
+    /// sighting her is the chance of sighting a force at the same distance
+    /// (taken as at least one hex) times her surfaced share when she is on
+    /// station, whole when she is on passage. Sighted, she is reported to
+    /// the group's side through the report's error, held down for the rest
+    /// of the pulse and the next, and attacked by the aircraft: damaged under
+    /// the air attack's chance, then sunk under its share. No aircraft is
+    /// lost, no bomb used and no sortie added.
+    pub(crate) fn search_for_submarines(
+        &mut self,
+        day: u32,
+        pulse: Pulse,
+        search_flight: &SubmarineSearch,
+        search: &crate::refdata::SearchFigures,
+    ) {
+        if self.truth.submarines.is_empty() {
+            return;
+        }
+        let Some(figures) = self
+            .ref_data
+            .submarines
+            .as_ref()
+            .map(|data| data.figures.clone())
+        else {
+            return;
+        };
+        let flight = search_flight;
+        let boats: Vec<SubmarineId> = self
+            .truth
+            .submarines
+            .values()
+            .filter(|boat| boat.side != flight.side && boat.on_map(day))
+            .map(|boat| boat.id)
+            .collect();
+        for id in boats {
+            let boat = &self.truth.submarines[&id];
+            let hex = boat.hex;
+            if !bearing::in_arc(flight.origin, hex, flight.arc.from_deg, flight.arc.to_deg) {
+                continue;
+            }
+            // At least one hex away, so that a boat in the group's own hex
+            // is not sighted for certain (rule 48).
+            let distance = i64::from(flight.origin.air_distance_nm(hex)).max(HEX_NM);
+            let distance_nm = Fixed::from_int(distance);
+            if distance_nm > flight.arc.range_nm {
+                continue;
+            }
+            let on_station = boat.on_station(day);
+            let share = if on_station {
+                figures.surfaced_share
+            } else {
+                Fixed::ONE
+            };
+            let of_a_force = sighting_chance(
+                flight.aircraft,
+                flight.sweep_width_nm,
+                flight.arc_deg,
+                distance_nm,
+            );
+            let chance = of_a_force * share;
+            let mut stream = self.rng_pair(
+                day,
+                Some(pulse),
+                Subsystem::Submarine,
+                Draw::SubmarineSighted,
+                EntityRef::Submarine(id),
+                EntityRef::AirGroup(flight.group),
+            );
+            let sighted = stream.chance(chance);
+            let breakdown = self.config.record_breakdowns.then(|| Breakdown {
+                factors: vec![
+                    Factor {
+                        name: "degrees_per_radian",
+                        value: DEGREES_PER_RADIAN,
+                    },
+                    Factor {
+                        name: "aircraft",
+                        value: Fixed::from_int(i64::from(flight.aircraft)),
+                    },
+                    Factor {
+                        name: "sweep_width_nm",
+                        value: flight.sweep_width_nm,
+                    },
+                    Factor {
+                        name: "arc_deg",
+                        value: Fixed::from_int(i64::from(flight.arc_deg)),
+                    },
+                    Factor {
+                        name: "distance_nm",
+                        value: distance_nm,
+                    },
+                    Factor {
+                        name: "chance_of_a_force",
+                        value: of_a_force,
+                    },
+                    Factor {
+                        name: "surfaced_share",
+                        value: share,
+                    },
+                ],
+                result: chance,
+            });
+            let attempt = self.events.record(
+                day,
+                Some(pulse),
+                EventKind::SubmarineSearchAttempt {
+                    air_group: flight.group,
+                    submarine: id,
+                    distance_nm,
+                    chance,
+                    sighted,
+                },
+                vec![Cause::Event(flight.flown)],
+                breakdown,
+            );
+            if !sighted {
+                continue;
+            }
+
+            // Reported to the group's side at her hex through the report's
+            // error, held first by the group's command (statement 19).
+            let mut stream = self.rng_pair(
+                day,
+                Some(pulse),
+                Subsystem::Submarine,
+                Draw::SubmarineReportError,
+                EntityRef::Submarine(id),
+                EntityRef::AirGroup(flight.group),
+            );
+            let (struck, direction) = if stream.chance(search.position_error_chance) {
+                (
+                    Fixed::ONE,
+                    Some(usize::try_from(stream.below(6)).expect("below 6")),
+                )
+            } else {
+                (Fixed::ZERO, None)
+            };
+            let reported_hex = report_hex(&self.map, hex, direction);
+            let report = SubmarineReport {
+                hex: reported_hex,
+                day,
+                pulse: Some(pulse),
+                received_event: self.events.next_id(),
+                age_pulses: 0,
+            };
+            let holders = Holders::Commands {
+                commands: vec![self.command_of_group(flight.group)],
+                key: report.received_event,
+                day,
+                pulse: Some(pulse),
+            };
+            let ApplyOutcome::SubmarineReport { replaced } =
+                self.apply_report(flight.side, &Report::Submarine(report), &holders, search)
+            else {
+                unreachable!("a report of a submarine is taken in as one");
+            };
+            let breakdown = self.config.record_breakdowns.then(|| Breakdown {
+                factors: vec![
+                    Factor {
+                        name: "position_error_chance",
+                        value: search.position_error_chance,
+                    },
+                    Factor {
+                        name: "position_error_struck",
+                        value: struck,
+                    },
+                ],
+                result: Fixed::ZERO,
+            });
+            let received = self.events.record(
+                day,
+                Some(pulse),
+                EventKind::SubmarineReported {
+                    side: flight.side,
+                    hex: reported_hex,
+                    replaced,
+                },
+                vec![Cause::Event(attempt)],
+                breakdown,
+            );
+            assert_eq!(
+                received, report.received_event,
+                "the report cites the event that records it"
+            );
+            self.pass_report(flight.side, &Report::Submarine(report), &holders);
+
+            // She is held down for the rest of the pulse and the next (rule
+            // 20): the later of what it was and the next pulse.
+            let next = pulses_after(day, pulse, 1);
+            let boat = self.truth.submarines.get_mut(&id).expect("the boat exists");
+            if boat
+                .held_down_until
+                .is_none_or(|(d, p)| pulse_order(d, p) < pulse_order(next.0, next.1))
+            {
+                boat.held_down_until = Some(next);
+            }
+
+            // The aircraft attack her in the same pulse (rules 20, 50, 51).
+            let mut stream = self.rng_pair(
+                day,
+                Some(pulse),
+                Subsystem::Submarine,
+                Draw::SubmarineAirAttack,
+                EntityRef::Submarine(id),
+                EntityRef::AirGroup(flight.group),
+            );
+            let damaged = stream.chance(figures.air_attack_damages_chance);
+            let sunk = damaged && stream.chance(figures.air_attack_sinks_share);
+            let breakdown = self.config.record_breakdowns.then(|| Breakdown {
+                factors: vec![
+                    Factor {
+                        name: "air_attack_damages_chance",
+                        value: figures.air_attack_damages_chance,
+                    },
+                    Factor {
+                        name: "air_attack_sinks_share",
+                        value: figures.air_attack_sinks_share,
+                    },
+                ],
+                result: Fixed::ZERO,
+            });
+            let attacked = self.events.record(
+                day,
+                Some(pulse),
+                EventKind::SubmarineAttackedFromAir {
+                    air_group: flight.group,
+                    submarine: id,
+                    hex,
+                    damaged,
+                    sunk,
+                },
+                vec![Cause::Event(attempt)],
+                breakdown,
+            );
+            if sunk {
+                let boat = self.truth.submarines.get_mut(&id).expect("the boat exists");
+                boat.condition = SubmarineCondition::Sunk;
+                boat.passage = None;
+                self.events.record(
+                    day,
+                    Some(pulse),
+                    EventKind::SubmarineSunk { submarine: id },
+                    vec![Cause::Event(attacked)],
+                    None,
+                );
+            } else if damaged {
+                self.truth
+                    .submarines
+                    .get_mut(&id)
+                    .expect("the boat exists")
+                    .condition = SubmarineCondition::Damaged;
+                self.send_home(
+                    day,
+                    pulse,
+                    id,
+                    SubmarineLeftReason::Damaged,
+                    vec![Cause::Event(attacked)],
+                );
+            }
+        }
     }
 
     /// Sends a boat for home (decision 0218, 3, 21 and 43): a passage to her

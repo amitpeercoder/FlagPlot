@@ -499,6 +499,19 @@ fn describe_side(kind: &SideEventKind, key: &UmpireKey, at: (u32, Option<Pulse>)
         SideEventKind::SubmarineHuntedBy { task_force, hex } => {
             (d.id("task_force", *task_force).hex("hex", *hex), true)
         }
+        SideEventKind::OwnSubmarineAttackedFromAir {
+            submarine,
+            hex,
+            damaged,
+        } => (
+            d.id("submarine", *submarine)
+                .hex("hex", *hex)
+                .flag("damaged", *damaged),
+            true,
+        ),
+        SideEventKind::AttackedSubmarineFromAir { air_group, hex } => {
+            (d.id("air_group", *air_group).hex("hex", *hex), true)
+        }
         SideEventKind::BaseChangedSide {
             base,
             hex,
