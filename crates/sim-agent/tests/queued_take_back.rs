@@ -176,7 +176,7 @@ fn queued_lists_two_orders_and_a_command_at_dusk_in_the_sides_numbers() {
     p.ok("set_leave", json!({"leave": "launch", "given": true}));
     let answer = p.queued();
     assert_eq!(answer["kind"], "queued");
-    assert_eq!(answer["version"], 46);
+    assert_eq!(answer["version"], sim_agent::VERSION);
     assert_eq!(answer["clock"]["at"], "dusk");
     assert!(answer["as_of"].as_str().unwrap().starts_with("0-dusk-"));
     let entries = &answer["entries"];
