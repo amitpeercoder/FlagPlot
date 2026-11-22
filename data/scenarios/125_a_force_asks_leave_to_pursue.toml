@@ -1,0 +1,129 @@
+# Scenario 125: a force asks leave to go after what it has found.
+#
+# Decision 0214. Scenario 58's game with one difference in the contact and
+# the commands: the Allied side holds one carrier contact 16 hexes (640 nm)
+# to the east, beyond a night's steaming at full speed and the bombers'
+# reach together (610 nm) and within two nights' and that reach (970 nm).
+# The commander states "operate task force 1 from (0,0)" at balanced, gives
+# both leaves and sets the leave to pursue at ask. The staff asks leave to
+# pursue in the evening and the clock stops. The game is 4 days. The hand
+# calculation is in tests/scenario_125_a_force_asks_leave_to_pursue.rs. The
+# test runs this file on the frozen step 1 figures with scenario 53's table
+# of aircraft for each ship added and `pursuit_nights` of 2, and with
+# variants it builds from the parsed text. The upkeep, wear, fatigue and
+# supply figures are not loaded.
+#
+# PLACEHOLDER DATA. The base, ship, aircraft, figures and map are invented.
+
+name = "Placeholder scenario 125: A force asks leave to pursue"
+placeholder = true
+seed = 1942
+days = 4
+map = "../map/placeholder_a_carrier_force_closes.toml"
+ship_classes = "../reference/ship_classes.csv"
+port_sizes = "../reference/port_sizes.csv"
+aircraft_types = "../reference/aircraft_types.csv"
+search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat.toml"
+air_combat = "../reference/air_combat.toml"
+
+# Allied base 1.
+[[base]]
+id = 1
+name = "Placeholder base 1"
+side = "allied"
+q = 0
+r = 5
+supply_t = 1000
+fuel_t = 5000
+
+# Task force 1: one placeholder carrier, stopped at sea at (0,0).
+[[task_force]]
+id = 1
+name = "Placeholder carrier force 1"
+side = "allied"
+q = 0
+r = 0
+mission = "carrier"
+home_port = 1
+
+[[ship]]
+id = 1
+name = "Placeholder carrier 1"
+class = 4
+side = "allied"
+fuel_t = 3000
+task_force = 1
+
+# The groups aboard.
+[[air_group]]
+id = 1
+name = "Placeholder fighters 1"
+side = "allied"
+ship = 1
+aircraft_type = 4
+ready = 12
+
+[[air_group]]
+id = 2
+name = "Placeholder carrier scouts 2"
+side = "allied"
+ship = 1
+aircraft_type = 2
+ready = 6
+
+[[air_group]]
+id = 3
+name = "Placeholder dive bombers 3"
+side = "allied"
+ship = 1
+aircraft_type = 3
+ready = 10
+
+# The contact
+[[contact]]
+side = "allied"
+q = 16
+r = 0
+ship_count = 1
+kind = "carrier"
+age_pulses = 0
+
+# The Allied commander's commands
+[[command]]
+day = 1
+side = "allied"
+kind = "set_intent"
+intent = 1
+intent_kind = "operate_carriers"
+task_force = 1
+hex = [0, 0]
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_limit"
+limit = "risk"
+intent = 1
+risk = "balanced"
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_leave"
+leave = "prepare"
+given = true
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_leave"
+leave = "launch"
+given = true
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_pursuit"
+intent = 1
+leave = "ask"
