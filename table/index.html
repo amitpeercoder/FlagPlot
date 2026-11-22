@@ -436,6 +436,9 @@ body.watched .gives { display: none !important; }
 #game-says:empty { display: none; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .said.notsent { margin-top: 4px; font-size: 13px; }
+#card .how { display: flex; flex-direction: column; gap: 8px; }
+#card .how .hrow .when { display: block; font-family: var(--f-ui); font-size: 12px; font-weight: 700; letter-spacing: 0.1em; color: var(--paper-dim); }
+#card .how .hrow .words { text-align: left; }
 </style>
 </head>
 <body>
@@ -1228,7 +1231,10 @@ body.watched .gives { display: none !important; }
   function button(parent, text, go, fn) { var row = parent.querySelector('.row') || parent.appendChild(el('div', 'row')), b = el('button', go ? 'go' : '', text); b.type = 'button'; b.addEventListener('click', function () { fn(b); }); row.appendChild(b); return b; }
   // Resolves true when the command was taken in, and false when it was refused: the refusal is said in `home`, where it was signed.
   function act(tool, args, done, home) { return api(tool, args).then(function (a) { say('signed', done || a.summary || 'Done.'); return refresh().then(function () { return true; }); }).catch(function (e) { say('refused', e.message, home); return false; }); }
-  var TOLD = { contact: 'A contact is reported', attack: 'You are attacked', loss: 'A ship is lost or out of action', strike: 'Your strike is away', landing: 'Your men are ashore, or fighting' };
+  // The stops speak as the commander's own staff: "we" and "our" for the side, "you" only for what is the commander's to do.
+  var TOLD = { contact: 'We have a contact', attack: 'We are attacked', loss: 'We have lost a ship, or one is out of action', strike: 'Our strike is away', landing: 'Our men are ashore, or fighting' };
+  // A type of aircraft as the cards say it: the maker left off (the airLine rule), and a Japanese type's long name cut after its designation.
+  function shortType(name) { return cleanName(String(name)).replace(/^\S+ (?=\S*\d)/, '').replace(/ Type \d.*$/, ''); }
   // ---- a force asks leave to go after what it has found (decision 0214) ----
   function wholeHours(h) { var v = parseFloat(h); return isNaN(v) ? null : Math.round(v); }
   function askingWhat(a) { var k = String(a.kind || 'force').replace(/_/g, ' '); return (/^[aeiou]/i.test(k) ? 'an ' : 'a ') + k; }
@@ -1409,26 +1415,60 @@ body.watched .gives { display: none !important; }
       if (!endShown) { endShown = true; readEnd(); }
     }
     lastTold.forEach(function (t) {
-      var a = slip('FROM THE PLOT \u00b7 ' + (clock.at === 'dusk' ? '1800' : clock.at), null, TOLD[t.thing] || t.thing, null, false, box); t.lines.slice(0, 3).forEach(function (l) { a.appendChild(rich('div', 'told', l)); });
+      var a = slip('FROM THE PLOT \u00b7 ' + (clock.at === 'dusk' ? '1800' : clock.at), null, null, null, false, box); a.appendChild(rich('strong', '', toldTitle(t))); t.lines.slice(0, 3).forEach(function (l) { a.appendChild(rich('div', 'told', l)); });
       if (t.lines.length > 3) { var more = el('button', 'ref more', 'and ' + (t.lines.length - 3) + ' more'); more.type = 'button'; more.addEventListener('click', function () { readTold(t); }); a.appendChild(more); }
     });
     // A plan that waits for the commander's leave has one notice, under FOR YOUR DECISION: the clock's own slip for it would say the same twice.
     if (lastRun && lastRun.fired) lastRun.fired.forEach(function (f) {
       if (f.standing === 'waits_for_leave') return;
-      var a = slip('FROM STAFF \u00b7 DAY ' + f.day, null, f.words.replace(/^standing \w+ fired: /, '').replace(/^./, function (c) { return c.toUpperCase(); }), null, false, box);
+      var a = slip('FROM STAFF \u00b7 DAY ' + f.day, null, f.words.replace(/the commander's/g, 'your').replace(/^standing \w+ fired: /, '').replace(/^./, function (c) { return c.toUpperCase(); }), null, false, box);
       if (f.why && f.why.length) button(a, 'WHY', true, function () { readFired(f); });
       if (f.standing && !WATCH) button(a, 'DO NOT STOP ME FOR THIS', false, function () { act('set_interrupt', { standing: f.standing, on: false }, 'The clock will not stop for that again.', a); });
     });
     if (lastRun && lastRun.fired && lastRun.fired.some(function (f) { return f.standing === 'waits_for_leave'; })) slip('FROM STAFF', null, 'A plan waits for your leave.', null, false, box);
     if (stopArrive) slip('FROM THE PLOT \u00b7 ' + (clock.at === 'dusk' ? '1800' : clock.at), null, stopArrive.replace(/^./, function (c) { return c.toUpperCase(); }), null, false, box);
     if (stopNote && WATCH && !M.over) slip('FROM THE PLOT \u00b7 ' + (clock.at === 'dusk' ? '1800' : clock.at), null, stopNote, null, false, box);
-    if (lastRun && lastRun.stopped === 'asks_leave' && M.asking.length) slip('FROM STAFF', null, 'The staff asks your leave.', null, false, box);
+    if (lastRun && lastRun.stopped === 'asks_leave' && M.asking.length) slip('FROM STAFF', null, 'We ask your leave.', null, false, box);
     $('sp-why').hidden = playing || !box.children.length;
   }
+  // The heading of a slip of what was told: where the slip's own events say which it is, it says so ("We have lost USS Quincy", "Our men
+  // are fighting at Lunga"); where several kinds are in one slip, or the events do not say, it is the general heading. Handles are
+  // left in the words, for rich() to link by name.
+  function toldHead(t) {
+    var ev = t.events || [], uniq = function (a) { return a.filter(function (x, i) { return a.indexOf(x) === i; }); };
+    function ship(e) { var s = (e.entities || []).filter(function (x) { return x && /^ship:/.test(x.handle); })[0]; if (s && s.name && !M.names[s.handle]) M.names[s.handle] = cleanName(String(s.name)); return s ? s.handle : null; }
+    function many(list, what, one) { return list.length > 3 ? list.length + ' ' + what : list.length > 1 ? list.slice(0, -1).join(', ') + ' and ' + list[list.length - 1] : list[0]; }
+    function hexOf(e) { var m = /\((-?\d+),(-?\d+)\)/.exec(String(e.text)); return m ? '(' + m[1] + ',' + m[2] + ')' : null; }
+    if (!ev.length) return null;
+    if (t.thing === 'loss') {
+      var g = { sunk: [], out: [], fire: [] }, bad = false;
+      ev.forEach(function (e) { var s = ship(e), k = e.event_kind === 'ship_sunk' || e.event_kind === 'ship_lost_with_base' ? 'sunk' : e.event_kind === 'system_hit' ? 'out' : e.event_kind === 'aircraft_fire_roll' ? 'fire' : null; if (!s || !k) bad = true; else g[k].push(s); });
+      var kinds = ['sunk', 'out', 'fire'].filter(function (k) { return g[k].length; }); if (bad || kinds.length !== 1) return null;
+      var l = uniq(g[kinds[0]]), w = many(l, 'ships');
+      return kinds[0] === 'sunk' ? 'We have lost ' + w : kinds[0] === 'out' ? w + (l.length > 1 ? ' are' : ' is') + ' out of action' : w + (l.length > 1 ? ' are on fire among their aircraft' : ' is on fire among her aircraft');
+    }
+    if (t.thing === 'landing') {
+      var ashore = uniq(ev.filter(function (e) { return e.event_kind === 'men_landed'; }).map(hexOf)), fight = uniq(ev.filter(function (e) { return e.event_kind === 'ground_fight'; }).map(hexOf));
+      if (ashore.length && !fight.length && ashore.every(Boolean) && ashore.length <= 3) return 'Our men are ashore at ' + many(ashore, 'places');
+      if (fight.length && !ashore.length && fight.every(Boolean) && fight.length <= 3) return 'Our men are fighting at ' + many(fight, 'places');
+      return null;
+    }
+    if (t.thing === 'contact') {
+      var cs = ev.filter(function (e) { return e.event_kind === 'report_received'; }).map(function (e) { return /report: (\d+) ships?, (.*?), at /.exec(String(e.text)); });
+      if (cs.length === 1 && cs[0]) return 'We have a contact: ' + cs[0][1] + (+cs[0][1] === 1 ? ' ship' : ' ships') + ', ' + kindWords(cs[0][2], +cs[0][1]);
+      return cs.length > 1 ? 'We have ' + cs.length + ' new contacts' : null;
+    }
+    if (t.thing === 'attack') {
+      var bs = ev.filter(function (e) { return e.event_kind === 'base_attacked_against'; }).map(function (e) { var m = /bombs at ((?:base):\d+)/.exec(String(e.text)); return m && m[1]; });
+      if (bs.length && bs.length === ev.length && bs.every(Boolean)) { var bl = uniq(bs); return many(bl, 'bases') + (bl.length > 1 ? ' are' : ' is') + ' bombed'; }
+    }
+    return null;
+  }
+  function toldTitle(t, plain) { var h = toldHead(t); return h ? (plain ? h.replace(/\b(?:ship|base):\d+/g, function (x) { return nameOf(x); }).replace(/\((-?\d+),(-?\d+)\)/g, function (x, q, r) { return hexWords({ q: +q, r: +r }); }) : h) : TOLD[t.thing] || t.thing; }
   // The rest of what was told at this stop, and the reasons of an interrupt, are read on a paper over the chart.
   function readTold(t) {
     var doc = $('sheet-doc'); doc.textContent = ''; t.lines.forEach(function (l) { doc.appendChild(rich('p', '', l)); });
-    sheetAs(TOLD[t.thing] || t.thing); doc.hidden = false; $('sheet-text').hidden = true; $('sheet').hidden = false; $('sheet-close').focus();
+    sheetAs(toldTitle(t, true)); doc.hidden = false; $('sheet-text').hidden = true; $('sheet').hidden = false; $('sheet-close').focus();
   }
   function readFired(f) {
     var doc = $('sheet-doc'); doc.textContent = '';
@@ -1893,10 +1933,11 @@ body.watched .gives { display: none !important; }
     var pl = thingPlace(t), list = pl ? thingsAt(pl) : [], k = thingKey(t), i = -1;
     list.forEach(function (x, n) { if (i < 0 && thingKey(x) === k) i = n; });
     if (i < 0) { list.unshift(t); i = 0; } else list[i] = t;
-    if (stack && !$('card').hidden && list.length > 1 && thingKey(stack.list[stack.i]) === k && sameHex(thingPlace(stack.list[stack.i]), pl)) i = (i + 1) % list.length;
-    stack = { list: list, i: i }; showStack();
+    var cycles = stack && !$('card').hidden && list.length > 1 && thingKey(stack.list[stack.i]) === k && sameHex(thingPlace(stack.list[stack.i]), pl); if (cycles) i = (i + 1) % list.length;
+    stack = { list: list, i: i }; stepping = !!cycles; try { showStack(); } finally { stepping = false; }
   }
-  function stepStack(by) {
+  function stepStack(by) { stepping = true; try { stepStackIn(by); } finally { stepping = false; } }
+  function stepStackIn(by) {
     if (sibs) { var n = (sibs.i + by + sibs.list.length) % sibs.list.length, to = sibs.list[n]; wantDiary = to; try { history.replaceState(null, '', '#see=' + to); } catch (e) {} var lu = /^land_unit:/.test(to) && M.units.filter(function (y) { return y.land_unit.handle === to; })[0]; if (lu) cardUnit(lu); else cardEntity(to); return; }
     if (!stack) return; stack.i = (stack.i + by + stack.list.length) % stack.list.length; showStack();
   }
@@ -1955,11 +1996,21 @@ body.watched .gives { display: none !important; }
   // sheet, until the card is put down or the clock moves.
   var trail = [], shown = null, trailAt = '';
   function stamp() { return M.day + ':' + (typeof clock === 'object' && clock ? clock.at : ''); }
-  function forget() { trail = []; shown = null; backSheet = ''; $('card-back').hidden = true; endMarch(); if (arcDraft || airReach) { arcDraft = null; airReach = null; if (g) drawMarks(); } }
-  function remember(f) { return function (a) {
+  function forget() { trail = []; shown = null; shownKey = null; backSheet = ''; $('card-back').hidden = true; endMarch(); if (arcDraft || airReach) { arcDraft = null; airReach = null; if (g) drawMarks(); } }
+  // The trail of cards. A card is the thing it shows, by its handle (a hex by its hex). Opening the card of the thing whose card is open
+  // changes nothing in the trail; the trail never holds one thing twice running, so BACK never leads to the card it is on; stepping
+  // through a stack or a force's ships replaces the card and does not grow the trail; a link from the stop paper, which is not a card,
+  // starts a new trail.
+  var shownKey = null, stepping = false, viaStop = false;
+  document.addEventListener('click', function (e) { viaStop = !!(e.target.closest && e.target.closest('#stop')); setTimeout(function () { viaStop = false; }, 0); }, true);
+  function remember(f, keyOf) { return function (a) {
     if (trailAt !== stamp()) { forget(); trailAt = stamp(); }
-    if (shown) trail.push(shown);
-    shown = function () { $('sheet').hidden = true; f(a); };
+    var key = keyOf ? keyOf(a) : null, same = !!key && key === shownKey && !$('card').hidden && $('sheet').hidden;
+    if (!same && !stepping) {
+      if (viaStop) trail = [];
+      else if (shown && !(trail.length && trail[trail.length - 1].key === shownKey)) trail.push(shown);
+    }
+    shownKey = key; shown = function () { $('sheet').hidden = true; f(a); }; shown.key = key;
     $('card-back').hidden = !trail.length; backWords(); return f(a);
   }; }
   // A card offers the orders that can be given about what it shows: an enemy
@@ -2032,9 +2083,11 @@ body.watched .gives { display: none !important; }
     cardBase = function (t) { var r = b.apply(this, arguments); ordersHere({ kind: 'own', base: t.base, name: t.base.base.name, v: placeOf(t.base.place) }); return r; };
     cardHex = function (hpl) { var r = x.apply(this, arguments); ordersHere(watersAt(hpl)); return r; };
   })();
-  cardGone = remember(cardGone);
-  cardUnit = remember(cardUnit); cardEntity = remember(cardEntity); cardContact = remember(cardContact); cardPlace = remember(cardPlace); cardForce = remember(cardForce); cardBase = remember(cardBase); cardHex = remember(cardHex);
-  $('card-back').addEventListener('click', function () { var was = trail.pop(); if (!was) return; shown = was; $('card-back').hidden = !trail.length; backWords(); was(); });
+  cardGone = remember(cardGone, function (n) { return 'contact:' + n; });
+  cardUnit = remember(cardUnit, function (u) { return u.land_unit.handle; }); cardEntity = remember(cardEntity, function (h) { return h; }); cardContact = remember(cardContact, function (t) { return t.contact.contact.handle; });
+  cardPlace = remember(cardPlace, function (t) { return t.base ? t.base.base.handle : 'hex:' + t.place.q + ',' + t.place.r; }); cardForce = remember(cardForce, function (t) { return t.force.task_force.handle; });
+  cardBase = remember(cardBase, function (t) { return t.base.base.handle; }); cardHex = remember(cardHex, function (h) { return 'hex:' + h.q + ',' + h.r; });
+  $('card-back').addEventListener('click', function () { var was = trail.pop(); if (!was) return; shown = was; shownKey = was.key || null; $('card-back').hidden = !trail.length; backWords(); was(); });
   $('card-find').addEventListener('click', function () { if (findAt) turnTo(findAt); });
   $('card-diary').addEventListener('click', function () { if (cardHandle) readUnitDiary(cardHandle); });
   (function () { var f = cardForce, b = cardBase, u = cardUnit, e = cardEntity;
@@ -2075,11 +2128,39 @@ body.watched .gives { display: none !important; }
     api('get_entity', { handle: c.contact.handle }).then(function (a) {
       var ev = a.entity && a.entity.last_report_event; if (ev == null) return;
       return api('explain', { event: ev }).then(function (x) {
-        var lines = (x.nodes || []).filter(function (n) { return n.type === 'event' && n.depth <= 1 && n.text; }).map(function (n) { return (n.day != null ? 'Day ' + n.day + (n.pulse ? ', ' + n.pulse : '') + ': ' : '') + n.text; });
-        listOf(how, 'HOW WE KNOW', lines);
+        howWeKnow(how, (x.nodes || []).filter(function (n) { return n.type === 'event' && n.depth <= 1 && n.text; }));
       });
     }).catch(function () {});
    
+  }
+  // HOW WE KNOW on a contact's card: each report that made the contact, a row for each, the when on a small line of its own and the
+  // words beneath it, in the staff's voice, with units by name and places as latitude and longitude with the hex in brackets, linked.
+  // The events carry no fields but their kind, their words, their units and their day and pulse, so the report's figures are read from
+  // its words. A report and the search that made it are one row. A kind not known here is said as the game has it, tidied.
+  function kindWords(k, n) { k = String(k || '').replace(/_/g, ' ').trim(); if (!k || k === 'unknown' || k === 'unspecified') return 'kind not made out'; return 'taken for ' + (n === 1 ? (/^[aeiou]/i.test(k) ? 'an ' : 'a ') + k : /s$/.test(k) ? k : k + 's'); }
+  function howWhen(n) { var w = n.day != null && n.pulse ? phaseWords(n.day, n.pulse).replace(/ · [\d–]+$/, '') : ''; return w; }
+  function howWeKnow(into, nodes) {
+    if (!nodes.length) return;
+    var head = el('div', 'sub', 'HOW WE KNOW'), box = el('div', 'how'); into.appendChild(head); into.appendChild(box);
+    function unit(n, i) { var u = (n.entities || [])[i || 0]; if (u && u.name && !M.names[u.handle]) M.names[u.handle] = cleanName(String(u.name)); return u ? refTo(u.handle, u.name) : el('span', '', 'Our aircraft'); }
+    function row(n, parts) { var r = el('div', 'hrow'), w = howWhen(n), d = el('div', 'words'); if (w) r.appendChild(el('b', 'when', w)); parts.forEach(function (x) { d.appendChild(typeof x === 'string' ? document.createTextNode(x) : x); }); r.appendChild(d); box.appendChild(r); }
+    function atPlace(q, r) { return placeLink({ q: +q, r: +r }); }
+    var used = {};
+    nodes.forEach(function (n, i) {
+      if (used[i]) return;
+      var tx = String(n.text).replace(/^(Allied|Japanese|allied|japanese) /, ''), m;
+      if (n.event_kind === 'report_received' && (m = /report: (\d+) ships?, (.*?), at \((-?\d+),(-?\d+)\): (new|refreshed) contact:\d+/.exec(tx))) {
+        var cnt = +m[1], sight = nodes.filter(function (o, j) { return j > i && !used[j] && o.event_kind === 'search_attempt'; })[0], what = cnt + (cnt === 1 ? ' ship' : ' ships') + ', ' + kindWords(m[2], cnt) + ', at ';
+        if (sight) { used[nodes.indexOf(sight)] = true; row(n, [unit(sight), ' sighted ' + what, atPlace(m[3], m[4]), m[5] === 'new' ? '. Plotted as a new contact.' : '. The contact is confirmed.']); }
+        else row(n, ['Reported: ' + what, atPlace(m[3], m[4]), m[5] === 'new' ? '. Plotted as a new contact.' : '. The contact is confirmed.']);
+      } else if (n.event_kind === 'search_attempt' && (m = /searched and sighted (.*)$/.exec(tx))) row(n, [unit(n), ' sighted ' + m[1] + '.']);
+      else if (n.event_kind === 'air_attack' && (m = /(bombs|torpedoes) at a ship(?:: (\d+) shots?)?/.exec(tx))) row(n, [unit(n), ' attacked it with ' + m[1] + (m[2] ? ', ' + m[2] + ' dropped' : '') + '.']);
+      else {
+        var parts = [], last = 0, re = /\((-?\d+),(-?\d+)\)/g, s = tx.replace(/\bcontact:\d+/g, 'it'), mm; (n.entities || []).forEach(function (u) { if (u && u.name && !M.names[u.handle]) M.names[u.handle] = cleanName(String(u.name)); });
+        while ((mm = re.exec(s))) { if (mm.index > last) parts.push(rich('span', '', s.slice(last, mm.index))); parts.push(atPlace(mm[1], mm[2])); last = re.lastIndex; }
+        parts.push(rich('span', '', s.slice(last).replace(/^./, function (c) { return c; }))); row(n, parts);
+      }
+    });
   }
   function cardPlace(t) {
     var pl = t.place, name = (t.base && t.base.base.name) || M.hexNames[pl.q + ',' + pl.r], body = openCard((name || (t.sea ? 'OPEN WATER' : 'LAND')).toUpperCase(), t.base ? 'ENEMY BASE' : null);
@@ -2225,7 +2306,7 @@ body.watched .gives { display: none !important; }
     else if ((k === 'aircraft_lost' || k === 'pilots_lost') && R('^' + H + ' lost (\\d+) (aircraft|pilots?), (\\d+) left')) out = N(m[1]) + ' lost ' + m[2] + ' ' + m[3] + '; ' + m[4] + ' left';
     else if (k === 'base_attacked_against' && R('bombs at ' + H + ': .*?(\\d+) hits?: (.*)$')) out = (function (d) { var seen = /; (?:recognised as (.+)|(type not made out))$/.exec(d); if (seen) d = d.slice(0, seen.index);
       var parts = d.split(', ').filter(function (x) { return !/^0 /.test(x); }).map(function (x) { return x.replace(/on nothing/, 'to no effect'); });
-      return N(m[1]) + ' was bombed' + (seen ? (seen[1] ? ' by ' + cleanName(seen[1]) + ' aircraft' : ' by aircraft of a type not made out') : '') + ': ' + (m[2] === '0' ? 'no bomb fell on the base' : m[2] + (m[2] === '1' ? ' bomb' : ' bombs') + ' on the base' + (parts.length ? ', ' + parts.join(', ') : '')); })(m[3]);
+      return N(m[1]) + ' was bombed' + (seen ? (seen[1] ? ' by ' + shortType(seen[1]) + ' aircraft' : ' by aircraft of a type not made out') : '') + ': ' + (m[2] === '0' ? 'no bomb fell on the base' : m[2] + (m[2] === '1' ? ' bomb' : ' bombs') + ' on the base' + (parts.length ? ', ' + parts.join(', ') : '')); })(m[3]);
     else if (k === 'air_fight' && R('^' + H + ' patrol at ([^:]*)')) out = N(m[1]) + ' engaged ' + m[2];
     else if (k === 'airfield_built' && R('^' + H)) out = 'The airfield at ' + N(m[1]) + ' is complete';
     else if (k === 'air_attack_against' && R('^' + H + ' attacked by (\\d+) aircraft(?: with (\\w+), (?:recognised as (.+)|(type not made out)))?')) out = N(m[1]) + ' was attacked' + (m[3] ? ' with ' + m[3] : '') + ' by ' + m[2] + ' aircraft' + (m[4] ? ', recognised as ' + cleanName(m[4]) : m[5] ? ', type not made out' : '');
@@ -3361,7 +3442,7 @@ body.watched .gives { display: none !important; }
   }
   var calm = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   // The table's own stop (nothing in the engine): at an evening whose briefing names a unit that came today or comes tomorrow.
-  function arrivalsStop() { return clock.at === 'dusk' && $('stop-arrive').checked && ((M.came || []).length || (M.tomorrow || []).length) ? 'reinforcements ' + ((M.came || []).length ? 'came today' : 'come tomorrow') : ''; }
+  function arrivalsStop() { return clock.at === 'dusk' && $('stop-arrive').checked && ((M.came || []).length || (M.tomorrow || []).length) ? 'our reinforcements ' + ((M.came || []).length ? 'came today' : 'come tomorrow') : ''; }
   function stopOn() { return ['contact', 'attack', 'loss', 'strike', 'landing'].filter(function (k) { return $('stop-' + k).checked; }); }
   // Where the scenario lets a seat stop between pulses, time is advanced a pulse at a time and each pulse is
   // plotted as it is fought. Elsewhere a day is fought whole and then plotted.
@@ -3387,7 +3468,7 @@ body.watched .gives { display: none !important; }
               // What the attack did to the side's own: the units that lost aircraft or men at the places attacked, in that pulse.
               if (t.thing === 'attack') { var at = {}, when = {}; told.forEach(function (n) { when[byNumber[n].pulse] = 1; (byNumber[n].entities || []).forEach(function (x) { if (x && /^(base|task_force):/.test(x.handle)) at[x.handle] = 1; }); });
                 Object.keys(byNumber).map(Number).sort(function (a, b) { return a - b; }).forEach(function (n) { var e = byNumber[n]; if (told.indexOf(n) >= 0 || !HURT[e.event_kind] || !when[e.pulse] || !(e.entities || []).some(function (x) { return x && at[x.handle]; })) return; lines.push(sayEvent(e, true)); }); }
-              lastTold.push({ thing: t.thing, lines: lines }); });
+              lastTold.push({ thing: t.thing, lines: lines, events: told.map(function (n) { return byNumber[n]; }) }); });
             clock = { at: r.clock.at, day: r.clock.day }; await refresh();
             var arrive = arrivalsStop();
             if (!until || !playing || r.game_over || r.stopped !== 'pulses' || arrive) {
@@ -3429,8 +3510,8 @@ body.watched .gives { display: none !important; }
     return TOLD_KIND[e.event_kind] || null;
   }
   function toldOf(evs, wanted) {
-    var by = {}; evs.forEach(function (e) { var t = toldAs(e); if (t && wanted.indexOf(t) >= 0) (by[t] = by[t] || []).push(sayEvent(e, true)); });
-    return ['contact', 'attack', 'loss', 'strike', 'landing'].filter(function (t) { return by[t]; }).map(function (t) { return { thing: t, lines: by[t] }; });
+    var by = {}, evby = {}; evs.forEach(function (e) { var t = toldAs(e); if (t && wanted.indexOf(t) >= 0) (by[t] = by[t] || []).push(sayEvent(e, true)); (evby[t] = evby[t] || []).push(e); });
+    return ['contact', 'attack', 'loss', 'strike', 'landing'].filter(function (t) { return by[t]; }).map(function (t) { return { thing: t, lines: by[t], events: evby[t] }; });
   }
   function watchGo(until) {
     if (M.over) { say('stopped', 'The game is over.'); return; }

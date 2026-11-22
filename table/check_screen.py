@@ -173,6 +173,53 @@ def orders_and_signed():
           "with the drawer closed the two controls that run time stay in sight under the head: the same buttons of the foot")
 
 
+def stops_speak_as_the_staff():
+    """The stops of the clock speak as the commander's own staff (decision 0221, stage 2): "we" and "our" for the side, "you"
+    only for what is the commander's to do; an aircraft type is said as the cards say it (the maker left off, a Japanese
+    type cut after its designation), by the page's text."""
+    with open(os.path.join(HERE, "index.html"), encoding="utf-8") as page:
+        text = page.read()
+    told = text[text.index("var TOLD = {"):text.index("\n", text.index("var TOLD = {"))]
+    check("'We are attacked'" in told and "'Our strike is away'" in told and "'Our men are ashore, or fighting'" in told
+          and not any(w in told for w in ("You ", "Your ")), "what the clock was stopped for is said as \"we\" and \"our\", never \"you\" for the side")
+    check("'We ask your leave.'" in text and "'A plan waits for your leave.'" in text and "'our reinforcements '" in text and "the commander's/g, 'your'" in text,
+          "a leave asked or waited for is the commander's own: \"your\"; the side's reinforcements are \"our\"")
+    check("function toldHead(t)" in text and "'We have lost '" in text and "' is on fire among her aircraft'" in text and "'Our men are ashore at '" in text
+          and "'Our men are fighting at '" in text and "'We have a contact: '" in text and "' bombed'" in text and "events: told.map(" in text,
+          "where a slip's own events say which it is, its heading says so (a ship lost or out of action, men ashore or fighting, the contact, the base bombed); the general heading stays for a mix")
+    check("function shortType(name)" in text and "' by ' + shortType(seen[1]) + ' aircraft'" in text,
+          "an aircraft type in a stop's line is the short designation, not the data's long name")
+
+
+def cards_show_no_handle():
+    """A contact's HOW WE KNOW is said in the table's words, not the engine's raw lines (decision 0221, stage 2), by the
+    page's text: its rows are a when and the words, units by name, places linked, and a handle of the form word:number is
+    never put on a card (the page is drawn in a browser; the same was read there for every kind of card)."""
+    import re
+    with open(os.path.join(HERE, "index.html"), encoding="utf-8") as page:
+        text = page.read()
+    check("howWeKnow(how, " in text and "listOf(how, 'HOW WE KNOW'" not in text and ".replace(/\\bcontact:\\d+/g, 'it')" in text,
+          "a contact's HOW WE KNOW is built by howWeKnow, which has no handle of its own: a contact is \"it\"")
+    css = (re.search(r"#card \.how \.hrow \.words \{([^}]*)\}", text) or [None, ""])[1]
+    check("text-align: left" in css and "#card .how .hrow .when { display: block;" in text,
+          "each row is the when on its own small line and the words beneath it, left-aligned, with no figure column")
+
+
+def the_trail_holds_no_duplicate():
+    """The trail of cards (decision 0221, stage 2), by the page's text: a card is the thing it shows by its handle; opening the
+    card of the thing already shown changes nothing in the trail; the trail never holds one thing twice running; stepping
+    replaces the card; a link from the stop paper starts a new trail. (Tried in a browser, not here.)"""
+    with open(os.path.join(HERE, "index.html"), encoding="utf-8") as page:
+        text = page.read()
+    check("function remember(f, keyOf)" in text and "key === shownKey && !$('card').hidden" in text
+          and "trail[trail.length - 1].key === shownKey" in text,
+          "opening the card of the thing whose card is open leaves the trail as it is, and the trail never holds one thing twice running")
+    check("stepping = true; try { stepStackIn(by); }" in text and "if (viaStop) trail = [];" in text and "closest('#stop')" in text,
+          "stepping through a stack replaces the card without growing the trail, and a link from the stop paper starts a new trail")
+    check(all("remember(" + c + ", function" in text for c in ("cardContact", "cardForce", "cardBase", "cardPlace", "cardHex", "cardUnit", "cardEntity", "cardGone")),
+          "every way a card opens names the thing it shows")
+
+
 def queue_through_the_bridge(bridge):
     """The two tools SIGNED rests on, as the page calls them: queued lists what was signed, with a unit's hold going with
     its order, and take_back withdraws one entry and what goes with it, refused with the token out of date."""
@@ -691,6 +738,9 @@ def main():
     outcomes_said_one_way()
     the_stop_paper()
     orders_and_signed()
+    stops_speak_as_the_staff()
+    cards_show_no_handle()
+    the_trail_holds_no_duplicate()
     if not os.path.exists(args.sim_cli):
         sys.exit(f"{args.sim_cli} is not built: cargo build --release -p sim-cli")
     with tempfile.TemporaryDirectory() as keep:
