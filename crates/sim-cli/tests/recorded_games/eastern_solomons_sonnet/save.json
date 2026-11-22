@@ -27,7 +27,7 @@
     },
     {
       "file": "data/scenarios/../reference/air_combat.toml",
-      "hash": "60bed4440a5f1083"
+      "hash": "7f707c95bf06dce0"
     }
   ],
   "doctrine_version": "supply-53",
@@ -35,7 +35,7 @@
   "hashes": [
     {
       "day": 1,
-      "hash": "f234d1a7f5362eb6"
+      "hash": "b840f1ba7c7a6d81"
     }
   ],
   "orders": [
@@ -589,7 +589,7 @@
       "unit": "air_group:19"
     }
   ],
-  "rules_version": 27,
+  "rules_version": 28,
   "scenario": {
     "file": "data/scenarios/05_eastern_solomons.toml",
     "hash": "a9443b066a393e0b"
@@ -600,6 +600,6 @@
   },
   "seed": 1942,
   "staff": [],
-  "state_version": "flagplot-state-v55",
+  "state_version": "flagplot-state-v56",
   "version": 24
 }

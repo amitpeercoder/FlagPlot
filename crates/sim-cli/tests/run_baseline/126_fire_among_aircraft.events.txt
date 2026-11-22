@@ -2,9 +2,9 @@ Scenario 126: Fire among a carrier's aircraft
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash c1e4627fec474567  16 events
-day   2  hash 2acf75bfdc3fa6b2  10 events
-day   3  hash ea2e5f3df10d457c  19 events
+day   1  hash 5cd9c2d1371679b8  16 events
+day   2  hash 9df164fcef55400b  10 events
+day   3  hash 5ba2a44a9148780b  19 events
 
 #1 D1 -         order:1 accepted for air_group:1  <- order:1
 #2 D1 -         order:2 accepted for air_group:1  <- order:2

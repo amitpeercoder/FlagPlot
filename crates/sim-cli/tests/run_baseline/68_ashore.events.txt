@@ -2,20 +2,20 @@ Placeholder scenario 68: Ashore
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 8ed8d1f64e98fbc7  26 events
-day   2  hash 02d5321261d6c3bc  15 events
-day   3  hash 7a8320bf229449a1  13 events
-day   4  hash 62b73045341d78be  13 events
-day   5  hash bf4a0b0dc5fb83aa  44 events
-day   6  hash 8b0f6bc3be9971be  27 events
-day   7  hash 1f14c3974dd9ff75  18 events
-day   8  hash 8f48df6359f185f4  19 events
-day   9  hash c7c0de4c7a98c1ac  16 events
-day  10  hash 3f71a8dc52f25dc4  24 events
-day  11  hash 8c7403d7d311cdc0  41 events
-day  12  hash 19fd7eea6dd1aaf7  16 events
-day  13  hash ba6f139f1df9648f  9 events
-day  14  hash 161bb8029f8c3365  6 events
+day   1  hash 183a378e9f58f8ee  26 events
+day   2  hash aa1387486fa9d067  15 events
+day   3  hash 293016336f314766  13 events
+day   4  hash 3a83fabe97564ae7  13 events
+day   5  hash aac4bd1b39cfb80f  44 events
+day   6  hash 40d6d53504958837  27 events
+day   7  hash d675ec6165915994  18 events
+day   8  hash 34d6111bf9f6c3b3  19 events
+day   9  hash af4fe87d3cdfb39f  16 events
+day  10  hash 465f7c65169451d3  24 events
+day  11  hash 71f00de99df72cdf  41 events
+day  12  hash 6fcd4bf695bb7ad6  16 events
+day  13  hash f3af93dcf6952fa6  9 events
+day  14  hash 40543e11544181b8  6 events
 
 #1 D0 -         Allied ground report at (4,0): 500 enemy men ashore (told)
 #2 D1 -         Allied the commander's command taken: set intent:1 to take the place at (4,0)

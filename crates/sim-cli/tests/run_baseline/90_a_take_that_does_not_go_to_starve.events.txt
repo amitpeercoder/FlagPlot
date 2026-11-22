@@ -2,14 +2,14 @@ Placeholder scenario 90: A take that does not go to starve
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 3c58fc71878ebc67  41 events
-day   2  hash 3aa144db5bedabfa  9 events
-day   3  hash fc9b265438526456  9 events
-day   4  hash 6c60635e571b7f6a  9 events
-day   5  hash c6cbe6e972ba8ec6  9 events
-day   6  hash 80faf3797dc61d92  9 events
-day   7  hash 66f82d1d0895d1f6  9 events
-day   8  hash c9b904d3ca738092  9 events
+day   1  hash c7e9d603cdf4e63e  41 events
+day   2  hash 211c8869741a7ec7  9 events
+day   3  hash ebd241b797d6b8d7  9 events
+day   4  hash 9313655c4992348f  9 events
+day   5  hash ac4ddca67cd433bf  9 events
+day   6  hash bd6b0d8663fc3547  9 events
+day   7  hash 55d93a9bb2b6d9b7  9 events
+day   8  hash da341f4920d83f8f  9 events
 
 #1 D0 -         Allied ground report at (4,0): 400 enemy men ashore (told)
 #2 D1 -         Allied the commander's command taken: set intent:1 to control island 1
