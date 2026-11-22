@@ -34,7 +34,7 @@ What the rows hold (`engagement_events.csv`):
 1. **A find is the contact the closing rule would take were one bound of the order lifted.** It is looked for at dusk, for a carrier force where the closing rule runs (not held, not going home, not fuelling, with a bomber that can fly), under an order to operate carriers or to deny waters, and only where the rule as it stands closes on nothing and has nothing in reach. The rule is then worked again whole, with one bound lifted, and the contact it takes is the find:
    - **too far:** the night's steaming taken as `pursuit_nights` nights;
    - **the waters first:** the order's preference for its waters set aside.
-   Where both give a contact the too-far one is the find. Nothing else of the rule is lifted: the kinds a risk closes on, the fuel to go and come back at the risk's margin, and freshness are as they are.
+   Where both give a contact the find is the one of the more important kind, and of two of a kind the nearer. Nothing else of the rule is lifted: the kinds a risk closes on, the fuel to go and come back at the risk's margin, and freshness are as they are.
 2. **A find never crosses a hard limit.** A contact outside the order's area limit, read up the tree, is not a find. A force that is held has none. The forces limit binds as today.
 3. **A force covering a landing has no find.** A carrier force that serves a take or an island stays with it.
 
