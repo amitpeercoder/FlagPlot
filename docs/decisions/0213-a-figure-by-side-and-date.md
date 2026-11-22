@@ -65,3 +65,7 @@ Read by a reviewer who had not seen it written. What follows is the plan as it n
 6. **What it amends, in full:** decision 0187's sentence; `docs/step2-spec.md`, tuning rules 1 and 7, which gain the exception of rule 2 here; chapter 1.
 7. **A navy within a side is still not told apart.** The first figure given by side is of fuel handled in American and Japanese carriers; a British carrier on the Allied side would read the American value. No such ship is on file. It is noted for the campaign.
 8. **The only figure given by side so far is decision 0212's `aircraft_fire_chance`,** which the designer confirmed on Nov 22, 2026.
+
+## As built, Nov 22, 2026
+
+Built with decisions 0211 and 0212 in one pull request, to "Reviewed". The table is `[[by_side]]` in `air_combat.toml`, with `figure`, `side` (`allied` or `japanese`), `value` and `rests_on`; the loader (`crates/sim-data/src/reference.rs`) keeps the list of figures a record names, `GIVEN_BY_SIDE`, now `aircraft_fire_chance` alone, and refuses what rule 4 of "Reviewed" lists. Resolved, a figure is a `BySide` value in the simulation's figures, read with the side of the unit a rule works on. The other figures files refuse the table as any unknown key. `SideView::air_combat_figures` gives the side's own value in both places, and a dry run (`sim-trial`'s `build_world`) is built on the figures as the side knows them (`RefData::as_seen_by`). The frozen copies have no such table, and `crates/sim-data/tests/frozen_figures.rs` names it among what they are without.

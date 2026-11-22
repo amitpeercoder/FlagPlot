@@ -261,3 +261,29 @@ The measurer's readings are ruled as measured, so that what is built is what was
 - A fire ends when she sinks by flooding. A carrier lost to fire is sunk by the ordinary sinking, with the fire's record as its cause.
 
 The hand calculations are scenarios 126 (this rule) and 127 (decision 0211).
+
+## As built, Nov 22, 2026
+
+Built with decisions 0211 and 0213 in one pull request, to the rules of "Measured and reviewed again" and the readings ruled above. The code is `crates/sim-core/src/airstrike/carrier_fire.rs`, with the state `Ship::aircraft_fire` (its level, the day and pulse a raid last set it, and its record; hashed after `available_from`, the layout `flagplot-state-v55`), the last phase of every pulse `PulsePhase::AircraftFires`, the records `AircraftFireRoll` and `AircraftFireFought`, the draws `AircraftFireSet` (20) and `AircraftFireFought` (21), and `Ship::deck_for_flying`, which every launch, patrol, landing and the side's view of them read. The rules label is 27. Scenario 126 is its hand calculation.
+
+Where the build reads the record, and where it departs from it:
+
+- **A carrier lost to fire** is sunk by the ordinary `ShipSunk`, unchanged in its fields; "fire as its cause" is its cause, the `AircraftFireFought` record that rose above the top (marked `lost`). No field was added to `ShipSunk`.
+- **The raid's record** names the carrier and her force, not the raid's group, which is the enemy's; it cites the raid's attacks on her, which the carrier's side is given cut.
+- **The bombers counted** are each bomber group's ready aircraft less those the pulse's count has flying, plus its damaged aircraft, aboard; and the ready ones flying. Aircraft away from an earlier sortie and not back count in neither. Where none is aboard no draw is made and nothing is recorded.
+- **The chance** is worked in the game's six decimals, each product cut in turn: scenario 126's 0.208546875 (the Allied side, half away, three bombs) is 0.208547 in the game, and that one statement is an ignored test, back to the architect.
+- **A fire set closes her deck at once,** as a deck that goes out does: her aircraft in the air in that pulse look for another deck or a base.
+- **A fire is fought only in a task force.** A burning carrier sent to a yard keeps her fire there, unfought, and it is fought again when she is back in a force (`docs/rules/differences.md`, row 57, to be ruled).
+- **A side's view and a dry run** read the side's own `aircraft_fire_chance` for both sides (decision 0213).
+
+### The scenarios for play, 1,000 games each, as built
+
+| | Measured ("The amended rules measured", both) | As built |
+| --- | --- | --- |
+| Midway, who is ahead | Japanese 579, Allied 421 | Japanese 571, Allied 429 |
+| Coral Sea | Allied 670 | Allied 679 |
+| Five days | Allied 816 | Allied 827 (Japanese 172, one level) |
+
+Carriers lost, games of 1,000, to flooding and to fire (measured in brackets): Akagi 53 and 632 (59, 627); Kaga 56 and 650 (48, 635); Soryu 274 and 422 (269, 414); Hiryu 232 and 481 (245, 445); Enterprise at Midway 70 and 152 (83, 145); Hornet 79 and 172 (69, 196); Yorktown at Midway 30 and 0 (33, 1); Yorktown at the Coral Sea 19 and 95 (15, 86); Lexington 0 and 149 (0, 134); Shoho 870 and 41 (871, 39); Shokaku at the Coral Sea 0 and 4; Zuikaku at the Coral Sea 0 and 3; Shokaku in the five days 7 and 304 (10, 291); Zuikaku 9 and 302 (11, 285); Ryujo 228 and 507 (232, 510); Enterprise in the five days 220 and 70 (217, 72); Saratoga 7 and 82 (6, 86). No ship that is not a carrier is lost to fire.
+
+The difference from the measured numbers has one cause found: the first raid of a kind at a force draws its ship as scenario 127's hand calculation has it, a draw d below one and the place floor(n x d), where the throwaway drew a whole number below n. The same seed therefore takes another ship in some pulses, and the games that follow differ. Nothing was moved. These are the scenarios' new numbers, in place of those recorded in decision 0198 and its like before these rules: Midway is inside the band of decision 0187 (neither side in more than 650); the Coral Sea is outside it by 29 games and the five days by 177, both toward the Allied side, as measured. The five days' balance is work of its own, by the designer's word above.
