@@ -3238,7 +3238,7 @@ body.watched .gives { display: none !important; }
     var ids = Object.keys(ptrs); if (ids.length === 2) { pinch0 = Math.hypot(ptrs[ids[0]].x - ptrs[ids[1]].x, ptrs[ids[0]].y - ptrs[ids[1]].y); zoom0 = goal.zoom; }
   });
   canvas.addEventListener('pointermove', function (e) {
-    var p = ptrs[e.pointerId]; if (!p) { hoverAt = onTable(e.clientX, e.clientY); if (e.pointerType === 'mouse') canvas.classList.toggle('over', !picking && !playing && !!tileAt(e.clientX, e.clientY)); return; } var ids = Object.keys(ptrs);
+    var p = ptrs[e.pointerId]; if (!p) { hoverAt = onTable(e.clientX, e.clientY); if (e.pointerType === 'mouse') canvas.classList.toggle('over', !picking && !playing && (!!tileAt(e.clientX, e.clientY) || orderAt(hoverAt) != null)); return; } var ids = Object.keys(ptrs);
     if (ids.length === 1) { var s = camDist * 0.0016; goal.x -= (e.clientX - p.x) * s; goal.z -= (e.clientY - p.y) * s * (1.5 - 0.5 * flat); clampGoal(); }
     p.x = e.clientX; p.y = e.clientY;
     if (ids.length === 2 && pinch0) { var d = Math.hypot(ptrs[ids[0]].x - ptrs[ids[1]].x, ptrs[ids[0]].y - ptrs[ids[1]].y); goal.zoom = zoom0 + Math.log(d / pinch0) * 0.5; clampGoal(); }
