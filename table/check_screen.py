@@ -158,11 +158,11 @@ def the_screen(bridge):
     check("<html" in get(bridge.table + "/"), "the page is served under the table's key")
     check(get(bridge.table + "/config") == {"screen": True}, "with no game in hand the page is told to show the screen")
     listed = get(bridge.table + "/scenarios")["scenarios"]
-    check([s["id"] for s in listed] == ["eastern-solomons", "coral-sea", "eastern-solomons-five-days", "guadalcanal-39-days"],
-          "the screen lists the scenarios simplest first: the Eastern Solomons, the Coral Sea, the Eastern Solomons over five days and the 39 days")
+    check([s["id"] for s in listed] == ["eastern-solomons", "coral-sea", "midway", "eastern-solomons-five-days", "guadalcanal-39-days"],
+          "the screen lists the scenarios simplest first: the Eastern Solomons, the Coral Sea, Midway, the Eastern Solomons over five days and the 39 days")
     check(all("file" not in p for s in listed for p in s["pairings"]), "the list given to the screen names no file")
-    check([len(s["pairings"]) for s in listed] == [4, 7, 7, 7],
-          "the Eastern Solomons offers 4 games, the Coral Sea 7, the five-day Eastern Solomons 7 and the 39 days 7")
+    check([len(s["pairings"]) for s in listed] == [4, 7, 7, 7, 7],
+          "the Eastern Solomons offers 4 games, the Coral Sea 7, Midway 7, the five-day Eastern Solomons 7 and the 39 days 7")
     seat = get(bridge.table + "/agent?side=allied&scenario=guadalcanal-39-days")["ok"]
     program = os.path.join(HERE, "seat_mcp.py")
     check(seat["claude"].startswith("claude mcp add flag-plot-allied -- python3 " + program + " --url " + bridge.root + "/seat/"),

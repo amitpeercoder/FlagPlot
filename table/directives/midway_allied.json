@@ -1,0 +1,34 @@
+{
+ "note": "Directives for the Allied seat of Midway, 3 to 7 June 1942. Written for the game in its own words: these are not historical documents and quote none. Each gives the situation as the commander above has it and the mission with its purpose, and nothing the commander can find out for himself: what the enemy has, what is coming and what cannot be replaced are read elsewhere on the table. Decision 0157; what the American side knew of the enemy's plan, decision 0198, rule 34.",
+ "directives": [
+  {
+   "number": 1,
+   "when": "start",
+   "from": "Commander in Chief, U.S. Pacific Fleet",
+   "to": "Commander, Task Force 17",
+   "subject": "Midway",
+   "parts": [
+    {
+     "heading": "1. Situation",
+     "text": [
+      "The enemy is expected to move against Midway in the coming days. His carriers, four or more, are expected to approach from the north-west and to strike the island first. A landing force, with transports and its escort, is expected from the west.",
+      "Midway is held by its garrison and has aircraft of its own, which come under your command. Task Forces 16 and 17 are at sea north-east of the island, where the enemy is not believed to look for them."
+     ]
+    },
+    {
+     "heading": "2. Mission",
+     "text": [
+      "Hold Midway and destroy the enemy carriers, to keep the enemy from the island and the approaches to Hawaii."
+     ]
+    },
+    {
+     "heading": "3. Execution",
+     "text": [
+      "Employ the forces assigned to your command as you judge necessary. The method is yours.",
+      "Your carriers cannot soon be replaced. Do not offer them to a stronger force unless the enemy stands to lose more than you. Further direction will follow as the situation requires."
+     ]
+    }
+   ]
+  }
+ ]
+}

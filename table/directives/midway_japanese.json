@@ -1,0 +1,34 @@
+{
+ "note": "Directives for the Japanese seat of Midway, 3 to 7 June 1942. Written for the game in its own words: these are not historical documents and quote none. Each gives the situation as the commander above has it and the mission with its purpose, and nothing the commander can find out for himself: what the enemy has, what is coming and what cannot be replaced are read elsewhere on the table. Decision 0157; the Japanese side knew of no American carrier near, decision 0198, rule 34.",
+ "directives": [
+  {
+   "number": 1,
+   "when": "start",
+   "from": "Commander in Chief, Combined Fleet",
+   "to": "Commander, Second Fleet",
+   "subject": "Occupation of Midway",
+   "parts": [
+    {
+     "heading": "1. Situation",
+     "text": [
+      "Midway is held by the enemy, with a garrison and aircraft. It is the outpost from which he watches the approaches to Hawaii. The invasion force with the men to take it is assigned to you, with the carrier striking force, which is to neutralise the island's air strength before the landing.",
+      "The enemy's carriers are not believed to be near. None has been reported."
+     ]
+    },
+    {
+     "heading": "2. Mission",
+     "text": [
+      "Land the invasion force at Midway and take the place, and destroy the enemy fleet if it comes out to meet you, to push the defensive perimeter east and bring the enemy carriers to battle."
+     ]
+    },
+    {
+     "heading": "3. Execution",
+     "text": [
+      "Employ the forces assigned to your command as you judge necessary. The method is yours.",
+      "The landing is the purpose of the operation. Further direction will follow as the situation requires."
+     ]
+    }
+   ]
+  }
+ ]
+}

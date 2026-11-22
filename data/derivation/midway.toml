@@ -42,18 +42,18 @@
 # not name) is in surface_weapons_not_modelled, as at the Coral Sea; Jintsu's
 # class (Sendai) is blocked on rounds besides.
 #
-# THE JAPANESE CARRIERS' AIRCRAFT (rules 50 to 54), for the scenario, not for
-# this list: Akagi 24 fighters, 18 bombers, 18 attack planes; Kaga 27, 20,
-# 27; Hiryu 18, 18, 18; Soryu 18, 18 (rule 51) and 18. The 6th Air Group's
-# fighters are in the fighters (rule 52). The sum is 87 fighters, 74 bombers
-# and 81 attack planes, 242 in all, beside the 234 of Bates (90, 72 and 72,
-# air_unit_facts 5864 to 5867): 8 more, the difference left in sight (rule 53).
-# The second pass found combinedfleet's records of 27 May (air_unit_facts
-# 14200 to 14216, B): Akagi 18, 18, 18 and six of the 6th Air Group, Kaga 18,
-# 18 (and two spare), 27 and nine of the 6th, Soryu 18, 16, 18 and three of
-# the 6th; nothing for Hiryu. With the 6th's fighters in, Akagi and Kaga are
-# the readings of rule 50; Soryu's fighters would be 21, not 18. These rows
-# do not change the rulings; they are for the architect.
+# THE JAPANESE CARRIERS' AIRCRAFT (rules 73 and 74, which replace rules 50
+# and 51), for the scenario, not for this list: combinedfleet's records of 27
+# May (air_unit_facts 14200 to 14216, B), each carrier's own 18 fighters with
+# the 6th Air Group's beside them. Akagi 24 fighters, 18 bombers, 18 attack
+# planes; Kaga 27, 18 (her two spare bombers are not flown) and 27; Soryu 21,
+# 16 (rule 74: two sources state 16 aboard; the 18 of row 12403 stays,
+# disputed) and 18. Hiryu has no row in that source and keeps rule 50's rows,
+# 18, 18 and 18, with the 6th's three fighters added: 21, 18 and 18. The
+# 6th Air Group's fighters are in the fighters (rule 52). The sum is 93
+# fighters, 70 bombers and 81 attack planes, 244 in all, beside the 234 of
+# Bates (90, 72 and 72, air_unit_facts 5864 to 5867): 10 more, the difference
+# left in sight (rule 53).
 #
 # ZUIHO'S AIR GROUP (rule 66), by the rule for disagreements: six A5M4, six
 # A6M2 and twelve B5N2, combinedfleet's record of 29 May (air_unit_facts 14220
@@ -304,3 +304,34 @@ type = "pby-5"
 5034 = ["asashio", "arashio", "michishio", "oshio", "asagumo", "minegumo", "natsugumo"]
 5035 = ["arare", "kasumi"]
 5036 = ["mikazuki"]
+
+# The experience values of the ships of scenario 114 (decision 0064; decision
+# 0198, rule 93; the questions and their thresholds are in rules.toml, under
+# [experience]). The tool measures the windows to the engagement's first day
+# in engagements.csv, 4 June 1942 for midway: the three months are 4 March to
+# 4 June 1942 and a new ship is one commissioned after 4 June 1941. The ships
+# are those of the scenario, so Gwin, Zuiho and Mikazuki (rules 85 and 87)
+# are not here. Worden is not here either: her one commissioning row
+# (ship_facts 202) is unconfirmed and gives a year only, so the question of a
+# new ship cannot be answered for her, as for Farragut in the Coral Sea's
+# list; she has the game's own value for a ship not answered. No answer is
+# written by hand.
+[experience]
+engagement = "midway"
+output = "../reference/ship_experience_midway.ships.csv"
+ships = [
+    "cv-6-enterprise", "cv-8-hornet",
+    "ca-24-pensacola", "ca-26-northampton", "ca-32-new-orleans", "ca-36-minneapolis", "ca-44-vincennes", "cl-51-atlanta",
+    "dd-360-phelps", "dd-354-monaghan", "dd-355-aylwin", "dd-363-balch",
+    "dd-371-conyngham", "dd-397-benham", "dd-398-ellet", "dd-401-maury",
+    "cv-5-yorktown", "ca-34-astoria", "ca-33-portland",
+    "dd-417-morris", "dd-410-hughes", "dd-411-anderson", "dd-412-hammann", "dd-414-russell",
+    "akagi", "kaga", "soryu", "hiryu", "haruna", "kirishima", "tone", "chikuma", "nagara",
+    "kazagumo", "yugumo", "makigumo", "akigumo", "isokaze", "urakaze", "hamakaze", "tanikaze",
+    "nowaki", "arashi", "hagikaze", "maikaze",
+    "jintsu", "kuroshio", "oyashio", "hatsukaze", "yukikaze", "amatsukaze", "tokitsukaze",
+    "kasumi", "arare", "kagero", "shiranui",
+    "kumano", "suzuya", "mogami", "mikuma", "arashio", "asashio", "oshio", "michishio",
+    "kongo", "hiei", "atago", "chokai", "haguro", "myoko", "yura",
+    "yudachi", "murasame", "harusame", "samidare", "asagumo", "minegumo", "natsugumo",
+]

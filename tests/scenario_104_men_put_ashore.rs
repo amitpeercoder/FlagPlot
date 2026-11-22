@@ -122,6 +122,9 @@
 //!     architect on Nov 21, 2026: the files of the same two scenarios with
 //!     their oilers, decision 0206, have it too, as do the table's copies
 //!     of files for play, decision 0205.)
+//!     (Amended by the architect on Nov 22, 2026: scenario 114's four files,
+//!     decision 0198, have it too, as do the table's copies of its files b,
+//!     c and d.)
 //! 24. **It changes no game.** File a's five daily hashes on seed 1942 are
 //!     the same with the key as with it taken out.
 //! 25. **The result's words.** `sim-cli run` on file a prints its result
@@ -1194,6 +1197,7 @@ fn statement_23_the_key() {
             && name != Some("base_eastern_solomons_oilers.toml")
             && name != Some("base_coral_sea_oilers.toml")
             && name != Some("base_coral_sea_both_oilers.toml")
+            && name != Some("base_midway.toml")
     }) {
         let text = std::fs::read_to_string(file).expect("reads");
         if text.lines().any(|l| l.trim_start().starts_with("for_play")) {
@@ -1215,6 +1219,8 @@ fn statement_23_the_key() {
                 PathBuf::from(format!(
                     "scenarios/coral-sea/03{l}_coral_sea_both_oilers.toml"
                 )),
+                // Midway (decision 0198).
+                PathBuf::from(format!("scenarios/midway/01{l}_midway.toml")),
             ]
         })
         .collect();
@@ -1225,6 +1231,11 @@ fn statement_23_the_key() {
         )));
         want.push(PathBuf::from(format!(
             "scenarios/table-hunger/02{l}_eastern_solomons_oilers.toml"
+        )));
+    }
+    for l in ['b', 'c', 'd'] {
+        want.push(PathBuf::from(format!(
+            "scenarios/table-hunger/01{l}_midway.toml"
         )));
     }
     want.sort();

@@ -58,7 +58,38 @@
         {"allied": "engine", "japanese": "agent", "engine": "staff", "file": "data/scenarios/table-hunger/03c_coral_sea_both_oilers.toml"},
         {"allied": "agent", "japanese": "agent", "file": "data/scenarios/table-hunger/03d_coral_sea_both_oilers.toml"}
       ]
-    
+
+    },
+    {
+      "id": "midway",
+      "map": "data/map/midway.csv",
+      "name": "Midway",
+      "dates": "3 to 7 June 1942",
+      "days": 5,
+      "start": "1942-06-03",
+      "lines": [
+        "Three American carriers and the aircraft of Midway meet four Japanese fleet carriers, while a Japanese invasion force makes for the atoll with the men to take it."
+      ],
+      "sides": {
+        "allied": "Hold Midway and sink the Japanese carriers.",
+        "japanese": "Land the invasion force's men at Midway and sink the American carriers."
+      },
+      "islands": [
+        {"number": 1, "name": "Midway", "base": 1}
+      ],
+      "directives": {
+        "allied": "table/directives/midway_allied.json",
+        "japanese": "table/directives/midway_japanese.json"
+      },
+      "pairings": [
+        {"allied": "person", "japanese": "engine", "engine": "staff", "file": "data/scenarios/table-hunger/01b_midway.toml"},
+        {"allied": "engine", "japanese": "person", "engine": "staff", "file": "data/scenarios/table-hunger/01c_midway.toml"},
+        {"allied": "person", "japanese": "agent", "file": "data/scenarios/table-hunger/01d_midway.toml"},
+        {"allied": "agent", "japanese": "person", "file": "data/scenarios/table-hunger/01d_midway.toml"},
+        {"allied": "agent", "japanese": "engine", "engine": "staff", "file": "data/scenarios/table-hunger/01b_midway.toml"},
+        {"allied": "engine", "japanese": "agent", "engine": "staff", "file": "data/scenarios/table-hunger/01c_midway.toml"},
+        {"allied": "agent", "japanese": "agent", "file": "data/scenarios/table-hunger/01d_midway.toml"}
+      ]
     },
     {
       "id": "eastern-solomons-five-days",
