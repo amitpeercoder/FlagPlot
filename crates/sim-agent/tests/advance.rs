@@ -555,7 +555,8 @@ fn the_refusals_inside_a_day() {
     );
     call(&mut s, ALLIED, "issue_orders", route_and_cruise());
     call(&mut s, ALLIED, "advance", json!({"pulses": 1}));
-    // A kind given at dusk.
+    // A kind given at dusk is kept for the next dusk, not refused (decision
+    // 0219); the clear below removes it again.
     let given = call(
         &mut s,
         ALLIED,
@@ -563,13 +564,9 @@ fn the_refusals_inside_a_day() {
         json!({"orders": [{"unit": "task_force:1", "order": {"kind": "set_mission", "mission": "bombardment"}}]}),
     );
     check("issue_orders.schema.json", &given);
-    assert_eq!(given["results"][0]["status"], "refused");
-    let reason = given["results"][0]["reason"].as_str().unwrap();
-    assert!(
-        reason.starts_with("this kind of order is given at dusk"),
-        "{reason}"
-    );
-    assert!(reason.contains("given when the day is over"), "{reason}");
+    assert_eq!(given["results"][0]["status"], "queued");
+    assert_eq!(given["results"][0]["kept"], true);
+    assert_eq!(given["kept"], 1);
     // The briefing at 0600.
     let e = refused(&mut s, ALLIED, "get_briefing", json!({}));
     assert!(e.message.contains("the briefing is made at dusk"), "{e}");

@@ -1097,9 +1097,11 @@ apply; a game that gives none of it is answered as before.
   where it has men; it comes at the end of the day).
 - **`issue_orders` at 0600 and 1200.** Each order is checked at once and only the seven kinds may be given (a task
   force's route, speed, readiness and rules of engagement, an air group's mission and search arc, a land unit's
-  posture); any other is refused with the engine's words "this kind of order is given at dusk: ..." and a hint. The
-  answer adds `for_pulse` (`morning` or `afternoon`) and each queued result's `for` ("the morning pulse of day 1");
-  `for_day` is the open day and `queued` counts the orders queued inside the day. `clear` empties those.
+  posture) act inside the day; any other order is not refused for that (decision 0219): it is checked at once and
+  kept for the next dusk, and its result says `"kept": true` and `acts` ("kept: it is given at 1800 for the coming
+  day, day 2"). The answer adds `for_pulse` (`morning` or `afternoon`) and each pulse order's `for` ("the morning
+  pulse of day 1"); `for_day` is the open day and `queued` counts the orders queued for the pulse; `kept_in_call` and
+  `kept` count the kept orders. `clear` empties the pulse orders and the kept ones.
 - **`get_briefing` at 0600 and 1200** is refused: the briefing is made at dusk; `events` gives the day so far.
 - **`inside_day`.** At 0600 or 1200, `command_state`, `plans`, `staff_orders`, `propose`, `preview` and a queued
   command (`set_intent` and the other command tools) carry a note `inside_day`: they are worked on the state as it

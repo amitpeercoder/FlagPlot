@@ -59,6 +59,14 @@
                 "description": "For an order given inside a day: the pulse it is taken in at, in words, such as \"the morning pulse of day 1\".",
                 "type": "string"
               },
+              "kept": {
+                "description": "Decision 0219: true for an order given inside a day, at 0600 or 1200, that is not one of the seven kinds that act inside a day. It was checked at once and is kept: it is given at 1800 with the orders of that dusk, for the coming day, and checked again then. Absent for every other order.",
+                "const": true
+              },
+              "acts": {
+                "description": "Decision 0219: with kept, when the order acts, in words, such as \"kept: it is given at 1800 for the coming day, day 2\".",
+                "type": "string"
+              },
               "below_reserve": {
                 "description": "For a queued load of supply or fuel (decision 0111): present when, as the stocks stand now, the load may take tons below the reserve of the base it loads from. Your own load order is not held to the reserve; the staff's is. tons is the tons below; text is the sentence a player reads.",
                 "type": "object",
@@ -116,6 +124,14 @@
     },
     "queued": {
       "description": "How many orders are now waiting for the coming day, all calls together.",
+      "type": "integer"
+    },
+    "kept_in_call": {
+      "description": "Decision 0219, given only for orders given inside a day: how many of the orders in this call were kept for 1800 (the accepted orders that do not act inside a day). Counted in queued_in_call, not in queued.",
+      "type": "integer"
+    },
+    "kept": {
+      "description": "Decision 0219, given only for orders given inside a day: how many orders are now kept for 1800, all calls together. queued then counts the orders for the next pulse of the open day only.",
       "type": "integer"
     },
     "summary": {
