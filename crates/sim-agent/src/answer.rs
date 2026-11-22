@@ -149,8 +149,14 @@ pub const FORMAT: &str = "flagplot-agent";
 /// `arrivals.comes_tomorrow` (decision 0215); and, inside a day, an order not
 /// of the seven kinds kept for the next dusk rather than refused (decision
 /// 0219): its result's `kept` and `acts`, and the answer's `kept_in_call` and
-/// `kept`.
-pub const VERSION: u32 = 45;
+/// `kept`. 46 adds the tools `queued` and `take_back` (decision 0221, rules 15
+/// to 18), of every seat: `queued` lists what the seat has queued, each entry
+/// with its place (`pulse`, `dusk` or `commands` and a number), its unit and
+/// order or its tool and command in the side's numbers, when it acts, what
+/// goes with it and what a hold rests on, with an `as_of`; `take_back`
+/// withdraws one entry by its place and what goes with it, given that
+/// `as_of`, and is refused where another queued entry rests on it.
+pub const VERSION: u32 = 46;
 
 /// The answer to a question about something the side does not know of: a
 /// unit of the enemy, a number that does not exist, an event the side may not

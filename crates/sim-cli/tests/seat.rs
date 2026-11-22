@@ -281,7 +281,9 @@ fn mcp_at_a_seat_offers_the_nine_tools_and_says_where_the_seat_is() {
             "explain",
             "events",
             "issue_orders",
-            "end_day"
+            "end_day",
+            "queued",
+            "take_back"
         ]
     );
     // A command tool is not a tool of this seat.
@@ -308,7 +310,7 @@ fn mcp_at_the_area_seat_still_offers_the_staff_tools() {
             json!({"jsonrpc": "2.0", "id": 2, "method": "tools/list", "params": {}}),
         ],
     );
-    assert_eq!(answers[1]["result"]["tools"].as_array().unwrap().len(), 31);
+    assert_eq!(answers[1]["result"]["tools"].as_array().unwrap().len(), 33);
 }
 
 fn play(game: &Path, args: &[&str]) -> Output {

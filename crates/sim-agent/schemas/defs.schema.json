@@ -993,7 +993,7 @@
           "const": "flagplot-agent"
         },
         "version": {
-          "const": 45
+          "const": 46
         },
         "kind": {
           "const": "not_known"

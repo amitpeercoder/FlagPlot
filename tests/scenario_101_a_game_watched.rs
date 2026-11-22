@@ -856,6 +856,8 @@ fn s12_the_watcher_can_change_nothing() {
         "set_interrupt",
         "acknowledge",
         "trial",
+        "queued",
+        "take_back",
     ];
     let mut every: Vec<&str> = TOOLS.to_vec();
     every.extend(COMMAND_TOOLS);

@@ -227,6 +227,26 @@ fn tool_definitions() -> Vec<(&'static str, String, Value)> {
             "Say you have finished giving orders for the coming day. The game then resolves the day (night, morning and afternoon pulses): your queued orders and the other side's are carried out, and you may read a new briefing. The answer says whether the day was resolved, how many days have been resolved and whether the game is over; when game_over is true there is nothing more to order, though you can still read, and the answer carries the result (points by objective, margin and level for both sides) if the scenario has objectives, else null. Call it once per day after issue_orders; orders cannot be given between end_day and the next day. Example arguments: {}.".to_string(),
             json!({"type": "object", "additionalProperties": false}),
         ),
+        (
+            "queued",
+            "What your seat has queued, each entry with its place: orders for the next pulse of the open day (queue \"pulse\"), orders for dusk (\"dusk\", given at 1800 for the coming day; inside a day this includes an order kept for dusk) and commands to the staff (\"commands\"), each in the order given and in your own numbers, with when it acts, what is taken back with it (goes_with) and, for a hold, the orders it rests on. The answer carries an as_of that take_back must be given. Takes no arguments; it changes nothing.".to_string(),
+            json!({"type": "object", "additionalProperties": false}),
+        ),
+        (
+            "take_back",
+            "Take back one queued entry by its place, with what goes with it: an order to a unit takes the holds you sent on that unit if it was the last order queued to it, and a set_intent that makes a new intent takes the limits and pursuit leave you queued for that intent. It is refused, and nothing changes, if another queued entry rests on it (such as an order to a force that a queued forming order would make): the words name that entry and its place, and you take that back first. Give the queue, the number and the as_of of the latest queued; an as_of that is stale is refused (call queued again). A preview made before a take back is void after it. The entry is withdrawn, not refused: nothing is recorded in the game.".to_string(),
+            json!({
+                "type": "object",
+                "required": ["queue", "number", "as_of"],
+                "additionalProperties": false,
+                "properties": {
+                    "queue": {"enum": ["pulse", "dusk", "commands"], "description": "The queue of the entry, as queued gave it."},
+                    "number": {"type": "integer", "minimum": 1, "description": "The entry's number in its queue, from 1."},
+                    "as_of": {"type": "string", "description": "The as_of of the latest queued answer."},
+                    "reason": {"type": "string", "description": "Optional: why, for the reader of the transcript. The game never reads it."}
+                }
+            }),
+        ),
     ]
 }
 

@@ -34,6 +34,8 @@ Every answer is a JSON object with a top-level `"format": "flagplot-agent"`,
 | `run` | `run.schema.json` | `run` (offered where exactly one seat is held by a player) |
 | `report` | `report.schema.json` | `report` |
 | `end_day` | `end_day.schema.json` | `end_day` |
+| `queued` | `queued.schema.json` | `queued`: the seat's queued orders and commands, each with its place (decision 0221) |
+| `take_back` | `take_back.schema.json` | `take_back`: one queued entry withdrawn with what goes with it (decision 0221) |
 | `events` | `events.schema.json` | `events`: the side's own events of a day, or of one part of it |
 | `advance` | `advance.schema.json` | `advance` (offered where the scenario lets a seat stop between pulses and exactly one seat is held by a player) |
 | `error` | `error.schema.json` | any call refused as a whole |

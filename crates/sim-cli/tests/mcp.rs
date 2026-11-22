@@ -234,7 +234,7 @@ fn a_scripted_client_plays_scenario_5_through_the_protocol() {
 
     let listed = c.request("tools/list", json!({}));
     let tools = listed["result"]["tools"].as_array().expect("tools");
-    assert_eq!(tools.len(), 31);
+    assert_eq!(tools.len(), 33);
     let names: Vec<&str> = tools.iter().map(|t| t["name"].as_str().unwrap()).collect();
     assert_eq!(
         names,
@@ -249,6 +249,8 @@ fn a_scripted_client_plays_scenario_5_through_the_protocol() {
             "events",
             "issue_orders",
             "end_day",
+            "queued",
+            "take_back",
             // The seat's side has a staff: its tools follow (decision 0107).
             "command_state",
             "plans",
@@ -684,7 +686,7 @@ fn the_modern_revision_is_served_by_per_request_metadata() {
     assert!(d["result"]["instructions"].is_string());
     assert!(d["result"]["_meta"]["io.modelcontextprotocol/serverInfo"]["name"].is_string());
     let l = c.request("tools/list", json!({"_meta": meta}));
-    assert_eq!(l["result"]["tools"].as_array().unwrap().len(), 31);
+    assert_eq!(l["result"]["tools"].as_array().unwrap().len(), 33);
     assert_eq!(l["result"]["resultType"], "complete");
     let r = c.request(
         "tools/call",
@@ -1398,7 +1400,7 @@ fn a_seat_with_a_staff_lists_the_staff_tools_and_commands_through_them() {
     assert!(instructions.contains("does nothing for your side until you set an intent"));
     let listed = c.request("tools/list", json!({}));
     let tools = listed["result"]["tools"].as_array().unwrap();
-    for tool in tools.iter().skip(10) {
+    for tool in tools.iter().skip(12) {
         let name = tool["name"].as_str().unwrap();
         let description = tool["description"].as_str().unwrap();
         // Each says plainly that the staff does nothing until an intent with
