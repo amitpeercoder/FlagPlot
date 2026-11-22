@@ -254,7 +254,7 @@ fn a_game_with_an_order_at_0600_exported_replays_to_the_same_hashes() {
         "export",
     );
     let saved: Value = serde_json::from_str(&fs::read_to_string(save).unwrap()).unwrap();
-    assert_eq!(saved["version"], 23);
+    assert_eq!(saved["version"], 24);
     let orders = saved["orders"].as_array().unwrap();
     assert_eq!(orders.len(), 3);
     assert!(orders[..2].iter().all(|o| o.get("pulse").is_none()));

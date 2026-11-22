@@ -404,6 +404,9 @@ fn a_step_carries_only_the_pictures_that_changed() {
 /// `air_types` and their breakdowns' new factors, and nothing else: checked
 /// against the exports of the commit before, with those taken out, each of
 /// which hashes as pinned before.
+/// Remade again for decision 0214 (the state layout v55): every file
+/// changes in its state version and day hashes and nothing else: checked
+/// against the exports of the commit before, with those taken out.
 #[test]
 fn a_scenario_with_command_levels_off_exports_as_it_did() {
     fn fnv(bytes: &[u8]) -> u64 {
@@ -412,16 +415,16 @@ fn a_scenario_with_command_levels_off_exports_as_it_did() {
         })
     }
     let before: [(&str, u64); 10] = [
-        ("01_transit", 0x7227_d237_c728_9b42),
-        ("04a_night_action", 0x3a39_de7c_38d2_6def),
-        ("05_eastern_solomons", 0x1e78_68a8_cda8_5fa9),
-        ("21_landing", 0x1edc_69ae_9ebf_edc8),
-        ("23_fight_ashore", 0x1af6_6ec0_88fb_8ff0),
-        ("31_airfield_damage", 0xbeaf_31d0_1861_e713),
-        ("36_one_convoy", 0xbcba_9d3c_b450_ec69),
-        ("43_keep_two_bases_fed", 0x9a97_7832_109c_9f64),
-        ("50_neutralise_a_base", 0x04ad_a8f0_ada8_0080),
-        ("58_a_carrier_force_closes", 0x9e89_cd21_4706_a94e),
+        ("01_transit", 0xfc06_15f3_1a2e_9e91),
+        ("04a_night_action", 0x9400_288b_f808_b258),
+        ("05_eastern_solomons", 0xa01f_b4a2_930d_a4a2),
+        ("21_landing", 0xcf92_bb22_77ef_a6e4),
+        ("23_fight_ashore", 0xc0dd_929e_d5f4_9717),
+        ("31_airfield_damage", 0x3560_c262_2c29_30d0),
+        ("36_one_convoy", 0x0bf9_457e_3fcf_e610),
+        ("43_keep_two_bases_fed", 0x7449_651a_323a_9e3a),
+        ("50_neutralise_a_base", 0xb8cc_bb87_8601_d1ac),
+        ("58_a_carrier_force_closes", 0xd756_28b9_817b_c2a0),
     ];
     let prefix6 = br#"{"format":"flagplot-replay","version":6,"#;
     let prefix5 = br#"{"format":"flagplot-replay","version":5,"#;
