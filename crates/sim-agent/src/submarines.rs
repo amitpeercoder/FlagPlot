@@ -55,6 +55,72 @@ pub struct SubmarineLine {
     /// otherwise.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub comes_on_day: Option<u32>,
+    /// Whose hands she is in (decision 0218, stage 3): the staff's under a
+    /// patrol intent, the commander's by a hold or an order, or free. Left
+    /// out for a boat held apart, sunk or gone home.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub hands: Option<HandsLine>,
+}
+
+/// Whose hands a boat is in.
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct HandsLine {
+    /// `staff`, `commander` or `free`.
+    pub by: &'static str,
+    /// The patrol intent whose boat she is, for `staff`. Left out otherwise.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub intent: Option<u32>,
+    /// In words.
+    pub words: String,
+}
+
+/// Whose hands a boat that is on the map is in: the commander's where a
+/// hold is on her (a hold command or an order to her), else the staff's
+/// under the first patrol intent in force that may use her, else free.
+fn hands_of(view: &SideView<'_>, boat: &Submarine) -> HandsLine {
+    use sim_core::command::{HoldMaker, HoldTarget, IntentKind};
+    let state = view.command_state();
+    if let Some(hold) = state.holds.get(&HoldTarget::Submarine(boat.id)) {
+        let words = match hold.by {
+            HoldMaker::Command => format!("held by your hold command of day {}", hold.day),
+            HoldMaker::Order(_) => format!("held by your order of day {}", hold.day),
+        };
+        return HandsLine {
+            by: "commander",
+            intent: None,
+            words,
+        };
+    }
+    let named_elsewhere = |except: sim_core::ids::IntentId| {
+        state.intents_in_force().any(|other| {
+            other.id != except
+                && other
+                    .limits
+                    .forces
+                    .as_ref()
+                    .is_some_and(|forces| forces.submarines.contains(&boat.id))
+        })
+    };
+    let staff = state
+        .intents_in_force()
+        .filter(|intent| matches!(intent.kind, IntentKind::Patrol { .. }))
+        .find(|intent| match state.submarines_on_chain(intent.id) {
+            Some(named) => named.contains(&boat.id),
+            None => !named_elsewhere(intent.id),
+        });
+    match staff {
+        Some(intent) => HandsLine {
+            by: "staff",
+            intent: Some(intent.id.raw()),
+            words: format!("in the staff's hands under intent:{}", intent.id.raw()),
+        },
+        None => HandsLine {
+            by: "free",
+            intent: None,
+            words: "in no one's hands: no hold on her and no patrol intent that may use her"
+                .to_string(),
+        },
+    }
 }
 
 /// The pulse a boat is held down to.
@@ -190,5 +256,6 @@ pub(crate) fn boat_line(
             }),
         damaged: boat.condition == SubmarineCondition::Damaged,
         comes_on_day: boat.enters_day.filter(|_| held_apart),
+        hands: on_map.then(|| hands_of(view, boat)),
     }
 }

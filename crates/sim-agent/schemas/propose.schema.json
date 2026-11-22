@@ -31,7 +31,7 @@
       "const": "flagplot-agent"
     },
     "version": {
-      "const": 47
+      "const": 48
     },
     "kind": {
       "const": "propose"
@@ -202,6 +202,7 @@
         }
       }
     },
+    "stations": { "$ref": "defs.schema.json#/$defs/patrol_stations" },
     "tree": {
       "oneOf": [
         {
@@ -231,6 +232,7 @@
                 "neutralise",
                 "raid",
                 "deny",
+                "patrol",
                 "strike_ships",
                 "search_waters",
                 "stand_at",
@@ -297,6 +299,7 @@
                       "neutralise",
                       "raid",
                       "deny",
+                      "patrol",
                       "strike_ships",
                       "search_waters",
                       "stand_at",

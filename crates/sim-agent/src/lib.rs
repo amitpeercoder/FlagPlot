@@ -126,7 +126,8 @@ pub use staffing::{
     command_state, plan_order, plans, propose, staff_orders, why, STAFF_DEFAULT_INTERVAL_DAYS,
 };
 pub use submarines::{
-    HeldDownUntil, SubmarineLine, SubmarineReportLine, SubmarinesPart, SuspectedWatersLine,
+    HandsLine, HeldDownUntil, SubmarineLine, SubmarineReportLine, SubmarinesPart,
+    SuspectedWatersLine,
 };
 pub use told::{told_as, DayPart, STOP_ON};
 pub use trial::{

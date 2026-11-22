@@ -368,7 +368,7 @@
       "hash": "3b3353e3ccc0e0d7"
     }
   ],
-  "doctrine_version": "supply-54",
+  "doctrine_version": "supply-55",
   "format": "flagplot-saved-game",
   "hashes": [
     {
@@ -976,7 +976,7 @@
       "unit": "land_unit:17"
     }
   ],
-  "rules_version": 29,
+  "rules_version": 30,
   "scenario": {
     "file": "data/scenarios/second-proof/07m_model_week.toml",
     "hash": "632c7d31c9cab8a1"

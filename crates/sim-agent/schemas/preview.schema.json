@@ -32,7 +32,7 @@
       "const": "flagplot-agent"
     },
     "version": {
-      "const": 47
+      "const": 48
     },
     "kind": {
       "const": "preview"
@@ -125,6 +125,7 @@
             "null"
           ]
         },
+        "stations": { "$ref": "defs.schema.json#/$defs/patrol_stations" },
         "binds": {
           "oneOf": [
             {
@@ -234,6 +235,7 @@
             "null"
           ]
         },
+        "stations": { "$ref": "defs.schema.json#/$defs/patrol_stations" },
         "binds": {
           "oneOf": [
             {

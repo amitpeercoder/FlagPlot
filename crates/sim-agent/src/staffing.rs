@@ -84,6 +84,7 @@ impl<'a> Names<'a> {
         forces: &BTreeMap<u32, u32>,
         groups: &BTreeMap<u32, u32>,
         land_units: &BTreeMap<u32, u32>,
+        submarines: &BTreeMap<u32, u32>,
     ) -> String {
         map_unit_tokens(text, |kind, raw| match kind {
             "ship" => ships
@@ -95,9 +96,10 @@ impl<'a> Names<'a> {
                 .get(&raw)
                 .copied()
                 .or_else(|| self.ctx.land_unit_number(LandUnitId::new(raw))),
-            "submarine" => self
-                .ctx
-                .submarine_number(sim_core::ids::SubmarineId::new(raw)),
+            "submarine" => submarines.get(&raw).copied().or_else(|| {
+                self.ctx
+                    .submarine_number(sim_core::ids::SubmarineId::new(raw))
+            }),
             _ => groups
                 .get(&raw)
                 .copied()
@@ -108,6 +110,7 @@ impl<'a> Names<'a> {
     pub(crate) fn text(&self, text: &str) -> String {
         self.text_with(
             text,
+            &BTreeMap::new(),
             &BTreeMap::new(),
             &BTreeMap::new(),
             &BTreeMap::new(),
@@ -152,6 +155,20 @@ impl<'a> Names<'a> {
                                             .and_then(|n| u32::try_from(n).ok())
                                             .and_then(|raw| {
                                                 self.ctx.group_number(AirGroupId::new(raw))
+                                            })
+                                            .map_or_else(|| id.clone(), |n| json!(n))
+                                    })
+                                    .collect(),
+                            ),
+                            ("submarines", Value::Array(ids)) => Value::Array(
+                                ids.iter()
+                                    .map(|id| {
+                                        id.as_u64()
+                                            .and_then(|n| u32::try_from(n).ok())
+                                            .and_then(|raw| {
+                                                self.ctx.submarine_number(
+                                                    sim_core::ids::SubmarineId::new(raw),
+                                                )
                                             })
                                             .map_or_else(|| id.clone(), |n| json!(n))
                                     })
@@ -213,6 +230,18 @@ impl<'a> Names<'a> {
     }
 
     /// The side's numbers of land units, in order.
+    fn submarines<'s>(
+        &self,
+        ids: impl IntoIterator<Item = &'s sim_core::ids::SubmarineId>,
+    ) -> Vec<u32> {
+        let mut numbers: Vec<u32> = ids
+            .into_iter()
+            .map(|id| self.ctx.submarine_number(*id).unwrap_or_else(|| id.raw()))
+            .collect();
+        numbers.sort_unstable();
+        numbers
+    }
+
     fn land_units<'s>(&self, ids: impl IntoIterator<Item = &'s LandUnitId>) -> Vec<u32> {
         let mut numbers: Vec<u32> = ids
             .into_iter()
@@ -307,6 +336,10 @@ fn forces_json(n: &Names<'_>, forces: &sim_core::command::ForcesLimit) -> Value 
         "land_units": n.land_units(&forces.land_units),
         "source": forces.source.map(|source| n.base(source)),
     });
+    // Decision 0218, stage 3: the boats a patrol may use, left out when none.
+    if !forces.submarines.is_empty() {
+        body["submarines"] = json!(n.submarines(&forces.submarines));
+    }
     let waiting = limit_not_yet_available(n, forces);
     if !waiting.is_empty() {
         body["not_yet_available"] = Value::Array(waiting);
@@ -539,6 +572,11 @@ fn limits_read_up_json(n: &Names<'_>, state: &CommandState, intent: &Intent) -> 
         body["targets"] = targets_json(targets);
         body["targets_from"] = json!(on.raw());
     }
+    // Decision 0218, stage 3: the boats named in every forces limit on the
+    // chain that names any, shown only where there are some.
+    if let Some(boats) = state.submarines_on_chain(intent.id) {
+        body["submarines_binding"] = json!(n.submarines(&boats));
+    }
     body
 }
 
@@ -600,12 +638,16 @@ fn kind_json(n: &Names<'_>, kind: IntentKind) -> Value {
         "task_force": kind.force().map(|force| n.force_number(force.raw()).unwrap_or_else(|| force.raw())),
         "hex": kind
             .waters()
+            .or_else(|| kind.patrol_waters())
             .map(|(hex, _)| hex)
             .or_else(|| kind.station())
             .or_else(|| kind.landing())
             .or_else(|| kind.place())
             .map(|hex| json!([hex.q, hex.r])),
-        "distance": kind.waters().map(|(_, distance)| distance),
+        "distance": kind
+            .waters()
+            .or_else(|| kind.patrol_waters())
+            .map(|(_, distance)| distance),
         "floor_days": floor_days,
         "interval_days": interval_days,
         "by_day": by_day,
@@ -1046,7 +1088,11 @@ fn hold_target_json(n: &Names<'_>, target: HoldTarget, request: Option<&Request>
                 .unwrap_or_else(|| group.raw()),
         }),
         // Decision 0218, 34: a boat is written by her number.
-        HoldTarget::Submarine(boat) => json!({ "submarine": boat.raw() }),
+        HoldTarget::Submarine(boat) => json!({
+            "submarine": written(|r| &r.submarine_stand_ins, boat.raw())
+                .or_else(|| n.ctx.submarine_number(boat))
+                .unwrap_or_else(|| boat.raw()),
+        }),
     }
 }
 
@@ -1141,6 +1187,7 @@ pub(crate) fn command_text(
             &r.force_stand_ins,
             &r.group_stand_ins,
             &r.land_unit_stand_ins,
+            &r.submarine_stand_ins,
         ),
         None => n.text(&command.to_string()),
     }
@@ -1167,7 +1214,10 @@ fn hold_target_words(n: &Names<'_>, target: HoldTarget) -> String {
             "air group {}",
             n.ctx.group_number(group).unwrap_or_else(|| group.raw())
         ),
-        HoldTarget::Submarine(boat) => format!("submarine {}", boat.raw()),
+        HoldTarget::Submarine(boat) => format!(
+            "submarine {}",
+            n.ctx.submarine_number(boat).unwrap_or_else(|| boat.raw())
+        ),
     }
 }
 
@@ -1916,39 +1966,66 @@ pub fn propose(view: &SideView<'_>, staff: &dyn Staff, intent: u32) -> Result<Va
             })
         })
         .collect();
-    Ok(answer(
-        "propose",
-        json!({
-            "for_day": today,
-            "intent": intent,
-            "plan": {"number": proposal.plan.raw(), "state": proposal.plan_state.name()},
-            "projection": proposal.projection.as_ref().map(projection_json),
-            "runs": proposal
-                .runs
-                .iter()
-                .enumerate()
-                .map(|(i, run)| json!({
-                    "index": i + 1,
-                    "ships": n.ships(&run.ships),
-                    "load_t": dec(run.load_t),
-                    "days": days_json(&run.days),
-                    "reason": n.value(&reason_to_json(&run.reason)),
-                }))
-                .collect::<Vec<_>>(),
-            "binds": proposal.shortfall.as_ref().map(|s| json!({
-                "binds": n.text(&s.binds),
-                "shortfall_days": dec(s.shortfall_days),
-                "source_dry_day": s.source_dry_day,
-                "check_day": s.check_day,
-                "displaced_by": s.displaced_by.iter().map(|d| displacement_json(&n, d)).collect::<Vec<_>>(),
-            })),
-            "displaces": displaces,
-            "displaced_by": displaced_by,
-            "displaced_intents": displaced_intents,
-            "tree": tree_json(&n, view, &proposal),
-            "would_hand_in": with_day(decisions_json(&n, &proposal.decisions), today),
-            "reason": n.value(&reason_to_json(&proposal.reason)),
-        }),
+    let stations = stations_json(&n, Some(&proposal));
+    let mut body = json!({
+        "for_day": today,
+        "intent": intent,
+        "plan": {"number": proposal.plan.raw(), "state": proposal.plan_state.name()},
+        "projection": proposal.projection.as_ref().map(projection_json),
+        "runs": proposal
+            .runs
+            .iter()
+            .enumerate()
+            .map(|(i, run)| json!({
+                "index": i + 1,
+                "ships": n.ships(&run.ships),
+                "load_t": dec(run.load_t),
+                "days": days_json(&run.days),
+                "reason": n.value(&reason_to_json(&run.reason)),
+            }))
+            .collect::<Vec<_>>(),
+        "binds": proposal.shortfall.as_ref().map(|s| json!({
+            "binds": n.text(&s.binds),
+            "shortfall_days": dec(s.shortfall_days),
+            "source_dry_day": s.source_dry_day,
+            "check_day": s.check_day,
+            "displaced_by": s.displaced_by.iter().map(|d| displacement_json(&n, d)).collect::<Vec<_>>(),
+        })),
+        "displaces": displaces,
+        "displaced_by": displaced_by,
+        "displaced_intents": displaced_intents,
+        "tree": tree_json(&n, view, &proposal),
+        "would_hand_in": with_day(decisions_json(&n, &proposal.decisions), today),
+        "reason": n.value(&reason_to_json(&proposal.reason)),
+    });
+    if let Some(stations) = stations {
+        body["stations"] = stations;
+    }
+    Ok(answer("propose", body))
+}
+
+/// The stations the staff would give boats under a patrol intent (decision
+/// 0218, stage 3), beside the words of the proposal's reason: each boat as
+/// her handle and name, her station and her place among the boats the order
+/// may use. `None` for every other intent, so the key is left out.
+fn stations_json(n: &Names<'_>, proposal: Option<&Proposal>) -> Option<Value> {
+    let stations = proposal.map(|p| p.stations.as_slice()).unwrap_or_default();
+    if stations.is_empty() {
+        return None;
+    }
+    Some(Value::Array(
+        stations
+            .iter()
+            .map(|station| {
+                let boat = n.ctx.submarine(station.boat);
+                json!({
+                    "submarine": boat.handle,
+                    "name": boat.name,
+                    "hex": n.ctx.place(station.hex),
+                    "place": station.place,
+                })
+            })
+            .collect(),
     ))
 }
 
@@ -2254,6 +2331,7 @@ pub(crate) struct Request {
     force_stand_ins: BTreeMap<u32, u32>,
     group_stand_ins: BTreeMap<u32, u32>,
     land_unit_stand_ins: BTreeMap<u32, u32>,
+    submarine_stand_ins: BTreeMap<u32, u32>,
     /// The intent number was the side's next free one, chosen by the tool.
     pub number_chosen: bool,
 }
@@ -2288,6 +2366,7 @@ fn allowed_keys(tool: &str) -> &'static [&'static str] {
             "task_forces",
             "air_groups",
             "land_units",
+            "submarines",
             "source",
             "hexes",
             "rank",
@@ -2308,7 +2387,14 @@ fn allowed_keys(tool: &str) -> &'static [&'static str] {
         "set_pursuit" => &["intent", "leave"],
         "answer_pursuit" => &["task_force", "contact", "allow"],
         "approve" | "cancel_plan" => &["plan"],
-        "hold" | "release" => &["ship", "task_force", "air_group", "land_unit", "setting"],
+        "hold" | "release" => &[
+            "ship",
+            "task_force",
+            "air_group",
+            "land_unit",
+            "submarine",
+            "setting",
+        ],
         "set_interrupt" => &["interrupt", "base", "below_days", "standing", "on"],
         "acknowledge" => &["interrupt", "standing", "plan", "ship", "task_force"],
         _ => &[],
@@ -2339,6 +2425,7 @@ pub(crate) fn request(
     let mut force_stand_ins: BTreeMap<u32, u32> = BTreeMap::new();
     let mut group_stand_ins: BTreeMap<u32, u32> = BTreeMap::new();
     let mut land_unit_stand_ins: BTreeMap<u32, u32> = BTreeMap::new();
+    let mut submarine_stand_ins: BTreeMap<u32, u32> = BTreeMap::new();
     let mut made = 0;
     let mut body = Map::new();
     for (key, value) in args {
@@ -2358,7 +2445,7 @@ pub(crate) fn request(
             Some("cover" | "hold") => &["base"],
             Some("neutralise") => &["target"],
             Some("raid") => &["base", "target"],
-            Some("deny") => &["hex", "distance"],
+            Some("deny" | "patrol") => &["hex", "distance"],
             Some("strike_ships" | "search_waters") => &["base"],
             Some("stand_at" | "operate_carriers") => &["task_force", "hex"],
             Some("ready_landing") => &["task_force", "hex", "by_day"],
@@ -2390,7 +2477,7 @@ pub(crate) fn request(
                 "cover" | "hold" => "a base and nothing else",
                 "neutralise" => "a target (the enemy base) and nothing else",
                 "raid" => "a base (your own) and a target (the enemy base) and nothing else",
-                "deny" => "a hex ([q, r]) and a distance (whole hexes) and nothing else",
+                "deny" | "patrol" => "a hex ([q, r]) and a distance (whole hexes) and nothing else",
                 "strike_ships" | "search_waters" => "a base and nothing else",
                 "stand_at" | "operate_carriers" => {
                     "a task_force (your own force's number) and a hex ([q, r]) and nothing else"
@@ -2468,7 +2555,7 @@ pub(crate) fn request(
             && (body.contains_key("hex") || body.contains_key("distance"))
         {
             return Err(CallError::new(
-                "\"hex\" and \"distance\" are arguments of set_intent only for intent_kind deny",
+                "\"hex\" and \"distance\" are arguments of set_intent only for intent_kind deny or patrol",
             ));
         }
     }
@@ -2513,7 +2600,13 @@ pub(crate) fn request(
                 body.insert(key.into(), json!(whole.to_string()));
             }
         }
-        for key in ["ships", "task_forces", "air_groups", "land_units"] {
+        for key in [
+            "ships",
+            "task_forces",
+            "air_groups",
+            "land_units",
+            "submarines",
+        ] {
             let Some(Value::Array(numbers)) = body.get_mut(key) else {
                 continue;
             };
@@ -2533,6 +2626,10 @@ pub(crate) fn request(
                     "land_units" => (
                         ctx.own_land_unit_or_held(number).map(|u| u.id.raw()),
                         &mut land_unit_stand_ins,
+                    ),
+                    "submarines" => (
+                        ctx.own_submarine(number).map(|b| b.id.raw()),
+                        &mut submarine_stand_ins,
                     ),
                     _ => (
                         ctx.own_ship_or_held(number).map(|s| s.id.raw()),
@@ -2598,7 +2695,7 @@ pub(crate) fn request(
         // The target is named by the side's number; a number that names none
         // of the side's units becomes one no unit has, so the engine refuses
         // an enemy unit and one that does not exist alike.
-        for key in ["ship", "task_force", "air_group", "land_unit"] {
+        for key in ["ship", "task_force", "air_group", "land_unit", "submarine"] {
             let Some(number) = body
                 .get(key)
                 .and_then(Value::as_u64)
@@ -2618,6 +2715,10 @@ pub(crate) fn request(
                 "land_unit" => (
                     ctx.own_land_unit_or_held(number).map(|u| u.id.raw()),
                     &mut land_unit_stand_ins,
+                ),
+                "submarine" => (
+                    ctx.own_submarine(number).map(|b| b.id.raw()),
+                    &mut submarine_stand_ins,
                 ),
                 _ => (
                     ctx.own_group_or_held(number).map(|g| g.id.raw()),
@@ -2647,6 +2748,7 @@ pub(crate) fn request(
         force_stand_ins,
         group_stand_ins,
         land_unit_stand_ins,
+        submarine_stand_ins,
         number_chosen,
     })
 }
@@ -2835,7 +2937,8 @@ pub(crate) fn command_answer(
                 &request.ship_stand_ins,
                 &request.force_stand_ins,
                 &request.group_stand_ins,
-                &request.land_unit_stand_ins
+                &request.land_unit_stand_ins,
+                &request.submarine_stand_ins
             ));
             out["notes"] = json!([]);
             out["summary"] = json!(format!(
@@ -3017,7 +3120,7 @@ fn staff_side_json(
             })
         })
         .collect();
-    let json = json!({
+    let mut json = json!({
         "orders": shown["orders"],
         "commands": shown["commands"],
         "no_orders": shown["no_orders"],
@@ -3029,6 +3132,9 @@ fn staff_side_json(
             .and_then(|p| p.first_day_below),
         "binds": proposal.as_ref().map_or(Value::Null, |p| binds_json(n, p)),
     });
+    if let Some(stations) = stations_json(n, proposal.as_ref()) {
+        json["stations"] = stations;
+    }
     (json, decisions, proposal)
 }
 

@@ -885,7 +885,7 @@ pub fn command_to_json(command: &CommandKind) -> Value {
             if let Some(target) = kind.target() {
                 body["target"] = json!(target.raw());
             }
-            if let Some((hex, distance)) = kind.waters() {
+            if let Some((hex, distance)) = kind.waters().or_else(|| kind.patrol_waters()) {
                 body["hex"] = json!([hex.q, hex.r]);
                 body["distance"] = json!(distance);
             }

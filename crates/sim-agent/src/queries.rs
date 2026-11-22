@@ -111,6 +111,16 @@ pub struct ListContacts {
     /// the side holds none.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub ground_estimates: Vec<GroundEstimateLine>,
+    /// The side's reports of enemy submarines (decision 0218, stage 3), in
+    /// hex order and in `area` if one is given. Reports, never an enemy
+    /// boat, and kept apart from `contacts`. Left out when none.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub submarine_reports: Vec<crate::submarines::SubmarineReportLine>,
+    /// The waters where the side suspects enemy submarines work, in the
+    /// order it was told, those with a centre in `area` if one is given.
+    /// Left out when none.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub suspected_waters: Vec<crate::submarines::SuspectedWatersLine>,
 }
 
 /// A line for each of the side's task forces that has a ship afloat, in
@@ -208,10 +218,35 @@ pub fn list_contacts(view: &SideView<'_>, area: Option<(Hex, u32)>) -> ListConta
     // for the estimates alone.
     // The area command's picture (decision 0134, 13).
     let picture = crate::common::area_picture(view);
-    if picture.ground_estimates().next().is_some() {
+    if picture.ground_estimates().next().is_some()
+        || picture.submarine_reports().next().is_some()
+        || !picture.suspected_waters().is_empty()
+    {
         ctx.set_events(&view.events());
     }
     let ground_estimates = ground_estimate_lines(&ctx, view, Some(&|hex| within(area, hex)));
+    let submarine_reports = picture
+        .submarine_reports()
+        .filter(|report| within(area, report.hex))
+        .map(|report| crate::submarines::SubmarineReportLine {
+            place: ctx.place(report.hex),
+            day: report.day,
+            age_pulses: report.age_pulses,
+            event: ctx.number_if_seen(report.received_event),
+        })
+        .collect();
+    let suspected_waters = picture
+        .suspected_waters()
+        .iter()
+        .filter(|waters| within(area, waters.hex))
+        .map(|waters| crate::submarines::SuspectedWatersLine {
+            place: ctx.place(waters.hex),
+            distance_hexes: waters.distance_hexes,
+            words: waters.words.clone(),
+            told_day: waters.day,
+            event: ctx.number_if_seen(waters.received_event),
+        })
+        .collect();
     ListContacts {
         format: FORMAT,
         version: VERSION,
@@ -223,6 +258,8 @@ pub fn list_contacts(view: &SideView<'_>, area: Option<(Hex, u32)>) -> ListConta
             .map(|c| contact_line(&ctx, c))
             .collect(),
         ground_estimates,
+        submarine_reports,
+        suspected_waters,
     }
 }
 

@@ -7,7 +7,7 @@
   "additionalProperties": false,
   "properties": {
     "format": { "const": "flagplot-agent" },
-    "version": { "const": 47 },
+    "version": { "const": 48 },
     "kind": { "const": "list_contacts" },
     "area": { "$ref": "#/$defs/area_or_null" },
     "contacts": { "type": "array", "items": { "$ref": "defs.schema.json#/$defs/contact_line" } },
@@ -15,6 +15,37 @@
       "description": "The side's estimates of the enemy's men ashore (decision 0092, 19), one for each hex, in the area if one is given. Estimates, not counts: they may be wrong. Left out when the side holds none.",
       "type": "array",
       "items": { "$ref": "defs.schema.json#/$defs/ground_estimate_line" }
+    },
+    "submarine_reports": {
+      "description": "The side's reports of enemy submarines (decision 0218, stage 3), in hex order and in the area if one is given, each possibly out of place. Reports only, kept apart from contacts. Left out when none.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["place", "day", "age_pulses"],
+        "additionalProperties": false,
+        "properties": {
+          "place": { "$ref": "defs.schema.json#/$defs/place" },
+          "day": { "type": "integer", "description": "The day it was made." },
+          "age_pulses": { "type": "integer", "description": "The pulses since it was made." },
+          "event": { "type": "integer" }
+        }
+      }
+    },
+    "suspected_waters": {
+      "description": "The waters where the side suspects enemy submarines work (decision 0218, stage 3), in the order it was told, those centred in the area if one is given. Left out when none.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["place", "distance_hexes", "words", "told_day"],
+        "additionalProperties": false,
+        "properties": {
+          "place": { "$ref": "defs.schema.json#/$defs/place" },
+          "distance_hexes": { "type": "integer", "description": "How many hexes round the centre." },
+          "words": { "type": "string", "description": "The belief, in words." },
+          "told_day": { "type": "integer" },
+          "event": { "type": "integer" }
+        }
+      }
     }
   },
   "$defs": {

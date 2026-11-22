@@ -3,6 +3,21 @@
   "$id": "flagplot-agent/defs",
   "title": "Shared definitions of the flagplot-agent answers, version 1",
   "$defs": {
+    "patrol_stations": {
+      "description": "For a patrol intent (decision 0218, stage 3): each boat the staff would give a station, in place order, with the station and her place among the boats the order may use. A boat that keeps her station is here; a boat passed over is not. Left out for every other intent.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["submarine", "name", "hex", "place"],
+        "additionalProperties": false,
+        "properties": {
+          "submarine": { "type": "string", "description": "The boat's handle, submarine:N." },
+          "name": { "type": ["string", "null"] },
+          "hex": { "$ref": "defs.schema.json#/$defs/place" },
+          "place": { "type": "integer", "minimum": 1 }
+        }
+      }
+    },
     "submarine_line": {
       "description": "One of the side's own submarines (decision 0218), known exactly to her side.",
       "type": "object",
@@ -24,7 +39,18 @@
           "properties": { "day": { "type": "integer" }, "pulse": { "enum": ["night", "morning", "afternoon"] } }
         },
         "damaged": { "type": "boolean" },
-        "comes_on_day": { "description": "The day a boat held apart comes onto the map. Left out otherwise.", "type": "integer" }
+        "comes_on_day": { "description": "The day a boat held apart comes onto the map. Left out otherwise.", "type": "integer" },
+        "hands": {
+          "description": "Whose hands she is in (decision 0218, stage 3): the staff's under a patrol intent, the commander's by a hold or an order, or free. Left out for a boat held apart, sunk or gone home.",
+          "type": "object",
+          "required": ["by", "words"],
+          "additionalProperties": false,
+          "properties": {
+            "by": { "enum": ["staff", "commander", "free"] },
+            "intent": { "type": "integer", "description": "The patrol intent whose boat she is, for staff. Left out otherwise." },
+            "words": { "type": "string" }
+          }
+        }
       }
     },
     "dec": {
@@ -1017,7 +1043,7 @@
           "const": "flagplot-agent"
         },
         "version": {
-          "const": 47
+          "const": 48
         },
         "kind": {
           "const": "not_known"

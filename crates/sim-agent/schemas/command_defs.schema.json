@@ -403,6 +403,11 @@
                   "type": "array",
                   "items": { "type": "integer" },
                   "description": "The side's numbers of the land units the staff may order (decision 0141)."
+                },
+                "submarines": {
+                  "type": "array",
+                  "items": { "type": "integer" },
+                  "description": "The side's numbers of the boats a patrol intent may use (decision 0218, stage 3). Left out when none."
                 }
               }
             },
@@ -815,6 +820,7 @@
                     "neutralise",
                     "raid",
                     "deny",
+                    "patrol",
                     "strike_ships",
                     "search_waters",
                     "stand_at",
@@ -1310,6 +1316,18 @@
               "type": "integer"
             }
           }
+        },
+        {
+          "type": "object",
+          "required": [
+            "submarine"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "submarine": {
+              "type": "integer"
+            }
+          }
         }
       ]
     },
@@ -1600,6 +1618,11 @@
                   "type": "array",
                   "items": { "type": "integer" },
                   "description": "The side's numbers of the land units the staff may order (decision 0141)."
+                },
+                "submarines": {
+                  "type": "array",
+                  "items": { "type": "integer" },
+                  "description": "The side's numbers of the boats a patrol intent may use (decision 0218, stage 3). Left out when none."
                 }
               }
             },
@@ -1627,6 +1650,11 @@
               "type": "null"
             }
           ]
+        },
+        "submarines_binding": {
+          "description": "The boats named in every forces limit on the chain that names any, which are all a patrol intent may use (decision 0218, stage 3). Left out where no limit on the chain names a boat.",
+          "type": "array",
+          "items": { "type": "integer" }
         },
         "land_units_binding": {
           "description": "The land units named in every forces limit on the chain, which are all the staff may order (decision 0141); null where no forces limit is set on the chain.",
