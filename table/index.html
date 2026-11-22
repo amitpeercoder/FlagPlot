@@ -2005,11 +2005,13 @@ body.watched .gives { display: none !important; }
   document.addEventListener('click', function (e) { viaStop = !!(e.target.closest && e.target.closest('#stop')); setTimeout(function () { viaStop = false; }, 0); }, true);
   function remember(f, keyOf) { return function (a) {
     if (trailAt !== stamp()) { forget(); trailAt = stamp(); }
-    var key = keyOf ? keyOf(a) : null, same = !!key && key === shownKey && !$('card').hidden && $('sheet').hidden;
-    if (!same && !stepping) {
-      if (viaStop) trail = [];
-      else if (shown && !(trail.length && trail[trail.length - 1].key === shownKey)) trail.push(shown);
-    }
+    var key = keyOf ? keyOf(a) : null, same = !!key && key === shownKey;
+    // A link from the stop paper, which is not a card, starts a new trail, unless it names the card that is open.
+    if (!stepping && viaStop && !(same && !$('card').hidden)) trail = [];
+    else if (!same && !stepping && shown && !(trail.length && trail[trail.length - 1].key === shownKey)) trail.push(shown);
+    // Whatever opened it, BACK never leads to the thing about to be shown: a card closed by a form and opened again by a touch is
+    // the same card, not a step back.
+    while (key && trail.length && trail[trail.length - 1].key === key) trail.pop();
     shownKey = key; shown = function () { $('sheet').hidden = true; f(a); }; shown.key = key;
     $('card-back').hidden = !trail.length; backWords(); return f(a);
   }; }

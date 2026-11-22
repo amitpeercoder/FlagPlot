@@ -211,10 +211,12 @@ def the_trail_holds_no_duplicate():
     replaces the card; a link from the stop paper starts a new trail. (Tried in a browser, not here.)"""
     with open(os.path.join(HERE, "index.html"), encoding="utf-8") as page:
         text = page.read()
-    check("function remember(f, keyOf)" in text and "key === shownKey && !$('card').hidden" in text
+    check("function remember(f, keyOf)" in text and "same = !!key && key === shownKey;" in text
           and "trail[trail.length - 1].key === shownKey" in text,
           "opening the card of the thing whose card is open leaves the trail as it is, and the trail never holds one thing twice running")
-    check("stepping = true; try { stepStackIn(by); }" in text and "if (viaStop) trail = [];" in text and "closest('#stop')" in text,
+    check("while (key && trail.length && trail[trail.length - 1].key === key) trail.pop();" in text,
+          "BACK never leads to the thing about to be shown, as after a form closed its card and the thing is touched again")
+    check("stepping = true; try { stepStackIn(by); }" in text and "if (!stepping && viaStop && !(same && !$('card').hidden)) trail = [];" in text and "closest('#stop')" in text,
           "stepping through a stack replaces the card without growing the trail, and a link from the stop paper starts a new trail")
     check(all("remember(" + c + ", function" in text for c in ("cardContact", "cardForce", "cardBase", "cardPlace", "cardHex", "cardUnit", "cardEntity", "cardGone")),
           "every way a card opens names the thing it shows")
