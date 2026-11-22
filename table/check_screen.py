@@ -184,6 +184,9 @@ def stops_speak_as_the_staff():
           and not any(w in told for w in ("You ", "Your ")), "what the clock was stopped for is said as \"we\" and \"our\", never \"you\" for the side")
     check("'We ask your leave.'" in text and "'A plan waits for your leave.'" in text and "'our reinforcements '" in text and "the commander's/g, 'your'" in text,
           "a leave asked or waited for is the commander's own: \"your\"; the side's reinforcements are \"our\"")
+    check("function toldHead(t)" in text and "'We have lost '" in text and "' is on fire among her aircraft'" in text and "'Our men are ashore at '" in text
+          and "'Our men are fighting at '" in text and "'We have a contact: '" in text and "' bombed'" in text and "events: told.map(" in text,
+          "where a slip's own events say which it is, its heading says so (a ship lost or out of action, men ashore or fighting, the contact, the base bombed); the general heading stays for a mix")
     check("function shortType(name)" in text and "' by ' + shortType(seen[1]) + ' aircraft'" in text,
           "an aircraft type in a stop's line is the short designation, not the data's long name")
 
