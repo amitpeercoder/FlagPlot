@@ -313,6 +313,7 @@ fn reason(intent_n: u32, worked: &str) -> Reason {
         binding: vec!["a limit".to_string()],
         worked: worked.to_string(),
         would_change: vec!["more stock".to_string()],
+        answer_of: None,
     }
 }
 
@@ -3403,6 +3404,7 @@ fn hand_in_of(notices: &[(NoticeKind, u32)]) -> StaffDecisions {
                 plan: plan(*plan_n),
                 run: None,
                 rests_on: NoticeBasis::NoOrder(i),
+                pursuit: None,
             })
             .collect(),
         ..StaffDecisions::default()
@@ -3548,18 +3550,21 @@ fn a_notice_cites_its_reasons_event_and_a_firing_cites_the_notice() {
                 plan: plan(1),
                 run: None,
                 rests_on: NoticeBasis::Command(0),
+                pursuit: None,
             },
             StaffNotice {
                 kind: NoticeKind::RunEnded,
                 plan: plan(1),
                 run: Some(3),
                 rests_on: NoticeBasis::NoOrder(0),
+                pursuit: None,
             },
             StaffNotice {
                 kind: NoticeKind::WaitsForLeave(Leave::Launch),
                 plan: plan(2),
                 run: None,
                 rests_on: NoticeBasis::NoOrder(5),
+                pursuit: None,
             },
         ],
         ..StaffDecisions::default()
@@ -3919,12 +3924,14 @@ fn a_hand_in_given_back_and_a_live_staffs_are_merged_with_the_notices_still_on_t
                 plan: plan(2),
                 run: None,
                 rests_on: NoticeBasis::NoOrder(0),
+                pursuit: None,
             },
             StaffNotice {
                 kind: NoticeKind::RunEnded,
                 plan: plan(2),
                 run: Some(1),
                 rests_on: NoticeBasis::Command(0),
+                pursuit: None,
             },
         ],
         ..StaffDecisions::default()
@@ -4606,4 +4613,515 @@ fn the_denies_naming_a_force_are_those_whose_nearest_forces_limit_names_it() {
         .collect();
     assert_eq!(found, vec![intent(2)]);
     assert!(state(&world, A).denies_naming(tf(2)).is_empty());
+}
+
+// ---------------------------------------------------------------------------
+// Decision 0214: a force asks leave to go after what it has found.
+// ---------------------------------------------------------------------------
+
+fn set_pursuit(n: u32, leave: Option<PursueLeave>) -> CommandKind {
+    CommandKind::SetPursuit {
+        intent: intent(n),
+        leave,
+    }
+}
+
+fn answer(force: u32, contact: u32, allow: bool) -> CommandKind {
+    CommandKind::AnswerPursuit {
+        force: tf(force),
+        contact,
+        allow,
+    }
+}
+
+/// The event of the last `CommandTaken` of an `answer_pursuit` in the log.
+fn last_answer_event(world: &World) -> crate::ids::EventId {
+    world
+        .events
+        .iter()
+        .filter(|e| {
+            matches!(
+                &e.kind,
+                EventKind::CommandTaken {
+                    command: CommandKind::AnswerPursuit { .. },
+                    ..
+                }
+            )
+        })
+        .map(|e| e.id)
+        .last()
+        .expect("an answer was taken")
+}
+
+fn pursuit_find(contact: u32) -> PursuitFind {
+    PursuitFind {
+        contact,
+        kind: ShipKind::Carrier,
+        age: 2,
+        reported_at: Hex::new(6, 0),
+        to: Hex::new(5, 0),
+        hours: Some(t(9)),
+    }
+}
+
+/// A hand-in of one pursuit notice of `kind` for force `force`, resting on
+/// its own no-order reason.
+fn pursuit_hand_in(kind: NoticeKind, force: u32, contact: u32) -> StaffDecisions {
+    StaffDecisions {
+        no_orders: vec![reason(1, "a pursuit")],
+        notices: vec![StaffNotice {
+            kind,
+            plan: plan(1),
+            run: None,
+            rests_on: NoticeBasis::NoOrder(0),
+            pursuit: Some(PursuitNotice {
+                force: tf(force),
+                intent: intent(1),
+                find: (kind != NoticeKind::PursuitEnded).then(|| pursuit_find(contact)),
+            }),
+        }],
+        ..StaffDecisions::default()
+    }
+}
+
+fn standing_asks(force: u32) -> InterruptRef {
+    InterruptRef::Standing {
+        kind: StandingKind::AsksLeaveToPursue,
+        subject: StandingSubject::TaskForce(tf(force)),
+    }
+}
+
+#[test]
+fn the_pursuit_codes_and_names_round_trip() {
+    for (leave, code, name) in [
+        (PursueLeave::Ask, 1, "ask"),
+        (PursueLeave::Go, 2, "go"),
+        (PursueLeave::Stay, 3, "stay"),
+    ] {
+        assert_eq!(leave.code(), code);
+        assert_eq!(leave.name(), name);
+        assert_eq!(PursueLeave::from_name(name), Some(leave));
+    }
+    assert_eq!(PursueLeave::from_name("maybe"), None);
+    assert_eq!(PursuitBy::Taken.code(), 2);
+    assert_eq!(
+        PursuitBy::Answer(world().events.record(
+            1,
+            None,
+            EventKind::CommandRefused {
+                side: A,
+                issuer: Issuer::Player,
+                command: set_intent(1),
+                reason: CommandRefusal::NotYours,
+            },
+            Vec::new(),
+            None,
+        ))
+        .code(),
+        1
+    );
+    for (kind, code, name) in [
+        (NoticeKind::AsksLeaveToPursue, 10, "asks_leave_to_pursue"),
+        (NoticeKind::Pursues, 11, "pursues"),
+        (NoticeKind::PursuitEnded, 12, "pursuit_ended"),
+    ] {
+        assert_eq!(kind.code(), code);
+        assert_eq!(kind.name(), name);
+        assert_eq!(NoticeKind::from_name(name), Some(kind));
+    }
+    assert_eq!(StandingKind::AsksLeaveToPursue.code(), 6);
+    assert_eq!(
+        StandingKind::AsksLeaveToPursue.name(),
+        "asks_leave_to_pursue"
+    );
+    assert_eq!(
+        StandingKind::from_name("asks_leave_to_pursue"),
+        Some(StandingKind::AsksLeaveToPursue)
+    );
+    assert!(StandingKind::ALL.contains(&StandingKind::AsksLeaveToPursue));
+    assert_eq!(StandingSubject::TaskForce(tf(4)).code(), 3);
+    assert_eq!(StandingSubject::TaskForce(tf(4)).raw(), 4);
+    assert_eq!(set_pursuit(1, None).name(), "set_pursuit");
+    assert_eq!(answer(1, 1, true).name(), "answer_pursuit");
+}
+
+#[test]
+fn set_pursuit_sets_and_clears_a_leave_and_is_not_an_amendment() {
+    // Plan 1 is approved, so a change to its intent would amend it.
+    let mut world = world_with_plan(true);
+    player(&mut world, set_pursuit(1, Some(PursueLeave::Stay))).unwrap();
+    assert_eq!(
+        state(&world, A).pursue_leaves[&intent(1)],
+        PursueLeave::Stay
+    );
+    assert!(
+        state(&world, A).plans[&plan(1)].amendments.is_empty(),
+        "the setting is not an amendment of the plan"
+    );
+    player(&mut world, set_pursuit(1, Some(PursueLeave::Go))).unwrap();
+    assert_eq!(state(&world, A).pursue_leaves[&intent(1)], PursueLeave::Go);
+    player(&mut world, set_pursuit(1, None)).unwrap();
+    assert!(state(&world, A).pursue_leaves.is_empty());
+}
+
+#[test]
+fn set_pursuit_is_the_commanders_and_names_an_intent_in_force() {
+    let mut world = world();
+    player(&mut world, set_intent(1)).unwrap();
+    refused(
+        &mut world,
+        Issuer::Staff,
+        set_pursuit(1, Some(PursueLeave::Go)),
+        CommandRefusal::NotYours,
+    );
+    refused(
+        &mut world,
+        Issuer::Player,
+        set_pursuit(9, Some(PursueLeave::Go)),
+        CommandRefusal::NoSuchIntent(intent(9)),
+    );
+    // A withdrawn intent is not in force.
+    player(
+        &mut world,
+        CommandKind::WithdrawIntent { intent: intent(1) },
+    )
+    .unwrap();
+    refused(
+        &mut world,
+        Issuer::Player,
+        set_pursuit(1, Some(PursueLeave::Go)),
+        CommandRefusal::NoSuchIntent(intent(1)),
+    );
+}
+
+#[test]
+fn answer_pursuit_is_the_commanders_and_names_a_force_of_the_side() {
+    let mut world = world();
+    refused(
+        &mut world,
+        Issuer::Staff,
+        answer(2, 1, true),
+        CommandRefusal::NotYours,
+    );
+    // The enemy's force and one that does not exist are refused alike.
+    refused(
+        &mut world,
+        Issuer::Player,
+        answer(20, 1, true),
+        CommandRefusal::NotYourForce(tf(20)),
+    );
+    refused(
+        &mut world,
+        Issuer::Player,
+        answer(99, 1, false),
+        CommandRefusal::NotYourForce(tf(99)),
+    );
+    player(&mut world, answer(2, 1, true)).unwrap();
+}
+
+#[test]
+fn pursue_read_up_takes_the_nearest_setting_and_has_two_defaults() {
+    const PLACE: Hex = Hex::new(5, 0);
+    let mut world = world();
+    world.map.insert(
+        PLACE,
+        HexData {
+            kind: crate::map::HexKind::Coast,
+            ..HexData::open_sea()
+        },
+    );
+    player(
+        &mut world,
+        CommandKind::SetIntent {
+            intent: intent(1),
+            kind: IntentKind::TakePlace {
+                hex: PLACE,
+                by_day: None,
+            },
+        },
+    )
+    .unwrap();
+    player(&mut world, set_forces(1, forces(&[], &[1]))).unwrap();
+    player(&mut world, CommandKind::Approve { plan: plan(1) }).unwrap();
+    staff(
+        &mut world,
+        form_under(
+            1,
+            IntentKind::OperateCarriers {
+                force: tf(1),
+                hex: Hex::new(3, 0),
+            },
+        ),
+    )
+    .unwrap();
+    // A player's default is ask (the leave to launch is withheld).
+    assert_eq!(
+        state(&world, A).pursue_read_up(intent(2)),
+        (PursueLeave::Ask, None)
+    );
+    // Set on the root, the child reads it up the tree.
+    player(&mut world, set_pursuit(1, Some(PursueLeave::Stay))).unwrap();
+    assert_eq!(
+        state(&world, A).pursue_read_up(intent(2)),
+        (PursueLeave::Stay, Some(intent(1)))
+    );
+    // Set on the child, the nearest wins.
+    staff_free_set(&mut world, 2, PursueLeave::Go);
+    assert_eq!(
+        state(&world, A).pursue_read_up(intent(2)),
+        (PursueLeave::Go, Some(intent(2)))
+    );
+    assert_eq!(
+        state(&world, A).pursue_read_up(intent(1)),
+        (PursueLeave::Stay, Some(intent(1)))
+    );
+    // A side given the leave to launch (as one with no commander is) has go.
+    let mut open = state(&world, A).clone();
+    open.pursue_leaves.clear();
+    open.leaves.launch = true;
+    assert_eq!(open.pursue_read_up(intent(2)), (PursueLeave::Go, None));
+}
+
+/// Sets the pursue leave on an intent directly, for a child the commander
+/// may not set by command.
+fn staff_free_set(world: &mut World, intent_n: u32, leave: PursueLeave) {
+    world
+        .command
+        .get_mut(&A)
+        .unwrap()
+        .pursue_leaves
+        .insert(intent(intent_n), leave);
+}
+
+#[test]
+fn a_yes_sets_a_pursuit_by_answer_naming_its_event_and_clears_a_refusal() {
+    let mut world = world();
+    player(&mut world, answer(2, 7, false)).unwrap();
+    assert!(state(&world, A).pursuit_refusals.contains(&(tf(2), 7)));
+    player(&mut world, answer(2, 7, true)).unwrap();
+    let taken = last_answer_event(&world);
+    let pursuit = state(&world, A).pursuits[&tf(2)];
+    assert_eq!(pursuit.by, PursuitBy::Answer(taken));
+    assert_eq!(pursuit.contact, 7);
+    assert_eq!(pursuit.since_day, 1);
+    assert!(
+        state(&world, A).pursuit_refusals.is_empty(),
+        "a yes clears the refusal of that contact"
+    );
+    assert_eq!(
+        state(&world, A).leaves_by_answer().collect::<Vec<_>>(),
+        vec![tf(2)]
+    );
+    // A refusal of another contact stays.
+    player(&mut world, answer(2, 8, false)).unwrap();
+    assert!(state(&world, A).pursuit_refusals.contains(&(tf(2), 8)));
+}
+
+#[test]
+fn a_no_records_a_refusal_and_ends_a_pursuit_under_way() {
+    let mut world = world();
+    player(&mut world, answer(2, 7, true)).unwrap();
+    assert!(state(&world, A).pursuits.contains_key(&tf(2)));
+    player(&mut world, answer(2, 7, false)).unwrap();
+    assert!(state(&world, A).pursuits.is_empty());
+    assert!(state(&world, A).pursuit_refusals.contains(&(tf(2), 7)));
+    assert_eq!(state(&world, A).leaves_by_answer().count(), 0);
+}
+
+#[test]
+fn a_pursues_notice_inserts_a_taken_pursuit_and_a_pursuit_ended_notice_removes_it() {
+    let mut world = world();
+    world.submit_staff(A, pursuit_hand_in(NoticeKind::Pursues, 2, 4));
+    world.resolve_day().unwrap();
+    let pursuit = state(&world, A).pursuits[&tf(2)];
+    assert_eq!(pursuit.by, PursuitBy::Taken);
+    assert_eq!(pursuit.contact, 4);
+    assert_eq!(pursuit.since_day, 1);
+    assert_eq!(state(&world, A).leaves_by_answer().count(), 0);
+    // The notice's pursuit is on its event.
+    assert!(world.events.iter().any(|e| matches!(
+        &e.kind,
+        EventKind::StaffNotice { kind: NoticeKind::Pursues, pursuit: Some(p), .. }
+            if p.force == tf(2) && p.find.is_some_and(|f| f.contact == 4)
+    )));
+    // A second "pursues" for a force that has an entry changes nothing.
+    world.submit_staff(A, pursuit_hand_in(NoticeKind::Pursues, 2, 5));
+    world.resolve_day().unwrap();
+    assert_eq!(state(&world, A).pursuits[&tf(2)].contact, 4);
+    world.submit_staff(A, pursuit_hand_in(NoticeKind::PursuitEnded, 2, 0));
+    world.resolve_day().unwrap();
+    assert!(state(&world, A).pursuits.is_empty());
+    // And none of it fires the interrupt.
+    assert_eq!(all_firings(&world, A), 0);
+}
+
+#[test]
+fn an_asking_notice_fires_the_standing_interrupt_for_the_force_and_changes_nothing_else() {
+    let mut world = world();
+    world.submit_staff(A, pursuit_hand_in(NoticeKind::AsksLeaveToPursue, 2, 3));
+    world.resolve_day().unwrap();
+    assert_eq!(firings(&world, A, 1), vec![standing_asks(2)]);
+    assert!(state(&world, A).pursuits.is_empty());
+    // It cites the notice's event.
+    let log = log(&world);
+    let notice = log
+        .iter()
+        .find(|e| {
+            matches!(
+                e.kind,
+                EventKind::StaffNotice {
+                    kind: NoticeKind::AsksLeaveToPursue,
+                    ..
+                }
+            )
+        })
+        .expect("a notice")
+        .id;
+    let fired = log
+        .iter()
+        .find(|e| matches!(e.kind, EventKind::InterruptFired { .. }))
+        .expect("a firing");
+    assert_eq!(fired.causes, vec![Cause::Event(notice)]);
+    // Not again while it holds.
+    world.submit_staff(A, pursuit_hand_in(NoticeKind::AsksLeaveToPursue, 2, 3));
+    world.resolve_day().unwrap();
+    assert_eq!(all_firings(&world, A), 1);
+    // The enemy has none.
+    assert_eq!(all_firings(&world, J), 0);
+}
+
+#[test]
+fn an_asking_notice_does_not_fire_when_the_kind_is_switched_off() {
+    let mut world = world();
+    player(&mut world, switch(StandingKind::AsksLeaveToPursue, false)).unwrap();
+    world.submit_staff(A, pursuit_hand_in(NoticeKind::AsksLeaveToPursue, 2, 3));
+    world.resolve_day().unwrap();
+    assert_eq!(all_firings(&world, A), 0);
+    assert!(state(&world, A).standing.is_empty());
+}
+
+#[test]
+fn a_stray_notice_fires_nothing_for_the_asking_interrupt() {
+    // Another kind of notice carrying a pursuit, or an asking with none,
+    // does not fire it.
+    let mut world = world();
+    world.submit_staff(A, pursuit_hand_in(NoticeKind::Pursues, 2, 3));
+    let mut bare = pursuit_hand_in(NoticeKind::AsksLeaveToPursue, 2, 3);
+    bare.notices[0].pursuit = None;
+    world.submit_staff(A, bare);
+    world.resolve_day().unwrap();
+    assert_eq!(all_firings(&world, A), 0);
+}
+
+#[test]
+fn the_new_command_state_fields_each_change_the_hash() {
+    let base_world = world();
+    let hash = base_world.state_hash();
+    let changed = |edit: &dyn Fn(&mut CommandState)| {
+        let mut world = base_world.clone();
+        edit(world.command.get_mut(&A).unwrap());
+        world.state_hash()
+    };
+    let leave_ask = changed(&|s| {
+        s.pursue_leaves.insert(intent(1), PursueLeave::Ask);
+    });
+    let leave_go = changed(&|s| {
+        s.pursue_leaves.insert(intent(1), PursueLeave::Go);
+    });
+    let taken = changed(&|s| {
+        s.pursuits.insert(
+            tf(2),
+            Pursuit {
+                by: PursuitBy::Taken,
+                contact: 3,
+                since_day: 1,
+            },
+        );
+    });
+    let other_contact = changed(&|s| {
+        s.pursuits.insert(
+            tf(2),
+            Pursuit {
+                by: PursuitBy::Taken,
+                contact: 4,
+                since_day: 1,
+            },
+        );
+    });
+    let other_day = changed(&|s| {
+        s.pursuits.insert(
+            tf(2),
+            Pursuit {
+                by: PursuitBy::Taken,
+                contact: 3,
+                since_day: 2,
+            },
+        );
+    });
+    let refusal = changed(&|s| {
+        s.pursuit_refusals.insert((tf(2), 3));
+    });
+    let other_refusal = changed(&|s| {
+        s.pursuit_refusals.insert((tf(2), 4));
+    });
+    let all = [
+        hash,
+        leave_ask,
+        leave_go,
+        taken,
+        other_contact,
+        other_day,
+        refusal,
+        other_refusal,
+    ];
+    for (i, a) in all.iter().enumerate() {
+        for b in &all[i + 1..] {
+            assert_ne!(a, b, "two states of the new fields hash alike");
+        }
+    }
+    // A pursuit by answer hashes through its event.
+    let mut by_answer = base_world.clone();
+    player(&mut by_answer, answer(2, 3, true)).unwrap();
+    assert_ne!(by_answer.state_hash(), hash);
+    assert!(!by_answer.command[&A].is_empty());
+}
+
+#[test]
+fn a_reasons_cites_become_causes_of_its_order_and_its_reason() {
+    let mut world = world();
+    player(&mut world, answer(2, 3, true)).unwrap();
+    let answered = last_answer_event(&world);
+    let mut cited = reason(1, "a pursuit by leave");
+    cited.answer_of = Some(tf(2));
+    let decisions = StaffDecisions {
+        orders: vec![StaffOrder {
+            kind: OrderKind::TaskForce {
+                target: tf(2),
+                order: TaskForceOrder::SetSpeed(SpeedSetting::Cruise),
+            },
+            intent: intent(1),
+            reason: cited,
+        }],
+        ..StaffDecisions::default()
+    };
+    player(&mut world, set_intent(1)).unwrap();
+    player(&mut world, set_forces(1, forces(&[], &[2]))).unwrap();
+    world.submit_staff(A, decisions);
+    world.resolve_day().unwrap();
+    let log = log(&world);
+    let reason_event = log
+        .iter()
+        .find(|e| matches!(&e.kind, EventKind::StaffReason { reason, .. } if reason.worked == "a pursuit by leave"))
+        .expect("the reason is recorded");
+    assert!(reason_event.causes.contains(&Cause::Event(answered)));
+    let order_event = log
+        .iter()
+        .find(|e| {
+            matches!(
+                e.kind,
+                EventKind::OrderAccepted { .. } | EventKind::OrderRejected { .. }
+            )
+        })
+        .expect("the order is answered");
+    assert!(order_event.causes.contains(&Cause::Event(answered)));
 }

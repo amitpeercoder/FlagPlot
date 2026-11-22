@@ -74,7 +74,7 @@ pub use window::{
 use core::fmt;
 
 use sim_core::believed::{BelievedForce, BelievedIntent, BelievedMen};
-use sim_core::command::{CommandKind, IntentKind, Leave};
+use sim_core::command::{CommandKind, IntentKind, Leave, PursuitBy};
 use sim_core::ids::IntentId;
 use sim_core::map::Map;
 use sim_core::refdata::{RefData, TrialFigures};
@@ -179,11 +179,22 @@ pub fn pictures_from_half(
         )));
     }
     enemy::check(half, view, believed)?;
+    // The commander's answers to a force's asking leave to pursue name a
+    // contact by its number and, for a yes, the event of the answer
+    // (decision 0214, "Who answers where no one is there"). A made-up world's
+    // contacts are numbered anew and its log is its own, so the answers are
+    // not carried into it. The side's settings (`set_pursuit`) are, as part
+    // of its orders.
+    let mut own = half.clone();
+    own.command
+        .pursuits
+        .retain(|_, pursuit| !matches!(pursuit.by, PursuitBy::Answer(_)));
+    own.command.pursuit_refusals.clear();
     (1..=trial.worlds)
         .map(|world| {
             let (enemy_half, assumptions) =
                 enemy::make(half, view, believed, figures, trial, world)?;
-            let picture = WorldPicture::from_halves(half.clone(), enemy_half)
+            let picture = WorldPicture::from_halves(own.clone(), enemy_half)
                 .map_err(|e| Refused(e.to_string()))?;
             Ok(TrialPicture {
                 world,

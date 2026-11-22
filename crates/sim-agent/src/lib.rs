@@ -20,7 +20,8 @@
 //! * [`explain`]: an event as the side may see it and its visible causes.
 //! * [`command_state`], [`plans`], [`propose`], [`plan_order`], [`staff_orders`], [`why`] and
 //!   the commands a seat queues (`set_intent`, `withdraw_intent`,
-//!   `set_limit`, `set_leave`, `approve`, `cancel_plan`): the tools of a seat
+//!   `set_limit`, `set_leave`, `set_pursuit`, `answer_pursuit`, `approve`,
+//!   `cancel_plan`): the tools of a seat
 //!   whose side has a staff (decision 0107). Each answers from a view of the
 //!   world as the coming day will find it, which only the session makes.
 //! * [`measure`]: air distance, sea route, the passage of a task force, its
@@ -47,6 +48,7 @@ mod measure;
 mod neutralise;
 mod objectives;
 mod orders;
+mod pursuit;
 mod queries;
 mod record;
 mod reporting;
@@ -105,6 +107,7 @@ pub use objectives::{
     ResultPart, ScoreLine, ShipKindPoints, ShipsOfKind, SideResultPart,
 };
 pub use orders::{is_orderable_unit, order_from_json, order_to_json, unit_text};
+pub use pursuit::trial_pursuit_settings;
 pub use queries::{
     get_entity, list_bases, list_contacts, list_forces, AirGroupDetail, Area, BaseDetail,
     ContactDetail, Detail, EnemyBaseDetail, EnemyBaseLine, Entity, EntityAnswer, ForceDetail,

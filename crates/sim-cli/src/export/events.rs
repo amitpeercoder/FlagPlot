@@ -2352,13 +2352,17 @@ pub(super) fn describe(
                 .iter()
                 .map(|piece| format!("{} (day {})", piece.what, piece.day))
                 .collect();
-            (
-                "staff_reason",
-                data.with("evidence", Field::Str(evidence.join("; ")))
-                    .with("binding", Field::Str(reason.binding.join("; ")))
-                    .with("worked", Field::Str(reason.worked.clone()))
-                    .with("would_change", Field::Str(reason.would_change.join("; "))),
-            )
+            let mut data = data
+                .with("evidence", Field::Str(evidence.join("; ")))
+                .with("binding", Field::Str(reason.binding.join("; ")))
+                .with("worked", Field::Str(reason.worked.clone()))
+                .with("would_change", Field::Str(reason.would_change.join("; ")));
+            // The force whose answer the decision rests on (decision 0214);
+            // written only where there is one.
+            if let Some(force) = reason.answer_of {
+                data = data.id("answer_of", force);
+            }
+            ("staff_reason", data)
         }
         EventKind::HeldByOrder {
             side,
@@ -2376,6 +2380,7 @@ pub(super) fn describe(
             plan,
             run,
             intent,
+            pursuit,
         } => {
             let mut data = d
                 .text("side", names::side(*side))
@@ -2387,6 +2392,26 @@ pub(super) fn describe(
             // The intent whose words a take-a-place's `met` notice says.
             if let Some(intent) = intent {
                 data = data.int("intent", intent.raw());
+            }
+            // What a pursuit notice says (decision 0214); written only for
+            // those, so every other export is as it was.
+            if let Some(pursuit) = pursuit {
+                let mut out = Data::new()
+                    .id("task_force", pursuit.force)
+                    .int("intent", pursuit.intent.raw());
+                if let Some(find) = &pursuit.find {
+                    let mut found = Data::new()
+                        .int("contact", find.contact)
+                        .text("kind", find.kind.name())
+                        .int("age", find.age)
+                        .hex("reported_at", find.reported_at)
+                        .hex("to", find.to);
+                    if let Some(hours) = find.hours {
+                        found = found.num("hours", hours);
+                    }
+                    out = out.with("find", Field::Obj(found));
+                }
+                data = data.with("pursuit", Field::Obj(out));
             }
             ("staff_notice", data)
         }

@@ -886,6 +886,10 @@ pub struct AirCombatFigures {
     /// strength and the ship's experience, and 1 at most. From 0 to 0.5. At
     /// 0 the chance is the plain figure. A raid on a base is not moved.
     pub raid_recognised_experience_strength: Fixed,
+    /// The nights' steaming a find is looked for within (decision 0214, rule
+    /// 1); a placeholder. 1 is the closing rule as it stands (one night), so
+    /// no find is ever made; the live file has 2.
+    pub pursuit_nights: u32,
 }
 
 impl AirCombatFigures {
@@ -2237,6 +2241,8 @@ impl AirCombatFigures {
             raid_recognised_chance: Fixed::ZERO,
             // Step 1's rule (decision 0168): experience moves nothing.
             raid_recognised_experience_strength: Fixed::ZERO,
+            // One night: the closing rule as it stands (decision 0214).
+            pursuit_nights: 1,
         }
     }
 }

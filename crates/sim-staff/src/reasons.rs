@@ -307,6 +307,13 @@ impl ReasonBuilder {
         self
     }
 
+    /// The decision rests on the commander's answer for this force's leave
+    /// to pursue (decision 0214, rule 10).
+    pub(crate) fn answer_of(mut self, force: sim_core::ids::TaskForceId) -> Self {
+        self.reason.answer_of = Some(force);
+        self
+    }
+
     pub(crate) fn done(self) -> Reason {
         self.reason
     }

@@ -2,10 +2,10 @@ Placeholder scenario 57: Going back to rearm
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 18a20723d5a36cb3  24 events
-day   2  hash 7e05a6bc4da01614  22 events
-day   3  hash 59ef18785cd974f9  5 events
-day   4  hash e2925a93e0c311bb  3 events
+day   1  hash f2afa58b9662e494  24 events
+day   2  hash fae8571d7e45b7c9  22 events
+day   3  hash 79818b87be1a7284  5 events
+day   4  hash 9690976649e235ae  3 events
 
 task_force:1 "Placeholder cruiser force 1" (Allied): Arrived at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; home port base:1
 ship:1 "Placeholder cruiser 1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 800 gun rounds, torpedoes ready; 2000 t of fuel, 0 t of supply

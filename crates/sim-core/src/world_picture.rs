@@ -27,7 +27,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use crate::belief::{BattleClaim, BeliefState, Contact, GroundEstimate, GroundGrade};
 use crate::claims::UnitClaim;
-use crate::command::{CommandState, Hold, HoldMaker};
+use crate::command::{CommandState, Hold, HoldMaker, PursuitBy};
 use crate::entering::Entering;
 use crate::events::{Cause, EventKind, EventLog};
 use crate::hex::Hex;
@@ -265,7 +265,19 @@ fn walk_held_ids(
             interrupts: _,
             standing: _,
             standing_off: _,
+            pursue_leaves: _,
+            pursuits,
+            pursuit_refusals: _,
         } = command;
+        // A pursuit by answer names the event of the commander's answer.
+        for (force, pursuit) in pursuits.iter_mut() {
+            if let PursuitBy::Answer(event) = &mut pursuit.by {
+                visit(
+                    format!("the {} leave to pursue of {force}", side.name()),
+                    HeldId::Event(event),
+                );
+            }
+        }
         for (target, Hold { day: _, by }) in holds.iter_mut() {
             match by {
                 HoldMaker::Command => {}

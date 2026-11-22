@@ -317,6 +317,7 @@ impl Day<'_, '_> {
             plan: plan.id,
             run: None,
             rests_on: NoticeBasis::NoOrder(index),
+            pursuit: None,
         });
         if in_scope {
             self.lines.push(format!(

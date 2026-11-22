@@ -46,7 +46,7 @@ use std::sync::Mutex;
 use crate::fixed::Fixed;
 use crate::hex::Hex;
 use crate::ids::{
-    AirGroupId, BaseId, IntentId, InterruptId, LandUnitId, OrderId, ShipId, TaskForceId,
+    AirGroupId, BaseId, EventId, IntentId, InterruptId, LandUnitId, OrderId, ShipId, TaskForceId,
 };
 use crate::orders::{Issuer, OrderKind};
 use crate::refdata::ShipKind;
@@ -994,6 +994,77 @@ pub enum Leave {
     Launch,
 }
 
+/// The leave to pursue set on an order (decision 0214, rule 4): whether a
+/// carrier force may leave its order to go after a find. Read up the tree as
+/// the other leaves are.
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+pub enum PursueLeave {
+    /// The staff asks leave for each find.
+    Ask,
+    /// The staff takes the leave as given and tells the commander.
+    Go,
+    /// Nothing changes from today.
+    Stay,
+}
+
+impl PursueLeave {
+    /// A stable number. Part of the state hash. Never renumber.
+    pub const fn code(self) -> u8 {
+        match self {
+            PursueLeave::Ask => 1,
+            PursueLeave::Go => 2,
+            PursueLeave::Stay => 3,
+        }
+    }
+
+    /// The setting's name as scenario files, saved games and the tools write
+    /// it.
+    pub const fn name(self) -> &'static str {
+        match self {
+            PursueLeave::Ask => "ask",
+            PursueLeave::Go => "go",
+            PursueLeave::Stay => "stay",
+        }
+    }
+
+    /// The setting of that name.
+    pub fn from_name(name: &str) -> Option<PursueLeave> {
+        [PursueLeave::Ask, PursueLeave::Go, PursueLeave::Stay]
+            .into_iter()
+            .find(|leave| leave.name() == name)
+    }
+}
+
+/// How a force came by its leave to pursue (decision 0214, rules 8 and 10).
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Debug)]
+pub enum PursuitBy {
+    /// The commander's yes: the `CommandTaken` event of his answer.
+    Answer(EventId),
+    /// Taken by the staff, at go.
+    Taken,
+}
+
+impl PursuitBy {
+    /// A stable number. Part of the state hash. Never renumber.
+    pub const fn code(self) -> u8 {
+        match self {
+            PursuitBy::Answer(_) => 1,
+            PursuitBy::Taken => 2,
+        }
+    }
+}
+
+/// A force's leave to pursue under way (decision 0214, rules 8, 10 and 12).
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct Pursuit {
+    pub by: PursuitBy,
+    /// The commander's number of the contact it began on (a number in the
+    /// side's contact series).
+    pub contact: u32,
+    /// The day it began.
+    pub since_day: u32,
+}
+
 // ---------------------------------------------------------------------------
 // Plans.
 // ---------------------------------------------------------------------------
@@ -1295,16 +1366,21 @@ pub enum StandingKind {
     /// enemy carriers near its way (a notice of the staff's, decision 0191,
     /// 9). Added at the end.
     LiftTurnedBack,
+    /// A carrier force asks leave to pursue a find (a notice of the staff's,
+    /// decision 0214, 7). Its subject is the force. Added at the end
+    /// (decision 0214).
+    AsksLeaveToPursue,
 }
 
 impl StandingKind {
     /// Every kind, in code order.
-    pub const ALL: [StandingKind; 5] = [
+    pub const ALL: [StandingKind; 6] = [
         StandingKind::CannotMeet,
         StandingKind::WaitsForLeave,
         StandingKind::ShipLost,
         StandingKind::CannotBringEnough,
         StandingKind::LiftTurnedBack,
+        StandingKind::AsksLeaveToPursue,
     ];
 
     /// A stable number. Part of the state hash. Never renumber.
@@ -1315,6 +1391,7 @@ impl StandingKind {
             StandingKind::ShipLost => 3,
             StandingKind::CannotBringEnough => 4,
             StandingKind::LiftTurnedBack => 5,
+            StandingKind::AsksLeaveToPursue => 6,
         }
     }
 
@@ -1326,6 +1403,7 @@ impl StandingKind {
             StandingKind::ShipLost => "ship_lost",
             StandingKind::CannotBringEnough => "cannot_bring_enough",
             StandingKind::LiftTurnedBack => "lift_turned_back",
+            StandingKind::AsksLeaveToPursue => "asks_leave_to_pursue",
         }
     }
 
@@ -1343,6 +1421,9 @@ impl StandingKind {
 pub enum StandingSubject {
     Plan(PlanId),
     Ship(ShipId),
+    /// A task force: the subject of `AsksLeaveToPursue`. Added at the end
+    /// (decision 0214).
+    TaskForce(TaskForceId),
 }
 
 impl StandingSubject {
@@ -1351,6 +1432,7 @@ impl StandingSubject {
         match self {
             StandingSubject::Plan(_) => 1,
             StandingSubject::Ship(_) => 2,
+            StandingSubject::TaskForce(_) => 3,
         }
     }
 
@@ -1359,6 +1441,7 @@ impl StandingSubject {
         match self {
             StandingSubject::Plan(plan) => plan.raw(),
             StandingSubject::Ship(ship) => ship.raw(),
+            StandingSubject::TaskForce(force) => force.raw(),
         }
     }
 }
@@ -1368,6 +1451,7 @@ impl core::fmt::Display for StandingSubject {
         match self {
             StandingSubject::Plan(plan) => write!(f, "{plan}"),
             StandingSubject::Ship(ship) => write!(f, "{ship}"),
+            StandingSubject::TaskForce(force) => write!(f, "{force}"),
         }
     }
 }
@@ -1442,6 +1526,16 @@ pub struct CommandState {
     pub standing: BTreeMap<(StandingKind, StandingSubject), InterruptStatus>,
     /// Standing kinds the commander has switched off.
     pub standing_off: BTreeSet<StandingKind>,
+    /// The leave to pursue set on an order (decision 0214, rule 4). Added at
+    /// the end.
+    pub pursue_leaves: BTreeMap<IntentId, PursueLeave>,
+    /// Each force's leave to pursue under way, by answer or taken (decision
+    /// 0214, rules 8, 10 and 12). Added at the end.
+    pub pursuits: BTreeMap<TaskForceId, Pursuit>,
+    /// The commander's no, by force and contact number (decision 0214, rule
+    /// 8). Kept: a contact number is never reused in a side's series, so a
+    /// refusal of a contact no longer held binds nothing. Added at the end.
+    pub pursuit_refusals: BTreeSet<(TaskForceId, u32)>,
 }
 
 impl CommandState {
@@ -1701,6 +1795,31 @@ impl CommandState {
             .find_map(|on| on.limits.knowledge.map(|knowledge| (knowledge, on.id)))
     }
 
+    /// The leave to pursue binding `intent`, read up the tree (decision 0214,
+    /// 4): the nearest set on the chain, with the intent it is set on. Where
+    /// none is set, the default and `None`: go where the side's leave to
+    /// launch is given (a side with no commander is given both leaves), else
+    /// ask.
+    pub fn pursue_read_up(&self, intent: IntentId) -> (PursueLeave, Option<IntentId>) {
+        match self
+            .up_the_tree(intent)
+            .find_map(|on| self.pursue_leaves.get(&on.id).map(|leave| (*leave, on.id)))
+        {
+            Some((leave, on)) => (leave, Some(on)),
+            None if self.leaves.launch => (PursueLeave::Go, None),
+            None => (PursueLeave::Ask, None),
+        }
+    }
+
+    /// The forces whose leave to pursue is the commander's answer (decision
+    /// 0214, 10), in number order.
+    pub fn leaves_by_answer(&self) -> impl Iterator<Item = TaskForceId> + '_ {
+        self.pursuits
+            .iter()
+            .filter(|(_, pursuit)| matches!(pursuit.by, PursuitBy::Answer(_)))
+            .map(|(force, _)| *force)
+    }
+
     /// The targets limit binding `intent`, read up the tree (decision 0190,
     /// 2): the nearest set on the chain, with the intent it is set on;
     /// `None` where none is set, and every list and choice is today's.
@@ -1837,6 +1956,9 @@ impl CommandState {
             && self.interrupts.is_empty()
             && self.standing.is_empty()
             && self.standing_off.is_empty()
+            && self.pursue_leaves.is_empty()
+            && self.pursuits.is_empty()
+            && self.pursuit_refusals.is_empty()
             && self.leaves == Leaves::default()
             && self.next_plan == 1
     }
@@ -1934,6 +2056,21 @@ pub enum CommandKind {
     /// 0117, 3). It takes the number one above the highest the side has
     /// used, its maker is the staff, its plan its root's. Added at the end.
     FormIntent { parent: IntentId, kind: IntentKind },
+    /// The commander's: set the leave to pursue on an intent, or clear it
+    /// with `None` (it is read up the tree again). Not an amendment of a
+    /// plan. Added at the end (decision 0214, rule 4).
+    SetPursuit {
+        intent: IntentId,
+        leave: Option<PursueLeave>,
+    },
+    /// The commander's: answer a force's asking leave to pursue a contact,
+    /// yes or no. A no ends a pursuit of the force that is under way. Added
+    /// at the end (decision 0214, rule 8).
+    AnswerPursuit {
+        force: TaskForceId,
+        contact: u32,
+        allow: bool,
+    },
 }
 
 /// What a `set_interrupt` command sets.
@@ -1972,6 +2109,8 @@ impl CommandKind {
             | CommandKind::Hold { .. }
             | CommandKind::Release { .. }
             | CommandKind::SetInterrupt(_)
+            | CommandKind::SetPursuit { .. }
+            | CommandKind::AnswerPursuit { .. }
             | CommandKind::Acknowledge { .. } => issuer == Issuer::Player,
             CommandKind::Approve { .. } => {
                 matches!(issuer, Issuer::Player | Issuer::Staff)
@@ -2007,6 +2146,8 @@ impl CommandKind {
             CommandKind::SetInterrupt(_) => "set_interrupt",
             CommandKind::Acknowledge { .. } => "acknowledge",
             CommandKind::FormIntent { .. } => "form_intent",
+            CommandKind::SetPursuit { .. } => "set_pursuit",
+            CommandKind::AnswerPursuit { .. } => "answer_pursuit",
         }
     }
 }
@@ -2439,6 +2580,19 @@ impl core::fmt::Display for CommandKind {
                 write!(f, "form under {parent} an intent to ")?;
                 write_intent_kind(f, *kind)
             }
+            CommandKind::SetPursuit { intent, leave } => match leave {
+                Some(leave) => write!(f, "set the leave to pursue on {intent} to {}", leave.name()),
+                None => write!(f, "clear the leave to pursue on {intent}"),
+            },
+            CommandKind::AnswerPursuit {
+                force,
+                contact,
+                allow,
+            } => write!(
+                f,
+                "answer {force}'s asking to pursue contact {contact}: {}",
+                if *allow { "allowed" } else { "refused" }
+            ),
         }
     }
 }
@@ -2613,6 +2767,11 @@ pub struct Reason {
     pub worked: String,
     /// What, if different, would give a different decision.
     pub would_change: Vec<String>,
+    /// The decision rests on the commander's answer for this force's leave
+    /// to pursue (decision 0214, rule 10). Intake resolves the answer's event
+    /// from the side's state and makes it a cause of the order and of its
+    /// reason. Added at the end.
+    pub answer_of: Option<TaskForceId>,
 }
 
 // ---------------------------------------------------------------------------
@@ -2670,6 +2829,17 @@ pub enum NoticeKind {
     /// morning it is turned back, not on the mornings it is kept back. Added
     /// at the end.
     LiftTurnedBack,
+    /// A carrier force asks leave to pursue a find (decision 0214, 6): the
+    /// notice's `pursuit` gives the force, the contact, where the force
+    /// would go and the order it would leave. Added at the end (decision
+    /// 0214).
+    AsksLeaveToPursue,
+    /// A carrier force pursues a find on leave the staff took (decision
+    /// 0214, 10). Stops nothing. Added at the end (decision 0214).
+    Pursues,
+    /// A force's pursuit is ended (decision 0214, 12). Added at the end
+    /// (decision 0214).
+    PursuitEnded,
 }
 
 impl NoticeKind {
@@ -2685,6 +2855,9 @@ impl NoticeKind {
             NoticeKind::Met => 7,
             NoticeKind::CannotBringEnough => 8,
             NoticeKind::LiftTurnedBack => 9,
+            NoticeKind::AsksLeaveToPursue => 10,
+            NoticeKind::Pursues => 11,
+            NoticeKind::PursuitEnded => 12,
         }
     }
 
@@ -2700,6 +2873,9 @@ impl NoticeKind {
             NoticeKind::Met => "met",
             NoticeKind::CannotBringEnough => "cannot_bring_enough",
             NoticeKind::LiftTurnedBack => "lift_turned_back",
+            NoticeKind::AsksLeaveToPursue => "asks_leave_to_pursue",
+            NoticeKind::Pursues => "pursues",
+            NoticeKind::PursuitEnded => "pursuit_ended",
         }
     }
 
@@ -2715,6 +2891,9 @@ impl NoticeKind {
             NoticeKind::Met,
             NoticeKind::CannotBringEnough,
             NoticeKind::LiftTurnedBack,
+            NoticeKind::AsksLeaveToPursue,
+            NoticeKind::Pursues,
+            NoticeKind::PursuitEnded,
         ]
         .into_iter()
         .find(|kind| kind.name() == name)
@@ -2740,6 +2919,36 @@ pub struct StaffNotice {
     pub plan: PlanId,
     pub run: Option<u32>,
     pub rests_on: NoticeBasis,
+    /// What a pursuit notice says (decision 0214): `Some` for the three
+    /// pursuit kinds, `None` for the rest. Added at the end.
+    pub pursuit: Option<PursuitNotice>,
+}
+
+/// What a pursuit notice says (decision 0214, 6): the force, the order it
+/// would leave, and the find.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct PursuitNotice {
+    pub force: TaskForceId,
+    /// The order the force would leave.
+    pub intent: IntentId,
+    /// `Some` for the asking and for "pursues"; `None` for "pursuit ended".
+    pub find: Option<PursuitFind>,
+}
+
+/// The find of a pursuit notice (decision 0214, 6).
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct PursuitFind {
+    /// The commander's number of the contact.
+    pub contact: u32,
+    pub kind: ShipKind,
+    /// Its age in pulses.
+    pub age: u32,
+    /// Where it was reported.
+    pub reported_at: Hex,
+    /// The hex the force would close to.
+    pub to: Hex,
+    /// The hours to it by the engine's forecast, where it has one.
+    pub hours: Option<Fixed>,
 }
 
 /// What a staff hands in for one day (decision 0107, 4): orders with their

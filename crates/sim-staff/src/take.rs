@@ -518,6 +518,7 @@ impl Day<'_, '_> {
                     plan: plan.id,
                     run: None,
                     rests_on: NoticeBasis::Command(index),
+                    pursuit: None,
                 });
             }
             if in_scope {

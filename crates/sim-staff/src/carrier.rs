@@ -32,7 +32,8 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use sim_core::command::{
-    Addressee, Intent, IntentKind, NoticeBasis, NoticeKind, Reason, Risk, StaffNotice, StaffOrder,
+    Addressee, Intent, IntentKind, NoticeBasis, NoticeKind, PursueLeave, PursuitBy, PursuitFind,
+    PursuitNotice, Reason, Risk, StaffNotice, StaffOrder,
 };
 use sim_core::commander::Initiative;
 use sim_core::fixed::Fixed;
@@ -521,6 +522,82 @@ pub fn close_to(path: &[Hex], contact: Hex, reach: Fixed) -> Option<Hex> {
         .find(|h| Fixed::from_int(i64::from(h.air_distance_nm(contact))) <= reach)
 }
 
+/// The find of a carrier force (decision 0214, rule 1): the contact the
+/// closing rule would take were the night taken as `nights` nights. The
+/// caller asks only where the rule as it stands gives [`Closing::TooFar`].
+/// The rule is worked again whole with the night so taken; the contact it
+/// closes on is the find. With `nights` of 1 the rule is as it stands and
+/// there is no find.
+pub fn find(
+    risk: Risk,
+    weigh: &dyn Fn(&Held) -> Risk,
+    reach: Fixed,
+    night_nm: Fixed,
+    nights: u32,
+    contacts: &[Held],
+) -> Option<Held> {
+    if nights <= 1 {
+        return None;
+    }
+    match closing_by(
+        risk,
+        weigh,
+        reach,
+        night_nm * Fixed::from_int(i64::from(nights)),
+        contacts,
+    ) {
+        Closing::CloseOn(c) => Some(c),
+        _ => None,
+    }
+}
+
+/// What the commander's own picture calls a contact the force holds
+/// (decision 0214, rule 6): where reports do not travel, the force's own
+/// number; where they do, his number of a contact of the same estimated hex
+/// and kind, and none where he holds none.
+fn commander_number(view: &sim_core::view::SideView<'_>, c: &Held) -> Option<u32> {
+    if !view.reports_travel() {
+        return Some(c.number);
+    }
+    let area = crate::picture::picture_of(view, Addressee::Area);
+    area.contacts()
+        .find(|x| x.estimated_hex == c.hex && x.estimated_kind == c.kind)
+        .map(|x| area.contact_number(x.id))
+}
+
+/// How a pursuit is carried on, for the words of its reason.
+#[derive(Clone, PartialEq, Eq, Debug)]
+enum Pursuing {
+    /// Only the asking: the working of the find, with no order from it.
+    Asking,
+    /// By the commander's yes of that day.
+    Answer(u32),
+    /// On leave the staff took, with the words of where it comes from.
+    Taken(String),
+}
+
+/// What the staff does with a find (decision 0214, rule 10).
+enum Act {
+    /// Pursue it; `true` where the staff takes the leave now and says so.
+    Pursue(Pursuing, bool),
+    /// Ask leave.
+    Ask,
+    /// The commander refused leave for this contact.
+    Refused(u32),
+    /// Nothing at all changes.
+    Nothing,
+}
+
+/// What closing on one contact comes to (decision 0130, 3 to 4).
+struct CloseOut {
+    /// The words where it does not close, or a reason to join.
+    words: Option<String>,
+    closes: bool,
+    route: Option<(Vec<Hex>, Option<SpeedSetting>, Reason)>,
+    /// Where it would close to and the hours there, where it has a route.
+    place: Option<(Hex, Option<Fixed>, SpeedSetting)>,
+}
+
 fn setting_words(speed: SpeedSetting) -> &'static str {
     match speed {
         SpeedSetting::Full => "full speed",
@@ -627,6 +704,8 @@ impl Day<'_, '_> {
         let mut orders: Vec<StaffOrder> = Vec::new();
         let mut notes: Vec<Reason> = Vec::new();
         let mut cannot = false;
+        // The notices of decision 0214: each with the reason it rests on.
+        let mut pursuit_notices: Vec<(NoticeKind, Reason, PursuitNotice)> = Vec::new();
 
         let force = view.task_forces().find(|f| f.id == id).cloned();
         let held = force
@@ -981,6 +1060,9 @@ impl Day<'_, '_> {
                 // Closing the range (decision 0130, 2 to 5): on a morning the
                 // force is not on its way home and not fuelling at home.
                 let mut closes = false;
+                // Whether a pursuit of the force goes on: it has a find or a
+                // contact to close on or stay for (decision 0214, rule 12).
+                let mut pursuit_continues = false;
                 let mut stays = false;
                 let mut close_words: Option<String> = None;
                 // It left its task's hex to close: its last route ends at a
@@ -1113,6 +1195,165 @@ impl Day<'_, '_> {
                                     "{} nm ({night_nm} nm in the night's {NIGHT_HOURS} hours at full speed and the {reach} nm normal reach of its bombers)",
                                     night_nm + reach
                                 );
+                            let pursuit_nights =
+                                view.air_combat_figures().map_or(1, |f| f.pursuit_nights);
+                            let pursuit_words = format!(
+                                "{} nm ({} nm in {pursuit_nights} nights of {NIGHT_HOURS} hours at full speed and the {reach} nm normal reach of its bombers)",
+                                night_nm * Fixed::from_int(i64::from(pursuit_nights)) + reach,
+                                night_nm * Fixed::from_int(i64::from(pursuit_nights))
+                            );
+                            // Closing on one contact: a sea route to a hex within
+                            // reach, and the fuel to go there and home at the
+                            // risk's margin. The find of decision 0214 works it
+                            // the same way (`pursuing`), so a pursuit passes
+                            // exactly what a close passes.
+                            let close_on = |c: Held, pursuing: Option<&Pursuing>| -> CloseOut {
+                                let mut out = CloseOut {
+                                    words: None,
+                                    closes: false,
+                                    route: None,
+                                    place: None,
+                                };
+                                let target = view
+                                    .sea_path(here, c.hex)
+                                    .and_then(|path| close_to(&path, c.hex, reach));
+                                let Some(target) = target else {
+                                    out.words = Some(format!(
+                                            "{id} does not close: {}, but no sea route from {here} reaches a hex within the {reach} nm normal reach of its bombers of {}.{rating_text}",
+                                            held_words(&c),
+                                            c.hex
+                                        ));
+                                    return out;
+                                };
+                                let (speed, speed_text) = passage_speed(view, id, risk, target);
+                                let hours = hours_to(view, id, target, speed);
+                                out.place = Some((target, hours, speed));
+                                let hours_text = hours.map_or_else(
+                                    || "it does not arrive by the engine's measure".to_string(),
+                                    |h| format!("{h} hours at {}", setting_words(speed)),
+                                );
+                                let target_nm = here.air_distance_nm(target);
+                                let contact_text = match pursuing {
+                                    None => format!(
+                                            "{}, beyond the {reach} nm normal reach of its bombers and within the {reach_words}",
+                                            held_words(&c)
+                                        ),
+                                    Some(_) => format!(
+                                            "{}, beyond the {reach} nm normal reach of its bombers and more than the {reach_words}, but within the {pursuit_words}",
+                                            held_words(&c)
+                                        ),
+                                };
+                                let place_text = format!(
+                                        "the first hex along the shortest sea route to {} within that reach of it is {target}, {target_nm} nm from {here}: {hours_text}",
+                                        c.hex
+                                    );
+                                // Fuel first (rule 4).
+                                let fuel = home_hex.map(|home_at| {
+                                    (
+                                        home_at,
+                                        fuel_needs(
+                                            view,
+                                            id,
+                                            &[target, home_at],
+                                            Some(speed),
+                                            margin,
+                                        )
+                                        .map(|(needs, _)| needs),
+                                    )
+                                });
+                                match fuel {
+                                    Some((_, None)) => {
+                                        out.words = Some(format!(
+                                                "{id} does not close: {contact_text}; {place_text}; but the engine would refuse the passage there and home.{rating_text}"
+                                            ));
+                                    }
+                                    Some((_, Some(needs))) if needs.iter().any(|n| n.short()) => {
+                                        out.words = Some(format!(
+                                                "{id} does not close on {}: {contact_text}; {place_text}; but the passage to {target} and from there home to {home_text}, by the engine's measure at {}, times the {margin} of the {risk_text}: {}: a ship has less than it needs.{rating_text}",
+                                                crate::picture::contact_words(&picture, c.number),
+                                                setting_words(speed),
+                                                needs_words(&needs)
+                                            ));
+                                    }
+                                    fuel => {
+                                        let fuel_text = match fuel {
+                                                Some((_, Some(needs))) => format!(
+                                                    "the passage to {target} and from there home to {home_text}, by the engine's measure at {}, times the {margin} of the {risk_text}: {}: it has the fuel",
+                                                    setting_words(speed),
+                                                    needs_words(&needs)
+                                                ),
+                                                _ => format!("{id} has no home port the staff knows, so its fuel is not measured against a passage home"),
+                                            };
+                                        out.closes = true;
+                                        // Where a rating changed how the
+                                        // contact was weighed, the reason says
+                                        // so (decision 0137, 10).
+                                        let (binding, why) = match (pursuing, weighed_words(&c)) {
+                                            (Some(Pursuing::Answer(day)), _) => (
+                                                format!("a force with the commander's leave to pursue goes after a contact it holds more than a night away and within {pursuit_nights} nights at full speed and its bombers' reach"),
+                                                format!("{id} pursues it by the commander's leave given on day {day}; {} waits", task.id),
+                                            ),
+                                            (Some(Pursuing::Taken(source)), _) => (
+                                                format!("a force with leave to pursue goes after a contact it holds more than a night away and within {pursuit_nights} nights at full speed and its bombers' reach"),
+                                                format!("the leave to pursue was taken, {source}, so {id} pursues it and tells the commander; {} waits", task.id),
+                                            ),
+                                            (Some(Pursuing::Asking), _) => (
+                                                "the find is worked as a pursuit would be".to_string(),
+                                                format!("{id} would pursue it were leave given; {} would wait", task.id),
+                                            ),
+                                            (None, None) => (
+                                                format!("at the {risk_text} the force closes on {} it holds beyond its bombers' reach and within a night at full speed and that reach", closes_words(risk)),
+                                                format!("at the {risk_text} it closes on {}", closes_words(risk)),
+                                            ),
+                                            (None, Some(words)) => (
+                                                format!(
+                                                    "a {} commander weighs a contact of his own at the {} risk, and at that risk the force closes on {} it holds beyond its bombers' reach and within a night at full speed and that reach",
+                                                    initiative.name(),
+                                                    weigh(&c).name(),
+                                                    closes_words(weigh(&c))
+                                                ),
+                                                words,
+                                            ),
+                                        };
+                                        // Any other contact whose weighing a
+                                        // rating changed.
+                                        let others: Vec<String> = held_contacts
+                                            .iter()
+                                            .filter(|o| {
+                                                o.age <= CLOSE_MAX_AGE && o.number != c.number
+                                            })
+                                            .filter_map(weighed_words)
+                                            .collect();
+                                        let others_text = if others.is_empty() || pursuing.is_some()
+                                        {
+                                            String::new()
+                                        } else {
+                                            format!(" {}.", others.join(". "))
+                                        };
+                                        let mut builder = serving(task, &plan)
+                                            .evidence(contact_text.clone(), today)
+                                            .evidence(fuel_text.clone(), today)
+                                            .evidence(hours_text.clone(), today)
+                                            .binding(binding)
+                                            .binding("it goes no nearer than its bombers need");
+                                        if matches!(pursuing, Some(Pursuing::Answer(_))) {
+                                            builder = builder.answer_of(id);
+                                        }
+                                        let mut builder = builder
+                                            .worked(format!(
+                                                "{intent_words}: {contact_text}: {why}. {place_text}. {fuel_text}. {id} is routed to {target} at {speed_text}.{others_text}"
+                                            ))
+                                            .would_change("the contact within reach, older, dropped or of another kind")
+                                            .would_change("less fuel aboard");
+                                        if pursuing.is_some() {
+                                            builder = builder.would_change("the leave withdrawn");
+                                        }
+                                        out.route =
+                                            Some((vec![target], Some(speed), builder.done()));
+                                    }
+                                }
+                                out
+                            };
                             match closing_by(risk, &weigh, reach, night_nm, &held_contacts) {
                                 Closing::Preserve => {
                                     close_words = Some(format!(
@@ -1164,6 +1405,7 @@ impl Day<'_, '_> {
                                         ));
                                 }
                                 Closing::InReach(c) if left_to_close => {
+                                    pursuit_continues = true;
                                     // It stays while the first contact is
                                     // in reach (rule 5).
                                     stays = true;
@@ -1174,6 +1416,7 @@ impl Day<'_, '_> {
                                         ));
                                 }
                                 Closing::InReach(c) => {
+                                    pursuit_continues = true;
                                     close_words = Some(format!(
                                             "{id} does not close: {}, within the {reach} nm normal reach of its bombers, the first of the contacts it closes on ({}) within the {reach_words}.{rating_text}",
                                             held_words(&c),
@@ -1185,138 +1428,214 @@ impl Day<'_, '_> {
                                             "{id} does not close: {}, beyond the {reach} nm normal reach of its bombers and more than the {reach_words}.{rating_text}",
                                             held_words(&c)
                                         ));
-                                }
-                                Closing::CloseOn(c) => {
-                                    let target = view
-                                        .sea_path(here, c.hex)
-                                        .and_then(|path| close_to(&path, c.hex, reach));
-                                    match target {
-                                        None => {
-                                            close_words = Some(format!(
-                                                    "{id} does not close: {}, but no sea route from {here} reaches a hex within the {reach} nm normal reach of its bombers of {}.{rating_text}",
-                                                    held_words(&c),
-                                                    c.hex
-                                                ));
-                                        }
-                                        Some(target) => {
-                                            let (speed, speed_text) =
-                                                passage_speed(view, id, risk, target);
-                                            let hours = hours_to(view, id, target, speed);
+                                    // A find (decision 0214, rules 1 to 3): a
+                                    // force not under a take or an island works
+                                    // the rule again with the night lifted; the
+                                    // find must pass the rest of the rule and
+                                    // lie inside the order's area limit.
+                                    let free = self.under_take(task).is_none()
+                                        && self.under_island(task).is_none();
+                                    let found = free
+                                        .then(|| {
+                                            find(
+                                                risk,
+                                                &weigh,
+                                                reach,
+                                                night_nm,
+                                                pursuit_nights,
+                                                &held_contacts,
+                                            )
+                                        })
+                                        .flatten()
+                                        .filter(|f| {
+                                            self.state
+                                                .area_read_up(task.id)
+                                                .is_none_or(|area| area.contains(&f.hex))
+                                        });
+                                    if let Some(f) = found {
+                                        let probe = close_on(f, Some(&Pursuing::Asking));
+                                        if let (true, Some((to, hours, _))) =
+                                            (probe.closes, probe.place)
+                                        {
+                                            pursuit_continues = true;
+                                            let number = commander_number(view, &f);
+                                            let before = self.state.pursuits.get(&id).copied();
+                                            let (leave, leave_on) =
+                                                self.state.pursue_read_up(task.id);
+                                            let source = match leave_on {
+                                                Some(on) => format!(
+                                                    "the leave to pursue of {on} is {}",
+                                                    leave.name()
+                                                ),
+                                                None => format!(
+                                                    "no leave to pursue is set, so by default it is {}",
+                                                    leave.name()
+                                                ),
+                                            };
+                                            // Who gives the leave, in the order of
+                                            // rule 10 and the table of the plan.
+                                            let act = match before {
+                                                Some(p) if matches!(p.by, PursuitBy::Answer(_)) => {
+                                                    Act::Pursue(
+                                                        Pursuing::Answer(p.since_day),
+                                                        false,
+                                                    )
+                                                }
+                                                Some(_) => Act::Pursue(
+                                                    Pursuing::Taken(
+                                                        "on leave the staff took earlier"
+                                                            .to_string(),
+                                                    ),
+                                                    false,
+                                                ),
+                                                _ => match number {
+                                                    Some(n)
+                                                        if self
+                                                            .state
+                                                            .pursuit_refusals
+                                                            .contains(&(id, n)) =>
+                                                    {
+                                                        Act::Refused(n)
+                                                    }
+                                                    _ => match (leave, number) {
+                                                        (PursueLeave::Stay, _) => Act::Nothing,
+                                                        (PursueLeave::Go, _) => Act::Pursue(
+                                                            Pursuing::Taken(source.clone()),
+                                                            before.is_none(),
+                                                        ),
+                                                        (_, Some(_)) => Act::Ask,
+                                                        (_, None) => Act::Nothing,
+                                                    },
+                                                },
+                                            };
+                                            let find_notice = |number: u32| PursuitFind {
+                                                contact: number,
+                                                kind: f.kind,
+                                                age: f.age,
+                                                reported_at: f.hex,
+                                                to,
+                                                hours,
+                                            };
                                             let hours_text = hours.map_or_else(
                                                 || {
                                                     "it does not arrive by the engine's measure"
                                                         .to_string()
                                                 },
-                                                |h| {
-                                                    format!("{h} hours at {}", setting_words(speed))
-                                                },
+                                                |h| format!("{h} hours"),
                                             );
-                                            let target_nm = here.air_distance_nm(target);
-                                            let contact_text = format!(
-                                                    "{}, beyond the {reach} nm normal reach of its bombers and within the {reach_words}",
-                                                    held_words(&c)
-                                                );
-                                            let place_text = format!(
-                                                    "the first hex along the shortest sea route to {} within that reach of it is {target}, {target_nm} nm from {here}: {hours_text}",
-                                                    c.hex
-                                                );
-                                            // Fuel first (rule 4).
-                                            let fuel = home_hex.map(|home_at| {
-                                                (
-                                                    home_at,
-                                                    fuel_needs(
-                                                        view,
-                                                        id,
-                                                        &[target, home_at],
-                                                        Some(speed),
-                                                        margin,
-                                                    )
-                                                    .map(|(needs, _)| needs),
-                                                )
-                                            });
-                                            match fuel {
-                                                Some((_, None)) => {
-                                                    close_words = Some(format!(
-                                                            "{id} does not close: {contact_text}; {place_text}; but the engine would refuse the passage there and home.{rating_text}"
-                                                        ));
+                                            let found_words = format!(
+                                                "{}, a {}, {} pulse(s) old, reported at {}, {} nm from {here}",
+                                                crate::picture::contact_words(&picture, f.number),
+                                                f.kind.name(),
+                                                f.age,
+                                                f.hex,
+                                                f.distance_nm
+                                            );
+                                            let bound_words = format!(
+                                                "beyond a night's steaming and the reach, within {pursuit_nights} nights"
+                                            );
+                                            match act {
+                                                Act::Nothing => {}
+                                                Act::Refused(n) => {
+                                                    close_words = close_words.map(|w| {
+                                                        format!(
+                                                            "{w} The commander refused leave to pursue contact {n}, so {id} does not pursue it."
+                                                        )
+                                                    });
                                                 }
-                                                Some((_, Some(needs)))
-                                                    if needs.iter().any(|n| n.short()) =>
-                                                {
-                                                    close_words = Some(format!(
-                                                            "{id} does not close on {}: {contact_text}; {place_text}; but the passage to {target} and from there home to {home_text}, by the engine's measure at {}, times the {margin} of the {risk_text}: {}: a ship has less than it needs.{rating_text}",
-                                                            crate::picture::contact_words(&picture, c.number),
-                                                            setting_words(speed),
-                                                            needs_words(&needs)
-                                                        ));
+                                                Act::Ask => {
+                                                    let n = number.unwrap_or(f.number);
+                                                    let reason = serving(task, &plan)
+                                                        .evidence(found_words.clone(), today)
+                                                        .evidence(format!("{id} would close to {to}, {hours_text}"), today)
+                                                        .binding(source.clone())
+                                                        .worked(format!(
+                                                            "{intent_words}: {id} asks leave to pursue contact {n}: {found_words}, {bound_words}. It would close to {to}, {} nm from {here}, {hours_text}, and {} would wait. The leave to pursue is {} ({source}), so the staff asks and the force is given no route and no speed order today.",
+                                                            here.air_distance_nm(to),
+                                                            task.id,
+                                                            leave.name()
+                                                        ))
+                                                        .would_change("leave given, or the contact older, dropped or beyond two nights")
+                                                        .done();
+                                                    pursuit_notices.push((
+                                                        NoticeKind::AsksLeaveToPursue,
+                                                        reason,
+                                                        PursuitNotice {
+                                                            force: id,
+                                                            intent: task.id,
+                                                            find: Some(find_notice(n)),
+                                                        },
+                                                    ));
                                                 }
-                                                fuel => {
-                                                    let fuel_text = match fuel {
-                                                            Some((_, Some(needs))) => format!(
-                                                                "the passage to {target} and from there home to {home_text}, by the engine's measure at {}, times the {margin} of the {risk_text}: {}: it has the fuel",
-                                                                setting_words(speed),
-                                                                needs_words(&needs)
-                                                            ),
-                                                            _ => format!("{id} has no home port the staff knows, so its fuel is not measured against a passage home"),
-                                                        };
-                                                    closes = true;
-                                                    // Where a rating changed how
-                                                    // the contact was weighed,
-                                                    // the reason says so
-                                                    // (decision 0137, 10).
-                                                    let (binding, why) = match weighed_words(&c) {
-                                                        None => (
-                                                            format!("at the {risk_text} the force closes on {} it holds beyond its bombers' reach and within a night at full speed and that reach", closes_words(risk)),
-                                                            format!("at the {risk_text} it closes on {}", closes_words(risk)),
-                                                        ),
-                                                        Some(words) => (
-                                                            format!(
-                                                                "a {} commander weighs a contact of his own at the {} risk, and at that risk the force closes on {} it holds beyond its bombers' reach and within a night at full speed and that reach",
-                                                                initiative.name(),
-                                                                weigh(&c).name(),
-                                                                closes_words(weigh(&c))
-                                                            ),
-                                                            words,
-                                                        ),
-                                                    };
-                                                    // Any other contact whose
-                                                    // weighing a rating changed.
-                                                    let others: Vec<String> = held_contacts
-                                                        .iter()
-                                                        .filter(|o| {
-                                                            o.age <= CLOSE_MAX_AGE
-                                                                && o.number != c.number
-                                                        })
-                                                        .filter_map(weighed_words)
-                                                        .collect();
-                                                    let others_text = if others.is_empty() {
-                                                        String::new()
-                                                    } else {
-                                                        format!(" {}.", others.join(". "))
-                                                    };
-                                                    route = Some((
-                                                            vec![target],
-                                                            Some(speed),
-                                                            serving(task, &plan)
-                                                                .evidence(contact_text.clone(), today)
-                                                                .evidence(fuel_text.clone(), today)
-                                                                .evidence(hours_text.clone(), today)
-                                                                .binding(binding)
-                                                                .binding("it goes no nearer than its bombers need")
-                                                                .worked(format!(
-                                                                    "{intent_words}: {contact_text}: {why}. {place_text}. {fuel_text}. {id} is routed to {target} at {speed_text}.{others_text}"
-                                                                ))
-                                                                .would_change("the contact within reach, older, dropped or of another kind")
-                                                                .would_change("less fuel aboard")
-                                                                .done(),
+                                                Act::Pursue(how, new) => {
+                                                    let out = close_on(f, Some(&how));
+                                                    close_words = out.words;
+                                                    closes = out.closes;
+                                                    route = out.route;
+                                                    if new {
+                                                        let n = number.unwrap_or(f.number);
+                                                        let reason = serving(task, &plan)
+                                                            .evidence(found_words.clone(), today)
+                                                            .evidence(format!("{id} would close to {to}, {hours_text}"), today)
+                                                            .binding(source.clone())
+                                                            .worked(format!(
+                                                                "{intent_words}: {id} pursues contact {n}: {found_words}, {bound_words}. The leave to pursue is {} ({source}), so it is taken: {id} closes to {to}, {hours_text}, and {} waits.",
+                                                                leave.name(),
+                                                                task.id
+                                                            ))
+                                                            .would_change("the leave withdrawn")
+                                                            .done();
+                                                        pursuit_notices.push((
+                                                            NoticeKind::Pursues,
+                                                            reason,
+                                                            PursuitNotice {
+                                                                force: id,
+                                                                intent: task.id,
+                                                                find: Some(find_notice(n)),
+                                                            },
                                                         ));
+                                                    }
                                                 }
                                             }
                                         }
                                     }
                                 }
+                                Closing::CloseOn(c) => {
+                                    let out = close_on(c, None);
+                                    pursuit_continues |= out.closes;
+                                    close_words = out.words;
+                                    closes = out.closes;
+                                    route = out.route;
+                                }
                             }
                         }
+                    }
+                }
+                // The end of a pursuit (decision 0214, rule 12): a force with
+                // a leave to pursue that has neither a find nor a contact to
+                // close on or stay for. It goes back to its hex by the rule
+                // that sends it back today.
+                if !dry && !pursuit_continues {
+                    if let Some(pursuit) = self.state.pursuits.get(&id) {
+                        let by = match pursuit.by {
+                            PursuitBy::Answer(_) => "the commander's leave",
+                            PursuitBy::Taken => "leave the staff took",
+                        };
+                        let reason = serving(task, &plan)
+                            .evidence(format!("{id} is at {here}, with a pursuit begun on day {} on contact {}", pursuit.since_day, pursuit.contact), today)
+                            .binding("a pursuit ends at the first dusk the force has neither a find nor a contact to close on")
+                            .worked(format!("{intent_words}: the pursuit of {id}, on {by} from day {} on contact {}, is ended: {id} has neither a find nor a contact to close on, so it goes back to {hex} by the rule that sends it back, and {} is served again.", pursuit.since_day, pursuit.contact, task.id))
+                            .would_change("a fresh contact within reach, or a find")
+                            .done();
+                        pursuit_notices.push((
+                            NoticeKind::PursuitEnded,
+                            reason,
+                            PursuitNotice {
+                                force: id,
+                                intent: task.id,
+                                find: None,
+                            },
+                        ));
                     }
                 }
                 // A way the staff gave to its station, kept while the force is
@@ -1838,8 +2157,19 @@ impl Day<'_, '_> {
                     plan: plan.id,
                     run: None,
                     rests_on: NoticeBasis::NoOrder(index),
+                    pursuit: None,
                 });
             }
+        }
+        for (kind, reason, pursuit) in pursuit_notices {
+            out.no_orders.push(reason);
+            out.notices.push(StaffNotice {
+                kind,
+                plan: plan.id,
+                run: None,
+                rests_on: NoticeBasis::NoOrder(out.no_orders.len() - 1),
+                pursuit: Some(pursuit),
+            });
         }
         if in_scope {
             self.lines
@@ -1898,6 +2228,48 @@ mod tests {
             distance_nm: Fixed::from_int(i64::from(Hex { q: 0, r: 0 }.air_distance_nm(hex))),
             in_waters: false,
         }
+    }
+
+    #[test]
+    fn a_find_is_the_contact_the_rule_takes_with_the_night_lifted() {
+        let reach = Fixed::from_int(250);
+        let night = Fixed::from_int(360);
+        let f = |risk: Risk, nights: u32, contacts: &[Held]| {
+            find(risk, &|_| risk, reach, night, nights, contacts)
+        };
+        // 16 hexes, 640 nm: beyond 610 and within 970.
+        let far = held(1, 16, ShipKind::Carrier, 0);
+        assert_eq!(
+            closing(Risk::Balanced, reach, night, &[far]),
+            Closing::TooFar(far)
+        );
+        assert_eq!(f(Risk::Balanced, 2, &[far]), Some(far));
+        // One night is the rule as it stands: no find.
+        assert_eq!(f(Risk::Balanced, 1, &[far]), None);
+        // 25 hexes, 1000 nm: beyond 970.
+        let beyond = held(1, 25, ShipKind::Carrier, 0);
+        assert_eq!(f(Risk::Balanced, 2, &[beyond]), None);
+        // 24 hexes, 960 nm, is within.
+        let edge = held(1, 24, ShipKind::Carrier, 0);
+        assert_eq!(f(Risk::Balanced, 2, &[edge]), Some(edge));
+        // A kind the risk does not close on is no find at balanced, and is
+        // one at press.
+        let cruiser = held(1, 16, ShipKind::Cruiser, 0);
+        assert_eq!(f(Risk::Balanced, 2, &[cruiser]), None);
+        assert_eq!(f(Risk::Press, 2, &[cruiser]), Some(cruiser));
+        // Preserve closes on nothing, so finds nothing.
+        assert_eq!(f(Risk::Preserve, 2, &[far]), None);
+        // An old contact is none.
+        let old = held(1, 16, ShipKind::Carrier, 4);
+        assert_eq!(f(Risk::Balanced, 2, &[old]), None);
+        // The more important kind, then the nearer, then the lower number.
+        let near_cruiser = held(2, 14, ShipKind::Cruiser, 0);
+        let carrier = held(3, 20, ShipKind::Carrier, 0);
+        assert_eq!(f(Risk::Press, 2, &[near_cruiser, carrier]), Some(carrier));
+        let nearer = held(4, 18, ShipKind::Carrier, 0);
+        assert_eq!(f(Risk::Press, 2, &[carrier, nearer]), Some(nearer));
+        let twin = held(2, 18, ShipKind::Carrier, 0);
+        assert_eq!(f(Risk::Press, 2, &[nearer, twin]), Some(twin));
     }
 
     #[test]

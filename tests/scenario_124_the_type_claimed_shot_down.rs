@@ -889,8 +889,10 @@ fn a_claim_passed_between_commands_and_a_picture_keep_the_types() {
 
 #[test]
 fn the_hash_counts_the_types_in_the_air() {
-    // The state's layout was raised for the new list (decision 0057).
-    assert_eq!(sim_core::hash::STATE_VERSION, b"flagplot-state-v54");
+    // The state's layout was raised for the new list (decision 0057), to
+    // v54; decision 0214 raised it to v55 since, for a force's leave to
+    // pursue.
+    assert_eq!(sim_core::hash::STATE_VERSION, b"flagplot-state-v55");
     let made = run(ALL, "1", &[]);
     let unmade = run(ALL, "0", &[]);
     // The fights are the same and the types differ: so do the hashes.

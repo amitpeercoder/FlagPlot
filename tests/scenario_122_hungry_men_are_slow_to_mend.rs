@@ -1584,9 +1584,10 @@ fn property_one_function_in_statement_13() {
 #[test]
 fn property_no_new_state() {
     // v53 when this was built; decision 0210 raised it to v54 since, for a
-    // claim's types in the air, which this rule does not touch.
-    assert_eq!(sim_core::hash::STATE_VERSION, b"flagplot-state-v54");
-    assert_eq!(sim_core::world::RULES_VERSION, 26);
+    // claim's types in the air, and decision 0214 to v55 with the rules
+    // label 27, for a force's leave to pursue; neither touches this rule.
+    assert_eq!(sim_core::hash::STATE_VERSION, b"flagplot-state-v55");
+    assert_eq!(sim_core::world::RULES_VERSION, 27);
     let root = common::data_dir().join("..");
     let file = root.join("crates/sim-cli/tests/recorded_games/eastern_solomons_haiku/save.json");
     let saved = sim_cli::save::read(file.to_str().expect("a path")).expect("the save reads");

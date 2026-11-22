@@ -2,20 +2,20 @@ Placeholder scenario 95: The estimate
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 9cbfb255a967269e  6 events
-day   2  hash 20963ccb12ba35c5  6 events
-day   3  hash 8c1e04acc465fedf  6 events
-day   4  hash c5c0a4e22b2d7c7e  6 events
-day   5  hash 6dbf69d434cb4098  6 events
-day   6  hash b320dc8c3c2c1608  6 events
-day   7  hash effd6d728bc565a6  6 events
-day   8  hash c0b9545fbcffba41  6 events
-day   9  hash e43b95febe5a9b37  6 events
-day  10  hash 9718b8d5df775e52  6 events
-day  11  hash 87bc9ab5620b915f  6 events
-day  12  hash 778907f63f348c6c  6 events
-day  13  hash a7e47c8a8e8367c2  6 events
-day  14  hash 32b4790e5db73027  6 events
+day   1  hash a8d542f8774ca1a1  6 events
+day   2  hash b7ee62931b252de2  6 events
+day   3  hash 7abf7d8afd4a21c4  6 events
+day   4  hash c09b6f7a6fed6cf1  6 events
+day   5  hash 304e94f6a1af575f  6 events
+day   6  hash 57bdfcd269891567  6 events
+day   7  hash 993c9a00f3593c59  6 events
+day   8  hash d13d13ce14acda32  6 events
+day   9  hash d486795a8f2072e4  6 events
+day  10  hash fab11542f908cc39  6 events
+day  11  hash 57a3b698ea330cac  6 events
+day  12  hash 171bd48c61a36883  6 events
+day  13  hash ee92858be51a4f85  6 events
+day  14  hash 3596c9e97cf5945c  6 events
 
 #1 D0 -         Allied ground report at (4,0): 200 enemy men ashore (told)
 #2 D1 night     base:1 spent 3 t of supply on 600 men ashore for the day, 997 t left

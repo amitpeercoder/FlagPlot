@@ -275,6 +275,21 @@ impl World {
                     }
                 }
             }
+            StandingKind::AsksLeaveToPursue => {
+                // A force's asking leave to pursue a find (decision 0214, 7):
+                // the subject is the force the notice names.
+                for (notice, event) in notices.get(&side).into_iter().flatten() {
+                    if notice.kind != NoticeKind::AsksLeaveToPursue {
+                        continue;
+                    }
+                    if let Some(pursuit) = notice.pursuit {
+                        holding
+                            .entry(StandingSubject::TaskForce(pursuit.force))
+                            .or_default()
+                            .push(*event);
+                    }
+                }
+            }
             StandingKind::ShipLost => {
                 // No game without an intent gets a new event.
                 if self.command[&side].intents_in_force().next().is_none() {

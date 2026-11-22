@@ -814,6 +814,8 @@ struct AirCombatFile {
     raid_recognised_chance: Quantity,
     /// Decision 0168. Required.
     raid_recognised_experience_strength: Quantity,
+    /// Decision 0214, rule 1. Required.
+    pursuit_nights: u32,
     /// Decision 0118, 2. Optional: a file without it gives no figure for
     /// any kind, and sizing a strike does nothing.
     strike_aircraft_per_ship: Option<StrikeAircraftTable>,
@@ -954,6 +956,7 @@ fn parse_air_combat_figures(text: &str, path: &Path) -> Result<AirCombatFigures,
             "raid_recognised_experience_strength",
             &file.raid_recognised_experience_strength,
         )?,
+        pursuit_nights: file.pursuit_nights,
     };
     if let Some(problem) = figures.problem() {
         return Err(fail(problem));
@@ -1778,6 +1781,30 @@ mod tests {
         assert_eq!(
             figures.raid_recognised_experience_strength,
             Fixed::from_ratio(25, 100)
+        );
+        // Decision 0214: the live figure is a placeholder, 2 nights.
+        assert_eq!(figures.pursuit_nights, 2);
+    }
+
+    #[test]
+    fn the_pursuit_nights_figure_is_required_and_a_whole_number() {
+        let line = "pursuit_nights = 2";
+        let with = |to: &str| {
+            let text = air_combat_text().replace(line, to);
+            assert_ne!(text, air_combat_text(), "{line} is in the file");
+            parse_air_combat_figures(&text, here())
+        };
+        assert!(with("")
+            .expect_err("rejected")
+            .message
+            .contains("pursuit_nights"));
+        assert!(with("pursuit_nights = 2.5")
+            .expect_err("rejected")
+            .message
+            .contains("pursuit_nights"));
+        assert_eq!(
+            with("pursuit_nights = 1").expect("parses").pursuit_nights,
+            1
         );
     }
 
