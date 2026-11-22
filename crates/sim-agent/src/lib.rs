@@ -51,6 +51,7 @@ mod objectives;
 mod orders;
 mod pursuit;
 mod queries;
+mod queued;
 mod record;
 mod reporting;
 mod session;

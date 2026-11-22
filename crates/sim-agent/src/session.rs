@@ -35,6 +35,7 @@ use crate::objectives::result_part;
 use crate::orders::{is_orderable_unit, land_unit_number, order_from_json};
 use crate::pursuit;
 use crate::queries::{get_entity, list_bases, list_contacts, list_forces};
+use crate::queued::{self, QueueName, Queues, Slot};
 use crate::record::{
     seat_name, CallError, Post, Seat, SeatKind, TranscriptEntry, COMMAND_TOOLS, TOOLS, TRIAL_TOOLS,
     WATCHER_TOOLS,
@@ -1464,6 +1465,8 @@ impl Session {
             "advance" if self.advance_offered() => self.advance(side, &args),
             "issue_orders" => self.issue_orders(side, &args),
             "end_day" => self.end_day(side),
+            "queued" => self.queued_tool(side, &args),
+            "take_back" => self.take_back_tool(side, &args),
             "trial" if self.has_trial_tools(side) => self.trial_tool(side, &args),
             "trials" if self.has_trial_tools(side) => self.trials_tool(side, &args),
             command if COMMAND_TOOLS.contains(&command) && self.at_a_command(side) => {
@@ -2095,6 +2098,237 @@ impl Session {
     }
 
     // -----------------------------------------------------------------
+    // What is queued, and taking it back (decision 0221, rules 15 to 18).
+    // -----------------------------------------------------------------
+
+    /// The token `queued` gives and `take_back` must be given back: it
+    /// changes whenever the seat's queues change or the clock moves.
+    fn as_of(&self, side: Side) -> String {
+        format!(
+            "{}-{}-{}",
+            self.world.day(),
+            self.open_day().map_or("dusk", |(_, pulse)| pulse.name()),
+            self.revision(side)
+        )
+    }
+
+    /// Every entry the seat has queued, in the order `queued` lists them.
+    fn queue_rows(&self, side: Side) -> Result<Vec<queued::Row>, CallError> {
+        let view = self.view_of(side)?;
+        let state = &self.seats[&side];
+        let queues = Queues {
+            pulse: &state.queued_inside,
+            dusk: &state.queued,
+            commands: &state.commands,
+        };
+        let moment = queued::Moment {
+            open: self.open_day(),
+            dusk_day: self.command_day(),
+        };
+        // The commands are written as their answers write them, on the view
+        // of the world as the coming day will find it.
+        if state.commands.is_empty() {
+            return Ok(queued::rows(&view, &view, &queues, &moment));
+        }
+        let world = self.preview();
+        let coming = world.side_view(side);
+        Ok(queued::rows(&view, &coming, &queues, &moment))
+    }
+
+    /// `queued`: what the seat has queued, with each entry's place.
+    fn queued_tool(
+        &self,
+        side: Side,
+        args: &serde_json::Map<String, Value>,
+    ) -> Result<Value, CallError> {
+        if let Some(key) = args.keys().next() {
+            return Err(CallError::new(format!(
+                "\"{key}\" is not an argument of queued: it takes none"
+            )));
+        }
+        let rows = self.queue_rows(side)?;
+        Ok(queued::queued_answer(
+            &rows,
+            self.clock(),
+            &self.as_of(side),
+        ))
+    }
+
+    /// Which of the seat's queued entries the engine's own check passes now:
+    /// each order beside the orders before it in its queue, each command by
+    /// the verdict of taking the queue in. A refused entry can only be one
+    /// the state has since turned against.
+    fn queues_passing(&self, side: Side) -> [Vec<bool>; 3] {
+        let state = &self.seats[&side];
+        let orders = |queue: &[OrderRequest]| -> Vec<bool> {
+            (0..queue.len())
+                .map(|i| {
+                    self.world
+                        .check_order_queued(side, &queue[i], &queue[..i])
+                        .is_ok()
+                })
+                .collect()
+        };
+        let commands = if state.commands.is_empty() {
+            Vec::new()
+        } else {
+            let day = self.command_day();
+            let scripted = self.commands.get(&day).map_or(0, |list| {
+                list.iter().filter(|(who, _)| *who == side).count()
+            });
+            let world = self.preview_with(Some((side, &state.commands)), None);
+            let view = world.side_view(side);
+            (0..state.commands.len())
+                .map(|i| matches!(staffing::verdict(&view, scripted + i), Some(Ok(()))))
+                .collect()
+        };
+        [
+            orders(&state.queued_inside),
+            orders(&state.queued),
+            commands,
+        ]
+    }
+
+    /// `take_back`: withdraws one queued entry and what goes with it, and
+    /// changes nothing else; refused, leaving every queue as it was, where
+    /// another queued entry rests on what would go.
+    fn take_back_tool(
+        &mut self,
+        side: Side,
+        args: &serde_json::Map<String, Value>,
+    ) -> Result<Value, CallError> {
+        if self.is_over() {
+            return Err(CallError::new("the game is over"));
+        }
+        if self.seats[&side].ended {
+            return Err(CallError::new("the day's orders are closed"));
+        }
+        const ALLOWED: [&str; 4] = ["queue", "number", "as_of", "reason"];
+        if let Some(key) = args.keys().find(|key| !ALLOWED.contains(&key.as_str())) {
+            return Err(CallError::naming(
+                format!("\"{key}\" is not an argument of take_back"),
+                &ALLOWED,
+            ));
+        }
+        match args.get("reason") {
+            None | Some(Value::Null) | Some(Value::String(_)) => {}
+            Some(_) => return Err(CallError::new("\"reason\" must be text")),
+        }
+        let queue = args
+            .get("queue")
+            .and_then(Value::as_str)
+            .and_then(QueueName::parse)
+            .ok_or_else(|| {
+                CallError::naming(
+                    "\"queue\" is needed, as the queue of an entry you were shown",
+                    &["pulse", "dusk", "commands"],
+                )
+            })?;
+        let number = args
+            .get("number")
+            .and_then(Value::as_u64)
+            .and_then(|n| usize::try_from(n).ok())
+            .ok_or_else(|| {
+                CallError::new("\"number\" is needed, as the number of an entry you were shown")
+            })?;
+        let as_of = args.get("as_of").and_then(Value::as_str).ok_or_else(|| {
+            CallError::new("\"as_of\" is needed, as the as_of of the last queued you were given")
+        })?;
+        if as_of != self.as_of(side) {
+            return Err(CallError::new(
+                "the queue has changed since it was listed: call queued again",
+            ));
+        }
+        let slot = Slot { queue, number };
+        let before = self.queue_rows(side)?;
+        let gone = {
+            let view = self.view_of(side)?;
+            let state = &self.seats[&side];
+            let queues = Queues {
+                pulse: &state.queued_inside,
+                dusk: &state.queued,
+                commands: &state.commands,
+            };
+            if !queues.has(slot) {
+                return Err(CallError::new(format!(
+                    "nothing is queued at place {} {number}: call queued to see what is",
+                    queue.name()
+                )));
+            }
+            queued::gone(&view, &queues, slot)
+        };
+        // Try it: take the entries out and judge the rest again as they were
+        // judged when queued. An entry that passes now and fails without
+        // them rests on what would go.
+        let passing_now = self.queues_passing(side);
+        let saved = {
+            let state = &self.seats[&side];
+            (
+                state.queued_inside.clone(),
+                state.queued.clone(),
+                state.commands.clone(),
+            )
+        };
+        {
+            let state = self.seats.get_mut(&side).expect("both seats exist");
+            let keep = |queue: QueueName, number: usize| !gone.contains(&Slot { queue, number });
+            let thin = |list: &mut Vec<OrderRequest>, queue: QueueName| {
+                let mut number = 0;
+                list.retain(|_| {
+                    number += 1;
+                    keep(queue, number)
+                });
+            };
+            thin(&mut state.queued_inside, QueueName::Pulse);
+            thin(&mut state.queued, QueueName::Dusk);
+            let mut number = 0;
+            state.commands.retain(|_| {
+                number += 1;
+                keep(QueueName::Commands, number)
+            });
+        }
+        let passing_after = self.queues_passing(side);
+        let mut resting: Option<Slot> = None;
+        'queues: for (which, queue) in [QueueName::Pulse, QueueName::Dusk, QueueName::Commands]
+            .into_iter()
+            .enumerate()
+        {
+            let mut after_at = 0;
+            for (i, now) in passing_now[which].iter().enumerate() {
+                let number = i + 1;
+                if gone.contains(&Slot { queue, number }) {
+                    continue;
+                }
+                let after = passing_after[which].get(after_at).copied().unwrap_or(false);
+                after_at += 1;
+                if *now && !after {
+                    resting = Some(Slot { queue, number });
+                    break 'queues;
+                }
+            }
+        }
+        if let Some(rests) = resting {
+            let state = self.seats.get_mut(&side).expect("both seats exist");
+            (state.queued_inside, state.queued, state.commands) = saved;
+            let row = before
+                .iter()
+                .find(|row| row.slot == rests)
+                .expect("a queued entry is listed");
+            return Err(CallError::new(queued::rests_on_it(row)));
+        }
+        self.bump(side);
+        let left = self.queue_rows(side)?;
+        let mut taken: Vec<&queued::Row> = Vec::new();
+        taken.extend(before.iter().filter(|row| row.slot == slot));
+        taken.extend(
+            before
+                .iter()
+                .filter(|row| row.slot != slot && gone.contains(&row.slot)),
+        );
+        Ok(queued::take_back_answer(&taken, &left, &self.as_of(side)))
+    }
+
+    // -----------------------------------------------------------------
     // Commands and the staff (decision 0107, "As built", "The tools").
     // -----------------------------------------------------------------
 
@@ -2504,7 +2738,7 @@ impl Session {
                     if more == 1 { " was" } else { "s were" }
                 ));
             } else if orders < was_orders {
-                what.push("your queued orders were cleared".to_string());
+                what.push("your queued orders were cleared or taken back".to_string());
             }
             if what.is_empty() {
                 what.push("your queued orders or commands were changed".to_string());

@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "flagplot-agent/queued",
+  "title": "queued: what the seat has queued, each entry with its place",
+  "description": "The answer of queued (decision 0221, rule 15): the seat's queued orders and commands, in the order pulse, dusk, commands, each as it was given. An entry's place is its queue and its number there, from 1; take_back names it. as_of changes whenever the queues change or the clock moves, and take_back must be given it. Orders and commands are written in the side's numbers, as issue_orders and the command tools take them. It lists nothing of the enemy.",
+  "type": "object",
+  "required": ["format", "version", "kind", "clock", "as_of", "entries", "summary"],
+  "additionalProperties": false,
+  "properties": {
+    "format": { "const": "flagplot-agent" },
+    "version": { "const": 46 },
+    "kind": { "const": "queued" },
+    "clock": {
+      "type": "object",
+      "required": ["day", "at", "next_pulse", "days_resolved", "words"],
+      "additionalProperties": false,
+      "properties": {
+        "day": { "type": "integer", "description": "The day whose pulse is next: the open day at 0600 or 1200, the coming day at dusk." },
+        "at": { "enum": ["dusk", "0600", "1200"] },
+        "next_pulse": { "enum": ["night", "morning", "afternoon", null], "description": "null once the game is over." },
+        "days_resolved": { "type": "integer" },
+        "words": { "type": "string" }
+      }
+    },
+    "as_of": { "type": "string" },
+    "entries": { "type": "array", "items": { "$ref": "#/$defs/entry" } },
+    "summary": { "type": "string" }
+  },
+  "$defs": {
+    "place": {
+      "type": "object",
+      "required": ["queue", "number"],
+      "additionalProperties": false,
+      "properties": {
+        "queue": { "enum": ["pulse", "dusk", "commands"], "description": "pulse: orders for the next pulse of the open day; dusk: orders given at 1800 for the coming day; commands: commands taken in at the coming day's start." },
+        "number": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "acts": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["at", "day", "pulse"],
+          "additionalProperties": false,
+          "properties": {
+            "at": { "const": "pulse" },
+            "day": { "type": "integer" },
+            "pulse": { "enum": ["night", "morning", "afternoon"] }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["at", "day"],
+          "additionalProperties": false,
+          "properties": {
+            "at": { "const": "dusk" },
+            "day": { "type": "integer", "description": "The day the entry is given for: the day after the open day, or the coming day." }
+          }
+        }
+      ]
+    },
+    "entry": {
+      "description": "An order has unit and order; a command has tool and command. goes_with lists the entries taken back with this one (rule 16); rests_on, for a hold, the queued orders to its unit.",
+      "type": "object",
+      "required": ["place", "what", "text", "acts", "acts_words", "goes_with", "rests_on"],
+      "additionalProperties": false,
+      "properties": {
+        "place": { "$ref": "#/$defs/place" },
+        "what": { "enum": ["order", "command"] },
+        "unit": { "type": "string" },
+        "order": { "type": "object", "description": "The order body as issue_orders takes it, in the side's numbers.", "required": ["kind"] },
+        "tool": { "type": "string" },
+        "command": { "$ref": "command_defs.schema.json#/$defs/command_body" },
+        "text": { "type": "string" },
+        "acts": { "$ref": "#/$defs/acts" },
+        "acts_words": { "type": "string" },
+        "goes_with": { "type": "array", "items": { "$ref": "#/$defs/place" } },
+        "rests_on": { "type": "array", "items": { "$ref": "#/$defs/place" } }
+      }
+    }
+  }
+}
