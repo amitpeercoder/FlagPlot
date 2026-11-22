@@ -173,6 +173,21 @@ def orders_and_signed():
           "with the drawer closed the two controls that run time stay in sight under the head: the same buttons of the foot")
 
 
+def stops_speak_as_the_staff():
+    """The stops of the clock speak as the commander's own staff (decision 0221, stage 2): "we" and "our" for the side, "you"
+    only for what is the commander's to do; an aircraft type is said as the cards say it (the maker left off, a Japanese
+    type cut after its designation), by the page's text."""
+    with open(os.path.join(HERE, "index.html"), encoding="utf-8") as page:
+        text = page.read()
+    told = text[text.index("var TOLD = {"):text.index("\n", text.index("var TOLD = {"))]
+    check("'We are attacked'" in told and "'Our strike is away'" in told and "'Our men are ashore, or fighting'" in told
+          and not any(w in told for w in ("You ", "Your ")), "what the clock was stopped for is said as \"we\" and \"our\", never \"you\" for the side")
+    check("'We ask your leave.'" in text and "'A plan waits for your leave.'" in text and "'our reinforcements '" in text and "the commander's/g, 'your'" in text,
+          "a leave asked or waited for is the commander's own: \"your\"; the side's reinforcements are \"our\"")
+    check("function shortType(name)" in text and "' by ' + shortType(seen[1]) + ' aircraft'" in text,
+          "an aircraft type in a stop's line is the short designation, not the data's long name")
+
+
 def queue_through_the_bridge(bridge):
     """The two tools SIGNED rests on, as the page calls them: queued lists what was signed, with a unit's hold going with
     its order, and take_back withdraws one entry and what goes with it, refused with the token out of date."""
@@ -691,6 +706,7 @@ def main():
     outcomes_said_one_way()
     the_stop_paper()
     orders_and_signed()
+    stops_speak_as_the_staff()
     if not os.path.exists(args.sim_cli):
         sys.exit(f"{args.sim_cli} is not built: cargo build --release -p sim-cli")
     with tempfile.TemporaryDirectory() as keep:

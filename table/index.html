@@ -1228,7 +1228,10 @@ body.watched .gives { display: none !important; }
   function button(parent, text, go, fn) { var row = parent.querySelector('.row') || parent.appendChild(el('div', 'row')), b = el('button', go ? 'go' : '', text); b.type = 'button'; b.addEventListener('click', function () { fn(b); }); row.appendChild(b); return b; }
   // Resolves true when the command was taken in, and false when it was refused: the refusal is said in `home`, where it was signed.
   function act(tool, args, done, home) { return api(tool, args).then(function (a) { say('signed', done || a.summary || 'Done.'); return refresh().then(function () { return true; }); }).catch(function (e) { say('refused', e.message, home); return false; }); }
-  var TOLD = { contact: 'A contact is reported', attack: 'You are attacked', loss: 'A ship is lost or out of action', strike: 'Your strike is away', landing: 'Your men are ashore, or fighting' };
+  // The stops speak as the commander's own staff: "we" and "our" for the side, "you" only for what is the commander's to do.
+  var TOLD = { contact: 'We have a contact', attack: 'We are attacked', loss: 'We have lost a ship, or one is out of action', strike: 'Our strike is away', landing: 'Our men are ashore, or fighting' };
+  // A type of aircraft as the cards say it: the maker left off (the airLine rule), and a Japanese type's long name cut after its designation.
+  function shortType(name) { return cleanName(String(name)).replace(/^\S+ (?=\S*\d)/, '').replace(/ Type \d.*$/, ''); }
   // ---- a force asks leave to go after what it has found (decision 0214) ----
   function wholeHours(h) { var v = parseFloat(h); return isNaN(v) ? null : Math.round(v); }
   function askingWhat(a) { var k = String(a.kind || 'force').replace(/_/g, ' '); return (/^[aeiou]/i.test(k) ? 'an ' : 'a ') + k; }
@@ -1415,14 +1418,14 @@ body.watched .gives { display: none !important; }
     // A plan that waits for the commander's leave has one notice, under FOR YOUR DECISION: the clock's own slip for it would say the same twice.
     if (lastRun && lastRun.fired) lastRun.fired.forEach(function (f) {
       if (f.standing === 'waits_for_leave') return;
-      var a = slip('FROM STAFF \u00b7 DAY ' + f.day, null, f.words.replace(/^standing \w+ fired: /, '').replace(/^./, function (c) { return c.toUpperCase(); }), null, false, box);
+      var a = slip('FROM STAFF \u00b7 DAY ' + f.day, null, f.words.replace(/the commander's/g, 'your').replace(/^standing \w+ fired: /, '').replace(/^./, function (c) { return c.toUpperCase(); }), null, false, box);
       if (f.why && f.why.length) button(a, 'WHY', true, function () { readFired(f); });
       if (f.standing && !WATCH) button(a, 'DO NOT STOP ME FOR THIS', false, function () { act('set_interrupt', { standing: f.standing, on: false }, 'The clock will not stop for that again.', a); });
     });
     if (lastRun && lastRun.fired && lastRun.fired.some(function (f) { return f.standing === 'waits_for_leave'; })) slip('FROM STAFF', null, 'A plan waits for your leave.', null, false, box);
     if (stopArrive) slip('FROM THE PLOT \u00b7 ' + (clock.at === 'dusk' ? '1800' : clock.at), null, stopArrive.replace(/^./, function (c) { return c.toUpperCase(); }), null, false, box);
     if (stopNote && WATCH && !M.over) slip('FROM THE PLOT \u00b7 ' + (clock.at === 'dusk' ? '1800' : clock.at), null, stopNote, null, false, box);
-    if (lastRun && lastRun.stopped === 'asks_leave' && M.asking.length) slip('FROM STAFF', null, 'The staff asks your leave.', null, false, box);
+    if (lastRun && lastRun.stopped === 'asks_leave' && M.asking.length) slip('FROM STAFF', null, 'We ask your leave.', null, false, box);
     $('sp-why').hidden = playing || !box.children.length;
   }
   // The rest of what was told at this stop, and the reasons of an interrupt, are read on a paper over the chart.
@@ -2225,7 +2228,7 @@ body.watched .gives { display: none !important; }
     else if ((k === 'aircraft_lost' || k === 'pilots_lost') && R('^' + H + ' lost (\\d+) (aircraft|pilots?), (\\d+) left')) out = N(m[1]) + ' lost ' + m[2] + ' ' + m[3] + '; ' + m[4] + ' left';
     else if (k === 'base_attacked_against' && R('bombs at ' + H + ': .*?(\\d+) hits?: (.*)$')) out = (function (d) { var seen = /; (?:recognised as (.+)|(type not made out))$/.exec(d); if (seen) d = d.slice(0, seen.index);
       var parts = d.split(', ').filter(function (x) { return !/^0 /.test(x); }).map(function (x) { return x.replace(/on nothing/, 'to no effect'); });
-      return N(m[1]) + ' was bombed' + (seen ? (seen[1] ? ' by ' + cleanName(seen[1]) + ' aircraft' : ' by aircraft of a type not made out') : '') + ': ' + (m[2] === '0' ? 'no bomb fell on the base' : m[2] + (m[2] === '1' ? ' bomb' : ' bombs') + ' on the base' + (parts.length ? ', ' + parts.join(', ') : '')); })(m[3]);
+      return N(m[1]) + ' was bombed' + (seen ? (seen[1] ? ' by ' + shortType(seen[1]) + ' aircraft' : ' by aircraft of a type not made out') : '') + ': ' + (m[2] === '0' ? 'no bomb fell on the base' : m[2] + (m[2] === '1' ? ' bomb' : ' bombs') + ' on the base' + (parts.length ? ', ' + parts.join(', ') : '')); })(m[3]);
     else if (k === 'air_fight' && R('^' + H + ' patrol at ([^:]*)')) out = N(m[1]) + ' engaged ' + m[2];
     else if (k === 'airfield_built' && R('^' + H)) out = 'The airfield at ' + N(m[1]) + ' is complete';
     else if (k === 'air_attack_against' && R('^' + H + ' attacked by (\\d+) aircraft(?: with (\\w+), (?:recognised as (.+)|(type not made out)))?')) out = N(m[1]) + ' was attacked' + (m[3] ? ' with ' + m[3] : '') + ' by ' + m[2] + ' aircraft' + (m[4] ? ', recognised as ' + cleanName(m[4]) : m[5] ? ', type not made out' : '');
@@ -3361,7 +3364,7 @@ body.watched .gives { display: none !important; }
   }
   var calm = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   // The table's own stop (nothing in the engine): at an evening whose briefing names a unit that came today or comes tomorrow.
-  function arrivalsStop() { return clock.at === 'dusk' && $('stop-arrive').checked && ((M.came || []).length || (M.tomorrow || []).length) ? 'reinforcements ' + ((M.came || []).length ? 'came today' : 'come tomorrow') : ''; }
+  function arrivalsStop() { return clock.at === 'dusk' && $('stop-arrive').checked && ((M.came || []).length || (M.tomorrow || []).length) ? 'our reinforcements ' + ((M.came || []).length ? 'came today' : 'come tomorrow') : ''; }
   function stopOn() { return ['contact', 'attack', 'loss', 'strike', 'landing'].filter(function (k) { return $('stop-' + k).checked; }); }
   // Where the scenario lets a seat stop between pulses, time is advanced a pulse at a time and each pulse is
   // plotted as it is fought. Elsewhere a day is fought whole and then plotted.
