@@ -23,6 +23,7 @@ mod input;
 mod output;
 mod problem;
 mod reading;
+mod submarine;
 mod troops;
 
 use std::collections::BTreeMap;
@@ -33,6 +34,7 @@ use oob_check::table::{Data, Table};
 pub use derive::{AMMUNITION_NOT_LIMITING_ROUNDS, NO_RADAR_ITEMS};
 pub use output::{aircraft_sources_name, companion_names, Outputs};
 pub use problem::{Kind, Problem};
+pub use submarine::SubmarineFiles;
 
 /// Where the rules text comes from, when it is not simply given.
 pub enum RulesSource<'a> {
@@ -229,6 +231,13 @@ pub fn derive_with(
             Err(type_problems) => problems.extend(type_problems),
         }
     }
+    let mut submarine_derived = None;
+    if let Some(sub) = &list.submarines {
+        match env.derive_submarines(sub) {
+            Ok(derived) => submarine_derived = Some(derived),
+            Err(sub_problems) => problems.extend(sub_problems),
+        }
+    }
     // An entry no figure reads is a problem: nothing is estimated without
     // being used, and an entry is not left standing for nothing.
     if problems.is_empty() {
@@ -237,6 +246,12 @@ pub fn derive_with(
                 r.estimates
                     .iter()
                     .any(|u| u.subject == entry.subject && u.attribute == entry.attribute)
+            }) || submarine_derived.as_ref().is_some_and(|d| {
+                d.classes.iter().any(|c| {
+                    c.estimates
+                        .iter()
+                        .any(|u| u.subject == entry.subject && u.attribute == entry.attribute)
+                })
             });
             if !used {
                 problems.push(Problem::new(
@@ -311,6 +326,19 @@ pub fn derive_with(
         let derived = experience::derive(exp, exp_rules, &data, &names)?;
         outputs.experience_csv = Some(derived.text);
         outputs.experience_unread = derived.unread;
+    }
+    if let (Some(sub), Some(derived)) = (&list.submarines, &submarine_derived) {
+        outputs.submarine = Some(submarine::render(
+            &list,
+            list_name,
+            &rules,
+            sub,
+            derived,
+            &idle_later,
+        ));
+        outputs
+            .estimated
+            .extend(submarine::estimated_lines(derived));
     }
     Ok(outputs)
 }
@@ -415,6 +443,21 @@ pub fn run(list_path: &Path, facts_dir: &Path, check_only: bool) -> Result<Outco
     }
     if let (Some(exp), Some(csv)) = (&list.experience, outputs.experience_csv) {
         files.push((dir.join(&exp.output), csv));
+    }
+    if let (Some(sub), Some(written)) = (&list.submarines, outputs.submarine) {
+        for (output, csv, sources) in [
+            (&sub.output, written.class_csv, written.class_sources_csv),
+            (
+                &sub.torpedo_output,
+                written.torpedo_csv,
+                written.torpedo_sources_csv,
+            ),
+        ] {
+            let path = dir.join(output);
+            let sources_path = path.with_file_name(companion_names(output).0);
+            files.push((path, csv));
+            files.push((sources_path, sources));
+        }
     }
     let paths: Vec<PathBuf> = files.iter().map(|(p, _)| p.clone()).collect();
     if check_only {
