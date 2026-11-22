@@ -87,3 +87,81 @@ Four stages, each its own pull request, the table playable after each:
 ## Questions for the designer
 
 None before the review. He chose the layout.
+
+## Amended on review, Nov 22, 2026
+
+Read by a reviewer who had not seen it written, and after the designer, looking at the drawing, missed the chart's controls: "show/hide plans, 2D/3D, zoom in/out". Where this differs from what is above, this holds.
+
+### What the review found
+
+- **Nothing can take back one signed order.** The tool that gives orders can only empty the whole queue; the tool for commands can only empty it while adding another; no tool lists the direct orders queued, so a list of what was signed would live in the page's memory and be lost at a reload. Decision 0216 as amended says in terms that an order signed is not taken back singly.
+- **The first stage could not have shipped alone.** It took away the status line, where 48 places say their outcomes, the refusals, the prompts while a place is picked, and the second touch of New game and Restart, before their new homes were built; and "Give an order" before a force's card offered the orders on its waters.
+- **The order paper had no place** among the stop paper, the cards and the reading papers, and an air group's search arc is drawn only while its card is open.
+- **A column of 400 by 800 overflows:** a stop of the table's own can tell fifty lines; an interrupt's reasons open at nearly half the window's height; thirty reports opened in place push the orders off the screen. On the first evening the column is nearly empty and the one cue to give an order went with the button.
+- **Stopping each evening by default** would make CARRY ON the same as the one-day control and take away the quiet week that passes in seconds.
+- **The leave to launch is not a stop,** and with its stop switched off a plan would wait for ever unseen. A standing interrupt can be switched back on by the tool; only the page lacked the control. A switch given inside a day takes hold at 1800.
+- **There is no CHART menu today:** the chart's seven controls are buttons, and two of them are the zoom.
+- **Three listeners answer Escape at once.**
+
+### The stop paper, restated
+
+1. **Its head and foot do not scroll:** the clock above and the controls that run time below are always in sight. What lies between scrolls as one.
+2. **It is 360 wide in a window under 1440 and 400 from there.** Under 1100 it is a drawer, opened by the clock, which stays at the top; while open it covers the chart, takes the focus, and Escape closes it.
+3. **WHY THE CLOCK STOPPED says at most three lines for each kind of reason** and "and n more", which opens them as a paper for reading. An interrupt's reasons open as a paper too, not in the column.
+4. **SINCE keeps the reports' own headings by pulse and their folding of a kind under one line,** shows the three latest lines, and opens all as a paper for reading. "Since" is since the clock last stopped in this sitting; after a reload it is the day's.
+5. **An empty part says a fact and nothing more:** "No order in force." under YOUR ORDERS; FOR YOUR DECISION is left out when nothing waits.
+6. **When the game is over** the head says so, WHY holds how it ended as a link to its paper, and the foot's controls are READ HOW IT ENDED, and under GAME, New game and Restart.
+7. **A watched game has no FOR YOUR DECISION, YOUR ORDERS or SIGNED.** Its seat slips and the switch of sides are under the head. **Against an agent** the head has a third state, waiting for the other commander, in which nothing can be signed or taken back and the foot says so.
+8. **A paper for reading wins the right side over a card:** the card is put by and comes back when the paper closes, as now.
+
+### The chart's controls
+
+9. **They are always in sight, at the foot of the chart on the right, and not in a menu:** what the chart shows (PLANS, PIECES, NAMES, HEXES, each lit when on, and cycling through what it cycles through today); the view (TABLE or FROM ABOVE); and the zoom, in and out. The wheel, the pinch and the drag work as now. Only STAFF and GAME are menus, at the top right. The agent's seat is under GAME.
+
+### Running time
+
+10. **Rule 13 is withdrawn.** CARRY ON runs to the next thing that is ticked to stop the clock, as now. The second control runs one step and is named for the game: NEXT PULSE where the game is played by pulses, NEXT DAY where by days. A tick "each evening" is in the fold, off unless the player ticks it.
+
+### Giving an order, restated
+
+11. **The order paper opens at the right, in the card's place,** with a way back to the card. It stays open while the chart is touched for a place, a course or an arc, and the chart draws what is being drafted while the draft is open.
+12. **The parts are the same for every order; the controls between them are the kind's own:** a course's list of points, an arc's bearing, width and reach, a force's ships, the staff's reading and its try.
+13. **NOT SENT says, line by line, what went and what did not.** An order refused leaves nothing of it queued: the hold the page sends before a unit's order is withdrawn where the order is refused.
+14. **The commands a plan's paper and a card give** (approve, cancel, a risk, a pursuit setting, keep from the staff, return to the staff) go under SIGNED as an order does.
+
+### Taking back
+
+15. **Two tools of the session are new,** and nothing in the engine: one lists what is queued for a seat, its direct orders and its commands, each with its place; one withdraws a single queued entry by its place. They are the session's, which holds the queues (decision 0219, rule 7). The agent's interface rises.
+16. **Withdrawing an entry withdraws what rests on it:** the hold sent before a unit's order; the limits that name an order to the staff queued with them. Where another queued entry names what this one would make (an order to a force not yet formed) the tool refuses and names it.
+17. **SIGNED is read from that tool,** so it is right after a reload. TAKE BACK is offered for each entry until the clock runs; nothing is offered after.
+18. **Decision 0216's sentence that an order signed is not taken back singly is withdrawn by this.** A land unit's orders are taken back as any other.
+
+### Stops, restated
+
+19. **The fold holds the table's ticks** (a contact, an attack, a loss, a strike, a landing, reinforcements as decision 0215 has them, each evening) **and the staff's standing interrupts,** each a tick that can be cleared and set. A tick of the staff's changed inside a day shows "from 1800".
+20. **The table's ticks are kept in the browser for the game,** keyed as its directives are, and cleared by New game and Restart. A page that cannot keep them plays as now.
+21. **The leaves are not in the fold.** The leave to launch is a line of YOUR ORDERS ("Plans launch: when ready" or "on my word"), with its switch; a plan that waits for leave is under FOR YOUR DECISION whether or not its stop is ticked.
+
+### Words, restated
+
+22. **A unit the player holds is "Yours: you keep it out of the staff's plans",** as decision 0216 has it; an order signed for the evening "waits for 1800"; a signed entry is "taken back"; an order to the staff is "withdrawn"; a draft is "torn up".
+23. **What a player must know before signing is said as a fact of that order** and never as a rule.
+
+### Keys and reading aloud
+
+24. **One Escape, the topmost thing first:** a place being picked, a draft (asked where something is chosen), a paper, a card, a menu, the fold.
+25. **At a stop the focus goes to the first thing that waits,** or to WHY, and is never taken from a draft. A paper that closes gives the focus back.
+26. **SINCE says a count while the clock runs,** not each line; the clock's state is said once at each change; a card is not read out whole at each open.
+27. **An order on a hex can be begun from the keyboard** through any link to a place. A course's points stay the pointer's.
+
+### How it is built, restated
+
+Five stages, each its own pull request, the table playable after each; none begins before the table batch (decisions 0215 to 0219) is merged. The file is not split.
+
+0. **One way to say an outcome:** every place that writes the status line calls one function with where it belongs, and the line stays for now.
+1. **The stop paper, the clock and the chart's controls:** the column with its head, WHY, FOR YOUR DECISION, SINCE and foot; cards and the order forms at the right; the chart's controls at its foot; the tray, the reports panel and the bar go, the outcomes' line moving to the column's foot; the widths. "Give an order" stays in the foot and the Orders menu stays.
+2. **The two tools, YOUR ORDERS and SIGNED,** with the leave's line; the Orders menu and the plan chip go; outcomes go to where they belong and the line goes.
+3. **One order paper;** a force's card gains the orders on its waters; "Give an order" goes.
+4. **The fold of stops, the words, the captions, the keys.**
+
+The screen's checks keep their literal checks beside the code they check, list every call the page makes at load, and gain checks of each part of the stop paper.
