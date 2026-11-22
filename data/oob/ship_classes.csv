@@ -83,3 +83,20 @@ id,key,name,nation,type
 14301,jp-shiretoko-class,Shiretoko class,jp,oiler
 14302,jp-ondo-class,Ondo class,jp,oiler
 14303,jp-toa-maru-class,Toa Maru class,jp,oiler
+16000,us-s-boat-s-1-group,"S-class submarines, first (Electric Boat, S-1) group: DANFS gives S-38 "cl. S-1"",us,submarine
+16001,us-s-boat-s-42-group,"S-class submarines, S-42 group (S-42 to S-47): DANFS gives S-44, S-45 and S-47 "cl. S-42"",us,submarine
+16002,us-narwhal-class,"Narwhal class (Narwhal, Nautilus)",us,submarine
+16003,us-sargo-class,"Sargo class",us,submarine
+16004,us-tambor-class,"Tambor class",us,submarine
+16005,us-gato-class,"Gato class",us,submarine
+16006,us-fleet-type-submarine,"The fleet type submarine in general, as NAVPERS 16160 (1946) describes it: not a class; figures average the wartime fleet boats",us,submarine
+16007,jp-i-1-group,"I-1 to I-6, built 1926 on, German design (the Technical Mission's block in S-01-1; it does not name the Japanese types)",jp,submarine
+16008,jp-i-5-group,"I-5 class as ONI 222-J (1945) groups it (I-5 to I-8 per its sheet)",jp,submarine
+16009,jp-i-9-group,"I-9 class as ONI 222-J (1945) groups it",jp,submarine
+16010,jp-i-15-group,"I-15 class (I-15, I-17, I-19, I-21, I-23, I-25 to I-45 in the Technical Mission's block; ONI 222-J's I-15 class); the Japanese type code is not stated by the rows",jp,submarine
+16011,jp-i-121-group,"I-121 to I-124, minelaying submarines built 1927, German design",jp,submarine
+16012,jp-i-153-group,"I-153 to I-167, fleet submarines built 1927 on (the Technical Mission's block; ONI 222-J's I-153 class); the Japanese type codes are not stated by the rows",jp,submarine
+16013,jp-i-168-group,"I-168 to I-175, fleet submarines built 1934 on (the Technical Mission's block); the Japanese type code is not stated by the rows",jp,submarine
+16014,jp-i-176-group,"I-176 to I-185, fleet submarines built 1942 on (the Technical Mission's block; ONI 222-J's I-176 class)",jp,submarine
+16015,jp-ro-33-group,"RO-33 and RO-34, medium submarines built 1935",jp,submarine
+16016,jp-ro-35-group,"RO-35 class as ONI 222-J (1945) heads the sheet; whether it covers RO-33 and RO-34 is not stated",jp,submarine

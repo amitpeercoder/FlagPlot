@@ -177,3 +177,19 @@ fuel_capacity_bbl,ship_class,integer,barrels,one,"The fuel oil a ship of the cla
 fuel_capacity_bbl,ship,integer,barrels,one,"The fuel oil the ship carries to steam on (her own bunkers, not cargo), in barrels of 42 US gallons as a source states it; made tons only by a factor read from a row (decision 0206; the class attribute of the same name, read of the ship)"
 cargo_oil_capacity_bbl,ship_class,integer,barrels,one,"The oil a ship of the class can carry for other ships, a capacity and not a load, in barrels of 42 US gallons as a source states it; made tons only by a factor read from a row (decision 0206)"
 cargo_oil_capacity_bbl,ship,integer,barrels,one,"The oil the ship can carry for other ships, a capacity and not a load, in barrels of 42 US gallons as a source states it; made tons only by a factor read from a row (decision 0206; the class attribute of the same name, read of the ship)"
+submerged_max_speed_kn,ship_class,decimal,knots,one,"Designed maximum speed submerged, as a source states it"
+submerged_endurance_note,ship_class,text,,many,"A source's statement of how long or how far a submarine could run submerged on her battery, with the speed"
+diving_depth_m,ship_class,integer,metres,one,"Diving depth of a submarine as a source states it; the note says safe, operating or tested"
+diving_depth_note,ship_class,text,,many,A source's statement of a submarine's diving depth in a unit or form that cannot be filed as diving_depth_m
+surfaced_displacement_lt,ship_class,integer,long tons,one,"Displacement of a submarine surfaced as a source states it (DANFS ""surf.""), where the source does not say standard"
+submerged_displacement_lt,ship_class,integer,long tons,one,Displacement of a submarine submerged as a source states it
+torpedo_tubes_bow,ship_class,integer,tubes,one,"Torpedo tubes firing ahead, in the bow"
+torpedo_tubes_stern,ship_class,integer,tubes,one,Torpedo tubes firing astern
+complement_note,ship_class,text,,many,"A source's statement of complement that cannot be filed as one whole number (a range, or officers and men given apart)"
+exploder_note,weapon,text,,many,"A source's statement of a torpedo's exploder: kind, arming, faults and the dates they were found or mended"
+depth_fault_note,weapon,text,,many,"A source's statement that a torpedo ran deeper or shallower than set, with dates found and mended"
+reliability_note,weapon,text,,many,"A source's statement of how reliable a weapon was in service, or of hits and failures, with its period"
+torpedo_failure_note,weapon,text,,many,"A source's statement of torpedo failures (duds, prematures, erratic runs) with their period"
+depth_setting_note,weapon,text,,many,"A source's statement of the depth settings of a depth charge's pistol, with its period"
+service_note,weapon,text,,many,"A source's statement of a weapon's development, production, issue or withdrawal that cannot be filed as in_service"
+performance_note,weapon,text,,many,A source's statement of a torpedo's speeds and ranges in a form that cannot be filed as the numeric attributes
