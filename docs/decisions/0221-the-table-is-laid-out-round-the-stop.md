@@ -210,3 +210,15 @@ In the same pull request, the plan's paper was mended on the designer's word:
 - What the staff wants to know before a landing is said once, on the highest task that says it.
 - The held count names where it came from ("as it was told", "seen from the air", "from men in contact"). The page had read a field the tool does not send, which left an empty part between two commas.
 - A task's name says a place by its base's name, or by its position with the hex in brackets, as a card does, linked.
+
+## The architect's rulings on stages 0 and 1, Nov 22, 2026
+
+Read on the team's report, its screenshots and the page's checks before merging.
+
+- **WHY gains "A plan waits for your leave." and "The staff asks your leave."** where that is why the clock stopped. Right: an empty WHY at a stop is worse than a line that FOR YOUR DECISION repeats.
+- **WHY is not kept across a reload.** It is kept with the game in stage 4, with the table's ticks.
+- **SINCE is left out on the first evening,** and the column is then nearly empty until stage 2 gives it YOUR ORDERS and "No order in force."
+- **Cards and forms stop above the chart's controls,** and the chart's turning does not allow for a paper for reading. Both stand.
+- **The step control reads NEXT DAY** where the game is played by days. It read "One day"; the plan's word is kept.
+- **The plan paper's tally still counts a waiting plan once for each task under it** ("2 wait for you" for one plan). It is to count plans, and is mended in stage 2 with the plan's line under YOUR ORDERS.
+- **Not tried by the team and owed before stage 4 closes:** a force asking leave to pursue in the column; an interrupt's reasons opened as a paper; the keyboard alone.
