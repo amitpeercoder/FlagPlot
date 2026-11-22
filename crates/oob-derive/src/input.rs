@@ -46,6 +46,20 @@ struct RawList {
     anti_aircraft_unknown_means_none: Vec<String>,
     #[serde(default)]
     estimate: Vec<RawEstimate>,
+    #[serde(default)]
+    submarine_output: Option<String>,
+    #[serde(default)]
+    submarine_torpedo_output: Option<String>,
+    #[serde(default)]
+    torpedoes: Vec<String>,
+    #[serde(default)]
+    submarine: Vec<crate::submarine::RawSubmarine>,
+    #[serde(default)]
+    left_out: Vec<crate::submarine::RawLeftOut>,
+    #[serde(default)]
+    submarine_class_ids: Option<BTreeMap<String, String>>,
+    #[serde(default)]
+    submarine_torpedo_ids: Option<BTreeMap<String, String>>,
 }
 
 /// An `[[estimate]]` entry of a list (decision 0207, rule 4).
@@ -411,6 +425,9 @@ pub struct List {
     pub anti_aircraft_unknown_means_none: BTreeSet<String>,
     /// The list's estimates (decision 0207, rule 4).
     pub estimates: Vec<Estimate>,
+    /// The submarine classes and torpedoes to derive (decision 0218,
+    /// rules 28 and 29), when the list has them.
+    pub submarines: Option<crate::submarine::SubmarineList>,
 }
 
 /// Checks the `[troops]` table against the list.
@@ -619,10 +636,12 @@ pub fn parse_list(text: &str) -> (Option<List>, Vec<Problem>) {
                 problems.push(list_problem(field, "the list has no ships"));
             }
         }
-        if raw.aircraft.is_empty() && raw.experience.is_none() {
+        let submarines =
+            raw.submarine_output.is_some() || !raw.submarine.is_empty() || !raw.left_out.is_empty();
+        if raw.aircraft.is_empty() && raw.experience.is_none() && !submarines {
             problems.push(list_problem(
                 "ships",
-                "the list has neither ships nor [[aircraft]] entries (nor an [experience] table)",
+                "the list has neither ships nor [[aircraft]] entries (nor an [experience] table nor [[submarine]] entries)",
             ));
         }
     } else {
@@ -806,6 +825,18 @@ pub fn parse_list(text: &str) -> (Option<List>, Vec<Problem>) {
         None => TroopsInput::default(),
     };
     let estimates = parse_estimates(&raw.estimate, &ships, &mut problems);
+    let submarines = crate::submarine::parse(
+        crate::submarine::RawParts {
+            output: raw.submarine_output,
+            torpedo_output: raw.submarine_torpedo_output,
+            torpedoes: raw.torpedoes,
+            entries: raw.submarine,
+            left_out: raw.left_out,
+            class_ids: raw.submarine_class_ids,
+            torpedo_ids: raw.submarine_torpedo_ids,
+        },
+        &mut problems,
+    );
     for ship in &raw.anti_aircraft_unknown_means_none {
         if !ships.contains(ship) {
             problems.push(list_problem(
@@ -844,6 +875,7 @@ pub fn parse_list(text: &str) -> (Option<List>, Vec<Problem>) {
             .into_iter()
             .collect(),
         estimates,
+        submarines,
     };
     (Some(list), problems)
 }

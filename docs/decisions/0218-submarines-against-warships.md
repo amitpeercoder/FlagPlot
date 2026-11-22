@@ -320,3 +320,64 @@ Waters kept by a side with a count of boats in them, and no boat as a unit, woul
 ### Rule card, restated
 
 Reads: each boat's hex, station, passage, salvoes, state and held-down count, her class and torpedo; each enemy force's hours in her hex in the pulse, its ships, their kinds, which are dead in the water, and whether the hex holds a base of its side; each searching group's arc, range and aircraft; the figures; the side's suspected waters and reports of submarines, for the staff. Writes: torpedo hits through chapter 4; the boat's salvoes, state, held-down count, station and passage; reports of submarines and their ageing; claims. Draws: the seven above.
+
+## As built: stage 1, the data
+
+Built on Nov 22, 2026, on branch `submarine-data`, by a team lead for the architect, and amended the same day on the architect's rulings (next section). No rule of the simulation is built and nothing in `sim-core` or `sim-data` changes; no scenario loads the new tables.
+
+**The list.** `data/derivation/submarines_1942.toml`, dated 7 August 1942. Each of the seventeen classes of the type submarine in `ship_classes.csv` is either derived (`[[submarine]]`) or left out with its reason (`[[left_out]]`), and the tool refuses a list that does neither for one. Ids pinned: classes 6000 to 6011, torpedoes 6100 to 6104 (`[submarine_class_ids]`, `[submarine_torpedo_ids]`).
+
+**The written rules** (rule 28) are set out in `data/derivation/rules.toml` under "Decision 0218, stage 1" and worked in `crates/oob-derive/src/submarine.rs`: salvo = `torpedo_tubes_bow`; salvoes carried = `torpedoes_carried` / salvo, rounded down; passage speed = `endurance_speed_kn`; damage = `warhead_kg` x `torpedo_damage_per_warhead_kg`. Every fact is read as any row is (`reading::resolve`: preferred rows and exceptions, dates, `later = true`). Rule 29: a passage speed may be an `[[estimate]]` of decision 0207 with the class as subject (its refusals all hold); a class whose torpedo no `torpedo_model` row states, of any standing, takes the torpedo of a `torpedo_from` entry (`weapon`, `group` for the group nearest in date by the year built, `rows` cited, `by`, `date`, `reason`), refused where any such row is filed for the class. Either is named in the class file's column `estimated`.
+
+**The files** (generated, never edited): `data/reference/submarine_classes_1942.csv` (`id,name,salvo,salvoes_carried,passage_speed_kn,torpedo_id,estimated`) and `submarine_torpedoes_1942.csv` (`id,name,damage`), each with a `.sources.csv`; their frozen copies in `data/reference/step1`. Checked by `crates/oob-derive/tests/submarines.rs` (the list derives exactly the files on disk, and the rules on small data sets) and by step 6 of `scripts/regenerate.sh`.
+
+| Id | Class | Salvo | Salvoes | Passage kn | Torpedo |
+| --- | --- | --- | --- | --- | --- |
+| 6000 | Sargo | 4 | 6 | 10 | Mark 14, estimated |
+| 6001 | Tambor | 6 | 4 | 10 | Mark 14, estimated |
+| 6002 | Gato | 6 | 4 | 10 | Mark 14, estimated |
+| 6003 | I-15 block | 6 | 2 | 16 | Type 95, estimated (her boats) |
+| 6004 | I-153 block | 6 | 2 | 10 | Type 89, estimated (the I-121 block's boat) |
+| 6005 | I-168 block | 4 | 3 | 10 | Type 89 (class row) |
+| 6006 | I-176 block | 6 | 2 | 16 | Type 95, estimated (the I-15 block's boats) |
+| 6007 | RO-33 group | 4 | 2 | 16 | Type 95 (class row) |
+| 6008 | I-121 block | 4 | 2 | 12 | Type 89, estimated (her boat I-123) |
+| 6009 | S-boats, S-1 group | 4 | 3 | 8.686399, estimated | Mark 10 (class rows) |
+| 6010 | S-boats, S-42 group | 4 | 3 | 8.686399, estimated | Mark 10 (class rows) |
+| 6011 | Narwhal | 4 | 6 | 10.423678, estimated | Mark 14, estimated |
+
+The three passage speeds are by ratio from the class's top speed (14.5 and 17.4 knots) times 0.599062, the mean of endurance speed over top speed of the eight like classes with both rows (the I-1, I-15, I-168, I-176 and RO-33 blocks and the Sargo, Tambor and Gato classes), between 0.434782 (I-168) and 0.846560 (RO-33): 6.304339 to 12.27512 knots for the S-boats, 7.565206 to 14.730144 for Narwhal.
+
+Torpedoes: Mark 14 92, Mark 10 90.72, Type 89 120, Type 95 162, Type 96 162 (warheads 230, 226.8, 300, 405 and 405 kg at 0.4 a kilogram, a placeholder).
+
+**Left out:** the fleet type (not a class); the I-1 block (two types in one block, to be split when rows of its own exist); I-5 and I-9 (no speed); RO-35 (no speed, 1945 rows only); the Type 92 (no warhead).
+
+**The count of torpedoes and hits** of rule 30 is in the list's closing notes and sets no figure.
+
+## The architect's rulings on stage 1
+
+Ruled on Nov 22, 2026, on pull request 684, and recorded as the repository records a settled dispute: an exception in `data/derivation/rules.toml` with the reason on it, no row on file changed. Every exception and entry that had said it was the lead's proposal now says it is settled by the architect, with the reason.
+
+**Disputes.**
+
+1. **I-9 class torpedoes carried: 20** (ONI 222-J, row 16214, read with `later = true`), over Wikipedia's 18 (16218, 16220): a class sheet of naval intelligence over a tertiary page; the salvoes do not move. The class stays out until its speed is found.
+2. **I-5 class bow tubes: 4** (ONI 222-J, 16206, `later = true`), over Wikipedia's 6 (16210): two sources of the time agree, ONI and the Technical Mission's block for I-1 to I-6. Out until its speed is found.
+3. **The I-1 block is to be split** into the J1 boats (I-1 to I-4) and I-6, as new class keys with new pinned ids, only if no new fact row is needed. Every row on file speaks of the block and stays the block's, so the new classes would have no rows of their own: the block is left out and the rows wanted are listed below.
+4. **Type 96 warhead: 405 kg** (the Technical Mission, 16063), over NavWeaps's 550 (16064): the Technical Mission examined the weapon and derives it from the Type 95 Model 1; the other names another explosive and no document. The Type 96 is in the torpedo table (6104).
+5. **The I-15 block's torpedo: Type 95,** estimated and marked, resting on I-19 at Wasp (3002, the one preferred, stated row for a boat of the block in the period) and I-21's firings (16433, 16434); I-26's Type 89 of 7 June (16435) stays on file as evidence against and is named in the entry's reason. ONI's torpedo line for the class is to be filed by research before stage 2's scenarios use it; the list says so.
+6. **Gato top speed: 20 knots** (16105), over 20.25 (16100), the lower of two rows of one source, as decision 0207's first use read. With it the passage speeds of the S-1 group, the S-42 group and Narwhal are worked by decision 0207's estimate, marked; the S-boats carry the Mark 10 (stated by their class rows); Narwhal takes the fleet type's Mark 14, estimated, as Sargo does. The S-boats' bow tubes are read from their lone unconfirmed rows (16131, 16135) by exception. The estimate also needed the like classes' rows dated only to 1942 (the top speeds of the I-1, I-15, I-168, I-176 and RO-33 blocks and the I-1 block's endurance speed), read by the same kind of exception as the classes' own.
+7. **I-121 block torpedoes carried: 8** (the Technical Mission, 16033), the row of the time over one of 1945 (16060), pending research. The class is derived (6008); its torpedo is the Type 89 of its boat I-123 (16429), estimated.
+
+**Readings accepted.** The Mark 14 for the Sargo, Tambor and Gato classes from the fleet type's rows, marked estimated, the Mark 10 as a reserve weapon set aside. The group nearest in date is by the year the boats were built, and the rules file says so. The exceptions that read a lone weak row with no row against it, each marked, each giving way to a better row when one is filed. The reasons are worded so that the generated header no longer prints a doubled stop; the line format is unchanged.
+
+**Research still owed, as rows wanted.**
+
+- **The I-9 group:** its surface speed of endurance (`endurance_speed_kn`) or its top speed (`max_speed_kn`); the Technical Mission's S-01-1 block for I-9 to I-12 (the source of row 16188) may hold them.
+- **The I-5 group:** `endurance_speed_kn` or `max_speed_kn`.
+- **The RO-35 group:** `endurance_speed_kn` or `max_speed_kn`, and whether its ONI sheet covers RO-33 and RO-34 or boats of 1942 at all.
+- **The I-15 group:** ONI 222-J's I-15 sheet's torpedo line, filed as a `torpedo_model` row (row 16051's as_stated reads "Typa89s"); once filed, the class's `torpedo_from` is driven out.
+- **The I-168 and RO-33 groups:** `torpedoes_carried` from a primary source (today Wikipedia alone, 16222 and 16226).
+- **The I-1 block's split:** for the J1 boats (I-1 to I-4) and for I-6, each: `torpedo_tubes_bow`, `torpedoes_carried`, `endurance_speed_kn` and `torpedo_model`, filed to the new class keys, and the boats' `class` in `ships.csv`.
+- **The S-boats:** a range with its speed (`endurance_speed_kn`), which drives out their estimate; a primary statement of their bow and stern tubes.
+- **Narwhal:** `endurance_speed_kn`, which drives out her estimate; her torpedo by class and date.
+- **The I-121 block:** torpedoes carried from a third source, to settle 8 against 20.

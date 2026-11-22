@@ -198,6 +198,16 @@ impl Index {
             .find(|row| row.id == id)
     }
 
+    /// The row of `ship_class_facts.csv` with this id, whatever it says.
+    pub fn class_fact(&self, id: i64) -> Option<&Row> {
+        let id = id.to_string();
+        self.rows
+            .iter()
+            .filter(|((table, _, _), _)| *table == Table::ClassFacts)
+            .flat_map(|(_, rows)| rows)
+            .find(|row| row.id == id)
+    }
+
     /// Every row the exception names (one, unless two files share the id
     /// for the same entity and attribute).
     pub fn named_by<'a>(&'a self, exception: &'a Exception) -> impl Iterator<Item = &'a Row> + 'a {

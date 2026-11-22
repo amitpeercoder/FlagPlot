@@ -121,6 +121,9 @@ pub struct Outputs {
     /// the count and the ships, then one line an attribute with its method,
     /// working and range (rule 6). Empty for a list with no estimate.
     pub estimated: Vec<String>,
+    /// The submarine class file, the torpedo file and their sources files,
+    /// when the list has submarines (decision 0218).
+    pub submarine: Option<crate::submarine::SubmarineFiles>,
 }
 
 /// The name of the column of a class file that names the estimated figures
@@ -176,7 +179,7 @@ pub(crate) fn one_line(text: &str) -> String {
     text.split_whitespace().collect::<Vec<_>>().join(" ")
 }
 
-fn csv_text(header: &[&str], rows: &[Vec<String>]) -> String {
+pub(crate) fn csv_text(header: &[&str], rows: &[Vec<String>]) -> String {
     let mut writer = csv::Writer::from_writer(Vec::new());
     writer.write_record(header).expect("writing to memory");
     for row in rows {
@@ -393,7 +396,7 @@ pub struct Context<'a> {
 
 /// One exception used, for the header: the row, its standing, the reason
 /// and the day agreed, and for one saying `later = true` the row's date.
-fn exception_line(e: &Exception, row: &Row) -> String {
+pub(crate) fn exception_line(e: &Exception, row: &Row) -> String {
     let later = if e.later {
         format!(
             "; later = true: read from a row of a later date, valid from {} (decision 0200)",
@@ -416,7 +419,7 @@ fn exception_line(e: &Exception, row: &Row) -> String {
 
 /// The header lines for exceptions saying `later = true` that do nothing on
 /// this list; none when there are none.
-fn idle_lines(idle: &[String]) -> Vec<String> {
+pub(crate) fn idle_lines(idle: &[String]) -> Vec<String> {
     if idle.is_empty() {
         return Vec::new();
     }
@@ -452,6 +455,7 @@ pub fn render(ctx: &Context) -> Result<Outputs, Problem> {
             search_not_settled: Vec::new(),
             torpedo_not_split: Vec::new(),
             estimated: Vec::new(),
+            submarine: None,
         });
     }
     let troop = list.troop_figures;
@@ -817,6 +821,7 @@ pub fn render(ctx: &Context) -> Result<Outputs, Problem> {
         search_not_settled: Vec::new(),
         torpedo_not_split,
         estimated: estimated_lines(&estimates),
+        submarine: None,
     })
 }
 

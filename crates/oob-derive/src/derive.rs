@@ -263,6 +263,11 @@ pub struct Env<'a> {
     pub(crate) aircraft: BTreeMap<String, AircraftInfo>,
     /// Weapon key to its `kind` in weapons.csv.
     pub(crate) weapons: BTreeMap<String, String>,
+    /// Weapon key to its name in weapons.csv.
+    pub(crate) weapon_names: BTreeMap<String, String>,
+    /// The rows of engagement_events.csv by id, for the rows a list's
+    /// `torpedo_from` entry cites (decision 0218, rule 29).
+    pub(crate) events: BTreeMap<String, crate::submarine::EventRow>,
     pub(crate) date: Day,
     pub(crate) rules: &'a Rules,
     /// The achieved rates of fire, when the rules have a `[fire_rate]`
@@ -463,12 +468,34 @@ impl<'a> Env<'a> {
             .into_iter()
             .map(|rec| (rec.get("key").to_string(), rec.get("kind").to_string()))
             .collect();
+        let weapon_names = data
+            .rows("weapons.csv")
+            .into_iter()
+            .map(|rec| (rec.get("key").to_string(), rec.get("name").to_string()))
+            .collect();
+        let events = data
+            .rows("engagement_events.csv")
+            .into_iter()
+            .map(|rec| {
+                (
+                    rec.get("id").to_string(),
+                    crate::submarine::EventRow {
+                        time: rec.get("time").to_string(),
+                        actor: rec.get("actor").to_string(),
+                        means: rec.get("means").to_string(),
+                        standing: rec.get("standing").to_string(),
+                    },
+                )
+            })
+            .collect();
         let mut env = Env {
             index: Index::build(data),
             ships,
             classes,
             aircraft,
             weapons,
+            weapon_names,
+            events,
             date,
             rules,
             fire_rate: None,
@@ -584,7 +611,7 @@ impl<'a> Env<'a> {
             .collect()
     }
 
-    fn fact(
+    pub(crate) fn fact(
         &self,
         w: &mut Work,
         keys: (&str, &str),
@@ -1121,7 +1148,12 @@ impl<'a> Env<'a> {
                 Kind::Estimate,
                 figure,
                 format!(
-                    "{attribute} of ship {ship} or class {class}: a row is filed ({}), so a fact drives the estimate out: take out the list's [[estimate]] entry for {} {attribute} (decision 0207, rule 11)",
+                    "{attribute} of {}: a row is filed ({}), so a fact drives the estimate out: take out the list's [[estimate]] entry for {} {attribute} (decision 0207, rule 11)",
+                    if ship.is_empty() {
+                        format!("class {class}")
+                    } else {
+                        format!("ship {ship} or class {class}")
+                    },
                     filed.join(", "),
                     entry.subject.words()
                 ),
@@ -1154,6 +1186,7 @@ impl<'a> Env<'a> {
             figure: FIGURES
                 .iter()
                 .chain(AIR_FIGURES.iter())
+                .chain(std::iter::once(&crate::submarine::PASSAGE_SPEED))
                 .copied()
                 .find(|f| *f == figure)
                 .unwrap_or("?"),
@@ -1161,7 +1194,10 @@ impl<'a> Env<'a> {
             attribute: attribute.to_string(),
             method_words,
             note: format!("{working}; {by}"),
-            line: format!("{ship} {attribute}: {line}"),
+            line: format!(
+                "{} {attribute}: {line}",
+                if ship.is_empty() { class } else { ship }
+            ),
         });
         Some(got)
     }
@@ -1184,19 +1220,24 @@ impl<'a> Env<'a> {
     ) -> Option<(Got<Dec>, String, String, String)> {
         let (ship, class) = keys;
         let attribute = entry.attribute.as_str();
+        let who = if ship.is_empty() {
+            format!("class {class}")
+        } else {
+            format!("ship {ship}")
+        };
         if self.estimate_for(ship, class, from).is_some() {
             w.fail(
                 Kind::Estimate,
                 figure,
                 format!(
-                    "{attribute} of ship {ship}: it is worked from {from}, which the list also estimates, and an estimate never rests on an estimate (decision 0207, rule 8)"
+                    "{attribute} of {who}: it is worked from {from}, which the list also estimates, and an estimate never rests on an estimate (decision 0207, rule 8)"
                 ),
             );
             return None;
         }
         let own = resolve_over(
             self.index.rows(Table::ShipFacts, ship, from),
-            &format!("{from} of ship {ship} (her own row, for an estimate by ratio)"),
+            &format!("{from} of {who} (her own row, for an estimate by ratio)"),
             self.index.rows(Table::ClassFacts, class, from),
             &format!("{from} of class {class} (for an estimate by ratio)"),
             self.date,
@@ -1231,7 +1272,7 @@ impl<'a> Env<'a> {
                     Kind::Estimate,
                     figure,
                     format!(
-                        "{attribute} of ship {ship}: class {key} is of the type {kind_type} with rows of both {attribute} and {from}, and has one of them estimated in {list}: an estimate never rests on an estimate (decision 0207, rule 8)"
+                        "{attribute} of {who}: class {key} is of the type {kind_type} with rows of both {attribute} and {from}, and has one of them estimated in {list}: an estimate never rests on an estimate (decision 0207, rule 8)"
                     ),
                 );
                 ok = false;
@@ -1240,7 +1281,7 @@ impl<'a> Env<'a> {
             let read = |rows: &[Row], what: &str| {
                 resolve(
                     rows,
-                    &format!("{what} of class {key} (a like class of {ship})"),
+                    &format!("{what} of class {key} (a like class of {who})"),
                     self.date,
                     &self.rules.exceptions,
                 )
@@ -1285,7 +1326,7 @@ impl<'a> Env<'a> {
                 Kind::Missing,
                 figure,
                 format!(
-                    "{attribute} of ship {ship}: no like class: no other class of the type {kind_type} on file has rows of both {attribute} and {from} (decision 0207, rule 2)"
+                    "{attribute} of {who}: no like class: no other class of the type {kind_type} on file has rows of both {attribute} and {from} (decision 0207, rule 2)"
                 ),
             );
             return None;
