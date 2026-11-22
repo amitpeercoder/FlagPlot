@@ -340,3 +340,19 @@ Made on Nov 22, 2026 on the build's report, the first game's report (`docs/valid
 7. **So the first game was the common game in its result and not in its detail:** the American carriers do strike in most games, and sink a carrier in more than half. What does not vary is that the Japanese carriers never look for them, never find them and never strike them, and that the landing is made. The game as the staffs play it is the landing against one carrier.
 8. **The scenario is merged and listed at the table all the same, on the designer's word to add Midway.** The Coral Sea was listed only when it was inside the band; this one is listed outside it, and that is said here and to him. A person in the Allied seat plays against these Japanese orders, not against the Allied staff's.
 9. **Nothing is changed to enter the band.** What may be done is rule 5's list, to which the band adds one: **the Japanese carriers' search,** which under a take looks only at the place to be taken.
+
+## The American carriers' station moved, on the designer's word
+
+On Nov 22, 2026 the designer, shown the band of 983 to 17 and rule 5's list, said to make Midway a contest as the architect had suggested: the American carriers' station and the Japanese carriers' search.
+
+103. **Task Forces 16 and 17 are both ordered to operate from hex (9,-5). Rule 99 is amended.** It is the hex of 31 30 N, 176 30 W, the position Task Force 17's commander chose for the two forces at dawn on 4 June, 202 miles from Midway on bearing 013 (engagement positions 5744 and 5745). Rule 99 held them where they waited on 2 and 3 June. They start where they did, at the rendezvous, and steam to the station as the staff sends them; they are so at it a day before they were, as the Japanese carriers are at theirs.
+104. **The band with that one change, read the same day:** over seeds 1 to 1,000 the Japanese side is ahead in 867 games and the Allied side in 132, and one is level; 724 are decisive Japanese victories. It is still outside the band, and it is now a carrier battle:
+   - an American carrier group launches at ships in 999 games, where it did in 780;
+   - a Japanese carrier group attacks an American carrier in 454 games, where it never did;
+   - a Japanese carrier is sunk in 891 games (one in 763, two in 111, three in 16, four in 1), and an American one in 255 (one in 207, two in 48);
+   - of the Japanese carriers sunk, Akagi is the one in 891 games, Kaga in 128, Soryu in 17 and Hiryu in 1.
+105. **The Japanese carriers' search is not changed, and the reason is the run.** With the American carriers at their station the Japanese find and strike them in nearly half the games as the rules stand: the station lies inside the arc their floatplanes fly toward Midway. A rule to widen that search would send the result further from the band, not toward it, and is left until the rest is settled.
+106. **What the run now points at,** put to the designer:
+   - **Nearly every American strike falls on one carrier.** Akagi is sunk seven times as often as Kaga and fifty times as often as Soryu. On the day three squadrons struck three carriers. How a strike's aircraft are shared among the ships of the force they find is to be looked into before anything else, since it is a thing of the engine and not of this battle.
+   - **The landing is made whatever happens to the carriers,** and is 45 of the points. On the day it was called off when they were lost (rule 96 leaves that to decision 0191, which turns back a lift that is itself hurt, and it never is).
+   - **A carrier caught with her aircraft armed on deck** (rule 16), which the designer said to see the run before deciding.

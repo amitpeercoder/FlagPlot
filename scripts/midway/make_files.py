@@ -83,8 +83,11 @@ HEADER = '''# SCENARIO 114, MIDWAY (decision 0198).
 #     hexes of (1,-1), its forces the SBD-2, SB2U-3 and B-17E groups (14,
 #     15, 18), with the targets limit carriers, then transports,
 #     battleships, cruisers, destroyers (rule 98); intent 3, operate task
-#     force 1 from (14,-6), Point Luck; intent 4, operate task force 2 from
-#     (15,-6) (rule 99), each with its own air groups (no forces limit).
+#     force 1 from (9,-5), and intent 4, operate task force 2 from (9,-5):
+#     the hex of 31 30 N, 176 30 W, the launching position Task Force 17's
+#     commander chose for dawn on 4 June, 202 miles north of Midway
+#     (engagement positions 5744, 5745; rule 99 as amended by rule 103),
+#     each with its own air groups (no forces limit).
 #     Leave to prepare and leave to launch given. No order of a commander's
 #     own.
 #
@@ -131,9 +134,9 @@ def allied(risk):
     text += command(s, 'set_limit', limit='"targets"', intent=2,
                     kinds='["carrier", "transport", "battleship", "cruiser", "destroyer"]')
     text += command(s, 'set_intent', intent=3, intent_kind='"operate_carriers"',
-                    task_force=1, hex='[14, -6]')
+                    task_force=1, hex='[9, -5]')
     text += command(s, 'set_intent', intent=4, intent_kind='"operate_carriers"',
-                    task_force=2, hex='[15, -6]')
+                    task_force=2, hex='[9, -5]')
     text += risk_limits(s, [1, 2, 3, 4], risk)
     text += leaves(s)
     return text
