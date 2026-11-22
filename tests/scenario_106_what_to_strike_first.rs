@@ -203,7 +203,10 @@ mod record {
 /// the aircraft claimed shot down): every claim's record gains its list
 /// `air_types`, and a claim whose men made the types out its breakdown's
 /// factors for them; with those taken out each text is the text of the
-/// commit before, line for line.
+/// commit before, line for line. Remade for decision 0214 (a force asks
+/// leave to pursue): every reason gains `answer_of` and every staff notice
+/// `pursuit`, each none in these games; with those taken out each text is
+/// the text of the commit before, line for line.
 #[test]
 fn s12_no_game_without_the_limit_changes() {
     let games: [(&str, Option<u32>, u64); 5] = [
@@ -211,19 +214,19 @@ fn s12_no_game_without_the_limit_changes() {
         (
             "five-days/01a_eastern_solomons.toml",
             None,
-            0x0512_0bcf_b8bb_5b92,
+            0x7813_2cd2_d91c_e42e,
         ),
         (
             "stage-3-proof/07a_slice.toml",
             Some(7),
-            0xaa1a_6b86_8d2b_6789,
+            0x3c6a_6053_4166_f6ab,
         ),
         (
             "second-proof/05a_eastern_solomons.toml",
             None,
-            0xd57c_8d25_5a8b_707a,
+            0xc3cd_f5f8_48b5_f330,
         ),
-        ("second-proof/07a_week.toml", None, 0xce31_72a5_8aa2_7f47),
+        ("second-proof/07a_week.toml", None, 0xa39f_faa6_6de9_caa1),
     ];
     let write_to = std::env::var("FLAGPILOT_106_RECORD").ok();
     let mut moved = Vec::new();
