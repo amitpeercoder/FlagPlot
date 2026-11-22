@@ -1913,7 +1913,7 @@ function eventMatches(model, ev, text, sel) {
 /** The level an intent is addressed to, set by its kind (decision 0117, 2): "area", "base:N" or "task_force:N". */
 function intentLevel(it) {
   switch (it.kind) {
-    case 'keep_supplied': case 'neutralise': case 'deny': case 'take_place': case 'control_island': return 'area';
+    case 'keep_supplied': case 'neutralise': case 'deny': case 'take_place': case 'control_island': case 'patrol': return 'area';
     case 'cover': case 'hold': case 'raid': case 'strike_ships': case 'search_waters': case 'build_up': return it.base != null ? 'base:' + it.base : 'area';
     case 'stand_at': case 'operate_carriers': case 'ready_landing': case 'bombard': return it.task_force != null ? 'task_force:' + it.task_force : 'area';
     default: return 'area';
@@ -1993,6 +1993,8 @@ function intentWords(model, it, engine) {
     case 'take_place': return 'take the place at (' + it.hex[0] + ',' + it.hex[1] + ')' + (it.by_day ? ' by day ' + it.by_day : '');
     // Decision 0151.
     case 'control_island': return 'control island ' + it.island + (it.by_day ? ' by the end of day ' + it.by_day : '');
+    // Decision 0218, stage 3.
+    case 'patrol': return 'patrol the waters within ' + it.distance + (it.distance === 1 ? ' hex' : ' hexes') + ' of (' + it.hex[0] + ',' + it.hex[1] + ') with submarines';
     case 'build_up': {
       const want = w => ({ airfield: 'an airfield', mend: "its airfield's damage mended", defences: 'defences to ' + it.defences + ' points', port: 'the port worked', aircraft: 'aircraft repair' })[w] || w;
       return 'build up ' + baseW(it.base) + ': ' + (it.wants || []).map(want).join(', then ');
