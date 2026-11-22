@@ -2774,14 +2774,14 @@ body.watched .gives { display: none !important; }
       })(top.plan != null ? plans[top.plan] : null);
       // The brief: one line a task, with a word for where it stands. What
       // the staff decided today and why is one step down, under each line.
-      var lines = [], tally = {};
+      var lines = [], tally = {}, tallied = {}; // the tally counts plans, not the tasks under them
       (function walk(i, depth) {
         if (i.number !== root) {
           var p = i.plan != null ? plans[i.plan] : null, w = work[i.number] || [];
           var ok = p && signed('approve', 'plan', p.number), off = p && signed('cancel_plan', 'plan', p.number), waits = p && !ok && !off && ((p.state === 'preparing' && !st.leaves.launch) || (p.state === 'draft' && !st.leaves.prepare)), live = p && p.state !== 'complete' && p.state !== 'released' && p.state !== 'cancelled';
           var acts = w.some(function (x) { return x.verdict !== 'No order today'; }), cannot = w.some(function (x) { return /cannot (meet|be met)/i.test(x.r.worked || ''); });
           var word = !i.in_force ? 'ENDED' : (p && p.state === 'complete') ? 'DONE' : off ? 'CANCELLED FROM 1800' : ok ? 'APPROVED' : waits ? 'WAITS FOR YOU' : acts ? 'ORDERS TODAY' : cannot ? 'CANNOT BE MET' : (p && (p.state === 'preparing' || p.state === 'draft')) ? 'PREPARING' : 'STANDING';
-          tally[word] = (tally[word] || 0) + 1; lines.push({ i: i, p: p, w: w, depth: depth, word: word, waits: waits, live: live, ok: ok, off: off });
+          var plan = p ? 'plan ' + p.number : 'order ' + i.number; (tallied[word] = tallied[word] || {})[plan] = 1; tally[word] = Object.keys(tallied[word]).length; lines.push({ i: i, p: p, w: w, depth: depth, word: word, waits: waits, live: live, ok: ok, off: off });
         }
         st.intents.filter(function (c) { return c.parent === i.number; }).forEach(function (c) { walk(c, depth + 1); });
       })(top, 0);
