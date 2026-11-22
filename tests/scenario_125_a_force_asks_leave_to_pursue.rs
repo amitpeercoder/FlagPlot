@@ -1188,15 +1188,24 @@ fn the_default_is_go_where_launching_is_given_and_ask_where_it_waits() {
 }
 
 #[test]
-#[ignore = "mismatch reported to the architect: with leave to launch withheld the carrier task waits for the leave (a waits_for_leave_to_launch notice, no orders, no find), so the staff never asks; the default is Ask only in the command state"]
 fn the_default_with_launching_withheld_the_staff_asks() {
+    // With leave to launch withheld the commander releases the plan himself:
+    // two approvals on day 1 (draft to preparing, preparing to released).
     let withheld = changed(
         &without_pursuit_setting(&text()),
         "leave = \"launch\"\ngiven = true",
         "leave = \"launch\"\ngiven = false",
     );
-    let played = play(&withheld);
+    let t = format!(
+        "{withheld}{}{}",
+        command_table(1, "kind = \"approve\"\nplan = 1"),
+        command_table(1, "kind = \"approve\"\nplan = 1")
+    );
+    let played = play(&t);
+    played.nothing_refused();
     assert_eq!(played.notice_kinds(1), vec![NoticeKind::AsksLeaveToPursue]);
+    assert_eq!(find_of(&played.notices(1)[0]).to, hex(10, 0));
+    assert!(!played.orders(1).iter().any(is_route));
 }
 
 #[test]
