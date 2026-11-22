@@ -102,11 +102,11 @@
 //!
 //! The force is at (0,0), stopped, having steamed 800 nm at 30 kn. Her
 //! fuel is asserted as scenario 58's is: she burnt what a force of the
-//! same ship ordered over the same two passages at full speed burns. Two
-//! notices of this rule in the game as answered: the asking is not among
-//! them (the answer came before the staff was asked), so the one notice is
-//! the pursuit ended. In the game as first stopped, before the answer, the
-//! one notice is the asking.
+//! same two passages at full speed burns. The game as answered records
+//! one notice of this rule: the pursuit ended, on day 3. The asking is not
+//! recorded in it: it was shown at the stop as what the staff would hand
+//! in, and the answer came before the staff was asked. A game not answered
+//! records the asking (property "Not answered").
 //!
 //! # Properties
 //!
