@@ -69,3 +69,38 @@ None moves: no game on file gives a rest, and the form is the table's. The layou
 ## Questions for the designer
 
 None before the review.
+
+## Amended on review, Nov 22, 2026
+
+Read by a reviewer who had not seen it written. Where this differs from what is above, this holds.
+
+### Orders to a land unit
+
+- **Rule 6 is settled: the engine already does it.** A commander's order to a land unit that an order in force may use holds the unit from the staff when it is taken in (decision 0141, item 14), at dusk and inside a day, and the staff's doctrines leave a held unit alone. Nothing in the staff changes and rule 6 needs no rule card.
+- **The form holds the unit first, as the force's and the air group's forms do:** it sends the hold and then the order, so that a unit no order yet uses is the commander's too and stays so if an order that could use it comes later. The card then says "Yours: you keep it out of the staff's plans". It goes back to the staff when he releases it.
+- **"In whose hands" is as the force's card has it:** the commander's where it is held, otherwise the staff's.
+- **What is offered follows every refusal the engine has:** a working unit is offered defend and work alone; a unit with no man ashore the activity alone; a unit with no man ashore and none aboard, one before its day and one held apart no form at all; a march only to the hexes the tool lists as joined to the unit's by land.
+- **When spent has three answers,** as the engine has: hold, fall back, or left to supply (hold where the unit can be fed where it stands, otherwise fall back).
+- **Work offers the four jobs and "the staff's choice of job",** and says where the unit's hex has no base of its side, in which it makes no work.
+- **An order signed is not taken back singly.** The table has no such thing for a force's orders either; rule 4's words on it are withdrawn.
+- **The form says, before signing, what an order costs that a player would not expect:** a march or an attack leaves the unit's fieldworks; a march takes only the men ashore.
+
+### Rest
+
+- **Rest is offered for a land unit and an air group, and not for a task force.** A force's fatigue cuts only its chance of sighting, and a force at normal readiness is alerted, and tires, whenever a contact is near: a rest order could not promise rest.
+- **A land unit's rest is defend and no march.** Its activity is left as it is: activity plays no part in rest, a working unit takes no other, and a training unit would lose its training.
+- **An air group's rest is the rest mission.**
+- **Rule 11 is withdrawn.** A unit defending in a fight does rest; what stops rest is marching, firing on attack, and being under bombs or shells, which is not known beforehand. Rest is not offered to a unit with no man ashore, or where the figures of fatigue are not loaded.
+- **The hold is of a new kind, a rest hold,** its code added after the two there are. It ends at dusk, before the commander's orders of that dusk hold anything and before the staff is asked, where the unit's fatigue at the end of the day before is at or below the figure. An event records that the rest ended, seen by the unit's own side, and the evening's report says it.
+- **A later order of the commander's to the unit ends the rest and keeps the unit his:** the rest hold becomes an ordinary hold by order, and does not end by itself. A search arc or another setting of an air group that leaves it on the rest mission does not count.
+- **Rest for a unit already held** makes its hold a rest hold: it will end.
+- **The figure is one for each kind,** `rested_fatigue` in the ground figures and in the fatigue figures, each a placeholder of 10, the level below which the table says "fresh". The frozen copies do not gain it and no frozen game has a rest hold.
+- **With command levels on,** a rest hold and its end are in the command's own state as any hold is.
+- **The card says, before signing, what a rest costs:** that an order using the unit waits for it. A unit that a landing is about to lift holds up the units behind it.
+- **A resting unit that cannot recover** (under fire each day, or aboard) stays held until the commander releases it; the card shows its fatigue, and the report says nothing until it is rested.
+
+Rule card for rest: reads a rest-held unit's fatigue and its kind's `rested_fatigue`. Writes the hold's end, or its kind where the commander orders the unit. Draws: none. The layout rises; the rules label and the agent's interface rise; recorded games are remade; the records of closed proofs are not altered.
+
+Rulebook: chapter 8 (holds; a rest hold and when it ends) and the glossary ("Hold", "Rest hold").
+
+A scenario of its own and its hand calculation are written by the architect before the rest is delegated. The form for the three orders needs none and may be built first.
