@@ -2881,6 +2881,9 @@ pub enum CautionKind {
     /// The force has no home port the staff knows, so its fuel was not
     /// measured against a passage home.
     FuelNotMeasured,
+    /// The station chosen lies inside submarine waters the side holds, no
+    /// place outside them serving (decision 0218, rule 55).
+    StationInSubmarineWaters,
 }
 
 impl CautionKind {
@@ -2889,6 +2892,7 @@ impl CautionKind {
         match self {
             CautionKind::StationInDanger => 1,
             CautionKind::FuelNotMeasured => 2,
+            CautionKind::StationInSubmarineWaters => 3,
         }
     }
 
@@ -2897,14 +2901,19 @@ impl CautionKind {
         match self {
             CautionKind::StationInDanger => "station_in_danger",
             CautionKind::FuelNotMeasured => "fuel_not_measured",
+            CautionKind::StationInSubmarineWaters => "station_in_submarine_waters",
         }
     }
 
     /// The kind named `name`, where there is one.
     pub fn from_name(name: &str) -> Option<CautionKind> {
-        [CautionKind::StationInDanger, CautionKind::FuelNotMeasured]
-            .into_iter()
-            .find(|k| k.name() == name)
+        [
+            CautionKind::StationInDanger,
+            CautionKind::FuelNotMeasured,
+            CautionKind::StationInSubmarineWaters,
+        ]
+        .into_iter()
+        .find(|k| k.name() == name)
     }
 }
 

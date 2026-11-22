@@ -140,13 +140,18 @@ use std::collections::BTreeMap;
 use std::fs;
 use std::path::PathBuf;
 
-use sim_core::command::{Addressee, CommandState, PatrolStation, Proposal, Staff, StaffDecisions};
+use sim_core::command::{
+    Addressee, CautionKind, CommandKind, CommandState, IntentKind, PatrolStation, Proposal, Reason,
+    Risk, Staff, StaffDecisions,
+};
 use sim_core::events::{Cause, Event, EventKind};
+use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
-use sim_core::ids::{IntentId, SubmarineId};
-use sim_core::orders::{Issuer, OrderKind, SubmarineOrder};
+use sim_core::ids::{IntentId, SubmarineId, TaskForceId};
+use sim_core::orders::{Issuer, OrderKind, SubmarineOrder, TaskForceOrder};
 use sim_core::state::{Side, TruthState};
 use sim_data::Scenario;
+use sim_staff::station::{margin_of, order_by_risk, reach_for, Candidate};
 use sim_staff::{as_staffs, staffs, SupplyStaff};
 
 mod common;
@@ -945,4 +950,535 @@ fn statement_21_a_home_base_no_sea_route_reaches_is_refused() {
         message.contains("no sea route reaches submarine:1's home base base:2"),
         "{message}"
     );
+}
+
+// ---------------------------------------------------------------------
+// Part C: the staff and submarine waters (statements 13 to 19).
+//
+// The setting is the architect's: the Allied side has a commander and a
+// staff, a carrier force C free to be stationed, and an order to deny the
+// waters within 1 hex of (6,0). The setting here, all placeholder data on
+// the placeholder patrol map with one Allied coast hex added at (12,4):
+//
+// - Allied base H (base 2) at (12,4), C's home port; the Japanese base
+//   (base 1) at (12,0) as in the other games, which the Allied side's map
+//   does not hold (the scenario gives it no knowledge of it), so no circle
+//   of danger reaches any hex and, by decision 0203's rule 6, the way a
+//   force takes is the shortest sea route.
+// - C, task force 1, stopped at sea at (11,0): one carrier and two
+//   destroyers (classes 17 and 18 of scenario 116's placeholder classes:
+//   15 kn at cruise, 30 at full speed, 1,000 t of fuel, 4,000 nm of
+//   endurance, full), on the carrier mission, with a bomber group of a
+//   normal strike radius of 210 nm, a fighter group and a scouting group
+//   aboard. 210 nm less 40 nm for the waters' 1 hex is 170 nm: the
+//   candidates are the hexes within 170 nm of (6,0).
+// - The commander gives "deny the waters within 1 hex of (6,0)" as intent
+//   1, with no forces limit, and both leaves, on day 2 (so that what a
+//   game holds on day 1 is held when the station is chosen on the
+//   morning of day 2). Nothing else is given.
+// ---------------------------------------------------------------------
+
+/// The patrol map with its sea made longer to the west, so that the
+/// Japanese base can lie further from every hex of the waters than a circle
+/// of danger reaches (15 hexes), and `extra` appended; written once to the
+/// build directory.
+fn wide_map_with(name: &str, extra: &str) -> String {
+    // Written once: the games run on parallel threads and read it.
+    static MAP: std::sync::OnceLock<String> = std::sync::OnceLock::new();
+    MAP.get_or_init(|| {
+        let original = fs::read_to_string(common::data_dir().join("map/placeholder_patrol.toml"))
+            .expect("read the map");
+        let wide = common::replace_once(&original, "q = [0, 12]", "q = [-24, 12]");
+        let path = PathBuf::from(env!("CARGO_TARGET_TMPDIR")).join(name);
+        fs::write(&path, format!("{wide}\n{extra}")).expect("write the map");
+        path.to_string_lossy().into_owned()
+    })
+    .clone()
+}
+
+/// One game of Part C: lines added to the head, and the Japanese boat's
+/// entry if there is one.
+#[derive(Clone, Default)]
+struct Sea {
+    /// Whole tables added after the standard ones.
+    extra: String,
+    /// The seed of the game.
+    seed: Option<u64>,
+    /// The hex the Japanese boat starts at, if there is one.
+    boat: Option<(i32, i32)>,
+    /// The hex of a stopped Allied cruiser the boat may fire on, if any.
+    decoy: Option<(i32, i32)>,
+    /// The force's hex, (12,-2) by default.
+    force_at: Option<(i32, i32)>,
+    /// The Japanese base's hex, (-20,0) by default.
+    enemy_base: Option<(i32, i32)>,
+    /// The commander's commands of day 2 in place of the deny's and the
+    /// two leaves.
+    orders: Option<String>,
+}
+
+const DENY_AND_LEAVES: &str = "[[command]]\nday = 2\nside = \"allied\"\nkind = \"set_intent\"\nintent = 1\nintent_kind = \"deny\"\nhex = [6, 0]\ndistance = 1\n\n\
+    [[command]]\nday = 2\nside = \"allied\"\nkind = \"set_leave\"\nleave = \"prepare\"\ngiven = true\n\n\
+    [[command]]\nday = 2\nside = \"allied\"\nkind = \"set_leave\"\nleave = \"launch\"\ngiven = true\n";
+
+impl Sea {
+    fn text(&self) -> String {
+        let map = wide_map_with(
+            "scenario_129_part_c_map.toml",
+            "[[hex]]\nq = 12\nr = 4\nkind = \"coast\"\nport_size = 3\nanchorage = true\n\n\
+             [[hex]]\nq = -20\nr = 0\nkind = \"coast\"\nport_size = 3\nanchorage = true\n\n\
+             [[hex]]\nq = 0\nr = 0\nkind = \"coast\"\nport_size = 3\nanchorage = true\n",
+        );
+        let (fq, fr) = self.force_at.unwrap_or((12, -2));
+        let (bq, br) = self.enemy_base.unwrap_or((-20, 0));
+        let seed = self.seed.unwrap_or(1942);
+        let mut text = format!(
+            "name = \"Placeholder scenario 129, part C\"\nplaceholder = true\nseed = {seed}\ndays = 3\nmap = \"{map}\"\n\
+             ship_classes = [\"../reference/ship_classes.csv\", \"../reference/ship_classes_placeholder_scenario_116.csv\"]\n\
+             port_sizes = \"../reference/port_sizes.csv\"\n\
+             aircraft_types = [\"../reference/aircraft_types.csv\", \"../reference/aircraft_types_placeholder_scenario_116.csv\"]\n\
+             search = \"../reference/search.toml\"\nsurface_combat = \"../reference/surface_combat.toml\"\nair_combat = \"../reference/air_combat.toml\"\n\
+             submarine_classes = \"../reference/submarine_classes_placeholder_scenario_128.csv\"\n\
+             submarine_torpedoes = \"../reference/submarine_torpedoes_placeholder_scenario_128.csv\"\n\
+             submarines = \"../reference/submarines_placeholder_scenario_128.toml\"\n\n\
+             [[base]]\nid = 1\nname = \"Placeholder Japanese base\"\nside = \"japanese\"\nq = {bq}\nr = {br}\nairfield = false\n\n\
+             [[base]]\nid = 2\nname = \"Placeholder base H\"\nside = \"allied\"\nq = 12\nr = 4\nsupply_t = 1000\nfuel_t = 5000\n\n\
+             [[task_force]]\nid = 1\nname = \"Placeholder carrier force C\"\nside = \"allied\"\nq = {fq}\nr = {fr}\nmission = \"carrier\"\nhome_port = 2\n\n\
+             [[ship]]\nid = 1\nname = \"Placeholder carrier 1\"\nclass = 17\nside = \"allied\"\nfuel_t = 1000\ntask_force = 1\n\n\
+             [[ship]]\nid = 2\nname = \"Placeholder destroyer 2\"\nclass = 18\nside = \"allied\"\nfuel_t = 1000\ntask_force = 1\n\n\
+             [[ship]]\nid = 3\nname = \"Placeholder destroyer 3\"\nclass = 18\nside = \"allied\"\nfuel_t = 1000\ntask_force = 1\n\n\
+             [[air_group]]\nid = 1\nname = \"Placeholder dive bombers 1\"\nside = \"allied\"\nship = 1\naircraft_type = 5\nready = 12\n\n\
+             [[air_group]]\nid = 2\nname = \"Placeholder fighters 2\"\nside = \"allied\"\nship = 1\naircraft_type = 4\nready = 12\n\n\
+             [[air_group]]\nid = 3\nname = \"Placeholder carrier scouts 3\"\nside = \"allied\"\nship = 1\naircraft_type = 2\nready = 6\n\n"
+        );
+        if let Some((q, r)) = self.decoy {
+            text.push_str(&format!(
+                "[[task_force]]\nid = 2\nname = \"Placeholder decoy force\"\nside = \"allied\"\nq = {q}\nr = {r}\nmission = \"surface_combat\"\n\n\
+                 [[ship]]\nid = 4\nname = \"Placeholder cruiser 4\"\nclass = 1\nside = \"allied\"\nfuel_t = 2000\ntask_force = 2\n\n"
+            ));
+        }
+        if let Some((q, r)) = self.boat {
+            text.push_str(&format!(
+                "[[submarine]]\nid = 1\nname = \"Placeholder boat 1\"\nside = \"japanese\"\nclass = 6900\nq = {q}\nr = {r}\nhome = 1\n\n"
+            ));
+        }
+        text.push_str(&self.extra);
+        text.push_str(self.orders.as_deref().unwrap_or(DENY_AND_LEAVES));
+        text
+    }
+
+    fn scenario(&self) -> Scenario {
+        common::from_text(&self.text(), &path()).expect("the game loads")
+    }
+
+    fn play(&self) -> Played {
+        play(self.scenario(), Side::Allied)
+    }
+}
+
+/// The suspected waters the Allied side is told on day 1.
+fn waters_told(q: i32, r: i32, distance: u32) -> String {
+    format!(
+        "[[suspected_waters]]\nside = \"allied\"\nq = {q}\nr = {r}\ndistance = {distance}\nday = 1\n\
+         words = \"Placeholder belief: enemy boats work these waters\"\n\
+         rows = \"placeholder, no row\"\nreading = \"Placeholder reading, the architect's of scenario 129\"\n\n"
+    )
+}
+
+/// The seed whose game, with a boat at (10,-3) and a cruiser stopped there
+/// for her to fire on, has her fire on the first night and the Allied side
+/// told of one report at her hex, (10,-3), and of no other on day 1 (found
+/// by trying seeds from 1; the first is 2).
+const REPORT_SEED: u64 = 2;
+
+fn reason_text(reason: &Reason) -> String {
+    let evidence: Vec<&str> = reason.evidence.iter().map(|e| e.what.as_str()).collect();
+    format!(
+        "{} | {} | {}",
+        reason.worked,
+        evidence.join(" | "),
+        reason.binding.join(" | ")
+    )
+}
+
+impl Played {
+    /// The carrier task formed on `day`: its station and its reason. At most
+    /// one is formed.
+    fn carrier_task(&self, day: u32) -> Option<(Hex, &Reason)> {
+        let formed: Vec<(Hex, &Reason)> = self.handed[&day]
+            .commands
+            .iter()
+            .filter_map(|c| match c.kind {
+                CommandKind::FormIntent {
+                    kind: IntentKind::OperateCarriers { force, hex },
+                    ..
+                } if force == TaskForceId::new(1) => Some((hex, &c.reason)),
+                _ => None,
+            })
+            .collect();
+        assert!(formed.len() <= 1, "one carrier task at most: {formed:?}");
+        formed.first().copied()
+    }
+
+    /// The station of the carrier task formed on day 2 (the order is given
+    /// on day 2), and on no other day.
+    fn station(&self) -> Hex {
+        for day in [1, 3] {
+            assert!(
+                self.carrier_task(day).is_none(),
+                "no task formed on day {day}"
+            );
+        }
+        self.carrier_task(2).expect("a task formed on day 2").0
+    }
+
+    fn station_reason(&self) -> String {
+        reason_text(self.carrier_task(2).expect("a task formed on day 2").1)
+    }
+
+    /// Every reason of every day, as one text.
+    fn all_said(&self) -> String {
+        self.handed
+            .values()
+            .flat_map(|d| {
+                d.orders
+                    .iter()
+                    .map(|o| &o.reason)
+                    .chain(d.no_orders.iter())
+                    .chain(d.commands.iter().map(|c| &c.reason))
+            })
+            .map(reason_text)
+            .collect::<Vec<_>>()
+            .join("\n")
+    }
+
+    /// The routes the staff gave task force 1 on `day`.
+    fn routes(&self, day: u32) -> Vec<Vec<Hex>> {
+        self.handed[&day]
+            .orders
+            .iter()
+            .filter_map(|o| match &o.kind {
+                OrderKind::TaskForce {
+                    target,
+                    order: TaskForceOrder::SetRoute { waypoints, .. },
+                } if *target == TaskForceId::new(1) => Some(waypoints.clone()),
+                _ => None,
+            })
+            .collect()
+    }
+
+    /// The reports of a submarine the Allied side was told of on `day`.
+    fn reports_on(&self, day: u32) -> Vec<Hex> {
+        self.events
+            .iter()
+            .filter(|e| e.day == day)
+            .filter_map(|e| match &e.kind {
+                EventKind::SubmarineReported { side, hex, .. } if *side == Side::Allied => {
+                    Some(*hex)
+                }
+                _ => None,
+            })
+            .collect()
+    }
+}
+
+/// The hexes the rule ranks, in its order, for C1: the candidates (the hexes
+/// the force can reach by sea within the reach the waters leave, 210 nm less
+/// 40 nm for the waters' 1 hex, of (6,0)), each with its passage by sea from
+/// the force's hex and, there being no circle of danger, no margin, ordered
+/// by the rule of the balanced risk (the least passage, then hex order). It
+/// is worked on the Allied view of the game as it stands before day 1, by
+/// the rule's own public functions.
+fn rule_order(sea: &Sea) -> Vec<Hex> {
+    let scenario = sea.scenario();
+    let view = scenario.world.side_view(Side::Allied);
+    let here = sea.force_at.map_or(hex(12, -2), |(q, r)| hex(q, r));
+    let field = view.sea_distances_to(here);
+    let within = reach_for(Fixed::from_int(210), Some(1));
+    let centre = hex(6, 0);
+    let candidates: Vec<Candidate> = field
+        .iter()
+        .filter(|(h, _)| h.air_distance_within(centre, within))
+        .map(|(h, passage)| Candidate {
+            hex: *h,
+            passage: *passage,
+            margin: margin_of(*h, &[]),
+        })
+        .collect();
+    assert_eq!(
+        candidates.len(),
+        61,
+        "the candidates: hexes within 4 of (6,0)"
+    );
+    order_by_risk(Risk::Balanced, &candidates)
+        .into_iter()
+        .map(|c| c.hex)
+        .collect()
+}
+
+/// The rule's first hex outside the circle of `hexes` hexes round `centre`.
+fn first_outside(order: &[Hex], centre: Hex, hexes: u32) -> Hex {
+    *order
+        .iter()
+        .find(|h| h.distance(centre) > hexes)
+        .expect("a hex outside")
+}
+
+#[test]
+fn statement_13_game_c1_no_submarine_belief_the_station_is_s_and_no_reason_speaks_of_submarines() {
+    let sea = Sea::default();
+    // S, by the rule: of the 61 candidates the least passage from (12,-2) is
+    // 2 hexes, held by (10,-2), (10,-1) and (10,0) alone, and the lowest hex
+    // is (10,-2).
+    let order = rule_order(&sea);
+    assert_eq!(&order[..3], &[hex(10, -2), hex(10, -1), hex(10, 0)]);
+    let played = sea.play();
+    assert_eq!(played.station(), hex(10, -2));
+    assert!(played.station_reason().contains("The station is (10,-2)"));
+    let said = played.all_said().to_lowercase();
+    assert!(!said.contains("submarine"), "{said}");
+    assert!(!said.contains("passed over"), "{said}");
+    for day in 1..=3 {
+        for command in &played.handed[&day].commands {
+            assert!(
+                command.reason.cautions.is_empty(),
+                "no caution: {command:?}"
+            );
+        }
+    }
+}
+
+#[test]
+fn statement_14_game_c2_suspected_waters_that_hold_s_the_force_is_stationed_at_the_next_hex_outside(
+) {
+    // Waters of 1 hex round (10,-3) hold (10,-2), S, one hex from the centre,
+    // and not (10,-1), 2 hexes from it.
+    let sea = Sea {
+        extra: waters_told(10, -3, 1),
+        ..Sea::default()
+    };
+    // The next the rule ranks that is outside the waters, worked from the
+    // rule's own order on the same view.
+    let order = rule_order(&sea);
+    assert_eq!(order[0], hex(10, -2));
+    let expected = first_outside(&order, hex(10, -3), 1);
+    assert_eq!(expected, hex(10, -1));
+    let played = sea.play();
+    assert_eq!(played.station(), expected);
+    let reason = played.station_reason();
+    assert!(
+        reason.contains(
+            "(10,-2) passed over: inside the suspected submarine waters within 1 hexes of (10,-3)"
+        ),
+        "{reason}"
+    );
+    assert!(
+        !reason.contains("no place outside submarine waters serves"),
+        "{reason}"
+    );
+    assert!(reason.contains("The station is (10,-1)"), "{reason}");
+}
+
+#[test]
+fn statement_15_game_c3_a_report_of_a_submarine_next_to_s_the_force_is_stationed_at_the_next_hex_outside(
+) {
+    // A boat at (10,-3) fires on a cruiser stopped there in the first night:
+    // by the engine's rule (decision 0218, rule 14) the side fired on is
+    // told of one submarine at her hex, here undisplaced by the error. The
+    // report is held from day 1; the order is given on day 2.
+    let sea = Sea {
+        seed: Some(REPORT_SEED),
+        boat: Some((10, -3)),
+        decoy: Some((10, -3)),
+        ..Sea::default()
+    };
+    let played = sea.play();
+    assert_eq!(played.reports_on(1), vec![hex(10, -3)]);
+    // S is within one hex of the report; (10,-1) is two hexes from it.
+    let expected = first_outside(&rule_order(&sea), hex(10, -3), 1);
+    assert_eq!(expected, hex(10, -1));
+    assert_eq!(played.station(), expected);
+    let reason = played.station_reason();
+    assert!(
+        reason.contains(
+            "(10,-2) passed over: within one hex of a report of a submarine at (10,-3), day 1"
+        ),
+        "{reason}"
+    );
+    assert!(
+        !reason.contains("no place outside submarine waters serves"),
+        "{reason}"
+    );
+}
+
+#[test]
+fn statement_16_game_c4_waters_that_hold_every_candidate_the_force_is_at_s_and_no_place_outside_serves(
+) {
+    // The waters of 4 hexes round (6,0) hold every hex within 170 nm of it.
+    let sea = Sea {
+        extra: waters_told(6, 0, 4),
+        ..Sea::default()
+    };
+    let order = rule_order(&sea);
+    assert!(order.iter().all(|h| h.distance(hex(6, 0)) <= 4));
+    let played = sea.play();
+    assert_eq!(played.station(), hex(10, -2));
+    let reason = played.station_reason();
+    assert!(
+        reason.contains("no place outside submarine waters serves, so the station is (10,-2), inside the suspected submarine waters within 4 hexes of (6,0)"),
+        "{reason}"
+    );
+    assert!(!reason.contains("passed over"), "{reason}");
+    // Decision 0217's cautions: one of the new kind, of the station's hex.
+    let (_, formed) = played.carrier_task(2).expect("a task");
+    let cautions: Vec<_> = formed
+        .cautions
+        .iter()
+        .map(|c| (c.kind, c.hex, c.of))
+        .collect();
+    assert_eq!(
+        cautions,
+        vec![(
+            CautionKind::StationInSubmarineWaters,
+            Some(hex(10, -2)),
+            None
+        )]
+    );
+    assert_eq!(CautionKind::StationInSubmarineWaters.code(), 3);
+    assert_eq!(
+        CautionKind::from_name("station_in_submarine_waters"),
+        Some(CautionKind::StationInSubmarineWaters)
+    );
+}
+
+#[test]
+fn statement_17_the_route_is_as_the_route_rule_gives_it_not_bent_for_submarine_waters() {
+    // No circle of danger: by decision 0203's rule 6 the way is the shortest
+    // sea route, so the route is the one point of the station.
+    let c1 = Sea::default().play();
+    assert_eq!(c1.routes(2), vec![vec![hex(10, -2)]]);
+    let c2 = Sea {
+        extra: waters_told(10, -3, 1),
+        ..Sea::default()
+    }
+    .play();
+    assert_eq!(c2.routes(2), vec![vec![hex(10, -1)]]);
+    let c3 = Sea {
+        seed: Some(REPORT_SEED),
+        boat: Some((10, -3)),
+        decoy: Some((10, -3)),
+        ..Sea::default()
+    }
+    .play();
+    assert_eq!(c3.routes(2), vec![vec![hex(10, -1)]]);
+    // And in the game of every candidate held, the station and the route are
+    // those of C1.
+    let c4 = Sea {
+        extra: waters_told(6, 0, 4),
+        ..Sea::default()
+    }
+    .play();
+    assert_eq!(c4.routes(2), vec![vec![hex(10, -2)]]);
+}
+
+// Statement 18, "where a force waits": scenario 73's game (a carrier force
+// named in the forces limit of a take of the place at (10,0), its covering
+// hex (4,0) by that scenario's hand calculation, the next hex along the
+// row (5,0)) with the Allied side told suspected waters on day 1.
+
+fn take_path() -> PathBuf {
+    common::data_dir().join("scenarios/73_carrier_cover.toml")
+}
+
+fn take_figures() -> sim_data::LoadOptions {
+    common::altered_reference("s129take", |dir| {
+        common::edit_file(dir, "air_combat.toml", |text| {
+            format!("{text}\ncruiser = 12\ndestroyer = 6\ntransport = 6\nauxiliary = 4\n")
+        })
+    })
+}
+
+/// Scenario 73's game with `extra` added, played, with the Allied staff's
+/// carrier task of the morning of day 2.
+fn take_game(extra: &str) -> (Hex, String) {
+    let text = format!(
+        "{}\n{extra}",
+        fs::read_to_string(take_path()).expect("scenario 73 reads")
+    );
+    let scenario =
+        common::from_text_with(&text, &take_path(), &take_figures()).expect("the take game loads");
+    let played = play(scenario, Side::Allied);
+    let (hex, reason) = played.carrier_task_of_any_force(2);
+    (hex, reason)
+}
+
+impl Played {
+    /// The one carrier task formed on `day`, whichever force: station and
+    /// reason.
+    fn carrier_task_of_any_force(&self, day: u32) -> (Hex, String) {
+        let formed: Vec<(Hex, String)> = self.handed[&day]
+            .commands
+            .iter()
+            .filter_map(|c| match c.kind {
+                CommandKind::FormIntent {
+                    kind: IntentKind::OperateCarriers { hex, .. },
+                    ..
+                } => Some((hex, reason_text(&c.reason))),
+                _ => None,
+            })
+            .collect();
+        assert_eq!(formed.len(), 1, "one carrier task on day {day}: {formed:?}");
+        formed.into_iter().next().expect("one")
+    }
+}
+
+#[test]
+fn statement_18_where_a_force_waits_the_covering_hex_is_the_next_along_the_route_outside_submarine_waters(
+) {
+    // Without waters: scenario 73's covering hex, (4,0), and no word of
+    // submarines.
+    let (hex_none, reason_none) = take_game("");
+    assert_eq!(hex_none, hex(4, 0));
+    assert!(
+        !reason_none.to_lowercase().contains("submarine"),
+        "{reason_none}"
+    );
+    // Waters of 1 hex round (3,0) hold (4,0) and not (5,0), the next hex of
+    // the row the shortest sea route follows.
+    let (hex_next, reason_next) = take_game(&waters_told(3, 0, 1));
+    assert_eq!(hex_next, hex(5, 0));
+    assert!(
+        reason_next.contains(
+            "(4,0) passed over: inside the suspected submarine waters within 1 hexes of (3,0)"
+        ),
+        "{reason_next}"
+    );
+    // Waters of 3 hexes round (7,0) hold every hex of the route within the
+    // reach, (4,0) to (10,0): the first serves, and the reason says no place
+    // outside serves.
+    let (hex_all, reason_all) = take_game(&waters_told(7, 0, 3));
+    assert_eq!(hex_all, hex(4, 0));
+    assert!(
+        reason_all.contains("no place outside submarine waters serves, so it is (4,0)"),
+        "{reason_all}"
+    );
+    assert!(!reason_all.contains("passed over"), "{reason_all}");
+}
+
+#[test]
+fn statement_19_the_staff_reads_only_what_the_side_believes_a_boat_at_s_the_side_holds_no_report_of(
+) {
+    // C1 with a Japanese boat at S = (10,-2), and no cruiser for her to
+    // fire on: the Allied side holds no report and no suspected waters on
+    // day 1, so the staff stations the force at S.
+    let played = Sea {
+        boat: Some((10, -2)),
+        ..Sea::default()
+    }
+    .play();
+    assert!(played.reports_on(1).is_empty());
+    assert_eq!(played.station(), hex(10, -2));
+    let said = played.all_said().to_lowercase();
+    assert!(!said.contains("submarine"), "{said}");
+    assert!(!said.contains("passed over"), "{said}");
 }

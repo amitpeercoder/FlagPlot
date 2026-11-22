@@ -287,7 +287,8 @@
         "kind": {
           "enum": [
             "station_in_danger",
-            "fuel_not_measured"
+            "fuel_not_measured",
+            "station_in_submarine_waters"
           ]
         },
         "of": {

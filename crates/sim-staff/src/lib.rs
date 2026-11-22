@@ -58,6 +58,7 @@ pub mod targets;
 mod told;
 mod turn_back;
 mod units;
+mod waters;
 pub mod way;
 
 pub use available::{counted_by_a_take, Counted};

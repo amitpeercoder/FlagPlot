@@ -671,6 +671,11 @@ impl Day<'_, '_> {
         let full = self.weighed_full(force);
         let mut first_short: Option<(Hex, FuelRead)> = None;
         let mut chosen: Option<(Candidate, FuelRead)> = None;
+        // Decision 0218, 55: candidates in fuel but in submarine waters, in
+        // the order tried. The first outside them is the station; where none
+        // is outside, the first of these.
+        let mut passed: Vec<(Candidate, String)> = Vec::new();
+        let mut first_in_waters: Option<(Candidate, FuelRead)> = None;
         for candidate in &order {
             let read = self.fuel_for(
                 force,
@@ -681,11 +686,30 @@ impl Day<'_, '_> {
                 full,
             );
             if read.in_fuel {
-                chosen = Some((*candidate, read));
-                break;
+                match crate::waters::in_submarine_waters(self.area, candidate.hex) {
+                    None => {
+                        chosen = Some((*candidate, read));
+                        break;
+                    }
+                    Some(why) => {
+                        passed.push((*candidate, why));
+                        if first_in_waters.is_none() {
+                            first_in_waters = Some((*candidate, read));
+                        }
+                        continue;
+                    }
+                }
             }
             if first_short.is_none() {
                 first_short = Some((candidate.hex, read));
+            }
+        }
+        let mut none_outside = false;
+        if chosen.is_none() {
+            if let Some(found) = first_in_waters {
+                chosen = Some(found);
+                none_outside = true;
+                passed.clear();
             }
         }
         let Some((station, fuel)) = chosen else {
@@ -696,6 +720,19 @@ impl Day<'_, '_> {
                 read.words,
                 read.short.join(", ")
             ));
+        };
+        let submarines = if none_outside {
+            format!(
+                "; no place outside submarine waters serves, so the station is {}, {}",
+                station.hex,
+                crate::waters::in_submarine_waters(self.area, station.hex)
+                    .expect("the station is in submarine waters")
+            )
+        } else {
+            passed
+                .iter()
+                .map(|(c, why)| format!("; {} passed over: {why}", c.hex))
+                .collect()
         };
         // The words of the choice.
         let circle_words: Vec<String> = circles
@@ -731,7 +768,10 @@ impl Day<'_, '_> {
             .min_by_key(|c| (c.passage, c.hex))
             .copied()
             .expect("there is a candidate");
-        let nearer = if nearest.hex == station.hex || nearest.passage == station.passage {
+        let nearer = if nearest.hex == station.hex
+            || nearest.passage == station.passage
+            || passed.iter().any(|(c, _)| c.hex == nearest.hex)
+        {
             String::new()
         } else if outside(nearest.margin) {
             format!(
@@ -774,7 +814,7 @@ impl Day<'_, '_> {
             Risk::Press => "at the press risk the station is the one with the least passage, in danger or out",
         };
         let words = format!(
-            "{held} is free: on the carrier mission, with no task and named by nothing of the commander's, and not held. The candidates, {} of them, are the hexes the force can reach by sea within {within_words} of {}; {choice}. The station is {where_words}: {passage_words}; {danger}{nearer}. Fuel: {}.",
+            "{held} is free: on the carrier mission, with no task and named by nothing of the commander's, and not held. The candidates, {} of them, are the hexes the force can reach by sea within {within_words} of {}; {choice}. The station is {where_words}: {passage_words}; {danger}{nearer}{submarines}. Fuel: {}.",
             candidates.len(),
             aim.words,
             fuel.words
@@ -801,6 +841,17 @@ impl Day<'_, '_> {
                 ),
             })
             .collect();
+        if none_outside {
+            cautions.push(Caution {
+                kind: CautionKind::StationInSubmarineWaters,
+                of: None,
+                hex: Some(station.hex),
+                words: format!(
+                    "the station {} lies in submarine waters, and no place outside them serves",
+                    station.hex
+                ),
+            });
+        }
         if home.is_none() {
             cautions.push(Caution {
                 kind: CautionKind::FuelNotMeasured,
