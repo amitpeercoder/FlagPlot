@@ -112,3 +112,7 @@ Rule 22 was built on Nov 20, 2026, with decision 0186, in one pull request.
 ## The architect's rulings on the build
 
 Read on Nov 20, 2026. The key is built as rule 22 has it: `for_play` in a scenario's objectives, the words over a result, the batch file's header (its version unchanged, as when the daily supply figure was added), and `sim-cli validate` refusing. Scenario 103's base carries the key because it is the source its script reads; it is not played, and that stands. Scenario 103 is the first scenario for play. Its four games between agents are still owed.
+
+## Amended by decision 0213 (Nov 22, 2026)
+
+The sentence "the figures of the simulation are one set for every battle and stay so" is amended, as decision 0213 stands after its review: the rules are one set for every battle, and a figure may differ by side, where a row of a difference in doctrine or practice between the navies supports it, never by scenario, battle, ship or place. What a side is scored for stays each scenario's own, as above.
