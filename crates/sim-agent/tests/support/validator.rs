@@ -2,7 +2,7 @@
 //!
 //! It knows exactly what those schemas use: `type` (one name or a list),
 //! `const`, `enum`, `required`, `properties`, `additionalProperties` (a
-//! boolean), `items`, `minItems`, `maxItems`, `oneOf` (exactly one branch must match), `$ref` (to
+//! boolean), `items`, `minItems`, `maxItems`, `minimum` (a whole number), `oneOf` (exactly one branch must match), `$ref` (to
 //! `#/$defs/name` in the same file or `file#/$defs/name` in another file of the
 //! folder), and `format: "decimal"` for strings. Any other keyword that
 //! constrains a value is an error, so a schema cannot quietly use something
@@ -29,6 +29,7 @@ const KNOWN: &[&str] = &[
     "items",
     "minItems",
     "maxItems",
+    "minimum",
     "oneOf",
     "$ref",
     "format",
@@ -170,6 +171,13 @@ impl Schemas {
                         }
                     }
                 }
+            }
+        }
+        if let (Some(least), Some(value)) =
+            (schema.get("minimum").and_then(Value::as_i64), inst.as_i64())
+        {
+            if value < least {
+                errors.push(format!("{path}: {value} is below the minimum {least}"));
             }
         }
         if let Some(array) = inst.as_array() {

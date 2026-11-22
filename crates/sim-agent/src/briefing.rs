@@ -1786,6 +1786,17 @@ pub struct ArrivalsPart {
     /// when none.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub entry_waiting_yesterday: Vec<crate::entries::EntryWaitingLine>,
+    /// What came today: the side's own forces and units that entered in the
+    /// day just played, air groups that received aircraft, and units whose
+    /// day to be used it was, each with what the staff did with it (decision
+    /// 0215). Left out when none; empty on day 1.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub came_today: Vec<crate::arrivals_told::ArrivalToldLine>,
+    /// What comes tomorrow: what enters, receives aircraft or may first be
+    /// used on the day the briefing is for (decision 0215). Left out when
+    /// none.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub comes_tomorrow: Vec<crate::arrivals_told::ArrivalToldLine>,
 }
 
 #[derive(Clone, PartialEq, Eq, Debug, Serialize)]
@@ -2105,7 +2116,10 @@ pub fn briefing_for_game(view: &SideView<'_>, scenario: &str, last_day: Option<u
         std::mem::take(&mut day.found_empty),
     );
 
+    let told = crate::arrivals_told::told_of_arrivals(&ctx, &events, today);
     let arrivals = ArrivalsPart {
+        came_today: told.came_today,
+        comes_tomorrow: told.comes_tomorrow,
         due: view
             .arrivals()
             .filter(|a| a.day >= today || a.waiting)

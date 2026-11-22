@@ -825,6 +825,68 @@
         "event": { "type": "integer" }
       }
     },
+    "arrival_told_line": {
+      "description": "One unit of the side's own that came today or comes tomorrow (decision 0215): its kind, its handle, why it is listed (`how`: enter, aircraft for an air group that receives aircraft, usable for its day to be used), where it is (`place`, and `at`, the base or ship) and what it is (`ships` by kind, `men`, `aircraft`, `aircraft_received`, and an air group's `mission` now with its `target`). `staff` is in `came_today` only and has exactly one of its fields: what is explicit of what the staff did with the unit. It never says that no order uses a unit.",
+      "type": "object",
+      "required": ["kind", "unit", "how"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": { "enum": ["task_force", "land_unit", "air_group"] },
+        "unit": { "$ref": "#/$defs/handle" },
+        "how": { "type": "array", "minItems": 1, "items": { "enum": ["enter", "aircraft", "usable"] } },
+        "place": { "$ref": "#/$defs/place" },
+        "at": { "$ref": "#/$defs/handle" },
+        "ships": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["kind", "ships"],
+            "additionalProperties": false,
+            "properties": { "kind": { "type": "string" }, "ships": { "type": "integer" } }
+          }
+        },
+        "air_groups": { "description": "The air groups a force carries; they have no lines of their own.", "type": "array", "items": { "$ref": "#/$defs/handle" } },
+        "land_units": {
+          "description": "The land units a force carries, with their men; they have no lines of their own.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["handle", "men"],
+            "additionalProperties": false,
+            "properties": { "handle": { "$ref": "#/$defs/handle" }, "men": { "type": "integer" } }
+          }
+        },
+        "men": { "type": "integer" },
+        "aircraft": { "type": "integer" },
+        "aircraft_received": { "type": "integer" },
+        "mission": { "type": "string" },
+        "target": { "$ref": "#/$defs/handle" },
+        "staff": {
+          "type": "object",
+          "additionalProperties": false,
+          "oneOf": [
+            { "required": ["ordered"] },
+            { "required": ["named_in_limit"] },
+            { "required": ["held"] },
+            { "required": ["commander_ordered"] },
+            { "required": ["no_order_today"] }
+          ],
+          "properties": {
+            "ordered": { "$ref": "#/$defs/arrival_intent_ref" },
+            "named_in_limit": { "$ref": "#/$defs/arrival_intent_ref" },
+            "held": { "const": true },
+            "commander_ordered": { "const": true },
+            "no_order_today": { "const": true }
+          }
+        }
+      }
+    },
+    "arrival_intent_ref": {
+      "type": "object",
+      "required": ["intent", "words"],
+      "additionalProperties": false,
+      "properties": { "intent": { "type": "integer" }, "words": { "type": "string" } }
+    },
     "entry_waiting_line": {
       "description": "A unit that could not enter yesterday and waits for its base (decision 0195, 2 and 16).",
       "type": "object",

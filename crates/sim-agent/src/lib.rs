@@ -34,6 +34,7 @@
 //! string if it is a [`sim_core::fixed::Fixed`], never a float.
 
 mod answer;
+mod arrivals_told;
 mod briefing;
 mod choices;
 mod commands;
