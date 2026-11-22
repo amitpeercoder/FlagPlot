@@ -405,9 +405,9 @@ body.watched .gives { display: none !important; }
   .view { max-width: calc(100% - 32px); }
 }
 @media (max-width: 760px) {
-  .menus { top: 112px; }
-  .order { top: 160px; max-height: calc(100% - 160px - 124px); }
-  #stops { top: 156px; }
+  .menus { top: 208px; }
+  .order { top: 256px; max-height: calc(100% - 256px - 124px); }
+  #stops { top: 252px; }
 }
 @media (max-width: 520px) {
   .view button { min-width: 40px; padding: 0 8px; font-size: 13px; letter-spacing: 0.05em; }
@@ -1165,7 +1165,7 @@ body.watched .gives { display: none !important; }
     if (clock.at !== 'dusk') { var today = dateOf(M.day - 1, true); cl.textContent = (today ? today + ' \u00b7 ' : '') + clock.at; st.textContent = 'DAY ' + M.day + (M.lastDay ? ' OF ' + M.lastDay : '') + ' \u00b7 ' + state; }
     else { var day = M.lastDay ? Math.min(M.day, M.lastDay) : M.day, dusk = dateOf(M.day - 2, true); cl.textContent = (dusk ? dusk + ' \u00b7 ' : '') + '1800'; st.textContent = (M.over ? 'THE LAST DAY IS FOUGHT' : 'ORDERS FOR DAY ' + day + (M.lastDay ? ' OF ' + M.lastDay : '')) + ' \u00b7 ' + state; }
     // At the game's end the foot has one control, to read how it ended; while the other commander is waited for nothing more is ordered.
-    showSigned(); $('btn-day').hidden = M.over; $('btn-go').hidden = M.over; $('btn-end').hidden = !M.over;
+    showSigned(); showOrders(); $('btn-day').hidden = M.over; $('btn-go').hidden = M.over; $('btn-end').hidden = !M.over;
   }
   // A pulse by its date and its hours: "12-13 AUG · NIGHT · 1800-0600". The
   // hours are the theatre's own, one clock for the whole chart.
