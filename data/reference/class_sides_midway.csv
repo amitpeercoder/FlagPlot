@@ -1,0 +1,66 @@
+# FILE OF SIDES of scenario 114, Midway (decision 0198; decision 0173, 1 to
+# 3): whose each class of ship and type of aircraft of ship_classes_midway.csv,
+# ship_classes_placeholder_transport_8_8_knots.csv and aircraft_types_midway.csv
+# is. Written by hand; no generated file changes for it. Columns: table
+# (ship_class or aircraft_type), id, side (allied, japanese or both), note.
+#
+# What a row rests on (decision 0173, 3): a class or type derived from the
+# order of battle takes the side of the ships or aircraft its derivation list
+# gives it, and its note names the list and the ships. A placeholder class
+# takes both: it is invented and used by either side. Classes 5004 (Zuiho),
+# 5021 (Gwin) and 5036 (Mikazuki) and type 5112 (the A5M4) are in the files
+# though the scenario leaves their ships out (rules 85 and 87), and have rows.
+table,id,side,note
+ship_class,19,both,"Placeholder transport, 8.8 knots: a placeholder class, used by either side"
+ship_class,5000,japanese,"Derived by data/derivation/midway.toml, class_ids 5000: akagi"
+ship_class,5001,japanese,"Derived by data/derivation/midway.toml, class_ids 5001: kaga"
+ship_class,5002,japanese,"Derived by data/derivation/midway.toml, class_ids 5002: soryu"
+ship_class,5003,japanese,"Derived by data/derivation/midway.toml, class_ids 5003: hiryu"
+ship_class,5004,japanese,"Derived by data/derivation/midway.toml, class_ids 5004: zuiho"
+ship_class,5005,allied,"Derived by data/derivation/midway.toml, class_ids 5005: cv-6-enterprise"
+ship_class,5006,allied,"Derived by data/derivation/midway.toml, class_ids 5006: cv-5-yorktown"
+ship_class,5007,allied,"Derived by data/derivation/midway.toml, class_ids 5007: cv-8-hornet"
+ship_class,5008,allied,"Derived by data/derivation/midway.toml, class_ids 5008: ca-24-pensacola"
+ship_class,5009,allied,"Derived by data/derivation/midway.toml, class_ids 5009: ca-26-northampton"
+ship_class,5010,allied,"Derived by data/derivation/midway.toml, class_ids 5010: ca-32-new-orleans, ca-36-minneapolis"
+ship_class,5011,allied,"Derived by data/derivation/midway.toml, class_ids 5011: ca-44-vincennes"
+ship_class,5012,allied,"Derived by data/derivation/midway.toml, class_ids 5012: ca-34-astoria"
+ship_class,5013,allied,"Derived by data/derivation/midway.toml, class_ids 5013: ca-33-portland"
+ship_class,5014,allied,"Derived by data/derivation/midway.toml, class_ids 5014: cl-51-atlanta"
+ship_class,5015,allied,"Derived by data/derivation/midway.toml, class_ids 5015: dd-352-worden, dd-354-monaghan, dd-355-aylwin"
+ship_class,5016,allied,"Derived by data/derivation/midway.toml, class_ids 5016: dd-360-phelps, dd-363-balch"
+ship_class,5017,allied,"Derived by data/derivation/midway.toml, class_ids 5017: dd-371-conyngham"
+ship_class,5018,allied,"Derived by data/derivation/midway.toml, class_ids 5018: dd-397-benham, dd-398-ellet"
+ship_class,5019,allied,"Derived by data/derivation/midway.toml, class_ids 5019: dd-401-maury"
+ship_class,5020,allied,"Derived by data/derivation/midway.toml, class_ids 5020: dd-410-hughes, dd-411-anderson, dd-412-hammann, dd-414-russell, dd-417-morris"
+ship_class,5021,allied,"Derived by data/derivation/midway.toml, class_ids 5021: dd-433-gwin"
+ship_class,5022,japanese,"Derived by data/derivation/midway.toml, class_ids 5022: tone, chikuma"
+ship_class,5023,japanese,"Derived by data/derivation/midway.toml, class_ids 5023: haruna, kirishima"
+ship_class,5024,japanese,"Derived by data/derivation/midway.toml, class_ids 5024: kongo, hiei"
+ship_class,5025,japanese,"Derived by data/derivation/midway.toml, class_ids 5025: nagara, yura"
+ship_class,5026,japanese,"Derived by data/derivation/midway.toml, class_ids 5026: jintsu"
+ship_class,5027,japanese,"Derived by data/derivation/midway.toml, class_ids 5027: kumano, suzuya, mikuma, mogami"
+ship_class,5028,japanese,"Derived by data/derivation/midway.toml, class_ids 5028: atago"
+ship_class,5029,japanese,"Derived by data/derivation/midway.toml, class_ids 5029: chokai"
+ship_class,5030,japanese,"Derived by data/derivation/midway.toml, class_ids 5030: myoko, haguro"
+ship_class,5031,japanese,"Derived by data/derivation/midway.toml, class_ids 5031: akigumo, hamakaze, isokaze, tanikaze, urakaze, arashi, hagikaze, maikaze, nowaki, kuroshio, oyashio, amatsukaze, hatsukaze, tokitsukaze, yukikaze, kagero, shiranui"
+ship_class,5032,japanese,"Derived by data/derivation/midway.toml, class_ids 5032: kazagumo, makigumo, yugumo"
+ship_class,5033,japanese,"Derived by data/derivation/midway.toml, class_ids 5033: harusame, murasame, samidare, yudachi"
+ship_class,5034,japanese,"Derived by data/derivation/midway.toml, class_ids 5034: asashio, arashio, michishio, oshio, asagumo, minegumo, natsugumo"
+ship_class,5035,japanese,"Derived by data/derivation/midway.toml, class_ids 5035: arare, kasumi"
+ship_class,5036,japanese,"Derived by data/derivation/midway.toml, class_ids 5036: mikazuki"
+aircraft_type,5100,allied,"Derived by data/derivation/midway.toml, type 5100: the F4F-4, VF-3, VF-6 and VF-8"
+aircraft_type,5101,allied,"Derived by data/derivation/midway.toml, type 5101: the F4F-3, VMF-221's seven"
+aircraft_type,5102,allied,"Derived by data/derivation/midway.toml, type 5102: the F2A-3, VMF-221's twenty-one"
+aircraft_type,5103,allied,"Derived by data/derivation/midway.toml, type 5103: the SBD-3, the dive bombers of the three carriers"
+aircraft_type,5104,allied,"Derived by data/derivation/midway.toml, type 5104: the SBD-2, VMSB-241's nineteen"
+aircraft_type,5105,allied,"Derived by data/derivation/midway.toml, type 5105: the SB2U-3, VMSB-241's seventeen"
+aircraft_type,5106,allied,"Derived by data/derivation/midway.toml, type 5106: the TBD-1, VT-3, VT-6 and VT-8"
+aircraft_type,5107,allied,"Derived by data/derivation/midway.toml, type 5107: the B-17E, the Army's bombers at Midway"
+aircraft_type,5108,japanese,"Derived by data/derivation/midway.toml, type 5108: the A6M2, the four carriers' fighters"
+aircraft_type,5109,japanese,"Derived by data/derivation/midway.toml, type 5109: the D3A1, the four carriers' bombers"
+aircraft_type,5110,japanese,"Derived by data/derivation/midway.toml, type 5110: the B5N2, the four carriers' attack planes"
+aircraft_type,5111,japanese,"Derived by data/derivation/midway.toml, type 5111: the E13A1, Tone's and Chikuma's floatplanes"
+aircraft_type,5112,japanese,"Derived by data/derivation/midway.toml, type 5112: the A5M4, Zuiho's fighters, which the scenario leaves out with her"
+aircraft_type,5113,allied,"Derived by data/derivation/midway.toml, type 5113: the PBY-5A, Midway's sixteen"
+aircraft_type,5114,allied,"Derived by data/derivation/midway.toml, type 5114: the PBY-5, Midway's fourteen"

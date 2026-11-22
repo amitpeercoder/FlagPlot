@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 20, 2026, on the designer's word
 
 Summary: A third small scenario for play: Midway over four days, 3 to 6 June 1942. Three American carriers and the aircraft of Midway against four Japanese carriers, with a Japanese force bound to land on the atoll. It needs what no scenario has needed: a second map, in another sea. It is built in four stages: the map, the data, the scenario, and whether it is a contest. It uses the rules the Coral Sea called for, which are built.
 
-Standing: Confirmed by the designer on Nov 20, 2026; stage 0, the map, is decision 0199, built; stage A, the data, is gathered, ruled on (rules 50 to 80) and derived (`data/derivation/midway.toml`); stage B's rulings are rules 81 to 102 and its hand calculation is `tests/scenario_114_midway.rs`, written on Nov 22, 2026.
+Standing: Confirmed by the designer on Nov 20, 2026; stage 0, the map, is decision 0199, built; stage A, the data, is gathered, ruled on (rules 50 to 80) and derived (`data/derivation/midway.toml`); stage B's rulings are rules 81 to 102 and its hand calculation is `tests/scenario_114_midway.rs`, written on Nov 22, 2026; stage B is built and its first game played ("Stage B: as built"), the band waiting on the architect's reading of that game.
 
 ## Why
 
@@ -286,3 +286,57 @@ A reviewer read rules 81 to 99 as first written and the hand calculation against
 - **Midway's stock was 2,000 t on working not shown;** the working comes to 2,000 t for the five days with nothing to spare. Rule 94.
 - **Left unsaid for the build:** fuel aboard, supply aboard, that the invasion force starts stopped, Wake's fuel, the order of the air groups. The hand calculation now says each.
 - **What to expect was not said.** Rules 101 and 102.
+
+## Stage B: as built
+
+Built on Nov 22, 2026 on the branch `midway-build`, to rules 81 to 102 and the hand calculation in `tests/scenario_114_midway.rs`. No rule of the simulation was added or changed.
+
+**What was built, and where.**
+
+- **The transports' class:** class 19, "Placeholder transport, 8.8 knots", `data/reference/ship_classes_placeholder_transport_8_8_knots.csv`: the Coral Sea's class 14 with a cruise and a top speed of 8.8 kn, 600 berths, marked a placeholder, its header saying that the speed stands on rows 7699 and 7706 alone.
+- **The file of sides:** `data/reference/class_sides_midway.csv`, a row for every class of the list (5000 to 5036, Zuiho's, Gwin's and Mikazuki's among them though no ship of the scenario is of them), every type (5100 to 5114) and class 19 (both sides).
+- **Ships' experience (rule 93):** derived, by an `[experience]` block in `data/derivation/midway.toml` for the scenario's ships (`ship_experience_midway.ships.csv`), engagement `midway`, windows to 4 June 1942. Worden is left out of the block: her one commissioning row (ship_facts 202) is unconfirmed and gives a year only, and with her in it the tool reports a problem; Farragut was left out of the Coral Sea's block for the same reason. She has the game's own value for a ship not answered, and the header says so.
+- **The list's header** on the Japanese carriers' aircraft is corrected to rules 73 and 74 (93, 70 and 81, 244 in all). No generated file changed for it. `oob-derive -- data/derivation/midway.toml --check` passes.
+- **Frozen copies** in `data/reference/step1/` of the new class file and the file of sides, and the frozen `aircraft_types_midway.csv` brought up to the live one (types 5113 and 5114), each with its line in that folder's README.
+- **The scenario:** `data/scenarios/midway/base_midway.toml` and its four files `01a` to `01d_midway.toml`, made by `scripts/midway/make_files.py [--check]` as the Coral Sea's are. 92 ships, 4 task forces, 2 bases, 3 land units, 32 air groups, ids in the order of the hand calculation. Every ship's fuel is her class's full figure.
+- **The tests:** `tests/scenario_114_midway.rs`, a test for each of statements 1 to 26 and the four properties; all pass, none ignored. Scenario 104's statement 23 is widened to these four files and the table's copies of b, c and d: its doc comment gains one sentence in the form of the earlier additions, and its test the new files.
+- **The table:** an entry `midway` in `table/scenarios.json`, after the Coral Sea, on `data/map/midway.csv`, with its seven pairings; its directives `table/directives/midway_allied.json` and `midway_japanese.json`; the table's copies of files b, c and d in `data/scenarios/table-hunger/`, by `scripts/table-copies/make_copies.py`; and `table/check_screen.py`'s check of the listed order and counts extended for it. The check passes.
+- **The first game:** `docs/validation/midway-first-game.md`.
+
+**Readings of the build, where the hand calculation is silent.** Each follows the Coral Sea's base file, and each is the architect's to overrule.
+
+- The figures files are the Coral Sea's (the live search, surface and air combat, upkeep, fatigue, air supply, ground and trial figures, the port sizes), and `orders_inside_a_day = true`, as in scenarios 103 and 105. Command levels are off.
+- Midway has the airfield a base has by default, and 4 aircraft repaired a day, a placeholder: the figure the Coral Sea and the 39 days give Rabaul, their base with aircraft (Port Moresby had no aircraft and no figure). No anti-aircraft figure (a gap, as the hand calculation says).
+- Wake has `airfield = false`, for rule 81's "no airfield".
+- The ground figures are the live `ground.toml` in the scenario's files, and `ground_hunger.toml` in the table's copies (decision 0205), as for every file with land units.
+- The island table names one island, Midway, of base 1, for the table's list.
+- The Allied deny's targets limit has no `waters_first`: the hand calculation names none.
+- Ships' names: "USS" before the American names and none before the Japanese, as in the Coral Sea's file. The land units are named for their units: "The garrison of Midway", "Ichiki Detachment", "2nd Combined Special Naval Landing Force".
+- The history for the end paper: "Akagi, Kaga, Soryu and Hiryu and the cruiser Mikuma were sunk. Yorktown and the destroyer Hammann were lost. The invasion force turned back on 5 June and landed no one at Midway." The missions: Allied "Hold Midway and sink the Japanese carriers."; Japanese "Land the invasion force's men at Midway and sink the American carriers."
+
+**What did not hold.** Every statement holds as written. Four were read, and the reading is the test's: statements 14 and 16 count the steps of the agent's sea route as the hexes after the start; statement 18's "sailed for Midway" is that task force 4 has left (-17,4) and its route's first waypoint is Midway (its route goes on to Wake, the way home); statement 19's "waters denied" is the deny's area, within 4 of (1,-1), where each of the three hexes is exactly 4 away.
+
+**The first game** (file a, seed 1): a decisive Japanese victory, 49.41 to 7.6. All 4,507 men landed at 1559 on 6 June and after, with no fight ashore. No carrier was sunk; Akagi was put out of action by Midway's bombers. The American carriers found the Japanese carriers on 4 June but never struck: they decide to close only at a day's start, on a contact held as a carrier, and closed once, to 208 nm, beyond the SBD-3's 200. The Japanese carriers never found the American carriers: their search looked only toward Midway. Rule 101's landing held to the hour; its "the game turns on the carriers" did not, because there was no carrier battle. Rule 102 held. The band of 1,000 games has not been run: it waits for the architect's reading of this game.
+
+## Stage B: the architect's rulings on the build and the first game
+
+Made on Nov 22, 2026 on the build's report, the first game's report (`docs/validation/midway-first-game.md`) and the scenario's header.
+
+1. **Every statement of the hand calculation holds,** and the build's readings are accepted: the Coral Sea's figures files, orders inside a day, Midway's four aircraft repaired a day as a placeholder, Wake with no airfield, the names, and Worden left at the loader's experience for want of a row that dates her.
+2. **The first game is a decisive Japanese victory, 49.41 to 7.6, with no carrier battle.** All 4,507 men landed, to the hour rule 101 gave; no carrier was sunk on either side; the American carriers launched no strike in five days. Rule 102 held in full: the Japanese carriers were at their hex north of Midway by the first evening and were found first, by a search that Wake pointed across them.
+3. **Why the American carriers never struck, as the game's own record has it.** The staff is asked once a day and closes only on a contact it then holds as a carrier: the sighting of 4 June came a pulse after that day's asking. On 5 June it closed on a report one hex off and stopped at the first hex within its torpedo planes' 175 nm of that report, 208 nm from where the carriers were, eight miles past its dive bombers' reach. On the other days the search called the carrier force battleships or cruisers, and at balanced it does not close on those.
+4. **Nothing is changed for it.** The scenario is merged as it was specified before the game, and the report stands as written. These are things of the staff's rules, not of this scenario's data, and the same rules play the Coral Sea and the Eastern Solomons.
+5. **What is put to the designer, with the band:**
+   - **The American carriers' station.** The orders hold them at the point where they waited on 2 and 3 June. The rows have them steaming south-west through the night of 3 June to be about 200 nm north of Midway at dawn on the 4th (5743, 5747): an order to operate from there is what they did, and would put them in reach on the morning the battle was fought. It was not in the orders written before the game, and changing an order after a game is seen is for him to allow.
+   - **A staff that closes inside a day,** on a sighting of that morning, as a commander would.
+   - **A margin on the hex a carrier force closes to,** so that a report a hex off does not leave it just out of reach, and closing by the reach of the aircraft that will strike.
+   - **The scoring,** in which the landing alone is a decisive victory.
+6. **The band, read on Nov 22, 2026: far outside.** Over seeds 1 to 1,000 of the file in which both sides are given their orders, at the commit of the build, the Japanese side is ahead in 983 games and the Allied side in 17; 947 are decisive Japanese victories. The counts behind it:
+   - **The landing:** every man lands in 969 games, some in 12 and none in 19, in which the invasion force is still on its way when the game ends. It is never turned back and never sunk; a transport is sunk in 17 games.
+   - **The Japanese carriers:** none sunk in 436 games, one in 535, two in 29, never more. Akagi is the one sunk in 564 games and Kaga in 29; Soryu and Hiryu are never sunk. One or more is out of action and afloat in 787.
+   - **The American carriers:** none is ever sunk or put out of action. A group of theirs launches at ships in 780 games.
+   - **No Japanese carrier group ever strikes an American carrier force.** Every launch of theirs, in every game, is at Midway.
+   - **Aircraft lost, the mean of a game:** 104 Allied and 46 Japanese.
+7. **So the first game was the common game in its result and not in its detail:** the American carriers do strike in most games, and sink a carrier in more than half. What does not vary is that the Japanese carriers never look for them, never find them and never strike them, and that the landing is made. The game as the staffs play it is the landing against one carrier.
+8. **The scenario is merged and listed at the table all the same, on the designer's word to add Midway.** The Coral Sea was listed only when it was inside the band; this one is listed outside it, and that is said here and to him. A person in the Allied seat plays against these Japanese orders, not against the Allied staff's.
+9. **Nothing is changed to enter the band.** What may be done is rule 5's list, to which the band adds one: **the Japanese carriers' search,** which under a take looks only at the place to be taken.

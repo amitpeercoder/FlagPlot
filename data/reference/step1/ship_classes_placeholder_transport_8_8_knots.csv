@@ -1,0 +1,18 @@
+# FROZEN: a copy of data/reference/ship_classes_placeholder_transport_8_8_knots.csv
+# as first made, on Nov 22, 2026, for scenario 114, Midway (decision 0198, stage B)
+# (docs/step2-spec.md, "Tests while figures move"). Do not edit.
+# PLACEHOLDER DATA. One invented class for scenario 114, Midway (decision
+# 0198, rules 33, 64, 65 and 88; the hand calculation of
+# tests/scenario_114_midway.rs, "The transports"). It is not historical and
+# must not be used for validation.
+# Class 19, Placeholder transport, 8.8 knots, is class 14 of
+# ship_classes_placeholder_transport_6_5_knots.csv (the Coral Sea's
+# placeholder transport) with a cruise speed and a top speed of 8.8 kn in
+# place of 6.5. The 8.8 kn stands on two positions alone (rule 65): 700 nm
+# from Midway at 0925 on 3 June and 560 nm at 0120 on 4 June (engagement_events
+# 7699 and 7706) are 140 nm in 15 hours 55 minutes. No other figure of it
+# rests on a row. It is in a file of its own so that no other scenario's data
+# files change.
+# The columns are those of ship_classes.csv, and troop_capacity_men last.
+id,name,kind,cruise_speed_kn,max_speed_kn,fuel_capacity_t,endurance_nm,cargo_capacity_t,main_guns,gun_rounds_per_min,gun_rounds_per_gun,gun_damage,torpedo_tubes,torpedo_tubes_one_side,torpedo_damage,toughness,radar,aircraft_capacity,anti_aircraft,troop_capacity_men
+19,"Placeholder transport, 8.8 knots",transport,8.8,8.8,1000,10000,3000,0,0,0,0,0,0,0,300,0,0,0,600
