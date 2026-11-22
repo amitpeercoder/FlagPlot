@@ -155,7 +155,8 @@ def orders_and_signed():
           "SIGNED is read from queued at each refresh, TAKE BACK withdraws one entry by its place and as_of, and a refusal is said beside the entry")
     check("function canSign() { return !WATCH && !M.over && !playing; }" in text and "if (canSign()) {" in text and "(e.goes_with || [])" in text,
           "TAKE BACK is offered only while the clock is stopped and the seat may sign; what goes with an entry is not a line of its own")
-    check("'Acts at '" in text and "'Waits for 1800'" in text, "each entry says when it acts, \"Acts at 1200\" or \"Waits for 1800\"")
+    check("function actsWords(e)" in text and "clock.at === 'dusk' ? ACTS_TONIGHT : a.at === 'pulse' ? ACTS_NOW : ACTS_DUSK" in text,
+          "each entry says when it acts in the words of ACTS: at dusk \"Acts at 1800, with tonight's orders\", inside a day \"Acts at once\" or \"Acts at 1800, for the coming day\"")
     check("refusedIn(home, words)" in text and "'NOT SENT'" in text and "act(tool, args, done, home)" in text,
           "a refusal is said as NOT SENT in the form, paper or entry that was signed")
     check("else if (kind === 'confirm') $('game-says')" in text and "else if (kind === 'running')" in text and "'clock-doing'" in text
@@ -210,8 +211,8 @@ def one_order_paper():
     check(all(a >= 0 for a in at) and at == sorted(at), "the paper's parts are in order: TO, THE ORDER, IN WHOSE HANDS, ACTS, the staff's reading, what was sent, SIGN AND SEND, TEAR UP")
     check('id="o-pv" open' in form and "$('o-pv').open = true" in text and 'id="p-dry"' in form and "OFFERED.trial" in text,
           "the staff's reading is shown open, with DRY RUN where the game has a trial")
-    check("function actsText(orders)" in text and "'Acts at once, at '" in text and "'Acts at 1800, for the coming day'" in text and "'Acts at once: '" in text,
-          "ACTS says before signing when the order acts: at once, at 1800 for the coming day, or each part by itself")
+    check("function actsText(orders)" in text and "return ACTS_NOW;" in text and "return ACTS_DUSK;" in text and "return ACTS_TONIGHT;" in text and "ACTS_NOW + ': ' + names(now)" in text,
+          "ACTS says before signing when the order acts: at dusk with tonight's orders, inside a day at once or at 1800 for the coming day, or each part by itself")
     check("function handsText(d)" in text and "STAFF_HANDS = 'you keep it out of the staff\u2019s plans'" in text and "'The staff\u2019s now. Yours once signed: '" in text,
           "IN WHOSE HANDS says, for a unit, whose it is now and whose it will be once signed, in decision 0216's words")
     check('id="p-back"' in form and "'\u2190 BACK TO '" in text and "from.go()" in text and "from: from" in text,
@@ -339,6 +340,135 @@ def the_fold_and_the_keys():
     card = re.search(r'<aside[^>]*id="card"[^>]*>', text).group(0)
     check("aria-live" not in card and "setAttribute('aria-label', String(title))" in text, "a card is not one live region: its title is its label, said once")
     check("e.ctrlKey || e.metaKey" in text and "p-sign').click()" in text, "an order paper is signed from the keyboard from anywhere in it")
+
+
+# What the page's script is given to run its own wording in node: the page's own functions cut from its text, with the few
+# things they read from the rest of the page stood in (the names the table holds, no map, a document that only collects text).
+NODE_PRELUDE = r"""
+const M = { names: { 'ship:1': 'USS Enterprise', 'base:1': 'Lunga' }, hexNames: {} }, hexAt = {}, showHexes = false;
+function hexMiles() { return 40; } function whereIs() { return ''; }
+class Node { constructor(tag, cls) { this.tag = tag; this.className = cls || ''; this.kids = []; this.own = ''; this.attrs = {}; }
+  appendChild(k) { this.kids.push(k); return k; } setAttribute(k, v) { this.attrs[k] = v; }
+  set textContent(v) { this.kids = []; this.own = v; } get textContent() { return this.own + this.kids.map(k => k.textContent).join(''); } }
+const made = {}; const $ = id => made[id] || (made[id] = new Node('div'));
+function el(tag, cls, text) { const n = new Node(tag, cls); if (text != null) n.own = text; return n; }
+const document = { createTextNode: t => { const n = new Node('#text'); n.own = t; return n; } };
+"""
+
+
+def run_in_node(code, data):
+    """Runs `code` (after the prelude) in node with `data` as its JSON argument and returns what it printed as JSON."""
+    import shutil
+    node = shutil.which("node")
+    check(node is not None, "node is found, to run the page's own wording")
+    with tempfile.TemporaryDirectory() as folder:
+        path = os.path.join(folder, "run.js")
+        with open(path, "w", encoding="utf-8") as out:
+            out.write(NODE_PRELUDE + code + "\nconst input = JSON.parse(process.argv[2]); console.log(JSON.stringify(main(input)));\n")
+        done = subprocess.run([node, path, json.dumps(data)], capture_output=True, text=True)
+        check(done.returncode == 0, "the page's own wording runs in node" + ("" if done.returncode == 0 else ": " + done.stderr.strip()[:300]))
+        return json.loads(done.stdout)
+
+
+def page_text():
+    with open(os.path.join(HERE, "index.html"), encoding="utf-8") as page:
+        return page.read()
+
+
+def the_words_and_what_the_papers_say():
+    """The words (decision 0221, stage 4, the second half), by the page's text and by its own wording run in node: one word for
+    each thing in every place; ACTS and SIGNED in one wording; no caption that explains a rule; the engine's text worded before it
+    is shown; SINCE with a type short and a place with its hex; a place said once not said in full again in a list; the prompt at
+    the chart's top centre; SIGNED never silently stale; an interrupt's reasons opened as a paper."""
+    import re
+    text = page_text()
+    # 1. one word for each thing
+    check("var HELD_BY_YOU = 'Yours: ' + STAFF_HANDS;" in text and "function handsHeld(hold)" in text and text.count("handsHeld(") >= 5,
+          "a unit the player holds is \"Yours: you keep it out of the staff's plans\" on every card, in the paper and in the staff's menu")
+    check(not any(w in text for w in ("kept out of the staff\\'s plans by you", "held by your direct order", "'Held from the staff", "': kept from the staff'", "'Released. ", "'Release'", "Yours: you hold it", "' from the staff.'")),
+          "no other word names a unit that is held: not \"kept from the staff\", \"held from the staff\", \"released\" or \"you hold it\"")
+    check("var RETURNED = 'Returned to the staff." in text and text.count("RETURNED") >= 5 and "'Return to the staff'" in text,
+          "a unit given back is \"returned to the staff\", in the button, the line and the status")
+    check("': withdrawn'" in text and "'The order is withdrawn from 1800.'" in text and "'The draft is torn up. Nothing was ordered.'" in text and "'TAKE BACK'" in text and "NOT TAKEN BACK" in text,
+          "an order to the staff is withdrawn, a draft is torn up, a signed entry is taken back")
+    # 2. ACTS and SIGNED say one wording
+    check("var ACTS_TONIGHT = 'Acts at 1800, with tonight\\u2019s orders', ACTS_NOW = 'Acts at once', ACTS_DUSK = 'Acts at 1800, for the coming day'" in text
+          and "'Waits for 1800'" not in text and "'Acts at once, at '" not in text and "hourNow" not in text,
+          "ACTS and SIGNED say it in the same three sentences, and the old \"Waits for 1800\" and \"Acts at once, at 1800\" are gone")
+    check("staff ? (clock.at === 'dusk' ? ACTS_TONIGHT : ACTS_DUSK)" in text and "was.acts" in text and "' Not yet in effect.'" not in text,
+          "an order to the staff and the card's \"Ordered\" line say it in the same words")
+    # 3. captions that explain a rule are gone
+    gone = ["Capture its places, garrison and supply them", "Land men and capture the place. Nothing is ordered for afterwards", "Air raids on its airfield until it can fly no aircraft",
+            "Its men defend it; it is kept supplied", "Supply runs keep 30 days of stock there. Nothing else.", "Fighters over it and searches round it. Nothing else.",
+            "Search them and strike any enemy ship that enters", "The same, over a wider circle.", "The carrier force goes there and works from it", "The force goes there and waits, to meet enemy ships",
+            "A course ends the fuelling", "your risk goes with the order", "The draft is not signed. Sign it on the order", "The game is as it was.", "Giving it frees every plan of yours that waits on it",
+            "play it again with", "What was already ordered stands", "the units it would take lie idle in between", "A claim is what they believe", "Nothing is ordered until you sign"]
+    check(not [g for g in gone if g in text] and "el('small', '', e[2])" not in text and "b.title = e[2]" not in text,
+          "no caption explains a rule: the notes under each end of an order to the staff, the dry run's \"sign it on the order\", its foot and its sheet lines, and the preview's risk note are gone")
+    # 4. the situation's text goes through the table's words
+    check("function situationDoc(doc, text)" in text and "situationDoc($('sheet-doc')" in text and "$('sheet-text').textContent = b.text" not in text,
+          "the situation is shown as a paper of its sections with each line through the table's words, not as the engine's raw text")
+    # 5. SINCE: a type short, a place with its hex
+    check("shortTypes(list.replace(" in text and "shortType(m[4])" in text and "function hexPlace(q, r)" in text and text.count("hexPlace(") >= 3,
+          "SINCE, the war diary and the evening report say an aircraft type short and a position with its hex in brackets, linked")
+    said = run_in_node(text[text.index("  function cleanName"):text.index("  function sayIntent")] + text[text.index("  // A list of \"12 Aichi"):text.index("  // ---- a force asks leave")]
+                       + "\nfunction main(x) { return [shortTypes(x[0]), shortType(x[1])]; }",
+                       ["12 Aichi D3A1 Type 99 Carrier Bomber Model 11, 3 Mitsubishi A6M2 Type 0 Carrier Fighter Model 21, 2 Douglas SBD-3 Dauntless, 1 unidentified", "Nakajima B5N2 Type 97 Carrier Attack Bomber Model 12"])
+    check(said == ["12 D3A1, 3 A6M2, 2 SBD-3 Dauntless, 1 unidentified", "B5N2"], f"an aircraft type is said short as the slips say it ({said[0]})")
+    # 6. a place said once is not said in full again
+    check("function taskWords(tag, text, said)" in text and "(again ? 'there'" in text and "said = {}" in text and "taskWords('span', paperText(it, t.n), said)" in text and "placeSpan(a.hex, said)" in text
+          and "typeof it === 'function' ? it()" in text,
+          "in one task's WHY a place is said in full once, with its latitude, longitude and hex, and \"there\" afterwards, in the order the lists are drawn")
+    # 7. the prompt at the chart's top centre
+    css = re.search(r"#prompt \{([^}]*)\}", text).group(1)
+    check("top: 12px" in css and "bottom: 76px" not in css and "margin: 0 auto" in css and "right: 200px" in css and "left: calc(var(--sp-w) + 16px)" in css
+          and "body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px); }" in text
+          and "top: calc(var(--sp-h, 190px) + 8px)" in text and "setProperty('--sp-h'" in text and "body.prompting .order" in text,
+          "the prompt lies at the chart's top centre between the stop paper and the order paper, and under the head and its strip in the drawer layout, clear of the order paper and the controls")
+    # 8. SIGNED is never silently stale
+    check("function staleSigned()" in text and "Could not read what is signed. " in text and "'READ AGAIN'" in text and "refresh().catch(function () { staleSigned(); })" in text
+          and text.count("signedRefresh()") >= 8 and "return refresh();\n      })" not in text,
+          "a failed read after a signing or a taking back says \"Could not read what is signed. READ AGAIN\" where SIGNED is, and READ AGAIN reads again")
+    check("function signedRefresh() { return refresh().catch(function () { staleSigned(); }); }" in text and "}, function (e) { say('refused', e.message, home); return false; }); }" in text
+          and "function (err) { b.disabled = false; backRefused" in text,
+          "a read that fails is not taken for the order's refusal: a sign or a take back that went is not reported as NOT SENT or NOT TAKEN BACK")
+    # 10. an interrupt's reasons opened as a paper
+    check("function readFired(f)" in text and "api('why', { number: n })" in text and "button(a, 'WHY', true, function () { readFired(f); })" in text and "function firedWords(w)" in text,
+          "a firing of the staff's, with reasons, opens them as a paper from its WHY, and its words are the table's")
+    said = run_in_node(text[text.index("  function cleanName"):text.index("  function sayIntent")] + text[text.index("  // What the engine says of a firing"):text.index("  function showWhy() {")]
+                       + "\nfunction main(x) { return x.map(firedWords); }",
+                       ["standing ship_lost fired: ship:1 was lost", "standing cannot_meet fired: plan:2 cannot meet its intent", "interrupt:3 fired, base:1 at 8.3 days of supply, below 10",
+                        "standing waits_for_leave fired: plan:1 waits for the commander's leave"])
+    check(said == ["USS Enterprise was lost", "Plan 2 cannot meet its intent", "Lunga has 8.3 days of supply, below your 10", "Plan 1 waits for your leave"],
+          f"what a firing says has no handle in it ({said})")
+
+
+def a_refusal_through_the_page(bridge):
+    """A refusal shown as NOT SENT, forced (decision 0221, stage 4). The engine refuses a malformed order in a real issue_orders
+    call through the bridge; the page's own way from that answer to its words, from `signUnit` (the expression it uses for a
+    refused result), `refusalWords` with its table of refusals and `paperLines`, which draws the line, is cut from the page's text
+    and run in node on that answer. What is chosen: the real engine's refusal, the page's real functions, a stand-in for the
+    document that only collects text; the paper itself in a browser is tried by hand."""
+    print("-- a refusal said as NOT SENT: a malformed order through the page's own functions", flush=True)
+    check(begin(bridge, "guadalcanal-39-days", "person", "engine") == {"ok": True}, "begun")
+    person = Person(bridge.table)
+    answer = person.call("issue_orders", {"orders": [{"unit": "task_force:1", "order": {"kind": "set_route", "waypoints": [[300, 300]]}},
+                                                     {"unit": "task_force:77", "order": {"kind": "set_speed", "speed": "full"}}]})["ok"]
+    results = answer["results"]
+    check(answer["queued"] == 0 and [r["status"] for r in results] == ["refused", "refused"] and all(r.get("reason") for r in results), f"the engine refuses both malformed orders: {results}")
+    text = page_text()
+    import re
+    expression = re.search(r"why: (refusalWords\(r \? .*? : 'refused'\))", text)
+    check(expression is not None, "the page words a refused result with refusalWords from its reason")
+    code = (text[text.index("  function cleanName"):text.index("  function sayIntent")] + text[text.index("  function orderWords"):text.index("  function nameOf(")]
+            + text[text.index("  function commas(n)"):text.index("  function commas(n)") + 400].split("\n  }\n")[0] + "\n  }\n"
+            + text[text.index("  var REFUSALS = ["):text.index("  // What the status line says of orders taken in")]
+            + text[text.index("  function paperLines(lines)"):text.index("  function signUnit()")]
+            + "\nfunction main(results) { const lines = results.map((r, i) => ({ ok: false, label: ['Course', 'Speed'][i], why: " + expression.group(1) + " })); paperLines(lines); return $('p-says').kids.map(k => k.textContent); }")
+    said = run_in_node(code, results)
+    check(said[0] == "Course: NOT SENT — Waypoint (300,300) is off the map." and said[1] == "Speed: NOT SENT — It is not one of yours.",
+          f"each refused line says NOT SENT with the engine's reason in the table's words ({said})")
+    check(post(bridge.table + "/new") == {"ok": True}, "the game is put away")
 
 
 def queue_through_the_bridge(bridge):
@@ -926,6 +1056,7 @@ def main():
     the_trail_holds_no_duplicate()
     the_plan_paper_has_no_rule_caption()
     the_fold_and_the_keys()
+    the_words_and_what_the_papers_say()
     if not os.path.exists(args.sim_cli):
         sys.exit(f"{args.sim_cli} is not built: cargo build --release -p sim-cli")
     with tempfile.TemporaryDirectory() as keep:
@@ -934,6 +1065,7 @@ def main():
             listed = the_screen(bridge)
             every_game(bridge, listed)
             orders_on_the_card(bridge)
+            a_refusal_through_the_page(bridge)
             queue_through_the_bridge(bridge)
             the_paper_in_words(bridge)
             midway_on_its_chart(bridge)
