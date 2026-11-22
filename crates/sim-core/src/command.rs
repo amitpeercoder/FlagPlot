@@ -46,7 +46,8 @@ use std::sync::Mutex;
 use crate::fixed::Fixed;
 use crate::hex::Hex;
 use crate::ids::{
-    AirGroupId, BaseId, EventId, IntentId, InterruptId, LandUnitId, OrderId, ShipId, TaskForceId,
+    AirGroupId, BaseId, EntityRef, EventId, IntentId, InterruptId, LandUnitId, OrderId, ShipId,
+    TaskForceId,
 };
 use crate::orders::{Issuer, OrderKind};
 use crate::refdata::ShipKind;
@@ -2772,6 +2773,62 @@ pub struct Reason {
     /// from the side's state and makes it a cause of the order and of its
     /// reason. Added at the end.
     pub answer_of: Option<TaskForceId>,
+    /// What the commander should weigh before he approves, each with the unit
+    /// or place it is of, said apart from the working (decision 0217, rules 4
+    /// and 5). Added at the end.
+    pub cautions: Vec<Caution>,
+}
+
+/// A short statement of something a commander should weigh before he
+/// approves a plan, with the unit or place it is of (decision 0217, rule 4).
+/// It names only what the side holds: its own forces, the enemy bases on its
+/// map and its contacts.
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct Caution {
+    pub kind: CautionKind,
+    /// The unit it is of: an enemy base whose circle holds the station, or
+    /// the force whose fuel was not measured.
+    pub of: Option<EntityRef>,
+    /// The place it is of: the centre of the circle that holds the station.
+    pub hex: Option<Hex>,
+    pub words: String,
+}
+
+/// What a caution says (decision 0217, rule 4). New kinds are added at the
+/// end; a code is never renumbered.
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+pub enum CautionKind {
+    /// The station chosen lies inside the circle of an enemy base or of a
+    /// contact.
+    StationInDanger,
+    /// The force has no home port the staff knows, so its fuel was not
+    /// measured against a passage home.
+    FuelNotMeasured,
+}
+
+impl CautionKind {
+    /// The stable code of the kind. Never renumbered.
+    pub fn code(self) -> u8 {
+        match self {
+            CautionKind::StationInDanger => 1,
+            CautionKind::FuelNotMeasured => 2,
+        }
+    }
+
+    /// The name of the kind, as a saved game and the agent write it.
+    pub fn name(self) -> &'static str {
+        match self {
+            CautionKind::StationInDanger => "station_in_danger",
+            CautionKind::FuelNotMeasured => "fuel_not_measured",
+        }
+    }
+
+    /// The kind named `name`, where there is one.
+    pub fn from_name(name: &str) -> Option<CautionKind> {
+        [CautionKind::StationInDanger, CautionKind::FuelNotMeasured]
+            .into_iter()
+            .find(|k| k.name() == name)
+    }
 }
 
 // ---------------------------------------------------------------------------

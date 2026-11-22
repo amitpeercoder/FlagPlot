@@ -2402,6 +2402,13 @@ pub(super) fn describe(
             if let Some(force) = reason.answer_of {
                 data = data.id("answer_of", force);
             }
+            // The cautions' words (decision 0217); written only where there
+            // are any.
+            if !reason.cautions.is_empty() {
+                let cautions: Vec<&str> =
+                    reason.cautions.iter().map(|c| c.words.as_str()).collect();
+                data = data.with("cautions", Field::Str(cautions.join("; ")));
+            }
             ("staff_reason", data)
         }
         EventKind::HeldByOrder {

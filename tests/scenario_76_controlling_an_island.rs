@@ -202,6 +202,15 @@
 //!   what the Allied side cannot see give the same orders and reasons; a
 //!   save on day 7 and a resume give the same game; every scenario built
 //!   before this one gives the events it gave.
+//!
+//! # Decision 0217
+//!
+//! The architect's statement 8: "In scenario 76's carrier variant the deny
+//! the staff forms under the order to control the island has a carrier task
+//! under it, and on no day of the 14 is the notice that it cannot be met
+//! handed in for that deny; its reason for the bases names the carrier
+//! force first and has no 'cannot meet'. Every order of every day is what
+//! it was."
 
 // ---------------------------------------------------------------- The harness
 
@@ -1669,4 +1678,71 @@ fn a_hold_under_the_island_covers_its_base_with_the_groups_there() {
         "{:?}",
         g.orders(1)
     );
+}
+
+/// Decision 0217, statement 8 (the architect's): in the carrier variant the
+/// deny the staff forms under the order to control the island has a carrier
+/// task under it, and on no day of the 14 is the notice that it cannot be
+/// met handed in for that deny; its reason for the bases names the carrier
+/// force first and has no "cannot meet". Every order of every day is what
+/// it was (the orders and commands of the 14 days were dumped before the
+/// change and after it and compared: no line differs).
+#[test]
+fn decision_0217_statement_8_the_islands_deny_is_met_by_its_carrier_task() {
+    let g = play_carrier(&with_a_carrier());
+    // The deny is intent 5; the carrier task under it is intent 6.
+    let carrier = IntentKind::OperateCarriers {
+        force: TaskForceId::new(2),
+        hex: A,
+    };
+    assert_eq!(g.formed(carrier), vec![(1, 5)]);
+    assert_eq!(g.days(), 14);
+    for day in 1..=14 {
+        let handed = &g.handed[&day];
+        let about_the_deny = |r: &Reason| r.worked.contains("No base intent:5 may use");
+        // No notice that the order cannot be met rests on a reason of the
+        // deny.
+        for notice in &handed.notices {
+            if notice.kind != sim_core::command::NoticeKind::CannotMeet {
+                continue;
+            }
+            if let sim_core::command::NoticeBasis::NoOrder(i) = notice.rests_on {
+                let reason = &handed.no_orders[i];
+                assert!(
+                    !reason.worked.contains("intent:5"),
+                    "day {day}: the notice that intent 5 cannot be met: {}",
+                    reason.worked
+                );
+            }
+        }
+        // The deny's reason for the bases names the carrier force first.
+        let reasons: Vec<&Reason> = handed
+            .no_orders
+            .iter()
+            .filter(|r| about_the_deny(r))
+            .collect();
+        assert_eq!(reasons.len(), 1, "day {day}");
+        let worked = &reasons[0].worked;
+        assert!(
+            worked.starts_with(
+                "intent:6, to operate the carrier force task_force:2 from (0,0), serves intent:5."
+            ),
+            "day {day}: {worked}"
+        );
+        assert!(
+            !worked.to_lowercase().contains("cannot meet"),
+            "day {day}: {worked}"
+        );
+        assert!(
+            worked.find("task_force:2") < worked.find("base:1"),
+            "day {day}: {worked}"
+        );
+    }
+    // The island's neutralise, intent 7, is not in the ruling: it still
+    // says it cannot be met, on the days it had.
+    assert!(g.handed[&1].notices.iter().any(|n| {
+        n.kind == sim_core::command::NoticeKind::CannotMeet
+            && matches!(n.rests_on, sim_core::command::NoticeBasis::NoOrder(i)
+                if g.handed[&1].no_orders[i].worked.contains("intent:7"))
+    }));
 }

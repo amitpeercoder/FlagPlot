@@ -314,6 +314,7 @@ fn reason(intent_n: u32, worked: &str) -> Reason {
         worked: worked.to_string(),
         would_change: vec!["more stock".to_string()],
         answer_of: None,
+        cautions: Vec::new(),
     }
 }
 

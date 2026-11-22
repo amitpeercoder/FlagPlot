@@ -1963,6 +1963,16 @@ fn tree_json(n: &Names<'_>, view: &SideView<'_>, proposal: &Proposal) -> Value {
             "maker": "staff",
             "text": command_text(n, &command.kind, None),
             "reason": n.value(&reason_to_json(&command.reason)),
+            // Decision 0217: what the commander should weigh, apart from
+            // the working; an empty list where there is none.
+            "cautions": n.value(&Value::Array(
+                command
+                    .reason
+                    .cautions
+                    .iter()
+                    .map(crate::commands::caution_to_json)
+                    .collect(),
+            )),
         });
         if let (Some(map), Value::Object(kind)) = (entry.as_object_mut(), kind_json(n, *kind)) {
             map.extend(kind);

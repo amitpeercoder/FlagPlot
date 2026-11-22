@@ -63,15 +63,18 @@ use std::collections::BTreeSet;
 
 use serde_json::{json, Map, Value};
 use sim_core::command::{
-    Addressee, Awaited, ChainLink, CommandKind, Evidence, ForcesLimit, HeldSetting, HoldTarget,
-    IntentKind, InterruptCondition, InterruptRef, InterruptSetting, Knowledge, Leave, Limit, Maker,
-    NoticeBasis, NoticeKind, PlanId, PlanOutcome, PursueLeave, PursuitFind, PursuitNotice, Reason,
-    Risk, RunDays, RunSpec, Serves, StaffCommand, StaffDecisions, StaffNotice, StaffOrder,
-    StandingKind, StandingSubject, TargetsLimit, Want, Wants,
+    Addressee, Awaited, Caution, CautionKind, ChainLink, CommandKind, Evidence, ForcesLimit,
+    HeldSetting, HoldTarget, IntentKind, InterruptCondition, InterruptRef, InterruptSetting,
+    Knowledge, Leave, Limit, Maker, NoticeBasis, NoticeKind, PlanId, PlanOutcome, PursueLeave,
+    PursuitFind, PursuitNotice, Reason, Risk, RunDays, RunSpec, Serves, StaffCommand,
+    StaffDecisions, StaffNotice, StaffOrder, StandingKind, StandingSubject, TargetsLimit, Want,
+    Wants,
 };
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
-use sim_core::ids::{AirGroupId, BaseId, IntentId, InterruptId, LandUnitId, ShipId, TaskForceId};
+use sim_core::ids::{
+    AirGroupId, BaseId, EntityRef, IntentId, InterruptId, LandUnitId, ShipId, TaskForceId,
+};
 use sim_core::refdata::ShipKind;
 
 use crate::orders::{order_from_json, order_to_json, unit_text};
@@ -1162,7 +1165,70 @@ pub(crate) fn reason_to_json(reason: &Reason) -> Value {
     if let Some(force) = reason.answer_of {
         body["answer_of"] = json!(force.raw());
     }
+    // Decision 0217: written only where there are any, so that a game saved
+    // before it, and every reason without one, reads and writes as it did.
+    if !reason.cautions.is_empty() {
+        body["cautions"] = Value::Array(reason.cautions.iter().map(caution_to_json).collect());
+    }
     body
+}
+
+/// A caution as JSON (decision 0217): its kind, the unit it is of as a
+/// handle object and the place as a hex, each left out where there is none.
+pub(crate) fn caution_to_json(caution: &Caution) -> Value {
+    let mut body = json!({ "kind": caution.kind.name() });
+    if let Some(of) = caution.of {
+        body["of"] = json!({ "handle": of.to_string() });
+    }
+    if let Some(hex) = caution.hex {
+        body["hex"] = json!({ "q": hex.q, "r": hex.r });
+    }
+    body["words"] = json!(caution.words);
+    body
+}
+
+/// The unit a handle names, as `EntityRef` writes it: `base:2`,
+/// `task_force:1`, `ship:3`, `air_group:4` or `land_unit:5`.
+fn entity_from_handle(handle: &str) -> Result<EntityRef, String> {
+    let bad = || format!("\"{handle}\" is not a handle such as \"base:2\"");
+    let (kind, number) = handle.split_once(':').ok_or_else(bad)?;
+    let raw: u32 = number.parse().map_err(|_| bad())?;
+    match kind {
+        "base" => Ok(EntityRef::Base(BaseId::new(raw))),
+        "task_force" => Ok(EntityRef::TaskForce(TaskForceId::new(raw))),
+        "ship" => Ok(EntityRef::Ship(ShipId::new(raw))),
+        "air_group" => Ok(EntityRef::AirGroup(AirGroupId::new(raw))),
+        "land_unit" => Ok(EntityRef::LandUnit(LandUnitId::new(raw))),
+        _ => Err(bad()),
+    }
+}
+
+fn caution_from_json(value: &Value) -> Result<Caution, String> {
+    let name = text(value, "kind")?;
+    let kind =
+        CautionKind::from_name(name).ok_or_else(|| format!("unknown caution kind \"{name}\""))?;
+    let of = match value.get("of") {
+        None | Some(Value::Null) => None,
+        Some(handle) => Some(entity_from_handle(text(handle, "handle")?)?),
+    };
+    let hex = match value.get("hex") {
+        None | Some(Value::Null) => None,
+        Some(hex) => {
+            let get = |key: &str| {
+                hex.get(key)
+                    .and_then(Value::as_i64)
+                    .and_then(|n| i32::try_from(n).ok())
+                    .ok_or_else(|| format!("a caution's hex has no whole number \"{key}\""))
+            };
+            Some(Hex::new(get("q")?, get("r")?))
+        }
+    };
+    Ok(Caution {
+        kind,
+        of,
+        hex,
+        words: text(value, "words")?.to_string(),
+    })
 }
 
 fn reason_from_json(value: &Value) -> Result<Reason, String> {
@@ -1237,6 +1303,14 @@ fn reason_from_json(value: &Value) -> Result<Reason, String> {
         worked: text(value, "worked")?.to_string(),
         would_change: texts(value, "would_change")?,
         answer_of: small_opt(value, "answer_of")?.map(TaskForceId::new),
+        // A game saved before decision 0217 has none.
+        cautions: match value.get("cautions") {
+            None | Some(Value::Null) => Vec::new(),
+            Some(_) => list(value, "cautions")?
+                .iter()
+                .map(caution_from_json)
+                .collect::<Result<_, String>>()?,
+        },
     })
 }
 
@@ -2191,6 +2265,7 @@ mod tests {
             worked: "12 days x 10 t = 120 t".to_string(),
             would_change: vec!["a second ship in the pool".to_string()],
             answer_of: None,
+            cautions: Vec::new(),
         };
         let decisions = StaffDecisions {
             orders: vec![StaffOrder {
@@ -2361,5 +2436,38 @@ mod tests {
         ] {
             assert!(hand_in(bad.clone()).is_err(), "{bad}");
         }
+    }
+
+    #[test]
+    fn a_reasons_cautions_round_trip_and_are_left_out_when_there_are_none() {
+        let mut reason = Reason::default();
+        assert!(reason_to_json(&reason).get("cautions").is_none());
+        reason.cautions = vec![
+            Caution {
+                kind: CautionKind::StationInDanger,
+                of: Some(EntityRef::Base(BaseId::new(2))),
+                hex: Some(Hex::new(-10, 0)),
+                words: "the station lies inside a circle".to_string(),
+            },
+            Caution {
+                kind: CautionKind::FuelNotMeasured,
+                of: Some(EntityRef::TaskForce(TaskForceId::new(1))),
+                hex: None,
+                words: "its fuel was not measured".to_string(),
+            },
+            Caution {
+                kind: CautionKind::StationInDanger,
+                of: None,
+                hex: Some(Hex::new(3, 4)),
+                words: "a contact".to_string(),
+            },
+        ];
+        let body = reason_to_json(&reason);
+        assert_eq!(body["cautions"][0]["of"]["handle"], "base:2");
+        assert_eq!(body["cautions"][0]["hex"]["q"], -10);
+        assert!(body["cautions"][1].get("hex").is_none());
+        assert!(body["cautions"][2].get("of").is_none());
+        let back = reason_from_json(&body);
+        assert_eq!(back, Ok(reason));
     }
 }
