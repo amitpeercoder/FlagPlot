@@ -2478,10 +2478,10 @@ body.watched .gives { display: none !important; }
           if (seen[key] == null) { seen[key] = list.length; list.push([isLoss ? LOST[o.kind] : c[0], '\u2013', '\u2013', '\u2013', '\u2013']); }
           var row = list[seen[key]]; row[1 + (isLoss ? 1 - col : col)] = c[1]; row[3 + col] = pts(o.points);
         }); });
-        var names = [SIDE_WORD[config.seat].replace(/^the /, 'The '), SIDE_WORD[other].replace(/^the /, 'The ')];
+        var SHORT = { allied: 'Allies', japanese: 'Japan' }, names = [SHORT[config.seat], SHORT[other]];
         function tableOf(title, rows, total) {
           if (!rows.length) return; var t = el('table'), hr = el('tr');
-          ['', names[0], names[1], 'Points to ' + SIDE_WORD[config.seat], 'Points to ' + SIDE_WORD[other]].forEach(function (h) { hr.appendChild(el('th', '', h)); }); t.appendChild(hr);
+          ['', names[0], names[1], 'Points, ' + SHORT[config.seat], 'Points, ' + SHORT[other]].forEach(function (h) { hr.appendChild(el('th', '', h)); }); t.appendChild(hr);
           rows.forEach(function (x) { var tr = el('tr'); tr.appendChild(el('th', '', x[0])); x.slice(1).forEach(function (v) { tr.appendChild(el('td', '', v)); }); t.appendChild(tr); });
           if (total) { var tt = el('tr'); tt.appendChild(el('th', '', 'Points in all')); ['', '', pts(r[config.seat].total), pts(r[other].total)].forEach(function (v) { var td = el('td', '', v); td.style.fontWeight = '700'; tt.appendChild(td); }); t.appendChild(tt); }
           box.appendChild(el('h3', '', title)); box.appendChild(t);
