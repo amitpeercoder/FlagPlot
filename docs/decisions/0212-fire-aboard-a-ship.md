@@ -121,3 +121,101 @@ None before the measuring. What it shows of each battle is put to him before any
 - **The count of fires lost and saved was miscounted** and left out Ryujo and Shokaku at Santa Cruz; the chance of spreading now rests on the cruisers and destroyers, eight ships with rows.
 - **It ran only in the scenarios for play.** By the designer's ruling it runs in every battle.
 - **It had no scenario of its own.** It will.
+
+## Measured and reviewed again, Nov 22, 2026
+
+The plan above was read by a second reviewer and played on a throwaway with decision 0211: 1,000 games of each scenario for play under each rule alone and both, and the validation batches and the proofs' batches before and with both. What follows is the plan as it now stands; where it differs from the rules above, this holds.
+
+### What the games showed
+
+Who is ahead, of 1,000 (the band: neither side in more than 650):
+
+| | Before | This rule alone | Both rules |
+| --- | --- | --- | --- |
+| Midway | Japanese 867 | Japanese 722 | Japanese 521, Allied 479 |
+| Coral Sea | Allied 574 | Allied 570 | Allied 622 |
+| Five days | Allied 615 | Allied 768 | Allied 812 |
+
+Carriers lost with both rules, games of 1,000, to flooding and to fire:
+
+| Carrier | Before | Flooding | Fire |
+| --- | --- | --- | --- |
+| Akagi | 891 | 87 | 719 |
+| Kaga | 128 | 55 | 701 |
+| Soryu | 17 | 288 | 437 |
+| Hiryu | 1 | 170 | 456 |
+| Enterprise (Midway) | 255 | 103 | 166 |
+| Hornet (Midway) | 48 | 96 | 164 |
+| Yorktown (Midway) | 0 | 45 | 2 |
+| Yorktown (Coral Sea) | 310 | 21 | 142 |
+| Lexington | 0 | 0 | 108 |
+| Shokaku (five days) | 177 | 21 | 367 |
+| Zuikaku (five days) | 1 | 4 | 256 |
+| Ryujo | 419 | 209 | 484 |
+| Enterprise (five days) | 270 | 216 | 84 |
+| Saratoga | 15 | 8 | 75 |
+
+- **The rule does at Midway what the record has:** the four carriers are lost to fire, and the scenario comes inside its band.
+- **Four things it did that no row supports:**
+  - **Ships that are not carriers were lost to fire:** cruisers of the Tone class 144 times in the five days, 137 of them set alight through their own floatplanes; destroyers 137 in the five days and 110 at the Coral Sea; transports 89 at the Coral Sea.
+  - **Seven carriers in ten lost to fire went down at the end of the pulse they were bombed in.** The Japanese carriers of 4 June burnt for about nine hours.
+  - **Shokaku and Zuikaku were lost to fire in 367 and 256 games of the five days.** In the record Shokaku was bombed twice in 1942 with her strike away and saved. In the game about six in ten of a Japanese carrier's aircraft were aboard when she was bombed, fighters and aircraft not sent among them.
+  - **American carriers were lost to fire in 159 to 332 games of each scenario.** Six bombings of American carriers in 1942 lost none to a bomb's fire. A raid set an American carrier's aircraft alight in 13 to 30 bombings in 100, which over six bombings loses none about one time in two: the record does not refuse it, and does not support 30.
+- **No validation verdict changes,** and no proof condition read from a batch. The Eastern Solomons' measure of American carriers sunk holds its record of none in 945 runs of 1,000 where it held in all.
+
+### What the review found
+
+- **The frozen figures would have moved:** with the chance of spreading at nothing every fire of 30 or more fell by a step each pulse.
+- **A sinking's count of aircraft in the air is nothing where sorties are not noted,** as in the Eastern Solomons' validation file: every aircraft read as aboard.
+- **The Japanese figure was said to stand in for what the pulse cannot hold,** which is a limit of the model both sides share, and it was set by side after a game was read. Decision 0213 forbids both.
+- **The chance of spreading at 0.5 does not come to "four lost and four saved":** from a fire at the top it loses three in four. Two of the eight were torpedo fires in fuel, which the game cannot make.
+- **Fire damage was made to mean two things,** damage to mend and a fire burning.
+- **Citations:** the words "no aviation fuel was active" are outcome row 15425, not 15418; rows 15340 to 15346 are Yorktown on 4 June alone, and the Coral Sea's draining is event row 15383; Shokaku on 8 May had "the gasoline afire" (15318) and was saved.
+
+### The rules as they now stand
+
+1. **It is of carriers alone:** a ship with a flight deck, in a task force. A cruiser's floatplanes are not in it. A ship of any other kind, a ship in a yard and the fire damage of every ship are as today.
+2. **A fire among her aircraft is a state of its own,** a level from nothing to `aircraft_fire_levels`. Fire damage is not changed by it and does not feed it. Rules 5 to 8 above are withdrawn: a fire from hits does not grow, in any ship.
+3. **A raid whose bombs hit a carrier may set her strike aircraft alight.** For each raid with one bomb hit or more on her, after every attack of the pulse has landed and if she is afloat:
+   - her strike aircraft are the ready and damaged bombers of the groups aboard her, dive bombers, torpedo bombers and level bombers;
+   - those aboard are those not flying in the pulse, as the pulse's own count of aircraft flying has it, which is kept whatever figures are loaded;
+   - the share is those aboard over all of them, and nothing where she has no bomber;
+   - the chance for one bomb is her side's `aircraft_fire_chance` times the share, and for the raid one less the chance that every bomb fails;
+   - one draw; under the chance, her fire among aircraft becomes `aircraft_fire_levels`, the top.
+4. **A fire among aircraft is fought from the next pulse.** At the end of each pulse after the one in which it was set or last raised, a carrier with such a fire makes one draw: under `fire_spreads_chance` it rises a level, otherwise it falls one. At nothing it is out.
+5. **A carrier whose fire among aircraft would rise above the top is lost,** sunk as a sinking sinks her, with fire as the cause on the record.
+6. **A carrier with a fire among aircraft flies nothing off and lands nothing on,** as one whose deck is out. Her deck is as it was when the fire is out.
+7. **The rule is off where its figures are absent.** The frozen copies do not gain them, and every frozen test stands byte for byte.
+
+### Figures
+
+| Figure | Value | Rests on |
+| --- | --- | --- |
+| `aircraft_fire_chance`, Japanese | 0.6 | a judgement: aircraft armed and fuelled in closed hangars with the fuel system live (the technical mission's report A-11; event rows 15395 to 15406). The rows give the direction and no size |
+| `aircraft_fire_chance`, Allied | 0.15 | a judgement: fuelling on the flight deck, and the gasoline lines drained on warning of a raid (event row 15383; outcome rows 15340, 15383). The rows give the direction and no size |
+| `fire_spreads_chance` | 0.5 | no row; the middle. With three levels a fire set at the top is lost at the end of the next pulse one time in two and in the end three in four. The four Japanese carriers set alight on 4 June were all lost |
+| `aircraft_fire_levels` | 3 | a judgement from the times: the carriers of 4 June were abandoned in 20 minutes to 10 hours |
+
+- **The two values by side are a question for the designer** (below). They were first set after a game had been read, and the plan said so wrongly of the Japanese one that it stood in for the pulse. As they now stand each rests on the navy's handling of fuel and on nothing else, and neither has been moved since the measuring.
+- **No value is given by date.** The American changes of 1943 and 1944 have no battle on file to be seen in and no row dated to the month.
+
+### What is recorded and who knows
+
+- **New state of a ship:** her fire among aircraft and the pulse it was set or raised. Hashed in its place and named; the layout rises.
+- **Three records:** the fire set, citing the raid's attacks, with the bombs, the bombers aboard and flying, the share, the chance and the draw; each pulse's rise or fall; the ship sunk, with fire as its cause. A side sees its own. The enemy sees the sinking as it sees any.
+- **Two draws,** each with its own value added at the end, in the air combat subsystem: for a raid's fire, on a stream of the ship and the raid's first group; for the fire's fighting, on a stream of the ship.
+- **The rules label rises.**
+
+Rule card: reads a carrier's fire among aircraft and side, the bombers of the groups aboard her and those flying in the pulse, the bomb hits a raid put on her, the figures. Writes her fire among aircraft; that she is sunk, with the aircraft and men lost with her; that she cannot fly. Draws: two new values.
+
+### What it does not do, added
+
+- **It does not know a bomber armed from one struck below empty.** A bomber aboard is taken as armed or soon to be.
+- **It does not let a carrier be warned of a raid.** The game has no radar and no warning; the Allied figure carries the draining of lines that warning allowed.
+- **It does not lose any ship but a carrier to fire.** The cruisers and destroyers lost to fire in 1942 were lost to many shell hits and to torpedoes in fuel; that is another rule.
+
+### Questions for the designer
+
+1. **The two values by side,** 0.6 and 0.15: whether the difference in handling fuel, sourced in direction and not in size, is enough to set them apart, or one value should serve both.
+
+It is measured again with decision 0211 as amended before anything is built, and what it shows is put to the designer.

@@ -84,3 +84,36 @@ None before the measuring. What it shows of each battle is put to him before any
 - **It ran only in the scenarios for play.** By the designer's ruling it runs in every battle.
 - **It said the same shots follow whatever ship is chosen and nothing else moves.** The ship attacked draws what she makes of the attackers on her own stream; rule 8 says so.
 - **It had no scenario of its own.** It will.
+
+## Measured and reviewed again, Nov 22, 2026
+
+The plan above was read by a second reviewer and both rules were played on a throwaway, 1,000 games of each scenario for play under each rule alone and both, and the validation batches and the proofs' batches before and with both. What follows is the plan as it now stands; where it differs from the rules above, this holds.
+
+### What the games showed of this rule alone
+
+| | Before | This rule alone | Both rules |
+| --- | --- | --- | --- |
+| Midway, who is ahead of 1,000 | Japanese 867 | Japanese 947 | Japanese 521, Allied 479 |
+| Coral Sea | Allied 574 | Allied 654 | Allied 622 |
+| Five days | Allied 615 | Allied 682 | Allied 812 |
+
+- **It does what it is for.** Where two raids or more attack the Japanese force at Midway, one ship was attacked in every such pulse before; with the rule, two or more in 3,070 of 3,842. Hits on a ship that already looked lost fall from 7.6 a game to 3.8 at Midway and from 3.4 to 1.3 at the Coral Sea.
+- **Alone it sinks fewer carriers,** as the plan said it would: Akagi from 891 games to 135. It is not built without decision 0212.
+- **No validation verdict and no proof condition read from a batch changes** with both rules.
+
+### What the review found, and the rules as they now stand
+
+- **The figure by side is withdrawn.** It rested on one Japanese case of dividing among carriers found and one American case each way, Pearl Harbor being ships at anchor and the order of 1944 not 1942. One rule serves both sides, with no figure and no chance of falling on the same ship.
+- **The first raid's ship was an accident of numbering.** At Midway the same carrier drew the first raid of every pulse.
+
+1. **The raids that attack one force in a pulse and want one kind of ship are taken in turn,** in the order of their first group's number. Raids that want another kind take their own turns apart.
+2. **The first of them draws its ship:** one draw, each ship of the kind that does not look lost as likely as another. Where every ship of the kind looks lost, among those.
+3. **Each raid after it takes the next ship of the kind that does not look lost,** by ship number, going round among those that do not look lost. A ship that looks lost is attacked only where none of the kind is otherwise.
+4. **"Looks lost" is read once, at the start of the pulse's air combat,** as every attack is worked on the state at its start. A ship sunk earlier in the same pulse is therefore still attacked; that is not mended here.
+5. **The rule is off where its switch is absent.** The live air combat figures gain `strike_is_spread`, and the frozen copy does not: there a group chooses its ship as today, and every frozen test stands byte for byte. The key is named in the frozen-figures test's list of keys the frozen copy is without.
+6. **The draw is recorded:** the raid's attack names the ships it could have drawn and the one drawn, in its breakdown, and the ship a later raid took by turn. A side sees of it what it sees of its own attack today.
+7. **Rules 2, 6, 7 and 8 above stand.** Rules 1, 3, 4, 5 and 9 above are replaced by these.
+
+Rule card: reads the raids at a force, each first group's target list, the force's ships afloat with deck, flotation and fire, `crippled_flotation`, `claimed_sunk_fire`. Writes nothing. Draws: one new value, for the first raid of a kind at a force, on a stream of that raid's first group and the force.
+
+It is measured again with decision 0212 as amended before anything is built.

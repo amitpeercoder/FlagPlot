@@ -52,3 +52,16 @@ Reads: the scenario's date; the entries of a figures file. Writes: nothing in a 
 ## Questions for the designer
 
 None. It is his ruling, written down.
+
+## Reviewed, Nov 22, 2026
+
+Read by a reviewer who had not seen it written. What follows is the plan as it now stands; where it differs from the rules above, this holds.
+
+1. **By side only, for now.** No battle on file is later than 1942, so a value from a date could not be seen in any game. A figure may be given a value for each side; the date of a scenario and values from a date wait for the campaign. When they come the dated values are kept whole and read by the game's own date each day, so a game that crosses a date needs no new reader. Rules 2 to 4 above are withdrawn so far.
+2. **A value by side rests on a row of a difference in doctrine or practice between the navies.** It may agree with results across battles. It is not fitted to one battle, it is never keyed to a scenario, a ship or a place, and it does not stand in for something the model lacks that both sides share.
+3. **A side is not told the enemy's value.** Figures are common knowledge because they are the same for both sides (decision 0100, item 3); a value by side is not. A side's view gives its own value in both places, and a dry run plays the made-up enemy on the side's own: a commander takes the enemy to do as his own navy does. Chapter 1's "figures, in full" and the engineering page on truth and belief are amended to say so.
+4. **The loader refuses** an entry for a figure no decision record names, an unknown side, two entries for one figure and side, an entry for a figure the file does not hold, a value outside the figure's range, a TOML float, and an entry with no reason.
+5. **The frozen copies gain no such table,** and the frozen-figures test names it among what they are without.
+6. **What it amends, in full:** decision 0187's sentence; `docs/step2-spec.md`, tuning rules 1 and 7, which gain the exception of rule 2 here; chapter 1.
+7. **A navy within a side is still not told apart.** The first figure given by side is of fuel handled in American and Japanese carriers; a British carrier on the Allied side would read the American value. No such ship is on file. It is noted for the campaign.
+8. **The only figure given by side so far is decision 0212's `aircraft_fire_chance`,** and whether it is to be is that record's question for the designer.
