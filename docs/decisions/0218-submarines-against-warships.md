@@ -460,7 +460,14 @@ Built on Nov 22, 2026, on branch `submarine-3`, by a team lead for the architect
 
 **The versions.** The rules label is 30 (29 before it), for state a game saved under the old rules could not hold. The doctrine is `supply-55`. The agent interface is 48. The state layout is `flagplot-state-v56`, unchanged: no game without a patrol, a boat in a limit or a hold on a boat changes its hash. The recorded games were remade by `scripts/regenerate.sh`, their transcripts moving only in the interface version and their saves only in the rules label and the doctrine version; the closed proofs' records were not touched. Every run baseline but scenario 129's new one is as it was (statement 22), and `scripts/compare-scenarios.sh --live-only` finds no scenario on file changed.
 
-**Owed to the architect.** Scenario 128's game A13 gives a boat `salvoes = 0`, which the ruling on row 61 now has the loader refuse: its test `statement_04` fails, and the statement or the game is the architect's to change. Statement 18's half on standing by night (choice 4).
+**The architect's rulings on pull request 691, Nov 23, 2026.** Statement 4 of scenario 128 is restated: a boat without a salvo is never on station, since she leaves for home in the pulse she fires her last and a scenario may not give her none; game A13 is taken out of its test. Statement 18 of scenario 129 is restated: the regard is had where the staff chooses the hex at which a force waits (the covering hex of a take); where a force stands by night the hex is the order's own and the staff chooses none (row 73 closed so). The choices above and rows 69 to 72 are accepted as written; decision 0220's kinds take the codes after 16 when built.
+
+**Owed, and not proved.**
+
+- The agent's tools with reports of submarines present: `list_contacts`' `submarine_reports` is tested empty only.
+- A report sighted from the air shown at the table: no game on file gives one, so its card's words ("Sighted from the air") are checked by text alone.
+- The regard on the hex moved to look (decision 0159) and on a force already within the covering reach: built, with no test of their own.
+- In a game with no orders inside a day, the table's stop for a submarine's attack comes at dusk, after the day is resolved, and not in the pulse of the attack: the table can stop only where the engine stops. That is so of such games and is not a fault of the stop.
 
 ### Rule card, stage 3
 

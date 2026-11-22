@@ -81,9 +81,11 @@
 //!    miss 0.9 to the sixth, 0.531441; chance 0.468559. Game A9, the same
 //!    all the night: miss 0.282428 (0.9 to the twelfth, cut at each
 //!    product); chance 0.717572.
-//! 4. A boat that is held down, on passage, damaged or without a salvo
-//!    makes no draw. Games A10 to A13, the force of A1 with the boat in
-//!    each state: no attack chance is recorded.
+//! 4. A boat that is held down, on passage or damaged makes no draw. Games
+//!    A10 to A12, the force of A1 with the boat in each state: no attack
+//!    chance is recorded. A boat without a salvo is never on station: she
+//!    leaves for home in the pulse she fires her last (statement 11), and a
+//!    scenario may not give her none (scenario 129, statement 20).
 //! 5. A force lying in a hex that holds a base of its own side is not
 //!    attacked. Game A14, A1 with an Allied base at (5,0): none recorded.
 //! 6. A force with none of a carrier, a battleship, a transport, an
@@ -770,7 +772,7 @@ fn statement_03_a_ship_dead_in_the_water_multiplies_the_hourly_chance_by_5() {
 }
 
 #[test]
-fn statement_04_a_boat_held_down_on_passage_damaged_or_without_a_salvo_makes_no_draw() {
+fn statement_04_a_boat_held_down_on_passage_or_damaged_makes_no_draw() {
     let none_at_night = |lines: &str, label: &str| {
         let scenario = game(vec![carrier_and_destroyer()]).boat(lines).scenario();
         for seed in [1, 2, 3, 4, 5] {
@@ -785,7 +787,6 @@ fn statement_04_a_boat_held_down_on_passage_damaged_or_without_a_salvo_makes_no_
     none_at_night("held_down_pulses = 1", "A10 held down");
     none_at_night("station_q = 9\nstation_r = 0", "A11 on passage");
     none_at_night("condition = \"damaged\"", "A12 damaged");
-    none_at_night("salvoes = 0", "A13 no salvo");
     // The held boat is held for that pulse only: she has a chance in the
     // next.
     let held = game(vec![carrier_and_destroyer()])

@@ -108,9 +108,10 @@
 //!    no place outside submarine waters serves.
 //! 17. In C2 and C3 the force's route is as the route rule gives it; a
 //!    route is not bent for submarine waters.
-//! 18. The same regard is had by the doctrine that chooses where a force
-//!    stands by night and where a force waits, each proved on one game as
-//!    statements 14 and 16 are.
+//! 18. The same regard is had where the staff chooses the hex at which a
+//!    force waits (the covering hex of a take), proved on one game as
+//!    statements 14 and 16 are. Where a force stands by night the hex is the
+//!    order's own and the staff chooses none.
 //! 19. A side's staff reads only what the side believes: with an enemy
 //!    boat lying at S that the side holds no report of and no suspected
 //!    waters, the staff stations the force at S (C1 with the boat added).
