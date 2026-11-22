@@ -25,10 +25,10 @@ use crate::orders::{Activity, AirMission, Job, Mission, SpeedSetting, WhenSpent}
 use crate::refdata::ShipKind;
 use crate::state::Side;
 use crate::state::{
-    AirGroup, AirGroupLocation, AircraftFire, Arrival, Base, CargoOrder, Charge, ClaimTally, DayWork, Formation,
-    FuelFrom, Halt, HaltWork, HitsOnMen, LandUnit, March, MenReplacement, MenStream, Preparation,
-    Replacement, Route, RulesOfEngagement, SearchArc, Ship, ShipLocation, ShipSystem, ShipSystems,
-    Skills, Strength, SupplyLine, TaskForce, Troops, TruthState, YardTrip,
+    AirGroup, AirGroupLocation, AircraftFire, Arrival, Base, CargoOrder, Charge, ClaimTally,
+    DayWork, Formation, FuelFrom, Halt, HaltWork, HitsOnMen, LandUnit, March, MenReplacement,
+    MenStream, Preparation, Replacement, Route, RulesOfEngagement, SearchArc, Ship, ShipLocation,
+    ShipSystem, ShipSystems, Skills, Strength, SupplyLine, TaskForce, Troops, TruthState, YardTrip,
 };
 use crate::world::World;
 
