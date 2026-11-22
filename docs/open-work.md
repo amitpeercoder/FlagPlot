@@ -122,7 +122,11 @@ The scale (item 2 above) is not a condition of step 3's stages 0 to 2.
 ## Not planned
 
 - `docs/rules-comparison.md` (the designer's, Nov 14, 2026, checked against the code) sets Flag Plot's rules against another game's manual and is the list of gaps to triage. Decision 0102 rules on each gap (build, defer or decline); the rows it marks "To be written" are decision records still to come.
-- Submarines against warships are planned in three stages (decision 0218): the data (stage 1) and the rule (stage 2) are built; the patrol order, the staff's regard for submarine waters, the agent's tools and the table are stage 3, still to come.
+- Submarines against warships are planned in three stages (decision 0218): the data (stage 1), the rule (stage 2) and the staff's part (stage 3) are built. Stage 3 is the patrol order with its stations, a hold on a boat, boats in a forces limit, the staff's regard for submarine waters (rules chapter 8, Patrolling waters with submarines), the loader's refusal of a boat with no salvo and of a home base the sea cannot reach, the agent's tools (interface 48) and the table's part. Open from it:
+  1. **Boats are in no scenario for play.** Scenarios 128 and 129 hold the only boats; putting boats into the scenarios the game is played on (the Solomons games, the 39 days) is not done, and what it does to a game is to be measured before and after, as a rule that changes every game is.
+  2. **Stages two and three of the submarine design** (`docs/design/`): a boat that reports what she sees or moves on a report, the war on shipping, and what a boat's approach and conditions add, are not built (chapter 10, What was cut).
+  3. **Scenario 128's game A13** gives a boat `salvoes = 0` and expects her to stay on her station and attack nothing; the loader now refuses the scenario (differences row 61). Statement 4 of the hand calculation, which says what such a boat does, needs the architect's ruling: restate or drop it.
+  4. **Rows 69 to 73 of `docs/rules/differences.md`** (a boat two orders name, a limit that names no boat, a boat that cannot serve and her place, the places the regard reaches) are not ruled.
 
 ## Decisions still to make
 
