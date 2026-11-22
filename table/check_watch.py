@@ -322,6 +322,61 @@ def one_agent(sim_cli, port, hold):
         bridge.stop()
 
 
+SUB = "data/scenarios/table-submarines/128_a_submarine_in_the_way.toml"
+
+
+def submarines_watched(sim_cli, port, hold):
+    """Submarines in a watched game (decision 0218, stage 3): the table's copy of scenario 128 (a Japanese boat on a station where an
+    Allied force lies, seed 6: it fires on the carrier on the first morning and is hunted), both seats agents'. What each seat and the
+    watcher read through the doors is what the page draws and says: the Japanese boat is its side's, exactly, with her hands; the
+    Allied side holds a report of a submarine and the waters it is told of and nothing of the boat; a direct order and a hold on a
+    boat are queued at the Japanese door and seen by the watcher in the seat's calls."""
+    print(f"-- submarines in a watched game of two agents: {SUB}", flush=True)
+    bridge = Bridge([SUB, "--watch", "--seat", "allied", "--seat", "japanese", "--port", str(port), "--sim-cli", sim_cli, "--hold", str(hold)], 3)
+    try:
+        watcher = Watcher(bridge.url("A watched game."))
+        allied = Agent(bridge.url("The allied seat's door"))
+        japanese = Agent(bridge.url("The japanese seat's door"))
+        boats = japanese.call("list_forces")["ok"].get("submarines", [])
+        check(len(boats) == 1 and boats[0]["state"] == "on station" and boats[0]["hands"]["by"] == "free" and boats[0]["salvoes_left"] == 2,
+              "the Japanese agent reads its boat: on station, in no one's hands, two salvoes left")
+        check("submarines" not in allied.call("list_forces")["ok"] and allied.call("list_contacts")["ok"].get("suspected_waters"),
+              "the Allied agent reads no boat of the enemy's and the waters it is told of")
+        check("submarines" in watcher.read("japanese", "list_forces")["ok"] and "submarines" not in watcher.read("allied", "list_forces")["ok"],
+              "the watcher reads the boat from the Japanese side and none from the Allied")
+        held = japanese.call("hold", {"submarine": 1})
+        check("command" in held["ok"] and held["ok"]["command"]["submarine"] == 1, "the Japanese agent holds the boat out of the staff's plans")
+        order = japanese.call("issue_orders", {"orders": [{"unit": "submarine:1", "order": {"kind": "station", "hex": [5, 0]}}], "reason": "stay on the force"})
+        check(order["ok"]["results"][0]["status"] == "queued", "and orders her a station")
+        calls = watcher.seat_calls("japanese")
+        check(calls["calls"][-1]["tool"] == "issue_orders" and calls["calls"][-1]["reason"] == "stay on the force" and any(c["tool"] == "hold" for c in calls["calls"]),
+              "the watcher sees the seat's hold and its order to the boat, with its reason")
+        pending = [allied.later("end_day"), japanese.later("end_day")]
+        check(wait_until(lambda: watcher.standing()["waiting_for"] == []), "both seats are ready")
+        for _ in range(4):
+            step = watcher.step()
+            if "ok" in step and step["ok"].get("resolved") and (step["ok"]["resolved"].get("day") or "afternoon" in step["ok"]["resolved"].get("pulses", [])):
+                break
+        for thread in pending:
+            thread.join(hold + 10)
+        events = watcher.read("allied", "events", {"day": 1})["ok"]["events"]
+        kinds = [e["event_kind"] for e in events]
+        check("salvo_from_submarine" in kinds and "submarine_reported" in kinds and "submarine_hunted_by" in kinds,
+              f"the Allied side is told that one of its ships was fired on from a submarine, of a report of one and of its own force's hunt ({sorted(set(kinds))})")
+        contacts = watcher.read("allied", "list_contacts")["ok"]
+        report = contacts["submarine_reports"][0]
+        explained = watcher.read("allied", "explain", {"event": report["event"]})["ok"]
+        check([n["event_kind"] for n in explained["nodes"]] == ["submarine_reported", "salvo_from_submarine"],
+              "the Allied report of a submarine is explained by the salvo on its ship, which is how its card says it was made")
+        jevents = watcher.read("japanese", "events", {"day": 1})["ok"]["events"]
+        jkinds = [e["event_kind"] for e in jevents]
+        check("own_submarine_fired" in jkinds and "own_submarine_hunted" in jkinds and "submarine_reported" not in jkinds and "salvo_from_submarine" not in jkinds,
+              f"the Japanese side is told its boat fired and was hunted, and nothing of the Allied side's report or its ship's fright ({sorted(set(jkinds))})")
+        check("submarine_reports" not in watcher.read("japanese", "list_contacts")["ok"], "the Japanese side holds no report of a submarine")
+    finally:
+        bridge.stop()
+
+
 def not_watched(sim_cli, port):
     print("-- the player's table, not watched", flush=True)
     bridge = Bridge([S78, "--seat", "allied", "--port", str(port), "--sim-cli", sim_cli], 1)
@@ -349,6 +404,7 @@ def main():
         two_agents(args.sim_cli, args.port, args.hold, keep)
     one_agent(args.sim_cli, args.port + 1, args.hold)
     not_watched(args.sim_cli, args.port + 2)
+    submarines_watched(args.sim_cli, args.port + 2, args.hold)
     print("all held", flush=True)
 
 

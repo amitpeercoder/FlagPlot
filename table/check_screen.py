@@ -303,10 +303,10 @@ def the_fold_and_the_keys():
     foot = text[text.index('id="sp-foot"'):text.index("</footer>", text.index('id="sp-foot"'))]
     check('<details id="stopfold"' in foot and "WHAT STOPS THE CLOCK" in foot and foot.index('id="stopfold"') < foot.index('id="btn-day"'),
           "the fold WHAT STOPS THE CLOCK is in the stop paper's foot, above the controls that run time")
-    for tick in ("contact", "attack", "loss", "strike", "landing", "arrive", "evening"):
+    for tick in ("contact", "attack", "submarine", "loss", "strike", "landing", "arrive", "evening"):
         check(f'id="stop-{tick}"' in foot, f"the fold holds the table's tick for {tick}")
-    check("each evening" in foot and re.search(r"evening: false", text) and re.search(r"TICK_DEFAULT = \{[^}]*contact: true, attack: true, loss: true, strike: false, landing: false, arrive: false, evening: false", text),
-          "each evening is in the fold and off by default; a contact, an attack and a loss are ticked, and the rest not")
+    check("each evening" in foot and re.search(r"evening: false", text) and re.search(r"TICK_DEFAULT = \{[^}]*contact: true, attack: true, submarine: true, loss: true, strike: false, landing: false, arrive: false, evening: false", text),
+          "each evening is in the fold and off by default; a contact, an attack, a submarine's attack and a loss are ticked, and the rest not")
     check("eveningStop()" in text and text.count("eveningStop()") >= 4 and "stopEvening" in text, "Carry on stops each evening where that is ticked, in the pulse, day and watched loops alike")
     check('id="stops-staff"' in foot and all(k in text for k in ("cannot_meet", "waits_for_leave", "ship_lost", "cannot_bring_enough", "lift_turned_back", "asks_leave_to_pursue")) and "var STAFF_STOP" in text,
           "the staff's six standing interrupts are listed in the fold")
@@ -441,6 +441,247 @@ def the_words_and_what_the_papers_say():
                         "standing waits_for_leave fired: plan:1 waits for the commander's leave"])
     check(said == ["USS Enterprise was lost", "Plan 2 cannot meet its intent", "Lunga has 8.3 days of supply, below your 10", "Plan 1 waits for your leave"],
           f"what a firing says has no handle in it ({said})")
+
+
+SUBMARINE_GAMES = "data/scenarios/table-submarines/"
+
+
+def cut_function(text, header):
+    """The text of one function of the page, from its header to its closing brace: a one-line function to the end of its line, any
+    other to the next line that is a lone two-space brace (the page's functions are all laid out so)."""
+    start = text.index(header)
+    line_end = text.index("\n", start)
+    if text[start:line_end].rstrip().endswith("}"):
+        return text[start:line_end]
+    return text[start:text.index("\n  }\n", start) + 4]
+
+
+def the_submarines():
+    """Submarines at the table (decision 0218, stage 3), by the page's text: a boat of the side's own as a piece and a card with
+    the direct order through the one paper and the hold; a report of a submarine as a mark of its own with its card and HOW WE KNOW;
+    suspected waters drawn faintly with no boat and a card; the patrol order with its distance, its stations drawn while drafted and
+    in the plan's paper; the stop and its slips; the diary's and SINCE's words. (The page is drawn in a browser, tried by hand.)"""
+    import re
+    text = page_text()
+    # 1. a boat of the player's own
+    check("function cardBoat(t)" in text and "boat: cardBoat, subreport: cardSubReport, waters: cardWaters" in text and "tile('own', 'submarine', true, 0.15)" in text
+          and "kind === 'submarine') { g.beginPath(); g.ellipse(" in text and "{ kind: 'boat', boat: b }" in text and "kind === 'submarine') { found = M.boats.filter(" in text,
+          "a boat of the player's own has a piece of her own (a hull on the side's own rectangle) and a card, reached by touching the piece, stepping the pieces at her hex and a link to her")
+    card = cut_function(text, "function cardBoat(t)")
+    rows = ["['Class',", "['Where',", "['Her station',", "['Salvoes left',", "['Doing',", "['Condition',", "['Held down',", "['In whose hands', whose]"]
+    at = [card.find(r) for r in rows]
+    check(all(a >= 0 for a in at) and at == sorted(at), "her card says, in order: class, where, her station, salvoes left, what she is doing, sound or damaged, held down, in whose hands")
+    check("'The staff\u2019s, under '" in card and "handsHeld(held)" in card and "'Free'" in card and "placeLink(b.place)" in card and "placeLink(b.station)" in card,
+          "in whose hands is the staff's under the order named (linked to its paper), the player's as every held unit says it, or free; where she is and her station are places, linked, with the hex in brackets")
+    check("'GIVE A DIRECT ORDER'" in card and "openPaper('boat', { unit: h, name: boatName(b), hold: { submarine: n }" in card
+          and "'KEEP THIS BOAT OUT OF THE STAFF\\'S PLANS'" in card and "act('hold', { submarine: n }" in card and "'RETURN IT TO THE STAFF'" in card and "act('release', { submarine: n }, RETURNED" in card,
+          "her card offers the direct order through the one order paper, keeping her out of the staff's plans, and returning her, as a force's card does")
+    check("function boatOrderable(b) { return (b.state === 'on station' || b.state === 'on passage') && !b.damaged; }" in text and "if (boatOrderable(b))" in card,
+          "the order is offered for a boat on station or on passage and sound, which the engine takes, and not for one going home, sunk or gone home")
+    controls = cut_function(text, "function boatControls(form, b)")
+    check("kind: 'station', hex: [stationDraft.place.q, stationDraft.place.r]" in controls and "'Take station at '" in controls and "startStation();" in controls
+          and "picking === 'station'" in controls and "if (hh[5] !== 0) { say('picking', 'Touch open water.'); return; }" in text and "({ route: pickRoute, station: pickStation }[picking] || pickMarch)(p)" in text,
+          "the paper's order is a station, touched on the chart and drawn there (open water only), with the way to choose again")
+    check(re.search(r"var INSIDE_KINDS = \{[^}]*\}", text) and "station" not in re.search(r"var INSIDE_KINDS = \{[^}]*\}", text).group(0) and "station: 'Station'" in text,
+          "a station is not an order that acts inside a day: the paper says when it acts as every such order does")
+    acts = run_in_node(text[text.index("  var ACTS_TONIGHT"):text.index("\n", text.index("  var ACTS_TONIGHT"))] + "\n" + text[text.index("  var INSIDE_KINDS"):text.index("\n", text.index("  var INSIDE_KINDS"))]
+                       + "\nvar ORDER_LABEL = { station: 'Station' }; var clock = { at: 'dusk' };\n" + cut_function(text, "function labelOf(o)") + "\n" + cut_function(text, "function actsText(orders)")
+                       + "\nfunction main(x) { const o = [{ unit: 'submarine:1', order: { kind: 'station', hex: [1, 1] } }]; const out = [actsText(o)]; clock = { at: '1200' }; out.push(actsText(o)); return out; }", None)
+    check(acts == ["Acts at 1800, with tonight’s orders", "Acts at 1800, for the coming day"],
+          f"a station order says it acts at 1800: with tonight's orders at dusk, for the coming day inside a day ({acts})")
+    # 2. a report of a submarine
+    check("function subMark(c, u, alpha)" in text and "M.subReports || []).forEach(function (r) { var v = placeOf(r.place); if (v) subMark(" in text
+          and "ring(" not in cut_function(text, "function subMark(c, u, alpha)") and "tile('enemy', 'submarine', false, 0.15" in text and "'SUBMARINE REPORTED'" in text,
+          "a report of a submarine is a mark of its own (a dashed diamond with a hull, fainter as it ages) and an unsure enemy tile, not a ship contact's ring, with its card")
+    how = cut_function(text, "function howWeKnowBoat(into, nodes)")
+    check("'Reported after a salvo on '" in how and "'Sighted from the air by '" in how and "'Sighted from the air.'" in how and "rep.hidden_causes" in how and "api('explain', { event: r.event })" in text,
+          "a report's HOW WE KNOW says it came after a salvo on a ship, or was sighted from the air, from the events that made it (`explain` of the report's event)")
+    # 3. the suspected waters
+    check("red: true }, true, u)" in text and "(w.distance_hexes + 0.5) * hexMiles()" in text and "g.fillStyle = a.red ? 'rgba(163,33,26,0.07)'" in text and "'SUSPECTED WATERS'" in text
+          and "'Told '" in text and "kind: 'waters', waters: w" in text,
+          "suspected waters are drawn faintly (a fill and a dashed edge in the enemy's red, no boat), and have a card with what is believed, round where, how far and the day told")
+    sit = run_in_node(cut_function(text, "function situationLine(line, part, over)") + "\nfunction dateOf(n) { return 'D' + (n + 1); }\nfunction noPoints(l) { return l; }\n"
+                      + "function main(x) { return x.map(l => situationLine(l, 'SUBMARINES', false)); }", [
+        "- Report of an enemy submarine: at (5,-1), made day 1, 1 pulse old [event 6]",
+        "- Waters where enemy submarines are thought to work: within 3 hexes of (5,0), told on day 1: Placeholder words. [event 1]"])
+    check(sit == ["- A submarine is reported at (5,-1), made D1, 1 pulse old", "- Waters where enemy submarines are suspected: within 3 hexes of (5,0), told D1: Placeholder words."],
+          f"the situation says a report and the suspected waters in words, with the day as a date and no event number ({sit})")
+    # 4. the patrol order
+    ends = cut_function(text, "function ends(target)")
+    check("if (target.kind === 'waters' && (M.boats || []).some(function (b) { return b.state !== 'sunk' && b.state !== 'home'; })) list.push(['Patrol these waters with submarines', { intent_kind: 'patrol', hex: [target.q, target.r], distance: 2 }, null]);" in ends,
+          "\"Patrol these waters with submarines\" is among the orders on waters, and only where the side has a boat on the map or coming")
+    check('id="o-dist" min="1" max="6" step="1"' in text and "function patrolDistance()" in text and "if (e[1].intent_kind === 'patrol') args.distance = patrolDistance();" in text
+          and "e.target.id === 'o-dist'" in text and "function showPatrol()" in text and "round(d)" in text,
+          "the distance is a small whole-number control (1 to 6 hexes, said in miles) that asks the staff again when it changes")
+    check("patrolStations = w.stations || p.stations || null;" in text and "patrolStations.forEach(function (s) { var v = placeOf(s.hex); if (v) stationMark(cpx(v), u, cleanName(s.name || s.submarine), true); })" in text
+          and "stationDraft = null; patrolStations = null; stationPicked = null;" in text and "pd + 0.5) * hexMiles()" in text,
+          "while a patrol is drafted the waters and the stations the staff would give are drawn, each named, from the preview, and are cleared when the paper closes")
+    check("if (top.kind === 'patrol') (pr.stations || []).forEach(" in text and "if (i.kind === 'patrol') (M.boats || []).filter(function (b) { return b.hands && b.hands.by === 'staff' && b.hands.intent === i.number" in text
+          and "if (k === 'station')" in text and "case 'station': text('take station at ')" in text and "patrol: 'PATROL WITH SUBMARINES'" in text and "'Patrol the waters round '" in text,
+          "a patrol signed is in the plan's paper as the tree shows any task, each boat under it with her station, in YOUR ORDERS and SIGNED and on the chart as an order")
+    # 5. the stop and its slips
+    check('id="stop-submarine"' in text and "a submarine attacks us" in text and "submarine: 'We are attacked by a submarine', boat: 'We have lost a boat'" in text,
+          "the fold WHAT STOPS THE CLOCK has the tick \"a submarine attacks us\", and the general headings say \"we\"")
+    toldhead = cut_function(text, "function toldHead(t)")
+    check("'We are torpedoed: '" in toldhead and "', by a submarine'" in toldhead and "' was fired on by a submarine'" in toldhead and "'Lost: '" in toldhead,
+          "a slip says \"We are torpedoed: <ship>, by a submarine\" for a hit, that a ship was fired on by a submarine and where for a salvo that missed, and \"Lost: <boat>\" for a boat lost")
+    check("var subT = submarineTold(subEv); lastTold = lastTold.concat(subT);" in text and "evening || subT.length)" in text and "lastTold = subT;" in text and "|| subT.length) {" in text
+          and "lastTold = toldOf(evs, stopOn()).concat(submarineTold(evs));" in text and "if (lost.length && ticks.loss)" in text and "if (salvos.length && ticks.submarine)" in text,
+          "the clock stops on a submarine's attack in the pulse, day and watched loops alike, by a stop of the table's own (a boat lost rides the stop for a loss), and sends the engine no kind of stop it does not have")
+    check("stop_on: stopOn()" in text and "'submarine'" not in text[text.index("function stopOn()"):text.index("\n", text.index("function stopOn()"))],
+          "the stops sent to the engine are still its own five: nothing of the table's is asked of it")
+    # 6. the diary's and SINCE's words
+    kinds = ["submarine_entered", "submarine_on_station", "submarine_left_for_home", "submarine_reached_home", "own_submarine_fired", "own_submarine_hunted", "submarine_hunted_by",
+             "own_submarine_attacked_from_air", "attacked_submarine_from_air", "submarine_sunk", "salvo_from_submarine", "submarine_reported", "submarine_report_dropped", "suspected_waters_told"]
+    sayevent = cut_function(text, "function sayEvent(e, linked)")
+    check(all(f"k === '{k}'" in sayevent for k in kinds) and "claim from a submarine at " in sayevent,
+          "the war diary and SINCE have words for each event of the submarines: " + ", ".join(kinds))
+    check("submarine_steamed: 1, submarine_ordered_to_station: 1 };" in text and text.count("submarine_steamed: 1") == 2,
+          "a boat's steaming and being ordered to her station are routine: not plotted, and folded in the diary")
+
+
+def the_submarines_through_the_page(sim_cli, port, hold):
+    """The page's own wording on real events (decision 0218, stage 3): a bridge on the table's copies of scenarios 128 and 129
+    (`data/scenarios/table-submarines/`), each side's events and contacts read through `/call` as the page reads them, and the page's
+    own functions (`sayEvent`, `submarineTold`, `toldHead`) run in node on them. The seeds: 6 (the boat fires on the carrier on the
+    first morning and is hunted), 8 (it fires and misses), 13 (it fires and is sunk)."""
+    print("-- submarines through the page's own wording: the table's copies of scenarios 128 and 129", flush=True)
+    import re
+    text = page_text()
+    repo = os.path.dirname(HERE)
+    base = os.path.join(repo, SUBMARINE_GAMES, "128_a_submarine_in_the_way.toml")
+    with open(base, encoding="utf-8") as f:
+        original = f.read()
+    check('seed = 6' in original and 'distance = 3' in original, "the table's copy of scenario 128 has seed 6 and the waters the Allied side is told of")
+    code = cut_function(text, "function cleanName(s)") + "\n" + cut_function(text, "function sayEvent(e, linked)") + "\n" \
+        + cut_function(text, "function salvoHits(salvo, evs)") + "\n" + cut_function(text, "function submarineTold(evs)") + "\n" + cut_function(text, "function toldHead(t)") + "\n" \
+        + cut_function(text, "function kindWords(k, n)") + "\n" + cut_function(text, "function orderWords(t)") + """
+var config = { seat: 'allied' }; var ticks = { submarine: true, loss: true };
+function whereIs(pl) { return '<' + pl.q + ',' + pl.r + '>'; } function dateOf(n) { return 'D' + (n + 1); } function round(n) { return n + ' hexes round'; }
+function fig(x) { return x; } function nameOf(h) { return h; }
+function main(evs) { const told = submarineTold(evs); return { lines: evs.map(e => sayEvent(e, false)), told: told.map(t => ({ thing: t.thing, head: toldHead(t), n: t.lines.length })) }; }
+"""
+    def play(seed, seat, scenario_text=None):
+        body = (scenario_text or original).replace("seed = 6", f"seed = {seed}")
+        with tempfile.TemporaryDirectory() as folder:
+            path = os.path.join(folder, "game.toml")
+            with open(path, "w", encoding="utf-8") as out:
+                out.write(body.replace('"../../', '"' + os.path.join(repo, "data") + "/"))
+            command = [sys.executable, os.path.join(HERE, "serve.py"), path, "--seat", seat, "--start", "1942-08-24", "--port", str(port), "--sim-cli", sim_cli]
+            process = subprocess.Popen(command, stdout=subprocess.PIPE, text=True)
+            try:
+                line = process.stdout.readline()
+                check(line.startswith("The table is at "), f"the bridge is up on seed {seed} for the {seat} seat")
+                root = f"http://127.0.0.1:{port}"
+                call = lambda tool, arguments=None: post(root + "/call", {"tool": tool, "arguments": arguments or {}})["ok"]
+                call("end_day")
+                return call("events", {"day": 1})["events"], call("list_contacts"), call("list_forces"), call
+            finally:
+                process.send_signal(signal.SIGTERM)
+                process.wait(30)
+
+    def words(events):
+        return run_in_node(code, events)
+
+    # seed 6, the Allied side: a hit
+    events, contacts, forces, _ = play(6, "allied")
+    check("submarines" not in forces and contacts.get("submarine_reports") and contacts.get("suspected_waters"),
+          "the Allied side has no boat, holds a report of a submarine and the waters it is told of (and nothing of the enemy boat)")
+    said = words(events)
+    check(said["told"] == [{"thing": "submarine", "head": "We are torpedoed: ship:1, by a submarine", "n": 4}]
+          or (len(said["told"]) == 1 and said["told"][0]["head"] == "We are torpedoed: ship:1, by a submarine"),
+          f"a salvo that hit is the slip \"We are torpedoed: <ship>, by a submarine\", the ship's own events under it ({said['told']})")
+    joined = " | ".join(said["lines"])
+    check("Carrier, of Allied force, was fired on from a submarine at <5,0>" in joined and "A submarine is reported at <5,-1>" in joined and "Allied force hunted a submarine at <5,0>" in joined,
+          f"the events are said as the staff would: fired on from a submarine, a submarine reported, the force's hunt ({joined[:700]})")
+    # The kinds this game does not give, as the engine writes them (the Display of EventKind and SideEventKind in sim-core).
+    own = lambda handle, name: [{"handle": handle, "name": name}]
+    synthetic = [
+        {"event_kind": "submarine_entered", "text": "submarine:1 came onto the map at (12,0)", "entities": own("submarine:1", "Placeholder submarine 1")},
+        {"event_kind": "submarine_on_station", "text": "submarine:7 reached her station at (7,0)", "entities": own("submarine:7", "Placeholder submarine 7")},
+        {"event_kind": "submarine_left_for_home", "text": "submarine:1 left for base:1, her home: she was damaged", "entities": own("submarine:1", "Placeholder submarine 1") + own("base:1", "Placeholder submarine base")},
+        {"event_kind": "submarine_reached_home", "text": "submarine:1 reached base:1, her home, and left the map", "entities": own("submarine:1", "Placeholder submarine 1") + own("base:1", "Placeholder submarine base")},
+        {"event_kind": "own_submarine_attacked_from_air", "text": "submarine:1 was attacked from the air at (5,0), damaged", "entities": own("submarine:1", "Placeholder submarine 1")},
+        {"event_kind": "attacked_submarine_from_air", "text": "air_group:2 attacked a submarine at (5,0)", "entities": own("air_group:2", "VS-3")},
+        {"event_kind": "submarine_report_dropped", "text": "Allied dropped its report of a submarine at (5,-1), grown too old", "entities": []},
+        {"event_kind": "submarine_reported", "text": "Allied report of a submarine at (5,-1), replacing the report held", "entities": []},
+        {"event_kind": "suspected_waters_told", "text": "Allied told on day 1 of waters where enemy submarines are suspected, 3 hexes round (5,0): Placeholder: words", "entities": []},
+    ]
+    said = words(synthetic)["lines"]
+    check(said == ["Submarine 1 came onto the map at <12,0>.", "Submarine 7 is on station at <7,0>.", "Submarine 1 left for Submarine base, her home: she is damaged.",
+                   "Submarine 1 reached Submarine base, her home.", "Submarine 1 was attacked from the air at <5,0> and is damaged.", "VS-3 attacked a submarine at <5,0>.",
+                   "The report of a submarine at <5,-1> is dropped: it grew too old.", "A submarine is reported at <5,-1>, replacing the earlier report.",
+                   "We are told of waters where enemy submarines are suspected, 3 hexes round <5,0>: Placeholder: words."],
+          f"a boat on the map or on station, left for home, reached home, attacked from the air, our own air attack on one, a report dropped or replaced and waters told are said in the staff's words ({said})")
+    check(not re.search(r"\b\w+:\d+\b", joined), "no line of them carries a handle")
+    # seed 8, the Allied side: a miss
+    events, _, _, _ = play(8, "allied")
+    said = words(events)
+    check(len(said["told"]) == 1 and said["told"][0]["head"] == "ship:1 was fired on by a submarine at (5,0)",
+          f"a salvo that missed is a slip that one of ours was fired on by a submarine, and where ({said['told']})")
+    # seed 13, the Japanese side: the boat lost
+    events, contacts, forces, _ = play(13, "japanese")
+    said = words(events)
+    check("submarine_reports" not in contacts and "suspected_waters" not in contacts and forces["submarines"][0]["state"] == "sunk",
+          "the Japanese side holds no report and no waters, and its boat is sunk")
+    check([t["head"] for t in said["told"]] == ["Lost: submarine:1"], f"a boat lost is the slip \"Lost: <boat>\" ({said['told']})")
+    joined = " | ".join(said["lines"])
+    check("Submarine 1 fired 4 torpedoes at <5,0>, at what she took for a carrier" in joined and "A submarine reports 4 hits on a carrier at <5,0>" in joined
+          and "was hunted at <5,0> and is damaged; she is held down until the afternoon of D1" in joined and "Submarine 1 was sunk" in joined,
+          f"the boat's own events are said: fired, a claim, hunted, sunk ({joined[:700]})")
+    # seed 6, the Japanese side: held down
+    events, contacts, forces, call = play(6, "japanese")
+    boat = forces["submarines"][0]
+    check(boat["state"] == "on station" and boat["hands"]["by"] == "free" and boat["salvoes_left"] == 1 and boat["held_down_until"]["pulse"], f"a boat's card has what it reads: {boat['state']}, free, one salvo left, held down")
+
+
+def the_patrol_through_the_page(sim_cli, port):
+    """The patrol and a boat's order through the bridge, as the page makes the calls (decision 0218, stage 3): a preview of a patrol
+    gives each boat its station; a hold and a station order are queued, listed by `queued` as the page reads SIGNED and taken back; a
+    patrol approved is the staff's, and a boat is in its hands under it."""
+    print("-- the patrol and a boat's order, as the page makes the calls", flush=True)
+    repo = os.path.dirname(HERE)
+    path = os.path.join(repo, SUBMARINE_GAMES, "129_the_patrol.toml")
+    command = [sys.executable, os.path.join(HERE, "serve.py"), path, "--seat", "japanese", "--start", "1942-08-24", "--port", str(port), "--sim-cli", sim_cli]
+    process = subprocess.Popen(command, stdout=subprocess.PIPE, text=True)
+    try:
+        check(process.stdout.readline().startswith("The table is at "), "the bridge is up on the table's copy of scenario 129, the Japanese seat")
+        root = f"http://127.0.0.1:{port}"
+        call = lambda tool, arguments=None: post(root + "/call", {"tool": tool, "arguments": arguments or {}})["ok"]
+        forces = call("list_forces")["submarines"]
+        check(len(forces) == 7 and all(b["hands"]["by"] == "free" for b in forces), "seven boats, each in no one's hands")
+        preview = call("preview", {"command": "set_intent", "intent_kind": "patrol", "hex": [5, 0], "distance": 2})
+        stations = preview["with_change"]["stations"]
+        check(len(stations) == 7 and stations[0]["hex"]["q"] == 5 and stations[0]["hex"]["r"] == 0 and all(s["name"] and s["submarine"].startswith("submarine:") for s in stations),
+              "a preview of a patrol gives each boat its station, by name, as the page draws and says them")
+        order = call("issue_orders", {"orders": [{"unit": "submarine:1", "order": {"kind": "station", "hex": [7, 0]}}]})
+        check(order["results"][0]["status"] == "queued", "a direct order gives a boat a station")
+        queued = call("queued")["entries"]
+        station = [e for e in queued if e.get("order", {}).get("kind") == "station"][0]
+        check(station["unit"] == "submarine:1" and station["order"]["hex"] == [7, 0] and station["acts"]["at"] == "dusk",
+              "SIGNED reads it from queued: the boat, the hex, acting at dusk")
+        back = call("take_back", {"queue": station["place"]["queue"], "number": station["place"]["number"], "as_of": call("queued")["as_of"]})
+        check(not call("queued")["entries"], f"it is taken back, and nothing of it is left queued ({back.get('summary', '')[:60]})")
+        call("hold", {"submarine": 1})
+        holds = call("command_state")["holds"]
+        check(len(holds) == 1 and holds[0]["target"] == {"submarine": 1}, "a hold on a boat is listed with its target, so that her card and the staff's menu read it")
+        entry = call("queued")
+        hold = [e for e in entry["entries"] if e.get("tool") == "hold"][0]
+        call("take_back", {"queue": hold["place"]["queue"], "number": hold["place"]["number"], "as_of": entry["as_of"]})
+        check(not call("queued")["entries"] and not call("command_state")["holds"], "a hold on a boat is taken back as any entry is")
+        preview = call("preview", {"command": "set_intent", "intent_kind": "patrol", "hex": [5, 0], "distance": 2})
+        approved = call("approve", {"preview": preview["preview"]})
+        check(approved["command"]["intent_kind"] == "patrol", "a patrol is approved as an order")
+        proposed = call("propose", {"intent": 1})
+        check(len(proposed.get("stations", [])) == 7 and proposed["stations"][0]["name"], "a plan that waits is proposed with its stations, which the plan's paper lists under the order, each boat by name")
+        call("set_leave", {"leave": "prepare", "given": True})
+        call("set_leave", {"leave": "launch", "given": True})
+        call("end_day")
+        boats = call("list_forces")["submarines"]
+        check(all(b["hands"]["by"] == "staff" and b["hands"]["intent"] == 1 for b in boats), "each boat is then the staff's, under the order named")
+    finally:
+        process.send_signal(signal.SIGTERM)
+        process.wait(30)
 
 
 def a_refusal_through_the_page(bridge):
@@ -1087,6 +1328,7 @@ def main():
     the_plan_paper_has_no_rule_caption()
     the_fold_and_the_keys()
     the_words_and_what_the_papers_say()
+    the_submarines()
     if not os.path.exists(args.sim_cli):
         sys.exit(f"{args.sim_cli} is not built: cargo build --release -p sim-cli")
     with tempfile.TemporaryDirectory() as keep:
@@ -1110,6 +1352,8 @@ def main():
         versus = [g for g in games if os.path.exists(os.path.join(keep, g, "transcript_japanese.jsonl"))
                   and os.path.exists(os.path.join(keep, g, "transcript_allied.jsonl"))]
         check(versus, f"a game of a person against an agent keeps each seat's transcript ({versus[0] if versus else ''})")
+    the_submarines_through_the_page(args.sim_cli, args.port, args.hold)
+    the_patrol_through_the_page(args.sim_cli, args.port)
     print("-- the bridge started with a scenario: table/check_watch.py", flush=True)
     done = subprocess.run([sys.executable, os.path.join(HERE, "check_watch.py"), "--sim-cli", args.sim_cli,
                            "--port", str(args.port + 3), "--hold", str(args.hold)])
