@@ -206,6 +206,7 @@ Each hit has damage points: `100 x weapon damage / toughness`, in one product an
 - A gun hit lands on flotation if its draw is below `surface_combat.toml: gun_hit_flotation`, else on fire. A torpedo hit always lands on flotation and makes no track draw. [0014, 0032]
 - Each hit also makes one system draw, always, even if the chance below is 0. The system chance is `min(1, points x system_hit_chance_per_point)`. The systems take consecutive bands of the draw, in the code's order of the systems (`ShipSystem::ALL`): propulsion, fire control, main battery, torpedo mounts, flight deck. This order is the same for every table. Each band is as wide as the system chance times the system's share in the table of the weapon: `gun_system_hit` for a gun and `torpedo_system_hit` for a torpedo here, and `air_combat.toml: bomb_system_hit` for a bomb (chapter 5, The attack on a ship). A system absent from a table has share 0, so its band has no width. A draw beyond the last band hits no system. A system the ship does not have is still hit, and nothing changes. [0016, 0033]
 - Neither table in `surface_combat.toml` names the flight deck. A surface hit cannot land on it. Bombs have their own table (chapter 5, The attack on a ship). [0026]
+- A submarine's torpedo hit is worked as a ship's torpedo hit is, with these differences: the weapon damage is the `damage` of her torpedo in `submarine_torpedoes`, not a class's `torpedo_damage`; every hit lands on flotation; and the system draw of each hit is taken from the salvo's own stream after the torpedoes' draws (chapter 10, The salvo). The hits are applied at once, one salvo, as Applying damage says, citing the salvo, outside a fight, as round 0 (chapter 1, A surface fight), and a ship sunk is sunk as any ship is (Sinking). [0218, rule 8]
 
 ## Damage
 
@@ -461,6 +462,7 @@ Known limit: flooding that slows a ship, magazine explosions and damage to radar
 | Report error | The force and the enemy force, subsystem intelligence | Chapter 3, How each part is drawn |
 | Bombardment (`Draw::Bombardment`) | The firing ship and the base | One stream for each firing ship and night: the weighed shots, then for each hit where it lands, then, on the first firing ship's stream only, the sighting report [0092] |
 | A fire among aircraft fought (`Draw::AircraftFireFought`) | The ship, air combat subsystem | One draw for each ship with such a fire at a pulse's end: rises, or falls [0212] |
+| A submarine's torpedoes (`Draw::SubmarineTorpedo`) | The boat and the ship aimed at, submarine subsystem | One draw for each torpedo of the salvo in its place, then one system draw for each hit (chapter 10, Draws) [0218] |
 
 All randomness goes through `World::rng` or `World::rng_pair`. [0003, 0013, 0014, 0021]
 
@@ -469,6 +471,7 @@ All randomness goes through `World::rng` or `World::rng_pair`. [0003, 0013, 0014
 - Movement, routes, speed, stragglers and fuel burn: chapter 2.
 - Search, reports, contacts, their error model, claims, and who is alert and why: chapter 3.
 - Air strikes on ships, anti-aircraft fire, fighters, the bomb table and the flight deck's use: chapter 5.
+- A submarine's chance to attack, her salvo and the hunt of her: chapter 10.
 - Air groups lost with a sunk ship, pilots, and aircraft repair: chapter 5.
 - Orders, their intake and their checks, including the rules of engagement order: chapter 1, Orders.
 - How a side is shown events and what is cut: chapter 1, What a side sees of an event.

@@ -10,12 +10,12 @@ Chapter 1, The order in which a day resolves, holds the whole sequence. Before e
 
 | Pulse | Phase | What it does to belief |
 | --- | --- | --- |
-| Morning, afternoon | Air search | Air groups search and make sighting reports |
+| Morning, afternoon | Air search | Air groups search and make sighting reports. A group that flies also looks for boats in its arc: a boat sighted gives its side a report of a submarine (chapter 10, Aircraft and the boat) |
 | Morning, afternoon | Strike decisions | Read contacts; write nothing |
 | Morning, afternoon | Air combat | Strikes make sighting reports, "nothing there" reports and claims |
-| All three | Movement | Forces meet and fight in time order. A fight makes sighting reports and claims |
+| All three | Movement | Forces meet and fight in time order. A fight makes sighting reports and claims. Last in the step, a submarine's salvo gives her side a claim and the side fired on a report of a submarine (chapter 10) |
 | Night | Shore bombardment | A bombardment gives the base's side a sighting report and the bombarding side a claim |
-| All three | End of the pulse | Every side's contacts age or are dropped |
+| All three | End of the pulse | Every side's reports of submarines age or are dropped by their own figure, then every side's contacts age or are dropped |
 | End of the day | Ground combat | Each hex where both sides have men ashore gives each side a ground report, which replaces its estimate; a side with an estimate and fighting men in a hex where the enemy has none is told its men find none, and the estimate is cleared |
 
 The night pulse has an empty search phase. The end-of-day intelligence step is empty: ageing and merging are done as above. [0001, 0012, 0022]
@@ -69,7 +69,7 @@ A side sees: nothing separate. [0047]
 
 ### Who can be sighted
 
-A target is a task force of the other side with at least one ship, at its position at the start of the pulse. Search runs before movement, so it sees each force where the last pulse left it. A group never searches for its own side. The group sees no individual ships: the targets are task forces. [0012, 0025]
+A target is a task force of the other side with at least one ship, at its position at the start of the pulse. Search runs before movement, so it sees each force where the last pulse left it. A group never searches for its own side. The group sees no individual ships: the targets are task forces. A submarine is no target of this list: the group's look for her follows its look for forces, by a rule of its own (chapter 10, Aircraft and the boat). [0012, 0025, 0218, rule 18]
 
 A side sees: nothing about a target it did not sight. A search that found nothing is not shown to anyone. [0047]
 
@@ -96,6 +96,8 @@ Events, in order: `SearchFlown` once for each group that flies (it records the g
 Because each report goes into belief at once, a later group's report in the same pulse can merge into a contact an earlier group made, if it is within `merge_distance_same_pulse_hexes` of it (A sighting report makes or refreshes a contact); a report further off makes a contact of its own. Each group looks at its own targets only through its own draws, so this does not change anyone's chance. [0012, 0133]
 
 A side sees: its own `SearchFlown` whole. A `SearchAttempt` that sighted, to the searching side only, cut: the air group, without the task force (decision 0065) and without the distance or the chance, which would say where the force really was when the report names a neighbouring hex. A `SearchAttempt` that did not sight, to nobody. The sighted force is not told, and the enemy sees no part of the search. [0047, 0061, 0065]
+
+After the targets, the same group looks for the boats of the other side in its arc, on streams of the submarine subsystem (chapter 10, Aircraft and the boat); this changes no draw of the forces' look and no report of a force. [0218, rules 18 and 48]
 
 Not built: a group sending only part of itself on search while the rest does something else; night search; radar, weather and coastwatchers; delay and loss of a report on its way to the side's own belief (between commands a report can be late or lost, chapter 1, Commands and their pictures). [0012, 0052, 0135]
 
@@ -149,7 +151,9 @@ A side sees: its own report whole. The enemy sees nothing of it. [0047]
 
 ### What a side holds
 
-Belief holds three things for a side: contacts, claims and estimates of the enemy's men ashore. All come only from a report. The only way to write them is `BeliefState::apply_report`. The one other change is ageing, which takes no truth and no report. [0007, 0012, 0055]
+Belief holds five things for a side: contacts, claims, estimates of the enemy's men ashore, reports of submarines and suspected waters. All come only from a report. The only way to write them is `BeliefState::apply_report`. The one other change is ageing, which takes no truth and no report. [0007, 0012, 0055]
+
+A report of a submarine holds a hex, the day and pulse it was made, the event that recorded its arrival and an age in pulses; it holds no count, no kind and no identity. A side holds one for a hex, the newer, in a list of its own in hex order, and it is read by nothing that reads contacts. Suspected waters hold a hex, a distance, words, the rows they rest on and the day they were told, in the order told. Chapter 10, Reports of submarines and Suspected waters, holds both. [0218, rules 44 and 47]
 
 A contact holds an ID, an estimated hex, an estimated ship count, an estimated kind, an age in pulses, and the event that recorded the report that last made or refreshed it. Contact numbers are allocated for the side in order, and a number is never used again, including after a contact is dropped. [0012, 0028, 0032]
 
@@ -172,6 +176,8 @@ The test reads only what the side believes. A refreshed or created contact is ma
 A side sees: `ReportReceived` whole, saying the contact and whether it was created. [0047]
 
 ### Ageing and dropping
+
+A side's reports of submarines are aged just before, by their own figure, `submarines.toml: submarine_report_drop_age_pulses`, as chapter 10, Reports of submarines, says; they never take part in a contact's ageing. [0218, rule 44]
 
 At the end of every pulse, night included, for each side in order, each contact that was not made or refreshed in that pulse gains one pulse of age. A contact whose age reaches `search.toml: contact_drop_age_pulses` is dropped. The marks are then cleared. Each aged or dropped contact is an event (`ContactAged` or `ContactDropped`, with the age) that cites the report that last refreshed it, and they come in contact number order.
 
@@ -385,6 +391,14 @@ Not built (decisions 0179, 0180 and 0210): ships claimed sunk by group, a surfac
 
 Not built: a claim of ships crippled, a claim of supply destroyed or of men lost, and setting claims against later intelligence. The chances are the same for both sides and are placeholders for step 2. [0056]
 
+### The claim after a submarine's salvo
+
+One claim is made for each salvo a boat fires, straight after her hits have landed, for her side (chapter 10, What each side is told). It is marked `from_submarine`, and `from_air` and `from_bombardment` are false. It holds the ships her hits sank, the hits believed scored, the kind of ship her people took the target for, and no aircraft. The hits are the hits really scored plus one false hit for each torpedo that missed, each at one draw under `submarines.toml: submarine_false_hit_chance`, which stands where a raid's `air_combat.toml: bomb_false_claim_chance` does. The kind is drawn on the confusion row of the aimed ship's true kind, as a report's kind is (How each part is drawn). So the claim is never below the truth and is never corrected. The stream is `Draw::SubmarineClaim`, in the submarine subsystem, keyed on the boat and the ship aimed at. [0218, rule 45]
+
+The `ClaimReceived` event cites the salvo. Its breakdown (`real_hits`, `torpedoes_missed`, `false_hit_chance`, `false_hits`) is the umpire's.
+
+A side sees: its own `ClaimReceived` whole, without its breakdown. The enemy sees none. [0047, 0218]
+
 ### The claim after a shore bombardment
 
 One claim is made for a force for a night's bombardment, straight after the force's hits have landed and its base's side has been given its sighting report (chapter 4, Shore bombardment). It holds aircraft believed destroyed on the ground and nothing else: no ships, no hits, no aircraft shot down. It is marked `from_bombardment`, and `from_air` is false. Its text reads "claim from the sea at (q,r): N aircraft destroyed on the ground". [0092]
@@ -397,7 +411,7 @@ A side sees: its own `ClaimReceived` whole, without its breakdown. The enemy see
 
 ### What reads claims
 
-A side's progress toward its objectives reads its claims: its known count of enemy ships sunk, with their kinds where a claim has one, and of enemy aircraft destroyed, are sums of its claims, labelled as claimed. Ships crippled stay not observable. The umpire's result at the end reads the truth. Chapter 06 holds the rule. The briefing's "Claims yesterday" lists them. [0054, 0056]
+A side's progress toward its objectives reads its claims, a submarine's among them: its known count of enemy ships sunk, with their kinds where a claim has one, and of enemy aircraft destroyed, are sums of its claims, labelled as claimed. Ships crippled stay not observable. The umpire's result at the end reads the truth. Chapter 06 holds the rule. The briefing's "Claims yesterday" lists them. [0054, 0056]
 
 A side sees: its own claim count, which can be above the truth. [0056]
 
@@ -416,3 +430,4 @@ A side sees: its own claim count, which can be above the truth. [0056]
 - The random number key and how a stream is drawn from it, and the state hash: chapter 1, Numbers and chance, and The state hash and saved games.
 - Which events a side sees and how an event is cut: chapter 1, What a side sees of an event. The briefing and the queries are not rules.
 - Movement, fuel and cargo: chapter 2.
+- The boat, her attack, her side's claim, reports of submarines and suspected waters in full: chapter 10.
