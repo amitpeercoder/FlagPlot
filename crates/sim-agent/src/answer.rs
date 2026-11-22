@@ -160,8 +160,14 @@ pub const FORMAT: &str = "flagplot-agent";
 /// side's own boats, its reports of submarines and its suspected waters, left
 /// out where it has none), `list_forces`' `submarines`, the entity answer for
 /// a boat of the side's own (`submarine:N`), the order `station` of a boat,
-/// a claim's `from_submarine`, and the objective `submarines_sunk`.
-pub const VERSION: u32 = 47;
+/// a claim's `from_submarine`, and the objective `submarines_sunk`. 48 adds the
+/// patrol of submarines to the command tools (decision 0218, stage 3):
+/// `set_intent` with `intent_kind` `patrol` (`hex`, `distance`), `hold` and
+/// `release` of a boat (`submarine`), `set_limit` forces with `submarines`;
+/// `list_contacts`' `submarine_reports` and `suspected_waters`; a boat's
+/// `hands` in `list_forces` (the staff's, the commander's or free); and the
+/// `stations` of `propose` and `preview` for a patrol intent.
+pub const VERSION: u32 = 48;
 
 /// The answer to a question about something the side does not know of: a
 /// unit of the enemy, a number that does not exist, an event the side may not

@@ -1054,6 +1054,7 @@ fn a_forces_limit_an_intent_and_a_hold_may_name_the_sides_own_held_units() {
         air_groups: [group(11), group(12)].into_iter().collect(),
         source: None,
         land_units: [unit(21), unit(22)].into_iter().collect(),
+        submarines: Default::default(),
     };
     assert_eq!(
         command_result(

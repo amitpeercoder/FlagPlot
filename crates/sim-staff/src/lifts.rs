@@ -485,6 +485,7 @@ impl Day<'_, '_> {
                 air_groups: BTreeSet::new(),
                 source: None,
                 land_units: BTreeSet::new(),
+                submarines: Default::default(),
             });
             let before = limit.clone();
             limit

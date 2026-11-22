@@ -596,6 +596,7 @@ impl Day<'_, '_> {
             air_groups: BTreeSet::new(),
             source: None,
             land_units: BTreeSet::new(),
+            submarines: Default::default(),
         });
         new_limit.land_units = now.clone();
         if let Some(found) = self.state.intents.get_mut(&task.id) {

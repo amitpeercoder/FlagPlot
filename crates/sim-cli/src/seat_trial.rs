@@ -519,6 +519,7 @@ impl Context {
                 target: base(target),
             },
             IntentKind::Deny { hex, distance } => TaskShown::Deny { hex, distance },
+            IntentKind::Patrol { hex, distance } => TaskShown::Patrol { hex, distance },
             IntentKind::StrikeShips { base: b } => TaskShown::StrikeShips { base: base(b) },
             IntentKind::SearchWaters { base: b } => TaskShown::SearchWaters { base: base(b) },
             IntentKind::StandAt { force: f, hex } => TaskShown::StandAt {
@@ -795,6 +796,7 @@ fn enemy_intent(kind: IntentKind) -> (&'static str, Option<Hex>, Option<BaseId>)
         IntentKind::KeepSupplied { base, .. } => ("keep supplied", None, Some(base)),
         IntentKind::Cover { base } => ("cover from the air", None, Some(base)),
         IntentKind::Deny { hex, .. } => ("deny the waters", Some(hex), None),
+        IntentKind::Patrol { hex, .. } => ("patrol the waters", Some(hex), None),
         IntentKind::ControlIsland { .. } => ("control an island", None, None),
         IntentKind::Bombard { target, .. } => ("bombard", None, Some(target)),
         IntentKind::StandAt { hex, .. } | IntentKind::OperateCarriers { hex, .. } => {

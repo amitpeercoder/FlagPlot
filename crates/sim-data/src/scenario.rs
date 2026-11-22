@@ -3744,6 +3744,12 @@ impl Scenario {
                 }
             };
             let salvoes = spec.salvoes.unwrap_or(class.salvoes_carried);
+            if salvoes == 0 {
+                return Err(fail(format!(
+                    "{what} has salvoes = 0: a boat with no salvo is sent home, so a scenario gives 1 to her class's {} (decision 0218, rule 43)",
+                    class.salvoes_carried
+                )));
+            }
             if salvoes > class.salvoes_carried {
                 return Err(fail(format!(
                     "{what} has salvoes = {salvoes}, more than her class carries ({})",
@@ -8552,6 +8558,7 @@ task_force = 3
                     air_groups: BTreeSet::new(),
                     land_units: BTreeSet::new(),
                     source: Some(BaseId::new(1)),
+                    submarines: Default::default(),
                 },
             })
         );
@@ -8570,6 +8577,7 @@ task_force = 3
                         .into_iter()
                         .collect(),
                     source: None,
+                    submarines: Default::default(),
                 },
             })
         );
@@ -8690,6 +8698,7 @@ task_force = 3
                         .collect(),
                     land_units: BTreeSet::new(),
                     source: None,
+                    submarines: Default::default(),
                 },
             })
         );
@@ -9133,6 +9142,75 @@ task_force = 3
             .expect("loads")
             .scripted_commands()
             .is_empty());
+    }
+
+    /// Decision 0218, stage 3: the patrol order, a hold on a boat and a
+    /// forces limit naming boats are given by a scenario's commands.
+    #[test]
+    fn the_patrol_order_a_hold_on_a_boat_and_a_limit_naming_boats_load() {
+        use sim_core::command::{ForcesLimit, HoldTarget, IntentKind, Limit};
+        use sim_core::ids::SubmarineId;
+        assert_eq!(
+            only(&command(
+                "kind = \"set_intent\"\nintent = 3\nintent_kind = \"patrol\"\nhex = [5, -2]\ndistance = 4"
+            )),
+            CommandKind::SetIntent {
+                intent: IntentId::new(3),
+                kind: IntentKind::Patrol {
+                    hex: Hex::new(5, -2),
+                    distance: 4
+                }
+            }
+        );
+        // A patrol takes a hex and a distance and no base.
+        for body in [
+            "intent_kind = \"patrol\"\nhex = [5, -2]",
+            "intent_kind = \"patrol\"\ndistance = 4",
+            "intent_kind = \"patrol\"\nhex = [5, -2]\ndistance = 4\nbase = 1",
+        ] {
+            assert!(
+                parse_with(&command(&format!(
+                    "kind = \"set_intent\"\nintent = 3\n{body}"
+                )))
+                .is_err(),
+                "{body}"
+            );
+        }
+        for (kind, make) in [("hold", true), ("release", false)] {
+            let target = HoldTarget::Submarine(SubmarineId::new(6));
+            assert_eq!(
+                only(&command(&format!("kind = \"{kind}\"\nsubmarine = 6"))),
+                if make {
+                    CommandKind::Hold { target }
+                } else {
+                    CommandKind::Release { target }
+                }
+            );
+        }
+        // A hold names exactly one target.
+        assert!(parse_with(&command("kind = \"hold\"\nsubmarine = 6\nship = 1")).is_err());
+        assert!(parse_with(&command(
+            "kind = \"hold\"\nsubmarine = 6\nsetting = \"search_arc\""
+        ))
+        .is_err());
+        assert_eq!(
+            only(&command(
+                "kind = \"set_limit\"\nlimit = \"forces\"\nintent = 3\nsubmarines = [2, 6]"
+            )),
+            CommandKind::SetLimit(Limit::Forces {
+                intent: IntentId::new(3),
+                limit: ForcesLimit {
+                    ships: Default::default(),
+                    task_forces: Default::default(),
+                    air_groups: Default::default(),
+                    source: None,
+                    land_units: Default::default(),
+                    submarines: [SubmarineId::new(2), SubmarineId::new(6)]
+                        .into_iter()
+                        .collect(),
+                }
+            })
+        );
     }
 
     #[test]
@@ -10163,7 +10241,6 @@ task_force = 3
         assert_eq!((passage.to, passage.home), (Hex::new(5, 0), true));
         // Salvoes, at most her class's.
         assert_eq!(boat_of("salvoes = 1\n").salvoes, 1);
-        assert_eq!(boat_of("salvoes = 0\n").salvoes, 0);
         // Days.
         let boat = boat_of("leave_day = 2\navailable_from = 2\nenters = 2\n");
         assert_eq!(
@@ -10190,6 +10267,7 @@ task_force = 3
     fn a_bad_boat_is_refused_with_its_reason() {
         for (extra, words) in [
             ("salvoes = 3\n", "more than her class carries"),
+            ("salvoes = 0\n", "submarine 1 has salvoes = 0"),
             ("condition = \"afloat\"\n", "sound or damaged"),
             ("enters = 1\n", "enters = 1"),
             ("enters = 3\n", "after the last day"),

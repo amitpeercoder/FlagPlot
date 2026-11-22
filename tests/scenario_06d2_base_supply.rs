@@ -2951,7 +2951,10 @@ fn a_scenario_that_names_no_supply_file_has_the_hashes_it_had_before_this_stage(
                 && !stem.starts_with("90_")
                 // And scenario 125's, whose staff asks leave to pursue and
                 // pursues (decision 0214).
-                && !stem.starts_with("125_"))
+                && !stem.starts_with("125_")
+                // And scenario 129's, whose staff patrols with submarines
+                // (decision 0218, stage 3).
+                && !stem.starts_with("129_"))
             .then(|| stem.to_string())
         })
         .collect();

@@ -31,7 +31,7 @@
       "const": "flagplot-agent"
     },
     "version": {
-      "const": 47
+      "const": 48
     },
     "kind": {
       "const": "plan_order"

@@ -372,6 +372,9 @@ pub(crate) struct Day<'v, 'a> {
     /// What the carrier pass found for each commander's deny and neutralise
     /// this morning (decision 0202), stored nowhere.
     pub(crate) carrier_ends: BTreeMap<IntentId, crate::station::CarrierOutcome>,
+    /// The stations a proposal's patrol order would give, in place order
+    /// (decision 0218, 54); only for the tree in scope.
+    pub(crate) patrol_stations: Vec<sim_core::command::PatrolStation>,
 }
 
 /// The kinds the air doctrine serves: hold, cover, neutralise, raid, deny,
@@ -397,6 +400,7 @@ pub(crate) fn is_air(kind: IntentKind) -> bool {
             | IntentKind::TakePlace { .. }
             | IntentKind::Bombard { .. }
             | IntentKind::ControlIsland { .. }
+            | IntentKind::Patrol { .. }
     )
 }
 
@@ -491,6 +495,7 @@ pub(crate) fn propose(view: &SideView<'_>, intent: IntentId) -> Option<Proposal>
         shortfall: None,
         displaces: Vec::new(),
         reason,
+        stations: day.patrol_stations,
     })
 }
 
@@ -543,6 +548,7 @@ impl<'v, 'a> Day<'v, 'a> {
             looking_groups: std::collections::BTreeSet::new(),
             men_waits: BTreeMap::new(),
             carrier_ends: BTreeMap::new(),
+            patrol_stations: Vec::new(),
         };
         day.leaves();
         // Decision 0151: the tree of an island, formed before the doctrines
@@ -574,6 +580,9 @@ impl<'v, 'a> Day<'v, 'a> {
         // Decision 0148: carriers under "take a place", formed once its
         // plan is released and served after the landing's morning.
         day.take_carriers();
+        // Decision 0218, 54: the patrol order, served last so that no other
+        // doctrine's hand-in changes for a game with no patrol.
+        day.patrols();
         Some(day)
     }
 

@@ -1246,3 +1246,47 @@ fn a_picture_carries_the_waters_told_and_a_half_carries_its_own_and_none_waiting
     assert_eq!(half.belief.suspected_waters.len(), 1);
     assert!(half.belief.suspected_waters.iter().all(|w| w.day == 1));
 }
+
+/// Decision 0218, rules 3 and 21 (row 68): a home base ships cannot enter, or
+/// that no sea route reaches from her station, is refused when the world is
+/// made, with her number and the base in the reason.
+#[test]
+fn a_home_base_the_sea_does_not_reach_is_refused_with_her_number_and_the_base() {
+    let made = |edit: &dyn Fn(&mut crate::map::Map)| {
+        let (ref_data, mut map, truth) = parts(vec![boat(1)]);
+        edit(&mut map);
+        World::new(7, ref_data, map, truth)
+    };
+    // A sound world is accepted as before.
+    made(&|_| {}).expect("a valid setup");
+    // The base's hex is land: ships cannot enter it.
+    let words = match made(&|map| {
+        map.insert(
+            hx(5, 0),
+            crate::map::HexData {
+                kind: crate::map::HexKind::Land,
+                ..crate::map::HexData::open_sea()
+            },
+        );
+    }) {
+        Err(SimError::InvalidSetup(words)) => words,
+        other => panic!("accepted or another fault: {:?}", other.err()),
+    };
+    assert!(
+        words.contains("submarine:1") && words.contains("base:2") && words.contains("enter"),
+        "{words}"
+    );
+    // The base's hex is sea with every side closed: no route reaches it.
+    let words = match made(&|map| {
+        let mut data = map.get(hx(5, 0)).expect("on the map").clone();
+        data.closed_sides = [true; 6];
+        map.insert(hx(5, 0), data);
+    }) {
+        Err(SimError::InvalidSetup(words)) => words,
+        other => panic!("accepted or another fault: {:?}", other.err()),
+    };
+    assert!(
+        words.contains("submarine:1") && words.contains("base:2") && words.contains("no sea route"),
+        "{words}"
+    );
+}

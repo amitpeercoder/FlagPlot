@@ -172,11 +172,13 @@ impl Default for MadeIds {
 /// carrier is bombed, and a ship's field a game saved under the old rules
 /// could not hold) and 29 from decision 0218 (submarines: a boat as a unit
 /// of her own kind with her state, which a game saved under the old rules
-/// could not hold). A pull request
+/// could not hold) and 30 from decision 0218, stage 3 (the patrol order, a hold
+/// on a boat and a forces limit naming boats, which a game saved under the
+/// old rules could not hold). A pull request
 /// raises it by one
 /// when it changes a rule in a way that changes what an existing game would do; a
 /// change that leaves every existing game as it was leaves it alone.
-pub const RULES_VERSION: u32 = 29;
+pub const RULES_VERSION: u32 = 30;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct SimConfig {
@@ -536,6 +538,23 @@ impl World {
                 return Err(SimError::InvalidSetup(format!(
                     "{} has home base {}, which does not exist",
                     boat.id, boat.home
+                )));
+            }
+            // Her home base is a hex ships can enter and a sea route reaches
+            // it from her station, or she could never be taken off the map
+            // there (decision 0218, rules 3 and 21; row 68 of the
+            // differences).
+            let base = &truth.bases[&boat.home];
+            if !map.is_navigable(base.hex) {
+                return Err(SimError::InvalidSetup(format!(
+                    "{}'s home base {} is at {}, which is not a hex ships can enter",
+                    boat.id, boat.home, base.hex
+                )));
+            }
+            if map.sea_distance(boat.station, base.hex).is_none() {
+                return Err(SimError::InvalidSetup(format!(
+                    "no sea route reaches {}'s home base {} at {} from her station {}",
+                    boat.id, boat.home, base.hex, boat.station
                 )));
             }
         }

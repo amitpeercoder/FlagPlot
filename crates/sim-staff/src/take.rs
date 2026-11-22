@@ -830,6 +830,7 @@ impl Day<'_, '_> {
                         air_groups: BTreeSet::new(),
                         source: None,
                         land_units: choice.picks.iter().map(|p| p.id).collect(),
+                        submarines: Default::default(),
                     };
                     FirstChoice::Found {
                         choice,
@@ -3746,6 +3747,7 @@ impl Day<'_, '_> {
             air_groups: BTreeSet::new(),
             source: None,
             land_units: BTreeSet::new(),
+            submarines: Default::default(),
         });
         // A limit that names no unit binds the units above it (decision
         // 0149, 3): the second lift adds to those.
@@ -4005,6 +4007,7 @@ impl Day<'_, '_> {
             air_groups: BTreeSet::new(),
             source: None,
             land_units: BTreeSet::new(),
+            submarines: Default::default(),
         });
         if limit.land_units.is_empty() {
             limit.land_units = self.state.land_units_on_chain(task.id).unwrap_or_default();

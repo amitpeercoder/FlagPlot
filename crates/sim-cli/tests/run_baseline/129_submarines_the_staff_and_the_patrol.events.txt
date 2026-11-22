@@ -1,0 +1,91 @@
+Scenario 129: The staff patrols waters with submarines
+PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
+seed 1942
+
+day   1  hash c63914068e5e67dd  54 events
+day   2  hash 9b4f5aebdfcab31b  14 events
+day   3  hash 16a96cf5031e5e08  2 events
+
+#1 D1 -         Japanese the commander's command taken: set intent:1 to patrol the waters within 2 hexes of (5,0) with submarines
+#2 D1 -         Japanese plan:1 drafted for intent:1  <- #1
+#3 D1 -         Japanese the commander's command taken: give the leave to prepare
+#4 D1 -         Japanese the commander's command taken: give the leave to launch
+#5 D1 -         Japanese the staff's command taken: approve plan:1
+#6 D1 -         Japanese plan:1 went from draft to preparing  <- #5
+#7 D1 -         Japanese staff's reason for the command to approve plan:1 [serves intent 1: patrol the waters within 2 hexes of (5,0) with submarines; plan 1; decided at the level of the area]: plan:1, the plan to patrol the waters within 2 hexes of (5,0) with submarines, is a draft inside the limits of intent:1 and leave to prepare is given: the staff makes it ready (preparing).  <- #5
+#8 D1 -         Japanese the staff's command taken: approve plan:1
+#9 D1 -         Japanese plan:1 went from preparing to released  <- #8
+#10 D1 -         Japanese staff's reason for the command to approve plan:1 [serves intent 1: patrol the waters within 2 hexes of (5,0) with submarines; plan 1; decided at the level of the area]: plan:1, the plan to patrol the waters within 2 hexes of (5,0) with submarines, is ready and leave to launch is given: the staff releases it.  <- #8
+#11 D1 -         order:1 accepted for submarine:1  <- order:1  [issued by the staff]
+#12 D1 -         submarine:1 was ordered to her station at (5,0)  <- order:1
+#13 D1 -         Japanese staff's reason for order:1 [serves intent 1: patrol the waters within 2 hexes of (5,0) with submarines; plan 1; decided at the level of the area]: intent:1 patrols the waters within 2 hexes of (5,0) (19 hex(es) on the map). submarine:1 (Placeholder submarine 1) is in place 1 of the boats it may use, so her station is (5,0), the centre of the waters: the staff orders her to the station.  <- order:1, #11
+#14 D1 -         order:2 accepted for submarine:2  <- order:2  [issued by the staff]
+#15 D1 -         submarine:2 was ordered to her station at (3,0)  <- order:2
+#16 D1 -         Japanese staff's reason for order:2 [serves intent 1: patrol the waters within 2 hexes of (5,0) with submarines; plan 1; decided at the level of the area]: intent:1 patrols the waters within 2 hexes of (5,0) (19 hex(es) on the map). submarine:2 (Placeholder submarine 2) is in place 2 of the boats it may use, so her station is (3,0), station 2 of the waters, 2 hexes from the nearest before it: the staff orders her to the station.  <- order:2, #14
+#17 D1 -         order:3 accepted for submarine:3  <- order:3  [issued by the staff]
+#18 D1 -         submarine:3 was ordered to her station at (3,2)  <- order:3
+#19 D1 -         Japanese staff's reason for order:3 [serves intent 1: patrol the waters within 2 hexes of (5,0) with submarines; plan 1; decided at the level of the area]: intent:1 patrols the waters within 2 hexes of (5,0) (19 hex(es) on the map). submarine:3 (Placeholder submarine 3) is in place 3 of the boats it may use, so her station is (3,2), station 3 of the waters, 2 hexes from the nearest before it: the staff orders her to the station.  <- order:3, #17
+#20 D1 -         order:4 accepted for submarine:4  <- order:4  [issued by the staff]
+#21 D1 -         submarine:4 was ordered to her station at (5,-2)  <- order:4
+#22 D1 -         Japanese staff's reason for order:4 [serves intent 1: patrol the waters within 2 hexes of (5,0) with submarines; plan 1; decided at the level of the area]: intent:1 patrols the waters within 2 hexes of (5,0) (19 hex(es) on the map). submarine:4 (Placeholder submarine 4) is in place 4 of the boats it may use, so her station is (5,-2), station 4 of the waters, 2 hexes from the nearest before it: the staff orders her to the station.  <- order:4, #20
+#23 D1 -         order:5 accepted for submarine:5  <- order:5  [issued by the staff]
+#24 D1 -         submarine:5 was ordered to her station at (5,2)  <- order:5
+#25 D1 -         Japanese staff's reason for order:5 [serves intent 1: patrol the waters within 2 hexes of (5,0) with submarines; plan 1; decided at the level of the area]: intent:1 patrols the waters within 2 hexes of (5,0) (19 hex(es) on the map). submarine:5 (Placeholder submarine 5) is in place 5 of the boats it may use, so her station is (5,2), station 5 of the waters, 2 hexes from the nearest before it: the staff orders her to the station.  <- order:5, #23
+#26 D1 -         order:6 accepted for submarine:6  <- order:6  [issued by the staff]
+#27 D1 -         submarine:6 was ordered to her station at (7,-2)  <- order:6
+#28 D1 -         Japanese staff's reason for order:6 [serves intent 1: patrol the waters within 2 hexes of (5,0) with submarines; plan 1; decided at the level of the area]: intent:1 patrols the waters within 2 hexes of (5,0) (19 hex(es) on the map). submarine:6 (Placeholder submarine 6) is in place 6 of the boats it may use, so her station is (7,-2), station 6 of the waters, 2 hexes from the nearest before it: the staff orders her to the station.  <- order:6, #26
+#29 D1 -         order:7 accepted for submarine:7  <- order:7  [issued by the staff]
+#30 D1 -         submarine:7 was ordered to her station at (7,0)  <- order:7
+#31 D1 -         Japanese staff's reason for order:7 [serves intent 1: patrol the waters within 2 hexes of (5,0) with submarines; plan 1; decided at the level of the area]: intent:1 patrols the waters within 2 hexes of (5,0) (19 hex(es) on the map). submarine:7 (Placeholder submarine 7) is in place 7 of the boats it may use, so her station is (7,0), station 7 of the waters, 2 hexes from the nearest before it: the staff orders her to the station.  <- order:7, #29
+#32 D1 night     submarine:1 steamed from (12,0) to (9,0)  <- order:1
+#33 D1 night     submarine:2 steamed from (12,0) to (9,0)  <- order:2
+#34 D1 night     submarine:3 steamed from (12,0) to (9,0)  <- order:3
+#35 D1 night     submarine:4 steamed from (12,0) to (10,-2)  <- order:4
+#36 D1 night     submarine:5 steamed from (12,0) to (9,0)  <- order:5
+#37 D1 night     submarine:6 steamed from (12,0) to (10,-2)  <- order:6
+#38 D1 night     submarine:7 steamed from (12,0) to (9,0)  <- order:7
+#39 D1 morning   submarine:1 steamed from (9,0) to (7,0)  <- order:1
+#40 D1 morning   submarine:2 steamed from (9,0) to (7,0)  <- order:2
+#41 D1 morning   submarine:3 steamed from (9,0) to (7,0)  <- order:3
+#42 D1 morning   submarine:4 steamed from (10,-2) to (9,-2)  <- order:4
+#43 D1 morning   submarine:5 steamed from (9,0) to (7,0)  <- order:5
+#44 D1 morning   submarine:6 steamed from (10,-2) to (9,-2)  <- order:6
+#45 D1 morning   submarine:7 steamed from (9,0) to (7,0)  <- order:7
+#46 D1 afternoon submarine:1 steamed from (7,0) to (6,0)  <- order:1
+#47 D1 afternoon submarine:2 steamed from (7,0) to (6,0)  <- order:2
+#48 D1 afternoon submarine:3 steamed from (7,0) to (5,0)  <- order:3
+#49 D1 afternoon submarine:4 steamed from (9,-2) to (7,-2)  <- order:4
+#50 D1 afternoon submarine:5 steamed from (7,0) to (5,2)  <- order:5
+#51 D1 afternoon submarine:6 steamed from (9,-2) to (7,-2)  <- order:6
+#52 D1 afternoon submarine:7 steamed from (7,0) to (7,0)  <- order:7
+#53 D1 afternoon submarine:7 reached her station at (7,0)  <- #52
+#54 D1 -         base:1 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#55 D2 -         Japanese staff's reason for giving no order [serves intent 1: patrol the waters within 2 hexes of (5,0) with submarines; plan 1; decided at the level of the area]: intent:1 patrols the waters within 2 hexes of (5,0) (19 hex(es) on the map). submarine:1 (Placeholder submarine 1) keeps her station at (5,0); submarine:2 (Placeholder submarine 2) keeps her station at (3,0); submarine:3 (Placeholder submarine 3) keeps her station at (3,2); submarine:4 (Placeholder submarine 4) keeps her station at (5,-2); submarine:5 (Placeholder submarine 5) keeps her station at (5,2); submarine:6 (Placeholder submarine 6) keeps her station at (7,-2); submarine:7 (Placeholder submarine 7) keeps her station at (7,0). The station of a boat passed over goes to no one.
+#56 D2 night     submarine:1 steamed from (6,0) to (5,0)  <- order:1
+#57 D2 night     submarine:1 reached her station at (5,0)  <- #56
+#58 D2 night     submarine:2 steamed from (6,0) to (3,0)  <- order:2
+#59 D2 night     submarine:2 reached her station at (3,0)  <- #58
+#60 D2 night     submarine:3 steamed from (5,0) to (3,2)  <- order:3
+#61 D2 night     submarine:3 reached her station at (3,2)  <- #60
+#62 D2 night     submarine:4 steamed from (7,-2) to (5,-2)  <- order:4
+#63 D2 night     submarine:4 reached her station at (5,-2)  <- #62
+#64 D2 night     submarine:5 steamed from (5,2) to (5,2)  <- order:5
+#65 D2 night     submarine:5 reached her station at (5,2)  <- #64
+#66 D2 night     submarine:6 steamed from (7,-2) to (7,-2)  <- order:6
+#67 D2 night     submarine:6 reached her station at (7,-2)  <- #66
+#68 D2 -         base:1 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+#69 D3 -         Japanese staff's reason for giving no order [serves intent 1: patrol the waters within 2 hexes of (5,0) with submarines; plan 1; decided at the level of the area]: intent:1 patrols the waters within 2 hexes of (5,0) (19 hex(es) on the map). submarine:1 (Placeholder submarine 1) keeps her station at (5,0); submarine:2 (Placeholder submarine 2) keeps her station at (3,0); submarine:3 (Placeholder submarine 3) keeps her station at (3,2); submarine:4 (Placeholder submarine 4) keeps her station at (5,-2); submarine:5 (Placeholder submarine 5) keeps her station at (5,2); submarine:6 (Placeholder submarine 6) keeps her station at (7,-2); submarine:7 (Placeholder submarine 7) keeps her station at (7,0). The station of a boat passed over goes to no one.
+#70 D3 -         base:1 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+
+base:1 "Placeholder submarine base" (Japanese) at (12,0): 0 t of supply in stock, no airfield
+submarine:1 "Placeholder submarine 1" (Japanese): sound, at (5,0), on station at (5,0), 2 salvoes
+submarine:2 "Placeholder submarine 2" (Japanese): sound, at (3,0), on station at (3,0), 2 salvoes
+submarine:3 "Placeholder submarine 3" (Japanese): sound, at (3,2), on station at (3,2), 2 salvoes
+submarine:4 "Placeholder submarine 4" (Japanese): sound, at (5,-2), on station at (5,-2), 2 salvoes
+submarine:5 "Placeholder submarine 5" (Japanese): sound, at (5,2), on station at (5,2), 2 salvoes
+submarine:6 "Placeholder submarine 6" (Japanese): sound, at (7,-2), on station at (7,-2), 2 salvoes
+submarine:7 "Placeholder submarine 7" (Japanese): sound, at (7,0), on station at (7,0), 2 salvoes
+Allied: no contacts
+Allied: no battle claims
+Japanese: no contacts
+Japanese: no battle claims

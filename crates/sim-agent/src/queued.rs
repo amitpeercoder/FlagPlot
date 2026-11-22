@@ -133,6 +133,7 @@ fn hold_unit(target: HoldTarget) -> Option<String> {
             Some(format!("air_group:{}", group.raw()))
         }
         HoldTarget::LandUnit(unit) => Some(format!("land_unit:{}", unit.raw())),
+        HoldTarget::Submarine(boat) => Some(format!("submarine:{}", boat.raw())),
         HoldTarget::Ship(_) => None,
     }
 }

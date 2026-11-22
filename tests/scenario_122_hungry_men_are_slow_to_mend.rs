@@ -1588,9 +1588,10 @@ fn property_no_new_state() {
     // for a force's leave to pursue, and decisions 0211 and 0212 to v56 and
     // 28, for a ship's fire among her aircraft, and decision 0218 the
     // rules label to 29 for the submarine, a boat hashed only where there
-    // is one; none touches this rule.
+    // is one, and its third stage to 30 for the patrol order and a hold on
+    // a boat; none touches this rule.
     assert_eq!(sim_core::hash::STATE_VERSION, b"flagplot-state-v56");
-    assert_eq!(sim_core::world::RULES_VERSION, 29);
+    assert_eq!(sim_core::world::RULES_VERSION, 30);
     let root = common::data_dir().join("..");
     let file = root.join("crates/sim-cli/tests/recorded_games/eastern_solomons_haiku/save.json");
     let saved = sim_cli::save::read(file.to_str().expect("a path")).expect("the save reads");

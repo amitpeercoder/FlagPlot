@@ -1226,6 +1226,10 @@ pub(crate) fn check_command(
                     .is_some_and(|found| found.side == side)
                     || held(EntityRef::LandUnit(*unit))
             }
+            HoldTarget::Submarine(boat) => truth
+                .submarines
+                .get(boat)
+                .is_some_and(|found| found.side == side),
         };
         if !own || hold.day > day {
             violations.push(InvariantViolation::HoldUnsound(side, *target));

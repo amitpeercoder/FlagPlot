@@ -40,6 +40,7 @@ mod morning;
 mod neutralise;
 mod night;
 mod order;
+mod patrol;
 mod picture;
 mod planner;
 mod projection;
@@ -57,6 +58,7 @@ pub mod targets;
 mod told;
 mod turn_back;
 mod units;
+mod waters;
 pub mod way;
 
 pub use available::{counted_by_a_take, Counted};
@@ -381,8 +383,16 @@ use sim_core::view::SideView;
 /// and its reason for giving the bases no task names the carrier tasks
 /// first; and the reason of a carrier station the staff chose carries its
 /// cautions (the station stands in danger; the fuel was not measured). It
-/// gives the orders `supply-53` gave.
-pub const DOCTRINE_VERSION: &str = "supply-54";
+/// gives the orders `supply-53` gave. `supply-55` adds decision 0218, stage
+/// 3: the patrol of submarines (a patrol intent gives each boat it may use
+/// the station of her place in the waters and orders her there, and gives no
+/// order, with its reason, to a boat that keeps her station or cannot serve)
+/// and the staff's regard for the waters a side suspects enemy submarines
+/// work in (a station inside them is passed over where a place outside
+/// serves, and carries the caution `station_in_submarine_waters` where none
+/// does). It gives the orders `supply-54` gave to a side with no patrol
+/// intent and no suspected waters.
+pub const DOCTRINE_VERSION: &str = "supply-55";
 
 /// The staff: the doctrine for keeping a base supplied (stage 1) and, after
 /// it, the air doctrine for holding a place and covering a base from the air

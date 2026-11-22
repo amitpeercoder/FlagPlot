@@ -33,7 +33,7 @@
       "const": "flagplot-agent"
     },
     "version": {
-      "const": 47
+      "const": 48
     },
     "kind": {
       "const": "command_state"
@@ -127,6 +127,7 @@
               "neutralise",
               "raid",
               "deny",
+              "patrol",
               "strike_ships",
               "search_waters",
               "stand_at",

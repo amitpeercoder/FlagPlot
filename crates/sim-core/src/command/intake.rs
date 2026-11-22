@@ -25,7 +25,9 @@ use crate::command::{
 };
 use crate::events::{Cause, EventKind};
 use crate::fixed::Fixed;
-use crate::ids::{AirGroupId, BaseId, EntityRef, EventId, IntentId, LandUnitId, ShipId};
+use crate::ids::{
+    AirGroupId, BaseId, EntityRef, EventId, IntentId, LandUnitId, ShipId, SubmarineId,
+};
 use crate::orders::{AirGroupOrder, BaseOrder, Issuer, OrderKind, OrderRequest, RejectReason};
 use crate::state::{AirGroupLocation, ShipLocation, Side};
 use crate::world::World;
@@ -192,6 +194,43 @@ impl World {
         self.own_land_unit_struct(side, unit).is_some()
     }
 
+    /// Whether `boat` is one of `side`'s own submarines and not sunk
+    /// (decision 0218, 34). Never the enemy's: one reason for a boat that
+    /// does not exist and an enemy's.
+    fn own_submarine(&self, side: Side, boat: SubmarineId) -> bool {
+        self.truth.submarines.get(&boat).is_some_and(|found| {
+            found.side == side && found.condition != crate::state::SubmarineCondition::Sunk
+        })
+    }
+
+    /// Whether intent `intent` may use submarine `boat` (decision 0218, 12
+    /// and 34): a "patrol" in force may use a boat of the side when every
+    /// forces limit on its chain that names at least one boat names her;
+    /// where no limit on the chain names a boat, every boat of the side. A
+    /// limit naming only ships or air groups does not bind the boats. No
+    /// other kind of intent may use a boat.
+    pub(crate) fn may_use_submarine(
+        &self,
+        side: Side,
+        intent: IntentId,
+        boat: SubmarineId,
+    ) -> bool {
+        let state = &self.command[&side];
+        let Some(found) = state.intents.get(&intent) else {
+            return false;
+        };
+        if !found.in_force() || !matches!(found.kind, IntentKind::Patrol { .. }) {
+            return false;
+        }
+        if !self.own_submarine(side, boat) {
+            return false;
+        }
+        match state.submarines_on_chain(intent) {
+            Some(allowed) => allowed.contains(&boat),
+            None => true,
+        }
+    }
+
     /// Whether `ship` is in the pool of `forces`: listed in it, or in a task
     /// force it lists (afloat in it, or away from it at the yard).
     pub(crate) fn in_pool(&self, forces: &ForcesLimit, ship: ShipId) -> bool {
@@ -325,7 +364,11 @@ impl World {
             .collect();
         let names_forces =
             |forces: &ForcesLimit| !(forces.task_forces.is_empty() && forces.ships.is_empty());
-        limit
+        limit.submarines.iter().all(|boat| {
+            state
+                .submarines_on_chain(parent)
+                .is_none_or(|allowed| allowed.contains(boat))
+        }) && limit
             .air_groups
             .iter()
             .all(|group| self.may_use_group(side, parent, *group))
@@ -361,17 +404,25 @@ impl World {
     /// and a source only where it is the source of every one. With no forces
     /// limit above, the parent may use only what its addressee commands: a
     /// base's air groups, and no ship.
-    fn forces_narrow(&self, side: Side, parent: IntentId, limit: &ForcesLimit) -> bool {
+    pub(crate) fn forces_narrow(&self, side: Side, parent: IntentId, limit: &ForcesLimit) -> bool {
         let state = &self.command[&side];
         // Under "control an island" too, each limit above binds only what it
         // names, kind by kind (decision 0151, 4).
         if state.take_place_on_chain(parent).is_some() || state.island_on_chain(parent).is_some() {
             return self.forces_narrow_under_take(side, parent, limit);
         }
-        let groups_ok = limit
-            .air_groups
-            .iter()
-            .all(|group| self.may_use_group(side, parent, *group))
+        // Each boat named is named in the parent's limit read up the tree,
+        // or the parent has no limit naming any boat (decision 0218, 12).
+        let boats_ok = limit.submarines.iter().all(|boat| {
+            state
+                .submarines_on_chain(parent)
+                .is_none_or(|allowed| allowed.contains(boat))
+        });
+        let groups_ok = boats_ok
+            && limit
+                .air_groups
+                .iter()
+                .all(|group| self.may_use_group(side, parent, *group))
             && limit
                 .land_units
                 .iter()
@@ -667,6 +718,11 @@ impl World {
                                 return Err(CommandRefusal::NotYourLandUnit(*unit));
                             }
                         }
+                        for boat in &limit.submarines {
+                            if !self.own_submarine(side, *boat) {
+                                return Err(CommandRefusal::NotYourSubmarine(*boat));
+                            }
+                        }
                     }
                     Limit::Area { hexes, .. } => {
                         if hexes.is_empty() || hexes.iter().any(|hex| !self.map.contains(*hex)) {
@@ -925,6 +981,11 @@ impl World {
                             return Err(CommandRefusal::NotYourLandUnit(*unit));
                         }
                     }
+                    HoldTarget::Submarine(boat) => {
+                        if !self.own_submarine(side, *boat) {
+                            return Err(CommandRefusal::NotYourSubmarine(*boat));
+                        }
+                    }
                 }
                 if state.holds.contains_key(target) {
                     return Err(CommandRefusal::AlreadyHeld(*target));
@@ -1061,7 +1122,7 @@ impl World {
         }
         // The waters of a "deny an area" intent are about a hex on the map
         // (decision 0123, 1).
-        if let Some((hex, _)) = kind.waters() {
+        if let Some((hex, _)) = kind.waters().or_else(|| kind.patrol_waters()) {
             if !self.map.contains(hex) {
                 return Err(CommandRefusal::NotOnMap(hex));
             }
@@ -1826,8 +1887,11 @@ impl World {
                 let whole = HoldTarget::LandUnit(*target);
                 state.holds.contains_key(&whole).then_some(whole)
             }
-            // A hold on a boat is the third stage's (decision 0218, 34).
-            OrderKind::Submarine { .. } => None,
+            // Decision 0218, 34.
+            OrderKind::Submarine { target, .. } => {
+                let whole = HoldTarget::Submarine(*target);
+                state.holds.contains_key(&whole).then_some(whole)
+            }
         }
     }
 
@@ -1854,6 +1918,10 @@ impl World {
         // A land unit the intent may use (decision 0141).
         if let OrderKind::LandUnit { target, .. } = &request.kind {
             return self.may_use_land_unit(side, intent, *target);
+        }
+        // A boat a patrol in force may use (decision 0218, 12 and 34).
+        if let OrderKind::Submarine { target, .. } = &request.kind {
+            return self.may_use_submarine(side, intent, *target);
         }
         // An intent addressed to a task force commands that force (decision
         // 0124, 6): an order to it is inside, whatever the limits above.

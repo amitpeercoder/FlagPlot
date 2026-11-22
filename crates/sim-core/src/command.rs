@@ -47,7 +47,7 @@ use crate::fixed::Fixed;
 use crate::hex::Hex;
 use crate::ids::{
     AirGroupId, BaseId, EntityRef, EventId, IntentId, InterruptId, LandUnitId, OrderId, ShipId,
-    TaskForceId,
+    SubmarineId, TaskForceId,
 };
 use crate::orders::{Issuer, OrderKind};
 use crate::refdata::ShipKind;
@@ -184,6 +184,11 @@ pub enum IntentKind {
     /// "deny an area" and "neutralise a base" (item 6). It is never marked
     /// complete (item 12). Added at the end.
     ControlIsland { island: u32, by_day: Option<u32> },
+    /// Patrol the waters within `distance` hexes of `hex` with submarines
+    /// (decision 0218, 11 and 12): an end, addressed to the area. It has no
+    /// date. A commander states it as a root; the staff cannot form it and
+    /// nothing stands under it. Added at the end.
+    Patrol { hex: Hex, distance: u32 },
 }
 
 /// One thing a "build up a base" task wants (decision 0141, 8 and 10).
@@ -320,6 +325,7 @@ impl IntentKind {
             IntentKind::TakePlace { .. } => 13,
             IntentKind::Bombard { .. } => 14,
             IntentKind::ControlIsland { .. } => 15,
+            IntentKind::Patrol { .. } => 16,
         }
     }
 
@@ -341,6 +347,7 @@ impl IntentKind {
             IntentKind::TakePlace { .. } => "take_place",
             IntentKind::Bombard { .. } => "bombard",
             IntentKind::ControlIsland { .. } => "control_island",
+            IntentKind::Patrol { .. } => "patrol",
         }
     }
 
@@ -358,6 +365,7 @@ impl IntentKind {
             | IntentKind::BuildUp { base, .. } => Some(base),
             IntentKind::Neutralise { target } | IntentKind::Bombard { target, .. } => Some(target),
             IntentKind::Deny { .. }
+            | IntentKind::Patrol { .. }
             | IntentKind::StandAt { .. }
             | IntentKind::OperateCarriers { .. }
             | IntentKind::ReadyLanding { .. }
@@ -372,6 +380,7 @@ impl IntentKind {
         match self {
             IntentKind::Neutralise { .. }
             | IntentKind::Deny { .. }
+            | IntentKind::Patrol { .. }
             | IntentKind::StandAt { .. }
             | IntentKind::OperateCarriers { .. }
             | IntentKind::ReadyLanding { .. }
@@ -448,6 +457,15 @@ impl IntentKind {
         }
     }
 
+    /// The waters of a "patrol" intent (decision 0218, 11): its hex and its
+    /// distance in hexes.
+    pub const fn patrol_waters(self) -> Option<(Hex, u32)> {
+        match self {
+            IntentKind::Patrol { hex, distance } => Some((hex, distance)),
+            _ => None,
+        }
+    }
+
     /// Whether a commander may state an intent of this kind as a root
     /// (decision 0123, 11): every kind but "search waters", which stands
     /// under "deny an area" only.
@@ -476,6 +494,7 @@ impl IntentKind {
             IntentKind::KeepSupplied { .. }
             | IntentKind::Neutralise { .. }
             | IntentKind::Deny { .. }
+            | IntentKind::Patrol { .. }
             | IntentKind::TakePlace { .. }
             | IntentKind::ControlIsland { .. } => Addressee::Area,
             IntentKind::Cover { base }
@@ -657,7 +676,7 @@ impl Risk {
 /// for it, the pool, the air groups it may use (decision 0115, 2), and for a
 /// supply intent exactly one source base (decision 0107, 19). A supply
 /// intent's forces limit must name a source; another kind's need not.
-#[derive(Clone, PartialEq, Eq, Debug)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct ForcesLimit {
     pub ships: BTreeSet<ShipId>,
     pub task_forces: BTreeSet<TaskForceId>,
@@ -668,6 +687,27 @@ pub struct ForcesLimit {
     /// Land units the staff may order for the intent (decision 0141, "A
     /// forces limit gains land units"). Added at the end.
     pub land_units: BTreeSet<LandUnitId>,
+    /// Submarines the intent may use (decision 0218, 12 and 34): only a
+    /// "patrol" may use a boat. Added at the end.
+    pub submarines: BTreeSet<SubmarineId>,
+}
+
+/// Written as the derived form was, with the boats only where the limit
+/// names one (decision 0218, stage 3): an event's words, and so every digest
+/// of events, are what they were for a limit that names no boat.
+impl core::fmt::Debug for ForcesLimit {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let mut out = f.debug_struct("ForcesLimit");
+        out.field("ships", &self.ships)
+            .field("task_forces", &self.task_forces)
+            .field("air_groups", &self.air_groups)
+            .field("source", &self.source)
+            .field("land_units", &self.land_units);
+        if !self.submarines.is_empty() {
+            out.field("submarines", &self.submarines);
+        }
+        out.finish()
+    }
 }
 
 /// The limits of one intent as they stand. A limit not set is `None` (or the
@@ -1274,6 +1314,10 @@ pub enum HoldTarget {
     /// a `hold` command or by a commander's order to a unit a task may use.
     /// Added at the end.
     LandUnit(LandUnitId),
+    /// A submarine: the staff gives her no order (decision 0218, 34). Made
+    /// by a `hold` command or by a commander's order to a boat a patrol may
+    /// use. Added at the end.
+    Submarine(SubmarineId),
 }
 
 impl HoldTarget {
@@ -1285,6 +1329,7 @@ impl HoldTarget {
             HoldTarget::Setting { .. } => 3,
             HoldTarget::AirGroup(_) => 4,
             HoldTarget::LandUnit(_) => 5,
+            HoldTarget::Submarine(_) => 6,
         }
     }
 }
@@ -1299,6 +1344,7 @@ impl core::fmt::Display for HoldTarget {
             },
             HoldTarget::AirGroup(group) => write!(f, "{group}"),
             HoldTarget::LandUnit(unit) => write!(f, "{unit}"),
+            HoldTarget::Submarine(boat) => write!(f, "{boat}"),
         }
     }
 }
@@ -1861,6 +1907,22 @@ impl CommandState {
         }))
     }
 
+    /// The submarines the forces limits on `intent`'s chain allow (decision
+    /// 0218, 12): those named in every limit on the chain that names at
+    /// least one boat. A limit naming no boat does not bind the boats, as a
+    /// limit naming no air group does not bind the groups under an island.
+    /// `None` where no limit on the chain names a boat.
+    pub fn submarines_on_chain(&self, intent: IntentId) -> Option<BTreeSet<SubmarineId>> {
+        let mut limits = self
+            .forces_on_chain(intent)
+            .into_iter()
+            .filter(|limit| !limit.submarines.is_empty());
+        let first = limits.next()?.submarines.clone();
+        Some(limits.fold(first, |allowed, limit| {
+            allowed.intersection(&limit.submarines).copied().collect()
+        }))
+    }
+
     /// The rank of `intent` read up the tree; `None` where none is set on it
     /// or above it.
     pub fn priority_read_up(&self, intent: IntentId) -> Option<u32> {
@@ -2277,6 +2339,10 @@ pub enum CommandRefusal {
     /// "deny an area" and does not stand beneath one (decision 0190, 27).
     /// Added at the end.
     NoWatersFirstOn(IntentId),
+    /// The submarine is not one of the side's, does not exist or is sunk
+    /// (decision 0218, 34: a forces limit or a hold names her). Added at the
+    /// end.
+    NotYourSubmarine(SubmarineId),
 }
 
 impl core::fmt::Display for CommandRefusal {
@@ -2357,6 +2423,9 @@ impl core::fmt::Display for CommandRefusal {
             ),
             CommandRefusal::NotYourLandUnit(unit) => {
                 write!(f, "{unit} is not one of the side's land units")
+            }
+            CommandRefusal::NotYourSubmarine(boat) => {
+                write!(f, "{boat} is not one of the side's submarines")
             }
             CommandRefusal::NotACoastHex(hex) => write!(f, "{hex} is not a coast hex on the map"),
             CommandRefusal::NotLand(hex) => write!(f, "{hex} is not a hex of land on the map"),
@@ -2598,6 +2667,13 @@ impl core::fmt::Display for CommandKind {
     }
 }
 
+/// The statement of a "patrol" intent in words (decision 0218, 11): "patrol
+/// the waters within 3 hexes of (5,2) with submarines"; one hex is "1 hex".
+pub fn patrol_words(hex: Hex, distance: u32) -> String {
+    let hexes = if distance == 1 { "hex" } else { "hexes" };
+    format!("patrol the waters within {distance} {hexes} of {hex} with submarines")
+}
+
 /// An intent's kind as a command's words give it: "keep base:2 supplied at
 /// 30 days, a run every 15 days", "cover base:1 from the air", "hold
 /// base:1".
@@ -2621,6 +2697,7 @@ fn write_intent_kind(f: &mut core::fmt::Formatter<'_>, kind: IntentKind) -> core
         IntentKind::Deny { hex, distance } => {
             write!(f, "deny the waters within {distance} hexes of {hex}")
         }
+        IntentKind::Patrol { hex, distance } => f.write_str(&patrol_words(hex, distance)),
         IntentKind::StrikeShips { base } => write!(f, "strike ships from {base}"),
         IntentKind::SearchWaters { base } => write!(f, "search the waters from {base}"),
         IntentKind::StandAt { force, hex } => write!(f, "stand at {hex} with {force}"),
@@ -2804,6 +2881,9 @@ pub enum CautionKind {
     /// The force has no home port the staff knows, so its fuel was not
     /// measured against a passage home.
     FuelNotMeasured,
+    /// The station chosen lies inside submarine waters the side holds, no
+    /// place outside them serving (decision 0218, rule 55).
+    StationInSubmarineWaters,
 }
 
 impl CautionKind {
@@ -2812,6 +2892,7 @@ impl CautionKind {
         match self {
             CautionKind::StationInDanger => 1,
             CautionKind::FuelNotMeasured => 2,
+            CautionKind::StationInSubmarineWaters => 3,
         }
     }
 
@@ -2820,14 +2901,19 @@ impl CautionKind {
         match self {
             CautionKind::StationInDanger => "station_in_danger",
             CautionKind::FuelNotMeasured => "fuel_not_measured",
+            CautionKind::StationInSubmarineWaters => "station_in_submarine_waters",
         }
     }
 
     /// The kind named `name`, where there is one.
     pub fn from_name(name: &str) -> Option<CautionKind> {
-        [CautionKind::StationInDanger, CautionKind::FuelNotMeasured]
-            .into_iter()
-            .find(|k| k.name() == name)
+        [
+            CautionKind::StationInDanger,
+            CautionKind::FuelNotMeasured,
+            CautionKind::StationInSubmarineWaters,
+        ]
+        .into_iter()
+        .find(|k| k.name() == name)
     }
 }
 
@@ -3394,6 +3480,23 @@ pub struct Proposal {
     /// The lower intents this proposal would displace.
     pub displaces: Vec<Displaced>,
     pub reason: Reason,
+    /// For a patrol order (decision 0218, 54): each boat the staff would
+    /// give a station, with that station and her place in the order, in
+    /// place order. A boat that keeps her station is here; a boat passed
+    /// over is not. Empty for every other intent.
+    pub stations: Vec<PatrolStation>,
+}
+
+/// One boat's place and station under a patrol order, as the staff works
+/// them (decision 0218, 54).
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct PatrolStation {
+    pub boat: SubmarineId,
+    /// The station the boat is given.
+    pub hex: Hex,
+    /// Her place among the boats the order may use, counted from 1: the
+    /// boat of place n has station n of the waters.
+    pub place: u32,
 }
 
 /// Each side's staff, or none. The function that resolves a day takes it.

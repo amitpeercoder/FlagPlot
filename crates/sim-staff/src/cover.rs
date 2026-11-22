@@ -44,7 +44,7 @@ use sim_core::orders::{AirGroupOrder, Mission, OrderKind, SpeedSetting, TaskForc
 use sim_core::state::{AirGroupLocation, ShipLocation};
 
 use crate::air::{mission_words, Day};
-use crate::carrier::{close_to, CarrierAir, CarrierGroup, CarrierRole, CLOSE_MAX_AGE};
+use crate::carrier::{CarrierAir, CarrierGroup, CarrierRole, CLOSE_MAX_AGE};
 use crate::neutralise::{bomber_reach, distance_nm};
 use crate::raid::{
     decide as raid_decide, held_share, least_weight, rest_level, BomberVerdict, RaidGroup, RaidRole,
@@ -365,8 +365,11 @@ impl Day<'_, '_> {
                 covering => self
                     .view
                     .sea_path(here, place)
-                    .and_then(|path| close_to(&path, place, longest))
-                    .map(|hex| {
+                    .and_then(|path| {
+                        crate::waters::close_to_regarding(self.area, &path, place, longest)
+                    })
+                    .map(|regard| {
+                        let hex = regard.hex;
                         let before = covering.map_or_else(
                             || "no covering hex is found".to_string(),
                             |(c, _)| format!("the covering hex {c} is beyond the search of {scout_words}"),
@@ -374,9 +377,10 @@ impl Day<'_, '_> {
                         (
                             hex,
                             format!(
-                                "{before}: the first hex along the shortest sea route to {place} within {longest} nm of it is {hex}, {} nm from {here} and {} nm from {place}",
+                                "{before}: the first hex along the shortest sea route to {place} within {longest} nm of it is {hex}, {} nm from {here} and {} nm from {place}{}",
                                 distance_nm(here, hex),
-                                distance_nm(hex, place)
+                                distance_nm(hex, place),
+                                regard.words()
                             ),
                         )
                     }),
@@ -656,25 +660,30 @@ impl Day<'_, '_> {
             .collect::<Vec<_>>()
             .join(" and ");
         if place_nm <= reach {
-            return Ok((
-                here,
-                format!(
-                    "the least normal strike radius of the bomber groups aboard is {reach} nm, set by {sets}, and {place} is {place_nm} nm from {here}, within it: the covering hex is the hex {id} lies in, {here}"
-                ),
-            ));
+            let within = format!(
+                "the least normal strike radius of the bomber groups aboard is {reach} nm, set by {sets}, and {place} is {place_nm} nm from {here}, within it: the covering hex is the hex {id} lies in, {here}"
+            );
+            // Decision 0218, 55: the hex it lies in is the only hex.
+            let regard = match crate::waters::in_submarine_waters(self.area, here) {
+                None => String::new(),
+                Some(_) => format!("; no place outside submarine waters serves, so it is {here}"),
+            };
+            return Ok((here, format!("{within}{regard}")));
         }
         match self
             .view
             .sea_path(here, place)
-            .and_then(|path| close_to(&path, place, reach))
+            .and_then(|path| crate::waters::close_to_regarding(self.area, &path, place, reach))
         {
-            Some(hex) => {
+            Some(regard) => {
+                let hex = regard.hex;
                 let from_force = here.air_distance_nm(hex);
                 let from_place = hex.air_distance_nm(place);
                 Ok((
                     hex,
                     format!(
-                        "the least normal strike radius of the bomber groups aboard is {reach} nm, set by {sets}, and {place} is {place_nm} nm from {here}, beyond it: the first hex along the shortest sea route to {place} within {reach} nm of it is {hex}, {from_force} nm from {here} and {from_place} nm from {place}"
+                        "the least normal strike radius of the bomber groups aboard is {reach} nm, set by {sets}, and {place} is {place_nm} nm from {here}, beyond it: the first hex along the shortest sea route to {place} within {reach} nm of it is {hex}, {from_force} nm from {here} and {from_place} nm from {place}{}",
+                        regard.words()
                     ),
                 ))
             }
