@@ -165,3 +165,19 @@ Five stages, each its own pull request, the table playable after each; none begi
 4. **The fold of stops, the words, the captions, the keys.**
 
 The screen's checks keep their literal checks beside the code they check, list every call the page makes at load, and gain checks of each part of the stop paper.
+
+## As built: stage 0
+
+Every place that wrote the status line now calls `say(kind, words)` in `table/index.html`, and nothing else writes it. The line looks and reads as before. The kind says where the outcome belongs, for the stages that move it. The kinds are:
+
+- `refused`: an order or command refused or not sent.
+- `signed`: what signing or an answer gave.
+- `draft`: a draft begun or torn up.
+- `stopped`: why the clock stopped, or that the game is over.
+- `running`: the clock running and what it is doing.
+- `picking`: a prompt while a place is picked on the chart.
+- `confirm`: the second touch that New game and Restart ask for.
+- `hint`: the first look's hint.
+- `failed`: a paper that could not be read.
+
+The status line carries the kind as `data-kind`. `table/check_screen.py` checks that the old writer is gone and that every call names a known kind.

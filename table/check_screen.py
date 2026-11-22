@@ -73,6 +73,19 @@ def page_scripts_parse():
             check(done.returncode == 0, f"inline script {number} of the page parses" + ("" if done.returncode == 0 else ": " + done.stderr.strip()))
 
 
+def outcomes_said_one_way():
+    """Every outcome the page says goes through one function with its kind (decision 0221, stage 0):
+    nothing writes the status line but `say`, and every call names a kind the page knows."""
+    import re
+    with open(os.path.join(HERE, "index.html"), encoding="utf-8") as page:
+        text = page.read()
+    check("function say(kind, words)" in text and "setStatus" not in text,
+          "the page says every outcome through say(kind, words), and nothing else writes the status line")
+    kinds = set(re.findall(r"\b(\w+): 1", re.search(r"var SAY_KINDS = \{([^}]*)\}", text).group(1)))
+    used = set(re.findall(r"\bsay\('(\w+)'", text))
+    check(used and used <= kinds, f"every say names a kind of SAY_KINDS ({', '.join(sorted(used))})")
+
+
 def http(method, url, body=None):
     """(status, answer) of one request; an answer that is not JSON is its text."""
     data = None if body is None else json.dumps(body).encode()
@@ -558,6 +571,7 @@ def main():
     parser.add_argument("--hold", type=float, default=3, help="the doors' wait, shortened for the check")
     args = parser.parse_args()
     page_scripts_parse()
+    outcomes_said_one_way()
     if not os.path.exists(args.sim_cli):
         sys.exit(f"{args.sim_cli} is not built: cargo build --release -p sim-cli")
     with tempfile.TemporaryDirectory() as keep:
