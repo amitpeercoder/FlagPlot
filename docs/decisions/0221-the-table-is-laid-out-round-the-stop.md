@@ -304,3 +304,37 @@ Two facts are read from the staff's words, because no field gives them:
 - the last fold;
 - no caption at the foot;
 - the paper's words, by running a real proposal of the 39 days through the page's own wording.
+
+## The architect's rulings on the plan's paper, Nov 22, 2026
+
+- **The threats of a search arc, and the one fact of a task that orders nothing, are read from the staff's words for now.** This is a row of open work. When the staff's doctrine is next changed, `propose`'s arcs gain a list of threats as a field, and each sub-intent gains its fact for ordering nothing. The staff is not changed for it now.
+- **In a WHY list a place said once is not said in full again in the same list.** After its first mention with latitude, longitude and hex, later mentions in that task's WHY say "there", or the place's short name where that reads plainly. This is done in stage 4, with the words.
+
+## As built: stage 3
+
+One order paper, `#paper`, gives every order. It replaces the operation order (`#order`), the order to a force (`#force`) with its course (`#course`), and the air group's and land unit's forms inside their cards. It opens at the right in the card's place. When it was opened from a card it carries "← BACK TO" that card. Every direct-order button and every "orders you can give" opens it.
+
+- **Its parts, in order:**
+  - **TO**, "The staff" or the unit by name, linked.
+  - **THE ORDER**, the kind's own controls, every one kept. A course's points are in the paper, with ADD ON THE CHART and DONE ON THE CHART.
+  - **IN WHOSE HANDS**, for a unit: "The staff's now. Yours once signed: you keep it out of the staff's plans."
+  - **ACTS**: "Acts at once, at 1800" (or 0600 or 1200), or "Acts at 1800, for the coming day". A draft that mixes the two says which part acts when.
+  - **The staff's reading**, open, with DRY RUN where the game has a trial.
+  - **SIGN AND SEND and TEAR UP.**
+- **The paper stays open while the chart is touched**, and a touch that picks nothing opens no card. The chart draws what is drafted while the paper is open: the course, the search arc, the march's places and the deny circle. Before, an air group's arc was drawn only while its card was open.
+- **Escape or BACK on a draft:**
+  - With nothing chosen, it tears the draft up.
+  - With something chosen, the paper asks "Tear up this order?" with TEAR UP and KEEP WRITING, and a second Escape keeps writing.
+  - A link to another card asks the same.
+- **NOT SENT says, line by line, what went and what did not**, one line for each order of the call ("Speed: sent." "Course: NOT SENT — the reason"). On a second try what went is not sent again. An order to the staff signs in steps (the order, its risk, its forces), and a step that did not run says so.
+- **A refused unit order leaves nothing queued.** Where nothing of the order went and the page had sent a hold first, the page reads `queued` and takes that hold back with `take_back`. Where part of it went, the hold stays.
+- **An air group's mission and its arc, signed together, are one entry under SIGNED** (the ruling on stage 2). Its TAKE BACK takes back both.
+- **Gone:** the three forms, their captions ("BEFORE YOU SIGN", "It is 1800. The order goes with tonight's orders.", the land unit's "takes it out of the staff's hands"), and the functions that served them.
+
+`table/check_screen.py` checks the paper's parts in order, ACTS, IN WHOSE HANDS, the way back, Escape, the draft drawn while the paper is open, NOT SENT line by line, and the mission and arc as one entry. It also takes a hold back against the engine after a refused order.
+
+Left for stage 4:
+- ACTS says "Acts at once, at 1800" where SIGNED says "Acts at 1800": to be made one wording.
+- Escape on an empty draft closes the card it came from too, rather than going back to it.
+- The order to the staff's descriptions under each end are old wording.
+- Once, SIGNED was not read again after a signing when the bridge reset the page's connections; the next refresh showed it. The page says nothing when a refresh fails.

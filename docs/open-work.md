@@ -184,6 +184,7 @@ Where step 2 ends, battle by battle, with every named miss and agreement at the 
 - For step 3, named by the closing legibility test (`docs/validation/closing-tests.md`, finding L6, ruled Nov 13, 2026): a side shown an enemy strike on its ships with its causes hidden is told nothing of why it came; the briefing could say that an enemy strike always rests on a contact the enemy held, without saying which.
 - For step 3, the same test, L7: a task force's mission is shown in the briefing; the bombardment mission is read by a rule (decision 0092), and the item holds for the other missions, which no rule reads: show one only when a rule reads it, or say there that it is a label.
 - For step 3, named by Rabaul round 3 (`docs/validation/tuning/rabaul-r3-wear.md`, ruled Nov 13, 2026): small airfields that wear aircraft faster (left unbuilt by decision 0035), for the American losses on take-off, landing and ferrying that do not go with distance; and a wear that does not rise in a straight line with distance, since the dive bombers' searches and Rabaul's raids want the distance term opposite ways.
+- When the staff's doctrine is next changed (decision 0221, the architect's rulings on the plan's paper, Nov 22, 2026): `propose`'s arcs gain the threats each arc was set for as a field, and each sub-intent gains its fact for ordering nothing. The table's plan paper reads both from the staff's words until then.
 
 ## Done, and recorded nowhere else
 

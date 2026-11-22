@@ -150,7 +150,7 @@ def orders_and_signed():
           "YOUR ORDERS lists the orders in force, each a link to its plan's paper, and says \"No order in force.\" when there is none")
     check("'Plans launch: ' + (given ? 'when ready' : 'on my word')" in text and "act('set_leave', { leave: 'launch', given: !given }" in text,
           "it says \"Plans launch: when ready\" or \"on my word\", with the switch that gives and withholds the leave")
-    check("api('queued').catch(function () { return null; })" in text and "api('take_back', { queue: e.place.queue, number: e.place.number, as_of: M.queue.as_of })" in text
+    check("api('queued').catch(function () { return null; })" in text and "api('take_back', { queue: one.place.queue, number: one.place.number, as_of: M.queue.as_of })" in text
           and "'TAKE BACK'" in text and "NOT TAKEN BACK" in text,
           "SIGNED is read from queued at each refresh, TAKE BACK withdraws one entry by its place and as_of, and a refusal is said beside the entry")
     check("function canSign() { return !WATCH && !M.over && !playing; }" in text and "if (canSign()) {" in text and "(e.goes_with || [])" in text,
@@ -187,6 +187,49 @@ def orders_and_signed():
     check(re.search(r"\.stoppaper \.sp-body \{ display: none; \}", text) and not re.search(r"\.stoppaper \.sp-foot \{ display: none", text)
           and 'id="sp-foot"' in column and 'id="btn-day"' in column and 'id="btn-go"' in column,
           "with the drawer closed the two controls that run time stay in sight under the head: the same buttons of the foot")
+
+
+def one_order_paper():
+    """The one order paper (decision 0221, stage 3), by the page's text: the three forms and the forms inside the cards
+    are folded into one paper with the same parts in the same places; it opens in the card's place with a way back, asks before
+    Escape tears up a draft with something chosen, lets the chart draw what is drafted while it is open, says NOT SENT line by
+    line, takes the hold back where nothing of the order went, and gives an air group's mission and arc as one entry under
+    SIGNED. (Tried in a browser, not here.)"""
+    import re
+    with open(os.path.join(HERE, "index.html"), encoding="utf-8") as page:
+        text = page.read()
+    check('<form class="order gives" id="paper"' in text and not any(f'id="{old}"' in text for old in ("order", "force", "course"))
+          and "'airorder'" not in text and "'landorder'" not in text and "function orderForce(" not in text and "function closeForce(" not in text and "function closeOrder(" not in text,
+          "one order paper: the forms #order, #force and #course and the forms inside the air group's and the land unit's cards are gone")
+    check(text.count("openPaper('force'") == 1 and text.count("openPaper('staff'") == 1 and text.count("openPaper('air'") == 1 and text.count("openPaper('land'") == 1,
+          "every way to an order opens the one paper: a force's card, an air group's, a land unit's, and a card's orders you can give")
+    start = text.index('<form class="order gives" id="paper"')
+    form = text[start:text.index("</form>", start)]
+    parts = ['id="p-to"', "THE ORDER", "IN WHOSE HANDS", "ACTS", 'id="o-pv"', "THE STAFF'S READING", 'id="p-says"', "SIGN AND SEND", "TEAR UP"]
+    at = [form.find(p) for p in parts]
+    check(all(a >= 0 for a in at) and at == sorted(at), "the paper's parts are in order: TO, THE ORDER, IN WHOSE HANDS, ACTS, the staff's reading, what was sent, SIGN AND SEND, TEAR UP")
+    check('id="o-pv" open' in form and "$('o-pv').open = true" in text and 'id="p-dry"' in form and "OFFERED.trial" in text,
+          "the staff's reading is shown open, with DRY RUN where the game has a trial")
+    check("function actsText(orders)" in text and "'Acts at once, at '" in text and "'Acts at 1800, for the coming day'" in text and "'Acts at once: '" in text,
+          "ACTS says before signing when the order acts: at once, at 1800 for the coming day, or each part by itself")
+    check("function handsText(d)" in text and "STAFF_HANDS = 'you keep it out of the staff\u2019s plans'" in text and "'The staff\u2019s now. Yours once signed: '" in text,
+          "IN WHOSE HANDS says, for a unit, whose it is now and whose it will be once signed, in decision 0216's words")
+    check('id="p-back"' in form and "'\u2190 BACK TO '" in text and "from.go()" in text and "from: from" in text,
+          "the paper has a way back to the card it was opened from")
+    check("function paperAsk(words, yes)" in text and "'KEEP WRITING'" in text and "function tearUpAsking(then, words)" in text and "if (!paperChosen())" in text
+          and "e.key !== 'Escape' || !paper" in text and "}, true);" in text[text.index("e.key !== 'Escape' || !paper"):text.index("e.key !== 'Escape' || !paper") + 700],
+          "Escape tears up a draft with nothing chosen, and asks in the paper where something is chosen")
+    check("arcDraft && (!$('card').hidden || paper)" in text and "marchDraft && (!$('card').hidden || paper)" in text and "$('card').hidden && !paper &&" in text
+          and "else if (!picking && !paper && !playing" in text and "if (draft) ring(draft.v" in text and "force && force.route" in text,
+          "the chart draws what is drafted while the paper is open (a course, an arc, a march, the deny circle) and a touch on it opens no card")
+    check("function paperLines(lines)" in text and "el('b', '', 'NOT SENT')" in text and "' \\u2014 '" in text and "ORDER_LABEL" in text and "createTextNode('sent.')" in text,
+          "a refusal keeps the paper open and says NOT SENT line by line: \"Speed: sent.\" and \"Course: NOT SENT\" with the engine's reason")
+    check("function takeBackHold(p)" in text and "e.command.kind === 'hold'" in text and "api('take_back', { queue: mine.place.queue" in text and "nothing && p.holdSent ? takeBackHold(p)" in text,
+          "where nothing of a unit's order went, the hold sent before it is taken back with take_back")
+    check("also[arc.place.queue" in text and "x.order.kind === 'set_search_arc' && x.unit === e.unit" in text and "var group = [e].concat(also[" in text,
+          "an air group's mission and its search arc, signed together, are one entry under SIGNED, taken back together")
+    check(not any(w in text for w in ("BEFORE YOU SIGN", "f-when", "your direct order takes it out of the staff")),
+          "the captions before signing are gone: what a unit's order does to whose hands it is in is said as a fact, in IN WHOSE HANDS")
 
 
 def stops_speak_as_the_staff():
@@ -271,6 +314,15 @@ def queue_through_the_bridge(bridge):
           "take_back withdraws the order and the hold that goes with it, and lists what is left")
     again = person.call("take_back", {"queue": "commands", "number": 1, "as_of": taken["as_of"]})["ok"]
     check(again["queued"] == [] and person.call("queued")["ok"]["entries"] == [], "and the leave is taken back too: nothing is queued")
+    # A unit's order refused by the engine after the hold the paper sends first at dusk: the hold is taken back, nothing is left queued.
+    person.call("hold", {"task_force": 1})
+    refused = person.call("issue_orders", {"orders": [{"unit": "task_force:1", "order": {"kind": "join", "into": "task_force:99"}}]})["ok"]
+    check(refused["results"][0]["status"] == "refused", "an order the engine refuses leaves the hold sent before it queued")
+    queued = person.call("queued")["ok"]
+    hold = [e for e in queued["entries"] if e.get("command", {}).get("kind") == "hold" and e["command"].get("task_force") == 1]
+    check(len(hold) == 1, "the page finds that hold in queued, as a command of kind hold naming the force")
+    person.call("take_back", {"queue": hold[0]["place"]["queue"], "number": hold[0]["place"]["number"], "as_of": queued["as_of"]})
+    check(person.call("queued")["ok"]["entries"] == [], "and takes it back: nothing of the refused order is left queued")
     check(post(bridge.table + "/new") == {"ok": True}, "the game is put away")
 
 
@@ -520,8 +572,8 @@ def land_unit_orders(bridge, person):
     holds the form and its words, and the three orders go to the tool in the shapes the form sends them,
     after the hold the form sends first. The form itself is drawn in a browser and is not run here."""
     page = get(bridge.table + "/")
-    check("'landorder'" in page and "NOT SENT" in page and "Acts at 1800, for the coming day." in page,
-          "the page holds the land unit's order form, the line for a refusal and the line for an order kept to dusk")
+    check("function landControls(form, u, held)" in page and "NOT SENT" in page and "Acts at 1800, for the coming day" in page,
+          "the page holds the land unit's controls for the one order paper, the line for a refusal and the line for an order kept to dusk")
     units = person.call("list_forces")["ok"]["land_units"]
     fighting = [u for u in units if u["men_ashore"] and u.get("march_to") and not u.get("working")]
     check(fighting, "a fighting unit with men ashore lists the places it can march to (march_to)")
@@ -818,6 +870,7 @@ def main():
     outcomes_said_one_way()
     the_stop_paper()
     orders_and_signed()
+    one_order_paper()
     stops_speak_as_the_staff()
     cards_show_no_handle()
     the_trail_holds_no_duplicate()
