@@ -1326,6 +1326,12 @@ pub(crate) fn seen(kind: &EventKind, side: Side, owners: &Owners, knows_fight: b
         // are the side's own, whole, and the enemy is told nothing of either
         // (decision 0205, 10).
         EventKind::RationsLanded { side: owner, .. } => whole_if(*owner == side),
+        // What a side's fight cost, its bases' ammunition spent on it and
+        // the ammunition a landing brings are the side's own, whole; the
+        // enemy is told nothing of any (decision 0209, 17).
+        EventKind::FightSupplyCharged { side: owner, .. }
+        | EventKind::AmmunitionLanded { side: owner, .. } => whole_if(*owner == side),
+        EventKind::BaseAmmunitionSpent { base, .. } => whole_if(own_base(base)),
         EventKind::HungerNightsChanged { unit, .. } => whole_if(own_unit(unit)),
         // Fuelling at sea is the side's own, whole: a ship fuelled, fuelling
         // broken off and the order ended; the enemy is told nothing of any
@@ -1462,6 +1468,10 @@ fn own_factors(kind: &SideEventKind) -> &'static [&'static str] {
             "shots_before_limit",
             "side_firing_men",
             "engaged_men",
+            // Its own side's supplied share and the fire share it gives,
+            // where the figures of 0209 are given (decision 0209, 15).
+            "supplied_share",
+            "fire_share",
         ],
         SideEventKind::Salvo { .. } => &[
             "guns",
@@ -1722,6 +1732,9 @@ fn first_known_round(side: Side, fight: &[Event], owners: &Owners) -> Option<u32
             | EventKind::StockReceived { .. }
             | EventKind::MenJoined { .. }
             | EventKind::RationsLanded { .. }
+            | EventKind::FightSupplyCharged { .. }
+            | EventKind::BaseAmmunitionSpent { .. }
+            | EventKind::AmmunitionLanded { .. }
             | EventKind::HungerNightsChanged { .. }
             | EventKind::ShipFuelledAtSea { .. }
             | EventKind::FuellingBrokenOff { .. }
@@ -1938,6 +1951,9 @@ fn fight_round(kind: &EventKind) -> Option<u32> {
         | EventKind::StockReceived { .. }
         | EventKind::MenJoined { .. }
         | EventKind::RationsLanded { .. }
+        | EventKind::FightSupplyCharged { .. }
+        | EventKind::BaseAmmunitionSpent { .. }
+        | EventKind::AmmunitionLanded { .. }
         | EventKind::HungerNightsChanged { .. }
         | EventKind::ShipFuelledAtSea { .. }
         | EventKind::FuellingBrokenOff { .. }
@@ -2298,6 +2314,9 @@ fn count_from_known_round(kind: SideEventKind, known: u32, round_minutes: u32) -
             | EventKind::StockReceived { .. }
             | EventKind::MenJoined { .. }
             | EventKind::RationsLanded { .. }
+            | EventKind::FightSupplyCharged { .. }
+            | EventKind::BaseAmmunitionSpent { .. }
+            | EventKind::AmmunitionLanded { .. }
             | EventKind::HungerNightsChanged { .. }
             | EventKind::ShipFuelledAtSea { .. }
             | EventKind::FuellingBrokenOff { .. }
@@ -2556,6 +2575,9 @@ fn whole_may_have_hidden_causes(kind: &EventKind) -> bool {
         | EventKind::StockReceived { .. }
         | EventKind::MenJoined { .. }
         | EventKind::RationsLanded { .. }
+        | EventKind::FightSupplyCharged { .. }
+        | EventKind::BaseAmmunitionSpent { .. }
+        | EventKind::AmmunitionLanded { .. }
         | EventKind::HungerNightsChanged { .. }
             | EventKind::ShipFuelledAtSea { .. }
             | EventKind::FuellingBrokenOff { .. }
@@ -2844,6 +2866,9 @@ pub(crate) fn project(side: Side, log: &[Event], owners: &Owners) -> Vec<SideEve
                     | EventKind::StockReceived { .. }
                     | EventKind::MenJoined { .. }
                     | EventKind::RationsLanded { .. }
+                    | EventKind::FightSupplyCharged { .. }
+                    | EventKind::BaseAmmunitionSpent { .. }
+                    | EventKind::AmmunitionLanded { .. }
                     | EventKind::HungerNightsChanged { .. }
                     | EventKind::ShipFuelledAtSea { .. }
                     | EventKind::FuellingBrokenOff { .. }
@@ -4524,6 +4549,44 @@ mod tests {
                 Whole,
                 Nothing,
             )),
+            // What a side's fight cost, its base's ammunition spent on it
+            // and the ammunition a landing brings are told to their own
+            // side, whole, and to the enemy not at all (decision 0209, 17).
+            sided(row(
+                EventKind::FightSupplyCharged {
+                    side: Side::Allied,
+                    hex: hex(),
+                    men_at_grips: fx(1000),
+                    wanted_t: fx(10),
+                    from_ammunition_t: fx(6),
+                    from_supply_t: fx(4),
+                    supplied_share: fx(1),
+                },
+                Whole,
+                Nothing,
+            )),
+            sided(row(
+                EventKind::BaseAmmunitionSpent {
+                    base: base(1),
+                    asked_t: fx(10),
+                    paid_t: fx(6),
+                    left_t: fx(0),
+                },
+                Whole,
+                Nothing,
+            )),
+            sided(row(
+                EventKind::AmmunitionLanded {
+                    base: base(1),
+                    side: Side::Allied,
+                    task_force: force(1),
+                    men: 3000,
+                    days: fx(4),
+                    ammunition_t: fx(120),
+                },
+                Whole,
+                Nothing,
+            )),
             // A falling back is told to its own side only.
             sided(row(
                 EventKind::UnitFellBack {
@@ -4942,7 +5005,7 @@ mod tests {
     #[test]
     fn the_table_has_a_row_for_every_kind_of_event() {
         let all = event_kind_names();
-        assert_eq!(all.len(), 159, "the log has 159 kinds of event");
+        assert_eq!(all.len(), 162, "the log has 162 kinds of event");
         let covered: BTreeSet<String> = table()
             .iter()
             .map(|row| kind_name(&row.log[row.at]))
@@ -5451,6 +5514,54 @@ mod tests {
                 "shots",
             ]
         );
+        assert!(project(Side::Japanese, &events, &owners(false)).is_empty());
+    }
+
+    #[test]
+    fn a_ground_fire_cut_keeps_the_sides_supplied_share_and_fire_share() {
+        // Decision 0209, 15 and 17: a side sees its own side's supplied share
+        // and fire share in its own unit's fire; the enemy is given nothing
+        // of it.
+        let factor = |name, value| Factor { name, value };
+        let mut events = log(vec![EventKind::GroundFire {
+            unit: unit(1),
+            hex: hex(),
+            firing_men: 1000,
+            shots: Fixed::from_ratio(625, 100),
+            chance: Fixed::from_ratio(6, 10),
+            hits: 4,
+        }]);
+        events[0].breakdown = Some(Breakdown {
+            factors: vec![
+                factor("men_ashore", fx(1000)),
+                factor("fed_share", fx(1)),
+                factor("fatigue_factor", fx(1)),
+                factor("firing_men", fx(1000)),
+                factor("men_per_shot", fx(100)),
+                factor("supplied_share", Fixed::from_ratio(1, 2)),
+                factor("fire_share", Fixed::from_ratio(625, 1000)),
+                factor("shots", Fixed::from_ratio(625, 100)),
+                factor("chance", Fixed::from_ratio(6, 10)),
+            ],
+            result: Fixed::from_ratio(375, 100),
+        });
+        let shown = project(Side::Allied, &events, &owners(false));
+        let breakdown = shown[0].breakdown.as_ref().expect("a breakdown");
+        let names: Vec<&str> = breakdown.factors.iter().map(|f| f.name).collect();
+        assert_eq!(
+            names,
+            vec![
+                "men_ashore",
+                "fed_share",
+                "fatigue_factor",
+                "firing_men",
+                "men_per_shot",
+                "supplied_share",
+                "fire_share",
+                "shots",
+            ]
+        );
+        assert_eq!(breakdown.result, None);
         assert!(project(Side::Japanese, &events, &owners(false)).is_empty());
     }
 

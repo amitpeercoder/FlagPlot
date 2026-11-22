@@ -1639,6 +1639,25 @@ pub struct HungerFigures {
     /// given both or neither, and only with the three above. Without them a
     /// unit fights and works by its fed share alone, as before.
     pub mending: Option<MendingFigures>,
+    /// The three figures of a fight that costs supply (decision 0209, 1),
+    /// given all or none, and only with the three above; they do not need
+    /// the two of 0208. Without them a fight ashore charges nothing and a
+    /// landing brings no ammunition, as before.
+    pub fight_supply: Option<FightSupplyFigures>,
+}
+
+/// The three figures of decision 0209 (rule 1).
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct FightSupplyFigures {
+    /// The tons a man at grips costs in a day's fight (decision 0209, 4), 0
+    /// or more.
+    pub fight_supply_t_per_man: Fixed,
+    /// A side's fire share where its fight was supplied with nothing
+    /// (decision 0209, 7), from 0 to 1.
+    pub unsupplied_fire_share: Fixed,
+    /// The days of fighting a landing puts into a base's ammunition for the
+    /// men aboard (decision 0209, 10), 0 or more.
+    pub fight_days_landed: Fixed,
 }
 
 /// The two figures of decision 0208 (rule 1), each from 0 to 1.
@@ -2033,6 +2052,23 @@ impl GroundFigures {
                     if value.is_negative() || value > Fixed::ONE {
                         return Some(format!("ground {name} {value} is not between 0 and 1"));
                     }
+                }
+            }
+            // A fight costs supply (decision 0209, 1).
+            if let Some(fight) = hunger.fight_supply {
+                for (name, value) in [
+                    ("fight_supply_t_per_man", fight.fight_supply_t_per_man),
+                    ("fight_days_landed", fight.fight_days_landed),
+                ] {
+                    if value.is_negative() {
+                        return Some(format!("ground {name} {value} is not 0 or more"));
+                    }
+                }
+                let share = fight.unsupplied_fire_share;
+                if share.is_negative() || share > Fixed::ONE {
+                    return Some(format!(
+                        "ground unsupplied_fire_share {share} is not between 0 and 1"
+                    ));
                 }
             }
         }

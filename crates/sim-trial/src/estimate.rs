@@ -343,6 +343,9 @@ pub enum AssumedOf {
         kind: IntentKind,
     },
     EnemyGivenNoIntent,
+    /// The enemy's men ashore taken as supplied in full in their fights
+    /// (decision 0209, 12).
+    EnemySupplied,
 }
 
 /// What else was assumed of a thing, with the count of worlds it was so in.
@@ -885,6 +888,7 @@ fn assumed(figures: &[WorldFigures]) -> Vec<Assumed> {
                     Read::Made(AssumedOf::EnemyIntent { kind: *kind })
                 }
                 Assumption::EnemyGivenNoIntent => Read::Made(AssumedOf::EnemyGivenNoIntent),
+                Assumption::EnemySupplied => Read::Made(AssumedOf::EnemySupplied),
                 Assumption::BelievedMenMade {
                     place,
                     name,
@@ -1186,6 +1190,9 @@ fn assumed_words(line: &Assumed) -> String {
         AssumedOf::EnemyGivenNoBelief => "the enemy given no belief".to_string(),
         AssumedOf::EnemyIntent { kind } => format!("the enemy taken to intend {kind:?}"),
         AssumedOf::EnemyGivenNoIntent => "the enemy given no intent".to_string(),
+        AssumedOf::EnemySupplied => {
+            "the enemy's men ashore taken as supplied in full in their fights".to_string()
+        }
     };
     let mut out = what;
     if !line.made_in.is_empty() {

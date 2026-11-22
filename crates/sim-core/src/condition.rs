@@ -123,6 +123,7 @@ mod tests {
                 hungry_below_share: fx("0.6"),
                 hunger_nights_before_loss: 14,
                 mending,
+                fight_supply: None,
             }),
             ..GroundFigures::FIRST
         }

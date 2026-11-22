@@ -160,6 +160,10 @@ pub enum SupplyUse {
     /// The supply a land unit took with it when it marched out of the base's
     /// hex (decision 0094, 9). Added at the end.
     March,
+    /// What the side's men at grips in a day's fight in the base's hex cost,
+    /// where the base's ammunition did not cover it (decision 0209, 5 and
+    /// 14). Added at the end.
+    Fight,
 }
 
 impl SupplyUse {
@@ -171,6 +175,7 @@ impl SupplyUse {
             SupplyUse::Repairs => "repairs",
             SupplyUse::Men => "men",
             SupplyUse::March => "march",
+            SupplyUse::Fight => "fight",
         }
     }
 }
@@ -2193,6 +2198,53 @@ pub enum EventKind {
         before: u32,
         nights: u32,
     },
+    /// What `side`'s men at grips in the day's fight at `hex` cost (decision
+    /// 0209, 3 to 6 and 14): `men_at_grips`, a quantity not cut to a whole
+    /// man; `wanted_t`, their want; what was charged of it from the
+    /// ammunition and from the supply of the side's bases in the hex; and
+    /// `supplied_share`, what was charged over what was wanted. Recorded
+    /// for each side in a fight that wanted anything, only where the figures
+    /// of 0209 are given, after the fight's event and before any unit's
+    /// fire, the Allied side first. Cites the fight. The side's own, whole;
+    /// the enemy is told nothing. Added at the end.
+    FightSupplyCharged {
+        side: Side,
+        hex: Hex,
+        men_at_grips: Fixed,
+        wanted_t: Fixed,
+        from_ammunition_t: Fixed,
+        from_supply_t: Fixed,
+        supplied_share: Fixed,
+    },
+    /// A base spent ammunition on its side's men at grips in a day's fight
+    /// in its hex (decision 0209, 5 and 14): `asked_t` what was asked of it,
+    /// `paid_t` what its stock covered, `left_t` what it has afterwards.
+    /// Recorded only for a base with ammunition that was asked something.
+    /// Cites the side's `FightSupplyCharged`. The base's side's own, whole;
+    /// the enemy is told nothing. Added at the end.
+    BaseAmmunitionSpent {
+        base: BaseId,
+        asked_t: Fixed,
+        paid_t: Fixed,
+        left_t: Fixed,
+    },
+    /// A force began to land men at `base` and put days of fighting into its
+    /// ammunition (decision 0209, 10 and 16): the `men` aboard the ships of
+    /// `task_force` at that moment, `days` of fighting at the tons for a man
+    /// at grips, `ammunition_t` in all. Given at every landing, not once for
+    /// a base. Recorded only where the figures of 0209 are given and it
+    /// puts something down. Cites what the rations' record cites: the
+    /// `BaseFormed` where the landing formed the base, and the unload order
+    /// and the force's arrival where the base stood. The side's own, whole;
+    /// the enemy is told nothing. Added at the end.
+    AmmunitionLanded {
+        base: BaseId,
+        side: Side,
+        task_force: TaskForceId,
+        men: u32,
+        days: Fixed,
+        ammunition_t: Fixed,
+    },
 }
 
 impl EventKind {
@@ -2744,6 +2796,11 @@ impl EventKind {
                 base, task_force, ..
             } => vec![EntityRef::Base(*base), EntityRef::TaskForce(*task_force)],
             EventKind::HungerNightsChanged { unit, .. } => vec![EntityRef::LandUnit(*unit)],
+            EventKind::FightSupplyCharged { .. } => Vec::new(),
+            EventKind::BaseAmmunitionSpent { base, .. } => vec![EntityRef::Base(*base)],
+            EventKind::AmmunitionLanded {
+                base, task_force, ..
+            } => vec![EntityRef::Base(*base), EntityRef::TaskForce(*task_force)],
         }
     }
 }
@@ -3210,6 +3267,7 @@ impl fmt::Display for EventKind {
                     SupplyUse::Repairs => format!("{aircraft} repairs"),
                     SupplyUse::Men => format!("{men} men ashore for the day"),
                     SupplyUse::March => format!("{men} men marching out of the hex"),
+                    SupplyUse::Fight => "the men at grips in a fight".to_string(),
                 };
                 if paid_t < asked_t {
                     write!(
@@ -4726,6 +4784,48 @@ impl fmt::Display for EventKind {
             } => write!(
                 f,
                 "{unit} at {hex} has been hungry {nights} nights, from {before}"
+            ),
+            EventKind::FightSupplyCharged {
+                side,
+                hex,
+                men_at_grips,
+                wanted_t,
+                from_ammunition_t,
+                from_supply_t,
+                supplied_share,
+            } => write!(
+                f,
+                "the {} side's fight at {hex} wanted {wanted_t} t for {men_at_grips} men at grips: {from_ammunition_t} t from ammunition and {from_supply_t} t from supply, a supplied share of {supplied_share}",
+                side.name()
+            ),
+            EventKind::BaseAmmunitionSpent {
+                base,
+                asked_t,
+                paid_t,
+                left_t,
+            } => {
+                if paid_t < asked_t {
+                    write!(
+                        f,
+                        "{base} spent {paid_t} t of ammunition on the men at grips in a fight: {asked_t} t was asked and the stock could not cover it, {left_t} t left"
+                    )
+                } else {
+                    write!(
+                        f,
+                        "{base} spent {paid_t} t of ammunition on the men at grips in a fight, {left_t} t left"
+                    )
+                }
+            }
+            EventKind::AmmunitionLanded {
+                base,
+                task_force,
+                men,
+                days,
+                ammunition_t,
+                ..
+            } => write!(
+                f,
+                "the landing of {task_force} put {ammunition_t} t of ammunition into {base}: {days} days of fighting for the {men} men aboard"
             ),
         }
     }
