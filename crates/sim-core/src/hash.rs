@@ -268,7 +268,10 @@ const fn speed_code(speed: SpeedSetting) -> u8 {
 /// agent's table) (decision 0201);
 /// version 53 adds a land unit's nights of hunger, `hunger_nights`, after its
 /// formation, and a base's `rations_landed` after its `ammunition_t`
-/// (decision 0205, 11).
+/// (decision 0205, 11);
+/// version 54 adds a claim's `air_types` (the count, then each type and its
+/// number) after its `by_unit`, in a side's belief, a command's picture and a
+/// report in flight alike (decision 0210, 1).
 ///
 /// What is held apart until its day (decision 0195, 23) does not raise the
 /// version: it is hashed last, after the domain, and only where something is
@@ -279,7 +282,7 @@ const fn speed_code(speed: SpeedSetting) -> u8 {
 /// replacement men and each land unit's strength (decision 0197, 21), after
 /// the supply lines, only where a scenario gives a stream or an
 /// establishment.
-pub const STATE_VERSION: &[u8] = b"flagplot-state-v53";
+pub const STATE_VERSION: &[u8] = b"flagplot-state-v54";
 
 /// Names every field of the state, with no `..` in any pattern. It does
 /// nothing when it runs. It is here so that a field added to the state does
@@ -882,6 +885,8 @@ fn name_every_field(world: &World) {
             // After `from_bombardment` (decisions 0179 and 0180).
             ground_types: _,
             by_unit,
+            // After `by_unit` (decision 0210).
+            air_types: _,
         }) = belief.claims().first()
         {
             if let Some(UnitClaim {
@@ -1287,6 +1292,12 @@ fn hash_claim(h: &mut StateHasher, claim: &crate::belief::BattleClaim) {
         h.u32(line.shot_down);
         h.u32(line.on_ground);
         h.u32(line.hits);
+    }
+    // After `by_unit`: the types claimed shot down (decision 0210).
+    h.count(claim.air_types.len());
+    for (aircraft_type, aircraft) in &claim.air_types {
+        h.u32(aircraft_type.raw());
+        h.u32(*aircraft);
     }
 }
 

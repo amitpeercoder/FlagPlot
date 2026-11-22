@@ -113,6 +113,7 @@ fn claim(key: EventId) -> Report {
         received_event: key,
         ground_types: Vec::new(),
         by_unit: Vec::new(),
+        air_types: Vec::new(),
     })
 }
 

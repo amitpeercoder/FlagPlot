@@ -880,7 +880,9 @@ pub(crate) fn seen(kind: &EventKind, side: Side, owners: &Owners, knows_fight: b
         // (decisions 0056 and 0135). The types it names were on the enemy's
         // field and are what the raiders made out (decision 0179, 9); the
         // units it names are the side's own, with what each claims (decision
-        // 0180, 9). Both are the claim, seen by whoever sees the claim. The
+        // 0180, 9). The types it names shot down were in a pool its men
+        // fired at and are what they made out (decision 0210, 10). All are
+        // the claim, seen by whoever sees the claim. The
         // event's entities are those units, the side's own, so a side sees
         // them with its own claim and the enemy, who is not given the event,
         // never does.
@@ -896,6 +898,7 @@ pub(crate) fn seen(kind: &EventKind, side: Side, owners: &Owners, knows_fight: b
             from_bombardment: _,
             ground_types: _,
             by_unit: _,
+            air_types: _,
         } => whole_if(*owner == side),
 
         // A side's own passing of its own reports between its commands, and
@@ -3428,6 +3431,7 @@ mod tests {
                     from_bombardment: false,
                     ground_types: Vec::new(),
                     by_unit: Vec::new(),
+                    air_types: Vec::new(),
                 },
                 Whole,
                 Nothing,
@@ -5386,6 +5390,7 @@ mod tests {
             from_bombardment: false,
             ground_types: Vec::new(),
             by_unit: Vec::new(),
+            air_types: Vec::new(),
         };
         let mut events = log(vec![claim.clone()]);
         events[0].breakdown = Some(Breakdown {

@@ -10,7 +10,7 @@
   "additionalProperties": false,
   "properties": {
     "format": { "const": "flagplot-agent" },
-    "version": { "const": 40 },
+    "version": { "const": 41 },
     "kind": { "const": "briefing" },
     "heading": { "$ref": "#/$defs/heading" },
     "objectives": { "$ref": "#/$defs/objectives" },
@@ -835,6 +835,19 @@
               "from_bombardment": { "description": "True for the claim of a shore bombardment (decision 0092, 17). Left out when false.", "type": "boolean" },
               "ground_types": {
                 "description": "The types of the aircraft claimed destroyed on the ground, by name, each with its number, where the raiders made them out (decision 0179). Left out where none is named.",
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["aircraft_type", "aircraft"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "aircraft_type": { "type": "string" },
+                    "aircraft": { "type": "integer" }
+                  }
+                }
+              },
+              "air_types": {
+                "description": "The types of the aircraft claimed shot down, by name, each with its number, where the claim's men made them out (decision 0210). Left out where none is named.",
                 "type": "array",
                 "items": {
                   "type": "object",

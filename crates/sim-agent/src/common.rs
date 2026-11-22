@@ -314,8 +314,8 @@ impl<'a> Ctx<'a> {
                 &RecognisedWords(Some(*aircraft_type)).to_string(),
                 &format!("recognised as {}", self.aircraft_type_name(*aircraft_type)),
             ),
-            // A claim names types by the name its data has (decision 0179,
-            // 8) and units as the seat's tools name them, one no longer in
+            // A claim names types by the name its data has (decisions 0179,
+            // 8, and 0210, 8) and units as the seat's tools name them, one no longer in
             // the game "since dissolved" (decision 0180, 10). Each unit is
             // written by the umpire's token, which the mapping below turns
             // into the side's number.
@@ -331,8 +331,13 @@ impl<'a> Ctx<'a> {
                 from_bombardment,
                 ground_types,
                 by_unit,
+                air_types,
             }) if *from_air => {
                 let types: Vec<(String, u32)> = ground_types
+                    .iter()
+                    .map(|(t, n)| (self.aircraft_type_name(*t), *n))
+                    .collect();
+                let in_the_air: Vec<(String, u32)> = air_types
                     .iter()
                     .map(|(t, n)| (self.aircraft_type_name(*t), *n))
                     .collect();
@@ -366,6 +371,7 @@ impl<'a> Ctx<'a> {
                     *from_bombardment,
                     &types,
                     &units,
+                    &in_the_air,
                 )
             }
             other => other.to_string(),

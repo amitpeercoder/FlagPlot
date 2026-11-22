@@ -321,8 +321,10 @@ fn the_words_of_day_2_name_the_type_after_the_number() {
     assert!(claim.text.contains("15 aircraft destroyed on the ground"));
     assert_eq!(
         before_the_units(&claim.text),
-        "Japanese claim at (5,0): 6 aircraft shot down, 15 aircraft destroyed on the ground \
-         (15 of aircraft_type:3)"
+        // Since decision 0210 the claim names the patrol's type in the air as
+        // well (scenario 124 has the words).
+        "Japanese claim at (5,0): 6 aircraft shot down (6 of aircraft_type:4), 15 aircraft \
+         destroyed on the ground (15 of aircraft_type:3)"
     );
     // At made out 0 the words are scenario 11's, to the letter, but for the
     // clause that names the units.
@@ -357,6 +359,7 @@ fn the_words_of_day_2_name_the_type_after_the_number() {
                         *claimed_on_ground,
                         *from_air,
                         *from_bombardment,
+                        &[],
                         &[],
                         &[],
                     )
@@ -411,8 +414,14 @@ fn nothing_else_moves_with_the_chance_of_making_out_a_type() {
         for (a, b) in a.iter().zip(&b) {
             assert_eq!((a.day, a.side, a.numbers), (b.day, b.side, b.numbers));
             assert_eq!(a.by_unit, b.by_unit, "{chances:?}");
+            // Since decision 0210 the Allied claims' types in the air and
+            // their words move with the chance; their types on the ground,
+            // none, do not.
             if a.side == Side::Allied {
-                assert_eq!(a, b, "{chances:?}: the Allied claims do not move");
+                assert_eq!(
+                    a.types, b.types,
+                    "{chances:?}: the Allied claims do not move"
+                );
             }
         }
     }

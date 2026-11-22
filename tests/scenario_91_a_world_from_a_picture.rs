@@ -240,6 +240,7 @@ fn case_one() -> (WorldPicture, RefData, Map) {
             from_bombardment: false,
             ground_types: Vec::new(),
             by_unit: Vec::new(),
+            air_types: Vec::new(),
         }],
         estimates: vec![PictureEstimate {
             hex: Hex::new(8, 0),
