@@ -29,11 +29,11 @@
 //!
 //! | Base | Number | Side | Hex | What it has |
 //! | --- | --- | --- | --- | --- |
-//! | Midway | 1 | Allied | (5,1) | Its garrison; its aircraft; 2,000 t of supply, a placeholder (rule 95); no fuel for ships; no anti-aircraft figure and no port size (gaps) |
-//! | Wake | 2 | Japanese | (-24,16) | 100 t of supply, a placeholder; no aircraft, no men (rule 81) |
+//! | Midway | 1 | Allied | (5,1) | Its garrison; its aircraft and their airfield; 4,000 t of supply, a placeholder (rule 94); no fuel for ships; no anti-aircraft figure and no port size (gaps) |
+//! | Wake | 2 | Japanese | (-24,16) | 100 t of supply, a placeholder; no aircraft, no airfield, no men, no fuel (rule 81) |
 //!
 //! 2. Midway is a coast hex and Wake is, each by the map's mark of land.
-//! 3. Midway has 2,000 t of supply and Wake 100 t, and the header marks
+//! 3. Midway has 4,000 t of supply and Wake 100 t, and the header marks
 //!    both placeholders and says why Wake is in: a lift needs a base of
 //!    its side, and the landing force in truth came from Saipan and Guam,
 //!    off the map.
@@ -56,7 +56,7 @@
 //! Both start in hex (15,-6), the hex of 32 04 N, 172 45 W, where the
 //! rows have the two forces meet on the afternoon of 2 June (engagement
 //! positions 5737 to 5739), some two hours before the game begins. Left
-//! out and said in the header: Gwin, who joined on 5 June (rule 87); the
+//! out and said in the header: Gwin, who joined on 5 June (rule 85); the
 //! fuelling group (Cimarron, Platte, Dewey, Monssen); the submarines; the
 //! auxiliaries of the naval district.
 //!
@@ -69,7 +69,7 @@
 //! | Group | Aboard or at | Type | Aircraft | Row |
 //! | --- | --- | --- | --- | --- |
 //! | VF-6 | Enterprise | F4F-4 | 27 | 12610 |
-//! | VB-6 | Enterprise | SBD-3 (rule 92) | 18 | 12600 |
+//! | VB-6 | Enterprise | SBD-3 (rule 90) | 18 | 12600 |
 //! | VS-6 | Enterprise | SBD-3 | 18 | 12606 |
 //! | VT-6 | Enterprise | TBD-1 | 14 | 5727 |
 //! | VF-8 | Hornet | F4F-4 | 27 | 12641 |
@@ -82,7 +82,7 @@
 //! | VMF-221 | Midway | F2A-3 | 21 | 5748 |
 //! | VMF-221 | Midway | F4F-3 | 7 | 5749 |
 //! | VMSB-241 | Midway | SBD-2 | 19 | 5750 |
-//! | VMSB-241 | Midway | SB2U-3 | 17 | 5751 |
+//! | VMSB-241 | Midway | SB2U-3 | 17, of which 5 damaged (rule 92) | 5751 |
 //! | The patrol squadrons | Midway | PBY-5 | 14 | 5753 |
 //! | The patrol squadrons | Midway | PBY-5A | 16 | 5754 |
 //! | The Army bombers | Midway | B-17E | 17 | 5755 |
@@ -94,8 +94,9 @@
 //!    = 77, Yorktown 25 + 18 + 18 + 12 = 73, and Midway 21 + 7 + 19 + 17 +
 //!    14 + 16 + 17 = 111: 338 Allied aircraft. No carrier has more than
 //!    her class holds.
-//! 7. Every group is ready in full at the start, and every one has the
-//!    type the table gives.
+//! 7. Every group has the type the table gives and is ready in full at
+//!    the start, but the SB2U-3 group, which has 12 ready and 5 damaged.
+//!    The groups are numbered in the order of the table, 1 to 18.
 //!
 //! **Ashore:** land unit 1, Midway's garrison, 2,178 men (land unit facts
 //! 6907; rule 63), at Midway, on defence.
@@ -104,8 +105,8 @@
 //!
 //! # The Japanese forces
 //!
-//! Every warship is of her class in the list (classes 5000 to 5004 and
-//! 5022 to 5036). The transports are of a placeholder class of their own.
+//! Every warship is of her class in the list (classes 5000 to 5003 and
+//! 5022 to 5035). The transports are of a placeholder class of their own.
 //!
 //! **Task force 3, the First Carrier Striking Force,** on the carrier
 //! mission, 21 ships: Akagi, Kaga, Soryu, Hiryu; Haruna, Kirishima; Tone,
@@ -114,38 +115,38 @@
 //! starts at (-2,-15), the hex of 37 01.5 N, 171 07 E, where its own
 //! report has it at 1630 on 2 June (engagement positions 5700; rule 32).
 //!
-//! **Task force 4, the occupation force,** on the transport mission, 24
-//! ships: the thirteen transports Nankai Maru, Zenyo Maru, Brazil Maru,
-//! Argentina Maru, Azuma Maru, Kirishima Maru, Kano Maru, Toa Maru No. 2,
-//! Akebono Maru, Hokuriku Maru, Goshu Maru, Keiyo Maru and Seicho Maru
-//! (rule 90); and their close screen, Jintsu; Kuroshio, Oyashio,
-//! Hatsukaze, Yukikaze, Amatsukaze, Tokitsukaze, Kasumi, Arare, Kagero,
-//! Shiranui. It starts at (-17,4) (rule 83, worked below).
+//! **Task force 4, the Midway Invasion Force,** on the transport mission,
+//! 46 ships (rule 86):
 //!
-//! **Task force 5, the Close Support Group,** on the surface combat
-//! mission, 8 ships: Kumano, Suzuya, Mogami, Mikuma; Arashio, Asashio,
-//! Oshio, Michishio. It starts at (-16,4), a placeholder (rule 84).
+//! - the thirteen transports, "Placeholder transport 1" to "13" (rule
+//!   88);
+//! - their close screen, 11 ships: Jintsu; Kuroshio, Oyashio, Hatsukaze,
+//!   Yukikaze, Amatsukaze, Tokitsukaze, Kasumi, Arare, Kagero, Shiranui;
+//! - the Close Support Group, 8 ships: Kumano, Suzuya, Mogami, Mikuma;
+//!   Arashio, Asashio, Oshio, Michishio;
+//! - the Second Fleet's main body, 14 ships: Kongo, Hiei; Atago, Chokai,
+//!   Haguro, Myoko; Yura; Yudachi, Murasame, Harusame, Samidare, Asagumo,
+//!   Minegumo, Natsugumo.
 //!
-//! **Task force 6, the Second Fleet's main body,** on the surface combat
-//! mission, 14 ships: Kongo, Hiei; Atago, Chokai, Haguro, Myoko; Yura;
-//! Yudachi, Murasame, Harusame, Samidare, Asagumo, Minegumo, Natsugumo.
-//! It starts at (-16,2), a placeholder (rule 85).
+//! It starts at (-17,4) (rule 83, worked below), stopped, with no route.
 //!
-//! **Task force 7, Zuiho's force,** on the carrier mission, 2 ships:
-//! Zuiho, Mikazuki (rule 88). It starts at (-16,2) with task force 6.
+//! Left out and said in the header: Zuiho and Mikazuki (rule 87); the
+//! Main Body with Yamato; the Aleutians forces; the seaplane tender
+//! group; the minesweepers; the supply groups; Patrol Boats 1, 2 and 34;
+//! the submarines; Wake's air units.
 //!
-//! Left out and said in the header: the Main Body with Yamato; the
-//! Aleutians forces; the seaplane tender group; the minesweepers; the
-//! supply groups; Patrol Boats 1, 2 and 34; the submarines; Wake's air
-//! units.
+//! 9. The two forces have 21 and 46 ships, 67 in all, each warship of the
+//!    class the list gives her, and start at (-2,-15) and (-17,4), both
+//!    deep sea. Every ship of the scenario, of either side, starts with
+//!    her fuel full.
+//! 10. The header names the thirteen ships the placeholder transports
+//!     stand for, says the thirteenth is disputed, and says that the
+//!     night surface threat of the Second Fleet's main body is not in the
+//!     game.
 //!
-//! 9. The five forces have 21, 24, 8, 14 and 2 ships, 69 in all, each
-//!    warship of the class the list gives her, and start at (-2,-15),
-//!    (-17,4), (-16,4), (-16,2) and (-16,2), every one deep sea.
-//! 10. The header marks the starts of task forces 5, 6 and 7 placeholders
-//!     and gives the row each was worked from.
-//!
-//! The air groups, in this order:
+//! The air groups, numbered on from the Allied ones in this order,
+//! carrier by carrier, fighters then bombers then attack planes, and
+//! then the two cruisers:
 //!
 //! | Aboard | Fighters, A6M2 | Bombers, D3A1 | Attack planes, B5N2 | Other |
 //! | --- | --- | --- | --- | --- |
@@ -153,17 +154,17 @@
 //! | Kaga | 27 | 18 | 27 | |
 //! | Soryu | 21 | 16 | 18 | |
 //! | Hiryu | 21 | 18 | 18 | |
-//! | Zuiho | 6 | | 12 | 6 A5M4 fighters, a group of their own |
 //! | Tone | | | | 3 Type 0 floatplanes, E13A1 |
 //! | Chikuma | | | | 3 Type 0 floatplanes, E13A1 |
 //!
-//! Rules 73 to 75 and 93. A carrier's 6th Air Group fighters are in her
+//! Rules 73, 74 and 91. A carrier's 6th Air Group fighters are in her
 //! fighter group.
 //!
 //! 11. The four carriers have 60, 72, 55 and 57 aircraft: fighters 24 +
 //!     27 + 21 + 21 = 93, bombers 18 + 18 + 16 + 18 = 70, attack planes 18
-//!     + 27 + 18 + 18 = 81, 244 in all. Zuiho has 24 and the two cruisers
-//!     6: 274 Japanese aircraft. No ship has more than her class holds.
+//!     + 27 + 18 + 18 = 81, 244 in all. The two cruisers have 6: 250
+//!     Japanese aircraft in 14 groups, numbered 19 to 32. No ship has
+//!     more than her class holds.
 //!
 //! **The landing force,** aboard task force 4: land unit 2, the Ichiki
 //! Detachment, 2,507 men, and land unit 3, the 2nd Combined Special
@@ -175,36 +176,39 @@
 //! # The transports
 //!
 //! **Their class** is a placeholder of its own, marked: 600 berths, no
-//! guns, a cruising and a top speed of 8.8 kn. The speed stands on two
+//! guns, a cruising and a top speed of 8.8 kn, and its other figures
+//! those of the Coral Sea's placeholder transport. Each carries 41 t of
+//! supply, as the Coral Sea's do (rule 95). The speed stands on two
 //! positions alone (rule 65): 700 miles from Midway at 0925 on 3 June
 //! and 560 miles at 0120 on 4 June (engagement events 7699 and 7706) are
 //! 140 nm in 15 hours 55 minutes, 8.8 kn to one place.
 //!
 //! **Their start** (rule 83). Back from 0925 on 3 June to 1800 on 2 June
 //! is 15 hours 25 minutes, 135.7 nm at 8.8 kn: 835.7 nm from Midway on
-//! bearing 261. Midway is at 28.232 N, 177.370 W, which in the map's
-//! frame is 217.8 nm east and 16.1 nm south of hex (0,0). On bearing 261
-//! the start is 825.4 nm west and 130.7 nm south of Midway: 607.6 nm
-//! west and 146.8 nm south of hex (0,0). A hex's centre is 40 x (q + r/2)
-//! nm east and 34.641 x r nm south: r is 4 and q is -17, whose centre is
-//! 600 nm west and 138.6 nm south.
+//! bearing 261, laid off in the map's own flat frame. Midway is at 28.232
+//! N, 177.370 W, which in that frame is 217.8 nm east and 16.1 nm south
+//! of hex (0,0). On bearing 261 the start is 825.4 nm west and 130.7 nm
+//! south of Midway: 607.6 nm west and 146.8 nm south of hex (0,0). A
+//! hex's centre is 40 x (q + r/2) nm east and 34.641 x r nm south: r is 4
+//! and q is -17, whose centre is 600 nm west and 138.6 nm south.
 //!
 //! 13. The thirteen transports are of that class, 600 berths each, 7,800
-//!     in all for 4,507 men, and the file says beside the speed that it
-//!     stands on the two positions alone.
-//! 14. From (-17,4) to Midway's hex the sea way is 22 hexes, 880 nm, with
-//!     no land in the way. At 8.8 kn that is 100 hours: a force that
-//!     sails at 1800 on 2 June and holds 8.8 kn reaches Midway's hex at
-//!     2200 on 6 June, in the night that begins day 5.
-//! 15. The force's speed is the transports': no ship of the close screen
-//!     cruises slower than 8.8 kn.
+//!     in all for 4,507 men, each with 41 t of supply, and the file says
+//!     beside the speed that it stands on the two positions alone.
+//! 14. From (-17,4) to Midway's hex the sea way is 22 steps, charged to a
+//!     ship as 827 nm, with no land in the way. At 8.8 kn that is 94
+//!     hours less a minute: a force that sails at 1800 on 2 June and
+//!     holds 8.8 kn reaches Midway's hex at about 1600 on 6 June, in the
+//!     afternoon of day 4.
+//! 15. The force's speed is the transports': no warship of it cruises
+//!     slower than 8.8 kn.
 //!
 //! # Distances
 //!
-//! 16. By the map: from task force 3's start to Midway 23 hexes, 817 nm
-//!     by air; from the American carriers' start to Midway 10 hexes, 356
-//!     nm; from Wake to Midway 29 hexes; from task force 5's start to
-//!     (-3,1) 13 hexes; from task force 6's start to (-5,1) 11 hexes.
+//! 16. By the map: from task force 3's start to Midway 23 steps, 817 nm
+//!     by air; from the American carriers' start to Midway 10 steps, 356
+//!     nm; from Wake to Midway 29 steps; from task force 3's start to
+//!     (5,-3), four hexes north of Midway, 19 steps, charged as 666 nm.
 //!
 //! # What a side the engine plays is given
 //!
@@ -213,38 +217,35 @@
 //! **The Japanese side:**
 //!
 //! - **Take Midway** (the place at (5,1)), its forces task forces 3 and 4
-//!   and land units 2 and 3, at risk press and with no need to know (rule
-//!   96). The carriers are in the take's forces and have no order of
-//!   their own (rule 38).
-//! - **Stand** task force 6 at (-5,1) and task force 5 at (-3,1) (rule
-//!   98).
-//! - **Operate** task force 7 from (-6,1).
-//! - It is given an estimate of 750 men at Midway (land unit facts 6908)
-//!   if a scenario file can give a side an estimate of the men at a
-//!   place; if it cannot, none.
+//!   and land units 2 and 3, with no need to know, and no risk set, so
+//!   that it is balanced (rule 96). The carriers are in the take's forces
+//!   and have no order of their own (rule 38).
+//! - It is given no estimate of the men at Midway.
 //!
 //! **The Allied side:**
 //!
 //! - **Hold Midway,** its forces land unit 1, the two fighter groups of
-//!   VMF-221 and the two groups of flying boats (rule 97).
-//! - **Deny the waters within 10 hexes of Midway,** its forces the SBD-2
-//!   group, the SB2U-3 group and the B-17E group; what to strike first:
-//!   carriers, then transports, battleships, cruisers, destroyers,
-//!   auxiliaries.
+//!   VMF-221 (groups 12 and 13) and the two groups of flying boats (16
+//!   and 17) (rule 97).
+//! - **Deny the waters within 4 hexes of (1,-1),** its forces the SBD-2
+//!   group, the SB2U-3 group and the B-17E group (14, 15 and 18); what to
+//!   strike first: carriers, then transports, battleships, cruisers,
+//!   destroyers (rule 98).
 //! - **Operate** task force 1 from (14,-6), Point Luck (place positions
-//!   5113), and task force 2 from (15,-6).
+//!   5113), and task force 2 from (15,-6) (rule 99).
 //!
 //! 17. Each order is accepted on day 1 as given, and none is refused.
 //! 18. In the file in which the Japanese side is given its orders, by the
-//!     morning of day 2 the staff has formed a plan under the take, task
-//!     force 4 is under way toward Midway, and task force 3 is under way
-//!     toward a hex within its attack planes' reach of Midway. If the
+//!     morning of day 2 the staff has formed a plan under the take; task
+//!     force 4 has sailed for Midway at 8.8 kn; and task force 3 is at,
+//!     or under way to, a hex no more than 4 hexes from Midway. If the
 //!     staff forms no plan, or gives task force 4 no order, the build
 //!     stops and reports the staff's words: nothing is changed to make it
 //!     sail.
 //! 19. In the file in which the Allied side is given its orders, on day 1
-//!     a fighter group patrols over Midway, a group of flying boats
-//!     searches, and no group of flying boats is sent to strike.
+//!     a fighter group patrols over Midway, both groups of flying boats
+//!     search, no flying boat is sent to strike, and the hexes (5,-3),
+//!     (-3,1) and (1,3) are within the waters denied.
 //!
 //! # The files
 //!
@@ -269,14 +270,14 @@
 //! 1 for each 100; and for the Japanese side men landed at Midway 1 for
 //! each 100.
 //!
-//! The levels (rule 99): minor 5, major 15, decisive 30; the horizon 66
+//! The levels (rule 100): minor 5, major 15, decisive 30; the horizon 66
 //! days, from 2 June to the landings on Guadalcanal on 7 August (28 days
 //! of June, 31 of July, 7 of August).
 //!
 //! 23. The file's objectives are those figures, levels and horizon, and
 //!     mark it for play.
 //! 24. What is at stake, by those figures. The four fleet carriers sunk
-//!     are 40 points and Zuiho 10. The thirteen transports sunk with every
+//!     are 40 points. The thirteen transports sunk with every
 //!     man aboard are 13 x 2 + 45.07 = 71.07. Every man of the landing
 //!     force landed is 45.07 to the Japanese side. The three American
 //!     carriers sunk are 30. Midway's garrison lost to the last man is
@@ -287,19 +288,21 @@
 //!
 //! # What the game does not model, said in the header
 //!
-//! Rules 16, 17 and 42 to 45, and: no experience is derived for this
-//! battle (rule 94); the flying boats' night torpedo attack is not in it
-//! (rule 97); the surface weapons of the carriers' screens, the close
-//! screen and the Close Support Group's cruisers are not modelled (rules
-//! 69 and 79).
+//! Rules 16, 17 and 42 to 45, and: the night surface threat (rule 86);
+//! ships' experience, if the list could not derive it (rule 93); the
+//! flying boats' night torpedo attack (rule 97); that no force's fuel is
+//! weighed and the oilers are left out (rule 95); what Wake's being on
+//! the map does to each side's search (rule 82); and every ship whose
+//! class the list marks as having surface weapons not modelled, by
+//! name, read from the list.
 //!
 //! 26. The header says each of these.
 //!
 //! # Properties
 //!
 //! - **Nothing is invented.** Every ship and aircraft type of the file is
-//!   of a class or type the list derives, but the transports' class, the
-//!   two stocks and the three starts, each marked a placeholder.
+//!   of a class or type the list derives, but the transports and their
+//!   class and the two stocks, each marked a placeholder.
 //! - **The list's check passes,** and no figure of the scenario is typed
 //!   by hand where the list gives it.
 //! - **The same game twice** gives the same events.
@@ -312,8 +315,12 @@
 //! architect before any run of many games is read (rule 41): day by day,
 //! what each staff ordered and why, what was found and when, every
 //! strike with its losses, whether and when the transports reached
-//! Midway and what landed, the score by line, and what the classes whose
-//! surface weapons are not modelled took away (rules 68 and 79). The band
+//! Midway and what landed, the score by line, what the classes whose
+//! surface weapons are not modelled took away (rules 68 and 79), which
+//! way each side's search looked and what Wake did to it (rules 82 and
+//! 102), whether any ship ran out of fuel (rule 95), what Midway's stock
+//! stood at each evening (rule 94), and how what happened compares with
+//! what rules 101 and 102 expect. The band
 //! of decision 0187 is read on 1,000 games of file a only after that
 //! report is read, and nothing is changed to enter it.
 
