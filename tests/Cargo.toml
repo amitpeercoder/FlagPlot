@@ -665,3 +665,7 @@ path = "scenario_127_a_strike_is_spread.rs"
 [[test]]
 name = "scenario_128_submarines_against_warships"
 path = "scenario_128_submarines_against_warships.rs"
+
+[[test]]
+name = "scenario_129_submarines_the_staff_and_the_patrol"
+path = "scenario_129_submarines_the_staff_and_the_patrol.rs"

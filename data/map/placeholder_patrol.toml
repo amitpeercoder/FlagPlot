@@ -1,0 +1,21 @@
+# PLACEHOLDER MAP. Open sea with one coast hex, used by scenario 129
+# (submarines, the staff and the patrol order, decision 0218). The geography
+# is invented: the coast hex stands in for the Japanese submarine base the
+# boats start at, 7 hexes east of the centre of the waters they are to
+# patrol, at (5,0). The real slice map replaces this file.
+
+placeholder = true
+
+# Ranges are inclusive.
+[[region]]
+kind = "deep_sea"
+q = [0, 12]
+r = [-6, 6]
+
+# Stands in for a Japanese submarine base.
+[[hex]]
+q = 12
+r = 0
+kind = "coast"
+port_size = 3
+anchorage = true

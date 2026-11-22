@@ -1,0 +1,123 @@
+# Scenario 129: submarines, the staff and the patrol order. Game A1 of the
+# hand calculation in tests/scenario_129_submarines_the_staff_and_the_patrol.rs:
+# seven placeholder Japanese submarines lie at the Japanese base at (12,0);
+# the Japanese commander orders the waters within 2 hexes of (5,0) patrolled
+# with submarines and gives both leaves, and the staff gives each boat the
+# station its place in the order gives it. The Allied side has nothing.
+# Decision 0218, stage 3 (the third stage of three).
+#
+# The test runs variants of this file, one for each game of the hand
+# calculation.
+#
+# PLACEHOLDER DATA. The boats, base, figures and map are invented. The class
+# and the torpedo are those of scenario 128.
+
+name = "Scenario 129: The staff patrols waters with submarines"
+placeholder = true
+seed = 1942
+days = 3
+map = "../map/placeholder_patrol.toml"
+ship_classes = "../reference/ship_classes.csv"
+port_sizes = "../reference/port_sizes.csv"
+aircraft_types = "../reference/aircraft_types.csv"
+search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat.toml"
+submarine_classes = "../reference/submarine_classes_placeholder_scenario_128.csv"
+submarine_torpedoes = "../reference/submarine_torpedoes_placeholder_scenario_128.csv"
+submarines = "../reference/submarines_placeholder_scenario_128.toml"
+
+# The Japanese submarine base the boats start at and go home to.
+[[base]]
+id = 1
+name = "Placeholder submarine base"
+side = "japanese"
+q = 12
+r = 0
+airfield = false
+
+[[submarine]]
+id = 1
+name = "Placeholder submarine 1"
+side = "japanese"
+class = 6900
+q = 12
+r = 0
+home = 1
+
+[[submarine]]
+id = 2
+name = "Placeholder submarine 2"
+side = "japanese"
+class = 6900
+q = 12
+r = 0
+home = 1
+
+[[submarine]]
+id = 3
+name = "Placeholder submarine 3"
+side = "japanese"
+class = 6900
+q = 12
+r = 0
+home = 1
+
+[[submarine]]
+id = 4
+name = "Placeholder submarine 4"
+side = "japanese"
+class = 6900
+q = 12
+r = 0
+home = 1
+
+[[submarine]]
+id = 5
+name = "Placeholder submarine 5"
+side = "japanese"
+class = 6900
+q = 12
+r = 0
+home = 1
+
+[[submarine]]
+id = 6
+name = "Placeholder submarine 6"
+side = "japanese"
+class = 6900
+q = 12
+r = 0
+home = 1
+
+[[submarine]]
+id = 7
+name = "Placeholder submarine 7"
+side = "japanese"
+class = 6900
+q = 12
+r = 0
+home = 1
+
+# The Japanese commander's commands
+[[command]]
+day = 1
+side = "japanese"
+kind = "set_intent"
+intent = 1
+intent_kind = "patrol"
+hex = [5, 0]
+distance = 2
+
+[[command]]
+day = 1
+side = "japanese"
+kind = "set_leave"
+leave = "prepare"
+given = true
+
+[[command]]
+day = 1
+side = "japanese"
+kind = "set_leave"
+leave = "launch"
+given = true

@@ -40,6 +40,7 @@ mod morning;
 mod neutralise;
 mod night;
 mod order;
+mod patrol;
 mod picture;
 mod planner;
 mod projection;

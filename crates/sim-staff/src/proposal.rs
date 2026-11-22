@@ -281,6 +281,7 @@ pub(crate) fn propose(view: SideView<'_>, intent: IntentId) -> Option<Proposal> 
         shortfall,
         displaces,
         reason,
+        stations: Vec::new(),
     })
 }
 

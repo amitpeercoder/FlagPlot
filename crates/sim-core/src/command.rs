@@ -676,7 +676,7 @@ impl Risk {
 /// for it, the pool, the air groups it may use (decision 0115, 2), and for a
 /// supply intent exactly one source base (decision 0107, 19). A supply
 /// intent's forces limit must name a source; another kind's need not.
-#[derive(Clone, PartialEq, Eq, Debug)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct ForcesLimit {
     pub ships: BTreeSet<ShipId>,
     pub task_forces: BTreeSet<TaskForceId>,
@@ -690,6 +690,24 @@ pub struct ForcesLimit {
     /// Submarines the intent may use (decision 0218, 12 and 34): only a
     /// "patrol" may use a boat. Added at the end.
     pub submarines: BTreeSet<SubmarineId>,
+}
+
+/// Written as the derived form was, with the boats only where the limit
+/// names one (decision 0218, stage 3): an event's words, and so every digest
+/// of events, are what they were for a limit that names no boat.
+impl core::fmt::Debug for ForcesLimit {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let mut out = f.debug_struct("ForcesLimit");
+        out.field("ships", &self.ships)
+            .field("task_forces", &self.task_forces)
+            .field("air_groups", &self.air_groups)
+            .field("source", &self.source)
+            .field("land_units", &self.land_units);
+        if !self.submarines.is_empty() {
+            out.field("submarines", &self.submarines);
+        }
+        out.finish()
+    }
 }
 
 /// The limits of one intent as they stand. A limit not set is `None` (or the
@@ -3453,6 +3471,23 @@ pub struct Proposal {
     /// The lower intents this proposal would displace.
     pub displaces: Vec<Displaced>,
     pub reason: Reason,
+    /// For a patrol order (decision 0218, 54): each boat the staff would
+    /// give a station, with that station and her place in the order, in
+    /// place order. A boat that keeps her station is here; a boat passed
+    /// over is not. Empty for every other intent.
+    pub stations: Vec<PatrolStation>,
+}
+
+/// One boat's place and station under a patrol order, as the staff works
+/// them (decision 0218, 54).
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct PatrolStation {
+    pub boat: SubmarineId,
+    /// The station the boat is given.
+    pub hex: Hex,
+    /// Her place among the boats the order may use, counted from 1: the
+    /// boat of place n has station n of the waters.
+    pub place: u32,
 }
 
 /// Each side's staff, or none. The function that resolves a day takes it.
