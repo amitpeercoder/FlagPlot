@@ -1326,7 +1326,9 @@ none of it.
 
 ## The types claimed shot down (decision 0210)
 
-`version` is 41. A claim in the briefing's `claims` gains `air_types`, left out when empty: the types of the aircraft
+`version` is 42. An air group's line gains `attack_weapon`, "bombs" or "torpedoes": what its aircraft attack ships with, left out for a type that carries neither. Nothing else changed from 41.
+
+(Version 41:) A claim in the briefing's `claims` gains `air_types`, left out when empty: the types of the aircraft
 claimed shot down, each `{"aircraft_type", "aircraft"}` with the type's name, where the men who fired made them out (the
 one draw that already decides `ground_types`). A type named was among the enemy aircraft that firing was at; its number may
 be above the truth. The words of the claim name them after the number of aircraft shot down, "4 aircraft shot down (3 of T,
