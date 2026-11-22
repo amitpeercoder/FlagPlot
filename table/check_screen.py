@@ -182,9 +182,9 @@ def orders_and_signed():
     check('id="sp-chev"' in column and "The stop paper is closed: open it" in text and "The stop paper is open: close it" in text
           and "' for your decision'" in text and "role=\"img\"" in column,
           "the head has a chevron whose label says the paper is open or closed, and the count of what waits for a decision")
-    check("function atStop() { setDrawer(true); }" in text and text.count("atStop();") >= 4 and "function startRun() { setDrawer(false);" in text,
+    check("function atStop() { setDrawer(true); focusStop(); }" in text and text.count("atStop();") >= 4 and "function startRun() { setDrawer(false);" in text,
           "the drawer opens at load and at every stop of the clock; the clock's starting closes it")
-    check(re.search(r"\.stoppaper \.sp-body \{ display: none; \}", text) and not re.search(r"\.stoppaper \.sp-foot \{ display: none", text)
+    check(re.search(r"\.stoppaper \.sp-body, \.stoppaper \.fold \{ display: none; \}", text) and not re.search(r"\.stoppaper \.sp-foot \{ display: none", text)
           and 'id="sp-foot"' in column and 'id="btn-day"' in column and 'id="btn-go"' in column,
           "with the drawer closed the two controls that run time stay in sight under the head: the same buttons of the foot")
 
@@ -216,8 +216,8 @@ def one_order_paper():
           "IN WHOSE HANDS says, for a unit, whose it is now and whose it will be once signed, in decision 0216's words")
     check('id="p-back"' in form and "'\u2190 BACK TO '" in text and "from.go()" in text and "from: from" in text,
           "the paper has a way back to the card it was opened from")
-    check("function paperAsk(words, yes)" in text and "'KEEP WRITING'" in text and "function tearUpAsking(then, words)" in text and "if (!paperChosen())" in text
-          and "e.key !== 'Escape' || !paper" in text and "}, true);" in text[text.index("e.key !== 'Escape' || !paper"):text.index("e.key !== 'Escape' || !paper") + 700],
+    check("function paperAsk(words, yes)" in text and "'KEEP WRITING'" in text and "function tearUpAsking(then, words, back)" in text and "if (!paperChosen())" in text
+          and "else if (paper) { if ($('p-says').querySelector('.ask'))" in text and "tearUpAsking(null, null, true)" in text,
           "Escape tears up a draft with nothing chosen, and asks in the paper where something is chosen")
     check("arcDraft && (!$('card').hidden || paper)" in text and "marchDraft && (!$('card').hidden || paper)" in text and "$('card').hidden && !paper &&" in text
           and "else if (!picking && !paper && !playing" in text and "if (draft) ring(draft.v" in text and "force && force.route" in text,
@@ -289,6 +289,56 @@ def the_trail_holds_no_duplicate():
           "stepping through a stack replaces the card without growing the trail, and a link from the stop paper starts a new trail")
     check(all("remember(" + c + ", function" in text for c in ("cardContact", "cardForce", "cardBase", "cardPlace", "cardHex", "cardUnit", "cardEntity", "cardGone")),
           "every way a card opens names the thing it shows")
+
+
+def the_fold_and_the_keys():
+    """What stops the clock and the keys (decision 0221, stage 4), by the page's text: the fold in the foot with the
+    table's ticks and the staff's standing interrupts; the ticks kept in the browser for the game, keyed as the directives
+    are, and forgotten by New game and Restart; why the clock stopped kept across a reload; one Escape, in its order;
+    the focus at a stop; SINCE's count while the clock runs; a card that is not a live region."""
+    import re
+    with open(os.path.join(HERE, "index.html"), encoding="utf-8") as page:
+        text = page.read()
+    foot = text[text.index('id="sp-foot"'):text.index("</footer>", text.index('id="sp-foot"'))]
+    check('<details id="stopfold"' in foot and "WHAT STOPS THE CLOCK" in foot and foot.index('id="stopfold"') < foot.index('id="btn-day"'),
+          "the fold WHAT STOPS THE CLOCK is in the stop paper's foot, above the controls that run time")
+    for tick in ("contact", "attack", "loss", "strike", "landing", "arrive", "evening"):
+        check(f'id="stop-{tick}"' in foot, f"the fold holds the table's tick for {tick}")
+    check("each evening" in foot and re.search(r"evening: false", text) and re.search(r"TICK_DEFAULT = \{[^}]*contact: true, attack: true, loss: true, strike: false, landing: false, arrive: false, evening: false", text),
+          "each evening is in the fold and off by default; a contact, an attack and a loss are ticked, and the rest not")
+    check("eveningStop()" in text and text.count("eveningStop()") >= 4 and "stopEvening" in text, "Carry on stops each evening where that is ticked, in the pulse, day and watched loops alike")
+    check('id="stops-staff"' in foot and all(k in text for k in ("cannot_meet", "waits_for_leave", "ship_lost", "cannot_bring_enough", "lift_turned_back", "asks_leave_to_pursue")) and "var STAFF_STOP" in text,
+          "the staff's six standing interrupts are listed in the fold")
+    check("interrupts.switched_off" in text and "act('set_interrupt', { standing: k, on: c.checked }" in text,
+          "each staff tick is read from command_state's switched_off and cleared and set by set_interrupt")
+    check("'from 1800'" in text and "M.queue.at !== 'dusk'" in text, "a staff tick changed inside a day says from 1800")
+    check("btn-stops" not in text and "id=\"stops\" hidden" not in text and "THE CLOCK STOPS WHEN I AM TOLD OF" not in text, "the old panel and its button are gone")
+    check("button(a, 'DO NOT STOP ME FOR THIS'" in text and 'id="btn-leave' not in foot and "leave" not in foot.split('id="stops-staff"')[0].lower().replace("my leave", ""),
+          "a slip's DO NOT STOP ME FOR THIS stays, and the leave to launch is not in the fold")
+    check("function keptKey(name)" in text and "KEPT_ROOT.slice('flagplot-directives'.length)" in text and "localStorage.setItem(keptKey('stops')" in text,
+          "the table's ticks are kept in the browser, keyed as the directives are")
+    check(text.count("forgetKept();") >= 2 and "localStorage.removeItem(keptKey('stops'))" in text and "localStorage.removeItem(keptKey('why'))" in text,
+          "New game and Restart forget the ticks and the kept WHY")
+    check(all(re.search(fn + r"[^\n]*try \{", text) or "try {" in text[text.index("function " + fn):text.index("function " + fn) + 400] for fn in ("recallTicks", "keepTicks", "forgetKept", "keepWhy", "forgetWhy", "recallWhy")),
+          "every access to the browser's storage for them is in a try, so a page that cannot keep them plays as before")
+    check("function keepWhy()" in text and "function recallWhy()" in text and "k.day !== clock.day || k.at !== clock.at" in text and text.count("keepWhy();") >= 4 and "forgetWhy();" in text.split("function startRun()")[1][:300],
+          "WHY is kept at each stop and read again at a reload at the same stop, and is dropped when the clock starts or has moved")
+    escapes = re.findall(r"e\.key\s*[!=]==\s*'Escape'", text)
+    check(len(escapes) == 1 and text.count("addEventListener('keydown', escapeOnce)") == 1, "exactly one listener answers Escape")
+    body = text[text.index("function escapeOnce"):text.index("document.addEventListener('keydown', escapeOnce)")]
+    order = ["picking === 'route'", "$('sheet').hidden", "else if (paper)", "$('card').hidden", "MENUS.some", "$('stopfold').open", "drawer-open"]
+    at = [body.find(o) for o in order]
+    check(all(a >= 0 for a in at) and at == sorted(at), "Escape answers, in order: a place being picked, a paper for reading, a draft, a card, a menu, the fold, the drawer")
+    check("tearUpAsking(null, null, true)" in body and "wantCard = true" in text, "an empty draft goes back to the card it came from")
+    check("function focusStop()" in text and "function atStop() { setDrawer(true); focusStop(); }" in text and "if (paper || playing" in text,
+          "at a stop the focus goes to what waits or to WHY, and is never taken from a draft")
+    check("addEventListener('focusin'" in text and "openedBy[id]" in text, "a card or paper that closes gives the focus back to what opened it")
+    check('id="since-count" class="sr" aria-live="polite"' in text and "function sayCount()" in text and "sayCount(); if (!calm)" in text and 'id="since" aria-live="off"' in text,
+          "while the clock runs SINCE says a count, once for each pulse, and not each line")
+    check('id="clock-doing" aria-live' not in text and "function sayState()" in text and "stateSaid" in text, "the clock's state is said once at each change")
+    card = re.search(r'<aside[^>]*id="card"[^>]*>', text).group(0)
+    check("aria-live" not in card and "setAttribute('aria-label', String(title))" in text, "a card is not one live region: its title is its label, said once")
+    check("e.ctrlKey || e.metaKey" in text and "p-sign').click()" in text, "an order paper is signed from the keyboard from anywhere in it")
 
 
 def queue_through_the_bridge(bridge):
@@ -875,6 +925,7 @@ def main():
     cards_show_no_handle()
     the_trail_holds_no_duplicate()
     the_plan_paper_has_no_rule_caption()
+    the_fold_and_the_keys()
     if not os.path.exists(args.sim_cli):
         sys.exit(f"{args.sim_cli} is not built: cargo build --release -p sim-cli")
     with tempfile.TemporaryDirectory() as keep:

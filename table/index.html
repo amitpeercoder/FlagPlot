@@ -146,13 +146,25 @@ button:disabled { opacity: 0.45; cursor: default; }
 .order #o-ends .endw b { font-weight: 700; }
 .order #o-ends .endw small { font-size: 12px; color: var(--paper-dim); line-height: 1.3; }
 .order label { display: inline-flex; align-items: center; gap: 6px; min-height: 38px; cursor: pointer; }
-.stops { border: 0; margin: 0; padding: 9px 12px; background: var(--paper-old); color: var(--paper-ink); font-family: var(--f-type); font-size: 13px; border-radius: 2px; box-shadow: 0 4px 12px rgba(0,0,0,0.45); display: flex; flex-wrap: wrap; gap: 2px 12px; }
-#stops { position: fixed; top: 52px; right: 16px; width: min(330px, calc(100% - 32px)); z-index: 5; }
-#stops[hidden] { display: none; }
-.stops legend { float: left; width: 100%; font-size: 12px; color: var(--paper-dim); padding: 0 0 4px; }
-.stops label { display: inline-flex; align-items: center; gap: 5px; min-height: 30px; cursor: pointer; }
-.stops.daily label:not(.arr) { display: none; }
+/* What stops the clock (decision 0221, stage 4): a fold in the stop paper's foot, closed. The ticks are the commander's own settings. */
+.fold { border-top: 1px solid #cfc6a8; margin: -4px 0 0; padding-top: 6px; }
+.fold summary { cursor: pointer; min-height: 30px; display: flex; align-items: center; font-family: var(--f-ui); font-size: 13px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--paper-dim); }
+.fold summary::after { content: '\25B8'; margin-left: 8px; }
+.fold[open] summary::after { content: '\25BE'; }
+.fold summary::-webkit-details-marker { display: none; }
+.fold summary:focus-visible { outline: 3px solid #f0c36a; outline-offset: 1px; }
+.fold .stops { max-height: min(280px, 36vh); overflow-y: auto; padding-bottom: 4px; font-family: var(--f-type); font-size: 13.5px; }
+.stops fieldset { border: 0; margin: 0; padding: 0 0 6px; min-width: 0; }
+.stops fieldset[hidden] { display: none; }
+.stops legend { padding: 2px 0 2px; font-size: 12px; letter-spacing: 0.08em; color: var(--paper-dim); }
+.stops label { display: flex; align-items: center; gap: 8px; min-height: 28px; cursor: pointer; flex-wrap: wrap; }
+.stops label > span:not(.from) { flex: 1 1 0; min-width: 0; }
+.stops label .from { font-size: 12px; letter-spacing: 0.08em; color: var(--paper-dim); }
+.stops .notsent { flex: 1 1 100%; }
+.stops.daily label.pulse { display: none; }
 .stops input { accent-color: var(--own); width: 16px; height: 16px; margin: 0; }
+.stoppaper .fold { display: block; }
+#sp-why:focus-visible, #card:focus-visible { outline: 2px solid #b8862a; outline-offset: 2px; }
 .order input { accent-color: var(--own); width: 18px; height: 18px; margin: 0; }
 .order .pv { border-top: 1px dashed #8d8672; padding-top: 8px; display: flex; flex-direction: column; gap: 6px; }
 .order .pv b { font-size: 12px; color: var(--paper-dim); font-weight: 400; }
@@ -410,7 +422,7 @@ body.watched .gives { display: none !important; }
   :root { --sp-w: 0px; }
   .stoppaper { left: 16px; top: 12px; bottom: auto; width: min(360px, calc(100% - 32px)); }
   /* Closed, the head shows and the two controls that run time hang under it as a strip: the same buttons as the foot's. */
-  .stoppaper .sp-body { display: none; }
+  .stoppaper .sp-body, .stoppaper .fold { display: none; }
   .stoppaper .sp-foot { padding: 8px 18px 12px; }
   .sp-head { cursor: pointer; }
   .sp-head:focus-visible { outline: 3px solid #f0c36a; outline-offset: -3px; }
@@ -422,7 +434,8 @@ body.watched .gives { display: none !important; }
   body.drawer-open .sp-chev::before { top: 7px; transform: rotate(-135deg); }
   body.drawer-open #sp-count { display: none; }
   body.drawer-open .stoppaper { left: 0; top: 0; bottom: 0; width: min(400px, 100%); }
-  body.drawer-open .stoppaper .sp-body { display: block; }
+  body.drawer-open .stoppaper .sp-body, body.drawer-open .stoppaper .fold { display: block; }
+#sp-why:focus-visible, #card:focus-visible { outline: 2px solid #b8862a; outline-offset: 2px; }
   body.drawer-open .stoppaper .sp-foot { padding: 10px 18px 14px; }
   body.drawer-open .menus, body.drawer-open .view { z-index: 11; }
   .order { width: min(360px, calc(100% - 32px)); }
@@ -431,7 +444,6 @@ body.watched .gives { display: none !important; }
 @media (max-width: 760px) {
   .menus { top: 208px; }
   .order { top: 256px; max-height: calc(100% - 256px - 124px); }
-  #stops { top: 252px; }
 }
 @media (max-width: 520px) {
   .view button { min-width: 40px; padding: 0 8px; font-size: 13px; letter-spacing: 0.05em; }
@@ -479,7 +491,7 @@ body.papered #prompt { right: auto; left: calc(var(--sp-w) + 16px); max-width: m
     <div class="sp-row"><span class="sp-name">Flag Plot</span><span id="seat">The table</span></div>
     <div class="clock" id="clock">DAY 1</div>
     <div class="sp-state" id="clock-state"></div>
-    <div class="sp-doing" id="clock-doing" aria-live="polite"></div>
+    <div class="sp-doing" id="clock-doing"></div>
     <div class="sp-tail"><span id="sp-count"></span><span class="sp-chev" id="sp-chev" role="img" aria-label=""></span></div>
   </header>
   <div class="sp-body" id="sp-body" tabindex="-1">
@@ -487,13 +499,27 @@ body.papered #prompt { right: auto; left: calc(var(--sp-w) + 16px); max-width: m
       <span id="watch-side" class="seg" role="group" aria-label="The side watched" hidden></span>
       <div id="seatbox" aria-live="polite"></div>
     </div>
-    <section id="sp-why" hidden><h2>WHY THE CLOCK STOPPED</h2><div id="why"></div></section>
+    <section id="sp-why" hidden tabindex="-1" aria-label="Why the clock stopped"><h2>WHY THE CLOCK STOPPED</h2><div id="why"></div></section>
     <section id="sp-decide" hidden><h2 id="sp-decide-h">FOR YOUR DECISION</h2><div id="signals"></div></section>
-    <section id="sp-since" hidden><h2 id="sp-since-h">SINCE</h2><div id="since" aria-live="off"></div></section>
+    <section id="sp-since" hidden><h2 id="sp-since-h">SINCE</h2><div id="since" aria-live="off"></div><div id="since-count" class="sr" aria-live="polite"></div></section>
     <section id="sp-orders" hidden><h2>YOUR ORDERS</h2><div id="orders-in"></div><div id="leave-line"></div><div id="orders-says"></div>
       <div id="sp-signed" hidden><h3>SIGNED</h3><div id="signed" aria-live="polite"></div></div></section>
   </div>
   <footer class="sp-foot" id="sp-foot">
+    <details id="stopfold" class="fold"><summary>WHAT STOPS THE CLOCK</summary>
+      <div class="stops" id="stops">
+        <fieldset id="stops-table"><legend>THE CLOCK STOPS FOR</legend>
+          <label class="pulse"><input type="checkbox" id="stop-contact"> a contact</label>
+          <label class="pulse"><input type="checkbox" id="stop-attack"> an attack on mine</label>
+          <label class="pulse"><input type="checkbox" id="stop-loss"> a ship lost</label>
+          <label class="pulse"><input type="checkbox" id="stop-strike"> my strike away</label>
+          <label class="pulse"><input type="checkbox" id="stop-landing"> men ashore</label>
+          <label class="arr"><input type="checkbox" id="stop-arrive"> reinforcements arriving</label>
+          <label class="eve"><input type="checkbox" id="stop-evening"> each evening</label>
+        </fieldset>
+        <fieldset id="stops-staff" hidden><legend>THE STAFF STOPS IT WHEN</legend></fieldset>
+      </div>
+    </details>
     <div class="acts">
       <button type="button" id="btn-day">Next day</button>
       <button type="button" class="main" id="btn-go">Carry on</button>
@@ -503,7 +529,7 @@ body.papered #prompt { right: auto; left: calc(var(--sp-w) + 16px); max-width: m
 </aside>
 <div class="menus">
   <button type="button" id="btn-staff" class="intray menu" aria-expanded="false" aria-controls="pop-staff" title="The staff's standing papers" hidden>Staff</button>
-  <button type="button" id="btn-game" class="intray menu" aria-expanded="false" aria-controls="pop-game" title="The game: a new one, this one again, what stops the clock">Game</button>
+  <button type="button" id="btn-game" class="intray menu" aria-expanded="false" aria-controls="pop-game" title="The game: a new one, or this one again">Game</button>
 </div>
 <div id="pop-staff" class="pop" hidden>
   <div id="papers-staff" class="papers" role="toolbar" aria-label="The staff's standing papers"></div>
@@ -563,13 +589,13 @@ body.papered #prompt { right: auto; left: calc(var(--sp-w) + 16px); max-width: m
   <div id="o-dry-says" class="pv" aria-live="polite"></div>
   <div id="p-says" aria-live="polite"></div>
   <div class="row">
-    <button type="submit" class="go" id="p-sign" disabled>SIGN AND SEND</button>
+    <button type="submit" class="go" id="p-sign" disabled title="Sign and send: Ctrl+Enter anywhere in the paper">SIGN AND SEND</button>
     <button type="button" id="p-dry" hidden disabled>DRY RUN</button>
     <button type="button" id="p-cancel">TEAR UP</button>
   </div>
 </form>
 
-<aside class="order card" id="card" hidden aria-label="What is known of what you touched" aria-live="polite">
+<aside class="order card" id="card" hidden tabindex="-1" role="region" aria-label="What is known of what you touched">
   <div class="cardnav"><button type="button" id="card-back" hidden>&#8592; BACK</button><button type="button" id="card-find" hidden title="Turn the table to where it is">ON CHART</button><button type="button" id="card-diary" hidden title="What the war diary holds of it">ITS DIARY</button><span id="card-step" hidden><button type="button" id="card-prev" title="The one before, of those at this place" aria-label="The one before">&#8249;</button><span id="card-step-n"></span><button type="button" id="card-next" title="The next, of those at this place" aria-label="The next">&#8250;</button></span><button type="button" id="card-close" title="Close (Esc)" aria-label="Close">&#10005;</button></div>
   <div id="card-body" style="display:flex;flex-direction:column;gap:8px"></div>
 </aside>
@@ -608,18 +634,8 @@ body.papered #prompt { right: auto; left: calc(var(--sp-w) + 16px); max-width: m
     <button type="button" id="btn-new" title="End this game and choose another" hidden>New game</button>
     <button type="button" id="btn-agent" hidden>The agent's seat</button>
     <button type="button" id="btn-restart" title="Begin the game again from its first evening">Restart</button>
-    <button type="button" id="btn-stops" aria-expanded="false" aria-controls="stops" hidden title="What stops the clock">What stops the clock</button>
   </div>
 </div>
-<fieldset class="stops" id="stops" hidden>
-  <legend>THE CLOCK STOPS WHEN I AM TOLD OF</legend>
-  <label><input type="checkbox" id="stop-contact" checked> a contact</label>
-  <label><input type="checkbox" id="stop-attack" checked> an attack on mine</label>
-  <label><input type="checkbox" id="stop-loss" checked> a ship lost</label>
-  <label><input type="checkbox" id="stop-strike"> my strike away</label>
-  <label><input type="checkbox" id="stop-landing"> men ashore</label>
-  <label class="arr"><input type="checkbox" id="stop-arrive"> reinforcements arriving</label>
-</fieldset>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
@@ -818,7 +834,7 @@ body.papered #prompt { right: auto; left: calc(var(--sp-w) + 16px); max-width: m
   }
 
   // ---- what the side knows, as the tools gave it ----
-  var OFFERED = {}, clock = { at: 'dusk', day: 1 }, lastTold = [], stopArrive = '', since = { from: '', phases: [] }, versusWaited = false;
+  var OFFERED = {}, clock = { at: 'dusk', day: 1 }, lastTold = [], stopArrive = '', stopEvening = false, since = { from: '', phases: [] }, versusWaited = false;
   var M = { air: [], names: {}, hexNames: {}, day: 1, lastDay: 0, forces: [], units: [], bases: [], enemyBases: [], contacts: [], estimates: [], state: null, over: false, result: null, asking: [] };
   var lastRun = null, draft = null;
   function baseByNumber(n) { var all = M.bases.concat(M.enemyBases), i; for (i = 0; i < all.length; i++) if (num(all[i].base.handle) === n) return all[i]; return null; }
@@ -1155,7 +1171,7 @@ body.papered #prompt { right: auto; left: calc(var(--sp-w) + 16px); max-width: m
       M.forces = a[0].task_forces || []; M.units = a[0].land_units || [];
       M.bases = a[1].bases || []; M.enemyBases = a[1].enemy_bases || [];
       M.contacts = a[2].contacts || []; M.estimates = a[2].ground_estimates || [];
-      M.state = a[3]; M.queue = a[5] && a[5].entries ? { entries: a[5].entries, as_of: a[5].as_of } : null;
+      M.state = a[3]; M.queue = a[5] && a[5].entries ? { entries: a[5].entries, as_of: a[5].as_of, at: a[5].clock && a[5].clock.at } : null;
       if (a[4].refused != null) { var at = /stands at (\d{4}) of day (\d+)/.exec(a[4].refused); if (at) clock = { at: at[1], day: parseInt(at[2], 10) }; M.day = clock.day; if (a.air) M.air = a.air;
         // Inside a day there is no briefing to give the game's last day. A page loaded then asks the
         // measure of a yard order for any force of the side, whose answer carries it, and says it on the clock.
@@ -1169,7 +1185,7 @@ body.papered #prompt { right: auto; left: calc(var(--sp-w) + 16px); max-width: m
       M.units.forEach(function (u) { M.names[u.land_unit.handle] = cleanName(u.land_unit.name); });
       M.air.forEach(function (x) { M.names[x.air_group.handle] = cleanName(x.air_group.name); });
       M.bases.concat(M.enemyBases).forEach(function (b) { M.names[b.base.handle] = cleanName(b.base.name); if (b.place && !/^Landing at/.test(b.base.name)) M.hexNames[b.place.q + ',' + b.place.r] = cleanName(b.base.name); });
-      layPieces(); drawMarks(); showClock(); showSignals(); showSigned();
+      layPieces(); drawMarks(); showClock(); showSignals(); showSigned(); showStops();
       if (planShown != null) buildPlan(planShown);
     });
   }
@@ -1182,8 +1198,14 @@ body.papered #prompt { right: auto; left: calc(var(--sp-w) + 16px); max-width: m
     if (VERSUS && playing && versusWaited) return 'WAITING FOR THE ' + SIDE_NAME[VERSUS.other].toUpperCase() + ' COMMANDER';
     return playing ? 'THE CLOCK RUNS' : 'THE CLOCK IS STOPPED';
   }
+  // The clock's state is said once at each change, to a reader of the screen; the head's own lines are not live.
+  var stateSaid = null;
+  function sayState() {
+    var w = M.over ? 'The game is over.' : VERSUS && playing && versusWaited ? 'Waiting for the ' + SIDE_NAME[VERSUS.other] + ' commander.' : playing ? 'The clock runs.' : 'The clock is stopped.';
+    if (stateSaid !== null && w !== stateSaid) $('sr').textContent = w; stateSaid = w;
+  }
   function showClock() {
-    var state = clockState(), cl = $('clock'), st = $('clock-state');
+    sayState(); var state = clockState(), cl = $('clock'), st = $('clock-state');
     if (clock.at !== 'dusk') { var today = dateOf(M.day - 1, true); cl.textContent = (today ? today + ' \u00b7 ' : '') + clock.at; st.textContent = 'DAY ' + M.day + (M.lastDay ? ' OF ' + M.lastDay : '') + ' \u00b7 ' + state; }
     else { var day = M.lastDay ? Math.min(M.day, M.lastDay) : M.day, dusk = dateOf(M.day - 2, true); cl.textContent = (dusk ? dusk + ' \u00b7 ' : '') + '1800'; st.textContent = (M.over ? 'THE LAST DAY IS FOUGHT' : 'ORDERS FOR DAY ' + day + (M.lastDay ? ' OF ' + M.lastDay : '')) + ' \u00b7 ' + state; }
     // At the game's end the foot has one control, to read how it ended; while the other commander is waited for nothing more is ordered.
@@ -1204,10 +1226,14 @@ body.papered #prompt { right: auto; left: calc(var(--sp-w) + 16px); max-width: m
   // What has been reported since the clock last stopped: the phases of the pulses played, and their lines, as data. The
   // stop paper says the latest three under SINCE; the rest are read on a paper.
   function sinceFrom() { var dusk = clock.at === 'dusk', d = dateOf(dusk ? M.day - 2 : M.day - 1); return (dusk ? '1800' : clock.at) + (d ? ', ' + d : ''); }
+  // While the clock runs SINCE says a count, once for each pulse plotted, and not each line; at a stop it is read by its own heading.
+  var sinceN = 0, countSaid = '';
+  function sayCount() { if (!playing || !sinceN) return; var w = sinceN + (sinceN === 1 ? ' report' : ' reports'); if (w !== countSaid) { countSaid = w; $('since-count').textContent = w; } }
   function showSince() {
     var box = $('since'), all = [], n, lp;
     // The count is of the reports, those folded under one line among them; the three shown are the latest reports, not a fold.
     var folded = 0; since.phases.forEach(function (ph) { ph.lines.forEach(function (l) { if (l.more) folded += l.more; else all.push({ ph: ph, l: l }); }); }); n = all.length + folded; box.textContent = '';
+    sinceN = n;
     // On the first evening nothing has been played: the part is left out.
     $('sp-since').hidden = !since.from && !since.phases.length;
     $('sp-since-h').textContent = 'SINCE' + (since.from ? ' ' + since.from : '') + (n ? ' \u00b7 ' + n + (n === 1 ? ' REPORT' : ' REPORTS') : '');
@@ -1234,7 +1260,7 @@ body.papered #prompt { right: auto; left: calc(var(--sp-w) + 16px); max-width: m
     }).catch(function () {});
   }
   // The clock starts from a stop: what was told and what was reported are cleared, and shown again from the data at the next stop.
-  function startRun() { setDrawer(false); stopNote = ''; lastTold = []; lastRun = null; stopArrive = ''; since = { from: sinceFrom(), phases: [] }; showSince(); showWhy(); }
+  function startRun() { setDrawer(false); stopNote = ''; lastTold = []; lastRun = null; stopArrive = ''; stopEvening = false; forgetWhy(); countSaid = ''; since = { from: sinceFrom(), phases: [] }; showSince(); showWhy(); }
 
   // ---- the signals tray ----
   // A standing paper the commander may read at any time: a button in the
@@ -1269,7 +1295,7 @@ body.papered #prompt { right: auto; left: calc(var(--sp-w) + 16px); max-width: m
   function answerPursuit(a, allow, home) {
     return api('answer_pursuit', { task_force: a.task_force, contact: a.contact, allow: allow }).then(function () {
       M.asking = M.asking.filter(function (x) { return x !== a; });
-      say('signed', allow ? 'Leave given. The force goes after it when the day is played.' : 'Leave refused. The force keeps to its order.'); return refresh();
+      say('signed', allow ? 'Leave given. The force goes after it when the day is played.' : 'Leave refused. The force keeps to its order.'); keepWhy(); return refresh();
     }).catch(function (e) { say('refused', e.message, home); });
   }
   function askingSlips() {
@@ -1388,7 +1414,7 @@ body.papered #prompt { right: auto; left: calc(var(--sp-w) + 16px); max-width: m
       case 'set_limit': text(c.limit === 'risk' ? 'Order ' + c.intent + ': risk ' + c.risk : c.limit === 'forces' ? 'Order ' + c.intent + ': the forces it may use' : 'Order ' + c.intent + ': a limit on ' + String(c.limit).replace(/_/g, ' ')); break;
       case 'set_pursuit': text('Order ' + c.intent + ': pursuit ' + ({ ask: 'asks my leave', go: 'goes and reports', stay: 'is not looked for' }[c.leave] || String(c.leave || ''))); break;
       case 'answer_pursuit': ref('task_force:' + c.task_force); text(c.allow ? ': leave given to go after it' : ': leave refused to go after it'); break;
-      case 'set_interrupt': text(c.standing ? (c.on ? 'The clock stops again for ' : 'The clock does not stop for ') + String(c.standing).replace(/_/g, ' ') : plainWords(e.text)); break;
+      case 'set_interrupt': text(c.standing ? (c.on ? 'The staff stops the clock when ' : 'The staff does not stop the clock when ') + (STAFF_STOP[c.standing] || String(c.standing).replace(/_/g, ' ')) : plainWords(e.text)); break;
       case 'withdraw_intent': text('Order ' + c.intent + ': withdrawn'); break;
       default: text(plainWords(e.text));
     }
@@ -1396,7 +1422,7 @@ body.papered #prompt { right: auto; left: calc(var(--sp-w) + 16px); max-width: m
   }
   // SIGNED: what the seat has queued, read from the engine's `queued`, each entry with when it acts and, while the clock is
   // stopped and the seat may sign, TAKE BACK. A hold sent before a unit's order goes with that order and is not a line.
-  var signedSeen = null, freshSigned = false, backRefused = null, freshKeys = [], signedAsOf = null;
+  var backHeld = null, signedSeen = null, freshSigned = false, backRefused = null, freshKeys = [], signedAsOf = null;
   function showSigned() {
     var box = $('signed'), wrap = $('sp-signed'); if (!box) return;
     // An entry that goes with another (a hold sent before a unit's order, the limits queued with an order) is not a line of its own.
@@ -1410,6 +1436,9 @@ body.papered #prompt { right: auto; left: calc(var(--sp-w) + 16px); max-width: m
       var arc = list.filter(function (x) { return x.order && x.order.kind === 'set_search_arc' && x.unit === e.unit && x.place.queue === e.place.queue; })[0];
       if (!arc) return true; (also[arc.place.queue + ':' + arc.place.number] = also[arc.place.queue + ':' + arc.place.number] || []).push(e); return false;
     });
+    // A list that is drawn again keeps the focus where it was: on the same place in it, or the part's body once it is empty.
+    var held = box.contains(document.activeElement) ? Array.prototype.indexOf.call(box.querySelectorAll('.back'), document.activeElement) : null;
+    if (held === null && backHeld !== null) held = backHeld; backHeld = null;
     box.textContent = ''; wrap.hidden = !list.length;
     var keys = list.map(function (e) { return e.place.queue + '|' + e.text; });
     // What is new since the queue last changed is marked, until it changes again.
@@ -1422,7 +1451,7 @@ body.papered #prompt { right: auto; left: calc(var(--sp-w) + 16px); max-width: m
       if (canSign()) {
         var b = el('button', 'back', 'TAKE BACK'); b.type = 'button'; b.setAttribute('aria-label', 'Take back: ' + what.textContent.replace(/JUST SIGNED/, '').trim());
         b.addEventListener('click', function () {
-          b.disabled = true;
+          backHeld = k; b.disabled = true;
           // The later entry first, then the one it was signed with, each read again for the token that has moved on.
           var group = [e].concat(also[e.place.queue + ':' + e.place.number] || []);
           group.reduce(function (p, one, i) { return p.then(function () { return i ? api('queued').then(function (q) { return api('take_back', { queue: one.place.queue, number: one.place.number, as_of: q.as_of }); }) : api('take_back', { queue: one.place.queue, number: one.place.number, as_of: M.queue.as_of }); }); }, Promise.resolve()).then(function () { return refresh(); })
@@ -1433,6 +1462,64 @@ body.papered #prompt { right: auto; left: calc(var(--sp-w) + 16px); max-width: m
       if (backRefused && backRefused.key === keys[k] && backRefused.asOf === M.queue.as_of) { var nb = el('div', 'notsent'); nb.appendChild(el('b', '', 'NOT TAKEN BACK')); nb.appendChild(document.createTextNode(' ' + backRefused.words)); row.appendChild(nb); }
       box.appendChild(row);
     });
+    if (held !== null) { var backs = box.querySelectorAll('.back'); if (backs.length) backs[Math.max(0, Math.min(held, backs.length - 1))].focus({ preventScroll: true }); else $('sp-body').focus({ preventScroll: true }); }
+    // After a paper is signed the focus goes to the entry just signed, where TAKE BACK is, if it would otherwise be lost.
+    if (wantSigned) { var fresh = box.querySelector('.sg.new .back'), cur = document.activeElement; if (fresh && (!cur || cur === document.body || !document.body.contains(cur))) { fresh.focus({ preventScroll: true }); wantSigned = false; } }
+  }
+
+  // ---- what stops the clock: the fold in the stop paper's foot (decision 0221, stage 4) ----
+  // Every stop is a tick that can be cleared and set. The table's own (a contact, an attack, a loss, a strike, men ashore, reinforcements,
+  // each evening) are kept in the browser for the game, keyed as the directives are, and forgotten by New game and Restart; a page that
+  // cannot keep them plays as it did. The staff's standing interrupts are the engine's: `command_state` lists the kinds switched off and
+  // `set_interrupt` switches one. A switch given inside a day takes hold at 1800, which the tick says. The leave to launch is not here:
+  // it is a line of YOUR ORDERS, and a plan that waits for leave is under FOR YOUR DECISION whether or not its stop is ticked.
+  var TICK_DEFAULT = { contact: true, attack: true, loss: true, strike: false, landing: false, arrive: false, evening: false };
+  var ticks = {}; Object.keys(TICK_DEFAULT).forEach(function (k) { ticks[k] = TICK_DEFAULT[k]; });
+  var STAFF_STOP = { cannot_meet: 'it cannot meet an order', waits_for_leave: 'a plan waits for my leave', ship_lost: 'a ship of ours is lost', cannot_bring_enough: 'it cannot bring the men a landing needs', lift_turned_back: 'it turns a landing’s lift back', asks_leave_to_pursue: 'a force asks my leave to pursue' };
+  function keptKey(name) { return 'flagplot-' + name + KEPT_ROOT.slice('flagplot-directives'.length); }
+  function whyKey() { return keptKey('why' + (WATCH ? '-' + WATCH.side : '')); }
+  function recallTicks() {
+    try { var k = JSON.parse(localStorage.getItem(keptKey('stops')) || 'null'); if (k) Object.keys(TICK_DEFAULT).forEach(function (t) { if (typeof k[t] === 'boolean') ticks[t] = k[t]; }); } catch (e) {}
+    showStops();
+  }
+  function keepTicks() { try { localStorage.setItem(keptKey('stops'), JSON.stringify(ticks)); } catch (e) {} }
+  // New game and Restart forget what the page kept for the game: its ticks and why the clock stopped.
+  function forgetKept() { try { localStorage.removeItem(keptKey('stops')); localStorage.removeItem(keptKey('why')); ['allied', 'japanese'].forEach(function (sd) { localStorage.removeItem(keptKey('why-' + sd)); }); } catch (e) {} }
+  Object.keys(TICK_DEFAULT).forEach(function (k) { $('stop-' + k).addEventListener('change', function () { ticks[k] = this.checked; keepTicks(); }); });
+  var staffTicks = null;
+  function showStops() {
+    Object.keys(TICK_DEFAULT).forEach(function (k) { $('stop-' + k).checked = ticks[k]; });
+    var box = $('stops-staff'), s = M.state; box.hidden = !!WATCH || !OFFERED.set_interrupt || !s || !s.interrupts;
+    if (box.hidden) return;
+    if (!staffTicks) {
+      staffTicks = {};
+      Object.keys(STAFF_STOP).forEach(function (k) {
+        var l = el('label'), c = el('input'), t = el('span', '', STAFF_STOP[k]), f = el('span', 'from'); c.type = 'checkbox'; c.id = 'staff-stop-' + k; l.appendChild(c); l.appendChild(t); l.appendChild(f); box.appendChild(l); staffTicks[k] = { c: c, f: f, l: l };
+        c.addEventListener('change', function () { c.disabled = true; act('set_interrupt', { standing: k, on: c.checked }, c.checked ? 'The staff stops the clock again.' : 'The staff does not stop the clock for that.', l).then(function () { c.disabled = !canSign(); showStops(); }); });
+      });
+    }
+    var off = s.interrupts.switched_off || [], queued = ((M.queue && M.queue.entries) || []).filter(function (e) { return e.tool === 'set_interrupt' && e.command && e.command.standing; });
+    Object.keys(staffTicks).forEach(function (k) {
+      var t = staffTicks[k], pending = !WATCH && M.queue && M.queue.at !== 'dusk' && queued.some(function (e) { return e.command.standing === k; });
+      t.c.checked = off.indexOf(k) < 0; t.c.disabled = !canSign(); t.f.textContent = pending ? 'from 1800' : '';
+    });
+  }
+
+  // Why the clock stopped is kept with the game across a reload, as the ticks are: at the same stop it shows what it showed, and once the
+  // clock moves it is dropped.
+  function keepWhy() {
+    try {
+      localStorage.setItem(whyKey(), JSON.stringify({ day: clock.day, at: clock.at, told: lastTold, run: lastRun ? { fired: lastRun.fired || [], summary: lastRun.summary, stopped: lastRun.stopped } : null, arrive: stopArrive, evening: stopEvening, note: stopNote,
+        asking: (M.asking || []).map(function (a) { var o = {}; Object.keys(a).forEach(function (x) { if (x !== 'pts') o[x] = a[x]; }); return o; }) }));
+    } catch (e) {}
+  }
+  function forgetWhy() { try { localStorage.removeItem(whyKey()); } catch (e) {} }
+  function recallWhy() {
+    try {
+      var k = JSON.parse(localStorage.getItem(whyKey()) || 'null'); if (!k) return;
+      if (k.day !== clock.day || k.at !== clock.at) { forgetWhy(); return; }
+      lastTold = k.told || []; lastRun = k.run || null; stopArrive = k.arrive || ''; stopEvening = !!k.evening; stopNote = k.note || ''; takeAsking(k.asking || []); showSignals(); showWhy();
+    } catch (e) {}
   }
   // WHY THE CLOCK STOPPED: each reason of this stop, one slip for each kind of reason. It is not shown while the clock runs, nor where
   // the stop was the commander's own. What was told and what fired are shown again from the data at each stop.
@@ -1454,6 +1541,7 @@ body.papered #prompt { right: auto; left: calc(var(--sp-w) + 16px); max-width: m
       if (f.standing && !WATCH) button(a, 'DO NOT STOP ME FOR THIS', false, function () { act('set_interrupt', { standing: f.standing, on: false }, 'The clock will not stop for that again.', a); });
     });
     if (lastRun && lastRun.fired && lastRun.fired.some(function (f) { return f.standing === 'waits_for_leave'; })) slip('FROM STAFF', null, 'A plan waits for your leave.', null, false, box);
+    if (stopEvening) slip('FROM THE PLOT \u00b7 1800', null, 'It is evening.', null, false, box);
     if (stopArrive) slip('FROM THE PLOT \u00b7 ' + (clock.at === 'dusk' ? '1800' : clock.at), null, stopArrive.replace(/^./, function (c) { return c.toUpperCase(); }), null, false, box);
     if (stopNote && WATCH && !M.over) slip('FROM THE PLOT \u00b7 ' + (clock.at === 'dusk' ? '1800' : clock.at), null, stopNote, null, false, box);
     if (lastRun && lastRun.stopped === 'asks_leave' && M.asking.length) slip('FROM STAFF', null, 'We ask your leave.', null, false, box);
@@ -1910,7 +1998,12 @@ body.papered #prompt { right: auto; left: calc(var(--sp-w) + 16px); max-width: m
       if (cardHandle !== of || body.querySelector('.dlink')) return; var after = body.querySelector('.kv') || body.querySelector('.headline'); if (!after) return;
       var row = el('div', ''), dl = el('button', 'ref dlink', 'Diary'); dl.type = 'button'; dl.title = 'What the war diary holds of it'; dl.addEventListener('click', function () { readUnitDiary(of); }); row.appendChild(dl); body.insertBefore(row, after.nextSibling);
     }, 0); }
-    $('card').hidden = false; $('card-find').hidden = true; if (!stackShowing) { stack = null; sibs = null; $('card-step').hidden = true; } return body;
+    // The card is named, not read out whole: its title is its label, said once. Opened from the keyboard it takes the focus (and says its
+    // title by being focused); opened from the chart it says its title to a reader of the screen.
+    var was = !$('card').hidden, a = document.activeElement, keyboard = !was && (wantCard || (a && a !== document.body && a !== canvas && !$('paper').contains(a)));
+    $('card').setAttribute('aria-label', String(title)); if (!keyboard && !was) $('sr').textContent = 'Card: ' + title;
+    $('card').hidden = false; if (keyboard) { wantCard = false; setTimeout(function () { var x = document.activeElement; if (!$('card').hidden && (!x || x === document.body || $('paper').hidden || !$('paper').contains(x))) $('card').focus({ preventScroll: true }); }, 0); }
+    $('card-find').hidden = true; if (!stackShowing) { stack = null; sibs = null; $('card-step').hidden = true; } return body;
   }
   // Pieces that share a place lie on one another. A touch opens the one
   // touched; the card then steps through all that is at that place, and a
@@ -3451,7 +3544,43 @@ body.papered #prompt { right: auto; left: calc(var(--sp-w) + 16px); max-width: m
   readOob = tracked('oob', readOob); readInTray = tracked('in', readInTray); readDirective = tracked('directive', readDirective, function (d) { return d.number; }); readReport = tracked('report', readReport); readBriefing = tracked('situation', readBriefing);
   $('sheet-back').addEventListener('click', function () { var p = sheetTrail.pop(); if (!p) return; sheetBacking = true; p.fn(); });
   $('sheet-close').addEventListener('click', function () { $('sheet').hidden = true; });
-  document.addEventListener('keydown', function (e) { if (e.key !== 'Escape') return; if (!$('sheet').hidden) { $('sheet').hidden = true; } else if (!$('card').hidden) { $('card-close').click(); } else if (document.body.classList.contains('drawer-open')) { shutDrawer(); } });
+  // The one Escape (decision 0221, stage 4): the topmost thing first. A place being picked; a paper for reading, which lies over the
+  // rest; a draft (asked where something is chosen, and an empty one goes back to the card it came from); a card; a menu; the fold of
+  // what stops the clock; the drawer. Nothing else listens for it.
+  function escapeOnce(e) {
+    if (e.key !== 'Escape') return;
+    if (picking === 'route') { stopRoute(); showRoute(); }
+    else if (picking === 'march') { endMarch(); showPrompt('', ''); paperShow(); }
+    else if (picking) { picking = false; canvas.classList.remove('picking'); showPrompt('', ''); }
+    else if (!$('sheet').hidden) $('sheet').hidden = true;
+    else if (paper) { if ($('p-says').querySelector('.ask')) $('p-says').textContent = ''; else tearUpAsking(null, null, true); }
+    else if (!$('card').hidden) { $('card').hidden = true; forget(); }
+    else if (MENUS.some(function (m) { return !$(m[1]).hidden; })) { var m = MENUS.filter(function (x) { return !$(x[1]).hidden; })[0]; shutMenus(); $(m[0]).focus(); }
+    else if ($('stopfold').open) { $('stopfold').open = false; $('stopfold').querySelector('summary').focus(); }
+    else if (document.body.classList.contains('drawer-open')) shutDrawer();
+    else return;
+    e.preventDefault();
+  }
+  document.addEventListener('keydown', escapeOnce);
+  // From the keyboard the paper is signed from anywhere in it: the staff's reading, open above the button, is long to tab through.
+  $('paper').addEventListener('keydown', function (e) { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey) && !$('p-sign').disabled) { e.preventDefault(); $('p-sign').click(); } });
+  // Focus goes back to what opened a card, a paper for reading or a draft when it closes, if the focus was in it or lost with it.
+  var lastOutside = null, openedBy = {}, wantCard = false, wantSigned = false;
+  document.addEventListener('focusin', function (e) { var t = e.target; if (t && t.closest && !t.closest('#card, #sheet, #paper')) lastOutside = t; });
+  ['card', 'sheet', 'paper'].forEach(function (id) {
+    var was = !$(id).hidden;
+    new MutationObserver(function () {
+      var n = $(id), now = !n.hidden; if (now === was) return; was = now;
+      if (now) { openedBy[id] = lastOutside; if (id === 'card' && wantCard) { wantCard = false; setTimeout(function () { var x = document.activeElement; if (!n.hidden && (!x || x === document.body || $('paper').hidden || !$('paper').contains(x))) n.focus({ preventScroll: true }); }, 0); } return; }
+      var back = openedBy[id]; openedBy[id] = null;
+      if (id === 'paper') { wantSigned = true; setTimeout(function () { wantSigned = false; }, 4000); setTimeout(function () { var f = $('signed').querySelector('.sg.new .back'), c = document.activeElement; if (f && wantSigned && (!c || c === document.body || !document.body.contains(c) || $('paper').contains(c))) { f.focus({ preventScroll: true }); wantSigned = false; } }, 50); }
+      if (!back) return;
+      setTimeout(function () {
+        var a = document.activeElement;
+        if (!wantCard && document.body.contains(back) && back.getClientRects().length && (!a || a === document.body || n.contains(a))) back.focus({ preventScroll: true });
+      }, 0);
+    }).observe($(id), { attributes: true, attributeFilter: ['hidden'] });
+  });
 
   // ---- time: you watch a day played out, and may stop between days ----
   // The seat's tools answer between days, so a day is fought and then plotted: the table plays the three
@@ -3499,7 +3628,7 @@ body.papered #prompt { right: auto; left: calc(var(--sp-w) + 16px); max-width: m
     var lines = digest(evs), phase = { title: phaseWords(day, ph), lines: [], empty: null }; since.phases.push(phase);
     if (!lines.length) { phase.empty = any ? 'Your forces steam on. Nothing else is reported.' : 'Nothing is reported.'; showSince(); }
     for (var k = 0; k < lines.length; k++) { phase.lines.push({ text: lines[k].text, red: !!lines[k].red, number: lines[k].number, more: lines[k].more || 0 }); showSince(); flash(lines[k].hex, lines[k].red ? 0xa3211a : 0x1f4e8c); if (!calm) await sleep(Math.min(420, 2400 / lines.length)); }
-    if (!calm) await sleep(any || lines.length ? 1500 : 500);
+    sayCount(); if (!calm) await sleep(any || lines.length ? 1500 : 500);
   }
   // A force or unit that came onto the map did so at the start of its day, though the engine gives the event no pulse.
   function isEntry(e) { return e.event_kind === 'force_entered' || e.event_kind === 'unit_entered'; }
@@ -3517,15 +3646,17 @@ body.papered #prompt { right: auto; left: calc(var(--sp-w) + 16px); max-width: m
   }
   var calm = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   // The table's own stop (nothing in the engine): at an evening whose briefing names a unit that came today or comes tomorrow.
-  function arrivalsStop() { return clock.at === 'dusk' && $('stop-arrive').checked && ((M.came || []).length || (M.tomorrow || []).length) ? 'our reinforcements ' + ((M.came || []).length ? 'came today' : 'come tomorrow') : ''; }
-  function stopOn() { return ['contact', 'attack', 'loss', 'strike', 'landing'].filter(function (k) { return $('stop-' + k).checked; }); }
+  function arrivalsStop() { return clock.at === 'dusk' && ticks.arrive && ((M.came || []).length || (M.tomorrow || []).length) ? 'our reinforcements ' + ((M.came || []).length ? 'came today' : 'come tomorrow') : ''; }
+  function stopOn() { return ['contact', 'attack', 'loss', 'strike', 'landing'].filter(function (k) { return ticks[k]; }); }
+  // The table's own stop at each evening: off unless ticked, so that Carry on runs to the next thing that is ticked.
+  function eveningStop() { return clock.at === 'dusk' && ticks.evening; }
   // Where the scenario lets a seat stop between pulses, time is advanced a pulse at a time and each pulse is
   // plotted as it is fought. Elsewhere a day is fought whole and then plotted.
   function go(until) {
     if (WATCH) return watchGo(until);
     if (M.over) { say('stopped', 'The game is over.'); return; }
     closePaper(); playing = true; $('btn-go').textContent = 'Stop the clock'; $('btn-day').disabled = true; startRun(); showClock();
-    function rest(words, kind) { playing = false; $('btn-go').textContent = 'Carry on'; $('btn-day').disabled = false; showClock(); showWhy(); atStop(); say(kind || 'stopped', words, $('clock-doing')); }
+    function rest(words, kind) { playing = false; $('btn-go').textContent = 'Carry on'; $('btn-day').disabled = false; showClock(); showWhy(); atStop(); say(kind || 'stopped', words, $('clock-doing')); keepWhy(); }
     (async function () {
       try {
         for (;;) {
@@ -3545,9 +3676,9 @@ body.papered #prompt { right: auto; left: calc(var(--sp-w) + 16px); max-width: m
                 Object.keys(byNumber).map(Number).sort(function (a, b) { return a - b; }).forEach(function (n) { var e = byNumber[n]; if (told.indexOf(n) >= 0 || !HURT[e.event_kind] || !when[e.pulse] || !(e.entities || []).some(function (x) { return x && at[x.handle]; })) return; lines.push(sayEvent(e, true)); }); }
               lastTold.push({ thing: t.thing, lines: lines, events: told.map(function (n) { return byNumber[n]; }) }); });
             clock = { at: r.clock.at, day: r.clock.day }; await refresh();
-            var arrive = arrivalsStop();
-            if (!until || !playing || r.game_over || r.stopped !== 'pulses' || arrive) {
-              stopArrive = arrive;
+            var arrive = arrivalsStop(), evening = eveningStop();
+            if (!until || !playing || r.game_over || r.stopped !== 'pulses' || arrive || evening) {
+              stopArrive = arrive; stopEvening = evening;
               return rest('');
             }
           } else {
@@ -3557,8 +3688,8 @@ body.papered #prompt { right: auto; left: calc(var(--sp-w) + 16px); max-width: m
             takeAsking([]);
             say('running', 'Day ' + day + ': the reports come in.');
             await plotDay(day, await eventsOf(day)); await refresh();
-            var fired = d.fired && d.fired.length, arrive = arrivalsStop();
-            if (!until || !playing || d.game_over || fired || arrive) { stopArrive = arrive; return rest(''); }
+            var fired = d.fired && d.fired.length, arrive = arrivalsStop(), evening = eveningStop();
+            if (!until || !playing || d.game_over || fired || arrive || evening) { stopArrive = arrive; stopEvening = evening; return rest(''); }
           }
         }
       } catch (e) { rest('Refused: ' + e.message, 'refused'); }
@@ -3591,7 +3722,7 @@ body.papered #prompt { right: auto; left: calc(var(--sp-w) + 16px); max-width: m
   function watchGo(until) {
     if (M.over) { say('stopped', 'The game is over.'); return; }
     closePaper(); playing = true; $('btn-go').textContent = 'Stop'; $('btn-day').disabled = true; startRun(); showClock();
-    function rest(words, kind) { playing = false; $('btn-go').textContent = 'Carry on'; $('btn-day').disabled = false; showClock(); showWhy(); atStop(); say(kind || 'stopped', words, $('clock-doing')); pollSeats(); }
+    function rest(words, kind) { playing = false; $('btn-go').textContent = 'Carry on'; $('btn-day').disabled = false; showClock(); showWhy(); atStop(); say(kind || 'stopped', words, $('clock-doing')); keepWhy(); pollSeats(); }
     (async function () {
       try {
         for (;;) {
@@ -3611,9 +3742,9 @@ body.papered #prompt { right: auto; left: calc(var(--sp-w) + 16px); max-width: m
           } else { say('running', 'Day ' + day + ': the reports come in.'); evs = await eventsOf(day); await plotDay(day, evs); }
           lastTold = toldOf(evs, stopOn()); lastRun = { summary: s.summary }; if (s.game_over) M.over = true;
           clock = { at: s.clock.at, day: s.clock.day }; await refresh();
-          var arrive = arrivalsStop();
-          if (!until || !playing || s.game_over || lastTold.length || arrive) {
-            stopArrive = arrive;
+          var arrive = arrivalsStop(), evening = eveningStop();
+          if (!until || !playing || s.game_over || lastTold.length || arrive || evening) {
+            stopArrive = arrive; stopEvening = evening;
             return rest('');
           }
         }
@@ -3679,16 +3810,16 @@ body.papered #prompt { right: auto; left: calc(var(--sp-w) + 16px); max-width: m
     if (!WATCH || side === WATCH.side) return; if (playing) { say('refused', 'Stop the clock first.', $('sp-seats')); return; }
     WATCH.side = side; config.seat = side; config.directives = WATCH.directives[side] || [];
     KEPT = KEPT_ROOT + '-' + side; received = {}; readOnes = {}; recalled = false;
-    dayCache = {}; lastTold = []; lastRun = null; stopArrive = ''; seatSeen = ''; since = { from: '', phases: [] }; showSince();
+    dayCache = {}; lastTold = []; lastRun = null; stopArrive = ''; stopEvening = false; seatSeen = ''; since = { from: '', phases: [] }; showSince();
     $('sheet').hidden = true; $('card').hidden = true; clearPlan(); headSeat(); sideButtons();
     watchTools().then(refresh).then(pollSeats).catch(function (e) { say('failed', e.message, $('sp-seats')); });
   }
   function startWatch() {
     var w = config.watch; WATCH = { side: config.seat, agents: w.agents, insideDay: w.inside_day, directives: w.directives || {} };
     document.body.classList.add('watched'); KEPT = KEPT_ROOT + '-' + WATCH.side;
-    headSeat(); sideButtons(); $('btn-stops').hidden = false; $('btn-day').textContent = w.inside_day ? 'Next pulse' : 'Next day';
+    headSeat(); sideButtons(); recallTicks(); $('btn-day').textContent = w.inside_day ? 'Next pulse' : 'Next day';
     setInterval(pollSeats, 2000);
-    return watchTools().then(refresh).then(pollSeats);
+    return watchTools().then(refresh).then(function () { recallWhy(); }).then(pollSeats);
   }
 
   // ---- a person against an agent (decision 0185): no watcher; the clock moves when both have finished ----
@@ -3710,7 +3841,7 @@ body.papered #prompt { right: auto; left: calc(var(--sp-w) + 16px); max-width: m
       var mine = ((a.ok && a.ok.seats) || []).filter(function (x) { return x.seat === config.seat; })[0];
       if (!mine || !mine.held || (a.ok && a.ok.game_over)) return false;
       playing = true; $('btn-go').textContent = 'Stop the clock'; $('btn-day').disabled = true; startRun(); showClock(); say('running', finishedWords());
-      var rest = function (words, kind) { playing = false; $('btn-go').textContent = 'Carry on'; $('btn-day').disabled = false; showClock(); showWhy(); atStop(); say(kind || 'stopped', words, $('clock-doing')); };
+      var rest = function (words, kind) { playing = false; $('btn-go').textContent = 'Carry on'; $('btn-day').disabled = false; showClock(); showWhy(); atStop(); say(kind || 'stopped', words, $('clock-doing')); keepWhy(); };
       api('wait').then(function (r) { if (r && r.game_over) { M.over = true; M.result = r.result; } return refresh(); }).then(function () { rest(''); })
         .catch(function (e) { rest(''); return refresh().catch(function () {}); });
       return true;
@@ -3891,20 +4022,15 @@ body.papered #prompt { right: auto; left: calc(var(--sp-w) + 16px); max-width: m
     row.appendChild(t); row.appendChild(k); d.appendChild(row); box.appendChild(d); k.focus();
   }
   // Nothing chosen: tear it up; something chosen: ask first.
-  function tearUpAsking(then, words) {
+  // With `back`, as Escape has it, the draft that is torn up goes back to the card it came from.
+  function tearUpAsking(then, words, back) {
     if (!paper) { if (then) then(); return; }
-    if (!paperChosen()) { closePaper(); say('draft', 'The draft is torn up. Nothing was ordered.'); if (then) then(); return; }
-    paperAsk(words || 'Tear up this order? What you chose is not kept.', function () { closePaper(); say('draft', 'The draft is torn up. Nothing was ordered.'); if (then) then(); });
+    var from = back ? paper.from : null, done = function () { closePaper(); say('draft', 'The draft is torn up. Nothing was ordered.'); if (then) then(); else if (from) { wantCard = true; setTimeout(function () { wantCard = false; }, 1500); from.go(); } };
+    if (!paperChosen()) { done(); return; }
+    paperAsk(words || 'Tear up this order? What you chose is not kept.', done);
   }
   $('p-cancel').addEventListener('click', function () { closePaper(); say('draft', 'The draft is torn up. Nothing was ordered.'); });
   $('p-back').addEventListener('click', function () { var from = paper && paper.from; if (from) tearUpAsking(function () { from.go(); }, 'Tear up this order and go back to ' + from.title + '?'); });
-  document.addEventListener('keydown', function (e) {
-    if (e.key !== 'Escape' || !paper || !$('sheet').hidden || !$('pop-staff').hidden || !$('pop-game').hidden || !$('stops').hidden) return;
-    e.stopPropagation();
-    if ($('p-says').querySelector('.ask')) { $('p-says').textContent = ''; return; }
-    if (picking === 'route') { stopRoute(); showRoute(); return; }
-    tearUpAsking();
-  }, true);
   // Something in the paper was chosen or changed.
   function paperTouched(e) {
     if (!paper) return;
@@ -4223,7 +4349,6 @@ body.papered #prompt { right: auto; left: calc(var(--sp-w) + 16px); max-width: m
     $(m[1]).addEventListener('click', function (e) { e.stopPropagation(); if (e.target.closest('.papers:not(.stay) button, .ref')) shutMenus(); });
   });
   document.addEventListener('click', function () { shutMenus(); });
-  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') shutMenus(); });
   function menuWords() {
     var st = $('btn-staff'), due = 0;
     [].forEach.call($('papers-staff').querySelectorAll('.mark'), function (m) { due += parseInt(m.textContent, 10) || 0; });
@@ -4237,7 +4362,7 @@ body.papered #prompt { right: auto; left: calc(var(--sp-w) + 16px); max-width: m
     var b = this;
     if (!restartAsked) { var w = document.createElement('span'); w.textContent = 'again to restart'; b.appendChild(w); b.classList.add('ask'); say('confirm', 'Touch it again to begin the game anew from its first evening. This game is not kept.'); restartAsked = setTimeout(function () { restartAsked = 0; say('confirm', ''); b.classList.remove('ask'); if (b.lastChild.tagName === 'SPAN') b.removeChild(b.lastChild); }, 5000); return; }
     clearTimeout(restartAsked); b.disabled = true; say('running', 'Beginning again.');
-    fetch(BASE + '/restart', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }).then(function (r) { return r.json(); }).then(function (a) { if (a.refused != null) throw new Error(a.refused); try { history.replaceState(null, '', location.pathname); } catch (e) {} location.reload(); }).catch(function (e) { b.disabled = false; say('failed', 'It could not begin again: ' + e.message, $('game-says')); });
+    fetch(BASE + '/restart', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }).then(function (r) { return r.json(); }).then(function (a) { if (a.refused != null) throw new Error(a.refused); forgetKept(); try { history.replaceState(null, '', location.pathname); } catch (e) {} location.reload(); }).catch(function (e) { b.disabled = false; say('failed', 'It could not begin again: ' + e.message, $('game-says')); });
   });
   // A new game is asked twice too: it ends the game in hand, whoever is at a seat, and opens the screen.
   var newAsked = 0;
@@ -4245,11 +4370,9 @@ body.papered #prompt { right: auto; left: calc(var(--sp-w) + 16px); max-width: m
     var b = this;
     if (!newAsked) { b.classList.add('ask'); say('confirm', 'Touch it again to end this game and choose another.'); newAsked = setTimeout(function () { newAsked = 0; say('confirm', ''); b.classList.remove('ask'); }, 5000); return; }
     clearTimeout(newAsked); b.disabled = true; playing = false; say('running', 'Ending this game.');
-    fetch(BASE + '/new', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }).then(function (r) { return r.json(); }).then(function (a) { if (a.refused != null) throw new Error(a.refused); try { history.replaceState(null, '', location.pathname); } catch (e) {} location.reload(); }).catch(function (e) { b.disabled = false; say('failed', 'It could not end the game: ' + e.message, $('game-says')); });
+    fetch(BASE + '/new', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }).then(function (r) { return r.json(); }).then(function (a) { if (a.refused != null) throw new Error(a.refused); forgetKept(); try { history.replaceState(null, '', location.pathname); } catch (e) {} location.reload(); }).catch(function (e) { b.disabled = false; say('failed', 'It could not end the game: ' + e.message, $('game-says')); });
   });
   $('btn-agent').addEventListener('click', function () { shutMenus(); readAgentSeats(); });
-  $('btn-stops').addEventListener('click', function () { shutMenus(); var f = $('stops'); f.hidden = !f.hidden; this.setAttribute('aria-expanded', String(!f.hidden)); });
-  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !$('stops').hidden) { $('stops').hidden = true; $('btn-stops').setAttribute('aria-expanded', 'false'); } });
   $('btn-back').addEventListener('click', function () { leanBy(-0.25); });
   // The chair looks at the middle of the part of the window no panel covers: the stop paper where it is a column, and a card or an
   // order form where one shows. The picture is shifted so, eased as the chair is; a paper for reading does not count.
@@ -4278,7 +4401,15 @@ body.papered #prompt { right: auto; left: calc(var(--sp-w) + 16px); max-width: m
   function setDrawer(open) { if (!narrow.matches) return; document.body.classList.toggle('drawer-open', open); drawerWords(); }
   function shutDrawer() { setDrawer(false); $('sp-head').focus(); }
   function toggleDrawer() { if (!narrow.matches) return; var open = !document.body.classList.contains('drawer-open'); setDrawer(open); if (open) $('sp-body').focus(); }
-  function atStop() { setDrawer(true); }
+  // At a stop the focus goes to the first thing that waits, or else to WHY; never from a draft that is open, a paper for reading or a menu.
+  function focusStop() {
+    if (paper || playing || !$('sheet').hidden || MENUS.some(function (m) { return !$(m[1]).hidden; })) return;
+    var a = document.activeElement; if (a && a !== document.body && !$('stop').contains(a)) return;
+    var first = $('sp-decide').hidden ? null : $('signals').querySelector('button, [tabindex="0"], a[href]');
+    if (!first && !$('sp-why').hidden) first = $('sp-why');
+    if (first) first.focus({ preventScroll: false });
+  }
+  function atStop() { setDrawer(true); focusStop(); }
   function wireDrawer() {
     var h = $('sp-head');
     if (narrow.matches) { h.setAttribute('role', 'button'); h.tabIndex = 0; h.setAttribute('aria-controls', 'stop'); }
@@ -4328,7 +4459,7 @@ body.papered #prompt { right: auto; left: calc(var(--sp-w) + 16px); max-width: m
     hexes.forEach(function (h) { h[4] = runLon(h[4]); }); chartNames = a[3] && a[3].map(function (n) { return { name: n.name, kind: n.kind, lat: n.lat, lon: runLon(n.lon) }; }); headSeat();
     var ready = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
     if (config.home) { KEPT_ROOT += BASE + '-' + config.home.number; KEPT = KEPT_ROOT; $('btn-new').hidden = false; $('btn-agent').hidden = !config.home.agents.length; }
-    return ready.then(function () { layChart(); cur.zoom = 0; placeCamera(); requestAnimationFrame(frame); if (config.watch) return startWatch(); if (config.versus) startVersus(); return fetch(BASE + '/tools').then(function (r) { return r.json(); }).then(function (names) { names.forEach(function (n) { OFFERED[n] = true; }); $('btn-stops').hidden = false; $('stops').classList.toggle('daily', !OFFERED.advance); if (OFFERED.advance) $('btn-day').textContent = 'Next pulse'; return refresh().catch(function (e) { if (!VERSUS || !/waits for the clock/.test(e.message)) throw e; }).then(function () { return VERSUS ? resumeVersus() : false; }).then(function (held) { if (!held && !playing && !WATCH) return loadSince(); }); }); });
+    return ready.then(function () { layChart(); cur.zoom = 0; placeCamera(); requestAnimationFrame(frame); if (config.watch) return startWatch(); if (config.versus) startVersus(); return fetch(BASE + '/tools').then(function (r) { return r.json(); }).then(function (names) { names.forEach(function (n) { OFFERED[n] = true; }); $('stops').classList.toggle('daily', !OFFERED.advance); recallTicks(); if (OFFERED.advance) $('btn-day').textContent = 'Next pulse'; return refresh().catch(function (e) { if (!VERSUS || !/waits for the clock/.test(e.message)) throw e; }).then(function () { return VERSUS ? resumeVersus() : false; }).then(function (held) { if (!held && !playing) recallWhy(); if (!held && !playing && !WATCH) return loadSince(); }); }); });
   });
   }).then(function () { if (onScreen) return; atStop(); var shown = true; try { shown = localStorage.getItem('flagplot.hint.look') === '1'; localStorage.setItem('flagplot.hint.look', '1'); } catch (e) {} say('hint', shown ? '' : 'Drag to look along the table; scroll to lean in.'); })
     .catch(function (e) { fatal('The table could not reach the game: ' + e.message); });
