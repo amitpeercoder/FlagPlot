@@ -218,4 +218,6 @@ Rule card: reads a carrier's fire among aircraft and side, the bombers of the gr
 
 1. **The two values by side,** 0.6 and 0.15: whether the difference in handling fuel, sourced in direction and not in size, is enough to set them apart, or one value should serve both.
 
+Answered on Nov 22, 2026, with the first measuring before him: by navy. The two values stand as judgements on the navies' handling of fuel; they are not moved on what a game shows.
+
 It is measured again with decision 0211 as amended before anything is built, and what it shows is put to the designer.

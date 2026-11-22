@@ -64,4 +64,4 @@ Read by a reviewer who had not seen it written. What follows is the plan as it n
 5. **The frozen copies gain no such table,** and the frozen-figures test names it among what they are without.
 6. **What it amends, in full:** decision 0187's sentence; `docs/step2-spec.md`, tuning rules 1 and 7, which gain the exception of rule 2 here; chapter 1.
 7. **A navy within a side is still not told apart.** The first figure given by side is of fuel handled in American and Japanese carriers; a British carrier on the Allied side would read the American value. No such ship is on file. It is noted for the campaign.
-8. **The only figure given by side so far is decision 0212's `aircraft_fire_chance`,** and whether it is to be is that record's question for the designer.
+8. **The only figure given by side so far is decision 0212's `aircraft_fire_chance`,** which the designer confirmed on Nov 22, 2026.
