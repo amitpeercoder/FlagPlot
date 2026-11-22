@@ -305,6 +305,9 @@ fn is_thing(thing: &str, event: &Value) -> bool {
                 || (kind == "system_hit"
                     && (text.contains("propulsion hit") || text.contains("flight deck hit"))
                     && text.ends_with("-> out"))
+                // A carrier set on fire among her aircraft flies nothing off
+                // or on while it burns (decision 0212): told as a loss.
+                || (kind == "aircraft_fire_roll" && text.contains(": set, fire"))
         }
         "strike" => matches!(kind, "strike_launched" | "base_strike_launched"),
         "landing" => matches!(kind, "men_landed" | "ground_fight"),
@@ -479,11 +482,13 @@ fn stop_on_attack_strike_and_loss_stop_where_the_side_was_told() {
             "{name}: the {side:?} side on {thing}"
         );
     }
-    // Where the thing is not told, the game ends with no stop on it.
+    // The Allied side's carrier is set on fire among her aircraft in the
+    // Eastern Solomons' afternoon (decision 0212): a loss, told.
     assert_eq!(
         stops_on("05_eastern_solomons.toml", &es, ALLIED, "loss"),
-        None
+        Some((1, "afternoon".to_string()))
     );
+    // Where the thing is not told, the game ends with no stop on it.
     assert_eq!(
         stops_on("04_savo_island.toml", &savo, Side::Japanese, "loss"),
         None

@@ -441,12 +441,33 @@ impl Briefing {
         let l = &self.losses;
         o.each("Ships sunk", &l.ships_sunk, |x| {
             format!(
-                "Ship sunk: {} of {}{}",
+                "Ship sunk: {} of {}{}{}",
                 x.ship.text(),
                 x.task_force.text(),
+                if x.cause.is_some() {
+                    ", lost to the fire among her aircraft"
+                } else {
+                    ""
+                },
                 ev(x.event)
             )
         });
+        if !l.aircraft_fires.is_empty() {
+            o.each("Fires among aircraft", &l.aircraft_fires, |x| {
+            let what = match x.change {
+                "set" => {
+                    "set on fire among her aircraft; she can fly no aircraft off or land any on while it burns"
+                }
+                "grew" => "the fire among her aircraft grew; she still can fly no aircraft off or on",
+                "died_down" => {
+                    "the fire among her aircraft died down; she still can fly no aircraft off or on"
+                }
+                "out" => "the fire among her aircraft is out; she can fly aircraft again",
+                _ => "lost to the fire among her aircraft",
+            };
+            format!("Carrier {} of {}: {}{}", x.ship.text(), x.task_force.text(), what, ev(x.event))
+        });
+        }
         o.each("Ships damaged", &l.ships_damaged, |x| {
             let mut s = format!(
                 "Ship damaged: {}: {} {}",

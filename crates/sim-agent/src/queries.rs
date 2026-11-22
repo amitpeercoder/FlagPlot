@@ -284,6 +284,11 @@ pub struct ShipDetail {
     pub cargo_fuel_t: Dec,
     pub flotation_damage: Dec,
     pub fire_damage: Dec,
+    /// Given (true) only for a carrier with a fire among her aircraft
+    /// (decision 0212): while it burns she flies no aircraft off and lands
+    /// none on. Left out otherwise. Only the side's own ships are asked about.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub on_fire_among_aircraft: Option<bool>,
     pub gun_rounds: Dec,
     pub torpedoes_ready: bool,
     pub systems: SystemStates,
@@ -393,6 +398,11 @@ pub struct ShipLine {
     pub fuels_at_sea: Option<bool>,
     pub flotation_damage: Dec,
     pub fire_damage: Dec,
+    /// Given (true) only for a carrier with a fire among her aircraft
+    /// (decision 0212): while it burns she flies no aircraft off and lands
+    /// none on. Left out otherwise. As in [`ShipDetail`].
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub on_fire_among_aircraft: Option<bool>,
     /// As in [`ShipDetail`]: shown only when it is not 2.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub experience: Option<u8>,
@@ -558,6 +568,7 @@ fn entity_of(view: &SideView<'_>, handle: &str) -> Option<Detail> {
                 cargo_fuel_t: Dec(ship.cargo_fuel_t),
                 flotation_damage: Dec(ship.flotation_damage),
                 fire_damage: Dec(ship.fire_damage),
+                on_fire_among_aircraft: ship.aircraft_fire.is_some().then_some(true),
                 gun_rounds: Dec(ship.gun_rounds),
                 torpedoes_ready: ship.torpedoes_ready,
                 systems: systems(&ship.systems),
@@ -618,6 +629,7 @@ fn entity_of(view: &SideView<'_>, handle: &str) -> Option<Detail> {
                             .then_some(true),
                         flotation_damage: Dec(s.flotation_damage),
                         fire_damage: Dec(s.fire_damage),
+                        on_fire_among_aircraft: s.aircraft_fire.is_some().then_some(true),
                         experience: shown_experience(s),
                         troops: troops_aboard(&ctx, s),
                     })
