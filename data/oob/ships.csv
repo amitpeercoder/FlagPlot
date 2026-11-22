@@ -424,3 +424,9 @@ id,key,name,nation,class,hull_number
 14306,ondo,Ondo (oiler),jp,,
 14307,hayatomo,Hayatomo (oiler),jp,,
 14308,naruto,Naruto (oiler),jp,,
+16000,ss-143-s-38,USS S-38,us,us-s-boat-s-1-group,SS-143
+16001,ss-155-s-44,USS S-44,us,us-s-boat-s-42-group,SS-155
+16002,ss-156-s-45,USS S-45,us,us-s-boat-s-42-group,SS-156
+16003,ss-158-s-47,USS S-47,us,us-s-boat-s-42-group,SS-158
+16004,ss-188-sargo,USS Sargo,us,us-sargo-class,SS-188
+16005,ss-197-seawolf,USS Seawolf,us,us-sargo-class,SS-197
