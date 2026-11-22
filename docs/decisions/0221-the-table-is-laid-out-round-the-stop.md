@@ -275,3 +275,32 @@ Read on the session's code for `queued` and `take_back`, the team's report and i
 - **Not tried, and owed before stage 4 closes:** a refusal by the engine shown as NOT SENT (the forms offer only what it takes; force one in the check); an air attack's row under HOW WE KNOW.
 - **For stage 3:** an air group's mission and its arc are one entry under SIGNED, not two. **For stage 4:** SINCE says an aircraft type short and a position with its hex, as the slips now do; in a narrow window the prompt while a place is picked does not cover a control.
 - **One test failed once under the full parallel run and passes alone** (scenario 120, statement 6, which runs the derivation command inside itself). It is not of this change; it is a row of open work to stop it running a build inside a test run.
+
+## As built: the plan's paper as one tree
+
+On the designer's word, after looking at the paper of a plan that waits ("could portray a hierarchy of orders"), the plan's paper says its plan once, as one tree. It was built in its own pull request, between stages 2 and 3.
+
+- **The order is at the root, with its tasks under it** as the staff would form them, each under its parent, with rules down the left. A plan that waits is built from `propose`'s `tree.sub_intents`; a plan in force from `command_state`'s intents under the root. Tasks carry no order number; the root keeps the player's.
+- **Under each task are the units it would order,** by name and linked, each in one line of what it is ordered. They come from `would_hand_in` for a plan that waits and from `staff_orders` for a plan in force. A task that orders nothing says the one fact that matters.
+- **Each task has one fold, WHY**, holding short lists of facts: WEIGHED, CHOSE, HOLDS IT BACK and WOULD CHANGE WITH, read from its reason's fields. A search arc is said as a bearing range and drawn on the chart while the fold is open or the task is under the pointer. Cautions stay in the warning ink under their task.
+- **APPROVE and CANCEL are given once a plan,** on its line at the top. The full working is the last fold, closed, and nothing is at the foot: the caption on how a plan is changed is gone.
+- **The paper says things in the table's words,** without the engine's phrases:
+  - no "hex(es)" and no "nearest hex";
+  - fatigue as the cards say it;
+  - shares said one way;
+  - positions with the hex in brackets;
+  - "ours" for "the side's".
+
+Two facts are read from the staff's words, because no field gives them:
+
+- **The threats a search arc was set for** are the `base:N` and `contact:N` handles in the arc's working, found and linked. A list of threats on `propose`'s `arcs` would end this, but it would change the staff's reason and the doctrine's label.
+- **The fact of a task that orders nothing** is the sentence of `tree.no_orders` that names it first.
+
+`table/check_screen.py` checks:
+
+- one APPROVE a plan, at the top;
+- the tree and its rules;
+- the WHY fold;
+- the last fold;
+- no caption at the foot;
+- the paper's words, by running a real proposal of the 39 days through the page's own wording.

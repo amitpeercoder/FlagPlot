@@ -2750,6 +2750,7 @@ body.watched .gives { display: none !important; }
   // The staff's words made plain for the paper: fatigue as the cards say it, shares in words, no hex count.
   function paperPre(t) {
     return String(t)
+      .replace(/\bwhich is not the side's: the staff waits for it to be the side's\b/g, 'which is not ours: the staff waits for it to be ours')
       .replace(/(?:Search arc: )?threats: [^;]*?; the narrowest arc that holds them is (\d+) to (\d+), widened by (\d+) degrees at each end to (\d+) to (\d+)/g, 'the arc is the narrowest that holds the threats, $1\u00B0 to $2\u00B0, widened by $3\u00B0 at each end to $4\u00B0 to $5\u00B0')
       .replace(/\bat a share of (0?\.\d+|1(?:\.0+)?)/g, function (m, s) { return +s >= 1 ? 'with all its fighters' : 'with ' + shareWords(s) + ' of its fighters'; })
       .replace(/\bhas fatigue (\d+)(?:\.\d+)?(?:,? (above|not above) the (\d+) of the ([\w ]+? risk))?/g, function (m, n, rel, lim, risk) { return 'is ' + tiredBit(n) + (rel ? (rel === 'above' ? ', past the ' + lim + ' the ' + risk + ' allows' : '; the ' + risk + ' allows up to ' + lim) : ''); })
@@ -3034,7 +3035,8 @@ body.watched .gives { display: none !important; }
         var wl = el('div', 'line'), w = quiet('WITHDRAW THIS ORDER', 'danger'); w.addEventListener('click', function () { act('withdraw_intent', { intent: root }, 'The order is withdrawn from 1800.', wl).then(function (ok) { if (ok) $('sheet').hidden = true; }); }); wl.appendChild(w); doc.appendChild(wl);
       }
       if (WATCH && working) doc.appendChild(working);
-      if (!WATCH) doc.appendChild(el('div', 'foot', (a[2].inside_day ? 'Worked now, in the middle of the day; the staff is asked again at dusk and may then do otherwise. ' : '') + 'You change a plan by instruction: your leave, a limit, a cancel or a withdrawal. To keep a force out of it, touch the force and keep it out of the staff\'s plans; a direct order of yours keeps out a force the staff is already using, and only that one.'));
+      // No caption that explains how a plan is changed (agreed Nov 19, 2026); inside a day the paper says only when it was worked.
+      if (!WATCH && a[2].inside_day) doc.appendChild(el('div', 'foot', 'Worked now, inside the day; the staff works it again at 1800.'));
       sheetAs('THE PLAN');
       // The plans of the orders in force are paged through from one another.
       var roots = st.intents.filter(function (i) { return i.parent == null && i.in_force; }).map(function (i) { return i.number; }).sort(function (x, y) { return x - y; }), at = roots.indexOf(root);

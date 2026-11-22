@@ -221,6 +221,16 @@ def cards_show_no_handle():
           "each row is the when on its own small line and the words beneath it, left-aligned, with no figure column")
 
 
+def the_plan_paper_has_no_rule_caption():
+    """The plan's paper (the plan as one tree): no caption at its foot explains how a plan is changed (agreed Nov 19, 2026);
+    inside a day it says only when it was worked."""
+    with open(os.path.join(HERE, "index.html"), encoding="utf-8") as page:
+        text = page.read()
+    check("You change a plan by instruction" not in text
+          and "if (!WATCH && a[2].inside_day) doc.appendChild(el('div', 'foot', 'Worked now, inside the day; the staff works it again at 1800.'));" in text,
+          "the plan's paper has no caption explaining how a plan is changed; inside a day its foot says when it was worked")
+
+
 def the_trail_holds_no_duplicate():
     """The trail of cards (decision 0221, stage 2), by the page's text: a card is the thing it shows by its handle; opening the
     card of the thing already shown changes nothing in the trail; the trail never holds one thing twice running; stepping
@@ -811,6 +821,7 @@ def main():
     stops_speak_as_the_staff()
     cards_show_no_handle()
     the_trail_holds_no_duplicate()
+    the_plan_paper_has_no_rule_caption()
     if not os.path.exists(args.sim_cli):
         sys.exit(f"{args.sim_cli} is not built: cargo build --release -p sim-cli")
     with tempfile.TemporaryDirectory() as keep:
