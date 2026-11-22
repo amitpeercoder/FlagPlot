@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 22, 2026, on the designer's ques
 
 Summary: Today a force, a land unit or aircraft that arrive are taken into the staff's plans from their day without a word to the commander. This keeps that, tells him in the day's report what arrived, where, and what the staff has done with it, and adds a stop he may switch on for the evening after something arrives. He overrules the staff with the tools he has.
 
-Standing: Planned on Nov 22, 2026; to be reviewed.
+Standing: Planned on Nov 22, 2026; reviewed and amended the same day; built on Nov 22, 2026 (see "As built"), for the architect to read.
 
 ## Why
 
@@ -89,3 +89,14 @@ What is recorded: nothing new. The agent's interface rises, for the briefing's t
 Rule card: none; no rule of the simulation changes. Rulebook: none but chapter 1's account of the briefing, where it lists what a briefing holds.
 
 Tests are the briefing's, in the agent's crate, on a scenario that has each kind of arrival: a force that enters, a unit that enters, aircraft that arrive, a unit whose day comes with no entry, two on one day, and none on day 1. There is no hand calculation: nothing is computed.
+
+## As built, Nov 22, 2026
+
+- **The briefing** (`sim-agent/src/arrivals_told.rs`) gains, in its `arrivals` part, `came_today` and `comes_tomorrow`, each left out when empty. A line has the unit's `kind`, the unit, `how` (one or more of `enter`, `aircraft` and `usable`), where it is (`place`, and `at`, a base or a ship), what it is (a force's `ships` by kind, its `air_groups` and `land_units` aboard, a unit's `men`, a group's `aircraft` and `aircraft_received`, its `mission` and `target`), and, in `came_today`, `staff`, exactly one of `ordered` (the intent and its words), `named_in_limit` (the intent and its words), `held`, `commander_ordered` and `no_order_today`. The text briefing says them as "Came today: ..." and "Comes tomorrow: ...".
+- **What the staff did** is read from the side's own orders (`SideView::orders`, each with its issuer and the intent it serves) and the day's `OrderAccepted` events: the staff's order accepted for the unit in the day just played; then the commander's; then a hold of the whole unit in the command state; then an intent in force whose own forces limit names it; else no order that day. A limit inherited down a tree is not read, and a hold on one setting of a group is not counted as a hold.
+- **One line a unit.** A unit that enters and may be used the same day has one line. What a force carries is in the force's line and has no line of its own, but for a group aboard that receives aircraft with no entry of its own. A unit that entered and is gone by the evening has no line.
+- **Day 1 has none** in either list, and so the briefing before day 1 has no `comes_tomorrow` and the arrivals of day 1 are delivered but not told.
+- **A unit held apart** may be used from the later of its entry day and its own day; `comes_tomorrow` reads the unit's own day from the entry, since the view gives the later one.
+- **The table:** the evening report has two parts, "Reinforcements came today" and "Reinforcements due tomorrow", one line each by name ("12 aircraft joined VMF-223 at Henderson Field, on patrol"), with the staff's part in the page's words. The panel of what stops the clock is offered in every game now and gains "reinforcements arriving", off until ticked: with it ticked, time run from the table stops at the evening whose briefing has a line in either list. In a game played a day at a time the panel shows this stop alone. The day's plot shows an entry under the night of its day, in words ("Carrier force K arrived at ..., 3 ships"), not at the day's end.
+- **Tests:** `crates/sim-agent/tests/told_of_arrivals.rs`, on scenario 72 made to have a force that enters and is first usable on one day, a land unit that enters, a land unit whose day comes with no entry, aircraft due on days 1, 3 and 5 (three arrivals on day 3), and on scenario 21 with a force entering with two land units aboard; the staff's parts, the text, the enemy's briefing, and every briefing against its schema. Not tested: a group aboard that receives aircraft with no entry of its own.
+- **Versions:** the agent interface 45, once for the batch. No state, hash, doctrine or rules label changes.

@@ -33,7 +33,7 @@
       "const": "flagplot-agent"
     },
     "version": {
-      "const": 44
+      "const": 45
     },
     "kind": {
       "const": "command_state"

@@ -4,7 +4,7 @@ Status: a ruling by the architect on the designer's word at the table, Nov 22, 2
 
 Summary: At the stops inside a day, 0600 and 1200, a seat may give only seven kinds of order, and any other is refused with the words that it is given at dusk. Commands to the staff given there are already taken and held for the next dusk. This does the same for an order to a unit: an order that cannot act inside the day is taken, kept, and handed in at the next dusk as if given then, and its answer says when it will act. Nothing changes in when any order acts.
 
-Standing: Ruled on Nov 22, 2026; to be built.
+Standing: Ruled on Nov 22, 2026; built on Nov 22, 2026 (see "As built"), for the architect to read.
 
 ## Why
 
@@ -50,3 +50,13 @@ Written by the architect; a test that disagrees comes back to him.
 
 - **The tool's answer and its queue; the words of chapter 1,** where "Any other order ... is refused" becomes rules 3 to 5 for a seat, the engine's own refusal standing for an order that reaches it; the table's forms, which offer every order at every stop and say when each acts.
 - **The agent's interface rises.**
+
+## As built, Nov 22, 2026
+
+- **The check of the record** against the code found its "Why" and rules true. One line of chapter 1 said commands to the staff are not given inside a day; the code queues them for the next dusk, as the record says, and the chapter now says so.
+- **The tool** (`sim-agent/src/session.rs`, `issue_orders` and `judge`): at 0600 or 1200 an order of the seven kinds is judged against the pulse's queue and queued for the next pulse, as before; any other is judged by the engine's `check_order_queued` against the seat's queue for dusk and this call's kept orders, and where it passes is put in that queue, which the day's dusk hands in with the seat's other orders, in the order given. Its result is `queued` with `kept: true` and `acts` ("kept: it is given at 1800 for the coming day, day N"); the answer gains `kept_in_call` and `kept`, and its summary says how many were kept for 1800. `clear` at a stop inside a day clears both queues. The saved game records a kept order as an order of that dusk, so a replay is the game in which it was given then. A watched game saved inside a day keeps neither queue, as it kept none before.
+- **The words** of the tool's instructions for a game with orders inside a day (`sim-cli/src/mcp.rs`) say that any order may be given and when each acts. The engine's refusal "given at dusk" stays, for an order that reaches it, as a scenario's script's may.
+- **Tests:** `crates/sim-agent/tests/orders_kept_for_dusk.rs`, statements 1 to 8 on scenario 78 with its own order inside a day removed, and `01_transit` for statement 8. Statement 2 compares a game in which the order was kept at 1200 with one in which it was given at that dusk: the daily hashes, the hand-in and the events from that dusk on are the same. **Statement 5 is proved on a stand-in:** no scenario with orders inside a day loses a whole task force in an afternoon, so the test keeps a stand-down at 0600 and a mission order at 1200 for the same force, and the second is refused at dusk because the force no longer exists. That an order to a force sunk in the afternoon is refused at dusk, for the reason an order to a lost unit is refused, is not shown on a sinking. The test `the_refusals_inside_a_day` of `advance.rs`, which held that such an order is refused, now holds that it is kept.
+- **Games on file:** no recorded game has an order refused inside a day as given at dusk, so none moves for this.
+- **The table:** every form offers every order at every stop; an order not of the seven kinds says "Acts at 1800, for the coming day." in the form before signing, in the status line and among what has been signed. The page keeps that list itself, and a reload forgets it, though the session still holds the orders: no tool lists a seat's queued orders.
+- **Versions:** the agent interface 45, once for the batch with decisions 0215 and 0217.
