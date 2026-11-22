@@ -1,0 +1,214 @@
+# Scenario 127: a strike is spread.
+#
+# Decision 0211, as amended and measured. Three raids attack a force of three
+# carriers and two cruisers in one morning: the first draws its carrier
+# among those that do not look lost, and each raid after it takes the next.
+# The Allied force, task force 1, has three carriers with five strike groups
+# aboard (ship 2's two groups make one raid); the Japanese force, task
+# force 2, has three carriers and two cruisers, no aircraft and no patrol.
+# The Allied side starts holding a contact of it, and each group is allowed
+# to strike on a contact one pulse old, which is what a contact held at the
+# start is in the morning. One day. The hand calculation is in
+# tests/scenario_127_a_strike_is_spread.rs. The test runs this file on the
+# live figures, which carry the switch `strike_is_spread`, for seeds 1 to
+# 1000, and with the switch taken out of a copy of them.
+#
+# Group 3 is of twelve dive bombers here, where the hand calculation says
+# torpedo bombers: no placeholder torpedo bomber is in the live aircraft
+# types. The test also runs a copy of the live types with one added, and
+# group 3 of that type.
+#
+# PLACEHOLDER DATA. The ships, aircraft, figures and map are invented.
+
+name = "Scenario 127: A strike is spread"
+placeholder = true
+seed = 1942
+days = 1
+map = "../map/placeholder_search.toml"
+ship_classes = "../reference/ship_classes.csv"
+port_sizes = "../reference/port_sizes.csv"
+aircraft_types = "../reference/aircraft_types.csv"
+search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat.toml"
+air_combat = "../reference/air_combat.toml"
+
+# The Allied carrier force lies stopped at (4,0).
+[[task_force]]
+id = 1
+name = "Placeholder carrier force"
+side = "allied"
+q = 4
+r = 0
+mission = "carrier"
+
+# The Japanese force lies stopped at (9,0), 200 nm east.
+[[task_force]]
+id = 2
+name = "Placeholder enemy force"
+side = "japanese"
+q = 9
+r = 0
+mission = "carrier"
+
+[[ship]]
+id = 1
+name = "Placeholder carrier A1"
+class = 4
+side = "allied"
+fuel_t = 3000
+task_force = 1
+
+[[ship]]
+id = 2
+name = "Placeholder carrier A2"
+class = 4
+side = "allied"
+fuel_t = 3000
+task_force = 1
+
+[[ship]]
+id = 3
+name = "Placeholder carrier A3"
+class = 4
+side = "allied"
+fuel_t = 3000
+task_force = 1
+
+[[ship]]
+id = 11
+name = "Placeholder carrier B1"
+class = 4
+side = "japanese"
+fuel_t = 3000
+task_force = 2
+
+[[ship]]
+id = 12
+name = "Placeholder carrier B2"
+class = 4
+side = "japanese"
+fuel_t = 3000
+task_force = 2
+
+[[ship]]
+id = 13
+name = "Placeholder carrier B3"
+class = 4
+side = "japanese"
+fuel_t = 3000
+task_force = 2
+
+[[ship]]
+id = 14
+name = "Placeholder cruiser B1"
+class = 1
+side = "japanese"
+fuel_t = 2000
+task_force = 2
+
+[[ship]]
+id = 15
+name = "Placeholder cruiser B2"
+class = 1
+side = "japanese"
+fuel_t = 2000
+task_force = 2
+
+# What the Allied side starts holding: the Japanese force, at its hex.
+[[contact]]
+side = "allied"
+q = 9
+r = 0
+ship_count = 5
+kind = "carrier"
+
+# Aboard ship 1, group 1; aboard ship 2, groups 2 and 3; aboard ship 3,
+# group 4.
+[[air_group]]
+id = 1
+name = "Placeholder bombing squadron 1"
+side = "allied"
+ship = 1
+aircraft_type = 3
+ready = 18
+
+[[air_group]]
+id = 2
+name = "Placeholder bombing squadron 2"
+side = "allied"
+ship = 2
+aircraft_type = 3
+ready = 18
+
+[[air_group]]
+id = 3
+name = "Placeholder strike squadron 3"
+side = "allied"
+ship = 2
+aircraft_type = 3
+ready = 12
+
+[[air_group]]
+id = 4
+name = "Placeholder bombing squadron 4"
+side = "allied"
+ship = 3
+aircraft_type = 3
+ready = 18
+
+# Every group is on naval strike, and allowed a contact one pulse old.
+[[order]]
+day = 1
+side = "allied"
+air_group = 1
+kind = "set_air_mission"
+mission = "naval_strike"
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 1
+kind = "set_strike_contact_age"
+pulses = 1
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 2
+kind = "set_air_mission"
+mission = "naval_strike"
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 2
+kind = "set_strike_contact_age"
+pulses = 1
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 3
+kind = "set_air_mission"
+mission = "naval_strike"
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 3
+kind = "set_strike_contact_age"
+pulses = 1
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 4
+kind = "set_air_mission"
+mission = "naval_strike"
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 4
+kind = "set_strike_contact_age"
+pulses = 1

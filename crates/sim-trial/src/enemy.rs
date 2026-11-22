@@ -413,6 +413,7 @@ impl Making {
                     system_repair_points: Fixed::ZERO,
                     troops: None,
                     available_from: None,
+                    aircraft_fire: None,
                 },
             );
             ships.insert(id);

@@ -2253,6 +2253,47 @@ pub enum EventKind {
         days: Fixed,
         ammunition_t: Fixed,
     },
+    /// A raid's bombs hit a carrier with bombers of her own, and one draw
+    /// said whether they set her aircraft alight (decision 0212, as
+    /// measured, 3). Recorded for every raid that drew, set or not, after
+    /// every attack of the pulse has landed: `bombs` the bomb hits its groups put on her, on either
+    /// track; `aboard` and `flying` her bombers, ready and damaged, not
+    /// flying and flying in the pulse, counted at the start of the air
+    /// combat step; `share` aboard over both; `chance` one less the chance
+    /// that every bomb fails, each at her side's `aircraft_fire_chance`
+    /// times the share; `draw` the draw, which set the fire where it is
+    /// under the chance (`set`); `level_after` her fire among aircraft
+    /// after, 0 for none. Cites the raid's attacks on her. The carrier's
+    /// side's own, whole; the enemy is told nothing. Added at the end.
+    AircraftFireRoll {
+        ship: ShipId,
+        task_force: TaskForceId,
+        bombs: u32,
+        aboard: u32,
+        flying: u32,
+        share: Fixed,
+        chance: Fixed,
+        draw: Fixed,
+        set: bool,
+        level_after: u8,
+    },
+    /// A fire among a carrier's aircraft fought at a pulse's end (decision
+    /// 0212, as measured, 4 and 5): from `level_before`, one draw, `draw`,
+    /// under `fire_spreads_chance` rose a level and otherwise fell one, to
+    /// `level_after`; 0 is out. Where it would rise above the top she is
+    /// `lost`: in a task force (`task_force`) her `ShipSunk` cites this; in
+    /// port or at a yard, with no force, this is the record of her loss, and
+    /// what goes down with her cites it. Cites the fire's record before it,
+    /// the raid's or the last pulse's. The carrier's side's own, whole; the
+    /// enemy is told nothing but the sinking, as of any. Added at the end.
+    AircraftFireFought {
+        ship: ShipId,
+        task_force: Option<TaskForceId>,
+        level_before: u8,
+        draw: Fixed,
+        level_after: u8,
+        lost: bool,
+    },
 }
 
 impl EventKind {
@@ -2429,7 +2470,16 @@ impl EventKind {
             }
             EventKind::ShipSunk {
                 ship, task_force, ..
+            }
+            | EventKind::AircraftFireRoll {
+                ship, task_force, ..
             } => vec![EntityRef::Ship(*ship), EntityRef::TaskForce(*task_force)],
+            EventKind::AircraftFireFought {
+                ship, task_force, ..
+            } => [EntityRef::Ship(*ship)]
+                .into_iter()
+                .chain(task_force.map(EntityRef::TaskForce))
+                .collect(),
             EventKind::ForceBecameAlert { task_force, .. }
             | EventKind::ForceBrokeOff { task_force, .. } => {
                 vec![EntityRef::TaskForce(*task_force)]
@@ -3515,6 +3565,51 @@ impl fmt::Display for EventKind {
                         system.name(),
                         before.name(),
                         after.name()
+                    )
+                }
+            }
+            EventKind::AircraftFireRoll {
+                ship,
+                task_force,
+                bombs,
+                aboard,
+                flying,
+                share,
+                chance,
+                draw,
+                set,
+                level_after,
+            } => write!(
+                f,
+                "{ship} of {task_force}: {bombs} bomb hits with {aboard} bombers aboard and {flying} flying (share {share}), chance {chance} of a fire among her aircraft, draw {draw}: {}, fire {level_after}",
+                if *set { "set" } else { "not set" }
+            ),
+            EventKind::AircraftFireFought {
+                ship,
+                task_force,
+                level_before,
+                draw,
+                level_after,
+                lost,
+            } => {
+                match task_force {
+                    Some(force) => write!(f, "{ship} of {force}: ")?,
+                    None => write!(f, "{ship}: ")?,
+                }
+                if *lost {
+                    write!(
+                        f,
+                        "the fire among her aircraft grew past {level_before} (draw {draw}) and she is lost"
+                    )
+                } else if *level_after == 0 {
+                    write!(
+                        f,
+                        "the fire among her aircraft is out (from {level_before}, draw {draw})"
+                    )
+                } else {
+                    write!(
+                        f,
+                        "the fire among her aircraft went from {level_before} to {level_after} (draw {draw})"
                     )
                 }
             }

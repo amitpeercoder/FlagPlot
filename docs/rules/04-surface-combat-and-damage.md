@@ -215,10 +215,10 @@ One mechanism applies damage to a ship, shared by surface fire and air attack. [
 
 A ship has two damage tracks, flotation and fire, each from 0 to 100. A hit adds its points to its track, 100 at most. `ShipDamaged` records the hits on one track from one salvo, with the points and the value after. The third track of decision 0014, system damage, no longer exists: it was replaced by named systems. [0014, 0016]
 
-- Flotation damage of 100 sinks the ship. Nothing else sinks it. [0014]
+- Flotation damage of 100 sinks the ship. Nothing else sinks it but a fire among a carrier's aircraft that is lost (Fire among a carrier's aircraft, below), which sinks her in the same way. [0014, 0212]
 - Flotation damage of `surface_combat.toml: crippled_flotation` or more makes a ship heavily damaged. A heavily damaged ship counts toward its force's break-off level. It has no other effect. (The figure, the break-off event's text and its breakdown keep the older word, crippled; in this book and the glossary a crippled ship is the objectives' one, with propulsion or flight deck out, chapter 6.) [0014]
 - Fire damage above 0 lights the ship at night: it is easier to hit (the lit factor). Fire damage of `claimed_sunk_fire` or more makes the enemy claim it as sunk (chapter 3, Claims). It has no other effect. [0014]
-- Fire does not grow, spread or burn out, and is not fought. Fire damage changes by hits, and falls only by repair (below). [0014, 0069]
+- Fire damage does not grow, spread or burn out, and is not fought. It changes by hits, and falls only by repair (below). The fire among a carrier's aircraft (below) is another thing: a separate state of a carrier, which fire damage neither feeds nor is changed by. [0014, 0069, 0212]
 - A ship starts a scenario with no flotation or fire damage unless its `[[ship]]` entry gives `flotation_damage` (from 0 to below 100: a ship sunk is not given this way) or `fire_damage` (from 0 to 100), each a whole number or a decimal string; the loader refuses a value outside the range and a float. [0069]
 
 A side sees: `ShipDamaged`, `SystemHit` and `ShipSunk` whole, for its own ships. It does not see the damage it does. [0047]
@@ -233,7 +233,7 @@ Damage lands at the end of the round, one salvo at a time in the order they were
 
 ### Sinking
 
-A ship that sinks has its location set to sunk and leaves its task force. It is in no task force and no port and takes no further part in anything. `ShipSunk` records it and cites the damage event. Every air group aboard is lost with it, with all its aircraft and pilots (chapter 5, A group lost with its ship), and so are all the men aboard (chapter 7, Lost at sea). [0014, 0025, 0066]
+A ship that sinks has its location set to sunk and leaves its task force. It is in no task force and no port and takes no further part in anything. `ShipSunk` records it and cites the damage event, or, for a carrier lost to a fire among her aircraft, the `AircraftFireFought` that lost her. A carrier lost to such a fire in port or at the yard, in no task force, has no `ShipSunk`: the `AircraftFireFought` that lost her, naming no force, is the record of her loss, and what goes down with her cites it. A fire among her aircraft ends with her, whatever sank her. Every air group aboard is lost with it, with all its aircraft and pilots (chapter 5, A group lost with its ship), and so are all the men aboard (chapter 7, Lost at sea). [0014, 0025, 0066]
 
 ### Named systems
 
@@ -253,9 +253,33 @@ The factor of a system is `surface_combat.toml: degraded_factor` when degraded, 
 
 ### The flight deck
 
-The flight deck is the fifth system. It limits the aircraft the ship's air groups can fly in a pulse (chapter 5, What a group can fly in a pulse). Bombs can hit it, and surface fire cannot, because no surface table names it. [0026]
+The flight deck is the fifth system. It limits the aircraft the ship's air groups can fly in a pulse (chapter 5, What a group can fly in a pulse). Bombs can hit it, and surface fire cannot, because no surface table names it. A fire among a carrier's aircraft shuts the deck to flying without changing the system's state (below). [0026, 0212]
 
 A side sees: `SystemHit` whole, for its own ships. [0047]
+
+## Fire among a carrier's aircraft
+
+A bomb that hits a carrier may set her aircraft alight (chapter 5, Fire among a carrier's aircraft, which holds how it is set). It is a state of a carrier of its own, `aircraft_fire`, a level from 1 to `air_combat.toml: aircraft_fire_levels`, or none. It is separate from her fire damage: it is not raised by fire hits and does not raise them, and a repair that lowers her fire damage does not put it out. A ship of any other kind has none. It is hashed (chapter 1, The state hash). [0212]
+
+**Fought at the end of each pulse.** The last phase of every pulse, the night pulse too, is the fire phase (chapter 1, The order in which a day resolves). It runs where the fire figures are loaded. Each carrier afloat with a fire among her aircraft, wherever she is, in a task force, in port or at the yard, in ship order, whose fire was not set in this pulse, makes one draw, on a stream of the air combat subsystem keyed on the ship, with its own `Draw` value, `AircraftFireFought`. Under `air_combat.toml: fire_spreads_chance` the fire rises a level; otherwise it falls one, and at no level it is out. A fire set in a pulse is first fought at the end of the next, and one a raid sets again while it burns goes back to the top, and that pulse is the one it was last set in. With three levels a fire set at the top is lost at the end of the next pulse one time in two. [0212]
+
+**Lost.** A carrier whose fire would rise above the top is lost. She sinks as any ship sinks (Sinking): she leaves her force, her air groups and her men are lost with her (chapter 5, A group lost with its ship; chapter 7, Lost at sea), and her deck is lost to the aircraft that were in the air. `ShipSunk` records it, citing the `AircraftFireFought` that lost her, so the cause of a loss to fire is read from that record. A ship that sinks by flooding while she burns ends the fire. No ship but a carrier is lost to fire. [0212]
+
+**What it shuts.** While a carrier burns she flies nothing off and lands nothing on (chapter 5, Fire among a carrier's aircraft). It does not count her as crippled (chapter 6), does not make her look lost to a raid (chapter 5, The raids at a force, taken in turn), does not count toward her force's break-off level and does not change her flotation damage, fire damage or systems. [0212]
+
+`AircraftFireFought` records the fight of one fire: the ship and force, the level before, the draw, the level after (0 for out) and whether she is lost. It cites the record of the fire before it, a raid's `AircraftFireRoll` or the last pulse's `AircraftFireFought`. Its breakdown holds the level before, `fire_spreads_chance` and the draw. A side sees: the records for its own carrier, whole, and nothing of the enemy's: the enemy is told of her loss as of any sinking. [0212]
+
+**The figures.** All in `air_combat.toml`, placeholders, each resting on a judgement and not on a size from the rows; the frozen step 1 copy has none of them and no such fire is set there.
+
+| Figure | Value | Rests on |
+| --- | --- | --- |
+| `aircraft_fire_chance` | 0.3 plain; Japanese 0.6; Allied 0.15 | The chance one bomb sets a carrier's aircraft alight with all her bombers aboard. A figure by side (chapter 1, Figures by side). The plain value has no row and sits between the two. Japanese: aircraft armed and fuelled in closed hangars with the fuel system live. Allied: fuelling on the flight deck and the fuel lines drained on warning of a raid. The rows give the direction and no size |
+| `fire_spreads_chance` | 0.5 | The chance a fire rises a level at a pulse's end rather than falls one. No row; the middle. The four Japanese carriers set alight on 4 June 1942 were all lost |
+| `aircraft_fire_levels` | 3 | The top, the level a raid sets. A judgement from the times: the carriers of 4 June 1942 were abandoned in 20 minutes to 10 hours, one to three pulses. The loader refuses 0 |
+
+The loader refuses the three given in part, `fire_spreads_chance` and either side's `aircraft_fire_chance` outside 0 to 1, and a float. [0212, 0213]
+
+**Not built.** A fire among aircraft does not destroy aircraft or close a deck beyond the fire's own time, and no ship that is not a carrier is lost to fire: the cruisers and destroyers lost to fire in 1942 were lost to many shell hits and to torpedoes in fuel, which is another rule. It does not model fuel vapour, tell a ship with an armoured deck from one without, tell one crew's training from another's but by her side's figure, let a ship be warned of a raid, or let a ship lost to fire be towed, saved or scuttled by choice. It gives the Japanese side no figure for fighting a fire, and no figure differs by date. [0212, 0213]
 
 ## Breaking off
 
@@ -436,6 +460,7 @@ Known limit: flooding that slows a ship, magazine explosions and damage to radar
 | Alarm | The force alone | One for each fight it hears in a pulse, in the order the fights end |
 | Report error | The force and the enemy force, subsystem intelligence | Chapter 3, How each part is drawn |
 | Bombardment (`Draw::Bombardment`) | The firing ship and the base | One stream for each firing ship and night: the weighed shots, then for each hit where it lands, then, on the first firing ship's stream only, the sighting report [0092] |
+| A fire among aircraft fought (`Draw::AircraftFireFought`) | The ship, air combat subsystem | One draw for each ship with such a fire at a pulse's end: rises, or falls [0212] |
 
 All randomness goes through `World::rng` or `World::rng_pair`. [0003, 0013, 0014, 0021]
 

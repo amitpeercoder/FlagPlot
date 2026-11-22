@@ -2,9 +2,9 @@ Scenario 12b: Patrol pilots
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 5824d0082f32f946  26 events
-day   2  hash c74cf1c592621bb6  18 events
-day   3  hash 72f16ec34b29c186  18 events
+day   1  hash 0c57bab9b4ef5741  26 events
+day   2  hash b25fdc01ef703c95  18 events
+day   3  hash 549b31aa72d2da59  18 events
 
 air_group:1 "Placeholder bomber group" (Japanese) at base:1: 10 ready, mission BaseStrike on base:2, no arc
 air_group:2 "Placeholder escort group" (Japanese) at base:1: 10 ready, 10 pilots, mission CombatAirPatrol, patrol share 0.5, no arc

@@ -447,6 +447,10 @@ pub struct AttackOnShip {
 #[derive(Clone, PartialEq, Eq, Debug, Serialize)]
 pub struct LossesPart {
     pub ships_sunk: Vec<SunkShip>,
+    /// Fires among a carrier's aircraft, set, grown, died down, out or lost
+    /// to (decision 0212). Left out when none.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub aircraft_fires: Vec<AircraftFireLine>,
     /// Ships damaged and not sunk.
     pub ships_damaged: Vec<DamagedShip>,
     /// Aircraft and pilots lost, by group, with the cause.
@@ -498,6 +502,25 @@ pub struct RebasedLine {
 pub struct SunkShip {
     pub ship: Handle,
     pub task_force: Handle,
+    /// `fire_among_aircraft` where the ship was lost to a fire among her
+    /// aircraft (decision 0212); left out otherwise.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub cause: Option<&'static str>,
+    pub event: u32,
+}
+
+/// A fire among a carrier's aircraft, as the side's own carrier had it
+/// (decision 0212). While it burns she can fly no aircraft off or on. Her
+/// own side's alone: nothing is told of an enemy ship's fire.
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct AircraftFireLine {
+    pub ship: Handle,
+    /// Her task force; left out for a carrier in port or at a yard.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub task_force: Option<Handle>,
+    /// `set` (a raid's bombs set her aircraft alight), `grew`, `died_down`,
+    /// `out` or `lost` (she was lost to it).
+    pub change: &'static str,
     pub event: u32,
 }
 
@@ -2941,6 +2964,7 @@ impl Day {
         let mut air_attacks: BTreeMap<(ShipId, Weapon), AttackOnShip> = BTreeMap::new();
         let mut sunk = Vec::new();
         let mut sunk_ids: BTreeSet<ShipId> = BTreeSet::new();
+        let mut aircraft_fires: Vec<AircraftFireLine> = Vec::new();
         let mut damaged: BTreeMap<ShipId, DamagedShip> = BTreeMap::new();
         let mut aircraft: BTreeMap<AirGroupId, AircraftLoss> = BTreeMap::new();
         let mut claims = Vec::new();
@@ -3073,13 +3097,61 @@ impl Day {
                         event: id,
                         reports: Vec::new(),
                     }),
+                    EventKind::AircraftFireRoll {
+                        ship,
+                        task_force,
+                        set: true,
+                        ..
+                    } => aircraft_fires.push(AircraftFireLine {
+                        ship: ctx.ship(*ship),
+                        task_force: Some(ctx.force(*task_force)),
+                        change: "set",
+                        event: id,
+                    }),
+                    EventKind::AircraftFireRoll { .. } => {}
+                    EventKind::AircraftFireFought {
+                        ship,
+                        task_force,
+                        level_before,
+                        level_after,
+                        lost,
+                        ..
+                    } => aircraft_fires.push(AircraftFireLine {
+                        ship: ctx.ship(*ship),
+                        task_force: task_force.map(|force| ctx.force(force)),
+                        change: if *lost {
+                            "lost"
+                        } else if *level_after == 0 {
+                            "out"
+                        } else if level_after > level_before {
+                            "grew"
+                        } else {
+                            "died_down"
+                        },
+                        event: id,
+                    }),
                     EventKind::ShipSunk {
                         ship, task_force, ..
                     } => {
                         sunk_ids.insert(*ship);
+                        // Lost to a fire among her aircraft where a cause
+                        // she cites, one the side may see, is that fire's
+                        // last record (decision 0212).
+                        let lost_to_fire = e.causes.iter().any(|c| {
+                            matches!(c, sim_core::side_events::SideCause::Event(n)
+                                if all.iter().any(|a| a.number == *n
+                                    && matches!(
+                                        a.kind,
+                                        SideEventKind::Whole(EventKind::AircraftFireFought {
+                                            lost: true,
+                                            ..
+                                        })
+                                    )))
+                        });
                         sunk.push(SunkShip {
                             ship: ctx.ship(*ship),
                             task_force: ctx.force(*task_force),
+                            cause: lost_to_fire.then_some("fire_among_aircraft"),
                             event: id,
                         });
                     }
@@ -4559,6 +4631,7 @@ impl Day {
             },
             losses: LossesPart {
                 ships_sunk: sunk,
+                aircraft_fires,
                 ships_damaged: damaged,
                 aircraft: aircraft.into_values().collect(),
                 aircraft_landed_elsewhere: landed,

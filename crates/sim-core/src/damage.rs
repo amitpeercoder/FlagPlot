@@ -213,8 +213,11 @@ impl World {
 
     /// Takes a ship out of its task force and records it, with the loss of
     /// every air group aboard (decision 5 of
-    /// `docs/decisions/0025-carrier-air-groups.md`).
-    fn sink_ship(
+    /// `docs/decisions/0025-carrier-air-groups.md`). A fire among her
+    /// aircraft ends with her (decision 0212, as measured); `cause` is what
+    /// sank her, the damage that took her flotation to 100 or the fire's
+    /// record.
+    pub(crate) fn sink_ship(
         &mut self,
         site: DamageSite,
         task_force: TaskForceId,
@@ -222,11 +225,9 @@ impl World {
         cause: EventId,
     ) -> EventId {
         let sank_at = self.truth.task_forces[&task_force].position();
-        self.truth
-            .ships
-            .get_mut(&ship)
-            .expect("ship exists")
-            .location = ShipLocation::Sunk;
+        let sinking = self.truth.ships.get_mut(&ship).expect("ship exists");
+        sinking.location = ShipLocation::Sunk;
+        sinking.aircraft_fire = None;
         self.truth
             .task_forces
             .get_mut(&task_force)
@@ -247,6 +248,15 @@ impl World {
             hex: sank_at,
             cause: sunk,
         });
+        self.lose_all_aboard(site, ship, sunk);
+        sunk
+    }
+
+    /// What goes down with a ship sunk by the record `sunk`: every air group
+    /// aboard, but for its aircraft in the air in this pulse, with their
+    /// pilots, and the men aboard. The ship's sinking, in a force or out of
+    /// one, comes here.
+    pub(crate) fn lose_all_aboard(&mut self, site: DamageSite, ship: ShipId, sunk: EventId) {
         // The group stays aboard in the state, with no position. It keeps
         // only the aircraft that are in the air in this pulse (decisions 7
         // and 10 of 0059): those are dealt with when they come home. All the
@@ -300,7 +310,6 @@ impl World {
         }
         // The men aboard go down with her (decision 0066, 15).
         self.lose_men_with_ship(site.day, Some(site.pulse), ship, sunk);
-        sunk
     }
 
     fn record_at(&mut self, site: DamageSite, kind: EventKind, causes: Vec<Cause>) -> EventId {

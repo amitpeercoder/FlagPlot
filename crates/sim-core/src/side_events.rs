@@ -814,7 +814,12 @@ pub(crate) fn seen(kind: &EventKind, side: Side, owners: &Owners, knows_fight: b
         | EventKind::CargoUnloaded { ship, .. }
         | EventKind::ShipDamaged { ship, .. }
         | EventKind::SystemHit { ship, .. }
-        | EventKind::ShipSunk { ship, .. } => whole_if(own_ship(ship)),
+        | EventKind::ShipSunk { ship, .. }
+        // A fire among a carrier's aircraft, set or fought: her side's own
+        // (decision 0212, as measured). The enemy learns of her sinking, if
+        // she is lost, as of any.
+        | EventKind::AircraftFireRoll { ship, .. }
+        | EventKind::AircraftFireFought { ship, .. } => whole_if(own_ship(ship)),
 
         // Air groups.
         // A flight to look at the enemy ashore: the flying side's own, never
@@ -1635,6 +1640,8 @@ fn first_known_round(side: Side, fight: &[Event], owners: &Owners) -> Option<u32
             | EventKind::Salvo { .. }
             | EventKind::ShipDamaged { .. }
             | EventKind::ShipSunk { .. }
+            | EventKind::AircraftFireRoll { .. }
+            | EventKind::AircraftFireFought { .. }
             | EventKind::ForceBecameAlert { .. }
             | EventKind::ForceBrokeOff { .. }
             | EventKind::ForceSlippedAway { .. }
@@ -1857,6 +1864,8 @@ fn fight_round(kind: &EventKind) -> Option<u32> {
         | EventKind::EngagementBegun { .. }
         | EventKind::ShipDamaged { .. }
         | EventKind::ShipSunk { .. }
+        | EventKind::AircraftFireRoll { .. }
+        | EventKind::AircraftFireFought { .. }
         | EventKind::ForcesPassedUnseen { .. }
         | EventKind::EngagementEnded { .. }
         | EventKind::ClaimReceived { .. }
@@ -2219,6 +2228,8 @@ fn count_from_known_round(kind: SideEventKind, known: u32, round_minutes: u32) -
             | EventKind::Salvo { .. }
             | EventKind::ShipDamaged { .. }
             | EventKind::ShipSunk { .. }
+            | EventKind::AircraftFireRoll { .. }
+            | EventKind::AircraftFireFought { .. }
             | EventKind::ForceSlippedAway { .. }
             | EventKind::ForcesPassedUnseen { .. }
             | EventKind::EngagementEnded { .. }
@@ -2468,6 +2479,8 @@ fn whole_may_have_hidden_causes(kind: &EventKind) -> bool {
         | EventKind::ContactDropped { .. }
         | EventKind::ShipDamaged { .. }
         | EventKind::ShipSunk { .. }
+        | EventKind::AircraftFireRoll { .. }
+        | EventKind::AircraftFireFought { .. }
         | EventKind::ForceBecameAlert { .. }
         | EventKind::ForceBrokeOff { .. }
         | EventKind::ClaimReceived { .. }
@@ -2769,6 +2782,8 @@ pub(crate) fn project(side: Side, log: &[Event], owners: &Owners) -> Vec<SideEve
                     | EventKind::Salvo { .. }
                     | EventKind::ShipDamaged { .. }
                     | EventKind::ShipSunk { .. }
+                    | EventKind::AircraftFireRoll { .. }
+                    | EventKind::AircraftFireFought { .. }
                     | EventKind::ForceBecameAlert { .. }
                     | EventKind::ForceBrokeOff { .. }
                     | EventKind::ForceSlippedAway { .. }
@@ -3361,6 +3376,36 @@ mod tests {
                     round: 1,
                     ship: ship(1),
                     task_force: force(1),
+                },
+                Whole,
+                Nothing,
+            ),
+            // A fire among a carrier's aircraft, set or fought, is her side's
+            // own, whole; the enemy is told nothing of it (decision 0212).
+            row(
+                EventKind::AircraftFireRoll {
+                    ship: ship(1),
+                    task_force: force(1),
+                    bombs: 2,
+                    aboard: 20,
+                    flying: 0,
+                    share: fx(1),
+                    chance: Fixed::from_ratio(84, 100),
+                    draw: Fixed::from_ratio(1, 2),
+                    set: true,
+                    level_after: 3,
+                },
+                Whole,
+                Nothing,
+            ),
+            row(
+                EventKind::AircraftFireFought {
+                    ship: ship(1),
+                    task_force: Some(force(1)),
+                    level_before: 3,
+                    draw: Fixed::from_ratio(3, 4),
+                    level_after: 2,
+                    lost: false,
                 },
                 Whole,
                 Nothing,
@@ -5010,7 +5055,7 @@ mod tests {
     #[test]
     fn the_table_has_a_row_for_every_kind_of_event() {
         let all = event_kind_names();
-        assert_eq!(all.len(), 162, "the log has 162 kinds of event");
+        assert_eq!(all.len(), 164, "the log has 164 kinds of event");
         let covered: BTreeSet<String> = table()
             .iter()
             .map(|row| kind_name(&row.log[row.at]))

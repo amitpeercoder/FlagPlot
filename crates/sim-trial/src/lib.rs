@@ -222,6 +222,10 @@ pub fn pictures_from_half(
 /// in the order given, at the risk a commander gets by default. With no
 /// intent nothing is handed in. Refused as the constructor refuses.
 pub fn build_world(picture: &TrialPicture, ref_data: RefData, map: Map) -> Result<World, SimError> {
+    // The world is played on the figures as the side knows them: a figure
+    // given by side holds the side's own value for both, so the enemy it
+    // makes up does as its own navy does (decision 0213, as reviewed, 3).
+    let ref_data = ref_data.as_seen_by(picture.side);
     let mut built = World::from_picture(picture.picture.clone(), ref_data, map, picture.stream)?;
     // The side the picture makes up is taken as supplied in full in its
     // fights ashore, and charged nothing (decision 0209, 12): the side does

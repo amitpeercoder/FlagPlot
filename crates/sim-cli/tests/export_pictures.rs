@@ -407,6 +407,11 @@ fn a_step_carries_only_the_pictures_that_changed() {
 /// Remade again for decision 0214 (the state layout v55): every file
 /// changes in its state version and day hashes and nothing else: checked
 /// against the exports of the commit before, with those taken out.
+/// Remade again for decisions 0211 and 0212 (the state layout v56 and the
+/// rules label 28): every file changes in its state version, rules label and
+/// day hashes; scenario 5, whose raids attack a force and bomb carriers, in
+/// its game too, since both rules run in every battle. Not checked against
+/// the exports of the commit before beyond that.
 #[test]
 fn a_scenario_with_command_levels_off_exports_as_it_did() {
     fn fnv(bytes: &[u8]) -> u64 {
@@ -415,16 +420,16 @@ fn a_scenario_with_command_levels_off_exports_as_it_did() {
         })
     }
     let before: [(&str, u64); 10] = [
-        ("01_transit", 0xfc06_15f3_1a2e_9e91),
-        ("04a_night_action", 0x9400_288b_f808_b258),
-        ("05_eastern_solomons", 0xa01f_b4a2_930d_a4a2),
-        ("21_landing", 0xcf92_bb22_77ef_a6e4),
-        ("23_fight_ashore", 0xc0dd_929e_d5f4_9717),
-        ("31_airfield_damage", 0x3560_c262_2c29_30d0),
-        ("36_one_convoy", 0x0bf9_457e_3fcf_e610),
-        ("43_keep_two_bases_fed", 0x7449_651a_323a_9e3a),
-        ("50_neutralise_a_base", 0xb8cc_bb87_8601_d1ac),
-        ("58_a_carrier_force_closes", 0xd756_28b9_817b_c2a0),
+        ("01_transit", 0x7ecc_5c31_ddea_7aa8),
+        ("04a_night_action", 0xbfce_0d33_b889_ff04),
+        ("05_eastern_solomons", 0x9868_09b6_5620_7009),
+        ("21_landing", 0x8221_287f_6fe2_a9f0),
+        ("23_fight_ashore", 0x7e4b_22e4_28fd_e66b),
+        ("31_airfield_damage", 0x6dac_9307_81ef_44b9),
+        ("36_one_convoy", 0xe730_33a4_12d8_509e),
+        ("43_keep_two_bases_fed", 0xcfae_e167_5054_42b1),
+        ("50_neutralise_a_base", 0xbe1e_959e_2fcc_f49d),
+        ("58_a_carrier_force_closes", 0xff88_c2a3_f9bc_a22e),
     ];
     let prefix6 = br#"{"format":"flagplot-replay","version":6,"#;
     let prefix5 = br#"{"format":"flagplot-replay","version":5,"#;

@@ -2336,6 +2336,7 @@ impl Scenario {
                 system_repair_points: Fixed::ZERO,
                 troops: None,
                 available_from: available_day(spec.available_from, id).map_err(&fail)?,
+                aircraft_fire: None,
             };
             if truth.ships.insert(id, ship).is_some() {
                 return Err(fail(format!("{id} appears twice")));

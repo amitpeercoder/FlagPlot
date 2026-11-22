@@ -1824,6 +1824,46 @@ pub(super) fn describe(
                 .num("points", *points)
                 .num("value_after", *value_after),
         ),
+        EventKind::AircraftFireRoll {
+            ship,
+            task_force,
+            bombs,
+            aboard,
+            flying,
+            share,
+            chance,
+            draw,
+            set,
+            level_after,
+        } => (
+            "aircraft_fire_roll",
+            d.id("ship", *ship)
+                .id("task_force", *task_force)
+                .int("bombs", *bombs)
+                .int("aboard", *aboard)
+                .int("flying", *flying)
+                .num("share", *share)
+                .num("chance", *chance)
+                .num("draw", *draw)
+                .flag("set", *set)
+                .int("level_after", u32::from(*level_after)),
+        ),
+        EventKind::AircraftFireFought {
+            ship,
+            task_force,
+            level_before,
+            draw,
+            level_after,
+            lost,
+        } => (
+            "aircraft_fire_fought",
+            d.id("ship", *ship)
+                .id_when_some("task_force", *task_force)
+                .int("level_before", u32::from(*level_before))
+                .num("draw", *draw)
+                .int("level_after", u32::from(*level_after))
+                .flag("lost", *lost),
+        ),
         EventKind::ShipSunk {
             round,
             ship,

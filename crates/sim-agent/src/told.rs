@@ -147,7 +147,10 @@ pub const STOP_ON: [&str; 5] = ["contact", "attack", "loss", "strike", "landing"
 ///   `engagement_begun` (a surface fight its force is in has begun).
 /// - `loss`: `ship_sunk` or `ship_lost_with_base` of one of its ships, and
 ///   `system_hit` of one of its
-///   ships whose propulsion or flight deck went out.
+///   ships whose propulsion or flight deck went out, and
+///   `aircraft_fire_roll` of one of its carriers whose aircraft were set
+///   alight (decision 0212): she flies nothing off and lands nothing on
+///   while it burns, as with a deck out.
 /// - `strike`: `strike_launched` and `base_strike_launched` of one of its
 ///   air groups.
 /// - `landing`: `men_landed` of one of its land units, and `ground_fight`, a
@@ -170,6 +173,7 @@ pub fn told_as(event: &SideEvent) -> Option<&'static str> {
             after: SystemState::Out,
             ..
         }) if *before != SystemState::Out => Some("loss"),
+        SideEventKind::Whole(EventKind::AircraftFireRoll { set: true, .. }) => Some("loss"),
         SideEventKind::Whole(
             EventKind::StrikeLaunched { .. } | EventKind::BaseStrikeLaunched { .. },
         ) => Some("strike"),

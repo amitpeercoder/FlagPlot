@@ -1396,9 +1396,14 @@ impl<'a> SideView<'a> {
     }
 
     /// The air combat figures, if the scenario names them. Rules, so common
-    /// knowledge (decision 0100, 3).
-    pub fn air_combat_figures(&self) -> Option<&'a AirCombatFigures> {
-        self.ref_data.air_combat.as_ref()
+    /// knowledge (decision 0100, 3), but for a figure given by side: that
+    /// holds the side's own value for both sides, as the side is not told
+    /// the enemy's (decision 0213, as reviewed, 3).
+    pub fn air_combat_figures(&self) -> Option<AirCombatFigures> {
+        self.ref_data
+            .air_combat
+            .as_ref()
+            .map(|air| air.as_seen_by(self.side))
     }
 
     /// The air wear and repair figures, if the scenario names them. Rules,
@@ -1651,6 +1656,7 @@ mod tests {
                         system_repair_points: Fixed::ZERO,
                         troops: None,
                         available_from: None,
+                        aircraft_fire: None,
                     },
                 );
             }

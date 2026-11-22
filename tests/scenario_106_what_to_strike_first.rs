@@ -206,15 +206,19 @@ mod record {
 /// commit before, line for line. Remade for decision 0214 (a force asks
 /// leave to pursue): every reason gains `answer_of` and every staff notice
 /// `pursuit`, each none in these games; with those taken out each text is
-/// the text of the commit before, line for line.
+/// the text of the commit before, line for line. Remade for decisions
+/// 0211 and 0212 (a strike spread over the ships of its kind and fire among
+/// a carrier's aircraft, which run in every battle): the four games with
+/// carrier strikes move in their play; the 39 days' first week, which has
+/// none, keeps its digest.
 #[test]
 fn s12_no_game_without_the_limit_changes() {
     let games: [(&str, Option<u32>, u64); 5] = [
-        ("05_eastern_solomons.toml", None, 0x4446_c295_ccf6_7f32),
+        ("05_eastern_solomons.toml", None, 0x7bfb_03ae_40ce_25d0),
         (
             "five-days/01a_eastern_solomons.toml",
             None,
-            0x7813_2cd2_d91c_e42e,
+            0x66d9_de0e_df37_8249,
         ),
         (
             "stage-3-proof/07a_slice.toml",
@@ -224,9 +228,9 @@ fn s12_no_game_without_the_limit_changes() {
         (
             "second-proof/05a_eastern_solomons.toml",
             None,
-            0xc3cd_f5f8_48b5_f330,
+            0xfce4_2251_78d4_456f,
         ),
-        ("second-proof/07a_week.toml", None, 0xa39f_faa6_6de9_caa1),
+        ("second-proof/07a_week.toml", None, 0x91a7_9ab7_cf7f_24d9),
     ];
     let write_to = std::env::var("FLAGPILOT_106_RECORD").ok();
     let mut moved = Vec::new();

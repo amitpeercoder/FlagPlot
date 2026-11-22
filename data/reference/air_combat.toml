@@ -174,6 +174,35 @@ raid_recognised_experience_strength = "0.25"
 # 1 in the frozen step 1 figures: one night is the closing rule as it stands.
 pursuit_nights = 2
 
+# A strike is spread (decision 0211, as measured). Where several raids attack
+# one force in a pulse and want one kind of ship, the first draws its ship
+# among those of the kind that do not look lost and each after it takes the
+# next. A rule's switch, not a figure: a file without it spreads nothing, as
+# the frozen step 1 figures do not.
+strike_is_spread = true
+
+# Fire among a carrier's aircraft (decision 0212, as measured). A raid whose
+# bombs hit a carrier may set her bombers aboard alight; the fire is fought at
+# each pulse's end, a level up or down, and loses her if it rises above the
+# top. A file without these three sets no such fire, as the frozen step 1
+# figures do not. All three are placeholders.
+#
+# The chance one bomb sets them alight with all her bombers aboard, times the
+# share of her bombers that are aboard. Given by side below (decision 0213);
+# the plain value is read by a side given none. Placeholder: no row; between
+# the two values by side.
+aircraft_fire_chance = "0.3"
+# The chance a fire among aircraft rises a level at a pulse's end rather than
+# falls one. Placeholder: no row; the middle. With three levels a fire set at
+# the top is lost at the end of the next pulse one time in two and in the end
+# three in four. The four Japanese carriers set alight on 4 June 1942 were all
+# lost.
+fire_spreads_chance = "0.5"
+# The levels of a fire among aircraft; a raid sets it at the top. Placeholder:
+# a judgement from the times, the carriers of 4 June 1942 abandoned in 20
+# minutes to 10 hours, one to three pulses.
+aircraft_fire_levels = 3
+
 # Whether a bomb or torpedo hit also knocks a system down one level follows
 # surface_combat.toml's system_hit_chance_per_point (decision 0033).
 
@@ -231,3 +260,19 @@ cruiser = 9
 destroyer = 3
 transport = 3
 auxiliary = 3
+
+# Figures by side (decision 0213): the value a side's units read in place of
+# the plain one. Only a figure a decision record names may be given so, each
+# entry with what it rests on: a difference in doctrine or practice between
+# the navies, never a battle's result.
+[[by_side]]
+figure = "aircraft_fire_chance"
+side = "japanese"
+value = "0.6"
+rests_on = "Placeholder (decision 0212): a judgement. Aircraft armed and fuelled in closed hangars with the fuel system live (the Naval Technical Mission's report A-11; event rows 15395 to 15406). The rows give the direction and no size."
+
+[[by_side]]
+figure = "aircraft_fire_chance"
+side = "allied"
+value = "0.15"
+rests_on = "Placeholder (decision 0212): a judgement. Fuelling on the flight deck, and the gasoline lines drained on warning of a raid (event row 15383; outcome rows 15340 and 15383). The rows give the direction and no size."

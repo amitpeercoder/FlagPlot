@@ -77,6 +77,9 @@ pub enum PulsePhase {
     /// daily supply for aircraft and before air group rest (decisions 16 and
     /// 18 of 0066).
     MenSupply,
+    /// Each fire among a carrier's aircraft is fought, the last phase of
+    /// every pulse (decision 0212, as measured, 4). Added at the end.
+    AircraftFires,
 }
 
 /// A step after the last pulse.
@@ -93,7 +96,7 @@ pub enum EndOfDayPhase {
     BaseCount,
 }
 
-const NIGHT_SEQUENCE: [PulsePhase; 13] = [
+const NIGHT_SEQUENCE: [PulsePhase; 14] = [
     PulsePhase::AircraftRepair,
     PulsePhase::AirArrival,
     PulsePhase::AirReplacement,
@@ -107,9 +110,10 @@ const NIGHT_SEQUENCE: [PulsePhase; 13] = [
     PulsePhase::SurfaceEngagements,
     PulsePhase::ShoreBombardment,
     PulsePhase::Loading,
+    PulsePhase::AircraftFires,
 ];
 
-const DAYLIGHT_SEQUENCE: [PulsePhase; 7] = [
+const DAYLIGHT_SEQUENCE: [PulsePhase; 8] = [
     PulsePhase::AirSearch,
     PulsePhase::StrikeDecisions,
     PulsePhase::AirCombat,
@@ -117,6 +121,7 @@ const DAYLIGHT_SEQUENCE: [PulsePhase; 7] = [
     PulsePhase::Movement,
     PulsePhase::SurfaceEngagements,
     PulsePhase::Loading,
+    PulsePhase::AircraftFires,
 ];
 
 const END_OF_DAY_SEQUENCE: [EndOfDayPhase; 5] = [
@@ -484,6 +489,7 @@ impl World {
             PulsePhase::MenReplacement => self.receive_replacement_men(day, pulse),
             PulsePhase::AirSupplyUpkeep => self.pay_daily_supply(day, pulse),
             PulsePhase::MenSupply => self.feed_men_ashore(day, pulse),
+            PulsePhase::AircraftFires => self.fight_aircraft_fires(day, pulse),
             PulsePhase::AirGroupRest => self.stand_down_and_return_air_groups(day, pulse),
             // Fights happen inside the movement step, where forces meet, and
             // so do the straggler passes after them (decision 0022,

@@ -117,3 +117,20 @@ The plan above was read by a second reviewer and both rules were played on a thr
 Rule card: reads the raids at a force, each first group's target list, the force's ships afloat with deck, flotation and fire, `crippled_flotation`, `claimed_sunk_fire`. Writes nothing. Draws: one new value, for the first raid of a kind at a force, on a stream of that raid's first group and the force.
 
 It is measured again with decision 0212 as amended before anything is built.
+
+## As built, Nov 22, 2026
+
+Built with decisions 0212 and 0213 in one pull request, to the rules of "Measured and reviewed again". The code is `crates/sim-core/src/airstrike/spread.rs`, called once on the state at the start of the air combat step; the switch is `air_combat.toml: strike_is_spread`, absent from the frozen copy; the draw is `Draw::StrikeSpread` (19). Scenario 127 is its hand calculation.
+
+- **The first raid's draw** is a draw d below one, in millionths, and the place floor(n x d) among the n ships of the pool, as scenario 127 states it. The throwaway that measured the rule drew a whole number below n; the same seed therefore takes another ship in some pulses, which is the cause found of the as-built numbers differing slightly from the measured ones (decision 0212, "As built").
+- **A group of another kind than its raid's** attacks the first ship of its kind by the order, those that do not look lost first, by ship number, as rule 6 above and scenario 127 have it; the throwaway took the first by ship number alone. They differ only where the lowest-numbered ship of that kind looks lost.
+- **The breakdown** of each attack of a raid of the raid's kind carries the choice: for the first raid `spread_could_draw` (each ship it could have drawn), `spread_draw` and `spread_ship_drawn`; for a later raid `spread_ship_by_turn` and `spread_after_ship`.
+- The games of 1,000 are in decision 0212, "As built".
+
+### The architect's rulings, Nov 22, 2026
+
+Read on pull request 675. Accepted as built:
+
+- A group of another kind than its raid's takes the first ship of its kind that does not look lost.
+- Scenario 127's contact-age orders (`set_strike_contact_age` 1 for each group, the live figures' age being 0), and its dive bombers for group 3, with the torpedo case tested on a copy of the types.
+- The first raid's draw as place floor(n x d); the difference of the as-built numbers from the throwaway's is that and nothing else.

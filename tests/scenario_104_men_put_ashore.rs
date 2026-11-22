@@ -94,11 +94,14 @@
 //!     objective taken out, not from a number written here.
 //! 18. **The count.** 350 + 350 + 600 + 152 + 48 = 1,500 men, at 1 point
 //!     for each 100: 15 points.
-//! 19. **The result.** Without the objective the Japanese side has 8.87
-//!     points and the Allied side 22.69, an Allied margin of 13.82, a
-//!     major victory. With it the Japanese side has 8.87 + 15 = 23.87,
-//!     the Allied side 22.69 still: an Allied margin of 22.69 - 23.87 =
-//!     -1.18, inside the minor level of 3 either way, a stalemate.
+//! 19. **The result.** Without the objective the Japanese side has 2.67
+//!     points and the Allied side 42.59, an Allied margin of 39.92, a
+//!     decisive victory. With it the Japanese side has 2.67 + 15 = 17.67,
+//!     the Allied side 42.59 still: an Allied margin of 42.59 - 17.67 =
+//!     24.92, a decisive victory. (Restated by the architect on Nov 22,
+//!     2026. Before decisions 0211 and 0212 the game on this seed gave 8.87
+//!     and 22.69, a margin of 13.82 without the objective and -1.18, a
+//!     stalemate, with it.)
 //! 20. **What the Japanese side knows** at the end of day 1: 0 men, exact.
 //!     At the end of day 2 and after: 1,500 men, 15 points, exact.
 //! 21. **The words.** The Japanese briefing has the line "Objective: men
@@ -948,16 +951,16 @@ fn statement_18_the_count() {
 #[test]
 fn statement_19_the_result() {
     let without = &game_a_without_the_objective().result;
-    assert_eq!(without.japanese.total, fx("8.87"));
-    assert_eq!(without.allied.total, fx("22.69"));
-    assert_eq!(without.allied.margin, fx("13.82"));
-    assert_eq!(without.allied.outcome, Outcome::Victory(Level::Major));
+    assert_eq!(without.japanese.total, fx("2.67"));
+    assert_eq!(without.allied.total, fx("42.59"));
+    assert_eq!(without.allied.margin, fx("39.92"));
+    assert_eq!(without.allied.outcome, Outcome::Victory(Level::Decisive));
     let with = &game_a().result;
-    assert_eq!(with.japanese.total, fx("23.87"));
-    assert_eq!(with.allied.total, fx("22.69"));
-    assert_eq!(with.allied.margin, fx("-1.18"));
-    assert_eq!(with.allied.outcome, Outcome::Stalemate);
-    assert_eq!(with.japanese.outcome, Outcome::Stalemate);
+    assert_eq!(with.japanese.total, fx("17.67"));
+    assert_eq!(with.allied.total, fx("42.59"));
+    assert_eq!(with.allied.margin, fx("24.92"));
+    assert_eq!(with.allied.outcome, Outcome::Victory(Level::Decisive));
+    assert_eq!(with.japanese.outcome, Outcome::Defeat(Level::Decisive));
 }
 
 // --- The briefing's reading of file a (statements 20 and 21)

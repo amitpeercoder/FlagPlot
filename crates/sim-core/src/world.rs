@@ -166,11 +166,15 @@ impl Default for MadeIds {
 /// order and a task force's field that a game saved under the old rules
 /// could not hold) and 27 from decision 0214 (a force asks leave to go after
 /// a find, or goes, which changes games with a carrier force and a contact
-/// within two nights' steaming). A pull request
+/// within two nights' steaming) and 28 from decisions 0211 and 0212 (a
+/// strike spread over the ships of its kind and fire among a carrier's
+/// aircraft, which change every game in which raids attack a force or a
+/// carrier is bombed, and a ship's field a game saved under the old rules
+/// could not hold). A pull request
 /// raises it by one
 /// when it changes a rule in a way that changes what an existing game would do; a
 /// change that leaves every existing game as it was leaves it alone.
-pub const RULES_VERSION: u32 = 27;
+pub const RULES_VERSION: u32 = 28;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct SimConfig {

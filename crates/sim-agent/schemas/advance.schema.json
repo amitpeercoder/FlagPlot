@@ -8,7 +8,7 @@
   "additionalProperties": false,
   "properties": {
     "format": { "const": "flagplot-agent" },
-    "version": { "const": 43 },
+    "version": { "const": 44 },
     "kind": { "const": "advance" },
     "pulses_resolved": {
       "type": "array",
@@ -36,7 +36,7 @@
       "items": { "$ref": "command_defs.schema.json#/$defs/asking" }
     },
     "told": {
-      "description": "Of the things in stop_on, those the side was told in the last pulse resolved (for the afternoon, with the end of the day), each with the numbers of its events. contact: report_received with created true. attack: air_attack_against, base_attacked_against, shore_bombardment_against, salvo_against, engagement_begun. loss: ship_sunk, ship_lost_with_base; system_hit with propulsion or flight_deck going out. strike: strike_launched, base_strike_launched. landing: men_landed, ground_fight.",
+      "description": "Of the things in stop_on, those the side was told in the last pulse resolved (for the afternoon, with the end of the day), each with the numbers of its events. contact: report_received with created true. attack: air_attack_against, base_attacked_against, shore_bombardment_against, salvo_against, engagement_begun. loss: ship_sunk, ship_lost_with_base; system_hit with propulsion or flight_deck going out; aircraft_fire_roll that set a carrier's aircraft alight. strike: strike_launched, base_strike_launched. landing: men_landed, ground_fight.",
       "type": "array",
       "items": {
         "type": "object",
