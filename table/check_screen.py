@@ -52,6 +52,27 @@ def check(holds, words):
     print("ok  " + words, flush=True)
 
 
+def page_scripts_parse():
+    """Every inline <script> of the page parses: each one's text is written to a temporary file and
+    `node --check` is run on it. A syntax error once passed every other check."""
+    import re
+    import shutil
+    node = shutil.which("node")
+    check(node is not None, "node is found, to check that the page's scripts parse")
+    with open(os.path.join(HERE, "index.html"), encoding="utf-8") as page:
+        text = page.read()
+    scripts = [body for attrs, body in re.findall(r"<script([^>]*)>(.*?)</script>", text, re.S)
+               if "src=" not in attrs and body.strip()]
+    check(scripts, "the page has inline scripts")
+    with tempfile.TemporaryDirectory() as folder:
+        for number, body in enumerate(scripts, 1):
+            path = os.path.join(folder, f"script{number}.js")
+            with open(path, "w", encoding="utf-8") as out:
+                out.write(body)
+            done = subprocess.run([node, "--check", path], capture_output=True, text=True)
+            check(done.returncode == 0, f"inline script {number} of the page parses" + ("" if done.returncode == 0 else ": " + done.stderr.strip()))
+
+
 def http(method, url, body=None):
     """(status, answer) of one request; an answer that is not JSON is its text."""
     data = None if body is None else json.dumps(body).encode()
@@ -510,6 +531,7 @@ def main():
     parser.add_argument("--port", type=int, default=8780, help="the first of six ports used")
     parser.add_argument("--hold", type=float, default=3, help="the doors' wait, shortened for the check")
     args = parser.parse_args()
+    page_scripts_parse()
     if not os.path.exists(args.sim_cli):
         sys.exit(f"{args.sim_cli} is not built: cargo build --release -p sim-cli")
     with tempfile.TemporaryDirectory() as keep:
