@@ -367,7 +367,16 @@ use sim_core::view::SideView;
 /// side with no such force, or whose force's shortest way is the one taken,
 /// gets the orders `supply-51` gave, and the same reasons where that way is
 /// in fuel and enters no hex inside a circle of danger by day.
-pub const DOCTRINE_VERSION: &str = "supply-52";
+/// `supply-53` adds decision 0214: a carrier force whose closing rule gives
+/// nothing, because every fresh contact of a kind it closes on is beyond a
+/// night and its bombers' reach, looks for a find within `pursuit_nights`
+/// nights, or with the order's waters first set aside, inside the order's
+/// area; with the order's leave to pursue at go it pursues the find and says
+/// so, at ask it asks leave in a notice, and on the commander's yes it
+/// pursues; and at the first dusk it has neither a find nor a contact to close
+/// on the pursuit is ended in a notice. A side with no such find, or with the
+/// leave at stay, gets the orders and reasons `supply-52` gave.
+pub const DOCTRINE_VERSION: &str = "supply-53";
 
 /// The staff: the doctrine for keeping a base supplied (stage 1) and, after
 /// it, the air doctrine for holding a place and covering a base from the air
