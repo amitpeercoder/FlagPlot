@@ -221,3 +221,28 @@ Rule card: reads a carrier's fire among aircraft and side, the bombers of the gr
 Answered on Nov 22, 2026, with the first measuring before him: by navy. The two values stand as judgements on the navies' handling of fuel; they are not moved on what a game shows.
 
 It is measured again with decision 0211 as amended before anything is built, and what it shows is put to the designer.
+
+## The amended rules measured, Nov 22, 2026
+
+Decisions 0211 and 0212 as amended above were played on the throwaway, 1,000 games of each setting, with nothing moved. With both switches off the events are byte for byte those of the build without them.
+
+Who is ahead, of 1,000 (the band: neither side in more than 650):
+
+| | Neither | 0211 alone | 0212 alone | Both | Both, one chance of 0.4 |
+| --- | --- | --- | --- | --- | --- |
+| Midway | Japanese 867 | Japanese 955 | Japanese 781 | Japanese 579, Allied 421 | Japanese 661 |
+| Coral Sea | Allied 574 | Allied 702 | Allied 561 | Allied 670 | Allied 617 |
+| Five days | Allied 615 | Allied 706 | Allied 741 | Allied 816 | Allied 744 |
+
+Carriers lost with both rules, games of 1,000, to flooding and to fire: Akagi 59 and 627; Kaga 48 and 635; Soryu 269 and 414; Hiryu 245 and 445; Enterprise at Midway 83 and 145; Hornet 69 and 196; Yorktown at Midway 33 and 1; Yorktown at the Coral Sea 15 and 86; Lexington 0 and 134; Shoho 871 and 39; Shokaku in the five days 10 and 291; Zuikaku 11 and 285; Ryujo 232 and 510; Enterprise in the five days 217 and 72; Saratoga 6 and 86.
+
+- **No ship that is not a carrier is lost to fire,** in any setting.
+- **No carrier is lost in the pulse she is bombed.** Of the fires that lost a carrier about six in ten lost her at the end of the next pulse; a fire put out took three pulses or more.
+- **A raid's bombing set a fire** in 60 of 100 bombings of a Japanese carrier at Midway and 34 of an American one; at the Coral Sea 23 and 13; in the five days 58 and 21. The share of bombers aboard at a bombing was 0.68 for the Japanese carriers at Midway (0.52 in the morning, 0.91 in the afternoon) and 0.75 in the five days.
+- **Midway is inside its band. The Coral Sea is outside it by 20 games and the five days by 166,** both toward the Allied side. Decision 0211 alone moves both that way too.
+- **No validation verdict moves** (Savo, the Eastern Solomons, Cape Esperance, the air campaign, the landings), and the Eastern Solomons' American carriers sunk stays none in all 1,000 runs. **No proof condition read from a batch changes whether it holds.**
+- **Not measured:** the proofs' conditions that need events and not a batch; legibility; the hash, saves and frozen tests, which the throwaway does not carry.
+
+The readings the measurer chose where the record was open, each to be ruled before a build: a ship with a flight deck is a ship of the carrier kind; a strike aircraft is one of a type with the bomber role; a carrier bombed again while burning goes back to the top; a burning carrier is closed to launching and landing and is not counted as crippled or as looking lost; a fire ends when she sinks by flooding.
+
+What it shows of each battle is put to the designer before anything is built.
