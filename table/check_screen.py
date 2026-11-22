@@ -188,6 +188,20 @@ def stops_speak_as_the_staff():
           "an aircraft type in a stop's line is the short designation, not the data's long name")
 
 
+def cards_show_no_handle():
+    """A contact's HOW WE KNOW is said in the table's words, not the engine's raw lines (decision 0221, stage 2), by the
+    page's text: its rows are a when and the words, units by name, places linked, and a handle of the form word:number is
+    never put on a card (the page is drawn in a browser; the same was read there for every kind of card)."""
+    import re
+    with open(os.path.join(HERE, "index.html"), encoding="utf-8") as page:
+        text = page.read()
+    check("howWeKnow(how, " in text and "listOf(how, 'HOW WE KNOW'" not in text and ".replace(/\\bcontact:\\d+/g, 'it')" in text,
+          "a contact's HOW WE KNOW is built by howWeKnow, which has no handle of its own: a contact is \"it\"")
+    css = (re.search(r"#card \.how \.hrow \.words \{([^}]*)\}", text) or [None, ""])[1]
+    check("text-align: left" in css and "#card .how .hrow .when { display: block;" in text,
+          "each row is the when on its own small line and the words beneath it, left-aligned, with no figure column")
+
+
 def queue_through_the_bridge(bridge):
     """The two tools SIGNED rests on, as the page calls them: queued lists what was signed, with a unit's hold going with
     its order, and take_back withdraws one entry and what goes with it, refused with the token out of date."""
@@ -707,6 +721,7 @@ def main():
     the_stop_paper()
     orders_and_signed()
     stops_speak_as_the_staff()
+    cards_show_no_handle()
     if not os.path.exists(args.sim_cli):
         sys.exit(f"{args.sim_cli} is not built: cargo build --release -p sim-cli")
     with tempfile.TemporaryDirectory() as keep:

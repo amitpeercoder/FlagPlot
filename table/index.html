@@ -436,6 +436,9 @@ body.watched .gives { display: none !important; }
 #game-says:empty { display: none; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .said.notsent { margin-top: 4px; font-size: 13px; }
+#card .how { display: flex; flex-direction: column; gap: 8px; }
+#card .how .hrow .when { display: block; font-family: var(--f-ui); font-size: 12px; font-weight: 700; letter-spacing: 0.1em; color: var(--paper-dim); }
+#card .how .hrow .words { text-align: left; }
 </style>
 </head>
 <body>
@@ -2078,11 +2081,39 @@ body.watched .gives { display: none !important; }
     api('get_entity', { handle: c.contact.handle }).then(function (a) {
       var ev = a.entity && a.entity.last_report_event; if (ev == null) return;
       return api('explain', { event: ev }).then(function (x) {
-        var lines = (x.nodes || []).filter(function (n) { return n.type === 'event' && n.depth <= 1 && n.text; }).map(function (n) { return (n.day != null ? 'Day ' + n.day + (n.pulse ? ', ' + n.pulse : '') + ': ' : '') + n.text; });
-        listOf(how, 'HOW WE KNOW', lines);
+        howWeKnow(how, (x.nodes || []).filter(function (n) { return n.type === 'event' && n.depth <= 1 && n.text; }));
       });
     }).catch(function () {});
    
+  }
+  // HOW WE KNOW on a contact's card: each report that made the contact, a row for each, the when on a small line of its own and the
+  // words beneath it, in the staff's voice, with units by name and places as latitude and longitude with the hex in brackets, linked.
+  // The events carry no fields but their kind, their words, their units and their day and pulse, so the report's figures are read from
+  // its words. A report and the search that made it are one row. A kind not known here is said as the game has it, tidied.
+  function howWhen(n) { var w = n.day != null && n.pulse ? phaseWords(n.day, n.pulse).replace(/ · [\d–]+$/, '') : ''; return w; }
+  function howWeKnow(into, nodes) {
+    if (!nodes.length) return;
+    var head = el('div', 'sub', 'HOW WE KNOW'), box = el('div', 'how'); into.appendChild(head); into.appendChild(box);
+    var kindWords = function (k, n) { k = String(k || '').replace(/_/g, ' ').trim(); if (!k || k === 'unknown' || k === 'unspecified') return 'kind not made out'; return 'taken for ' + (n === 1 ? (/^[aeiou]/i.test(k) ? 'an ' : 'a ') + k : /s$/.test(k) ? k : k + 's'); };
+    function unit(n, i) { var u = (n.entities || [])[i || 0]; if (u && u.name && !M.names[u.handle]) M.names[u.handle] = cleanName(String(u.name)); return u ? refTo(u.handle, u.name) : el('span', '', 'Our aircraft'); }
+    function row(n, parts) { var r = el('div', 'hrow'), w = howWhen(n), d = el('div', 'words'); if (w) r.appendChild(el('b', 'when', w)); parts.forEach(function (x) { d.appendChild(typeof x === 'string' ? document.createTextNode(x) : x); }); r.appendChild(d); box.appendChild(r); }
+    function atPlace(q, r) { return placeLink({ q: +q, r: +r }); }
+    var used = {};
+    nodes.forEach(function (n, i) {
+      if (used[i]) return;
+      var tx = String(n.text).replace(/^(Allied|Japanese|allied|japanese) /, ''), m;
+      if (n.event_kind === 'report_received' && (m = /report: (\d+) ships?, (.*?), at \((-?\d+),(-?\d+)\): (new|refreshed) contact:\d+/.exec(tx))) {
+        var cnt = +m[1], sight = nodes.filter(function (o, j) { return j > i && !used[j] && o.event_kind === 'search_attempt'; })[0], what = cnt + (cnt === 1 ? ' ship' : ' ships') + ', ' + kindWords(m[2], cnt) + ', at ';
+        if (sight) { used[nodes.indexOf(sight)] = true; row(n, [unit(sight), ' sighted ' + what, atPlace(m[3], m[4]), m[5] === 'new' ? '. Plotted as a new contact.' : '. The contact is confirmed.']); }
+        else row(n, ['Reported: ' + what, atPlace(m[3], m[4]), m[5] === 'new' ? '. Plotted as a new contact.' : '. The contact is confirmed.']);
+      } else if (n.event_kind === 'search_attempt' && (m = /searched and sighted (.*)$/.exec(tx))) row(n, [unit(n), ' sighted ' + m[1] + '.']);
+      else if (n.event_kind === 'air_attack' && (m = /(bombs|torpedoes) at a ship(?:: (\d+) shots?)?/.exec(tx))) row(n, [unit(n), ' attacked it with ' + m[1] + (m[2] ? ', ' + m[2] + ' dropped' : '') + '.']);
+      else {
+        var parts = [], last = 0, re = /\((-?\d+),(-?\d+)\)/g, s = tx.replace(/\bcontact:\d+/g, 'it'), mm; (n.entities || []).forEach(function (u) { if (u && u.name && !M.names[u.handle]) M.names[u.handle] = cleanName(String(u.name)); });
+        while ((mm = re.exec(s))) { if (mm.index > last) parts.push(rich('span', '', s.slice(last, mm.index))); parts.push(atPlace(mm[1], mm[2])); last = re.lastIndex; }
+        parts.push(rich('span', '', s.slice(last).replace(/^./, function (c) { return c; }))); row(n, parts);
+      }
+    });
   }
   function cardPlace(t) {
     var pl = t.place, name = (t.base && t.base.base.name) || M.hexNames[pl.q + ',' + pl.r], body = openCard((name || (t.sea ? 'OPEN WATER' : 'LAND')).toUpperCase(), t.base ? 'ENEMY BASE' : null);
