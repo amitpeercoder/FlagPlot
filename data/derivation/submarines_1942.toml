@@ -1,0 +1,258 @@
+# The submarine classes of 1942 on file and their torpedoes, as of 7 August
+# 1942, the first day of the 39 days, for decision 0218, stage 1 (the data).
+# The derivation tool turns this list into
+# data/reference/submarine_classes_1942.csv and
+# data/reference/submarine_torpedoes_1942.csv, each with a sources companion.
+# No scenario loads them yet: stage 2 adds the loader and the boats.
+#
+# The written rules are decision 0218's rule 28, set out in rules.toml under
+# "Decision 0218, stage 1": a salvo is the class's tubes that bear forward;
+# the salvoes carried are its torpedoes carried over its salvo, rounded down;
+# the passage speed is its speed of endurance on the surface; the damage of a
+# hit is the torpedo's warhead times torpedo_damage_per_warhead_kg. Rule 29: a
+# figure still missing is estimated from like boats by decision 0207 and
+# marked; a class whose torpedo no row states takes the torpedo stated for the
+# boats of her group, or of the group nearest in date, and is marked
+# (`torpedo_from` below).
+#
+# Every class of the type submarine in ship_classes.csv is either derived
+# ([[submarine]]) or left out with its reason ([[left_out]]); the tool refuses
+# a list that does neither for one.
+#
+# The exceptions the figures rest on are at the end of rules.toml. Each is a
+# PROPOSAL of the stage 1 lead (Nov 22, 2026) for the architect's ruling:
+# rows of the Technical Mission's S-01-1 dated only to 1942 judged to hold on
+# the date; rows of ONI 222-J (June 1945) read for 1942 as already so
+# (`later = true`); and lone weak rows read where no row stands against them.
+# The torpedo_from entries are likewise the lead's proposals.
+#
+# `submarine_hit_chance` is not derived here (decision 0218, rule 30): it is
+# counted for each weapon from the attacks on file. The count, which sets no
+# figure, is at the end of this file.
+
+name = "The submarine classes of 1942"
+date = "1942-08-07"
+rules = "rules.toml"
+ships = []
+submarine_output = "../reference/submarine_classes_1942.csv"
+submarine_torpedo_output = "../reference/submarine_torpedoes_1942.csv"
+
+# The torpedoes derived. Every torpedo a derived class carries is here; the
+# Mark 10 is here for the S-boats, which wait on the passage speed (below).
+torpedoes = [
+    "us-21in-torpedo-mk14",
+    "us-21in-torpedo-mk10",
+    "jp-53cm-torpedo-type89",
+    "jp-53cm-torpedo-type95",
+]
+
+# ---------------------------------------------------------------- American
+
+[[submarine]]
+class = "us-sargo-class"
+[submarine.torpedo_from]
+weapon = "us-21in-torpedo-mk14"
+group = "us-fleet-type-submarine"
+rows = ["ship_class_facts.csv:16184"]
+by = "the stage 1 lead (proposed)"
+date = "2026-11-22"
+reason = "No row names the torpedo of the Sargo class. The fleet type's row 16184 (NavWeaps) gives the Mark 14 as the standard submarine torpedo of the war, of US submarines generally. The tubes pamphlet's row 16185 covers SS-198 and higher, so not Sargo (SS-188 to 197), and is not cited. Rowland and Boyd's Mark 10 for the fleet type (row 16186) is a reserve weapon by its own words, not the regular load, and is not read. Proposed for the architect's ruling."
+
+[[submarine]]
+class = "us-tambor-class"
+[submarine.torpedo_from]
+weapon = "us-21in-torpedo-mk14"
+group = "us-fleet-type-submarine"
+rows = ["ship_class_facts.csv:16184", "ship_class_facts.csv:16185"]
+by = "the stage 1 lead (proposed)"
+date = "2026-11-22"
+reason = "No row names the torpedo of the Tambor class. The fleet type's rows give the Mark 14: NavWeaps's standard torpedo of US submarines (16184) and the tubes pamphlet's tubes designed primarily for the Mark 14, of every boat SS-198 and higher but SS-204 and 205 (16185), which takes in the Tambors. Rowland and Boyd's Mark 10 for the fleet type (row 16186) is a reserve weapon by its own words and is not read. Proposed for the architect's ruling."
+
+[[submarine]]
+class = "us-gato-class"
+[submarine.torpedo_from]
+weapon = "us-21in-torpedo-mk14"
+group = "us-fleet-type-submarine"
+rows = ["ship_class_facts.csv:16184", "ship_class_facts.csv:16185"]
+by = "the stage 1 lead (proposed)"
+date = "2026-11-22"
+reason = "No row names the torpedo of the Gato class. The fleet type's rows give the Mark 14: NavWeaps's standard torpedo of US submarines (16184) and the tubes pamphlet's tubes designed primarily for the Mark 14, of every boat SS-198 and higher but SS-204 and 205 (16185). Rowland and Boyd's Mark 10 for the fleet type (row 16186) is a reserve weapon by its own words and is not read. Proposed for the architect's ruling."
+
+# ---------------------------------------------------------------- Japanese
+
+[[submarine]]
+class = "jp-i-15-group"
+[submarine.torpedo_from]
+weapon = "jp-53cm-torpedo-type95"
+rows = ["engagement_events.csv:3002", "engagement_events.csv:16433", "engagement_events.csv:16434"]
+by = "the stage 1 lead (proposed)"
+date = "2026-11-22"
+reason = "No torpedo_model row is filed for the block. Its boats' rows of 1942: I-19 fired six Type 95 at Wasp on 15 September (3002, the one preferred row), I-21 fired Type 95 on 5 and 7 May (16433, 16434). Against them: I-26 fired a Type 89 on 7 June (16435) after embarking Type 95 in January (16428), and ONI 222-J's I-15 sheet, whose OCR line restated in row 16051's as_stated reads 'Typa89s', is not filed as a torpedo_model row. The preferred row is read, as the brief asks; the dispute goes to the architect."
+
+[[submarine]]
+class = "jp-i-153-group"
+[submarine.torpedo_from]
+weapon = "jp-53cm-torpedo-type89"
+group = "jp-i-121-group"
+rows = ["engagement_events.csv:16429"]
+by = "the stage 1 lead (proposed)"
+date = "2026-11-22"
+reason = "No torpedo_model row is filed for the block and no row names a torpedo fired by one of its boats. The group nearest in date is the I-121 block, built 1927 as the I-153 block is (the Technical Mission's headings); its boat I-123 fired four Type 89 on 20 January 1942 (16429). ONI 222-J's I-153 sheet, restated in row 16064's as_stated, also reads 'Type 89', but no torpedo_model row is filed from it. Proposed for the architect's ruling."
+
+[[submarine]]
+class = "jp-i-168-group"
+# Her torpedo is read from her class's row 16225, by an exception.
+
+[[submarine]]
+class = "jp-i-176-group"
+[submarine.torpedo_from]
+weapon = "jp-53cm-torpedo-type95"
+group = "jp-i-15-group"
+rows = ["engagement_events.csv:3002", "engagement_events.csv:16433", "engagement_events.csv:16434"]
+by = "the stage 1 lead (proposed)"
+date = "2026-11-22"
+reason = "No torpedo_model row is filed for the block and no row names a torpedo fired by one of its boats in 1942 (gaps.csv lists I-176 among the boats looked for). The group nearest in date is the I-15 block, built 1940, against the I-176 block's 1942; the torpedo stated for its boats is the Type 95 (3002, 16433, 16434), with the dissent its own entry lists. It rests on the boats' rows, not on the I-15 block's derived figure. Proposed for the architect's ruling."
+
+[[submarine]]
+class = "jp-ro-33-group"
+# Her torpedo is read from her class's row 16229, by an exception.
+
+# ---------------------------------------------------------------- left out
+
+[[left_out]]
+class = "us-s-boat-s-1-group"
+reason = "No passage speed: no endurance_speed_kn row (gaps.csv says it was looked for). Decision 0207's estimate by ratio from her max_speed_kn cannot be worked while a like class's row is disputed: the Gato class's max_speed_kn, 20.25 (16100) against 20 (16105), both DANFS, neither preferred, and every like class is read (decision 0207, rule 6). Her bow tubes rest on a lone unconfirmed row (16131). Settle Gato's speed, and make readable the like classes' rows dated only to 1942 (the max_speed_kn and endurance_speed_kn of the Technical Mission's blocks), and the entry is [[estimate]] class us-s-boat-s-1-group, endurance_speed_kn, ratio from max_speed_kn."
+
+[[left_out]]
+class = "us-s-boat-s-42-group"
+reason = "As the S-1 group: no endurance_speed_kn row, and the estimate by ratio waits on the Gato class's disputed max_speed_kn (16100 against 16105). Her bow tubes rest on a lone unconfirmed row (16135)."
+
+[[left_out]]
+class = "us-narwhal-class"
+reason = "No passage speed: no endurance_speed_kn row (gaps.csv says it was looked for); the estimate by ratio from her max_speed_kn (17.4) waits on the Gato class's disputed max_speed_kn (16100 against 16105)."
+
+[[left_out]]
+class = "us-fleet-type-submarine"
+reason = "Not a class: NAVPERS 16160's figures of the wartime fleet boat in general, by its own name. Its torpedo rows are read as the group of the fleet classes."
+
+[[left_out]]
+class = "jp-i-1-group"
+reason = "Torpedoes carried disputed with no preferred row: 20 for the J1 boats (16202) against 17 for I-6 (16203), both Wikipedia, two types in one block. Its torpedo is two types as well: Type 95 for the J1 boats (16204) against Type 89 for I-6 (16205), both unconfirmed."
+
+[[left_out]]
+class = "jp-i-5-group"
+reason = "Bow tubes disputed with no preferred row: 4 (ONI 222-J, 16206) against 6 (Wikipedia, 16210). And no passage speed: no endurance_speed_kn row and no max_speed_kn to estimate one from."
+
+[[left_out]]
+class = "jp-i-9-group"
+reason = "Torpedoes carried disputed with no preferred row: 20 (ONI 222-J, 16214) against 18 (Wikipedia, 16218, 16220); either gives 3 salvoes of 6. And no passage speed: no endurance_speed_kn row and no max_speed_kn to estimate one from."
+
+[[left_out]]
+class = "jp-i-121-group"
+reason = "Torpedoes carried disputed with no preferred row: 8 (the Technical Mission, 16033) against 20 (ONI 222-J, 16060)."
+
+[[left_out]]
+class = "jp-ro-35-group"
+reason = "No passage speed: no endurance_speed_kn row and no max_speed_kn to estimate one from; its rows are ONI 222-J's of June 1945 alone, and whether its sheet covers a boat of 1942 is not stated (ship_classes.csv 16016)."
+
+[[left_out]]
+weapon = "jp-53cm-torpedo-type96"
+reason = "Warhead disputed with no preferred row: 405 kg (the Technical Mission, 16063) against 550 kg (NavWeaps, 16064). No class on file is said to carry it; I-4 fired two on 6 April 1942 (16431)."
+
+[[left_out]]
+weapon = "jp-53cm-torpedo-type92"
+reason = "No warhead_kg row. No class on file is said to carry it in 1942."
+
+# The ids, pinned (decision 0077): 6000 up for the classes and 6100 up for the
+# torpedoes, ranges no other list uses. A class left out takes the next free
+# id when it is derived.
+[submarine_class_ids]
+6000 = "us-sargo-class"
+6001 = "us-tambor-class"
+6002 = "us-gato-class"
+6003 = "jp-i-15-group"
+6004 = "jp-i-153-group"
+6005 = "jp-i-168-group"
+6006 = "jp-i-176-group"
+6007 = "jp-ro-33-group"
+
+[submarine_torpedo_ids]
+6100 = "us-21in-torpedo-mk14"
+6101 = "us-21in-torpedo-mk10"
+6102 = "jp-53cm-torpedo-type89"
+6103 = "jp-53cm-torpedo-type95"
+
+# ------------------------------------------------- the count of hits (rule 30)
+# Counted by the stage 1 lead on Nov 22, 2026, from engagement_events.csv (ev)
+# and engagement_outcomes.csv (out). It sets no figure. Choices: the aimed ship
+# only (strays listed apart); a torpedo that left no tube is not counted; a
+# disputed count is a range; a dud that struck is a miss (rule 8); a salvo with
+# no stated count of torpedoes or of hits is listed and not counted. "Stated":
+# a row of the salvo names the weapon. "Class row": the boat's class row names
+# it. "Estimated": taken by rule 29 from the boats of her group or the group
+# nearest in date (this list's torpedo_from), or, for a class left out here,
+# as rule 29 would take it.
+#
+# The six Japanese salvoes at warships, January to September 1942:
+#   Type 89, stated   I-6 at Saratoga, 11 Jan: 3 fired, 1 hit (ev 16050)
+#   Type 89, class row I-168 at Yorktown, 6 Jun: 4 fired, 1 to 2 hits on
+#                     Yorktown (ev 16053, 8035, 8037; out 9366); Hammann's 1 or
+#                     2 are strays (class row 16225, by exception)
+#   Type 89, estimated I-121 at Task Force 16, 22 Aug: 1 seen, the count not
+#                     printed; 0 hits (ev 16023); as rule 29 would take it from
+#                     I-123's Type 89 (ev 16429), her class being left out
+#   Type 95, stated   I-19 at Wasp, 15 Sep: 6 fired, 2 to 3 hits on Wasp
+#                     (ev 3002; out 871, 872); North Carolina and O'Brien 1
+#                     each, strays. BuShips judged the warhead near a Type 89's
+#                     (out 16072)
+#   Type 95, estimated I-26 at Saratoga, 31 Aug: 6 fired (one broached), 1 hit
+#                     (ev 16010, 16011); her own rows are a Type 95 loaded in
+#                     January and a Type 89 fired in June (ev 16428, 16435)
+#   not counted       I-11 at Hornet, 6 Sep: 4 fired, 0 hits (ev 16017); her
+#                     class's rows name both Type 89 and Type 95 (16215, 16216)
+#   Totals: Type 89, 7 or 8 fired, 2 to 3 hits (stated 3 and 1); Type 95, 12
+#   fired, 3 to 4 hits (stated 6 and 2 to 3).
+# Later in 1942, on file: I-176 at a column she took for a battleship, 20 Oct,
+# 6 fired, Chester hit once, the aimed ship not stated (ev 3019, 3020; Type 95
+# estimated); I-26 at San Francisco and Juneau, 13 Nov, 3 fired and 3 fired, or
+# one salvo of 3, Juneau hit once (ev 3029, 3031; Type 95 estimated).
+# Japanese salvoes at merchant ships, weapon stated: Type 89, I-7 2 fired 1 hit
+# (ev 16430), I-26 1 fired 1 hit (ev 16435), I-123 4 fired hits not stated
+# (ev 16429), I-3 count not stated 1 hit (ev 16432); Type 95, I-21 2 fired 2
+# hits and 2 fired 0, both premature (ev 16433, 16434); Type 96, I-4 2 fired
+# hits not stated (ev 16431); 6th Year Type, RO-61 at Casco 3 fired 1 hit
+# (ev 16057). RO-33 at Malaita, count not stated, 1 hit (ev 16055; Type 95 by
+# class row).
+#
+# The Mark 10 (S-boats; the weapon stated by the salvo's row or by the S-boat
+# class rows 16180 to 16183):
+#   S-42 at Okinoshima, 11 May: 4 fired, 2 to 3 hits (ev 16104, 16107 stated)
+#   S-44 at Kako, 10 Aug: 4 fired, 3 to 4 hits (ev 16126, 16127, 16130 stated)
+#   S-44 at Shoei Maru, 12 May: 4 fired, 2 hits (ev 16108, 16112)
+#   S-38 at Meiyo Maru, 8 Aug: 2 fired, 2 hits (ev 16123)
+#   S-44 at a ship, 8 May: 2 fired, 0 hits (ev 16109)
+#   not counted: S-42, 3 May (count not stated, missed, ev 16103); S-37, 2 Sep
+#   (count not stated, 1 hit, ev 16150); S-47, 2 May and 12 Sep (ev 16161,
+#   16164); S-41, 7 Aug (ev 16151)
+#   Totals: 16 fired, 9 to 11 hits; at warships (Okinoshima, Kako) 8 fired, 5
+#   to 7 hits.
+#
+# The Mark 14 (fleet boats; the weapon estimated by rule 29 for every salvo,
+# no salvo's row naming it):
+#   Nautilus at a battleship, 4 Jun 0825: 1 fired (the second tube failed), 0
+#   (ev 16063, 16078, 16086; out 16108, 16112)
+#   Nautilus at Arashi, 4 Jun 0910: 1 fired, 0 (ev 8044, 16066)
+#   Nautilus at a carrier, 4 Jun 1359: 3 fired (a fourth would not leave its
+#   tube), 0 to 3 hits: her claim 3, Bates 2 or 3, survivors 1 dud (ev 16072,
+#   16084, 8045 to 8047; out 16109)
+#   Grouper at a destroyer, 4 Jun: 2 fired, one at a time, 0 (ev 16090)
+#   Flying Fish at a battleship, 28 Aug: 4 fired, 0 to 2 hits heard by sound
+#   (ev 16137)
+#   Trout at a light carrier, 28 Sep: 5 fired, 0 to 2 explosions heard
+#   (ev 16145, 16136)
+#   Amberjack at a cruiser, 30 Sep: 6 fired, 0 (ev 16149)
+#   Amberjack at a transport, 18 Sep: 4 fired, 0 (ev 16147)
+#   not counted: Flying Fish at a destroyer, 28 Aug (count not stated, ev
+#   16140), at patrol vessels 2 Sep (hits that did not explode, no count, ev
+#   16141) and 4 Sep (2 fired, sank her, hits not stated, ev 16142)
+#   Totals: 26 fired, 0 to 7 hits; at warships 22 fired, 0 to 7 hits.

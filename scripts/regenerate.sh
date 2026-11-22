@@ -19,6 +19,12 @@
 #                       that pin them (FLAGPILOT_UPDATE_GOLDEN=1)
 #   5 batch fixture     crates/sim-cli/tests/batch_before, the old-format
 #                       batch file, written by its test (FLAGPILOT_UPDATE_GOLDEN=1)
+#   6 submarine tables  data/reference/submarine_classes_1942.csv and
+#                       submarine_torpedoes_1942.csv with their sources, from
+#                       data/derivation/submarines_1942.toml (oob-derive,
+#                       decision 0218, stage 1); their frozen copies in
+#                       data/reference/step1 are not remade (they are copies
+#                       as first derived)
 #
 # It then checks what stays by hand and says so: the version strings in
 # documents (listed, not edited), NOT_IN_THE_FULL_SLICE in
@@ -98,6 +104,7 @@ if [ "$check" -eq 1 ]; then
     probe "3 recorded games" cargo test --release --quiet -p sim-cli --test mcp every_recorded_game_replays_to_its_transcript_and_save
     probe "4 pinned hashes" cargo test --release --quiet -p scenario-tests --test scenario_10_objectives --test scenario_17a_target_choice
     probe "5 batch fixture" cargo test --release --quiet -p sim-cli --test batch the_keys_a_version_1_reader_used_keep_their_values
+    probe "6 submarine tables" cargo test --release --quiet -p oob-derive --test submarines the_submarine_list_derives_exactly_the_files_in_data_reference
     rm -f "${TMPDIR:-/tmp}/regenerate-check.out"
     if [ -n "$stale" ]; then
         say "stale, or failing for another reason (read the output above):$stale"
@@ -158,6 +165,11 @@ say "5 batch fixture"
 quiet env FLAGPILOT_UPDATE_GOLDEN=1 cargo test --release --quiet -p sim-cli --test batch \
     the_keys_a_version_1_reader_used_keep_their_values \
     || fail "5 batch fixture"
+
+# 6 the submarine tables (decision 0218, stage 1)
+say "6 submarine tables"
+quiet cargo run --release --quiet -p oob-derive -- data/derivation/submarines_1942.toml \
+    || fail "6 submarine tables"
 
 # ------------------------------------------------------- what stays by hand
 current=$(sed -n 's/.*STATE_VERSION: &\[u8\] = b"\(flagplot-state-v[0-9]*\)";.*/\1/p' crates/sim-core/src/hash.rs)
@@ -247,6 +259,10 @@ if [ -n "$transcripts$saves" ]; then
 fi
 group "4 pinned hashes" "$pinned"
 group "5 batch fixture" "$batch_before"
+group "6 submarine tables" data/reference/submarine_classes_1942.csv \
+    data/reference/submarine_classes_1942.sources.csv \
+    data/reference/submarine_torpedoes_1942.csv \
+    data/reference/submarine_torpedoes_1942.sources.csv
 
 echo
 if [ -n "$failed" ]; then

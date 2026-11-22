@@ -320,3 +320,30 @@ Waters kept by a side with a count of boats in them, and no boat as a unit, woul
 ### Rule card, restated
 
 Reads: each boat's hex, station, passage, salvoes, state and held-down count, her class and torpedo; each enemy force's hours in her hex in the pulse, its ships, their kinds, which are dead in the water, and whether the hex holds a base of its side; each searching group's arc, range and aircraft; the figures; the side's suspected waters and reports of submarines, for the staff. Writes: torpedo hits through chapter 4; the boat's salvoes, state, held-down count, station and passage; reports of submarines and their ageing; claims. Draws: the seven above.
+
+## As built: stage 1, the data
+
+Built on Nov 22, 2026, on branch `submarine-data`, by a team lead for the architect. No rule of the simulation is built and nothing in `sim-core` or `sim-data` changes; no scenario loads the new tables.
+
+**The list.** `data/derivation/submarines_1942.toml`, dated 7 August 1942. Each of the seventeen classes of the type submarine in `ship_classes.csv` is either derived (`[[submarine]]`) or left out with its reason (`[[left_out]]`), and the tool refuses a list that does neither for one. Ids pinned: classes 6000 to 6007, torpedoes 6100 to 6103 (`[submarine_class_ids]`, `[submarine_torpedo_ids]`).
+
+**The written rules** (rule 28) are set out in `data/derivation/rules.toml` under "Decision 0218, stage 1" and worked in `crates/oob-derive/src/submarine.rs`: salvo = `torpedo_tubes_bow`; salvoes carried = `torpedoes_carried` / salvo, rounded down; passage speed = `endurance_speed_kn`; damage = `warhead_kg` x `torpedo_damage_per_warhead_kg`. Every fact is read as any row is (`reading::resolve`: preferred rows and exceptions, dates, `later = true`). Rule 29: a passage speed may be an `[[estimate]]` of decision 0207 with the class as subject (its refusals all hold); a class whose torpedo no `torpedo_model` row states, of any standing, takes the torpedo of a `torpedo_from` entry (`weapon`, `group` for the group nearest in date, `rows` cited, `by`, `date`, `reason`), refused where any such row is filed for the class. Either is named in the class file's column `estimated`.
+
+**The files** (generated, never edited): `data/reference/submarine_classes_1942.csv` (`id,name,salvo,salvoes_carried,passage_speed_kn,torpedo_id,estimated`) and `submarine_torpedoes_1942.csv` (`id,name,damage`), each with a `.sources.csv`; their frozen copies in `data/reference/step1`. Checked by `crates/oob-derive/tests/submarines.rs` (the list derives exactly the files on disk, and the rules on small data sets) and by step 6 of `scripts/regenerate.sh`.
+
+| Id | Class | Salvo | Salvoes | Passage kn | Torpedo |
+| --- | --- | --- | --- | --- | --- |
+| 6000 | Sargo | 4 | 6 | 10 | Mark 14, estimated |
+| 6001 | Tambor | 6 | 4 | 10 | Mark 14, estimated |
+| 6002 | Gato | 6 | 4 | 10 | Mark 14, estimated |
+| 6003 | I-15 block | 6 | 2 | 16 | Type 95, estimated (her boats) |
+| 6004 | I-153 block | 6 | 2 | 10 | Type 89, estimated (the I-121 block) |
+| 6005 | I-168 block | 4 | 3 | 10 | Type 89 (class row) |
+| 6006 | I-176 block | 6 | 2 | 16 | Type 95, estimated (the I-15 block's boats) |
+| 6007 | RO-33 group | 4 | 2 | 16 | Type 95 (class row) |
+
+Torpedoes: Mark 14 92, Mark 10 90.72, Type 89 120, Type 95 162 (warheads 230, 226.8, 300 and 405 kg at 0.4 a kilogram, a placeholder).
+
+**Left out:** the two S-boat groups and Narwhal (no endurance speed; the estimate by ratio waits on the Gato class's disputed top speed, a like class); the fleet type (not a class); the I-1 block (torpedoes carried disputed), I-5 (bow tubes disputed, no speed), I-9 (torpedoes carried disputed, no speed), I-121 (torpedoes carried disputed), RO-35 (no speed, 1945 rows only); the Type 96 (warhead disputed) and Type 92 (no warhead).
+
+**Not yet the architect's.** Every exception the figures rest on (22 at the end of `rules.toml`) and every `torpedo_from` entry is the lead's proposal, said so in its reason; the disputes are put to the architect and none is settled. The count of torpedoes and hits of rule 30 is in the list's closing notes and sets no figure.
