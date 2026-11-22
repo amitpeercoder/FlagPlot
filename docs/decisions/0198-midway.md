@@ -331,4 +331,12 @@ Made on Nov 22, 2026 on the build's report, the first game's report (`docs/valid
    - **A staff that closes inside a day,** on a sighting of that morning, as a commander would.
    - **A margin on the hex a carrier force closes to,** so that a report a hex off does not leave it just out of reach, and closing by the reach of the aircraft that will strike.
    - **The scoring,** in which the landing alone is a decisive victory.
-6. **The band is run next,** on 1,000 games of the file in which both sides are given their orders, as rule 15 says, and reported with these.
+6. **The band, read on Nov 22, 2026: far outside.** Over seeds 1 to 1,000 of the file in which both sides are given their orders, at the commit of the build, the Japanese side is ahead in 983 games and the Allied side in 17; 947 are decisive Japanese victories. The counts behind it:
+   - **The landing:** every man lands in 969 games, some in 12 and none in 19, in which the invasion force is still on its way when the game ends. It is never turned back and never sunk; a transport is sunk in 17 games.
+   - **The Japanese carriers:** none sunk in 436 games, one in 535, two in 29, never more. Akagi is the one sunk in 564 games and Kaga in 29; Soryu and Hiryu are never sunk. One or more is out of action and afloat in 787.
+   - **The American carriers:** none is ever sunk or put out of action. A group of theirs launches at ships in 780 games.
+   - **No Japanese carrier group ever strikes an American carrier force.** Every launch of theirs, in every game, is at Midway.
+   - **Aircraft lost, the mean of a game:** 104 Allied and 46 Japanese.
+7. **So the first game was the common game in its result and not in its detail:** the American carriers do strike in most games, and sink a carrier in more than half. What does not vary is that the Japanese carriers never look for them, never find them and never strike them, and that the landing is made. The game as the staffs play it is the landing against one carrier.
+8. **The scenario is merged and listed at the table all the same, on the designer's word to add Midway.** The Coral Sea was listed only when it was inside the band; this one is listed outside it, and that is said here and to him. A person in the Allied seat plays against these Japanese orders, not against the Allied staff's.
+9. **Nothing is changed to enter the band.** What may be done is rule 5's list, to which the band adds one: **the Japanese carriers' search,** which under a take looks only at the place to be taken.
