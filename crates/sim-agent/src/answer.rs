@@ -135,7 +135,7 @@ pub const FORMAT: &str = "flagplot-agent";
 /// the air the types of the aircraft claimed shot down, by name, where its
 /// men made them out (`air_types`), with them in the claim's words (decision
 /// 0210).
-pub const VERSION: u32 = 41;
+pub const VERSION: u32 = 42;
 
 /// The answer to a question about something the side does not know of: a
 /// unit of the enemy, a number that does not exist, an event the side may not

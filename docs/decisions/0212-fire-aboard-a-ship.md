@@ -246,3 +246,18 @@ Carriers lost with both rules, games of 1,000, to flooding and to fire: Akagi 59
 The readings the measurer chose where the record was open, each to be ruled before a build: a ship with a flight deck is a ship of the carrier kind; a strike aircraft is one of a type with the bomber role; a carrier bombed again while burning goes back to the top; a burning carrier is closed to launching and landing and is not counted as crippled or as looking lost; a fire ends when she sinks by flooding.
 
 What it shows of each battle is put to the designer before anything is built.
+
+## The designer's word, and the readings ruled, Nov 22, 2026
+
+With these numbers before him the designer said: "Yes, build them", of both rules as measured, the five days' balance to be looked at as work of its own and not by moving a figure of this rule.
+
+The measurer's readings are ruled as measured, so that what is built is what was played:
+
+- A ship with a flight deck, for this rule, is a ship of the carrier kind.
+- A strike aircraft is one of a type with the bomber role.
+- Bombers aboard and flying are counted once, at the start of the pulse's air combat.
+- A carrier bombed again while burning goes back to the top, and that pulse is the one her fire was last set in.
+- A burning carrier is closed to launching and to landing, her own aircraft and others'; she is not counted as crippled for it, and she does not look lost for it under decision 0211. That a burning carrier should look lost to a raid is likely right and was not what was measured; it is left for a later record with its own measuring.
+- A fire ends when she sinks by flooding. A carrier lost to fire is sunk by the ordinary sinking, with the fire's record as its cause.
+
+The hand calculations are scenarios 126 (this rule) and 127 (decision 0211).

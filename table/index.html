@@ -152,6 +152,11 @@ button:disabled { opacity: 0.45; cursor: default; }
 .sheetnav + .sheet { border-radius: 0 0 2px 2px; }
 #planchip { position: fixed; top: 54px; left: 50%; transform: translateX(-50%); z-index: 6; display: flex; align-items: center; gap: 10px; max-width: calc(100% - 32px); background: var(--paper); color: var(--paper-ink); padding: 6px 6px 6px 12px; border-radius: 2px; font-size: 14px; letter-spacing: 0.04em; box-shadow: 0 2px 10px rgba(0,0,0,0.4); }
 #planchip[hidden] { display: none; }
+.holds { margin-top: 2px; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 8px; color: #e6dfc9; }
+.holds[hidden] { display: none; }
+.holds summary { cursor: pointer; letter-spacing: 0.06em; text-transform: uppercase; font-size: 13px; font-weight: 600; }
+.holds .hold { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 6px; padding: 6px 8px; font-size: 13px; background: var(--paper); color: var(--paper-ink); border-radius: 2px; }
+.holds .hold button:not(.ref) { flex: none; min-height: 28px; padding: 0 8px; background: transparent; color: inherit; border: 1px solid rgba(0,0,0,0.35); border-radius: 2px; font: inherit; cursor: pointer; }
 #planchip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 #planchip button { min-height: 32px; padding: 0 10px; background: transparent; color: inherit; border: 1px solid rgba(0,0,0,0.3); border-radius: 2px; font: inherit; font-weight: 600; cursor: pointer; }
 .sheetbar span { color: var(--ink-dim); font-size: 13px; letter-spacing: 0.04em; }
@@ -341,7 +346,7 @@ body.watched .gives { display: none !important; }
 /* A narrow screen (a tablet, a phone): the view's buttons take a row of their
    own across the top, the heading and the trays go under them, and the clock
    may wrap. A desktop window is wider than this and is not touched. */
-@media (max-width: 820px) {
+@media (max-width: 1180px) {
   .view { left: 16px; right: 16px; top: 8px; justify-content: flex-end; flex-wrap: wrap; }
   .top { padding: 52px 16px 8px 16px; gap: 4px 12px; }
   .top h1 { font-size: 20px; }
@@ -390,6 +395,7 @@ body.watched .gives { display: none !important; }
 </div>
 <div id="pop-staff" class="pop" hidden>
   <div id="papers-staff" class="papers" role="toolbar" aria-label="The staff's standing papers"></div>
+  <details id="holds-staff" class="holds" hidden><summary></summary><div id="holds-list"></div></details>
 </div>
 
 <aside class="tray" aria-label="Signals">
@@ -692,6 +698,9 @@ body.watched .gives { display: none !important; }
   // a place is held, taken or beaten down, and round waters denied. Read
   // from the seat's own tools (command_state, staff_orders, measure).
   var planShown = null, planMarks = null;
+  // Where on the chart each order's words and rings were last drawn, in the chart's own pixels: a touch there opens the order.
+  var orderHits = [];
+  function orderAt(q) { if (!q) return null; var c = cpx(q), best = null; orderHits.forEach(function (h) { if (h.order == null) return; var pad = h.pad || 0; if (c[0] >= h.x - pad && c[0] <= h.x + h.w + pad && c[1] >= h.y - pad && c[1] <= h.y + h.h + pad) best = h.order; }); return best; }
   function hexV(q, r) { var h = hexAt[q + ',' + r]; return h ? world(h[3], h[4]) : null; }
   // The switch for every plan at once: 'all' stands where one order's number
   // stands when a single plan is shown, and is kept from one sitting to the next.
@@ -706,12 +715,14 @@ body.watched .gives { display: none !important; }
     var marks = { root: root, moves: [], rings: [] }, asks = [], seen = {}, stand = {};
     function pending(i) { var p = i.plan != null ? plans[i.plan] : null; return !p || p.state === 'draft' || p.state === 'preparing'; }
     function baseOf(o) { return o ? M.bases.concat(M.enemyBases).filter(function (b) { return b.base.handle === o.handle; })[0] : null; }
-    function mark(v, r, label, dash) { if (v) marks.rings.push({ v: v, r: r, label: label, dash: dash }); }
+    // Each mark says which of the commander's orders it is drawn for, so that a touch on it opens that order.
+    function orderOf(i) { var n = 0; while (i && i.parent != null && by[i.parent] && n++ < 20) i = by[i.parent]; return i ? i.number : null; }
+    function mark(v, r, label, dash, i) { if (v) marks.rings.push({ v: v, r: r, label: label, dash: dash, order: orderOf(i) }); }
     function move(h, hex, kind, i) {
       var f = M.forces.filter(function (x) { return x.task_force.handle === h; })[0], to = hexV(hex[0], hex[1]);
       if (!f || !f.place || !to || seen[h]) return; seen[h] = true;
-      if (f.place.q === hex[0] && f.place.r === hex[1]) { var k = hex[0] + ',' + hex[1]; if (!stand[k]) { stand[k] = { v: to, r: 20, names: [], dash: pending(i) }; marks.rings.push(stand[k]); } stand[k].names.push(nameOf(h)); stand[k].label = stand[k].names.join(', ') + ' · on station'; return; }
-      var m = { pts: [placeOf(f.place), to], label: nameOf(h), kind: kind, dash: pending(i) }; marks.moves.push(m);
+      if (f.place.q === hex[0] && f.place.r === hex[1]) { var k = hex[0] + ',' + hex[1]; if (!stand[k]) { stand[k] = { v: to, r: 20, names: [], dash: pending(i), order: orderOf(i) }; marks.rings.push(stand[k]); } stand[k].names.push(nameOf(h)); stand[k].label = stand[k].names.join(', ') + ' · on station'; return; }
+      var m = { pts: [placeOf(f.place), to], label: nameOf(h), kind: kind, dash: pending(i), order: orderOf(i) }; marks.moves.push(m);
       asks.push(api('measure', { question: 'passage', task_force: h, to: { q: hex[0], r: hex[1] } }).then(function (a) {
         if (a.route && a.route.length) m.pts = [placeOf(f.place)].concat(a.route.map(placeOf));
         m.when = a.outcome === 'arrives' && a.ends ? (dateOf(a.ends.day - 1) || 'DAY ' + a.ends.day) + ', ' + a.ends.pulse : a.outcome ? String(a.outcome).replace(/_/g, ' ') : '';
@@ -723,13 +734,13 @@ body.watched .gives { display: none !important; }
     tree.forEach(function (i) {
       var b;
       if (i.kind === 'ready_landing' && i.hex && i.limits && i.limits.forces) (i.limits.forces.task_forces || []).forEach(function (n) { var lf = M.forces.filter(function (x) { return x.task_force.handle === 'task_force:' + n; })[0]; if (lf && lf.mission === 'transport') move('task_force:' + n, i.hex, 'landing', i); });
-      if (i.kind === 'take_place' && i.hex) { var tk = { v: hexV(i.hex[0], i.hex[1]), r: 27, label: 'TAKE', dash: pending(i) }; if (tk.v) { marks.rings.push(tk);
+      if (i.kind === 'take_place' && i.hex) { var tk = { v: hexV(i.hex[0], i.hex[1]), r: 27, label: 'TAKE', dash: pending(i), order: orderOf(i) }; if (tk.v) { marks.rings.push(tk);
         // The day the staff expects the first men ashore, where its plan order gives one.
         asks.push(api('order', { intent: i.number }).then(function (o) { if (o && o.expected_ashore != null) tk.label = 'TAKE \u00B7 ASHORE ' + (dateOf(o.expected_ashore - 1) || 'DAY ' + o.expected_ashore); else if (o) { var stage = {}; (o.phases || []).forEach(function (ph) { stage[ph.name] = ph.stage; }); if (stage.land === 'done') tk.label = 'TAKEN'; else if (stage.move === 'done') tk.label = 'TAKE \u00B7 MEN ASHORE'; } }).catch(function () {})); } }
-      if (i.kind === 'hold' && (b = baseOf(i.base))) mark(placeOf(b.place), 24, 'HOLD', pending(i));
-      if (i.kind === 'neutralise' && (b = baseOf(i.target))) mark(placeOf(b.place), 22, 'NEUTRALISE', pending(i));
-      if (i.kind === 'deny' && i.hex && i.distance) { var h = hexAt[i.hex[0] + ',' + i.hex[1]]; if (h) marks.rings.push({ v: world(h[3], h[4]), edge: world(h[3] + i.distance * hexMiles() / 60, h[4]), label: 'DENY', dash: true }); }
-      if (i.kind === 'keep_supplied' && (b = baseOf(i.base))) { var src = baseOf(i.limits_read_up && i.limits_read_up.forces && i.limits_read_up.forces.source); if (src) marks.moves.push({ pts: [placeOf(src.place), placeOf(b.place)], label: 'Supply from ' + src.base.name, kind: 'supply', dash: pending(i) }); }
+      if (i.kind === 'hold' && (b = baseOf(i.base))) mark(placeOf(b.place), 24, 'HOLD', pending(i), i);
+      if (i.kind === 'neutralise' && (b = baseOf(i.target))) mark(placeOf(b.place), 22, 'NEUTRALISE', pending(i), i);
+      if (i.kind === 'deny' && i.hex && i.distance) { var h = hexAt[i.hex[0] + ',' + i.hex[1]]; if (h) marks.rings.push({ v: world(h[3], h[4]), edge: world(h[3] + i.distance * hexMiles() / 60, h[4]), label: 'DENY', dash: true, order: orderOf(i) }); }
+      if (i.kind === 'keep_supplied' && (b = baseOf(i.base))) { var src = baseOf(i.limits_read_up && i.limits_read_up.forces && i.limits_read_up.forces.source); if (src) marks.moves.push({ pts: [placeOf(src.place), placeOf(b.place)], label: 'Supply from ' + src.base.name, kind: 'supply', dash: pending(i), order: orderOf(i) }); }
     });
     // What the staff orders this morning for the plan: a force given a
     // course, and the air groups set on a base to be beaten down.
@@ -744,7 +755,7 @@ body.watched .gives { display: none !important; }
     }).catch(function () {}));
     return Promise.all(asks).then(function () {
       if (planShown !== root) return;
-      planMarks = marks; $('planchip-text').textContent = all ? 'ALL PLANS ON CHART · ' + (roots.length ? roots.length + ' order' + (roots.length === 1 ? '' : 's') : 'no order in force') : 'PLAN ON CHART · ' + plainWords(sayIntent(top, {})); $('planchip-read').hidden = all; $('planchip').hidden = false; plansSwitch(); if (g) drawMarks();
+      planMarks = marks; $('planchip-text').textContent = all ? 'ALL PLANS ON CHART · ' + (roots.length ? roots.length + ' order' + (roots.length === 1 ? '' : 's') : 'no order in force') : 'PLAN ON CHART · ' + plainWords(sayIntent(top, {})); $('planchip-read').hidden = all; $('planchip').hidden = all; plansSwitch(); if (g) drawMarks();
     });
   }
   var planDrawnAt = 0;
@@ -753,23 +764,23 @@ body.watched .gives { display: none !important; }
   function drawPlan(u, ring) {
     // Tags and arrows keep much the same size to the eye as you lean in.
     var navy = '#12335c', tags = [], spots = {}, order = [], z = planZoom(); planDrawnAt = camDist; var u0 = u; u = u * z;
-    function tag(x, y, lines) {
+    function tag(x, y, lines, order) {
       g.font = '700 ' + Math.round(14 * u) + "px 'Courier Prime', monospace"; var w = 0, lh = 17 * u; lines.forEach(function (t) { w = Math.max(w, g.measureText(t).width); });
       // Keep one tag off another: step down until it is clear.
       var box = { x: x - w / 2 - 5 * u, y: y - lh * lines.length / 2 - 3 * u, w: w + 10 * u, h: lh * lines.length + 6 * u }, tries = 0;
       while (tries++ < 8 && tags.some(function (t) { return box.x < t.x + t.w && t.x < box.x + box.w && box.y < t.y + t.h && t.y < box.y + box.h; })) box.y += box.h + 2 * u;
-      tags.push(box);
+      tags.push(box); orderHits.push({ x: box.x, y: box.y, w: box.w, h: box.h, pad: 4 * u, order: order });
       g.save(); g.globalAlpha = 0.92; g.fillStyle = '#f1ead6'; g.fillRect(box.x, box.y, box.w, box.h); g.globalAlpha = 1; g.strokeStyle = navy; g.lineWidth = u; g.strokeRect(box.x, box.y, box.w, box.h);
       g.fillStyle = navy; g.textAlign = 'center'; lines.forEach(function (t, n) { g.fillText(t, box.x + box.w / 2, box.y + 3 * u + lh * (n + 0.75)); }); g.restore();
     }
     g.save(); g.lineCap = 'round'; g.lineJoin = 'round';
     planMarks.rings.forEach(function (r) {
       var c;
-      if (r.edge) { c = cpx(r.v); var e = cpx(r.edge), rad = Math.abs(e[1] - c[1]); g.save(); g.globalAlpha = 0.7; g.strokeStyle = navy; g.lineWidth = 2 * u; g.setLineDash([10 * u, 7 * u]); g.beginPath(); g.arc(c[0], c[1], rad, 0, 7); g.stroke(); g.restore(); tag(c[0], c[1] - rad, [r.label]); }
-      else { c = cpx(r.v); var k = Math.round(c[0] / (8 * u)) + ',' + Math.round(c[1] / (8 * u)), at = spots[k]; if (!at) { at = spots[k] = { v: r.v, r: 0, dash: true, words: [], names: [] }; order.push(at); } at.r = Math.max(at.r, r.r); at.dash = at.dash && r.dash; if (r.names) at.names = at.names.concat(r.names); else at.words.push(r.label); }
+      if (r.edge) { c = cpx(r.v); var e = cpx(r.edge), rad = Math.abs(e[1] - c[1]); g.save(); g.globalAlpha = 0.7; g.strokeStyle = navy; g.lineWidth = 2 * u; g.setLineDash([10 * u, 7 * u]); g.beginPath(); g.arc(c[0], c[1], rad, 0, 7); g.stroke(); g.restore(); tag(c[0], c[1] - rad, [r.label], r.order); }
+      else { c = cpx(r.v); var k = Math.round(c[0] / (8 * u)) + ',' + Math.round(c[1] / (8 * u)), at = spots[k]; if (!at) { at = spots[k] = { v: r.v, r: 0, dash: true, words: [], names: [] }; order.push(at); } at.r = Math.max(at.r, r.r); at.dash = at.dash && r.dash; if (at.order == null) at.order = r.order; if (r.names) at.names = at.names.concat(r.names); else at.words.push(r.label); }
     });
     // One ring a place, with what is to be done there and who stands there.
-    order.forEach(function (at) { var c = ring(at.v, at.r, navy, 0.9, at.dash, 2.6), lines = []; if (at.words.length) lines.push(at.words.join(' \u00B7 ')); at.names.forEach(function (n) { lines.push(n); }); if (at.names.length) lines[lines.length - 1] += ' \u00B7 on station'; tag(c[0], c[1] + at.r * u0 + (12 + 8 * lines.length) * u, lines); });
+    order.forEach(function (at) { var c = ring(at.v, at.r, navy, 0.9, at.dash, 2.6), lines = []; if (at.words.length) lines.push(at.words.join(' \u00B7 ')); at.names.forEach(function (n) { lines.push(n); }); if (at.names.length) lines[lines.length - 1] += ' \u00B7 on station'; tag(c[0], c[1] + at.r * u0 + (12 + 8 * lines.length) * u, lines, at.order); orderHits.push({ x: c[0] - at.r * u0, y: c[1] - at.r * u0, w: 2 * at.r * u0, h: 2 * at.r * u0, order: at.order }); });
     planMarks.moves.forEach(function (m) {
       var block = m.kind === 'landing' && !m.dash, w = block ? 13 : ({ landing: 7, cover: 4.5, supply: 3.2, air: 2.4 })[m.kind] || 3, P = m.pts.filter(Boolean).map(cpx), k;
       if (P.length < 2) return;
@@ -787,14 +798,14 @@ body.watched .gives { display: none !important; }
       g.beginPath(); g.moveTo(end[0], end[1]); g.lineTo(end[0] - Math.cos(ang - 0.42) * hl, end[1] - Math.sin(ang - 0.42) * hl); g.lineTo(end[0] - Math.cos(ang + 0.42) * hl, end[1] - Math.sin(ang + 0.42) * hl); g.closePath();
       if (block) { g.fillStyle = 'rgba(206,224,230,0.96)'; g.fill(); g.lineWidth = 2.2 * u; g.strokeStyle = navy; g.stroke(); g.fillStyle = navy; } else g.fill();
       g.globalAlpha = 1; var a = P[Math.floor((P.length - 1) / 2)], b = P[Math.ceil((P.length - 1) / 2)];
-      tag((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, m.when ? [m.label, m.when.toUpperCase()] : [m.label]);
+      tag((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, m.when ? [m.label, m.when.toUpperCase()] : [m.label], m.order);
     });
     g.restore();
   }
   var WORD = { control_island: 'SEIZE AND HOLD', take_place: 'CAPTURE', hold: 'HOLD', neutralise: 'NEUTRALISE', deny: 'DENY THESE WATERS', keep_supplied: 'KEEP SUPPLIED', cover: 'COVER FROM THE AIR', operate_carriers: 'OPERATE CARRIERS FROM', stand_at: 'STATION A FORCE AT' };
 
   function drawMarks() {
-    g.setTransform(1, 0, 0, 1, 0, 0); g.drawImage(baseCanvas, 0, 0);
+    g.setTransform(1, 0, 0, 1, 0, 0); g.drawImage(baseCanvas, 0, 0); orderHits = [];
     var u = PX / 100;
     function ring(v, r, colour, alpha, dash, width) { var c = cpx(v); g.save(); g.globalAlpha = alpha; g.strokeStyle = colour; g.lineWidth = (width || 2.4) * u; g.setLineDash(dash ? [6 * u, 5 * u] : []); g.beginPath(); g.arc(c[0], c[1], r * u, 0.15, 6.5); g.stroke(); g.restore(); return c; }
     if (arcDraft && !$('card').hidden) { (function (a) {
@@ -811,7 +822,7 @@ body.watched .gives { display: none !important; }
     var intents = M.state ? M.state.intents.filter(function (i) { return i.in_force && !i.parent; }) : [];
     // The intents' own rings and words give way to a plan shown on the chart, and their words keep their size as the commander leans in.
     var iz = planZoom(); g.save(); g.font = '700 ' + Math.round(12 * u * iz) + "px 'Courier Prime', monospace";
-    if (!planMarks) intents.forEach(function (it, k) { var v = intentPlace(it); if (!v) return; var c = ring(v, 30 + k * 4, '#1f4e8c', 1, false, 2.8); g.fillStyle = '#12335c'; g.fillText('ORDER ' + it.number + ' · ' + (WORD[it.kind] || it.kind.toUpperCase()), c[0] + (36 + k * 4) * u, c[1] + (4 + k * 14 * iz) * u); });
+    if (!planMarks) intents.forEach(function (it, k) { var v = intentPlace(it); if (!v) return; var c = ring(v, 30 + k * 4, '#1f4e8c', 1, false, 2.8); g.fillStyle = '#12335c'; var ot = 'ORDER ' + it.number + ' · ' + (WORD[it.kind] || it.kind.toUpperCase()), ox = c[0] + (36 + k * 4) * u, oy = c[1] + (4 + k * 14 * iz) * u; g.fillText(ot, ox, oy); orderHits.push({ x: ox, y: oy - 12 * u * iz, w: g.measureText(ot).width, h: 16 * u * iz, pad: 4 * u, order: it.number }); });
     g.restore();
     if (draft) ring(draft.v, 30, '#1f4e8c', 1, true, 2.2);
     // Where the side's own forces are, marked on the chart itself with a ring
@@ -1055,17 +1066,20 @@ body.watched .gives { display: none !important; }
   }
   var TOLD = { contact: 'A contact is reported', attack: 'You are attacked', loss: 'A ship is lost or out of action', strike: 'Your strike is away', landing: 'Your men are ashore, or fighting' };
   function showSignals() {
-    var box = $('signals'), s = M.state; box.textContent = ''; $('papers').textContent = ''; $('papers-staff').textContent = ''; $('leave-slot').textContent = '';
+    var box = $('signals'), s = M.state; box.textContent = ''; $('papers').textContent = ''; $('papers-staff').textContent = ''; $('leave-slot').textContent = ''; $('holds-list').textContent = '';
     if (M.over) { var endSlip = slip('THE UMPIRE', 'ENDED', 'The campaign is over', endLine(), true); endSlip.classList.add('opens'); endSlip.tabIndex = 0; endSlip.setAttribute('role', 'button'); endSlip.addEventListener('click', readEnd); endSlip.appendChild(el('div', 'told', 'READ HOW IT ENDED \u203A')); if (!endShown) { endShown = true; readEnd(); } }
     lastTold.forEach(function (t) { var a = slip('FROM THE PLOT · ' + (clock.at === 'dusk' ? '1800' : clock.at), 'STOPPED THE CLOCK', TOLD[t.thing] || t.thing, null, true); t.lines.slice(0, 10).forEach(function (l) { a.appendChild(rich('div', 'told', l)); }); if (t.lines.length > 10) a.appendChild(el('div', 'told', 'And ' + (t.lines.length - 10) + ' more: see the war diary.')); });
+    // What is held from the staff is kept in the Staff menu, folded, with its count: it is a standing state, not a signal.
     (s.holds || []).forEach(function (h) {
-      var a = slip('HELD FROM THE STAFF', null, null, null), args = {}, what = null; ['ship', 'task_force', 'air_group', 'land_unit', 'setting'].forEach(function (k) { if (h.target && h.target[k] != null) { args[k] = h.target[k]; if (k !== 'setting' && !what) what = k + ':' + h.target[k]; } });
+      var a = el('div', 'hold'), args = {}, what = null; ['ship', 'task_force', 'air_group', 'land_unit', 'setting'].forEach(function (k) { if (h.target && h.target[k] != null) { args[k] = h.target[k]; if (k !== 'setting' && !what) what = k + ':' + h.target[k]; } });
       // A hold is made by the commander's hold (made_by "command") or by his direct order to the unit: the words say which.
       var since = h.day != null ? String(h.day) : (/day (\d+)/.exec(h.text || '') || [])[1];
       var how = h.made_by === 'command' ? ', kept out of the staff\'s plans by you' + (since ? ' from day ' + since : '') : ', held by your direct order' + (since ? ' of day ' + since : '');
-      a.appendChild(what ? rich('div', '', what + how) : el('div', '', h.text));
-      if (!WATCH) button(a, 'RELEASE TO THE STAFF', false, function () { act('release', args, 'Released. The staff may use it again from dusk.'); });
+      a.appendChild(what ? rich('span', '', what + how) : el('span', '', h.text));
+      if (!WATCH) { var r = document.createElement('button'); r.type = 'button'; r.textContent = 'Release'; r.title = 'Release to the staff'; r.addEventListener('click', function () { act('release', args, 'Released. The staff may use it again from dusk.'); }); a.appendChild(r); }
+      $('holds-list').appendChild(a);
     });
+    (function () { var n = (s.holds || []).length, d = $('holds-staff'); d.hidden = !n; d.querySelector('summary').textContent = 'Held from the staff \u00B7 ' + n; })();
     // A plan that waits for the commander's leave has one notice, below, which
     // opens its order: the clock's own slip for it would say the same twice.
     if (lastRun && lastRun.fired) lastRun.fired.forEach(function (f) {
@@ -1258,6 +1272,7 @@ body.watched .gives { display: none !important; }
   }
   var backSheet = '', findAt = null;
   function backWords() { $('card-back').textContent = '\u2190 BACK' + (trail.length === 1 && backSheet ? ' TO ' + backSheet.toUpperCase() : ''); }
+  var cardGone = function (n) { var gone = openCard('CONTACT ' + n, 'ENEMY'); gone.appendChild(el('div', '', 'This contact is no longer held: its report grew too old, or it was looked for and not found.')); };
   var cardHex = function (hpl) { var hc = openCard((M.hexNames[hpl.q + ',' + hpl.r] || whereIs(hpl)).toUpperCase(), null); hc.appendChild(el('div', '', 'Hex ' + hpl.q + ', ' + hpl.r + '.')); };
   function seeIt(h) {
     var kind = h.split(':')[0], n = num(h), found; if (!$('sheet').hidden) { forget(); trailAt = stamp(); shown = function () { $('card').hidden = true; $('sheet').hidden = false; }; } $('sheet').hidden = true;
@@ -1265,7 +1280,7 @@ body.watched .gives { display: none !important; }
     if (kind === 'hex') { var qr = h.slice(4).split(','), hpl = { q: +qr[0], r: +qr[1] }; turnTo(hpl); return cardHex(hpl); }
     if (kind === 'task_force') { found = M.forces.filter(function (f) { return f.task_force.handle === h; })[0]; if (found) { turnTo(found.place); return cardForce({ force: found }); } }
     if (kind === 'base') { found = M.bases.filter(function (b) { return b.base.handle === h; })[0]; if (found) { turnTo(found.place); return cardBase({ base: found }); } found = M.enemyBases.filter(function (b) { return b.base.handle === h; })[0]; if (found) { turnTo(found.place); return cardPlace({ place: found.place, base: found }); } }
-    if (kind === 'contact') { found = M.contacts.filter(function (c) { return c.contact.handle === h; })[0]; if (found) { turnTo(found.place); return cardContact({ contact: found }); } var gone = openCard('CONTACT ' + n, 'ENEMY'); gone.appendChild(el('div', '', 'This contact is no longer held: its report grew too old, or it was looked for and not found.')); return; }
+    if (kind === 'contact') { found = M.contacts.filter(function (c) { return c.contact.handle === h; })[0]; if (found) { turnTo(found.place); return cardContact({ contact: found }); } return cardGone(n); }
     if (kind === 'land_unit') { found = M.units.filter(function (u) { return u.land_unit.handle === h; })[0]; if (found) { turnTo(found.place); return cardUnit(found); } }
     if (kind === 'air_group') { var ag = M.air.filter(function (x) { return x.air_group.handle === h; })[0], home = ag && ag.location && M.bases.filter(function (b) { return b.base.handle === ag.location.handle; })[0]; if (home) turnTo(home.place); }
     if (kind === 'air_group' || kind === 'ship') return cardEntity(h);
@@ -1283,21 +1298,22 @@ body.watched .gives { display: none !important; }
   function hungerWord(u) { return parseFloat(u.fed_share) >= 1 ? 'Mending' : 'Short of food'; }
   function cardUnit(u) {
     var body = openCard(u.land_unit.name.toUpperCase(), 'YOURS', true);
-    var kvu = kv(body, [['Men ashore', u.men_ashore ? commas(u.men_ashore) : null], ['Men aboard', u.men_aboard ? commas(u.men_aboard) : null], ['Where', u.place ? hexWords(u.place) : 'aboard ship'], ['Posture', u.posture], ['Doing', u.activity], ['Fatigue', u.fatigue], ['Fed last night', fedWords(u)], [hungerWord(u), u.hunger_nights ? u.hunger_nights + (u.hunger_nights === 1 ? ' night' : ' nights') : null], ['Condition', u.fighting_share != null ? Math.floor(parseFloat(u.fighting_share) * 100) + '%' : null], ['Experience', u.experience]]);
+    var kvu = kv(body, [['Men ashore', u.men_ashore ? commas(u.men_ashore) : null], ['Men aboard', u.men_aboard ? commas(u.men_aboard) : null], ['Where', u.place ? placeLink(u.place) : 'aboard ship'], ['Posture', u.posture], ['Doing', u.activity], ['Fatigue', tiredWords(u.fatigue)], ['Fed last night', fedWords(u)], [hungerWord(u), u.hunger_nights ? u.hunger_nights + (u.hunger_nights === 1 ? ' night' : ' nights') : null], ['Condition', u.fighting_share != null ? Math.floor(parseFloat(u.fighting_share) * 100) + '%' : null], ['Experience', seasonedWords(u.experience)]]);
     if (u.hunger_nights && parseFloat(u.fed_share) < 1) Promise.all([M.day, M.day - 1].map(dayEvents)).then(function (all) { var tonight = all[0].some(function (e) { return e.pulse === 'night'; }) ? all[0] : all[1], last = tonight.filter(function (e) { return e.event_kind === 'hunger_nights_changed' && e.pulse === 'night' && (e.entities || []).some(function (x) { return x.handle === u.land_unit.handle; }); }).pop(), m = last && /hungry (\d+) nights, from (\d+)/.exec(last.text); if (m && +m[1] > +m[2]) { [].slice.call(kvu.children).forEach(function (c) { if (c.textContent === 'Short of food') c.textContent = 'Hungry'; }); } });
     if ((u.aboard || []).length) { listOf(body, 'ABOARD', u.aboard.map(function (a) { return a.ship.handle + ': ' + commas(a.men); }), 'men'); }
    
+    if (u.place) siblings(M.units.filter(function (y) { return y.place && sameHex(y.place, u.place); }).map(function (y) { return y.land_unit.handle; }), u.land_unit.handle, 'of the units here');
   }
   function cardEntity(h) {
     api('get_entity', { handle: h }).then(function (a) {
       var e = a.entity; if (!e) { var no = openCard(nameOf(h).toUpperCase(), null); no.appendChild(el('div', '', 'Nothing is held of it.')); return; }
       if (e.entity_kind === 'air_group') { var x = e.summary, body = openCard(x.air_group.name.toUpperCase(), 'YOURS', true); turnTo(x.place);
-        kv(body, [['Aircraft', x.aircraft_type], ['Ready', x.ready + ' of ' + e.strength + (x.damaged ? ', ' + x.damaged + ' damaged' : '')], ['Mission', String(x.mission).replace(/_/g, ' ') + (x.stood_down ? ', stood down' : '')], ['Fatigue', x.fatigue], ['Claims to date', (function (c) { if (!c) return null; var w = []; if (c.shot_down) w.push(c.shot_down + ' shot down'); if (c.on_ground) w.push(c.on_ground + ' on the ground'); if (c.hits) w.push(c.hits + (c.hits === 1 ? ' hit' : ' hits') + ' on ships'); return w.length ? w.join(', ') : null; })(x.claimed_to_date || e.claimed_to_date)], ['Strike radius', x.strike_radius_nm + ' miles'], ['Search range', x.search_range_nm + ' miles']]);
+        kv(body, [['Aircraft', x.aircraft_type], ['Type', airKind(x)], ['Ready', x.ready + ' of ' + e.strength + (x.damaged ? ', ' + x.damaged + ' damaged' : '')], ['Mission', String(x.mission).replace(/_/g, ' ') + (x.stood_down ? ', stood down' : '')], ['Fatigue', tiredWords(x.fatigue)], ['Claims to date', (function (c) { if (!c) return null; var w = []; if (c.shot_down) w.push(c.shot_down + ' shot down'); if (c.on_ground) w.push(c.on_ground + ' on the ground'); if (c.hits) w.push(c.hits + (c.hits === 1 ? ' hit' : ' hits') + ' on ships'); return w.length ? w.join(', ') : null; })(x.claimed_to_date || e.claimed_to_date)], ['Strike radius', x.strike_radius_nm + ' miles'], ['Search range', x.search_range_nm + ' miles']]);
         var kvg = body.querySelector('.kv'); if (kvg && x.location) { if (x.location.name) M.names[x.location.handle] = String(x.location.name).replace(/^Placeholder /, ''); kvg.appendChild(el('span', '', 'Based at')); kvg.appendChild(rich('span', '', x.location.handle)); }
         if (x.location) siblings(M.air.filter(function (y) { return y.location && y.location.handle === x.location.handle; }).map(function (y) { return y.air_group.handle; }), h, 'of the groups there');
         airOrder(body, e, h); return; }
       if (e.entity_kind === 'ship') { var b2 = openCard(e.ship.name.replace(/^Placeholder /, '').toUpperCase(), 'YOURS', true), sys = e.systems || {}, out = Object.keys(sys).filter(function (k) { return sys[k] !== 'working'; }); turnTo(e.place);
-        kv(b2, [['Class', shipClass(e.class)], ['Kind', String(e.ship_kind).replace(/_/g, ' ')], ['State', e.sunk ? 'SUNK' : (+e.flotation_damage || +e.fire_damage) ? 'damaged' : 'sound'], ['Out of action', out.length ? out.map(function (k) { return k.replace(/_/g, ' ') + ' ' + sys[k]; }).join(', ') : null], ['Own fuel', commas(e.fuel_t) + (+e.fuel_capacity_t > 0 ? ' of ' + commas(e.fuel_capacity_t) : '') + ' t, ' + commas(e.range_nm) + ' miles'], ['Cargo', (+e.supply_t || +e.cargo_fuel_t) ? commas(e.supply_t) + ' t supply, ' + commas(e.cargo_fuel_t) + ' t fuel' : null]]);
+        kv(b2, [['Class', shipClass(e.class)], ['Kind', String(e.ship_kind).replace(/_/g, ' ')], ['State', e.sunk ? 'SUNK' : (+e.flotation_damage || +e.fire_damage) ? 'damaged' : 'sound'], ['Out of action', out.length ? out.map(function (k) { return k.replace(/_/g, ' ') + ' ' + sys[k]; }).join(', ') : null], ['Fuel', +e.fuel_capacity_t > 0 ? levelBar(+e.fuel_t / +e.fuel_capacity_t, commas(e.fuel_t) + ' of ' + commas(e.fuel_capacity_t) + ' t') : commas(e.fuel_t) + ' t'], ['Range', e.range_nm != null ? commas(e.range_nm) + ' miles at cruise' : null], ['Cargo', (+e.supply_t || +e.cargo_fuel_t) ? commas(e.supply_t) + ' t supply, ' + commas(e.cargo_fuel_t) + ' t fuel' : null]]);
         if (e.troops || e.troop_capacity_men) { b2.appendChild(el('div', 'sub', 'MEN ABOARD')); b2.appendChild(rich('div', '', (e.troops ? e.troops.land_unit.handle + ': ' + commas(e.troops.men) + ' men' : 'None') + (e.troop_capacity_men ? ' (room for ' + commas(e.troop_capacity_men) + ')' : ''))); }
         if (e.task_force) { var of = b2.querySelector('.kv'); if (of) { of.appendChild(el('span', '', 'Part of')); of.appendChild(rich('span', '', e.task_force.handle)); } siblings(FORCE_SHIPS[e.task_force.handle], h, 'of the ships of her force'); }
         if ((e.air_groups || []).length) { e.air_groups.forEach(function (g) { M.names[g.handle] = g.name; }); airList(b2, 'AIR GROUPS ABOARD', e.air_groups.map(function (g) { return M.air.filter(function (y) { return y.air_group.handle === g.handle; })[0]; }).filter(Boolean)); }
@@ -1323,6 +1339,22 @@ body.watched .gives { display: none !important; }
   // from the map itself.
   function hexMiles() { var a = hexAt['0,0'], b = hexAt['1,0']; if (!a || !b) return 40; var rad = Math.PI / 180, dlat = (b[3] - a[3]) * rad, dlon = (b[4] - a[4]) * rad, h = Math.pow(Math.sin(dlat / 2), 2) + Math.cos(a[3] * rad) * Math.cos(b[3] * rad) * Math.pow(Math.sin(dlon / 2), 2); return Math.round(2 * 3440.065 * Math.asin(Math.sqrt(h)) / 5) * 5; }
   function round(n) { return showHexes ? n + ' hexes round' : 'within ' + n * hexMiles() + ' miles'; }
+  // A place on a card: its latitude and longitude with the hex in brackets,
+  // and a press turns the chart to it.
+  function placeLink(pl) {
+    var h = hexAt[pl.q + ',' + pl.r], lat = pl.lat != null ? pl.lat : h && h[3], lon = pl.lon != null ? pl.lon : h && h[4], known = M.hexNames[pl.q + ',' + pl.r], hex = '(' + pl.q + ', ' + pl.r + ')';
+    var words = lat == null || lon == null ? '' : dm(lat, 'N', 'S') + ' ' + dmLon(runLon(lon));
+    var s = el('span', ''), b = el('button', 'ref', known || words || hex); b.type = 'button'; b.title = 'Show on the chart'; b.addEventListener('click', function (e) { e.stopPropagation(); turnTo(pl); }); s.appendChild(b);
+    if (known && words) s.appendChild(document.createTextNode(' \u00B7 ' + words));
+    if (known || words) s.appendChild(document.createTextNode(' ' + hex));
+    return s;
+  }
+  // Fatigue runs from 0 to 100 and experience from 0 to 4, 2 being the
+  // service's standard: said in a word, with the whole number beside it.
+  function tiredWords(v) { if (v == null || v === '') return null; var n = Math.round(Number(v)); if (isNaN(n)) return String(v); return (n < 10 ? 'fresh' : n < 30 ? 'a little tired' : n < 60 ? 'tired' : n < 85 ? 'worn out' : 'exhausted') + ' \u00B7 ' + n + ' of 100'; }
+  function seasonedWords(v) { if (v == null || v === '') return null; var n = Math.round(Number(v)); if (isNaN(n)) return String(v); return ['raw', 'green', 'trained', 'seasoned', 'veteran'][Math.max(0, Math.min(4, n))]; }
+  // A level as a bar with its words over it, as a force's ships show fuel.
+  function levelBar(lv, txt) { var bar = el('span', 'lvl' + (lv < 0.25 ? ' low' : '')), fill = el('i', ''); fill.style.width = Math.round(Math.max(0, Math.min(1, lv)) * 100) + '%'; bar.appendChild(fill); bar.appendChild(el('b', '', txt)); var s = el('span', ''); s.appendChild(bar); return s; }
   function hexWords(pl) { var known = M.hexNames[pl.q + ',' + pl.r]; return known || whereIs(pl); }
   // The unit a card is of, for the way from the card to its own diary.
   var cardHandle = null, wantDiary = null;
@@ -1367,7 +1399,7 @@ body.watched .gives { display: none !important; }
     stack = { list: list, i: i }; showStack();
   }
   function stepStack(by) {
-    if (sibs) { var n = (sibs.i + by + sibs.list.length) % sibs.list.length, to = sibs.list[n]; wantDiary = to; try { history.replaceState(null, '', '#see=' + to); } catch (e) {} cardEntity(to); return; }
+    if (sibs) { var n = (sibs.i + by + sibs.list.length) % sibs.list.length, to = sibs.list[n]; wantDiary = to; try { history.replaceState(null, '', '#see=' + to); } catch (e) {} var lu = /^land_unit:/.test(to) && M.units.filter(function (y) { return y.land_unit.handle === to; })[0]; if (lu) cardUnit(lu); else cardEntity(to); return; }
     if (!stack) return; stack.i = (stack.i + by + stack.list.length) % stack.list.length; showStack();
   }
   // A ship's card steps through the ships of her force, and an air group's
@@ -1381,11 +1413,18 @@ body.watched .gives { display: none !important; }
   }
   // An air group as a row of a list: its name, its aircraft and what they are
   // for on the left; how many are ready and what it is doing on the right.
+  // What kind of aircraft a group flies, from its role and what it attacks ships with.
+  function airKind(x) {
+    if (x.role === 'fighter') return 'Fighter';
+    if (x.role === 'patrol') return x.attack_weapon === 'torpedoes' ? 'Patrol aircraft, carries a torpedo' : x.attack_weapon === 'bombs' ? 'Patrol aircraft, carries bombs' : 'Patrol aircraft';
+    if (x.role === 'bomber') return x.attack_weapon === 'torpedoes' ? 'Torpedo bomber' : 'Bomber';
+    return null;
+  }
   function airLine(x) { return x.air_group.handle + ', ' + String(x.aircraft_type).replace(/^\S+ (?=\S*\d)/, '') + (x.role ? ' (' + x.role + ')' : '') + ' · ' + String(x.mission).replace(/_/g, ' ') + ': ' + x.ready + '/' + (x.ready + x.damaged); }
   // The share of a group's aircraft on hand that are ready to fly.
   function airLevel(x) { var all = x.ready + x.damaged; return all > 0 ? x.ready / all : null; }
   function airList(body, title, groups) { listOf(body, title, groups.map(airLine), 'ready', groups.map(airLevel)); }
-  function kv(body, rows) { var g = el('div', 'kv'); rows.forEach(function (r) { if (r[1] == null || r[1] === '') return; g.appendChild(el('span', '', r[0])); g.appendChild(el('span', '', String(r[1]))); }); body.appendChild(g); return g; }
+  function kv(body, rows) { var g = el('div', 'kv'); rows.forEach(function (r) { if (r[1] == null || r[1] === '') return; g.appendChild(el('span', '', r[0])); g.appendChild(r[1] && r[1].nodeType ? r[1] : el('span', '', String(r[1]))); }); body.appendChild(g); return g; }
   // A list on a card: a name on the left and its figure on the right, one row
   // each, with what the figure counts said once in the heading. A long list
   // shows its first rows and folds the rest.
@@ -1493,6 +1532,7 @@ body.watched .gives { display: none !important; }
     cardBase = function (t) { var r = b.apply(this, arguments); ordersHere({ kind: 'own', base: t.base, name: t.base.base.name, v: placeOf(t.base.place) }); return r; };
     cardHex = function (hpl) { var r = x.apply(this, arguments); ordersHere(watersAt(hpl)); return r; };
   })();
+  cardGone = remember(cardGone);
   cardUnit = remember(cardUnit); cardEntity = remember(cardEntity); cardContact = remember(cardContact); cardPlace = remember(cardPlace); cardForce = remember(cardForce); cardBase = remember(cardBase); cardHex = remember(cardHex);
   $('card-back').addEventListener('click', function () { var was = trail.pop(); if (!was) return; shown = was; $('card-back').hidden = !trail.length; backWords(); was(); });
   $('card-find').addEventListener('click', function () { if (findAt) turnTo(findAt); });
@@ -1528,7 +1568,7 @@ body.watched .gives { display: none !important; }
   }
   function cardContact(t) {
     var c = t.contact, body = openCard('CONTACT ' + num(c.contact.handle), 'ENEMY');
-    kv(body, [['Reported', c.ship_count + ' ship' + (c.ship_count === 1 ? '' : 's')], ['Taken for', c.taken_for && String(c.taken_for.kind || c.taken_for).replace(/_/g, ' ')], ['Where', hexWords(c.place)], ['Age', pulsesOld(c.age_pulses)]]);
+    kv(body, [['Reported', c.ship_count + ' ship' + (c.ship_count === 1 ? '' : 's')], ['Taken for', c.taken_for && String(c.taken_for.kind || c.taken_for).replace(/_/g, ' ')], ['Where', placeLink(c.place)], ['Age', pulsesOld(c.age_pulses)]]);
     var how = el('div'); body.appendChild(how);
     api('get_entity', { handle: c.contact.handle }).then(function (a) {
       var ev = a.entity && a.entity.last_report_event; if (ev == null) return;
@@ -1542,7 +1582,7 @@ body.watched .gives { display: none !important; }
   function cardPlace(t) {
     var pl = t.place, name = (t.base && t.base.base.name) || M.hexNames[pl.q + ',' + pl.r], body = openCard((name || (t.sea ? 'OPEN WATER' : 'LAND')).toUpperCase(), t.base ? 'ENEMY BASE' : null);
     var est = M.estimates.filter(function (e) { return sameHex(e.place, pl); })[0], here = M.contacts.filter(function (c) { return sameHex(c.place, pl); });
-    kv(body, [['Where', whereIs(pl)]]);
+    kv(body, [['Where', placeLink(pl)]]);
     // What is believed of the place, a line for each thing held, each with
     // where it came from and how old it is. A thing not held has no line.
     if (est) { body.appendChild(el('div', 'sub', 'MEN ASHORE')); kv(body, [['Estimate', 'About ' + commas(est.men) + ' men'], ['From', est.came_from], ['Age', daysOld(est)]]); }
@@ -1557,11 +1597,11 @@ body.watched .gives { display: none !important; }
     var giver = f.fuel_from && M.forces.filter(function (o) { return o.task_force.handle === f.fuel_from.handle; })[0], giverName = f.fuel_from && nameOf(f.fuel_from.handle, f.fuel_from.name);
     var doing = !f.fuel_from ? f.status.replace(/_/g, ' ') + (f.destination ? ', for ' + hexWords(f.destination) : '')
       : giver && sameHex(giver.place, f.place) ? 'fuelling at sea from ' + giverName : 'steaming to ' + giverName + ', to fuel at sea from it';
-    kv(body, [['Kind', f.mission.replace(/_/g, ' ')], ['Where', hexWords(f.place)], ['Doing', doing],
+    kv(body, [['Kind', f.mission.replace(/_/g, ' ')], ['Where', placeLink(f.place)], ['Doing', doing],
       ['Not before', f.available_from > M.day ? dateOf(f.available_from - 1) + ' (day ' + f.available_from + ')' : null],
-      ['Speed', f.speed], ['Readiness', f.readiness + (f.alert ? ', alert' : '')], ['Fatigue', f.fatigue],
+      ['Speed', f.speed], ['Readiness', f.readiness + (f.alert ? ', alert' : '')], ['Fatigue', tiredWords(f.fatigue)],
       ['Cargo', f.cargo_supply_t != null ? commas(f.cargo_supply_t) + ' t supply, ' + commas(f.cargo_fuel_t || 0) + ' t fuel' : null],
-      ['Shortest legs', f.least_fuelled ? f.least_fuelled.ship.name.replace(/^Placeholder /, '') + ': ' + commas(f.least_fuelled.fuel_t) + ' t, ' + commas(f.least_fuelled.range_nm) + ' miles at cruising speed' : null],
+      ['Range', f.least_fuelled ? commas(f.least_fuelled.range_nm) + ' miles at cruise \u00B7 ' + f.least_fuelled.ship.name.replace(/^Placeholder /, '').replace(/^./, function (c) { return c.toUpperCase(); }) + ' runs dry first' : null],
       ['In whose hands', held ? (held.made_by === 'command' ? 'Yours: you keep it out of the staff\'s plans.' : 'Yours, by your direct order. The staff plans round it.') : 'The staff\'s']]);
     // Ordering a force is done from its card, so the buttons stand at the head of it.
     if (!WATCH && !M.over && !playing && !(f.available_from > M.day)) { var row = el('div', 'row'), b = el('button', '', 'GIVE A DIRECT ORDER'); b.type = 'button'; b.addEventListener('click', function () { orderForce(f); }); row.appendChild(b);
@@ -1580,7 +1620,7 @@ body.watched .gives { display: none !important; }
   }
   function cardBase(t) {
     var b = t.base, h = b.base.handle, dos = b.days_of_supply || {}, body = openCard(b.base.name.toUpperCase(), 'YOURS', true);
-    kv(body, [['Where', whereIs(b.place)], ['Supply', commas(b.supply_t) + ' t'], ['Ammunition', b.ammunition_t != null ? commas(b.ammunition_t) + ' t' : null], ['Fuel for ships', commas(b.fuel_t) + ' t'],
+    kv(body, [['Where', placeLink(b.place)], ['Supply', commas(b.supply_t) + ' t'], ['Ammunition', b.ammunition_t != null ? commas(b.ammunition_t) + ' t' : null], ['Fuel for ships', commas(b.fuel_t) + ' t'],
       ['Days of supply', dos.days != null ? dayCount(dos.days) + ' at ' + aboutTons(dos.planned_use_t) + ' t a day' : 'No figure: nothing is planned to be used here today'],
       // The map gives a size of airfield or none; a base with aircraft flying from it has one all the same, of no size given, so no line is shown.
       ['Airfield', b.airfield_size ? 'size ' + b.airfield_size : M.air.some(function (x) { return x.location && x.location.handle === h; }) ? null : 'none'], ['Port', b.port_size ? 'size ' + b.port_size : 'none']]);
@@ -2081,6 +2121,8 @@ body.watched .gives { display: none !important; }
     if (where && i.kind === 'deny') return 'Deny the waters round ' + where;
     var tfn = i.task_force != null && ((M.forces.filter(function (f) { return num(f.task_force.handle) === Number(i.task_force.handle ? num(i.task_force.handle) : i.task_force); })[0] || {}).task_force || {}).name;
     if (where && i.kind === 'operate_carriers') return 'Operate ' + (tfn || 'the carrier force') + ' from ' + where;
+    if (where && i.kind === 'strike_ships') return 'Strike ships from ' + where;
+    if (where && i.kind === 'search_waters') return 'Search the waters from ' + where;
     if (where && i.kind === 'stand_at') return 'Station ' + (tfn || 'the force') + ' at ' + where;
     var w = (WORD[i.kind] || i.kind.replace(/_/g, ' ')).toLowerCase(); return (w.charAt(0).toUpperCase() + w.slice(1) + ' ' + where).trim();
   }
@@ -2117,6 +2159,7 @@ body.watched .gives { display: none !important; }
         else if (ok) n.appendChild(el('div', 'work', 'Approved by you today. The staff acts on it from 1800.'));
         else if (waits) {
           var wline = n.appendChild(el('div', 'work', p.state === 'preparing' ? 'It is ready and waits for your leave to launch.' : 'It waits for your leave to prepare.'));
+          var more = n.appendChild(el('div', ''));
           // What approving it would send, as the staff works it as if released;
           // a plan that would form nothing, or cannot meet the order, says so.
           api('propose', { intent: root }).then(function (pr) {
@@ -2124,8 +2167,18 @@ body.watched .gives { display: none !important; }
             var body = t.replace(/^Taking [\s\S]*? as released, the staff would (?:do this for the tree of \S+: )?/, '');
             // What it would form and why, not the orders the task then gives.
             body = body.split(/ intent:\d+, operating the carrier force /)[0];
-            if (/cannot meet|would form no intent and give no order/.test(t)) { wline.textContent = ''; wline.appendChild(rich('span', '', 'Approved as it stands, it would form nothing that serves the order: ' + body)); wline.style.color = 'var(--enemy)'; }
-            else { wline.textContent = ''; wline.appendChild(rich('span', '', (p.state === 'preparing' ? 'It waits for your leave to launch. ' : 'It waits for your leave to prepare. ') + 'Approved, it would send: ' + body)); }
+            // The short of it first: one line for each task the plan would
+            // form, with the groups it would use. The staff's working in
+            // full is folded under it for whoever wants to check it.
+            var lead = p.state === 'preparing' ? 'It waits for your leave to launch.' : 'It waits for your leave to prepare.', none = /cannot meet|would form no intent and give no order/.test(t);
+            var subs = (pr.tree && pr.tree.sub_intents) || [], uses = {}; ((pr.tree && pr.tree.groups) || []).forEach(function (g) { uses[g.intent] = g.air_groups || []; });
+            wline.textContent = none ? 'Approved as it stands, it would form nothing that serves the order.' : subs.length ? lead + ' Approved, it would:' : lead;
+            if (none) wline.style.color = 'var(--enemy)';
+            if (!none) subs.forEach(function (sub) {
+              var with_ = sub.kind === 'operate_carriers' ? 0 : (uses[sub.number] || []).length;
+              more.appendChild(rich('div', 'work', '\u2022 ' + sayIntent(sub, {}) + (with_ ? ' \u00B7 ' + with_ + ' air group' + (with_ === 1 ? '' : 's') : '')));
+            });
+            var fold = el('details', 'working'), head = el('summary', 'work', 'Staff\u2019s working'); head.style.cursor = 'pointer'; fold.appendChild(head); fold.appendChild(rich('div', 'work', body.replace(/^./, function (c) { return c.toUpperCase(); }))); more.appendChild(fold);
           }).catch(function () {});
         }
         if (!off && !gone && !WATCH) { var row = el('div', 'row'), press = function (words, tool, done) { var x = el('button', tool === 'approve' ? 'primary' : 'quiet', words); x.type = 'button'; x.addEventListener('click', function () { act(tool, { plan: p.number }, done).then(function () { readPlan(root); }); }); row.appendChild(x); };
@@ -2457,10 +2510,10 @@ body.watched .gives { display: none !important; }
           if (seen[key] == null) { seen[key] = list.length; list.push([isLoss ? LOST[o.kind] : c[0], '\u2013', '\u2013', '\u2013', '\u2013']); }
           var row = list[seen[key]]; row[1 + (isLoss ? 1 - col : col)] = c[1]; row[3 + col] = pts(o.points);
         }); });
-        var names = [SIDE_WORD[config.seat].replace(/^the /, 'The '), SIDE_WORD[other].replace(/^the /, 'The ')];
+        var SHORT = { allied: 'Allies', japanese: 'Japan' }, names = [SHORT[config.seat], SHORT[other]];
         function tableOf(title, rows, total) {
           if (!rows.length) return; var t = el('table'), hr = el('tr');
-          ['', names[0], names[1], 'Points to ' + SIDE_WORD[config.seat], 'Points to ' + SIDE_WORD[other]].forEach(function (h) { hr.appendChild(el('th', '', h)); }); t.appendChild(hr);
+          ['', names[0], names[1], 'Points, ' + SHORT[config.seat], 'Points, ' + SHORT[other]].forEach(function (h) { hr.appendChild(el('th', '', h)); }); t.appendChild(hr);
           rows.forEach(function (x) { var tr = el('tr'); tr.appendChild(el('th', '', x[0])); x.slice(1).forEach(function (v) { tr.appendChild(el('td', '', v)); }); t.appendChild(tr); });
           if (total) { var tt = el('tr'); tt.appendChild(el('th', '', 'Points in all')); ['', '', pts(r[config.seat].total), pts(r[other].total)].forEach(function (v) { var td = el('td', '', v); td.style.fontWeight = '700'; tt.appendChild(td); }); t.appendChild(tt); }
           box.appendChild(el('h3', '', title)); box.appendChild(t);
@@ -2705,7 +2758,7 @@ body.watched .gives { display: none !important; }
           } else {
             var day = M.day; setStatus(VERSUS ? finishedWords() : 'Day ' + day + ' is being fought.');
             var d = await api('run', { days: 1 }); lastRun = d; if (d.game_over) { M.over = true; M.result = d.result; }
-            setStatus('Day ' + day + ': the plot, pulse by pulse, from what your side was told.');
+            setStatus('Day ' + day + ': the reports come in.');
             await plotDay(day, await eventsOf(day)); await refresh();
             var fired = d.fired && d.fired.length;
             if (!until || !playing || d.game_over || fired) return rest(d.game_over ? 'The game is over.' : fired ? 'The clock is stopped: ' + d.fired.length + ' signal' + (d.fired.length > 1 ? 's wait' : ' waits') + ' for you.' : '');
@@ -2758,7 +2811,7 @@ body.watched .gives { display: none !important; }
             if (pulses[0] === 'night') $('plot').textContent = '';
             evs = await eventsOf(day, pulses[0]); await plotPhase(day, pulses[0], evs);
             if (pulses[0] === 'afternoon') { var end = await eventsOf(day, 'end'); evs = evs.concat(end); await plotPhase(day, 'end', end); }
-          } else { setStatus('Day ' + day + ': the plot, pulse by pulse, from what the side was told.'); evs = await eventsOf(day); await plotDay(day, evs); }
+          } else { setStatus('Day ' + day + ': the reports come in.'); evs = await eventsOf(day); await plotDay(day, evs); }
           lastTold = toldOf(evs, stopOn()); lastRun = { summary: s.summary }; if (s.game_over) M.over = true;
           clock = { at: s.clock.at, day: s.clock.day }; await refresh();
           if (!until || !playing || s.game_over || lastTold.length) {
@@ -3217,7 +3270,7 @@ body.watched .gives { display: none !important; }
     var ids = Object.keys(ptrs); if (ids.length === 2) { pinch0 = Math.hypot(ptrs[ids[0]].x - ptrs[ids[1]].x, ptrs[ids[0]].y - ptrs[ids[1]].y); zoom0 = goal.zoom; }
   });
   canvas.addEventListener('pointermove', function (e) {
-    var p = ptrs[e.pointerId]; if (!p) { hoverAt = onTable(e.clientX, e.clientY); if (e.pointerType === 'mouse') canvas.classList.toggle('over', !picking && !playing && !!tileAt(e.clientX, e.clientY)); return; } var ids = Object.keys(ptrs);
+    var p = ptrs[e.pointerId]; if (!p) { hoverAt = onTable(e.clientX, e.clientY); if (e.pointerType === 'mouse') canvas.classList.toggle('over', !picking && !playing && (!!tileAt(e.clientX, e.clientY) || orderAt(hoverAt) != null)); return; } var ids = Object.keys(ptrs);
     if (ids.length === 1) { var s = camDist * 0.0016; goal.x -= (e.clientX - p.x) * s; goal.z -= (e.clientY - p.y) * s * (1.5 - 0.5 * flat); clampGoal(); }
     p.x = e.clientX; p.y = e.clientY;
     if (ids.length === 2 && pinch0) { var d = Math.hypot(ptrs[ids[0]].x - ptrs[ids[1]].x, ptrs[ids[0]].y - ptrs[ids[1]].y); goal.zoom = zoom0 + Math.log(d / pinch0) * 0.5; clampGoal(); }
@@ -3225,7 +3278,7 @@ body.watched .gives { display: none !important; }
   function up(e) {
     delete ptrs[e.pointerId]; if (!Object.keys(ptrs).length) canvas.classList.remove('dragging'); pinch0 = 0;
     if (picking && downAt && e.type === 'pointerup' && Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y) < 6) { var p = onTable(e.clientX, e.clientY); if (p && Math.abs(p.x) <= TW / 2 && Math.abs(p.z) <= TD / 2) (picking === 'force' ? pickForce : picking === 'route' ? pickRoute : pick)(p); }
-    else if (!picking && !playing && downAt && e.type === 'pointerup' && Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y) < 6) { var q = onTable(e.clientX, e.clientY); var hit = tileAt(e.clientX, e.clientY); if (hit) touch(hit); else if (q && Math.abs(q.x) <= TW / 2 && Math.abs(q.z) <= TD / 2) look(q); }
+    else if (!picking && !playing && downAt && e.type === 'pointerup' && Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y) < 6) { var q = onTable(e.clientX, e.clientY); var hit = tileAt(e.clientX, e.clientY), ord = hit ? null : orderAt(q); if (hit) touch(hit); else if (ord != null) readPlan(ord); else if (q && Math.abs(q.x) <= TW / 2 && Math.abs(q.z) <= TD / 2) look(q); }
     downAt = null;
   }
   canvas.addEventListener('pointerup', up); canvas.addEventListener('pointercancel', up);
@@ -3274,7 +3327,7 @@ body.watched .gives { display: none !important; }
     o.hidden = !n && !$('leave-slot').children.length; o.textContent = 'Orders \u00B7 ' + n;
     [].forEach.call($('papers').querySelectorAll('.mark'), function (m) { due += parseInt(m.textContent, 10) || 0; }); if (due) { var a = document.createElement('span'); a.className = 'mark'; a.textContent = String(due); o.appendChild(a); }
     due = 0; [].forEach.call($('papers-staff').querySelectorAll('.mark'), function (m) { due += parseInt(m.textContent, 10) || 0; });
-    st.hidden = !$('papers-staff').children.length; st.textContent = 'Staff'; if (due) { var b = document.createElement('span'); b.className = 'mark'; b.textContent = String(due); st.appendChild(b); }
+    st.hidden = !$('papers-staff').children.length && !$('holds-list').children.length; st.textContent = 'Staff' + ($('holds-list').children.length ? ' \u00B7 ' + $('holds-list').children.length + ' held' : ''); if (due) { var b = document.createElement('span'); b.className = 'mark'; b.textContent = String(due); st.appendChild(b); }
     if (o.hidden) $('pop-orders').hidden = true; if (st.hidden) $('pop-staff').hidden = true;
   }
   new MutationObserver(menuWords).observe($('pop-orders'), { childList: true, subtree: true }); new MutationObserver(menuWords).observe($('pop-staff'), { childList: true, subtree: true });
