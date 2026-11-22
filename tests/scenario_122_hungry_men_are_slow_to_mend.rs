@@ -1319,6 +1319,14 @@ const THREE: [&str; 3] = [
 ];
 const TWO: [&str; 2] = ["hunger_weakness_per_night", "unfed_fighting_share"];
 
+/// The three figures of decision 0209, which `ground_hunger.toml` may add
+/// to the live file too (0209, 2).
+const FIGHT_SUPPLY: [&str; 3] = [
+    "fight_supply_t_per_man",
+    "unsupplied_fire_share",
+    "fight_days_landed",
+];
+
 /// 18. The files.
 #[test]
 fn statement_18_the_files() {
@@ -1337,7 +1345,13 @@ fn statement_18_the_files() {
         .filter(|k| !live.contains_key(*k))
         .map(String::as_str)
         .collect();
-    let mut expected: Vec<&str> = THREE.iter().chain(TWO.iter()).copied().collect();
+    // And the three of decision 0209, by the architect's leave (0209, 2).
+    let mut expected: Vec<&str> = THREE
+        .iter()
+        .chain(TWO.iter())
+        .chain(FIGHT_SUPPLY.iter())
+        .copied()
+        .collect();
     expected.sort_unstable();
     assert_eq!(added, expected);
     // The live ground.toml gives none of the five.

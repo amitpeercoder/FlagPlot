@@ -1026,6 +1026,8 @@ fn assert_payment(
         SupplyUse::Men => "men fed".to_string(),
         // Decision 0094: these scenarios have no march.
         SupplyUse::March => "men marching".to_string(),
+        // Decision 0209: these scenarios have no fight ashore.
+        SupplyUse::Fight => "the men at grips in a fight".to_string(),
     };
     let mut text = if paid < asked {
         format!(

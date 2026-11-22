@@ -699,6 +699,11 @@ pub struct BriefingBase {
     pub as_of: Option<String>,
     pub supply_t: Dec,
     pub fuel_t: Dec,
+    /// The base's ammunition (decision 0122), which its side's fights
+    /// ashore spend first (decision 0209, 5). Left out while the base has
+    /// none.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ammunition_t: Option<Dec>,
     /// Supply paid out yesterday, all uses together.
     pub spent_yesterday_t: Dec,
     pub destroyed_yesterday_t: Dec,
@@ -2031,6 +2036,7 @@ pub fn briefing_for_game(view: &SideView<'_>, scenario: &str, last_day: Option<u
                 ),
                 supply_t: Dec(b.supply_t),
                 fuel_t: Dec(b.fuel_t),
+                ammunition_t: (b.ammunition_t > Fixed::ZERO).then_some(Dec(b.ammunition_t)),
                 spent_yesterday_t: Dec(spent),
                 destroyed_yesterday_t: Dec(day
                     .destroyed
@@ -2759,6 +2765,9 @@ struct StockMoves {
     fuel_refuelling: Fixed,
     /// Taken out of the base by a march (decision 0094, 9).
     march_out: Fixed,
+    /// Spent on its side's men at grips in fights in its hex (decision
+    /// 0209, 5).
+    fight: Fixed,
     /// Put into the base by a march.
     march_in: Fixed,
 }
@@ -2771,6 +2780,7 @@ impl StockMoves {
             - self.sorties_and_upkeep
             - self.repairs
             - self.men
+            - self.fight
             - self.destroyed
     }
 
@@ -2808,6 +2818,11 @@ pub struct SupplyChange {
     /// nothing was put in.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub arrived_with_marches_t: Option<Dec>,
+    /// Spent on the side's men at grips in fights in the base's hex, where
+    /// the base's ammunition did not cover them (decision 0209, 5). Left out
+    /// when nothing was spent so.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub used_in_fights_t: Option<Dec>,
 }
 
 /// How a base's fuel stock moved yesterday.
@@ -2845,6 +2860,7 @@ fn stocks_yesterday(
         moves.destroyed,
         moves.march_out,
         moves.march_in,
+        moves.fight,
     ]
     .iter()
     .any(|t| !t.is_zero());
@@ -2866,6 +2882,7 @@ fn stocks_yesterday(
             men_fed_t: (!moves.men.is_zero()).then_some(Dec(moves.men)),
             taken_by_marches_t: (!moves.march_out.is_zero()).then_some(Dec(moves.march_out)),
             arrived_with_marches_t: (!moves.march_in.is_zero()).then_some(Dec(moves.march_in)),
+            used_in_fights_t: (!moves.fight.is_zero()).then_some(Dec(moves.fight)),
         }),
         fuel: fuel_moved.then(|| FuelChange {
             start_t: Dec(base.fuel_t - moves.fuel_net()),
@@ -3273,6 +3290,9 @@ impl Day {
                             // The men's charge is its own line, not the
                             // aircraft's (decision 0066, 16).
                             SupplyUse::Men => moves.men += *paid_t,
+                            // What a fight costs is its own line (decision
+                            // 0209, 5).
+                            SupplyUse::Fight => moves.fight += *paid_t,
                         }
                     }
                     EventKind::BaseSupplyDestroyed {
@@ -4230,7 +4250,14 @@ impl Day {
                     // side's events and its explain; the base's stock and the
                     // unit's line say where they stand (decision 0205, 10).
                     | EventKind::RationsLanded { .. }
-                    | EventKind::HungerNightsChanged { .. } => {}
+                    | EventKind::HungerNightsChanged { .. }
+                    // What a fight cost, the ammunition a base spent on it
+                    // and the ammunition a landing brings are in the side's
+                    // events and its explain; the base's stocks say where
+                    // they stand (decision 0209, 17).
+                    | EventKind::FightSupplyCharged { .. }
+                    | EventKind::BaseAmmunitionSpent { .. }
+                    | EventKind::AmmunitionLanded { .. } => {}
                 },
                 SideEventKind::EnemySurrendered { hex, men } => {
                     ground.prisoners.push(PrisonersLine {

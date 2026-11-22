@@ -1572,7 +1572,7 @@ body.watched .gives { display: none !important; }
   }
   function cardBase(t) {
     var b = t.base, h = b.base.handle, dos = b.days_of_supply || {}, body = openCard(b.base.name.toUpperCase(), 'YOURS', true);
-    kv(body, [['Where', whereIs(b.place)], ['Supply', commas(b.supply_t) + ' t'], ['Fuel for ships', commas(b.fuel_t) + ' t'],
+    kv(body, [['Where', whereIs(b.place)], ['Supply', commas(b.supply_t) + ' t'], ['Ammunition', b.ammunition_t != null ? commas(b.ammunition_t) + ' t' : null], ['Fuel for ships', commas(b.fuel_t) + ' t'],
       ['Days of supply', dos.days != null ? dayCount(dos.days) + ' at ' + aboutTons(dos.planned_use_t) + ' t a day' : 'No figure: nothing is planned to be used here today'],
       ['Airfield', b.airfield_size ? 'size ' + b.airfield_size : 'none'], ['Port', b.port_size ? 'size ' + b.port_size : 'none']]);
     listOf(body, 'MEN ASHORE', M.units.filter(function (u) { return u.men_ashore && sameHex(u.place, b.place); }).map(function (u) { return u.land_unit.handle + ': ' + commas(u.men_ashore) + ' men, ' + u.posture; }));
@@ -1682,6 +1682,14 @@ body.watched .gives { display: none !important; }
     else if (k === 'fuel_order_ended' && R("^" + H + "'s order to fuel from " + H + ' ended: (.*)$')) out = 'Fuelling ended for ' + N(m[1]) + ': ' + m[3];
     else if (k === 'ship_refuelled' && R('^' + H + ' took ([\\d.]+) t of fuel at ' + H)) out = N(m[1]) + ' took ' + fig(m[2]) + ' t of fuel at ' + N(m[3]);
     else if (k === 'rations_landed' && R('^the landing of ' + H + ' put ([\\d.]+) t of rations into ' + H + ': ([\\d.]+) nights for the (\\d+) men aboard')) out = N(m[1]) + ' landed ' + fig(m[2]) + ' t of rations at ' + N(m[3]) + ', ' + fig(m[4]) + ' days for ' + fig(m[5]) + ' men';
+    // What a day's fighting used, and where our troops fired short, in whole tons.
+    else if (k === 'fight_supply_charged' && R("^the \\w+ side's fight at " + AT + ' wanted ([\\d.]+) t for [\\d.]+ men at grips: ([\\d.]+) t from ammunition and ([\\d.]+) t from supply, a supplied share of ([\\d.]+)')) out = (function () {
+      var used = [], a = parseFloat(m[4]), sp = parseFloat(m[5]), given = a + sp;
+      if (a > 0) used.push(aboutTons(m[4]) + ' t of ammunition'); if (sp > 0) used.push(aboutTons(m[5]) + ' t of supply');
+      if (parseFloat(m[6]) >= 1) return 'The fighting at ' + P(m[1], m[2]) + ' used ' + (used.length ? used.join(' and ') : 'nothing from the stocks');
+      return 'Our troops at ' + P(m[1], m[2]) + ' fired short: the fighting called for ' + aboutTons(m[3]) + ' t of ammunition' + (given > 0 ? ' and the stocks there gave ' + used.join(' and ') : ' and there was none to give');
+    })();
+    else if (k === 'ammunition_landed' && R('^the landing of ' + H + ' put ([\\d.]+) t of ammunition into ' + H + ': [\\d.]+ days of fighting for the (\\d+) men aboard')) out = N(m[1]) + ' landed ' + aboutTons(m[2]) + ' t of ammunition at ' + N(m[3]) + ' with ' + fig(m[4]) + ' men';
     else if (k === 'hunger_nights_changed' && R('^' + H + ' at ' + AT + ' has been hungry (\\d+) nights')) out = N(m[1]) + ' at ' + P(m[2], m[3]) + (m[4] === '0' ? ': no longer hungry' : ': hungry ' + m[4] + (m[4] === '1' ? ' night' : ' nights'));
     else if (k === 'strike_mission_cleared' && R('^' + H + ' has no mission: the base it was to strike, ' + H)) out = N(m[1]) + ' stood down from its strike: ' + N(m[2]) + ' is ours';
     if (out == null) {
@@ -1748,7 +1756,7 @@ body.watched .gives { display: none !important; }
   // what was ordered, what was done and what was reported. It is the seat's
   // own events (the tool `events`), in its own words; an entry opens what led
   // to it (the tool `explain`). What the staff does every day is folded.
-  var D_ROUTINE = { hunger_nights_changed: 1, air_group_fatigue: 1, land_unit_fatigue: 1, task_force_fatigue: 1, aircraft_worn: 1, aircraft_repaired: 1, fieldworks_changed: 1, unit_worked: 1, base_supply_spent: 1, men_fed: 1, base_at_day_end: 1, search_flown: 1, fuel_burned: 1, ship_refuelled: 1, contact_aged: 1, fight_day_counted: 1, left_roster: 1, loading_lost: 1, ground_fire: 1, task_force_steamed: 1, escorts_sent: 1, airfield_mended: 1, base_anti_aircraft_fire: 1, anti_aircraft_fire: 1, salvo: 1, salvo_against: 1 }, diaryLast = 0;
+  var D_ROUTINE = { hunger_nights_changed: 1, air_group_fatigue: 1, land_unit_fatigue: 1, task_force_fatigue: 1, aircraft_worn: 1, aircraft_repaired: 1, fieldworks_changed: 1, unit_worked: 1, base_supply_spent: 1, base_ammunition_spent: 1, men_fed: 1, base_at_day_end: 1, search_flown: 1, fuel_burned: 1, ship_refuelled: 1, contact_aged: 1, fight_day_counted: 1, left_roster: 1, loading_lost: 1, ground_fire: 1, task_force_steamed: 1, escorts_sent: 1, airfield_mended: 1, base_anti_aircraft_fire: 1, anti_aircraft_fire: 1, salvo: 1, salvo_against: 1 }, diaryLast = 0;
   function diaryWords(t) { t = nameText(plainWords(String(t).replace(/^(Allied|Japanese) /, ''))).replace(/_/g, ' '); t = t.charAt(0).toUpperCase() + t.slice(1); return /[.!?]$/.test(t) ? t : t + '.'; }
   // A plan said by what it is for, and the intent of the commander's it comes under.
   // Whether the commander has signed this already, for the staff at 1800.

@@ -1309,3 +1309,17 @@ unit's line where it is below 1. A reason a unit did no training, `mending`, is 
 `no_activity_yesterday`: fed in full, its nights of hunger above nothing. A working unit is given
 `not_fed` only where its fighting share is nothing. The side's own units only; the enemy is told
 none of it.
+
+## A fight costs supply (decision 0209)
+
+Fields added only, so `version` does not change. A base's line (`list_bases`, and the briefing's
+`bases`) has `ammunition_t`, the base's ammunition, left out while it is 0, so every game whose
+bases hold none is listed as it was; a day's fight ashore spends it first, then supply. A base's
+`stocks_yesterday.supply` has `used_in_fights_t`, the supply its side's men at grips used in fights
+in its hex where its ammunition did not cover them, present only when above 0; it is part of
+`spent_yesterday_t`. The text adds "ammunition N t" to a base's line and "used in fights" to its
+stocks. The events `fight_supply_charged`, `base_ammunition_spent` and `ammunition_landed`, and the
+`base_supply_spent` reason `fight`, are in the side's events and its explain. A trial's assumed
+things gain `enemy_supplied`: the enemy's men ashore taken as supplied in full in their fights,
+for the side does not know his stocks. The side's own bases and fights only; the enemy is told
+none of it.
