@@ -20,8 +20,14 @@ pub(crate) fn in_submarine_waters(view: &SideView<'_>, hex: Hex) -> Option<Strin
     for waters in view.suspected_waters() {
         if hex.distance(waters.hex) <= waters.distance_hexes {
             return Some(format!(
-                "inside the suspected submarine waters within {} hexes of {}",
-                waters.distance_hexes, waters.hex
+                "inside the suspected submarine waters within {} {} of {}",
+                waters.distance_hexes,
+                if waters.distance_hexes == 1 {
+                    "hex"
+                } else {
+                    "hexes"
+                },
+                waters.hex
             ));
         }
     }

@@ -1268,7 +1268,7 @@ fn statement_14_game_c2_suspected_waters_that_hold_s_the_force_is_stationed_at_t
     let reason = played.station_reason();
     assert!(
         reason.contains(
-            "(10,-2) passed over: inside the suspected submarine waters within 1 hexes of (10,-3)"
+            "(10,-2) passed over: inside the suspected submarine waters within 1 hex of (10,-3)"
         ),
         "{reason}"
     );
@@ -1449,7 +1449,7 @@ fn statement_18_where_a_force_waits_the_covering_hex_is_the_next_along_the_route
     assert_eq!(hex_next, hex(5, 0));
     assert!(
         reason_next.contains(
-            "(4,0) passed over: inside the suspected submarine waters within 1 hexes of (3,0)"
+            "(4,0) passed over: inside the suspected submarine waters within 1 hex of (3,0)"
         ),
         "{reason_next}"
     );
