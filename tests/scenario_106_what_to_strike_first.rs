@@ -203,15 +203,19 @@ mod record {
 /// the aircraft claimed shot down): every claim's record gains its list
 /// `air_types`, and a claim whose men made the types out its breakdown's
 /// factors for them; with those taken out each text is the text of the
-/// commit before, line for line.
+/// commit before, line for line. Remade for decisions 0211 and 0212 (a
+/// strike spread over the ships of its kind and fire among a carrier's
+/// aircraft, which run in every battle): the four games with carrier
+/// strikes move in their play; the 39 days' first week, which has none,
+/// keeps its digest.
 #[test]
 fn s12_no_game_without_the_limit_changes() {
     let games: [(&str, Option<u32>, u64); 5] = [
-        ("05_eastern_solomons.toml", None, 0x4446_c295_ccf6_7f32),
+        ("05_eastern_solomons.toml", None, 0x7bfb_03ae_40ce_25d0),
         (
             "five-days/01a_eastern_solomons.toml",
             None,
-            0x0512_0bcf_b8bb_5b92,
+            0xf36b_ce5c_cbb8_5e2b,
         ),
         (
             "stage-3-proof/07a_slice.toml",
@@ -221,9 +225,9 @@ fn s12_no_game_without_the_limit_changes() {
         (
             "second-proof/05a_eastern_solomons.toml",
             None,
-            0xd57c_8d25_5a8b_707a,
+            0xb92c_ce4b_c481_75d5,
         ),
-        ("second-proof/07a_week.toml", None, 0xce31_72a5_8aa2_7f47),
+        ("second-proof/07a_week.toml", None, 0x7e97_c7f7_0a67_63ff),
     ];
     let write_to = std::env::var("FLAGPILOT_106_RECORD").ok();
     let mut moved = Vec::new();
