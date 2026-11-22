@@ -510,6 +510,10 @@
         "role": {
           "enum": ["patrol", "bomber", "fighter"]
         },
+        "attack_weapon": {
+          "description": "What the group's aircraft attack ships with. Left out for a type that carries neither and where the type is not known.",
+          "enum": ["bombs", "torpedoes"]
+        },
         "location": {
           "description": "The base or the ship the group is at; null for a group lost with a base that changed side (decision 0090, 20), which has no place.",
           "$ref": "#/$defs/handle_or_null"

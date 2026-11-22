@@ -114,6 +114,17 @@ pub(crate) fn role(role: AircraftRole) -> &'static str {
     }
 }
 
+/// What a type attacks ships with, as an air group's line gives it; `None`
+/// for a type that carries nothing.
+pub(crate) fn attack_weapon(weapon: sim_core::refdata::AttackWeapon) -> Option<&'static str> {
+    use sim_core::refdata::AttackWeapon as W;
+    match weapon {
+        W::None => None,
+        W::Bomb => Some("bombs"),
+        W::Torpedo => Some("torpedoes"),
+    }
+}
+
 /// Why a force's loading fell, as the briefing writes it (decision 0095).
 pub(crate) fn loading_loss(reason: sim_core::events::LoadingLoss) -> &'static str {
     use sim_core::events::LoadingLoss as L;
