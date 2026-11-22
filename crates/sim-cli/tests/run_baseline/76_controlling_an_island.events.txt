@@ -2,20 +2,20 @@ Placeholder scenario 76: Controlling an island
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 2b336247f3163e60  64 events
-day   2  hash d1861a9d8352dfa4  29 events
-day   3  hash 923ce758cf6ac541  21 events
-day   4  hash b198175ef3c118af  33 events
-day   5  hash 8e92c1eadc8a5484  35 events
-day   6  hash f2d8f3e775730568  25 events
-day   7  hash 1f1f4997f1516fcf  15 events
-day   8  hash 56d9af86a2f16afc  22 events
-day   9  hash dd206e8795cd3422  28 events
-day  10  hash 625f09e4bf1175f6  23 events
-day  11  hash 17e21da76f86b5e5  15 events
-day  12  hash ee897da431b9c1b4  15 events
-day  13  hash f0567e9bb58b560b  15 events
-day  14  hash 062f395ca97cd42c  15 events
+day   1  hash 7a73682a36e7cfed  64 events
+day   2  hash 998995ece0b2027d  29 events
+day   3  hash f7eb1d65347103d4  21 events
+day   4  hash 4e3e456276aee834  33 events
+day   5  hash a10f2149cf42ca03  35 events
+day   6  hash acaa471f06206ae9  25 events
+day   7  hash 499e57735ddeaf16  15 events
+day   8  hash 05a1a6ae6aebfc33  22 events
+day   9  hash 7cc51d8c712e193b  28 events
+day  10  hash a5552518efea7131  23 events
+day  11  hash 542f82cc72dec1e6  15 events
+day  12  hash 622652ebc2d977f3  15 events
+day  13  hash df217ef2c26db87c  15 events
+day  14  hash f6bfba64a6f08feb  15 events
 
 #1 D1 -         Allied the commander's command taken: set intent:1 to control island 1
 #2 D1 -         Allied plan:1 drafted for intent:1  <- #1

@@ -2,12 +2,12 @@ Scenario 31: An airfield damaged and mended
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash dab65d445d686eb9  24 events
-day   2  hash 50068ed080499584  23 events
-day   3  hash 26d81043ea2b5ca6  26 events
-day   4  hash b5d555e1ac2a8ca8  22 events
-day   5  hash 40dddacc82a025f2  21 events
-day   6  hash a39e6714cbcaa034  21 events
+day   1  hash 8455c4052d539d30  24 events
+day   2  hash acaafb206ab06aad  23 events
+day   3  hash e324ce3d1580d0d3  26 events
+day   4  hash ad00b2bcd0b97de3  22 events
+day   5  hash fb3bb8d4e6731661  21 events
+day   6  hash e5eb1f2364d17f75  21 events
 
 air_group:1 "Placeholder patrol squadron" (Allied) at base:1: 12 ready, mission Search, arc 060-120 to 400 nm
 air_group:2 "Placeholder fighter squadron 1" (Allied) at base:1: 12 ready, mission Rest, no arc
