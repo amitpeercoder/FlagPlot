@@ -97,6 +97,9 @@ button:disabled { opacity: 0.45; cursor: default; }
 #p-staff, #p-force, #p-unit { display: flex; flex-direction: column; gap: 8px; }
 #p-summary:empty, #p-costs:empty, #p-says:empty, #o-dry-says:empty { display: none; }
 #p-costs { color: var(--paper-dim); }
+#paper .frow .fl { flex-basis: 64px; }
+#paper .frow input[type=range] { flex: 1 1 90px; min-width: 90px; }
+#paper .frow .sval { flex: 0 0 84px; text-align: right; }
 #p-says { display: flex; flex-direction: column; gap: 4px; font-size: 14px; }
 #p-says .sentline { color: var(--paper-dim); }
 #p-says .ask { border-top: 1px dashed #8d8672; padding-top: 8px; display: flex; flex-direction: column; gap: 8px; }
@@ -453,6 +456,8 @@ body.watched .gives { display: none !important; }
 #clock-doing .notsent b { color: #f0a58f; }
 #prompt { position: fixed; bottom: 76px; right: 16px; z-index: 7; max-width: min(340px, calc(100% - var(--sp-w) - 32px)); padding: 9px 12px; background: var(--paper); color: var(--paper-ink); font-family: var(--f-type); font-size: 14px; line-height: 1.35; border-left: 4px solid var(--own); box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
 #prompt[hidden] { display: none; }
+body.papered #prompt { right: auto; left: calc(var(--sp-w) + 16px); max-width: min(300px, calc(100% - var(--sp-w) - 400px)); }
+@media (max-width: 1099px) { body.papered #prompt { left: 16px; bottom: 140px; max-width: 220px; } }
 #game-says { font-family: var(--f-type); font-size: 13px; line-height: 1.4; color: var(--ink); }
 #game-says:empty { display: none; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
@@ -3854,7 +3859,7 @@ body.watched .gives { display: none !important; }
   }
   function dropPaper() {
     if (!paper) return;
-    paper = null; force = null; draft = null; endMarch(); arcDraft = null; previewSeq += 1;
+    paper = null; force = null; draft = null; endMarch(); arcDraft = null; previewSeq += 1; document.body.classList.remove('papered');
     if (picking === 'route') { picking = false; canvas.classList.remove('picking'); }
     $('paper').hidden = true; $('p-says').textContent = ''; $('p-unit').textContent = '';
     if ($('card').hidden) airReach = null;
@@ -3875,7 +3880,7 @@ body.watched .gives { display: none !important; }
     if (kind === 'force') { $('p-force').hidden = false; setupForce(o.force); paper.draft = forceDraft; }
     else if (kind === 'staff') { $('p-staff').hidden = false; openDraft(o.target, o.first); }
     else { var box = $('p-unit'); box.textContent = ''; box.hidden = false; var c = o.build(box); paper.draft = c.draft; paper.update = c.update; paper.onSigned = c.onSigned || null; }
-    $('paper').hidden = false; paperShow(); say('draft', 'A draft. Nothing is ordered until you sign.');
+    $('paper').hidden = false; document.body.classList.add('papered'); paperShow(); say('draft', 'A draft. Nothing is ordered until you sign.');
     setTimeout(function () { if (paper) { var f = $('p-the').querySelector('input:checked, input, button'); if (f) f.focus({ preventScroll: true }); } }, 0);
   }
   // A question put in the paper itself; `yes` is what TEAR UP does there.
@@ -3992,7 +3997,7 @@ body.watched .gives { display: none !important; }
     var box = $('p-says'); box.textContent = '';
     lines.forEach(function (l) {
       var d = el('div', l.ok ? 'sentline' : 'notsent'); if (!l.ok) d.setAttribute('role', 'alert'); d.appendChild(document.createTextNode(l.label + ': '));
-      if (l.ok) d.appendChild(document.createTextNode('sent.')); else { d.appendChild(el('b', '', 'NOT SENT')); d.appendChild(document.createTextNode(' — ' + l.why)); } box.appendChild(d);
+      if (l.ok) d.appendChild(document.createTextNode('sent.')); else { d.appendChild(el('b', '', 'NOT SENT')); d.appendChild(document.createTextNode(' \u2014 ' + l.why)); } box.appendChild(d);
     });
   }
   function signUnit() {
@@ -4057,7 +4062,7 @@ body.watched .gives { display: none !important; }
     draft.ends.forEach(function (e, i) { var l = el('label'), r = el('input'); r.type = 'radio'; r.name = 'end'; r.value = String(i); r.id = 'o-end-' + i; r.checked = i === (first || 0); l.appendChild(r); var t = el('span', 'endw'); t.appendChild(el('b', '', e[0])); if (e[2]) t.appendChild(el('small', '', e[2])); l.appendChild(t); box.appendChild(l); });
     $('o-risk-balanced').checked = true; drawMarks(); askPreview();
   }
-  function chosen(name) { var r = document.querySelector('#order input[name="' + name + '"]:checked'); return r ? r.value : ''; }
+  function chosen(name) { var r = document.querySelector('#paper input[name="' + name + '"]:checked'); return r ? r.value : ''; }
   function askPreview() {
     if (!draft) return; var seq = ++previewSeq, out = $('o-preview'), e = draft.ends[parseInt(chosen('end'), 10) || 0];
     previewNo = null; $('p-sign').disabled = true; $('p-dry').disabled = true; $('p-dry').hidden = !OFFERED.trial; $('o-dry-says').textContent = ''; out.textContent = 'Asking the staff.'; $('o-pv').open = true; $('o-pv-sum').textContent = 'THE STAFF\'S READING';
