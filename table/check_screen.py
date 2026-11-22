@@ -471,6 +471,36 @@ def a_refusal_through_the_page(bridge):
     check(post(bridge.table + "/new") == {"ok": True}, "the game is put away")
 
 
+def no_points_in_play(bridge):
+    """No points while the game is in play (the designer's standing rule; decision 0221, the ruling after stage 4). The real
+    situation of the 39 days, which carries the objectives' worth and the levels of victory, is put through the page's own
+    `situationLine` and `noPoints`, cut from its text and run in node, line by line as `situationDoc` reads it; nothing shown says
+    "points". The page itself writes the word only in HOW IT ENDED (`readEnd`)."""
+    print("-- no points in play: the situation of the 39 days through the page's own functions", flush=True)
+    check(begin(bridge, "guadalcanal-39-days", "person", "engine") == {"ok": True}, "begun")
+    person = Person(bridge.table)
+    text = person.call("get_briefing", {"text": True})["ok"]["text"]
+    import re
+    check(re.search(r"\bpoints\b", text) and "Levels:" in text and "These are estimates from reports" in text,
+          "the engine's situation carries the objectives' worth, the levels and the note on estimates")
+    page = page_text()
+    code = (page[page.index("  function noPoints(line)"):page.index("  function situationDoc(doc, text)")]
+            + "\nfunction main(text) { let part = '', shown = []; text.split('\\n').forEach(function (line) { if (/^[A-Z][A-Z ]+$/.test(line)) { part = line; shown.push(line); return; } const l = situationLine(line, part, false); if (l != null) shown.push(l); }); return shown; }")
+    shown = run_in_node(code, text)
+    check(not any(re.search(r"\bpoints\b", l, re.I) for l in shown) and not any("Levels:" in l for l in shown),
+          f"no line of the situation shown in play says points or the levels ({[l for l in shown if 'point' in l.lower()][:3]})")
+    check(any("Objective: " in l for l in shown) and any("What the enemy is after:" in l for l in shown),
+          "each objective, and what the enemy is after, is still said in words")
+    check(not any("These are estimates from reports" in l for l in shown), "the note on how estimates work is left out")
+    check("line = situationLine(line, part, M.over); if (line == null) return;" in page,
+          "the situation paper draws each line through situationLine, which keeps the worth for the game's end")
+    end = page[page.index("  function readEnd"):]
+    end = end[:end.index("\n  }\n") + 4]
+    literals = [m.group(0) for m in re.finditer(r"'[^'\n]*\b[Pp]oints\b[^'\n]*'", page)]
+    check(literals and all(l in end for l in literals), f"the page writes the word points only in HOW IT ENDED ({literals})")
+    check(post(bridge.table + "/new") == {"ok": True}, "the game is put away")
+
+
 def queue_through_the_bridge(bridge):
     """The two tools SIGNED rests on, as the page calls them: queued lists what was signed, with a unit's hold going with
     its order, and take_back withdraws one entry and what goes with it, refused with the token out of date."""
@@ -1066,6 +1096,7 @@ def main():
             every_game(bridge, listed)
             orders_on_the_card(bridge)
             a_refusal_through_the_page(bridge)
+            no_points_in_play(bridge)
             queue_through_the_bridge(bridge)
             the_paper_in_words(bridge)
             midway_on_its_chart(bridge)

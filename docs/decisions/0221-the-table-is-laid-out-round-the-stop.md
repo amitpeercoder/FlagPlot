@@ -405,3 +405,22 @@ Left for stage 4:
 - The situation still shows the scoring's lines and the note on estimates. Against "no points during play" this is the designer's to rule.
 - "for the coming day" under SIGNED was not seen live.
 - The per-order pursuit setting is not linked from the fold. The amended rules leave it out; the staff's standing tick for a force asking leave is in it.
+
+## The architect's rulings on stage 4, Nov 22, 2026
+
+- **The pursuit setting of each order stays out of the fold,** as the amended rules have it.
+- **No points are shown during play,** by the designer's standing rule. The situation paper does not show the scoring's lines, the levels of victory or any point value while the game is in play. It says the mission and each objective in words, without their worth, and keeps what is known of progress in words. The points belong to HOW IT ENDED alone. The note under the estimates stays only if it says what the commander knows, not how a rule works.
+
+### As built
+
+In its own pull request, "The situation shows no points during play", the page shows the situation through `situationLine`.
+
+- **While the game is in play, the OBJECTIVES part is cut back:**
+  - an objective's worth is cut ("Objective: Lunga is your own side's at the end of the game");
+  - the line of levels is left out;
+  - "worth N points" is cut from what is known of progress;
+  - "The enemy is scored for:" becomes "What the enemy is after:", with each line's worth cut.
+- **The note under the estimates is left out:** "These are estimates from reports, not counts: each can be wrong by up to half either way …" says how a rule works.
+- **Once the game is over,** the objectives are shown whole.
+
+The evening report, the directives and the plan's paper were read on Midway and the 39 days in play, and none says "points". `table/check_screen.py` puts the real situation of the 39 days through the page's own functions in node and checks two things: no line shown in play says "points" or the levels, and each objective and what the enemy is after are still said. It also checks that the page writes the word "points" only in HOW IT ENDED.
