@@ -155,20 +155,21 @@ The rows give firing ranges for the 1942 attacks themselves: I-6 4,700 yards, I-
 
 | Class or block | Surface / submerged speed (knots) | Submerged endurance | Range | Depth | Tubes, torpedoes | Rows |
 | --- | --- | --- | --- | --- | --- | --- |
-| US S-boat, S-1 group (S-38) | 14.5 / 11 | gap | gap | gap | 4, gap | cl 16071 to 16076 |
-| US S-boat, S-42 group (S-42 to S-47) | 14.5 / 11 | gap | gap | gap | 4, gap (12 Mark 10 for S-44, Wikipedia: wp 16014) | cl 16077 to 16083 |
-| US Narwhal (Nautilus) | 17.4 / 8 | gap | gap | gap | 4 bow, 2 stern, 4 topside | cl 16084 to 16089 |
-| US Sargo | 20 / 8.75 | gap | gap | gap | 8 | cl 16106 to 16113 |
-| US Tambor | 20 / 8.75 | 48 hours at 2 knots (Wikipedia) | 11,000 miles at 10 (Wikipedia) | 250 to 300 feet test (Wikipedia) | 10 | cl 16090 to 16097, 16121 to 16123 |
-| US Gato | 20 or 20.25 / 8.75 | 48 hours at 2 knots (Wikipedia) | 11,000 (Wikipedia) | 300 feet test (Wikipedia) | 10 | cl 16098 to 16105, 16124 to 16126 |
-| US fleet type, general (NAVPERS 16160) | about 21 / about 10 | | over 12,000 | | 10 | cl 16114 to 16120 |
-| I-1 to I-6 (I-6) | 17 / 8 | | 20,000 at 10 | 75 m | 4 bow; 20 (ONI's I-5 class) | cl 16000 to 16006, 16070 |
+| US S-boat, S-1 group (S-38) | 14.5 / 11 | gap | gap | gap | 4 bow, 0 stern (inferred); 12 Mark 10 | cl 16071 to 16076; 16127, 16128, 16131 to 16134, 16180, 16181 |
+| US S-boat, S-42 group (S-42 to S-47) | 14.5 / 11 | gap | gap | gap | 4 bow, 0 stern (inferred); 12 Mark 10 (and wp 16014) | cl 16077 to 16083; 16129, 16130, 16135 to 16138, 16182, 16183 |
+| US Narwhal (Nautilus) | 17.4 / 8 | gap | 18,000 or 15,000, no speed | gap | 4 bow, 2 stern, 4 topside; 24; torpedo gap | cl 16084 to 16089; 16139 to 16150 |
+| US Sargo | 20 / 8.75 | gap | 11,000 at 10 (Wikipedia); 15,000, no speed | gap | 4 bow, 4 stern; 24 | cl 16106 to 16113; 16151 to 16158 |
+| US Tambor | 20 / 8.75 | 48 hours at 2 knots (Wikipedia) | 11,000 miles at 10 (Wikipedia); 15,000, no speed | 250 to 300 feet test (Wikipedia) | 6 bow, 4 stern; 24 | cl 16090 to 16097, 16121 to 16123; 16159 to 16163, 16166 to 16169 |
+| US Gato | 20 or 20.25 / 8.75 | 48 hours at 2 knots (Wikipedia) | 11,000 at 10 (Wikipedia, NavSource) | 300 feet test (Wikipedia) | 6 bow, 4 stern; 24 | cl 16098 to 16105, 16124 to 16126; 16164, 16165, 16170 to 16177 |
+| US fleet type, general (NAVPERS 16160) | about 21 / about 10 | | over 12,000 | | 6 bow, 4 stern; Mark 14 (Mark 10 in reserve) | cl 16114 to 16120; 16178, 16179, 16184 to 16186 |
+| I-1 to I-6 (I-6) | 17 / 8 | | 20,000 at 10 | 75 m | 4 bow, 2 stern; 20 or 17 (Wikipedia, disputed); ONI's I-5 class 4 bow, 2 stern (or 6 bow, disputed), 20, Type 89 with Type 95 reported | cl 16000 to 16006, 16070; 16187, 16189 to 16191, 16196 to 16212 |
 | I-15 block (I-15, I-17, I-19, I-26 ...) | 22 / gap | 32 hours at 3 knots | 14,000 at 16 | 100 m; 327 feet (ONI) | 6 bow, 16 | cl 16015 to 16022, 16048 to 16052 |
-| I-168 to I-175 | 23 / 8 | 22 hours at 3 knots | 14,000 at 10 | 75 m | 4 bow, 2 stern | cl 16007 to 16014 |
+| I-168 to I-175 | 23 / 8 | 22 hours at 3 knots | 14,000 at 10 | 75 m | 4 bow, 2 stern; 14 and Type 89 (Wikipedia only) | cl 16007 to 16014; 16193, 16194, 16222 to 16225 |
 | I-176 to I-185 | 23 / 8 | 10 hours at 5 knots | 8,000 at 16 | gap | 6 bow, 12 | cl 16023 to 16030, 16053 to 16056 |
 | I-153 to I-167 | gap | gap | 10,000 at 10 | 60 m | 6 bow, 2 stern (ONI), 16 | cl 16036 to 16039, 16061 to 16064 |
 | I-121 to I-124 | gap | gap | 8,000 at 12 | gap | 4 bow; 8 or 20 | cl 16031 to 16035, 16057 to 16060 |
-| RO-33, RO-34 | 18.9 / 8.4 | 25.7 hours at 3.5 knots | 3,000 at 16 | 75 m | 4 bow | cl 16040 to 16047 |
+| RO-33, RO-34 | 18.9 / 8.4 | 25.7 hours at 3.5 knots | 3,000 at 16 | 75 m | 4 bow; 10 (Wikipedia only) | cl 16040 to 16047; 16195, 16226 to 16229 |
+| I-9 to I-11 (I-9 class) | | | | | 6 bow; 20 (ONI) or 18 (Wikipedia), disputed; Type 89, Type 95 reported | cl 16069; 16188, 16192, 16213 to 16221 |
 
 The Japanese figures are the Technical Mission's "as built" table (1946) read through OCR; the depth is a "submergence depth" the report does not call test or operating. The I-9 class carried a floatplane (cl 16069). Twenty-six boats are tied to a class by a row (sh 16000 to 16025).
 
@@ -182,8 +183,8 @@ The last 61 entries of `gaps.csv`. The ones that matter most to a rule:
 - the arrival of each boat of the Midway cordon (only I-169's is stated);
 - the stations of the American boats off Truk, Rabaul, Kavieng and Bougainville, and of the Japanese boats in the Coral Sea beyond the line south-west of Guadalcanal;
 - any statement of attack doctrine of 1942 for either navy (ranges, spreads, target speeds accepted), and the American screening doctrine of 1942 as a publication;
-- an official source for the submerged endurance and test depth of the American classes, and the torpedoes carried by each;
-- which Japanese boats carried the Type 95 and which the Type 89 in 1942;
+- an official source for the submerged endurance and test depth of the American classes (the torpedoes carried by each are now on file, section 9);
+- which Japanese boats carried the Type 95 and which the Type 89 in 1942, beyond the firings and loads of section 9;
 - a rate of counter-attack, damage or loss per attack for either navy in 1942;
 - when Japanese depth-charge settings changed, from a primary source.
 
@@ -235,3 +236,30 @@ Each has its own rows.
 - **The drop test of 1943:** 90 feet (NSL) against 900 (Rowland and Boyd).
 - **Depth charges in a Japanese destroyer:** about 30 in fleet destroyers (WDR 58) against 90 in convoy destroyers (S-24).
 - **Class figures:** I-15 block 2,212 tons (Technical Mission) against 2,100 (ONI); I-176 1,630 against 1,609; I-121 torpedoes 8 against 20; Tambor's complement 79 against 59 and her displacement 1,476 against 1,475 (two DANFS entries); Sargo's complement 55 against 64; S-47 800 tons against S-44's 850.
+
+## 9. Second pass: the classes' torpedoes (2026-11-22)
+
+Read later the same day for decision 0218's figures: torpedoes carried, bow and stern tubes, the speed at which a range is quoted, which torpedo each class or boat carried in 1942, and the Type 96's warhead. Two Sonnet readers staged statements with their quotations; the lead checked every quotation by program against the saved text (all passed), read two figures off page images (S-01-1's I-1 and I-9 blocks, O-01-1's Type 96 charge), and wrote the rows. Rows: `ship_class_facts.csv` 16127 to 16229, `weapon_facts.csv` 16063 to 16065, `engagement_events.csv` 16426 to 16435, `sources.csv` 16014 (FM 30-50, the Army's identification manual of US Navy ships, October 1941) and 16015 (the Fleet Type Submarine series pamphlet "21-Inch Submerged Torpedo Tubes"), and six entries at the end of `gaps.csv`. No existing row was changed.
+
+**Closed.**
+
+- *Torpedoes carried, US:* S-boats 12 (FM 30-50, HyperWar, NavSource; cl 16127, 16129, 16132, 16134, 16136, 16138); Narwhal, Sargo, Tambor and Gato 24 (HyperWar and NavSource; cl 16141, 16144, 16148, 16153, 16155, 16161, 16166, 16172, 16175). No source separates reloads from the torpedoes in the tubes.
+- *Torpedoes carried, Japanese:* only from Wikipedia, except ONI's I-9 class. I-168 group 14 (cl 16222, unconfirmed); I-1 group 20 for the J1 boats against 17 for I-6 (cl 16202, 16203, disputed: two types in one block); I-9 group 20 (ONI) against 18 (Wikipedia) (cl 16214, 16218, 16220, disputed); I-5 group 20 (cl 16212, agreeing with 16070); RO-33 group 10 (cl 16226, 16227, unconfirmed).
+- *Bow and stern tubes:* S-boats 4 bow (HyperWar, unconfirmed) and 0 stern (inferred from 4 bow and FM 30-50's 4 in all; cl 16131, 16133, 16135, 16137); Narwhal 4 and 2 (cl 16139, 16140, 16142, 16143, 16146, 16147), with 4 topside tubes NavSource dates to Nautilus's refit of July 1941 to April 1942 (noted, not filed: no torpedo named for a fit); Sargo 4 and 4 (cl 16151, 16152, HyperWar only, unconfirmed); Tambor and Gato 6 and 4 (the tubes pamphlet: every boat SS-198 and higher but SS-204 and 205; HyperWar, NavSource; cl 16159, 16160, 16162 to 16165, 16170, 16171, 16173, 16174); the fleet type 6 and 4 (NAVPERS 16160, cl 16178, 16179). Japanese: I-1 group 2 stern (S-01-1, read off the page image, cl 16187; Wikipedia agrees); I-9 to I-12 six forward (S-01-1, cl 16188; Wikipedia agrees); ONI's I-5 class 4 bow and 2 stern against Wikipedia's 6 all bow (cl 16206, 16207, 16210). Nishida's totals (cl 16189 to 16195).
+- *Range and its speed, US:* 11,000 miles at 10 knots for Gato (NavSource and Wikipedia, cl 16176, 16177), for Tambor and Sargo from Wikipedia only (cl 16157, 16158, 16169). Other statements give a range with no speed: Narwhal 18,000 (HyperWar) or 15,000 (a press caption of about 1928 to 1930), Sargo 15,000, Tambor 15,000 (a 1940 caption) (cl 16145, 16149, 16154, 16167).
+- *Which torpedo, US:* the Mark 10 for the S-boats (Rowland and Boyd: built for the R and S boats that could not fire the longer Mark 14; NavWeaps; cl 16180 to 16183); the Mark 14 for the fleet type in general (NavWeaps, and the tubes "designed primarily for the Mark 14"), with the Mark 10 as a reserve weapon (cl 16184 to 16186). No source names the torpedo by class (Narwhal, Sargo, Tambor, Gato) or by date.
+- *Which torpedo, Japanese:* class statements: ONI gives Type 89 for its I-5 and I-9 classes, each with "Type 95 also reported" (cl 16208, 16209, 16215, 16216); Wikipedia gives Type 89 for the I-168 group and I-6, Type 95 for the J1, A1 and RO-33 types (cl 16204, 16205, 16221, 16225, 16229, unconfirmed). Firings and loads named by combinedfleet (ev 16426 to 16435): I-17 fired the old 6th Year Type in December 1941; I-26 embarked Type 95 at Kwajalein on 11 January 1942 and fired a Type 89 at Coast Trader on 7 June; I-123 fired four Type 89 off Darwin on 20 January; I-7 and I-3 fired Type 89 in April; I-4 fired two Type 96 on 6 April; I-21 fired Type 95 on 5 and 7 May (both of the second pair premature). With I-19's six Type 95 at Wasp (on file 3002) and I-6's Type 89 at Saratoga (ev 16050), the record shows both types in use by the same squadrons in 1942, and I-26 firing Type 89 after embarking Type 95.
+- *The Type 96 warhead:* 405 kg (891 lb) in the Technical Mission's O-01-1 against 550 kg (1,213 lb) of Type 97 explosive in NavWeaps (wp 16063 to 16065, disputed). The Technical Mission's 405 kg is the same as its Type 95 Model 1 charge (wp 16056), from which the Type 96 was made.
+
+**Still gaps** (the six new entries of `gaps.csv`):
+
+- the range and its speed for the S-boats; the endurance speed of Narwhal; a range with speed for any US class from an official source;
+- reloads apart from loaded tubes, for every class;
+- the torpedo by class and date for Narwhal, Sargo, Tambor and Gato;
+- a primary statement that the S-1 and S-42 groups had no stern tube;
+- torpedoes carried for the I-168 and RO-33 groups from any source but Wikipedia (ONI has no sheet for either);
+- the torpedo type for I-15, I-17, I-168, I-11, RO-33, I-9, I-31, I-174, I-175, I-121, I-122, I-24, I-176 and RO-34 in 1942: their records of movement name none (I-168's four at Yorktown and Hammann are not typed).
+
+**Where the format did not fit.** `fits.csv` ties a weapon to a carrier with a count of tubes or mounts; no source here gives a count tied to a torpedo type, so the class statements went to `torpedo_model` in `ship_class_facts.csv` (a type with no count, as that attribute is defined) and the boat statements to engagement events in `submarine-war-1942`. There is no attribute for a boat's torpedo type outside a firing.
+
+**Rows this pass left for the architect.** Wikipedia's Type J1 page (6 bow tubes) disagrees with row 16004 (the Technical Mission, four forward); it is filed `alternative` (cl 16198) so as not to change 16004, and is not settled by anyone. NavSource's 11,000 miles for Gato was not filed as `endurance_nm`, because a second agreeing source would require 16125 (Wikipedia) to change from `unconfirmed` to `preferred`; the speed is filed (cl 16176).
