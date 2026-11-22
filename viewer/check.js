@@ -262,12 +262,12 @@ function checkAirModel(replay, model, label) {
 
 
 // ---- Replay version 4: the state at each step is in the file ----
-const STEP_KINDS = ['task_forces', 'ships', 'air_groups', 'bases', 'land_units'];
+const STEP_KINDS = ['task_forces', 'ships', 'air_groups', 'bases', 'land_units', 'submarines'];
 const SORTED = x => JSON.stringify(x, (k, v) => (v && typeof v === 'object' && !Array.isArray(v)) ? Object.fromEntries(Object.entries(v).sort(([a], [b]) => a < b ? -1 : 1)) : v);
 
 /** Applies the entries of `steps` in order, on its own (no code of the page), and returns each step's records as JSON text by kind and key. */
 function applySteps(steps) {
-  const cur = { task_forces: new Map(), ships: new Map(), air_groups: new Map(), bases: new Map(), land_units: new Map(), contacts: { allied: new Map(), japanese: new Map() }, ground_estimates: { allied: new Map(), japanese: new Map() } };
+  const cur = { task_forces: new Map(), ships: new Map(), air_groups: new Map(), bases: new Map(), land_units: new Map(), submarines: new Map(), contacts: { allied: new Map(), japanese: new Map() }, ground_estimates: { allied: new Map(), japanese: new Map() } };
   const out = [];
   for (const e of steps) {
     const ch = e.changed || {}, rm = e.removed || {};
@@ -278,7 +278,7 @@ function applySteps(steps) {
       for (const r of (ch.ground_estimates && ch.ground_estimates[side]) || []) cur.ground_estimates[side].set(r.hex.join(','), SORTED(r));
       for (const h of (rm.ground_estimates && rm.ground_estimates[side]) || []) cur.ground_estimates[side].delete(h.join(','));
     }
-    out.push({ task_forces: new Map(cur.task_forces), ships: new Map(cur.ships), air_groups: new Map(cur.air_groups), bases: new Map(cur.bases), land_units: new Map(cur.land_units) });
+    out.push({ task_forces: new Map(cur.task_forces), ships: new Map(cur.ships), air_groups: new Map(cur.air_groups), bases: new Map(cur.bases), land_units: new Map(cur.land_units), submarines: new Map(cur.submarines) });
   }
   return { last: cur, all: out };
 }

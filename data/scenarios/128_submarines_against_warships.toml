@@ -1,0 +1,72 @@
+# Scenario 128: submarines against warships. Game A1 of the hand calculation
+# in tests/scenario_128_submarines_against_warships.rs: one placeholder
+# Japanese submarine lies on her station at (5,0); one Allied task force of a
+# placeholder carrier and a placeholder destroyer lies stopped at (5,0) all
+# the night. Decision 0218, stage 2 (the second stage of three).
+#
+# With no rule of the attack built yet (phase 1 of the build: the boat as a
+# unit, her state, hash, loader and views), the boat simply sits. The test
+# runs variants of this file, one for each game of the hand calculation.
+#
+# PLACEHOLDER DATA. The boat, ships, base, figures and map are invented. The
+# class and the torpedo are those of scenario 4a's torpedo (damage 200), so
+# that a hit is worked as that scenario works one.
+
+name = "Scenario 128: A submarine lies in the way of a force"
+placeholder = true
+seed = 1942
+days = 1
+map = "../map/placeholder_submarines.toml"
+ship_classes = "../reference/ship_classes.csv"
+port_sizes = "../reference/port_sizes.csv"
+aircraft_types = "../reference/aircraft_types.csv"
+search = "../reference/search.toml"
+surface_combat = "../reference/surface_combat.toml"
+submarine_classes = "../reference/submarine_classes_placeholder_scenario_128.csv"
+submarine_torpedoes = "../reference/submarine_torpedoes_placeholder_scenario_128.csv"
+submarines = "../reference/submarines_placeholder_scenario_128.toml"
+
+# The Japanese submarine base the boat goes home to, 7 hexes east of her
+# station and far from the action.
+[[base]]
+id = 1
+name = "Placeholder submarine base"
+side = "japanese"
+q = 12
+r = 0
+airfield = false
+
+# Boat 1 on her station at (5,0), sound, with both salvoes.
+[[submarine]]
+id = 1
+name = "Placeholder submarine 1"
+side = "japanese"
+class = 6900
+q = 5
+r = 0
+home = 1
+
+# The Allied force lies stopped at (5,0) all the night.
+[[task_force]]
+id = 1
+name = "Placeholder Allied force"
+side = "allied"
+q = 5
+r = 0
+mission = "surface_combat"
+
+[[ship]]
+id = 1
+name = "Placeholder carrier"
+class = 4
+side = "allied"
+fuel_t = 3000
+task_force = 1
+
+[[ship]]
+id = 2
+name = "Placeholder destroyer"
+class = 2
+side = "allied"
+fuel_t = 500
+task_force = 1

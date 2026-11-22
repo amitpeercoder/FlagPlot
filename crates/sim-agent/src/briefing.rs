@@ -3009,6 +3009,9 @@ impl Day {
             match &e.kind {
                 SideEventKind::Whole(kind) => match kind {
                     EventKind::OrderAccepted { .. } => orders.accepted += 1,
+                    // The briefing's part for a side's own boats is a later
+                    // phase of decision 0218.
+                    EventKind::SubmarineEntered { .. } => {}
                     EventKind::ForceEntered { .. }
                     | EventKind::UnitEntered { .. }
                     | EventKind::EntryWaiting { .. } => {

@@ -39,7 +39,7 @@ use crate::refdata::{RefData, ShipKind};
 use crate::rng::{Domain, Stream};
 use crate::state::{
     AirGroup, CargoOrder, Charge, FuelFrom, Halt, HitsOnMen, LandUnit, March, Preparation, Side,
-    TaskForce, TruthState, YardTrip,
+    Submarine, SubmarinePassage, TaskForce, TruthState, YardTrip,
 };
 use crate::time::Pulse;
 use crate::world::{MadeIds, SimError, World, MADE_IDS_FLOOR};
@@ -209,7 +209,11 @@ fn walk_held_ids(
         supply_lines: _,
         // Nor does a stream of men or a unit's strength.
         men_replacement: _,
+        submarines,
     } = truth;
+    for boat in submarines.values_mut() {
+        walk_submarine(boat, visit);
+    }
     for force in task_forces.values_mut() {
         walk_task_force(force, visit);
     }
@@ -405,6 +409,43 @@ fn walk_task_force(force: &mut TaskForce, visit: &mut dyn FnMut(String, HeldId<'
         if let Some(held) = cargo_completed {
             event("cargo completed since its halt", held);
         }
+    }
+}
+
+/// A submarine holds the order that gave her station and the one that
+/// sent her on a passage (decision 0218).
+fn walk_submarine(boat: &mut Submarine, visit: &mut dyn FnMut(String, HeldId<'_>)) {
+    let Submarine {
+        id,
+        name: _,
+        side: _,
+        class: _,
+        hex: _,
+        station: _,
+        passage,
+        salvoes: _,
+        held_down_until: _,
+        condition: _,
+        home: _,
+        leave_day: _,
+        enters_day: _,
+        available_from: _,
+        station_order,
+    } = boat;
+    if let Some(held) = station_order {
+        visit(format!("{id}'s station order"), HeldId::Order(held));
+    }
+    if let Some(SubmarinePassage {
+        to: _,
+        home: _,
+        toward_hex: _,
+        progress_nm: _,
+        leg_nm: _,
+        arrived: _,
+        order: Some(held),
+    }) = passage
+    {
+        visit(format!("{id}'s passage order"), HeldId::Order(held));
     }
 }
 

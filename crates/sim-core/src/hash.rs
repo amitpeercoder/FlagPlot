@@ -28,7 +28,8 @@ use crate::state::{
     AirGroup, AirGroupLocation, AircraftFire, Arrival, Base, CargoOrder, Charge, ClaimTally,
     DayWork, Formation, FuelFrom, Halt, HaltWork, HitsOnMen, LandUnit, March, MenReplacement,
     MenStream, Preparation, Replacement, Route, RulesOfEngagement, SearchArc, Ship, ShipLocation,
-    ShipSystem, ShipSystems, Skills, Strength, SupplyLine, TaskForce, Troops, TruthState, YardTrip,
+    ShipSystem, ShipSystems, Skills, Strength, Submarine, SubmarinePassage, SupplyLine, TaskForce,
+    Troops, TruthState, YardTrip,
 };
 use crate::world::World;
 
@@ -398,7 +399,36 @@ fn name_every_field(world: &World) {
         entering,
         supply_lines,
         men_replacement,
+        submarines,
     } = truth;
+    if let Some(Submarine {
+        id: _,
+        // Not hashed: a name changes nothing that happens.
+        name: _,
+        side: _,
+        class: _,
+        hex: _,
+        station: _,
+        passage:
+            Some(SubmarinePassage {
+                to: _,
+                home: _,
+                toward_hex: _,
+                progress_nm: _,
+                leg_nm: _,
+                arrived: _,
+                order: _,
+            }),
+        salvoes: _,
+        held_down_until: _,
+        condition: _,
+        home: _,
+        leave_day: _,
+        enters_day: _,
+        available_from: _,
+        station_order: _,
+    }) = submarines.values().find(|boat| boat.passage.is_some())
+    {}
     let MenReplacement { streams, units } = men_replacement;
     if let Some(MenStream {
         side: _,
@@ -2313,7 +2343,71 @@ pub(crate) fn hash_world(world: &World) -> u64 {
         }
     }
 
+    // Last of all (decision 0218), and only where the game has a submarine:
+    // the boats in number order, each its number, side, class, hex, station,
+    // passage (0, or 1 then its fields), salvoes, held down (0, or 1 then
+    // the day and the pulse's code), condition, home base, leave day, entry
+    // day, day to be used from and station order; the name is not hashed.
+    // A game with no boat writes nothing here and its hash is what it was,
+    // so the layout's version is not raised. The later phases of the rule
+    // (the belief lists of reports of submarines and suspected waters, and
+    // the claims marked a submarine's) append to this same block, after the
+    // boats, and the block is then written where any of them is held.
+    if !truth.submarines.is_empty() {
+        h.count(truth.submarines.len());
+        for boat in truth.submarines.values() {
+            hash_submarine(&mut h, boat);
+        }
+    }
+
     h.finish()
+}
+
+/// One submarine (decision 0218): see the block in [`hash_world`].
+fn hash_submarine(h: &mut StateHasher, boat: &Submarine) {
+    h.u32(boat.id.raw());
+    h.u8(boat.side.code());
+    h.u32(boat.class.raw());
+    h.i32(boat.hex.q);
+    h.i32(boat.hex.r);
+    h.i32(boat.station.q);
+    h.i32(boat.station.r);
+    match &boat.passage {
+        Some(passage) => {
+            h.u8(1);
+            h.i32(passage.to.q);
+            h.i32(passage.to.r);
+            h.u8(u8::from(passage.home));
+            match passage.toward_hex {
+                Some(hex) => {
+                    h.u8(1);
+                    h.i32(hex.q);
+                    h.i32(hex.r);
+                }
+                None => h.u8(0),
+            }
+            h.i64(passage.progress_nm.raw());
+            h.i64(passage.leg_nm.raw());
+            h.u8(u8::from(passage.arrived));
+            h.optional_u32(passage.order.map(|order| order.raw()));
+        }
+        None => h.u8(0),
+    }
+    h.u32(boat.salvoes);
+    match boat.held_down_until {
+        Some((day, pulse)) => {
+            h.u8(1);
+            h.u32(day);
+            h.u64(pulse.code());
+        }
+        None => h.u8(0),
+    }
+    h.u8(boat.condition.code());
+    h.u32(boat.home.raw());
+    h.optional_u32(boat.leave_day);
+    h.optional_u32(boat.enters_day);
+    h.optional_u32(boat.available_from);
+    h.optional_u32(boat.station_order.map(|order| order.raw()));
 }
 
 /// One unit held apart (decision 0195, 23): the key's kind code and number,

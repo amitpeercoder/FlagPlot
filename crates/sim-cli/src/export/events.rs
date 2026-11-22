@@ -1195,6 +1195,10 @@ pub(super) fn describe(
                 .ids("air_groups", air_groups)
                 .ids("land_units", land_units),
         ),
+        EventKind::SubmarineEntered { submarine, hex } => (
+            "submarine_entered",
+            d.id("submarine", *submarine).hex("hex", *hex),
+        ),
         EventKind::UnitEntered {
             unit,
             side,

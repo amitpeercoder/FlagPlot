@@ -52,7 +52,7 @@ use crate::fixed::Fixed;
 use crate::hex::Hex;
 use crate::ids::{
     AirGroupId, AircraftTypeId, BaseId, EntityRef, EventId, LandUnitId, OrderId, ShipId,
-    TaskForceId,
+    SubmarineId, TaskForceId,
 };
 use crate::state::{Side, TruthState};
 use crate::time::{ClockTime, Pulse};
@@ -642,6 +642,7 @@ pub(crate) struct Owners {
     pub(crate) air_groups: BTreeMap<AirGroupId, Side>,
     pub(crate) bases: BTreeMap<BaseId, Side>,
     pub(crate) land_units: BTreeMap<LandUnitId, Side>,
+    pub(crate) submarines: BTreeMap<SubmarineId, Side>,
     pub(crate) orders: BTreeMap<OrderId, Side>,
     /// The task forces with no ship that are not away at the yard. A force
     /// emptied by sinking is never removed and never given a ship again, so a
@@ -689,6 +690,11 @@ impl Owners {
                 .iter()
                 .map(|(id, u)| (*id, u.side))
                 .collect(),
+            submarines: truth
+                .submarines
+                .iter()
+                .map(|(id, boat)| (*id, boat.side))
+                .collect(),
             orders: orders.iter().map(|(id, o)| (*id, o.side)).collect(),
         }
     }
@@ -700,6 +706,7 @@ impl Owners {
             EntityRef::AirGroup(id) => self.air_groups.get(&id).copied(),
             EntityRef::Base(id) => self.bases.get(&id).copied(),
             EntityRef::LandUnit(id) => self.land_units.get(&id).copied(),
+            EntityRef::Submarine(id) => self.submarines.get(&id).copied(),
             EntityRef::Pilot(_)
             | EntityRef::Contact(_)
             | EntityRef::Event(_)
@@ -727,6 +734,7 @@ pub(crate) fn seen(kind: &EventKind, side: Side, owners: &Owners, knows_fight: b
     let own_group = |id: &AirGroupId| owners.air_groups.get(id) == Some(&side);
     let own_base = |id: &BaseId| owners.bases.get(id) == Some(&side);
     let own_unit = |id: &LandUnitId| owners.land_units.get(id) == Some(&side);
+    let own_boat = |id: &SubmarineId| owners.submarines.get(id) == Some(&side);
     let whole_if = |own: bool| if own { Seen::Whole } else { Seen::Nothing };
     let cut_if = |own: bool, cut: SideEventKind| {
         if own {
@@ -1323,6 +1331,9 @@ pub(crate) fn seen(kind: &EventKind, side: Side, owners: &Owners, knows_fight: b
         EventKind::ForceEntered { side: owner, .. }
         | EventKind::UnitEntered { side: owner, .. }
         | EventKind::EntryWaiting { side: owner, .. } => whole_if(*owner == side),
+        // A submarine's side sees her come onto the map, whole; the enemy is
+        // told nothing of it (decision 0218, 13 and 16).
+        EventKind::SubmarineEntered { submarine, .. } => whole_if(own_boat(submarine)),
         // A side sees its own supply lines give, whole: the line's side
         // holds the base on the night it gives. The enemy is told nothing
         // (decision 0196, 3).
@@ -1738,6 +1749,7 @@ fn first_known_round(side: Side, fight: &[Event], owners: &Owners) -> Option<u32
             | EventKind::ArrivalWaiting { .. }
             | EventKind::ForceEntered { .. }
             | EventKind::UnitEntered { .. }
+            | EventKind::SubmarineEntered { .. }
             | EventKind::EntryWaiting { .. }
             | EventKind::StockReceived { .. }
             | EventKind::MenJoined { .. }
@@ -1959,6 +1971,7 @@ fn fight_round(kind: &EventKind) -> Option<u32> {
         | EventKind::ArrivalWaiting { .. }
         | EventKind::ForceEntered { .. }
         | EventKind::UnitEntered { .. }
+        | EventKind::SubmarineEntered { .. }
         | EventKind::EntryWaiting { .. }
         | EventKind::StockReceived { .. }
         | EventKind::MenJoined { .. }
@@ -2324,6 +2337,7 @@ fn count_from_known_round(kind: SideEventKind, known: u32, round_minutes: u32) -
             | EventKind::ArrivalWaiting { .. }
             | EventKind::ForceEntered { .. }
             | EventKind::UnitEntered { .. }
+            | EventKind::SubmarineEntered { .. }
             | EventKind::EntryWaiting { .. }
             | EventKind::StockReceived { .. }
             | EventKind::MenJoined { .. }
@@ -2587,6 +2601,7 @@ fn whole_may_have_hidden_causes(kind: &EventKind) -> bool {
         | EventKind::ArrivalWaiting { .. }
         | EventKind::ForceEntered { .. }
         | EventKind::UnitEntered { .. }
+        | EventKind::SubmarineEntered { .. }
         | EventKind::EntryWaiting { .. }
         | EventKind::StockReceived { .. }
         | EventKind::MenJoined { .. }
@@ -2880,6 +2895,7 @@ pub(crate) fn project(side: Side, log: &[Event], owners: &Owners) -> Vec<SideEve
                     | EventKind::ArrivalWaiting { .. }
                     | EventKind::ForceEntered { .. }
                     | EventKind::UnitEntered { .. }
+                    | EventKind::SubmarineEntered { .. }
                     | EventKind::EntryWaiting { .. }
                     | EventKind::StockReceived { .. }
                     | EventKind::MenJoined { .. }
@@ -3018,6 +3034,7 @@ mod tests {
             owners.air_groups.insert(group(n), side);
             owners.bases.insert(base(n), side);
             owners.land_units.insert(unit(n), side);
+            owners.submarines.insert(SubmarineId::new(n), side);
             owners.orders.insert(order(n), side);
         }
         owners
@@ -5015,6 +5032,16 @@ mod tests {
             // The picture a world was built from (decision 0170, 7): both
             // sides see it whole.
             row(EventKind::BuiltFromPicture { day: 4 }, Whole, Whole),
+            // A submarine coming onto the map on her day is told to her own
+            // side whole and to the enemy not at all (decision 0218, 33).
+            row(
+                EventKind::SubmarineEntered {
+                    submarine: SubmarineId::new(1),
+                    hex: hex(),
+                },
+                Whole,
+                Nothing,
+            ),
         ];
         // Every row is also run in the mirror, with the sides' units swapped.
         rows.shrink_to_fit();
@@ -5055,7 +5082,7 @@ mod tests {
     #[test]
     fn the_table_has_a_row_for_every_kind_of_event() {
         let all = event_kind_names();
-        assert_eq!(all.len(), 164, "the log has 164 kinds of event");
+        assert_eq!(all.len(), 165, "the log has 165 kinds of event");
         let covered: BTreeSet<String> = table()
             .iter()
             .map(|row| kind_name(&row.log[row.at]))
@@ -5213,6 +5240,11 @@ mod tests {
                                 | EntityRef::Pilot(_)
                                 | EntityRef::Place(_)
                                 | EntityRef::LandUnit(_) => true,
+                                // No row of the table names a submarine; the
+                                // enemy's is never given (decision 0218).
+                                EntityRef::Submarine(_) => {
+                                    owners.entity(entity).is_none_or(|owner| owner == side)
+                                }
                             };
                             assert!(own, "{side:?} is shown {entity} in {:?}", event.kind);
                         }

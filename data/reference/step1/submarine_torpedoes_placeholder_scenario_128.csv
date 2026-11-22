@@ -1,0 +1,12 @@
+# FROZEN: a copy of data/reference/submarine_torpedoes_placeholder_scenario_128.csv
+# as first made, on Nov 22, 2026, for decision 0218, stage 2 (scenario 128), by the ruling of
+# docs/step2-spec.md, "Tests while figures move", 6. Do not edit. A rule that adds a
+# new figure adds it here too, with its first value. Otherwise byte for byte the live file.
+# PLACEHOLDER DATA. The torpedo is invented for scenario 128 (decision 0218,
+# tests/scenario_128_submarines_against_warships.rs): its damage is the
+# torpedo_damage of class 1 of ship_classes.csv, the torpedo of scenario 4a,
+# so that a hit is worked exactly as that scenario works one. It is not
+# historical and must not be used for validation. Its hit chance is in
+# submarines_placeholder_scenario_128.toml.
+id,name,damage
+6950,Placeholder submarine torpedo,200

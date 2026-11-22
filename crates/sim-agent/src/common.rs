@@ -606,6 +606,9 @@ impl<'a> Ctx<'a> {
             // Only a trial's draw's key (decision 0174, 3); no event names
             // it.
             EntityRef::Place(place) => bare(format!("place:{place}")),
+            // The briefing's part for a side's own boats is a later phase
+            // of decision 0218; until then she is named by her number.
+            EntityRef::Submarine(id) => bare(id.to_string()),
         }
     }
 

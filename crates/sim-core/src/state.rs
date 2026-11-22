@@ -18,7 +18,7 @@ use crate::fixed::Fixed;
 use crate::hex::{Hex, HEX_NM};
 use crate::ids::{
     AirGroupId, AircraftTypeId, BaseId, EntityRef, EventId, FormationId, LandUnitId, OrderId,
-    ShipClassId, ShipId, TaskForceId,
+    ShipClassId, ShipId, SubmarineClassId, SubmarineId, TaskForceId,
 };
 use crate::map::{Map, Terrain};
 use crate::orders::{
@@ -1539,6 +1539,118 @@ pub struct TruthState {
     /// and no `establishment`. Added at the end, and hashed last, only where
     /// it is not empty.
     pub men_replacement: MenReplacement,
+    /// The submarines (decision 0218): units of their own kind, none in a
+    /// task force. A boat held apart until her day is here too, with
+    /// `enters_day` set. Empty in a scenario with no `[[submarine]]`. Added
+    /// at the end, and hashed last, only where it is not empty.
+    pub submarines: BTreeMap<SubmarineId, Submarine>,
+}
+
+/// What a submarine is in (decision 0218, 1 and 43). `Sunk` and `Home` are
+/// off the map.
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+pub enum SubmarineCondition {
+    Sound,
+    Damaged,
+    Sunk,
+    Home,
+}
+
+impl SubmarineCondition {
+    /// A stable number for the condition. Never renumber: it feeds the
+    /// state hash.
+    pub const fn code(self) -> u8 {
+        match self {
+            SubmarineCondition::Sound => 1,
+            SubmarineCondition::Damaged => 2,
+            SubmarineCondition::Sunk => 3,
+            SubmarineCondition::Home => 4,
+        }
+    }
+
+    pub const fn name(self) -> &'static str {
+        match self {
+            SubmarineCondition::Sound => "sound",
+            SubmarineCondition::Damaged => "damaged",
+            SubmarineCondition::Sunk => "sunk",
+            SubmarineCondition::Home => "home",
+        }
+    }
+}
+
+/// A submarine's passage to a hex: to her station or, with `home`, to the
+/// base her scenario names (decision 0218, 3 and 43). She steams along the
+/// sea route a force would take.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct SubmarinePassage {
+    /// The hex she is bound for.
+    pub to: Hex,
+    /// Whether she is going home: she is then taken off the map at `to`.
+    pub home: bool,
+    /// The hex she has set out for and not yet reached, while she is on a
+    /// leg between two.
+    pub toward_hex: Option<Hex>,
+    /// Nautical miles steamed of the leg to `toward_hex`.
+    pub progress_nm: Fixed,
+    /// Nautical miles of that leg.
+    pub leg_nm: Fixed,
+    /// Whether she has reached `to`: she is on station from the pulse after
+    /// she arrives, and the passage is cleared then.
+    pub arrived: bool,
+    /// The order that sent her, if one did.
+    pub order: Option<OrderId>,
+}
+
+/// A submarine (decision 0218, 1 and 31 to 33): a unit of her own kind, not
+/// a ship in a task force. She keeps a station, fires salvoes at forces
+/// that come into her hex, and is hunted for it.
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct Submarine {
+    pub id: SubmarineId,
+    pub name: String,
+    pub side: Side,
+    pub class: SubmarineClassId,
+    /// Where she is: the hex she is in, or the hex she has last entered on a
+    /// passage.
+    pub hex: Hex,
+    /// The hex she keeps.
+    pub station: Hex,
+    /// `Some` while she goes to her station or home.
+    pub passage: Option<SubmarinePassage>,
+    /// Salvoes left.
+    pub salvoes: u32,
+    /// The last pulse she is held down, inclusive: she attacks in none up to
+    /// and including it.
+    pub held_down_until: Option<(u32, Pulse)>,
+    pub condition: SubmarineCondition,
+    /// The base her scenario names, where she goes home (rules 3, 21, 43).
+    pub home: BaseId,
+    /// The day she leaves for home (rule 3), or `None`.
+    pub leave_day: Option<u32>,
+    /// Held apart until this day (rule 33): in no hex for any rule before
+    /// it. `None`: on the map from the start.
+    pub enters_day: Option<u32>,
+    /// The day from which her side may use her (rule 33). `None`: day 1.
+    pub available_from: Option<u32>,
+    /// The order that gave her station, if one did.
+    pub station_order: Option<OrderId>,
+}
+
+impl Submarine {
+    /// Whether she is on the map on `day`: not sunk, not home and not held
+    /// apart until a later day.
+    pub fn on_map(&self, day: u32) -> bool {
+        !matches!(
+            self.condition,
+            SubmarineCondition::Sunk | SubmarineCondition::Home
+        ) && self.enters_day.is_none_or(|enters| enters <= day)
+    }
+
+    /// Whether she is on her station on `day`: on the map, on no passage
+    /// and in her station's hex.
+    pub fn on_station(&self, day: u32) -> bool {
+        self.on_map(day) && self.passage.is_none() && self.hex == self.station
+    }
 }
 
 /// A stream of replacement men a scenario gives a base (decision 0197,
@@ -1695,6 +1807,12 @@ impl TruthState {
                     .filter_map(|ship| self.available_from(EntityRef::Ship(ship.id)))
                     .max();
                 later(unit.available_from, ships)
+            }
+            // A submarine: the later of the day she enters and her own day
+            // (decision 0218, 33).
+            EntityRef::Submarine(id) => {
+                let boat = self.submarines.get(&id)?;
+                later(boat.enters_day, boat.available_from)
             }
             _ => None,
         }

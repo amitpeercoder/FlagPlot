@@ -32,6 +32,9 @@ pub enum Subsystem {
     /// A trial's own draws, made in building a picture's enemy (decision
     /// 0174, 3), never by a rule of play. Added at the end.
     Trial,
+    /// A submarine's draws (decision 0218), keyed on the day and the pulse.
+    /// Added at the end.
+    Submarine,
 }
 
 impl Subsystem {
@@ -47,6 +50,7 @@ impl Subsystem {
             Subsystem::Upkeep => 7,
             Subsystem::Intelligence => 8,
             Subsystem::Trial => 9,
+            Subsystem::Submarine => 10,
         }
     }
 }
@@ -163,11 +167,32 @@ pub enum Draw {
     /// end (decision 0212, as measured, 4): one draw, on a stream of the air
     /// combat subsystem keyed on the ship, by day and pulse.
     AircraftFireFought,
+    /// Whether a submarine attacks a task force in a pulse (decision 0218, 37 to 39): one stream per boat and force, entity the submarine, other the task force; one number, the attack.
+    /// On a stream of the submarine subsystem.
+    SubmarineAttack,
+    /// Whether one torpedo of a submarine's salvo hits (decision 0218, 42): one stream per boat and ship aimed at, entity the submarine, other the ship; the n-th number is the torpedo in the n-th place of the salvo.
+    /// On a stream of the submarine subsystem.
+    SubmarineTorpedo,
+    /// What the hunt does to a submarine (decision 0218, 9, 10 and 53): entity the submarine, other the task force; the first number is the damage, the second, drawn only if she is damaged, the sinking share.
+    /// On a stream of the submarine subsystem.
+    SubmarineHunt,
+    /// Whether a search sights a submarine (decision 0218, 48): entity the submarine, other the air group; one number.
+    /// On a stream of the submarine subsystem.
+    SubmarineSighted,
+    /// What an air group's attack does to a submarine it sighted (decision 0218, 50): entity the submarine, other the air group; the damage, then the sinking share.
+    /// On a stream of the submarine subsystem.
+    SubmarineAirAttack,
+    /// The position error of a report of a submarine (decision 0218, 44 and 46): entity the submarine, other the ship aimed at (a salvo) or the air group (a sighting); drawn as the direction of a ship's report is, the chance of an error and then one of six directions if struck.
+    /// On a stream of the submarine subsystem.
+    SubmarineReportError,
+    /// The claim of a submarine's side (decision 0218, 45): entity the submarine, other the ship aimed at; first the kind taken for, one number read on the confusion row of the aimed ship's true kind, then one draw for each torpedo that missed, under the false hit chance.
+    /// On a stream of the submarine subsystem.
+    SubmarineClaim,
 }
 
 impl Draw {
     /// Every value, for the test that their codes differ.
-    pub const ALL: [Draw; 22] = [
+    pub const ALL: [Draw; 29] = [
         Draw::Legacy,
         Draw::Claim,
         Draw::Ditch,
@@ -190,6 +215,13 @@ impl Draw {
         Draw::StrikeSpread,
         Draw::AircraftFireSet,
         Draw::AircraftFireFought,
+        Draw::SubmarineAttack,
+        Draw::SubmarineTorpedo,
+        Draw::SubmarineHunt,
+        Draw::SubmarineSighted,
+        Draw::SubmarineAirAttack,
+        Draw::SubmarineReportError,
+        Draw::SubmarineClaim,
     ];
 
     /// A stable number for the rule. Never renumber. 0 is `Legacy` alone
@@ -218,6 +250,13 @@ impl Draw {
             Draw::StrikeSpread => 19,
             Draw::AircraftFireSet => 20,
             Draw::AircraftFireFought => 21,
+            Draw::SubmarineAttack => 22,
+            Draw::SubmarineTorpedo => 23,
+            Draw::SubmarineHunt => 24,
+            Draw::SubmarineSighted => 25,
+            Draw::SubmarineAirAttack => 26,
+            Draw::SubmarineReportError => 27,
+            Draw::SubmarineClaim => 28,
         }
     }
 }

@@ -7,8 +7,8 @@ use sim_core::ids::UmpireKey;
 use sim_core::orders::{AirMission, Reach};
 use sim_core::refdata::{RefData, ShipKind};
 use sim_core::state::{
-    AirGroup, AirGroupLocation, Base, LandUnit, Ship, ShipLocation, ShipSystem, Side, TaskForce,
-    TruthState,
+    AirGroup, AirGroupLocation, Base, LandUnit, Ship, ShipLocation, ShipSystem, Side, Submarine,
+    TaskForce, TruthState,
 };
 use sim_core::World;
 
@@ -39,6 +39,11 @@ pub struct Snapshot {
     /// so a file made before land units is unchanged.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub land_units: Vec<LandUnitOut>,
+    /// The submarines (decision 0218), the umpire's truth: both sides'.
+    /// Left out when the scenario has none, so a file made before
+    /// submarines is unchanged.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub submarines: Vec<SubmarineOut>,
     /// What is held apart until its day (decision 0195), one entry each, in
     /// the state's order, both sides' (the umpire's file). Left out when
     /// nothing is held, so a file made before forces that arrive is
@@ -76,6 +81,29 @@ pub struct EntryOut {
     air_groups: Vec<AirGroupOut>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     land_units: Vec<LandUnitOut>,
+}
+
+/// A submarine (decision 0218), the umpire's truth: where she is, her
+/// station and her condition ("sound", "damaged", "sunk" or "home"; the last
+/// two are off the map).
+#[derive(Serialize)]
+pub struct SubmarineOut {
+    id: u32,
+    name: String,
+    side: &'static str,
+    hex: Pos,
+    station: Pos,
+    condition: &'static str,
+    /// Salvoes left.
+    salvoes: u32,
+    /// True while she is on a passage to her station or home. Left out when
+    /// false.
+    #[serde(skip_serializing_if = "is_false")]
+    on_passage: bool,
+    /// The day she enters, while she is held apart until it (decision 0218,
+    /// 33): she is on no map before it. Left out when she has none.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    enters_day: Option<u32>,
 }
 
 /// A land unit: its men ashore and the hex they are in (null with none
@@ -506,6 +534,7 @@ pub fn snapshot(truth: &TruthState, ref_data: &RefData, key: &UmpireKey) -> Snap
             .values()
             .map(|unit| land_unit(unit, key))
             .collect(),
+        submarines: truth.submarines.values().map(submarine).collect(),
         entering: truth
             .entering
             .iter()
@@ -540,6 +569,20 @@ pub fn snapshot(truth: &TruthState, ref_data: &RefData, key: &UmpireKey) -> Snap
                     .collect(),
             })
             .collect(),
+    }
+}
+
+fn submarine(boat: &Submarine) -> SubmarineOut {
+    SubmarineOut {
+        id: boat.id.raw(),
+        name: boat.name.clone(),
+        side: names::side(boat.side),
+        hex: Pos::from(boat.hex),
+        station: Pos::from(boat.station),
+        condition: boat.condition.name(),
+        salvoes: boat.salvoes,
+        on_passage: boat.passage.is_some(),
+        enters_day: boat.enters_day,
     }
 }
 
@@ -759,6 +802,9 @@ pub struct FinalOut {
     bases: Vec<BaseOut>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     land_units: Vec<LandUnitOut>,
+    /// The submarines (decision 0218). Left out when there are none.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    submarines: Vec<SubmarineOut>,
     contacts: PerSide<ContactOut>,
     claims: PerSide<ClaimOut>,
     /// What each side believes of the enemy's men ashore (decision 0092,
@@ -832,6 +878,7 @@ pub struct Records {
     air_groups: Vec<AirGroupOut>,
     bases: Vec<BaseOut>,
     land_units: Vec<LandUnitOut>,
+    submarines: Vec<SubmarineOut>,
     contacts: PerSide<ContactOut>,
     ground_estimates: PerSide<GroundEstimateOut>,
     pictures: PerSide<super::pictures::PictureOut>,
@@ -846,6 +893,7 @@ pub fn records(world: &World) -> Records {
         air_groups,
         bases,
         land_units,
+        submarines,
         // What is held apart is in the opening state; a step has what is on
         // the map.
         entering: _,
@@ -892,6 +940,7 @@ pub fn records(world: &World) -> Records {
         air_groups,
         bases,
         land_units,
+        submarines,
         contacts: PerSide {
             allied: contacts(Side::Allied),
             japanese: contacts(Side::Japanese),
@@ -924,6 +973,7 @@ pub struct KeyedRecords {
     pub air_groups: Vec<(u32, String)>,
     pub bases: Vec<(u32, String)>,
     pub land_units: Vec<(u32, String)>,
+    pub submarines: Vec<(u32, String)>,
     pub contacts: PerSide<(u32, String)>,
     /// Keyed by hex, as the side holds one estimate for each.
     pub ground_estimates: PerSide<((i32, i32), String)>,
@@ -939,6 +989,7 @@ impl Records {
             air_groups: keyed(&self.air_groups, |r| r.id),
             bases: keyed(&self.bases, |r| r.id),
             land_units: keyed(&self.land_units, |r| r.id),
+            submarines: keyed(&self.submarines, |r| r.id),
             contacts: PerSide {
                 allied: keyed(&self.contacts.allied, |r| r.id),
                 japanese: keyed(&self.contacts.japanese, |r| r.id),
@@ -964,6 +1015,7 @@ pub fn final_state(world: &World) -> FinalOut {
         air_groups,
         bases,
         land_units,
+        submarines,
         contacts,
         ground_estimates,
         pictures,
@@ -989,6 +1041,7 @@ pub fn final_state(world: &World) -> FinalOut {
         air_groups,
         bases,
         land_units,
+        submarines,
         contacts,
         claims: PerSide {
             allied: claims(Side::Allied),

@@ -213,6 +213,22 @@ define_id!(
     LandUnitId,
     "land_unit"
 );
+define_id!(
+    /// A submarine: a unit of her own kind, not a ship in a task force
+    /// (decision 0218).
+    SubmarineId,
+    "submarine"
+);
+define_id!(
+    /// A submarine class (decision 0218).
+    SubmarineClassId,
+    "submarine_class"
+);
+define_id!(
+    /// A submarine torpedo (decision 0218).
+    SubmarineTorpedoId,
+    "submarine_torpedo"
+);
 define_opaque_id!(
     /// A contact in one side's belief state.
     ContactId,
@@ -310,6 +326,8 @@ pub enum EntityRef {
     /// own. The list is told by the draw's own value. Never an entity of the
     /// world: no event and no state names one. Added at the end.
     Place(u32),
+    /// A submarine (decision 0218). Added at the end.
+    Submarine(SubmarineId),
 }
 
 impl EntityRef {
@@ -326,6 +344,7 @@ impl EntityRef {
             EntityRef::Contact(_) => 7,
             EntityRef::Event(_) => 8,
             EntityRef::Place(_) => 9,
+            EntityRef::Submarine(_) => 10,
         }
     }
 
@@ -340,6 +359,7 @@ impl EntityRef {
             EntityRef::Contact(id) => id.raw(),
             EntityRef::Event(id) => id.raw(),
             EntityRef::Place(place) => place,
+            EntityRef::Submarine(id) => id.raw(),
         }
     }
 
@@ -361,6 +381,7 @@ impl fmt::Display for EntityRef {
             EntityRef::Contact(id) => id.shown().fmt(f),
             EntityRef::Event(id) => id.shown().fmt(f),
             EntityRef::Place(place) => write!(f, "place:{place}"),
+            EntityRef::Submarine(id) => id.fmt(f),
         }
     }
 }
@@ -392,6 +413,12 @@ impl From<BaseId> for EntityRef {
 impl From<LandUnitId> for EntityRef {
     fn from(id: LandUnitId) -> Self {
         EntityRef::LandUnit(id)
+    }
+}
+
+impl From<SubmarineId> for EntityRef {
+    fn from(id: SubmarineId) -> Self {
+        EntityRef::Submarine(id)
     }
 }
 

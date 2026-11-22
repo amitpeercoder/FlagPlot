@@ -170,11 +170,13 @@ impl Default for MadeIds {
 /// strike spread over the ships of its kind and fire among a carrier's
 /// aircraft, which change every game in which raids attack a force or a
 /// carrier is bombed, and a ship's field a game saved under the old rules
+/// could not hold) and 29 from decision 0218 (submarines: a boat as a unit
+/// of her own kind with her state, which a game saved under the old rules
 /// could not hold). A pull request
 /// raises it by one
 /// when it changes a rule in a way that changes what an existing game would do; a
 /// change that leaves every existing game as it was leaves it alone.
-pub const RULES_VERSION: u32 = 28;
+pub const RULES_VERSION: u32 = 29;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct SimConfig {
@@ -486,6 +488,49 @@ impl World {
             .and_then(|figures| figures.problem())
         {
             return Err(SimError::InvalidSetup(problem));
+        }
+        // The submarines (decision 0218): the data is whole, and each boat's
+        // class, hexes and home base are in it and on the map.
+        if let Some(data) = ref_data.submarines.as_ref() {
+            data.validate().map_err(SimError::InvalidSetup)?;
+        }
+        if !truth.submarines.is_empty() && ref_data.submarines.is_none() {
+            return Err(SimError::InvalidSetup(
+                "there are submarines but no submarine data".to_string(),
+            ));
+        }
+        for (key, boat) in &truth.submarines {
+            let known = ref_data
+                .submarines
+                .as_ref()
+                .is_some_and(|data| data.classes.contains_key(&boat.class));
+            if !known {
+                return Err(SimError::InvalidSetup(format!(
+                    "{} has unknown submarine class {}",
+                    boat.id, boat.class
+                )));
+            }
+            if boat.id != *key || boat.id.raw() >= MADE_IDS_FLOOR {
+                return Err(SimError::InvalidSetup(format!(
+                    "{} has a number of 1,000,000 or more, which is for units made in play, \
+                     or is not kept under it",
+                    boat.id
+                )));
+            }
+            for (what, hex) in [("hex", boat.hex), ("station", boat.station)] {
+                if !map.is_navigable(hex) {
+                    return Err(SimError::InvalidSetup(format!(
+                        "{}'s {what} {hex} is not a hex ships can enter",
+                        boat.id
+                    )));
+                }
+            }
+            if !truth.bases.contains_key(&boat.home) {
+                return Err(SimError::InvalidSetup(format!(
+                    "{} has home base {}, which does not exist",
+                    boat.id, boat.home
+                )));
+            }
         }
         // What is held apart until its day is checked as what is on the map
         // is (decision 0195, 12): it enters the same world.

@@ -18,7 +18,9 @@ use crate::command::{
 };
 use crate::fixed::Fixed;
 use crate::hex::{Hex, HEX_NM};
-use crate::ids::{AirGroupId, BaseId, EntityRef, IntentId, LandUnitId, ShipId, TaskForceId};
+use crate::ids::{
+    AirGroupId, BaseId, EntityRef, IntentId, LandUnitId, ShipId, SubmarineId, TaskForceId,
+};
 use crate::map::Map;
 use crate::refdata::RefData;
 use crate::state::Side;
@@ -230,6 +232,9 @@ pub enum InvariantViolation {
     /// establishment (decision 0197, 1, 17 and 18). Added at the end of the
     /// enum.
     StrengthUnsound(LandUnitId),
+    /// A submarine breaks one of her own invariants (decision 0218): the
+    /// words say which. Added at the end of the enum.
+    SubmarineUnsound(SubmarineId, &'static str),
 }
 
 impl fmt::Display for InvariantViolation {
@@ -269,6 +274,7 @@ impl fmt::Display for InvariantViolation {
                     "a stream of replacement men to {base} names no base, gives no men, or has its days out of order"
                 )
             }
+            InvariantViolation::SubmarineUnsound(boat, why) => write!(f, "{boat} {why}"),
             InvariantViolation::StrengthUnsound(unit) => {
                 write!(
                     f,
@@ -528,6 +534,59 @@ impl fmt::Display for InvariantViolation {
 }
 
 /// Returns every invariant the state breaks. Empty means the state is sound.
+/// What is wrong with a submarine, if anything (decision 0218): her class is
+/// in the data; her salvoes are at most her class's; a boat sunk or home has
+/// no passage; she is on her station when she is on no passage; her hex and
+/// her station are navigable; her number is below the floor of the numbers
+/// made in play and is her key; a pulse she is held down is not before day
+/// 1.
+fn submarine_problem(
+    key: SubmarineId,
+    boat: &crate::state::Submarine,
+    map: &Map,
+    ref_data: &RefData,
+) -> Option<&'static str> {
+    if boat.id != key {
+        return Some("is kept under another number");
+    }
+    if boat.id.raw() >= crate::world::MADE_IDS_FLOOR {
+        return Some("has a number of a unit made in play");
+    }
+    let Some(class) = ref_data
+        .submarines
+        .as_ref()
+        .and_then(|data| data.classes.get(&boat.class))
+    else {
+        return Some("has a class the submarine data does not give");
+    };
+    if boat.salvoes > class.salvoes_carried {
+        return Some("has more salvoes than her class carries");
+    }
+    let off_map = matches!(
+        boat.condition,
+        crate::state::SubmarineCondition::Sunk | crate::state::SubmarineCondition::Home
+    );
+    if off_map {
+        if boat.passage.is_some() {
+            return Some("is off the map and has a passage");
+        }
+    } else {
+        if !map.is_navigable(boat.hex) {
+            return Some("is at a hex ships cannot enter");
+        }
+        if boat.passage.is_none() && boat.hex != boat.station {
+            return Some("is on no passage and not at her station");
+        }
+    }
+    if !map.is_navigable(boat.station) {
+        return Some("has a station ships cannot enter");
+    }
+    if boat.held_down_until.is_some_and(|(day, _)| day < 1) {
+        return Some("is held down before day 1");
+    }
+    None
+}
+
 pub(crate) fn check(truth: &TruthState, map: &Map, ref_data: &RefData) -> Vec<InvariantViolation> {
     let mut violations = Vec::new();
     let full_damage = Fixed::from_int(100);
@@ -972,6 +1031,12 @@ pub(crate) fn check(truth: &TruthState, map: &Map, ref_data: &RefData) -> Vec<In
         };
         if !sound {
             violations.push(InvariantViolation::StrengthUnsound(*id));
+        }
+    }
+
+    for (key, boat) in &truth.submarines {
+        if let Some(why) = submarine_problem(*key, boat, map, ref_data) {
+            violations.push(InvariantViolation::SubmarineUnsound(*key, why));
         }
     }
 

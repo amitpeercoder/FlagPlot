@@ -12,7 +12,7 @@ use std::collections::BTreeMap;
 
 use crate::events::SortieKind;
 use crate::fixed::Fixed;
-use crate::ids::{AircraftTypeId, ShipClassId};
+use crate::ids::{AircraftTypeId, ShipClassId, SubmarineClassId, SubmarineTorpedoId};
 use crate::orders::Reach;
 use crate::state::{Ship, ShipSystem, Side, SystemState};
 
@@ -1260,6 +1260,126 @@ pub struct RefData {
     /// class or type has a side, and the game plays as before. No rule of
     /// play reads it.
     pub class_sides: Option<ClassSides>,
+    /// The submarines' classes, torpedoes and figures (decision 0218). `None`
+    /// if the scenario names no submarine files: it then has no boat. Added
+    /// at the end.
+    pub submarines: Option<SubmarineData>,
+}
+
+/// One class of submarine (decision 0218, 1 and 28): her salvo, the salvoes
+/// she carries, her passage speed on the surface and her torpedo. She is
+/// not a kind of ship and has no row in the ship classes.
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct SubmarineClass {
+    pub id: SubmarineClassId,
+    pub name: String,
+    /// Torpedoes in one salvo: the tubes that bear forward.
+    pub salvo: u32,
+    /// Salvoes she carries at the start.
+    pub salvoes_carried: u32,
+    /// Her speed on a passage, in knots.
+    pub passage_speed_kn: Fixed,
+    pub torpedo: SubmarineTorpedoId,
+}
+
+/// One torpedo a submarine fires (decision 0218, 28 and 30). The chance
+/// that it hits is a figure of the weapon and is in
+/// [`SubmarineFigures::hit_chance`].
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct SubmarineTorpedo {
+    pub id: SubmarineTorpedoId,
+    pub name: String,
+    /// The damage of one hit, as a ship's torpedo's is (chapter 4).
+    pub damage: Fixed,
+}
+
+/// The submarine figures of decision 0218. Every one is a placeholder
+/// until a count sets it.
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct SubmarineFigures {
+    /// The chance of an attack in each hour a force is in her hex.
+    pub attacks_per_hour: Fixed,
+    /// The multiple of it where a ship of the force is dead in the water.
+    pub attacks_ship_dead_in_water: Fixed,
+    /// The pulses a boat is held down after a hunt, the pulse itself
+    /// counted.
+    pub held_down_pulses: u32,
+    pub hunt_damages_chance: Fixed,
+    pub hunt_sinks_share: Fixed,
+    /// How much harder a boat on her station is to sight than a ship.
+    pub surfaced_share: Fixed,
+    pub air_attack_damages_chance: Fixed,
+    pub air_attack_sinks_share: Fixed,
+    /// The chance that a torpedo that missed is claimed a hit.
+    pub false_hit_chance: Fixed,
+    /// The age in pulses at which a report of a submarine is dropped.
+    pub report_drop_age_pulses: u32,
+    /// The chance that a torpedo hits, by torpedo (decisions 8 and 30).
+    pub hit_chance: BTreeMap<SubmarineTorpedoId, Fixed>,
+}
+
+impl SubmarineFigures {
+    /// Describes what is wrong with the figures, if anything.
+    pub fn validate(&self) -> Result<(), String> {
+        for (label, chance) in [
+            ("submarine_attacks_per_hour", self.attacks_per_hour),
+            ("hunt_damages_chance", self.hunt_damages_chance),
+            ("hunt_sinks_share", self.hunt_sinks_share),
+            ("submarine_surfaced_share", self.surfaced_share),
+            ("air_attack_damages_chance", self.air_attack_damages_chance),
+            ("air_attack_sinks_share", self.air_attack_sinks_share),
+            ("submarine_false_hit_chance", self.false_hit_chance),
+        ] {
+            if chance.is_negative() || chance > Fixed::ONE {
+                return Err(format!("{label} is {chance}, not a chance from 0 to 1"));
+            }
+        }
+        for (torpedo, chance) in &self.hit_chance {
+            if chance.is_negative() || *chance > Fixed::ONE {
+                return Err(format!(
+                    "the hit chance of {torpedo} is {chance}, not a chance from 0 to 1"
+                ));
+            }
+        }
+        if self.attacks_ship_dead_in_water.is_negative() {
+            return Err("attacks_ship_dead_in_water is negative".to_string());
+        }
+        if self.report_drop_age_pulses < 1 {
+            return Err("submarine_report_drop_age_pulses is less than 1".to_string());
+        }
+        Ok(())
+    }
+}
+
+/// All the submarine reference data of a game (decision 0218).
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct SubmarineData {
+    pub classes: BTreeMap<SubmarineClassId, SubmarineClass>,
+    pub torpedoes: BTreeMap<SubmarineTorpedoId, SubmarineTorpedo>,
+    pub figures: SubmarineFigures,
+}
+
+impl SubmarineData {
+    /// Describes what is wrong with the data, if anything: the figures, and
+    /// every class's torpedo being in the table with a hit chance.
+    pub fn validate(&self) -> Result<(), String> {
+        self.figures.validate()?;
+        for class in self.classes.values() {
+            if !self.torpedoes.contains_key(&class.torpedo) {
+                return Err(format!(
+                    "{} names {}, which the torpedoes do not give",
+                    class.id, class.torpedo
+                ));
+            }
+            if !self.figures.hit_chance.contains_key(&class.torpedo) {
+                return Err(format!(
+                    "{} has no hit chance for {}",
+                    class.id, class.torpedo
+                ));
+            }
+        }
+        Ok(())
+    }
 }
 
 /// The side that uses a class of ship or a type of aircraft (decision 0173,

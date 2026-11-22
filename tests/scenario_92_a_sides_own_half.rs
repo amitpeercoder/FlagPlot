@@ -247,6 +247,9 @@ fn cited(truth: &TruthState, commands: &BTreeMap<Side, CommandState>) -> Vec<(St
         entering: _,
         supply_lines: _,
         men_replacement: _,
+        // A boat holds an order, walked by the engine's own walk; this
+        // test's scenarios have none (decision 0218).
+        submarines: _,
     } = truth;
     for force in task_forces.values() {
         cited_by_force(force, &mut out);
@@ -520,6 +523,7 @@ fn cited_by_half(half: &PictureHalf) -> Vec<(String, Cited)> {
         entering: half.entering.clone(),
         supply_lines: half.supply_lines.clone(),
         men_replacement: half.men_replacement.clone(),
+        submarines: half.submarines.clone(),
     };
     cited(&truth, &BTreeMap::from([(half.side, half.command.clone())]))
 }
@@ -705,6 +709,7 @@ fn case_one_the_japanese_half_holds_nothing_but_its_day_and_counters() {
             replacements: Vec::new(),
             supply_lines: Vec::new(),
             men_replacement: Default::default(),
+            submarines: BTreeMap::new(),
             arrivals: Vec::new(),
             orders: Vec::new(),
             command: CommandState::new(),
@@ -1178,6 +1183,7 @@ fn japanese_by_hand(allied: &PictureHalf) -> PictureHalf {
         replacements: Vec::new(),
         supply_lines: Vec::new(),
         men_replacement: Default::default(),
+        submarines: BTreeMap::new(),
         arrivals: Vec::new(),
         orders: vec![PictureOrder {
             side: Side::Japanese,

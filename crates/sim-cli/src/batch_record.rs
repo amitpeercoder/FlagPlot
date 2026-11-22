@@ -1265,6 +1265,7 @@ pub fn count(
             | EventKind::ArrivalWaiting { .. }
             | EventKind::ForceEntered { .. }
             | EventKind::UnitEntered { .. }
+            | EventKind::SubmarineEntered { .. }
             | EventKind::EntryWaiting { .. }
             | EventKind::StockReceived { .. }
             | EventKind::MenJoined { .. }

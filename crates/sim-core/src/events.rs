@@ -17,7 +17,7 @@ use crate::held::AsOf;
 use crate::hex::Hex;
 use crate::ids::{
     AirGroupId, AircraftTypeId, BaseId, ContactId, EntityRef, EventId, IntentId, LandUnitId,
-    OrderId, ShipId, TaskForceId,
+    OrderId, ShipId, SubmarineId, TaskForceId,
 };
 use crate::orders::{Cargo, Issuer, Job, RejectReason};
 use crate::pictures::CommandRef;
@@ -2294,6 +2294,14 @@ pub enum EventKind {
         level_after: u8,
         lost: bool,
     },
+    /// A submarine came onto the map at `hex` on her day (decision 0218,
+    /// 33), first thing, where the units held apart enter. It cites no
+    /// cause. Her own side's, whole; the enemy is told nothing. Added at
+    /// the end.
+    SubmarineEntered {
+        submarine: SubmarineId,
+        hex: Hex,
+    },
 }
 
 impl EventKind {
@@ -2480,6 +2488,9 @@ impl EventKind {
                 .into_iter()
                 .chain(task_force.map(EntityRef::TaskForce))
                 .collect(),
+            EventKind::SubmarineEntered { submarine, .. } => {
+                vec![EntityRef::Submarine(*submarine)]
+            }
             EventKind::ForceBecameAlert { task_force, .. }
             | EventKind::ForceBrokeOff { task_force, .. } => {
                 vec![EntityRef::TaskForce(*task_force)]
@@ -3612,6 +3623,9 @@ impl fmt::Display for EventKind {
                         "the fire among her aircraft went from {level_before} to {level_after} (draw {draw})"
                     )
                 }
+            }
+            EventKind::SubmarineEntered { submarine, hex } => {
+                write!(f, "{submarine} came onto the map at {hex}")
             }
             EventKind::ShipSunk {
                 round,

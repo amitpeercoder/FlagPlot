@@ -81,6 +81,8 @@ mod resolve;
 mod search;
 mod start;
 mod stragglers;
+#[cfg(test)]
+mod submarine_tests;
 mod surface;
 mod upkeep;
 pub mod works;
