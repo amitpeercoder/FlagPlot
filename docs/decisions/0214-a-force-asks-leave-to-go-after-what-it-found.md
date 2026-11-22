@@ -117,3 +117,11 @@ Reads: the side's picture of contacts; each carrier force's task, the order it i
 1. **Ask at balanced, go at press, stay at preserve.** The architect proposes it. It makes risk mean one more thing, and an order at balanced now stops the clock where it did not.
 2. **The staff asked inside a day for this alone** (rule 14), which decision 0155 had left out. Without it a sighting of the morning is asked about the next dawn.
 3. **Carrier forces first,** and other forces after it is played.
+
+## Confirmed on Nov 22, 2026
+
+The designer was asked the three questions one at a time and took the architect's proposal on each.
+
+1. **By risk:** an order at preserve stays, at balanced asks, at press goes and reports.
+2. **The staff is asked at the stops inside a day, for this alone.**
+3. **Carrier forces first.**
