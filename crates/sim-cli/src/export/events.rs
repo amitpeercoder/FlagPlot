@@ -910,6 +910,20 @@ pub(super) fn describe(
                 .int("lost", *lost)
                 .int("ashore", *ashore),
         ),
+        EventKind::SubmarineReported {
+            side,
+            hex,
+            replaced,
+        } => (
+            "submarine_reported",
+            d.text("side", names::side(*side))
+                .hex("hex", *hex)
+                .flag("replaced", *replaced),
+        ),
+        EventKind::SubmarineReportDropped { side, hex } => (
+            "submarine_report_dropped",
+            d.text("side", names::side(*side)).hex("hex", *hex),
+        ),
         EventKind::GroundReportReceived {
             side,
             hex,
@@ -2010,6 +2024,7 @@ pub(super) fn describe(
             claimed_on_ground,
             from_air,
             from_bombardment,
+            from_submarine,
             ground_types,
             by_unit,
             air_types,
@@ -2024,6 +2039,19 @@ pub(super) fn describe(
             let d = if *from_bombardment {
                 d.int("claimed_on_ground", *claimed_on_ground)
                     .flag("from_bombardment", true)
+            } else {
+                d
+            };
+            // A submarine's claim (decision 0218, 45) says the hits believed
+            // scored and the kind taken for, and is marked.
+            let d = if *from_submarine {
+                let d = d
+                    .int("claimed_hits", *claimed_hits)
+                    .flag("from_submarine", true);
+                match claimed_kind {
+                    Some(kind) => d.text("claimed_kind", kind.name()),
+                    None => d,
+                }
             } else {
                 d
             };

@@ -948,6 +948,10 @@ fn name_every_field(world: &World) {
             claimed_on_ground: _,
             from_air: _,
             from_bombardment: _,
+            // Not in the claim's own hash (decision 0218, 45): where a claim
+            // is marked a submarine's, its place in the list is hashed in
+            // the submarine block at the end of the state.
+            from_submarine: _,
             received_event: _,
             // After `from_bombardment` (decisions 0179 and 0180).
             ground_types: _,
@@ -971,6 +975,16 @@ fn name_every_field(world: &World) {
             report_event: _,
             grade: _,
         }) = belief.ground_estimates().next()
+        {}
+        // Hashed in the submarine block at the end of the state (decision
+        // 0218, 44).
+        if let Some(crate::belief::SubmarineReport {
+            hex: _,
+            day: _,
+            pulse: _,
+            received_event: _,
+            age_pulses: _,
+        }) = belief.submarine_reports().next()
         {}
     }
 }
@@ -1409,6 +1423,50 @@ fn hash_report(h: &mut StateHasher, report: &crate::belief::Report) {
             h.u32(none.day);
             h.u32(none.received_event.raw());
         }
+        // After the last (decision 0218).
+        Report::Submarine(submarine) => {
+            h.u8(6);
+            hash_submarine_report(h, submarine);
+        }
+    }
+}
+
+/// One report of a submarine (decision 0218, 44): hex, day, pulse (0 for
+/// none), event and age.
+fn hash_submarine_report(h: &mut StateHasher, report: &crate::belief::SubmarineReport) {
+    h.i32(report.hex.q);
+    h.i32(report.hex.r);
+    h.u32(report.day);
+    h.u64(report.pulse.map_or(0, crate::time::Pulse::code));
+    h.u32(report.received_event.raw());
+    h.u32(report.age_pulses);
+}
+
+/// Whether a belief holds anything of a submarine: a report of one or a
+/// claim marked a submarine's (decision 0218).
+fn holds_submarine_state(belief: &crate::belief::BeliefState) -> bool {
+    belief.submarine_reports().next().is_some()
+        || belief.claims().iter().any(|claim| claim.from_submarine)
+}
+
+/// What one belief holds of a submarine, for the block at the end of
+/// [`hash_world`]: its reports of submarines in hex order, then the places
+/// in its claims of the claims marked a submarine's.
+fn hash_belief_submarine_state(h: &mut StateHasher, belief: &crate::belief::BeliefState) {
+    h.count(belief.submarine_reports().count());
+    for report in belief.submarine_reports() {
+        hash_submarine_report(h, report);
+    }
+    let marked: Vec<usize> = belief
+        .claims()
+        .iter()
+        .enumerate()
+        .filter(|(_, claim)| claim.from_submarine)
+        .map(|(place, _)| place)
+        .collect();
+    h.count(marked.len());
+    for place in marked {
+        h.count(place);
     }
 }
 
@@ -2353,10 +2411,30 @@ pub(crate) fn hash_world(world: &World) -> u64 {
     // (the belief lists of reports of submarines and suspected waters, and
     // the claims marked a submarine's) append to this same block, after the
     // boats, and the block is then written where any of them is held.
-    if !truth.submarines.is_empty() {
+    // Appended (phase 3): for each side's belief, then each command's
+    // picture in the order the chain is hashed, its reports of submarines
+    // (hex, day, pulse's code, event, age) and the places in its claims of
+    // the claims marked a submarine's.
+    let chain_pictures = || {
+        world.chain.iter().flat_map(|chain| {
+            Side::ALL
+                .into_iter()
+                .flat_map(move |side| chain[&side].values().map(|post| post.picture()))
+        })
+    };
+    if !truth.submarines.is_empty()
+        || world.beliefs.values().any(holds_submarine_state)
+        || chain_pictures().any(holds_submarine_state)
+    {
         h.count(truth.submarines.len());
         for boat in truth.submarines.values() {
             hash_submarine(&mut h, boat);
+        }
+        for belief in world.beliefs.values() {
+            hash_belief_submarine_state(&mut h, belief);
+        }
+        for picture in chain_pictures() {
+            hash_belief_submarine_state(&mut h, picture);
         }
     }
 

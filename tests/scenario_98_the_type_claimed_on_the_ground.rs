@@ -359,6 +359,7 @@ fn the_words_of_day_2_name_the_type_after_the_number() {
                         *claimed_on_ground,
                         *from_air,
                         *from_bombardment,
+                        false,
                         &[],
                         &[],
                         &[],

@@ -30,7 +30,7 @@ mod surface_choices;
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::airstrike::{NavalStrike, StrikeChoice, StrikeInFlight};
-use crate::belief::{BattleClaim, BeliefState, Contact, GroundEstimate};
+use crate::belief::{BattleClaim, BeliefState, Contact, GroundEstimate, SubmarineReport};
 use crate::choices::{Answer, Question};
 use crate::events::EventLog;
 use crate::fixed::Fixed;
@@ -688,6 +688,13 @@ impl<'a> SideView<'a> {
     /// The side's estimate of the enemy's men ashore in `hex`, if it has one.
     pub fn ground_estimate(&self, hex: Hex) -> Option<&'a GroundEstimate> {
         self.own_belief().ground_estimate(hex)
+    }
+
+    /// What the side believes of submarines at sea: one report for a hex, in
+    /// hex order, each as old as it is (decision 0218, 44). A report may be
+    /// wrong in its place; the boat is not shown.
+    pub fn submarine_reports(&self) -> impl Iterator<Item = &'a SubmarineReport> + '_ {
+        self.own_belief().submarine_reports()
     }
 
     /// The figures of shore bombardment, if a force can bombard (decision

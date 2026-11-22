@@ -22,7 +22,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
 
-use crate::belief::{AgeOutcome, ApplyOutcome, BeliefState, Report};
+use crate::belief::{AgeOutcome, ApplyOutcome, BeliefState, Report, SubmarineAgeOutcome};
 use crate::commander::{Commander, NamedCommander};
 use crate::ids::{AirGroupId, BaseId, ContactId, EntityRef, EventId, LandUnitId, TaskForceId};
 use crate::refdata::SearchFigures;
@@ -171,6 +171,11 @@ impl CommandPost {
     pub(crate) fn age(&mut self, figures: &SearchFigures) {
         self.picture.age_contacts(figures);
         self.forget_dropped();
+    }
+
+    /// Ages the picture's reports of submarines (decision 0218, 44).
+    pub(crate) fn age_submarine_reports(&mut self, drop_age_pulses: u32) {
+        self.picture.age_submarine_reports(drop_age_pulses);
     }
 
     fn forget_dropped(&mut self) {
@@ -743,6 +748,27 @@ impl World {
             }
         }
         outcomes
+    }
+
+    /// Ages `side`'s reports of submarines and, with command levels on,
+    /// every command's picture of the side (decision 0218, 44). Returns the
+    /// reports dropped from the side's own belief.
+    pub(crate) fn age_submarine_pictures(
+        &mut self,
+        side: Side,
+        drop_age_pulses: u32,
+    ) -> Vec<SubmarineAgeOutcome> {
+        let dropped = self
+            .beliefs
+            .get_mut(&side)
+            .expect("both sides have a belief state")
+            .age_submarine_reports(drop_age_pulses);
+        if let Some(chain) = self.chain.as_mut() {
+            for post in chain.get_mut(&side).expect("both sides").values_mut() {
+                post.age_submarine_reports(drop_age_pulses);
+            }
+        }
+        dropped
     }
 
     /// A task force was formed during the game (decision 0134, 5): with

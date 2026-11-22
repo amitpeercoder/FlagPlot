@@ -709,3 +709,174 @@ fn send_home_finishes_the_leg_she_is_on_and_does_nothing_for_a_boat_already_goin
         [1, 2, 3]
     );
 }
+
+// ---- Reports of submarines in belief and in hash (phase 3) ----
+
+fn submarine_report(hex: Hex, event: u32) -> crate::belief::Report {
+    crate::belief::Report::Submarine(crate::belief::SubmarineReport {
+        hex,
+        day: 1,
+        pulse: Some(Pulse::Night),
+        received_event: crate::ids::EventId::new(event),
+        age_pulses: 0,
+    })
+}
+
+/// Tells the side a report and ages the pulse out, as the end of a pulse
+/// does, so that the world can be hashed.
+fn tell(world: &mut World, side: Side, report: &crate::belief::Report) {
+    use crate::pictures::Holders;
+    let figures = world.ref_data.search.clone().expect("figures");
+    world.apply_report(side, report, &Holders::Every, &figures);
+    world.age_contacts_at_end_of_pulse(1, Pulse::Night);
+}
+
+#[test]
+fn a_report_of_a_submarine_and_a_claim_marked_a_submarines_are_hashed_and_nothing_more() {
+    let plain = world_with(vec![boat(1)]);
+    let mut one = world_with(vec![boat(1)]);
+    tell(&mut one, Side::Allied, &submarine_report(hx(5, 0), 3));
+    let mut moved = world_with(vec![boat(1)]);
+    tell(&mut moved, Side::Allied, &submarine_report(hx(4, 0), 3));
+    let mut told_to_the_other = world_with(vec![boat(1)]);
+    tell(
+        &mut told_to_the_other,
+        Side::Japanese,
+        &submarine_report(hx(5, 0), 3),
+    );
+    let hashes = [
+        hash_world(&plain),
+        hash_world(&one),
+        hash_world(&moved),
+        hash_world(&told_to_the_other),
+    ];
+    for (i, a) in hashes.iter().enumerate() {
+        for b in &hashes[i + 1..] {
+            assert_ne!(a, b, "each holds something different");
+        }
+    }
+    // The same report told the same way hashes the same.
+    let mut again = world_with(vec![boat(1)]);
+    tell(&mut again, Side::Allied, &submarine_report(hx(5, 0), 3));
+    assert_eq!(hash_world(&one), hash_world(&again));
+
+    // A claim is hashed as it always was, and where it is marked a
+    // submarine's the mark is hashed too.
+    let claim = |from_submarine: bool| {
+        crate::belief::Report::BattleClaim(crate::belief::BattleClaim {
+            hex: hx(5, 0),
+            day: 1,
+            pulse: Pulse::Night,
+            claimed_sunk: 0,
+            claimed_hits: 2,
+            claimed_kind: Some(crate::refdata::ShipKind::Carrier),
+            claimed_shot_down: 0,
+            claimed_on_ground: 0,
+            from_air: false,
+            from_bombardment: false,
+            from_submarine,
+            received_event: crate::ids::EventId::new(4),
+            ground_types: Vec::new(),
+            by_unit: Vec::new(),
+            air_types: Vec::new(),
+        })
+    };
+    let mut marked = world_with(vec![boat(1)]);
+    tell(&mut marked, Side::Japanese, &claim(true));
+    let mut unmarked = world_with(vec![boat(1)]);
+    tell(&mut unmarked, Side::Japanese, &claim(false));
+    assert_ne!(hash_world(&marked), hash_world(&unmarked));
+}
+
+#[test]
+fn a_game_with_no_boat_writes_nothing_of_submarines_and_ageing_is_a_no_op() {
+    // No submarine data: no figure to age by, so the report list stays as
+    // it is (empty) and the hash holds no submarine block.
+    let mut world = test_world();
+    let before = hash_world(&world);
+    world.age_contacts_at_end_of_pulse(1, Pulse::Night);
+    assert_eq!(hash_world(&world), before);
+    assert_eq!(world.side_view(Side::Allied).submarine_reports().count(), 0);
+}
+
+#[test]
+fn reports_of_submarines_age_and_drop_by_their_own_figure_with_an_event_citing_the_report() {
+    let mut world = world_with(vec![boat(1)]);
+    tell(&mut world, Side::Allied, &submarine_report(hx(5, 0), 3));
+    // Made in the pulse it was told, so not aged by it; six pulses to drop.
+    let held = |world: &World| {
+        world
+            .side_view(Side::Allied)
+            .submarine_reports()
+            .map(|r| (r.hex, r.age_pulses))
+            .collect::<Vec<_>>()
+    };
+    assert_eq!(held(&world), vec![(hx(5, 0), 0)]);
+    for age in 1..6 {
+        world.age_contacts_at_end_of_pulse(1, Pulse::Morning);
+        assert_eq!(held(&world), vec![(hx(5, 0), age)], "age {age}");
+    }
+    world.age_contacts_at_end_of_pulse(1, Pulse::Afternoon);
+    assert!(held(&world).is_empty(), "dropped at 6 pulses");
+    let dropped: Vec<_> = world
+        .events()
+        .iter()
+        .filter(|e| matches!(e.kind, EventKind::SubmarineReportDropped { .. }))
+        .collect();
+    assert_eq!(dropped.len(), 1);
+    assert_eq!(
+        dropped[0].causes,
+        vec![Cause::Event(crate::ids::EventId::new(3))]
+    );
+    // Whole for the side that held it, absent for the other.
+    let told = |side: Side| {
+        world
+            .side_view(side)
+            .events()
+            .iter()
+            .filter(|e| {
+                matches!(
+                    e.kind,
+                    SideEventKind::Whole(EventKind::SubmarineReportDropped { .. })
+                )
+            })
+            .count()
+    };
+    assert_eq!((told(Side::Allied), told(Side::Japanese)), (1, 0));
+}
+
+#[test]
+fn a_report_of_nothing_there_removes_no_report_of_a_submarine_in_the_world() {
+    use crate::belief::{Report, SightingReport};
+    use crate::pictures::Holders;
+    let mut world = world_with(vec![boat(1)]);
+    let figures = world.ref_data.search.clone().expect("figures");
+    tell(&mut world, Side::Allied, &submarine_report(hx(5, 0), 3));
+    // A contact of ships at the same hex, then a strike that found nothing
+    // there: the contact goes, the report of a submarine stays.
+    world.apply_report(
+        Side::Allied,
+        &Report::Sighting(SightingReport {
+            estimated_hex: hx(5, 0),
+            estimated_ship_count: 1,
+            estimated_kind: crate::refdata::ShipKind::Cruiser,
+            received_event: crate::ids::EventId::new(4),
+            age_pulses: 0,
+        }),
+        &Holders::Every,
+        &figures,
+    );
+    assert_eq!(world.side_view(Side::Allied).contacts().count(), 1);
+    world.apply_report(
+        Side::Allied,
+        &Report::NothingThere {
+            contact: None,
+            hex: hx(5, 0),
+        },
+        &Holders::Every,
+        &figures,
+    );
+    world.age_contacts_at_end_of_pulse(1, Pulse::Morning);
+    assert_eq!(world.side_view(Side::Allied).contacts().count(), 0);
+    assert_eq!(world.side_view(Side::Allied).submarine_reports().count(), 1);
+}

@@ -569,6 +569,29 @@ impl World {
         if pulse != Pulse::Afternoon {
             self.make_state_reports(day, pulse);
         }
+        // Reports of submarines age by their own figure (decision 0218, 44):
+        // with no submarine data there are none.
+        if let Some(drop_age) = self
+            .ref_data
+            .submarines
+            .as_ref()
+            .map(|data| data.figures.report_drop_age_pulses)
+        {
+            for side in Side::ALL {
+                for outcome in self.age_submarine_pictures(side, drop_age) {
+                    self.events.record(
+                        day,
+                        Some(pulse),
+                        EventKind::SubmarineReportDropped {
+                            side,
+                            hex: outcome.hex,
+                        },
+                        vec![Cause::Event(outcome.received_event)],
+                        None,
+                    );
+                }
+            }
+        }
         // With no search figures there are no air groups, so no contacts.
         let Some(figures) = self.ref_data.search.clone() else {
             return;
@@ -3374,6 +3397,7 @@ mod tests {
             claimed_on_ground: 0,
             from_air: false,
             from_bombardment: false,
+            from_submarine: false,
             received_event: EventId::new(7),
             ground_types: Vec::new(),
             by_unit: Vec::new(),
@@ -3435,6 +3459,7 @@ mod tests {
             BattleClaim {
                 from_air: true,
                 from_bombardment: false,
+                from_submarine: false,
                 ..claim.clone()
             },
             BattleClaim {

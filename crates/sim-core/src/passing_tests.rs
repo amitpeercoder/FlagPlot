@@ -110,6 +110,7 @@ fn claim(key: EventId) -> Report {
         claimed_on_ground: 0,
         from_air: false,
         from_bombardment: false,
+        from_submarine: false,
         received_event: key,
         ground_types: Vec::new(),
         by_unit: Vec::new(),

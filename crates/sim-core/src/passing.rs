@@ -18,7 +18,7 @@
 
 use std::collections::BTreeSet;
 
-use crate::belief::{Report, SightingReport};
+use crate::belief::{Report, SightingReport, SubmarineReport};
 use crate::command::Addressee;
 use crate::events::{Arrival, Breakdown, Cause, Direction, EventKind, Factor, ReportListener};
 use crate::fixed::Fixed;
@@ -87,6 +87,7 @@ fn report_hex(report: &Report) -> Hex {
         Report::NothingThere { hex, .. } => *hex,
         Report::Ground(ground) => ground.hex,
         Report::NoneFound(none) => none.hex,
+        Report::Submarine(submarine) => submarine.hex,
     }
 }
 
@@ -99,6 +100,13 @@ fn aged(report: &Report, pulses: u64) -> Report {
                 .age_pulses
                 .saturating_add(u32::try_from(pulses).unwrap_or(u32::MAX)),
             ..sighting.clone()
+        }),
+        // A report of a submarine is as old as it is, as a sighting is.
+        Report::Submarine(submarine) => Report::Submarine(SubmarineReport {
+            age_pulses: submarine
+                .age_pulses
+                .saturating_add(u32::try_from(pulses).unwrap_or(u32::MAX)),
+            ..*submarine
         }),
         other => other.clone(),
     }

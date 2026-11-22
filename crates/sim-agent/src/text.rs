@@ -586,6 +586,23 @@ impl Briefing {
                     x.claimed_on_ground,
                     ev(x.event)
                 )
+            } else if x.from_submarine {
+                // A submarine's (decision 0218, 45): the hits believed
+                // scored on the kind she took her target for.
+                let (_, words) = sim_core::events::air_claim_words(
+                    x.claimed_sunk,
+                    x.claimed_hits,
+                    x.taken_for,
+                    0,
+                    0,
+                    &[],
+                    &[],
+                );
+                format!(
+                    "Claim from a submarine at {}: {words}{}",
+                    at(&x.place),
+                    ev(x.event)
+                )
             } else if x.from_air {
                 let types: Vec<(String, u32)> = x
                     .ground_types

@@ -57,6 +57,35 @@ pub enum Report {
     /// A side's fighting men stood in a hex and found no enemy man there
     /// (decision 0110, item 10): the side's estimate for the hex is cleared.
     NoneFound(NoneFoundReport),
+    /// A submarine was found at a hex (decision 0218, 44): a report of its
+    /// own kind, held in a list of its own and read by no rule that reads
+    /// contacts.
+    Submarine(SubmarineReport),
+}
+
+/// What a report of a submarine says (decision 0218, 44): where, and when.
+/// It holds no identity of the boat.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct SubmarineReport {
+    pub hex: Hex,
+    /// The day of the report.
+    pub day: u32,
+    /// The pulse of the report; `None` for a report made in no pulse.
+    pub pulse: Option<Pulse>,
+    /// The event that records this report's arrival.
+    pub received_event: EventId,
+    /// The pulses since the report was made: 0 as it is made, more for a
+    /// report that reaches a command a pulse late.
+    pub age_pulses: u32,
+}
+
+/// What [`BeliefState::age_submarine_reports`] did to one report: dropped
+/// for its age.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct SubmarineAgeOutcome {
+    pub hex: Hex,
+    /// The event that recorded the report's arrival.
+    pub received_event: EventId,
 }
 
 /// What a report that a hex is empty says: the hex, the day and the event
@@ -179,6 +208,11 @@ pub struct BattleClaim {
     /// aircraft believed destroyed on the ground and nothing else. Then
     /// `from_air` is false.
     pub from_bombardment: bool,
+    /// True for the claim of a submarine (decision 0218, 45): the hits
+    /// believed scored on the kind of ship she took her target for, and the
+    /// ships believed sunk. Then `from_air` and `from_bombardment` are
+    /// false.
+    pub from_submarine: bool,
     /// The event that records this claim's arrival.
     pub received_event: EventId,
     /// The types of the aircraft claimed destroyed on the ground, each with
@@ -213,6 +247,7 @@ impl BattleClaim {
             self.claimed_on_ground,
             self.from_air,
             self.from_bombardment,
+            self.from_submarine,
             &self.ground_types,
             &self.by_unit,
             &self.air_types,
@@ -264,6 +299,10 @@ pub enum ApplyOutcome {
     /// A report that a hex is empty cleared the estimate the side held for
     /// it: this one.
     Cleared { estimate: GroundEstimate },
+    /// A report of a submarine was taken in, or heard and changed nothing
+    /// because the side holds a newer one for the hex. `replaced` is true if
+    /// the side held one for the hex before (decision 0218, 44).
+    SubmarineReport { replaced: bool },
 }
 
 /// What [`BeliefState::age_contacts`] did to one contact.
@@ -287,9 +326,16 @@ pub struct BeliefState {
     /// Estimates of the enemy's men ashore, one for a hex (decision 0092,
     /// 11). They never age.
     ground_estimates: BTreeMap<Hex, GroundEstimate>,
+    /// Reports of submarines, one for a hex, the newer (decision 0218, 44).
+    /// Aged and dropped by [`BeliefState::age_submarine_reports`]; read by
+    /// nothing that reads contacts.
+    submarine_reports: BTreeMap<Hex, SubmarineReport>,
     /// Contacts created or refreshed since the last ageing. Always empty
     /// between pulses, so not hashed.
     refreshed_this_pulse: BTreeSet<ContactId>,
+    /// The hexes whose report of a submarine was made or replaced since the
+    /// last ageing. Always empty between pulses, so not hashed.
+    submarine_refreshed_this_pulse: BTreeSet<Hex>,
 }
 
 impl BeliefState {
@@ -300,7 +346,9 @@ impl BeliefState {
             contact_ids: IdAllocator::new(),
             claims: Vec::new(),
             ground_estimates: BTreeMap::new(),
+            submarine_reports: BTreeMap::new(),
             refreshed_this_pulse: BTreeSet::new(),
+            submarine_refreshed_this_pulse: BTreeSet::new(),
         }
     }
 
@@ -316,6 +364,7 @@ impl BeliefState {
         contacts: impl IntoIterator<Item = (Hex, u32, ShipKind, u32)>,
         claims: impl IntoIterator<Item = BattleClaim>,
         estimates: impl IntoIterator<Item = GroundEstimate>,
+        submarine_reports: impl IntoIterator<Item = SubmarineReport>,
         event: EventId,
     ) -> BeliefState {
         let mut belief = BeliefState::new(side);
@@ -352,6 +401,18 @@ impl BeliefState {
                 )
             })
             .collect();
+        belief.submarine_reports = submarine_reports
+            .into_iter()
+            .map(|report| {
+                (
+                    report.hex,
+                    SubmarineReport {
+                        received_event: event,
+                        ..report
+                    },
+                )
+            })
+            .collect();
         belief
     }
 
@@ -383,6 +444,11 @@ impl BeliefState {
         self.ground_estimates.get(&hex)
     }
 
+    /// The side's reports of submarines, in hex order (decision 0218, 44).
+    pub fn submarine_reports(&self) -> impl Iterator<Item = &SubmarineReport> {
+        self.submarine_reports.values()
+    }
+
     /// The raw value the next contact ID will have. Part of the state hash.
     pub(crate) fn next_contact_raw(&self) -> u32 {
         self.contact_ids.next_raw()
@@ -391,7 +457,7 @@ impl BeliefState {
     /// True if a contact was created or refreshed and not yet aged. Must be
     /// false whenever the state is hashed.
     pub(crate) fn has_pending_refreshes(&self) -> bool {
-        !self.refreshed_this_pulse.is_empty()
+        !self.refreshed_this_pulse.is_empty() || !self.submarine_refreshed_this_pulse.is_empty()
     }
 
     /// Writes a report into belief. With [`BeliefState::age_contacts`] this
@@ -466,6 +532,18 @@ impl BeliefState {
                 Some(estimate) => ApplyOutcome::Cleared { estimate },
                 None => ApplyOutcome::Unchanged,
             },
+            // One for a hex, the newer: a report whose event is older than
+            // the one held is heard and changes nothing (decision 0218, 44).
+            Report::Submarine(submarine) => {
+                let held = self.submarine_reports.get(&submarine.hex);
+                let replaced = held.is_some();
+                if held.is_some_and(|held| held.received_event > submarine.received_event) {
+                    return ApplyOutcome::SubmarineReport { replaced };
+                }
+                self.submarine_reports.insert(submarine.hex, *submarine);
+                self.submarine_refreshed_this_pulse.insert(submarine.hex);
+                ApplyOutcome::SubmarineReport { replaced }
+            }
         }
     }
 
@@ -549,6 +627,34 @@ impl BeliefState {
         }
         self.refreshed_this_pulse.clear();
         outcomes
+    }
+
+    /// Ages every report of a submarine not made or replaced this pulse by
+    /// one pulse and drops those that reach `drop_age_pulses`, and clears
+    /// the set made this pulse (decision 0218, 44). Takes no truth. Returns
+    /// the reports dropped, in hex order.
+    pub(crate) fn age_submarine_reports(
+        &mut self,
+        drop_age_pulses: u32,
+    ) -> Vec<SubmarineAgeOutcome> {
+        let mut dropped = Vec::new();
+        for (hex, report) in &mut self.submarine_reports {
+            if self.submarine_refreshed_this_pulse.contains(hex) {
+                continue;
+            }
+            report.age_pulses = report.age_pulses.saturating_add(1);
+            if report.age_pulses >= drop_age_pulses {
+                dropped.push(SubmarineAgeOutcome {
+                    hex: *hex,
+                    received_event: report.received_event,
+                });
+            }
+        }
+        for outcome in &dropped {
+            self.submarine_reports.remove(&outcome.hex);
+        }
+        self.submarine_refreshed_this_pulse.clear();
+        dropped
     }
 }
 
@@ -894,6 +1000,7 @@ mod tests {
             claimed_on_ground: 0,
             from_air: false,
             from_bombardment: false,
+            from_submarine: false,
             received_event: EventId::new(40),
             ground_types: Vec::new(),
             by_unit: Vec::new(),
@@ -920,6 +1027,7 @@ mod tests {
             claimed_on_ground: 4,
             from_air: true,
             from_bombardment: false,
+            from_submarine: false,
             received_event: EventId::new(90),
             ground_types: Vec::new(),
             by_unit: Vec::new(),
@@ -940,6 +1048,7 @@ mod tests {
             claimed_kind: _,
             claimed_shot_down: _,
             claimed_on_ground: _,
+            from_submarine: _,
             from_air: _,
             from_bombardment: _,
             received_event: _,
@@ -1272,5 +1381,160 @@ mod tests {
             (s60_held(&belief), belief.next_contact_raw())
         };
         assert_eq!(play(), play());
+    }
+    // ---- Reports of submarines (decision 0218, 44) ----
+
+    fn submarine_report(q: i32, r: i32, event: u32) -> SubmarineReport {
+        SubmarineReport {
+            hex: Hex::new(q, r),
+            day: 1,
+            pulse: Some(Pulse::Night),
+            received_event: EventId::new(event),
+            age_pulses: 0,
+        }
+    }
+
+    fn held_submarines(belief: &BeliefState) -> Vec<(Hex, u32, u32)> {
+        belief
+            .submarine_reports()
+            .map(|report| (report.hex, report.received_event.raw(), report.age_pulses))
+            .collect()
+    }
+
+    fn tell_submarine(belief: &mut BeliefState, report: SubmarineReport) -> ApplyOutcome {
+        belief.apply_report(&Report::Submarine(report), &figures())
+    }
+
+    #[test]
+    fn two_reports_of_a_submarine_in_one_hex_are_one_the_newer() {
+        let mut belief = BeliefState::new(Side::Allied);
+        assert_eq!(
+            tell_submarine(&mut belief, submarine_report(5, 0, 3)),
+            ApplyOutcome::SubmarineReport { replaced: false }
+        );
+        assert_eq!(
+            tell_submarine(&mut belief, submarine_report(5, 0, 9)),
+            ApplyOutcome::SubmarineReport { replaced: true }
+        );
+        assert_eq!(held_submarines(&belief), vec![(Hex::new(5, 0), 9, 0)]);
+        // A report in another hex is another report, held in hex order.
+        tell_submarine(&mut belief, submarine_report(4, 0, 11));
+        assert_eq!(
+            held_submarines(&belief),
+            vec![(Hex::new(4, 0), 11, 0), (Hex::new(5, 0), 9, 0)]
+        );
+    }
+
+    #[test]
+    fn a_report_of_a_submarine_older_than_the_one_held_is_heard_and_changes_nothing() {
+        let mut belief = BeliefState::new(Side::Allied);
+        tell_submarine(&mut belief, submarine_report(5, 0, 9));
+        belief.age_submarine_reports(6);
+        belief.age_submarine_reports(6);
+        let outcome = tell_submarine(&mut belief, submarine_report(5, 0, 4));
+        assert_eq!(outcome, ApplyOutcome::SubmarineReport { replaced: true });
+        // Still the report of event 9, and aged one pulse as it was.
+        assert_eq!(held_submarines(&belief), vec![(Hex::new(5, 0), 9, 1)]);
+        assert!(
+            !belief.has_pending_refreshes(),
+            "nothing was made this pulse"
+        );
+    }
+
+    #[test]
+    fn nothing_there_removes_no_report_of_a_submarine() {
+        let mut belief = BeliefState::new(Side::Allied);
+        let contact = put_contact(&mut belief, 5, 0, 0);
+        tell_submarine(&mut belief, submarine_report(5, 0, 3));
+        // By the contact, then by the hex alone: the contact goes, the
+        // report of a submarine stays.
+        let dropped = nothing_there(&mut belief, contact, 5, 0);
+        assert_eq!(dropped, ApplyOutcome::Dropped);
+        let again = belief.apply_report(
+            &Report::NothingThere {
+                contact: None,
+                hex: Hex::new(5, 0),
+            },
+            &figures(),
+        );
+        assert_eq!(again, ApplyOutcome::Unchanged);
+        assert_eq!(held_submarines(&belief), vec![(Hex::new(5, 0), 3, 0)]);
+        // A "none found" report for the hex clears no report of a submarine.
+        belief.apply_report(
+            &Report::NoneFound(NoneFoundReport {
+                hex: Hex::new(5, 0),
+                day: 1,
+                received_event: EventId::new(5),
+            }),
+            &figures(),
+        );
+        assert_eq!(held_submarines(&belief), vec![(Hex::new(5, 0), 3, 0)]);
+    }
+
+    #[test]
+    fn a_report_of_a_submarine_ages_a_pulse_at_a_time_and_is_dropped_at_its_own_age() {
+        let mut belief = BeliefState::new(Side::Allied);
+        tell_submarine(&mut belief, submarine_report(5, 0, 3));
+        assert!(belief.has_pending_refreshes());
+        // The pulse it was made in does not age it.
+        assert!(belief.age_submarine_reports(3).is_empty());
+        assert_eq!(held_submarines(&belief), vec![(Hex::new(5, 0), 3, 0)]);
+        assert!(belief.age_submarine_reports(3).is_empty());
+        assert_eq!(held_submarines(&belief), vec![(Hex::new(5, 0), 3, 1)]);
+        assert!(belief.age_submarine_reports(3).is_empty());
+        assert_eq!(held_submarines(&belief), vec![(Hex::new(5, 0), 3, 2)]);
+        // At the drop age it goes, and says which report it was.
+        let dropped = belief.age_submarine_reports(3);
+        assert_eq!(
+            dropped,
+            vec![SubmarineAgeOutcome {
+                hex: Hex::new(5, 0),
+                received_event: EventId::new(3),
+            }]
+        );
+        assert_eq!(held_submarines(&belief), Vec::new());
+    }
+
+    #[test]
+    fn a_report_of_a_submarine_replaced_this_pulse_starts_again_and_contacts_age_on_their_own() {
+        let figures = figures();
+        let mut belief = BeliefState::new(Side::Allied);
+        let contact = put_contact(&mut belief, 2, 2, 0);
+        tell_submarine(&mut belief, submarine_report(5, 0, 3));
+        belief.age_submarine_reports(6);
+        belief.age_submarine_reports(6);
+        assert_eq!(held_submarines(&belief), vec![(Hex::new(5, 0), 3, 1)]);
+        // A newer report replaces it and so is not aged in its pulse.
+        tell_submarine(&mut belief, submarine_report(5, 0, 8));
+        belief.age_submarine_reports(6);
+        assert_eq!(held_submarines(&belief), vec![(Hex::new(5, 0), 8, 0)]);
+        // Ageing the submarine reports touches no contact, and ageing the
+        // contacts touches no report of a submarine.
+        assert_eq!(belief.contact(contact).expect("held").age_pulses, 0);
+        belief.age_contacts(&figures);
+        assert_eq!(belief.contact(contact).expect("held").age_pulses, 1);
+        assert_eq!(held_submarines(&belief), vec![(Hex::new(5, 0), 8, 0)]);
+        // A report of a submarine merges with no contact: the contact at
+        // the same hex stays, and makes no report.
+        let there = put_contact(&mut belief, 5, 0, 0);
+        tell_submarine(&mut belief, submarine_report(5, 0, 12));
+        assert_eq!(belief.contact(there).expect("held").age_pulses, 0);
+        assert_eq!(belief.contacts().count(), 2);
+    }
+
+    #[test]
+    fn a_belief_made_from_a_picture_holds_the_reports_of_submarines_given() {
+        let belief = BeliefState::from_picture(
+            Side::Allied,
+            Vec::new(),
+            Vec::new(),
+            Vec::new(),
+            vec![SubmarineReport {
+                age_pulses: 2,
+                ..submarine_report(5, 0, 1)
+            }],
+            EventId::new(7),
+        );
+        assert_eq!(held_submarines(&belief), vec![(Hex::new(5, 0), 7, 2)]);
     }
 }

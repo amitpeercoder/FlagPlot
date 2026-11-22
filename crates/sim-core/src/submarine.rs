@@ -19,6 +19,7 @@
 //! - At the end of a passage she is on station, or, going home, she is
 //!   taken off the map at her base's hex.
 
+use crate::belief::{ApplyOutcome, BattleClaim, Report, SubmarineReport};
 use crate::damage::{damage_per_hit, system_for_draw, system_hit_chance, DamageSite, HitSet};
 use crate::events::{Breakdown, Cause, DamageTrack, EventKind, Factor, SubmarineLeftReason};
 use crate::fixed::Fixed;
@@ -26,8 +27,10 @@ use crate::hex::Hex;
 use crate::ids::{EntityRef, EventId, ShipId, SubmarineId, TaskForceId};
 use crate::map::Map;
 use crate::movement::HoursInHex;
+use crate::pictures::{CommandRef, Holders};
 use crate::refdata::ShipKind;
 use crate::rng::{Draw, Subsystem};
+use crate::search::{report_hex, reported_kind};
 use crate::state::{ShipSystem, SubmarineCondition, SubmarinePassage};
 use crate::time::Pulse;
 use crate::world::World;
@@ -64,6 +67,15 @@ fn pulses_after(day: u32, pulse: Pulse, n: u32) -> (u32, Pulse) {
 /// A pulse as a number that orders pulses in time.
 fn pulse_order(day: u32, pulse: Pulse) -> (u32, u64) {
     (day, pulse.code())
+}
+
+/// What a salvo came to, for what each side is told of it.
+struct SalvoTold {
+    real_hits: u32,
+    missed: u32,
+    sunk: u32,
+    taken_for: ShipKind,
+    false_hit_chance: Fixed,
 }
 
 /// What the attack chance for a pulse is (decision 0218, 39): one less the
@@ -317,7 +329,29 @@ impl World {
             .min()
             .map(|(_, _, ship)| ship)
             .expect("the force has a ship she may fire at");
-        let taken_for = self.ship_kind(ship_id); // phase 3: the kind her side takes it for.
+        // Her side's claim is one stream of the boat and the ship (decision
+        // 0218, 45): first the kind her side takes the ship for, through the
+        // search figures' confusion row of its true kind, then one chance for each torpedo that
+        // missed, drawn below.
+        let search = self
+            .ref_data
+            .search
+            .clone()
+            .expect("World::new requires search figures with submarines");
+        let mut claim_stream = self.rng_pair(
+            day,
+            Some(pulse),
+            Subsystem::Submarine,
+            Draw::SubmarineClaim,
+            EntityRef::Submarine(id),
+            EntityRef::Ship(ship_id),
+        );
+        let true_kind = self.ship_kind(ship_id);
+        let taken_for = reported_kind(
+            true_kind,
+            claim_stream.below(Fixed::SCALE.unsigned_abs()),
+            &search,
+        );
 
         // The salvo: one salvo of her class, each torpedo the next number of
         // the stream of the boat and the ship (rule 42).
@@ -386,11 +420,7 @@ impl World {
             vec![Cause::Event(chance_event)],
             breakdown,
         );
-        // phase 3: her side's claim, and the report of a submarine to the
-        // side fired on.
-        let mut track_hits = [0u32; 2];
-        track_hits[DamageTrack::Flotation as usize] = hits;
-        self.apply_hit_set(
+        let applied = self.apply_hit_set(
             DamageSite {
                 day,
                 pulse,
@@ -401,9 +431,31 @@ impl World {
                 target: ship_id,
                 target_force: force_id,
                 damage_per_hit: per_hit,
-                track_hits,
+                track_hits: {
+                    let mut track_hits = [0u32; 2];
+                    track_hits[DamageTrack::Flotation as usize] = hits;
+                    track_hits
+                },
                 system_hits,
             },
+        );
+        self.submarine_tells(
+            day,
+            pulse,
+            id,
+            force_id,
+            ship_id,
+            hex,
+            salvo,
+            SalvoTold {
+                real_hits: hits,
+                missed: class.salvo - hits,
+                sunk: u32::try_from(applied.sunk.len()).expect("few ships"),
+                taken_for,
+                false_hit_chance: figures.false_hit_chance,
+            },
+            &mut claim_stream,
+            &search,
         );
 
         // The hunt (rules 9, 10, 22 and 53): a force with a warship afloat
@@ -478,6 +530,180 @@ impl World {
                 vec![Cause::Event(salvo)],
             );
         }
+    }
+
+    /// What each side is told of a salvo (decision 0218, 13, 14, 45 and
+    /// 46), after its hits have landed. Her side gets her claim, made as a
+    /// raid's claim is: the hits that landed and a chance of a false hit for
+    /// each torpedo that missed, the kind she took her target for, the ships
+    /// her hits sank; it is held by her side's highest command. The side
+    /// fired on gets a report of a submarine at her hex through the
+    /// report's error, held first by the command of the force fired on.
+    #[allow(clippy::too_many_arguments)]
+    fn submarine_tells(
+        &mut self,
+        day: u32,
+        pulse: Pulse,
+        id: SubmarineId,
+        force_id: TaskForceId,
+        ship_id: ShipId,
+        hex: Hex,
+        salvo: EventId,
+        told: SalvoTold,
+        claim_stream: &mut crate::rng::RngStream,
+        search: &crate::refdata::SearchFigures,
+    ) {
+        let side = self.truth.submarines[&id].side;
+        let fired_on = self.truth.task_forces[&force_id].side;
+        let command_fired_on = self.command_of_force(force_id);
+
+        // Her side's claim.
+        let false_hits = u32::try_from(
+            (0..told.missed)
+                .filter(|_| claim_stream.chance(told.false_hit_chance))
+                .count(),
+        )
+        .expect("few torpedoes");
+        let claimed_hits = told.real_hits + false_hits;
+        let claim = BattleClaim {
+            hex,
+            day,
+            pulse,
+            claimed_sunk: told.sunk,
+            claimed_hits,
+            claimed_kind: Some(told.taken_for),
+            claimed_shot_down: 0,
+            claimed_on_ground: 0,
+            from_air: false,
+            from_bombardment: false,
+            from_submarine: true,
+            received_event: self.events.next_id(),
+            ground_types: Vec::new(),
+            by_unit: Vec::new(),
+            air_types: Vec::new(),
+        };
+        let holders = Holders::Commands {
+            commands: vec![CommandRef::Area],
+            key: claim.received_event,
+            day,
+            pulse: Some(pulse),
+        };
+        self.apply_report(side, &Report::BattleClaim(claim.clone()), &holders, search);
+        let breakdown = self.config.record_breakdowns.then(|| Breakdown {
+            factors: vec![
+                Factor {
+                    name: "real_hits",
+                    value: Fixed::from_int(i64::from(told.real_hits)),
+                },
+                Factor {
+                    name: "torpedoes_missed",
+                    value: Fixed::from_int(i64::from(told.missed)),
+                },
+                Factor {
+                    name: "false_hit_chance",
+                    value: told.false_hit_chance,
+                },
+                Factor {
+                    name: "false_hits",
+                    value: Fixed::from_int(i64::from(false_hits)),
+                },
+            ],
+            result: Fixed::from_int(i64::from(claimed_hits)),
+        });
+        let received = self.events.record(
+            day,
+            Some(pulse),
+            EventKind::ClaimReceived {
+                side,
+                hex,
+                claimed_sunk: told.sunk,
+                claimed_hits,
+                claimed_kind: Some(told.taken_for),
+                claimed_shot_down: 0,
+                claimed_on_ground: 0,
+                from_air: false,
+                from_bombardment: false,
+                from_submarine: true,
+                ground_types: Vec::new(),
+                by_unit: Vec::new(),
+                air_types: Vec::new(),
+            },
+            vec![Cause::Event(salvo)],
+            breakdown,
+        );
+        assert_eq!(
+            received, claim.received_event,
+            "the claim cites the event that records it"
+        );
+        self.pass_report(side, &Report::BattleClaim(claim), &holders);
+
+        // The side fired on: a report of a submarine at her hex through the
+        // report's error (one stream of the boat and the ship; the count
+        // and the kind are not drawn).
+        let mut stream = self.rng_pair(
+            day,
+            Some(pulse),
+            Subsystem::Submarine,
+            Draw::SubmarineReportError,
+            EntityRef::Submarine(id),
+            EntityRef::Ship(ship_id),
+        );
+        let (struck, direction) = if stream.chance(search.position_error_chance) {
+            (
+                Fixed::ONE,
+                Some(usize::try_from(stream.below(6)).expect("below 6")),
+            )
+        } else {
+            (Fixed::ZERO, None)
+        };
+        let reported_hex = report_hex(&self.map, hex, direction);
+        let report = SubmarineReport {
+            hex: reported_hex,
+            day,
+            pulse: Some(pulse),
+            received_event: self.events.next_id(),
+            age_pulses: 0,
+        };
+        let holders = Holders::Commands {
+            commands: vec![command_fired_on],
+            key: report.received_event,
+            day,
+            pulse: Some(pulse),
+        };
+        let ApplyOutcome::SubmarineReport { replaced } =
+            self.apply_report(fired_on, &Report::Submarine(report), &holders, search)
+        else {
+            unreachable!("a report of a submarine is taken in as one");
+        };
+        let breakdown = self.config.record_breakdowns.then(|| Breakdown {
+            factors: vec![
+                Factor {
+                    name: "position_error_chance",
+                    value: search.position_error_chance,
+                },
+                Factor {
+                    name: "position_error_struck",
+                    value: struck,
+                },
+            ],
+            result: Fixed::ZERO,
+        });
+        let received = self.events.record(
+            day,
+            Some(pulse),
+            EventKind::SubmarineReported {
+                side: fired_on,
+                hex: reported_hex,
+                replaced,
+            },
+            vec![Cause::Event(salvo)],
+            breakdown,
+        );
+        assert_eq!(
+            received, report.received_event,
+            "the report cites the event that records it"
+        );
+        self.pass_report(fired_on, &Report::Submarine(report), &holders);
     }
 
     /// Sends a boat for home (decision 0218, 3, 21 and 43): a passage to her

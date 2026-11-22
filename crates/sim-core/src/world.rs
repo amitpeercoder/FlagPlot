@@ -499,6 +499,13 @@ impl World {
                 "there are submarines but no submarine data".to_string(),
             ));
         }
+        // A boat's claim and the report of her to the side fired on are told
+        // through the search figures' error and confusion of kinds.
+        if !truth.submarines.is_empty() && ref_data.search.is_none() {
+            return Err(SimError::InvalidSetup(
+                "there are submarines but no search figures".to_string(),
+            ));
+        }
         for (key, boat) in &truth.submarines {
             let known = ref_data
                 .submarines

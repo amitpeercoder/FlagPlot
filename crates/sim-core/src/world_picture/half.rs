@@ -250,7 +250,14 @@ impl SideView<'_> {
             arrivals,
             orders,
             command,
-            belief: belief_of(self.contacts(), self.claims(), self.ground_estimates()),
+            // The enemy's half reads no report of a submarine as a force: its
+            // own reports are the side's (decision 0218, 44).
+            belief: belief_of(
+                self.contacts(),
+                self.claims(),
+                self.ground_estimates(),
+                self.submarine_reports(),
+            ),
             counters: PictureCounters {
                 next_task_force: self.next_task_force_id().raw(),
                 next_air_group: self.next_air_group_id().raw(),

@@ -611,6 +611,11 @@ pub struct Claim {
     /// false. Left out when false.
     #[serde(skip_serializing_if = "is_false")]
     pub from_bombardment: bool,
+    /// True for the claim of a submarine (decision 0218, 45): hits believed
+    /// scored on the kind of ship she took her target for, and the ships
+    /// believed sunk. `from_air` is then false. Left out when false.
+    #[serde(skip_serializing_if = "is_false")]
+    pub from_submarine: bool,
     /// The types of the aircraft claimed destroyed on the ground, by name,
     /// each with its number, where the raiders made them out (decision
     /// 0179). Left out where none is named.
@@ -3019,7 +3024,9 @@ impl Day {
                     | EventKind::SubmarineAttackChance { .. }
                     | EventKind::SubmarineSalvo { .. }
                     | EventKind::SubmarineHunted { .. }
-                    | EventKind::SubmarineSunk { .. } => {}
+                    | EventKind::SubmarineSunk { .. }
+                    | EventKind::SubmarineReported { .. }
+                    | EventKind::SubmarineReportDropped { .. } => {}
                     EventKind::ForceEntered { .. }
                     | EventKind::UnitEntered { .. }
                     | EventKind::EntryWaiting { .. } => {
@@ -3337,6 +3344,7 @@ impl Day {
                         claimed_on_ground,
                         from_air,
                         from_bombardment,
+                        from_submarine,
                         ground_types,
                         by_unit,
                         air_types,
@@ -3374,6 +3382,7 @@ impl Day {
                         claimed_on_ground: *claimed_on_ground,
                         from_air: *from_air,
                         from_bombardment: *from_bombardment,
+                        from_submarine: *from_submarine,
                         event: id,
                     }),
                     EventKind::BaseSupplySpent {
@@ -4744,6 +4753,7 @@ fn reports_of(
                 claimed_sunk,
                 from_air: false,
                 from_bombardment: false,
+                from_submarine: false,
                 ..
             }) => StrikeReport {
                 result: "claim",

@@ -25,7 +25,9 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use crate::belief::{BattleClaim, BeliefState, Contact, GroundEstimate, GroundGrade};
+use crate::belief::{
+    BattleClaim, BeliefState, Contact, GroundEstimate, GroundGrade, SubmarineReport,
+};
 use crate::claims::UnitClaim;
 use crate::command::{CommandState, Hold, HoldMaker, PursuitBy};
 use crate::entering::Entering;
@@ -91,6 +93,19 @@ pub struct PictureBelief {
     pub claims: Vec<PictureClaim>,
     /// Its estimates of the enemy's men ashore, at most one for a hex.
     pub estimates: Vec<PictureEstimate>,
+    /// Its reports of submarines, at most one for a hex (decision 0218,
+    /// 44).
+    pub submarine_reports: Vec<PictureSubmarineReport>,
+}
+
+/// A report of a submarine in a picture: a [`SubmarineReport`] without its
+/// event.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct PictureSubmarineReport {
+    pub hex: Hex,
+    pub day: u32,
+    pub pulse: Option<Pulse>,
+    pub age_pulses: u32,
 }
 
 /// A contact in a picture: where, how many ships, taken for what kind, and
@@ -116,6 +131,8 @@ pub struct PictureClaim {
     pub claimed_on_ground: u32,
     pub from_air: bool,
     pub from_bombardment: bool,
+    /// True for the claim of a submarine (decision 0218, 45).
+    pub from_submarine: bool,
     /// The types claimed on the ground (decision 0179).
     pub ground_types: Vec<(AircraftTypeId, u32)>,
     /// Who claims what (decision 0180): every unit named is of the claim's
@@ -693,6 +710,7 @@ fn picture_belief(belief: &BeliefState) -> PictureBelief {
         belief.contacts(),
         belief.claims(),
         belief.ground_estimates(),
+        belief.submarine_reports(),
     )
 }
 
@@ -704,6 +722,7 @@ fn belief_of<'a>(
     contacts: impl Iterator<Item = &'a Contact>,
     claims: &[BattleClaim],
     estimates: impl Iterator<Item = &'a GroundEstimate>,
+    submarine_reports: impl Iterator<Item = &'a SubmarineReport>,
 ) -> PictureBelief {
     PictureBelief {
         contacts: contacts
@@ -728,6 +747,7 @@ fn belief_of<'a>(
                     claimed_on_ground,
                     from_air,
                     from_bombardment,
+                    from_submarine,
                     received_event: _,
                     ground_types,
                     by_unit,
@@ -744,6 +764,7 @@ fn belief_of<'a>(
                     claimed_on_ground,
                     from_air,
                     from_bombardment,
+                    from_submarine,
                     ground_types,
                     by_unit,
                     air_types,
@@ -756,6 +777,14 @@ fn belief_of<'a>(
                 men: estimate.men,
                 day: estimate.day,
                 grade: estimate.grade,
+            })
+            .collect(),
+        submarine_reports: submarine_reports
+            .map(|report| PictureSubmarineReport {
+                hex: report.hex,
+                day: report.day,
+                pulse: report.pulse,
+                age_pulses: report.age_pulses,
             })
             .collect(),
     }
@@ -1031,6 +1060,7 @@ fn build(
                     claimed_on_ground: c.claimed_on_ground,
                     from_air: c.from_air,
                     from_bombardment: c.from_bombardment,
+                    from_submarine: c.from_submarine,
                     received_event: picture_event,
                     ground_types: c.ground_types.clone(),
                     by_unit: c.by_unit.clone(),
@@ -1042,6 +1072,13 @@ fn build(
                     day: e.day,
                     report_event: picture_event,
                     grade: e.grade,
+                }),
+                given.submarine_reports.iter().map(|r| SubmarineReport {
+                    hex: r.hex,
+                    day: r.day,
+                    pulse: r.pulse,
+                    received_event: picture_event,
+                    age_pulses: r.age_pulses,
                 }),
                 picture_event,
             );

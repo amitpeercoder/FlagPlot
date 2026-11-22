@@ -857,6 +857,8 @@ pub enum EventKind {
         from_air: bool,
         /// True for the claim of a shore bombardment (decision 0092, 17).
         from_bombardment: bool,
+        /// True for the claim of a submarine (decision 0218, 45).
+        from_submarine: bool,
         /// The types of the aircraft claimed destroyed on the ground, each
         /// with its number, in order of the type's number (decision 0179):
         /// empty, or adding to `claimed_on_ground`.
@@ -2414,6 +2416,23 @@ pub enum EventKind {
     SubmarineSunk {
         submarine: SubmarineId,
     },
+    /// A report of a submarine reached `side`'s belief (decision 0218, 44
+    /// and 46): at `hex`, through the report's error. `replaced` is true if
+    /// the side held a report of one there before. Cites the salvo (or the
+    /// sighting) it rests on. Seen whole by `side` and not at all by the
+    /// other. Added at the end.
+    SubmarineReported {
+        side: Side,
+        hex: Hex,
+        replaced: bool,
+    },
+    /// A report of a submarine at `hex` was dropped from `side`'s belief for
+    /// its age (decision 0218, 44). Cites the report that made it. Seen
+    /// whole by `side`. Added at the end.
+    SubmarineReportDropped {
+        side: Side,
+        hex: Hex,
+    },
 }
 
 impl EventKind {
@@ -2897,6 +2916,9 @@ impl EventKind {
                 vec![EntityRef::LandUnit(*unit), EntityRef::Base(*base)]
             }
             EventKind::GroundReportReceived { .. } => Vec::new(),
+            EventKind::SubmarineReported { .. } | EventKind::SubmarineReportDropped { .. } => {
+                Vec::new()
+            }
             EventKind::ReconnaissanceFlown {
                 air_group, from, ..
             } => std::iter::once(EntityRef::AirGroup(*air_group))
@@ -3838,6 +3860,21 @@ impl fmt::Display for EventKind {
                 }
             ),
             EventKind::SubmarineSunk { submarine } => write!(f, "{submarine} was sunk"),
+            EventKind::SubmarineReported {
+                side,
+                hex,
+                replaced,
+            } => write!(
+                f,
+                "{} report of a submarine at {hex}{}",
+                side.name(),
+                if *replaced { ", replacing the report held" } else { "" }
+            ),
+            EventKind::SubmarineReportDropped { side, hex } => write!(
+                f,
+                "{} dropped its report of a submarine at {hex}, grown too old",
+                side.name()
+            ),
             EventKind::ShipSunk {
                 round,
                 ship,
@@ -3883,6 +3920,7 @@ impl fmt::Display for EventKind {
                 claimed_on_ground,
                 from_air,
                 from_bombardment,
+                from_submarine,
                 ground_types,
                 by_unit,
                 air_types,
@@ -3896,6 +3934,7 @@ impl fmt::Display for EventKind {
                 *claimed_on_ground,
                 *from_air,
                 *from_bombardment,
+                *from_submarine,
                 ground_types,
                 by_unit,
                 air_types,
@@ -5441,6 +5480,7 @@ pub fn claim_text(
     claimed_on_ground: u32,
     from_air: bool,
     from_bombardment: bool,
+    from_submarine: bool,
     ground_types: &[(AircraftTypeId, u32)],
     by_unit: &[UnitClaim],
     air_types: &[(AircraftTypeId, u32)],
@@ -5466,6 +5506,7 @@ pub fn claim_text(
         claimed_on_ground,
         from_air,
         from_bombardment,
+        from_submarine,
         &types,
         &units,
         &in_the_air,
@@ -5486,6 +5527,7 @@ pub fn claim_words(
     claimed_on_ground: u32,
     from_air: bool,
     from_bombardment: bool,
+    from_submarine: bool,
     types: &[(String, u32)],
     units: &[(String, UnitClaim)],
     air_types: &[(String, u32)],
@@ -5495,6 +5537,20 @@ pub fn claim_words(
             "{} claim from the sea at {hex}: {claimed_on_ground} aircraft destroyed on the ground",
             side.name()
         );
+    }
+    // A submarine's claim (decision 0218, 45): the hits believed scored on
+    // the kind she took her target for, and the ships they sank.
+    if from_submarine {
+        let (_, words) = air_claim_words(
+            claimed_sunk,
+            claimed_hits,
+            claimed_kind.map(ShipKind::name),
+            0,
+            0,
+            &[],
+            &[],
+        );
+        return format!("{} claim from a submarine at {hex}: {words}", side.name());
     }
     if !from_air {
         return format!(

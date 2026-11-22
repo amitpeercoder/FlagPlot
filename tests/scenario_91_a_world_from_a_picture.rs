@@ -238,6 +238,7 @@ fn case_one() -> (WorldPicture, RefData, Map) {
             claimed_on_ground: 0,
             from_air: true,
             from_bombardment: false,
+            from_submarine: false,
             ground_types: Vec::new(),
             by_unit: Vec::new(),
             air_types: Vec::new(),
@@ -248,6 +249,7 @@ fn case_one() -> (WorldPicture, RefData, Map) {
             day: 2,
             grade: GroundGrade::SeenFromAir,
         }],
+        submarine_reports: Vec::new(),
     };
     let picture = WorldPicture {
         day: 4,

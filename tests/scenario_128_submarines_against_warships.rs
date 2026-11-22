@@ -214,6 +214,8 @@ use std::sync::OnceLock;
 use sim_core::events::{Event, EventKind, SubmarineLeftReason};
 use sim_core::fixed::Fixed;
 use sim_core::ids::{EntityRef, EventId, ShipId, SubmarineId, TaskForceId};
+use sim_core::pictures::CommandRef;
+use sim_core::refdata::ShipKind;
 use sim_core::rng::{Draw, Subsystem};
 use sim_core::side_events::SideEventKind;
 use sim_core::state::{Side, SubmarineCondition};
@@ -325,6 +327,9 @@ struct Game {
     days: u32,
     allied_base_at_the_boat: bool,
     wide_map: bool,
+    /// Command levels on, with no report figures: every command holds a
+    /// report at once.
+    command_levels: bool,
 }
 
 fn game(forces: Vec<Force>) -> Game {
@@ -334,6 +339,7 @@ fn game(forces: Vec<Force>) -> Game {
         days: 1,
         allied_base_at_the_boat: false,
         wide_map: false,
+        command_levels: false,
     }
 }
 
@@ -354,6 +360,10 @@ impl Game {
         self.allied_base_at_the_boat = true;
         self
     }
+    fn command_levels(mut self) -> Game {
+        self.command_levels = true;
+        self
+    }
 
     fn text(&self) -> String {
         let text = fs::read_to_string(scenario_path()).expect("read the scenario");
@@ -366,6 +376,13 @@ impl Game {
             .to_string();
         text.push('\n');
         text = common::replace_once(&text, "days = 1\n", &format!("days = {}\n", self.days));
+        if self.command_levels {
+            text = common::replace_once(
+                &text,
+                "placeholder = true\n",
+                "command_levels = true\nplaceholder = true\n",
+            );
+        }
         text = common::replace_once(
             &text,
             "class = 6900\nq = 5\nr = 0\nhome = 1\n",
@@ -1432,4 +1449,641 @@ fn statement_15_a_force_of_one_ship_the_ship_aimed_at_hunts_nothing() {
         }
     }
     assert!(fired > 0 && again > 0);
+}
+
+// ---------------------------------------------------------------------
+// Part E: what each side is told.
+// ---------------------------------------------------------------------
+
+/// What the boat's stream of claims gives for a salvo at `ship` in
+/// `(day, pulse)`, replayed from the world's seed as the rule draws it: the
+/// kind taken for, read by the confusion row of `true_kind`, and the number
+/// of false hits among `missed` torpedoes.
+fn claim_replayed(
+    run: &Run,
+    day: u32,
+    pulse: Pulse,
+    ship: u32,
+    true_kind: ShipKind,
+    missed: u32,
+) -> (ShipKind, u32) {
+    let search = run
+        .world
+        .ref_data()
+        .search
+        .as_ref()
+        .expect("search figures");
+    let mut stream = run.world.rng_pair(
+        day,
+        Some(pulse),
+        Subsystem::Submarine,
+        Draw::SubmarineClaim,
+        EntityRef::Submarine(BOAT),
+        EntityRef::Ship(ShipId::new(ship)),
+    );
+    let draw = i64::try_from(stream.below(1_000_000)).expect("a draw");
+    let row = &search.kind_confusion[&true_kind];
+    let mut cumulative = 0i64;
+    let mut taken_for = None;
+    for kind in ShipKind::ALL {
+        cumulative += row.get(&kind).map_or(0, |chance| chance.raw());
+        if draw < cumulative {
+            taken_for = Some(kind);
+            break;
+        }
+    }
+    let false_hits = (0..missed).filter(|_| stream.chance(fx("0.25"))).count();
+    (
+        taken_for.expect("a draw lands in a confusion row"),
+        u32::try_from(false_hits).expect("few"),
+    )
+}
+
+/// Where the report of a submarine to the side fired on says she is, for a
+/// salvo at `ship` in `(day, pulse)`, replayed from the world's seed as the
+/// rule draws it: her hex, or a neighbour where the error struck.
+fn report_replayed(run: &Run, day: u32, pulse: Pulse, ship: u32, at: (i32, i32)) -> (i32, i32) {
+    let search = run
+        .world
+        .ref_data()
+        .search
+        .as_ref()
+        .expect("search figures");
+    let mut stream = run.world.rng_pair(
+        day,
+        Some(pulse),
+        Subsystem::Submarine,
+        Draw::SubmarineReportError,
+        EntityRef::Submarine(BOAT),
+        EntityRef::Ship(ShipId::new(ship)),
+    );
+    if !stream.chance(search.position_error_chance) {
+        return at;
+    }
+    let index = usize::try_from(stream.below(6)).expect("below 6");
+    let (dq, dr) = sim_core::hex::Hex::DIRECTIONS[index];
+    let neighbour = sim_core::hex::Hex::new(at.0 + dq, at.1 + dr);
+    if run.world.map().is_navigable(neighbour) {
+        (neighbour.q, neighbour.r)
+    } else {
+        at
+    }
+}
+
+#[test]
+fn statement_21_her_side_is_told_that_she_fired_the_kind_taken_and_her_claim_and_no_contact() {
+    let a1 = game(vec![carrier_and_destroyer()]).scenario();
+    let (mut fired, mut other_kind, mut false_seen, mut no_hits, mut hits_seen) = (0, 0, 0, 0, 0);
+    for seed in 1..=SEEDS {
+        let run = play(&a1, seed);
+        let Some(salvo) = run.salvos().first().copied() else {
+            continue;
+        };
+        fired += 1;
+        // The aimed ship is the carrier, ship 1 (statement 8).
+        assert_eq!(salvo.ship, 1, "seed {seed}");
+        let (taken_for, false_hits) = claim_replayed(
+            &run,
+            salvo.day,
+            salvo.pulse,
+            salvo.ship,
+            ShipKind::Carrier,
+            salvo.torpedoes - salvo.hits,
+        );
+        let sunk = u32::try_from(
+            run.events
+                .iter()
+                .filter(|e| matches!(e.kind, EventKind::ShipSunk { .. }))
+                .count(),
+        )
+        .expect("few");
+
+        let japanese = run.world.side_view(Side::Japanese);
+        let events = japanese.events();
+        // That she fired and the kind she took her target for.
+        let told: Vec<&sim_core::side_events::SideEvent> = events
+            .iter()
+            .filter(|e| matches!(e.kind, SideEventKind::OwnSubmarineFired { .. }))
+            .collect();
+        assert_eq!(told.len(), 1, "seed {seed}: told once that she fired");
+        let SideEventKind::OwnSubmarineFired {
+            submarine,
+            hex,
+            torpedoes,
+            taken_for: told_kind,
+        } = told[0].kind.clone()
+        else {
+            unreachable!("filtered");
+        };
+        assert_eq!(submarine, BOAT);
+        assert_eq!((hex.q, hex.r), (5, 0));
+        assert_eq!(torpedoes, 4);
+        assert_eq!(told_kind, taken_for, "seed {seed}: the kind taken for");
+        // The umpire's salvo event carries the same kind.
+        let EventKind::SubmarineSalvo {
+            taken_for: logged, ..
+        } = run.event(salvo.id).kind
+        else {
+            unreachable!("a salvo");
+        };
+        assert_eq!(logged, taken_for);
+        if taken_for != ShipKind::Carrier {
+            other_kind += 1;
+        }
+
+        // Her claim: seen whole, as a submarine's, the hits that landed and
+        // a chance of a false hit for each that missed, the ships sunk.
+        let claims: Vec<&sim_core::side_events::SideEvent> = events
+            .iter()
+            .filter(|e| {
+                matches!(
+                    e.kind,
+                    SideEventKind::Whole(EventKind::ClaimReceived { .. })
+                )
+            })
+            .collect();
+        assert_eq!(claims.len(), 1, "seed {seed}: one claim");
+        let SideEventKind::Whole(EventKind::ClaimReceived {
+            side,
+            hex,
+            claimed_sunk,
+            claimed_hits,
+            claimed_kind,
+            claimed_shot_down,
+            claimed_on_ground,
+            from_air,
+            from_bombardment,
+            from_submarine,
+            ..
+        }) = claims[0].kind.clone()
+        else {
+            unreachable!("filtered");
+        };
+        assert_eq!(side, Side::Japanese);
+        assert_eq!((hex.q, hex.r), (5, 0), "her hex");
+        assert!(from_submarine && !from_air && !from_bombardment);
+        assert_eq!(claimed_kind, Some(taken_for), "seed {seed}");
+        assert_eq!(claimed_hits, salvo.hits + false_hits, "seed {seed}: hits");
+        assert_eq!(claimed_sunk, sunk, "seed {seed}: the ships her hits sank");
+        assert_eq!((claimed_shot_down, claimed_on_ground), (0, 0));
+        assert!(claimed_hits >= salvo.hits && claimed_hits <= salvo.torpedoes);
+        if false_hits > 0 {
+            false_seen += 1;
+        }
+        if salvo.hits == 0 {
+            no_hits += 1;
+        } else {
+            hits_seen += 1;
+        }
+        // The claim cites the salvo, and the umpire's breakdown of it holds
+        // the real hits, the chance and the false hits and no raw draw.
+        let logged_claim = run
+            .events
+            .iter()
+            .find(|e| matches!(e.kind, EventKind::ClaimReceived { .. }))
+            .expect("the umpire's claim");
+        assert_eq!(
+            logged_claim.causes,
+            vec![sim_core::events::Cause::Event(salvo.id)]
+        );
+        let breakdown = logged_claim.breakdown.as_ref().expect("a breakdown");
+        let factor = |name: &str| {
+            breakdown
+                .factors
+                .iter()
+                .find(|f| f.name == name)
+                .unwrap_or_else(|| panic!("factor {name}"))
+                .value
+        };
+        assert_eq!(factor("real_hits"), Fixed::from_int(i64::from(salvo.hits)));
+        assert_eq!(factor("false_hit_chance"), fx("0.25"));
+        assert_eq!(factor("false_hits"), Fixed::from_int(i64::from(false_hits)));
+        assert_eq!(breakdown.result, Fixed::from_int(i64::from(claimed_hits)));
+        assert!(breakdown.factors.iter().all(|f| f.name != "draw"));
+        // The words say it is a submarine's claim.
+        assert!(
+            logged_claim.kind.to_string().contains("submarine"),
+            "{}",
+            logged_claim.kind
+        );
+
+        // Held in her side's belief as that claim, and in no other's.
+        let claims_held = japanese.claims();
+        assert_eq!(claims_held.len(), 1);
+        assert!(claims_held[0].from_submarine);
+        assert_eq!(claims_held[0].claimed_hits, claimed_hits);
+        assert_eq!(claims_held[0].claimed_kind, Some(taken_for));
+        assert_eq!(
+            (claims_held[0].day, claims_held[0].pulse),
+            (salvo.day, salvo.pulse)
+        );
+        assert!(claims_held[0].text(Side::Japanese).contains("submarine"));
+        assert!(run.world.side_view(Side::Allied).claims().is_empty());
+
+        // No contact of the force and no report of ships.
+        assert_eq!(japanese.contacts().count(), 0, "seed {seed}: no contact");
+        assert!(
+            !events.iter().any(|e| matches!(
+                e.kind,
+                SideEventKind::Whole(
+                    EventKind::ReportReceived { .. } | EventKind::ContactNotThere { .. }
+                )
+            )),
+            "seed {seed}: no report of ships"
+        );
+        // And no report of a submarine: her own side knows her exactly.
+        assert_eq!(japanese.submarine_reports().count(), 0);
+    }
+    assert!(fired > 100, "she fired on {fired} seeds");
+    // The kind taken for is sometimes not the carrier (0.3 of the time), a
+    // claim is sometimes raised above the hits (a false hit), and both a
+    // salvo that hit and one that missed are claimed.
+    assert!(other_kind > 0 && false_seen > 0 && no_hits > 0 && hits_seen > 0);
+}
+
+#[test]
+fn statement_22_the_side_fired_on_is_told_of_each_salvo_with_no_boat_named_and_one_report() {
+    let a1 = game(vec![carrier_and_destroyer()]).scenario();
+    let (mut fired, mut missed_all, mut struck, mut true_hex) = (0, 0, 0, 0);
+    for seed in 1..=SEEDS {
+        let run = play(&a1, seed);
+        let Some(salvo) = run.salvos().first().copied() else {
+            continue;
+        };
+        fired += 1;
+        let allied = run.world.side_view(Side::Allied);
+        let events = allied.events();
+        // Told of the salvo, hit or miss, with no boat named.
+        let salvos: Vec<&sim_core::side_events::SideEvent> = events
+            .iter()
+            .filter(|e| matches!(e.kind, SideEventKind::SalvoFromSubmarine { .. }))
+            .collect();
+        assert_eq!(salvos.len(), 1, "seed {seed}: told of the salvo");
+        let SideEventKind::SalvoFromSubmarine {
+            task_force,
+            ship,
+            hex,
+        } = salvos[0].kind.clone()
+        else {
+            unreachable!("filtered");
+        };
+        assert_eq!((task_force.raw(), ship.raw()), (1, salvo.ship));
+        assert_eq!((hex.q, hex.r), (5, 0));
+        assert_eq!(
+            (salvos[0].day, salvos[0].pulse),
+            (salvo.day, Some(salvo.pulse))
+        );
+        assert!(
+            salvos[0]
+                .kind
+                .entities()
+                .iter()
+                .all(|e| !matches!(e, EntityRef::Submarine(_))),
+            "seed {seed}: no boat named"
+        );
+        let words = salvos[0].kind.to_string();
+        assert!(
+            !words.contains("submarine:") && !words.contains("Placeholder submarine"),
+            "seed {seed}: {words}"
+        );
+        if salvo.hits == 0 {
+            missed_all += 1;
+        }
+        // No event told to the side names the boat or a number of hers.
+        for event in &events {
+            assert!(
+                event
+                    .kind
+                    .entities()
+                    .iter()
+                    .all(|e| !matches!(e, EntityRef::Submarine(_))),
+                "seed {seed}: {}",
+                event.kind
+            );
+        }
+
+        // One report of a submarine at her hex through the report's error.
+        let at = report_replayed(&run, salvo.day, salvo.pulse, salvo.ship, (5, 0));
+        if at == (5, 0) {
+            true_hex += 1;
+        } else {
+            struck += 1;
+        }
+        let reports: Vec<_> = allied.submarine_reports().collect();
+        assert_eq!(reports.len(), 1, "seed {seed}: one report");
+        assert_eq!((reports[0].hex.q, reports[0].hex.r), at, "seed {seed}");
+        assert_eq!(
+            (reports[0].day, reports[0].pulse),
+            (salvo.day, Some(salvo.pulse))
+        );
+        // Made in the salvo's pulse and aged one a pulse after it.
+        let after = pulses(1).len() - 1 - index_of(salvo.day, salvo.pulse);
+        assert_eq!(
+            reports[0].age_pulses,
+            u32::try_from(after).expect("few"),
+            "seed {seed}"
+        );
+        let told: Vec<&sim_core::side_events::SideEvent> = events
+            .iter()
+            .filter(|e| {
+                matches!(
+                    e.kind,
+                    SideEventKind::Whole(EventKind::SubmarineReported { .. })
+                )
+            })
+            .collect();
+        assert_eq!(told.len(), 1, "seed {seed}: told of the report");
+        assert!(matches!(
+            told[0].kind,
+            SideEventKind::Whole(EventKind::SubmarineReported {
+                side: Side::Allied,
+                replaced: false,
+                ..
+            })
+        ));
+        // The umpire's event cites the salvo.
+        let logged = run
+            .events
+            .iter()
+            .find(|e| matches!(e.kind, EventKind::SubmarineReported { .. }))
+            .expect("logged");
+        assert_eq!(
+            logged.causes,
+            vec![sim_core::events::Cause::Event(salvo.id)]
+        );
+        assert_eq!(reports[0].received_event, logged.id);
+        // Its contacts of ships are unchanged.
+        assert_eq!(allied.contacts().count(), 0, "seed {seed}");
+        // And the boat's side is not told of the report.
+        assert!(!run
+            .world
+            .side_view(Side::Japanese)
+            .events()
+            .iter()
+            .any(|e| matches!(
+                e.kind,
+                SideEventKind::Whole(EventKind::SubmarineReported { .. })
+            )));
+    }
+    assert!(fired > 100);
+    // The error strikes about 0.3 of the time, and a salvo that missed
+    // every torpedo is told and reported as one that hit.
+    assert!(struck > 0 && true_hex > 0 && missed_all > 0);
+}
+
+#[test]
+fn statement_23_two_reports_of_a_submarine_in_one_hex_are_one_the_newer() {
+    // Two salvoes in two days: a second salvo is a second report. Where both
+    // name one hex the side holds one, the newer; where they name two it
+    // holds two.
+    let a1 = game(vec![carrier_and_destroyer()]).days(2).scenario();
+    let (mut same, mut apart) = (0, 0);
+    for seed in 1..=SEEDS {
+        let run = play(&a1, seed);
+        let salvos = run.salvos();
+        if salvos.len() < 2 {
+            continue;
+        }
+        let reports: Vec<&Event> = run
+            .events
+            .iter()
+            .filter(|e| matches!(e.kind, EventKind::SubmarineReported { .. }))
+            .collect();
+        assert_eq!(reports.len(), 2, "seed {seed}");
+        let (hexes, replaced): (Vec<_>, Vec<_>) = reports
+            .iter()
+            .map(|e| match e.kind {
+                EventKind::SubmarineReported { hex, replaced, .. } => ((hex.q, hex.r), replaced),
+                _ => unreachable!("filtered"),
+            })
+            .unzip();
+        for (i, salvo) in salvos.iter().enumerate() {
+            assert_eq!(
+                hexes[i],
+                report_replayed(&run, salvo.day, salvo.pulse, salvo.ship, (5, 0)),
+                "seed {seed}: report {i}"
+            );
+        }
+        let held: Vec<_> = run
+            .world
+            .side_view(Side::Allied)
+            .submarine_reports()
+            .map(|r| ((r.hex.q, r.hex.r), r.received_event, r.age_pulses))
+            .collect();
+        let end = pulses(2).len() - 1;
+        let age_of =
+            |salvo: &Salvo| u32::try_from(end - index_of(salvo.day, salvo.pulse)).expect("few");
+        if hexes[0] == hexes[1] {
+            same += 1;
+            // One report of the hex, the newer; the second said so.
+            assert_eq!(replaced, vec![false, true], "seed {seed}");
+            assert_eq!(held, vec![(hexes[0], reports[1].id, age_of(&salvos[1]))]);
+        } else {
+            apart += 1;
+            assert_eq!(replaced, vec![false, false], "seed {seed}");
+            let mut expected = vec![
+                (hexes[0], reports[0].id, age_of(&salvos[0])),
+                (hexes[1], reports[1].id, age_of(&salvos[1])),
+            ];
+            expected.sort_by_key(|(hex, _, _)| *hex);
+            let mut held_sorted = held.clone();
+            held_sorted.sort_by_key(|(hex, _, _)| *hex);
+            assert_eq!(held_sorted, expected, "seed {seed}");
+        }
+    }
+    assert!(same > 0 && apart > 0, "same {same}, apart {apart}");
+}
+
+#[test]
+fn statement_24_a_side_sees_its_own_boats_exactly_and_the_other_only_its_reports() {
+    // Three days, so that she fires, goes home and arrives on some seeds.
+    let a1 = game(vec![carrier_and_destroyer()]).days(3).scenario();
+    let (mut fired, mut home, mut sunk) = (0, 0, 0);
+    for seed in 1..=300 {
+        let run = play(&a1, seed);
+        let truth = run.boat();
+        // The boat's side: exact.
+        let japanese = run.world.side_view(Side::Japanese);
+        let own: Vec<&sim_core::state::Submarine> = japanese.own_submarines().collect();
+        assert_eq!(own.len(), 1);
+        assert_eq!(own[0], truth, "seed {seed}: exactly as she is");
+        assert_eq!(japanese.submarine(BOAT), Some(truth));
+        assert_eq!(
+            (own[0].salvoes, own[0].held_down_until, own[0].condition),
+            (truth.salvoes, truth.held_down_until, truth.condition)
+        );
+        match truth.condition {
+            SubmarineCondition::Home => home += 1,
+            SubmarineCondition::Sunk => sunk += 1,
+            _ => {}
+        }
+        // The other side: no boat, only its reports.
+        let allied = run.world.side_view(Side::Allied);
+        assert_eq!(allied.own_submarines().count(), 0, "seed {seed}");
+        assert_eq!(allied.submarine(BOAT), None);
+        let salvos = run.salvos().len();
+        if salvos > 0 {
+            fired += 1;
+            assert!(allied.submarine_reports().count() >= 1 || run_dropped(&run));
+        }
+        // No event of her passage, station, salvoes, state or held-down
+        // count is seen by the other side; nothing it is given names her.
+        for event in allied.events() {
+            let boat_event = matches!(
+                &event.kind,
+                SideEventKind::OwnSubmarineFired { .. }
+                    | SideEventKind::OwnSubmarineHunted { .. }
+                    | SideEventKind::Whole(
+                        EventKind::SubmarineEntered { .. }
+                            | EventKind::SubmarineSteamed { .. }
+                            | EventKind::SubmarineOnStation { .. }
+                            | EventKind::SubmarineLeftForHome { .. }
+                            | EventKind::SubmarineReachedHome { .. }
+                            | EventKind::SubmarineAttackChance { .. }
+                            | EventKind::SubmarineSalvo { .. }
+                            | EventKind::SubmarineHunted { .. }
+                            | EventKind::SubmarineSunk { .. }
+                    )
+            );
+            assert!(!boat_event, "seed {seed}: {}", event.kind);
+            assert!(
+                event
+                    .kind
+                    .entities()
+                    .iter()
+                    .all(|e| !matches!(e, EntityRef::Submarine(_))),
+                "seed {seed}: {}",
+                event.kind
+            );
+        }
+        // The same of the other side's picture of the world it would be
+        // built into: a command's view holds no boat either.
+        assert!(allied.commands().is_empty() || allied.command(CommandRef::Area).is_some());
+        // The boat's side is told of her own passage, station and state.
+        let told = japanese.events();
+        assert!(
+            told.iter()
+                .any(|e| matches!(e.kind, SideEventKind::OwnSubmarineFired { .. }))
+                == (salvos > 0)
+        );
+    }
+    assert!(fired > 50 && home > 0 && sunk > 0, "{fired} {home} {sunk}");
+}
+
+/// Whether the other side's report of the boat was dropped for its age in
+/// the run.
+fn run_dropped(run: &Run) -> bool {
+    run.events
+        .iter()
+        .any(|e| matches!(e.kind, EventKind::SubmarineReportDropped { .. }))
+}
+
+#[test]
+fn statement_25_a_report_ages_and_is_dropped_by_its_own_figures_and_is_in_every_commands_picture() {
+    // A boat with one salvo makes one report, so nothing replaces it. The
+    // contact figure drops a contact at 5 pulses; the report's own figure
+    // is 6.
+    let held = |days: u32, command_levels: bool| {
+        let mut game = game(vec![carrier_and_destroyer()])
+            .boat("salvoes = 1")
+            .days(days);
+        if command_levels {
+            game = game.command_levels();
+        }
+        game.scenario()
+    };
+    let (mut checked_held, mut checked_dropped) = (0, 0);
+    for seed in 1..=SEEDS {
+        // Two days: the end is 5 pulses after a night salvo of day 1.
+        let two = play(&held(2, false), seed);
+        let Some(salvo) = two.salvos().first().copied() else {
+            continue;
+        };
+        if (salvo.day, salvo.pulse) != (1, Pulse::Night) {
+            continue;
+        }
+        let allied = two.world.side_view(Side::Allied);
+        let kept: Vec<_> = allied.submarine_reports().collect();
+        assert_eq!(kept.len(), 1, "seed {seed}: still held at 5 pulses");
+        assert_eq!(kept[0].age_pulses, 5, "seed {seed}");
+        assert!(!run_dropped(&two));
+        checked_held += 1;
+
+        // Three days: it reaches 6 pulses in the night of day 3 and is
+        // dropped there, by an event citing the report that made it.
+        let three = play(&held(3, false), seed);
+        assert_eq!(three.salvos().first().copied(), Some(salvo), "seed {seed}");
+        let report = three
+            .events
+            .iter()
+            .find(|e| matches!(e.kind, EventKind::SubmarineReported { .. }))
+            .expect("the report");
+        let dropped: Vec<&Event> = three
+            .events
+            .iter()
+            .filter(|e| matches!(e.kind, EventKind::SubmarineReportDropped { .. }))
+            .collect();
+        assert_eq!(dropped.len(), 1, "seed {seed}");
+        assert_eq!((dropped[0].day, dropped[0].pulse), (3, Some(Pulse::Night)));
+        assert_eq!(
+            dropped[0].causes,
+            vec![sim_core::events::Cause::Event(report.id)]
+        );
+        assert_eq!(
+            three
+                .world
+                .side_view(Side::Allied)
+                .submarine_reports()
+                .count(),
+            0
+        );
+        // Whole for the side that held it, absent for the other.
+        let told = |side: Side| {
+            three
+                .world
+                .side_view(side)
+                .events()
+                .iter()
+                .filter(|e| {
+                    matches!(
+                        e.kind,
+                        SideEventKind::Whole(EventKind::SubmarineReportDropped { .. })
+                    )
+                })
+                .count()
+        };
+        assert_eq!((told(Side::Allied), told(Side::Japanese)), (1, 0));
+
+        // With command levels on, the report is in every command's picture
+        // of the side, aged and dropped as the side's own is.
+        let on_two = play(&held(2, true), seed);
+        let on_three = play(&held(3, true), seed);
+        for (run, age) in [(&on_two, Some(5)), (&on_three, None)] {
+            let view = run.world.side_view(Side::Allied);
+            let commands = view.commands();
+            assert!(commands.contains(&CommandRef::Area) && commands.len() >= 2);
+            for command in commands {
+                let pictured: Vec<_> = view
+                    .command(command)
+                    .expect("a command's view")
+                    .submarine_reports()
+                    .map(|r| (r.hex, r.age_pulses))
+                    .collect();
+                let own: Vec<_> = view
+                    .submarine_reports()
+                    .map(|r| (r.hex, r.age_pulses))
+                    .collect();
+                assert_eq!(pictured, own, "seed {seed}: {command:?}");
+                assert_eq!(pictured.len(), usize::from(age.is_some()));
+                if let Some(age) = age {
+                    assert_eq!(pictured[0].1, age);
+                }
+            }
+        }
+        checked_dropped += 1;
+        if checked_dropped >= 40 {
+            break;
+        }
+    }
+    assert!(checked_held > 20 && checked_dropped > 20);
 }

@@ -984,6 +984,7 @@ pub(crate) fn seen(kind: &EventKind, side: Side, owners: &Owners, knows_fight: b
             claimed_on_ground: _,
             from_air: _,
             from_bombardment: _,
+            from_submarine: _,
             ground_types: _,
             by_unit: _,
             air_types: _,
@@ -1471,6 +1472,11 @@ pub(crate) fn seen(kind: &EventKind, side: Side, owners: &Owners, knows_fight: b
             }
         }
         EventKind::SubmarineSunk { submarine } => whole_if(own_boat(submarine)),
+        // A side's report of a submarine and its dropping are its own,
+        // whole; the enemy is told nothing of them (decision 0218, 44 and
+        // 46).
+        EventKind::SubmarineReported { side: owner, .. }
+        | EventKind::SubmarineReportDropped { side: owner, .. } => whole_if(*owner == side),
         EventKind::SubmarineEntered { submarine, .. }
         | EventKind::SubmarineSteamed { submarine, .. }
         | EventKind::SubmarineOnStation { submarine, .. }
@@ -1700,6 +1706,7 @@ fn side_breakdown(kind: &SideEventKind, breakdown: &Option<Breakdown>) -> Option
         kind,
         SideEventKind::Whole(EventKind::GroundReportReceived { .. })
             | SideEventKind::Whole(EventKind::GroundFoundEmpty { .. })
+            | SideEventKind::Whole(EventKind::SubmarineReported { .. })
     ) {
         return None;
     }
@@ -1906,6 +1913,8 @@ fn first_known_round(side: Side, fight: &[Event], owners: &Owners) -> Option<u32
             | EventKind::SubmarineSalvo { .. }
             | EventKind::SubmarineHunted { .. }
             | EventKind::SubmarineSunk { .. }
+            | EventKind::SubmarineReported { .. }
+            | EventKind::SubmarineReportDropped { .. }
             | EventKind::EntryWaiting { .. }
             | EventKind::StockReceived { .. }
             | EventKind::MenJoined { .. }
@@ -2136,6 +2145,8 @@ fn fight_round(kind: &EventKind) -> Option<u32> {
         | EventKind::SubmarineSalvo { .. }
         | EventKind::SubmarineHunted { .. }
         | EventKind::SubmarineSunk { .. }
+        | EventKind::SubmarineReported { .. }
+        | EventKind::SubmarineReportDropped { .. }
         | EventKind::EntryWaiting { .. }
         | EventKind::StockReceived { .. }
         | EventKind::MenJoined { .. }
@@ -2510,6 +2521,8 @@ fn count_from_known_round(kind: SideEventKind, known: u32, round_minutes: u32) -
             | EventKind::SubmarineSalvo { .. }
             | EventKind::SubmarineHunted { .. }
             | EventKind::SubmarineSunk { .. }
+            | EventKind::SubmarineReported { .. }
+            | EventKind::SubmarineReportDropped { .. }
             | EventKind::EntryWaiting { .. }
             | EventKind::StockReceived { .. }
             | EventKind::MenJoined { .. }
@@ -2793,6 +2806,8 @@ fn whole_may_have_hidden_causes(kind: &EventKind) -> bool {
         | EventKind::SubmarineSalvo { .. }
         | EventKind::SubmarineHunted { .. }
         | EventKind::SubmarineSunk { .. }
+        | EventKind::SubmarineReported { .. }
+        | EventKind::SubmarineReportDropped { .. }
         | EventKind::EntryWaiting { .. }
         | EventKind::StockReceived { .. }
         | EventKind::MenJoined { .. }
@@ -3095,6 +3110,8 @@ pub(crate) fn project(side: Side, log: &[Event], owners: &Owners) -> Vec<SideEve
                     | EventKind::SubmarineSalvo { .. }
                     | EventKind::SubmarineHunted { .. }
                     | EventKind::SubmarineSunk { .. }
+                    | EventKind::SubmarineReported { .. }
+                    | EventKind::SubmarineReportDropped { .. }
                     | EventKind::EntryWaiting { .. }
                     | EventKind::StockReceived { .. }
                     | EventKind::MenJoined { .. }
@@ -3694,6 +3711,7 @@ mod tests {
                     claimed_on_ground: 0,
                     from_air: false,
                     from_bombardment: false,
+                    from_submarine: false,
                     ground_types: Vec::new(),
                     by_unit: Vec::new(),
                     air_types: Vec::new(),
@@ -5335,6 +5353,26 @@ mod tests {
                 Whole,
                 Nothing,
             ),
+            // A side's report of a submarine and its dropping are its own,
+            // whole, and the enemy is told nothing of them (decision 0218,
+            // 44 and 46).
+            sided(row(
+                EventKind::SubmarineReported {
+                    side: Side::Allied,
+                    hex: hex(),
+                    replaced: true,
+                },
+                Whole,
+                Nothing,
+            )),
+            sided(row(
+                EventKind::SubmarineReportDropped {
+                    side: Side::Allied,
+                    hex: hex(),
+                },
+                Whole,
+                Nothing,
+            )),
         ];
         // Every row is also run in the mirror, with the sides' units swapped.
         rows.shrink_to_fit();
@@ -5375,7 +5413,7 @@ mod tests {
     #[test]
     fn the_table_has_a_row_for_every_kind_of_event() {
         let all = event_kind_names();
-        assert_eq!(all.len(), 173, "the log has 173 kinds of event");
+        assert_eq!(all.len(), 175, "the log has 175 kinds of event");
         let covered: BTreeSet<String> = table()
             .iter()
             .map(|row| kind_name(&row.log[row.at]))
@@ -5759,6 +5797,7 @@ mod tests {
             claimed_on_ground: 0,
             from_air: true,
             from_bombardment: false,
+            from_submarine: false,
             ground_types: Vec::new(),
             by_unit: Vec::new(),
             air_types: Vec::new(),
