@@ -24,7 +24,8 @@ submarine_attacks_per_hour = "0.02"
 attacks_ship_dead_in_water = "5"
 
 # PLACEHOLDER, from the hunts on file (three to ten hours and more): the
-# pulses a boat is held down after a hunt, the pulse of the hunt counted.
+# pulses a boat is held down after the pulse of a hunt, which she is held
+# down for as well.
 held_down_pulses = 2
 
 # PLACEHOLDER, counted on few cases (decision 0218, rule 53): of some fifteen

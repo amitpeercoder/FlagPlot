@@ -12,7 +12,7 @@ placeholder = true
 
 submarine_attacks_per_hour = "0.02"
 attacks_ship_dead_in_water = "5"
-# Held down for two pulses after a hunt, the pulse of the hunt counted.
+# Held down for the rest of the pulse of the hunt and two pulses after it.
 held_down_pulses = 2
 hunt_damages_chance = "0.3"
 hunt_sinks_share = "0.2"

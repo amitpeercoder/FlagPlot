@@ -1301,8 +1301,8 @@ pub struct SubmarineFigures {
     pub attacks_per_hour: Fixed,
     /// The multiple of it where a ship of the force is dead in the water.
     pub attacks_ship_dead_in_water: Fixed,
-    /// The pulses a boat is held down after a hunt, the pulse itself
-    /// counted.
+    /// The pulses a boat is held down after the pulse of a hunt, which she
+    /// is held down for as well.
     pub held_down_pulses: u32,
     pub hunt_damages_chance: Fixed,
     pub hunt_sinks_share: Fixed,
