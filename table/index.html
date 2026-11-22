@@ -343,8 +343,6 @@ button:disabled { opacity: 0.45; cursor: default; }
 #stop .slip:last-child { padding-bottom: 0; }
 #stop .slip.opens:hover, #stop .slip.opens:focus-visible { outline-offset: 2px; }
 .sp-foot { flex: none; background: var(--paper); border-top: 1px solid #cfc6a8; padding: 10px 18px 14px; display: flex; flex-direction: column; gap: 8px; }
-.status { font-family: var(--f-type); font-size: 13px; line-height: 1.4; color: var(--paper-dim); min-width: 0; overflow-wrap: anywhere; }
-.status:empty { display: none; }
 .acts { display: flex; flex-wrap: wrap; gap: 8px; }
 .acts button { min-height: 46px; padding: 0 16px; background: transparent; color: var(--paper-ink); border: 2px solid var(--paper-ink); border-radius: 0; font-size: 16px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
 .acts button.main, .acts button#btn-end { flex: 1; background: var(--paper-ink); color: var(--paper); font-weight: 700; padding: 0 24px; }
@@ -418,6 +416,16 @@ body.watched .gives { display: none !important; }
 #signed .sg .fresh { margin-left: 6px; font-family: var(--f-ui); font-size: 11px; font-weight: 700; letter-spacing: 0.12em; color: var(--own); }
 #signed .sg.new { border-left: 3px solid var(--own); padding-left: 8px; }
 #signed .sg .notsent { flex: 1 1 100%; font-size: 13px; }
+#clock-doing { font-family: var(--f-type); font-size: 13px; line-height: 1.35; color: var(--ink-dim); overflow-wrap: anywhere; }
+#clock-doing:empty { display: none; }
+#clock-doing .notsent { color: #f0a58f; }
+#clock-doing .notsent b { color: #f0a58f; }
+#prompt { position: fixed; bottom: 76px; right: 16px; z-index: 7; max-width: min(340px, calc(100% - var(--sp-w) - 32px)); padding: 9px 12px; background: var(--paper); color: var(--paper-ink); font-family: var(--f-type); font-size: 14px; line-height: 1.35; border-left: 4px solid var(--own); box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
+#prompt[hidden] { display: none; }
+#game-says { font-family: var(--f-type); font-size: 13px; line-height: 1.4; color: var(--ink); }
+#game-says:empty { display: none; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.said.notsent { margin-top: 4px; font-size: 13px; }
 </style>
 </head>
 <body>
@@ -432,6 +440,7 @@ body.watched .gives { display: none !important; }
     <div class="sp-row"><span class="sp-name">Flag Plot</span><span id="seat">The table</span></div>
     <div class="clock" id="clock">DAY 1</div>
     <div class="sp-state" id="clock-state"></div>
+    <div class="sp-doing" id="clock-doing" aria-live="polite"></div>
   </header>
   <div class="sp-body" id="sp-body" tabindex="-1">
     <div id="sp-seats">
@@ -445,7 +454,6 @@ body.watched .gives { display: none !important; }
       <div id="sp-signed" hidden><h3>SIGNED</h3><div id="signed" aria-live="polite"></div></div></section>
   </div>
   <footer class="sp-foot" id="sp-foot">
-    <div class="status" id="status" role="status">Laying the chart.</div>
     <div class="acts">
       <button type="button" id="btn-day">Next day</button>
       <button type="button" class="main" id="btn-go">Carry on</button>
@@ -474,6 +482,7 @@ body.watched .gives { display: none !important; }
   <div>Forces: the staff's choice.</div>
   <details class="pv" id="o-pv"><summary id="o-pv-sum">THE STAFF'S PREVIEW</summary><div id="o-preview" aria-live="polite">Asking the staff.</div></details>
   <div id="o-dry-says" class="pv" aria-live="polite"></div>
+  <div id="o-says" aria-live="polite"></div>
   <div class="row">
     <button type="submit" class="go" id="o-sign" disabled>SIGN AND SEND</button>
     <button type="button" id="o-dry" hidden disabled>DRY RUN</button>
@@ -544,6 +553,8 @@ body.watched .gives { display: none !important; }
   </section>
 </div>
 
+<div id="prompt" role="status" hidden></div>
+<div id="sr" class="sr" aria-live="polite"></div>
 <div class="view" role="group" aria-label="Your view of the table">
   <div class="vg">
     <button type="button" id="btn-plans" aria-pressed="false" title="Your plans on the chart: all of them, or none" aria-label="Plans on the chart">Plans</button>
@@ -561,6 +572,7 @@ body.watched .gives { display: none !important; }
   </div>
 </div>
 <div id="pop-game" class="pop" hidden>
+  <div id="game-says" role="status"></div>
   <div class="papers stay">
     <button type="button" id="btn-new" title="End this game and choose another" hidden>New game</button>
     <button type="button" id="btn-agent" hidden>The agent's seat</button>
@@ -585,16 +597,45 @@ body.watched .gives { display: none !important; }
   var $ = function (id) { return document.getElementById(id); };
   function fatal(words) { $('fatal').textContent = words; $('fatal').hidden = false; }
   function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
-  // Every outcome the table says goes through this, with the kind of outcome it is, so that each can be
-  // given its own place on the table (decision 0221). For now each is said on the status line, as before.
+  // Every outcome the table says goes through this, with the kind of outcome it is and, where it has one, the place it
+  // belongs (decision 0221). Where each kind goes:
+  //   refused  in `home`, the form, paper or entry that was signed, as NOT SENT with the reason; else under YOUR ORDERS
+  //   signed   under SIGNED: the new entry, marked, and read out by the live region there; nothing is said apart
+  //   stopped  in WHY THE CLOCK STOPPED (what the engine said of a watched game's stop); the head's doing-line is cleared
+  //   picking  a prompt beside the chart's controls while a place is picked
+  //   confirm  in the GAME menu, under the button touched
+  //   hint     the same prompt, until the chart is first touched
+  //   draft    to the live region for a screen reader only: the draft itself is on the screen
+  //   running  the head's doing-line, under the state of the clock
+  //   failed   on the paper that could not be read (or in `home`)
   var SAY_KINDS = { refused: 1, signed: 1, draft: 1, stopped: 1, running: 1, picking: 1, confirm: 1, hint: 1, failed: 1 };
-  var said = { kind: '', words: '' };
-  function say(kind, words) {
-    if (!SAY_KINDS[kind]) throw new Error('say: no such kind ' + kind);
-    said = { kind: kind, words: words || '' };
-    if (kind === 'signed') freshSigned = true;
-    var s = $('status'); s.textContent = said.words; s.setAttribute('data-kind', kind);
+  var said = { kind: '', words: '' }, stopNote = '', promptKind = '', hintTimer = 0;
+  function refusedIn(home, words) {
+    if (!home || !document.body.contains(home)) home = $('orders-says');
+    var old = home.querySelector(':scope > .said.notsent'); if (old) home.removeChild(old);
+    var d = el('div', 'said notsent'); d.setAttribute('role', 'alert'); d.appendChild(el('b', '', 'NOT SENT')); d.appendChild(document.createTextNode(' ' + refusalWords(words))); home.appendChild(d);
   }
+  function showPrompt(kind, words) {
+    var pr = $('prompt'); clearTimeout(hintTimer); promptKind = words ? kind : ''; pr.textContent = words; pr.hidden = !words;
+    if (words && kind === 'hint') hintTimer = setTimeout(function () { if (promptKind === 'hint') showPrompt('', ''); }, 9000);
+  }
+  function say(kind, words, home) {
+    if (!SAY_KINDS[kind]) throw new Error('say: no such kind ' + kind);
+    said = { kind: kind, words: words || '' }; words = words || '';
+    if (kind === 'signed') { freshSigned = true; $('orders-says').textContent = ''; }
+    else if (kind === 'refused') refusedIn(home, words);
+    else if (kind === 'stopped') { stopNote = words; $('clock-doing').textContent = ''; showWhy(); }
+    else if (kind === 'picking' || kind === 'hint') showPrompt(kind, words);
+    else if (kind === 'confirm') $('game-says').textContent = words;
+    else if (kind === 'draft') $('sr').textContent = words;
+    else if (kind === 'running') { $('clock-doing').textContent = words; }
+    else if (kind === 'failed') {
+      if (home && document.body.contains(home)) { var f = el('div', 'said notsent'); f.appendChild(el('b', '', 'NOT READ')); f.appendChild(document.createTextNode(' ' + words)); home.textContent = ''; home.appendChild(f); }
+      else { var doc = $('sheet-doc'); doc.textContent = ''; sheetAs('NOT READ'); var n = el('div', 'notsent'); n.appendChild(el('b', '', 'NOT READ')); n.appendChild(document.createTextNode(' ' + words)); doc.appendChild(n); doc.hidden = false; $('sheet-text').hidden = true; $('sheet').hidden = false; $('sheet-close').focus(); }
+    }
+  }
+  new MutationObserver(function () { if (!canvas.classList.contains('picking') && promptKind === 'picking') showPrompt('', ''); }).observe($('scene'), { attributes: true, attributeFilter: ['class'] });
+  $('scene').addEventListener('pointerdown', function () { if (promptKind === 'hint') showPrompt('', ''); });
   function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
   function num(handle) { return parseInt(String(handle).split(':')[1], 10); }
   // A figure with its thousands marked. A quantity the game holds to places
@@ -1160,7 +1201,7 @@ body.watched .gives { display: none !important; }
     }).catch(function () {});
   }
   // The clock starts from a stop: what was told and what was reported are cleared, and shown again from the data at the next stop.
-  function startRun() { lastTold = []; lastRun = null; stopArrive = ''; since = { from: sinceFrom(), phases: [] }; showSince(); showWhy(); }
+  function startRun() { stopNote = ''; lastTold = []; lastRun = null; stopArrive = ''; since = { from: sinceFrom(), phases: [] }; showSince(); showWhy(); }
 
   // ---- the signals tray ----
   // A standing paper the commander may read at any time: a button in the
@@ -1174,7 +1215,8 @@ body.watched .gives { display: none !important; }
     a.appendChild(f); if (title) a.appendChild(el('strong', '', plainWords(title))); if (body) a.appendChild(el('div', '', plainWords(body))); (into || $('signals')).appendChild(a); return a;
   }
   function button(parent, text, go, fn) { var row = parent.querySelector('.row') || parent.appendChild(el('div', 'row')), b = el('button', go ? 'go' : '', text); b.type = 'button'; b.addEventListener('click', function () { fn(b); }); row.appendChild(b); return b; }
-  function act(tool, args, done) { return api(tool, args).then(function (a) { say('signed', done || a.summary || 'Done.'); return refresh(); }).catch(function (e) { say('refused', 'Refused: ' + e.message); }); }
+  // Resolves true when the command was taken in, and false when it was refused: the refusal is said in `home`, where it was signed.
+  function act(tool, args, done, home) { return api(tool, args).then(function (a) { say('signed', done || a.summary || 'Done.'); return refresh().then(function () { return true; }); }).catch(function (e) { say('refused', e.message, home); return false; }); }
   var TOLD = { contact: 'A contact is reported', attack: 'You are attacked', loss: 'A ship is lost or out of action', strike: 'Your strike is away', landing: 'Your men are ashore, or fighting' };
   // ---- a force asks leave to go after what it has found (decision 0214) ----
   function wholeHours(h) { var v = parseFloat(h); return isNaN(v) ? null : Math.round(v); }
@@ -1188,18 +1230,18 @@ body.watched .gives { display: none !important; }
       api('measure', { question: 'passage', task_force: h, to: { q: a.to.q, r: a.to.r } }).then(function (m) { if (m.route && m.route.length) { a.pts = [placeOf(f.place)].concat(m.route.map(placeOf)); if (g) drawMarks(); } }).catch(function () {});
     });
   }
-  function answerPursuit(a, allow) {
+  function answerPursuit(a, allow, home) {
     return api('answer_pursuit', { task_force: a.task_force, contact: a.contact, allow: allow }).then(function () {
       M.asking = M.asking.filter(function (x) { return x !== a; });
       say('signed', allow ? 'Leave given. The force goes after it when the day is played.' : 'Leave refused. The force keeps to its order.'); return refresh();
-    }).catch(function (e) { say('refused', 'Refused: ' + e.message); });
+    }).catch(function (e) { say('refused', e.message, home); });
   }
   function askingSlips() {
     M.asking.forEach(function (a) {
       var h = wholeHours(a.hours), age = a.age_pulses ? ', reported ' + a.age_pulses + (a.age_pulses === 1 ? ' pulse' : ' pulses') + ' ago' : ', just reported';
       var s = slip('FROM STAFF', null, 'Leave to go after ' + askingWhat(a), null, true);
       s.appendChild(rich('div', '', 'Found ' + hexWords(a.reported_at) + age + '. task_force:' + a.task_force + (a.contact != null ? ' (contact:' + a.contact + ')' : '') + ' would go to ' + hexWords(a.to) + (h != null ? ', ' + (h < 1 ? 'under 1 hour' : h + (h === 1 ? ' hour' : ' hours')) : '') + '. ' + askingOrder(a).replace(/^./, function (c) { return c.toUpperCase(); }) + ' would wait.'));
-      if (!WATCH) { button(s, 'ALLOW', true, function () { answerPursuit(a, true); }); button(s, 'REFUSE', false, function () { answerPursuit(a, false); }); }
+      if (!WATCH) { button(s, 'ALLOW', true, function () { answerPursuit(a, true, s); }); button(s, 'REFUSE', false, function () { answerPursuit(a, false, s); }); }
     });
   }
   function pursuitOf(h) { var n = num(h); return ((M.state && M.state.pursuits) || []).filter(function (p) { return p.task_force === n; })[0]; }
@@ -1212,7 +1254,7 @@ body.watched .gives { display: none !important; }
       var since = h.day != null ? String(h.day) : (/day (\d+)/.exec(h.text || '') || [])[1];
       var how = h.made_by === 'command' ? ', kept out of the staff\'s plans by you' + (since ? ' from day ' + since : '') : ', held by your direct order' + (since ? ' of day ' + since : '');
       a.appendChild(what ? rich('span', '', what + how) : el('span', '', h.text));
-      if (!WATCH) { var r = document.createElement('button'); r.type = 'button'; r.textContent = 'Release'; r.title = 'Release to the staff'; r.addEventListener('click', function () { act('release', args, 'Released. The staff may use it again from dusk.'); }); a.appendChild(r); }
+      if (!WATCH) { var r = document.createElement('button'); r.type = 'button'; r.textContent = 'Release'; r.title = 'Release to the staff'; r.addEventListener('click', function () { act('release', args, 'Released. The staff may use it again from dusk.', a); }); a.appendChild(r); }
       $('holds-list').appendChild(a);
     });
     (function () { var n = (s.holds || []).length, d = $('holds-staff'); d.hidden = !n; d.querySelector('summary').textContent = 'Held from the staff \u00B7 ' + n; })();
@@ -1259,7 +1301,7 @@ body.watched .gives { display: none !important; }
       box.appendChild(row);
     });
     var given = !!s.leaves.launch, l = el('div', 'leaveline'); l.appendChild(el('span', '', 'Plans launch: ' + (given ? 'when ready' : 'on my word')));
-    if (!M.over) { var sw = el('button', 'quiet', given ? 'ON MY WORD' : 'WHEN READY'); sw.type = 'button'; sw.title = given ? 'Plans launch on my word' : 'Plans launch when ready'; sw.disabled = !canSign(); sw.addEventListener('click', function () { sw.disabled = true; act('set_leave', { leave: 'launch', given: !given }, '', line); }); l.appendChild(sw); }
+    if (!M.over) { var sw = el('button', 'quiet', given ? 'ON MY WORD' : 'WHEN READY'); sw.type = 'button'; sw.title = given ? 'Plans launch on my word' : 'Plans launch when ready'; sw.disabled = !canSign(); sw.addEventListener('click', function () { sw.disabled = true; act('set_leave', { leave: 'launch', given: !given }, '', line).then(function (ok) { if (!ok) sw.disabled = false; }); }); l.appendChild(sw); }
     line.appendChild(l);
   }
   // When an entry of the queues acts, in the words of the forms: a pulse's order at the hour its pulse begins, what is
@@ -1318,15 +1360,18 @@ body.watched .gives { display: none !important; }
   }
   // SIGNED: what the seat has queued, read from the engine's `queued`, each entry with when it acts and, while the clock is
   // stopped and the seat may sign, TAKE BACK. A hold sent before a unit's order goes with that order and is not a line.
-  var signedSeen = null, freshSigned = false, backRefused = null;
+  var signedSeen = null, freshSigned = false, backRefused = null, freshKeys = [], signedAsOf = null;
   function showSigned() {
     var box = $('signed'), wrap = $('sp-signed'); if (!box) return;
     var list = (M.queue && !WATCH && !playing && !M.over ? M.queue.entries : []).filter(function (e) { return !(e.rests_on && e.rests_on.length); });
     box.textContent = ''; wrap.hidden = !list.length;
-    var keys = list.map(function (e) { return e.place.queue + '|' + e.text; }), fresh = freshSigned && signedSeen && keys.some(function (k) { return signedSeen.indexOf(k) < 0; });
+    var keys = list.map(function (e) { return e.place.queue + '|' + e.text; });
+    // What is new since the queue last changed is marked, until it changes again.
+    if (M.queue && M.queue.as_of !== signedAsOf) { freshKeys = freshSigned && signedSeen ? keys.filter(function (k) { return signedSeen.indexOf(k) < 0; }) : []; if (freshKeys.length) freshSigned = false; signedSeen = keys; signedAsOf = M.queue.as_of; }
+    var isNew = function (k) { return freshKeys.indexOf(keys[k]) >= 0; };
     list.forEach(function (e, k) {
-      var row = el('div', 'sg' + (fresh && signedSeen.indexOf(keys[k]) < 0 ? ' new' : '')), what = el('div', 'what'); what.appendChild(signedLine(e));
-      if (fresh && signedSeen.indexOf(keys[k]) < 0) what.appendChild(el('span', 'fresh', 'JUST SIGNED'));
+      var row = el('div', 'sg' + (isNew(k) ? ' new' : '')), what = el('div', 'what'); what.appendChild(signedLine(e));
+      if (isNew(k)) what.appendChild(el('span', 'fresh', 'JUST SIGNED'));
       what.appendChild(el('span', 'when', actsWords(e))); row.appendChild(what);
       if (canSign()) {
         var b = el('button', 'back', 'TAKE BACK'); b.type = 'button'; b.setAttribute('aria-label', 'Take back: ' + what.textContent.replace(/JUST SIGNED/, '').trim());
@@ -1340,7 +1385,6 @@ body.watched .gives { display: none !important; }
       if (backRefused && backRefused.key === keys[k] && backRefused.asOf === M.queue.as_of) { var nb = el('div', 'notsent'); nb.appendChild(el('b', '', 'NOT TAKEN BACK')); nb.appendChild(document.createTextNode(' ' + backRefused.words)); row.appendChild(nb); }
       box.appendChild(row);
     });
-    if (fresh) freshSigned = false; signedSeen = keys;
   }
   // WHY THE CLOCK STOPPED: each reason of this stop, one slip for each kind of reason. It is not shown while the clock runs, nor where
   // the stop was the commander's own. What was told and what fired are shown again from the data at each stop.
@@ -1359,10 +1403,11 @@ body.watched .gives { display: none !important; }
       if (f.standing === 'waits_for_leave') return;
       var a = slip('FROM STAFF \u00b7 DAY ' + f.day, null, f.words.replace(/^standing \w+ fired: /, '').replace(/^./, function (c) { return c.toUpperCase(); }), null, false, box);
       if (f.why && f.why.length) button(a, 'WHY', true, function () { readFired(f); });
-      if (f.standing && !WATCH) button(a, 'DO NOT STOP ME FOR THIS', false, function () { act('set_interrupt', { standing: f.standing, on: false }, 'The clock will not stop for that again.'); });
+      if (f.standing && !WATCH) button(a, 'DO NOT STOP ME FOR THIS', false, function () { act('set_interrupt', { standing: f.standing, on: false }, 'The clock will not stop for that again.', a); });
     });
     if (lastRun && lastRun.fired && lastRun.fired.some(function (f) { return f.standing === 'waits_for_leave'; })) slip('FROM STAFF', null, 'A plan waits for your leave.', null, false, box);
     if (stopArrive) slip('FROM THE PLOT \u00b7 ' + (clock.at === 'dusk' ? '1800' : clock.at), null, stopArrive.replace(/^./, function (c) { return c.toUpperCase(); }), null, false, box);
+    if (stopNote && WATCH && !M.over) slip('FROM THE PLOT \u00b7 ' + (clock.at === 'dusk' ? '1800' : clock.at), null, stopNote, null, false, box);
     if (lastRun && lastRun.stopped === 'asks_leave' && M.asking.length) slip('FROM STAFF', null, 'The staff asks your leave.', null, false, box);
     $('sp-why').hidden = playing || !box.children.length;
   }
@@ -1577,7 +1622,7 @@ body.watched .gives { display: none !important; }
     function arcOf() { var w = +sW.input.value, c = +sC.input.value, r = +sR.input.value; return w >= 360 ? { from: 0, to: 0, range: r, words: 'all round' } : { from: ((c - w / 2) % 360 + 360) % 360, to: (c + w / 2) % 360, range: r, words: deg3(c - w / 2) + ' to ' + deg3(c + w / 2) }; }
     var baseRow = segOf(form, 'Base', 'abase', M.enemyBases.map(function (b) { return [num(b.base.handle), b.base.name]; }), '');
     var sum = el('div', 'asum'), keeps = el('div', 'keeps'), out = el('div', ''), row = el('div', 'row'), go = el('button', 'go', 'SIGN AND SEND'); go.type = 'button'; row.appendChild(go); form.appendChild(sum); form.appendChild(keeps); form.appendChild(row); form.appendChild(out);
-    if (held) { var r = el('button', '', 'RETURN IT TO THE STAFF'); r.type = 'button'; r.addEventListener('click', function () { act('release', { air_group: n }, 'Released. The staff may use it again from dusk.').then(function () { $('card').hidden = true; }); }); row.appendChild(r); }
+    if (held) { var r = el('button', '', 'RETURN IT TO THE STAFF'); r.type = 'button'; r.addEventListener('click', function () { act('release', { air_group: n }, 'Released. The staff may use it again from dusk.', row).then(function (ok) { if (!ok) return; $('card').hidden = true; }); }); row.appendChild(r); }
     function pick(name) { var c = form.querySelector('input[name="' + name + '"]:checked'); return c ? c.value : ''; }
     function draft() {
       var m = pick('amis'), orders = [], words = [];
@@ -1693,7 +1738,7 @@ body.watched .gives { display: none !important; }
     var baseHere = u.place && M.bases.some(function (b) { return sameHex(b.place, u.place); }), nomake = el('div', 'nomake');
     var sum = el('div', 'asum'), keeps = el('div', 'keeps'), costs = el('div', 'costs'), out = el('div', ''), row = el('div', 'row'), go = el('button', 'go', 'SIGN AND SEND'); go.type = 'button'; row.appendChild(go);
     [nomake, sum, keeps, costs, row, out].forEach(function (c) { form.appendChild(c); });
-    if (held) { var r = el('button', '', 'RETURN IT TO THE STAFF'); r.type = 'button'; r.addEventListener('click', function () { act('release', { land_unit: n }, 'Released. The staff may use it again from dusk.').then(function () { $('card').hidden = true; }); }); row.appendChild(r); }
+    if (held) { var r = el('button', '', 'RETURN IT TO THE STAFF'); r.type = 'button'; r.addEventListener('click', function () { act('release', { land_unit: n }, 'Released. The staff may use it again from dusk.', row).then(function (ok) { if (!ok) return; $('card').hidden = true; }); }); row.appendChild(r); }
     function pick(name) { var c = form.querySelector('input[name="' + name + '"]:checked'); return c ? c.value : ''; }
     function jobName(j) { return (JOBS.filter(function (x) { return x[0] === j; })[0] || [0, ''])[1].toLowerCase(); }
     function draft() {
@@ -1752,7 +1797,7 @@ body.watched .gives { display: none !important; }
         if ((e.air_groups || []).length) { e.air_groups.forEach(function (g) { M.names[g.handle] = cleanName(g.name); }); airList(b2, 'AIR GROUPS ABOARD', e.air_groups.map(function (g) { return M.air.filter(function (y) { return y.air_group.handle === g.handle; })[0]; }).filter(Boolean)); }
         return; }
       var other = openCard(nameOf(h).toUpperCase(), null); other.appendChild(el('div', '', 'Nothing more is held of it.'));
-    }).catch(function (e) { say('refused', e.message); });
+    }).catch(function (e) { say('failed', e.message, openCard(nameOf(h).toUpperCase(), null)); });
   }
   window.addEventListener('hashchange', function () { var m = /^#see=(.+)$/.exec(location.hash); if (m) see(decodeURIComponent(m[1])); });
 
@@ -2049,8 +2094,8 @@ body.watched .gives { display: none !important; }
       ['In whose hands', held ? (held.made_by === 'command' ? 'Yours: you keep it out of the staff\'s plans.' : 'Yours, by your direct order. The staff plans round it.') : 'The staff\'s']]);
     // Ordering a force is done from its card, so the buttons stand at the head of it.
     if (!WATCH && !M.over && !playing && !(f.available_from > M.day)) { var row = el('div', 'row'), b = el('button', '', 'GIVE A DIRECT ORDER'); b.type = 'button'; b.addEventListener('click', function () { orderForce(f); }); row.appendChild(b);
-      if (held) { var r = el('button', '', 'RETURN IT TO THE STAFF'); r.type = 'button'; r.addEventListener('click', function () { act('release', { task_force: num(h) }, 'Released. The staff may use it again from dusk.').then(function () { $('card').hidden = true; }); }); row.appendChild(r); }
-      else if (f.mission === 'carrier') { var k = el('button', '', 'KEEP THIS FORCE OUT OF THE STAFF\'S PLANS'); k.type = 'button'; k.addEventListener('click', function () { act('hold', { task_force: num(h) }, 'Held. The staff leaves it out of its plans from dusk.').then(function () { $('card').hidden = true; }); }); row.appendChild(k); }
+      if (held) { var r = el('button', '', 'RETURN IT TO THE STAFF'); r.type = 'button'; r.addEventListener('click', function () { act('release', { task_force: num(h) }, 'Released. The staff may use it again from dusk.', row).then(function (ok) { if (!ok) return; $('card').hidden = true; }); }); row.appendChild(r); }
+      else if (f.mission === 'carrier') { var k = el('button', '', 'KEEP THIS FORCE OUT OF THE STAFF\'S PLANS'); k.type = 'button'; k.addEventListener('click', function () { act('hold', { task_force: num(h) }, 'Held. The staff leaves it out of its plans from dusk.', row).then(function (ok) { if (!ok) return; $('card').hidden = true; }); }); row.appendChild(k); }
       body.appendChild(row); }
     var ships = el('div'); body.appendChild(ships);
     api('get_entity', { handle: h }).then(function (a) {
@@ -2722,7 +2767,7 @@ body.watched .gives { display: none !important; }
             var fold = el('details', 'working'), head = el('summary', 'work', 'Staff\u2019s working'); head.style.cursor = 'pointer'; fold.appendChild(head); fold.appendChild(rich('div', 'work', body.replace(/^./, function (c) { return c.toUpperCase(); }))); more.appendChild(fold);
           }).catch(function () {});
         }
-        if (!off && !gone && !WATCH) { pressed[p.number] = true; var row = el('div', 'row'), press = function (words, tool, done) { var x = el('button', tool === 'approve' ? 'primary' : 'quiet', words); x.type = 'button'; x.addEventListener('click', function () { act(tool, { plan: p.number }, done).then(function () { readPlan(root); }); }); row.appendChild(x); };
+        if (!off && !gone && !WATCH) { pressed[p.number] = true; var row = el('div', 'row'), press = function (words, tool, done) { var x = el('button', tool === 'approve' ? 'primary' : 'quiet', words); x.type = 'button'; x.addEventListener('click', function () { act(tool, { plan: p.number }, done, row).then(function (ok) { if (ok) readPlan(root); }); }); row.appendChild(x); };
           if (waits) press('APPROVE PLAN ' + p.number, 'approve', 'Plan ' + p.number + ' approved.');
           press('CANCEL PLAN ' + p.number, 'cancel_plan', 'Plan ' + p.number + ' is cancelled from 1800.'); n.appendChild(row); }
         doc.appendChild(n);
@@ -2787,8 +2832,8 @@ body.watched .gives { display: none !important; }
         if (L.off) d.appendChild(el('div', 'work', 'Cancelled by you today. It stops at 1800.'));
         else if (L.ok) d.appendChild(el('div', 'work', 'Approved by you today. The staff acts on it from 1800.'));
         if (L.live && !L.off && !WATCH && !pressed[p.number]) { pressed[p.number] = true; var row = el('div', 'row'); (L.waits ? n : d).appendChild(row);
-          if (L.waits) { var ok = el('button', 'primary', 'APPROVE PLAN ' + p.number); ok.type = 'button'; ok.addEventListener('click', function () { act('approve', { plan: p.number }, 'Plan ' + p.number + ' approved.').then(function () { readPlan(root); }); }); row.appendChild(ok); }
-          var no = el('button', 'quiet', 'CANCEL PLAN ' + p.number); no.type = 'button'; no.addEventListener('click', function () { act('cancel_plan', { plan: p.number }, 'Plan ' + p.number + ' is cancelled from 1800.').then(function () { readPlan(root); }); }); row.appendChild(no); }
+          if (L.waits) { var ok = el('button', 'primary', 'APPROVE PLAN ' + p.number); ok.type = 'button'; ok.addEventListener('click', function () { act('approve', { plan: p.number }, 'Plan ' + p.number + ' approved.', row).then(function (ok) { if (ok) readPlan(root); }); }); row.appendChild(ok); }
+          var no = el('button', 'quiet', 'CANCEL PLAN ' + p.number); no.type = 'button'; no.addEventListener('click', function () { act('cancel_plan', { plan: p.number }, 'Plan ' + p.number + ' is cancelled from 1800.', row).then(function (ok) { if (ok) readPlan(root); }); }); row.appendChild(no); }
         doc.appendChild(n);
       });
       if (OFFERED.trial && !WATCH) { var dryFold = fold('DRY RUN'); dryBox(dryFold, root); doc.appendChild(dryFold); }
@@ -2801,10 +2846,10 @@ body.watched .gives { display: none !important; }
         ['preserve', 'balanced', 'press'].filter(function (r) { return r !== riskNow; }).forEach(function (r) {
           var l = choice(r.charAt(0).toUpperCase() + r.slice(1));
           if (can) { var t = quiet('TRY IT FIRST'); tries.push(t); t.addEventListener('click', function () { whatIf(root, { limit: 'risk', risk: r }, 'risk ' + r, wsays, tries); }); l.appendChild(t); }
-          var set = quiet('SET IT'); set.addEventListener('click', function () { act('set_limit', { limit: 'risk', intent: root, risk: r }, 'Risk set to ' + r + '. The staff plans again at 1800.').then(function () { readPlan(root); }); }); l.appendChild(set);
+          var set = quiet('SET IT'); set.addEventListener('click', function () { act('set_limit', { limit: 'risk', intent: root, risk: r }, 'Risk set to ' + r + '. The staff plans again at 1800.', l).then(function (ok) { if (ok) readPlan(root); }); }); l.appendChild(set);
         });
         if (top.pursue) { var pl = choice('Pursuit'), ps = el('div', 'seg'); ps.setAttribute('role', 'group'); ps.setAttribute('aria-label', 'Pursuit');
-          [['ask', 'ASK ME'], ['go', 'GO AND REPORT'], ['stay', 'STAY']].forEach(function (o) { var b = el('button', '', o[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(top.pursue.leave === o[0])); if (top.pursue.leave !== o[0]) b.addEventListener('click', function () { act('set_pursuit', { intent: root, leave: o[0] }, 'Pursuit: ' + o[1].toLowerCase() + '.').then(function () { readPlan(root); }); }); ps.appendChild(b); }); pl.appendChild(ps); }
+          [['ask', 'ASK ME'], ['go', 'GO AND REPORT'], ['stay', 'STAY']].forEach(function (o) { var b = el('button', '', o[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(top.pursue.leave === o[0])); if (top.pursue.leave !== o[0]) b.addEventListener('click', function () { act('set_pursuit', { intent: root, leave: o[0] }, 'Pursuit: ' + o[1].toLowerCase() + '.', pl).then(function (ok) { if (ok) readPlan(root); }); }); ps.appendChild(b); }); pl.appendChild(ps); }
         if (can) {
           var nl = choice('Not before day'), nday = el('input'), nb = quiet('TRY IT FIRST'); nday.type = 'number'; nday.min = String(M.day + 2); nday.value = String(M.day + 3); nday.style.width = '4.5em'; nday.setAttribute('aria-label', 'The day it is not to go before'); tries.push(nb);
           nb.addEventListener('click', function () { var d = parseInt(nday.value, 10); if (!(d > 0)) return; whatIf(root, { limit: 'not_before', from_day: d }, 'not before day ' + d, wsays, tries); });
@@ -2812,7 +2857,7 @@ body.watched .gives { display: none !important; }
           rk.appendChild(wsays); rk.appendChild(el('div', 'work', 'A try is played beside the plan as it stands, at the size chosen under Dry run. Nothing is given until you say so.'));
         }
         doc.appendChild(rk);
-        var wl = el('div', 'line'), w = quiet('WITHDRAW THIS ORDER', 'danger'); w.addEventListener('click', function () { act('withdraw_intent', { intent: root }, 'The order is withdrawn from 1800.').then(function () { $('sheet').hidden = true; }); }); wl.appendChild(w); doc.appendChild(wl);
+        var wl = el('div', 'line'), w = quiet('WITHDRAW THIS ORDER', 'danger'); w.addEventListener('click', function () { act('withdraw_intent', { intent: root }, 'The order is withdrawn from 1800.', wl).then(function (ok) { if (ok) $('sheet').hidden = true; }); }); wl.appendChild(w); doc.appendChild(wl);
       }
       if (!WATCH) doc.appendChild(el('div', 'foot', (a[2].inside_day ? 'Worked now, in the middle of the day; the staff is asked again at dusk and may then do otherwise. ' : '') + 'You change a plan by instruction: your leave, a limit, a cancel or a withdrawal. To keep a force out of it, touch the force and keep it out of the staff\'s plans; a direct order of yours keeps out a force the staff is already using, and only that one.'));
       sheetAs('THE PLAN');
@@ -3006,7 +3051,7 @@ body.watched .gives { display: none !important; }
     if (dates) underneath(doc, 'THE STAFF\'S OWN WORDS', j.text || []);
     else staffBrief(doc, j, a, tried);
     var back = el('div', 'row'); doc.appendChild(back);
-    if (draft && draft.preview != null && root != null && !WATCH) { var give = el('button', 'go', 'GIVE IT: ' + draft.words.toUpperCase()); give.type = 'button'; give.addEventListener('click', function () { api('approve', { preview: draft.preview }).then(function (a) { if (a.status && a.status !== 'queued') throw new Error(a.summary || 'refused'); say('signed', 'Given: ' + draft.words + '. The staff plans again at 1800.'); return refresh(); }).then(function () { readPlan(root); }).catch(function (e) { say('refused', 'Refused: ' + dryWords(e.message)); }); }); back.appendChild(give); }
+    if (draft && draft.preview != null && root != null && !WATCH) { var give = el('button', 'go', 'GIVE IT: ' + draft.words.toUpperCase()); give.type = 'button'; give.addEventListener('click', function () { api('approve', { preview: draft.preview }).then(function (a) { if (a.status && a.status !== 'queued') throw new Error(a.summary || 'refused'); say('signed', 'Given: ' + draft.words + '. The staff plans again at 1800.'); return refresh(); }).then(function () { readPlan(root); }).catch(function (e) { say('refused', dryWords(e.message), back); }); }); back.appendChild(give); }
     if (root != null) { var bb = el('button', '', 'BACK TO THE PLAN'); bb.type = 'button'; bb.addEventListener('click', function () { readPlan(root); }); back.appendChild(bb); }
     else { var bc = el('button', '', 'BACK TO THE DRAFT'); bc.type = 'button'; bc.addEventListener('click', function () { $('sheet').hidden = true; }); back.appendChild(bc); doc.appendChild(el('div', 'work', 'The draft is not signed. Sign it on the order, or tear it up.')); }
     doc.appendChild(el('div', 'foot', 'Played by your staff from what your side knows and believes. The game is as it was.'));
@@ -3310,7 +3355,7 @@ body.watched .gives { display: none !important; }
     if (WATCH) return watchGo(until);
     if (M.over) { say('stopped', 'The game is over.'); return; }
     closeOrder(); closeForce(); playing = true; $('btn-go').textContent = 'Stop the clock'; $('btn-day').disabled = true; startRun(); showClock();
-    function rest(words, kind) { playing = false; $('btn-go').textContent = 'Carry on'; $('btn-day').disabled = false; showClock(); showWhy(); say(kind || 'stopped', words); }
+    function rest(words, kind) { playing = false; $('btn-go').textContent = 'Carry on'; $('btn-day').disabled = false; showClock(); showWhy(); say(kind || 'stopped', words, $('clock-doing')); }
     (async function () {
       try {
         for (;;) {
@@ -3333,18 +3378,17 @@ body.watched .gives { display: none !important; }
             var arrive = arrivalsStop();
             if (!until || !playing || r.game_over || r.stopped !== 'pulses' || arrive) {
               stopArrive = arrive;
-              var when = clock.at === 'dusk' ? 'at 1800' : 'at ' + clock.at + ' of day ' + clock.day;
-              return rest(r.game_over ? 'The game is over.' : r.stopped === 'asks_leave' ? 'The clock is stopped ' + when + ': the staff asks your leave.' : r.stopped === 'told' ? 'The clock is stopped ' + when + ': you were told something you asked to be stopped for.' : r.stopped === 'interrupt' ? 'The clock is stopped ' + when + ': the staff has a signal for you.' : arrive ? 'The clock is stopped ' + when + ': ' + arrive + '.' : '');
+              return rest('');
             }
           } else {
             var day = M.day; say('running', VERSUS ? finishedWords() : 'Day ' + day + ' is being fought.');
             var d = await api('run', { days: 1 }); lastRun = d; if (d.game_over) { M.over = true; M.result = d.result; }
-            if (d.stopped === 'asks_leave') { takeAsking(d.asking); await refresh(); return rest('The clock is stopped: the staff asks your leave.'); }
+            if (d.stopped === 'asks_leave') { takeAsking(d.asking); await refresh(); return rest(''); }
             takeAsking([]);
             say('running', 'Day ' + day + ': the reports come in.');
             await plotDay(day, await eventsOf(day)); await refresh();
             var fired = d.fired && d.fired.length, arrive = arrivalsStop();
-            if (!until || !playing || d.game_over || fired || arrive) { stopArrive = arrive; return rest(d.game_over ? 'The game is over.' : arrive && !fired ? 'The clock is stopped: ' + arrive + '.' : fired ? 'The clock is stopped: ' + d.fired.length + ' signal' + (d.fired.length > 1 ? 's wait' : ' waits') + ' for you.' : ''); }
+            if (!until || !playing || d.game_over || fired || arrive) { stopArrive = arrive; return rest(''); }
           }
         }
       } catch (e) { rest('Refused: ' + e.message, 'refused'); }
@@ -3377,7 +3421,7 @@ body.watched .gives { display: none !important; }
   function watchGo(until) {
     if (M.over) { say('stopped', 'The game is over.'); return; }
     closeOrder(); closeForce(); playing = true; $('btn-go').textContent = 'Stop'; $('btn-day').disabled = true; startRun(); showClock();
-    function rest(words, kind) { playing = false; $('btn-go').textContent = 'Carry on'; $('btn-day').disabled = false; showClock(); showWhy(); say(kind || 'stopped', words); pollSeats(); }
+    function rest(words, kind) { playing = false; $('btn-go').textContent = 'Carry on'; $('btn-day').disabled = false; showClock(); showWhy(); say(kind || 'stopped', words, $('clock-doing')); pollSeats(); }
     (async function () {
       try {
         for (;;) {
@@ -3400,8 +3444,7 @@ body.watched .gives { display: none !important; }
           var arrive = arrivalsStop();
           if (!until || !playing || s.game_over || lastTold.length || arrive) {
             stopArrive = arrive;
-            var when = clock.at === 'dusk' ? 'at 1800' : 'at ' + clock.at + ' of day ' + clock.day;
-            return rest(s.game_over ? 'The game is over.' : lastTold.length ? 'The clock is stopped ' + when + '.' : arrive ? 'The clock is stopped ' + when + ': ' + arrive + '.' : '');
+            return rest('');
           }
         }
       } catch (e) { rest('Refused: ' + e.message, 'refused'); }
@@ -3463,12 +3506,12 @@ body.watched .gives { display: none !important; }
   }
   // Looking from the other side: its heading, its words for a base taken, its directives, its picture.
   function watchSide(side) {
-    if (!WATCH || side === WATCH.side) return; if (playing) { say('stopped', 'Stop the clock first.'); return; }
+    if (!WATCH || side === WATCH.side) return; if (playing) { say('refused', 'Stop the clock first.', $('sp-seats')); return; }
     WATCH.side = side; config.seat = side; config.directives = WATCH.directives[side] || [];
     KEPT = KEPT_ROOT + '-' + side; received = {}; readOnes = {}; recalled = false;
     dayCache = {}; lastTold = []; lastRun = null; stopArrive = ''; seatSeen = ''; since = { from: '', phases: [] }; showSince();
     $('sheet').hidden = true; $('card').hidden = true; clearPlan(); headSeat(); sideButtons();
-    watchTools().then(refresh).then(pollSeats).catch(function (e) { say('failed', e.message); });
+    watchTools().then(refresh).then(pollSeats).catch(function (e) { say('failed', e.message, $('sp-seats')); });
   }
   function startWatch() {
     var w = config.watch; WATCH = { side: config.seat, agents: w.agents, insideDay: w.inside_day, directives: w.directives || {} };
@@ -3497,8 +3540,8 @@ body.watched .gives { display: none !important; }
       var mine = ((a.ok && a.ok.seats) || []).filter(function (x) { return x.seat === config.seat; })[0];
       if (!mine || !mine.held || (a.ok && a.ok.game_over)) return false;
       playing = true; $('btn-go').textContent = 'Stop the clock'; $('btn-day').disabled = true; startRun(); showClock(); say('running', finishedWords());
-      var rest = function (words, kind) { playing = false; $('btn-go').textContent = 'Carry on'; $('btn-day').disabled = false; showClock(); showWhy(); say(kind || 'stopped', words); };
-      api('wait').then(function (r) { if (r && r.game_over) { M.over = true; M.result = r.result; } return refresh(); }).then(function () { rest(M.over ? 'The game is over.' : 'The clock has moved.'); })
+      var rest = function (words, kind) { playing = false; $('btn-go').textContent = 'Carry on'; $('btn-day').disabled = false; showClock(); showWhy(); say(kind || 'stopped', words, $('clock-doing')); };
+      api('wait').then(function (r) { if (r && r.game_over) { M.over = true; M.result = r.result; } return refresh(); }).then(function () { rest(''); })
         .catch(function (e) { rest(''); return refresh().catch(function () {}); });
       return true;
     }).catch(function () { return false; });
@@ -3816,7 +3859,7 @@ body.watched .gives { display: none !important; }
       if (kind !== 'keep_supplied' && kind !== 'hold') return a;
       return supplyForces(kind, asked[1].base).then(function (limit) { if (!limit) return a; limit.intent = a.intent; return api('set_limit', limit).then(function () { return a; }); });
     }).then(function (a) { closeOrder(); say('signed', 'Signed: order ' + a.intent + '. The staff takes it up at 1800.'); return refresh(); })
-      .catch(function (err) { say('refused', 'Refused: ' + err.message); askPreview(); });
+      .catch(function (err) { say('refused', err.message, $('o-says')); askPreview(); });
   });
 
   // ---- the chair: you lean, you do not fly ----
@@ -3909,17 +3952,17 @@ body.watched .gives { display: none !important; }
   var restartAsked = 0;
   $('btn-restart').addEventListener('click', function () {
     var b = this;
-    if (!restartAsked) { var w = document.createElement('span'); w.textContent = 'again to restart'; b.appendChild(w); b.classList.add('ask'); say('confirm', 'Touch it again to begin the game anew from its first evening. This game is not kept.'); restartAsked = setTimeout(function () { restartAsked = 0; b.classList.remove('ask'); if (b.lastChild.tagName === 'SPAN') b.removeChild(b.lastChild); }, 5000); return; }
+    if (!restartAsked) { var w = document.createElement('span'); w.textContent = 'again to restart'; b.appendChild(w); b.classList.add('ask'); say('confirm', 'Touch it again to begin the game anew from its first evening. This game is not kept.'); restartAsked = setTimeout(function () { restartAsked = 0; say('confirm', ''); b.classList.remove('ask'); if (b.lastChild.tagName === 'SPAN') b.removeChild(b.lastChild); }, 5000); return; }
     clearTimeout(restartAsked); b.disabled = true; say('running', 'Beginning again.');
-    fetch(BASE + '/restart', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }).then(function (r) { return r.json(); }).then(function (a) { if (a.refused != null) throw new Error(a.refused); try { history.replaceState(null, '', location.pathname); } catch (e) {} location.reload(); }).catch(function (e) { b.disabled = false; say('failed', 'It could not begin again: ' + e.message); });
+    fetch(BASE + '/restart', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }).then(function (r) { return r.json(); }).then(function (a) { if (a.refused != null) throw new Error(a.refused); try { history.replaceState(null, '', location.pathname); } catch (e) {} location.reload(); }).catch(function (e) { b.disabled = false; say('failed', 'It could not begin again: ' + e.message, $('game-says')); });
   });
   // A new game is asked twice too: it ends the game in hand, whoever is at a seat, and opens the screen.
   var newAsked = 0;
   $('btn-new').addEventListener('click', function () {
     var b = this;
-    if (!newAsked) { b.classList.add('ask'); say('confirm', 'Touch it again to end this game and choose another.'); newAsked = setTimeout(function () { newAsked = 0; b.classList.remove('ask'); }, 5000); return; }
+    if (!newAsked) { b.classList.add('ask'); say('confirm', 'Touch it again to end this game and choose another.'); newAsked = setTimeout(function () { newAsked = 0; say('confirm', ''); b.classList.remove('ask'); }, 5000); return; }
     clearTimeout(newAsked); b.disabled = true; playing = false; say('running', 'Ending this game.');
-    fetch(BASE + '/new', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }).then(function (r) { return r.json(); }).then(function (a) { if (a.refused != null) throw new Error(a.refused); try { history.replaceState(null, '', location.pathname); } catch (e) {} location.reload(); }).catch(function (e) { b.disabled = false; say('failed', 'It could not end the game: ' + e.message); });
+    fetch(BASE + '/new', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }).then(function (r) { return r.json(); }).then(function (a) { if (a.refused != null) throw new Error(a.refused); try { history.replaceState(null, '', location.pathname); } catch (e) {} location.reload(); }).catch(function (e) { b.disabled = false; say('failed', 'It could not end the game: ' + e.message, $('game-says')); });
   });
   $('btn-agent').addEventListener('click', function () { shutMenus(); readAgentSeats(); });
   $('btn-stops').addEventListener('click', function () { shutMenus(); var f = $('stops'); f.hidden = !f.hidden; this.setAttribute('aria-expanded', String(!f.hidden)); });
