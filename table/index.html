@@ -352,10 +352,6 @@ button:disabled { opacity: 0.45; cursor: default; }
 .status:empty { display: none; }
 .acts { display: flex; flex-wrap: wrap; gap: 8px; }
 .acts button { min-height: 46px; padding: 0 16px; background: transparent; color: var(--paper-ink); border: 2px solid var(--paper-ink); border-radius: 0; font-size: 16px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
-.acts button.gives, .acts button#btn-end { flex: 1 1 100%; }
-.acts button.cue { border-color: #a8791c; color: #7a5712; box-shadow: 0 0 0 0 rgba(168,121,28,0.7); animation: cue 2.2s ease-out infinite; }
-@keyframes cue { 0% { box-shadow: 0 0 0 0 rgba(168,121,28,0.6); } 70% { box-shadow: 0 0 0 10px rgba(168,121,28,0); } 100% { box-shadow: 0 0 0 0 rgba(168,121,28,0); } }
-@media (prefers-reduced-motion: reduce) { .acts button.cue { animation: none; box-shadow: 0 0 0 3px rgba(168,121,28,0.45); } }
 .acts button.main, .acts button#btn-end { flex: 1; background: var(--paper-ink); color: var(--paper); font-weight: 700; padding: 0 24px; }
 .acts button#btn-end { flex: 1 1 100%; }
 #fatal { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 24px; text-align: center; font-size: 20px; background: var(--room); }
@@ -440,7 +436,6 @@ body.watched .gives { display: none !important; }
   <footer class="sp-foot" id="sp-foot">
     <div class="status" id="status" role="status">Laying the chart.</div>
     <div class="acts">
-      <button type="button" id="btn-intent" class="gives">Give an order</button>
       <button type="button" id="btn-day">Next day</button>
       <button type="button" class="main" id="btn-go">Carry on</button>
       <button type="button" id="btn-end" hidden>Read how it ended</button>
@@ -1112,8 +1107,7 @@ body.watched .gives { display: none !important; }
     if (clock.at !== 'dusk') { var today = dateOf(M.day - 1, true); cl.textContent = (today ? today + ' \u00b7 ' : '') + clock.at; st.textContent = 'DAY ' + M.day + (M.lastDay ? ' OF ' + M.lastDay : '') + ' \u00b7 ' + state; }
     else { var day = M.lastDay ? Math.min(M.day, M.lastDay) : M.day, dusk = dateOf(M.day - 2, true); cl.textContent = (dusk ? dusk + ' \u00b7 ' : '') + '1800'; st.textContent = (M.over ? 'THE LAST DAY IS FOUGHT' : 'ORDERS FOR DAY ' + day + (M.lastDay ? ' OF ' + M.lastDay : '')) + ' \u00b7 ' + state; }
     // At the game's end the foot has one control, to read how it ended; while the other commander is waited for nothing more is ordered.
-    $('btn-intent').hidden = M.over; $('btn-day').hidden = M.over; $('btn-go').hidden = M.over; $('btn-end').hidden = !M.over;
-    $('btn-intent').disabled = !!(VERSUS && playing && versusWaited);
+    $('btn-day').hidden = M.over; $('btn-go').hidden = M.over; $('btn-end').hidden = !M.over;
   }
   // A pulse by its date and its hours: "12-13 AUG · NIGHT · 1800-0600". The
   // hours are the theatre's own, one clock for the whole chart.
@@ -1218,8 +1212,6 @@ body.watched .gives { display: none !important; }
     (function () { var n = (s.holds || []).length, d = $('holds-staff'); d.hidden = !n; d.querySelector('summary').textContent = 'Held from the staff \u00B7 ' + n; })();
     askingSlips();
     var roots = s.intents.filter(function (i) { return i.in_force && !i.parent; });
-    // With no intent stated the staff does nothing: the button that states one is marked, and nothing is said.
-    $('btn-intent').classList.toggle('cue', !roots.length && !M.over);
     s.plans.forEach(function (p) {
       var waits = (p.state === 'preparing' && !s.leaves.launch) || (p.state === 'draft' && !s.leaves.prepare); if (!waits || signed('approve', 'plan', p.number)) return;
       var po = planOf(p.number), name = po.name ? po.name.charAt(0).toUpperCase() + po.name.slice(1) : 'Plan ' + p.number, root = po.root != null ? po.root : p.intent;
@@ -1869,9 +1861,9 @@ body.watched .gives { display: none !important; }
   // of it beneath it as lesser ones, and orders that stand apart as equal
   // buttons. An order in force is shown as given, with its paper, and so is
   // each part of a wider order in force: covered by it, not offered again.
-  function ordersHere(target) {
+  function ordersHere(target, behind) {
     if (!target || WATCH || M.over || playing) return;
-    var list = ends(target), body = $('card-body'), after = body.querySelector('.kv') || body.querySelector('.headline'); if (!list.length || !after) return;
+    var list = ends(target), body = $('card-body'), after = behind || body.querySelector('.kv') || body.querySelector('.headline'); if (!list.length || !after) return;
     var given = list.map(function (e) { return endInForce(e, target); }), offered = 0;
     var box = el('div', 'ohere'), head = el('div', 'sub', ''); box.appendChild(head);
     function paperLink(row, words, i, cap) { var r = rootIntent(i); row.appendChild(document.createTextNode(words)); var b = el('button', 'ref', (cap ? 'Order ' : 'order ') + r.number); b.type = 'button'; b.addEventListener('click', function () { readPlan(r.number); }); row.appendChild(b); }
@@ -1897,7 +1889,9 @@ body.watched .gives { display: none !important; }
     head.textContent = offered ? 'ORDERS YOU CAN GIVE' : 'ORDERS IN FORCE';
     body.insertBefore(box, after.nextSibling);
   }
-  (function () { var c = cardContact, p = cardPlace, b = cardBase, x = cardHex;
+  (function () { var c = cardContact, p = cardPlace, b = cardBase, x = cardHex, f = cardForce;
+    // A force's card offers the orders on its waters that a hex's card offers, below its own buttons.
+    cardForce = function (t) { var r = f.apply(this, arguments); var row = $('card-body').querySelector(':scope > .row'); ordersHere(watersAt(t.force.place), row || null); return r; };
     cardContact = function (t) { var r = c.apply(this, arguments); ordersHere(watersAt(t.contact.place)); return r; };
     cardPlace = function (t) { var r = p.apply(this, arguments); ordersHere(t.base ? { kind: 'enemy', base: t.base, name: t.base.base.name, v: placeOf(t.place) } : watersAt(t.place)); return r; };
     cardBase = function (t) { var r = b.apply(this, arguments); ordersHere({ kind: 'own', base: t.base, name: t.base.base.name, v: placeOf(t.base.place) }); return r; };
@@ -3538,12 +3532,7 @@ body.watched .gives { display: none !important; }
 
   // ---- an order to a force at 0600 or 1200: touch the force, choose, sign (decision 0156) ----
   var force = null;
-  function closeForce() { $('force').hidden = true; $('course').hidden = true; force = null; if (g) drawMarks(); if (picking === 'force' || picking === 'route') { picking = false; canvas.classList.remove('picking'); } }
-  function pickForce(p) {
-    var best = null, bd = 0.4; Object.keys(pieces).forEach(function (h) { var d = pieces[h].grp.position.distanceTo(p); if (d < bd) { bd = d; best = pieces[h]; } });
-    if (!best) { say('picking', 'No force of yours is there. Touch one of your tiles.'); return; }
-    orderForce(best.force);
-  }
+  function closeForce() { $('force').hidden = true; $('course').hidden = true; force = null; if (g) drawMarks(); if (picking === 'route') { picking = false; canvas.classList.remove('picking'); } }
   function orderForce(f) {
     var best = { force: f }; $('card').hidden = true;
     picking = false; canvas.classList.remove('picking'); force = { f: best.force, route: [] };
@@ -3669,13 +3658,6 @@ body.watched .gives { display: none !important; }
     });
     return list;
   }
-  function pick(p) {
-    var best = null, bd = 0.32;
-    M.bases.forEach(function (b) { var d = placeOf(b.place).distanceTo(p); if (d < bd) { bd = d; best = { kind: 'own', base: b, name: b.base.name, v: placeOf(b.place) }; } });
-    M.enemyBases.forEach(function (b) { var d = placeOf(b.place).distanceTo(p); if (d < bd) { bd = d; best = { kind: 'enemy', base: b, name: b.base.name, v: placeOf(b.place) }; } });
-    if (!best) { var hd = 1e9, hh = null; hexes.forEach(function (h) { var d = world(h[3], h[4]).distanceTo(p); if (d < hd) { hd = d; hh = h; } }); if (!hh) return; best = { kind: 'waters', q: hh[0], r: hh[1], name: 'the waters about ' + (showHexes ? 'hex ' + hh[0] + ', ' + hh[1] : whereIs({ q: hh[0], r: hh[1] })), v: world(hh[3], hh[4]) }; }
-    openDraft(best, 0);
-  }
   // The draft of an order about `best`, a base or waters, with its end
   // numbered `first` picked: from a touch on the chart, or from a card.
   function openDraft(best, first) {
@@ -3709,7 +3691,6 @@ body.watched .gives { display: none !important; }
     }).catch(function (err) { if (seq !== previewSeq) return; out.textContent = 'The staff refuses it: ' + err.message; $('o-pv-sum').textContent = 'THE STAFF REFUSES IT'; $('o-pv').open = true; });
   }
   $('order').addEventListener('change', function (e) { if (e.target.name === 'end') askPreview(); });
-  $('btn-intent').addEventListener('click', function () { if (playing || WATCH) return; closeOrder(); closeForce(); picking = true; canvas.classList.add('picking'); say('picking', 'Touch the chart where you mean: a base, or open water.'); });
   $('o-dry').addEventListener('click', function () {
     if (previewNo == null) return; var says = $('o-dry-says');
     playDry({ preview: previewNo, size: drySize }, says, [$('o-dry'), $('o-sign')], function (j) { if (chosen('risk') !== 'balanced') says.textContent = 'Played at balanced; your risk goes with the order.'; readEstimate(j, null, { preview: previewNo }); });
@@ -3797,7 +3778,7 @@ body.watched .gives { display: none !important; }
   });
   function up(e) {
     delete ptrs[e.pointerId]; if (!Object.keys(ptrs).length) canvas.classList.remove('dragging'); pinch0 = 0;
-    if (picking && downAt && e.type === 'pointerup' && Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y) < 6) { var p = onTable(e.clientX, e.clientY); if (p && Math.abs(p.x) <= TW / 2 && Math.abs(p.z) <= TD / 2) (picking === 'force' ? pickForce : picking === 'route' ? pickRoute : picking === 'march' ? pickMarch : pick)(p); }
+    if (picking && downAt && e.type === 'pointerup' && Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y) < 6) { var p = onTable(e.clientX, e.clientY); if (p && Math.abs(p.x) <= TW / 2 && Math.abs(p.z) <= TD / 2) (picking === 'route' ? pickRoute : pickMarch)(p); }
     else if (!picking && !playing && downAt && e.type === 'pointerup' && Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y) < 6) { var q = onTable(e.clientX, e.clientY); var hit = tileAt(e.clientX, e.clientY), ord = hit ? null : orderAt(q); if (hit) touch(hit); else if (ord != null) readPlan(ord); else if (q && Math.abs(q.x) <= TW / 2 && Math.abs(q.z) <= TD / 2) look(q); }
     downAt = null;
   }
