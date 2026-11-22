@@ -1539,6 +1539,8 @@ body.watched .gives { display: none !important; }
       var d = draft(); sum.textContent = d.words.join(' '); keeps.textContent = keptWords(d.orders, d.words);
       var cost = []; if ((d.marches || (d.attacks && pick('lpos') !== u.posture)) && u.fieldworks && parseFloat(u.fieldworks) > 0) cost.push(d.marches ? 'A march leaves its fieldworks behind.' : 'An attack leaves its fieldworks behind.');
       if (d.marches && u.men_aboard > 0) cost.push('Only the men ashore march: the ' + commas(u.men_aboard) + ' aboard stay aboard.');
+      // Decision 0216, rule 6: said before signing, in the force form's words.
+      if (!held && d.orders.length) cost.push('If the staff is using this unit, your order takes it out of the staff’s hands. The staff plans round it until you release it.');
       costs.textContent = cost.join(' '); go.hidden = !d.orders.length && !d.error; out.textContent = '';
     }
     form.addEventListener('change', show); form.addEventListener('input', show); show();
