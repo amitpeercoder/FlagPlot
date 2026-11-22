@@ -1899,10 +1899,11 @@ body.watched .gives { display: none !important; }
     var pl = thingPlace(t), list = pl ? thingsAt(pl) : [], k = thingKey(t), i = -1;
     list.forEach(function (x, n) { if (i < 0 && thingKey(x) === k) i = n; });
     if (i < 0) { list.unshift(t); i = 0; } else list[i] = t;
-    if (stack && !$('card').hidden && list.length > 1 && thingKey(stack.list[stack.i]) === k && sameHex(thingPlace(stack.list[stack.i]), pl)) i = (i + 1) % list.length;
-    stack = { list: list, i: i }; showStack();
+    var cycles = stack && !$('card').hidden && list.length > 1 && thingKey(stack.list[stack.i]) === k && sameHex(thingPlace(stack.list[stack.i]), pl); if (cycles) i = (i + 1) % list.length;
+    stack = { list: list, i: i }; stepping = !!cycles; try { showStack(); } finally { stepping = false; }
   }
-  function stepStack(by) {
+  function stepStack(by) { stepping = true; try { stepStackIn(by); } finally { stepping = false; } }
+  function stepStackIn(by) {
     if (sibs) { var n = (sibs.i + by + sibs.list.length) % sibs.list.length, to = sibs.list[n]; wantDiary = to; try { history.replaceState(null, '', '#see=' + to); } catch (e) {} var lu = /^land_unit:/.test(to) && M.units.filter(function (y) { return y.land_unit.handle === to; })[0]; if (lu) cardUnit(lu); else cardEntity(to); return; }
     if (!stack) return; stack.i = (stack.i + by + stack.list.length) % stack.list.length; showStack();
   }
@@ -1961,11 +1962,21 @@ body.watched .gives { display: none !important; }
   // sheet, until the card is put down or the clock moves.
   var trail = [], shown = null, trailAt = '';
   function stamp() { return M.day + ':' + (typeof clock === 'object' && clock ? clock.at : ''); }
-  function forget() { trail = []; shown = null; backSheet = ''; $('card-back').hidden = true; endMarch(); if (arcDraft || airReach) { arcDraft = null; airReach = null; if (g) drawMarks(); } }
-  function remember(f) { return function (a) {
+  function forget() { trail = []; shown = null; shownKey = null; backSheet = ''; $('card-back').hidden = true; endMarch(); if (arcDraft || airReach) { arcDraft = null; airReach = null; if (g) drawMarks(); } }
+  // The trail of cards. A card is the thing it shows, by its handle (a hex by its hex). Opening the card of the thing whose card is open
+  // changes nothing in the trail; the trail never holds one thing twice running, so BACK never leads to the card it is on; stepping
+  // through a stack or a force's ships replaces the card and does not grow the trail; a link from the stop paper, which is not a card,
+  // starts a new trail.
+  var shownKey = null, stepping = false, viaStop = false;
+  document.addEventListener('click', function (e) { viaStop = !!(e.target.closest && e.target.closest('#stop')); setTimeout(function () { viaStop = false; }, 0); }, true);
+  function remember(f, keyOf) { return function (a) {
     if (trailAt !== stamp()) { forget(); trailAt = stamp(); }
-    if (shown) trail.push(shown);
-    shown = function () { $('sheet').hidden = true; f(a); };
+    var key = keyOf ? keyOf(a) : null, same = !!key && key === shownKey && !$('card').hidden && $('sheet').hidden;
+    if (!same && !stepping) {
+      if (viaStop) trail = [];
+      else if (shown && !(trail.length && trail[trail.length - 1].key === shownKey)) trail.push(shown);
+    }
+    shownKey = key; shown = function () { $('sheet').hidden = true; f(a); }; shown.key = key;
     $('card-back').hidden = !trail.length; backWords(); return f(a);
   }; }
   // A card offers the orders that can be given about what it shows: an enemy
@@ -2038,9 +2049,11 @@ body.watched .gives { display: none !important; }
     cardBase = function (t) { var r = b.apply(this, arguments); ordersHere({ kind: 'own', base: t.base, name: t.base.base.name, v: placeOf(t.base.place) }); return r; };
     cardHex = function (hpl) { var r = x.apply(this, arguments); ordersHere(watersAt(hpl)); return r; };
   })();
-  cardGone = remember(cardGone);
-  cardUnit = remember(cardUnit); cardEntity = remember(cardEntity); cardContact = remember(cardContact); cardPlace = remember(cardPlace); cardForce = remember(cardForce); cardBase = remember(cardBase); cardHex = remember(cardHex);
-  $('card-back').addEventListener('click', function () { var was = trail.pop(); if (!was) return; shown = was; $('card-back').hidden = !trail.length; backWords(); was(); });
+  cardGone = remember(cardGone, function (n) { return 'contact:' + n; });
+  cardUnit = remember(cardUnit, function (u) { return u.land_unit.handle; }); cardEntity = remember(cardEntity, function (h) { return h; }); cardContact = remember(cardContact, function (t) { return t.contact.contact.handle; });
+  cardPlace = remember(cardPlace, function (t) { return t.base ? t.base.base.handle : 'hex:' + t.place.q + ',' + t.place.r; }); cardForce = remember(cardForce, function (t) { return t.force.task_force.handle; });
+  cardBase = remember(cardBase, function (t) { return t.base.base.handle; }); cardHex = remember(cardHex, function (h) { return 'hex:' + h.q + ',' + h.r; });
+  $('card-back').addEventListener('click', function () { var was = trail.pop(); if (!was) return; shown = was; shownKey = was.key || null; $('card-back').hidden = !trail.length; backWords(); was(); });
   $('card-find').addEventListener('click', function () { if (findAt) turnTo(findAt); });
   $('card-diary').addEventListener('click', function () { if (cardHandle) readUnitDiary(cardHandle); });
   (function () { var f = cardForce, b = cardBase, u = cardUnit, e = cardEntity;

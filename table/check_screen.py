@@ -202,6 +202,21 @@ def cards_show_no_handle():
           "each row is the when on its own small line and the words beneath it, left-aligned, with no figure column")
 
 
+def the_trail_holds_no_duplicate():
+    """The trail of cards (decision 0221, stage 2), by the page's text: a card is the thing it shows by its handle; opening the
+    card of the thing already shown changes nothing in the trail; the trail never holds one thing twice running; stepping
+    replaces the card; a link from the stop paper starts a new trail. (Tried in a browser, not here.)"""
+    with open(os.path.join(HERE, "index.html"), encoding="utf-8") as page:
+        text = page.read()
+    check("function remember(f, keyOf)" in text and "key === shownKey && !$('card').hidden" in text
+          and "trail[trail.length - 1].key === shownKey" in text,
+          "opening the card of the thing whose card is open leaves the trail as it is, and the trail never holds one thing twice running")
+    check("stepping = true; try { stepStackIn(by); }" in text and "if (viaStop) trail = [];" in text and "closest('#stop')" in text,
+          "stepping through a stack replaces the card without growing the trail, and a link from the stop paper starts a new trail")
+    check(all("remember(" + c + ", function" in text for c in ("cardContact", "cardForce", "cardBase", "cardPlace", "cardHex", "cardUnit", "cardEntity", "cardGone")),
+          "every way a card opens names the thing it shows")
+
+
 def queue_through_the_bridge(bridge):
     """The two tools SIGNED rests on, as the page calls them: queued lists what was signed, with a unit's hold going with
     its order, and take_back withdraws one entry and what goes with it, refused with the token out of date."""
@@ -722,6 +737,7 @@ def main():
     orders_and_signed()
     stops_speak_as_the_staff()
     cards_show_no_handle()
+    the_trail_holds_no_duplicate()
     if not os.path.exists(args.sim_cli):
         sys.exit(f"{args.sim_cli} is not built: cargo build --release -p sim-cli")
     with tempfile.TemporaryDirectory() as keep:
