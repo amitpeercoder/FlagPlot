@@ -202,6 +202,10 @@ pub struct AirGroupLine {
     /// where the type is not known.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub role: Option<&'static str>,
+    /// What its aircraft attack ships with: "bombs" or "torpedoes". Left out
+    /// for a type that carries neither and where the type is not known.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub attack_weapon: Option<&'static str>,
     /// The base or the ship it is at; `None` for a group lost with a base
     /// that changed side (decision 0090, 20), which has no place.
     pub location: Option<Handle>,
@@ -886,6 +890,7 @@ pub(crate) fn air_group_line(ctx: &Ctx<'_>, group: &AirGroup) -> AirGroupLine {
         ),
         air_group: ctx.group(group.id),
         role: aircraft_type.map(|t| crate::words::role(t.role)),
+        attack_weapon: aircraft_type.and_then(|t| crate::words::attack_weapon(t.attack_weapon)),
         aircraft_type: aircraft_type
             .map_or_else(|| group.aircraft_type.to_string(), |t| t.name.clone()),
         lost_with_base: location.is_none(),

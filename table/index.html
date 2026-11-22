@@ -152,6 +152,11 @@ button:disabled { opacity: 0.45; cursor: default; }
 .sheetnav + .sheet { border-radius: 0 0 2px 2px; }
 #planchip { position: fixed; top: 54px; left: 50%; transform: translateX(-50%); z-index: 6; display: flex; align-items: center; gap: 10px; max-width: calc(100% - 32px); background: var(--paper); color: var(--paper-ink); padding: 6px 6px 6px 12px; border-radius: 2px; font-size: 14px; letter-spacing: 0.04em; box-shadow: 0 2px 10px rgba(0,0,0,0.4); }
 #planchip[hidden] { display: none; }
+.holds { margin-top: 2px; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 8px; color: #e6dfc9; }
+.holds[hidden] { display: none; }
+.holds summary { cursor: pointer; letter-spacing: 0.06em; text-transform: uppercase; font-size: 13px; font-weight: 600; }
+.holds .hold { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 6px; padding: 6px 8px; font-size: 13px; background: var(--paper); color: var(--paper-ink); border-radius: 2px; }
+.holds .hold button:not(.ref) { flex: none; min-height: 28px; padding: 0 8px; background: transparent; color: inherit; border: 1px solid rgba(0,0,0,0.35); border-radius: 2px; font: inherit; cursor: pointer; }
 #planchip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 #planchip button { min-height: 32px; padding: 0 10px; background: transparent; color: inherit; border: 1px solid rgba(0,0,0,0.3); border-radius: 2px; font: inherit; font-weight: 600; cursor: pointer; }
 .sheetbar span { color: var(--ink-dim); font-size: 13px; letter-spacing: 0.04em; }
@@ -341,7 +346,7 @@ body.watched .gives { display: none !important; }
 /* A narrow screen (a tablet, a phone): the view's buttons take a row of their
    own across the top, the heading and the trays go under them, and the clock
    may wrap. A desktop window is wider than this and is not touched. */
-@media (max-width: 820px) {
+@media (max-width: 1180px) {
   .view { left: 16px; right: 16px; top: 8px; justify-content: flex-end; flex-wrap: wrap; }
   .top { padding: 52px 16px 8px 16px; gap: 4px 12px; }
   .top h1 { font-size: 20px; }
@@ -390,6 +395,7 @@ body.watched .gives { display: none !important; }
 </div>
 <div id="pop-staff" class="pop" hidden>
   <div id="papers-staff" class="papers" role="toolbar" aria-label="The staff's standing papers"></div>
+  <details id="holds-staff" class="holds" hidden><summary></summary><div id="holds-list"></div></details>
 </div>
 
 <aside class="tray" aria-label="Signals">
@@ -692,6 +698,9 @@ body.watched .gives { display: none !important; }
   // a place is held, taken or beaten down, and round waters denied. Read
   // from the seat's own tools (command_state, staff_orders, measure).
   var planShown = null, planMarks = null;
+  // Where on the chart each order's words and rings were last drawn, in the chart's own pixels: a touch there opens the order.
+  var orderHits = [];
+  function orderAt(q) { if (!q) return null; var c = cpx(q), best = null; orderHits.forEach(function (h) { if (h.order == null) return; var pad = h.pad || 0; if (c[0] >= h.x - pad && c[0] <= h.x + h.w + pad && c[1] >= h.y - pad && c[1] <= h.y + h.h + pad) best = h.order; }); return best; }
   function hexV(q, r) { var h = hexAt[q + ',' + r]; return h ? world(h[3], h[4]) : null; }
   // The switch for every plan at once: 'all' stands where one order's number
   // stands when a single plan is shown, and is kept from one sitting to the next.
@@ -706,12 +715,14 @@ body.watched .gives { display: none !important; }
     var marks = { root: root, moves: [], rings: [] }, asks = [], seen = {}, stand = {};
     function pending(i) { var p = i.plan != null ? plans[i.plan] : null; return !p || p.state === 'draft' || p.state === 'preparing'; }
     function baseOf(o) { return o ? M.bases.concat(M.enemyBases).filter(function (b) { return b.base.handle === o.handle; })[0] : null; }
-    function mark(v, r, label, dash) { if (v) marks.rings.push({ v: v, r: r, label: label, dash: dash }); }
+    // Each mark says which of the commander's orders it is drawn for, so that a touch on it opens that order.
+    function orderOf(i) { var n = 0; while (i && i.parent != null && by[i.parent] && n++ < 20) i = by[i.parent]; return i ? i.number : null; }
+    function mark(v, r, label, dash, i) { if (v) marks.rings.push({ v: v, r: r, label: label, dash: dash, order: orderOf(i) }); }
     function move(h, hex, kind, i) {
       var f = M.forces.filter(function (x) { return x.task_force.handle === h; })[0], to = hexV(hex[0], hex[1]);
       if (!f || !f.place || !to || seen[h]) return; seen[h] = true;
-      if (f.place.q === hex[0] && f.place.r === hex[1]) { var k = hex[0] + ',' + hex[1]; if (!stand[k]) { stand[k] = { v: to, r: 20, names: [], dash: pending(i) }; marks.rings.push(stand[k]); } stand[k].names.push(nameOf(h)); stand[k].label = stand[k].names.join(', ') + ' · on station'; return; }
-      var m = { pts: [placeOf(f.place), to], label: nameOf(h), kind: kind, dash: pending(i) }; marks.moves.push(m);
+      if (f.place.q === hex[0] && f.place.r === hex[1]) { var k = hex[0] + ',' + hex[1]; if (!stand[k]) { stand[k] = { v: to, r: 20, names: [], dash: pending(i), order: orderOf(i) }; marks.rings.push(stand[k]); } stand[k].names.push(nameOf(h)); stand[k].label = stand[k].names.join(', ') + ' · on station'; return; }
+      var m = { pts: [placeOf(f.place), to], label: nameOf(h), kind: kind, dash: pending(i), order: orderOf(i) }; marks.moves.push(m);
       asks.push(api('measure', { question: 'passage', task_force: h, to: { q: hex[0], r: hex[1] } }).then(function (a) {
         if (a.route && a.route.length) m.pts = [placeOf(f.place)].concat(a.route.map(placeOf));
         m.when = a.outcome === 'arrives' && a.ends ? (dateOf(a.ends.day - 1) || 'DAY ' + a.ends.day) + ', ' + a.ends.pulse : a.outcome ? String(a.outcome).replace(/_/g, ' ') : '';
@@ -723,13 +734,13 @@ body.watched .gives { display: none !important; }
     tree.forEach(function (i) {
       var b;
       if (i.kind === 'ready_landing' && i.hex && i.limits && i.limits.forces) (i.limits.forces.task_forces || []).forEach(function (n) { var lf = M.forces.filter(function (x) { return x.task_force.handle === 'task_force:' + n; })[0]; if (lf && lf.mission === 'transport') move('task_force:' + n, i.hex, 'landing', i); });
-      if (i.kind === 'take_place' && i.hex) { var tk = { v: hexV(i.hex[0], i.hex[1]), r: 27, label: 'TAKE', dash: pending(i) }; if (tk.v) { marks.rings.push(tk);
+      if (i.kind === 'take_place' && i.hex) { var tk = { v: hexV(i.hex[0], i.hex[1]), r: 27, label: 'TAKE', dash: pending(i), order: orderOf(i) }; if (tk.v) { marks.rings.push(tk);
         // The day the staff expects the first men ashore, where its plan order gives one.
         asks.push(api('order', { intent: i.number }).then(function (o) { if (o && o.expected_ashore != null) tk.label = 'TAKE \u00B7 ASHORE ' + (dateOf(o.expected_ashore - 1) || 'DAY ' + o.expected_ashore); else if (o) { var stage = {}; (o.phases || []).forEach(function (ph) { stage[ph.name] = ph.stage; }); if (stage.land === 'done') tk.label = 'TAKEN'; else if (stage.move === 'done') tk.label = 'TAKE \u00B7 MEN ASHORE'; } }).catch(function () {})); } }
-      if (i.kind === 'hold' && (b = baseOf(i.base))) mark(placeOf(b.place), 24, 'HOLD', pending(i));
-      if (i.kind === 'neutralise' && (b = baseOf(i.target))) mark(placeOf(b.place), 22, 'NEUTRALISE', pending(i));
-      if (i.kind === 'deny' && i.hex && i.distance) { var h = hexAt[i.hex[0] + ',' + i.hex[1]]; if (h) marks.rings.push({ v: world(h[3], h[4]), edge: world(h[3] + i.distance * hexMiles() / 60, h[4]), label: 'DENY', dash: true }); }
-      if (i.kind === 'keep_supplied' && (b = baseOf(i.base))) { var src = baseOf(i.limits_read_up && i.limits_read_up.forces && i.limits_read_up.forces.source); if (src) marks.moves.push({ pts: [placeOf(src.place), placeOf(b.place)], label: 'Supply from ' + src.base.name, kind: 'supply', dash: pending(i) }); }
+      if (i.kind === 'hold' && (b = baseOf(i.base))) mark(placeOf(b.place), 24, 'HOLD', pending(i), i);
+      if (i.kind === 'neutralise' && (b = baseOf(i.target))) mark(placeOf(b.place), 22, 'NEUTRALISE', pending(i), i);
+      if (i.kind === 'deny' && i.hex && i.distance) { var h = hexAt[i.hex[0] + ',' + i.hex[1]]; if (h) marks.rings.push({ v: world(h[3], h[4]), edge: world(h[3] + i.distance * hexMiles() / 60, h[4]), label: 'DENY', dash: true, order: orderOf(i) }); }
+      if (i.kind === 'keep_supplied' && (b = baseOf(i.base))) { var src = baseOf(i.limits_read_up && i.limits_read_up.forces && i.limits_read_up.forces.source); if (src) marks.moves.push({ pts: [placeOf(src.place), placeOf(b.place)], label: 'Supply from ' + src.base.name, kind: 'supply', dash: pending(i), order: orderOf(i) }); }
     });
     // What the staff orders this morning for the plan: a force given a
     // course, and the air groups set on a base to be beaten down.
@@ -744,7 +755,7 @@ body.watched .gives { display: none !important; }
     }).catch(function () {}));
     return Promise.all(asks).then(function () {
       if (planShown !== root) return;
-      planMarks = marks; $('planchip-text').textContent = all ? 'ALL PLANS ON CHART · ' + (roots.length ? roots.length + ' order' + (roots.length === 1 ? '' : 's') : 'no order in force') : 'PLAN ON CHART · ' + plainWords(sayIntent(top, {})); $('planchip-read').hidden = all; $('planchip').hidden = false; plansSwitch(); if (g) drawMarks();
+      planMarks = marks; $('planchip-text').textContent = all ? 'ALL PLANS ON CHART · ' + (roots.length ? roots.length + ' order' + (roots.length === 1 ? '' : 's') : 'no order in force') : 'PLAN ON CHART · ' + plainWords(sayIntent(top, {})); $('planchip-read').hidden = all; $('planchip').hidden = all; plansSwitch(); if (g) drawMarks();
     });
   }
   var planDrawnAt = 0;
@@ -753,23 +764,23 @@ body.watched .gives { display: none !important; }
   function drawPlan(u, ring) {
     // Tags and arrows keep much the same size to the eye as you lean in.
     var navy = '#12335c', tags = [], spots = {}, order = [], z = planZoom(); planDrawnAt = camDist; var u0 = u; u = u * z;
-    function tag(x, y, lines) {
+    function tag(x, y, lines, order) {
       g.font = '700 ' + Math.round(14 * u) + "px 'Courier Prime', monospace"; var w = 0, lh = 17 * u; lines.forEach(function (t) { w = Math.max(w, g.measureText(t).width); });
       // Keep one tag off another: step down until it is clear.
       var box = { x: x - w / 2 - 5 * u, y: y - lh * lines.length / 2 - 3 * u, w: w + 10 * u, h: lh * lines.length + 6 * u }, tries = 0;
       while (tries++ < 8 && tags.some(function (t) { return box.x < t.x + t.w && t.x < box.x + box.w && box.y < t.y + t.h && t.y < box.y + box.h; })) box.y += box.h + 2 * u;
-      tags.push(box);
+      tags.push(box); orderHits.push({ x: box.x, y: box.y, w: box.w, h: box.h, pad: 4 * u, order: order });
       g.save(); g.globalAlpha = 0.92; g.fillStyle = '#f1ead6'; g.fillRect(box.x, box.y, box.w, box.h); g.globalAlpha = 1; g.strokeStyle = navy; g.lineWidth = u; g.strokeRect(box.x, box.y, box.w, box.h);
       g.fillStyle = navy; g.textAlign = 'center'; lines.forEach(function (t, n) { g.fillText(t, box.x + box.w / 2, box.y + 3 * u + lh * (n + 0.75)); }); g.restore();
     }
     g.save(); g.lineCap = 'round'; g.lineJoin = 'round';
     planMarks.rings.forEach(function (r) {
       var c;
-      if (r.edge) { c = cpx(r.v); var e = cpx(r.edge), rad = Math.abs(e[1] - c[1]); g.save(); g.globalAlpha = 0.7; g.strokeStyle = navy; g.lineWidth = 2 * u; g.setLineDash([10 * u, 7 * u]); g.beginPath(); g.arc(c[0], c[1], rad, 0, 7); g.stroke(); g.restore(); tag(c[0], c[1] - rad, [r.label]); }
-      else { c = cpx(r.v); var k = Math.round(c[0] / (8 * u)) + ',' + Math.round(c[1] / (8 * u)), at = spots[k]; if (!at) { at = spots[k] = { v: r.v, r: 0, dash: true, words: [], names: [] }; order.push(at); } at.r = Math.max(at.r, r.r); at.dash = at.dash && r.dash; if (r.names) at.names = at.names.concat(r.names); else at.words.push(r.label); }
+      if (r.edge) { c = cpx(r.v); var e = cpx(r.edge), rad = Math.abs(e[1] - c[1]); g.save(); g.globalAlpha = 0.7; g.strokeStyle = navy; g.lineWidth = 2 * u; g.setLineDash([10 * u, 7 * u]); g.beginPath(); g.arc(c[0], c[1], rad, 0, 7); g.stroke(); g.restore(); tag(c[0], c[1] - rad, [r.label], r.order); }
+      else { c = cpx(r.v); var k = Math.round(c[0] / (8 * u)) + ',' + Math.round(c[1] / (8 * u)), at = spots[k]; if (!at) { at = spots[k] = { v: r.v, r: 0, dash: true, words: [], names: [] }; order.push(at); } at.r = Math.max(at.r, r.r); at.dash = at.dash && r.dash; if (at.order == null) at.order = r.order; if (r.names) at.names = at.names.concat(r.names); else at.words.push(r.label); }
     });
     // One ring a place, with what is to be done there and who stands there.
-    order.forEach(function (at) { var c = ring(at.v, at.r, navy, 0.9, at.dash, 2.6), lines = []; if (at.words.length) lines.push(at.words.join(' \u00B7 ')); at.names.forEach(function (n) { lines.push(n); }); if (at.names.length) lines[lines.length - 1] += ' \u00B7 on station'; tag(c[0], c[1] + at.r * u0 + (12 + 8 * lines.length) * u, lines); });
+    order.forEach(function (at) { var c = ring(at.v, at.r, navy, 0.9, at.dash, 2.6), lines = []; if (at.words.length) lines.push(at.words.join(' \u00B7 ')); at.names.forEach(function (n) { lines.push(n); }); if (at.names.length) lines[lines.length - 1] += ' \u00B7 on station'; tag(c[0], c[1] + at.r * u0 + (12 + 8 * lines.length) * u, lines, at.order); orderHits.push({ x: c[0] - at.r * u0, y: c[1] - at.r * u0, w: 2 * at.r * u0, h: 2 * at.r * u0, order: at.order }); });
     planMarks.moves.forEach(function (m) {
       var block = m.kind === 'landing' && !m.dash, w = block ? 13 : ({ landing: 7, cover: 4.5, supply: 3.2, air: 2.4 })[m.kind] || 3, P = m.pts.filter(Boolean).map(cpx), k;
       if (P.length < 2) return;
@@ -787,14 +798,14 @@ body.watched .gives { display: none !important; }
       g.beginPath(); g.moveTo(end[0], end[1]); g.lineTo(end[0] - Math.cos(ang - 0.42) * hl, end[1] - Math.sin(ang - 0.42) * hl); g.lineTo(end[0] - Math.cos(ang + 0.42) * hl, end[1] - Math.sin(ang + 0.42) * hl); g.closePath();
       if (block) { g.fillStyle = 'rgba(206,224,230,0.96)'; g.fill(); g.lineWidth = 2.2 * u; g.strokeStyle = navy; g.stroke(); g.fillStyle = navy; } else g.fill();
       g.globalAlpha = 1; var a = P[Math.floor((P.length - 1) / 2)], b = P[Math.ceil((P.length - 1) / 2)];
-      tag((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, m.when ? [m.label, m.when.toUpperCase()] : [m.label]);
+      tag((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, m.when ? [m.label, m.when.toUpperCase()] : [m.label], m.order);
     });
     g.restore();
   }
   var WORD = { control_island: 'SEIZE AND HOLD', take_place: 'CAPTURE', hold: 'HOLD', neutralise: 'NEUTRALISE', deny: 'DENY THESE WATERS', keep_supplied: 'KEEP SUPPLIED', cover: 'COVER FROM THE AIR', operate_carriers: 'OPERATE CARRIERS FROM', stand_at: 'STATION A FORCE AT' };
 
   function drawMarks() {
-    g.setTransform(1, 0, 0, 1, 0, 0); g.drawImage(baseCanvas, 0, 0);
+    g.setTransform(1, 0, 0, 1, 0, 0); g.drawImage(baseCanvas, 0, 0); orderHits = [];
     var u = PX / 100;
     function ring(v, r, colour, alpha, dash, width) { var c = cpx(v); g.save(); g.globalAlpha = alpha; g.strokeStyle = colour; g.lineWidth = (width || 2.4) * u; g.setLineDash(dash ? [6 * u, 5 * u] : []); g.beginPath(); g.arc(c[0], c[1], r * u, 0.15, 6.5); g.stroke(); g.restore(); return c; }
     if (arcDraft && !$('card').hidden) { (function (a) {
@@ -811,7 +822,7 @@ body.watched .gives { display: none !important; }
     var intents = M.state ? M.state.intents.filter(function (i) { return i.in_force && !i.parent; }) : [];
     // The intents' own rings and words give way to a plan shown on the chart, and their words keep their size as the commander leans in.
     var iz = planZoom(); g.save(); g.font = '700 ' + Math.round(12 * u * iz) + "px 'Courier Prime', monospace";
-    if (!planMarks) intents.forEach(function (it, k) { var v = intentPlace(it); if (!v) return; var c = ring(v, 30 + k * 4, '#1f4e8c', 1, false, 2.8); g.fillStyle = '#12335c'; g.fillText('ORDER ' + it.number + ' · ' + (WORD[it.kind] || it.kind.toUpperCase()), c[0] + (36 + k * 4) * u, c[1] + (4 + k * 14 * iz) * u); });
+    if (!planMarks) intents.forEach(function (it, k) { var v = intentPlace(it); if (!v) return; var c = ring(v, 30 + k * 4, '#1f4e8c', 1, false, 2.8); g.fillStyle = '#12335c'; var ot = 'ORDER ' + it.number + ' · ' + (WORD[it.kind] || it.kind.toUpperCase()), ox = c[0] + (36 + k * 4) * u, oy = c[1] + (4 + k * 14 * iz) * u; g.fillText(ot, ox, oy); orderHits.push({ x: ox, y: oy - 12 * u * iz, w: g.measureText(ot).width, h: 16 * u * iz, pad: 4 * u, order: it.number }); });
     g.restore();
     if (draft) ring(draft.v, 30, '#1f4e8c', 1, true, 2.2);
     // Where the side's own forces are, marked on the chart itself with a ring
@@ -1055,17 +1066,20 @@ body.watched .gives { display: none !important; }
   }
   var TOLD = { contact: 'A contact is reported', attack: 'You are attacked', loss: 'A ship is lost or out of action', strike: 'Your strike is away', landing: 'Your men are ashore, or fighting' };
   function showSignals() {
-    var box = $('signals'), s = M.state; box.textContent = ''; $('papers').textContent = ''; $('papers-staff').textContent = ''; $('leave-slot').textContent = '';
+    var box = $('signals'), s = M.state; box.textContent = ''; $('papers').textContent = ''; $('papers-staff').textContent = ''; $('leave-slot').textContent = ''; $('holds-list').textContent = '';
     if (M.over) { var endSlip = slip('THE UMPIRE', 'ENDED', 'The campaign is over', endLine(), true); endSlip.classList.add('opens'); endSlip.tabIndex = 0; endSlip.setAttribute('role', 'button'); endSlip.addEventListener('click', readEnd); endSlip.appendChild(el('div', 'told', 'READ HOW IT ENDED \u203A')); if (!endShown) { endShown = true; readEnd(); } }
     lastTold.forEach(function (t) { var a = slip('FROM THE PLOT · ' + (clock.at === 'dusk' ? '1800' : clock.at), 'STOPPED THE CLOCK', TOLD[t.thing] || t.thing, null, true); t.lines.slice(0, 10).forEach(function (l) { a.appendChild(rich('div', 'told', l)); }); if (t.lines.length > 10) a.appendChild(el('div', 'told', 'And ' + (t.lines.length - 10) + ' more: see the war diary.')); });
+    // What is held from the staff is kept in the Staff menu, folded, with its count: it is a standing state, not a signal.
     (s.holds || []).forEach(function (h) {
-      var a = slip('HELD FROM THE STAFF', null, null, null), args = {}, what = null; ['ship', 'task_force', 'air_group', 'land_unit', 'setting'].forEach(function (k) { if (h.target && h.target[k] != null) { args[k] = h.target[k]; if (k !== 'setting' && !what) what = k + ':' + h.target[k]; } });
+      var a = el('div', 'hold'), args = {}, what = null; ['ship', 'task_force', 'air_group', 'land_unit', 'setting'].forEach(function (k) { if (h.target && h.target[k] != null) { args[k] = h.target[k]; if (k !== 'setting' && !what) what = k + ':' + h.target[k]; } });
       // A hold is made by the commander's hold (made_by "command") or by his direct order to the unit: the words say which.
       var since = h.day != null ? String(h.day) : (/day (\d+)/.exec(h.text || '') || [])[1];
       var how = h.made_by === 'command' ? ', kept out of the staff\'s plans by you' + (since ? ' from day ' + since : '') : ', held by your direct order' + (since ? ' of day ' + since : '');
-      a.appendChild(what ? rich('div', '', what + how) : el('div', '', h.text));
-      if (!WATCH) button(a, 'RELEASE TO THE STAFF', false, function () { act('release', args, 'Released. The staff may use it again from dusk.'); });
+      a.appendChild(what ? rich('span', '', what + how) : el('span', '', h.text));
+      if (!WATCH) { var r = document.createElement('button'); r.type = 'button'; r.textContent = 'Release'; r.title = 'Release to the staff'; r.addEventListener('click', function () { act('release', args, 'Released. The staff may use it again from dusk.'); }); a.appendChild(r); }
+      $('holds-list').appendChild(a);
     });
+    (function () { var n = (s.holds || []).length, d = $('holds-staff'); d.hidden = !n; d.querySelector('summary').textContent = 'Held from the staff \u00B7 ' + n; })();
     // A plan that waits for the commander's leave has one notice, below, which
     // opens its order: the clock's own slip for it would say the same twice.
     if (lastRun && lastRun.fired) lastRun.fired.forEach(function (f) {
@@ -1292,7 +1306,7 @@ body.watched .gives { display: none !important; }
     api('get_entity', { handle: h }).then(function (a) {
       var e = a.entity; if (!e) { var no = openCard(nameOf(h).toUpperCase(), null); no.appendChild(el('div', '', 'Nothing is held of it.')); return; }
       if (e.entity_kind === 'air_group') { var x = e.summary, body = openCard(x.air_group.name.toUpperCase(), 'YOURS', true); turnTo(x.place);
-        kv(body, [['Aircraft', x.aircraft_type], ['Ready', x.ready + ' of ' + e.strength + (x.damaged ? ', ' + x.damaged + ' damaged' : '')], ['Mission', String(x.mission).replace(/_/g, ' ') + (x.stood_down ? ', stood down' : '')], ['Fatigue', x.fatigue], ['Claims to date', (function (c) { if (!c) return null; var w = []; if (c.shot_down) w.push(c.shot_down + ' shot down'); if (c.on_ground) w.push(c.on_ground + ' on the ground'); if (c.hits) w.push(c.hits + (c.hits === 1 ? ' hit' : ' hits') + ' on ships'); return w.length ? w.join(', ') : null; })(x.claimed_to_date || e.claimed_to_date)], ['Strike radius', x.strike_radius_nm + ' miles'], ['Search range', x.search_range_nm + ' miles']]);
+        kv(body, [['Aircraft', x.aircraft_type], ['Type', airKind(x)], ['Ready', x.ready + ' of ' + e.strength + (x.damaged ? ', ' + x.damaged + ' damaged' : '')], ['Mission', String(x.mission).replace(/_/g, ' ') + (x.stood_down ? ', stood down' : '')], ['Fatigue', x.fatigue], ['Claims to date', (function (c) { if (!c) return null; var w = []; if (c.shot_down) w.push(c.shot_down + ' shot down'); if (c.on_ground) w.push(c.on_ground + ' on the ground'); if (c.hits) w.push(c.hits + (c.hits === 1 ? ' hit' : ' hits') + ' on ships'); return w.length ? w.join(', ') : null; })(x.claimed_to_date || e.claimed_to_date)], ['Strike radius', x.strike_radius_nm + ' miles'], ['Search range', x.search_range_nm + ' miles']]);
         var kvg = body.querySelector('.kv'); if (kvg && x.location) { if (x.location.name) M.names[x.location.handle] = String(x.location.name).replace(/^Placeholder /, ''); kvg.appendChild(el('span', '', 'Based at')); kvg.appendChild(rich('span', '', x.location.handle)); }
         if (x.location) siblings(M.air.filter(function (y) { return y.location && y.location.handle === x.location.handle; }).map(function (y) { return y.air_group.handle; }), h, 'of the groups there');
         airOrder(body, e, h); return; }
@@ -1381,6 +1395,13 @@ body.watched .gives { display: none !important; }
   }
   // An air group as a row of a list: its name, its aircraft and what they are
   // for on the left; how many are ready and what it is doing on the right.
+  // What kind of aircraft a group flies, from its role and what it attacks ships with.
+  function airKind(x) {
+    if (x.role === 'fighter') return 'Fighter';
+    if (x.role === 'patrol') return x.attack_weapon === 'torpedoes' ? 'Patrol aircraft, carries a torpedo' : x.attack_weapon === 'bombs' ? 'Patrol aircraft, carries bombs' : 'Patrol aircraft';
+    if (x.role === 'bomber') return x.attack_weapon === 'torpedoes' ? 'Torpedo bomber' : 'Bomber';
+    return null;
+  }
   function airLine(x) { return x.air_group.handle + ', ' + String(x.aircraft_type).replace(/^\S+ (?=\S*\d)/, '') + (x.role ? ' (' + x.role + ')' : '') + ' · ' + String(x.mission).replace(/_/g, ' ') + ': ' + x.ready + '/' + (x.ready + x.damaged); }
   // The share of a group's aircraft on hand that are ready to fly.
   function airLevel(x) { var all = x.ready + x.damaged; return all > 0 ? x.ready / all : null; }
@@ -3225,7 +3246,7 @@ body.watched .gives { display: none !important; }
   function up(e) {
     delete ptrs[e.pointerId]; if (!Object.keys(ptrs).length) canvas.classList.remove('dragging'); pinch0 = 0;
     if (picking && downAt && e.type === 'pointerup' && Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y) < 6) { var p = onTable(e.clientX, e.clientY); if (p && Math.abs(p.x) <= TW / 2 && Math.abs(p.z) <= TD / 2) (picking === 'force' ? pickForce : picking === 'route' ? pickRoute : pick)(p); }
-    else if (!picking && !playing && downAt && e.type === 'pointerup' && Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y) < 6) { var q = onTable(e.clientX, e.clientY); var hit = tileAt(e.clientX, e.clientY); if (hit) touch(hit); else if (q && Math.abs(q.x) <= TW / 2 && Math.abs(q.z) <= TD / 2) look(q); }
+    else if (!picking && !playing && downAt && e.type === 'pointerup' && Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y) < 6) { var q = onTable(e.clientX, e.clientY); var hit = tileAt(e.clientX, e.clientY), ord = hit ? null : orderAt(q); if (hit) touch(hit); else if (ord != null) readPlan(ord); else if (q && Math.abs(q.x) <= TW / 2 && Math.abs(q.z) <= TD / 2) look(q); }
     downAt = null;
   }
   canvas.addEventListener('pointerup', up); canvas.addEventListener('pointercancel', up);
@@ -3274,7 +3295,7 @@ body.watched .gives { display: none !important; }
     o.hidden = !n && !$('leave-slot').children.length; o.textContent = 'Orders \u00B7 ' + n;
     [].forEach.call($('papers').querySelectorAll('.mark'), function (m) { due += parseInt(m.textContent, 10) || 0; }); if (due) { var a = document.createElement('span'); a.className = 'mark'; a.textContent = String(due); o.appendChild(a); }
     due = 0; [].forEach.call($('papers-staff').querySelectorAll('.mark'), function (m) { due += parseInt(m.textContent, 10) || 0; });
-    st.hidden = !$('papers-staff').children.length; st.textContent = 'Staff'; if (due) { var b = document.createElement('span'); b.className = 'mark'; b.textContent = String(due); st.appendChild(b); }
+    st.hidden = !$('papers-staff').children.length && !$('holds-list').children.length; st.textContent = 'Staff' + ($('holds-list').children.length ? ' \u00B7 ' + $('holds-list').children.length + ' held' : ''); if (due) { var b = document.createElement('span'); b.className = 'mark'; b.textContent = String(due); st.appendChild(b); }
     if (o.hidden) $('pop-orders').hidden = true; if (st.hidden) $('pop-staff').hidden = true;
   }
   new MutationObserver(menuWords).observe($('pop-orders'), { childList: true, subtree: true }); new MutationObserver(menuWords).observe($('pop-staff'), { childList: true, subtree: true });
