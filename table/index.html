@@ -1297,7 +1297,7 @@ body.watched .gives { display: none !important; }
   function hungerWord(u) { return parseFloat(u.fed_share) >= 1 ? 'Mending' : 'Short of food'; }
   function cardUnit(u) {
     var body = openCard(u.land_unit.name.toUpperCase(), 'YOURS', true);
-    var kvu = kv(body, [['Men ashore', u.men_ashore ? commas(u.men_ashore) : null], ['Men aboard', u.men_aboard ? commas(u.men_aboard) : null], ['Where', u.place ? hexWords(u.place) : 'aboard ship'], ['Posture', u.posture], ['Doing', u.activity], ['Fatigue', u.fatigue], ['Fed last night', fedWords(u)], [hungerWord(u), u.hunger_nights ? u.hunger_nights + (u.hunger_nights === 1 ? ' night' : ' nights') : null], ['Condition', u.fighting_share != null ? Math.floor(parseFloat(u.fighting_share) * 100) + '%' : null], ['Experience', u.experience]]);
+    var kvu = kv(body, [['Men ashore', u.men_ashore ? commas(u.men_ashore) : null], ['Men aboard', u.men_aboard ? commas(u.men_aboard) : null], ['Where', u.place ? placeLink(u.place) : 'aboard ship'], ['Posture', u.posture], ['Doing', u.activity], ['Fatigue', u.fatigue], ['Fed last night', fedWords(u)], [hungerWord(u), u.hunger_nights ? u.hunger_nights + (u.hunger_nights === 1 ? ' night' : ' nights') : null], ['Condition', u.fighting_share != null ? Math.floor(parseFloat(u.fighting_share) * 100) + '%' : null], ['Experience', u.experience]]);
     if (u.hunger_nights && parseFloat(u.fed_share) < 1) Promise.all([M.day, M.day - 1].map(dayEvents)).then(function (all) { var tonight = all[0].some(function (e) { return e.pulse === 'night'; }) ? all[0] : all[1], last = tonight.filter(function (e) { return e.event_kind === 'hunger_nights_changed' && e.pulse === 'night' && (e.entities || []).some(function (x) { return x.handle === u.land_unit.handle; }); }).pop(), m = last && /hungry (\d+) nights, from (\d+)/.exec(last.text); if (m && +m[1] > +m[2]) { [].slice.call(kvu.children).forEach(function (c) { if (c.textContent === 'Short of food') c.textContent = 'Hungry'; }); } });
     if ((u.aboard || []).length) { listOf(body, 'ABOARD', u.aboard.map(function (a) { return a.ship.handle + ': ' + commas(a.men); }), 'men'); }
    
@@ -1337,6 +1337,16 @@ body.watched .gives { display: none !important; }
   // from the map itself.
   function hexMiles() { var a = hexAt['0,0'], b = hexAt['1,0']; if (!a || !b) return 40; var rad = Math.PI / 180, dlat = (b[3] - a[3]) * rad, dlon = (b[4] - a[4]) * rad, h = Math.pow(Math.sin(dlat / 2), 2) + Math.cos(a[3] * rad) * Math.cos(b[3] * rad) * Math.pow(Math.sin(dlon / 2), 2); return Math.round(2 * 3440.065 * Math.asin(Math.sqrt(h)) / 5) * 5; }
   function round(n) { return showHexes ? n + ' hexes round' : 'within ' + n * hexMiles() + ' miles'; }
+  // A place on a card: its latitude and longitude with the hex in brackets,
+  // and a press turns the chart to it.
+  function placeLink(pl) {
+    var h = hexAt[pl.q + ',' + pl.r], lat = pl.lat != null ? pl.lat : h && h[3], lon = pl.lon != null ? pl.lon : h && h[4], known = M.hexNames[pl.q + ',' + pl.r], hex = '(' + pl.q + ', ' + pl.r + ')';
+    var words = lat == null || lon == null ? '' : dm(lat, 'N', 'S') + ' ' + dmLon(runLon(lon));
+    var s = el('span', ''), b = el('button', 'ref', known || words || hex); b.type = 'button'; b.title = 'Show on the chart'; b.addEventListener('click', function (e) { e.stopPropagation(); turnTo(pl); }); s.appendChild(b);
+    if (known && words) s.appendChild(document.createTextNode(' \u00B7 ' + words));
+    if (known || words) s.appendChild(document.createTextNode(' ' + hex));
+    return s;
+  }
   function hexWords(pl) { var known = M.hexNames[pl.q + ',' + pl.r]; return known || whereIs(pl); }
   // The unit a card is of, for the way from the card to its own diary.
   var cardHandle = null, wantDiary = null;
@@ -1406,7 +1416,7 @@ body.watched .gives { display: none !important; }
   // The share of a group's aircraft on hand that are ready to fly.
   function airLevel(x) { var all = x.ready + x.damaged; return all > 0 ? x.ready / all : null; }
   function airList(body, title, groups) { listOf(body, title, groups.map(airLine), 'ready', groups.map(airLevel)); }
-  function kv(body, rows) { var g = el('div', 'kv'); rows.forEach(function (r) { if (r[1] == null || r[1] === '') return; g.appendChild(el('span', '', r[0])); g.appendChild(el('span', '', String(r[1]))); }); body.appendChild(g); return g; }
+  function kv(body, rows) { var g = el('div', 'kv'); rows.forEach(function (r) { if (r[1] == null || r[1] === '') return; g.appendChild(el('span', '', r[0])); g.appendChild(r[1] && r[1].nodeType ? r[1] : el('span', '', String(r[1]))); }); body.appendChild(g); return g; }
   // A list on a card: a name on the left and its figure on the right, one row
   // each, with what the figure counts said once in the heading. A long list
   // shows its first rows and folds the rest.
@@ -1549,7 +1559,7 @@ body.watched .gives { display: none !important; }
   }
   function cardContact(t) {
     var c = t.contact, body = openCard('CONTACT ' + num(c.contact.handle), 'ENEMY');
-    kv(body, [['Reported', c.ship_count + ' ship' + (c.ship_count === 1 ? '' : 's')], ['Taken for', c.taken_for && String(c.taken_for.kind || c.taken_for).replace(/_/g, ' ')], ['Where', hexWords(c.place)], ['Age', pulsesOld(c.age_pulses)]]);
+    kv(body, [['Reported', c.ship_count + ' ship' + (c.ship_count === 1 ? '' : 's')], ['Taken for', c.taken_for && String(c.taken_for.kind || c.taken_for).replace(/_/g, ' ')], ['Where', placeLink(c.place)], ['Age', pulsesOld(c.age_pulses)]]);
     var how = el('div'); body.appendChild(how);
     api('get_entity', { handle: c.contact.handle }).then(function (a) {
       var ev = a.entity && a.entity.last_report_event; if (ev == null) return;
@@ -1563,7 +1573,7 @@ body.watched .gives { display: none !important; }
   function cardPlace(t) {
     var pl = t.place, name = (t.base && t.base.base.name) || M.hexNames[pl.q + ',' + pl.r], body = openCard((name || (t.sea ? 'OPEN WATER' : 'LAND')).toUpperCase(), t.base ? 'ENEMY BASE' : null);
     var est = M.estimates.filter(function (e) { return sameHex(e.place, pl); })[0], here = M.contacts.filter(function (c) { return sameHex(c.place, pl); });
-    kv(body, [['Where', whereIs(pl)]]);
+    kv(body, [['Where', placeLink(pl)]]);
     // What is believed of the place, a line for each thing held, each with
     // where it came from and how old it is. A thing not held has no line.
     if (est) { body.appendChild(el('div', 'sub', 'MEN ASHORE')); kv(body, [['Estimate', 'About ' + commas(est.men) + ' men'], ['From', est.came_from], ['Age', daysOld(est)]]); }
@@ -1578,11 +1588,11 @@ body.watched .gives { display: none !important; }
     var giver = f.fuel_from && M.forces.filter(function (o) { return o.task_force.handle === f.fuel_from.handle; })[0], giverName = f.fuel_from && nameOf(f.fuel_from.handle, f.fuel_from.name);
     var doing = !f.fuel_from ? f.status.replace(/_/g, ' ') + (f.destination ? ', for ' + hexWords(f.destination) : '')
       : giver && sameHex(giver.place, f.place) ? 'fuelling at sea from ' + giverName : 'steaming to ' + giverName + ', to fuel at sea from it';
-    kv(body, [['Kind', f.mission.replace(/_/g, ' ')], ['Where', hexWords(f.place)], ['Doing', doing],
+    kv(body, [['Kind', f.mission.replace(/_/g, ' ')], ['Where', placeLink(f.place)], ['Doing', doing],
       ['Not before', f.available_from > M.day ? dateOf(f.available_from - 1) + ' (day ' + f.available_from + ')' : null],
       ['Speed', f.speed], ['Readiness', f.readiness + (f.alert ? ', alert' : '')], ['Fatigue', f.fatigue],
       ['Cargo', f.cargo_supply_t != null ? commas(f.cargo_supply_t) + ' t supply, ' + commas(f.cargo_fuel_t || 0) + ' t fuel' : null],
-      ['Shortest legs', f.least_fuelled ? f.least_fuelled.ship.name.replace(/^Placeholder /, '') + ': ' + commas(f.least_fuelled.fuel_t) + ' t, ' + commas(f.least_fuelled.range_nm) + ' miles at cruising speed' : null],
+      ['Range', f.least_fuelled ? commas(f.least_fuelled.range_nm) + ' miles at cruise \u00B7 ' + f.least_fuelled.ship.name.replace(/^Placeholder /, '').replace(/^./, function (c) { return c.toUpperCase(); }) + ' runs dry first' : null],
       ['In whose hands', held ? (held.made_by === 'command' ? 'Yours: you keep it out of the staff\'s plans.' : 'Yours, by your direct order. The staff plans round it.') : 'The staff\'s']]);
     // Ordering a force is done from its card, so the buttons stand at the head of it.
     if (!WATCH && !M.over && !playing && !(f.available_from > M.day)) { var row = el('div', 'row'), b = el('button', '', 'GIVE A DIRECT ORDER'); b.type = 'button'; b.addEventListener('click', function () { orderForce(f); }); row.appendChild(b);
@@ -1601,7 +1611,7 @@ body.watched .gives { display: none !important; }
   }
   function cardBase(t) {
     var b = t.base, h = b.base.handle, dos = b.days_of_supply || {}, body = openCard(b.base.name.toUpperCase(), 'YOURS', true);
-    kv(body, [['Where', whereIs(b.place)], ['Supply', commas(b.supply_t) + ' t'], ['Ammunition', b.ammunition_t != null ? commas(b.ammunition_t) + ' t' : null], ['Fuel for ships', commas(b.fuel_t) + ' t'],
+    kv(body, [['Where', placeLink(b.place)], ['Supply', commas(b.supply_t) + ' t'], ['Ammunition', b.ammunition_t != null ? commas(b.ammunition_t) + ' t' : null], ['Fuel for ships', commas(b.fuel_t) + ' t'],
       ['Days of supply', dos.days != null ? dayCount(dos.days) + ' at ' + aboutTons(dos.planned_use_t) + ' t a day' : 'No figure: nothing is planned to be used here today'],
       // The map gives a size of airfield or none; a base with aircraft flying from it has one all the same, of no size given, so no line is shown.
       ['Airfield', b.airfield_size ? 'size ' + b.airfield_size : M.air.some(function (x) { return x.location && x.location.handle === h; }) ? null : 'none'], ['Port', b.port_size ? 'size ' + b.port_size : 'none']]);
