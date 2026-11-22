@@ -222,3 +222,44 @@ Read on the team's report, its screenshots and the page's checks before merging.
 - **The step control reads NEXT DAY** where the game is played by days. It read "One day"; the plan's word is kept.
 - **The plan paper's tally still counts a waiting plan once for each task under it** ("2 wait for you" for one plan). It is to count plans, and is mended in stage 2 with the plan's line under YOUR ORDERS.
 - **Not tried by the team and owed before stage 4 closes:** a force asking leave to pursue in the column; an interrupt's reasons opened as a paper; the keyboard alone.
+
+## As built: stage 2
+
+**The two tools** are the session's, in `crates/sim-agent/src/queued.rs` and `session.rs`; nothing in `sim-core` changes. Both are tools of every seat, listed after `end_day`, and neither is the watcher's.
+
+- `queued` lists what the seat has queued: its orders for the next pulse, its orders for dusk and its commands, in that order. Each entry carries its place (`queue` and `number`), the unit and the order or the tool and the command in the side's numbers, its words, when it acts (`acts`, `acts_words`), `goes_with` and `rests_on`. The answer carries an `as_of` token that changes whenever the queues change or the clock moves.
+- `take_back {queue, number, as_of}` withdraws one entry and what goes with it: a hold goes with the last queued order to its unit, and the commands that name a new intent go with the `set_intent` that makes it. The tool takes them out, judges what is left again by the engine's own checks, and is refused, changing nothing, where an entry that passes now would fail without them; the refusal names that entry and its place. A stale `as_of`, a place with nothing in it and a game that is over are refused too.
+- The agent interface is 46. Fifteen tests are in `crates/sim-agent/tests/queued_take_back.rs`. Chapter 8's list of tools, chapter 1, `docs/commands.md` and the glossary say the tools. The recorded transcripts are remade, changing in their version alone; the records of the closed proofs are not touched.
+- While the other commander is waited for, `queued` is refused like any call of a seat that is ready, so SIGNED is not read then; nothing can be signed then either. Ruled acceptable.
+
+**The table** (`table/index.html`):
+
+- **A force's card offers the orders on its waters**, below its own controls. "Give an order" and its cue are gone. Nothing was reachable only through it: a touch on open water opens the hex's card with its orders.
+- **YOUR ORDERS** lists each order in force as a link to its plan, with a note where its plan waits. The plan chip's close is now TAKE OFF on that plan's line, while the plan is on the chart. The line "Plans launch: when ready" or "on my word" carries its switch. "No order in force." stands where there is none. The Orders menu and the plan chip are gone; their papers are under STAFF or in the column.
+- **SIGNED is read from `queued`** at load and at every refresh, so it is the same after a reload.
+  - Each entry is a line in the table's words, the unit by name and linked, with "Acts at 0600", "Acts at 1200", "Acts at 1800" or "Waits for 1800".
+  - TAKE BACK is offered while the clock is stopped and the seat may sign. A refused one says NOT TAKEN BACK and why, beside the entry.
+  - An entry that rests on another, or goes with it, is not a line of its own: a hold goes with its order, and a limit with the order to the staff it was signed with.
+  - The commands of a plan's paper and of a card are listed as orders are.
+- **Each outcome is said where it belongs,** through `say(kind, words, home)`, and the outcomes' line is gone:
+  - `refused` is NOT SENT in what was signed.
+  - `signed` is the new entry under SIGNED, marked JUST SIGNED.
+  - `stopped` is WHY.
+  - `picking` and `hint` are a prompt above the chart's controls.
+  - `confirm` is in the GAME menu.
+  - `running` is the head's line.
+  - `failed` is NOT READ on the paper that failed.
+  - `draft` is said to a reader of the screen only.
+- **The plan paper's tally counts plans**, not tasks.
+- **The drawer, under 1100 wide,** is open at load and at every stop. The player may close it, and it stays so until the next stop; it closes when the clock starts. Its head shows a chevron pointing down when closed and up when open, labelled for a reader, and when closed the count of what waits ("1 FOR YOUR DECISION"). With the drawer closed, the two controls that run time hang under the head as a strip: the same elements, moved by CSS.
+
+**Mends on the designer's word, in the same pull request:**
+
+- **The stops speak as the staff.** "A contact is reported" became "We have a contact", "You are attacked" "We are attacked", "Your strike is away" "Our strike is away", and "The staff asks your leave." "We ask your leave." Where the slip's events say which it is, the heading for a loss or for men ashore names it ("We have lost USS Quincy", "Our men are fighting at Lunga"); the general heading is kept where several kinds are in one slip. The game's end stays in the umpire's voice.
+- **Aircraft are named short in those lines.** A type is said as the cards say it: the maker left off, and a Japanese type's long name cut after its designation ("G4M1 aircraft").
+- **A contact card's HOW WE KNOW** gives the date and pulse on a line of their own and the words beneath, from the events' fields: units by name and linked, no handle, the place as latitude and longitude with the hex in brackets, the kind in the plural, in the staff's voice ("VS-5 sighted 14 ships, taken for carriers, at …").
+- **The card's trail** never holds one thing twice running, and BACK never leads to the card it is on. That holds when the card is opened again after a form has closed it. A link in the stop paper starts a new trail. Stepping through a stack does not grow the trail.
+
+`table/check_screen.py` checks each part: YOUR ORDERS and its empty fact, the launch line, SIGNED from `queued` with TAKE BACK, the outcomes' homes, that the removed parts are gone, the drawer, the chevron and the strip, the trail, and that no card text shows a handle. `PAGE_LOAD_CALLS` gains `queued`.
+
+Left for later stages: an air group's mission and its arc are two entries under SIGNED; SINCE still names an aircraft type in full and gives a position without its hex; the prompt while a place is picked covers the zoom-in control in a narrow window.
