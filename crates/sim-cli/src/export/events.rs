@@ -1199,6 +1199,34 @@ pub(super) fn describe(
             "submarine_entered",
             d.id("submarine", *submarine).hex("hex", *hex),
         ),
+        EventKind::SubmarineSteamed {
+            submarine,
+            from,
+            to,
+        } => (
+            "submarine_steamed",
+            d.id("submarine", *submarine)
+                .hex("from", *from)
+                .hex("to", *to),
+        ),
+        EventKind::SubmarineOnStation { submarine, hex } => (
+            "submarine_on_station",
+            d.id("submarine", *submarine).hex("hex", *hex),
+        ),
+        EventKind::SubmarineLeftForHome {
+            submarine,
+            base,
+            reason,
+        } => (
+            "submarine_left_for_home",
+            d.id("submarine", *submarine)
+                .id("base", *base)
+                .text("reason", reason.name()),
+        ),
+        EventKind::SubmarineReachedHome { submarine, base } => (
+            "submarine_reached_home",
+            d.id("submarine", *submarine).id("base", *base),
+        ),
         EventKind::UnitEntered {
             unit,
             side,

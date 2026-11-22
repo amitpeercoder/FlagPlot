@@ -525,6 +525,38 @@ impl DetachReason {
     }
 }
 
+/// Why a submarine left for home (decision 0218, 3, 21 and 43).
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+pub enum SubmarineLeftReason {
+    /// Her scenario's leave day came.
+    LeaveDay,
+    /// She was damaged.
+    Damaged,
+    /// She has no salvo left.
+    NoSalvo,
+}
+
+impl SubmarineLeftReason {
+    /// A stable number for the reason. Never renumber it; add new reasons at
+    /// the end.
+    pub const fn code(self) -> u8 {
+        match self {
+            SubmarineLeftReason::LeaveDay => 1,
+            SubmarineLeftReason::Damaged => 2,
+            SubmarineLeftReason::NoSalvo => 3,
+        }
+    }
+
+    /// The reason as the event log writes it.
+    pub const fn name(self) -> &'static str {
+        match self {
+            SubmarineLeftReason::LeaveDay => "her leave day came",
+            SubmarineLeftReason::Damaged => "she was damaged",
+            SubmarineLeftReason::NoSalvo => "she had no salvo left",
+        }
+    }
+}
+
 /// The way a report is passed between commands (decision 0135, 3 to 5).
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Debug)]
 pub enum Direction {
@@ -2302,6 +2334,37 @@ pub enum EventKind {
         submarine: SubmarineId,
         hex: Hex,
     },
+    /// A submarine on passage steamed in the pulse (decision 0218, 43): from
+    /// the hex she was in to the hex she is in. Cites the order that sent
+    /// her, or the event that sent her home, if there is one. Her own
+    /// side's, whole; the enemy is told nothing. Added at the end.
+    SubmarineSteamed {
+        submarine: SubmarineId,
+        from: Hex,
+        to: Hex,
+    },
+    /// A submarine reached her station (decision 0218, 43): she is on
+    /// station from the next pulse. Cites her steaming. Her own side's,
+    /// whole; the enemy is told nothing. Added at the end.
+    SubmarineOnStation {
+        submarine: SubmarineId,
+        hex: Hex,
+    },
+    /// A submarine left her station for the base her scenario names
+    /// (decision 0218, 3, 21 and 43), for `reason`. Her own side's, whole;
+    /// the enemy is told nothing. Added at the end.
+    SubmarineLeftForHome {
+        submarine: SubmarineId,
+        base: BaseId,
+        reason: SubmarineLeftReason,
+    },
+    /// A submarine reached her home base and is taken off the map
+    /// (decision 0218, 43). Cites her steaming. Her own side's, whole; the
+    /// enemy is told nothing. Added at the end.
+    SubmarineReachedHome {
+        submarine: SubmarineId,
+        base: BaseId,
+    },
 }
 
 impl EventKind {
@@ -2488,8 +2551,16 @@ impl EventKind {
                 .into_iter()
                 .chain(task_force.map(EntityRef::TaskForce))
                 .collect(),
-            EventKind::SubmarineEntered { submarine, .. } => {
+            EventKind::SubmarineEntered { submarine, .. }
+            | EventKind::SubmarineSteamed { submarine, .. }
+            | EventKind::SubmarineOnStation { submarine, .. } => {
                 vec![EntityRef::Submarine(*submarine)]
+            }
+            EventKind::SubmarineLeftForHome {
+                submarine, base, ..
+            }
+            | EventKind::SubmarineReachedHome { submarine, base } => {
+                vec![EntityRef::Submarine(*submarine), EntityRef::Base(*base)]
             }
             EventKind::ForceBecameAlert { task_force, .. }
             | EventKind::ForceBrokeOff { task_force, .. } => {
@@ -3626,6 +3697,26 @@ impl fmt::Display for EventKind {
             }
             EventKind::SubmarineEntered { submarine, hex } => {
                 write!(f, "{submarine} came onto the map at {hex}")
+            }
+            EventKind::SubmarineSteamed {
+                submarine,
+                from,
+                to,
+            } => write!(f, "{submarine} steamed from {from} to {to}"),
+            EventKind::SubmarineOnStation { submarine, hex } => {
+                write!(f, "{submarine} reached her station at {hex}")
+            }
+            EventKind::SubmarineLeftForHome {
+                submarine,
+                base,
+                reason,
+            } => write!(
+                f,
+                "{submarine} left for {base}, her home: {}",
+                reason.name()
+            ),
+            EventKind::SubmarineReachedHome { submarine, base } => {
+                write!(f, "{submarine} reached {base}, her home, and left the map")
             }
             EventKind::ShipSunk {
                 round,

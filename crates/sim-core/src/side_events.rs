@@ -1333,7 +1333,11 @@ pub(crate) fn seen(kind: &EventKind, side: Side, owners: &Owners, knows_fight: b
         | EventKind::EntryWaiting { side: owner, .. } => whole_if(*owner == side),
         // A submarine's side sees her come onto the map, whole; the enemy is
         // told nothing of it (decision 0218, 13 and 16).
-        EventKind::SubmarineEntered { submarine, .. } => whole_if(own_boat(submarine)),
+        EventKind::SubmarineEntered { submarine, .. }
+        | EventKind::SubmarineSteamed { submarine, .. }
+        | EventKind::SubmarineOnStation { submarine, .. }
+        | EventKind::SubmarineLeftForHome { submarine, .. }
+        | EventKind::SubmarineReachedHome { submarine, .. } => whole_if(own_boat(submarine)),
         // A side sees its own supply lines give, whole: the line's side
         // holds the base on the night it gives. The enemy is told nothing
         // (decision 0196, 3).
@@ -1750,6 +1754,10 @@ fn first_known_round(side: Side, fight: &[Event], owners: &Owners) -> Option<u32
             | EventKind::ForceEntered { .. }
             | EventKind::UnitEntered { .. }
             | EventKind::SubmarineEntered { .. }
+            | EventKind::SubmarineSteamed { .. }
+            | EventKind::SubmarineOnStation { .. }
+            | EventKind::SubmarineLeftForHome { .. }
+            | EventKind::SubmarineReachedHome { .. }
             | EventKind::EntryWaiting { .. }
             | EventKind::StockReceived { .. }
             | EventKind::MenJoined { .. }
@@ -1972,6 +1980,10 @@ fn fight_round(kind: &EventKind) -> Option<u32> {
         | EventKind::ForceEntered { .. }
         | EventKind::UnitEntered { .. }
         | EventKind::SubmarineEntered { .. }
+        | EventKind::SubmarineSteamed { .. }
+        | EventKind::SubmarineOnStation { .. }
+        | EventKind::SubmarineLeftForHome { .. }
+        | EventKind::SubmarineReachedHome { .. }
         | EventKind::EntryWaiting { .. }
         | EventKind::StockReceived { .. }
         | EventKind::MenJoined { .. }
@@ -2338,6 +2350,10 @@ fn count_from_known_round(kind: SideEventKind, known: u32, round_minutes: u32) -
             | EventKind::ForceEntered { .. }
             | EventKind::UnitEntered { .. }
             | EventKind::SubmarineEntered { .. }
+            | EventKind::SubmarineSteamed { .. }
+            | EventKind::SubmarineOnStation { .. }
+            | EventKind::SubmarineLeftForHome { .. }
+            | EventKind::SubmarineReachedHome { .. }
             | EventKind::EntryWaiting { .. }
             | EventKind::StockReceived { .. }
             | EventKind::MenJoined { .. }
@@ -2602,6 +2618,10 @@ fn whole_may_have_hidden_causes(kind: &EventKind) -> bool {
         | EventKind::ForceEntered { .. }
         | EventKind::UnitEntered { .. }
         | EventKind::SubmarineEntered { .. }
+        | EventKind::SubmarineSteamed { .. }
+        | EventKind::SubmarineOnStation { .. }
+        | EventKind::SubmarineLeftForHome { .. }
+        | EventKind::SubmarineReachedHome { .. }
         | EventKind::EntryWaiting { .. }
         | EventKind::StockReceived { .. }
         | EventKind::MenJoined { .. }
@@ -2896,6 +2916,10 @@ pub(crate) fn project(side: Side, log: &[Event], owners: &Owners) -> Vec<SideEve
                     | EventKind::ForceEntered { .. }
                     | EventKind::UnitEntered { .. }
                     | EventKind::SubmarineEntered { .. }
+                    | EventKind::SubmarineSteamed { .. }
+                    | EventKind::SubmarineOnStation { .. }
+                    | EventKind::SubmarineLeftForHome { .. }
+                    | EventKind::SubmarineReachedHome { .. }
                     | EventKind::EntryWaiting { .. }
                     | EventKind::StockReceived { .. }
                     | EventKind::MenJoined { .. }
@@ -5042,6 +5066,42 @@ mod tests {
                 Whole,
                 Nothing,
             ),
+            // A submarine's passage is told to her own side whole and to the
+            // enemy not at all (decision 0218, 43).
+            row(
+                EventKind::SubmarineSteamed {
+                    submarine: SubmarineId::new(1),
+                    from: hex(),
+                    to: hex(),
+                },
+                Whole,
+                Nothing,
+            ),
+            row(
+                EventKind::SubmarineOnStation {
+                    submarine: SubmarineId::new(1),
+                    hex: hex(),
+                },
+                Whole,
+                Nothing,
+            ),
+            row(
+                EventKind::SubmarineLeftForHome {
+                    submarine: SubmarineId::new(1),
+                    base: base(1),
+                    reason: crate::events::SubmarineLeftReason::LeaveDay,
+                },
+                Whole,
+                Nothing,
+            ),
+            row(
+                EventKind::SubmarineReachedHome {
+                    submarine: SubmarineId::new(1),
+                    base: base(1),
+                },
+                Whole,
+                Nothing,
+            ),
         ];
         // Every row is also run in the mirror, with the sides' units swapped.
         rows.shrink_to_fit();
@@ -5082,7 +5142,7 @@ mod tests {
     #[test]
     fn the_table_has_a_row_for_every_kind_of_event() {
         let all = event_kind_names();
-        assert_eq!(all.len(), 165, "the log has 165 kinds of event");
+        assert_eq!(all.len(), 169, "the log has 169 kinds of event");
         let covered: BTreeSet<String> = table()
             .iter()
             .map(|row| kind_name(&row.log[row.at]))

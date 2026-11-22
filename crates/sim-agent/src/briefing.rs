@@ -3011,7 +3011,11 @@ impl Day {
                     EventKind::OrderAccepted { .. } => orders.accepted += 1,
                     // The briefing's part for a side's own boats is a later
                     // phase of decision 0218.
-                    EventKind::SubmarineEntered { .. } => {}
+                    EventKind::SubmarineEntered { .. }
+                    | EventKind::SubmarineSteamed { .. }
+                    | EventKind::SubmarineOnStation { .. }
+                    | EventKind::SubmarineLeftForHome { .. }
+                    | EventKind::SubmarineReachedHome { .. } => {}
                     EventKind::ForceEntered { .. }
                     | EventKind::UnitEntered { .. }
                     | EventKind::EntryWaiting { .. } => {

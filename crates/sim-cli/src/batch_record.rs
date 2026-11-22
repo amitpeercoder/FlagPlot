@@ -1266,6 +1266,10 @@ pub fn count(
             | EventKind::ForceEntered { .. }
             | EventKind::UnitEntered { .. }
             | EventKind::SubmarineEntered { .. }
+            | EventKind::SubmarineSteamed { .. }
+            | EventKind::SubmarineOnStation { .. }
+            | EventKind::SubmarineLeftForHome { .. }
+            | EventKind::SubmarineReachedHome { .. }
             | EventKind::EntryWaiting { .. }
             | EventKind::StockReceived { .. }
             | EventKind::MenJoined { .. }

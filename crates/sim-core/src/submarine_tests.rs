@@ -9,7 +9,7 @@
 //! 3) and boat 1 of it on station at (3,0), the Japanese side's, base 2 as
 //! her home.
 
-use crate::events::EventKind;
+use crate::events::{Cause, EventKind, SubmarineLeftReason};
 use crate::fixed::Fixed;
 use crate::hash::hash_world;
 use crate::hex::Hex;
@@ -431,4 +431,281 @@ fn a_half_of_a_picture_holds_the_sides_own_boats_and_the_joined_picture_both() {
     let picture =
         crate::world_picture::WorldPicture::from_halves(japanese, allied).expect("the halves join");
     assert_eq!(picture.truth.submarines.len(), 2);
+}
+
+// ---- the boat's passage (decision 0218, 3, 21 and 43) ----
+//
+// The class steams 10 knots on a passage: 120 nm in a night, 60 in a morning
+// or an afternoon, a hex 40 nm. She enters a hex 20 nm before its centre.
+
+fn passage_to(to: Hex, home: bool) -> SubmarinePassage {
+    SubmarinePassage {
+        to,
+        home,
+        toward_hex: None,
+        progress_nm: Fixed::ZERO,
+        leg_nm: Fixed::ZERO,
+        arrived: false,
+        order: None,
+    }
+}
+
+/// The movement step of a pulse, with the boat's passage in it.
+fn step(world: &mut World, day: u32, pulse: Pulse) {
+    world.move_task_forces(day, pulse);
+}
+
+fn boat_of(world: &World) -> &Submarine {
+    &world.truth.submarines[&SubmarineId::new(1)]
+}
+
+/// The passage events of boat 1 from event `from` on: (kind, pulse).
+fn passage_events(world: &World, from: usize) -> Vec<(String, Option<Pulse>)> {
+    world
+        .events()
+        .from_index(from)
+        .iter()
+        .filter_map(|event| {
+            let word = match &event.kind {
+                EventKind::SubmarineSteamed { from, to, .. } => format!("steamed {from} {to}"),
+                EventKind::SubmarineOnStation { hex, .. } => format!("on station {hex}"),
+                EventKind::SubmarineLeftForHome { reason, base, .. } => {
+                    format!("left for {base} {}", reason.code())
+                }
+                EventKind::SubmarineReachedHome { base, .. } => format!("reached {base}"),
+                _ => return None,
+            };
+            Some((word, event.pulse))
+        })
+        .collect()
+}
+
+#[test]
+fn a_boat_on_passage_reaches_her_station_at_10_knots_and_is_on_station_from_the_next_pulse() {
+    // From (3,0) to (9,0): 240 nm. The night's 120 take her to the centre of
+    // (6,0); the morning's 60 to the moment she enters (8,0), half way along
+    // the leg to (8,0)'s centre; the afternoon's 60 to the centre of (9,0).
+    let mut one = boat(1);
+    one.station = hx(9, 0);
+    one.passage = Some(passage_to(hx(9, 0), false));
+    let mut world = world_with(vec![one]);
+    let at = |world: &World| {
+        let boat = boat_of(world);
+        (
+            boat.hex,
+            boat.passage.and_then(|p| p.toward_hex),
+            boat.on_station(1),
+        )
+    };
+
+    step(&mut world, 1, Pulse::Night);
+    assert_eq!(at(&world), (hx(6, 0), None, false));
+    // A leg is entered at half its charge: 20 nm along, she is in (7,0).
+    step(&mut world, 1, Pulse::Morning);
+    assert_eq!(at(&world), (hx(8, 0), Some(hx(8, 0)), false));
+    assert_eq!(
+        boat_of(&world).passage.map(|p| (p.progress_nm, p.leg_nm)),
+        Some((Fixed::from_int(20), Fixed::from_int(40)))
+    );
+    assert!(!boat_of(&world).passage.expect("passage").arrived);
+    step(&mut world, 1, Pulse::Afternoon);
+    // She has arrived: the passage stands, marked, for the rest of the pulse.
+    let passage = boat_of(&world).passage.expect("passage");
+    assert!(passage.arrived);
+    assert_eq!(boat_of(&world).hex, hx(9, 0));
+    assert!(!boat_of(&world).on_station(1));
+    assert_eq!(
+        passage_events(&world, 0),
+        vec![
+            ("steamed (3,0) (6,0)".to_string(), Some(Pulse::Night)),
+            ("steamed (6,0) (8,0)".to_string(), Some(Pulse::Morning)),
+            ("steamed (8,0) (9,0)".to_string(), Some(Pulse::Afternoon)),
+            ("on station (9,0)".to_string(), Some(Pulse::Afternoon)),
+        ]
+    );
+    // From the next pulse she is on station and steams no more.
+    let before = world.events().len();
+    step(&mut world, 2, Pulse::Night);
+    assert!(boat_of(&world).passage.is_none());
+    assert!(boat_of(&world).on_station(2));
+    assert!(passage_events(&world, before).is_empty());
+    assert!(crate::invariants::check(&world.truth, &world.map, &world.ref_data).is_empty());
+}
+
+#[test]
+fn a_boat_going_home_on_her_leave_day_is_taken_off_the_map_at_her_base() {
+    // Base 2 is at (5,0), 80 nm from (3,0): she gets there in the night of
+    // her leave day, the second.
+    let mut one = boat(1);
+    one.leave_day = Some(2);
+    let mut world = world_with(vec![one]);
+    step(&mut world, 1, Pulse::Night);
+    step(&mut world, 1, Pulse::Morning);
+    step(&mut world, 1, Pulse::Afternoon);
+    assert!(boat_of(&world).passage.is_none());
+    assert_eq!(boat_of(&world).hex, hx(3, 0));
+    assert!(passage_events(&world, 0).is_empty());
+
+    step(&mut world, 2, Pulse::Night);
+    let events: Vec<_> = world.events().iter().cloned().collect();
+    let kinds: Vec<_> = events
+        .iter()
+        .filter(|event| {
+            matches!(
+                &event.kind,
+                EventKind::SubmarineLeftForHome { .. }
+                    | EventKind::SubmarineSteamed { .. }
+                    | EventKind::SubmarineReachedHome { .. }
+            )
+        })
+        .collect();
+    assert_eq!(kinds.len(), 3);
+    assert_eq!(
+        kinds[0].kind,
+        EventKind::SubmarineLeftForHome {
+            submarine: SubmarineId::new(1),
+            base: HOME,
+            reason: SubmarineLeftReason::LeaveDay,
+        }
+    );
+    assert!(kinds[0].causes.is_empty());
+    assert_eq!(
+        kinds[1].kind,
+        EventKind::SubmarineSteamed {
+            submarine: SubmarineId::new(1),
+            from: hx(3, 0),
+            to: hx(5, 0),
+        }
+    );
+    // Her steaming cites what sent her; her arrival cites her steaming.
+    assert_eq!(kinds[1].causes, vec![Cause::Event(kinds[0].id)]);
+    assert_eq!(
+        kinds[2].kind,
+        EventKind::SubmarineReachedHome {
+            submarine: SubmarineId::new(1),
+            base: HOME,
+        }
+    );
+    assert_eq!(kinds[2].causes, vec![Cause::Event(kinds[1].id)]);
+    let gone = boat_of(&world);
+    assert_eq!(gone.condition, SubmarineCondition::Home);
+    assert!(gone.passage.is_none());
+    assert!(!gone.on_map(2));
+    // Off the map she does nothing more.
+    let before = world.events().len();
+    step(&mut world, 2, Pulse::Morning);
+    step(&mut world, 3, Pulse::Night);
+    assert!(passage_events(&world, before).is_empty());
+    assert!(crate::invariants::check(&world.truth, &world.map, &world.ref_data).is_empty());
+    // Her side is told of it, whole; the enemy is not.
+    let told = |side: Side| {
+        world
+            .side_view(side)
+            .events()
+            .iter()
+            .filter(|event| {
+                matches!(
+                    event.kind,
+                    SideEventKind::Whole(EventKind::SubmarineLeftForHome { .. })
+                        | SideEventKind::Whole(EventKind::SubmarineSteamed { .. })
+                        | SideEventKind::Whole(EventKind::SubmarineReachedHome { .. })
+                )
+            })
+            .count()
+    };
+    assert_eq!(told(Side::Japanese), 3);
+    assert_eq!(told(Side::Allied), 0);
+}
+
+#[test]
+fn a_boat_that_enters_after_her_leave_day_leaves_in_her_first_pulse_and_a_damaged_one_has_no_event()
+{
+    let mut late = boat(1);
+    late.leave_day = Some(1);
+    late.enters_day = Some(3);
+    let mut world = world_with(vec![late]);
+    step(&mut world, 1, Pulse::Night);
+    step(&mut world, 2, Pulse::Night);
+    assert!(passage_events(&world, 0).is_empty());
+    step(&mut world, 3, Pulse::Night);
+    assert_eq!(
+        passage_events(&world, 0)
+            .into_iter()
+            .map(|(word, _)| word)
+            .collect::<Vec<_>>(),
+        vec![
+            "left for base:2 1".to_string(),
+            "steamed (3,0) (5,0)".to_string(),
+            "reached base:2".to_string(),
+        ]
+    );
+
+    // A boat loaded damaged already goes home: no event of leaving, her
+    // steaming cites nothing.
+    let mut hurt = boat(1);
+    hurt.condition = SubmarineCondition::Damaged;
+    hurt.passage = Some(passage_to(hx(5, 0), true));
+    let mut world = world_with(vec![hurt]);
+    step(&mut world, 1, Pulse::Night);
+    assert_eq!(
+        passage_events(&world, 0)
+            .into_iter()
+            .map(|(word, _)| word)
+            .collect::<Vec<_>>(),
+        vec![
+            "steamed (3,0) (5,0)".to_string(),
+            "reached base:2".to_string()
+        ]
+    );
+    assert_eq!(boat_of(&world).condition, SubmarineCondition::Home);
+}
+
+#[test]
+fn send_home_finishes_the_leg_she_is_on_and_does_nothing_for_a_boat_already_going_home() {
+    let mut one = boat(1);
+    one.station = hx(9, 0);
+    one.passage = Some(passage_to(hx(9, 0), false));
+    let mut world = world_with(vec![one]);
+    // The night takes her to the centre of (6,0); the morning's 60 nm to the
+    // moment she enters (8,0), half way along its leg.
+    step(&mut world, 1, Pulse::Night);
+    step(&mut world, 1, Pulse::Morning);
+    let id = SubmarineId::new(1);
+    let toward = boat_of(&world).passage.expect("passage").toward_hex;
+    assert_eq!(toward, Some(hx(8, 0)));
+    let sent = world.send_home(
+        1,
+        Pulse::Morning,
+        id,
+        SubmarineLeftReason::Damaged,
+        Vec::new(),
+    );
+    assert!(sent.is_some());
+    let passage = boat_of(&world).passage.expect("passage");
+    assert!(passage.home);
+    assert_eq!(passage.to, hx(5, 0));
+    // The leg to (8,0) is finished first, then the way back to (5,0).
+    assert_eq!(passage.toward_hex, Some(hx(8, 0)));
+    assert!(world
+        .send_home(
+            1,
+            Pulse::Morning,
+            id,
+            SubmarineLeftReason::NoSalvo,
+            Vec::new()
+        )
+        .is_none());
+    step(&mut world, 1, Pulse::Afternoon);
+    assert_eq!(boat_of(&world).hex, hx(7, 0));
+    step(&mut world, 2, Pulse::Night);
+    assert_eq!(boat_of(&world).condition, SubmarineCondition::Home);
+    assert_eq!(boat_of(&world).hex, hx(5, 0));
+    assert_eq!(
+        [
+            SubmarineLeftReason::LeaveDay.code(),
+            SubmarineLeftReason::Damaged.code(),
+            SubmarineLeftReason::NoSalvo.code()
+        ],
+        [1, 2, 3]
+    );
 }
