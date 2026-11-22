@@ -1,115 +1,123 @@
 # 0212: Fire aboard a ship
 
-Status: a plan by the architect, written on Nov 22, 2026, on the designer's word after 1,000 games of Midway: "Do both", of spreading a strike (decision 0211) and of fire that can destroy a carrier. It takes up what decision 0198's rule 16 left for the designer, a carrier caught with her aircraft aboard, and what decision 0102 deferred, fire that spreads. It is to be read by a reviewer who has not seen it written before anything is built.
+Status: a plan by the architect, written on Nov 22, 2026, on the designer's word after 1,000 games of Midway: "Do both", of spreading a strike (decision 0211) and of fire that can destroy a carrier. It was read by a reviewer who had not seen it written, who built a throwaway of both rules and played 200 games of each scenario for play; the designer then ruled that the rules run in every battle, with values that may differ by side and date where doctrine differed (decision 0213), and research on that doctrine was gathered. This is the plan rewritten on all three. It is to be reviewed again and measured before anything is built.
 
-Summary: Today fire aboard a ship does nothing but light her at night: it does not grow or burn out, and only flooding sinks a ship. So a carrier takes about 27 bomb hits to sink where the record has four lost to two, three and four. This lets a bomb that hits a carrier set fire among the aircraft aboard her, more surely the more of them are aboard and not flying; lets a fire that has taken hold grow or be fought down pulse by pulse; and loses a ship whose fire reaches the top of its scale. It runs where a scenario's figures give it, so no proof and no recorded game moves.
+Summary: Today fire aboard a ship does nothing but light her at night, and only flooding sinks a ship; a carrier takes about 27 bomb hits to sink where the record has carriers lost to two, three and four. This lets a raid whose bombs hit a carrier set her aircraft and their fuel alight, the likelier the more of her aircraft are aboard, and by a chance that differs by side as the two navies' handling of fuel did; lets a fire that has taken hold grow or be fought down pulse by pulse in any ship; and loses a ship whose fire, at the top of its scale, grows again. It runs in every battle.
 
-Standing: Planned on Nov 22, 2026; to be reviewed.
+Standing: Planned on Nov 22, 2026; reviewed and rewritten the same day; to be reviewed again and measured.
 
 ## Why
 
 What is so today (rules chapter 4; `damage.rs`):
 
-- **A ship has two tracks of damage, flotation and fire, each from 0 to 100, and only flotation at 100 sinks her.** A bomb's hit lands on flotation three times in four and on fire once. A hit's points are 100 times the weapon's damage over the ship's toughness.
+- **A ship has two tracks of damage, flotation and fire, each from 0 to 100, and only flotation at 100 sinks her.** A bomb's hit lands on flotation three times in four and on fire once.
 - **"Fire does not grow, spread or burn out, and is not fought."** It lights a ship at night, and at 30 or more her enemy claims her sunk.
-- **A hit on a carrier destroys no aircraft aboard short of sinking her,** and the game keeps nothing of aircraft being on deck, armed or fuelled (decision 0198, rule 110). It does know, when a carrier is hit, how many aircraft are aboard her and how many of them are flying in that pulse.
-- **So by the figures Akagi takes about 26 dive bomber hits to sink, Kaga 27, Soryu 11, Hiryu 12, a Yorktown 14 and Lexington 28.**
+- **A hit on a carrier destroys no aircraft aboard short of sinking her.** The game knows, when a carrier is hit, how many aircraft of her groups are aboard and how many are flying in that pulse, and nothing of their being armed or fuelled.
 
-What the rows hold (`engagement_outcomes.csv`, `engagement_events.csv`):
+What the rows hold (`docs/research/carrier-doctrine-by-navy-and-date.md`; rows 15300 to 15462 of `engagement_outcomes.csv` and those on file before):
 
-| Carrier | Bombs | Torpedoes | What became of her | Rows |
-| --- | --- | --- | --- | --- |
-| Akagi, 4 June | 2, "neither fatal" | 0 | fire over the whole hangar, "induced explosions", pumps failed; abandoned in about 9 hours, scuttled. "Preparing her second attack when hit" | 9300 to 9304 |
-| Kaga, 4 June | 4 at least (unconfirmed) | 0 | fire uncontrollable, spread to the fuel tanks; sank in about 9 hours | 9306 to 9309 |
-| Soryu, 4 June | 3 | 0 | induced explosions in her magazines; abandoned in 20 minutes, sank in about 9 hours | 9311 to 9314 |
-| Hiryu, 4 June | not counted on file (4 and 6 claimed, disputed) | 0 | "fires uncontrollable"; abandoned in about 10 hours, scuttled | 9316 to 9320, 9480, 9481 |
-| Lexington, 8 May | 3 | 2 | an internal explosion an hour and a half after the hits; scuttled in about 8 hours | 4252, 4253, events 2514 |
-| Shokaku, 8 May | 3 | 0 | flight deck wrecked, petrol fires; saved | 4218, 4220 |
-| Yorktown, 8 May | 1 | 0 | saved | 4256 |
-| Yorktown, 4 June | 3 | 2 | fires minor and out in half an hour; abandoned for her list, sunk later by a submarine | 9350 to 9367 |
-| Enterprise, 24 August | 3 | 0 | fires under control in 40 minutes; saved | 181 to 184, 207 |
-| Enterprise, 26 October | 2 | 0 | saved | 4427, 4428 |
-| Zuiho, 26 October | 2 | 0 | saved | events 2601 |
-| Astoria, a cruiser, Savo | | | "uncontrolled fires caused the loss", about 10 hours after | 3969 |
-
-- **Of the carriers that were bombed, five were lost to fire or to what the fire set off and six were saved,** and the hits do not tell them apart: two bombs lost Akagi and three did not lose Enterprise.
-- **What tells some of them apart is on file for one ship only:** Akagi was preparing her second attack. The Japanese carriers held back armed aircraft that morning (engagement events 2172, 2237, unconfirmed). What each ship's deck and hangar held when she was hit is not on file, nor is Japanese damage control, nor Lexington's fuel vapour as a row.
+- **Where a carrier's aircraft were tells the lost from the saved better than her navy does.** Japanese carriers bombed with armed and fuelled aircraft aboard, Akagi, Kaga and Soryu on 4 June, were all lost to fire, after one to four hits (15304, 15306, 15324, 9300 to 9314). Japanese carriers bombed with their strike away, Shokaku twice and Zuiho, were all saved ("no aviation fuel was active", 15418).
+- **Hiryu was lost to fire with most of her aircraft gone:** what she had left was aboard (15314, 15402).
+- **No American carrier was lost in 1942 to a fire a bomb set.** Yorktown at the Coral Sea and at Midway and Hornet at Santa Cruz had drained their gasoline lines and filled them with carbon dioxide before the attack (15340 to 15346); Enterprise's fires of 24 August were under control in 40 minutes (207). The one American carrier hit with fuelled aircraft in her hangar and a live gasoline system, Wasp, was lost to fire, after torpedoes (5100).
+- **The Japanese armed and fuelled in closed hangars; the Americans fuelled on the flight deck** (the Naval Technical Mission's report A-11; Yorktown's reports). No row has a Japanese carrier clearing her lines before an attack in 1942.
+- **The rows do not bear out that Japanese crews fought fires worse in 1942.** That verdict is American and post-war, from interviews, with no ship cited (training facts 15326), and the same report describes schools, a damage control officer in every ship and drills (15327 to 15332). Shokaku's crew saved her twice.
+- **Fire lost ships that carry no aircraft too.** Of the American cruisers and destroyers of 1942 with major fires on file, about four were lost with fire the stated cause (Astoria, Cushing, Monssen, Northampton) and about four saved (San Francisco, Boise, Salt Lake City, Pensacola). What decided it was whether the fire mains and power survived.
+- **The American navy's firefighting changed in dated steps:** fog nozzles and inert gas after Lexington in mid 1942; schools, the manual and diesel pumps in 1943; hangar fires put out in one to four hours in 1944 and 1945. A Japanese change is dated only from mid 1944, and no row says it helped.
 
 ## The rules
 
 ### Where it runs
 
-1. **The rule runs where a scenario's surface combat figures give its six figures,** in a table `[fire]`, all or none. Without the table fire is as it is today, in every rule below.
+1. **The rule runs in every battle,** on the figures below. In the frozen figures the two chances are nothing for both sides, so fire there is as it is today and the hand calculations stand.
+2. **It is of ships in task forces.** A ship in a yard or in port in no force is as today.
 
 ### Fire among the aircraft
 
-2. **A bomb that hits a ship with aircraft aboard may set them on fire.** For each bomb hit on a ship whose class can carry aircraft, after the hit's own effect:
-   - her aircraft aboard are the ready and damaged aircraft of the groups aboard her, less those of them flying in this pulse;
-   - her share aboard is those aircraft over her class's capacity, no more than 1;
-   - the chance is `deck_fire_chance` times the share times the share;
-   - one draw; if it is under the chance, her fire damage rises by `deck_fire_points`, no higher than 100.
-3. **The share is squared** because two things must both be so: the bomb must fall among aircraft, and they must be the ones fuelled and armed, and each is the likelier the more of her aircraft are aboard. A carrier whose strike is away has few aboard and is seldom set alight this way; one caught with nearly all aboard nearly always is.
-4. **A torpedo sets no such fire,** and neither does a shell.
+3. **A raid whose bombs hit a ship that has aircraft aboard may set them alight.** For each raid that scores one bomb hit or more on such a ship in a pulse, if those hits have not sunk her:
+   - her aircraft aboard are the ready and damaged aircraft of the groups aboard her, less those of them flying in the pulse, as a sinking counts them;
+   - her share aboard is those aircraft over those aircraft and the ones flying, the aircraft of her own groups; nothing where she has no aircraft at all;
+   - the chance for one bomb is her side's `aircraft_fire_chance` times the share; the chance for the raid is one less the chance that every bomb fails;
+   - one draw; under the chance, her fire damage becomes 100.
+4. **A torpedo sets no such fire,** and neither does a shell. A ship with no aircraft of her own is not touched by rule 3.
 
 ### A fire that has taken hold
 
-5. **At the end of each pulse, every ship afloat whose fire damage is at or above `fire_takes_hold_at` makes one draw.** Under `fire_spreads_chance` her fire rises by `fire_spread_points`; otherwise it falls by `fire_fought_points`, not below nothing.
-6. **A fire below `fire_takes_hold_at` is as fire is today:** it neither grows nor falls.
-7. **A ship whose fire damage reaches 100 is lost.** She sinks as a ship whose flotation reaches 100 does, with her aircraft aboard and her men, and the record says she was lost to fire. This is so whether the last points came from a hit or from the fire's own growth.
-8. **It is so for every ship, not carriers alone:** a cruiser's fire that has taken hold grows or is fought as a carrier's is. Only rule 2 is of ships that carry aircraft.
+5. **At the end of each pulse, each ship in a task force whose fire damage is at or above `fire_takes_hold_at` makes one draw.** Under her side's `fire_spreads_chance` her fire rises by `fire_step`; otherwise it falls by `fire_step`, not below nothing.
+6. **A ship whose fire would rise above 100 is lost.** She sinks as a ship whose flotation reaches 100 does, with the aircraft aboard her and her men, and the record says she was lost to fire.
+7. **A hit alone does not lose a ship to fire.** Hits raise fire as today, no higher than 100. It is the fire's own growth at the end of a pulse that loses her.
+8. **A fire below `fire_takes_hold_at` is as fire is today.**
 
 ## Figures
 
-9. All are placeholders, each with what it rests on. They are set from the rows above and before any game is run with them, and are not moved to enter a band.
+9. Placeholders, each with what it rests on. They are set from the rows before any game is run with them, and none is moved to enter a band. `aircraft_fire_chance` and `fire_spreads_chance` are figures by side (decision 0213); the other two are one for all.
 
-| Figure | Value | Rests on |
-| --- | --- | --- |
-| `deck_fire_chance` | 1 | a judgement: with every aircraft aboard, a bomb that hits sets them alight. The four carriers of 4 June were lost to two to four bombs each, Akagi to two |
-| `deck_fire_points` | 30 | a judgement: a fire among aircraft has taken hold at once. It is the figure of `fire_takes_hold_at` |
-| `fire_takes_hold_at` | 30 | the fire at which a crew already believes an enemy ship lost (`claimed_sunk_fire`), taken as the fire that is past being put out at once |
-| `fire_spreads_chance` | 0.6 | a judgement from the count of the table: of twelve ships on file with fires worth a row, six were lost to them or to what they set off and six saved them. A fire that has taken hold is given a little better than even to grow in a pulse |
-| `fire_spread_points` | 35 | a judgement from the times: the Japanese carriers were abandoned in 20 minutes to 10 hours, one to three pulses. From 30, two pulses of growth reach 100 |
-| `fire_fought_points` | 20 | a judgement: Enterprise's fires were under control in 40 minutes and out in hours. Two pulses of fighting bring a fire from just past the mark to below it |
+| Figure | Side and date | Value | Rests on |
+| --- | --- | --- | --- |
+| `aircraft_fire_chance` | plain value | 0.3 | no row; between the two below |
+| | Japanese, from the start | 0.6 | a judgement: aircraft armed and fuelled in closed hangars with the fuel system live. The four carriers of 4 June, each with what aircraft she had aboard, were all lost to fire after one to four bombs |
+| | Allied, from May 1942 | 0.15 | a judgement: fuelling on the flight deck, and the lines drained and filled with carbon dioxide before an attack, from the Coral Sea on (15340 to 15346). No American carrier was lost to a fire a bomb set in six bombings |
+| | Allied, from January 1943 | 0.1 | a judgement on dated changes: inert gas, fog nozzles, schools and the firefighting manual |
+| `fire_spreads_chance` | plain value | 0.5 | of the eight American cruisers and destroyers with major fires on file, four were lost and four saved |
+| | Allied, from January 1943 | 0.4 | a judgement on the same dated changes |
+| | Allied, from January 1944 | 0.3 | hangar fires controlled in one to four hours, Franklin and Bunker Hill saved |
+| `fire_takes_hold_at` | | 30 | the fire at which a crew already believes an enemy ship lost (`claimed_sunk_fire`) |
+| `fire_step` | | 25 | a judgement from the times: the Japanese carriers were abandoned in 20 minutes to 10 hours, one to three pulses |
+
+No value by side is given for Japanese firefighting: the rows do not support one for 1942, and the change of 1944 has no row that says it helped.
 
 What they come to, said before a run:
 
-- **A carrier with nearly all her aircraft aboard** (a share of 0.7): each bomb sets fire with a chance of 0.49. Two bombs, 0.74; three, 0.87; four, 0.93.
-- **A carrier whose strike is away** (a share of 0.2): each bomb, 0.04. Three bombs, 0.115.
-- **A fire that has taken hold:** from 30 it reaches 100 before it is fought below the mark in 49 cases of 100, and from 60, after two such fires, in 80. So a carrier with a share of 0.7 hit by three bombs is lost to fire about half the time or a little more, and one with a share of 0.2 hit by three about one time in twenty.
+- **A fire at 100** is lost at the next pulse's end half the time and in the end 3 times in 4; at 75, once in 2; at 50, and for a fire that has just taken hold at 30 to 49, once in 4.
+- **A Japanese carrier with all her aircraft aboard:** one bomb sets them alight 6 times in 10, two bombs 84 in 100, three 94. Three in four of those fires lose her.
+- **An American carrier of 1942 with all aboard:** one bomb 15 in 100, three bombs 39. With half her aircraft away, three bombs 21.
+- **A carrier whose aircraft are all flying** is not set alight this way.
 
 ## What is recorded and who knows
 
-10. **A fire set among aircraft is recorded** for the ship, citing the attack: the aircraft aboard, the share, the chance, and her fire after. **Each pulse's growth or fall is recorded** for the ship, citing the event that last changed her fire. **A ship lost to fire** is recorded as sunk, with fire as the cause, citing that.
-11. **A side sees these for its own ships and nothing of the enemy's.** The enemy's claim already counts a ship with fire of 30 or more as sunk.
-12. **Two draws are new,** each with its own value added at the end: one for a fire among aircraft, on a stream of the ship and the attacking group; one for a fire's growth, on a stream of the ship, by day and pulse.
-13. **No new state.** Fire damage is a field a ship has. The rules label does not rise where no game on file plays differently.
+10. **A fire set among aircraft is recorded** for the ship, citing the raid's attacks: the bombs that hit, the aircraft aboard and flying, the share, the chance, and her fire after. **Each pulse's growth or fall is recorded** for the ship. **A ship lost to fire** is recorded as sunk with fire as the cause.
+11. **A side sees these for its own ships and nothing of the enemy's.**
+12. **Two draws are new,** each with its own value added at the end: one for a raid's fire among aircraft, on a stream of the ship and the raid's first group; one for a fire's growth, on a stream of the ship, by day and pulse.
+13. **A cause is new on the record of a ship sunk,** and nothing is new in a ship's state: fire damage is a field she has.
 
 ## Rule card
 
-Reads: a ship's fire damage, her class's aircraft capacity, the aircraft of the groups aboard her and those flying in the pulse, the figures. Writes: her fire damage; that she is sunk. Draws: two new values.
+Reads: a ship's fire damage and side, the aircraft of the groups aboard her and those flying in the pulse, the bombs a raid put on her, the figures. Writes: her fire damage; that she is sunk. Draws: two new values.
 
 ## Games on file
 
-- **No proof, no validation and no recorded game moves.** The figures go into a file of their own, `data/reference/surface_combat_play.toml`: the live `surface_combat.toml` with the table added and nothing else changed, and a frozen counterpart. The live file and its frozen copy are not changed. The scenarios for play name it, with decision 0211's file: the Coral Sea, the Eastern Solomons over five days, Midway, and the table's copies of the 39 days.
-- **The scenarios for play move,** and their bands are read again on 1,000 games each. The build reports for each, before and after, with decision 0211 on in both so that this rule's own effect is seen: who is ahead; carriers sunk by ship and by cause, flooding or fire; for each carrier lost to fire, the bombs that hit her, her share aboard when each hit, and the pulses from the first fire to her loss; other ships lost to fire.
+It runs everywhere, so games move wherever a carrier with aircraft aboard is bombed or any ship's fire is at 30 or more at a pulse's end. The reviewer's 200 games found ships at such a fire today in every scenario for play: destroyers, cruisers and transports as well as carriers.
+
+- **The frozen figures and the frozen scenarios do not move,** nor the hand calculations on them.
+- **Before it is built it is measured,** on a throwaway outside the repository, with decision 0211: 1,000 games of each scenario for play and of every validation file and proof, the surface battles among them, before and after, each rule alone and both together. What is reported: who is ahead; ships sunk by ship and by cause, flooding or fire; for each ship lost to fire, how the fire began (among aircraft or from hits), the bombs, the share aboard, and the pulses from the fire's beginning to her loss; ships of each kind lost to fire; and for each validation measure and each proof's condition, its value before and after and whether its verdict changes.
+- **The records of closed proofs are not altered.** A proof or a measure whose reading moves is reported to the designer; it is his to say whether a proof is run again and whether a figure is to be looked at.
 
 ## What it does not do
 
-- **It does not keep what a carrier's aircraft are doing** beyond aboard and flying in the pulse. Aircraft aboard are taken as a danger whether struck below, fuelled on deck or neither: the game does not know.
+- **It does not know what a carrier's aircraft are doing** beyond aboard or flying in the pulse. Both sides launch before either lands, so a carrier is "caught" only with what did not fly in that pulse. The moment of 4 June, strike aircraft back aboard and being rearmed as the bombs fell, is not a thing the game's pulse can hold; what stands in for it is the Japanese side's figure.
 - **It does not let a fire destroy aircraft** before the ship is lost, nor close a flight deck.
-- **It does not tell one navy's damage control from another's,** nor a ship built with an armoured deck from one without.
-- **It does not model fuel vapour,** which lost Lexington and Wasp after torpedoes.
-- **It does not let a ship lost to fire be towed or saved by another,** nor be scuttled by choice: at 100 she is gone.
-- **It does not change the fire a shell or a bomb sets today,** which lands on the fire track once in four hits and takes hold only once it has reached the mark.
-- **It does not reach the proofs.** Savo's and Cape Esperance's cruisers, some of which were lost to fire, play as before. Whether the proofs take the rule is the designer's question, with those of hunger and ammunition.
+- **It does not tell a ship with an armoured deck from one without,** nor one crew's training from another's but through her side's figures.
+- **It does not model fuel vapour,** which lost Lexington after torpedoes and bombs and Wasp after torpedoes.
+- **It does not let a ship lost to fire be towed, saved or scuttled by choice.**
+- **It does not give the Japanese side a figure for fighting a fire.**
 
 ## What it costs
 
-- **Six figures, two draws, three records, a step at the end of each pulse and a check at each bomb hit on a ship with aircraft.**
-- **A figures file of its own and its frozen counterpart;** the script that makes the table's copies rewrites a third line.
-- **Carriers are lost far more easily where the rule runs,** on both sides.
+- **Four figures, two of them by side, two draws, three records, a step at the end of each pulse and a check for each raid that bombs a ship with aircraft.**
+- **Ships of every kind can be lost to fire,** in every battle, the surface battles of the proofs among them.
 - **Rulebook:** chapter 4 (what fire does, the end of a pulse, what sinks a ship, the figures, what is left out); chapter 5 where a hit on a carrier is described; chapter 1's order of a pulse, its list of draws and who sees what; the glossary's "Fire damage" and a new "Share aboard".
+- **A scenario of its own and its hand calculation,** written by the architect when the measuring is read and before any code is delegated.
 
 ## Questions for the designer
 
-None before the build. He asked for it. The six figures are placeholders, and what they do to each of the three battles is reported before anything is tuned.
+None before the measuring. What it shows of each battle is put to him before anything is built.
+
+## How the plan changed
+
+- **The share aboard was squared, over the ship's capacity,** which made Akagi the hardest of the four to set alight and gave Hiryu, with few aircraft left and all of them aboard, a small chance. It is now the share of her own aircraft that are aboard, not squared.
+- **The chance was one for both sides,** and in the game as played it fell on the American carriers, hit in the afternoon with everything back aboard, more than on the Japanese, hit in the morning with their strike away. The two navies handled fuel differently, by rows, and the chance is now a figure by side.
+- **A fire among aircraft added 30 for each bomb,** so most carriers were lost at the instant of the hits. It is now one fire for a raid, and a ship is lost only by the fire's growth at a pulse's end.
+- **A hit that took fire to 100 lost the ship,** which turned one hit on a destroyer's fire track into a sinking. Rule 7.
+- **"Every ship afloat"** took in ships in a yard. Rule 2.
+- **The count of fires lost and saved was miscounted** and left out Ryujo and Shokaku at Santa Cruz; the chance of spreading now rests on the cruisers and destroyers, eight ships with rows.
+- **It ran only in the scenarios for play.** By the designer's ruling it runs in every battle.
+- **It had no scenario of its own.** It will.

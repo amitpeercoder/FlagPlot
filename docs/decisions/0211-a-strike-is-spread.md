@@ -1,61 +1,86 @@
 # 0211: A strike is spread over the ships of the kind it wants
 
-Status: a plan by the architect, written on Nov 22, 2026, on the designer's word after 1,000 games of Midway: "Do both", of spreading a strike and of fire that can destroy a carrier (decision 0212). It is to be read by a reviewer who has not seen it written before anything is built.
+Status: a plan by the architect, written on Nov 22, 2026, on the designer's word after 1,000 games of Midway: "Do both", of spreading a strike and of fire that can destroy a carrier (decision 0212). It was read by a reviewer who had not seen it written, who built a throwaway of both rules and played 200 games of each scenario for play; the designer then ruled that the rules run in every battle, with values that may differ by side and date where doctrine differed (decision 0213), and research on that doctrine was gathered. This is the plan rewritten on all three. It is to be reviewed again and measured before anything is built.
 
-Summary: Today every strike group that attacks a force in a pulse attacks the same ship: the first of the kind its list ranks highest, and among several of that kind the lowest-numbered. So four carriers are attacked one at a time, and aircraft are spent on a ship already lost. This takes the groups that attack a force in a pulse in turn and gives each the next ship of the kind it wants, leaving for last a ship that already looks lost. A group is still not divided. It runs where a scenario's air combat figures switch it on, so no proof and no recorded game moves.
+Summary: Today every strike group that attacks a force in a pulse attacks the same ship: the first of the kind its list ranks highest, and among several of that kind the lowest-numbered. So four carriers are attacked one at a time and aircraft are spent on a ship already lost. This lets each carrier's or base's raid take the next ship of the kind it wants, leaving for last a ship that already looks lost. Whether a raid does take the next ship, or falls on the one the raid before it attacked, is a chance that differs by side, as the two navies' practice did. A raid's groups stay together. It runs in every battle.
 
-Standing: Planned on Nov 22, 2026; to be reviewed.
+Standing: Planned on Nov 22, 2026; reviewed and rewritten the same day; to be reviewed again and measured.
 
 ## Why
 
-- **The rule today** (decision 0026, item 9, kept by decision 0063; rules chapter 5; `airstrike/raids.rs`, `ship_to_attack`): a group attacks the best-ranked ship afloat in the force its raid found, the lowest ship number on a tie, chosen on the ships afloat when the pulse's air combat begins. Decision 0026 said of it: "It wastes aircraft on a ship already sinking and never touches the escorts. Spreading a strike is deferred."
-- **What it does** (decision 0198, rules 107 and 108, counted on 1,000 games of Midway): in every pulse with two or more groups attacking a force they attack exactly one ship. Kaga is never attacked while Akagi is afloat. Of the groups after the first in a pulse, 86 in 100 go at a ship an earlier group of that pulse has already hit. At the Coral Sea in the game Yorktown is attacked by 1,135 groups in 200 games and Lexington, in the same force, by 145.
-- **What the rows hold.** On the morning of 4 June three squadrons attacked three carriers: Kaga by nine dive bombers, Soryu by thirteen, Akagi by a number not stated (engagement events 8000 to 8002, preferred). At the Coral Sea on 8 May the Japanese attacked both American carriers of one force, and Lexington and Yorktown were both hit (engagement outcomes 4252, 4253, 4256). Against it: on the same day both American groups attacked Shokaku and none Zuikaku (events 2509 to 2511), for a reason no row gives. A strike was divided over the target by its leader at the Eastern Solomons (outcomes 336, 351) and at Santa Cruz American aircraft attacked two carriers, three cruisers and a battleship (events 2601 to 2606). No row states a doctrine for dividing a strike before launch.
+- **The rule today** (decision 0026, item 9, kept by decision 0063; rules chapter 5; `airstrike/raids.rs`): a group attacks the best-ranked ship afloat in the force its raid found, the lowest ship number on a tie. Decision 0026 said: "It wastes aircraft on a ship already sinking and never touches the escorts. Spreading a strike is deferred."
+- **What it does** (decision 0198, rules 107 and 108): in every pulse with two or more groups attacking a force they attack one ship. At Midway Kaga is never attacked while Akagi is afloat; at the Coral Sea Lexington is all but spared while Yorktown is afloat, and in the record Lexington was the one lost.
+- **What the rows hold** (`docs/research/carrier-doctrine-by-navy-and-date.md`):
+  - **Each carrier's aircraft attacked as a unit.** American groups joined no other group (engagement events 15314 to 15322); the Japanese divided by carrier unit.
+  - **The Japanese divided a strike among the carriers found, by plan.** At Pearl Harbor each attack unit had its target in the order (15331 to 15337, an order reconstructed after the war). At the Coral Sea on 8 May each carrier's aircraft took one American carrier, 26 and 27 aircraft (15342, 15343). In June 1944 the order was each squadron its own target (15359, 15360).
+  - **American groups fell on what their leaders chose and as they arrived.** At the Coral Sea both groups attacked Shoho on 7 May and both Shokaku on 8 May, with Zuikaku in the same force untouched (15320 to 15322, 2509 to 2511). At Midway squadrons of two carriers fell on three (15314 to 15318). The doctrine of 1941 is known here only at second hand and says three things: the farthest target first, divide equally, or by what the groups ahead have attacked (15301 to 15303, low).
+  - **That is two or three cases a side:** enough to say which way the difference runs and not enough to size it.
+- **What the reviewer's 200 games showed of the first plan,** which spread by group: all the dive bombers went at one carrier and all the torpedo planes at another, which no row has; and a ship whose deck was out or that was already sinking was still the first attacked.
 
 ## The rules
 
-1. **The rule runs where a scenario's air combat figures give `spread_strikes = true`.** Without the key, or with it false, a group chooses its ship as today, in every rule below.
-2. **The groups that attack one force in a pulse are taken in turn,** every group of the attacking side whose raid found that force, whatever ship or base it flew from, in the order of the group's number.
-3. **A group's choice is among the ships of the kind it wants:** the ships afloat in the force, when the pulse's air combat begins, that its own target list ranks best. They are every ship of one kind, since a list ranks by kind.
-4. **Ships that look lost are put last.** Those ships are put in order: first the ones whose fire damage is below `claimed_sunk_fire`, by ship number; then the ones at or above it, by ship number. That figure is the fire at which a crew already believes a ship lost (rules chapter 3). It is read on the state when the pulse's air combat begins, as the choice of ship is today.
-5. **The n-th group to want that kind takes the ship in place n,** counting from nothing and going round: the first such group of the pulse takes the first ship of the order, the next the second, and a group past the last ship begins again at the first. Groups that want another kind are counted apart.
-6. **A group is not divided.** All its aircraft attack the one ship, as today.
-7. **Nothing else of the attack changes.** The force a raid attacks is chosen as today. The fighters, the guns, the shots and their draws are as they are: the attack's draws are keyed on the group and the force, not the ship, so the same shots hit or miss. What a hit does follows from the ship it lands on, as today.
-8. **No draw.** It is the way a surface fight already gives each firing ship its target, the ship in place by number (rules chapter 4).
-
-## What a side learns by it
-
-Nothing new. The attacking side is told of its attack without the ship, as now, and its claim names the kind its contact was taken for. The side attacked sees which of its ships were attacked, as now.
-
-## Rule card
-
-Reads: the groups attacking a force in a pulse, each group's target list, the force's ships afloat and their fire damage, `claimed_sunk_fire`. Writes: nothing; the ship each group attacks. Draws: none.
+1. **The rule runs in every battle,** on the figures below. In the frozen figures the chance of rule 5 is nothing for both sides, so a group there chooses its ship as today and the hand calculations stand.
+2. **A raid is the unit.** A raid is the strikes of one pulse from one ship or base at one hex, as now. All the groups of a raid that want one kind of ship attack the same ship of that kind.
+3. **The raids that attack one force in a pulse are taken in turn,** in the order of their first group's number.
+4. **The ships of a kind are put in order, the ones that look lost last.** For the kind a raid's first group ranks best among the force's ships afloat when the pulse's air combat begins: first the ships that do not look lost, by ship number; then those that do, by ship number. A ship looks lost when her flight deck is out, where she has one; or her flotation damage is at or above `crippled_flotation`; or her fire damage is at or above `claimed_sunk_fire`. Each is a figure or a state the game has, read as the choice of ship is read today.
+5. **The first raid takes the first ship of the order. Each raid after it makes one draw:** under its side's `strike_divides_chance` it takes the ship after the one the raid before it took, going round to the first after the last; otherwise it takes the same ship as the raid before it.
+6. **A group of the raid that wants another kind** attacks the first ship of that kind by the same order, as it would today.
+7. **A group is not divided,** and no aircraft goes at a ship of a kind its list ranks lower while one it ranks higher is afloat, as today.
+8. **Nothing else of the attack changes.** The force a raid attacks is chosen as today. The fighters, the guns, the shots and their draws are as they are, keyed on the group and the force. What the ship attacked makes of the attackers is drawn for that ship, as today, so which ship's lookouts draw does follow the choice.
 
 ## Figures
 
-9. **One key, `spread_strikes`, in the air combat figures.** It goes into a figures file of its own, `data/reference/air_combat_play.toml`: the live `air_combat.toml` with the key added and nothing else changed, and a frozen counterpart. The live `air_combat.toml` and its frozen copy are not changed.
-10. **The scenarios for play name that file:** the Coral Sea, the Eastern Solomons over five days and Midway, in their own files, and the table's copies of the 39 days, by the script that makes them. No file a proof or a validation measure plays names it.
+9. **`strike_divides_chance`, in the air combat figures, by side** (decision 0213). Placeholders, each with what it rests on:
+
+| Side and date | Value | Rests on |
+| --- | --- | --- |
+| Plain value | 0.5 | no row; the middle |
+| Japanese, from the start | 1 | a judgement from two cases and a later order: each carrier's aircraft their own carrier at the Coral Sea (15342, 15343), targets by unit in the order for Pearl Harbor (15331 to 15337), each squadron its own target in June 1944 (15359, 15360) |
+| Allied, from the start | 0.5 | a judgement from two cases: both groups on one carrier at the Coral Sea on 7 and on 8 May (15320 to 15322), three carriers attacked at Midway (15314 to 15318). One fell together and one spread |
+
+No later value is given for the Allied side: that American strikes were coordinated over several carriers from 1944 is a lead and not a row.
+
+## What a side learns by it
+
+Nothing new. The attacking side is told of its attack without the ship, as now.
+
+## Rule card
+
+Reads: the raids attacking a force in a pulse, each first group's target list, the force's ships afloat with their flight deck, flotation and fire, `crippled_flotation`, `claimed_sunk_fire`, the side's `strike_divides_chance`. Writes: nothing; the ship each raid attacks. Draws: one new value, for a raid after the first at a force, on a stream of the raid's first group and the force.
 
 ## Games on file
 
-- **No proof, no validation and no recorded game moves:** none names the new file.
-- **The scenarios for play move,** and their bands are read again on 1,000 games each and reported: Midway's, the Coral Sea's, which stood inside the band at 574 to 426, and the Eastern Solomons over five days'. The build reports for each, before and after: who is ahead, carriers sunk by ship, hits on a carrier already sunk or with her deck out, and ships attacked in a pulse.
-- **Tests on file that pin the one ship** play the frozen figures or the live `air_combat.toml`, where the rule is off, and are not changed.
+It runs everywhere, so games move wherever two raids attack a force with two ships of the wanted kind, or a ship that looks lost is afloat beside one that does not.
+
+- **The frozen figures and the frozen scenarios do not move,** nor the hand calculations on them.
+- **Before it is built it is measured,** on a throwaway outside the repository, with decision 0212: 1,000 games of each scenario for play and of every validation file and proof that has air attacks, before and after, each rule alone and both together. What is reported: who is ahead; ships sunk by ship; ships attacked in a pulse; hits on a ship already sunk or that looks lost; and for each validation measure and each proof's condition, its value before and after and whether its verdict changes.
+- **The records of closed proofs are not altered.** A proof whose condition moves is reported to the designer as it now reads; it is his to say whether a proof is run again.
+- **Recorded games and saves** are remade as at any change of a rule.
 
 ## What it does not do
 
-- **It does not divide a group among ships,** nor send aircraft at the escorts while a ship of the wanted kind is afloat.
-- **It does not choose by a ship's size or by what she is doing,** only by her number and by whether she looks lost.
-- **It does not carry the turn from one pulse to the next:** each pulse begins again at the first ship of the order.
+- **It does not divide a group or a raid among ships,** nor send aircraft at the escorts while a ship of the wanted kind is afloat. At the Coral Sea about one Japanese aircraft in twenty went at an escort, and at Santa Cruz groups that found no carrier attacked cruisers.
+- **It does not carry the turn from one pulse to the next.**
 - **It does not let a commander say how a strike is to be divided.**
-- **It does not change which force a raid attacks** where two forces lie in one hex, as the two American forces at Midway do: every Japanese strike still goes at the force with the lower number.
+- **It does not change which force a raid attacks** where two forces lie in one hex.
+- **It does not give the Allied side a later value.**
 
 ## What it costs
 
-- **One key and a change to how a group's ship is chosen;** the choice now needs every group attacking the force in the pulse, across raids, where today each group chooses alone.
-- **A figures file of its own and its frozen counterpart,** named by the scenarios for play; the script that makes the table's copies rewrites a second line.
-- **Rulebook:** chapter 5 (the ship a group attacks, and "One ship" among what is left out); the glossary's "Raid" where it says what a group attacks.
+- **One figure by side, one draw, and the choice of ship made for a raid with the raids before it in view,** where today each group chooses alone.
+- **Carriers of a force are attacked together,** so each is hit less and, as the rules of damage stand, sunk less often: the reviewer's 200 games of Midway had Akagi sunk in 4 where she was in 183, and the smaller carriers in her place. It is planned with decision 0212 for that reason.
+- **Rulebook:** chapter 5 (the ship a group attacks, "One ship" among what is left out); chapter 1's list of draws; the glossary's "Raid".
+- **A scenario of its own and its hand calculation,** written by the architect when the measuring is read and before any code is delegated.
 
 ## Questions for the designer
 
-None. He asked for it.
+None before the measuring. What it shows of each battle is put to him before anything is built.
+
+## How the plan changed
+
+- **It spread by group, in the order of the groups' numbers.** A carrier's dive bombers and torpedo planes would never have attacked the same ship. It now spreads by raid, which is a carrier's or a base's aircraft together, as the rows have both navies attack.
+- **"Looks lost" was fire alone,** which today is rare: a carrier with her deck out or sinking was still attacked first. It now takes the deck and flotation too.
+- **It was the same for both sides.** The Japanese divided by plan and the Americans did not always; the chance of taking the next ship is now a figure by side.
+- **It ran only in the scenarios for play.** By the designer's ruling it runs in every battle.
+- **It said the same shots follow whatever ship is chosen and nothing else moves.** The ship attacked draws what she makes of the attackers on her own stream; rule 8 says so.
+- **It had no scenario of its own.** It will.
