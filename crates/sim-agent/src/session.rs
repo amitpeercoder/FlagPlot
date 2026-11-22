@@ -2843,8 +2843,11 @@ impl Session {
             .iter()
             .map(|c| command_words(&coming_view, c))
             .collect();
+        // The settings carried are the side's own, not something tried: they
+        // are in the worlds and left out of the words (decision 0214).
         let course_words: Vec<String> = course
             .iter()
+            .filter(|c| !matches!(c, CommandKind::SetPursuit { .. }))
             .map(|c| command_words(&coming_view, c))
             .collect();
         drop(coming);
