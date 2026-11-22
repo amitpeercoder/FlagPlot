@@ -42,10 +42,16 @@ PAGE_LOAD_CALLS = [
     ("list_contacts", {}),
     ("command_state", {}),
     ("get_briefing", {"text": False}),
+    # On every refresh, not in a watched game: what the seat has queued, for SIGNED (showSigned).
+    ("queued", {}),
     # Once at load, not on refresh: the day's reports for the stop paper's SINCE (loadSince). Its day is the
     # day just fought at dusk, or the day in hand inside one.
     ("events", {"day": 1}),
 ]
+
+
+# What the page asks at load that a seat whose call is held is not answered (not a watcher's read, decision 0182).
+NOT_WHILE_HELD = {"queued"}
 
 
 def check(holds, words):
@@ -82,7 +88,7 @@ def outcomes_said_one_way():
     import re
     with open(os.path.join(HERE, "index.html"), encoding="utf-8") as page:
         text = page.read()
-    check("function say(kind, words)" in text and "setStatus" not in text,
+    check("function say(kind, words, home)" in text and "setStatus" not in text,
           "the page says every outcome through say(kind, words), and nothing else writes the status line")
     kinds = set(re.findall(r"\b(\w+): 1", re.search(r"var SAY_KINDS = \{([^}]*)\}", text).group(1)))
     used = set(re.findall(r"\bsay\('(\w+)'", text))
@@ -100,13 +106,13 @@ def the_stop_paper():
     start = text.index('<aside id="stop"')
     column = text[start:text.index("</aside>", start)]
     parts = ['id="sp-head"', 'id="clock"', 'id="clock-state"', 'id="sp-body"', 'id="sp-seats"', "WHY THE CLOCK STOPPED",
-             "FOR YOUR DECISION", 'id="sp-since"', 'id="sp-foot"']
+             "FOR YOUR DECISION", 'id="sp-since"', 'id="sp-orders"', "YOUR ORDERS", 'id="sp-signed"', "SIGNED", 'id="sp-foot"']
     at = [column.find(p) for p in parts]
     check(all(a >= 0 for a in at) and at == sorted(at),
-          "the stop paper holds, in order: the head with the clock and its state, the seats, WHY THE CLOCK STOPPED, FOR YOUR DECISION, SINCE, the foot")
+          "the stop paper holds, in order: the head with the clock and its state, the seats, WHY THE CLOCK STOPPED, FOR YOUR DECISION, SINCE, YOUR ORDERS with SIGNED, the foot")
     foot = column[column.index('id="sp-foot"'):]
-    check(all(f'id="{b}"' in foot for b in ("status", "btn-intent", "btn-day", "btn-go", "btn-end")),
-          "its foot holds the outcomes' line, Give an order, the step, Carry on and Read how it ended")
+    check(all(f'id="{b}"' in foot for b in ("btn-day", "btn-go", "btn-end")) and not any(f'id="{g}"' in column for g in ("status", "btn-intent")),
+          "its foot holds the step, Carry on and Read how it ended, and no outcomes' line and no Give an order")
     check(">Next day<" in foot and "'Next pulse'" in text, "the step is named for the game: Next day, or Next pulse where the game is played by pulses")
     css = lambda selector: (re.search(re.escape(selector) + r" \{([^}]*)\}", text) or [None, ""])[1]
     check("flex: none" in css(".sp-head") and "flex: none" in css(".sp-foot") and "overflow-y: auto" in css(".sp-body"),
@@ -114,8 +120,9 @@ def the_stop_paper():
     check("--sp-w: 360px" in text and re.search(r"@media \(min-width: 1440px\) \{[^}]*--sp-w: 400px", text)
           and "@media (max-width: 1099px)" in text and "drawer-open" in text,
           "it is 360 wide, 400 from 1440, and a drawer under 1100")
-    check(not any(old in text for old in ('id="plot"', 'class="tray"', 'class="bar"', 'id="btn-in"', "--bar-h")),
-          "the reports panel, the signals tray, the bar at the foot and the in-tray button are gone")
+    check(not any(old in text for old in ('id="plot"', 'class="tray"', 'class="bar"', 'id="btn-in"', "--bar-h", 'id="btn-intent"', 'id="btn-orders"', 'id="pop-orders"',
+                                          'id="planchip"', 'id="status"', "$('status')", "#planchip")),
+          "the reports panel, the signals tray, the bar at the foot, the in-tray button, Give an order, the Orders menu, the plan chip and the outcomes' line are gone")
     view = text[text.index('<div class="view"'):]
     view = view[:view.index("</div>\n</div>") if "</div>\n</div>" in view else 2000]
     check(all(f'id="{b}"' in view for b in ("btn-plans", "btn-pieces", "btn-labels", "btn-hexes", "btn-view", "btn-above", "btn-lean", "btn-back"))
@@ -123,12 +130,73 @@ def the_stop_paper():
           "the chart's controls are at its foot: plans, pieces, names, hexes, table or from above, and the zoom")
     menus = text[text.index('<div class="menus"'):]
     menus = menus[:menus.index("</div>")]
-    check(all(f'id="{b}"' in menus for b in ("btn-orders", "btn-staff", "btn-game")) and 'id="btn-agent"' in text[text.index('id="pop-game"'):],
-          "the menus at the top right are Orders, Staff and Game, and the agent's seat is under Game")
+    check(all(f'id="{b}"' in menus for b in ("btn-staff", "btn-game")) and 'id="btn-orders"' not in menus and 'id="btn-agent"' in text[text.index('id="pop-game"'):],
+          "the menus at the top right are Staff and Game, and the agent's seat is under Game")
     check("right: 16px" in css(".order") and "setViewOffset" in text,
           "cards and order forms open at the right, and the chart turns to the middle of what is not covered")
     check("pressed[p.number] = true" in text and "!pressed[p.number]" in text and "needSaid[" in text and "taskWords('strong'" in text,
           "the plan's paper gives a plan's APPROVE and CANCEL once, at the topmost task on it, says a need once, and names a task's places")
+
+
+def orders_and_signed():
+    """YOUR ORDERS and SIGNED (decision 0221, stage 2), by the page's text: the orders in force with their empty fact
+    and the leave to launch; SIGNED read from `queued` with TAKE BACK through `take_back`; each outcome in its place; the
+    drawer open at load, with its chevron and its count, and the two controls that run time in sight with it closed."""
+    import re
+    with open(os.path.join(HERE, "index.html"), encoding="utf-8") as page:
+        text = page.read()
+    check("YOUR ORDERS" in text and "'No order in force.'" in text and "i.in_force && !i.parent" in text,
+          "YOUR ORDERS lists the orders in force, each a link to its plan's paper, and says \"No order in force.\" when there is none")
+    check("'Plans launch: ' + (given ? 'when ready' : 'on my word')" in text and "act('set_leave', { leave: 'launch', given: !given }" in text,
+          "it says \"Plans launch: when ready\" or \"on my word\", with the switch that gives and withholds the leave")
+    check("api('queued').catch(function () { return null; })" in text and "api('take_back', { queue: e.place.queue, number: e.place.number, as_of: M.queue.as_of })" in text
+          and "'TAKE BACK'" in text and "NOT TAKEN BACK" in text,
+          "SIGNED is read from queued at each refresh, TAKE BACK withdraws one entry by its place and as_of, and a refusal is said beside the entry")
+    check("function canSign() { return !WATCH && !M.over && !playing; }" in text and "if (canSign()) {" in text and "(e.goes_with || [])" in text,
+          "TAKE BACK is offered only while the clock is stopped and the seat may sign; what goes with an entry is not a line of its own")
+    check("'Acts at '" in text and "'Waits for 1800'" in text, "each entry says when it acts, \"Acts at 1200\" or \"Waits for 1800\"")
+    check("refusedIn(home, words)" in text and "'NOT SENT'" in text and "act(tool, args, done, home)" in text,
+          "a refusal is said as NOT SENT in the form, paper or entry that was signed")
+    check("else if (kind === 'confirm') $('game-says')" in text and "else if (kind === 'running')" in text and "'clock-doing'" in text
+          and "showPrompt(kind, words)" in text and "else if (kind === 'draft') $('sr')" in text,
+          "a confirm is said in the GAME menu, what the clock is doing under the head's state, a pick and the first hint in a prompt by the chart's controls, a draft to the live region")
+    check("act(tool, { plan: p.number }, done, row)" in text and "tallied[word]" in text,
+          "the plan paper's tally counts plans, not the tasks under them")
+    column = text[text.index('<aside id="stop"'):text.index("</aside>", text.index('<aside id="stop"'))]
+    check('id="sp-chev"' in column and "The stop paper is closed: open it" in text and "The stop paper is open: close it" in text
+          and "' for your decision'" in text and "role=\"img\"" in column,
+          "the head has a chevron whose label says the paper is open or closed, and the count of what waits for a decision")
+    check("function atStop() { setDrawer(true); }" in text and text.count("atStop();") >= 4 and "function startRun() { setDrawer(false);" in text,
+          "the drawer opens at load and at every stop of the clock; the clock's starting closes it")
+    check(re.search(r"\.stoppaper \.sp-body \{ display: none; \}", text) and not re.search(r"\.stoppaper \.sp-foot \{ display: none", text)
+          and 'id="sp-foot"' in column and 'id="btn-day"' in column and 'id="btn-go"' in column,
+          "with the drawer closed the two controls that run time stay in sight under the head: the same buttons of the foot")
+
+
+def queue_through_the_bridge(bridge):
+    """The two tools SIGNED rests on, as the page calls them: queued lists what was signed, with a unit's hold going with
+    its order, and take_back withdraws one entry and what goes with it, refused with the token out of date."""
+    print("-- queued and take_back, as the page calls them: the Eastern Solomons over five days, the person Allied", flush=True)
+    check(begin(bridge, "eastern-solomons-five-days", "person", "engine") == {"ok": True}, "begun")
+    person = Person(bridge.table)
+    nothing = person.call("queued")["ok"]
+    check(nothing["entries"] == [] and nothing["as_of"], "with nothing signed, queued lists no entry")
+    person.call("hold", {"task_force": 1})
+    person.call("issue_orders", {"orders": [{"unit": "task_force:1", "order": {"kind": "set_speed", "speed": "full"}}]})
+    person.call("set_leave", {"leave": "launch", "given": True})
+    listed = person.call("queued")["ok"]
+    by = {(e["place"]["queue"], e["place"]["number"]): e for e in listed["entries"]}
+    order = [e for e in listed["entries"] if e["what"] == "order"][0]
+    hold = [e for e in listed["entries"] if e.get("tool") == "hold"][0]
+    check(len(listed["entries"]) == 3 and hold["rests_on"] == [order["place"]] and hold["place"] in order["goes_with"],
+          "queued lists the order, the hold that rests on it (which goes with it) and the leave")
+    check("refused" in person.raw("take_back", {"queue": "dusk", "number": 1, "as_of": "not this"}), "a take back with an out of date token is refused")
+    taken = person.call("take_back", {"queue": order["place"]["queue"], "number": order["place"]["number"], "as_of": listed["as_of"]})["ok"]
+    check(len(taken["taken_back"]) == 2 and [e["tool"] for e in taken["queued"]] == ["set_leave"],
+          "take_back withdraws the order and the hold that goes with it, and lists what is left")
+    again = person.call("take_back", {"queue": "commands", "number": 1, "as_of": taken["as_of"]})["ok"]
+    check(again["queued"] == [] and person.call("queued")["ok"]["entries"] == [], "and the leave is taken back too: nothing is queued")
+    check(post(bridge.table + "/new") == {"ok": True}, "the game is put away")
 
 
 def http(method, url, body=None):
@@ -525,7 +593,11 @@ def person_against_agent(bridge, hold):
             check(http("GET", bridge.table + path)[0] == 200, f"on load while held ({when}): {path} answered")
         for tool, arguments in PAGE_LOAD_CALLS:
             answer = person.raw(tool, arguments)
-            check("ok" in answer, f"on load and refresh while held ({when}): {tool} answered")
+            if tool in NOT_WHILE_HELD:
+                # Not a watcher's read: refused while held, and the page does without (SIGNED is empty then; nothing can be signed).
+                check("refused" in answer, f"on load and refresh while held ({when}): {tool} is refused, and the page does without it")
+            else:
+                check("ok" in answer, f"on load and refresh while held ({when}): {tool} answered")
     check(t.answer.get("waiting") is True, f"the person's run, the agent not finished, answers that it waits after {min(hold, 20)} s")
     # A page loaded again picks the wait up, and is answered when the clock moves.
     reloaded = later(person.call, "wait")
@@ -618,6 +690,7 @@ def main():
     page_scripts_parse()
     outcomes_said_one_way()
     the_stop_paper()
+    orders_and_signed()
     if not os.path.exists(args.sim_cli):
         sys.exit(f"{args.sim_cli} is not built: cargo build --release -p sim-cli")
     with tempfile.TemporaryDirectory() as keep:
@@ -626,6 +699,7 @@ def main():
             listed = the_screen(bridge)
             every_game(bridge, listed)
             orders_on_the_card(bridge)
+            queue_through_the_bridge(bridge)
             midway_on_its_chart(bridge)
             person_against_agent(bridge, args.hold)
             seat_mcp(bridge)
