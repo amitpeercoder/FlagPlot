@@ -461,6 +461,48 @@ fn describe_side(kind: &SideEventKind, key: &UmpireKey, at: (u32, Option<Pulse>)
                 .int("hits_on_men", *hits_on_men),
             true,
         ),
+        SideEventKind::OwnSubmarineFired {
+            submarine,
+            hex,
+            torpedoes,
+            taken_for,
+        } => (
+            d.id("submarine", *submarine)
+                .hex("hex", *hex)
+                .int("torpedoes", *torpedoes)
+                .text("taken_for", taken_for.name()),
+            true,
+        ),
+        SideEventKind::SalvoFromSubmarine {
+            task_force,
+            ship,
+            hex,
+            torpedoes,
+            hits,
+        } => (
+            d.id("task_force", *task_force)
+                .id("ship", *ship)
+                .hex("hex", *hex)
+                .int("torpedoes", *torpedoes)
+                .int("hits", *hits),
+            true,
+        ),
+        SideEventKind::OwnSubmarineHunted {
+            submarine,
+            hex,
+            held_down_until,
+            damaged,
+        } => (
+            d.id("submarine", *submarine)
+                .hex("hex", *hex)
+                .int("held_down_until_day", held_down_until.0)
+                .text("held_down_until_pulse", held_down_until.1.name())
+                .flag("damaged", *damaged),
+            true,
+        ),
+        SideEventKind::SubmarineHuntedBy { task_force, hex } => {
+            (d.id("task_force", *task_force).hex("hex", *hex), true)
+        }
         SideEventKind::BaseChangedSide {
             base,
             hex,

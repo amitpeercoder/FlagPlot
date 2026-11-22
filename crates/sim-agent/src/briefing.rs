@@ -3015,7 +3015,11 @@ impl Day {
                     | EventKind::SubmarineSteamed { .. }
                     | EventKind::SubmarineOnStation { .. }
                     | EventKind::SubmarineLeftForHome { .. }
-                    | EventKind::SubmarineReachedHome { .. } => {}
+                    | EventKind::SubmarineReachedHome { .. }
+                    | EventKind::SubmarineAttackChance { .. }
+                    | EventKind::SubmarineSalvo { .. }
+                    | EventKind::SubmarineHunted { .. }
+                    | EventKind::SubmarineSunk { .. } => {}
                     EventKind::ForceEntered { .. }
                     | EventKind::UnitEntered { .. }
                     | EventKind::EntryWaiting { .. } => {
@@ -4537,6 +4541,12 @@ impl Day {
                     weighed_shots: Dec(*weighed_shots),
                     event: id,
                 }),
+                // The briefing's part for a side's own boats and what was
+                // fired at it from the sea is a later phase of decision 0218.
+                SideEventKind::OwnSubmarineFired { .. }
+                | SideEventKind::SalvoFromSubmarine { .. }
+                | SideEventKind::OwnSubmarineHunted { .. }
+                | SideEventKind::SubmarineHuntedBy { .. } => {}
                 SideEventKind::ShoreBombardmentAgainst {
                     base,
                     hex,

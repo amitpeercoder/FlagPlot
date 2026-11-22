@@ -19,15 +19,69 @@
 //! - At the end of a passage she is on station, or, going home, she is
 //!   taken off the map at her base's hex.
 
-use crate::events::{Cause, EventKind, SubmarineLeftReason};
+use crate::damage::{damage_per_hit, system_for_draw, system_hit_chance, DamageSite, HitSet};
+use crate::events::{Breakdown, Cause, DamageTrack, EventKind, Factor, SubmarineLeftReason};
 use crate::fixed::Fixed;
 use crate::hex::Hex;
-use crate::ids::{EventId, SubmarineId};
+use crate::ids::{EntityRef, EventId, ShipId, SubmarineId, TaskForceId};
 use crate::map::Map;
 use crate::movement::HoursInHex;
-use crate::state::{SubmarineCondition, SubmarinePassage};
+use crate::refdata::ShipKind;
+use crate::rng::{Draw, Subsystem};
+use crate::state::{ShipSystem, SubmarineCondition, SubmarinePassage};
 use crate::time::Pulse;
 use crate::world::World;
+
+/// The place of a kind in the order a boat fires at: carrier, battleship,
+/// transport, auxiliary, cruiser (decision 0218, 40). A kind not in it is
+/// not fired at.
+fn target_rank(kind: ShipKind) -> Option<u8> {
+    match kind {
+        ShipKind::Carrier => Some(0),
+        ShipKind::Battleship => Some(1),
+        ShipKind::Transport => Some(2),
+        ShipKind::Auxiliary => Some(3),
+        ShipKind::Cruiser => Some(4),
+        ShipKind::Destroyer => None,
+    }
+}
+
+/// The kinds of ship that hunt a boat that fired on their force (decision
+/// 0218, 9).
+fn is_warship(kind: ShipKind) -> bool {
+    matches!(
+        kind,
+        ShipKind::Carrier | ShipKind::Battleship | ShipKind::Cruiser | ShipKind::Destroyer
+    )
+}
+
+/// The pulse `n` pulses after `(day, pulse)`.
+fn pulses_after(day: u32, pulse: Pulse, n: u32) -> (u32, Pulse) {
+    let index = (day - 1) * 3 + u32::try_from(pulse.code() - 1).expect("a pulse code") + n;
+    (index / 3 + 1, Pulse::ALL[(index % 3) as usize])
+}
+
+/// A pulse as a number that orders pulses in time.
+fn pulse_order(day: u32, pulse: Pulse) -> (u32, u64) {
+    (day, pulse.code())
+}
+
+/// What the attack chance for a pulse is (decision 0218, 39): one less the
+/// chance that every hour fails, worked as one less the hourly chance
+/// multiplied by itself for each whole hour, each product cut, and once
+/// more by one less the hourly chance times the part of an hour left over.
+/// Returns the chance, the miss, the whole hours and the part.
+fn attack_chance(hourly: Fixed, hours: Fixed) -> (Fixed, Fixed, i64, Fixed) {
+    let whole = hours.trunc();
+    let part = hours - Fixed::from_int(whole);
+    let fails = Fixed::ONE - hourly;
+    let mut miss = Fixed::ONE;
+    for _ in 0..whole {
+        miss = miss * fails;
+    }
+    miss = miss * (Fixed::ONE - hourly * part);
+    (Fixed::ONE - miss, miss, whole, part)
+}
 
 /// Steams a boat's passage up to `budget_nm` and returns the miles steamed.
 /// `hex` is where she is (the hex she has entered); it changes when she
@@ -83,14 +137,9 @@ fn steam_passage(
 impl World {
     /// What the submarines do at the end of the movement step of a pulse,
     /// with `hours` the hours each force with a ship afloat spent in each
-    /// hex in it (decision 0218, 37 and 38). This phase works the passage
-    /// only; the attack on the forces in a boat's hex is the next.
-    pub(crate) fn submarines_after_movement(
-        &mut self,
-        day: u32,
-        pulse: Pulse,
-        _hours: &HoursInHex,
-    ) {
+    /// hex in it (decision 0218, 37 and 38): first every boat's passage, then
+    /// every boat's attack.
+    pub(crate) fn submarines_after_movement(&mut self, day: u32, pulse: Pulse, hours: &HoursInHex) {
         let boats: Vec<SubmarineId> = self
             .truth
             .submarines
@@ -98,8 +147,336 @@ impl World {
             .filter(|boat| boat.on_map(day))
             .map(|boat| boat.id)
             .collect();
+        for id in &boats {
+            self.run_passage(day, pulse, *id);
+        }
         for id in boats {
-            self.run_passage(day, pulse, id);
+            self.submarine_attacks(day, pulse, id, hours);
+        }
+    }
+
+    /// The kind of a ship.
+    fn ship_kind(&self, ship: ShipId) -> ShipKind {
+        self.ref_data.ship_classes[&self.truth.ships[&ship].class].kind
+    }
+
+    /// Whether a ship is dead in the water: its propulsion gives no speed,
+    /// as the movement rules decide a ship makes none.
+    fn dead_in_the_water(&self, ship: ShipId) -> bool {
+        self.ref_data
+            .surface_combat
+            .as_ref()
+            .is_some_and(|figures| {
+                figures
+                    .system_factor(
+                        ShipSystem::Propulsion,
+                        self.truth.ships[&ship].systems.propulsion,
+                    )
+                    .is_zero()
+            })
+    }
+
+    /// One boat's attack in the pulse (decision 0218, 4 to 10, 37 to 42):
+    /// the chance for each enemy force that spent hours in her hex, the
+    /// salvo at the force that draws first by the order of kinds, and the
+    /// hunt of her by the force fired on.
+    fn submarine_attacks(&mut self, day: u32, pulse: Pulse, id: SubmarineId, hours: &HoursInHex) {
+        let boat = &self.truth.submarines[&id];
+        let able = boat.condition == SubmarineCondition::Sound
+            && boat.on_station(day)
+            && boat.salvoes > 0
+            && boat.available_from.is_none_or(|from| from <= day)
+            && boat
+                .held_down_until
+                .is_none_or(|(d, p)| pulse_order(d, p) < pulse_order(day, pulse));
+        if !able {
+            return;
+        }
+        let Some(data) = self.ref_data.submarines.as_ref() else {
+            return;
+        };
+        let (side, hex, station_order, class_id) =
+            (boat.side, boat.hex, boat.station_order, boat.class);
+        let class = data.classes[&class_id].clone();
+        let figures = data.figures.clone();
+        let torpedo = data.torpedoes[&class.torpedo].clone();
+        let hit_chance = figures.hit_chance[&class.torpedo];
+
+        // The forces that spent hours in her hex, in number order, each with
+        // its chance and its own draw.
+        let mut drawn: Vec<(u8, TaskForceId, EventId)> = Vec::new();
+        for (force_id, spent) in hours {
+            let Some((_, spent_h)) = spent.iter().find(|(at, h)| *at == hex && *h > Fixed::ZERO)
+            else {
+                continue;
+            };
+            let force = &self.truth.task_forces[force_id];
+            if force.side == side {
+                continue;
+            }
+            let best = force
+                .ships
+                .iter()
+                .filter_map(|ship| target_rank(self.ship_kind(*ship)))
+                .min();
+            let Some(best) = best else {
+                continue;
+            };
+            // A force lying where a base of its own side is not attacked
+            // (decision 0218, 41).
+            if self
+                .truth
+                .bases
+                .values()
+                .any(|base| base.hex == hex && base.side == force.side && base.on_map)
+            {
+                continue;
+            }
+            let dead = force.ships.iter().any(|ship| self.dead_in_the_water(*ship));
+            let multiple = if dead {
+                figures.attacks_ship_dead_in_water
+            } else {
+                Fixed::ONE
+            };
+            let hourly = (figures.attacks_per_hour * multiple).min(Fixed::ONE);
+            let (chance, miss, whole, part) = attack_chance(hourly, *spent_h);
+            let breakdown = self.config.record_breakdowns.then(|| Breakdown {
+                factors: vec![
+                    Factor {
+                        name: "attacks_per_hour",
+                        value: figures.attacks_per_hour,
+                    },
+                    Factor {
+                        name: "attacks_ship_dead_in_water",
+                        value: multiple,
+                    },
+                    Factor {
+                        name: "hours",
+                        value: *spent_h,
+                    },
+                    Factor {
+                        name: "whole_hours",
+                        value: Fixed::from_int(whole),
+                    },
+                    Factor {
+                        name: "part_hour",
+                        value: part,
+                    },
+                    Factor {
+                        name: "miss",
+                        value: miss,
+                    },
+                ],
+                result: chance,
+            });
+            let event = self.events.record(
+                day,
+                Some(pulse),
+                EventKind::SubmarineAttackChance {
+                    submarine: id,
+                    task_force: *force_id,
+                    hex,
+                    hours: *spent_h,
+                    chance,
+                    attacks: hourly,
+                },
+                station_order.map(Cause::Order).into_iter().collect(),
+                breakdown,
+            );
+            let attacks = self
+                .rng_pair(
+                    day,
+                    Some(pulse),
+                    Subsystem::Submarine,
+                    Draw::SubmarineAttack,
+                    EntityRef::Submarine(id),
+                    EntityRef::TaskForce(*force_id),
+                )
+                .chance(chance);
+            if attacks {
+                drawn.push((best, *force_id, event));
+            }
+        }
+        // Of the forces whose draw succeeded she attacks the one whose best
+        // ship ranks first, then the lowest number (rule 6).
+        let Some(&(_, force_id, chance_event)) =
+            drawn.iter().min_by_key(|(rank, f, _)| (*rank, *f))
+        else {
+            return;
+        };
+
+        // The ship aimed at: first by the order of kinds, a ship dead in the
+        // water before another of its kind, then the lowest number (rule 7).
+        let ship_id = self.truth.task_forces[&force_id]
+            .ships
+            .iter()
+            .filter_map(|ship| {
+                target_rank(self.ship_kind(*ship))
+                    .map(|rank| (rank, !self.dead_in_the_water(*ship), *ship))
+            })
+            .min()
+            .map(|(_, _, ship)| ship)
+            .expect("the force has a ship she may fire at");
+        let taken_for = self.ship_kind(ship_id); // phase 3: the kind her side takes it for.
+
+        // The salvo: one salvo of her class, each torpedo the next number of
+        // the stream of the boat and the ship (rule 42).
+        self.truth
+            .submarines
+            .get_mut(&id)
+            .expect("the boat exists")
+            .salvoes -= 1;
+        let mut stream = self.rng_pair(
+            day,
+            Some(pulse),
+            Subsystem::Submarine,
+            Draw::SubmarineTorpedo,
+            EntityRef::Submarine(id),
+            EntityRef::Ship(ship_id),
+        );
+        let results: Vec<bool> = (0..class.salvo)
+            .map(|_| stream.chance(hit_chance))
+            .collect();
+        let hits = u32::try_from(results.iter().filter(|hit| **hit).count()).expect("few hits");
+        let ship_class = &self.ref_data.ship_classes[&self.truth.ships[&ship_id].class];
+        let per_hit = damage_per_hit(torpedo.damage, ship_class.toughness);
+        // A hit may also knock a system down, as a torpedo's hit does in a
+        // surface fight: one draw for each hit, after the torpedoes'.
+        let mut system_hits = Vec::new();
+        if let Some(surface) = self.ref_data.surface_combat.as_ref() {
+            let system_chance = system_hit_chance(per_hit, surface.system_hit_chance_per_point);
+            for _ in 0..hits {
+                let draw = stream.below(Fixed::SCALE.unsigned_abs());
+                let draw = Fixed::from_raw(i64::try_from(draw).expect("a draw fits in i64"));
+                system_hits.extend(system_for_draw(
+                    draw,
+                    system_chance,
+                    &surface.torpedo_system_hit,
+                ));
+            }
+        }
+        let breakdown = self.config.record_breakdowns.then(|| {
+            let mut factors = vec![Factor {
+                name: "hit_chance",
+                value: hit_chance,
+            }];
+            for hit in &results {
+                factors.push(Factor {
+                    name: "torpedo_hit",
+                    value: if *hit { Fixed::ONE } else { Fixed::ZERO },
+                });
+            }
+            Breakdown {
+                factors,
+                result: Fixed::from_int(i64::from(hits)),
+            }
+        });
+        let salvo = self.events.record(
+            day,
+            Some(pulse),
+            EventKind::SubmarineSalvo {
+                submarine: id,
+                task_force: force_id,
+                ship: ship_id,
+                hex,
+                torpedoes: class.salvo,
+                hits,
+                taken_for,
+            },
+            vec![Cause::Event(chance_event)],
+            breakdown,
+        );
+        // phase 3: her side's claim, and the report of a submarine to the
+        // side fired on.
+        let mut track_hits = [0u32; 2];
+        track_hits[DamageTrack::Flotation as usize] = hits;
+        self.apply_hit_set(
+            DamageSite {
+                day,
+                pulse,
+                round: 0,
+            },
+            &HitSet {
+                cause: salvo,
+                target: ship_id,
+                target_force: force_id,
+                damage_per_hit: per_hit,
+                track_hits,
+                system_hits,
+            },
+        );
+
+        // The hunt (rules 9, 10, 22 and 53): a force with a warship afloat
+        // that is not the ship aimed at hunts her, hit or miss.
+        let hunts = self.truth.task_forces[&force_id]
+            .ships
+            .iter()
+            .any(|ship| *ship != ship_id && is_warship(self.ship_kind(*ship)));
+        if hunts {
+            let until = pulses_after(day, pulse, figures.held_down_pulses);
+            let mut stream = self.rng_pair(
+                day,
+                Some(pulse),
+                Subsystem::Submarine,
+                Draw::SubmarineHunt,
+                EntityRef::Submarine(id),
+                EntityRef::TaskForce(force_id),
+            );
+            let damaged = stream.chance(figures.hunt_damages_chance);
+            let sunk = damaged && stream.chance(figures.hunt_sinks_share);
+            let boat = self.truth.submarines.get_mut(&id).expect("the boat exists");
+            boat.held_down_until = Some(until);
+            let hunted = self.events.record(
+                day,
+                Some(pulse),
+                EventKind::SubmarineHunted {
+                    submarine: id,
+                    task_force: force_id,
+                    hex,
+                    held_down_until: until,
+                    damaged,
+                    sunk,
+                },
+                vec![Cause::Event(salvo)],
+                None,
+            );
+            if sunk {
+                let boat = self.truth.submarines.get_mut(&id).expect("the boat exists");
+                boat.condition = SubmarineCondition::Sunk;
+                boat.passage = None;
+                self.events.record(
+                    day,
+                    Some(pulse),
+                    EventKind::SubmarineSunk { submarine: id },
+                    vec![Cause::Event(hunted)],
+                    None,
+                );
+                return;
+            }
+            if damaged {
+                self.truth
+                    .submarines
+                    .get_mut(&id)
+                    .expect("the boat exists")
+                    .condition = SubmarineCondition::Damaged;
+                self.send_home(
+                    day,
+                    pulse,
+                    id,
+                    SubmarineLeftReason::Damaged,
+                    vec![Cause::Event(hunted)],
+                );
+            }
+        }
+        // With no salvo left she goes home as a damaged boat does.
+        if self.truth.submarines[&id].salvoes == 0 {
+            self.send_home(
+                day,
+                pulse,
+                id,
+                SubmarineLeftReason::NoSalvo,
+                vec![Cause::Event(salvo)],
+            );
         }
     }
 

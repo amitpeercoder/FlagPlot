@@ -2365,6 +2365,55 @@ pub enum EventKind {
         submarine: SubmarineId,
         base: BaseId,
     },
+    /// The chance that a submarine attacks a task force that spent `hours`
+    /// of a pulse in her hex (decision 0218, 37 to 39): `attacks` is the
+    /// hourly chance used, with the breakdown of the factors, and `chance`
+    /// is one less the chance that every hour fails. The draw is made on it.
+    /// Cites her station order, if she has one. Neither side is told it: it
+    /// names the enemy force. Added at the end.
+    SubmarineAttackChance {
+        submarine: SubmarineId,
+        task_force: TaskForceId,
+        hex: Hex,
+        hours: Fixed,
+        chance: Fixed,
+        attacks: Fixed,
+    },
+    /// A submarine's salvo at `ship` of `task_force` (decision 0218, 7, 8
+    /// and 42): `torpedoes` fired, `hits` of them hitting; each torpedo's
+    /// chance and result is in the breakdown. `taken_for` is the kind her
+    /// side takes the ship for. Cites the attack chance it was drawn on.
+    /// Each side is given its cut of it: the boat's side that she fired and
+    /// at what kind, the side fired on that its ship was fired at, with no
+    /// boat named. Added at the end.
+    SubmarineSalvo {
+        submarine: SubmarineId,
+        task_force: TaskForceId,
+        ship: ShipId,
+        hex: Hex,
+        torpedoes: u32,
+        hits: u32,
+        taken_for: ShipKind,
+    },
+    /// The force fired on hunts the boat that fired (decision 0218, 9, 10,
+    /// 22 and 53): she is held down to the pulse `held_down_until`, and the
+    /// hunt's draws damaged her or sank her or neither. Cites the salvo.
+    /// Her side is told of it cut of the force, and the force's side that
+    /// it hunted and nothing of the result. Added at the end.
+    SubmarineHunted {
+        submarine: SubmarineId,
+        task_force: TaskForceId,
+        hex: Hex,
+        held_down_until: (u32, Pulse),
+        damaged: bool,
+        sunk: bool,
+    },
+    /// A submarine was sunk (decision 0218, 9 and 22) and is gone from the
+    /// map. Cites the hunt. Her own side's, whole; the enemy is told
+    /// nothing. Added at the end.
+    SubmarineSunk {
+        submarine: SubmarineId,
+    },
 }
 
 impl EventKind {
@@ -2552,6 +2601,7 @@ impl EventKind {
                 .chain(task_force.map(EntityRef::TaskForce))
                 .collect(),
             EventKind::SubmarineEntered { submarine, .. }
+            | EventKind::SubmarineSunk { submarine }
             | EventKind::SubmarineSteamed { submarine, .. }
             | EventKind::SubmarineOnStation { submarine, .. } => {
                 vec![EntityRef::Submarine(*submarine)]
@@ -2562,6 +2612,29 @@ impl EventKind {
             | EventKind::SubmarineReachedHome { submarine, base } => {
                 vec![EntityRef::Submarine(*submarine), EntityRef::Base(*base)]
             }
+            EventKind::SubmarineAttackChance {
+                submarine,
+                task_force,
+                ..
+            }
+            | EventKind::SubmarineHunted {
+                submarine,
+                task_force,
+                ..
+            } => vec![
+                EntityRef::Submarine(*submarine),
+                EntityRef::TaskForce(*task_force),
+            ],
+            EventKind::SubmarineSalvo {
+                submarine,
+                task_force,
+                ship,
+                ..
+            } => vec![
+                EntityRef::Submarine(*submarine),
+                EntityRef::TaskForce(*task_force),
+                EntityRef::Ship(*ship),
+            ],
             EventKind::ForceBecameAlert { task_force, .. }
             | EventKind::ForceBrokeOff { task_force, .. } => {
                 vec![EntityRef::TaskForce(*task_force)]
@@ -3718,6 +3791,53 @@ impl fmt::Display for EventKind {
             EventKind::SubmarineReachedHome { submarine, base } => {
                 write!(f, "{submarine} reached {base}, her home, and left the map")
             }
+            EventKind::SubmarineAttackChance {
+                submarine,
+                task_force,
+                hex,
+                hours,
+                chance,
+                attacks,
+            } => write!(
+                f,
+                "{submarine} had a chance of {chance} to attack {task_force} at {hex}: \
+                 {hours} hours at {attacks} an hour"
+            ),
+            EventKind::SubmarineSalvo {
+                submarine,
+                task_force,
+                ship,
+                hex,
+                torpedoes,
+                hits,
+                taken_for,
+            } => write!(
+                f,
+                "{submarine} fired {torpedoes} torpedoes at {ship} of {task_force} at {hex}, \
+                 taken for a {}: {hits} hit",
+                taken_for.name()
+            ),
+            EventKind::SubmarineHunted {
+                submarine,
+                task_force,
+                hex,
+                held_down_until,
+                damaged,
+                sunk,
+            } => write!(
+                f,
+                "{task_force} hunted {submarine} at {hex}: she is held down to day {} {}{}",
+                held_down_until.0,
+                held_down_until.1.name(),
+                if *sunk {
+                    ", and she was sunk"
+                } else if *damaged {
+                    ", and she was damaged"
+                } else {
+                    ""
+                }
+            ),
+            EventKind::SubmarineSunk { submarine } => write!(f, "{submarine} was sunk"),
             EventKind::ShipSunk {
                 round,
                 ship,

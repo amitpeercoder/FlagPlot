@@ -1270,6 +1270,10 @@ pub fn count(
             | EventKind::SubmarineOnStation { .. }
             | EventKind::SubmarineLeftForHome { .. }
             | EventKind::SubmarineReachedHome { .. }
+            | EventKind::SubmarineAttackChance { .. }
+            | EventKind::SubmarineSalvo { .. }
+            | EventKind::SubmarineHunted { .. }
+            | EventKind::SubmarineSunk { .. }
             | EventKind::EntryWaiting { .. }
             | EventKind::StockReceived { .. }
             | EventKind::MenJoined { .. }

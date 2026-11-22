@@ -1223,6 +1223,58 @@ pub(super) fn describe(
                 .id("base", *base)
                 .text("reason", reason.name()),
         ),
+        EventKind::SubmarineAttackChance {
+            submarine,
+            task_force,
+            hex,
+            hours,
+            chance,
+            attacks,
+        } => (
+            "submarine_attack_chance",
+            d.id("submarine", *submarine)
+                .id("task_force", *task_force)
+                .hex("hex", *hex)
+                .num("hours", *hours)
+                .num("chance", *chance)
+                .num("attacks", *attacks),
+        ),
+        EventKind::SubmarineSalvo {
+            submarine,
+            task_force,
+            ship,
+            hex,
+            torpedoes,
+            hits,
+            taken_for,
+        } => (
+            "submarine_salvo",
+            d.id("submarine", *submarine)
+                .id("task_force", *task_force)
+                .id("ship", *ship)
+                .hex("hex", *hex)
+                .int("torpedoes", *torpedoes)
+                .int("hits", *hits)
+                .text("taken_for", taken_for.name()),
+        ),
+        EventKind::SubmarineHunted {
+            submarine,
+            task_force,
+            hex,
+            held_down_until,
+            damaged,
+            sunk,
+        } => (
+            "submarine_hunted",
+            d.id("submarine", *submarine)
+                .id("task_force", *task_force)
+                .hex("hex", *hex)
+                .int("held_down_until_day", held_down_until.0)
+                .text("held_down_until_pulse", held_down_until.1.name())
+                .flag("damaged", *damaged)
+                .flag("sunk", *sunk),
+        ),
+        EventKind::SubmarineSunk { submarine } => ("submarine_sunk", d.id("submarine", *submarine)),
         EventKind::SubmarineReachedHome { submarine, base } => (
             "submarine_reached_home",
             d.id("submarine", *submarine).id("base", *base),

@@ -54,6 +54,7 @@ use crate::ids::{
     AirGroupId, AircraftTypeId, BaseId, EntityRef, EventId, LandUnitId, OrderId, ShipId,
     SubmarineId, TaskForceId,
 };
+use crate::refdata::ShipKind;
 use crate::state::{Side, TruthState};
 use crate::time::{ClockTime, Pulse};
 
@@ -311,6 +312,38 @@ pub enum SideEventKind {
         hits_on_supply: u32,
         hits_on_men: u32,
     },
+    /// The side's own submarine fired a salvo (decision 0218, 13 and 45):
+    /// that she fired, how many torpedoes and the kind her people took the
+    /// target for. Not the force or the ship, nor what the torpedoes did.
+    OwnSubmarineFired {
+        submarine: SubmarineId,
+        hex: Hex,
+        torpedoes: u32,
+        taken_for: ShipKind,
+    },
+    /// A salvo fired at the side's ship from a submarine (decision 0218,
+    /// 46): that it was fired at, from where and how many torpedoes, and
+    /// how many hit. No boat is named.
+    SalvoFromSubmarine {
+        task_force: TaskForceId,
+        ship: ShipId,
+        hex: Hex,
+        torpedoes: u32,
+        hits: u32,
+    },
+    /// The side's own submarine was hunted (decision 0218, 9 and 22): where,
+    /// until when she is held down and whether she was damaged. Not the
+    /// force that hunted her, nor whether she was sunk, which is told by
+    /// its own event.
+    OwnSubmarineHunted {
+        submarine: SubmarineId,
+        hex: Hex,
+        held_down_until: (u32, Pulse),
+        damaged: bool,
+    },
+    /// The side's own force hunted a submarine (decision 0218, 15): that it
+    /// did and where. Not the boat or what came of it.
+    SubmarineHuntedBy { task_force: TaskForceId, hex: Hex },
 }
 
 /// Why a surface fight ended, as a side is told (decision 0085, F5). It has
@@ -385,6 +418,16 @@ impl SideEventKind {
             SideEventKind::GroundFire { unit, .. } => vec![EntityRef::LandUnit(*unit)],
             SideEventKind::BaseChangedSide { base, .. }
             | SideEventKind::ShoreBombardmentAgainst { base, .. } => vec![EntityRef::Base(*base)],
+            SideEventKind::OwnSubmarineFired { submarine, .. }
+            | SideEventKind::OwnSubmarineHunted { submarine, .. } => {
+                vec![EntityRef::Submarine(*submarine)]
+            }
+            SideEventKind::SalvoFromSubmarine {
+                task_force, ship, ..
+            } => vec![EntityRef::TaskForce(*task_force), EntityRef::Ship(*ship)],
+            SideEventKind::SubmarineHuntedBy { task_force, .. } => {
+                vec![EntityRef::TaskForce(*task_force)]
+            }
             SideEventKind::BombardmentFire { ship, base, .. } => {
                 vec![EntityRef::Ship(*ship), EntityRef::Base(*base)]
             }
@@ -587,6 +630,42 @@ impl fmt::Display for SideEventKind {
                 f,
                 "{task_force} bombarded {base} at {hex}: {shells} shells, {weighed_shots} weighed shots"
             ),
+            SideEventKind::OwnSubmarineFired {
+                submarine,
+                hex,
+                torpedoes,
+                taken_for,
+            } => write!(
+                f,
+                "{submarine} fired {torpedoes} torpedoes at {hex}, at what she took for a {}",
+                taken_for.name()
+            ),
+            SideEventKind::SalvoFromSubmarine {
+                task_force,
+                ship,
+                hex,
+                torpedoes,
+                hits,
+            } => write!(
+                f,
+                "{ship} of {task_force} at {hex} fired on from a submarine: {torpedoes} torpedoes, {hits} {}",
+                if *hits == 1 { "hit" } else { "hits" }
+            ),
+            SideEventKind::OwnSubmarineHunted {
+                submarine,
+                hex,
+                held_down_until,
+                damaged,
+            } => write!(
+                f,
+                "{submarine} was hunted at {hex}, held down to day {} {}{}",
+                held_down_until.0,
+                held_down_until.1.name(),
+                if *damaged { ", damaged" } else { "" }
+            ),
+            SideEventKind::SubmarineHuntedBy { task_force, hex } => {
+                write!(f, "{task_force} hunted a submarine at {hex}")
+            }
             SideEventKind::ShoreBombardmentAgainst {
                 base,
                 hex,
@@ -1333,6 +1412,69 @@ pub(crate) fn seen(kind: &EventKind, side: Side, owners: &Owners, knows_fight: b
         | EventKind::EntryWaiting { side: owner, .. } => whole_if(*owner == side),
         // A submarine's side sees her come onto the map, whole; the enemy is
         // told nothing of it (decision 0218, 13 and 16).
+        // The chance names the enemy force; neither side is told it
+        // (decision 0218, 37).
+        EventKind::SubmarineAttackChance { .. } => Seen::Nothing,
+        // Her side is told that she fired and at what kind; the side fired
+        // on that its ship was, with no boat named (decision 0218, 45, 46).
+        EventKind::SubmarineSalvo {
+            submarine,
+            task_force,
+            ship,
+            hex,
+            torpedoes,
+            hits,
+            taken_for,
+        } => {
+            if own_boat(submarine) {
+                Seen::Cut(SideEventKind::OwnSubmarineFired {
+                    submarine: *submarine,
+                    hex: *hex,
+                    torpedoes: *torpedoes,
+                    taken_for: *taken_for,
+                })
+            } else {
+                cut_if(
+                    own_ship(ship),
+                    SideEventKind::SalvoFromSubmarine {
+                        task_force: *task_force,
+                        ship: *ship,
+                        hex: *hex,
+                        torpedoes: *torpedoes,
+                        hits: *hits,
+                    },
+                )
+            }
+        }
+        // The boat's side is told of the hunt and whether she was damaged;
+        // the force's side that it hunted, and nothing of the result
+        // (decision 0218, 15).
+        EventKind::SubmarineHunted {
+            submarine,
+            task_force,
+            hex,
+            held_down_until,
+            damaged,
+            ..
+        } => {
+            if own_boat(submarine) {
+                Seen::Cut(SideEventKind::OwnSubmarineHunted {
+                    submarine: *submarine,
+                    hex: *hex,
+                    held_down_until: *held_down_until,
+                    damaged: *damaged,
+                })
+            } else {
+                cut_if(
+                    own_force(task_force),
+                    SideEventKind::SubmarineHuntedBy {
+                        task_force: *task_force,
+                        hex: *hex,
+                    },
+                )
+            }
+        }
+        EventKind::SubmarineSunk { submarine } => whole_if(own_boat(submarine)),
         EventKind::SubmarineEntered { submarine, .. }
         | EventKind::SubmarineSteamed { submarine, .. }
         | EventKind::SubmarineOnStation { submarine, .. }
@@ -1450,7 +1592,13 @@ fn own_factors(kind: &SideEventKind) -> &'static [&'static str] {
         | SideEventKind::GroundAttackFailed { .. }
         // A force's bombardment has no breakdown.
         | SideEventKind::ShoreBombardment { .. }
-        | SideEventKind::ShoreBombardmentAgainst { .. } => &[],
+        | SideEventKind::ShoreBombardmentAgainst { .. }
+        // A submarine's salvo and her hunt have no breakdown a side is
+        // given: the chances are the umpire's (decision 0218, 37).
+        | SideEventKind::OwnSubmarineFired { .. }
+        | SideEventKind::SalvoFromSubmarine { .. }
+        | SideEventKind::OwnSubmarineHunted { .. }
+        | SideEventKind::SubmarineHuntedBy { .. } => &[],
         // The side's own ship's guns, rounds and shells, without the chance
         // (decision 0092, 17).
         SideEventKind::BombardmentFire { .. } => &[
@@ -1758,6 +1906,10 @@ fn first_known_round(side: Side, fight: &[Event], owners: &Owners) -> Option<u32
             | EventKind::SubmarineOnStation { .. }
             | EventKind::SubmarineLeftForHome { .. }
             | EventKind::SubmarineReachedHome { .. }
+            | EventKind::SubmarineAttackChance { .. }
+            | EventKind::SubmarineSalvo { .. }
+            | EventKind::SubmarineHunted { .. }
+            | EventKind::SubmarineSunk { .. }
             | EventKind::EntryWaiting { .. }
             | EventKind::StockReceived { .. }
             | EventKind::MenJoined { .. }
@@ -1984,6 +2136,10 @@ fn fight_round(kind: &EventKind) -> Option<u32> {
         | EventKind::SubmarineOnStation { .. }
         | EventKind::SubmarineLeftForHome { .. }
         | EventKind::SubmarineReachedHome { .. }
+        | EventKind::SubmarineAttackChance { .. }
+        | EventKind::SubmarineSalvo { .. }
+        | EventKind::SubmarineHunted { .. }
+        | EventKind::SubmarineSunk { .. }
         | EventKind::EntryWaiting { .. }
         | EventKind::StockReceived { .. }
         | EventKind::MenJoined { .. }
@@ -2354,6 +2510,10 @@ fn count_from_known_round(kind: SideEventKind, known: u32, round_minutes: u32) -
             | EventKind::SubmarineOnStation { .. }
             | EventKind::SubmarineLeftForHome { .. }
             | EventKind::SubmarineReachedHome { .. }
+            | EventKind::SubmarineAttackChance { .. }
+            | EventKind::SubmarineSalvo { .. }
+            | EventKind::SubmarineHunted { .. }
+            | EventKind::SubmarineSunk { .. }
             | EventKind::EntryWaiting { .. }
             | EventKind::StockReceived { .. }
             | EventKind::MenJoined { .. }
@@ -2412,7 +2572,11 @@ fn count_from_known_round(kind: SideEventKind, known: u32, round_minutes: u32) -
         | SideEventKind::GroundAttackFailed { .. }
         | SideEventKind::BombardmentFire { .. }
         | SideEventKind::ShoreBombardment { .. }
-        | SideEventKind::ShoreBombardmentAgainst { .. }) => other,
+        | SideEventKind::ShoreBombardmentAgainst { .. }
+        | SideEventKind::OwnSubmarineFired { .. }
+        | SideEventKind::SalvoFromSubmarine { .. }
+        | SideEventKind::OwnSubmarineHunted { .. }
+        | SideEventKind::SubmarineHuntedBy { .. }) => other,
     }
 }
 
@@ -2472,7 +2636,14 @@ fn may_have_hidden_causes(kind: &SideEventKind) -> bool {
         // An attack that failed cites the enemy's fire beside its own.
         | SideEventKind::GroundAttackFailed { .. }
         // A bombardment of the side's base cites the enemy's ships' fire.
-        | SideEventKind::ShoreBombardmentAgainst { .. } => true,
+        | SideEventKind::ShoreBombardmentAgainst { .. }
+        // A submarine's salvo cites the chance it was drawn on and her
+        // station order, which neither side is given (decision 0218, 37);
+        // the hunt cites the salvo, which the side is given only cut.
+        | SideEventKind::OwnSubmarineFired { .. }
+        | SideEventKind::SalvoFromSubmarine { .. }
+        | SideEventKind::OwnSubmarineHunted { .. }
+        | SideEventKind::SubmarineHuntedBy { .. } => true,
     }
 }
 
@@ -2622,6 +2793,10 @@ fn whole_may_have_hidden_causes(kind: &EventKind) -> bool {
         | EventKind::SubmarineOnStation { .. }
         | EventKind::SubmarineLeftForHome { .. }
         | EventKind::SubmarineReachedHome { .. }
+        | EventKind::SubmarineAttackChance { .. }
+        | EventKind::SubmarineSalvo { .. }
+        | EventKind::SubmarineHunted { .. }
+        | EventKind::SubmarineSunk { .. }
         | EventKind::EntryWaiting { .. }
         | EventKind::StockReceived { .. }
         | EventKind::MenJoined { .. }
@@ -2920,6 +3095,10 @@ pub(crate) fn project(side: Side, log: &[Event], owners: &Owners) -> Vec<SideEve
                     | EventKind::SubmarineOnStation { .. }
                     | EventKind::SubmarineLeftForHome { .. }
                     | EventKind::SubmarineReachedHome { .. }
+                    | EventKind::SubmarineAttackChance { .. }
+                    | EventKind::SubmarineSalvo { .. }
+                    | EventKind::SubmarineHunted { .. }
+                    | EventKind::SubmarineSunk { .. }
                     | EventKind::EntryWaiting { .. }
                     | EventKind::StockReceived { .. }
                     | EventKind::MenJoined { .. }
@@ -2984,7 +3163,11 @@ pub(crate) fn project(side: Side, log: &[Event], owners: &Owners) -> Vec<SideEve
                 | SideEventKind::GroundAttackFailed { .. }
                 | SideEventKind::BombardmentFire { .. }
                 | SideEventKind::ShoreBombardment { .. }
-                | SideEventKind::ShoreBombardmentAgainst { .. } => None,
+                | SideEventKind::ShoreBombardmentAgainst { .. }
+                | SideEventKind::OwnSubmarineFired { .. }
+                | SideEventKind::SalvoFromSubmarine { .. }
+                | SideEventKind::OwnSubmarineHunted { .. }
+                | SideEventKind::SubmarineHuntedBy { .. } => None,
             };
             let hidden_causes = may_have_hidden_causes(&kind);
             let breakdown = side_breakdown(&kind, &event.breakdown);
@@ -5102,6 +5285,57 @@ mod tests {
                 Whole,
                 Nothing,
             ),
+            // A submarine's attack: the chance names the enemy force and is
+            // told to neither; the salvo is told to her side as that she
+            // fired, and to the side fired on as a salvo with no boat named
+            // (decision 0218, 45 and 46).
+            row(
+                EventKind::SubmarineAttackChance {
+                    submarine: SubmarineId::new(2),
+                    task_force: force(1),
+                    hex: hex(),
+                    hours: fx(12),
+                    chance: Fixed::from_ratio(1, 5),
+                    attacks: Fixed::from_ratio(1, 50),
+                },
+                Nothing,
+                Nothing,
+            ),
+            row(
+                EventKind::SubmarineSalvo {
+                    submarine: SubmarineId::new(2),
+                    task_force: force(1),
+                    ship: ship(1),
+                    hex: hex(),
+                    torpedoes: 4,
+                    hits: 2,
+                    taken_for: ShipKind::Carrier,
+                },
+                Cut("SalvoFromSubmarine", &["submarine", "taken_for"]),
+                Cut("OwnSubmarineFired", &["task_force", "ship", "hits"]),
+            ),
+            row(
+                EventKind::SubmarineHunted {
+                    submarine: SubmarineId::new(2),
+                    task_force: force(1),
+                    hex: hex(),
+                    held_down_until: (1, Pulse::Afternoon),
+                    damaged: true,
+                    sunk: false,
+                },
+                Cut(
+                    "SubmarineHuntedBy",
+                    &["submarine", "held_down_until", "damaged", "sunk"],
+                ),
+                Cut("OwnSubmarineHunted", &["task_force", "sunk"]),
+            ),
+            row(
+                EventKind::SubmarineSunk {
+                    submarine: SubmarineId::new(1),
+                },
+                Whole,
+                Nothing,
+            ),
         ];
         // Every row is also run in the mirror, with the sides' units swapped.
         rows.shrink_to_fit();
@@ -5142,7 +5376,7 @@ mod tests {
     #[test]
     fn the_table_has_a_row_for_every_kind_of_event() {
         let all = event_kind_names();
-        assert_eq!(all.len(), 169, "the log has 169 kinds of event");
+        assert_eq!(all.len(), 173, "the log has 173 kinds of event");
         let covered: BTreeSet<String> = table()
             .iter()
             .map(|row| kind_name(&row.log[row.at]))
