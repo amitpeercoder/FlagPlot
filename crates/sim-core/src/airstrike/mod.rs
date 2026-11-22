@@ -150,7 +150,9 @@ use crate::ids::{
 };
 use crate::orders::{AirMission, Reach};
 use crate::pictures::{CommandRef, Holders};
-use crate::refdata::{AirCombatFigures, AttackWeapon, ShipKind, SurfaceCombatFigures};
+use crate::refdata::{
+    AirCombatFigures, AircraftFireFigures, AttackWeapon, ShipKind, SurfaceCombatFigures,
+};
 use crate::rng::{Draw, RngStream, Subsystem};
 use crate::search::{draw_report, ReportDraws};
 use crate::state::{AirGroup, AirGroupLocation, ShipSystem, Side, SystemState};
@@ -160,11 +162,13 @@ use crate::view::strike_review::{ContactVerdict, StrikeStop};
 use crate::world::World;
 
 mod air_combat;
+mod carrier_fire;
 mod claims;
 mod decision;
 mod flight_deck;
 mod ground;
 mod raids;
+mod spread;
 #[cfg(test)]
 mod tests;
 mod wear;
@@ -179,6 +183,7 @@ pub(crate) use decision::{
 pub use decision::{NavalStrike, StrikeChoice, StrikeSizing};
 pub(crate) use flight_deck::able_to_fly;
 pub(crate) use raids::{escort_choice, fighter_split, raids_of_side};
+use spread::{spread_factors, Spread, SpreadChoice};
 
 /// What a strike was launched at: the contact its side held (decision
 /// 0026), or the base it was ordered to strike (decision 0034).

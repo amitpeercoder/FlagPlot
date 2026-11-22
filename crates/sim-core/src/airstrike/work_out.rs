@@ -29,6 +29,7 @@ impl World {
         raid: &Raid,
         fighters: &[FighterGroup],
         meets: PatrolShare,
+        spread: &BTreeMap<AirGroupId, Spread>,
     ) -> RaidResult {
         let first = &raid.strikes[0];
         let escorts_sent: Vec<(AirGroupId, u32, Vec<Cause>)> = raid
@@ -489,9 +490,29 @@ impl World {
                     RaidTarget::Ships(task_force) => {
                         // Each group attacks the ship its own list ranks
                         // first in the force the raid found (decision 4 of
-                        // 0063).
-                        let ship = self.ship_to_attack(strike.air_group, task_force);
-                        self.work_out_attack(day, pulse, strike, *left, (task_force, ship))
+                        // 0063), or, where the strike is spread, the ship
+                        // its raid's turn gave it (decision 0211).
+                        match spread.get(&strike.air_group) {
+                            Some(chosen) => self.work_out_attack(
+                                day,
+                                pulse,
+                                strike,
+                                *left,
+                                (task_force, chosen.ship),
+                                chosen.choice.as_ref(),
+                            ),
+                            None => {
+                                let ship = self.ship_to_attack(strike.air_group, task_force);
+                                self.work_out_attack(
+                                    day,
+                                    pulse,
+                                    strike,
+                                    *left,
+                                    (task_force, ship),
+                                    None,
+                                )
+                            }
+                        }
                     }
                     RaidTarget::Base(base) => {
                         self.work_out_base_attack(day, pulse, strike, *left, base)
@@ -532,6 +553,7 @@ impl World {
         strike: &StrikeInFlight,
         aircraft: u32,
         target: (TaskForceId, ShipId),
+        spread: Option<&SpreadChoice>,
     ) -> Outcome {
         let (task_force, ship) = target;
 
@@ -608,7 +630,7 @@ impl World {
             .collect();
 
         let breakdown = self.config.record_breakdowns.then(|| Breakdown {
-            factors: vec![
+            factors: [
                 Factor {
                     name: "aircraft",
                     value: shots,
@@ -617,7 +639,12 @@ impl World {
                     name: "hit_chance",
                     value: chance,
                 },
-            ],
+            ]
+            .into_iter()
+            // How the ship was chosen, where the strike is spread (decision
+            // 0211, as measured, 6).
+            .chain(spread.map_or_else(Vec::new, |choice| spread_factors(ship, choice)))
+            .collect(),
             result: expected,
         });
         Outcome::Attack(Box::new(Attack {

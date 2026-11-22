@@ -105,7 +105,7 @@ impl World {
                 .truth
                 .ships
                 .get(&ship)
-                .map(|ship| ship.systems.get(ShipSystem::FlightDeck)),
+                .map(|ship| ship.deck_for_flying()),
             _ => None,
         };
         let able = able_to_fly(

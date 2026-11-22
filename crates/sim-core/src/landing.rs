@@ -50,9 +50,7 @@ use crate::ids::{AirGroupId, BaseId, EntityRef, EventId, ShipId};
 use crate::orders::{AirMission, Reach};
 use crate::refdata::{AircraftType, GroundFigures, RefData, ShipKind};
 use crate::rng::{Draw, Subsystem};
-use crate::state::{
-    AirGroup, AirGroupLocation, Base, Ship, ShipLocation, ShipSystem, Side, SystemState,
-};
+use crate::state::{AirGroup, AirGroupLocation, Base, Ship, ShipLocation, Side, SystemState};
 use crate::time::Pulse;
 use crate::upkeep::Sortie;
 use crate::world::World;
@@ -124,7 +122,7 @@ pub(crate) fn carriers_in_hex<'a>(
                     .get(&ship.class)
                     .is_some_and(|class| class.kind == ShipKind::Carrier)
                 && ship.location != ShipLocation::Sunk
-                && ship.systems.get(ShipSystem::FlightDeck) != SystemState::Out
+                && ship.deck_for_flying() != SystemState::Out
                 && ship_hex(ship.id) == Some(hex)
         })
         .map(|ship| CarrierRoom {
@@ -228,8 +226,7 @@ impl World {
         match self.truth.ships.get(&ship) {
             None => false,
             Some(ship) => {
-                ship.location == ShipLocation::Sunk
-                    || ship.systems.get(ShipSystem::FlightDeck) == SystemState::Out
+                ship.location == ShipLocation::Sunk || ship.deck_for_flying() == SystemState::Out
             }
         }
     }

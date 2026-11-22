@@ -151,11 +151,23 @@ pub enum Draw {
     /// raiding or raided, and is made only where the chance is above 0 and
     /// the claim has something to name.
     ClaimType,
+    /// The ship the first raid of a kind at a force draws (decision 0211,
+    /// as measured, 2): one draw, on a stream of the air combat subsystem
+    /// keyed on that raid's first strike group and the force.
+    StrikeSpread,
+    /// Whether a raid's bombs set a carrier's aircraft alight (decision
+    /// 0212, as measured, 3): one draw for the raid, on a stream of the air
+    /// combat subsystem keyed on the ship and the raid's first strike group.
+    AircraftFireSet,
+    /// Whether a fire among a carrier's aircraft rises or falls at a pulse's
+    /// end (decision 0212, as measured, 4): one draw, on a stream of the air
+    /// combat subsystem keyed on the ship, by day and pulse.
+    AircraftFireFought,
 }
 
 impl Draw {
     /// Every value, for the test that their codes differ.
-    pub const ALL: [Draw; 19] = [
+    pub const ALL: [Draw; 22] = [
         Draw::Legacy,
         Draw::Claim,
         Draw::Ditch,
@@ -175,6 +187,9 @@ impl Draw {
         Draw::TrialBelievedHex,
         Draw::TrialBelievedBase,
         Draw::ClaimType,
+        Draw::StrikeSpread,
+        Draw::AircraftFireSet,
+        Draw::AircraftFireFought,
     ];
 
     /// A stable number for the rule. Never renumber. 0 is `Legacy` alone
@@ -200,6 +215,9 @@ impl Draw {
             Draw::TrialBelievedHex => 16,
             Draw::TrialBelievedBase => 17,
             Draw::ClaimType => 18,
+            Draw::StrikeSpread => 19,
+            Draw::AircraftFireSet => 20,
+            Draw::AircraftFireFought => 21,
         }
     }
 }

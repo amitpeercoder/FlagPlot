@@ -2,6 +2,7 @@
 //! hex, in raids, and meets the fighters and guns there (decisions 0026 and
 //! 0027).
 
+use super::carrier_fire::RaidBombs;
 use super::raids::{group_raids, send_escorts};
 use super::*;
 use crate::ids::AircraftTypeId;
@@ -45,10 +46,11 @@ impl World {
                 )
             });
         }
-        let mut ground = {
-            let flying = self.aircraft_flying(pulse, &strikes, &raids, &fighters);
-            self.aircraft_on_the_ground(&strikes, &flying)
-        };
+        let flying = self.aircraft_flying(pulse, &strikes, &raids, &fighters);
+        let mut ground = self.aircraft_on_the_ground(&strikes, &flying);
+        // Each carrier's bombers aboard and flying, counted once here for
+        // the fire among her aircraft (decision 0212, as measured).
+        let bombers_aboard = self.bombers_aboard(&flying);
         // The field of each raided base as it first stood, by the type of
         // each group, before any raid's hits come off the count (decision
         // 0179, 2).
@@ -70,11 +72,27 @@ impl World {
             self.note_strikes(&strikes);
         }
         let shares = self.patrol_shares(&raids, &fighters);
+        // The ship each group attacks where the strike is spread (decision
+        // 0211), on the state at the start of the step.
+        let spread = self.spread_raids(day, pulse, &raids);
         let results: Vec<RaidResult> = raids
             .iter()
             .zip(&shares)
-            .map(|(raid, share)| self.work_out_raid(day, pulse, raid, &fighters, *share))
+            .map(|(raid, share)| self.work_out_raid(day, pulse, raid, &fighters, *share, &spread))
             .collect();
+        // The raid each strike group belongs to, by its index.
+        let raid_of: BTreeMap<AirGroupId, usize> = raids
+            .iter()
+            .enumerate()
+            .flat_map(|(index, raid)| {
+                raid.strikes
+                    .iter()
+                    .map(move |strike| (strike.air_group, index))
+            })
+            .collect();
+        // The bombs each raid put on each ship, for the fire among a
+        // carrier's aircraft (decision 0212).
+        let mut raid_bombs: BTreeMap<(usize, ShipId), RaidBombs> = BTreeMap::new();
         // The patrol of each side over each hex, as it stood at the start of
         // the step: the escorts' hits on it from all the raids come off it
         // in turn, the lowest group first.
@@ -590,6 +608,13 @@ impl World {
                 }
             };
             let attack_event = event;
+            if attack.weapon == Weapon::Bomb && attack.hits > 0 {
+                let entry = raid_bombs
+                    .entry((raid_of[&attack.air_group], attack.ship))
+                    .or_default();
+                entry.bombs += attack.hits;
+                entry.attacks.push(attack_event);
+            }
             let applied = self.apply_hit_set(
                 site,
                 &HitSet {
@@ -668,6 +693,10 @@ impl World {
             );
             self.pass_report(attack.side, &Report::Sighting(report), &holders);
         }
+
+        // A raid's bombs may set a carrier's aircraft alight, once every
+        // attack has landed (decision 0212, as measured, 3).
+        self.set_aircraft_fires(day, pulse, &raids, &raid_bombs, &bombers_aboard);
 
         // Each side that fired in a raid claims what it believes it did, once
         // the raid is resolved (decision 0056).

@@ -814,7 +814,12 @@ pub(crate) fn seen(kind: &EventKind, side: Side, owners: &Owners, knows_fight: b
         | EventKind::CargoUnloaded { ship, .. }
         | EventKind::ShipDamaged { ship, .. }
         | EventKind::SystemHit { ship, .. }
-        | EventKind::ShipSunk { ship, .. } => whole_if(own_ship(ship)),
+        | EventKind::ShipSunk { ship, .. }
+        // A fire among a carrier's aircraft, set or fought: her side's own
+        // (decision 0212, as measured). The enemy learns of her sinking, if
+        // she is lost, as of any.
+        | EventKind::AircraftFireRoll { ship, .. }
+        | EventKind::AircraftFireFought { ship, .. } => whole_if(own_ship(ship)),
 
         // Air groups.
         // A flight to look at the enemy ashore: the flying side's own, never
@@ -1635,6 +1640,8 @@ fn first_known_round(side: Side, fight: &[Event], owners: &Owners) -> Option<u32
             | EventKind::Salvo { .. }
             | EventKind::ShipDamaged { .. }
             | EventKind::ShipSunk { .. }
+            | EventKind::AircraftFireRoll { .. }
+            | EventKind::AircraftFireFought { .. }
             | EventKind::ForceBecameAlert { .. }
             | EventKind::ForceBrokeOff { .. }
             | EventKind::ForceSlippedAway { .. }
@@ -1857,6 +1864,8 @@ fn fight_round(kind: &EventKind) -> Option<u32> {
         | EventKind::EngagementBegun { .. }
         | EventKind::ShipDamaged { .. }
         | EventKind::ShipSunk { .. }
+        | EventKind::AircraftFireRoll { .. }
+        | EventKind::AircraftFireFought { .. }
         | EventKind::ForcesPassedUnseen { .. }
         | EventKind::EngagementEnded { .. }
         | EventKind::ClaimReceived { .. }
@@ -2219,6 +2228,8 @@ fn count_from_known_round(kind: SideEventKind, known: u32, round_minutes: u32) -
             | EventKind::Salvo { .. }
             | EventKind::ShipDamaged { .. }
             | EventKind::ShipSunk { .. }
+            | EventKind::AircraftFireRoll { .. }
+            | EventKind::AircraftFireFought { .. }
             | EventKind::ForceSlippedAway { .. }
             | EventKind::ForcesPassedUnseen { .. }
             | EventKind::EngagementEnded { .. }
@@ -2468,6 +2479,8 @@ fn whole_may_have_hidden_causes(kind: &EventKind) -> bool {
         | EventKind::ContactDropped { .. }
         | EventKind::ShipDamaged { .. }
         | EventKind::ShipSunk { .. }
+        | EventKind::AircraftFireRoll { .. }
+        | EventKind::AircraftFireFought { .. }
         | EventKind::ForceBecameAlert { .. }
         | EventKind::ForceBrokeOff { .. }
         | EventKind::ClaimReceived { .. }
@@ -2769,6 +2782,8 @@ pub(crate) fn project(side: Side, log: &[Event], owners: &Owners) -> Vec<SideEve
                     | EventKind::Salvo { .. }
                     | EventKind::ShipDamaged { .. }
                     | EventKind::ShipSunk { .. }
+                    | EventKind::AircraftFireRoll { .. }
+                    | EventKind::AircraftFireFought { .. }
                     | EventKind::ForceBecameAlert { .. }
                     | EventKind::ForceBrokeOff { .. }
                     | EventKind::ForceSlippedAway { .. }

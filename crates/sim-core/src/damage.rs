@@ -213,8 +213,11 @@ impl World {
 
     /// Takes a ship out of its task force and records it, with the loss of
     /// every air group aboard (decision 5 of
-    /// `docs/decisions/0025-carrier-air-groups.md`).
-    fn sink_ship(
+    /// `docs/decisions/0025-carrier-air-groups.md`). A fire among her
+    /// aircraft ends with her (decision 0212, as measured); `cause` is what
+    /// sank her, the damage that took her flotation to 100 or the fire's
+    /// record.
+    pub(crate) fn sink_ship(
         &mut self,
         site: DamageSite,
         task_force: TaskForceId,
@@ -222,11 +225,9 @@ impl World {
         cause: EventId,
     ) -> EventId {
         let sank_at = self.truth.task_forces[&task_force].position();
-        self.truth
-            .ships
-            .get_mut(&ship)
-            .expect("ship exists")
-            .location = ShipLocation::Sunk;
+        let sinking = self.truth.ships.get_mut(&ship).expect("ship exists");
+        sinking.location = ShipLocation::Sunk;
+        sinking.aircraft_fire = None;
         self.truth
             .task_forces
             .get_mut(&task_force)

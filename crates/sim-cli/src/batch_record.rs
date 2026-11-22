@@ -1196,6 +1196,8 @@ pub fn count(
             | EventKind::ForceSurprised { .. }
             | EventKind::ShipDamaged { .. }
             | EventKind::ShipSunk { .. }
+            | EventKind::AircraftFireRoll { .. }
+            | EventKind::AircraftFireFought { .. }
             | EventKind::ForceBecameAlert { .. }
             | EventKind::ForceSlippedAway { .. }
             | EventKind::ForcesPassedUnseen { .. }

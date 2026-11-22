@@ -14,7 +14,7 @@ use crate::hex::Hex;
 use crate::ids::{AirGroupId, BaseId, ShipId};
 use crate::landing::{carriers_in_hex, landing_radius, place_landings, takes_aircraft, Airborne};
 use crate::orders::AirMission;
-use crate::state::{AirGroup, AirGroupLocation, ShipLocation, ShipSystem, Side, SystemState};
+use crate::state::{AirGroup, AirGroupLocation, ShipLocation, Side, SystemState};
 use crate::time::Pulse;
 use crate::upkeep::rest_choice;
 use crate::view::SideView;
@@ -46,7 +46,7 @@ impl SideView<'_> {
             AirGroupLocation::Ship(ship) => self
                 .ships()
                 .find(|own| own.id == ship)
-                .map(|ship| ship.systems.get(ShipSystem::FlightDeck)),
+                .map(|ship| ship.deck_for_flying()),
             _ => None,
         };
         able_to_fly(
@@ -90,10 +90,7 @@ impl SideView<'_> {
     /// side's.
     fn own_deck_is_lost(&self, ship: ShipId) -> Option<bool> {
         let ship = self.ships().find(|own| own.id == ship)?;
-        Some(
-            ship.location == ShipLocation::Sunk
-                || ship.systems.get(ShipSystem::FlightDeck) == SystemState::Out,
-        )
+        Some(ship.location == ShipLocation::Sunk || ship.deck_for_flying() == SystemState::Out)
     }
 
     /// Whether `group` is a fighter group on combat air patrol that has

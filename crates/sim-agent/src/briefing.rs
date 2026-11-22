@@ -3073,6 +3073,8 @@ impl Day {
                         event: id,
                         reports: Vec::new(),
                     }),
+                    // TODO(0212 words): a fire among a carrier's aircraft.
+                    EventKind::AircraftFireRoll { .. } | EventKind::AircraftFireFought { .. } => {}
                     EventKind::ShipSunk {
                         ship, task_force, ..
                     } => {
