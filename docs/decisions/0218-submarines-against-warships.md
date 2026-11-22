@@ -105,3 +105,89 @@ A scenario with no submarine plays as it does. The scenarios for play and the 39
 1. **Three stages, this one first:** boats on stations against warships; then boats that report and patrol lines the staff keeps; then the war on shipping.
 2. **How a player commands his boats in this stage:** each boat by a direct order to a station, as a force is ordered. A patrol order that the staff carries out, with the boats spread over waters, comes with the second stage.
 3. **An enemy boat is never shown until she is found:** no marker, no hint, until a torpedo or a sighting makes a contact.
+
+## Amended on review, Nov 22, 2026
+
+Read by a reviewer who had not seen it written. What follows is the plan as it now stands and replaces the rules, the figures and the questions above.
+
+### What the review found
+
+- **History said too strongly.** Saratoga in January was hit at 15 knots on passage, neither lingering nor flying; Hornet's force met every condition the plan named and was missed; CINCPAC's staff held a ship at 15 knots with a zigzag "reasonably safe" (event 16411). RO-33 was sunk by the escort of the ship she had just torpedoed, the one such case on file. Flying Fish and S-42 were damaged as well as I-168. Two of the five boats caught by aircraft were on the surface by day. The Japanese hunts on file in 1942 were not short: S-42 was hunted for nine hours. North Carolina and O'Brien were in another task force than Wasp, five to seven miles off.
+- **"Keeping one area" was largely boats brought to a force that had been reported** (COMSOPAC: "to prevent concentration of enemy submarines"), which is the second stage's mechanism.
+- **The conduct factors were used twice,** in meeting and in hitting, squaring an effect the rows give once; and "flying" would have been true of every carrier force in every daylight pulse.
+- **The figures could not be counted as the table said.** Encounters over boat-days give 0.8 to 5 in 100 a boat-day on a handful of cases, and that is not the chance the rule needs, which is for a force in the boat's hex: the stations are gaps. A side's torpedo figure counted from results is what decision 0213 forbids, and the two American torpedoes differ tenfold on one side.
+- **A boat as a task force of one would have been caught by every rule made for a task force:** a surface fight in her hex, a strike sent at her contact, the staff's reading of every contact as a threat to its runs and stations, alerts, the trial building her as a surface ship, fuelling, command levels.
+- **Truth handed over:** an event telling the boat's side the force she met, each torpedo's chance made of the enemy's conduct, a contact at the true hex for the side torpedoed.
+- **The pillars:** boats placed only by the scenario or a direct order are a task only the player can do, and the other side's staff could place none.
+
+### A boat
+
+1. **A submarine is a unit of her own kind,** as an air group and a land unit are: not a ship in a task force. She has a number, a name, a side, a class, a hex, a station, her salvoes left, and the pulses she is held down. Her class gives her surface speed, her torpedo and the salvoes she carries, derived from the fact rows; what the rows do not hold is a gap, and a boat whose class lacks a figure the rule needs is not put in a scenario.
+2. **No rule made for a task force touches her:** she meets no surface fight, is sighted by no search and struck by no aircraft in this stage, fuels nowhere, tires not at all, and is no command.
+3. **She keeps a station, a hex.** Ordered to another she goes there at her class's surface speed, in a straight passage by sea, and attacks nothing on the way. A scenario may give her a day by which she must leave for home; she then goes to the base it names and is taken off the map.
+
+### Meeting and attacking
+
+4. **In each pulse, after the forces have moved, for each boat on her station and not held down, and each enemy task force that was in her hex in the pulse:** one draw, under `submarine_attacks_per_hour` for each hour the force spent in the hex in that pulse, the chance for the pulse being one less the chance that every hour fails. The hours are the movement's own. A force that lies in the hex all a night has twelve hours of it; one that crosses at 30 knots, an hour and a third.
+5. **A ship of the force dead in the water** multiplies the chance of each hour by `attacks_ship_dead_in_water`. No other conduct of the force moves it in this stage.
+6. **Of several forces she attacks one:** the force whose best ship ranks first by her side's order of kinds (carrier, battleship, transport, cruiser, auxiliary, destroyer, as CINCPAC's plan of Midway had it, event 16224), then the lowest number.
+7. **She fires one salvo at one ship** of that force: the ship first by that order, a ship dead in the water before another of its kind, then the lowest number. A salvo is her class's, and is one of the salvoes she carries.
+8. **Each torpedo hits by her torpedo's `submarine_hit_chance`,** a figure of the weapon and not of the side, and a hit is worked through chapter 4 as a ship's torpedo hit is. Nothing of the force's conduct or its screen moves it in this stage. A dud is a miss, and is in the weapon's figure.
+
+### The hunt
+
+9. **A force with a warship that is not the ship hit hunts the boat that fired on it.** She is held down for `held_down_pulses` pulses, in which she attacks nothing. One draw: under `hunt_sinks_chance`, one figure for both sides, she is sunk.
+10. **A force with no such ship hunts nothing,** and the boat is free in the next pulse.
+
+### Where the boats are put
+
+11. **An order is new: patrol waters with submarines.** The commander names waters, a hex and a distance, and may name the boats; the staff gives each boat it may use a station in those waters, the stations spread by a written order of the waters' hexes that puts them as far apart as they go, and sends a boat that has come back out again. A side with no commander is given its order by the scenario, as its other orders are.
+12. **A direct order to a boat** gives her a station and holds her from the staff, as a direct order holds a force.
+
+### What a side knows
+
+13. **A side knows its own boats exactly.** Of an attack it is told that the boat fired, at a ship of the kind she took it for, through the confusion of kinds a sighting has, and what she claims: its claim is made as a ship's torpedo claim is made (chapter 3). It is given the report of the force as a sighting gives one, through the report and its error, and nothing of the truth.
+14. **The side attacked** is told of each hit as it is told of any, with "by a submarine" where no attacker is in sight, and is given a report of one submarine at the hex, through the report and its error. A contact of a submarine is of its own sort: it does not merge with a contact of ships, alerts no force, is no threat in the staff's readings, is no target of a strike or a sortie, and is not built in a dry run.
+15. **A hunt tells the hunters only that they hunted.** A boat sunk is told to her own side when she does not come back: at the pulse, in this stage.
+16. **Nothing else shows an enemy boat.**
+
+### Figures
+
+All placeholders, and judgements unless it says counted.
+
+| Figure | Rests on |
+| --- | --- |
+| `submarine_attacks_per_hour` | a judgement. No source gives a rate, and the stations it would be counted on are gaps. Checked, not set, against the count the rows allow: four attacks, or nine or ten with the reports of forces met, on some 190 to 500 boat-days east of the Solomons from 20 August to 20 September |
+| `attacks_ship_dead_in_water` | one case and a captain's word: Yorktown under tow (outcome 16097) |
+| `submarine_hit_chance`, a figure of each torpedo | counted for each weapon from the attacks on file, the count and its choices written in the weapon's rules file: the aimed ship only; a torpedo that left no tube not counted; a disputed count as a range. The Mark 10 from the S-boats' attacks, the Mark 14 from the fleet boats', the Japanese torpedoes from the six salvoes |
+| a class's salvo and salvoes carried | from the class rows, a gap where they are silent |
+| `held_down_pulses` | from the hunts on file, three to ten hours and more |
+| `hunt_sinks_chance` | one boat sunk by the escort of the ship she hit, of some fifteen that fired |
+
+The points for a submarine sunk, in the objectives' tables, are a placeholder like every point value.
+
+### What is recorded
+
+Events, each with its causes and its entry for who sees it: a boat ordered to a station; a salvo, with each torpedo's draw (her side: that she fired, the kind believed and her claim; the other side: the hits, as hits are told); a boat held down (her side); a boat sunk (her side). Three new draws, each with its own value at the end: the attack, each torpedo, the hunt. The boats are new state, hashed and named; a pulse's hours in a hex are worked in the pulse and not kept.
+
+### Rule card
+
+Reads: each boat's hex, station, salvoes, held-down count, class and torpedo; each enemy force's hours in her hex in the pulse, its ships and their kinds, which are dead in the water; the figures; for the staff, the order's waters and the boats it may use. Writes: torpedo hits through chapter 4; the boat's salvoes and held-down count; that she is sunk; her station and passage; reports. Draws: three new values.
+
+### What it does not do, added
+
+- **Nothing of a force's speed, zigzag, flying or screen moves a chance,** but the hours it spends in a boat's hex and a ship dead in the water. The rows give the direction of each and the size of none, and the first of them is carried by the hours.
+- **No aircraft finds or attacks a boat,** and no search sights one. Aircraft held boats down and damaged two in August 1942; that waits for the second stage with the boats' own reports.
+- **No boat moves on a report of the enemy.** The Japanese lines brought to Saratoga's and Wasp's waters are the second stage.
+- **A boat burns no fuel.** A patrol's length is the scenario's.
+- **A hunt does not damage a boat short of sinking her.**
+- **A torpedo that misses hits no other ship.**
+
+### Games on file
+
+A scenario with no boat and no patrol order plays as it does, byte for byte. Boats are put into the scenarios for play in a later change, from the rows of where they were, and those scenarios are measured before and after then.
+
+### Questions for the designer
+
+1. **The first stage as amended:** boats as units of their own on stations, a patrol order the staff carries out for either side, one chance of attack that grows with the hours a force spends in a boat's waters, and the hunt. Aircraft against boats, boats that report and move on reports, and the war on shipping come after.
+2. **An enemy boat is never shown until she attacks,** and then only as a report of a submarine near where the ship was hit.
