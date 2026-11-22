@@ -80,6 +80,10 @@
 //!   ships, air groups and bases of scenario 19a and of scenario 6a end
 //!   each day the same with the figure at 0, at 0.75 and at 1: the hits,
 //!   the aircraft lost and the damage do not move.
+//!   (Note by the architect, Nov 22, 2026, with decision 0210: the
+//!   test compares the ships, air groups and bases, as this says, and no
+//!   longer the daily hashes, since a claim's types are in the hash and
+//!   move with the figure.)
 //! - **It is the same twice.** The same seed gives the same recognition
 //!   twice, and a game saved and replayed gives the same.
 //! - **Nothing more is told.** Two worlds that differ only in what the
