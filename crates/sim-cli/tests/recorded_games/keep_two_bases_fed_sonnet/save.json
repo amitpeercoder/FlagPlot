@@ -201,7 +201,7 @@
     }
   ],
   "orders": [],
-  "rules_version": 28,
+  "rules_version": 29,
   "scenario": {
     "file": "data/scenarios/43_keep_two_bases_fed.toml",
     "hash": "0a6c6a34dbb4fcd2"

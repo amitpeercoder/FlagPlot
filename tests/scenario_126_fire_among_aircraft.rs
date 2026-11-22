@@ -1704,9 +1704,11 @@ fn on_the_frozen_figures_every_event_of_scenario_5b_is_byte_for_byte_what_it_was
     // The digest below was taken from the build without this rule (the
     // commit before the engine change of decisions 0211 and 0212, 9fc04a5c)
     // and is the same on the build with it: 1,554 events over seeds 1 to
-    // 100, with their ids, causes and breakdowns.
+    // 100, with their ids, causes and breakdowns. Remade for decision 0218,
+    // stage 2: every claim's record gains `from_submarine`, false here; with
+    // it taken out the digest is the one before, 0x9c1b_fecc_6760_de9d.
     assert_eq!(
         digest_of_frozen_runs("05b_strike"),
-        (0x9c1b_fecc_6760_de9d, 1554)
+        (0x8343_3cb7_77dd_5cfb, 1554)
     );
 }

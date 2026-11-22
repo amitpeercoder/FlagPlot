@@ -219,27 +219,30 @@ mod record {
 /// cannot be met nor fires the standing interrupt, and its reason for the
 /// bases names the carrier task first; in the second proof's week a deny the
 /// carrier forces serve gains that reason each day. No order or command
-/// moved in either, and no other event.
+/// moved in either, and no other event. Remade for decision 0218, stage 2
+/// (submarines against warships): every claim's record gains
+/// `from_submarine`, false in these games; with it taken out each text is
+/// the text of the commit before (origin/main at c1cf209a), line for line.
 #[test]
 fn s12_no_game_without_the_limit_changes() {
     let games: [(&str, Option<u32>, u64); 5] = [
-        ("05_eastern_solomons.toml", None, 0x7bfb_03ae_40ce_25d0),
+        ("05_eastern_solomons.toml", None, 0xf71a_aaa2_934a_ef74),
         (
             "five-days/01a_eastern_solomons.toml",
             None,
-            0x0ad2_e5bf_5f21_76e5,
+            0x09ff_3069_b3b6_c64b,
         ),
         (
             "stage-3-proof/07a_slice.toml",
             Some(7),
-            0x60bf_33fb_0ca7_3116,
+            0x2db5_8085_886d_209e,
         ),
         (
             "second-proof/05a_eastern_solomons.toml",
             None,
-            0xbbd4_8dc4_b18e_dc37,
+            0x72dc_4916_07fd_653b,
         ),
-        ("second-proof/07a_week.toml", None, 0xd252_0a19_d0d1_594d),
+        ("second-proof/07a_week.toml", None, 0xb817_4bbd_4b8d_4333),
     ];
     let write_to = std::env::var("FLAGPILOT_106_RECORD").ok();
     let mut moved = Vec::new();

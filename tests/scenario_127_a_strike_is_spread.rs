@@ -897,13 +897,17 @@ fn on_the_frozen_figures_every_event_of_the_frozen_strike_scenarios_is_what_it_w
     // 0212 (the commit before their engine change, 9fc04a5c), the same on
     // the build with them: scenarios 5c, 5d and 13a, which strike ships,
     // over seeds 1 to 100 (scenario 5b's is in scenario 126's test).
+    // Remade for decision 0218, stage 2: every claim's record gains
+    // `from_submarine`, false here; with it taken out each digest is the one
+    // before (5c 0x3461_0bac_438e_b822, 5d 0xa52b_1ec2_391e_ccda; 13a has no
+    // claim and did not move).
     assert_eq!(
         digest_of_frozen_runs("05c_air_combat"),
-        (0x3461_0bac_438e_b822, 2576)
+        (0xdef5_44eb_0a67_4d72, 2576)
     );
     assert_eq!(
         digest_of_frozen_runs("05d_carrier_duel"),
-        (0xa52b_1ec2_391e_ccda, 7191)
+        (0x3575_c47f_9867_9f3a, 7191)
     );
     assert_eq!(
         digest_of_frozen_runs("13a_target_priority"),

@@ -1,0 +1,20 @@
+Scenario 128: A submarine lies in the way of a force
+PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
+seed 1942
+
+day   1  hash dabefde370b5156f  4 events
+
+#1 D1 night     submarine:1 had a chance of 0.215287 to attack task_force:1 at (5,0): 12 hours at 0.02 an hour
+#2 D1 morning   submarine:1 had a chance of 0.114159 to attack task_force:1 at (5,0): 6 hours at 0.02 an hour
+#3 D1 afternoon submarine:1 had a chance of 0.114159 to attack task_force:1 at (5,0): 6 hours at 0.02 an hour
+#4 D1 -         base:1 at the end of the day: 0 t of supply, 0 aircraft ready: not open
+
+task_force:1 "Placeholder Allied force" (Allied): Idle at (5,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
+ship:1 "Placeholder carrier": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 3000 t of fuel, 0 t of supply
+ship:2 "Placeholder destroyer": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 600 gun rounds, torpedoes ready; 500 t of fuel, 0 t of supply
+base:1 "Placeholder submarine base" (Japanese) at (12,0): 0 t of supply in stock, no airfield
+submarine:1 "Placeholder submarine 1" (Japanese): sound, at (5,0), on station at (5,0), 2 salvoes
+Allied: no contacts
+Allied: no battle claims
+Japanese: no contacts
+Japanese: no battle claims
