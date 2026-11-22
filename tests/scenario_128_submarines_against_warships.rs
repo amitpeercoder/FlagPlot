@@ -60,7 +60,7 @@
 //! | A4 | crosses at 20 knots in the morning | 2 | 0.960400 | 0.039600 |
 //! | A5 | crosses at 15 knots in the morning | 40/15 = 2.666666 | 0.947594 | 0.052406 |
 //! | A6 | arrives at (5,0) with 3 hours of the morning left and stops | 3 | 0.941192 | 0.058808 |
-//! | A7 | passes through (4,0) and (6,0) and never enters (5,0) | 0 | none | no draw |
+//! | A7 | passes by (4,0), (5,-1), (6,-1) and (6,0) and never enters (5,0) | 0 | none | no draw |
 //!
 //! Worked: 0.98 squared is 0.960400; cubed 0.941192; the sixth power
 //! 0.885841 and the twelfth 0.784713, each product cut at the sixth

@@ -477,14 +477,10 @@ fn describe_side(kind: &SideEventKind, key: &UmpireKey, at: (u32, Option<Pulse>)
             task_force,
             ship,
             hex,
-            torpedoes,
-            hits,
         } => (
             d.id("task_force", *task_force)
                 .id("ship", *ship)
-                .hex("hex", *hex)
-                .int("torpedoes", *torpedoes)
-                .int("hits", *hits),
+                .hex("hex", *hex),
             true,
         ),
         SideEventKind::OwnSubmarineHunted {

@@ -322,14 +322,13 @@ pub enum SideEventKind {
         taken_for: ShipKind,
     },
     /// A salvo fired at the side's ship from a submarine (decision 0218,
-    /// 46): that it was fired at, from where and how many torpedoes, and
-    /// how many hit. No boat is named.
+    /// 46): that it was fired at, and where. As [`SideEventKind::SalvoAgainst`]
+    /// is cut: not the torpedoes, nor what they did (the hits it took reach
+    /// it as `ShipDamaged`), nor the boat that fired.
     SalvoFromSubmarine {
         task_force: TaskForceId,
         ship: ShipId,
         hex: Hex,
-        torpedoes: u32,
-        hits: u32,
     },
     /// The side's own submarine was hunted (decision 0218, 9 and 22): where,
     /// until when she is held down and whether she was damaged. Not the
@@ -644,12 +643,9 @@ impl fmt::Display for SideEventKind {
                 task_force,
                 ship,
                 hex,
-                torpedoes,
-                hits,
             } => write!(
                 f,
-                "{ship} of {task_force} at {hex} fired on from a submarine: {torpedoes} torpedoes, {hits} {}",
-                if *hits == 1 { "hit" } else { "hits" }
+                "{ship} of {task_force} at {hex} fired on from a submarine"
             ),
             SideEventKind::OwnSubmarineHunted {
                 submarine,
@@ -1416,14 +1412,16 @@ pub(crate) fn seen(kind: &EventKind, side: Side, owners: &Owners, knows_fight: b
         // (decision 0218, 37).
         EventKind::SubmarineAttackChance { .. } => Seen::Nothing,
         // Her side is told that she fired and at what kind; the side fired
-        // on that its ship was, with no boat named (decision 0218, 45, 46).
+        // on that its ship was, with no boat named and, as a ship's salvo
+        // against it is cut, neither the torpedoes nor the hits (decision
+        // 0218, 45, 46; the architect's ruling on stage 2).
         EventKind::SubmarineSalvo {
             submarine,
             task_force,
             ship,
             hex,
             torpedoes,
-            hits,
+            hits: _,
             taken_for,
         } => {
             if own_boat(submarine) {
@@ -1440,8 +1438,6 @@ pub(crate) fn seen(kind: &EventKind, side: Side, owners: &Owners, knows_fight: b
                         task_force: *task_force,
                         ship: *ship,
                         hex: *hex,
-                        torpedoes: *torpedoes,
-                        hits: *hits,
                     },
                 )
             }
@@ -5311,7 +5307,10 @@ mod tests {
                     hits: 2,
                     taken_for: ShipKind::Carrier,
                 },
-                Cut("SalvoFromSubmarine", &["submarine", "taken_for"]),
+                Cut(
+                    "SalvoFromSubmarine",
+                    &["submarine", "torpedoes", "hits", "taken_for"],
+                ),
                 Cut("OwnSubmarineFired", &["task_force", "ship", "hits"]),
             ),
             row(
