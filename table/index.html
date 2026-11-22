@@ -650,6 +650,8 @@ body.watched .gives { display: none !important; }
       b2.save(); b2.textAlign = 'center'; b2.textBaseline = 'middle';
       b2.font = (sea || water ? 'italic 400 ' : n.kind === 'island' ? '400 ' : '700 ') + (sea ? 46 : water ? 19 : n.kind === 'land' ? 30 : n.kind === 'group' ? 24 : 21) + 'px ' + F;
       try { b2.letterSpacing = (sea ? 22 : n.kind === 'group' ? 12 : n.kind === 'land' ? 8 : water ? 2 : 1) + 'px'; } catch (e) {}
+      // A name near the chart's edge is set inside it, as a printer would, not cut by the border.
+      var half = b2.measureText(n.name).width / 2, edge = 80; if (half * 2 < W - 2 * edge) c = [Math.max(edge + half, Math.min(W - edge - half, c[0])), c[1]];
       b2.fillStyle = sea ? 'rgba(38,78,104,0.42)' : water ? 'rgba(38,78,104,0.7)' : n.kind === 'group' ? 'rgba(60,50,34,0.5)' : 'rgba(60,50,34,0.82)';
       if (!sea && !water) { b2.strokeStyle = 'rgba(143,185,204,0.55)'; b2.lineWidth = 4; b2.lineJoin = 'round'; if (n.kind !== 'land') b2.strokeText(n.name, c[0], c[1]); }
       b2.fillText(n.name, c[0], c[1]); b2.restore();
@@ -1133,10 +1135,12 @@ body.watched .gives { display: none !important; }
   function plainWords(t, keepHex) {
     t = orderWords(String(t).replace(/(intent|plan):(\d+)/gi, '$1 $2')).replace(/island \d+ \(([^)]+)\)/g, '$1').replace(/Placeholder /g, '');
     t = t.replace(/\b0 pulse\(s\) old\b/g, 'just reported').replace(/\b(\d+) pulse\(s\)/g, function (m, n) { return n + (n === '1' ? ' pulse' : ' pulses'); })
-      .replace(/\bat a share of 0\.25\b/g, 'with a quarter of its aircraft').replace(/\bat a share of 0\.5\b/g, 'with half its aircraft').replace(/\bat a share of 0\.75\b/g, 'with three quarters of its aircraft')
+      .replace(/\bat (?:a )?share (?:of )?0\.25\b/g, 'with a quarter of its aircraft').replace(/\bat (?:a )?share (?:of )?0\.5\b/g, 'with half its aircraft').replace(/\bat (?:a )?share (?:of )?0\.75\b/g, 'with three quarters of its aircraft')
       .replace(/\b(\d+)\.(\d+) (miles|nm)\b/g, function (m, w, f, u) { return Math.round(parseFloat(w + '.' + f)) + ' ' + u; })
       .replace(/\bfatigue (\d+)\.(\d+)\b/g, function (m, w, f) { return 'fatigue ' + Math.round(parseFloat(w + '.' + f)); })
-      .replace(/\bhas no home port the staff knows\b/g, 'has no home port').replace(/, 0 sunk\b/g, '').replace(/(^|[;.] ?)([Tt])he rest are escorts\b/g, function (m, a, c) { return a + (c === 'T' ? 'Its' : 'its') + ' other fighters go as escorts'; });
+      .replace(/\bhas no home port the staff knows\b/g, 'has no home port').replace(/, 0 sunk\b/g, '')
+      // Any figure still with places ("8.8 kn", "93.977272 hours") is shown whole, to the nearest; one under 1 as "under 1".
+      .replace(/(^|[^\w.])(\d+\.\d+)(?!\w|\.\d)/g, function (m, a, x) { var v = +x; return a + (v > 0 && v < 1 ? 'under 1' : commas(String(Math.round(v)))); }).replace(/(^|[;.] ?)([Tt])he rest are escorts\b/g, function (m, a, c) { return a + (c === 'T' ? 'Its' : 'its') + ' other fighters go as escorts'; });
     if (showHexes) return t;
     t = t.replace(/(\d+) hex(?:es)?\b(?! round)/g, function (m, n) { return (+n * hexMiles()) + ' miles'; });
     if (keepHex) return t;
@@ -1174,7 +1178,11 @@ body.watched .gives { display: none !important; }
   }
   function rich(tag, cls, text) {
     var e = el(tag, cls), last = 0, m; text = String(text == null ? '' : text); MENTION.lastIndex = 0;
-    while ((m = MENTION.exec(text))) { if (m.index > last) plainLinks(e, text.slice(last, m.index)); e.appendChild(refTo(m[1], m[2])); last = MENTION.lastIndex; }
+    while ((m = MENTION.exec(text))) {
+      if (m.index > last) plainLinks(e, text.slice(last, m.index)); e.appendChild(refTo(m[1], m[2])); last = MENTION.lastIndex;
+      // A base said at its own place ("base:2 (Wake) at (-24,16)", where that hex is named Wake) is said once.
+      var at = /^ at \((-?\d+), ?(-?\d+)\)/.exec(text.slice(last)); if (at && !showHexes && M.hexNames[at[1] + ',' + at[2]] && M.hexNames[at[1] + ',' + at[2]] === nameOf(m[1], m[2])) { last += at[0].length; MENTION.lastIndex = last; }
+    }
     if (last < text.length) plainLinks(e, text.slice(last)); return e;
   }
   function turnTo(pl) { var v = pl && placeOf(pl); if (!v) return; goal.x = v.x; goal.z = v.z; if (goal.zoom < 0.55) goal.zoom = 0.55; clampGoal(); }
@@ -1574,7 +1582,8 @@ body.watched .gives { display: none !important; }
     var b = t.base, h = b.base.handle, dos = b.days_of_supply || {}, body = openCard(b.base.name.toUpperCase(), 'YOURS', true);
     kv(body, [['Where', whereIs(b.place)], ['Supply', commas(b.supply_t) + ' t'], ['Ammunition', b.ammunition_t != null ? commas(b.ammunition_t) + ' t' : null], ['Fuel for ships', commas(b.fuel_t) + ' t'],
       ['Days of supply', dos.days != null ? dayCount(dos.days) + ' at ' + aboutTons(dos.planned_use_t) + ' t a day' : 'No figure: nothing is planned to be used here today'],
-      ['Airfield', b.airfield_size ? 'size ' + b.airfield_size : 'none'], ['Port', b.port_size ? 'size ' + b.port_size : 'none']]);
+      // The map gives a size of airfield or none; a base with aircraft flying from it has one all the same, of no size given, so no line is shown.
+      ['Airfield', b.airfield_size ? 'size ' + b.airfield_size : M.air.some(function (x) { return x.location && x.location.handle === h; }) ? null : 'none'], ['Port', b.port_size ? 'size ' + b.port_size : 'none']]);
     listOf(body, 'MEN ASHORE', M.units.filter(function (u) { return u.men_ashore && sameHex(u.place, b.place); }).map(function (u) { return u.land_unit.handle + ': ' + commas(u.men_ashore) + ' men, ' + u.posture; }));
     airList(body, 'AIR GROUPS HERE', M.air.filter(function (x) { return x.location && x.location.handle === h; }));
     forcesHere(body, 'FORCES HERE', b.place, null);
@@ -1604,7 +1613,8 @@ body.watched .gives { display: none !important; }
   // is about 10, not 9.
   function dayCount(d) { var n = Math.trunc(parseFloat(d)); return isNaN(n) ? String(d) : commas(n) + (n === 1 ? ' day' : ' days'); }
   function aboutTons(t) { var v = parseFloat(t); if (isNaN(v)) return String(t); return v === Math.round(v) ? commas(v) : v < 0.5 ? 'under 1' : 'about ' + commas(Math.round(v)); }
-  function shipClass(c) { return String(c || '').replace(/^Placeholder /, '').split(', ').filter(function (part, i) { return i === 0 || !/_|\bnot modelled\b|\bunknown\b|\d/.test(part); }).join(', '); }
+  // A class is named without the note the list carries in brackets ("Akagi (single ship, converted from ...)").
+  function shipClass(c) { return String(c || '').replace(/^Placeholder /, '').replace(/ \([^()]*\)/g, '').split(', ').filter(function (part, i) { return i === 0 || !/_|\bnot modelled\b|\bunknown\b|\d/.test(part); }).join(', '); }
   function fig(x) { var n = parseFloat(x); if (isNaN(n)) return x; return commas(n); }
   // A count of the enemy ashore as a staff would pass it on: rounded, with
   // the size of force it makes. The count is the game's; the round figure
@@ -1796,7 +1806,8 @@ body.watched .gives { display: none !important; }
     function said(x, n) { n = parseInt(n, 10); if (n === own) return 'this task'; var w = intentWords(n); return w ? '"' + w + '"' : 'order ' + n; }
     t = String(t).replace(/intent:(\d+)/g, said);
     t = nameText(plainWords(String(t).replace(/\bintent (\d+)\b/g, said), keepHex));
-    t = t.replace(/([A-Z][\w .'’-]*?) \(\1\)/g, '$1').replace(/(\d) nm\b/g, '$1 miles').replace(/\bfrom day (\d+)\b/g, function (x, n) { var d = dateOf(parseInt(n, 10) - 1); return d ? 'from ' + d : x; });
+    // A name said twice, "X (X)", is said once; a name may begin with a figure ("2nd ...").
+    t = t.replace(/([A-Z0-9][\w .'’-]*?) \(\1\)/g, '$1').replace(/(\d) nm\b/g, '$1 miles').replace(/\bfrom day (\d+)\b/g, function (x, n) { var d = dateOf(parseInt(n, 10) - 1); return d ? 'from ' + d : x; });
     // "a may be used from 20 AUG, b may be used from 20 AUG, c may be used from 30 AUG": gathered by the day.
     t = t.replace(/\(((?:[^()]*? may be used from [^,()]+)(?:, [^()]*? may be used from [^,()]+)+)\)/g, function (x, inner) { var by = {}, order = []; inner.split(', ').forEach(function (it) { var m = /^(.*?) may be used from (.+)$/.exec(it); if (!m) return; if (!by[m[2]]) { by[m[2]] = []; order.push(m[2]); } by[m[2]].push(m[1]); }); return '(not yet to hand: ' + order.map(function (d) { return by[d].join(', ') + ' from ' + d; }).join('; ') + ')'; });
     return cap ? t.charAt(0).toUpperCase() + t.slice(1) : t;
@@ -2610,6 +2621,8 @@ body.watched .gives { display: none !important; }
   // pulses in turn from what the side was told in each. Stopping the clock takes effect when the day is plotted.
   var playing = false, flashes = [];
   var HURT = { aircraft_destroyed_on_ground: 1, damaged_aircraft_destroyed_on_ground: 1, men_lost_to_fire: 1, base_supply_destroyed: 1, airfield_damaged: 1, ship_damaged: 1, ship_sunk: 1 };
+  // What a kind of report is called where the plot folds the rest of them away.
+  var MORE_OF = { base_attacked_against: 'bombing of a base', base_supply_destroyed: 'supply destroyed', base_ammunition_destroyed: 'ammunition destroyed', air_attack_against: 'attack on our ships', air_fight: 'air fighting', aircraft_lost: 'aircraft lost', aircraft_destroyed_on_ground: 'aircraft lost on the ground', claim_received: 'claims', report_received: 'sightings', airfield_hit: 'hits on an airfield', men_lost: 'men lost', ship_hit: 'hits on our ships', system_hit: 'damage to our ships', strike_launched: 'strikes launched', base_strike_launched: 'raids launched', salvo_against: 'gunfire against us', shore_bombardment_against: 'shelling of a base' };
   var QUIET = { fuel_burned: 1, air_group_fatigue: 1, task_force_fatigue: 1, land_unit_fatigue: 1, aircraft_worn: 1, cargo_unloaded: 1, order_accepted: 1, staff_reason: 1, command_taken: 1, intent_formed: 1, plan_drafted: 1, plan_state_changed: 1, plan_amended: 1, fight_day_counted: 1, ground_fire: 1, left_roster: 1, search_flown: 1, strike_mission_cleared: 1, base_at_day_end: 1, task_force_halted: 1, task_force_steamed: 1, staff_notice: 1, interrupt_fired: 1, men_fed: 1 };
   function eventsOf(day, pulse) { var args = { day: day }; if (pulse) args.pulse = pulse; return api('events', args).then(function (a) { return a.events || []; }); }
   function named(text) {
@@ -2633,7 +2646,7 @@ body.watched .gives { display: none !important; }
       lines.push({ text: sayEvent(e, true), number: e.event_kind === 'claim_received' ? e.number : null, hex: hexIn(e.text), red: /enemy|attack|bomb|sunk|hit|lost|contact|fight|surrender/.test(e.text) });
     });
     Object.keys(landed).forEach(function (k) { lines.unshift({ text: commas(landed[k]) + ' men landed at ' + named(k), hex: hexIn(k), red: false }); });
-    Object.keys(perKind).forEach(function (k) { if (perKind[k] > 3) lines.push({ text: 'and ' + (perKind[k] - 3) + ' more reports of ' + k.replace(/_/g, ' ') }); });
+    Object.keys(perKind).forEach(function (k) { var n = perKind[k] - 3; if (n > 0) lines.push({ text: 'and ' + n + ' more ' + (n === 1 ? 'report' : 'reports') + ' of ' + (MORE_OF[k] || k.replace(/_/g, ' ')) }); });
     return lines;
   }
   async function plotPhase(day, ph, evs) {

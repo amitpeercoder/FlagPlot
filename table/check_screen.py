@@ -292,6 +292,41 @@ def orders_on_the_card(bridge):
     check(post(bridge.table + "/new") == {"ok": True}, "the game is put away")
 
 
+def midway_on_its_chart(bridge):
+    """What the Midway game gives the page that the old map's games did not, and
+    that the page words as it should (the mends of "Table: Midway on its own chart").
+    The words themselves are the page's, seen in a browser; here the game is checked to
+    give each case, and the page to hold the wording that answers it."""
+    print("-- Midway: the cases its cards and papers meet", flush=True)
+    page = get(bridge.table + "/")
+    check(begin(bridge, "midway", "person", "engine") == {"ok": True}, "Midway begun, the person Allied")
+    frame = get(bridge.table + "/frame")
+    check(frame and frame["west"] == 163 and frame["east"] == 194, "the bridge serves the Midway map's frame, across the date line (163 to 194)")
+    names = {n["name"]: n for n in get(bridge.table + "/names")}
+    check(-166.211 + 360 > frame["east"] - 0.5, "French Frigate Shoals lies within half a degree of the chart's eastern edge")
+    check("edge = 80" in page and "c = [Math.max(edge + half, Math.min(W - edge - half, c[0])), c[1]]" in page and "French Frigate Shoals" in names,
+          "and the page sets a name near the edge inside the chart, not cut by its border")
+    person = Person(bridge.table)
+    bases = person.call("list_bases")["ok"]["bases"]
+    air = [g for g in person.call("get_briefing", {"text": False})["ok"]["air_groups"] if (g.get("location") or {}).get("handle") == "base:1"]
+    check(bases[0]["base"]["name"] == "Midway" and bases[0]["airfield_size"] == 0 and len(air) == 7,
+          "Midway has no airfield size on the map and seven air groups flying from it")
+    check("M.air.some(function (x) { return x.location && x.location.handle === h; }) ? null : 'none'" in page,
+          "and the page's base card says no 'Airfield: none' for a base with aircraft flying from it")
+    check(begin(bridge, "midway", "engine", "person") == {"ok": True}, "Midway begun, the person Japanese")
+    person = Person(bridge.table)
+    shown = json.dumps(person.call("preview", {"command": "set_intent", "intent_kind": "take_place", "base": 1}))
+    check("land_unit:2 (2nd Combined Special Naval Landing Force)" in shown and "8.8 kn" in shown,
+          "the staff's words for the take name a unit whose name begins with a figure, and give a speed with a decimal")
+    check("([A-Z0-9][\\w .'’-]*?) \\(\\1\\)" in page and "(\\d+\\.\\d+)(?!\\w|\\.\\d)" in page,
+          "and the page says such a name once and shows every figure whole")
+    carriers = person.call("get_entity", {"handle": "task_force:1"})["ok"]["entity"]["ships"]
+    check(any(" (" in str(s.get("class")) for s in carriers), "a Japanese carrier's class carries a note in brackets")
+    check(".replace(/ \\([^()]*\\)/g, '')" in page, "and the page names the class without it")
+    check("base_attacked_against: 'bombing of a base'" in page and "(n === 1 ? 'report' : 'reports')" in page,
+          "the plot folds the rest of a kind of report under a plain name, not the event's own")
+
+
 def page_supply_limit(person, base, kind):
     """The forces limit index.html sets when a keep-supplied or hold order is
     signed (supplyForces), worked from the same answers, or None."""
@@ -483,6 +518,7 @@ def main():
             listed = the_screen(bridge)
             every_game(bridge, listed)
             orders_on_the_card(bridge)
+            midway_on_its_chart(bridge)
             person_against_agent(bridge, args.hold)
             seat_mcp(bridge)
         finally:
