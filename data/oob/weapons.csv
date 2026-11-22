@@ -83,3 +83,11 @@ id,key,name,nation,kind
 6150,jp-bomb-30kg,30 kg bomb,jp,bomb
 6151,us-bomb-600lb-gp,600 lb GP bomb,us,bomb
 13000,jp-61cm-torpedo,61 cm (24-inch) torpedo (type not stated by the source),jp,torpedo
+16000,us-21in-torpedo-mk14,US 21in torpedo Mark 14 (submarine),us,torpedo
+16001,us-21in-torpedo-mk10,US 21in torpedo Mark 10 (S-boats),us,torpedo
+16002,jp-53cm-torpedo-type95,53 cm Type 95 submarine torpedo (oxygen),jp,torpedo
+16003,jp-53cm-torpedo-type96,53 cm Type 96 submarine torpedo (38 percent oxygen),jp,torpedo
+16004,jp-53cm-torpedo-type89,53 cm Type 89 submarine torpedo (air),jp,torpedo
+16005,jp-53cm-torpedo-type92,53 cm Type 92 submarine torpedo (electric),jp,torpedo
+16006,jp-type-95-depth-charge,Type 95 depth charge,jp,depth_charge
+16007,jp-type-2-depth-charge,Type 2 depth charge,jp,depth_charge
