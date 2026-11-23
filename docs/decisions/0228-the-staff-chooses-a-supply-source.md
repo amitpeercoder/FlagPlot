@@ -285,3 +285,22 @@ Added to what must always hold: two bases of a side in one hex can never togethe
 
 Chapter 8: the key and what a side without it gets; Holding a place, The supply that follows; Controlling an island, The source of supply and The source kept; the doctrine's step 1 (an empty pool) and A new run (the cut); The tools (`supplied_from`); the doctrine's version. Chapter 1 or 8, wherever a scenario's keys for a side are listed. The glossary: "supply to spare", "the place's need".
 
+
+## The architect's ruling on the build, Nov 23, 2026
+
+**Found, before any code.** This record believed the staff may already set a forces limit on an intent it formed under a commander's hold. It may not. Intake checks that a limit on an intent with a parent narrows (`check_command`, `SetLimit`, `forces_narrow` in `crates/sim-core/src/command/intake.rs`). Off a take and an island, with no limit above that binds ships the limit may name no ship and no task force, and it may name a source only where a limit above names that source. So under a hold with no limit, the staff's limit of source base 3 and task force 1 is refused as wider than its parent; under a hold that names only a source, its task forces are. The architect read the function and its one caller, and it is so. Only a chain under a take or an island is checked by `forces_narrow_under_take`, where a limit above binds only what it names.
+
+**Ruled: a second engine change, beside the key.** For a side whose scenario says its staff chooses its sources of supply, a forces limit set on a "keep supplied" whose parent is a "hold a place" is checked as under a take (`forces_narrow_under_take`): each limit above binds only what it names of the task forces and ships, the land units and the source, and what none names is the staff's to name. A source the commander names anywhere above still binds: a limit that names another is refused.
+
+- **It is keyed on the side's key, the intent's kind and its parent's kind, and on nothing else.** Not on who gives the command and not on who made the intent: a "keep supplied" under a hold is always the staff's, since a hold is a root under which only the staff forms (and the invariants hold a child to the staff's making). So `forces_narrow` is given the intent the limit is set on, and needs neither the issuer nor the maker. The developer's suggestion is taken with that one simplification.
+- **For a side without the key the check is what it is today,** on every chain. A take and an island are untouched for every side.
+- **Rule card, added.** Reads: the side's key; the kind of the intent a forces limit is set on and of its parent; the forces limits above it as they were set. Writes: nothing; it decides whether `set_limit` is taken or refused as wider than its parent. Draws: none.
+- **The rules label stays 32.** No file on file states the key, so no game on file meets the changed check. No other version moves for this: the doctrine, the layout, the saved game and the agent interface are as "The versions it raises" has them.
+- **Statements.** 1, 6, 8, 9, 12 and 14 rest on the change and none is restated. Added, as tests of intake in `sim-core` beside those of `forces_narrow`:
+  - **21.** For a side without the key, a forces limit naming a source and a task force, set on a "keep supplied" under a hold with no forces limit, is refused as wider than its parent, as today.
+  - **22.** For a side with the key, the same limit is taken.
+  - **23.** For a side with the key, under a hold whose forces limit names source base 4, a limit on the "keep supplied" naming source base 3 is refused as wider than its parent, and one naming base 4 and a task force is taken.
+  - **24.** For a side with the key, a forces limit set on a cover formed under the same hold is checked as today.
+- **Rulebook:** chapter 8, The intent tree (a limit must narrow) and The forces limit on a staff's orders, say the keyed case.
+
+"The engine changes in one place" above is replaced by: the engine changes in two places, the key and this check.
