@@ -19,7 +19,11 @@
 //!
 //! # Where the table of "before" digests comes from
 //!
-//! `BEFORE` below was taken on Nov 23, 2026, from a separate worktree of the
+//! `BEFORE` below was taken again on Nov 23, 2026, by the lead, from a
+//! worktree of main at 284a7614 (decision 0222, rule 1 merged: the reason of
+//! a hold with no source, which moved the words of the Coral Sea, five-day,
+//! Midway and table-hunger games and no order) with the same `digest`
+//! module, after this branch merged main. It was first taken from the
 //! commit 9bdc3062 (origin/limits-engine: the statements and the staffs
 //! before the engine of decision 0222, rule 2 and what follows it), with
 //! this file's own `digest` module copied into a temporary test there and the
@@ -186,7 +190,7 @@ pub mod digest {
     }
 }
 
-/// The digests taken at 9bdc3062 (see above), in file order.
+/// The digests taken at 284a7614 (see above), in file order.
 const BEFORE: &[(&str, u64)] = &[
     ("125_a_force_asks_leave_to_pursue.toml", 0xf97d80e74fc0fdba),
     (
@@ -248,15 +252,15 @@ const BEFORE: &[(&str, u64)] = &[
         "carriers-serve-an-end/116_carriers_serve_an_end.toml",
         0x60728e019239c7f0,
     ),
-    ("coral-sea/01a_coral_sea.toml", 0xe3d74fbbcd084e57),
+    ("coral-sea/01a_coral_sea.toml", 0x661d4c5c16082bc5),
     ("coral-sea/01b_coral_sea.toml", 0x4544e7849882af2a),
-    ("coral-sea/01c_coral_sea.toml", 0xcf0e6e36a3e39eee),
-    ("coral-sea/02a_coral_sea_oilers.toml", 0xe3d74fbbcd084e57),
+    ("coral-sea/01c_coral_sea.toml", 0x783ee3d37b15be08),
+    ("coral-sea/02a_coral_sea_oilers.toml", 0x661d4c5c16082bc5),
     ("coral-sea/02b_coral_sea_oilers.toml", 0x4544e7849882af2a),
-    ("coral-sea/02c_coral_sea_oilers.toml", 0xcf0e6e36a3e39eee),
+    ("coral-sea/02c_coral_sea_oilers.toml", 0x783ee3d37b15be08),
     (
         "coral-sea/03a_coral_sea_both_oilers.toml",
-        0xe3d74fbbcd084e57,
+        0x661d4c5c16082bc5,
     ),
     (
         "coral-sea/03b_coral_sea_both_oilers.toml",
@@ -264,14 +268,14 @@ const BEFORE: &[(&str, u64)] = &[
     ),
     (
         "coral-sea/03c_coral_sea_both_oilers.toml",
-        0xcf0e6e36a3e39eee,
+        0x783ee3d37b15be08,
     ),
-    ("five-days/01a_eastern_solomons.toml", 0x09ff3069b3b6c64b),
+    ("five-days/01a_eastern_solomons.toml", 0xae1b70a84e669f81),
     ("five-days/01b_eastern_solomons.toml", 0xd154c525fa803b8d),
-    ("five-days/01c_eastern_solomons.toml", 0xa0183099b6bbef63),
+    ("five-days/01c_eastern_solomons.toml", 0x55b02ee573255e13),
     (
         "five-days/02a_eastern_solomons_oilers.toml",
-        0x09ff3069b3b6c64b,
+        0xae1b70a84e669f81,
     ),
     (
         "five-days/02b_eastern_solomons_oilers.toml",
@@ -279,7 +283,7 @@ const BEFORE: &[(&str, u64)] = &[
     ),
     (
         "five-days/02c_eastern_solomons_oilers.toml",
-        0xa0183099b6bbef63,
+        0x55b02ee573255e13,
     ),
     (
         "forces-that-arrive/111b_carrier_force_intent.toml",
@@ -293,9 +297,9 @@ const BEFORE: &[(&str, u64)] = &[
         "men-ashore-no-more-coming/109_men_ashore_with_no_more_coming.toml",
         0x9a0d7acdb1a1d464,
     ),
-    ("midway/01a_midway.toml", 0x7f499d7aed1ec42a),
+    ("midway/01a_midway.toml", 0x5f6de67090e3801a),
     ("midway/01b_midway.toml", 0x747f2a173872fe49),
-    ("midway/01c_midway.toml", 0x51ff6eacd6b4f5d7),
+    ("midway/01c_midway.toml", 0x79f2afc2f0dc4f81),
     (
         "orders-inside-proof/36_one_convoy_on.toml",
         0x6e1422cadfbaf838,
@@ -328,14 +332,14 @@ const BEFORE: &[(&str, u64)] = &[
         0x130a56e3fb23efd0,
     ),
     ("table-hunger/01b_midway.toml", 0x5444e0b1bfe5d55f),
-    ("table-hunger/01c_midway.toml", 0x51ff6eacd6b4f5d7),
+    ("table-hunger/01c_midway.toml", 0x79f2afc2f0dc4f81),
     (
         "table-hunger/02b_eastern_solomons_oilers.toml",
         0xb58016163247dfca,
     ),
     (
         "table-hunger/02c_eastern_solomons_oilers.toml",
-        0x7066e4b2ec7883a9,
+        0xd62d809290e02ca3,
     ),
     (
         "table-hunger/03b_coral_sea_both_oilers.toml",
@@ -343,7 +347,7 @@ const BEFORE: &[(&str, u64)] = &[
     ),
     (
         "table-hunger/03c_coral_sea_both_oilers.toml",
-        0xcf0e6e36a3e39eee,
+        0x783ee3d37b15be08,
     ),
     ("table-hunger/07b_slice.toml", 0x8c82b9e0a37ea641),
     ("table-hunger/07c_slice.toml", 0x5bf9105d4d7d4976),

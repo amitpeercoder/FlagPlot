@@ -584,7 +584,7 @@ fn statement_5_a_limit_naming_a_source_binds_the_source_and_nothing_else() {
                 }));
     // The source binds: the hold forms its supply, which a limit with no
     // source names does not (the land-unit game above forms none and says
-    // its forces limit names no source).
+    // no source is named on it or above it, decision 0222, rule 1).
     assert!(limited
         .formed_all(1)
         .iter()
@@ -597,7 +597,7 @@ fn statement_5_a_limit_naming_a_source_binds_the_source_and_nothing_else() {
         .any(|(_, kind)| matches!(kind, IntentKind::KeepSupplied { .. })));
     assert!(land_only
         .said(1)
-        .contains("its forces limit names no source"));
+        .contains("no source is named on it or above it"));
 }
 
 /// The patrol game of statement 5: scenario 129's seven boats of the

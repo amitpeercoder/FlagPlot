@@ -3,5 +3,5 @@
 # instead of asserting); it is not edited by hand. One `name hexhash` line each.
 scenario_10_eastern_solomons_day_1 0a728f85dc8616aa
 scenario_17a_case_8 d6bb0637d5d4ccef
-scenario_128_statement_27_scenario_04a aef16875a121d670
-scenario_128_statement_27_scenario_05b 1c217693be7e3e75
+scenario_128_statement_27_scenario_04a a1a86068c839f509
+scenario_128_statement_27_scenario_05b bc828acbf9ff0fee

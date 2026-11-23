@@ -452,14 +452,15 @@ fn statement_1_a_side_reads_the_games_days() {
 /// gives now. They are the values `sim-cli hash` printed before this rule,
 /// remade for the state's layout alone at version 52 (decision 0201) and at
 /// version 53 (decision 0205), at version 54 (decision 0210) and at version
-/// 55 (decision 0214) and at version 56 (decision 0212), none of which moved an event of the game.
+/// 55 (decision 0214), at version 56 (decision 0212) and at version 57 and the rules label 31
+/// (decision 0222), none of which moved an event of the game.
 const PRE_RULE: [&str; 6] = [
-    "cdbcf42eb80293a5",
-    "6e19c55b6600d06a",
-    "e328281df72d6865",
-    "3d9f6dded49373e0",
-    "b511a32abae981b3",
-    "796d2eb901b10300",
+    "fcb97e7c4b7e3226",
+    "949f164f969a8855",
+    "6a145a37b6a68520",
+    "d19161d0e94767fd",
+    "1004bad4a7f7d356",
+    "9dd73ce9fed40be1",
 ];
 
 #[test]
@@ -481,7 +482,7 @@ fn statement_1_the_games_length_is_not_in_the_hash() {
     // And what a game of many days gives is what the game gave before this
     // rule, day for day.
     assert_eq!(hex16(&hundred[..6]), PRE_RULE.to_vec());
-    assert_eq!(format!("{:016x}", hundred[6]), "c1f3456b43e7aa3c");
+    assert_eq!(format!("{:016x}", hundred[6]), "340cbdacd1552311");
 }
 
 // ------------------------------------------------------------------ Statement 2

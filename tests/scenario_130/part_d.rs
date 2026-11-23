@@ -229,15 +229,23 @@ fn statement_18_an_area() {
 }
 
 /// Statement 18, the source of a forces limit: scenario 69 with the hold's
-/// forces limit naming no source. The reason says the limit names no
-/// source and that a source in the forces limit would change it.
+/// forces limit naming no source, and an Allied base 3 at C holding 500 t
+/// (scenario 69's own variant of decision 0222, rule 1): the reason says no
+/// source is named and that one may be named among the bases that could be
+/// one, and speaks of the source limit on the hold. (Where no base could be
+/// the source, rule 1's reason offers nothing and speaks of no limit.)
 #[test]
 fn statement_18_a_source() {
     let relative = "69_taken_and_held.toml";
+    let base_3 = "[[base]]\nid = 3\nname = \"Placeholder base C\"\nside = \"allied\"\nq = 0\nr = 6\nsupply_t = 500\nfuel_t = 0\n\n# Japanese base 2 at B";
     let text = changed(
-        &text_of(relative),
-        "intent = 2\ntask_forces = [1]\nsource = 1",
-        "intent = 2\ntask_forces = [1]",
+        &changed(
+            &text_of(relative),
+            "intent = 2\ntask_forces = [1]\nsource = 1",
+            "intent = 2\ntask_forces = [1]",
+        ),
+        "# Japanese base 2 at B",
+        base_3,
     );
     let played = play(relative, &text, 8);
     let found: Vec<(u32, &Reason)> = played
@@ -257,7 +265,10 @@ fn statement_18_a_source() {
             vec![on(LimitKind::Source, 2)],
             "day {day}: {reason:?}"
         );
-        assert_eq!(reason.would_change, vec!["a source in the forces limit"]);
+        assert_eq!(
+            reason.would_change,
+            vec!["a source named among base:3 (Placeholder base C)"]
+        );
     }
 }
 
