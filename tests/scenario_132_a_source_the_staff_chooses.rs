@@ -107,7 +107,7 @@
 //! - **7.** On day 2 the supply is served, says that no ship of its pool is afloat and sends nothing. The hold's plan is not marked failed.
 //! - **12.** The staff chooses nothing. It sets the supply's forces limit to source base 4 and no force, since none lies there; `supplied_from` says base 4, `chosen_by` `commander`. The supply sends nothing, and the hold's plan is not marked failed.
 //! - **13.** Withdrawn.
-//! - **14.** On the morning after the commander names base 2, the staff sets the supply's forces limit to source base 2 and task force 2, and task force 1 is no longer in it; `supplied_from` says base 2, `chosen_by` `commander`.
+//! - **14.** (Restated by the architect, Nov 23, 2026, decision 0228, the rulings after the build, 4.) On the morning of day 3, the day the commander names base 2, his command being taken in before the staff is asked, the staff sets the supply's forces limit to source base 2 and task force 2, and task force 1 is no longer in it; `supplied_from` says base 2, `chosen_by` `commander`.
 //! - **15.** From day 17 the source is still base 2 and `chosen_by` is `staff`: the staff does not choose again.
 //!
 //! Added:
