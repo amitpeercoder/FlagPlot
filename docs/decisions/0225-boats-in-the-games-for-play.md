@@ -105,3 +105,13 @@ The atoll (28.232 N, 177.370 W, which is 182.630 E) lies at east 217.77 nm, nort
 | Gato, 200 at 280 | -196.96, 34.73 | 20.81, 18.65 | (1, -1) at 20, 34.64: 16.0 nm | (1, 0): 26.8 nm |
 
 Nautilus's point lies within a third of a mile of the line between two hexes; the rule gives (4, -2), and her stated position of 4 June is in the other.
+
+## A ruling on the derivation, Nov 23, 2026
+
+The research of Nov 23, 2026 (`docs/research/submarine-rows-for-the-play-scenarios.md`, pull request 705) filed eight new submarine classes with speed rows, and ONI 222-J's torpedo line for the I-15 class. As `oob-derive` stood, the new classes' rows would have entered the pools of like classes of the S-boats' and Narwhal's estimated passage speeds, and the I-15 class's rows, though dated 1945, would have driven out its `torpedo_from` entry. Research on file must not change what the game reads until the architect rules on it. So:
+
+1. **A class named in a `[[left_out]]` entry of the list is in no like-class pool, unless its entry carries `like_class = true` with a reason** (`like_class_reason`). It is set on `jp-i-1-group` only: "in the pool of like classes as it has been since the list was first derived; whether it stays is the architect's to rule with the new rows (decision 0225, rule 13)". The loader refuses `like_class` without a reason, and an unknown key as it does today.
+2. **In `check_torpedo_from`, only a `torpedo_model` row that holds on the list's date drives a `torpedo_from` entry out;** a row beginning after that date is not read, as no row after the list's date is. Rows 17236 and 17237 stay as filed.
+
+The eight new classes are left out of `submarines_1942.toml` with the reason "On file, not derived: waits on the architect's ruling (decision 0225, rule 13)". The generated tables' rows are as before; the class file's header lists the eight among the classes left out.
+

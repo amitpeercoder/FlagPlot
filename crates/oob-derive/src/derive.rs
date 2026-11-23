@@ -290,6 +290,9 @@ pub struct Env<'a> {
     pub(crate) gaps: Vec<(String, Vec<String>)>,
     /// The list's file name, as `all_estimates` names it.
     pub(crate) list_name: String,
+    /// Classes the list leaves out without `like_class = true`: in no pool
+    /// of like classes (decision 0225, the ruling of Nov 23, 2026).
+    pub(crate) not_like: BTreeSet<String>,
 }
 
 /// A row of `aircraft_types.csv`.
@@ -505,6 +508,7 @@ impl<'a> Env<'a> {
             estimates: Vec::new(),
             all_estimates: Vec::new(),
             list_name: String::new(),
+            not_like: BTreeSet::new(),
             gaps: data
                 .rows("gaps.csv")
                 .into_iter()
@@ -1206,7 +1210,9 @@ impl<'a> Env<'a> {
     /// the mean over every like class of its `attribute` over its `from`,
     /// each division cut at the sixth place. The like classes are every
     /// class of her class's type on file, her own left out, with class rows
-    /// of both; each is read as any row is, and one that cannot be read, or
+    /// of both, but for a class the list leaves out without `like_class =
+    /// true` (decision 0225, the ruling of Nov 23, 2026); each is read as
+    /// any row is, and one that cannot be read, or
     /// that has either attribute estimated in any list (rule 8), fails the
     /// estimate rather than being passed over.
     #[allow(clippy::type_complexity)]
@@ -1259,7 +1265,7 @@ impl<'a> Env<'a> {
         let mut likes: Vec<(String, Dec, Dec, Dec, Read, Read)> = Vec::new();
         let mut ok = true;
         for (key, info) in &self.classes {
-            if info.kind_type != kind_type || key == class {
+            if info.kind_type != kind_type || key == class || self.not_like.contains(key) {
                 continue;
             }
             let a_rows = self.index.rows(Table::ClassFacts, key, attribute);
