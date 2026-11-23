@@ -1171,10 +1171,11 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
     }
     M.enemyBases.forEach(function (b) { var v = placeOf(b.place); label([b.base.name.toUpperCase(), 'Enemy base'], RED, function () { return v; }, 0.45, 1, [0, -0.2]); });
     var ashore = {};
-    M.units.forEach(function (u) { if (!u.place || !u.men_ashore) return; var k = u.place.q + ',' + u.place.r; ashore[k] = ashore[k] || { place: u.place, men: 0, units: 0 }; ashore[k].men += u.men_ashore; ashore[k].units++; });
+    M.units.forEach(function (u) { if (!u.place || !u.men_ashore) return; var k = u.place.q + ',' + u.place.r; ashore[k] = ashore[k] || { place: u.place, men: 0, units: 0, first: u }; ashore[k].men += u.men_ashore; ashore[k].units++; });
     Object.keys(ashore).forEach(function (k) {
       var a = ashore[k], v = placeOf(a.place), sq;
-      sq = fixed(tile('own', 'infantry', true, 0.16), v, -0.17, 0.06);
+      // The piece is the men's: a touch opens the first unit ashore there, and the card steps through the rest at the place.
+      sq = fixed(tile('own', 'infantry', true, 0.16), v, -0.17, 0.06, { kind: 'unit', unit: a.first, place: a.place });
       label(['YOUR MEN ASHORE', commas(a.men) + ' men, ' + a.units + ' units'], OWN, function () { return sq.position; }, 0.7, 1, [-0.6, 0.35]);
     });
     M.estimates.forEach(function (e) { var v = placeOf(e.place); if (v) label(['ENEMY ASHORE \u00B7 ' + strengthOf(e.men).toUpperCase().replace(' STRENGTH', '').replace(/^A /, '').replace('MORE THAN A BATTALION', 'BATTALION +'), 'About ' + aboutMen(e.men) + ' men', e.age_days ? e.age_days + ' days old' : 'Reported today'], RED, function () { return v; }, 1.0, 1, [0.55, -0.4]); });
@@ -2117,11 +2118,12 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
   // second touch on the same piece goes to the next.
   var stack = null, stackShowing = false;
   function thingPlace(t) { return t.kind === 'force' ? t.force.place : t.kind === 'contact' ? t.contact.place : t.kind === 'base' ? t.base.place : t.kind === 'boat' ? t.boat.place : t.kind === 'subreport' ? t.report.place : t.kind === 'waters' ? t.waters.place : t.place; }
-  function thingKey(t) { return t.kind === 'force' ? 'f' + t.force.task_force.handle : t.kind === 'contact' ? 'c' + t.contact.contact.handle : t.kind === 'base' ? 'b' + t.base.base.handle : t.kind === 'boat' ? 's' + t.boat.submarine.handle : t.kind === 'subreport' ? 'r' + t.report.place.q + ',' + t.report.place.r + ',' + t.report.day : t.kind === 'waters' ? 'w' + t.waters.place.q + ',' + t.waters.place.r + ',' + t.waters.distance_hexes : 'p'; }
+  function thingKey(t) { return t.kind === 'force' ? 'f' + t.force.task_force.handle : t.kind === 'contact' ? 'c' + t.contact.contact.handle : t.kind === 'base' ? 'b' + t.base.base.handle : t.kind === 'unit' ? 'u' + t.unit.land_unit.handle : t.kind === 'boat' ? 's' + t.boat.submarine.handle : t.kind === 'subreport' ? 'r' + t.report.place.q + ',' + t.report.place.r + ',' + t.report.day : t.kind === 'waters' ? 'w' + t.waters.place.q + ',' + t.waters.place.r + ',' + t.waters.distance_hexes : 'p'; }
   function thingsAt(pl) {
     var list = [];
     M.bases.forEach(function (b) { if (sameHex(b.place, pl)) list.push({ kind: 'base', base: b }); });
     M.forces.forEach(function (f) { if (f.place && !(f.available_from > M.day) && sameHex(f.place, pl)) list.push({ kind: 'force', force: f }); });
+    M.units.forEach(function (u) { if (u.place && u.men_ashore && sameHex(u.place, pl)) list.push({ kind: 'unit', unit: u, place: u.place }); });
     var his = M.enemyBases.filter(function (b) { return sameHex(b.place, pl); })[0];
     if (his || M.estimates.some(function (e) { return sameHex(e.place, pl); })) list.push({ kind: 'place', place: pl, base: his });
     M.contacts.forEach(function (c) { if (sameHex(c.place, pl)) list.push({ kind: 'contact', contact: c }); });
@@ -2132,7 +2134,7 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
   }
   function showStack() {
     var t = stack.list[stack.i]; stackShowing = true;
-    try { ({ force: cardForce, contact: cardContact, base: cardBase, place: cardPlace, boat: cardBoat, subreport: cardSubReport, waters: cardWaters })[t.kind](t); } finally { stackShowing = false; }
+    try { ({ force: cardForce, contact: cardContact, base: cardBase, unit: function (t) { cardUnit(t.unit); }, place: cardPlace, boat: cardBoat, subreport: cardSubReport, waters: cardWaters })[t.kind](t); } finally { stackShowing = false; }
     $('card-step').hidden = stack.list.length < 2; $('card-step-n').textContent = (stack.i + 1) + ' of ' + stack.list.length;
     $('card-prev').title = 'The one before, of those at this place'; $('card-next').title = 'The next, of those at this place';
   }
