@@ -226,3 +226,152 @@ The files were built with decision 0228, on the branch `source-build`. Read ther
 - **The files of `table-rear-bases/` carry that key from the files they are made from.** Statement 2 stands: against those files they differ only as it lists.
 - **The measurement of step 5 is not made, and is owed straight after the merge, before anything else is planned on the 39 days.** It is not a condition of the merge: nothing is tuned to it and neither ruling moves for what it shows. Because the table's files now state decision 0228's key, it is made in four arrangements on seeds 1 to 100, each against the run of Nov 23, 2026: ruling 1 alone and ruling 2 alone, without the key; both, without the key; both, with the key, which is the game the table plays. The files without the key are made for the measurement by the script and are not kept. Until it is reported, this record does not say what the rulings did, and the table's 39 days are played unmeasured; the report says so if a base, a run or the men ashore fare worse than on Nov 23.
 
+
+## The measurement after decision 0228, Nov 23, 2026
+
+The measurement that "The architect's rulings after the build" owes, made on `rear-measure`, cut from main after decision 0228 merged (HEAD `d966a7ac`). It states what was found. It rules nothing, moves no figure and judges no mark.
+
+### What was run
+
+- **Seeds 1 to 100, 39 days, staff against staff,** each seed one `sim-cli export` of the arrangement's file, read by a script kept outside the repository (the umpire's reading, as the proofs' readers are). The release build: `cargo build --release -p sim-cli`, then `target/release/sim-cli export FILE --seed N --out OUT` for N from 1 to 100. The Nov 23 run's own commands are not on file; its arrangement is the record's words above ("the proofs' arrangement with both sides from their orders and the table's ground figures"), taken here as `data/scenarios/stage-3-proof/07a_slice.toml` (decision 0153's arrangement (a): each side from its own intents, `[[command]]` on day 1) with its `ground` line naming `../../reference/ground_hunger.toml` (the figures the table plays), no submarines, no `staff_chooses_supply_sources`. That reading is the measurer's; the record does not name the file.
+- **The files are the table's 39 days only in part.** `data/scenarios/table-rear-bases/` holds the games the table plays, with neither side given intents: no staff has intents there, so the measure cannot be made on them. Each arrangement file here is the Nov 23 arrangement above with the rulings' edits made by the same rules as `scripts/table-rear-bases/make_files.py` (ruling 1: task forces 30 and 32 to 39 `at_base = 2`, `home_port = 2`, `available_from` one less; ruling 2: base 3 `supply_t = 2120` for 960), and, where the arrangement has it, the key (`[side.allied]` and `[side.japanese]` each with `staff_chooses_supply_sources = true`) at the end. They are temporary files in `data/scenarios/tmp-inside/`, never committed; no committed scenario was changed.
+- **Arrangements:** (a0) the Nov 23 arrangement re-run on this build, to say whether the earlier run reproduces; (1) ruling 1 alone; (2) ruling 2 alone; (3) both, no key; (4) both, with the key. Two more, for the table's own game with submarines (decisions 0225 and 0227), made from `data/scenarios/table-boats/07a_slice_submarines.toml` (the same game with 13 boats, the table's ground figures and the key on both sides): (s0) as it stands, no rulings, and (s4) with both rulings.
+- **Measures** are those of the Nov 23 measurement, read from each seed's events and the base records at the end of each day (a base "at nothing" is under 0.5 t at a day's end; "short" is a `base_supply_spent` event that paid less than it asked), and the step 5 list of "What the rulings change" (days unfed, men lost to hunger, tons shipped and not, runs by night and by day). Not measured: bombs as Lunga's drain, carrier forces' fuel, and the staff's other "could not" reasons.
+
+### Findings
+
+1. **The Nov 23 arrangement reproduces on this build.** Every figure the record states is met by a0: Espiritu Santo's supply gone on day 25 with the staff's "cannot be met" from day 26 in all seeds, its fuel on day 6, Lunga's fuel on day 4, Lunga's aircraft short for sorties in 75 seeds from day 27 (the record has 75 and 27) and its men in 54 from day 30 (54 and 30), Allied men unfed in 35 seeds from day 38 (the record's "35 seeds, from about day 38", which it calls the stock at the place at nothing; here Lunga's stock is at nothing at a day's end in 87 seeds from day 25 and the count of 35 is the Allied men unfed), Japanese men unfed from day 12 in every seed, 1,009 to 1,011 lost, Rabaul never short. (Two seeds of a0 failed in the reader on a step with no changes and were run again once the reader was mended.) Decision 0228's code is therefore in this build and a0 is unchanged by it: its key is off.
+2. **The key changes nothing in these games.** Arrangement (4) is arrangement (3) with the key: the hash of every day of seed 1 is the same, and the summary of every one of the 100 seeds is the same, in every measure. The key is read (a misspelt key is refused). In these games each side has its commands of day 1 and the staff's choices are the same with it and without it. The control with submarines (s0) differs from a0 by the boats only and plays the same way within a few seeds; (s4) is the same as (4) in every measure.
+3. **Ruling 1 alone** removes "cut to ... by the source's 0 t above its reserve" (100 of 100 seeds, 4.0 a seed, first on day 10, to 0), changes the order of the Japanese lifts from 13.9 by day, 5.8 by night to 5.8 by day, 13.7 by night (by the words of the staff's reasons: "goes by day" against "lands in the night" or "is set to"), loads 793 t at Rabaul a seed for 817, and changes nothing else in the Japanese hunger: Japanese men are unfed in every seed from day 2 (at Tulagi) and every day from day 12 to the end, and 1,011 men a seed are lost to hunger, as in a0. Allied figures move a little (Lunga's men short in 49 seeds, from day 33, for 54, from day 30; Allied men unfed in 26 seeds for 35).
+4. **Ruling 2 alone** moves the Allied side and not the Japanese. Espiritu Santo's supply is at nothing at a day's end in 96 seeds from day 31 (100 from day 25), at the end of day 39 in 96; the staff's "cannot be met" in 56 seeds, 0.8 a seed, first on day 37 (100 seeds, 7.2 a seed, day 26); Lunga's stock at nothing at the end of day 39 in 5 seeds (82); Lunga's aircraft short for sorties in 55 seeds from day 25 (75 from day 27), its men in 39 seeds from day 27 (54 from day 30); Allied men unfed in 2 seeds (35). Espiritu Santo's fuel is still gone on day 6, as ruling 3 leaves it. The Japanese side is a0's: the lifts are cut in 100 seeds, and the same 1,011 men are lost.
+5. **Both rulings** add up: the Allied figures are those of ruling 2 alone, a little better (Lunga's stock at nothing at the end of day 39 in no seed, the "cannot be met" in 50 seeds, Lunga's men short in 27 seeds from day 27, no Allied man unfed), and the Japanese lifts are those of ruling 1 alone. Shortland holds nothing at the end of day 1 in every arrangement (it starts with nothing). Rabaul is never at nothing in any. Lunga is Allied at the end in 100 of 100 seeds in every arrangement.
+6. **The Japanese hunger at Lunga is not moved by either ruling.** In every arrangement the same 1,009 to 1,011 men a seed are lost, unfed from day 12 in every seed. In the one export read for the cause (arrangement (3), seed 1) the unfed men are at (2,-5), fed from base 6 ("Placeholder Japanese stock west of the Lunga", 71 t on day 1 and at nothing from day 12), 28 days of the game; and the men of the force that landed at (2,-4) on day 10 are fed from base 10, formed by that landing, and unfed 6 days. No Japanese lift "cut" by a source remains in (1), (3) or (4), so the loads that reach those men are not cut by a source; what they carry is as the files have it.
+7. **What is lower or later than in a0,** since the record asks it said: Rabaul's stock at the end of day 39 is 8,113 t a seed under ruling 1 alone, 8,176 under ruling 2 alone and 7,988 under both, against 8,268 in a0 (Rabaul is never at nothing); the supply the Japanese runs unload at base 10 is 967 t a seed under ruling 1 (989 in a0), 969 under ruling 2, 1,008 under both, and at base 11 (formed by a landing in some seeds) 42, 70 and 44 against 71; the Japanese lift orders number 30.5 a seed under ruling 1 and 30.6 under both against 31.2. Espiritu Santo's supply is at nothing at the end of day 39 in 95 of 100 seeds under both rulings (100 in a0) and the staff is still told "cannot be met" in half the seeds, late. Earlier than in a0: the first day Lunga's aircraft are short for sorties is day 26.5 under ruling 1 alone (27 in a0) and day 25 under ruling 2 alone and under both (27), in fewer seeds (74, 55 and 59 against 75), and Lunga's supply is at nothing from day 26 under ruling 1 alone and under both (25 in a0, and 25 under ruling 2 alone).
+
+### The tables
+
+Each table is an arrangement against the Nov 23 run: the record's figures first, then a0 (the Nov 23 arrangement on this build), then the arrangement. "Seeds" is of 100; "day" is the median first day, with the range where it is not one day; "a seed" is the mean over the 100.
+
+**Ruling 1 alone, no key.**
+
+| Measure | The Nov 23 run, as the record states it | The Nov 23 arrangement re-run on this build | This arrangement |
+|---|---|---|---|
+| Espiritu Santo, supply at nothing at a day's end | all shipped on day 24; later runs cannot be met from day 26, 100 seeds | 100 seeds, day 25 (20 to 33) | 100 seeds, day 25 (20 to 35) |
+| Espiritu Santo, fuel at nothing | gone day 6 | 100 seeds, day 6 (6 to 6) | 100 seeds, day 6 (6 to 6) |
+| Espiritu Santo, supply at nothing at the end of day 39 (seeds) | not stated | 100 | 100 |
+| Allied staff: "cannot be met: the source's stock" | every later run from day 26, 100 seeds | 100 seeds, 7.2 a seed, first day 26 | 97 seeds, 6.6 a seed, first day 26 |
+| Lunga (base 1), fuel at nothing | gone day 4 | 100 seeds, day 4 (4 to 4) | 100 seeds, day 4 (4 to 4) |
+| Lunga, supply at nothing at a day's end | not stated | 87 seeds, day 25 (20 to 39) | 84 seeds, day 26 (20 to 39) |
+| Lunga, supply at nothing at the end of day 39 (seeds) | not stated | 82 | 75 |
+| Lunga, aircraft short of supply for sorties | 75 seeds from day 27 | 75 seeds, day 27 | 74 seeds, day 26.5 |
+| Lunga, men short of supply (paid less than asked) | 54 seeds from day 30 | 54 seeds, day 30 | 49 seeds, day 33 |
+| Allied men unfed anywhere (first day) | 35 seeds from about day 38 (read in the record as the Allied stock at the place at nothing) | 35 seeds, day 38 | 26 seeds, day 37.5 |
+| Shortland (base 7), supply at nothing at a day's end | holds nothing | 100 seeds, day 1 (1 to 1) | 100 seeds, day 1 (1 to 1) |
+| Rabaul (base 2), supply or fuel at nothing | never short | 0 seeds / 0 seeds | 0 seeds / 0 seeds |
+| Japanese lifts "cut to ... by the source's 0 t above its reserve" | every lift from Shortland, "nothing to take" | 100 seeds, 4.0 a seed, first day 10 | 0 seeds |
+| Japanese men unfed anywhere (first day) | not stated | 100 seeds, day 2 | 100 seeds, day 2 |
+| Japanese men unfed every day to the end of the game | unfed from day 12 in all 100 seeds | 100 seeds, from day 12 | 100 seeds, from day 12 |
+| Japanese men lost to hunger | about 1,000 | 1011 a seed (median 1009) | 1011 a seed (median 1009) |
+| Supply loaded at Rabaul (t a seed, mean) | not stated | 817 | 793 |
+| Supply loaded at Espiritu Santo (t a seed, mean) | not stated | 960 | 960 |
+| Supply unloaded at Lunga, base 1 (t a seed, mean) | not stated | 4122 | 4122 |
+| Japanese lift orders, by day / by night / other (a seed, mean) | not stated | 13.9 / 5.8 / 11.4 | 5.8 / 13.7 / 11.0 |
+
+**Ruling 2 alone, no key.**
+
+| Measure | The Nov 23 run, as the record states it | The Nov 23 arrangement re-run on this build | This arrangement |
+|---|---|---|---|
+| Espiritu Santo, supply at nothing at a day's end | all shipped on day 24; later runs cannot be met from day 26, 100 seeds | 100 seeds, day 25 (20 to 33) | 96 seeds, day 31 (26 to 39) |
+| Espiritu Santo, fuel at nothing | gone day 6 | 100 seeds, day 6 (6 to 6) | 100 seeds, day 6 (6 to 6) |
+| Espiritu Santo, supply at nothing at the end of day 39 (seeds) | not stated | 100 | 96 |
+| Allied staff: "cannot be met: the source's stock" | every later run from day 26, 100 seeds | 100 seeds, 7.2 a seed, first day 26 | 56 seeds, 0.8 a seed, first day 37 |
+| Lunga (base 1), fuel at nothing | gone day 4 | 100 seeds, day 4 (4 to 4) | 100 seeds, day 4 (4 to 4) |
+| Lunga, supply at nothing at a day's end | not stated | 87 seeds, day 25 (20 to 39) | 89 seeds, day 25 (20 to 36) |
+| Lunga, supply at nothing at the end of day 39 (seeds) | not stated | 82 | 5 |
+| Lunga, aircraft short of supply for sorties | 75 seeds from day 27 | 75 seeds, day 27 | 55 seeds, day 25 |
+| Lunga, men short of supply (paid less than asked) | 54 seeds from day 30 | 54 seeds, day 30 | 39 seeds, day 27 |
+| Allied men unfed anywhere (first day) | 35 seeds from about day 38 (read in the record as the Allied stock at the place at nothing) | 35 seeds, day 38 | 2 seeds, day 38 |
+| Shortland (base 7), supply at nothing at a day's end | holds nothing | 100 seeds, day 1 (1 to 1) | 100 seeds, day 1 (1 to 1) |
+| Rabaul (base 2), supply or fuel at nothing | never short | 0 seeds / 0 seeds | 0 seeds / 0 seeds |
+| Japanese lifts "cut to ... by the source's 0 t above its reserve" | every lift from Shortland, "nothing to take" | 100 seeds, 4.0 a seed, first day 10 | 100 seeds, 4.0 a seed, first day 10 |
+| Japanese men unfed anywhere (first day) | not stated | 100 seeds, day 2 | 100 seeds, day 2 |
+| Japanese men unfed every day to the end of the game | unfed from day 12 in all 100 seeds | 100 seeds, from day 12 | 100 seeds, from day 12 |
+| Japanese men lost to hunger | about 1,000 | 1011 a seed (median 1009) | 1011 a seed (median 1009) |
+| Supply loaded at Rabaul (t a seed, mean) | not stated | 817 | 856 |
+| Supply loaded at Espiritu Santo (t a seed, mean) | not stated | 960 | 2102 |
+| Supply unloaded at Lunga, base 1 (t a seed, mean) | not stated | 4122 | 5018 |
+| Japanese lift orders, by day / by night / other (a seed, mean) | not stated | 13.9 / 5.8 / 11.4 | 14.0 / 5.8 / 11.2 |
+
+**Both rulings, no key.**
+
+| Measure | The Nov 23 run, as the record states it | The Nov 23 arrangement re-run on this build | This arrangement |
+|---|---|---|---|
+| Espiritu Santo, supply at nothing at a day's end | all shipped on day 24; later runs cannot be met from day 26, 100 seeds | 100 seeds, day 25 (20 to 33) | 95 seeds, day 33 (26 to 39) |
+| Espiritu Santo, fuel at nothing | gone day 6 | 100 seeds, day 6 (6 to 6) | 100 seeds, day 6 (6 to 6) |
+| Espiritu Santo, supply at nothing at the end of day 39 (seeds) | not stated | 100 | 95 |
+| Allied staff: "cannot be met: the source's stock" | every later run from day 26, 100 seeds | 100 seeds, 7.2 a seed, first day 26 | 50 seeds, 0.6 a seed, first day 37 |
+| Lunga (base 1), fuel at nothing | gone day 4 | 100 seeds, day 4 (4 to 4) | 100 seeds, day 4 (4 to 4) |
+| Lunga, supply at nothing at a day's end | not stated | 87 seeds, day 25 (20 to 39) | 84 seeds, day 26 (20 to 32) |
+| Lunga, supply at nothing at the end of day 39 (seeds) | not stated | 82 | 0 |
+| Lunga, aircraft short of supply for sorties | 75 seeds from day 27 | 75 seeds, day 27 | 59 seeds, day 25 |
+| Lunga, men short of supply (paid less than asked) | 54 seeds from day 30 | 54 seeds, day 30 | 27 seeds, day 27 |
+| Allied men unfed anywhere (first day) | 35 seeds from about day 38 (read in the record as the Allied stock at the place at nothing) | 35 seeds, day 38 | 0 seeds |
+| Shortland (base 7), supply at nothing at a day's end | holds nothing | 100 seeds, day 1 (1 to 1) | 100 seeds, day 1 (1 to 1) |
+| Rabaul (base 2), supply or fuel at nothing | never short | 0 seeds / 0 seeds | 0 seeds / 0 seeds |
+| Japanese lifts "cut to ... by the source's 0 t above its reserve" | every lift from Shortland, "nothing to take" | 100 seeds, 4.0 a seed, first day 10 | 0 seeds |
+| Japanese men unfed anywhere (first day) | not stated | 100 seeds, day 2 | 100 seeds, day 2 |
+| Japanese men unfed every day to the end of the game | unfed from day 12 in all 100 seeds | 100 seeds, from day 12 | 100 seeds, from day 12 |
+| Japanese men lost to hunger | about 1,000 | 1011 a seed (median 1009) | 1011 a seed (median 1009) |
+| Supply loaded at Rabaul (t a seed, mean) | not stated | 817 | 858 |
+| Supply loaded at Espiritu Santo (t a seed, mean) | not stated | 960 | 2086 |
+| Supply unloaded at Lunga, base 1 (t a seed, mean) | not stated | 4122 | 5033 |
+| Japanese lift orders, by day / by night / other (a seed, mean) | not stated | 13.9 / 5.8 / 11.4 | 5.8 / 13.8 / 11.0 |
+
+**Both rulings, with the key.**
+
+| Measure | The Nov 23 run, as the record states it | The Nov 23 arrangement re-run on this build | This arrangement |
+|---|---|---|---|
+| Espiritu Santo, supply at nothing at a day's end | all shipped on day 24; later runs cannot be met from day 26, 100 seeds | 100 seeds, day 25 (20 to 33) | 95 seeds, day 33 (26 to 39) |
+| Espiritu Santo, fuel at nothing | gone day 6 | 100 seeds, day 6 (6 to 6) | 100 seeds, day 6 (6 to 6) |
+| Espiritu Santo, supply at nothing at the end of day 39 (seeds) | not stated | 100 | 95 |
+| Allied staff: "cannot be met: the source's stock" | every later run from day 26, 100 seeds | 100 seeds, 7.2 a seed, first day 26 | 50 seeds, 0.6 a seed, first day 37 |
+| Lunga (base 1), fuel at nothing | gone day 4 | 100 seeds, day 4 (4 to 4) | 100 seeds, day 4 (4 to 4) |
+| Lunga, supply at nothing at a day's end | not stated | 87 seeds, day 25 (20 to 39) | 84 seeds, day 26 (20 to 32) |
+| Lunga, supply at nothing at the end of day 39 (seeds) | not stated | 82 | 0 |
+| Lunga, aircraft short of supply for sorties | 75 seeds from day 27 | 75 seeds, day 27 | 59 seeds, day 25 |
+| Lunga, men short of supply (paid less than asked) | 54 seeds from day 30 | 54 seeds, day 30 | 27 seeds, day 27 |
+| Allied men unfed anywhere (first day) | 35 seeds from about day 38 (read in the record as the Allied stock at the place at nothing) | 35 seeds, day 38 | 0 seeds |
+| Shortland (base 7), supply at nothing at a day's end | holds nothing | 100 seeds, day 1 (1 to 1) | 100 seeds, day 1 (1 to 1) |
+| Rabaul (base 2), supply or fuel at nothing | never short | 0 seeds / 0 seeds | 0 seeds / 0 seeds |
+| Japanese lifts "cut to ... by the source's 0 t above its reserve" | every lift from Shortland, "nothing to take" | 100 seeds, 4.0 a seed, first day 10 | 0 seeds |
+| Japanese men unfed anywhere (first day) | not stated | 100 seeds, day 2 | 100 seeds, day 2 |
+| Japanese men unfed every day to the end of the game | unfed from day 12 in all 100 seeds | 100 seeds, from day 12 | 100 seeds, from day 12 |
+| Japanese men lost to hunger | about 1,000 | 1011 a seed (median 1009) | 1011 a seed (median 1009) |
+| Supply loaded at Rabaul (t a seed, mean) | not stated | 817 | 858 |
+| Supply loaded at Espiritu Santo (t a seed, mean) | not stated | 960 | 2086 |
+| Supply unloaded at Lunga, base 1 (t a seed, mean) | not stated | 4122 | 5033 |
+| Japanese lift orders, by day / by night / other (a seed, mean) | not stated | 13.9 / 5.8 / 11.4 | 5.8 / 13.8 / 11.0 |
+
+### The control with submarines
+
+The table's own game with its 13 boats (`07a_slice_submarines.toml`, key on) as it stands (s0), and with both rulings (s4), agree with a0 and with (4) respectively in every measure above to within a seed or two (s0 against a0: Espiritu Santo's supply at nothing in 100 seeds, day 25; the staff's "cannot be met" in 100 seeds, 7.2 a seed; Lunga's aircraft short in 75 seeds from day 27, its men in 54 from day 30; Allied men unfed in 34; Japanese lifts cut in 100 seeds; the same 1,011 men lost). (s4) is (4) in every figure.
+
+### What was not run
+
+The table's own files (`table-rear-bases/`, neither side given intents) were not played: they have no staff intents, so no loading, shipping or hunger follows from them on its own. The pairings with a player in one seat are not measured. Nothing here says what the table's game does with the rulings when a player orders a hold; the key's effect was looked for in games where each side has orders on day 1 and none was found.
+
+### Facts for the architect
+
+The measurement reports, and does not decide: that the Japanese hunger and its 1,011 men lost are not moved by either ruling; that the key made no difference in these games; that ruling 2's figure still leaves Espiritu Santo at nothing in 95 seeds by day 39; that ruling 1 turns the Japanese lifts from day to night runs (13.9 by day, 5.8 by night to 5.8 by day, 13.7 by night); and that Espiritu Santo's fuel is gone on day 6 in every arrangement.
+
+## The architect's reading of the measurement, Nov 23, 2026
+
+Read: the section above, and `data/scenarios/stage-3-proof/07a_slice.toml` for what each side is given in it. A reading; no figure, ruling or mark is changed by it.
+
+1. **The arrangement stands.** The record did not name the file of the first run, which was the architect's omission. `stage-3-proof/07a_slice.toml` with the table's ground figures is what "the proofs' arrangement with both sides from their orders and the table's ground figures" says, and its re-run meets every figure the first run recorded, which is the test of it. It is now named: any later measurement against the run of Nov 23 uses that file so changed. One reading of the first run is corrected by the re-run: "35 seeds, from about day 38" is the Allied men unfed, not Lunga's stock at nothing at a day's end, which is 87 seeds from day 25.
+2. **That the key changes nothing there is as expected.** Each side states "control an island" and nothing else, so no commander's hold lacks a source, and under an island the one rule of choosing gives the base the old rule gave: Rabaul against bases with nothing to spare, Espiritu Santo alone (decision 0228 said so as a lead; this confirms it). Neither source has men or aircraft enough for its own fifteen days to bind a load. So the key's effect is not measured here and cannot be in this file. It is proved where it acts, in scenario 132, and seen at the table in the five-day check of a hold of Lunga. No measurement of it on 100 seeds is owed: it will be read in the first measured game in which a commander holds a place and names no source, which stage 4's trial has.
+3. **Ruling 2 did what a larger stock does, and no more is claimed.** With both rulings no Allied man is unfed (35 seeds before), Lunga ends with supply in every seed (82 at nothing before), and the staff says "cannot be met" in half the seeds, late, for all of them from day 26. Espiritu Santo is still emptied in 95 seeds by about day 33: the figure is a least figure and plays as one. It is not moved.
+4. **Ruling 1 did what it was for and did not feed the men.** No lift is cut by an empty source, and the runs go by night where they went by day, which answers the doubt the review raised about the longer passage. The Japanese men lost to hunger are the same 1,011 a seed. So the empty anchorage, which the first measurement named as "a cause no mend has addressed", was not the cause that binds.
+5. **The Japanese hunger is decision 0159's named miss still, and its cause is now closer.** In the one game read for it the unfed men are those fallen back to (2,-5), fed from the 71 t there, which is gone on day 12. That hex is no named place of the island, so no hold stands there and the staff forms no supply for it. One game is a lead, not a finding. Owed, to the plan of stage 4's trial and not to this record: the cause read on more seeds, and whether men of the side ashore on an island at a place the order does not name are the order's to feed.
+6. **Still open in this record:** Espiritu Santo's fuel, gone on day 6 in every arrangement (ruling 3, and its research); Lunga's fuel, gone on day 4; Nouméa, a port for a base and one base fed from another, which wait.
+7. **Decision 0224 stands as built.** Its two rulings are in the table's files, measured, and neither is withdrawn or adjusted. It names no new miss of its own.

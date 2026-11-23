@@ -898,7 +898,7 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
 
   // ---- what the side knows, as the tools gave it ----
   var OFFERED = {}, clock = { at: 'dusk', day: 1 }, lastTold = [], stopArrive = '', stopEvening = false, since = { from: '', phases: [] }, versusWaited = false;
-  var M = { air: [], names: {}, hexNames: {}, day: 1, lastDay: 0, forces: [], units: [], bases: [], enemyBases: [], contacts: [], estimates: [], boats: [], subReports: [], suspected: [], state: null, over: false, result: null, asking: [] };
+  var M = { air: [], names: {}, hexNames: {}, day: 1, lastDay: 0, forces: [], units: [], bases: [], enemyBases: [], contacts: [], estimates: [], boats: [], subReports: [], suspected: [], subEstimate: null, state: null, over: false, result: null, asking: [] };
   var lastRun = null, draft = null;
   function baseByNumber(n) { var all = M.bases.concat(M.enemyBases), i; for (i = 0; i < all.length; i++) if (num(all[i].base.handle) === n) return all[i]; return null; }
   function intentPlace(it) {
@@ -1066,6 +1066,8 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
     (lostMarks || []).forEach(function (pl) { var v = placeOf(pl); if (!v) return; var c = cpx(v), k = 8 * u; g.save(); g.strokeStyle = '#5c5a52'; g.lineWidth = 2.4 * u; g.setLineDash([3 * u, 4 * u]); g.beginPath(); g.moveTo(c[0] - k, c[1] - k); g.lineTo(c[0] + k, c[1] + k); g.moveTo(c[0] + k, c[1] - k); g.lineTo(c[0] - k, c[1] + k); g.stroke(); g.restore(); });
     // Waters where the side suspects enemy submarines: marked faintly, with no boat drawn. A report of a submarine: a mark of its own.
     (M.suspected || []).forEach(function (w) { var h = hexAt[w.place.q + ',' + w.place.r]; if (h) reachShape({ lat: h[3], lon: h[4], from: 0, to: 0, range: (w.distance_hexes + 0.5) * hexMiles(), ring: true, fill: true, red: true }, true, u); });
+    // The side's estimate of the enemy's boats (decision 0223, stage D1): each reported area as waters with the count, under the reports.
+    ((M.subEstimate && M.subEstimate.areas) || []).forEach(function (e) { var h = hexAt[e.place.q + ',' + e.place.r]; if (h) reachShape({ lat: h[3], lon: h[4], from: 0, to: 0, range: (e.distance_hexes + 0.5) * hexMiles(), ring: true, fill: true, red: true, label: 'about ' + e.count }, true, u); });
     (M.subReports || []).forEach(function (r) { var v = placeOf(r.place); if (v) subMark(cpx(v), u, Math.max(0.3, 1 - (r.age_pulses || 0) / 9)); });
     // The station of the boat whose card is open, and of a boat's order being drafted; the stations a patrol being drafted would give.
     (M.boats || []).forEach(function (b) { if (boatShown !== b.submarine.handle || $('card').hidden || !b.station) return; var s = placeOf(b.station), f = b.place && placeOf(b.place); if (!s) return; if (f && !sameHex(b.station, b.place)) { var fc = cpx(f), sc = cpx(s); g.save(); g.strokeStyle = 'rgba(18,51,92,0.6)'; g.lineWidth = 2 * u; g.setLineDash([6 * u, 5 * u]); g.beginPath(); g.moveTo(fc[0], fc[1]); g.lineTo(sc[0], sc[1]); g.stroke(); g.restore(); } stationMark(cpx(s), u, '', false); });
@@ -1272,7 +1274,7 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
       M.forces = a[0].task_forces || []; M.units = a[0].land_units || [];
       M.bases = a[1].bases || []; M.enemyBases = a[1].enemy_bases || [];
       M.contacts = a[2].contacts || []; M.estimates = a[2].ground_estimates || [];
-      M.boats = a[0].submarines || []; M.subReports = a[2].submarine_reports || []; M.suspected = a[2].suspected_waters || [];
+      M.boats = a[0].submarines || []; M.subReports = a[2].submarine_reports || []; M.suspected = a[2].suspected_waters || []; M.subEstimate = a[2].submarine_estimate || null;
       M.state = a[3]; M.queue = a[5] && a[5].entries ? { entries: a[5].entries, as_of: a[5].as_of, at: a[5].clock && a[5].clock.at } : null;
       if (a[4].refused != null) { var at = /stands at (\d{4}) of day (\d+)/.exec(a[4].refused); if (at) clock = { at: at[1], day: parseInt(at[2], 10) }; M.day = clock.day; if (a.air) M.air = a.air;
         // Inside a day there is no briefing to give the game's last day. A page loaded then asks the

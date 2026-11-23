@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 23, 2026, on the designer's ques
 
 Summary: Since decision 0218 a side has boats, a commander can order a patrol of waters, and the staff spreads the boats evenly over those waters. Both navies' staffs do it the same way, no staff sends a boat out unless the commander orders a patrol, and what a side believes of enemy boats is only what a scenario tells it and the reports it holds. This plan gives each navy its own way of placing boats, lets the staff form a patrol under the orders that call for one, and gives the staff an estimate of the enemy's boats made from its own reports, the attacks it has suffered and, for the navy whose record shows it, habit.
 
-Standing: Planned on Nov 23, 2026; amended on review; stages 0 and A built; stage D1's statements written, not built.
+Standing: Planned on Nov 23, 2026; amended on review; stages 0 and A built; stage D1 built (see "As built: stage D1").
 
 ## Why
 
@@ -248,4 +248,24 @@ After day 1 the eight reports make four areas, begun in hex order: (-4,2) with f
 - **The chart** (hatched waters with the count, under the PIECES control) is proved by the table's screen check, not by this scenario.
 - **The days of an area's reports** are shown differing between areas, not within one: no game here has one area with reports of two days.
 - **`estimate_join_hexes`, 2, is a judgement** with no row under it, marked so where it is written.
+
+## As built: stage D1 (Nov 23, 2026)
+
+Built to the architect's statements of scenario 134 (`tests/scenario_134_the_estimate_of_boats.rs`), every hex and count as worked by hand; no statement was changed and all 15 hold, the 10 tests of the file passing with their ignore markers removed. Agent interface version 54 (main stood at 53 when this was built); no state, hash, layout, saved game, rules label or doctrine change.
+
+**The function** is `sim_core::submarine_estimate::submarine_estimate(picture: &CommandView, own_bases: &[(BaseId, Hex)], doctrine: SubmarineDoctrine) -> SubmarineEstimate`, in `crates/sim-core/src/submarine_estimate.rs`. It takes a picture, the side's own bases and the side's own doctrine and nothing else. `ESTIMATE_JOIN_HEXES` is 2, a constant marked a judgement where it is written, in no figure file. Reports are taken in hex order; a report joins the first area (the earliest begun) whose first report is within 2 of it, else begins one; a report is counted where it is more than one hex from every report counted before it in its area; the days of an area are the days of its reports, each once, in order; by habit is each of the side's own bases in base number order, whatever reports are held.
+
+**Where it is offered.** `list_contacts` gives `submarine_estimate` (`areas`, `by_habit`) beside `submarine_reports` and `suspected_waters`, left out when empty and as a whole when it holds nothing; the schema, the tool's MCP description, the rulebook (chapter 10, The estimate of the enemy's boats), the glossary ("Estimate of boats") and `docs/commands.md` say so. The briefing's `submarines` part, the tool `intelligence` and every other answer are unchanged. A seat is given the estimate of its own picture (`area_picture`), the bases of the side's own view, and the doctrine of the side's own view. The table's chart draws each reported area as faint red waters with its count, beside the reports (not hatched; proved by the screen check's run, not by a statement).
+
+**Choices the record left, made as the record's rulings read.** An area's words are "Enemy submarines reported here, about N." and a base's "Enemy submarines may be expected off NAME." Within an area the `reports` are given as places, the days as whole numbers. The test builds the habit, suspected-waters, command-levels, ninth-boat and cut-salvoes games from the file's text, and plays the seat-at-a-command games through a session (the seat placed before day 1, the scenario's own Allied orders given through `issue_orders`).
+
+**Comparison.** The recorded games' transcripts were remade with `regame.py` and each differs from the one before in its version line alone.
+
+### Rule card
+
+| Rule | Reads | Writes |
+| --- | --- | --- |
+| The estimate of the enemy's boats | one command's picture's reports of submarines; the side's own bases; the side's own `submarine_doctrine` | nothing: a reading, made again when asked |
+
+No draw is made and no event is added.
 

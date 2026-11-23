@@ -182,7 +182,9 @@ pub const FORMAT: &str = "flagplot-agent";
 /// 53 adds `supplied_from` to a hold and an island of `command_state`
 /// (decision 0228): the base the supply is read from and who chose it, `staff`
 /// or `commander`.
-pub const VERSION: u32 = 53;
+/// 54 adds `submarine_estimate` to `list_contacts` (decision 0223, stage D1):
+/// the side's estimate of the enemy's boats, a reading of its own reports.
+pub const VERSION: u32 = 54;
 
 /// The answer to a question about something the side does not know of: a
 /// unit of the enemy, a number that does not exist, an event the side may not

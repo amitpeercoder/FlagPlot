@@ -544,6 +544,8 @@
 //! the stop at 0600, a trial made in the middle of a game), the build says
 //! so and it comes back to the architect; no statement is changed to fit.
 
+#![allow(clippy::doc_lazy_continuation)]
+
 #[test]
 #[ignore = "statement written, not built"]
 fn a_given_the_order_keeps_its_contact_and_forms_a_denys_tasks() {}

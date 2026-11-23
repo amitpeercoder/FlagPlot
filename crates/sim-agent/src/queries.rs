@@ -121,6 +121,13 @@ pub struct ListContacts {
     /// Left out when none.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub suspected_waters: Vec<crate::submarines::SuspectedWatersLine>,
+    /// The side's estimate of the enemy's boats (decision 0223, stage D1):
+    /// areas made from its reports, each with an "about" count, and its own
+    /// bases named by habit where its scenario says so; those areas with a
+    /// centre in `area` if one is given. A reading of its own reports and
+    /// nothing else; left out when it holds nothing.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub submarine_estimate: Option<crate::submarines::SubmarineEstimateLine>,
 }
 
 /// A line for each of the side's task forces that has a ship afloat, in
@@ -247,6 +254,7 @@ pub fn list_contacts(view: &SideView<'_>, area: Option<(Hex, u32)>) -> ListConta
             event: ctx.number_if_seen(waters.received_event),
         })
         .collect();
+    let submarine_estimate = crate::submarines::estimate_line(&ctx, view, &|hex| within(area, hex));
     ListContacts {
         format: FORMAT,
         version: VERSION,
@@ -260,6 +268,7 @@ pub fn list_contacts(view: &SideView<'_>, area: Option<(Hex, u32)>) -> ListConta
         ground_estimates,
         submarine_reports,
         suspected_waters,
+        submarine_estimate,
     }
 }
 
