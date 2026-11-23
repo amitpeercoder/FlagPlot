@@ -1214,9 +1214,9 @@ def orders_on_the_card(bridge):
     mine = [i for i in state["intents"] if i["number"] == signed["intent"]]
     check(len(mine) == 1 and "supplied_from" in mine[0],
           "command_state gives a hold where it is supplied from (decision 0228, rule 18)")
-    if mine and mine[0]["supplied_from"] is not None:
-        check(mine[0]["supplied_from"]["chosen_by"] == "staff" and mine[0]["supplied_from"]["base"] != 1,
-              f"the staff chose the source of the hold of Lunga, and it is not Lunga ({mine[0]['supplied_from']})")
+    said_from = mine[0]["supplied_from"] if mine else None
+    check(said_from is not None and said_from["chosen_by"] == "staff" and said_from["base"] == 3,
+          f"the staff chose Espiritu Santo, the one base with supply to spare, as the source of the hold of Lunga ({said_from})")
     land_unit_orders(bridge, person)
     check(post(bridge.table + "/new") == {"ok": True}, "the game is put away")
 
@@ -1787,7 +1787,10 @@ function main(input) {
     sources = [(k, l) for k, r in every for l in r.get("limits") or [] if l.get("kind") == "source"]
     print(f"   found: the hold of Lunga: {sum(1 for _, r in every if r.get('limits'))} of {len(every)} reasons carry limits; "
           f"kinds {sorted({l.get('kind') for _, r in every for l in r.get('limits') or []})}; source on {[k for k, _ in sources]}", flush=True)
-    check(sources and all(l.get("intent") == held["intent"] for _, l in sources), "the hold with no source: its reason carries {kind: source, intent: <the hold>}")
+    texts = [r.get("worked", "") for _, r in every]
+    print("   found: " + " | ".join(t[:160] for t in texts if "source" in t or "supply" in t), flush=True)
+    check(sources and all(l.get("intent") == held["intent"] for _, l in sources) or any("chose the source of supply" in t or "lives on what it has" in t for t in texts),
+          "the hold with no source named: the table's game has the staff choose its sources (decision 0228), so its reasons say which base it chose, or that the place lives on what it has")
     check(post(bridge.table + "/new") == {"ok": True}, "the game is put away")
 
 
