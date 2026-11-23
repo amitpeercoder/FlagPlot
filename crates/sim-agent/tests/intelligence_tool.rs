@@ -132,8 +132,14 @@
 //!    - `raids`: the `action.raids_on_bases` of that day of the briefings,
 //!      field for field, with `recognised` as the briefing has it;
 //!    - `bombardments`: its `action.bombardments_against`;
-//!    - `attacks_on_ships`: its `action.attacks_on_ships`, a submarine's
-//!      salvoes among them;
+//!    - `attacks_on_ships`: its `action.attacks_on_ships`. A submarine's
+//!      salvo is not among them: the briefing does not say it;
+//!    - `submarine_attacks`: one line for each salvo a submarine fired at a
+//!      ship of the side's, read from the side's own events (the salvo from
+//!      a submarine, as the side is given it): `against`, the handle of the
+//!      side's ship; `place`; `pulse`; and `event`. It has no count of
+//!      torpedoes or of hits and nothing of the boat, none of which the
+//!      side is told (amended on Nov 23, 2026, the rulings on the build);
 //!    - `fights`: its `action.fights`, each naming the side's own force and
 //!      never the enemy's.
 //!
@@ -153,7 +159,7 @@
 //!    given as `estimate` (that line); or claims of aircraft destroyed on
 //!    the ground in its hex with `from_air` true, given as
 //!    `claimed_on_ground_from_air`, their sum, with `claims`, each one's
-//!    `day` and number. A claim from the sea puts no base in this part. The
+//!    `day` and `number`, the aircraft it claims. A claim from the sea puts no base in this part. The
 //!    lines are in the order of the bases' numbers.
 //!
 //! 8. **ENEMY SUBMARINES** (`enemy_submarines`) has `reports`, the
@@ -370,8 +376,8 @@
 //! - Allied, over: `enemy_submarines.reports` is the reports
 //!   `list_contacts` holds then, and the report dropped on day 3 is not
 //!   among them or anywhere else in the answer. `enemy_has_done` is day 2
-//!   then day 1, each with the attack on ship 1 by torpedo as the briefing
-//!   has it.
+//!   then day 1, each with one line of `submarine_attacks`, against ship
+//!   1 at (5,0) in the morning, and no `attacks_on_ships`.
 //! - Japanese, over: `claimed.days` is day 2 then day 1, one claim each,
 //!   `from_submarine` true, with `taken_for`; `totals.hits` and
 //!   `totals.sunk` are the sums of the two and the other two are 0.
