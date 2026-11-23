@@ -2,10 +2,10 @@ Placeholder scenario 65: A day from which a force may be used
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 0e6b4f831b399f2d  12 events
-day   2  hash 8e754dd749aa9fb7  25 events
-day   3  hash 884f7f66932f2901  7 events
-day   4  hash d2aa7dd3ebca74b1  5 events
+day   1  hash d2786ea94e2589ea  12 events
+day   2  hash 5ea3d827ca9816f0  25 events
+day   3  hash 32884a918b266c06  7 events
+day   4  hash 9bb82a326247e48a  5 events
 
 #1 D1 -         Allied the commander's command taken: set intent:1 to operate the carrier force task_force:1 from (6,0)
 #2 D1 -         Allied plan:1 drafted for intent:1  <- #1
