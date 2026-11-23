@@ -550,25 +550,15 @@ fn statement_5_every_figure_names_its_rows_and_its_rule() {
 
 // ------------------------------------------------- Statement 6: as they were
 
-fn cargo() -> Command {
-    let mut command = Command::new(std::env::var("CARGO").unwrap_or_else(|_| "cargo".to_string()));
-    command.current_dir(repo());
-    command
-}
-
+/// `oob-derive data/derivation/<list> --check`, asked of the library the
+/// program is built on, as the program asks it.
 fn derive_check(list: &str) {
-    let out = cargo()
-        .args(["run", "--quiet", "-p", "oob-derive", "--"])
-        .arg(format!("data/derivation/{list}"))
-        .arg("--check")
-        .output()
-        .expect("the derivation runs");
-    let said = format!(
-        "{}{}",
-        String::from_utf8_lossy(&out.stdout),
-        String::from_utf8_lossy(&out.stderr)
+    let path = repo().join("data/derivation").join(list);
+    let said = oob_derive::said(
+        &path.display().to_string(),
+        oob_derive::run(&path, &repo().join("data/oob"), true),
     );
-    assert!(out.status.success(), "{list}: {said}");
+    assert!(said.passed, "{list}: {}{}", said.out, said.err);
 }
 
 /// Each derivation list on file still derives exactly its committed files.

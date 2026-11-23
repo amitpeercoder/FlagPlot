@@ -159,6 +159,7 @@ version = "0.1.0"
 dependencies = [
  "csv",
  "map-tool",
+ "oob-derive",
  "serde_json",
  "sim-agent",
  "sim-cli",
