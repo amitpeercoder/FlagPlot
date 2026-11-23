@@ -18,7 +18,7 @@ use sim_core::time::Pulse;
 use sim_core::view::SideView;
 
 use crate::answer::{FORMAT, VERSION};
-use crate::common::{map_unit_tokens, Ctx};
+use crate::common::Ctx;
 use crate::orders::{order_to_json, order_words, unit_text};
 use crate::staffing::{command_json, command_text, Names};
 
@@ -240,14 +240,11 @@ fn rests_on(queues: &Queues<'_>, slot: Slot) -> Vec<Slot> {
     }
 }
 
-/// The side's number of each unit a text names by the umpire's id.
-fn numbered(names: &Names<'_>, ctx: &Ctx<'_>, text: &str) -> String {
-    map_unit_tokens(text, |kind, raw| match kind {
-        "ship" => ctx.ship_number(sim_core::ids::ShipId::new(raw)),
-        "task_force" => names.force_number(raw),
-        "land_unit" => ctx.land_unit_number(sim_core::ids::LandUnitId::new(raw)),
-        _ => ctx.group_number(sim_core::ids::AirGroupId::new(raw)),
-    })
+/// The side's number of each unit a text names by the umpire's id: a ship,
+/// task force, air group, land unit or submarine, as every other answer
+/// numbers it (`Names::text`, decision 0086). A base keeps its number.
+fn numbered(names: &Names<'_>, text: &str) -> String {
+    names.text(text)
 }
 
 /// An order's body as `issue_orders` takes it, in the side's numbers: the
@@ -256,7 +253,7 @@ fn numbered(names: &Names<'_>, ctx: &Ctx<'_>, text: &str) -> String {
 /// into, an escort's charge, a fuelling's giver).
 fn body_in_numbers(names: &Names<'_>, ctx: &Ctx<'_>, body: &Value) -> Value {
     match body {
-        Value::String(text) => Value::String(numbered(names, ctx, text)),
+        Value::String(text) => Value::String(numbered(names, text)),
         Value::Array(items) => Value::Array(
             items
                 .iter()
@@ -327,10 +324,9 @@ pub(crate) fn rows(
         let (mut json, text) = match slot.queue {
             QueueName::Pulse | QueueName::Dusk => {
                 let order = &queues.orders(slot.queue)[slot.number - 1];
-                let unit = numbered(&names, &ctx, &unit_text(&order.kind));
+                let unit = numbered(&names, &unit_text(&order.kind));
                 let text = numbered(
                     &names,
-                    &ctx,
                     &format!("{}: {}", unit_text(&order.kind), order_words(&order.kind)),
                 );
                 (
