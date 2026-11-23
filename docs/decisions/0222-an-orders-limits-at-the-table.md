@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 23, 2026, on the designer's ques
 
 Summary: An order carries eleven limits in the engine: what the staff may use, where, when, in what rank, what it strikes first, what it must know. The table lets a player set one, the risk. So the staff's reasons tell him to do things the table does not offer. This puts the limits on the order's paper, each at the staff's choice until he sets it, makes a reason that names a limit lead to that limit's control, and has the staff choose a supply source itself where none is named, so that the commonest such reason goes.
 
-Standing: Planned on Nov 23, 2026; to be reviewed.
+Standing: Planned on Nov 23, 2026; amended on review; confirmed by the designer; steps 1, 2 and 4 built; step 3, the staff's choice of a source, is planned again in decision 0228, which replaces rules 8 to 12 as amended.
 
 ## Why
 
@@ -365,3 +365,8 @@ At 1280 and 900 wide, on the bridge started with no scenario:
 - **Midway:** "Operate Task Force 17 from here" offered air groups at first and listed none, a fault mended; listed, a limit naming VS-5 left all four groups ordered, so air groups are no longer offered on that order (above). A patrol shows boats only and no risk.
 
 Not seen: "WE CHOSE IT FOR YOU" on a screen (no game tried gave the page a source to choose: the Coral Sea and the 39 days have one base of the side at the start); the area's circle with MOVE ON THE CHART on a supply; protected ships; the landing's wait for, after and knowledge sent to the engine from the paper; a refusal of one of a batch on a screen (the check forces one through the bridge and the page's functions); a reserve link from a reason (no reason met spoke of a reserve).
+
+## Step 3 is planned in decision 0228
+
+Written by the architect on Nov 23, 2026. Step 3 (rules 8 to 12 as amended, the staff's choice of a source) is not built from this record. The review of decision 0224 found that "the island's rule, unchanged" chooses a full base no ship lies at, and the measurement there showed stocks that bind. Decision 0228 plans the choice again, for a commander's hold and for an island alike, and replaces rules 8 to 12. Carried there unchanged: the table's own choosing goes (rule 11), a source the commander names is used (rule 12), and the designer's answer 1, that the source the staff chose is shown on the paper as its choice, with CHANGE. Changed there: the rule of the choice itself (rule 8), and rule 10's "with no ship to carry it the staff forms none", which becomes the island's way: the supply is formed and waits for a ship. Ruling 3 on pull request 695, whether the commander may name a base another order draws on, is settled there: he may.
+
