@@ -4774,7 +4774,7 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
     if (on) {
       var kinds = lim.targets.kinds, box = el('div', 'limlist'), order = kinds.concat(TARGET_KINDS.filter(function (k) { return kinds.indexOf(k) < 0; }));
       order.forEach(function (k) {
-        var r = el('div', 'limkind'), at = kinds.indexOf(k), word = k + 's';
+        var r = el('div', 'limkind'), at = kinds.indexOf(k), word = k === 'auxiliary' ? 'auxiliaries' : k + 's';
         r.appendChild(limCheck('lim-targets-k-' + k, word.charAt(0).toUpperCase() + word.slice(1), at >= 0, function (c) { limSet(null, function () { var i = kinds.indexOf(k); if (c && i < 0) kinds.push(k); else if (!c && i >= 0) kinds.splice(i, 1); }, 'lim-targets-k-' + k); }));
         if (at >= 0) [['up', '↑', 'sooner', -1], ['down', '↓', 'later', 1]].forEach(function (m) {
           var b = el('button', '', m[1]); b.type = 'button'; b.id = 'lim-targets-' + m[0] + '-' + k; b.setAttribute('aria-label', 'Strike ' + word + ' ' + m[2]);
