@@ -1,0 +1,2235 @@
+# MIDWAY, WITH SUBMARINES (decision 0225, as amended on review on Nov 23,
+# 2026).
+#
+# This file is a copy of file a, both sides given their orders (staff against
+# staff), on the table's ground figures. It is not offered at the table: it is
+# kept for the measure of decision 0225, rule 8. It copies
+# data/scenarios/midway/01a_midway.toml.
+#
+# Made by scripts/table-boats/make_files.py. Do not edit by hand: change the
+# file it copies or the script and make the files again (`python3
+# scripts/table-boats/make_files.py --check` says whether each file is still
+# the one it makes). Each copy is the file it copies with this header, the
+# three keys of the submarine files and the section SUBMARINES at the end, and
+# nothing else (file a also names the table's ground figures). Its `name` is
+# the name of the file it copies.
+#
+# IT HAS SUBMARINES: five boats, each on station where she starts, each in a
+# section of her own at the end with her rows. American: USS Tambor (1,3), USS
+# Trout (1,1), USS Nautilus (4,-2) and USS Gato (1,-1). Japanese: I-168 (5,1).
+# Each name is the name of her row of ships.csv.
+#   - Each start is a PLACEHOLDER start, read from a row by a rule (decision
+#     0225, amended rules 2 and 3). The American boats: an arc of Bates's
+#     disposition of 2 June (engagement_positions 16010: 240 to 360 degrees,
+#     150 miles from Midway, six boats; 16009: 250 to 310 degrees, 200 miles,
+#     three boats) is read clockwise from its lower bearing, the first boat
+#     the row names at the lower bearing and the last at the higher, those
+#     between at even steps, every boat the row names counted; the bearing is
+#     laid off flat in the map's frame from the atoll's position at the arc's
+#     distance, and the boat starts in the hex that point falls in. I-168
+#     starts in Midway's hex, where rows 16202 and 7673 have her on 1, 2 and 4
+#     June; there she attacks nothing, since a force in the hex of its own
+#     base is not attacked.
+#   - THE HOMES ARE STAND-INS: the American boats' home is Midway (base 1) and
+#     I-168's is Wake (base 2), each the base of her side on the map nearest
+#     her; the true homes are off the map. Two effects are accepted: a boat
+#     going home to a base that has changed side still leaves the map there;
+#     and I-168's way home to Wake is five days on passage, on which a search
+#     sights her at the whole chance.
+#   - NO ORDER is given to any boat: each keeps her station. The rows that
+#     moved the boats in the battle are not played: the order to close and
+#     attack the enemy to the north-west at 0710 on 4 June (engagement_events
+#     16181) and the order to form on the circle of 100 miles from Midway by
+#     dawn on 5 June (16182). A person orders his own boats; a side the staff
+#     plays leaves its boats on their stations, and no doctrine moves a boat
+#     without a patrol order of the commander's.
+#   - THE SIDES ARE UNEQUAL in every pairing: four American boats on the arcs
+#     west and north-west of Midway, across the way the Japanese forces come,
+#     against one Japanese boat at Midway itself. The Japanese cordons (Subron
+#     3's KO line and Subron 5's OTSU line) and Subdivision 13 at French
+#     Frigate Shoals lie east of the map's edge and are not in the game.
+#   - NO SUSPECTED WATERS. The rows of what each side believed of the other's
+#     boats are left out: engagement_events 16842 (one boat west of Midway, 29
+#     May), 16518 (one 200 miles south-west of Midway, 16 April) and 16202
+#     (fourteen sighted by I-168 off Midway, 1 and 2 June). They give no
+#     distance, and waters would change where the staff stands its forces, so
+#     that this game would differ from the game without boats by more than
+#     boats.
+#   - LEFT OUT: the seven American boats the arcs name that have no ship row,
+#     Dolphin and Grenadier (16009), Grayling, Grouper and Gudgeon (16010),
+#     Flying Fish and Cachalot (engagement_positions 16011, the inner arc);
+#     their places on the arcs are left empty. The other American boats of the
+#     battle (Cuttlefish, the support patrol and the boats north of Oahu) are
+#     off the map or have no ship row.
+#   - ESTIMATED FIGURES (decision 0207, rule 12). The classes are those
+#     derived as of 7 August 1942 (data/reference/submarine_classes_1942.csv);
+#     the five boats' classes did not change between June and August. Three
+#     load figures estimated from like boats by decision 0207, not stated by
+#     any row: class 6001, Tambor class (Tambor, Trout), its torpedo; class
+#     6002, Gato class (Gato), its torpedo; class 6011, Narwhal class
+#     (Nautilus), its passage speed and its torpedo. An estimate is never
+#     evidence. Class 6005 (I-168) has none.
+#   - THE FIGURES OF THE SUBMARINES ARE PLAYED UNSET (decision 0225, amended
+#     rule 7): data/reference/submarines.toml, every one a placeholder, on the
+#     designer's word of Nov 23, 2026 that boats are not to be held back
+#     (decision 0225, the designer's answer: the table offers one game of
+#     Midway, and it has its boats). No objective counts a boat sunk.
+#
+# Kept out of the loops that walk data/scenarios/*.toml by being in this
+# folder (decision 0072).
+#
+# THE GAME IT COPIES. What follows, to the first key, is the header of the
+# file it copies, as it stands there. It holds of this file, but where it says
+# the submarines are left out or not modelled (Nautilus and I-168 among those
+# left out): the five boats above are in.
+#
+# SCENARIO 114, MIDWAY (decision 0198).
+#
+# Made by scripts/midway/make_files.py from the base,
+# data/scenarios/midway/base_midway.toml. Do not edit by hand: change the
+# base or the script and make the files again
+# (`python3 scripts/midway/make_files.py --check` says whether each file is
+# still the one it makes). There are four files, one for each pairing the
+# table offers (decision 0185):
+#   01a: both sides given their orders (staff against staff);
+#   01b: the Japanese side given its orders, the Allied side none (a person
+#        or an agent takes the Allied seat);
+#   01c: the Allied side given its orders, the Japanese side none;
+#   01d: neither side given orders.
+# Each is the base with this header, a name of its own and, at the end, the
+# `[[command]]` tables of the sides it gives orders, and nothing else: with
+# their names and those tables taken away the four are the same, byte for
+# byte. The orders are the hand calculation's (tests/scenario_114_midway.rs,
+# "What a side the engine plays is given"), on day 1, with no risk set
+# (balanced):
+#   Japanese: intent 1, take Midway, the place (5,1), its forces the First
+#     Carrier Striking Force and the Midway Invasion Force (task forces 3
+#     and 4) and the landing force (land units 2 and 3), with no need to
+#     know (a knowledge limit of none); the carriers are in the take's
+#     forces and have no order of their own (rule 38). Leave to prepare and
+#     leave to launch given. No estimate of the men at Midway is held
+#     (rule 96).
+#   Allied: intent 1, hold Midway (base 1), its forces the garrison (land
+#     unit 1), VMF-221's two fighter groups (12, 13) and the two groups of
+#     flying boats (16, 17) (rule 97); intent 2, deny the waters within 4
+#     hexes of (1,-1), its forces the SBD-2, SB2U-3 and B-17E groups (14,
+#     15, 18), with the targets limit carriers, then transports,
+#     battleships, cruisers, destroyers (rule 98); intent 3, operate task
+#     force 1 from (9,-5), and intent 4, operate task force 2 from (9,-5):
+#     the hex of 31 30 N, 176 30 W, the launching position Task Force 17's
+#     commander chose for dawn on 4 June, 202 miles north of Midway
+#     (engagement positions 5744, 5745; rule 99 as amended by rule 103),
+#     each with its own air groups (no forces limit).
+#     Leave to prepare and leave to launch given. No order of a commander's
+#     own.
+#
+# Kept out of the loops that walk data/scenarios/*.toml by being in this
+# folder (decision 0072).
+#
+# THE BASE of scenario 114, Midway, 3 to 7 June 1942 (decision 0198, as
+# amended on review, confirmed on Nov 20, 2026, with stage A's rulings 50 to
+# 80 and stage B's rulings 81 to 102). It is not played itself:
+# scripts/midway/make_files.py makes the four files of data/scenarios/midway/
+# from it, each with this text, a name of its own and the commands of its
+# pairing, and nothing else. Edit this file or the script, never a file it
+# makes, and make them again. The hand calculation is the doc comment of
+# tests/scenario_114_midway.rs.
+#
+# Three American carriers and the aircraft of Midway against four Japanese
+# carriers, with a Japanese force bound to land on the atoll. A scenario for
+# play (decision 0187): its scoring is its own. No scripted order: each side
+# is played by a commander or a staff.
+#
+# THE CLOCK. The game begins at 1800 on 2 June 1942; day 1 is 3 June and
+# day 5 is 7 June, and the game ends at 1800 on 7 June. Times are zone +12,
+# Midway's clock; a Japanese row on the clock of Tokyo dates the same day a
+# day later, 21 hours on, and is converted. (A scenario file has no key for a
+# date.)
+#
+# THE MAP: data/map/midway.csv, the map of decision 0199. Hex (0,0) is at
+# 28.5 N, 178.5 E; hexes are 40 nm.
+#
+# WHAT IT IS MADE OF, and where each piece comes from:
+#   - Every real ship and aircraft type: the derivation list of Midway
+#     (data/derivation/midway.toml, as of 3 June 1942), its classes 5000 to
+#     5036 and types 5100 to 5114 (no ship of the scenario is of Zuiho's
+#     5004, Gwin's 5021 or Mikazuki's 5036, and no group flies the A5M4,
+#     5112), and each ship's experience from
+#     ship_experience_midway.ships.csv where it gives one (rule 93: the list
+#     derives it for every ship of the scenario but Worden, whose one
+#     commissioning row is unconfirmed and gives a year only, so she has the
+#     game's own value for a ship not answered). Each ship cites her rows of
+#     engagement_forces. Air groups have no experience in the game (decision
+#     0064).
+#   - The air groups' strengths: the rows of data/oob/air_unit_facts.csv the
+#     hand calculation names, beside each group.
+#   - Midway (base 1), its garrison and its aircraft; Wake (base 2), a name
+#     and a place (place_positions 5107) and a placeholder stock.
+#   - The transports: thirteen placeholder ships of a placeholder class of
+#     this scenario's own, with the two land units of the landing force
+#     aboard.
+#
+# WHY WAKE IS IN (rules 81 and 82). A lift needs a base of its side to come
+# back to: with no Japanese base on the map the staff forms no order for the
+# take at all. Wake is a Japanese base with nothing but its name, its place
+# and 100 t of supply, a PLACEHOLDER: no aircraft, no airfield, no men, no
+# fuel. The landing force did not sail from Wake but from Saipan and Guam,
+# which are off the map: Wake is where a lift that is turned back goes, and
+# where the staff counts the take's way home from. Its air units of June are
+# on file by day and are left out, their type being in no list.
+#
+# LEFT OUT, and why (decision 0198, rules 6, 35, 60, 64, 78, 85 and 87):
+#   - Allied: Gwin, who joined Task Force 17 on 5 June (engagement_forces
+#     8582, 8663) and whose place on 2 June is on no row (rule 85); the
+#     fuelling group (Cimarron, Platte, Dewey, Monssen); the submarines,
+#     Nautilus among them; the auxiliaries of the naval district. At Midway:
+#     the four B-26s and the six TBF-1s (rules 60 and 78), and the six more
+#     B-17s that came on 4 June.
+#   - Japanese: Zuiho and Mikazuki (rule 87: a two-ship carrier force with one
+#     group of attack planes would only search, out of all reach or standing
+#     before the transports as the bombers' first target; she flew no strike
+#     in the battle); the Main Body with Yamato, which did not come within
+#     reach; the Aleutians forces; the seaplane tender group; the
+#     minesweepers; the supply groups; Patrol Boats 1, 2 and 34 (no class on
+#     file); the submarines, I-168 among them; Wake's air units. Soryu's two
+#     D4Y1-C and the Type 95 floatplanes of the battleships and cruisers
+#     (rule 60).
+#
+# THE PLACEHOLDER TRANSPORTS (rule 88). The thirteen transports are of a
+# placeholder class and are named "Placeholder transport 1" to "13": a real
+# ship is not given an invented rating. They stand for Nankai Maru, Zenyo
+# Maru, Brazil Maru, Argentina Maru, Azuma Maru, Kirishima Maru, Kano Maru,
+# Toa Maru No. 2, Akebono Maru, Hokuriku Maru, Goshu Maru, Keiyo Maru and
+# Seicho Maru (engagement_forces 5868 to 5880). Which was the thirteenth is
+# disputed: one source has Seicho Maru (5880), another Kiyosumi Maru (5968).
+# Their speed, 8.8 kn, stands on two positions alone (rule 65).
+#
+# ONE FORCE FOR THE INVASION (rule 86). The transports, their close screen,
+# the Close Support Group and the Second Fleet's main body are one task
+# force, the Midway Invasion Force, at the transports' 8.8 kn, as they were
+# one command. So the night surface threat of the Second Fleet's main body,
+# closing on the American carriers at 28 kn on the night of 4 June, is not
+# in the game.
+#
+# THE AIR GROUPS, gaps and readings: VB-6 flies the SBD-3, though its rows
+# say SBD-2 and SBD-3 mixed with no split (air_unit_facts 12600 to 12603):
+# the split is a gap (rule 90). Of VMSB-241's seventeen SB2U-3s twelve are
+# ready and five damaged (rule 92). Tone and Chikuma carry three Type 0
+# floatplanes each (rule 91). Hornet's dive bombers are one group of 35
+# (rule 56). A Japanese carrier's 6th Air Group fighters are in her fighter
+# group (rules 52 and 73).
+#
+# WHAT EACH SIDE KNOWS AT THE START (rule 34). No contact is held, no
+# believed force is given, and no estimate of the men at Midway is held by
+# the Japanese side (rule 96). The American side's knowledge is carried by
+# where its carriers start, north-east of Midway, by the orders a side the
+# engine plays is given and by the directive read at the table.
+#
+# WHAT THE GAME DOES NOT MODEL, said before a run:
+#   - A carrier caught with her aircraft armed and fuelled on deck (rule 16):
+#     no rule makes a carrier more easily destroyed while she rearms or spots
+#     a strike. The Japanese side will do better for it.
+#   - Submarines (rule 17). Yorktown's sinking by one is not in the game.
+#   - Weather (rule 42). Fog hid the Japanese carriers on 2 and 3 June; with
+#     none, and a search of 700 nm, they are likely to be found on the first
+#     day.
+#   - Daylight (rule 43). Night is from 1800 to 0600 everywhere; at Midway in
+#     June there were about fourteen hours of light, and the morning's
+#     launches and first sightings fell in what the game calls night.
+#   - Reach (rule 44). The Japanese torpedo plane's radius in the game is 175
+#     nm, against a launch at 240 nm on the day, so the carriers close
+#     further than they did.
+#   - And what it does have (rule 45): while the Japanese carriers serve the
+#     take, their bombers are held to the raid on Midway for the whole of a
+#     pulse, a part of the bind Nagumo was in, though not the decks full of
+#     armed aircraft.
+#   - The night surface threat of the Second Fleet's main body (rule 86,
+#     above).
+#   - Ships' experience is derived (rule 93) for every ship but Worden
+#     (above).
+#   - The flying boats' night torpedo attack of 3 June (rule 97): Midway's
+#     hold names the flying boats, so they search and are sent to strike by
+#     no order.
+#   - Fuel (rule 95): every ship starts with her fuel full, no base has fuel
+#     for ships and no force has a home port (Pearl Harbor, Japan and the
+#     Marianas are off the map), so no force's fuel is weighed by the staff,
+#     and the oilers are left out. A destroyer that steams at full speed for
+#     long can run dry.
+#   - What Wake's being on the map does to each side's search (rule 82): a
+#     carrier force points its search at the enemy's bases, so a base at Wake
+#     draws each side's carriers' search toward it, a thing of the game and
+#     not of the battle.
+# SURFACE WEAPONS NOT MODELLED (decision 0198, rules 68, 69 and 79; the list's
+# surface_weapons_not_modelled): these ships fire no gun and no torpedo at a
+# ship, though their anti-aircraft guns fire: USS Enterprise, USS Hornet, USS
+# Pensacola, USS Northampton, USS New Orleans, USS Minneapolis, USS Vincennes,
+# USS Atlanta, USS Phelps, USS Worden, USS Monaghan, USS Aylwin, USS Balch,
+# USS Conyngham, USS Benham, USS Ellet, USS Maury, USS Yorktown, USS Astoria,
+# USS Portland, USS Morris, USS Hughes, USS Anderson, USS Hammann, USS
+# Russell, Akagi, Kaga, Soryu, Hiryu, Haruna, Kirishima, Tone, Chikuma,
+# Nagara, Kazagumo, Yugumo, Makigumo, Akigumo, Isokaze, Urakaze, Hamakaze,
+# Tanikaze, Nowaki, Arashi, Hagikaze, Maikaze, Jintsu, Kuroshio, Oyashio,
+# Hatsukaze, Yukikaze, Amatsukaze, Tokitsukaze, Kasumi, Arare, Kagero,
+# Shiranui, Kumano, Suzuya, Mogami, Mikuma, Yura. Kumano, Suzuya, Mogami,
+# Mikuma and Yura are among them because no row names the torpedo they carried
+# on 3 June, the rest because they are carriers or screens or the transports'
+# close screen. Surface fire is modelled for: Arashio, Asashio, Oshio,
+# Michishio, Kongo, Hiei, Atago, Chokai, Haguro, Myoko, Yudachi, Murasame,
+# Harusame, Samidare, Asagumo, Minegumo, Natsugumo.
+#
+# PLACEHOLDER DATA. The transports, their class, the supply aboard them;
+# Midway's stock and Wake's stock; Midway's repairs a day; the Japanese
+# carriers' start is a row's (engagement_positions 5700), the invasion
+# force's is worked from two rows (rule 83) and the American carriers' is the
+# rendezvous of the rows (rule 84), each marked a placeholder; every point
+# value and level. The figures files are the live placeholders.
+#
+# A port size: the map gives every hex none, and a scenario cannot set one,
+# so Midway and Wake have none. Midway has no anti-aircraft figure: a gap.
+#
+# Kept out of the loops that walk data/scenarios/*.toml by being in this
+# folder (decision 0072).
+
+name = "Scenario 114, file a: Midway, 3 to 7 June 1942; both sides given their orders"
+placeholder = true
+seed = 1942
+days = 5
+map = "../../map/midway.csv"
+# The Midway list's classes, and the transports' placeholder class (class 19).
+ship_classes = [
+    "../../reference/ship_classes_midway.csv",
+    "../../reference/ship_classes_placeholder_transport_8_8_knots.csv",
+]
+port_sizes = "../../reference/port_sizes.csv"
+aircraft_types = [
+    "../../reference/aircraft_types_midway.csv",
+]
+search = "../../reference/search.toml"
+surface_combat = "../../reference/surface_combat.toml"
+submarine_classes = "../../reference/submarine_classes_1942.csv"
+submarine_torpedoes = "../../reference/submarine_torpedoes_1942.csv"
+submarines = "../../reference/submarines.toml"
+air_combat = "../../reference/air_combat.toml"
+# Fatigue, wear, supply and the land rules on, with the live figures, as
+# scenarios 103 and 105 have them. Command levels are off.
+air_upkeep = "../../reference/air_upkeep.toml"
+fatigue = "../../reference/fatigue.toml"
+air_supply = "../../reference/air_supply.toml"
+ground = "../../reference/ground_hunger.toml"
+# Whose each class and type is (decision 0173, 1 to 3): this scenario's own
+# file of sides, which names every class and type of the two class files and
+# the type file above.
+class_sides = "../../reference/class_sides_midway.csv"
+# The trial's figures (decision 0174): the live ones.
+trial = "../../reference/trial.toml"
+# A side may stop at 0600 and 1200 (decision 0156), as in scenarios 103 and
+# 105.
+orders_inside_a_day = true
+
+# ---------------------------------------------------------------------------
+# BASES
+# ---------------------------------------------------------------------------
+
+# Midway, Allied, in hex (5,1), the atoll at 28.232 N, 177.370 W
+# (place_positions 5100), a coast hex by the map's mark of land (decision
+# 0199). Its garrison, its aircraft and their airfield (Eastern Island,
+# place_facts 6000 to 6005).
+# Supply: PLACEHOLDER, 4,000 t (rule 94). The rows say the island was heavily
+# stocked with bombs and fuel (place_facts 6008, 6031) and give no tons. At
+# the game's figures five days cost about 2,000 t (the upkeep of 111
+# aircraft, the flying boats' search, the fighters' patrol, the bombers twice
+# a day and the garrison); 4,000 t is twice that, so that the stock is not
+# what stops an aircraft. No fuel for ships. No anti-aircraft figure: a gap.
+# Repairs a day: PLACEHOLDER, 4, the figure the Coral Sea and the 39 days give
+# Rabaul, a base with aircraft (a reading of the build: no row gives one).
+[[base]]
+id = 1
+name = "Midway"
+side = "allied"
+q = 5
+r = 1
+supply_t = 4000
+aircraft_repairs_per_day = 4
+
+# Wake, Japanese, in hex (-24,16), at 19.299 N, 166.624 E (place_positions
+# 5107), a coast hex by the map's mark of land. Supply: PLACEHOLDER, 100 t
+# (rule 81). No aircraft, no airfield, no men, no fuel: see the header.
+[[base]]
+id = 2
+name = "Wake"
+side = "japanese"
+q = -24
+r = 16
+supply_t = 100
+airfield = false
+
+# ---------------------------------------------------------------------------
+# TASK FORCES. No task force has a home port.
+# ---------------------------------------------------------------------------
+
+# Task Force 16 (Spruance), on the carrier mission. PLACEHOLDER start
+# (15,-6): the hex of 32 04 N, 172 45 W, where the rows have Task Forces 16
+# and 17 meet on the afternoon of 2 June (engagement_positions 5737 to 5739),
+# some two hours before the game begins (rule 84). It is the point north-east
+# of Midway where they stood because of what was known (rule 34).
+[[task_force]]
+id = 1
+name = "Task Force 16"
+side = "allied"
+q = 15
+r = -6
+mission = "carrier"
+
+# Task Force 17 (Fletcher), on the carrier mission. PLACEHOLDER start
+# (15,-6): the same rows.
+[[task_force]]
+id = 2
+name = "Task Force 17"
+side = "allied"
+q = 15
+r = -6
+mission = "carrier"
+
+# The First Carrier Striking Force (Nagumo), on the carrier mission.
+# PLACEHOLDER start (-2,-15): the hex of 37 01.5 N, 171 07 E, where its own
+# report has it on course 130 at 1630 on 2 June by Midway's clock, 1330 on 3
+# June by Tokyo's (engagement_positions 5700; rule 32), an hour and a half
+# before the game begins.
+[[task_force]]
+id = 3
+name = "First Carrier Striking Force"
+side = "japanese"
+q = -2
+r = -15
+mission = "carrier"
+
+# The Midway Invasion Force (Kondo's Second Fleet: the transports, their
+# close screen, the Close Support Group and the main body), on the transport
+# mission, one force (rule 86). PLACEHOLDER start (-17,4), stopped, with no
+# route, so that a staff may take it as a lift as it stands. Worked from two
+# rows (rule 83): 700 nm on bearing 261 from Midway at 0925 on 3 June and 560
+# nm at 0120 on 4 June (engagement_events 7699 and 7706) are 140 nm in 15
+# hours 55 minutes, 8.8 kn; back 15 hours 25 minutes to 1800 on 2 June is
+# 135.7 nm more, 835.7 nm from Midway on bearing 261, laid off in the map's
+# own flat frame: 607.6 nm west and 146.8 nm south of hex (0,0), in hex
+# (-17,4). The 8.8 kn stands on the two positions alone (rule 65).
+[[task_force]]
+id = 4
+name = "Midway Invasion Force"
+side = "japanese"
+q = -17
+r = 4
+mission = "transport"
+
+# ---------------------------------------------------------------------------
+# SHIPS
+# ---------------------------------------------------------------------------
+
+# Task force 1, Task Force 16: ships 1 to 17.
+
+# USS Enterprise (cv-6-enterprise; engagement_forces 8500, 8557, 8608, 8673):
+# class 5005, Yorktown class, anti_aircraft 12, surface weapons not modelled
+# (ship_classes_midway.ships.csv). Fuel full, an assumption. Experience 2:
+# ship_experience_midway.ships.csv (ship_facts.csv:167).
+[[ship]]
+id = 1
+name = "USS Enterprise"
+class = 5005
+side = "allied"
+fuel_t = 4360
+experience = 2
+task_force = 1
+
+# USS Hornet (cv-8-hornet; engagement_forces 8501, 8558, 8609): class 5007,
+# Yorktown class, anti_aircraft 18 (Hornet), surface weapons not modelled
+# (ship_classes_midway.ships.csv). Fuel full, an assumption. Experience 1:
+# ship_experience_midway.ships.csv (ship_facts.csv:4000, ship_facts.csv:8802,
+# ship_facts.csv:8804).
+[[ship]]
+id = 2
+name = "USS Hornet"
+class = 5007
+side = "allied"
+fuel_t = 4360
+experience = 1
+task_force = 1
+
+# USS Pensacola (ca-24-pensacola; engagement_forces 8503, 8563, 8610, 8666):
+# class 5008, Pensacola class, surface weapons not modelled
+# (ship_classes_midway.ships.csv). Fuel full, an assumption. Experience 2:
+# ship_experience_midway.ships.csv (ship_facts.csv:4165).
+[[ship]]
+id = 3
+name = "USS Pensacola"
+class = 5008
+side = "allied"
+fuel_t = 2116
+experience = 2
+task_force = 1
+
+# USS Northampton (ca-26-northampton; engagement_forces 8502, 8562, 8611):
+# class 5009, Northampton class, surface weapons not modelled
+# (ship_classes_midway.ships.csv). Fuel full, an assumption. Experience 2:
+# ship_experience_midway.ships.csv (ship_facts.csv:4084, ship_facts.csv:8810).
+[[ship]]
+id = 4
+name = "USS Northampton"
+class = 5009
+side = "allied"
+fuel_t = 2987
+experience = 2
+task_force = 1
+
+# USS New Orleans (ca-32-new-orleans; engagement_forces 8504, 8559, 8614):
+# class 5010, New Orleans class, anti_aircraft 12, surface weapons not
+# modelled (ship_classes_midway.ships.csv). Fuel full, an assumption.
+# Experience 2: ship_experience_midway.ships.csv (ship_facts.csv:81).
+[[ship]]
+id = 5
+name = "USS New Orleans"
+class = 5010
+side = "allied"
+fuel_t = 1900
+experience = 2
+task_force = 1
+
+# USS Minneapolis (ca-36-minneapolis; engagement_forces 8505, 8560, 8613):
+# class 5010, New Orleans class, anti_aircraft 12, surface weapons not
+# modelled (ship_classes_midway.ships.csv). Fuel full, an assumption.
+# Experience 2: ship_experience_midway.ships.csv (ship_facts.csv:98).
+[[ship]]
+id = 6
+name = "USS Minneapolis"
+class = 5010
+side = "allied"
+fuel_t = 1900
+experience = 2
+task_force = 1
+
+# USS Vincennes (ca-44-vincennes; engagement_forces 8506, 8561, 8612, 8667):
+# class 5011, New Orleans class, anti_aircraft 9 (Vincennes), surface weapons
+# not modelled (ship_classes_midway.ships.csv). Fuel full, an assumption.
+# Experience 2: ship_experience_midway.ships.csv (ship_facts.csv:116,
+# ship_facts.csv:117).
+[[ship]]
+id = 7
+name = "USS Vincennes"
+class = 5011
+side = "allied"
+fuel_t = 1900
+experience = 2
+task_force = 1
+
+# USS Atlanta (cl-51-atlanta; engagement_forces 8507, 8564, 8615): class 5014,
+# Atlanta class, surface weapons not modelled (ship_classes_midway.ships.csv).
+# Fuel full, an assumption. Experience 1: ship_experience_midway.ships.csv
+# (ship_facts.csv:145).
+[[ship]]
+id = 8
+name = "USS Atlanta"
+class = 5014
+side = "allied"
+fuel_t = 1481
+experience = 1
+task_force = 1
+
+# USS Phelps (dd-360-phelps; engagement_forces 8508, 8565, 8618): class 5016,
+# Porter class, surface weapons not modelled (ship_classes_midway.ships.csv).
+# Fuel full, an assumption. Experience 2: ship_experience_midway.ships.csv
+# (ship_facts.csv:220).
+[[ship]]
+id = 9
+name = "USS Phelps"
+class = 5016
+side = "allied"
+fuel_t = 651
+experience = 2
+task_force = 1
+
+# USS Worden (dd-352-worden; engagement_forces 8509, 8566, 8619, 8672): class
+# 5015, Farragut class, surface weapons not modelled
+# (ship_classes_midway.ships.csv). Fuel full, an assumption. Experience:
+# ship_experience_midway.ships.csv gives none (her one commissioning row is
+# unconfirmed and gives a year only), so the game's own value for a ship not
+# answered.
+[[ship]]
+id = 10
+name = "USS Worden"
+class = 5015
+side = "allied"
+fuel_t = 607
+task_force = 1
+
+# USS Monaghan (dd-354-monaghan; engagement_forces 8510, 8567, 8621, 8670):
+# class 5015, Farragut class, surface weapons not modelled
+# (ship_classes_midway.ships.csv). Fuel full, an assumption. Experience 2:
+# ship_experience_midway.ships.csv (ship_facts.csv:3338).
+[[ship]]
+id = 11
+name = "USS Monaghan"
+class = 5015
+side = "allied"
+fuel_t = 607
+experience = 2
+task_force = 1
+
+# USS Aylwin (dd-355-aylwin; engagement_forces 8511, 8568, 8620): class 5015,
+# Farragut class, surface weapons not modelled
+# (ship_classes_midway.ships.csv). Fuel full, an assumption. Experience 2:
+# ship_experience_midway.ships.csv (ship_facts.csv:3345).
+[[ship]]
+id = 12
+name = "USS Aylwin"
+class = 5015
+side = "allied"
+fuel_t = 607
+experience = 2
+task_force = 1
+
+# USS Balch (dd-363-balch; engagement_forces 8512, 8569, 8616, 8664, 8668):
+# class 5016, Porter class, surface weapons not modelled
+# (ship_classes_midway.ships.csv). Fuel full, an assumption. Experience 2:
+# ship_experience_midway.ships.csv (ship_facts.csv:224).
+[[ship]]
+id = 13
+name = "USS Balch"
+class = 5016
+side = "allied"
+fuel_t = 651
+experience = 2
+task_force = 1
+
+# USS Conyngham (dd-371-conyngham; engagement_forces 8513, 8570, 8624): class
+# 5017, Mahan class, surface weapons not modelled
+# (ship_classes_midway.ships.csv). Fuel full, an assumption. Experience 2:
+# ship_experience_midway.ships.csv (ship_facts.csv:8815, ship_facts.csv:8816).
+[[ship]]
+id = 14
+name = "USS Conyngham"
+class = 5017
+side = "allied"
+fuel_t = 506
+experience = 2
+task_force = 1
+
+# USS Benham (dd-397-benham; engagement_forces 8514, 8571, 8617, 8665, 8669):
+# class 5018, Benham class, surface weapons not modelled
+# (ship_classes_midway.ships.csv). Fuel full, an assumption. Experience 2:
+# ship_experience_midway.ships.csv (ship_facts.csv:300).
+[[ship]]
+id = 15
+name = "USS Benham"
+class = 5018
+side = "allied"
+fuel_t = 491
+experience = 2
+task_force = 1
+
+# USS Ellet (dd-398-ellet; engagement_forces 8515, 8572, 8622): class 5018,
+# Benham class, surface weapons not modelled (ship_classes_midway.ships.csv).
+# Fuel full, an assumption. Experience 2: ship_experience_midway.ships.csv
+# (ship_facts.csv:304, ship_facts.csv:305, ship_facts.csv:306).
+[[ship]]
+id = 16
+name = "USS Ellet"
+class = 5018
+side = "allied"
+fuel_t = 491
+experience = 2
+task_force = 1
+
+# USS Maury (dd-401-maury; engagement_forces 8516, 8573, 8623, 8671): class
+# 5019, Gridley class, surface weapons not modelled
+# (ship_classes_midway.ships.csv). Fuel full, an assumption. Experience 2:
+# ship_experience_midway.ships.csv (ship_facts.csv:318).
+[[ship]]
+id = 17
+name = "USS Maury"
+class = 5019
+side = "allied"
+fuel_t = 525
+experience = 2
+task_force = 1
+
+# Task force 2, Task Force 17: ships 18 to 25.
+
+# USS Yorktown (cv-5-yorktown; engagement_forces 8521, 8574, 8625): class
+# 5006, Yorktown class, anti_aircraft 18 (Yorktown), surface weapons not
+# modelled (ship_classes_midway.ships.csv). Fuel full, an assumption.
+# Experience 2: ship_experience_midway.ships.csv (ship_facts.csv:3331).
+[[ship]]
+id = 18
+name = "USS Yorktown"
+class = 5006
+side = "allied"
+fuel_t = 4360
+experience = 2
+task_force = 2
+
+# USS Astoria (ca-34-astoria; engagement_forces 8522, 8575, 8626): class 5012,
+# New Orleans class, anti_aircraft 9 (Astoria), surface weapons not modelled
+# (ship_classes_midway.ships.csv). Fuel full, an assumption. Experience 2:
+# ship_experience_midway.ships.csv (ship_facts.csv:89, ship_facts.csv:90).
+[[ship]]
+id = 19
+name = "USS Astoria"
+class = 5012
+side = "allied"
+fuel_t = 1900
+experience = 2
+task_force = 2
+
+# USS Portland (ca-33-portland; engagement_forces 8523, 8576, 8627): class
+# 5013, Portland class, surface weapons not modelled
+# (ship_classes_midway.ships.csv). Fuel full, an assumption. Experience 2:
+# ship_experience_midway.ships.csv (ship_facts.csv:85).
+[[ship]]
+id = 20
+name = "USS Portland"
+class = 5013
+side = "allied"
+fuel_t = 2614
+experience = 2
+task_force = 2
+
+# USS Morris (dd-417-morris; engagement_forces 8524, 8579, 8629): class 5020,
+# Sims class, surface weapons not modelled (ship_classes_midway.ships.csv).
+# Fuel full, an assumption. Experience 2: ship_experience_midway.ships.csv
+# (ship_facts.csv:3379).
+[[ship]]
+id = 21
+name = "USS Morris"
+class = 5020
+side = "allied"
+fuel_t = 453
+experience = 2
+task_force = 2
+
+# USS Hughes (dd-410-hughes; engagement_forces 8525, 8578, 8632, 8662): class
+# 5020, Sims class, surface weapons not modelled
+# (ship_classes_midway.ships.csv). Fuel full, an assumption. Experience 2:
+# ship_experience_midway.ships.csv (ship_facts.csv:8822).
+[[ship]]
+id = 22
+name = "USS Hughes"
+class = 5020
+side = "allied"
+fuel_t = 453
+experience = 2
+task_force = 2
+
+# USS Anderson (dd-411-anderson; engagement_forces 8526, 8580, 8631): class
+# 5020, Sims class, surface weapons not modelled
+# (ship_classes_midway.ships.csv). Fuel full, an assumption. Experience 2:
+# ship_experience_midway.ships.csv (ship_facts.csv:3360).
+[[ship]]
+id = 23
+name = "USS Anderson"
+class = 5020
+side = "allied"
+fuel_t = 453
+experience = 2
+task_force = 2
+
+# USS Hammann (dd-412-hammann; engagement_forces 8527, 8577, 8628): class
+# 5020, Sims class, surface weapons not modelled
+# (ship_classes_midway.ships.csv). Fuel full, an assumption. Experience 2:
+# ship_experience_midway.ships.csv (ship_facts.csv:3363).
+[[ship]]
+id = 24
+name = "USS Hammann"
+class = 5020
+side = "allied"
+fuel_t = 453
+experience = 2
+task_force = 2
+
+# USS Russell (dd-414-russell; engagement_forces 8528, 8581, 8630): class
+# 5020, Sims class, surface weapons not modelled
+# (ship_classes_midway.ships.csv). Fuel full, an assumption. Experience 2:
+# ship_experience_midway.ships.csv (ship_facts.csv:3368).
+[[ship]]
+id = 25
+name = "USS Russell"
+class = 5020
+side = "allied"
+fuel_t = 453
+experience = 2
+task_force = 2
+
+# Task force 3, the First Carrier Striking Force: ships 26 to 46.
+
+# Akagi (akagi; engagement_forces 5800, 5945): class 5000, Akagi (single ship,
+# converted from an Amagi-class battlecruiser hull), surface weapons not
+# modelled (ship_classes_midway.ships.csv). Fuel full, an assumption.
+# Experience 2: ship_experience_midway.ships.csv (ship_facts.csv:9102).
+[[ship]]
+id = 26
+name = "Akagi"
+class = 5000
+side = "japanese"
+fuel_t = 5905
+experience = 2
+task_force = 3
+
+# Kaga (kaga; engagement_forces 5801, 5946): class 5001, Kaga (single ship,
+# converted from a battleship hull), surface weapons not modelled
+# (ship_classes_midway.ships.csv). Fuel full, an assumption. Experience 2:
+# ship_experience_midway.ships.csv (ship_facts.csv:9107).
+[[ship]]
+id = 27
+name = "Kaga"
+class = 5001
+side = "japanese"
+fuel_t = 5217
+experience = 2
+task_force = 3
+
+# Soryu (soryu; engagement_forces 5802, 5949): class 5002, Soryu (single ship;
+# Hiryu is a modified sister, separate class), surface weapons not modelled
+# (ship_classes_midway.ships.csv). Fuel full, an assumption. Experience 2:
+# ship_experience_midway.ships.csv (ship_facts.csv:9112).
+[[ship]]
+id = 28
+name = "Soryu"
+class = 5002
+side = "japanese"
+fuel_t = 3612
+experience = 2
+task_force = 3
+
+# Hiryu (hiryu; engagement_forces 5803, 5950): class 5003, Hiryu (single ship,
+# modified Soryu design), surface weapons not modelled
+# (ship_classes_midway.ships.csv). Fuel full, an assumption. Experience 2:
+# ship_experience_midway.ships.csv (ship_facts.csv:9117).
+[[ship]]
+id = 29
+name = "Hiryu"
+class = 5003
+side = "japanese"
+fuel_t = 4331
+experience = 2
+task_force = 3
+
+# Haruna (haruna; engagement_forces 5806, 5947): class 5023, Kongo class,
+# surface weapons not modelled, surface weapons not modelled
+# (ship_classes_midway.ships.csv). Fuel full, an assumption. Experience 2:
+# ship_experience_midway.ships.csv (ship_facts.csv:5697, ship_facts.csv:9122).
+[[ship]]
+id = 30
+name = "Haruna"
+class = 5023
+side = "japanese"
+fuel_t = 6330
+experience = 2
+task_force = 3
+
+# Kirishima (kirishima; engagement_forces 5807, 5948): class 5023, Kongo
+# class, surface weapons not modelled, surface weapons not modelled
+# (ship_classes_midway.ships.csv). Fuel full, an assumption. Experience 2:
+# ship_experience_midway.ships.csv (ship_facts.csv:465).
+[[ship]]
+id = 31
+name = "Kirishima"
+class = 5023
+side = "japanese"
+fuel_t = 6330
+experience = 2
+task_force = 3
+
+# Tone (tone; engagement_forces 5804, 5951): class 5022, Tone class, surface
+# weapons not modelled (ship_classes_midway.ships.csv). Fuel full, an
+# assumption. Experience 3: ship_experience_midway.ships.csv
+# (ship_facts.csv:558, training_facts.csv:32).
+[[ship]]
+id = 32
+name = "Tone"
+class = 5022
+side = "japanese"
+fuel_t = 2690
+experience = 3
+task_force = 3
+
+# Chikuma (chikuma; engagement_forces 5805, 5952): class 5022, Tone class,
+# surface weapons not modelled (ship_classes_midway.ships.csv). Fuel full, an
+# assumption. Experience 3: ship_experience_midway.ships.csv
+# (ship_facts.csv:126, training_facts.csv:32).
+[[ship]]
+id = 33
+name = "Chikuma"
+class = 5022
+side = "japanese"
+fuel_t = 2690
+experience = 3
+task_force = 3
+
+# Nagara (nagara; engagement_forces 5808, 5953): class 5025, Nagara class,
+# surface weapons not modelled (ship_classes_midway.ships.csv). Fuel full, an
+# assumption. Experience 3: ship_experience_midway.ships.csv
+# (ship_facts.csv:506, training_facts.csv:32).
+[[ship]]
+id = 34
+name = "Nagara"
+class = 5025
+side = "japanese"
+fuel_t = 1260
+experience = 3
+task_force = 3
+
+# Kazagumo (kazagumo; engagement_forces 5809): class 5032, Yugumo class,
+# surface weapons not modelled (ship_classes_midway.ships.csv). Fuel full, an
+# assumption. Experience 2: ship_experience_midway.ships.csv
+# (ship_facts.csv:447, training_facts.csv:32).
+[[ship]]
+id = 35
+name = "Kazagumo"
+class = 5032
+side = "japanese"
+fuel_t = 500
+experience = 2
+task_force = 3
+
+# Yugumo (yugumo; engagement_forces 5810): class 5032, Yugumo class, surface
+# weapons not modelled (ship_classes_midway.ships.csv). Fuel full, an
+# assumption. Experience 2: ship_experience_midway.ships.csv
+# (ship_facts.csv:577, training_facts.csv:32).
+[[ship]]
+id = 36
+name = "Yugumo"
+class = 5032
+side = "japanese"
+fuel_t = 500
+experience = 2
+task_force = 3
+
+# Makigumo (makigumo; engagement_forces 5811): class 5032, Yugumo class,
+# surface weapons not modelled (ship_classes_midway.ships.csv). Fuel full, an
+# assumption. Experience 2: ship_experience_midway.ships.csv
+# (ship_facts.csv:479, training_facts.csv:32).
+[[ship]]
+id = 37
+name = "Makigumo"
+class = 5032
+side = "japanese"
+fuel_t = 500
+experience = 2
+task_force = 3
+
+# Akigumo (akigumo; engagement_forces 5812): class 5031, Kagero class, surface
+# weapons not modelled (ship_classes_midway.ships.csv). Fuel full, an
+# assumption. Experience 3: ship_experience_midway.ships.csv
+# (training_facts.csv:32).
+[[ship]]
+id = 38
+name = "Akigumo"
+class = 5031
+side = "japanese"
+fuel_t = 500
+experience = 3
+task_force = 3
+
+# Isokaze (isokaze; engagement_forces 5813): class 5031, Kagero class, surface
+# weapons not modelled (ship_classes_midway.ships.csv). Fuel full, an
+# assumption. Experience 3: ship_experience_midway.ships.csv
+# (training_facts.csv:32).
+[[ship]]
+id = 39
+name = "Isokaze"
+class = 5031
+side = "japanese"
+fuel_t = 500
+experience = 3
+task_force = 3
+
+# Urakaze (urakaze; engagement_forces 5814): class 5031, Kagero class, surface
+# weapons not modelled (ship_classes_midway.ships.csv). Fuel full, an
+# assumption. Experience 3: ship_experience_midway.ships.csv
+# (training_facts.csv:32).
+[[ship]]
+id = 40
+name = "Urakaze"
+class = 5031
+side = "japanese"
+fuel_t = 500
+experience = 3
+task_force = 3
+
+# Hamakaze (hamakaze; engagement_forces 5815): class 5031, Kagero class,
+# surface weapons not modelled (ship_classes_midway.ships.csv). Fuel full, an
+# assumption. Experience 3: ship_experience_midway.ships.csv
+# (training_facts.csv:32).
+[[ship]]
+id = 41
+name = "Hamakaze"
+class = 5031
+side = "japanese"
+fuel_t = 500
+experience = 3
+task_force = 3
+
+# Tanikaze (tanikaze; engagement_forces 5816): class 5031, Kagero class,
+# surface weapons not modelled (ship_classes_midway.ships.csv). Fuel full, an
+# assumption. Experience 3: ship_experience_midway.ships.csv
+# (training_facts.csv:32).
+[[ship]]
+id = 42
+name = "Tanikaze"
+class = 5031
+side = "japanese"
+fuel_t = 500
+experience = 3
+task_force = 3
+
+# Nowaki (nowaki; engagement_forces 5817): class 5031, Kagero class, surface
+# weapons not modelled (ship_classes_midway.ships.csv). Fuel full, an
+# assumption. Experience 3: ship_experience_midway.ships.csv
+# (training_facts.csv:32).
+[[ship]]
+id = 43
+name = "Nowaki"
+class = 5031
+side = "japanese"
+fuel_t = 500
+experience = 3
+task_force = 3
+
+# Arashi (arashi; engagement_forces 5818): class 5031, Kagero class, surface
+# weapons not modelled (ship_classes_midway.ships.csv). Fuel full, an
+# assumption. Experience 3: ship_experience_midway.ships.csv
+# (training_facts.csv:32).
+[[ship]]
+id = 44
+name = "Arashi"
+class = 5031
+side = "japanese"
+fuel_t = 500
+experience = 3
+task_force = 3
+
+# Hagikaze (hagikaze; engagement_forces 5819): class 5031, Kagero class,
+# surface weapons not modelled (ship_classes_midway.ships.csv). Fuel full, an
+# assumption. Experience 3: ship_experience_midway.ships.csv
+# (training_facts.csv:32).
+[[ship]]
+id = 45
+name = "Hagikaze"
+class = 5031
+side = "japanese"
+fuel_t = 500
+experience = 3
+task_force = 3
+
+# Maikaze (maikaze; engagement_forces 5820): class 5031, Kagero class, surface
+# weapons not modelled (ship_classes_midway.ships.csv). Fuel full, an
+# assumption. Experience 3: ship_experience_midway.ships.csv
+# (training_facts.csv:32).
+[[ship]]
+id = 46
+name = "Maikaze"
+class = 5031
+side = "japanese"
+fuel_t = 500
+experience = 3
+task_force = 3
+
+# Task force 4, the Midway Invasion Force: the thirteen placeholder transports
+# (ships 47 to 59), the close screen (60 to 70), the Close Support Group (71
+# to 78) and the Second Fleet's main body (79 to 92).
+
+# The thirteen transports: PLACEHOLDERS, of the placeholder class "Placeholder
+# transport, 8.8 knots" (class 19,
+# ship_classes_placeholder_transport_8_8_knots.csv; 600 berths), named so
+# because a real ship is not given an invented rating (decision 0198, rule
+# 88). Their speed, 8.8 kn, stands on two positions alone (rule 65): 700 nm
+# from Midway at 0925 on 3 June and 560 nm at 0120 on 4 June
+# (engagement_events 7699 and 7706), 140 nm in 15 hours 55 minutes. Fuel full
+# (1,000 t), an assumption. Supply aboard: PLACEHOLDER, 41 t on each, the
+# Coral Sea's figure (rule 95). Each comment names the ship the transport
+# stands for and her row.
+
+# Stands for Nankai Maru: engagement_forces 5868.
+[[ship]]
+id = 47
+name = "Placeholder transport 1"
+class = 19
+side = "japanese"
+fuel_t = 1000
+supply_t = 41
+task_force = 4
+
+# Stands for Zenyo Maru: engagement_forces 5869.
+[[ship]]
+id = 48
+name = "Placeholder transport 2"
+class = 19
+side = "japanese"
+fuel_t = 1000
+supply_t = 41
+task_force = 4
+
+# Stands for Brazil Maru: engagement_forces 5870.
+[[ship]]
+id = 49
+name = "Placeholder transport 3"
+class = 19
+side = "japanese"
+fuel_t = 1000
+supply_t = 41
+task_force = 4
+
+# Stands for Argentina Maru: engagement_forces 5871.
+[[ship]]
+id = 50
+name = "Placeholder transport 4"
+class = 19
+side = "japanese"
+fuel_t = 1000
+supply_t = 41
+task_force = 4
+
+# Stands for Azuma Maru: engagement_forces 5872.
+[[ship]]
+id = 51
+name = "Placeholder transport 5"
+class = 19
+side = "japanese"
+fuel_t = 1000
+supply_t = 41
+task_force = 4
+
+# Stands for Kirishima Maru: engagement_forces 5873.
+[[ship]]
+id = 52
+name = "Placeholder transport 6"
+class = 19
+side = "japanese"
+fuel_t = 1000
+supply_t = 41
+task_force = 4
+
+# Stands for Kano Maru: engagement_forces 5874.
+[[ship]]
+id = 53
+name = "Placeholder transport 7"
+class = 19
+side = "japanese"
+fuel_t = 1000
+supply_t = 41
+task_force = 4
+
+# Stands for Toa Maru No. 2: engagement_forces 5875.
+[[ship]]
+id = 54
+name = "Placeholder transport 8"
+class = 19
+side = "japanese"
+fuel_t = 1000
+supply_t = 41
+task_force = 4
+
+# Stands for Akebono Maru: engagement_forces 5876.
+[[ship]]
+id = 55
+name = "Placeholder transport 9"
+class = 19
+side = "japanese"
+fuel_t = 1000
+supply_t = 41
+task_force = 4
+
+# Stands for Hokuriku Maru: engagement_forces 5877.
+[[ship]]
+id = 56
+name = "Placeholder transport 10"
+class = 19
+side = "japanese"
+fuel_t = 1000
+supply_t = 41
+task_force = 4
+
+# Stands for Goshu Maru: engagement_forces 5878.
+[[ship]]
+id = 57
+name = "Placeholder transport 11"
+class = 19
+side = "japanese"
+fuel_t = 1000
+supply_t = 41
+task_force = 4
+
+# Stands for Keiyo Maru: engagement_forces 5879.
+[[ship]]
+id = 58
+name = "Placeholder transport 12"
+class = 19
+side = "japanese"
+fuel_t = 1000
+supply_t = 41
+task_force = 4
+
+# Stands for Seicho Maru: engagement_forces 5880 (disputed: another source lists Kiyosumi Maru, engagement_forces 5968, in her place).
+[[ship]]
+id = 59
+name = "Placeholder transport 13"
+class = 19
+side = "japanese"
+fuel_t = 1000
+supply_t = 41
+task_force = 4
+
+# The close screen: ships 60 to 70.
+
+# Jintsu (jintsu; engagement_forces 5881, 5960): class 5026, Sendai class,
+# surface weapons not modelled (ship_classes_midway.ships.csv). Fuel full, an
+# assumption. Experience 3: ship_experience_midway.ships.csv
+# (ship_facts.csv:432, training_facts.csv:32).
+[[ship]]
+id = 60
+name = "Jintsu"
+class = 5026
+side = "japanese"
+fuel_t = 994
+experience = 3
+task_force = 4
+
+# Kuroshio (kuroshio; engagement_forces 5882): class 5031, Kagero class,
+# surface weapons not modelled (ship_classes_midway.ships.csv). Fuel full, an
+# assumption. Experience 3: ship_experience_midway.ships.csv
+# (training_facts.csv:32).
+[[ship]]
+id = 61
+name = "Kuroshio"
+class = 5031
+side = "japanese"
+fuel_t = 500
+experience = 3
+task_force = 4
+
+# Oyashio (oyashio; engagement_forces 5883): class 5031, Kagero class, surface
+# weapons not modelled (ship_classes_midway.ships.csv). Fuel full, an
+# assumption. Experience 3: ship_experience_midway.ships.csv
+# (training_facts.csv:32).
+[[ship]]
+id = 62
+name = "Oyashio"
+class = 5031
+side = "japanese"
+fuel_t = 500
+experience = 3
+task_force = 4
+
+# Hatsukaze (hatsukaze; engagement_forces 5885): class 5031, Kagero class,
+# surface weapons not modelled (ship_classes_midway.ships.csv). Fuel full, an
+# assumption. Experience 3: ship_experience_midway.ships.csv
+# (training_facts.csv:32).
+[[ship]]
+id = 63
+name = "Hatsukaze"
+class = 5031
+side = "japanese"
+fuel_t = 500
+experience = 3
+task_force = 4
+
+# Yukikaze (yukikaze; engagement_forces 5886): class 5031, Kagero class,
+# surface weapons not modelled (ship_classes_midway.ships.csv). Fuel full, an
+# assumption. Experience 3: ship_experience_midway.ships.csv
+# (training_facts.csv:32).
+[[ship]]
+id = 64
+name = "Yukikaze"
+class = 5031
+side = "japanese"
+fuel_t = 500
+experience = 3
+task_force = 4
+
+# Amatsukaze (amatsukaze; engagement_forces 5887): class 5031, Kagero class,
+# surface weapons not modelled (ship_classes_midway.ships.csv). Fuel full, an
+# assumption. Experience 3: ship_experience_midway.ships.csv
+# (training_facts.csv:32).
+[[ship]]
+id = 65
+name = "Amatsukaze"
+class = 5031
+side = "japanese"
+fuel_t = 500
+experience = 3
+task_force = 4
+
+# Tokitsukaze (tokitsukaze; engagement_forces 5888): class 5031, Kagero class,
+# surface weapons not modelled (ship_classes_midway.ships.csv). Fuel full, an
+# assumption. Experience 3: ship_experience_midway.ships.csv
+# (training_facts.csv:32).
+[[ship]]
+id = 66
+name = "Tokitsukaze"
+class = 5031
+side = "japanese"
+fuel_t = 500
+experience = 3
+task_force = 4
+
+# Kasumi (kasumi; engagement_forces 5889): class 5035, Asashio class, surface
+# weapons not modelled, surface weapons not modelled
+# (ship_classes_midway.ships.csv). Fuel full, an assumption. Experience 3:
+# ship_experience_midway.ships.csv (ship_facts.csv:9209,
+# training_facts.csv:32).
+[[ship]]
+id = 67
+name = "Kasumi"
+class = 5035
+side = "japanese"
+fuel_t = 492
+experience = 3
+task_force = 4
+
+# Arare (arare; engagement_forces 5890): class 5035, Asashio class, surface
+# weapons not modelled, surface weapons not modelled
+# (ship_classes_midway.ships.csv). Fuel full, an assumption. Experience 3:
+# ship_experience_midway.ships.csv (ship_facts.csv:9215,
+# training_facts.csv:32).
+[[ship]]
+id = 68
+name = "Arare"
+class = 5035
+side = "japanese"
+fuel_t = 492
+experience = 3
+task_force = 4
+
+# Kagero (kagero; engagement_forces 5891): class 5031, Kagero class, surface
+# weapons not modelled (ship_classes_midway.ships.csv). Fuel full, an
+# assumption. Experience 3: ship_experience_midway.ships.csv
+# (training_facts.csv:32).
+[[ship]]
+id = 69
+name = "Kagero"
+class = 5031
+side = "japanese"
+fuel_t = 500
+experience = 3
+task_force = 4
+
+# Shiranui (shiranui; engagement_forces 5892): class 5031, Kagero class,
+# surface weapons not modelled (ship_classes_midway.ships.csv). Fuel full, an
+# assumption. Experience 3: ship_experience_midway.ships.csv
+# (ship_facts.csv:9245, training_facts.csv:32).
+[[ship]]
+id = 70
+name = "Shiranui"
+class = 5031
+side = "japanese"
+fuel_t = 500
+experience = 3
+task_force = 4
+
+# The Close Support Group: ships 71 to 78.
+
+# Kumano (kumano; engagement_forces 5893, 5957): class 5027, Mogami class,
+# surface weapons not modelled (ship_classes_midway.ships.csv). Fuel full, an
+# assumption. Experience 3: ship_experience_midway.ships.csv
+# (ship_facts.csv:470, training_facts.csv:32).
+[[ship]]
+id = 71
+name = "Kumano"
+class = 5027
+side = "japanese"
+fuel_t = 2310
+experience = 3
+task_force = 4
+
+# Suzuya (suzuya; engagement_forces 5894, 5956): class 5027, Mogami class,
+# surface weapons not modelled (ship_classes_midway.ships.csv). Fuel full, an
+# assumption. Experience 3: ship_experience_midway.ships.csv
+# (ship_facts.csv:539, training_facts.csv:32).
+[[ship]]
+id = 72
+name = "Suzuya"
+class = 5027
+side = "japanese"
+fuel_t = 2310
+experience = 3
+task_force = 4
+
+# Mogami (mogami; engagement_forces 5895, 5954): class 5027, Mogami class,
+# surface weapons not modelled (ship_classes_midway.ships.csv). Fuel full, an
+# assumption. Experience 3: ship_experience_midway.ships.csv
+# (ship_facts.csv:9140, training_facts.csv:32).
+[[ship]]
+id = 73
+name = "Mogami"
+class = 5027
+side = "japanese"
+fuel_t = 2310
+experience = 3
+task_force = 4
+
+# Mikuma (mikuma; engagement_forces 5896, 5955): class 5027, Mogami class,
+# surface weapons not modelled (ship_classes_midway.ships.csv). Fuel full, an
+# assumption. Experience 3: ship_experience_midway.ships.csv
+# (ship_facts.csv:9134, training_facts.csv:32).
+[[ship]]
+id = 74
+name = "Mikuma"
+class = 5027
+side = "japanese"
+fuel_t = 2310
+experience = 3
+task_force = 4
+
+# Arashio (arashio; engagement_forces 5897): class 5034, Asashio class
+# (ship_classes_midway.ships.csv). Fuel full, an assumption. Experience 3:
+# ship_experience_midway.ships.csv (ship_facts.csv:9227,
+# training_facts.csv:32).
+[[ship]]
+id = 75
+name = "Arashio"
+class = 5034
+side = "japanese"
+fuel_t = 492
+experience = 3
+task_force = 4
+
+# Asashio (asashio; engagement_forces 5898): class 5034, Asashio class
+# (ship_classes_midway.ships.csv). Fuel full, an assumption. Experience 3:
+# ship_experience_midway.ships.csv (ship_facts.csv:9221,
+# training_facts.csv:32).
+[[ship]]
+id = 76
+name = "Asashio"
+class = 5034
+side = "japanese"
+fuel_t = 492
+experience = 3
+task_force = 4
+
+# Oshio (oshio; engagement_forces 5899): class 5034, Asashio class
+# (ship_classes_midway.ships.csv). Fuel full, an assumption. Experience 3:
+# ship_experience_midway.ships.csv (ship_facts.csv:9233,
+# training_facts.csv:32).
+[[ship]]
+id = 77
+name = "Oshio"
+class = 5034
+side = "japanese"
+fuel_t = 492
+experience = 3
+task_force = 4
+
+# Michishio (michishio; engagement_forces 5900): class 5034, Asashio class
+# (ship_classes_midway.ships.csv). Fuel full, an assumption. Experience 3:
+# ship_experience_midway.ships.csv (ship_facts.csv:9239,
+# training_facts.csv:32).
+[[ship]]
+id = 78
+name = "Michishio"
+class = 5034
+side = "japanese"
+fuel_t = 492
+experience = 3
+task_force = 4
+
+# The Second Fleet's main body: ships 79 to 92.
+
+# Kongo (kongo; engagement_forces 5854, 5959): class 5024, Kongo class
+# (ship_classes_midway.ships.csv). Fuel full, an assumption. Experience 2:
+# ship_experience_midway.ships.csv (ship_facts.csv:5696, ship_facts.csv:9128).
+[[ship]]
+id = 79
+name = "Kongo"
+class = 5024
+side = "japanese"
+fuel_t = 6330
+experience = 2
+task_force = 4
+
+# Hiei (hiei; engagement_forces 5855, 5958): class 5024, Kongo class
+# (ship_classes_midway.ships.csv). Fuel full, an assumption. Experience 2:
+# ship_experience_midway.ships.csv (ship_facts.csv:411).
+[[ship]]
+id = 80
+name = "Hiei"
+class = 5024
+side = "japanese"
+fuel_t = 6330
+experience = 2
+task_force = 4
+
+# Atago (atago; engagement_forces 5856): class 5028, Takao class,
+# anti_aircraft 8 (ship_classes_midway.ships.csv). Fuel full, an assumption.
+# Experience 3: ship_experience_midway.ships.csv (ship_facts.csv:54,
+# training_facts.csv:32).
+[[ship]]
+id = 81
+name = "Atago"
+class = 5028
+side = "japanese"
+fuel_t = 2529
+experience = 3
+task_force = 4
+
+# Chokai (chokai; engagement_forces 5857): class 5029, Takao class,
+# anti_aircraft 6 (ship_classes_midway.ships.csv). Fuel full, an assumption.
+# Experience 3: ship_experience_midway.ships.csv (ship_facts.csv:135,
+# ship_facts.csv:136, training_facts.csv:32).
+[[ship]]
+id = 82
+name = "Chokai"
+class = 5029
+side = "japanese"
+fuel_t = 2529
+experience = 3
+task_force = 4
+
+# Haguro (haguro; engagement_forces 5858): class 5030, Myoko class
+# (ship_classes_midway.ships.csv). Fuel full, an assumption. Experience 3:
+# ship_experience_midway.ships.csv (ship_facts.csv:397,
+# training_facts.csv:32).
+[[ship]]
+id = 83
+name = "Haguro"
+class = 5030
+side = "japanese"
+fuel_t = 2431
+experience = 3
+task_force = 4
+
+# Myoko (myoko; engagement_forces 5859): class 5030, Myoko class
+# (ship_classes_midway.ships.csv). Fuel full, an assumption. Experience 3:
+# ship_experience_midway.ships.csv (ship_facts.csv:501,
+# training_facts.csv:32).
+[[ship]]
+id = 84
+name = "Myoko"
+class = 5030
+side = "japanese"
+fuel_t = 2431
+experience = 3
+task_force = 4
+
+# Yura (yura; engagement_forces 5860): class 5025, Nagara class, surface
+# weapons not modelled (ship_classes_midway.ships.csv). Fuel full, an
+# assumption. Experience 3: ship_experience_midway.ships.csv
+# (ship_facts.csv:585, training_facts.csv:32).
+[[ship]]
+id = 85
+name = "Yura"
+class = 5025
+side = "japanese"
+fuel_t = 1260
+experience = 3
+task_force = 4
+
+# Yudachi (yudachi; engagement_forces 5861): class 5033, Shiratsuyu class
+# (ship_classes_midway.ships.csv). Fuel full, an assumption. Experience 3:
+# ship_experience_midway.ships.csv (training_facts.csv:32).
+[[ship]]
+id = 86
+name = "Yudachi"
+class = 5033
+side = "japanese"
+fuel_t = 492
+experience = 3
+task_force = 4
+
+# Murasame (murasame; engagement_forces 5862): class 5033, Shiratsuyu class
+# (ship_classes_midway.ships.csv). Fuel full, an assumption. Experience 3:
+# ship_experience_midway.ships.csv (ship_facts.csv:489,
+# training_facts.csv:32).
+[[ship]]
+id = 87
+name = "Murasame"
+class = 5033
+side = "japanese"
+fuel_t = 492
+experience = 3
+task_force = 4
+
+# Harusame (harusame; engagement_forces 5863): class 5033, Shiratsuyu class
+# (ship_classes_midway.ships.csv). Fuel full, an assumption. Experience 3:
+# ship_experience_midway.ships.csv (training_facts.csv:32).
+[[ship]]
+id = 88
+name = "Harusame"
+class = 5033
+side = "japanese"
+fuel_t = 492
+experience = 3
+task_force = 4
+
+# Samidare (samidare; engagement_forces 5864): class 5033, Shiratsuyu class
+# (ship_classes_midway.ships.csv). Fuel full, an assumption. Experience 3:
+# ship_experience_midway.ships.csv (training_facts.csv:32).
+[[ship]]
+id = 89
+name = "Samidare"
+class = 5033
+side = "japanese"
+fuel_t = 492
+experience = 3
+task_force = 4
+
+# Asagumo (asagumo; engagement_forces 5865): class 5034, Asashio class
+# (ship_classes_midway.ships.csv). Fuel full, an assumption. Experience 3:
+# ship_experience_midway.ships.csv (training_facts.csv:32).
+[[ship]]
+id = 90
+name = "Asagumo"
+class = 5034
+side = "japanese"
+fuel_t = 492
+experience = 3
+task_force = 4
+
+# Minegumo (minegumo; engagement_forces 5866): class 5034, Asashio class
+# (ship_classes_midway.ships.csv). Fuel full, an assumption. Experience 3:
+# ship_experience_midway.ships.csv (training_facts.csv:32).
+[[ship]]
+id = 91
+name = "Minegumo"
+class = 5034
+side = "japanese"
+fuel_t = 492
+experience = 3
+task_force = 4
+
+# Natsugumo (natsugumo; engagement_forces 5867): class 5034, Asashio class
+# (ship_classes_midway.ships.csv). Fuel full, an assumption. Experience 3:
+# ship_experience_midway.ships.csv (training_facts.csv:32).
+[[ship]]
+id = 92
+name = "Natsugumo"
+class = 5034
+side = "japanese"
+fuel_t = 492
+experience = 3
+task_force = 4
+
+# ---------------------------------------------------------------------------
+# AIR GROUPS. Each strength cites its row in data/oob/air_unit_facts.csv. No
+# group counts its pilots, as in scenarios 103 and 105. The Allied groups are
+# 1 to 18 and the Japanese 19 to 32, in the order of the hand calculation.
+# ---------------------------------------------------------------------------
+
+# Enterprise's fighters: air_unit_facts 12610.
+[[air_group]]
+id = 1
+name = "VF-6"
+side = "allied"
+ship = 1
+aircraft_type = 5100
+ready = 27
+
+# Enterprise's bombing squadron: air_unit_facts 12600. Its rows say SBD-2 and
+# SBD-3 mixed with no split (12600 to 12603); it flies the SBD-3, as the other
+# three dive bomber squadrons of the two sister carriers did (rule 90). The
+# split is a gap.
+[[air_group]]
+id = 2
+name = "VB-6"
+side = "allied"
+ship = 1
+aircraft_type = 5103
+ready = 18
+
+# air_unit_facts 12606.
+[[air_group]]
+id = 3
+name = "VS-6"
+side = "allied"
+ship = 1
+aircraft_type = 5103
+ready = 18
+
+# air_unit_facts 5727.
+[[air_group]]
+id = 4
+name = "VT-6"
+side = "allied"
+ship = 1
+aircraft_type = 5106
+ready = 14
+
+# Hornet's fighters, her report of 28 May: air_unit_facts 12641.
+[[air_group]]
+id = 5
+name = "VF-8"
+side = "allied"
+ship = 2
+aircraft_type = 5100
+ready = 27
+
+# Hornet's dive bombers, 35 by her own report (air_unit_facts 12639; rule
+# 56). No row splits them between her two squadrons, so they are one group.
+[[air_group]]
+id = 6
+name = "VB-8 and VS-8"
+side = "allied"
+ship = 2
+aircraft_type = 5103
+ready = 35
+
+# air_unit_facts 5739.
+[[air_group]]
+id = 7
+name = "VT-8"
+side = "allied"
+ship = 2
+aircraft_type = 5106
+ready = 15
+
+# Yorktown's report: air_unit_facts 5705.
+[[air_group]]
+id = 8
+name = "VF-3"
+side = "allied"
+ship = 18
+aircraft_type = 5100
+ready = 25
+
+# air_unit_facts 5702.
+[[air_group]]
+id = 9
+name = "VB-3"
+side = "allied"
+ship = 18
+aircraft_type = 5103
+ready = 18
+
+# air_unit_facts 5711.
+[[air_group]]
+id = 10
+name = "VS-5"
+side = "allied"
+ship = 18
+aircraft_type = 5103
+ready = 18
+
+# Yorktown's report, 12 (air_unit_facts 5708), against 13 and 15 (rule 61).
+[[air_group]]
+id = 11
+name = "VT-3"
+side = "allied"
+ship = 18
+aircraft_type = 5106
+ready = 12
+
+# Midway's Marine fighters: air_unit_facts 5748.
+[[air_group]]
+id = 12
+name = "VMF-221, F2A-3"
+side = "allied"
+base = 1
+aircraft_type = 5102
+ready = 21
+
+# air_unit_facts 5749.
+[[air_group]]
+id = 13
+name = "VMF-221, F4F-3"
+side = "allied"
+base = 1
+aircraft_type = 5101
+ready = 7
+
+# Midway's Marine dive bombers: air_unit_facts 5750 (rule 55).
+[[air_group]]
+id = 14
+name = "VMSB-241, SBD-2"
+side = "allied"
+base = 1
+aircraft_type = 5104
+ready = 19
+
+# air_unit_facts 5751 (rule 55): seventeen, of which the row's own note has
+# five out of commission on 31 May, so twelve ready and five damaged (rule
+# 92).
+[[air_group]]
+id = 15
+name = "VMSB-241, SB2U-3"
+side = "allied"
+base = 1
+aircraft_type = 5105
+ready = 12
+damaged = 5
+
+# Midway's flying boats, two groups by type (rule 57): air_unit_facts 5753.
+[[air_group]]
+id = 16
+name = "Patrol squadrons, PBY-5"
+side = "allied"
+base = 1
+aircraft_type = 5114
+ready = 14
+
+# air_unit_facts 5754.
+[[air_group]]
+id = 17
+name = "Patrol squadrons, PBY-5A"
+side = "allied"
+base = 1
+aircraft_type = 5113
+ready = 16
+
+# The Army's bombers at Midway on 3 June: air_unit_facts 5755.
+[[air_group]]
+id = 18
+name = "Army bombers, B-17E"
+side = "allied"
+base = 1
+aircraft_type = 5107
+ready = 17
+
+# The Japanese carriers' groups (rules 73 and 74): combinedfleet's records of
+# 27 May (air_unit_facts 14200 to 14216), each carrier's own fighters with the
+# 6th Air Group's beside them; Hiryu by rule 50's rows with the 6th's three.
+
+# 18 of her own (air_unit_facts 14200) and six of the 6th Air Group (14203,
+# 14204).
+[[air_group]]
+id = 19
+name = "Akagi fighter unit"
+side = "japanese"
+ship = 26
+aircraft_type = 5108
+ready = 24
+
+# air_unit_facts 14201.
+[[air_group]]
+id = 20
+name = "Akagi bomber unit"
+side = "japanese"
+ship = 26
+aircraft_type = 5109
+ready = 18
+
+# air_unit_facts 14202.
+[[air_group]]
+id = 21
+name = "Akagi attack unit"
+side = "japanese"
+ship = 26
+aircraft_type = 5110
+ready = 18
+
+# 18 of her own (air_unit_facts 14205) and nine of the 6th Air Group (14209,
+# 14210).
+[[air_group]]
+id = 22
+name = "Kaga fighter unit"
+side = "japanese"
+ship = 27
+aircraft_type = 5108
+ready = 27
+
+# air_unit_facts 14206; her two spare bombers (14209) are not flown.
+[[air_group]]
+id = 23
+name = "Kaga bomber unit"
+side = "japanese"
+ship = 27
+aircraft_type = 5109
+ready = 18
+
+# air_unit_facts 14207.
+[[air_group]]
+id = 24
+name = "Kaga attack unit"
+side = "japanese"
+ship = 27
+aircraft_type = 5110
+ready = 27
+
+# 18 of her own (air_unit_facts 14211) and three of the 6th Air Group (14214,
+# 14215).
+[[air_group]]
+id = 25
+name = "Soryu fighter unit"
+side = "japanese"
+ship = 28
+aircraft_type = 5108
+ready = 21
+
+# air_unit_facts 14212: 16 (rule 74).
+[[air_group]]
+id = 26
+name = "Soryu bomber unit"
+side = "japanese"
+ship = 28
+aircraft_type = 5109
+ready = 16
+
+# air_unit_facts 14213.
+[[air_group]]
+id = 27
+name = "Soryu attack unit"
+side = "japanese"
+ship = 28
+aircraft_type = 5110
+ready = 18
+
+# 18 of her own (air_unit_facts 5849) and three of the 6th Air Group (5860,
+# 5861), rule 73.
+[[air_group]]
+id = 28
+name = "Hiryu fighter unit"
+side = "japanese"
+ship = 29
+aircraft_type = 5108
+ready = 21
+
+# air_unit_facts 5852.
+[[air_group]]
+id = 29
+name = "Hiryu bomber unit"
+side = "japanese"
+ship = 29
+aircraft_type = 5109
+ready = 18
+
+# air_unit_facts 5855.
+[[air_group]]
+id = 30
+name = "Hiryu attack unit"
+side = "japanese"
+ship = 29
+aircraft_type = 5110
+ready = 18
+
+# Tone's Type 0 floatplanes, three (air_unit_facts 12466, low; rule 91).
+[[air_group]]
+id = 31
+name = "Tone floatplanes"
+side = "japanese"
+ship = 32
+aircraft_type = 5111
+ready = 3
+
+# Chikuma's, three (air_unit_facts 12468, low; rule 91).
+[[air_group]]
+id = 32
+name = "Chikuma floatplanes"
+side = "japanese"
+ship = 33
+aircraft_type = 5111
+ready = 3
+
+# ---------------------------------------------------------------------------
+# LAND UNITS. Every unit has experience 2 and every skill 2 (the defaults)
+# and starts rested. No formation: no row gives one for these men.
+# ---------------------------------------------------------------------------
+
+# Midway's garrison: 2,178 fighting men, the 6th Defense Battalion and the
+# two raider companies (land_unit_facts 6907; rule 63). The sailors, the air
+# units' men and the soldiers are not a land unit. Ashore at the base, on the
+# defence.
+[[land_unit]]
+id = 1
+name = "The garrison of Midway"
+side = "allied"
+men = 2178
+q = 5
+r = 1
+
+# The landing force, 4,507 men in two units, aboard task force 4 (rules 62
+# and 89). Units are put aboard in unit order over the force's ships in ship
+# order, and a ship carries the men of one unit only; which ship carries
+# which men is not said. The warships have no berths. The construction units
+# are not land units of the game and are not landed.
+
+# The Ichiki Detachment: 2,507 men, a count on 19 May (land_unit_facts
+# 12800).
+[[land_unit]]
+id = 2
+name = "Ichiki Detachment"
+side = "japanese"
+men = 2507
+task_force = 4
+
+# The 2nd Combined Special Naval Landing Force: 2,000 men (land_unit_facts
+# 6947).
+[[land_unit]]
+id = 3
+name = "2nd Combined Special Naval Landing Force"
+side = "japanese"
+men = 2000
+task_force = 4
+
+# ---------------------------------------------------------------------------
+# THE ISLANDS (decision 0151), for an order to control an island given at the
+# table: Midway, of its base.
+# ---------------------------------------------------------------------------
+
+[[island]]
+number = 1
+name = "Midway"
+places = [{ base = 1 }]
+
+# ---------------------------------------------------------------------------
+# MISSIONS AND OBJECTIVES (decision 0054; decision 0198, rules 12 to 14, 46
+# to 48 and 100; decisions 0186 and 0187). A scenario for play (decision
+# 0187): its scale is its own, and its results are not laid beside the
+# record or another scenario's. Every figure is one the game already has
+# (scenarios 103 and 105). Every point value is a PLACEHOLDER. No objective
+# for a base open or held: the mission inside five days is the landing.
+#
+# The levels are set before any game is played, in terms of the carriers and
+# the landing force (rule 100): minor 5, a carrier out of action; major 15, a
+# third of the landing force ashore, or lost; decisive 30, two thirds.
+#
+# The horizon is 66 days, from 2 June to the landings on Guadalcanal on 7
+# August (28 days of June, 31 of July, 7 of August), the next operation the
+# carriers fought in: a carrier out for those days missed it.
+# ---------------------------------------------------------------------------
+
+[objectives]
+for_play = true
+minor = 5
+major = 15
+decisive = 30
+horizon_days = 66
+history = "Akagi, Kaga, Soryu and Hiryu and the cruiser Mikuma were sunk. Yorktown and the destroyer Hammann were lost. The invasion force turned back on 5 June and landed no one at Midway."
+
+[objectives.allied]
+mission = "Hold Midway and sink the Japanese carriers."
+
+[[objectives.allied.objective]]
+kind = "ships_sunk"
+points = { carrier = 10, battleship = 8, cruiser = 4, destroyer = 1, transport = 2, auxiliary = 1 }
+
+[[objectives.allied.objective]]
+kind = "ships_out_of_action"
+points = { carrier = 5, battleship = 4, cruiser = 2, destroyer = "0.5", transport = 1, auxiliary = "0.5" }
+
+[[objectives.allied.objective]]
+kind = "aircraft_destroyed"
+points = "0.05"
+
+[[objectives.allied.objective]]
+kind = "men_lost"
+points_per_100_men = 1
+
+[objectives.japanese]
+mission = "Land the invasion force's men at Midway and sink the American carriers."
+
+[[objectives.japanese.objective]]
+kind = "ships_sunk"
+points = { carrier = 10, battleship = 8, cruiser = 4, destroyer = 1, transport = 2, auxiliary = 1 }
+
+[[objectives.japanese.objective]]
+kind = "ships_out_of_action"
+points = { carrier = 5, battleship = 4, cruiser = 2, destroyer = "0.5", transport = 1, auxiliary = "0.5" }
+
+[[objectives.japanese.objective]]
+kind = "aircraft_destroyed"
+points = "0.05"
+
+[[objectives.japanese.objective]]
+kind = "men_lost"
+points_per_100_men = 1
+
+# 1 point for each 100 men the invasion force lands in the hex of Midway and
+# does not take off again (decision 0186), the figure scenarios 103 and 105
+# give it.
+[[objectives.japanese.objective]]
+kind = "men_landed"
+base = 1
+points_per_100_men = 1
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_intent"
+intent = 1
+intent_kind = "hold"
+base = 1
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_limit"
+limit = "forces"
+intent = 1
+air_groups = [12, 13, 16, 17]
+land_units = [1]
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_intent"
+intent = 2
+intent_kind = "deny"
+hex = [1, -1]
+distance = 4
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_limit"
+limit = "forces"
+intent = 2
+air_groups = [14, 15, 18]
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_limit"
+limit = "targets"
+intent = 2
+kinds = ["carrier", "transport", "battleship", "cruiser", "destroyer"]
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_intent"
+intent = 3
+intent_kind = "operate_carriers"
+task_force = 1
+hex = [9, -5]
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_intent"
+intent = 4
+intent_kind = "operate_carriers"
+task_force = 2
+hex = [9, -5]
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_leave"
+leave = "prepare"
+given = true
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_leave"
+leave = "launch"
+given = true
+
+[[command]]
+day = 1
+side = "japanese"
+kind = "set_intent"
+intent = 1
+intent_kind = "take_place"
+hex = [5, 1]
+
+[[command]]
+day = 1
+side = "japanese"
+kind = "set_limit"
+limit = "forces"
+intent = 1
+task_forces = [3, 4]
+land_units = [2, 3]
+
+[[command]]
+day = 1
+side = "japanese"
+kind = "set_limit"
+limit = "knowledge"
+intent = 1
+knowledge = "none"
+
+[[command]]
+day = 1
+side = "japanese"
+kind = "set_leave"
+leave = "prepare"
+given = true
+
+[[command]]
+day = 1
+side = "japanese"
+kind = "set_leave"
+leave = "launch"
+given = true
+
+# SUBMARINES (decision 0225, as amended on review). Made by scripts/table-boats/make_files.py.
+# Each boat starts on her station, her hex (no station key), with her class's
+# salvoes, sound, and is ordered nowhere. The rule that reads each American
+# start from her arc is in the header; the hexes are worked by hand in
+# decision 0225, "The hexes, worked by hand".
+
+# USS Tambor (ships.csv 6321; class 6001, Tambor class, by ship_facts 16020).
+# PLACEHOLDER start (1,3): engagement_positions 16010 (Bates, 2 June: Tambor,
+# Trout, Grayling, Nautilus, Grouper and Gudgeon on the arc 240 to 360
+# degrees, 150 miles from Midway; steps of 24 degrees), first of six, bearing
+# 240 degrees: the point 150 miles out lies 17.6 nm from the centre of (1,3).
+# Home: Midway (base 1), a stand-in.
+[[submarine]]
+id = 1
+name = "USS Tambor"
+side = "allied"
+class = 6001
+q = 1
+r = 3
+home = 1
+
+# USS Trout (ships.csv 6322; class 6001, Tambor class, by ship_facts 16021).
+# PLACEHOLDER start (1,1): engagement_positions 16010 (Bates, 2 June: Tambor,
+# Trout, Grayling, Nautilus, Grouper and Gudgeon on the arc 240 to 360
+# degrees, 150 miles from Midway; steps of 24 degrees), second of six, bearing
+# 264 degrees: 9.1 nm from the centre of (1,1). Home: Midway (base 1), a
+# stand-in.
+[[submarine]]
+id = 2
+name = "USS Trout"
+side = "allied"
+class = 6001
+q = 1
+r = 1
+home = 1
+
+# USS Nautilus (ships.csv 6317; class 6011, Narwhal class, by ship_facts
+# 16019). PLACEHOLDER start (4,-2): engagement_positions 16010 (Bates, 2 June:
+# Tambor, Trout, Grayling, Nautilus, Grouper and Gudgeon on the arc 240 to 360
+# degrees, 150 miles from Midway; steps of 24 degrees), fourth of six, bearing
+# 312 degrees: 20.3 nm from the centre of (4,-2) and 20.6 nm from that of
+# (4,-3). Her stated position at 0710 on 4 June (engagement_positions 16002:
+# 30-00 N, 179-25 W, in the hex next to hers) agrees with this reading of the
+# order and is not her start: it is of the second day. Home: Midway (base 1),
+# a stand-in.
+[[submarine]]
+id = 3
+name = "USS Nautilus"
+side = "allied"
+class = 6011
+q = 4
+r = -2
+home = 1
+
+# USS Gato (ships.csv 6326; class 6002, Gato class, by ship_facts 16022).
+# PLACEHOLDER start (1,-1): engagement_positions 16009 (Bates, 2 June:
+# Dolphin, Gato and Grenadier on the arc 250 to 310 degrees, 200 miles from
+# Midway; steps of 30 degrees), second of three, bearing 280 degrees: 16.0 nm
+# from the centre of (1,-1). Home: Midway (base 1), a stand-in.
+[[submarine]]
+id = 4
+name = "USS Gato"
+side = "allied"
+class = 6002
+q = 1
+r = -1
+home = 1
+
+# I-168 (ships.csv 6424; class 6005, I-168 to I-175, by ship_facts 16000).
+# PLACEHOLDER start (5,1), Midway's hex: engagement_events 16202 (she
+# reconnoitred Midway from midnight of 1 June to noon of 2 June) and 7673
+# (surfaced 4,500 yards east of Eastern Island at 2154 on 4 June). Her one row
+# in the positions file (engagement_positions 5774, Yorktown sunk 159 miles
+# east of Midway) is of a later day and takes an order to go there. Home: Wake
+# (base 2), a stand-in.
+[[submarine]]
+id = 5
+name = "I-168"
+side = "japanese"
+class = 6005
+q = 5
+r = 1
+home = 2

@@ -1528,7 +1528,8 @@ fn property_no_game_on_file_moves() {
         let own = rel.starts_with("hunger-takes-time/")
             || rel.starts_with("hungry-men-are-slow-to-mend/")
             || rel.starts_with("a-fight-costs-supply/")
-            || rel.starts_with("table-hunger/");
+            || rel.starts_with("table-hunger/")
+            || rel.starts_with("table-boats/");
         let text = std::fs::read_to_string(file).expect("the scenario reads");
         let Some(ground) = ground_line(&text) else {
             continue;
