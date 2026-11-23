@@ -4101,7 +4101,7 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
     (d.fights || []).forEach(function (x) { rows.push(['Action at ', { place: x.place }, ': ', { ref: x.force.handle, name: x.force.name }, ' met the enemy, ' + x.rounds + (x.rounds === 1 ? ' round' : ' rounds') + ', ' + (INTEL_FIGHT_ENDED[x.ended] || intelSay(x.ended)) + '.']); });
     return rows;
   }
-  function intelEstimate(e) { return [intelAbout(e.men), ' · ', { place: e.place }, ' · from ' + e.came_from, ' · ', daysOld(e)]; }
+  function intelEstimate(e) { return [intelAbout(e.men), ' · ', { place: e.place }].concat(e.came_from === 'told' ? [] : [' · from ' + e.came_from], [' · ', daysOld(e)]); }
   function intelEmpty(f) { return [{ place: f.place }, ' found empty ' + intelDay(f.day) + '; ' + commas(f.men) + ' men had been reported.']; }
   function intelBase(b) {
     var row = [{ ref: b.base.handle, name: b.base.name }];
