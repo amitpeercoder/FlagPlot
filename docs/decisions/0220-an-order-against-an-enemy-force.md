@@ -269,7 +269,7 @@ A function of `table/check_screen.py`, by the page's text, by the page's own fun
 15. **Through a bridge.** On the table's game of scenario 133's game A, at the Allied seat: on the first evening the card of the contact at (8,0) has both buttons; with the order given at 2 hexes and three days played, the paper says the force is followed at the place of (14,0), 2 ships, taken for cruisers, with one taking of day 3, and the chart's ring is round that place; with six days played the paper says lost, the ring is dashed round the place of (8,0), and the slip of the loss was drawn; with seven played the order is ended, its slip was drawn and no ring is drawn. Run with the three stops ticked, time stopped for the loss and for the end and for nothing else of this order.
 
 
-## The count, as run (Nov 23, 2026)
+## The count, as made (Nov 23, 2026)
 
 Made before the build, on today's code (`e7bdc8c2`, release build), as "The count, as stated" says. It is the umpire's; it tunes nothing and moves no figure. Facts only: the nine-in-ten mark and the first finding are read by the architect.
 
@@ -327,3 +327,16 @@ By the days between the pair, over all 15 files:
 | same day | 4464 | 3759 | 705 | 115 of 705 | 4464 of 4464 |
 | next day | 5915 | 4092 | 1823 | 706 of 1823 | 5915 of 5915 |
 | 2+ days | 1376 | 300 | 1076 | 27 of 1076 | 1376 of 1376 |
+
+### The architect's reading of the count (Nov 23, 2026)
+
+Read from the tables above; the counter's check gave the hand calculation's numbers, so the counter is believed.
+
+1. **The review's first finding does not hold as it was worded, and holds as far as the rule needs.** It said a force on the move "rarely" keeps its number from one day to the next and that each day's sighting is "most often" a new contact with the old one held. Of the 5,915 pairs a day apart, 4,092 refreshed the contact and 1,823 made a new one: three in ten, not most. Of those 1,823 the old contact was still held in 706, four in ten. The forces of these games are mostly carrier forces the staff keeps at a station, which move little from morning to morning; the finding was reasoned from a force steaming all day. What the rule rests on is not "most often" but "often enough that an order which could not change its number would fail": 3,604 of 11,755 later sightings changed the number, and over two days or more 1,076 of 1,376. An order that followed a number alone would have been lost at each. Rules 5 to 9 stand as amended.
+2. **`followed_force_knots` and ruling R4 stand.** Every pair, 11,755 of 11,755, is within the distance, against a mark of nine in ten; pairs a day apart needed 15 knots at most. The 40 knots is of pairs in one day, where a report a hex out at each end is most of the distance and R4's pulse of room is what holds them. The count shows the distance never refuses the same force. It does not show that it refuses another force: that is the sort, the nearest and "no other order follows it", which scenario 133's game B states.
+3. **Decision 0220 goes to build,** to the statements of scenario 133 as written. No figure, ruling or statement is changed by the count.
+4. **The two readings the developer chose are confirmed.** "Held at the dusk after" is the dusk that ends the later sighting's day: no drop of the old contact on that day or before it. That is the dusk at which rule 7 is worked, and it is the reading of the hand calculation (contact 1 at dusk of day 3). The nine-in-ten value by the nearest rank is as good as any, and nothing is judged on it.
+5. **The files left out are rightly left out.** A file that gives one side orders, or neither, is not "staff against staff, each side given the orders its mission implies"; `table-hunger` and the `base_*` files give no commands. One caution on the sums: several files are the same game counted again (the oiler and submarine files of one battle), so the totals weigh those games more than once. No share above changes its side of a mark with each game counted once; the per-file rows are what to read.
+6. **The counter stays in the repository,** at `scripts/0220-count/`, as the proofs' scripts are kept: it is the umpire's, reads export files, is read by no test, no build step and nothing that plays, and is run by hand. It is not run again as a gate; if `followed_force_knots` or R4 is ever questioned, it is the tool to ask.
+7. **Owed.** The review's sentence in "What the review found" is left as written, being the review's; this reading is the record of what the count found against it. No game here has a surface force running by night, the case the order says plainly it does not meet; the count says nothing of it.
+
