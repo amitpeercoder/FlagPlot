@@ -316,19 +316,14 @@
             }
           },
           "supplied_from": {
-            "description": "A hold or a control_island intent only (decision 0228, rule 18): the base its supply is read from and who chose it, `staff` or `commander`; null where no supply is in force under it.",
-            "oneOf": [
-              { "type": "null" },
-              {
-                "type": "object",
-                "required": ["base", "chosen_by"],
-                "additionalProperties": false,
-                "properties": {
-                  "base": { "type": "integer" },
-                  "chosen_by": { "enum": ["staff", "commander"] }
-                }
-              }
-            ]
+            "description": "A hold or a control_island intent only (decision 0228, rule 18): the base its supply is read from and who chose it, `staff` or `commander`; left out where the order reads no source.",
+            "type": "object",
+            "required": ["base", "chosen_by"],
+            "additionalProperties": false,
+            "properties": {
+              "base": { "type": "integer" },
+              "chosen_by": { "enum": ["staff", "commander"] }
+            }
           },
           "measure": {
             "oneOf": [

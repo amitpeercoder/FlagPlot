@@ -1487,7 +1487,7 @@ Decision 0228, amended on review and by the architect's rulings on the build (do
 
 **Three places in the engine** change for a side with the key and for none other: the key itself; the check that a forces limit narrows (The intent tree, A limit must narrow): a forces limit set on a "keep supplied" whose parent is a "hold a place" is checked as under a take, each limit above binding only what it names, a source the commander names above still binding; and the limit a run of a hold's plan is checked against (Runs): that of the lowest-numbered "keep supplied" in force directly under the hold that has one, in place of the hold's own.
 
-**The tools.** `command_state` gives each hold and each island in force `supplied_from`: `{"base", "chosen_by"}`, `chosen_by` `staff` or `commander`, the source the supply under it reads (the nearest forces limit on its chain that names one) and who chose it (`commander` where an intent of his on the chain names a source); null where no supply is in force under it. It is worked from the command state and stored nowhere, and given for every side (agent interface version 53). [0228]
+**The tools.** `command_state` gives each hold and each island in force `supplied_from`: `{"base", "chosen_by"}`, `chosen_by` `staff` or `commander`, the source the supply under it reads (the nearest forces limit on its chain that names one) and who chose it (`commander` where an intent of his on the chain names a source); left out where the order reads no source (no supply is in force under it). It is worked from the command state and stored nowhere, and given for every side that has one to give (agent interface version 53). [0228]
 
 ## Patrolling waters with submarines
 

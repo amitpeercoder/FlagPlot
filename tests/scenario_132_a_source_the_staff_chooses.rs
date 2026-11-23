@@ -67,7 +67,7 @@
 //! File f, file a played for twenty days, in which on day 3 the commander names source base 2 on the hold, and on day 16 clears it:
 //!
 //! 13. While a run from base 3 is loading or under way the source is base 3, and the reason of each such morning names the run the change waits for.
-//! 14. On the first morning no run is unfinished, the staff sets the supply's forces limit to base 2 and task force 2, and task force 1 is no longer in it.
+//! 14. On the morning of day 3, the day the commander names base 2, his command being taken in before the staff is asked, the staff sets the supply's forces limit to source base 2 and task force 2, and task force 1 is no longer in it; `supplied_from` says base 2, `chosen_by` `commander`.
 //! 15. The change is taken up before day 16. From day 17 the source is still base 2: the staff does not choose again.
 //!
 //! File g, file a with task force 3 at base 4 from day 3:
@@ -667,15 +667,12 @@ fn file_f() -> String {
 #[test]
 fn statement_14_a_source_the_commander_names_is_taken_up_and_the_pool_made_anew() {
     let played = play(&file_f(), 20);
-    let change = (3..16)
-        .find_map(|d| {
-            played
-                .limits(d)
-                .into_iter()
-                .find(|(i, s, _)| *i == intent(2) && *s == Some(base(2)))
-                .map(|(_, _, f)| (d, f))
-        })
-        .expect("the change is taken up before day 16");
+    let change = played
+        .limits(3)
+        .into_iter()
+        .find(|(i, s, _)| *i == intent(2) && *s == Some(base(2)))
+        .map(|(_, _, f)| (3, f))
+        .expect("the limit is set on the morning of day 3");
     assert_eq!(change.1, vec![force(2)], "task force 1 is no longer in it");
     assert_eq!(
         played.states[change.0 as usize].supplied_from(intent(1)),
