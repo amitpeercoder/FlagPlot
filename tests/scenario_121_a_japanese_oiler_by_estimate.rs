@@ -229,37 +229,16 @@ fn oob_rows(name: &str) -> Vec<BTreeMap<String, String>> {
         .collect()
 }
 
-fn cargo() -> Command {
-    let mut command = Command::new(std::env::var("CARGO").unwrap_or_else(|_| "cargo".to_string()));
-    command.current_dir(repo());
-    command
-}
-
 /// `oob-derive <list> --check`, with the facts of `facts` (by default
-/// data/oob): whether it passed, and what it printed.
+/// data/oob): whether it passed, and what it printed. It is asked of the
+/// library the program is built on, as the program asks it.
 fn derive_check(list: &Path, facts: Option<&Path>) -> (bool, String) {
-    // One at a time: two `cargo run`s at once may each build the program,
-    // and one replace it under the other while it runs.
-    static ONE_AT_A_TIME: std::sync::Mutex<()> = std::sync::Mutex::new(());
-    let _turn = ONE_AT_A_TIME.lock().unwrap_or_else(|e| e.into_inner());
-    let mut command = cargo();
-    command
-        .args(["run", "--quiet", "-p", "oob-derive", "--"])
-        .arg(list)
-        .arg("--check");
-    if let Some(facts) = facts {
-        command.arg("--facts").arg(facts);
-    }
-    let out = command.output().expect("the derivation runs");
-    (
-        out.status.success(),
-        format!(
-            "{}{}{}",
-            out.status,
-            String::from_utf8_lossy(&out.stdout),
-            String::from_utf8_lossy(&out.stderr)
-        ),
-    )
+    let facts = facts.map_or_else(|| repo().join("data/oob"), Path::to_path_buf);
+    let said = oob_derive::said(
+        &list.display().to_string(),
+        oob_derive::run(list, &facts, true),
+    );
+    (said.passed, format!("{}{}", said.out, said.err))
 }
 
 /// A fresh folder of this test's own under the system's temporary folder.

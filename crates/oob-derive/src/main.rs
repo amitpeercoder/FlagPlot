@@ -4,8 +4,6 @@
 use std::path::Path;
 use std::process::ExitCode;
 
-use oob_derive::Outcome;
-
 const USAGE: &str = "usage: oob-derive <list.toml> [--facts <dir>] [--check]";
 
 fn main() -> ExitCode {
@@ -29,66 +27,16 @@ fn main() -> ExitCode {
         return usage();
     };
     let facts = facts.unwrap_or_else(|| "data/oob".to_string());
-    match oob_derive::run(Path::new(&list), Path::new(&facts), check) {
-        Err(message) => {
-            eprintln!("{message}");
-            ExitCode::FAILURE
-        }
-        Ok(Outcome::Problems(problems)) => {
-            for problem in &problems {
-                println!("{problem}");
-            }
-            let n = problems.len();
-            println!(
-                "{list}: {n} {}",
-                if n == 1 { "problem" } else { "problems" }
-            );
-            ExitCode::FAILURE
-        }
-        Ok(Outcome::Clean {
-            files,
-            written,
-            unread,
-            not_settled,
-            torpedo_not_split,
-            estimated,
-        }) => {
-            println!("{list}: no problems");
-            println!("{}", if written { "wrote:" } else { "would write:" });
-            for file in files {
-                println!("  {}", file.display());
-            }
-            // The count of the estimates (decision 0207, rule 13), printed
-            // for every list.
-            match estimated.split_first() {
-                None => println!("estimated (decision 0207): none"),
-                Some((count, lines)) => {
-                    println!("{count}:");
-                    for line in lines {
-                        println!("  {line}");
-                    }
-                }
-            }
-            if !unread.is_empty() {
-                println!("rows of the listed ships that no question read (not in the file):");
-                for line in unread {
-                    println!("  {line}");
-                }
-            }
-            if !torpedo_not_split.is_empty() {
-                println!("torpedo tubes not split: no row says how the tubes bear, so the tubes on one side are all of them (decision 0074, 3):");
-                for line in torpedo_not_split {
-                    println!("  {line}");
-                }
-            }
-            if !not_settled.is_empty() {
-                println!("aircraft types whose search radius is not settled (the strike radius is kept, decision 0075):");
-                for line in not_settled {
-                    println!("  {line}");
-                }
-            }
-            ExitCode::SUCCESS
-        }
+    let said = oob_derive::said(
+        &list,
+        oob_derive::run(Path::new(&list), Path::new(&facts), check),
+    );
+    print!("{}", said.out);
+    eprint!("{}", said.err);
+    if said.passed {
+        ExitCode::SUCCESS
+    } else {
+        ExitCode::FAILURE
     }
 }
 
