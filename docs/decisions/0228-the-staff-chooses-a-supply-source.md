@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 23, 2026. It is step 3 of decisi
 
 Summary: Where a commander orders a place held and names no base to supply it from, the staff forms no supply and tells him to name one. Under an order to control an island the staff does choose, by the most supply above the reserve, which can pick a full base no ship lies at, or strip a forward base of its own men's food. This gives the staff one rule for choosing a source, used in both cases: a base that can spare supply after its own fifteen days, one that can cover the place's need before one that cannot, one with a transport force lying empty at it before one with none, then the most to spare. The choice is kept, shown on the order's paper as the staff's, and the commander may change it.
 
-Standing: Planned on Nov 23, 2026; amended on review; nothing built.
+Standing: Planned on Nov 23, 2026; amended on review and by the architect's rulings on the build; built on Nov 23, 2026 (As built, below).
 
 ## Why it is a record of its own
 
@@ -319,3 +319,29 @@ Chapter 8: the key and what a side without it gets; Holding a place, The supply 
 "The engine changes in two places" is replaced by: three, the key, the narrowing check and this.
 
 **Rule 17's bases: confirmed as the developer built it.** The other bases the day's reason names are weighed by rules 1 and 2 without the test of "the source of an order higher in priority", and with the test of a base before its day. The list is there to lead the commander to name a source, and by rule 14 a base he names is not refused because another order draws on it; a base before its day he cannot use at all. So the list is exactly the bases he could name with something to spare. Rule 17 is read so: "each other base of the side, not in the place's hex and not before its day, that has supply to spare".
+
+## As built, Nov 23, 2026
+
+Built by a developer from the record as amended on review and by the architect's rulings on the build, in one branch. Commits, in order: the engine and the staff; scenario 132's files; the third ruling and the intake tests; scenario 132's test; the table, decision 0224's rulings in the table's 39-day files and the rulebook; the generated files; the pins.
+
+- **Versions taken:** doctrine `supply-59`; state layout `flagplot-state-v59`; saved game 27; agent interface 53. The rules label stays 32. Main had 52 for the interface (decision 0226) and decision 0227 moved no version.
+- **The key:** `staff_chooses_supply_sources` under `[side.allied]` and `[side.japanese]`, held in `CommandState::staff_chooses_sources`, hashed last in the side's command state, named in `name_every_field`, given by `SideView::staff_chooses_sources`. A side's command state with the key is not empty (`CommandState::is_empty`).
+- **The three engine changes** (the record: "three, the key, the narrowing check and this"): `forces_narrow` is given the intent the limit is set on; `CommandState::supply_limit_under_hold` is read by `forces_of` (the limit a run of a hold's plan is checked against) and by the apply of `add_run` (the run's source).
+- **The staff** (`crates/sim-staff/src/source.rs` is new): `weigh_sources` (rules 1 to 4, in a `Day`), `base_spare`, `hex_keeps`, `place_need`, `other_sources_words` (rule 17). `holding.rs` gains `keyed_hold_supply` (rules 9, 10, 12, 14, 16), `nothing_to_spare_reason` (rule 6); `island.rs` takes the one rule for a side with the key (rule 13) and not refusing a commander's named base for another order's draw (rule 14); `planner.rs` and `doctrine.rs` the cut to what the source can spare (rule 7) and the plan not marked failed (amendment B).
+- **The tool:** `command_state` gives `supplied_from` on a hold and an island, from `CommandState::supplied_from` (rule 18); `chosen_by` is `commander` where an intent of his on the supply's chain names a source.
+- **The table** (rules 19 to 21): `supplyForces` and "WE CHOSE IT FOR YOU" are gone; the plan's paper says "Supplied from: <base>, our choice" with CHANGE where the staff chose; `check_screen.py` has the checks. The table's files state the key for both sides through `scripts/table-boats/make_files.py`.
+- **Decision 0224's rulings** in `data/scenarios/table-rear-bases/`, made by `scripts/table-rear-bases/make_files.py` from the 39-day files of `table-boats/` (the games the table plays; the record named `table-hunger`, which the table no longer plays), tested in `tests/table_rear_bases_files.rs`; `table/scenarios.json` names them. Those files are the games with the key on. The measurement the record asks of 0224's rulings "first without it, then with it" is not made here.
+
+**Statements.** 1 to 20 are tested in `tests/scenario_132_a_source_the_staff_chooses.rs` and hold as written, with the readings below; 21 to 25 are tested in `crates/sim-core/src/command/tests.rs` and hold. The properties are tested as games (the order of rule 4 is read from the source the staff gives over varied stocks and forces).
+
+**Readings the build made, for the architect.**
+- **Statement 14, "the morning after the commander names base 2":** the commander's command of day 3 is taken in before the staff is asked on day 3, so the staff sets the limit on the morning of day 3 itself. The test asserts it is set before day 16 and names the pool exactly.
+- **Statement 16** needed a reason on every morning of a kept source: the staff gives one (a no-order reason, "chosen on an earlier morning and kept") each morning the source is kept and unchanged, where it is the staff's.
+- **Statement 10:** the reason of a day the supply cannot be met says "no other base of the side can spare supply" (its words come from `other_sources_words`).
+- **Rule 17's list** is as the architect confirmed.
+- **Statement 5 of decision 0224** ("no file under data/scenarios outside the new folder is changed") could not hold with the key turned on in the table's files: the sixteen files of `table-boats/` change in their `[side]` tables by the one key and by nothing else. The new folder's files are made from them.
+- **Tests that name the table's folders** (`scenario_119`, `scenario_123`, the lists of folders that may name the table's ground figures) gain the new folder in their lists; no expected number of any test moved but the state hashes and versions of the layout.
+
+**What did not move.** No run baseline changed beyond its hash lines (`scripts/regenerate.sh`); no staffed game on file played differently; the recorded games' transcripts changed in the interface version alone, and in `second_proof_week_sonnet` by `supplied_from: null` in two `command_state` answers, the tool's one new field (`recorded_games/README.md`). Every pinned state hash and export hash was remade for the layout; every digest of what a staff hands in (`scenario_130`, part D) is as it was.
+
+**Rule card as built.** Reads: the side's key; the side's bases (supply, reserve, hex), the planned use of the hexes, the transport forces (stopped, empty, may be taken), the engine's sea path, the command state. Writes: a "keep supplied" under a hold, the forces limit of the supply it formed; nothing else. Draws: none. No new event: `side_events.rs` is not touched.
