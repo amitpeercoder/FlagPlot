@@ -19,7 +19,7 @@ use serde::de::{self, Deserializer};
 use serde::{Deserialize, Serialize};
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
-use sim_core::ids::{AirGroupId, EntityRef, ShipId, TaskForceId};
+use sim_core::ids::EntityRef;
 use sim_core::orders::{RejectReason, SpeedSetting};
 use sim_core::refdata::{AircraftRole, AttackWeapon};
 use sim_core::state::{Ship, ShipLocation};
@@ -29,7 +29,7 @@ use sim_core::{PassageEnd, PassageForecast};
 
 use crate::answer::{NotKnown, FORMAT, VERSION};
 use crate::choices::Choices;
-use crate::common::{map_unit_tokens, Ctx, Dec, Handle, Place};
+use crate::common::{Ctx, Dec, Handle, Place};
 use crate::words;
 
 /// A place in a question: a hex as `{"q": 2, "r": -4}`, or a unit or contact
@@ -601,15 +601,7 @@ fn yard(ctx: &Ctx<'_>, handle: &str, context: &MeasureContext<'_>) -> Option<Yar
             Ok(()) => answer.order = Some("accepted"),
             Err(reason) => {
                 answer.order = Some("refused");
-                answer.refusal =
-                    Some(map_unit_tokens(
-                        &words::refusal(&reason),
-                        |kind, raw| match kind {
-                            "ship" => ctx.ship_number(ShipId::new(raw)),
-                            "task_force" => ctx.force_number(TaskForceId::new(raw)),
-                            _ => ctx.group_number(AirGroupId::new(raw)),
-                        },
-                    ));
+                answer.refusal = Some(ctx.map_text(&words::refusal(&reason)));
             }
         }
     }

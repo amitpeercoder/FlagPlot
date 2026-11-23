@@ -194,6 +194,23 @@ impl<'a> Names<'a> {
                                 .and_then(|n| u32::try_from(n).ok())
                                 .and_then(|raw| self.force_number(raw))
                                 .map_or_else(|| v.clone(), |n| json!(n)),
+                            // The one unit a wait for, or a reason's level,
+                            // names: the side's number, as a hold's is.
+                            (
+                                kind @ ("ship" | "air_group" | "land_unit" | "submarine"),
+                                Value::Number(number),
+                            ) => number
+                                .as_u64()
+                                .and_then(|n| u32::try_from(n).ok())
+                                .and_then(|raw| match kind {
+                                    "ship" => self.ctx.ship_number(ShipId::new(raw)),
+                                    "air_group" => self.ctx.group_number(AirGroupId::new(raw)),
+                                    "land_unit" => self.ctx.land_unit_number(LandUnitId::new(raw)),
+                                    _ => self
+                                        .ctx
+                                        .submarine_number(sim_core::ids::SubmarineId::new(raw)),
+                                })
+                                .map_or_else(|| v.clone(), |n| json!(n)),
                             _ => self.value(v),
                         };
                         (key.clone(), shown)
@@ -1166,6 +1183,26 @@ pub(crate) fn command_json(
             {
                 if let Some(force) = kind.force() {
                     body["task_force"] = json!(written_force(n, force, request));
+                }
+            }
+            // A wait for names its force or unit as the side wrote it where
+            // it is not the side's own.
+            if let CommandKind::SetLimit(Limit::WaitFor {
+                awaited: Some(awaited),
+                ..
+            }) = command
+            {
+                match awaited {
+                    Awaited::TaskForce(force) => {
+                        body["task_force"] = json!(written_force(n, *force, request));
+                    }
+                    Awaited::LandUnit(unit) => {
+                        if let Some(number) =
+                            request.and_then(|r| r.land_unit_stand_ins.get(&unit.raw()).copied())
+                        {
+                            body["land_unit"] = json!(number);
+                        }
+                    }
                 }
             }
             body
