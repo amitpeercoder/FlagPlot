@@ -1291,6 +1291,99 @@ def the_limits_on_the_paper(bridge):
     check(post(bridge.table + "/new") == {"ok": True}, "the game is put away")
 
 
+LIMITS_FORCE_IN_NODE = r"""
+function whereIs() { return ''; } function dateOf() { return ''; } function sayIntent() { return 'Hold Port Moresby'; }
+const hexes = [];
+function main() {
+  M.names['task_force:1'] = 'Task Force 17'; M.names['base:1'] = 'Port Moresby'; M.state = { intents: [] };
+  const out = {};
+  out.cleared = limitSignedPart('hold', { limit: 'forces', cleared: true, intent: 1 });
+  out.forces = limitSignedPart('deny', { limit: 'forces', task_forces: [1], ships: [], none_of: ['air_groups'], in_place: true, intent: 1 });
+  out.rank = [limitSignedPart('hold', { limit: 'priority', rank: 1 }), limitSignedPart('hold', { limit: 'priority', rank: 3 }), limitSignedPart('hold', { limit: 'priority', rank: null })];
+  out.targets = limitSignedPart('deny', { limit: 'targets', kinds: [] });
+  out.risk = limitSignedPart('hold', { limit: 'risk', risk: 'press' });
+  out.area = limitSignedPart('keep_supplied', { limit: 'area', cleared: true });
+  const none = newLim();
+  out.bodies = ['forces', 'area', 'protected', 'targets', 'risk'].map(g => limGroupBody('keep_supplied', none, g));
+  const set = newLim(); set.ships = { mode: 'only', task_forces: [1], ships: [] }; set.in_place = true; set.source = 1;
+  out.partsBefore = [limPart('deny', set, 'ships'), limPart('hold', set, 'source'), limPart('deny', set, 'air_groups')];
+  limReset(set, 'ships'); out.afterReset = limGroupBody('hold', set, 'forces'); limReset(set, 'source'); out.afterBoth = limGroupBody('hold', set, 'forces');
+  out.groups = [limGroup('source'), limGroup('in_place'), limGroup('area'), limGroup('risk')];
+  out.offered = { deny: PLAN_LINES.filter(k => k === 'risk' ? offers('deny', 'risk') : lineOffered('deny', k)), take: PLAN_LINES.filter(k => lineOffered('take_place', k)), patrol: PLAN_LINES.filter(k => lineOffered('patrol', k)) };
+  return out;
+}
+"""
+
+
+def limits_in_force(bridge):
+    """The limits of an order in force, on its plan's paper (decision 0222, "As built: step 4, the table"): the page holds the
+    LIMITS part of the plan's paper, its own paper for a limit changed, the way to open the plan at a limit, a base's reserve and
+    SIGNED's words; the pure pieces (what a signed limit says, the body a line sends) are run in node; and the engine takes what
+    the page sends, a limit changed or cleared on an order in force, one by itself, and a base's reserve."""
+    import re
+    print("-- the limits of an order in force: the plan's paper, the paper for a change, and the engine taking it", flush=True)
+    text = page_text()
+    plan = text[text.index("// ---- the plan's paper as one tree ----"):text.index("// ---- the dry run (decisions")]
+    check("function planLimits(top)" in plan and "function limitJump(kind)" in plan and "function readPlan(root, focus, limitFocus)" in plan and "limitFocus.kind" in plan and "'LIMITS'" in plan
+          and "doc.appendChild(planLimits(top))" in plan and "'Order ' + top.number + ' · given day ' + top.set_day" in plan and "limited by you" not in plan and "of the staff\\'s choosing" not in plan,
+          "the plan's paper has a LIMITS part after its head line, which no longer says the risk or whether the forces are limited, and opens at a limit (readPlan's third argument)")
+    check("'SET IT'" not in plan and "TRY IT FIRST" in plan and "'Not before day'" in plan and "'Pursuit'" in plan,
+          "the plan's RISK AND TIMING keeps TRY IT FIRST, the not-before what-if and the pursuit, and has no SET IT: the risk is changed in LIMITS")
+    check("openPaper('limit'" in text and "function openLimitPaper(root, key, back)" in text and "function askLimitPreview()" in text and "paper.kind === 'limit'" in text and "'Change the limits of '" in text and "limReset(l, key)" in text,
+          "a limit is changed on the one order paper, as its own kind: the order named by its words and linked, the line, the staff's reading, a signature")
+    check("data-key" in plan or "row.dataset.key = key" in plan, "each line of LIMITS is a row with its key, so that a link can scroll to it and mark it")
+    check("'Set by us: '" in plan and "'From your order: '" in text and "limitJump(x.group" in text and "limitNotes(t, i, byNum)" in plan,
+          "a task says what the staff set on it, and what it reads from the order, linked to that order's LIMITS line")
+    check("function reserveLine(body, b)" in text and "Kept in reserve: " in text and "limit: 'reserve', base: n, supply_t: String(sv), fuel_t: String(fv)" in text and "reserveLine(body, b);" in text
+          and "'Change what is kept in reserve at '" in text and "'Sign the reserve at '" in text, "an own base's card says what it keeps in reserve, with CHANGE and two whole-number fields in tons and SIGN, labelled")
+    signed = cut_function(text, "  function signedLine(e) {")
+    check("orderCap(c.intent)" in signed and "limitSignedPart(intentKindOf(c.intent), c)" in signed and "'Order ' + c.intent" not in signed and "kept in reserve" in signed and "pursuit " in signed and "': withdrawn'" in signed,
+          "SIGNED says a limit, a pursuit and a withdrawal by the order's words, never by its number, and a reserve by the base's name")
+    model = text[text.index("  var LIMITS_OFFERED"):text.index("  // ---- end of the limits model ----")]
+    code = "".join(cut_function(text, f"  function {h}(") + "\n" for h in ["cleanName", "num", "hexDist", "hexWords"]) + model + LIMITS_FORCE_IN_NODE
+    said = run_in_node(code, None)
+    check(said["cleared"] == "Forces: back to the staff’s choice" and said["area"] == "Keep within: back to the staff’s choice" and said["targets"] == "Strike first: back to the staff’s choice",
+          f"a limit cleared is said as back to the staff's choice ({said['cleared']}; {said['area']}; {said['targets']})")
+    check(said["forces"] == "Ships and forces: Task Force 17, from where they lie · Air groups: none" and said["risk"] == "Risk: press" and said["rank"] == ["ranked first", "ranked third", "not ranked"],
+          f"a limit set is said in the table's words, a rank as first, second and so on ({said['forces']}; {said['rank']})")
+    check(said["bodies"] == [{"limit": "forces", "cleared": True}, {"limit": "area", "cleared": True}, {"limit": "protected", "ships": []}, {"limit": "targets"}, {"limit": "risk", "risk": "balanced"}],
+          f"a limit wholly at the staff's choice sends the body that clears it ({said['bodies']})")
+    check(said["partsBefore"] == ["Ships and forces: Task Force 17, from where they lie", "Supplied from: Port Moresby", None] and said["afterReset"] == {"limit": "forces", "source": 1} and said["afterBoth"] == {"limit": "forces", "cleared": True},
+          f"one forces line put back leaves the others, and all of them put back clears the limit ({said['afterReset']}; {said['afterBoth']})")
+    check(said["groups"] == ["forces", "forces", "area", "risk"], "the forces lines are one limit, and every other line is its own")
+    check(said["offered"]["deny"] == ["ships", "air_groups", "targets", "risk"] and "area" in said["offered"]["take"] and "knowledge" in said["offered"]["take"] and said["offered"]["patrol"] == ["submarines"],
+          f"each kind of order shows the lines it offers ({said['offered']})")
+    # The engine takes what the page sends.
+    check(begin(bridge, "coral-sea", "person", "engine") == {"ok": True}, "begun: the Coral Sea, the person Allied")
+    person = Person(bridge.table)
+    deny = [{"limit": "forces", "task_forces": [1], "ships": [], "none_of": ["air_groups"], "in_place": True}]
+    order = {"command": "set_intent", "intent_kind": "deny", "hex": [-18, -1], "distance": 4, "limits": deny}
+    shown = person.call("preview", order)["ok"]
+    check(person.call("approve", {"preview": shown["preview"]})["ok"].get("limits_queued") == 1, "a deny with Task Force 17 in place is signed")
+    check(person.call("end_day")["ok"].get("resolved"), "the day ends and the order is in force")
+    state = person.call("command_state")["ok"]
+    mine = [i for i in state["intents"] if i["number"] == 1][0]
+    check(mine["limits"]["forces"]["task_forces"] == [1] and mine["limits"]["forces"]["in_place"] is True and mine["limits_read_up"]["forces_from"] == 1,
+          "the order in force shows its forces limit, and that it is read from itself")
+    clear = person.call("preview", {"command": "set_limit", "limit": "forces", "intent": 1, "cleared": True})["ok"]
+    check(clear.get("status") != "refused" and "tree" in (clear.get("with_change") or {}), f"clearing the forces limit of an order in force is read by the staff and not refused ({clear.get('status')})")
+    given = person.call("approve", {"preview": clear["preview"]})["ok"]
+    check(given.get("status") == "queued", f"and is signed ({given.get('status')})")
+    check(person.call("end_day")["ok"].get("resolved"), "the day ends")
+    after = [i for i in person.call("command_state")["ok"]["intents"] if i["number"] == 1][0]
+    check(after["limits"]["forces"] is None, f"the order's forces limit is back to the staff's choice ({after['limits']['forces']})")
+    targets = person.call("preview", {"command": "set_limit", "limit": "targets", "intent": 1, "kinds": ["carrier"], "waters_first": True})["ok"]
+    check(targets.get("status") != "refused", f"strike first, with these waters first, is read on an order in force ({targets.get('status')})")
+    queued = person.call("set_limit", {"limit": "reserve", "base": 1, "supply_t": "100", "fuel_t": "0"})["ok"]
+    check(queued.get("status") == "queued", f"a base's reserve is signed ({queued.get('status')})")
+    held = person.call("queued")["ok"]
+    mine = [e for e in held["entries"] if e["command"]["kind"] == "set_limit" and e["command"]["limit"] == "reserve"]
+    check(len(mine) == 1, "and is under SIGNED")
+    taken = person.call("take_back", {"queue": mine[0]["place"]["queue"], "number": mine[0]["place"]["number"], "as_of": held["as_of"]})["ok"]
+    check(taken.get("status") != "refused" and person.call("queued")["ok"]["entries"] == [], "and taken back")
+    check(post(bridge.table + "/new") == {"ok": True}, "the game is put away")
+
+
 def midway_on_its_chart(bridge):
     """What the Midway game gives the page that the old map's games did not, and
     that the page words as it should (the mends of "Table: Midway on its own chart").
@@ -1548,6 +1641,7 @@ def main():
             the_paper_in_words(bridge)
             the_staffs_reading(bridge)
             the_limits_on_the_paper(bridge)
+            limits_in_force(bridge)
             midway_on_its_chart(bridge)
             person_against_agent(bridge, args.hold)
             seat_mcp(bridge)
