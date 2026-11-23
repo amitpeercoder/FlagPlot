@@ -1179,7 +1179,7 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
     });
     M.estimates.forEach(function (e) { var v = placeOf(e.place); if (v) label(['ENEMY ASHORE \u00B7 ' + strengthOf(e.men).toUpperCase().replace(' STRENGTH', '').replace(/^A /, '').replace('MORE THAN A BATTALION', 'BATTALION +'), 'About ' + aboutMen(e.men) + ' men', e.age_days ? e.age_days + ' days old' : 'Reported today'], RED, function () { return v; }, 1.0, 1, [0.55, -0.4]); });
     (M.subReports || []).forEach(function (r) { var v = placeOf(r.place); if (v) label(['SUBMARINE REPORTED', r.age_pulses ? 'Report ' + r.age_pulses + (r.age_pulses === 1 ? ' pulse' : ' pulses') + ' old' : 'Reported this pulse'], RED, function () { return v; }, 0.8, 1, [-0.5, 0.3]); });
-    M.contacts.forEach(function (c) { var v = placeOf(c.place); if (v) label(['CONTACT', c.ship_count + ' ships' + (c.taken_for ? ', taken for ' + (c.taken_for.kind || c.taken_for) : ''), c.age_pulses ? 'Report ' + c.age_pulses + ' pulses old' : 'Fresh report'], RED, function () { return v; }, 0.6, 0, [0.2, -0.3]); });
+    M.contacts.forEach(function (c) { var v = placeOf(c.place); if (v) label(['CONTACT', c.ship_count + (c.ship_count === 1 ? ' ship' : ' ships') + (c.taken_for ? ', ' + kindWords(c.taken_for.kind || c.taken_for, c.ship_count) : ''), c.age_pulses ? 'Report ' + c.age_pulses + ' pulses old' : 'Fresh report'], RED, function () { return v; }, 0.6, 0, [0.2, -0.3]); });
   }
 
   // ---- the plotter's stick ----
@@ -2337,7 +2337,7 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
   }
   function cardContact(t) {
     var c = t.contact, body = openCard('CONTACT ' + num(c.contact.handle), 'ENEMY');
-    kv(body, [['Reported', c.ship_count + ' ship' + (c.ship_count === 1 ? '' : 's')], ['Taken for', c.taken_for && String(c.taken_for.kind || c.taken_for).replace(/_/g, ' ')], ['Where', placeLink(c.place)], ['Age', pulsesOld(c.age_pulses)]]);
+    kv(body, [['Reported', c.ship_count + ' ship' + (c.ship_count === 1 ? '' : 's')], [c.ship_count === 1 ? 'Taken for' : 'Heaviest seen', c.taken_for && String(c.taken_for.kind || c.taken_for).replace(/_/g, ' ')], ['Where', placeLink(c.place)], ['Age', pulsesOld(c.age_pulses)]]);
     var how = el('div'); body.appendChild(how);
     api('get_entity', { handle: c.contact.handle }).then(function (a) {
       var ev = a.entity && a.entity.last_report_event; if (ev == null) return;
@@ -2351,7 +2351,8 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
   // words beneath it, in the staff's voice, with units by name and places as latitude and longitude with the hex in brackets, linked.
   // The events carry no fields but their kind, their words, their units and their day and pulse, so the report's figures are read from
   // its words. A report and the search that made it are one row. A kind not known here is said as the game has it, tidied.
-  function kindWords(k, n) { k = String(k || '').replace(/_/g, ' ').trim(); if (!k || k === 'unknown' || k === 'unspecified') return 'kind not made out'; return 'taken for ' + (n === 1 ? (/^[aeiou]/i.test(k) ? 'an ' : 'a ') + k : /s$/.test(k) ? k : k + 's'); }
+  function kindWords(k, n) { k = String(k || '').replace(/_/g, ' ').trim(); if (!k || k === 'unknown' || k === 'unspecified') return 'kind not made out'; var one = (/^[aeiou]/i.test(k) ? 'an ' : 'a ') + k; return n === 1 ? 'taken for ' + one : 'the heaviest taken for ' + one; }
+  // A report names one kind for a whole force: the heaviest ship seen in it. Of several ships it is said so, and not as though all were of it.
   function howWhen(n) { var w = n.day != null && n.pulse ? phaseWords(n.day, n.pulse).replace(/ · [\d–]+$/, '') : ''; return w; }
   function howWeKnow(into, nodes) {
     if (!nodes.length) return;
@@ -3750,7 +3751,7 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
       (function () { var ps = doc.querySelectorAll('p'), p2 = ps[1]; if (!p2) return; p2.appendChild(document.createTextNode(' ')); var ob = el('button', 'ref', 'Order of battle'); ob.type = 'button'; ob.addEventListener('click', function () { readOob(); }); p2.appendChild(ob); })();
       // since the last evening
       var since = [];
-      (c.new || []).forEach(function (x) { since.push('New: ' + x.contact.handle + ', ' + plural(x.ship_count, 'ship') + (x.taken_for ? ', taken for ' + String(x.taken_for.kind || x.taken_for).replace(/_/g, ' ') : '') + ', at ' + hexWords(x.place) + '.'); });
+      (c.new || []).forEach(function (x) { since.push('New: ' + x.contact.handle + ', ' + plural(x.ship_count, 'ship') + (x.taken_for ? ', ' + kindWords(x.taken_for.kind || x.taken_for, x.ship_count) : '') + ', at ' + hexWords(x.place) + '.'); });
       if (n(c.refreshed)) since.push(plural(n(c.refreshed), 'contact') + ' sighted again.');
       if (n(c.dropped)) since.push(plural(n(c.dropped), 'contact') + ' dropped from the plot: the report grew too old.');
       if (n(c.not_there)) since.push(plural(n(c.not_there), 'contact') + ' looked for and not found.');
