@@ -1133,3 +1133,116 @@ fn the_submarine_list_derives_exactly_the_files_in_data_reference() {
         read("data/reference/submarine_torpedoes_1942.sources.csv")
     );
 }
+
+// The ruling of Nov 23, 2026 (decision 0225): a class the list leaves out is
+// in no pool of like classes unless its entry says `like_class = true` with a
+// reason; and only a torpedo_model row that holds on the list's date drives a
+// `torpedo_from` entry out.
+//
+// Worked by hand: a fifth class `jp-sub-e`, left out, with endurance 18 and
+// max 20 (ratio 0.9). Out of the pool, `jp-sub-d`'s estimate stays as above,
+// the mean 0.65 over 3 classes and 13 knots. In the pool, the mean is
+// (0.5 + 0.75 + 0.7 + 0.9) / 4 = 0.7125 over 4 classes, and 20 x 0.7125 =
+// 14.25.
+
+fn with_left_out_class(entry: &str) -> (String, Files) {
+    let mut files = base();
+    let classes = files.get_mut("ship_classes.csv").unwrap();
+    classes.push_str("1006,jp-sub-e,Sub E class,jp,submarine\n");
+    add_row(
+        &mut files,
+        "ship_class_facts.csv",
+        fact(20, "jp-sub-e", "endurance_speed_kn", "18"),
+    );
+    add_row(
+        &mut files,
+        "ship_class_facts.csv",
+        fact(21, "jp-sub-e", "max_speed_kn", "20"),
+    );
+    let list = the_list().replace(
+        "[[left_out]]\nclass = \"us-sub-fleet\"",
+        &format!("[[left_out]]\nclass = \"jp-sub-e\"\nreason = \"Not derived.\"\n{entry}\n[[left_out]]\nclass = \"us-sub-fleet\""),
+    );
+    (list, files)
+}
+
+#[test]
+fn a_left_out_class_with_rows_is_in_no_pool_of_like_classes() {
+    let (list, files) = with_left_out_class("");
+    let outputs = derives(&list, &files);
+    let subs = outputs.submarine.as_ref().unwrap();
+    let d = source_of(&subs.class_sources_csv, "6003", "passage_speed_kn");
+    assert_eq!(d[2], "13");
+    assert!(
+        d[5].contains("x 0.65, the mean over 3 like classes"),
+        "{}",
+        d[5]
+    );
+    assert!(!d[5].contains("jp-sub-e"), "{}", d[5]);
+}
+
+#[test]
+fn a_left_out_class_marked_like_class_is_in_the_pool() {
+    let (list, files) =
+        with_left_out_class("like_class = true\nlike_class_reason = \"Kept in the pool.\"\n");
+    let outputs = derives(&list, &files);
+    let subs = outputs.submarine.as_ref().unwrap();
+    let d = source_of(&subs.class_sources_csv, "6003", "passage_speed_kn");
+    assert_eq!(d[2], "14.25");
+    assert!(d[5].contains("the mean over 4 like classes"), "{}", d[5]);
+    assert!(d[5].contains("jp-sub-e"), "{}", d[5]);
+}
+
+#[test]
+fn like_class_needs_a_reason_and_is_only_true() {
+    let (list, files) = with_left_out_class("like_class = true\n");
+    assert!(fails(&list, &files)
+        .iter()
+        .any(|p| p.contains("`like_class = true` needs a `like_class_reason`")));
+    let (list, files) = with_left_out_class("like_class = false\nlike_class_reason = \"No.\"\n");
+    assert!(fails(&list, &files)
+        .iter()
+        .any(|p| p.contains("`like_class` is only ever `true`")));
+    let (list, files) = with_left_out_class("like_class_reason = \"No.\"\n");
+    assert!(fails(&list, &files)
+        .iter()
+        .any(|p| p.contains("`like_class` is only ever `true`")));
+}
+
+#[test]
+fn a_torpedo_row_dated_after_the_list_leaves_torpedo_from_standing() {
+    let mut files = base();
+    add_row(
+        &mut files,
+        "ship_class_facts.csv",
+        fact(19, "us-sub-b", "torpedo_model", "jp-torp-b")
+            .replace("jp-torp-b,,,", "jp-torp-b,1945,,"),
+    );
+    let outputs = derives(&the_list(), &files);
+    let subs = outputs.submarine.as_ref().unwrap();
+    let rows = records(&subs.class_csv);
+    let b = rows.iter().find(|r| r[0] == "6001").expect("Sub B row");
+    assert_eq!(b[5], "6100");
+    assert_eq!(b[6], "torpedo_id");
+}
+
+#[test]
+fn a_torpedo_row_dated_on_or_before_the_list_drives_torpedo_from_out() {
+    for from in ["1942-08-07", "1942-01-01"] {
+        let mut files = base();
+        add_row(
+            &mut files,
+            "ship_class_facts.csv",
+            fact(19, "us-sub-b", "torpedo_model", "us-torp-a")
+                .replace("us-torp-a,,,", &format!("us-torp-a,{from},,")),
+        );
+        assert_one(
+            &fails(&the_list(), &files),
+            &[
+                "us-sub-b",
+                "a row drives the entry out: take out torpedo_from",
+                "ship_class_facts.csv:19",
+            ],
+        );
+    }
+}

@@ -430,3 +430,32 @@ id,key,name,nation,class,hull_number
 16003,ss-158-s-47,USS S-47,us,us-s-boat-s-42-group,SS-158
 16004,ss-188-sargo,USS Sargo,us,us-sargo-class,SS-188
 16005,ss-197-seawolf,USS Seawolf,us,us-sargo-class,SS-197
+17200,ss-142-s-37,USS S-37,us,us-s-boat-s-1-group,SS-142
+17201,ss-144-s-39,USS S-39,us,us-s-boat-s-1-group,SS-144
+17202,ss-146-s-41,USS S-41,us,us-s-boat-s-1-group,SS-146
+17203,ss-153-s-42,USS S-42,us,us-s-boat-s-42-group,SS-153
+17204,ss-154-s-43,USS S-43,us,us-s-boat-s-42-group,SS-154
+17205,ss-157-s-46,USS S-46,us,us-s-boat-s-42-group,SS-157
+17211,ss-177-pickerel,USS Pickerel,us,,SS-177
+17223,ss-219-amberjack,USS Amberjack,us,us-gato-class,SS-219
+17224,i-15,I-15,jp,jp-i-15-group,
+17225,i-17,I-17,jp,jp-i-15-group,
+17226,i-19,I-19,jp,jp-i-15-group,
+17227,i-21,I-21,jp,jp-i-15-group,
+17228,i-26,I-26,jp,jp-i-15-group,
+17229,i-27,I-27,jp,jp-i-15-group,
+17230,i-28,I-28,jp,jp-i-15-group,
+17231,i-29,I-29,jp,jp-i-15-group,
+17232,i-31,I-31,jp,jp-i-15-group,
+17233,i-33,I-33,jp,jp-i-15-group,
+17234,i-22,I-22,jp,jp-i-16-group,
+17235,i-24,I-24,jp,jp-i-16-group,
+17236,i-9,I-9,jp,jp-i-9-group,
+17237,i-11,I-11,jp,jp-i-9-group,
+17238,ro-33,RO-33,jp,jp-ro-33-group,
+17239,ro-34,RO-34,jp,jp-ro-33-group,
+17240,i-7,I-7,jp,jp-i-7-group,
+17241,i-8,I-8,jp,,
+17242,i-5,I-5,jp,,
+17243,i-4,I-4,jp,,
+17244,i-176,I-176,jp,jp-i-176-group,

@@ -100,3 +100,11 @@ id,key,name,nation,type
 16014,jp-i-176-group,"I-176 to I-185, fleet submarines built 1942 on (the Technical Mission's block; ONI 222-J's I-176 class)",jp,submarine
 16015,jp-ro-33-group,"RO-33 and RO-34, medium submarines built 1935",jp,submarine
 16016,jp-ro-35-group,"RO-35 class as ONI 222-J (1945) heads the sheet; whether it covers RO-33 and RO-34 is not stated",jp,submarine
+17200,jp-i-16-group,"I-16, I-18, I-20, I-22, I-24, I-46, I-47, I-48, built 1940 on (the Technical Mission's block e in S-01-1; Nishida's C1 type for I-16 to I-24)",jp,submarine
+17201,jp-i-7-group,"I-7 and I-8, built 1933 on (the Technical Mission's block b in S-01-1; Nishida's J3 type). ONI 222-J puts I-8 in its I-5 class and does not list I-7",jp,submarine
+17202,jp-i-1-j1-group,"I-1 to I-4 (Nishida's and Wikipedia's J1 type), the part of the Technical Mission's I-1 to I-6 block (jp-i-1-group) the architect ruled be split off; I-5 and I-6 are not in it",jp,submarine
+17203,jp-i-6-j2-group,"I-6 alone (Nishida's and Wikipedia's J2 type), the other part of the split of the Technical Mission's I-1 to I-6 block (jp-i-1-group)",jp,submarine
+17204,us-dolphin-class,"Dolphin class (Dolphin, SS-169, ex V-7), as DANFS and FM 30-50 name it",us,submarine
+17205,us-cachalot-class,"Cachalot class (Cachalot SS-170, Cuttlefish SS-171): DANFS's CACHALOT, FM 30-50's Cuttlefish class",us,submarine
+17206,us-porpoise-class,"Porpoise class as DANFS names it in the entries of Pike (SS-173), Tarpon (SS-175), Pickerel (SS-177) and Plunger (SS-179); FM 30-50 (1941) names SS-172 to 175 the Pike class and puts SS-176 to 181 in a Perch class (us-perch-class)",us,submarine
+17207,us-perch-class,"Perch class as FM 30-50 (1941) names it: Perch, Pickerel, Permit, Plunger, Pollack, Pompano (SS-176 to 181); DANFS calls these boats Porpoise class",us,submarine

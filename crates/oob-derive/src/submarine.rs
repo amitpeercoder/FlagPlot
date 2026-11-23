@@ -110,6 +110,13 @@ pub(crate) struct RawLeftOut {
     #[serde(default)]
     weapon: Option<String>,
     reason: String,
+    /// A class left out is in no pool of like classes (decision 0207, rule
+    /// 6) unless its entry says `like_class = true`, with
+    /// `like_class_reason` (decision 0225, the ruling of Nov 23, 2026).
+    #[serde(default)]
+    like_class: Option<bool>,
+    #[serde(default)]
+    like_class_reason: Option<String>,
 }
 
 /// The submarine keys of a list, as read from the file.
@@ -161,6 +168,10 @@ pub struct SubmarineList {
     pub left_out_classes: Vec<(String, String)>,
     /// Weapon key and the reason it is left out.
     pub left_out_weapons: Vec<(String, String)>,
+    /// Classes left out that stay in the pool of like classes, with the
+    /// reason (`like_class = true`; decision 0225, the ruling of Nov 23,
+    /// 2026). Every other class left out is in no pool.
+    pub like_classes_kept: Vec<(String, String)>,
     /// The class ids pinned (decision 0077's way), id to class key.
     pub class_ids: BTreeMap<u32, String>,
     /// The torpedo ids pinned, id to weapon key.
@@ -355,11 +366,44 @@ pub(crate) fn parse(parts: RawParts, problems: &mut Vec<Problem>) -> Option<Subm
     }
     let mut left_out_classes: Vec<(String, String)> = Vec::new();
     let mut left_out_weapons: Vec<(String, String)> = Vec::new();
+    let mut like_classes_kept: Vec<(String, String)> = Vec::new();
     for raw in &parts.left_out {
         if raw.reason.trim().is_empty() {
             problems.push(problem("left_out", "`reason` must not be empty"));
             ok = false;
             continue;
+        }
+        let like_reason = raw
+            .like_class_reason
+            .as_deref()
+            .map(str::trim)
+            .filter(|r| !r.is_empty());
+        match (raw.like_class, like_reason) {
+            (None, None) => {}
+            (Some(true), Some(reason)) => match &raw.class {
+                Some(class) => like_classes_kept.push((class.clone(), reason.to_string())),
+                None => {
+                    problems.push(problem(
+                        "left_out",
+                        "`like_class` is said of a class, not of a weapon",
+                    ));
+                    ok = false;
+                }
+            },
+            (Some(true), None) => {
+                problems.push(problem(
+                    "left_out",
+                    "`like_class = true` needs a `like_class_reason`: a class left out is in no pool of like classes unless the list says why (decision 0225)",
+                ));
+                ok = false;
+            }
+            _ => {
+                problems.push(problem(
+                    "left_out",
+                    "`like_class` is only ever `true`, with a `like_class_reason`; leave both out for a class in no pool (decision 0225)",
+                ));
+                ok = false;
+            }
         }
         match (&raw.class, &raw.weapon) {
             (Some(class), None) => {
@@ -423,6 +467,7 @@ pub(crate) fn parse(parts: RawParts, problems: &mut Vec<Problem>) -> Option<Subm
         entries,
         left_out_classes,
         left_out_weapons,
+        like_classes_kept,
         class_ids,
         torpedo_ids,
     })
@@ -933,14 +978,28 @@ impl Env<'_> {
     ) -> Option<(BTreeSet<Cite>, Vec<String>, String)> {
         let class = entry.class.as_str();
         let mut good = true;
-        let own = self.index.rows(Table::ClassFacts, class, MODEL);
+        // Only a row that holds on the list's date drives the entry out; a
+        // row beginning after it is not read, as no row after the list's
+        // date is (decision 0225, the ruling of Nov 23, 2026). A row whose
+        // dates cannot be told against the date still drives it out.
+        let own: Vec<&Row> = self
+            .index
+            .rows(Table::ClassFacts, class, MODEL)
+            .iter()
+            .filter(|row| {
+                !matches!(
+                    crate::date::valid_on(&row.from, &row.to, self.date),
+                    Ok(crate::date::Tri::No)
+                )
+            })
+            .collect();
         if !own.is_empty() {
             w.fail(
                 Kind::Estimate,
                 "torpedo_id",
                 format!(
                     "a {MODEL} row is filed for class {class} ({}), so a row drives the entry out: take out torpedo_from (decision 0218, rule 29)",
-                    own.iter().map(Row::cite).collect::<Vec<_>>().join(", ")
+                    own.iter().map(|row| row.cite()).collect::<Vec<_>>().join(", ")
                 ),
             );
             good = false;
