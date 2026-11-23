@@ -112,3 +112,33 @@
 //!    commands, reasons' words and hash it gave. The staffed scenarios on
 //!    file are compared before and after; those that move are the ones
 //!    statement 8 lists and the ones statement 21 changes, and no other.
+//!
+//! ## Part G: a limit can say "none of this kind" (the architect's ruling A)
+//!
+//! Stated by the architect during the build, Nov 23, 2026.
+//!
+//! G1. A deny whose limit names two carrier forces and lists `air_groups`
+//!    in `none_of` forms no task at any air base.
+//! G2. The same limit without `none_of` forms one where a base's bombers
+//!    reach.
+//! G3. A limit naming an air group and listing `air_groups` in `none_of` is
+//!    refused.
+//! G4. A limit naming nothing and listing nothing uses nothing of any kind.
+
+mod common;
+
+// The tests, one file a part, each under the statements it proves.
+#[path = "scenario_130/part_a.rs"]
+mod part_a;
+#[path = "scenario_130/part_b.rs"]
+mod part_b;
+#[path = "scenario_130/part_c.rs"]
+mod part_c;
+#[path = "scenario_130/part_d.rs"]
+mod part_d;
+#[path = "scenario_130/part_e.rs"]
+mod part_e;
+#[path = "scenario_130/part_f.rs"]
+mod part_f;
+#[path = "scenario_130/part_g.rs"]
+mod part_g;
