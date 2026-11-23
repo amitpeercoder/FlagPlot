@@ -163,6 +163,9 @@ pub fn staff_tool_definitions() -> Vec<(&'static str, String, Value)> {
                     "within_days": {"type": "integer", "description": "(knowledge recent_count) the most days old the count may be on the morning it goes, at least 1; 3 where left out."},
                     "kinds": {"type": "array", "items": {"enum": ["carrier", "battleship", "cruiser", "destroyer", "transport", "auxiliary"]}, "maxItems": 6, "description": "(targets) the kinds of ship the bombers strike, most wanted first, each once; left out or empty to clear the limit."},
                     "waters_first": {"type": "boolean", "description": "(targets) whether the waters of the deny the intent is, or stands under, are struck first; false where left out."},
+                    "none_of": {"type": "array", "items": {"enum": ["ships", "air_groups", "land_units", "submarines"]}, "description": "(forces) the kinds of which the staff may use nothing (ships and task forces are one kind); a kind named in the limit may not be listed."},
+                    "in_place": {"type": "boolean", "description": "(forces) true: the task forces named work from where they lie, and are not stationed by the staff; needs a task force named. False where left out."},
+                    "cleared": {"type": "boolean", "description": "(forces, area) true clears the limit, given with nothing else but intent: the limit above, or the staff's choice, binds."},
                     "clear": clear.clone(),
                     "reason": reason.clone()
                 }
