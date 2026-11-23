@@ -156,9 +156,15 @@
 //! 22. **A hold lifted.** With C held when the deny is given, and the
 //!     hold lifted on day 3, the task is formed on the morning of day 4
 //!     and the station chosen then, from where C is that morning.
-//! 23. **A force the commander named keeps its hex.** With the deny's
-//!     forces limit naming C, the task names (10,0), the hex C is in,
-//!     and no station is chosen: decision 0125, as today.
+//! 23. Restated by the architect, Nov 23, 2026 (decision 0222, rule 2):
+//!     "A carrier force the commander gave its own task keeps its hex and
+//!     serves the order from there; a carrier force only named in the
+//!     order's forces limit is stationed by the staff as a free one is."
+//!     And, by the architect's ruling I: "a force named with `in_place`
+//!     keeps its hex and the staff forms its task there."
+//!     (As first written: "**A force the commander named keeps its hex.**
+//!     With the deny's forces limit naming C, the task names (10,0), the
+//!     hex C is in, and no station is chosen: decision 0125, as today.")
 //! 24. **One force, two orders.** A gives the deny of statement 2 and the
 //!     neutralise of statement 11 at balanced. With the neutralise at the
 //!     higher priority C serves the neutralise, and the deny's reason
@@ -1152,10 +1158,11 @@ fn statement_22_a_hold_lifted() {
     assert!(played.station_reason(4).contains("from (10,0)"));
 }
 
-/// Statement 23.
+/// Statement 23, as restated by the architect (decision 0222, rule 2): the
+/// first half, a force the commander gave its own task keeps its hex.
 #[test]
-fn statement_23_a_force_the_commander_named_keeps_its_hex() {
-    let t = at(
+fn statement_23_a_force_given_its_own_task_keeps_its_hex() {
+    let named = at(
         &text(),
         "commands",
         &command(
@@ -1163,10 +1170,77 @@ fn statement_23_a_force_the_commander_named_keeps_its_hex() {
             "kind = \"set_limit\"\nlimit = \"forces\"\nintent = 1\ntask_forces = [1]",
         ),
     );
+    let t = at(
+        &named,
+        "commands",
+        &command(
+            1,
+            "kind = \"set_intent\"\nintent = 2\nintent_kind = \"operate_carriers\"\ntask_force = 1\nhex = [10, 0]",
+        ),
+    );
     let played = play(&t, 1);
-    assert_eq!(played.station(1), Some(hex(10, 0)));
+    // The staff forms no carrier task: the commander's own stands, at
+    // (10,0), and serves the deny from there.
+    assert_eq!(played.station(1), None);
     assert_eq!(played.route_of(1), None);
-    assert!(!played.station_reason(1).contains("The station is"));
+    let task = played
+        .scenario
+        .world
+        .side_view(Side::Allied)
+        .command_state()
+        .intents
+        .get(&IntentId::new(2))
+        .map(|i| i.kind);
+    assert_eq!(
+        task,
+        Some(IntentKind::OperateCarriers {
+            force: c(),
+            hex: hex(10, 0)
+        })
+    );
+    let served: Vec<String> = played
+        .decisions(1)
+        .no_orders
+        .iter()
+        .map(words)
+        .filter(|w| w.contains("intent:2") && w.contains("stands as a root"))
+        .collect();
+    assert_eq!(served.len(), 1, "{served:?}");
+}
+
+/// Statement 23, the second half: a force only named in the order's forces
+/// limit is stationed by the staff as a free one is, at statement 2's
+/// station, (3,0), and its reason says it is named, not free.
+#[test]
+fn statement_23_a_force_only_named_is_stationed_as_a_free_one() {
+    for level in RISKS {
+        let t = at(
+            &at_risk(&text(), level),
+            "commands",
+            &command(
+                1,
+                "kind = \"set_limit\"\nlimit = \"forces\"\nintent = 1\ntask_forces = [1]",
+            ),
+        );
+        let played = play(&t, 1);
+        assert_eq!(
+            played.formed(1),
+            vec![(IntentId::new(1), c(), hex(3, 0))],
+            "{level}"
+        );
+        let said = played.station_reason(1);
+        assert!(
+            said.contains(
+                "The station is (3,0), 120 nm (3 hexes) east of the centre of the waters"
+            ),
+            "{level}: {said}"
+        );
+        assert!(
+            said.contains("is named in your order's forces limit"),
+            "{level}: {said}"
+        );
+        assert!(!said.contains("is free"), "{level}: {said}");
+    }
 }
 
 /// The deny of statement 2 and the neutralise of statement 11, at balanced.
@@ -1636,4 +1710,23 @@ fn decision_0217_statement_6_no_home_port_is_a_caution() {
     assert_eq!(listed[0]["kind"], "fuel_not_measured");
     assert_eq!(listed[0]["of"]["handle"], "task_force:1");
     assert!(listed[0].get("hex").is_none());
+}
+
+/// Statement 23, the third half (the architect's ruling I): a force named
+/// with `in_place` keeps its hex, (10,0), and the staff forms its task
+/// there; no station is chosen.
+#[test]
+fn statement_23_a_force_named_in_place_keeps_its_hex() {
+    let t = at(
+        &text(),
+        "commands",
+        &command(
+            1,
+            "kind = \"set_limit\"\nlimit = \"forces\"\nintent = 1\ntask_forces = [1]\nin_place = true",
+        ),
+    );
+    let played = play(&t, 1);
+    assert_eq!(played.station(1), Some(hex(10, 0)));
+    assert_eq!(played.route_of(1), None);
+    assert!(!played.station_reason(1).contains("The station is"));
 }

@@ -39,15 +39,20 @@
 //! limit) and, with `"recent_count"` alone, `within_days` (3 where left
 //! out). Decision 0190: `"targets"` has `intent`, `kinds` (ship kind names,
 //! most wanted first; left out or empty clears the limit) and `waters_first`
-//! (a bool, false where left out).
+//! (a bool, false where left out). Decision 0222, rule 3: `"forces"` and
+//! `"area"` with `cleared = true` and nothing but `intent` clear the limit;
+//! a forces limit with no list and no source is "use nothing", not cleared.
+//! A forces limit's `none_of` lists kinds (`"ships"`, `"air_groups"`,
+//! `"land_units"`, `"submarines"`) of which the staff may use nothing, and
+//! `in_place` (true or false) says its task forces work from where they lie.
 
 use std::collections::BTreeSet;
 
 use serde::Deserialize;
 use sim_core::command::{
-    Awaited, CommandKind, ForcesLimit, HeldSetting, HoldTarget, IntentKind, InterruptCondition,
-    InterruptRef, InterruptSetting, Knowledge, Leave, Limit, PlanId, PursueLeave, Risk,
-    StandingKind, StandingSubject, TargetsLimit, Want, Wants,
+    Awaited, CommandKind, ForceKind, ForcesLimit, HeldSetting, HoldTarget, IntentKind,
+    InterruptCondition, InterruptRef, InterruptSetting, Knowledge, Leave, Limit, PlanId,
+    PursueLeave, Risk, StandingKind, StandingSubject, TargetsLimit, Want, Wants,
 };
 use sim_core::hex::Hex;
 use sim_core::ids::{
@@ -81,6 +86,14 @@ pub(crate) struct CommandSpec {
     air_groups: Option<Vec<u32>>,
     land_units: Option<Vec<u32>>,
     submarines: Option<Vec<u32>>,
+    /// Decision 0222, rule 3: true clears a forces limit or an area.
+    cleared: Option<bool>,
+    /// Decision 0222, the architect's ruling A: kinds of which nothing may
+    /// be used.
+    none_of: Option<Vec<String>>,
+    /// Decision 0222, the architect's ruling I: the task forces named work
+    /// from where they lie.
+    in_place: Option<bool>,
     wants: Option<Vec<String>>,
     defences: Option<u32>,
     by_day: Option<u32>,
@@ -140,6 +153,9 @@ impl CommandSpec {
         note(self.air_groups.is_some(), "air_groups");
         note(self.land_units.is_some(), "land_units");
         note(self.submarines.is_some(), "submarines");
+        note(self.cleared.is_some(), "cleared");
+        note(self.none_of.is_some(), "none_of");
+        note(self.in_place.is_some(), "in_place");
         note(self.wants.is_some(), "wants");
         note(self.defences.is_some(), "defences");
         note(self.by_day.is_some(), "by_day");
@@ -220,6 +236,10 @@ impl CommandSpec {
                 }
             },
             ("withdraw_intent", _) => &["intent"],
+            // Decision 0222, rule 3: cleared, with nothing else.
+            ("set_limit", Some("forces" | "area")) if self.cleared == Some(true) => {
+                &["limit", "intent", "cleared"]
+            }
             ("set_limit", Some("forces")) => &[
                 "limit",
                 "intent",
@@ -229,6 +249,8 @@ impl CommandSpec {
                 "land_units",
                 "submarines",
                 "source",
+                "none_of",
+                "in_place",
             ],
             ("set_limit", Some("area")) => &["limit", "intent", "hexes"],
             ("set_limit", Some("priority")) => &["limit", "intent", "rank"],
@@ -463,6 +485,12 @@ impl CommandSpec {
             },
             "withdraw_intent" => CommandKind::WithdrawIntent { intent: intent()? },
             "set_limit" => CommandKind::SetLimit(match self.limit.as_deref() {
+                Some("forces") if self.cleared == Some(true) => Limit::ForcesCleared {
+                    intent: intent()?,
+                },
+                Some("area") if self.cleared == Some(true) => Limit::AreaCleared {
+                    intent: intent()?,
+                },
                 Some("forces") => Limit::Forces {
                     intent: intent()?,
                     limit: ForcesLimit {
@@ -502,6 +530,17 @@ impl CommandSpec {
                             .copied()
                             .map(SubmarineId::new)
                             .collect(),
+                        none_of: self
+                            .none_of
+                            .iter()
+                            .flatten()
+                            .map(|name| {
+                                ForceKind::from_name(name).ok_or_else(|| {
+                                    format!("{what} lists \"{name}\" in none_of, which is not ships, air_groups, land_units or submarines")
+                                })
+                            })
+                            .collect::<Result<_, _>>()?,
+                        in_place: self.in_place.unwrap_or(false),
                     },
                 },
                 Some("area") => Limit::Area {
@@ -829,6 +868,9 @@ impl BelievedIntentSpec {
             air_groups: None,
             land_units: None,
             submarines: None,
+            cleared: None,
+            none_of: None,
+            in_place: None,
             wants: self.wants.clone(),
             defences: self.defences,
             by_day: self.by_day,

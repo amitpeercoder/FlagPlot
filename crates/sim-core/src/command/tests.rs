@@ -227,6 +227,8 @@ fn forces(ship_list: &[u32], force_list: &[u32]) -> ForcesLimit {
         land_units: BTreeSet::new(),
         source: Some(base(1)),
         submarines: Default::default(),
+        none_of: Default::default(),
+        in_place: false,
     }
 }
 
@@ -316,6 +318,7 @@ fn reason(intent_n: u32, worked: &str) -> Reason {
         would_change: vec!["more stock".to_string()],
         answer_of: None,
         cautions: Vec::new(),
+        limits: Vec::new(),
     }
 }
 
@@ -2206,6 +2209,8 @@ fn two_worlds_differing_in_the_other_side(other: Side) -> (World, World) {
                 land_units: BTreeSet::new(),
                 source: Some(base(enemy_base)),
                 submarines: Default::default(),
+                none_of: Default::default(),
+                in_place: false,
             },
         }),
     );

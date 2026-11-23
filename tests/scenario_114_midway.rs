@@ -2157,23 +2157,14 @@ fn property_nothing_is_invented() {
 /// gives them, is the file's.
 #[test]
 fn property_the_lists_check_passes_and_the_files_figures_are_the_lists() {
-    // One at a time, as scenario 121's check does it.
-    static ONE_AT_A_TIME: std::sync::Mutex<()> = std::sync::Mutex::new(());
-    let _turn = ONE_AT_A_TIME.lock().unwrap_or_else(|e| e.into_inner());
-    let out = std::process::Command::new(std::env::var("CARGO").unwrap_or_else(|_| "cargo".into()))
-        .current_dir(repo())
-        .args(["run", "--quiet", "-p", "oob-derive", "--"])
-        .arg(repo().join("data/derivation/midway.toml"))
-        .arg("--check")
-        .output()
-        .expect("the derivation runs");
-    let said = format!(
-        "{}{}{}",
-        out.status,
-        String::from_utf8_lossy(&out.stdout),
-        String::from_utf8_lossy(&out.stderr)
+    // `oob-derive data/derivation/midway.toml --check`, asked of the library
+    // the program is built on, as the program asks it.
+    let list = repo().join("data/derivation/midway.toml");
+    let said = oob_derive::said(
+        &list.display().to_string(),
+        oob_derive::run(&list, &repo().join("data/oob"), true),
     );
-    assert!(out.status.success(), "{said}");
+    assert!(said.passed, "{}{}", said.out, said.err);
     for letter in LETTERS {
         let t = start(letter);
         for s in t.ships.values().filter(|s| !is_transport(s)) {

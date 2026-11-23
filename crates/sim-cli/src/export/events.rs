@@ -2569,6 +2569,21 @@ pub(super) fn describe(
                     reason.cautions.iter().map(|c| c.words.as_str()).collect();
                 data = data.with("cautions", Field::Str(cautions.join("; ")));
             }
+            // The limits it speaks of (decision 0222, rule 5), each as its
+            // kind and the intent it is set on ("forces on intent:3");
+            // written only where there are any.
+            if !reason.limits.is_empty() {
+                let limits: Vec<String> = reason
+                    .limits
+                    .iter()
+                    .map(|l| match (l.intent, l.base) {
+                        (Some(intent), _) => format!("{} on {intent}", l.kind.name()),
+                        (None, Some(base)) => format!("{} of {base}", l.kind.name()),
+                        (None, None) => l.kind.name().to_string(),
+                    })
+                    .collect();
+                data = data.with("limits", Field::Str(limits.join("; ")));
+            }
             ("staff_reason", data)
         }
         EventKind::HeldByOrder {

@@ -397,8 +397,17 @@ use sim_core::view::SideView;
 /// its supply above its reserve, or, where none could, says that no other
 /// base of the side holds supply above its reserve and the place lives on
 /// what it has, with its days of supply today, and offers nothing. It gives
-/// the orders `supply-55` gave.
-pub const DOCTRINE_VERSION: &str = "supply-56";
+/// the orders `supply-55` gave. `supply-57` adds decision 0222, rules 2, 5
+/// and 6: a commander's forces limit binds only the kinds it names or lists
+/// in `none_of` (outside a take and an island, which keep their own rules),
+/// so a limit that names task forces leaves the bases' air groups to the
+/// staff; a carrier force named in a commander's deny or neutralise is
+/// stationed as a free one is, and one under a hold says it works from where
+/// it lies; a reason records the limits it speaks of; and supply is served
+/// in rank order read up the tree. It gives the orders `supply-56` gave to a
+/// side whose forces limits name no carrier force of a deny or neutralise
+/// without its own task and name every kind they mean to bind.
+pub const DOCTRINE_VERSION: &str = "supply-57";
 
 /// The staff: the doctrine for keeping a base supplied (stage 1) and, after
 /// it, the air doctrine for holding a place and covering a base from the air

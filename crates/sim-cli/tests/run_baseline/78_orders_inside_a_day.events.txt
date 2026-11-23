@@ -2,9 +2,9 @@ Scenario 78: Orders inside a day, Noumea to Espiritu Santo
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 294ea74202f583d1  14 events
-day   2  hash bbe6589f13858b35  9 events
-day   3  hash 846a10b2d38d1ab0  2 events
+day   1  hash fffdc9a783f26a54  14 events
+day   2  hash f758a42ee83fe6f4  9 events
+day   3  hash 8c7359bee0d18655  2 events
 
 #1 D1 -         order:1 accepted for task_force:1  <- order:1
 #2 D1 -         order:2 accepted for task_force:1  <- order:2

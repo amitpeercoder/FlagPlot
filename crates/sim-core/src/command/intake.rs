@@ -277,10 +277,15 @@ impl World {
                     .is_some_and(|found| found.ships.contains(&ship)),
                 _ => false,
             };
+            // A limit that binds no ship and no task force leaves the force
+            // to the staff, and the groups aboard it go with it (decision
+            // 0222, rule 2), outside a take and an island.
+            let by_kind = !state.reads_as_bound(intent);
             return aboard
                 && state.forces_on_chain(intent).iter().all(|forces| {
                     forces.air_groups.contains(&group)
                         || self.force_in_forces_limit(side, forces, force)
+                        || (by_kind && !forces.binds_ships())
                 });
         }
         match state.groups_on_chain(intent) {
@@ -311,10 +316,12 @@ impl World {
         // hex where no forces limit on its chain names a land unit (decision
         // 0144, 4).
         if let IntentKind::Hold { base } = found.kind {
-            let named = state
-                .forces_on_chain(intent)
-                .iter()
-                .any(|forces| !forces.land_units.is_empty());
+            // Outside an island a limit that names nothing binds the land
+            // units too (decision 0222, rule 3).
+            let by_kind = !state.reads_as_bound(intent);
+            let named = state.forces_on_chain(intent).iter().any(|forces| {
+                !forces.land_units.is_empty() || (by_kind && forces.binds_land_units())
+            });
             if !named {
                 return !own.working
                     && own.men_ashore > 0
@@ -427,26 +434,33 @@ impl World {
                 .land_units
                 .iter()
                 .all(|unit| self.may_use_land_unit(side, parent, *unit));
-        let above = state.forces_on_chain(parent);
-        if above.is_empty() {
-            return groups_ok
-                && limit.ships.is_empty()
-                && limit.task_forces.is_empty()
-                && limit.source.is_none();
-        }
-        groups_ok
-            && limit
+        // Each kind is checked against the limits above that bind it
+        // (decision 0222, rule 2); with none binding it, the parent may use
+        // of it what its addressee commands: no ship, no task force and no
+        // source.
+        let above = state.ship_limits_on_chain(parent);
+        let sources: Vec<_> = state
+            .forces_on_chain(parent)
+            .into_iter()
+            .filter(|forces| forces.binds_source())
+            .collect();
+        let ships_ok = if above.is_empty() {
+            limit.ships.is_empty() && limit.task_forces.is_empty()
+        } else {
+            limit
                 .ships
                 .iter()
                 .all(|ship| self.in_every_pool(&above, *ship))
-            && limit.task_forces.iter().all(|force| {
-                above
-                    .iter()
-                    .all(|forces| self.force_in_forces_limit(side, forces, *force))
-            })
-            && limit
-                .source
-                .is_none_or(|source| above.iter().all(|forces| forces.source == Some(source)))
+                && limit.task_forces.iter().all(|force| {
+                    above
+                        .iter()
+                        .all(|forces| self.force_in_forces_limit(side, forces, *force))
+                })
+        };
+        let source_ok = limit.source.is_none_or(|source| {
+            !sources.is_empty() && sources.iter().all(|forces| forces.source == Some(source))
+        });
+        groups_ok && ships_ok && source_ok
     }
 
     /// Checks a command against the side's command state and its own units,
@@ -693,6 +707,14 @@ impl World {
                 }
                 match limit {
                     Limit::Forces { limit, .. } => {
+                        // Decision 0222, the architect's ruling A.
+                        if let Some(kind) = limit.named_and_none_of() {
+                            return Err(CommandRefusal::NamedAndNoneOf(kind));
+                        }
+                        // Decision 0222, the architect's ruling I.
+                        if limit.in_place && limit.task_forces.is_empty() {
+                            return Err(CommandRefusal::InPlaceWithNoTaskForce);
+                        }
                         for ship in &limit.ships {
                             if !self.own_ship_afloat(side, *ship) {
                                 return Err(CommandRefusal::NotYourShip(*ship));
@@ -740,7 +762,11 @@ impl World {
                     | Limit::Risk { .. }
                     | Limit::NotBefore { .. }
                     | Limit::Knowledge { .. }
-                    | Limit::Targets { .. } => {}
+                    | Limit::Targets { .. }
+                    // Decision 0222, rule 3: clearing a limit, set or not,
+                    // names nothing to check.
+                    | Limit::ForcesCleared { .. }
+                    | Limit::AreaCleared { .. } => {}
                     // A force or unit not the side's is refused as a forces
                     // limit naming it is, so that a refusal tells nothing of
                     // the enemy (decision 0159, 9).
@@ -807,7 +833,11 @@ impl World {
                         | Limit::Knowledge { .. }
                         // A child's targets limit replaces its parent's and
                         // is never wider (decision 0190, 19).
-                        | Limit::Targets { .. } => true,
+                        | Limit::Targets { .. }
+                        // A limit cleared leaves the parent's to bind, which
+                        // is never wider than itself (decision 0222, rule 3).
+                        | Limit::ForcesCleared { .. }
+                        | Limit::AreaCleared { .. } => true,
                     };
                     if !narrows {
                         return Err(CommandRefusal::WiderThanParent(parent));
@@ -1354,6 +1384,9 @@ impl World {
                         Limit::Targets { targets, .. } => {
                             intent.limits.targets.clone_from(targets);
                         }
+                        // Decision 0222, rule 3.
+                        Limit::ForcesCleared { .. } => intent.limits.forces = None,
+                        Limit::AreaCleared { .. } => intent.limits.area = None,
                         Limit::Reserve { .. } => {}
                     }
                     let plan_id = intent.plan;
@@ -1930,9 +1963,10 @@ impl World {
         {
             return *target == force;
         }
-        // Every forces limit on the chain binds (the architect's ruling
-        // after the build). A root has its own alone.
-        let limits = state.forces_on_chain(intent);
+        // Every forces limit on the chain that binds the ships binds (the
+        // architect's ruling after the build; decision 0222, rule 2). A root
+        // has its own alone.
+        let limits = state.ship_limits_on_chain(intent);
         if limits.is_empty() {
             return false;
         }
@@ -1944,7 +1978,14 @@ impl World {
                 target,
                 order: BaseOrder::FormTaskForce { ships },
             } => {
-                limits.iter().all(|forces| Some(*target) == forces.source)
+                let by_kind = !state.reads_as_bound(intent);
+                let sources: Vec<_> = state
+                    .forces_on_chain(intent)
+                    .into_iter()
+                    .filter(|forces| !by_kind || forces.binds_source())
+                    .collect();
+                !sources.is_empty()
+                    && sources.iter().all(|forces| Some(*target) == forces.source)
                     && ships.iter().all(|ship| self.in_every_pool(&limits, *ship))
             }
             // Land units and any other base order are in no forces limit.

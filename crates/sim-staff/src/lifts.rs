@@ -15,6 +15,7 @@
 //! The doctrine reads the side's own view and its planned command state and
 //! nothing else.
 
+use sim_core::command::LimitKind;
 use std::collections::BTreeSet;
 
 use sim_core::command::{
@@ -486,6 +487,8 @@ impl Day<'_, '_> {
                 source: None,
                 land_units: BTreeSet::new(),
                 submarines: Default::default(),
+                none_of: Default::default(),
+                in_place: false,
             });
             let before = limit.clone();
             limit
@@ -507,6 +510,7 @@ impl Day<'_, '_> {
                         crate::assemble::limit_words(&limit)
                     ))
                     .would_change("the commander changing the limit")
+                    .speaks_of_on(LimitKind::Forces, hold.id)
                     .done();
                 if let Some(intent) = self.state.intents.get_mut(&hold.id) {
                     intent.limits.forces = Some(limit.clone());

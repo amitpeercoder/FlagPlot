@@ -2,10 +2,10 @@ Placeholder scenario 125: A force asks leave to pursue
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash f3fc08d5130b60df  38 events
-day   2  hash 7a1d5e1e98b5fe91  9 events
-day   3  hash cfa06dce8755863b  7 events
-day   4  hash 18e362abd29930f1  5 events
+day   1  hash cbd921f5ddf7f99c  38 events
+day   2  hash 59b1a8fbb1246b04  9 events
+day   3  hash ce5e56cd0c8b902a  7 events
+day   4  hash 1fb1ceb3e50533a0  5 events
 
 #1 D0 -         Allied report: 1 ship, carrier, at (16,0), held at the start: new contact:1
 #2 D1 -         Allied the commander's command taken: set intent:1 to operate the carrier force task_force:1 from (0,0)

@@ -252,6 +252,14 @@ struct ForcesOut {
     /// Left out where the limit names none (decision 0218, 12).
     #[serde(skip_serializing_if = "Vec::is_empty")]
     submarines: Vec<u32>,
+    /// The kinds of which nothing may be used, by name; left out where it
+    /// lists none (decision 0222, the architect's ruling A).
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    none_of: Vec<&'static str>,
+    /// Decision 0222, ruling I: true where the task forces named work from
+    /// where they lie; left out otherwise.
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    in_place: bool,
     /// Left out where the limit names none (a cover or hold intent's need
     /// not).
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -339,6 +347,8 @@ fn limits(limits: &IntentLimits) -> LimitsOut {
             air_groups: forces.air_groups.iter().map(|g| g.raw()).collect(),
             land_units: forces.land_units.iter().map(|u| u.raw()).collect(),
             submarines: forces.submarines.iter().map(|b| b.raw()).collect(),
+            none_of: forces.none_of.iter().map(|k| k.name()).collect(),
+            in_place: forces.in_place,
             source: forces.source.map(|source| source.raw()),
         }),
         area: limits
@@ -448,6 +458,10 @@ struct LimitOut {
     /// out where the limit is cleared.
     #[serde(skip_serializing_if = "Option::is_none")]
     targets: Option<TargetsOut>,
+    /// Decision 0222, rule 3: true where a forces limit or an area is
+    /// cleared; left out otherwise.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    cleared: Option<bool>,
 }
 
 fn limit(limit: &Limit) -> LimitOut {
@@ -469,6 +483,7 @@ fn limit(limit: &Limit) -> LimitOut {
         knowledge: None,
         within_days: None,
         targets: None,
+        cleared: None,
     };
     match limit {
         Limit::Forces { intent, limit } => LimitOut {
@@ -479,6 +494,8 @@ fn limit(limit: &Limit) -> LimitOut {
                 air_groups: limit.air_groups.iter().map(|g| g.raw()).collect(),
                 land_units: limit.land_units.iter().map(|u| u.raw()).collect(),
                 submarines: limit.submarines.iter().map(|b| b.raw()).collect(),
+                none_of: limit.none_of.iter().map(|k| k.name()).collect(),
+                in_place: limit.in_place,
                 source: limit.source.map(|source| source.raw()),
             }),
             ..blank("forces")
@@ -545,6 +562,16 @@ fn limit(limit: &Limit) -> LimitOut {
             intent: Some(intent.raw()),
             targets: set.as_ref().map(targets),
             ..blank("targets")
+        },
+        Limit::ForcesCleared { intent } => LimitOut {
+            intent: Some(intent.raw()),
+            cleared: Some(true),
+            ..blank("forces")
+        },
+        Limit::AreaCleared { intent } => LimitOut {
+            intent: Some(intent.raw()),
+            cleared: Some(true),
+            ..blank("area")
         },
     }
 }

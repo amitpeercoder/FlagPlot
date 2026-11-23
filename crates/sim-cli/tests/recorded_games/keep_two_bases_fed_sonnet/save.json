@@ -116,92 +116,92 @@
       "hash": "3b3353e3ccc0e0d7"
     }
   ],
-  "doctrine_version": "supply-56",
+  "doctrine_version": "supply-57",
   "format": "flagplot-saved-game",
   "hashes": [
     {
       "day": 1,
-      "hash": "76fa9c743882ba49"
+      "hash": "7a18466e4a38db16"
     },
     {
       "day": 2,
-      "hash": "e959f0ebfd95f79a"
+      "hash": "758169092592bbe5"
     },
     {
       "day": 3,
-      "hash": "50751a36a3b30b7e"
+      "hash": "9df6335615055881"
     },
     {
       "day": 4,
-      "hash": "0789355aba7f8138"
+      "hash": "6d5082805f55d56f"
     },
     {
       "day": 5,
-      "hash": "46d3ef367a672426"
+      "hash": "aec1008676bb2a11"
     },
     {
       "day": 6,
-      "hash": "6ddb4ee414f018a4"
+      "hash": "8d95cf86858a48ab"
     },
     {
       "day": 7,
-      "hash": "1a62479a92a2956a"
+      "hash": "fbab3736414cdecd"
     },
     {
       "day": 8,
-      "hash": "5e25d31418cb1944"
+      "hash": "1a43ef8847a93ac3"
     },
     {
       "day": 9,
-      "hash": "06f6225046d14dce"
+      "hash": "586ac3d141fdd5a9"
     },
     {
       "day": 10,
-      "hash": "2bf9e87853c1a2c4"
+      "hash": "1fac11f83d2b7e6b"
     },
     {
       "day": 11,
-      "hash": "20d2f9a03665e5ba"
+      "hash": "5c45139fdf55d7dd"
     },
     {
       "day": 12,
-      "hash": "e46d80680149d20c"
+      "hash": "0160cc0b6f4e7ccb"
     },
     {
       "day": 13,
-      "hash": "4da713c7f6a469e6"
+      "hash": "88bd5497a849c2f9"
     },
     {
       "day": 14,
-      "hash": "b187cebd54bdb354"
+      "hash": "6987a399e8cd4f5b"
     },
     {
       "day": 15,
-      "hash": "06ef1157b950bc0e"
+      "hash": "8b4dc9881a75db09"
     },
     {
       "day": 16,
-      "hash": "8c9c68263a732f11"
+      "hash": "54e31c5bd6a3c63e"
     },
     {
       "day": 17,
-      "hash": "69ad6e67c3c45b94"
+      "hash": "17e9955c42d58a5b"
     },
     {
       "day": 18,
-      "hash": "d4aca696ec82fee1"
+      "hash": "3aa74ef65b894e8e"
     },
     {
       "day": 19,
-      "hash": "c7f991a5c200af53"
+      "hash": "4f2762563d2412fc"
     },
     {
       "day": 20,
-      "hash": "dd1cfa06b15f685d"
+      "hash": "5b75c0a1f6c0db5a"
     }
   ],
   "orders": [],
-  "rules_version": 30,
+  "rules_version": 31,
   "scenario": {
     "file": "data/scenarios/43_keep_two_bases_fed.toml",
     "hash": "0a6c6a34dbb4fcd2"
@@ -296,6 +296,12 @@
                   "what": "the reading of day 3 is projected at 8 t"
                 }
               ],
+              "limits": [
+                {
+                  "intent": 1,
+                  "kind": "area"
+                }
+              ],
               "serves": {
                 "intent": 1,
                 "level": "area",
@@ -330,6 +336,12 @@
                 {
                   "day": 1,
                   "what": "the reading of day 3 is projected at 8 t"
+                }
+              ],
+              "limits": [
+                {
+                  "intent": 1,
+                  "kind": "area"
                 }
               ],
               "serves": {
@@ -430,6 +442,12 @@
                   "what": "the reading of day 3 is projected at 8 t"
                 }
               ],
+              "limits": [
+                {
+                  "intent": 2,
+                  "kind": "area"
+                }
+              ],
               "serves": {
                 "intent": 2,
                 "level": "area",
@@ -464,6 +482,12 @@
                 {
                   "day": 1,
                   "what": "the reading of day 3 is projected at 8 t"
+                }
+              ],
+              "limits": [
+                {
+                  "intent": 2,
+                  "kind": "area"
                 }
               ],
               "serves": {
@@ -511,6 +535,12 @@
                   "what": "the reading of day 3 is projected at 8 t"
                 }
               ],
+              "limits": [
+                {
+                  "intent": 1,
+                  "kind": "area"
+                }
+              ],
               "serves": {
                 "intent": 1,
                 "level": "area",
@@ -547,6 +577,12 @@
                 {
                   "day": 1,
                   "what": "the reading of day 3 is projected at 8 t"
+                }
+              ],
+              "limits": [
+                {
+                  "intent": 2,
+                  "kind": "area"
                 }
               ],
               "serves": {
@@ -586,6 +622,12 @@
                   "what": "the reading of day 3 is projected at 8 t"
                 }
               ],
+              "limits": [
+                {
+                  "intent": 1,
+                  "kind": "area"
+                }
+              ],
               "serves": {
                 "intent": 1,
                 "level": "area",
@@ -621,6 +663,12 @@
                 {
                   "day": 1,
                   "what": "the reading of day 3 is projected at 8 t"
+                }
+              ],
+              "limits": [
+                {
+                  "intent": 2,
+                  "kind": "area"
                 }
               ],
               "serves": {
@@ -682,6 +730,12 @@
                   "what": "plan:1 is released"
                 }
               ],
+              "limits": [
+                {
+                  "intent": 1,
+                  "kind": "area"
+                }
+              ],
               "serves": {
                 "intent": 1,
                 "level": "area",
@@ -712,6 +766,12 @@
                 {
                   "day": 2,
                   "what": "plan:1 is released"
+                }
+              ],
+              "limits": [
+                {
+                  "intent": 1,
+                  "kind": "area"
                 }
               ],
               "serves": {
@@ -762,6 +822,12 @@
                   "what": "plan:2 is released"
                 }
               ],
+              "limits": [
+                {
+                  "intent": 2,
+                  "kind": "area"
+                }
+              ],
               "serves": {
                 "intent": 2,
                 "level": "area",
@@ -792,6 +858,12 @@
                 {
                   "day": 2,
                   "what": "plan:2 is released"
+                }
+              ],
+              "limits": [
+                {
+                  "intent": 2,
+                  "kind": "area"
                 }
               ],
               "serves": {
@@ -1569,6 +1641,12 @@
                   "what": "the reading of day 18 is projected at 9 t"
                 }
               ],
+              "limits": [
+                {
+                  "intent": 1,
+                  "kind": "area"
+                }
+              ],
               "serves": {
                 "intent": 1,
                 "level": "area",
@@ -1603,6 +1681,12 @@
                 {
                   "day": 16,
                   "what": "the reading of day 18 is projected at 9 t"
+                }
+              ],
+              "limits": [
+                {
+                  "intent": 1,
+                  "kind": "area"
                 }
               ],
               "serves": {
@@ -1649,6 +1733,12 @@
                   "what": "the reading of day 18 is projected at 9 t"
                 }
               ],
+              "limits": [
+                {
+                  "intent": 2,
+                  "kind": "area"
+                }
+              ],
               "serves": {
                 "intent": 2,
                 "level": "area",
@@ -1683,6 +1773,12 @@
                 {
                   "day": 16,
                   "what": "the reading of day 18 is projected at 9 t"
+                }
+              ],
+              "limits": [
+                {
+                  "intent": 2,
+                  "kind": "area"
                 }
               ],
               "serves": {
@@ -1729,6 +1825,12 @@
                   "what": "the reading of day 18 is projected at 9 t"
                 }
               ],
+              "limits": [
+                {
+                  "intent": 1,
+                  "kind": "area"
+                }
+              ],
               "serves": {
                 "intent": 1,
                 "level": "area",
@@ -1764,6 +1866,12 @@
                 {
                   "day": 16,
                   "what": "the reading of day 18 is projected at 9 t"
+                }
+              ],
+              "limits": [
+                {
+                  "intent": 2,
+                  "kind": "area"
                 }
               ],
               "serves": {
@@ -1825,6 +1933,12 @@
                   "what": "plan:1 is released"
                 }
               ],
+              "limits": [
+                {
+                  "intent": 1,
+                  "kind": "area"
+                }
+              ],
               "serves": {
                 "intent": 1,
                 "level": "area",
@@ -1855,6 +1969,12 @@
                 {
                   "day": 17,
                   "what": "plan:1 is released"
+                }
+              ],
+              "limits": [
+                {
+                  "intent": 1,
+                  "kind": "area"
                 }
               ],
               "serves": {
@@ -1905,6 +2025,12 @@
                   "what": "plan:2 is released"
                 }
               ],
+              "limits": [
+                {
+                  "intent": 2,
+                  "kind": "area"
+                }
+              ],
               "serves": {
                 "intent": 2,
                 "level": "area",
@@ -1935,6 +2061,12 @@
                 {
                   "day": 17,
                   "what": "plan:2 is released"
+                }
+              ],
+              "limits": [
+                {
+                  "intent": 2,
+                  "kind": "area"
                 }
               ],
               "serves": {
@@ -2123,6 +2255,6 @@
       "side": "allied"
     }
   ],
-  "state_version": "flagplot-state-v56",
-  "version": 24
+  "state_version": "flagplot-state-v57",
+  "version": 25
 }

@@ -29,6 +29,7 @@
 //! battle readiness at its hex; the stance avoid and the break-off level of
 //! the risk.
 
+use sim_core::command::LimitKind;
 use std::collections::{BTreeMap, BTreeSet};
 
 use sim_core::command::{
@@ -1336,6 +1337,10 @@ impl Day<'_, '_> {
                                             .evidence(hours_text.clone(), today)
                                             .binding(binding)
                                             .binding("it goes no nearer than its bombers need");
+                                        if pursuing.is_none() {
+                                            builder =
+                                                builder.speaks_of(&self.state, LimitKind::Risk);
+                                        }
                                         if matches!(pursuing, Some(Pursuing::Answer(_))) {
                                             builder = builder.answer_of(id);
                                         }
@@ -1783,12 +1788,13 @@ impl Day<'_, '_> {
                                 break_off(risk)
                             ))
                             .would_change("a different risk level")
+                            .speaks_of(&self.state, LimitKind::Risk)
                             .done(),
                     );
                 }
                 // Radio silence at preserve the force (decision 0136, 18).
                 if let Some((order, reason)) =
-                    crate::stand::silence_order(view, task, &plan, id, risk, today)
+                    crate::stand::silence_order(view, &self.state, task, &plan, id, risk, today)
                 {
                     give(&mut orders, order, reason);
                 }
@@ -2079,19 +2085,27 @@ impl Day<'_, '_> {
                     let mut builder = serving(task, &plan)
                         .evidence(line.clone(), today)
                         .evidence(has, today)
-                        .binding(format!("rest above fatigue {level} at the {risk_text}"));
+                        .binding(format!("rest above fatigue {level} at the {risk_text}"))
+                        .speaks_of(&self.state, LimitKind::Risk);
                     // The limit and the deny that shaped it (decision 0190, 6).
                     match order {
                         AirGroupOrder::SetTargetPriority { kinds } => {
                             if let Some((_, on)) = &targets.kinds {
-                                builder = builder.binding(format!(
-                                    "the targets limit set on {on}: {}, in that order, at every risk",
-                                    kinds_words(kinds)
-                                ));
+                                builder = builder
+                                    .binding(format!(
+                                        "the targets limit set on {on}: {}, in that order, at every risk",
+                                        kinds_words(kinds)
+                                    ))
+                                    .speaks_of_on(LimitKind::Targets, *on);
                             }
                         }
                         AirGroupOrder::SetStrikeFirstWaters { .. } => {
-                            builder = builder.binding(crate::targets::waters_binding(&targets));
+                            builder = crate::targets::speaks_of_waters(
+                                builder.binding(crate::targets::waters_binding(&targets)),
+                                &self.state,
+                                task.id,
+                                &targets,
+                            );
                         }
                         _ => {}
                     }

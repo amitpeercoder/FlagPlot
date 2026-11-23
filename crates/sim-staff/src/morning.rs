@@ -229,15 +229,15 @@ impl Morning {
 }
 
 /// The intents in force in the order the staff serves them: ranked first
-/// (rank 1 first), then those with no rank, each by number (ruling 10).
+/// (rank 1 first), then those with no rank, each by number (ruling 10). The
+/// rank is read up the tree (decision 0222, rule 6): a supply the staff
+/// formed under a ranked order is ranked with it, and a rank set on the
+/// intent itself is read before one above it.
 pub(crate) fn priority_order(state: &CommandState) -> Vec<&Intent> {
     let mut intents: Vec<&Intent> = state.intents_in_force().collect();
     intents.sort_by_key(|intent| {
-        (
-            intent.limits.priority.is_none(),
-            intent.limits.priority.unwrap_or(0),
-            intent.id,
-        )
+        let rank = state.priority_read_up(intent.id);
+        (rank.is_none(), rank.unwrap_or(0), intent.id)
     });
     intents
 }

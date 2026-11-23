@@ -22,6 +22,9 @@ toml.workspace = true
 # hex with the map tool's own projection.
 csv.workspace = true
 map-tool = { path = "../crates/map-tool" }
+# Scenarios 114, 120 and 121 ask a derivation list's check of the library
+# `oob-derive` is built on, not of the program through cargo.
+oob-derive = { path = "../crates/oob-derive" }
 
 [[test]]
 name = "scenario_01_transit"
@@ -669,6 +672,10 @@ path = "scenario_128_submarines_against_warships.rs"
 [[test]]
 name = "scenario_129_submarines_the_staff_and_the_patrol"
 path = "scenario_129_submarines_the_staff_and_the_patrol.rs"
+
+[[test]]
+name = "scenario_130_a_limit_binds_what_it_names"
+path = "scenario_130_a_limit_binds_what_it_names.rs"
 
 [[test]]
 name = "boats_in_the_midway_games"

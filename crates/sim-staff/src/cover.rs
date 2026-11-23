@@ -31,6 +31,7 @@
 //! on the first morning the end is met, the way home (item 8,
 //! [`Day::send_home`]).
 
+use sim_core::command::LimitKind;
 use std::collections::BTreeMap;
 
 use sim_core::command::{
@@ -421,6 +422,7 @@ impl Day<'_, '_> {
                     ))
                     .would_change("leave to launch given")
                     .would_change("a group the forces limit names that reaches the place")
+                    .speaks_of(&self.state, LimitKind::Forces)
                     .done();
                 self.target(in_scope).no_orders.push(reason);
                 return;
@@ -453,6 +455,7 @@ impl Day<'_, '_> {
                 .would_change("a count of the grade asked for")
                 .would_change("a group the forces limit names that reaches the place")
                 .would_change(format!("{id} not named in the forces limit"))
+                .speaks_of(&self.state, LimitKind::Forces)
                 .done();
             self.target(in_scope).commands.push(StaffCommand {
                 kind: CommandKind::FormIntent {
@@ -611,6 +614,7 @@ impl Day<'_, '_> {
                 ))
                 .would_change(format!("{id} not named in the forces limit"))
                 .would_change("such a task already standing")
+                .speaks_of(&self.state, LimitKind::Forces)
                 .done();
             self.target(in_scope).commands.push(StaffCommand {
                 kind: CommandKind::FormIntent {
@@ -869,6 +873,7 @@ impl Day<'_, '_> {
                     aim.of
                 ))
                 .would_change("more bombers able to fly, a bolder risk level")
+                .speaks_of(&self.state, LimitKind::Risk)
                 .done();
             out.note = Some(reason);
             return out;
@@ -941,6 +946,7 @@ impl Day<'_, '_> {
                 .binding(binding)
                 .worked(worked)
                 .would_change("a fresh contact of ships within reach, a different fatigue or risk level, or the cost of the last raid")
+                .speaks_of(&self.state, LimitKind::Risk)
                 .done();
             out.orders.push(StaffOrder {
                 kind: OrderKind::AirGroup {

@@ -21,6 +21,7 @@
 //! hex to act at, so that the force halts there, fires in the night's
 //! bombardment phase and steams on at the morning by the rules as they are.
 
+use sim_core::command::LimitKind;
 use std::collections::BTreeSet;
 
 use sim_core::command::{
@@ -184,6 +185,7 @@ impl Day<'_, '_> {
                 ))
                 .would_change(format!("{id} not named in the forces limit"))
                 .would_change("such a task already in force")
+                .speaks_of(&self.state, LimitKind::Forces)
                 .done();
             self.target(in_scope).commands.push(StaffCommand {
                 kind: CommandKind::FormIntent {
@@ -366,6 +368,7 @@ impl Day<'_, '_> {
                 ))
                 .would_change(format!("{id} taken by an intent higher in priority"))
                 .would_change("such a task already in force")
+                .speaks_of(&self.state, LimitKind::Priority)
                 .done();
             self.target(in_scope).commands.push(StaffCommand {
                 kind: CommandKind::FormIntent {
@@ -666,7 +669,7 @@ impl Day<'_, '_> {
         };
         let here = force.position();
 
-        if let Some(order) = silence_order(view, task, &plan, id, risk, today) {
+        if let Some(order) = silence_order(view, &self.state, task, &plan, id, risk, today) {
             out.orders.push(order);
         }
 
@@ -740,6 +743,7 @@ impl Day<'_, '_> {
                         break_off(risk)
                     ))
                     .would_change("a different risk level")
+                    .speaks_of(&self.state, LimitKind::Risk)
                     .done(),
             ));
         }

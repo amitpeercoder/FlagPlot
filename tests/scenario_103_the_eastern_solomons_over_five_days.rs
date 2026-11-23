@@ -1526,6 +1526,10 @@ fn it_can_be_played_from_a_seat() {
 
 /// Scenario 5 is untouched: its file, its frozen copy and its variants are
 /// what they were when this scenario was built (their digests pinned here).
+/// The second proof's 05a and 05b and stage 2b's three were given `none_of`
+/// on their denies' forces limits by the architect's ruling B of decision
+/// 0222, which says the same order in the new language; their digests are
+/// remade for it, and their games are what they were.
 #[test]
 fn scenario_5_is_untouched() {
     let pinned: [(&str, u64); 17] = [
@@ -1548,11 +1552,11 @@ fn scenario_5_is_untouched() {
         ),
         (
             "scenarios/second-proof/05a_eastern_solomons.toml",
-            0x5366c1566b253774,
+            0xd64d_53ab_74f6_bcc0,
         ),
         (
             "scenarios/second-proof/05b_eastern_solomons.toml",
-            0xc3a51991b07b7840,
+            0xaebb_1fe1_89ce_7edc,
         ),
         (
             "scenarios/second-proof/05c_eastern_solomons.toml",
@@ -1568,15 +1572,15 @@ fn scenario_5_is_untouched() {
         ),
         (
             "scenarios/stage-2b-proof/05a_eastern_solomons.toml",
-            0xb59166876bd86e46,
+            0x7164_a06d_bfbc_9e12,
         ),
         (
             "scenarios/stage-2b-proof/05b_eastern_solomons_off.toml",
-            0xa5cadd36b00b190c,
+            0x935d_0b33_c813_1bd8,
         ),
         (
             "scenarios/stage-2b-proof/05c_eastern_solomons_bold.toml",
-            0x1c64b319f392179a,
+            0xe3ce_11dc_a5d6_b89a,
         ),
         (
             "scenarios/step2-frozen/05_eastern_solomons.toml",

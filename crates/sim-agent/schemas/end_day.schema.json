@@ -19,7 +19,7 @@
       "const": "flagplot-agent"
     },
     "version": {
-      "const": 49
+      "const": 50
     },
     "kind": {
       "const": "end_day"

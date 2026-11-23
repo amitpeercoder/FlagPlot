@@ -59,6 +59,7 @@ impl Staff for AskingStaff {
                 would_change: vec!["leave to pursue".to_string()],
                 answer_of: None,
                 cautions: Vec::new(),
+                limits: Vec::new(),
             }],
             notices: vec![StaffNotice {
                 kind: NoticeKind::AsksLeaveToPursue,

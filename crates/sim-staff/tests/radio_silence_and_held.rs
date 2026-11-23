@@ -223,6 +223,7 @@ fn silence_is_not_given_with_no_report_figures_or_with_command_levels_off() {
 
 /// Scenario 62 with its first intent a deny intent over (0,5) naming task
 /// force 1: an intent addressed to the area, which forms the carrier task.
+/// The deny's forces limit says `in_place` since decision 0222, ruling I.
 fn deny_text(up: (u32, u32)) -> String {
     let text = text(up, "press");
     let text = once(
@@ -231,7 +232,7 @@ fn deny_text(up: (u32, u32)) -> String {
         "intent_kind = \"deny\"\nhex = [0, 5]\ndistance = 0",
     );
     format!(
-        "{text}\n[[order]]\nday = 1\nside = \"allied\"\ntask_force = 1\nkind = \"set_route\"\nwaypoints = [[0, 2]]\n\n[[command]]\nday = 1\nside = \"allied\"\nkind = \"set_limit\"\nlimit = \"forces\"\nintent = 1\ntask_forces = [1]\n"
+        "{text}\n[[order]]\nday = 1\nside = \"allied\"\ntask_force = 1\nkind = \"set_route\"\nwaypoints = [[0, 2]]\n\n[[command]]\nday = 1\nside = \"allied\"\nkind = \"set_limit\"\nlimit = \"forces\"\nintent = 1\ntask_forces = [1]\nin_place = true\n"
     )
 }
 

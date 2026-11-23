@@ -323,6 +323,67 @@ impl ReasonBuilder {
         self
     }
 
+    /// The reason speaks of a limit of `kind` (decision 0222, rule 5): the
+    /// limit set on the chain of the intent it serves, recorded with the
+    /// intent it is set on ([`CommandState::limit_set_on`]). Nothing where
+    /// the reason serves no intent. Recorded once a kind and intent.
+    pub(crate) fn speaks_of(
+        self,
+        state: &sim_core::command::CommandState,
+        kind: sim_core::command::LimitKind,
+    ) -> Self {
+        let Some(intent) = self.reason.serves.intent else {
+            return self;
+        };
+        let on = state.limit_set_on(intent, kind);
+        self.speaks_of_on(kind, on)
+    }
+
+    /// The reason speaks of a limit of `kind` set on `intent`, named by the
+    /// caller (decision 0222, rule 5).
+    pub(crate) fn speaks_of_on(
+        mut self,
+        kind: sim_core::command::LimitKind,
+        intent: IntentId,
+    ) -> Self {
+        let limit = sim_core::command::ReasonLimit {
+            kind,
+            intent: Some(intent),
+            base: None,
+        };
+        if !self.reason.limits.contains(&limit) {
+            self.reason.limits.push(limit);
+        }
+        self
+    }
+
+    /// The reason speaks of what the take asks to know of the enemy
+    /// (decision 0222, rule 5): the knowledge limit, on the order it is set
+    /// on, where the commander set one; else the risk, which sets it.
+    pub(crate) fn speaks_of_knowledge(
+        self,
+        state: &sim_core::command::CommandState,
+        set_on: Option<IntentId>,
+    ) -> Self {
+        match set_on {
+            Some(on) => self.speaks_of_on(sim_core::command::LimitKind::Knowledge, on),
+            None => self.speaks_of(state, sim_core::command::LimitKind::Risk),
+        }
+    }
+
+    /// The reason speaks of the reserve of `base` (decision 0222, rule 5).
+    pub(crate) fn speaks_of_reserve(mut self, base: sim_core::ids::BaseId) -> Self {
+        let limit = sim_core::command::ReasonLimit {
+            kind: sim_core::command::LimitKind::Reserve,
+            intent: None,
+            base: Some(base),
+        };
+        if !self.reason.limits.contains(&limit) {
+            self.reason.limits.push(limit);
+        }
+        self
+    }
+
     pub(crate) fn done(self) -> Reason {
         self.reason
     }

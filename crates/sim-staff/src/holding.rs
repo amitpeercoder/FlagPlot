@@ -22,6 +22,7 @@
 //! The doctrine reads the side's own view and its planned command state and
 //! nothing else.
 
+use sim_core::command::LimitKind;
 use std::collections::BTreeSet;
 
 use sim_core::command::{
@@ -114,11 +115,13 @@ impl Day<'_, '_> {
         let base_text = base_words(self.view, base);
         // Those its forces limit names, read up the tree; with no land unit
         // named anywhere on the chain, all of them.
-        let named = self
-            .state
-            .forces_on_chain(hold.id)
-            .iter()
-            .any(|forces| !forces.land_units.is_empty());
+        // Outside an island a limit that names nothing binds them too
+        // (decision 0222, rule 3), as intake reads it.
+        let by_kind = !self.state.reads_as_bound(hold.id);
+        let named =
+            self.state.forces_on_chain(hold.id).iter().any(|forces| {
+                !forces.land_units.is_empty() || (by_kind && forces.binds_land_units())
+            });
         let allowed = if named {
             self.state.land_units_on_chain(hold.id)
         } else {
@@ -302,6 +305,7 @@ impl Day<'_, '_> {
                 "{opening}. A source may be named in the forces limit among the bases of the side that could be one: {list}."
             ))
             .would_change(format!("a source named among {names}"))
+            .speaks_of(&self.state, LimitKind::Source)
             .done()
     }
 
@@ -423,6 +427,7 @@ impl Day<'_, '_> {
             ))
             .would_change("a supply intent for the base already in force")
             .would_change("no source in the forces limit")
+            .speaks_of(&self.state, LimitKind::Source)
             .done();
         if in_scope {
             self.lines.push(format!(
