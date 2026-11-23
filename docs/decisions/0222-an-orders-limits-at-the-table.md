@@ -152,7 +152,7 @@ Where a hold has men at its base and no source on it or above it, the staff stil
 
 Under "control an island" with no base to be the source, the island's own reason still says that no base can be the source, and the hold beneath it no longer adds that the commander may name one: the player is told once what could change it. The table's wording functions matched none of the old sentence's words, so nothing in `table/index.html` changed.
 
-Tests: scenario 69, a hold with no source (no other base can be the source: base 1 is the source of the take, higher in priority) and the same with a placeholder base 3 at C holding 500 t (named); scenario 79's hold with no source now pins the words that name base 1. No expected number moved.
+Tests: scenario 69, a hold with no source (no other base can be the source: base 1 is the source of the take, higher in priority) and the same with a placeholder base 3 at C holding 500 t (named); scenario 79's hold with no source now pins the words that name base 1. No expected number of a hand calculation moved. Scenario 106's record of five staffed games (statement 12) is remade for the five-day Eastern Solomons alone, whose Allied hold of Lunga now names Tulagi as a base that could be the source: with the reason's words taken out its text is the text before, line for line, and the other four did not move. The staffed scenarios run before and after (`scripts/compare-scenarios.sh`, 254 runs on the live and the frozen figures) are the same with the hashes cut.
 
 ### Questions for the designer
 
