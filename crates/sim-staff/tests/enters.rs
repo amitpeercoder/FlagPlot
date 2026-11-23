@@ -48,6 +48,7 @@ fn limit_of(force: Option<u32>, unit: Option<u32>) -> ForcesLimit {
         source: None,
         land_units: unit.map(LandUnitId::new).into_iter().collect(),
         submarines: Default::default(),
+        none_of: Default::default(),
     }
 }
 

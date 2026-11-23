@@ -340,6 +340,10 @@ fn forces_json(n: &Names<'_>, forces: &sim_core::command::ForcesLimit) -> Value 
     if !forces.submarines.is_empty() {
         body["submarines"] = json!(n.submarines(&forces.submarines));
     }
+    // Decision 0222, the architect's ruling A: left out when it lists none.
+    if !forces.none_of.is_empty() {
+        body["none_of"] = json!(forces.none_of.iter().map(|k| k.name()).collect::<Vec<_>>());
+    }
     let waiting = limit_not_yet_available(n, forces);
     if !waiting.is_empty() {
         body["not_yet_available"] = Value::Array(waiting);
@@ -2383,6 +2387,7 @@ fn allowed_keys(tool: &str) -> &'static [&'static str] {
             "kinds",
             "waters_first",
             "cleared",
+            "none_of",
         ],
         "set_leave" => &["leave", "given"],
         "set_pursuit" => &["intent", "leave"],

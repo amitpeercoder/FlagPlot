@@ -272,7 +272,27 @@
           "items": {
             "$ref": "#/$defs/caution"
           }
+        },
+        "limits": {
+          "description": "Decision 0222, rule 5: the limits the reason speaks of, each with its kind and the intent it is set on (or, for a reserve, the base). Left out where there are none.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/reason_limit"
+          }
         }
+      }
+    },
+    "reason_limit": {
+      "description": "One limit a reason speaks of (decision 0222, rule 5): its kind, and the intent it is set on, which may be above the one the reason serves, or the base of a reserve.",
+      "type": "object",
+      "required": ["kind"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": ["forces", "area", "priority", "protected", "reserve", "risk", "not_before", "wait_for", "after", "knowledge", "targets", "source"]
+        },
+        "intent": { "type": "integer" },
+        "base": { "type": "integer" }
       }
     },
     "caution": {
@@ -408,6 +428,11 @@
                   "type": "array",
                   "items": { "type": "integer" },
                   "description": "The side's numbers of the boats a patrol intent may use (decision 0218, stage 3). Left out when none."
+                },
+                "none_of": {
+                  "type": "array",
+                  "items": { "enum": ["ships", "air_groups", "land_units", "submarines"] },
+                  "description": "Decision 0222, the architect's ruling A: the kinds of which the staff may use nothing. Left out when none."
                 }
               }
             },
@@ -1623,6 +1648,11 @@
                   "type": "array",
                   "items": { "type": "integer" },
                   "description": "The side's numbers of the boats a patrol intent may use (decision 0218, stage 3). Left out when none."
+                },
+                "none_of": {
+                  "type": "array",
+                  "items": { "enum": ["ships", "air_groups", "land_units", "submarines"] },
+                  "description": "Decision 0222, the architect's ruling A: the kinds of which the staff may use nothing. Left out when none."
                 }
               }
             },

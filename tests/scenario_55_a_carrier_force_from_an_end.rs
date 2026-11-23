@@ -1019,6 +1019,26 @@ fn no_staff_order_is_refused_and_the_commands_are_taken() {
 
 // --------------------------------------------------------------- Properties
 
+/// The scenario restated (decision 0222, the architect's ruling C): the
+/// commander gives task force 1 its own task, to operate from (0,0), the hex
+/// where it lies, as intent 2, at `risk` where one is given. Since decision
+/// 0222, rule 2, a carrier force only named in a deny's forces limit is
+/// stationed by the staff; a force with its own task keeps it and serves
+/// from there, which is the situation these tests were written for.
+fn own_task(text: &str, risk: Option<&str>) -> String {
+    let mut extra = command_table(
+        1,
+        "kind = \"set_intent\"\nintent = 2\nintent_kind = \"operate_carriers\"\ntask_force = 1\nhex = [0, 0]",
+    );
+    if let Some(risk) = risk {
+        extra.push_str(&command_table(
+            1,
+            &format!("kind = \"set_limit\"\nlimit = \"risk\"\nintent = 2\nrisk = \"{risk}\""),
+        ));
+    }
+    format!("{text}\n{extra}")
+}
+
 fn without_risk(text: &str) -> String {
     changed(
         text,
@@ -1049,7 +1069,7 @@ fn air_orders(played: &Played, day: u32) -> Vec<Given> {
 
 #[test]
 fn balanced_gives_group_1_a_half_and_group_3_two_orders_and_launches_nothing() {
-    let played = play(&without_risk(&text()));
+    let played = play(&own_task(&without_risk(&text()), None));
     played.nothing_refused();
     // Eight orders on day 1: a carrier force searches in both daylight
     // pulses at balanced (decision 0131, rule 6 as amended).
@@ -1106,7 +1126,7 @@ fn at_preserve(text: &str) -> String {
 
 #[test]
 fn preserve_the_force_searches_once_a_day_group_2_three_orders_morning_pulses_only() {
-    let played = play(&at_preserve(&text()));
+    let played = play(&own_task(&at_preserve(&text()), Some("preserve")));
     played.nothing_refused();
     // Group 2 is given three orders: the search mission, search once a day
     // and the arc, in that order.
@@ -1140,7 +1160,7 @@ fn the_scenario_with_fuel(tons: u32) -> String {
 
 #[test]
 fn fuel_takes_her_home_79_t_against_79_999999_and_she_is_routed_home() {
-    let played = play(&the_scenario_with_fuel(79));
+    let played = play(&own_task(&the_scenario_with_fuel(79), None));
     played.nothing_refused();
     // On day 1 the force is routed to base 1, which is (5,0).
     assert!(

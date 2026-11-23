@@ -252,6 +252,10 @@ struct ForcesOut {
     /// Left out where the limit names none (decision 0218, 12).
     #[serde(skip_serializing_if = "Vec::is_empty")]
     submarines: Vec<u32>,
+    /// The kinds of which nothing may be used, by name; left out where it
+    /// lists none (decision 0222, the architect's ruling A).
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    none_of: Vec<&'static str>,
     /// Left out where the limit names none (a cover or hold intent's need
     /// not).
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -339,6 +343,7 @@ fn limits(limits: &IntentLimits) -> LimitsOut {
             air_groups: forces.air_groups.iter().map(|g| g.raw()).collect(),
             land_units: forces.land_units.iter().map(|u| u.raw()).collect(),
             submarines: forces.submarines.iter().map(|b| b.raw()).collect(),
+            none_of: forces.none_of.iter().map(|k| k.name()).collect(),
             source: forces.source.map(|source| source.raw()),
         }),
         area: limits
@@ -484,6 +489,7 @@ fn limit(limit: &Limit) -> LimitOut {
                 air_groups: limit.air_groups.iter().map(|g| g.raw()).collect(),
                 land_units: limit.land_units.iter().map(|u| u.raw()).collect(),
                 submarines: limit.submarines.iter().map(|b| b.raw()).collect(),
+                none_of: limit.none_of.iter().map(|k| k.name()).collect(),
                 source: limit.source.map(|source| source.raw()),
             }),
             ..blank("forces")

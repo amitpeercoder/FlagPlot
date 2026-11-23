@@ -281,7 +281,9 @@ const fn speed_code(speed: SpeedSetting) -> u8 {
 /// 3), the notice kinds codes 10 to 12 and the two commands (decision 0214);
 /// version 56 adds a ship's `aircraft_fire` (0 for none, else 1, its level,
 /// the day and the pulse's code, 64 bits, it was set and its record) after her
-/// `available_from` (decision 0212).
+/// `available_from` (decision 0212); version 57 adds a forces limit's
+/// `none_of`, after its boats, where it lists a kind (decision 0222, the
+/// architect's ruling A).
 ///
 /// What is held apart until its day (decision 0195, 23) does not raise the
 /// version: it is hashed last, after the domain, and only where something is
@@ -292,7 +294,7 @@ const fn speed_code(speed: SpeedSetting) -> u8 {
 /// replacement men and each land unit's strength (decision 0197, 21), after
 /// the supply lines, only where a scenario gives a stream or an
 /// establishment.
-pub const STATE_VERSION: &[u8] = b"flagplot-state-v56";
+pub const STATE_VERSION: &[u8] = b"flagplot-state-v57";
 
 /// Names every field of the state, with no `..` in any pattern. It does
 /// nothing when it runs. It is here so that a field added to the state does
@@ -1081,6 +1083,7 @@ fn name_limits(limits: &IntentLimits) {
         source: _,
         land_units: _,
         submarines: _,
+        none_of: _,
     }) = forces
     {}
 }
@@ -1271,6 +1274,16 @@ fn hash_forces(h: &mut StateHasher, forces: &ForcesLimit) {
         h.count(forces.submarines.len());
         for boat in &forces.submarines {
             h.u32(boat.raw());
+        }
+    }
+    // Decision 0222, the architect's ruling A: the kinds of which nothing may
+    // be used, in their place after the boats, written only where there is
+    // one (a tag byte, the count, then each kind's code). Version 57.
+    if !forces.none_of.is_empty() {
+        h.u8(7);
+        h.count(forces.none_of.len());
+        for kind in &forces.none_of {
+            h.u8(kind.code());
         }
     }
 }
@@ -2687,6 +2700,7 @@ mod tests {
             source: Some(BaseId::new(1)),
             land_units: [LandUnitId::new(9)].into_iter().collect(),
             submarines: std::collections::BTreeSet::new(),
+            none_of: Default::default(),
         };
         // The layout as it was: ships, task forces, air groups, the source,
         // the land units.

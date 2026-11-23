@@ -42,14 +42,16 @@
 //! (a bool, false where left out). Decision 0222, rule 3: `"forces"` and
 //! `"area"` with `cleared = true` and nothing but `intent` clear the limit;
 //! a forces limit with no list and no source is "use nothing", not cleared.
+//! A forces limit's `none_of` lists kinds (`"ships"`, `"air_groups"`,
+//! `"land_units"`, `"submarines"`) of which the staff may use nothing.
 
 use std::collections::BTreeSet;
 
 use serde::Deserialize;
 use sim_core::command::{
-    Awaited, CommandKind, ForcesLimit, HeldSetting, HoldTarget, IntentKind, InterruptCondition,
-    InterruptRef, InterruptSetting, Knowledge, Leave, Limit, PlanId, PursueLeave, Risk,
-    StandingKind, StandingSubject, TargetsLimit, Want, Wants,
+    Awaited, CommandKind, ForceKind, ForcesLimit, HeldSetting, HoldTarget, IntentKind,
+    InterruptCondition, InterruptRef, InterruptSetting, Knowledge, Leave, Limit, PlanId,
+    PursueLeave, Risk, StandingKind, StandingSubject, TargetsLimit, Want, Wants,
 };
 use sim_core::hex::Hex;
 use sim_core::ids::{
@@ -85,6 +87,9 @@ pub(crate) struct CommandSpec {
     submarines: Option<Vec<u32>>,
     /// Decision 0222, rule 3: true clears a forces limit or an area.
     cleared: Option<bool>,
+    /// Decision 0222, the architect's ruling A: kinds of which nothing may
+    /// be used.
+    none_of: Option<Vec<String>>,
     wants: Option<Vec<String>>,
     defences: Option<u32>,
     by_day: Option<u32>,
@@ -145,6 +150,7 @@ impl CommandSpec {
         note(self.land_units.is_some(), "land_units");
         note(self.submarines.is_some(), "submarines");
         note(self.cleared.is_some(), "cleared");
+        note(self.none_of.is_some(), "none_of");
         note(self.wants.is_some(), "wants");
         note(self.defences.is_some(), "defences");
         note(self.by_day.is_some(), "by_day");
@@ -238,6 +244,7 @@ impl CommandSpec {
                 "land_units",
                 "submarines",
                 "source",
+                "none_of",
             ],
             ("set_limit", Some("area")) => &["limit", "intent", "hexes"],
             ("set_limit", Some("priority")) => &["limit", "intent", "rank"],
@@ -517,6 +524,16 @@ impl CommandSpec {
                             .copied()
                             .map(SubmarineId::new)
                             .collect(),
+                        none_of: self
+                            .none_of
+                            .iter()
+                            .flatten()
+                            .map(|name| {
+                                ForceKind::from_name(name).ok_or_else(|| {
+                                    format!("{what} lists \"{name}\" in none_of, which is not ships, air_groups, land_units or submarines")
+                                })
+                            })
+                            .collect::<Result<_, _>>()?,
                     },
                 },
                 Some("area") => Limit::Area {
@@ -845,6 +862,7 @@ impl BelievedIntentSpec {
             land_units: None,
             submarines: None,
             cleared: None,
+            none_of: None,
             wants: self.wants.clone(),
             defences: self.defences,
             by_day: self.by_day,

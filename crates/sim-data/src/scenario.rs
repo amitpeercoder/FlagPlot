@@ -8559,6 +8559,7 @@ task_force = 3
                     land_units: BTreeSet::new(),
                     source: Some(BaseId::new(1)),
                     submarines: Default::default(),
+                    none_of: Default::default(),
                 },
             })
         );
@@ -8578,6 +8579,7 @@ task_force = 3
                         .collect(),
                     source: None,
                     submarines: Default::default(),
+                    none_of: Default::default(),
                 },
             })
         );
@@ -8699,6 +8701,7 @@ task_force = 3
                     land_units: BTreeSet::new(),
                     source: None,
                     submarines: Default::default(),
+                    none_of: Default::default(),
                 },
             })
         );
@@ -9208,6 +9211,7 @@ task_force = 3
                     submarines: [SubmarineId::new(2), SubmarineId::new(6)]
                         .into_iter()
                         .collect(),
+                    none_of: Default::default(),
                 }
             })
         );

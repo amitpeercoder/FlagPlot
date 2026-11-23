@@ -690,11 +690,65 @@ pub struct ForcesLimit {
     /// Submarines the intent may use (decision 0218, 12 and 34): only a
     /// "patrol" may use a boat. Added at the end.
     pub submarines: BTreeSet<SubmarineId>,
+    /// The kinds of which the staff may use nothing (decision 0222, the
+    /// architect's ruling A): each is bound, with nothing of it named. Never
+    /// read from an empty list. Added at the end.
+    pub none_of: BTreeSet<ForceKind>,
+}
+
+/// A kind of force a forces limit binds (decision 0222, the architect's
+/// ruling A): ships and task forces are one kind. The source is not one.
+/// New kinds are added at the end; a code is never renumbered.
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+pub enum ForceKind {
+    Ships,
+    AirGroups,
+    LandUnits,
+    Submarines,
+}
+
+impl ForceKind {
+    /// Every kind, in code order.
+    pub const ALL: [ForceKind; 4] = [
+        ForceKind::Ships,
+        ForceKind::AirGroups,
+        ForceKind::LandUnits,
+        ForceKind::Submarines,
+    ];
+
+    /// The stable code of the kind. Never renumbered.
+    pub fn code(self) -> u8 {
+        match self {
+            ForceKind::Ships => 1,
+            ForceKind::AirGroups => 2,
+            ForceKind::LandUnits => 3,
+            ForceKind::Submarines => 4,
+        }
+    }
+
+    /// The kind's name, as `none_of` lists it.
+    pub fn name(self) -> &'static str {
+        match self {
+            ForceKind::Ships => "ships",
+            ForceKind::AirGroups => "air_groups",
+            ForceKind::LandUnits => "land_units",
+            ForceKind::Submarines => "submarines",
+        }
+    }
+
+    /// The kind named `name`, where there is one.
+    pub fn from_name(name: &str) -> Option<ForceKind> {
+        ForceKind::ALL.into_iter().find(|k| k.name() == name)
+    }
 }
 
 impl ForcesLimit {
     /// Whether the limit names nothing of any kind: "use nothing", which
     /// binds every kind (decision 0222, rule 3: not the same as no limit).
+    ///
+    /// A limit that lists a kind in `none_of` names something: it binds that
+    /// kind to nothing and leaves the kinds it neither names nor lists to the
+    /// staff (the architect's ruling A).
     pub fn names_nothing(&self) -> bool {
         self.ships.is_empty()
             && self.task_forces.is_empty()
@@ -702,6 +756,26 @@ impl ForcesLimit {
             && self.source.is_none()
             && self.land_units.is_empty()
             && self.submarines.is_empty()
+            && self.none_of.is_empty()
+    }
+
+    /// Whether the limit lists `kind` in `none_of`: none of it may be used.
+    pub fn none_of(&self, kind: ForceKind) -> bool {
+        self.none_of.contains(&kind)
+    }
+
+    /// The first kind the limit both names a unit of and lists in `none_of`,
+    /// which intake refuses (the architect's ruling A).
+    pub fn named_and_none_of(&self) -> Option<ForceKind> {
+        ForceKind::ALL.into_iter().find(|kind| {
+            self.none_of(*kind)
+                && match kind {
+                    ForceKind::Ships => self.names_ships(),
+                    ForceKind::AirGroups => !self.air_groups.is_empty(),
+                    ForceKind::LandUnits => !self.land_units.is_empty(),
+                    ForceKind::Submarines => !self.submarines.is_empty(),
+                }
+        })
     }
 
     /// Whether the limit names a ship or a task force. Ships and task forces
@@ -714,22 +788,22 @@ impl ForcesLimit {
     /// Whether the limit binds the ships and task forces (decision 0222,
     /// rule 2): it names one, or it names nothing at all.
     pub fn binds_ships(&self) -> bool {
-        self.names_ships() || self.names_nothing()
+        self.names_ships() || self.none_of(ForceKind::Ships) || self.names_nothing()
     }
 
     /// Whether the limit binds the air groups: it names one, or nothing.
     pub fn binds_groups(&self) -> bool {
-        !self.air_groups.is_empty() || self.names_nothing()
+        !self.air_groups.is_empty() || self.none_of(ForceKind::AirGroups) || self.names_nothing()
     }
 
     /// Whether the limit binds the land units: it names one, or nothing.
     pub fn binds_land_units(&self) -> bool {
-        !self.land_units.is_empty() || self.names_nothing()
+        !self.land_units.is_empty() || self.none_of(ForceKind::LandUnits) || self.names_nothing()
     }
 
     /// Whether the limit binds the submarines: it names one, or nothing.
     pub fn binds_submarines(&self) -> bool {
-        !self.submarines.is_empty() || self.names_nothing()
+        !self.submarines.is_empty() || self.none_of(ForceKind::Submarines) || self.names_nothing()
     }
 
     /// Whether the limit binds the source: it names one, or nothing.
@@ -752,6 +826,11 @@ impl core::fmt::Debug for ForcesLimit {
         if !self.submarines.is_empty() {
             out.field("submarines", &self.submarines);
         }
+        // `none_of` is left out of the debug text (decision 0222, the
+        // architect's ruling B): a closed proof's file that lists it, to say
+        // in the new language the order it gave, writes the text it wrote,
+        // so every digest of its events is what it was. Its JSON, its words
+        // and its hash carry it.
         out.finish()
     }
 }
@@ -1900,7 +1979,7 @@ impl CommandState {
             if by_kind {
                 limit.binds_groups()
             } else {
-                !island || !limit.air_groups.is_empty()
+                !island || !limit.air_groups.is_empty() || limit.none_of(ForceKind::AirGroups)
             }
         });
         let first = limits.next()?.air_groups.clone();
@@ -2177,11 +2256,12 @@ impl CommandState {
 /// land units and the source taken from `fill` (decisions 0149, 3, and 0151,
 /// 4). The air groups are `own`'s.
 fn fill_unnamed(mut own: ForcesLimit, fill: &ForcesLimit) -> ForcesLimit {
-    if own.task_forces.is_empty() && own.ships.is_empty() {
+    // A kind listed in `none_of` is bound to nothing and is not filled.
+    if own.task_forces.is_empty() && own.ships.is_empty() && !own.none_of(ForceKind::Ships) {
         own.task_forces.clone_from(&fill.task_forces);
         own.ships.clone_from(&fill.ships);
     }
-    if own.land_units.is_empty() {
+    if own.land_units.is_empty() && !own.none_of(ForceKind::LandUnits) {
         own.land_units.clone_from(&fill.land_units);
     }
     if own.source.is_none() {
@@ -2489,6 +2569,9 @@ pub enum CommandRefusal {
     /// (decision 0218, 34: a forces limit or a hold names her). Added at the
     /// end.
     NotYourSubmarine(SubmarineId),
+    /// A forces limit names a unit of a kind and lists that kind in
+    /// `none_of` (decision 0222, the architect's ruling A). Added at the end.
+    NamedAndNoneOf(ForceKind),
 }
 
 impl core::fmt::Display for CommandRefusal {
@@ -2573,6 +2656,11 @@ impl core::fmt::Display for CommandRefusal {
             CommandRefusal::NotYourSubmarine(boat) => {
                 write!(f, "{boat} is not one of the side's submarines")
             }
+            CommandRefusal::NamedAndNoneOf(kind) => write!(
+                f,
+                "the forces limit names {} and lists them in none_of: a kind is named or listed, not both",
+                kind.name()
+            ),
             CommandRefusal::NotACoastHex(hex) => write!(f, "{hex} is not a coast hex on the map"),
             CommandRefusal::NotLand(hex) => write!(f, "{hex} is not a hex of land on the map"),
             CommandRefusal::NoSuchIsland(number) => {

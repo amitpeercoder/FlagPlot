@@ -947,6 +947,7 @@ mod tests {
                             land_units: [sim_core::ids::LandUnitId::new(2)].into_iter().collect(),
                             source: Some(BaseId::new(1)),
                             submarines: Default::default(),
+                            none_of: Default::default(),
                         },
                     }),
                 ),
@@ -978,6 +979,10 @@ mod tests {
                             ]
                             .into_iter()
                             .collect(),
+                            // Decision 0222, the architect's ruling A.
+                            none_of: [sim_core::command::ForceKind::AirGroups]
+                                .into_iter()
+                                .collect(),
                         },
                     }),
                 ),

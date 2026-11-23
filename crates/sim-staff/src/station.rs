@@ -846,8 +846,15 @@ impl Day<'_, '_> {
             Risk::Balanced => "at the balanced risk, with no candidate in fuel outside every circle, the station is the one least deep in danger, then with the least passage",
             Risk::Press => "at the press risk the station is the one with the least passage, in danger or out",
         };
+        // A force the order's forces limit names has its own words (decision
+        // 0222, the architect's ruling D).
+        let standing = if self.state.ship_limits_on_chain(end.id).is_empty() {
+            format!("{held} is free: on the carrier mission, with no task and named by nothing of the commander's, and not held")
+        } else {
+            format!("{held} is named in your order's forces limit: on the carrier mission, with no task, and not held")
+        };
         let words = format!(
-            "{held} is free: on the carrier mission, with no task and named by nothing of the commander's, and not held. The candidates, {} of them, are the hexes the force can reach by sea within {within_words} of {}; {choice}. The station is {where_words}: {passage_words}; {danger}{nearer}{submarines}. Fuel: {}.",
+            "{standing}. The candidates, {} of them, are the hexes the force can reach by sea within {within_words} of {}; {choice}. The station is {where_words}: {passage_words}; {danger}{nearer}{submarines}. Fuel: {}.",
             candidates.len(),
             aim.words,
             fuel.words

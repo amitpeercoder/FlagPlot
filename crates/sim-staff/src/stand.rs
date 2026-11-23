@@ -597,11 +597,21 @@ impl Day<'_, '_> {
                     withdrawn_day: None,
                 },
             );
+            // Under a hold a carrier force named in the forces limit works
+            // from where it lies, and the reason says so (decision 0222, the
+            // architect's ruling D).
+            let from_where = if matches!(kind, IntentKind::OperateCarriers { .. })
+                && matches!(end.kind, IntentKind::Hold { .. })
+            {
+                " A carrier force named in the forces limit of a hold works from where it lies: the staff chooses no station for it."
+            } else {
+                ""
+            };
             let reason = serving(end, plan)
                 .evidence(why.clone(), today)
                 .binding(format!("{id} is named in the forces limit of {}", end.id))
                 .worked(format!(
-                    "{id} is named in the forces limit of {}, its plan is released and no task of {id} stands under it: {why}, so the staff forms {id_new}, to {words}, under it, for {id} to carry out.",
+                    "{id} is named in the forces limit of {}, its plan is released and no task of {id} stands under it: {why}, so the staff forms {id_new}, to {words}, under it, for {id} to carry out.{from_where}",
                     end.id
                 ))
                 .would_change(format!("{id} not named in the forces limit"))

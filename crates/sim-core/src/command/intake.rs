@@ -319,10 +319,9 @@ impl World {
             // Outside an island a limit that names nothing binds the land
             // units too (decision 0222, rule 3).
             let by_kind = !state.reads_as_bound(intent);
-            let named = state
-                .forces_on_chain(intent)
-                .iter()
-                .any(|forces| !forces.land_units.is_empty() || (by_kind && forces.names_nothing()));
+            let named = state.forces_on_chain(intent).iter().any(|forces| {
+                !forces.land_units.is_empty() || (by_kind && forces.binds_land_units())
+            });
             if !named {
                 return !own.working
                     && own.men_ashore > 0
@@ -708,6 +707,10 @@ impl World {
                 }
                 match limit {
                     Limit::Forces { limit, .. } => {
+                        // Decision 0222, the architect's ruling A.
+                        if let Some(kind) = limit.named_and_none_of() {
+                            return Err(CommandRefusal::NamedAndNoneOf(kind));
+                        }
                         for ship in &limit.ships {
                             if !self.own_ship_afloat(side, *ship) {
                                 return Err(CommandRefusal::NotYourShip(*ship));

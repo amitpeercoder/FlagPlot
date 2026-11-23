@@ -117,11 +117,10 @@ impl Day<'_, '_> {
         // Outside an island a limit that names nothing binds them too
         // (decision 0222, rule 3), as intake reads it.
         let by_kind = !self.state.reads_as_bound(hold.id);
-        let named = self
-            .state
-            .forces_on_chain(hold.id)
-            .iter()
-            .any(|forces| !forces.land_units.is_empty() || (by_kind && forces.names_nothing()));
+        let named =
+            self.state.forces_on_chain(hold.id).iter().any(|forces| {
+                !forces.land_units.is_empty() || (by_kind && forces.binds_land_units())
+            });
         let allowed = if named {
             self.state.land_units_on_chain(hold.id)
         } else {
