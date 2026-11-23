@@ -141,8 +141,15 @@
 //!   all, and units 1 and 2 are on attack at the end.
 //! - **A hold with no source.** With intent 2's forces limit left out:
 //!   the load of day 2 is 90 t. On day 6 units 1 and 2 are set to defend,
-//!   no supply intent is formed, and the hold's reason says the commander
-//!   may name a source. Ten orders in all.
+//!   no supply intent is formed, and the hold's reason says that no other
+//!   base of the side can be the source (base 1 is the source of intent 1,
+//!   higher in priority), so base 2 lives on what it has, and offers no
+//!   source to name (decision 0222, rule 1). Ten orders in all.
+//! - **A hold with no source and a base that could be one.** As above, with
+//!   an Allied base 3 at C holding 500 t and no reserve: the same ten
+//!   orders, and the hold's reason names base 3, with its 500 t above its
+//!   reserve, as a base a source may be named among (decision 0222, rule
+//!   1).
 //! - **It cannot be held, at balanced.** With base 1 at 100 t of supply:
 //!   on the morning of day 2 it holds 94 t against 144 t wanted, short by
 //!   50 t. The staff says so, releases the plan and orders the load of
@@ -470,6 +477,16 @@ impl Played {
             .iter()
             .filter(|r| r.serves.intent == Some(intent(of)))
             .map(text_of)
+            .collect()
+    }
+
+    /// What would change the no-order reasons of `day` serving `of`.
+    fn would_change(&self, day: u32, of: u32) -> Vec<String> {
+        self.handed[&day]
+            .no_orders
+            .iter()
+            .filter(|r| r.serves.intent == Some(intent(of)))
+            .flat_map(|r| r.would_change.iter().cloned())
             .collect()
     }
 
@@ -862,12 +879,54 @@ fn a_hold_with_no_source() {
         .all_commands()
         .iter()
         .any(|(_, c)| matches!(c, Cmd::Form(2, _))));
+    let reasons = g.no_orders(6, 2);
     assert!(
-        g.no_orders(6, 2)
-            .iter()
-            .any(|r| r.contains("the commander may name a source")),
+        reasons.iter().any(|r| r.contains(
+            "No other base of the side can be the source (base:1 (Placeholder base A) is the source of intent:1, an intent higher in priority), so base:2 (Placeholder airfield B) lives on what it has"
+        )),
+        "{reasons:?}"
+    );
+    assert!(
+        g.would_change(6, 2)
+            .contains(&"a base of the side with supply above its reserve".to_string()),
         "{:?}",
-        g.no_orders(6, 2)
+        g.would_change(6, 2)
+    );
+    assert!(
+        !reasons
+            .iter()
+            .any(|r| r.contains("name a source") || r.contains("may be named")),
+        "{reasons:?}"
+    );
+}
+
+/// Decision 0222, rule 1: with a base of the side that could be the source,
+/// the hold's reason names it, with its supply above its reserve, and the
+/// staff's orders are those of the hold with no source.
+#[test]
+fn a_hold_with_no_source_and_a_base_that_could_be_one() {
+    let base_3 = "[[base]]\nid = 3\nname = \"Placeholder base C\"\nside = \"allied\"\nq = 0\nr = 6\nsupply_t = 500\nfuel_t = 0\n\n# Japanese base 2 at B";
+    let t = changed(
+        &changed(&text(), HOLD_LIMIT, ""),
+        "# Japanese base 2 at B",
+        base_3,
+    );
+    let g = play(&t);
+    let mut wanted = main_orders()[..10].to_vec();
+    wanted[1] = (2, Given::LoadTo(n(90)));
+    assert_eq!(g.all_orders(), wanted);
+    let reasons = g.no_orders(6, 2);
+    assert!(
+        reasons.iter().any(|r| r.contains(
+            "A source may be named in the forces limit among the bases of the side that could be one: base:3 (Placeholder base C), 500 t of supply above its reserve."
+        ) && r.contains("base:3 (Placeholder base C) could be the source: 500 t of supply above its reserve")),
+        "{reasons:?}"
+    );
+    assert!(
+        g.would_change(6, 2)
+            .contains(&"a source named among base:3 (Placeholder base C)".to_string()),
+        "{:?}",
+        g.would_change(6, 2)
     );
 }
 

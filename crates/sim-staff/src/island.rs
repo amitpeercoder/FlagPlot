@@ -531,10 +531,19 @@ impl Day<'_, '_> {
                 continue;
             }
             let text = base_words(self.view, base.id);
-            if let Err(why) = self.may_take_base(base.id, &others) {
-                lines.push(format!("{text}: {why}"));
-                continue;
-            }
+            let above = match self.source_test(&base, &others, named.is_none()) {
+                Ok(above) => above,
+                Err(NotSource::Taken(why)) => {
+                    lines.push(format!("{text}: {why}"));
+                    continue;
+                }
+                Err(NotSource::NothingAbove) => {
+                    lines.push(format!(
+                        "{text}: nothing above its reserve, so it cannot be the source"
+                    ));
+                    continue;
+                }
+            };
             // Decision 0163, 1: no transport force need lie there; the pool
             // may be empty (item 2).
             let forces = self.pool_at(base.id, &others);
@@ -550,15 +559,6 @@ impl Day<'_, '_> {
                         .join(", ")
                 )
             };
-            let above = base.supply_t - base.supply_reserve_t;
-            // The commander's source is his, whatever it holds; one the staff
-            // chooses must have supply above its reserve.
-            if named.is_none() && above <= sim_core::fixed::Fixed::ZERO {
-                lines.push(format!(
-                    "{text}: nothing above its reserve, so it cannot be the source"
-                ));
-                continue;
-            }
             lines.push(format!(
                 "{text}: {} t of supply above its reserve, with {pool_words}",
                 above.max(sim_core::fixed::Fixed::ZERO)
@@ -594,6 +594,70 @@ impl Day<'_, '_> {
                 chosen: None,
             },
         }
+    }
+
+    /// The island's test of one base as the source (item 8; decision 0163,
+    /// 1): the staff may take it and, where the staff chooses it
+    /// (`staff_chooses`), it has supply above its reserve. The commander's
+    /// source is his, whatever it holds. `Ok` with its supply above its
+    /// reserve.
+    fn source_test(
+        &self,
+        base: &sim_core::state::Base,
+        others: &crate::assemble::Others,
+        staff_chooses: bool,
+    ) -> Result<sim_core::fixed::Fixed, NotSource> {
+        self.may_take_base(base.id, others)
+            .map_err(NotSource::Taken)?;
+        let above = base.supply_t - base.supply_reserve_t;
+        if staff_chooses && above <= sim_core::fixed::Fixed::ZERO {
+            return Err(NotSource::NothingAbove);
+        }
+        Ok(above)
+    }
+
+    /// Decision 0222, rule 1: each base of the side the staff could weigh as
+    /// a source for `end` by the island's test (`source_test`), in none of
+    /// `excluded`, the hexes of the places it serves, in base order: `Ok`
+    /// with its supply above its reserve where it could be the source, else
+    /// the words why it cannot.
+    pub(crate) fn source_candidates(
+        &self,
+        end: &Intent,
+        excluded: &BTreeSet<Hex>,
+    ) -> Vec<(BaseId, Result<sim_core::fixed::Fixed, String>)> {
+        let others = self.others_above(end);
+        let mut bases: Vec<_> = self
+            .view
+            .bases()
+            .filter(|b| !excluded.contains(&b.hex))
+            .collect();
+        bases.sort_by_key(|b| b.id);
+        bases
+            .into_iter()
+            .map(|b| {
+                let test = self.source_test(b, &others, true).map_err(|why| match why {
+                    NotSource::Taken(words) => words,
+                    NotSource::NothingAbove => String::new(),
+                });
+                (b.id, test)
+            })
+            .collect()
+    }
+
+    /// The "control an island" on `intent`'s chain, where one is, with the
+    /// hexes of its named places: the hexes its source is never in.
+    pub(crate) fn island_above(&self, intent: IntentId) -> Option<(Intent, BTreeSet<Hex>)> {
+        let mut at = self.state.intents.get(&intent);
+        let (end, island) = loop {
+            let found = at?;
+            if let IntentKind::ControlIsland { island, .. } = found.kind {
+                break (found.clone(), island);
+            }
+            at = found.parent.and_then(|p| self.state.intents.get(&p));
+        };
+        let found = self.view.island(island)?;
+        Some((end, found.places.iter().map(|p| p.hex).collect()))
     }
 
     /// Decision 0152, 10 and 11: the transport forces the staff may take
@@ -935,6 +999,14 @@ impl Day<'_, '_> {
             }
         }
     }
+}
+
+/// Why a base cannot be the source by the island's test.
+enum NotSource {
+    /// The staff may not take it: the words why.
+    Taken(String),
+    /// The staff chooses, and it has nothing above its reserve.
+    NothingAbove,
 }
 
 /// The source of supply of an island's holds (item 8): the base chosen and

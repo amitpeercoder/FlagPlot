@@ -368,7 +368,7 @@
       "hash": "3b3353e3ccc0e0d7"
     }
   ],
-  "doctrine_version": "supply-55",
+  "doctrine_version": "supply-56",
   "format": "flagplot-saved-game",
   "hashes": [
     {
@@ -1447,6 +1447,18 @@
               {
                 "day": 15,
                 "what": "intent:2 names no source"
+              },
+              {
+                "day": 15,
+                "what": "base:1 (Lunga) could be the source: 1253.825 t of supply above its reserve"
+              },
+              {
+                "day": 15,
+                "what": "base:3 (Espiritu Santo) could be the source: 3521.1 t of supply above its reserve"
+              },
+              {
+                "day": 15,
+                "what": "base:8 (Landing at (2,-4)) could be the source: 218.8 t of supply above its reserve"
               }
             ],
             "serves": {
@@ -1457,9 +1469,9 @@
               "plan": 2,
               "statement": "hold base:4 (Tulagi)"
             },
-            "worked": "intent:2 holds base:4 (Tulagi) and its forces limit names no source, so the staff forms no supply for it: the commander may name a source in the forces limit, or state \"keep supplied\" himself.",
+            "worked": "intent:2 holds base:4 (Tulagi) and no source is named on it or above it, so the staff forms no supply for it. A source may be named in the forces limit among the bases of the side that could be one: base:1 (Lunga), 1253.825 t of supply above its reserve; base:3 (Espiritu Santo), 3521.1 t of supply above its reserve; base:8 (Landing at (2,-4)), 218.8 t of supply above its reserve.",
             "would_change": [
-              "a source in the forces limit"
+              "a source named among base:1 (Lunga), base:3 (Espiritu Santo), base:8 (Landing at (2,-4))"
             ]
           },
           {
@@ -5148,6 +5160,18 @@
               {
                 "day": 16,
                 "what": "intent:2 names no source"
+              },
+              {
+                "day": 16,
+                "what": "base:1 (Lunga) could be the source: 1782.258 t of supply above its reserve"
+              },
+              {
+                "day": 16,
+                "what": "base:3 (Espiritu Santo) could be the source: 2561.1 t of supply above its reserve"
+              },
+              {
+                "day": 16,
+                "what": "base:8 (Landing at (2,-4)) could be the source: 218.8 t of supply above its reserve"
               }
             ],
             "serves": {
@@ -5158,9 +5182,9 @@
               "plan": 2,
               "statement": "hold base:4 (Tulagi)"
             },
-            "worked": "intent:2 holds base:4 (Tulagi) and its forces limit names no source, so the staff forms no supply for it: the commander may name a source in the forces limit, or state \"keep supplied\" himself.",
+            "worked": "intent:2 holds base:4 (Tulagi) and no source is named on it or above it, so the staff forms no supply for it. A source may be named in the forces limit among the bases of the side that could be one: base:1 (Lunga), 1782.258 t of supply above its reserve; base:3 (Espiritu Santo), 2561.1 t of supply above its reserve; base:8 (Landing at (2,-4)), 218.8 t of supply above its reserve.",
             "would_change": [
-              "a source in the forces limit"
+              "a source named among base:1 (Lunga), base:3 (Espiritu Santo), base:8 (Landing at (2,-4))"
             ]
           },
           {
@@ -6791,6 +6815,18 @@
               {
                 "day": 17,
                 "what": "intent:2 names no source"
+              },
+              {
+                "day": 17,
+                "what": "base:1 (Lunga) could be the source: 2860.42 t of supply above its reserve"
+              },
+              {
+                "day": 17,
+                "what": "base:3 (Espiritu Santo) could be the source: 2239.05 t of supply above its reserve"
+              },
+              {
+                "day": 17,
+                "what": "base:8 (Landing at (2,-4)) could be the source: 218.8 t of supply above its reserve"
               }
             ],
             "serves": {
@@ -6801,9 +6837,9 @@
               "plan": 2,
               "statement": "hold base:4 (Tulagi)"
             },
-            "worked": "intent:2 holds base:4 (Tulagi) and its forces limit names no source, so the staff forms no supply for it: the commander may name a source in the forces limit, or state \"keep supplied\" himself.",
+            "worked": "intent:2 holds base:4 (Tulagi) and no source is named on it or above it, so the staff forms no supply for it. A source may be named in the forces limit among the bases of the side that could be one: base:1 (Lunga), 2860.42 t of supply above its reserve; base:3 (Espiritu Santo), 2239.05 t of supply above its reserve; base:8 (Landing at (2,-4)), 218.8 t of supply above its reserve.",
             "would_change": [
-              "a source in the forces limit"
+              "a source named among base:1 (Lunga), base:3 (Espiritu Santo), base:8 (Landing at (2,-4))"
             ]
           },
           {
@@ -7914,6 +7950,18 @@
               {
                 "day": 18,
                 "what": "intent:2 names no source"
+              },
+              {
+                "day": 18,
+                "what": "base:1 (Lunga) could be the source: 2722.73 t of supply above its reserve"
+              },
+              {
+                "day": 18,
+                "what": "base:3 (Espiritu Santo) could be the source: 2239.05 t of supply above its reserve"
+              },
+              {
+                "day": 18,
+                "what": "base:8 (Landing at (2,-4)) could be the source: 218.8 t of supply above its reserve"
               }
             ],
             "serves": {
@@ -7924,9 +7972,9 @@
               "plan": 2,
               "statement": "hold base:4 (Tulagi)"
             },
-            "worked": "intent:2 holds base:4 (Tulagi) and its forces limit names no source, so the staff forms no supply for it: the commander may name a source in the forces limit, or state \"keep supplied\" himself.",
+            "worked": "intent:2 holds base:4 (Tulagi) and no source is named on it or above it, so the staff forms no supply for it. A source may be named in the forces limit among the bases of the side that could be one: base:1 (Lunga), 2722.73 t of supply above its reserve; base:3 (Espiritu Santo), 2239.05 t of supply above its reserve; base:8 (Landing at (2,-4)), 218.8 t of supply above its reserve.",
             "would_change": [
-              "a source in the forces limit"
+              "a source named among base:1 (Lunga), base:3 (Espiritu Santo), base:8 (Landing at (2,-4))"
             ]
           },
           {
@@ -8936,6 +8984,18 @@
               {
                 "day": 19,
                 "what": "intent:2 names no source"
+              },
+              {
+                "day": 19,
+                "what": "base:1 (Lunga) could be the source: 2638.475 t of supply above its reserve"
+              },
+              {
+                "day": 19,
+                "what": "base:3 (Espiritu Santo) could be the source: 2239.05 t of supply above its reserve"
+              },
+              {
+                "day": 19,
+                "what": "base:8 (Landing at (2,-4)) could be the source: 218.8 t of supply above its reserve"
               }
             ],
             "serves": {
@@ -8946,9 +9006,9 @@
               "plan": 2,
               "statement": "hold base:4 (Tulagi)"
             },
-            "worked": "intent:2 holds base:4 (Tulagi) and its forces limit names no source, so the staff forms no supply for it: the commander may name a source in the forces limit, or state \"keep supplied\" himself.",
+            "worked": "intent:2 holds base:4 (Tulagi) and no source is named on it or above it, so the staff forms no supply for it. A source may be named in the forces limit among the bases of the side that could be one: base:1 (Lunga), 2638.475 t of supply above its reserve; base:3 (Espiritu Santo), 2239.05 t of supply above its reserve; base:8 (Landing at (2,-4)), 218.8 t of supply above its reserve.",
             "would_change": [
-              "a source in the forces limit"
+              "a source named among base:1 (Lunga), base:3 (Espiritu Santo), base:8 (Landing at (2,-4))"
             ]
           },
           {
@@ -9871,6 +9931,18 @@
               {
                 "day": 20,
                 "what": "intent:2 names no source"
+              },
+              {
+                "day": 20,
+                "what": "base:1 (Lunga) could be the source: 3216.67 t of supply above its reserve"
+              },
+              {
+                "day": 20,
+                "what": "base:3 (Espiritu Santo) could be the source: 2239.05 t of supply above its reserve"
+              },
+              {
+                "day": 20,
+                "what": "base:8 (Landing at (2,-4)) could be the source: 218.8 t of supply above its reserve"
               }
             ],
             "serves": {
@@ -9881,9 +9953,9 @@
               "plan": 2,
               "statement": "hold base:4 (Tulagi)"
             },
-            "worked": "intent:2 holds base:4 (Tulagi) and its forces limit names no source, so the staff forms no supply for it: the commander may name a source in the forces limit, or state \"keep supplied\" himself.",
+            "worked": "intent:2 holds base:4 (Tulagi) and no source is named on it or above it, so the staff forms no supply for it. A source may be named in the forces limit among the bases of the side that could be one: base:1 (Lunga), 3216.67 t of supply above its reserve; base:3 (Espiritu Santo), 2239.05 t of supply above its reserve; base:8 (Landing at (2,-4)), 218.8 t of supply above its reserve.",
             "would_change": [
-              "a source in the forces limit"
+              "a source named among base:1 (Lunga), base:3 (Espiritu Santo), base:8 (Landing at (2,-4))"
             ]
           },
           {
@@ -10855,6 +10927,18 @@
               {
                 "day": 21,
                 "what": "intent:2 names no source"
+              },
+              {
+                "day": 21,
+                "what": "base:1 (Lunga) could be the source: 3682.575 t of supply above its reserve"
+              },
+              {
+                "day": 21,
+                "what": "base:3 (Espiritu Santo) could be the source: 2239.05 t of supply above its reserve"
+              },
+              {
+                "day": 21,
+                "what": "base:8 (Landing at (2,-4)) could be the source: 218.8 t of supply above its reserve"
               }
             ],
             "serves": {
@@ -10865,9 +10949,9 @@
               "plan": 2,
               "statement": "hold base:4 (Tulagi)"
             },
-            "worked": "intent:2 holds base:4 (Tulagi) and its forces limit names no source, so the staff forms no supply for it: the commander may name a source in the forces limit, or state \"keep supplied\" himself.",
+            "worked": "intent:2 holds base:4 (Tulagi) and no source is named on it or above it, so the staff forms no supply for it. A source may be named in the forces limit among the bases of the side that could be one: base:1 (Lunga), 3682.575 t of supply above its reserve; base:3 (Espiritu Santo), 2239.05 t of supply above its reserve; base:8 (Landing at (2,-4)), 218.8 t of supply above its reserve.",
             "would_change": [
-              "a source in the forces limit"
+              "a source named among base:1 (Lunga), base:3 (Espiritu Santo), base:8 (Landing at (2,-4))"
             ]
           },
           {

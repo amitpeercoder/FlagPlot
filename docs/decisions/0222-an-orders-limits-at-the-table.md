@@ -141,6 +141,19 @@ Four pull requests, in this order:
 
 Agent-played recorded games cannot be replayed under a changed doctrine without the agent; they are treated by their rules label as the repository's scripts treat them, and the records of closed proofs are not altered.
 
+### As built: rule 1
+
+Built on Nov 23, 2026, by itself, as the first of the four pull requests. Doctrine `supply-56`; nothing the staff orders or commands changes, only the words of one reason.
+
+Where a hold has men at its base and no source on it or above it, the staff still forms no supply, and its reason (`holding.rs`, `no_source_reason`) now weighs, from the side's own view, each base of the side by the island's own test of a candidate (`island.rs`, `source_test`, which `island_source` now calls too, so the test is written once): a base of the side not in the place's hex (under "control an island", in no named place's hex, and with the island's own reckoning of what is taken higher in priority), that the staff may take, with supply above its reserve.
+
+- **With one or more:** "intent:N holds X and no source is named on it or above it, so the staff forms no supply for it. A source may be named in the forces limit among the bases of the side that could be one: base:1 (A), 1000 t of supply above its reserve." Each such base is evidence with its supply above its reserve; it would change with "a source named among base:1 (A)".
+- **With none:** "... so the staff forms no supply for it. No other base of the side holds supply above its reserve, so X lives on what it has: N days of supply today." The days are whole days, cut down (with no planned use, the tons). It would change with "a base of the side with supply above its reserve" and offers nothing to name. Where a base holds supply above its reserve but the staff may not take it (the source of an intent higher in priority, a base not before its day), the sentence says "No other base of the side can be the source (why, for each)", so that the words stay true; that reading is the architect's, not the plan's, which spoke only of supply.
+
+Under "control an island" with no base to be the source, the island's own reason still says that no base can be the source, and the hold beneath it no longer adds that the commander may name one: the player is told once what could change it. The table's wording functions matched none of the old sentence's words, so nothing in `table/index.html` changed.
+
+Tests: scenario 69, a hold with no source (no other base can be the source: base 1 is the source of the take, higher in priority) and the same with a placeholder base 3 at C holding 500 t (named); scenario 79's hold with no source now pins the words that name base 1. No expected number moved.
+
 ### Questions for the designer
 
 1. **Should the staff choose a supply source for a hold when the commander names none** (rules 8 to 12)? The architect recommends yes.

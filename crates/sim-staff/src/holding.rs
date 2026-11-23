@@ -197,6 +197,114 @@ impl Day<'_, '_> {
         men
     }
 
+    /// Decision 0222, rule 1: the reason of a hold with no source on it or
+    /// above it. Where a base of the side could be one by the island's test
+    /// (a base of the side not in the place's hex, or under "control an
+    /// island" in none of its places' hexes, that the staff may take, with
+    /// supply above its reserve), it names those bases; where none could, it
+    /// says the place lives on what it has, with its days of supply today,
+    /// and offers nothing.
+    fn no_source_reason(
+        &self,
+        hold: &Intent,
+        plan: &Plan,
+        base_text: &str,
+        fed_text: &str,
+        hex: sim_core::hex::Hex,
+    ) -> sim_core::command::Reason {
+        let today = self.today;
+        let (end, excluded) = self
+            .island_above(hold.id)
+            .unwrap_or_else(|| (hold.clone(), std::iter::once(hex).collect()));
+        let weighed = self.source_candidates(&end, &excluded);
+        let candidates: Vec<(BaseId, sim_core::fixed::Fixed)> = weighed
+            .iter()
+            .filter_map(|(base, test)| test.as_ref().ok().map(|above| (*base, *above)))
+            .collect();
+        // The bases that hold supply above their reserve and that the staff
+        // may not take, with the words why (an empty word: nothing above).
+        let taken: Vec<String> = weighed
+            .iter()
+            .filter_map(|(_, test)| test.as_ref().err())
+            .filter(|why| !why.is_empty())
+            .cloned()
+            .collect();
+        let opening = format!(
+            "{} holds {base_text} and no source is named on it or above it, so the staff forms no supply for it",
+            hold.id
+        );
+        if candidates.is_empty() {
+            let figure = self.view.days_of_supply(hex);
+            let days = match figure.and_then(|f| f.days) {
+                Some(days) => format!(
+                    "{} {} of supply today",
+                    crate::units::floor_whole(days),
+                    crate::units::days_word(crate::units::floor_whole(days))
+                ),
+                None => format!(
+                    "{} t of supply today and no planned use",
+                    figure.map_or(sim_core::fixed::Fixed::ZERO, |f| f.stock_t)
+                ),
+            };
+            let (none, said) = if taken.is_empty() {
+                let words = "no other base of the side holds supply above its reserve";
+                (words.to_string(), words.to_string())
+            } else {
+                let why = taken.join("; ");
+                (
+                    format!("no other base of the side can be the source: {why}"),
+                    format!("no other base of the side can be the source ({why})"),
+                )
+            };
+            return serving(hold, plan)
+                .evidence(format!("{} names no source", hold.id), today)
+                .evidence(none, today)
+                .evidence(format!("{fed_text}: {days}"), today)
+                .binding("no base of the side can be the source")
+                .worked(format!(
+                    "{opening}. {}, so {fed_text} lives on what it has: {days}.",
+                    capitalised(&said)
+                ))
+                .would_change("a base of the side with supply above its reserve")
+                .done();
+        }
+        let list = candidates
+            .iter()
+            .map(|(base, above)| {
+                format!(
+                    "{}, {} t of supply above its reserve",
+                    base_words(self.view, *base),
+                    above
+                )
+            })
+            .collect::<Vec<_>>()
+            .join("; ");
+        let names = candidates
+            .iter()
+            .map(|(base, _)| base_words(self.view, *base))
+            .collect::<Vec<_>>()
+            .join(", ");
+        let mut reason =
+            serving(hold, plan).evidence(format!("{} names no source", hold.id), today);
+        for (base, above) in &candidates {
+            reason = reason.evidence(
+                format!(
+                    "{} could be the source: {} t of supply above its reserve",
+                    base_words(self.view, *base),
+                    above
+                ),
+                today,
+            );
+        }
+        reason
+            .binding("no source in the forces limit")
+            .worked(format!(
+                "{opening}. A source may be named in the forces limit among the bases of the side that could be one: {list}."
+            ))
+            .would_change(format!("a source named among {names}"))
+            .done()
+    }
+
     /// Items 7 and 9: "keep supplied" formed under the hold, on a morning it
     /// has men at the base (the supply follows the men: a hold with no man
     /// there plays as it did).
@@ -237,15 +345,7 @@ impl Day<'_, '_> {
             .nearest_forces(hold.id)
             .and_then(|forces| forces.source);
         let Some(source) = source else {
-            let reason = serving(hold, plan)
-                .evidence(format!("{} names no source", hold.id), today)
-                .binding("no source in the forces limit")
-                .worked(format!(
-                    "{} holds {base_text} and its forces limit names no source, so the staff forms no supply for it: the commander may name a source in the forces limit, or state \"keep supplied\" himself.",
-                    hold.id
-                ))
-                .would_change("a source in the forces limit")
-                .done();
+            let reason = self.no_source_reason(hold, plan, &base_text, &fed_text, hex);
             self.target(in_scope).no_orders.push(reason);
             return;
         };
@@ -338,4 +438,12 @@ impl Day<'_, '_> {
             reason,
         });
     }
+}
+
+/// `words` with its first letter a capital.
+fn capitalised(words: &str) -> String {
+    let mut chars = words.chars();
+    chars.next().map_or_else(String::new, |first| {
+        first.to_uppercase().chain(chars).collect()
+    })
 }
