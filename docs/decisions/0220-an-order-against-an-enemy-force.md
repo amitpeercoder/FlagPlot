@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 22, 2026, on the designer's word
 
 Summary: Every order a commander can give is about a place or a base. None is about an enemy force, so a player who wants a force sunk must turn that into waters himself, and the order goes stale when the enemy moves. This adds two orders that name a contact: destroy it, and shadow it. The staff turns each into the tasks it already has, round where the contact is believed to be, and moves them as the reports move. The order says plainly when the contact is lost, when another report is taken to be the same force, and when it is taken for another kind of ship.
 
-Standing: Planned on Nov 22, 2026; amended on review; the scenario's statements written on Nov 23, 2026; not built.
+Standing: Built on Nov 23, 2026 (see "As built" at the end); planned on Nov 22, 2026; amended on review; the scenario's statements written on Nov 23, 2026.
 
 ## Why
 
@@ -340,3 +340,36 @@ Read from the tables above; the counter's check gave the hand calculation's numb
 6. **The counter stays in the repository,** at `scripts/0220-count/`, as the proofs' scripts are kept: it is the umpire's, reads export files, is read by no test, no build step and nothing that plays, and is run by hand. It is not run again as a gate; if `followed_force_knots` or R4 is ever questioned, it is the tool to ask.
 7. **Owed.** The review's sentence in "What the review found" is left as written, being the review's; this reading is the record of what the count found against it. No game here has a surface force running by night, the case the order says plainly it does not meet; the count says nothing of it.
 
+
+## As built (Nov 23, 2026)
+
+Built on the branch `destroy-shadow`, in three commits, to the statements of scenario 133 as written. Five points the build left to the architect are at the end.
+
+### What was built, and where
+
+- **The engine** (`sim-core`, `sim-data`, `sim-cli`). `command.rs`: the intent kind `DestroyForce { contact, distance, search_only }` (code 17, name `destroy_force`, addressed to the area, a root), `Followed` (what an order keeps: the contact, the hex, the day and pulse of the report, whether taken for a carrier, whether lost, kept in the command state by order), `FollowNotice` and the three notice kinds `Follows`, `ContactLost` and `ForceNotFound` (codes 13 to 15, names `follows`, `contact_lost`, `force_not_found`), the refusal `ContactNotHeld`, `report_pulse` (R2) and `report_distance_hexes` (R4), and the order's leave to pursue read as go, or stay where search only. `command/intake.rs`: the check of the contact, `kept_at_giving`, and `apply_follow_notice`, which writes the kept state on a notice and, on `force_not_found`, withdraws the order and everything beneath it with the notice's event as the cause (R8). `hash.rs` hashes the new state in its place and names it. `sim-data/src/scenario.rs` loads `intent_kind = "destroy_force"` with `contact`, `distance` and `search_only`, and refuses a `hex` or a `base` with them. `sim-cli/src/save.rs` and `export/` write the order, the notices and their `follow`.
+- **The staff** (`sim-staff`). `follow.rs`: `follow_forces`, run at dusk before every other pass, by priority then by number (R5): follow a fresh contact, else take another by the sort, the nearest and the lowest number, else end, else be lost; `waters_of`; the figures `followed_force_knots` 20, `lost_contact_days` 2 and `station_rechosen_hexes` 3 as constants of the doctrine. `deny.rs` serves the order as a deny with its waters read from `waters_of`, withdraws a base's task out of reach (R7), forms no strike for a shadow or a lost order. `targets.rs` puts its waters first; `carrier.rs` has a force close on a contact in them of any kind and take the order's own leave; `station.rs` chooses a free carrier force's station again (R10) and stations for no shadow and no lost order; `stand.rs` forms no stand task; `search.rs` flies a shadow's searches in both daylight pulses at any risk.
+- **The tools** (`sim-agent`, `sim-cli`, `sim-trial`). `commands.rs` and `staff_tools.rs`: `set_intent` takes `destroy_force`. `follow.rs` of `sim-agent`: the order's paper in `command_state` as `following`, and the staff's words for the three notices. `told.rs` and `session.rs`: the three stops. `sim-trial` finds the followed contact again by its place in the order of the picture's contacts in a dry run (R14). The schemas and tool descriptions are changed to say all of it.
+- **The rulebook.** Chapter 8 has "Destroying a force" after "Denying an area", with the kind in the intent list, the refusal "Contact not held", the pairs that may stand under it, the three notices and the tools; chapter 1 names the three stops; the glossary has "Destroy order", "Shadow order (search only)", "Followed force", "Taking (of a contact)" and "Lost contact (of a destroy order)"; `docs/commands.md` has the tool keys; `docs/rules/differences.md` has rows 78 to 82.
+
+### The versions taken
+
+State layout `flagplot-state-v60`; saved game version 28; rules label 33; doctrine `supply-60`; agent interface 55. (On `origin/main` they were v59, 27, 32, `supply-59` and 53, and stage D1 of decision 0223 took interface 54.)
+
+### The tool keys
+
+- `set_intent` with `intent_kind` `destroy_force`: `contact` (required, the number in the commander's picture), `distance` (required, whole hexes, 0 or more), `search_only` (optional, false where left out); no `hex`, no `base`.
+- `command_state`: an order of this kind has `contact`, `search_only` and `following`, its paper.
+- `run`: `stop_on`, a list of `follows_other_sort`, `contact_lost` and `force_not_found`, off unless asked; stops after the day, `stopped` `told`.
+- `advance`: the same three beside its five; stops at the end of the first pulse of the day the notice is handed in.
+- The notices `follows`, `contact_lost` and `force_not_found`, each with a `follow`; the refusal "Contact not held".
+
+### Open points, to the architect
+
+Each is a row of `docs/rules/differences.md`, marked "Open: to the architect". None changes a statement of scenario 133 as written.
+
+- **(a) Row 78.** Statement 42: a seat at a base or a task force has no `set_intent` (`NO_INTENTS_HERE`, decision 0138), so a seat below the area cannot give the order, which rule 12 and the statement have it do.
+- **(b) Row 79.** Rule 13, "kept at once": a command given inside a day is taken in at dusk (decision 0219), so the report is kept at dusk. It is the same as at once unless the contact is refreshed or dropped inside the day; a dropped one is refused at dusk.
+- **(c) Row 80.** R10: the staff withdraws the old station only where a new one can be chosen in the same hand-in, so a force for which none can be chosen keeps its station though it lies too far.
+- **(d) Row 81.** `follow_forces` works an order whose plan is not yet released, a draft, so a notice of following can be handed in before leave to launch is given.
+- **(e) Row 82.** The notices of lost and of ended, where the contact is no longer held, carry 0 ships and a kind taken from the sort the order kept (carrier or cruiser), not the count and kind last reported.
