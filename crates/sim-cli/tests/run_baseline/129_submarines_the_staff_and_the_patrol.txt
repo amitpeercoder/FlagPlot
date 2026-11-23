@@ -2,9 +2,9 @@ Scenario 129: The staff patrols waters with submarines
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash c63914068e5e67dd  54 events
-day   2  hash 9b4f5aebdfcab31b  14 events
-day   3  hash 16a96cf5031e5e08  2 events
+day   1  hash fb3238d61621280e  54 events
+day   2  hash df9d9d2ae12ae35c  14 events
+day   3  hash add0e28fd8dce3e7  2 events
 
 base:1 "Placeholder submarine base" (Japanese) at (12,0): 0 t of supply in stock, no airfield
 submarine:1 "Placeholder submarine 1" (Japanese): sound, at (5,0), on station at (5,0), 2 salvoes

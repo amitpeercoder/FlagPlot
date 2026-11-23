@@ -1,0 +1,161 @@
+# Scenario 130, the holds: two places held, one transport, one source.
+#
+# Decision 0222, rules 2 and 6 (as amended on review). Side A, the Allied side,
+# has three bases on the map of scenario 40a (S at (0,0), T at (5,0), U at
+# (0,5)): base 1 at S, the source, with 1,000 t of supply and 1,000 t of fuel;
+# base 2 at T and base 3 at U, each with 10 t of supply, each with 200 men
+# ashore (land units 1 and 2) on the defence, who eat 1 t a day. Task force 1
+# is one placeholder fast transport (ship 1, 30 t of cargo) stopped in port at
+# base 1: enough for one run at a time. No enemy, no aircraft and no random
+# draw.
+#
+# The Allied commander states "hold base 2" as intent 1 and "hold base 3" as
+# intent 2, each with a forces limit of task force 1 and source base 1, and
+# gives both leaves. Under each hold the staff forms "keep supplied" for its
+# base (intents 3 and 4 as the staff numbers them), and the one transport
+# serves the one first.
+#
+# The test builds its variants from the text of this file, at the marked lines
+# below: a rank on a hold, a rank on a supply, and for statement 5 a second
+# unit and a group of fighters at base 2. It runs on the frozen step 1
+# figures. The statements are in
+# tests/scenario_130_a_limit_binds_what_it_names.rs.
+#
+# Kept out of the loops that walk data/scenarios/*.toml by being in this
+# folder (decision 0072).
+#
+# PLACEHOLDER DATA. The bases, ships, units and map are invented. Every name
+# below says "Placeholder".
+
+name = "Placeholder scenario 130: Two holds, one transport"
+placeholder = true
+seed = 1942
+days = 14
+map = "../../map/placeholder_one_pool_two_hexes.toml"
+ship_classes = [
+    "../../reference/ship_classes.csv",
+    "../../reference/ship_classes_placeholder_fast_transport_cargo.csv",
+]
+port_sizes = "../../reference/port_sizes.csv"
+aircraft_types = "../../reference/aircraft_types.csv"
+search = "../../reference/search.toml"
+surface_combat = "../../reference/surface_combat.toml"
+ground = "../../reference/ground.toml"
+
+# S: the source. Port size 1, one berth.
+[[base]]
+id = 1
+name = "Placeholder base S, Allied"
+side = "allied"
+q = 0
+r = 0
+supply_t = 1000
+fuel_t = 1000
+
+# T: port size 0, by lighter.
+[[base]]
+id = 2
+name = "Placeholder base T, Allied"
+side = "allied"
+q = 5
+r = 0
+supply_t = 10
+
+# U: port size 0, by lighter.
+[[base]]
+id = 3
+name = "Placeholder base U, Allied"
+side = "allied"
+q = 0
+r = 5
+supply_t = 10
+
+# MARK: bases
+
+[[land_unit]]
+id = 1
+name = "Placeholder unit 1"
+side = "allied"
+men = 200
+q = 5
+r = 0
+posture = "defend"
+
+[[land_unit]]
+id = 2
+name = "Placeholder unit 2"
+side = "allied"
+men = 200
+q = 0
+r = 5
+posture = "defend"
+
+# MARK: units
+
+# Task force 1: one placeholder fast transport, stopped in port at base 1.
+[[task_force]]
+id = 1
+name = "Placeholder transport force 1"
+side = "allied"
+at_base = 1
+mission = "transport"
+
+[[ship]]
+id = 1
+name = "Placeholder fast transport 1"
+class = 12
+side = "allied"
+fuel_t = 500
+task_force = 1
+
+# MARK: forces
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_intent"
+intent = 1
+intent_kind = "hold"
+base = 2
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_intent"
+intent = 2
+intent_kind = "hold"
+base = 3
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_limit"
+limit = "forces"
+intent = 1
+task_forces = [1]
+source = 1
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_limit"
+limit = "forces"
+intent = 2
+task_forces = [1]
+source = 1
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_leave"
+leave = "prepare"
+given = true
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_leave"
+leave = "launch"
+given = true
+
+# MARK: commands

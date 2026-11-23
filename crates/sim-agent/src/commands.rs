@@ -63,12 +63,12 @@ use std::collections::BTreeSet;
 
 use serde_json::{json, Map, Value};
 use sim_core::command::{
-    Addressee, Awaited, Caution, CautionKind, ChainLink, CommandKind, Evidence, ForcesLimit,
-    HeldSetting, HoldTarget, IntentKind, InterruptCondition, InterruptRef, InterruptSetting,
-    Knowledge, Leave, Limit, Maker, NoticeBasis, NoticeKind, PlanId, PlanOutcome, PursueLeave,
-    PursuitFind, PursuitNotice, Reason, Risk, RunDays, RunSpec, Serves, StaffCommand,
-    StaffDecisions, StaffNotice, StaffOrder, StandingKind, StandingSubject, TargetsLimit, Want,
-    Wants,
+    Addressee, Awaited, Caution, CautionKind, ChainLink, CommandKind, Evidence, ForceKind,
+    ForcesLimit, HeldSetting, HoldTarget, IntentKind, InterruptCondition, InterruptRef,
+    InterruptSetting, Knowledge, Leave, Limit, LimitKind, Maker, NoticeBasis, NoticeKind, PlanId,
+    PlanOutcome, PursueLeave, PursuitFind, PursuitNotice, Reason, ReasonLimit, Risk, RunDays,
+    RunSpec, Serves, StaffCommand, StaffDecisions, StaffNotice, StaffOrder, StandingKind,
+    StandingSubject, TargetsLimit, Want, Wants,
 };
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
@@ -460,6 +460,14 @@ fn limit_to_json(limit: &Limit) -> Value {
                 body["land_units"] =
                     json!(limit.land_units.iter().map(|u| u.raw()).collect::<Vec<_>>());
             }
+            // Decision 0222, the architect's ruling A: left out when empty.
+            if !limit.none_of.is_empty() {
+                body["none_of"] = json!(limit.none_of.iter().map(|k| k.name()).collect::<Vec<_>>());
+            }
+            // Decision 0222, ruling I: left out when false.
+            if limit.in_place {
+                body["in_place"] = json!(true);
+            }
             // Decision 0218, 12: left out when empty.
             if !limit.submarines.is_empty() {
                 body["submarines"] =
@@ -545,6 +553,20 @@ fn limit_to_json(limit: &Limit) -> Value {
             }
             body
         }
+        // Decision 0222, rule 3: a forces limit or an area cleared is
+        // written with `cleared` true and nothing else.
+        Limit::ForcesCleared { intent } => json!({
+            "kind": "set_limit",
+            "limit": "forces",
+            "intent": intent.raw(),
+            "cleared": true,
+        }),
+        Limit::AreaCleared { intent } => json!({
+            "kind": "set_limit",
+            "limit": "area",
+            "intent": intent.raw(),
+            "cleared": true,
+        }),
         // Decision 0190: a limit cleared is written with no `kinds`.
         Limit::Targets { intent, targets } => {
             let mut body = json!({
@@ -563,6 +585,41 @@ fn limit_to_json(limit: &Limit) -> Value {
 
 fn limit_from_json(value: &Value) -> Result<Limit, String> {
     let intent = || small(value, "intent").map(IntentId::new);
+    // Decision 0222, rule 3: a forces limit or an area given with `cleared`
+    // true is cleared, and is given with nothing else.
+    let cleared = match value.get("cleared") {
+        None | Some(Value::Null) | Some(Value::Bool(false)) => false,
+        Some(Value::Bool(true)) => true,
+        Some(_) => return Err("\"cleared\" must be true or false".to_string()),
+    };
+    if cleared {
+        const NAMES: [&str; 9] = [
+            "in_place",
+            "none_of",
+            "ships",
+            "task_forces",
+            "air_groups",
+            "land_units",
+            "submarines",
+            "source",
+            "hexes",
+        ];
+        if let Some(key) = NAMES
+            .iter()
+            .find(|k| value.get(**k).is_some_and(|v| !v.is_null()))
+        {
+            return Err(format!(
+                "a limit given with \"cleared\" is given with nothing else, and \"{key}\" was given"
+            ));
+        }
+        return match text(value, "limit")? {
+            "forces" => Ok(Limit::ForcesCleared { intent: intent()? }),
+            "area" => Ok(Limit::AreaCleared { intent: intent()? }),
+            other => Err(format!(
+                "only a forces limit and an area are cleared with \"cleared\", not \"{other}\""
+            )),
+        };
+    }
     match text(value, "limit")? {
         "forces" => Ok(Limit::Forces {
             intent: intent()?,
@@ -588,6 +645,12 @@ fn limit_from_json(value: &Value) -> Result<Limit, String> {
                     .into_iter()
                     .map(SubmarineId::new)
                     .collect(),
+                none_of: none_of_from_json(value)?,
+                in_place: match value.get("in_place") {
+                    None | Some(Value::Null) => false,
+                    Some(Value::Bool(b)) => *b,
+                    Some(_) => return Err("\"in_place\" must be true or false".to_string()),
+                },
             },
         }),
         "area" => Ok(Limit::Area {
@@ -1195,6 +1258,10 @@ pub(crate) fn reason_to_json(reason: &Reason) -> Value {
     if !reason.cautions.is_empty() {
         body["cautions"] = Value::Array(reason.cautions.iter().map(caution_to_json).collect());
     }
+    // Decision 0222, rule 5: left out when the reason speaks of no limit.
+    if !reason.limits.is_empty() {
+        body["limits"] = Value::Array(reason.limits.iter().map(reason_limit_to_json).collect());
+    }
     body
 }
 
@@ -1226,6 +1293,53 @@ fn entity_from_handle(handle: &str) -> Result<EntityRef, String> {
         "land_unit" => Ok(EntityRef::LandUnit(LandUnitId::new(raw))),
         _ => Err(bad()),
     }
+}
+
+/// A forces limit's `none_of` (decision 0222, the architect's ruling A): a
+/// list of kinds by name, each of `ships`, `air_groups`, `land_units` and
+/// `submarines`; left out or null for none.
+fn none_of_from_json(value: &Value) -> Result<BTreeSet<ForceKind>, String> {
+    match value.get("none_of") {
+        None | Some(Value::Null) => Ok(BTreeSet::new()),
+        Some(Value::Array(items)) => items
+            .iter()
+            .map(|item| {
+                let name = item
+                    .as_str()
+                    .ok_or_else(|| "\"none_of\" lists kinds by name".to_string())?;
+                ForceKind::from_name(name).ok_or_else(|| {
+                    format!(
+                        "\"{name}\" is not a kind for \"none_of\": ships, air_groups, land_units or submarines"
+                    )
+                })
+            })
+            .collect(),
+        Some(_) => Err("\"none_of\" must be a list of kinds".to_string()),
+    }
+}
+
+/// A limit a reason speaks of (decision 0222, rule 5): `{kind, intent}`, or
+/// `{kind, base}` for a reserve.
+pub(crate) fn reason_limit_to_json(limit: &ReasonLimit) -> Value {
+    let mut body = json!({ "kind": limit.kind.name() });
+    if let Some(intent) = limit.intent {
+        body["intent"] = json!(intent.raw());
+    }
+    if let Some(base) = limit.base {
+        body["base"] = json!(base.raw());
+    }
+    body
+}
+
+fn reason_limit_from_json(value: &Value) -> Result<ReasonLimit, String> {
+    let name = text(value, "kind")?;
+    let kind = LimitKind::from_name(name)
+        .ok_or_else(|| format!("unknown kind of limit \"{name}\" in a reason"))?;
+    Ok(ReasonLimit {
+        kind,
+        intent: small_opt(value, "intent")?.map(IntentId::new),
+        base: small_opt(value, "base")?.map(BaseId::new),
+    })
 }
 
 fn caution_from_json(value: &Value) -> Result<Caution, String> {
@@ -1334,6 +1448,14 @@ fn reason_from_json(value: &Value) -> Result<Reason, String> {
             Some(_) => list(value, "cautions")?
                 .iter()
                 .map(caution_from_json)
+                .collect::<Result<_, String>>()?,
+        },
+        // A game saved before decision 0222 has none.
+        limits: match value.get("limits") {
+            None | Some(Value::Null) => Vec::new(),
+            Some(_) => list(value, "limits")?
+                .iter()
+                .map(reason_limit_from_json)
                 .collect::<Result<_, String>>()?,
         },
     })
@@ -1687,6 +1809,8 @@ mod tests {
                     submarines: [SubmarineId::new(6), SubmarineId::new(2)]
                         .into_iter()
                         .collect(),
+                    none_of: Default::default(),
+                    in_place: false,
                 },
             }),
             CommandKind::WithdrawIntent { intent },
@@ -1701,6 +1825,8 @@ mod tests {
                     land_units: BTreeSet::new(),
                     source: Some(BaseId::new(2)),
                     submarines: Default::default(),
+                    none_of: Default::default(),
+                    in_place: false,
                 },
             }),
             CommandKind::SetLimit(Limit::Forces {
@@ -1714,6 +1840,8 @@ mod tests {
                     land_units: BTreeSet::new(),
                     source: None,
                     submarines: Default::default(),
+                    none_of: Default::default(),
+                    in_place: false,
                 },
             }),
             CommandKind::SetLimit(Limit::Forces {
@@ -1727,6 +1855,8 @@ mod tests {
                         .collect(),
                     source: Some(BaseId::new(1)),
                     submarines: Default::default(),
+                    none_of: Default::default(),
+                    in_place: false,
                 },
             }),
             CommandKind::SetLimit(Limit::Area {
@@ -2227,6 +2357,8 @@ mod tests {
                     land_units: BTreeSet::new(),
                     source: Some(BaseId::new(2)),
                     submarines: Default::default(),
+                    none_of: Default::default(),
+                    in_place: false,
                 }
             }))
         );
@@ -2241,6 +2373,8 @@ mod tests {
                 land_units: BTreeSet::new(),
                 source: None,
                 submarines: Default::default(),
+                none_of: Default::default(),
+                in_place: false,
             },
         }));
         assert_eq!(
@@ -2324,6 +2458,7 @@ mod tests {
             would_change: vec!["a second ship in the pool".to_string()],
             answer_of: None,
             cautions: Vec::new(),
+            limits: Vec::new(),
         };
         let decisions = StaffDecisions {
             orders: vec![StaffOrder {

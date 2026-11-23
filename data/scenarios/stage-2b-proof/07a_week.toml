@@ -2805,6 +2805,9 @@ kind = "set_limit"
 limit = "forces"
 intent = 3
 task_forces = [1, 2]
+# The kinds this order named none of, in the language of decision 0222
+# (the architect's ruling B): "these carriers and nothing else".
+none_of = ["air_groups", "land_units", "submarines"]
 
 [[command]]
 day = 15
@@ -2908,6 +2911,11 @@ kind = "set_limit"
 limit = "forces"
 intent = 5
 task_forces = [3, 4]
+# The kinds this order named none of, in the language of decision 0222
+# (the architect's ruling B): "these carriers and nothing else".
+none_of = ["air_groups", "land_units", "submarines"]
+# The architect's ruling I: "these forces, from where they are".
+in_place = true
 
 [[command]]
 day = 15

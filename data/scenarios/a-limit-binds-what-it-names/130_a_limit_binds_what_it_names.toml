@@ -1,0 +1,193 @@
+# Scenario 130: a limit binds what it names.
+#
+# Decision 0222, rule 2 (as amended on review). Side A, the Allied side, has:
+#  - base H (base 1) at (10,2), a coast hex with a port, C's home port;
+#  - base B (base 2) at (-6,0), a coast hex, 4 hexes west of the nearest hex
+#    of the waters the deny names, holding a bomber group (group 4, 12
+#    placeholder dive bombers of a normal strike radius of 210 nm) and a group
+#    that searches (group 5, 6 placeholder carrier scouts, a search range of
+#    300 nm);
+#  - a carrier force C, task force 1: one placeholder carrier and two
+#    placeholder destroyers (ships 1 to 3, as in scenario 116), on the carrier
+#    mission, stopped at sea at (10,0), home port base H. Aboard the carrier
+#    are groups 1 to 3 (bombers, fighters, scouts);
+#  - a surface force S, task force 2: one placeholder destroyer (ship 4), on
+#    the surface combat mission, stopped at sea at (-12,6).
+# Side B, the Japanese side, has nothing. The Allied commander states "deny
+# the waters within 2 hexes of (0,0)" as intent 1 at the balanced risk by
+# default, with no forces limit, and gives both leaves.
+#
+# The test builds its variants from the text of this file, at the marked
+# lines below (limits and commands, a second order). It runs on the frozen
+# step 1 figures, with the classes of
+# data/reference/ship_classes_placeholder_scenario_116.csv and the aircraft of
+# data/reference/aircraft_types_placeholder_scenario_116.csv. The map is
+# data/map/placeholder_a_limit_binds_what_it_names.toml. The statements are in
+# tests/scenario_130_a_limit_binds_what_it_names.rs.
+#
+# Kept out of the loops that walk data/scenarios/*.toml by being in this
+# folder (decision 0072).
+#
+# PLACEHOLDER DATA. The bases, ships, aircraft, figures and map are invented.
+# Every name below says "Placeholder".
+
+name = "Placeholder scenario 130: A limit binds what it names"
+placeholder = true
+seed = 1942
+days = 4
+map = "../../map/placeholder_a_limit_binds_what_it_names.toml"
+ship_classes = [
+    "../../reference/ship_classes.csv",
+    "../../reference/ship_classes_placeholder_scenario_116.csv",
+]
+port_sizes = "../../reference/port_sizes.csv"
+aircraft_types = [
+    "../../reference/aircraft_types.csv",
+    "../../reference/aircraft_types_placeholder_scenario_116.csv",
+]
+search = "../../reference/search.toml"
+surface_combat = "../../reference/surface_combat.toml"
+air_combat = "../../reference/air_combat.toml"
+
+# Allied base H, C's home port.
+[[base]]
+id = 1
+name = "Placeholder base H"
+side = "allied"
+q = 10
+r = 2
+supply_t = 1000
+fuel_t = 5000
+
+# Allied base B, with the groups of the land-based air.
+[[base]]
+id = 2
+name = "Placeholder base B"
+side = "allied"
+q = -6
+r = 0
+supply_t = 1000
+fuel_t = 5000
+
+# MARK: bases
+
+# Task force 1, C.
+[[task_force]]
+id = 1
+name = "Placeholder carrier force C"
+side = "allied"
+q = 10
+r = 0
+mission = "carrier"
+home_port = 1
+
+[[ship]]
+id = 1
+name = "Placeholder carrier 1"
+class = 17
+side = "allied"
+fuel_t = 1000
+task_force = 1
+
+[[ship]]
+id = 2
+name = "Placeholder destroyer 2"
+class = 18
+side = "allied"
+fuel_t = 1000
+task_force = 1
+
+[[ship]]
+id = 3
+name = "Placeholder destroyer 3"
+class = 18
+side = "allied"
+fuel_t = 1000
+task_force = 1
+
+# Task force 2, S.
+[[task_force]]
+id = 2
+name = "Placeholder surface force S"
+side = "allied"
+q = -12
+r = 6
+mission = "surface_combat"
+
+[[ship]]
+id = 4
+name = "Placeholder destroyer 4"
+class = 18
+side = "allied"
+fuel_t = 1000
+task_force = 2
+
+# The groups aboard the carrier.
+[[air_group]]
+id = 1
+name = "Placeholder dive bombers 1"
+side = "allied"
+ship = 1
+aircraft_type = 5
+ready = 12
+
+[[air_group]]
+id = 2
+name = "Placeholder fighters 2"
+side = "allied"
+ship = 1
+aircraft_type = 4
+ready = 12
+
+[[air_group]]
+id = 3
+name = "Placeholder carrier scouts 3"
+side = "allied"
+ship = 1
+aircraft_type = 2
+ready = 6
+
+# The groups at base B.
+[[air_group]]
+id = 4
+name = "Placeholder dive bombers 4"
+side = "allied"
+base = 2
+aircraft_type = 5
+ready = 12
+
+[[air_group]]
+id = 5
+name = "Placeholder carrier scouts 5"
+side = "allied"
+base = 2
+aircraft_type = 2
+ready = 6
+
+# MARK: forces
+
+# The Allied commander's commands.
+[[command]]
+day = 1
+side = "allied"
+kind = "set_intent"
+intent = 1
+intent_kind = "deny"
+hex = [0, 0]
+distance = 2
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_leave"
+leave = "prepare"
+given = true
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_leave"
+leave = "launch"
+given = true
+
+# MARK: commands

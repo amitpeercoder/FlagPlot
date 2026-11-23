@@ -1132,6 +1132,8 @@ fn statement_10_a_force_named_in_the_forces_limit_is_used_though_it_has_an_oiler
         source: None,
         land_units: BTreeSet::new(),
         submarines: Default::default(),
+        none_of: Default::default(),
+        in_place: false,
     };
     let counted: Vec<u32> = counted_by_a_take(&view, Some(&limit))
         .task_forces

@@ -26,6 +26,7 @@
 //!   charge on the morning the run is routed; on a later morning on which
 //!   its charge is stopped at the source, its charge is cleared.
 
+use sim_core::command::LimitKind;
 use std::collections::BTreeSet;
 
 use sim_core::command::{Addressee, CommandState, Intent, Plan, Risk};
@@ -306,6 +307,8 @@ pub(crate) fn for_run(
                 .worked(worked)
                 .would_change("no threat held at balanced risk, or press risk")
                 .would_change("the escort held, short of fuel or away from the source")
+                .speaks_of(ctx.state, LimitKind::Forces)
+                .speaks_of(ctx.state, LimitKind::Risk)
                 .done();
             ForRun::Sails {
                 words: Some(format!("{threat_words}; {escort} escorts it.")),

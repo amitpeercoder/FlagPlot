@@ -4,8 +4,9 @@
 //!
 //! **Which forces** (rules 1 to 5). Each morning, before the ends are served,
 //! one pass over the commander's denies and neutralises whose plans are
-//! released and whose forces limit names no task force, in priority order and
-//! then by number. Each keeps the carrier task the staff chose for it
+//! released, in priority order and then by number; where the order's forces
+//! limit names task forces, only the carrier forces it names are stationed
+//! (decision 0222, rule 2). Each keeps the carrier task the staff chose for it
 //! where it stands, withdrawing it where the force is held or an intent
 //! higher in priority names the force; then takes every free carrier force
 //! for which it finds a station. A force is free where it is on the carrier
@@ -26,6 +27,7 @@
 //! strikes on ships, and under a neutralise its bombers' raid on the base
 //! (`crate::cover`). This module draws no random number and adds no state.
 
+use sim_core::command::LimitKind;
 use std::collections::{BTreeMap, BTreeSet};
 
 use sim_core::command::{
@@ -248,20 +250,32 @@ impl Day<'_, '_> {
             let Some(plan) = self.plan_of(&end) else {
                 continue;
             };
-            // Rule 1: a forces limit that names task forces uses only those,
-            // which keep their hex (decision 0125, 2).
-            if self
-                .state
-                .nearest_forces(end.id)
-                .is_some_and(|f| !f.task_forces.is_empty() || !f.ships.is_empty())
-            {
+            // Rule 1, as decision 0222, rule 2 has it: a forces limit that
+            // names task forces uses only those, and the staff stations each
+            // carrier force of them as it stations a free one; a limit that
+            // names none leaves the free forces to the staff.
+            // The architect's ruling I: a limit that says its task forces
+            // work from where they lie keeps the forming rule of decisions
+            // 0124 and 0125; the pass stations none of them.
+            if self.state.in_place_on_chain(end.id) {
                 continue;
             }
+            let bound = self.state.ship_limits_on_chain(end.id);
+            let named: Option<Vec<TaskForceId>> = (!bound.is_empty()).then(|| {
+                forces
+                    .iter()
+                    .filter(|f| bound.iter().all(|limit| force_inside(limit, f)))
+                    .map(|f| f.id)
+                    .collect()
+            });
             let in_scope = self.in_scope(end.id);
             let mut outcome = CarrierOutcome::default();
             self.keep_chosen(&end, &plan, in_scope, &mut taken, &mut outcome);
             for force in &forces {
                 let fid = force.id;
+                if named.as_ref().is_some_and(|named| !named.contains(&fid)) {
+                    continue;
+                }
                 if let Some(other) = taken.get(&fid).copied() {
                     if other == end.id {
                         continue;
@@ -277,6 +291,7 @@ impl Day<'_, '_> {
                                 end.id, end.id
                             ))
                             .would_change(format!("{} higher in priority than {other}", end.id))
+                            .speaks_of(&self.state, LimitKind::Priority)
                             .done();
                         self.target(in_scope).no_orders.push(reason);
                         outcome.words.push(words);
@@ -286,7 +301,12 @@ impl Day<'_, '_> {
                 let Some(aboard) = self.carrier_force_aboard(fid) else {
                     continue;
                 };
-                if let Err(why) = self.free_carrier(force) {
+                let free = if named.is_some() {
+                    self.named_carrier(&end, force)
+                } else {
+                    self.free_carrier(force)
+                };
+                if let Err(why) = free {
                     outcome.words.push(format!("{fid} is not free: {why}"));
                     continue;
                 }
@@ -309,6 +329,7 @@ impl Day<'_, '_> {
                             ))
                             .would_change("a bolder risk level")
                             .would_change("more fuel aboard")
+                            .speaks_of(&self.state, LimitKind::Risk)
                             .done();
                         self.target(in_scope).no_orders.push(reason);
                         if in_scope {
@@ -365,6 +386,27 @@ impl Day<'_, '_> {
             return Err(format!("{id} has a carrier task, {}", task.id));
         }
         let others = self.others_in_force();
+        self.may_take_force(force, &others)
+            .map_err(|why| why.replace(", an intent higher in priority", ", an intent in force"))
+    }
+
+    /// Decision 0222, rule 2: `Err(words)` where a carrier force the forces
+    /// limit of `end` names may not be stationed for it: it has a carrier
+    /// task (the commander's own among them), or the island's test of a force
+    /// the staff may take fails it over the intents in force of every other
+    /// tree.
+    fn named_carrier(&self, end: &Intent, force: &TaskForce) -> Result<(), String> {
+        let id = force.id;
+        if let Some(task) = self.state.intents_in_force().find(|i| {
+            i.kind.force() == Some(id) && matches!(i.kind, IntentKind::OperateCarriers { .. })
+        }) {
+            return Err(format!("{id} has a carrier task, {}", task.id));
+        }
+        let root = self.state.root_of(end.id);
+        let mut others = self.others_in_force();
+        others
+            .forces
+            .retain(|_, by| self.state.root_of(*by) != root);
         self.may_take_force(force, &others)
             .map_err(|why| why.replace(", an intent higher in priority", ", an intent in force"))
     }
@@ -813,8 +855,15 @@ impl Day<'_, '_> {
             Risk::Balanced => "at the balanced risk, with no candidate in fuel outside every circle, the station is the one least deep in danger, then with the least passage",
             Risk::Press => "at the press risk the station is the one with the least passage, in danger or out",
         };
+        // A force the order's forces limit names has its own words (decision
+        // 0222, the architect's ruling D).
+        let standing = if self.state.ship_limits_on_chain(end.id).is_empty() {
+            format!("{held} is free: on the carrier mission, with no task and named by nothing of the commander's, and not held")
+        } else {
+            format!("{held} is named in your order's forces limit: on the carrier mission, with no task, and not held")
+        };
         let words = format!(
-            "{held} is free: on the carrier mission, with no task and named by nothing of the commander's, and not held. The candidates, {} of them, are the hexes the force can reach by sea within {within_words} of {}; {choice}. The station is {where_words}: {passage_words}; {danger}{nearer}{submarines}. Fuel: {}.",
+            "{standing}. The candidates, {} of them, are the hexes the force can reach by sea within {within_words} of {}; {choice}. The station is {where_words}: {passage_words}; {danger}{nearer}{submarines}. Fuel: {}.",
             candidates.len(),
             aim.words,
             fuel.words
@@ -1080,6 +1129,7 @@ impl Day<'_, '_> {
         }
         let reason = builder
             .would_change(format!("{force} held, or named by another order"))
+            .speaks_of(&self.state, LimitKind::Risk)
             .cautions(chosen.cautions.clone())
             .done();
         self.target(in_scope).commands.push(StaffCommand {
@@ -1098,8 +1148,9 @@ impl Day<'_, '_> {
     }
 
     /// Rule 23: whether `task` is a carrier task the staff chose a station
-    /// for: its own, under a commander's deny or neutralise whose forces
-    /// limit names no task force.
+    /// for: its own, under a commander's deny or neutralise. Since decision
+    /// 0222, rule 2, that is every carrier task the staff forms under one,
+    /// for a free force and for a force its forces limit names alike.
     pub(crate) fn station_chosen(&self, task: &Intent) -> bool {
         if task.maker != Maker::Staff {
             return false;
@@ -1111,10 +1162,7 @@ impl Day<'_, '_> {
             parent.kind,
             IntentKind::Deny { .. } | IntentKind::Neutralise { .. }
         ) && parent.maker == Maker::Commander
-            && !self
-                .state
-                .nearest_forces(parent.id)
-                .is_some_and(|f| !f.task_forces.is_empty() || !f.ships.is_empty())
+            && !self.state.in_place_on_chain(parent.id)
     }
 }
 
@@ -1167,6 +1215,14 @@ pub(crate) fn way_ahead(path: &[Hex], station: Hex, knots: Fixed) -> Vec<Hex> {
         way.push(station);
     }
     way
+}
+
+/// Whether `force` is inside `limit`: listed, or with at least one ship and
+/// every ship listed (the engine's test of a task force inside a forces
+/// limit, as the side sees its own force).
+fn force_inside(limit: &sim_core::command::ForcesLimit, force: &TaskForce) -> bool {
+    limit.task_forces.contains(&force.id)
+        || (!force.ships.is_empty() && force.ships.iter().all(|s| limit.ships.contains(s)))
 }
 
 #[cfg(test)]

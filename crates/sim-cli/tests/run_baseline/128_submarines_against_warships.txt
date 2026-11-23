@@ -2,7 +2,7 @@ Scenario 128: A submarine lies in the way of a force
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash dabefde370b5156f  4 events
+day   1  hash ebbf8f9794a92fb6  4 events
 
 task_force:1 "Placeholder Allied force" (Allied): Idle at (5,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 ship:1 "Placeholder carrier": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 3000 t of fuel, 0 t of supply

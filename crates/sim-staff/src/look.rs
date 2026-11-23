@@ -40,6 +40,7 @@
 //! The doctrine reads the side's own view and its planned command state and
 //! nothing else.
 
+use sim_core::command::LimitKind;
 use std::collections::BTreeSet;
 
 use sim_core::belief::{GroundEstimate, GroundGrade};
@@ -469,6 +470,7 @@ impl Day<'_, '_> {
                         mission_words(group.mission)
                     ))
                     .would_change(format!("a count older than {asker} asks for"))
+                    .speaks_of_knowledge(&self.state, k.asked_from)
                     .done();
                 self.target(in_scope).orders.push(StaffOrder {
                     kind: OrderKind::AirGroup {
@@ -511,6 +513,7 @@ impl Day<'_, '_> {
             .would_change(format!(
                 "a count of {asker}'s grade, or a group that reaches the place"
             ))
+            .speaks_of_knowledge(&self.state, k.asked_from)
             .done();
         self.target(in_scope).orders.push(StaffOrder {
             kind: OrderKind::AirGroup {
@@ -597,6 +600,8 @@ impl Day<'_, '_> {
             source: None,
             land_units: BTreeSet::new(),
             submarines: Default::default(),
+            none_of: Default::default(),
+            in_place: false,
         });
         new_limit.land_units = now.clone();
         if let Some(found) = self.state.intents.get_mut(&task.id) {
@@ -616,6 +621,7 @@ impl Day<'_, '_> {
                 list(&now)
             ))
             .would_change("another count of the enemy at the place, or other units in the forces limit")
+            .speaks_of_on(LimitKind::Forces, task.id)
             .done();
         self.target(in_scope).commands.push(StaffCommand {
             kind: CommandKind::SetLimit(Limit::Forces {
@@ -681,6 +687,7 @@ impl Day<'_, '_> {
                         k.asks, plan.id
                     ))
                     .would_change(format!("a count of {asker}'s grade"))
+                    .speaks_of_knowledge(&self.state, k.asked_from)
                     .done();
                 self.target(in_scope).no_orders.push(reason);
                 return None;
@@ -700,6 +707,7 @@ impl Day<'_, '_> {
                         k.asks, plan.id
                     ))
                     .would_change(format!("a count of {asker}'s grade"))
+                    .speaks_of_knowledge(&self.state, k.asked_from)
                     .done();
                 self.target(in_scope).no_orders.push(reason);
                 return None;
@@ -741,6 +749,7 @@ impl Day<'_, '_> {
                         } else {
                             "a group that can look at the place, a count, or a bolder risk level"
                         })
+                        .speaks_of_knowledge(&self.state, k.asked_from)
                         .done();
                     if noticed {
                         self.target(in_scope).no_orders.push(reason);
@@ -782,6 +791,7 @@ impl Day<'_, '_> {
                                     }
                                 ))
                                 .would_change("more ships, a smaller count, or a bolder risk level")
+                                .speaks_of(&self.state, LimitKind::Risk)
                                 .done();
                             if noticed {
                                 self.target(in_scope).no_orders.push(reason);

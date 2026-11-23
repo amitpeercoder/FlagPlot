@@ -23,6 +23,7 @@
 //! - **No state** (rule 12): a lift is turned back when it is under way with
 //!   men aboard and the place is not a hex it is to act at on its route.
 
+use sim_core::command::LimitKind;
 use sim_core::command::PlanState;
 use sim_core::command::{Intent, NoticeBasis, NoticeKind, Plan, Risk, StaffNotice, StaffOrder};
 use sim_core::events::EventKind;
@@ -397,6 +398,7 @@ impl Day<'_, '_> {
                     } else {
                         "a ship of the lift, of its escort or a carrier of the side sunk, or preserve the force"
                     })
+                    .speaks_of(&self.state, LimitKind::Risk)
                     .done();
                 self.target(in_scope).no_orders.push(reason);
                 return Reading::Decided;
@@ -429,6 +431,7 @@ impl Day<'_, '_> {
                 .would_change(format!(
                     "no contact reported as a carrier within {DANGER_HEXES} hexes of the way in the last {CLEAR_PULSES} pulses, or press"
                 ))
+                .speaks_of(&self.state, LimitKind::Risk)
                 .done();
             self.target(in_scope).no_orders.push(reason);
             return Reading::Decided;
@@ -493,6 +496,7 @@ impl Day<'_, '_> {
                 .would_change(format!(
                     "no contact reported as a carrier within {DANGER_HEXES} hexes of the way in the last {CLEAR_PULSES} pulses, or press"
                 ))
+                .speaks_of(&self.state, LimitKind::Risk)
                 .done()));
         }
         Ok(if m.now.is_some() {
@@ -557,6 +561,7 @@ impl Day<'_, '_> {
                 .binding(format!("{} a threatened lift turns back", m.risk_words()))
                 .worked(format!("{worked} {extra}"))
                 .would_change("the danger passed for two mornings, or press")
+                .speaks_of(&self.state, LimitKind::Risk)
                 .done()
         };
         if in_scope {

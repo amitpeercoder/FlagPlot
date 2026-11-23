@@ -690,6 +690,131 @@ pub struct ForcesLimit {
     /// Submarines the intent may use (decision 0218, 12 and 34): only a
     /// "patrol" may use a boat. Added at the end.
     pub submarines: BTreeSet<SubmarineId>,
+    /// The kinds of which the staff may use nothing (decision 0222, the
+    /// architect's ruling A): each is bound, with nothing of it named. Never
+    /// read from an empty list. Added at the end.
+    pub none_of: BTreeSet<ForceKind>,
+    /// The task forces the limit names are used from the hex where each
+    /// lies, by the forming rule of decisions 0124 and 0125: the carrier pass
+    /// stations none of them (decision 0222, the architect's ruling I). Only
+    /// with a task force named. Added at the end.
+    pub in_place: bool,
+}
+
+/// A kind of force a forces limit binds (decision 0222, the architect's
+/// ruling A): ships and task forces are one kind. The source is not one.
+/// New kinds are added at the end; a code is never renumbered.
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+pub enum ForceKind {
+    Ships,
+    AirGroups,
+    LandUnits,
+    Submarines,
+}
+
+impl ForceKind {
+    /// Every kind, in code order.
+    pub const ALL: [ForceKind; 4] = [
+        ForceKind::Ships,
+        ForceKind::AirGroups,
+        ForceKind::LandUnits,
+        ForceKind::Submarines,
+    ];
+
+    /// The stable code of the kind. Never renumbered.
+    pub fn code(self) -> u8 {
+        match self {
+            ForceKind::Ships => 1,
+            ForceKind::AirGroups => 2,
+            ForceKind::LandUnits => 3,
+            ForceKind::Submarines => 4,
+        }
+    }
+
+    /// The kind's name, as `none_of` lists it.
+    pub fn name(self) -> &'static str {
+        match self {
+            ForceKind::Ships => "ships",
+            ForceKind::AirGroups => "air_groups",
+            ForceKind::LandUnits => "land_units",
+            ForceKind::Submarines => "submarines",
+        }
+    }
+
+    /// The kind named `name`, where there is one.
+    pub fn from_name(name: &str) -> Option<ForceKind> {
+        ForceKind::ALL.into_iter().find(|k| k.name() == name)
+    }
+}
+
+impl ForcesLimit {
+    /// Whether the limit names nothing of any kind: "use nothing", which
+    /// binds every kind (decision 0222, rule 3: not the same as no limit).
+    ///
+    /// A limit that lists a kind in `none_of` names something: it binds that
+    /// kind to nothing and leaves the kinds it neither names nor lists to the
+    /// staff (the architect's ruling A).
+    pub fn names_nothing(&self) -> bool {
+        self.ships.is_empty()
+            && self.task_forces.is_empty()
+            && self.air_groups.is_empty()
+            && self.source.is_none()
+            && self.land_units.is_empty()
+            && self.submarines.is_empty()
+            && self.none_of.is_empty()
+    }
+
+    /// Whether the limit lists `kind` in `none_of`: none of it may be used.
+    pub fn none_of(&self, kind: ForceKind) -> bool {
+        self.none_of.contains(&kind)
+    }
+
+    /// The first kind the limit both names a unit of and lists in `none_of`,
+    /// which intake refuses (the architect's ruling A).
+    pub fn named_and_none_of(&self) -> Option<ForceKind> {
+        ForceKind::ALL.into_iter().find(|kind| {
+            self.none_of(*kind)
+                && match kind {
+                    ForceKind::Ships => self.names_ships(),
+                    ForceKind::AirGroups => !self.air_groups.is_empty(),
+                    ForceKind::LandUnits => !self.land_units.is_empty(),
+                    ForceKind::Submarines => !self.submarines.is_empty(),
+                }
+        })
+    }
+
+    /// Whether the limit names a ship or a task force. Ships and task forces
+    /// are one kind: the pool of ships, a ship lying in a task force it
+    /// lists (decision 0222, rule 2).
+    pub fn names_ships(&self) -> bool {
+        !(self.ships.is_empty() && self.task_forces.is_empty())
+    }
+
+    /// Whether the limit binds the ships and task forces (decision 0222,
+    /// rule 2): it names one, or it names nothing at all.
+    pub fn binds_ships(&self) -> bool {
+        self.names_ships() || self.none_of(ForceKind::Ships) || self.names_nothing()
+    }
+
+    /// Whether the limit binds the air groups: it names one, or nothing.
+    pub fn binds_groups(&self) -> bool {
+        !self.air_groups.is_empty() || self.none_of(ForceKind::AirGroups) || self.names_nothing()
+    }
+
+    /// Whether the limit binds the land units: it names one, or nothing.
+    pub fn binds_land_units(&self) -> bool {
+        !self.land_units.is_empty() || self.none_of(ForceKind::LandUnits) || self.names_nothing()
+    }
+
+    /// Whether the limit binds the submarines: it names one, or nothing.
+    pub fn binds_submarines(&self) -> bool {
+        !self.submarines.is_empty() || self.none_of(ForceKind::Submarines) || self.names_nothing()
+    }
+
+    /// Whether the limit binds the source: it names one, or nothing.
+    pub fn binds_source(&self) -> bool {
+        self.source.is_some() || self.names_nothing()
+    }
 }
 
 /// Written as the derived form was, with the boats only where the limit
@@ -706,6 +831,11 @@ impl core::fmt::Debug for ForcesLimit {
         if !self.submarines.is_empty() {
             out.field("submarines", &self.submarines);
         }
+        // `in_place` (ruling I) and `none_of` are left out of the debug text (decision 0222, the
+        // architect's ruling B): a closed proof's file that lists it, to say
+        // in the new language the order it gave, writes the text it wrote,
+        // so every digest of its events is what it was. Its JSON, its words
+        // and its hash carry it.
         out.finish()
     }
 }
@@ -950,6 +1080,18 @@ pub enum Limit {
         intent: IntentId,
         targets: Option<TargetsLimit>,
     },
+    /// Decision 0222, rule 3: the forces limit set on the intent is cleared,
+    /// so that it binds no more and what it named is the staff's choice
+    /// again, read up the tree. Not the same as a forces limit that names
+    /// nothing, which is "use nothing". Added at the end.
+    ForcesCleared {
+        intent: IntentId,
+    },
+    /// Decision 0222, rule 3: the area set on the intent is cleared. Added at
+    /// the end.
+    AreaCleared {
+        intent: IntentId,
+    },
 }
 
 impl Limit {
@@ -965,7 +1107,9 @@ impl Limit {
             | Limit::WaitFor { intent, .. }
             | Limit::After { intent, .. }
             | Limit::Knowledge { intent, .. }
-            | Limit::Targets { intent, .. } => Some(*intent),
+            | Limit::Targets { intent, .. }
+            | Limit::ForcesCleared { intent }
+            | Limit::AreaCleared { intent } => Some(*intent),
             Limit::Reserve { .. } => None,
         }
     }
@@ -1690,6 +1834,53 @@ impl CommandState {
         found
     }
 
+    /// Whether the forces limits on `intent`'s chain are read as they bind
+    /// under a "take a place" or a "control an island" on it (decisions 0149
+    /// and 0151), by those orders' own rules; elsewhere each limit binds the
+    /// kinds it names (decision 0222, rule 2).
+    pub fn reads_as_bound(&self, intent: IntentId) -> bool {
+        self.take_place_on_chain(intent).is_some() || self.island_on_chain(intent).is_some()
+    }
+
+    /// The forces limits on `intent`'s chain that bind its ships and task
+    /// forces, nearest first (decision 0222, rule 2): each that names a ship
+    /// or a task force, or names nothing at all. Under a take or an island,
+    /// every limit on the chain, read as it binds. Empty where none does:
+    /// then the intent may use the ships its addressee commands.
+    pub fn ship_limits_on_chain(&self, intent: IntentId) -> Vec<Cow<'_, ForcesLimit>> {
+        let by_kind = !self.reads_as_bound(intent);
+        self.forces_on_chain(intent)
+            .into_iter()
+            .filter(|limit| !by_kind || limit.binds_ships())
+            .collect()
+    }
+
+    /// The nearest forces limit on `intent`'s chain that binds its ships and
+    /// task forces (decision 0222, rule 2); for a chain under a take or an
+    /// island, the nearest as it binds.
+    pub fn nearest_ship_limit(&self, intent: IntentId) -> Option<Cow<'_, ForcesLimit>> {
+        self.ship_limits_on_chain(intent).into_iter().next()
+    }
+
+    /// Whether the task forces named on `intent`'s chain work from where they
+    /// lie (decision 0222, the architect's ruling I): the nearest limit that
+    /// binds the ships says `in_place`.
+    pub fn in_place_on_chain(&self, intent: IntentId) -> bool {
+        self.nearest_ship_limit(intent)
+            .is_some_and(|limit| limit.in_place)
+    }
+
+    /// The source named on `intent`'s chain (decision 0222, rule 2): of the
+    /// nearest limit that binds the source, its own or above it. Under a take
+    /// or an island, the nearest limit's, as it binds.
+    pub fn source_on_chain(&self, intent: IntentId) -> Option<BaseId> {
+        let by_kind = !self.reads_as_bound(intent);
+        self.forces_on_chain(intent)
+            .into_iter()
+            .find(|limit| !by_kind || limit.binds_source())
+            .and_then(|limit| limit.source)
+    }
+
     /// Whether `intent` owns a plan of its own: a root, or an intent formed
     /// with one (see [`CommandState::forms_own_plan`]).
     pub fn owns_plan(&self, intent: &Intent) -> bool {
@@ -1790,12 +1981,20 @@ impl CommandState {
     /// bind the air groups (decision 0151, 4, the architect's addition on
     /// the build's finding): with none on the chain naming one, `None`, so
     /// an intent addressed to a base may use the groups based there.
+    ///
+    /// Elsewhere a limit binds the air groups only where it names one, or
+    /// names nothing at all (decision 0222, rule 2): a limit that names task
+    /// forces and no air group leaves the groups to the staff.
     pub fn groups_on_chain(&self, intent: IntentId) -> Option<BTreeSet<AirGroupId>> {
         let island = self.island_on_chain(intent).is_some();
-        let mut limits = self
-            .forces_on_chain(intent)
-            .into_iter()
-            .filter(|limit| !island || !limit.air_groups.is_empty());
+        let by_kind = !self.reads_as_bound(intent);
+        let mut limits = self.forces_on_chain(intent).into_iter().filter(|limit| {
+            if by_kind {
+                limit.binds_groups()
+            } else {
+                !island || !limit.air_groups.is_empty() || limit.none_of(ForceKind::AirGroups)
+            }
+        });
         let first = limits.next()?.air_groups.clone();
         Some(limits.fold(first, |allowed, limit| {
             allowed.intersection(&limit.air_groups).copied().collect()
@@ -1899,8 +2098,15 @@ impl CommandState {
     /// The land units the forces limits on `intent`'s chain allow: those
     /// named in every one of them (decision 0141). `None` where none is set
     /// on the chain.
+    ///
+    /// Outside a take and an island a limit binds the land units only where
+    /// it names one, or names nothing at all (decision 0222, rule 2).
     pub fn land_units_on_chain(&self, intent: IntentId) -> Option<BTreeSet<LandUnitId>> {
-        let mut limits = self.forces_on_chain(intent).into_iter();
+        let by_kind = !self.reads_as_bound(intent);
+        let mut limits = self
+            .forces_on_chain(intent)
+            .into_iter()
+            .filter(|limit| !by_kind || limit.binds_land_units());
         let first = limits.next()?.land_units.clone();
         Some(limits.fold(first, |allowed, limit| {
             allowed.intersection(&limit.land_units).copied().collect()
@@ -1912,11 +2118,14 @@ impl CommandState {
     /// least one boat. A limit naming no boat does not bind the boats, as a
     /// limit naming no air group does not bind the groups under an island.
     /// `None` where no limit on the chain names a boat.
+    ///
+    /// A limit that names nothing at all binds the boats too: "use nothing"
+    /// (decision 0222, rule 3).
     pub fn submarines_on_chain(&self, intent: IntentId) -> Option<BTreeSet<SubmarineId>> {
         let mut limits = self
             .forces_on_chain(intent)
             .into_iter()
-            .filter(|limit| !limit.submarines.is_empty());
+            .filter(|limit| limit.binds_submarines());
         let first = limits.next()?.submarines.clone();
         Some(limits.fold(first, |allowed, limit| {
             allowed.intersection(&limit.submarines).copied().collect()
@@ -1941,6 +2150,35 @@ impl CommandState {
         Some(areas.fold(first, |kept, area| {
             kept.intersection(area).copied().collect()
         }))
+    }
+
+    /// The intent on `intent`'s chain that a limit of `kind` a reason
+    /// speaks of is set on (decision 0222, rule 5): the nearest that sets
+    /// it, itself first; for the risk, the one whose risk binds (the least
+    /// bold, the nearest of those); where none sets it, the root of the
+    /// chain, the order the commander would set it on. For a reserve, which
+    /// is a base's, the root.
+    pub fn limit_set_on(&self, intent: IntentId, kind: LimitKind) -> IntentId {
+        let set = |found: &Intent| -> bool {
+            let limits = &found.limits;
+            match kind {
+                LimitKind::Forces => limits.forces.is_some(),
+                LimitKind::Source => limits.forces.as_ref().is_some_and(|f| f.source.is_some()),
+                LimitKind::Area => limits.area.is_some(),
+                LimitKind::Priority => limits.priority.is_some(),
+                LimitKind::Protected => !limits.protected.is_empty(),
+                LimitKind::Risk => limits.risk == Some(self.risk_read_up(intent)),
+                LimitKind::NotBefore => limits.not_before.is_some(),
+                LimitKind::WaitFor => limits.wait_for.is_some(),
+                LimitKind::After => limits.after.is_some(),
+                LimitKind::Knowledge => limits.knowledge.is_some(),
+                LimitKind::Targets => limits.targets.is_some(),
+                LimitKind::Reserve => false,
+            }
+        };
+        self.up_the_tree(intent)
+            .find(|found| set(found))
+            .map_or_else(|| self.root_of(intent), |found| found.id)
     }
 
     /// The intents in force directly under `intent`, by number.
@@ -2031,11 +2269,12 @@ impl CommandState {
 /// land units and the source taken from `fill` (decisions 0149, 3, and 0151,
 /// 4). The air groups are `own`'s.
 fn fill_unnamed(mut own: ForcesLimit, fill: &ForcesLimit) -> ForcesLimit {
-    if own.task_forces.is_empty() && own.ships.is_empty() {
+    // A kind listed in `none_of` is bound to nothing and is not filled.
+    if own.task_forces.is_empty() && own.ships.is_empty() && !own.none_of(ForceKind::Ships) {
         own.task_forces.clone_from(&fill.task_forces);
         own.ships.clone_from(&fill.ships);
     }
-    if own.land_units.is_empty() {
+    if own.land_units.is_empty() && !own.none_of(ForceKind::LandUnits) {
         own.land_units.clone_from(&fill.land_units);
     }
     if own.source.is_none() {
@@ -2343,6 +2582,12 @@ pub enum CommandRefusal {
     /// (decision 0218, 34: a forces limit or a hold names her). Added at the
     /// end.
     NotYourSubmarine(SubmarineId),
+    /// A forces limit names a unit of a kind and lists that kind in
+    /// `none_of` (decision 0222, the architect's ruling A). Added at the end.
+    NamedAndNoneOf(ForceKind),
+    /// A forces limit says `in_place` and names no task force (decision
+    /// 0222, the architect's ruling I). Added at the end.
+    InPlaceWithNoTaskForce,
 }
 
 impl core::fmt::Display for CommandRefusal {
@@ -2427,6 +2672,14 @@ impl core::fmt::Display for CommandRefusal {
             CommandRefusal::NotYourSubmarine(boat) => {
                 write!(f, "{boat} is not one of the side's submarines")
             }
+            CommandRefusal::InPlaceWithNoTaskForce => f.write_str(
+                "the forces limit says its task forces work from where they lie and names no task force",
+            ),
+            CommandRefusal::NamedAndNoneOf(kind) => write!(
+                f,
+                "the forces limit names {} and lists them in none_of: a kind is named or listed, not both",
+                kind.name()
+            ),
             CommandRefusal::NotACoastHex(hex) => write!(f, "{hex} is not a coast hex on the map"),
             CommandRefusal::NotLand(hex) => write!(f, "{hex} is not a hex of land on the map"),
             CommandRefusal::NoSuchIsland(number) => {
@@ -2502,10 +2755,14 @@ impl core::fmt::Display for CommandKind {
                             Count(limit.air_groups.len(), "air group", "air groups")
                         )?;
                     }
-                    match limit.source {
-                        Some(source) => write!(f, " from {source}"),
-                        None => Ok(()),
+                    if let Some(source) = limit.source {
+                        write!(f, " from {source}")?;
                     }
+                    // Decision 0222, the architect's ruling I.
+                    if limit.in_place {
+                        write!(f, ", from where they lie")?;
+                    }
+                    Ok(())
                 }
                 Limit::Area { intent, hexes } => {
                     write!(
@@ -2550,6 +2807,10 @@ impl core::fmt::Display for CommandKind {
                     Some(knowledge) => write!(f, "{intent} goes on {knowledge}"),
                     None => write!(f, "clear {intent}'s knowledge"),
                 },
+                Limit::ForcesCleared { intent } => {
+                    write!(f, "clear {intent}'s forces limit")
+                }
+                Limit::AreaCleared { intent } => write!(f, "clear {intent}'s area"),
                 Limit::Targets { intent, targets } => match targets {
                     Some(targets) => {
                         write!(
@@ -2835,7 +3096,7 @@ pub struct Evidence {
 /// It is handed in with its order or with the decision to give none,
 /// recorded as an event (`StaffReason`) and kept in the log, so it resolves
 /// by that event's number after its intent is replaced.
-#[derive(Clone, PartialEq, Eq, Debug, Default)]
+#[derive(Clone, PartialEq, Eq, Default)]
 pub struct Reason {
     pub serves: Serves,
     pub evidence: Vec<Evidence>,
@@ -2854,6 +3115,123 @@ pub struct Reason {
     /// or place it is of, said apart from the working (decision 0217, rules 4
     /// and 5). Added at the end.
     pub cautions: Vec<Caution>,
+    /// The limits the reason speaks of, where its words of what holds it
+    /// back or what would change it name a limit: each with its kind and the
+    /// intent it is set on (decision 0222, rule 5). Recorded with the reason;
+    /// it changes no state and no hash, and nothing reads it to decide.
+    /// Added at the end.
+    pub limits: Vec<ReasonLimit>,
+}
+
+/// Written as the derived form was, without the limits it speaks of
+/// (decision 0222, rule 5): the list is recorded beside the reason and changes
+/// nothing, so every digest of a reason's debug text, which the tests of
+/// earlier decisions keep, is what it was. The list is read from the field.
+impl core::fmt::Debug for Reason {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let mut out = f.debug_struct("Reason");
+        out.field("serves", &self.serves)
+            .field("evidence", &self.evidence)
+            .field("binding", &self.binding)
+            .field("worked", &self.worked)
+            .field("would_change", &self.would_change)
+            .field("answer_of", &self.answer_of)
+            .field("cautions", &self.cautions);
+        out.finish()
+    }
+}
+
+/// One limit a reason speaks of (decision 0222, rule 5): its kind, and the
+/// intent it is set on, which may be above the one the reason serves; for a
+/// base's reserve, the base and no intent. Where the limit is set nowhere on
+/// the chain, the intent is the one the commander would set it on: the root
+/// of the reason's chain.
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Debug)]
+pub struct ReasonLimit {
+    pub kind: LimitKind,
+    pub intent: Option<IntentId>,
+    pub base: Option<BaseId>,
+}
+
+/// The kind of a limit a reason speaks of (decision 0222, rule 5). The
+/// eleven limits, numbered as an amendment's hash numbers them, and the
+/// source of a forces limit, which the table shows apart. New kinds are
+/// added at the end; a code is never renumbered.
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+pub enum LimitKind {
+    Forces,
+    Area,
+    Priority,
+    Protected,
+    Reserve,
+    Risk,
+    NotBefore,
+    WaitFor,
+    After,
+    Knowledge,
+    Targets,
+    /// The source base of a forces limit.
+    Source,
+}
+
+impl LimitKind {
+    /// Every kind, in code order.
+    pub const ALL: [LimitKind; 12] = [
+        LimitKind::Forces,
+        LimitKind::Area,
+        LimitKind::Priority,
+        LimitKind::Protected,
+        LimitKind::Reserve,
+        LimitKind::Risk,
+        LimitKind::NotBefore,
+        LimitKind::WaitFor,
+        LimitKind::After,
+        LimitKind::Knowledge,
+        LimitKind::Targets,
+        LimitKind::Source,
+    ];
+
+    /// The stable code of the kind. Never renumbered.
+    pub fn code(self) -> u8 {
+        match self {
+            LimitKind::Forces => 1,
+            LimitKind::Area => 2,
+            LimitKind::Priority => 3,
+            LimitKind::Protected => 4,
+            LimitKind::Reserve => 5,
+            LimitKind::Risk => 6,
+            LimitKind::NotBefore => 7,
+            LimitKind::WaitFor => 8,
+            LimitKind::After => 9,
+            LimitKind::Knowledge => 10,
+            LimitKind::Targets => 11,
+            LimitKind::Source => 12,
+        }
+    }
+
+    /// The name of the kind, as `set_limit` names the limit, a saved game
+    /// and the agent write it.
+    pub fn name(self) -> &'static str {
+        match self {
+            LimitKind::Forces => "forces",
+            LimitKind::Area => "area",
+            LimitKind::Priority => "priority",
+            LimitKind::Protected => "protected",
+            LimitKind::Reserve => "reserve",
+            LimitKind::Risk => "risk",
+            LimitKind::NotBefore => "not_before",
+            LimitKind::WaitFor => "wait_for",
+            LimitKind::After => "after",
+            LimitKind::Knowledge => "knowledge",
+            LimitKind::Targets => "targets",
+            LimitKind::Source => "source",
+        }
+    }
+
+    /// The kind named `name`, where there is one.
+    pub fn from_name(name: &str) -> Option<LimitKind> {
+        LimitKind::ALL.into_iter().find(|k| k.name() == name)
+    }
 }
 
 /// A short statement of something a commander should weigh before he

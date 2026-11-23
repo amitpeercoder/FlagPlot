@@ -213,8 +213,11 @@ struct PreviewRecord {
     moment: (u32, Option<Pulse>),
     /// The side's revision when the preview was made.
     revision: u32,
-    /// The command as the tool read it, with the numbers the side wrote.
-    request: staffing::Request,
+    /// The command as the tool read it, with the numbers the side wrote,
+    /// and after it the limits given with it (decision 0222, rule 4): the
+    /// order and its limits are one preview, queued in this order or not
+    /// at all.
+    requests: Vec<staffing::Request>,
     /// The side's queued commands and the count of its queued orders when
     /// the preview was made, to say what was queued after it.
     commands: Vec<CommandKind>,
@@ -2338,13 +2341,14 @@ impl Session {
     /// commands of the script and the queued commands and orders of every
     /// seat handed in, and the first three steps of the day taken
     /// ([`World::at_staff_step`]). `queue` stands in for one seat's queued
-    /// commands and `extra` is one more command at the end of one side's.
+    /// commands and `extra` is more commands, in order, at the end of one
+    /// side's.
     /// Nothing outside this module may name a world, so every tool function
     /// is given a view of the copy and nothing else.
     fn preview_with(
         &self,
         queue: Option<(Side, &[CommandKind])>,
-        extra: Option<(Side, &CommandKind)>,
+        extra: Option<(Side, &[CommandKind])>,
     ) -> World {
         // While a day is open the copy is the state as it stands with the
         // open day treated as closed: no end of the day is resolved, and the
@@ -2369,8 +2373,8 @@ impl Session {
             // where the override holds a unit as the pulse would.
             world.submit_orders(side, state.queued_inside.clone());
         }
-        if let Some((side, command)) = extra {
-            world.submit_commands(side, vec![command.clone()]);
+        if let Some((side, commands)) = extra {
+            world.submit_commands(side, commands.to_vec());
         }
         world.at_staff_step()
     }
@@ -2554,44 +2558,67 @@ impl Session {
             next_intent,
             next_interrupt,
         )?;
-        self.queue_request(side, tool, request, queue, None)
+        self.queue_requests(side, tool, vec![request], queue, None)
     }
 
-    /// Takes a command read from a call (or from a preview) in after
-    /// `queue`, the commands queued before it, and queues it if the engine
-    /// would take it. `via` is the preview it was approved from.
-    fn queue_request(
+    /// Takes commands read from a call (or from a preview) in after `queue`,
+    /// the commands queued before them, and queues them, in order, if the
+    /// engine would take every one: all or none (decision 0222, rule 4).
+    /// `via` is the preview they were approved from. The answer is the first
+    /// command's, with `limits_queued` for those after it where a preview of
+    /// an order with limits is approved; where one is refused the answer is
+    /// its refusal, and says which of the batch it is.
+    fn queue_requests(
         &mut self,
         side: Side,
         tool: &str,
-        request: staffing::Request,
+        requests: Vec<staffing::Request>,
         queue: Vec<CommandKind>,
         via: Option<u32>,
     ) -> Result<Value, CallError> {
         // The script's commands of the side come first on the day, then the
-        // seat's: the new command is the one after both.
+        // seat's: the new commands are the ones after both.
         let day = self.command_day();
         let before = self.commands.get(&day).map_or(0, |list| {
             list.iter().filter(|(who, _)| *who == side).count()
         }) + queue.len();
-        let world = self.preview_with(Some((side, &queue)), Some((side, &request.kind)));
+        let kinds: Vec<CommandKind> = requests.iter().map(|r| r.kind.clone()).collect();
+        let world = self.preview_with(Some((side, &queue)), Some((side, &kinds)));
         let view = world.side_view(side);
-        let verdict = staffing::verdict(&view, before).ok_or_else(|| {
-            CallError::new("the command could not be checked: the game has no verdict on it")
-        })?;
+        let mut verdicts = Vec::new();
+        for i in 0..requests.len() {
+            verdicts.push(staffing::verdict(&view, before + i).ok_or_else(|| {
+                CallError::new("the command could not be checked: the game has no verdict on it")
+            })?);
+        }
+        let refused = verdicts.iter().position(Result::is_err);
         let state = self.seats.get_mut(&side).expect("both seats exist");
         let was = std::mem::replace(&mut state.commands, queue);
-        if verdict.is_ok() {
-            state.commands.push(request.kind.clone());
+        if refused.is_none() {
+            state.commands.extend(kinds);
         }
         let queued = state.commands.len();
         let changed = state.commands != was;
-        let mut out = staffing::command_answer(&view, &request, tool, &verdict, queued);
+        let shown = refused.unwrap_or(0);
+        let mut out =
+            staffing::command_answer(&view, &requests[shown], tool, &verdicts[shown], queued);
         if changed {
             self.bump(side);
         }
-        if let (Some(number), Some(map)) = (via, out.as_object_mut()) {
-            map.insert("preview".into(), json!(number));
+        if let Some(map) = out.as_object_mut() {
+            if let Some(number) = via {
+                map.insert("preview".into(), json!(number));
+            }
+            if requests.len() > 1 {
+                if refused.is_some() {
+                    map.insert(
+                        "of_batch".into(),
+                        json!({ "position": shown + 1, "size": requests.len() }),
+                    );
+                } else {
+                    map.insert("limits_queued".into(), json!(requests.len() - 1));
+                }
+            }
         }
         Ok(out)
     }
@@ -2617,29 +2644,99 @@ impl Session {
         };
         let mut rest = args.clone();
         rest.remove("command");
+        let limits = match rest.remove("limits") {
+            None | Some(Value::Null) => Vec::new(),
+            Some(Value::Array(list)) if command == "set_intent" => list,
+            Some(_) if command == "set_limit" => {
+                return Err(CallError::new(
+                    "\"limits\" is not an argument of preview for command set_limit: it is given with a set_intent",
+                ));
+            }
+            Some(_) => {
+                return Err(CallError::new(
+                    "\"limits\" must be a list of limits, each as set_limit takes one without \"intent\"",
+                ));
+            }
+        };
         let queue = self.seats[&side].commands.clone();
         let next_intent = {
             let world = self.preview_with(Some((side, &queue)), None);
             staffing::next_free_intent(&world.side_view(side), &queue)
         };
-        let request =
-            staffing::request(&self.world.side_view(side), command, &rest, next_intent, 0)?;
+        let mut requests = vec![staffing::request(
+            &self.world.side_view(side),
+            command,
+            &rest,
+            next_intent,
+            0,
+        )?];
+        if !limits.is_empty() {
+            let CommandKind::SetIntent { intent, .. } = &requests[0].kind else {
+                return Err(CallError::new("a preview of limits is of a set_intent"));
+            };
+            let intent = intent.raw();
+            for (i, limit) in limits.iter().enumerate() {
+                let Value::Object(body) = limit else {
+                    return Err(CallError::new(format!(
+                        "limits[{i}] must be an object, a limit as set_limit takes it without \"intent\""
+                    )));
+                };
+                if body.contains_key("intent") {
+                    return Err(CallError::new(format!(
+                        "limits[{i}]: \"intent\" is not an argument of a limit given with a set_intent: the limit is of that order"
+                    )));
+                }
+                if body.get("limit").and_then(Value::as_str) == Some("reserve") {
+                    return Err(CallError::new(format!(
+                        "limits[{i}]: a reserve is of a base, not of an order: give it with set_limit"
+                    )));
+                }
+                let mut body = body.clone();
+                body.insert("intent".into(), json!(intent));
+                requests.push(
+                    staffing::request(
+                        &self.world.side_view(side),
+                        "set_limit",
+                        &body,
+                        next_intent,
+                        0,
+                    )
+                    .map_err(|e| CallError {
+                        message: format!("limits[{i}]: {}", e.message),
+                        allowed: e.allowed,
+                    })?,
+                );
+            }
+        }
         let day = self.command_day();
         let before = self.commands.get(&day).map_or(0, |list| {
             list.iter().filter(|(who, _)| *who == side).count()
         }) + queue.len();
-        let with = self.preview_with(None, Some((side, &request.kind)));
-        let verdict = staffing::verdict(&with.side_view(side), before).ok_or_else(|| {
-            CallError::new("the command could not be checked: the game has no verdict on it")
-        })?;
-        if verdict.is_err() {
-            return Ok(staffing::command_answer(
-                &with.side_view(side),
-                &request,
-                "preview",
-                &verdict,
-                queue.len(),
-            ));
+        let kinds: Vec<CommandKind> = requests.iter().map(|r| r.kind.clone()).collect();
+        let with = self.preview_with(None, Some((side, &kinds)));
+        for (i, request) in requests.iter().enumerate() {
+            let verdict =
+                staffing::verdict(&with.side_view(side), before + i).ok_or_else(|| {
+                    CallError::new(
+                        "the command could not be checked: the game has no verdict on it",
+                    )
+                })?;
+            if verdict.is_err() {
+                let mut out = staffing::command_answer(
+                    &with.side_view(side),
+                    request,
+                    "preview",
+                    &verdict,
+                    queue.len(),
+                );
+                if let (true, Some(map)) = (requests.len() > 1, out.as_object_mut()) {
+                    map.insert(
+                        "of_batch".into(),
+                        json!({ "position": i + 1, "size": requests.len() }),
+                    );
+                }
+                return Ok(out);
+            }
         }
         let as_is = self.preview();
         let shown = self.previews.iter().filter(|p| p.side == side).count();
@@ -2650,7 +2747,8 @@ impl Session {
             &as_is.side_view(side),
             &with.side_view(side),
             staff,
-            &request,
+            &requests[0],
+            &requests[1..],
         );
         self.previews.push(PreviewRecord {
             number,
@@ -2658,7 +2756,7 @@ impl Session {
             day,
             moment: self.moment(),
             revision: self.revision(side),
-            request,
+            requests,
             commands: queue,
             orders: self.seats[&side].queued.len(),
         });
@@ -2666,7 +2764,7 @@ impl Session {
     }
 
     /// `approve` of a preview: queues exactly the command the preview
-    /// showed, if nothing was queued and no day resolved since (ruling 26).
+    /// showed, and the limits given with it, if nothing was queued and no day resolved since (ruling 26).
     fn approve_preview(
         &mut self,
         side: Side,
@@ -2706,8 +2804,8 @@ impl Session {
                 "preview {number} is not a preview you were shown"
             )));
         };
-        let (request, day, revision, moment) = (
-            record.request.clone(),
+        let (requests, day, revision, moment) = (
+            record.requests.clone(),
             record.day,
             record.revision,
             record.moment,
@@ -2756,13 +2854,13 @@ impl Session {
             let world = self.preview();
             return Ok(staffing::refused_answer(
                 &world.side_view(side),
-                &request,
+                &requests[0],
                 "approve",
                 reason,
                 queue.len(),
             ));
         }
-        self.queue_request(side, "approve", request, queue, Some(number))
+        self.queue_requests(side, "approve", requests, queue, Some(number))
     }
 
     // -----------------------------------------------------------------
@@ -2940,7 +3038,7 @@ impl Session {
                     return Err(CallError::new(format!("intent {raw} is withdrawn")));
                 }
                 let words = staffing::intent_words(&coming_view, held.kind);
-                (id, None, format!("intent {raw}, {words}"))
+                (id, Vec::new(), format!("intent {raw}, {words}"))
             }
             (None, Some(raw)) => {
                 let Some(record) = self
@@ -2962,14 +3060,23 @@ impl Session {
                         "preview {raw} is void: something was queued after it; preview it again"
                     )));
                 }
-                let command = record.request.kind.clone();
+                let command = record.requests[0].kind.clone();
+                let limits: Vec<CommandKind> = record.requests[1..]
+                    .iter()
+                    .map(|r| r.kind.clone())
+                    .collect();
                 let Some(id) = staffing::previewed_intent(&coming_view, &command) else {
                     return Err(CallError::new(format!(
                         "preview {raw} is of a limit on no intent: there is no intent to try"
                     )));
                 };
-                let words = command_words(&coming_view, &command);
-                (id, Some(command), format!("preview {raw}, {words}"))
+                let mut words = command_words(&coming_view, &command);
+                for limit in &limits {
+                    words = format!("{words}; {}", command_words(&coming_view, limit));
+                }
+                let mut draft = vec![command];
+                draft.extend(limits);
+                (id, draft, format!("preview {raw}, {words}"))
             }
             (None, None) => unreachable!("one of the two is given"),
         };
@@ -2992,7 +3099,7 @@ impl Session {
         };
         let queued = !in_force && standing.iter().any(&sets);
         // What the second trial would be of (decision 0181, amended 1).
-        let of = match &draft {
+        let of = match draft.first() {
             None if in_force => BesideOf::Withdrawn,
             None => BesideOf::WithoutIt,
             Some(CommandKind::SetIntent { .. }) if !in_force && !queued => BesideOf::WithoutIt,
@@ -3068,7 +3175,7 @@ impl Session {
                 }
             )
         });
-        let drafted = match &draft {
+        let drafted = match draft.first() {
             Some(CommandKind::SetIntent { intent, .. }) => Some(*intent),
             _ => None,
         };
@@ -3090,7 +3197,7 @@ impl Session {
                 course,
             )
         } else {
-            let mut course: Vec<CommandKind> = draft.iter().cloned().collect();
+            let mut course: Vec<CommandKind> = draft.to_vec();
             course.extend(leaves.iter().cloned());
             course.extend(settings(drafted, None));
             (standing.clone(), course)

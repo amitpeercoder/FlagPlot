@@ -672,3 +672,7 @@ path = "scenario_128_submarines_against_warships.rs"
 [[test]]
 name = "scenario_129_submarines_the_staff_and_the_patrol"
 path = "scenario_129_submarines_the_staff_and_the_patrol.rs"
+
+[[test]]
+name = "scenario_130_a_limit_binds_what_it_names"
+path = "scenario_130_a_limit_binds_what_it_names.rs"

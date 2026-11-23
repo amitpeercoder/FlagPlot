@@ -94,9 +94,15 @@
     },
     {
       "command": {
+        "in_place": true,
         "intent": 5,
         "kind": "set_limit",
         "limit": "forces",
+        "none_of": [
+          "air_groups",
+          "land_units",
+          "submarines"
+        ],
         "ships": [],
         "task_forces": [
           3,
@@ -368,92 +374,92 @@
       "hash": "3b3353e3ccc0e0d7"
     }
   ],
-  "doctrine_version": "supply-56",
+  "doctrine_version": "supply-57",
   "format": "flagplot-saved-game",
   "hashes": [
     {
       "day": 1,
-      "hash": "a1aba7ccc4576e23"
+      "hash": "bda40f945ea4d71e"
     },
     {
       "day": 2,
-      "hash": "eeec049c399801a3"
+      "hash": "ff65ee8c33fd3a16"
     },
     {
       "day": 3,
-      "hash": "c0960d0a1d205000"
+      "hash": "7cfba7986f5c7f79"
     },
     {
       "day": 4,
-      "hash": "972dbd1450e5daef"
+      "hash": "2ea77a9eca3cd1c2"
     },
     {
       "day": 5,
-      "hash": "e3d9fc00f518771c"
+      "hash": "227ec0b122d0209d"
     },
     {
       "day": 6,
-      "hash": "045ceff577e78159"
+      "hash": "05d622de8d619d60"
     },
     {
       "day": 7,
-      "hash": "fd5ea4a7415826eb"
+      "hash": "23585245e562a1ca"
     },
     {
       "day": 8,
-      "hash": "742151825da08a77"
+      "hash": "b4ff20d44bbd2da4"
     },
     {
       "day": 9,
-      "hash": "175b7de5ab9328ed"
+      "hash": "411a9e5fa025eb0c"
     },
     {
       "day": 10,
-      "hash": "b912371f45b47d38"
+      "hash": "f31b1b34aad9e169"
     },
     {
       "day": 11,
-      "hash": "8c798365a4a9e4f1"
+      "hash": "cba8437f335fbb14"
     },
     {
       "day": 12,
-      "hash": "20ddf73243c54a68"
+      "hash": "ebb694bbefc6caf3"
     },
     {
       "day": 13,
-      "hash": "02ed59904183e819"
+      "hash": "a9882afefaa8baac"
     },
     {
       "day": 14,
-      "hash": "53b80220400dcd2a"
+      "hash": "3e4b3309cc5666df"
     },
     {
       "day": 15,
-      "hash": "6caf88705d0678bd"
+      "hash": "953dc4ad800a700e"
     },
     {
       "day": 16,
-      "hash": "0fa1695854f6877e"
+      "hash": "cf782b6eae2bb3a7"
     },
     {
       "day": 17,
-      "hash": "9d15c6adc58923fb"
+      "hash": "7240bd0c1296f478"
     },
     {
       "day": 18,
-      "hash": "1bbd3a63822979b1"
+      "hash": "a40e05981ec0ccf4"
     },
     {
       "day": 19,
-      "hash": "a4eabfccd4277b3b"
+      "hash": "196bba08ffb22650"
     },
     {
       "day": 20,
-      "hash": "9fd2b510ace77491"
+      "hash": "dacc7c6c45ef93d8"
     },
     {
       "day": 21,
-      "hash": "8e6a09e937755e61"
+      "hash": "474849770ef0f524"
     }
   ],
   "orders": [
@@ -976,10 +982,10 @@
       "unit": "land_unit:17"
     }
   ],
-  "rules_version": 30,
+  "rules_version": 31,
   "scenario": {
     "file": "data/scenarios/second-proof/07m_model_week.toml",
-    "hash": "632c7d31c9cab8a1"
+    "hash": "d88d85d1b304bed6"
   },
   "seats": {
     "allied": "player",
@@ -1071,6 +1077,12 @@
                   "what": "the reading of day 21 is projected at 1105.335 t"
                 }
               ],
+              "limits": [
+                {
+                  "intent": 3,
+                  "kind": "area"
+                }
+              ],
               "serves": {
                 "intent": 3,
                 "level": "area",
@@ -1107,6 +1119,12 @@
                 {
                   "day": 15,
                   "what": "the reading of day 21 is projected at 1105.335 t"
+                }
+              ],
+              "limits": [
+                {
+                  "intent": 3,
+                  "kind": "area"
                 }
               ],
               "serves": {
@@ -1461,6 +1479,12 @@
                 "what": "base:8 (Landing at (2,-4)) could be the source: 218.8 t of supply above its reserve"
               }
             ],
+            "limits": [
+              {
+                "intent": 2,
+                "kind": "source"
+              }
+            ],
             "serves": {
               "intent": 2,
               "level": {
@@ -1503,6 +1527,12 @@
               {
                 "day": 15,
                 "what": "intent:2 may use no fighter group and no group that can search at base:4 (Tulagi)"
+              }
+            ],
+            "limits": [
+              {
+                "intent": 2,
+                "kind": "forces"
               }
             ],
             "serves": {
@@ -1555,6 +1585,12 @@
                 "what": "intent:6, the cover of base:1 (Lunga) from the air, with 4 group(s) at the base that the staff may order"
               }
             ],
+            "limits": [
+              {
+                "intent": 1,
+                "kind": "risk"
+              }
+            ],
             "serves": {
               "chain": [
                 {
@@ -1584,6 +1620,12 @@
               {
                 "day": 15,
                 "what": "intent:7, striking ships from base:1 (Lunga), with 7 group(s) at the base that the staff may order"
+              }
+            ],
+            "limits": [
+              {
+                "intent": 4,
+                "kind": "risk"
               }
             ],
             "serves": {
@@ -1652,6 +1694,12 @@
                   "what": "the reading of day 21 is projected at 1105.335 t"
                 }
               ],
+              "limits": [
+                {
+                  "intent": 3,
+                  "kind": "area"
+                }
+              ],
               "serves": {
                 "intent": 3,
                 "level": "area",
@@ -1684,6 +1732,12 @@
                 {
                   "day": 15,
                   "what": "its mission is rest"
+                }
+              ],
+              "limits": [
+                {
+                  "intent": 1,
+                  "kind": "risk"
                 }
               ],
               "serves": {
@@ -1726,6 +1780,12 @@
                 {
                   "day": 15,
                   "what": "its patrol share is 1"
+                }
+              ],
+              "limits": [
+                {
+                  "intent": 1,
+                  "kind": "risk"
                 }
               ],
               "serves": {
@@ -1771,6 +1831,12 @@
                   "what": "its mission is rest"
                 }
               ],
+              "limits": [
+                {
+                  "intent": 1,
+                  "kind": "risk"
+                }
+              ],
               "serves": {
                 "chain": [
                   {
@@ -1811,6 +1877,12 @@
                 {
                   "day": 15,
                   "what": "its patrol share is 1"
+                }
+              ],
+              "limits": [
+                {
+                  "intent": 1,
+                  "kind": "risk"
                 }
               ],
               "serves": {
@@ -1856,6 +1928,12 @@
                   "what": "its mission is rest"
                 }
               ],
+              "limits": [
+                {
+                  "intent": 1,
+                  "kind": "risk"
+                }
+              ],
               "serves": {
                 "chain": [
                   {
@@ -1896,6 +1974,12 @@
                 {
                   "day": 15,
                   "what": "its patrol share is 1"
+                }
+              ],
+              "limits": [
+                {
+                  "intent": 1,
+                  "kind": "risk"
                 }
               ],
               "serves": {
@@ -1941,6 +2025,12 @@
                   "what": "its mission is rest"
                 }
               ],
+              "limits": [
+                {
+                  "intent": 1,
+                  "kind": "risk"
+                }
+              ],
               "serves": {
                 "chain": [
                   {
@@ -1981,6 +2071,12 @@
                 {
                   "day": 15,
                   "what": "its patrol share is 1"
+                }
+              ],
+              "limits": [
+                {
+                  "intent": 1,
+                  "kind": "risk"
                 }
               ],
               "serves": {
@@ -2024,6 +2120,12 @@
                 {
                   "day": 15,
                   "what": "it has rest"
+                }
+              ],
+              "limits": [
+                {
+                  "intent": 4,
+                  "kind": "risk"
                 }
               ],
               "serves": {
@@ -2110,6 +2212,12 @@
                   "what": "it has rest"
                 }
               ],
+              "limits": [
+                {
+                  "intent": 4,
+                  "kind": "risk"
+                }
+              ],
               "serves": {
                 "chain": [
                   {
@@ -2192,6 +2300,12 @@
                 {
                   "day": 15,
                   "what": "it has rest"
+                }
+              ],
+              "limits": [
+                {
+                  "intent": 4,
+                  "kind": "risk"
                 }
               ],
               "serves": {
@@ -2277,6 +2391,12 @@
                   "what": "task_force:1 has the stance engage and a break-off level of 0.5"
                 }
               ],
+              "limits": [
+                {
+                  "intent": 5,
+                  "kind": "risk"
+                }
+              ],
               "serves": {
                 "intent": 5,
                 "level": {
@@ -2348,6 +2468,12 @@
                   "what": "its mission is rest"
                 }
               ],
+              "limits": [
+                {
+                  "intent": 5,
+                  "kind": "risk"
+                }
+              ],
               "serves": {
                 "intent": 5,
                 "level": {
@@ -2384,6 +2510,12 @@
                   "what": "its patrol share is 1"
                 }
               ],
+              "limits": [
+                {
+                  "intent": 5,
+                  "kind": "risk"
+                }
+              ],
               "serves": {
                 "intent": 5,
                 "level": {
@@ -2418,6 +2550,12 @@
                 {
                   "day": 15,
                   "what": "its mission is rest"
+                }
+              ],
+              "limits": [
+                {
+                  "intent": 5,
+                  "kind": "risk"
                 }
               ],
               "serves": {
@@ -2458,6 +2596,12 @@
                   "what": "it has no search arc"
                 }
               ],
+              "limits": [
+                {
+                  "intent": 5,
+                  "kind": "risk"
+                }
+              ],
               "serves": {
                 "intent": 5,
                 "level": {
@@ -2492,6 +2636,12 @@
                 {
                   "day": 15,
                   "what": "its mission is rest"
+                }
+              ],
+              "limits": [
+                {
+                  "intent": 5,
+                  "kind": "risk"
                 }
               ],
               "serves": {
@@ -2530,6 +2680,12 @@
                   "what": "its standing orders differ from the table"
                 }
               ],
+              "limits": [
+                {
+                  "intent": 5,
+                  "kind": "risk"
+                }
+              ],
               "serves": {
                 "intent": 5,
                 "level": {
@@ -2564,6 +2720,12 @@
                 {
                   "day": 15,
                   "what": "its mission is rest"
+                }
+              ],
+              "limits": [
+                {
+                  "intent": 5,
+                  "kind": "risk"
                 }
               ],
               "serves": {
@@ -2602,6 +2764,12 @@
                   "what": "its standing orders differ from the table"
                 }
               ],
+              "limits": [
+                {
+                  "intent": 5,
+                  "kind": "risk"
+                }
+              ],
               "serves": {
                 "intent": 5,
                 "level": {
@@ -2638,6 +2806,12 @@
                   "what": "its mission is rest"
                 }
               ],
+              "limits": [
+                {
+                  "intent": 5,
+                  "kind": "risk"
+                }
+              ],
               "serves": {
                 "intent": 5,
                 "level": {
@@ -2672,6 +2846,12 @@
                 {
                   "day": 15,
                   "what": "its standing orders differ from the table"
+                }
+              ],
+              "limits": [
+                {
+                  "intent": 5,
+                  "kind": "risk"
                 }
               ],
               "serves": {
@@ -2778,6 +2958,12 @@
                   "what": "the reading of day 18 is projected at 13.74 t"
                 }
               ],
+              "limits": [
+                {
+                  "intent": 3,
+                  "kind": "area"
+                }
+              ],
               "serves": {
                 "intent": 3,
                 "level": "area",
@@ -2816,6 +3002,12 @@
                 {
                   "day": 15,
                   "what": "the reading of day 18 is projected at 13.74 t"
+                }
+              ],
+              "limits": [
+                {
+                  "intent": 3,
+                  "kind": "area"
                 }
               ],
               "serves": {
@@ -3138,6 +3330,12 @@
                   "what": "task_force:3 is on the carrier mission with 2 carrier(s) afloat and 10 air group(s) aboard, and lies at (9,-19)"
                 }
               ],
+              "limits": [
+                {
+                  "intent": 5,
+                  "kind": "forces"
+                }
+              ],
               "serves": {
                 "intent": 5,
                 "level": "area",
@@ -3168,6 +3366,12 @@
                 {
                   "day": 15,
                   "what": "task_force:4 is on the carrier mission with 1 carrier(s) afloat and 2 air group(s) aboard, and lies at (7,-18)"
+                }
+              ],
+              "limits": [
+                {
+                  "intent": 5,
+                  "kind": "forces"
                 }
               ],
               "serves": {
@@ -3272,6 +3476,12 @@
                 "what": "intent:6, the cover of base:2 (Rabaul) from the air, with 2 group(s) at the base that the staff may order"
               }
             ],
+            "limits": [
+              {
+                "intent": 2,
+                "kind": "risk"
+              }
+            ],
             "serves": {
               "chain": [
                 {
@@ -3306,6 +3516,12 @@
               {
                 "day": 15,
                 "what": "the bombers that go can send 41 between them, against the 6 the balanced risk asks; the fighters can give 12 escorts (it goes without an escort if it must)"
+              }
+            ],
+            "limits": [
+              {
+                "intent": 1,
+                "kind": "risk"
               }
             ],
             "serves": {
@@ -3419,6 +3635,12 @@
                   "what": "the reading of day 18 is projected at 13.74 t"
                 }
               ],
+              "limits": [
+                {
+                  "intent": 3,
+                  "kind": "area"
+                }
+              ],
               "serves": {
                 "intent": 3,
                 "level": "area",
@@ -3451,6 +3673,12 @@
                 {
                   "day": 15,
                   "what": "its mission is rest"
+                }
+              ],
+              "limits": [
+                {
+                  "intent": 2,
+                  "kind": "risk"
                 }
               ],
               "serves": {
@@ -3493,6 +3721,12 @@
                 {
                   "day": 15,
                   "what": "its patrol share is 1"
+                }
+              ],
+              "limits": [
+                {
+                  "intent": 2,
+                  "kind": "risk"
                 }
               ],
               "serves": {
@@ -3538,6 +3772,12 @@
                   "what": "its mission is rest"
                 }
               ],
+              "limits": [
+                {
+                  "intent": 2,
+                  "kind": "risk"
+                }
+              ],
               "serves": {
                 "chain": [
                   {
@@ -3578,6 +3818,12 @@
                 {
                   "day": 15,
                   "what": "its patrol share is 1"
+                }
+              ],
+              "limits": [
+                {
+                  "intent": 2,
+                  "kind": "risk"
                 }
               ],
               "serves": {
@@ -3626,6 +3872,12 @@
                 {
                   "day": 15,
                   "what": "the bombers that go can send 41 between them, against the 6 the balanced risk asks; the fighters can give 12 escorts (it goes without an escort if it must)"
+                }
+              ],
+              "limits": [
+                {
+                  "intent": 1,
+                  "kind": "risk"
                 }
               ],
               "serves": {
@@ -3708,6 +3960,12 @@
                   "what": "task_force:3 has the stance engage and a break-off level of 0.5"
                 }
               ],
+              "limits": [
+                {
+                  "intent": 5,
+                  "kind": "risk"
+                }
+              ],
               "serves": {
                 "chain": [
                   {
@@ -3748,6 +4006,12 @@
                 {
                   "day": 15,
                   "what": "its mission is rest"
+                }
+              ],
+              "limits": [
+                {
+                  "intent": 5,
+                  "kind": "risk"
                 }
               ],
               "serves": {
@@ -3793,6 +4057,12 @@
                   "what": "its patrol share is 1"
                 }
               ],
+              "limits": [
+                {
+                  "intent": 5,
+                  "kind": "risk"
+                }
+              ],
               "serves": {
                 "chain": [
                   {
@@ -3834,6 +4104,12 @@
                 {
                   "day": 15,
                   "what": "its mission is rest"
+                }
+              ],
+              "limits": [
+                {
+                  "intent": 5,
+                  "kind": "risk"
                 }
               ],
               "serves": {
@@ -3879,6 +4155,12 @@
                   "what": "its standing orders differ from the table"
                 }
               ],
+              "limits": [
+                {
+                  "intent": 5,
+                  "kind": "risk"
+                }
+              ],
               "serves": {
                 "chain": [
                   {
@@ -3920,6 +4202,12 @@
                 {
                   "day": 15,
                   "what": "its mission is rest"
+                }
+              ],
+              "limits": [
+                {
+                  "intent": 5,
+                  "kind": "risk"
                 }
               ],
               "serves": {
@@ -3965,6 +4253,12 @@
                   "what": "its standing orders differ from the table"
                 }
               ],
+              "limits": [
+                {
+                  "intent": 5,
+                  "kind": "risk"
+                }
+              ],
               "serves": {
                 "chain": [
                   {
@@ -4006,6 +4300,12 @@
                 {
                   "day": 15,
                   "what": "its mission is rest"
+                }
+              ],
+              "limits": [
+                {
+                  "intent": 5,
+                  "kind": "risk"
                 }
               ],
               "serves": {
@@ -4051,6 +4351,12 @@
                   "what": "its patrol share is 1"
                 }
               ],
+              "limits": [
+                {
+                  "intent": 5,
+                  "kind": "risk"
+                }
+              ],
               "serves": {
                 "chain": [
                   {
@@ -4092,6 +4398,12 @@
                 {
                   "day": 15,
                   "what": "its mission is rest"
+                }
+              ],
+              "limits": [
+                {
+                  "intent": 5,
+                  "kind": "risk"
                 }
               ],
               "serves": {
@@ -4137,6 +4449,12 @@
                   "what": "its standing orders differ from the table"
                 }
               ],
+              "limits": [
+                {
+                  "intent": 5,
+                  "kind": "risk"
+                }
+              ],
               "serves": {
                 "chain": [
                   {
@@ -4178,6 +4496,12 @@
                 {
                   "day": 15,
                   "what": "its mission is rest"
+                }
+              ],
+              "limits": [
+                {
+                  "intent": 5,
+                  "kind": "risk"
                 }
               ],
               "serves": {
@@ -4223,6 +4547,12 @@
                   "what": "its standing orders differ from the table"
                 }
               ],
+              "limits": [
+                {
+                  "intent": 5,
+                  "kind": "risk"
+                }
+              ],
               "serves": {
                 "chain": [
                   {
@@ -4264,6 +4594,12 @@
                 {
                   "day": 15,
                   "what": "its mission is rest"
+                }
+              ],
+              "limits": [
+                {
+                  "intent": 5,
+                  "kind": "risk"
                 }
               ],
               "serves": {
@@ -4311,6 +4647,12 @@
                   "what": "it has no search arc"
                 }
               ],
+              "limits": [
+                {
+                  "intent": 5,
+                  "kind": "risk"
+                }
+              ],
               "serves": {
                 "chain": [
                   {
@@ -4352,6 +4694,12 @@
                 {
                   "day": 15,
                   "what": "its mission is rest"
+                }
+              ],
+              "limits": [
+                {
+                  "intent": 5,
+                  "kind": "risk"
                 }
               ],
               "serves": {
@@ -4397,6 +4745,12 @@
                   "what": "its standing orders differ from the table"
                 }
               ],
+              "limits": [
+                {
+                  "intent": 5,
+                  "kind": "risk"
+                }
+              ],
               "serves": {
                 "chain": [
                   {
@@ -4438,6 +4792,12 @@
                 {
                   "day": 15,
                   "what": "its mission is rest"
+                }
+              ],
+              "limits": [
+                {
+                  "intent": 5,
+                  "kind": "risk"
                 }
               ],
               "serves": {
@@ -4483,6 +4843,12 @@
                   "what": "its standing orders differ from the table"
                 }
               ],
+              "limits": [
+                {
+                  "intent": 5,
+                  "kind": "risk"
+                }
+              ],
               "serves": {
                 "chain": [
                   {
@@ -4526,6 +4892,12 @@
                   "what": "its mission is rest"
                 }
               ],
+              "limits": [
+                {
+                  "intent": 5,
+                  "kind": "risk"
+                }
+              ],
               "serves": {
                 "chain": [
                   {
@@ -4567,6 +4939,12 @@
                 {
                   "day": 15,
                   "what": "its patrol share is 1"
+                }
+              ],
+              "limits": [
+                {
+                  "intent": 5,
+                  "kind": "risk"
                 }
               ],
               "serves": {
@@ -4612,6 +4990,12 @@
                   "what": "its mission is rest"
                 }
               ],
+              "limits": [
+                {
+                  "intent": 5,
+                  "kind": "risk"
+                }
+              ],
               "serves": {
                 "chain": [
                   {
@@ -4653,6 +5037,12 @@
                 {
                   "day": 15,
                   "what": "its patrol share is 1"
+                }
+              ],
+              "limits": [
+                {
+                  "intent": 5,
+                  "kind": "risk"
                 }
               ],
               "serves": {
@@ -4735,6 +5125,12 @@
                   "what": "task_force:4 has the stance engage and a break-off level of 0.5"
                 }
               ],
+              "limits": [
+                {
+                  "intent": 5,
+                  "kind": "risk"
+                }
+              ],
               "serves": {
                 "chain": [
                   {
@@ -4775,6 +5171,12 @@
                 {
                   "day": 15,
                   "what": "its mission is rest"
+                }
+              ],
+              "limits": [
+                {
+                  "intent": 5,
+                  "kind": "risk"
                 }
               ],
               "serves": {
@@ -4820,6 +5222,12 @@
                   "what": "its patrol share is 1"
                 }
               ],
+              "limits": [
+                {
+                  "intent": 5,
+                  "kind": "risk"
+                }
+              ],
               "serves": {
                 "chain": [
                   {
@@ -4861,6 +5269,12 @@
                 {
                   "day": 15,
                   "what": "its mission is rest"
+                }
+              ],
+              "limits": [
+                {
+                  "intent": 5,
+                  "kind": "risk"
                 }
               ],
               "serves": {
@@ -4906,6 +5320,12 @@
                   "what": "its standing orders differ from the table"
                 }
               ],
+              "limits": [
+                {
+                  "intent": 5,
+                  "kind": "risk"
+                }
+              ],
               "serves": {
                 "chain": [
                   {
@@ -4947,6 +5367,12 @@
                 {
                   "day": 15,
                   "what": "its mission is rest"
+                }
+              ],
+              "limits": [
+                {
+                  "intent": 5,
+                  "kind": "risk"
                 }
               ],
               "serves": {
@@ -4992,6 +5418,12 @@
                 {
                   "day": 15,
                   "what": "it has no search arc"
+                }
+              ],
+              "limits": [
+                {
+                  "intent": 5,
+                  "kind": "risk"
                 }
               ],
               "serves": {
@@ -5174,6 +5606,12 @@
                 "what": "base:8 (Landing at (2,-4)) could be the source: 218.8 t of supply above its reserve"
               }
             ],
+            "limits": [
+              {
+                "intent": 2,
+                "kind": "source"
+              }
+            ],
             "serves": {
               "intent": 2,
               "level": {
@@ -5216,6 +5654,12 @@
               {
                 "day": 16,
                 "what": "intent:2 may use no fighter group and no group that can search at base:4 (Tulagi)"
+              }
+            ],
+            "limits": [
+              {
+                "intent": 2,
+                "kind": "forces"
               }
             ],
             "serves": {
@@ -5293,6 +5737,12 @@
                 "what": "intent:6, the cover of base:1 (Lunga) from the air, with 4 group(s) at the base that the staff may order"
               }
             ],
+            "limits": [
+              {
+                "intent": 1,
+                "kind": "risk"
+              }
+            ],
             "serves": {
               "chain": [
                 {
@@ -5322,6 +5772,12 @@
               {
                 "day": 16,
                 "what": "intent:7, striking ships from base:1 (Lunga), with 7 group(s) at the base that the staff may order"
+              }
+            ],
+            "limits": [
+              {
+                "intent": 4,
+                "kind": "risk"
               }
             ],
             "serves": {
@@ -5431,6 +5887,12 @@
                   "what": "its patrol share is 0.5"
                 }
               ],
+              "limits": [
+                {
+                  "intent": 1,
+                  "kind": "risk"
+                }
+              ],
               "serves": {
                 "chain": [
                   {
@@ -5472,6 +5934,12 @@
                 {
                   "day": 16,
                   "what": "its patrol share is 0.5"
+                }
+              ],
+              "limits": [
+                {
+                  "intent": 1,
+                  "kind": "risk"
                 }
               ],
               "serves": {
@@ -5517,6 +5985,12 @@
                   "what": "its patrol share is 0.5"
                 }
               ],
+              "limits": [
+                {
+                  "intent": 1,
+                  "kind": "risk"
+                }
+              ],
               "serves": {
                 "chain": [
                   {
@@ -5558,6 +6032,12 @@
                 {
                   "day": 16,
                   "what": "its patrol share is 0.5"
+                }
+              ],
+              "limits": [
+                {
+                  "intent": 1,
+                  "kind": "risk"
                 }
               ],
               "serves": {
@@ -5634,6 +6114,12 @@
                   "what": "its mission is search"
                 }
               ],
+              "limits": [
+                {
+                  "intent": 5,
+                  "kind": "risk"
+                }
+              ],
               "serves": {
                 "intent": 5,
                 "level": {
@@ -5670,6 +6156,12 @@
                   "what": "its standing orders differ from the table"
                 }
               ],
+              "limits": [
+                {
+                  "intent": 5,
+                  "kind": "risk"
+                }
+              ],
               "serves": {
                 "intent": 5,
                 "level": {
@@ -5704,6 +6196,12 @@
                 {
                   "day": 16,
                   "what": "its mission is naval strike"
+                }
+              ],
+              "limits": [
+                {
+                  "intent": 5,
+                  "kind": "risk"
                 }
               ],
               "serves": {
@@ -5744,6 +6242,12 @@
                   "what": "it has no search arc"
                 }
               ],
+              "limits": [
+                {
+                  "intent": 5,
+                  "kind": "risk"
+                }
+              ],
               "serves": {
                 "intent": 5,
                 "level": {
@@ -5777,6 +6281,12 @@
                 {
                   "day": 16,
                   "what": "task_force:2 has the stance engage and a break-off level of 0.5"
+                }
+              ],
+              "limits": [
+                {
+                  "intent": 8,
+                  "kind": "risk"
                 }
               ],
               "serves": {
@@ -5850,6 +6360,12 @@
                   "what": "its mission is rest"
                 }
               ],
+              "limits": [
+                {
+                  "intent": 8,
+                  "kind": "risk"
+                }
+              ],
               "serves": {
                 "intent": 8,
                 "level": {
@@ -5886,6 +6402,12 @@
                   "what": "its patrol share is 1"
                 }
               ],
+              "limits": [
+                {
+                  "intent": 8,
+                  "kind": "risk"
+                }
+              ],
               "serves": {
                 "intent": 8,
                 "level": {
@@ -5920,6 +6442,12 @@
                 {
                   "day": 16,
                   "what": "its mission is rest"
+                }
+              ],
+              "limits": [
+                {
+                  "intent": 8,
+                  "kind": "risk"
                 }
               ],
               "serves": {
@@ -5960,6 +6488,12 @@
                   "what": "it has no search arc"
                 }
               ],
+              "limits": [
+                {
+                  "intent": 8,
+                  "kind": "risk"
+                }
+              ],
               "serves": {
                 "intent": 8,
                 "level": {
@@ -5994,6 +6528,12 @@
                 {
                   "day": 16,
                   "what": "its mission is rest"
+                }
+              ],
+              "limits": [
+                {
+                  "intent": 8,
+                  "kind": "risk"
                 }
               ],
               "serves": {
@@ -6032,6 +6572,12 @@
                   "what": "its standing orders differ from the table"
                 }
               ],
+              "limits": [
+                {
+                  "intent": 8,
+                  "kind": "risk"
+                }
+              ],
               "serves": {
                 "intent": 8,
                 "level": {
@@ -6066,6 +6612,12 @@
                 {
                   "day": 16,
                   "what": "its mission is rest"
+                }
+              ],
+              "limits": [
+                {
+                  "intent": 8,
+                  "kind": "risk"
                 }
               ],
               "serves": {
@@ -6104,6 +6656,12 @@
                   "what": "its standing orders differ from the table"
                 }
               ],
+              "limits": [
+                {
+                  "intent": 8,
+                  "kind": "risk"
+                }
+              ],
               "serves": {
                 "intent": 8,
                 "level": {
@@ -6140,6 +6698,12 @@
                   "what": "its mission is rest"
                 }
               ],
+              "limits": [
+                {
+                  "intent": 8,
+                  "kind": "risk"
+                }
+              ],
               "serves": {
                 "intent": 8,
                 "level": {
@@ -6174,6 +6738,12 @@
                 {
                   "day": 16,
                   "what": "its standing orders differ from the table"
+                }
+              ],
+              "limits": [
+                {
+                  "intent": 8,
+                  "kind": "risk"
                 }
               ],
               "serves": {
@@ -6385,6 +6955,12 @@
                 "what": "intent:6, the cover of base:2 (Rabaul) from the air, with 2 group(s) at the base that the staff may order"
               }
             ],
+            "limits": [
+              {
+                "intent": 2,
+                "kind": "risk"
+              }
+            ],
             "serves": {
               "chain": [
                 {
@@ -6419,6 +6995,12 @@
               {
                 "day": 16,
                 "what": "the bombers that go can send 25 between them, against the 6 the balanced risk asks; the fighters can give 7 escorts (it goes without an escort if it must)"
+              }
+            ],
+            "limits": [
+              {
+                "intent": 1,
+                "kind": "risk"
               }
             ],
             "serves": {
@@ -6633,6 +7215,12 @@
                   "what": "plan:3 is released"
                 }
               ],
+              "limits": [
+                {
+                  "intent": 3,
+                  "kind": "area"
+                }
+              ],
               "serves": {
                 "intent": 3,
                 "level": "area",
@@ -6663,6 +7251,12 @@
                 {
                   "day": 16,
                   "what": "plan:3 is released"
+                }
+              ],
+              "limits": [
+                {
+                  "intent": 3,
+                  "kind": "area"
                 }
               ],
               "serves": {
@@ -6829,6 +7423,12 @@
                 "what": "base:8 (Landing at (2,-4)) could be the source: 218.8 t of supply above its reserve"
               }
             ],
+            "limits": [
+              {
+                "intent": 2,
+                "kind": "source"
+              }
+            ],
             "serves": {
               "intent": 2,
               "level": {
@@ -6871,6 +7471,12 @@
               {
                 "day": 17,
                 "what": "intent:2 may use no fighter group and no group that can search at base:4 (Tulagi)"
+              }
+            ],
+            "limits": [
+              {
+                "intent": 2,
+                "kind": "forces"
               }
             ],
             "serves": {
@@ -6948,6 +7554,12 @@
                 "what": "intent:6, the cover of base:1 (Lunga) from the air, with 4 group(s) at the base that the staff may order"
               }
             ],
+            "limits": [
+              {
+                "intent": 1,
+                "kind": "risk"
+              }
+            ],
             "serves": {
               "chain": [
                 {
@@ -6977,6 +7589,12 @@
               {
                 "day": 17,
                 "what": "intent:7, striking ships from base:1 (Lunga), with 7 group(s) at the base that the staff may order"
+              }
+            ],
+            "limits": [
+              {
+                "intent": 4,
+                "kind": "risk"
               }
             ],
             "serves": {
@@ -7128,6 +7746,12 @@
                   "what": "plan:3 is released"
                 }
               ],
+              "limits": [
+                {
+                  "intent": 3,
+                  "kind": "area"
+                }
+              ],
               "serves": {
                 "intent": 3,
                 "level": "area",
@@ -7158,6 +7782,12 @@
                 {
                   "day": 17,
                   "what": "plan:3 is released"
+                }
+              ],
+              "limits": [
+                {
+                  "intent": 3,
+                  "kind": "area"
                 }
               ],
               "serves": {
@@ -7191,6 +7821,12 @@
                 {
                   "day": 17,
                   "what": "its mission is naval strike"
+                }
+              ],
+              "limits": [
+                {
+                  "intent": 5,
+                  "kind": "risk"
                 }
               ],
               "serves": {
@@ -7232,6 +7868,12 @@
                   "what": "its arc is 240 to 330 at 397 nm"
                 }
               ],
+              "limits": [
+                {
+                  "intent": 5,
+                  "kind": "risk"
+                }
+              ],
               "serves": {
                 "amendment": 1,
                 "intent": 5,
@@ -7267,6 +7909,12 @@
                 {
                   "day": 17,
                   "what": "its mission is search"
+                }
+              ],
+              "limits": [
+                {
+                  "intent": 5,
+                  "kind": "risk"
                 }
               ],
               "serves": {
@@ -7338,6 +7986,12 @@
                   "what": "its mission is search"
                 }
               ],
+              "limits": [
+                {
+                  "intent": 8,
+                  "kind": "risk"
+                }
+              ],
               "serves": {
                 "amendment": 1,
                 "intent": 8,
@@ -7373,6 +8027,12 @@
                 {
                   "day": 17,
                   "what": "its standing orders differ from the table"
+                }
+              ],
+              "limits": [
+                {
+                  "intent": 8,
+                  "kind": "risk"
                 }
               ],
               "serves": {
@@ -7412,6 +8072,12 @@
                   "what": "its mission is naval strike"
                 }
               ],
+              "limits": [
+                {
+                  "intent": 8,
+                  "kind": "risk"
+                }
+              ],
               "serves": {
                 "amendment": 1,
                 "intent": 8,
@@ -7449,6 +8115,12 @@
                 {
                   "day": 17,
                   "what": "it has no search arc"
+                }
+              ],
+              "limits": [
+                {
+                  "intent": 8,
+                  "kind": "risk"
                 }
               ],
               "serves": {
@@ -7683,6 +8355,12 @@
                 "what": "intent:6, the cover of base:2 (Rabaul) from the air, with 2 group(s) at the base that the staff may order"
               }
             ],
+            "limits": [
+              {
+                "intent": 2,
+                "kind": "risk"
+              }
+            ],
             "serves": {
               "chain": [
                 {
@@ -7717,6 +8395,12 @@
               {
                 "day": 17,
                 "what": "the bombers that go can send 16 between them, against the 6 the balanced risk asks; the fighters can give 4 escorts (it goes without an escort if it must)"
+              }
+            ],
+            "limits": [
+              {
+                "intent": 1,
+                "kind": "risk"
               }
             ],
             "serves": {
@@ -7964,6 +8648,12 @@
                 "what": "base:8 (Landing at (2,-4)) could be the source: 218.8 t of supply above its reserve"
               }
             ],
+            "limits": [
+              {
+                "intent": 2,
+                "kind": "source"
+              }
+            ],
             "serves": {
               "intent": 2,
               "level": {
@@ -8006,6 +8696,12 @@
               {
                 "day": 18,
                 "what": "intent:2 may use no fighter group and no group that can search at base:4 (Tulagi)"
+              }
+            ],
+            "limits": [
+              {
+                "intent": 2,
+                "kind": "forces"
               }
             ],
             "serves": {
@@ -8083,6 +8779,12 @@
                 "what": "intent:6, the cover of base:1 (Lunga) from the air, with 4 group(s) at the base that the staff may order"
               }
             ],
+            "limits": [
+              {
+                "intent": 1,
+                "kind": "risk"
+              }
+            ],
             "serves": {
               "chain": [
                 {
@@ -8112,6 +8814,12 @@
               {
                 "day": 18,
                 "what": "intent:7, striking ships from base:1 (Lunga), with 7 group(s) at the base that the staff may order"
+              }
+            ],
+            "limits": [
+              {
+                "intent": 4,
+                "kind": "risk"
               }
             ],
             "serves": {
@@ -8248,6 +8956,12 @@
                   "what": "its mission is search"
                 }
               ],
+              "limits": [
+                {
+                  "intent": 5,
+                  "kind": "risk"
+                }
+              ],
               "serves": {
                 "amendment": 1,
                 "intent": 5,
@@ -8283,6 +8997,12 @@
                 {
                   "day": 18,
                   "what": "its mission is naval strike"
+                }
+              ],
+              "limits": [
+                {
+                  "intent": 5,
+                  "kind": "risk"
                 }
               ],
               "serves": {
@@ -8324,6 +9044,12 @@
                   "what": "it has no search arc"
                 }
               ],
+              "limits": [
+                {
+                  "intent": 5,
+                  "kind": "risk"
+                }
+              ],
               "serves": {
                 "amendment": 1,
                 "intent": 5,
@@ -8359,6 +9085,12 @@
                 {
                   "day": 18,
                   "what": "its mission is search"
+                }
+              ],
+              "limits": [
+                {
+                  "intent": 8,
+                  "kind": "risk"
                 }
               ],
               "serves": {
@@ -8398,6 +9130,12 @@
                   "what": "its mission is naval strike"
                 }
               ],
+              "limits": [
+                {
+                  "intent": 8,
+                  "kind": "risk"
+                }
+              ],
               "serves": {
                 "amendment": 1,
                 "intent": 8,
@@ -8435,6 +9173,12 @@
                 {
                   "day": 18,
                   "what": "it has no search arc"
+                }
+              ],
+              "limits": [
+                {
+                  "intent": 8,
+                  "kind": "risk"
                 }
               ],
               "serves": {
@@ -8669,6 +9413,12 @@
                 "what": "intent:6, the cover of base:2 (Rabaul) from the air, with 2 group(s) at the base that the staff may order"
               }
             ],
+            "limits": [
+              {
+                "intent": 2,
+                "kind": "risk"
+              }
+            ],
             "serves": {
               "chain": [
                 {
@@ -8703,6 +9453,12 @@
               {
                 "day": 18,
                 "what": "the bombers that go can send 0 between them, against the 6 the balanced risk asks; the fighters can give 1 escorts (it goes without an escort if it must)"
+              }
+            ],
+            "limits": [
+              {
+                "intent": 1,
+                "kind": "risk"
               }
             ],
             "serves": {
@@ -8877,6 +9633,12 @@
                   "what": "the bombers that go can send 0 between them, against the 6 the balanced risk asks; the fighters can give 1 escorts (it goes without an escort if it must)"
                 }
               ],
+              "limits": [
+                {
+                  "intent": 1,
+                  "kind": "risk"
+                }
+              ],
               "serves": {
                 "chain": [
                   {
@@ -8998,6 +9760,12 @@
                 "what": "base:8 (Landing at (2,-4)) could be the source: 218.8 t of supply above its reserve"
               }
             ],
+            "limits": [
+              {
+                "intent": 2,
+                "kind": "source"
+              }
+            ],
             "serves": {
               "intent": 2,
               "level": {
@@ -9040,6 +9808,12 @@
               {
                 "day": 19,
                 "what": "intent:2 may use no fighter group and no group that can search at base:4 (Tulagi)"
+              }
+            ],
+            "limits": [
+              {
+                "intent": 2,
+                "kind": "forces"
               }
             ],
             "serves": {
@@ -9117,6 +9891,12 @@
                 "what": "intent:6, the cover of base:1 (Lunga) from the air, with 4 group(s) at the base that the staff may order"
               }
             ],
+            "limits": [
+              {
+                "intent": 1,
+                "kind": "risk"
+              }
+            ],
             "serves": {
               "chain": [
                 {
@@ -9146,6 +9926,12 @@
               {
                 "day": 19,
                 "what": "intent:7, striking ships from base:1 (Lunga), with 7 group(s) at the base that the staff may order"
+              }
+            ],
+            "limits": [
+              {
+                "intent": 4,
+                "kind": "risk"
               }
             ],
             "serves": {
@@ -9282,6 +10068,12 @@
                   "what": "its mission is naval strike"
                 }
               ],
+              "limits": [
+                {
+                  "intent": 5,
+                  "kind": "risk"
+                }
+              ],
               "serves": {
                 "amendment": 1,
                 "intent": 5,
@@ -9321,6 +10113,12 @@
                   "what": "its arc is 250 to 340 at 397 nm"
                 }
               ],
+              "limits": [
+                {
+                  "intent": 5,
+                  "kind": "risk"
+                }
+              ],
               "serves": {
                 "amendment": 1,
                 "intent": 5,
@@ -9356,6 +10154,12 @@
                 {
                   "day": 19,
                   "what": "its mission is search"
+                }
+              ],
+              "limits": [
+                {
+                  "intent": 5,
+                  "kind": "risk"
                 }
               ],
               "serves": {
@@ -9395,6 +10199,12 @@
                   "what": "its mission is naval strike"
                 }
               ],
+              "limits": [
+                {
+                  "intent": 8,
+                  "kind": "risk"
+                }
+              ],
               "serves": {
                 "amendment": 1,
                 "intent": 8,
@@ -9430,6 +10240,12 @@
                 {
                   "day": 19,
                   "what": "its mission is search"
+                }
+              ],
+              "limits": [
+                {
+                  "intent": 8,
+                  "kind": "risk"
                 }
               ],
               "serves": {
@@ -9664,6 +10480,12 @@
                 "what": "intent:6, the cover of base:2 (Rabaul) from the air, with 2 group(s) at the base that the staff may order"
               }
             ],
+            "limits": [
+              {
+                "intent": 2,
+                "kind": "risk"
+              }
+            ],
             "serves": {
               "chain": [
                 {
@@ -9698,6 +10520,12 @@
               {
                 "day": 19,
                 "what": "the bombers that go can send 0 between them, against the 6 the balanced risk asks; the fighters can give 1 escorts (it goes without an escort if it must)"
+              }
+            ],
+            "limits": [
+              {
+                "intent": 1,
+                "kind": "risk"
               }
             ],
             "serves": {
@@ -9945,6 +10773,12 @@
                 "what": "base:8 (Landing at (2,-4)) could be the source: 218.8 t of supply above its reserve"
               }
             ],
+            "limits": [
+              {
+                "intent": 2,
+                "kind": "source"
+              }
+            ],
             "serves": {
               "intent": 2,
               "level": {
@@ -9987,6 +10821,12 @@
               {
                 "day": 20,
                 "what": "intent:2 may use no fighter group and no group that can search at base:4 (Tulagi)"
+              }
+            ],
+            "limits": [
+              {
+                "intent": 2,
+                "kind": "forces"
               }
             ],
             "serves": {
@@ -10064,6 +10904,12 @@
                 "what": "intent:6, the cover of base:1 (Lunga) from the air, with 4 group(s) at the base that the staff may order"
               }
             ],
+            "limits": [
+              {
+                "intent": 1,
+                "kind": "risk"
+              }
+            ],
             "serves": {
               "chain": [
                 {
@@ -10093,6 +10939,12 @@
               {
                 "day": 20,
                 "what": "intent:7, striking ships from base:1 (Lunga), with 7 group(s) at the base that the staff may order"
+              }
+            ],
+            "limits": [
+              {
+                "intent": 4,
+                "kind": "risk"
               }
             ],
             "serves": {
@@ -10229,6 +11081,12 @@
                   "what": "its mission is search"
                 }
               ],
+              "limits": [
+                {
+                  "intent": 5,
+                  "kind": "risk"
+                }
+              ],
               "serves": {
                 "amendment": 1,
                 "intent": 5,
@@ -10264,6 +11122,12 @@
                 {
                   "day": 20,
                   "what": "its mission is naval strike"
+                }
+              ],
+              "limits": [
+                {
+                  "intent": 5,
+                  "kind": "risk"
                 }
               ],
               "serves": {
@@ -10305,6 +11169,12 @@
                   "what": "its arc is 260 to 340 at 397 nm"
                 }
               ],
+              "limits": [
+                {
+                  "intent": 5,
+                  "kind": "risk"
+                }
+              ],
               "serves": {
                 "amendment": 1,
                 "intent": 5,
@@ -10342,6 +11212,12 @@
                   "what": "its mission is naval strike"
                 }
               ],
+              "limits": [
+                {
+                  "intent": 8,
+                  "kind": "risk"
+                }
+              ],
               "serves": {
                 "amendment": 1,
                 "intent": 8,
@@ -10377,6 +11253,12 @@
                 {
                   "day": 20,
                   "what": "its mission is search"
+                }
+              ],
+              "limits": [
+                {
+                  "intent": 8,
+                  "kind": "risk"
                 }
               ],
               "serves": {
@@ -10611,6 +11493,12 @@
                 "what": "intent:6, the cover of base:2 (Rabaul) from the air, with 2 group(s) at the base that the staff may order"
               }
             ],
+            "limits": [
+              {
+                "intent": 2,
+                "kind": "risk"
+              }
+            ],
             "serves": {
               "chain": [
                 {
@@ -10645,6 +11533,12 @@
               {
                 "day": 20,
                 "what": "the bombers that go can send 18 between them, against the 6 the balanced risk asks; the fighters can give 1 escorts (it goes without an escort if it must)"
+              }
+            ],
+            "limits": [
+              {
+                "intent": 1,
+                "kind": "risk"
               }
             ],
             "serves": {
@@ -10820,6 +11714,12 @@
                   "what": "the bombers that go can send 18 between them, against the 6 the balanced risk asks; the fighters can give 1 escorts (it goes without an escort if it must)"
                 }
               ],
+              "limits": [
+                {
+                  "intent": 1,
+                  "kind": "risk"
+                }
+              ],
               "serves": {
                 "chain": [
                   {
@@ -10941,6 +11841,12 @@
                 "what": "base:8 (Landing at (2,-4)) could be the source: 218.8 t of supply above its reserve"
               }
             ],
+            "limits": [
+              {
+                "intent": 2,
+                "kind": "source"
+              }
+            ],
             "serves": {
               "intent": 2,
               "level": {
@@ -10983,6 +11889,12 @@
               {
                 "day": 21,
                 "what": "intent:2 may use no fighter group and no group that can search at base:4 (Tulagi)"
+              }
+            ],
+            "limits": [
+              {
+                "intent": 2,
+                "kind": "forces"
               }
             ],
             "serves": {
@@ -11060,6 +11972,12 @@
                 "what": "intent:6, the cover of base:1 (Lunga) from the air, with 4 group(s) at the base that the staff may order"
               }
             ],
+            "limits": [
+              {
+                "intent": 1,
+                "kind": "risk"
+              }
+            ],
             "serves": {
               "chain": [
                 {
@@ -11089,6 +12007,12 @@
               {
                 "day": 21,
                 "what": "intent:7, striking ships from base:1 (Lunga), with 7 group(s) at the base that the staff may order"
+              }
+            ],
+            "limits": [
+              {
+                "intent": 4,
+                "kind": "risk"
               }
             ],
             "serves": {
@@ -11225,6 +12149,12 @@
                   "what": "its mission is naval strike"
                 }
               ],
+              "limits": [
+                {
+                  "intent": 5,
+                  "kind": "risk"
+                }
+              ],
               "serves": {
                 "amendment": 1,
                 "intent": 5,
@@ -11264,6 +12194,12 @@
                   "what": "its arc is 250 to 350 at 397 nm"
                 }
               ],
+              "limits": [
+                {
+                  "intent": 5,
+                  "kind": "risk"
+                }
+              ],
               "serves": {
                 "amendment": 1,
                 "intent": 5,
@@ -11299,6 +12235,12 @@
                 {
                   "day": 21,
                   "what": "its mission is search"
+                }
+              ],
+              "limits": [
+                {
+                  "intent": 5,
+                  "kind": "risk"
                 }
               ],
               "serves": {
@@ -11338,6 +12280,12 @@
                   "what": "its mission is search"
                 }
               ],
+              "limits": [
+                {
+                  "intent": 8,
+                  "kind": "risk"
+                }
+              ],
               "serves": {
                 "amendment": 1,
                 "intent": 8,
@@ -11373,6 +12321,12 @@
                 {
                   "day": 21,
                   "what": "its mission is naval strike"
+                }
+              ],
+              "limits": [
+                {
+                  "intent": 8,
+                  "kind": "risk"
                 }
               ],
               "serves": {
@@ -11605,6 +12559,12 @@
                 "what": "intent:6, the cover of base:2 (Rabaul) from the air, with 2 group(s) at the base that the staff may order"
               }
             ],
+            "limits": [
+              {
+                "intent": 2,
+                "kind": "risk"
+              }
+            ],
             "serves": {
               "chain": [
                 {
@@ -11639,6 +12599,12 @@
               {
                 "day": 21,
                 "what": "the bombers that go can send 0 between them, against the 6 the balanced risk asks; the fighters can give 1 escorts (it goes without an escort if it must)"
+              }
+            ],
+            "limits": [
+              {
+                "intent": 1,
+                "kind": "risk"
               }
             ],
             "serves": {
@@ -11813,6 +12779,12 @@
                   "what": "the bombers that go can send 0 between them, against the 6 the balanced risk asks; the fighters can give 1 escorts (it goes without an escort if it must)"
                 }
               ],
+              "limits": [
+                {
+                  "intent": 1,
+                  "kind": "risk"
+                }
+              ],
               "serves": {
                 "chain": [
                   {
@@ -11841,6 +12813,6 @@
       "side": "japanese"
     }
   ],
-  "state_version": "flagplot-state-v56",
-  "version": 24
+  "state_version": "flagplot-state-v57",
+  "version": 25
 }

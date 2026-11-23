@@ -186,8 +186,12 @@ pub const FORMAT: &str = "flagplot-saved-game";
 /// `answer_pursuit` (`task_force`, `contact`, `allow`), in a hand-in's
 /// notices an optional `"pursuit"` and in a hand-in's reasons an optional
 /// `"answer_of"` (a force number); its state version is v55. A game of an older
-/// version is refused, not converted.
-pub const VERSION: u32 = 24;
+/// version is refused, not converted. Version 25 (decision 0222) adds in
+/// `"commands"` a forces limit's `none_of` and, for a forces limit or an
+/// area, `cleared`, and in a hand-in's reasons an optional `"limits"`; its
+/// state version is v57. A game of an older version is refused, not
+/// converted.
+pub const VERSION: u32 = 25;
 
 pub type Script = BTreeMap<u32, Vec<(Side, OrderRequest)>>;
 
@@ -947,6 +951,8 @@ mod tests {
                             land_units: [sim_core::ids::LandUnitId::new(2)].into_iter().collect(),
                             source: Some(BaseId::new(1)),
                             submarines: Default::default(),
+                            none_of: Default::default(),
+                            in_place: false,
                         },
                     }),
                 ),
@@ -978,6 +984,11 @@ mod tests {
                             ]
                             .into_iter()
                             .collect(),
+                            // Decision 0222, the architect's ruling A.
+                            none_of: [sim_core::command::ForceKind::AirGroups]
+                                .into_iter()
+                                .collect(),
+                            in_place: false,
                         },
                     }),
                 ),
@@ -1276,6 +1287,7 @@ mod tests {
             would_change: vec!["a second ship in the pool".to_string()],
             answer_of: None,
             cautions: Vec::new(),
+            limits: Vec::new(),
         };
         // A reason that cites the commander's answer (decision 0214).
         let cited = Reason {
@@ -1454,7 +1466,7 @@ mod tests {
         .expect("writes");
         let written: Value = serde_json::from_str(&fs::read_to_string(&file).expect("reads"))
             .expect("the file is JSON");
-        assert_eq!(written["version"], 24);
+        assert_eq!(written["version"], 25);
         assert_eq!(written["doctrine_version"], sim_staff::DOCTRINE_VERSION);
         assert_eq!(written["commands"].as_array().expect("commands").len(), 36);
         assert_eq!(written["staff"].as_array().expect("staff").len(), 1);

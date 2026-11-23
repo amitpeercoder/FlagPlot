@@ -2,11 +2,11 @@ Placeholder scenario 82: How much must be known
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 2092318a83ef6749  31 events
-day   2  hash cc841bbff428dca4  15 events
-day   3  hash 1e6e2a4923088d0b  13 events
-day   4  hash 67ad500feaa2017b  16 events
-day   5  hash f5ea739462922074  13 events
+day   1  hash c2b70e1cc5fa3d60  31 events
+day   2  hash 149f4573b25e867b  15 events
+day   3  hash 4f0530fc88a83d48  13 events
+day   4  hash f25a243379a6998a  16 events
+day   5  hash 85266c17c4143531  13 events
 
 #1 D1 -         Allied the commander's command taken: set intent:1 to take the place at (4,0)
 #2 D1 -         Allied plan:1 drafted for intent:1  <- #1

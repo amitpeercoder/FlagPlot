@@ -169,8 +169,12 @@ pub const FORMAT: &str = "flagplot-agent";
 /// `stations` of `propose` and `preview` for a patrol intent. 49 adds to
 /// `preview`'s `with_change` the proposal's `tree`, `would_hand_in` and
 /// `reason`, as `propose` gives them for an intent in force, so that a draft
-/// is read in the shape of a plan (decision 0221, the staff's reading).
-pub const VERSION: u32 = 49;
+/// is read in the shape of a plan (decision 0221, the staff's reading). 50
+/// adds decision 0222: `preview` of a `set_intent` takes its `limits` and
+/// `approve` of that preview queues them with it; `set_limit` takes `cleared`
+/// for a forces limit or an area and `none_of` on a forces limit; a reason
+/// gains `limits`.
+pub const VERSION: u32 = 50;
 
 /// The answer to a question about something the side does not know of: a
 /// unit of the enemy, a number that does not exist, an event the side may not

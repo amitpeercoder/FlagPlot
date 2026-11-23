@@ -21,6 +21,7 @@
 //! nothing else. "Once" is read from the side's own events: a notice of the
 //! kind already handed in for the plan is not handed in again.
 
+use sim_core::command::LimitKind;
 use std::collections::{BTreeMap, BTreeSet};
 
 use sim_core::command::{
@@ -490,6 +491,7 @@ impl Day<'_, '_> {
                         "{force_id} is to land at {hex} with {roster_words}: the staff gives it the landing order with that roster.{left_words}"
                     ))
                     .would_change("another hex, or other units in the forces limit")
+                    .speaks_of(&self.state, LimitKind::Forces)
                     .done();
                 orders.push(StaffOrder {
                     kind: OrderKind::TaskForce {
@@ -579,6 +581,7 @@ impl Day<'_, '_> {
                 .evidence(format!("the risk is {risk_text}, with {date_text}"), today)
                 .worked(format!("{state_words}; {why}: the staff {verb}."))
                 .would_change("another risk level or date, or the unit's experience")
+                .speaks_of(&self.state, LimitKind::Risk)
                 .done();
             orders.push(StaffOrder {
                 kind: OrderKind::LandUnit {
@@ -752,6 +755,7 @@ impl Day<'_, '_> {
                         binds.words()
                     ))
                     .would_change("a later date, a bolder risk level, or other units")
+                    .speaks_of(&self.state, LimitKind::Risk)
                     .done();
                 self.notice(in_scope, reason, NoticeKind::Late, plan);
             }
@@ -766,6 +770,7 @@ impl Day<'_, '_> {
                     binds.words()
                 ))
                 .would_change("another risk level or date")
+                .speaks_of(&self.state, LimitKind::Risk)
                 .done();
             self.target(in_scope).no_orders.push(reason);
         }

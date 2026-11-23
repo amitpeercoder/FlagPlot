@@ -15,6 +15,7 @@
 //! Where a cover of the base is in force no search task is formed (rule 13):
 //! the cover's arc takes the waters as threats (`crate::air`).
 
+use sim_core::command::LimitKind;
 use sim_core::command::{Intent, IntentKind, Risk, StaffOrder};
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
@@ -367,6 +368,7 @@ impl Day<'_, '_> {
                                         mission_words(m.mission)
                                     ))
                                     .would_change("a lower fatigue, or a bolder risk level")
+                                    .speaks_of(&self.state, LimitKind::Risk)
                                     .done(),
                             );
                         }
@@ -386,6 +388,7 @@ impl Day<'_, '_> {
                                         mission_words(m.mission)
                                     ))
                                     .would_change("a fatigue above the level")
+                                    .speaks_of(&self.state, LimitKind::Risk)
                                     .done(),
                             );
                         }
@@ -409,6 +412,7 @@ impl Day<'_, '_> {
                                         if once { "on" } else { "off" }
                                     ))
                                     .would_change("a different risk level")
+                                    .speaks_of(&self.state, LimitKind::Risk)
                                     .done(),
                             );
                         }
@@ -465,6 +469,7 @@ impl Day<'_, '_> {
         }
         let intent_words = format!("{}, searching the waters from {base_text}", task.id);
         let waiting = self.waiting_note(task, base);
+        let risk_on = self.state.limit_set_on(task.id, LimitKind::Risk);
         let out = self.target(in_scope);
         out.orders.extend(orders);
         if !unordered.is_empty() || members.is_empty() {
@@ -489,6 +494,7 @@ impl Day<'_, '_> {
                     arc_words(&arc)
                 ))
                 .would_change("a group whose fatigue or mission differs from what the doctrine wants")
+                .speaks_of_on(LimitKind::Risk, risk_on)
                 .done();
             out.no_orders.push(reason);
         }

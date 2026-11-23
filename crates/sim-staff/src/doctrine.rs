@@ -34,8 +34,8 @@
 
 use sim_core::command::{
     CommandKind, CommandState, Committed, Displacement, Hold, HoldTarget, Intent, IntentKind,
-    Leave, NoticeBasis, NoticeKind, Plan, PlanId, PlanOutcome, PlanState, Reason, Risk, RunSpec,
-    Shortfall, StaffDecisions,
+    Leave, LimitKind, NoticeBasis, NoticeKind, Plan, PlanId, PlanOutcome, PlanState, Reason, Risk,
+    RunSpec, Shortfall, StaffDecisions,
 };
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
@@ -212,6 +212,8 @@ pub(crate) fn serve(
                         intent.id
                     ))
                     .would_change("a forces limit naming ships and a source base")
+                .speaks_of(state, LimitKind::Forces)
+                .speaks_of(state, LimitKind::Source)
                     .done(),
             );
             return Served::default();
@@ -298,6 +300,7 @@ pub(crate) fn serve(
                 .binding("the pool has no ship afloat")
                 .worked(text)
                 .would_change("a ship afloat in the forces limit")
+                .speaks_of(state, LimitKind::Forces)
                 .done()
         };
         if plan.state.approved() && mode == Mode::Live {
@@ -330,8 +333,12 @@ pub(crate) fn serve(
             })
             .collect::<Vec<_>>()
             .join(", ");
+        let mut reason = serving(intent, plan);
+        for other in pool.iter().filter_map(|ship| protected.get(ship)) {
+            reason = reason.speaks_of_on(LimitKind::Protected, *other);
+        }
         out.no_order(
-            serving(intent, plan)
+            reason
                 .evidence(
                     "every ship of the pool is protected for another intent",
                     today,
@@ -783,6 +790,7 @@ fn dispatch(
             )
             .evidence(format!("{} is released", plan.id), today)
             .binding(format!("area: {}", area_text(params.area)))
+            .speaks_of(planner.view.command_state(), LimitKind::Area)
             .worked({
                 let worked = match &night_words {
                     Some(words) => format!("{worked} {words}"),
@@ -1034,6 +1042,7 @@ fn new_run(
                 }
             ))
             .binding(format!("area: {}", area_text(params.area)))
+            .speaks_of(planner.view.command_state(), LimitKind::Area)
             .worked(format!("{worked} {extra}"))
             .would_change(format!(
                 "a reading of day {} at or above {} would call no run",
@@ -1725,6 +1734,7 @@ fn send_home(
                     today,
                 )
                 .binding(format!("area: {}", area_text(params.area)))
+                .speaks_of(state, LimitKind::Area)
                 .worked(format!(
                     "{} is cancelled: {id} on passage out to {} is sent home to {}; its cargo stays aboard and its unload order stands, so it is put back ashore at {}.",
                     plan.id, params.destination, params.source, params.source
@@ -1779,6 +1789,7 @@ fn free_ended(view: &SideView<'_>, out: &mut Out) {
             would_change: vec!["a plan that was not ended".to_string()],
             answer_of: None,
             cautions: Vec::new(),
+            limits: Vec::new(),
         };
         out.command(
             CommandKind::FreeShips {

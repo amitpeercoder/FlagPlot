@@ -24,6 +24,7 @@
 //! The pure parts are [`margin`], [`break_off`] and [`threat`]; the rest
 //! reads the side's view, and the engine's measures through it.
 
+use sim_core::command::LimitKind;
 use std::collections::BTreeSet;
 
 use sim_core::command::{
@@ -455,6 +456,12 @@ impl Day<'_, '_> {
             .unwrap_or_default();
         let today = self.today;
         let mut any = false;
+        let stationed = end.maker == Maker::Commander
+            && matches!(
+                end.kind,
+                IntentKind::Deny { .. } | IntentKind::Neutralise { .. }
+            )
+            && !self.state.in_place_on_chain(end.id);
         for id in named {
             let Some(force) = self.area.task_forces().find(|f| f.id == id) else {
                 continue;
@@ -480,6 +487,23 @@ impl Day<'_, '_> {
                         ships.len()
                     ),
                 ),
+                // A carrier force the forces limit of a commander's deny or
+                // neutralise names is stationed by the carrier pass, as a free
+                // one is (decision 0222, rule 2): no task is formed for it
+                // here, and one the pass formed under this end is the pass's
+                // to speak of. A task of another's making that stands is said
+                // as before, and serves the end.
+                Mission::Carrier
+                    if !surface_only
+                        && stationed
+                        && !self.state.intents_in_force().any(|other| {
+                            other.kind.force() == Some(id)
+                                && matches!(other.kind, IntentKind::OperateCarriers { .. })
+                                && !(other.parent == Some(end.id) && other.maker == Maker::Staff)
+                        }) =>
+                {
+                    continue;
+                }
                 Mission::Carrier if !surface_only => {
                     let carriers: Vec<_> = ships
                         .iter()
@@ -575,15 +599,26 @@ impl Day<'_, '_> {
                     withdrawn_day: None,
                 },
             );
+            // Under a hold a carrier force named in the forces limit works
+            // from where it lies, and the reason says so (decision 0222, the
+            // architect's ruling D).
+            let from_where = if matches!(kind, IntentKind::OperateCarriers { .. })
+                && matches!(end.kind, IntentKind::Hold { .. })
+            {
+                " A carrier force named in the forces limit of a hold works from where it lies: the staff chooses no station for it."
+            } else {
+                ""
+            };
             let reason = serving(end, plan)
                 .evidence(why.clone(), today)
                 .binding(format!("{id} is named in the forces limit of {}", end.id))
                 .worked(format!(
-                    "{id} is named in the forces limit of {}, its plan is released and no task of {id} stands under it: {why}, so the staff forms {id_new}, to {words}, under it, for {id} to carry out.",
+                    "{id} is named in the forces limit of {}, its plan is released and no task of {id} stands under it: {why}, so the staff forms {id_new}, to {words}, under it, for {id} to carry out.{from_where}",
                     end.id
                 ))
                 .would_change(format!("{id} not named in the forces limit"))
                 .would_change("such a task already standing")
+                .speaks_of(&self.state, LimitKind::Forces)
                 .done();
             self.target(in_scope).commands.push(StaffCommand {
                 kind: CommandKind::FormIntent {
@@ -761,7 +796,7 @@ impl Day<'_, '_> {
         let here = force.position();
 
         // Radio silence at preserve the force (decision 0136, 18).
-        if let Some(order) = silence_order(view, task, &plan, id, risk, today) {
+        if let Some(order) = silence_order(view, &self.state, task, &plan, id, risk, today) {
             out.orders.push(order);
         }
 
@@ -1045,7 +1080,7 @@ impl Day<'_, '_> {
         }
 
         // Rules of engagement, set once from the risk (rule 13).
-        if let Some(order) = roe_order(task, &plan, &force, risk, today) {
+        if let Some(order) = roe_order(&self.state, task, &plan, &force, risk, today) {
             out.orders.push(order);
         }
 
@@ -1158,6 +1193,7 @@ impl Day<'_, '_> {
                                     "{intent_words}: {threat_text}, and {sortie_rule}. {fuel_text}: it has the fuel. It is routed to the station {station} and home to {home_text}, the station marked to stand at: {hours} hours to the station at {speed_text}, it stands there for the night and steams for home at morning."
                                 ))
                                 .would_change("no threat, a bolder or more careful risk, or less fuel aboard")
+                                .speaks_of(&self.state, LimitKind::Risk)
                                 .done(),
                         ));
                     } else if short.is_empty() {
@@ -1340,6 +1376,7 @@ impl Day<'_, '_> {
                     .binding("at preserve the force, a force with no home port does not go to its station, and is given nothing there, while a contact that outnumbers it is within 15 hexes of the station")
                     .worked(format!("{intent_words}: {lead}; but {outnumbered}, so at preserve the force {what}."))
                     .would_change("the contact farther or gone, fewer ships in it, or a bolder risk")
+                    .speaks_of(&self.state, LimitKind::Risk)
                     .done(),
             );
             self.hand_in_stand(task, plan, id, out, in_scope, intent_words);
@@ -1628,7 +1665,7 @@ impl Day<'_, '_> {
         if let Some(order) = home_order {
             out.orders.push(order);
         }
-        if let Some(order) = roe_order(task, plan, force, risk, today) {
+        if let Some(order) = roe_order(&self.state, task, plan, force, risk, today) {
             out.orders.push(order);
         }
         // Readiness by the test of a sortie, whether or not it goes (11).
@@ -1710,6 +1747,7 @@ impl Day<'_, '_> {
 /// silent already, nothing; the staff never turns silence off (20).
 pub(crate) fn silence_order(
     view: &SideView<'_>,
+    state: &sim_core::command::CommandState,
     task: &Intent,
     plan: &Plan,
     force: TaskForceId,
@@ -1732,6 +1770,7 @@ pub(crate) fn silence_order(
                 "At preserve the force, {force} keeps radio silence: it is set to it, and sends nothing until it fights, is attacked or strikes. What silence buys is not built: nothing listens to radio traffic yet (decision 0136, 19)."
             ))
             .would_change("a different risk level")
+            .speaks_of(state, LimitKind::Risk)
             .done(),
     ))
 }
@@ -1741,6 +1780,7 @@ pub(crate) fn silence_order(
 /// the straggler instruction and keep share as they are. `None` where the
 /// force has them already.
 fn roe_order(
+    state: &sim_core::command::CommandState,
     task: &Intent,
     plan: &Plan,
     force: &TaskForce,
@@ -1776,6 +1816,7 @@ fn roe_order(
                 break_off(risk)
             ))
             .would_change("a different risk level")
+            .speaks_of(state, LimitKind::Risk)
             .done(),
     ))
 }

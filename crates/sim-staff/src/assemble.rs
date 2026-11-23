@@ -62,7 +62,7 @@ pub(crate) struct NoSource {
 /// names: what the staff may not take for the end (item 5).
 #[derive(Default)]
 pub(crate) struct Others {
-    forces: BTreeMap<TaskForceId, IntentId>,
+    pub(crate) forces: BTreeMap<TaskForceId, IntentId>,
     units: BTreeMap<LandUnitId, IntentId>,
     bases: BTreeMap<BaseId, IntentId>,
 }
@@ -380,6 +380,8 @@ impl Day<'_, '_> {
                 source: Some(base),
                 land_units: here,
                 submarines: Default::default(),
+                none_of: Default::default(),
+                in_place: false,
             };
             let choice = match self.choose(end, &limit, place, hex, risk, false) {
                 Ok(choice) => choice,
@@ -640,6 +642,8 @@ impl Day<'_, '_> {
             source: named_source.is_none().then_some(source),
             land_units,
             submarines: Default::default(),
+            none_of: Default::default(),
+            in_place: false,
         };
         Ok(Assembled {
             choice,
@@ -714,6 +718,8 @@ impl Day<'_, '_> {
                 source: Some(base),
                 land_units: fighting,
                 submarines: Default::default(),
+                none_of: Default::default(),
+                in_place: false,
             };
             let choice = match self.choose(end, &limit, place, hex, risk, true) {
                 Ok(choice) => choice,
