@@ -113,13 +113,7 @@ pub mod digest {
         folders.sort();
         for folder in folders {
             let name = folder.file_name().unwrap().to_string_lossy().to_string();
-            // `a-force-followed` holds scenario 133, written for decision
-            // 0220's orders and not to be run until they are built (decision
-            // 0072): its build takes it out of this list.
-            if name == "step2-frozen"
-                || name == "a-limit-binds-what-it-names"
-                || name == "a-force-followed"
-            {
+            if name == "step2-frozen" || name == "a-limit-binds-what-it-names" {
                 continue;
             }
             visit(&folder, &format!("{name}/"));
