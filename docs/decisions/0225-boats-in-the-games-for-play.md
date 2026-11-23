@@ -40,3 +40,55 @@ Standing: Planned on Nov 23, 2026; to be reviewed.
 ## Before it is built
 
 Reviewed by a fresh reader; then the architect's statements for the Midway copies: each boat's hex worked from its row by rule 2, and what each game must hold on day 1.
+
+## Amended on review, Nov 23, 2026
+
+A fresh reader was given this record, the research, the rows, the Midway files and the tests, and worked the hexes with the map's own projection. The architect accepts the findings. Where this section and the rules above differ, this section holds.
+
+### What the review found
+
+- **Rule 4 measured a game rule 1 did not make:** staff against staff is file a, which the table does not play.
+- **Rule 2 did not say which end of an arc is first, which way the arc runs, or where it is measured from.** Two readings put Tambor, Trout and Nautilus in different hexes.
+- **I-168's one row in the positions file is of 6 June,** where she sank Yorktown. On the game's first days the rows have her at Midway itself.
+- **The even spread is not an estimate in the sense of decision 0207,** which is of a ship's figures from like ships. It is a reading of a row, of the kind the Midway base marks "PLACEHOLDER start".
+- **Decision 0218 says of its figures "each is to be set from the rows before a game is played with it".** Rule 5 plays them unset.
+- **The rows of belief are sentences, not waters:** "one west of Midway" has no distance.
+- **Adding a folder is more than new names:** two tests exempt folders by name, one lists every file for play, the table's check pins the list of games and their pairings, and the table takes the first pairing whose seats match.
+- **The arcs name seven boats with no ship row, not eleven;** four more are named elsewhere.
+
+### The rules, as amended
+
+1. **The folder `data/scenarios/table-boats/` holds four Midway games:** a copy of each of the table's b, c and d and one of a, on the table's ground figures, made by a script from the table's copies (a from the game's own file a), with file names no other scenario has. The table offers b, c and d as a game of their own, "Midway, with submarines". File a is for the measure and is not offered.
+2. **Where each boat starts** (replacing rule 2's first two items). An arc is read clockwise from its lower bearing, the first boat a row names at the lower bearing and the last at the higher, the boats between at even steps. Bearings are true from the atoll's own position, laid off flat in the map's frame at the arc's distance, and the boat starts in the hex that point falls in. Every boat the row names is counted. That gives, from row 16010 (240 to 360 degrees, 150 miles, six boats, steps of 24 degrees) and row 16009 (250 to 310 degrees, 200 miles, three boats, steps of 30):
+
+   | Boat | Place in her row | Bearing | Hex |
+   | --- | --- | --- | --- |
+   | Tambor | first of six | 240 | (1, 3) |
+   | Trout | second of six | 264 | (1, 1) |
+   | Nautilus | fourth of six | 312 | (4, -2) |
+   | Gato | second of three | 280 | (1, -1) |
+
+   Each is marked "PLACEHOLDER start" with the row and this rule, as the game's other starts worked from rows are. Nautilus's stated position at 0710 on 4 June (row 16002: 30-00 N, 179-25 W, the hex next to hers) agrees with this reading of the order and is not used as her start: it is of the second day.
+3. **I-168 starts in Midway's hex, (5, 1),** where rows 16202 and 7673 have her on 1, 2 and 4 June. There she attacks nothing by the rule (a force in the hex of its own base is not attacked). What the rows say she did, the attack of 6 June 159 miles away, takes an order to go there, which a player may give and the staff does not.
+4. **Homes.** The American boats' home is Midway and I-168's is Wake, each a stand-in named as one. Two effects are accepted and named in the game's notes: a boat going home to a base that has changed side still leaves the map there; I-168's way home is five days on passage, sighted at the whole chance.
+5. **No suspected waters in these games.** The rows (16842, 16518, 16202) give no distance, and waters would change where the staff stands its forces, so that the game with boats would differ from the game without by more than boats. They are named in the notes as left out.
+6. **No order is scripted.** The rows that moved the boats (16181, to close the enemy on 4 June; 16182, the circle of 100 miles by dawn on 5 June) are named in the notes. A player orders his boats; a side the staff plays leaves its boats on their stations. The two sides are so unequal in every pairing, and the notes say so.
+7. **The figures are played unset,** on the designer's word of Nov 23, 2026 that boats are not to be held back. Decision 0218's sentence stands amended to that extent, and the game's name at the table says it is a trial. The classes are those derived as of 7 August 1942; the five boats' classes did not change between June and August.
+8. **The measure** (replacing rule 4): file a's copy on seeds 1 to 100 against the same file with the boats taken out, made for the run and not kept. Reported: ships sunk and damaged by cause and side, carriers lost, the result; for each boat the pulses in which a force lay under her chance and the force-hours in them (from `SubmarineAttackChance`, the only record of them), the salvoes, hits, hunts, sightings from the air, and whether she was damaged, sunk or went home; and the hex of each Japanese force at each day's end, so that an empty count can be told from a force that never came near. A force of destroyers alone is under no chance, so Grouper's attack of the rows could not happen here; she is not in the game.
+9. **What the tests gain, and nothing else in them changes:** `table-boats/` joins the folders the two hunger tests exempt (scenario 119 near line 1040, scenario 123 near line 1527); scenario 104's statement 23 gains the three files for play; the table's check gains the new game and its pairings; a new test runs the new script with `--check` and holds the statements below. The header of each copy is written anew: it is made by the new script, is offered at the table, has submarines, and names the estimated figures of classes 6001, 6002 and 6011 as the data rules require.
+10. **The directive** for each seat of the new game gains one sentence naming the boats the side has and where.
+11. **No objective counts a boat sunk.**
+12. **Decision 0223 as amended moves no boat without a patrol order of the commander's,** so these boats keep their stations when it is built.
+13. **Rule 6 above gains:** S-39 and S-46; I-11's class; the speeds of the I-9 and I-5 groups; I-22, I-24, I-28 and I-29; the Japanese belief of Allied boats in August and September. A boat known by "off Rabaul" may be given a patrol order of those waters today; it does not wait for decision 0223.
+
+### The statements the new test holds
+
+Each copy, loaded:
+
+1. It has five submarines: Tambor, Trout, Nautilus and Gato of the Allied side and I-168 of the Japanese, and no other.
+2. They start at (1, 3), (1, 1), (4, -2), (1, -1) and (5, 1) in that order, each on station there, each in a hex ships can enter.
+3. Tambor and Trout are of class 6001, Gato of 6002, Nautilus of 6011 and I-168 of 6005, each with her class's torpedo and salvoes.
+4. The Allied boats' home is Midway and I-168's is Wake.
+5. It has no suspected waters.
+6. Taken with its submarines and their three keys removed, it is the game it copies, line for line but for its header and its ground figures as the copy it comes from has them.
+7. Played on seed 1 with no order to any boat, every boat still afloat at the end is in the hex she started in.
