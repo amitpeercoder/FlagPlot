@@ -712,7 +712,7 @@ limit = "forces"
 intent = 2
 task_forces = [1, 2]
 # The kinds this order named none of, in the language of decision 0222
-# (the architect\'s ruling B): "these carriers and nothing else".
+# (the architect's ruling B): "these carriers and nothing else".
 none_of = ["air_groups", "land_units", "submarines"]
 
 [[command]]
@@ -766,7 +766,7 @@ limit = "forces"
 intent = 1
 task_forces = [3, 4]
 # The kinds this order named none of, in the language of decision 0222
-# (the architect\'s ruling B): "these carriers and nothing else".
+# (the architect's ruling B): "these carriers and nothing else".
 none_of = ["air_groups", "land_units", "submarines"]
 
 [[command]]

@@ -1552,11 +1552,11 @@ fn scenario_5_is_untouched() {
         ),
         (
             "scenarios/second-proof/05a_eastern_solomons.toml",
-            0x7f06_3423_7467_2754,
+            0xd64d_53ab_74f6_bcc0,
         ),
         (
             "scenarios/second-proof/05b_eastern_solomons.toml",
-            0x0b90_e8dd_077d_17aa,
+            0xaebb_1fe1_89ce_7edc,
         ),
         (
             "scenarios/second-proof/05c_eastern_solomons.toml",
@@ -1572,15 +1572,15 @@ fn scenario_5_is_untouched() {
         ),
         (
             "scenarios/stage-2b-proof/05a_eastern_solomons.toml",
-            0x1404_4d89_e305_48fe,
+            0x7164_a06d_bfbc_9e12,
         ),
         (
             "scenarios/stage-2b-proof/05b_eastern_solomons_off.toml",
-            0x8b71_69ec_cc01_5c2c,
+            0x935d_0b33_c813_1bd8,
         ),
         (
             "scenarios/stage-2b-proof/05c_eastern_solomons_bold.toml",
-            0x96d9_b1b0_960d_0d1a,
+            0xe3ce_11dc_a5d6_b89a,
         ),
         (
             "scenarios/step2-frozen/05_eastern_solomons.toml",

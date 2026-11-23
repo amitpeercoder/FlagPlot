@@ -2823,8 +2823,29 @@ limit = "forces"
 intent = 5
 task_forces = [3, 4]
 # The kinds this order named none of, in the language of decision 0222
-# (the architect\'s ruling B): "these carriers and nothing else".
+# (the architect's ruling B): "these carriers and nothing else".
 none_of = ["air_groups", "land_units", "submarines"]
+
+# The architect's ruling E of decision 0222: the same order in the new
+# language. By the old reading the carrier forces the deny named worked from
+# where they lay; now the commander gives each its own task there.
+[[command]]
+day = 15
+side = "japanese"
+kind = "set_intent"
+intent = 6
+intent_kind = "operate_carriers"
+task_force = 3
+hex = [9, -19]
+
+[[command]]
+day = 15
+side = "japanese"
+kind = "set_intent"
+intent = 7
+intent_kind = "operate_carriers"
+task_force = 4
+hex = [7, -18]
 
 [[command]]
 day = 15

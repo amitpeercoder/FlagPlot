@@ -90,7 +90,8 @@ fn three_limits(risk: &str) -> Value {
     ])
 }
 
-/// Statement 13.
+/// Statement 13, as restated by the architect, Nov 23, 2026 (decision
+/// 0222, ruling H).
 ///
 /// The game: scenario 53's, without its commanders' commands. Allied base 1
 /// has three dive bomber groups (1 to 3), a flying boat group and a fighter
@@ -166,6 +167,17 @@ fn statement_13_a_preview_with_its_limits_is_what_the_staff_hands_in_once_they_a
     assert!(
         !read.is_empty() && handed.ends_with(read),
         "{written}\n{with}"
+    );
+    // Statement 13 as restated (ruling H): the commands before them are the
+    // approvals that prepare and release the plan, which the preview does
+    // not show.
+    let before = &handed[..handed.len() - read.len()];
+    assert!(!before.is_empty(), "{written}");
+    assert!(
+        before
+            .iter()
+            .all(|c| c["command"]["kind"] == "approve" || c["kind"] == "approve"),
+        "{written}"
     );
 }
 

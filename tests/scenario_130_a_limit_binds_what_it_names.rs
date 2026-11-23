@@ -72,10 +72,15 @@
 //!
 //! ## Part C: an order read and signed with its limits (rule 4)
 //!
-//! 13. A preview of an order with a forces limit, a risk and an area
-//!    given with it shows what the staff would do under all three: the
-//!    same as the staff does on the first morning after the order and the
-//!    three limits are signed.
+//! 13. Restated by the architect, Nov 23, 2026 (decision 0222, ruling H):
+//!    "The orders the staff hands in on the day are exactly those the
+//!    preview showed. The commands it hands in on that day end with those
+//!    the preview showed; the approvals that prepare and release the plan
+//!    come before them and are not in the preview." (As first written: "A
+//!    preview of an order with a forces limit, a risk and an area given
+//!    with it shows what the staff would do under all three: the same as
+//!    the staff does on the first morning after the order and the three
+//!    limits are signed.")
 //! 14. Signing that preview queues the order and its limits together;
 //!    taking the order back takes its limits back with it.
 //! 15. A preview with a limit the engine would refuse says the refusal

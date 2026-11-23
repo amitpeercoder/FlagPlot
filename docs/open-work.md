@@ -135,6 +135,8 @@ From decision 0222 (the designer's answer 2, and "As built: the engine", rule 7)
 | Targets | Keep supplied, cover, stand at, patrol, ready a landing, build up a base |
 | Risk | Patrol |
 
+From decision 0222, ruling H: a preview does not show the approvals that prepare and release a plan.
+
 ## Not planned
 
 - `docs/rules-comparison.md` (the designer's, Nov 14, 2026, checked against the code) sets Flag Plot's rules against another game's manual and is the list of gaps to triage. Decision 0102 rules on each gap (build, defer or decline); the rows it marks "To be written" are decision records still to come.

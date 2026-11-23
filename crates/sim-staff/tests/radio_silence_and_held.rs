@@ -228,6 +228,16 @@ fn silence_is_not_given_with_no_report_figures_or_with_command_levels_off() {
 /// deny's forming rule reads as standing; a force only named in a deny's
 /// forces limit is stationed by the staff since rule 2.
 fn deny_text(up: (u32, u32)) -> String {
+    format!(
+        "{}\n[[command]]\nday = 1\nside = \"allied\"\nkind = \"set_intent\"\nintent = 2\nintent_kind = \"operate_carriers\"\ntask_force = 1\nhex = [0, 0]\n",
+        named_deny_text(up)
+    )
+}
+
+/// The same deny naming force 1 in its forces limit and nothing more: since
+/// decision 0222, rule 2, the area's carrier pass stations the force, as a
+/// free one, and so forms its task (the architect's ruling G).
+fn named_deny_text(up: (u32, u32)) -> String {
     let text = text(up, "press");
     let text = once(
         &text,
@@ -235,7 +245,7 @@ fn deny_text(up: (u32, u32)) -> String {
         "intent_kind = \"deny\"\nhex = [0, 5]\ndistance = 0",
     );
     format!(
-        "{text}\n[[order]]\nday = 1\nside = \"allied\"\ntask_force = 1\nkind = \"set_route\"\nwaypoints = [[0, 2]]\n\n[[command]]\nday = 1\nside = \"allied\"\nkind = \"set_limit\"\nlimit = \"forces\"\nintent = 1\ntask_forces = [1]\n\n[[command]]\nday = 1\nside = \"allied\"\nkind = \"set_intent\"\nintent = 2\nintent_kind = \"operate_carriers\"\ntask_force = 1\nhex = [0, 0]\n"
+        "{text}\n[[order]]\nday = 1\nside = \"allied\"\ntask_force = 1\nkind = \"set_route\"\nwaypoints = [[0, 2]]\n\n[[command]]\nday = 1\nside = \"allied\"\nkind = \"set_limit\"\nlimit = \"forces\"\nintent = 1\ntask_forces = [1]\n"
     )
 }
 
@@ -278,10 +288,19 @@ fn an_area_doctrine_reads_a_force_where_the_area_command_holds_it() {
     );
 }
 
+/// Restated by the architect, Nov 23, 2026 (decision 0222, ruling G):
+/// "With every report on time, the area forms the same tasks, at the same
+/// hexes, in the same order, with the same notices, as with command levels
+/// off, and forms at least one." The deny names force 1 only, which the
+/// area's carrier pass stations and so forms its task. Compared: the kinds
+/// of the commands and what they form, not the words of their reasons; the
+/// notices whole. (The station's reason says "as of" under command levels
+/// with every report on time, where levels off does not: words only,
+/// `docs/rules/differences.md`, row 76, open.)
 #[test]
 fn with_every_report_on_time_the_area_doctrine_gives_what_command_levels_off_gives() {
-    let on = play(&deny_text(ON_TIME)).1;
-    let text = deny_text(ON_TIME);
+    let on = play(&named_deny_text(ON_TIME)).1;
+    let text = named_deny_text(ON_TIME);
     let off_text = {
         let t = once(&text, LEVELS_LINE, "");
         let at = t.find("reports = \"").expect("a reports line");
@@ -290,20 +309,22 @@ fn with_every_report_on_time_the_area_doctrine_gives_what_command_levels_off_giv
     };
     let off = play(&off_text).1;
     assert_eq!(on.len(), off.len());
+    let kinds = |d: &sim_core::command::StaffDecisions| -> Vec<CommandKind> {
+        d.commands.iter().map(|c| c.kind.clone()).collect()
+    };
     let mut formed = 0;
     for (a, b) in on.iter().zip(&off) {
-        // What the area forms, with its reasons, and its notices: the words
-        // "as of" never appear.
-        assert_eq!(a.commands, b.commands);
+        assert_eq!(kinds(a), kinds(b));
         assert_eq!(a.notices, b.notices);
         formed += a
             .commands
             .iter()
             .filter(|c| matches!(c.kind, CommandKind::FormIntent { .. }))
             .count();
-        for c in &a.commands {
-            assert!(!c.reason.worked.contains("as of"));
-        }
     }
-    assert!(formed > 0, "the area formed a task");
+    let said: Vec<String> = on
+        .iter()
+        .flat_map(|d| d.no_orders.iter().map(|r| r.worked.clone()))
+        .collect();
+    assert!(formed > 0, "the area formed a task: {said:#?}");
 }
