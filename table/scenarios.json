@@ -1,5 +1,5 @@
 {
-  "note": "The scenarios offered for play on the table's new game screen (decision 0185). The screen reads nothing else of a scenario. For each, a game is offered only where a file makes it one: the engine's side given orders to its units (\"script\") or orders for its staff to carry out (\"staff\"), and a side played by a person or an agent given nothing. Each pairing names who holds each side (person, agent or engine) and the file. Each scenario names its map, key \"map\", a repository path, and the table draws the chart of that map (decision 0199); an entry with none is on the present map, data/map/south_pacific.csv, and every present entry names it. Kept by hand: a scenario renamed or moved is changed here. A file that names the ground figures is the copy in data/scenarios/table-hunger (for Midway, which has submarines, the copy in data/scenarios/table-boats made from it by scripts/table-boats/make_files.py, decision 0225) that names the figures of hunger that takes time (decision 0205, 3), made from the file on file by scripts/table-copies/make_copies.py; a file with no land units is the file on file. Listed simplest first: by its length and by how much a side has to run.",
+  "note": "The scenarios offered for play on the table's new game screen (decision 0185). The screen reads nothing else of a scenario. For each, a game is offered only where a file makes it one: the engine's side given orders to its units (\"script\") or orders for its staff to carry out (\"staff\"), and a side played by a person or an agent given nothing. Each pairing names who holds each side (person, agent or engine) and the file. Each scenario names its map, key \"map\", a repository path, and the table draws the chart of that map (decision 0199); an entry with none is on the present map, data/map/south_pacific.csv, and every present entry names it. Kept by hand: a scenario renamed or moved is changed here. A file that names the ground figures is the copy in data/scenarios/table-hunger (for each battle that has submarines, the copy in data/scenarios/table-boats made from it by scripts/table-boats/make_files.py, decisions 0225 and 0227) that names the figures of hunger that takes time (decision 0205, 3), made from the file on file by scripts/table-copies/make_copies.py; a file with no land units is the file on file. Listed simplest first: by its length and by how much a side has to run.",
   "scenarios": [
     {
       "id": "eastern-solomons",
@@ -36,7 +36,8 @@
       "start": "1942-05-06",
       "lines": [
         "Two American carriers and a cruiser group meet two Japanese fleet carriers and a light carrier in the Coral Sea, while a Japanese convoy makes for Port Moresby with the men to take it.",
-        "Each side has an oiler with its carriers: the Neosho for the Allied side, the Toho Maru for the Japanese."
+        "Each side has an oiler with its carriers: the Neosho for the Allied side, the Toho Maru for the Japanese.",
+        "Each side has submarines at sea: one American boat off Cape St George, and three Japanese, one off Noumea and two off Port Moresby."
       ],
       "sides": {
         "allied": "Stop the landing at Port Moresby and sink the Japanese carriers.",
@@ -50,13 +51,13 @@
         "japanese": "table/directives/coral_sea_japanese.json"
       },
       "pairings": [
-        {"allied": "person", "japanese": "engine", "engine": "staff", "file": "data/scenarios/table-hunger/03b_coral_sea_both_oilers.toml"},
-        {"allied": "engine", "japanese": "person", "engine": "staff", "file": "data/scenarios/table-hunger/03c_coral_sea_both_oilers.toml"},
-        {"allied": "person", "japanese": "agent", "file": "data/scenarios/table-hunger/03d_coral_sea_both_oilers.toml"},
-        {"allied": "agent", "japanese": "person", "file": "data/scenarios/table-hunger/03d_coral_sea_both_oilers.toml"},
-        {"allied": "agent", "japanese": "engine", "engine": "staff", "file": "data/scenarios/table-hunger/03b_coral_sea_both_oilers.toml"},
-        {"allied": "engine", "japanese": "agent", "engine": "staff", "file": "data/scenarios/table-hunger/03c_coral_sea_both_oilers.toml"},
-        {"allied": "agent", "japanese": "agent", "file": "data/scenarios/table-hunger/03d_coral_sea_both_oilers.toml"}
+        {"allied": "person", "japanese": "engine", "engine": "staff", "file": "data/scenarios/table-boats/03b_coral_sea_both_oilers_submarines.toml"},
+        {"allied": "engine", "japanese": "person", "engine": "staff", "file": "data/scenarios/table-boats/03c_coral_sea_both_oilers_submarines.toml"},
+        {"allied": "person", "japanese": "agent", "file": "data/scenarios/table-boats/03d_coral_sea_both_oilers_submarines.toml"},
+        {"allied": "agent", "japanese": "person", "file": "data/scenarios/table-boats/03d_coral_sea_both_oilers_submarines.toml"},
+        {"allied": "agent", "japanese": "engine", "engine": "staff", "file": "data/scenarios/table-boats/03b_coral_sea_both_oilers_submarines.toml"},
+        {"allied": "engine", "japanese": "agent", "engine": "staff", "file": "data/scenarios/table-boats/03c_coral_sea_both_oilers_submarines.toml"},
+        {"allied": "agent", "japanese": "agent", "file": "data/scenarios/table-boats/03d_coral_sea_both_oilers_submarines.toml"}
       ]
 
     },
@@ -69,7 +70,7 @@
       "start": "1942-06-03",
       "lines": [
         "Three American carriers and the aircraft of Midway meet four Japanese fleet carriers, while a Japanese invasion force makes for the atoll with the men to take it.",
-        "Each side has its submarines on station: four American boats west and north-west of Midway, and one Japanese boat off the atoll itself."
+        "Each side has its submarines on station: fourteen American boats on the arcs west and north-west of Midway, on a line to the east-north-east and far to the west, and one Japanese boat off the atoll itself."
       ],
       "sides": {
         "allied": "Hold Midway and sink the Japanese carriers.",
@@ -101,7 +102,8 @@
       "start": "1942-08-23",
       "lines": [
         "The Eastern Solomons fought over five days. Two American carrier forces and the Marines at Lunga face a Japanese convoy bound for Guadalcanal, covered by the carrier striking force and the Ryujo detachment.",
-        "The Allied side has two oilers, the Platte and the Cimarron, at Efate. The Japanese side has none."
+        "The Allied side has two oilers, the Platte and the Cimarron, at Efate. The Japanese side has none.",
+        "Submarines: one American boat due off Savo Island on the fourth day, and four Japanese, two north-east of Malaita, one coming east of it and one off Lunga."
       ],
       "sides": {
         "allied": "Keep the airfield at Lunga open, stop the convoy, and sink the Japanese carriers while keeping your own.",
@@ -116,13 +118,13 @@
         "japanese": "table/directives/eastern_solomons_five_days_japanese.json"
       },
       "pairings": [
-        {"allied": "person", "japanese": "engine", "engine": "staff", "file": "data/scenarios/table-hunger/02b_eastern_solomons_oilers.toml"},
-        {"allied": "engine", "japanese": "person", "engine": "staff", "file": "data/scenarios/table-hunger/02c_eastern_solomons_oilers.toml"},
-        {"allied": "person", "japanese": "agent", "file": "data/scenarios/table-hunger/02d_eastern_solomons_oilers.toml"},
-        {"allied": "agent", "japanese": "person", "file": "data/scenarios/table-hunger/02d_eastern_solomons_oilers.toml"},
-        {"allied": "agent", "japanese": "engine", "engine": "staff", "file": "data/scenarios/table-hunger/02b_eastern_solomons_oilers.toml"},
-        {"allied": "engine", "japanese": "agent", "engine": "staff", "file": "data/scenarios/table-hunger/02c_eastern_solomons_oilers.toml"},
-        {"allied": "agent", "japanese": "agent", "file": "data/scenarios/table-hunger/02d_eastern_solomons_oilers.toml"}
+        {"allied": "person", "japanese": "engine", "engine": "staff", "file": "data/scenarios/table-boats/02b_eastern_solomons_oilers_submarines.toml"},
+        {"allied": "engine", "japanese": "person", "engine": "staff", "file": "data/scenarios/table-boats/02c_eastern_solomons_oilers_submarines.toml"},
+        {"allied": "person", "japanese": "agent", "file": "data/scenarios/table-boats/02d_eastern_solomons_oilers_submarines.toml"},
+        {"allied": "agent", "japanese": "person", "file": "data/scenarios/table-boats/02d_eastern_solomons_oilers_submarines.toml"},
+        {"allied": "agent", "japanese": "engine", "engine": "staff", "file": "data/scenarios/table-boats/02b_eastern_solomons_oilers_submarines.toml"},
+        {"allied": "engine", "japanese": "agent", "engine": "staff", "file": "data/scenarios/table-boats/02c_eastern_solomons_oilers_submarines.toml"},
+        {"allied": "agent", "japanese": "agent", "file": "data/scenarios/table-boats/02d_eastern_solomons_oilers_submarines.toml"}
       ]
     },
     {
@@ -133,7 +135,8 @@
       "days": 39,
       "start": "1942-08-07",
       "lines": [
-        "The landings on Guadalcanal and Tulagi and the weeks of fighting for the airfield at Lunga Point, at sea, in the air and ashore."
+        "The landings on Guadalcanal and Tulagi and the weeks of fighting for the airfield at Lunga Point, at sea, in the air and ashore.",
+        "Submarines come on station through the weeks: five American boats, from Cape St George to Shortland and Savo Island, and eight Japanese, off Lunga and Tulagi, north-east of Malaita and south-east of San Cristobal."
       ],
       "sides": {
         "allied": "Seize and hold Tulagi and the airfield at Lunga Point, to safeguard communications with Australia.",
@@ -148,13 +151,13 @@
         "japanese": "table/directives/guadalcanal_japanese.json"
       },
       "pairings": [
-        {"allied": "person", "japanese": "engine", "engine": "staff", "file": "data/scenarios/table-hunger/07b_slice.toml"},
-        {"allied": "engine", "japanese": "person", "engine": "staff", "file": "data/scenarios/table-hunger/07c_slice.toml"},
-        {"allied": "person", "japanese": "agent", "file": "data/scenarios/table-hunger/07_full_slice.toml"},
-        {"allied": "agent", "japanese": "person", "file": "data/scenarios/table-hunger/07_full_slice.toml"},
-        {"allied": "agent", "japanese": "engine", "engine": "staff", "file": "data/scenarios/table-hunger/07b_slice.toml"},
-        {"allied": "engine", "japanese": "agent", "engine": "staff", "file": "data/scenarios/table-hunger/07c_slice.toml"},
-        {"allied": "agent", "japanese": "agent", "file": "data/scenarios/table-hunger/07_full_slice.toml"}
+        {"allied": "person", "japanese": "engine", "engine": "staff", "file": "data/scenarios/table-boats/07b_slice_submarines.toml"},
+        {"allied": "engine", "japanese": "person", "engine": "staff", "file": "data/scenarios/table-boats/07c_slice_submarines.toml"},
+        {"allied": "person", "japanese": "agent", "file": "data/scenarios/table-boats/07_full_slice_submarines.toml"},
+        {"allied": "agent", "japanese": "person", "file": "data/scenarios/table-boats/07_full_slice_submarines.toml"},
+        {"allied": "agent", "japanese": "engine", "engine": "staff", "file": "data/scenarios/table-boats/07b_slice_submarines.toml"},
+        {"allied": "engine", "japanese": "agent", "engine": "staff", "file": "data/scenarios/table-boats/07c_slice_submarines.toml"},
+        {"allied": "agent", "japanese": "agent", "file": "data/scenarios/table-boats/07_full_slice_submarines.toml"}
       ]
     }
   ]

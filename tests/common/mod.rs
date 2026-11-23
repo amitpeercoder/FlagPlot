@@ -18,6 +18,7 @@
 
 #![allow(dead_code)]
 
+pub mod boats_in_a_game;
 pub mod no_deck;
 
 use std::fs;
