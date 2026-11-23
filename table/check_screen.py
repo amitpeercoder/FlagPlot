@@ -165,7 +165,7 @@ def orders_and_signed():
     check("act(tool, { plan: p.number }, done, row)" in text and "tallied[word]" not in text and "el('h3', '', 'The brief')" not in text,
           "the plan's paper has no tally and no brief: the plan's line is one, the tree is the rest")
     paper = text[text.index("// ---- the plan's paper as one tree ----"):text.index("// ---- the dry run (decisions")]
-    check("function paperNode(t)" in paper and "t.kids.forEach(function (k) { n.appendChild(paperNode(k)); })" in paper
+    check("function paperNode(t, bare)" in paper and "t.kids.forEach(function (k) { n.appendChild(paperNode(k)); })" in paper
           and "function proposedTree(top, said, pr)" in paper and "pr.tree" in paper and "tr.sub_intents" in paper and "s.parent" in paper
           and "st.intents.filter(function (c) { return c.parent === i.number; })" in paper,
           "the plan's paper is one tree: a plan that waits from propose's tree (each task under its parent), a plan in force from command_state's intents under the root")
@@ -366,7 +366,7 @@ def run_in_node(code, data):
         with open(path, "w", encoding="utf-8") as out:
             out.write(NODE_PRELUDE + code + "\nconst input = JSON.parse(process.argv[2]); console.log(JSON.stringify(main(input)));\n")
         done = subprocess.run([node, path, json.dumps(data)], capture_output=True, text=True)
-        check(done.returncode == 0, "the page's own wording runs in node" + ("" if done.returncode == 0 else ": " + done.stderr.strip()[:300]))
+        check(done.returncode == 0, "the page's own wording runs in node" + ("" if done.returncode == 0 else ": " + done.stderr.strip()[-300:]))
         return json.loads(done.stdout)
 
 
@@ -1104,6 +1104,82 @@ def the_paper_in_words(bridge):
     check(post(bridge.table + "/new") == {"ok": True}, "the game is put away")
 
 
+def the_staffs_reading(bridge):
+    """The staff's reading in the order paper is the plan's tree (decision 0221, "As built: the staff's reading"). Real `preview`
+    answers, as the paper asks them, are put through the page's own functions cut from its text and run in node: `proposedTree`, the
+    plan paper's tree, with `readingTop` for the one line at the head, and `paperText`, which words every line of the tree. What is
+    chosen: the real engine's answers and the page's real functions, with the few things they read from the rest of the page stood in
+    (the forces by name, no map); the paper itself in a browser is tried by hand. Three orders: to deny waters near Port Moresby in the
+    Coral Sea, the same with Task Force 17 already given an order, so that nothing can serve it, and to seize and hold Guadalcanal."""
+    import re
+    print("-- the staff's reading is the plan's tree: real previews through the page's own functions", flush=True)
+    text = page_text()
+    ask = text[text.index("  function askPreview() {"):text.index("  $('p-dry').addEventListener('click'")]
+    check("It cannot yet" not in text and "commands of its own" not in text and "It would ' + p.shown" not in text and "countOf((w.orders" not in text,
+          "the page no longer words the engine's paragraph: no \"It cannot yet\", no count of orders and commands of its own")
+    check("readingView(out, p, e);" in ask and "proposedTree(top, {}, pr)" in text and "paperNode(root, true)" in text,
+          "the reading is drawn by readingView from proposedTree and paperNode, the plan paper's own functions")
+    check("This reading is worked at balanced risk." in ask and "chosen('risk') !== 'balanced'" in ask, "the reading says it is worked at balanced risk only where the risk chosen is not balanced")
+    check("'THE STAFF\\'S WORKING IN FULL'" in text[text.index("  function readingView"):text.index("  function askPreview() {")], "the staff's working in full is the reading's last fold")
+    heads = ["commas", "cleanName", "orderWords", "plainCounts", "plainWords", "nameText", "intentWords", "reasonWords", "tidyWorked", "paperPre", "shareWords", "tiredBit",
+             "paperText", "plainFact", "cautionPart", "cautionWords", "cautionTexts", "cutTop", "sayIntent", "newTask", "taskHex", "labelPlain", "arcsFrom", "finishTask",
+             "threatsOf", "proposedTree", "draftTop", "readingTop"]
+    code = "const config = { islands: [{ number: 1, name: 'New Guinea' }] }; let hexRaw = false, PAPER_TASKS = null; M.forces = [{ task_force: { handle: 'task_force:1', name: 'Task Force 17' } }]; M.bases = []; M.enemyBases = []; M.names['task_force:1'] = 'Task Force 17'; M.names['base:1'] = 'Port Moresby';\n"
+    code += "function dateOf() { return ''; } function num(h) { return parseInt(String(h).split(':')[1], 10); }\n" + re.search(r"  var WORD = .*\n", text).group(0)
+    code += "".join(cut_function(text, f"  function {h}(") + "\n" for h in heads)
+    code += r"""
+function main(input) {
+  const out = [];
+  input.forEach(function (a) {
+    const w = a.preview.with_change, pr = { tree: w.tree, would_hand_in: w.would_hand_in, stations: null, reason: w.reason }, e = [a.preview.shown, a.end];
+    const top = draftTop(e, a.preview), root = proposedTree(top, {}, pr); PAPER_TASKS[top.number] = 'this order';
+    const lead = readingTop(root, top.kind), lines = [], all = [root];
+    for (let i = 0; i < all.length; i++) { all[i].kids.forEach(k => all.push(k)); }
+    all.forEach(t => { t.facts.forEach(f => lines.push(paperText(f, t.n))); t.reasons.forEach(r => (r.binding || []).concat(r.would_change || []).forEach(s => lines.push(paperText(s, t.n)))); t.nothing.forEach(s => lines.push(paperText(s, t.n))); });
+    lines.push(paperText(w.reason.worked, null));
+    out.push({ name: a.name, lead: lead.text, bad: !!lead.bad, lines: lines, root: top.number, kids: root.kids.map(k => k.label) });
+    PAPER_TASKS = null;
+  });
+  return out;
+}
+"""
+    previews = []
+    for name, scenario, first, end in [
+        ("coral", "coral-sea", None, {"intent_kind": "deny", "hex": [-18, -1], "distance": 4}),
+        ("coral-taken", "coral-sea", {"intent_kind": "operate_carriers", "task_force": 1, "hex": [-14, -2]}, {"intent_kind": "deny", "hex": [-18, -1], "distance": 4}),
+        ("days", "guadalcanal-39-days", None, {"intent_kind": "control_island", "island": 1}),
+    ]:
+        check(begin(bridge, scenario, "person", "engine") == {"ok": True}, f"begun: {name}")
+        person = Person(bridge.table)
+        if first:
+            shown = person.call("preview", dict(command="set_intent", **first))["ok"]
+            check(person.call("approve", {"preview": shown["preview"]})["ok"].get("kind") == "command", "an order for Task Force 17 is given first, so that it is not free")
+        answer = person.call("preview", dict(command="set_intent", **end))["ok"]
+        w = answer["with_change"]
+        check(w.get("tree") and "would_hand_in" in w and "reason" in w, f"{name}: the engine's preview carries the tree, what it would hand in and its reason")
+        previews.append({"name": name, "preview": answer, "end": end})
+        check(post(bridge.table + "/new") == {"ok": True}, "the game is put away")
+    said = run_in_node(code, previews)
+    banned = r"miles\(es\)|hex\(es\)|nm from the nearest|commands of its own|It cannot yet|\border \d+\b|\bintent\b|\bintent:\d+"
+    for a in said:
+        every = [a["lead"]] + a["lines"]
+        bad = [t for t in every if re.search(banned, t)]
+        check(not bad, f"{a['name']}: nothing in the reading says \"miles(es)\", \"hex(es)\", \"nm from the nearest\", a count of commands, \"It cannot yet\" or an order number the draft does not have" + (f": {bad[0][:160]}" if bad else ""))
+    coral, taken, days = said
+    check(coral["lead"].startswith("Task Force 17 would work these waters from ") and not coral["bad"], f"coral: the line at the head says what would serve the order ({coral['lead']})")
+    check(any(t.startswith("No air base can reach these waters: ") and "in these waters" in t for t in coral["lines"]),
+          "coral: Port Moresby, inside the waters, is said as in these waters, once, in a fact about what cannot be done")
+    check(taken["lead"] == "Nothing can serve this order yet." and taken["bad"], f"coral with the force given an order: the head says nothing can serve it ({taken['lead']})")
+    check(any("Task Force 17 is not free: it serves ⟦1⟧" in t for t in taken["lines"]),
+          "that reason names the order the force serves, as a mark the page draws as a link to its paper")
+    check(any("⟦1⟧ withdrawn" in t for t in taken["lines"]), "what would change it includes that order withdrawn")
+    check(days["lead"] == "The staff would take it up in these tasks:" and len(days["kids"]) >= 3, f"the 39 days: the tasks are the tree under the order ({days['lead']}, {len(days['kids'])} under it)")
+    check(any(t.startswith("No air base can reach ") for t in days["lines"]), "the 39 days: a raid the staff cannot form is said as a fact, in words")
+    check("function orderLink(n)" in text and "orderFound(n)" in text and "orderLink(+m[5])" in text and "readPlan(found.root, found.task" in text,
+          "the order a unit is not free for is found by its number, walked up to its root in command_state, and opens that order's paper at the task")
+    check("serves ⟦" in text and "has a carrier task, intent:" in text, "the page reads the engine's phrase for a carrier task and for a task an order higher in priority holds")
+
+
 def midway_on_its_chart(bridge):
     """What the Midway game gives the page that the old map's games did not, and
     that the page words as it should (the mends of "Table: Midway on its own chart").
@@ -1350,6 +1426,7 @@ def main():
             no_points_in_play(bridge)
             queue_through_the_bridge(bridge)
             the_paper_in_words(bridge)
+            the_staffs_reading(bridge)
             midway_on_its_chart(bridge)
             person_against_agent(bridge, args.hold)
             seat_mcp(bridge)

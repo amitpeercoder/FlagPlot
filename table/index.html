@@ -212,6 +212,7 @@ button:disabled { opacity: 0.45; cursor: default; }
 .sheet .doc p.lead { margin: 0 0 12px; padding-bottom: 10px; border-bottom: 1px solid #8d8672; font-size: 14px; line-height: 1.5; color: var(--paper-dim); }
 .sheet .doc p.lead strong { color: var(--paper-ink); font-size: 15px; }
 .sheet .doc details.fold { margin-top: 10px; }
+.order .pv details.fold { margin-top: 10px; }
 .sheet .doc .row { align-items: center; }
 .sheet .doc button.primary { background: var(--own); border-color: var(--own); color: #fff; }
 .sheet .doc button.quiet { min-height: 0; padding: 2px 0; border: 0; background: none; box-shadow: none; color: var(--own); font-size: 12px; letter-spacing: 0.1em; text-decoration: underline; text-underline-offset: 3px; }
@@ -275,8 +276,12 @@ button:disabled { opacity: 0.45; cursor: default; }
 .card .sub { font-family: var(--f-ui); font-size: 12px; font-weight: 700; letter-spacing: 0.12em; color: var(--paper-dim); margin-top: 4px; }
 .card .headline { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
 .sheet .doc .node { border-left: 2px solid #8d8672; padding: 2px 0 2px 12px; display: flex; flex-direction: column; gap: 5px; }
+.order .pv .node { border-left: 2px solid #8d8672; padding: 2px 0 2px 12px; display: flex; flex-direction: column; gap: 5px; }
 .sheet .doc .node .who { font-size: 12px; color: var(--paper-dim); display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+.order .pv .node .who { font-size: 12px; color: var(--paper-dim); display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
 .sheet .doc .node .work { font-size: 13px; color: var(--paper-dim); }
+.order .pv .node .work { font-size: 13px; color: var(--paper-dim); }
+.sheet .doc .node.focus, #signed .sg.focus { outline: 2px solid #f0c36a; outline-offset: 2px; }
 .sheet .doc .row { display: flex; flex-wrap: wrap; gap: 8px; }
 .ref { text-align: left; display: inline; min-height: 0 !important; padding: 0 !important; border: 0 !important; border-bottom: 1px solid transparent !important; border-radius: 0 !important; background: transparent !important; color: var(--own) !important; font: inherit !important; letter-spacing: 0 !important; cursor: pointer; }
 .ref.enemy { color: var(--enemy) !important; }
@@ -306,16 +311,27 @@ button:disabled { opacity: 0.45; cursor: default; }
 .sheet .doc .ords details[open] > summary { color: var(--paper-ink); }
 .sheet .doc .ords details .reason { margin-left: 14px; }
 .sheet .doc .cautions { margin-top: 6px; }
+.order .pv .cautions { margin-top: 6px; }
 .sheet .doc .ptask { margin-top: 4px; }
+.order .pv .ptask { margin-top: 4px; }
 .sheet .doc .ptask .who strong { color: var(--paper-ink); font-size: 14px; }
+.order .pv .ptask .who strong { color: var(--paper-ink); font-size: 14px; }
 .sheet .doc .punits { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; margin: 2px 0; }
+.order .pv .punits { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; margin: 2px 0; }
 .sheet .doc .punit { font-size: 13px; color: var(--paper-ink); padding-left: 2.2ch; text-indent: -2.2ch; }
+.order .pv .punit { font-size: 13px; color: var(--paper-ink); padding-left: 2.2ch; text-indent: -2.2ch; }
 .sheet .doc .punit::before { content: '\2022\00a0'; color: var(--paper-dim); }
+.order .pv .punit::before { content: '\2022\00a0'; color: var(--paper-dim); }
 .sheet .doc details.why > summary { min-height: 22px; }
+.order .pv details.why > summary { min-height: 22px; }
 .sheet .doc .wsub { font-family: var(--f-ui); font-size: 11px; font-weight: 700; letter-spacing: 0.1em; color: var(--paper-dim); margin-top: 6px; }
+.order .pv .wsub { font-family: var(--f-ui); font-size: 11px; font-weight: 700; letter-spacing: 0.1em; color: var(--paper-dim); margin-top: 6px; }
 .sheet .doc details.why ul.rpoints { margin: 2px 0 2px; padding-left: 18px; font-size: 13px; }
+.order .pv details.why ul.rpoints { margin: 2px 0 2px; padding-left: 18px; font-size: 13px; }
 .sheet .doc details.why li.rmore { list-style: none; margin-left: -18px; }
+.order .pv details.why li.rmore { list-style: none; margin-left: -18px; }
 .sheet .doc .cautions .work { color: var(--enemy); }
+.order .pv .cautions .work { color: var(--enemy); }
 .reason { color: var(--paper-ink); font-size: 13px; padding: 2px 0 4px; }
 .reason .rconcl { font-weight: 700; }
 .reason .rfor, .reason .rmeta { color: var(--paper-dim); margin-top: 3px; }
@@ -327,8 +343,11 @@ button:disabled { opacity: 0.45; cursor: default; }
 .reason .rthen { margin-top: 3px; font-weight: 700; }
 .reason .rnotes { margin: 2px 0 4px; padding-left: 18px; color: var(--paper-dim); font-size: 12px; list-style: '\2013  '; }
 .sheet .doc .node .reason { font-size: 14px; line-height: 1.45; padding: 6px 0; }
+.order .pv .node .reason { font-size: 14px; line-height: 1.45; padding: 6px 0; }
 .sheet .doc .node .reason + .reason { border-top: 1px dotted #8d8672; }
+.order .pv .node .reason + .reason { border-top: 1px dotted #8d8672; }
 .sheet .doc .node .reason .rlead { margin-top: 6px; }
+.order .pv .node .reason .rlead { margin-top: 6px; }
 .cret { border-top: 2px solid #8d8672; margin-top: 6px; padding-top: 8px; }
 .cret h3 { margin-bottom: 4px; }
 .cret .crow { display: grid; grid-template-columns: 1fr 86px 110px; gap: 0 10px; padding: 3px 0; border-bottom: 1px dotted rgba(90,85,72,0.35); }
@@ -1682,11 +1701,17 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
   // of hexes as miles.
   // The engine says intent; the table says order, as a commander would.
   function orderWords(t) { return String(t).replace(/\bcontrols island\b/g, 'seizes and holds island').replace(/\b([Cc])ontrol island\b/g, function (x, c) { return (c === 'C' ? 'Seize' : 'seize') + ' and hold island'; }).replace(/\btakes the place at\b/g, 'captures').replace(/\b([Tt])ake the place at\b/g, function (x, c) { return c === 'T' ? 'Capture' : 'capture'; }).replace(/\bintents\b/g, 'orders').replace(/\bIntents\b/g, 'Orders').replace(/\bintent\b/g, 'order').replace(/\bIntent\b/g, 'Order'); }
+  // The engine's counting words, said as a person would: no plural in brackets, no count of the hexes a place makes on the map,
+  // and a distance to the nearest hex of waters as the base being in them or so many miles from them.
+  function plainCounts(t) {
+    return String(t).replace(/ \(\d+ hex\(es\) on the map\)/g, '').replace(/(\d+) hex\(es\)/g, function (m, n) { return n + (n === '1' ? ' hex' : ' hexes'); }).replace(/\bhex\(es\)/g, 'hexes')
+      .replace(/ is 0 nm from the nearest hex of /g, ' lies in ').replace(/(\d+) nm from the nearest hex of /g, '$1 miles from ');
+  }
   function plainWords(t, keepHex) {
-    t = cleanName(orderWords(String(t).replace(/(intent|plan):(\d+)/gi, '$1 $2')).replace(/island \d+ \(([^)]+)\)/g, '$1'));
+    t = cleanName(orderWords(plainCounts(t).replace(/(intent|plan):(\d+)/gi, '$1 $2')).replace(/island \d+ \(([^)]+)\)/g, '$1'));
     // An island the engine numbers is named, where the scenario names it; the commander is "you", as the staff speaks to him.
     if (typeof config !== 'undefined' && config.islands) t = t.replace(/\bisland (\d+)\b(?! \()/g, function (m, n) { var i = config.islands.filter(function (x) { return x.number === +n; })[0]; return i ? i.name : m; });
-    t = t.replace(/\bthe commander's\b/g, 'your').replace(/\bthe commander has not\b/g, 'you have not').replace(/\bso it waits for him\b/g, 'so it waits for you');
+    t = t.replace(/\bof the commander's\b/g, 'of yours').replace(/\bthe commander's\b/g, 'your').replace(/\bthe commander has not\b/g, 'you have not').replace(/\bso it waits for him\b/g, 'so it waits for you');
     t = t.replace(/\b0 pulse\(s\) old\b/g, 'just reported').replace(/\b(\d+) pulse\(s\)/g, function (m, n) { return n + (n === '1' ? ' pulse' : ' pulses'); })
       .replace(/\bat (?:a )?share (?:of )?0\.25\b/g, 'with a quarter of its aircraft').replace(/\bat (?:a )?share (?:of )?0\.5\b/g, 'with half its aircraft').replace(/\bat (?:a )?share (?:of )?0\.75\b/g, 'with three quarters of its aircraft')
       .replace(/\b(\d+)\.(\d+) (miles|nm)\b/g, function (m, w, f, u) { return Math.round(parseFloat(w + '.' + f)) + ' ' + u; })
@@ -1722,13 +1747,14 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
     var names = {}, list = [];
     Object.keys(M.names || {}).forEach(function (h) { var n = M.names[h]; if (/^(task_force|air_group|submarine):/.test(h) && n && n.length > 2 && !names[n]) { names[n] = h; list.push(n); } });
     list.sort(function (a, b) { return b.length - a.length; });
-    var re = new RegExp('\\((-?\\d+), ?(-?\\d+)\\)|\\bcontact (\\d+)\\b|(\\d+\u00b0\\d+\u2032[NS] \\d+\u00b0\\d+\u2032[EW])' + (list.length ? '|(?<![\\w-])(' + list.map(function (n) { return n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }).join('|') + ')(?![\\w-])' : ''), 'g'), last = 0, m;
+    var re = new RegExp('\\((-?\\d+), ?(-?\\d+)\\)|\\bcontact (\\d+)\\b|(\\d+\u00b0\\d+\u2032[NS] \\d+\u00b0\\d+\u2032[EW])|⟦(\\d+)⟧' + (list.length ? '|(?<![\\w-])(' + list.map(function (n) { return n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }).join('|') + ')(?![\\w-])' : ''), 'g'), last = 0, m;
     while ((m = re.exec(text))) {
       var node = null;
       if (m[1] != null) { if (hexAt[m[1] + ',' + m[2]]) node = hexPlace(+m[1], +m[2]); }
       else if (m[3] != null) { if (M.contacts.some(function (c) { return c.contact.handle === 'contact:' + m[3]; })) node = refTo('contact:' + m[3]); }
       else if (m[4] != null) { var at = placeHex(m[4]); if (at) { node = hexPlace(at[0], at[1]); var br = /^ \((-?\d+), ?(-?\d+)\)/.exec(text.slice(re.lastIndex)); if (br && +br[1] === at[0] && +br[2] === at[1]) re.lastIndex += br[0].length; } }
-      else if (m[5] != null) node = refTo(names[m[5]]);
+      else if (m[5] != null) node = orderLink(+m[5]);
+      else if (m[6] != null) node = refTo(names[m[6]]);
       if (!node) continue;
       if (m.index > last) e.appendChild(document.createTextNode(plainWords(text.slice(last, m.index)))); e.appendChild(node); last = re.lastIndex;
     }
@@ -2692,6 +2718,33 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
   function signed(kind, key, value) { return ((M.state && M.state.queued) || []).some(function (x) { return x.command && x.command.kind === kind && x.command[key] === value; }); }
   function planOf(n) { var st = M.state || {}, p = (st.plans || []).filter(function (x) { return x.number === n; })[0], by = {}; (st.intents || []).forEach(function (i) { by[i.number] = i; }); var i = p && by[p.intent]; if (!i) return { name: '', root: null }; var r = i; while (r.parent != null && by[r.parent]) r = by[r.parent]; var w = sayIntent(i, {}); return { name: w.charAt(0).toLowerCase() + w.slice(1), root: r.number }; }
   function intentWords(n) { if (PAPER_TASKS && PAPER_TASKS[n]) return PAPER_TASKS[n].charAt(0).toLowerCase() + PAPER_TASKS[n].slice(1); var i = ((M.state || {}).intents || []).filter(function (x) { return x.number === n; })[0]; if (!i) return ''; var w = sayIntent(i, {}); return w.charAt(0).toLowerCase() + w.slice(1); }
+  // An order of the commander's, named as he knows it and linked to its paper (where WITHDRAW THIS ORDER is): a task the staff formed
+  // under one of his orders goes to that order's paper, opened at the task; an order of his still signed and not taken up, to its
+  // entry under SIGNED, where TAKE BACK is. Found by the order's number, walked up its parents in `command_state`.
+  function orderFound(n) {
+    var by = {}, i; ((M.state || {}).intents || []).forEach(function (x) { by[x.number] = x; }); i = by[n];
+    if (i) { var r = i; while (r.parent != null && by[r.parent]) r = by[r.parent]; return { root: r.number, task: n, intent: i }; }
+    var q = ((M.queue || {}).entries || []).filter(function (e) { return e.command && e.command.intent === n; })[0];
+    return q ? { queued: q } : null;
+  }
+  function orderWordsOf(n, found) {
+    var w = intentWords(n), i = found && found.intent, h = i && i.hex && !M.hexNames[i.hex[0] + ',' + i.hex[1]] && !/\(-?\d+, ?-?\d+\)\s*$/.test(w) ? ' (' + i.hex[0] + ', ' + i.hex[1] + ')' : '';
+    return w ? 'your order to ' + w.charAt(0).toLowerCase() + w.slice(1) + h : 'one of your orders';
+  }
+  function orderLink(n) {
+    var found = orderFound(n), words = orderWordsOf(n, found); if (!found) return document.createTextNode(words);
+    var b = el('button', 'ref', words); b.type = 'button'; b.title = found.queued ? 'Show it under SIGNED' : 'Open the order';
+    b.addEventListener('click', function (ev) { ev.stopPropagation(); openOrder(n); }); return b;
+  }
+  function openOrder(n) {
+    var found = orderFound(n); if (!found) return;
+    function go() {
+      if (found.queued) { if (document.body.classList.contains('drawer-open') === false) setDrawer(true); var box = $('signed'), rows = box ? box.querySelectorAll('.sg') : [], at = ((M.queue || {}).entries || []).indexOf(found.queued); var row = rows[Math.max(0, Math.min(at, rows.length - 1))]; if (row) { row.scrollIntoView({ block: 'center' }); row.classList.add('focus'); setTimeout(function () { row.classList.remove('focus'); }, 2500); } return; }
+      readPlan(found.root, found.task !== found.root ? found.task : null);
+    }
+    if (paper) { if (!paperChosen()) { closePaper(); return go(); } return paperAsk('Tear up this order to read about your other order?', function () { closePaper(); go(); }); }
+    go();
+  }
   function planWords(t) { return t.replace(/plan:(\d+)('s)?/g, function (x, n, own) { var p = planOf(parseInt(n, 10)); return 'plan ' + n + (p.name ? (own ? ' (' + p.name + ')' : ', ' + p.name + ',') : '') + (own || ''); }).replace(/,( cannot|\.|$)/, function (x, y) { return y === ' cannot' ? ', cannot' : y; }); }
   // Whose an accepted order was. The staff's reason for an order it handed
   // in is recorded straight after the order is taken in, so an accepted order
@@ -2722,11 +2775,14 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
   // what holds it and what would change it. Every word is the staff's own
   // (the tool `why`); only the order and the names are the table's.
   function reasonWords(t, own, cap, keepHex) {
-    function said(x, n) { n = parseInt(n, 10); if (n === own) return 'this task'; var w = intentWords(n); return w ? '"' + w + '"' : 'order ' + n; }
+    function said(x, n) { n = parseInt(n, 10); if (n === own) return 'this task'; var w = intentWords(n); return w === 'this order' ? w : w ? '"' + w + '"' : 'order ' + n; }
+    // A unit that is not free, for another order's sake, names that order: a mark the page draws as a link to its paper.
+    t = String(t).replace(/\b((?:task_force|air_group|land_unit|ship|submarine):\d+) is not free: \1 (?:has a carrier task, |serves )intent:(\d+)(?:, an intent (?:higher in priority|in force))?/g, '$1 is not free: it serves ⟦$2⟧')
+      .replace(/\bhas a carrier task, intent:(\d+)|\bserves intent:(\d+), an intent (?:higher in priority|in force)/g, function (m, a, b) { return 'serves ⟦' + (a || b) + '⟧'; });
     t = String(t).replace(/intent:(\d+)/g, said);
     t = nameText(plainWords(String(t).replace(/\bintent (\d+)\b/g, said), keepHex));
     // A name said twice, "X (X)", is said once; a name may begin with a figure ("2nd ...").
-    t = t.replace(/([A-Z0-9][\w .'’-]*?) \(\1\)/g, '$1').replace(/(\d) nm\b/g, '$1 miles').replace(/\bfrom day (\d+)\b/g, function (x, n) { var d = dateOf(parseInt(n, 10) - 1); return d ? 'from ' + d : x; });
+    t = t.replace(/([A-Z0-9][\w .'’-]*?) \(\1\)/g, '$1').replace(/(\d) nm\b/g, '$1 miles').replace(/(\d[\d,]*) miles \(\1 miles\)/g, '$1 miles').replace(/\bfrom day (\d+)\b/g, function (x, n) { var d = dateOf(parseInt(n, 10) - 1); return d ? 'from ' + d : x; });
     // "a may be used from 20 AUG, b may be used from 20 AUG, c may be used from 30 AUG": gathered by the day.
     t = t.replace(/\(((?:[^()]*? may be used from [^,()]+)(?:, [^()]*? may be used from [^,()]+)+)\)/g, function (x, inner) { var by = {}, order = []; inner.split(', ').forEach(function (it) { var m = /^(.*?) may be used from (.+)$/.exec(it); if (!m) return; if (!by[m[2]]) { by[m[2]] = []; order.push(m[2]); } by[m[2]].push(m[1]); }); return '(not yet to hand: ' + order.map(function (d) { return by[d].join(', ') + ' from ' + d; }).join('; ') + ')'; });
     return cap ? t.charAt(0).toUpperCase() + t.slice(1) : t;
@@ -3041,9 +3097,28 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
       .replace(/\babove fatigue (\d+)(?:\.\d+)?/g, 'tired past $1 of 100')
       .replace(/\bfatigue (\d+)(?:\.\d+)?/g, function (m, n) { return tiredBit(n); })
       .replace(/ is 0 nm from the nearest hex of /g, ' lies in ').replace(/(\d+) nm from the nearest hex of /g, '$1 nm from ')
+      .replace(/\bmust touch a hex of the waters\b/g, 'must reach the waters')
+      .replace(/\ba group at the base, or one that can fly\b/g, 'a bomber or search group at a base within reach')
       .replace(/\b(\d+) ([a-z]+(?: [a-z]+)?)\(s\)/g, function (m, n, w) { return n + ' ' + w + (n === '1' ? '' : 's'); })
       .replace(/(?<![\d.])0\.75(?!\d)/g, 'three quarters').replace(/(?<![\d.])0\.5(?!\d)/g, 'half').replace(/(?<![\d.])0\.25(?!\d)/g, 'a quarter')
       .replace(/\b(25|50|75) in 100\b/g, function (m, n) { return shareWords(+n / 100); });
+  }
+  // What cannot be done, said as facts in the player's terms, with what would change it; `null` where the staff's sentence is none the
+  // table knows, and then the sentence itself is said. A base's distance from waters is said as the base in them or so many miles from them;
+  // a force not free for another order's sake names that order (a link, drawn from the mark `reasonWords` makes) and is withdrawn with it.
+  function plainFact(t) {
+    t = String(t); var m, lines = [], changes = [], miles = function (n) { return +n === 0 ? 'in these waters' : commas(Math.round(+n)) + ' miles from these waters'; };
+    if (/(?:^|\. )No base intent:\d+ may use has a bomber whose normal reach, or a group whose search range, touches the waters/.test(t)) {
+      var bs = []; t.replace(/(base:\d+ \([^)]*\)) is (\d+) nm from the nearest hex of the waters/g, function (x, b, d) { bs.push(b + ', ' + miles(d)); return x; });
+      if (bs.length) lines.push('No air base can reach these waters: ' + (bs.length > 1 ? bs.slice(0, -1).join('; ') + ' and ' + bs[bs.length - 1] + ' have' : bs[0] + ', has') + ' no bomber or search aircraft the staff may use.');
+      if ((m = /and no carrier force can serve it: ([^.]*?(?:intent:\d+)?[^.]*)\./.exec(t))) {
+        lines.push('No carrier force can serve this order: ' + m[1] + '.');
+        m[1].replace(/(?:has a carrier task, |serves )intent:(\d+)/g, function (x, n) { changes.push('⟦' + n + '⟧ withdrawn'); return x; });
+      }
+      return lines.length ? { lines: lines, changes: changes } : null;
+    }
+    if ((m = /(?:^|\. )No base intent:\d+ may use has a bomber group that reaches (base:\d+ \([^)]*\)) on normal reach: (base:\d+ \([^)]*\)) is (\d+) nm from /.exec(t))) return { lines: ['No air base can reach ' + m[1] + ': ' + m[2] + ', ' + commas(Math.round(+m[3])) + ' miles away, has no bomber group the staff may use.'], changes: [] };
+    return null;
   }
   function paperText(t, own) {
     return reasonWords(tidyWorked(paperPre(t)), own, true, true).replace(/(\S[^()]*\([^()]*\)) \(\1\)/g, '$1').replace(/\b([A-Z][\w .'’-]*?) stands at \1, a named place of /g, '$1 is a named place of ');
@@ -3141,19 +3216,21 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
     }); });
     return out.map(function (x) { return typeof x === 'string' ? x : (x.force || 'The station') + ' would stand within reach of ' + (x.parts.length > 1 ? x.parts.slice(0, -1).join(', ') + ' and ' + x.parts[x.parts.length - 1] : x.parts[0]); });
   }
-  function paperNode(t) {
-    var n = el('div', 'node ptask'), who = el('div', 'who');
-    who.appendChild(taskWords('strong', t.label)); if (t.word) { var tag = el('span', 'state', t.word); if (t.word === 'WAITS FOR YOU' || t.word === 'CANNOT BE MET') tag.style.color = 'var(--enemy)'; who.appendChild(tag); } n.appendChild(who);
-    if (t.arcs.length) { who.addEventListener('mouseenter', function () { paperHover = t.arcs.map(paperArc).filter(Boolean); paperArcsDraw(); }); who.addEventListener('mouseleave', function () { paperHover = null; paperArcsDraw(); }); }
+  // `bare` is the order itself, in the staff's reading: it has no line of its own, only what is under it.
+  function paperNode(t, bare) {
+    var n = el('div', 'node ptask'), who = el('div', 'who'); if (t.n != null) n.setAttribute('data-task', String(t.n));
+    who.appendChild(taskWords('strong', t.label)); if (t.word) { var tag = el('span', 'state', t.word); if (t.word === 'WAITS FOR YOU' || t.word === 'CANNOT BE MET') tag.style.color = 'var(--enemy)'; who.appendChild(tag); } if (!bare) n.appendChild(who);
+    if (t.arcs.length && !bare) { who.addEventListener('mouseenter', function () { paperHover = t.arcs.map(paperArc).filter(Boolean); paperArcsDraw(); }); who.addEventListener('mouseleave', function () { paperHover = null; paperArcsDraw(); }); }
     if (t.dim) n.style.opacity = 0.6;
     var u = unitsView(t.units);
-    if (u) n.appendChild(u); else if (!t.kids.length && t.nothing.length) n.appendChild(paperLine('work', oneFact(t.nothing[0], t.n), t.n));
+    if (u) n.appendChild(u); else if (!t.kids.length && t.nothing.length && !t.facts.length) { var pf = plainFact(t.nothing[0]); (pf ? pf.lines : [oneFact(t.nothing[0], t.n)]).forEach(function (l) { n.appendChild(paperLine('work', l, t.n)); }); }
+    t.facts.forEach(function (f) { var l = paperLine('work', f, t.n); l.style.color = 'var(--enemy)'; n.appendChild(l); });
     var warn = cautionTexts(t.cautions); if (warn.length) { var cw = el('div', 'cautions'); warn.forEach(function (x) { cw.appendChild(paperLine('work', x, t.n)); }); n.appendChild(cw); }
     var why = whyView(t); if (why) n.appendChild(why);
     t.kids.forEach(function (k) { n.appendChild(paperNode(k)); });
     return n;
   }
-  function newTask(number, label) { return { n: number, label: label, word: null, units: [], reasons: [], nothing: [], chose: [], arcs: [], threats: null, cautions: [], kids: [], dim: false }; }
+  function newTask(number, label) { return { n: number, label: label, word: null, units: [], reasons: [], nothing: [], chose: [], arcs: [], threats: null, cautions: [], kids: [], facts: [], dim: false }; }
   // The arcs a task's units are ordered to search, once each, from the task's own place.
   function arcsFrom(t, hex) {
     var seen = {}; t.units.forEach(function (x) { if (x.order && x.order.kind === 'set_search_arc') { var a = { hex: hex, from: +x.order.from_deg, to: +x.order.to_deg, range: +x.order.range_nm }, k = [a.from, a.to, a.range].join('>'); if (!seen[k]) { seen[k] = 1; t.arcs.push(a); } } });
@@ -3182,11 +3259,20 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
     hand.forEach(function (x) { var t = by[x.intent] || root; if (x.reason && x.reason.cautions && x.reason.cautions.length) t.cautions.push({ list: x.reason.cautions, force: /^task_force:/.test(x.unit || '') ? x.unit : null }); });
     Object.keys(by).forEach(function (k) { finishTask(by[k], by[k].hex); });
     (tr.arcs || []).forEach(function (a) { var t = by[a.intent]; if (t && !t.threats) t.threats = threatsOf(a.how); });
-    (tr.no_orders || []).forEach(function (s) { var m = /\bintent:(\d+)/.exec(s), t = m && by[+m[1]]; if (t && !t.units.length && t !== root) t.nothing.push(s); });
+    // What cannot be done, as a fact under the task it belongs to, with what would change it in that task's WHY.
+    ((pr.would_hand_in && pr.would_hand_in.no_orders) || []).forEach(function (r) {
+      if (/^Taking plan/.test(String(r.worked || ''))) return;
+      var k = r.serves && r.serves.intent, t = k != null ? by[k] : null, f = t && plainFact(r.worked); if (!f) return;
+      f.lines.forEach(function (l) { if (t.facts.indexOf(l) < 0) t.facts.push(l); }); t.reasons.push({ binding: r.binding || [], would_change: (r.would_change || []).concat(f.changes), evidence: [] });
+    });
+    (tr.no_orders || []).forEach(function (s) { var m = /\bintent:(\d+)/.exec(s), t = m && by[+m[1]]; if (t && !t.units.length && !t.facts.length && t !== root) t.nothing.push(s); });
+    // A caution said under a task is not said again under the order above it.
+    (function (t) { var seen = {}; (function walk(k) { k.kids.forEach(function (c) { cautionTexts(c.cautions).forEach(function (x) { seen[x] = true; }); walk(c); }); })(t); t.cautions = t.cautions.filter(function (en) { var tx = cautionTexts([en]); return !tx.length || !tx.every(function (x) { return seen[x]; }); }); })(root);
     return root;
   }
-  function readPlan(root) {
-    paperArcsClear();
+  var paperFocus = null;
+  function readPlan(root, focus) {
+    paperArcsClear(); paperFocus = focus == null ? null : focus;
     Promise.all([api('command_state'), api('plans'), api('staff_orders').catch(function () { return {}; }), api('order', { intent: root }).catch(function () { return null; })]).then(function (a) {
       // A plan not yet launched has formed nothing: the staff is asked what releasing it would form and order.
       var mine = (a[0].intents || []).filter(function (i) { return i.number === root; })[0], mp = mine && mine.plan != null ? (a[1].plans || []).filter(function (p) { return p.number === mine.plan; })[0] : null;
@@ -3325,6 +3411,7 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
       // No caption that explains how a plan is changed (agreed Nov 19, 2026); inside a day the paper says only when it was worked.
       if (!WATCH && a[2].inside_day) doc.appendChild(el('div', 'foot', 'Worked now, inside the day; the staff works it again at 1800.'));
       sheetAs('THE PLAN');
+      if (paperFocus != null) { var fn = doc.querySelector('[data-task="' + paperFocus + '"]'); paperFocus = null; if (fn) { fn.scrollIntoView({ block: 'center' }); fn.classList.add('focus'); } }
       // The plans of the orders in force are paged through from one another.
       var roots = st.intents.filter(function (i) { return i.parent == null && i.in_force; }).map(function (i) { return i.number; }).sort(function (x, y) { return x - y; }), at = roots.indexOf(root);
       if (at >= 0 && roots.length > 1) { $('sheet-step').hidden = false; $('sheet-step-n').textContent = (at + 1) + ' of ' + roots.length; $('sheet-prev').onclick = function () { readPlan(roots[(at - 1 + roots.length) % roots.length]); }; $('sheet-next').onclick = function () { readPlan(roots[(at + 1) % roots.length]); }; }
@@ -3337,7 +3424,7 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
   // in the game is changed by it. ----
   var drySize = 'small', dryBusy = false;
   // A distance the staff gives in hexes is given in miles, as the draft gave it, unless the hexes are shown.
-  function dryWords(t) { return nameText(String(t).replace(/\b(\d+) hex(?:es)?\b(?! round)/g, function (m, n) { return showHexes ? m : (+n * hexMiles()) + ' miles'; }).replace(/\((-?\d+),(-?\d+)\)/g, function (m, q, r) { return hexWords({ q: Number(q), r: Number(r) }); }).replace(/\bworlds\b/g, 'runs').replace(/\bworld\b/g, 'run').replace(/\bintent (\d+)/g, 'order $1').replace(/\b[Tt]he trial's enemy/g, function (m) { return (m.charAt(0) === 'T' ? 'The' : 'the') + ' enemy of the dry run'; }).replace(/\bthe trial\b/g, 'the dry run').replace(/\ba trial\b/g, 'a dry run').replace(/\bsecond trial\b/g, 'second run')); }
+  function dryWords(t) { return nameText(plainCounts(t).replace(/\b(\d+) hex(?:es)?\b(?! round)/g, function (m, n) { return showHexes ? m : (+n * hexMiles()) + ' miles'; }).replace(/\((-?\d+),(-?\d+)\)/g, function (m, q, r) { return hexWords({ q: Number(q), r: Number(r) }); }).replace(/\bworlds\b/g, 'runs').replace(/\bworld\b/g, 'run').replace(/\bintent (\d+)/g, 'order $1').replace(/\b[Tt]he trial's enemy/g, function (m) { return (m.charAt(0) === 'T' ? 'The' : 'the') + ' enemy of the dry run'; }).replace(/\bthe trial\b/g, 'the dry run').replace(/\ba trial\b/g, 'a dry run').replace(/\bsecond trial\b/g, 'second run')); }
   function dryBox(doc, root) {
     var box = el('div', 'planorder dryrun'), sizes = el('span', 'seg sizes'), row = el('div', 'line'), more = el('div', 'line'), says = el('div', 'work'), all = [];
     ['small', 'standard', 'full'].forEach(function (z) { var b = el('button', z === drySize ? 'on' : '', z.toUpperCase()); b.type = 'button'; b.addEventListener('click', function () { drySize = z; Array.prototype.forEach.call(sizes.children, function (c) { c.className = c === b ? 'on' : ''; }); }); sizes.appendChild(b); });
@@ -4461,6 +4548,32 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
     $('o-risk-balanced').checked = true; $('o-dist').value = '2'; patrolStations = null; showPatrol(); drawMarks(); askPreview();
   }
   function chosen(name) { var r = document.querySelector('#paper input[name="' + name + '"]:checked'); return r ? r.value : ''; }
+  // The draft as an order in force would be read, so that the plan's functions can draw its tree: its number is the next free one, and in
+  // the words of the reading it is "this order".
+  function draftTop(e, p) {
+    var k = e[1], t = { number: p.intent, kind: k.intent_kind, maker: 'commander', hex: k.hex || null, distance: k.distance, island: k.island, task_force: k.task_force };
+    if (k.base != null) t.base = { handle: 'base:' + k.base, name: '' }; if (k.target != null) t.target = { handle: 'base:' + k.target, name: '' };
+    return t;
+  }
+  // What the staff would do if the order is signed, in one line: the one carrier force it would work the waters with, said as it is; else
+  // that it would take the order up in tasks or in orders; else that nothing can serve it yet.
+  function readingTop(root, kind) {
+    var kids = root.kids, one = kids.length === 1 && !root.units.length ? /^Operate (.+?) from (\(-?\d+,-?\d+\))$/.exec(kids[0].label) : null;
+    if (one) return { text: one[1] + ' would ' + (kind === 'deny' ? 'work these waters from ' : 'operate from ') + one[2] + '.' };
+    if (kids.length) return { text: 'The staff would take it up in these tasks:' };
+    if (root.units.length) return { text: 'The staff would give these orders:' };
+    return { text: 'Nothing can serve this order yet.', bad: true };
+  }
+  function readingView(out, p, e) {
+    var w = p.with_change || {}, pr = { tree: w.tree || {}, would_hand_in: w.would_hand_in || {}, stations: w.stations || p.stations, reason: w.reason || {} };
+    var top = draftTop(e, p), root = proposedTree(top, {}, pr), body = String((w.reason || {}).worked || '').replace(/^Taking [\s\S]*? as released, the staff would (?:do this for the tree of \S+: )?/, '');
+    PAPER_TASKS[top.number] = 'this order';
+    var lead = readingTop(root, top.kind), line = paperLine('work', lead.text, null); line.style.fontWeight = 'bold'; if (lead.bad) line.style.color = 'var(--enemy)'; out.appendChild(line);
+    if (lead.bad === undefined && (w.no_orders || []).some(function (n) { return (n.binding || []).some(function (b) { return /^leave to launch is withheld/.test(b); }); })) out.appendChild(el('div', 'work', 'It would wait for your leave to launch.'));
+    var shown = paperNode(root, true); shown.style.borderLeft = '0'; shown.style.paddingLeft = '0'; out.appendChild(shown);
+    if (body) { var d = document.createElement('details'), sm = document.createElement('summary'); sm.textContent = 'THE STAFF\'S WORKING IN FULL'; d.className = 'fold'; d.appendChild(sm); workedView(d, '', { worked: paperPre(body) }, null, true); out.appendChild(d); }
+    PAPER_TASKS = null;
+  }
   function askPreview() {
     if (!draft) return; var seq = ++previewSeq, out = $('o-preview'), e = draft.ends[parseInt(chosen('end'), 10) || 0];
     previewNo = null; $('p-sign').disabled = true; $('p-dry').disabled = true; $('p-dry').hidden = !OFFERED.trial; $('o-dry-says').textContent = ''; out.textContent = 'Asking the staff.'; $('o-pv').open = true; $('o-pv-sum').textContent = 'THE STAFF\'S READING';
@@ -4468,19 +4581,11 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
     patrolStations = null; if (g) drawMarks();
     api('preview', args).then(function (p) {
       if (seq !== previewSeq) return; if (p.status === 'refused') throw new Error(p.reason || p.summary || 'refused');
-      if (seq !== previewSeq) return; out.textContent = ''; var w = p.with_change || {};
-      out.appendChild(rich('div', '', 'It would ' + p.shown + '. On the first morning the staff would give ' + countOf((w.orders || []).length, 'order') + ' and ' + countOf((w.commands || []).length, 'command') + ' of its own.'));
-      // What approving it would send, worked as if released, and an order it
-      // cannot meet, said as such and not as ready (decision 0202, 31).
-      var said = (w.no_orders || []).map(function (n) { return n.worked || (n.binding || []).join('; '); });
-      var approving = said.filter(function (t) { return /^Taking plan/.test(t); }), rest = said.filter(function (t) { return !/^Taking plan/.test(t); });
-      approving.forEach(function (t) { var cannot = /cannot meet|would form no intent and give no order/.test(t); var d = rich('div', '', (cannot ? 'Approved, it would form nothing that serves the order: ' : 'If you approve it: ') + t.replace(/^Taking [\s\S]*? as released, the staff would (?:do this for the tree of \S+: )?/, '').split(/ intent:\d+, operating the carrier force /)[0]); if (cannot) d.style.color = 'var(--enemy)'; out.appendChild(d); });
-      rest.filter(function (t) { return /cannot meet/.test(t); }).forEach(function (t) { var d = rich('div', '', 'It cannot meet the order: ' + t); d.style.color = 'var(--enemy)'; out.appendChild(d); });
-      var yet = rest.filter(function (t) { return !/cannot meet/.test(t); });
-      yet.slice(0, 3).forEach(function (t) { out.appendChild(rich('div', '', 'It cannot yet: ' + t)); });
-      if (yet.length > 3) out.appendChild(el('div', '', 'And ' + (yet.length - 3) + ' more it cannot yet do.'));
+      if (seq !== previewSeq) return; out.textContent = '';
+      // The reading is the plan's paper in short: the same tree, drawn by the same functions (decision 0221, "As built: the staff's reading").
+      readingView(out, p, e);
       if (chosen('risk') !== 'balanced') out.appendChild(el('div', '', 'This reading is worked at balanced risk.'));
-      patrolStations = w.stations || p.stations || null; if (g) drawMarks();
+      var w = p.with_change || {}; patrolStations = w.stations || p.stations || null; if (g) drawMarks();
       previewNo = p.preview; $('p-sign').disabled = false; $('p-dry').disabled = false;
     }).catch(function (err) { if (seq !== previewSeq) return; out.textContent = 'The staff refuses it: ' + err.message; $('o-pv-sum').textContent = 'THE STAFF REFUSES IT'; $('o-pv').open = true; });
   }
