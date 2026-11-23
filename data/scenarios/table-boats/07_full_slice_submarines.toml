@@ -3189,10 +3189,12 @@ points_per_100_men = 1
 [side.allied]
 submarine_pattern = "off_bases"
 expects_boats_off_own_bases = true
+staff_chooses_supply_sources = true
 
 [side.japanese]
 submarine_pattern = "lines"
 expects_boats_off_own_bases = false
+staff_chooses_supply_sources = true
 
 # USS S-38 (ships.csv 16000; class 6009, S-1 group, by ship_facts 16015).
 # PLACEHOLDER start (-5,-12): engagement_events 16119 (off Cape St George on 7

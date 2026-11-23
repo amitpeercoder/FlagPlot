@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 23, 2026. It is step 3 of decisi
 
 Summary: Where a commander orders a place held and names no base to supply it from, the staff forms no supply and tells him to name one. Under an order to control an island the staff does choose, by the most supply above the reserve, which can pick a full base no ship lies at, or strip a forward base of its own men's food. This gives the staff one rule for choosing a source, used in both cases: a base that can spare supply after its own fifteen days, one that can cover the place's need before one that cannot, one with a transport force lying empty at it before one with none, then the most to spare. The choice is kept, shown on the order's paper as the staff's, and the commander may change it.
 
-Standing: Planned on Nov 23, 2026; amended on review; nothing built.
+Standing: Planned on Nov 23, 2026; amended on review and by the architect's rulings on the build; built on Nov 23, 2026 (As built, below).
 
 ## Why it is a record of its own
 
@@ -284,4 +284,77 @@ Added to what must always hold: two bases of a side in one hex can never togethe
 ### What the build changes in the rulebook
 
 Chapter 8: the key and what a side without it gets; Holding a place, The supply that follows; Controlling an island, The source of supply and The source kept; the doctrine's step 1 (an empty pool) and A new run (the cut); The tools (`supplied_from`); the doctrine's version. Chapter 1 or 8, wherever a scenario's keys for a side are listed. The glossary: "supply to spare", "the place's need".
+
+
+## The architect's ruling on the build, Nov 23, 2026
+
+**Found, before any code.** This record believed the staff may already set a forces limit on an intent it formed under a commander's hold. It may not. Intake checks that a limit on an intent with a parent narrows (`check_command`, `SetLimit`, `forces_narrow` in `crates/sim-core/src/command/intake.rs`). Off a take and an island, with no limit above that binds ships the limit may name no ship and no task force, and it may name a source only where a limit above names that source. So under a hold with no limit, the staff's limit of source base 3 and task force 1 is refused as wider than its parent; under a hold that names only a source, its task forces are. The architect read the function and its one caller, and it is so. Only a chain under a take or an island is checked by `forces_narrow_under_take`, where a limit above binds only what it names.
+
+**Ruled: a second engine change, beside the key.** For a side whose scenario says its staff chooses its sources of supply, a forces limit set on a "keep supplied" whose parent is a "hold a place" is checked as under a take (`forces_narrow_under_take`): each limit above binds only what it names of the task forces and ships, the land units and the source, and what none names is the staff's to name. A source the commander names anywhere above still binds: a limit that names another is refused.
+
+- **It is keyed on the side's key, the intent's kind and its parent's kind, and on nothing else.** Not on who gives the command and not on who made the intent: a "keep supplied" under a hold is always the staff's, since a hold is a root under which only the staff forms (and the invariants hold a child to the staff's making). So `forces_narrow` is given the intent the limit is set on, and needs neither the issuer nor the maker. The developer's suggestion is taken with that one simplification.
+- **For a side without the key the check is what it is today,** on every chain. A take and an island are untouched for every side.
+- **Rule card, added.** Reads: the side's key; the kind of the intent a forces limit is set on and of its parent; the forces limits above it as they were set. Writes: nothing; it decides whether `set_limit` is taken or refused as wider than its parent. Draws: none.
+- **The rules label stays 32.** No file on file states the key, so no game on file meets the changed check. No other version moves for this: the doctrine, the layout, the saved game and the agent interface are as "The versions it raises" has them.
+- **Statements.** 1, 6, 8, 9, 12 and 14 rest on the change and none is restated. Added, as tests of intake in `sim-core` beside those of `forces_narrow`:
+  - **21.** For a side without the key, a forces limit naming a source and a task force, set on a "keep supplied" under a hold with no forces limit, is refused as wider than its parent, as today.
+  - **22.** For a side with the key, the same limit is taken.
+  - **23.** For a side with the key, under a hold whose forces limit names source base 4, a limit on the "keep supplied" naming source base 3 is refused as wider than its parent, and one naming base 4 and a task force is taken.
+  - **24.** For a side with the key, a forces limit set on a cover formed under the same hold is checked as today.
+- **Rulebook:** chapter 8, The intent tree (a limit must narrow) and The forces limit on a staff's orders, say the keyed case.
+
+"The engine changes in one place" above is replaced by: the engine changes in two places, the key and this check.
+
+### The second stop: a run of the supply under a hold, and rule 17's bases
+
+**Found, by play of file a.** The choice, the forming and the limit work on day 1 (source base 3, task force 1). Every later `add_run` and `commit_ships` is refused as having no forces limit. Intake's `forces_of` (`crates/sim-core/src/command/intake.rs`) reads the forces limit of the plan's owner, and, where the owner has none, the nearest limit up the tree only for a "keep supplied" under an island. Section B of the review made the supply share the hold's plan, so the owner is the hold, and the limit the staff sets on the supply beneath it is never read. The architect read the closure and its two callers, and it is so. Section B did not foresee it.
+
+**Ruled: a third engine change.** For a side with the key, where the owner of a plan is a "hold a place" and a "keep supplied" in force formed directly under it has a forces limit of its own, the forces limit of a run of that plan is that supply's: its source and its pool. With more than one such supply, the lowest-numbered. With none, the owner's limit is read as today. That limit was taken by the check of the first ruling, so it is inside whatever the commander named above. For a side without the key nothing is read differently.
+
+- **Rule card, added.** Reads: the side's key; the kind of a plan's owner; the "keep supplied" intents in force directly under it and their forces limits. Writes: nothing; it decides which forces limit `add_run` and `commit_ships` are checked against. Draws: none.
+- **Versions:** none moves. The rules label stays 32, since no file on file states the key.
+- **Statements:** 4, 8, 9 and 14 rest on it and none is restated. Added, a test of intake: **25.** For a side with the key, a run of a hold's plan is checked against the forces limit of the "keep supplied" in force under the hold (taken where its ships are in that limit, refused where they are not); for a side without the key, with no limit on the hold, it is refused as having no forces limit, as today.
+- **Rulebook:** chapter 8, Runs and Holding a place (Its plan) say which limit a run of a hold's plan draws on.
+
+"The engine changes in two places" is replaced by: three, the key, the narrowing check and this.
+
+**Rule 17's bases: confirmed as the developer built it.** The other bases the day's reason names are weighed by rules 1 and 2 without the test of "the source of an order higher in priority", and with the test of a base before its day. The list is there to lead the commander to name a source, and by rule 14 a base he names is not refused because another order draws on it; a base before its day he cannot use at all. So the list is exactly the bases he could name with something to spare. Rule 17 is read so: "each other base of the side, not in the place's hex and not before its day, that has supply to spare".
+
+## As built, Nov 23, 2026
+
+Built by a developer from the record as amended on review and by the architect's rulings on the build, in one branch. Commits, in order: the engine and the staff; scenario 132's files; the third ruling and the intake tests; scenario 132's test; the table, decision 0224's rulings in the table's 39-day files and the rulebook; the generated files; the pins.
+
+- **Versions taken:** doctrine `supply-59`; state layout `flagplot-state-v59`; saved game 27; agent interface 53. The rules label stays 32. Main had 52 for the interface (decision 0226) and decision 0227 moved no version.
+- **The key:** `staff_chooses_supply_sources` under `[side.allied]` and `[side.japanese]`, held in `CommandState::staff_chooses_sources`, hashed last in the side's command state, named in `name_every_field`, given by `SideView::staff_chooses_sources`. A side's command state with the key is not empty (`CommandState::is_empty`).
+- **The three engine changes** (the record: "three, the key, the narrowing check and this"): `forces_narrow` is given the intent the limit is set on; `CommandState::supply_limit_under_hold` is read by `forces_of` (the limit a run of a hold's plan is checked against) and by the apply of `add_run` (the run's source).
+- **The staff** (`crates/sim-staff/src/source.rs` is new): `weigh_sources` (rules 1 to 4, in a `Day`), `base_spare`, `hex_keeps`, `place_need`, `other_sources_words` (rule 17). `holding.rs` gains `keyed_hold_supply` (rules 9, 10, 12, 14, 16), `nothing_to_spare_reason` (rule 6); `island.rs` takes the one rule for a side with the key (rule 13) and not refusing a commander's named base for another order's draw (rule 14); `planner.rs` and `doctrine.rs` the cut to what the source can spare (rule 7) and the plan not marked failed (amendment B).
+- **The tool:** `command_state` gives `supplied_from` on a hold and an island, from `CommandState::supplied_from` (rule 18); `chosen_by` is `commander` where an intent of his on the supply's chain names a source.
+- **The table** (rules 19 to 21): `supplyForces` and "WE CHOSE IT FOR YOU" are gone; the plan's paper says "Supplied from: <base>, our choice" with CHANGE where the staff chose; `check_screen.py` has the checks. The table's files state the key for both sides through `scripts/table-boats/make_files.py`.
+- **Decision 0224's rulings** in `data/scenarios/table-rear-bases/`, made by `scripts/table-rear-bases/make_files.py` from the 39-day files of `table-boats/` (the games the table plays; the record named `table-hunger`, which the table no longer plays), tested in `tests/table_rear_bases_files.rs`; `table/scenarios.json` names them. Those files are the games with the key on. The measurement the record asks of 0224's rulings "first without it, then with it" is not made here.
+
+**Statements.** 1 to 20 are tested in `tests/scenario_132_a_source_the_staff_chooses.rs` and hold as written, with the readings below; 21 to 25 are tested in `crates/sim-core/src/command/tests.rs` and hold. The properties are tested as games (the order of rule 4 is read from the source the staff gives over varied stocks and forces).
+
+**Readings the build made, for the architect.**
+- **Statement 14, "the morning after the commander names base 2":** the commander's command of day 3 is taken in before the staff is asked on day 3, so the staff sets the limit on the morning of day 3 itself. The test asserts it is set before day 16 and names the pool exactly.
+- **Statement 16** needed a reason on every morning of a kept source: the staff gives one (a no-order reason, "chosen on an earlier morning and kept") each morning the source is kept and unchanged, where it is the staff's.
+- **Statement 10:** the reason of a day the supply cannot be met says "no other base of the side can spare supply" (its words come from `other_sources_words`).
+- **Rule 17's list** is as the architect confirmed.
+- **Statement 5 of decision 0224** ("no file under data/scenarios outside the new folder is changed") could not hold with the key turned on in the table's files: the sixteen files of `table-boats/` change in their `[side]` tables by the one key and by nothing else. The new folder's files are made from them.
+- **Tests that name the table's folders** (`scenario_119`, `scenario_123`, the lists of folders that may name the table's ground figures) gain the new folder in their lists; no expected number of any test moved but the state hashes and versions of the layout.
+
+**What did not move.** No run baseline changed beyond its hash lines (`scripts/regenerate.sh`); no staffed game on file played differently; the recorded games' transcripts changed in the interface version alone, and in `second_proof_week_sonnet` by `supplied_from: null` in two `command_state` answers, the tool's one new field (`recorded_games/README.md`). Every pinned state hash and export hash was remade for the layout; every digest of what a staff hands in (`scenario_130`, part D) is as it was.
+
+**Rule card as built.** Reads: the side's key; the side's bases (supply, reserve, hex), the planned use of the hexes, the transport forces (stopped, empty, may be taken), the engine's sea path, the command state. Writes: a "keep supplied" under a hold, the forces limit of the supply it formed; nothing else. Draws: none. No new event: `side_events.rs` is not touched.
+
+## The architect's rulings after the build, Nov 23, 2026
+
+Read on the branch `source-build` at 60a4f8e7: the diff of `data/scenarios/` and of the recorded games against main, `staffing.rs` where `supplied_from` is written, the two tests whose lists of folders changed, scenario 132's doc comment and the table's check.
+
+1. **The table's files state the key in their own folders: right.** The sixteen files of `data/scenarios/table-boats/` each gain one line in each side's table, `staff_chooses_supply_sources = true`, made by their script, and nothing else in them differs. They are the table's files and no proof's. The boats' tests pass as written.
+2. **`table-rear-bases/` joins the list of the table's folders in scenarios 119 and 123: accepted.** Each list says which folders hold the table's copies; no expected number or statement moved.
+3. **Statement 14 is restated,** here and in the test's doc comment: "On the morning of day 3, the day the commander names base 2, his command being taken in before the staff is asked, the staff sets the supply's forces limit to source base 2 and task force 2, and task force 1 is no longer in it; `supplied_from` says base 2, `chosen_by` `commander`." "The morning after" was the architect's error about the day's order. The test is to assert day 3, not "before day 16"; if it is not day 3 it comes back.
+4. **A reason on each morning a source is kept: accepted,** for a side with the key. Statement 16 asks for it, and it is a reason with no order, as the island's kept source is said. It is one reason a supply a morning, not one a base.
+5. **`supplied_from` is left out where there is nothing to say.** The build writes `"supplied_from": null` on a hold or an island with no source, and so changed two answers of `second_proof_week_sonnet`, a closed proof's record, beyond the version line. That is not accepted. Section A's "given for every side, since it only reports" is restated: the key `supplied_from` is present only where the order reads a source, for every side, as the briefing leaves out what a scenario does not state. The record is regenerated; against main it may then differ in the interface's and the doctrine's version numbers and the layout's, and in nothing else. If anything else differs it comes back. The schema says the key may be absent.
+6. **The table's check of the five-day hold of Lunga is the manager's,** not a statement of the architect's: it is a check of the page, and what it now expects (the staff chooses Espiritu Santo, the page chooses nothing) is rules 9, 18 and 21.
+7. **The measurement of decision 0224's rulings is owed after the merge, and first.** It is ruled there.
 

@@ -2,10 +2,10 @@ Placeholder scenario 72: Reconnaissance
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash bdf710a77a1c7911  31 events
-day   2  hash 00b01572af787f28  15 events
-day   3  hash 76a4b25b8182d931  15 events
-day   4  hash d4576f16d930ff85  13 events
+day   1  hash 39efe1c3b5037ffc  31 events
+day   2  hash 8fd543666862a743  15 events
+day   3  hash ff9eeb7466a5e214  15 events
+day   4  hash 3c882b99b64561e8  13 events
 
 #1 D1 -         Allied the commander's command taken: set intent:1 to take the place at (4,0)
 #2 D1 -         Allied plan:1 drafted for intent:1  <- #1

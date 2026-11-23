@@ -159,7 +159,28 @@ pub(crate) fn setup<'a>(
         interval_days: interval_days.unwrap_or(DEFAULT_INTERVAL_DAYS),
         interval_set: interval_days.is_some(),
         area: intent.limits.area.as_ref(),
+        staff_source: view.staff_chooses_sources()
+            && state.commander_source_on_chain(intent.id).is_none(),
     })
+}
+
+/// Whether a forces limit of the commander's on `intent`'s chain binds ships
+/// (decision 0228, B): then the ships are his to name, not the staff's to find.
+fn commander_binds_ships(state: &CommandState, intent: sim_core::ids::IntentId) -> bool {
+    let mut at = state.intents.get(&intent);
+    while let Some(found) = at {
+        if found.maker == sim_core::command::Maker::Commander
+            && found
+                .limits
+                .forces
+                .as_ref()
+                .is_some_and(|limit| limit.binds_ships())
+        {
+            return true;
+        }
+        at = found.parent.and_then(|p| state.intents.get(&p));
+    }
+    false
 }
 
 /// The tons the runs of every plan still loading at `source` have yet to
@@ -219,7 +240,13 @@ pub(crate) fn serve(
             return Served::default();
         }
         Setup::BaseNotYours(which) => {
-            if plan.state.approved() && mode == Mode::Live {
+            // Decision 0228, B: where the source is the staff's choice and the
+            // base is no longer the side's, the plan is not marked failed: the
+            // staff chooses again that morning.
+            let staff_chose = which == "the source"
+                && view.staff_chooses_sources()
+                && state.commander_source_on_chain(intent.id).is_none();
+            if plan.state.approved() && mode == Mode::Live && !staff_chose {
                 out.command(
                     CommandKind::MarkPlan {
                         plan: plan.id,
@@ -303,7 +330,12 @@ pub(crate) fn serve(
                 .speaks_of(state, LimitKind::Forces)
                 .done()
         };
-        if plan.state.approved() && mode == Mode::Live {
+        // Decision 0228, B: where the ships are the staff's to find (no limit
+        // of the commander's on the chain binds ships), an empty pool does not
+        // mark the plan failed: a ship may lie at the source tomorrow.
+        let staff_finds_ships =
+            view.staff_chooses_sources() && !commander_binds_ships(state, intent.id);
+        if plan.state.approved() && mode == Mode::Live && !staff_finds_ships {
             out.command(
                 CommandKind::MarkPlan {
                     plan: plan.id,
@@ -1292,6 +1324,7 @@ fn idle_reason(
         Some(days) => format!(" = {days} days"),
         None => " (no figure)".to_string(),
     };
+    let mut speaks_of_source = false;
     let mut worked = format!(
         "Reading today at {}{}: {} over {} a day{figure}, against a floor of {} days ({}).",
         params.destination,
@@ -1333,6 +1366,14 @@ fn idle_reason(
                     format!(" ({detail})")
                 }
             ));
+            if params.staff_source && matches!(blocker, Blocker::Source { .. }) {
+                worked.push_str(&crate::source::other_sources_words(
+                    planner.view,
+                    params.source,
+                    params.destination_hex,
+                ));
+                speaks_of_source = true;
+            }
             if let Some(short) = &idle.shortfall {
                 worked.push_str(&format!(
                     " Short {} {} at the reading of day {}: {} against {}.",
@@ -1440,6 +1481,9 @@ fn idle_reason(
     }
     builder =
         builder.would_change("a larger use at the destination would bring the next run forward");
+    if speaks_of_source {
+        builder = builder.speaks_of(planner.view.command_state(), LimitKind::Source);
+    }
     builder.worked(worked).done()
 }
 

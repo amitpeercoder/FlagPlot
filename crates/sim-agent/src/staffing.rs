@@ -797,6 +797,18 @@ fn intent_json(n: &Names<'_>, staff: &dyn Staff, view: &SideView<'_>, intent: &I
     if matches!(intent.kind, IntentKind::Hold { .. }) {
         body["measure"] = hold_measure_json(&crate::hold_measure(view, intent.id));
     }
+    // Decision 0228, rule 18: where a hold or an island is supplied from,
+    // worked from the command state and stored nowhere.
+    if matches!(
+        intent.kind,
+        IntentKind::Hold { .. } | IntentKind::ControlIsland { .. }
+    ) {
+        // Left out where the order reads no source (decision 0228, the
+        // architect's rulings after the build).
+        if let Some((base, by)) = state.supplied_from(intent.id) {
+            body["supplied_from"] = json!({"base": base.raw(), "chosen_by": by.name()});
+        }
+    }
     if matches!(intent.kind, IntentKind::ControlIsland { .. }) {
         body["measure"] = island_measure_json(&crate::island_measure(view, intent.id));
     }

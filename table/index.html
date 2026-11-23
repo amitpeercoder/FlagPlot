@@ -112,7 +112,6 @@ button:disabled { opacity: 0.45; cursor: default; }
 .sheet .doc .ordl.focus { outline: 2px solid #f0c36a; outline-offset: 2px; }
 #p-limits .limhead { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 14px; }
 #p-limits .limhead .fl { flex: 0 0 100%; font-size: 12px; color: var(--paper-dim); letter-spacing: 0.08em; }
-#p-limits .limhead .we { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; color: var(--own); }
 #p-limits .limlist { display: flex; flex-direction: column; padding-left: 14px; max-height: 190px; overflow-y: auto; }
 #p-limits .limlist label { min-height: 30px; }
 #p-limits .limkind { display: flex; flex-wrap: wrap; align-items: center; gap: 0 8px; }
@@ -3722,6 +3721,8 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
       row.dataset.key = key; row.dataset.group = limGroup(key); row.id = 'plim-' + key; row.setAttribute('role', 'group'); row.setAttribute('aria-label', name);
       if (set) said = limPart(top.kind, own, key);
       else if (from != null && from !== top.number) { var above = limFromState({ forces: up.forces, area: up.area, targets: up.targets, not_before: up.not_before, knowledge: up.knowledge, risk: up.risk }); said = limPart(top.kind, above, key); }
+      // Decision 0228, rule 19: where the staff chose the source the supply is read from, the line says which base and that it is our choice.
+      if (!said && key === 'source' && top.supplied_from && top.supplied_from.chosen_by === 'staff') said = LINE_NAME.source + ': ' + nm('base:' + top.supplied_from.base) + ', our choice';
       var line = el('span', 'limsaid', said || (key === 'risk' ? name + ': ' + STAFFS + ' (' + (up.risk || 'balanced') + ')' : name + ': ' + STAFFS));
       row.appendChild(line);
       if (!set && from != null && from !== top.number && said) { line.appendChild(document.createTextNode(', from ')); line.appendChild(orderLink(from)); }
@@ -4994,7 +4995,7 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
   function unitNo(x) { return x == null ? null : typeof x === 'object' ? (x.handle ? num(x.handle) : x.number) : typeof x === 'string' && x.indexOf(':') >= 0 ? num(x) : Number(x); }
   function newLim() {
     return { ships: { mode: 'staff', task_forces: [], ships: [] }, air_groups: { mode: 'staff', list: [] }, land_units: { mode: 'staff', list: [] }, submarines: { mode: 'staff', list: [] }, in_place: false, source: null,
-      area: null, targets: null, protected: null, not_before: null, wait_for: null, after: null, knowledge: null, risk: 'balanced', chosen: {} };
+      area: null, targets: null, protected: null, not_before: null, wait_for: null, after: null, knowledge: null, risk: 'balanced' };
   }
   // The set_limit bodies of a draft, without `intent`, each with the line it belongs to: only what is set, and only what the kind offers.
   function limitPlan(kind, lim) {
@@ -5172,10 +5173,10 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
   }
   // A change: what the player did, then the part drawn again, the summary said again and the staff asked again.
   function limSet(chosenKey, change, focusId) {
-    lim.touched = true; if (chosenKey) lim.chosen[chosenKey] = false; limMarked = null; change(); drawLimits(focusId); limSummary(); limAsk();
+    lim.touched = true; limMarked = null; change(); drawLimits(focusId); limSummary(); limAsk();
   }
   function limRow(key, name) { var r = el('div', 'limline'); r.dataset.key = key; r.setAttribute('role', 'group'); r.setAttribute('aria-label', name); return r; }
-  function limHead(name, tag) { var h = el('div', 'limhead'); h.appendChild(el('span', 'fl', name)); if (tag) h.appendChild(el('span', 'we', 'WE CHOSE IT FOR YOU')); return h; }
+  function limHead(name) { var h = el('div', 'limhead'); h.appendChild(el('span', 'fl', name)); return h; }
   function limRadio(group, id, value, words, on, change) {
     var l = el('label'), r = el('input'); r.type = 'radio'; r.name = group; r.id = id; r.value = value; r.checked = on; r.addEventListener('change', function () { if (r.checked) change(value); });
     l.appendChild(r); l.appendChild(document.createTextNode(' ' + words)); return l;
@@ -5216,7 +5217,7 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
   }
   // A kind of forces: the staff's choice, use only these (and a list to tick), or none.
   function kindLine(key, mode, setMode, items, has, toggle) {
-    var name = LINE_NAME[key], row = limRow(key, name), head = limHead(name, lim.chosen[key]), seg = el('span', 'limkind');
+    var name = LINE_NAME[key], row = limRow(key, name), head = limHead(name), seg = el('span', 'limkind');
     [['staff', STAFFS], ['only', 'Use only these'], ['none', 'None']].forEach(function (m) { seg.appendChild(limRadio('lim-' + key, 'lim-' + key + '-' + m[0], m[0], m[1], mode === m[0], function (v) { limSet(key, function () { setMode(v); }); })); });
     head.appendChild(seg); row.appendChild(head);
     if (mode === 'only') { var box = el('div', 'limlist'); items.forEach(function (it, i) { box.appendChild(limCheck('lim-' + key + '-' + i, it.label, has(it.h), function (on) { limSet(key, function () { toggle(it.h, on); }, 'lim-' + key + '-' + i); })); }); row.appendChild(box); }
@@ -5224,7 +5225,7 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
     return row;
   }
   function areaLine() {
-    var name = LINE_NAME.area, row = limRow('area', name), head = limHead(name, false), a = lim.area, seg = el('span', 'limkind');
+    var name = LINE_NAME.area, row = limRow('area', name), head = limHead(name), a = lim.area, seg = el('span', 'limkind');
     seg.appendChild(limRadio('lim-area', 'lim-area-staff', 'staff', STAFFS, !a, function () { limSet(null, function () { lim.area = null; if (picking === 'area') { picking = false; canvas.classList.remove('picking'); showPrompt('', ''); } }); }));
     seg.appendChild(limRadio('lim-area', 'lim-area-within', 'within', 'Within', !!a, function () { limSet(null, function () { lim.area = { q: draftPlace().q, r: draftPlace().r, dist: lim.areaDist || 3 }; }); }));
     head.appendChild(seg); row.appendChild(head);
@@ -5249,7 +5250,7 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
     limSet(null, function () { lim.area = { q: hh[0], r: hh[1], dist: lim.area.dist }; }, 'lim-area-move');
   }
   function targetsLine(kind) {
-    var name = LINE_NAME.targets, row = limRow('targets', name), head = limHead(name, false), seg = el('span', 'limkind'), on = !!lim.targets;
+    var name = LINE_NAME.targets, row = limRow('targets', name), head = limHead(name), seg = el('span', 'limkind'), on = !!lim.targets;
     seg.appendChild(limRadio('lim-targets', 'lim-targets-staff', 'staff', STAFFS, !on, function () { limSet(null, function () { lim.targets = null; }); }));
     seg.appendChild(limRadio('lim-targets', 'lim-targets-these', 'these', 'These first', on, function () { limSet(null, function () { lim.targets = { kinds: [], waters_first: false }; }); }));
     head.appendChild(seg); row.appendChild(head);
@@ -5271,7 +5272,7 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
     return row;
   }
   function protectedLine() {
-    var name = LINE_NAME.protected, row = limRow('protected', name), head = limHead(name, false), seg = el('span', 'limkind'), on = !!lim.protected;
+    var name = LINE_NAME.protected, row = limRow('protected', name), head = limHead(name), seg = el('span', 'limkind'), on = !!lim.protected;
     seg.appendChild(limRadio('lim-protected', 'lim-protected-staff', 'none', 'None', !on, function () { limSet(null, function () { lim.protected = null; }); }));
     seg.appendChild(limRadio('lim-protected', 'lim-protected-these', 'these', 'These ships', on, function () { limSet(null, function () { lim.protected = []; }); }));
     head.appendChild(seg); row.appendChild(head);
@@ -5283,7 +5284,7 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
   }
   // A line that is one choice from a list: the staff's, or one of the options.
   function chooseLine(key, options, value, change, reset, more) {
-    var name = LINE_NAME[key], row = limRow(key, name), head = limHead(name, lim.chosen[key]);
+    var name = LINE_NAME[key], row = limRow(key, name), head = limHead(name);
     head.appendChild(limSelect(key, name, [['', STAFFS]].concat(options), value, change)); row.appendChild(head);
     if (more) row.appendChild(more);
     if (value !== '') row.appendChild(limBack(key, name, 'lim-' + key + '-sel', reset));
@@ -5294,7 +5295,7 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
     if (key === 'ships' && o('ships')) return kindLine('ships', lim.ships.mode, function (m) { lim.ships.mode = m; }, limShips(),
       function (h) { return (/^task_force/.test(h) ? lim.ships.task_forces : lim.ships.ships).indexOf(num(h)) >= 0; }, function (h, on) { toggled(/^task_force/.test(h) ? lim.ships.task_forces : lim.ships.ships, num(h), on); });
     if (key === 'in_place' && o('in_place') && lim.ships.mode === 'only' && lim.ships.task_forces.length) {
-      var name = LINE_NAME.in_place, row = limRow('in_place', name), head = limHead(name, false), seg = el('span', 'limkind');
+      var name = LINE_NAME.in_place, row = limRow('in_place', name), head = limHead(name), seg = el('span', 'limkind');
       seg.appendChild(limRadio('lim-in_place', 'lim-in_place-staff', 'staff', 'The staff stations them', !lim.in_place, function () { limSet(null, function () { lim.in_place = false; }); }));
       seg.appendChild(limRadio('lim-in_place', 'lim-in_place-lie', 'lie', 'From where they lie', lim.in_place, function () { limSet(null, function () { lim.in_place = true; }); }));
       head.appendChild(seg); row.appendChild(head); if (lim.in_place) row.appendChild(limBack('in_place', name, 'lim-in_place-staff', function () { lim.in_place = false; })); return row;
@@ -5333,7 +5334,7 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
   }
   // The risk, on the paper that changes it alone: preserve, balanced or press.
   function riskLine() {
-    var name = LINE_NAME.risk, row = limRow('risk', name), head = limHead(name, false), seg = el('span', 'limkind');
+    var name = LINE_NAME.risk, row = limRow('risk', name), head = limHead(name), seg = el('span', 'limkind');
     ['preserve', 'balanced', 'press'].forEach(function (r) { seg.appendChild(limRadio('lim-risk', 'lim-risk-' + r, r, r.charAt(0).toUpperCase() + r.slice(1), lim.risk === r, function () { limSet(null, function () { lim.risk = r; }, 'lim-risk-' + r); })); });
     head.appendChild(seg); row.appendChild(head); return row;
   }
@@ -5354,11 +5355,7 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
     $('o-risk').hidden = !offers(kind, 'risk'); $('p-limits').hidden = false; drawLimits(); limSummary();
     previewSeq += 1; previewNo = null; $('p-sign').disabled = true; $('p-dry').disabled = true; $('o-preview').textContent = 'Asking the staff.'; $('o-pv-sum').textContent = 'THE STAFF\'S READING'; clearTimeout(limTimer);
     var go = function () { if (mine === limSeq && draft) askPreview(); };
-    if (kind === 'keep_supplied' || kind === 'hold') supplyForces(kind, e[1].base).then(function (l) {
-      if (mine !== limSeq || !draft || !l || lim.touched) return;
-      lim.source = l.source; lim.ships = { mode: 'only', task_forces: l.task_forces, ships: l.ships }; lim.chosen.source = lim.chosen.ships = true; drawLimits(); limSummary();
-    }).catch(function () {}).then(go);
-    else go();
+    go();
     if (g) drawMarks();
   }
 
@@ -5368,9 +5365,8 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
   // forms that other under it by itself: an island's tree forms the take of
   // each place, the neutralising of the enemy's bases near, the hold of each
   // place and, under the hold, its cover and its supply (from a source the
-  // staff names); a hold forms its cover, and its supply from the source the
-  // paper puts in its limits when the end is chosen (supplyForces), which the
-  // player may change.
+  // staff chooses, decision 0228); a hold forms its cover, and its supply from
+  // the source the staff chooses where the player names none.
   function ends(target) {
     var list = [], n = target.base ? num(target.base.base.handle) : null, wide = null;
     if (n != null) config.islands.forEach(function (i) { if (i.base === n) { if (wide == null) wide = list.length; list.push(['Seize and hold ' + i.name, { intent_kind: 'control_island', island: i.number }, null, null]); } });
@@ -5480,39 +5476,6 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
     if (previewNo == null) return; var says = $('o-dry-says');
     playDry({ preview: previewNo, size: drySize }, says, [$('p-dry'), $('p-sign')], function (j) { readEstimate(j, null, { preview: previewNo }); });
   });
-  // The table's own choice of a source for an order to keep a base supplied, or to hold it, put in the paper's limits when the end is
-  // chosen, for the player to keep or change ("WE CHOSE IT FOR YOU"): the staff has ships to send only where a forces limit names a
-  // source and a pool of ships and forces (rules, chapter 8, The eleven limits). The air groups of a hold are not named: naming them
-  // would only narrow its cover (decision 0222, rule 2).
-  // The source is the side's base outside the place's hex: one with none of
-  // the side's men ashore first (their stock feeds them), then one with a
-  // free transport force lying stopped there or ships in port in no force,
-  // then the most supply above its reserve, then the lower number. The
-  // pool is every transport force of the side that is not held, has no men
-  // aboard (a hold would land them) and is named in the forces limit of no
-  // order but another supply or hold (the staff shares a pool between those
-  // by its commitments), and the ships in port in no force at the source.
-  // With no base to be the source, or no ship for the pool (an empty pool
-  // fails the plan), no limit is set.
-  function supplyForces(kind, n) {
-    var st = M.state || {}, dest = M.bases.filter(function (b) { return num(b.base.handle) === n; })[0]; if (!dest) return Promise.resolve(null);
-    var named = {}; (st.intents || []).forEach(function (i) { var f = i.in_force && i.kind !== 'keep_supplied' && i.kind !== 'hold' && i.limits && i.limits.forces; if (f) (f.task_forces || []).forEach(function (t) { named[typeof t === 'object' ? num(t.handle) : Number(t)] = true; }); });
-    (st.holds || []).forEach(function (h) { if (h.target && h.target.task_force != null) named[Number(h.target.task_force)] = true; });
-    var reserve = {}; (st.reserves || []).forEach(function (r) { reserve[r.base.handle] = parseFloat(r.supply_reserve_t) || 0; });
-    var transports = M.forces.filter(function (f) { return f.mission === 'transport' && !named[num(f.task_force.handle)]; });
-    var bases = M.bases.filter(function (b) { return b !== dest && !sameHex(b.place, dest.place) && (parseFloat(b.supply_t) || 0) - (reserve[b.base.handle] || 0) > 0; });
-    if (!bases.length) return Promise.resolve(null);
-    return Promise.all(transports.map(function (f) { return api('get_entity', { handle: f.task_force.handle }).catch(function () { return {}; }); }).concat(bases.map(function (b) { return api('get_entity', { handle: b.base.handle }).catch(function () { return {}; }); }))).then(function (got) {
-      var men = {}; M.units.forEach(function (u) { (u.aboard || []).forEach(function (a) { men[a.ship.handle] = true; }); });
-      var free = transports.filter(function (f, k) { var ships = ((got[k] || {}).entity || {}).ships || []; return !ships.some(function (s) { return men[s.ship.handle]; }); });
-      var inPort = bases.map(function (b, k) { return (((got[transports.length + k] || {}).entity || {}).ships_in_port || []).map(function (s) { if (s.name && !M.names[s.handle]) M.names[s.handle] = cleanName(s.name); return num(s.handle); }); });
-      var ready = bases.map(function (b, k) { return inPort[k].length > 0 || free.some(function (f) { return sameHex(f.place, b.place) && !f.destination && !(f.available_from > M.day); }); });
-      var manned = bases.map(function (b) { return M.units.some(function (u) { return u.men_ashore && sameHex(u.place, b.place); }); });
-      var order = bases.map(function (b, k) { return k; }).sort(function (x, y) { var bx = bases[x], by = bases[y]; return (manned[x] ? 1 : 0) - (manned[y] ? 1 : 0) || (ready[y] ? 1 : 0) - (ready[x] ? 1 : 0) || ((parseFloat(by.supply_t) - (reserve[by.base.handle] || 0)) - (parseFloat(bx.supply_t) - (reserve[bx.base.handle] || 0))) || num(bx.base.handle) - num(by.base.handle); });
-      var k = order[0]; if (!free.length && !inPort[k].length) return null;
-      return { limit: 'forces', source: num(bases[k].base.handle), task_forces: free.map(function (f) { return num(f.task_force.handle); }), ships: inPort[k] };
-    });
-  }
   // A limit of an order in force, changed on its own paper: the one line (or, for the forces, their lines), the staff's reading of the
   // order with that limit changed, and a signature. BACK TO THE STAFF’S CHOICE opens it with the line already put back.
   function openLimitPaper(root, key, back) {

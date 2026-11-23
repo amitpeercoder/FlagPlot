@@ -2,8 +2,8 @@ Placeholder scenario 93: The enemy's half
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 66ef03afd95f9a00  2 events
-day   2  hash 65a5b01f0d915e21  2 events
+day   1  hash 0b742e8ccbac0d8b  2 events
+day   2  hash 3271e4e7b99856c6  2 events
 
 #1 D1 -         base:1 at the end of the day: 1000 t of supply, 0 aircraft ready: not open
 #2 D1 -         base:2 at the end of the day: 200 t of supply, 0 aircraft ready: not open

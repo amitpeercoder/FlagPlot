@@ -1731,6 +1731,10 @@ pub struct CommandState {
     /// its navy and date (decision 0223, stage 0). Set when the game is made
     /// and never changed by a rule or a command. Added at the end.
     pub submarine_doctrine: SubmarineDoctrine,
+    /// Whether the side's scenario states that its staff chooses its sources
+    /// of supply (decision 0228, amended on review, A). Set when the game is
+    /// made and never changed by a rule or a command. Added at the end.
+    pub staff_chooses_sources: bool,
 }
 
 /// The pattern the side's staff places the boats of a patrol in (decision
@@ -1934,6 +1938,77 @@ impl CommandState {
             .into_iter()
             .find(|limit| !by_kind || limit.binds_source())
             .and_then(|limit| limit.source)
+    }
+
+    /// The source a commander's own intent on `intent`'s chain names
+    /// (decision 0228): the nearest intent of his, itself included, whose
+    /// forces limit names one.
+    pub fn commander_source_on_chain(&self, intent: IntentId) -> Option<BaseId> {
+        self.up_the_tree(intent)
+            .filter(|found| found.maker == Maker::Commander)
+            .find_map(|found| found.limits.forces.as_ref()?.source)
+    }
+
+    /// Where the supply `supply` is supplied from (decision 0228, rule 18):
+    /// the source it reads, the nearest forces limit on its chain that names
+    /// one, and who chose it: the commander where an intent of his on the
+    /// chain names a source, else the staff. Worked from the command state;
+    /// stored nowhere.
+    pub fn supplied_from_of(&self, supply: IntentId) -> Option<(BaseId, Maker)> {
+        let source = self.source_on_chain(supply)?;
+        let by = if self.commander_source_on_chain(supply).is_some() {
+            Maker::Commander
+        } else {
+            Maker::Staff
+        };
+        Some((source, by))
+    }
+
+    /// Where the hold or island `intent` is supplied from (decision 0228,
+    /// rule 18): of the first "keep supplied" in force under it (under an
+    /// island, under its holds), by number. `None` where none is.
+    pub fn supplied_from(&self, intent: IntentId) -> Option<(BaseId, Maker)> {
+        let mut under = self.children_in_force(intent);
+        under.sort();
+        for child in under {
+            let Some(found) = self.intents.get(&child) else {
+                continue;
+            };
+            match found.kind {
+                IntentKind::KeepSupplied { .. } => {
+                    if let Some(from) = self.supplied_from_of(child) {
+                        return Some(from);
+                    }
+                }
+                IntentKind::Hold { .. } => {
+                    if let Some(from) = self.supplied_from(child) {
+                        return Some(from);
+                    }
+                }
+                _ => {}
+            }
+        }
+        None
+    }
+
+    /// The forces limit a run of the plan of `owner` draws on in place of the
+    /// owner's own (decision 0228, the architect's ruling on the build): for a
+    /// side whose staff chooses its sources, where `owner` is a "hold a
+    /// place", the forces limit of the lowest-numbered "keep supplied" in
+    /// force directly under it that has one. `None` otherwise.
+    pub fn supply_limit_under_hold(&self, owner: IntentId) -> Option<&ForcesLimit> {
+        if !self.staff_chooses_sources {
+            return None;
+        }
+        let hold = self.intents.get(&owner)?;
+        if !matches!(hold.kind, IntentKind::Hold { .. }) {
+            return None;
+        }
+        self.intents_in_force()
+            .filter(|i| {
+                i.parent == Some(owner) && matches!(i.kind, IntentKind::KeepSupplied { .. })
+            })
+            .find_map(|i| i.limits.forces.as_ref())
     }
 
     /// Whether `intent` owns a plan of its own: a root, or an intent formed
@@ -2319,6 +2394,7 @@ impl CommandState {
             && self.leaves == Leaves::default()
             && self.next_plan == 1
             && self.submarine_doctrine == SubmarineDoctrine::default()
+            && !self.staff_chooses_sources
     }
 }
 

@@ -1,0 +1,183 @@
+# Scenario 132, a source the staff chooses (decision 0228).
+#
+# The Allied side, side A, has four bases on the map of
+# data/map/placeholder_a_source_the_staff_chooses.toml: base 1 at H (0,0) with
+# 20 t of supply and land unit 1, 1,000 men ashore; base 2 at N (-2,0) with
+# 200 t and land unit 2, 2,000 men ashore, task force 2 stopped there, one
+# placeholder troop transport (class 10), nothing aboard; base 3 at F (0,8)
+# with 2,000 t and no men, task force 1 stopped there, two such transports,
+# nothing aboard; base 4 at G (8,0) with 5,000 t, no men and no force. No base
+# has a reserve and no air figure is loaded. Every skill of land units 1 and 2
+# is the default, 2, so a man's charge is 0.005 t a day (the ground file's
+# daily_supply_t_per_man); the troop transport has room for 3,000 t, so no
+# load here is cut by the ships' room. There is no enemy and no random draw.
+#
+# On day 1 the Allied commander states "hold base 1" with no limit and gives
+# both leaves. The game is ten days. The Allied scenario states that its staff
+# chooses its sources of supply (the key at the mark `side`).
+#
+# The test builds its variants from the text of this file, at the marked
+# lines: it adds bases at the mark `bases`, units at `units`, forces at
+# `forces`, commands at `commands`, an island at `islands` and the key at
+# `side`. The statements and the hand calculation are in
+# tests/scenario_132_a_source_the_staff_chooses.rs.
+#
+# Kept out of the loops that walk data/scenarios/*.toml by being in this
+# folder (decision 0072).
+#
+# PLACEHOLDER DATA. The bases, ships, units and map are invented. Every name
+# below says "Placeholder".
+
+name = "Placeholder scenario 132: A source the staff chooses"
+placeholder = true
+seed = 1942
+days = 10
+map = "../../map/placeholder_a_source_the_staff_chooses.toml"
+ship_classes = [
+    "../../reference/ship_classes.csv",
+    "../../reference/ship_classes_placeholder_transports.csv",
+]
+port_sizes = "../../reference/port_sizes.csv"
+aircraft_types = "../../reference/aircraft_types.csv"
+search = "../../reference/search.toml"
+surface_combat = "../../reference/surface_combat.toml"
+ground = "../../reference/ground.toml"
+
+# MARK: side
+[side.allied]
+staff_chooses_supply_sources = true
+
+# MARK: base 1
+# H: the place supplied. 20 t, 1,000 men.
+[[base]]
+id = 1
+name = "Placeholder base H"
+side = "allied"
+q = 0
+r = 0
+supply_t = 20
+
+# MARK: base 2
+# N: 200 t, 2,000 men, one transport.
+[[base]]
+id = 2
+name = "Placeholder base N"
+side = "allied"
+q = -2
+r = 0
+supply_t = 200
+
+# MARK: base 3
+# F: 2,000 t, no men, two transports.
+[[base]]
+id = 3
+name = "Placeholder base F"
+side = "allied"
+q = 0
+r = 8
+supply_t = 2000
+
+# MARK: base 4
+# G: 5,000 t, no men, no force.
+[[base]]
+id = 4
+name = "Placeholder base G"
+side = "allied"
+q = 8
+r = 0
+supply_t = 5000
+
+# MARK: bases
+
+[[land_unit]]
+id = 1
+name = "Placeholder unit 1"
+side = "allied"
+men = 1000
+q = 0
+r = 0
+posture = "defend"
+
+# MARK: unit 2
+[[land_unit]]
+id = 2
+name = "Placeholder unit 2"
+side = "allied"
+men = 2000
+q = -2
+r = 0
+posture = "defend"
+
+# MARK: units
+
+# MARK: force 2
+# Task force 2: one placeholder troop transport, stopped at base 2.
+[[task_force]]
+id = 2
+name = "Placeholder transport force 2"
+side = "allied"
+at_base = 2
+mission = "transport"
+
+[[ship]]
+id = 3
+name = "Placeholder troop transport 3"
+class = 10
+side = "allied"
+fuel_t = 1000
+task_force = 2
+
+# MARK: force 1
+# Task force 1: two placeholder troop transports, stopped at base 3.
+[[task_force]]
+id = 1
+name = "Placeholder transport force 1"
+side = "allied"
+at_base = 3
+mission = "transport"
+
+[[ship]]
+id = 1
+name = "Placeholder troop transport 1"
+class = 10
+side = "allied"
+fuel_t = 1000
+task_force = 1
+
+[[ship]]
+id = 2
+name = "Placeholder troop transport 2"
+class = 10
+side = "allied"
+fuel_t = 1000
+task_force = 1
+
+# MARK: forces
+
+# MARK: islands
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_intent"
+intent = 1
+intent_kind = "hold"
+base = 1
+
+# MARK: order
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_leave"
+leave = "prepare"
+given = true
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_leave"
+leave = "launch"
+given = true
+
+# MARK: commands

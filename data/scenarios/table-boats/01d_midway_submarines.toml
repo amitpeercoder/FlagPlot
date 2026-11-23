@@ -2074,10 +2074,12 @@ points_per_100_men = 1
 [side.allied]
 submarine_pattern = "off_bases"
 expects_boats_off_own_bases = true
+staff_chooses_supply_sources = true
 
 [side.japanese]
 submarine_pattern = "lines"
 expects_boats_off_own_bases = false
+staff_chooses_supply_sources = true
 
 # USS Tambor (ships.csv 6321; class 6001, Tambor class, by ship_facts 16020).
 # PLACEHOLDER start (1,3): engagement_positions 16010 (Bates, 2 June: Tambor,

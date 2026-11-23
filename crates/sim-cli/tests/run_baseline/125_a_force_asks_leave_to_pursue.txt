@@ -2,10 +2,10 @@ Placeholder scenario 125: A force asks leave to pursue
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 453febf33f35b651  38 events
-day   2  hash 85073e0d588dd143  9 events
-day   3  hash d0a080d03fe5872d  7 events
-day   4  hash ddbd233e73b7d75b  5 events
+day   1  hash 53c2dea79b53e32a  38 events
+day   2  hash 329344ae93eb218e  9 events
+day   3  hash 8d1e4d106d5273b8  7 events
+day   4  hash f21155205ca0190a  5 events
 
 task_force:1 "Placeholder carrier force 1" (Allied): Idle at (0,0); readiness battle, alert, rules of engagement: avoid, break off at 0.5, stragglers: keep, keep 0; home port base:1
 air_group:1 "Placeholder fighters 1" (Allied) aboard ship:1: 12 ready, mission CombatAirPatrol, patrol share 0.5, no arc
