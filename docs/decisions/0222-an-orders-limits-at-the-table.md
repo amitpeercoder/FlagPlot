@@ -298,3 +298,52 @@ Read: the limit's kinds and helpers and the two clearing limits in `command.rs`,
 6. **Rule 4, the preview of an order with its limits,** shows the orders exactly and not the approvals that prepare and release the plan (ruling H). That is enough for the table's reading.
 7. **What moved:** scenario 55 in words only, on 254 runs compared. Versions: rules label 31, layout v57, saved game 25, doctrine `supply-57`, agent interface 50.
 8. **Not seen:** the table in a browser on this build. The table offers none of this yet; step 4 does.
+
+## As built: step 4, the table
+
+Built on the branch `table-limits`, in `table/index.html`, on the engine of agent interface 50. Nothing in the engine is changed by this step but what the list at the end of this section says.
+
+### Which controls each order offers, and what each sends
+
+Taken from the table "What each limit is read by" above: a control is shown on an order only where something in the code reads that limit for that kind of order. Every control starts at the staff's choice, and the choice is sent only where the player has set it. All the order's limits go with the order in one `preview` (`limits`) and one `approve {preview}`; under SIGNED they are one entry, and TAKE BACK takes them back whole.
+
+| The order (its end on the paper) | Ships and forces (task forces, and single ships in port in no force) | Air groups | Land units | Boats | From where they lie | Supplied from | Keep within | Strike first | These waters first | Protected ships | Not before, wait for, after, knowledge | Risk |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Hold a place (`hold`) | yes | yes | yes | no | no | yes | no | yes | no | no | no | yes |
+| Keep it supplied (`keep_supplied`) | yes | no | no | no | no | yes, needed | yes | no | no | yes | no | yes |
+| Cover it from the air (`cover`) | no | yes | no | no | no | no | no | no | no | no | no | yes |
+| Deny these waters (`deny`) | yes | yes | no | no | yes | no | no | yes | yes | no | no | yes |
+| Neutralise a base (`neutralise`) | yes | yes | no | no | yes | no | no | yes | no | no | no | yes |
+| Operate a carrier force from here (`operate_carriers`) | no (it names its force) | yes (the groups aboard that force) | no | no | no | no | no | yes | no | no | no | yes |
+| Station a force here (`stand_at`) | no (it names its force) | no | no | no | no | no | no | no | no | no | no | yes |
+| Capture a place only (`take_place`) | yes | yes | yes | no | no | yes | yes | yes | no | no | yes | yes |
+| Seize and hold an island (`control_island`) | yes | yes | yes | no | no | yes | yes | yes | no | no | yes | yes |
+| Patrol these waters with submarines (`patrol`) | no | no | no | yes | no | no | no | no | no | no | no | no |
+
+What each control sends (`set_limit`, in a preview's `limits` without `intent`, or with `intent` on an order in force):
+
+| Control | Its choices | Sent |
+| --- | --- | --- |
+| A kind of forces (ships and forces, air groups, land units, boats) | the staff's choice; use only these (units by name, from what the side has); none | One `forces` limit for the order: `task_forces` and `ships` (ships and forces), `air_groups`, `land_units`, `submarines` for the kinds set to "use only these"; `none_of` (`ships`, `air_groups`, `land_units`, `submarines`) for the kinds set to "none"; nothing for a kind at the staff's choice. With every kind at the staff's choice and no source, no forces limit is sent; on an order in force the limit is cleared (`cleared: true`) |
+| From where they lie | the staff stations them; from where they lie | `in_place: true` with the forces limit; offered only once a task force is named |
+| Supplied from | the staff's choice; a base of the side by name | `source` in the same forces limit |
+| Keep within | the staff's choice; a place and a distance in whole hexes, said in miles, drawn as a circle | `area` with `hexes`, every hex of the map within the distance; back to the staff's choice is `area` with `cleared: true` |
+| Strike first | the staff's choice; kinds of ship in order | `targets` with `kinds`; back to the staff's choice is `kinds` left out |
+| These waters first | off; on | `waters_first: true` in the same `targets` limit |
+| Protected ships | none; these ships, by name | `protected` with `ships`; none is `ships: []` |
+| Not before | the staff's choice; a date | `not_before` with `from_day`; left out to clear |
+| Wait for | the staff's choice; a task force or a land unit by name | `wait_for` with `task_force` or `land_unit`; neither to clear |
+| After | the staff's choice; another of his orders to take a place or control an island | `after` with `other_intent`; left out to clear |
+| Knowledge | the staff's choice (the risk decides); nothing; a count; a count no older than N days | `knowledge` with `knowledge` and `within_days`; left out to clear |
+| Risk | preserve, balanced, press | `risk` |
+| Rank (THE ORDERS paper only) | first, second and so on, or not ranked | `priority` with `rank`, or `rank: null` |
+| A base's reserve (the base's card) | tons of supply and of fuel kept | `reserve` with `base`, `supply_t`, `fuel_t` (whole numbers) |
+
+Not offered, though the tool takes it there, because nothing reads it on that kind of order (each a row of "A limit the tool takes where nothing reads it" in `docs/open-work.md`): an area on a hold, a deny, a neutralise, a carrier force's own order, a station, a cover or a patrol (it binds a carrier task's closing and a bombardment beneath a deny, a hold or a neutralise, not where the staff stations a force or where the air searches); protected ships on anything but a supply; targets on a supply, a cover, a station or a patrol; ships on a cover or a patrol; air groups on a supply, a station or a patrol; risk on a patrol.
+
+### What the decision promises that the engine cannot do
+
+1. **A forces limit cannot be cleared through the seat's tools.** `set_limit` and `preview` of `forces` with `cleared: true` are refused, "a limit given with \"cleared\" is given with nothing else, and \"ships\" was given": `staffing::request` (`crates/sim-agent/src/staffing.rs`) adds empty `ships` and `task_forces` to every forces limit before the engine reads it. An area clears. The engine's own reading of a scenario's `cleared = true` is right; only the tool's door adds the keys. A one-line mend in `sim-agent` (skip the defaults where `cleared` is true) is needed for "back to the staff's choice" on the forces of an order in force; it is reported to the architect before it is made.
+2. **Ranks cannot be read by the staff as one batch.** A preview takes one `set_intent` with its limits, or one `set_limit`; several ranks on several orders cannot be previewed together. THE ORDERS paper sends each rank as its own `priority` limit under one SIGN AND SEND, with no staff's reading of the whole, and SIGNED shows them as one entry.
+3. **The staff does not choose a supply source** (step 3 of this decision, not built). Where a hold or a supply has no source, the paper shows none as the staff's choice; the table's own choosing of a source (`supplyForces`) stays until step 3 and its choice is shown on the paper as a set limit the player can change or clear.
+4. **The `set_limit` tool's schema does not list `none_of`, `in_place` or `cleared`,** though the tool takes them; a client that holds strictly to the schema could not send them. Words only.
