@@ -30,6 +30,7 @@ use crate::answer::{FORMAT, VERSION};
 use crate::briefing::briefing_for_game;
 use crate::common::{map_unit_tokens, Ctx};
 use crate::explain::explain;
+use crate::intelligence::intelligence;
 use crate::measure::{measure_in, MeasureContext, Question};
 use crate::objectives::result_part;
 use crate::orders::{is_orderable_unit, land_unit_number, order_from_json};
@@ -1465,6 +1466,14 @@ impl Session {
                 to_value(&explain(&self.view_of(side)?, event))
             }
             "events" => self.events_tool(side, &args),
+            "intelligence" => {
+                if let Some(key) = args.keys().next() {
+                    return Err(CallError::new(format!(
+                        "\"{key}\" is not an argument of intelligence: it takes none"
+                    )));
+                }
+                Ok(intelligence(&self.view_of(side)?))
+            }
             "advance" if self.advance_offered() => self.advance(side, &args),
             "issue_orders" => self.issue_orders(side, &args),
             "end_day" => self.end_day(side),
