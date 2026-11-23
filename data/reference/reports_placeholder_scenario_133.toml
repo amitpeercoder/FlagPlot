@@ -1,0 +1,31 @@
+# Report figures of scenario 133 (decision 0220: an order against an enemy
+# force). Every figure is a placeholder: invented so that the scenario's hand
+# calculation rests on no die (every chance is 0 or 1), not historical. No row
+# sizes any of them. The game "command levels on" of
+# tests/scenario_133_a_force_followed.rs names this file with its `reports`
+# key. The live figures are in reports.toml.
+
+# Required by the loader and ignored once read: the scenario carries the flag.
+placeholder = true
+
+# Placeholders: a report sent up always arrives a pulse late; sideways and
+# down never arrive.
+[up]
+on_time = "0"
+late = "1"
+
+[sideways]
+on_time = "0"
+late = "0"
+
+[down]
+on_time = "0"
+late = "0"
+
+# Placeholders, as scenario 62's. No row sizes any of them.
+[radio_reach_nm]
+carrier = 600
+battleship = 600
+cruiser = 600
+other_ship = 300
+base = 1000

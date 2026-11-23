@@ -1,0 +1,162 @@
+# Scenario 133, game E: a kind that changes and stops nothing (decision 0220,
+# as amended on review, rule 11). Two Japanese cruisers lie at (8,0) and do
+# not move. Two Japanese destroyers lie at (16,0), 640 nm from base 1 and
+# beyond the flying boats' range, and join the cruisers in the night of day 2
+# at 30 knots (320 nm in 10 hours and 40 minutes). On the morning of day 2 the
+# two forces are reported in task force order at the one hex, and the second
+# report replaces the first: the contact is two destroyers. The Allied
+# commander orders the force of contact 1 destroyed, within 2 hexes, at
+# balanced, and gives both leaves. Base 1 has flying boats and no bomber. The
+# statements and the hand calculation are in
+# tests/scenario_133_a_force_followed.rs.
+#
+# NOT TO BE RUN YET: the order "destroy a force" (`intent_kind =
+# "destroy_force"`, with `contact`, `distance` and, where given,
+# `search_only`) is read by no loader until decision 0220 is built. The keys
+# are the architect's, ruled in the decision record.
+#
+# Kept out of the loops that walk data/scenarios/*.toml by being in this
+# folder (decision 0072).
+#
+# The test runs this file on the frozen step 1 figures with three changes made
+# through `common::altered_reference`, so that a report says exactly what was
+# there and no outcome rests on a die: `position_error_chance`,
+# `count_over_chance` and `count_under_chance` are 0, and every row of
+# `kind_confusion` names its own kind with a chance of 1. The upkeep, wear,
+# fatigue, supply and report figures are not loaded. The staff's own figures
+# (`followed_force_knots` 20, `lost_contact_days` 2, `station_rechosen_hexes`
+# 3) are the doctrine's, in the code, and are read from no file.
+#
+# PLACEHOLDER DATA. The base, ships, aircraft, figures and map are invented.
+# The 100 flying boats of group 1 are a placeholder number chosen so that the
+# chance to sight a force in the arc is 1 at any distance to the type's 600 nm
+# and any width of arc: 57.295779 x 100 x 40 = 229,183.116, above 600 x 360 =
+# 216,000.
+
+name = "Placeholder scenario 133, game E: a kind that changes"
+placeholder = true
+seed = 1942
+days = 3
+map = "../../map/placeholder_a_force_followed.toml"
+ship_classes = "../../reference/ship_classes.csv"
+port_sizes = "../../reference/port_sizes.csv"
+aircraft_types = "../../reference/aircraft_types.csv"
+search = "../../reference/search.toml"
+surface_combat = "../../reference/surface_combat.toml"
+air_combat = "../../reference/air_combat.toml"
+
+# Allied base 1, with the flying boats.
+[[base]]
+id = 1
+name = "Placeholder base 1"
+side = "allied"
+q = 0
+r = 0
+supply_t = 1000
+fuel_t = 5000
+
+[[air_group]]
+id = 1
+name = "Placeholder flying boats 1"
+side = "allied"
+base = 1
+aircraft_type = 1
+ready = 100
+
+# Japanese task force 1: two placeholder cruisers, stopped at sea at (8,0).
+[[task_force]]
+id = 1
+name = "Placeholder cruiser force 1"
+side = "japanese"
+q = 8
+r = 0
+mission = "surface_combat"
+
+[[ship]]
+id = 1
+name = "Placeholder cruiser 1"
+class = 1
+side = "japanese"
+fuel_t = 2000
+task_force = 1
+
+[[ship]]
+id = 2
+name = "Placeholder cruiser 2"
+class = 1
+side = "japanese"
+fuel_t = 2000
+task_force = 1
+
+# Japanese task force 2: two placeholder destroyers, stopped at sea at (16,0).
+[[task_force]]
+id = 2
+name = "Placeholder destroyer force 2"
+side = "japanese"
+q = 16
+r = 0
+mission = "surface_combat"
+
+[[ship]]
+id = 3
+name = "Placeholder destroyer 3"
+class = 2
+side = "japanese"
+fuel_t = 500
+task_force = 2
+
+[[ship]]
+id = 4
+name = "Placeholder destroyer 4"
+class = 2
+side = "japanese"
+fuel_t = 500
+task_force = 2
+
+# The contact the Allied side starts with: contact 1.
+[[contact]]
+side = "allied"
+q = 8
+r = 0
+ship_count = 2
+kind = "cruiser"
+age_pulses = 0
+
+# The destroyers join the cruisers in the night of day 2.
+[[order]]
+day = 2
+side = "japanese"
+task_force = 2
+kind = "set_speed"
+knots = 30
+
+[[order]]
+day = 2
+side = "japanese"
+task_force = 2
+kind = "set_route"
+waypoints = [[8, 0]]
+
+# The Allied commander's commands
+[[command]]
+day = 1
+side = "allied"
+kind = "set_intent"
+intent = 1
+intent_kind = "destroy_force"
+contact = 1
+distance = 2
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_leave"
+leave = "prepare"
+given = true
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_leave"
+leave = "launch"
+given = true

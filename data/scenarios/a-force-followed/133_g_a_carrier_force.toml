@@ -1,0 +1,158 @@
+# Scenario 133, game G: a free carrier force under the order (decision 0220,
+# as amended on review, rule 2). The Allied side starts holding contact 1, two
+# cruisers at (9,0), where there is no ship. Two Japanese cruisers lie at
+# (13,0) and do not move. An Allied carrier lies at (3,0). The Allied
+# commander orders the force of contact 1 destroyed, within 2 hexes, at
+# balanced, and gives both leaves. The staff stations the carrier force at
+# (5,0); at dusk of day 2 the order takes contact 2 at (13,0), the station is
+# chosen again, at (9,0), and the force closes on the cruisers, to (7,0). On
+# the morning of day 2 her bombers are launched; the game ends that day and
+# nothing of the strike's result is stated. The statements and the hand
+# calculation are in tests/scenario_133_a_force_followed.rs.
+#
+# NOT TO BE RUN YET: the order "destroy a force" (`intent_kind =
+# "destroy_force"`, with `contact`, `distance` and, where given,
+# `search_only`) is read by no loader until decision 0220 is built. The keys
+# are the architect's, ruled in the decision record.
+#
+# Kept out of the loops that walk data/scenarios/*.toml by being in this
+# folder (decision 0072).
+#
+# The test runs this file on the frozen step 1 figures with three changes made
+# through `common::altered_reference`, so that a report says exactly what was
+# there and no outcome rests on a die: `position_error_chance`,
+# `count_over_chance` and `count_under_chance` are 0, and every row of
+# `kind_confusion` names its own kind with a chance of 1. The upkeep, wear,
+# fatigue, supply and report figures are not loaded. The staff's own figures
+# (`followed_force_knots` 20, `lost_contact_days` 2, `station_rechosen_hexes`
+# 3) are the doctrine's, in the code, and are read from no file.
+#
+# PLACEHOLDER DATA. The base, ships, aircraft, figures and map are invented.
+# The 100 flying boats of group 1 are a placeholder number chosen so that the
+# chance to sight a force in the arc is 1 at any distance to the type's 600 nm
+# and any width of arc: 57.295779 x 100 x 40 = 229,183.116, above 600 x 360 =
+# 216,000.
+
+name = "Placeholder scenario 133, game G: a free carrier force"
+placeholder = true
+seed = 1942
+days = 2
+map = "../../map/placeholder_a_force_followed.toml"
+ship_classes = "../../reference/ship_classes.csv"
+port_sizes = "../../reference/port_sizes.csv"
+aircraft_types = "../../reference/aircraft_types.csv"
+search = "../../reference/search.toml"
+surface_combat = "../../reference/surface_combat.toml"
+air_combat = "../../reference/air_combat.toml"
+
+# Allied base 1, with the flying boats.
+[[base]]
+id = 1
+name = "Placeholder base 1"
+side = "allied"
+q = 0
+r = 0
+supply_t = 1000
+fuel_t = 5000
+
+[[air_group]]
+id = 1
+name = "Placeholder flying boats 1"
+side = "allied"
+base = 1
+aircraft_type = 1
+ready = 100
+
+# Allied task force 1: one placeholder carrier, stopped at sea at (3,0), with
+# no home port, so that its fuel is not weighed (chapter 8, Operating a
+# carrier force, item 7). She has fighters and dive bombers and no scout:
+# nothing aboard searches.
+[[task_force]]
+id = 1
+name = "Placeholder carrier force 1"
+side = "allied"
+q = 3
+r = 0
+mission = "carrier"
+
+[[ship]]
+id = 1
+name = "Placeholder carrier 1"
+class = 4
+side = "allied"
+fuel_t = 3000
+task_force = 1
+
+[[air_group]]
+id = 2
+name = "Placeholder fighters 2"
+side = "allied"
+ship = 1
+aircraft_type = 4
+ready = 12
+
+[[air_group]]
+id = 3
+name = "Placeholder dive bombers 3"
+side = "allied"
+ship = 1
+aircraft_type = 3
+ready = 10
+
+# Japanese task force 2: two placeholder cruisers, stopped at sea at (13,0).
+[[task_force]]
+id = 2
+name = "Placeholder cruiser force 2"
+side = "japanese"
+q = 13
+r = 0
+mission = "surface_combat"
+
+[[ship]]
+id = 2
+name = "Placeholder cruiser 2"
+class = 1
+side = "japanese"
+fuel_t = 2000
+task_force = 2
+
+[[ship]]
+id = 3
+name = "Placeholder cruiser 3"
+class = 1
+side = "japanese"
+fuel_t = 2000
+task_force = 2
+
+# The contact the Allied side starts with: contact 1.
+[[contact]]
+side = "allied"
+q = 9
+r = 0
+ship_count = 2
+kind = "cruiser"
+age_pulses = 0
+
+# The Allied commander's commands
+[[command]]
+day = 1
+side = "allied"
+kind = "set_intent"
+intent = 1
+intent_kind = "destroy_force"
+contact = 1
+distance = 2
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_leave"
+leave = "prepare"
+given = true
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_leave"
+leave = "launch"
+given = true
