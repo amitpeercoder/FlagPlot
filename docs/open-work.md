@@ -137,6 +137,8 @@ From decision 0222 (the designer's answer 2, and "As built: the engine", rule 7)
 
 From decision 0222, ruling H: a preview does not show the approvals that prepare and release a plan.
 
+From decision 0222, step 4: a preview takes one order with its limits or one limit: several ranks cannot be read as one change.
+
 ## Not planned
 
 - `docs/rules-comparison.md` (the designer's, Nov 14, 2026, checked against the code) sets Flag Plot's rules against another game's manual and is the list of gaps to triage. Decision 0102 rules on each gap (build, defer or decline); the rows it marks "To be written" are decision records still to come.

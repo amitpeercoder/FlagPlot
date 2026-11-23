@@ -2600,7 +2600,10 @@ pub(crate) fn request(
     }
     if tool == "set_limit" {
         let limit = body.get("limit").and_then(Value::as_str).unwrap_or("");
-        if limit == "forces" {
+        // Decision 0222, rule 3: a forces limit given with `cleared` is
+        // given with nothing else, so it is given no default lists.
+        let cleared = body.get("cleared").and_then(Value::as_bool) == Some(true);
+        if limit == "forces" && !cleared {
             body.entry("ships").or_insert_with(|| json!([]));
             body.entry("task_forces").or_insert_with(|| json!([]));
         }

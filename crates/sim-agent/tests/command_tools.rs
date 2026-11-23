@@ -887,3 +887,80 @@ fn a_targets_limit_is_set_shown_refused_and_cleared() {
         .expect_err("the other side cannot be asked");
     assert!(!error.message.contains("battleship"));
 }
+
+/// Decision 0222, step 4 (the architect's approval of the mend): a forces
+/// limit given with `cleared: true` is taken by the seat's tools, by
+/// `set_limit` and by `preview`, and clears the limit; given with any unit,
+/// source, `none_of` or `in_place` it is still refused.
+#[test]
+fn a_forces_limit_is_cleared_by_the_tools() {
+    let mut p = Player::new();
+    p.call("set_intent", json!({"base": 2, "floor_days": 30}));
+    let a = p.call(
+        "set_limit",
+        json!({"limit": "forces", "intent": 1, "ships": [1, 2], "source": 1}),
+    );
+    assert_eq!(a["status"], "queued", "{a}");
+    let state = p.call("command_state", json!({}));
+    assert!(
+        !state["intents"][0]["limits"]["forces"].is_null(),
+        "{state}"
+    );
+
+    let shown = p.call(
+        "preview",
+        json!({"command": "set_limit", "limit": "forces", "intent": 1, "cleared": true}),
+    );
+    assert!(shown["preview"].is_number(), "{shown}");
+    let a = p.call(
+        "set_limit",
+        json!({"limit": "forces", "intent": 1, "cleared": true}),
+    );
+    assert_eq!(a["status"], "queued", "{a}");
+    assert_eq!(
+        a["command"],
+        json!({"kind": "set_limit", "limit": "forces", "intent": 1, "cleared": true})
+    );
+    let state = p.call("command_state", json!({}));
+    let intent = &state["intents"][0];
+    assert!(intent["limits"]["forces"].is_null(), "{intent}");
+    assert!(intent["limits_read_up"]["forces"].is_null(), "{intent}");
+    assert!(
+        intent["limits_read_up"]["forces_from"].is_null(),
+        "{intent}"
+    );
+
+    for extra in [
+        json!({"ships": [1]}),
+        json!({"task_forces": [1]}),
+        json!({"air_groups": [1]}),
+        json!({"land_units": [1]}),
+        json!({"submarines": [1]}),
+        json!({"source": 1}),
+        json!({"none_of": ["air_groups"]}),
+        json!({"in_place": true}),
+    ] {
+        let mut args = json!({"limit": "forces", "intent": 1, "cleared": true});
+        for (k, v) in extra.as_object().unwrap() {
+            args[k] = v.clone();
+        }
+        let error = p
+            .try_call("set_limit", args.clone())
+            .expect_err("cleared with something else");
+        assert!(
+            error.message.contains("is given with nothing else"),
+            "{args}: {}",
+            error.message
+        );
+        let mut preview = args.clone();
+        preview["command"] = json!("set_limit");
+        let error = p
+            .try_call("preview", preview)
+            .expect_err("cleared with something else");
+        assert!(
+            error.message.contains("is given with nothing else"),
+            "{args}: {}",
+            error.message
+        );
+    }
+}
