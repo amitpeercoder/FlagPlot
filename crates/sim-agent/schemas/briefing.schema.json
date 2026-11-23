@@ -10,7 +10,7 @@
   "additionalProperties": false,
   "properties": {
     "format": { "const": "flagplot-agent" },
-    "version": { "const": 50 },
+    "version": { "const": 51 },
     "kind": { "const": "briefing" },
     "heading": { "$ref": "#/$defs/heading" },
     "objectives": { "$ref": "#/$defs/objectives" },
@@ -53,7 +53,7 @@
       "$ref": "#/$defs/land_units"
     },
     "submarines": {
-      "description": "The side's own submarines, its reports of enemy submarines and the waters it suspects they work in (decision 0218). Left out when the side has none of the three.",
+      "description": "The side's own submarines, its reports of enemy submarines the waters it suspects they work in (decision 0218) and its own submarine doctrine (decision 0223, stage 0). Left out when the side has none of the four.",
       "$ref": "#/$defs/submarines"
     },
     "base_changes": {
@@ -496,6 +496,17 @@
               "told_day": { "type": "integer" },
               "event": { "type": "integer" }
             }
+          }
+        },
+        "doctrine": {
+          "description": "The side's own submarine doctrine as its scenario states it (decision 0223, stage 0). Left out where the scenario states neither a pattern nor an expectation. Never the enemy's.",
+          "type": "object",
+          "required": ["expects_boats_off_own_bases", "words"],
+          "additionalProperties": false,
+          "properties": {
+            "submarine_pattern": { "description": "How the staff places the boats of a patrol. Left out where the scenario states none.", "enum": ["off_bases", "lines"] },
+            "expects_boats_off_own_bases": { "type": "boolean", "description": "Whether the side expects enemy boats off its own bases." },
+            "words": { "type": "string", "description": "The doctrine, in words." }
           }
         }
       }

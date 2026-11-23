@@ -283,7 +283,10 @@ const fn speed_code(speed: SpeedSetting) -> u8 {
 /// the day and the pulse's code, 64 bits, it was set and its record) after her
 /// `available_from` (decision 0212); version 57 adds a forces limit's
 /// `none_of`, after its boats, where it lists a kind (decision 0222, the
-/// architect's ruling A).
+/// architect's ruling A); version 58 adds to a side's command state, after
+/// the commander's refusals, its submarine doctrine: the pattern's code (0
+/// for none, 1 `off_bases`, 2 `lines`) and whether it expects boats off its
+/// own bases (decision 0223, stage 0).
 ///
 /// What is held apart until its day (decision 0195, 23) does not raise the
 /// version: it is hashed last, after the domain, and only where something is
@@ -294,7 +297,7 @@ const fn speed_code(speed: SpeedSetting) -> u8 {
 /// replacement men and each land unit's strength (decision 0197, 21), after
 /// the supply lines, only where a scenario gives a stream or an
 /// establishment.
-pub const STATE_VERSION: &[u8] = b"flagplot-state-v57";
+pub const STATE_VERSION: &[u8] = b"flagplot-state-v58";
 
 /// Names every field of the state, with no `..` in any pattern. It does
 /// nothing when it runs. It is here so that a field added to the state does
@@ -786,6 +789,11 @@ fn name_every_field(world: &World) {
             pursue_leaves,
             pursuits,
             pursuit_refusals,
+            submarine_doctrine:
+                crate::command::SubmarineDoctrine {
+                    pattern: _,
+                    expects_boats_off_own_bases: _,
+                },
         } = state;
         if let Some(Intent {
             id: _,
@@ -1722,6 +1730,16 @@ fn hash_command_state(h: &mut StateHasher, state: &CommandState) {
         h.u32(force.raw());
         h.u32(*contact);
     }
+    // Decision 0223, stage 0: the side's submarine doctrine, after the
+    // refusals: the pattern's code (0 for none), then whether it expects
+    // boats off its own bases. Version 58.
+    h.u8(state
+        .submarine_doctrine
+        .pattern
+        .map_or(0, crate::command::SubmarinePattern::code));
+    h.u8(u8::from(
+        state.submarine_doctrine.expects_boats_off_own_bases,
+    ));
 }
 
 /// Hashes where an interrupt stands: armed, the day it last fired,

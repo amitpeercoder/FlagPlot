@@ -715,6 +715,16 @@ pub struct CommandStateOut {
     /// written only where there are some.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pursuit_refusals: Vec<PursuitRefusalOut>,
+    /// The pattern the side's staff places the boats of a patrol in, as its
+    /// scenario states it (decision 0223, stage 0): `off_bases` or `lines`.
+    /// The umpire's file; written only where the scenario states one.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    submarine_pattern: Option<&'static str>,
+    /// Whether the side expects enemy boats off its own bases, as its
+    /// scenario states it (decision 0223, stage 0). The umpire's file;
+    /// written only where true.
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    expects_boats_off_own_bases: bool,
 }
 
 #[derive(Serialize)]
@@ -788,6 +798,8 @@ fn state(state: &CommandState, key: &UmpireKey) -> CommandStateOut {
                 contact: *contact,
             })
             .collect(),
+        submarine_pattern: state.submarine_doctrine.pattern.map(|p| p.name()),
+        expects_boats_off_own_bases: state.submarine_doctrine.expects_boats_off_own_bases,
     }
 }
 

@@ -1,11 +1,13 @@
 //! The briefing's part for submarines (decision 0218): the side's own boats,
-//! its reports of enemy submarines and the waters it suspects they work in.
-//! Left out where the side has none of the three, so a game with no boat and
-//! no waters is briefed as it was. A boat is known exactly to her own side
+//! its reports of enemy submarines, the waters it suspects they work in and
+//! (decision 0223, stage 0) the submarine doctrine its scenario states for
+//! it. Left out where the side has none of the four, so a game with no boat,
+//! no waters and no doctrine is briefed as it was. A boat is known exactly to her own side
 //! and an enemy boat is never shown: only a report of one, which may be out
 //! of place, and a belief the side was told.
 
 use serde::Serialize;
+use sim_core::command::{SubmarineDoctrine, SubmarinePattern};
 use sim_core::state::{Submarine, SubmarineCondition};
 use sim_core::view::SideView;
 
@@ -26,6 +28,23 @@ pub struct SubmarinesPart {
     /// order it was told. Left out when none.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub suspected_waters: Vec<SuspectedWatersLine>,
+    /// The side's own submarine doctrine, as its scenario states it
+    /// (decision 0223, stage 0). Left out where the scenario states neither
+    /// a pattern nor an expectation. Never the enemy's.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub doctrine: Option<DoctrineLine>,
+}
+
+/// The side's own submarine doctrine (decision 0223, stage 0).
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct DoctrineLine {
+    /// `off_bases` or `lines`. Left out where the scenario states none.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub submarine_pattern: Option<&'static str>,
+    /// Whether the side expects enemy boats off its own bases.
+    pub expects_boats_off_own_bases: bool,
+    /// In words.
+    pub words: String,
 }
 
 /// One of the side's own boats.
@@ -162,8 +181,8 @@ pub struct SuspectedWatersLine {
     pub event: Option<u32>,
 }
 
-/// The part, or `None` when the side has no boat, no report of a submarine
-/// and no suspected waters. `today` is the day about to be played. The
+/// The part, or `None` when the side has no boat, no report of a submarine,
+/// no suspected waters and no doctrine. `today` is the day about to be played. The
 /// context must have its events set.
 pub(crate) fn submarines_part(
     ctx: &Ctx<'_>,
@@ -196,13 +215,41 @@ pub(crate) fn submarines_part(
             event: ctx.number_if_seen(waters.received_event),
         })
         .collect();
-    if boats.is_empty() && reports.is_empty() && suspected_waters.is_empty() {
+    let doctrine = doctrine_line(view.submarine_doctrine());
+    if boats.is_empty() && reports.is_empty() && suspected_waters.is_empty() && doctrine.is_none() {
         return None;
     }
     Some(SubmarinesPart {
         boats,
         reports,
         suspected_waters,
+        doctrine,
+    })
+}
+
+/// The side's own doctrine in the briefing: `Some` exactly when it is not
+/// the default.
+fn doctrine_line(doctrine: SubmarineDoctrine) -> Option<DoctrineLine> {
+    if doctrine == SubmarineDoctrine::default() {
+        return None;
+    }
+    let mut words = match doctrine.pattern {
+        Some(SubmarinePattern::Lines) => {
+            "Your staff places the boats of a patrol in lines across the approach of the enemy."
+        }
+        Some(SubmarinePattern::OffBases) => {
+            "Your staff places the boats of a patrol off the enemy's bases."
+        }
+        None => "Your staff spreads the boats of a patrol evenly over the waters.",
+    }
+    .to_string();
+    if doctrine.expects_boats_off_own_bases {
+        words.push_str(" Boats of the enemy's may be expected off your own bases.");
+    }
+    Some(DoctrineLine {
+        submarine_pattern: doctrine.pattern.map(SubmarinePattern::name),
+        expects_boats_off_own_bases: doctrine.expects_boats_off_own_bases,
+        words,
     })
 }
 

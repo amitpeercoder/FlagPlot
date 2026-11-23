@@ -177,12 +177,15 @@ impl Default for MadeIds {
 /// old rules could not hold) and 31 from decision 0222 (a forces limit binds
 /// only the kinds it names or lists in `none_of`, a forces limit and an area
 /// cleared, which change games whose limits name some kinds and not others,
-/// and a limit's field a game saved under the old rules could not hold). A
+/// and a limit's field a game saved under the old rules could not hold) and
+/// 32 from decision 0223, stages 0 and A (a side's submarine doctrine, which
+/// a game saved under the old rules could not hold, and the pattern of a
+/// patrol, which changes the stations of a side given one). A
 /// pull request
 /// raises it by one
 /// when it changes a rule in a way that changes what an existing game would do; a
 /// change that leaves every existing game as it was leaves it alone.
-pub const RULES_VERSION: u32 = 31;
+pub const RULES_VERSION: u32 = 32;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct SimConfig {
@@ -707,6 +710,27 @@ impl World {
     /// give it.
     pub fn set_game_days(&mut self, days: u32) {
         self.game_days = Some(days);
+    }
+
+    /// Gives `side` the submarine doctrine its scenario states (decision
+    /// 0223, stage 0): set when the game is made, before its first day, and
+    /// never changed after. State of the side's own, hashed with its command
+    /// state.
+    pub fn set_submarine_doctrine(
+        &mut self,
+        side: Side,
+        doctrine: crate::command::SubmarineDoctrine,
+    ) -> Result<(), SimError> {
+        if self.truth.day != 0 || self.day_in_hand.is_some() {
+            return Err(SimError::InvalidSetup(
+                "a side's submarine doctrine is set before the first day".to_string(),
+            ));
+        }
+        // Every side has a command state from the making of the world.
+        if let Some(state) = self.command.get_mut(&side) {
+            state.submarine_doctrine = doctrine;
+        }
+        Ok(())
     }
 
     /// The number of days the game has (decision 0194), `None` where it was
