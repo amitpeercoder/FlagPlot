@@ -27,6 +27,7 @@
 //! strikes on ships, and under a neutralise its bombers' raid on the base
 //! (`crate::cover`). This module draws no random number and adds no state.
 
+use sim_core::command::LimitKind;
 use std::collections::{BTreeMap, BTreeSet};
 
 use sim_core::command::{
@@ -284,6 +285,7 @@ impl Day<'_, '_> {
                                 end.id, end.id
                             ))
                             .would_change(format!("{} higher in priority than {other}", end.id))
+                            .speaks_of(&self.state, LimitKind::Priority)
                             .done();
                         self.target(in_scope).no_orders.push(reason);
                         outcome.words.push(words);
@@ -321,6 +323,7 @@ impl Day<'_, '_> {
                             ))
                             .would_change("a bolder risk level")
                             .would_change("more fuel aboard")
+                            .speaks_of(&self.state, LimitKind::Risk)
                             .done();
                         self.target(in_scope).no_orders.push(reason);
                         if in_scope {
@@ -1120,6 +1123,7 @@ impl Day<'_, '_> {
         }
         let reason = builder
             .would_change(format!("{force} held, or named by another order"))
+            .speaks_of(&self.state, LimitKind::Risk)
             .cautions(chosen.cautions.clone())
             .done();
         self.target(in_scope).commands.push(StaffCommand {

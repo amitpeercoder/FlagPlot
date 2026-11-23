@@ -27,8 +27,9 @@
 use std::collections::BTreeSet;
 
 use sim_core::command::{
-    CommandKind, ForcesLimit, HoldTarget, Intent, IntentKind, Leave, Limit, Maker, NoticeBasis,
-    NoticeKind, Plan, PlanOutcome, PlanState, Risk, StaffCommand, StaffNotice, StaffOrder,
+    CommandKind, ForcesLimit, HoldTarget, Intent, IntentKind, Leave, Limit, LimitKind, Maker,
+    NoticeBasis, NoticeKind, Plan, PlanOutcome, PlanState, Risk, StaffCommand, StaffNotice,
+    StaffOrder,
 };
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
@@ -301,6 +302,9 @@ struct HoldCheck {
     /// a short lift's supply aboard is weighed against (decision 0169, 4).
     need: Fixed,
     until: u32,
+    /// The source whose reserve the check weighed the stock against, where
+    /// it came up short (decision 0222, rule 5).
+    reserve_of: Option<BaseId>,
 }
 
 /// The share of `attack_fatigue_limit` at or below which a unit not on
@@ -583,6 +587,7 @@ impl Day<'_, '_> {
                         end.id
                     ))
                     .would_change("a source of the side")
+                    .speaks_of(&self.state, LimitKind::Source)
                     .done();
                 self.target(in_scope).no_orders.push(reason);
                 return;
@@ -648,6 +653,7 @@ impl Day<'_, '_> {
                     }
                 ))
                 .would_change("more ships, a smaller estimate, or a bolder risk level")
+                .speaks_of(&self.state, LimitKind::Risk)
                 .done();
             if noticed {
                 self.target(in_scope).no_orders.push(reason);
@@ -772,6 +778,7 @@ impl Day<'_, '_> {
                 choice.force, end.id
             ))
             .would_change("other units or ships in the forces limit")
+            .speaks_of(&self.state, LimitKind::Forces)
             .done();
         let limit_reason = serving(end, plan)
             .evidence(choice_words.clone(), today)
@@ -781,6 +788,7 @@ impl Day<'_, '_> {
                 "{worked} The staff sets the forces limit of {new_id} to {unit_list}."
             ))
             .would_change("the commander changing the limit")
+            .speaks_of_on(LimitKind::Forces, new_id)
             .done();
         let out = self.target(in_scope);
         out.commands.push(StaffCommand {
@@ -1155,6 +1163,7 @@ impl Day<'_, '_> {
                     ))
                     .worked(worked.clone())
                     .would_change("a unit's day, the risk, a limit or the estimate")
+                    .speaks_of(&self.state, LimitKind::Risk)
                     .done();
                 self.target(in_scope).no_orders.push(reason);
                 if in_scope {
@@ -1190,6 +1199,7 @@ impl Day<'_, '_> {
                     .would_change(
                         "the risk, a limit, the estimate, or a unit's day coming into reach",
                     )
+                    .speaks_of(&self.state, LimitKind::Risk)
                     .done();
                 if noticed {
                     self.target(in_scope).no_orders.push(reason);
@@ -1232,6 +1242,7 @@ impl Day<'_, '_> {
                     .would_change(
                         "the risk, a limit, the estimate, a unit's day coming into reach, or supply at the source",
                     )
+                    .speaks_of(&self.state, LimitKind::Risk)
                     .done();
                 if noticed {
                     self.target(in_scope).no_orders.push(reason);
@@ -2057,6 +2068,7 @@ impl Day<'_, '_> {
                 "{} days, the {until} until supply follows and the margin of {margin} (the check that the place can be held)",
                 until + margin
             ),
+            reserve_of: (stock < both).then_some(source),
             short,
             words,
             need,
@@ -2458,7 +2470,12 @@ impl Day<'_, '_> {
                             }
                         ))
                         .would_change("more supply at the source, more room in the ships, a bolder risk level")
-                        .done();
+                        .speaks_of(&self.state, LimitKind::Risk);
+                    let reason = match check.reserve_of {
+                        Some(base) => reason.speaks_of_reserve(base),
+                        None => reason,
+                    }
+                    .done();
                     if noticed {
                         self.target(in_scope).no_orders.push(reason);
                     } else {
@@ -2981,6 +2998,7 @@ impl Day<'_, '_> {
                             if noticed { "" } else { ", and the staff hands in the notice that it cannot meet the intent" }
                         ))
                         .would_change("a speed that arrives in the dark, or a bolder risk level")
+                        .speaks_of(&self.state, LimitKind::Risk)
                         .done();
                     if noticed {
                         self.target(in_scope).no_orders.push(reason);
@@ -3625,8 +3643,15 @@ impl Day<'_, '_> {
                     "the place the side's, a new estimate, men rested, more men coming, or the risk"
                 } else {
                     "the place the side's, a new estimate, men rested or landed"
-                })
-                .done();
+                });
+            // The words name the risk where more men may come (decision
+            // 0222, rule 5).
+            let reason = if nothing.is_some() && !held_back {
+                reason.speaks_of(&self.state, LimitKind::Risk)
+            } else {
+                reason
+            }
+            .done();
             let handed = self
                 .target(in_scope)
                 .notices
@@ -3787,6 +3812,7 @@ impl Day<'_, '_> {
                 task.id
             ))
             .would_change("the commander changing the limit")
+            .speaks_of_on(LimitKind::Forces, task.id)
             .done();
         self.target(in_scope).commands.push(StaffCommand {
             kind: CommandKind::SetLimit(Limit::Forces {
@@ -4033,6 +4059,7 @@ impl Day<'_, '_> {
                 crate::assemble::limit_words(&limit)
             ))
             .would_change("the commander changing the limit")
+            .speaks_of_on(LimitKind::Forces, task.id)
             .done();
         if let Some(found) = self.state.intents.get_mut(&task.id) {
             found.limits.forces = Some(limit.clone());

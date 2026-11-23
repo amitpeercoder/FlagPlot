@@ -22,6 +22,7 @@
 //! The doctrine reads the side's own view and its planned command state and
 //! nothing else.
 
+use sim_core::command::LimitKind;
 use std::collections::BTreeSet;
 
 use sim_core::command::{
@@ -247,6 +248,7 @@ impl Day<'_, '_> {
                     hold.id
                 ))
                 .would_change("a source in the forces limit")
+                .speaks_of(&self.state, LimitKind::Source)
                 .done();
             self.target(in_scope).no_orders.push(reason);
             return;
@@ -325,6 +327,7 @@ impl Day<'_, '_> {
             ))
             .would_change("a supply intent for the base already in force")
             .would_change("no source in the forces limit")
+            .speaks_of(&self.state, LimitKind::Source)
             .done();
         if in_scope {
             self.lines.push(format!(

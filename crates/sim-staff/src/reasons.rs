@@ -357,6 +357,20 @@ impl ReasonBuilder {
         self
     }
 
+    /// The reason speaks of what the take asks to know of the enemy
+    /// (decision 0222, rule 5): the knowledge limit, on the order it is set
+    /// on, where the commander set one; else the risk, which sets it.
+    pub(crate) fn speaks_of_knowledge(
+        self,
+        state: &sim_core::command::CommandState,
+        set_on: Option<IntentId>,
+    ) -> Self {
+        match set_on {
+            Some(on) => self.speaks_of_on(sim_core::command::LimitKind::Knowledge, on),
+            None => self.speaks_of(state, sim_core::command::LimitKind::Risk),
+        }
+    }
+
     /// The reason speaks of the reserve of `base` (decision 0222, rule 5).
     pub(crate) fn speaks_of_reserve(mut self, base: sim_core::ids::BaseId) -> Self {
         let limit = sim_core::command::ReasonLimit {

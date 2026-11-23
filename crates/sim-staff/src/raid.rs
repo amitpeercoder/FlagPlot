@@ -27,6 +27,7 @@
 //! at least the weight the risk asks and, at preserve the force, when at
 //! least one fighter can go with them.
 
+use sim_core::command::LimitKind;
 use std::collections::BTreeMap;
 
 use sim_core::command::{
@@ -672,6 +673,7 @@ impl Day<'_, '_> {
                 .worked(worked)
                 .would_change("a different fatigue, risk level, or cost of the last raid")
                 .would_change("a cover of the base in force, for a fighter group")
+                .speaks_of(&self.state, LimitKind::Risk)
                 .done();
             orders.push(StaffOrder {
                 kind: OrderKind::AirGroup {
@@ -691,6 +693,7 @@ impl Day<'_, '_> {
             .collect();
         let intent_words = format!("{}, the raid on {target_text} from {base_text}", raid.id);
         let waiting = self.waiting_note(raid, base);
+        let risk_on = self.state.limit_set_on(raid.id, LimitKind::Risk);
         let out = self.target(in_scope);
         out.orders.extend(orders);
         if !unordered.is_empty() || morning.cannot.is_some() || groups.is_empty() {
@@ -721,7 +724,8 @@ impl Day<'_, '_> {
                 )
                 .evidence(weight_text.clone(), today)
                 .binding(format!("rest above fatigue {level} at the {risk_text}"))
-                .binding(format!("the least a raid sends: {}", morning.least));
+                .binding(format!("the least a raid sends: {}", morning.least))
+                .speaks_of_on(LimitKind::Risk, risk_on);
             if let Some(cannot) = morning.cannot {
                 builder = builder.binding(match cannot {
                     CannotRaid::NoBomber => "no bomber group that can reach the target",

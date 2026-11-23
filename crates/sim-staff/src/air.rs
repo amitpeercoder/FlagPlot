@@ -36,6 +36,7 @@
 //! the same day over one tree as if its plan were released and keeps what is
 //! handed in for that tree.
 
+use sim_core::command::LimitKind;
 use std::collections::BTreeMap;
 
 use sim_core::bearing::in_arc;
@@ -481,6 +482,8 @@ pub(crate) fn propose(view: &SideView<'_>, intent: IntentId) -> Option<Proposal>
         .worked(worked)
         .would_change("a different risk level, forces limit or hold")
         .would_change("a group at the base, or one that can fly")
+        .speaks_of(state, LimitKind::Risk)
+        .speaks_of(state, LimitKind::Forces)
         .done();
     let mut decisions = day.real;
     fill_decisions(view, &day.state, &mut decisions);
@@ -1006,6 +1009,7 @@ impl<'v, 'a> Day<'v, 'a> {
                         self.waiting_note(&hold, base)
                     ))
                     .would_change("a fighter group or a search group at the base, or in the forces limit")
+                    .speaks_of(&self.state, LimitKind::Forces)
                     .done();
                 self.target(in_scope).no_orders.push(reason);
                 continue;
@@ -1342,6 +1346,7 @@ impl<'v, 'a> Day<'v, 'a> {
                                         mission_words(m.mission)
                                     ))
                                     .would_change("a lower fatigue, or a bolder risk level")
+                                    .speaks_of(&self.state, LimitKind::Risk)
                                     .done(),
                             );
                         }
@@ -1374,6 +1379,7 @@ impl<'v, 'a> Day<'v, 'a> {
                                         mission_words(m.mission)
                                     ))
                                     .would_change("a fatigue above the level with another fighter group able to fly")
+                                    .speaks_of(&self.state, LimitKind::Risk)
                                     .done(),
                             );
                         }
@@ -1392,6 +1398,7 @@ impl<'v, 'a> Day<'v, 'a> {
                                     ))
                                     .would_change("a different risk level")
                                     .would_change("an air raid on the base, or none on the three days before")
+                                    .speaks_of(&self.state, LimitKind::Risk)
                                     .done(),
                             );
                         }
@@ -1422,6 +1429,7 @@ impl<'v, 'a> Day<'v, 'a> {
                                         mission_words(m.mission)
                                     ))
                                     .would_change("a lower fatigue, or a bolder risk level")
+                                    .speaks_of(&self.state, LimitKind::Risk)
                                     .done(),
                             );
                         }
@@ -1449,6 +1457,7 @@ impl<'v, 'a> Day<'v, 'a> {
                                         mission_words(m.mission)
                                     ))
                                     .would_change("a fatigue above the level")
+                                    .speaks_of(&self.state, LimitKind::Risk)
                                     .done(),
                             );
                         }
@@ -1472,6 +1481,7 @@ impl<'v, 'a> Day<'v, 'a> {
                                         if once { "on" } else { "off" }
                                     ))
                                     .would_change("a different risk level")
+                                    .speaks_of(&self.state, LimitKind::Risk)
                                     .done(),
                             );
                         }
@@ -1569,6 +1579,7 @@ impl<'v, 'a> Day<'v, 'a> {
         let intent_words = format!("{}, the cover of {base_text} from the air", cover.id);
         let mut notice_basis: Option<usize> = None;
         let waiting = self.waiting_note(cover, base);
+        let risk_on = self.state.limit_set_on(cover.id, LimitKind::Risk);
         let out = self.target(in_scope);
         out.orders.extend(orders.iter().cloned());
         if !unordered.is_empty() || cannot_meet {
@@ -1612,7 +1623,8 @@ impl<'v, 'a> Day<'v, 'a> {
                 )
                 .binding(format!("the patrol share of the {risk_text}: {share_note}"))
                 .binding(format!("rest above fatigue {level} at {risk_text}"))
-                .binding(format!("search arc: {arc_text}"));
+                .binding(format!("search arc: {arc_text}"))
+                .speaks_of_on(LimitKind::Risk, risk_on);
             if cannot_meet {
                 builder =
                     builder.binding("no fighter group of the intent has an aircraft able to fly");

@@ -24,6 +24,7 @@
 //! The pure parts are [`margin`], [`break_off`] and [`threat`]; the rest
 //! reads the side's view, and the engine's measures through it.
 
+use sim_core::command::LimitKind;
 use std::collections::BTreeSet;
 
 use sim_core::command::{
@@ -616,6 +617,7 @@ impl Day<'_, '_> {
                 ))
                 .would_change(format!("{id} not named in the forces limit"))
                 .would_change("such a task already standing")
+                .speaks_of(&self.state, LimitKind::Forces)
                 .done();
             self.target(in_scope).commands.push(StaffCommand {
                 kind: CommandKind::FormIntent {
@@ -793,7 +795,7 @@ impl Day<'_, '_> {
         let here = force.position();
 
         // Radio silence at preserve the force (decision 0136, 18).
-        if let Some(order) = silence_order(view, task, &plan, id, risk, today) {
+        if let Some(order) = silence_order(view, &self.state, task, &plan, id, risk, today) {
             out.orders.push(order);
         }
 
@@ -1077,7 +1079,7 @@ impl Day<'_, '_> {
         }
 
         // Rules of engagement, set once from the risk (rule 13).
-        if let Some(order) = roe_order(task, &plan, &force, risk, today) {
+        if let Some(order) = roe_order(&self.state, task, &plan, &force, risk, today) {
             out.orders.push(order);
         }
 
@@ -1190,6 +1192,7 @@ impl Day<'_, '_> {
                                     "{intent_words}: {threat_text}, and {sortie_rule}. {fuel_text}: it has the fuel. It is routed to the station {station} and home to {home_text}, the station marked to stand at: {hours} hours to the station at {speed_text}, it stands there for the night and steams for home at morning."
                                 ))
                                 .would_change("no threat, a bolder or more careful risk, or less fuel aboard")
+                                .speaks_of(&self.state, LimitKind::Risk)
                                 .done(),
                         ));
                     } else if short.is_empty() {
@@ -1372,6 +1375,7 @@ impl Day<'_, '_> {
                     .binding("at preserve the force, a force with no home port does not go to its station, and is given nothing there, while a contact that outnumbers it is within 15 hexes of the station")
                     .worked(format!("{intent_words}: {lead}; but {outnumbered}, so at preserve the force {what}."))
                     .would_change("the contact farther or gone, fewer ships in it, or a bolder risk")
+                    .speaks_of(&self.state, LimitKind::Risk)
                     .done(),
             );
             self.hand_in_stand(task, plan, id, out, in_scope, intent_words);
@@ -1660,7 +1664,7 @@ impl Day<'_, '_> {
         if let Some(order) = home_order {
             out.orders.push(order);
         }
-        if let Some(order) = roe_order(task, plan, force, risk, today) {
+        if let Some(order) = roe_order(&self.state, task, plan, force, risk, today) {
             out.orders.push(order);
         }
         // Readiness by the test of a sortie, whether or not it goes (11).
@@ -1742,6 +1746,7 @@ impl Day<'_, '_> {
 /// silent already, nothing; the staff never turns silence off (20).
 pub(crate) fn silence_order(
     view: &SideView<'_>,
+    state: &sim_core::command::CommandState,
     task: &Intent,
     plan: &Plan,
     force: TaskForceId,
@@ -1764,6 +1769,7 @@ pub(crate) fn silence_order(
                 "At preserve the force, {force} keeps radio silence: it is set to it, and sends nothing until it fights, is attacked or strikes. What silence buys is not built: nothing listens to radio traffic yet (decision 0136, 19)."
             ))
             .would_change("a different risk level")
+            .speaks_of(state, LimitKind::Risk)
             .done(),
     ))
 }
@@ -1773,6 +1779,7 @@ pub(crate) fn silence_order(
 /// the straggler instruction and keep share as they are. `None` where the
 /// force has them already.
 fn roe_order(
+    state: &sim_core::command::CommandState,
     task: &Intent,
     plan: &Plan,
     force: &TaskForce,
@@ -1808,6 +1815,7 @@ fn roe_order(
                 break_off(risk)
             ))
             .would_change("a different risk level")
+            .speaks_of(state, LimitKind::Risk)
             .done(),
     ))
 }
