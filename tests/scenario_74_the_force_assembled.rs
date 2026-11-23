@@ -353,6 +353,7 @@ fn cmd(c: &CommandKind) -> Cmd {
                 land_units,
                 submarines: _,
                 none_of: _,
+                in_place: _,
             } = limit;
             assert!(ships.is_empty() && air_groups.is_empty(), "{limit:?}");
             Cmd::Limit(

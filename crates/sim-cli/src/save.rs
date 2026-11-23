@@ -952,6 +952,7 @@ mod tests {
                             source: Some(BaseId::new(1)),
                             submarines: Default::default(),
                             none_of: Default::default(),
+                            in_place: false,
                         },
                     }),
                 ),
@@ -987,6 +988,7 @@ mod tests {
                             none_of: [sim_core::command::ForceKind::AirGroups]
                                 .into_iter()
                                 .collect(),
+                            in_place: false,
                         },
                     }),
                 ),

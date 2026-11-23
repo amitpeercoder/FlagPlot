@@ -228,6 +228,7 @@ fn forces(ship_list: &[u32], force_list: &[u32]) -> ForcesLimit {
         source: Some(base(1)),
         submarines: Default::default(),
         none_of: Default::default(),
+        in_place: false,
     }
 }
 
@@ -2209,6 +2210,7 @@ fn two_worlds_differing_in_the_other_side(other: Side) -> (World, World) {
                 source: Some(base(enemy_base)),
                 submarines: Default::default(),
                 none_of: Default::default(),
+                in_place: false,
             },
         }),
     );

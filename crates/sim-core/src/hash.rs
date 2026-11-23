@@ -1084,6 +1084,7 @@ fn name_limits(limits: &IntentLimits) {
         land_units: _,
         submarines: _,
         none_of: _,
+        in_place: _,
     }) = forces
     {}
 }
@@ -1285,6 +1286,11 @@ fn hash_forces(h: &mut StateHasher, forces: &ForcesLimit) {
         for kind in &forces.none_of {
             h.u8(kind.code());
         }
+    }
+    // Decision 0222, the architect's ruling I: written only where it is true
+    // (a tag byte 8), after `none_of`, in the same layout v57.
+    if forces.in_place {
+        h.u8(8);
     }
 }
 
@@ -2701,6 +2707,7 @@ mod tests {
             land_units: [LandUnitId::new(9)].into_iter().collect(),
             submarines: std::collections::BTreeSet::new(),
             none_of: Default::default(),
+            in_place: false,
         };
         // The layout as it was: ships, task forces, air groups, the source,
         // the land units.

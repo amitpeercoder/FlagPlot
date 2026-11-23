@@ -1389,12 +1389,7 @@ fn carrier_force(dd: i64, with_oiler: bool) -> String {
         + &a_ship(6, 152, "allied", dd, 3, None)
         + "\n[[air_group]]\nid = 1\nname = \"Placeholder fighters 1\"\nside = \"allied\"\nship = 5\naircraft_type = 4\nready = 12\n"
         + "\n[[command]]\nday = 1\nside = \"allied\"\nkind = \"set_intent\"\nintent = 1\nintent_kind = \"deny\"\nhex = [-6, 0]\ndistance = 0\n"
-        + "\n[[command]]\nday = 1\nside = \"allied\"\nkind = \"set_limit\"\nlimit = \"forces\"\nintent = 1\ntask_forces = [3]\n"
-        // Restated by decision 0222, the architect's ruling C: the commander
-        // gives task force 3 its own task at (-6,0), where it lies, so that it
-        // keeps its hex and serves the deny from there, as the force named in
-        // the deny's limit did before rule 2.
-        + "\n[[command]]\nday = 1\nside = \"allied\"\nkind = \"set_intent\"\nintent = 2\nintent_kind = \"operate_carriers\"\ntask_force = 3\nhex = [-6, 0]\n"
+        + "\n[[command]]\nday = 1\nside = \"allied\"\nkind = \"set_limit\"\nlimit = \"forces\"\nintent = 1\ntask_forces = [3]\nin_place = true\n"
         + "\n[[command]]\nday = 1\nside = \"allied\"\nkind = \"set_leave\"\nleave = \"prepare\"\ngiven = true\n"
         + "\n[[command]]\nday = 1\nside = \"allied\"\nkind = \"set_leave\"\nleave = \"launch\"\ngiven = true\n"
 }

@@ -361,37 +361,20 @@ const BEFORE: &[(&str, u64)] = &[
     ),
 ];
 
-/// The files that move, and the first line of the game's text that differs
-/// (taken on Nov 23, 2026, with `FLAGPILOT_130_TEXTS`):
-///
-/// - `55_a_carrier_force_from_an_end.toml`: day 1, the Allied staff's
-///   reason for the carrier task of task force 1, which the deny's forces
-///   limit names. Before, the force was given its task where it lay, (0,0),
-///   with the reason "task_force:1 is on the carrier mission with 1
-///   carrier(s) afloat ... and lies at (0,0)" and the binding "is named in
-///   the forces limit of intent:1"; now the carrier pass stations it as a
-///   free force and says so ("task_force:1 lies at (0,0) with bombers of a
-///   least normal strike radius of 250 nm", "the candidates ... 117"). The
-///   station chosen is (0,0) again, so no order and no later event moves but
-///   the reasons' words.
-/// - `second-proof/07a_week.toml`, `07d_week.toml`, `07m_model_week.toml` and
-///   `stage-2b-proof/07a_week.toml`: day 15, the Japanese staff's first
-///   handing in (first differing line: an intent number, 6 before and 8
-///   now, in the order to air group 6's group). The Japanese deny names the
-///   carrier forces 3 and 4, which before were given their task at the hex
-///   they lay in ((9,-19) and (7,-18)) and are now stationed by the carrier
-///   pass, both at (0,-7); the two tasks use the intent numbers 6 and 7 and
-///   shift the numbers of the tasks formed after them.
-/// - `second-proof/07b_week.toml` does not move: its two carrier forces each
-///   have the commander's own `operate_carriers` order (intents 4 and 5), so
-///   they keep their hexes.
-pub const MOVED: &[&str] = &[
-    "55_a_carrier_force_from_an_end.toml",
-    "second-proof/07a_week.toml",
-    "second-proof/07d_week.toml",
-    "second-proof/07m_model_week.toml",
-    "stage-2b-proof/07a_week.toml",
-];
+/// The files whose games move under decision 0222. Since the architect's
+/// ruling I, one: `55_a_carrier_force_from_an_end.toml`, whose limit says
+/// `in_place` (its force works from where it lies, as before), moves only in
+/// the words of the deny's reason for its bases, since rule 2 leaves the air
+/// groups to the staff: "base:1 (Placeholder base 1) is 200 nm from the
+/// nearest hex of the waters and has no bomber and no group that can search
+/// that the intent may use" where it said "the side has no base it may
+/// use", and in the limit's own words ("from where they lie"). No order
+/// moves. The Japanese denies of `second-proof/07a_week.toml`,
+/// `07d_week.toml`, `07m_model_week.toml` and `stage-2b-proof/07a_week.toml`
+/// say `in_place` too and are as they were (before ruling I their named
+/// carrier forces were stationed by the carrier pass and they moved from
+/// day 15).
+pub const MOVED: &[&str] = &["55_a_carrier_force_from_an_end.toml"];
 
 /// What a file's commands say: whether it has a take or an island order, and
 /// whether it has a forces limit on an order of another kind, or on a take

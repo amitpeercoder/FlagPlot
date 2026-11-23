@@ -445,6 +445,10 @@
                   "type": "array",
                   "items": { "enum": ["ships", "air_groups", "land_units", "submarines"] },
                   "description": "Decision 0222, the architect's ruling A: the kinds of which the staff may use nothing. Left out when none."
+                },
+                "in_place": {
+                  "type": "boolean",
+                  "description": "Decision 0222, the architect's ruling I: the task forces named work from where they lie. Left out when false."
                 }
               }
             },
@@ -1665,6 +1669,10 @@
                   "type": "array",
                   "items": { "enum": ["ships", "air_groups", "land_units", "submarines"] },
                   "description": "Decision 0222, the architect's ruling A: the kinds of which the staff may use nothing. Left out when none."
+                },
+                "in_place": {
+                  "type": "boolean",
+                  "description": "Decision 0222, the architect's ruling I: the task forces named work from where they lie. Left out when false."
                 }
               }
             },

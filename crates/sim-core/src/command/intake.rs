@@ -711,6 +711,10 @@ impl World {
                         if let Some(kind) = limit.named_and_none_of() {
                             return Err(CommandRefusal::NamedAndNoneOf(kind));
                         }
+                        // Decision 0222, the architect's ruling I.
+                        if limit.in_place && limit.task_forces.is_empty() {
+                            return Err(CommandRefusal::InPlaceWithNoTaskForce);
+                        }
                         for ship in &limit.ships {
                             if !self.own_ship_afloat(side, *ship) {
                                 return Err(CommandRefusal::NotYourShip(*ship));

@@ -694,6 +694,11 @@ pub struct ForcesLimit {
     /// architect's ruling A): each is bound, with nothing of it named. Never
     /// read from an empty list. Added at the end.
     pub none_of: BTreeSet<ForceKind>,
+    /// The task forces the limit names are used from the hex where each
+    /// lies, by the forming rule of decisions 0124 and 0125: the carrier pass
+    /// stations none of them (decision 0222, the architect's ruling I). Only
+    /// with a task force named. Added at the end.
+    pub in_place: bool,
 }
 
 /// A kind of force a forces limit binds (decision 0222, the architect's
@@ -826,7 +831,7 @@ impl core::fmt::Debug for ForcesLimit {
         if !self.submarines.is_empty() {
             out.field("submarines", &self.submarines);
         }
-        // `none_of` is left out of the debug text (decision 0222, the
+        // `in_place` (ruling I) and `none_of` are left out of the debug text (decision 0222, the
         // architect's ruling B): a closed proof's file that lists it, to say
         // in the new language the order it gave, writes the text it wrote,
         // so every digest of its events is what it was. Its JSON, its words
@@ -1857,6 +1862,14 @@ impl CommandState {
         self.ship_limits_on_chain(intent).into_iter().next()
     }
 
+    /// Whether the task forces named on `intent`'s chain work from where they
+    /// lie (decision 0222, the architect's ruling I): the nearest limit that
+    /// binds the ships says `in_place`.
+    pub fn in_place_on_chain(&self, intent: IntentId) -> bool {
+        self.nearest_ship_limit(intent)
+            .is_some_and(|limit| limit.in_place)
+    }
+
     /// The source named on `intent`'s chain (decision 0222, rule 2): of the
     /// nearest limit that binds the source, its own or above it. Under a take
     /// or an island, the nearest limit's, as it binds.
@@ -2572,6 +2585,9 @@ pub enum CommandRefusal {
     /// A forces limit names a unit of a kind and lists that kind in
     /// `none_of` (decision 0222, the architect's ruling A). Added at the end.
     NamedAndNoneOf(ForceKind),
+    /// A forces limit says `in_place` and names no task force (decision
+    /// 0222, the architect's ruling I). Added at the end.
+    InPlaceWithNoTaskForce,
 }
 
 impl core::fmt::Display for CommandRefusal {
@@ -2656,6 +2672,9 @@ impl core::fmt::Display for CommandRefusal {
             CommandRefusal::NotYourSubmarine(boat) => {
                 write!(f, "{boat} is not one of the side's submarines")
             }
+            CommandRefusal::InPlaceWithNoTaskForce => f.write_str(
+                "the forces limit says its task forces work from where they lie and names no task force",
+            ),
             CommandRefusal::NamedAndNoneOf(kind) => write!(
                 f,
                 "the forces limit names {} and lists them in none_of: a kind is named or listed, not both",
@@ -2736,10 +2755,14 @@ impl core::fmt::Display for CommandKind {
                             Count(limit.air_groups.len(), "air group", "air groups")
                         )?;
                     }
-                    match limit.source {
-                        Some(source) => write!(f, " from {source}"),
-                        None => Ok(()),
+                    if let Some(source) = limit.source {
+                        write!(f, " from {source}")?;
                     }
+                    // Decision 0222, the architect's ruling I.
+                    if limit.in_place {
+                        write!(f, ", from where they lie")?;
+                    }
+                    Ok(())
                 }
                 Limit::Area { intent, hexes } => {
                     write!(

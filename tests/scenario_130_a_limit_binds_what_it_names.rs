@@ -129,6 +129,16 @@
 //! G3. A limit naming an air group and listing `air_groups` in `none_of` is
 //!    refused.
 //! G4. A limit naming nothing and listing nothing uses nothing of any kind.
+//!
+//! Stated by the architect, ruling I, Nov 23, 2026:
+//!
+//! G5. A deny whose limit names the carrier force with `in_place` forms the
+//!    carrier task at the hex where the force lies and the carrier pass
+//!    stations nothing.
+//! G6. The same game with `in_place` false stations it at (3,0) as
+//!    statement 4 has it.
+//! G7. `in_place` true on a limit naming no task force is refused, naming
+//!    why.
 
 #![allow(clippy::doc_lazy_continuation)]
 

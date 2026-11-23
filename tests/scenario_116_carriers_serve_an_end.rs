@@ -160,6 +160,8 @@
 //!     "A carrier force the commander gave its own task keeps its hex and
 //!     serves the order from there; a carrier force only named in the
 //!     order's forces limit is stationed by the staff as a free one is."
+//!     And, by the architect's ruling I: "a force named with `in_place`
+//!     keeps its hex and the staff forms its task there."
 //!     (As first written: "**A force the commander named keeps its hex.**
 //!     With the deny's forces limit naming C, the task names (10,0), the
 //!     hex C is in, and no station is chosen: decision 0125, as today.")
@@ -1708,4 +1710,23 @@ fn decision_0217_statement_6_no_home_port_is_a_caution() {
     assert_eq!(listed[0]["kind"], "fuel_not_measured");
     assert_eq!(listed[0]["of"]["handle"], "task_force:1");
     assert!(listed[0].get("hex").is_none());
+}
+
+/// Statement 23, the third half (the architect's ruling I): a force named
+/// with `in_place` keeps its hex, (10,0), and the staff forms its task
+/// there; no station is chosen.
+#[test]
+fn statement_23_a_force_named_in_place_keeps_its_hex() {
+    let t = at(
+        &text(),
+        "commands",
+        &command(
+            1,
+            "kind = \"set_limit\"\nlimit = \"forces\"\nintent = 1\ntask_forces = [1]\nin_place = true",
+        ),
+    );
+    let played = play(&t, 1);
+    assert_eq!(played.station(1), Some(hex(10, 0)));
+    assert_eq!(played.route_of(1), None);
+    assert!(!played.station_reason(1).contains("The station is"));
 }

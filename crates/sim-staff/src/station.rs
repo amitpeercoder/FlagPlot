@@ -254,6 +254,12 @@ impl Day<'_, '_> {
             // names task forces uses only those, and the staff stations each
             // carrier force of them as it stations a free one; a limit that
             // names none leaves the free forces to the staff.
+            // The architect's ruling I: a limit that says its task forces
+            // work from where they lie keeps the forming rule of decisions
+            // 0124 and 0125; the pass stations none of them.
+            if self.state.in_place_on_chain(end.id) {
+                continue;
+            }
             let bound = self.state.ship_limits_on_chain(end.id);
             let named: Option<Vec<TaskForceId>> = (!bound.is_empty()).then(|| {
                 forces
@@ -1156,6 +1162,7 @@ impl Day<'_, '_> {
             parent.kind,
             IntentKind::Deny { .. } | IntentKind::Neutralise { .. }
         ) && parent.maker == Maker::Commander
+            && !self.state.in_place_on_chain(parent.id)
     }
 }
 

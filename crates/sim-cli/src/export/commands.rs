@@ -256,6 +256,10 @@ struct ForcesOut {
     /// lists none (decision 0222, the architect's ruling A).
     #[serde(skip_serializing_if = "Vec::is_empty")]
     none_of: Vec<&'static str>,
+    /// Decision 0222, ruling I: true where the task forces named work from
+    /// where they lie; left out otherwise.
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    in_place: bool,
     /// Left out where the limit names none (a cover or hold intent's need
     /// not).
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -344,6 +348,7 @@ fn limits(limits: &IntentLimits) -> LimitsOut {
             land_units: forces.land_units.iter().map(|u| u.raw()).collect(),
             submarines: forces.submarines.iter().map(|b| b.raw()).collect(),
             none_of: forces.none_of.iter().map(|k| k.name()).collect(),
+            in_place: forces.in_place,
             source: forces.source.map(|source| source.raw()),
         }),
         area: limits
@@ -490,6 +495,7 @@ fn limit(limit: &Limit) -> LimitOut {
                 land_units: limit.land_units.iter().map(|u| u.raw()).collect(),
                 submarines: limit.submarines.iter().map(|b| b.raw()).collect(),
                 none_of: limit.none_of.iter().map(|k| k.name()).collect(),
+                in_place: limit.in_place,
                 source: limit.source.map(|source| source.raw()),
             }),
             ..blank("forces")

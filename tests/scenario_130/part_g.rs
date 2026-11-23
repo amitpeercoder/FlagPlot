@@ -155,3 +155,54 @@ fn g4_a_limit_naming_and_listing_nothing_uses_nothing_of_any_kind() {
     assert_eq!(patrol(Some("")), vec![]);
     assert_eq!(patrol(None).len(), 7);
 }
+
+/// G5 (the architect's, ruling I): a deny whose limit names the carrier
+/// force C with `in_place` forms the carrier task at the hex where C lies,
+/// (10,0), and the carrier pass stations nothing: the task's reason is the
+/// forming rule's, not a station's.
+#[test]
+fn g5_in_place_forms_the_task_where_the_force_lies() {
+    let t = forces_limit(&text(), 1, "task_forces = [1]\nin_place = true");
+    let played = play(&t, 1);
+    assert_eq!(played.refusals(), vec![]);
+    let carriers: Vec<IntentKind> = formed_kinds(&played)
+        .into_iter()
+        .filter(|k| matches!(k, IntentKind::OperateCarriers { .. }))
+        .collect();
+    assert_eq!(carriers, vec![operate(1, hex(10, 0))]);
+    let said = played.said(1);
+    assert!(!said.contains("The station is"), "{said}");
+    assert!(
+        said.contains("is named in the forces limit of intent:1"),
+        "{said}"
+    );
+}
+
+/// G6 (the architect's, ruling I): the same game with `in_place` false
+/// stations C at (3,0), as statement 4 has it.
+#[test]
+fn g6_in_place_false_stations_the_force_as_statement_4() {
+    let t = forces_limit(&text(), 1, "task_forces = [1]\nin_place = false");
+    let played = play(&t, 1);
+    assert_eq!(played.refusals(), vec![]);
+    let carriers: Vec<IntentKind> = formed_kinds(&played)
+        .into_iter()
+        .filter(|k| matches!(k, IntentKind::OperateCarriers { .. }))
+        .collect();
+    assert_eq!(carriers, vec![operate(1, hex(3, 0))]);
+}
+
+/// G7 (the architect's, ruling I): `in_place` true on a limit that names no
+/// task force is refused, and the refusal says why.
+#[test]
+fn g7_in_place_with_no_task_force_is_refused() {
+    let t = forces_limit(&text(), 1, "air_groups = [4]\nin_place = true");
+    let played = play(&t, 1);
+    assert_eq!(
+        played.refusals(),
+        vec![(1, CommandRefusal::InPlaceWithNoTaskForce)]
+    );
+    assert!(CommandRefusal::InPlaceWithNoTaskForce
+        .to_string()
+        .contains("names no task force"));
+}

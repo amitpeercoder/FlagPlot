@@ -445,6 +445,7 @@ impl Day<'_, '_> {
             land_units: BTreeSet::new(),
             submarines: Default::default(),
             none_of: Default::default(),
+            in_place: false,
         };
         let reason = serving(end, plan)
             .evidence(source.words.clone(), today)
@@ -726,6 +727,7 @@ impl Day<'_, '_> {
                 land_units: BTreeSet::new(),
                 submarines: Default::default(),
                 none_of: Default::default(),
+                in_place: false,
             };
             if hold.limits.forces.as_ref() == Some(&limit) {
                 continue;

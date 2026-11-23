@@ -381,6 +381,7 @@ impl Day<'_, '_> {
                 land_units: here,
                 submarines: Default::default(),
                 none_of: Default::default(),
+                in_place: false,
             };
             let choice = match self.choose(end, &limit, place, hex, risk, false) {
                 Ok(choice) => choice,
@@ -642,6 +643,7 @@ impl Day<'_, '_> {
             land_units,
             submarines: Default::default(),
             none_of: Default::default(),
+            in_place: false,
         };
         Ok(Assembled {
             choice,
@@ -717,6 +719,7 @@ impl Day<'_, '_> {
                 land_units: fighting,
                 submarines: Default::default(),
                 none_of: Default::default(),
+                in_place: false,
             };
             let choice = match self.choose(end, &limit, place, hex, risk, true) {
                 Ok(choice) => choice,

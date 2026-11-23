@@ -43,7 +43,8 @@
 //! `"area"` with `cleared = true` and nothing but `intent` clear the limit;
 //! a forces limit with no list and no source is "use nothing", not cleared.
 //! A forces limit's `none_of` lists kinds (`"ships"`, `"air_groups"`,
-//! `"land_units"`, `"submarines"`) of which the staff may use nothing.
+//! `"land_units"`, `"submarines"`) of which the staff may use nothing, and
+//! `in_place` (true or false) says its task forces work from where they lie.
 
 use std::collections::BTreeSet;
 
@@ -90,6 +91,9 @@ pub(crate) struct CommandSpec {
     /// Decision 0222, the architect's ruling A: kinds of which nothing may
     /// be used.
     none_of: Option<Vec<String>>,
+    /// Decision 0222, the architect's ruling I: the task forces named work
+    /// from where they lie.
+    in_place: Option<bool>,
     wants: Option<Vec<String>>,
     defences: Option<u32>,
     by_day: Option<u32>,
@@ -151,6 +155,7 @@ impl CommandSpec {
         note(self.submarines.is_some(), "submarines");
         note(self.cleared.is_some(), "cleared");
         note(self.none_of.is_some(), "none_of");
+        note(self.in_place.is_some(), "in_place");
         note(self.wants.is_some(), "wants");
         note(self.defences.is_some(), "defences");
         note(self.by_day.is_some(), "by_day");
@@ -245,6 +250,7 @@ impl CommandSpec {
                 "submarines",
                 "source",
                 "none_of",
+                "in_place",
             ],
             ("set_limit", Some("area")) => &["limit", "intent", "hexes"],
             ("set_limit", Some("priority")) => &["limit", "intent", "rank"],
@@ -534,6 +540,7 @@ impl CommandSpec {
                                 })
                             })
                             .collect::<Result<_, _>>()?,
+                        in_place: self.in_place.unwrap_or(false),
                     },
                 },
                 Some("area") => Limit::Area {
@@ -863,6 +870,7 @@ impl BelievedIntentSpec {
             submarines: None,
             cleared: None,
             none_of: None,
+            in_place: None,
             wants: self.wants.clone(),
             defences: self.defences,
             by_day: self.by_day,

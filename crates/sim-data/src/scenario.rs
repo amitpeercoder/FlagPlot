@@ -8560,6 +8560,7 @@ task_force = 3
                     source: Some(BaseId::new(1)),
                     submarines: Default::default(),
                     none_of: Default::default(),
+                    in_place: false,
                 },
             })
         );
@@ -8580,6 +8581,7 @@ task_force = 3
                     source: None,
                     submarines: Default::default(),
                     none_of: Default::default(),
+                    in_place: false,
                 },
             })
         );
@@ -8702,6 +8704,7 @@ task_force = 3
                     source: None,
                     submarines: Default::default(),
                     none_of: Default::default(),
+                    in_place: false,
                 },
             })
         );
@@ -9212,6 +9215,7 @@ task_force = 3
                         .into_iter()
                         .collect(),
                     none_of: Default::default(),
+                    in_place: false,
                 }
             })
         );

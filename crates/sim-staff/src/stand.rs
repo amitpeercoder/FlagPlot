@@ -460,7 +460,8 @@ impl Day<'_, '_> {
             && matches!(
                 end.kind,
                 IntentKind::Deny { .. } | IntentKind::Neutralise { .. }
-            );
+            )
+            && !self.state.in_place_on_chain(end.id);
         for id in named {
             let Some(force) = self.area.task_forces().find(|f| f.id == id) else {
                 continue;

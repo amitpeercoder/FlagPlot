@@ -464,6 +464,10 @@ fn limit_to_json(limit: &Limit) -> Value {
             if !limit.none_of.is_empty() {
                 body["none_of"] = json!(limit.none_of.iter().map(|k| k.name()).collect::<Vec<_>>());
             }
+            // Decision 0222, ruling I: left out when false.
+            if limit.in_place {
+                body["in_place"] = json!(true);
+            }
             // Decision 0218, 12: left out when empty.
             if !limit.submarines.is_empty() {
                 body["submarines"] =
@@ -589,7 +593,8 @@ fn limit_from_json(value: &Value) -> Result<Limit, String> {
         Some(_) => return Err("\"cleared\" must be true or false".to_string()),
     };
     if cleared {
-        const NAMES: [&str; 8] = [
+        const NAMES: [&str; 9] = [
+            "in_place",
             "none_of",
             "ships",
             "task_forces",
@@ -641,6 +646,11 @@ fn limit_from_json(value: &Value) -> Result<Limit, String> {
                     .map(SubmarineId::new)
                     .collect(),
                 none_of: none_of_from_json(value)?,
+                in_place: match value.get("in_place") {
+                    None | Some(Value::Null) => false,
+                    Some(Value::Bool(b)) => *b,
+                    Some(_) => return Err("\"in_place\" must be true or false".to_string()),
+                },
             },
         }),
         "area" => Ok(Limit::Area {
@@ -1800,6 +1810,7 @@ mod tests {
                         .into_iter()
                         .collect(),
                     none_of: Default::default(),
+                    in_place: false,
                 },
             }),
             CommandKind::WithdrawIntent { intent },
@@ -1815,6 +1826,7 @@ mod tests {
                     source: Some(BaseId::new(2)),
                     submarines: Default::default(),
                     none_of: Default::default(),
+                    in_place: false,
                 },
             }),
             CommandKind::SetLimit(Limit::Forces {
@@ -1829,6 +1841,7 @@ mod tests {
                     source: None,
                     submarines: Default::default(),
                     none_of: Default::default(),
+                    in_place: false,
                 },
             }),
             CommandKind::SetLimit(Limit::Forces {
@@ -1843,6 +1856,7 @@ mod tests {
                     source: Some(BaseId::new(1)),
                     submarines: Default::default(),
                     none_of: Default::default(),
+                    in_place: false,
                 },
             }),
             CommandKind::SetLimit(Limit::Area {
@@ -2344,6 +2358,7 @@ mod tests {
                     source: Some(BaseId::new(2)),
                     submarines: Default::default(),
                     none_of: Default::default(),
+                    in_place: false,
                 }
             }))
         );
@@ -2359,6 +2374,7 @@ mod tests {
                 source: None,
                 submarines: Default::default(),
                 none_of: Default::default(),
+                in_place: false,
             },
         }));
         assert_eq!(
