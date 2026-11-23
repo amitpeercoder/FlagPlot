@@ -213,13 +213,58 @@ Each is the architect's, with its reason. Where one differs from the words of th
 - **State and the hash.** One kind of intent, its code at the end, with its distance and whether it is search only; and, in the side's command state by order: the contact followed, the hex, day and pulse of the report kept, whether taken for a carrier, and whether lost. Each is hashed in its place and named in `hash::name_every_field`. The state layout rises, and with it the saved game's version.
 - **Codes at the end:** three notices (follows; contact lost; ended, not found) and one reason a command is refused (the contact is not held). No interrupt, no event kind and no draw is added.
 - **The doctrine's version, the rules label and the agent's interface rise.**
-- **The numbers.** On `origin/main` today the state layout is v58, the rules label 32 and the agent's interface 51, and branches in flight will take v59 and interfaces 52 and 53. The builder merges `main` first and takes the next free number of each then, and says in the pull request which it took.
+- **The numbers** (restated on Nov 23, 2026, after decisions 0226, 0227 and 0228 merged). On `origin/main` the state layout is v59, the saved game's version 27, the rules label 32, the doctrine `supply-59` and the agent's interface 53; stage D1 of decision 0223, in build, will take an interface number. The builder merges `main` first, takes the next free number of each then (layout, saved game, rules label, doctrine, interface), and says in the pull request which it took. No number is written here to be built to.
 
 ### Owed, and not proved by the statements
 
-- **The count on the games for play** ("Before it is built", above) is still owed: a developer makes it and reports it to the architect; it tunes nothing.
+- **The count on the games for play** is stated below ("The count, as stated") and is made before the build.
 - **Lost is handed in once** is not shown by a game: with `lost_contact_days` at 2 an order is lost for one dusk only.
 - **A group keeps the waters to strike first of a task withdrawn under it** (R6). It is a known limit of the strike doctrine and is not mended here.
-- **The table's part** (the two buttons, the paper, the dashed waters, the slips) is proved by the table's screen check, not by this scenario.
+- **The table's part** is proved by the page's check, stated below ("The page's check"), not by this scenario.
 - **Chapter 8 and the glossary** change in the same pull request.
+
+## The count, as stated (Nov 23, 2026)
+
+Owed by "Before it is built". It is the umpire's: it reads the log of each game, which is the truth, and nothing that plays reads it. It tunes nothing and changes no figure, statement or file of the game.
+
+**What is counted.** A sighting is a `ReportReceived` that a search made (its cause a `SearchAttempt`), taken with the enemy task force that attempt names, the side told, the day and pulse, the hex reported and whether it made a contact or refreshed one. For each side and each enemy task force the sightings are put in order of time. Each sighting after the first of its force is one **later sighting**, paired with the sighting before it. Two sightings of one force in one pulse are one, the first.
+
+1. **Refreshed or new.** Of the later sightings, how many refreshed a contact and how many made a new one, in all and by the days between the pair (the same day, the next day, two days on or more).
+2. **The old one still held.** Of those that made a new contact, in how many the side still held, at the dusk after, the contact the earlier sighting made or refreshed.
+3. **Within the distance.** For each pair, the hex distance between the two reported hexes against ruling R4's distance: the hours from the start of the earlier sighting's pulse to the end of the later one's, at 20 knots, in whole hexes cut. How many pairs are within it, in all and by the days between.
+4. **The knots it would take.** For each pair, the hex distance times 40 nm over the hours between the starts of the two pulses: the greatest, and the value that nine pairs in ten fall at or below.
+
+**The games.** Every scenario for play on file (`for_play = true`) that has a search, staff against staff as its band is read, each side given the orders its mission implies, on the live figures, seeds 1 to 100. The counts are given for each scenario and summed.
+
+**The check of the counter, worked by hand.** Before it is run on the games, the counter is run on game A of scenario 133 with the order's three lines replaced by a deny of the waters within 2 hexes of (8,0), on the altered frozen figures of that scenario's test. The hand calculation of `tests/scenario_133_a_force_followed.rs`, game A, gives the sightings of Japanese task force 1 by the Allied side: the mornings of days 1, 2, 3 and 4, at (8,0), (14,0), (14,0) and (8,0). So there are 3 later sightings, each paired with the morning before:
+
+| Pair | Hexes apart | Result | R4: hours, hexes | Within | Knots it would take |
+| --- | --- | --- | --- | --- | --- |
+| Day 1 to day 2 | 6 | new contact | 30, 15 | yes | 240 / 24 = 10 |
+| Day 2 to day 3 | 0 | refreshed | 30, 15 | yes | 0 |
+| Day 3 to day 4 | 6 | new contact | 30, 15 | yes | 10 |
+
+The counter must give: 3 later sightings, all of the next day; 1 refreshed and 2 new; of the 2 new, 2 with the old contact still held at the dusk after (contact 1 at dusk of day 3, contact 2 at dusk of day 5); 3 of 3 within the distance; the greatest 10 knots. The Japanese side has no sighting. A counter that gives anything else is wrong and is mended before it is believed.
+
+**How it is read.** It is a check of two things and sets neither. The review's first finding holds if most later sightings of the next day make a new contact while the old is held. `followed_force_knots` and R4 stand if at least nine pairs in ten are within the distance. Where fewer are, or where the first finding does not hold, the counts come back to the architect before anything is built; no figure is moved to meet them by anyone else. The counts are written under this section as "The count, as made", with the commit and the seeds.
+
+## The page's check (Nov 23, 2026)
+
+A function of `table/check_screen.py`, by the page's text, by the page's own functions run in node on an answer, and through a bridge on a real game, as its other checks are. Its statements:
+
+1. **Where it is.** The card of a contact the seat holds has two buttons above the orders on its waters, in this order: DESTROY THIS FORCE and SHADOW IT. With DESTROY THIS FORCE goes a choice of the distance, 2 or 4 hexes round. A card of anything that is not a held contact has neither.
+2. **What is sent.** DESTROY THIS FORCE sends one order of the kind destroy a force with the contact's number as the seat's picture has it, the distance chosen, and search only off; SHADOW IT sends the same with search only on. Neither sends a hex. No other call is made to give the order.
+3. **Given at any hour.** Both buttons are shown and work at every stop, at dusk and inside a day. An order given inside a day is drawn at once with the hour from which the staff acts on it, as decision 0219's other orders are; none is refused or hidden for the hour.
+4. **The paper names the force by its report.** The order's paper says what it follows now in the words the contact's card uses: where, how many ships, taken for what, how old. It gives no contact number and no handle of the form word:number, and the place is a link made by the function the cards use.
+5. **Each taking, in order.** Under that, one line for each time the order took another report for the same force, the earliest first, with the day; a report that only refreshed the contact adds no line. A taking of the other sort says what it is now taken for and what it was.
+6. **A kind that changes** changes the words "taken for" on the paper and on the card and adds no line and no slip.
+7. **Lost.** A lost order's paper says the force is lost and where it was last reported, with the day. A search-only order's paper lists no strike and no carrier force.
+8. **The chart.** The order's waters are drawn round the place of the report it follows, at the order's distance, and move when the answer's place moves. A lost order's waters are drawn dashed round the last place. An order ended or withdrawn draws none. The ring is drawn from the order as the tool gives it; the page works no centre of its own.
+9. **The slips.** Each of the three notices that may stop the clock is a slip from the staff, in the staff's voice as "we": that we now take the force for a carrier force, or no longer do; that we have lost it and are searching where it was last reported; that we have not found it and the order is ended. The slip names the force as the paper does, by its report.
+10. **The stops.** The panel has three stops, each ticked unless the player unticks it: a carrier where there was none or none where there was one, lost, ended. A call of time from the page asks for the ones ticked and for no other of these; unticked, the call does not ask for it. A taking of the same sort stops nothing and makes no slip.
+11. **Nothing can serve it.** Where the staff says the order cannot be met, the paper says so in the staff's words as given, as a deny's paper does.
+12. **Words.** Run in node on answers with an order followed, taken twice, lost and ended, the text drawn holds "order" and never "intent"; says "the enemy" and never "his"; has the staff speak as "we"; and holds no sentence that explains a rule: none saying how far a force may have steamed, when a contact counts as fresh, how many days until an order ends, why a report is taken for the same force, or that the staff aims where the force was. It gives no figure of the rule (no knots, no count of days left, no distance but the order's own).
+13. **No points and no result.** The same text holds none of "points", "victory", "margin" or "score".
+14. **A watched game.** The paper, the ring and the slips are drawn for the seat watched, through the watcher's read of the same tools; the watcher is shown no button to give the order.
+15. **Through a bridge.** On the table's game of scenario 133's game A, at the Allied seat: on the first evening the card of the contact at (8,0) has both buttons; with the order given at 2 hexes and three days played, the paper says the force is followed at the place of (14,0), 2 ships, taken for cruisers, with one taking of day 3, and the chart's ring is round that place; with six days played the paper says lost, the ring is dashed round the place of (8,0), and the slip of the loss was drawn; with seven played the order is ended, its slip was drawn and no ring is drawn. Run with the three stops ticked, time stopped for the loss and for the end and for nothing else of this order.
 
