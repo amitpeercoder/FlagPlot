@@ -4937,7 +4937,7 @@ mod submarine_tests {
             figures: load_submarine_figures(&data_file("submarines.toml"))
                 .expect("the live figures load"),
         };
-        assert_eq!(data.classes.len(), 12);
+        assert_eq!(data.classes.len(), 15);
         assert_eq!(data.torpedoes.len(), 5);
         data.validate()
             .expect("the 1942 data fits the live figures");
