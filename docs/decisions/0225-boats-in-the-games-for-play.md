@@ -92,3 +92,16 @@ Each copy, loaded:
 5. It has no suspected waters.
 6. Taken with its submarines and their three keys removed, it is the game it copies, line for line but for its header and its ground figures as the copy it comes from has them.
 7. Played on seed 1 with no order to any boat, every boat still afloat at the end is in the hex she started in.
+
+### The hexes, worked by hand
+
+The atoll (28.232 N, 177.370 W, which is 182.630 E) lies at east 217.77 nm, north -16.08 nm in the map's frame (east = (lon - 178.5) x 60 x 0.878817; north = (lat - 28.5) x 60). A point at distance d on bearing b is east + d sin b, north + d cos b. A hex (q, r) is centred at east 40 (q + r/2), south 34.641 r, and a point is in the hex whose centre is nearest.
+
+| Boat | d sin b, d cos b | Point (east, north) | Nearest centre | Next nearest |
+| --- | --- | --- | --- | --- |
+| Tambor, 150 at 240 | -129.90, -75.00 | 87.87, -91.08 | (1, 3) at 100, -103.92: 17.6 nm | (1, 2): 23.2 nm |
+| Trout, 150 at 264 | -149.18, -15.68 | 68.59, -31.76 | (1, 1) at 60, -34.64: 9.1 nm | |
+| Nautilus, 150 at 312 | -111.47, 100.37 | 106.30, 84.29 | (4, -2) at 120, 69.28: 20.3 nm | (4, -3): 20.6 nm |
+| Gato, 200 at 280 | -196.96, 34.73 | 20.81, 18.65 | (1, -1) at 20, 34.64: 16.0 nm | (1, 0): 26.8 nm |
+
+Nautilus's point lies within a third of a mile of the line between two hexes; the rule gives (4, -2), and her stated position of 4 June is in the other.
