@@ -125,6 +125,8 @@
 //!    refused.
 //! G4. A limit naming nothing and listing nothing uses nothing of any kind.
 
+#![allow(clippy::doc_lazy_continuation)]
+
 mod common;
 
 // The tests, one file a part, each under the statements it proves.

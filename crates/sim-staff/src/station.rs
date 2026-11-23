@@ -1210,6 +1210,14 @@ pub(crate) fn way_ahead(path: &[Hex], station: Hex, knots: Fixed) -> Vec<Hex> {
     way
 }
 
+/// Whether `force` is inside `limit`: listed, or with at least one ship and
+/// every ship listed (the engine's test of a task force inside a forces
+/// limit, as the side sees its own force).
+fn force_inside(limit: &sim_core::command::ForcesLimit, force: &TaskForce) -> bool {
+    limit.task_forces.contains(&force.id)
+        || (!force.ships.is_empty() && force.ships.iter().all(|s| limit.ships.contains(s)))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1288,12 +1296,4 @@ mod tests {
             ]
         );
     }
-}
-
-/// Whether `force` is inside `limit`: listed, or with at least one ship and
-/// every ship listed (the engine's test of a task force inside a forces
-/// limit, as the side sees its own force).
-fn force_inside(limit: &sim_core::command::ForcesLimit, force: &TaskForce) -> bool {
-    limit.task_forces.contains(&force.id)
-        || (!force.ships.is_empty() && force.ships.iter().all(|s| limit.ships.contains(s)))
 }

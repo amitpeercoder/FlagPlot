@@ -128,7 +128,7 @@ fn statement_13_a_preview_with_its_limits_is_what_the_staff_hands_in_once_they_a
     );
     let orders = would_hand_in(&with, "orders");
     assert!(
-        orders.as_array().expect("orders").len() > 0,
+        !orders.as_array().expect("orders").is_empty(),
         "the staff hands in orders for the order: {with}"
     );
     // Only group 1 is used, and it is set at the preserve risk's share.

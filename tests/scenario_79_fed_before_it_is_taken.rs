@@ -123,8 +123,10 @@
 //!   the staff forms no intent and gives no order: the hold waits for
 //!   base 2 to be the side's, as before this decision.
 //! - **No source.** With base 1 left out of intent 1's forces limit, no
-//!   "keep supplied" is formed, and the hold's reason says that its
-//!   forces limit names no source.
+//!   "keep supplied" is formed, and the hold's reason says that no source
+//!   is named on it or above it and names base 1, with its 1,000 t above
+//!   its reserve, as a base a source may be named among (decision 0222,
+//!   rule 1).
 //! - **Formed once.** In the main case exactly one "keep supplied" intent
 //!   is in force for the hex on every day from 2 to 14 (item 2).
 //! - **Stated as before.** The Japanese side, given nothing, is given no
@@ -773,7 +775,7 @@ fn no_man_ashore() {
 }
 
 /// No source: no "keep supplied" is formed, and the hold's reason says that
-/// its forces limit names no source.
+/// no source is named and names base 1 as a base that could be one.
 #[test]
 fn no_source() {
     let g = play(&changed(
@@ -791,7 +793,8 @@ fn no_source() {
         assert!(
             g.no_orders(day, 1)
                 .iter()
-                .any(|r| r.contains("its forces limit names no source")),
+                .any(|r| r.contains("no source is named on it or above it")
+                    && r.contains("A source may be named in the forces limit among the bases of the side that could be one: base:1 (Placeholder base A), 1000 t of supply above its reserve.")),
             "day {day}: {:?}",
             g.no_orders(day, 1)
         );
