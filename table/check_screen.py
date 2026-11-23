@@ -471,6 +471,11 @@ def the_submarines():
     rows = ["['Class',", "['Where',", "['Her station',", "['Salvoes left',", "['Doing',", "['Condition',", "['Held down',", "['In whose hands', whose]"]
     at = [card.find(r) for r in rows]
     check(all(a >= 0 for a in at) and at == sorted(at), "her card says, in order: class, where, her station, salvoes left, what she is doing, sound or damaged, held down, in whose hands")
+    cls = run_in_node(cut_function(text, "function cleanName(s)") + "\n" + cut_function(text, "function shipClass(c)")
+                      + "\nfunction main(x) { return shipClass(x); }",
+                      "I-168 to I-175, fleet submarines built 1934 on (the Technical Mission's block); the Japanese type code is not stated by the rows")
+    check("['Class', shipClass(b.class)]" in card and cls == "I-168 to I-175",
+          f"her class is shown as a ship's is, by the page's own short form of the class file's name ({cls})")
     check("'The staff\u2019s, under '" in card and "handsHeld(held)" in card and "'Free'" in card and "placeLink(b.place)" in card and "placeLink(b.station)" in card,
           "in whose hands is the staff's under the order named (linked to its paper), the player's as every held unit says it, or free; where she is and her station are places, linked, with the hex in brackets")
     check("'GIVE A DIRECT ORDER'" in card and "openPaper('boat', { unit: h, name: boatName(b), hold: { submarine: n }" in card
