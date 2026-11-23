@@ -58,6 +58,14 @@
 #   jp-i-5-group: Bow tubes 4 by the architect's ruling (ONI 222-J, 16206), but no passage speed: no endurance_speed_kn row and no max_speed_kn to estimate one from. Wanted: the class's surface speed of endurance, or its top speed.
 #   jp-i-9-group: Torpedoes carried 20 by the architect's ruling (ONI 222-J, 16214), but no passage speed: no endurance_speed_kn row and no max_speed_kn to estimate one from. Wanted: the class's surface speed of endurance, or its top speed (the Technical Mission's I-9 block, row 16188's source, may hold them).
 #   jp-ro-35-group: No passage speed: no endurance_speed_kn row and no max_speed_kn to estimate one from; its rows are ONI 222-J's of June 1945 alone, and whether its sheet covers a boat of 1942 is not stated (ship_classes.csv 16016). Wanted: its speeds, and whether it covers RO-33 and RO-34.
+#   jp-i-16-group: On file, not derived: waits on the architect's ruling (decision 0225, rule 13).
+#   jp-i-7-group: On file, not derived: waits on the architect's ruling (decision 0225, rule 13).
+#   jp-i-1-j1-group: On file, not derived: waits on the architect's ruling (decision 0225, rule 13).
+#   jp-i-6-j2-group: On file, not derived: waits on the architect's ruling (decision 0225, rule 13).
+#   us-dolphin-class: On file, not derived: waits on the architect's ruling (decision 0225, rule 13).
+#   us-cachalot-class: On file, not derived: waits on the architect's ruling (decision 0225, rule 13).
+#   us-porpoise-class: On file, not derived: waits on the architect's ruling (decision 0225, rule 13).
+#   us-perch-class: On file, not derived: waits on the architect's ruling (decision 0225, rule 13).
 id,name,salvo,salvoes_carried,passage_speed_kn,torpedo_id,estimated
 6000,Sargo class,4,6,10,6100,torpedo_id
 6001,Tambor class,6,4,10,6100,torpedo_id

@@ -135,6 +135,14 @@ pub fn derive_with(
     let mut env = derive::Env::build(&data, list.date, &rules);
     env.estimates = list.estimates.clone();
     env.list_name = list_name.to_string();
+    if let Some(sub) = &list.submarines {
+        env.not_like = sub
+            .left_out_classes
+            .iter()
+            .filter(|(class, _)| !sub.like_classes_kept.iter().any(|(c, _)| c == class))
+            .map(|(class, _)| class.clone())
+            .collect();
+    }
     env.all_estimates = list
         .estimates
         .iter()

@@ -1788,6 +1788,10 @@ agreed = "2026-11-21"
 # the group nearest in date, by the list's torpedo_from entry, and is marked. The group nearest in date
 # is the one whose boats were built nearest in year to hers, by the year the Technical Mission's
 # headings and the classes' names give (settled by the architect, Nov 22, 2026).
+# The ruling of Nov 23, 2026 (decision 0225): a class a list leaves out ([[left_out]]) is in no pool of
+# like classes unless its entry says like_class = true with a like_class_reason; and only a torpedo_model
+# row of the class that holds on the list's date drives its torpedo_from entry out (a row beginning after
+# the date is not read, as no row after the list's date is).
 # Each exception below is the architect's ruling of Nov 22, 2026, with its reason.
 
 [[exception]]

@@ -15,6 +15,12 @@
 # torpedo stated for the boats of her group, or of the group nearest in date
 # by the year her boats were built, and is marked (`torpedo_from` below).
 #
+# A class left out is in no pool of like classes for the estimates by ratio
+# unless its entry says like_class = true with a like_class_reason; only a
+# torpedo_model row that holds on the list's date drives a torpedo_from entry
+# out (decision 0225, the architect's ruling of Nov 23, 2026). The classes of
+# the research of Nov 23, 2026 are left out until the architect rules on them.
+#
 # Every class of the type submarine in ship_classes.csv is either derived
 # ([[submarine]]) or left out with its reason ([[left_out]]); the tool refuses
 # a list that does neither for one.
@@ -193,6 +199,8 @@ reason = "Not a class: NAVPERS 16160's figures of the wartime fleet boat in gene
 [[left_out]]
 class = "jp-i-1-group"
 reason = "Two types in one block: torpedoes carried 20 for the J1 boats I-1 to I-4 (16202) against 17 for I-6 (16203), and the torpedo Type 95 for the J1 boats (16204) against Type 89 for I-6 (16205). The architect ruled the block be split into the J1 boats and I-6, but a split needs fact rows of the new classes' own (every row on file speaks of the block and stays the block's), so it is left out until research files, for each of the two: bow tubes, torpedoes carried, the speed of endurance on the surface and the torpedo carried."
+like_class = true
+like_class_reason = "in the pool of like classes as it has been since the list was first derived; whether it stays is the architect's to rule with the new rows (decision 0225, rule 13)"
 
 [[left_out]]
 class = "jp-i-5-group"
@@ -205,6 +213,38 @@ reason = "Torpedoes carried 20 by the architect's ruling (ONI 222-J, 16214), but
 [[left_out]]
 class = "jp-ro-35-group"
 reason = "No passage speed: no endurance_speed_kn row and no max_speed_kn to estimate one from; its rows are ONI 222-J's of June 1945 alone, and whether its sheet covers a boat of 1942 is not stated (ship_classes.csv 16016). Wanted: its speeds, and whether it covers RO-33 and RO-34."
+
+[[left_out]]
+class = "jp-i-16-group"
+reason = "On file, not derived: waits on the architect's ruling (decision 0225, rule 13)."
+
+[[left_out]]
+class = "jp-i-7-group"
+reason = "On file, not derived: waits on the architect's ruling (decision 0225, rule 13)."
+
+[[left_out]]
+class = "jp-i-1-j1-group"
+reason = "On file, not derived: waits on the architect's ruling (decision 0225, rule 13)."
+
+[[left_out]]
+class = "jp-i-6-j2-group"
+reason = "On file, not derived: waits on the architect's ruling (decision 0225, rule 13)."
+
+[[left_out]]
+class = "us-dolphin-class"
+reason = "On file, not derived: waits on the architect's ruling (decision 0225, rule 13)."
+
+[[left_out]]
+class = "us-cachalot-class"
+reason = "On file, not derived: waits on the architect's ruling (decision 0225, rule 13)."
+
+[[left_out]]
+class = "us-porpoise-class"
+reason = "On file, not derived: waits on the architect's ruling (decision 0225, rule 13)."
+
+[[left_out]]
+class = "us-perch-class"
+reason = "On file, not derived: waits on the architect's ruling (decision 0225, rule 13)."
 
 [[left_out]]
 weapon = "jp-53cm-torpedo-type92"
