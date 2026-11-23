@@ -1,5 +1,5 @@
 {
- "note": "Directives for the Japanese seat of the Coral Sea, 6 to 10 May 1942. Written for the game in its own words: these are not historical documents and quote none. Each gives the situation as the commander above has it and the mission with its purpose, and nothing the commander can find out for himself: what the enemy has, what is coming and what cannot be replaced are read elsewhere on the table. Decision 0157.",
+ "note": "Directives for the Japanese seat of the Coral Sea, 6 to 10 May 1942. Written for the game in its own words: these are not historical documents and quote none. Each gives the situation as the commander above has it and the mission with its purpose, and nothing the commander can find out for himself: what the enemy has, what is coming and what cannot be replaced are read elsewhere on the table. Decision 0157. The last sentence of the situation names the side's submarines and where they are (decision 0227).",
  "directives": [
   {
    "number": 1,
@@ -12,7 +12,8 @@
      "heading": "1. Situation",
      "text": [
       "Port Moresby is held by the enemy and is the base from which he contests New Guinea. The invasion force with the men to take it is assigned to you, with the carrier striking force and the covering force.",
-      "Enemy carriers may be in the Coral Sea. Their position is not known."
+      "Enemy carriers may be in the Coral Sea. Their position is not known.",
+      "Three of our submarines are at sea and under your command: I-21 off Noumea, and RO-33 and RO-34 off Port Moresby. RO-33 leaves her area on 10 May."
      ]
     },
     {

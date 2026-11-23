@@ -1,5 +1,5 @@
 {
- "note": "Directives for the Japanese seat of the Eastern Solomons over five days, 23 to 27 August 1942. Written for the game in its own words: these are not historical documents and quote none. Each gives the situation as the commander above has it and the mission with its purpose, and nothing the commander can find out for himself: what the enemy has, what is coming and what cannot be replaced are read elsewhere on the table. Decision 0157.",
+ "note": "Directives for the Japanese seat of the Eastern Solomons over five days, 23 to 27 August 1942. Written for the game in its own words: these are not historical documents and quote none. Each gives the situation as the commander above has it and the mission with its purpose, and nothing the commander can find out for himself: what the enemy has, what is coming and what cannot be replaced are read elsewhere on the table. Decision 0157. The last sentence of the situation names the side's submarines and where they are (decision 0227).",
  "directives": [
   {
    "number": 1,
@@ -12,7 +12,8 @@
      "heading": "1. Situation",
      "text": [
       "The enemy holds Lunga Point and operates aircraft from its field. Our troops on Guadalcanal are too few to retake it. A convoy carrying men and supply is assigned to you, with the carrier striking force, the detachment with Ryujo and the air forces at Rabaul.",
-      "Enemy carriers are believed to be operating east of the island."
+      "Enemy carriers are believed to be operating east of the island.",
+      "Four of our submarines are under your command: RO-34 off Lunga, I-19 and I-17 north-east of Malaita on their way south, and I-33, who arrives east of Malaita on 24 August."
      ]
     },
     {

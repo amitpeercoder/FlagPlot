@@ -114,3 +114,17 @@ Placeable today, class built and a dated position on the map: I-121, I-122, I-12
 The new entries of `gaps.csv`: the S-boats' positions on patrol (the war patrol reports are not online); the Japanese boats' stations on the Coral Sea line and on the Solomons lines by latitude and longitude, with each line's spacing and extent; which boat held which sector at Midway; the I-168 and RO-33 classes' totals and model from a primary source; the torpedo model of the four new American classes and their other figures from a source better than Wikipedia; the completion dates of I-31, I-33, I-11 and I-4; I-19's firing position at Wasp; any Japanese estimate of Allied boats at Guadalcanal.
 
 What could not be checked: S-01-6's table is read from a page image whose row labels overlap (the I-15 and I-16 rows); the reloads are the column the Technical Mission calls "Reload Torpedoes", and whether its figures held in 1942 is not stated. ONI 222-J's I-9 sheet gives a designed speed of 17.0 knots, the same figure as its I-5 sheet beside it, against the Technical Mission's 24; it is filed and disputed, not explained.
+
+## Rulings, Nov 23, 2026
+
+The architect ruled on this file's rows in decision 0227 (`docs/decisions/0227-boats-in-every-game-for-play.md`). No row is changed. In brief, with the reasons in the record:
+
+- **Derived now:** `us-dolphin-class` (6012), `us-cachalot-class` (6013) and `jp-i-9-group` (6014). The other six new classes wait, each with its reason.
+- **The I-9 group:** top speed row 17201 (24 knots) is read over 17206 (17); its torpedo, the Type 95, is read from row 16221 by an exception (amended on review), the rows of 1945 (16215, 16216) not being read for 1942.
+- **The I-15 class's torpedo** stays the Type 95 from her boats' rows of 1942; rows 17236 and 17237 are not read for 1942.
+- **Torpedoes carried:** 16222 (I-168 group, 14) and 16214 (I-9 group, 20) stay read, the tubes and reloads of S-01-6 giving the same salvoes; 16033 (I-121 group, 8) is confirmed over 16060.
+- **Pickerel and Plunger** are of `us-perch-class` (17244, 17245) when it is derived; **I-8** of `jp-i-7-group` (17283) and **I-5** of `jp-i-1-group` (17286); **I-4** of `jp-i-1-j1-group` (17290) when it is derived; **I-21** of the I-15 class by 17257 and 17258.
+- **S-42's arrival off Savo** is read from event 17242 (26 August).
+- **Left in dispute, read by nothing:** the submerged speeds 17202 and 17209; Cachalot's range, 17272 and 17277.
+- **Owed:** place rows for Cape St George and San Cristobal; the two class names in `ship_classes.csv` (16008, 16010) that misstate their source.
+

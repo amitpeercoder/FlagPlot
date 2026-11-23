@@ -972,8 +972,13 @@ fn property_the_table_s_copies() {
     );
     for letter in ['b', 'c', 'd'] {
         let copy = format!("data/scenarios/table-hunger/03{letter}_coral_sea_both_oilers.toml");
-        assert!(json.contains(&copy), "{copy}");
         assert!(repo().join(&copy).exists(), "{copy}");
+        // The table plays the copy with submarines made from it (decision
+        // 0227), which stays beside the copy it is made from.
+        let played =
+            format!("data/scenarios/table-boats/03{letter}_coral_sea_both_oilers_submarines.toml");
+        assert!(json.contains(&played), "{played}");
+        assert!(repo().join(&played).exists(), "{played}");
     }
     assert!(
         json.contains("Each side has an oiler"),
