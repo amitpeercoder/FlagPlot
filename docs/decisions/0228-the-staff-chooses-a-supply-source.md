@@ -304,3 +304,18 @@ Chapter 8: the key and what a side without it gets; Holding a place, The supply 
 - **Rulebook:** chapter 8, The intent tree (a limit must narrow) and The forces limit on a staff's orders, say the keyed case.
 
 "The engine changes in one place" above is replaced by: the engine changes in two places, the key and this check.
+
+### The second stop: a run of the supply under a hold, and rule 17's bases
+
+**Found, by play of file a.** The choice, the forming and the limit work on day 1 (source base 3, task force 1). Every later `add_run` and `commit_ships` is refused as having no forces limit. Intake's `forces_of` (`crates/sim-core/src/command/intake.rs`) reads the forces limit of the plan's owner, and, where the owner has none, the nearest limit up the tree only for a "keep supplied" under an island. Section B of the review made the supply share the hold's plan, so the owner is the hold, and the limit the staff sets on the supply beneath it is never read. The architect read the closure and its two callers, and it is so. Section B did not foresee it.
+
+**Ruled: a third engine change.** For a side with the key, where the owner of a plan is a "hold a place" and a "keep supplied" in force formed directly under it has a forces limit of its own, the forces limit of a run of that plan is that supply's: its source and its pool. With more than one such supply, the lowest-numbered. With none, the owner's limit is read as today. That limit was taken by the check of the first ruling, so it is inside whatever the commander named above. For a side without the key nothing is read differently.
+
+- **Rule card, added.** Reads: the side's key; the kind of a plan's owner; the "keep supplied" intents in force directly under it and their forces limits. Writes: nothing; it decides which forces limit `add_run` and `commit_ships` are checked against. Draws: none.
+- **Versions:** none moves. The rules label stays 32, since no file on file states the key.
+- **Statements:** 4, 8, 9 and 14 rest on it and none is restated. Added, a test of intake: **25.** For a side with the key, a run of a hold's plan is checked against the forces limit of the "keep supplied" in force under the hold (taken where its ships are in that limit, refused where they are not); for a side without the key, with no limit on the hold, it is refused as having no forces limit, as today.
+- **Rulebook:** chapter 8, Runs and Holding a place (Its plan) say which limit a run of a hold's plan draws on.
+
+"The engine changes in two places" is replaced by: three, the key, the narrowing check and this.
+
+**Rule 17's bases: confirmed as the developer built it.** The other bases the day's reason names are weighed by rules 1 and 2 without the test of "the source of an order higher in priority", and with the test of a base before its day. The list is there to lead the commander to name a source, and by rule 14 a base he names is not refused because another order draws on it; a base before its day he cannot use at all. So the list is exactly the bases he could name with something to spare. Rule 17 is read so: "each other base of the side, not in the place's hex and not before its day, that has supply to spare".
