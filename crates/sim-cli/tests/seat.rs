@@ -280,6 +280,7 @@ fn mcp_at_a_seat_offers_the_nine_tools_and_says_where_the_seat_is() {
             "measure",
             "explain",
             "events",
+            "intelligence",
             "issue_orders",
             "end_day",
             "queued",
