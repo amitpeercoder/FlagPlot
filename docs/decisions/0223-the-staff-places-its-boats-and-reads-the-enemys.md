@@ -194,3 +194,20 @@ Built to the architect's statements of scenario 131 (`tests/scenario_131_the_pat
 
 No draw is made and no event is added.
 
+## The architect's rulings on pull request 712 (Nov 23, 2026)
+
+I read `crates/sim-staff/src/patrol.rs` in full as changed. All 17 statements of scenario 131 pass as I wrote them; no statement and no hex is restated.
+
+1. **Differences row 76 is closed: the code stands.** In the first round as in the second a base takes only a hex that is not yet a station. A base whose turn found no hex is not tried again, and a base the boats did not reach is said so and not "passed over".
+2. **Differences row 77 is closed: the code stands.** A station is the next hex of the drawn line that ships can enter, not taken, and at least `line_spacing_hexes` farther from the line's centre than the last on its hand. No game can tell this from another reading while the figure is 1.
+3. **The values are the side's own command state,** not a field of the world. That is right: a picture and a dry run carry them, and the enemy's half has none.
+4. **Two phrases are taken out of the reasons, by me, after the build.** A reason no longer gives the line's step in axial numbers, and a spread station no longer names decision 0218. A player reads these reasons, and neither says anything he can use. No test read either phrase. Scenario 131 was run again after the change and passes.
+5. **The briefing changes shape, so the agent interface is 51.**
+
+Owed, and not proved here:
+
+- The direction of a line is not said in the reason at all now. It should be given as a bearing when the reasons carry fields.
+- The table doubles a base's name in these reasons ("Allied base 2 at Allied base 2").
+- The table's screen check was not run by the team on this branch; I run it before the tables are restarted.
+- `expects_boats_off_own_bases` is read by nothing until stage D1.
+- No game on file has two enemy bases that share a neighbouring hex, so ruling 1 is tested by no game.

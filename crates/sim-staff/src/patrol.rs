@@ -436,10 +436,7 @@ fn spread_alone(
         .into_iter()
         .map(|station| Station {
             hex: station.hex,
-            how: format!(
-                "{}, spread over the waters as decision 0218 spreads them",
-                station.how
-            ),
+            how: format!("{}, spread over the waters", station.how),
         })
         .collect();
     Patterned {
@@ -545,11 +542,9 @@ fn lines(
         (None, None) => "there is no hex for a second line".to_string(),
     };
     let reading = format!(
-        "The approach is from {from}, {} from the centre {centre}, the nearest enemy base more than {} from it. The first line runs through {centre} across it, each step of its drawing {} in q and {} in r and the opposite, and has {first_count} station(s) in the waters; {second_words}{}.",
+        "The approach is from {from}, {} from the centre {centre}, the nearest enemy base more than {} from it. The first line runs through {centre} across it and has {first_count} station(s) in the waters; {second_words}{}.",
         hexes(base.hex.distance(centre)),
         hexes(LINE_GAP_HEXES),
-        across.0,
-        across.1,
         if second_hex.is_some() {
             format!(", with {second_count} station(s) given on it")
         } else {
