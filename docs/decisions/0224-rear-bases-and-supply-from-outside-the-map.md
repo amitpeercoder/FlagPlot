@@ -158,20 +158,19 @@ The designer's direction, as relayed after the measurement: the Japanese runs lo
 
 **This overrides ruling E of decision 0101 in these files only.** That ruling put the runs at Shortland for a game in which each run is ordered once, by the scenario, with what is aboard. It stands in every file where that is so.
 
-### Ruling 2: Espiritu Santo's supply is 2,137 t, a placeholder sized from the stated loads of the runs
+### Ruling 2: Espiritu Santo's supply is 2,120 t, a placeholder sized from the stated loads of the runs
 
-**What is ruled.** In the table's own files of the 39 days, Espiritu Santo (base 3) starts with 2,137 t of supply in place of 960 t. It is marked PLACEHOLDER, with this working beside it. It is given no supply line.
+**What is ruled.** In the table's own files of the 39 days, Espiritu Santo (base 3) starts with 2,120 t of supply in place of 960 t. It is marked PLACEHOLDER, with this working beside it. It is given no supply line.
 
-**The rule the figure is made by.** The stock is the sum of the loads the rows state for the runs that landed at Guadalcanal or Tulagi on or before the scenario's last day, 14 September 1942, wherever they loaded. A run counts once, at the largest total a row states for it; where only one ship's load is stated, that ship's. A run with no stated tons counts nothing and stays a gap. Tons are taken as printed.
+**The rule the figure is made by.** The stock is the sum of the loads the rows state for the runs that landed at Guadalcanal or Tulagi on or before the scenario's last day, 14 September 1942, wherever they loaded. A run counts once, at the largest total a row states for it. A run with no stated total counts nothing and stays a gap. Tons are taken as printed.
 
 | Run | Tons | Row | Note |
 | --- | --- | --- | --- |
 | The four destroyer-transports of 15 August | 120 | `troop_lift_facts` 88 (Dyer) | Loaded at Espiritu Santo |
 | Alhena, Fomalhaut and the destroyer-transports, 20 to 23 August | 2,000 | `troop_lift_facts` 60 (Dyer: "over 2,000 tons") | Fomalhaut's about 1,500 t (12869, her own report) and the 120 t of rations of 20 or 21 August (12859, 656) are filed on this run and are inside it, not added |
-| Colhoun, sunk on 30 August | 17 | `troop_lift_facts` 399 (Miller) | One ship of the run of 29 to 30 August; the rest of that run is not stated |
-| **Sum** | **2,137** | | |
+| **Sum** | **2,120** | | |
 
-Not stated, so nothing counted: Manley and Stringham (16 August), William Ward Burrows (20 August), Burrows and Kopara (29 to 30 August, beyond Colhoun), Betelgeuse (31 August), Fomalhaut (3 September), Fuller and Bellatrix (7 to 8 and 14 September). Not counted because it never landed in the days played: Lakatoi's 400 t, lost on passage (12890); Santa Ana, held back (`place_facts` 14456); the convoy of the 7th Marines, which sailed on the last day and landed on 18 September.
+Not stated, so nothing counted: Manley and Stringham (16 August), William Ward Burrows (20 August), Burrows and Kopara (29 to 30 August), Betelgeuse (31 August), Fomalhaut (3 September), Fuller and Bellatrix (7 to 8 and 14 September). Not counted because it never landed in the days played: Colhoun's 17 t, aboard when she was sunk on 30 August (`troop_lift_facts` 399, whose note says the sentence does not put her in the run of 29 August); Lakatoi's 400 t, lost on passage (12890); Santa Ana, held back (`place_facts` 14456); the convoy of the 7th Marines, which sailed on the last day and landed on 18 September.
 
 **Why wherever they loaded.** Fomalhaut loaded at Nouméa (12869); Alhena and the destroyer-transports at Espiritu Santo (394, 12853); the research has Burrows and Kopara from Efate, which the architect did not find in a row and does not rest on. Nouméa is not a base of the scenario, and this record says it waits. Espiritu Santo is the one Allied base the runs can load at, so it stands for every port they loaded at, and the files' notes say so.
 
@@ -180,7 +179,7 @@ Not stated, so nothing counted: Manley and Stringham (16 August), William Ward B
 - **It is not a stock.** No row gives what lay at Espiritu Santo on any day (`gaps.csv`, the two entries for the place `espiritu-santo`), and the base was "in the earliest throes of being built and stocked" in mid-August (`place_facts` 14491, 14494). The gap stays open under the figure.
 - **It is low.** Seven runs are counted at nothing because no row gives their tons.
 - **It is all there on the first day,** where the record brought it forward over five weeks. A staff may ship early what was not yet there. A line by date would be closer and needs a rate no row gives.
-- **Every row it reads is unconfirmed,** and two of the three are one author, Dyer. No derivation reads them; the figure is a scenario's placeholder and is never evidence.
+- **Every row it reads is unconfirmed,** and both are one author, Dyer. No derivation reads them; the figure is a scenario's placeholder and is never evidence.
 
 The architect holds that this is what "sized from the loads of the runs" can honestly mean on the rows as they are, and rules it. Were a larger figure wanted, the rows do not give one.
 
@@ -203,10 +202,18 @@ The five steps the measurement gave now read:
 **The architect's statements for the files.** The build holds these, each tested where a test can read it:
 
 1. The script's check passes for each of the three files.
-2. Each file differs from the file it is made from in this and nothing else: its header; base 3's `supply_t`, 2137 for 960; for each of task forces 30 and 32 to 39, `at_base = 2`, `home_port = 2` and `available_from` one less.
+2. Read as data, with every comment set aside, each file differs from the file it is made from in this and nothing else: its `name`; base 3's `supply_t`, 2120 for 960; for each of task forces 30 and 32 to 39, `at_base = 2`, `home_port = 2` and `available_from` one less. Its comments differ in the header and in the notes rulings 1 and 2 ask for, beside base 3, base 7 and each run moved.
 3. Base 7 has no supply and no fuel on the first day.
 4. On the first morning task force 30 may be used (day 9), it lies stopped at Rabaul's hex with 7 t of supply aboard, as the file it is made from had it at Shortland.
 5. No file under `data/scenarios/` outside the new folder, and no recorded game, is changed by the pull request.
 
 **What is not claimed.** That the Japanese men at Lunga are then fed. Decision 0159's named miss has other causes on file (the supply formed late, and a run by night that lands 25 t), and the measurement of step 5 says what moved.
+
+### Amended on review, Nov 23, 2026
+
+A fresh reader checked the rulings against the rows and the files. The architect checked each point and rules:
+
+- **Colhoun's 17 t is out of the sum, which is 2,120 t.** The row's own note says Miller's sentence does not put her in the run of 29 August, and she was sunk with the 17 t aboard, so they were not landed. Ruling 2's rule counted "that ship's" load where a run had no total; that clause is taken out, and its table, its figure and the count of authors are corrected above in place.
+- **Statement 2 is restated** above: it forbade the notes that rulings 1 and 2 require. The data may differ only as listed; the comments differ in the header and the notes.
+- **Task force 39 has the fuel for the move, at cruising speed.** Its two ships are the placeholder fast transport with cargo (class 12: 500 t of fuel, 4,000 nm, 16 knots cruising and 36 full) with 500 t each. The file's own note at Rabaul gives a fast transport's round trip to Lunga as about 139 t at cruise. At full speed the burn is times (36/16) squared, 5.0625, about 704 t, more than a ship holds. So ruling 1 stands for every run moved, and one thing follows that the ruling did not say: **from Rabaul no run can go at full speed and come home,** where from Shortland it could. A run by night is then the run at cruise where the forecast puts its arrival in the dark, and otherwise the run goes by day at balanced and does not sail at preserve the force (rules chapter 8, A run by night). The measurement of step 5 reports how many runs went by night and by day under ruling 1. Nothing is adjusted for it.
 

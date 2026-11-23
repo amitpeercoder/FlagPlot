@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 23, 2026. It is step 3 of decisi
 
 Summary: Where a commander orders a place held and names no base to supply it from, the staff forms no supply and tells him to name one. Under an order to control an island the staff does choose, by the most supply above the reserve, which can pick a full base no ship lies at, or strip a forward base of its own men's food. This gives the staff one rule for choosing a source, used in both cases: a base that can spare supply after its own fifteen days, one that can cover the place's need before one that cannot, one with a transport force lying empty at it before one with none, then the most to spare. The choice is kept, shown on the order's paper as the staff's, and the commander may change it.
 
-Standing: Planned on Nov 23, 2026; to be reviewed.
+Standing: Planned on Nov 23, 2026; amended on review; nothing built.
 
 ## Why it is a record of its own
 
@@ -197,10 +197,12 @@ The staffed games on file are run before and after (`scripts/compare-scenarios.s
 
 ## The versions it raises
 
-- **The doctrine:** `supply-57` to `supply-58`.
-- **The rules label:** 31 to 32, for the plan of its own (rule 11).
-- **The agent interface:** 50 to 51, for `supplied_from`.
-- **Not raised:** the state layout and the hash version (no new field), and the saved game version, unless the build finds a field is needed, which comes back to the architect first.
+Corrected on review: the record as first written was one behind main. Each is one above what main has when the build's pull request is opened; as main stood on Nov 23, 2026:
+
+- **The doctrine:** `supply-58` to `supply-59`.
+- **The state layout:** `flagplot-state-v58` to v59, and **the saved game version** 26 to 27, for the scenario's key (see Amended on review, A).
+- **The agent interface:** 51 to 52. If decision 0226's build, which also takes 51 to 52, has merged first, 52 to 53. The rule for the builder: merge main in before the pull request is opened and take the next number after main's.
+- **Not raised: the rules label,** which stays 32. No game on file plays differently, and the label rises only when one would.
 
 ## How it is built
 
@@ -212,3 +214,74 @@ Reviewed first by a fresh reader given this record, rules chapter 8, `island.rs`
 ## Questions for the designer
 
 None. He has said the staff chooses and the commander may change it; the rest is the architect's inside that.
+
+## Amended on review, Nov 23, 2026
+
+A fresh reader was given this record and the code. It found today's code described truly, no breach of determinism or of truth and belief, and the hand calculation holding. It found eight things to mend. The architect checked each against the code and rules as below. Where this section and the rules above differ, this section holds.
+
+### A. The staff chooses only where the scenario says so
+
+**Found.** The recorded game `second_proof_week_sonnet`, of stage 2's closed second proof, has an Allied hold with no source while Espiritu Santo "could be the source". Under rule 9 the staff would form a supply there: a change of substance in a game that must replay as recorded, whose calls may not be edited. Scenarios 69 (its third property, "a base that could be one", not the second as the record said), 79, 76, 86 (which pins the island's words of the source), 130 (part D, statement 18) and 106 (statement 12's hashes of the five-day file) all assert today's behaviour.
+
+**Ruled.** As command levels are (decision 0132), this is on only where a scenario says, and with it off every game plays as before.
+
+- **A scenario states, for a side, that its staff chooses its sources of supply.** The key is the side's, beside the side's other doctrine values (decision 0223, stage 0), and is left out by every file on file today. It is state: it goes into `hash::hash_world` in its place, is named in `hash::name_every_field`, and the layout version is raised and the golden files remade (decision 0057). It never changes in a game.
+- **For a side without it, nothing in this record applies:** rules 1 to 17 are not read, the island chooses by the most supply above the reserve, a commander's hold with no source forms no supply, and the orders and reasons are those `supply-58` gave. `supplied_from` (rule 18) is given for every side, since it only reports.
+- **No test on file is restated and no pin is remade for this record** but for the layout version. The comparison of the staffed games before and after must show none moved; one that moves comes back to the architect. No file of a closed proof states the key, and the recorded games of closed proofs replay as they do at every rise of the doctrine's version.
+- **The files the table plays state it for both sides,** by the scripts that make them. The table's files of the 39 days under decision 0224 are measured for that record's rulings first without it, then with it, so that the two are not confused.
+- **Why two rules are kept.** One mechanism is the rule (`docs/engineering/rule-complexity.md`); the reason for two is that a closed proof's agent-played record cannot be said again in a new language. Open work: when those records are next marked as of an older engine, the old choice goes and the key with it.
+
+"Games on file" above is replaced by this. Its two expectations (island games moving in words, scenarios 69 and 79 restated) no longer arise.
+
+### B. No plan of its own; a plan is not failed for want of the staff's ships
+
+**Found.** Rule 11 cannot be built as worded. `CommandState::forms_own_plan` knows only an intent's kind and its parent's kind; intake, `plan_owner` and the invariants rest on it; nothing in the state says who chose a source, and that can change in a game.
+
+**Ruled.** Rule 11 is withdrawn. The supply the staff forms under a commander's hold shares the hold's plan, as it does today where he names a source. What rule 11 was for is done in the doctrine instead:
+
+- **Where the ships of a supply are the staff's to find** (no limit of the commander's on its chain binds ships), an empty pool does not mark the plan failed. The supply is served, says no ship of its pool is afloat, and sends nothing. Where his limit names the ships and none is afloat, the plan is marked failed, as today.
+- **Where the source is the staff's choice** (rule 8) and the base is no longer the side's, the plan is not marked failed either; the staff chooses again that morning by rules 1 to 4. This is the one case in which it chooses again, and it is the island's today.
+
+Rule 12 stands with those words. The engine does not change but for the key of A, so the rules label is not raised.
+
+### C. A commander's source acts at once, as it does today
+
+**Found.** Rule 15 made a named source wait for runs to finish, where an island's is taken up the same morning today (`island_pools`); rule 14 dropped a refusal the island makes today; neither was listed as a change. File e was not covered by rule 10. What `supplied_from` shows while a change waits was not said.
+
+**Ruled.** Rule 15 is withdrawn. Rule 10 is restated:
+
+- **Under a commander's hold, for a side with the key, the staff sets the forces limit of the supply in every case,** each morning it differs: the source is the commander's where an intent of his on the chain names one, else the staff's, chosen and kept; the task forces are his where his limits bind ships, else the transport forces stopped at the source with nothing aboard, a pool that only grows while the source is the same and is made anew when it changes.
+- **So a source he names is taken up on the staff's next morning,** under a hold as under an island, and nothing waits. What becomes of a run still loading at the old source is the supply doctrine's reading as it is today when an island's source is renamed; the architect has not traced it, the build reports it, and it is a row of open work if it is wrong.
+- **`supplied_from` is the source the supply reads that morning** (the nearest forces limit on its chain that names one), with `chosen_by` `commander` where an intent of his on the chain names a source and `staff` otherwise. After he puts it back to the staff's choice it shows the same base, `staff`.
+- **Rule 14's change is a change, for a side with the key:** a base the commander names is not refused because an order higher in priority draws on it. It is listed with the rulebook's changes.
+
+### D. What a base keeps, where bases share a hex; and loads still to be taken
+
+**Ruled.** Rule 2 is restated. Days of supply are a hex's, so the keep is worked for the hex: the greater of the summed reserves of the side's bases there and fifteen days of the hex's planned use. The hex's supply less that, not below 0, is what the hex can spare. A base can spare the lesser of its own supply above its own reserve and what its hex can spare. Rule 7 is restated: a run is cut to what the source can spare, less what runs still loading there have yet to take, those added earlier the same morning included, as the doctrine reckons the stock above the reserve today (`source_available`).
+
+### E. The hand calculation's unstated figures
+
+The numbers hold on these, now stated in the setup: every skill of land units 1 and 2 is 2, so each skill's factor is 1 and a man's charge is 0.005 t a day whatever the ground file's strengths; the placeholder troop transport (class 10) has room for 3,000 t, so no load in the files is cut by the ships' room; no base has a reserve and no air figures are loaded.
+
+### The statements, restated
+
+Every file states the key for the Allied side, but files j and k. Statements 1, 2, 4 to 6, 8 to 11 and 16 to 18 stand as written. Restated by the architect, Nov 23, 2026:
+
+- **3.** The supply serves the hold's plan and has none of its own. The hold's plan is released on day 1 and is not marked failed on any day.
+- **7.** On day 2 the supply is served, says that no ship of its pool is afloat and sends nothing. The hold's plan is not marked failed.
+- **12.** The staff chooses nothing. It sets the supply's forces limit to source base 4 and no force, since none lies there; `supplied_from` says base 4, `chosen_by` `commander`. The supply sends nothing, and the hold's plan is not marked failed.
+- **13.** Withdrawn.
+- **14.** On the morning after the commander names base 2, the staff sets the supply's forces limit to source base 2 and task force 2, and task force 1 is no longer in it; `supplied_from` says base 2, `chosen_by` `commander`.
+- **15.** From day 17 the source is still base 2 and `chosen_by` is `staff`: the staff does not choose again.
+
+Added:
+
+- **19.** File j, file a without the key: no supply is formed on any day, and the hold's reason on day 1 is the one `supply-58` gives, naming bases 2, 3 and 4 with 200 t, 2,000 t and 5,000 t of supply above their reserves.
+- **20.** File k, file h without the key: the island's hold is given source base 4 and no force, as today.
+
+Added to what must always hold: two bases of a side in one hex can never together spare more than their hex can; and a side without the key gets, on any setup, the orders `supply-58` gave.
+
+### What the build changes in the rulebook
+
+Chapter 8: the key and what a side without it gets; Holding a place, The supply that follows; Controlling an island, The source of supply and The source kept; the doctrine's step 1 (an empty pool) and A new run (the cut); The tools (`supplied_from`); the doctrine's version. Chapter 1 or 8, wherever a scenario's keys for a side are listed. The glossary: "supply to spare", "the place's need".
+
