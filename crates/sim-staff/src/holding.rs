@@ -223,10 +223,15 @@ impl Day<'_, '_> {
         // the bases are weighed by rules 1 and 2 and the words say whether
         // any can spare supply.
         if self.view.staff_chooses_sources() {
-            let chain = self.state.island_on_chain(hold.id).is_none().then_some(hold.id);
+            let chain = self
+                .state
+                .island_on_chain(hold.id)
+                .is_none()
+                .then_some(hold.id);
             let weighing = self.weigh_sources(&end, &excluded, hex, chain);
             if weighing.chosen.is_empty() {
-                return self.nothing_to_spare_reason(hold, plan, base_text, fed_text, hex, &weighing);
+                return self
+                    .nothing_to_spare_reason(hold, plan, base_text, fed_text, hex, &weighing);
             }
         }
         let weighed = self.source_candidates(&end, &excluded);
@@ -465,7 +470,11 @@ impl Day<'_, '_> {
             .map(std::borrow::Cow::into_owned);
         let before: Option<ForcesLimit> = mine.as_ref().and_then(|m| m.limits.forces.clone());
         let (ships, task_forces, in_place) = match &bound {
-            Some(limit) => (limit.ships.clone(), limit.task_forces.clone(), limit.in_place),
+            Some(limit) => (
+                limit.ships.clone(),
+                limit.task_forces.clone(),
+                limit.in_place,
+            ),
             None => {
                 let mut forces: BTreeSet<sim_core::ids::TaskForceId> = before
                     .as_ref()
@@ -532,8 +541,10 @@ impl Day<'_, '_> {
                         hold.id
                     )
                 };
-                let mut builder = serving(hold, plan)
-                    .evidence(format!("{base_text} has no supply intent for its hex in force"), today);
+                let mut builder = serving(hold, plan).evidence(
+                    format!("{base_text} has no supply intent for its hex in force"),
+                    today,
+                );
                 for line in &lines {
                     builder = builder.evidence(line.clone(), today);
                 }
@@ -567,6 +578,20 @@ impl Day<'_, '_> {
             }
         };
         if !formed && before.as_ref() == Some(&limit) {
+            // Decision 0228, rule 5: a source the staff chose is kept, and the
+            // reason of the morning says so.
+            if commander.is_none() {
+                let reason = serving(hold, plan)
+                    .evidence(words.clone(), today)
+                    .binding(format!("{source} was chosen on an earlier morning"))
+                    .worked(format!(
+                        "{}: {words}; the staff does not choose again while it is the side's base, and the forces limit of {id} stands.",
+                        hold.id
+                    ))
+                    .would_change(format!("{source} no longer the side's base"))
+                    .done();
+                self.target(in_scope).no_orders.push(reason);
+            }
             return;
         }
         let reason = serving(hold, plan)

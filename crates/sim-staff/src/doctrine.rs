@@ -333,8 +333,8 @@ pub(crate) fn serve(
         // Decision 0228, B: where the ships are the staff's to find (no limit
         // of the commander's on the chain binds ships), an empty pool does not
         // mark the plan failed: a ship may lie at the source tomorrow.
-        let staff_finds_ships = view.staff_chooses_sources()
-            && !commander_binds_ships(state, intent.id);
+        let staff_finds_ships =
+            view.staff_chooses_sources() && !commander_binds_ships(state, intent.id);
         if plan.state.approved() && mode == Mode::Live && !staff_finds_ships {
             out.command(
                 CommandKind::MarkPlan {

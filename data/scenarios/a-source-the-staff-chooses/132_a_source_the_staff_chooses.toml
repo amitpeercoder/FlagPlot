@@ -47,6 +47,7 @@ ground = "../../reference/ground.toml"
 [side.allied]
 staff_chooses_supply_sources = true
 
+# MARK: base 1
 # H: the place supplied. 20 t, 1,000 men.
 [[base]]
 id = 1
