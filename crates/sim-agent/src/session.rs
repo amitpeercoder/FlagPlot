@@ -30,6 +30,7 @@ use crate::answer::{FORMAT, VERSION};
 use crate::briefing::briefing_for_game;
 use crate::common::{map_unit_tokens, Ctx};
 use crate::explain::explain;
+use crate::follow;
 use crate::intelligence::intelligence;
 use crate::measure::{measure_in, MeasureContext, Question};
 use crate::objectives::result_part;
@@ -42,7 +43,7 @@ use crate::record::{
     WATCHER_TOOLS,
 };
 use crate::staffing;
-use crate::told::{events_answer, told_since, DayPart, STOP_ON};
+use crate::told::{events_answer, told_on_day, told_since, DayPart, STOP_ON};
 use crate::trial::{
     answer_fields, command_words, described_fields, window_fields, Answered, AskedShown, BesideOf,
     CourseStep, DatesAsked, SecondAsked, SizeAsked, TrialAsked, TrialRunner, TrialStep,
@@ -296,6 +297,11 @@ struct RunWait {
     stopped: Option<&'static str>,
     /// The askings that stopped it before a day (decision 0214, rule 7).
     asking: Vec<Value>,
+    /// The notices of following it was asked to stop on (decision 0220,
+    /// R11): off unless asked for.
+    stop_on: Vec<&'static str>,
+    /// What the side was told of them on the last day resolved.
+    told: Vec<Value>,
 }
 
 /// What a call of `advance` is answered from.
@@ -1719,26 +1725,7 @@ impl Session {
         };
         let count = resolved.len();
         let why = match stopped {
-            "told" => {
-                let things: Vec<String> = told
-                    .iter()
-                    .map(|t| {
-                        let numbers: Vec<String> = t["events"]
-                            .as_array()
-                            .into_iter()
-                            .flatten()
-                            .map(|n| n.to_string())
-                            .collect();
-                        format!(
-                            "{} (event{} {})",
-                            t["thing"].as_str().unwrap_or_default(),
-                            if numbers.len() == 1 { "" } else { "s" },
-                            numbers.join(", ")
-                        )
-                    })
-                    .collect();
-                format!("you were told of {}", things.join("; "))
-            }
+            "told" => format!("you were told of {}", told_words(told)),
             "interrupt" => format!("an interrupt fired: {}", staffing::firing_words(&fired)),
             "game_over" => "the game is over".to_string(),
             "asks_leave" => pursuit::asking_words(&wait.asking),
@@ -3571,12 +3558,41 @@ impl Session {
     ) -> Result<RunWait, CallError> {
         if let Some(key) = args
             .keys()
-            .find(|k| !["days", "reason"].contains(&k.as_str()))
+            .find(|k| !["days", "reason", "stop_on"].contains(&k.as_str()))
         {
             return Err(CallError::naming(
                 format!("\"{key}\" is not an argument of run"),
-                &["days", "reason"],
+                &["days", "reason", "stop_on"],
             ));
+        }
+        // Decision 0220, R11: `run` stops after a day on a notice of
+        // following where it is asked to, and on no other thing of
+        // advance's.
+        let mut stop_on: Vec<&'static str> = Vec::new();
+        match args.get("stop_on") {
+            None | Some(Value::Null) => {}
+            Some(Value::Array(items)) => {
+                for item in items {
+                    let thing = item
+                        .as_str()
+                        .and_then(|t| follow::NOTICE_STOPS.iter().copied().find(|s| *s == t))
+                        .ok_or_else(|| {
+                            CallError::naming(
+                                "each of \"stop_on\" must be one of the notices run can stop on",
+                                &follow::NOTICE_STOPS,
+                            )
+                        })?;
+                    if !stop_on.contains(&thing) {
+                        stop_on.push(thing);
+                    }
+                }
+            }
+            Some(_) => {
+                return Err(CallError::naming(
+                    "\"stop_on\" must be a list of the notices run can stop on",
+                    &follow::NOTICE_STOPS,
+                ))
+            }
         }
         match args.get("reason") {
             None | Some(Value::Null) | Some(Value::String(_)) => {}
@@ -3612,6 +3628,8 @@ impl Session {
             staff_orders,
             stopped: None,
             asking: Vec::new(),
+            stop_on,
+            told: Vec::new(),
         })
     }
 
@@ -3620,10 +3638,21 @@ impl Session {
     fn run_after_day(&self, side: Side, wait: &mut RunWait) -> bool {
         wait.count += 1;
         let day = self.world.day();
+        // Decision 0220, R11: the notices of following the staff handed in on
+        // the day, which stop the call after it, never before.
+        wait.told = if wait.stop_on.is_empty() {
+            Vec::new()
+        } else {
+            self.view_of(side)
+                .map(|view| told_on_day(&view, day, &wait.stop_on))
+                .unwrap_or_default()
+        };
         let stopped = if self.is_over() {
             "game_over"
         } else if staffing::fired_on_day(&self.world.side_view(side), day) {
             "interrupt"
+        } else if !wait.told.is_empty() {
+            "told"
         } else if wait.count >= wait.days {
             "days"
         } else {
@@ -3660,6 +3689,7 @@ impl Session {
             "interrupt" => staffing::firing_words(&fired),
             "game_over" => "the game is over".to_string(),
             "asks_leave" => pursuit::asking_words(&wait.asking),
+            "told" => format!("you were told of {}", told_words(&wait.told)),
             _ => format!("the {days} days asked for are resolved"),
         };
         let mut summary = if stopped == "asks_leave" {
@@ -3691,6 +3721,21 @@ impl Session {
         });
         if stopped == "asks_leave" {
             body["asking"] = json!(wait.asking);
+        }
+        // Decision 0220, R11: written only where asked for, and the notice
+        // is named where one came (also on the day the game ended).
+        if !wait.stop_on.is_empty() {
+            body["stop_on"] = json!(wait.stop_on);
+            if !wait.told.is_empty() {
+                body["told"] = json!(wait.told);
+                if stopped == "game_over" {
+                    body["summary"] = json!(format!(
+                        "{} You were told of {} on that day.",
+                        body["summary"].as_str().unwrap_or_default(),
+                        told_words(&wait.told)
+                    ));
+                }
+            }
         }
         Ok(body)
     }
@@ -3838,6 +3883,32 @@ impl Session {
         self.stopped = Some((day, words.clone()));
         CallError::new(words)
     }
+}
+
+/// What a stop told the side, in words: each thing with the numbers of its
+/// events and, for a notice of following, the staff's words.
+fn told_words(told: &[Value]) -> String {
+    told.iter()
+        .map(|t| {
+            let numbers: Vec<String> = t["events"]
+                .as_array()
+                .into_iter()
+                .flatten()
+                .map(|n| n.to_string())
+                .collect();
+            let mut words = format!(
+                "{} (event{} {})",
+                t["thing"].as_str().unwrap_or_default(),
+                if numbers.len() == 1 { "" } else { "s" },
+                numbers.join(", ")
+            );
+            for said in t["words"].as_array().into_iter().flatten() {
+                words.push_str(&format!(": {}", said.as_str().unwrap_or_default()));
+            }
+            words
+        })
+        .collect::<Vec<_>>()
+        .join("; ")
 }
 
 fn to_value<T: serde::Serialize>(answer: &T) -> Result<Value, CallError> {

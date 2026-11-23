@@ -629,7 +629,7 @@ fn kind_json(n: &Names<'_>, kind: IntentKind) -> Value {
         | IntentKind::Raid { .. }
         | IntentKind::Deny { .. }
         | IntentKind::Patrol { .. }
-        | IntentKind::DestroyForce { .. } // 0220: staff/agent to fill
+        | IntentKind::DestroyForce { .. }
         | IntentKind::StrikeShips { .. }
         | IntentKind::SearchWaters { .. }
         | IntentKind::StandAt { .. }
@@ -670,10 +670,13 @@ fn kind_json(n: &Names<'_>, kind: IntentKind) -> Value {
             .or_else(|| kind.landing())
             .or_else(|| kind.place())
             .map(|hex| json!([hex.q, hex.r])),
+        // The distance of a deny's or a patrol's waters, and of an order to
+        // destroy a force, round the force it follows (decision 0220).
         "distance": kind
             .waters()
             .or_else(|| kind.patrol_waters())
-            .map(|(_, distance)| distance),
+            .map(|(_, distance)| distance)
+            .or_else(|| kind.followed().map(|(_, distance, _)| distance)),
         "floor_days": floor_days,
         "interval_days": interval_days,
         "by_day": by_day,
@@ -818,6 +821,16 @@ fn intent_json(n: &Names<'_>, staff: &dyn Staff, view: &SideView<'_>, intent: &I
     }
     if matches!(intent.kind, IntentKind::Deny { .. }) {
         body["measure"] = deny_measure_json(&crate::deny_measure(view, intent.id));
+    }
+    // Decision 0220: an order to destroy a force names the contact it was
+    // given (the number in the commander's picture), says whether it is
+    // search only, and, while it is in force, has its paper.
+    if let Some((contact, _, search_only)) = intent.kind.followed() {
+        body["contact"] = json!(contact);
+        body["search_only"] = json!(search_only);
+        if let Some(paper) = crate::follow::following_json(view, intent) {
+            body["following"] = paper;
+        }
     }
     body
 }
@@ -1238,6 +1251,20 @@ pub(crate) fn command_text(
     command: &CommandKind,
     request: Option<&Request>,
 ) -> String {
+    // Decision 0220: an order to destroy a force names the force by its
+    // report, where the engine's own words name its number.
+    if let CommandKind::SetIntent {
+        kind:
+            IntentKind::DestroyForce {
+                contact,
+                distance,
+                search_only,
+            },
+        ..
+    } = command
+    {
+        return crate::follow::order_words(&n.ctx.view, *contact, *distance, *search_only);
+    }
     match request {
         Some(r) => n.text_with(
             &command.to_string(),
@@ -1736,10 +1763,12 @@ fn task_words(view: &SideView<'_>, kind: IntentKind) -> String {
         }
         // Decision 0218, 11.
         IntentKind::Patrol { hex, distance } => sim_core::command::patrol_words(hex, distance),
-        // 0220: staff/agent to fill.
-        IntentKind::DestroyForce { contact, .. } => {
-            format!("destroy the force of contact {contact}")
-        }
+        // Decision 0220: the force by its report, never its number.
+        IntentKind::DestroyForce {
+            contact,
+            distance,
+            search_only,
+        } => crate::follow::order_words(view, contact, distance, search_only),
         IntentKind::StrikeShips { base } => {
             format!("strike ships from {}", base_words(view, base))
         }
@@ -2419,6 +2448,8 @@ fn allowed_keys(tool: &str) -> &'static [&'static str] {
             "wants",
             "defences",
             "island",
+            "contact",
+            "search_only",
         ],
         "withdraw_intent" => &["intent"],
         "set_limit" => &[
@@ -2511,6 +2542,8 @@ pub(crate) fn request(
             Some("neutralise") => &["target"],
             Some("raid") => &["base", "target"],
             Some("deny" | "patrol") => &["hex", "distance"],
+            // Decision 0220, R12.
+            Some("destroy_force") => &["contact", "distance", "search_only"],
             Some("strike_ships" | "search_waters") => &["base"],
             Some("stand_at" | "operate_carriers") => &["task_force", "hex"],
             Some("ready_landing") => &["task_force", "hex", "by_day"],
@@ -2534,6 +2567,8 @@ pub(crate) fn request(
                 "wants",
                 "defences",
                 "island",
+                "contact",
+                "search_only",
             ]
             .into_iter()
             .find(|k| body.contains_key(*k) && !takes.contains(k)),
@@ -2543,6 +2578,9 @@ pub(crate) fn request(
                 "neutralise" => "a target (the enemy base) and nothing else",
                 "raid" => "a base (your own) and a target (the enemy base) and nothing else",
                 "deny" | "patrol" => "a hex ([q, r]) and a distance (whole hexes) and nothing else",
+                "destroy_force" => {
+                    "a contact (the number of a contact in your picture), a distance (whole hexes, 0 or more) and, if wanted, search_only (true or false; false where left out) and nothing else"
+                }
                 "strike_ships" | "search_waters" => "a base and nothing else",
                 "stand_at" | "operate_carriers" => {
                     "a task_force (your own force's number) and a hex ([q, r]) and nothing else"
@@ -2601,6 +2639,22 @@ pub(crate) fn request(
                 (true, false) => {}
             }
         }
+        // Decision 0220, R12: a missing contact is the engine's to refuse
+        // (the contact is not held), and search_only is false where left out.
+        if kind == Some("destroy_force") {
+            body.entry("contact").or_insert_with(|| json!(0));
+            body.entry("search_only").or_insert_with(|| json!(false));
+        }
+        if (kind.is_none() || kind == Some("keep_supplied")) && body.contains_key("contact") {
+            return Err(CallError::new(
+                "\"contact\" is an argument of set_intent only for intent_kind destroy_force",
+            ));
+        }
+        if (kind.is_none() || kind == Some("keep_supplied")) && body.contains_key("search_only") {
+            return Err(CallError::new(
+                "\"search_only\" is an argument of set_intent only for intent_kind destroy_force",
+            ));
+        }
         if (kind.is_none() || kind == Some("keep_supplied")) && body.contains_key("island") {
             return Err(CallError::new(
                 "\"island\" is an argument of set_intent only for intent_kind control_island",
@@ -2620,7 +2674,7 @@ pub(crate) fn request(
             && (body.contains_key("hex") || body.contains_key("distance"))
         {
             return Err(CallError::new(
-                "\"hex\" and \"distance\" are arguments of set_intent only for intent_kind deny or patrol",
+                "\"hex\" and \"distance\" are arguments of set_intent only for intent_kind deny, patrol or (distance alone) destroy_force",
             ));
         }
     }
@@ -3000,14 +3054,20 @@ pub(crate) fn command_answer(
         }
         Err(reason) => {
             out["status"] = json!("refused");
-            out["reason"] = json!(n.text_with(
-                &reason.to_string(),
-                &request.ship_stand_ins,
-                &request.force_stand_ins,
-                &request.group_stand_ins,
-                &request.land_unit_stand_ins,
-                &request.submarine_stand_ins
-            ));
+            out["reason"] = match reason {
+                // Decision 0220, R12: no contact named is a contact not held.
+                CommandRefusal::ContactNotHeld(0) => json!(
+                    "the contact is not held: no contact is named (give \"contact\", the number of a contact in your picture)"
+                ),
+                _ => json!(n.text_with(
+                    &reason.to_string(),
+                    &request.ship_stand_ins,
+                    &request.force_stand_ins,
+                    &request.group_stand_ins,
+                    &request.land_unit_stand_ins,
+                    &request.submarine_stand_ins
+                )),
+            };
             out["notes"] = json!([]);
             out["summary"] = json!(format!(
                 "Refused, and not queued. {queued} command{} queued for day {day}.",

@@ -56,9 +56,29 @@
         "interrupt",
         "game_over",
         "days",
-        "asks_leave"
+        "asks_leave",
+        "told"
       ],
-      "description": "interrupt: an interrupt of yours fired on the last day resolved; game_over: the game ended; days: the number of days asked for was resolved; asks_leave: at dusk, before the next day, your staff would hand in a force's asking leave to pursue a find (decision 0214, rule 7): nothing was resolved by the stop, and days_resolved has the days of the call before it (count 0 where it stopped before the first)."
+      "description": "told: the staff handed in, on the last day resolved, a notice you asked to stop on (stop_on; decision 0220, R11); interrupt: an interrupt of yours fired on the last day resolved; game_over: the game ended; days: the number of days asked for was resolved; asks_leave: at dusk, before the next day, your staff would hand in a force's asking leave to pursue a find (decision 0214, rule 7): nothing was resolved by the stop, and days_resolved has the days of the call before it (count 0 where it stopped before the first)."
+    },
+    "stop_on": {
+      "type": "array",
+      "description": "Given only where you asked for stops: the notices of following the call stops after a day on (decision 0220, R11).",
+      "items": { "enum": ["follows_other_sort", "contact_lost", "force_not_found"] }
+    },
+    "told": {
+      "type": "array",
+      "description": "Given only where one of stop_on came on the last day resolved: the notice, with the numbers of its events and the staff's words, naming the force by its report.",
+      "items": {
+        "type": "object",
+        "required": ["thing", "events"],
+        "additionalProperties": false,
+        "properties": {
+          "thing": { "enum": ["follows_other_sort", "contact_lost", "force_not_found"] },
+          "events": { "type": "array", "items": { "type": "integer" } },
+          "words": { "type": "array", "items": { "type": "string" } }
+        }
+      }
     },
     "asking": {
       "type": "array",

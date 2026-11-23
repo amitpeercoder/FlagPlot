@@ -11,8 +11,8 @@ use std::collections::BTreeMap;
 
 use serde_json::{json, Value};
 use sim_core::command::{
-    IntentKind, InterruptCondition, InterruptRef, InterruptStatus, NoticeKind, PlanId,
-    PursuitNotice, StandingKind, StandingSubject,
+    FollowNotice, IntentKind, InterruptCondition, InterruptRef, InterruptStatus, NoticeKind,
+    PlanId, PursuitNotice, StandingKind, StandingSubject,
 };
 use sim_core::events::EventKind;
 use sim_core::fixed::Fixed;
@@ -373,13 +373,13 @@ fn matter_words(
         (NoticeKind::Ready, _) => format!("plan:{} is ready", plan.raw()),
         (NoticeKind::Late, _) => format!("plan:{} cannot be ready by its date", plan.raw()),
         (NoticeKind::Met, _) => format!("plan:{} has every want met", plan.raw()),
-        // 0220: staff/agent to fill.
-        (NoticeKind::Follows, _) => format!("plan:{} follows a force", plan.raw()),
-        (NoticeKind::ContactLost, _) => {
-            format!("plan:{} has lost the force it follows", plan.raw())
-        }
+        // Decision 0220: the three notices of following say the force by its
+        // report where they carry one (`follow_words`); these are the words
+        // of one that carries none.
+        (NoticeKind::Follows, _) => "We follow a force.".to_string(),
+        (NoticeKind::ContactLost, _) => "We have lost the force we follow.".to_string(),
         (NoticeKind::ForceNotFound, _) => {
-            format!("plan:{} has not found the force it follows", plan.raw())
+            "We have not found the force we followed: the order is ended.".to_string()
         }
     }
 }
@@ -423,6 +423,9 @@ struct Matter {
     /// What a pursuit notice says, as the last day's gave it (decision
     /// 0214): each force's pursuit is a matter of its own.
     pursuit: Option<PursuitNotice>,
+    /// What a notice of following says, as the last day's gave it (decision
+    /// 0220): each order's following is a matter of its own.
+    follow: Option<FollowNotice>,
     /// The days it was handed in, each with the `why` number of the reason
     /// that day's notice cites.
     history: Vec<(u32, Option<u32>)>,
@@ -439,6 +442,7 @@ fn matters(events: &[SideEvent], side: sim_core::state::Side) -> Vec<Matter> {
             plan,
             run,
             pursuit,
+            follow,
             ..
         }) = &event.kind
         else {
@@ -452,17 +456,21 @@ fn matters(events: &[SideEvent], side: sim_core::state::Side) -> Vec<Matter> {
                 plan.raw(),
                 *run,
                 kind.code(),
-                pursuit.map_or(0, |p| p.force.raw()),
+                pursuit.map_or(0, |p| p.force.raw()) + follow.map_or(0, |f| f.intent.raw()),
             ))
             .or_insert_with(|| Matter {
                 kind: *kind,
                 plan: *plan,
                 run: *run,
                 pursuit: *pursuit,
+                follow: *follow,
                 history: Vec::new(),
             });
         if pursuit.is_some() {
             matter.pursuit = *pursuit;
+        }
+        if follow.is_some() {
+            matter.follow = *follow;
         }
         if matter.history.last().map(|(day, _)| *day) != Some(event.day) {
             matter
@@ -580,9 +588,10 @@ pub(crate) fn report(view: &SideView<'_>) -> Value {
             let intent = state.plans.get(&m.plan).map(|p| p.intent);
             let intent_kind = intent.and_then(|id| state.intents.get(&id)).map(|i| i.kind);
             let intent = intent.map(|id| id.raw());
-            let words = match &m.pursuit {
-                Some(pursuit) => pursuit_words(m.kind, n.force(pursuit.force), pursuit),
-                None => matter_words(m.kind, m.plan, intent.zip(intent_kind), m.run),
+            let words = match (&m.pursuit, &m.follow) {
+                (Some(pursuit), _) => pursuit_words(m.kind, n.force(pursuit.force), pursuit),
+                (None, Some(follow)) => crate::follow::follow_words(m.kind, follow),
+                (None, None) => matter_words(m.kind, m.plan, intent.zip(intent_kind), m.run),
             };
             if open {
                 open_words.push(format!("{words} (since day {opened})"));
@@ -611,6 +620,10 @@ pub(crate) fn report(view: &SideView<'_>) -> Value {
                 if let Some(find) = pursuit.find {
                     body["contact"] = json!(find.contact);
                 }
+            }
+            // A notice of following names its order (decision 0220).
+            if let Some(follow) = &m.follow {
+                body["order"] = json!(follow.intent.raw());
             }
             body
         })

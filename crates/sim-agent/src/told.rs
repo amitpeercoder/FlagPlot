@@ -133,7 +133,20 @@ fn view_pulse(name: Option<&str>) -> Option<Pulse> {
 
 /// The things `advance` can stop on (decision 0156, rule 8), in the order
 /// the interface lists them.
-pub const STOP_ON: [&str; 5] = ["contact", "attack", "loss", "strike", "landing"];
+///
+/// The last three are the notices of following (decision 0220, R11): a
+/// taking of the other sort, an order lost, an order ended. They are off
+/// unless asked for, as the rest are, and `run` takes these three alone.
+pub const STOP_ON: [&str; 8] = [
+    "contact",
+    "attack",
+    "loss",
+    "strike",
+    "landing",
+    "follows_other_sort",
+    "contact_lost",
+    "force_not_found",
+];
 
 /// Which of [`STOP_ON`] the side was told by one of its events, if any. The
 /// event kinds behind each:
@@ -156,6 +169,10 @@ pub const STOP_ON: [&str; 5] = ["contact", "attack", "loss", "strike", "landing"
 /// - `landing`: `men_landed` of one of its land units, and `ground_fight`, a
 ///   fight ashore, which a side is told of only where it has men in the
 ///   fight.
+/// - `follows_other_sort`, `contact_lost` and `force_not_found`: the staff's
+///   notices of following (decision 0220, R11); a notice of following that
+///   took another contact of the same sort, or only refreshed the contact
+///   followed, is none of them.
 pub fn told_as(event: &SideEvent) -> Option<&'static str> {
     match &event.kind {
         SideEventKind::Whole(EventKind::ReportReceived { created: true, .. }) => Some("contact"),
@@ -181,30 +198,68 @@ pub fn told_as(event: &SideEvent) -> Option<&'static str> {
         SideEventKind::Whole(EventKind::MenLanded { .. }) | SideEventKind::GroundFight { .. } => {
             Some("landing")
         }
+        SideEventKind::Whole(EventKind::StaffNotice { kind, follow, .. }) => {
+            crate::follow::notice_stop(*kind, follow.as_ref())
+        }
         _ => None,
     }
 }
 
 /// What the side was told among its events numbered above `before` (the
 /// count it held before), for each of `wanted`: the thing, with the numbers
-/// of its events. Things with no event are left out.
+/// of its events. Things with no event are left out. A notice of following
+/// also carries its words, in the staff's voice, one for each event.
 pub fn told_since(view: &SideView<'_>, before: usize, wanted: &[&str]) -> Vec<Value> {
     let events = view.events();
+    told_among(events.iter().enumerate().skip(before), wanted)
+}
+
+/// What the side was told on `day` among its events, as [`told_since`] gives
+/// it: the notices of following that stop `run` (decision 0220, R11) are
+/// handed in at the dusk that opens the day, and `run` reads them at the
+/// dusk after it.
+pub fn told_on_day(view: &SideView<'_>, day: u32, wanted: &[&str]) -> Vec<Value> {
+    let events = view.events();
+    told_among(
+        events.iter().enumerate().filter(|(_, e)| e.day == day),
+        wanted,
+    )
+}
+
+fn told_among<'a>(
+    events: impl Iterator<Item = (usize, &'a SideEvent)> + Clone,
+    wanted: &[&str],
+) -> Vec<Value> {
     let mut out: Vec<Value> = Vec::new();
     for thing in STOP_ON {
         if !wanted.contains(&thing) {
             continue;
         }
-        let numbers: Vec<u32> = events
-            .iter()
-            .enumerate()
-            .skip(before)
+        let told: Vec<(u32, &SideEvent)> = events
+            .clone()
             .filter(|(_, e)| told_as(e) == Some(thing))
-            .map(|(i, _)| u32::try_from(i + 1).expect("few events"))
+            .map(|(i, e)| (u32::try_from(i + 1).expect("few events"), e))
             .collect();
-        if !numbers.is_empty() {
-            out.push(json!({"thing": thing, "events": numbers}));
+        if told.is_empty() {
+            continue;
         }
+        let numbers: Vec<u32> = told.iter().map(|(number, _)| *number).collect();
+        let mut entry = json!({"thing": thing, "events": numbers});
+        let words: Vec<String> = told
+            .iter()
+            .filter_map(|(_, e)| match &e.kind {
+                SideEventKind::Whole(EventKind::StaffNotice {
+                    kind,
+                    follow: Some(follow),
+                    ..
+                }) => Some(crate::follow::follow_words(*kind, follow)),
+                _ => None,
+            })
+            .collect();
+        if !words.is_empty() {
+            entry["words"] = json!(words);
+        }
+        out.push(entry);
     }
     out
 }
