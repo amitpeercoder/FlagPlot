@@ -107,3 +107,60 @@ No draw is made. No new state field: the doctrine's new values are figures. A ne
 
 1. **The picket's distance.** The only figures are Midway's arcs of 200, 150 and 50 miles, one battle. The plan uses 150 miles as `picket_miles`, marked in the figures file as resting on one battle. Say if a picket should wait for a better figure.
 2. **The staff sends boats out without a patrol order** (rule 7). It does so only under an order to hold, control, deny or take, never with no order at all. Say if a boat should move only on the commander's own patrol order.
+
+## Amended on review, Nov 23, 2026
+
+A fresh reader was given this record, the research and the code, and found eight things that had to be mended before a build and nine that should be. The architect accepts the findings. The plan above is cut to what can be built on what stands, and the rest is set aside with what each part needs. Where this section and the rules above differ, this section holds.
+
+### What the review found
+
+- **A patrol is a root nothing stands under, served only when its plan is released, by every boat of the side in number order with stations that do not move up** (`patrol.rs`, chapter 8). Rules 7 to 10 needed four new parent pairs, a boat list of free boats with a count, stations that move up, an exception to the launch leave, and a doctrine at the area's level reading the holds of bases below it. None was in the plan.
+- **The picket is against the rows.** Two boats at a base is the plan of July 1941. By January 1942 Wake and Midway were cut to one boat and then none, and at Midway in May the boats were raised and moved towards the approach, not drawn in. Rule 14 had it backwards.
+- **Rule 3's line was not defined on a hex grid,** had no direction where the nearest enemy base is the centre, and its "nearest enemy base" is often not where the enemy comes from.
+- **The staff's figures are constants in the code,** values by date were withdrawn (decision 0213), and a value by side for Japan would move scenario 129 at once.
+- **Rules 17 and 18 assumed the staff can move a station it chose.** The carrier station is chosen on the morning its task is formed and kept; moving it is a task ended and formed again, which is new work.
+- **The estimate's count was not an algorithm,** "at least" claimed a lower bound the reports cannot give, the belief keeps one report a hex and drops it after six pulses, and `sim-agent` cannot call `sim-staff`.
+- **Two citations were wrong:** "usually too late" (16776) is a judgement of 1944; the rows begin at 16436.
+
+### What is built: three stages
+
+**Stage 0. A scenario says how each side's staff uses its boats.**
+
+- A scenario may give a side `submarine_pattern` (`off_bases` or `lines`) and `expects_boats_off_own_bases` (true or false). A side given neither plays as it does today, so no game on file moves, scenario 129 among them. This is the scenario stating its side's doctrine for its navy and date; a doctrine file by navy and date waits for the campaign that needs one.
+- The two values are in the state (hashed in their place, the layout version raised) and in a side's own picture. Neither side sees the other's.
+
+**Stage A. The pattern of a patrol the commander orders** (rules 1, 2, 5 and 6 above stand, with these changes).
+
+- **Off bases** (rule 2): a base with no navigable neighbour in the waters is passed over. The second round and the spread count the stations already given. The list of bases is read each morning, and a boat whose station is unchanged is given no order, as now. `boats_per_station` is 2, a judgement from rows that show one or two, marked so.
+- **Lines** (rule 3 is replaced):
+  - **The approach** is the enemy base on the side's map nearest the centre among those more than `line_gap_hexes` (5) from it; lowest number on a tie. With none there is no line and the boats are spread.
+  - **The line** runs through the centre at right angles to the approach. For the approach's vector (q, r) from the centre in axial hexes, the vector across it is (-(q + 2r), 2q + r), which is exact. The hexes of the line are those the hex line-drawing rule gives from the centre along that vector and along its opposite (each point rounded to the nearest hex, the lowest hex on a tie), while they lie in the waters.
+  - **Stations** are the centre, then the next hex along the first hand, then the next along the other, and so by turns, each `line_spacing_hexes` (1: 30 miles is less than a hex of 40) farther. A hex ships cannot enter is stepped over and the line goes on beyond it.
+  - **The second line** is the same line drawn through the hex `line_gap_hexes` from the centre along the approach, away from the enemy, where that hex is in the waters; boats left when the first line is full go there. Boats left after that are spread.
+  - The 5 hexes rest on one source and one battle, and the 1 hex on one source with a repeat in 1944; both are marked so where they are written.
+- "Allied" here is the American pattern for every Allied boat; the rows are American.
+
+**Stage D1. The estimate of the enemy's boats, as a reading.**
+
+- It is a function in `sim-core` of one command's picture and nothing else, so an agent's tools and the table can ask it. It reads the reports of submarines the picture holds, and no event: what a command has not been told it does not estimate from.
+- **Areas:** the reports are taken in hex order; a report within `estimate_join_hexes` (2) of the first report of an area joins that area, else it begins one. No area joins another, so none chains across the map.
+- **The count** of an area is its reports that are more than one hex from every report counted before them in the area, said as "about N" and never "at least".
+- **By habit,** for a side whose scenario says so: each of the side's own bases is named as waters where boats may be expected, with no count.
+- **It is told** in `list_contacts` beside the reports and on the chart with them. It drives nothing: the regard of decision 0218 reads the reports as it does now.
+- `estimate_join_hexes` is a judgement, marked so.
+
+### What is set aside, and what each needs
+
+- **A patrol the staff forms itself** (rules 7 to 10). It needs a patrol that can stand under another order, a boat list of free boats with a count and stations that move up, a ruling on the launch leave, and a pass at the area's level. A boat the commander stationed by his own order must be shut out of it. Until then a boat moves only on a patrol order of the commander's, which answers the designer's second question for now, and a scenario gives the side that plays by its staff alone its patrol orders.
+- **The picket** (rules 7 and 14) is withdrawn: the rows of 1942 are against it.
+- **Boats moved on a report** (rules 11 to 13). It needs the staff-formed patrol, a memory of the contact that moved the line, and a delay between the order and the boats; without the delay the boats arrive in under a day, where the record has two to three.
+- **A station moved after an attack, and the regard reading the estimate** (rules 17 and 18). They need a carrier task ended and formed again at a new station. Decision 0220 needs the same for a force that follows a contact; it is built once, there, and used here after.
+
+### The designer's questions, as they stand
+
+1. The picket's distance is no longer asked: the picket is withdrawn.
+2. Whether the staff may send boats out under other orders is set aside with rules 7 to 10, and is asked again when that work is planned.
+
+### Before it is built
+
+The architect's scenario and statements for stages 0 and A together, then D1. The reviewer's order is kept: 0, A, D1.
