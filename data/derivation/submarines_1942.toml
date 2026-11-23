@@ -207,6 +207,38 @@ class = "jp-ro-35-group"
 reason = "No passage speed: no endurance_speed_kn row and no max_speed_kn to estimate one from; its rows are ONI 222-J's of June 1945 alone, and whether its sheet covers a boat of 1942 is not stated (ship_classes.csv 16016). Wanted: its speeds, and whether it covers RO-33 and RO-34."
 
 [[left_out]]
+class = "jp-i-16-group"
+reason = "On file, not derived: waits on the architect's ruling (decision 0225, rule 13)."
+
+[[left_out]]
+class = "jp-i-7-group"
+reason = "On file, not derived: waits on the architect's ruling (decision 0225, rule 13)."
+
+[[left_out]]
+class = "jp-i-1-j1-group"
+reason = "On file, not derived: waits on the architect's ruling (decision 0225, rule 13)."
+
+[[left_out]]
+class = "jp-i-6-j2-group"
+reason = "On file, not derived: waits on the architect's ruling (decision 0225, rule 13)."
+
+[[left_out]]
+class = "us-dolphin-class"
+reason = "On file, not derived: waits on the architect's ruling (decision 0225, rule 13)."
+
+[[left_out]]
+class = "us-cachalot-class"
+reason = "On file, not derived: waits on the architect's ruling (decision 0225, rule 13)."
+
+[[left_out]]
+class = "us-porpoise-class"
+reason = "On file, not derived: waits on the architect's ruling (decision 0225, rule 13)."
+
+[[left_out]]
+class = "us-perch-class"
+reason = "On file, not derived: waits on the architect's ruling (decision 0225, rule 13)."
+
+[[left_out]]
 weapon = "jp-53cm-torpedo-type92"
 reason = "No warhead_kg row. No class on file is said to carry it in 1942."
 
