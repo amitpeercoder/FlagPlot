@@ -370,6 +370,95 @@ pub enum Outcome {
     },
 }
 
+/// What the program says of what [`run`] did: whether it passed, and the
+/// text it prints to standard output and to standard error.
+#[derive(Debug)]
+pub struct Said {
+    pub passed: bool,
+    pub out: String,
+    pub err: String,
+}
+
+/// The program's report of `result`, with `list` the list as it was named.
+/// The program prints this and nothing else, so a test that asks what the
+/// program says calls this rather than running the program.
+pub fn said(list: &str, result: Result<Outcome, String>) -> Said {
+    use std::fmt::Write;
+    let mut out = String::new();
+    let mut line = |text: &dyn std::fmt::Display| {
+        let _ = writeln!(out, "{text}");
+    };
+    let passed = match result {
+        Err(message) => {
+            return Said {
+                passed: false,
+                out: String::new(),
+                err: format!("{message}\n"),
+            };
+        }
+        Ok(Outcome::Problems(problems)) => {
+            for problem in &problems {
+                line(problem);
+            }
+            let n = problems.len();
+            line(&format!(
+                "{list}: {n} {}",
+                if n == 1 { "problem" } else { "problems" }
+            ));
+            false
+        }
+        Ok(Outcome::Clean {
+            files,
+            written,
+            unread,
+            not_settled,
+            torpedo_not_split,
+            estimated,
+        }) => {
+            line(&format!("{list}: no problems"));
+            line(&if written { "wrote:" } else { "would write:" });
+            for file in files {
+                line(&format!("  {}", file.display()));
+            }
+            // The count of the estimates (decision 0207, rule 13), printed
+            // for every list.
+            match estimated.split_first() {
+                None => line(&"estimated (decision 0207): none"),
+                Some((count, lines)) => {
+                    line(&format!("{count}:"));
+                    for l in lines {
+                        line(&format!("  {l}"));
+                    }
+                }
+            }
+            if !unread.is_empty() {
+                line(&"rows of the listed ships that no question read (not in the file):");
+                for l in unread {
+                    line(&format!("  {l}"));
+                }
+            }
+            if !torpedo_not_split.is_empty() {
+                line(&"torpedo tubes not split: no row says how the tubes bear, so the tubes on one side are all of them (decision 0074, 3):");
+                for l in torpedo_not_split {
+                    line(&format!("  {l}"));
+                }
+            }
+            if !not_settled.is_empty() {
+                line(&"aircraft types whose search radius is not settled (the strike radius is kept, decision 0075):");
+                for l in not_settled {
+                    line(&format!("  {l}"));
+                }
+            }
+            true
+        }
+    };
+    Said {
+        passed,
+        out,
+        err: String::new(),
+    }
+}
+
 /// Reads the list, the rules it names and the facts directory, derives, and
 /// writes the three files unless there is a problem or `check_only`.
 ///
