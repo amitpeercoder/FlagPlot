@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 23, 2026, on the designer's ques
 
 Summary: This is a rule for scenarios, not for the engine. It says, for every base in a scenario, how its stock is replaced: not at all, by a line from off the map, or by ships. It names the test that chooses between them, gives each rear base a reserve, puts the missing rear bases on the maps that have room for them, and says where each figure comes from. It adds no mechanism: the supply line, the reserve, a unit that enters by date, berths and lighters are all built. It then says how an economy takes each piece over.
 
-Standing: Planned on Nov 23, 2026; to be reviewed.
+Standing: Planned on Nov 23, 2026; amended on review; measured; the architect's rulings of Nov 23, 2026 on where the Japanese runs load and on Espiritu Santo's stock given, the fuel left open; nothing built.
 
 ## Why
 
@@ -138,3 +138,82 @@ The 39 days were run staff against staff on seeds 1 to 100, in the proofs' arran
 5. **Each change is measured against this run** on the same seeds, and nothing is tuned to the result.
 
 Not measured: the table's own pairings with a player in one seat; a balance of each base's stock event by event.
+
+## The architect's rulings, Nov 23, 2026
+
+The designer's direction, as relayed after the measurement: the Japanese runs load at Rabaul, with no invented stock at Shortland; Espiritu Santo's stock is sized from the loads of the runs. The architect read the rows the research of that day filed (`docs/research/guadalcanal-supply-runs-1942.md`; `troop_lift_facts` 12803 to 12890, `place_facts` 14478 to 14560, `land_unit_facts` 15241 to 15258, and the rows held before them) and rules as follows. Each ruling is data and changes no rule of the game. Each is made in the table's own files of the 39 days and nowhere else.
+
+### Ruling 1: the Japanese runs lie at Rabaul and load there; Shortland holds nothing
+
+**What is ruled.** In the table's own files of the 39 days, each Japanese run that the files start at Shortland (task forces 30 and 32 to 39) starts stopped at Rabaul (base 2) with Rabaul as its home port, and may be used one day earlier than the file has it. What each has aboard at the start is unchanged. Shortland (base 7) keeps no supply and no fuel, as ruling E of decision 0101 left it. Task force 31, Ichiki's, is at Rabaul already. The night force at Shortland (task force 6) is not moved.
+
+**Why.** A run takes supply only from the base it lies at. At Shortland, with nothing, a staff can send a run with what the scenario put aboard and can never load one again; that is the cause the measurement found. The record gives two ways out, and only one rests on rows:
+
+- **No row gives Shortland a stock.** The research looked for one in Morison, Saito, Bullard, Miller, Zimmerman, Hough and the records of about fifty ships and found none: the two entries of `gaps.csv` for the place `shortland-islands` say so. What the rows show there is an anchorage: occupied in March 1942 as a relay base (`place_facts` 14478 to 14480), where the August convoy retired (`troop_lift_facts` 12813, 12815), with a station oiler from 6 September (`place_facts` 14328) and seaplanes from 28 August (`place_facts` 14483 to 14485). A stock there would be invented.
+- **The rows put the men and the stores at Rabaul.** The Kawaguchi Detachment was landed at Rabaul on 27 August (`troop_lift_facts` 12829) and its first battalion embarked there on 28 August for the Shortlands (12835). The Aoba Detachment reached Rabaul on 31 August (`land_unit_facts` 15241). Uzuki ran food and ammunition "from Rabaul to Guadalcanal" on 24 to 25 August (`troop_lift_facts` 723). The men of 31 August to 7 September came with about two weeks' rations (12821), which were theirs from where they embarked.
+
+**What the rows say against it, and what the ruling gives up.** Every destroyer run of 29 August to 11 September whose start is stated left the Shortlands, and that is firm. One row has stores loaded into destroyers there on 29 August (`troop_lift_facts` 12837, Hough alone). So the ruling is true of the men and of what they ate, and not of the ships that carried them the last leg. It is a named simplification, and the files' notes say so in these words: the passage from Rabaul to the Shortlands in a transport and the run from the Shortlands in destroyers are one passage by one force. What is lost: Shortland as the place the runs sail from, and a run about twice as long (Rabaul to Lunga is 16 hexes, Shortland to Lunga 8). It is given up because the other way needs a base fed from another base on the map, which this record says waits.
+
+**The day earlier.** One row dates the leg: Sado Maru left Rabaul on 28 August and reached the Shortlands on 29 August (`troop_lift_facts` 12835), a day. So each run moved may be used a day earlier than the file has it. For the run of 29 August that day is the row's own; for the others it is worked out from that row and marked so. No row gives where the Oite's run of 16 August loaded; it is moved with the rest and its note says that.
+
+**This overrides ruling E of decision 0101 in these files only.** That ruling put the runs at Shortland for a game in which each run is ordered once, by the scenario, with what is aboard. It stands in every file where that is so.
+
+### Ruling 2: Espiritu Santo's supply is 2,120 t, a placeholder sized from the stated loads of the runs
+
+**What is ruled.** In the table's own files of the 39 days, Espiritu Santo (base 3) starts with 2,120 t of supply in place of 960 t. It is marked PLACEHOLDER, with this working beside it. It is given no supply line.
+
+**The rule the figure is made by.** The stock is the sum of the loads the rows state for the runs that landed at Guadalcanal or Tulagi on or before the scenario's last day, 14 September 1942, wherever they loaded. A run counts once, at the largest total a row states for it. A run with no stated total counts nothing and stays a gap. Tons are taken as printed.
+
+| Run | Tons | Row | Note |
+| --- | --- | --- | --- |
+| The four destroyer-transports of 15 August | 120 | `troop_lift_facts` 88 (Dyer) | Loaded at Espiritu Santo |
+| Alhena, Fomalhaut and the destroyer-transports, 20 to 23 August | 2,000 | `troop_lift_facts` 60 (Dyer: "over 2,000 tons") | Fomalhaut's about 1,500 t (12869, her own report) and the 120 t of rations of 20 or 21 August (12859, 656) are filed on this run and are inside it, not added |
+| **Sum** | **2,120** | | |
+
+Not stated, so nothing counted: Manley and Stringham (16 August), William Ward Burrows (20 August), Burrows and Kopara (29 to 30 August), Betelgeuse (31 August), Fomalhaut (3 September), Fuller and Bellatrix (7 to 8 and 14 September). Not counted because it never landed in the days played: Colhoun's 17 t, aboard when she was sunk on 30 August (`troop_lift_facts` 399, whose note says the sentence does not put her in the run of 29 August); Lakatoi's 400 t, lost on passage (12890); Santa Ana, held back (`place_facts` 14456); the convoy of the 7th Marines, which sailed on the last day and landed on 18 September.
+
+**Why wherever they loaded.** Fomalhaut loaded at Nouméa (12869); Alhena and the destroyer-transports at Espiritu Santo (394, 12853); the research has Burrows and Kopara from Efate, which the architect did not find in a row and does not rest on. Nouméa is not a base of the scenario, and this record says it waits. Espiritu Santo is the one Allied base the runs can load at, so it stands for every port they loaded at, and the files' notes say so.
+
+**How far the rows support it.** They support the figure as a least figure of what was carried, and no more:
+
+- **It is not a stock.** No row gives what lay at Espiritu Santo on any day (`gaps.csv`, the two entries for the place `espiritu-santo`), and the base was "in the earliest throes of being built and stocked" in mid-August (`place_facts` 14491, 14494). The gap stays open under the figure.
+- **It is low.** Seven runs are counted at nothing because no row gives their tons.
+- **It is all there on the first day,** where the record brought it forward over five weeks. A staff may ship early what was not yet there. A line by date would be closer and needs a rate no row gives.
+- **Every row it reads is unconfirmed,** and both are one author, Dyer. No derivation reads them; the figure is a scenario's placeholder and is never evidence.
+
+The architect holds that this is what "sized from the loads of the runs" can honestly mean on the rows as they are, and rules it. Were a larger figure wanted, the rows do not give one.
+
+### Ruling 3: Espiritu Santo's fuel is not ruled
+
+The direction speaks of the runs' loads. No run carried fuel oil for ships: what they carried in drums was aviation gasoline, which is part of the game's supply and is inside ruling 2. The rows give no stock of fuel oil at Espiritu Santo and no load of an oiler there: Sabine fuelled eleven ships from 22 to 28 August (`place_facts` 14435), a count of ships; the planned deliveries of fuel oil this record cites are Nouméa's. So nothing sizes the 600 t, and the architect stops here rather than make a figure. The fuel stays 600 t, a placeholder, and the measurement's finding stands unmended: it is gone on day 6. Owed, as research: the oilers that discharged at Espiritu Santo in August and September 1942 and what each gave.
+
+### What the rulings change in "What follows"
+
+The five steps the measurement gave now read:
+
+1. **The table's 39 days get files of their own. Unchanged, and first.** They are made by a script from the files the table plays today (`data/scenarios/table-hunger/07_full_slice.toml`, `07b_slice.toml`, `07c_slice.toml`), as the files of decision 0225 are, with a check that says whether each file is still the one the script makes. `table/scenarios.json` then names them. No file of a proof, no frozen file and no file a test reads is touched.
+2. **Shortland: settled by ruling 1.** No stock is set and no placeholder is sized. The script moves the nine runs to Rabaul, a day earlier.
+3. **Espiritu Santo: settled for supply by ruling 2,** as a stock and not a line. **Open for fuel** (ruling 3): nothing changes in its fuel until rows are found.
+4. **Nouméa, a port for a base, and one base fed from another still wait.** Ruling 1's simplification and ruling 2's "wherever they loaded" are both there because they wait, and both are taken out when they are built.
+5. **Each ruling is measured by itself, then both together, against the run of Nov 23, 2026,** staff against staff on seeds 1 to 100: ruling 1 alone, ruling 2 alone, both. Reported: the day each base first falls to nothing, the days the men of each side at Lunga are unfed and the men lost to hunger, what each staff shipped and what it said it could not. Nothing is tuned to what is found, and neither figure is moved for it.
+
+**The staff's choice of a source** (decision 0222, step 3; decision 0228) is not needed for either ruling: in these files the staffs already choose Rabaul and Espiritu Santo. It is planned beside them because the review of this record asked for it before a rear base is added.
+
+**The architect's statements for the files.** The build holds these, each tested where a test can read it:
+
+1. The script's check passes for each of the three files.
+2. Read as data, with every comment set aside, each file differs from the file it is made from in this and nothing else: its `name`; base 3's `supply_t`, 2120 for 960; for each of task forces 30 and 32 to 39, `at_base = 2`, `home_port = 2` and `available_from` one less. Its comments differ in the header and in the notes rulings 1 and 2 ask for, beside base 3, base 7 and each run moved.
+3. Base 7 has no supply and no fuel on the first day.
+4. On the first morning task force 30 may be used (day 9), it lies stopped at Rabaul's hex with 7 t of supply aboard, as the file it is made from had it at Shortland.
+5. No file under `data/scenarios/` outside the new folder, and no recorded game, is changed by the pull request.
+
+**What is not claimed.** That the Japanese men at Lunga are then fed. Decision 0159's named miss has other causes on file (the supply formed late, and a run by night that lands 25 t), and the measurement of step 5 says what moved.
+
+### Amended on review, Nov 23, 2026
+
+A fresh reader checked the rulings against the rows and the files. The architect checked each point and rules:
+
+- **Colhoun's 17 t is out of the sum, which is 2,120 t.** The row's own note says Miller's sentence does not put her in the run of 29 August, and she was sunk with the 17 t aboard, so they were not landed. Ruling 2's rule counted "that ship's" load where a run had no total; that clause is taken out, and its table, its figure and the count of authors are corrected above in place.
+- **Statement 2 is restated** above: it forbade the notes that rulings 1 and 2 require. The data may differ only as listed; the comments differ in the header and the notes.
+- **Task force 39 has the fuel for the move, at cruising speed.** Its two ships are the placeholder fast transport with cargo (class 12: 500 t of fuel, 4,000 nm, 16 knots cruising and 36 full) with 500 t each. The file's own note at Rabaul gives a fast transport's round trip to Lunga as about 139 t at cruise. At full speed the burn is times (36/16) squared, 5.0625, about 704 t, more than a ship holds. So ruling 1 stands for every run moved, and one thing follows that the ruling did not say: **from Rabaul no run can go at full speed and come home,** where from Shortland it could. A run by night is then the run at cruise where the forecast puts its arrival in the dark, and otherwise the run goes by day at balanced and does not sail at preserve the force (rules chapter 8, A run by night). The measurement of step 5 reports how many runs went by night and by day under ruling 1. Nothing is adjusted for it.
+

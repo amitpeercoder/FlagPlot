@@ -150,7 +150,7 @@ def orders_and_signed():
           "YOUR ORDERS lists the orders in force, each a link to its plan's paper, and says \"No order in force.\" when there is none")
     check("'Plans launch: ' + (given ? 'when ready' : 'on my word')" in text and "act('set_leave', { leave: 'launch', given: !given }" in text,
           "it says \"Plans launch: when ready\" or \"on my word\", with the switch that gives and withholds the leave")
-    check("api('queued').catch(function () { return null; })" in text and "api('take_back', { queue: one.place.queue, number: one.place.number, as_of: M.queue.as_of })" in text
+    check("api('queued').catch(function () { return null; })" in text and "api('take_back', { queue: one.place.queue, number: one.place.number, as_of: q.as_of })" in text
           and "'TAKE BACK'" in text and "NOT TAKEN BACK" in text,
           "SIGNED is read from queued at each refresh, TAKE BACK withdraws one entry by its place and as_of, and a refusal is said beside the entry")
     check("function canSign() { return !WATCH && !M.over && !playing; }" in text and "if (canSign()) {" in text and "(e.goes_with || [])" in text,
@@ -668,7 +668,7 @@ def the_submarines():
           "the order is offered for a boat on station or on passage and sound, which the engine takes, and not for one going home, sunk or gone home")
     controls = cut_function(text, "function boatControls(form, b)")
     check("kind: 'station', hex: [stationDraft.place.q, stationDraft.place.r]" in controls and "'Take station at '" in controls and "startStation();" in controls
-          and "picking === 'station'" in controls and "if (hh[5] !== 0) { say('picking', 'Touch open water.'); return; }" in text and "({ route: pickRoute, station: pickStation }[picking] || pickMarch)(p)" in text,
+          and "picking === 'station'" in controls and "if (hh[5] !== 0) { say('picking', 'Touch open water.'); return; }" in text and "({ route: pickRoute, station: pickStation, area: pickArea }[picking] || pickMarch)(p)" in text,
           "the paper's order is a station, touched on the chart and drawn there (open water only), with the way to choose again")
     check(re.search(r"var INSIDE_KINDS = \{[^}]*\}", text) and "station" not in re.search(r"var INSIDE_KINDS = \{[^}]*\}", text).group(0) and "station: 'Station'" in text,
           "a station is not an order that acts inside a day: the paper says when it acts as every such order does")
@@ -1316,7 +1316,8 @@ def the_staffs_reading(bridge):
           "the page no longer words the engine's paragraph: no \"It cannot yet\", no count of orders and commands of its own")
     check("readingView(out, p, e);" in ask and "proposedTree(top, {}, pr)" in text and "paperNode(root, true)" in text,
           "the reading is drawn by readingView from proposedTree and paperNode, the plan paper's own functions")
-    check("This reading is worked at balanced risk." in ask and "chosen('risk') !== 'balanced'" in ask, "the reading says it is worked at balanced risk only where the risk chosen is not balanced")
+    check("This reading is worked with the limits you set." in ask and "args.limits" in ask and "limit: 'risk', risk: risk" in text and "Played at balanced risk" not in text and "worked at balanced risk" not in text,
+          "the reading is worked with the limits and the risk chosen, and says so where any is sent; nothing says it is worked at balanced risk")
     check("'THE STAFF\\'S WORKING IN FULL'" in text[text.index("  function readingView"):text.index("  function askPreview() {")], "the staff's working in full is the reading's last fold")
     heads = ["commas", "cleanName", "orderWords", "plainCounts", "plainWords", "nameText", "intentWords", "reasonWords", "tidyWorked", "paperPre", "shareWords", "tiredBit",
              "paperText", "plainFact", "cautionPart", "cautionWords", "cautionTexts", "cutTop", "sayIntent", "newTask", "taskHex", "labelPlain", "arcsFrom", "finishTask",
@@ -1375,6 +1376,394 @@ function main(input) {
     check("function orderLink(n)" in text and "orderFound(n)" in text and "orderLink(+m[5])" in text and "readPlan(found.root, found.task" in text,
           "the order a unit is not free for is found by its number, walked up to its root in command_state, and opens that order's paper at the task")
     check("serves ⟦" in text and "has a carrier task, intent:" in text, "the page reads the engine's phrase for a carrier task and for a task an order higher in priority holds")
+
+
+LIMITS_IN_NODE = r"""
+function whereIs() { return ''; } function dateOf(d) { return d === 10 ? '12 May' : ''; } function sayIntent(i) { return 'Capture Lunga'; }
+const hexes = []; for (let q = -4; q <= 4; q++) for (let r = -4; r <= 4; r++) hexes.push([q, r, 0, 0, 0, 0]);
+function main() {
+  M.names['task_force:1'] = 'Task Force 17'; M.names['task_force:2'] = 'Task Force 11'; M.names['ship:7'] = 'USS Hornet'; M.names['air_group:3'] = 'VB-6'; M.names['base:2'] = 'Lunga'; M.names['land_unit:4'] = 'the 1st Marines'; M.names['submarine:1'] = 'USS Tambor';
+  M.hexNames['0,0'] = 'Lunga'; M.state = { intents: [{ number: 5, kind: 'take_place', in_force: true }] };
+  const out = {};
+  const deny = newLim(); deny.ships = { mode: 'only', task_forces: [1], ships: [] }; deny.in_place = true; deny.air_groups.mode = 'none'; deny.targets = { kinds: ['carrier', 'cruiser'], waters_first: true };
+  out.deny = limitBodies('deny', deny); out.denyLine = limitsLine('deny', deny); out.denyPlan = limitPlan('deny', deny).map(p => p.key);
+  const lone_ = newLim(); lone_.ships = { mode: 'only', task_forces: [1], ships: [] }; out.coverShips = limitBodies('cover', lone_); out.coverOffers = LIMITS_OFFERED.cover; out.patrolOffers = LIMITS_OFFERED.patrol;
+  out.back = limitsLine('deny', limFromBodies(out.deny.map(b => Object.assign({ intent: 3 }, b)))) === out.denyLine;
+  out.backBodies = limitBodies('deny', limFromBodies(out.deny.map(b => Object.assign({ intent: 3 }, b))));
+  out.none = limitBodies('hold', newLim()); out.noneLine = limitsLine('hold', newLim());
+  const src = newLim(); src.source = 2; out.source = limitBodies('keep_supplied', src); out.sourceLine = limitsLine('keep_supplied', src);
+  const lone = newLim(); lone.ships = { mode: 'only', task_forces: [], ships: [7] }; lone.ships.mode = 'only'; out.single = limitBodies('hold', lone); out.singleLine = limitsLine('hold', lone);
+  const empty = newLim(); empty.ships.mode = 'only'; out.emptyOnly = limitBodies('hold', empty);
+  const area = newLim(); area.area = { q: 0, r: 0, dist: 1 }; out.area = limitBodies('keep_supplied', area); out.areaLine = limitsLine('keep_supplied', area); out.hold_area = limitBodies('hold', area);
+  const land = newLim(); land.not_before = 11; land.wait_for = { task_force: 2 }; land.after = 5; land.knowledge = { knowledge: 'recent_count', within_days: 3 }; land.risk = 'press';
+  out.land = limitBodies('take_place', land); out.landLine = limitsLine('take_place', land); out.landOnHold = limitBodies('hold', land);
+  out.landBack = limitBodies('take_place', limFromBodies(out.land.map(b => Object.assign({ intent: 3 }, b))));
+  out.riskLine = limitsLine('hold', limFromBodies([{ limit: 'risk', risk: 'press', intent: 1 }]));
+  const st = limFromState({ forces: { ships: [], task_forces: [1], air_groups: [], land_units: [], source: 'base:2', none_of: ['air_groups'], in_place: true }, area: [[0, 0], [1, 0], [0, 1], [-1, 1], [-1, 0], [0, -1], [1, -1]], targets: { kinds: ['carrier'], waters_first: false }, protected: [{ handle: 'ship:7' }], risk: 'preserve', knowledge: { setting: 'count', within_days: null }, wait_for: { land_unit: 4 } });
+  out.state = limitsLine('take_place', st); out.stateArea = st.area;
+  return out;
+}
+"""
+
+
+def the_limits_on_the_paper(bridge):
+    """The LIMITS part of the order paper (decision 0222, "As built: step 4, the table"): the page holds it and sends the order with
+    its limits as one preview and one approval; the model that says what each kind offers, what a draft sends and how it is said is
+    cut from the page's text and run in node; and the engine takes what the model sends, as one order with its limits, and refuses
+    one of them by its place in the batch."""
+    import re
+    print("-- the limits on the order paper: the page's model in node, and the engine taking what it sends", flush=True)
+    text = page_text()
+    sign = cut_function(text, "  function signStaff() {")
+    check("var LIMITS_OFFERED" in text and "function limitBodies(" in text and "function limitsLine(" in text and "function limFromBodies(" in text and "function limFromState(" in text and 'id="p-limits"' in text and "args.limits" in text,
+          "the page holds the limits model, the LIMITS part of the paper and the order's limits sent with its preview")
+    check("set_limit" not in sign and "supplyForces" not in sign and "api('approve', { preview: no })" in sign and "limits_queued" in sign,
+          "signing is one approval of the preview: it sends no limit and no risk itself, and checks the count of limits that went")
+    check("operate_carriers: ['targets', 'risk']," in text and "patrol: ['submarines']" in text,
+          "a carrier force's own order offers no air groups (the groups aboard go with their force) and a patrol only its boats")
+    check("if (t && !f && (r.limits || []).length) t.reasons.push(" in text,
+          "a reason the reading has no plain words for keeps its list of limits, so a rank it speaks of is still a link")
+    check("lim.chosen.source = lim.chosen.ships = true" in text and "WE CHOSE IT FOR YOU" in text and "limit.air_groups" not in text,
+          "the table's own source is put in the limits as a choice the player may change, and a hold no longer names its air groups")
+    check("area: pickArea" in text and "picking === 'route' || picking === 'station' || picking === 'area'" in text and "MOVE ON THE CHART" in text,
+          "the chart's touch moves the area's middle, and tearing the paper up ends it")
+    check("BACK TO THE STAFF\u2019S CHOICE" in text and "'Strike ' + word + ' ' + m[2]" in text and "These waters first" in text, "each set line has its way back, and the strike order has its up and down")
+    model = text[text.index("  var LIMITS_OFFERED"):text.index("  // ---- end of the limits model ----")]
+    code = "".join(cut_function(text, f"  function {h}(") + "\n" for h in ["cleanName", "num", "hexDist", "hexWords"]) + model + LIMITS_IN_NODE
+    said = run_in_node(code, None)
+    deny = [{"limit": "forces", "task_forces": [1], "ships": [], "none_of": ["air_groups"], "in_place": True},
+            {"limit": "targets", "kinds": ["carrier", "cruiser"], "waters_first": True}]
+    check(said["deny"] == deny, f"a Coral Sea deny with Task Force 17 only, from where it lies, no air groups, carriers then cruisers first and these waters first sends exactly those two limits ({said['deny']})")
+    check(said["denyPlan"] == ["ships", "targets"], "each limit sent knows the line it belongs to")
+    check(said["coverShips"] == [] and "ships" not in said["coverOffers"] and "air_groups" in said["coverOffers"], "a cover offers no ships control, and a ships limit set on it is not sent")
+    check("risk" not in said["patrolOffers"] and said["patrolOffers"] == ["submarines"], "a patrol offers the boats and no risk")
+    line = said["denyLine"]
+    check("Task Force 17" in line and "from where they lie" in line and "Air groups: none" in line and "carriers, then cruisers" in line and not re.search(r"\b(task_force|ship|base|air_group|land_unit|submarine)[: ]?\d|\b\d{2,}\b", line.replace("17", "")) and not re.search(r"\b[a-z_]+:\d+", line),
+          f"the deny's limits are said by name and in the table's words, with no handle or number of the engine's ({line})")
+    check(said["back"] and said["backBodies"] == deny, "what a draft sends reads back, from the limits queued, as the same draft")
+    check(said["none"] == [] and said["noneLine"] == "The staff’s choice in all.", "a draft with every line at the staff's choice sends no limit and says so")
+    check(said["source"] == [{"limit": "forces", "source": 2}] and said["sourceLine"] == "Supplied from: Lunga", "a source alone is a forces limit naming it, said by the base's name")
+    check(said["single"] == [{"limit": "forces", "task_forces": [], "ships": [7]}] and "USS Hornet" in said["singleLine"], "a single ship is named by its name and sent in ships")
+    check(said["emptyOnly"] == [], "\"use only these\" with nothing ticked sends nothing, not a limit that uses nothing")
+    check(len(said["area"]) == 1 and said["area"][0]["limit"] == "area" and sorted(map(tuple, said["area"][0]["hexes"])) == sorted([(0, 0), (1, 0), (0, 1), (-1, 1), (-1, 0), (0, -1), (1, -1)])
+          and said["areaLine"] == "Keep within: within 40 miles of Lunga" and said["hold_area"] == [], "an area is every hex of the map within its distance of its middle, and a hold is not offered one")
+    check([b["limit"] for b in said["land"]] == ["not_before", "wait_for", "after", "knowledge"] and said["land"][0]["from_day"] == 11 and said["land"][1] == {"limit": "wait_for", "task_force": 2}
+          and said["land"][2] == {"limit": "after", "other_intent": 5} and said["land"][3] == {"limit": "knowledge", "knowledge": "recent_count", "within_days": 3} and said["landOnHold"] == [],
+          "a landing's four are sent as their own limits and only on a take or an island")
+    check(said["landLine"] == "Not before: 12 May · Wait for: Task Force 11 · After: Capture Lunga · Knowledge: a count no older than 3 days · Risk: press", f"the landing's four are said as a date, names and a count's age, with the risk ({said['landLine']})")
+    check(said["landBack"] == said["land"] and said["riskLine"] == "Risk: press", "the landing's four read back from the queue; a risk read back is said")
+    check("Task Force 17" in said["state"] and "Air groups: none" in said["state"] and "Supplied from: Lunga" in said["state"] and "Keep within: within 40 miles of Lunga" in said["state"] and "Wait for: the 1st Marines" in said["state"]
+          and "Knowledge: a count" in said["state"] and "Risk: preserve" in said["state"] and said["stateArea"] == {"q": 0, "r": 0, "dist": 1},
+          f"the limits an order in force shows are said as a draft's are, an area as its middle and its reach ({said['state']})")
+    # The engine takes what the model sends, as one order with its limits.
+    check(begin(bridge, "coral-sea", "person", "engine") == {"ok": True}, "begun: the Coral Sea, the person Allied")
+    person = Person(bridge.table)
+    order = {"command": "set_intent", "intent_kind": "deny", "hex": [-18, -1], "distance": 4}
+    shown = person.call("preview", dict(order, limits=deny))["ok"]
+    check(shown.get("status") != "refused" and len(shown.get("shown_limits", [])) == 2, f"the preview of that deny with those limits is not refused and shows its two limits ({shown.get('status')})")
+    hold = person.call("preview", {"command": "set_intent", "intent_kind": "hold", "base": 1, "limits": [{"limit": "targets", "kinds": ["carrier"]}]})["ok"]
+    check(hold.get("status") != "refused" and len(hold.get("shown_limits", [])) == 1, "a targets limit without waters_first is taken, as a hold's is sent")
+    signed = person.call("approve", {"preview": shown["preview"]})["ok"]
+    check(signed.get("limits_queued") == 2, f"approving it queues the order and its two limits ({signed.get('limits_queued')})")
+    queued = person.call("queued")["ok"]
+    intents = [e for e in queued["entries"] if e["command"]["kind"] == "set_intent"]
+    check(len(intents) == 1 and len(intents[0].get("goes_with", [])) == 2, "the queue holds one set_intent with the two limits going with it")
+    entries = {(e["place"]["queue"], e["place"]["number"]): e for e in queued["entries"]}
+    goes = [entries[(w["queue"], w["number"])]["command"] for w in intents[0]["goes_with"]]
+    check(all(c["kind"] == "set_limit" for c in goes), "what goes with the order is its limits")
+    taken = person.call("take_back", {"queue": intents[0]["place"]["queue"], "number": intents[0]["place"]["number"], "as_of": queued["as_of"]})["ok"]
+    check(taken.get("status") != "refused" and person.call("queued")["ok"]["entries"] == [], f"taking the order back takes its limits with it and leaves the queue empty")
+    refused = person.call("preview", dict(order, limits=[{"limit": "forces", "task_forces": [1], "none_of": ["ships"]}]))["ok"]
+    check(refused.get("status") == "refused" and (refused.get("of_batch") or {}).get("position") == 2, f"a limit the engine refuses is answered with its place in the batch ({refused.get('of_batch')})")
+    check(post(bridge.table + "/new") == {"ok": True}, "the game is put away")
+
+
+LIMITS_FORCE_IN_NODE = r"""
+function whereIs() { return ''; } function dateOf() { return ''; } function sayIntent() { return 'Hold Port Moresby'; }
+const hexes = [];
+function main() {
+  M.names['task_force:1'] = 'Task Force 17'; M.names['base:1'] = 'Port Moresby'; M.state = { intents: [] };
+  const out = {};
+  out.cleared = limitSignedPart('hold', { limit: 'forces', cleared: true, intent: 1 });
+  out.forces = limitSignedPart('deny', { limit: 'forces', task_forces: [1], ships: [], none_of: ['air_groups'], in_place: true, intent: 1 });
+  out.rank = [limitSignedPart('hold', { limit: 'priority', rank: 1 }), limitSignedPart('hold', { limit: 'priority', rank: 3 }), limitSignedPart('hold', { limit: 'priority', rank: null })];
+  out.targets = limitSignedPart('deny', { limit: 'targets', kinds: [] });
+  out.risk = limitSignedPart('hold', { limit: 'risk', risk: 'press' });
+  out.area = limitSignedPart('keep_supplied', { limit: 'area', cleared: true });
+  const none = newLim();
+  out.bodies = ['forces', 'area', 'protected', 'targets', 'risk'].map(g => limGroupBody('keep_supplied', none, g));
+  const set = newLim(); set.ships = { mode: 'only', task_forces: [1], ships: [] }; set.in_place = true; set.source = 1;
+  out.partsBefore = [limPart('deny', set, 'ships'), limPart('hold', set, 'source'), limPart('deny', set, 'air_groups')];
+  limReset(set, 'ships'); out.afterReset = limGroupBody('hold', set, 'forces'); limReset(set, 'source'); out.afterBoth = limGroupBody('hold', set, 'forces');
+  out.groups = [limGroup('source'), limGroup('in_place'), limGroup('area'), limGroup('risk')];
+  out.offered = { deny: PLAN_LINES.filter(k => k === 'risk' ? offers('deny', 'risk') : lineOffered('deny', k)), take: PLAN_LINES.filter(k => lineOffered('take_place', k)), patrol: PLAN_LINES.filter(k => lineOffered('patrol', k)) };
+  return out;
+}
+"""
+
+
+def limits_in_force(bridge):
+    """The limits of an order in force, on its plan's paper (decision 0222, "As built: step 4, the table"): the page holds the
+    LIMITS part of the plan's paper, its own paper for a limit changed, the way to open the plan at a limit, a base's reserve and
+    SIGNED's words; the pure pieces (what a signed limit says, the body a line sends) are run in node; and the engine takes what
+    the page sends, a limit changed or cleared on an order in force, one by itself, and a base's reserve."""
+    import re
+    print("-- the limits of an order in force: the plan's paper, the paper for a change, and the engine taking it", flush=True)
+    text = page_text()
+    plan = text[text.index("// ---- the plan's paper as one tree ----"):text.index("// ---- the dry run (decisions")]
+    check("function planLimits(top)" in plan and "function limitJump(kind)" in plan and "function readPlan(root, focus, limitFocus)" in plan and "limitFocus.kind" in plan and "'LIMITS'" in plan
+          and "doc.appendChild(planLimits(top))" in plan and "'Order ' + top.number + ' · given day ' + top.set_day" in plan and "limited by you" not in plan and "of the staff\\'s choosing" not in plan,
+          "the plan's paper has a LIMITS part after its head line, which no longer says the risk or whether the forces are limited, and opens at a limit (readPlan's third argument)")
+    check("'SET IT'" not in plan and "TRY IT FIRST" in plan and "'Not before day'" in plan and "'Pursuit'" in plan,
+          "the plan's RISK AND TIMING keeps TRY IT FIRST, the not-before what-if and the pursuit, and has no SET IT: the risk is changed in LIMITS")
+    check("openPaper('limit'" in text and "function openLimitPaper(root, key, back)" in text and "function askLimitPreview()" in text and "paper.kind === 'limit'" in text and "'Change the limits of '" in text and "limReset(l, key)" in text,
+          "a limit is changed on the one order paper, as its own kind: the order named by its words and linked, the line, the staff's reading, a signature")
+    check("data-key" in plan or "row.dataset.key = key" in plan, "each line of LIMITS is a row with its key, so that a link can scroll to it and mark it")
+    check("'Set by us: '" in plan and "'From your order: '" in text and "limitJump(x.group" in text and "limitNotes(t, i, byNum)" in plan,
+          "a task says what the staff set on it, and what it reads from the order, linked to that order's LIMITS line")
+    check("function reserveLine(body, b)" in text and "Kept in reserve: " in text and "limit: 'reserve', base: n, supply_t: String(sv), fuel_t: String(fv)" in text and "reserveLine(body, b);" in text
+          and "'Change what is kept in reserve at '" in text and "'Sign the reserve at '" in text, "an own base's card says what it keeps in reserve, with CHANGE and two whole-number fields in tons and SIGN, labelled")
+    signed = cut_function(text, "  function signedLine(e) {")
+    check("orderCap(c.intent)" in signed and "limitSignedPart(intentKindOf(c.intent), c)" in signed and "'Order ' + c.intent" not in signed and "kept in reserve" in signed and "pursuit " in signed and "': withdrawn'" in signed,
+          "SIGNED says a limit, a pursuit and a withdrawal by the order's words, never by its number, and a reserve by the base's name")
+    model = text[text.index("  var LIMITS_OFFERED"):text.index("  // ---- end of the limits model ----")]
+    code = "".join(cut_function(text, f"  function {h}(") + "\n" for h in ["cleanName", "num", "hexDist", "hexWords"]) + model + LIMITS_FORCE_IN_NODE
+    said = run_in_node(code, None)
+    check(said["cleared"] == "Forces: back to the staff’s choice" and said["area"] == "Keep within: back to the staff’s choice" and said["targets"] == "Strike first: back to the staff’s choice",
+          f"a limit cleared is said as back to the staff's choice ({said['cleared']}; {said['area']}; {said['targets']})")
+    check(said["forces"] == "Ships and forces: Task Force 17, from where they lie · Air groups: none" and said["risk"] == "Risk: press" and said["rank"] == ["ranked first", "ranked third", "not ranked"],
+          f"a limit set is said in the table's words, a rank as first, second and so on ({said['forces']}; {said['rank']})")
+    check(said["bodies"] == [{"limit": "forces", "cleared": True}, {"limit": "area", "cleared": True}, {"limit": "protected", "ships": []}, {"limit": "targets"}, {"limit": "risk", "risk": "balanced"}],
+          f"a limit wholly at the staff's choice sends the body that clears it ({said['bodies']})")
+    check(said["partsBefore"] == ["Ships and forces: Task Force 17, from where they lie", "Supplied from: Port Moresby", None] and said["afterReset"] == {"limit": "forces", "source": 1} and said["afterBoth"] == {"limit": "forces", "cleared": True},
+          f"one forces line put back leaves the others, and all of them put back clears the limit ({said['afterReset']}; {said['afterBoth']})")
+    check(said["groups"] == ["forces", "forces", "area", "risk"], "the forces lines are one limit, and every other line is its own")
+    check(said["offered"]["deny"] == ["ships", "air_groups", "targets", "risk"] and "area" in said["offered"]["take"] and "knowledge" in said["offered"]["take"] and said["offered"]["patrol"] == ["submarines"],
+          f"each kind of order shows the lines it offers ({said['offered']})")
+    # The engine takes what the page sends.
+    check(begin(bridge, "coral-sea", "person", "engine") == {"ok": True}, "begun: the Coral Sea, the person Allied")
+    person = Person(bridge.table)
+    deny = [{"limit": "forces", "task_forces": [1], "ships": [], "none_of": ["air_groups"], "in_place": True}]
+    order = {"command": "set_intent", "intent_kind": "deny", "hex": [-18, -1], "distance": 4, "limits": deny}
+    shown = person.call("preview", order)["ok"]
+    check(person.call("approve", {"preview": shown["preview"]})["ok"].get("limits_queued") == 1, "a deny with Task Force 17 in place is signed")
+    check(person.call("end_day")["ok"].get("resolved"), "the day ends and the order is in force")
+    state = person.call("command_state")["ok"]
+    mine = [i for i in state["intents"] if i["number"] == 1][0]
+    check(mine["limits"]["forces"]["task_forces"] == [1] and mine["limits"]["forces"]["in_place"] is True and mine["limits_read_up"]["forces_from"] == 1,
+          "the order in force shows its forces limit, and that it is read from itself")
+    clear = person.call("preview", {"command": "set_limit", "limit": "forces", "intent": 1, "cleared": True})["ok"]
+    check(clear.get("status") != "refused" and "tree" in (clear.get("with_change") or {}), f"clearing the forces limit of an order in force is read by the staff and not refused ({clear.get('status')})")
+    given = person.call("approve", {"preview": clear["preview"]})["ok"]
+    check(given.get("status") == "queued", f"and is signed ({given.get('status')})")
+    check(person.call("end_day")["ok"].get("resolved"), "the day ends")
+    after = [i for i in person.call("command_state")["ok"]["intents"] if i["number"] == 1][0]
+    check(after["limits"]["forces"] is None, f"the order's forces limit is back to the staff's choice ({after['limits']['forces']})")
+    targets = person.call("preview", {"command": "set_limit", "limit": "targets", "intent": 1, "kinds": ["carrier"], "waters_first": True})["ok"]
+    check(targets.get("status") != "refused", f"strike first, with these waters first, is read on an order in force ({targets.get('status')})")
+    queued = person.call("set_limit", {"limit": "reserve", "base": 1, "supply_t": "100", "fuel_t": "0"})["ok"]
+    check(queued.get("status") == "queued", f"a base's reserve is signed ({queued.get('status')})")
+    held = person.call("queued")["ok"]
+    mine = [e for e in held["entries"] if e["command"]["kind"] == "set_limit" and e["command"]["limit"] == "reserve"]
+    check(len(mine) == 1, "and is under SIGNED")
+    taken = person.call("take_back", {"queue": mine[0]["place"]["queue"], "number": mine[0]["place"]["number"], "as_of": held["as_of"]})["ok"]
+    check(taken.get("status") != "refused" and person.call("queued")["ok"]["entries"] == [], "and taken back")
+    check(post(bridge.table + "/new") == {"ok": True}, "the game is put away")
+
+
+RANKS_IN_NODE = r"""
+function main() {
+  const out = {};
+  // Case 1: three ranked, the third moved to the top.
+  out.third_up = rankSends([1, 2, 3], [3, 1, 2], { 1: 1, 2: 2, 3: 3 });
+  // Case 2: two ranked and one not; the first two swap, the unranked stays below.
+  out.swap = rankSends([1, 2, 3], [2, 1, 3], { 1: 1, 2: 2, 3: null });
+  // Case 3: an unranked one moved to the top of those ranked.
+  out.unranked_up = rankSends([1, 2, 3], [3, 1, 2], { 1: 1, 2: null, 3: null });
+  // Case 4: nothing moved.
+  out.none = rankSends([1, 2], [1, 2], { 1: 1, 2: 2 });
+  // Case 5: moved and moved back.
+  out.back = rankSends([4, 5, 6], [4, 5, 6], { 4: null, 5: null, 6: null });
+  return out;
+}
+"""
+
+
+def the_orders_paper(bridge):
+    """THE ORDERS (decision 0222, step 4, the designer's answer 3), by the page's text, by the pure ordering run in node, and through
+    the bridge: the paper opens from YOUR ORDERS and lists the orders in rank; each rank is its own `priority` limit under one
+    SIGN AND SEND (a preview takes no batch of them, so no reading of the whole is shown); SIGNED groups the ranks as one entry with
+    one TAKE BACK; and the engine takes the ranks, takes them back and puts them in force."""
+    print("-- THE ORDERS: the paper, the ranks sent one by one, and the engine taking them", flush=True)
+    text = page_text()
+    orders = cut_function(text, "  function readOrders(focus) {")
+    draw = cut_function(text, "  function drawOrders(focus) {")
+    signed = cut_function(text, "  function showSigned() {")
+    check("readOrders = tracked('orders', readOrders)" in text and "sheetAs('THE ORDERS')" in orders and "api('staff_orders')" in orders and "'THE ORDERS'" in cut_function(text, "  function showOrders() {")
+          and "readOrders();" in cut_function(text, "  function showOrders() {"),
+          "YOUR ORDERS has a THE ORDERS button, which opens the paper in the sheet; the staff's orders are read once when it opens")
+    check("'Waits for your leave'" in text and "'Launched'" in text and "'Cannot be met'" in text and "'Preparing'" in text and "'In force'" in text and "'Signed · ' + actsWords(e)" in draw
+          and "limitsLine(i.kind, limFromState(i.limits))" in draw and "limFromBodies(lims)" in draw and "readPlan(n)" in draw and "openOrder(c.intent)" in draw,
+          "each line has its state, its limits in a line and a link to its plan, or for one signed its entry under SIGNED")
+    check("'Rank ' + lowerFirst(words) + ' ' + d[2]" in draw and "'higher'" in draw and "'lower'" in draw and "e.altKey" in draw and "'ArrowUp'" in draw and "'ArrowDown'" in draw
+          and "focus.at" in draw and "'WITHDRAW'" in draw and "act('withdraw_intent', { intent: n }" in draw and "'Ranks changed'" in draw and "'SIGN AND SEND'" in draw and "'PUT BACK'" in draw,
+          "an order in force is ranked with two labelled buttons or with Alt and the arrow keys, the focus staying where it was, and withdrawn; a change shows SIGN AND SEND and PUT BACK")
+    check("'Not ranked'" in draw and "pend.length" in draw and "ro.before.slice().sort" in draw and "takeBackEntries(pend.slice().reverse())" in draw and "'Signed · ' + actsWords(pend[pend.length - 1])" in draw,
+          "ranks signed and not in force show the list in the signed order with Signed at its head and one TAKE BACK, without arrows")
+    send = cut_function(text, "  function sendRanks(go, back) {")
+    check("api('set_limit', b)" in send and "rankSends(ro.before, ro.now, ro.rankOf)" in send and "'NOT SENT'" in draw and "preview" not in send and "propose" not in send and "staff" not in send.lower(),
+          "SIGN AND SEND sends each rank as its own set_limit, says NOT SENT for one refused, and asks the staff for no reading of the whole")
+    check("isRankEntry(e)" in signed and "rankLine(ranksOf[" in signed and "takeBackEntries(group)" in signed and "'Ranks: '" in text and "ORDINAL[rank - 1]" in text,
+          "SIGNED groups the priority limits queued together as one line, \"Ranks: first: ...; second: ...\", with one TAKE BACK that takes each back")
+    check("limit: 'priority'" in text and "draft.priority" not in text, "THE ORDERS sends limit: 'priority'")
+    # the pure ordering, in node
+    code = cut_function(text, "  function rankSends(before, after, rankOf) {") + "\n" + RANKS_IN_NODE
+    got = run_in_node(code, None)
+    check(got["third_up"] == [{"limit": "priority", "intent": 3, "rank": 1}, {"limit": "priority", "intent": 1, "rank": 2}, {"limit": "priority", "intent": 2, "rank": 3}],
+          f"the third of three ranked orders put first sends all three ranks ({got['third_up']})")
+    check(got["swap"] == [{"limit": "priority", "intent": 2, "rank": 1}, {"limit": "priority", "intent": 1, "rank": 2}] and got["none"] == [] and got["back"] == [],
+          f"two swapped sends two ranks and the unranked one below is left alone; nothing moved sends nothing ({got['swap']})")
+    check(got["unranked_up"] == [{"limit": "priority", "intent": 3, "rank": 1}, {"limit": "priority", "intent": 1, "rank": 2}, {"limit": "priority", "intent": 2, "rank": 3}],
+          f"an unranked order moved to the top is ranked first, the ranked one it passed moves to second, and the unranked one it passed is ranked third ({got['unranked_up']})")
+    # through the bridge, on the 39 days
+    check(begin(bridge, "guadalcanal-39-days", "person", "engine") == {"ok": True}, "begun: the 39 days, the person Allied")
+    person = Person(bridge.table)
+    for order in ({"command": "set_intent", "intent_kind": "control_island", "island": 1},
+                  {"command": "set_intent", "intent_kind": "deny", "hex": [2, -4], "distance": 3}):
+        shown = person.call("preview", order)["ok"]
+        check(shown.get("status") != "refused", f"{order['intent_kind']}: the order is read ({shown.get('status')})")
+        check(person.call("approve", {"preview": shown["preview"]})["ok"].get("status") == "queued", f"{order['intent_kind']}: and signed")
+    check(person.call("end_day")["ok"].get("resolved"), "the day ends and both orders are in force")
+    mine = [i for i in person.call("command_state")["ok"]["intents"] if i["in_force"] and i.get("parent") is None and i.get("maker") == "commander"]
+    first, second = sorted(i["number"] for i in mine)[:2]
+    check(len(mine) >= 2 and all(i["limits"]["priority"] is None for i in mine), f"two orders of the commander's are in force, neither ranked ({[i['number'] for i in mine]})")
+    for body in ({"limit": "priority", "intent": second, "rank": 1}, {"limit": "priority", "intent": first, "rank": 2}):
+        sent = person.call("set_limit", body)["ok"]
+        check(sent.get("status") == "queued", f"the rank {body['rank']} of order {body['intent']} is signed ({sent.get('status')})")
+    held = person.call("queued")["ok"]
+    ranks = [e for e in held["entries"] if e["command"].get("limit") == "priority"]
+    check(len(ranks) == 2, "the queue holds both ranks, each its own entry")
+    for entry in reversed(ranks):
+        held = person.call("queued")["ok"]
+        taken = person.call("take_back", {"queue": entry["place"]["queue"], "number": entry["place"]["number"], "as_of": held["as_of"]})["ok"]
+        check(taken.get("status") != "refused", "a rank is taken back, the later first, then the earlier")
+    check(person.call("queued")["ok"]["entries"] == [], "the queue is empty after both are taken back")
+    for body in ({"limit": "priority", "intent": second, "rank": 1}, {"limit": "priority", "intent": first, "rank": 2}):
+        check(person.call("set_limit", body)["ok"].get("status") == "queued", f"the rank {body['rank']} is signed again")
+    check(person.call("end_day")["ok"].get("resolved"), "the day ends and the ranks are in force")
+    state = person.call("command_state")["ok"]["intents"]
+    rank = {i["number"]: i["limits"]["priority"] for i in state if i["number"] in (first, second)}
+    check(rank == {second: 1, first: 2}, f"the command state shows the ranks on the right orders ({rank})")
+    # what the staff said of it: any reason that lists a priority among its limits, over the days that follow (none is required)
+    found = total = 0
+    for _ in range(5):
+        check(person.call("end_day")["ok"].get("resolved"), "a day ends")
+        so = person.call("staff_orders")["ok"]
+        reasons = [o["reason"] for o in (so.get("orders") or []) + (so.get("commands") or []) if o.get("reason")] + list(so.get("no_orders") or [])
+        total += len(reasons)
+        found += sum(1 for r in reasons if any((l or {}).get("kind") == "priority" for l in (r.get("limits") or [])))
+    print(f"   found: {found} of {total} reasons over five days list a priority limit", flush=True)
+    check(post(bridge.table + "/new") == {"ok": True}, "the game is put away")
+
+
+def reason_limits_as_links(bridge):
+    """A reason's limits are links (decision 0222, rules 11, 12 and 17): by the page's text, by the words of each kind run in node, and
+    through the bridge, where the engine's real reasons are asked for and put through the page's own `proposedTree`. What is chosen: the
+    engine's `limits` list on a reason is what the page reads (nothing in the page reads limit words out of a reason's text); the link
+    in a browser is tried by hand."""
+    import re
+    print("-- a reason's limits are links: the words, where a link goes, and the engine's reasons through proposedTree", flush=True)
+    text = page_text()
+    words = text[text.index("  var LIMIT_LINK ="):text.index("  function limitLinkWords(")] + cut_function(text, "  function limitLinkWords(") + "\n" + cut_function(text, "  function limitInState(")
+    blocks = [cut_function(text, h) for h in ("  function limitLinks(", "  function openLimit(", "  function limitSetOn(")]
+    check("function limitLinkWords(" in text and "function openLimit(" in text and "'YOUR LIMITS'" in text and "block('YOUR LIMITS', limitLinks(t.reasons, PAPER_ROOT))" in cut_function(text, "  function whyView("),
+          "the page has limitLinkWords, openLimit and a YOUR LIMITS block in WHY")
+    check("'YOUR LIMITS'" in cut_function(text, "  function reasonView(") and "limitLinks([r], null)" in cut_function(text, "  function reasonView("),
+          "a reason laid out for an interrupt or the war diary has the same YOUR LIMITS block")
+    check(not any(re.search(r"\.exec\(|\.test\(|\.match\(|\.replace\(", b) for b in blocks) and all("worked" not in b and "binding" not in b and "would_change" not in b for b in blocks),
+          "the code that makes the links reads the engine's `limits` list: no pattern is run on a reason's words")
+    check("readPlan(found.root, found.task !== found.root ? found.task : null, { kind: l.kind })" in blocks[1] and "readOrders({ n: l.intent" in blocks[1] and "see(" in blocks[1]
+          and "openOrder(l.intent)" in blocks[1] and "Tear up this order to read about your other order?" in blocks[1] and "isDraftNo(l.intent)" in blocks[1],
+          "a link goes to the draft's LIMITS part, THE ORDERS, the base's card, the plan of an order in force at that limit, or the order's entry under SIGNED, and asks before tearing up a draft")
+    code = "function nm(h) { return M.names[h] || h; }\n" + words + r"""
+function main() {
+  const kinds = ['forces', 'source', 'area', 'targets', 'risk', 'priority', 'protected', 'not_before', 'wait_for', 'after', 'knowledge'], out = {};
+  kinds.forEach(k => { out[k] = [limitLinkWords(k, true), limitLinkWords(k, false)]; });
+  out.reserve = [limitLinkWords('reserve', true, 1), limitLinkWords('reserve', true, 'base:1')];
+  out.state = [limitInState('forces', { forces: { none_of: ['ships'] } }), limitInState('forces', { forces: {} }), limitInState('forces', null), limitInState('source', { forces: { source: 3 } }),
+               limitInState('area', { area: [] }), limitInState('priority', { priority: 0 }), limitInState('protected', { protected: [] }), limitInState('targets', { targets: { kinds: ['carrier'] } })];
+  return out;
+}
+"""
+    got = run_in_node(code, None)
+    want = {"forces": ["the forces you named", "the forces it may use"], "source": ["the base it is supplied from", "a base to supply it from"],
+            "area": ["the waters you kept it within", "waters to keep it within"], "targets": ["what it strikes first", "what it strikes first"],
+            "risk": ["the risk you set", "its risk"], "priority": ["its rank", "its rank"], "protected": ["the ships you protected", "ships to protect"],
+            "not_before": ["the day it waits for", "a day to wait for"], "wait_for": ["what it waits for", "a force or unit to wait for"],
+            "after": ["the order it waits on", "an order to wait on"], "knowledge": ["what must be known first", "what must be known first"],
+            "reserve": ["the reserve kept at Lunga", "the reserve kept at Lunga"]}
+    check(all(got[k] == v for k, v in want.items()), "each kind of limit is said in the table's words, set and not set, and a reserve by the base's name")
+    check(not any(re.search(r"limit|intent|\d", w, re.I) for v in want.values() for w in v), "and none of those words says \"limit\", \"intent\" or a number")
+    check(got["state"] == [True, False, False, True, False, True, False, True], f"whether a limit is set is read from the command state's own shape ({got['state']})")
+    # through the bridge: the engine's reasons, with what each carries
+    heads = ["commas", "cleanName", "orderWords", "plainCounts", "plainWords", "nameText", "intentWords", "reasonWords", "tidyWorked", "paperPre", "shareWords", "tiredBit",
+             "paperText", "plainFact", "cautionPart", "cautionWords", "cautionTexts", "cutTop", "sayIntent", "newTask", "taskHex", "labelPlain", "arcsFrom", "finishTask",
+             "threatsOf", "proposedTree", "draftTop", "readingTop"]
+    code = "const config = { islands: [{ number: 1, name: 'New Guinea' }] }; let hexRaw = false, PAPER_TASKS = null; M.forces = [{ task_force: { handle: 'task_force:1', name: 'Task Force 17' } }]; M.bases = []; M.enemyBases = []; M.names['task_force:1'] = 'Task Force 17'; M.names['base:1'] = 'Port Moresby';\n"
+    code += "function dateOf() { return ''; } function num(h) { return parseInt(String(h).split(':')[1], 10); }\n" + re.search(r"  var WORD = .*\n", text).group(0)
+    code += "".join(cut_function(text, f"  function {h}(") + "\n" for h in heads)
+    code += r"""
+function main(input) {
+  const w = input.with_change, pr = { tree: w.tree, would_hand_in: w.would_hand_in, stations: null, reason: w.reason }, e = [input.shown, input.end];
+  const top = draftTop(e, input), root = proposedTree(top, {}, pr), all = [root], kept = [];
+  for (let i = 0; i < all.length; i++) { all[i].kids.forEach(k => all.push(k)); }
+  all.forEach(t => t.reasons.forEach(r => (r.limits || []).forEach(l => kept.push(l))));
+  return { kept: kept, tasks: all.length, number: top.number };
+}
+"""
+
+    def reasons_of(answer):
+        w = answer["with_change"]
+        found = [("the reason", w.get("reason"))]
+        found += [("a reason of no order", r) for r in (w.get("would_hand_in") or {}).get("no_orders") or []]
+        found += [("an order's reason", o.get("reason")) for o in (w.get("would_hand_in") or {}).get("orders") or []]
+        found += [("a task's reason", s.get("reason")) for s in (w.get("tree") or {}).get("sub_intents") or []]
+        return [(k, r) for k, r in found if isinstance(r, dict)]
+
+    check(begin(bridge, "coral-sea", "person", "engine") == {"ok": True}, "begun: the Coral Sea, the person Allied")
+    person = Person(bridge.table)
+    end = {"intent_kind": "deny", "hex": [-18, -1], "distance": 4}
+    attempts = [[{"limit": "forces", "none_of": ["ships", "air_groups"]}], [{"limit": "forces", "none_of": ["air_groups"]}]]
+    answer, mine = None, []
+    for limits in attempts:
+        answer = person.call("preview", dict(command="set_intent", limits=limits, **end))["ok"]
+        check(answer.get("status") != "refused" and answer.get("with_change"), f"the deny is read with {limits[0]['none_of']} none")
+        mine = [l for _, r in reasons_of(answer) for l in (r.get("limits") or []) if l.get("kind") == "forces" and l.get("intent") == answer["intent"]]
+        if mine:
+            break
+    every = reasons_of(answer)
+    carrying = [(k, [l.get("kind") for l in r.get("limits") or []]) for k, r in every if r.get("limits")]
+    kinds = sorted({l.get("kind") for _, r in every for l in r.get("limits") or []})
+    print(f"   found: {len(carrying)} of {len(every)} reasons carry limits; kinds {kinds}; the draft is order {answer['intent']}", flush=True)
+    check(mine, "the engine's reasons name the forces limit on the draft's own number: {kind: forces, intent: <the draft>}")
+    check(all(set(l) <= {"kind", "intent", "base"} for _, r in every for l in r.get("limits") or []), "every limit a reason carries is {kind, intent} or {kind: reserve, base}")
+    seen = run_in_node(code, dict(answer, end=end))
+    check(seen["number"] == answer["intent"] and {"kind": "forces", "intent": answer["intent"]} in seen["kept"],
+          f"proposedTree keeps the forces limit in a task's reasons ({len(seen['kept'])} limits over {seen['tasks']} tasks)")
+    check(post(bridge.table + "/new") == {"ok": True}, "the game is put away")
+    # the hold of Lunga: its reason, where it names no source, says which limit would give it one
+    check(begin(bridge, "eastern-solomons-five-days", "person", "engine") == {"ok": True}, "begun: the Eastern Solomons in five days, the person Allied")
+    person = Person(bridge.table)
+    lunga = [b["base"]["handle"] for b in person.call("list_bases")["ok"]["bases"] if b["base"]["name"] == "Lunga"]
+    check(lunga, "Lunga is among the side's bases")
+    held = person.call("preview", {"command": "set_intent", "intent_kind": "hold", "base": int(lunga[0].split(":")[1])})["ok"]
+    check(held.get("status") != "refused" and held.get("with_change"), "the hold of Lunga is read")
+    every = reasons_of(held)
+    sources = [(k, l) for k, r in every for l in r.get("limits") or [] if l.get("kind") == "source"]
+    print(f"   found: the hold of Lunga: {sum(1 for _, r in every if r.get('limits'))} of {len(every)} reasons carry limits; "
+          f"kinds {sorted({l.get('kind') for _, r in every for l in r.get('limits') or []})}; source on {[k for k, _ in sources]}", flush=True)
+    check(sources and all(l.get("intent") == held["intent"] for _, l in sources), "the hold with no source: its reason carries {kind: source, intent: <the hold>}")
+    check(post(bridge.table + "/new") == {"ok": True}, "the game is put away")
 
 
 def midway_on_its_chart(bridge):
@@ -1459,8 +1848,6 @@ def page_supply_limit(person, base, kind):
         return None
     limit = {"limit": "forces", "source": num(source["base"]["handle"]), "task_forces": [num(f["task_force"]["handle"]) for f in free],
              "ships": in_port[source["base"]["handle"]]}
-    if kind == "hold":
-        limit["air_groups"] = []
     return limit
 
 
@@ -1636,6 +2023,10 @@ def main():
             queue_through_the_bridge(bridge)
             the_paper_in_words(bridge)
             the_staffs_reading(bridge)
+            the_limits_on_the_paper(bridge)
+            limits_in_force(bridge)
+            the_orders_paper(bridge)
+            reason_limits_as_links(bridge)
             the_intelligence_of_the_long_game(bridge)
             midway_on_its_chart(bridge)
             person_against_agent(bridge, args.hold)

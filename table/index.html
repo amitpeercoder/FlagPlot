@@ -92,6 +92,7 @@ button:disabled { opacity: 0.45; cursor: default; }
 .order { position: fixed; right: 16px; left: auto; top: 60px; bottom: auto; width: min(360px, calc(100% - var(--sp-w) - 48px)); max-height: calc(100% - 60px - 124px); overflow-y: auto; background: var(--paper); color: var(--paper-ink); font-family: var(--f-type); font-size: 14px; line-height: 1.38; padding: 14px 16px; border-radius: 2px; box-shadow: 0 8px 24px rgba(0,0,0,0.55); display: flex; flex-direction: column; gap: 10px; }
 /* The one order paper: the same parts in the same places for every order. */
 .order [hidden] { display: none !important; }
+.order.abovesheet { z-index: 45; }
 #paper .pp { display: flex; flex-direction: column; gap: 4px; border-top: 1px dashed #8d8672; padding-top: 8px; }
 #paper .pp .pl { font-family: var(--f-ui); font-size: 12px; font-weight: 700; letter-spacing: 0.14em; color: var(--paper-dim); }
 #p-staff, #p-force, #p-unit { display: flex; flex-direction: column; gap: 8px; }
@@ -102,6 +103,26 @@ button:disabled { opacity: 0.45; cursor: default; }
 #paper .frow .sval { flex: 0 0 84px; text-align: right; }
 #paper #o-patrol .fl { flex: 0 0 auto; }
 #paper #o-patrol .sval { flex: 1 1 auto; text-align: left; }
+#p-limits summary { cursor: pointer; min-height: 30px; display: flex; align-items: center; font-family: var(--f-ui); font-size: 12px; font-weight: 700; letter-spacing: 0.14em; color: var(--paper-dim); }
+#p-limits summary:focus-visible { outline: 3px solid #f0c36a; outline-offset: 1px; }
+#p-limits-body { display: flex; flex-direction: column; gap: 8px; padding-top: 4px; }
+#p-limits .limline { display: flex; flex-direction: column; gap: 2px; padding-left: 8px; border-left: 2px solid #cfc6a8; }
+#p-limits .limline.notsent { border-left-color: var(--enemy); }
+#p-limits .limline.focus { border-left-color: #f0c36a; outline: 2px solid #f0c36a; outline-offset: 2px; }
+.sheet .doc .ordl.focus { outline: 2px solid #f0c36a; outline-offset: 2px; }
+#p-limits .limhead { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 14px; }
+#p-limits .limhead .fl { flex: 0 0 100%; font-size: 12px; color: var(--paper-dim); letter-spacing: 0.08em; }
+#p-limits .limhead .we { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; color: var(--own); }
+#p-limits .limlist { display: flex; flex-direction: column; padding-left: 14px; max-height: 190px; overflow-y: auto; }
+#p-limits .limlist label { min-height: 30px; }
+#p-limits .limkind { display: flex; flex-wrap: wrap; align-items: center; gap: 0 8px; }
+#p-limits .limkind label { flex: 1 1 auto; min-height: 30px; }
+#p-limits .limkind button { min-height: 30px; min-width: 34px; padding: 0 6px; font-size: 14px; }
+#p-limits select, #p-limits input[type=number] { min-height: 34px; font: inherit; max-width: 100%; }
+#p-limits input[type=number] { width: 4.5em; }
+#p-limits .limkind button { font-size: 14px; letter-spacing: 0; }
+#p-limits button.quiet { align-self: flex-start; min-height: 26px; padding: 2px 0; border: 0; background: none; color: var(--own); font-size: 12px; letter-spacing: 0.1em; text-decoration: underline; text-underline-offset: 3px; }
+#p-limits .sval { font-variant-numeric: tabular-nums; }
 #p-says { display: flex; flex-direction: column; gap: 4px; font-size: 14px; }
 #p-says .sentline { color: var(--paper-dim); }
 #p-says .ask { border-top: 1px dashed #8d8672; padding-top: 8px; display: flex; flex-direction: column; gap: 8px; }
@@ -281,7 +302,22 @@ button:disabled { opacity: 0.45; cursor: default; }
 .order .pv .node .who { font-size: 12px; color: var(--paper-dim); display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
 .sheet .doc .node .work { font-size: 13px; color: var(--paper-dim); }
 .order .pv .node .work { font-size: 13px; color: var(--paper-dim); }
-.sheet .doc .node.focus, #signed .sg.focus { outline: 2px solid #f0c36a; outline-offset: 2px; }
+.sheet .doc .node.focus, #signed .sg.focus, .sheet .doc .limrow.focus { outline: 2px solid #f0c36a; outline-offset: 2px; }
+.sheet .doc .limrow { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 10px; padding: 2px 0 2px 8px; border-left: 2px solid #cfc6a8; font-size: 14px; }
+.sheet .doc .limrow .limsaid { flex: 1 1 100%; }
+.sheet .doc .ordl { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; padding: 6px 0; border-top: 1px dotted #8d8672; }
+.sheet .doc .ordl .rk { min-width: 1.6em; font-weight: 700; }
+.sheet .doc .ordl .state { font-size: 12px; letter-spacing: 0.08em; color: var(--paper-dim); }
+.sheet .doc .ordl .work { flex: 1 1 100%; padding-left: 1.6em; }
+.sheet .doc .ordl .ctl { margin-left: auto; display: inline-flex; gap: 6px; }
+.sheet .doc .ordl .ctl button.up, .sheet .doc .ordl .ctl button.down { min-width: 32px; min-height: 30px; padding: 0 6px; font-size: 16px; }
+.sheet .doc .ordl:focus-visible { outline: 2px solid #f0c36a; outline-offset: 2px; }
+.sheet .doc .ordrule { margin-top: 8px; font-family: var(--f-ui); font-size: 12px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--paper-dim); border-top: 1px solid #cfc6a8; padding-top: 4px; }
+.sheet .doc .ordbar, .sheet .doc .ordsigned { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; padding: 8px 0; }
+.sheet .doc .ordsays { padding-top: 6px; }
+.reserve { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 10px; margin: 6px 0; }
+.reservebox { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; margin-bottom: 6px; }
+.reservebox input { width: 5.5em; }
 .sheet .doc .row { display: flex; flex-wrap: wrap; gap: 8px; }
 .ref { text-align: left; display: inline; min-height: 0 !important; padding: 0 !important; border: 0 !important; border-bottom: 1px solid transparent !important; border-radius: 0 !important; background: transparent !important; color: var(--own) !important; font: inherit !important; letter-spacing: 0 !important; cursor: pointer; }
 .ref.enemy { color: var(--enemy) !important; }
@@ -570,12 +606,11 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
       <div>At <strong id="o-place">this place</strong> you are to:</div>
       <fieldset id="o-ends"><legend>END</legend></fieldset>
       <div class="frow" id="o-patrol" hidden><span class="fl">Patrol these waters,</span><input type="number" id="o-dist" min="1" max="6" step="1" value="2" aria-label="Hexes round the place"><span class="sval" id="o-dist-out"></span></div>
-      <fieldset><legend>RISK</legend>
+      <fieldset id="o-risk"><legend>RISK</legend>
         <label><input type="radio" name="risk" id="o-risk-preserve" value="preserve"> Preserve</label>
         <label><input type="radio" name="risk" id="o-risk-balanced" value="balanced" checked> Balanced</label>
         <label><input type="radio" name="risk" id="o-risk-press" value="press"> Press</label>
       </fieldset>
-      <div>Forces: the staff's choice.</div>
     </div>
     <div id="p-force" hidden>
       <div class="frow"><span class="fl">Speed</span><span class="seg">
@@ -610,6 +645,7 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
     <div id="p-costs" class="costs"></div>
   </div>
   <div class="pp" id="p-hands" hidden><span class="pl">IN WHOSE HANDS</span><span id="p-hands-t"></span></div>
+  <details class="pp" id="p-limits" hidden><summary id="p-limits-sum">LIMITS</summary><div id="p-limits-body"></div></details>
   <div class="pp" id="p-acts"><span class="pl">ACTS</span><span id="p-acts-t"></span></div>
   <details class="pv" id="o-pv" open hidden><summary id="o-pv-sum">THE STAFF'S READING</summary><div id="o-preview" aria-live="polite">Asking the staff.</div></details>
   <div id="o-dry-says" class="pv" aria-live="polite"></div>
@@ -1044,6 +1080,8 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
     g.restore();
     if (draft) ring(draft.v, 30, '#1f4e8c', 1, true, 2.2);
     if (draft && paper && paper.kind === 'staff') { var pd = patrolDistance(), ph = pd && hexAt[draft.q + ',' + draft.r]; if (ph) reachShape({ lat: ph[3], lon: ph[4], from: 0, to: 0, range: (pd + 0.5) * hexMiles(), ring: true, fill: true }, false, u); }
+    // The area a draft keeps its order within: the same circle, in the quieter style.
+    if (paper && lim && lim.area && ((paper.kind === 'staff' && draft) || (paper.kind === 'limit' && limCtx)) && offers(limKind(), 'area')) { var ah = hexAt[lim.area.q + ',' + lim.area.r]; if (ah) reachShape({ lat: ah[3], lon: ah[4], from: 0, to: 0, range: (lim.area.dist + 0.5) * hexMiles(), ring: true, fill: true }, true, u); }
     // Where the side's own forces are, marked on the chart itself with a ring
     // the size of the hex, while their pieces are put away.
     if (!sideShown('own')) (function () { var done = {}, rad = HEXR * PX * 0.82; g.save(); M.forces.forEach(function (f) { if (!f.place || f.available_from > M.day) return; var k = f.place.q + ',' + f.place.r; if (done[k]) return; done[k] = true; var c = cpx(placeOf(f.place)); g.beginPath(); g.arc(c[0], c[1], rad, 0, 7); g.fillStyle = 'rgba(18,51,92,0.16)'; g.fill(); g.strokeStyle = 'rgba(18,51,92,0.85)'; g.lineWidth = 2.6 * u; g.stroke(); }); g.restore(); })();
@@ -1439,6 +1477,7 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
       if (planShown === r.number) { row.appendChild(el('span', 'state on', 'ON THE CHART')); var off = el('button', 'quiet', 'TAKE OFF'); off.type = 'button'; off.title = 'Take the plan off the chart'; off.setAttribute('aria-label', 'Take the plan off the chart'); off.addEventListener('click', clearPlan); row.appendChild(off); }
       box.appendChild(row);
     });
+    var all = el('button', 'quiet', 'THE ORDERS'); all.type = 'button'; all.id = 'orders-all'; all.title = 'Read every order, in rank'; all.addEventListener('click', function () { readOrders(); }); box.appendChild(all);
     var given = !!s.leaves.launch, l = el('div', 'leaveline'); l.appendChild(el('span', '', 'Plans launch: ' + (given ? 'when ready' : 'on my word')));
     if (!M.over) { var sw = el('button', 'quiet', given ? 'ON MY WORD' : 'WHEN READY'); sw.type = 'button'; sw.title = given ? 'Plans launch on my word' : 'Plans launch when ready'; sw.disabled = !canSign(); sw.addEventListener('click', function () { sw.disabled = true; act('set_leave', { leave: 'launch', given: !given }, '', line).then(function (ok) { if (!ok) sw.disabled = false; }); }); l.appendChild(sw); }
     line.appendChild(l);
@@ -1452,6 +1491,10 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
     var a = e.acts || {};
     return clock.at === 'dusk' ? ACTS_TONIGHT : a.at === 'pulse' ? ACTS_NOW : ACTS_DUSK;
   }
+  // An order of the commander's by its words, for SIGNED: "Your order to hold Port Moresby".
+  function orderCap(n) { var w = orderWordsOf(n, orderFound(n)); return w.charAt(0).toUpperCase() + w.slice(1); }
+  function intentKindOf(n) { var i = ((M.state || {}).intents || []).filter(function (x) { return x.number === n; })[0]; return i ? i.kind : null; }
+  function wholeTons(x) { return Math.round(parseFloat(x) || 0); }
   // A signed entry said in the table's words: the unit by name, linked, and what it is ordered.
   function signedLine(e) {
     var node = el('span', ''), o = e.order, c = e.command, u = e.unit;
@@ -1485,17 +1528,23 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
     }
     var at = function (n) { var b = baseByNumber(n); return b ? { name: b.base.name } : null; };
     switch (c.kind) {
-      case 'set_intent': text('Order: ' + sayIntent({ number: 'signed ' + c.intent, kind: c.intent_kind, island: c.island, hex: c.hex, base: c.base != null ? at(c.base) : null, target: c.target != null ? at(c.target) : null }, {}).replace(/^./, function (x) { return x; })); break;
+      case 'set_intent': {
+        text('Order: ' + sayIntent({ number: 'signed ' + c.intent, kind: c.intent_kind, island: c.island, hex: c.hex, base: c.base != null ? at(c.base) : null, target: c.target != null ? at(c.target) : null }, {}).replace(/^./, function (x) { return x; }));
+        // The limits signed with it (the engine's `goes_with`) are said in the same line.
+        var lims = (e.goes_with || []).map(function (w) { return ((M.queue && M.queue.entries) || []).filter(function (x) { return x.place.queue === w.queue && x.place.number === w.number && x.command && x.command.kind === 'set_limit'; })[0]; }).filter(Boolean).map(function (x) { return x.command; });
+        if (lims.length) { var said = limitsLine(c.intent_kind, limFromBodies(lims)); if (said !== STAFF_ALL) text(' · ' + said); }
+        break;
+      }
       case 'hold': ref(units(c)); text(' is yours: ' + STAFF_HANDS); break;
       case 'release': ref(units(c)); text(': returned to the staff'); break;
       case 'approve': { var po = planOf(c.plan); text('Plan ' + c.plan + (po.name ? ', ' + po.name : '') + ': approved'); break; }
       case 'cancel_plan': { var pc = planOf(c.plan); text('Plan ' + c.plan + (pc.name ? ', ' + pc.name : '') + ': cancelled'); break; }
       case 'set_leave': text(c.leave === 'launch' ? 'Plans launch: ' + (c.given ? 'when ready' : 'on my word') : 'Plans are prepared: ' + (c.given ? 'when ready' : 'on my word')); break;
-      case 'set_limit': text(c.limit === 'risk' ? 'Order ' + c.intent + ': risk ' + c.risk : c.limit === 'forces' ? 'Order ' + c.intent + ': the forces it may use' : 'Order ' + c.intent + ': a limit on ' + String(c.limit).replace(/_/g, ' ')); break;
-      case 'set_pursuit': text('Order ' + c.intent + ': pursuit ' + ({ ask: 'asks my leave', go: 'goes and reports', stay: 'is not looked for' }[c.leave] || String(c.leave || ''))); break;
+      case 'set_limit': text(c.limit === 'reserve' ? nm('base:' + unitNo(c.base)) + ': ' + commas(wholeTons(c.supply_t)) + ' t of supply and ' + commas(wholeTons(c.fuel_t)) + ' t of fuel kept in reserve' : orderCap(c.intent) + ': ' + limitSignedPart(intentKindOf(c.intent), c)); break;
+      case 'set_pursuit': text(orderCap(c.intent) + ': pursuit ' + ({ ask: 'asks my leave', go: 'goes and reports', stay: 'is not looked for' }[c.leave] || String(c.leave || ''))); break;
       case 'answer_pursuit': ref('task_force:' + c.task_force); text(c.allow ? ': leave given to go after it' : ': leave refused to go after it'); break;
       case 'set_interrupt': text(c.standing ? (c.on ? 'The staff stops the clock when ' : 'The staff does not stop the clock when ') + (STAFF_STOP[c.standing] || String(c.standing).replace(/_/g, ' ')) : plainWords(e.text)); break;
-      case 'withdraw_intent': text('Order ' + c.intent + ': withdrawn'); break;
+      case 'withdraw_intent': text(orderCap(c.intent) + ': withdrawn'); break;
       default: text(plainWords(e.text));
     }
     return node;
@@ -1516,6 +1565,15 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
       var arc = list.filter(function (x) { return x.order && x.order.kind === 'set_search_arc' && x.unit === e.unit && x.place.queue === e.place.queue; })[0];
       if (!arc) return true; (also[arc.place.queue + ':' + arc.place.number] = also[arc.place.queue + ':' + arc.place.number] || []).push(e); return false;
     });
+    // The ranks of the orders (THE ORDERS paper sends each as its own limit), signed together, are one entry, "Ranks: ...". Taking it back takes each.
+    var ranksOf = {}, rankSet = {};
+    list.forEach(function (e) { if (isRankEntry(e)) (rankSet[e.place.queue] = rankSet[e.place.queue] || []).push(e); });
+    list = list.filter(function (e) {
+      if (!isRankEntry(e)) return true;
+      var g = rankSet[e.place.queue], key = e.place.queue + ':' + e.place.number;
+      if (g[g.length - 1] !== e) return false;
+      ranksOf[key] = g.slice(); also[key] = g.slice(0, -1).reverse(); return true;
+    });
     // A list that is drawn again keeps the focus where it was: on the same place in it, or the part's body once it is empty.
     var held = box.contains(document.activeElement) ? Array.prototype.indexOf.call(box.querySelectorAll('.back'), document.activeElement) : null;
     if (held === null && backHeld !== null) held = backHeld; backHeld = null;
@@ -1525,7 +1583,7 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
     if (M.queue && M.queue.as_of !== signedAsOf) { freshKeys = freshSigned && signedSeen ? keys.filter(function (k) { return signedSeen.indexOf(k) < 0; }) : []; if (freshKeys.length) freshSigned = false; signedSeen = keys; signedAsOf = M.queue.as_of; }
     var isNew = function (k) { return freshKeys.indexOf(keys[k]) >= 0; };
     list.forEach(function (e, k) {
-      var row = el('div', 'sg' + (isNew(k) ? ' new' : '')), what = el('div', 'what'); what.appendChild(signedLine(e));
+      var row = el('div', 'sg' + (isNew(k) ? ' new' : '')), what = el('div', 'what'); what.appendChild(ranksOf[e.place.queue + ':' + e.place.number] ? rankLine(ranksOf[e.place.queue + ':' + e.place.number]) : signedLine(e));
       if (isNew(k)) what.appendChild(el('span', 'fresh', 'JUST SIGNED'));
       what.appendChild(el('span', 'when', actsWords(e))); row.appendChild(what);
       if (canSign()) {
@@ -1534,7 +1592,7 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
           backHeld = k; b.disabled = true;
           // The later entry first, then the one it was signed with, each read again for the token that has moved on.
           var group = [e].concat(also[e.place.queue + ':' + e.place.number] || []);
-          group.reduce(function (p, one, i) { return p.then(function () { return i ? api('queued').then(function (q) { return api('take_back', { queue: one.place.queue, number: one.place.number, as_of: q.as_of }); }) : api('take_back', { queue: one.place.queue, number: one.place.number, as_of: M.queue.as_of }); }); }, Promise.resolve()).then(function () { return signedRefresh(); }, function (err) { b.disabled = false; backRefused = { key: keys[k], asOf: M.queue.as_of, words: refusalWords(err.message) }; return signedRefresh(); });
+          takeBackEntries(group).then(function () { return signedRefresh(); }, function (err) { b.disabled = false; backRefused = { key: keys[k], asOf: M.queue.as_of, words: refusalWords(err.message) }; return signedRefresh(); });
         });
         row.appendChild(b);
       }
@@ -1544,6 +1602,148 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
     if (held !== null) { var backs = box.querySelectorAll('.back'); if (backs.length) backs[Math.max(0, Math.min(held, backs.length - 1))].focus({ preventScroll: true }); else $('sp-body').focus({ preventScroll: true }); }
     // After a paper is signed the focus goes to the entry just signed, where TAKE BACK is, if it would otherwise be lost.
     if (wantSigned) { var fresh = box.querySelector('.sg.new .back'), cur = document.activeElement; if (fresh && (!cur || cur === document.body || !document.body.contains(cur))) { fresh.focus({ preventScroll: true }); wantSigned = false; } }
+  }
+
+  // ---- THE ORDERS: every order of the commander's in force or signed, in rank (decision 0222, step 4) ----
+  // Each rank is its own `priority` limit: a preview takes no batch of them, so no staff's reading of the whole is shown or promised.
+  function isRankEntry(e) { return !!(e && e.command && e.command.kind === 'set_limit' && e.command.limit === 'priority'); }
+  function takeBackEntries(group) {
+    return group.reduce(function (p, one) { return p.then(function () { return api('queued').then(function (q) { return api('take_back', { queue: one.place.queue, number: one.place.number, as_of: q.as_of }); }); }); }, Promise.resolve());
+  }
+  function lowerFirst(w) { return String(w).replace(/^./, function (c) { return c.toLowerCase(); }); }
+  function ordinalWords(rank) { return rank == null ? 'not ranked' : (ORDINAL[rank - 1] || rank + 'th'); }
+  // "Ranks: first: hold Port Moresby; second: deny the waters round ..." for ranks signed together.
+  function rankLine(list) {
+    var cmds = list.map(function (e) { return e.command; }).sort(function (a, b) { return (a.rank == null ? 1e9 : a.rank) - (b.rank == null ? 1e9 : b.rank); });
+    return document.createTextNode('Ranks: ' + cmds.map(function (c) { return ordinalWords(c.rank) + ': ' + (intentWords(c.intent) || 'one of your orders'); }).join('; '));
+  }
+  // The bodies to send for a list moved from `before` to `after` (order numbers, top first): every order from the top to the lowest one
+  // whose place changed is ranked by its place, one set_limit each; one whose rank is already its place is not sent; those below stay.
+  function rankSends(before, after, rankOf) {
+    var last = -1, out = [], k;
+    after.forEach(function (n, at) { if (before[at] !== n) last = at; });
+    for (k = 0; k <= last; k++) if (rankOf[after[k]] !== k + 1) out.push({ limit: 'priority', intent: after[k], rank: k + 1 });
+    return out;
+  }
+  var ro = null;
+  function ordersOfCommander() {
+    var s = M.state || { intents: [] };
+    return s.intents.filter(function (i) { return i.in_force && i.parent == null && (i.maker == null || i.maker === 'commander'); });
+  }
+  // The set_intent entries signed and not yet in force, and the rank entries signed and not yet in force.
+  function signedOrders() { return ((M.queue && M.queue.entries) || []).filter(function (e) { return e.command && e.command.kind === 'set_intent'; }); }
+  function signedRanks() {
+    var q = (M.queue && M.queue.entries) || [], with_ = {};
+    q.forEach(function (e) { (e.goes_with || []).forEach(function (g) { with_[g.queue + ':' + g.number] = true; }); });
+    return q.filter(function (e) { return isRankEntry(e) && !with_[e.place.queue + ':' + e.place.number]; });
+  }
+  function readOrders(focus) {
+    api('staff_orders').catch(function () { return {}; }).then(function (so) {
+      var mine = ordersOfCommander().slice(); mine.sort(function (a, b) { return (a.limits && a.limits.priority != null ? a.limits.priority : 1e9) - (b.limits && b.limits.priority != null ? b.limits.priority : 1e9) || a.number - b.number; });
+      var rankOf = {}; mine.forEach(function (i) { rankOf[i.number] = i.limits && i.limits.priority != null ? i.limits.priority : null; });
+      var before = mine.map(function (i) { return i.number; });
+      ro = { staff: so || {}, before: before, now: before.slice(), rankOf: rankOf, m: mine.filter(function (i) { return rankOf[i.number] != null; }).length, lines: [], shown: null };
+      sheetAs('THE ORDERS'); $('sheet-doc').hidden = false; $('sheet-text').hidden = true; $('sheet').hidden = false;
+      drawOrders(focus || null);
+      if (!focus) { var first = $('sheet-doc').querySelector('button'); (first || $('sheet-close')).focus(); }
+    }).catch(function (e) { say('failed', 'The orders could not be read: ' + e.message); });
+  }
+  readOrders = tracked('orders', readOrders);
+  // The state of an order in force, in a word: its plan waits for leave, was launched, cannot be met, is preparing; else in force.
+  function orderState(i, st, so) {
+    var under = {}; (function walk(n) { under[n] = true; st.intents.forEach(function (c) { if (c.parent === n) walk(c.number); }); })(i.number);
+    var plans = st.plans.filter(function (p) { return under[p.intent]; });
+    var waiting = plans.some(function (p) { return !signed('approve', 'plan', p.number) && ((p.state === 'preparing' && !st.leaves.launch) || (p.state === 'draft' && !st.leaves.prepare)); });
+    if (waiting) return 'Waits for your leave';
+    var cannot = plans.some(function (p) { return p.state === 'failed'; }) || ((so && so.no_orders) || []).some(function (o) { return o.serves && under[o.serves.intent] && /cannot (meet|be met)/i.test(String(o.worked || '')); });
+    if (cannot) return 'Cannot be met';
+    if (plans.some(function (p) { return p.state === 'released' || p.state === 'complete'; })) return 'Launched';
+    if (plans.some(function (p) { return p.state === 'preparing' || p.state === 'draft'; })) return 'Preparing';
+    return 'In force';
+  }
+  function signedIntentWords(c) {
+    var at = function (n) { var b = baseByNumber(n); return b ? { name: b.base.name } : null; };
+    return sayIntent({ number: 'signed ' + c.intent, kind: c.intent_kind, island: c.island, hex: c.hex, base: c.base != null ? at(c.base) : null, target: c.target != null ? at(c.target) : null }, {});
+  }
+  function drawOrders(focus) {
+    var doc = $('sheet-doc'), st = M.state, can = canSign(), pend = signedRanks(), by = {}, mine = ordersOfCommander(), sign = signedOrders();
+    if (!st || !ro) return; doc.textContent = '';
+    mine.forEach(function (i) { by[i.number] = i; });
+    var pendRank = {}; pend.forEach(function (e) { pendRank[e.command.intent] = e.command.rank; });
+    var order = pend.length ? ro.before.slice().sort(function (a, b) { return (pendRank[a] != null ? pendRank[a] : 1e9) - (pendRank[b] != null ? pendRank[b] : 1e9); }) : ro.now;
+    order = order.filter(function (n) { return by[n]; }); mine.forEach(function (i) { if (order.indexOf(i.number) < 0) order.push(i.number); });
+    var last = -1; ro.now.forEach(function (n, at) { if (ro.before[at] !== n) last = at; });
+    var cut = Math.max(ro.m, last + 1), changed = !pend.length && last >= 0;
+    if (pend.length) {
+      var head = el('div', 'ordsigned'); head.appendChild(el('span', '', 'Signed · ' + actsWords(pend[pend.length - 1])));
+      if (can) { var tb = el('button', 'quiet', 'TAKE BACK'); tb.type = 'button'; tb.id = 'orders-takeback'; tb.setAttribute('aria-label', 'Take back the ranks'); tb.addEventListener('click', function () { tb.disabled = true; takeBackEntries(pend.slice().reverse()).then(function () { ro.lines = []; return signedRefresh(); }, function (err) { ro.lines = [{ ok: false, label: 'The ranks', why: refusalWords(err.message) }]; return signedRefresh(); }).then(function () { ro.now = ro.before.slice(); drawOrders(); var f = doc.querySelector('button'); if (f) f.focus(); }); }); head.appendChild(tb); }
+      doc.appendChild(head);
+    }
+    if (!order.length && !sign.length) doc.appendChild(el('div', 'work', 'No order in force.'));
+    var shownRule = false;
+    order.forEach(function (n, k) {
+      var i = by[n], ranked = pend.length ? pendRank[n] != null : k < cut, rank = pend.length ? pendRank[n] : k + 1;
+      if (!ranked && !shownRule && k > 0 && (pend.length ? pendRank[order[0]] != null : cut > 0)) { doc.appendChild(el('div', 'ordrule', 'Not ranked')); shownRule = true; }
+      var words = sayIntent(i, {}), row = el('div', 'ordl'); row.dataset.n = n; row.tabIndex = 0; row.setAttribute('aria-label', words);
+      row.appendChild(el('span', 'rk', ranked ? rank + '.' : ''));
+      var link = el('button', 'ref', words); link.type = 'button'; link.title = 'Order ' + n + ': read the plan'; link.addEventListener('click', function () { readPlan(n); }); row.appendChild(link);
+      row.appendChild(el('span', 'state', orderState(i, st, ro.staff)));
+      var lim = limitsLine(i.kind, limFromState(i.limits)); if (lim !== STAFF_ALL) row.appendChild(el('div', 'work', lim));
+      if (can) {
+        var ctl = el('span', 'ctl');
+        if (!pend.length) {
+          [['up', '↑', 'higher', -1], ['down', '↓', 'lower', 1]].forEach(function (d) {
+            var b = el('button', 'quiet ' + d[0], d[1]); b.type = 'button'; b.setAttribute('aria-label', 'Rank ' + lowerFirst(words) + ' ' + d[2]);
+            if ((d[3] < 0 && k === 0) || (d[3] > 0 && k === order.length - 1)) b.setAttribute('aria-disabled', 'true');
+            b.addEventListener('click', function () { moveOrder(n, d[3], d[0]); }); ctl.appendChild(b);
+          });
+        }
+        var w = el('button', 'quiet danger', 'WITHDRAW'); w.type = 'button'; w.setAttribute('aria-label', 'Withdraw: ' + lowerFirst(words));
+        w.addEventListener('click', function () { w.disabled = true; act('withdraw_intent', { intent: n }, 'The order is withdrawn from 1800.', row).then(function (ok) { if (ok) readOrders(); else w.disabled = false; }); }); ctl.appendChild(w); row.appendChild(ctl);
+      }
+      row.addEventListener('keydown', function (e) {
+        if (!e.altKey || (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') || !can || pend.length) return;
+        e.preventDefault(); var t = e.target; moveOrder(n, e.key === 'ArrowUp' ? -1 : 1, t === row ? 'line' : t.classList.contains('down') ? 'down' : 'up');
+      });
+      doc.appendChild(row);
+    });
+    if (sign.length) {
+      doc.appendChild(el('div', 'ordrule', 'Signed'));
+      sign.forEach(function (e) {
+        var c = e.command, words = signedIntentWords(c), row = el('div', 'ordl'); row.dataset.n = c.intent; row.tabIndex = 0; row.setAttribute('aria-label', words); row.appendChild(el('span', 'rk', ''));
+        var link = el('button', 'ref', words); link.type = 'button'; link.title = 'Show it under SIGNED'; link.addEventListener('click', function () { openOrder(c.intent); }); row.appendChild(link);
+        row.appendChild(el('span', 'state', 'Signed · ' + actsWords(e)));
+        var lims = (e.goes_with || []).map(function (w) { return ((M.queue && M.queue.entries) || []).filter(function (x) { return x.place.queue === w.queue && x.place.number === w.number && x.command && x.command.kind === 'set_limit'; })[0]; }).filter(Boolean).map(function (x) { return x.command; });
+        if (lims.length) { var said = limitsLine(c.intent_kind, limFromBodies(lims)); if (said !== STAFF_ALL) row.appendChild(el('div', 'work', said)); }
+        if (can) { var tb = el('button', 'quiet', 'TAKE BACK'); tb.type = 'button'; tb.setAttribute('aria-label', 'Take back: ' + lowerFirst(words)); tb.addEventListener('click', function () { tb.disabled = true; takeBackEntries([e]).then(function () { ro.lines = []; return signedRefresh(); }, function (err) { ro.lines = [{ ok: false, label: words, why: refusalWords(err.message) }]; return signedRefresh(); }).then(function () { drawOrders(); var f = doc.querySelector('button'); if (f) f.focus(); }); }); row.appendChild(tb); }
+        doc.appendChild(row);
+      });
+    }
+    if (changed && can) {
+      var bar = el('div', 'ordbar'); bar.appendChild(el('span', '', 'Ranks changed'));
+      var go = el('button', 'primary', 'SIGN AND SEND'), back = el('button', 'quiet', 'PUT BACK'); go.type = 'button'; back.type = 'button'; go.id = 'orders-send'; back.id = 'orders-putback';
+      back.addEventListener('click', function () { ro.now = ro.before.slice(); ro.lines = []; drawOrders(); var f = doc.querySelector('.ordl button.up, .ordl button'); if (f) f.focus(); });
+      go.addEventListener('click', function () { sendRanks(go, back); });
+      bar.appendChild(go); bar.appendChild(back); doc.appendChild(bar);
+    }
+    if (ro.lines.length) {
+      var says = el('div', 'ordsays'); ro.lines.forEach(function (l) { var d = el('div', l.ok ? 'sentline' : 'notsent'); if (!l.ok) d.setAttribute('role', 'alert'); d.appendChild(document.createTextNode(l.label + ': ')); if (l.ok) d.appendChild(document.createTextNode('sent.')); else { d.appendChild(el('b', '', 'NOT SENT')); d.appendChild(document.createTextNode(' — ' + l.why)); } says.appendChild(d); }); doc.appendChild(says);
+    }
+    if (focus) { var f = doc.querySelector('.ordl[data-n="' + focus.n + '"] ' + (focus.at === 'line' ? '' : 'button.' + focus.at)); if (focus.at === 'line') f = doc.querySelector('.ordl[data-n="' + focus.n + '"]'); if (f) { f.focus({ preventScroll: true }); if (focus.mark) { f.scrollIntoView({ block: 'center' }); f.classList.add('focus'); setTimeout(function () { f.classList.remove('focus'); }, 2500); } } }
+  }
+  function moveOrder(n, dir, at) {
+    var k = ro.now.indexOf(n), to = k + dir; if (k < 0 || to < 0 || to >= ro.now.length) { drawOrders({ n: n, at: at }); return; }
+    ro.now.splice(k, 1); ro.now.splice(to, 0, n); ro.lines = []; drawOrders({ n: n, at: at });
+  }
+  function sendRanks(go, back) {
+    var bodies = rankSends(ro.before, ro.now, ro.rankOf), sayOne = function (n) { var i = ordersOfCommander().filter(function (x) { return x.number === n; })[0]; return i ? sayIntent(i, {}) : 'One of your orders'; };
+    if (!bodies.length) return; go.disabled = true; back.disabled = true; ro.lines = [];
+    bodies.reduce(function (p, b) {
+      return p.then(function () { return api('set_limit', b).then(function () { ro.lines.push({ ok: true, label: sayOne(b.intent) }); }, function (e) { ro.lines.push({ ok: false, label: sayOne(b.intent), why: refusalWords(e.message) }); }); });
+    }, Promise.resolve()).then(function () { return signedRefresh(); }).then(function () {
+      if (ro.lines.some(function (l) { return l.ok; })) say('signed', 'The ranks are signed.');
+      drawOrders(); var f = $('sheet-doc').querySelector('button'); if (f) f.focus();
+    });
   }
 
   // ---- what stops the clock: the fold in the stop paper's foot (decision 0221, stage 4) ----
@@ -2509,12 +2709,29 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
     kv(body, [['Round', placeLink(w.place)], ['Reaches', round(w.distance_hexes).replace(/ round$/, '')], ['Told', dateOf(w.told_day - 1) || 'day ' + w.told_day]]);
     body.appendChild(rich('div', 'work', w.words));
   }
+  // What the base keeps back from issue (decision 0222): the supply and the fuel, in whole tons, changed by a command like any other.
+  function reserveLine(body, b) {
+    var r = (((M.state || {}).reserves) || []).filter(function (x) { return x.base && x.base.handle === b.base.handle; })[0] || {}, n = num(b.base.handle), name = nm(b.base.handle);
+    var row = el('div', 'reserve'), edit = el('div', 'reservebox'), said = el('span', '', 'Kept in reserve: ' + commas(wholeTons(r.supply_reserve_t)) + ' t of supply, ' + commas(wholeTons(r.fuel_reserve_t)) + ' t of fuel');
+    row.appendChild(said); body.appendChild(row); if (WATCH || M.over || playing) return;
+    var ch = el('button', 'quiet', 'CHANGE'), sign = el('button', 'go', 'SIGN'); ch.type = 'button'; sign.type = 'button'; ch.setAttribute('aria-expanded', 'false');
+    ch.setAttribute('aria-label', 'Change what is kept in reserve at ' + name); sign.setAttribute('aria-label', 'Sign the reserve at ' + name); edit.hidden = true;
+    function field(id, label, v) { var l = el('label'), i = el('input'); i.type = 'number'; i.min = '0'; i.step = '1'; i.id = id; i.value = String(v); i.setAttribute('aria-label', label + ' kept in reserve at ' + name + ', in tons'); l.appendChild(document.createTextNode(label + ' ')); l.appendChild(i); l.appendChild(document.createTextNode(' t')); edit.appendChild(l); return i; }
+    var s = field('res-supply', 'Supply', wholeTons(r.supply_reserve_t)), f = field('res-fuel', 'Fuel', wholeTons(r.fuel_reserve_t)); edit.appendChild(sign);
+    ch.addEventListener('click', function () { edit.hidden = !edit.hidden; ch.setAttribute('aria-expanded', String(!edit.hidden)); if (!edit.hidden) s.focus(); });
+    sign.addEventListener('click', function () {
+      var sv = parseInt(s.value, 10), fv = parseInt(f.value, 10); if (!(sv >= 0) || !(fv >= 0) || String(sv) !== String(s.value).trim() || String(fv) !== String(f.value).trim()) { say('refused', 'Whole tons, none below nothing.', row); return; }
+      act('set_limit', { limit: 'reserve', base: n, supply_t: String(sv), fuel_t: String(fv) }, 'Signed: ' + name + ' keeps ' + commas(sv) + ' t of supply and ' + commas(fv) + ' t of fuel in reserve.', row).then(function (ok) { if (ok) { edit.hidden = true; ch.setAttribute('aria-expanded', 'false'); ch.focus(); } });
+    });
+    row.appendChild(ch); body.appendChild(edit);
+  }
   function cardBase(t) {
     var b = t.base, h = b.base.handle, dos = b.days_of_supply || {}, body = openCard(b.base.name.toUpperCase(), 'YOURS', true);
     kv(body, [['Where', placeLink(b.place)], ['Supply', commas(b.supply_t) + ' t'], ['Ammunition', b.ammunition_t != null ? commas(b.ammunition_t) + ' t' : null], ['Fuel for ships', commas(b.fuel_t) + ' t'],
       ['Days of supply', dos.days != null ? dayCount(dos.days) + ' at ' + aboutTons(dos.planned_use_t) + ' t a day' : 'No figure: nothing is planned to be used here today'],
       // The map gives a size of airfield or none; a base with aircraft flying from it has one all the same, of no size given, so no line is shown.
       ['Airfield', b.airfield_size ? 'size ' + b.airfield_size : M.air.some(function (x) { return x.location && x.location.handle === h; }) ? null : 'none'], ['Port', b.port_size ? 'size ' + b.port_size : 'none']]);
+    reserveLine(body, b);
     listOf(body, 'MEN ASHORE', M.units.filter(function (u) { return u.men_ashore && sameHex(u.place, b.place); }).map(function (u) { return u.land_unit.handle + ': ' + commas(u.men_ashore) + ' men, ' + u.posture; }));
     airList(body, 'AIR GROUPS HERE', M.air.filter(function (x) { return x.location && x.location.handle === h; })); showReach(M.air.filter(function (x) { return x.location && x.location.handle === h; }), b.place);
     forcesHere(body, 'FORCES HERE', b.place, null);
@@ -2751,6 +2968,59 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
     if (paper) { if (!paperChosen()) { closePaper(); return go(); } return paperAsk('Tear up this order to read about your other order?', function () { closePaper(); go(); }); }
     go();
   }
+  // A reason's limits, each a link to where that limit is read or changed (decision 0222, rules 11, 12 and 17). The engine's own list is
+  // used: `{kind, intent}`, or `{kind: 'reserve', base}`. `PAPER_ROOT` is the order whose paper is being drawn, which needs no "on" after it.
+  var PAPER_ROOT = null;
+  function isDraftNo(n) { return !!paper && paper.kind === 'staff' && previewIntent != null && n === previewIntent; }
+  function limitSetOn(l) {
+    if (l.kind === 'reserve') return true;
+    if (isDraftNo(l.intent)) {
+      var dk = limKind(); if (!dk || !lim) return false;
+      if (l.kind === 'risk') return offers(dk, 'risk') && !!chosen('risk') && chosen('risk') !== 'balanced';
+      return limitPlan(dk, lim).some(function (x) { return x.body.limit === l.kind || (l.kind === 'source' && x.body.limit === 'forces' && x.body.source != null); });
+    }
+    var i = ((M.state || {}).intents || []).filter(function (x) { return x.number === l.intent; })[0];
+    if (i) return limitInState(l.kind, i.limits);
+    var q = ((M.queue || {}).entries || []).filter(function (e) { return e.command && e.command.intent === l.intent && e.command.kind === 'set_intent'; })[0];
+    if (!q) return false;
+    return (q.goes_with || []).some(function (w) { return ((M.queue || {}).entries || []).some(function (x) { return x.place.queue === w.queue && x.place.number === w.number && x.command && x.command.kind === 'set_limit' && x.command.limit === l.kind; }); });
+  }
+  // Where one link goes: the draft's own LIMITS part, the order's ranks, the base's card, the plan of an order in force at that limit, or
+  // the order's entry under SIGNED.
+  function openLimit(l) {
+    if (l.kind === 'reserve') { see(l.base != null && String(l.base).indexOf(':') >= 0 ? l.base : 'base:' + l.base); return; }
+    if (isDraftNo(l.intent)) {
+      var key = l.kind === 'forces' ? FORCES_LINES.filter(function (k) { return offers(limKind(), k); })[0] : l.kind;
+      if (l.kind === 'priority' || !key) return;
+      limMarked = null; $('p-limits').hidden = false; $('p-limits').open = true; drawLimits();
+      var box = $('p-limits-body'), row = (l.kind === 'forces' ? FORCES_LINES : [key]).map(function (k) { return box.querySelector('[data-key="' + k + '"]'); }).filter(Boolean)[0] || (l.kind === 'risk' ? $('o-risk') : null);
+      if (!row) return;
+      Array.prototype.forEach.call(box.querySelectorAll('.focus'), function (x) { x.classList.remove('focus'); }); row.classList.add('focus'); row.scrollIntoView({ block: 'nearest' });
+      var c = row.querySelector('input:checked, select, input, button'); if (c) c.focus({ preventScroll: true }); return;
+    }
+    var found = orderFound(l.intent); if (!found) return;
+    function go() {
+      if (l.kind === 'priority') { readOrders({ n: l.intent, at: 'line', mark: true }); return; }
+      if (found.queued) { openOrder(l.intent); return; }
+      readPlan(found.root, found.task !== found.root ? found.task : null, { kind: l.kind });
+    }
+    if (paper) { if (!paperChosen()) { closePaper(); return go(); } return paperAsk('Tear up this order to read about your other order?', function () { closePaper(); go(); }); }
+    go();
+  }
+  // The block YOUR LIMITS: one link for each distinct limit the reasons speak of, with the order it is set on where that is not this paper's.
+  function limitLinks(reasons, intoRoot) {
+    var seen = {}, out = [];
+    (reasons || []).forEach(function (r) { (r.limits || []).forEach(function (l) { var k = l.kind + '|' + (l.kind === 'reserve' ? l.base : l.intent); if (!seen[k]) { seen[k] = 1; out.push(l); } }); });
+    return out.map(function (l) {
+      return function () {
+        var span = el('span', ''), words = limitLinkWords(l.kind, limitSetOn(l), l.base), plain = l.kind === 'priority' && isDraftNo(l.intent);
+        if (plain) span.appendChild(document.createTextNode(words));
+        else { var b = el('button', 'ref', words); b.type = 'button'; b.addEventListener('click', function (ev) { ev.stopPropagation(); openLimit(l); }); span.appendChild(b); }
+        if (l.kind !== 'reserve' && l.intent !== intoRoot && orderWordsOf(l.intent, orderFound(l.intent))) { span.appendChild(document.createTextNode(' on ')); span.appendChild(orderLink(l.intent)); }
+        return span;
+      };
+    });
+  }
   function planWords(t) { return t.replace(/plan:(\d+)('s)?/g, function (x, n, own) { var p = planOf(parseInt(n, 10)); return 'plan ' + n + (p.name ? (own ? ' (' + p.name + ')' : ', ' + p.name + ',') : '') + (own || ''); }).replace(/,( cannot|\.|$)/, function (x, y) { return y === ' cannot' ? ', cannot' : y; }); }
   // Whose an accepted order was. The staff's reason for an order it handed
   // in is recorded straight after the order is taken in, so an accepted order
@@ -2811,6 +3081,7 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
     }
     if ((r.binding || []).length) { var b = el('div', 'rmeta', ''); b.appendChild(el('span', '', 'Held by ')); b.appendChild(rich('span', '', reasonWords(r.binding.join('; '), undefined, false, true) + '.')); into.appendChild(b); }
     if ((r.would_change || []).length) { var c = el('div', 'rmeta', ''); c.appendChild(el('span', '', 'Would change with ')); c.appendChild(rich('span', '', reasonWords(r.would_change.join('; '), undefined, false, true) + '.')); into.appendChild(c); }
+    var yl = limitLinks([r], null); if (yl.length) { into.appendChild(el('div', 'wsub', 'YOUR LIMITS')); var yu = el('ul', 'rpoints', ''); yl.forEach(function (f) { var li = document.createElement('li'); li.appendChild(f()); yu.appendChild(li); }); into.appendChild(yu); }
   }
   // The staff's working, laid out to be read: a sentence a line, what it
   // put in brackets as notes beneath, a list where it gave a list, and
@@ -3206,7 +3477,7 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
     });
     t.chose.forEach(function (s) { if (!seen['c' + s]) { seen['c' + s] = 1; chose.push(s); } });
     t.nothing.forEach(function (s) { held.push(oneFact(s, t.n)); });
-    block('WEIGHED', weighed); block('CHOSE', chose); block('HOLDS IT BACK', held); block('WOULD CHANGE WITH', would);
+    block('WEIGHED', weighed); block('CHOSE', chose); block('HOLDS IT BACK', held); block('WOULD CHANGE WITH', would); block('YOUR LIMITS', limitLinks(t.reasons, PAPER_ROOT));
     if (!any) return null;
     d.addEventListener('toggle', function () { if (d.open && t.arcs.length) paperOpen[t.n] = t.arcs.map(paperArc).filter(Boolean); else delete paperOpen[t.n]; paperArcsDraw(); });
     return d;
@@ -3228,6 +3499,13 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
     who.appendChild(taskWords('strong', t.label)); if (t.word) { var tag = el('span', 'state', t.word); if (t.word === 'WAITS FOR YOU' || t.word === 'CANNOT BE MET') tag.style.color = 'var(--enemy)'; who.appendChild(tag); } if (!bare) n.appendChild(who);
     if (t.arcs.length && !bare) { who.addEventListener('mouseenter', function () { paperHover = t.arcs.map(paperArc).filter(Boolean); paperArcsDraw(); }); who.addEventListener('mouseleave', function () { paperHover = null; paperArcsDraw(); }); }
     if (t.dim) n.style.opacity = 0.6;
+    if (t.setBy) n.appendChild(el('div', 'work', t.setBy));
+    [true, false].forEach(function (mine) {
+      var ps = (t.fromAbove || []).filter(function (x) { return x.mine === mine; }); if (!ps.length) return;
+      var fa = el('div', 'work'); fa.appendChild(document.createTextNode(mine ? 'From your order: ' : 'From the order above: '));
+      ps.forEach(function (x, k) { if (k) fa.appendChild(document.createTextNode(' · ')); if (mine) { var b = el('button', 'ref', x.text); b.type = 'button'; b.addEventListener('click', function () { limitJump(x.group === 'forces' ? 'forces' : x.group); }); fa.appendChild(b); } else fa.appendChild(document.createTextNode(x.text)); });
+      n.appendChild(fa);
+    });
     var u = unitsView(t.units);
     if (u) n.appendChild(u); else if (!t.kids.length && t.nothing.length && !t.facts.length) { var pf = plainFact(t.nothing[0]); (pf ? pf.lines : [oneFact(t.nothing[0], t.n)]).forEach(function (l) { n.appendChild(paperLine('work', l, t.n)); }); }
     t.facts.forEach(function (f) { var l = paperLine('work', f, t.n); l.style.color = 'var(--enemy)'; n.appendChild(l); });
@@ -3258,7 +3536,8 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
     hexRaw = true; subs.forEach(function (s) { by[s.number] = newTask(s.number, sayIntent(s, {})); by[s.number].hex = taskHex(s); by[s.number].reasons.push(s.reason || {}); }); hexRaw = false;
     PAPER_TASKS = {}; Object.keys(by).forEach(function (k) { PAPER_TASKS[k] = labelPlain(by[k].label); });
     subs.forEach(function (s) { var p = by[s.parent] || root; p.kids.push(by[s.number]); (by[s.number].cautions).push({ list: s.cautions, force: s.task_force != null ? 'task_force:' + s.task_force : null }); });
-    hand.forEach(function (x) { var t = by[x.intent] || root; t.units.push({ unit: x.unit, order: x.order, reason: x.reason || {} }); });
+    hand.forEach(function (x) { var t = by[x.intent] || root; t.units.push({ unit: x.unit, order: x.order, reason: x.reason || {} }); if (x.reason && (x.reason.limits || []).length) t.reasons.push({ limits: x.reason.limits }); });
+    if (pr.reason && (pr.reason.limits || []).length) root.reasons.push({ limits: pr.reason.limits });
     // A patrol: each boat the staff would station, with her station.
     if (top.kind === 'patrol') (pr.stations || []).forEach(function (s) { if (!root.units.some(function (x) { return x.unit === s.submarine; })) root.units.push({ unit: s.submarine, order: { kind: 'station', hex: [s.hex.q, s.hex.r] }, reason: {} }); });
     cmds.forEach(function (x) { var t = by[x.reason && x.reason.serves && x.reason.serves.intent] || root; t.cautions.push({ list: x.reason && x.reason.cautions, force: x.task_force != null ? 'task_force:' + x.task_force : null }); });
@@ -3268,8 +3547,11 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
     // What cannot be done, as a fact under the task it belongs to, with what would change it in that task's WHY.
     ((pr.would_hand_in && pr.would_hand_in.no_orders) || []).forEach(function (r) {
       if (/^Taking plan/.test(String(r.worked || ''))) return;
-      var k = r.serves && r.serves.intent, t = k != null ? by[k] : null, f = t && plainFact(r.worked); if (!f) return;
-      f.lines.forEach(function (l) { if (t.facts.indexOf(l) < 0) t.facts.push(l); }); t.reasons.push({ binding: r.binding || [], would_change: (r.would_change || []).concat(f.changes), evidence: [] });
+      var k = r.serves && r.serves.intent, t = k != null ? by[k] : null, f = t && plainFact(r.worked);
+      // A reason the table has no plain words for still says which limits it speaks of (decision 0222, rule 5).
+      if (t && !f && (r.limits || []).length) t.reasons.push({ binding: [], would_change: [], evidence: [], limits: r.limits });
+      if (!f) return;
+      f.lines.forEach(function (l) { if (t.facts.indexOf(l) < 0) t.facts.push(l); }); t.reasons.push({ binding: r.binding || [], would_change: (r.would_change || []).concat(f.changes), evidence: [], limits: r.limits || [] });
     });
     (tr.no_orders || []).forEach(function (s) { var m = /\bintent:(\d+)/.exec(s), t = m && by[+m[1]]; if (t && !t.units.length && !t.facts.length && t !== root) t.nothing.push(s); });
     // A caution said under a task is not said again under the order above it.
@@ -3277,7 +3559,7 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
     return root;
   }
   var paperFocus = null;
-  function readPlan(root, focus) {
+  function readPlan(root, focus, limitFocus) {
     paperArcsClear(); paperFocus = focus == null ? null : focus;
     Promise.all([api('command_state'), api('plans'), api('staff_orders').catch(function () { return {}; }), api('order', { intent: root }).catch(function () { return null; })]).then(function (a) {
       // A plan not yet launched has formed nothing: the staff is asked what releasing it would form and order.
@@ -3297,8 +3579,10 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
       var lim = top.limits_read_up || {}, head;
       // The order in one line: its number, when given, its risk and its forces. The order itself heads the tree below.
       head = el('p', 'lead');
-      head.appendChild(document.createTextNode('Order ' + top.number + ' · given day ' + top.set_day + ' · risk ' + (lim.risk || 'balanced') + ' · forces ' + (top.limits && top.limits.forces ? 'limited by you' : 'of the staff\'s choosing') + (st.leaves.launch ? ' · leave to launch given' : '')));
+      head.appendChild(document.createTextNode('Order ' + top.number + ' · given day ' + top.set_day + (st.leaves.launch ? ' · leave to launch given' : '')));
       doc.appendChild(head);
+      // The limits the order carries, each at the staff's choice until set, with the way to change one (decision 0222).
+      doc.appendChild(planLimits(top));
       // What is not asked of the commander now is folded away, to be opened when wanted.
       function fold(title) { var d = document.createElement('details'), sm = document.createElement('summary'); sm.textContent = title; d.appendChild(sm); d.className = 'fold'; return d; }
       // What must be known before a take goes (decision 0159, 13): one line
@@ -3317,6 +3601,7 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
         var make = function (i, depth) {
           var w = work[i.number] || [], p = i.plan != null ? plans[i.plan] : null, t;
           hexRaw = true; t = newTask(i.number, i === top ? upper(sayIntent(top, said)) : sayIntent(i, {})); hexRaw = false; PAPER_TASKS[i.number] = labelPlain(t.label); t.hex = taskHex(i);
+          if (i !== top) limitNotes(t, i, byNum);
           t.units = w.filter(function (x) { return x.o && x.o.order && x.o.unit; }).map(function (x) { return { unit: x.o.unit, order: x.o.order, reason: x.r }; });
           // A patrol in force: each boat of the staff's under it, with her station.
           if (i.kind === 'patrol') (M.boats || []).filter(function (b) { return b.hands && b.hands.by === 'staff' && b.hands.intent === i.number && b.station && !t.units.some(function (x) { return x.unit === b.submarine.handle; }); }).forEach(function (b) { t.units.push({ unit: b.submarine.handle, order: { kind: 'station', hex: [b.station.q, b.station.r] }, reason: {} }); });
@@ -3342,7 +3627,7 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
         var texts = all.map(function (x) { return String(x.r.worked || ''); }), once = {};
         all.forEach(function (x, n) { var w = texts[n]; if (!w || once[w] || texts.some(function (o) { return o.length > w.length && o.indexOf(w) === 0; })) return; once[w] = true; if (!working) working = fold('THE STAFF\'S WORKING IN FULL'); workedView(working, '', { worked: paperPre(w) }, root, true); });
       }
-      var shown = paperNode(tree); PAPER_TASKS = null;
+      PAPER_ROOT = root; var shown = paperNode(tree); PAPER_TASKS = null; PAPER_ROOT = null;
       // The plan's own line, and the commander's word on it, given here and nowhere else: each plan once, with its APPROVE and CANCEL under it.
       var pressed = {};
       function planNode(p, label) {
@@ -3396,10 +3681,9 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
         function quiet(words, cls) { var b = el('button', 'quiet' + (cls ? ' ' + cls : ''), words); b.type = 'button'; return b; }
         function choice(label) { var l = el('div', 'line'); l.appendChild(el('span', 'fl', label)); rk.appendChild(l); return l; }
         rk.appendChild(el('div', 'work', 'The risk is ' + riskNow + '.'));
-        ['preserve', 'balanced', 'press'].filter(function (r) { return r !== riskNow; }).forEach(function (r) {
+        ['preserve', 'balanced', 'press'].filter(function (r) { return can && r !== riskNow; }).forEach(function (r) {
           var l = choice(r.charAt(0).toUpperCase() + r.slice(1));
-          if (can) { var t = quiet('TRY IT FIRST'); tries.push(t); t.addEventListener('click', function () { whatIf(root, { limit: 'risk', risk: r }, 'risk ' + r, wsays, tries); }); l.appendChild(t); }
-          var set = quiet('SET IT'); set.addEventListener('click', function () { act('set_limit', { limit: 'risk', intent: root, risk: r }, 'Risk set to ' + r + '. The staff plans again at 1800.', l).then(function (ok) { if (ok) readPlan(root); }); }); l.appendChild(set);
+          { var t = quiet('TRY IT FIRST'); tries.push(t); t.addEventListener('click', function () { whatIf(root, { limit: 'risk', risk: r }, 'risk ' + r, wsays, tries); }); l.appendChild(t); }
         });
         if (top.pursue) { var pl = choice('Pursuit'), ps = el('div', 'seg'); ps.setAttribute('role', 'group'); ps.setAttribute('aria-label', 'Pursuit');
           [['ask', 'ASK ME'], ['go', 'GO AND REPORT'], ['stay', 'STAY']].forEach(function (o) { var b = el('button', '', o[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(top.pursue.leave === o[0])); if (top.pursue.leave !== o[0]) b.addEventListener('click', function () { act('set_pursuit', { intent: root, leave: o[0] }, 'Pursuit: ' + o[1].toLowerCase() + '.', pl).then(function (ok) { if (ok) readPlan(root); }); }); ps.appendChild(b); }); pl.appendChild(ps); }
@@ -3422,7 +3706,51 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
       var roots = st.intents.filter(function (i) { return i.parent == null && i.in_force; }).map(function (i) { return i.number; }).sort(function (x, y) { return x - y; }), at = roots.indexOf(root);
       if (at >= 0 && roots.length > 1) { $('sheet-step').hidden = false; $('sheet-step-n').textContent = (at + 1) + ' of ' + roots.length; $('sheet-prev').onclick = function () { readPlan(roots[(at - 1 + roots.length) % roots.length]); }; $('sheet-next').onclick = function () { readPlan(roots[(at + 1) % roots.length]); }; }
       $('sheet-chart').hidden = false; $('sheet-chart').onclick = function () { $('sheet').hidden = true; showPlanOnChart(root); }; doc.hidden = false; $('sheet-text').hidden = true; $('sheet').hidden = false; $('sheet-close').focus();
+      if (limitFocus && limitFocus.kind) limitJump(limitFocus.kind);
     }).catch(function (e) { say('failed', 'The plan could not be read: ' + e.message); });
+  }
+  // The LIMITS part of an order's paper: a line for each control its kind offers, with its value in the table's words, and CHANGE; and
+  // where it is set on the order itself, BACK TO THE STAFF’S CHOICE. A limit read from an order above says so, linked to that order.
+  var FROM_ABOVE = { ships: 'forces_from', air_groups: 'forces_from', land_units: 'forces_from', submarines: 'forces_from', source: 'forces_from', area: 'area_from', targets: 'targets_from', risk: 'risk_from', not_before: 'not_before_from', knowledge: 'knowledge_from' };
+  function planLimits(top) {
+    var d = document.createElement('details'), sm = document.createElement('summary'), own = limFromState(top.limits), up = top.limits_read_up || {}, can = canSign() && top.in_force !== false, any = false;
+    sm.textContent = 'LIMITS'; d.className = 'fold limits'; d.open = true; d.appendChild(sm);
+    PLAN_LINES.forEach(function (key) {
+      if (!(key === 'risk' ? offers(top.kind, 'risk') : lineOffered(top.kind, key))) return;
+      any = true;
+      var name = LINE_NAME[key], row = el('div', 'limrow'), set = key === 'risk' ? !!(top.limits && top.limits.risk != null) : limPart(top.kind, own, key) != null, from = FROM_ABOVE[key] ? up[FROM_ABOVE[key]] : null, said;
+      row.dataset.key = key; row.dataset.group = limGroup(key); row.id = 'plim-' + key; row.setAttribute('role', 'group'); row.setAttribute('aria-label', name);
+      if (set) said = limPart(top.kind, own, key);
+      else if (from != null && from !== top.number) { var above = limFromState({ forces: up.forces, area: up.area, targets: up.targets, not_before: up.not_before, knowledge: up.knowledge, risk: up.risk }); said = limPart(top.kind, above, key); }
+      var line = el('span', 'limsaid', said || (key === 'risk' ? name + ': ' + STAFFS + ' (' + (up.risk || 'balanced') + ')' : name + ': ' + STAFFS));
+      row.appendChild(line);
+      if (!set && from != null && from !== top.number && said) { line.appendChild(document.createTextNode(', from ')); line.appendChild(orderLink(from)); }
+      if (can) {
+        var ch = el('button', 'quiet', 'CHANGE'); ch.type = 'button'; ch.id = 'plim-' + key + '-change'; ch.setAttribute('aria-label', 'Change: ' + name); ch.addEventListener('click', function () { openLimitPaper(top.number, key, false); }); row.appendChild(ch);
+        if (set && key !== 'risk') { var bk = el('button', 'quiet', 'BACK TO THE STAFF’S CHOICE'); bk.type = 'button'; bk.id = 'plim-' + key + '-back'; bk.setAttribute('aria-label', 'Back to the staff’s choice: ' + name); bk.addEventListener('click', function () { openLimitPaper(top.number, key, true); }); row.appendChild(bk); }
+      }
+      d.appendChild(row);
+    });
+    if (!any) d.appendChild(el('div', 'work', 'Nothing to set.'));
+    return d;
+  }
+  // Opens the paper at one limit: its line scrolled into view, marked and with the focus on its CHANGE. `forces` is the first forces line.
+  function limitJump(kind) {
+    var doc = $('sheet-doc'), keys = kind === 'forces' ? FORCES_LINES : [kind], row = null;
+    keys.some(function (k) { row = doc.querySelector('.limrow[data-key="' + k + '"]'); return !!row; });
+    if (!row) return false; var f = row.closest('details'); if (f) f.open = true;
+    row.scrollIntoView({ block: 'center' }); row.classList.add('focus'); var b = row.querySelector('button'); if (b) b.focus({ preventScroll: true }); return true;
+  }
+  // What a task's limits are, under the order: those the staff set on it, and those it reads from the order above.
+  function limitNotes(t, i, byNum) {
+    var set = limitsLine(i.kind, limFromState(i.limits)); if (set !== STAFF_ALL) t.setBy = 'Set by us: ' + set;
+    var up = i.limits_read_up || {}, parts = [];
+    [['forces', 'forces_from'], ['area', 'area_from'], ['risk', 'risk_from']].forEach(function (g) {
+      var from = up[g[1]], src = from != null && from !== i.number ? byNum[from] : null; if (!src) return;
+      var said = g[0] === 'risk' ? (up.risk ? LINE_NAME.risk + ': ' + up.risk : null) : g[0] === 'area' ? limPart(src.kind, limFromState({ area: up.area }), 'area') : limitsLine(src.kind, limFromState({ forces: up.forces }));
+      if (said && said !== STAFF_ALL) parts.push({ text: said, group: g[0], mine: src.parent == null });
+    });
+    if (parts.length) t.fromAbove = parts;
   }
 
   // ---- the dry run (decisions 0178 and 0181): the staff plays the order
@@ -4460,7 +4788,7 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
   function paperChosen() { return !!paper && (paper.dirty || paperDraft().orders.length > 0); }
   function paperShow() {
     if (!paper) return;
-    var staff = paper.kind === 'staff', extra = paper.update ? paper.update() : '', d = staff ? { orders: [], words: [] } : paperDraft();
+    var staff = paper.kind === 'staff' || paper.kind === 'limit', extra = paper.update ? paper.update() : '', d = staff ? { orders: [], words: [] } : paperDraft();
     $('p-summary').textContent = staff ? '' : d.words.length ? d.words.join(' ') : 'Nothing is changed yet.';
     $('p-costs').textContent = extra || '';
     var hands = staff ? '' : handsText(d); $('p-hands').hidden = !hands; $('p-hands-t').textContent = hands;
@@ -4470,8 +4798,9 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
   }
   function dropPaper() {
     if (!paper) return;
-    paper = null; force = null; draft = null; endMarch(); arcDraft = null; previewSeq += 1; document.body.classList.remove('papered');
-    if (picking === 'route' || picking === 'station') { picking = false; canvas.classList.remove('picking'); }
+    paper = null; previewIntent = null; force = null; draft = null; endMarch(); arcDraft = null; previewSeq += 1; document.body.classList.remove('papered');
+    clearTimeout(limTimer); clearTimeout(limDraw); limSeq += 1; lim = null; limCtx = null; limEnt = {}; $('paper').classList.remove('abovesheet'); limMarked = null; $('p-limits').hidden = true; $('p-limits').open = false; $('p-limits-body').textContent = '';
+    if (picking === 'route' || picking === 'station' || picking === 'area') { picking = false; canvas.classList.remove('picking'); }
     stationDraft = null; patrolStations = null; stationPicked = null;
     $('paper').hidden = true; $('p-says').textContent = ''; $('p-unit').textContent = '';
     if ($('card').hidden) airReach = null;
@@ -4484,9 +4813,9 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
     dropPaper();
     paper = { kind: kind, unit: o.unit || null, from: from, dirty: false, sent: {}, done: {}, hold: o.hold || null, holdSent: false, busy: false, draft: function () { return { orders: [], words: [] }; }, update: null, onSigned: null };
     endMarch(); arcDraft = null; $('card').hidden = true; picking = false; canvas.classList.remove('picking');
-    ['p-staff', 'p-force', 'p-unit'].forEach(function (id) { $(id).hidden = true; });
+    ['p-staff', 'p-force', 'p-unit', 'p-limits'].forEach(function (id) { $(id).hidden = true; });
     $('p-says').textContent = ''; $('o-dry-says').textContent = ''; $('o-pv').hidden = true; $('p-dry').hidden = true; sendingOff($('p-sign')); $('p-sign').disabled = true;
-    var to = $('p-to-name'); to.textContent = ''; if (kind === 'staff') to.textContent = 'The staff'; else to.appendChild(refTo(o.unit, o.name));
+    var to = $('p-to-name'); to.textContent = ''; if (kind === 'staff' || kind === 'limit') to.textContent = 'The staff'; else to.appendChild(refTo(o.unit, o.name));
     var back = $('p-back'); back.hidden = !from; if (from) back.textContent = '← BACK TO ' + from.title.toUpperCase();
     $('p-draft').textContent = 'DRAFT';
     if (kind === 'force') { $('p-force').hidden = false; setupForce(o.force); paper.draft = forceDraft; }
@@ -4525,7 +4854,9 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
       }
     }
     if (paper.kind === 'staff' && e.type === 'input' && e.target.id === 'o-dist') showPatrol();
-    if (paper.kind === 'staff' && e.type === 'change' && (e.target.name === 'end' || e.target.id === 'o-dist')) { showPatrol(); askPreview(); }
+    if (paper.kind === 'staff' && e.type === 'change' && e.target.name === 'end') { showPatrol(); endChanged(); }
+    else if (paper.kind === 'staff' && e.type === 'change' && e.target.id === 'o-dist') { showPatrol(); askPreview(); }
+    else if (paper.kind === 'staff' && e.type === 'change' && e.target.name === 'risk') { limSummary(); limAsk(); }
     paper.dirty = true; $('p-says').textContent = ''; paperShow();
   }
   $('paper').addEventListener('input', paperTouched); $('paper').addEventListener('change', paperTouched);
@@ -4635,10 +4966,402 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
       })
       .catch(function (err) { return failed(todo.map(function (o) { return { ok: false, label: labelOf(o), why: refusalWords(err.message) }; })); });
   }
-  $('paper').addEventListener('submit', function (e) { e.preventDefault(); if (!paper || paper.busy) return; if (paper.kind === 'staff') signStaff(); else signUnit(); });
+  $('paper').addEventListener('submit', function (e) { e.preventDefault(); if (!paper || paper.busy) return; if (paper.kind === 'staff' || paper.kind === 'limit') signStaff(); else signUnit(); });
 
   // ---- stating an intent: touch the chart, fill the order, read the staff's preview, sign ----
-  var picking = false, previewNo = null, previewSeq = 0;
+  var picking = false, previewNo = null, previewIntent = null, previewSeq = 0;
+  // ---- the limits of an order (decision 0222, "As built: step 4, the table") ----
+  // The model is pure: what each kind of order offers, what a draft sends, what it says and the way back from what was sent or
+  // is in force. The page's checks cut it from this text and run it in node; nothing in it touches the page but the names it reads.
+  var LIMITS_OFFERED = {
+    hold: ['ships', 'air_groups', 'land_units', 'source', 'targets', 'risk'],
+    keep_supplied: ['ships', 'source', 'area', 'protected', 'risk'],
+    cover: ['air_groups', 'risk'],
+    deny: ['ships', 'air_groups', 'in_place', 'targets', 'waters_first', 'risk'],
+    neutralise: ['ships', 'air_groups', 'in_place', 'targets', 'risk'],
+    operate_carriers: ['targets', 'risk'],
+    stand_at: ['risk'],
+    take_place: ['ships', 'air_groups', 'land_units', 'source', 'area', 'targets', 'landing', 'risk'],
+    control_island: ['ships', 'air_groups', 'land_units', 'source', 'area', 'targets', 'landing', 'risk'],
+    patrol: ['submarines']
+  };
+  var TARGET_KINDS = ['carrier', 'battleship', 'cruiser', 'destroyer', 'transport', 'auxiliary'];
+  var LINE_NAME = { ships: 'Ships and forces', air_groups: 'Air groups', land_units: 'Land units', submarines: 'Boats', in_place: 'From where they lie', source: 'Supplied from', area: 'Keep within', targets: 'Strike first', protected: 'Protected ships', not_before: 'Not before', wait_for: 'Wait for', after: 'After', knowledge: 'Knowledge', risk: 'Risk' };
+  var STAFFS = 'The staff’s choice', STAFF_ALL = 'The staff’s choice in all.';
+  function offers(kind, key) { return (LIMITS_OFFERED[kind] || []).indexOf(key) >= 0; }
+  // A unit by its name; never by its number.
+  function nm(h) { var n = M.names[h]; return n ? cleanName(n) : String(h).split(':')[0].replace(/_/g, ' '); }
+  function unitNo(x) { return x == null ? null : typeof x === 'object' ? (x.handle ? num(x.handle) : x.number) : typeof x === 'string' && x.indexOf(':') >= 0 ? num(x) : Number(x); }
+  function newLim() {
+    return { ships: { mode: 'staff', task_forces: [], ships: [] }, air_groups: { mode: 'staff', list: [] }, land_units: { mode: 'staff', list: [] }, submarines: { mode: 'staff', list: [] }, in_place: false, source: null,
+      area: null, targets: null, protected: null, not_before: null, wait_for: null, after: null, knowledge: null, risk: 'balanced', chosen: {} };
+  }
+  // The set_limit bodies of a draft, without `intent`, each with the line it belongs to: only what is set, and only what the kind offers.
+  function limitPlan(kind, lim) {
+    var out = [], f = { limit: 'forces' }, none = [], first = null, o = function (k) { return offers(kind, k); }, mark = function (k) { if (!first) first = k; };
+    if (o('ships')) { var s = lim.ships; if (s.mode === 'only' && (s.task_forces.length || s.ships.length)) { f.task_forces = s.task_forces.slice(); f.ships = s.ships.slice(); mark('ships'); } else if (s.mode === 'none') { none.push('ships'); mark('ships'); } }
+    ['air_groups', 'land_units', 'submarines'].forEach(function (k) { if (!o(k)) return; var x = lim[k]; if (x.mode === 'only' && x.list.length) { f[k] = x.list.slice(); mark(k); } else if (x.mode === 'none') { none.push(k); mark(k); } });
+    if (o('source') && lim.source != null) { f.source = lim.source; mark('source'); }
+    if (none.length) f.none_of = none;
+    if (o('in_place') && lim.in_place && f.task_forces && f.task_forces.length) { f.in_place = true; mark('in_place'); }
+    if (first) out.push({ body: f, key: first });
+    if (o('area') && lim.area) { var hs = []; hexes.forEach(function (h) { if (hexDist({ q: h[0], r: h[1] }, lim.area) <= lim.area.dist) hs.push([h[0], h[1]]); }); out.push({ body: { limit: 'area', hexes: hs }, key: 'area' }); }
+    if (o('targets') && lim.targets && lim.targets.kinds.length) { var t = { limit: 'targets', kinds: lim.targets.kinds.slice() }; if (o('waters_first')) t.waters_first = !!lim.targets.waters_first; out.push({ body: t, key: 'targets' }); }
+    if (o('protected') && lim.protected && lim.protected.length) out.push({ body: { limit: 'protected', ships: lim.protected.slice() }, key: 'protected' });
+    if (o('landing')) {
+      if (lim.not_before != null) out.push({ body: { limit: 'not_before', from_day: lim.not_before }, key: 'not_before' });
+      if (lim.wait_for) out.push({ body: lim.wait_for.task_force != null ? { limit: 'wait_for', task_force: lim.wait_for.task_force } : { limit: 'wait_for', land_unit: lim.wait_for.land_unit }, key: 'wait_for' });
+      if (lim.after != null) out.push({ body: { limit: 'after', other_intent: lim.after }, key: 'after' });
+      if (lim.knowledge) { var k = { limit: 'knowledge', knowledge: lim.knowledge.knowledge }; if (lim.knowledge.knowledge === 'recent_count') k.within_days = lim.knowledge.within_days; out.push({ body: k, key: 'knowledge' }); }
+    }
+    return out;
+  }
+  function limitBodies(kind, lim) { return limitPlan(kind, lim).map(function (p) { return p.body; }); }
+  function areaWords(a) {
+    var where = hexWords({ q: a.q, r: a.r });
+    return showHexes ? a.dist + (a.dist === 1 ? ' hex' : ' hexes') + ' round ' + where : 'within ' + a.dist * hexMiles() + ' miles of ' + where;
+  }
+  function afterWords(n) { var i = ((M.state && M.state.intents) || []).filter(function (x) { return x.number === n; })[0]; return i ? sayIntent(i, {}) : 'another order'; }
+  function knowledgeWords(k) { return k.knowledge === 'none' ? 'nothing known' : k.knowledge === 'count' ? 'a count' : 'a count no older than ' + k.within_days + (k.within_days === 1 ? ' day' : ' days'); }
+  // What is set, in a line, in the table's words.
+  function limitsLine(kind, lim) {
+    var parts = [], o = function (k) { return offers(kind, k); }, names = function (list, h) { return list.map(function (n) { return nm(h + ':' + n); }); };
+    if (o('ships')) { var s = lim.ships; if (s.mode === 'only' && (s.task_forces.length || s.ships.length)) parts.push(LINE_NAME.ships + ': ' + names(s.task_forces, 'task_force').concat(names(s.ships, 'ship')).join(', ') + (o('in_place') && lim.in_place && s.task_forces.length ? ', from where they lie' : '')); else if (s.mode === 'none') parts.push(LINE_NAME.ships + ': none'); }
+    [['air_groups', 'air_group'], ['land_units', 'land_unit'], ['submarines', 'submarine']].forEach(function (k) { if (!o(k[0])) return; var x = lim[k[0]]; if (x.mode === 'only' && x.list.length) parts.push(LINE_NAME[k[0]] + ': ' + names(x.list, k[1]).join(', ')); else if (x.mode === 'none') parts.push(LINE_NAME[k[0]] + ': none'); });
+    if (o('source') && lim.source != null) parts.push(LINE_NAME.source + ': ' + nm('base:' + lim.source));
+    if (o('area') && lim.area) parts.push(LINE_NAME.area + ': ' + areaWords(lim.area));
+    if (o('targets') && lim.targets && lim.targets.kinds.length) parts.push(LINE_NAME.targets + ': ' + lim.targets.kinds.map(function (k) { return k === 'auxiliary' ? 'auxiliaries' : k + 's'; }).join(', then ') + (o('waters_first') && lim.targets.waters_first ? '; these waters first' : ''));
+    if (o('protected') && lim.protected && lim.protected.length) parts.push(LINE_NAME.protected + ': ' + names(lim.protected, 'ship').join(', '));
+    if (o('landing')) {
+      if (lim.not_before != null) parts.push(LINE_NAME.not_before + ': ' + (dateOf(lim.not_before - 1) || 'day ' + lim.not_before));
+      if (lim.wait_for) parts.push(LINE_NAME.wait_for + ': ' + (lim.wait_for.task_force != null ? nm('task_force:' + lim.wait_for.task_force) : nm('land_unit:' + lim.wait_for.land_unit)));
+      if (lim.after != null) parts.push(LINE_NAME.after + ': ' + afterWords(lim.after));
+      if (lim.knowledge) parts.push(LINE_NAME.knowledge + ': ' + knowledgeWords(lim.knowledge));
+    }
+    if (o('risk') && lim.risk && lim.risk !== 'balanced') parts.push(LINE_NAME.risk + ': ' + lim.risk);
+    return parts.length ? parts.join(' · ') : STAFF_ALL;
+  }
+  // A list of hexes as the circle it is: the hex of the list nearest its middle, and the farthest any is from it.
+  function areaOf(list) {
+    var pts = (list || []).map(function (h) { return h.q != null ? h : { q: h[0], r: h[1] }; }); if (!pts.length) return null;
+    var mq = 0, mr = 0, c = pts[0], best = 1e9, dist = 0; pts.forEach(function (p) { mq += p.q; mr += p.r; }); mq /= pts.length; mr /= pts.length;
+    pts.forEach(function (p) { var d = Math.pow(p.q - mq, 2) + Math.pow(p.r - mr, 2); if (d < best) { best = d; c = p; } });
+    pts.forEach(function (p) { dist = Math.max(dist, hexDist(p, c)); });
+    return { q: c.q, r: c.r, dist: dist };
+  }
+  // The inverse: a draft from the set_limit commands the queue holds (each with its intent).
+  function limFromBodies(list) {
+    var lim = newLim(), nn = function (a) { return (a || []).map(unitNo); };
+    (list || []).forEach(function (c) {
+      var k = c.limit;
+      if (k === 'forces') {
+        var none = c.none_of || [];
+        if ((c.task_forces || []).length || (c.ships || []).length) lim.ships = { mode: 'only', task_forces: nn(c.task_forces), ships: nn(c.ships) }; else if (none.indexOf('ships') >= 0) lim.ships.mode = 'none';
+        ['air_groups', 'land_units', 'submarines'].forEach(function (x) { if ((c[x] || []).length) lim[x] = { mode: 'only', list: nn(c[x]) }; else if (none.indexOf(x) >= 0) lim[x].mode = 'none'; });
+        if (c.source != null) lim.source = unitNo(c.source);
+        if (c.in_place) lim.in_place = true;
+      }
+      else if (k === 'area') lim.area = areaOf(c.hexes);
+      else if (k === 'targets') { if ((c.kinds || []).length) lim.targets = { kinds: c.kinds.slice(), waters_first: !!c.waters_first }; }
+      else if (k === 'protected') { if ((c.ships || []).length) lim.protected = nn(c.ships); }
+      else if (k === 'not_before') lim.not_before = c.from_day == null ? null : c.from_day;
+      else if (k === 'wait_for') lim.wait_for = c.task_force != null ? { task_force: unitNo(c.task_force) } : c.land_unit != null ? { land_unit: unitNo(c.land_unit) } : null;
+      else if (k === 'after') lim.after = c.other_intent == null ? null : c.other_intent;
+      else if (k === 'knowledge') lim.knowledge = c.knowledge ? { knowledge: c.knowledge, within_days: c.knowledge === 'recent_count' ? c.within_days : null } : null;
+      else if (k === 'risk') lim.risk = c.risk;
+    });
+    return lim;
+  }
+  // And from the limits an order in force shows in the command state.
+  function limFromState(limits) {
+    limits = limits || {};
+    var lim = newLim(), f = limits.forces, nn = function (a) { return (a || []).map(unitNo); };
+    if (f) {
+      var none = f.none_of || [];
+      if ((f.task_forces || []).length || (f.ships || []).length) lim.ships = { mode: 'only', task_forces: nn(f.task_forces), ships: nn(f.ships) }; else if (none.indexOf('ships') >= 0) lim.ships.mode = 'none';
+      ['air_groups', 'land_units', 'submarines'].forEach(function (x) { if ((f[x] || []).length) lim[x] = { mode: 'only', list: nn(f[x]) }; else if (none.indexOf(x) >= 0) lim[x].mode = 'none'; });
+      if (f.source != null) lim.source = unitNo(f.source);
+      if (f.in_place) lim.in_place = true;
+    }
+    if (limits.area && limits.area.length) lim.area = areaOf(limits.area);
+    if (limits.targets && (limits.targets.kinds || []).length) lim.targets = { kinds: limits.targets.kinds.slice(), waters_first: !!limits.targets.waters_first };
+    if ((limits.protected || []).length) lim.protected = nn(limits.protected);
+    if (limits.not_before != null) lim.not_before = limits.not_before;
+    if (limits.wait_for) lim.wait_for = limits.wait_for.task_force != null ? { task_force: unitNo(limits.wait_for.task_force) } : limits.wait_for.land_unit != null ? { land_unit: unitNo(limits.wait_for.land_unit) } : null;
+    if (limits.after != null) lim.after = limits.after;
+    if (limits.knowledge) lim.knowledge = { knowledge: limits.knowledge.setting, within_days: limits.knowledge.within_days == null ? null : limits.knowledge.within_days };
+    if (limits.risk) lim.risk = limits.risk;
+    return lim;
+  }
+  // The lines of an order in force on its plan's paper, and the limit of the engine each belongs to: the forces lines (ships, air groups,
+  // land units, boats, from where they lie, supplied from) are one `forces` limit, changed together on one paper. The rest are one each.
+  var PLAN_LINES = ['ships', 'air_groups', 'land_units', 'submarines', 'source', 'area', 'targets', 'protected', 'not_before', 'wait_for', 'after', 'knowledge', 'risk'];
+  var FORCES_LINES = ['ships', 'in_place', 'air_groups', 'land_units', 'submarines', 'source'];
+  function limGroup(key) { return FORCES_LINES.indexOf(key) >= 0 ? 'forces' : key; }
+  function lineOffered(kind, key) { return ['not_before', 'wait_for', 'after', 'knowledge'].indexOf(key) >= 0 ? offers(kind, 'landing') : offers(kind, key); }
+  // What one line of a draft says, or null where it is at the staff's choice.
+  function limPart(kind, l, key) {
+    if (key === 'risk') return l.risk ? LINE_NAME.risk + ': ' + l.risk : null;
+    var m = newLim(); if (key === 'ships') { m.ships = l.ships; m.in_place = l.in_place; } else m[key] = l[key];
+    var w = limitsLine(kind, m); return w === STAFF_ALL ? null : w;
+  }
+  // One line put back to the staff's choice, in a draft.
+  function limReset(l, key) {
+    if (key === 'ships') { l.ships = { mode: 'staff', task_forces: [], ships: [] }; l.in_place = false; }
+    else if (key === 'air_groups' || key === 'land_units' || key === 'submarines') l[key] = { mode: 'staff', list: [] };
+    else if (key !== 'risk') l[key] = null;
+  }
+  // The one set_limit body of a limit, as a draft has it; a limit wholly at the staff's choice sends the body that clears it.
+  function limGroupBody(kind, l, group) {
+    var b = null; limitPlan(kind, l).forEach(function (p) { if (p.body.limit === group) b = p.body; });
+    if (b) return b;
+    if (group === 'risk') return { limit: 'risk', risk: l.risk };
+    return group === 'forces' || group === 'area' ? { limit: group, cleared: true } : group === 'protected' ? { limit: 'protected', ships: [] } : { limit: group };
+  }
+  // A limit signed, said for SIGNED: the part it sets, or that it is back to the staff's choice.
+  var ORDINAL = ['first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth', 'ninth', 'tenth'];
+  function limitSignedPart(kind, c) {
+    var k = c.limit, name = k === 'forces' ? 'Forces' : LINE_NAME[k];
+    if (k === 'priority') return c.rank == null ? 'not ranked' : 'ranked ' + (ORDINAL[c.rank - 1] || c.rank + 'th');
+    if (k === 'risk') return LINE_NAME.risk + ': ' + c.risk;
+    var clearing = k === 'forces' || k === 'area' ? !!c.cleared : k === 'targets' ? !(c.kinds || []).length : k === 'protected' ? !(c.ships || []).length : k === 'not_before' ? c.from_day == null
+      : k === 'wait_for' ? c.task_force == null && c.land_unit == null : k === 'after' ? c.other_intent == null : k === 'knowledge' ? !c.knowledge : false;
+    if (clearing) return name + ': back to the staff’s choice';
+    var w = limitsLine(kind, limFromBodies([c])); return w === STAFF_ALL ? name + ': none' : w;
+  }
+  // A reason's limit said as a link: the table's words for it, as it is set on its order or left to the staff. A reserve is of a base.
+  var LIMIT_LINK = { forces: ['the forces you named', 'the forces it may use'], source: ['the base it is supplied from', 'a base to supply it from'], area: ['the waters you kept it within', 'waters to keep it within'],
+    targets: ['what it strikes first', 'what it strikes first'], risk: ['the risk you set', 'its risk'], priority: ['its rank', 'its rank'], protected: ['the ships you protected', 'ships to protect'],
+    not_before: ['the day it waits for', 'a day to wait for'], wait_for: ['what it waits for', 'a force or unit to wait for'], after: ['the order it waits on', 'an order to wait on'],
+    knowledge: ['what must be known first', 'what must be known first'] };
+  function limitLinkWords(kind, set, base) {
+    if (kind === 'reserve') return 'the reserve kept at ' + (base == null ? 'a base' : nm(typeof base === 'string' && base.indexOf(':') >= 0 ? base : 'base:' + base));
+    var w = LIMIT_LINK[kind]; return w ? w[set ? 0 : 1] : 'what you set';
+  }
+  // Whether a limit of that kind is set, in the shape an order in force shows in the command state.
+  function limitInState(kind, limits) {
+    limits = limits || {}; var f = limits.forces, v = limits[kind], has = function (a) { return a != null && a.length > 0; };
+    if (kind === 'forces') return !!f && (has(f.task_forces) || has(f.ships) || has(f.air_groups) || has(f.land_units) || has(f.submarines) || has(f.none_of) || !!f.in_place);
+    if (kind === 'source') return !!f && f.source != null;
+    if (kind === 'area' || kind === 'protected') return has(v);
+    if (kind === 'targets') return v != null && !(v.kinds && !v.kinds.length);
+    return v != null;
+  }
+  // ---- end of the limits model ----
+
+  // ---- the LIMITS part of the order paper ----
+  // A line for each control the kind of order offers, each at the staff's choice until it is set. A control changed redraws the part,
+  // and the focus goes back to the control by its id. Every change asks the staff to read the order again, a moment after the last.
+  var lim = null, limCtx = null, limTimer = 0, limDraw = 0, limSeq = 0, limEnt = {}, limMarked = null, previewLimits = { count: 0, keys: [] };
+  var LINES = ['ships', 'in_place', 'air_groups', 'land_units', 'submarines', 'source', 'area', 'targets', 'protected', 'not_before', 'wait_for', 'after', 'knowledge'];
+  // The place the order is about: the waters touched, or the base.
+  function draftPlace() { if (limCtx) { var h = taskHex(limCtx.top); return h ? { q: h[0], r: h[1] } : { q: 0, r: 0 }; } return draft.q != null ? { q: draft.q, r: draft.r } : (draft.base && draft.base.place) || { q: 0, r: 0 }; }
+  function limKind() { if (limCtx) return limCtx.kind; var e = draft && draft.ends && draft.ends[parseInt(chosen('end'), 10) || 0]; return e ? e[1].intent_kind : null; }
+  // An entity of the game, read once for the draft; null while it is being read, and the part is drawn again when it comes.
+  function limGet(h) {
+    if (!(h in limEnt)) { limEnt[h] = null; var mine = limEnt; api('get_entity', { handle: h }).then(function (a) { mine[h] = a.entity || {}; }).catch(function () { mine[h] = {}; }).then(function () { if (mine !== limEnt) return; clearTimeout(limDraw); limDraw = setTimeout(function () { drawLimits(); }, 40); }); }
+    return limEnt[h];
+  }
+  function limSummary() {
+    if (limCtx && lim) { var ps = limCtx.keys.map(function (k) { return limPart(limCtx.kind, lim, k); }).filter(Boolean); $('p-limits-sum').textContent = 'LIMITS · ' + (ps.length ? ps.join(' · ') : STAFFS); return; }
+    var kind = limKind(); if (!lim || !kind) return; lim.risk = offers(kind, 'risk') ? chosen('risk') || 'balanced' : 'balanced'; $('p-limits-sum').textContent = 'LIMITS · ' + limitsLine(kind, lim); }
+  // The staff reads the order again, a moment after the last change; the old reading may not be signed meanwhile.
+  function limAsk() {
+    previewSeq += 1; previewNo = null; $('p-sign').disabled = true; $('p-dry').disabled = true; $('o-dry-says').textContent = ''; $('o-preview').textContent = 'Asking the staff.'; $('o-pv-sum').textContent = 'THE STAFF\'S READING';
+    clearTimeout(limTimer); limTimer = setTimeout(function () { limTimer = 0; askPreview(); }, 300);
+  }
+  // A change: what the player did, then the part drawn again, the summary said again and the staff asked again.
+  function limSet(chosenKey, change, focusId) {
+    lim.touched = true; if (chosenKey) lim.chosen[chosenKey] = false; limMarked = null; change(); drawLimits(focusId); limSummary(); limAsk();
+  }
+  function limRow(key, name) { var r = el('div', 'limline'); r.dataset.key = key; r.setAttribute('role', 'group'); r.setAttribute('aria-label', name); return r; }
+  function limHead(name, tag) { var h = el('div', 'limhead'); h.appendChild(el('span', 'fl', name)); if (tag) h.appendChild(el('span', 'we', 'WE CHOSE IT FOR YOU')); return h; }
+  function limRadio(group, id, value, words, on, change) {
+    var l = el('label'), r = el('input'); r.type = 'radio'; r.name = group; r.id = id; r.value = value; r.checked = on; r.addEventListener('change', function () { if (r.checked) change(value); });
+    l.appendChild(r); l.appendChild(document.createTextNode(' ' + words)); return l;
+  }
+  function limCheck(id, words, on, change, off) {
+    var l = el('label'), c = el('input'); c.type = 'checkbox'; c.id = id; c.checked = on; c.disabled = !!off; c.addEventListener('change', function () { change(c.checked); });
+    l.appendChild(c); l.appendChild(document.createTextNode(' ' + words)); return l;
+  }
+  function limBack(key, name, first, reset) {
+    var b = el('button', 'quiet', 'BACK TO THE STAFF’S CHOICE'); b.type = 'button'; b.id = 'lim-' + key + '-back'; b.setAttribute('aria-label', 'Back to the staff’s choice: ' + name);
+    b.addEventListener('click', function () { limSet(key, reset, first); }); return b;
+  }
+  function limSelect(key, name, options, value, change) {
+    var s = el('select'); s.id = 'lim-' + key + '-sel'; s.setAttribute('aria-label', name);
+    options.forEach(function (o) { var op = el('option', '', o[1]); op.value = o[0]; op.selected = o[0] === value; s.appendChild(op); });
+    s.addEventListener('change', function () { change(s.value); }); return s;
+  }
+  function byName(a, b) { return a.label < b.label ? -1 : a.label > b.label ? 1 : 0; }
+  function toggled(list, n, on) { var at = list.indexOf(n); if (on && at < 0) list.push(n); else if (!on && at >= 0) list.splice(at, 1); list.sort(function (a, b) { return a - b; }); }
+  // The single ships in port in no force, at each base of the side: the ships in port less the ships of every force.
+  function limPortShips() {
+    var inForce = {}, out = [];
+    M.forces.forEach(function (f) { var a = limGet(f.task_force.handle); (a && a.ships || []).forEach(function (x) { inForce[x.ship.handle] = true; if (x.ship.name) M.names[x.ship.handle] = cleanName(x.ship.name); }); });
+    M.bases.forEach(function (b) { var a = limGet(b.base.handle); (a && a.ships_in_port || []).forEach(function (s) { if (inForce[s.handle]) return; if (s.name) M.names[s.handle] = cleanName(s.name); out.push({ h: s.handle, label: nm(s.handle) + ', at ' + nm(b.base.handle) }); }); });
+    return out;
+  }
+  function limShips() {
+    var items = M.forces.filter(function (f) { return f.status !== 'away_at_yard'; }).map(function (f) { return { h: f.task_force.handle, label: nm(f.task_force.handle) }; }).sort(byName);
+    return items.concat(limPortShips().sort(byName));
+  }
+  function limTransportShips() {
+    var items = [];
+    M.forces.filter(function (f) { return f.mission === 'transport'; }).forEach(function (f) { var a = limGet(f.task_force.handle); (a && a.ships || []).forEach(function (x) { if (x.sunk) return; if (x.ship.name) M.names[x.ship.handle] = cleanName(x.ship.name); items.push({ h: x.ship.handle, label: nm(x.ship.handle) }); }); });
+    return items.concat(limPortShips()).sort(byName);
+  }
+  function limAir(kind) {
+    return M.air.filter(function (x) { return !x.lost_with_base; }).map(function (x) { return { h: x.air_group.handle, label: nm(x.air_group.handle) }; }).sort(byName);
+  }
+  // A kind of forces: the staff's choice, use only these (and a list to tick), or none.
+  function kindLine(key, mode, setMode, items, has, toggle) {
+    var name = LINE_NAME[key], row = limRow(key, name), head = limHead(name, lim.chosen[key]), seg = el('span', 'limkind');
+    [['staff', STAFFS], ['only', 'Use only these'], ['none', 'None']].forEach(function (m) { seg.appendChild(limRadio('lim-' + key, 'lim-' + key + '-' + m[0], m[0], m[1], mode === m[0], function (v) { limSet(key, function () { setMode(v); }); })); });
+    head.appendChild(seg); row.appendChild(head);
+    if (mode === 'only') { var box = el('div', 'limlist'); items.forEach(function (it, i) { box.appendChild(limCheck('lim-' + key + '-' + i, it.label, has(it.h), function (on) { limSet(key, function () { toggle(it.h, on); }, 'lim-' + key + '-' + i); })); }); row.appendChild(box); }
+    if (mode !== 'staff') row.appendChild(limBack(key, name, 'lim-' + key + '-staff', function () { setMode('staff'); }));
+    return row;
+  }
+  function areaLine() {
+    var name = LINE_NAME.area, row = limRow('area', name), head = limHead(name, false), a = lim.area, seg = el('span', 'limkind');
+    seg.appendChild(limRadio('lim-area', 'lim-area-staff', 'staff', STAFFS, !a, function () { limSet(null, function () { lim.area = null; if (picking === 'area') { picking = false; canvas.classList.remove('picking'); showPrompt('', ''); } }); }));
+    seg.appendChild(limRadio('lim-area', 'lim-area-within', 'within', 'Within', !!a, function () { limSet(null, function () { lim.area = { q: draftPlace().q, r: draftPlace().r, dist: lim.areaDist || 3 }; }); }));
+    head.appendChild(seg); row.appendChild(head);
+    if (a) {
+      var d = el('div', 'limkind'), n = el('input'), out = el('span', 'sval', round(a.dist)), where = el('span', ''), mv = el('button', '', picking === 'area' ? 'DONE ON THE CHART' : 'MOVE ON THE CHART');
+      n.type = 'number'; n.min = '1'; n.max = '10'; n.step = '1'; n.value = String(a.dist); n.id = 'lim-area-dist'; n.setAttribute('aria-label', 'Keep within, in hexes');
+      n.addEventListener('input', function () { var v = parseInt(n.value, 10); if (v >= 1 && v <= 10) { a.dist = v; lim.areaDist = v; lim.touched = true; out.textContent = round(v); limSummary(); limAsk(); if (g) drawMarks(); } });
+      n.addEventListener('change', function () { var v = Math.max(1, Math.min(10, parseInt(n.value, 10) || a.dist)); limSet(null, function () { a.dist = v; lim.areaDist = v; }); });
+      d.appendChild(n); d.appendChild(el('span', '', 'hexes')); d.appendChild(out); row.appendChild(d);
+      where.appendChild(document.createTextNode('Round ')); where.appendChild(placeLink({ q: a.q, r: a.r })); row.appendChild(where);
+      mv.type = 'button'; mv.id = 'lim-area-move';
+      mv.addEventListener('click', function () { if (picking === 'area') { picking = false; canvas.classList.remove('picking'); showPrompt('', ''); } else { picking = 'area'; canvas.classList.add('picking'); say('picking', 'Touch the chart for the middle of the area.'); } drawLimits('lim-area-move'); });
+      row.appendChild(mv); row.appendChild(limBack('area', name, 'lim-area-staff', function () { lim.area = null; if (picking === 'area') { picking = false; canvas.classList.remove('picking'); showPrompt('', ''); } }));
+    }
+    return row;
+  }
+  // The touch of the chart that moves the area's middle.
+  function pickArea(p) {
+    var hd = 1e9, hh = null; hexes.forEach(function (h) { var d = world(h[3], h[4]).distanceTo(p); if (d < hd) { hd = d; hh = h; } });
+    if (!hh || !lim || !lim.area) return;
+    picking = false; canvas.classList.remove('picking'); showPrompt('', '');
+    limSet(null, function () { lim.area = { q: hh[0], r: hh[1], dist: lim.area.dist }; }, 'lim-area-move');
+  }
+  function targetsLine(kind) {
+    var name = LINE_NAME.targets, row = limRow('targets', name), head = limHead(name, false), seg = el('span', 'limkind'), on = !!lim.targets;
+    seg.appendChild(limRadio('lim-targets', 'lim-targets-staff', 'staff', STAFFS, !on, function () { limSet(null, function () { lim.targets = null; }); }));
+    seg.appendChild(limRadio('lim-targets', 'lim-targets-these', 'these', 'These first', on, function () { limSet(null, function () { lim.targets = { kinds: [], waters_first: false }; }); }));
+    head.appendChild(seg); row.appendChild(head);
+    if (on) {
+      var kinds = lim.targets.kinds, box = el('div', 'limlist'), order = kinds.concat(TARGET_KINDS.filter(function (k) { return kinds.indexOf(k) < 0; }));
+      order.forEach(function (k) {
+        var r = el('div', 'limkind'), at = kinds.indexOf(k), word = k === 'auxiliary' ? 'auxiliaries' : k + 's';
+        r.appendChild(limCheck('lim-targets-k-' + k, word.charAt(0).toUpperCase() + word.slice(1), at >= 0, function (c) { limSet(null, function () { var i = kinds.indexOf(k); if (c && i < 0) kinds.push(k); else if (!c && i >= 0) kinds.splice(i, 1); }, 'lim-targets-k-' + k); }));
+        if (at >= 0) [['up', '↑', 'sooner', -1], ['down', '↓', 'later', 1]].forEach(function (m) {
+          var b = el('button', '', m[1]); b.type = 'button'; b.id = 'lim-targets-' + m[0] + '-' + k; b.setAttribute('aria-label', 'Strike ' + word + ' ' + m[2]);
+          b.addEventListener('click', function () { limSet(null, function () { var i = kinds.indexOf(k), j = i + m[3]; if (j >= 0 && j < kinds.length) { kinds[i] = kinds[j]; kinds[j] = k; } }, b.id); }); r.appendChild(b);
+        });
+        box.appendChild(r);
+      });
+      row.appendChild(box);
+      if (offers(kind, 'waters_first')) row.appendChild(limCheck('lim-targets-waters', 'These waters first', lim.targets.waters_first, function (c) { limSet(null, function () { lim.targets.waters_first = c; }, 'lim-targets-waters'); }, !kinds.length));
+      row.appendChild(limBack('targets', name, 'lim-targets-staff', function () { lim.targets = null; }));
+    }
+    return row;
+  }
+  function protectedLine() {
+    var name = LINE_NAME.protected, row = limRow('protected', name), head = limHead(name, false), seg = el('span', 'limkind'), on = !!lim.protected;
+    seg.appendChild(limRadio('lim-protected', 'lim-protected-staff', 'none', 'None', !on, function () { limSet(null, function () { lim.protected = null; }); }));
+    seg.appendChild(limRadio('lim-protected', 'lim-protected-these', 'these', 'These ships', on, function () { limSet(null, function () { lim.protected = []; }); }));
+    head.appendChild(seg); row.appendChild(head);
+    if (on) {
+      var box = el('div', 'limlist'); limTransportShips().forEach(function (it, i) { box.appendChild(limCheck('lim-protected-' + i, it.label, lim.protected.indexOf(num(it.h)) >= 0, function (c) { limSet(null, function () { toggled(lim.protected, num(it.h), c); }, 'lim-protected-' + i); })); });
+      row.appendChild(box); row.appendChild(limBack('protected', name, 'lim-protected-staff', function () { lim.protected = null; }));
+    }
+    return row;
+  }
+  // A line that is one choice from a list: the staff's, or one of the options.
+  function chooseLine(key, options, value, change, reset, more) {
+    var name = LINE_NAME[key], row = limRow(key, name), head = limHead(name, lim.chosen[key]);
+    head.appendChild(limSelect(key, name, [['', STAFFS]].concat(options), value, change)); row.appendChild(head);
+    if (more) row.appendChild(more);
+    if (value !== '') row.appendChild(limBack(key, name, 'lim-' + key + '-sel', reset));
+    return row;
+  }
+  function limLine(key, kind) {
+    var o = function (k) { return offers(kind, k); };
+    if (key === 'ships' && o('ships')) return kindLine('ships', lim.ships.mode, function (m) { lim.ships.mode = m; }, limShips(),
+      function (h) { return (/^task_force/.test(h) ? lim.ships.task_forces : lim.ships.ships).indexOf(num(h)) >= 0; }, function (h, on) { toggled(/^task_force/.test(h) ? lim.ships.task_forces : lim.ships.ships, num(h), on); });
+    if (key === 'in_place' && o('in_place') && lim.ships.mode === 'only' && lim.ships.task_forces.length) {
+      var name = LINE_NAME.in_place, row = limRow('in_place', name), head = limHead(name, false), seg = el('span', 'limkind');
+      seg.appendChild(limRadio('lim-in_place', 'lim-in_place-staff', 'staff', 'The staff stations them', !lim.in_place, function () { limSet(null, function () { lim.in_place = false; }); }));
+      seg.appendChild(limRadio('lim-in_place', 'lim-in_place-lie', 'lie', 'From where they lie', lim.in_place, function () { limSet(null, function () { lim.in_place = true; }); }));
+      head.appendChild(seg); row.appendChild(head); if (lim.in_place) row.appendChild(limBack('in_place', name, 'lim-in_place-staff', function () { lim.in_place = false; })); return row;
+    }
+    if (key === 'air_groups' && o('air_groups')) return kindLine('air_groups', lim.air_groups.mode, function (m) { lim.air_groups.mode = m; }, limAir(kind), function (h) { return lim.air_groups.list.indexOf(num(h)) >= 0; }, function (h, on) { toggled(lim.air_groups.list, num(h), on); });
+    if (key === 'land_units' && o('land_units')) return kindLine('land_units', lim.land_units.mode, function (m) { lim.land_units.mode = m; }, M.units.map(function (u) { return { h: u.land_unit.handle, label: nm(u.land_unit.handle) }; }).sort(byName), function (h) { return lim.land_units.list.indexOf(num(h)) >= 0; }, function (h, on) { toggled(lim.land_units.list, num(h), on); });
+    if (key === 'submarines' && o('submarines')) return kindLine('submarines', lim.submarines.mode, function (m) { lim.submarines.mode = m; }, (M.boats || []).filter(function (b) { return b.state !== 'sunk' && b.state !== 'home'; }).map(function (b) { return { h: b.submarine.handle, label: nm(b.submarine.handle) }; }).sort(byName), function (h) { return lim.submarines.list.indexOf(num(h)) >= 0; }, function (h, on) { toggled(lim.submarines.list, num(h), on); });
+    if (key === 'source' && o('source')) return chooseLine('source', M.bases.map(function (b) { return [String(num(b.base.handle)), nm(b.base.handle)]; }), lim.source == null ? '' : String(lim.source), function (v) { limSet('source', function () { lim.source = v === '' ? null : parseInt(v, 10); }, 'lim-source-sel'); }, function () { lim.source = null; });
+    if (key === 'area' && o('area')) return areaLine();
+    if (key === 'targets' && o('targets')) return targetsLine(kind);
+    if (key === 'protected' && o('protected')) return protectedLine();
+    if (!o('landing')) return null;
+    if (key === 'not_before') {
+      var days = [], from = clock.at === 'dusk' ? M.day : M.day + 1, last = M.lastDay || from + 30; for (var d = from; d <= last; d++) days.push([String(d), dateOf(d - 1) || 'Day ' + d]);
+      return chooseLine('not_before', days, lim.not_before == null ? '' : String(lim.not_before), function (v) { limSet(null, function () { lim.not_before = v === '' ? null : parseInt(v, 10); }, 'lim-not_before-sel'); }, function () { lim.not_before = null; });
+    }
+    if (key === 'wait_for') {
+      var who = M.forces.map(function (f) { return [f.task_force.handle, nm(f.task_force.handle)]; }).concat(M.units.map(function (u) { return [u.land_unit.handle, nm(u.land_unit.handle)]; })), w = lim.wait_for;
+      return chooseLine('wait_for', who, w ? (w.task_force != null ? 'task_force:' + w.task_force : 'land_unit:' + w.land_unit) : '', function (v) { limSet(null, function () { lim.wait_for = v === '' ? null : /^task_force/.test(v) ? { task_force: num(v) } : { land_unit: num(v) }; }, 'lim-wait_for-sel'); }, function () { lim.wait_for = null; });
+    }
+    if (key === 'after') {
+      var others = ((M.state && M.state.intents) || []).filter(function (i) { return i.in_force && !i.parent && !(limCtx && i.number === limCtx.root) && (i.kind === 'take_place' || i.kind === 'control_island'); }).map(function (i) { return [String(i.number), sayIntent(i, {})]; });
+      return chooseLine('after', others, lim.after == null ? '' : String(lim.after), function (v) { limSet(null, function () { lim.after = v === '' ? null : parseInt(v, 10); }, 'lim-after-sel'); }, function () { lim.after = null; });
+    }
+    if (key === 'knowledge') {
+      var kn = lim.knowledge, more = null;
+      if (kn && kn.knowledge === 'recent_count') {
+        more = el('div', 'limkind'); var n = el('input'); n.type = 'number'; n.min = '1'; n.max = '9'; n.step = '1'; n.value = String(kn.within_days); n.id = 'lim-knowledge-days'; n.setAttribute('aria-label', 'Knowledge, no older than this many days');
+        n.addEventListener('input', function () { var v = parseInt(n.value, 10); if (v >= 1 && v <= 9) { kn.within_days = v; lim.touched = true; limSummary(); limAsk(); } });
+        n.addEventListener('change', function () { var v = Math.max(1, Math.min(9, parseInt(n.value, 10) || kn.within_days)); limSet(null, function () { kn.within_days = v; }); });
+        more.appendChild(n); more.appendChild(el('span', '', 'days'));
+      }
+      return chooseLine('knowledge', [['none', 'Nothing need be known'], ['count', 'A count of the enemy'], ['recent_count', 'A count no older than']], kn ? kn.knowledge : '', function (v) { limSet(null, function () { lim.knowledge = v === '' ? null : { knowledge: v, within_days: v === 'recent_count' ? (kn && kn.within_days) || 3 : null }; }, 'lim-knowledge-sel'); }, function () { lim.knowledge = null; }, more);
+    }
+    return null;
+  }
+  // The risk, on the paper that changes it alone: preserve, balanced or press.
+  function riskLine() {
+    var name = LINE_NAME.risk, row = limRow('risk', name), head = limHead(name, false), seg = el('span', 'limkind');
+    ['preserve', 'balanced', 'press'].forEach(function (r) { seg.appendChild(limRadio('lim-risk', 'lim-risk-' + r, r, r.charAt(0).toUpperCase() + r.slice(1), lim.risk === r, function () { limSet(null, function () { lim.risk = r; }, 'lim-risk-' + r); })); });
+    head.appendChild(seg); row.appendChild(head); return row;
+  }
+  function drawLimits(focusId) {
+    if (!paper || !lim || !(paper.kind === 'limit' ? limCtx : paper.kind === 'staff' && draft)) return;
+    var kind = limKind(), box = $('p-limits-body'), keep = focusId || (box.contains(document.activeElement) ? document.activeElement.id : null), shown = 0;
+    box.textContent = '';
+    (limCtx ? limCtx.keys : LINES).forEach(function (key) { var row = key === 'risk' ? riskLine() : limLine(key, kind); if (!row) return; if (limMarked === key) row.classList.add('notsent'); box.appendChild(row); shown += 1; });
+    if (!shown) box.appendChild(el('div', '', 'Nothing to set.'));
+    var f = keep && $(keep); if (!f && keep) { var m = /^lim-([^-]+)-/.exec(keep), row = m && box.querySelector('[data-key="' + m[1] + '"]'); f = row && row.querySelector('input, select, button'); }
+    if (f && !f.disabled) f.focus({ preventScroll: true });
+  }
+  // The order's kind has changed, or a draft has just been opened: the limits begin again, the staff's own choice of a source is put in
+  // them where it makes one (and says so), and then the staff reads the order.
+  function endChanged() {
+    if (!draft) return; var e = draft.ends[parseInt(chosen('end'), 10) || 0], kind = e[1].intent_kind, mine = ++limSeq;
+    lim = newLim(); limMarked = null; limEnt = {}; if (picking === 'area') { picking = false; canvas.classList.remove('picking'); showPrompt('', ''); }
+    $('o-risk').hidden = !offers(kind, 'risk'); $('p-limits').hidden = false; drawLimits(); limSummary();
+    previewSeq += 1; previewNo = null; $('p-sign').disabled = true; $('p-dry').disabled = true; $('o-preview').textContent = 'Asking the staff.'; $('o-pv-sum').textContent = 'THE STAFF\'S READING'; clearTimeout(limTimer);
+    var go = function () { if (mine === limSeq && draft) askPreview(); };
+    if (kind === 'keep_supplied' || kind === 'hold') supplyForces(kind, e[1].base).then(function (l) {
+      if (mine !== limSeq || !draft || !l || lim.touched) return;
+      lim.source = l.source; lim.ships = { mode: 'only', task_forces: l.task_forces, ships: l.ships }; lim.chosen.source = lim.chosen.ships = true; drawLimits(); limSummary();
+    }).catch(function () {}).then(go);
+    else go();
+    if (g) drawMarks();
+  }
+
   // Each end is [words, the intent, its note, the index of the wider end
   // that includes it, or none, and, under an island, the hold that includes
   // it too]. An end includes another only where the staff
@@ -4646,7 +5369,8 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
   // each place, the neutralising of the enemy's bases near, the hold of each
   // place and, under the hold, its cover and its supply (from a source the
   // staff names); a hold forms its cover, and its supply from the source the
-  // table names in its forces limit when it is signed (supplyForces).
+  // paper puts in its limits when the end is chosen (supplyForces), which the
+  // player may change.
   function ends(target) {
     var list = [], n = target.base ? num(target.base.base.handle) : null, wide = null;
     if (n != null) config.islands.forEach(function (i) { if (i.base === n) { if (wide == null) wide = list.length; list.push(['Seize and hold ' + i.name, { intent_kind: 'control_island', island: i.number }, null, null]); } });
@@ -4676,7 +5400,7 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
     $('o-place').textContent = best.name; $('o-pv').hidden = false; $('p-dry').hidden = !OFFERED.trial;
     var box = $('o-ends'); while (box.children.length > 1) box.removeChild(box.lastChild);
     draft.ends.forEach(function (e, i) { var l = el('label'), r = el('input'); r.type = 'radio'; r.name = 'end'; r.value = String(i); r.id = 'o-end-' + i; r.checked = i === (first || 0); l.appendChild(r); var t = el('span', 'endw'); t.appendChild(el('b', '', e[0])); l.appendChild(t); box.appendChild(l); });
-    $('o-risk-balanced').checked = true; $('o-dist').value = '2'; patrolStations = null; showPatrol(); drawMarks(); askPreview();
+    $('o-risk-balanced').checked = true; $('o-dist').value = '2'; patrolStations = null; showPatrol(); drawMarks(); endChanged();
   }
   function chosen(name) { var r = document.querySelector('#paper input[name="' + name + '"]:checked'); return r ? r.value : ''; }
   // The draft as an order in force would be read, so that the plan's functions can draw its tree: its number is the next free one, and in
@@ -4695,39 +5419,71 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
     if (root.units.length) return { text: 'The staff would give these orders:' };
     return { text: 'Nothing can serve this order yet.', bad: true };
   }
-  function readingView(out, p, e) {
+  function readingView(out, p, e, own) {
     var w = p.with_change || {}, pr = { tree: w.tree || {}, would_hand_in: w.would_hand_in || {}, stations: w.stations || p.stations, reason: w.reason || {} };
-    var top = draftTop(e, p), root = proposedTree(top, {}, pr), body = String((w.reason || {}).worked || '').replace(/^Taking [\s\S]*? as released, the staff would (?:do this for the tree of \S+: )?/, '');
-    PAPER_TASKS[top.number] = 'this order';
+    var top = own || draftTop(e, p), root = proposedTree(top, {}, pr), body = String((w.reason || {}).worked || '').replace(/^Taking [\s\S]*? as released, the staff would (?:do this for the tree of \S+: )?/, '');
+    if (!own) PAPER_TASKS[top.number] = 'this order';
     var lead = readingTop(root, top.kind), line = paperLine('work', lead.text, null); line.style.fontWeight = 'bold'; if (lead.bad) line.style.color = 'var(--enemy)'; out.appendChild(line);
     if (lead.bad === undefined && (w.no_orders || []).some(function (n) { return (n.binding || []).some(function (b) { return /^leave to launch is withheld/.test(b); }); })) out.appendChild(el('div', 'work', 'It would wait for your leave to launch.'));
-    var shown = paperNode(root, true); shown.style.borderLeft = '0'; shown.style.paddingLeft = '0'; out.appendChild(shown);
+    PAPER_ROOT = top.number; var shown = paperNode(root, true); PAPER_ROOT = null; shown.style.borderLeft = '0'; shown.style.paddingLeft = '0'; out.appendChild(shown);
     if (body) { var d = document.createElement('details'), sm = document.createElement('summary'); sm.textContent = 'THE STAFF\'S WORKING IN FULL'; d.className = 'fold'; d.appendChild(sm); workedView(d, '', { worked: paperPre(body) }, null, true); out.appendChild(d); }
     PAPER_TASKS = null;
   }
+  // What the staff reads is the order with its limits: those the paper sets, and the risk where it is not balanced.
+  function sentLimits(kind) {
+    var plan = limitPlan(kind, lim), risk = chosen('risk');
+    if (offers(kind, 'risk') && risk && risk !== 'balanced') plan.push({ body: { limit: 'risk', risk: risk }, key: 'risk' });
+    return plan;
+  }
+  // The reason of a refusal, as the staff gave it.
+  function reasonOf(p) { var r = p.reason; return r && typeof r === 'object' ? r.text || p.summary || '' : r || p.summary || ''; }
+  // A limit refused: the LIMITS part is opened at its line, marked, and in view.
+  function limitRefused(key) {
+    limMarked = key; var part = $('p-limits'); part.open = true; drawLimits();
+    var row = key === 'risk' && !limCtx ? $('o-risk') : $('p-limits-body').querySelector('[data-key="' + key + '"]'); if (row && row.scrollIntoView) row.scrollIntoView({ block: 'nearest' });
+  }
+  function refusedWords(p, sent) {
+    var at = p.of_batch && p.of_batch.position >= 2 ? sent[p.of_batch.position - 2] : null, why = refusalWords(reasonOf(p));
+    return at ? { key: at.key, words: LINE_NAME[at.key] + ': ' + why } : { key: null, words: why };
+  }
+  // The staff reads one limit changed on an order in force: its tree as it would stand, drawn by the plan's own functions.
+  function askLimitPreview() {
+    var ctx = limCtx; if (!ctx || !lim) return; var seq = ++previewSeq, out = $('o-preview'), body = limGroupBody(ctx.kind, lim, ctx.group), args = { command: 'set_limit', intent: ctx.root };
+    Object.keys(body).forEach(function (k) { args[k] = body[k]; });
+    previewNo = null; $('p-sign').disabled = true; $('p-dry').disabled = true; $('p-dry').hidden = !OFFERED.trial; $('o-dry-says').textContent = ''; out.textContent = 'Asking the staff.'; $('o-pv').open = true; $('o-pv-sum').textContent = 'THE STAFF\'S READING';
+    api('preview', args).then(function (p) {
+      if (seq !== previewSeq || limCtx !== ctx) return;
+      if (p.status === 'refused') { out.textContent = 'The staff refuses it: ' + refusalWords(reasonOf(p)); $('o-pv-sum').textContent = 'THE STAFF REFUSES IT'; limitRefused(ctx.key); return; }
+      out.textContent = ''; readingView(out, p, null, ctx.top);
+      previewNo = p.preview; previewLimits = { count: 1, keys: [ctx.key] }; $('p-sign').disabled = false; $('p-dry').disabled = false;
+    }).catch(function (err) { if (seq !== previewSeq) return; out.textContent = 'The staff refuses it: ' + refusalWords(err.message); $('o-pv-sum').textContent = 'THE STAFF REFUSES IT'; $('o-pv').open = true; });
+  }
   function askPreview() {
-    if (!draft) return; var seq = ++previewSeq, out = $('o-preview'), e = draft.ends[parseInt(chosen('end'), 10) || 0];
+    if (paper && paper.kind === 'limit') return askLimitPreview();
+    if (!draft) return; var seq = ++previewSeq, out = $('o-preview'), e = draft.ends[parseInt(chosen('end'), 10) || 0], kind = e[1].intent_kind;
     previewNo = null; $('p-sign').disabled = true; $('p-dry').disabled = true; $('p-dry').hidden = !OFFERED.trial; $('o-dry-says').textContent = ''; out.textContent = 'Asking the staff.'; $('o-pv').open = true; $('o-pv-sum').textContent = 'THE STAFF\'S READING';
     var args = { command: 'set_intent' }; Object.keys(e[1]).forEach(function (k) { args[k] = e[1][k]; }); if (e[1].intent_kind === 'patrol') args.distance = patrolDistance();
+    var sent = sentLimits(kind); if (sent.length) args.limits = sent.map(function (x) { return x.body; });
     patrolStations = null; if (g) drawMarks();
     api('preview', args).then(function (p) {
-      if (seq !== previewSeq) return; if (p.status === 'refused') throw new Error(p.reason || p.summary || 'refused');
-      if (seq !== previewSeq) return; out.textContent = '';
+      if (seq !== previewSeq) return;
+      if (p.status === 'refused') { var said = refusedWords(p, sent); out.textContent = 'The staff refuses it: ' + said.words; $('o-pv-sum').textContent = 'THE STAFF REFUSES IT'; $('o-pv').open = true; if (said.key) limitRefused(said.key); return; }
+      out.textContent = ''; previewIntent = p.intent == null ? null : p.intent;
       // The reading is the plan's paper in short: the same tree, drawn by the same functions (decision 0221, "As built: the staff's reading").
       readingView(out, p, e);
-      if (chosen('risk') !== 'balanced') out.appendChild(el('div', '', 'This reading is worked at balanced risk.'));
+      if (sent.length) out.appendChild(el('div', '', 'This reading is worked with the limits you set.'));
       var w = p.with_change || {}; patrolStations = w.stations || p.stations || null; if (g) drawMarks();
-      previewNo = p.preview; $('p-sign').disabled = false; $('p-dry').disabled = false;
-    }).catch(function (err) { if (seq !== previewSeq) return; out.textContent = 'The staff refuses it: ' + err.message; $('o-pv-sum').textContent = 'THE STAFF REFUSES IT'; $('o-pv').open = true; });
+      previewNo = p.preview; previewLimits = { count: sent.length, keys: sent.map(function (x) { return x.key; }) }; $('p-sign').disabled = false; $('p-dry').disabled = false;
+    }).catch(function (err) { if (seq !== previewSeq) return; out.textContent = 'The staff refuses it: ' + refusalWords(err.message); $('o-pv-sum').textContent = 'THE STAFF REFUSES IT'; $('o-pv').open = true; });
   }
   $('p-dry').addEventListener('click', function () {
     if (previewNo == null) return; var says = $('o-dry-says');
-    playDry({ preview: previewNo, size: drySize }, says, [$('p-dry'), $('p-sign')], function (j) { if (chosen('risk') !== 'balanced') says.textContent = 'Played at balanced risk.'; readEstimate(j, null, { preview: previewNo }); });
+    playDry({ preview: previewNo, size: drySize }, says, [$('p-dry'), $('p-sign')], function (j) { readEstimate(j, null, { preview: previewNo }); });
   });
-  // The forces an order to keep a base supplied, or to hold it, is given when
-  // it is signed, so that the staff has ships to send: a supply intent's
-  // forces limit names one source and its pool of ships and forces, and the
-  // staff sends nothing without them (rules, chapter 8, The eleven limits).
+  // The table's own choice of a source for an order to keep a base supplied, or to hold it, put in the paper's limits when the end is
+  // chosen, for the player to keep or change ("WE CHOSE IT FOR YOU"): the staff has ships to send only where a forces limit names a
+  // source and a pool of ships and forces (rules, chapter 8, The eleven limits). The air groups of a hold are not named: naming them
+  // would only narrow its cover (decision 0222, rule 2).
   // The source is the side's base outside the place's hex: one with none of
   // the side's men ashore first (their stock feeds them), then one with a
   // free transport force lying stopped there or ships in port in no force,
@@ -4735,10 +5491,9 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
   // pool is every transport force of the side that is not held, has no men
   // aboard (a hold would land them) and is named in the forces limit of no
   // order but another supply or hold (the staff shares a pool between those
-  // by its commitments), and the ships in port in no force at the source. A
-  // hold's limit names too the air groups based at the base, which its cover
-  // would otherwise lose. With no base to be the source, or no ship for the
-  // pool (an empty pool fails the plan), no limit is set.
+  // by its commitments), and the ships in port in no force at the source.
+  // With no base to be the source, or no ship for the pool (an empty pool
+  // fails the plan), no limit is set.
   function supplyForces(kind, n) {
     var st = M.state || {}, dest = M.bases.filter(function (b) { return num(b.base.handle) === n; })[0]; if (!dest) return Promise.resolve(null);
     var named = {}; (st.intents || []).forEach(function (i) { var f = i.in_force && i.kind !== 'keep_supplied' && i.kind !== 'hold' && i.limits && i.limits.forces; if (f) (f.task_forces || []).forEach(function (t) { named[typeof t === 'object' ? num(t.handle) : Number(t)] = true; }); });
@@ -4750,35 +5505,46 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
     return Promise.all(transports.map(function (f) { return api('get_entity', { handle: f.task_force.handle }).catch(function () { return {}; }); }).concat(bases.map(function (b) { return api('get_entity', { handle: b.base.handle }).catch(function () { return {}; }); }))).then(function (got) {
       var men = {}; M.units.forEach(function (u) { (u.aboard || []).forEach(function (a) { men[a.ship.handle] = true; }); });
       var free = transports.filter(function (f, k) { var ships = ((got[k] || {}).entity || {}).ships || []; return !ships.some(function (s) { return men[s.ship.handle]; }); });
-      var inPort = bases.map(function (b, k) { return (((got[transports.length + k] || {}).entity || {}).ships_in_port || []).map(function (s) { return num(s.handle); }); });
+      var inPort = bases.map(function (b, k) { return (((got[transports.length + k] || {}).entity || {}).ships_in_port || []).map(function (s) { if (s.name && !M.names[s.handle]) M.names[s.handle] = cleanName(s.name); return num(s.handle); }); });
       var ready = bases.map(function (b, k) { return inPort[k].length > 0 || free.some(function (f) { return sameHex(f.place, b.place) && !f.destination && !(f.available_from > M.day); }); });
       var manned = bases.map(function (b) { return M.units.some(function (u) { return u.men_ashore && sameHex(u.place, b.place); }); });
       var order = bases.map(function (b, k) { return k; }).sort(function (x, y) { var bx = bases[x], by = bases[y]; return (manned[x] ? 1 : 0) - (manned[y] ? 1 : 0) || (ready[y] ? 1 : 0) - (ready[x] ? 1 : 0) || ((parseFloat(by.supply_t) - (reserve[by.base.handle] || 0)) - (parseFloat(bx.supply_t) - (reserve[bx.base.handle] || 0))) || num(bx.base.handle) - num(by.base.handle); });
       var k = order[0]; if (!free.length && !inPort[k].length) return null;
-      var limit = { limit: 'forces', source: num(bases[k].base.handle), task_forces: free.map(function (f) { return num(f.task_force.handle); }), ships: inPort[k] };
-      if (kind === 'hold') limit.air_groups = M.air.filter(function (x) { return x.location && x.location.handle === dest.base.handle; }).map(function (x) { return num(x.air_group.handle); });
-      return limit;
+      return { limit: 'forces', source: num(bases[k].base.handle), task_forces: free.map(function (f) { return num(f.task_force.handle); }), ships: inPort[k] };
     });
   }
-  // The staff's order is signed in steps: the order itself, its risk, and the forces a supply or a hold is given. Each says what went.
+  // A limit of an order in force, changed on its own paper: the one line (or, for the forces, their lines), the staff's reading of the
+  // order with that limit changed, and a signature. BACK TO THE STAFF’S CHOICE opens it with the line already put back.
+  function openLimitPaper(root, key, back) {
+    var top = ((M.state || {}).intents || []).filter(function (x) { return x.number === root; })[0]; if (!top || !canSign()) return;
+    var group = limGroup(key), keys = group === 'forces' ? FORCES_LINES.filter(function (k) { return offers(top.kind, k); }) : [key];
+    openPaper('limit', { unit: null, build: function (box) {
+      box.appendChild(document.createTextNode('Change the limits of ')); box.appendChild(orderLink(root));
+      return { draft: function () { return { orders: [], words: [] }; }, update: function () { return ''; } };
+    } });
+    if (!paper || paper.kind !== 'limit') return; $('paper').classList.add('abovesheet');
+    var l = limFromState(top.limits); if (back) limReset(l, key);
+    limCtx = { root: root, top: top, kind: top.kind, key: key, group: group, keys: keys }; lim = l; limMarked = null; limEnt = {};
+    $('p-limits').hidden = false; $('p-limits').open = true; $('o-pv').hidden = false; $('p-dry').hidden = !OFFERED.trial;
+    drawLimits(); limSummary(); limAsk(); if (g) drawMarks();
+    setTimeout(function () { if (paper && limCtx) { var f = $('p-limits-body').querySelector('input:checked, select, input, button'); if (f) f.focus({ preventScroll: true }); } }, 0);
+  }
+  // The staff's order is signed in one step: the preview is approved, and the risk and the limits went with it. A refusal says which
+  // line it is; the count of limits that went is checked against the count sent.
   function signStaff() {
-    if (previewNo == null) return; var p = paper, risk = chosen('risk'), btn = $('p-sign'), says = $('p-says');
-    var asked = draft && draft.ends[parseInt(chosen('end'), 10) || 0], kind = asked && asked[1].intent_kind, no = previewNo;
-    var steps = [{ key: 'order', label: 'The order', run: function () { return api('approve', { preview: no }).then(function (a) { if (a.status && a.status !== 'queued') throw new Error(a.summary || 'refused'); p.done.intent = a.intent; }); } }];
-    if (risk !== 'balanced') steps.push({ key: 'risk', label: 'Risk', run: function () { return api('set_limit', { limit: 'risk', intent: p.done.intent, risk: risk }); } });
-    if (kind === 'keep_supplied' || kind === 'hold') steps.push({ key: 'forces', label: 'Forces', run: function () { return supplyForces(kind, asked[1].base).then(function (limit) { if (!limit) return; limit.intent = p.done.intent; return api('set_limit', limit); }); } });
-    steps = steps.filter(function (s) { return !p.done[s.key + '!']; });
+    if (previewNo == null) return; var p = paper, ctx = limCtx, btn = $('p-sign'), says = $('p-says'), no = previewNo, sent = previewLimits;
     p.busy = true; btn.disabled = true; says.textContent = '';
-    var lines = [], k = 0;
-    (function next() {
-      if (k >= steps.length) { p.busy = false; say('signed', 'Signed: order ' + p.done.intent + '. The staff takes it up at 1800.'); closePaper(); return signedRefresh(); }
-      var s = steps[k++];
-      return s.run().then(function () { p.done[s.key + '!'] = true; lines.push({ ok: true, label: s.label }); return next(); }, function (err) {
-        p.busy = false; lines.push({ ok: false, label: s.label, why: refusalWords(err.message) });
-        while (k < steps.length) lines.push({ ok: false, label: steps[k++].label, why: 'Not tried: it waits on the line above.' });
-        if (paper !== p) return; paperLines(lines); if (!p.done['order!']) askPreview(); else btn.disabled = false; return signedRefresh();
-      });
-    })();
+    api('approve', { preview: no }).then(function (a) {
+      if (a.status && a.status !== 'queued') { var said = ctx ? { key: ctx.key, words: LINE_NAME[ctx.key] + ': ' + refusalWords(reasonOf(a)) } : refusedWords(a, previewLimits.keys.map(function (k) { return { key: k }; })); throw { said: said }; }
+      var got = a.limits_queued || 0; p.busy = false;
+      say('signed', ctx ? 'Signed: the limits of ' + orderWordsOf(ctx.root, orderFound(ctx.root)) + '. The staff takes it up at 1800.' : 'Signed: order ' + a.intent + '. The staff takes it up at 1800.'); closePaper();
+      if (!ctx && got !== sent.count) say('refused', 'Limits: ' + got + ' of ' + sent.count + ' went.');
+      return signedRefresh().then(function () { if (ctx && !$('sheet').hidden && $('sheet-title').textContent === 'THE PLAN') readPlan(ctx.root); });
+    }).catch(function (err) {
+      p.busy = false; if (paper !== p) return;
+      var said = err && err.said ? err.said : { key: null, words: refusalWords(err && err.message) };
+      paperLines([{ ok: false, label: said.key ? LINE_NAME[said.key] : 'The order', why: said.key ? said.words.replace(/^[^:]*: /, '') : said.words }]); if (said.key) limitRefused(said.key); askPreview(); return signedRefresh();
+    });
   }
 
   // ---- the chair: you lean, you do not fly ----
@@ -4814,7 +5580,7 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
   });
   function up(e) {
     delete ptrs[e.pointerId]; if (!Object.keys(ptrs).length) canvas.classList.remove('dragging'); pinch0 = 0;
-    if (picking && downAt && e.type === 'pointerup' && Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y) < 6) { var p = onTable(e.clientX, e.clientY); if (p && Math.abs(p.x) <= TW / 2 && Math.abs(p.z) <= TD / 2) ({ route: pickRoute, station: pickStation }[picking] || pickMarch)(p); }
+    if (picking && downAt && e.type === 'pointerup' && Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y) < 6) { var p = onTable(e.clientX, e.clientY); if (p && Math.abs(p.x) <= TW / 2 && Math.abs(p.z) <= TD / 2) ({ route: pickRoute, station: pickStation, area: pickArea }[picking] || pickMarch)(p); }
     else if (!picking && !paper && !playing && downAt && e.type === 'pointerup' && Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y) < 6) { var q = onTable(e.clientX, e.clientY); var hit = tileAt(e.clientX, e.clientY), ord = hit ? null : orderAt(q); if (hit) touch(hit); else if (ord != null) readPlan(ord); else if (q && Math.abs(q.x) <= TW / 2 && Math.abs(q.z) <= TD / 2) look(q); }
     downAt = null;
   }
