@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 22, 2026, on the designer's word
 
 Summary: Every order a commander can give is about a place or a base. None is about an enemy force, so a player who wants a force sunk must turn that into waters himself, and the order goes stale when the enemy moves. This adds two orders that name a contact: destroy it, and shadow it. The staff turns each into the tasks it already has, round where the contact is believed to be, and moves them as the reports move. The order says plainly when the contact is lost, when another report is taken to be the same force, and when it is taken for another kind of ship.
 
-Standing: Planned on Nov 22, 2026; to be reviewed.
+Standing: Planned on Nov 22, 2026; amended on review; the scenario's statements written on Nov 23, 2026; not built.
 
 ## Why
 
@@ -166,3 +166,60 @@ A count is made on the games for play, of sightings of one force that refresh a 
 ### The scenario's statements
 
 A force at 20 knots seen on two mornings, the second a new contact while the first is held, and the order follows it. Two forces in reach, a carrier and not, and the sort decides. Two orders and one new contact. A contact dropped by a strike that found nothing. A kind that changes and stops nothing. A carrier force that closes on a force taken for cruisers at balanced. A base that falls out of reach and its task withdrawn. A free carrier force's station chosen again. Lost, then ended. Search only forming no strike. Command levels on with the area's picture late, and a seat at a task force. A dry run of a side with the order. The frozen figures untouched.
+
+## The scenario's statements, as written (Nov 23, 2026)
+
+Written by the architect before any code. The statements and the hand calculation are the doc comment of `tests/scenario_133_a_force_followed.rs`, 53 of them, every test function empty and marked "statement written, not built". Nobody else changes a statement, a hex, a day or a number there; a mismatch goes back to the architect.
+
+### The games
+
+Scenario 133, in `data/scenarios/a-force-followed/`, kept out of the loops that walk `data/scenarios/*.toml` (decision 0072): the files name an order no loader reads until this is built. The map is `data/map/placeholder_a_force_followed.toml`. All is placeholder data.
+
+| Game | File | What it shows |
+| --- | --- | --- |
+| A | `133_a_followed.toml` | Two cruisers at 20 knots seen on four mornings: refreshed, taken as a new contact twice, a base's strike task withdrawn out of reach and formed again, lost, ended |
+| S | game A with `search_only` | No strike task, both daylight pulses, the same days |
+| B | `133_b_which_contact.toml` and seven games made from it | The sort, the nearest, the lower number, at the distance and one hex beyond it, two orders and one contact, an order given inside a day |
+| D | `133_d_a_strike_that_found_nothing.toml` | The followed contact dropped by a strike that found nothing, and rule 7 worked from what the order kept |
+| E | `133_e_a_kind_that_changes.toml` | A contact refreshed as another kind: no notice and no stop |
+| G | `133_g_a_carrier_force.toml` | A free carrier force stationed, its station chosen again, closing on cruisers at balanced, and its strike launched |
+| P | `133_p_leave_to_pursue.toml` | The order's leave to pursue: go, ask, stay, an area limit, search only |
+
+Command levels on (a report up a pulse late, `data/reference/reports_placeholder_scenario_133.toml`), a seat below the area, a dry run, the refusals, the stops, the hash and the games on file are statements 40 to 53.
+
+**The figures the tests read.** The frozen step 1 figures, through `common::altered_reference`, with the report's errors taken out (`position_error_chance`, `count_over_chance` and `count_under_chance` 0; each row of `kind_confusion` its own kind at 1), and for game P `pursuit_nights` 2 as scenario 125 has it. Frozen, because these are statements of what the rule computes on known figures; altered, because a test cannot hand a side a contact after the start (scenario 125 found this), so the contacts come from real ships under a real search, and the search must then report what is there. Group 1 has 100 flying boats, a placeholder number that makes the chance to sight 1 at any distance and width. The three figures of this rule are constants of the doctrine and are in no file.
+
+**What the architect checked against the engine as it stands.** Each game was run with a deny of the same waters in place of the order, on the altered frozen figures: the sightings, the contact numbers and ages at each dusk, the passages, the strike that finds nothing, the tasks a deny forms and their intent numbers, the carrier stations (5,0) and (16,0) and the orders of day 1 are as the hand calculation has them. That is a check of the rules already built, on which the statements stand; nothing of the new rule was run, and no number was taken from a run.
+
+### Rulings on what the plan left open
+
+Each is the architect's, with its reason. Where one differs from the words of the plan above, the ruling holds.
+
+- **R1. Fresh, in rules 6 and 7, is the picture's own figure,** `fresh_contact_max_age_pulses`, 2. At dusk that is a contact last reported in the day just played. It is the test under which a new report would refresh the contact, which is what the review's first finding turns on; the carrier doctrine's 3 pulses is a test of its own and is not this one. If the staff cannot read the figure through its view, that comes back to the architect.
+- **R2. The pulse of a contact's last report is read from its age:** age + 1 pulses before the dusk. A picture holds an age and no event, and a report heard late carries the age it has, so this is the same in every picture. A contact a side starts with at age 0 is as one reported in the afternoon of day 0.
+- **R3. What the order keeps is kept anew at every dusk at which the followed contact is held and its last report is not the one kept,** by one notice, **follows**, which the staff hands in and on which the engine writes. The notice says whether the number changed (a taking) and whether the contact taken is of the other sort. Only a taking is told on the order's paper, and only a taking of the other sort may stop the clock; the sort the order keeps changes only at a taking. Reason: rule 5 as written kept the report only at the giving and at a taking, and a strike sent to a neighbouring hex can drop the followed contact on the morning it was refreshed; rule 7 would then be worked from a report days old and a hex the force had long left. Where the followed contact is held, its last report and hex are read from the picture; where it is not, from what was kept.
+- **R4. The distance of rule 7 is counted between the two reports:** the hours from the start of the pulse of the followed contact's last report to the end of the pulse of the other contact's last report, at `followed_force_knots`, in whole hexes cut, by hex distance from the followed contact's hex; equal is within. Reason: "the hours since the last report", counted to the dusk, would let the same two reports qualify at a later dusk with nothing new learnt. The start of one pulse and the end of the other, because a report says its pulse and not its hour; that gives a daylight report 3 hexes of room over what 20 knots makes between two pulses' starts, which holds a report a hex out at each end.
+- **R5. At a dusk an order is worked in this order:** follow a fresh contact; else take one; else, on the dusk that begins day D + `lost_contact_days` + 1, D being the day of the last report, end; else be lost. That dusk is the first at least `lost_contact_days` days after the report. So with the figure at 2 an order is lost for one day and then ends, and a contact that qualifies on the dusk it would end is taken.
+- **R6. A lost order's strike tasks and carrier tasks are withdrawn by the staff** on the dusk it is lost, and its search tasks stand; they are formed again by the deny's own rule on a taking. A group whose task is withdrawn keeps its settings, the waters to strike first among them, as the rulebook already has it for a group the staff may no longer order.
+- **R7. "Two dusks running" is read without new state:** a base's task is withdrawn where nothing the task may use at the base touches the waters as they are at this dusk, nor the waters round the hex the order kept before this dusk. A bomber's normal reach for a strike task, a searcher's range for a search task, by the deny's own test. It is formed again by the deny's rule on the first dusk a reach touches.
+- **R8. An order that ends is withdrawn by the engine** when it records the notice, with everything beneath it, the notice's event as the cause. The staff may not withdraw an intent the commander made.
+- **R9. Search only reads its leave to pursue as stay,** forms no carrier task and no stand task, and where no base can search the waters says it cannot be met, as a deny does.
+- **R10. A station is chosen again at a dusk at which it lies more than `station_rechosen_hexes` hexes beyond the farthest a station may be from the centre** (the candidates' air distance of decision 0202, rule 5, in whole hexes cut: 4 for a reach of 250 nm and a distance of 2). The task is withdrawn and formed again in the same hand-in, under a new number. This differs from the plan's words, "from where it was chosen": nothing keeps where the centre was when a station was chosen, and to keep it would be state written on a staff's command. The test on the station itself needs none and also catches a centre that creeps a little each day. If the carrier pass cannot form a task for a force whose task it withdraws in the same hand-in, that comes back to the architect.
+- **R11. The three stops are keys of `run` and `advance`, off unless asked for:** a taking of the other sort, lost, ended. They stop after, never before a day: `advance` at the end of the first pulse of the day the notice is handed in, `run` at the dusk after it. Reason: none of the three waits for an answer, and a stop before the day needs the staff asked on a copy, which decision 0214 keeps for the one notice that does wait. The table asks for all three unless the player unticks them.
+- **R12. The keys.** In a scenario and in the tool: `intent_kind = "destroy_force"` with `contact` (the number in the commander's picture), `distance` (whole hexes, 0 or more) and `search_only` (false where left out). A contact that is held and not fresh may be named: the order keeps it and rule 7 is worked at its first dusk. A number the picture does not hold, or none, is refused: the contact is not held.
+
+### What it changes, and the numbers
+
+- **State and the hash.** One kind of intent, its code at the end, with its distance and whether it is search only; and, in the side's command state by order: the contact followed, the hex, day and pulse of the report kept, whether taken for a carrier, and whether lost. Each is hashed in its place and named in `hash::name_every_field`. The state layout rises, and with it the saved game's version.
+- **Codes at the end:** three notices (follows; contact lost; ended, not found) and one reason a command is refused (the contact is not held). No interrupt, no event kind and no draw is added.
+- **The doctrine's version, the rules label and the agent's interface rise.**
+- **The numbers.** On `origin/main` today the state layout is v58, the rules label 32 and the agent's interface 51, and branches in flight will take v59 and interfaces 52 and 53. The builder merges `main` first and takes the next free number of each then, and says in the pull request which it took.
+
+### Owed, and not proved by the statements
+
+- **The count on the games for play** ("Before it is built", above) is still owed: a developer makes it and reports it to the architect; it tunes nothing.
+- **Lost is handed in once** is not shown by a game: with `lost_contact_days` at 2 an order is lost for one dusk only.
+- **A group keeps the waters to strike first of a task withdrawn under it** (R6). It is a known limit of the strike doctrine and is not mended here.
+- **The table's part** (the two buttons, the paper, the dashed waters, the slips) is proved by the table's screen check, not by this scenario.
+- **Chapter 8 and the glossary** change in the same pull request.
+

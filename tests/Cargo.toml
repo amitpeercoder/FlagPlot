@@ -682,6 +682,14 @@ name = "scenario_131_the_pattern_of_a_patrol"
 path = "scenario_131_the_pattern_of_a_patrol.rs"
 
 [[test]]
+name = "scenario_133_a_force_followed"
+path = "scenario_133_a_force_followed.rs"
+
+[[test]]
+name = "scenario_134_the_estimate_of_boats"
+path = "scenario_134_the_estimate_of_boats.rs"
+
+[[test]]
 name = "boats_in_the_midway_games"
 path = "boats_in_the_midway_games.rs"
 

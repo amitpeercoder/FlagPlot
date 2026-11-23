@@ -1,0 +1,196 @@
+# Scenario 134: the estimate of the enemy's boats, as a reading (decision
+# 0223 as amended on review, stage D1).
+#
+# Eight Japanese boats lie on their stations. The flying boats of Allied base
+# 2 search the whole circle on day 1, and each boat is reported at her hex in
+# both daylight pulses. On day 2 the arc is 280 to 330 and holds only boat 8,
+# at (6,-6), on bearing 316; on day 3 the flying boats rest. The reports age
+# and are dropped at 6 pulses: those of day 1 at the end of day 3, boat 8's of
+# day 2 at the end of day 4. No Allied ship is at sea, so no boat attacks, and
+# no order of a commander is given: the estimate is read, and drives nothing.
+# The statements and the hexes worked by hand are in
+# tests/scenario_134_the_estimate_of_boats.rs, which builds its other games
+# (the habit, the Japanese side's, command levels on) from this text.
+#
+# NOT TO BE RUN YET by any test that reads the estimate: the reading is built
+# by decision 0223's stage D1. The file itself uses no key that is new.
+#
+# Kept out of the loops that walk data/scenarios/*.toml by being in this
+# folder (decision 0072).
+#
+# The test runs this file on the frozen step 1 figures with one change made
+# through `common::altered_reference`: `position_error_chance` is 0, so that a
+# report of a submarine names her own hex. The submarine figures are this
+# scenario's own, named below and not redirected: scenario 128's with
+# `submarine_surfaced_share` 1 and `air_attack_damages_chance` 0, so that a
+# boat in the arc is reported for certain and is never harmed. The staff's
+# figure `estimate_join_hexes`, 2, is a judgement and is in the code.
+#
+# PLACEHOLDER DATA. The boats, bases, aircraft, figures and map are invented.
+# The class and the torpedo are those of scenario 128. The 100 flying boats
+# are a placeholder number chosen so that the chance to sight is 1 at any
+# distance to the type's 600 nm with the whole circle searched: 57.295779 x
+# 100 x 40 = 229,183.116, above 600 x 360 = 216,000.
+
+name = "Placeholder scenario 134: the estimate of the enemy's boats"
+placeholder = true
+seed = 1942
+days = 4
+map = "../../map/placeholder_patterns.toml"
+ship_classes = "../../reference/ship_classes.csv"
+port_sizes = "../../reference/port_sizes.csv"
+aircraft_types = "../../reference/aircraft_types.csv"
+search = "../../reference/search.toml"
+surface_combat = "../../reference/surface_combat.toml"
+submarine_classes = "../../reference/submarine_classes_placeholder_scenario_128.csv"
+submarine_torpedoes = "../../reference/submarine_torpedoes_placeholder_scenario_128.csv"
+submarines = "../../reference/submarines_placeholder_scenario_134.toml"
+
+# The side tables
+# (None in this game: neither side's scenario says what it expects. The test
+# adds `[side.allied]` or `[side.japanese]` with `expects_boats_off_own_bases
+# = true` here for the games of the habit.)
+
+# The boats' home.
+[[base]]
+id = 1
+name = "Placeholder Japanese base 1"
+side = "japanese"
+q = -9
+r = 0
+airfield = false
+
+# The flying boats' base.
+[[base]]
+id = 2
+name = "Placeholder Allied base 2"
+side = "allied"
+q = 8
+r = 0
+supply_t = 1000
+fuel_t = 5000
+
+# A second Allied base, with nothing at it.
+[[base]]
+id = 3
+name = "Placeholder Allied base 3"
+side = "allied"
+q = 4
+r = 0
+airfield = false
+
+[[air_group]]
+id = 1
+name = "Placeholder flying boats 1"
+side = "allied"
+base = 2
+aircraft_type = 1
+ready = 100
+
+# The boats, each on her station at her hex, in the order of their hexes.
+[[submarine]]
+id = 1
+name = "Placeholder submarine 1"
+side = "japanese"
+class = 6900
+q = -4
+r = 2
+home = 1
+
+[[submarine]]
+id = 2
+name = "Placeholder submarine 2"
+side = "japanese"
+class = 6900
+q = -4
+r = 3
+home = 1
+
+[[submarine]]
+id = 3
+name = "Placeholder submarine 3"
+side = "japanese"
+class = 6900
+q = -3
+r = 3
+home = 1
+
+[[submarine]]
+id = 4
+name = "Placeholder submarine 4"
+side = "japanese"
+class = 6900
+q = -2
+r = 2
+home = 1
+
+[[submarine]]
+id = 5
+name = "Placeholder submarine 5"
+side = "japanese"
+class = 6900
+q = -1
+r = 2
+home = 1
+
+[[submarine]]
+id = 6
+name = "Placeholder submarine 6"
+side = "japanese"
+class = 6900
+q = 0
+r = -1
+home = 1
+
+[[submarine]]
+id = 7
+name = "Placeholder submarine 7"
+side = "japanese"
+class = 6900
+q = 0
+r = 0
+home = 1
+
+[[submarine]]
+id = 8
+name = "Placeholder submarine 8"
+side = "japanese"
+class = 6900
+q = 6
+r = -6
+home = 1
+
+# The flying boats' orders. Day 1: the whole circle, to 600 nm.
+[[order]]
+day = 1
+side = "allied"
+air_group = 1
+kind = "set_air_mission"
+mission = "search"
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 1
+kind = "set_search_arc"
+from_deg = 0
+to_deg = 0
+range_nm = 600
+
+# Day 2: an arc that holds boat 8 alone.
+[[order]]
+day = 2
+side = "allied"
+air_group = 1
+kind = "set_search_arc"
+from_deg = 280
+to_deg = 330
+range_nm = 600
+
+# Day 3: no search.
+[[order]]
+day = 3
+side = "allied"
+air_group = 1
+kind = "set_air_mission"
+mission = "rest"

@@ -181,6 +181,104 @@ pub struct SuspectedWatersLine {
     pub event: Option<u32>,
 }
 
+/// The side's estimate of the enemy's boats (decision 0223, stage D1): a
+/// reading of its own reports, never the enemy's truth.
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct SubmarineEstimateLine {
+    /// The areas the side's reports make, in the order they were begun.
+    /// Left out when none.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub areas: Vec<EstimateAreaLine>,
+    /// The side's own bases named as waters where boats may be expected, in
+    /// base number order. Left out when none.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub by_habit: Vec<HabitWatersLine>,
+}
+
+/// An area of the estimate: waters told as suspected waters are.
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct EstimateAreaLine {
+    /// The centre: the hex of the area's first report.
+    pub place: Place,
+    /// How many hexes round the centre.
+    pub distance_hexes: u32,
+    /// The hexes of the reports, in hex order.
+    pub reports: Vec<Place>,
+    /// How many boats, about: a whole number of 1 or more.
+    pub count: u32,
+    /// Always `reported`.
+    pub basis: &'static str,
+    /// The days of the reports, each once, in order.
+    pub days: Vec<u32>,
+    /// In words.
+    pub words: String,
+}
+
+/// One of the side's own bases named by habit.
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub struct HabitWatersLine {
+    pub base: Handle,
+    pub place: Place,
+    /// Always `by habit`.
+    pub basis: &'static str,
+    /// In words.
+    pub words: String,
+}
+
+/// The estimate the asking seat's picture makes, its areas whose centre lies
+/// in `area` and its bases whose hex lies in it. `None` where it holds
+/// nothing.
+pub(crate) fn estimate_line(
+    ctx: &Ctx<'_>,
+    view: &SideView<'_>,
+    within: &dyn Fn(sim_core::hex::Hex) -> bool,
+) -> Option<SubmarineEstimateLine> {
+    let picture = crate::common::area_picture(view);
+    let bases: Vec<(sim_core::ids::BaseId, sim_core::hex::Hex)> =
+        view.bases().map(|b| (b.id, b.hex)).collect();
+    let estimate = sim_core::submarine_estimate::submarine_estimate(
+        &picture,
+        &bases,
+        view.submarine_doctrine(),
+    );
+    let areas: Vec<EstimateAreaLine> = estimate
+        .areas
+        .iter()
+        .filter(|area| within(area.centre))
+        .map(|area| EstimateAreaLine {
+            place: ctx.place(area.centre),
+            distance_hexes: area.distance_hexes,
+            reports: area.reports.iter().map(|hex| ctx.place(*hex)).collect(),
+            count: area.count,
+            basis: "reported",
+            days: area.days.clone(),
+            words: format!("Enemy submarines reported here, about {}.", area.count),
+        })
+        .collect();
+    let by_habit: Vec<HabitWatersLine> = estimate
+        .by_habit
+        .iter()
+        .filter(|waters| within(waters.hex))
+        .map(|waters| {
+            let base = ctx.base(waters.base);
+            let words = match &base.name {
+                Some(name) => format!("Enemy submarines may be expected off {name}."),
+                None => "Enemy submarines may be expected off this base.".to_string(),
+            };
+            HabitWatersLine {
+                base,
+                place: ctx.place(waters.hex),
+                basis: "by habit",
+                words,
+            }
+        })
+        .collect();
+    if areas.is_empty() && by_habit.is_empty() {
+        return None;
+    }
+    Some(SubmarineEstimateLine { areas, by_habit })
+}
+
 /// The part, or `None` when the side has no boat, no report of a submarine,
 /// no suspected waters and no doctrine. `today` is the day about to be played. The
 /// context must have its events set.

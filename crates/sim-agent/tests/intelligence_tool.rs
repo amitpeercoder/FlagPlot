@@ -243,7 +243,7 @@
 //!     day on the hashes of game A played without it. Two calls at one
 //!     moment give the same bytes. The tool is in `TOOLS` and in
 //!     `WATCHER_TOOLS`, a watcher's read of it for a seat gives what that
-//!     seat is given, and `VERSION` is 53.
+//!     seat is given, and `VERSION` is 54.
 //!
 //! 16. **Command levels on** (rule 5), over E.
 //!     - At `area:easier`, whose picture is the side's own belief, every
@@ -761,7 +761,7 @@ fn statement_1_the_parts_are_in_order_and_an_empty_part_is_left_out() {
         }
         assert_eq!(answer["kind"], "intelligence");
         assert_eq!(answer["format"], "flagplot-agent");
-        assert_eq!(answer["version"], 53);
+        assert_eq!(answer["version"], 54);
     });
     // Between them the four games give every part.
     assert_eq!(seen_a_part.len(), ORDER.len(), "{seen_a_part:?}");
@@ -2095,10 +2095,10 @@ fn statement_15_a_reading_that_changes_no_hash_and_a_watcher_has_it() {
     assert_eq!(with.day_hashes(), without.day_hashes());
     assert_eq!(with.day_hashes().len(), 4);
 
-    // The tool is in TOOLS and in WATCHER_TOOLS, and the interface is 53.
+    // The tool is in TOOLS and in WATCHER_TOOLS, and the interface is 54.
     assert!(TOOLS.contains(&"intelligence"));
     assert!(WATCHER_TOOLS.contains(&"intelligence"));
-    assert_eq!(VERSION, 53);
+    assert_eq!(VERSION, 54);
     let session = drive(A, |_, _| {});
     for side in SIDES {
         assert!(session.tools(side).contains(&"intelligence"));

@@ -1,0 +1,31 @@
+# Report figures of scenario 134 (decision 0223, stage D1: the estimate of the
+# enemy's boats). Every figure is a placeholder: invented so that the
+# scenario's statements rest on no die (every chance is 0), not historical. No
+# row sizes any of them. The game "command levels on" of
+# tests/scenario_134_the_estimate_of_boats.rs names this file with its
+# `reports` key. The live figures are in reports.toml.
+
+# Required by the loader and ignored once read: the scenario carries the flag.
+placeholder = true
+
+# Placeholders: no report ever arrives at another command, up, sideways or
+# down, so each command's picture holds only what it found itself.
+[up]
+on_time = "0"
+late = "0"
+
+[sideways]
+on_time = "0"
+late = "0"
+
+[down]
+on_time = "0"
+late = "0"
+
+# Placeholders, as scenario 62's. No row sizes any of them.
+[radio_reach_nm]
+carrier = 600
+battleship = 600
+cruiser = 600
+other_ship = 300
+base = 1000

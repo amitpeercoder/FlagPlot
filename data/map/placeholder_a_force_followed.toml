@@ -1,0 +1,18 @@
+# PLACEHOLDER MAP used by scenario 133 (decision 0220). A stretch of open sea
+# with one port; the geography is invented. A hex is 40 nm, as on every map.
+
+placeholder = true
+
+# Ranges are inclusive.
+[[region]]
+kind = "deep_sea"
+q = [-4, 24]
+r = [-8, 8]
+
+# Allied base 1's hex.
+[[hex]]
+q = 0
+r = 0
+kind = "coast"
+port_size = 3
+anchorage = true

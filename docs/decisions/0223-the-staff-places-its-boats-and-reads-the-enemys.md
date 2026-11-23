@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 23, 2026, on the designer's ques
 
 Summary: Since decision 0218 a side has boats, a commander can order a patrol of waters, and the staff spreads the boats evenly over those waters. Both navies' staffs do it the same way, no staff sends a boat out unless the commander orders a patrol, and what a side believes of enemy boats is only what a scenario tells it and the reports it holds. This plan gives each navy its own way of placing boats, lets the staff form a patrol under the orders that call for one, and gives the staff an estimate of the enemy's boats made from its own reports, the attacks it has suffered and, for the navy whose record shows it, habit.
 
-Standing: Planned on Nov 23, 2026; amended on review; stages 0 and A built.
+Standing: Planned on Nov 23, 2026; amended on review; stages 0 and A built; stage D1 built (see "As built: stage D1").
 
 ## Why
 
@@ -211,3 +211,61 @@ Owed, and not proved here:
 - The table's screen check was not run by the team on this branch; I run it before the tables are restarted.
 - `expects_boats_off_own_bases` is read by nothing until stage D1.
 - No game on file has two enemy bases that share a neighbouring hex, so ruling 1 is tested by no game.
+
+## Stage D1: the statements, as written (Nov 23, 2026)
+
+Written by the architect before any code. The statements and the areas worked by hand are the doc comment of `tests/scenario_134_the_estimate_of_boats.rs`, 15 of them, every test function empty and marked "statement written, not built". Nobody else changes a statement, a hex or a count there; a mismatch goes back to the architect.
+
+### The game
+
+Scenario 134, `data/scenarios/the-estimate-of-boats/134_the_estimate_of_boats.toml`, on scenario 131's map, 4 days, kept out of the loops that walk `data/scenarios/*.toml` (decision 0072). Eight Japanese boats lie on their stations; the 100 flying boats of an Allied base search the whole circle on day 1, an arc that holds one boat on day 2, and rest from day 3. No commander gives a command. The test makes its other games from the file's text: the habit for each side, suspected waters beside the estimate, command levels on with no report passed (`data/reference/reports_placeholder_scenario_134.toml`), and two worlds that differ in what the side cannot see.
+
+**The figures the tests read.** The frozen step 1 figures with `position_error_chance` 0, through `common::altered_reference`, so that a report names the boat's own hex; and the scenario's own submarine figures, `data/reference/submarines_placeholder_scenario_134.toml`, scenario 128's with `submarine_surfaced_share` 1 and `air_attack_damages_chance` 0, so that a boat in the arc is reported for certain and never harmed. A scenario's submarine figures are read where it names them and are not redirected to the frozen folder. All placeholders.
+
+**What the architect checked against the engine as it stands.** The file was run as it is, on those figures: each boat is sighted at a chance of 1 and reported at her hex in both pulses of day 1, boat 8 alone on day 2, the reports of day 1 are dropped in the afternoon of day 3 and boat 8's in the afternoon of day 4. That is the reports the estimate will read, by rules already built; the estimate itself is not built and nothing of it was run.
+
+### The statements in brief
+
+After day 1 the eight reports make four areas, begun in hex order: (-4,2) with four reports, about 2; (-1,2) with two, about 2; (0,-1), about 1; (6,-6), about 1. A report next to another area's report begins its own area where it is 3 hexes from that area's first report; a report within 2 of two first reports joins the earlier area. The areas shrink as reports are dropped, to one after day 3 and none after day 4. By habit, a side whose scenario says so is told each of its own bases, with no count, on every day. The other side is given nothing of it. With command levels on it is read from one command's picture. It is kept nowhere and drives nothing.
+
+### Rulings on what the plan left open
+
+- **D1. An area is told as waters, as suspected waters are:** its centre, which is the hex of its first report, the distance `estimate_join_hexes`, its reports' hexes in hex order, its count as "about N", its basis ("reported") and the days of its reports, each once, in order. Every report of an area lies within that distance of the centre by the way areas are made, so the chart hatches those waters.
+- **D2. A report within the distance of the first reports of two areas joins the one begun earlier.** The plan says a report "joins that area" and did not say which of two.
+- **D3. By habit names each base the side's own view gives as its own,** in base number order, by the base and its hex, with no count and no hexes worked, whatever reports are held. The first plan's test of a ship lately at the base is not in the amended plan and is not built.
+- **D4. With an area given to `list_contacts`,** the estimate's areas are those whose centre lies in it and the bases by habit those whose hex lies in it, as suspected waters are given by their centre.
+- **D5. The key is `submarine_estimate`,** beside `submarine_reports` and `suspected_waters`, left out where the estimate holds nothing. The briefing's `submarines` part is not changed.
+- **D6. The function takes a picture, the side's own bases and the side's own doctrine,** and neither a world nor the umpire's view. A seat at a command is read that command's picture; the side's seat with command levels on, the area's.
+
+### What it changes, and the numbers
+
+- **No state, no hash, no layout, no event, no draw, no rules label and no doctrine version:** it is a reading that no rule and no staff reads. `expects_boats_off_own_bases`, in the state since stage 0, is now read by it.
+- **The agent's interface rises,** for `list_contacts`. On `origin/main` today it is 51, and branches in flight will take 52 and 53, one of which changes `list_contacts` too. The builder merges `main` first, takes the next free number then, and says in the pull request which it took.
+- **Chapter 10** (Reports of submarines; Scenario keys and figures, where `expects_boats_off_own_bases` is said to be read by nothing) and the glossary ("Estimate of boats") change in the same pull request.
+
+### Owed, and not proved by the statements
+
+- **The chart** (hatched waters with the count, under the PIECES control) is proved by the table's screen check, not by this scenario.
+- **The days of an area's reports** are shown differing between areas, not within one: no game here has one area with reports of two days.
+- **`estimate_join_hexes`, 2, is a judgement** with no row under it, marked so where it is written.
+
+## As built: stage D1 (Nov 23, 2026)
+
+Built to the architect's statements of scenario 134 (`tests/scenario_134_the_estimate_of_boats.rs`), every hex and count as worked by hand; no statement was changed and all 15 hold, the 10 tests of the file passing with their ignore markers removed. Agent interface version 54 (main stood at 53 when this was built); no state, hash, layout, saved game, rules label or doctrine change.
+
+**The function** is `sim_core::submarine_estimate::submarine_estimate(picture: &CommandView, own_bases: &[(BaseId, Hex)], doctrine: SubmarineDoctrine) -> SubmarineEstimate`, in `crates/sim-core/src/submarine_estimate.rs`. It takes a picture, the side's own bases and the side's own doctrine and nothing else. `ESTIMATE_JOIN_HEXES` is 2, a constant marked a judgement where it is written, in no figure file. Reports are taken in hex order; a report joins the first area (the earliest begun) whose first report is within 2 of it, else begins one; a report is counted where it is more than one hex from every report counted before it in its area; the days of an area are the days of its reports, each once, in order; by habit is each of the side's own bases in base number order, whatever reports are held.
+
+**Where it is offered.** `list_contacts` gives `submarine_estimate` (`areas`, `by_habit`) beside `submarine_reports` and `suspected_waters`, left out when empty and as a whole when it holds nothing; the schema, the tool's MCP description, the rulebook (chapter 10, The estimate of the enemy's boats), the glossary ("Estimate of boats") and `docs/commands.md` say so. The briefing's `submarines` part, the tool `intelligence` and every other answer are unchanged. A seat is given the estimate of its own picture (`area_picture`), the bases of the side's own view, and the doctrine of the side's own view. The table's chart draws each reported area as faint red waters with its count, beside the reports (not hatched; proved by the screen check's run, not by a statement).
+
+**Choices the record left, made as the record's rulings read.** An area's words are "Enemy submarines reported here, about N." and a base's "Enemy submarines may be expected off NAME." Within an area the `reports` are given as places, the days as whole numbers. The test builds the habit, suspected-waters, command-levels, ninth-boat and cut-salvoes games from the file's text, and plays the seat-at-a-command games through a session (the seat placed before day 1, the scenario's own Allied orders given through `issue_orders`).
+
+**Comparison.** The recorded games' transcripts were remade with `regame.py` and each differs from the one before in its version line alone.
+
+### Rule card
+
+| Rule | Reads | Writes |
+| --- | --- | --- |
+| The estimate of the enemy's boats | one command's picture's reports of submarines; the side's own bases; the side's own `submarine_doctrine` | nothing: a reading, made again when asked |
+
+No draw is made and no event is added.
+

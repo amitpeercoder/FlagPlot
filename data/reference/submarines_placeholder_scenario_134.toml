@@ -1,0 +1,27 @@
+# Submarine figures of scenario 134 (decision 0223, stage D1: the estimate of
+# the enemy's boats). PLACEHOLDER DATA: every figure is invented so that the
+# scenario's statements rest on no die, and none is historical. No row sizes
+# any of them. They are scenario 128's placeholders with two changed, so that
+# a boat in a searching group's arc and range is reported for certain and is
+# never harmed by it:
+#
+#   submarine_surfaced_share   1 (scenario 128 has 0.25)
+#   air_attack_damages_chance  0 (scenario 128 has 0.25)
+#
+# The games of tests/scenario_134_the_estimate_of_boats.rs name this file with
+# their `submarines` key. The live figures are in submarines.toml.
+
+placeholder = true
+submarine_attacks_per_hour = "0.02"
+attacks_ship_dead_in_water = "5"
+held_down_pulses = 2
+hunt_damages_chance = "0.3"
+hunt_sinks_share = "0.2"
+submarine_surfaced_share = "1"
+air_attack_damages_chance = "0"
+air_attack_sinks_share = "0.2"
+submarine_false_hit_chance = "0.25"
+submarine_report_drop_age_pulses = 6
+
+[hit_chance]
+6950 = "0.5"
