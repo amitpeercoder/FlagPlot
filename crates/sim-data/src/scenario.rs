@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 use serde::Deserialize;
 use sim_core::believed::{BelievedForce, BelievedIntent, BelievedMen, LastKnown, Standing};
 use sim_core::choices::Moment;
-use sim_core::command::CommandKind;
+use sim_core::command::{CommandKind, SubmarineDoctrine, SubmarinePattern};
 use sim_core::commander::{Commander, Initiative, NamedCommander};
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
@@ -198,6 +198,49 @@ struct ScenarioFile {
     /// 1). Data on the map, not state.
     #[serde(default)]
     island: Vec<IslandSpec>,
+    /// What a scenario states of each side's doctrine for its navy and date
+    /// (decision 0223, stage 0): `[side.allied]` and `[side.japanese]`, each
+    /// optional.
+    side: Option<SidesSpec>,
+}
+
+/// The `[side.<side>]` tables (decision 0223, stage 0).
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct SidesSpec {
+    allied: Option<SideDoctrineSpec>,
+    japanese: Option<SideDoctrineSpec>,
+}
+
+/// How a side's staff uses its boats (decision 0223, stage 0):
+/// `submarine_pattern` (`off_bases` or `lines`) and
+/// `expects_boats_off_own_bases` (true or false), each optional. A side
+/// given neither has no pattern and expects nothing.
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct SideDoctrineSpec {
+    submarine_pattern: Option<String>,
+    expects_boats_off_own_bases: Option<bool>,
+}
+
+impl SideDoctrineSpec {
+    /// The doctrine, or why the word for the pattern is refused, naming the
+    /// side and the word.
+    fn doctrine(&self, side: Side) -> Result<SubmarineDoctrine, String> {
+        let pattern = match &self.submarine_pattern {
+            None => None,
+            Some(word) => Some(SubmarinePattern::from_name(word).ok_or_else(|| {
+                format!(
+                    "the {} side's submarine_pattern \"{word}\" is not a pattern: it is \"off_bases\" or \"lines\" (decision 0223)",
+                    side.name()
+                )
+            })?),
+        };
+        Ok(SubmarineDoctrine {
+            pattern,
+            expects_boats_off_own_bases: self.expects_boats_off_own_bases.unwrap_or(false),
+        })
+    }
 }
 
 /// An island (decision 0151, 1): a number, a name and its places in order.
@@ -3991,6 +4034,21 @@ impl Scenario {
         // The game's days, configuration beside the objectives (decision
         // 0194, 12): set once, here, where the world is made.
         world.set_game_days(file.days);
+        // Each side's submarine doctrine, as the scenario states it (decision
+        // 0223, stage 0).
+        if let Some(sides) = &file.side {
+            for (side, spec) in [
+                (Side::Allied, sides.allied.as_ref()),
+                (Side::Japanese, sides.japanese.as_ref()),
+            ] {
+                if let Some(spec) = spec {
+                    let doctrine = spec.doctrine(side).map_err(&fail)?;
+                    world
+                        .set_submarine_doctrine(side, doctrine)
+                        .map_err(|e| fail(e.to_string()))?;
+                }
+            }
+        }
         // Command levels go on before anything that reaches a belief
         // (decision 0134, 12): the starting contacts and estimates then reach
         // every picture as they reach the side's.

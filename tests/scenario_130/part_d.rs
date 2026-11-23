@@ -556,7 +556,8 @@ fn digests(relative: &str, days: u32) -> Vec<(u64, u64)> {
 /// reason, is the one it was. What the test cannot show is that the list
 /// itself is read by nothing in the day: that is a property of the
 /// engine, whose hash and day read no reason, shown by every other game
-/// on file giving the hash it gave.
+/// on file giving the hash it gave. The state hashes were remade for the
+/// state's layout v58 (decision 0223, stage 0); every digest is as it was.
 #[test]
 fn statement_20_changes_no_order_no_command_and_no_hash() {
     for (relative, days, expected) in PINNED {
@@ -582,48 +583,48 @@ const PINNED: &[Pinned] = &[
         S116,
         4,
         &[
-            (0xa1b193548bb62f45, 0x661cd42fbafd2b5e),
-            (0x383d56ed75ded4cd, 0x71194a63e9b46cf1),
-            (0x542c116d6b56c759, 0x342f60124116d86f),
-            (0x8d5c72716af1d5fd, 0x656027b30b72d70a),
+            (0xc1de6752be2e9eea, 0x661cd42fbafd2b5e),
+            (0xc99c76e69bfa6616, 0x71194a63e9b46cf1),
+            (0x193aad0d26235172, 0x342f60124116d86f),
+            (0xb52cc2a522a4296a, 0x656027b30b72d70a),
         ],
     ),
     (
         "54_a_force_that_stands_by_night.toml",
         3,
         &[
-            (0xdb9e2018299f3114, 0xa80a9a4a55c850f0),
-            (0x7219f7e250cc29fa, 0x09a83d2eebb5527b),
-            (0x2501df4bfd1cc56e, 0x4a1c194224410cb0),
+            (0xd2808a01b4c9a239, 0xa80a9a4a55c850f0),
+            (0x07b4907fc4bff6d1, 0x09a83d2eebb5527b),
+            (0x461386ea55454849, 0x4a1c194224410cb0),
         ],
     ),
     (
         "86_fed_with_the_lift.toml",
         4,
         &[
-            (0xa928a818e117489d, 0xb237741f6139a881),
-            (0x9f6e0a77c430f199, 0x1d6e037b3595d27a),
-            (0x6165030ec7a97225, 0xacf61aef0523d659),
-            (0x3d190b04ee4abda9, 0x613984aef5fc075d),
+            (0xee0a77b2c47dd356, 0xb237741f6139a881),
+            (0x78d50d859ec7e00c, 0x1d6e037b3595d27a),
+            (0xb5f4f2de316fa10a, 0xacf61aef0523d659),
+            (0x4635ab82e79c165a, 0x613984aef5fc075d),
         ],
     ),
     (
         "81_told_to_wait.toml",
         4,
         &[
-            (0x19ff23b03515e94b, 0x49959b8201418bcb),
-            (0x2333de9f3d81b013, 0x9b2677b0215848cd),
-            (0xfc5820cf52a57881, 0x1f27cd7ff58a73e1),
-            (0x37194efc949c90df, 0x58e85cf9e3cd634f),
+            (0xbf2b23ebe3e853f6, 0x49959b8201418bcb),
+            (0xc0f04e41468363b2, 0x9b2677b0215848cd),
+            (0xe96afeeb0eae10ec, 0x1f27cd7ff58a73e1),
+            (0x03f01cee1d428bce, 0x58e85cf9e3cd634f),
         ],
     ),
     (
         "82_how_much_must_be_known.toml",
         3,
         &[
-            (0xc2b70e1cc5fa3d60, 0xdc58225c411e3afe),
-            (0x149f4573b25e867b, 0x86e2df66d204821e),
-            (0x4f0530fc88a83d48, 0x87c6d5c7f0810bad),
+            (0x1baf9feb7420d613, 0xdc58225c411e3afe),
+            (0xebede3881f41816e, 0x86e2df66d204821e),
+            (0xad4adb2e78cdcc61, 0x87c6d5c7f0810bad),
         ],
     ),
 ];

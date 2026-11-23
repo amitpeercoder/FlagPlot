@@ -1843,6 +1843,9 @@ fn submarines_text(o: &mut Out, part: &SubmarinesPart) {
             waters.event.map_or(String::new(), ev)
         ));
     }
+    if let Some(doctrine) = &part.doctrine {
+        o.line(doctrine.words.clone());
+    }
 }
 
 /// What yesterday's change of side of bases did to the side (decision 0090,

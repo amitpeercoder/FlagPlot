@@ -678,5 +678,9 @@ name = "scenario_130_a_limit_binds_what_it_names"
 path = "scenario_130_a_limit_binds_what_it_names.rs"
 
 [[test]]
+name = "scenario_131_the_pattern_of_a_patrol"
+path = "scenario_131_the_pattern_of_a_patrol.rs"
+
+[[test]]
 name = "boats_in_the_midway_games"
 path = "boats_in_the_midway_games.rs"

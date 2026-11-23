@@ -281,6 +281,8 @@ fn cited(truth: &TruthState, commands: &BTreeMap<Side, CommandState>) -> Vec<(St
             pursue_leaves: _,
             pursuits,
             pursuit_refusals: _,
+            // Decision 0223: a figure of the side's doctrine, citing nothing.
+            submarine_doctrine: _,
         } = command;
         // A leave to pursue by answer names the event of the answer
         // (decision 0214).

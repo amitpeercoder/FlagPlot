@@ -892,8 +892,9 @@ fn the_hash_counts_the_types_in_the_air() {
     // The state's layout was raised for the new list (decision 0057), to
     // v54; decision 0214 raised it to v55 since, for a force's leave to
     // pursue, and decision 0212 to v56, for a ship's fire among her aircraft, and
-    // decision 0222 to v57, for a forces limit's `none_of`.
-    assert_eq!(sim_core::hash::STATE_VERSION, b"flagplot-state-v57");
+    // decision 0222 to v57, for a forces limit's `none_of`, and decision
+    // 0223 to v58, for a side's submarine doctrine.
+    assert_eq!(sim_core::hash::STATE_VERSION, b"flagplot-state-v58");
     let made = run(ALL, "1", &[]);
     let unmade = run(ALL, "0", &[]);
     // The fights are the same and the types differ: so do the hashes.

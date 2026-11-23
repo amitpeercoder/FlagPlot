@@ -305,6 +305,7 @@ fn walk_held_ids(
             pursue_leaves: _,
             pursuits,
             pursuit_refusals: _,
+            submarine_doctrine: _,
         } = command;
         // A pursuit by answer names the event of the commander's answer.
         for (force, pursuit) in pursuits.iter_mut() {

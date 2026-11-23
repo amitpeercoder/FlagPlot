@@ -417,6 +417,10 @@ fn a_step_carries_only_the_pictures_that_changed() {
 /// state version, rules label, doctrine and day hashes; 36, 50 and 58 also
 /// in the `limits` a staff's reason now speaks of, and nothing else: checked
 /// against the exports of 9bdc3062 with those taken out.
+/// Remade again for decision 0223, stages 0 and A (the state layout v58,
+/// the rules label 32, the doctrine `supply-58`): every file changes in its
+/// state version, rules label, doctrine and day hashes and nothing else:
+/// checked against the exports of 4dc0b4da with those taken out.
 #[test]
 fn a_scenario_with_command_levels_off_exports_as_it_did() {
     fn fnv(bytes: &[u8]) -> u64 {
@@ -425,16 +429,16 @@ fn a_scenario_with_command_levels_off_exports_as_it_did() {
         })
     }
     let before: [(&str, u64); 10] = [
-        ("01_transit", 0x7a4f_a0e3_c20a_fa66),
-        ("04a_night_action", 0xb834_9b89_4138_3d43),
-        ("05_eastern_solomons", 0x3498_80ad_dc3d_dd45),
-        ("21_landing", 0x6e6c_5765_f918_23c4),
-        ("23_fight_ashore", 0xc861_4b1e_70e7_47d8),
-        ("31_airfield_damage", 0x7216_f2ca_a016_2d42),
-        ("36_one_convoy", 0x4fe1_dc21_9a65_833e),
-        ("43_keep_two_bases_fed", 0x2d10_12a9_192c_a7c1),
-        ("50_neutralise_a_base", 0x342b_8134_e102_79af),
-        ("58_a_carrier_force_closes", 0xdc54_b231_7ac2_527b),
+        ("01_transit", 0x840f_f42a_8dda_109a),
+        ("04a_night_action", 0xffab_33ac_59c6_1d3d),
+        ("05_eastern_solomons", 0xfd51_9653_b6c4_1590),
+        ("21_landing", 0x24a0_dd4e_a2e1_71ef),
+        ("23_fight_ashore", 0x2e73_4f80_7153_96a6),
+        ("31_airfield_damage", 0xe810_db9d_7810_0c9e),
+        ("36_one_convoy", 0xf765_1eec_f795_c3c0),
+        ("43_keep_two_bases_fed", 0x28eb_cab0_cbb8_af99),
+        ("50_neutralise_a_base", 0xb41f_599c_cc37_91a9),
+        ("58_a_carrier_force_closes", 0xcb7a_54cb_e03f_0cb6),
     ];
     let prefix6 = br#"{"format":"flagplot-replay","version":6,"#;
     let prefix5 = br#"{"format":"flagplot-replay","version":5,"#;

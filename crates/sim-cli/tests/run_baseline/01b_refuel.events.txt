@@ -2,11 +2,11 @@ Scenario 1b: Refuelling, Noumea to Espiritu Santo and back
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash c30a3ee884218f59  13 events
-day   2  hash 025b8aab5b58f6db  8 events
-day   3  hash 0c692e98b67964a9  12 events
-day   4  hash 5a406cf0029f4f66  8 events
-day   5  hash b3b1e5aaf2a13c27  2 events
+day   1  hash af1370052c0f57be  13 events
+day   2  hash a9d7dce722d81a90  8 events
+day   3  hash 4ac5d08c326d9c26  12 events
+day   4  hash 8c21ffdbce808fc5  8 events
+day   5  hash a3e1db5d660dc654  2 events
 
 #1 D1 -         order:1 accepted for task_force:1  <- order:1
 #2 D1 -         order:2 accepted for task_force:1  <- order:2

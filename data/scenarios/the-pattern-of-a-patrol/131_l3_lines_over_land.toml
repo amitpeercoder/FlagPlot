@@ -1,0 +1,126 @@
+# Scenario 131, game L3: the pattern of a patrol (decision 0223 as amended
+# on review, stages 0 and A). As L1 with (-1, 1) a hex of land and six boats.
+#
+# The Japanese side has the boats, at its home base at (-9, 0); the Japanese
+# commander orders the waters within 3 hexes of (0, 0) patrolled with
+# submarines and gives both leaves. The statements, the games and the hexes
+# worked by hand are in tests/scenario_131_the_pattern_of_a_patrol.rs.
+#
+# Kept out of the loops that walk data/scenarios/*.toml by being in this
+# folder (decision 0072).
+#
+# PLACEHOLDER DATA. The boats, bases, figures and map are invented. The class
+# and the torpedo are those of scenario 128.
+
+name = "Placeholder scenario 131, game L3: the pattern of a patrol"
+placeholder = true
+seed = 1942
+days = 3
+map = "../../map/placeholder_patterns_l3.toml"
+ship_classes = "../../reference/ship_classes.csv"
+port_sizes = "../../reference/port_sizes.csv"
+aircraft_types = "../../reference/aircraft_types.csv"
+search = "../../reference/search.toml"
+surface_combat = "../../reference/surface_combat.toml"
+submarine_classes = "../../reference/submarine_classes_placeholder_scenario_128.csv"
+submarine_torpedoes = "../../reference/submarine_torpedoes_placeholder_scenario_128.csv"
+submarines = "../../reference/submarines_placeholder_scenario_128.toml"
+
+# How the Japanese side's staff uses its boats (decision 0223, stage 0).
+[side.japanese]
+submarine_pattern = "lines"
+expects_boats_off_own_bases = false
+
+[[base]]
+id = 1
+name = "Placeholder Japanese base 1"
+side = "japanese"
+q = -9
+r = 0
+airfield = false
+
+[[base]]
+id = 2
+name = "Placeholder Allied base 2"
+side = "allied"
+q = 8
+r = 0
+airfield = false
+
+[[submarine]]
+id = 1
+name = "Placeholder submarine 1"
+side = "japanese"
+class = 6900
+q = -9
+r = 0
+home = 1
+
+[[submarine]]
+id = 2
+name = "Placeholder submarine 2"
+side = "japanese"
+class = 6900
+q = -9
+r = 0
+home = 1
+
+[[submarine]]
+id = 3
+name = "Placeholder submarine 3"
+side = "japanese"
+class = 6900
+q = -9
+r = 0
+home = 1
+
+[[submarine]]
+id = 4
+name = "Placeholder submarine 4"
+side = "japanese"
+class = 6900
+q = -9
+r = 0
+home = 1
+
+[[submarine]]
+id = 5
+name = "Placeholder submarine 5"
+side = "japanese"
+class = 6900
+q = -9
+r = 0
+home = 1
+
+[[submarine]]
+id = 6
+name = "Placeholder submarine 6"
+side = "japanese"
+class = 6900
+q = -9
+r = 0
+home = 1
+
+# The Japanese commander's commands
+[[command]]
+day = 1
+side = "japanese"
+kind = "set_intent"
+intent = 1
+intent_kind = "patrol"
+hex = [0, 0]
+distance = 3
+
+[[command]]
+day = 1
+side = "japanese"
+kind = "set_leave"
+leave = "prepare"
+given = true
+
+[[command]]
+day = 1
+side = "japanese"
+kind = "set_leave"
+leave = "launch"
+given = true

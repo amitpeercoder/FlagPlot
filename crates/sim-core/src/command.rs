@@ -1727,6 +1727,61 @@ pub struct CommandState {
     /// 8). Kept: a contact number is never reused in a side's series, so a
     /// refusal of a contact no longer held binds nothing. Added at the end.
     pub pursuit_refusals: BTreeSet<(TaskForceId, u32)>,
+    /// How the side's staff uses its boats, as its scenario states it for
+    /// its navy and date (decision 0223, stage 0). Set when the game is made
+    /// and never changed by a rule or a command. Added at the end.
+    pub submarine_doctrine: SubmarineDoctrine,
+}
+
+/// The pattern the side's staff places the boats of a patrol in (decision
+/// 0223, stage A): off enemy bases (the American way of 1942) or in lines
+/// across the approach (the Japanese way of 1942).
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Debug)]
+pub enum SubmarinePattern {
+    OffBases,
+    Lines,
+}
+
+impl SubmarinePattern {
+    /// A stable number for the pattern. Never renumber: it feeds the state
+    /// hash. 0 is no pattern.
+    pub const fn code(self) -> u8 {
+        match self {
+            SubmarinePattern::OffBases => 1,
+            SubmarinePattern::Lines => 2,
+        }
+    }
+
+    /// The word a scenario, a save and an answer use: `off_bases` or
+    /// `lines`.
+    pub const fn name(self) -> &'static str {
+        match self {
+            SubmarinePattern::OffBases => "off_bases",
+            SubmarinePattern::Lines => "lines",
+        }
+    }
+
+    /// The pattern a word names, if it names one.
+    pub fn from_name(word: &str) -> Option<SubmarinePattern> {
+        match word {
+            "off_bases" => Some(SubmarinePattern::OffBases),
+            "lines" => Some(SubmarinePattern::Lines),
+            _ => None,
+        }
+    }
+}
+
+/// How a side's staff uses its boats (decision 0223, stage 0): the side's
+/// own, known to it and to no one else. A side given neither value by its
+/// scenario has no pattern and expects nothing, and plays as before.
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
+pub struct SubmarineDoctrine {
+    /// The pattern of a patrol, or `None` for the spread of decision 0218.
+    pub pattern: Option<SubmarinePattern>,
+    /// Whether the side expects enemy boats off its own bases by habit.
+    /// Stored and shown; read by no rule yet (decision 0223, stage D1 reads
+    /// it).
+    pub expects_boats_off_own_bases: bool,
 }
 
 impl CommandState {
@@ -2247,7 +2302,8 @@ impl CommandState {
         force.and_then(|(force, ships)| self.hold_on_force(force, ships))
     }
 
-    /// Whether the command state is empty: nothing was ever set. A side
+    /// Whether the command state is empty: nothing was ever set, and the
+    /// scenario stated no submarine doctrine (decision 0223, stage 0). A side
     /// with an empty command state is played exactly as before stage 1.
     pub fn is_empty(&self) -> bool {
         self.intents.is_empty()
@@ -2262,6 +2318,7 @@ impl CommandState {
             && self.pursuit_refusals.is_empty()
             && self.leaves == Leaves::default()
             && self.next_plan == 1
+            && self.submarine_doctrine == SubmarineDoctrine::default()
     }
 }
 

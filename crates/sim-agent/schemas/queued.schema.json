@@ -8,7 +8,7 @@
   "additionalProperties": false,
   "properties": {
     "format": { "const": "flagplot-agent" },
-    "version": { "const": 50 },
+    "version": { "const": 51 },
     "kind": { "const": "queued" },
     "clock": {
       "type": "object",
