@@ -3340,7 +3340,19 @@ pub(crate) fn preview(
     let n = Names::new(with);
     let intent = previewed_intent(with, &request.kind);
     let (now_json, _, now_proposal) = staff_side_json(&Names::new(as_is), staff, as_is, intent);
-    let (with_json, _, with_proposal) = staff_side_json(&n, staff, with, intent);
+    let (mut with_json, _, with_proposal) = staff_side_json(&n, staff, with, intent);
+    // Decision 0221, the staff's reading: the tree the staff would form for
+    // the intent with the change, the orders it would hand in for it and its
+    // reason, as `propose` gives them for an intent in force, so that a draft
+    // is read in the same shape as a plan.
+    if let (Some(p), Some(map)) = (with_proposal.as_ref(), with_json.as_object_mut()) {
+        map.insert("tree".into(), tree_json(&n, with, p));
+        map.insert(
+            "would_hand_in".into(),
+            with_day(decisions_json(&n, &p.decisions), with.day() + 1),
+        );
+        map.insert("reason".into(), n.value(&reason_to_json(&p.reason)));
+    }
     answer(
         "preview",
         json!({

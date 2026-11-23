@@ -166,8 +166,11 @@ pub const FORMAT: &str = "flagplot-agent";
 /// `release` of a boat (`submarine`), `set_limit` forces with `submarines`;
 /// `list_contacts`' `submarine_reports` and `suspected_waters`; a boat's
 /// `hands` in `list_forces` (the staff's, the commander's or free); and the
-/// `stations` of `propose` and `preview` for a patrol intent.
-pub const VERSION: u32 = 48;
+/// `stations` of `propose` and `preview` for a patrol intent. 49 adds to
+/// `preview`'s `with_change` the proposal's `tree`, `would_hand_in` and
+/// `reason`, as `propose` gives them for an intent in force, so that a draft
+/// is read in the shape of a plan (decision 0221, the staff's reading).
+pub const VERSION: u32 = 49;
 
 /// The answer to a question about something the side does not know of: a
 /// unit of the enemy, a number that does not exist, an event the side may not

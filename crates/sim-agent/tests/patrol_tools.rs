@@ -251,3 +251,30 @@ fn the_waters_the_side_suspects_are_listed_and_no_enemy_boat_is() {
     assert!(japanese.get("submarine_reports").is_none(), "{japanese}");
     assert_eq!(japanese["contacts"], json!([]));
 }
+
+/// Decision 0221, the staff's reading: a preview of an order not yet given
+/// carries in `with_change` the proposal's tree, what it would hand in and
+/// its reason, the same as `propose` gives once the order is queued; the copy
+/// as things stand, with no such order, carries none of them.
+#[test]
+fn a_preview_of_a_draft_carries_the_proposal_as_propose_gives_it() {
+    let mut s = session("");
+    let draft = json!({"intent_kind": "patrol", "hex": [5, 0], "distance": 2});
+    let mut asked = draft.clone();
+    asked["command"] = json!("set_intent");
+    let a = call(&mut s, Side::Japanese, "preview", asked);
+    assert_eq!(a["valid"], true, "{a}");
+    let with = &a["with_change"];
+    for key in ["tree", "would_hand_in", "reason"] {
+        assert!(with.get(key).is_some(), "{key}: {a}");
+        assert!(a["as_things_stand"].get(key).is_none(), "{key}: {a}");
+    }
+    call(&mut s, Side::Japanese, "set_intent", draft);
+    let proposal = call(&mut s, Side::Japanese, "propose", json!({"intent": 1}));
+    assert_eq!(with["tree"], proposal["tree"], "{a}\n{proposal}");
+    assert_eq!(
+        with["would_hand_in"], proposal["would_hand_in"],
+        "{a}\n{proposal}"
+    );
+    assert_eq!(with["reason"], proposal["reason"], "{a}\n{proposal}");
+}
