@@ -77,3 +77,42 @@ What the record gives (the research):
 
 1. **The reserve and the placeholder stock** (rules 5 and 7) need a number of days the record does not give. The plan uses 30 days for both, marked as placeholders. Say if another figure is wanted.
 2. **Midway gets no supply in the days played** (rule 10), because the record's one ship arrived before them. Say if a supply ship should enter anyway, as a placeholder, to give the Japanese side something to cut.
+
+## Amended on review, Nov 23, 2026
+
+A fresh reader was given this record, the research, the rulebook and the code, and found eight things that had to be mended before a build. The architect accepts them. The plan's central claim, that this is a rule for scenarios and needs no new mechanism, was wrong, and so was what the architect told the designer when the question was asked: that the short games are broken for want of a rear base. Where this section and the rules above differ, this section holds. Rules 9 to 11 are withdrawn as written.
+
+### What the review found
+
+- **In the two five-day games supply does not bind.** Port Moresby's 450 t is 30 days for its men in a game of 5. The Allied side has no transport in the Coral Sea, and Townsville is 16 hexes away: no run could finish in the game. A rear base there would change nothing but what the staff's reason says, and a player who named it as a source would have his hold's plan fail for want of a ship. The reason as decision 0222, rule 1 now gives it ("lives on what it has: 30 days of supply today") is the true and sufficient answer in those games.
+- **A scenario cannot give a base a port.** Every hex of the generated maps is port size 0 and a base has no port key. Rule 8 needs a loader change, and it read the port table wrongly: the table is by size, not by berths, and three berths at its rates is 9,000 t a day, far above Nouméa in August and September 1942.
+- **A large rear base would be chosen as the source of "control an island"** by the rule of most supply above reserve, with no transport lying at it, and supply to Lunga would stop. The choice rule has to be settled first (decision 0222, step 3).
+- **Rules 5 and 7 give nothing where nothing draws on the base:** Townsville, Nouméa and Espiritu Santo have no garrison or aircraft in their scenarios, and a line of 0 is refused.
+- **Rule 2's "could" was not defined and was applied as "did" where it suited.** By the rows, carriers were detailed towards Townsville; Meiyo Maru was sunk on the Rabaul approach on day 2 of the 39 days carrying men for Guadalcanal; Shortland fed Guadalcanal and was called forward.
+- **The three kinds did not hold together:** there was no kind for a rear base fed from another base on the map, and rule 4 gave a forward base a line.
+- **Midway's stock from its gasoline would ground Midway:** 543,000 gallons is about 1,460 t against about 2,000 t the game's own figures use in five days, since aviation fuel is one part of the game's supply and not the whole.
+- **The 39 days the table plays are copies of a closed proof's files,** and `07_full_slice.toml` feeds a validation measure, a determinism test, a recorded game and two soak scenarios. The plan named no file.
+- **The record does give levels of reserve** (`docs/research/oob/supply-levels-and-convoy-cycles.md`): 120 and 90 days authorised for South Pacific bases from July 1942, as minimum reserves to be drawn on in emergency. They are authorised levels and not stocks on hand. "30 days" was the architect's and rested on nothing.
+- **The record was overread** in four places: Port Moresby's Townsville convoys are dated from June 1942, not May; no source says Rabaul's line was not cut; Nouméa's 5,000 t a day is December, after a stevedore battalion came; Lunga's 3,000 t is a limit of 29 September, after the 39 days.
+
+### What stands
+
+1. **Nothing is unlimited, and nothing is changed in the two five-day games.** Their bases are forward bases living on their stock, which is true to the days they cover.
+2. **The vocabulary,** corrected: a base is **forward** (its stock and what ships bring), **fed from a base on the map** (ships the staff routes), or **on a line** (tons a day from off the map). A base may be both fed and feeding.
+3. **A line is a named simplification, not a finding that the leg was safe.** It is used where the ships of a leg are not in the scenario. Where the rows say the leg was struck in the period, the scenario's notes say so beside the line.
+4. **The economy's seam** is the line's tons a day and nothing more is claimed for it here. `docs/design/economy.md` asks for cargo at the map's edge in real ships and for quiet routes as a pool of tonnage; a line is the stand-in until then, and the note is not changed by this record.
+
+### What is done next, in order
+
+1. **Measure before anything is planned further.** The 39 days, staff against staff, on 100 seeds, from a copy of the table's game: each base's supply and fuel by day, the first day each falls to its reserve or to nothing, what the staff shipped and what it could not. The question is whether any base's stock binds, where and when. Nothing is changed by it. If nothing binds but the Japanese hunger at Lunga already named (decision 0159), this record ends here and that miss is taken up on its own.
+2. **If a rear base binds,** four pieces of work are owed before a scenario changes, each planned and reviewed in its turn:
+   - a scenario key for a base's port, with rates from a derivation that reads the rows by their dates;
+   - the staff's choice of a source (decision 0222, step 3), so that a far, full base with no transport is not chosen;
+   - a base fed from another base on the map, for fuel as well as supply;
+   - the reserve, from the authorised levels, with the ruling that turns a level into a stock.
+3. **The table's 39 days get a file of their own** before any of that touches them, so that no closed proof's scenario and no frozen figure moves.
+4. **The gaps the research lists stay open:** stocks and rates for Rabaul, Truk, Shortland, Port Moresby and Espiritu Santo.
+
+### The designer's questions, as they stand
+
+Both are withdrawn: no reserve figure is set by this record, and Midway is not changed.
