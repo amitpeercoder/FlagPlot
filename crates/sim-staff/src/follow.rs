@@ -156,9 +156,15 @@ impl Day<'_, '_> {
 
     fn held_contacts(&self) -> Vec<Held> {
         let today = self.today;
-        let mut found: Vec<Held> = self
-            .area
-            .contacts()
+        // The commander's picture (decision 0220, 12): the area command's,
+        // which with command levels off holds the side's own belief.
+        let area = self.view.command(sim_core::pictures::CommandRef::Area);
+        let contacts: Vec<&sim_core::belief::Contact> = match &area {
+            Some(command) => command.contacts().collect(),
+            None => self.area.contacts().collect(),
+        };
+        let mut found: Vec<Held> = contacts
+            .into_iter()
             .map(|c| {
                 let (day, pulse) = report_pulse(today, Pulse::Night, c.age_pulses);
                 Held {

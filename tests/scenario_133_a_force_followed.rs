@@ -2485,7 +2485,6 @@ fn command_levels_on_the_order_reads_the_areas_picture() {
 }
 
 #[test]
-#[ignore = "statement 40: the staff's following reads the side's contacts, not the area command's picture (crates/sim-staff/src/follow.rs, held_contacts, via known_to(Area).view().contacts()); to the architect"]
 fn command_levels_on_the_order_keeps_the_report_the_area_heard() {
     let played = play_file("133_a_followed.toml", levels_on);
     // The order takes contact 2 and keeps (14,0), the morning of day 2, where
