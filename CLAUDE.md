@@ -21,6 +21,7 @@ If a spec or a rule is ambiguous or looks wrong, stop and ask. Do not guess. A d
 | Write anything a player, an agent or the UI will read | `docs/engineering/truth-and-belief.md`, and decisions 0047 to 0051 |
 | Add a crate, a dependency or a file that reads data | `docs/engineering/layout.md` |
 | Touch `data/oob`, `data/reference` or `data/derivation`, or use `references/` | `docs/engineering/data-rules.md`, then `data/oob/README.md` |
+| Start a working session, or wonder which model does a job | `docs/engineering/running-the-project.md`: the manager, the architect and the developers, what goes to the architect, and the working practices |
 | Build a scenario or its test, brief a developer, or open a pull request | `docs/engineering/roles-and-tests.md`. A test on the frozen figures: `data/scenarios/step2-frozen/README.md`. A scenario written and not to be run yet is kept out of the loops that walk `data/scenarios/*.toml`, as decision 0072 says |
 | Run a command and want to know what it does | `docs/commands.md` |
 | Think about what is not planned yet | `docs/design/` (intelligence, materials and economy, storytelling and commands, planning an operation, command levels and what each knows and reports, the plan for ground combat: stages 1 to 3 built, and marching, decision 0094). `docs/rules-comparison.md`: the gaps against another game's manual, triaged by decision 0102 |
@@ -107,11 +108,12 @@ The first three must pass before a commit; CI runs them, then runs scenario 1, e
 ## Who decides what
 
 - **Amit, the product manager:** what the game is, the specs, every decision marked "needs review", and the plan for each scenario or rule before it is built.
-- **The architect (the main session), the overall architect and project manager since Nov 13, 2026:** settling data, plans, specs, hand calculations, decision records, crate boundaries, and the final review and merge of each pull request. It plans and rules; Opus team leads carry out the work with Sonnet developers under them, and the architect reads their pull requests. Use the cheapest model that can do the job well.
+- **The manager (the main session, Opus, since Nov 23, 2026):** runs the work: what comes next, briefing Sonnet developers and reading what they build, every pull request and its merge, and the report to Amit. It does not write a plan, a statement or an expected number, and does not rule: those go to the architect.
+- **The architect (the most capable model, called by the manager for one job at a time):** settling data, plans, specs, hand calculations, decision records, crate boundaries and rulings. Use the cheapest model that can do the job well.
 - **Data is settled by the architect, not by Amit,** with the reason written on the row, in the rules file or in a decision record. The architect keeps `docs/step2-spec.md` and `data/validation/` and settles what the measures read; the spec session that owned them is archived.
 - **Questions go up, not sideways.** A developer who finds a brief or a spec unclear stops and asks. Only the product managers settle a spec question.
 
-`docs/engineering/roles-and-tests.md` has the full table and the rules of delegation.
+`docs/engineering/roles-and-tests.md` has the full table and the rules of delegation. `docs/engineering/running-the-project.md` has who sits where.
 
 ## Status
 
