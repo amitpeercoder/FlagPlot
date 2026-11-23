@@ -1236,6 +1236,10 @@ def the_limits_on_the_paper(bridge):
           "the page holds the limits model, the LIMITS part of the paper and the order's limits sent with its preview")
     check("set_limit" not in sign and "supplyForces" not in sign and "api('approve', { preview: no })" in sign and "limits_queued" in sign,
           "signing is one approval of the preview: it sends no limit and no risk itself, and checks the count of limits that went")
+    check("operate_carriers: ['targets', 'risk']," in text and "patrol: ['submarines']" in text,
+          "a carrier force's own order offers no air groups (the groups aboard go with their force) and a patrol only its boats")
+    check("if (t && !f && (r.limits || []).length) t.reasons.push(" in text,
+          "a reason the reading has no plain words for keeps its list of limits, so a rank it speaks of is still a link")
     check("lim.chosen.source = lim.chosen.ships = true" in text and "WE CHOSE IT FOR YOU" in text and "limit.air_groups" not in text,
           "the table's own source is put in the limits as a choice the player may change, and a hold no longer names its air groups")
     check("area: pickArea" in text and "picking === 'route' || picking === 'station' || picking === 'area'" in text and "MOVE ON THE CHART" in text,

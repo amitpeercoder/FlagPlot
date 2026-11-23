@@ -310,6 +310,7 @@ button:disabled { opacity: 0.45; cursor: default; }
 .sheet .doc .ordl .state { font-size: 12px; letter-spacing: 0.08em; color: var(--paper-dim); }
 .sheet .doc .ordl .work { flex: 1 1 100%; padding-left: 1.6em; }
 .sheet .doc .ordl .ctl { margin-left: auto; display: inline-flex; gap: 6px; }
+.sheet .doc .ordl .ctl button.up, .sheet .doc .ordl .ctl button.down { min-width: 32px; min-height: 30px; padding: 0 6px; font-size: 16px; }
 .sheet .doc .ordl:focus-visible { outline: 2px solid #f0c36a; outline-offset: 2px; }
 .sheet .doc .ordrule { margin-top: 8px; font-family: var(--f-ui); font-size: 12px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--paper-dim); border-top: 1px solid #cfc6a8; padding-top: 4px; }
 .sheet .doc .ordbar, .sheet .doc .ordsigned { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; padding: 8px 0; }
@@ -3543,7 +3544,10 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
     // What cannot be done, as a fact under the task it belongs to, with what would change it in that task's WHY.
     ((pr.would_hand_in && pr.would_hand_in.no_orders) || []).forEach(function (r) {
       if (/^Taking plan/.test(String(r.worked || ''))) return;
-      var k = r.serves && r.serves.intent, t = k != null ? by[k] : null, f = t && plainFact(r.worked); if (!f) return;
+      var k = r.serves && r.serves.intent, t = k != null ? by[k] : null, f = t && plainFact(r.worked);
+      // A reason the table has no plain words for still says which limits it speaks of (decision 0222, rule 5).
+      if (t && !f && (r.limits || []).length) t.reasons.push({ binding: [], would_change: [], evidence: [], limits: r.limits });
+      if (!f) return;
       f.lines.forEach(function (l) { if (t.facts.indexOf(l) < 0) t.facts.push(l); }); t.reasons.push({ binding: r.binding || [], would_change: (r.would_change || []).concat(f.changes), evidence: [], limits: r.limits || [] });
     });
     (tr.no_orders || []).forEach(function (s) { var m = /\bintent:(\d+)/.exec(s), t = m && by[+m[1]]; if (t && !t.units.length && !t.facts.length && t !== root) t.nothing.push(s); });
@@ -4847,7 +4851,7 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
     cover: ['air_groups', 'risk'],
     deny: ['ships', 'air_groups', 'in_place', 'targets', 'waters_first', 'risk'],
     neutralise: ['ships', 'air_groups', 'in_place', 'targets', 'risk'],
-    operate_carriers: ['air_groups', 'targets', 'risk'],
+    operate_carriers: ['targets', 'risk'],
     stand_at: ['risk'],
     take_place: ['ships', 'air_groups', 'land_units', 'source', 'area', 'targets', 'landing', 'risk'],
     control_island: ['ships', 'air_groups', 'land_units', 'source', 'area', 'targets', 'landing', 'risk'],
@@ -5080,10 +5084,6 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
     return items.concat(limPortShips()).sort(byName);
   }
   function limAir(kind) {
-    if (kind === 'operate_carriers') {
-      var a = limGet('task_force:' + (limCtx ? unitNo(limCtx.top.task_force) : draft.ends[parseInt(chosen('end'), 10) || 0][1].task_force)), out = [];
-      (a && a.air_groups || []).forEach(function (x) { if (x.name) M.names[x.handle] = cleanName(x.name); out.push({ h: x.handle, label: nm(x.handle) }); }); return out.sort(byName);
-    }
     return M.air.filter(function (x) { return !x.lost_with_base; }).map(function (x) { return { h: x.air_group.handle, label: nm(x.air_group.handle) }; }).sort(byName);
   }
   // A kind of forces: the staff's choice, use only these (and a list to tick), or none.
