@@ -126,7 +126,7 @@ From decision 0222 (the designer's answer 2, and "As built: the engine", rule 7)
 | Limit | Orders on which nothing reads it |
 | --- | --- |
 | Forces: ships and task forces | Cover a base, strike ships, search waters, raid, patrol, build up a base |
-| Forces: air groups | Keep supplied, stand at, patrol |
+| Forces: air groups | Keep supplied, stand at, patrol; operate a carrier force (the groups aboard go with their force: a limit naming one of them leaves every one ordered, seen on Midway at the table, decision 0222 step 4) |
 | Forces: land units | Every kind but hold, ready a landing, build up a base, take a place and control an island |
 | Forces: submarines | Every kind but patrol |
 | Forces: source | Every kind but keep supplied, hold, take a place and control an island |
@@ -136,6 +136,8 @@ From decision 0222 (the designer's answer 2, and "As built: the engine", rule 7)
 | Risk | Patrol |
 
 From decision 0222, ruling H: a preview does not show the approvals that prepare and release a plan.
+
+From decision 0222, step 4: a preview takes one order with its limits or one limit: several ranks cannot be read as one change.
 
 ## Not planned
 
