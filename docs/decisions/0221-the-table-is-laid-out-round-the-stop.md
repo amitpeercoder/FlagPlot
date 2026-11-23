@@ -445,3 +445,15 @@ On the designer's words about an order's THE STAFF'S READING on the Coral Sea ("
   - A hold made by an order is named without the order. Linking it would need the order's number in the hold's words (`hold_words` prints the maker without it).
   - The plan's paper's in-force "cannot be met" line still shows the staff's sentence.
   - Some diary and evening-report lines that do not pass through the shared wording were not traced.
+
+### The architect's rulings on pull request 694
+
+Read: the change to `preview` in `staffing.rs`, its test, and the page's `readingView`, `readingTop`, `plainFact`, `orderFound`, `orderLink`, `openOrder` and the change to `reasonWords`.
+
+1. **The preview carries the tree: accepted.** The ruling assumed it did. Giving the draft the same three fields `propose` gives is the smallest change that keeps one structure for a draft and a plan, and the test holds them equal to `propose`'s once the order is queued. Nothing a side may not know is added: the fields are worked from the same proposal the preview already made.
+2. **The page and the engine go together.** A page of this pull request on an engine of interface 48 finds no tree and would say "Nothing can serve this order yet." of an order that can be served. The page is put on a table only with the engine rebuilt.
+3. **`plainFact` reads the staff's sentences: accepted for now, and owed.** It knows two sentences by their words, and where it knows none the staff's own sentence is said, so a change to the engine's words loses the plain form and not the fact. The lasting form is a reason that carries what it is about as fields. Decision 0222's engine step gives a reason its limits; the bases, the distances and the order a unit serves belong beside them. Open work.
+4. **The order a unit serves is found by its number, not its words: right.** The mark the page puts in the text for it is the page's own and never leaves the page.
+5. **"Task Force 17 is not free: it serves your order to operate Task Force 17 from …" stands.** The force is named twice because the order's own words name it. An order is said as the player gave it, everywhere.
+6. **The reading at balanced risk stays as it is, said only where the risk chosen is another.** Decision 0222's engine step makes a preview take an order with its limits together, and the reading is worked at the chosen risk when the table uses it (0222, step 4).
+7. **Left open, as the lead lists them,** and one more: the link to an entry under SIGNED was not tried in a browser.
