@@ -517,7 +517,13 @@ impl World {
         // (decision 0151, 8 and 9).
         let forces_of = |plan: &Plan| -> Result<Cow<'_, ForcesLimit>, CommandRefusal> {
             let owner = state.intents.get(&plan.intent);
-            let forces = match owner.and_then(|intent| intent.limits.forces.as_ref()) {
+            // Decision 0228, the architect's ruling on the build: a run of a
+            // hold's plan draws on the staff's supply under it, for a side
+            // whose staff chooses its sources.
+            let supply_limit = state.supply_limit_under_hold(plan.intent);
+            let forces = match supply_limit
+                .or_else(|| owner.and_then(|intent| intent.limits.forces.as_ref()))
+            {
                 Some(forces) => Cow::Borrowed(forces),
                 None => owner
                     .filter(|i| {
@@ -1546,11 +1552,16 @@ impl World {
                 // supplied" under an island's hold (decision 0151, 8).
                 let source = {
                     let state = &self.command[&side];
-                    state.intents[&intent]
-                        .limits
-                        .forces
-                        .as_ref()
+                    state
+                        .supply_limit_under_hold(intent)
                         .and_then(|forces| forces.source)
+                        .or_else(|| {
+                            state.intents[&intent]
+                                .limits
+                                .forces
+                                .as_ref()
+                                .and_then(|forces| forces.source)
+                        })
                         .or_else(|| state.nearest_forces(intent).and_then(|f| f.source))
                         .expect("the forces limit and its source were checked")
                 };

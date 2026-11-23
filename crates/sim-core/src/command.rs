@@ -1991,6 +1991,26 @@ impl CommandState {
         None
     }
 
+    /// The forces limit a run of the plan of `owner` draws on in place of the
+    /// owner's own (decision 0228, the architect's ruling on the build): for a
+    /// side whose staff chooses its sources, where `owner` is a "hold a
+    /// place", the forces limit of the lowest-numbered "keep supplied" in
+    /// force directly under it that has one. `None` otherwise.
+    pub fn supply_limit_under_hold(&self, owner: IntentId) -> Option<&ForcesLimit> {
+        if !self.staff_chooses_sources {
+            return None;
+        }
+        let hold = self.intents.get(&owner)?;
+        if !matches!(hold.kind, IntentKind::Hold { .. }) {
+            return None;
+        }
+        self.intents_in_force()
+            .filter(|i| {
+                i.parent == Some(owner) && matches!(i.kind, IntentKind::KeepSupplied { .. })
+            })
+            .find_map(|i| i.limits.forces.as_ref())
+    }
+
     /// Whether `intent` owns a plan of its own: a root, or an intent formed
     /// with one (see [`CommandState::forms_own_plan`]).
     pub fn owns_plan(&self, intent: &Intent) -> bool {
