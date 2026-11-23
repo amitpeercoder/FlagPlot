@@ -664,6 +664,24 @@ type HeldRow = (u32, Hex, ShipKind, u32, u32);
 
 fn held_by(world: &sim_core::world::World) -> Vec<HeldRow> {
     let view = world.side_view(Side::Allied);
+    // With command levels on the order reads the area command's picture.
+    if world.command_levels() {
+        let area = view
+            .command(sim_core::pictures::CommandRef::Area)
+            .expect("the area command has a picture");
+        return area
+            .contacts()
+            .map(|c| {
+                (
+                    area.contact_number(c.id),
+                    c.estimated_hex,
+                    c.estimated_kind,
+                    c.estimated_ship_count,
+                    c.age_pulses,
+                )
+            })
+            .collect();
+    }
     view.contacts()
         .map(|c| {
             (
@@ -2425,34 +2443,930 @@ fn p_the_orders_leave_to_pursue_and_what_binds_it() {
     assert!(played.kinds(1).contains(&NoticeKind::CannotMeet));
 }
 
-#[test]
-#[ignore = "statement written, not built"]
-fn command_levels_on_the_order_reads_the_areas_picture() {}
+/// Game S with command levels on and the report figures of this scenario.
+fn levels_on(text: String) -> String {
+    let text = shadow(text);
+    let text = changed(&text, "days = 7\n", "days = 7\ncommand_levels = true\n");
+    changed(
+        &text,
+        "air_combat = \"../../reference/air_combat.toml\"\n",
+        "air_combat = \"../../reference/air_combat.toml\"\nreports = \"../../reference/reports_placeholder_scenario_133.toml\"\n",
+    )
+}
 
 #[test]
-#[ignore = "statement written, not built"]
-fn refusals_and_a_stale_contact_named() {}
+fn command_levels_on_the_order_reads_the_areas_picture() {
+    let played = play_file("133_a_followed.toml", levels_on);
+
+    // 40. At dusk of day 3 the area's picture holds contact 1, 3 pulses old,
+    // and contact 2 at (14,0), 1 pulse old, of the morning of day 2; the
+    // afternoon's report has not arrived.
+    assert_eq!(
+        played.held[2],
+        vec![
+            (1, hex(8, 0), ShipKind::Cruiser, 2, 3),
+            (2, hex(14, 0), ShipKind::Cruiser, 2, 1),
+        ]
+    );
+    // 41. The notices fall on the days of game S.
+    let handed: Vec<(u32, Vec<NoticeKind>)> = (1..=7).map(|d| (d, played.kinds(d))).collect();
+    assert_eq!(
+        handed,
+        vec![
+            (1, vec![]),
+            (2, vec![NoticeKind::Follows]),
+            (3, vec![NoticeKind::Follows]),
+            (4, vec![NoticeKind::Follows]),
+            (5, vec![NoticeKind::Follows]),
+            (6, vec![NoticeKind::ContactLost]),
+            (7, vec![NoticeKind::ForceNotFound]),
+        ]
+    );
+}
 
 #[test]
-#[ignore = "statement written, not built"]
-fn the_stops_are_keys_of_the_calls_of_time() {}
+#[ignore = "statement 40: the staff's following reads the side's contacts, not the area command's picture (crates/sim-staff/src/follow.rs, held_contacts, via known_to(Area).view().contacts()); to the architect"]
+fn command_levels_on_the_order_keeps_the_report_the_area_heard() {
+    let played = play_file("133_a_followed.toml", levels_on);
+    // The order takes contact 2 and keeps (14,0), the morning of day 2, where
+    // game S keeps the afternoon of day 2.
+    let (kind, follow) = played.the_follow(3);
+    assert_eq!(kind, NoticeKind::Follows);
+    assert_eq!((follow.contact, follow.taken_from), (2, Some(1)));
+    assert_eq!(follow.hex, hex(14, 0));
+    assert_eq!((follow.day, follow.pulse), (2, Pulse::Morning));
+    assert_eq!(
+        played.kept(3, 1),
+        Some(Followed {
+            contact: 2,
+            hex: hex(14, 0),
+            day: 2,
+            pulse: Pulse::Morning,
+            carrier: false,
+            lost: false,
+        })
+    );
+    let game_s = play_file("133_a_followed.toml", shadow);
+    assert_eq!(
+        game_s.kept(3, 1).map(|k| (k.day, k.pulse)),
+        Some((2, Pulse::Afternoon))
+    );
+    // The distance: from the start of the afternoon of day 1 to the end of
+    // the morning of day 2, 24 hours, 12 hexes against 6.
+    assert_eq!(
+        sim_core::command::report_distance_hexes(1, Pulse::Afternoon, 2, Pulse::Morning, 20),
+        12
+    );
+    assert_eq!(hex(14, 0).distance(hex(8, 0)), 6);
+}
 
 #[test]
-#[ignore = "statement written, not built"]
-fn withdrawn_by_the_commander() {}
+#[ignore = "statement 42: a seat at a base cannot give an order to the area today; to the architect"]
+fn a_seat_below_the_area_names_the_areas_contact() {
+    // 42. A seat at base 1 that gives the order names a contact by the number
+    // of base 1's picture; the order follows the area's contact of the same
+    // hex and kind. Where the area's picture holds no contact of that hex and
+    // kind the command is refused: the contact is not held. Not set up: a
+    // seat at a base has no set_intent (crates/sim-agent/src/session.rs,
+    // NO_INTENTS_HERE).
+}
+
+// ------------------------------------------------ Properties: sessions
+
+/// The order's command of game A, as the file gives it on day 1.
+const ORDER_COMMAND: &str = "[[command]]\nday = 1\nside = \"allied\"\nkind = \"set_intent\"\nintent = 1\nintent_kind = \"destroy_force\"\ncontact = 1\ndistance = 2\n\n";
+
+/// Game A with the order's command taken out: the leaves stay.
+fn without_order(text: String) -> String {
+    changed(&text, ORDER_COMMAND, "")
+}
+
+/// A scenario's text that lets a seat stop the clock inside a day.
+fn inside_a_day(text: String) -> String {
+    changed(
+        &text,
+        "days = 7\n",
+        "days = 7\norders_inside_a_day = true\n",
+    )
+}
+
+/// A session over game A on which both seats are played: the Allied seat
+/// and the Japanese seat, the doctrine's staffs asked for both, and no order
+/// given.
+fn both_seats(text: &str) -> sim_agent::Session {
+    let file = "133_a_followed.toml";
+    let scenario: Scenario =
+        common::from_text_with(text, &path_of(file), &figures()).expect("the scenario loads");
+    let title = scenario.name.clone();
+    sim_agent::Session::new(
+        scenario.world,
+        &title,
+        scenario.days,
+        sim_agent::Seat::Player,
+        sim_agent::Seat::Player,
+    )
+    .with_staffs(staffs())
+}
+
+fn says_not_held(answer: &serde_json::Value) {
+    assert_eq!(answer["status"], serde_json::json!("refused"), "{answer}");
+    let reason = answer["reason"].as_str().expect("a reason");
+    assert!(reason.contains("not held"), "{reason}");
+    assert_eq!(answer["queued"], serde_json::json!(0), "{answer}");
+}
 
 #[test]
-#[ignore = "statement written, not built"]
-fn a_side_sees_its_own_and_nothing_it_cannot_see_changes_it() {}
+fn refusals_and_a_stale_contact_named() {
+    use serde_json::json;
+    let file = "133_a_followed.toml";
+    let none_given = |text: String| inside_a_day(without_order(text));
+
+    // 43. Refused: set_intent with the kind destroy a force and a number the
+    // commander's picture does not hold is refused with the reason that the
+    // contact is not held, at dusk and inside a day; so is one with no
+    // contact.
+    let mut session = session_of(file, &none_given(text_of(file)), &figures());
+    let at_dusk = [
+        json!({"intent_kind": "destroy_force", "contact": 9, "distance": 2}),
+        json!({"intent_kind": "destroy_force", "distance": 2}),
+    ];
+    for args in &at_dusk {
+        says_not_held(&ask(&mut session, "set_intent", args.clone()));
+    }
+    // Inside a day: at 0600 of day 1.
+    ask(&mut session, "advance", json!({"pulses": 1}));
+    for args in &at_dusk {
+        says_not_held(&ask(&mut session, "set_intent", args.clone()));
+    }
+    // A contact held is accepted where the same call names it (the control).
+    let held = ask(
+        &mut session,
+        "set_intent",
+        json!({"intent_kind": "destroy_force", "contact": 1, "distance": 2}),
+    );
+    assert_eq!(held["status"], json!("queued"), "{held}");
+
+    // The Japanese seat cannot name an Allied contact: it holds none.
+    let mut both = both_seats(&none_given(text_of(file)));
+    let refused = both
+        .call(
+            Side::Japanese,
+            "set_intent",
+            &json!({"intent_kind": "destroy_force", "contact": 1, "distance": 2}),
+        )
+        .expect("an answer");
+    says_not_held(&refused);
+
+    // 44. A contact held and not fresh may be named. In game A the commander
+    // withdraws intent 1 at dusk of day 3 and at the same dusk gives a new
+    // order naming contact 1, then 4 pulses old. It is accepted and keeps
+    // contact 1, (8,0), the morning of day 1 (age 4: five pulses before the
+    // dusk). At that dusk it takes contact 2 by rule 7: 30 hours, 15 hexes
+    // against 6.
+    let mut session = session_of(file, &text_of(file), &figures());
+    for _ in 0..2 {
+        ask(&mut session, "end_day", json!({}));
+    }
+    let before = paper_of(&mut session);
+    assert_eq!((before.contact, before.age), (1, 4));
+    ask(&mut session, "withdraw_intent", json!({"intent": 1}));
+    let given = ask(
+        &mut session,
+        "set_intent",
+        json!({"intent_kind": "destroy_force", "contact": 1, "distance": 2}),
+    );
+    assert_eq!(given["status"], json!("queued"), "{given}");
+    let number = given["command"]["intent"].as_u64().expect("its number");
+    assert!(number > 3, "the next number of the commander's: {given}");
+    let state = ask(&mut session, "command_state", json!({}));
+    let new_order = state["intents"]
+        .as_array()
+        .expect("the intents")
+        .iter()
+        .find(|i| i["number"] == json!(number))
+        .unwrap_or_else(|| panic!("order {number} in {state}"));
+    let paper = &new_order["following"];
+    assert_eq!(paper["contact"], json!(1), "{paper}");
+    assert_eq!(paper["hex"], json!([8, 0]), "{paper}");
+    assert_eq!(paper["age_pulses"], json!(4), "{paper}");
+    assert_eq!(
+        paper["reported"],
+        json!({"day": 1, "pulse": "morning"}),
+        "{paper}"
+    );
+    ask(&mut session, "end_day", json!({}));
+    let handed = session.staff_handed_in()[&3][&Side::Allied].clone();
+    let follows: Vec<FollowNotice> = handed.notices.iter().filter_map(|n| n.follow).collect();
+    assert_eq!(follows.len(), 1, "{handed:?}");
+    assert_eq!(follows[0].intent, intent(u32::try_from(number).unwrap()));
+    assert_eq!((follows[0].contact, follows[0].taken_from), (2, Some(1)));
+    assert_eq!(follows[0].hex, hex(14, 0));
+    assert_eq!(
+        sim_core::command::report_distance_hexes(1, Pulse::Morning, 2, Pulse::Morning, 20),
+        15
+    );
+    assert_eq!(hex(14, 0).distance(hex(8, 0)), 6);
+    let world = session.into_world();
+    let kept = world.command_state(Side::Allied).followed[&intent(u32::try_from(number).unwrap())];
+    assert_eq!((kept.contact, kept.hex), (2, hex(14, 0)));
+    assert_eq!((kept.day, kept.pulse), (2, Pulse::Morning));
+}
+
+/// What a call of `run` or `advance` said of where it stopped.
+fn stopped_on(answer: &serde_json::Value) -> (String, Option<String>) {
+    (
+        answer["stopped"].as_str().expect("stopped").to_string(),
+        answer["told"][0]["thing"].as_str().map(str::to_string),
+    )
+}
 
 #[test]
-#[ignore = "statement written, not built"]
-fn a_dry_run_of_a_side_with_the_order() {}
+fn the_stops_are_keys_of_the_calls_of_time() {
+    use serde_json::json;
+    let a = "133_a_followed.toml";
+    let b = "133_b_which_contact.toml";
+
+    // 45. The stops are keys of the calls of time, off unless asked for.
+    // `run` asked for the stop "lost" in game A stops at dusk of day 7, the
+    // dusk after the day the notice was handed in (day 6), and names the
+    // notice.
+    let mut session = session_of(a, &text_of(a), &figures());
+    let run = ask(
+        &mut session,
+        "run",
+        json!({"days": 7, "stop_on": ["contact_lost"]}),
+    );
+    assert_eq!(
+        stopped_on(&run),
+        ("told".to_string(), Some("contact_lost".to_string())),
+        "{run}"
+    );
+    assert_eq!(run["days_resolved"]["last"], json!(6), "{run}");
+    assert_eq!(run["fired"], json!([]), "no interrupt fires: {run}");
+    assert!(
+        run["told"][0]["words"][0]
+            .as_str()
+            .expect("the notice's words")
+            .contains("lost"),
+        "{run}"
+    );
+    assert!(!session.is_over());
+
+    // `advance` asked for it stops at 0600 of day 6.
+    let mut session = session_of(a, &inside_a_day(text_of(a)), &figures());
+    let adv = ask(
+        &mut session,
+        "advance",
+        json!({"pulses": 60, "stop_on": ["contact_lost"]}),
+    );
+    assert_eq!(
+        stopped_on(&adv),
+        ("told".to_string(), Some("contact_lost".to_string())),
+        "{adv}"
+    );
+    assert_eq!(
+        (adv["clock"]["day"].as_u64(), adv["clock"]["at"].as_str()),
+        (Some(6), Some("0600")),
+        "{adv}"
+    );
+    assert_eq!(adv["fired"], json!([]), "{adv}");
+
+    // Asked for the stop "ended" they stop at the end of the game and at
+    // 0600 of day 7.
+    let mut session = session_of(a, &text_of(a), &figures());
+    let run = ask(
+        &mut session,
+        "run",
+        json!({"days": 7, "stop_on": ["force_not_found"]}),
+    );
+    assert_eq!(
+        stopped_on(&run),
+        ("game_over".to_string(), Some("force_not_found".to_string())),
+        "{run}"
+    );
+    assert_eq!(run["days_resolved"]["last"], json!(7), "{run}");
+    assert!(session.is_over(), "the end of the game");
+    assert_eq!(run["fired"], json!([]), "{run}");
+    let mut session = session_of(a, &inside_a_day(text_of(a)), &figures());
+    let adv = ask(
+        &mut session,
+        "advance",
+        json!({"pulses": 60, "stop_on": ["force_not_found"]}),
+    );
+    assert_eq!(
+        stopped_on(&adv),
+        ("told".to_string(), Some("force_not_found".to_string())),
+        "{adv}"
+    );
+    assert_eq!(
+        (adv["clock"]["day"].as_u64(), adv["clock"]["at"].as_str()),
+        (Some(7), Some("0600")),
+        "{adv}"
+    );
+
+    // `run` asked for the stop "taken, of the other sort" stops after day 2
+    // in the game of statement 17 and does not stop in game A.
+    let other = |t: String| without_force(&t, 2);
+    let mut session = session_of(b, &other(text_of(b)), &figures());
+    let run = ask(
+        &mut session,
+        "run",
+        json!({"days": 3, "stop_on": ["follows_other_sort"]}),
+    );
+    assert_eq!(
+        stopped_on(&run),
+        ("told".to_string(), Some("follows_other_sort".to_string())),
+        "{run}"
+    );
+    assert_eq!(run["days_resolved"]["last"], json!(2), "{run}");
+    assert_eq!(run["fired"], json!([]), "{run}");
+    let mut session = session_of(a, &text_of(a), &figures());
+    let run = ask(
+        &mut session,
+        "run",
+        json!({"days": 7, "stop_on": ["follows_other_sort"]}),
+    );
+    assert_ne!(run["stopped"], json!("told"), "{run}");
+    assert_eq!(run["days_resolved"]["last"], json!(7), "{run}");
+    assert!(session.is_over());
+
+    // Off unless asked for: with no key all seven days are played through,
+    // and none stops before a day is played.
+    let mut session = session_of(a, &text_of(a), &figures());
+    let run = ask(&mut session, "run", json!({"days": 7}));
+    assert_ne!(run["stopped"], json!("told"), "{run}");
+    assert_eq!(run["days_resolved"]["last"], json!(7), "{run}");
+    assert_eq!(run["fired"], json!([]), "{run}");
+}
 
 #[test]
-#[ignore = "statement written, not built"]
-fn hashed_named_replayed_and_the_same_twice() {}
+fn withdrawn_by_the_commander() {
+    use serde_json::json;
+    let file = "133_a_followed.toml";
+
+    // 46. Withdrawn. In game A the commander withdraws intent 1 at dusk of
+    // day 4: everything beneath it is withdrawn with it, nothing of the order
+    // is kept in the command state, and no notice of this rule is handed in
+    // after.
+    let mut session = session_of(file, &text_of(file), &figures());
+    for _ in 0..3 {
+        ask(&mut session, "end_day", json!({}));
+    }
+    ask(&mut session, "withdraw_intent", json!({"intent": 1}));
+    for _ in 4..=7 {
+        ask(&mut session, "end_day", json!({}));
+    }
+    assert!(session.is_over());
+    let handed = session.staff_handed_in().clone();
+    for day in 4..=7 {
+        let notices = handed
+            .get(&day)
+            .and_then(|by_side| by_side.get(&Side::Allied))
+            .map(|d| d.notices.clone())
+            .unwrap_or_default();
+        assert!(
+            notices.iter().all(|n| n.follow.is_none()),
+            "day {day}: {notices:?}"
+        );
+    }
+    let world = session.into_world();
+    let state = world.command_state(Side::Allied);
+    assert!(state.followed.is_empty(), "nothing of the order is kept");
+    assert!(
+        state.intents.values().all(|i| !i.in_force()),
+        "everything beneath it is withdrawn with it: {:?}",
+        state.intents
+    );
+}
+
+/// A game played to its end with the doctrine's staffs: the world it leaves
+/// and the hash at the end of each day.
+fn finished(file: &str, edit: impl FnOnce(String) -> String) -> (sim_core::world::World, Vec<u64>) {
+    let text = edit(text_of(file));
+    let mut scenario: Scenario =
+        common::from_text_with(&text, &path_of(file), &figures()).expect("the scenario loads");
+    let held = staffs();
+    let mut hashes = Vec::new();
+    while let Some(summary) = scenario
+        .next_day_watched(as_staffs(&held), &mut |_, _| {})
+        .expect("a day resolves")
+    {
+        hashes.push(summary.state_hash);
+    }
+    (scenario.world, hashes)
+}
+
+/// What a side was given of the log, without the umpire's numbers: its own
+/// count of each event, the day, the pulse and what it says.
+fn seen_by(world: &sim_core::world::World, side: Side) -> Vec<String> {
+    world
+        .side_view(side)
+        .events()
+        .iter()
+        .map(|e| format!("{} {} {:?} {:?}", e.number, e.day, e.pulse, e.kind))
+        .collect()
+}
 
 #[test]
-#[ignore = "statement written, not built"]
-fn no_game_on_file_moves_and_the_frozen_figures_are_untouched() {}
+fn a_side_sees_its_own_and_nothing_it_cannot_see_changes_it() {
+    use serde_json::json;
+    let file = "133_a_followed.toml";
+
+    // 47. A side sees its own. Each notice of this rule is a `StaffNotice`
+    // the Allied side sees whole and the Japanese side does not see.
+    let (world, _) = finished(file, same);
+    let whole = |side: Side| -> Vec<NoticeKind> {
+        world
+            .side_view(side)
+            .events()
+            .iter()
+            .filter_map(|e| match &e.kind {
+                sim_core::side_events::SideEventKind::Whole(EventKind::StaffNotice {
+                    kind,
+                    follow: Some(_),
+                    ..
+                }) => Some(*kind),
+                _ => None,
+            })
+            .collect()
+    };
+    assert_eq!(
+        whole(Side::Allied),
+        vec![
+            NoticeKind::Follows,
+            NoticeKind::Follows,
+            NoticeKind::Follows,
+            NoticeKind::Follows,
+            NoticeKind::ContactLost,
+            NoticeKind::ForceNotFound,
+        ]
+    );
+    assert!(world
+        .side_view(Side::Japanese)
+        .events()
+        .iter()
+        .all(|e| !matches!(
+            &e.kind,
+            sim_core::side_events::SideEventKind::Whole(EventKind::StaffNotice { .. })
+        )));
+    // No event the Japanese side is given differs between game A and game A
+    // with no order given.
+    let (none_given, _) = finished(file, without_order);
+    assert_eq!(
+        seen_by(&world, Side::Japanese),
+        seen_by(&none_given, Side::Japanese)
+    );
+    // No answer to its seat differs, at any dusk, from the same game with no
+    // order given: the tools that only read, asked of the Japanese seat.
+    let reads = [
+        "get_briefing",
+        "list_forces",
+        "list_contacts",
+        "list_bases",
+        "events",
+        "intelligence",
+        "command_state",
+        "plans",
+        "staff_orders",
+        "report",
+        "queued",
+    ];
+    let answers = |text: String| -> Vec<String> {
+        let mut session = session_of(file, &text, &figures());
+        let mut all = Vec::new();
+        for _ in 1..=7 {
+            for tool in reads {
+                let answer = match session.call(Side::Japanese, tool, &json!({})) {
+                    Ok(answer) => answer.to_string(),
+                    Err(e) => e.message,
+                };
+                all.push(format!("{tool}: {answer}"));
+            }
+            ask(&mut session, "end_day", json!({}));
+        }
+        all
+    };
+    let with_order = answers(text_of(file));
+    let without = answers(without_order(text_of(file)));
+    assert_eq!(with_order.len(), without.len());
+    for (a, b) in with_order.iter().zip(&without) {
+        assert_eq!(a, b);
+    }
+}
+
+/// Game A with a Japanese task force 2 of two cruisers at `(q, r)`, which no
+/// report of the Allied side names.
+fn with_unseen_force(text: String, q: i32, r: i32) -> String {
+    format!(
+        "{text}\n[[task_force]]\nid = 2\nname = \"Placeholder cruiser force 2\"\nside = \"japanese\"\nq = {q}\nr = {r}\nmission = \"surface_combat\"\n\n[[ship]]\nid = 3\nname = \"Placeholder cruiser 3\"\nclass = 1\nside = \"japanese\"\nfuel_t = 2000\ntask_force = 2\n\n[[ship]]\nid = 4\nname = \"Placeholder cruiser 4\"\nclass = 1\nside = \"japanese\"\nfuel_t = 2000\ntask_force = 2\n"
+    )
+}
+
+#[test]
+fn nothing_the_side_cannot_see_changes_what_it_hands_in() {
+    let file = "133_a_followed.toml";
+    // 48. Nothing it cannot see. Two worlds of game A that differ only in
+    // what the Allied side cannot see (the Japanese force's fuel; a Japanese
+    // force at (20,5), never reported) give the same orders, commands,
+    // notices and kept state on every day.
+    let of = |played: &Played| -> Vec<String> {
+        (1..=7)
+            .map(|day| {
+                format!(
+                    "day {day}: {:?} | kept {:?}",
+                    played.decisions(day),
+                    played.states[day as usize].followed
+                )
+            })
+            .collect()
+    };
+    let plain = of(&play_file(file, same));
+    let fuel = of(&play_file(file, |t| {
+        t.replace(
+            "fuel_t = 2000\ntask_force = 1",
+            "fuel_t = 1500\ntask_force = 1",
+        )
+    }));
+    assert_ne!(
+        text_of(file).replace(
+            "fuel_t = 2000\ntask_force = 1",
+            "fuel_t = 1500\ntask_force = 1"
+        ),
+        text_of(file),
+        "the fuel is changed"
+    );
+    let unseen = of(&play_file(file, |t| with_unseen_force(t, 20, 5)));
+    assert_eq!(plain, fuel, "the Japanese force's fuel");
+    assert_eq!(plain, unseen, "a force at (20,5), never reported");
+}
+
+#[test]
+fn a_dry_run_of_a_side_with_the_order() {
+    let file = "133_a_followed.toml";
+    // The trial's figures are named by the file as scenario 94's are.
+    let text = changed(
+        &text_of(file),
+        "air_combat = \"../../reference/air_combat.toml\"\n",
+        "air_combat = \"../../reference/air_combat.toml\"\ntrial = \"../../reference/trial_placeholder_scenario_94.toml\"\n",
+    );
+    let mut scenario: Scenario =
+        common::from_text_with(&text, &path_of(file), &figures()).expect("the scenario loads");
+    let held = staffs();
+    for _ in 1..=3 {
+        scenario
+            .next_day_watched(as_staffs(&held), &mut |_, _| {})
+            .expect("a day resolves")
+            .expect("the day exists");
+    }
+    // At dusk of day 4: the live order keeps contact 2, (14,0), the morning
+    // of day 3, as the live game's second dusk of taking has it.
+    let live_kept = scenario.world.command_state(Side::Allied).followed[&intent(1)];
+    assert_eq!((live_kept.contact, live_kept.hex), (2, hex(14, 0)));
+    let figures_of_trial = scenario
+        .trial_figures()
+        .expect("the trial's figures")
+        .clone();
+    let ref_data = scenario.world.ref_data().clone();
+    let map = scenario.world.map().clone();
+    let asked = sim_trial::Asked {
+        trial: 1,
+        worlds: 1,
+        days: 1,
+        course: Vec::new(),
+    };
+    let trial = sim_trial::Trial {
+        seed: figures_of_trial.seed,
+        trial: 1,
+        worlds: 1,
+    };
+    let (made, played) = {
+        let view = scenario.world.side_view(Side::Allied);
+        let made = sim_trial::pictures(
+            &view,
+            &sim_trial::Believed::default(),
+            &figures_of_trial,
+            trial,
+        )
+        .expect("the pictures are made");
+        let played = sim_trial::play(
+            &view,
+            &sim_trial::Believed::default(),
+            &figures_of_trial,
+            &ref_data,
+            &map,
+            asked,
+        )
+        .expect("the trial is played");
+        (made, played)
+    };
+    assert_eq!(made.len(), 1, "one world");
+    assert_eq!(played.worlds.len(), 1);
+
+    // In the made world the order is in force and follows the contact at
+    // (14,0), found by its place in the order of the picture's contacts,
+    // whatever number the made world gives it; what it keeps is what the live
+    // order keeps.
+    let start =
+        sim_trial::build_world(&made[0], ref_data.clone(), map.clone()).expect("the world builds");
+    assert!(start.command_state(Side::Allied).intents[&intent(1)].in_force());
+    let kept = start.command_state(Side::Allied).followed[&intent(1)];
+    let there = start.side_view(Side::Allied);
+    let at_14: Vec<u32> = there
+        .contacts()
+        .filter(|c| c.estimated_hex == hex(14, 0))
+        .map(|c| there.contact_number(c.id))
+        .collect();
+    assert_eq!(at_14, vec![kept.contact], "found by its place in the order");
+    assert_eq!(
+        Followed {
+            contact: live_kept.contact,
+            ..kept
+        },
+        live_kept
+    );
+
+    // The staff of the made world hands in, on its first dusk, the commands
+    // and the orders the live staff hands in at dusk of day 4.
+    scenario
+        .next_day_watched(as_staffs(&held), &mut |_, _| {})
+        .expect("day 4 resolves")
+        .expect("the day exists");
+    let live = scenario.world.staff_handed_in()[&Side::Allied].clone();
+    let day = &played.worlds[0].days[0];
+    let in_made = &day.staff[&Side::Allied];
+    assert_eq!(
+        format!(
+            "{:?}",
+            in_made.commands.iter().map(|c| &c.kind).collect::<Vec<_>>()
+        ),
+        format!(
+            "{:?}",
+            live.commands.iter().map(|c| &c.kind).collect::<Vec<_>>()
+        )
+    );
+    assert_eq!(
+        format!(
+            "{:?}",
+            in_made.orders.iter().map(|o| &o.kind).collect::<Vec<_>>()
+        ),
+        format!(
+            "{:?}",
+            live.orders.iter().map(|o| &o.kind).collect::<Vec<_>>()
+        )
+    );
+    assert_eq!(
+        in_made.notices.iter().map(|n| n.kind).collect::<Vec<_>>(),
+        live.notices.iter().map(|n| n.kind).collect::<Vec<_>>()
+    );
+    assert_eq!(live.notices.len(), 1, "a refreshing: follows");
+    // What the made world's order keeps after that dusk is what the live
+    // order keeps, the number apart.
+    let end = played.worlds[0].world.as_ref().expect("the world as left");
+    let made_end = end.command_state(Side::Allied).followed[&intent(1)];
+    let live_end = scenario.world.command_state(Side::Allied).followed[&intent(1)];
+    assert_eq!(
+        Followed {
+            contact: live_end.contact,
+            ..made_end
+        },
+        live_end
+    );
+}
+
+#[test]
+fn hashed_named_replayed_and_the_same_twice() {
+    let file = "133_a_followed.toml";
+
+    // 50. Hashed. What the order keeps is in the state hash: two worlds of
+    // game A that differ only in the kept pulse of the last report hash
+    // differently.
+    let text = changed(
+        &text_of(file),
+        "air_combat = \"../../reference/air_combat.toml\"\n",
+        "air_combat = \"../../reference/air_combat.toml\"\ntrial = \"../../reference/trial_placeholder_scenario_94.toml\"\n",
+    );
+    let mut scenario: Scenario =
+        common::from_text_with(&text, &path_of(file), &figures()).expect("the scenario loads");
+    let held = staffs();
+    for _ in 1..=3 {
+        scenario
+            .next_day_watched(as_staffs(&held), &mut |_, _| {})
+            .expect("a day resolves")
+            .expect("the day exists");
+    }
+    let figures_of_trial = scenario
+        .trial_figures()
+        .expect("the trial's figures")
+        .clone();
+    let ref_data = scenario.world.ref_data().clone();
+    let map = scenario.world.map().clone();
+    let made = sim_trial::pictures(
+        &scenario.world.side_view(Side::Allied),
+        &sim_trial::Believed::default(),
+        &figures_of_trial,
+        sim_trial::Trial {
+            seed: figures_of_trial.seed,
+            trial: 1,
+            worlds: 1,
+        },
+    )
+    .expect("the pictures are made");
+    let hash_with = |pulse: Option<Pulse>| {
+        let mut picture = made[0].clone();
+        if let Some(pulse) = pulse {
+            picture
+                .picture
+                .command
+                .get_mut(&Side::Allied)
+                .expect("the side's command state")
+                .followed
+                .get_mut(&intent(1))
+                .expect("the order keeps a report")
+                .pulse = pulse;
+        }
+        sim_trial::build_world(&picture, ref_data.clone(), map.clone())
+            .expect("the world builds")
+            .state_hash()
+    };
+    let kept = made[0].picture.command[&Side::Allied].followed[&intent(1)];
+    assert_eq!(kept.pulse, Pulse::Morning);
+    let as_made = hash_with(None);
+    assert_eq!(as_made, hash_with(Some(Pulse::Morning)), "the same twice");
+    assert_ne!(as_made, hash_with(Some(Pulse::Afternoon)));
+    assert_ne!(
+        hash_with(Some(Pulse::Night)),
+        hash_with(Some(Pulse::Afternoon))
+    );
+
+    // Each kept field is named in `hash::name_every_field`.
+    let source = std::fs::read_to_string(common::data_dir().join("../crates/sim-core/src/hash.rs"))
+        .expect("the hash's source reads");
+    let (_, block) = source
+        .split_once("crate::command::Followed {")
+        .expect("the kept state is named in name_every_field");
+    let block = block.split_once('}').expect("the pattern ends").0;
+    for field in ["contact", "hex", "day", "pulse", "carrier", "lost"] {
+        assert!(block.contains(&format!("{field}: _")), "{field} is named");
+    }
+    assert_eq!(block.matches(": _").count(), 6, "and no field more");
+
+    // A game saved at dusk of day 5 and replayed gives the hash of the game
+    // played through.
+    let saved_path =
+        std::path::Path::new(env!("CARGO_TARGET_TMPDIR")).join("scenario_133_a.save.json");
+    let mut live: Scenario = common::from_text_with(&text_of(file), &path_of(file), &figures())
+        .expect("the scenario loads");
+    let remembered = sim_cli::save::remember(&live).expect("the scenario is remembered");
+    let commands = live.scripted_commands().clone();
+    let script = live.scripted_orders().clone();
+    let inside = live.scripted_orders_inside_day().clone();
+    let mut handed: BTreeMap<u32, BTreeMap<Side, StaffDecisions>> = BTreeMap::new();
+    let mut hashes: Vec<(u32, u64)> = Vec::new();
+    for day in 1..=4 {
+        let summary = live
+            .next_day_watched(as_staffs(&held), &mut |_, _| {})
+            .expect("a day resolves")
+            .expect("the day exists");
+        handed.insert(day, live.world.staff_handed_in().clone());
+        hashes.push((day, summary.state_hash));
+    }
+    sim_cli::save::write(
+        saved_path.to_str().expect("a path"),
+        path_of(file).to_str().expect("a path"),
+        1942,
+        &remembered,
+        &script,
+        &inside,
+        &commands,
+        &handed,
+        &sim_cli::save::script_seats(),
+        &hashes,
+        None,
+    )
+    .expect("the game is saved");
+    let saved = sim_cli::save::read(saved_path.to_str().expect("a path")).expect("it reads");
+    let mut replay: Scenario = common::from_text_with(&text_of(file), &path_of(file), &figures())
+        .expect("the scenario loads");
+    replay.replace_script(saved.script.clone());
+    replay.replace_script_inside_day(saved.script_inside_day.clone());
+    replay.replace_commands(saved.commands.clone());
+    assert_eq!(saved.hashes.len(), 4);
+    let mut last = 0;
+    for (day, hash) in &saved.hashes {
+        for (side, decisions) in saved.staff.get(day).into_iter().flatten() {
+            replay.world.submit_staff(*side, decisions.clone());
+        }
+        let summary = replay
+            .next_day_watched(sim_core::Staffs::none(), &mut |_, _| {})
+            .expect("the day resolves")
+            .expect("the day exists");
+        assert_eq!(hash, &format!("{:016x}", summary.state_hash), "day {day}");
+        last = summary.state_hash;
+    }
+    // The game played through to dusk of day 5 gives that hash.
+    let (_, through) = finished(file, same);
+    assert_eq!(last, through[3]);
+    assert_eq!(hashes.last().map(|(_, h)| *h), Some(through[3]));
+
+    // 51. The same start gives the same game: game A played twice gives the
+    // same hash on every day.
+    let (_, again) = finished(file, same);
+    assert_eq!(through, again);
+    assert_eq!(through.len(), 7);
+}
+
+#[test]
+fn no_game_on_file_moves_and_the_frozen_figures_are_untouched() {
+    use std::fs;
+    let root = common::data_dir().join("..");
+
+    // 52. No game on file moves. No scenario on file gives the order: the
+    // comparison of every run, live and frozen, with the hashes cut, is made
+    // by `scripts/compare-scenarios.sh --against e9944c16`, the commit this is
+    // built on, and reported with the pull request; here, that no file the
+    // loops walk (or a recorded game) names it, which is what the comparison
+    // rests on.
+    let names = |dir: &std::path::Path, found: &mut Vec<String>| {
+        fn walk(dir: &std::path::Path, found: &mut Vec<String>) {
+            for entry in fs::read_dir(dir).expect("a folder reads") {
+                let path = entry.expect("an entry").path();
+                if path.is_dir() {
+                    walk(&path, found);
+                } else if let Ok(text) = fs::read_to_string(&path) {
+                    if text.contains("destroy_force") {
+                        found.push(path.display().to_string());
+                    }
+                }
+            }
+        }
+        walk(dir, found);
+    };
+    let mut found = Vec::new();
+    names(&root.join("data/scenarios"), &mut found);
+    names(
+        &root.join("crates/sim-cli/tests/recorded_games"),
+        &mut found,
+    );
+    names(&root.join("data/reference"), &mut found);
+    let own = "data/scenarios/a-force-followed/";
+    let elsewhere: Vec<&String> = found.iter().filter(|f| !f.contains(own)).collect();
+    assert!(
+        elsewhere.is_empty(),
+        "a game on file gives the order: {elsewhere:?}"
+    );
+    assert!(!found.is_empty(), "the games of this scenario give it");
+
+    // 53. The frozen figures are untouched. No file of `data/reference/step1`
+    // changes and no file of this scenario is copied to
+    // `data/scenarios/step2-frozen`; the three figures of the staff are
+    // constants of the doctrine.
+    for entry in fs::read_dir(root.join("data/scenarios/step2-frozen")).expect("it reads") {
+        let name = entry.expect("an entry").file_name();
+        assert!(
+            !name.to_string_lossy().contains("133"),
+            "{name:?} is a copy of this scenario"
+        );
+    }
+    let figures_named = [
+        "followed_force_knots",
+        "lost_contact_days",
+        "station_rechosen_hexes",
+    ];
+    for dir in ["data/reference", "data/reference/step1", "data/scenarios"] {
+        for entry in fs::read_dir(root.join(dir)).expect("it reads") {
+            let path = entry.expect("an entry").path();
+            if let Ok(text) = fs::read_to_string(&path) {
+                for figure in figures_named {
+                    assert!(!text.contains(figure), "{} names {figure}", path.display());
+                }
+            }
+        }
+    }
+    // Against the commit this is built on, where the history has it: no file
+    // of the frozen figures and none of the frozen scenarios differs.
+    let known = std::process::Command::new("git")
+        .args(["cat-file", "-e", "e9944c16^{commit}"])
+        .current_dir(&root)
+        .status()
+        .is_ok_and(|s| s.success());
+    if known {
+        let changed_files = std::process::Command::new("git")
+            .args([
+                "diff",
+                "--name-only",
+                "e9944c16",
+                "--",
+                "data/reference/step1",
+                "data/scenarios/step2-frozen",
+            ])
+            .current_dir(&root)
+            .output()
+            .expect("git runs");
+        assert!(changed_files.status.success());
+        assert_eq!(
+            String::from_utf8_lossy(&changed_files.stdout).trim(),
+            "",
+            "a frozen file changed"
+        );
+    }
+}
