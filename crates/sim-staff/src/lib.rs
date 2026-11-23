@@ -49,6 +49,7 @@ pub mod raid;
 mod ready;
 mod reasons;
 mod route;
+mod source;
 pub mod search;
 pub mod stand;
 pub mod station;
@@ -413,8 +414,18 @@ use sim_core::view::SideView;
 /// (`lines`) or off the enemy bases in or next to the waters (`off_bases`),
 /// the boats left spread as before counting the stations given, each station
 /// order's reason saying which rule gave it. It gives the orders `supply-57`
-/// gave to a side with no pattern.
-pub const DOCTRINE_VERSION: &str = "supply-58";
+/// gave to a side with no pattern. `supply-59` adds decision 0228: where a side's
+/// scenario states that its staff chooses its sources of supply, one rule
+/// chooses the source under a commander's hold and under "control an island"
+/// (a base that can spare the place's need, one with a transport force empty
+/// there, the most to spare, the nearer, the lower number), the staff forms the
+/// supply under a hold with no source named and sets its forces limit each
+/// morning, a run from a source the staff chose is cut to what the source can
+/// spare, an empty pool of ships the staff is to find does not mark a plan
+/// failed, and a source the commander names is not refused for another
+/// order's draw on it. It gives the orders `supply-58` gave to a side without
+/// the key.
+pub const DOCTRINE_VERSION: &str = "supply-59";
 
 /// The staff: the doctrine for keeping a base supplied (stage 1) and, after
 /// it, the air doctrine for holding a place and covering a base from the air

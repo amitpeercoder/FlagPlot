@@ -295,6 +295,12 @@ impl<'a> SideView<'a> {
         self.command.submarine_doctrine
     }
 
+    /// Whether the side's scenario states that its staff chooses its sources
+    /// of supply (decision 0228, A). The asking side's own value only.
+    pub fn staff_chooses_sources(&self) -> bool {
+        self.command.staff_chooses_sources
+    }
+
     /// The side's own command state, whole: its intents with their limits,
     /// its leaves, its plans with their baselines, amendments and runs, and
     /// the commitments of its ships (decision 0107, 6). There is no way to

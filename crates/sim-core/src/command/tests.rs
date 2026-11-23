@@ -5398,12 +5398,12 @@ fn a_boat_in_a_forces_limit_is_inside_the_parents_limit_or_the_parent_names_none
     // No limit naming a boat on the parent's chain: any boat of the side.
     assert!(world.command[&A].submarines_on_chain(parent).is_none());
     let any = boat_limit(&[1, 2]);
-    assert!(world.forces_narrow(A, parent, &any));
+    assert!(world.forces_narrow(A, parent, parent, &any));
     // A limit naming boat 1 only: boat 2 is wider.
     player(&mut world, set_forces(1, boat_limit(&[1]))).unwrap();
-    assert!(world.forces_narrow(A, parent, &boat_limit(&[1])));
-    assert!(!world.forces_narrow(A, parent, &boat_limit(&[1, 2])));
-    assert!(!world.forces_narrow(A, parent, &boat_limit(&[2])));
+    assert!(world.forces_narrow(A, parent, parent, &boat_limit(&[1])));
+    assert!(!world.forces_narrow(A, parent, parent, &boat_limit(&[1, 2])));
+    assert!(!world.forces_narrow(A, parent, parent, &boat_limit(&[2])));
 }
 
 #[test]

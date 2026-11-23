@@ -219,6 +219,16 @@ impl Day<'_, '_> {
         let (end, excluded) = self
             .island_above(hold.id)
             .unwrap_or_else(|| (hold.clone(), std::iter::once(hex).collect()));
+        // Decision 0228, rule 6: for a side whose staff chooses its sources,
+        // the bases are weighed by rules 1 and 2 and the words say whether
+        // any can spare supply.
+        if self.view.staff_chooses_sources() {
+            let chain = self.state.island_on_chain(hold.id).is_none().then_some(hold.id);
+            let weighing = self.weigh_sources(&end, &excluded, hex, chain);
+            if weighing.chosen.is_empty() {
+                return self.nothing_to_spare_reason(hold, plan, base_text, fed_text, hex, &weighing);
+            }
+        }
         let weighed = self.source_candidates(&end, &excluded);
         let candidates: Vec<(BaseId, sim_core::fixed::Fixed)> = weighed
             .iter()
@@ -309,6 +319,276 @@ impl Day<'_, '_> {
             .done()
     }
 
+    /// Decision 0228, rule 6: the reason of a hold whose side's staff chooses
+    /// its sources and no base of the side can spare supply: the place lives
+    /// on what it has, with its days of supply, and each base passed over is
+    /// named with its figures.
+    fn nothing_to_spare_reason(
+        &self,
+        hold: &Intent,
+        plan: &Plan,
+        base_text: &str,
+        fed_text: &str,
+        hex: sim_core::hex::Hex,
+        weighing: &crate::source::Weighing,
+    ) -> sim_core::command::Reason {
+        let today = self.today;
+        let figure = self.view.days_of_supply(hex);
+        let days = match figure.and_then(|f| f.days) {
+            Some(days) => format!(
+                "{} {} of supply today",
+                crate::units::floor_whole(days),
+                crate::units::days_word(crate::units::floor_whole(days))
+            ),
+            None => format!(
+                "{} t of supply today and no planned use",
+                figure.map_or(sim_core::fixed::Fixed::ZERO, |f| f.stock_t)
+            ),
+        };
+        let said = if weighing.passed.is_empty() {
+            "no other base of the side can spare supply".to_string()
+        } else {
+            format!(
+                "no other base of the side can spare supply ({})",
+                weighing.passed.join("; ")
+            )
+        };
+        serving(hold, plan)
+            .evidence(format!("{} names no source", hold.id), today)
+            .evidence(said.clone(), today)
+            .evidence(format!("{fed_text}: {days}"), today)
+            .binding("no base of the side can spare supply")
+            .worked(format!(
+                "{} holds {base_text} and no source is named on it or above it, so the staff chooses one: {}, so {fed_text} lives on what it has: {days}.",
+                hold.id,
+                capitalised(&said)
+            ))
+            .would_change("a base of the side with supply to spare")
+            .done()
+    }
+
+    /// Decision 0228, rules 9 to 12 as amended: where the side's staff
+    /// chooses its sources and the hold has men at its base, the staff forms
+    /// "keep supplied" under the hold with the forces limit it sets each
+    /// morning: the source (the commander's where he names one, else the
+    /// staff's, chosen and kept) and the ships (his where his limits bind
+    /// ships, else the transport forces stopped at the source with nothing
+    /// aboard, a pool that only grows while the source is the same).
+    #[allow(clippy::too_many_lines)]
+    fn keyed_hold_supply(
+        &mut self,
+        hold: &Intent,
+        plan: &Plan,
+        held: BaseId,
+        fed: BaseId,
+        hex: sim_core::hex::Hex,
+        in_scope: bool,
+    ) {
+        use sim_core::command::{ForcesLimit, Limit};
+        let today = self.today;
+        let base_text = base_words(self.view, held);
+        let fed_text = base_words(self.view, fed);
+        let hex_of = |b: BaseId| self.view.bases().find(|found| found.id == b).map(|f| f.hex);
+        let mine: Option<Intent> = self
+            .state
+            .intents_in_force()
+            .find(|i| {
+                i.parent == Some(hold.id)
+                    && i.maker == Maker::Staff
+                    && matches!(i.kind, IntentKind::KeepSupplied { base: b, .. } if hex_of(b) == Some(hex))
+            })
+            .cloned();
+        if mine.is_none()
+            && self.state.intents_in_force().any(|i| match i.kind {
+                IntentKind::KeepSupplied { base: b, .. } => hex_of(b) == Some(hex),
+                _ => false,
+            })
+        {
+            return;
+        }
+        let owned = |b: BaseId| self.view.bases().any(|found| found.id == b);
+        let others = self.others_above(hold);
+        let commander = self
+            .state
+            .commander_source_on_chain(hold.id)
+            .filter(|b| owned(*b));
+        let kept = mine
+            .as_ref()
+            .and_then(|m| m.limits.forces.as_ref()?.source)
+            .filter(|b| owned(*b));
+        let (source, mut pool, words, lines) = if let Some(source) = commander {
+            let pool = self.pool_at(source, &others);
+            (
+                source,
+                pool,
+                format!("the commander's forces limit names {source} as the source"),
+                Vec::new(),
+            )
+        } else if let Some(source) = kept {
+            let pool = self.pool_at(source, &others);
+            (
+                source,
+                pool,
+                format!(
+                    "the source of supply is {}, chosen on an earlier morning and kept",
+                    base_words(self.view, source)
+                ),
+                Vec::new(),
+            )
+        } else {
+            let excluded: BTreeSet<sim_core::hex::Hex> = std::iter::once(hex).collect();
+            let weighing = self.weigh_sources(hold, &excluded, hex, Some(hold.id));
+            let Some(pick) = weighing.chosen.first() else {
+                let reason =
+                    self.nothing_to_spare_reason(hold, plan, &base_text, &fed_text, hex, &weighing);
+                self.target(in_scope).no_orders.push(reason);
+                return;
+            };
+            let lines = weighing.lines();
+            (
+                pick.base,
+                pick.forces.clone(),
+                format!(
+                    "the staff chose the source of supply from the bases of the side not in the place's hex: {}; the source is {}",
+                    lines.join("; "),
+                    base_words(self.view, pick.base)
+                ),
+                lines,
+            )
+        };
+        pool.retain(|force| self.chain_allows_force(hold.id, *force));
+        // The ships: his where his limits bind ships, else the pool, which
+        // only grows while the source is the same.
+        let bound = self
+            .state
+            .nearest_ship_limit(hold.id)
+            .map(std::borrow::Cow::into_owned);
+        let before: Option<ForcesLimit> = mine.as_ref().and_then(|m| m.limits.forces.clone());
+        let (ships, task_forces, in_place) = match &bound {
+            Some(limit) => (limit.ships.clone(), limit.task_forces.clone(), limit.in_place),
+            None => {
+                let mut forces: BTreeSet<sim_core::ids::TaskForceId> = before
+                    .as_ref()
+                    .filter(|f| f.source == Some(source))
+                    .map(|f| f.task_forces.clone())
+                    .unwrap_or_default();
+                forces.retain(|f| !crate::stand::afloat(self.area, *f).is_empty());
+                forces.extend(pool.iter().copied());
+                (BTreeSet::new(), forces, false)
+            }
+        };
+        let limit = ForcesLimit {
+            ships,
+            task_forces: task_forces.clone(),
+            air_groups: BTreeSet::new(),
+            source: Some(source),
+            land_units: BTreeSet::new(),
+            submarines: Default::default(),
+            none_of: Default::default(),
+            in_place,
+        };
+        let forces_text = if task_forces.is_empty() {
+            "no force".to_string()
+        } else {
+            task_forces
+                .iter()
+                .map(ToString::to_string)
+                .collect::<Vec<_>>()
+                .join(", ")
+        };
+        let (id, formed) = match &mine {
+            Some(found) => (found.id, false),
+            None => {
+                let risk = self.state.risk_read_up(hold.id);
+                let floor_days = margin_days(risk);
+                let kind = IntentKind::KeepSupplied {
+                    base: fed,
+                    floor_days,
+                    interval_days: None,
+                };
+                let id_new = self.state.next_intent_number();
+                self.state.intents.insert(
+                    id_new,
+                    Intent {
+                        id: id_new,
+                        kind,
+                        parent: Some(hold.id),
+                        maker: Maker::Staff,
+                        addressee: kind.addressee(),
+                        limits: IntentLimits::default(),
+                        set_day: today,
+                        plan: hold.plan,
+                        withdrawn_day: None,
+                    },
+                );
+                let opening = if fed == held {
+                    format!(
+                        "{} holds {base_text}, which is the side's, and no supply for it is in force",
+                        hold.id
+                    )
+                } else {
+                    format!(
+                        "{} holds {base_text}, which is not the side's, and the side's men in its hex are fed through {fed_text}, for which no supply is in force",
+                        hold.id
+                    )
+                };
+                let mut builder = serving(hold, plan)
+                    .evidence(format!("{base_text} has no supply intent for its hex in force"), today);
+                for line in &lines {
+                    builder = builder.evidence(line.clone(), today);
+                }
+                let reason = builder
+                    .evidence(words.clone(), today)
+                    .binding(format!("{} is held and its plan is released", hold.id))
+                    .worked(format!(
+                        "{opening}: the staff forms {id_new}, keep {fed_text} supplied, under it, with a floor of {floor_days} {} (the margin at {}) and no interval, so that the staff uses 15 days. {}: the source is {source}.",
+                        crate::units::days_word(floor_days),
+                        risk.name(),
+                        capitalised(&words)
+                    ))
+                    .would_change("a supply intent for the base already in force")
+                    .would_change("another source of supply")
+                    .speaks_of(&self.state, LimitKind::Source)
+                    .done();
+                if in_scope {
+                    self.lines.push(format!(
+                        "{} holds {base_text}: it would form {id_new}, keep {fed_text} supplied from {source}, under it.",
+                        hold.id
+                    ));
+                }
+                self.target(in_scope).commands.push(StaffCommand {
+                    kind: CommandKind::FormIntent {
+                        parent: hold.id,
+                        kind,
+                    },
+                    reason,
+                });
+                (id_new, true)
+            }
+        };
+        if !formed && before.as_ref() == Some(&limit) {
+            return;
+        }
+        let reason = serving(hold, plan)
+            .evidence(words.clone(), today)
+            .worked(format!(
+                "{}: {words}; the staff sets the forces limit of {id}, the supply of {fed_text}, to {} and {forces_text}.",
+                hold.id,
+                base_words(self.view, source)
+            ))
+            .would_change("another source of supply")
+            .would_change("another transport force stopped empty at the source")
+            .speaks_of(&self.state, LimitKind::Source)
+            .done();
+        if let Some(found) = self.state.intents.get_mut(&id) {
+            found.limits.forces = Some(limit.clone());
+        }
+        self.target(in_scope).commands.push(StaffCommand {
+            kind: CommandKind::SetLimit(Limit::Forces { intent: id, limit }),
+            reason,
+        });
+    }
+
     /// Items 7 and 9: "keep supplied" formed under the hold, on a morning it
     /// has men at the base (the supply follows the men: a hold with no man
     /// there plays as it did).
@@ -331,6 +611,13 @@ impl Day<'_, '_> {
         let today = self.today;
         let base_text = base_words(self.view, held);
         let fed_text = base_words(self.view, fed);
+        // Decision 0228: for a side whose staff chooses its sources, a hold
+        // that is not under an island has the supply formed and its forces
+        // limit set by the staff's own rule.
+        if self.view.staff_chooses_sources() && self.state.island_on_chain(hold.id).is_none() {
+            self.keyed_hold_supply(hold, plan, held, fed, hex, in_scope);
+            return;
+        }
         let standing = self.state.intents_in_force().any(|i| match i.kind {
             IntentKind::KeepSupplied { base: b, .. } => {
                 self.view

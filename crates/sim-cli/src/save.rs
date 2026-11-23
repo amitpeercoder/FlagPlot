@@ -193,8 +193,12 @@ pub const FORMAT: &str = "flagplot-saved-game";
 /// converted. Version 26 (decision 0223, stage 0) is a game whose state holds
 /// each side's submarine doctrine, which its scenario states: the file's keys
 /// are unchanged; its state version is v58 and its daily hashes cover the
-/// doctrine. A game of an older version is refused, not converted.
-pub const VERSION: u32 = 26;
+/// doctrine. A game of an older version is refused, not converted. Version
+/// 27 (decision 0228) is a game whose state holds whether each side's staff
+/// chooses its sources of supply, which its scenario states: the file's keys
+/// are unchanged; its state version is v59 and its daily hashes cover it. A
+/// game of an older version is refused, not converted.
+pub const VERSION: u32 = 27;
 
 pub type Script = BTreeMap<u32, Vec<(Side, OrderRequest)>>;
 

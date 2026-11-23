@@ -411,8 +411,32 @@ impl World {
     /// and a source only where it is the source of every one. With no forces
     /// limit above, the parent may use only what its addressee commands: a
     /// base's air groups, and no ship.
-    pub(crate) fn forces_narrow(&self, side: Side, parent: IntentId, limit: &ForcesLimit) -> bool {
+    ///
+    /// `intent` is the intent the limit is set on. For a side whose scenario
+    /// says its staff chooses its sources of supply, a limit on a "keep
+    /// supplied" whose parent is a "hold a place" is checked as under a take
+    /// (decision 0228, the architect's ruling on the build): each limit above
+    /// binds only what it names, and a source named above still binds.
+    pub(crate) fn forces_narrow(
+        &self,
+        side: Side,
+        intent: IntentId,
+        parent: IntentId,
+        limit: &ForcesLimit,
+    ) -> bool {
         let state = &self.command[&side];
+        if state.staff_chooses_sources {
+            let supply_under_hold = matches!(
+                state.intents.get(&intent).map(|found| found.kind),
+                Some(IntentKind::KeepSupplied { .. })
+            ) && matches!(
+                state.intents.get(&parent).map(|found| found.kind),
+                Some(IntentKind::Hold { .. })
+            );
+            if supply_under_hold {
+                return self.forces_narrow_under_take(side, parent, limit);
+            }
+        }
         // Under "control an island" too, each limit above binds only what it
         // names, kind by kind (decision 0151, 4).
         if state.take_place_on_chain(parent).is_some() || state.island_on_chain(parent).is_some() {
@@ -819,7 +843,9 @@ impl World {
                 // bolder than the parent's, an area inside the parent's.
                 if let Some(parent) = parent {
                     let narrows = match limit {
-                        Limit::Forces { limit, .. } => self.forces_narrow(side, parent, limit),
+                        Limit::Forces { limit, intent } => {
+                            self.forces_narrow(side, *intent, parent, limit)
+                        }
                         Limit::Risk { risk, .. } => *risk <= state.risk_read_up(parent),
                         Limit::Area { hexes, .. } => state
                             .area_read_up(parent)
