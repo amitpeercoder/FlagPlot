@@ -545,7 +545,7 @@ fn lines(
         (None, None) => "there is no hex for a second line".to_string(),
     };
     let reading = format!(
-        "The approach is from {from}, {} from the centre {centre}, the nearest enemy base more than {} from it. The first line runs through {centre} across it, along ({}, {}) and its opposite, and has {first_count} station(s) in the waters; {second_words}{}.",
+        "The approach is from {from}, {} from the centre {centre}, the nearest enemy base more than {} from it. The first line runs through {centre} across it, each step of its drawing {} in q and {} in r and the opposite, and has {first_count} station(s) in the waters; {second_words}{}.",
         hexes(base.hex.distance(centre)),
         hexes(LINE_GAP_HEXES),
         across.0,

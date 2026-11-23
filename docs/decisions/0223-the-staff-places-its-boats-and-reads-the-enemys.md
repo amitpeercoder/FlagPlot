@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 23, 2026, on the designer's ques
 
 Summary: Since decision 0218 a side has boats, a commander can order a patrol of waters, and the staff spreads the boats evenly over those waters. Both navies' staffs do it the same way, no staff sends a boat out unless the commander orders a patrol, and what a side believes of enemy boats is only what a scenario tells it and the reports it holds. This plan gives each navy its own way of placing boats, lets the staff form a patrol under the orders that call for one, and gives the staff an estimate of the enemy's boats made from its own reports, the attacks it has suffered and, for the navy whose record shows it, habit.
 
-Standing: Planned on Nov 23, 2026; to be reviewed.
+Standing: Planned on Nov 23, 2026; amended on review; stages 0 and A built.
 
 ## Why
 
@@ -164,3 +164,33 @@ A fresh reader was given this record, the research and the code, and found eight
 ### Before it is built
 
 The architect's scenario and statements for stages 0 and A together, then D1. The reviewer's order is kept: 0, A, D1.
+
+## As built: stages 0 and A (Nov 23, 2026)
+
+Built to the architect's statements of scenario 131 (`tests/scenario_131_the_pattern_of_a_patrol.rs`), every hex as worked by hand; no statement or hex was changed. State layout `flagplot-state-v58`, saved game version 26, rules label 32, doctrine `supply-58`, agent interface version 51.
+
+**Stage 0.** A scenario gives a side `[side.allied]` or `[side.japanese]` with `submarine_pattern` (`off_bases` or `lines`) and `expects_boats_off_own_bases`, each optional; another word for the pattern is refused when the scenario is read, naming the side and the word. The two values are a new field at the end of the side's `CommandState`, `submarine_doctrine` (`SubmarineDoctrine`: the pattern, `SubmarinePattern` with the stable codes 1 and 2, 0 for none, and the expectation), set by `World::set_submarine_doctrine` before day 1 and never changed after. They are hashed after the commander's refusals in the command state and named in `hash::name_every_field`. Being in the command state, they go with the side's own half of a picture and not with the enemy's, and a world made up by a dry run gives the enemy half an empty command state. `SideView::submarine_doctrine` gives the asking side's own values; a seat at a command of the side is given them too. The briefing's `submarines` part shows them to the side's own seat as `doctrine`; the export writes them in the side's command state. `CommandState::is_empty` is false for a side with a doctrine, so the export writes that side's command state. `expects_boats_off_own_bases` is read by nothing.
+
+**Stage A.** In `crates/sim-staff/src/patrol.rs`, a patrol whose side has a pattern is given its stations by `patterned`; a side with none goes through `stations` as before, unchanged. The three figures are constants at the head of the file with what each rests on: `LINE_GAP_HEXES` 5, `LINE_SPACING_HEXES` 1, `BOATS_PER_STATION` 2. The nearest hex of a point of the line is found in whole numbers: the point's coordinates times the segment's length N are whole, and the squared straight distance to a hex's centre times N squared is dq² + dr² + dq·dr of the whole differences; the hexes within one of the point's own q and r rounded down are tried, the lowest (q, then r) kept on a tie. Each station order's reason says which rule gave the station, naming the base, and carries the staff's reading of the pattern (the approach, the vector across, each line's stations and whether the second lies in the waters; or each base with its stations and why one has fewer), and records the forces limit it speaks of. The reading is a line of a preview's and a proposal's words too, and their `stations` are the stations given.
+
+**Choices the plan did not make.**
+
+- The scenario's key is a table per side, `[side.<side>]`, and the values are held in the side's command state rather than in a new field of the world, so that a picture and a dry run carry them as the side's own without new work.
+- "Nearest hex" is by the straight distance between hex centres, the measure an air distance uses; every tie the statements work agrees with it.
+- A line's spacing is read as each station at least `line_spacing_hexes` farther from the line's centre than the last station on its hand; with 1 it is every hex of the drawn line that ships can enter.
+- The second line's hex is the first hex the line drawn from the centre along the opposite of the approach's vector, divided by the greatest common divisor of its parts, reaches at `line_gap_hexes` from the centre. A hex of the second line already a station is stepped over.
+- Off bases: the first round, as the second, takes only hexes not yet a station, so no two bases share one (statement 17); a base whose turn finds no hex is not tried in the second round. A base not reached because the boats ran out is said so ("the boats being fewer"), not passed over. A station of the spread is not kept off a base's own hex (a coast hex ships can enter); no game on file puts one there.
+- The games of the statements with land are on two copies of the map, `placeholder_patterns_l3.toml` and `placeholder_patterns_b2.toml`, each with its game's one land hex, so that each game is a file that runs as it stands.
+- The briefing's part shows the doctrine only where the scenario states one, so every game on file is briefed as before.
+
+**What the comparison showed.** `scripts/compare-scenarios.sh` against main's commit 4dc0b4da: 254 runs, live and frozen, the same with the hashes cut. The recorded games differ only in the interface version and the hashes; `legibility_*` and `stage_2b_seat_sonnet` are untouched.
+
+### Rule card
+
+| Rule | Reads | Writes |
+| --- | --- | --- |
+| Stage 0: the side's doctrine | the scenario's `[side.<side>]` | `CommandState::submarine_doctrine`, once, before day 1 |
+| Stage A: the pattern of a patrol | the side's own doctrine; the enemy bases on the side's map; the waters; the boats of the order | station orders, their reasons with the staff's reading; a preview's and a proposal's `stations` |
+
+No draw is made and no event is added.
+
