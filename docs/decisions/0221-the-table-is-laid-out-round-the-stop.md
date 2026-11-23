@@ -424,3 +424,24 @@ In its own pull request, "The situation shows no points during play", the page s
 - **Once the game is over,** the objectives are shown whole.
 
 The evening report, the directives and the plan's paper were read on Midway and the 39 days in play, and none says "points". `table/check_screen.py` puts the real situation of the 39 days through the page's own functions in node and checks two things: no line shown in play says "points" or the levels, and each objective and what the enemy is after are still said. It also checks that the page writes the word "points" only in HOW IT ENDED.
+
+## The staff's reading in the order paper is the plan's tree, Nov 23, 2026
+
+On the designer's words about an order's THE STAFF'S READING on the Coral Sea ("this text is still not very comprehensible … what should the player do with this?"), the architect ruled that the staff's reading in the order paper is the same tree as the plan's paper, built from the same structure and by the same functions, in a short form. The designer then added that a reason which says a unit is not free because of another order must link to that order, so that the player can withdraw it.
+
+### As built
+
+- **The engine.** `preview` had no tree: its `with_change` gave the staff's orders and decisions for the coming day only, and the tasks were told in one paragraph. It now carries the proposal's `tree`, `would_hand_in` and `reason`, as `propose` gives them for an intent in force. This is agent interface 49, and nothing in `sim-core` changes. `propose`'s schema now admits a `keep_supplied` task with its days, which a hold under a control of an island forms.
+- **The reading.** It is drawn from that answer by the plan's paper's own `proposedTree` and `paperNode`:
+  - **One line at the head** says what signing would do ("Task Force 17 would work these waters from 13°44′S 148°45′E (-18, 3)."; "The staff would take it up in these tasks:"). Where nothing would serve the order, it reads "Nothing can serve this order yet." in the warning ink.
+  - **The tree** follows, each task with its units one line each and a closed WHY fold.
+  - **What cannot be done** is said once, as a fact under the task it belongs to ("No air base can reach these waters: Port Moresby, in these waters, has no bomber or search aircraft the staff may use."), with WOULD CHANGE WITH ("a bomber or search group at a base within reach").
+  - **What is left out:** counts of orders and commands, the numbers of tasks, and "It cannot yet". The draft is "this order".
+  - **The staff's working in full** is the last fold, closed. DRY RUN stays.
+- **The words, shared.** The shared wording drops the count of hexes on the map, says "hexes" for "hex(es)", "lies in" for "0 nm from the nearest hex of" and "N miles from" for the rest. The plan's paper, WHY on a slip, an interrupt's reasons and the dry run gain the same.
+- **A unit that is not free.** Where a reason says a unit is not free because of another order or task, it says the unit once and names that order as the player knows it ("Task Force 17 is not free: it serves your order to operate Task Force 17 from …"). The order's words are a link to its paper, opened at the task, where WITHDRAW THIS ORDER is. WOULD CHANGE WITH gains "that order withdrawn". The order is found from the `intent:N` in the engine's words and the parent chain of `command_state`, not from the quoted words.
+- **Risk.** The reading is still worked at balanced risk: `preview` takes one command, `set_intent` has no risk, and a risk limit needs an order in force. "This reading is worked at balanced risk." is said only where the risk chosen is not balanced. Working the reading at the chosen risk needs `preview` to take a risk with a `set_intent`, an engine change left open.
+- **Left open:**
+  - A hold made by an order is named without the order. Linking it would need the order's number in the hold's words (`hold_words` prints the maker without it).
+  - The plan's paper's in-force "cannot be met" line still shows the staff's sentence.
+  - Some diary and evening-report lines that do not pass through the shared wording were not traced.
