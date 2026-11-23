@@ -66,3 +66,7 @@ Reviewed by a fresh reader given this record, the rules on what a side may know,
 ## Questions for the designer
 
 1. **The name.** The plan calls it THE ENEMY, in the STAFF menu. Say if INTELLIGENCE is wanted.
+
+## The designer's answer on the name, Nov 23, 2026
+
+"Yes, Intelligence or something even more militaristic (I don't recall the term, something with 'SIG'...)". The term he had in mind is most likely SIGINT, signals intelligence, which is knowledge got from the enemy's radio. This paper holds sightings, claims and estimates and nothing from radio, so that name would say something untrue of it. The paper is named INTELLIGENCE SUMMARY, the name a staff of the period gave the paper that gathers what is known of the enemy, and it is opened from the STAFF menu as INTELLIGENCE. Where this record says THE ENEMY, read INTELLIGENCE SUMMARY. If radio intelligence is ever built (`docs/design/intelligence.md`, standing sources), it gets a part of its own in the paper under its own name.
