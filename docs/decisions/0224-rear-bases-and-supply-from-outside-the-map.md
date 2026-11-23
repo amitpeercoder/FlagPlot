@@ -116,3 +116,25 @@ A fresh reader was given this record, the research, the rulebook and the code, a
 ### The designer's questions, as they stand
 
 Both are withdrawn: no reserve figure is set by this record, and Midway is not changed.
+
+## The measurement, Nov 23, 2026
+
+The 39 days were run staff against staff on seeds 1 to 100, in the proofs' arrangement with both sides from their orders and the table's ground figures (the table has no game with a staff on both sides, so this stands in for it). Each base's stock was read at the end of each day. The seeds hardly differ: the staffs choose the same in all of them. The counts are the measuring team's; the architect checked against the scenario file that Espiritu Santo begins with 960 t and 600 t of fuel and Shortland with nothing.
+
+**Stocks bind. The answer to "does a rear base run short" is yes, on both sides.**
+
+- **Espiritu Santo's supply, 960 t, is one run.** The Allied staff ships all of it on day 24, and from day 26 says of every later run "cannot be met: the source holds 0 t", in all 100 seeds. On day 1 it already says the landing at Lunga needs 1,526 t and the source has 960.
+- **Espiritu Santo's fuel, 600 t, is gone on day 6,** taken whole by one transport force, whose seventh ship is left short. Lunga's 200 t of fuel is gone on day 4 the same way. No carrier force takes fuel at any base in any seed, and none comes near empty.
+- **Lunga's supply fails late.** Its largest drain is bombs (2,375 t a seed), then the men (1,812 t). The Allied stock at the place is at nothing at a day's end in 35 seeds, from about day 38; its aircraft are short of supply for sorties in 75 seeds from day 27, and its men in 54 from day 30.
+- **Shortland holds nothing, and the Japanese runs sail from it.** Every lift from Shortland is "cut by the source's 0 t above its reserve: nothing to take" and carries only what was aboard. The Japanese men at Lunga are unfed from day 12 in all 100 seeds and about 1,000 are lost to hunger. This is the named miss of decision 0159's proof, and here is a cause of it that no mend has addressed: the base the runs leave from is empty, while Rabaul, 10,000 t, is never short.
+- **Never near binding:** Rabaul's supply and fuel, Tulagi after day 2, the Allied landing places, and every carrier force's fuel.
+
+**What follows.** The second step of "What is done next" is owed: the 39 days need their rear bases. In order:
+
+1. **The table's 39 days get files of their own,** so that what follows moves no closed proof's scenario.
+2. **Shortland's stock** is the smallest change with the largest effect, and is data: what the runs loaded there. The research found no figure for Shortland (a gap), so it is a marked placeholder sized by a written rule, or the runs are made to load at Rabaul, where the stock is. The architect rules which when the rows on where the runs loaded are read.
+3. **Espiritu Santo on a line,** for supply and for fuel, with the tons a day from the South Pacific's planned fuel deliveries where the rows give them and a marked placeholder for supply. This needs no port, since Espiritu Santo unloaded by lighter and is port size 0 already, and no choice of source, since it is already the source.
+4. **Nouméa, a port for a base, and one base fed from another** are not needed for that, and wait.
+5. **Each change is measured against this run** on the same seeds, and nothing is tuned to the result.
+
+Not measured: the table's own pairings with a player in one seat; a balance of each base's stock event by event.
