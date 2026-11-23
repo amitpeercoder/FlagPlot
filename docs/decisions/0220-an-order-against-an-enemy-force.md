@@ -268,3 +268,62 @@ A function of `table/check_screen.py`, by the page's text, by the page's own fun
 14. **A watched game.** The paper, the ring and the slips are drawn for the seat watched, through the watcher's read of the same tools; the watcher is shown no button to give the order.
 15. **Through a bridge.** On the table's game of scenario 133's game A, at the Allied seat: on the first evening the card of the contact at (8,0) has both buttons; with the order given at 2 hexes and three days played, the paper says the force is followed at the place of (14,0), 2 ships, taken for cruisers, with one taking of day 3, and the chart's ring is round that place; with six days played the paper says lost, the ring is dashed round the place of (8,0), and the slip of the loss was drawn; with seven played the order is ended, its slip was drawn and no ring is drawn. Run with the three stops ticked, time stopped for the loss and for the end and for nothing else of this order.
 
+
+## The count, as run (Nov 23, 2026)
+
+Made before the build, on today's code (`e7bdc8c2`, release build), as "The count, as stated" says. It is the umpire's; it tunes nothing and moves no figure. Facts only: the nine-in-ten mark and the first finding are read by the architect.
+
+**The counter** is `scripts/0220-count/count.py` (standard library Python; `run.sh` makes the games). It reads `sim-cli export` files and counts as the section above states, with these readings where the words left a choice: a sighting is a `report_received` whose cause is a `search_attempt`; the pulses are night 0 to 12, morning 12 to 18, afternoon 18 to 24 of the day's hours; "held at the dusk after" is no `contact_dropped` or `contact_not_there` event for the old contact on the later sighting's day or before it (so a contact dropped in the night of the next day is held, as the hand calculation has it); the nine-in-ten value is the nearest rank.
+
+**The check.** Game A of scenario 133 with the order's three lines replaced by `intent_kind = "deny"`, `hex = [8, 0]`, `distance = 2`, on the frozen figures altered as the test alters them (`position_error_chance`, `count_over_chance`, `count_under_chance` 0, every `kind_confusion` row its own kind at 1), seed 1942 as the file has it: 3 later sightings, all of the next day; 1 refreshed and 2 new; 2 of 2 with the old contact held; 3 of 3 within the distance (30 hours, 15 hexes, against 6, 0 and 6); the greatest 10 knots. Exactly the numbers stated; nothing was mended.
+
+**The games.** Every file with `for_play = true` that gives both sides orders (the `a` files of `coral-sea`, `five-days` and `midway`, and the `a`, `b` and `c` files of `table-boats`), 15 files, on the live figures the files name, seeds 1 to 100 (`sim-cli export FILE --seed N`). Left out: files that give one side orders or none (`b`, `c`, `d` of the other folders, `table-hunger`) and the three `base_*` files, which hold no commands. Commands:
+
+```
+cargo build --release -p sim-cli
+scripts/0220-count/run.sh OUT
+python3 scripts/0220-count/count.py sum OUT/*.jsonl
+```
+
+Several files give identical counts: `01a_midway` and `01a_midway_submarines`; `01a_coral_sea` and `02a_coral_sea_oilers`; `02a_eastern_solomons_oilers` and `02a_eastern_solomons_oilers_submarines` (and `01a_eastern_solomons`); `03a_coral_sea_both_oilers` and its submarine file. The sums count each file once, so those games weigh as many times as there are files. `01b_midway_submarines` and `03b_coral_sea_both_oilers_submarines` have no later sighting.
+
+Per file and side (the counts are of later sightings over seeds 1 to 100; "Within" is R4's distance; the knots are the pair's distance over the hours between the two pulses' starts):
+
+| Scenario | Side | Later | Refreshed | New | New, old held | Within the distance | Worst knots | Nine in ten at or below |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 01a_coral_sea | allied | 552 | 384 | 168 | 42 of 168 | 552 of 552 | 13.33 | 6.67 |
+| 01a_coral_sea | japanese | 747 | 496 | 251 | 35 of 251 | 747 of 747 | 40.00 | 8.33 |
+| 01a_eastern_solomons | allied | 1054 | 748 | 306 | 120 of 306 | 1054 of 1054 | 33.33 | 13.33 |
+| 01a_eastern_solomons | japanese | 292 | 208 | 84 | 19 of 84 | 292 of 292 | 13.33 | 6.67 |
+| 01a_midway | allied | 684 | 416 | 268 | 40 of 268 | 684 of 684 | 15.00 | 9.44 |
+| 01a_midway | japanese | 71 | 46 | 25 | 0 of 25 | 71 of 71 | 13.33 | 6.67 |
+| 01a_midway_submarines | allied | 684 | 416 | 268 | 40 of 268 | 684 of 684 | 15.00 | 9.44 |
+| 01a_midway_submarines | japanese | 71 | 46 | 25 | 0 of 25 | 71 of 71 | 13.33 | 6.67 |
+| 01b_midway_submarines | both | 0 | 0 | 0 | 0 of 0 | 0 of 0 | - | - |
+| 01c_midway_submarines | allied | 54 | 40 | 14 | 5 of 14 | 54 of 54 | 13.33 | 6.67 |
+| 02a_coral_sea_oilers | allied | 552 | 384 | 168 | 42 of 168 | 552 of 552 | 13.33 | 6.67 |
+| 02a_coral_sea_oilers | japanese | 747 | 496 | 251 | 35 of 251 | 747 of 747 | 40.00 | 8.33 |
+| 02a_eastern_solomons_oilers | allied | 1054 | 748 | 306 | 120 of 306 | 1054 of 1054 | 33.33 | 13.33 |
+| 02a_eastern_solomons_oilers | japanese | 292 | 208 | 84 | 19 of 84 | 292 of 292 | 13.33 | 6.67 |
+| 02a_eastern_solomons_oilers_submarines | allied | 1054 | 748 | 306 | 120 of 306 | 1054 of 1054 | 33.33 | 13.33 |
+| 02a_eastern_solomons_oilers_submarines | japanese | 292 | 208 | 84 | 19 of 84 | 292 of 292 | 13.33 | 6.67 |
+| 02b_eastern_solomons_oilers_submarines | japanese | 246 | 193 | 53 | 13 of 53 | 246 of 246 | 13.33 | 6.67 |
+| 02c_eastern_solomons_oilers_submarines | allied | 509 | 461 | 48 | 11 of 48 | 509 of 509 | 13.33 | 6.67 |
+| 03a_coral_sea_both_oilers | allied | 551 | 383 | 168 | 42 of 168 | 551 of 551 | 13.33 | 6.67 |
+| 03a_coral_sea_both_oilers | japanese | 739 | 493 | 246 | 34 of 246 | 739 of 739 | 40.00 | 8.33 |
+| 03a_coral_sea_both_oilers_submarines | allied | 551 | 383 | 168 | 42 of 168 | 551 of 551 | 13.33 | 6.67 |
+| 03a_coral_sea_both_oilers_submarines | japanese | 739 | 493 | 246 | 34 of 246 | 739 of 739 | 40.00 | 8.33 |
+| 03b_coral_sea_both_oilers_submarines | both | 0 | 0 | 0 | 0 of 0 | 0 of 0 | - | - |
+| 03c_coral_sea_both_oilers_submarines | allied | 220 | 153 | 67 | 16 of 67 | 220 of 220 | 13.33 | 6.67 |
+| All 15 | allied | 7519 | 5264 | 2255 | 640 of 2255 | 7519 of 7519 | 33.33 | 8.33 |
+| All 15 | japanese | 4236 | 2887 | 1349 | 208 of 1349 | 4236 of 4236 | 40.00 | 6.67 |
+| All 15 | both | 11755 | 8151 | 3604 | 848 of 3604 | 11755 of 11755 | 40.00 | 6.67 |
+
+
+By the days between the pair, over all 15 files:
+
+| Days between the pair | Later | Refreshed | New | New, old held | Within the distance |
+| --- | --- | --- | --- | --- | --- |
+| same day | 4464 | 3759 | 705 | 115 of 705 | 4464 of 4464 |
+| next day | 5915 | 4092 | 1823 | 706 of 1823 | 5915 of 5915 |
+| 2+ days | 1376 | 300 | 1076 | 27 of 1076 | 1376 of 1376 |
