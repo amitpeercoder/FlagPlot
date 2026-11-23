@@ -37,7 +37,10 @@ const FILES: [&str; 3] = [
 ];
 
 fn repo() -> PathBuf {
-    common::data_dir().parent().expect("the repository").to_path_buf()
+    common::data_dir()
+        .parent()
+        .expect("the repository")
+        .to_path_buf()
 }
 
 fn read(path: PathBuf) -> String {
@@ -59,20 +62,23 @@ fn statement_1_the_scripts_check_passes() {
         .current_dir(repo())
         .output()
         .expect("python3 runs");
-    assert!(out.status.success(), "{}", String::from_utf8_lossy(&out.stdout));
+    assert!(
+        out.status.success(),
+        "{}",
+        String::from_utf8_lossy(&out.stdout)
+    );
 }
 
 #[test]
 fn statement_2_each_file_differs_in_what_the_rulings_say_and_nothing_else() {
     for name in FILES {
         let from = data_lines(&read(repo().join("data/scenarios/table-boats").join(name)));
-        let made = data_lines(&read(repo().join("data/scenarios/table-rear-bases").join(name)));
+        let made = data_lines(&read(
+            repo().join("data/scenarios/table-rear-bases").join(name),
+        ));
         assert_eq!(from.len(), made.len(), "{name}: the same lines");
-        let differing: Vec<(&String, &String)> = from
-            .iter()
-            .zip(&made)
-            .filter(|(a, b)| a != b)
-            .collect();
+        let differing: Vec<(&String, &String)> =
+            from.iter().zip(&made).filter(|(a, b)| a != b).collect();
         let mut names = 0;
         let mut supply = 0;
         let mut at_base = 0;
@@ -129,14 +135,19 @@ fn statement_3_shortland_has_no_supply_and_no_fuel() {
 fn statement_4_task_force_30_may_be_used_on_day_9_and_lies_at_rabaul_with_7_t() {
     for name in FILES {
         let text = read(repo().join("data/scenarios/table-rear-bases").join(name));
-        let at = text.find("[[task_force]]\nid = 30\n").expect("task force 30");
+        let at = text
+            .find("[[task_force]]\nid = 30\n")
+            .expect("task force 30");
         let block = &text[at..at + text[at..].find("\n[[ship]]").expect("its ship")];
         assert!(block.contains("\navailable_from = 9\n"), "{name}");
         let truth = first_morning(name);
         let rabaul = truth.bases[&BaseId::new(2)].hex;
         let force = &truth.task_forces[&TaskForceId::new(30)];
         assert_eq!(force.from_hex, rabaul, "{name}");
-        assert!(force.toward_hex.is_none() && force.progress_nm.is_zero(), "{name}");
+        assert!(
+            force.toward_hex.is_none() && force.progress_nm.is_zero(),
+            "{name}"
+        );
         assert_eq!(
             truth.ships[&ShipId::new(100)].supply_t,
             sim_core::fixed::Fixed::from_int(7),
