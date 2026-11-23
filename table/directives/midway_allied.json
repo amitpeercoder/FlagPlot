@@ -1,5 +1,5 @@
 {
- "note": "Directives for the Allied seat of Midway, 3 to 7 June 1942. Written for the game in its own words: these are not historical documents and quote none. Each gives the situation as the commander above has it and the mission with its purpose, and nothing the commander can find out for himself: what the enemy has, what is coming and what cannot be replaced are read elsewhere on the table. Decision 0157; what the American side knew of the enemy's plan, decision 0198, rule 34.",
+ "note": "Directives for the Allied seat of Midway, 3 to 7 June 1942. Written for the game in its own words: these are not historical documents and quote none. Each gives the situation as the commander above has it and the mission with its purpose, and nothing the commander can find out for himself: what the enemy has, what is coming and what cannot be replaced are read elsewhere on the table. Decision 0157; what the American side knew of the enemy's plan, decision 0198, rule 34. The last sentence of the situation names the side's submarines and where they are (decision 0225, rule 10).",
  "directives": [
   {
    "number": 1,
@@ -12,7 +12,8 @@
      "heading": "1. Situation",
      "text": [
       "The enemy is expected to move against Midway in the coming days. His carriers, four or more, are expected to approach from the north-west and to strike the island first. A landing force, with transports and its escort, is expected from the west.",
-      "Midway is held by its garrison and has aircraft of its own, which come under your command. Task Forces 16 and 17 are at sea north-east of the island, where the enemy is not believed to look for them."
+      "Midway is held by its garrison and has aircraft of its own, which come under your command. Task Forces 16 and 17 are at sea north-east of the island, where the enemy is not believed to look for them.",
+      "Four of our submarines are on station and under your command: Tambor, Trout and Nautilus on the arc 150 miles west and north-west of Midway, and Gato 200 miles west of it."
      ]
     },
     {

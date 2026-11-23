@@ -1241,6 +1241,14 @@ fn statement_23_the_key() {
             "scenarios/table-hunger/01{l}_midway.toml"
         )));
     }
+    // The Midway games with submarines (decision 0225): the three for play
+    // and file a's copy, kept for the measure, which has the key as file a
+    // has it.
+    for l in ['a', 'b', 'c', 'd'] {
+        want.push(PathBuf::from(format!(
+            "scenarios/table-boats/01{l}_midway_submarines.toml"
+        )));
+    }
     want.sort();
     with_key.sort();
     assert_eq!(with_key, want);

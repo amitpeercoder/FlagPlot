@@ -28,7 +28,9 @@ FOLDER = 'data/scenarios/table-hunger'
 OLD = 'ground = "../../reference/ground.toml"\n'
 NEW = 'ground = "../../reference/ground_hunger.toml"\n'
 
-# The scenarios of table/scenarios.json that name the live ground figures.
+# The scenarios of table/scenarios.json that name the live ground figures. (Midway's
+# copies are kept though the table now plays the copies of them with submarines,
+# data/scenarios/table-boats/, decision 0225: those are made from these.)
 SOURCES = [
     'data/scenarios/coral-sea/03b_coral_sea_both_oilers.toml',
     'data/scenarios/coral-sea/03c_coral_sea_both_oilers.toml',
