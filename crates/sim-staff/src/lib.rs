@@ -30,6 +30,7 @@ mod deny;
 mod doctrine;
 mod escort;
 mod fleet;
+mod follow;
 pub mod fuelling;
 mod handin;
 mod holding;

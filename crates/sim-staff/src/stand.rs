@@ -459,9 +459,12 @@ impl Day<'_, '_> {
         let stationed = end.maker == Maker::Commander
             && matches!(
                 end.kind,
-                IntentKind::Deny { .. } | IntentKind::Neutralise { .. }
+                IntentKind::Deny { .. }
+                    | IntentKind::Neutralise { .. }
+                    | IntentKind::DestroyForce { .. }
             )
             && !self.state.in_place_on_chain(end.id);
+        let destroy = matches!(end.kind, IntentKind::DestroyForce { .. });
         for id in named {
             let Some(force) = self.area.task_forces().find(|f| f.id == id) else {
                 continue;
@@ -475,6 +478,28 @@ impl Day<'_, '_> {
             // The force as the area command holds it, and the moment that is
             // of where it is not the pulse just ended (decision 0136, 11).
             let held = crate::reasons::force_held_words(self.area, id);
+            // Decision 0220, 2: no stand task is formed under an order to
+            // destroy a force: a surface force is not sent after a force on
+            // the move.
+            if destroy && force.mission == Mission::SurfaceCombat && !ships.is_empty() {
+                let reason = serving(end, plan)
+                    .evidence(
+                        format!(
+                            "{held} is on the surface combat mission with {} ship(s) afloat",
+                            ships.len()
+                        ),
+                        today,
+                    )
+                    .binding("no stand task stands under an order to destroy a force")
+                    .worked(format!(
+                        "{}, the order to destroy a force, names {id}: a surface force is not sent after a force on the move, so the staff forms no stand task for it and gives it no order.",
+                        end.id
+                    ))
+                    .would_change("the order withdrawn, or a deny of the waters given in its place")
+                    .done();
+                self.target(in_scope).no_orders.push(reason);
+                continue;
+            }
             let (kind, words, why) = match force.mission {
                 Mission::SurfaceCombat if !ships.is_empty() => (
                     IntentKind::StandAt {

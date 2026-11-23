@@ -220,11 +220,19 @@ impl Day<'_, '_> {
     /// Rules 1 to 5 and 24 to 28: the carrier pass of the morning, before the
     /// ends are served. It records for each end it reads what it found.
     pub(crate) fn carriers_for_ends(&mut self) {
+        // Decision 0220: an order to destroy a force is stationed for as a deny
+        // is, but not a shadow (rule 3) and not one that is lost-contact (R6).
         let ends = self.in_priority_order(|i| {
             matches!(
                 i.kind,
-                IntentKind::Deny { .. } | IntentKind::Neutralise { .. }
+                IntentKind::Deny { .. }
+                    | IntentKind::Neutralise { .. }
+                    | IntentKind::DestroyForce {
+                        search_only: false,
+                        ..
+                    }
             ) && i.maker == Maker::Commander
+                && !self.is_lost(i.id)
         });
         if ends.is_empty() {
             return;
@@ -460,6 +468,7 @@ impl Day<'_, '_> {
                                 .is_some_and(|f| f.task_forces.contains(&fid))
                     })
             });
+            let mut rechosen = false;
             let why = match (held, named_above) {
                 (Some(hold), _) => Some(format!(
                     "{hold} is held by the commander: a force held is let go"
@@ -468,7 +477,14 @@ impl Day<'_, '_> {
                     "{other}, higher in priority than {}, names {fid}",
                     end.id
                 )),
-                (None, None) => None,
+                // Decision 0220, R10: a station of an order to destroy a
+                // force is chosen again where it lies too far from the
+                // waters' centre as it is now.
+                (None, None) => {
+                    let again = self.station_rechosen(end, fid, hex);
+                    rechosen = again.is_some();
+                    again
+                }
             };
             match why {
                 Some(why) => {
@@ -497,7 +513,9 @@ impl Day<'_, '_> {
                     if let Some(found) = self.state.intents.get_mut(&task.id) {
                         found.withdrawn_day = Some(today);
                     }
-                    outcome.words.push(format!("{fid} is let go: {why}"));
+                    if !rechosen {
+                        outcome.words.push(format!("{fid} is let go: {why}"));
+                    }
                 }
                 None => {
                     taken.insert(fid, end.id);
@@ -520,6 +538,37 @@ impl Day<'_, '_> {
         }
     }
 
+    /// Decision 0220, R10: where the station `station` of `force` under the
+    /// order `end` lies more than `station_rechosen_hexes` hexes beyond the
+    /// farthest a station may be from the centre of the waters as they are
+    /// today, and a station can be chosen again, the words that say so.
+    fn station_rechosen(&self, end: &Intent, force: TaskForceId, station: Hex) -> Option<String> {
+        if !matches!(end.kind, IntentKind::DestroyForce { .. }) {
+            return None;
+        }
+        let (centre, distance) = self.waters_of(end)?;
+        let aboard = self.carrier_force_aboard(force)?;
+        let reach = aboard
+            .iter()
+            .filter_map(|g| bomber_reach(self.view, g))
+            .min()?;
+        let within = reach_for(reach, Some(distance));
+        let allowed = u32::try_from((within / Fixed::from_int(HEX_NM)).trunc()).unwrap_or(0);
+        let apart = station.distance(centre);
+        if apart <= allowed + crate::follow::STATION_RECHOSEN_HEXES {
+            return None;
+        }
+        // Only where a station can be chosen again: a force is never left
+        // with no task by this rule.
+        let found = self.area.task_forces().find(|f| f.id == force)?;
+        self.choose_station(end, found, &aboard).ok()?;
+        Some(format!(
+            "the station {station} is {apart} hexes from the centre {centre} of the waters of {} as they are now, against the {allowed} hexes a station may be from it ({within} nm of reach left after 40 nm for each of the waters' {distance} hexes) and the {} allowed beyond: {apart} is more, so the station is chosen again",
+            end.id,
+            crate::follow::STATION_RECHOSEN_HEXES
+        ))
+    }
+
     /// What `end` is aimed at, read from the side's map.
     pub(crate) fn aim_of(&self, end: &Intent) -> Option<Aim> {
         match end.kind {
@@ -537,7 +586,8 @@ impl Day<'_, '_> {
                     target: Some(target),
                 })
             }
-            IntentKind::Deny { hex, distance } => {
+            IntentKind::Deny { .. } | IntentKind::DestroyForce { .. } => {
+                let (hex, distance) = self.waters_of(end)?;
                 let hexes: BTreeSet<Hex> = crate::deny::waters(self.view, hex, distance)
                     .into_iter()
                     .collect();
@@ -1108,6 +1158,7 @@ impl Day<'_, '_> {
         );
         let aim = match end.kind {
             IntentKind::Deny { hex, distance } => waters_words(hex, distance),
+            IntentKind::DestroyForce { .. } => self.end_words(end),
             IntentKind::Neutralise { target } => {
                 format!("neutralise {}", base_words(self.view, target))
             }
@@ -1160,7 +1211,12 @@ impl Day<'_, '_> {
         };
         matches!(
             parent.kind,
-            IntentKind::Deny { .. } | IntentKind::Neutralise { .. }
+            IntentKind::Deny { .. }
+                | IntentKind::Neutralise { .. }
+                | IntentKind::DestroyForce {
+                    search_only: false,
+                    ..
+                }
         ) && parent.maker == Maker::Commander
             && !self.state.in_place_on_chain(parent.id)
     }

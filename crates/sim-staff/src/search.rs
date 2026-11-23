@@ -251,7 +251,7 @@ impl Day<'_, '_> {
         self.state
             .ancestors(task.id)
             .into_iter()
-            .find_map(|above| above.kind.waters())
+            .find_map(|above| self.waters_of(above))
     }
 
     #[allow(clippy::too_many_lines)]
@@ -297,8 +297,23 @@ impl Day<'_, '_> {
             .get(&base)
             .filter(|t| t.borrower == task.id)
             .cloned();
-        let once = once_a_day(risk);
-        let once_text = once_words(risk);
+        // Decision 0220, 3: a shadow searches in both daylight pulses at any
+        // risk.
+        let shadow = self.state.ancestors(task.id).into_iter().any(|above| {
+            matches!(
+                above.kind,
+                IntentKind::DestroyForce {
+                    search_only: true,
+                    ..
+                }
+            )
+        });
+        let once = !shadow && once_a_day(risk);
+        let once_text = if shadow {
+            "a shadow searches in both daylight pulses at any risk".to_string()
+        } else {
+            once_words(risk)
+        };
 
         let mut members = self.at_base(task, base);
         if let Some(turn) = &turn {
