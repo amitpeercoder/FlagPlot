@@ -2,8 +2,8 @@ Scenario 26: A force that acts at a place and steams on
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash b04de8259b8e6f4e  39 events
-day   2  hash 07352ff5f2727926  13 events
+day   1  hash e01bea775b0535c3  39 events
+day   2  hash d517d6b89b0687f7  13 events
 
 #1 D1 -         order:1 accepted for task_force:2  <- order:1
 #2 D1 -         order:2 accepted for task_force:2  <- order:2

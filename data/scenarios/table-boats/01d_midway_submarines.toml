@@ -1,86 +1,114 @@
-# MIDWAY, WITH SUBMARINES (decision 0225, as amended on review on Nov 23,
-# 2026).
+# MIDWAY, WITH SUBMARINES (decisions 0225 and 0227, each as amended on
+# review).
 #
 # This file is a copy of the table's copy of file d, neither side given
-# orders. The table's Midway plays it for those pairings. It copies
+# orders. The table plays it for those pairings. It copies
 # data/scenarios/table-hunger/01d_midway.toml.
 #
 # Made by scripts/table-boats/make_files.py. Do not edit by hand: change the
 # file it copies or the script and make the files again (`python3
 # scripts/table-boats/make_files.py --check` says whether each file is still
 # the one it makes). Each copy is the file it copies with this header, the
-# three keys of the submarine files and the section SUBMARINES at the end, and
-# nothing else (file a also names the table's ground figures). Its `name` is
-# the name of the file it copies.
+# three keys of the submarine files and the section SUBMARINES at the end,
+# which opens with the two [side] tables, and nothing else (file a also names
+# the table's ground figures). Its `name` is the name of the file it copies.
 #
-# IT HAS SUBMARINES: five boats, each on station where she starts, each in a
-# section of her own at the end with her rows. American: USS Tambor (1,3), USS
-# Trout (1,1), USS Nautilus (4,-2) and USS Gato (1,-1). Japanese: I-168 (5,1).
-# Each name is the name of her row of ships.csv.
+# IT HAS SUBMARINES: fifteen boats, each in a section of her own at the end
+# with her rows. American: USS Tambor (1,3), USS Trout (1,1), USS Nautilus
+# (4,-2), USS Gato (1,-1), USS Grayling (2,-1), USS Grouper (6,-4), USS
+# Gudgeon (7,-4), USS Grenadier (3,-3), USS Flying Fish (5,-1), USS Narwhal
+# (18,-3), USS Trigger (16,-2), USS Dolphin (0,2), USS Cachalot (6,-1) and USS
+# Cuttlefish (-13,3). Japanese: I-168 (5,1). Each name is the name of her row
+# of ships.csv. The rows named are by file: engagement_positions.csv,
+# engagement_events.csv and ship_facts.csv, by their ids; a place row is a row
+# of place_positions.csv.
 #   - Each start is a PLACEHOLDER start, read from a row by a rule (decision
-#     0225, amended rules 2 and 3). The American boats: an arc of Bates's
-#     disposition of 2 June (engagement_positions 16010: 240 to 360 degrees,
-#     150 miles from Midway, six boats; 16009: 250 to 310 degrees, 200 miles,
-#     three boats) is read clockwise from its lower bearing, the first boat
-#     the row names at the lower bearing and the last at the higher, those
-#     between at even steps, every boat the row names counted; the bearing is
-#     laid off flat in the map's frame from the atoll's position at the arc's
-#     distance, and the boat starts in the hex that point falls in. I-168
-#     starts in Midway's hex, where rows 16202 and 7673 have her on 1, 2 and 4
-#     June; there she attacks nothing, since a force in the hex of its own
-#     base is not attacked.
+#     0225, amended rules 2 and 3, carried on by decision 0227). The American
+#     boats on the arcs of Bates's disposition of 2 June (engagement_positions
+#     16010: 240 to 360 degrees, 150 miles from Midway, six boats; 16009: 250
+#     to 310 degrees, 200 miles, three boats; 16011: 310 to 350 degrees, 50
+#     miles, two boats): the arc is read clockwise from its lower bearing, the
+#     first boat the row names at the lower bearing and the last at the
+#     higher, those between at even steps, every boat the row names counted;
+#     the bearing is laid off flat in the map's frame from the atoll's
+#     position at the arc's distance, and the boat starts in the hex that
+#     point falls in. The support patrol (16013, a line of bearing 045 to 225
+#     degrees through the point 075 degrees, 425 miles out, the boats 30 miles
+#     apart): Narwhal 30 miles from the centre on 045 and Trigger 30 miles on
+#     225, Plunger between them left out. Cuttlefish: row 17212, 263 degrees,
+#     690 miles at 2400 on 3 June. I-168 starts in Midway's hex, where rows
+#     16202 and 7673 have her on 1, 2 and 4 June; there she attacks nothing,
+#     since a force in the hex of its own base is not attacked. All ten new
+#     boats start on day 1, on stations ordered on 2 June.
 #   - THE HOMES ARE STAND-INS: the American boats' home is Midway (base 1) and
 #     I-168's is Wake (base 2), each the base of her side on the map nearest
 #     her; the true homes are off the map. Two effects are accepted: a boat
 #     going home to a base that has changed side still leaves the map there;
 #     and I-168's way home to Wake is five days on passage, on which a search
 #     sights her at the whole chance.
-#   - NO ORDER is given to any boat: each keeps her station. The rows that
-#     moved the boats in the battle are not played: the order to close and
-#     attack the enemy to the north-west at 0710 on 4 June (engagement_events
-#     16181) and the order to form on the circle of 100 miles from Midway by
-#     dawn on 5 June (16182). A person orders his own boats; a side the staff
-#     plays leaves its boats on their stations, and no doctrine moves a boat
-#     without a patrol order of the commander's.
-#   - THE SIDES ARE UNEQUAL in every pairing: four American boats on the arcs
-#     west and north-west of Midway, across the way the Japanese forces come,
-#     against one Japanese boat at Midway itself. The Japanese cordons (Subron
-#     3's KO line and Subron 5's OTSU line) and Subdivision 13 at French
-#     Frigate Shoals lie east of the map's edge and are not in the game.
+#   - NO ORDER is given to any boat: each keeps her station. A person orders
+#     his own boats; a side the staff plays leaves its boats where they start,
+#     since the staff moves a boat only on a patrol order of the commander's
+#     (decision 0223, as amended). The two [side] tables at the head of the
+#     section state each navy's pattern: the Allied side's is off bases and it
+#     expects boats off its own bases; the Japanese side's is lines and it
+#     does not (decision 0227). Neither moves a boat: the pattern is read only
+#     when a commander orders a patrol. The rows that moved the boats in the
+#     battle are not played: the order to close and attack the enemy to the
+#     north-west at 0710 on 4 June (engagement_events 16181) and the order to
+#     form on the circle of 100 miles from Midway by dawn on 5 June (16182).
+#   - THE SIDES ARE UNEQUAL in every pairing: fourteen American boats on the
+#     arcs west and north-west of Midway, across the way the Japanese forces
+#     come, and on a line east-north-east of the atoll, against one Japanese
+#     boat at Midway itself.
+#   - ACCEPTED EFFECTS, each counted by the measure of decision 0227 (which
+#     reports who held each such base on each day): a force in the hex of a
+#     base its own side holds is not attacked, so I-168, in Midway's hex,
+#     attacks nothing that lies at Midway; a boat with one start stands there
+#     for the game unless ordered. A boat in the hex of a base the enemy holds
+#     is looked for at the full count of that base's search: no American boat
+#     is in such a hex at the start.
 #   - NO SUSPECTED WATERS. The rows of what each side believed of the other's
 #     boats are left out: engagement_events 16842 (one boat west of Midway, 29
-#     May), 16518 (one 200 miles south-west of Midway, 16 April) and 16202
-#     (fourteen sighted by I-168 off Midway, 1 and 2 June). They give no
-#     distance, and waters would change where the staff stands its forces, so
-#     that this game would differ from the game without boats by more than
-#     boats.
-#   - LEFT OUT: the seven American boats the arcs name that have no ship row,
-#     Dolphin and Grenadier (16009), Grayling, Grouper and Gudgeon (16010),
-#     Flying Fish and Cachalot (engagement_positions 16011, the inner arc);
-#     their places on the arcs are left empty. The other American boats of the
-#     battle (Cuttlefish, the support patrol and the boats north of Oahu) are
-#     off the map or have no ship row.
-#   - ESTIMATED FIGURES (decision 0207, rule 12). The classes are those
-#     derived as of 7 August 1942 (data/reference/submarine_classes_1942.csv);
-#     the five boats' classes did not change between June and August. Three
-#     load figures estimated from like boats by decision 0207, not stated by
-#     any row: class 6001, Tambor class (Tambor, Trout), its torpedo; class
-#     6002, Gato class (Gato), its torpedo; class 6011, Narwhal class
-#     (Nautilus), its passage speed and its torpedo. An estimate is never
-#     evidence. Class 6005 (I-168) has none.
+#     May), 16518 (one 200 miles south-west of Midway, 16 April), 16202
+#     (fourteen sighted by I-168 off Midway, 1 and 2 June) and 17246 to 17248
+#     (of other waters). They give no distance, and waters would change where
+#     the staff stands its forces, so that this game would differ from the
+#     game without boats by more than boats.
+#   - LEFT OUT: USS Plunger, whose class (Porpoise or Perch) is not derived
+#     (decision 0227, ruling 9); USS Pike, Tarpon, Growler and Finback, off
+#     the map; the Japanese cordons (Subron 3's KO line and Subron 5's OTSU
+#     line) and Subdivision 13 at French Frigate Shoals, off the map; and
+#     I-171, whose point M (19 N 174-26 W, engagement_positions 16015, hex
+#     (1,16) of this map) is of 31 May, three days before the game, for an
+#     operation that was cancelled, and whom the rows have on the KO line at
+#     166-20 W from 1 June (engagement_events 16194), off the map: no row has
+#     her on the map in the game's days. Decision 0225's "I-168 alone lies on
+#     the map" is true of the game's days, not of the rows.
+#   - ESTIMATED FIGURES (decision 0207, rule 12; decision 0227). The classes
+#     are those derived as of 7 August 1942
+#     (data/reference/submarine_classes_1942.csv), read for earlier dates; no
+#     boat here is of a class whose rows change between May and August.
+#     Figures that load estimated from like boats by decision 0207, not stated
+#     by any row: class 6001, Tambor class (USS Tambor, USS Trout, USS
+#     Grayling, USS Gudgeon, USS Grenadier), its torpedo; class 6002, Gato
+#     class (USS Gato, USS Grouper, USS Flying Fish, USS Trigger), its
+#     torpedo; class 6011, Narwhal class (USS Nautilus, USS Narwhal), its
+#     passage speed and its torpedo; class 6012, Dolphin class (USS Dolphin),
+#     its torpedo; class 6013, Cachalot class (USS Cachalot, USS Cuttlefish),
+#     its torpedo. An estimate is never evidence. Class 6005 has none.
 #   - THE FIGURES OF THE SUBMARINES ARE PLAYED UNSET (decision 0225, amended
 #     rule 7): data/reference/submarines.toml, every one a placeholder, on the
-#     designer's word of Nov 23, 2026 that boats are not to be held back
-#     (decision 0225, the designer's answer: the table offers one game of
-#     Midway, and it has its boats). No objective counts a boat sunk.
+#     designer's word of Nov 23, 2026 that the table offers one game of each
+#     battle and where the battle has boats that game has them. No objective
+#     counts a boat sunk.
 #
 # Kept out of the loops that walk data/scenarios/*.toml by being in this
 # folder (decision 0072).
 #
 # THE GAME IT COPIES. What follows, to the first key, is the header of the
 # file it copies, as it stands there. It holds of this file, but where it says
-# the submarines are left out or not modelled (Nautilus and I-168 among those
-# left out): the five boats above are in.
+# the submarines are left out or not modelled: the boats above are in.
 #
 # SCENARIO 114, MIDWAY (decision 0198).
 #
@@ -2036,11 +2064,22 @@ kind = "men_landed"
 base = 1
 points_per_100_men = 1
 
-# SUBMARINES (decision 0225, as amended on review). Made by scripts/table-boats/make_files.py.
+# SUBMARINES (decisions 0225 and 0227). Made by scripts/table-boats/make_files.py.
 # Each boat starts on her station, her hex (no station key), with her class's
-# salvoes, sound, and is ordered nowhere. The rule that reads each American
-# start from her arc is in the header; the hexes are worked by hand in
-# decision 0225, "The hexes, worked by hand".
+# salvoes, sound, and is ordered nowhere. The rule that reads each start is in
+# the header; the hexes are worked by hand in decisions 0225 and 0227,
+# "The hexes, worked by hand".
+
+# How each side's staff uses its boats (decision 0223, stage 0; decision 0227).
+[side.allied]
+submarine_pattern = "off_bases"
+expects_boats_off_own_bases = true
+staff_chooses_supply_sources = true
+
+[side.japanese]
+submarine_pattern = "lines"
+expects_boats_off_own_bases = false
+staff_chooses_supply_sources = true
 
 # USS Tambor (ships.csv 6321; class 6001, Tambor class, by ship_facts 16020).
 # PLACEHOLDER start (1,3): engagement_positions 16010 (Bates, 2 June: Tambor,
@@ -2119,3 +2158,172 @@ class = 6005
 q = 5
 r = 1
 home = 2
+
+# USS Grayling (ships.csv 6323; class 6001, Tambor class, by ship_facts
+# 17226). PLACEHOLDER start (2,-1): engagement_positions 16010 (Bates, 2 June:
+# Tambor, Trout, Grayling, Nautilus, Grouper and Gudgeon on the arc 240 to 360
+# degrees, 150 miles from Midway; steps of 24 degrees), third of six, bearing
+# 288 degrees: 15.7 nm from the centre of (2,-1) and 25.3 nm from that of
+# (3,-1). She starts on day 1, on station ordered on 2 June, and has no leave
+# day: no row gives one. Home: Midway (base 1), a stand-in.
+[[submarine]]
+id = 6
+name = "USS Grayling"
+side = "allied"
+class = 6001
+q = 2
+r = -1
+home = 1
+
+# USS Grouper (ships.csv 6327; class 6002, Gato class, by ship_facts 17234).
+# PLACEHOLDER start (6,-4): engagement_positions 16010 (Bates, 2 June: Tambor,
+# Trout, Grayling, Nautilus, Grouper and Gudgeon on the arc 240 to 360
+# degrees, 150 miles from Midway; steps of 24 degrees), fifth of six, bearing
+# 336 degrees: 17.9 nm from the centre of (6,-4) and 23.9 nm from that of
+# (5,-3). Decision 0225 left her out for want of a ship row; her attack of the
+# rows, on a destroyer alone, still cannot happen. She starts on day 1, on
+# station ordered on 2 June, and has no leave day: no row gives one. Home:
+# Midway (base 1), a stand-in.
+[[submarine]]
+id = 7
+name = "USS Grouper"
+side = "allied"
+class = 6002
+q = 6
+r = -4
+home = 1
+
+# USS Gudgeon (ships.csv 6325; class 6001, Tambor class, by ship_facts 17230).
+# PLACEHOLDER start (7,-4): engagement_positions 16010 (Bates, 2 June: Tambor,
+# Trout, Grayling, Nautilus, Grouper and Gudgeon on the arc 240 to 360
+# degrees, 150 miles from Midway; steps of 24 degrees), sixth of six, bearing
+# 360 degrees: 18.4 nm from the centre of (7,-4) and 22.7 nm from that of
+# (8,-4). She starts on day 1, on station ordered on 2 June, and has no leave
+# day: no row gives one. Home: Midway (base 1), a stand-in.
+[[submarine]]
+id = 8
+name = "USS Gudgeon"
+side = "allied"
+class = 6001
+q = 7
+r = -4
+home = 1
+
+# USS Grenadier (ships.csv 6324; class 6001, Tambor class, by ship_facts
+# 17228). PLACEHOLDER start (3,-3): engagement_positions 16009 (Bates, 2 June:
+# Dolphin, Gato and Grenadier on the arc 250 to 310 degrees, 200 miles from
+# Midway; steps of 30 degrees), third of three, bearing 310 degrees: 9.7 nm
+# from the centre of (3,-3) and 30.3 nm from that of (4,-4). She starts on day
+# 1, on station ordered on 2 June, and has no leave day: no row gives one.
+# Home: Midway (base 1), a stand-in.
+[[submarine]]
+id = 9
+name = "USS Grenadier"
+side = "allied"
+class = 6001
+q = 3
+r = -3
+home = 1
+
+# USS Flying Fish (ships.csv 6328; class 6002, Gato class, by ship_facts
+# 17240). PLACEHOLDER start (5,-1): engagement_positions 16011 (Bates, 2 June:
+# Flying Fish and Cachalot on the arc 310 to 350 degrees, 50 miles from
+# Midway; steps of 40 degrees), first of two, bearing 310 degrees: 18.6 nm
+# from the centre of (5,-1) and 25.2 nm from that of (4,0). She starts on day
+# 1, on station ordered on 2 June, and has no leave day: no row gives one.
+# Home: Midway (base 1), a stand-in.
+[[submarine]]
+id = 10
+name = "USS Flying Fish"
+side = "allied"
+class = 6002
+q = 5
+r = -1
+home = 1
+
+# USS Narwhal (ships.csv 6329; class 6011, Narwhal class, by ship_facts
+# 17246). PLACEHOLDER start (18,-3): engagement_positions 16013 (Bates, 2
+# June: the support patrol, a line of bearing 045 to 225 degrees through the
+# point 075 degrees, 425 miles from Midway, the boats 30 miles apart; the
+# boats in the row's order from the 045 end: Narwhal, Plunger, Trigger); the
+# centre of the line is the point 075 degrees, 425 miles out; Narwhal is the
+# first of three, 30 miles from the centre on 045 degrees: 15.4 nm from the
+# centre of (18,-3) and 25.3 nm from that of (18,-4). She starts on day 1, on
+# station ordered on 2 June, and has no leave day: no row gives one. Home:
+# Midway (base 1), a stand-in.
+[[submarine]]
+id = 11
+name = "USS Narwhal"
+side = "allied"
+class = 6011
+q = 18
+r = -3
+home = 1
+
+# USS Trigger (ships.csv 6331; class 6002, Gato class, by ship_facts 17242).
+# PLACEHOLDER start (16,-2): engagement_positions 16013 (Bates, 2 June: the
+# support patrol, a line of bearing 045 to 225 degrees through the point 075
+# degrees, 425 miles from Midway, the boats 30 miles apart; the boats in the
+# row's order from the 045 end: Narwhal, Plunger, Trigger); Trigger is the
+# third of three, 30 miles from the centre on 225 degrees: 7.9 nm from the
+# centre of (16,-2) and 33.1 nm from that of (17,-2). Plunger, the second, is
+# left out: her class is not derived. She starts on day 1, on station ordered
+# on 2 June, and has no leave day: no row gives one. Home: Midway (base 1), a
+# stand-in.
+[[submarine]]
+id = 12
+name = "USS Trigger"
+side = "allied"
+class = 6002
+q = 16
+r = -2
+home = 1
+
+# USS Dolphin (ships.csv 6318; class 6012, Dolphin class, by ship_facts
+# 17212). PLACEHOLDER start (0,2): engagement_positions 16009 (Bates, 2 June:
+# Dolphin, Gato and Grenadier on the arc 250 to 310 degrees, 200 miles from
+# Midway; steps of 30 degrees), first of three, bearing 250 degrees: 18.3 nm
+# from the centre of (0,2) and 21.8 nm from that of (-1,3). She starts on day
+# 1, on station ordered on 2 June, and has no leave day: no row gives one.
+# Home: Midway (base 1), a stand-in.
+[[submarine]]
+id = 13
+name = "USS Dolphin"
+side = "allied"
+class = 6012
+q = 0
+r = 2
+home = 1
+
+# USS Cachalot (ships.csv 6319; class 6013, Cachalot class, by ship_facts
+# 17214). PLACEHOLDER start (6,-1): engagement_positions 16011 (Bates, 2 June:
+# Flying Fish and Cachalot on the arc 310 to 350 degrees, 50 miles from
+# Midway; steps of 40 degrees), second of two, bearing 350 degrees: 11.0 nm
+# from the centre of (6,-1) and 29.1 nm from that of (5,-1). She starts on day
+# 1, on station ordered on 2 June, and has no leave day: no row gives one.
+# Home: Midway (base 1), a stand-in.
+[[submarine]]
+id = 14
+name = "USS Cachalot"
+side = "allied"
+class = 6013
+q = 6
+r = -1
+home = 1
+
+# USS Cuttlefish (ships.csv 6320; class 6013, Cachalot class, by ship_facts
+# 17216). PLACEHOLDER start (-13,3): engagement_positions 17212 (Bates: she
+# bore 263 degrees, 690 miles from Midway at 2400 on 3 June), her first
+# position in the game's days: the point lies 8.0 nm from the centre of
+# (-13,3). Rows 16021 (27 N 170 E on 30 May) and 17213 (27 N 170-02 E at 0020
+# on 4 June) fall in the same hex. She starts on day 1, on station ordered on
+# 2 June, and has no leave day: no row gives one. Home: Midway (base 1), a
+# stand-in.
+[[submarine]]
+id = 15
+name = "USS Cuttlefish"
+side = "allied"
+class = 6013
+q = -13
+r = 3
+home = 1

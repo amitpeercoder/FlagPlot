@@ -68,6 +68,10 @@ pub(crate) struct Params<'a> {
     pub(crate) interval_days: u32,
     pub(crate) interval_set: bool,
     pub(crate) area: Option<&'a BTreeSet<Hex>>,
+    /// Whether the source is the staff's choice (decision 0228, rule 8): the
+    /// side's staff chooses its sources and no intent of the commander's on
+    /// the chain names one. A run from it is cut to what it can spare.
+    pub(crate) staff_source: bool,
 }
 
 /// Ships that move together: one ship lying in port in no force, or a
@@ -647,7 +651,13 @@ impl<'a, 'v> Planner<'a, 'v> {
             return (Fixed::ZERO, Fixed::ZERO, Fixed::ZERO);
         };
         let reserve = base.reserve_of(Cargo::Supply);
-        let above = base.above_reserve(Cargo::Supply);
+        // Decision 0228, rules 7 and D: a source the staff chose gives what it
+        // can spare, a source the commander named down to its reserve.
+        let above = if self.params.staff_source {
+            crate::source::base_spare(self.view, base)
+        } else {
+            base.above_reserve(Cargo::Supply)
+        };
         ((above - pending_t).max(Fixed::ZERO), base.supply_t, reserve)
     }
 
@@ -968,7 +978,15 @@ impl<'a, 'v> Planner<'a, 'v> {
             } else {
                 let mut cuts = Vec::new();
                 let to_take = (uncapped_t - chosen.aboard_t).max(Fixed::ZERO);
-                if to_take > available_t {
+                if to_take > available_t && self.params.staff_source {
+                    cuts.push(format!(
+                        "the source can spare {} t, so the load is cut to what the source can spare ({} t of its stock, {} t it keeps, {} t still to be taken by runs loading)",
+                        available_t,
+                        stock_t,
+                        (stock_t - available_t - pending_t).max(Fixed::ZERO),
+                        pending_t
+                    ));
+                } else if to_take > available_t {
                     cuts.push(format!(
                         "the source has {} t above its reserve of {} t to give ({} t of its stock, {} t still to be taken by runs loading)",
                         available_t, reserve_t, stock_t, pending_t

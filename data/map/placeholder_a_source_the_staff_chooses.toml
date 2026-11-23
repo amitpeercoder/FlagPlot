@@ -1,0 +1,42 @@
+# PLACEHOLDER MAP. Open sea with four coast hexes, used by scenario 132 (a
+# source the staff chooses, decision 0228): H at (0,0) with port size 0, so
+# ships there work by lighter, and N at (-2,0), F at (0,8) and G at (8,0), each
+# with port size 5. Each lies on an axis of the grid from H, where a leg
+# between centres is charged 40 nm (decision 0058): N is 2 hexes and 80 nm
+# from H, F and G are 8 hexes and 320 nm each. The geography is invented.
+
+placeholder = true
+
+# Ranges are inclusive.
+[[region]]
+kind = "deep_sea"
+q = [-3, 9]
+r = [-1, 9]
+
+# H, the place supplied.
+[[hex]]
+q = 0
+r = 0
+kind = "coast"
+port_size = 0
+
+# N, the near base.
+[[hex]]
+q = -2
+r = 0
+kind = "coast"
+port_size = 5
+
+# F, the far base with ships.
+[[hex]]
+q = 0
+r = 8
+kind = "coast"
+port_size = 5
+
+# G, the far base with no ship.
+[[hex]]
+q = 8
+r = 0
+kind = "coast"
+port_size = 5

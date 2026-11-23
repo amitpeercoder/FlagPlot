@@ -1,5 +1,5 @@
 {
- "note": "Directives for the Allied seat of the Coral Sea, 6 to 10 May 1942. Written for the game in its own words: these are not historical documents and quote none. Each gives the situation as the commander above has it and the mission with its purpose, and nothing the commander can find out for himself: what the enemy has, what is coming and what cannot be replaced are read elsewhere on the table. Decision 0157.",
+ "note": "Directives for the Allied seat of the Coral Sea, 6 to 10 May 1942. Written for the game in its own words: these are not historical documents and quote none. Each gives the situation as the commander above has it and the mission with its purpose, and nothing the commander can find out for himself: what the enemy has, what is coming and what cannot be replaced are read elsewhere on the table. Decision 0157. The last sentence of the situation names the side's submarines and where they are (decision 0227).",
  "directives": [
   {
    "number": 1,
@@ -12,7 +12,8 @@
      "heading": "1. Situation",
      "text": [
       "The enemy is expected to move by sea against Port Moresby within days, with transports covered by carriers. The time and the route of the movement are not known.",
-      "Port Moresby is held by its garrison. In enemy hands it would bring northern Australia under his aircraft."
+      "Port Moresby is held by its garrison. In enemy hands it would bring northern Australia under his aircraft.",
+      "One of our submarines, S-42, is on patrol south-east of Cape St George, off the south coast of New Ireland, and is under your command."
      ]
     },
     {

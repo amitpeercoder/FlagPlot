@@ -286,7 +286,8 @@ const fn speed_code(speed: SpeedSetting) -> u8 {
 /// architect's ruling A); version 58 adds to a side's command state, after
 /// the commander's refusals, its submarine doctrine: the pattern's code (0
 /// for none, 1 `off_bases`, 2 `lines`) and whether it expects boats off its
-/// own bases (decision 0223, stage 0).
+/// own bases (decision 0223, stage 0); version 59 adds after it whether the
+/// side's staff chooses its sources of supply (decision 0228, A).
 ///
 /// What is held apart until its day (decision 0195, 23) does not raise the
 /// version: it is hashed last, after the domain, and only where something is
@@ -297,7 +298,7 @@ const fn speed_code(speed: SpeedSetting) -> u8 {
 /// replacement men and each land unit's strength (decision 0197, 21), after
 /// the supply lines, only where a scenario gives a stream or an
 /// establishment.
-pub const STATE_VERSION: &[u8] = b"flagplot-state-v58";
+pub const STATE_VERSION: &[u8] = b"flagplot-state-v59";
 
 /// Names every field of the state, with no `..` in any pattern. It does
 /// nothing when it runs. It is here so that a field added to the state does
@@ -794,6 +795,7 @@ fn name_every_field(world: &World) {
                     pattern: _,
                     expects_boats_off_own_bases: _,
                 },
+            staff_chooses_sources: _,
         } = state;
         if let Some(Intent {
             id: _,
@@ -1740,6 +1742,9 @@ fn hash_command_state(h: &mut StateHasher, state: &CommandState) {
     h.u8(u8::from(
         state.submarine_doctrine.expects_boats_off_own_bases,
     ));
+    // Decision 0228, A: whether the side's staff chooses its sources of
+    // supply, after the submarine doctrine. Version 59.
+    h.u8(u8::from(state.staff_chooses_sources));
 }
 
 /// Hashes where an interrupt stands: armed, the day it last fired,

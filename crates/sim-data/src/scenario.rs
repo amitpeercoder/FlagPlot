@@ -221,6 +221,9 @@ struct SidesSpec {
 struct SideDoctrineSpec {
     submarine_pattern: Option<String>,
     expects_boats_off_own_bases: Option<bool>,
+    /// Whether the side's staff chooses its sources of supply (decision
+    /// 0228, A). Left out, it does not.
+    staff_chooses_supply_sources: Option<bool>,
 }
 
 impl SideDoctrineSpec {
@@ -4046,6 +4049,11 @@ impl Scenario {
                     world
                         .set_submarine_doctrine(side, doctrine)
                         .map_err(|e| fail(e.to_string()))?;
+                    if spec.staff_chooses_supply_sources == Some(true) {
+                        world
+                            .set_staff_chooses_sources(side)
+                            .map_err(|e| fail(e.to_string()))?;
+                    }
                 }
             }
         }

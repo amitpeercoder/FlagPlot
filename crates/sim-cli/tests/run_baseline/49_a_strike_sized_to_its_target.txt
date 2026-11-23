@@ -2,7 +2,7 @@ Placeholder scenario 49: A strike sized to its target
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash a3946553259c9fd3  46 events
+day   1  hash 46a06bb4397b700c  46 events
 
 air_group:1 "Placeholder dive bombers 1" (Allied) at base:1: 10 ready, mission NavalStrike, no arc
 air_group:2 "Placeholder dive bombers 2" (Allied) at base:1: 10 ready, mission NavalStrike, no arc

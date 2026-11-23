@@ -1529,7 +1529,8 @@ fn property_no_game_on_file_moves() {
             || rel.starts_with("hungry-men-are-slow-to-mend/")
             || rel.starts_with("a-fight-costs-supply/")
             || rel.starts_with("table-hunger/")
-            || rel.starts_with("table-boats/");
+            || rel.starts_with("table-boats/")
+            || rel.starts_with("table-rear-bases/");
         let text = std::fs::read_to_string(file).expect("the scenario reads");
         let Some(ground) = ground_line(&text) else {
             continue;
@@ -1587,8 +1588,9 @@ fn property_no_new_state() {
     // a boat; and decision 0222 to v57 and 31, for a forces limit's
     // `none_of` and a limit that binds the kinds it names; and decision 0223
     // to v58 and 32, for a side's submarine doctrine and the pattern of a
-    // patrol; none touches this rule.
-    assert_eq!(sim_core::hash::STATE_VERSION, b"flagplot-state-v58");
+    // patrol, and decision 0228 to v59, for whether a side's staff chooses its
+    // sources of supply; none touches this rule.
+    assert_eq!(sim_core::hash::STATE_VERSION, b"flagplot-state-v59");
     assert_eq!(sim_core::world::RULES_VERSION, 32);
     let root = common::data_dir().join("..");
     let file = root.join("crates/sim-cli/tests/recorded_games/eastern_solomons_haiku/save.json");

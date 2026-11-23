@@ -1241,12 +1241,20 @@ fn statement_23_the_key() {
             "scenarios/table-hunger/01{l}_midway.toml"
         )));
     }
-    // The Midway games with submarines (decision 0225): the three for play
+    // The games with submarines (decisions 0225 and 0227): the three for play
     // and file a's copy, kept for the measure, which has the key as file a
-    // has it.
+    // has it, of each game whose file carries it: Midway, the Coral Sea and
+    // the five days. The copies of the 39 days carry none, as their sources
+    // carry none.
     for l in ['a', 'b', 'c', 'd'] {
         want.push(PathBuf::from(format!(
             "scenarios/table-boats/01{l}_midway_submarines.toml"
+        )));
+        want.push(PathBuf::from(format!(
+            "scenarios/table-boats/03{l}_coral_sea_both_oilers_submarines.toml"
+        )));
+        want.push(PathBuf::from(format!(
+            "scenarios/table-boats/02{l}_eastern_solomons_oilers_submarines.toml"
         )));
     }
     want.sort();

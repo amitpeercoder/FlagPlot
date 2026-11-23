@@ -37,6 +37,7 @@ Every answer is a JSON object with a top-level `"format": "flagplot-agent"`,
 | `queued` | `queued.schema.json` | `queued`: the seat's queued orders and commands, each with its place (decision 0221) |
 | `take_back` | `take_back.schema.json` | `take_back`: one queued entry withdrawn with what goes with it (decision 0221) |
 | `events` | `events.schema.json` | `events`: the side's own events of a day, or of one part of it |
+| `intelligence` | `intelligence.schema.json` | `intelligence`: what the seat holds of the enemy, gathered on one answer (decision 0226) |
 | `advance` | `advance.schema.json` | `advance` (offered where the scenario lets a seat stop between pulses and exactly one seat is held by a player) |
 | `error` | `error.schema.json` | any call refused as a whole |
 | `transcript_entry` | `transcript_entry.schema.json` | one line of a game's transcript |

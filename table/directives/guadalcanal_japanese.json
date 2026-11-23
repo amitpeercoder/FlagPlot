@@ -1,5 +1,5 @@
 {
- "note": "Directives for the Japanese seat of the 39 days of Guadalcanal, 7 August to 14 September 1942. Written for the game in its own words: these are not historical documents and quote none. Each gives the situation as the commander above has it and the mission with its purpose, and nothing the commander can find out for himself: what the enemy has, what is coming and what cannot be replaced are read elsewhere on the table. Decision 0157.",
+ "note": "Directives for the Japanese seat of the 39 days of Guadalcanal, 7 August to 14 September 1942. Written for the game in its own words: these are not historical documents and quote none. Each gives the situation as the commander above has it and the mission with its purpose, and nothing the commander can find out for himself: what the enemy has, what is coming and what cannot be replaced are read elsewhere on the table. Decision 0157. The last sentence of the situation names the side's submarines and where they are (decision 0227).",
  "directives": [
   {
    "number": 1,
@@ -12,7 +12,8 @@
      "heading": "1. Situation",
      "text": [
       "Our forces hold Tulagi and are completing an airfield at Lunga Point, Guadalcanal. From that field our aircraft will command the sea routes between the enemy and Australia.",
-      "The enemy is expected to contest the southern Solomons. Where and in what strength he will come is not known."
+      "The enemy is expected to contest the southern Solomons. Where and in what strength he will come is not known.",
+      "No submarine of ours is on station yet. They are due, under your command: I-123 off Lunga on 12 August and I-122 off Tulagi on 13 August; RO-34 off Lunga and I-19 and I-17 north-east of Malaita on 23 August; I-33 east of Malaita on 24 August; and I-26 east of San Cristobal and I-11 off its south-eastern end on 31 August. RO-34 leaves on 6 September and I-11 on 11 September."
      ]
     },
     {

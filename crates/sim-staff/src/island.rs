@@ -522,6 +522,32 @@ impl Day<'_, '_> {
             };
         }
         let place_hexes: BTreeSet<Hex> = places.iter().map(|p| p.hex).collect();
+        // Decision 0228, rule 13: for a side whose staff chooses its sources,
+        // the choice is the one rule of rules 1 to 4.
+        if named.is_none() && self.view.staff_chooses_sources() {
+            let first = places.first().map_or_else(|| Hex::new(0, 0), |p| p.hex);
+            let weighing = self.weigh_sources(end, &place_hexes, first, None);
+            let lines = weighing.lines().join("; ");
+            return match weighing.chosen.first() {
+                Some(pick) => Source {
+                    words: format!(
+                        "the source of supply, chosen by the staff from the bases of the side in no named place's hex: {lines}; the source is {}",
+                        base_words(self.view, pick.base)
+                    ),
+                    chosen: Some((pick.base, pick.forces.clone())),
+                },
+                None => Source {
+                    words: if lines.is_empty() {
+                        "no base can be the source of supply (the bases of the side in no named place's hex: none)".to_string()
+                    } else {
+                        format!(
+                            "no base can be the source of supply (the bases of the side in no named place's hex: {lines})"
+                        )
+                    },
+                    chosen: None,
+                },
+            };
+        }
         let mut best: Option<(BaseId, sim_core::fixed::Fixed, BTreeSet<TaskForceId>)> = None;
         let mut lines: Vec<String> = Vec::new();
         let mut bases: Vec<_> = self.view.bases().cloned().collect();
@@ -610,8 +636,20 @@ impl Day<'_, '_> {
         others: &crate::assemble::Others,
         staff_chooses: bool,
     ) -> Result<sim_core::fixed::Fixed, NotSource> {
-        self.may_take_base(base.id, others)
-            .map_err(NotSource::Taken)?;
+        // Decision 0228, rule 14: for a side whose staff chooses its sources,
+        // a base the commander names is not refused because an order higher
+        // in priority draws on it; only a base before its day.
+        if !staff_chooses && self.view.staff_chooses_sources() {
+            if let Some(day) = self.not_before_choice(sim_core::ids::EntityRef::Base(base.id)) {
+                return Err(NotSource::Taken(crate::available::named_with_day(
+                    base_words(self.view, base.id),
+                    day,
+                )));
+            }
+        } else {
+            self.may_take_base(base.id, others)
+                .map_err(NotSource::Taken)?;
+        }
         let above = base.supply_t - base.supply_reserve_t;
         if staff_chooses && above <= sim_core::fixed::Fixed::ZERO {
             return Err(NotSource::NothingAbove);
@@ -665,7 +703,11 @@ impl Day<'_, '_> {
 
     /// Decision 0152, 10 and 11: the transport forces the staff may take
     /// that lie stopped at `base` with nothing aboard, a ship afloat each.
-    fn pool_at(&self, base: BaseId, others: &crate::assemble::Others) -> BTreeSet<TaskForceId> {
+    pub(crate) fn pool_at(
+        &self,
+        base: BaseId,
+        others: &crate::assemble::Others,
+    ) -> BTreeSet<TaskForceId> {
         let Some(hex) = self.view.bases().find(|b| b.id == base).map(|b| b.hex) else {
             return BTreeSet::new();
         };

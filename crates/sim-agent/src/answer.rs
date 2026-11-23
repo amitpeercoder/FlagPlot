@@ -176,8 +176,13 @@ pub const FORMAT: &str = "flagplot-agent";
 /// gains `limits`. 51 adds the briefing's `submarines.doctrine` (decision
 /// 0223, stage 0): the side's own submarine pattern (`off_bases` or `lines`)
 /// and whether it expects enemy boats off its own bases, with its words; left
-/// out where the scenario states neither.
-pub const VERSION: u32 = 51;
+/// out where the scenario states neither. 52 adds the tool `intelligence`
+/// (decision 0226): what the seat holds of the enemy, gathered on one answer
+/// of `kind` `intelligence`, of every seat and the watcher's.
+/// 53 adds `supplied_from` to a hold and an island of `command_state`
+/// (decision 0228): the base the supply is read from and who chose it, `staff`
+/// or `commander`.
+pub const VERSION: u32 = 53;
 
 /// The answer to a question about something the side does not know of: a
 /// unit of the enemy, a number that does not exist, an event the side may not

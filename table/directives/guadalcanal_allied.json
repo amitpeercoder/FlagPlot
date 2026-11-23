@@ -1,5 +1,5 @@
 {
-  "note": "Directives for the Allied seat of the 39 days of Guadalcanal, 7 August to 14 September 1942. Written for the game in its own words: these are not historical documents and quote none. Each gives the situation as the commander above has it and the mission with its purpose, and nothing the commander can find out for himself: what the enemy has, what is coming and what cannot be replaced are read elsewhere on the table. Decision 0157.",
+  "note": "Directives for the Allied seat of the 39 days of Guadalcanal, 7 August to 14 September 1942. Written for the game in its own words: these are not historical documents and quote none. Each gives the situation as the commander above has it and the mission with its purpose, and nothing the commander can find out for himself: what the enemy has, what is coming and what cannot be replaced are read elsewhere on the table. Decision 0157. The last sentence of the situation names the side's submarines and where they are (decision 0227).",
   "directives": [
     {
       "number": 1,
@@ -11,7 +11,8 @@
         {
           "heading": "1. Situation",
           "text": [
-            "Japanese forces occupy Tulagi. An airfield is reported under construction at Lunga Point, Guadalcanal. Aircraft operating from that field would threaten communications with Australia."
+            "Japanese forces occupy Tulagi. An airfield is reported under construction at Lunga Point, Guadalcanal. Aircraft operating from that field would threaten communications with Australia.",
+            "One of our submarines, S-38, is on patrol off Cape St George, under your command. Four more are due: S-44 north-east of New Ireland on 10 August, S-42 off Savo Island on 26 August, S-45 off Shortland on 31 August and S-37 off Savo Island on 2 September."
           ]
         },
         {

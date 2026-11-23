@@ -5398,12 +5398,12 @@ fn a_boat_in_a_forces_limit_is_inside_the_parents_limit_or_the_parent_names_none
     // No limit naming a boat on the parent's chain: any boat of the side.
     assert!(world.command[&A].submarines_on_chain(parent).is_none());
     let any = boat_limit(&[1, 2]);
-    assert!(world.forces_narrow(A, parent, &any));
+    assert!(world.forces_narrow(A, parent, parent, &any));
     // A limit naming boat 1 only: boat 2 is wider.
     player(&mut world, set_forces(1, boat_limit(&[1]))).unwrap();
-    assert!(world.forces_narrow(A, parent, &boat_limit(&[1])));
-    assert!(!world.forces_narrow(A, parent, &boat_limit(&[1, 2])));
-    assert!(!world.forces_narrow(A, parent, &boat_limit(&[2])));
+    assert!(world.forces_narrow(A, parent, parent, &boat_limit(&[1])));
+    assert!(!world.forces_narrow(A, parent, parent, &boat_limit(&[1, 2])));
+    assert!(!world.forces_narrow(A, parent, parent, &boat_limit(&[2])));
 }
 
 #[test]
@@ -5588,4 +5588,133 @@ fn a_hold_on_a_boat_changes_the_hash() {
     let mut other = base_world;
     player(&mut other, hold(HoldTarget::Submarine(sub(2)))).unwrap();
     assert_ne!(other.state_hash(), held);
+}
+
+// ---- Decision 0228, the architect's rulings on the build (statements 21 to 25)
+
+/// A world with a hold of base 1 (intent 1) whose plan is released and a
+/// "keep supplied" for base 1 the staff formed under it (intent 2); the side's
+/// staff chooses its sources where `keyed`.
+fn world_with_a_hold_and_its_supply(keyed: bool) -> World {
+    let mut world = world();
+    if keyed {
+        world.command.get_mut(&A).unwrap().staff_chooses_sources = true;
+    }
+    player(
+        &mut world,
+        CommandKind::SetIntent {
+            intent: intent(1),
+            kind: IntentKind::Hold { base: base(1) },
+        },
+    )
+    .unwrap();
+    player(&mut world, CommandKind::Approve { plan: plan(1) }).unwrap();
+    player(&mut world, CommandKind::Approve { plan: plan(1) }).unwrap();
+    staff(
+        &mut world,
+        CommandKind::FormIntent {
+            parent: intent(1),
+            kind: keep_supplied(1),
+        },
+    )
+    .unwrap();
+    world
+}
+
+/// A limit naming source `source` and the task forces `force_list`.
+fn sourced(source: u32, force_list: &[u32]) -> ForcesLimit {
+    ForcesLimit {
+        source: Some(base(source)),
+        ..forces(&[], force_list)
+    }
+}
+
+/// Statement 21: without the key, a limit naming a source and a task force on
+/// a "keep supplied" under a hold with no limit is refused as wider.
+#[test]
+fn statement_21_without_the_key_a_supply_under_a_hold_names_nothing_the_hold_does_not() {
+    let mut world = world_with_a_hold_and_its_supply(false);
+    refused(
+        &mut world,
+        Issuer::Staff,
+        set_forces(2, sourced(2, &[1])),
+        CommandRefusal::WiderThanParent(intent(1)),
+    );
+}
+
+/// Statement 22: with the key, the same limit is taken.
+#[test]
+fn statement_22_with_the_key_the_same_limit_is_taken() {
+    let mut world = world_with_a_hold_and_its_supply(true);
+    staff(&mut world, set_forces(2, sourced(2, &[1]))).unwrap();
+    assert_eq!(
+        state(&world, A).intents[&intent(2)].limits.forces,
+        Some(sourced(2, &[1]))
+    );
+}
+
+/// Statement 23: with the key, under a hold whose limit names source base 2, a
+/// limit naming base 1 is refused and one naming base 2 and a task force is
+/// taken.
+#[test]
+fn statement_23_a_source_the_commander_names_still_binds() {
+    let mut world = world_with_a_hold_and_its_supply(true);
+    player(&mut world, set_forces(1, sourced(2, &[]))).unwrap();
+    refused(
+        &mut world,
+        Issuer::Staff,
+        set_forces(2, sourced(1, &[])),
+        CommandRefusal::WiderThanParent(intent(1)),
+    );
+    staff(&mut world, set_forces(2, sourced(2, &[1]))).unwrap();
+}
+
+/// Statement 24: with the key, a limit on a cover formed under the same hold
+/// is checked as today.
+#[test]
+fn statement_24_a_cover_under_the_hold_is_checked_as_today() {
+    let mut world = world_with_a_hold_and_its_supply(true);
+    staff(
+        &mut world,
+        CommandKind::FormIntent {
+            parent: intent(1),
+            kind: IntentKind::Cover { base: base(1) },
+        },
+    )
+    .unwrap();
+    // Intent 3 is the cover: a task force the hold's limits do not name is
+    // wider than its parent.
+    refused(
+        &mut world,
+        Issuer::Staff,
+        set_forces(3, sourced(1, &[1])),
+        CommandRefusal::WiderThanParent(intent(1)),
+    );
+}
+
+/// Statement 25: with the key, a run of a hold's plan is checked against the
+/// limit of the supply under the hold; without the key, with no limit on the
+/// hold, it is refused as having no forces limit.
+#[test]
+fn statement_25_a_run_of_a_holds_plan_draws_on_the_supply_under_it() {
+    let add = |ship_list: &[u32]| CommandKind::AddRun {
+        plan: plan(1),
+        run: run_spec(ship_list, [2, 3, 6, 8]),
+    };
+    let mut world = world_with_a_hold_and_its_supply(true);
+    staff(&mut world, set_forces(2, sourced(1, &[1]))).unwrap();
+    staff(&mut world, add(&[1, 2])).unwrap();
+    refused(
+        &mut world,
+        Issuer::Staff,
+        add(&[3]),
+        CommandRefusal::NotInPool(ship(3)),
+    );
+    let mut world = world_with_a_hold_and_its_supply(false);
+    refused(
+        &mut world,
+        Issuer::Staff,
+        add(&[1, 2]),
+        CommandRefusal::NoForcesLimit,
+    );
 }

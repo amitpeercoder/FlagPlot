@@ -857,7 +857,7 @@ fn an_unknown_tool_and_bad_arguments_change_nothing_and_name_what_is_allowed() {
     let (mut session, _, _) = eastern_solomons();
     let before = world_hash(&session);
     let e = refused(&mut session, Side::Allied, "get_truth", json!({}));
-    assert_eq!(e.allowed.len(), 12);
+    assert_eq!(e.allowed.len(), 13);
     assert!(e.allowed.contains(&"issue_orders".to_string()));
     for (tool, args) in [
         ("get_entity", json!({})),
@@ -968,7 +968,7 @@ fn with_two_players_the_day_waits_for_both_and_the_order_does_not_matter() {
         assert!(result["allied"]["margin"].is_string(), "{result}");
         assert_eq!(
             last,
-            json!({"format": "flagplot-agent", "version": 51, "kind": "end_day", "resolved": true, "day": 1, "game_over": true})
+            json!({"format": "flagplot-agent", "version": 53, "kind": "end_day", "resolved": true, "day": 1, "game_over": true})
         );
         assert_eq!(session.day_hashes(), hashes, "variant {variant}");
         let world = session.into_world();

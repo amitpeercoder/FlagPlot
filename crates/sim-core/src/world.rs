@@ -733,6 +733,22 @@ impl World {
         Ok(())
     }
 
+    /// States that `side`'s staff chooses its sources of supply (decision
+    /// 0228, A): set before the first day and never changed after. State of
+    /// the side's own, hashed with its command state.
+    pub fn set_staff_chooses_sources(&mut self, side: Side) -> Result<(), SimError> {
+        if self.truth.day != 0 || self.day_in_hand.is_some() {
+            return Err(SimError::InvalidSetup(
+                "a side's staff chooses its sources of supply from its scenario, before the first day"
+                    .to_string(),
+            ));
+        }
+        if let Some(state) = self.command.get_mut(&side) {
+            state.staff_chooses_sources = true;
+        }
+        Ok(())
+    }
+
     /// The number of days the game has (decision 0194), `None` where it was
     /// given none.
     pub fn game_days(&self) -> Option<u32> {

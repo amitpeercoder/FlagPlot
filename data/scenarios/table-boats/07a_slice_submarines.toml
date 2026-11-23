@@ -1,0 +1,3552 @@
+# GUADALCANAL, THE 39 DAYS, 7 AUGUST TO 14 SEPTEMBER 1942, WITH SUBMARINES
+# (decision 0227, as amended on review).
+#
+# This file is a copy of file a, both sides given their orders (staff against
+# staff), on the table's ground figures. It is not offered at the table: it is
+# kept for the measure of decision 0227, stage 3. It copies
+# data/scenarios/stage-3-proof/07a_slice.toml.
+#
+# Made by scripts/table-boats/make_files.py. Do not edit by hand: change the
+# file it copies or the script and make the files again (`python3
+# scripts/table-boats/make_files.py --check` says whether each file is still
+# the one it makes). Each copy is the file it copies with this header, the
+# three keys of the submarine files and the section SUBMARINES at the end,
+# which opens with the two [side] tables, and nothing else (file a also names
+# the table's ground figures). Its `name` is the name of the file it copies.
+#
+# IT HAS SUBMARINES: thirteen boats, each in a section of her own at the end
+# with her rows. American: USS S-38 (-5,-12), USS S-44 (-3,-17), USS S-37
+# (2,-5), USS S-42 (2,-5) and USS S-45 (-2,-8). Japanese: I-122 (3,-5), I-123
+# (2,-4), RO-34 (2,-4), I-19 (7,-8), I-17 (9,-9), I-33 (8,-5), I-26 (8,-3) and
+# I-11 (4,-2). Most enter after day 1, on the day of their row. Each name is
+# the name of her row of ships.csv. The rows named are by file:
+# engagement_positions.csv, engagement_events.csv and ship_facts.csv, by their
+# ids; a place row is a row of place_positions.csv.
+#   - Each start is a PLACEHOLDER start (decision 0227, rule 2), one of three
+#     readings: a stated latitude and longitude, the hex the point falls in
+#     (where the position is her target's, it is read as hers); a bearing and
+#     a distance from a place with a preferred row in place_positions.csv, the
+#     point laid off flat in the map's frame; or at or off a place with no
+#     distance, the hex of the place. Where the rows give a boat two patrols
+#     in the days, the longer is read. She enters on the day of that position,
+#     on day 1 where a row has her in the same waters on or before the game's
+#     first day.
+#   - THE HOMES ARE STAND-INS, named on each boat: the true homes are off the
+#     map, or are not read from the rows. Espiritu Santo is every Allied
+#     boat's; Rabaul is every Japanese boat's.
+#   - NO ORDER is given to any boat: each keeps her station. A person orders
+#     his own boats; a side the staff plays leaves its boats where they start,
+#     since the staff moves a boat only on a patrol order of the commander's
+#     (decision 0223, as amended). The two [side] tables at the head of the
+#     section state each navy's pattern: the Allied side's is off bases and it
+#     expects boats off its own bases; the Japanese side's is lines and it
+#     does not (decision 0227). Neither moves a boat: the pattern is read only
+#     when a commander orders a patrol.
+#   - ACCEPTED EFFECTS, each counted by the measure of decision 0227 (which
+#     reports who held each such base on each day): a boat in the hex of a
+#     base the enemy holds is looked for at the full count of that base's
+#     search where the base flies one. In these days Lunga and Tulagi start
+#     Japanese and with no airfield, and Shortland has none: I-123 and RO-34
+#     at Lunga and I-122 at Tulagi lie at a base of their own side until it is
+#     taken, and S-45 at Shortland is looked for only by what search the base
+#     has. A force in the hex of a base its own side holds is not attacked:
+#     I-122, I-123 and RO-34 may attack an Allied force in their hex while the
+#     base is Japanese and not after it is Allied; S-45 attacks nothing lying
+#     at Shortland; S-37 and S-42, in the hex of the Japanese stock west of
+#     the Lunga, attack no run that ends there. I-19, I-17 and I-33 start
+#     where they were sighted on passage and do not go on to their line; a
+#     boat with one start stands there for the game unless ordered.
+#   - LEAVE DAYS, said in full: I-19, I-17, I-33 and I-26 have none because
+#     the rows have them leave on 20 September, after the game. I-123 has
+#     none: the rows have her sunk on 29 August, day 23, an outcome and not
+#     scripted; she is kept as long as she lives. I-122, S-38, S-44, S-42 and
+#     S-45 have none because no row gives one, a gap. S-37 (day 38), RO-34
+#     (day 31) and I-11 (day 36) have the day the rows give.
+#   - NO SUSPECTED WATERS. The rows of what each side believed of the other's
+#     boats are left out: Allied, engagement_events 16298, 16584, 16608,
+#     16589, 16590, 16303, 16610 and 16613; Japanese, none on file, a gap.
+#     They give no distance, and waters would change where the staff stands
+#     its forces.
+#   - LEFT OUT: RO-34's first patrol (off Tulagi on 10 August, back at Rabaul
+#     on 16 August; the longer second patrol is read). I-121 and I-31, whose
+#     positions are bearings from San Cristobal, a place with no row (owed);
+#     I-175, whose first patrol ended the day the rows first place her (12
+#     August) and whose second has one position, three days before the end;
+#     I-15, I-174, I-9, I-21 and I-24, with no position; S-41, S-46, S-47,
+#     S-43, Amberjack and the boats off Truk, with none on the map; S-39,
+#     aground on her way.
+#   - ESTIMATED FIGURES (decision 0207, rule 12; decision 0227). The classes
+#     are those derived as of 7 August 1942
+#     (data/reference/submarine_classes_1942.csv), read for earlier dates; no
+#     boat here is of a class whose rows change between May and August.
+#     Figures that load estimated from like boats by decision 0207, not stated
+#     by any row: class 6003, I-15 class (I-19, I-17, I-33, I-26), its
+#     torpedo; class 6008, I-121 group (I-122, I-123), its torpedo; class
+#     6009, S-1 group (USS S-38, USS S-37), its passage speed; class 6010,
+#     S-42 group (USS S-44, USS S-42, USS S-45), its passage speed. An
+#     estimate is never evidence. Classes 6007, 6014 have none.
+#   - THE FIGURES OF THE SUBMARINES ARE PLAYED UNSET (decision 0225, amended
+#     rule 7): data/reference/submarines.toml, every one a placeholder, on the
+#     designer's word of Nov 23, 2026 that the table offers one game of each
+#     battle and where the battle has boats that game has them. No objective
+#     counts a boat sunk.
+#
+# Kept out of the loops that walk data/scenarios/*.toml by being in this
+# folder (decision 0072).
+#
+# THE GAME IT COPIES. What follows, to the first key, is the header of the
+# file it copies, as it stands there. It holds of this file, but where it says
+# the submarines are left out or not modelled: the boats above are in.
+#
+# STAGE 3'S PROOF, decision 0153, arrangement (a): Allied intents and Japanese intents.
+# It serves conditions 1 to 4, 6 and 7, and both halves of condition 5.
+#
+# Made by scripts/stage-3-proof/make_arrangements.py from the staff's setup,
+# data/scenarios/staff/07_full_slice.toml, by the smallest change. Do not edit
+# by hand: change the script or the staff's setup and make it again
+# (`python3 scripts/stage-3-proof/make_arrangements.py --check` says whether
+# this file is still the one it makes). It differs from the staff's setup in
+# these four things and nothing else:
+#   1. This header and the `name`.
+#   2. Task force 6, "Placeholder night force A" (Japanese, two placeholder
+#      cruisers, ships 40 and 41, from day 18): stopped at Shortland (base 7),
+#      home port Shortland, on the bombardment mission, in place of its hex
+#      (-8,10) in the open Coral Sea on the surface combat mission. The
+#      architect's ruling in decision 0153, "The loading check": the setup's
+#      surface forces lie 14 to 18 hexes from the airfield and none is on the
+#      bombardment mission, so no staff could bombard or reach the airfield's
+#      waters in a night, which the record's Japanese ships did from Shortland.
+#      Its day and its ships are unchanged. It stays a placeholder.
+#   3. Two islands as data (decision 0153, "The islands"; decision 0151):
+#      island 1, Guadalcanal, of Lunga (base 1); island 2, Tulagi, of Tulagi
+#      (base 4). They are at the end of the file.
+#   4. The intents as stated (decision 0153, "The intents as stated"), at the
+#      end of the file, on day 1, with no forces limit and no risk set
+#      (balanced), and both leaves given:
+#        - Allied: intents 1 and 2 on day 1, below;
+#        - Japanese: intents 1 and 2 on day 1, below.
+#      Intent 1 is control island 1, Guadalcanal; intent 2 is control island
+#      2, Tulagi. Nothing else is stated.
+#
+# Kept out of the loops that walk data/scenarios/*.toml by being in this
+# folder (decision 0072): no loop of the tests, CI or scripts/ walks a
+# subfolder of data/scenarios.
+#
+# The STAFF'S SETUP of scenario 7, the full slice (decision 0140, items 10 to
+# 14). Made by a script from data/scenarios/07_full_slice.toml: the same map,
+# bases, forces, ships, air groups, land units, arrivals, replacements,
+# figures and objectives, with every scripted order table taken out and no
+# intent stated. It plays as the scripted file with its orders taken out
+# (decision 0140, 14); a side given no order does what its units do on their
+# own.
+#
+# It is kept out of the loops that walk data/scenarios/*.toml by being in this
+# folder (decision 0072).
+#
+# available_from = N (decision 0140, 1 to 6) is the day the rows have the unit
+# there to use; where no row speaks, the day of the first scripted order to
+# the unit in scenario 7; and an air group whose aircraft arrive in the file
+# takes the day of that arrival (the architect's rulings, Nov 17, 2026,
+# decision 0140's As built). The row or decision the day rests on is cited
+# beside it. A unit aboard a force takes the force's day and has no key of its
+# own; a unit with day 1 has none. A day with no row behind it is marked made
+# up (placeholder).
+#
+# [[formation]] tables and each land unit's formation come from data/oob rows,
+# cited beside them (decision 0140, 9).
+#
+# Relative paths are one folder deeper than in scenario 7. The comments below
+# this header are scenario 7's own and describe the scripted file; its orders
+# and the comments attached to them are not here. Made by make_staff_setup.py,
+# described in decision 0140's "As built". Do not edit by hand: change the
+# script or scenario 7 and make it again.
+
+# Scenario 7: the full slice, 7 August to 14 September 1942 (39 days).
+#
+# Decisions 0043, 0093 and 0101. Everything the earlier scenarios built, run
+# together on the real map: the landings of 7 to 9 August on Guadalcanal and
+# Tulagi and the land fight that followed them, to the ridge of 12 to 14
+# September (decisions 0093 and 0101, with the architect's rulings recorded at
+# the end of 0101); the Rabaul against Guadalcanal air campaign (scenario 6);
+# the Eastern Solomons carrier battle on day 18, 24 August (scenario 5); a
+# placeholder convoy from Espiritu Santo to Lunga; and three placeholder night
+# surface actions in the open Coral Sea. Day 1 is 7 August; a game day runs
+# from 18:00 the evening before its date (docs/rules chapter 1), so the night
+# pulse of day 1 is the night of 6 to 7 August.
+#
+# From this stage its land fight is measured (data/validation/
+# guadalcanal_landings.toml); the rest of it still is not. The frozen copy in
+# data/scenarios/step2-frozen/ is the fourteen-day slice and is not touched.
+#
+# WHAT THE LAND FIGHT HOLDS (decision 0101 and the rulings at its end; every
+# figure is used as given there, and the row each rests on is named beside it):
+#   - Lunga (base 1) and Tulagi (base 4) start Japanese. The American bases
+#     there are formed by the landings; the Japanese bases change side when
+#     their side is beaten ashore (decision 0090).
+#   - The American transports start at sea and land on day 1. The Japanese
+#     runs start at Shortland (base 7), Ichiki's at Rabaul, and are sent out on
+#     the day that lands them in the night pulse of the record's day.
+#   - A NIGHT LANDING IS NUMBERED A DAY LATER THAN ITS DATE. A destroyer run
+#     landed after dark on the date its row gives (the one clock time read,
+#     land_unit_facts 1049, is about 9 p.m.), and the evening of a date is the
+#     night pulse of the next game day. So the Oite's landing of 16 August is
+#     day 11, not day 10 (the architect's ruling of Nov 14, 2026).
+#   - The squadrons of Henderson Field arrive on day 14, 20 August, and wait
+#     until Lunga is American and has its airfield (decision 0103, 5, and the
+#     ruling A of decision 0101): their groups start at base 1 with nothing.
+#
+# What was changed to put the other pieces together (decision 0043):
+#   - The Eastern Solomons air groups on carriers are numbered 101 to 126
+#     (their numbers there, plus 100), since the Rabaul scenario uses 1 to 3
+#     and 10 to 17. Their ships, task forces and bases keep their numbers.
+#   - Eastern Solomons' own Henderson Field is the Rabaul scenario's base 1.
+#     Its two groups there, VMF-223 (group 9) and VMSB-232 (group 10), are the
+#     Rabaul scenario's groups 10 and 11 and are left out, with their orders.
+#   - Every day number of the fourteen-day slice is moved by 14 (decision
+#     0093, 1): Eastern Solomons' orders, written for its day 1, are given on
+#     day 18, and the air campaign's orders and arrivals move by the same 14.
+#     The Rabaul raids of 9 to 13 September and the arrivals of scenario 6's
+#     days 22 and 24, which the fourteen days left out, are restored at their
+#     shifted days (ruling F of decision 0101).
+#   - VMF-223 (group 10) no longer starts with 6 damaged aircraft: it starts
+#     with nothing and its aircraft arrive (an arrival brings ready aircraft
+#     only). The damaged aircraft were a placeholder for coverage.
+#   - Ships and air groups of the Eastern Solomons scenario start in the
+#     hexes that scenario gives them and sit there until day 18 (ruling G of
+#     decision 0101). Where the carriers were on 6 August, south of
+#     Guadalcanal, is a gap.
+#   - Force A (task force 6) is sent north on day 19 and back on day 20, so
+#     that the log has a turn-back event (decision 5 of 0005). It is there
+#     only for coverage, as the order sent to the wrong side's force is.
+#   - Lunga has 400 t of fuel and Espiritu Santo 600 t, so that the log has
+#     refuelling in port (decision 0045). They are placeholders and there only
+#     for coverage. Lunga's fuel is the Japanese base's at the start: the
+#     side that takes it keeps half (decision 0090).
+#
+# PLACEHOLDER DATA. The figures files are placeholders. The convoy, the
+# transports of both sides, the night-action forces, a bystander and a dry
+# destroyer are invented: placeholder classes, names starting "Placeholder".
+name = "Stage 3's proof, arrangement (a): Allied intents and Japanese intents; the staff's setup of the full slice, 7 August to 14 September 1942"
+placeholder = true
+seed = 1942
+days = 39
+map = "../../map/south_pacific.csv"
+land_links = "../../map/south_pacific_land_links.csv"
+ship_classes = [
+    "../../reference/ship_classes_eastern_solomons.csv",
+    "../../reference/ship_classes.csv",
+    "../../reference/ship_classes_placeholder_transports.csv",
+    "../../reference/ship_classes_placeholder_fast_transport_cargo.csv",
+    "../../reference/ship_classes_guadalcanal_landings.csv",
+]
+port_sizes = "../../reference/port_sizes.csv"
+aircraft_types = [
+    "../../reference/aircraft_types_eastern_solomons.csv",
+    "../../reference/aircraft_types_rabaul_guadalcanal.csv",
+]
+search = "../../reference/search.toml"
+surface_combat = "../../reference/surface_combat.toml"
+submarine_classes = "../../reference/submarine_classes_1942.csv"
+submarine_torpedoes = "../../reference/submarine_torpedoes_1942.csv"
+submarines = "../../reference/submarines.toml"
+air_combat = "../../reference/air_combat.toml"
+air_upkeep = "../../reference/air_upkeep.toml"
+fatigue = "../../reference/fatigue.toml"
+air_supply = "../../reference/air_supply.toml"
+ground = "../../reference/ground_hunger.toml"
+# Whose each class and type is (decision 0173, 1 to 3).
+class_sides = "../../reference/class_sides_full_slice.csv"
+
+# The Japanese bases at Lunga and Tulagi have no defences (0): no row sizes
+# the works of the garrisons of 7 August, so they stay 0 until research gives
+# one (decision 0106, "What it changes in the August scenario").
+#
+# Lunga, the airfield's hex, Japanese at the start (decision 0101, 6). It has
+# no airfield and 13,763 of work done on one (decision 0101, 9): the strip was
+# 2,600 ft graded and rolled on 7 August (place_facts 60) of the 3,778 ft it
+# had when finished (place_facts 62), so 20,000 x 2,600 / 3,778, cut to a
+# whole number. The share rests on rows; the total, ground.toml's
+# airfield_work, is a placeholder, so this figure is a placeholder too. Its
+# stock is 1,090 t (decision 0101, 20), half of which the side that takes it
+# keeps: 545 t, ten days for the Americans there, the ten days of Japanese
+# food in the division's count of about 15 August, read from the note of
+# land_unit_facts 417. Its guns and repairs a day are the slice's placeholders
+# for Henderson Field, kept by the side that holds it; its fuel is the
+# placeholder above.
+[[base]]
+id = 1
+name = "Lunga"
+side = "japanese"
+q = 2
+r = -4
+supply_t = 1090
+fuel_t = 400
+anti_aircraft = 8
+aircraft_repairs_per_day = 3
+airfield = false
+airfield_work = 13763
+
+# The Rabaul airfields, Lakunai and Vunakanau, in one hex. Nothing attacks
+# them in this scenario, so they are given no guns. Supply and repairs a day
+# are placeholders. The fuel is a PLACEHOLDER (decision 0163, 7): no row gives
+# Rabaul's stock of fuel oil in August 1942 (a gap in data/oob/gaps.csv). It is
+# sized not to bind: a fast transport's round trip to Lunga burns about 139 t,
+# so 50,000 t is three hundred and sixty such trips, and a hundred
+# destroyers' tanks filled (the architect's ruling 5 on decision 0163).
+
+[[base]]
+id = 2
+name = "Rabaul"
+side = "japanese"
+q = -5
+r = -13
+supply_t = 10000
+fuel_t = 50000
+aircraft_repairs_per_day = 4
+
+# Espiritu Santo, where the convoy loads (the hex of Segond Channel, port
+# size 2 on the real map). The supply is a placeholder.
+[[base]]
+id = 3
+name = "Espiritu Santo"
+side = "allied"
+q = 7
+r = 6
+supply_t = 960
+fuel_t = 600
+
+# Tulagi, with Gavutu and Tanambogo, one place in one hex (decision 0093, 5;
+# place_positions 74, 75), Japanese at the start, with no airfield (decision
+# 0101, 11). PLACEHOLDER stock: ten days for its 440 men, 440 x 0.005 x 10 =
+# 22 t (the architect's ruling on rows, 1, decision 0101). No row gives a
+# quantity there.
+[[base]]
+id = 4
+name = "Tulagi"
+side = "japanese"
+q = 3
+r = -5
+supply_t = 22
+airfield = false
+
+# The Japanese stocks ashore east and west of the airfield (decision 0101, 22,
+# as amended, 5 and 8, and decision 0109, 2). Each landing hex holds a base of
+# the Japanese side, off the enemy's map, with no airfield, so that the rations
+# a run lands go into a base its men are fed from. The bases are placeholders.
+# The men who land bring their own rations (each run's cargo, below), so the
+# stock stated ashore is only what the men who fall back there need, turned
+# into tons by ground.toml's daily_supply_t_per_man of 0.005:
+#   (3,-4): 0. Everyone who lands there brings his own.
+#   (2,-5): PLACEHOLDER stock, seven days for the 2,040 men of the garrison of
+#     Lunga and its two construction units, who fall back there on the first
+#     days (decision 0104), 2,040 x 0.005 x 7 = 71.4 t, 71 t cut to a whole
+#     ton (decision 0101, as amended, 8). No row gives a Japanese stock west
+#     of the field.
+# The seven days are the practice a Japanese officer gave (two on the man,
+# three in the unit, two at division, land_unit_facts 1044): a practice and
+# not what these units were issued.
+[[base]]
+id = 5
+name = "Placeholder Japanese stock at Taivu"
+side = "japanese"
+q = 3
+r = -4
+supply_t = 0
+airfield = false
+on_map = false
+
+[[base]]
+id = 6
+name = "Placeholder Japanese stock west of the Lunga"
+side = "japanese"
+q = 2
+r = -5
+supply_t = 71
+airfield = false
+on_map = false
+
+# Shortland, the anchorage the Japanese destroyer runs sailed from, in the hex
+# of its position row (place_positions 24: Shortland Harbour, -7.07268,
+# 155.88036, which the projection of decision 0017 puts in (-2,-8)). No
+# airfield, no stock and no guns (the architect's ruling E, decision 0101).
+[[base]]
+id = 7
+name = "Shortland"
+side = "japanese"
+q = -2
+r = -8
+airfield = false
+
+# ---------------------------------------------------------------------------
+# THE LANDINGS AND THE LAND FIGHT (decisions 0093 and 0101)
+# ---------------------------------------------------------------------------
+
+# The American transports: placeholders (decision 0101, 16). No rule gives a
+# transport its kind or its cargo, so the men and supply go in the placeholder
+# troop transport (class 10, 600 men, 3,000 t) and the placeholder fast
+# transport (class 11, 200 men, no cargo), each named "Placeholder", enough of
+# them to carry each landing's men and supply. A ship carries the men of one
+# unit only, so each unit takes whole ships: on Guadalcanal 8 for Combat Group
+# A, 8 for Combat Group B, 3 for the Support Group and 2 for the pioneers (21);
+# on the Tulagi side 2 for the Raiders, 1 for the Parachutists, 2 for 2/5 and 7
+# for the rest (12). No escort is in the slice: the escorts and the covering
+# cruisers are a gap (ruling H of decision 0101).
+#
+# WHERE THEY START. Both groups were at sea on the night of 6 August, coming
+# round Savo Island from the west, and began landing in the morning of 7
+# August (decision 0101, 7). Each starts three hexes west of its beach by sea,
+# 120 nm, which the placeholder transport's cruising 10 knots steams in 12
+# hours: from 18:00, the start of day 1, it is off its beach at about 06:00 on
+# 7 August, the start of the morning pulse, and lands on day 1, the record's
+# day. (-1,-4) is three hexes west of Lunga along the row; (0,-5) three west of
+# Tulagi along its row, past Savo. A start hex is the working out of a sailing
+# time, not a position from a row: no row of the area's positions puts the
+# force there at 18:00.
+
+[[task_force]]
+id = 20
+name = "Placeholder transports, Guadalcanal"
+side = "allied"
+q = -1
+r = -4
+mission = "transport"
+home_port = 3
+
+[[task_force]]
+id = 21
+name = "Placeholder transports, Tulagi"
+side = "allied"
+q = 0
+r = -5
+mission = "transport"
+home_port = 3
+
+# The 60 days of food the division embarked (land_unit_facts 409), turned
+# into tons by ground.toml's 0.005 a man a day (decision 0101, 18):
+# 10,900 x 0.005 x 60 = 3,270 t for Guadalcanal, shared among its 21
+# transports (15 of 156 t and 6 of 155 t), and 6,075 x 0.005 x 60 = 1,822 t
+# for the Tulagi side among its 12 (10 of 152 t and 2 of 151 t).
+
+[[ship]]
+id = 52
+name = "Placeholder troop transport, Guadalcanal 1"
+class = 10
+side = "allied"
+fuel_t = 1000
+supply_t = 156
+task_force = 20
+
+[[ship]]
+id = 53
+name = "Placeholder troop transport, Guadalcanal 2"
+class = 10
+side = "allied"
+fuel_t = 1000
+supply_t = 156
+task_force = 20
+
+[[ship]]
+id = 54
+name = "Placeholder troop transport, Guadalcanal 3"
+class = 10
+side = "allied"
+fuel_t = 1000
+supply_t = 156
+task_force = 20
+
+[[ship]]
+id = 55
+name = "Placeholder troop transport, Guadalcanal 4"
+class = 10
+side = "allied"
+fuel_t = 1000
+supply_t = 156
+task_force = 20
+
+[[ship]]
+id = 56
+name = "Placeholder troop transport, Guadalcanal 5"
+class = 10
+side = "allied"
+fuel_t = 1000
+supply_t = 156
+task_force = 20
+
+[[ship]]
+id = 57
+name = "Placeholder troop transport, Guadalcanal 6"
+class = 10
+side = "allied"
+fuel_t = 1000
+supply_t = 156
+task_force = 20
+
+[[ship]]
+id = 58
+name = "Placeholder troop transport, Guadalcanal 7"
+class = 10
+side = "allied"
+fuel_t = 1000
+supply_t = 156
+task_force = 20
+
+[[ship]]
+id = 59
+name = "Placeholder troop transport, Guadalcanal 8"
+class = 10
+side = "allied"
+fuel_t = 1000
+supply_t = 156
+task_force = 20
+
+[[ship]]
+id = 60
+name = "Placeholder troop transport, Guadalcanal 9"
+class = 10
+side = "allied"
+fuel_t = 1000
+supply_t = 156
+task_force = 20
+
+[[ship]]
+id = 61
+name = "Placeholder troop transport, Guadalcanal 10"
+class = 10
+side = "allied"
+fuel_t = 1000
+supply_t = 156
+task_force = 20
+
+[[ship]]
+id = 62
+name = "Placeholder troop transport, Guadalcanal 11"
+class = 10
+side = "allied"
+fuel_t = 1000
+supply_t = 156
+task_force = 20
+
+[[ship]]
+id = 63
+name = "Placeholder troop transport, Guadalcanal 12"
+class = 10
+side = "allied"
+fuel_t = 1000
+supply_t = 156
+task_force = 20
+
+[[ship]]
+id = 64
+name = "Placeholder troop transport, Guadalcanal 13"
+class = 10
+side = "allied"
+fuel_t = 1000
+supply_t = 156
+task_force = 20
+
+[[ship]]
+id = 65
+name = "Placeholder troop transport, Guadalcanal 14"
+class = 10
+side = "allied"
+fuel_t = 1000
+supply_t = 156
+task_force = 20
+
+[[ship]]
+id = 66
+name = "Placeholder troop transport, Guadalcanal 15"
+class = 10
+side = "allied"
+fuel_t = 1000
+supply_t = 156
+task_force = 20
+
+[[ship]]
+id = 67
+name = "Placeholder troop transport, Guadalcanal 16"
+class = 10
+side = "allied"
+fuel_t = 1000
+supply_t = 155
+task_force = 20
+
+[[ship]]
+id = 68
+name = "Placeholder troop transport, Guadalcanal 17"
+class = 10
+side = "allied"
+fuel_t = 1000
+supply_t = 155
+task_force = 20
+
+[[ship]]
+id = 69
+name = "Placeholder troop transport, Guadalcanal 18"
+class = 10
+side = "allied"
+fuel_t = 1000
+supply_t = 155
+task_force = 20
+
+[[ship]]
+id = 70
+name = "Placeholder troop transport, Guadalcanal 19"
+class = 10
+side = "allied"
+fuel_t = 1000
+supply_t = 155
+task_force = 20
+
+[[ship]]
+id = 71
+name = "Placeholder troop transport, Guadalcanal 20"
+class = 10
+side = "allied"
+fuel_t = 1000
+supply_t = 155
+task_force = 20
+
+[[ship]]
+id = 72
+name = "Placeholder troop transport, Guadalcanal 21"
+class = 10
+side = "allied"
+fuel_t = 1000
+supply_t = 155
+task_force = 20
+
+[[ship]]
+id = 73
+name = "Placeholder troop transport, Tulagi 1"
+class = 10
+side = "allied"
+fuel_t = 1000
+supply_t = 152
+task_force = 21
+
+[[ship]]
+id = 74
+name = "Placeholder troop transport, Tulagi 2"
+class = 10
+side = "allied"
+fuel_t = 1000
+supply_t = 152
+task_force = 21
+
+[[ship]]
+id = 75
+name = "Placeholder troop transport, Tulagi 3"
+class = 10
+side = "allied"
+fuel_t = 1000
+supply_t = 152
+task_force = 21
+
+[[ship]]
+id = 76
+name = "Placeholder troop transport, Tulagi 4"
+class = 10
+side = "allied"
+fuel_t = 1000
+supply_t = 152
+task_force = 21
+
+[[ship]]
+id = 77
+name = "Placeholder troop transport, Tulagi 5"
+class = 10
+side = "allied"
+fuel_t = 1000
+supply_t = 152
+task_force = 21
+
+[[ship]]
+id = 78
+name = "Placeholder troop transport, Tulagi 6"
+class = 10
+side = "allied"
+fuel_t = 1000
+supply_t = 152
+task_force = 21
+
+[[ship]]
+id = 79
+name = "Placeholder troop transport, Tulagi 7"
+class = 10
+side = "allied"
+fuel_t = 1000
+supply_t = 152
+task_force = 21
+
+[[ship]]
+id = 80
+name = "Placeholder troop transport, Tulagi 8"
+class = 10
+side = "allied"
+fuel_t = 1000
+supply_t = 152
+task_force = 21
+
+[[ship]]
+id = 81
+name = "Placeholder troop transport, Tulagi 9"
+class = 10
+side = "allied"
+fuel_t = 1000
+supply_t = 152
+task_force = 21
+
+[[ship]]
+id = 82
+name = "Placeholder troop transport, Tulagi 10"
+class = 10
+side = "allied"
+fuel_t = 1000
+supply_t = 152
+task_force = 21
+
+[[ship]]
+id = 83
+name = "Placeholder troop transport, Tulagi 11"
+class = 10
+side = "allied"
+fuel_t = 1000
+supply_t = 151
+task_force = 21
+
+[[ship]]
+id = 84
+name = "Placeholder troop transport, Tulagi 12"
+class = 10
+side = "allied"
+fuel_t = 1000
+supply_t = 151
+task_force = 21
+
+# Transport Division 12's run of 15 August (day 9): four destroyer-transports
+# with the CUB One detachment and 120 t, 30 t each (troop_lift_facts 70, 86 to
+# 88; decision 0101, 21). Class 12 is the placeholder fast transport with the 30
+# t of cargo of row 70 (ruling D of decision 0101). It starts at Espiritu Santo,
+# the base it sailed from, and is sent out on day 8 at its cruising 16 knots,
+# which brings it to Lunga on day 9 (worked out by running the scenario: see
+# the order).
+
+[[task_force]]
+id = 22
+name = "Placeholder fast transports with cargo, run of 15 August"
+side = "allied"
+# Day 8 (14 August): sent out from Espiritu Santo to land on day 9, 15 August:
+# Transport Division 12's run with the CUB One detachment,
+# data/oob/troop_lift_facts.csv 70, 86, 87, 88 and
+# data/oob/land_unit_facts.csv 660, 661 (decision 0101, 21). Worked out from
+# the landing date of the rows by the passage; the sending day itself has no
+# row.
+available_from = 8
+at_base = 3
+mission = "transport"
+home_port = 3
+
+[[ship]]
+id = 85
+name = "Placeholder fast transport with cargo 1"
+class = 12
+side = "allied"
+fuel_t = 500
+supply_t = 30
+task_force = 22
+
+[[ship]]
+id = 86
+name = "Placeholder fast transport with cargo 2"
+class = 12
+side = "allied"
+fuel_t = 500
+supply_t = 30
+task_force = 22
+
+[[ship]]
+id = 87
+name = "Placeholder fast transport with cargo 3"
+class = 12
+side = "allied"
+fuel_t = 500
+supply_t = 30
+task_force = 22
+
+[[ship]]
+id = 88
+name = "Placeholder fast transport with cargo 4"
+class = 12
+side = "allied"
+fuel_t = 500
+supply_t = 30
+task_force = 22
+
+# The run of 21 August (day 15): over 2,000 t landed, 200 t of it rations
+# (land_unit_facts 748; troop_lift_facts 60), here in two placeholder cargo
+# ships (class 3) of 1,000 t each. The record's six destroyer-transports of the
+# run are task force 24, which carries 2/5 across from Tulagi the same day.
+
+[[task_force]]
+id = 23
+name = "Placeholder cargo ships, run of 21 August"
+side = "allied"
+# Day 13 (19 August): sent out on the day that brings it to Lunga on day 15,
+# 21 August: the run of 21 August, data/oob/land_unit_facts.csv 748,
+# data/oob/troop_lift_facts.csv 60. Worked out from the landing date of the
+# rows by the passage; the sending day itself has no row.
+available_from = 13
+at_base = 3
+mission = "transport"
+home_port = 3
+
+[[ship]]
+id = 89
+name = "Placeholder cargo ship, run of 21 August 1"
+class = 3
+side = "allied"
+fuel_t = 1000
+supply_t = 1000
+task_force = 23
+
+[[ship]]
+id = 90
+name = "Placeholder cargo ship, run of 21 August 2"
+class = 3
+side = "allied"
+fuel_t = 1000
+supply_t = 1000
+task_force = 23
+
+# The crossings from Tulagi to Lunga (decision 0101, the line under the
+# American table): 2/5 on day 15, 21 August (land_unit_facts 534), and the
+# Raiders and the Parachutists on day 25, 31 August (land_unit_facts 798, 513).
+# Task force 24, six placeholder fast transports, carries 2/5 and then the
+# Raiders; task force 25, two more, the Parachutists. A ship carries one unit's
+# men and a load order names one unit, so the two units of day 25 need two
+# forces. Both start at Espiritu Santo and are worked out to lie at Tulagi the
+# day before each crossing, load then, and cross and land on the day.
+
+[[task_force]]
+id = 24
+name = "Placeholder fast transports, the Tulagi crossings"
+side = "allied"
+# Day 11 (17 August): sent out to lie at Tulagi on day 14 and cross with 2/5
+# on day 15, 21 August (data/oob/land_unit_facts.csv 534), then with the
+# Raiders on day 25, 31 August (data/oob/land_unit_facts.csv 798, 513),
+# decision 0101, the line under the American table. Worked out from the
+# landing date of the rows by the passage; the sending day itself has no row.
+available_from = 11
+at_base = 3
+mission = "transport"
+home_port = 3
+
+[[ship]]
+id = 91
+name = "Placeholder fast transport, crossings 1"
+class = 11
+side = "allied"
+fuel_t = 500
+task_force = 24
+
+[[ship]]
+id = 92
+name = "Placeholder fast transport, crossings 2"
+class = 11
+side = "allied"
+fuel_t = 500
+task_force = 24
+
+[[ship]]
+id = 93
+name = "Placeholder fast transport, crossings 3"
+class = 11
+side = "allied"
+fuel_t = 500
+task_force = 24
+
+[[ship]]
+id = 94
+name = "Placeholder fast transport, crossings 4"
+class = 11
+side = "allied"
+fuel_t = 500
+task_force = 24
+
+[[ship]]
+id = 95
+name = "Placeholder fast transport, crossings 5"
+class = 11
+side = "allied"
+fuel_t = 500
+task_force = 24
+
+[[ship]]
+id = 96
+name = "Placeholder fast transport, crossings 6"
+class = 11
+side = "allied"
+fuel_t = 500
+task_force = 24
+
+[[task_force]]
+id = 25
+name = "Placeholder fast transports, the Parachutists' crossing"
+side = "allied"
+# Day 21 (27 August): sent out to lie at Tulagi on day 24 and cross with the
+# Parachutists on day 25, 31 August (data/oob/land_unit_facts.csv 798, 513),
+# decision 0101, the line under the American table. Worked out from the
+# landing date of the rows by the passage; the sending day itself has no row.
+available_from = 21
+at_base = 3
+mission = "transport"
+home_port = 3
+
+[[ship]]
+id = 97
+name = "Placeholder fast transport, Parachutists 1"
+class = 11
+side = "allied"
+fuel_t = 500
+task_force = 25
+
+[[ship]]
+id = 98
+name = "Placeholder fast transport, Parachutists 2"
+class = 11
+side = "allied"
+fuel_t = 500
+task_force = 25
+
+# The ship that brought the 6th Naval Construction Battalion on 1 September
+# (day 26; land_unit_facts 606), a placeholder troop transport with the 392 men
+# and no supply: no row gives her load, so none is invented (the architect's
+# ruling, decision 0101).
+
+[[task_force]]
+id = 26
+name = "Placeholder transport, the Seabees of 1 September"
+side = "allied"
+# Day 24 (30 August): sent out on the day that brings the 6th Naval
+# Construction Battalion's ship to Lunga on day 26, 1 September
+# (data/oob/land_unit_facts.csv 606); no row gives her load (decision 0101).
+# Worked out from the landing date of the rows by the passage; the sending day
+# itself has no row.
+available_from = 24
+at_base = 3
+mission = "transport"
+home_port = 3
+
+[[ship]]
+id = 99
+name = "Placeholder troop transport, Seabees 1"
+class = 10
+side = "allied"
+fuel_t = 1000
+task_force = 26
+
+# The Japanese runs. Each starts at Shortland (base 7), Ichiki's at Rabaul
+# (base 2): its destroyers came from Truk, which is off the map (ruling E of
+# decision 0101). Every run but the four Fubuki-class destroyers is carried in
+# placeholder fast transports, enough of them for its men (decision 0101, 17):
+# no Kagero-class, Shiratsuyu-class or Kamikaze-class destroyer has a troop
+# figure, so the real destroyers of those runs are not in the slice. Fubuki and
+# Shirayuki (class 3009, 225 men) are of the run of 29 August and Hatsuyuki and
+# Amagiri (class 3010, 150 men) of 31 August, as the derivation list
+# data/derivation/guadalcanal_landings.toml reads them. Each run is ordered out
+# on the day before it lands, with its route to the landing hex and back home,
+# a mark on the landing hex (decision 0096: it halts, lands its men and steams
+# on) and an unload order; its speed is worked out so that it arrives in the
+# night pulse of its landing day (see each run's orders).
+#
+# EACH RUN LANDS ITS OWN RATIONS (decision 0109, 2). Two weeks' rations were
+# carried with the men by the destroyers (land_unit_facts 975), and a destroyer
+# was planned to carry 110 men and two weeks' rations (troop_lift_facts 170,
+# 177, 178). So each run carries rations for its men at the game's charge,
+# ground.toml's daily_supply_t_per_man of 0.005, as supply cargo, landed by its
+# unload order with the men: 14 days for each run of the Kawaguchi main body,
+# the Aoba part and the Oka group; 7 days for the Ichiki echelon, the Yokosuka
+# force and the force of 29 August, by the practice of land_unit_facts 1044,
+# which is all that bears on them. They sail in the placeholder fast transport
+# with cargo (class 12, 200 men and 30 t), as ruling D of decision 0101 made for
+# the American run of 15 August, as many ships as the men need, the rations
+# shared equally among a run's ships of that class. PLACEHOLDER: the rations
+# rest on a stated practice, not on what these units were issued.
+
+# Rations: 200 men (troop_lift_facts 37, 38) x 0.005 x 7 days = 7 t, the
+# seven days of land_unit_facts 1044, in one ship.
+[[task_force]]
+id = 30
+name = "Placeholder run of 16 August, the Yokosuka 5th Special Naval Landing Force"
+side = "japanese"
+# Day 10 (16 August): sent out on the day before its landing in the night
+# pulse of day 11, the Oite's run of 16 August (data/oob/troop_lift_facts.csv
+# 37, 38; the architect's ruling of Nov 14, 2026, that a night landing is
+# numbered a day later). Worked out from the landing date of the rows by the
+# passage; the sending day itself has no row.
+available_from = 10
+at_base = 7
+mission = "transport"
+home_port = 7
+
+[[ship]]
+id = 100
+name = "Placeholder fast transport with cargo, task force 30, 1"
+class = 12
+side = "japanese"
+fuel_t = 500
+supply_t = 7
+task_force = 30
+
+# Rations: 916 men (troop_lift_facts 141) x 0.005 x 7 days = 32.06 t, the seven
+# days of land_unit_facts 1044, 6.412 t in each of the five ships.
+[[task_force]]
+id = 31
+name = "Placeholder run of 18 August, the Ichiki Detachment"
+side = "japanese"
+# Day 12 (18 August): sent out from Rabaul on the day before its landing on
+# day 13, the Ichiki first echelon's run of 18 August
+# (data/oob/troop_lift_facts.csv 138, 139, 140, 141;
+# data/oob/land_unit_facts.csv 1049). Worked out from the landing date of the
+# rows by the passage; the sending day itself has no row.
+available_from = 12
+at_base = 2
+mission = "transport"
+home_port = 2
+
+[[ship]]
+id = 101
+name = "Placeholder fast transport with cargo, task force 31, 1"
+class = 12
+side = "japanese"
+fuel_t = 500
+supply_t = "6.412"
+task_force = 31
+
+[[ship]]
+id = 102
+name = "Placeholder fast transport with cargo, task force 31, 2"
+class = 12
+side = "japanese"
+fuel_t = 500
+supply_t = "6.412"
+task_force = 31
+
+[[ship]]
+id = 103
+name = "Placeholder fast transport with cargo, task force 31, 3"
+class = 12
+side = "japanese"
+fuel_t = 500
+supply_t = "6.412"
+task_force = 31
+
+[[ship]]
+id = 104
+name = "Placeholder fast transport with cargo, task force 31, 4"
+class = 12
+side = "japanese"
+fuel_t = 500
+supply_t = "6.412"
+task_force = 31
+
+[[ship]]
+id = 105
+name = "Placeholder fast transport with cargo, task force 31, 5"
+class = 12
+side = "japanese"
+fuel_t = 500
+supply_t = "6.412"
+task_force = 31
+
+# Rations: 900 men (troop_lift_facts 45, 148) x 0.005 x 7 days = 31.5 t, the
+# seven days of land_unit_facts 1044. Fubuki and Shirayuki are derived ships
+# and a derived destroyer has no cargo figure, so they carry men only and the
+# rations sail in the three placeholders beside them, 10.5 t each (the
+# architect's ruling, decision 0109, As built). Hatsuyuki and Amagiri of task
+# force 33 are the same.
+[[task_force]]
+id = 32
+name = "Run of 29 August to Tassafaronga"
+side = "japanese"
+# Day 23 (29 August): sent out on the day before its landing on day 24, the
+# run of 29 August to Tassafaronga (data/oob/troop_lift_facts.csv 45, 148).
+# Worked out from the landing date of the rows by the passage; the sending day
+# itself has no row.
+available_from = 23
+at_base = 7
+mission = "transport"
+home_port = 7
+
+[[ship]]
+id = 106
+name = "Fubuki"
+class = 3009
+side = "japanese"
+fuel_t = 475
+task_force = 32
+
+[[ship]]
+id = 107
+name = "Shirayuki"
+class = 3009
+side = "japanese"
+fuel_t = 475
+task_force = 32
+
+[[ship]]
+id = 108
+name = "Placeholder fast transport with cargo, task force 32, 1"
+class = 12
+side = "japanese"
+fuel_t = 500
+supply_t = "10.5"
+task_force = 32
+
+[[ship]]
+id = 109
+name = "Placeholder fast transport with cargo, task force 32, 2"
+class = 12
+side = "japanese"
+fuel_t = 500
+supply_t = "10.5"
+task_force = 32
+
+[[ship]]
+id = 110
+name = "Placeholder fast transport with cargo, task force 32, 3"
+class = 12
+side = "japanese"
+fuel_t = 500
+supply_t = "10.5"
+task_force = 32
+
+# Rations: 1,200 men (troop_lift_facts 153, 154) x 0.005 x 14 days = 84 t, the
+# two weeks of land_unit_facts 975, 16.8 t in each of the five placeholders
+# beside Hatsuyuki and Amagiri, who carry men only.
+[[task_force]]
+id = 33
+name = "Run of 31 August to Taivu, Kawaguchi part 1"
+side = "japanese"
+# Day 25 (31 August): sent out on the day before its landing on day 26, the
+# run of 31 August to Taivu (data/oob/troop_lift_facts.csv 153, 154). Worked
+# out from the landing date of the rows by the passage; the sending day itself
+# has no row.
+available_from = 25
+at_base = 7
+mission = "transport"
+home_port = 7
+
+[[ship]]
+id = 111
+name = "Hatsuyuki"
+class = 3010
+side = "japanese"
+fuel_t = 475
+task_force = 33
+
+[[ship]]
+id = 112
+name = "Amagiri"
+class = 3010
+side = "japanese"
+fuel_t = 475
+task_force = 33
+
+[[ship]]
+id = 113
+name = "Placeholder fast transport with cargo, task force 33, 1"
+class = 12
+side = "japanese"
+fuel_t = 500
+supply_t = "16.8"
+task_force = 33
+
+[[ship]]
+id = 114
+name = "Placeholder fast transport with cargo, task force 33, 2"
+class = 12
+side = "japanese"
+fuel_t = 500
+supply_t = "16.8"
+task_force = 33
+
+[[ship]]
+id = 115
+name = "Placeholder fast transport with cargo, task force 33, 3"
+class = 12
+side = "japanese"
+fuel_t = 500
+supply_t = "16.8"
+task_force = 33
+
+[[ship]]
+id = 116
+name = "Placeholder fast transport with cargo, task force 33, 4"
+class = 12
+side = "japanese"
+fuel_t = 500
+supply_t = "16.8"
+task_force = 33
+
+[[ship]]
+id = 117
+name = "Placeholder fast transport with cargo, task force 33, 5"
+class = 12
+side = "japanese"
+fuel_t = 500
+supply_t = "16.8"
+task_force = 33
+
+# Rations: 150 men (troop_lift_facts 159) x 0.005 x 14 days = 10.5 t, the two
+# weeks of land_unit_facts 975, in one ship.
+[[task_force]]
+id = 34
+name = "Placeholder run of 2 September, Kawaguchi part 2"
+side = "japanese"
+# Day 27 (2 September): sent out on the day before its landing on day 28, the
+# run of 2 September (data/oob/troop_lift_facts.csv 159). Worked out from the
+# landing date of the rows by the passage; the sending day itself has no row.
+available_from = 27
+at_base = 7
+mission = "transport"
+home_port = 7
+
+[[ship]]
+id = 118
+name = "Placeholder fast transport with cargo, task force 34, 1"
+class = 12
+side = "japanese"
+fuel_t = 500
+supply_t = "10.5"
+task_force = 34
+
+# Rations: 1,000 men (troop_lift_facts 161) x 0.005 x 14 days = 70 t, the two
+# weeks of land_unit_facts 975, 14 t in each of the five ships.
+[[task_force]]
+id = 35
+name = "Placeholder run of 4 September, Kawaguchi part 3"
+side = "japanese"
+# Day 29 (4 September): sent out on the day before its landing on day 30, the
+# run of 4 September (data/oob/troop_lift_facts.csv 161). Worked out from the
+# landing date of the rows by the passage; the sending day itself has no row.
+available_from = 29
+at_base = 7
+mission = "transport"
+home_port = 7
+
+[[ship]]
+id = 119
+name = "Placeholder fast transport with cargo, task force 35, 1"
+class = 12
+side = "japanese"
+fuel_t = 500
+supply_t = 14
+task_force = 35
+
+[[ship]]
+id = 120
+name = "Placeholder fast transport with cargo, task force 35, 2"
+class = 12
+side = "japanese"
+fuel_t = 500
+supply_t = 14
+task_force = 35
+
+[[ship]]
+id = 121
+name = "Placeholder fast transport with cargo, task force 35, 3"
+class = 12
+side = "japanese"
+fuel_t = 500
+supply_t = 14
+task_force = 35
+
+[[ship]]
+id = 122
+name = "Placeholder fast transport with cargo, task force 35, 4"
+class = 12
+side = "japanese"
+fuel_t = 500
+supply_t = 14
+task_force = 35
+
+[[ship]]
+id = 123
+name = "Placeholder fast transport with cargo, task force 35, 5"
+class = 12
+side = "japanese"
+fuel_t = 500
+supply_t = 14
+task_force = 35
+
+# Rations: 370 men (troop_lift_facts 164) x 0.005 x 14 days = 25.9 t, the two
+# weeks of land_unit_facts 975, 12.95 t in each of the two ships.
+[[task_force]]
+id = 36
+name = "Placeholder run of 5 September, Kawaguchi part 4"
+side = "japanese"
+# Day 30 (5 September): sent out on the day before its landing on day 31, the
+# run of 5 September (data/oob/troop_lift_facts.csv 164). Worked out from the
+# landing date of the rows by the passage; the sending day itself has no row.
+available_from = 30
+at_base = 7
+mission = "transport"
+home_port = 7
+
+[[ship]]
+id = 124
+name = "Placeholder fast transport with cargo, task force 36, 1"
+class = 12
+side = "japanese"
+fuel_t = 500
+supply_t = "12.95"
+task_force = 36
+
+[[ship]]
+id = 125
+name = "Placeholder fast transport with cargo, task force 36, 2"
+class = 12
+side = "japanese"
+fuel_t = 500
+supply_t = "12.95"
+task_force = 36
+
+# Rations: 370 men (troop_lift_facts 166) x 0.005 x 14 days = 25.9 t, the two
+# weeks of land_unit_facts 975, 12.95 t in each of the two ships.
+[[task_force]]
+id = 37
+name = "Placeholder run of 6 September, Kawaguchi part 5"
+side = "japanese"
+# Day 31 (6 September): sent out on the day before its landing on day 32, the
+# run of 6 September (data/oob/troop_lift_facts.csv 166). Worked out from the
+# landing date of the rows by the passage; the sending day itself has no row.
+available_from = 31
+at_base = 7
+mission = "transport"
+home_port = 7
+
+[[ship]]
+id = 126
+name = "Placeholder fast transport with cargo, task force 37, 1"
+class = 12
+side = "japanese"
+fuel_t = 500
+supply_t = "12.95"
+task_force = 37
+
+[[ship]]
+id = 127
+name = "Placeholder fast transport with cargo, task force 37, 2"
+class = 12
+side = "japanese"
+fuel_t = 500
+supply_t = "12.95"
+task_force = 37
+
+# Rations: 637 men (troop_lift_facts 168) x 0.005 x 14 days = 44.59 t, two
+# weeks as for the Kawaguchi runs (decision 0109, 2; land_unit_facts 975),
+# 11.1475 t in each of the four ships.
+[[task_force]]
+id = 38
+name = "Placeholder run of 11 September to Kamimbo, the Aoba Detachment"
+side = "japanese"
+# Day 36 (11 September): sent out on the day before its landing on day 37, the
+# Aoba Detachment's run to Kamimbo of 11 September
+# (data/oob/troop_lift_facts.csv 168). Worked out from the landing date of the
+# rows by the passage; the sending day itself has no row.
+available_from = 36
+at_base = 7
+mission = "transport"
+home_port = 7
+
+[[ship]]
+id = 128
+name = "Placeholder fast transport with cargo, task force 38, 1"
+class = 12
+side = "japanese"
+fuel_t = 500
+supply_t = "11.1475"
+task_force = 38
+
+[[ship]]
+id = 129
+name = "Placeholder fast transport with cargo, task force 38, 2"
+class = 12
+side = "japanese"
+fuel_t = 500
+supply_t = "11.1475"
+task_force = 38
+
+[[ship]]
+id = 130
+name = "Placeholder fast transport with cargo, task force 38, 3"
+class = 12
+side = "japanese"
+fuel_t = 500
+supply_t = "11.1475"
+task_force = 38
+
+[[ship]]
+id = 131
+name = "Placeholder fast transport with cargo, task force 38, 4"
+class = 12
+side = "japanese"
+fuel_t = 500
+supply_t = "11.1475"
+task_force = 38
+
+# Rations: 333 men (land_unit_facts 916 to 918) x 0.005 x 14 days = 23.31 t,
+# two weeks as for the Kawaguchi runs (decision 0109, 2; land_unit_facts
+# 975), 11.655 t in each of the two ships.
+[[task_force]]
+id = 39
+name = "Placeholder barges of early September, the Oka group"
+side = "japanese"
+# Day 31 (6 September): sent out on the day before its landing on day 32, 7
+# September, the Oka group's barges (data/oob/land_unit_facts.csv 931, 916,
+# 917, 918; decision 0101, as amended, 2). Worked out from the landing date of
+# the rows by the passage; the sending day itself has no row.
+available_from = 31
+at_base = 7
+mission = "transport"
+home_port = 7
+
+[[ship]]
+id = 132
+name = "Placeholder fast transport with cargo, task force 39, 1"
+class = 12
+side = "japanese"
+fuel_t = 500
+supply_t = "11.655"
+task_force = 39
+
+[[ship]]
+id = 133
+name = "Placeholder fast transport with cargo, task force 39, 2"
+class = 12
+side = "japanese"
+fuel_t = 500
+supply_t = "11.655"
+task_force = 39
+
+
+# FORMATIONS (decision 0140, 7 to 9). Each formation and each parent is a row
+# of data/oob/land_units.csv, and its id is that row's id. A parent is the
+# row's parent column, and the rows of data/oob/land_unit_facts.csv that state
+# it are cited beside it; where the column is blank there is no parent, a gap
+# and not a guess. A land unit belongs to the formation that is its own oob
+# entity; a unit with no one entity has none, and says why beside its keys.
+# Parents come first.
+
+# 1046 us-1st-marine-division (formation): the 1st Marine Division; no parent
+# among the oob entities (data/oob/land_unit_facts.csv 401 names Task Force
+# 62, which is not an oob land entity).
+[[formation]]
+id = 1046
+name = "1st Marine Division"
+side = "allied"
+
+# 1069 us-5th-marines (formation): land_units.csv parent column,
+# data/oob/land_unit_facts.csv 1479 (listed under the division in Hough's
+# roster; data/oob/land_unit_facts.csv 1407 puts it in Combat Group A).
+[[formation]]
+id = 1069
+name = "5th Marines"
+side = "allied"
+parent = 1046
+
+# 1055 us-2d-battalion-5th-marines (formation): land_units.csv parent column;
+# data/oob/land_unit_facts.csv 1489, 1514 (listed under the 5th Marines; its
+# reserve from 21 August).
+[[formation]]
+id = 1055
+name = "2d Battalion, 5th Marines"
+side = "allied"
+parent = 1069
+
+# 1048 us-1st-parachute-battalion (formation): land_units.csv parent column;
+# data/oob/land_unit_facts.csv 1472 (listed under the division;
+# data/oob/land_unit_facts.csv 1410 puts it in the Gavutu Group).
+[[formation]]
+id = 1048
+name = "1st Parachute Battalion"
+side = "allied"
+parent = 1046
+
+# 1049 us-1st-pioneer-battalion (formation): land_units.csv parent column;
+# data/oob/land_unit_facts.csv 1473 (listed under the division;
+# data/oob/land_unit_facts.csv 1414 puts it in the Support Group, 1093).
+[[formation]]
+id = 1049
+name = "1st Pioneer Battalion"
+side = "allied"
+parent = 1046
+
+# 1050 us-1st-raider-battalion (formation): the 1st Raider Battalion; the
+# parent column is blank (data/oob/land_unit_facts.csv 1419 attached to the
+# division, data/oob/land_unit_facts.csv 1409 in the Tulagi Group): no
+# standing parent.
+[[formation]]
+id = 1050
+name = "1st Raider Battalion"
+side = "allied"
+
+# 1077 us-combat-group-a (task-group): land_units.csv parent column;
+# data/oob/land_unit_facts.csv 1400 (the division's Operation Order 7-42 of 20
+# July 1942).
+[[formation]]
+id = 1077
+name = "Combat Group A (5th Marines, reinforced, less 2d Battalion)"
+side = "allied"
+parent = 1046
+
+# 1078 us-combat-group-b (task-group): land_units.csv parent column;
+# data/oob/land_unit_facts.csv 1401 (the division's Operation Order 7-42 of 20
+# July 1942).
+[[formation]]
+id = 1078
+name = "Combat Group B (1st Marines, reinforced)"
+side = "allied"
+parent = 1046
+
+# 1070 us-6th-naval-construction-battalion (construction): the 6th Naval
+# Construction Battalion; no parent row.
+[[formation]]
+id = 1070
+name = "6th Naval Construction Battalion"
+side = "allied"
+
+# 1080 us-cub-1 (construction): CUB One; no parent row (whose command it was
+# under is a gap).
+[[formation]]
+id = 1080
+name = "CUB One (Naval Construction and Base unit)"
+side = "allied"
+
+# 1003 jp-17th-army (formation): the Seventeenth Army; no parent row.
+[[formation]]
+id = 1003
+name = "Seventeenth Army"
+side = "japanese"
+
+# 1025 jp-kawaguchi-detachment (formation): land_units.csv parent column;
+# data/oob/land_unit_facts.csv 1522, 1557 (task organisation of 23 August;
+# listed under the army).
+[[formation]]
+id = 1025
+name = "Kawaguchi Detachment (35th Infantry Brigade)"
+side = "japanese"
+parent = 1003
+
+# 1001 jp-124th-infantry (formation): land_units.csv parent column;
+# data/oob/land_unit_facts.csv 1558 (listed under the Kawaguchi Detachment, 12
+# to 14 September, low grade; data/oob/land_unit_facts.csv 306 says the
+# detachment was composed mainly of it).
+[[formation]]
+id = 1001
+name = "124th Infantry Regiment"
+side = "japanese"
+parent = 1025
+
+# 1029 jp-oka-group (task-group): land_units.csv parent column (the group is
+# the 124th's headquarters and 2d Battalion); data/oob/land_unit_facts.csv
+# 1541 has it under the Kawaguchi Detachment itself (Wikipedia, low grade):
+# the same chain from 1025 up.
+[[formation]]
+id = 1029
+name = "Oka group (124th Infantry headquarters and 2d Battalion)"
+side = "japanese"
+parent = 1001
+
+# 1016 jp-aoba-detachment (formation): land_units.csv parent column;
+# data/oob/land_unit_facts.csv 61, 1523 (returned to the 17th Army's command;
+# task organisation of 23 August).
+[[formation]]
+id = 1016
+name = "Aoba Detachment"
+side = "japanese"
+parent = 1003
+
+# 1022 jp-ichiki-detachment (formation): the Ichiki Detachment; the parent
+# column is blank, the rows differ (data/oob/land_unit_facts.csv 252, 253,
+# 255, 1521, 1526, 1528): no standing parent.
+[[formation]]
+id = 1022
+name = "Ichiki Detachment"
+side = "japanese"
+
+# 1023 jp-ichiki-detachment-first-echelon (echelon): land_units.csv parent
+# column; data/oob/land_unit_facts.csv 1532 (the Ichiki Detachment, low grade;
+# data/oob/land_unit_facts.csv 1529, 1530 give a battalion of the 28th,
+# disputed).
+[[formation]]
+id = 1023
+name = "Ichiki Detachment, first echelon (advance unit)"
+side = "japanese"
+parent = 1022
+
+# 1000 jp-11th-construction-unit (construction): the 11th Construction Unit;
+# the parent column is blank (data/oob/land_unit_facts.csv 1567 attaches it to
+# the Eighth Fleet, not a parent): no parent.
+[[formation]]
+id = 1000
+name = "11th Naval Construction Unit"
+side = "japanese"
+
+# 1002 jp-13th-construction-unit (construction): the 13th Construction Unit;
+# the parent column is blank (data/oob/land_unit_facts.csv 1568 attaches it to
+# the Eighth Fleet, not a parent): no parent.
+[[formation]]
+id = 1002
+name = "13th Naval Construction Unit"
+side = "japanese"
+
+# 1017 jp-construction-unit-tulagi (construction): the construction unit on
+# Tulagi and Gavutu; no parent row.
+[[formation]]
+id = 1017
+name = "Japanese construction unit, Tulagi and Gavutu"
+side = "japanese"
+
+# 1027 jp-naval-garrison-guadalcanal (garrison): the naval garrison on
+# Guadalcanal; no parent row.
+[[formation]]
+id = 1027
+name = "Japanese naval garrison (guard unit and naval landing troops), Guadalcanal"
+side = "japanese"
+
+# 1033 jp-yokosuka-5th-snlf (formation): the Yokosuka 5th SNLF; no parent row
+# (the research names it a gap).
+[[formation]]
+id = 1033
+name = "Yokosuka 5th Special Naval Landing Force"
+side = "japanese"
+
+# Land units (decision 0101, "Land units", with the rulings at its end). A
+# unit's men are its fighting men; a working unit's men work and do not fight
+# (decisions 0093, 6, and 0099). Every unit has experience 2 and every skill 2
+# (the defaults): no real unit has a value until the rule that reads the
+# research statements is written. The Americans aboard are on attack from the
+# start (decision 0101, 12): they land on attack, and go on the defence by
+# order once the base is theirs.
+
+# land_unit_facts 646, the division's own report of men landed.
+[[land_unit]]
+id = 1
+name = "Combat Group A (5th Marines less 2/5)"
+side = "allied"
+# Formation 1077, the oob task group of the same name, Combat Group A
+# (data/oob/land_unit_facts.csv 646 states its men under it).
+formation = 1077
+men = 4306
+task_force = 20
+posture = "attack"
+
+# land_unit_facts 652, the same report.
+[[land_unit]]
+id = 2
+name = "Combat Group B (1st Marines)"
+side = "allied"
+# Formation 1078, the oob task group of the same name, Combat Group B
+# (data/oob/land_unit_facts.csv 652).
+formation = 1078
+men = 4561
+task_force = 20
+posture = "attack"
+
+# The rest of the 10,900 ashore on Guadalcanal (land_unit_facts 689, 690;
+# engagement_outcomes 801) after the two groups and the pioneers:
+# 10,900 - 4,306 - 4,561 - 660. 10,900 is the middle of the three totals and
+# has two sources.
+[[land_unit]]
+id = 3
+name = "Support Group, Guadalcanal"
+side = "allied"
+# No formation: the unit is what is left of the 10,900 ashore (a place total,
+# data/oob/land_unit_facts.csv 689, 690, entity us-forces-guadalcanal) after
+# the two groups and the pioneers. The Support Group of the order (1093) also
+# held the 11th Marines, engineers and others, and the pioneers here are unit
+# 4; the link is not plain.
+men = 1373
+task_force = 20
+posture = "attack"
+
+# land_unit_facts 498 (about 660). The other rows say 596, 500 and 490. It builds
+# the airfield alone: the 1st Engineer Battalion has no row of its men (a gap).
+[[land_unit]]
+id = 4
+name = "1st Pioneer Battalion"
+side = "allied"
+# Formation 1049, the 1st Pioneer Battalion (data/oob/land_unit_facts.csv
+# 498).
+formation = 1049
+working = true
+men = 660
+task_force = 20
+
+# land_unit_facts 518, 519.
+[[land_unit]]
+id = 5
+name = "1st Raider Battalion"
+side = "allied"
+# Formation 1050, the 1st Raider Battalion (data/oob/land_unit_facts.csv 518,
+# 519); the rows give it no standing parent.
+formation = 1050
+men = 828
+task_force = 21
+posture = "attack"
+
+# land_unit_facts 487.
+[[land_unit]]
+id = 6
+name = "1st Parachute Battalion"
+side = "allied"
+# Formation 1048, the 1st Parachute Battalion (data/oob/land_unit_facts.csv
+# 487).
+formation = 1048
+men = 395
+task_force = 21
+posture = "attack"
+
+# land_unit_facts 531, 532.
+[[land_unit]]
+id = 7
+name = "2d Battalion, 5th Marines"
+side = "allied"
+# Formation 1055, 2d Battalion, 5th Marines (data/oob/land_unit_facts.csv 531,
+# 532).
+formation = 1055
+men = 1085
+task_force = 21
+posture = "attack"
+
+# The rest of the 6,075 ashore on the Tulagi side (land_unit_facts 778;
+# engagement_outcomes 802): 6,075 - 828 - 395 - 1,085. The 1,390 of the 2d
+# Marines carried back to Espiritu Santo on 12 August (land_unit_facts 549) stay
+# on Tulagi (decision 0101, "Left out").
+[[land_unit]]
+id = 8
+name = "2d Marines and the rest of the Tulagi side"
+side = "allied"
+# No formation: the unit is the rest of the 6,075 on the Tulagi side after
+# units 5, 6 and 7 (a place total, data/oob/land_unit_facts.csv 778), the 2d
+# Marines and others; the link to the 2d Marines (1057) or to Rupertus'
+# command (1118) is not plain.
+men = 3767
+task_force = 21
+posture = "attack"
+
+# land_unit_facts 660, 661; troop_lift_facts 86, 87: 5 officers and 118 men, 15 August.
+[[land_unit]]
+id = 9
+name = "CUB One detachment"
+side = "allied"
+# Formation 1080, CUB One (data/oob/land_unit_facts.csv 660, 661); no row says
+# whose command it was under.
+formation = 1080
+working = true
+men = 123
+task_force = 22
+
+# land_unit_facts 606: 5 officers and 387 men, 1 September. The rows of 200 and
+# 357 are of parts.
+[[land_unit]]
+id = 10
+name = "6th Naval Construction Battalion"
+side = "allied"
+# Formation 1070, the 6th Naval Construction Battalion
+# (data/oob/land_unit_facts.csv 606); no row gives its command.
+formation = 1070
+working = true
+men = 392
+task_force = 26
+
+# land_unit_facts 317, the Japanese-derived account. The other is 250.
+[[land_unit]]
+id = 11
+name = "Naval guard troops, Lunga"
+side = "japanese"
+# Formation 1027, the Japanese naval garrison on Guadalcanal
+# (data/oob/land_unit_facts.csv 317).
+formation = 1027
+men = 240
+q = 2
+r = -4
+
+# land_unit_facts 1.
+[[land_unit]]
+id = 12
+name = "11th Construction Unit"
+side = "japanese"
+# Formation 1000, the 11th Construction Unit (data/oob/land_unit_facts.csv 1).
+formation = 1000
+working = true
+men = 900
+q = 2
+r = -4
+
+# land_unit_facts 4. The two together are 1,800, between the totals of 1,600 and
+# 1,700 (land_unit_facts 67, 65, 68) and well under 2,700 (land_unit_facts 66).
+[[land_unit]]
+id = 13
+name = "13th Construction Unit"
+side = "japanese"
+# Formation 1002, the 13th Construction Unit (data/oob/land_unit_facts.csv 4).
+formation = 1002
+working = true
+men = 900
+q = 2
+r = -4
+
+# land_unit_facts 63, one source for the place, the Japanese-derived account:
+# about 40 naval air force men and a naval guard unit of about 200. With the
+# construction unit, 440; 780 by American count (land_unit_facts 226) is the
+# other end of the range the measures take. land_unit_facts 227 (about 500) is
+# of Gavutu and Tanambogo only, a part (the architect's ruling on rows, 1).
+[[land_unit]]
+id = 14
+name = "Tulagi garrison"
+side = "japanese"
+# No formation: the unit is 40 air force men and a naval guard unit of 200
+# (data/oob/land_unit_facts.csv 313, 320: entities jp-naval-air-personnel-
+# tulagi 1026 and jp-naval-garrison-tulagi 1028); a composite with no one
+# entity. (The scenario's own comment cites row 63, which is the construction
+# unit of unit 15.)
+men = 240
+q = 3
+r = -5
+
+# land_unit_facts 63: a construction unit of about 200 men at Tulagi.
+[[land_unit]]
+id = 15
+name = "Construction unit, Tulagi"
+side = "japanese"
+# Formation 1017, the construction unit on Tulagi and Gavutu
+# (data/oob/land_unit_facts.csv 63).
+formation = 1017
+working = true
+men = 200
+q = 3
+r = -5
+
+# troop_lift_facts 37, 38: the men one named ship, the Oite, carried on 16
+# August. The other rows say 150 and about 500. Lands in (2,-5).
+[[land_unit]]
+id = 16
+name = "Yokosuka 5th Special Naval Landing Force"
+side = "japanese"
+# Formation 1033, the Yokosuka 5th Special Naval Landing Force (the Oite's
+# run: data/oob/troop_lift_facts.csv 37, 38); the research has no parent for
+# it (a gap).
+formation = 1033
+men = 200
+task_force = 30
+
+# troop_lift_facts 141, the most exact of rows that run from 900 to 1,000. Six
+# destroyers (troop_lift_facts 138 to 140). Lands at Taivu, (3,-4).
+[[land_unit]]
+id = 17
+name = "Ichiki Detachment, first echelon"
+side = "japanese"
+# Formation 1023, the Ichiki Detachment's first echelon
+# (data/oob/troop_lift_facts.csv 141).
+formation = 1023
+men = 916
+task_force = 31
+
+# troop_lift_facts 45, 148, which the derivation of the Fubuki class already
+# reads. Another source has 450 and 300 men landed at Taivu that night
+# (land_unit_facts 939 to 941; troop_lift_facts 173, 174); they are not added
+# (decision 0101, as amended, 3).
+[[land_unit]]
+id = 18
+name = "Force landed at Tassafaronga on 29 August"
+side = "japanese"
+# No formation: the men of the run of 29 August to Tassafaronga
+# (data/oob/troop_lift_facts.csv 45, 148, entity a run), no oob unit is named.
+men = 900
+task_force = 32
+
+# The Kawaguchi Detachment's main body, 3,090 men, the row for the 35th Brigade
+# headquarters and the 124th Infantry (land_unit_facts 310), landed at Taivu in
+# five parts, one unit for each run (ruling B of decision 0101): 1,200 on 31
+# August (troop_lift_facts 153, 154), 150 on 2 September (159), 1,000 on 4
+# September (161), 370 on 5 September (164) and 370 on 6 September (166). The
+# parts are a schedule for landing 3,090 men and not a statement of which unit
+# came on which night: row 161 names the men of 4 September as of the Ichiki
+# and Aoba Detachments, row 164 is disputed (231 against 370) and row 166 may
+# repeat it (the architect's ruling on rows, 3).
+
+# Lands at Taivu, (3,-4), the night after 31 August.
+[[land_unit]]
+id = 19
+name = "Kawaguchi main body, part 1"
+side = "japanese"
+# Formation 1025, part 1 of the main body of the Kawaguchi Detachment
+# (data/oob/land_unit_facts.csv 310); the parts are a landing schedule and not
+# a statement of which unit came on which night (scenario 7).
+formation = 1025
+men = 1200
+task_force = 33
+
+# Lands at Taivu, (3,-4), the night after 2 September.
+[[land_unit]]
+id = 20
+name = "Kawaguchi main body, part 2"
+side = "japanese"
+# Formation 1025, part 2 of the main body of the Kawaguchi Detachment
+# (data/oob/land_unit_facts.csv 310); a landing schedule, as part 1.
+formation = 1025
+men = 150
+task_force = 34
+
+# Lands at Taivu, (3,-4), the night after 4 September.
+[[land_unit]]
+id = 21
+name = "Kawaguchi main body, part 3"
+side = "japanese"
+# Formation 1025, part 3 of the main body of the Kawaguchi Detachment
+# (data/oob/land_unit_facts.csv 310); a landing schedule, as part 1 (row 161
+# names the men of 4 September as of the Ichiki and Aoba Detachments).
+formation = 1025
+men = 1000
+task_force = 35
+
+# Lands at Taivu, (3,-4), the night after 5 September.
+[[land_unit]]
+id = 22
+name = "Kawaguchi main body, part 4"
+side = "japanese"
+# Formation 1025, part 4 of the main body of the Kawaguchi Detachment
+# (data/oob/land_unit_facts.csv 310); a landing schedule, as part 1.
+formation = 1025
+men = 370
+task_force = 36
+
+# Lands at Taivu, (3,-4), the night after 6 September.
+[[land_unit]]
+id = 23
+name = "Kawaguchi main body, part 5"
+side = "japanese"
+# Formation 1025, part 5 of the main body of the Kawaguchi Detachment
+# (data/oob/land_unit_facts.csv 310); a landing schedule, as part 1.
+formation = 1025
+men = 370
+task_force = 37
+
+# troop_lift_facts 168: landed at Kamimbo, (2,-5), on 11 September.
+[[land_unit]]
+id = 24
+name = "Aoba Detachment, part"
+side = "japanese"
+# Formation 1016, the Aoba Detachment's part landed at Kamimbo
+# (data/oob/troop_lift_facts.csv 168); by the research it is the 3d Battalion,
+# 4th Infantry (1097, data/oob/land_unit_facts.csv 942), which the scenario
+# does not say.
+formation = 1016
+men = 637
+task_force = 38
+
+# Decision 0101, as amended, 2: some 1,000 men set out in barges and one third of
+# them were left under Oka's command on the island (land_unit_facts 916 to
+# 918): 1,000 / 3, cut to a whole man. Lower-grade rows say about 1,000 landed
+# and about 650 attacked (land_unit_facts 929 to 931, 925): the dispute, which
+# the measures take. Lands in (2,-5) on day 32, 7 September, the day by which a
+# row has it west of the perimeter (land_unit_facts 931); barges have no class,
+# so it comes in placeholder fast transports.
+[[land_unit]]
+id = 25
+name = "Oka group"
+side = "japanese"
+# Formation 1029, the Oka group (data/oob/land_unit_facts.csv 916, 917, 918).
+formation = 1029
+men = 333
+task_force = 39
+
+# The opening estimates (decision 0160, rule A; decision 0092, 16): what each
+# side believed of the enemy's men ashore before the first day, held from day
+# 1 with the grade "told". They are the record's own estimates, wrong as they
+# were (the designer's answer 1 of decision 0160), not the truth.
+#
+# The Allied side holds the figures of Admiral Turner's Operation Plan A3-42 of
+# 30 July 1942, the last dated estimate before the landing and the one the
+# landing was planned on (the architect's ruling, Nov 19, 2026, decision 0160,
+# "As built: step 1"). Both figures were high. The earlier estimates on file are
+# not read: the division's Operation Order 7-42 of 20 July (land_unit_facts
+# 161, 7,000 on Guadalcanal; 231, 1,400 in the Tulagi area), CINCPAC's of 6
+# July (1700, Tulagi 1,400; no place on Guadalcanal, gaps.csv) and the
+# division's of 11 and 27 July (1584, 1585, 5,000 on Guadalcanal); nor the
+# totals of both places (199 to 213, 1701).
+#
+# The Japanese side holds none: no figure existed before 7 August, as no
+# Allied man was ashore (gaps.csv, "a Japanese estimate of Allied men ashore
+# on Guadalcanal or Tulagi dated before 7 August 1942"). No other place has an
+# estimate in the record, so none is given.
+
+# Lunga's hex (base 1), 5,275 men on Guadalcanal: land_unit_facts 162 (Hough)
+# and 163 (Zimmerman), both of Operation Plan A3-42, 30 July.
+[[estimate]]
+side = "allied"
+q = 2
+r = -4
+men = 5275
+
+# Tulagi's hex (base 4), 1,850 men on Tulagi and Gavutu-Tanambogo together,
+# which the slice holds as one place: land_unit_facts 232 (Hough, 30 July) and
+# 230 (Zimmerman); Miller gives the same (233).
+[[estimate]]
+side = "allied"
+q = 3
+r = -5
+men = 1850
+
+# What each side believed of the enemy on the evening before 7 August
+# (decision 0173, 11). PLACEHOLDERS: every entry rests on no source yet. What
+# each command believed of the other's forces and purpose in the first week of
+# August 1942 is in the record and is owed as rows in data/oob before these
+# entries lose their mark (decision 0173, 12). No rule of the game reads them:
+# they are kept with the scenario for the constructor of a side's picture.
+# The Japanese side is given no belief of what the Allied side intends.
+
+[[believed_force]]
+side = "allied"
+name = "Placeholder Japanese cruiser force"
+kind = "cruiser"
+ships = 6
+standing = "present"
+at_base = 2
+day = 0
+placeholder = true
+note = "Decision 0173, 11: rests on no source yet; the research of what the Allied command believed of the Japanese forces before 7 August 1942 is owed."
+
+[[believed_force]]
+side = "allied"
+name = "Placeholder Japanese carrier force"
+kind = "carrier"
+ships = 8
+standing = "unknown"
+placeholder = true
+note = "Decision 0173, 11: rests on no source yet; the research of what the Allied command believed of the Japanese forces before 7 August 1942 is owed."
+
+[[believed_intent]]
+side = "allied"
+intent_kind = "hold"
+base = 1
+placeholder = true
+note = "Decision 0173, 11: the Japanese side believed to mean to hold Lunga. Rests on no source yet; the research of what the Allied command believed of the Japanese purpose before 7 August 1942 is owed."
+
+[[believed_intent]]
+side = "allied"
+intent_kind = "hold"
+base = 4
+placeholder = true
+note = "Decision 0173, 11: the Japanese side believed to mean to hold Tulagi. Rests on no source yet; the research of what the Allied command believed of the Japanese purpose before 7 August 1942 is owed."
+
+[[believed_force]]
+side = "japanese"
+name = "Placeholder Allied carrier force"
+kind = "carrier"
+ships = 8
+standing = "unknown"
+placeholder = true
+note = "Decision 0173, 11: rests on no source yet; the research of what the Japanese command believed of the Allied forces before 7 August 1942 is owed."
+
+
+[[task_force]]
+id = 1
+name = "Task Force 16"
+side = "allied"
+q = 7
+r = -5
+mission = "carrier"
+
+# Task Force 11, Saratoga, in the same hex.
+
+[[task_force]]
+id = 2
+name = "Task Force 11"
+side = "allied"
+q = 7
+r = -5
+mission = "carrier"
+
+# Nagumo's carriers with the ships of the vanguard, at the map's northern
+# edge at 18:00 on 23 August.
+
+[[task_force]]
+id = 3
+name = "Carrier striking force"
+side = "japanese"
+# Day 17 (23 August): Ruled by the architect, Nov 17, 2026: day 17 (23
+# August), the day the rows have the force on station north of the Solomons:
+# data/oob/engagement_positions.csv 334, 335, 336, 350; it left Hashirajima on
+# 16 August, Hiei and Kirishima Kure the same day
+# (data/oob/engagement_positions.csv 396). The script first orders it on day
+# 18 (the Eastern Solomons orders of scenario 5, decision 0093, 1). Its air
+# groups take its day.
+available_from = 17
+q = 9
+r = -19
+mission = "carrier"
+
+# The Ryujo detachment, in (7,-18) as in scenario 5 (decision 0058).
+# Ryujo's noon hex is (7,-9) and not (7,-10). The record has her launch from
+# 200 to 202 miles from Guadalcanal (engagement_events 331, the 8th Cruiser
+# Division's war diary: "20 degrees 202 nm from the Guadalcanal base";
+# engagement_positions 310: 200 nautical miles north of Lunga Point). (7,-9)
+# is 200 miles from Henderson Field at (2,-4) by hex centres; (7,-10) is 223,
+# which is the grid's error and not the record.
+
+[[task_force]]
+id = 4
+name = "Ryujo detachment"
+side = "japanese"
+# Day 17 (23 August): Ruled by the architect, Nov 17, 2026: day 17 (23
+# August), the day the rows have the Ryujo group near Bradley Reefs, with
+# Nagumo's force from 16 August: data/oob/engagement_positions.csv 334, 365,
+# 369. The script first orders it on day 18. Its air groups take its day.
+available_from = 17
+q = 7
+r = -18
+mission = "carrier"
+
+# The convoy: two placeholder cargo ships and a placeholder destroyer, loading
+# at Espiritu Santo on day 15 and steaming for Lunga Point.
+[[task_force]]
+id = 5
+name = "Placeholder supply convoy"
+side = "allied"
+# Day 15 (21 August): made up (placeholder): the convoy of scenario 7, loads
+# on day 15 and steams from day 16 (scenario 7's comment at its orders).
+available_from = 15
+at_base = 3
+mission = "transport"
+home_port = 3
+
+# The night action in the open Coral Sea well south of the rest. Force A is
+# ordered to battle readiness on day 18 and so has three days of fatigue
+# (decision 0037) when it steams on force B's hex, 8 hexes off, on day 21.
+[[task_force]]
+id = 6
+name = "Placeholder night force A"
+side = "japanese"
+# Day 18 (24 August): made up (placeholder): night force A, first ordered to
+# battle readiness on day 18 (scenario 7's comment at the night action).
+available_from = 18
+# STAGE 3'S PROOF ONLY (decision 0153, "The loading check", the architect's
+# ruling): restated as a placeholder bombardment force lying stopped at
+# Shortland (base 7) with Shortland as its home port, in place of q = -8,
+# r = 10 and the surface combat mission. Still a placeholder: no force of the
+# record is named or rated by it.
+at_base = 7
+mission = "bombardment"
+home_port = 7
+
+[[task_force]]
+id = 7
+name = "Placeholder night force B"
+side = "allied"
+# Day 21 (27 August): made up (placeholder): night force B, first ordered on
+# day 21, its rules of engagement, for the night action with force A.
+available_from = 21
+q = 0
+r = 10
+mission = "surface_combat"
+
+# A third night action, on day 25, both forces at normal readiness.
+[[task_force]]
+id = 12
+name = "Placeholder night force E"
+side = "japanese"
+# Day 25 (31 August): made up (placeholder): night force E, first ordered on
+# day 25 (the third night action).
+available_from = 25
+q = -8
+r = 12
+mission = "surface_combat"
+
+[[task_force]]
+id = 13
+name = "Placeholder night force F"
+side = "allied"
+# Day 25 (31 August): made up (placeholder): night force F, first ordered on
+# day 25 (the third night action).
+available_from = 25
+q = 0
+r = 12
+mission = "surface_combat"
+
+# A second Allied force in the hex force 7 holds, at normal readiness and not
+# alerted, so that it is called on by the alarm when force 6 fights force 7
+# (decision 0021, as scenario 4c's three forces).
+[[task_force]]
+id = 8
+name = "Placeholder bystander"
+side = "allied"
+q = 0
+r = 10
+mission = "escort"
+
+# A placeholder destroyer with almost no fuel, to run dry on day 16.
+[[task_force]]
+id = 9
+name = "Placeholder dry destroyer"
+side = "allied"
+# Day 16 (22 August): made up (placeholder): the dry destroyer, first ordered
+# on day 16 to run out of fuel (scenario 7's comment at its order).
+available_from = 16
+q = 4
+r = 12
+mission = "escort"
+
+# A second night action, 8 hexes apart on the next row south: force D avoids.
+[[task_force]]
+id = 10
+name = "Placeholder night force C"
+side = "japanese"
+# Day 23 (29 August): made up (placeholder): night force C, first ordered on
+# day 23 (the second night action).
+available_from = 23
+q = -8
+r = 14
+mission = "surface_combat"
+
+[[task_force]]
+id = 11
+name = "Placeholder night force D"
+side = "allied"
+# Day 23 (29 August): made up (placeholder): night force D, first ordered on
+# day 23 (the second night action).
+available_from = 23
+q = 0
+r = 14
+mission = "surface_combat"
+
+[[ship]]
+id = 1
+name = "USS Enterprise"
+class = 2020
+side = "allied"
+fuel_t = 4360
+task_force = 1
+
+[[ship]]
+id = 2
+name = "USS North Carolina"
+class = 2017
+side = "allied"
+fuel_t = 5550
+task_force = 1
+
+[[ship]]
+id = 3
+name = "USS Portland"
+class = 2019
+side = "allied"
+fuel_t = 2614
+task_force = 1
+
+[[ship]]
+id = 4
+name = "USS Atlanta"
+class = 2010
+side = "allied"
+fuel_t = 1481
+task_force = 1
+
+[[ship]]
+id = 5
+name = "USS Balch"
+class = 2018
+side = "allied"
+fuel_t = 651
+task_force = 1
+
+[[ship]]
+id = 6
+name = "USS Benham"
+class = 2011
+side = "allied"
+fuel_t = 491
+task_force = 1
+
+[[ship]]
+id = 7
+name = "USS Ellet"
+class = 2011
+side = "allied"
+fuel_t = 491
+task_force = 1
+
+[[ship]]
+id = 8
+name = "USS Maury"
+class = 2014
+side = "allied"
+fuel_t = 525
+task_force = 1
+
+[[ship]]
+id = 9
+name = "USS Grayson"
+class = 2013
+side = "allied"
+fuel_t = 467
+task_force = 1
+
+[[ship]]
+id = 10
+name = "USS Monssen"
+class = 2013
+side = "allied"
+fuel_t = 467
+task_force = 1
+
+[[ship]]
+id = 11
+name = "USS Saratoga"
+class = 2015
+side = "allied"
+fuel_t = 8400
+task_force = 2
+
+[[ship]]
+id = 12
+name = "USS New Orleans"
+class = 2016
+side = "allied"
+fuel_t = 1900
+task_force = 2
+
+[[ship]]
+id = 13
+name = "USS Minneapolis"
+class = 2016
+side = "allied"
+fuel_t = 1900
+task_force = 2
+
+[[ship]]
+id = 14
+name = "USS Farragut"
+class = 2012
+side = "allied"
+fuel_t = 607
+task_force = 2
+
+[[ship]]
+id = 15
+name = "USS Macdonough"
+class = 2012
+side = "allied"
+fuel_t = 607
+task_force = 2
+
+[[ship]]
+id = 16
+name = "USS Worden"
+class = 2012
+side = "allied"
+fuel_t = 607
+task_force = 2
+
+[[ship]]
+id = 17
+name = "USS Dale"
+class = 2012
+side = "allied"
+fuel_t = 607
+task_force = 2
+
+[[ship]]
+id = 18
+name = "USS Phelps"
+class = 2018
+side = "allied"
+fuel_t = 651
+task_force = 2
+
+[[ship]]
+id = 19
+name = "Shokaku"
+class = 2007
+side = "japanese"
+fuel_t = 4100
+task_force = 3
+
+[[ship]]
+id = 20
+name = "Zuikaku"
+class = 2006
+side = "japanese"
+fuel_t = 4100
+task_force = 3
+
+[[ship]]
+id = 21
+name = "Chikuma"
+class = 2008
+side = "japanese"
+fuel_t = 2690
+task_force = 3
+
+[[ship]]
+id = 22
+name = "Hiei"
+class = 2002
+side = "japanese"
+fuel_t = 6330
+task_force = 3
+
+[[ship]]
+id = 23
+name = "Kirishima"
+class = 2002
+side = "japanese"
+fuel_t = 6330
+task_force = 3
+
+[[ship]]
+id = 24
+name = "Kumano"
+class = 2003
+side = "japanese"
+fuel_t = 2310
+task_force = 3
+
+[[ship]]
+id = 25
+name = "Suzuya"
+class = 2003
+side = "japanese"
+fuel_t = 2310
+task_force = 3
+
+[[ship]]
+id = 26
+name = "Nagara"
+class = 2004
+side = "japanese"
+fuel_t = 1260
+task_force = 3
+
+[[ship]]
+id = 27
+name = "Akigumo"
+class = 2001
+side = "japanese"
+fuel_t = 500
+task_force = 3
+
+[[ship]]
+id = 28
+name = "Kazagumo"
+class = 2009
+side = "japanese"
+fuel_t = 500
+task_force = 3
+
+[[ship]]
+id = 29
+name = "Makigumo"
+class = 2009
+side = "japanese"
+fuel_t = 500
+task_force = 3
+
+[[ship]]
+id = 30
+name = "Yugumo"
+class = 2009
+side = "japanese"
+fuel_t = 500
+task_force = 3
+
+[[ship]]
+id = 31
+name = "Akizuki"
+class = 2000
+side = "japanese"
+fuel_t = 1071
+task_force = 3
+
+[[ship]]
+id = 32
+name = "Hatsukaze"
+class = 2001
+side = "japanese"
+fuel_t = 500
+task_force = 3
+
+[[ship]]
+id = 33
+name = "Ryujo"
+class = 2005
+side = "japanese"
+fuel_t = 2490
+task_force = 4
+
+[[ship]]
+id = 34
+name = "Tone"
+class = 2008
+side = "japanese"
+fuel_t = 2690
+task_force = 4
+
+[[ship]]
+id = 35
+name = "Amatsukaze"
+class = 2001
+side = "japanese"
+fuel_t = 500
+task_force = 4
+
+[[ship]]
+id = 36
+name = "Tokitsukaze"
+class = 2001
+side = "japanese"
+fuel_t = 500
+task_force = 4
+
+# Air groups. Each strength cites its row in data/oob/air_unit_facts.csv.
+
+# aircraft_operational row 213.
+
+[[ship]]
+id = 37
+name = "Placeholder cargo ship 1"
+class = 3
+side = "allied"
+fuel_t = 1000
+task_force = 5
+
+[[ship]]
+id = 38
+name = "Placeholder cargo ship 2"
+class = 3
+side = "allied"
+fuel_t = 1000
+task_force = 5
+
+[[ship]]
+id = 39
+name = "Placeholder destroyer 1"
+class = 2
+side = "allied"
+fuel_t = 500
+task_force = 5
+
+[[ship]]
+id = 40
+name = "Placeholder cruiser A1"
+class = 1
+side = "japanese"
+fuel_t = 2000
+task_force = 6
+
+[[ship]]
+id = 41
+name = "Placeholder cruiser A2"
+class = 1
+side = "japanese"
+fuel_t = 2000
+task_force = 6
+
+[[ship]]
+id = 42
+name = "Placeholder cruiser B1"
+class = 1
+side = "allied"
+fuel_t = 2000
+task_force = 7
+
+[[ship]]
+id = 43
+name = "Placeholder cruiser B2"
+class = 1
+side = "allied"
+fuel_t = 2000
+task_force = 7
+
+[[ship]]
+id = 44
+name = "Placeholder destroyer bystander"
+class = 2
+side = "allied"
+fuel_t = 500
+task_force = 8
+
+[[ship]]
+id = 45
+name = "Placeholder dry destroyer"
+class = 2
+side = "allied"
+fuel_t = 5
+task_force = 9
+
+[[ship]]
+id = 50
+name = "Placeholder cruiser E1"
+class = 1
+side = "japanese"
+fuel_t = 2000
+task_force = 12
+
+[[ship]]
+id = 51
+name = "Placeholder cruiser F1"
+class = 1
+side = "allied"
+fuel_t = 2000
+task_force = 13
+
+[[ship]]
+id = 46
+name = "Placeholder cruiser C1"
+class = 1
+side = "japanese"
+fuel_t = 2000
+task_force = 10
+
+[[ship]]
+id = 47
+name = "Placeholder cruiser C2"
+class = 1
+side = "japanese"
+fuel_t = 2000
+task_force = 10
+
+[[ship]]
+id = 48
+name = "Placeholder cruiser D1"
+class = 1
+side = "allied"
+fuel_t = 2000
+task_force = 11
+
+[[ship]]
+id = 49
+name = "Placeholder cruiser D2"
+class = 1
+side = "allied"
+fuel_t = 2000
+task_force = 11
+
+[[air_group]]
+id = 1
+name = "Land attack bombers at Rabaul (4th, Misawa and Kisarazu Air Groups)"
+side = "japanese"
+# Ruled by the architect, Nov 17, 2026: no day, day 1: the rows have its units
+# at Rabaul and flying on 7 August (4th Air Group: data/oob/air_unit_facts.csv
+# 18, 362, 363; Misawa: data/oob/air_unit_facts.csv 56, 355). The Kisarazu
+# detachment, at Rabaul on 22 August (data/oob/air_unit_facts.csv 52), stays
+# inside the group as the file has it. The script first orders the group on
+# day 15.
+base = 2
+aircraft_type = 2103
+ready = 41
+pilots = 41
+
+[[air_group]]
+id = 2
+name = "Tainan Air Group"
+side = "japanese"
+# Ruled by the architect, Nov 17, 2026: no day, day 1: the rows have it at
+# Rabaul and flying on 7 August (data/oob/air_unit_facts.csv 82, 83). The
+# script first orders it on day 15.
+base = 2
+aircraft_type = 2102
+ready = 24
+pilots = 24
+
+[[air_group]]
+id = 3
+name = "6th Air Group"
+side = "japanese"
+# Day 25 (31 August): Ruled by the architect, Nov 17, 2026: day 25, the day
+# its aircraft arrive in the file (the arrival of day 25), the 6th Air Group
+# at Lakunai from September via Truk (data/oob/air_unit_facts.csv 33). The
+# script first orders it on day 15.
+available_from = 25
+base = 2
+aircraft_type = 2102
+ready = 0
+pilots = 0
+
+[[air_group]]
+id = 10
+name = "VMF-223"
+side = "allied"
+# Day 14 (20 August): Ruled by the architect, Nov 17, 2026: day 14, the day
+# its aircraft arrive in the file (the arrival of day 14), VMF-223 onto
+# Henderson Field on 20 August (data/oob/air_unit_facts.csv 114, 115, 309;
+# decision 0101, 8). The script first orders it on day 15.
+available_from = 14
+base = 1
+aircraft_type = 2100
+ready = 0
+pilots = 0
+
+[[air_group]]
+id = 11
+name = "VMSB-232"
+side = "allied"
+# Day 14 (20 August): Ruled by the architect, Nov 17, 2026: day 14, the day
+# its aircraft arrive in the file (the arrival of day 14), VMSB-232 onto
+# Henderson Field on 20 August (data/oob/air_unit_facts.csv 134, 310; decision
+# 0101, 8). The script first orders it on day 15.
+available_from = 14
+base = 1
+aircraft_type = 2101
+ready = 0
+pilots = 0
+
+# Air group id 12 is retired and is never reused. It was "Flight 300", the
+# eleven dive bombers of Enterprise that landed at Henderson Field on 24 August,
+# once scripted as a day-4 arrival. Decision 11 of 0059: aircraft in the air
+# when their carrier's deck is lost now land at another carrier or at a base
+# within radius, and the rule forms the group. Henderson has those aircraft
+# only when the battle produces them.
+
+[[air_group]]
+id = 13
+name = "VMF-224"
+side = "allied"
+# Day 24 (30 August): Ruled by the architect, Nov 17, 2026: day 24, the day
+# its aircraft arrive in the file (the arrival of day 24), VMF-224 at
+# Henderson Field on 30 August (data/oob/air_unit_facts.csv 121, 318).
+# air_unit_facts 316 has 19 F4Fs brought on 21 August; the file's arrival is
+# followed. The script first orders it on day 15.
+available_from = 24
+base = 1
+aircraft_type = 2100
+ready = 0
+pilots = 0
+
+[[air_group]]
+id = 14
+name = "VMSB-231"
+side = "allied"
+# Day 24 (30 August): Ruled by the architect, Nov 17, 2026: day 24, the day
+# its aircraft arrive in the file (the arrival of day 24), VMSB-231 at
+# Henderson Field on 30 August (data/oob/air_unit_facts.csv 127, 128, 318).
+# air_unit_facts 317 has 12 SBD-3s on 21 August; the file's arrival is
+# followed. The script first orders it on day 15.
+available_from = 24
+base = 1
+aircraft_type = 2101
+ready = 0
+pilots = 0
+
+[[air_group]]
+id = 15
+name = "VF-5"
+side = "allied"
+# Day 36 (11 September): Ruled by the architect, Nov 17, 2026: day 36, the day
+# its aircraft arrive in the file (the arrival of day 36), VF-5 at Henderson
+# Field on 11 September (data/oob/air_unit_facts.csv 322). air_unit_facts 99
+# and 323 have 4 September; the file's arrival is followed. The script first
+# orders it on day 15.
+available_from = 36
+base = 1
+aircraft_type = 2100
+ready = 0
+pilots = 0
+
+[[air_group]]
+id = 16
+name = "Fighters from Hornet and Wasp"
+side = "allied"
+# Day 38 (13 September): Ruled by the architect, Nov 17, 2026: day 38, the day
+# its aircraft arrive in the file (the arrival of day 38), the fighters of
+# Hornet and Wasp at Henderson Field on 13 September
+# (data/oob/air_unit_facts.csv 324). The script first orders it on day 15.
+available_from = 38
+base = 1
+aircraft_type = 2100
+ready = 0
+pilots = 0
+
+[[air_group]]
+id = 17
+name = "VS-3"
+side = "allied"
+# Day 38 (13 September): Ruled by the architect, Nov 17, 2026: day 38, the day
+# its aircraft arrive in the file (the arrival of day 38), VS-3 at Henderson
+# Field on 13 September (data/oob/air_unit_facts.csv 156, 158, 325). The
+# script first orders it on day 15.
+available_from = 38
+base = 1
+aircraft_type = 2101
+ready = 0
+pilots = 0
+
+# Squadrons that arrive during the slice (decision 0041), listed with the
+# arrivals below. Day 1 is 7 August. Each arrives with a pilot for each
+# aircraft, which is an assumption: the sources count aircraft.
+
+[[air_group]]
+id = 101
+name = "VF-6"
+side = "allied"
+ship = 1
+aircraft_type = 2000
+ready = 27
+
+# aircraft_on_hand rows 92, 214.
+
+[[air_group]]
+id = 102
+name = "VB-6"
+side = "allied"
+ship = 1
+aircraft_type = 2001
+ready = 17
+
+# aircraft_operational row 216.
+
+[[air_group]]
+id = 103
+name = "VS-5"
+side = "allied"
+ship = 1
+aircraft_type = 2001
+ready = 16
+
+# aircraft_operational row 218 has 14; seven of them flew the afternoon
+# search (air_unit_facts 253, the war diary's flight 395) and are this group.
+# The other seven are group 125 (decision 0081).
+[[air_group]]
+id = 104
+name = "VT-3"
+side = "allied"
+ship = 1
+aircraft_type = 2002
+ready = 7
+
+# aircraft_on_hand row 207.
+
+[[air_group]]
+id = 105
+name = "VF-5"
+side = "allied"
+ship = 11
+aircraft_type = 2000
+ready = 27
+
+# aircraft_operational row 209.
+
+[[air_group]]
+id = 106
+name = "VB-3"
+side = "allied"
+ship = 11
+aircraft_type = 2001
+ready = 15
+
+# aircraft_on_hand rows 151, 210.
+
+[[air_group]]
+id = 107
+name = "VS-3"
+side = "allied"
+ship = 11
+aircraft_type = 2001
+ready = 15
+
+# aircraft_on_hand rows 177, 211 have 13; eight of them launched in the strike
+# on Ryujo (engagement_outcomes 231) and are this group. The other five are
+# group 126 (decision 0081).
+[[air_group]]
+id = 108
+name = "VT-8"
+side = "allied"
+ship = 11
+aircraft_type = 2002
+ready = 8
+
+# aircraft_operational row 227 has 26; three of them escorted the second wave
+# (engagement_outcomes 1163) and are group 123 (decision 0081). The 23 here are
+# the first wave's escort and the patrol.
+[[air_group]]
+id = 111
+name = "Shokaku fighter unit"
+side = "japanese"
+ship = 19
+aircraft_type = 2003
+ready = 23
+
+# aircraft_on_hand row 228 has 27: the 18 of the first wave
+# (engagement_outcomes 1159, 290) are this group, the 9 of the second wave
+# (1163) are group 121 (decision 0081).
+[[air_group]]
+id = 112
+name = "Shokaku bomber unit"
+side = "japanese"
+ship = 19
+aircraft_type = 2004
+ready = 18
+
+# aircraft_on_hand row 229.
+
+[[air_group]]
+id = 113
+name = "Shokaku attack unit"
+side = "japanese"
+ship = 19
+aircraft_type = 2005
+ready = 18
+
+# aircraft_operational row 231 has 25; six of them escorted the second wave
+# (engagement_outcomes 1169) and are group 124 (decision 0081). The 19 here are
+# the first wave's escort and the patrol.
+[[air_group]]
+id = 114
+name = "Zuikaku fighter unit"
+side = "japanese"
+ship = 20
+aircraft_type = 2003
+ready = 19
+
+# aircraft_on_hand row 232 has 27: the 9 of the first wave
+# (engagement_outcomes 1164, 290) are this group, the 18 of the second wave
+# (1169) are group 122 (decision 0081).
+[[air_group]]
+id = 115
+name = "Zuikaku bomber unit"
+side = "japanese"
+ship = 20
+aircraft_type = 2004
+ready = 9
+
+# aircraft_on_hand row 233.
+
+[[air_group]]
+id = 116
+name = "Zuikaku attack unit"
+side = "japanese"
+ship = 20
+aircraft_type = 2005
+ready = 18
+
+# aircraft_on_hand row 290, an establishment of June 1942.
+
+[[air_group]]
+id = 117
+name = "Chikuma floatplanes"
+side = "japanese"
+ship = 21
+aircraft_type = 2006
+ready = 5
+
+# aircraft_operational row 235.
+
+[[air_group]]
+id = 118
+name = "Ryujo fighter unit"
+side = "japanese"
+ship = 33
+aircraft_type = 2003
+ready = 23
+
+# aircraft_operational row 262.
+
+[[air_group]]
+id = 119
+name = "Ryujo attack unit"
+side = "japanese"
+ship = 33
+aircraft_type = 2005
+ready = 6
+
+# aircraft_on_hand row 285, an establishment of June 1942.
+
+[[air_group]]
+id = 120
+name = "Tone floatplanes"
+side = "japanese"
+ship = 34
+aircraft_type = 2006
+ready = 5
+
+# Decision 0081: an air group in a scenario is a launch the record has, where
+# the forms or rows give launches apart. Groups 121 to 126 are the launches that
+# the record has apart from the first ones of their units. Their numbers come
+# after every number the scenario had, so no group number changed its meaning.
+
+# The second wave from Shokaku: 9 dive bombers (engagement_outcomes 1163,
+# Shokaku's own form; 409), of the unit's 27 (air_unit_facts 228).
+[[air_group]]
+id = 121
+name = "Shokaku bomber unit, second wave"
+side = "japanese"
+ship = 19
+aircraft_type = 2004
+ready = 9
+
+# The second wave from Zuikaku: 18 dive bombers (engagement_outcomes 1169,
+# Zuikaku's own form; 409), of the unit's 27 (air_unit_facts 232).
+[[air_group]]
+id = 122
+name = "Zuikaku bomber unit, second wave"
+side = "japanese"
+ship = 20
+aircraft_type = 2004
+ready = 18
+
+# Shokaku's escort of the second wave: 3 fighters (engagement_outcomes 1163),
+# of the unit's 26 (air_unit_facts 227).
+[[air_group]]
+id = 123
+name = "Shokaku fighter unit, second wave escort"
+side = "japanese"
+ship = 19
+aircraft_type = 2003
+ready = 3
+
+# Zuikaku's escort of the second wave: 6 fighters (engagement_outcomes 1169),
+# of the unit's 25 (air_unit_facts 231).
+[[air_group]]
+id = 124
+name = "Zuikaku fighter unit, second wave escort"
+side = "japanese"
+ship = 20
+aircraft_type = 2003
+ready = 6
+
+# VT-3's other seven (air_unit_facts 218 less the seven of group 104): the 7
+# torpedo planes of Enterprise's attack group of 17:08, which found nothing
+# (engagement_outcomes 226, 378).
+[[air_group]]
+id = 125
+name = "VT-3, attack group"
+side = "allied"
+ship = 1
+aircraft_type = 2002
+ready = 7
+
+# VT-8's other five (air_unit_facts 177, 211 less the eight of group 108): the
+# torpedo planes of Saratoga's second group of 17:08 (engagement_outcomes 233,
+# 359).
+[[air_group]]
+id = 126
+name = "VT-8, second group"
+side = "allied"
+ship = 11
+aircraft_type = 2002
+ready = 5
+
+# Japanese: the striking force steams south-south-east at 17 knots, the Ryujo
+# detachment at 20.
+
+# 20 August (day 14): the squadrons of Henderson Field, VMF-223 with 19
+# fighters and VMSB-232 with 12 dive bombers (decision 0101, 8; place_facts
+# 53; air_unit_facts 36 and 108 to 135; the strengths are scenario 6's). They
+# do not start at Lunga: an arrival due at a base that is not its side's, or
+# has no airfield, or whose field is damaged to the level that takes no
+# aircraft, waits, and is delivered on the first night all three allow
+# (decision 0103, 5; decision 0101, as amended, 6). Each arrives with a pilot
+# for each aircraft, as every arrival here does.
+
+[[arrival]]
+day = 14
+air_group = 10
+aircraft = 19
+pilots = 19
+
+[[arrival]]
+day = 14
+air_group = 11
+aircraft = 12
+pilots = 12
+
+# 24 August: no scripted arrival. Flight 300 is produced by the rule (decision
+# 11 of 0059) when Enterprise's deck is lost.
+
+# 30 August: VMF-224.
+
+[[arrival]]
+day = 24
+air_group = 13
+aircraft = 19
+pilots = 19
+
+# 30 August: VMSB-231.
+
+[[arrival]]
+day = 24
+air_group = 14
+aircraft = 12
+pilots = 12
+
+# 31 August: the 6th Air Group's Zeros reach Rabaul.
+
+[[arrival]]
+day = 25
+air_group = 3
+aircraft = 13
+pilots = 13
+
+# The arrivals of scenario 6's days 22 and 24, restored at their shifted days
+# (ruling F of decision 0101).
+# 11 September: VF-5, from Saratoga.
+
+[[arrival]]
+day = 36
+air_group = 15
+aircraft = 24
+pilots = 24
+
+# 13 September: eighteen fighters from Hornet and Wasp.
+
+[[arrival]]
+day = 38
+air_group = 16
+aircraft = 18
+pilots = 18
+
+# 13 September: VS-3.
+
+[[arrival]]
+day = 38
+air_group = 17
+aircraft = 12
+pilots = 12
+
+[[replacement]]
+side = "japanese"
+base = 2
+aircraft_type = 2103
+aircraft_per_day = 2
+pilots_per_day = 2
+
+[[replacement]]
+side = "japanese"
+base = 2
+aircraft_type = 2102
+aircraft_per_day = 2
+pilots_per_day = 2
+
+# The scripted orders of scenario 7 are not here, nor the comments attached to
+# them (decision 0140, 10).
+
+# Missions and objectives (decision 0054). The points and the levels are the
+# placeholder scale of that decision, to be set from the record. The land
+# fight adds base_held for Lunga and Tulagi and men_lost for each side
+# (decision 0090), beside what the slice had: every point value of them is a
+# PLACEHOLDER set by the lead for this build and resting on no source, as
+# every point value of the slice is (decision 0101, as built).
+[objectives]
+minor = 3
+major = 8
+decisive = 16
+
+[objectives.allied]
+mission = "Take Lunga and Tulagi, build and hold the airfield, land the convoy there, keep the field flying, and win the carrier fight. The Japanese carriers are expected to come down from the north."
+
+[[objectives.allied.objective]]
+kind = "ships_sunk"
+points = { carrier = 10, battleship = 8, cruiser = 4, destroyer = 1, transport = 2, auxiliary = 1 }
+
+[[objectives.allied.objective]]
+kind = "ships_crippled"
+points = { carrier = 5, battleship = 4, cruiser = 2, destroyer = "0.5", transport = 1, auxiliary = "0.5" }
+
+[[objectives.allied.objective]]
+kind = "aircraft_destroyed"
+points = "0.05"
+
+[[objectives.allied.objective]]
+kind = "cargo_landed"
+base = 1
+points_per_t = "0.005"
+
+[[objectives.allied.objective]]
+kind = "base_open"
+base = 1
+points = 10
+
+[[objectives.allied.objective]]
+kind = "base_held"
+base = 1
+points = 10
+
+[[objectives.allied.objective]]
+kind = "base_held"
+base = 4
+points = 5
+
+[[objectives.allied.objective]]
+kind = "men_lost"
+points_per_100_men = 1
+
+[objectives.japanese]
+mission = "Hold Lunga and Tulagi or take them back, close the airfield, sink what supplies it, and win the carrier fight. The American carriers are believed to be south or east of Guadalcanal."
+
+[[objectives.japanese.objective]]
+kind = "ships_sunk"
+points = { carrier = 10, battleship = 8, cruiser = 4, destroyer = 1, transport = 2, auxiliary = 1 }
+
+[[objectives.japanese.objective]]
+kind = "ships_crippled"
+points = { carrier = 5, battleship = 4, cruiser = 2, destroyer = "0.5", transport = 1, auxiliary = "0.5" }
+
+[[objectives.japanese.objective]]
+kind = "aircraft_destroyed"
+points = "0.05"
+
+[[objectives.japanese.objective]]
+kind = "base_open"
+base = 1
+closed = true
+points = 10
+
+[[objectives.japanese.objective]]
+kind = "base_held"
+base = 1
+points = 10
+
+[[objectives.japanese.objective]]
+kind = "base_held"
+base = 4
+points = 5
+
+[[objectives.japanese.objective]]
+kind = "men_lost"
+points_per_100_men = 1
+
+# ---------------------------------------------------------------------------
+# STAGE 3'S PROOF (decision 0153): the islands and the intents as stated.
+# ---------------------------------------------------------------------------
+
+# The two islands (decision 0153, "The islands"), each of a base the slice
+# already has. Nothing else of the setup changes for them.
+[[island]]
+number = 1
+name = "Guadalcanal"
+places = [{ base = 1 }]
+
+[[island]]
+number = 2
+name = "Tulagi"
+places = [{ base = 4 }]
+
+# The Allied intents of decision 0153, "The intents as stated", on day 1:
+# no forces limit, no risk set (balanced), both leaves given.
+[[command]]
+day = 1
+side = "allied"
+kind = "set_intent"
+intent = 1
+intent_kind = "control_island"
+island = 1
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_intent"
+intent = 2
+intent_kind = "control_island"
+island = 2
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_leave"
+leave = "prepare"
+given = true
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_leave"
+leave = "launch"
+given = true
+
+# The Japanese intents of decision 0153, "The intents as stated", on day 1:
+# no forces limit, no risk set (balanced), both leaves given.
+[[command]]
+day = 1
+side = "japanese"
+kind = "set_intent"
+intent = 1
+intent_kind = "control_island"
+island = 1
+
+[[command]]
+day = 1
+side = "japanese"
+kind = "set_intent"
+intent = 2
+intent_kind = "control_island"
+island = 2
+
+[[command]]
+day = 1
+side = "japanese"
+kind = "set_leave"
+leave = "prepare"
+given = true
+
+[[command]]
+day = 1
+side = "japanese"
+kind = "set_leave"
+leave = "launch"
+given = true
+
+# SUBMARINES (decisions 0225 and 0227). Made by scripts/table-boats/make_files.py.
+# Each boat starts on her station, her hex (no station key), with her class's
+# salvoes, sound, and is ordered nowhere. The rule that reads each start is in
+# the header; the hexes are worked by hand in decisions 0225 and 0227,
+# "The hexes, worked by hand".
+
+# How each side's staff uses its boats (decision 0223, stage 0; decision 0227).
+[side.allied]
+submarine_pattern = "off_bases"
+expects_boats_off_own_bases = true
+staff_chooses_supply_sources = true
+
+[side.japanese]
+submarine_pattern = "lines"
+expects_boats_off_own_bases = false
+staff_chooses_supply_sources = true
+
+# USS S-38 (ships.csv 16000; class 6009, S-1 group, by ship_facts 16015).
+# PLACEHOLDER start (-5,-12): engagement_events 16119 (off Cape St George on 7
+# August) and 16122 (eight miles south of it on 8 August);
+# engagement_positions 16006, Meiyo Maru's position, 4-52 S 152-43 E, read as
+# hers since it is her target's: the point lies 17.6 nm from the centre of
+# (-5,-12) and 23.5 nm from that of (-4,-13). She starts on day 1 and has no
+# leave day: no row gives one. Home: Espiritu Santo (base 3), a stand-in (the
+# S-boats' own is Brisbane, off the map).
+[[submarine]]
+id = 1
+name = "USS S-38"
+side = "allied"
+class = 6009
+q = -5
+r = -12
+home = 3
+
+# USS S-44 (ships.csv 16001; class 6010, S-42 group, by ship_facts 16016).
+# PLACEHOLDER start (-3,-17): engagement_positions 16008, Kako's position of
+# 10 August (day 4), 02-28 S 152-11 E, read as hers since it is her target's:
+# the point lies 16.9 nm from the centre of (-3,-17) and 25.8 nm from that of
+# (-3,-16); row 16004 (2-15 S 152-15 E) is in the same hex. She enters on day
+# 4 and has no leave day: no row gives one. Home: Espiritu Santo (base 3), a
+# stand-in (the S-boats' own is Brisbane, off the map).
+[[submarine]]
+id = 2
+name = "USS S-44"
+side = "allied"
+class = 6010
+q = -3
+r = -17
+home = 3
+enters = 4
+
+# USS S-37 (ships.csv 17200; class 6009, S-1 group, by ship_facts 17200).
+# PLACEHOLDER start (2,-5): engagement_events 16150, north of Savo on 2
+# September (day 27); place row 10 (Savo Island): the point lies 9.3 nm from
+# the centre of (2,-5). Her leave day is 38, 13 September, on which
+# engagement_events 17239 ends her patrol; where the rows give only the end of
+# a patrol she is kept on her station longer than she was. The hex is the hex
+# of the Japanese stock west of the Lunga (base 6): she attacks no run that
+# ends there. Home: Espiritu Santo (base 3), a stand-in (the S-boats' own is
+# Brisbane, off the map).
+[[submarine]]
+id = 3
+name = "USS S-37"
+side = "allied"
+class = 6009
+q = 2
+r = -5
+home = 3
+enters = 27
+leave_day = 38
+
+# USS S-42 (ships.csv 17203; class 6010, S-42 group, by ship_facts 17206).
+# PLACEHOLDER start (2,-5): engagement_events 17242, on station between Savo
+# and Cape Esperance from 26 August (day 20), read over engagement_events
+# 16152's 28 August; place rows 10 and 32: the points lie 9.3 nm and 8.9 nm
+# from the centre of (2,-5). She enters on day 20 and has no leave day: no row
+# gives one. The hex is the hex of the Japanese stock west of the Lunga (base
+# 6): she attacks no run that ends there. Home: Espiritu Santo (base 3), a
+# stand-in (the S-boats' own is Brisbane, off the map).
+[[submarine]]
+id = 4
+name = "USS S-42"
+side = "allied"
+class = 6010
+q = 2
+r = -5
+home = 3
+enters = 20
+
+# USS S-45 (ships.csv 16002; class 6010, S-42 group, by ship_facts 16017).
+# PLACEHOLDER start (-2,-8), the hex of Shortland (rule 2, third reading: "in
+# the Shortland Island area"): engagement_events 16165, on station there by
+# the end of August, read as 31 August (day 25). She enters on day 25 and has
+# no leave day: no row gives one. She is in the hex of a base the enemy holds,
+# which has no airfield, and she attacks nothing lying at Shortland. Home:
+# Espiritu Santo (base 3), a stand-in (the S-boats' own is Brisbane, off the
+# map).
+[[submarine]]
+id = 5
+name = "USS S-45"
+side = "allied"
+class = 6010
+q = -2
+r = -8
+home = 3
+enters = 25
+
+# I-122 (ships.csv 6437; class 6008, I-121 group, by ship_facts 16013).
+# PLACEHOLDER start (3,-5), the hex of Tulagi: engagement_positions 17226, 1.6
+# miles south-west of Tulagi at 1730 on 13 August (day 7), laid off from
+# Tulagi's place row. She enters on day 7 and has no leave day: no row gives
+# one. She lies at a base of her own side until it is taken. Home: Rabaul
+# (base 2), a stand-in (the rows have the boats of the first weeks sail from
+# Rabaul and return to it; the others' is Truk, off the map).
+[[submarine]]
+id = 6
+name = "I-122"
+side = "japanese"
+class = 6008
+q = 3
+r = -5
+home = 2
+enters = 7
+
+# I-123 (ships.csv 6438; class 6008, I-121 group, by ship_facts 16014).
+# PLACEHOLDER start (2,-4), the hex of Lunga: engagement_positions 17229,
+# north of Lunga Point on 12 August (day 6). She enters on day 6 and has no
+# leave day: the rows have her sunk on 29 August, day 23 (engagement_positions
+# 16001, engagement_events 16054), an outcome and not scripted; she is kept as
+# long as she lives. She lies at a base of her own side until it is taken.
+# Home: Rabaul (base 2), a stand-in (the rows have the boats of the first
+# weeks sail from Rabaul and return to it; the others' is Truk, off the map).
+[[submarine]]
+id = 7
+name = "I-123"
+side = "japanese"
+class = 6008
+q = 2
+r = -4
+home = 2
+enters = 6
+
+# RO-34 (ships.csv 17239; class 6007, RO-33 group, by ship_facts 17279).
+# PLACEHOLDER start (2,-4), the hex of Lunga: her second patrol,
+# engagement_positions 17261, reconnoitres Lunga Roads at 1827 on 23 August
+# (day 17). Her leave day is 31, 6 September, on which engagement_events 17202
+# has her back at Rabaul. Her first patrol (off Tulagi on 10 August, back at
+# Rabaul on 16 August) is left out: the second is the longer. She lies at a
+# base of her own side until it is taken. Home: Rabaul (base 2), a stand-in
+# (the rows have the boats of the first weeks sail from Rabaul and return to
+# it; the others' is Truk, off the map).
+[[submarine]]
+id = 8
+name = "RO-34"
+side = "japanese"
+class = 6007
+q = 2
+r = -4
+home = 2
+enters = 17
+leave_day = 31
+
+# I-19 (ships.csv 17226; class 6003, I-15 class, by ship_facts 17254).
+# PLACEHOLDER start (7,-8): engagement_positions 17239, 07-30 S 162-15 E at
+# 0725 on 23 August (day 17): 14.0 nm from the centre of (7,-8). She stands
+# there unless ordered. She enters on day 17 and has no leave day: the rows
+# have her leave on 20 September, after the game. Home: Rabaul (base 2), a
+# stand-in (the rows have the boats of the first weeks sail from Rabaul and
+# return to it; the others' is Truk, off the map).
+[[submarine]]
+id = 9
+name = "I-19"
+side = "japanese"
+class = 6003
+q = 7
+r = -8
+home = 2
+enters = 17
+
+# I-17 (ships.csv 17225; class 6003, I-15 class, by ship_facts 17252).
+# PLACEHOLDER start (9,-9): engagement_positions 17240, 06-48 S 163-20 E at
+# 0745 on 23 August (day 17): 15.6 nm from the centre of (9,-9). She stands
+# there unless ordered. She enters on day 17 and has no leave day: the rows
+# have her leave on 20 September, after the game. Home: Rabaul (base 2), a
+# stand-in (the rows have the boats of the first weeks sail from Rabaul and
+# return to it; the others' is Truk, off the map).
+[[submarine]]
+id = 10
+name = "I-17"
+side = "japanese"
+class = 6003
+q = 9
+r = -9
+home = 2
+enters = 17
+
+# I-33 (ships.csv 17233; class 6003, I-15 class, by ship_facts 17268).
+# PLACEHOLDER start (8,-5): engagement_positions 17241, 09-21 S 163-35 E at
+# 1105 on 24 August (day 18): 17.2 nm from the centre of (8,-5). She enters on
+# day 18 and has no leave day: the rows have her leave on 20 September, after
+# the game. Home: Rabaul (base 2), a stand-in (the rows have the boats of the
+# first weeks sail from Rabaul and return to it; the others' is Truk, off the
+# map).
+[[submarine]]
+id = 11
+name = "I-33"
+side = "japanese"
+class = 6003
+q = 8
+r = -5
+home = 2
+enters = 18
+
+# I-26 (ships.csv 17228; class 6003, I-15 class, by ship_facts 17259).
+# PLACEHOLDER start (8,-3): engagement_positions 16000, Saratoga's position
+# when she fired, 10-34 S 164-18 E on 31 August (day 25), read as hers: the
+# point lies 19.5 nm from the centre of (8,-3) and 20.8 nm from that of
+# (7,-2), a difference of 1.3 miles; the rule gives (8,-3). Her area by
+# engagement_positions 17247 (140 miles east of San Cristobal) cannot be laid
+# off, San Cristobal having no place row. She enters on day 25 and has no
+# leave day: the rows have her leave on 20 September, after the game. Home:
+# Rabaul (base 2), a stand-in (the rows have the boats of the first weeks sail
+# from Rabaul and return to it; the others' is Truk, off the map).
+[[submarine]]
+id = 12
+name = "I-26"
+side = "japanese"
+class = 6003
+q = 8
+r = -3
+home = 2
+enters = 25
+
+# I-11 (ships.csv 17237; class 6014, I-9 group, by ship_facts 17275 and
+# 17276). PLACEHOLDER start (4,-2): engagement_positions 17248, 146 miles
+# south-east of Tulagi on 31 August (day 25), laid off from Tulagi's place row
+# 4 at bearing 135: the point lies 7.9 nm from the centre of (4,-2) and 32.3
+# nm from that of (3,-2). Her leave day is 36, 11 September, on which
+# engagement_events 17211 has her at Truk. Home: Rabaul (base 2), a stand-in
+# (the rows have the boats of the first weeks sail from Rabaul and return to
+# it; the others' is Truk, off the map).
+[[submarine]]
+id = 13
+name = "I-11"
+side = "japanese"
+class = 6014
+q = 4
+r = -2
+home = 2
+enters = 25
+leave_day = 36

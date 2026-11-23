@@ -1,5 +1,5 @@
 {
- "note": "Directives for the Allied seat of the Eastern Solomons over five days, 23 to 27 August 1942. Written for the game in its own words: these are not historical documents and quote none. Each gives the situation as the commander above has it and the mission with its purpose, and nothing the commander can find out for himself: what the enemy has, what is coming and what cannot be replaced are read elsewhere on the table. Decision 0157.",
+ "note": "Directives for the Allied seat of the Eastern Solomons over five days, 23 to 27 August 1942. Written for the game in its own words: these are not historical documents and quote none. Each gives the situation as the commander above has it and the mission with its purpose, and nothing the commander can find out for himself: what the enemy has, what is coming and what cannot be replaced are read elsewhere on the table. Decision 0157. The last sentence of the situation names the side's submarines and where they are (decision 0227).",
  "directives": [
   {
    "number": 1,
@@ -12,7 +12,8 @@
      "heading": "1. Situation",
      "text": [
       "Lunga Point and its airfield are in our hands and are held by the Marines ashore. The enemy is expected to land troops on Guadalcanal within days, and his carriers are believed at sea to cover the landing.",
-      "The airfield is the key to the island. While it operates the enemy cannot move by day within its reach."
+      "The airfield is the key to the island. While it operates the enemy cannot move by day within its reach.",
+      "One of our submarines, S-42, is due on station off Savo Island on 26 August, under your command."
      ]
     },
     {

@@ -421,6 +421,9 @@ fn a_step_carries_only_the_pictures_that_changed() {
 /// the rules label 32, the doctrine `supply-58`): every file changes in its
 /// state version, rules label, doctrine and day hashes and nothing else:
 /// checked against the exports of 4dc0b4da with those taken out.
+/// Remade again for decision 0228 (the state layout v59, the saved game 27, the
+/// doctrine `supply-59`): every file changes in its state version, doctrine and
+/// day hashes and nothing else, as the run baselines (`regenerate.sh`) show.
 #[test]
 fn a_scenario_with_command_levels_off_exports_as_it_did() {
     fn fnv(bytes: &[u8]) -> u64 {
@@ -429,16 +432,16 @@ fn a_scenario_with_command_levels_off_exports_as_it_did() {
         })
     }
     let before: [(&str, u64); 10] = [
-        ("01_transit", 0x840f_f42a_8dda_109a),
-        ("04a_night_action", 0xffab_33ac_59c6_1d3d),
-        ("05_eastern_solomons", 0xfd51_9653_b6c4_1590),
-        ("21_landing", 0x24a0_dd4e_a2e1_71ef),
-        ("23_fight_ashore", 0x2e73_4f80_7153_96a6),
-        ("31_airfield_damage", 0xe810_db9d_7810_0c9e),
-        ("36_one_convoy", 0xf765_1eec_f795_c3c0),
-        ("43_keep_two_bases_fed", 0x28eb_cab0_cbb8_af99),
-        ("50_neutralise_a_base", 0xb41f_599c_cc37_91a9),
-        ("58_a_carrier_force_closes", 0xcb7a_54cb_e03f_0cb6),
+        ("01_transit", 0x1ec0_992b_bf30_ad1b),
+        ("04a_night_action", 0x3080_0e84_6cec_8d9d),
+        ("05_eastern_solomons", 0x7bf7_cefe_0905_863f),
+        ("21_landing", 0xdf77_bc18_4cf2_c2ff),
+        ("23_fight_ashore", 0x3fac_a90d_dea4_0853),
+        ("31_airfield_damage", 0xc826_2514_784c_bdd1),
+        ("36_one_convoy", 0x12c0_5d26_bcc3_5a17),
+        ("43_keep_two_bases_fed", 0x456b_48a9_bbcb_cc30),
+        ("50_neutralise_a_base", 0xcd3c_8d36_9cdf_a229),
+        ("58_a_carrier_force_closes", 0x5cd7_8f51_f392_5ec0),
     ];
     let prefix6 = br#"{"format":"flagplot-replay","version":6,"#;
     let prefix5 = br#"{"format":"flagplot-replay","version":5,"#;
