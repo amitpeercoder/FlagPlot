@@ -541,7 +541,7 @@ impl Day<'_, '_> {
                     .evidence(words.clone(), today)
                     .binding(format!("{} is held and its plan is released", hold.id))
                     .worked(format!(
-                        "{opening}: the staff forms {id_new}, keep {fed_text} supplied, under it, with a floor of {floor_days} {} (the margin at {}) and no interval, so that the staff uses 15 days. {}: the source is {source}.",
+                        "{opening}: the staff forms {id_new}, keep {fed_text} supplied, under it, with a floor of {floor_days} {} (the margin at {}) and no interval, so that the staff uses 15 days. {}.",
                         crate::units::days_word(floor_days),
                         risk.name(),
                         capitalised(&words)

@@ -684,3 +684,7 @@ path = "scenario_131_the_pattern_of_a_patrol.rs"
 [[test]]
 name = "boats_in_the_midway_games"
 path = "boats_in_the_midway_games.rs"
+
+[[test]]
+name = "scenario_132_a_source_the_staff_chooses"
+path = "scenario_132_a_source_the_staff_chooses.rs"
