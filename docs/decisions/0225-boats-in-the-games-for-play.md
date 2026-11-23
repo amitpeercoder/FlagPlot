@@ -171,3 +171,13 @@ The research of Nov 23, 2026 (`docs/research/submarine-rows-for-the-play-scenari
 2. **In `check_torpedo_from`, only a `torpedo_model` row that holds on the list's date drives a `torpedo_from` entry out;** a row beginning after that date is not read, as no row after the list's date is. Rows 17236 and 17237 stay as filed.
 
 The eight new classes are left out of `submarines_1942.toml` with the reason "On file, not derived: waits on the architect's ruling (decision 0225, rule 13)". The generated tables' rows are as before; the class file's header lists the eight among the classes left out.
+
+### The architect's rulings on pull request 706 (Midway)
+
+Read: the new test and its statements, the boats as the copies give them, and the measure.
+
+1. **Built as amended and as the designer answered:** one Midway at the table, with its five boats. The statements are held as written. Scenario 104's statement 23 gains four files and not three, because file a's copy carries `for_play` as file a does; that is the statement working as written.
+2. **The boats change nothing in the game the staffs play.** On 100 seeds every result and every ship sunk is the same with the boats and without, and no boat is ever under a chance to attack: no Japanese force ends a pulse in an American boat's hex, and I-168 lies where she may not attack. That is the honest state of this game: the boats are the player's to use, and until he orders one she watches. It is also what rule 5 was written to find out. The attack chance cannot be judged on this game.
+3. **I-168 is found by Midway's flying boats every morning** and is sunk in 13 runs of 100 and sent home damaged in 31. The rows have her off Eastern Island for days, watched and not attacked. She is left where the rows put her and nothing is tuned. What it shows is owed to the figures: a boat on station in the hex of an enemy air base is looked for in every pulse at the full count of the base's search. Open work, with the attack chance, for when the submarine figures are set from the rows on every game together.
+4. **A boat's number under SIGNED is the engine's and not the side's** (`queued` in `sim-agent`): the Japanese seat reads "submarine 5" for his only boat and can count four boats before her. This tells a side something of the enemy and is mended at once, in its own pull request, before anything else is built on this game.
+5. **Not seen:** the agent pairings in a browser; the whole test suite after the last two merges of main, which CI runs.
