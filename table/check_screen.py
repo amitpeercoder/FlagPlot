@@ -456,6 +456,189 @@ def cut_function(text, header):
     return text[start:text.index("\n  }\n", start) + 4]
 
 
+INTEL_SAMPLE = {
+    "format": "flagplot-agent", "version": 52, "kind": "intelligence",
+    "parts": ["seen", "lost_sight_of", "claimed", "enemy_has_done", "ashore", "enemy_bases", "enemy_submarines", "before_the_game"],
+    "seen": [{"contact": {"handle": "contact:4", "name": None}, "place": {"q": 2, "r": 1}, "ship_count": 3, "taken_for": "cruiser", "age_pulses": 2},
+             {"contact": {"handle": "contact:2", "name": None}, "place": {"q": 3, "r": 1}, "ship_count": 1, "taken_for": "carrier", "age_pulses": 0}],
+    "lost_sight_of": [
+        {"contact": {"handle": "contact:3", "name": None}, "last_report": {"day": 2, "pulse": "night", "place": {"q": 5, "r": 5}, "ship_count": 8, "taken_for": "cruiser", "event": 11},
+         "dropped": {"day": 3, "pulse": "afternoon", "event": 40, "why": "no_report_since", "age_pulses": 5}},
+        {"contact": {"handle": "contact:1", "name": None}, "last_report": {"day": 0, "pulse": None, "place": {"q": 6, "r": 6}, "ship_count": 2, "taken_for": "destroyer", "event": 1},
+         "dropped": {"day": 1, "pulse": "afternoon", "event": 20, "why": "strike_found_nothing", "place": {"q": 6, "r": 6}}}],
+    "claimed": {"days": [{"day": 2, "claims": [{"pulse": "morning", "place": {"q": 4, "r": 4}, "claimed_sunk": 1, "claimed_hits": 3, "taken_for": "cruiser", "claimed_shot_down": 0, "claimed_on_ground": 0, "from_air": True, "event": 9}]},
+                         {"day": 1, "claims": [{"pulse": "night", "place": {"q": 0, "r": 0}, "claimed_sunk": 0, "claimed_hits": 0, "taken_for": None, "claimed_shot_down": 0, "claimed_on_ground": 29, "from_air": False, "from_bombardment": True, "event": 3}]}],
+                "totals": {"sunk": 1, "hits": 3, "shot_down": 0, "on_ground": 29}},
+    "enemy_has_done": [{"day": 2, "raids": [{"base": {"handle": "base:1", "name": "Lunga"}, "aircraft": "18", "weapon": "bombs", "recognised": "Mitsubishi G4M1 Type 1", "hits": 4, "event": 5}],
+                        "attacks_on_ships": [{"by": "aircraft", "against": {"handle": "ship:1", "name": "USS Enterprise"}, "weapon": "torpedoes", "attacks": 2, "aircraft": "9", "recognised": [], "not_recognised": 2, "events": [7]}],
+                        "submarine_attacks": [{"against": {"handle": "ship:1", "name": "USS Enterprise"}, "place": {"q": 5, "r": 0}, "pulse": "morning", "event": 8}],
+                        "fights": [{"force": {"handle": "task_force:1", "name": "Task Group Able"}, "place": {"q": 1, "r": 2}, "rounds": 3, "ended": "slipped_away", "event": 6}]},
+                       {"day": 1, "bombardments": [{"base": {"handle": "base:1", "name": "Lunga"}, "place": {"q": 0, "r": 0}, "shells": "1320", "hits": 37, "event": 4}]}],
+    "ashore": {"estimates": [{"place": {"q": 8, "r": 0}, "men": 330, "came_from": "men in contact", "day": 1, "age_days": 1, "event": 16}],
+               "found_empty": [{"day": 3, "place": {"q": 9, "r": 0}, "men": 39, "reported_day": 2, "event": 45}]},
+    "enemy_bases": [{"base": {"handle": "base:3", "name": "Tulagi"}, "place": {"q": 8, "r": 0}, "held_by": "japanese",
+                     "estimate": {"place": {"q": 8, "r": 0}, "men": 330, "came_from": "men in contact", "day": 1, "age_days": 1, "event": 16},
+                     "claimed_on_ground_from_air": 12, "claims": [{"day": 2, "number": 12}]}],
+    "enemy_submarines": {"reports": [{"place": {"q": 5, "r": -1}, "day": 1, "age_pulses": 4, "event": 6}],
+                         "suspected_waters": [{"place": {"q": 5, "r": 0}, "distance_hexes": 3, "words": "Placeholder: the staff believes enemy submarines work in these waters.", "told_day": 1, "event": 1}]},
+    "before_the_game": {"contacts": [{"contact": {"handle": "contact:1", "name": None}, "place": {"q": 6, "r": 6}, "ship_count": 2, "taken_for": "destroyer", "age_pulses": 2, "event": 1}],
+                        "estimates": [{"place": {"q": 8, "r": 0}, "men": 300, "came_from": "told", "event": 1}]},
+}
+
+INTEL_HEADS = ["SEEN", "LOST SIGHT OF", "CLAIMED", "WHAT THE ENEMY HAS DONE", "ASHORE", "ENEMY BASES", "ENEMY SUBMARINES", "BEFORE THE GAME"]
+
+
+def intelligence_code(text):
+    """The paper's own functions and the few of the page's they use, with stubs for what draws, run in node."""
+    start = text.index("  // ---- INTELLIGENCE SUMMARY")
+    paper = text[start:text.index("  // What is known of how a contact was last reported", start)]
+    helpers = "\n".join(cut_function(text, h) for h in ("function pulsesOld(n)", "function daysOld(e)", "function commas(n)", "function fig(x)", "function shortType(name)",
+                                                           "function cleanName(s)", "function round(n)"))
+    return """
+Node.prototype.addEventListener = function (k, f) { (this.listeners = this.listeners || []).push(k); };
+Object.defineProperty(Node.prototype, 'classList', { get() { const n = this; return { add(c) { n.className += ' ' + c; } }; } });
+var config = { start: '1942-08-24' };
+function dateOf(n) { return 'D' + (n + 1); } function num(h) { return parseInt(String(h).split(':')[1], 10); }
+function refTo(h, given) { const b = el('button', 'ref', given || (/^contact:/.test(h) ? 'contact ' + num(h) : 'unnamed')); b.type = 'button'; return b; }
+function placeLink(pl) { const s = el('span', ''); s.appendChild(el('button', 'ref', '<' + pl.q + ',' + pl.r + '>')); return s; }
+""" + helpers + "\n" + paper + """
+function all(node, f) { f(node); (node.kids || []).forEach(k => all(k, f)); }
+function main(a) {
+  const doc = el('div', ''); let hows = 0, directives = 0;
+  drawIntelligence(a, doc, function (row, event) { hows += 1; row.how = event; }, function () { directives += 1; });
+  const heads = [], text = [], refs = [], rows = [], buttons = [];
+  doc.kids.forEach(k => { if (k.className === 'sub') heads.push(k.textContent); });
+  all(doc, n => { if (n.className === 'ref') refs.push(n.textContent); if (n.className.indexOf('dline') >= 0) rows.push({ text: n.textContent, how: n.how === undefined ? null : n.how, cls: n.className }); if (n.tag === 'button') buttons.push(n.textContent); });
+  return { heads, text: doc.textContent, refs, rows, buttons, hows };
+}
+"""
+
+
+def the_intelligence_paper():
+    """The paper of what is known of the enemy (decision 0226, the page's statements 1 to 13): by the page's text and by its own
+    functions run in node on an answer. The page is drawn in a browser and tried by hand."""
+    import re
+    print("-- the intelligence paper: the page's text and its own functions in node", flush=True)
+    text = page_text()
+    # 1. where it is, and that it asks once, when it is opened
+    check("staffPaper('Intelligence', readIntelligence, true)" in text and "sheetAs('INTELLIGENCE SUMMARY')" in text,
+          "the Staff menu has Intelligence, which opens a sheet titled INTELLIGENCE SUMMARY")
+    opened = cut_function(text, "function readIntelligence()")
+    check(opened.count("api('intelligence'") == 1 and text.count("api('intelligence'") == 1 and "refresh" not in opened,
+          "the paper is drawn from one call of the tool intelligence, made when it is opened, and not at load or on a refresh")
+    paper = text[text.index("  // ---- INTELLIGENCE SUMMARY"):text.index("  // What is known of how a contact was last reported")]
+    check("api(" not in paper and "events" not in paper.replace("enemy_has_done", "") and not re.search(r"\.(test|exec|match|search)\(|\.replace\(/|\.split\(/", paper)
+          and not re.search(r"[(=,] ?/[^/*\s][^/\n]*/[gimsu]*[.),;]", paper),
+          "the functions that draw it call no other tool, read no events and match no pattern against words")
+    # 13. a watched game
+    check("if (WATCH) body.side = WATCH.side" in text and "staffPaper('Intelligence'" in text and "WATCH" not in text[text.index("staffPaper('Intelligence'") - 80:text.index("staffPaper('Intelligence'")],
+          "the paper opens for the seat watched, by the same call, which carries the side watched")
+    code = intelligence_code(text)
+    said = run_in_node(code, INTEL_SAMPLE)
+    flat = said["text"]
+    # 2. order
+    check(said["heads"] == INTEL_HEADS, f"given every part, the headings are in the paper's order, each once ({said['heads']})")
+    some = dict(INTEL_SAMPLE, parts=["claimed", "ashore"])
+    check(run_in_node(code, some)["heads"] == ["CLAIMED", "ASHORE"], "a part the answer does not name has no heading, and the order is the answer's own")
+    reordered = dict(INTEL_SAMPLE, parts=["ashore", "seen"])
+    check(run_in_node(code, reordered)["heads"] == ["ASHORE", "SEEN"], "the page takes the order from the answer's parts")
+    none = run_in_node(code, {"parts": []})
+    check(not none["heads"] and "We hold nothing of the enemy yet." in none["text"], "an answer with no part says We hold nothing of the enemy yet. and draws no heading")
+    # 3. how known and how old
+    check("3 ships" in flat and "heaviest seen cruiser" in flat and "Report 2 pulses old" in flat and "1 ship" in flat and "taken for carrier" in flat and "Reported this pulse" in flat,
+          "a contact's line gives its ships, what the heaviest was taken for, its place and its age, in the card's words")
+    check("About 330 men" in flat and "from men in contact" in flat and "Report 1 day old" in flat,
+          "an estimate's line gives the men, the place, where it came from and its age in days, in the place's card's words")
+    check("Report of a submarine" in flat and "Report 4 pulses old" in flat and "Placeholder: the staff believes enemy submarines work in these waters." in flat and "within 120 miles" in flat,
+          "a report of a submarine gives its place and age, and suspected waters their place, their distance and the words as told")
+    # 4. links
+    check(not re.search(r"\b[a-z_]+:\d+\b", flat), "no handle of the form word:number is shown")
+    check(all(n in said["refs"] for n in ("contact 4", "contact 2", "Lunga", "Tulagi", "USS Enterprise", "Task Group Able")) and any(r.startswith("<") for r in said["refs"]),
+          "every contact held, base, own unit and place on the paper is a link made by the functions the cards use")
+    # 5. lost sight of
+    lost = [r for r in said["rows"] if "Last reported" in r["text"]]
+    check(len(lost) == 2 and "D2, night" in lost[0]["text"] and "We have had no report since." in lost[0]["text"] and "Our strike found nothing there." in lost[1]["text"]
+          and "before the game" in lost[1]["text"] and "8 ships" in lost[0]["text"],
+          "each lost line says the day and part of the day of the last report, what it said, and one of two things")
+    check(said["hows"] == 2 and [r["how"] for r in lost] == [11, 1], "a lost line is not a link to a contact: pressing it opens how it was last reported, by the event of that report")
+    check("chart.hidden = !lost.length" in opened and "lostMarks = lost" in opened and "(lostMarks || []).forEach" in text and text.count("lostMarks = null") >= 2,
+          "SHOW ON CHART is shown while the answer has a lost contact, marks the last place of each with a mark of its own, and is hidden with none")
+    check("M.contacts.forEach(function (c) { var v = placeOf(c.place); if (!v) return; var a = Math.max(0.25" in text and "g.moveTo(c[0] - k, c[1] - k)" in text,
+          "the mark of a lost contact is a cross, not a held contact's ring")
+    # 6. claimed
+    check(flat.index("Claimed 1 ship sunk, 3 hits on a cruiser") < flat.index("Claimed 29 aircraft destroyed on the ground by our guns") and "Claimed, not confirmed: 1 sunk, 3 hits, 29 aircraft on the ground." in flat,
+          "claims by day, the latest first, a claim of ships says what the target was taken for, and one line of totals with the 0 left out")
+    check(flat.count("Claimed, not confirmed") == 1 and not re.search(r"on (a|the) (carrier|cruiser|destroyer|battleship): \d", flat) and "contact" not in flat[flat.index("CLAIMED"):flat.index("WHAT THE ENEMY")].lower().replace("claimed, not confirmed", ""),
+          "no total by kind of ship, and no claim is linked to a contact")
+    # 7. what the enemy has done
+    check("Raid on Lunga by 18 aircraft, recognised as G4M1, 4 hits." in flat and "type not made out" in flat and "attacked by a submarine at <5,0>, morning." in flat
+          and "shelled from the sea" in flat and "Action at <1,2>: Task Group Able met the enemy, 3 rounds, the enemy slipped away." in flat
+          and flat.index("D2", flat.index("WHAT THE ENEMY")) < flat.index("D1", flat.index("WHAT THE ENEMY")),
+          "the enemy's raids, shellings, attacks on our ships, a submarine's among them, and the actions our forces met, by day, with the type where recognised")
+    # 8. enemy bases
+    check("Tulagi · About 330 men · reported D1 · 12 aircraft claimed destroyed on the ground from the air, D2" in flat, "an enemy base shows the estimate of men there and the aircraft claimed on the ground from the air, with the day of each")
+    # 9. before the game
+    check("The directives" in said["buttons"] and "told at the start" in flat and "given 2 pulses old" in flat and "directive" not in paper.lower().replace("opendirectives", "").replace("ondirectives", "").replace("directives", "").replace("the directives", ""),
+          "BEFORE THE GAME shows the contacts and the estimates as given and one link that opens the directives, and reads no sentence of one")
+    # 10. not kept
+    kept = run_in_node(code, {"parts": ["seen", "ashore"], "seen": INTEL_SAMPLE["seen"], "ashore": INTEL_SAMPLE["ashore"], "not_kept": ["lost_sight_of", "enemy_has_done", "before_the_game"]})
+    check(kept["heads"] == ["SEEN", "LOST SIGHT OF", "WHAT THE ENEMY HAS DONE", "ASHORE", "BEFORE THE GAME"] and kept["text"].count("Not kept at this command.") == 3,
+          "each part named in not_kept has its heading and the one line Not kept at this command.")
+    # 11 and 12. words, and no points or result
+    low = flat.lower()
+    check("report" in low and "contact" in low and "force" not in low and "intent" not in low and not re.search(r"\bhis\b", low) and "the enemy" in low and "we " in low,
+          "the words: report or contact, never force of a contact, the enemy and never his, we for the staff, and no intent")
+    check(not any(w in low for w in ("points", "victory", "margin", "score")) and "M.over" not in paper and "result" not in paper,
+          "no points, victory, margin or score on the paper, and nothing of the game's result is read")
+    check(not any(w in low for w in ("probably", "perhaps", "possibly", "might", "unconfirmed", "believed", "usually", "because", "can be wrong", "means")),
+          "no sentence explains a rule and claimed, not confirmed is the only qualifier on the paper")
+
+
+def the_intelligence_through_a_bridge(sim_cli, port):
+    """The page's statement 14: on the table's game of scenario 128, the Allied seat, three days played, the call the page makes
+    answers and the paper drawn from it has ENEMY SUBMARINES (a report and the waters in the words told) and WHAT THE ENEMY HAS DONE
+    (the submarine's attacks on the carrier, one on each of days 1 and 2)."""
+    print("-- the intelligence paper on a real game: the table's copy of scenario 128", flush=True)
+    repo = os.path.dirname(HERE)
+    with open(os.path.join(repo, SUBMARINE_GAMES, "128_a_submarine_in_the_way.toml"), encoding="utf-8") as f:
+        original = f.read()
+    with tempfile.TemporaryDirectory() as folder:
+        path = os.path.join(folder, "game.toml")
+        with open(path, "w", encoding="utf-8") as out:
+            out.write(original.replace('"../../', '"' + os.path.join(repo, "data") + "/"))
+        command = [sys.executable, os.path.join(HERE, "serve.py"), path, "--seat", "allied", "--start", "1942-08-24", "--port", str(port), "--sim-cli", sim_cli]
+        process = subprocess.Popen(command, stdout=subprocess.PIPE, text=True)
+        try:
+            check(process.stdout.readline().startswith("The table is at "), "the bridge is up on the table's copy of scenario 128, the Allied seat")
+            root = f"http://127.0.0.1:{port}"
+            call = lambda tool, arguments=None: post(root + "/call", {"tool": tool, "arguments": arguments or {}})["ok"]
+            for _ in range(3):
+                call("end_day")
+            answer = call("intelligence")
+            check(answer["kind"] == "intelligence" and "enemy_submarines" in answer["parts"] and "enemy_has_done" in answer["parts"], f"the page's call answers: {answer['parts']}")
+            said = run_in_node(intelligence_code(page_text()), answer)
+            flat = said["text"]
+            check("ENEMY SUBMARINES" in said["heads"] and "WHAT THE ENEMY HAS DONE" in said["heads"], f"the paper has ENEMY SUBMARINES and WHAT THE ENEMY HAS DONE ({said['heads']})")
+            check("Report of a submarine" in flat and "the staff believes enemy submarines work in these waters" in flat, "ENEMY SUBMARINES gives a report and the suspected waters in the words told")
+            check(flat.count("attacked by a submarine") == 2 and "D2" in flat and "D1" in flat, "WHAT THE ENEMY HAS DONE gives the submarine's attacks on the carrier, one on each of days 1 and 2")
+        finally:
+            process.send_signal(signal.SIGTERM)
+            process.wait(30)
+
+
+def the_intelligence_of_the_long_game(bridge):
+    """The page's statement 14, second half: on the 39 days at the first evening the answer has BEFORE THE GAME, and the paper has the link
+    to the directives."""
+    print("-- the intelligence paper on the 39 days, at the first evening", flush=True)
+    check(begin(bridge, "guadalcanal-39-days", "person", "engine") == {"ok": True}, "begun")
+    person = Person(bridge.table)
+    answer = person.call("intelligence")["ok"]
+    check("before_the_game" in answer["parts"], f"the answer has BEFORE THE GAME ({answer['parts']})")
+    said = run_in_node(intelligence_code(page_text()), answer)
+    check("BEFORE THE GAME" in said["heads"] and "The directives" in said["buttons"], "the paper has BEFORE THE GAME with the link to the directives")
+    check(post(bridge.table + "/new") == {"ok": True}, "the game is put away")
+
+
 def the_submarines():
     """Submarines at the table (decision 0218, stage 3), by the page's text: a boat of the side's own as a piece and a card with
     the direct order through the one paper and the hold; a report of a submarine as a mark of its own with its card and HOW WE KNOW;
@@ -1855,6 +2038,7 @@ def main():
     the_fold_and_the_keys()
     the_words_and_what_the_papers_say()
     the_submarines()
+    the_intelligence_paper()
     if not os.path.exists(args.sim_cli):
         sys.exit(f"{args.sim_cli} is not built: cargo build --release -p sim-cli")
     with tempfile.TemporaryDirectory() as keep:
@@ -1872,6 +2056,7 @@ def main():
             limits_in_force(bridge)
             the_orders_paper(bridge)
             reason_limits_as_links(bridge)
+            the_intelligence_of_the_long_game(bridge)
             midway_on_its_chart(bridge)
             person_against_agent(bridge, args.hold)
             seat_mcp(bridge)
@@ -1885,6 +2070,7 @@ def main():
         check(versus, f"a game of a person against an agent keeps each seat's transcript ({versus[0] if versus else ''})")
     the_submarines_through_the_page(args.sim_cli, args.port, args.hold)
     the_patrol_through_the_page(args.sim_cli, args.port)
+    the_intelligence_through_a_bridge(args.sim_cli, args.port)
     print("-- the bridge started with a scenario: table/check_watch.py", flush=True)
     done = subprocess.run([sys.executable, os.path.join(HERE, "check_watch.py"), "--sim-cli", args.sim_cli,
                            "--port", str(args.port + 3), "--hold", str(args.hold)])

@@ -1043,7 +1043,7 @@
           "const": "flagplot-agent"
         },
         "version": {
-          "const": 51
+          "const": 52
         },
         "kind": {
           "const": "not_known"

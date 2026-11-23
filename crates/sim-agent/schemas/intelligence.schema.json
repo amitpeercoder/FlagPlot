@@ -1,0 +1,270 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "flagplot-agent/intelligence",
+  "title": "intelligence: what the seat holds of the enemy, on one answer",
+  "description": "Decision 0226. Gathers what the seat's picture and the side's own events say of the enemy: contacts held, contacts lost sight of, claims, what the enemy has done, men ashore, enemy bases, enemy submarines and what the side was told before the game. It adds no knowledge, makes no estimate, keeps no state and writes no sentence of its own: its only words are those of suspected waters, as told. A line is of the type the tool that already says that thing uses. A part with nothing is left out; parts lists those given, in the paper's order.",
+  "type": "object",
+  "required": ["format", "version", "kind", "parts"],
+  "additionalProperties": false,
+  "properties": {
+    "format": { "const": "flagplot-agent" },
+    "version": { "const": 52 },
+    "kind": { "const": "intelligence" },
+    "parts": {
+      "description": "The names of the parts that hold something, in the paper's order. One key below for each, and none for a part not named.",
+      "type": "array",
+      "items": { "enum": ["seen", "lost_sight_of", "claimed", "enemy_has_done", "ashore", "enemy_bases", "enemy_submarines", "before_the_game"] }
+    },
+    "not_kept": {
+      "description": "The parts this seat is not given (with command levels on, a seat other than the area seat under the easier setting). Left out where none.",
+      "type": "array",
+      "items": { "enum": ["lost_sight_of", "enemy_has_done", "before_the_game"] }
+    },
+    "seen": {
+      "description": "The contacts held, the least age first and of one age the higher number first: the lines of list_contacts.",
+      "type": "array",
+      "items": { "$ref": "defs.schema.json#/$defs/contact_line" }
+    },
+    "lost_sight_of": {
+      "description": "Each contact dropped and not held again, the latest dropped first.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["contact", "last_report", "dropped"],
+        "additionalProperties": false,
+        "properties": {
+          "contact": { "$ref": "defs.schema.json#/$defs/handle" },
+          "last_report": {
+            "description": "The last report that made or refreshed the contact. For a contact given at the start and never refreshed, day is 0 and pulse null.",
+            "type": "object",
+            "required": ["day", "pulse", "place", "ship_count", "taken_for", "event"],
+            "additionalProperties": false,
+            "properties": {
+              "day": { "type": "integer" },
+              "pulse": { "enum": ["night", "morning", "afternoon", null] },
+              "place": { "$ref": "defs.schema.json#/$defs/place" },
+              "ship_count": { "type": "integer" },
+              "taken_for": { "type": "string" },
+              "event": { "type": "integer" }
+            }
+          },
+          "dropped": {
+            "type": "object",
+            "required": ["day", "pulse", "event", "why"],
+            "additionalProperties": false,
+            "properties": {
+              "day": { "type": "integer" },
+              "pulse": { "enum": ["night", "morning", "afternoon", null] },
+              "event": { "type": "integer" },
+              "why": { "enum": ["no_report_since", "strike_found_nothing"] },
+              "age_pulses": { "description": "For no_report_since: the age it was dropped at.", "type": "integer" },
+              "place": { "description": "For strike_found_nothing: where the strike flew.", "$ref": "defs.schema.json#/$defs/place" }
+            }
+          }
+        }
+      }
+    },
+    "claimed": {
+      "type": "object",
+      "required": ["days", "totals"],
+      "additionalProperties": false,
+      "properties": {
+        "days": {
+          "description": "The latest day first, no day without a claim. A claim is a briefing's claim with its pulse added; event is left out where the seat is not shown it.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["day", "claims"],
+            "additionalProperties": false,
+            "properties": {
+              "day": { "type": "integer" },
+              "claims": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["pulse", "place", "claimed_sunk", "claimed_hits", "taken_for", "claimed_shot_down", "claimed_on_ground", "from_air"],
+                  "properties": {
+                    "pulse": { "enum": ["night", "morning", "afternoon"] },
+                    "place": { "$ref": "defs.schema.json#/$defs/place" },
+                    "claimed_sunk": { "type": "integer" },
+                    "claimed_hits": { "type": "integer" },
+                    "taken_for": { "type": ["string", "null"] },
+                    "claimed_shot_down": { "type": "integer" },
+                    "claimed_on_ground": { "type": "integer" },
+                    "from_air": { "type": "boolean" },
+                    "from_bombardment": { "type": "boolean" },
+                    "from_submarine": { "type": "boolean" },
+                    "event": { "type": "integer" }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "totals": {
+          "description": "Claimed, not confirmed: the sum of each kind of claim over every day. Never by kind of ship.",
+          "type": "object",
+          "required": ["sunk", "hits", "shot_down", "on_ground"],
+          "additionalProperties": false,
+          "properties": {
+            "sunk": { "type": "integer" },
+            "hits": { "type": "integer" },
+            "shot_down": { "type": "integer" },
+            "on_ground": { "type": "integer" }
+          }
+        }
+      }
+    },
+    "enemy_has_done": {
+      "description": "By day, the latest first, with no day on which nothing was done: raids on the side's bases, shellings of them from the sea, attacks on its ships and the fights at sea its forces met, as the briefing gives them.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["day"],
+        "additionalProperties": false,
+        "properties": {
+          "day": { "type": "integer" },
+          "raids": { "type": "array", "items": { "type": "object" } },
+          "bombardments": { "type": "array", "items": { "type": "object" } },
+          "attacks_on_ships": { "type": "array", "items": { "type": "object" } },
+          "submarine_attacks": {
+            "description": "A salvo a submarine fired at a ship of the side's: the ship, where, when and the event, and nothing of the torpedoes, the hits or the boat.",
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["against", "place", "pulse", "event"],
+              "additionalProperties": false,
+              "properties": {
+                "against": { "$ref": "defs.schema.json#/$defs/handle" },
+                "place": { "$ref": "defs.schema.json#/$defs/place" },
+                "pulse": { "enum": ["night", "morning", "afternoon", null] },
+                "event": { "type": "integer" }
+              }
+            }
+          },
+          "fights": { "type": "array", "items": { "type": "object" } }
+        }
+      }
+    },
+    "ashore": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "estimates": { "type": "array", "items": { "$ref": "defs.schema.json#/$defs/ground_estimate_line" } },
+        "found_empty": {
+          "description": "Every hex the side's men found empty, the latest first, with the day it was found empty.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["day", "place", "men", "reported_day", "event"],
+            "additionalProperties": false,
+            "properties": {
+              "day": { "type": "integer" },
+              "place": { "$ref": "defs.schema.json#/$defs/place" },
+              "men": { "type": "integer" },
+              "reported_day": { "type": "integer" },
+              "event": { "type": "integer" }
+            }
+          }
+        }
+      }
+    },
+    "enemy_bases": {
+      "description": "Only the enemy's bases of which something is held, in the order of the bases' numbers.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["base", "place", "held_by"],
+        "additionalProperties": false,
+        "properties": {
+          "base": { "$ref": "defs.schema.json#/$defs/handle" },
+          "place": { "$ref": "defs.schema.json#/$defs/place" },
+          "held_by": { "enum": ["allied", "japanese"] },
+          "estimate": { "$ref": "defs.schema.json#/$defs/ground_estimate_line" },
+          "claimed_on_ground_from_air": { "type": "integer" },
+          "claims": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["day", "number"],
+              "additionalProperties": false,
+              "properties": { "day": { "type": "integer" }, "number": { "type": "integer" } }
+            }
+          }
+        }
+      }
+    },
+    "enemy_submarines": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "reports": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["place", "day", "age_pulses"],
+            "additionalProperties": false,
+            "properties": {
+              "place": { "$ref": "defs.schema.json#/$defs/place" },
+              "day": { "type": "integer" },
+              "age_pulses": { "type": "integer" },
+              "event": { "type": "integer" }
+            }
+          }
+        },
+        "suspected_waters": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["place", "distance_hexes", "words", "told_day"],
+            "additionalProperties": false,
+            "properties": {
+              "place": { "$ref": "defs.schema.json#/$defs/place" },
+              "distance_hexes": { "type": "integer" },
+              "words": { "type": "string" },
+              "told_day": { "type": "integer" },
+              "event": { "type": "integer" }
+            }
+          }
+        }
+      }
+    },
+    "before_the_game": {
+      "description": "The contacts and the estimates of men the side was given at the start, as given, whatever has been reported since.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "contacts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["contact", "place", "ship_count", "taken_for", "age_pulses", "event"],
+            "additionalProperties": false,
+            "properties": {
+              "contact": { "$ref": "defs.schema.json#/$defs/handle" },
+              "place": { "$ref": "defs.schema.json#/$defs/place" },
+              "ship_count": { "type": "integer" },
+              "taken_for": { "type": "string" },
+              "age_pulses": { "type": "integer", "description": "The age it was given with." },
+              "event": { "type": "integer" }
+            }
+          }
+        },
+        "estimates": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["place", "men", "came_from", "event"],
+            "additionalProperties": false,
+            "properties": {
+              "place": { "$ref": "defs.schema.json#/$defs/place" },
+              "men": { "type": "integer" },
+              "came_from": { "type": "string" },
+              "event": { "type": "integer" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

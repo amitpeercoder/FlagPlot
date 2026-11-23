@@ -13,7 +13,7 @@ use sim_core::state::Side;
 use crate::answer::{FORMAT, VERSION};
 
 /// The tools of the interface: the whole vocabulary (decision 14 of 0050).
-pub const TOOLS: [&str; 12] = [
+pub const TOOLS: [&str; 13] = [
     "get_briefing",
     "list_forces",
     "list_contacts",
@@ -22,6 +22,7 @@ pub const TOOLS: [&str; 12] = [
     "measure",
     "explain",
     "events",
+    "intelligence",
     "issue_orders",
     "end_day",
     "queued",
@@ -64,7 +65,7 @@ pub const TRIAL_TOOLS: [&str; 2] = ["trial", "trials"];
 /// `preview` and not `trial`, which are recorded, and none that orders,
 /// commands, acknowledges or moves time. He is given those of them the
 /// seat has.
-pub const WATCHER_TOOLS: [&str; 16] = [
+pub const WATCHER_TOOLS: [&str; 17] = [
     "get_briefing",
     "list_forces",
     "list_bases",
@@ -73,6 +74,7 @@ pub const WATCHER_TOOLS: [&str; 16] = [
     "measure",
     "explain",
     "events",
+    "intelligence",
     "command_state",
     "plans",
     "staff_orders",
