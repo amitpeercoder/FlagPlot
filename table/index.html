@@ -303,6 +303,15 @@ button:disabled { opacity: 0.45; cursor: default; }
 .sheet .doc .node.focus, #signed .sg.focus, .sheet .doc .limrow.focus { outline: 2px solid #f0c36a; outline-offset: 2px; }
 .sheet .doc .limrow { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 10px; padding: 2px 0 2px 8px; border-left: 2px solid #cfc6a8; font-size: 14px; }
 .sheet .doc .limrow .limsaid { flex: 1 1 100%; }
+.sheet .doc .ordl { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; padding: 6px 0; border-top: 1px dotted #8d8672; }
+.sheet .doc .ordl .rk { min-width: 1.6em; font-weight: 700; }
+.sheet .doc .ordl .state { font-size: 12px; letter-spacing: 0.08em; color: var(--paper-dim); }
+.sheet .doc .ordl .work { flex: 1 1 100%; padding-left: 1.6em; }
+.sheet .doc .ordl .ctl { margin-left: auto; display: inline-flex; gap: 6px; }
+.sheet .doc .ordl:focus-visible { outline: 2px solid #f0c36a; outline-offset: 2px; }
+.sheet .doc .ordrule { margin-top: 8px; font-family: var(--f-ui); font-size: 12px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--paper-dim); border-top: 1px solid #cfc6a8; padding-top: 4px; }
+.sheet .doc .ordbar, .sheet .doc .ordsigned { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; padding: 8px 0; }
+.sheet .doc .ordsays { padding-top: 6px; }
 .reserve { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 10px; margin: 6px 0; }
 .reservebox { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; margin-bottom: 6px; }
 .reservebox input { width: 5.5em; }
@@ -1462,6 +1471,7 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
       if (planShown === r.number) { row.appendChild(el('span', 'state on', 'ON THE CHART')); var off = el('button', 'quiet', 'TAKE OFF'); off.type = 'button'; off.title = 'Take the plan off the chart'; off.setAttribute('aria-label', 'Take the plan off the chart'); off.addEventListener('click', clearPlan); row.appendChild(off); }
       box.appendChild(row);
     });
+    var all = el('button', 'quiet', 'THE ORDERS'); all.type = 'button'; all.id = 'orders-all'; all.title = 'Read every order, in rank'; all.addEventListener('click', function () { readOrders(); }); box.appendChild(all);
     var given = !!s.leaves.launch, l = el('div', 'leaveline'); l.appendChild(el('span', '', 'Plans launch: ' + (given ? 'when ready' : 'on my word')));
     if (!M.over) { var sw = el('button', 'quiet', given ? 'ON MY WORD' : 'WHEN READY'); sw.type = 'button'; sw.title = given ? 'Plans launch on my word' : 'Plans launch when ready'; sw.disabled = !canSign(); sw.addEventListener('click', function () { sw.disabled = true; act('set_leave', { leave: 'launch', given: !given }, '', line).then(function (ok) { if (!ok) sw.disabled = false; }); }); l.appendChild(sw); }
     line.appendChild(l);
@@ -1549,6 +1559,15 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
       var arc = list.filter(function (x) { return x.order && x.order.kind === 'set_search_arc' && x.unit === e.unit && x.place.queue === e.place.queue; })[0];
       if (!arc) return true; (also[arc.place.queue + ':' + arc.place.number] = also[arc.place.queue + ':' + arc.place.number] || []).push(e); return false;
     });
+    // The ranks of the orders (THE ORDERS paper sends each as its own limit), signed together, are one entry, "Ranks: ...". Taking it back takes each.
+    var ranksOf = {}, rankSet = {};
+    list.forEach(function (e) { if (isRankEntry(e)) (rankSet[e.place.queue] = rankSet[e.place.queue] || []).push(e); });
+    list = list.filter(function (e) {
+      if (!isRankEntry(e)) return true;
+      var g = rankSet[e.place.queue], key = e.place.queue + ':' + e.place.number;
+      if (g[g.length - 1] !== e) return false;
+      ranksOf[key] = g.slice(); also[key] = g.slice(0, -1).reverse(); return true;
+    });
     // A list that is drawn again keeps the focus where it was: on the same place in it, or the part's body once it is empty.
     var held = box.contains(document.activeElement) ? Array.prototype.indexOf.call(box.querySelectorAll('.back'), document.activeElement) : null;
     if (held === null && backHeld !== null) held = backHeld; backHeld = null;
@@ -1558,7 +1577,7 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
     if (M.queue && M.queue.as_of !== signedAsOf) { freshKeys = freshSigned && signedSeen ? keys.filter(function (k) { return signedSeen.indexOf(k) < 0; }) : []; if (freshKeys.length) freshSigned = false; signedSeen = keys; signedAsOf = M.queue.as_of; }
     var isNew = function (k) { return freshKeys.indexOf(keys[k]) >= 0; };
     list.forEach(function (e, k) {
-      var row = el('div', 'sg' + (isNew(k) ? ' new' : '')), what = el('div', 'what'); what.appendChild(signedLine(e));
+      var row = el('div', 'sg' + (isNew(k) ? ' new' : '')), what = el('div', 'what'); what.appendChild(ranksOf[e.place.queue + ':' + e.place.number] ? rankLine(ranksOf[e.place.queue + ':' + e.place.number]) : signedLine(e));
       if (isNew(k)) what.appendChild(el('span', 'fresh', 'JUST SIGNED'));
       what.appendChild(el('span', 'when', actsWords(e))); row.appendChild(what);
       if (canSign()) {
@@ -1567,7 +1586,7 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
           backHeld = k; b.disabled = true;
           // The later entry first, then the one it was signed with, each read again for the token that has moved on.
           var group = [e].concat(also[e.place.queue + ':' + e.place.number] || []);
-          group.reduce(function (p, one, i) { return p.then(function () { return i ? api('queued').then(function (q) { return api('take_back', { queue: one.place.queue, number: one.place.number, as_of: q.as_of }); }) : api('take_back', { queue: one.place.queue, number: one.place.number, as_of: M.queue.as_of }); }); }, Promise.resolve()).then(function () { return signedRefresh(); }, function (err) { b.disabled = false; backRefused = { key: keys[k], asOf: M.queue.as_of, words: refusalWords(err.message) }; return signedRefresh(); });
+          takeBackEntries(group).then(function () { return signedRefresh(); }, function (err) { b.disabled = false; backRefused = { key: keys[k], asOf: M.queue.as_of, words: refusalWords(err.message) }; return signedRefresh(); });
         });
         row.appendChild(b);
       }
@@ -1577,6 +1596,148 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
     if (held !== null) { var backs = box.querySelectorAll('.back'); if (backs.length) backs[Math.max(0, Math.min(held, backs.length - 1))].focus({ preventScroll: true }); else $('sp-body').focus({ preventScroll: true }); }
     // After a paper is signed the focus goes to the entry just signed, where TAKE BACK is, if it would otherwise be lost.
     if (wantSigned) { var fresh = box.querySelector('.sg.new .back'), cur = document.activeElement; if (fresh && (!cur || cur === document.body || !document.body.contains(cur))) { fresh.focus({ preventScroll: true }); wantSigned = false; } }
+  }
+
+  // ---- THE ORDERS: every order of the commander's in force or signed, in rank (decision 0222, step 4) ----
+  // Each rank is its own `priority` limit: a preview takes no batch of them, so no staff's reading of the whole is shown or promised.
+  function isRankEntry(e) { return !!(e && e.command && e.command.kind === 'set_limit' && e.command.limit === 'priority'); }
+  function takeBackEntries(group) {
+    return group.reduce(function (p, one) { return p.then(function () { return api('queued').then(function (q) { return api('take_back', { queue: one.place.queue, number: one.place.number, as_of: q.as_of }); }); }); }, Promise.resolve());
+  }
+  function lowerFirst(w) { return String(w).replace(/^./, function (c) { return c.toLowerCase(); }); }
+  function ordinalWords(rank) { return rank == null ? 'not ranked' : (ORDINAL[rank - 1] || rank + 'th'); }
+  // "Ranks: first: hold Port Moresby; second: deny the waters round ..." for ranks signed together.
+  function rankLine(list) {
+    var cmds = list.map(function (e) { return e.command; }).sort(function (a, b) { return (a.rank == null ? 1e9 : a.rank) - (b.rank == null ? 1e9 : b.rank); });
+    return document.createTextNode('Ranks: ' + cmds.map(function (c) { return ordinalWords(c.rank) + ': ' + (intentWords(c.intent) || 'one of your orders'); }).join('; '));
+  }
+  // The bodies to send for a list moved from `before` to `after` (order numbers, top first): every order from the top to the lowest one
+  // whose place changed is ranked by its place, one set_limit each; one whose rank is already its place is not sent; those below stay.
+  function rankSends(before, after, rankOf) {
+    var last = -1, out = [], k;
+    after.forEach(function (n, at) { if (before[at] !== n) last = at; });
+    for (k = 0; k <= last; k++) if (rankOf[after[k]] !== k + 1) out.push({ limit: 'priority', intent: after[k], rank: k + 1 });
+    return out;
+  }
+  var ro = null;
+  function ordersOfCommander() {
+    var s = M.state || { intents: [] };
+    return s.intents.filter(function (i) { return i.in_force && i.parent == null && (i.maker == null || i.maker === 'commander'); });
+  }
+  // The set_intent entries signed and not yet in force, and the rank entries signed and not yet in force.
+  function signedOrders() { return ((M.queue && M.queue.entries) || []).filter(function (e) { return e.command && e.command.kind === 'set_intent'; }); }
+  function signedRanks() {
+    var q = (M.queue && M.queue.entries) || [], with_ = {};
+    q.forEach(function (e) { (e.goes_with || []).forEach(function (g) { with_[g.queue + ':' + g.number] = true; }); });
+    return q.filter(function (e) { return isRankEntry(e) && !with_[e.place.queue + ':' + e.place.number]; });
+  }
+  function readOrders(focus) {
+    api('staff_orders').catch(function () { return {}; }).then(function (so) {
+      var mine = ordersOfCommander().slice(); mine.sort(function (a, b) { return (a.limits && a.limits.priority != null ? a.limits.priority : 1e9) - (b.limits && b.limits.priority != null ? b.limits.priority : 1e9) || a.number - b.number; });
+      var rankOf = {}; mine.forEach(function (i) { rankOf[i.number] = i.limits && i.limits.priority != null ? i.limits.priority : null; });
+      var before = mine.map(function (i) { return i.number; });
+      ro = { staff: so || {}, before: before, now: before.slice(), rankOf: rankOf, m: mine.filter(function (i) { return rankOf[i.number] != null; }).length, lines: [], shown: null };
+      sheetAs('THE ORDERS'); $('sheet-doc').hidden = false; $('sheet-text').hidden = true; $('sheet').hidden = false;
+      drawOrders(focus || null);
+      var first = $('sheet-doc').querySelector('button'); (first || $('sheet-close')).focus();
+    }).catch(function (e) { say('failed', 'The orders could not be read: ' + e.message); });
+  }
+  readOrders = tracked('orders', readOrders);
+  // The state of an order in force, in a word: its plan waits for leave, was launched, cannot be met, is preparing; else in force.
+  function orderState(i, st, so) {
+    var under = {}; (function walk(n) { under[n] = true; st.intents.forEach(function (c) { if (c.parent === n) walk(c.number); }); })(i.number);
+    var plans = st.plans.filter(function (p) { return under[p.intent]; });
+    var waiting = plans.some(function (p) { return !signed('approve', 'plan', p.number) && ((p.state === 'preparing' && !st.leaves.launch) || (p.state === 'draft' && !st.leaves.prepare)); });
+    if (waiting) return 'Waits for your leave';
+    var cannot = plans.some(function (p) { return p.state === 'failed'; }) || ((so && so.no_orders) || []).some(function (o) { return o.serves && under[o.serves.intent] && /cannot (meet|be met)/i.test(String(o.worked || '')); });
+    if (cannot) return 'Cannot be met';
+    if (plans.some(function (p) { return p.state === 'released' || p.state === 'complete'; })) return 'Launched';
+    if (plans.some(function (p) { return p.state === 'preparing' || p.state === 'draft'; })) return 'Preparing';
+    return 'In force';
+  }
+  function signedIntentWords(c) {
+    var at = function (n) { var b = baseByNumber(n); return b ? { name: b.base.name } : null; };
+    return sayIntent({ number: 'signed ' + c.intent, kind: c.intent_kind, island: c.island, hex: c.hex, base: c.base != null ? at(c.base) : null, target: c.target != null ? at(c.target) : null }, {});
+  }
+  function drawOrders(focus) {
+    var doc = $('sheet-doc'), st = M.state, can = canSign(), pend = signedRanks(), by = {}, mine = ordersOfCommander(), sign = signedOrders();
+    if (!st || !ro) return; doc.textContent = '';
+    mine.forEach(function (i) { by[i.number] = i; });
+    var pendRank = {}; pend.forEach(function (e) { pendRank[e.command.intent] = e.command.rank; });
+    var order = pend.length ? ro.before.slice().sort(function (a, b) { return (pendRank[a] != null ? pendRank[a] : 1e9) - (pendRank[b] != null ? pendRank[b] : 1e9); }) : ro.now;
+    order = order.filter(function (n) { return by[n]; }); mine.forEach(function (i) { if (order.indexOf(i.number) < 0) order.push(i.number); });
+    var last = -1; ro.now.forEach(function (n, at) { if (ro.before[at] !== n) last = at; });
+    var cut = Math.max(ro.m, last + 1), changed = !pend.length && last >= 0;
+    if (pend.length) {
+      var head = el('div', 'ordsigned'); head.appendChild(el('span', '', 'Signed · ' + actsWords(pend[pend.length - 1])));
+      if (can) { var tb = el('button', 'quiet', 'TAKE BACK'); tb.type = 'button'; tb.id = 'orders-takeback'; tb.setAttribute('aria-label', 'Take back the ranks'); tb.addEventListener('click', function () { tb.disabled = true; takeBackEntries(pend.slice().reverse()).then(function () { ro.lines = []; return signedRefresh(); }, function (err) { ro.lines = [{ ok: false, label: 'The ranks', why: refusalWords(err.message) }]; return signedRefresh(); }).then(function () { ro.now = ro.before.slice(); drawOrders(); var f = doc.querySelector('button'); if (f) f.focus(); }); }); head.appendChild(tb); }
+      doc.appendChild(head);
+    }
+    if (!order.length && !sign.length) doc.appendChild(el('div', 'work', 'No order in force.'));
+    var shownRule = false;
+    order.forEach(function (n, k) {
+      var i = by[n], ranked = pend.length ? pendRank[n] != null : k < cut, rank = pend.length ? pendRank[n] : k + 1;
+      if (!ranked && !shownRule && k > 0 && (pend.length ? pendRank[order[0]] != null : cut > 0)) { doc.appendChild(el('div', 'ordrule', 'Not ranked')); shownRule = true; }
+      var words = sayIntent(i, {}), row = el('div', 'ordl'); row.dataset.n = n; row.tabIndex = 0; row.setAttribute('aria-label', words);
+      row.appendChild(el('span', 'rk', ranked ? rank + '.' : ''));
+      var link = el('button', 'ref', words); link.type = 'button'; link.title = 'Order ' + n + ': read the plan'; link.addEventListener('click', function () { readPlan(n); }); row.appendChild(link);
+      row.appendChild(el('span', 'state', orderState(i, st, ro.staff)));
+      var lim = limitsLine(i.kind, limFromState(i.limits)); if (lim !== STAFF_ALL) row.appendChild(el('div', 'work', lim));
+      if (can) {
+        var ctl = el('span', 'ctl');
+        if (!pend.length) {
+          [['up', '↑', 'higher', -1], ['down', '↓', 'lower', 1]].forEach(function (d) {
+            var b = el('button', 'quiet ' + d[0], d[1]); b.type = 'button'; b.setAttribute('aria-label', 'Rank ' + lowerFirst(words) + ' ' + d[2]);
+            if ((d[3] < 0 && k === 0) || (d[3] > 0 && k === order.length - 1)) b.setAttribute('aria-disabled', 'true');
+            b.addEventListener('click', function () { moveOrder(n, d[3], d[0]); }); ctl.appendChild(b);
+          });
+        }
+        var w = el('button', 'quiet danger', 'WITHDRAW'); w.type = 'button'; w.setAttribute('aria-label', 'Withdraw: ' + lowerFirst(words));
+        w.addEventListener('click', function () { w.disabled = true; act('withdraw_intent', { intent: n }, 'The order is withdrawn from 1800.', row).then(function (ok) { if (ok) readOrders(); else w.disabled = false; }); }); ctl.appendChild(w); row.appendChild(ctl);
+      }
+      row.addEventListener('keydown', function (e) {
+        if (!e.altKey || (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') || !can || pend.length) return;
+        e.preventDefault(); var t = e.target; moveOrder(n, e.key === 'ArrowUp' ? -1 : 1, t === row ? 'line' : t.classList.contains('down') ? 'down' : 'up');
+      });
+      doc.appendChild(row);
+    });
+    if (sign.length) {
+      doc.appendChild(el('div', 'ordrule', 'Signed'));
+      sign.forEach(function (e) {
+        var c = e.command, words = signedIntentWords(c), row = el('div', 'ordl'); row.dataset.n = c.intent; row.tabIndex = 0; row.setAttribute('aria-label', words); row.appendChild(el('span', 'rk', ''));
+        var link = el('button', 'ref', words); link.type = 'button'; link.title = 'Show it under SIGNED'; link.addEventListener('click', function () { openOrder(c.intent); }); row.appendChild(link);
+        row.appendChild(el('span', 'state', 'Signed · ' + actsWords(e)));
+        var lims = (e.goes_with || []).map(function (w) { return ((M.queue && M.queue.entries) || []).filter(function (x) { return x.place.queue === w.queue && x.place.number === w.number && x.command && x.command.kind === 'set_limit'; })[0]; }).filter(Boolean).map(function (x) { return x.command; });
+        if (lims.length) { var said = limitsLine(c.intent_kind, limFromBodies(lims)); if (said !== STAFF_ALL) row.appendChild(el('div', 'work', said)); }
+        if (can) { var tb = el('button', 'quiet', 'TAKE BACK'); tb.type = 'button'; tb.setAttribute('aria-label', 'Take back: ' + lowerFirst(words)); tb.addEventListener('click', function () { tb.disabled = true; takeBackEntries([e]).then(function () { ro.lines = []; return signedRefresh(); }, function (err) { ro.lines = [{ ok: false, label: words, why: refusalWords(err.message) }]; return signedRefresh(); }).then(function () { drawOrders(); var f = doc.querySelector('button'); if (f) f.focus(); }); }); row.appendChild(tb); }
+        doc.appendChild(row);
+      });
+    }
+    if (changed && can) {
+      var bar = el('div', 'ordbar'); bar.appendChild(el('span', '', 'Ranks changed'));
+      var go = el('button', 'primary', 'SIGN AND SEND'), back = el('button', 'quiet', 'PUT BACK'); go.type = 'button'; back.type = 'button'; go.id = 'orders-send'; back.id = 'orders-putback';
+      back.addEventListener('click', function () { ro.now = ro.before.slice(); ro.lines = []; drawOrders(); var f = doc.querySelector('.ordl button.up, .ordl button'); if (f) f.focus(); });
+      go.addEventListener('click', function () { sendRanks(go, back); });
+      bar.appendChild(go); bar.appendChild(back); doc.appendChild(bar);
+    }
+    if (ro.lines.length) {
+      var says = el('div', 'ordsays'); ro.lines.forEach(function (l) { var d = el('div', l.ok ? 'sentline' : 'notsent'); if (!l.ok) d.setAttribute('role', 'alert'); d.appendChild(document.createTextNode(l.label + ': ')); if (l.ok) d.appendChild(document.createTextNode('sent.')); else { d.appendChild(el('b', '', 'NOT SENT')); d.appendChild(document.createTextNode(' — ' + l.why)); } says.appendChild(d); }); doc.appendChild(says);
+    }
+    if (focus) { var f = doc.querySelector('.ordl[data-n="' + focus.n + '"] ' + (focus.at === 'line' ? '' : 'button.' + focus.at)); if (focus.at === 'line') f = doc.querySelector('.ordl[data-n="' + focus.n + '"]'); if (f) f.focus({ preventScroll: true }); }
+  }
+  function moveOrder(n, dir, at) {
+    var k = ro.now.indexOf(n), to = k + dir; if (k < 0 || to < 0 || to >= ro.now.length) { drawOrders({ n: n, at: at }); return; }
+    ro.now.splice(k, 1); ro.now.splice(to, 0, n); ro.lines = []; drawOrders({ n: n, at: at });
+  }
+  function sendRanks(go, back) {
+    var bodies = rankSends(ro.before, ro.now, ro.rankOf), sayOne = function (n) { var i = ordersOfCommander().filter(function (x) { return x.number === n; })[0]; return i ? sayIntent(i, {}) : 'One of your orders'; };
+    if (!bodies.length) return; go.disabled = true; back.disabled = true; ro.lines = [];
+    bodies.reduce(function (p, b) {
+      return p.then(function () { return api('set_limit', b).then(function () { ro.lines.push({ ok: true, label: sayOne(b.intent) }); }, function (e) { ro.lines.push({ ok: false, label: sayOne(b.intent), why: refusalWords(e.message) }); }); });
+    }, Promise.resolve()).then(function () { return signedRefresh(); }).then(function () {
+      if (ro.lines.some(function (l) { return l.ok; })) say('signed', 'The ranks are signed.');
+      drawOrders(); var f = $('sheet-doc').querySelector('button'); if (f) f.focus();
+    });
   }
 
   // ---- what stops the clock: the fold in the stop paper's foot (decision 0221, stage 4) ----

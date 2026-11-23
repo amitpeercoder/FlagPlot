@@ -150,7 +150,7 @@ def orders_and_signed():
           "YOUR ORDERS lists the orders in force, each a link to its plan's paper, and says \"No order in force.\" when there is none")
     check("'Plans launch: ' + (given ? 'when ready' : 'on my word')" in text and "act('set_leave', { leave: 'launch', given: !given }" in text,
           "it says \"Plans launch: when ready\" or \"on my word\", with the switch that gives and withholds the leave")
-    check("api('queued').catch(function () { return null; })" in text and "api('take_back', { queue: one.place.queue, number: one.place.number, as_of: M.queue.as_of })" in text
+    check("api('queued').catch(function () { return null; })" in text and "api('take_back', { queue: one.place.queue, number: one.place.number, as_of: q.as_of })" in text
           and "'TAKE BACK'" in text and "NOT TAKEN BACK" in text,
           "SIGNED is read from queued at each refresh, TAKE BACK withdraws one entry by its place and as_of, and a refusal is said beside the entry")
     check("function canSign() { return !WATCH && !M.over && !playing; }" in text and "if (canSign()) {" in text and "(e.goes_with || [])" in text,
@@ -1384,6 +1384,101 @@ def limits_in_force(bridge):
     check(post(bridge.table + "/new") == {"ok": True}, "the game is put away")
 
 
+RANKS_IN_NODE = r"""
+function main() {
+  const out = {};
+  // Case 1: three ranked, the third moved to the top.
+  out.third_up = rankSends([1, 2, 3], [3, 1, 2], { 1: 1, 2: 2, 3: 3 });
+  // Case 2: two ranked and one not; the first two swap, the unranked stays below.
+  out.swap = rankSends([1, 2, 3], [2, 1, 3], { 1: 1, 2: 2, 3: null });
+  // Case 3: an unranked one moved to the top of those ranked.
+  out.unranked_up = rankSends([1, 2, 3], [3, 1, 2], { 1: 1, 2: null, 3: null });
+  // Case 4: nothing moved.
+  out.none = rankSends([1, 2], [1, 2], { 1: 1, 2: 2 });
+  // Case 5: moved and moved back.
+  out.back = rankSends([4, 5, 6], [4, 5, 6], { 4: null, 5: null, 6: null });
+  return out;
+}
+"""
+
+
+def the_orders_paper(bridge):
+    """THE ORDERS (decision 0222, step 4, the designer's answer 3), by the page's text, by the pure ordering run in node, and through
+    the bridge: the paper opens from YOUR ORDERS and lists the orders in rank; each rank is its own `priority` limit under one
+    SIGN AND SEND (a preview takes no batch of them, so no reading of the whole is shown); SIGNED groups the ranks as one entry with
+    one TAKE BACK; and the engine takes the ranks, takes them back and puts them in force."""
+    print("-- THE ORDERS: the paper, the ranks sent one by one, and the engine taking them", flush=True)
+    text = page_text()
+    orders = cut_function(text, "  function readOrders(focus) {")
+    draw = cut_function(text, "  function drawOrders(focus) {")
+    signed = cut_function(text, "  function showSigned() {")
+    check("readOrders = tracked('orders', readOrders)" in text and "sheetAs('THE ORDERS')" in orders and "api('staff_orders')" in orders and "'THE ORDERS'" in cut_function(text, "  function showOrders() {")
+          and "readOrders();" in cut_function(text, "  function showOrders() {"),
+          "YOUR ORDERS has a THE ORDERS button, which opens the paper in the sheet; the staff's orders are read once when it opens")
+    check("'Waits for your leave'" in text and "'Launched'" in text and "'Cannot be met'" in text and "'Preparing'" in text and "'In force'" in text and "'Signed · ' + actsWords(e)" in draw
+          and "limitsLine(i.kind, limFromState(i.limits))" in draw and "limFromBodies(lims)" in draw and "readPlan(n)" in draw and "openOrder(c.intent)" in draw,
+          "each line has its state, its limits in a line and a link to its plan, or for one signed its entry under SIGNED")
+    check("'Rank ' + lowerFirst(words) + ' ' + d[2]" in draw and "'higher'" in draw and "'lower'" in draw and "e.altKey" in draw and "'ArrowUp'" in draw and "'ArrowDown'" in draw
+          and "focus.at" in draw and "'WITHDRAW'" in draw and "act('withdraw_intent', { intent: n }" in draw and "'Ranks changed'" in draw and "'SIGN AND SEND'" in draw and "'PUT BACK'" in draw,
+          "an order in force is ranked with two labelled buttons or with Alt and the arrow keys, the focus staying where it was, and withdrawn; a change shows SIGN AND SEND and PUT BACK")
+    check("'Not ranked'" in draw and "pend.length" in draw and "ro.before.slice().sort" in draw and "takeBackEntries(pend.slice().reverse())" in draw and "'Signed · ' + actsWords(pend[pend.length - 1])" in draw,
+          "ranks signed and not in force show the list in the signed order with Signed at its head and one TAKE BACK, without arrows")
+    send = cut_function(text, "  function sendRanks(go, back) {")
+    check("api('set_limit', b)" in send and "rankSends(ro.before, ro.now, ro.rankOf)" in send and "'NOT SENT'" in draw and "preview" not in send and "propose" not in send and "staff" not in send.lower(),
+          "SIGN AND SEND sends each rank as its own set_limit, says NOT SENT for one refused, and asks the staff for no reading of the whole")
+    check("isRankEntry(e)" in signed and "rankLine(ranksOf[" in signed and "takeBackEntries(group)" in signed and "'Ranks: '" in text and "ORDINAL[rank - 1]" in text,
+          "SIGNED groups the priority limits queued together as one line, \"Ranks: first: ...; second: ...\", with one TAKE BACK that takes each back")
+    check("limit: 'priority'" in text and "draft.priority" not in text, "THE ORDERS sends limit: 'priority'")
+    # the pure ordering, in node
+    code = cut_function(text, "  function rankSends(before, after, rankOf) {") + "\n" + RANKS_IN_NODE
+    got = run_in_node(code, None)
+    check(got["third_up"] == [{"limit": "priority", "intent": 3, "rank": 1}, {"limit": "priority", "intent": 1, "rank": 2}, {"limit": "priority", "intent": 2, "rank": 3}],
+          f"the third of three ranked orders put first sends all three ranks ({got['third_up']})")
+    check(got["swap"] == [{"limit": "priority", "intent": 2, "rank": 1}, {"limit": "priority", "intent": 1, "rank": 2}] and got["none"] == [] and got["back"] == [],
+          f"two swapped sends two ranks and the unranked one below is left alone; nothing moved sends nothing ({got['swap']})")
+    check(got["unranked_up"] == [{"limit": "priority", "intent": 3, "rank": 1}, {"limit": "priority", "intent": 1, "rank": 2}, {"limit": "priority", "intent": 2, "rank": 3}],
+          f"an unranked order moved to the top is ranked first, the ranked one it passed moves to second, and the unranked one it passed is ranked third ({got['unranked_up']})")
+    # through the bridge, on the 39 days
+    check(begin(bridge, "guadalcanal-39-days", "person", "engine") == {"ok": True}, "begun: the 39 days, the person Allied")
+    person = Person(bridge.table)
+    for order in ({"command": "set_intent", "intent_kind": "control_island", "island": 1},
+                  {"command": "set_intent", "intent_kind": "deny", "hex": [2, -4], "distance": 3}):
+        shown = person.call("preview", order)["ok"]
+        check(shown.get("status") != "refused", f"{order['intent_kind']}: the order is read ({shown.get('status')})")
+        check(person.call("approve", {"preview": shown["preview"]})["ok"].get("status") == "queued", f"{order['intent_kind']}: and signed")
+    check(person.call("end_day")["ok"].get("resolved"), "the day ends and both orders are in force")
+    mine = [i for i in person.call("command_state")["ok"]["intents"] if i["in_force"] and i.get("parent") is None and i.get("maker") == "commander"]
+    first, second = sorted(i["number"] for i in mine)[:2]
+    check(len(mine) >= 2 and all(i["limits"]["priority"] is None for i in mine), f"two orders of the commander's are in force, neither ranked ({[i['number'] for i in mine]})")
+    for body in ({"limit": "priority", "intent": second, "rank": 1}, {"limit": "priority", "intent": first, "rank": 2}):
+        sent = person.call("set_limit", body)["ok"]
+        check(sent.get("status") == "queued", f"the rank {body['rank']} of order {body['intent']} is signed ({sent.get('status')})")
+    held = person.call("queued")["ok"]
+    ranks = [e for e in held["entries"] if e["command"].get("limit") == "priority"]
+    check(len(ranks) == 2, "the queue holds both ranks, each its own entry")
+    for entry in reversed(ranks):
+        held = person.call("queued")["ok"]
+        taken = person.call("take_back", {"queue": entry["place"]["queue"], "number": entry["place"]["number"], "as_of": held["as_of"]})["ok"]
+        check(taken.get("status") != "refused", "a rank is taken back, the later first, then the earlier")
+    check(person.call("queued")["ok"]["entries"] == [], "the queue is empty after both are taken back")
+    for body in ({"limit": "priority", "intent": second, "rank": 1}, {"limit": "priority", "intent": first, "rank": 2}):
+        check(person.call("set_limit", body)["ok"].get("status") == "queued", f"the rank {body['rank']} is signed again")
+    check(person.call("end_day")["ok"].get("resolved"), "the day ends and the ranks are in force")
+    state = person.call("command_state")["ok"]["intents"]
+    rank = {i["number"]: i["limits"]["priority"] for i in state if i["number"] in (first, second)}
+    check(rank == {second: 1, first: 2}, f"the command state shows the ranks on the right orders ({rank})")
+    # what the staff said of it: any reason that lists a priority among its limits, over the days that follow (none is required)
+    found = total = 0
+    for _ in range(5):
+        check(person.call("end_day")["ok"].get("resolved"), "a day ends")
+        so = person.call("staff_orders")["ok"]
+        reasons = [o["reason"] for o in (so.get("orders") or []) + (so.get("commands") or []) if o.get("reason")] + list(so.get("no_orders") or [])
+        total += len(reasons)
+        found += sum(1 for r in reasons if any((l or {}).get("kind") == "priority" for l in (r.get("limits") or [])))
+    print(f"   found: {found} of {total} reasons over five days list a priority limit", flush=True)
+    check(post(bridge.table + "/new") == {"ok": True}, "the game is put away")
+
+
 def midway_on_its_chart(bridge):
     """What the Midway game gives the page that the old map's games did not, and
     that the page words as it should (the mends of "Table: Midway on its own chart").
@@ -1642,6 +1737,7 @@ def main():
             the_staffs_reading(bridge)
             the_limits_on_the_paper(bridge)
             limits_in_force(bridge)
+            the_orders_paper(bridge)
             midway_on_its_chart(bridge)
             person_against_agent(bridge, args.hold)
             seat_mcp(bridge)
