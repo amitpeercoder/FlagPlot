@@ -3100,9 +3100,10 @@ pub struct Reason {
     pub limits: Vec<ReasonLimit>,
 }
 
-/// Written as the derived form was, with the limits only where the reason
-/// names one (decision 0222, rule 5): every digest of a reason's debug text
-/// is what it was for a reason that speaks of no limit.
+/// Written as the derived form was, without the limits it speaks of
+/// (decision 0222, rule 5): the list is recorded beside the reason and changes
+/// nothing, so every digest of a reason's debug text, which the tests of
+/// earlier decisions keep, is what it was. The list is read from the field.
 impl core::fmt::Debug for Reason {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         let mut out = f.debug_struct("Reason");
@@ -3113,9 +3114,6 @@ impl core::fmt::Debug for Reason {
             .field("would_change", &self.would_change)
             .field("answer_of", &self.answer_of)
             .field("cautions", &self.cautions);
-        if !self.limits.is_empty() {
-            out.field("limits", &self.limits);
-        }
         out.finish()
     }
 }
