@@ -122,6 +122,27 @@ pub(crate) fn waters_had(hexes: &BTreeSet<Hex>) -> String {
     )
 }
 
+/// The reason speaks of the targets limits that put the waters first
+/// (decision 0222, rule 5): the limit each deny that binds has set on its
+/// chain; with no deny, the targets limit of the task's chain.
+pub(crate) fn speaks_of_waters(
+    builder: crate::reasons::ReasonBuilder,
+    state: &sim_core::command::CommandState,
+    task: IntentId,
+    targets: &StrikeTargets,
+) -> crate::reasons::ReasonBuilder {
+    use sim_core::command::LimitKind;
+    if targets.denies.is_empty() {
+        return builder.speaks_of_on(
+            LimitKind::Targets,
+            state.limit_set_on(task, LimitKind::Targets),
+        );
+    }
+    targets.denies.iter().fold(builder, |b, d| {
+        b.speaks_of_on(LimitKind::Targets, d.limit_on)
+    })
+}
+
 /// What binds a group's waters to strike first, in words.
 pub(crate) fn waters_binding(targets: &StrikeTargets) -> String {
     if targets.denies.is_empty() {

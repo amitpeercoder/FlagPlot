@@ -32,6 +32,7 @@
 //! reads the area command's picture of the side's own boats and the side's
 //! command state, and nothing else.
 
+use sim_core::command::LimitKind;
 use std::collections::BTreeMap;
 
 use sim_core::command::{HoldTarget, Intent, IntentKind, PatrolStation, Plan, StaffOrder};
@@ -251,6 +252,7 @@ impl Day<'_, '_> {
                     plan_for(area, end, plan)
                 ))
                 .would_change("a boat of the side's own, or a forces limit that names one")
+                .speaks_of(&self.state, LimitKind::Forces)
                 .done();
             self.target(in_scope).no_orders.push(reason);
             return;

@@ -23,6 +23,7 @@
 //! the one that stands. The doctrine reads the side's own view, its area
 //! picture for the forces, and its planned command state.
 
+use sim_core::command::LimitKind;
 use std::collections::{BTreeMap, BTreeSet};
 
 use sim_core::command::{
@@ -854,6 +855,7 @@ impl Day<'_, '_> {
                     deny.id, deny.id
                 ))
                 .would_change(format!("{id} taken by an intent higher in priority"))
+                .speaks_of(&self.state, LimitKind::Priority)
                 .would_change("such a task already standing")
                 .done();
             let formed = self.form_under(deny, kind, reason, in_scope);

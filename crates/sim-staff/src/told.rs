@@ -24,9 +24,9 @@
 //! The doctrine reads the side's own view and its planned command state and
 //! nothing else.
 
-use sim_core::command::{Awaited, Intent, IntentKind, NoticeKind, Plan, WaitedFor};
+use sim_core::command::{Awaited, Intent, IntentKind, LimitKind, NoticeKind, Plan, WaitedFor};
 use sim_core::hex::Hex;
-use sim_core::ids::EntityRef;
+use sim_core::ids::{EntityRef, IntentId};
 
 use crate::air::Day;
 use crate::available;
@@ -43,6 +43,9 @@ pub(crate) struct Told {
     pub(crate) never: bool,
     pub(crate) expected_day: Option<u32>,
     pub(crate) words: Option<String>,
+    /// The kind of limit it is and the order it is set on, for the reason's
+    /// list of the limits it speaks of (decision 0222, rule 5).
+    pub(crate) limit: (LimitKind, IntentId),
 }
 
 impl Day<'_, '_> {
@@ -82,6 +85,7 @@ impl Day<'_, '_> {
                         set_on(on)
                     )
                 }),
+                limit: (LimitKind::NotBefore, on),
             });
         }
 
@@ -90,14 +94,19 @@ impl Day<'_, '_> {
             .forces_as_bound(end)
             .and_then(|f| f.source)
             .and_then(|s| view.bases().find(|b| b.id == s).map(|b| (s, b.hex)));
-        let never = |thing: WaitedFor, words: String| Told {
+        let never = |thing: WaitedFor, words: String, limit: (LimitKind, IntentId)| Told {
             thing,
             met: false,
             never: true,
             expected_day: None,
             words: Some(words),
+            limit,
         };
-        let waiting = |thing: WaitedFor, words: Option<String>, from: Option<u32>, at: bool| {
+        let waiting = |thing: WaitedFor,
+                       words: Option<String>,
+                       from: Option<u32>,
+                       at: bool,
+                       limit: (LimitKind, IntentId)| {
             let met = words.is_none();
             Told {
                 thing,
@@ -105,9 +114,11 @@ impl Day<'_, '_> {
                 never: false,
                 expected_day: if met || !at { None } else { from },
                 words,
+                limit,
             }
         };
         for (awaited, on) in &limits.wait_for {
+            let limit = (LimitKind::WaitFor, *on);
             let limit_words = format!("the commander's limit wait for {awaited}{}", set_on(*on));
             let thing = WaitedFor::Force(*awaited);
             match *awaited {
@@ -123,6 +134,7 @@ impl Day<'_, '_> {
                             )),
                             Some(day),
                             false,
+                            limit,
                         ));
                         continue;
                     }
@@ -133,13 +145,14 @@ impl Day<'_, '_> {
                         found.push(never(
                             thing,
                             format!("{limit_words}: the side no longer has {awaited}"),
+                            limit,
                         ));
                         continue;
                     };
                     let from = available::force_waiting(view, id);
                     let at = source.is_some_and(|(_, hex)| force_stopped_at(force, hex));
                     let words = awaited_words(&limit_words, *awaited, from, at, source);
-                    found.push(waiting(thing, words, from, at));
+                    found.push(waiting(thing, words, from, at, limit));
                 }
                 Awaited::LandUnit(id) => {
                     if let Some(day) = available::entering_on(view, EntityRef::LandUnit(id)) {
@@ -151,6 +164,7 @@ impl Day<'_, '_> {
                             )),
                             Some(day),
                             false,
+                            limit,
                         ));
                         continue;
                     }
@@ -158,6 +172,7 @@ impl Day<'_, '_> {
                         found.push(never(
                             thing,
                             format!("{limit_words}: the side no longer has {awaited}"),
+                            limit,
                         ));
                         continue;
                     };
@@ -168,6 +183,7 @@ impl Day<'_, '_> {
                         found.push(never(
                             thing,
                             format!("{limit_words}: the side no longer has a man of {awaited}"),
+                            limit,
                         ));
                         continue;
                     }
@@ -175,12 +191,13 @@ impl Day<'_, '_> {
                     let at =
                         source.is_some_and(|(_, hex)| unit.men_ashore > 0 && unit.hex == Some(hex));
                     let words = awaited_words(&limit_words, *awaited, from, at, source);
-                    found.push(waiting(thing, words, from, at));
+                    found.push(waiting(thing, words, from, at, limit));
                 }
             }
         }
 
         for (other, on) in &limits.after {
+            let limit = (LimitKind::After, *on);
             let limit_words = format!("the commander's limit after {other}{}", set_on(*on));
             let thing = WaitedFor::Intent(*other);
             let named = self.state.intents.get(other).cloned();
@@ -194,7 +211,7 @@ impl Day<'_, '_> {
             };
             let met = !places.is_empty() && places.iter().all(|hex| self.place_is_ours(*hex));
             if met {
-                found.push(waiting(thing, None, None, false));
+                found.push(waiting(thing, None, None, false, limit));
                 continue;
             }
             match named {
@@ -212,6 +229,7 @@ impl Day<'_, '_> {
                         )),
                         None,
                         false,
+                        limit,
                     ));
                 }
                 _ => found.push(never(
@@ -219,6 +237,7 @@ impl Day<'_, '_> {
                     format!(
                         "{limit_words}: {other} is withdrawn, so its place will not be taken for it"
                     ),
+                    limit,
                 )),
             }
         }
@@ -238,12 +257,15 @@ impl Day<'_, '_> {
         // What is waited for, and what can never come, each in words.
         let mut unmet: Vec<String> = Vec::new();
         let mut never: Vec<String> = Vec::new();
+        // The limits whose words the reason carries (decision 0222, rule 5).
+        let mut limits: Vec<(LimitKind, IntentId)> = Vec::new();
         for told in self.told_limits(end) {
             match (told.never, told.words) {
                 (true, Some(words)) => never.push(words),
                 (false, Some(words)) => unmet.push(words),
-                (_, None) => {}
+                (_, None) => continue,
             }
+            limits.push(told.limit);
         }
 
         if unmet.is_empty() && never.is_empty() {
@@ -252,6 +274,9 @@ impl Day<'_, '_> {
         let mut reason = serving(end, plan).evidence(ready_words.to_string(), today);
         for words in never.iter().chain(unmet.iter()) {
             reason = reason.binding(words.clone());
+        }
+        for (kind, on) in limits {
+            reason = reason.speaks_of_on(kind, on);
         }
         if never.is_empty() {
             let reason = reason

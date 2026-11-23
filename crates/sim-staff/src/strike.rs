@@ -27,7 +27,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use sim_core::command::{Addressee, Intent, IntentKind, Risk, StaffOrder};
+use sim_core::command::{Addressee, Intent, IntentKind, LimitKind, Risk, StaffOrder};
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
 use sim_core::ids::{AirGroupId, BaseId, IntentId};
@@ -457,6 +457,19 @@ impl Day<'_, '_> {
             builder = builder
                 .evidence(format!("it has {has}"), today)
                 .binding(binding);
+            builder = match order {
+                AirGroupOrder::SetTargetPriority { .. } => match &targets.kinds {
+                    Some((_, on)) => builder.speaks_of_on(LimitKind::Targets, *on),
+                    None => builder.speaks_of(&self.state, LimitKind::Risk),
+                },
+                AirGroupOrder::SetStrikeFirstWaters { .. } => {
+                    crate::targets::speaks_of_waters(builder, &self.state, task.id, &targets)
+                }
+                AirGroupOrder::SetStrikeSizing { .. } | AirGroupOrder::SetPatrolShare { .. } => {
+                    builder
+                }
+                _ => builder.speaks_of(&self.state, LimitKind::Risk),
+            };
             let worked = match order {
                 AirGroupOrder::SetStrikeSizing { .. } => format!(
                     "{line}. The group decides the size of its strikes from the task it is under: {} strikes ships that come within reach of {base_text}, which is more to hit than one force, so each strike is sized by doctrine, which sends everything at a kind it gives no figure for. Its strike sizing is set on.",
@@ -498,6 +511,7 @@ impl Day<'_, '_> {
             held_share(risk)
         );
         let waiting = self.waiting_note(task, base);
+        let risk_on = self.state.limit_set_on(task.id, LimitKind::Risk);
         let out = self.target(in_scope);
         out.orders.extend(orders);
         if !unordered.is_empty() || groups.is_empty() {
@@ -527,6 +541,7 @@ impl Day<'_, '_> {
                 .would_change(
                     "a group whose fatigue or standing orders differ from what the doctrine wants",
                 )
+                .speaks_of_on(LimitKind::Risk, risk_on)
                 .done();
             out.no_orders.push(reason);
         }
