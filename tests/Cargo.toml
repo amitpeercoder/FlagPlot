@@ -684,3 +684,15 @@ path = "scenario_131_the_pattern_of_a_patrol.rs"
 [[test]]
 name = "boats_in_the_midway_games"
 path = "boats_in_the_midway_games.rs"
+
+[[test]]
+name = "boats_in_the_coral_sea_games"
+path = "boats_in_the_coral_sea_games.rs"
+
+[[test]]
+name = "boats_in_the_five_days_games"
+path = "boats_in_the_five_days_games.rs"
+
+[[test]]
+name = "boats_in_the_thirty_nine_days_games"
+path = "boats_in_the_thirty_nine_days_games.rs"
