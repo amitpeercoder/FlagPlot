@@ -119,6 +119,22 @@ What comes next is the spec's order, not item 2's. Decisions 0095, 0097, 0098, 0
 The scale (item 2 above) is not a condition of step 3's stages 0 to 2.
 
 - From decision 0112 (refuelling that takes time): the staff counts a ship's fuelling hours at the berth rate for every ship of a run, where the engine gives a berth only to as many ships as the port has; a run of more ships than berths is free later than the staff counts. To be made exact with the first doctrine that sends several ships to fuel at once (stage 2 of step 3).
+## A limit the tool takes where nothing reads it
+
+From decision 0222 (the designer's answer 2, and "As built: the engine", rule 7): each row is a limit that `set_limit` takes on a kind of order where no doctrine reads it. The table does not offer it there; each is to be settled one way or the other: a doctrine comes to read it, or the tool comes to refuse it.
+
+| Limit | Orders on which nothing reads it |
+| --- | --- |
+| Forces: ships and task forces | Cover a base, strike ships, search waters, raid, patrol, build up a base |
+| Forces: air groups | Keep supplied, stand at, patrol |
+| Forces: land units | Every kind but hold, ready a landing, build up a base, take a place and control an island |
+| Forces: submarines | Every kind but patrol |
+| Forces: source | Every kind but keep supplied, hold, take a place and control an island |
+| Area | Cover, strike ships, search waters, stand at, patrol, raid, build up a base, ready a landing as a root; a carrier's station (only its closing reads it); a deny, a hold or a neutralise only through a carrier task or a bombardment beneath it. A keep supplied reads its own area and not one above it |
+| Protected | Every kind but keep supplied |
+| Targets | Keep supplied, cover, stand at, patrol, ready a landing, build up a base |
+| Risk | Patrol |
+
 ## Not planned
 
 - `docs/rules-comparison.md` (the designer's, Nov 14, 2026, checked against the code) sets Flag Plot's rules against another game's manual and is the list of gaps to triage. Decision 0102 rules on each gap (build, defer or decline); the rows it marks "To be written" are decision records still to come.

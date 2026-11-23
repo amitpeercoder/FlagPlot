@@ -182,3 +182,90 @@ His words: "I think - staff chooses and user can change it. But if an agent can 
 3. **An orders paper.** YOUR ORDERS in the stop paper opens a paper for reading, THE ORDERS, that lists every order of the commander's in force and signed: what it is, its state (waiting for leave, launched, cannot be met), its limits in a line, and its rank. Orders are put in rank by moving them up and down; an order not ranked comes after those that are. From each line its plan's paper opens, and it can be withdrawn. Rule 15 is this paper. A rank is sent only for the orders he has ranked, and what a rank does is said by the staff's reasons where it decided something ("Task Force 16 went to order 2, ranked before order 3").
 
 The second question put to him (a forces limit that binds only the kinds it names) he did not speak to; it follows from his second answer, since "use only these" must mean what it says for a player, and it is built as rule 2 has it, with the games on file that move listed in the build.
+
+## The architect's rulings during the build, Nov 23, 2026
+
+A. A limit can say "none of this kind". I checked second-proof/05a: its denies carry a forces limit naming only task forces [1, 2] and [3, 4]. Those orders meant "these carriers and nothing else", and rule 2 as I wrote it has no way to say that. So a forces limit gains `none_of`, a list of kinds (`ships` (ships and task forces are one kind), `air_groups`, `land_units`, `submarines`): a kind in `none_of` is bound and the staff may use nothing of it. A kind is bound if the limit names one of it or lists it in `none_of`; a kind neither named nor listed is the staff's choice; a limit naming nothing and listing nothing is still "use nothing" of every kind. Naming a unit of a kind and listing that kind in `none_of` is refused. It is a distinct key, never inferred from an empty list, in the state (hashed in its place, named in `name_every_field`, layout version raised, goldens remade), the agent's JSON, a scenario's TOML, the export and saves, and `command_state` shows it. `source` is not a kind for `none_of`.
+
+B. The closed proofs keep their games. Every scenario file of the second proof and of stage 2b's proof whose game moved (and any other file whose forces limit meant "only these" by the old reading and whose game moved for that reason alone) has `none_of` added to that limit for the kinds it did not name, so the file says the same order in the new language. The test of it: each such file's hash and events are what they were before this change, shown by the before-and-after comparison; a file that still moves after that comes back to me and is not adjusted further. Scenario 106's s12 and scenario 60's Eastern Solomons test must then pass with no expected value changed. The agent-played record `second_proof_week_sonnet` is a recording of calls made under the old reading: do not edit its calls by hand. Tell me exactly what scenario 101's s21 and the `mcp.rs` replay assert and what moves, and stop on that one item only; carry on with everything else. `legibility_*` and `stage_2b_seat_sonnet` are not touched in any way; if either moves, stop and tell me.
+
+C. Tests that state decision 0125, rule 2. Rule 2 of 0222 stands: a carrier force named in the forces limit of a deny or a neutralise is stationed by the staff as a free one is; a force the commander gave its own task (operate carriers, stand at) keeps it and serves from there. For scenarios 55, 115 (statements 18 and 21) and the two tests in `radio_silence_and_held.rs`: restate the scenario, not the expectation: give the named force the commander's own `operate_carriers` at the hex where it lies, so the situation the test was written for is the one played. If every expected number and statement then holds as written (intent numbers and the words of a reason may differ, and scenario 55's run baseline is remade), that is done; list each file changed. If any expected number or statement would have to change, stop on that test and bring it to me with the old and new values. Scenario 116's statement 23 I restate here; put it in the doc comment marked "restated by the architect, Nov 23, 2026 (decision 0222, rule 2)": "A carrier force the commander gave its own task keeps its hex and serves the order from there; a carrier force only named in the order's forces limit is stationed by the staff as a free one is." Test both halves.
+
+D. Your choices. Ships and task forces one kind: yes. Groups aboard a carrier go with their force: yes. A named carrier force under a hold works from where it lies: yes, and the reason says so in its own words. An empty limit is "use nothing" for a patrol's boats too: yes; a limit that names other kinds and no boat leaves the boats free, as 0218 said; add a row to differences.md for the fully empty case. `ForcesCleared` and `AreaCleared` as new variants with codes at the end: yes. The station's reason for a named force must not say "free, named by nothing of the commander's": give that case its own words ("named in your order's forces limit").
+
+## As built: the engine (rules 2 to 7), Nov 23, 2026
+
+Built on the branch `limits-engine-build` by a team lead with three developers; scenario 130 (`tests/scenario_130_a_limit_binds_what_it_names.rs`, its parts in `tests/scenario_130/`, its games in `data/scenarios/a-limit-binds-what-it-names/`) proves the statements. Versions: the rules label 30 to 31, the state layout v56 to v57, the saved game version 24 to 25, the doctrine `supply-56` to `supply-57`, the agent interface 49 to 50.
+
+### Rule card
+
+Reads: an intent's forces limit on its chain, kind by kind (ships and task forces one kind; air groups; land units; submarines; the source), and `none_of`; under a "take a place" or a "control an island" on the chain, the limits as those orders already read them (decisions 0149 and 0151), unchanged; the rank of an intent read up the tree, for the supply doctrine. Writes: nothing new in the world but a forces limit's `none_of` and the clearing of a forces limit or an area (`Limit::ForcesCleared`, `Limit::AreaCleared`, amendment codes 12 and 13); a reason's list of the limits it speaks of (`Reason::limits`), which is not state. Draws: none.
+
+### How each rule was built
+
+- **Rule 2.** A kind is bound by a limit where the limit names one of it or lists it in `none_of`, or where it names nothing and lists nothing at all. `ForcesLimit` gains `binds_ships`, `binds_groups`, `binds_land_units`, `binds_submarines`, `binds_source` and `names_nothing`; `CommandState` gains `reads_as_bound` (a take or an island on the chain), `ship_limits_on_chain`, `nearest_ship_limit` and `source_on_chain`. On a chain under a take or an island every reading is what it was.
+- **Rule 3.** `set_limit` of forces or area with `cleared: true` (a scenario's `cleared = true`) and nothing but the intent clears it: it is a command like the setting, refused for an intent not the side's (`NoSuchIntent`), an amendment of a plan in force (one `PlanAmended`, even where nothing was set), never "Wider than its parent", and not refused where nothing is set. A forces limit with no list, no source and no `none_of` is "use nothing", as before.
+- **Rule 4.** `preview` of a `set_intent` takes `limits`, a list of set_limit bodies without `intent`; the batch is taken in on the copy and worked as one, and a limit the engine refuses is answered as that refusal with `of_batch` and nothing numbered. `approve` of that preview queues the order and its limits, all or none (`limits_queued`). `take_back` of the order takes its limits with it, as decision 0221 already did. A trial of such a preview tries the whole batch.
+- **Rule 5.** `Reason` gains, at its end, `limits`: each a `ReasonLimit` of a `LimitKind` (forces, area, priority, protected, reserve, risk, not_before, wait_for, after, knowledge, targets, source; codes 1 to 12) and the intent it is set on (`CommandState::limit_set_on`: the nearest on the chain that sets it, for the risk the one that binds, else the root), or the base of a reserve. About ninety reasons are filled. It goes through the agent's JSON, the schemas (`command_defs.schema.json#/$defs/reason_limit`), saves (version 25), the export (`limits` on `staff_reason`) and the replay. A reason is not world state: it is not hashed, and its debug text leaves the list out, so every digest the earlier tests keep is what it was. No reason's words changed but the two below that the rulings gave.
+- **Rule 6.** `priority_order` in `morning.rs` reads the rank up the tree: a supply under a ranked order is ranked with it, and a rank on the supply itself is read first.
+- **Rule 7.** No doctrine reads an area that did not; the table below is the code as it stands.
+
+### Every place that reads a forces limit, and what changed
+
+| Where | What it reads | Change |
+| --- | --- | --- |
+| `CommandState::groups_on_chain` (the deny, neutralise, hold and cover doctrines; the check of an order to a group; the override) | Air groups | Only limits that bind air groups count. A deny or a neutralise whose limit names task forces and no group now uses every base (the oddity of decision 0202 is gone); a hold's cover likewise. Under an island, as before, but a limit listing `air_groups` in `none_of` binds there too |
+| `may_use_group`, an intent addressed to a task force | Groups aboard | A limit that binds no ship leaves the force to the staff and its groups go with it (ruling D) |
+| `land_units_on_chain`, `may_use_land_unit` (a hold's men; ready a landing and build up a base given as roots) | Land units | Only limits that bind land units count |
+| `submarines_on_chain` (the patrol; the check of an order to a boat) | Boats | A limit naming nothing binds the boats too ("use nothing"); one naming other kinds leaves them free, as before |
+| `forces_narrow` (a limit on a child) | Every kind | Each kind is checked against the limits above that bind it; a kind none binds is the addressee's, as with no limit |
+| `staff_order_in_forces_limit` (an order to a task force, a forming order) | Ships, source | Only limits that bind ships, and for a forming order the source, count |
+| `override_targets`, `hold.rs` | Task forces named | Unchanged |
+| Intake's `forces_of` (a run's pool and source) and `doctrine.rs` `setup` (the supply doctrine's pool) | The limit as set | Unchanged: a supply's ships come only from its limit; a limit naming only a source gives an empty pool, as before |
+| The carrier pass (`station.rs`) | Task forces | A commander's deny or neutralise whose limit binds ships stations each carrier force inside it as a free one (`named_carrier`); one whose limit binds none takes free forces, as before. `station_chosen` is every staff carrier task under such an order |
+| `form_force_tasks` (`stand.rs`) | Task forces named | Under a commander's deny or neutralise no carrier task is formed for a named force there (the pass stations it); a task of another's making that stands is said as before and serves. Under a hold, as before, with a sentence that the force works from where it lies |
+| `cover.rs`, `bombard.rs`, `take`, `island`, `assemble`, `lifts`, `look`, `order`, `ready`, `told`, `take/coming.rs` | Under a take or an island | Unchanged |
+| `holding.rs` (the hold's men, its source) | Land units, source | Men: as `may_use_land_unit`. Source: the nearest limit's, unchanged |
+| `denies_naming` (the strike step, a carrier's closing and search) | Task forces named | Unchanged |
+| The agent's `command_state`, `held_words`, notes | For words | `none_of` shown; otherwise unchanged |
+
+### What each limit is read by, as the code has it (rule 7)
+
+| Limit | Read by, and for which orders | Taken by the tool on orders where nothing reads it |
+| --- | --- | --- |
+| Forces: ships and task forces | A deny's and a hold's stand tasks and carrier tasks (the pass, for a deny or a neutralise); a supply's pool and runs (keep supplied, and the supply a hold forms); a take's and an island's lifts and landing; the override | Cover, strike ships, search waters, raid, patrol, build up a base |
+| Forces: air groups | Every air doctrine through `groups_on_chain` (hold, cover, neutralise, raid, deny, strike ships, search waters, reconnaissance under a take); the groups aboard a carrier task | Keep supplied, stand at, patrol |
+| Forces: land units | Hold (its men), ready a landing, build up a base, take, island | Every other kind |
+| Forces: submarines | Patrol | Every other kind |
+| Forces: source | Keep supplied (required), the supply a hold forms, take, island | Every other kind |
+| Area | A keep supplied's own route (its own area only, not read up the tree); a take's lifts, its way and the turn back (`take.rs`, `turn_back.rs`); a bombardment's route under a neutralise or a take (`bombard.rs`); a carrier force's closing on a find (`carrier.rs`, read up the tree from the carrier task) | Cover, strike ships, search waters, stand at, patrol, raid, build up a base, ready a landing given as a root; a carrier's station (the area binds its closing, not where the staff stations it); a deny, a hold or a neutralise only through a carrier task (its closing) or a bombardment beneath it |
+| Priority | The supply doctrine (rule 6, up the tree) and every air doctrine's order of serving (`in_priority_order`), the carrier pass, the island, the take, the patrol | None: every kind is served in rank order |
+| Protected | The supply doctrine only (`morning.rs`, `planner.rs`, `doctrine.rs`) | Every kind but keep supplied |
+| Risk | The supply doctrine's run by night and its escort, the margin of a supply under a hold, and every air, stand, carrier, bombard and take doctrine | Patrol |
+| Targets | Strike ships (`strike.rs`) and carrier tasks (`carrier.rs`), read up the tree from deny, hold, neutralise, take, island and operate | Keep supplied, cover, stand at, patrol, ready a landing, build up a base |
+| Not before, wait for, after, knowledge | The release of a take (`told.rs`, `look.rs`); refused on every other kind | None (the tool refuses them elsewhere) |
+| Reserve | The engine's refuelling and loads, at the base | (A base's) |
+
+The rows of open work this gives are in `docs/open-work.md`, "A limit the tool takes where nothing reads it".
+
+### Games on file that moved
+
+Compared before (9bdc3062) and after, the staffed games on file played by their staffs with the daily hashes left out (scenario 130, Part F, 95 files): 21 with a take or an island, the same; 28 with no forces limit, the same; of the 55 with a forces limit on another kind of order, five moved:
+
+- `55_a_carrier_force_from_an_end.toml`: the named force is stationed by the pass; its station is (0,0), where it lay, so only the reason's words move.
+- `second-proof/07a_week.toml`, `07d_week.toml`, `07m_model_week.toml` and `stage-2b-proof/07a_week.toml`: the Japanese deny names carrier forces 3 and 4 with no task of the commander's, and they are stationed at (0,-7) where they lay at (9,-19) and (7,-18). Ruling B's `none_of` does not bring these back; they go back to the architect, unadjusted.
+
+The second proof's and stage 2b's Eastern Solomons files (05a, 05b; 05a, 05b, 05c) and `second-proof/07b_week.toml`, given `none_of`, are as they were. No rank on file moved a game.
+
+### Choices the plan did not make
+
+- New `Limit` variants for clearing rather than options on the old ones (ruling D).
+- `none_of` and a reason's `limits` are left out of the debug texts, so the digests earlier tests keep (scenario 106's s12, scenario 77's staff digest, scenario 126's events) are what they were; JSON, words and the hash carry `none_of`.
+- `none_of` is hashed after the boats, only where it lists a kind (a tag 7, the count, the codes), and the layout version is raised as ruling A says.
+- A preview's reading compares orders exactly with the first morning; its commands are the last round of the staff's decisions (decision 0221's reading), so statement 13 is proved on the orders and on the commands' last round.
+- The reason of a hold with no source (rule 1, `no_source_reason`) records the source limit where it names bases that could be one, and nothing where none could.
+
+### Not settled here
+
+- The four week files above, scenario 106's s12 (its week file), and the record `second_proof_week_sonnet`, which is left as it was and fails its replay: the architect's.
+- `radio_silence_and_held.rs`'s second test: restated by ruling C, the deny forms no task (the commander's own stands), so its "the area formed a task" (at least one) is now none; unrestated, the station's reason with command levels on says "as of". The architect's.
