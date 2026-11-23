@@ -286,6 +286,15 @@ impl<'a> SideView<'a> {
         self.next_air_group
     }
 
+    /// How the side's own staff uses its boats, as its scenario states it
+    /// (decision 0223, stage 0): its pattern of a patrol and whether it
+    /// expects enemy boats off its own bases. The asking side's own values
+    /// only: there is no way to the other side's. A seat at a command of the
+    /// side is given the side's, as a doctrine of its navy.
+    pub fn submarine_doctrine(&self) -> crate::command::SubmarineDoctrine {
+        self.command.submarine_doctrine
+    }
+
     /// The side's own command state, whole: its intents with their limits,
     /// its leaves, its plans with their baselines, amendments and runs, and
     /// the commitments of its ships (decision 0107, 6). There is no way to

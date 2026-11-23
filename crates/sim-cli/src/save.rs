@@ -190,8 +190,11 @@ pub const FORMAT: &str = "flagplot-saved-game";
 /// `"commands"` a forces limit's `none_of` and, for a forces limit or an
 /// area, `cleared`, and in a hand-in's reasons an optional `"limits"`; its
 /// state version is v57. A game of an older version is refused, not
-/// converted.
-pub const VERSION: u32 = 25;
+/// converted. Version 26 (decision 0223, stage 0) is a game whose state holds
+/// each side's submarine doctrine, which its scenario states: the file's keys
+/// are unchanged; its state version is v58 and its daily hashes cover the
+/// doctrine. A game of an older version is refused, not converted.
+pub const VERSION: u32 = 26;
 
 pub type Script = BTreeMap<u32, Vec<(Side, OrderRequest)>>;
 

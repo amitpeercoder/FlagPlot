@@ -193,3 +193,723 @@
 //! *B3.* The Japanese bases are 11 hexes and more from (4, -4). The centre,
 //! then the lowest of the hexes 2 away: those with q = 2 are (2, -4),
 //! (2, -3) and (2, -2), and the lowest is (2, -4).
+
+use std::collections::BTreeMap;
+use std::path::PathBuf;
+
+use serde_json::{json, Value};
+use sim_agent::{Seat, Session};
+use sim_core::command::{StaffDecisions, SubmarineDoctrine, SubmarinePattern};
+use sim_core::events::{Event, EventKind};
+use sim_core::hex::Hex;
+use sim_core::ids::IntentId;
+use sim_core::orders::{Issuer, OrderKind, SubmarineOrder};
+use sim_core::state::Side;
+use sim_data::Scenario;
+use sim_staff::{as_staffs, staffs};
+
+mod common;
+
+// ---------------------------------------------------------------------
+// The games, each a file of `data/scenarios/the-pattern-of-a-patrol/`.
+// ---------------------------------------------------------------------
+
+#[derive(Clone, Copy)]
+enum Game {
+    L1,
+    L2,
+    L3,
+    L4,
+    L5,
+    L6,
+    B1,
+    B2,
+    B3,
+}
+
+impl Game {
+    fn file(self) -> &'static str {
+        match self {
+            Game::L1 => "131_l1_lines.toml",
+            Game::L2 => "131_l2_lines_wider_waters.toml",
+            Game::L3 => "131_l3_lines_over_land.toml",
+            Game::L4 => "131_l4_no_approach.toml",
+            Game::L5 => "131_l5_the_nearer_approach.toml",
+            Game::L6 => "131_l6_no_pattern.toml",
+            Game::B1 => "131_b1_off_bases.toml",
+            Game::B2 => "131_b2_a_base_passed_over.toml",
+            Game::B3 => "131_b3_no_base_near.toml",
+        }
+    }
+
+    fn path(self) -> PathBuf {
+        common::data_dir()
+            .join("scenarios/the-pattern-of-a-patrol")
+            .join(self.file())
+    }
+
+    fn text(self) -> String {
+        std::fs::read_to_string(self.path()).expect("the game's file reads")
+    }
+
+    /// The side with the boats.
+    fn side(self) -> Side {
+        match self {
+            Game::B1 | Game::B2 | Game::B3 => Side::Allied,
+            _ => Side::Japanese,
+        }
+    }
+
+    /// The patrol's order, as the commander's tools take it.
+    fn patrol(self) -> Value {
+        match self {
+            Game::B1 | Game::B2 => json!({"intent_kind": "patrol", "hex": [-6, 0], "distance": 3}),
+            Game::B3 => json!({"intent_kind": "patrol", "hex": [4, -4], "distance": 2}),
+            Game::L2 => json!({"intent_kind": "patrol", "hex": [0, 0], "distance": 6}),
+            _ => json!({"intent_kind": "patrol", "hex": [0, 0], "distance": 3}),
+        }
+    }
+
+    fn scenario(self) -> Scenario {
+        common::load(&self.path()).expect("the game loads")
+    }
+
+    fn play(self) -> Played {
+        play(self.scenario(), self.side())
+    }
+}
+
+fn hex(q: i32, r: i32) -> Hex {
+    Hex::new(q, r)
+}
+
+fn of(rows: &[(i32, i32)]) -> Vec<(u32, Hex)> {
+    rows.iter()
+        .zip(1..)
+        .map(|((q, r), boat)| (boat, hex(*q, *r)))
+        .collect()
+}
+
+/// A game played to its end with the doctrine's staffs: what the side's
+/// staff handed in each day, the log and the world.
+struct Played {
+    handed: BTreeMap<u32, StaffDecisions>,
+    events: Vec<Event>,
+    scenario: Scenario,
+}
+
+fn play(mut scenario: Scenario, side: Side) -> Played {
+    let held = staffs();
+    let mut handed = BTreeMap::new();
+    loop {
+        let day = scenario.world.day() + 1;
+        let summary = scenario
+            .next_day_watched(as_staffs(&held), &mut |_, _| {})
+            .expect("a day resolves");
+        if summary.is_none() {
+            break;
+        }
+        handed.insert(
+            day,
+            scenario
+                .world
+                .staff_handed_in()
+                .get(&side)
+                .cloned()
+                .unwrap_or_default(),
+        );
+    }
+    let events = scenario.world.events().iter().cloned().collect();
+    Played {
+        handed,
+        events,
+        scenario,
+    }
+}
+
+impl Played {
+    /// The station orders the staff handed in on `day`, as (boat, station)
+    /// in the order handed in.
+    fn stations(&self, day: u32) -> Vec<(u32, Hex)> {
+        self.handed[&day]
+            .orders
+            .iter()
+            .map(|order| match &order.kind {
+                OrderKind::Submarine {
+                    target,
+                    order: SubmarineOrder::Station(at),
+                } => (target.raw(), *at),
+                other => panic!("the patrol doctrine gave another order: {other:?}"),
+            })
+            .collect()
+    }
+
+    fn nothing_refused(&self) {
+        let refused: Vec<_> = self
+            .events
+            .iter()
+            .filter(|e| {
+                matches!(
+                    e.kind,
+                    EventKind::OrderRejected { .. } | EventKind::CommandRefused { .. }
+                )
+            })
+            .collect();
+        assert!(refused.is_empty(), "something was refused: {refused:?}");
+    }
+
+    /// The staff's station orders as the engine took them, in order.
+    fn taken(&self) -> Vec<(u32, Hex)> {
+        let mut taken = Vec::new();
+        for event in &self.events {
+            let EventKind::OrderAccepted { order, target } = &event.kind else {
+                continue;
+            };
+            let record = self.scenario.world.order(*order).expect("the order");
+            let OrderKind::Submarine {
+                order: SubmarineOrder::Station(at),
+                ..
+            } = &record.kind
+            else {
+                continue;
+            };
+            if record.origin.issuer != Issuer::Staff {
+                continue;
+            }
+            assert_eq!(record.origin.intent, Some(IntentId::new(1)));
+            let sim_core::ids::EntityRef::Submarine(id) = target else {
+                panic!("a station order to {target:?}");
+            };
+            taken.push((id.raw(), *at));
+        }
+        taken
+    }
+
+    /// The working of the staff's order to boat `raw` on day 1.
+    fn words(&self, raw: u32) -> String {
+        self.handed[&1]
+            .orders
+            .iter()
+            .find(|o| matches!(&o.kind, OrderKind::Submarine { target, .. } if target.raw() == raw))
+            .map(|o| o.reason.worked.clone())
+            .expect("an order for the boat")
+    }
+
+    fn no_order_text(&self, day: u32) -> Vec<String> {
+        self.handed[&day]
+            .no_orders
+            .iter()
+            .map(|r| r.worked.clone())
+            .collect()
+    }
+}
+
+/// A session over the game's file as `sim-cli` builds one, both seats
+/// played, the scenario's own commands taken out: the commander gives his
+/// own.
+fn session(game: Game) -> Session {
+    let mut scenario = game.scenario();
+    scenario.replace_commands(BTreeMap::new());
+    let name = scenario.name.clone();
+    Session::new(
+        scenario.world,
+        &name,
+        scenario.days,
+        Seat::Player,
+        Seat::Player,
+    )
+    .with_staffs(staffs())
+}
+
+fn ask(s: &mut Session, side: Side, tool: &str, args: Value) -> Value {
+    s.call(side, tool, &args)
+        .unwrap_or_else(|e| panic!("{tool} {args}: {}", e.message))
+}
+
+/// The stations of an answer's `stations`, as (boat, hex).
+fn answer_stations(stations: &Value) -> Vec<(u32, Hex)> {
+    stations
+        .as_array()
+        .expect("stations")
+        .iter()
+        .map(|s| {
+            let boat = s["submarine"]
+                .as_str()
+                .and_then(|h| h.strip_prefix("submarine:"))
+                .and_then(|n| n.parse().ok())
+                .expect("a boat's handle");
+            let q = i32::try_from(s["hex"]["q"].as_i64().expect("q")).unwrap();
+            let r = i32::try_from(s["hex"]["r"].as_i64().expect("r")).unwrap();
+            (boat, hex(q, r))
+        })
+        .collect()
+}
+
+/// Stations as (boat, hex), in the order given.
+type Stations = Vec<(u32, Hex)>;
+
+/// The stations `propose` gives for the patrol once ordered, and those
+/// `preview` gives for the order before it is given.
+fn proposed_and_previewed(game: Game) -> (Stations, Stations) {
+    let side = game.side();
+    let mut s = session(game);
+    let mut command = game.patrol();
+    command["command"] = json!("set_intent");
+    let preview = ask(&mut s, side, "preview", command);
+    assert_eq!(preview["valid"], true, "{preview}");
+    let previewed = answer_stations(&preview["with_change"]["stations"]);
+    ask(&mut s, side, "set_intent", game.patrol());
+    let proposal = ask(&mut s, side, "propose", json!({"intent": 1}));
+    (answer_stations(&proposal["stations"]), previewed)
+}
+
+/// Statement 17, for one game: no station on land, on a base's hex, or
+/// outside the waters, and no two boats of the patrol share one.
+fn sound(game: Game, played: &Played) {
+    let world = &played.scenario.world;
+    let given = played.stations(1);
+    let (centre, distance) = match game {
+        Game::B1 | Game::B2 => (hex(-6, 0), 3),
+        Game::B3 => (hex(4, -4), 2),
+        Game::L2 => (hex(0, 0), 6),
+        _ => (hex(0, 0), 3),
+    };
+    let bases: Vec<Hex> = world.umpire().bases.values().map(|b| b.hex).collect();
+    let mut seen = std::collections::BTreeSet::new();
+    for (boat, at) in &given {
+        assert!(world.map().is_navigable(*at), "boat {boat} on land at {at}");
+        assert!(!bases.contains(at), "boat {boat} on a base's hex at {at}");
+        assert!(
+            at.distance(centre) <= distance,
+            "boat {boat} outside at {at}"
+        );
+        assert!(seen.insert(*at), "two boats share {at}");
+    }
+}
+
+/// A game's stations, checked whole: those handed in on the first morning,
+/// as the engine took them, as `propose` and `preview` give them, and sound.
+fn stationed(game: Game, expected: &[(i32, i32)]) -> Played {
+    let played = game.play();
+    played.nothing_refused();
+    let expected = of(expected);
+    assert_eq!(played.stations(1), expected, "the first morning's orders");
+    assert_eq!(played.taken(), expected, "the orders the engine took");
+    let (proposed, previewed) = proposed_and_previewed(game);
+    assert_eq!(proposed, expected, "propose's stations");
+    assert_eq!(previewed, expected, "preview's stations");
+    sound(game, &played);
+    played
+}
+
+// ---------------------------------------------------------------------
+// Stage 0.
+// ---------------------------------------------------------------------
+
+#[test]
+fn statement_01_a_scenario_gives_a_side_its_pattern_and_what_it_expects() {
+    let lines = Game::L1.scenario();
+    assert_eq!(
+        lines.world.side_view(Side::Japanese).submarine_doctrine(),
+        SubmarineDoctrine {
+            pattern: Some(SubmarinePattern::Lines),
+            expects_boats_off_own_bases: false,
+        }
+    );
+    let bases = Game::B1.scenario();
+    assert_eq!(
+        bases.world.side_view(Side::Allied).submarine_doctrine(),
+        SubmarineDoctrine {
+            pattern: Some(SubmarinePattern::OffBases),
+            expects_boats_off_own_bases: true,
+        }
+    );
+    // A side given neither has no pattern and expects nothing.
+    let none = Game::L6.scenario();
+    for side in [Side::Allied, Side::Japanese] {
+        assert_eq!(
+            none.world.side_view(side).submarine_doctrine(),
+            SubmarineDoctrine::default()
+        );
+        assert_eq!(SubmarineDoctrine::default().pattern, None);
+        assert!(!SubmarineDoctrine::default().expects_boats_off_own_bases);
+    }
+    // Either may be given alone.
+    let only_expects =
+        common::replace_once(&Game::L1.text(), "submarine_pattern = \"lines\"\n", "");
+    let only_expects = common::replace_once(
+        &only_expects,
+        "expects_boats_off_own_bases = false",
+        "expects_boats_off_own_bases = true",
+    );
+    let scenario = common::from_text(&only_expects, &Game::L1.path()).expect("it loads");
+    assert_eq!(
+        scenario
+            .world
+            .side_view(Side::Japanese)
+            .submarine_doctrine(),
+        SubmarineDoctrine {
+            pattern: None,
+            expects_boats_off_own_bases: true,
+        }
+    );
+    let only_pattern =
+        common::replace_once(&Game::B1.text(), "expects_boats_off_own_bases = true\n", "");
+    let scenario = common::from_text(&only_pattern, &Game::B1.path()).expect("it loads");
+    assert_eq!(
+        scenario.world.side_view(Side::Allied).submarine_doctrine(),
+        SubmarineDoctrine {
+            pattern: Some(SubmarinePattern::OffBases),
+            expects_boats_off_own_bases: false,
+        }
+    );
+}
+
+#[test]
+fn statement_02_any_other_word_for_the_pattern_is_refused_naming_the_side_and_the_word() {
+    for (game, side, word) in [
+        (Game::L1, "japanese", "lines"),
+        (Game::B1, "allied", "off_bases"),
+    ] {
+        let text = common::replace_once(
+            &game.text(),
+            &format!("submarine_pattern = \"{word}\""),
+            "submarine_pattern = \"in_rows\"",
+        );
+        let Err(refusal) = common::from_text(&text, &game.path()) else {
+            panic!("the word in_rows was taken for the {side} side");
+        };
+        let message = refusal.to_string();
+        assert!(message.to_lowercase().contains(side), "{message}");
+        assert!(message.contains("in_rows"), "{message}");
+    }
+}
+
+#[test]
+fn statement_03_a_sides_own_picture_holds_its_pattern_and_no_answer_to_the_other_seat_does() {
+    let mut s = session(Game::L1);
+    // The side's own: its briefing says its pattern and what it expects.
+    let own = ask(&mut s, Side::Japanese, "get_briefing", json!({}));
+    let doctrine = &own["submarines"]["doctrine"];
+    assert_eq!(doctrine["submarine_pattern"], "lines", "{own}");
+    assert_eq!(doctrine["expects_boats_off_own_bases"], false, "{own}");
+    assert!(doctrine["words"].as_str().is_some_and(|w| !w.is_empty()));
+    // The other side's picture holds neither of the Japanese side's.
+    let world = Game::L1.scenario().world;
+    assert_eq!(
+        world.side_view(Side::Allied).submarine_doctrine(),
+        SubmarineDoctrine::default()
+    );
+    // And no answer of any tool the Allied seat has says either.
+    for tool in s.tools(Side::Allied) {
+        let answer = match s.call(Side::Allied, tool, &json!({})) {
+            Ok(answer) => answer.to_string(),
+            Err(e) => e.message,
+        };
+        for word in [
+            "submarine_pattern",
+            "expects_boats_off_own_bases",
+            "doctrine",
+        ] {
+            assert!(
+                !answer.contains(word),
+                "the Allied seat's {tool} says {word}: {answer}"
+            );
+        }
+    }
+}
+
+#[test]
+fn statement_04_a_scenario_with_no_pattern_plays_as_it_did_and_scenario_129s_stations_are_what_they_were(
+) {
+    // Scenario 129's game A1: the table of its Part A, as its own test
+    // states it. The comparison of every run with the hashes cut is made by
+    // `scripts/compare-scenarios.sh` and reported with the pull request.
+    let path = common::data_dir().join("scenarios/129_submarines_the_staff_and_the_patrol.toml");
+    let scenario = common::load(&path).expect("scenario 129 loads");
+    for side in [Side::Allied, Side::Japanese] {
+        assert_eq!(
+            scenario.world.side_view(side).submarine_doctrine(),
+            SubmarineDoctrine::default()
+        );
+    }
+    let played = play(scenario, Side::Japanese);
+    played.nothing_refused();
+    assert_eq!(
+        played.stations(1),
+        vec![
+            (1, hex(5, 0)),
+            (2, hex(3, 0)),
+            (3, hex(3, 2)),
+            (4, hex(5, -2)),
+            (5, hex(5, 2)),
+            (6, hex(7, -2)),
+            (7, hex(7, 0)),
+        ]
+    );
+}
+
+// ---------------------------------------------------------------------
+// Stage A: lines.
+// ---------------------------------------------------------------------
+
+const L1: [(i32, i32); 9] = [
+    (0, 0),
+    (-1, 1),
+    (0, -1),
+    (-1, 2),
+    (1, -2),
+    (-2, 3),
+    (1, -3),
+    (-3, 0),
+    (2, 1),
+];
+
+#[test]
+fn statement_05_l1_the_boats_are_stationed_on_the_line_across_the_approach_from_8_0() {
+    let played = stationed(Game::L1, &L1);
+    assert!(
+        played
+            .words(1)
+            .contains("The approach is from Placeholder Allied base 2 (base:2) at (8,0)"),
+        "{}",
+        played.words(1)
+    );
+}
+
+#[test]
+fn statement_06_l1_the_first_seven_reasons_say_the_first_line_from_the_base_the_last_two_the_spread(
+) {
+    let played = Game::L1.play();
+    for boat in 1..=7 {
+        let words = played.words(boat);
+        assert!(
+            words
+                .contains("first line across the approach from Placeholder Allied base 2 (base:2)"),
+            "boat {boat}: {words}"
+        );
+    }
+    for boat in 8..=9 {
+        let words = played.words(boat);
+        assert!(
+            words.contains("spread over the waters, the line being full"),
+            "boat {boat}: {words}"
+        );
+        assert!(
+            !words.contains("is on the first line"),
+            "boat {boat}: {words}"
+        );
+    }
+}
+
+#[test]
+fn statement_07_l2_fifteen_boats_two_lines_and_the_last_two_on_the_second() {
+    let played = stationed(
+        Game::L2,
+        &[
+            (0, 0),
+            (-1, 1),
+            (0, -1),
+            (-1, 2),
+            (1, -2),
+            (-2, 3),
+            (1, -3),
+            (-2, 4),
+            (2, -4),
+            (-3, 5),
+            (2, -5),
+            (-3, 6),
+            (3, -6),
+            (-5, 0),
+            (-6, 1),
+        ],
+    );
+    for boat in 14..=15 {
+        let words = played.words(boat);
+        assert!(
+            words.contains("second line across the approach"),
+            "boat {boat}: {words}"
+        );
+    }
+    for boat in 1..=13 {
+        let words = played.words(boat);
+        assert!(
+            words.contains("first line across the approach"),
+            "boat {boat}: {words}"
+        );
+    }
+}
+
+#[test]
+fn statement_08_l3_the_line_steps_over_the_land() {
+    let played = stationed(
+        Game::L3,
+        &[(0, 0), (-1, 2), (0, -1), (-2, 3), (1, -2), (1, -3)],
+    );
+    assert!(played.stations(1).iter().all(|(_, at)| *at != hex(-1, 1)));
+}
+
+#[test]
+fn statement_09_l4_no_enemy_base_beyond_5_hexes_no_line_and_the_reason_says_why() {
+    let played = stationed(Game::L4, &[(0, 0), (-3, 0), (-3, 3)]);
+    for boat in 1..=3 {
+        let words = played.words(boat);
+        assert!(words.contains("There is no line"), "boat {boat}: {words}");
+        assert!(
+            words
+                .contains("no enemy base on the side's map lies more than 5 hexes from the centre"),
+            "boat {boat}: {words}"
+        );
+        assert!(
+            words.contains("Placeholder Allied base 2 (base:2) at (4,0), is 4 hexes from it"),
+            "boat {boat}: {words}"
+        );
+    }
+}
+
+#[test]
+fn statement_10_l5_the_approach_is_from_the_nearer_base_beyond_5_hexes() {
+    let played = stationed(Game::L5, &[(0, 0), (1, -1), (-1, 0)]);
+    for boat in 1..=3 {
+        let words = played.words(boat);
+        assert!(
+            words.contains(
+                "first line across the approach from Placeholder Allied base 3 (base:3) at (0,-7)"
+            ),
+            "boat {boat}: {words}"
+        );
+    }
+}
+
+#[test]
+fn statement_11_l6_with_no_pattern_the_boats_are_spread_as_decision_0218_spreads_them() {
+    let played = stationed(Game::L6, &[(0, 0), (-3, 0), (-3, 3)]);
+    // The words of decision 0218, unchanged.
+    assert!(played.words(1).contains("the centre of the waters"));
+    assert!(played
+        .words(2)
+        .contains("station 2 of the waters, 3 hexes from the nearest before it"));
+    for boat in 1..=3 {
+        let words = played.words(boat);
+        assert!(!words.contains("line"), "boat {boat}: {words}");
+        assert!(
+            !words.contains("spread over the waters"),
+            "boat {boat}: {words}"
+        );
+    }
+}
+
+#[test]
+fn statement_12_l1_the_second_morning_no_boat_is_ordered_and_each_keeps_her_station() {
+    let played = Game::L1.play();
+    assert_eq!(played.stations(1), of(&L1));
+    assert!(played.stations(2).is_empty());
+    let words = played.no_order_text(2);
+    assert_eq!(words.len(), 1, "one decision to give no order: {words:?}");
+    for (boat, at) in of(&L1) {
+        assert!(
+            words[0].contains(&format!(
+                "submarine:{boat} (Placeholder submarine {boat}) keeps her station at {at}"
+            )),
+            "{}",
+            words[0]
+        );
+    }
+    assert!(played.stations(3).is_empty());
+}
+
+// ---------------------------------------------------------------------
+// Stage A: off bases.
+// ---------------------------------------------------------------------
+
+#[test]
+fn statement_13_b1_the_boats_are_stationed_off_the_bases_then_spread() {
+    stationed(
+        Game::B1,
+        &[
+            (-7, 0),
+            (-6, 2),
+            (-3, 0),
+            (-8, 1),
+            (-7, 3),
+            (-6, -3),
+            (-4, -2),
+        ],
+    );
+}
+
+#[test]
+fn statement_14_b1_each_reason_names_its_base_or_the_spread_and_base_3_has_one_station_and_why() {
+    let played = Game::B1.play();
+    for (boat, base) in [(1, 1), (4, 1), (2, 2), (5, 2), (3, 3)] {
+        let words = played.words(boat);
+        assert!(
+            words.contains(&format!(
+                "off Placeholder Japanese base {base} (base:{base})"
+            )),
+            "boat {boat}: {words}"
+        );
+    }
+    for boat in [6, 7] {
+        let words = played.words(boat);
+        assert!(
+            words.contains("spread over the waters"),
+            "boat {boat}: {words}"
+        );
+    }
+    // Base 3 is given one station and not two, and the words say why.
+    let words = played.words(3);
+    assert!(
+        words.contains(
+            "Placeholder Japanese base 3 (base:3) at (-2,0) is given 1 station(s) and not 2: \
+             no second hex next to it that ships can enter lies in the waters"
+        ),
+        "{words}"
+    );
+}
+
+#[test]
+fn statement_15_b2_base_3_has_no_hex_in_the_waters_and_is_passed_over() {
+    let played = stationed(Game::B2, &[(-7, 0), (-6, 2), (-8, 1), (-7, 3)]);
+    let words = played.words(1);
+    assert!(
+        words.contains(
+            "Placeholder Japanese base 3 (base:3) at (-2,0) is passed over: \
+             no hex next to it that ships can enter lies in the waters"
+        ),
+        "{words}"
+    );
+}
+
+#[test]
+fn statement_16_b3_no_enemy_base_in_or_next_to_the_waters_the_boats_are_spread() {
+    let played = stationed(Game::B3, &[(4, -4), (2, -4)]);
+    for boat in 1..=2 {
+        let words = played.words(boat);
+        assert!(
+            words.contains(
+                "No enemy base on the side's map lies in the waters or within a hex of them"
+            ),
+            "boat {boat}: {words}"
+        );
+    }
+}
+
+#[test]
+fn statement_17_in_every_game_no_station_is_on_land_on_a_base_or_outside_and_none_is_shared() {
+    for game in [
+        Game::L1,
+        Game::L2,
+        Game::L3,
+        Game::L4,
+        Game::L5,
+        Game::L6,
+        Game::B1,
+        Game::B2,
+        Game::B3,
+    ] {
+        let played = game.play();
+        assert!(!played.stations(1).is_empty(), "{}", game.file());
+        sound(game, &played);
+    }
+}

@@ -1,0 +1,151 @@
+# Scenario 131, game B1: the pattern of a patrol (decision 0223 as amended
+# on review, stages 0 and A). Pattern `off_bases`; seven boats.
+#
+# The Allied side has the boats, at its home base at (8, 0); the Allied
+# commander orders the waters within 3 hexes of (-6, 0) patrolled with
+# submarines and gives both leaves. The statements, the games and the hexes
+# worked by hand are in tests/scenario_131_the_pattern_of_a_patrol.rs.
+#
+# Kept out of the loops that walk data/scenarios/*.toml by being in this
+# folder (decision 0072).
+#
+# PLACEHOLDER DATA. The boats, bases, figures and map are invented. The class
+# and the torpedo are those of scenario 128.
+
+name = "Placeholder scenario 131, game B1: the pattern of a patrol"
+placeholder = true
+seed = 1942
+days = 3
+map = "../../map/placeholder_patterns.toml"
+ship_classes = "../../reference/ship_classes.csv"
+port_sizes = "../../reference/port_sizes.csv"
+aircraft_types = "../../reference/aircraft_types.csv"
+search = "../../reference/search.toml"
+surface_combat = "../../reference/surface_combat.toml"
+submarine_classes = "../../reference/submarine_classes_placeholder_scenario_128.csv"
+submarine_torpedoes = "../../reference/submarine_torpedoes_placeholder_scenario_128.csv"
+submarines = "../../reference/submarines_placeholder_scenario_128.toml"
+
+# How the Allied side's staff uses its boats (decision 0223, stage 0).
+[side.allied]
+submarine_pattern = "off_bases"
+expects_boats_off_own_bases = true
+
+[[base]]
+id = 1
+name = "Placeholder Japanese base 1"
+side = "japanese"
+q = -8
+r = 0
+airfield = false
+
+[[base]]
+id = 2
+name = "Placeholder Japanese base 2"
+side = "japanese"
+q = -6
+r = 3
+airfield = false
+
+[[base]]
+id = 3
+name = "Placeholder Japanese base 3"
+side = "japanese"
+q = -2
+r = 0
+airfield = false
+
+[[base]]
+id = 4
+name = "Placeholder Allied base 4"
+side = "allied"
+q = 8
+r = 0
+airfield = false
+
+[[submarine]]
+id = 1
+name = "Placeholder submarine 1"
+side = "allied"
+class = 6900
+q = 8
+r = 0
+home = 4
+
+[[submarine]]
+id = 2
+name = "Placeholder submarine 2"
+side = "allied"
+class = 6900
+q = 8
+r = 0
+home = 4
+
+[[submarine]]
+id = 3
+name = "Placeholder submarine 3"
+side = "allied"
+class = 6900
+q = 8
+r = 0
+home = 4
+
+[[submarine]]
+id = 4
+name = "Placeholder submarine 4"
+side = "allied"
+class = 6900
+q = 8
+r = 0
+home = 4
+
+[[submarine]]
+id = 5
+name = "Placeholder submarine 5"
+side = "allied"
+class = 6900
+q = 8
+r = 0
+home = 4
+
+[[submarine]]
+id = 6
+name = "Placeholder submarine 6"
+side = "allied"
+class = 6900
+q = 8
+r = 0
+home = 4
+
+[[submarine]]
+id = 7
+name = "Placeholder submarine 7"
+side = "allied"
+class = 6900
+q = 8
+r = 0
+home = 4
+
+# The Allied commander's commands
+[[command]]
+day = 1
+side = "allied"
+kind = "set_intent"
+intent = 1
+intent_kind = "patrol"
+hex = [-6, 0]
+distance = 3
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_leave"
+leave = "prepare"
+given = true
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_leave"
+leave = "launch"
+given = true

@@ -173,8 +173,11 @@ pub const FORMAT: &str = "flagplot-agent";
 /// adds decision 0222: `preview` of a `set_intent` takes its `limits` and
 /// `approve` of that preview queues them with it; `set_limit` takes `cleared`
 /// for a forces limit or an area and `none_of` on a forces limit; a reason
-/// gains `limits`.
-pub const VERSION: u32 = 50;
+/// gains `limits`. 51 adds the briefing's `submarines.doctrine` (decision
+/// 0223, stage 0): the side's own submarine pattern (`off_bases` or `lines`)
+/// and whether it expects enemy boats off its own bases, with its words; left
+/// out where the scenario states neither.
+pub const VERSION: u32 = 51;
 
 /// The answer to a question about something the side does not know of: a
 /// unit of the enemy, a number that does not exist, an event the side may not

@@ -406,8 +406,15 @@ use sim_core::view::SideView;
 /// it lies; a reason records the limits it speaks of; and supply is served
 /// in rank order read up the tree. It gives the orders `supply-56` gave to a
 /// side whose forces limits name no carrier force of a deny or neutralise
-/// without its own task and name every kind they mean to bind.
-pub const DOCTRINE_VERSION: &str = "supply-57";
+/// without its own task and name every kind they mean to bind. `supply-58`
+/// adds decision 0223, stage A: where a side's scenario gives it a submarine
+/// pattern, the stations of a patrol are given by it, on lines across the
+/// approach from the nearest enemy base more than 5 hexes from the centre
+/// (`lines`) or off the enemy bases in or next to the waters (`off_bases`),
+/// the boats left spread as before counting the stations given, each station
+/// order's reason saying which rule gave it. It gives the orders `supply-57`
+/// gave to a side with no pattern.
+pub const DOCTRINE_VERSION: &str = "supply-58";
 
 /// The staff: the doctrine for keeping a base supplied (stage 1) and, after
 /// it, the air doctrine for holding a place and covering a base from the air
