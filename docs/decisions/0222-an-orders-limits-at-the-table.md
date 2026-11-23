@@ -158,3 +158,13 @@ Tests: scenario 69, a hold with no source (no other base can be the source: base
 
 1. **Should the staff choose a supply source for a hold when the commander names none** (rules 8 to 12)? The architect recommends yes.
 2. **A forces limit that binds only the kinds it names** (rule 2) changes what a limit means in games on file that name forces. The architect recommends it: it is what "use only these" plainly says.
+
+### The architect's rulings on pull request 695 (rule 1)
+
+Read: `no_source_reason` in `holding.rs`, and `source_test`, `source_candidates` and `island_above` in `island.rs`.
+
+1. **One test of a source, used twice: right.** The hold's reason and the island's choice ask the same question of a base through `source_test`, so the reason can never offer a base the staff would refuse, nor withhold one it would take.
+2. **Where no base could be the source, nothing is offered and the place's days of supply are said.** That is the fact the player can act on: he knows how long he has. Whole days, rounded down, as the table shows them.
+3. **A base that has supply and that the staff may not take is named with why** (scenario 69: it is the source of an order higher in priority). The words stand. They speak of what the staff may choose. Whether the commander may himself name a base that another order draws on is not settled by this pull request and nothing here promises it; it is settled with step 3, where the staff chooses the source and the paper shows it with CHANGE.
+4. **No order moved,** on 254 runs with the hashes cut; only words did, and the doctrine is `supply-56`. The agent-played record of the second proof's week changes in the words of one reason and its doctrine number, checked field by field by the lead; the closed proofs' records are untouched.
+5. **Not seen:** the reason on the table in a browser, and "control an island" in the Coral Sea with its hold beneath it, which was tried once in a game not kept. Both are looked at when the table takes step 4.
