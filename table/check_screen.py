@@ -1479,6 +1479,106 @@ def the_orders_paper(bridge):
     check(post(bridge.table + "/new") == {"ok": True}, "the game is put away")
 
 
+def reason_limits_as_links(bridge):
+    """A reason's limits are links (decision 0222, rules 11, 12 and 17): by the page's text, by the words of each kind run in node, and
+    through the bridge, where the engine's real reasons are asked for and put through the page's own `proposedTree`. What is chosen: the
+    engine's `limits` list on a reason is what the page reads (nothing in the page reads limit words out of a reason's text); the link
+    in a browser is tried by hand."""
+    import re
+    print("-- a reason's limits are links: the words, where a link goes, and the engine's reasons through proposedTree", flush=True)
+    text = page_text()
+    words = text[text.index("  var LIMIT_LINK ="):text.index("  function limitLinkWords(")] + cut_function(text, "  function limitLinkWords(") + "\n" + cut_function(text, "  function limitInState(")
+    blocks = [cut_function(text, h) for h in ("  function limitLinks(", "  function openLimit(", "  function limitSetOn(")]
+    check("function limitLinkWords(" in text and "function openLimit(" in text and "'YOUR LIMITS'" in text and "block('YOUR LIMITS', limitLinks(t.reasons, PAPER_ROOT))" in cut_function(text, "  function whyView("),
+          "the page has limitLinkWords, openLimit and a YOUR LIMITS block in WHY")
+    check("'YOUR LIMITS'" in cut_function(text, "  function reasonView(") and "limitLinks([r], null)" in cut_function(text, "  function reasonView("),
+          "a reason laid out for an interrupt or the war diary has the same YOUR LIMITS block")
+    check(not any(re.search(r"\.exec\(|\.test\(|\.match\(|\.replace\(", b) for b in blocks) and all("worked" not in b and "binding" not in b and "would_change" not in b for b in blocks),
+          "the code that makes the links reads the engine's `limits` list: no pattern is run on a reason's words")
+    check("readPlan(found.root, found.task !== found.root ? found.task : null, { kind: l.kind })" in blocks[1] and "readOrders({ n: l.intent" in blocks[1] and "see(" in blocks[1]
+          and "openOrder(l.intent)" in blocks[1] and "Tear up this order to read about your other order?" in blocks[1] and "isDraftNo(l.intent)" in blocks[1],
+          "a link goes to the draft's LIMITS part, THE ORDERS, the base's card, the plan of an order in force at that limit, or the order's entry under SIGNED, and asks before tearing up a draft")
+    code = "function nm(h) { return M.names[h] || h; }\n" + words + r"""
+function main() {
+  const kinds = ['forces', 'source', 'area', 'targets', 'risk', 'priority', 'protected', 'not_before', 'wait_for', 'after', 'knowledge'], out = {};
+  kinds.forEach(k => { out[k] = [limitLinkWords(k, true), limitLinkWords(k, false)]; });
+  out.reserve = [limitLinkWords('reserve', true, 1), limitLinkWords('reserve', true, 'base:1')];
+  out.state = [limitInState('forces', { forces: { none_of: ['ships'] } }), limitInState('forces', { forces: {} }), limitInState('forces', null), limitInState('source', { forces: { source: 3 } }),
+               limitInState('area', { area: [] }), limitInState('priority', { priority: 0 }), limitInState('protected', { protected: [] }), limitInState('targets', { targets: { kinds: ['carrier'] } })];
+  return out;
+}
+"""
+    got = run_in_node(code, None)
+    want = {"forces": ["the forces you named", "the forces it may use"], "source": ["the base it is supplied from", "a base to supply it from"],
+            "area": ["the waters you kept it within", "waters to keep it within"], "targets": ["what it strikes first", "what it strikes first"],
+            "risk": ["the risk you set", "its risk"], "priority": ["its rank", "its rank"], "protected": ["the ships you protected", "ships to protect"],
+            "not_before": ["the day it waits for", "a day to wait for"], "wait_for": ["what it waits for", "a force or unit to wait for"],
+            "after": ["the order it waits on", "an order to wait on"], "knowledge": ["what must be known first", "what must be known first"],
+            "reserve": ["the reserve kept at Lunga", "the reserve kept at Lunga"]}
+    check(all(got[k] == v for k, v in want.items()), "each kind of limit is said in the table's words, set and not set, and a reserve by the base's name")
+    check(not any(re.search(r"limit|intent|\d", w, re.I) for v in want.values() for w in v), "and none of those words says \"limit\", \"intent\" or a number")
+    check(got["state"] == [True, False, False, True, False, True, False, True], f"whether a limit is set is read from the command state's own shape ({got['state']})")
+    # through the bridge: the engine's reasons, with what each carries
+    heads = ["commas", "cleanName", "orderWords", "plainCounts", "plainWords", "nameText", "intentWords", "reasonWords", "tidyWorked", "paperPre", "shareWords", "tiredBit",
+             "paperText", "plainFact", "cautionPart", "cautionWords", "cautionTexts", "cutTop", "sayIntent", "newTask", "taskHex", "labelPlain", "arcsFrom", "finishTask",
+             "threatsOf", "proposedTree", "draftTop", "readingTop"]
+    code = "const config = { islands: [{ number: 1, name: 'New Guinea' }] }; let hexRaw = false, PAPER_TASKS = null; M.forces = [{ task_force: { handle: 'task_force:1', name: 'Task Force 17' } }]; M.bases = []; M.enemyBases = []; M.names['task_force:1'] = 'Task Force 17'; M.names['base:1'] = 'Port Moresby';\n"
+    code += "function dateOf() { return ''; } function num(h) { return parseInt(String(h).split(':')[1], 10); }\n" + re.search(r"  var WORD = .*\n", text).group(0)
+    code += "".join(cut_function(text, f"  function {h}(") + "\n" for h in heads)
+    code += r"""
+function main(input) {
+  const w = input.with_change, pr = { tree: w.tree, would_hand_in: w.would_hand_in, stations: null, reason: w.reason }, e = [input.shown, input.end];
+  const top = draftTop(e, input), root = proposedTree(top, {}, pr), all = [root], kept = [];
+  for (let i = 0; i < all.length; i++) { all[i].kids.forEach(k => all.push(k)); }
+  all.forEach(t => t.reasons.forEach(r => (r.limits || []).forEach(l => kept.push(l))));
+  return { kept: kept, tasks: all.length, number: top.number };
+}
+"""
+
+    def reasons_of(answer):
+        w = answer["with_change"]
+        found = [("the reason", w.get("reason"))]
+        found += [("a reason of no order", r) for r in (w.get("would_hand_in") or {}).get("no_orders") or []]
+        found += [("an order's reason", o.get("reason")) for o in (w.get("would_hand_in") or {}).get("orders") or []]
+        found += [("a task's reason", s.get("reason")) for s in (w.get("tree") or {}).get("sub_intents") or []]
+        return [(k, r) for k, r in found if isinstance(r, dict)]
+
+    check(begin(bridge, "coral-sea", "person", "engine") == {"ok": True}, "begun: the Coral Sea, the person Allied")
+    person = Person(bridge.table)
+    end = {"intent_kind": "deny", "hex": [-18, -1], "distance": 4}
+    attempts = [[{"limit": "forces", "none_of": ["ships", "air_groups"]}], [{"limit": "forces", "none_of": ["air_groups"]}]]
+    answer, mine = None, []
+    for limits in attempts:
+        answer = person.call("preview", dict(command="set_intent", limits=limits, **end))["ok"]
+        check(answer.get("status") != "refused" and answer.get("with_change"), f"the deny is read with {limits[0]['none_of']} none")
+        mine = [l for _, r in reasons_of(answer) for l in (r.get("limits") or []) if l.get("kind") == "forces" and l.get("intent") == answer["intent"]]
+        if mine:
+            break
+    every = reasons_of(answer)
+    carrying = [(k, [l.get("kind") for l in r.get("limits") or []]) for k, r in every if r.get("limits")]
+    kinds = sorted({l.get("kind") for _, r in every for l in r.get("limits") or []})
+    print(f"   found: {len(carrying)} of {len(every)} reasons carry limits; kinds {kinds}; the draft is order {answer['intent']}", flush=True)
+    check(mine, "the engine's reasons name the forces limit on the draft's own number: {kind: forces, intent: <the draft>}")
+    check(all(set(l) <= {"kind", "intent", "base"} for _, r in every for l in r.get("limits") or []), "every limit a reason carries is {kind, intent} or {kind: reserve, base}")
+    seen = run_in_node(code, dict(answer, end=end))
+    check(seen["number"] == answer["intent"] and {"kind": "forces", "intent": answer["intent"]} in seen["kept"],
+          f"proposedTree keeps the forces limit in a task's reasons ({len(seen['kept'])} limits over {seen['tasks']} tasks)")
+    check(post(bridge.table + "/new") == {"ok": True}, "the game is put away")
+    # the hold of Lunga: its reason, where it names no source, says which limit would give it one
+    check(begin(bridge, "eastern-solomons-five-days", "person", "engine") == {"ok": True}, "begun: the Eastern Solomons in five days, the person Allied")
+    person = Person(bridge.table)
+    lunga = [b["base"]["handle"] for b in person.call("list_bases")["ok"]["bases"] if b["base"]["name"] == "Lunga"]
+    check(lunga, "Lunga is among the side's bases")
+    held = person.call("preview", {"command": "set_intent", "intent_kind": "hold", "base": int(lunga[0].split(":")[1])})["ok"]
+    check(held.get("status") != "refused" and held.get("with_change"), "the hold of Lunga is read")
+    every = reasons_of(held)
+    sources = [(k, l) for k, r in every for l in r.get("limits") or [] if l.get("kind") == "source"]
+    print(f"   found: the hold of Lunga: {sum(1 for _, r in every if r.get('limits'))} of {len(every)} reasons carry limits; "
+          f"kinds {sorted({l.get('kind') for _, r in every for l in r.get('limits') or []})}; source on {[k for k, _ in sources]}", flush=True)
+    check(sources and all(l.get("intent") == held["intent"] for _, l in sources), "the hold with no source: its reason carries {kind: source, intent: <the hold>}")
+    check(post(bridge.table + "/new") == {"ok": True}, "the game is put away")
+
+
 def midway_on_its_chart(bridge):
     """What the Midway game gives the page that the old map's games did not, and
     that the page words as it should (the mends of "Table: Midway on its own chart").
@@ -1738,6 +1838,7 @@ def main():
             the_limits_on_the_paper(bridge)
             limits_in_force(bridge)
             the_orders_paper(bridge)
+            reason_limits_as_links(bridge)
             midway_on_its_chart(bridge)
             person_against_agent(bridge, args.hold)
             seat_mcp(bridge)
