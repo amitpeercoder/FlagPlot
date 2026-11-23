@@ -669,3 +669,7 @@ path = "scenario_128_submarines_against_warships.rs"
 [[test]]
 name = "scenario_129_submarines_the_staff_and_the_patrol"
 path = "scenario_129_submarines_the_staff_and_the_patrol.rs"
+
+[[test]]
+name = "boats_in_the_midway_games"
+path = "boats_in_the_midway_games.rs"

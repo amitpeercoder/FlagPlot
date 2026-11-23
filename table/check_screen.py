@@ -897,6 +897,15 @@ def the_screen(bridge):
     check(all("file" not in p for s in listed for p in s["pairings"]), "the list given to the screen names no file")
     check([len(s["pairings"]) for s in listed] == [4, 7, 7, 7, 7],
           "the Eastern Solomons offers 4 games, the Coral Sea 7, Midway 7, the five-day Eastern Solomons 7 and the 39 days 7")
+    # Midway has its submarines (decision 0225, the designer's answer): one game of the battle, and it plays the copies with
+    # boats in table-boats/; its directives name each side's boats in the situation's last sentence.
+    midway = {e["id"]: e for e in json.load(open(os.path.join(HERE, "scenarios.json")))["scenarios"]}["midway"]
+    check(midway["name"] == "Midway" and sorted({p["file"] for p in midway["pairings"]}) == ["data/scenarios/table-boats/01" + l + "_midway_submarines.toml" for l in "bcd"],
+          "Midway is one game, named Midway, and its pairings play the copies with submarines of files b, c and d")
+    for side, words in (("allied", "Four of our submarines are on station"), ("japanese", "The submarine I-168 is off Midway")):
+        situation = json.load(open(os.path.join(os.path.dirname(HERE), midway["directives"][side])))["directives"][0]["parts"][0]["text"]
+        check(situation[-1].startswith(words) and sum("submarine" in t for t in situation) == 1,
+              f"Midway: the {side} directive's situation ends with the one sentence naming the side's boats")
     seat = get(bridge.table + "/agent?side=allied&scenario=guadalcanal-39-days")["ok"]
     program = os.path.join(HERE, "seat_mcp.py")
     check(seat["claude"].startswith("claude mcp add flag-plot-allied -- python3 " + program + " --url " + bridge.root + "/seat/"),
@@ -1211,6 +1220,17 @@ def midway_on_its_chart(bridge):
     carriers = person.call("get_entity", {"handle": "task_force:1"})["ok"]["entity"]["ships"]
     check(any(" (" in str(s.get("class")) for s in carriers), "a Japanese carrier's class carries a note in brackets")
     check(".replace(/ \\([^()]*\\)/g, '')" in page, "and the page names the class without it")
+    # Midway's submarines (decision 0225): each seat has its own boats and none of the other's, and a boat takes a station order.
+    check(begin(bridge, "midway", "person", "engine") == {"ok": True}, "Midway begun again, the person Allied, for the boats")
+    person = Person(bridge.table)
+    boats = person.call("list_forces")["ok"].get("submarines", [])
+    check([(b["submarine"].get("name"), b["state"]) for b in boats] == [("USS Tambor", "on station"), ("USS Trout", "on station"), ("USS Nautilus", "on station"), ("USS Gato", "on station")],
+          f"the Allied seat has its four boats, each on station, and nothing of I-168 ({[b['submarine'] for b in boats]})")
+    order = person.call("issue_orders", {"orders": [{"unit": "submarine:3", "order": {"kind": "station", "hex": [5, -3]}}]})["ok"]
+    check(order["results"][0]["status"] == "queued", "a direct order gives a boat of Midway's a station")
+    check(begin(bridge, "midway", "engine", "person") == {"ok": True}, "Midway begun again, the person Japanese, for the boats")
+    boats = Person(bridge.table).call("list_forces")["ok"].get("submarines", [])
+    check([(b["submarine"].get("name"), b["state"]) for b in boats] == [("I-168", "on station")], "the Japanese seat has I-168 alone, on station")
     check("base_attacked_against: 'bombing of a base'" in page and "(n === 1 ? 'report' : 'reports')" in page,
           "the plot folds the rest of a kind of report under a plain name, not the event's own")
 
