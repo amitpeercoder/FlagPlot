@@ -12,6 +12,8 @@
     "day",
     "command",
     "shown",
+    "limits",
+    "shown_limits",
     "intent",
     "as_things_stand",
     "with_change",
@@ -32,7 +34,7 @@
       "const": "flagplot-agent"
     },
     "version": {
-      "const": 49
+      "const": 50
     },
     "kind": {
       "const": "preview"
@@ -51,6 +53,20 @@
     "shown": {
       "type": "string",
       "description": "The command in words."
+    },
+    "limits": {
+      "type": "array",
+      "description": "The limits given with a set_intent (decision 0222, rule 4), each a set_limit command as it would be queued, after the order, in the order given: the staff's reading is of the order with all of them. An empty list where none was given.",
+      "items": {
+        "$ref": "command_defs.schema.json#/$defs/command_body"
+      }
+    },
+    "shown_limits": {
+      "type": "array",
+      "description": "The words of each of the limits, in the same order. An empty list where none was given.",
+      "items": {
+        "type": "string"
+      }
     },
     "intent": {
       "type": [

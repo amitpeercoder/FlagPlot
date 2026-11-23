@@ -168,7 +168,7 @@
               "type": "string"
             },
             "level": {
-              "description": "The level that decided (decision 0120, 2): the addressee of the intent served, \"area\", {\"base\": n} (n the base's number) or {\"task_force\": n} (n the side's number of the task force; decisions 0124 and 0125). Left out where a reason has none.",
+              "description": "The level that decided (decision 0120, 2): the addressee of the intent served, \"area\", {\"base\": n} (n the base's number) or {\"task_force\": n} (n the side's number of the task force; decisions 0124 and 0125) or {\"air_group\": n} (n the side's number of the air group, for a setting of one group's). Left out where a reason has none.",
               "oneOf": [
                 {
                   "const": "area"
@@ -193,6 +193,18 @@
                   "additionalProperties": false,
                   "properties": {
                     "task_force": {
+                      "type": "integer"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "air_group"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "air_group": {
                       "type": "integer"
                     }
                   }

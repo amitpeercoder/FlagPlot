@@ -3009,7 +3009,7 @@ pub(crate) fn next_free_interrupt(view: &SideView<'_>, queued: &[CommandKind]) -
 const MADE_READY_LOST: &str = "nothing: in a supply plan stock aboard a ship stays aboard and is carried by its next run, and stock landed stays where it lies";
 
 /// The note a preview ends with.
-const PREVIEW_NOTE: &str = "Nothing is changed by a preview. approve with {\"preview\": <n>} queues exactly this command. The preview is void once anything is queued or a day is resolved.";
+const PREVIEW_NOTE: &str = "Nothing is changed by a preview. approve with {\"preview\": <n>} queues exactly this command and the limits given with it. The preview is void once anything is queued or a day is resolved.";
 
 /// The words for the commands in `commands`, in the side's numbers.
 pub(crate) fn commands_text(view: &SideView<'_>, commands: &[CommandKind]) -> Vec<String> {
@@ -3335,13 +3335,15 @@ fn other_plans_give_up(
 /// of the world as the coming day will find it: `as_is` with the side's
 /// queued commands, and `with` the same and the command queued last. It is
 /// stored nowhere in the game. `number` is the preview's number among the
-/// side's own previews (decision 0172, 4).
+/// side's own previews (decision 0172, 4). `limits` are the limits given
+/// with a set_intent, taken in after it (decision 0222, rule 4).
 pub(crate) fn preview(
     number: u32,
     as_is: &SideView<'_>,
     with: &SideView<'_>,
     staff: &dyn Staff,
     request: &Request,
+    limits: &[Request],
 ) -> Value {
     let n = Names::new(with);
     let intent = previewed_intent(with, &request.kind);
@@ -3366,6 +3368,14 @@ pub(crate) fn preview(
             "day": with.day() + 1,
             "command": command_json(&n, &request.kind, Some(request)),
             "shown": command_text(&n, &request.kind, Some(request)),
+            "limits": limits
+                .iter()
+                .map(|l| command_json(&n, &l.kind, Some(l)))
+                .collect::<Vec<_>>(),
+            "shown_limits": limits
+                .iter()
+                .map(|l| command_text(&n, &l.kind, Some(l)))
+                .collect::<Vec<_>>(),
             "intent": intent.map(|i| i.raw()),
             "as_things_stand": now_json,
             "with_change": with_json,
