@@ -12,7 +12,7 @@
 //!
 //! | `kind` | keys |
 //! | --- | --- |
-//! | `set_intent` | `intent`, `base`, and `intent_kind`: `"keep_supplied"` (the default when absent, so a scenario written before the kinds reads as it did), which also takes `floor_days` and `interval_days` (optional), `"cover"` (cover `base` from the air) or `"hold"` (hold `base`), which take neither, `"neutralise"` (neutralise the enemy base `target`; takes `target` and no `base`) or `"raid"` (raid `target` from `base`; takes both), `"deny"` (deny the waters within `distance` whole hexes, 0 or more, of `hex` as `[q, r]`; takes `hex` and `distance` and no `base`), `"strike_ships"` (strike ships from `base`; takes `base`), `"search_waters"` (search the waters from `base`; takes `base`, and is the staff's to give, so the game refuses it as a root intent), `"stand_at"` (stand at `hex` as `[q, r]` with the task force `task_force`, decision 0124) or `"operate_carriers"` (operate the carrier force `task_force` from `hex`, decision 0125); each of those two takes `task_force` and `hex` and no `base`; `"ready_landing"` (ready a landing by the task force `task_force` at the coast hex `hex`, with optional `by_day`, a whole number from 1, decision 0141) takes those and no `base`; `"build_up"` (build up `base`, decision 0141) takes `base`, `wants`, a list of any of `"airfield"`, `"mend"`, `"defences"`, `"port"` and `"aircraft"` in order, each at most once, and `defences`, the points from 1 to 100, which is required when `"defences"` is a want and refused otherwise; `"take_place"` (take the hex of land `hex` as `[q, r]`, with optional `by_day`, a whole number from 1, decision 0142) takes those and no `base`, `task_force` or other key; `"control_island"` (control the island `island`, a number the scenario names in an `[[island]]` table, with optional `by_day`, a whole number from 1, decision 0151) takes those and no other key; `"bombard"` (bombard the enemy base `target` with the task force `task_force`, decision 0146) takes both and no `base`, `hex` or other key; `"patrol"` (patrol the waters within `distance` whole hexes, 0 or more, of `hex` as `[q, r]` with submarines, decision 0218, 11) takes `hex` and `distance` and no other key |
+//! | `set_intent` | `intent`, `base`, and `intent_kind`: `"keep_supplied"` (the default when absent, so a scenario written before the kinds reads as it did), which also takes `floor_days` and `interval_days` (optional), `"cover"` (cover `base` from the air) or `"hold"` (hold `base`), which take neither, `"neutralise"` (neutralise the enemy base `target`; takes `target` and no `base`) or `"raid"` (raid `target` from `base`; takes both), `"deny"` (deny the waters within `distance` whole hexes, 0 or more, of `hex` as `[q, r]`; takes `hex` and `distance` and no `base`), `"strike_ships"` (strike ships from `base`; takes `base`), `"search_waters"` (search the waters from `base`; takes `base`, and is the staff's to give, so the game refuses it as a root intent), `"stand_at"` (stand at `hex` as `[q, r]` with the task force `task_force`, decision 0124) or `"operate_carriers"` (operate the carrier force `task_force` from `hex`, decision 0125); each of those two takes `task_force` and `hex` and no `base`; `"ready_landing"` (ready a landing by the task force `task_force` at the coast hex `hex`, with optional `by_day`, a whole number from 1, decision 0141) takes those and no `base`; `"build_up"` (build up `base`, decision 0141) takes `base`, `wants`, a list of any of `"airfield"`, `"mend"`, `"defences"`, `"port"` and `"aircraft"` in order, each at most once, and `defences`, the points from 1 to 100, which is required when `"defences"` is a want and refused otherwise; `"take_place"` (take the hex of land `hex` as `[q, r]`, with optional `by_day`, a whole number from 1, decision 0142) takes those and no `base`, `task_force` or other key; `"control_island"` (control the island `island`, a number the scenario names in an `[[island]]` table, with optional `by_day`, a whole number from 1, decision 0151) takes those and no other key; `"bombard"` (bombard the enemy base `target` with the task force `task_force`, decision 0146) takes both and no `base`, `hex` or other key; `"patrol"` (patrol the waters within `distance` whole hexes, 0 or more, of `hex` as `[q, r]` with submarines, decision 0218, 11) takes `hex` and `distance` and no other key; `"destroy_force"` (destroy the force of the contact `contact`, the number the commander's picture gives it, which for a contact of the scenario is its place in the order the file gives them from 1, within `distance` whole hexes, 0 or more, with optional `search_only`, a boolean, false where left out, decision 0220) takes those and no other key |
 //! | `withdraw_intent` | `intent` |
 //! | `set_limit` | `limit` and its keys, below |
 //! | `set_leave` | `leave` (`"prepare"` or `"launch"`), `given` |
@@ -127,6 +127,9 @@ pub(crate) struct CommandSpec {
     contact: Option<u32>,
     /// Yes or no to a force's asking leave to pursue (`answer_pursuit`).
     allow: Option<bool>,
+    /// Whether an order to destroy a force is search only (`set_intent` of
+    /// `destroy_force`, decision 0220); false where left out.
+    search_only: Option<bool>,
 }
 
 impl CommandSpec {
@@ -187,6 +190,7 @@ impl CommandSpec {
         note(self.on.is_some(), "on");
         note(self.contact.is_some(), "contact");
         note(self.allow.is_some(), "allow");
+        note(self.search_only.is_some(), "search_only");
         keys
     }
 
@@ -217,6 +221,10 @@ impl CommandSpec {
                     &["intent", "intent_kind", "base"]
                 }
                 Some("deny" | "patrol") => &["intent", "intent_kind", "hex", "distance"],
+                // Decision 0220, R12.
+                Some("destroy_force") => {
+                    &["intent", "intent_kind", "contact", "distance", "search_only"]
+                }
                 Some("stand_at" | "operate_carriers") => {
                     &["intent", "intent_kind", "task_force", "hex"]
                 }
@@ -231,7 +239,7 @@ impl CommandSpec {
                 Some("raid") => &["intent", "intent_kind", "base", "target"],
                 Some(other) => {
                     return Err(format!(
-                        "{what} has intent_kind \"{other}\", which is not keep_supplied, cover, hold, neutralise, raid, deny, strike_ships, search_waters, stand_at, operate_carriers, ready_landing, build_up, take_place, control_island or bombard, or patrol"
+                        "{what} has intent_kind \"{other}\", which is not keep_supplied, cover, hold, neutralise, raid, deny, strike_ships, search_waters, stand_at, operate_carriers, ready_landing, build_up, take_place, control_island or bombard, or patrol, or destroy_force"
                     ))
                 }
             },
@@ -382,6 +390,15 @@ impl CommandSpec {
                             distance: need(self.distance, "distance")?,
                         }
                     }
+                    // Decision 0220, R12: the number of a contact in the
+                    // commander's picture (the contacts of a scenario are
+                    // numbered in the order the file gives them), the distance
+                    // in whole hexes, and search only, false where left out.
+                    Some("destroy_force") => IntentKind::DestroyForce {
+                        contact: need(self.contact, "contact")?,
+                        distance: need(self.distance, "distance")?,
+                        search_only: self.search_only.unwrap_or(false),
+                    },
                     Some("strike_ships") => IntentKind::StrikeShips {
                         base: BaseId::new(need(self.base, "base")?),
                     },
@@ -844,6 +861,13 @@ impl BelievedIntentSpec {
                     "{what} has intent_kind \"{name}\", which names a task force: a side cannot name a force of the enemy's, so a believed intent is of a kind that names only a base, a hex or an island"
                 ))
             }
+            // Decision 0220, R12: it names a contact of a commander's own
+            // picture, which a believed intent has none of.
+            Some("destroy_force") => {
+                return Err(format!(
+                    "{what} has intent_kind \"destroy_force\", which names a contact of the commander's own picture: a believed intent is of a kind that names only a base, a hex or an island"
+                ))
+            }
             Some(_) => {}
         }
         let enemy = match Side::from(self.side) {
@@ -902,6 +926,7 @@ impl BelievedIntentSpec {
             on: None,
             contact: None,
             allow: None,
+            search_only: None,
         };
         match command.build_kind(what)? {
             CommandKind::SetIntent { kind, .. } => Ok(kind),

@@ -610,6 +610,7 @@ impl Day<'_, '_> {
             run: None,
             rests_on: NoticeBasis::NoOrder(index),
             pursuit: None,
+            follow: None,
         });
     }
 }

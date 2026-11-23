@@ -52,6 +52,7 @@ use crate::ids::{
 use crate::orders::{Issuer, OrderKind};
 use crate::refdata::ShipKind;
 use crate::state::Side;
+use crate::time::Pulse;
 use crate::view::SideView;
 
 // ---------------------------------------------------------------------------
@@ -189,6 +190,17 @@ pub enum IntentKind {
     /// date. A commander states it as a root; the staff cannot form it and
     /// nothing stands under it. Added at the end.
     Patrol { hex: Hex, distance: u32 },
+    /// Destroy the force of contact `contact` of the commander's picture
+    /// (decision 0220, 1): a deny whose centre is read from the force it
+    /// follows, within `distance` hexes of it. Addressed to the area, and a
+    /// root. With `search_only` it forms the tasks to search waters and no
+    /// other. The staff never forms it. The centre is not in the kind: it is
+    /// the hex the order keeps ([`Followed`]). Added at the end.
+    DestroyForce {
+        contact: u32,
+        distance: u32,
+        search_only: bool,
+    },
 }
 
 /// One thing a "build up a base" task wants (decision 0141, 8 and 10).
@@ -326,6 +338,7 @@ impl IntentKind {
             IntentKind::Bombard { .. } => 14,
             IntentKind::ControlIsland { .. } => 15,
             IntentKind::Patrol { .. } => 16,
+            IntentKind::DestroyForce { .. } => 17,
         }
     }
 
@@ -348,6 +361,7 @@ impl IntentKind {
             IntentKind::Bombard { .. } => "bombard",
             IntentKind::ControlIsland { .. } => "control_island",
             IntentKind::Patrol { .. } => "patrol",
+            IntentKind::DestroyForce { .. } => "destroy_force",
         }
     }
 
@@ -366,6 +380,7 @@ impl IntentKind {
             IntentKind::Neutralise { target } | IntentKind::Bombard { target, .. } => Some(target),
             IntentKind::Deny { .. }
             | IntentKind::Patrol { .. }
+            | IntentKind::DestroyForce { .. }
             | IntentKind::StandAt { .. }
             | IntentKind::OperateCarriers { .. }
             | IntentKind::ReadyLanding { .. }
@@ -381,6 +396,7 @@ impl IntentKind {
             IntentKind::Neutralise { .. }
             | IntentKind::Deny { .. }
             | IntentKind::Patrol { .. }
+            | IntentKind::DestroyForce { .. }
             | IntentKind::StandAt { .. }
             | IntentKind::OperateCarriers { .. }
             | IntentKind::ReadyLanding { .. }
@@ -466,6 +482,19 @@ impl IntentKind {
         }
     }
 
+    /// What an order to destroy a force names (decision 0220): the contact's
+    /// number, the distance and whether it is search only.
+    pub const fn followed(self) -> Option<(u32, u32, bool)> {
+        match self {
+            IntentKind::DestroyForce {
+                contact,
+                distance,
+                search_only,
+            } => Some((contact, distance, search_only)),
+            _ => None,
+        }
+    }
+
     /// Whether a commander may state an intent of this kind as a root
     /// (decision 0123, 11): every kind but "search waters", which stands
     /// under "deny an area" only.
@@ -495,6 +524,7 @@ impl IntentKind {
             | IntentKind::Neutralise { .. }
             | IntentKind::Deny { .. }
             | IntentKind::Patrol { .. }
+            | IntentKind::DestroyForce { .. }
             | IntentKind::TakePlace { .. }
             | IntentKind::ControlIsland { .. } => Addressee::Area,
             IntentKind::Cover { base }
@@ -524,6 +554,13 @@ impl IntentKind {
             (
                 IntentKind::StrikeShips { .. } | IntentKind::SearchWaters { .. },
                 IntentKind::Deny { .. },
+            ) => true,
+            // Decision 0220, 2: no stand task stands under it.
+            (
+                IntentKind::StrikeShips { .. }
+                | IntentKind::SearchWaters { .. }
+                | IntentKind::OperateCarriers { .. },
+                IntentKind::DestroyForce { .. },
             ) => true,
             (IntentKind::StrikeShips { base }, IntentKind::Hold { base: held }) => base == held,
             // Decision 0124, 7: at the centre of the waters. Under a hold,
@@ -1735,6 +1772,125 @@ pub struct CommandState {
     /// of supply (decision 0228, amended on review, A). Set when the game is
     /// made and never changed by a rule or a command. Added at the end.
     pub staff_chooses_sources: bool,
+    /// What each order to destroy a force keeps of the force it follows
+    /// (decision 0220, 5): by order. Written at the giving by intake and at
+    /// a notice by the engine; removed when the order is withdrawn. Added at
+    /// the end.
+    pub followed: BTreeMap<IntentId, Followed>,
+}
+
+/// What an order to destroy a force keeps of the force it follows (decision
+/// 0220, 5 and R3): the contact's number in the commander's picture, the hex
+/// and the day and pulse of its last report, whether it was taken for a
+/// carrier, and whether the order is lost-contact.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct Followed {
+    /// The number of the contact followed, in the commander's picture.
+    pub contact: u32,
+    /// The hex of the last report kept: the order's centre.
+    pub hex: Hex,
+    /// The day and pulse of that report.
+    pub day: u32,
+    pub pulse: Pulse,
+    /// Whether the force was taken for a carrier, when the order was given or
+    /// last took a contact (the sort, rule 7).
+    pub carrier: bool,
+    /// Whether the order is lost-contact (rule 9).
+    pub lost: bool,
+}
+
+/// What a notice of following says (decision 0220, 8 and R3): the order, the
+/// contact and the report.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct FollowNotice {
+    /// The order.
+    pub intent: IntentId,
+    /// Follows: the contact followed now. Lost and ended: the contact last
+    /// followed.
+    pub contact: u32,
+    /// Follows: the number followed before, where the number changed (a
+    /// taking); `None` where the same contact was refreshed. `None` for lost
+    /// and ended.
+    pub taken_from: Option<u32>,
+    /// Follows, at a taking: the contact taken is of the other sort (a
+    /// carrier for a force that was not, or the other way). False otherwise.
+    pub other_sort: bool,
+    /// The report: hex, day and pulse (for lost and ended, the report kept).
+    pub hex: Hex,
+    pub day: u32,
+    pub pulse: Pulse,
+    /// What the report says: the count and the kind; whether it is a carrier.
+    pub ship_count: u32,
+    pub kind: ShipKind,
+    pub carrier: bool,
+}
+
+/// The absolute number of a pulse: three to a day, night 0, morning 1,
+/// afternoon 2 (decision 0220, R2).
+fn absolute_pulse(day: u32, pulse: Pulse) -> u64 {
+    3 * u64::from(day)
+        + match pulse {
+            Pulse::Night => 0,
+            Pulse::Morning => 1,
+            Pulse::Afternoon => 2,
+        }
+}
+
+/// The day and pulse of the last report of a contact of age `age` pulses, at
+/// a boundary whose next pulse to be played is `next_pulse` of `next_day`
+/// (decision 0220, R2): the pulse `age + 1` before that one. At dusk of day
+/// N the next pulse is the night of day N; inside day N after its night it is
+/// the morning of day N. So a contact a side starts with, at age 0 at the
+/// dusk of day 1, is read as one reported in the afternoon of day 0. A report
+/// that would be before the night of day 0 is read as the night of day 0.
+pub fn report_pulse(next_day: u32, next_pulse: Pulse, age: u32) -> (u32, Pulse) {
+    let next = absolute_pulse(next_day, next_pulse);
+    let back = u64::from(age) + 1;
+    let at = next.saturating_sub(back);
+    let day = u32::try_from(at / 3).unwrap_or(u32::MAX);
+    let pulse = match at % 3 {
+        0 => Pulse::Night,
+        1 => Pulse::Morning,
+        _ => Pulse::Afternoon,
+    };
+    (day, pulse)
+}
+
+/// The hours a pulse starts at in its day (decision 0220, R4): the night 12
+/// hours from hour 0, the morning 6 from hour 12, the afternoon 6 from hour
+/// 18.
+const fn pulse_start_hour(pulse: Pulse) -> u64 {
+    match pulse {
+        Pulse::Night => 0,
+        Pulse::Morning => 12,
+        Pulse::Afternoon => 18,
+    }
+}
+
+/// The hours a pulse lasts (decision 0220, R4).
+const fn pulse_hours(pulse: Pulse) -> u64 {
+    match pulse {
+        Pulse::Night => 12,
+        Pulse::Morning | Pulse::Afternoon => 6,
+    }
+}
+
+/// How far a contact may have moved between two reports, in whole hexes
+/// (decision 0220, R4): the hours from the start of the pulse of report A to
+/// the end of the pulse of report B, at `knots`, cut to whole hexes of 40
+/// nautical miles. Zero where B is not after A.
+pub fn report_distance_hexes(
+    a_day: u32,
+    a_pulse: Pulse,
+    b_day: u32,
+    b_pulse: Pulse,
+    knots: u32,
+) -> u32 {
+    let start = 24 * u64::from(a_day) + pulse_start_hour(a_pulse);
+    let end = 24 * u64::from(b_day) + pulse_start_hour(b_pulse) + pulse_hours(b_pulse);
+    let hours = end.saturating_sub(start);
+    let hexes = hours * u64::from(knots) / 40;
+    u32::try_from(hexes).unwrap_or(u32::MAX)
 }
 
 /// The pattern the side's staff places the boats of a patrol in (decision
@@ -2177,10 +2333,24 @@ impl CommandState {
     /// launch is given (a side with no commander is given both leaves), else
     /// ask.
     pub fn pursue_read_up(&self, intent: IntentId) -> (PursueLeave, Option<IntentId>) {
-        match self
-            .up_the_tree(intent)
-            .find_map(|on| self.pursue_leaves.get(&on.id).map(|leave| (*leave, on.id)))
-        {
+        // Decision 0220, 2 and 3: an order to destroy a force with no leave set
+        // on it reads "go" ("stay" where search only) and stops the walk.
+        match self.up_the_tree(intent).find_map(|on| {
+            self.pursue_leaves
+                .get(&on.id)
+                .map(|leave| (*leave, on.id))
+                .or(match on.kind {
+                    IntentKind::DestroyForce { search_only, .. } => Some((
+                        if search_only {
+                            PursueLeave::Stay
+                        } else {
+                            PursueLeave::Go
+                        },
+                        on.id,
+                    )),
+                    _ => None,
+                })
+        }) {
             Some((leave, on)) => (leave, Some(on)),
             None if self.leaves.launch => (PursueLeave::Go, None),
             None => (PursueLeave::Ask, None),
@@ -2391,6 +2561,7 @@ impl CommandState {
             && self.pursue_leaves.is_empty()
             && self.pursuits.is_empty()
             && self.pursuit_refusals.is_empty()
+            && self.followed.is_empty()
             && self.leaves == Leaves::default()
             && self.next_plan == 1
             && self.submarine_doctrine == SubmarineDoctrine::default()
@@ -2721,6 +2892,9 @@ pub enum CommandRefusal {
     /// A forces limit says `in_place` and names no task force (decision
     /// 0222, the architect's ruling I). Added at the end.
     InPlaceWithNoTaskForce,
+    /// An order to destroy a force names a number the commander's picture
+    /// does not hold, or none (0) (decision 0220, R12). Added at the end.
+    ContactNotHeld(u32),
 }
 
 impl core::fmt::Display for CommandRefusal {
@@ -2841,6 +3015,11 @@ impl core::fmt::Display for CommandRefusal {
             CommandRefusal::NoWatersFirstOn(id) => write!(
                 f,
                 "{id} is not a deny and does not stand beneath one: only there may the waters come first"
+            ),
+            CommandRefusal::ContactNotHeld(0) => f.write_str("no contact is named"),
+            CommandRefusal::ContactNotHeld(number) => write!(
+                f,
+                "contact {number} is not held: the commander's picture holds no contact of that number"
             ),
         }
     }
@@ -3092,6 +3271,18 @@ fn write_intent_kind(f: &mut core::fmt::Formatter<'_>, kind: IntentKind) -> core
             write!(f, "deny the waters within {distance} hexes of {hex}")
         }
         IntentKind::Patrol { hex, distance } => f.write_str(&patrol_words(hex, distance)),
+        IntentKind::DestroyForce {
+            contact,
+            distance,
+            search_only,
+        } => {
+            let hexes = if distance == 1 { "hex" } else { "hexes" };
+            let verb = if search_only { "shadow" } else { "destroy" };
+            write!(
+                f,
+                "{verb} the force of contact {contact}, within {distance} {hexes}"
+            )
+        }
         IntentKind::StrikeShips { base } => write!(f, "strike ships from {base}"),
         IntentKind::SearchWaters { base } => write!(f, "search the waters from {base}"),
         IntentKind::StandAt { force, hex } => write!(f, "stand at {hex} with {force}"),
@@ -3494,6 +3685,16 @@ pub enum NoticeKind {
     /// A force's pursuit is ended (decision 0214, 12). Added at the end
     /// (decision 0214).
     PursuitEnded,
+    /// An order to destroy a force follows its contact, refreshed or taken
+    /// anew (decision 0220, 8 and R3): the notice's `follow` says. Only a
+    /// taking of the other sort may stop the clock. Added at the end.
+    Follows,
+    /// An order to destroy a force is lost-contact (decision 0220, 9). Handed
+    /// in once. Added at the end.
+    ContactLost,
+    /// An order to destroy a force has found nothing in `lost_contact_days`
+    /// and is ended (decision 0220, 10). Added at the end.
+    ForceNotFound,
 }
 
 impl NoticeKind {
@@ -3512,6 +3713,9 @@ impl NoticeKind {
             NoticeKind::AsksLeaveToPursue => 10,
             NoticeKind::Pursues => 11,
             NoticeKind::PursuitEnded => 12,
+            NoticeKind::Follows => 13,
+            NoticeKind::ContactLost => 14,
+            NoticeKind::ForceNotFound => 15,
         }
     }
 
@@ -3530,6 +3734,9 @@ impl NoticeKind {
             NoticeKind::AsksLeaveToPursue => "asks_leave_to_pursue",
             NoticeKind::Pursues => "pursues",
             NoticeKind::PursuitEnded => "pursuit_ended",
+            NoticeKind::Follows => "follows",
+            NoticeKind::ContactLost => "contact_lost",
+            NoticeKind::ForceNotFound => "force_not_found",
         }
     }
 
@@ -3548,6 +3755,9 @@ impl NoticeKind {
             NoticeKind::AsksLeaveToPursue,
             NoticeKind::Pursues,
             NoticeKind::PursuitEnded,
+            NoticeKind::Follows,
+            NoticeKind::ContactLost,
+            NoticeKind::ForceNotFound,
         ]
         .into_iter()
         .find(|kind| kind.name() == name)
@@ -3576,6 +3786,9 @@ pub struct StaffNotice {
     /// What a pursuit notice says (decision 0214): `Some` for the three
     /// pursuit kinds, `None` for the rest. Added at the end.
     pub pursuit: Option<PursuitNotice>,
+    /// What a notice of following says (decision 0220): `Some` for the three
+    /// kinds of following, `None` for the rest. Added at the end.
+    pub follow: Option<FollowNotice>,
 }
 
 /// What a pursuit notice says (decision 0214, 6): the force, the order it

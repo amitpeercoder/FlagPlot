@@ -424,8 +424,9 @@ use sim_core::view::SideView;
 /// spare, an empty pool of ships the staff is to find does not mark a plan
 /// failed, and a source the commander names is not refused for another
 /// order's draw on it. It gives the orders `supply-58` gave to a side without
-/// the key.
-pub const DOCTRINE_VERSION: &str = "supply-59";
+/// the key. `supply-60` adds decision 0220's order to destroy a force and
+/// gives the orders `supply-59` gave to a side that gives none.
+pub const DOCTRINE_VERSION: &str = "supply-60";
 
 /// The staff: the doctrine for keeping a base supplied (stage 1) and, after
 /// it, the air doctrine for holding a place and covering a base from the air

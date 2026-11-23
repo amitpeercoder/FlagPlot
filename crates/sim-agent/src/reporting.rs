@@ -373,6 +373,14 @@ fn matter_words(
         (NoticeKind::Ready, _) => format!("plan:{} is ready", plan.raw()),
         (NoticeKind::Late, _) => format!("plan:{} cannot be ready by its date", plan.raw()),
         (NoticeKind::Met, _) => format!("plan:{} has every want met", plan.raw()),
+        // 0220: staff/agent to fill.
+        (NoticeKind::Follows, _) => format!("plan:{} follows a force", plan.raw()),
+        (NoticeKind::ContactLost, _) => {
+            format!("plan:{} has lost the force it follows", plan.raw())
+        }
+        (NoticeKind::ForceNotFound, _) => {
+            format!("plan:{} has not found the force it follows", plan.raw())
+        }
     }
 }
 

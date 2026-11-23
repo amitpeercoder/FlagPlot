@@ -119,6 +119,10 @@ pub(crate) fn aim(view: &SideView<'_>, intent: &Intent) -> String {
         IntentKind::Deny { hex, distance } => waters_words(hex, distance),
         // Decision 0218, 11.
         IntentKind::Patrol { hex, distance } => sim_core::command::patrol_words(hex, distance),
+        // 0220: staff/agent to fill.
+        IntentKind::DestroyForce { contact, .. } => {
+            format!("destroy the force of contact {contact}")
+        }
         IntentKind::StrikeShips { base } => {
             format!("strike ships from {}", base_words(view, base))
         }

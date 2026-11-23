@@ -94,6 +94,7 @@ impl Out {
             run,
             rests_on,
             pursuit: None,
+            follow: None,
         });
     }
 

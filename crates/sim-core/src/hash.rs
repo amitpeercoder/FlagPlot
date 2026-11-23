@@ -287,7 +287,12 @@ const fn speed_code(speed: SpeedSetting) -> u8 {
 /// the commander's refusals, its submarine doctrine: the pattern's code (0
 /// for none, 1 `off_bases`, 2 `lines`) and whether it expects boats off its
 /// own bases (decision 0223, stage 0); version 59 adds after it whether the
-/// side's staff chooses its sources of supply (decision 0228, A).
+/// side's staff chooses its sources of supply (decision 0228, A); version 60
+/// adds after it each order's kept following (the count, then for each order
+/// its number, the contact followed, the hex, the day, the pulse's code, whether
+/// taken for a carrier and whether lost), the order to destroy a force as an
+/// intent kind (code 17: the contact, the distance, search only) and the
+/// notice kinds codes 13 to 15 (decision 0220).
 ///
 /// What is held apart until its day (decision 0195, 23) does not raise the
 /// version: it is hashed last, after the domain, and only where something is
@@ -298,7 +303,7 @@ const fn speed_code(speed: SpeedSetting) -> u8 {
 /// replacement men and each land unit's strength (decision 0197, 21), after
 /// the supply lines, only where a scenario gives a stream or an
 /// establishment.
-pub const STATE_VERSION: &[u8] = b"flagplot-state-v59";
+pub const STATE_VERSION: &[u8] = b"flagplot-state-v60";
 
 /// Names every field of the state, with no `..` in any pattern. It does
 /// nothing when it runs. It is here so that a field added to the state does
@@ -796,6 +801,7 @@ fn name_every_field(world: &World) {
                     expects_boats_off_own_bases: _,
                 },
             staff_chooses_sources: _,
+            followed,
         } = state;
         if let Some(Intent {
             id: _,
@@ -936,6 +942,18 @@ fn name_every_field(world: &World) {
             }
         }
         let _ = pursuit_refusals.iter().next();
+        if let Some((
+            _,
+            crate::command::Followed {
+                contact: _,
+                hex: _,
+                day: _,
+                pulse: _,
+                carrier: _,
+                lost: _,
+            },
+        )) = followed.iter().next()
+        {}
     }
     // Each command's post (decisions 0134 to 0137), hashed after the command
     // states.
@@ -1063,6 +1081,11 @@ fn name_intent_kind(kind: IntentKind) {
         | IntentKind::Patrol {
             hex: _,
             distance: _,
+        }
+        | IntentKind::DestroyForce {
+            contact: _,
+            distance: _,
+            search_only: _,
         } => {}
     }
 }
@@ -1172,6 +1195,16 @@ fn hash_intent_kind(h: &mut StateHasher, kind: IntentKind) {
             h.i32(hex.q);
             h.i32(hex.r);
             h.u32(distance);
+        }
+        // Decision 0220, 1: the contact, the distance, then search only.
+        IntentKind::DestroyForce {
+            contact,
+            distance,
+            search_only,
+        } => {
+            h.u32(contact);
+            h.u32(distance);
+            h.u8(u8::from(search_only));
         }
     }
 }
@@ -1745,6 +1778,19 @@ fn hash_command_state(h: &mut StateHasher, state: &CommandState) {
     // Decision 0228, A: whether the side's staff chooses its sources of
     // supply, after the submarine doctrine. Version 59.
     h.u8(u8::from(state.staff_chooses_sources));
+    // Decision 0220, 5: what each order to destroy a force keeps, after
+    // that, by order. Version 60.
+    h.count(state.followed.len());
+    for (intent, kept) in &state.followed {
+        h.u32(intent.raw());
+        h.u32(kept.contact);
+        h.i32(kept.hex.q);
+        h.i32(kept.hex.r);
+        h.u32(kept.day);
+        h.u64(kept.pulse.code());
+        h.u8(u8::from(kept.carrier));
+        h.u8(u8::from(kept.lost));
+    }
 }
 
 /// Hashes where an interrupt stands: armed, the day it last fired,

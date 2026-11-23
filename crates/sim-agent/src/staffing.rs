@@ -629,6 +629,7 @@ fn kind_json(n: &Names<'_>, kind: IntentKind) -> Value {
         | IntentKind::Raid { .. }
         | IntentKind::Deny { .. }
         | IntentKind::Patrol { .. }
+        | IntentKind::DestroyForce { .. } // 0220: staff/agent to fill
         | IntentKind::StrikeShips { .. }
         | IntentKind::SearchWaters { .. }
         | IntentKind::StandAt { .. }
@@ -1735,6 +1736,10 @@ fn task_words(view: &SideView<'_>, kind: IntentKind) -> String {
         }
         // Decision 0218, 11.
         IntentKind::Patrol { hex, distance } => sim_core::command::patrol_words(hex, distance),
+        // 0220: staff/agent to fill.
+        IntentKind::DestroyForce { contact, .. } => {
+            format!("destroy the force of contact {contact}")
+        }
         IntentKind::StrikeShips { base } => {
             format!("strike ships from {}", base_words(view, base))
         }

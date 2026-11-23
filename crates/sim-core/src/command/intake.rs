@@ -16,12 +16,14 @@
 use std::borrow::Cow;
 use std::collections::BTreeMap;
 
+use crate::belief::Contact;
 use crate::command::{
-    Addressee, Amendment, AmendmentChange, Awaited, Baseline, Command, CommandKind, CommandRefusal,
-    CommandState, Commitment, ForcesLimit, Hold, HoldMaker, HoldTarget, Intent, IntentKind,
-    IntentLimits, InterruptCondition, InterruptRef, InterruptSetting, InterruptStatus, Knowledge,
-    Leave, Limit, Maker, NoticeBasis, NoticeKind, Plan, PlanId, PlanOutcome, PlanState, Pursuit,
-    PursuitBy, Reason, Run, SetInterrupt, StaffDecisions, StaffNotice, Staffs, StandingSubject,
+    report_pulse, Addressee, Amendment, AmendmentChange, Awaited, Baseline, Command, CommandKind,
+    CommandRefusal, CommandState, Commitment, FollowNotice, Followed, ForcesLimit, Hold, HoldMaker,
+    HoldTarget, Intent, IntentKind, IntentLimits, InterruptCondition, InterruptRef,
+    InterruptSetting, InterruptStatus, Knowledge, Leave, Limit, Maker, NoticeBasis, NoticeKind,
+    Plan, PlanId, PlanOutcome, PlanState, Pursuit, PursuitBy, Reason, Run, SetInterrupt,
+    StaffDecisions, StaffNotice, Staffs, StandingSubject,
 };
 use crate::events::{Cause, EventKind};
 use crate::fixed::Fixed;
@@ -29,8 +31,11 @@ use crate::ids::{
     AirGroupId, BaseId, EntityRef, EventId, IntentId, LandUnitId, ShipId, SubmarineId,
 };
 use crate::orders::{AirGroupOrder, BaseOrder, Issuer, OrderKind, OrderRequest, RejectReason};
+use crate::pictures::CommandRef;
+use crate::refdata::ShipKind;
 use crate::state::{AirGroupLocation, ShipLocation, Side};
-use crate::world::World;
+use crate::time::Pulse;
+use crate::world::{DayInHand, World};
 
 impl World {
     /// Step 1 of the day: takes in the commander's commands handed in for
@@ -109,6 +114,44 @@ impl World {
                 taken
             }
         }
+    }
+
+    /// The contact of that number in the commander's picture of `side`: the
+    /// area command's where the side has command levels on, else the side's
+    /// own belief (decision 0220, 12). `None` for 0 and for a number not
+    /// held.
+    pub(crate) fn commander_contact(&self, side: Side, number: u32) -> Option<&Contact> {
+        if number == 0 {
+            return None;
+        }
+        self.picture(side, CommandRef::Area)
+            .contacts()
+            .find(|contact| contact.id.raw() == number)
+    }
+
+    /// What an order to destroy a force keeps when it is given, read from the
+    /// commander's picture (decision 0220, 5 and R2): the contact, its hex,
+    /// the day and pulse of its last report from its age at the pulse next to
+    /// be played, and whether it was taken for a carrier.
+    fn kept_at_giving(&self, side: Side, number: u32, day: u32) -> Option<Followed> {
+        let contact = self.commander_contact(side, number)?;
+        let (next_day, next_pulse) = match self.day_in_hand {
+            Some(DayInHand {
+                day,
+                next_pulse: Some(pulse),
+                ..
+            }) => (day, pulse),
+            _ => (day, Pulse::Night),
+        };
+        let (report_day, report_pulse) = report_pulse(next_day, next_pulse, contact.age_pulses);
+        Some(Followed {
+            contact: number,
+            hex: contact.estimated_hex,
+            day: report_day,
+            pulse: report_pulse,
+            carrier: contact.estimated_kind == ShipKind::Carrier,
+            lost: false,
+        })
     }
 
     /// The side's own ship `ship`: on the map, or held apart for the side
@@ -568,7 +611,20 @@ impl World {
                 }
                 // "Search waters" stands under "deny an area" only (decision
                 // 0123, 11); then the kind itself.
-                self.check_root_intent(side, kind)
+                self.check_root_intent(side, kind)?;
+                // An order to destroy a force names a contact the
+                // commander's picture holds (decision 0220, R12); one the
+                // order already follows may be set again with other figures.
+                if let IntentKind::DestroyForce { contact, .. } = kind {
+                    let already = state
+                        .followed
+                        .get(intent)
+                        .is_some_and(|kept| kept.contact == *contact);
+                    if !already && self.commander_contact(side, *contact).is_none() {
+                        return Err(CommandRefusal::ContactNotHeld(*contact));
+                    }
+                }
+                Ok(())
             }
             CommandKind::WithdrawIntent { intent } => {
                 let found = self.in_force_intent(side, *intent)?;
@@ -1290,7 +1346,24 @@ impl World {
         let mut follow_ups = Vec::new();
         match kind {
             CommandKind::SetIntent { intent, kind } => {
+                // An order to destroy a force keeps its report from the
+                // commander's picture at the giving, or where the contact
+                // named changed (decision 0220, 5).
+                let kept = match kind {
+                    IntentKind::DestroyForce { contact, .. }
+                        if self.command[&side]
+                            .followed
+                            .get(intent)
+                            .is_none_or(|kept| kept.contact != *contact) =>
+                    {
+                        self.kept_at_giving(side, *contact, day)
+                    }
+                    _ => None,
+                };
                 let state = self.command.get_mut(&side).expect("side has command state");
+                if let Some(kept) = kept {
+                    state.followed.insert(*intent, kept);
+                }
                 // The plan the change falls on, if the intent exists.
                 let existing_plan = state.intents.get(intent).map(|existing| existing.plan);
                 match existing_plan {
@@ -1343,48 +1416,7 @@ impl World {
             }
             CommandKind::WithdrawIntent { intent } => {
                 let state = self.command.get_mut(&side).expect("side has command state");
-                // Everything beneath it is withdrawn the same day, each with
-                // its own event, caused by this command's (decision 0117, 6).
-                for below in state.descendants_in_force(*intent) {
-                    let found = state.intents.get_mut(&below).expect("intent exists");
-                    found.withdrawn_day = Some(day);
-                    let parent = found.parent.unwrap_or(*intent);
-                    let below_plan = found.plan;
-                    follow_ups.push(EventKind::IntentWithdrawn {
-                        side,
-                        intent: below,
-                        parent,
-                    });
-                    // A take under an island owns its plan (decision 0151,
-                    // 9): it ends with the take, as a root's does.
-                    if let Some(event) = end_own_plan(state, side, below, below_plan) {
-                        follow_ups.push(event);
-                    }
-                }
-                let found = state.intents.get_mut(intent).expect("intent exists");
-                found.withdrawn_day = Some(day);
-                let plan_id = found.plan;
-                let is_root = found.parent.is_none()
-                    || state
-                        .plans
-                        .get(&plan_id)
-                        .is_some_and(|p| p.intent == *intent);
-                let plan = state.plans.get_mut(&plan_id).expect("plan exists");
-                if is_root && !plan.state.ended() {
-                    let from = plan.state;
-                    let to = if from == PlanState::Released {
-                        PlanState::Complete
-                    } else {
-                        PlanState::Cancelled
-                    };
-                    plan.state = to;
-                    follow_ups.push(EventKind::PlanStateChanged {
-                        side,
-                        plan: plan_id,
-                        from,
-                        to,
-                    });
-                }
+                follow_ups.extend(withdraw_tree(state, day, side, *intent));
             }
             CommandKind::SetLimit(limit) => {
                 if let Limit::Reserve {
@@ -1811,6 +1843,7 @@ impl World {
                         run: notice.run,
                         intent,
                         pursuit: notice.pursuit,
+                        follow: notice.follow,
                     },
                     reason.map(|id| Cause::Event(*id)).into_iter().collect(),
                     None,
@@ -1835,6 +1868,12 @@ impl World {
                         }
                     }
                 }
+                // What an order to destroy a force keeps, written on its
+                // notice (decision 0220, 8 and R3), and its end (R8). The
+                // notice's event is the cause of what the end withdraws.
+                if let Some(follow) = notice.follow {
+                    self.apply_follow_notice(day, *side, notice.kind, follow, event);
+                }
                 notices.push((*notice, event));
             }
             if !notices.is_empty() {
@@ -1842,6 +1881,62 @@ impl World {
             }
         }
         recorded
+    }
+
+    /// Writes what a notice of following says on the order's kept state
+    /// (decision 0220, 8 and R3): "follows" keeps the report, and at a taking
+    /// (the number changed) the sort too and clears lost; "contact lost" sets
+    /// lost; "force not found" withdraws the order and everything beneath it,
+    /// each event caused by the notice's, and removes what was kept (R8).
+    fn apply_follow_notice(
+        &mut self,
+        day: u32,
+        side: Side,
+        kind: NoticeKind,
+        follow: FollowNotice,
+        notice_event: EventId,
+    ) {
+        let Some(state) = self.command.get_mut(&side) else {
+            return;
+        };
+        match kind {
+            NoticeKind::Follows => {
+                if let Some(kept) = state.followed.get_mut(&follow.intent) {
+                    kept.contact = follow.contact;
+                    kept.hex = follow.hex;
+                    kept.day = follow.day;
+                    kept.pulse = follow.pulse;
+                    if follow.taken_from.is_some() {
+                        kept.carrier = follow.carrier;
+                        kept.lost = false;
+                    }
+                }
+            }
+            NoticeKind::ContactLost => {
+                if let Some(kept) = state.followed.get_mut(&follow.intent) {
+                    kept.lost = true;
+                }
+            }
+            NoticeKind::ForceNotFound => {
+                let in_force = state.intents.get(&follow.intent).is_some_and(|found| {
+                    found.in_force() && matches!(found.kind, IntentKind::DestroyForce { .. })
+                });
+                if !in_force {
+                    return;
+                }
+                let follow_ups = withdraw_tree(state, day, side, follow.intent);
+                for follow_up in follow_ups {
+                    self.events.record(
+                        day,
+                        None,
+                        follow_up,
+                        vec![Cause::Event(notice_event)],
+                        None,
+                    );
+                }
+            }
+            _ => {}
+        }
     }
 
     /// Takes in one order a staff handed in, with its reason: refused
@@ -2034,6 +2129,65 @@ impl World {
 /// Ends the plan `plan` of `intent`, withdrawn beneath another, where the
 /// plan is its own (a take under an island, decision 0151, 9) and has not
 /// ended: complete where released, else cancelled, as a root's.
+/// Withdraws `intent` and everything beneath it in force the same day, each
+/// with its own event, and ends the plan a root owns (decision 0117, 6); what
+/// an order to destroy a force kept is removed with it (decision 0220, 5).
+/// One function for a commander's withdrawal and for the engine's, when the
+/// staff hands in that a force was not found (decision 0220, R8).
+fn withdraw_tree(
+    state: &mut CommandState,
+    day: u32,
+    side: Side,
+    intent: IntentId,
+) -> Vec<EventKind> {
+    let mut follow_ups = Vec::new();
+    // Everything beneath it is withdrawn the same day, each with its own
+    // event, caused by this command's (decision 0117, 6).
+    for below in state.descendants_in_force(intent) {
+        let found = state.intents.get_mut(&below).expect("intent exists");
+        found.withdrawn_day = Some(day);
+        let parent = found.parent.unwrap_or(intent);
+        let below_plan = found.plan;
+        follow_ups.push(EventKind::IntentWithdrawn {
+            side,
+            intent: below,
+            parent,
+        });
+        // A take under an island owns its plan (decision 0151, 9): it ends
+        // with the take, as a root's does.
+        if let Some(event) = end_own_plan(state, side, below, below_plan) {
+            follow_ups.push(event);
+        }
+        state.followed.remove(&below);
+    }
+    let found = state.intents.get_mut(&intent).expect("intent exists");
+    found.withdrawn_day = Some(day);
+    let plan_id = found.plan;
+    let is_root = found.parent.is_none()
+        || state
+            .plans
+            .get(&plan_id)
+            .is_some_and(|p| p.intent == intent);
+    let plan = state.plans.get_mut(&plan_id).expect("plan exists");
+    if is_root && !plan.state.ended() {
+        let from = plan.state;
+        let to = if from == PlanState::Released {
+            PlanState::Complete
+        } else {
+            PlanState::Cancelled
+        };
+        plan.state = to;
+        follow_ups.push(EventKind::PlanStateChanged {
+            side,
+            plan: plan_id,
+            from,
+            to,
+        });
+    }
+    state.followed.remove(&intent);
+    follow_ups
+}
+
 fn end_own_plan(
     state: &mut CommandState,
     side: Side,

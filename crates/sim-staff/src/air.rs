@@ -798,6 +798,7 @@ impl<'v, 'a> Day<'v, 'a> {
             run: None,
             rests_on: NoticeBasis::NoOrder(index),
             pursuit: None,
+            follow: None,
         });
     }
 
@@ -1648,6 +1649,7 @@ impl<'v, 'a> Day<'v, 'a> {
                     run: None,
                     rests_on: NoticeBasis::NoOrder(index),
                     pursuit: None,
+                    follow: None,
                 });
             }
         }

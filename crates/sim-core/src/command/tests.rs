@@ -3413,6 +3413,7 @@ fn hand_in_of(notices: &[(NoticeKind, u32)]) -> StaffDecisions {
                 run: None,
                 rests_on: NoticeBasis::NoOrder(i),
                 pursuit: None,
+                follow: None,
             })
             .collect(),
         ..StaffDecisions::default()
@@ -3559,6 +3560,7 @@ fn a_notice_cites_its_reasons_event_and_a_firing_cites_the_notice() {
                 run: None,
                 rests_on: NoticeBasis::Command(0),
                 pursuit: None,
+                follow: None,
             },
             StaffNotice {
                 kind: NoticeKind::RunEnded,
@@ -3566,6 +3568,7 @@ fn a_notice_cites_its_reasons_event_and_a_firing_cites_the_notice() {
                 run: Some(3),
                 rests_on: NoticeBasis::NoOrder(0),
                 pursuit: None,
+                follow: None,
             },
             StaffNotice {
                 kind: NoticeKind::WaitsForLeave(Leave::Launch),
@@ -3573,6 +3576,7 @@ fn a_notice_cites_its_reasons_event_and_a_firing_cites_the_notice() {
                 run: None,
                 rests_on: NoticeBasis::NoOrder(5),
                 pursuit: None,
+                follow: None,
             },
         ],
         ..StaffDecisions::default()
@@ -3933,6 +3937,7 @@ fn a_hand_in_given_back_and_a_live_staffs_are_merged_with_the_notices_still_on_t
                 run: None,
                 rests_on: NoticeBasis::NoOrder(0),
                 pursuit: None,
+                follow: None,
             },
             StaffNotice {
                 kind: NoticeKind::RunEnded,
@@ -3940,6 +3945,7 @@ fn a_hand_in_given_back_and_a_live_staffs_are_merged_with_the_notices_still_on_t
                 run: Some(1),
                 rests_on: NoticeBasis::Command(0),
                 pursuit: None,
+                follow: None,
             },
         ],
         ..StaffDecisions::default()
@@ -4687,6 +4693,7 @@ fn pursuit_hand_in(kind: NoticeKind, force: u32, contact: u32) -> StaffDecisions
                 intent: intent(1),
                 find: (kind != NoticeKind::PursuitEnded).then(|| pursuit_find(contact)),
             }),
+            follow: None,
         }],
         ..StaffDecisions::default()
     }
@@ -5716,5 +5723,601 @@ fn statement_25_a_run_of_a_holds_plan_draws_on_the_supply_under_it() {
         Issuer::Staff,
         add(&[1, 2]),
         CommandRefusal::NoForcesLimit,
+    );
+}
+
+// ---------------------------------------------------------------------------
+// Decision 0220: an order against an enemy force.
+// ---------------------------------------------------------------------------
+
+/// Gives the Allied picture a contact of `kind` at `hex`, `age` pulses old,
+/// by a sighting; returns its number.
+fn hold_contact(world: &mut World, hex: Hex, kind: ShipKind, age: u32) -> u32 {
+    use crate::belief::{ApplyOutcome, Report, SightingReport};
+    let figures = crate::refdata::SearchFigures::from_search_toml();
+    let outcome = world.beliefs.get_mut(&A).unwrap().apply_report(
+        &Report::Sighting(SightingReport {
+            estimated_hex: hex,
+            estimated_ship_count: 2,
+            estimated_kind: kind,
+            received_event: crate::ids::EventId::new(1),
+            age_pulses: age,
+        }),
+        &figures,
+    );
+    match outcome {
+        ApplyOutcome::Contact(found) => found.contact.raw(),
+        other => panic!("a sighting made no contact: {other:?}"),
+    }
+}
+
+fn destroy(n: u32, contact: u32) -> CommandKind {
+    CommandKind::SetIntent {
+        intent: intent(n),
+        kind: IntentKind::DestroyForce {
+            contact,
+            distance: 2,
+            search_only: false,
+        },
+    }
+}
+
+#[allow(clippy::too_many_arguments)]
+fn follow_notice(
+    kind: NoticeKind,
+    contact: u32,
+    taken_from: Option<u32>,
+    other_sort: bool,
+    hex: Hex,
+    day: u32,
+    pulse: Pulse,
+    carrier: bool,
+) -> StaffDecisions {
+    StaffDecisions {
+        no_orders: vec![reason(1, "a force followed")],
+        notices: vec![StaffNotice {
+            kind,
+            plan: plan(1),
+            run: None,
+            rests_on: NoticeBasis::NoOrder(0),
+            pursuit: None,
+            follow: Some(FollowNotice {
+                intent: intent(1),
+                contact,
+                taken_from,
+                other_sort,
+                hex,
+                day,
+                pulse,
+                ship_count: 2,
+                kind: if carrier {
+                    ShipKind::Carrier
+                } else {
+                    ShipKind::Cruiser
+                },
+                carrier,
+            }),
+        }],
+        ..StaffDecisions::default()
+    }
+}
+
+/// Takes in a hand-in of the staff at once, as the day's step 5 does.
+fn hand_in(world: &mut World, decisions: StaffDecisions) {
+    let day = world.truth.day + 1;
+    world.intake_staff_commands(day, &BTreeMap::from([(A, decisions)]));
+}
+
+#[test]
+fn the_order_to_destroy_a_force_has_its_code_and_name_and_is_the_areas_root() {
+    let kind = IntentKind::DestroyForce {
+        contact: 3,
+        distance: 2,
+        search_only: true,
+    };
+    assert_eq!(kind.code(), 17);
+    assert_eq!(kind.name(), "destroy_force");
+    assert_eq!(kind.followed(), Some((3, 2, true)));
+    assert_eq!(keep_supplied(1).followed(), None);
+    assert_eq!(kind.addressee(), Addressee::Area);
+    assert!(kind.may_be_root());
+    assert_eq!(kind.waters(), None);
+    assert_eq!(kind.base(), None);
+    assert_eq!(kind.own_base(), None);
+    // The strike, search and carrier tasks stand under it; a stand task does
+    // not (decision 0220, 2).
+    let under = |task: IntentKind| task.may_stand_under(kind);
+    assert!(under(IntentKind::StrikeShips { base: base(1) }));
+    assert!(under(IntentKind::SearchWaters { base: base(1) }));
+    assert!(under(IntentKind::OperateCarriers {
+        force: tf(1),
+        hex: HOME
+    }));
+    assert!(!under(IntentKind::StandAt {
+        force: tf(1),
+        hex: HOME
+    }));
+    assert_eq!(NoticeKind::Follows.code(), 13);
+    assert_eq!(NoticeKind::ContactLost.code(), 14);
+    assert_eq!(NoticeKind::ForceNotFound.code(), 15);
+    for kind in [
+        NoticeKind::Follows,
+        NoticeKind::ContactLost,
+        NoticeKind::ForceNotFound,
+    ] {
+        assert_eq!(NoticeKind::from_name(kind.name()), Some(kind));
+    }
+    assert_eq!(NoticeKind::Follows.name(), "follows");
+    assert_eq!(NoticeKind::ContactLost.name(), "contact_lost");
+    assert_eq!(NoticeKind::ForceNotFound.name(), "force_not_found");
+}
+
+#[test]
+fn the_pulse_of_a_report_is_read_from_its_age() {
+    // At dusk of day 3 the next pulse is the night of day 3.
+    assert_eq!(
+        report_pulse(3, Pulse::Night, 4),
+        (1, Pulse::Morning),
+        "age 4 at dusk of day 3"
+    );
+    assert_eq!(report_pulse(3, Pulse::Night, 1), (2, Pulse::Morning));
+    assert_eq!(report_pulse(3, Pulse::Night, 0), (2, Pulse::Afternoon));
+    // A contact the side starts with, at age 0 at dusk of day 1.
+    assert_eq!(report_pulse(1, Pulse::Night, 0), (0, Pulse::Afternoon));
+    // Inside day 1 after its night: the next pulse is the morning of day 1.
+    assert_eq!(report_pulse(1, Pulse::Morning, 1), (0, Pulse::Afternoon));
+    assert_eq!(report_pulse(1, Pulse::Morning, 0), (1, Pulse::Night));
+    // Before the beginning it reads as the night of day 0.
+    assert_eq!(report_pulse(0, Pulse::Night, 9), (0, Pulse::Night));
+}
+
+#[test]
+fn the_distance_between_two_reports_is_counted_in_whole_hexes() {
+    // At 20 knots a hex of 40 nautical miles is 2 hours.
+    let hexes = |a: (u32, Pulse), b: (u32, Pulse)| report_distance_hexes(a.0, a.1, b.0, b.1, 20);
+    // The morning of day 1 to the morning of day 2: 30 hours.
+    assert_eq!(
+        hexes((1, Pulse::Morning), (2, Pulse::Morning)),
+        15,
+        "30 hours"
+    );
+    // The afternoon of day 0 to the morning of day 1: 24 hours.
+    assert_eq!(hexes((0, Pulse::Afternoon), (1, Pulse::Morning)), 12);
+    // The afternoon of day 0 to the morning of day 2: 48 hours.
+    assert_eq!(hexes((0, Pulse::Afternoon), (2, Pulse::Morning)), 24);
+    // The afternoon of day 1 to the afternoon of day 2: 30 hours.
+    assert_eq!(hexes((1, Pulse::Afternoon), (2, Pulse::Afternoon)), 15);
+    // Cut to whole hexes: 7 hours at 20 knots is 3.5 hexes.
+    assert_eq!(
+        report_distance_hexes(1, Pulse::Morning, 1, Pulse::Afternoon, 20),
+        6
+    );
+    assert_eq!(
+        report_distance_hexes(1, Pulse::Morning, 1, Pulse::Afternoon, 7),
+        2
+    );
+}
+
+#[test]
+fn an_order_to_destroy_a_force_keeps_the_report_it_follows_at_the_giving() {
+    let mut world = world();
+    let cruisers = hold_contact(&mut world, Hex::new(8, 0), ShipKind::Cruiser, 0);
+    let carrier = hold_contact(&mut world, Hex::new(14, 1), ShipKind::Carrier, 3);
+    assert_eq!((cruisers, carrier), (1, 2));
+    player(&mut world, destroy(1, cruisers)).unwrap();
+    // Taken in on day 1, before its night, a contact of age 0 was reported
+    // in the afternoon of day 0.
+    assert_eq!(
+        state(&world, A).followed[&intent(1)],
+        Followed {
+            contact: 1,
+            hex: Hex::new(8, 0),
+            day: 0,
+            pulse: Pulse::Afternoon,
+            carrier: false,
+            lost: false,
+        }
+    );
+    // A carrier 3 pulses old: 4 pulses before the night of day 1, the night
+    // of day 0.
+    player(&mut world, destroy(2, carrier)).unwrap();
+    assert_eq!(
+        state(&world, A).followed[&intent(2)],
+        Followed {
+            contact: 2,
+            hex: Hex::new(14, 1),
+            day: 0,
+            pulse: Pulse::Night,
+            carrier: true,
+            lost: false,
+        }
+    );
+    // Setting the same order again with another distance keeps what it kept.
+    let kept = state(&world, A).followed[&intent(1)];
+    player(
+        &mut world,
+        CommandKind::SetIntent {
+            intent: intent(1),
+            kind: IntentKind::DestroyForce {
+                contact: 1,
+                distance: 4,
+                search_only: false,
+            },
+        },
+    )
+    .unwrap();
+    assert_eq!(state(&world, A).followed[&intent(1)], kept);
+    // The commander's picture is the side's own belief here, and the contact
+    // named is read from it: another contact, another report.
+    player(
+        &mut world,
+        CommandKind::SetIntent {
+            intent: intent(1),
+            kind: IntentKind::DestroyForce {
+                contact: 2,
+                distance: 4,
+                search_only: false,
+            },
+        },
+    )
+    .unwrap();
+    assert_eq!(state(&world, A).followed[&intent(1)].contact, 2);
+    assert!(state(&world, A).followed[&intent(1)].carrier);
+}
+
+#[test]
+fn an_order_to_destroy_a_force_names_a_contact_held() {
+    let mut world = world();
+    hold_contact(&mut world, Hex::new(8, 0), ShipKind::Cruiser, 0);
+    // A number not held, and none, are refused alike as not held.
+    refused(
+        &mut world,
+        Issuer::Player,
+        destroy(1, 7),
+        CommandRefusal::ContactNotHeld(7),
+    );
+    refused(
+        &mut world,
+        Issuer::Player,
+        destroy(1, 0),
+        CommandRefusal::ContactNotHeld(0),
+    );
+    assert_eq!(
+        CommandRefusal::ContactNotHeld(7).to_string(),
+        "contact 7 is not held: the commander's picture holds no contact of that number"
+    );
+    assert_eq!(
+        CommandRefusal::ContactNotHeld(0).to_string(),
+        "no contact is named"
+    );
+    // The enemy's picture does not hold the Allied contact.
+    assert_eq!(
+        give(&mut world, J, Issuer::Player, destroy(1, 1)),
+        Err(CommandRefusal::ContactNotHeld(1))
+    );
+    assert!(state(&world, A).followed.is_empty());
+    assert!(state(&world, A).intents.is_empty());
+    // A contact held and old may be named.
+    let old = hold_contact(&mut world, Hex::new(2, 0), ShipKind::Destroyer, 4);
+    player(&mut world, destroy(1, old)).unwrap();
+    assert_eq!(state(&world, A).followed[&intent(1)].contact, old);
+    assert_eq!(state(&world, A).followed[&intent(1)].day, 0);
+    assert_eq!(state(&world, A).followed[&intent(1)].pulse, Pulse::Night);
+}
+
+#[test]
+fn a_destroy_force_order_with_no_leave_set_reads_go_and_search_only_reads_stay() {
+    let mut world = world();
+    let found = hold_contact(&mut world, Hex::new(8, 0), ShipKind::Cruiser, 0);
+    player(&mut world, destroy(1, found)).unwrap();
+    player(
+        &mut world,
+        CommandKind::SetIntent {
+            intent: intent(2),
+            kind: IntentKind::DestroyForce {
+                contact: found,
+                distance: 2,
+                search_only: true,
+            },
+        },
+    )
+    .unwrap();
+    // The leave to launch is withheld, so any other order would ask.
+    assert_eq!(
+        state(&world, A).pursue_read_up(intent(1)),
+        (PursueLeave::Go, Some(intent(1)))
+    );
+    assert_eq!(
+        state(&world, A).pursue_read_up(intent(2)),
+        (PursueLeave::Stay, Some(intent(2)))
+    );
+    // One set on the order wins.
+    player(&mut world, set_pursuit(1, Some(PursueLeave::Ask))).unwrap();
+    assert_eq!(
+        state(&world, A).pursue_read_up(intent(1)),
+        (PursueLeave::Ask, Some(intent(1)))
+    );
+}
+
+#[test]
+fn a_follows_notice_keeps_the_report_and_a_taking_changes_the_sort_and_clears_lost() {
+    let mut world = world();
+    let cruisers = hold_contact(&mut world, Hex::new(8, 0), ShipKind::Cruiser, 0);
+    player(&mut world, destroy(1, cruisers)).unwrap();
+    world
+        .command
+        .get_mut(&A)
+        .unwrap()
+        .followed
+        .get_mut(&intent(1))
+        .unwrap()
+        .lost = true;
+    // A refresh of the same contact: the report moves, the sort and lost do
+    // not.
+    hand_in(
+        &mut world,
+        follow_notice(
+            NoticeKind::Follows,
+            1,
+            None,
+            false,
+            Hex::new(14, 0),
+            1,
+            Pulse::Morning,
+            true,
+        ),
+    );
+    let kept = state(&world, A).followed[&intent(1)];
+    assert_eq!(
+        kept,
+        Followed {
+            contact: 1,
+            hex: Hex::new(14, 0),
+            day: 1,
+            pulse: Pulse::Morning,
+            carrier: false,
+            lost: true,
+        }
+    );
+    // A taking of another contact: the number, the report and the sort
+    // change and the order is no longer lost.
+    hand_in(
+        &mut world,
+        follow_notice(
+            NoticeKind::Follows,
+            3,
+            Some(1),
+            true,
+            Hex::new(20, 0),
+            2,
+            Pulse::Afternoon,
+            true,
+        ),
+    );
+    assert_eq!(
+        state(&world, A).followed[&intent(1)],
+        Followed {
+            contact: 3,
+            hex: Hex::new(20, 0),
+            day: 2,
+            pulse: Pulse::Afternoon,
+            carrier: true,
+            lost: false,
+        }
+    );
+    // The notice is on the event, whole.
+    assert!(world.events.iter().any(|e| matches!(
+        &e.kind,
+        EventKind::StaffNotice { kind: NoticeKind::Follows, follow: Some(f), .. }
+            if f.taken_from == Some(1) && f.other_sort
+    )));
+}
+
+#[test]
+fn a_contact_lost_notice_sets_lost_and_a_force_not_found_notice_withdraws_the_tree() {
+    let mut world = world();
+    let cruisers = hold_contact(&mut world, Hex::new(8, 0), ShipKind::Cruiser, 0);
+    player(&mut world, destroy(1, cruisers)).unwrap();
+    player(&mut world, CommandKind::Approve { plan: plan(1) }).unwrap();
+    player(&mut world, CommandKind::Approve { plan: plan(1) }).unwrap();
+    // The staff forms a task under it.
+    staff(
+        &mut world,
+        form_under(1, IntentKind::SearchWaters { base: base(1) }),
+    )
+    .unwrap();
+    assert!(!state(&world, A).followed[&intent(1)].lost);
+    hand_in(
+        &mut world,
+        follow_notice(
+            NoticeKind::ContactLost,
+            1,
+            None,
+            false,
+            Hex::new(8, 0),
+            0,
+            Pulse::Afternoon,
+            false,
+        ),
+    );
+    assert!(state(&world, A).followed[&intent(1)].lost);
+    assert!(state(&world, A).intents[&intent(1)].in_force());
+    // Not found: the order and what is beneath it are withdrawn, each by an
+    // event caused by the notice's, and nothing of it is kept.
+    hand_in(
+        &mut world,
+        follow_notice(
+            NoticeKind::ForceNotFound,
+            1,
+            None,
+            false,
+            Hex::new(8, 0),
+            0,
+            Pulse::Afternoon,
+            false,
+        ),
+    );
+    assert!(state(&world, A).followed.is_empty());
+    assert!(!state(&world, A).intents[&intent(1)].in_force());
+    assert!(!state(&world, A).intents[&intent(2)].in_force());
+    assert_eq!(state(&world, A).plans[&plan(1)].state, PlanState::Complete);
+    let log = log(&world);
+    let notice = log
+        .iter()
+        .rev()
+        .find(|e| {
+            matches!(
+                e.kind,
+                EventKind::StaffNotice {
+                    kind: NoticeKind::ForceNotFound,
+                    ..
+                }
+            )
+        })
+        .expect("the notice")
+        .id;
+    // The order itself ends with its plan, as a commander's withdrawal ends
+    // it; what is beneath it has an event of its own.
+    let withdrawn = log
+        .iter()
+        .find(|e| {
+            matches!(&e.kind, EventKind::IntentWithdrawn { intent, .. } if *intent == self::intent(2))
+        })
+        .expect("a withdrawal");
+    assert!(
+        withdrawn.causes.contains(&Cause::Event(notice)),
+        "the task beneath is withdrawn on the notice's cause"
+    );
+    let ended = log.iter().find(|e| {
+        matches!(e.kind, EventKind::PlanStateChanged { .. })
+            && e.causes.contains(&Cause::Event(notice))
+    });
+    assert!(ended.is_some(), "the plan's end cites the notice");
+    // A second notice for an order gone changes nothing and does not fail.
+    let events = world.events.len();
+    hand_in(
+        &mut world,
+        follow_notice(
+            NoticeKind::ForceNotFound,
+            1,
+            None,
+            false,
+            Hex::new(8, 0),
+            0,
+            Pulse::Afternoon,
+            false,
+        ),
+    );
+    assert_eq!(world.events.len(), events + 2, "its reason and itself");
+}
+
+#[test]
+fn a_commanders_withdrawal_removes_what_the_order_kept_and_the_staff_may_not_withdraw_it() {
+    let mut world = world();
+    let cruisers = hold_contact(&mut world, Hex::new(8, 0), ShipKind::Cruiser, 0);
+    player(&mut world, destroy(1, cruisers)).unwrap();
+    refused(
+        &mut world,
+        Issuer::Staff,
+        CommandKind::WithdrawIntent { intent: intent(1) },
+        CommandRefusal::NotYours,
+    );
+    assert!(state(&world, A).followed.contains_key(&intent(1)));
+    player(
+        &mut world,
+        CommandKind::WithdrawIntent { intent: intent(1) },
+    )
+    .unwrap();
+    assert!(state(&world, A).followed.is_empty());
+    // An order the staff may not form: it is a root only.
+    refused(
+        &mut world,
+        Issuer::Staff,
+        form_under(
+            1,
+            IntentKind::DestroyForce {
+                contact: cruisers,
+                distance: 1,
+                search_only: false,
+            },
+        ),
+        CommandRefusal::NoSuchIntent(intent(1)),
+    );
+}
+
+#[test]
+fn what_the_order_keeps_is_in_the_hash_and_the_command_state_is_not_empty_with_it() {
+    let mut world = world();
+    let cruisers = hold_contact(&mut world, Hex::new(8, 0), ShipKind::Cruiser, 0);
+    player(&mut world, destroy(1, cruisers)).unwrap();
+    // The contacts made are no longer waiting to be aged.
+    world
+        .beliefs
+        .get_mut(&A)
+        .unwrap()
+        .age_contacts(&crate::refdata::SearchFigures::from_search_toml());
+    assert!(!state(&world, A).is_empty());
+    let mut other = world.clone();
+    assert_eq!(world.state_hash(), other.state_hash());
+    // Two worlds that differ only in the pulse of the report kept.
+    other
+        .command
+        .get_mut(&A)
+        .unwrap()
+        .followed
+        .get_mut(&intent(1))
+        .unwrap()
+        .pulse = Pulse::Morning;
+    assert_ne!(world.state_hash(), other.state_hash());
+    // And in each other kept field.
+    for change in 0..5 {
+        let mut other = world.clone();
+        let kept = other
+            .command
+            .get_mut(&A)
+            .unwrap()
+            .followed
+            .get_mut(&intent(1))
+            .unwrap();
+        match change {
+            0 => kept.contact += 1,
+            1 => kept.hex = Hex::new(9, 0),
+            2 => kept.day += 1,
+            3 => kept.carrier = true,
+            _ => kept.lost = true,
+        }
+        assert_ne!(world.state_hash(), other.state_hash(), "field {change}");
+    }
+    // The intent's own fields are hashed.
+    let mut other = world.clone();
+    other
+        .command
+        .get_mut(&A)
+        .unwrap()
+        .intents
+        .get_mut(&intent(1))
+        .unwrap()
+        .kind = IntentKind::DestroyForce {
+        contact: cruisers,
+        distance: 2,
+        search_only: true,
+    };
+    assert_ne!(world.state_hash(), other.state_hash());
+    // The invariant holds, and fails for an entry with no order in force.
+    assert!(
+        crate::invariants::check_command(A, state(&world, A), &world.truth, world.truth.day)
+            .is_empty()
+    );
+    other = world.clone();
+    other.command.get_mut(&A).unwrap().followed.insert(
+        intent(9),
+        *world.command_state(A).followed.get(&intent(1)).unwrap(),
+    );
+    assert_eq!(
+        crate::invariants::check_command(A, state(&other, A), &other.truth, other.truth.day),
+        vec![crate::invariants::InvariantViolation::FollowedUnsound(
+            A,
+            intent(9)
+        )]
     );
 }
