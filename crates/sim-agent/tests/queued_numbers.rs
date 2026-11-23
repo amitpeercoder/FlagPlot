@@ -35,15 +35,20 @@
 //! 3. The same holds for the Allied seat with its four boats: its handles are
 //!    `submarine:1` to `submarine:4` in every answer, and a queued order for
 //!    its third boat is `submarine:3`.
-//! 4. A queued order for a ship, a task force and an air group of each side
-//!    is named in `queued` by the same handle `list_forces` gives it.
+//! 4. (Restated by the architect, Nov 23, 2026: `list_forces` gives no
+//!    handle to a ship or an air group, and no order is addressed to a
+//!    ship.) A queued order for a task force and for an air group of each
+//!    side, and a queued hold on a ship of each side, is named in `queued`
+//!    by the handle the side's other tools give that unit: the task force's
+//!    by `list_forces`, the ship's and the air group's by `get_entity` of
+//!    the force they belong to.
 //! 5. `take_back` of a queued station order takes back the order of the boat
 //!    the seat named, and no other.
 //!
-//! Statement 4 has no test here yet: `list_forces` gives no handle to a ship
-//! or an air group (its lines are task forces, land units, submarines and
-//! units to enter), so the statement cannot be held as written. It is with
-//! the architect.
+//! The team lead's reading of statement 4: `get_entity` of a force lists
+//! its ships, not its air groups; a carrier's air groups are listed by
+//! `get_entity` of the carrier, one of the force's ships. The test takes the
+//! air group's handle from there.
 //!
 //! The team lead's own test, beside the architect's: the same for a land
 //! unit, in an order to it, a hold on it and a limit that waits for it.
@@ -510,6 +515,79 @@ fn every_answer_to_the_allied_seat_names_its_boats_1_to_4() {
     );
 }
 
+/// Statement 4.
+#[test]
+fn a_queued_order_and_hold_name_a_force_a_group_and_a_ship_as_the_other_tools_do() {
+    for side in [Side::Allied, Side::Japanese] {
+        let mut s = game();
+        let forces = call(&mut s, side, "list_forces", json!({}));
+        let force = forces["task_forces"][0]["task_force"]["handle"]
+            .as_str()
+            .unwrap_or_else(|| panic!("a force: {forces}"))
+            .to_string();
+        let entity = call(&mut s, side, "get_entity", json!({"handle": force}));
+        let ship_of = |word: &str| -> String {
+            entity["entity"]["ships"]
+                .as_array()
+                .and_then(|ships| {
+                    ships
+                        .iter()
+                        .find(|x| x["ship"]["name"].as_str().unwrap_or("").contains(word))
+                })
+                .unwrap_or_else(|| panic!("a {word}: {entity}"))["ship"]["handle"]
+                .as_str()
+                .unwrap()
+                .to_string()
+        };
+        let (carrier, destroyer) = (ship_of("carrier"), ship_of("destroyer"));
+        let aboard = call(&mut s, side, "get_entity", json!({"handle": carrier}));
+        let group = aboard["entity"]["air_groups"][0]["handle"]
+            .as_str()
+            .unwrap_or_else(|| panic!("a group aboard: {aboard}"))
+            .to_string();
+        let ship_number: u64 = destroyer["ship:".len()..].parse().unwrap();
+        order(
+            &mut s,
+            side,
+            &force,
+            json!({"kind": "set_speed", "speed": "cruise"}),
+        );
+        order(
+            &mut s,
+            side,
+            &group,
+            json!({"kind": "set_air_mission", "mission": "rest"}),
+        );
+        call(&mut s, side, "hold", json!({"ship": ship_number}));
+        let q = queued(&mut s, side);
+        for unit in [&force, &group] {
+            let e = entry_to(&q, unit);
+            assert!(
+                e["text"]
+                    .as_str()
+                    .unwrap()
+                    .starts_with(&format!("{unit}: ")),
+                "{side:?}: {e}"
+            );
+        }
+        let hold = q["entries"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|e| e["what"] == "command" && e["tool"] == "hold")
+            .expect("the hold");
+        assert_eq!(
+            hold["command"]["ship"],
+            json!(ship_number),
+            "{side:?}: {hold}"
+        );
+        assert!(
+            hold["text"].as_str().unwrap().contains(&destroyer),
+            "{side:?}: {hold}"
+        );
+    }
+}
+
 /// Statement 5.
 #[test]
 fn take_back_of_a_station_takes_back_the_named_boats_order_and_no_other() {
@@ -661,4 +739,83 @@ fn a_queued_order_hold_and_wait_name_a_land_unit_as_list_forces_does() {
             "{side:?}: {wait}"
         );
     }
+}
+
+/// Scenario 53's base and bombers, with the Allied air groups renumbered
+/// 11 to 15 (so the side's numbers 1 to 5 differ from the engine's) and its
+/// commands left out, for the seat to give.
+fn deny_game() -> Session {
+    let name = "53_deny_an_area.toml";
+    let file = support::scenario_text(name);
+    let at = file
+        .find("# The Allied commander's commands")
+        .expect("the commands begin");
+    let mut text = file[..at].to_string();
+    for raw in 1..=5 {
+        text = text.replace(
+            &format!("[[air_group]]\nid = {raw}\n"),
+            &format!("[[air_group]]\nid = {}\n", raw + 10),
+        );
+    }
+    let scenario = load_text(&text, name, 1942);
+    Session::new(
+        scenario.world,
+        "Deny",
+        scenario.days,
+        Seat::Player,
+        Seat::Player,
+    )
+    .with_staffs(sim_staff::staffs())
+}
+
+/// The team lead's: a staff reason whose level is an air group names the
+/// group by the side's number in `staff_orders` and `why`.
+#[test]
+fn a_reason_at_an_air_groups_level_names_it_by_the_sides_number() {
+    let mut s = deny_game();
+    for (tool, args) in [
+        (
+            "set_intent",
+            json!({"intent_kind": "deny", "hex": [0, 5], "distance": 0}),
+        ),
+        (
+            "set_limit",
+            json!({"limit": "risk", "intent": 1, "risk": "press"}),
+        ),
+        ("set_leave", json!({"leave": "prepare", "given": true})),
+        ("set_leave", json!({"leave": "launch", "given": true})),
+    ] {
+        let a = call(&mut s, Side::Allied, tool, args);
+        assert_eq!(a["status"], "queued", "{a}");
+    }
+    let orders = call(&mut s, Side::Allied, "staff_orders", json!({}));
+    let mut levels = Vec::new();
+    for order in orders["orders"].as_array().expect("orders") {
+        if order["order"]["kind"] != "set_strike_sizing" {
+            continue;
+        }
+        let unit = order["unit"].as_str().expect("a unit");
+        let level = &order["reason"]["serves"]["level"];
+        assert_eq!(format!("air_group:{}", level["air_group"]), unit, "{order}");
+        levels.push(level["air_group"].as_u64().expect("a number"));
+    }
+    assert_eq!(levels, [1, 2, 3], "{orders}");
+    for seat in [Side::Allied, Side::Japanese] {
+        call(&mut s, seat, "end_day", json!({}));
+    }
+    let events = call(&mut s, Side::Allied, "events", json!({"day": 1}));
+    let mut seen = 0;
+    for e in events["events"].as_array().expect("events") {
+        let number = e["number"].as_u64().expect("a number");
+        let why = call(&mut s, Side::Allied, "why", json!({"number": number}));
+        let level = &why["reason"]["serves"]["level"];
+        if level.get("air_group").is_none() {
+            continue;
+        }
+        let n = level["air_group"].as_u64().expect("a number");
+        assert!((1..=3).contains(&n), "{why}");
+        assert_eq!(why["level"], format!("air_group:{n}"), "{why}");
+        seen += 1;
+    }
+    assert_eq!(seen, 3, "{events}");
 }

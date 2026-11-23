@@ -2436,7 +2436,7 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
     else if (hands.by === 'commander') whose = el('span', '', held ? handsHeld(held) : HELD_BY_YOU + '.');
     else if (hands.by === 'free') whose = el('span', '', 'Free');
     var away = b.state === 'held apart' ? (b.comes_on_day != null ? (dateOf(b.comes_on_day - 1) || 'day ' + b.comes_on_day) : null) : null;
-    kv(body, [['Class', cleanName(String(b.class || ''))], ['Where', b.place ? placeLink(b.place) : (b.state === 'held apart' ? 'Not yet on the map' : b.state === 'home' ? 'Gone home' : null)], ['Her station', b.station ? placeLink(b.station) : null],
+    kv(body, [['Class', shipClass(b.class)], ['Where', b.place ? placeLink(b.place) : (b.state === 'held apart' ? 'Not yet on the map' : b.state === 'home' ? 'Gone home' : null)], ['Her station', b.station ? placeLink(b.station) : null],
       ['Bound for', b.state !== 'on station' && b.bound_for ? placeLink(b.bound_for) : null], ['Comes on the map', away], ['Salvoes left', String(b.salvoes_left)],
       ['Doing', BOAT_DOING[b.state] || null], ['Condition', b.state === 'sunk' || b.state === 'home' ? null : b.damaged ? 'Damaged' : 'Sound'], ['Held down', b.held_down_until ? heldDownWords(b.held_down_until) : null], ['In whose hands', whose]]);
     if (!WATCH && !M.over && !playing && boatOnMap(b)) {
