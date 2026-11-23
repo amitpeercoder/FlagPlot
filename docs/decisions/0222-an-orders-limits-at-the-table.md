@@ -72,3 +72,76 @@ Rules 1 to 12 move none. Rule 13 moves every staffed game in which a hold has no
 
 1. **Should the staff choose a supply source by itself (rule 13),** or only say that none is named and lead him to name one? The architect recommends that it choose: feeding a place is the staff's work.
 2. **Which limits he wants first,** if not all at once. The architect recommends forces, supplied from and area first; rank, strike first and the landing's four after.
+
+## Amended on review, Nov 23, 2026
+
+Read by a reviewer who had not seen it written; the architect checked its first finding on the Coral Sea's bases and on the staff's code. What follows is the plan as it now stands and replaces the rules above.
+
+### What the review found
+
+- **The case that began this was misread.** Under an order to control an island the staff already chooses a source of supply and its ships (decisions 0151, 0152 and 0163): the side's base off the island with the most supply above its reserve. "Control New Guinea" in the Coral Sea finds none because Port Moresby is the Allied side's only base. The reason shown then tells the player to name a source, and there is none he could name.
+- **A forces limit that names some things strips the rest.** Outside a landing and an island, an air group serves an order only where every forces limit above it names it; an order to deny waters whose limit names task forces and no air group has no base at all; a carrier force named in a limit is given its task where it lies that morning, where a free one is stationed by the staff. One touch on a carrier force would drop every land-based air group from the order and move where the carriers work.
+- **Several limits are read by nothing on most orders.** An area binds supply routes and a landing's lifts and is not read by a hold, a deny, a stand, a patrol or a carrier's station; targets are read where ships are struck and nowhere else; protected ships by supply alone; land units and boats only by the orders that use them.
+- **A forces limit and an area cannot be put back to the staff's choice:** the tool has no way to clear either.
+- **The staff's reading before signing cannot take the limits in:** a preview is of one command, and a limit on an order not yet signed is refused.
+- **A reason is words:** nothing in it says which limit it speaks of.
+- **Rule 13 could not be built as written.** The staff may not set a source under a commander's hold; a source with no ship fails the hold's plan and its cover with it; the measure proposed needed a planner's run for each base and was undefined where nothing runs short; and it would have been a third rule for choosing a source beside the island's and the table's own.
+
+### First, the reason that misled
+
+1. **Where a hold has no source and no base of the side could be one, the staff says that and offers nothing:** "No other base of ours holds supply: Port Moresby lives on what it has", with its days of supply. It says a source may be named only where a base that could be one exists, and names those bases. This is built at once, by itself.
+
+### The engine, before the table
+
+2. **A commander's forces limit binds only the kinds it names, on every kind of order,** as it does today under a landing and an island (decisions 0149 and 0151) and for boats (decision 0218). Naming a task force leaves the air groups, land units, boats and source to the staff; naming an air group leaves the task forces to it. A carrier force named in a limit is still stationed by the staff unless the commander gives it the task himself. Staffed games on file whose limits name forces are compared before and after and what moves is listed.
+3. **A forces limit and an area may be cleared,** by the command that sets them given with none, as the limits that tell a plan to wait are cleared.
+4. **A preview and a signing take an order with its limits as one,** so that the staff's reading is of the order as it will be given, at the risk and with the limits chosen.
+5. **A reason says which limits it speaks of:** a list at its end of the kind of each limit and the order it is set on, filled where its words of what holds it or what would change it name a limit. The doctrine's version rises.
+6. **The supply doctrine reads an order's rank up the tree,** so that supply the staff forms under a ranked order is ranked with it.
+7. **An area binds what it says it binds or is not offered.** No doctrine is changed to read it in this decision: it is offered only on the orders where it is read.
+
+### The staff chooses a source, if the designer agrees
+
+8. **For a hold of the commander's with no source on it or above it, the staff chooses by the island's rule, unchanged:** the side's base not in the place's hex, that the staff may take, with the most supply above its reserve, the lower number where they tie; chosen once and kept; its ships the transport forces stopped there with nothing aboard.
+9. **The staff may then set that source and those ships on the supply it forms,** which is a change to what a limit set by the staff may name under a commander's order, as decision 0149 has it under a landing.
+10. **The supply so formed has a plan of its own,** so that its failure does not end the hold; and **with no ship to carry it the staff forms none and says why.**
+11. **The table's own choosing of a source (`supplyForces`) goes,** the source being chosen in one place and said in a reason.
+12. **A source the commander names is used.**
+
+### The limits on the order's paper
+
+13. **A line is offered only where it changes what the staff does for that kind of order:**
+
+| The order | Forces | Supplied from | Keep within | Strike first | The landing's four |
+| --- | --- | --- | --- | --- | --- |
+| Hold a place | yes | yes | no | yes | no |
+| Keep a place supplied | yes (ships) | yes | yes | no | no |
+| Cover a place from the air | yes (air groups) | no | no | no | no |
+| Deny waters | yes | no | no | yes, and "these waters first" | no |
+| Operate a carrier force | no (it names its force) | no | no | yes | no |
+| Stand at a place | no | no | no | no | no |
+| Take a place | yes | yes | yes | no | yes |
+| Control an island | yes | yes | yes | no | yes |
+| Patrol with submarines | yes (boats) | no | no | no | no |
+
+14. **Forces and "supplied from" are one limit of the engine and are sent as one.** "Use only these" lists by kind, and a kind with nothing named says "the staff's choice".
+15. **Rank is on YOUR ORDERS in the stop paper,** not on each order's paper: the orders in a list he reorders, sending a rank only for those he has ranked.
+16. **Limits are changed afterwards from the plan's paper,** each shown in its head with CHANGE and with "back to the staff's choice". A change is a command under SIGNED and may be taken back until the clock runs. A task the staff formed for a force no longer named stands until its order is withdrawn, and the paper shows it so.
+17. **A reason's limit is a link to that limit's control,** from rule 5's list and not from its words. The table's words for each kind are "the forces you named", "the base it is supplied from", "the waters you kept it within", "what it strikes first".
+18. **Single ships are not named by a player.** Ships in port in no force at the source are the staff's to use.
+
+### How it is built
+
+Four pull requests, in this order:
+
+1. **The reason** (rule 1).
+2. **The engine and the tools** (rules 2 to 7), with a scenario and hand calculation by the architect.
+3. **The staff's source** (rules 8 to 12), if the designer agrees, with its scenario and hand calculation: a hold with men ashore and no source; a near forward base with men and little, a far rear base with much and an empty transport force; a base in the place's own hex, not chosen; no transport at the best base and the hold not failed; stocks that reverse and the source kept; a source the commander names; a side with no other base.
+4. **The table** (rules 13 to 18).
+
+Agent-played recorded games cannot be replayed under a changed doctrine without the agent; they are treated by their rules label as the repository's scripts treat them, and the records of closed proofs are not altered.
+
+### Questions for the designer
+
+1. **Should the staff choose a supply source for a hold when the commander names none** (rules 8 to 12)? The architect recommends yes.
+2. **A forces limit that binds only the kinds it names** (rule 2) changes what a limit means in games on file that name forces. The architect recommends it: it is what "use only these" plainly says.
