@@ -225,6 +225,21 @@ pub fn intelligence(view: &SideView<'_>) -> Value {
                 "attacks_on_ships",
                 read.action.attacks_on_ships.iter().map(to_json).collect(),
             );
+            // A salvo a submarine fired at a ship of the side's, as the side
+            // is given it: the ship, where and when, and nothing of the boat.
+            let submarine_attacks: Vec<Value> = by_day[day]
+                .iter()
+                .filter_map(|event| match &event.kind {
+                    SideEventKind::SalvoFromSubmarine { ship, hex, .. } => Some(json!({
+                        "against": to_json(&ctx.ship(*ship)),
+                        "place": to_json(&ctx.place(*hex)),
+                        "pulse": pulse_name(event.pulse),
+                        "event": ctx.number(event.id),
+                    })),
+                    _ => None,
+                })
+                .collect();
+            put("submarine_attacks", submarine_attacks);
             put("fights", read.action.fights.iter().map(to_json).collect());
             if any {
                 let mut line = Map::new();

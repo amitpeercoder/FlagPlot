@@ -127,6 +127,21 @@
           "raids": { "type": "array", "items": { "type": "object" } },
           "bombardments": { "type": "array", "items": { "type": "object" } },
           "attacks_on_ships": { "type": "array", "items": { "type": "object" } },
+          "submarine_attacks": {
+            "description": "A salvo a submarine fired at a ship of the side's: the ship, where, when and the event, and nothing of the torpedoes, the hits or the boat.",
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["against", "place", "pulse", "event"],
+              "additionalProperties": false,
+              "properties": {
+                "against": { "$ref": "defs.schema.json#/$defs/handle" },
+                "place": { "$ref": "defs.schema.json#/$defs/place" },
+                "pulse": { "enum": ["night", "morning", "afternoon", null] },
+                "event": { "type": "integer" }
+              }
+            }
+          },
           "fights": { "type": "array", "items": { "type": "object" } }
         }
       }

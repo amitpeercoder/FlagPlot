@@ -1240,19 +1240,28 @@ fn statement_5_what_the_enemy_has_done_by_day() {
                 expected.push(Value::Object(day));
             }
         }
-        assert_eq!(
-            list(answer, "enemy_has_done"),
-            expected.as_slice(),
-            "{label}"
-        );
-        assert_eq!(
-            has_key(answer, "enemy_has_done"),
-            !expected.is_empty(),
+        // The four lists the briefing gives; a submarine's attacks are the
+        // tool's own, read from the side's events (the ruling on the build).
+        let mine: Vec<Value> = list(answer, "enemy_has_done")
+            .iter()
+            .filter_map(|day| {
+                let mut day = day.clone();
+                day.as_object_mut().unwrap().remove("submarine_attacks");
+                (day.as_object().unwrap().len() > 1).then_some(day)
+            })
+            .collect();
+        assert_eq!(mine, expected, "{label}");
+        let has_attacks = list(answer, "enemy_has_done")
+            .iter()
+            .any(|d| has_key(d, "submarine_attacks"));
+        assert!(
+            has_key(answer, "enemy_has_done") == (!expected.is_empty() || has_attacks),
             "{label}"
         );
         days_seen += expected.len();
         for day in &expected {
-            // Four things and no other; a fight ashore is not among them.
+            // Four things and a submarine's attacks, and no other; a fight
+            // ashore is not among them.
             for key in day.as_object().unwrap().keys() {
                 assert!(
                     ["day", "raids", "bombardments", "attacks_on_ships", "fights"]
@@ -1292,10 +1301,10 @@ fn statement_5_what_the_enemy_has_done_by_day() {
 }
 
 #[test]
-#[ignore = "stopped for the architect: the briefing does not give a submarine's attack on a ship in attacks_on_ships (briefing.rs leaves SalvoFromSubmarine as a later phase of 0218), so statement 5's scenario D cannot hold as written"]
-fn statement_5_d_a_submarines_torpedoes_are_in_what_the_enemy_has_done() {
-    // D, Allied, over: day 2 then day 1, each with the attack on ship 1 by
-    // torpedo as the briefing has it.
+fn statement_5_d_a_submarines_attacks_are_in_what_the_enemy_has_done() {
+    // D, Allied, over: day 2 then day 1, each with one line of
+    // `submarine_attacks`, against ship 1 at (5,0) in the morning, and no
+    // `attacks_on_ships`.
     let over = &the_over(run_of(D)).intel[&Side::Allied];
     let done = list(over, "enemy_has_done");
     assert_eq!(done.len(), 2, "{over}");
@@ -1304,10 +1313,21 @@ fn statement_5_d_a_submarines_torpedoes_are_in_what_the_enemy_has_done() {
         (Some(2), Some(1))
     );
     for day in done {
-        let attacks = list(day, "attacks_on_ships");
+        assert!(!has_key(day, "attacks_on_ships"));
+        let attacks = list(day, "submarine_attacks");
         assert_eq!(attacks.len(), 1);
-        assert_eq!(attacks[0]["against"]["handle"], "ship:1");
-        assert_eq!(attacks[0]["weapon"], "torpedoes");
+        let line = &attacks[0];
+        assert_eq!(line["against"]["handle"], "ship:1");
+        assert_eq!(line["place"]["q"], 5);
+        assert_eq!(line["place"]["r"], 0);
+        assert_eq!(line["pulse"], "morning");
+        let keys: BTreeSet<&str> = line
+            .as_object()
+            .unwrap()
+            .keys()
+            .map(String::as_str)
+            .collect();
+        assert_eq!(keys, BTreeSet::from(["against", "place", "pulse", "event"]));
     }
 }
 
@@ -1842,6 +1862,9 @@ fn kind_expected(context: &str, answer: &Value) -> &'static str {
         c if c.starts_with("enemy_has_done") && c.contains("attacks_on_ships") => {
             "air_attack_against"
         }
+        c if c.starts_with("enemy_has_done") && c.contains("submarine_attacks") => {
+            "salvo_from_submarine"
+        }
         c if c.starts_with("enemy_submarines.reports") => "submarine_reported",
         c if c.starts_with("enemy_submarines.suspected_waters") => "suspected_waters_told",
         other => panic!("an event number at {other}"),
@@ -1952,6 +1975,9 @@ fn statement_13_every_handle_and_number_is_the_seats_own() {
                     if key == "version"
                         || key == "claimed_on_ground_from_air"
                         || path.contains(&"totals".to_string())
+                        // The one line no other tool has: its event is
+                        // explained above, and is in no briefing.
+                        || path.contains(&"submarine_attacks".to_string())
                     {
                         return;
                     }
