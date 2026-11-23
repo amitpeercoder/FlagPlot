@@ -27,7 +27,7 @@
       "const": "flagplot-agent"
     },
     "version": {
-      "const": 53
+      "const": 54
     },
     "kind": {
       "const": "command"

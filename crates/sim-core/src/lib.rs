@@ -82,6 +82,7 @@ mod search;
 mod start;
 mod stragglers;
 mod submarine;
+pub mod submarine_estimate;
 #[cfg(test)]
 mod submarine_tests;
 mod surface;
