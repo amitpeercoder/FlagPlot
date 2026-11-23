@@ -181,3 +181,8 @@ Read: the new test and its statements, the boats as the copies give them, and th
 3. **I-168 is found by Midway's flying boats every morning** and is sunk in 13 runs of 100 and sent home damaged in 31. The rows have her off Eastern Island for days, watched and not attacked. She is left where the rows put her and nothing is tuned. What it shows is owed to the figures: a boat on station in the hex of an enemy air base is looked for in every pulse at the full count of the base's search. Open work, with the attack chance, for when the submarine figures are set from the rows on every game together.
 4. **A boat's number under SIGNED is the engine's and not the side's** (`queued` in `sim-agent`): the Japanese seat reads "submarine 5" for his only boat and can count four boats before her. This tells a side something of the enemy and is mended at once, in its own pull request, before anything else is built on this game.
 5. **Not seen:** the agent pairings in a browser; the whole test suite after the last two merges of main, which CI runs.
+
+## Carried on, Nov 23, 2026
+
+Rule 6 and amended rule 13 are answered by the research of Nov 23, 2026 and by decision 0227, which places the boats of the Coral Sea, the five days and the 39 days, adds ten boats to Midway, states each navy's pattern in every game with boats, and rules on the classes and the rows in dispute. Statements 1, 2, 3 and 6 above are restated there for Midway's 15 boats.
+
