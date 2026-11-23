@@ -39,7 +39,9 @@
 //! limit) and, with `"recent_count"` alone, `within_days` (3 where left
 //! out). Decision 0190: `"targets"` has `intent`, `kinds` (ship kind names,
 //! most wanted first; left out or empty clears the limit) and `waters_first`
-//! (a bool, false where left out).
+//! (a bool, false where left out). Decision 0222, rule 3: `"forces"` and
+//! `"area"` with `cleared = true` and nothing but `intent` clear the limit;
+//! a forces limit with no list and no source is "use nothing", not cleared.
 
 use std::collections::BTreeSet;
 
@@ -81,6 +83,8 @@ pub(crate) struct CommandSpec {
     air_groups: Option<Vec<u32>>,
     land_units: Option<Vec<u32>>,
     submarines: Option<Vec<u32>>,
+    /// Decision 0222, rule 3: true clears a forces limit or an area.
+    cleared: Option<bool>,
     wants: Option<Vec<String>>,
     defences: Option<u32>,
     by_day: Option<u32>,
@@ -140,6 +144,7 @@ impl CommandSpec {
         note(self.air_groups.is_some(), "air_groups");
         note(self.land_units.is_some(), "land_units");
         note(self.submarines.is_some(), "submarines");
+        note(self.cleared.is_some(), "cleared");
         note(self.wants.is_some(), "wants");
         note(self.defences.is_some(), "defences");
         note(self.by_day.is_some(), "by_day");
@@ -220,6 +225,10 @@ impl CommandSpec {
                 }
             },
             ("withdraw_intent", _) => &["intent"],
+            // Decision 0222, rule 3: cleared, with nothing else.
+            ("set_limit", Some("forces" | "area")) if self.cleared == Some(true) => {
+                &["limit", "intent", "cleared"]
+            }
             ("set_limit", Some("forces")) => &[
                 "limit",
                 "intent",
@@ -463,6 +472,12 @@ impl CommandSpec {
             },
             "withdraw_intent" => CommandKind::WithdrawIntent { intent: intent()? },
             "set_limit" => CommandKind::SetLimit(match self.limit.as_deref() {
+                Some("forces") if self.cleared == Some(true) => Limit::ForcesCleared {
+                    intent: intent()?,
+                },
+                Some("area") if self.cleared == Some(true) => Limit::AreaCleared {
+                    intent: intent()?,
+                },
                 Some("forces") => Limit::Forces {
                     intent: intent()?,
                     limit: ForcesLimit {
@@ -829,6 +844,7 @@ impl BelievedIntentSpec {
             air_groups: None,
             land_units: None,
             submarines: None,
+            cleared: None,
             wants: self.wants.clone(),
             defences: self.defences,
             by_day: self.by_day,

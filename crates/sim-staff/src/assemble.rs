@@ -62,7 +62,7 @@ pub(crate) struct NoSource {
 /// names: what the staff may not take for the end (item 5).
 #[derive(Default)]
 pub(crate) struct Others {
-    forces: BTreeMap<TaskForceId, IntentId>,
+    pub(crate) forces: BTreeMap<TaskForceId, IntentId>,
     units: BTreeMap<LandUnitId, IntentId>,
     bases: BTreeMap<BaseId, IntentId>,
 }

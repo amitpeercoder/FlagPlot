@@ -1349,6 +1349,16 @@ fn hash_limit(h: &mut StateHasher, limit: &Limit) {
             h.u32(intent.raw());
             hash_targets(h, targets.as_ref());
         }
+        // Decision 0222, rule 3: new codes at the end, so that an amendment
+        // that sets a limit is hashed as it was.
+        Limit::ForcesCleared { intent } => {
+            h.u8(12);
+            h.u32(intent.raw());
+        }
+        Limit::AreaCleared { intent } => {
+            h.u8(13);
+            h.u32(intent.raw());
+        }
     }
 }
 

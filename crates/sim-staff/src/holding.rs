@@ -114,11 +114,14 @@ impl Day<'_, '_> {
         let base_text = base_words(self.view, base);
         // Those its forces limit names, read up the tree; with no land unit
         // named anywhere on the chain, all of them.
+        // Outside an island a limit that names nothing binds them too
+        // (decision 0222, rule 3), as intake reads it.
+        let by_kind = !self.state.reads_as_bound(hold.id);
         let named = self
             .state
             .forces_on_chain(hold.id)
             .iter()
-            .any(|forces| !forces.land_units.is_empty());
+            .any(|forces| !forces.land_units.is_empty() || (by_kind && forces.names_nothing()));
         let allowed = if named {
             self.state.land_units_on_chain(hold.id)
         } else {

@@ -448,6 +448,10 @@ struct LimitOut {
     /// out where the limit is cleared.
     #[serde(skip_serializing_if = "Option::is_none")]
     targets: Option<TargetsOut>,
+    /// Decision 0222, rule 3: true where a forces limit or an area is
+    /// cleared; left out otherwise.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    cleared: Option<bool>,
 }
 
 fn limit(limit: &Limit) -> LimitOut {
@@ -469,6 +473,7 @@ fn limit(limit: &Limit) -> LimitOut {
         knowledge: None,
         within_days: None,
         targets: None,
+        cleared: None,
     };
     match limit {
         Limit::Forces { intent, limit } => LimitOut {
@@ -545,6 +550,16 @@ fn limit(limit: &Limit) -> LimitOut {
             intent: Some(intent.raw()),
             targets: set.as_ref().map(targets),
             ..blank("targets")
+        },
+        Limit::ForcesCleared { intent } => LimitOut {
+            intent: Some(intent.raw()),
+            cleared: Some(true),
+            ..blank("forces")
+        },
+        Limit::AreaCleared { intent } => LimitOut {
+            intent: Some(intent.raw()),
+            cleared: Some(true),
+            ..blank("area")
         },
     }
 }

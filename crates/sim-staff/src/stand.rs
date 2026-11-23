@@ -455,6 +455,11 @@ impl Day<'_, '_> {
             .unwrap_or_default();
         let today = self.today;
         let mut any = false;
+        let stationed = end.maker == Maker::Commander
+            && matches!(
+                end.kind,
+                IntentKind::Deny { .. } | IntentKind::Neutralise { .. }
+            );
         for id in named {
             let Some(force) = self.area.task_forces().find(|f| f.id == id) else {
                 continue;
@@ -480,6 +485,23 @@ impl Day<'_, '_> {
                         ships.len()
                     ),
                 ),
+                // A carrier force the forces limit of a commander's deny or
+                // neutralise names is stationed by the carrier pass, as a free
+                // one is (decision 0222, rule 2): no task is formed for it
+                // here, and one the pass formed under this end is the pass's
+                // to speak of. A task of another's making that stands is said
+                // as before, and serves the end.
+                Mission::Carrier
+                    if !surface_only
+                        && stationed
+                        && !self.state.intents_in_force().any(|other| {
+                            other.kind.force() == Some(id)
+                                && matches!(other.kind, IntentKind::OperateCarriers { .. })
+                                && !(other.parent == Some(end.id) && other.maker == Maker::Staff)
+                        }) =>
+                {
+                    continue;
+                }
                 Mission::Carrier if !surface_only => {
                     let carriers: Vec<_> = ships
                         .iter()

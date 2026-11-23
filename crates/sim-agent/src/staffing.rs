@@ -2382,6 +2382,7 @@ fn allowed_keys(tool: &str) -> &'static [&'static str] {
             "within_days",
             "kinds",
             "waters_first",
+            "cleared",
         ],
         "set_leave" => &["leave", "given"],
         "set_pursuit" => &["intent", "leave"],
