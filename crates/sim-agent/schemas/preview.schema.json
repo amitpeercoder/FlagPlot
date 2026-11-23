@@ -32,7 +32,7 @@
       "const": "flagplot-agent"
     },
     "version": {
-      "const": 48
+      "const": 49
     },
     "kind": {
       "const": "preview"
@@ -126,6 +126,9 @@
           ]
         },
         "stations": { "$ref": "defs.schema.json#/$defs/patrol_stations" },
+        "tree": { "description": "Decision 0221, the staff's reading: for the intent with the change, the tree the staff would form, as propose gives it (null for a kind that forms none). Given only in with_change, where the staff has a proposal for the intent.", "$ref": "propose.schema.json#/properties/tree" },
+        "would_hand_in": { "description": "Decision 0221: what the staff would hand in for the intent with the change, as propose gives it.", "$ref": "command_defs.schema.json#/$defs/decisions" },
+        "reason": { "description": "Decision 0221: the proposal's own reason, as propose gives it.", "$ref": "command_defs.schema.json#/$defs/reason" },
         "binds": {
           "oneOf": [
             {
@@ -236,6 +239,9 @@
           ]
         },
         "stations": { "$ref": "defs.schema.json#/$defs/patrol_stations" },
+        "tree": { "description": "Decision 0221, the staff's reading: for the intent with the change, the tree the staff would form, as propose gives it (null for a kind that forms none). Given only in with_change, where the staff has a proposal for the intent.", "$ref": "propose.schema.json#/properties/tree" },
+        "would_hand_in": { "description": "Decision 0221: what the staff would hand in for the intent with the change, as propose gives it.", "$ref": "command_defs.schema.json#/$defs/decisions" },
+        "reason": { "description": "Decision 0221: the proposal's own reason, as propose gives it.", "$ref": "command_defs.schema.json#/$defs/reason" },
         "binds": {
           "oneOf": [
             {

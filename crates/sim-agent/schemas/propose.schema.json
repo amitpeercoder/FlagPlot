@@ -31,7 +31,7 @@
       "const": "flagplot-agent"
     },
     "version": {
-      "const": 48
+      "const": 49
     },
     "kind": {
       "const": "propose"
@@ -294,6 +294,7 @@
                   },
                   "kind": {
                     "enum": [
+                      "keep_supplied",
                       "cover",
                       "hold",
                       "neutralise",
@@ -360,10 +361,10 @@
                     "description": "The side's number of the task force a stand_at, operate_carriers, ready_landing or bombard intent names (decisions 0124, 0125, 0141 and 0146); null for the other kinds (a take_place has none)."
                   },
                   "floor_days": {
-                    "type": "null"
+                    "type": ["integer", "null"]
                   },
                   "interval_days": {
-                    "type": "null"
+                    "type": ["integer", "null"]
                   },
                   "by_day": {
                     "type": ["integer", "null"],

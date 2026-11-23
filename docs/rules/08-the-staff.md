@@ -1487,6 +1487,8 @@ Decision 0218, stage 3. The end "patrol the waters with submarines" and the doct
 10. **One decision to give no order**, with one reason, names every boat that keeps her station and every boat passed over with why and the station that went to no one. It is given only where there is at least one of either. [0218, rule 54]
 11. **A boat that has gone home is not sent out again:** she is off the map (the words of the first record on sending her out are withdrawn). A boat that is damaged is not repaired; she is passed over until she is sunk or goes home. [0218, rule 54]
 
+**The preview gives the proposal's tree.** A preview's `with_change` carries, for the intent with the change, the tree the staff would form, what it would hand in for the intent and the proposal's reason, as `propose` gives them for an intent in force, so that an order not yet given is read as a plan is. [0221, the staff's reading; the agent interface, version 49]
+
 **The preview and the proposal.** A preview or a `propose` of a patrol order, as if released, gives in its proposal `stations`: for each boat that is given a station or keeps hers, in place order, the boat, her station and her place. A boat passed over is not in the list; her reason is in the decision to give no order. The lines of the proposal say each boat "would be ordered to station H (how chosen)" or "keeps her station at H". [0218, rule 54; the agent interface, version 48]
 
 **Holds and boats** (decision 0218, rules 12 and 34).
