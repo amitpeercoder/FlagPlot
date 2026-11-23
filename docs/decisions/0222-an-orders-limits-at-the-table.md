@@ -145,3 +145,17 @@ Agent-played recorded games cannot be replayed under a changed doctrine without 
 
 1. **Should the staff choose a supply source for a hold when the commander names none** (rules 8 to 12)? The architect recommends yes.
 2. **A forces limit that binds only the kinds it names** (rule 2) changes what a limit means in games on file that name forces. The architect recommends it: it is what "use only these" plainly says.
+
+## The designer's answers, Nov 23, 2026, and what they add
+
+His words: "I think - staff chooses and user can change it. But if an agent can change limits - I think we should allow the player to set them as well. Maybe we should also have an orders screen, where orders can be prioritized."
+
+1. **The staff chooses a supply source where none is named, and the commander may change it.** Rules 8 to 12 are confirmed. The source the staff chose is shown on the order's paper under "supplied from", marked as the staff's choice, with CHANGE.
+2. **What an agent at a seat can set, a player can set.** Every limit the tool takes is reachable at the table, which adds to rule 13:
+   - **protected ships,** on an order to keep a place supplied, where they are read;
+   - **single ships** in "use only these", for a supply's ships in port and wherever a forces limit may name a ship (rule 18 is withdrawn);
+   - **a base's reserve** of supply and of fuel, on the base's card.
+   A limit is still offered on an order only where something reads it there. Where the tool would take a limit that nothing reads on that kind of order, the table does not offer it, and each such case is a row of open work: either a doctrine comes to read it or the tool comes to refuse it. A player is never given a control that does nothing, and an agent is not to be left one either.
+3. **An orders paper.** YOUR ORDERS in the stop paper opens a paper for reading, THE ORDERS, that lists every order of the commander's in force and signed: what it is, its state (waiting for leave, launched, cannot be met), its limits in a line, and its rank. Orders are put in rank by moving them up and down; an order not ranked comes after those that are. From each line its plan's paper opens, and it can be withdrawn. Rule 15 is this paper. A rank is sent only for the orders he has ranked, and what a rank does is said by the staff's reasons where it decided something ("Task Force 16 went to order 2, ranked before order 3").
+
+The second question put to him (a forces limit that binds only the kinds it names) he did not speak to; it follows from his second answer, since "use only these" must mean what it says for a player, and it is built as rule 2 has it, with the games on file that move listed in the build.
