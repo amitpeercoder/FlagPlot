@@ -156,6 +156,8 @@ fn everything(session: &mut Session) -> BTreeMap<String, String> {
         "get_briefing",
         json!({"text": true}),
     );
+    // What the seat holds of the enemy, on one answer (decision 0226).
+    ask(session, "intelligence".into(), "intelligence", json!({}));
     for tool in ["list_forces", "list_bases", "list_contacts"] {
         ask(session, tool.to_string(), tool, json!({}));
         ask(

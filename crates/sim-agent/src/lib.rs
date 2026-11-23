@@ -43,6 +43,7 @@ mod deny;
 mod entries;
 mod explain;
 mod hold;
+mod intelligence;
 mod island;
 mod lines;
 mod measure;
@@ -94,6 +95,7 @@ pub use explain::{
     explain, Explain, ExplainAnswer, ExplainNode, Explainer, NodeBreakdown, NodeFactor, DEPTH_LIMIT,
 };
 pub use hold::{hold_measure, HoldMeasure};
+pub use intelligence::{intelligence, PARTS as INTELLIGENCE_PARTS};
 pub use island::{island_measure, IslandMeasure, PlaceMeasure, DEFAULT_FLOOR_DAYS};
 pub use lines::{
     AboardLine, AirGroupLine, BaseLine, ContactLine, ForceLine, FuelLine, HaltLine, LandUnitLine,

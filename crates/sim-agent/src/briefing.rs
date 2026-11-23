@@ -5106,3 +5106,21 @@ fn warnings(ctx: &Ctx<'_>, day: &Day, rules: Rules) -> Warnings {
         strike_group_holding,
     }
 }
+
+/// What one day's events say that the paper of decision 0226 gathers: the
+/// part of the briefing's action and the hexes found empty, read by the
+/// briefing's own reading of a day, so the paper's lines are the briefing's.
+pub(crate) struct DayRead {
+    pub action: ActionPart,
+    pub found_empty: Vec<FoundEmptyLine>,
+}
+
+/// The briefing's reading of the side's events of one day (`events`), with
+/// `all` the side's events from the start.
+pub(crate) fn read_day(ctx: &Ctx<'_>, events: &[SideEvent], all: &[SideEvent]) -> DayRead {
+    let day = Day::read(ctx, events, all);
+    DayRead {
+        action: day.action,
+        found_empty: day.found_empty,
+    }
+}

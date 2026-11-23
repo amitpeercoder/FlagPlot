@@ -221,6 +221,11 @@ fn tool_definitions() -> Vec<(&'static str, String, Value)> {
                 }
             }),
         ),
+        (
+            "intelligence",
+            "What your side holds of the enemy, on one answer (decision 0226): SEEN (the contacts you hold, the youngest report first), LOST SIGHT OF (each contact dropped, with its last report and whether no report came since or a strike found nothing there), CLAIMED (every claim your picture holds, by day, with a line of totals headed claimed, not confirmed: ships sunk, hits, aircraft shot down, aircraft destroyed on the ground), WHAT THE ENEMY HAS DONE (by day, the raids on your bases, the shellings of them from the sea, the attacks on your ships and the fights at sea your forces met), ASHORE (your estimates of the enemy's men, and the hexes your men found empty), ENEMY BASES (only those of which an estimate of men or a claim of aircraft destroyed on the ground from the air is held), ENEMY SUBMARINES (the reports held and the waters suspected, as told) and BEFORE THE GAME (the contacts and estimates you were given at the start, as given). `parts` names the parts given, in that order, and a part with nothing is left out; `not_kept` names the parts a seat at a task force or a base, or the area seat as it stands with command levels on, is not given. It reads your picture and your own events and nothing else, adds no knowledge and makes no estimate: a contact is a report, never a count of the enemy's forces, a claim is what your people believe and can be above the truth, and two reports are never said to be of one force. Takes no arguments; it changes nothing.".to_string(),
+            json!({"type": "object", "additionalProperties": false}),
+        ),
         ("issue_orders", ISSUE_ORDERS_DESCRIPTION.to_string(), issue_orders_schema()),
         (
             "end_day",
