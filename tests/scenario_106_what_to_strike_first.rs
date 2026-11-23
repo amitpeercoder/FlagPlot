@@ -223,6 +223,11 @@ mod record {
 /// (submarines against warships): every claim's record gains
 /// `from_submarine`, false in these games; with it taken out each text is
 /// the text of the commit before (origin/main at c1cf209a), line for line.
+/// Remade for decision 0222, rule 1 (the reason of a hold with no source):
+/// in the five-day file the Allied hold of Lunga's reason on each of its
+/// five days gains the evidence that Tulagi could be the source and its new
+/// words; nothing else moved in it, and the other four games did not move
+/// (each text against 37fc8eea, line for line).
 #[test]
 fn s12_no_game_without_the_limit_changes() {
     let games: [(&str, Option<u32>, u64); 5] = [
@@ -230,7 +235,7 @@ fn s12_no_game_without_the_limit_changes() {
         (
             "five-days/01a_eastern_solomons.toml",
             None,
-            0x09ff_3069_b3b6_c64b,
+            0xae1b_70a8_4e66_9f81,
         ),
         (
             "stage-3-proof/07a_slice.toml",

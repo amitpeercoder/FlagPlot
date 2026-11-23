@@ -391,8 +391,14 @@ use sim_core::view::SideView;
 /// work in (a station inside them is passed over where a place outside
 /// serves, and carries the caution `station_in_submarine_waters` where none
 /// does). It gives the orders `supply-54` gave to a side with no patrol
-/// intent and no suspected waters.
-pub const DOCTRINE_VERSION: &str = "supply-55";
+/// intent and no suspected waters. `supply-56` adds decision 0222, rule 1:
+/// the reason of a hold with no source on it or above it names the bases of
+/// the side that could be one by the island's test of a source, each with
+/// its supply above its reserve, or, where none could, says that no other
+/// base of the side holds supply above its reserve and the place lives on
+/// what it has, with its days of supply today, and offers nothing. It gives
+/// the orders `supply-55` gave.
+pub const DOCTRINE_VERSION: &str = "supply-56";
 
 /// The staff: the doctrine for keeping a base supplied (stage 1) and, after
 /// it, the air doctrine for holding a place and covering a base from the air
