@@ -4,7 +4,7 @@ Status: settled by the architect on Nov 19, 2026, inside the plan for step 3, st
 
 Summary: A trial plays a course in a number of worlds. The estimate is what is read from them: in how many worlds the end was met, and by what day; in how many it was met and lost again; in how many it was not met; what it cost in men, ships and aircraft, as the lowest, the middle and the highest; what the trial's enemy lost; what was assumed; and where the worlds part by a thing the side did not know. It speaks in counts of worlds and never in chances, and in places, days, men, ships and aircraft and never in points. With it comes one thing the trial lacked: a way to say that the men at a place may be more than the side's estimate, and not known
 
-Standing: Settled by the architect, Nov 19, 2026, inside decision 0161, and amended on review. Built on Nov 19, 2026. Its case "a plan displaced" waits for the architect to state it, and its means for "believed men are set aside" for his ruling
+Standing: Settled by the architect, Nov 19, 2026, inside decision 0161, and amended on review. Built on Nov 19, 2026, and its readings ruled on. A case of a plan displaced by a take of another place is owed, with its hand calculation
 
 ## Why
 
@@ -135,3 +135,11 @@ Made on Nov 19, 2026, on reading the build.
 4. **"It waits for nothing" stands beside a need to know that is not met.** A count told at the start is not a count seen, and at balanced the plan order asks for one; with nothing that can look, the take goes without. The estimate gives both, as the plan order does.
 5. **The words name tasks and kinds as the engine prints them.** That is for a reader who is a programmer. Words for a commander are the next step's, which shows an estimate to a seat.
 
+## The architect's reading, Nov 24, 2026
+
+Made with decision 0161's "Where the stage stands". The standing line said two things waited for the architect; both were ruled on Nov 19, 2026 (rulings, 2 and 3), and the line is corrected.
+
+1. **"A plan displaced" is stated where it was built:** in scenario 95, two takes of one place that share a force do not displace one another by anything an estimate reads. Scenario 100 has the same of an order in force (its plan is met in the same worlds with the order and without, and is not named as displaced). The counting itself is tested inside the crate.
+2. **So no scenario yet shows a plan displaced.** The case owed is of two places. Its shape, to be given figures and a hand calculation by the architect in a call of its own, before anything is built: one transport force, two places, two takes in the commander's order of priority; tried, the first take's course has the force; the second plan, which without the course is met and kept in every world by a day worked by hand, is with it met later by the days of the force's passage out, back and loading, or not met inside the horizon; the estimate names it under what the other plans lost as later or in fewer worlds, with the counts; and with the priorities exchanged the two lines exchange.
+3. **It is not a condition of decision 0161's proof.** None of the twelve reads what another plan lost. It is a part of the spec's "It carries the side's other plans", and of the operation of "Done means" (its step 3), so it is owed before step 3 is done and is written in `docs/open-work.md`.
+4. **The words for a commander** (rulings, 5) were made by decisions 0178 and 0181. The legibility condition of the proof is read on a seat's answer.
