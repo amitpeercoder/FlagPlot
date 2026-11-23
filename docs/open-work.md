@@ -214,3 +214,17 @@ Where step 2 ends, battle by battle, with every named miss and agreement at the 
 
 What step 2 did is in `docs/validation/step2-close.md`, the decision records (`docs/decisions/README.md`) and git.
 
+
+## Open from decision 0228 (the staff chooses a source of supply)
+
+Built on Nov 23, 2026 (scenario 132; see the decision's "As built"). Each row is open:
+
+- **The staff does not choose again** when the kept source runs dry: it says so and names the other bases that could be one (rule 17), and the commander names a source.
+- **The staff brings no ship to a source.** A source with no transport force waits for one to lie there.
+- **The need of a place not yet the side's is 0,** so before a landing every base that can spare anything covers it; the take's own reckoning of what its men will eat is not read.
+- **Distance is the fourth key only.** Look at the order again when a rear base stands behind a rear base (Nouméa behind Espiritu Santo, decision 0224).
+- **The danger of the way** and **fuel** are not weighed in the choice.
+- **Two rules are kept for the choice** (the island's old one for a side without the key), because a closed proof's agent-played records cannot be said again in the new language. When those records are next marked as of an older engine, the old choice goes and the key with it.
+- **A run still loading when a commander renames the source** of its supply is read by the supply doctrine as it reads an island's renamed source; it has not been traced.
+- **Rule 17's list of other bases** weighs a base before its day and not the sources of orders higher in priority.
+- **An order to keep a base supplied given from a base's card** at the table is sent with no source unless the player sets one; only a hold and an island get the staff's choice.

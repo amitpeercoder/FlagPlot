@@ -68,13 +68,18 @@ KEYS = ('submarine_classes = "../../reference/submarine_classes_1942.csv"\n'
         'submarine_torpedoes = "../../reference/submarine_torpedoes_1942.csv"\n'
         'submarines = "../../reference/submarines.toml"\n')
 
+# The third key of each table states that the side's staff chooses its sources
+# of supply (decision 0228, amended on review, A): the files the table plays
+# state it for both sides.
 SIDES = ('[side.allied]\n'
          'submarine_pattern = "off_bases"\n'
          'expects_boats_off_own_bases = true\n'
+         'staff_chooses_supply_sources = true\n'
          '\n'
          '[side.japanese]\n'
          'submarine_pattern = "lines"\n'
-         'expects_boats_off_own_bases = false\n')
+         'expects_boats_off_own_bases = false\n'
+         'staff_chooses_supply_sources = true\n')
 
 CLASS_NAMES = {
     6001: 'Tambor class', 6002: 'Gato class', 6003: 'I-15 class',

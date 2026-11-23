@@ -1090,7 +1090,7 @@ def the_screen(bridge):
     entries = {e["id"]: e for e in json.load(open(os.path.join(HERE, "scenarios.json")))["scenarios"]}
     for gid, name, files, words in BOAT_GAMES:
         entry = entries[gid]
-        check(entry["name"] == name and sorted({p["file"] for p in entry["pairings"]}) == sorted("data/scenarios/table-boats/" + f for f in files),
+        check(entry["name"] == name and sorted({p["file"] for p in entry["pairings"]}) == sorted(("data/scenarios/table-rear-bases/" if gid == "guadalcanal-39-days" else "data/scenarios/table-boats/") + f for f in files),
               f"{name} is one game, and its pairings play the copies with submarines: " + ", ".join(files))
         for side in ("allied", "japanese"):
             situation = json.load(open(os.path.join(os.path.dirname(HERE), entry["directives"][side])))["directives"][0]["parts"][0]["text"]
@@ -1202,26 +1202,21 @@ def orders_on_the_card(bridge):
           "the commander's direct order is accepted with no staff's reason after it")
     check(any(staffs(nx) for e, nx in accepted if "task_force:2" in e["text"]),
           "each staff order to Task Force 11 is accepted with the staff's reason straight after it, naming the order it serves")
-    check(page_supply_limit(person, 3, "keep_supplied") is None,
-          "with no other base of the side to be a source, the page sets no forces limit on a keep-supplied order")
-
-    # The men put ashore at Lunga, and a keep-supplied order signed as the page
-    # signs it: its forces limit names a source and a pool the staff can send.
+    # The men put ashore at Lunga, and a hold signed as the page signs it, with no source named: the staff chooses one, the page does
+    # not (decision 0228). The tool says where the order is supplied from, and who chose it.
     person.call("issue_orders", {"orders": [
         {"unit": "task_force:9", "order": {"kind": "set_route", "waypoints": [[2, -4]], "act_at": [[2, -4]]}},
         {"unit": "task_force:9", "order": {"kind": "unload"}}]})
     person.call("end_day")
-    signed = person.call("set_intent", {"intent_kind": "keep_supplied", "base": 1, "floor_days": 30})["ok"]
-    limit = page_supply_limit(person, 1, "keep_supplied")
-    check(limit is not None and limit["source"] == 3 and limit["task_forces"],
-          f"with men ashore at Lunga the page names Espiritu Santo as the source and the free transports as the pool ({limit})")
-    limit["intent"] = signed["intent"]
-    check(person.call("set_limit", limit)["ok"]["status"] == "queued", "the forces limit is taken")
-    said = person.call("staff_orders")["ok"]
-    mine = [r for r in said["no_orders"] if r.get("serves", {}).get("intent") == signed["intent"]]
-    check(not any("no forces limit" in r["worked"] or "No ship of the pool" in r["worked"] for r in mine)
-          and any(c["kind"] == "approve" and c["reason"]["serves"]["intent"] == signed["intent"] for c in said["commands"]),
-          "the staff takes the order up: it makes the plan ready, and does not say it has no forces or no ship")
+    signed = person.call("set_intent", {"intent_kind": "hold", "base": 1})["ok"]
+    person.call("end_day")
+    state = person.call("command_state")["ok"]
+    mine = [i for i in state["intents"] if i["number"] == signed["intent"]]
+    check(len(mine) == 1 and "supplied_from" in mine[0],
+          "command_state gives a hold where it is supplied from (decision 0228, rule 18)")
+    if mine and mine[0]["supplied_from"] is not None:
+        check(mine[0]["supplied_from"]["chosen_by"] == "staff" and mine[0]["supplied_from"]["base"] != 1,
+              f"the staff chose the source of the hold of Lunga, and it is not Lunga ({mine[0]['supplied_from']})")
     land_unit_orders(bridge, person)
     check(post(bridge.table + "/new") == {"ok": True}, "the game is put away")
 
@@ -1451,8 +1446,10 @@ def the_limits_on_the_paper(bridge):
           "a carrier force's own order offers no air groups (the groups aboard go with their force) and a patrol only its boats")
     check("if (t && !f && (r.limits || []).length) t.reasons.push(" in text,
           "a reason the reading has no plain words for keeps its list of limits, so a rank it speaks of is still a link")
-    check("lim.chosen.source = lim.chosen.ships = true" in text and "WE CHOSE IT FOR YOU" in text and "limit.air_groups" not in text,
-          "the table's own source is put in the limits as a choice the player may change, and a hold no longer names its air groups")
+    check("supplyForces" not in text and "WE CHOSE IT FOR YOU" not in text and "lim.chosen" not in text and "limit.air_groups" not in text,
+          "the page chooses no source of its own (decision 0228, rule 21): an order from a base's card is sent with no source unless the player sets one")
+    check("top.supplied_from && top.supplied_from.chosen_by === 'staff'" in text and "', our choice'" in text,
+          "the plan's paper says of the base the staff chose that it is our choice, with the CHANGE the line has (decision 0228, rule 19)")
     check("area: pickArea" in text and "picking === 'route' || picking === 'station' || picking === 'area'" in text and "MOVE ON THE CHART" in text,
           "the chart's touch moves the area's middle, and tearing the paper up ends it")
     check("BACK TO THE STAFF\u2019S CHOICE" in text and "'Strike ' + word + ' ' + m[2]" in text and "These waters first" in text, "each set line has its way back, and the strike order has its up and down")
@@ -1839,45 +1836,6 @@ def midway_on_its_chart(bridge):
     check(order["results"][0]["status"] == "queued", "a direct order gives a boat of Midway's a station")
     check("base_attacked_against: 'bombing of a base'" in page and "(n === 1 ? 'report' : 'reports')" in page,
           "the plot folds the rest of a kind of report under a plain name, not the event's own")
-
-
-def page_supply_limit(person, base, kind):
-    """The forces limit index.html sets when a keep-supplied or hold order is
-    signed (supplyForces), worked from the same answers, or None."""
-    st = person.call("command_state")["ok"]
-    bases = person.call("list_bases")["ok"]["bases"]
-    forces = person.call("list_forces")["ok"]
-    num = lambda h: int(h.split(":")[1])
-    same = lambda a, b: a and b and a["q"] == b["q"] and a["r"] == b["r"]
-    dest = next((b for b in bases if num(b["base"]["handle"]) == base), None)
-    if dest is None:
-        return None
-    named = set()
-    for i in st["intents"]:
-        f = i["in_force"] and i["kind"] not in ("keep_supplied", "hold") and i["limits"]["forces"]
-        for t in (f or {}).get("task_forces", []) if f else []:
-            named.add(num(t["handle"]) if isinstance(t, dict) else int(t))
-    for h in st.get("holds", []):
-        if h.get("target", {}).get("task_force") is not None:
-            named.add(int(h["target"]["task_force"]))
-    reserve = {r["base"]["handle"]: float(r["supply_reserve_t"]) for r in st.get("reserves", [])}
-    above = lambda b: float(b["supply_t"]) - reserve.get(b["base"]["handle"], 0)
-    sources = [b for b in bases if b is not dest and not same(b["place"], dest["place"]) and above(b) > 0]
-    if not sources:
-        return None
-    aboard = {a["ship"]["handle"] for u in forces["land_units"] for a in u.get("aboard", [])}
-    free = [f for f in forces["task_forces"] if f["mission"] == "transport" and num(f["task_force"]["handle"]) not in named
-            and not any(s["ship"]["handle"] in aboard for s in person.call("get_entity", {"handle": f["task_force"]["handle"]})["ok"]["entity"].get("ships", []))]
-    in_port = {b["base"]["handle"]: [num(s["handle"]) for s in person.call("get_entity", {"handle": b["base"]["handle"]})["ok"]["entity"].get("ships_in_port") or []] for b in sources}
-    day = st["for_day"]
-    manned = lambda b: any(u["men_ashore"] and same(u["place"], b["place"]) for u in forces["land_units"])
-    ready = lambda b: bool(in_port[b["base"]["handle"]]) or any(same(f["place"], b["place"]) and not f.get("destination") and not (f.get("available_from") or 0) > day for f in free)
-    source = sorted(sources, key=lambda b: (manned(b), not ready(b), -above(b), num(b["base"]["handle"])))[0]
-    if not free and not in_port[source["base"]["handle"]]:
-        return None
-    limit = {"limit": "forces", "source": num(source["base"]["handle"]), "task_forces": [num(f["task_force"]["handle"]) for f in free],
-             "ships": in_port[source["base"]["handle"]]}
-    return limit
 
 
 def person_against_agent(bridge, hold):

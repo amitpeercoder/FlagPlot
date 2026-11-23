@@ -700,3 +700,7 @@ path = "boats_in_the_five_days_games.rs"
 [[test]]
 name = "boats_in_the_thirty_nine_days_games"
 path = "boats_in_the_thirty_nine_days_games.rs"
+
+[[test]]
+name = "table_rear_bases_files"
+path = "table_rear_bases_files.rs"

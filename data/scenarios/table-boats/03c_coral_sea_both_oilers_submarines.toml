@@ -1479,10 +1479,12 @@ given = true
 [side.allied]
 submarine_pattern = "off_bases"
 expects_boats_off_own_bases = true
+staff_chooses_supply_sources = true
 
 [side.japanese]
 submarine_pattern = "lines"
 expects_boats_off_own_bases = false
+staff_chooses_supply_sources = true
 
 # USS S-42 (ships.csv 17203; class 6010, S-42 group, by ship_facts 17206).
 # PLACEHOLDER start (-3,-12): engagement_events 16103 (off Cape St George on 5
