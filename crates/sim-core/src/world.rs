@@ -174,11 +174,15 @@ impl Default for MadeIds {
 /// of her own kind with her state, which a game saved under the old rules
 /// could not hold) and 30 from decision 0218, stage 3 (the patrol order, a hold
 /// on a boat and a forces limit naming boats, which a game saved under the
-/// old rules could not hold). A pull request
+/// old rules could not hold) and 31 from decision 0222 (a forces limit binds
+/// only the kinds it names or lists in `none_of`, a forces limit and an area
+/// cleared, which change games whose limits name some kinds and not others,
+/// and a limit's field a game saved under the old rules could not hold). A
+/// pull request
 /// raises it by one
 /// when it changes a rule in a way that changes what an existing game would do; a
 /// change that leaves every existing game as it was leaves it alone.
-pub const RULES_VERSION: u32 = 30;
+pub const RULES_VERSION: u32 = 31;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct SimConfig {

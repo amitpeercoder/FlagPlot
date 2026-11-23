@@ -186,8 +186,12 @@ pub const FORMAT: &str = "flagplot-saved-game";
 /// `answer_pursuit` (`task_force`, `contact`, `allow`), in a hand-in's
 /// notices an optional `"pursuit"` and in a hand-in's reasons an optional
 /// `"answer_of"` (a force number); its state version is v55. A game of an older
-/// version is refused, not converted.
-pub const VERSION: u32 = 24;
+/// version is refused, not converted. Version 25 (decision 0222) adds in
+/// `"commands"` a forces limit's `none_of` and, for a forces limit or an
+/// area, `cleared`, and in a hand-in's reasons an optional `"limits"`; its
+/// state version is v57. A game of an older version is refused, not
+/// converted.
+pub const VERSION: u32 = 25;
 
 pub type Script = BTreeMap<u32, Vec<(Side, OrderRequest)>>;
 

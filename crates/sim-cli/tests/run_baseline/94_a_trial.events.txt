@@ -2,14 +2,14 @@ Placeholder scenario 94: A trial
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 81c75605c3f32854  3 events
-day   2  hash 81e492030f756e8a  3 events
-day   3  hash 0b8547817ffb9698  3 events
-day   4  hash 98c44e94f18ac1ca  3 events
-day   5  hash dd24abae2428f90c  3 events
-day   6  hash f63091114490b50a  3 events
-day   7  hash df5ca95ae32d41b8  3 events
-day   8  hash 4fc77017874440ba  3 events
+day   1  hash 44c89143fd66906b  3 events
+day   2  hash 6ebdb15de2e1eb55  3 events
+day   3  hash 81db8b67c30a1fdf  3 events
+day   4  hash 68c9c3d23c4ed1ed  3 events
+day   5  hash c32342f96b909d93  3 events
+day   6  hash 814b28f68dd9a6f5  3 events
+day   7  hash 02df52dbbd930ebf  3 events
+day   8  hash c1f28ba7759f99fd  3 events
 
 #1 D1 -         base:1 at the end of the day: 1000 t of supply, 0 aircraft ready: not open
 #2 D1 -         base:2 at the end of the day: 0 t of supply, 0 aircraft ready: not open
