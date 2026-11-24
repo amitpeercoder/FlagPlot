@@ -5,13 +5,13 @@
 //
 //     node web/check.mjs
 //
-// It reads `Cargo.toml` and the shipped files and the game files of
-// `web/games/`; it reads no Markdown (ruling 47). The expected value of every
+// It reads `Cargo.toml` and the shipped files and the games of the
+// check in `web/games/`; it reads no Markdown (ruling 47). The expected value of every
 // comparison is what the native build gives: no hash is pinned and no number
 // is written by hand (ruling 29). Every answer is compared as the string the
-// door gave, byte for byte; nothing a door gives is parsed to be compared (a
-// game file's answers are parsed only so that the game can go on from what it
-// was told).
+// door gave, byte for byte; nothing a door gives is parsed to be compared (an
+// answer in a game of the check is parsed only so that the game can go on
+// from what it was told).
 //
 // # The statements this check holds
 //
@@ -39,8 +39,10 @@
 // 11. A game file of statement 7 cut at day 20 and continued natively, and one
 // cut natively and continued in the module, each end in the saved game of
 // statement 7.
-// 12. The module exports the seven functions of ruling 17, and no other name
-// but the binding's own as ruling 17 allows them.
+// 12. The module exports the seven functions of ruling 17, each a function,
+// and no other name but the binding's own: `memory`, names beginning
+// `__wbindgen_`, `__wbg_` or `__externref_`, and the globals
+// `__abort_handler` and `__instance_terminated`.
 // 13. The module refuses a pack whose versions are not its own, and a game
 // file whose pin is not the pack's.
 // 13a. For the Eastern Solomons game of statement 6, the saved game `sim-cli
@@ -49,8 +51,8 @@
 //
 // Also held here, from the rulings: the `web` profile has `overflow-checks =
 // true` written out (ruling 30); the stack is 8 MB and lies first in memory
-// (ruling 7); the files of `web/games/` are those of the games the list
-// offers a person against the engine (ruling 29).
+// (ruling 7); the games of the check in `web/games/` are those of the
+// games the list offers a person against the engine (ruling 29).
 
 import { spawn, spawnSync } from 'node:child_process';
 import { mkdtempSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -116,14 +118,21 @@ const wasmBytes = readFileSync(`${OUT}module/sim_web_bg.wasm`);
 const compiled = new WebAssembly.Module(wasmBytes);
 
 {
-  const allowed = (name) =>
-    FUNCTIONS.includes(name) ||
-    name === 'memory' ||
-    /^(__wbindgen_|__wbg_|__externref_)/.test(name);
-  const names = WebAssembly.Module.exports(compiled).map((e) => e.name);
-  const missing = FUNCTIONS.filter((f) => !names.includes(f));
-  const extra = names.filter((n) => !allowed(n));
-  check(missing.length === 0, `the module exports all seven functions of the door${missing.length ? ` (missing ${missing})` : ''}`);
+  // The allowed set (statement 12, as amended by the rulings on pull request
+  // 733): the seven, each a function; `memory`, the one memory; names the
+  // binding makes by prefix; and the two globals, by exact name and kind.
+  const exported = WebAssembly.Module.exports(compiled);
+  const kinds = Object.fromEntries(exported.map((e) => [e.name, e.kind]));
+  const wrong = FUNCTIONS.filter((f) => kinds[f] !== 'function');
+  const memories = exported.filter((e) => e.kind === 'memory');
+  const allowed = (e) =>
+    FUNCTIONS.includes(e.name) ||
+    (e.name === 'memory' && e.kind === 'memory') ||
+    (/^(__wbindgen_|__wbg_|__externref_)/.test(e.name) && ['function', 'table', 'global'].includes(e.kind)) ||
+    (['__abort_handler', '__instance_terminated'].includes(e.name) && e.kind === 'global');
+  const extra = exported.filter((e) => !allowed(e)).map((e) => `${e.name} (${e.kind})`);
+  check(wrong.length === 0, `the module exports each of the seven functions of the door, as a function${wrong.length ? ` (not so: ${wrong})` : ''}`);
+  check(memories.length === 1 && memories[0].name === 'memory', 'the module exports exactly one memory, named `memory`');
   check(extra.length === 0, `the module exports no name but the binding's own${extra.length ? ` (also ${extra})` : ''}`);
   const glue = await import(`${pathToFileURL(`${OUT}module/sim_web.js`)}?exports`);
   const glueNames = Object.keys(glue).filter((n) => n !== 'default' && n !== 'initSync');
@@ -336,7 +345,7 @@ async function finish(door, state, straightRun, label) {
 }
 
 // ---------------------------------------------------------------------------
-// The game files.
+// The games of the check.
 // ---------------------------------------------------------------------------
 
 const files = readdirSync(`${ROOT}web/games`).filter((f) => f.endsWith('.mjs')).sort();
@@ -350,7 +359,7 @@ for (const f of files) games[f.replace(/\.mjs$/, '')] = (await import(`${ROOT}we
   const plain = Object.keys(games).filter((n) => !n.startsWith('orders-'));
   check(
     JSON.stringify([...plain].sort()) === JSON.stringify([...names].sort()),
-    `web/games holds one file for each of the ${names.length} scenario files the list offers, and no other plain one`,
+    `web/games holds one game of the check for each of the ${names.length} scenario files the list offers, and no other plain one`,
   );
   const scenarios = JSON.parse(readFileSync(`${ROOT}table/scenarios.json`, 'utf8')).scenarios;
   const seatOf = (file) => {
