@@ -300,3 +300,69 @@ Decision 0224's reading of Nov 23 (5) left a lead from one game: the Japanese me
 **What is printed,** for each arrangement and side: the medians over the seeds on which the side landed men of U/L, F/L, A/L and M/L, and of (U less F)/L, which is what the hunger would be were no fallen-back man lost; the count of seeds in which F is more than half of U; the sum of F by hex; and the list of item 6. The per-seed rows go to a file beside it.
 
 **What the record will rest on.** If (U less F)/L is at or under one in twenty and F is most of U, the cause is the lead's and the record settles whose the fallen-back men are to feed. If A is large, the men starve where they landed and the cause is still the supply of the place, which is a different record. If neither, the result comes back to the architect before anything is planned.
+
+## The men unfed, as measured (Nov 24, 2026)
+
+Made as the section above says. Facts only: no condition is judged and no figure moved here.
+
+**The games.** `sim-cli` built in release from commit `3b5a7b5b` (the tree of `origin/main` at `7b7ea9c0`, which differs from it by no file; state v59, doctrine `supply-59`). Seeds 1 to 100, 39 days, one export a seed, 200 exports:
+
+```
+CARGO_TARGET_DIR=/tmp/unfed/target cargo build --release -p sim-cli
+sim-cli export data/scenarios/stage-3-proof/07a_slice.toml     --seed N --out /tmp/unfed/P/seedN.json     (P)
+sim-cli export data/scenarios/tmp-inside/07a_slice_T.toml      --seed N --out /tmp/unfed/T/seedN.json     (T)
+```
+
+T is P with one line changed, `ground = "../../reference/ground_hunger.toml"` for `ground = "../../reference/ground.toml"` (the table's ground figures, 0224's reading (1)); `data/scenarios/tmp-inside/07a_slice_T.toml` is a temporary file and is not committed; no committed scenario was changed.
+
+**The reader** is outside the repository: `/tmp/unfed/unfed.py` (it imports `scripts/0159-proof/hunger.py`'s `read_seed` unchanged for L, U and the counted units, and stage 3's `common.py`) and `/tmp/unfed/hextable.py` (the per-hex table). `python3 -I unfed.py DIR [--all] --rows OUT.jsonl`; per-seed rows are in `/tmp/unfed/rows{P,T}.jsonl` (the base reading) and `/tmp/unfed/rowsall{P,T}.jsonl` (the extension below), and the printed output in `/tmp/unfed/out*.txt`. Python's 3.9; `-I`. The scripts, rows and exports are in `/tmp`, which a reboot may clear; the two commands above make the exports again, and the games are deterministic.
+
+**What each count is.** L and U are `hunger.py`'s (L: men of `men_landed` of a unit of the side in a hex whose base of the start was not the side's; U: the `lost` of every `men_lost_unfed` of those units from the pulse of their first counted landing). A unit's latest move before an event is the last of its `unit_fell_back`, `spent_unit_fell_back` and `march_arrived` events in event order. **F:** a `men_lost_unfed` of a counted unit in H whose latest move is a `unit_fell_back` or `spent_unit_fell_back` whose `to` is H. **A:** no move before it and H is the unit's place (the hex of its latest counted `men_landed`). **M:** the latest move is a `march_arrived` whose `to` is H. **X:** anything else. Each X is listed in the rows file.
+
+### 1. The first fact, before anything else
+
+**T's Japanese men lost unfed come to the neighbourhood of the Nov 23 figure, but on the base reading none of them is counted.** All units of the Japanese side lose a median 1,009 men a seed in T (979 to 1,035; 101,129 over 100 seeds; the Nov 23 record has 1,009 to 1,011). In P the median is 1,860 (1,553 to 3,017). On the base reading, U is **0** in all 100 seeds of T for both sides: every one of those men belongs to units 11, 12 and 13 (the Japanese combat groups ashore at (2,-4) at the start; each is a land unit with no `men_landed` event in the ten seeds checked for it, 1, 11 and so on to 91, in both arrangements), which `hunger.py`'s reading never counts as landed. Landed men on the Japanese side, L, are a median 6,038 a seed (T: 599,227 over 100 seeds; P: 600,501) and none of them is lost unfed in T.
+
+### 2. The base reading (counted units only), medians over the 100 seeds
+
+| | Side | Seeds with L | median L | median U | U/L | F/L | A/L | M/L | X/L | (U less F)/L | seeds F over half of U |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| P | Japanese | 100 | 6,038 | 300.5 | 0.0505 | 0.0000 | 0.0505 | 0.0000 | 0.0000 | 0.0505 | 0 (U above 0 in 100 seeds) |
+| P | Allied | 100 | 16,975 | 468 | 0.0276 | 0.0000 | 0.0276 | 0.0000 | 0.0000 | 0.0276 | 0 (U above 0 in 59 seeds) |
+| T | Japanese | 100 | 6,038 | 0 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0 (U is 0 in every seed) |
+| T | Allied | 100 | 16,975 | 0 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0 (U is 0 in every seed) |
+
+Sums over the seeds: P Japanese U 35,764, all A; P Allied U 96,136, all A. F is 0 and M is 0 on every row. The sum of F by hex is empty. The Japanese counted men lost in P are lost where they landed, with no move before.
+
+### 3. The same split over every unit of the side (an extension, not the section's definition)
+
+The section's definition counts none of the units that the loss is in, so the same F, A, M and X are also printed over the `lost` of **every** `men_lost_unfed` of every unit of the side, a unit with no counted landing having the hex of its starting record as its place (`--all`). L is as above. Japanese side:
+
+| | median U (all units) | U/L | F/L | A/L | M/L | X/L | (U less F)/L | sums over 100 seeds |
+|---|---|---|---|---|---|---|---|---|
+| P | 1,860 | 0.3083 | 0.0000 | 0.0505 | 0.2093 | 0.0468 | 0.3083 | U 190,017: A 35,764, M 126,076, X 28,177, F 0 |
+| T | 1,009 | 0.1681 | 0.0000 | 0.0000 | 0.1681 | 0.0000 | 0.1681 | U 101,129: M 101,129, A 0, X 0, F 0 |
+
+Allied side, all units: P U 100,420 (A 100,420; the 4,284 beyond the counted units are lost at (2,-4) by units ashore at the start), T U 0.
+
+**F is 0 in every seed of both arrangements, whichever way it is counted, and seeds with F over half of U are 0 of 100 in each.** The reason is in the events: every `unit_fell_back` in these games is followed by a `march_day` series and a `march_arrived` to the same hex, so the latest move before any loss is a `march_arrived`, and the loss falls in M by the definition as written. Every one of the 126,076 (P) and 101,129 (T) M men is of a unit whose move before the `march_arrived` is a `unit_fell_back` to the same hex (`M_after_fell_back_to_same_hex` in the rows). Read with those men counted as fallen back (G, a count made here beside the definition): median G/L is 0.2093 in P and 0.1681 in T; (U less G)/L is 0.0985 in P and 0.0000 in T; seeds with G over half of U are 98 of 100 in P and 100 of 100 in T. In P the X men are 28,177 over the seeds, of units 11, 12 and 13, each of whose latest move was a `unit_fell_back` to (2,-5) and which lose men at (2,-4) with no later move event.
+
+### 4. The hexes where fallen-back men are lost (units 11, 12 and 13, by the G reading above)
+
+One hex, **(2,-5)**, in every seed of both arrangements (Japanese side; no Allied loss). The per-hex items of the section:
+
+| Item | P | T |
+|---|---|---|
+| Seeds, men lost at (2,-5) by these units over 100 seeds | 100, 126,076 | 100, 101,129 |
+| Men who fell back there (the events' `men`, summed over the seeds), day of the fall-back | 198,370, day 1 in every seed | 198,370, day 1 in every seed |
+| First day of a loss there (all seeds); last day | 13; 39 | 26; 39 |
+| A base of the side in the hex at the first loss | a base of the start in 100 seeds (base 6, "Placeholder Japanese stock west of the Lunga", 71 t at the start, `on_map = false`); none formed | the same, 100 seeds |
+| Tons the side unloaded in the hex from day 1 to the end | 0 in every seed | 0 in every seed |
+| Last `men_fed` at the hex before the first loss (median over seeds; the event is of a hex and a side, not of a unit, so it is the hex's and not each unit's) | day 13; 1,698 men, 616 fed, 1,082 unfed; from base 6 in 100 seeds | day 26; 1,980 men, 0 fed, 1,980 unfed; from base 6 in 100 seeds |
+| Staff orders (route end or via, acting at, prepare a landing, unload by a force lying there, or a command taken naming the hex) naming (2,-5) from day 1 | none in any seed | none in any seed |
+
+The per-unit item (the last `men_fed` of each unit) cannot be read from the events as written, since a `men_fed` event names a hex, a side and a base and no unit; the hex's last is given above. Of an order that "names" a hex: an unload order has no hex in its text, so it was read against the position of the force it was given to at the start of its day; a march to or from the hex that is no order is not an order of the staff and none appears in the orders or the commands taken.
+
+### 5. What was not read
+
+The Allied side has no F, M or X in either arrangement. No order of either side's staff names (2,-5) from day 1 in any of the 200 games. Units 11, 12 and 13 begin ashore, so the base reading carries none of the Japanese men lost unfed in T and 35,764 of the 190,017 lost by every Japanese unit in P (19 per cent). The hunger of the counted landed men (U/L 0.0505 in P, 0 in T) and the hunger of the men ashore at the start (M, 0.2093 in P and 0.1681 in T) are two counts.
