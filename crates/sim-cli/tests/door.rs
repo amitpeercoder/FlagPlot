@@ -27,6 +27,29 @@
 //! 5b. A second `begin` on a door that has a game is refused; no function
 //!    of the door takes a side but `begin` and `resume`.
 //!
+//! # The test owed on pull request 732 (B)
+//!
+//! Written by the architect in decision 0229, "The architect's rulings on
+//! pull request 732", copied word for word:
+//!
+//! B. Statement 5's last clause is not yet held as written. The statement
+//! says a file with its reads left out "replays to the same answers".
+//! `the_doors_file_without_reads_replays_as_the_file_with_them` compares the
+//! two files' saved games, their game files and one briefing, all after the
+//! game is over, on the one day of the Eastern Solomons. That shows the two
+//! end alike; it does not show that a call made after a read, in the middle
+//! of a game, is answered alike, which is what a kept game taken up in the
+//! browser rests on. The test owed, on Midway (five days), the Allied seat:
+//! play a file with its reads in, and the same calls with the reads left
+//! out, each to the evening of day 3, by `resume` in two doors; then make
+//! the same later calls on both and compare every answer, value for value.
+//! The later calls must include one whose answer carries a number the game
+//! gives out (`queued` after an order is signed, and `take_back` of an entry
+//! by its number; a `preview` and its approval where the game offers one)
+//! and then `end_day` to the last. The saved games at the end are compared
+//! as now. If any answer differs, the developer stops: ruling 33's choice to
+//! leave reads out would then be wrong, and it comes back to the architect.
+//!
 //! # How they are made
 //!
 //! The games are the table's: the Eastern Solomons over one day, the Allied
@@ -636,4 +659,102 @@ fn a_seed_is_a_string_of_digits() {
         .game_file()
         .expect("a file")
         .contains("12345678901234567890"));
+}
+
+// ---------------------------------------------------------------------
+// The test owed on pull request 732 (B).
+// ---------------------------------------------------------------------
+
+#[test]
+fn a_call_after_a_read_in_the_middle_of_midway_is_answered_alike_with_the_reads_or_without() {
+    let scenario = scenario(MIDWAY);
+    let pack = pack_bytes(&scenario);
+    // To the evening of day 3 (the clock stands at dusk before day 3), with
+    // reads among the calls and a call the game refuses.
+    let before: Vec<(&str, Value)> = vec![
+        ("get_briefing", json!({})),
+        ("list_forces", json!({})),
+        ("queued", json!({})),
+        (
+            "issue_orders",
+            json!({"orders": [{"unit": "task_force:77", "order": {"kind": "set_speed", "speed": "full"}}]}),
+        ),
+        ("end_day", json!({})),
+        ("get_briefing", json!({})),
+        ("events", json!({"day": 1})),
+        ("intelligence", json!({})),
+        ("end_day", json!({})),
+        ("list_contacts", json!({})),
+        ("command_state", json!({})),
+        ("queued", json!({})),
+    ];
+    // The file without the reads is the door's own; the file with them is
+    // the same header and every one of the calls, in `play`'s format.
+    let (_, without) = door_played(&scenario, &pack, &before);
+    let header = without.lines().next().expect("a header");
+    let mut with = format!("{header}\n");
+    for (tool, arguments) in &before {
+        with.push_str(&json!({"tool": tool, "arguments": arguments}).to_string());
+        with.push('\n');
+    }
+    assert!(with.lines().count() > without.lines().count());
+    let mut a = Door::new();
+    a.resume(&pack, &with).expect("resumed with its reads");
+    let mut b = Door::new();
+    b.resume(&pack, &without).expect("resumed without them");
+
+    let mut both = |call: (&str, Value)| -> Value {
+        let from_a = through(&mut a, &call);
+        let from_b = through(&mut b, &call);
+        assert_eq!(from_a, from_b, "{} {} is answered alike", call.0, call.1);
+        from_a
+    };
+    let order = |hex: [i32; 2]| {
+        (
+            "issue_orders",
+            json!({"orders": [{"unit": "submarine:1", "order": {"kind": "station", "hex": hex}}]}),
+        )
+    };
+    both(("get_briefing", json!({})));
+    both(order([7, 0]));
+    let queued = both(("queued", json!({})));
+    let entry = &queued["ok"]["entries"][0];
+    assert!(
+        entry["place"]["number"].is_number(),
+        "an entry has a number: {queued}"
+    );
+    let taken = both((
+        "take_back",
+        json!({"queue": entry["place"]["queue"], "number": entry["place"]["number"], "as_of": queued["ok"]["as_of"]}),
+    ));
+    assert!(taken["ok"].is_object(), "the entry is taken back: {taken}");
+    both(("queued", json!({})));
+    both(order([6, 1]));
+    let preview = both((
+        "preview",
+        json!({"command": "set_intent", "intent_kind": "patrol", "hex": [5, 0], "distance": 2}),
+    ));
+    let number = preview["ok"]["preview"].clone();
+    assert!(number.is_number(), "a preview has a number: {preview}");
+    let approved = both(("approve", json!({"preview": number})));
+    assert!(approved["ok"].is_object(), "approved: {approved}");
+    both(("queued", json!({})));
+    both(("plans", json!({})));
+    for _ in 0..3 {
+        both(("end_day", json!({})));
+        both(("get_briefing", json!({})));
+        both(("list_forces", json!({})));
+        both(("queued", json!({})));
+    }
+    let over = both(("get_briefing", json!({})));
+    assert!(
+        over["ok"].is_object(),
+        "the briefing after the last day: {over}"
+    );
+    assert_eq!(
+        a.saved_game().expect("saved game with the reads"),
+        b.saved_game().expect("saved game without them"),
+        "the saved games are the same"
+    );
+    assert_eq!(a.game_file().expect("file"), b.game_file().expect("file"));
 }
