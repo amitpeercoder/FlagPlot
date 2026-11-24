@@ -647,6 +647,9 @@ def the_submarines():
     import re
     text = page_text()
     # 1. a boat of the player's own
+    check("function boatTo(b, hex, i)" in text and "if (i.kind === 'patrol' && i.hex)" in text and "label: 'PATROL'" in text and "if (/^submarine:/.test(o.unit) && o.order.kind === 'station' && o.order.hex) boatTo(boatOf(o.unit), o.order.hex, i);" in text
+          and "sub: 2.4 })[m.kind]" in text and "e.order.kind === 'station' && e.order.hex) signed[e.unit]" in text and "stationMark(cpx(s), u, open ? '' : boatName(b), open || !!signed[h]);" in text,
+          "a patrol is drawn with the plans (its waters, each boat to her station, the staff's station orders), and every boat's station and a signed station order are drawn always")
     check("function cardBoat(t)" in text and "boat: cardBoat, subreport: cardSubReport, waters: cardWaters" in text and "tile('own', 'submarine', true, 0.15)" in text
           and "kind === 'submarine') { g.beginPath(); g.ellipse(" in text and "{ kind: 'boat', boat: b }" in text and "kind === 'submarine') { found = M.boats.filter(" in text,
           "a boat of the player's own has a piece of her own (a hull on the side's own rectangle) and a card, reached by touching the piece, stepping the pieces at her hex and a link to her")

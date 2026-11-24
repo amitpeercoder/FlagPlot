@@ -943,7 +943,7 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
     var all = root === 'all', top = by[root], roots = all ? st.intents.filter(function (i) { return i.in_force && i.parent == null; }) : [top];
     if (!all && (!top || !top.in_force)) { clearPlan(); return Promise.resolve(); }
     var tree = [], inTree = {}; roots.forEach(function walk(i) { tree.push(i); inTree[i.number] = i; st.intents.filter(function (c) { return c.parent === i.number && c.in_force; }).forEach(walk); });
-    var marks = { root: root, moves: [], rings: [] }, asks = [], seen = {}, stand = {};
+    var marks = { root: root, moves: [], rings: [], boats: {} }, asks = [], seen = {}, stand = {};
     function pending(i) { var p = i.plan != null ? plans[i.plan] : null; return !p || p.state === 'draft' || p.state === 'preparing'; }
     function baseOf(o) { return o ? M.bases.concat(M.enemyBases).filter(function (b) { return b.base.handle === o.handle; })[0] : null; }
     // Each mark says which of the commander's orders it is drawn for, so that a touch on it opens that order.
@@ -959,6 +959,16 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
         m.when = a.outcome === 'arrives' && a.ends ? (dateOf(a.ends.day - 1) || 'DAY ' + a.ends.day) + ', ' + a.ends.pulse : a.outcome ? String(a.outcome).replace(/_/g, ' ') : '';
       }).catch(function () {}));
     }
+    // A boat the plan sends to a station: an arrow from where she is, or a ring where she already keeps it.
+    function boatTo(b, hex, i) {
+      var h = b && b.submarine.handle, to = hex && hexV(hex[0], hex[1]);
+      // A boat given a direct order since is drawn on that order, not on the plan.
+      var signed = ((M.queue && M.queue.entries) || []).some(function (e) { return e.unit === h && e.order && e.order.kind === 'station'; });
+      if (!b || !b.place || !to || seen[h] || signed) return; seen[h] = true; marks.boats[h] = true;
+      if (b.place.q === hex[0] && b.place.r === hex[1]) { var k = hex[0] + ',' + hex[1]; if (!stand[k]) { stand[k] = { v: to, r: 20, names: [], dash: pending(i), order: orderOf(i) }; marks.rings.push(stand[k]); } stand[k].names.push(boatName(b)); return; }
+      marks.moves.push({ pts: [placeOf(b.place), to], label: boatName(b), kind: 'sub', dash: pending(i), order: orderOf(i) });
+    }
+    function boatOf(h) { return (M.boats || []).filter(function (b) { return b.submarine.handle === h; })[0]; }
     // A force is drawn on the task that is its own before any task that may only use it:
     // a landing's forces limit names the carriers that cover it, and they do not land.
     tree.forEach(function (i) { if (i.task_force != null && i.hex) move('task_force:' + i.task_force, i.hex, i.kind === 'ready_landing' ? 'landing' : 'cover', i); });
@@ -971,6 +981,9 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
       if (i.kind === 'hold' && (b = baseOf(i.base))) mark(placeOf(b.place), 24, 'HOLD', pending(i), i);
       if (i.kind === 'neutralise' && (b = baseOf(i.target))) mark(placeOf(b.place), 22, 'NEUTRALISE', pending(i), i);
       if (i.kind === 'deny' && i.hex && i.distance) { var h = hexAt[i.hex[0] + ',' + i.hex[1]]; if (h) marks.rings.push({ v: world(h[3], h[4]), edge: world(h[3] + i.distance * hexMiles() / 60, h[4]), label: 'DENY', dash: true, order: orderOf(i) }); }
+      // A patrol: its waters, and each boat the staff has on it to her station.
+      if (i.kind === 'patrol' && i.hex) { var ph = hexAt[i.hex[0] + ',' + i.hex[1]]; if (ph) { if (i.distance) marks.rings.push({ v: world(ph[3], ph[4]), edge: world(ph[3] + (+i.distance + 0.5) * hexMiles() / 60, ph[4]), label: 'PATROL', dash: true, order: orderOf(i) }); else mark(world(ph[3], ph[4]), 22, 'PATROL', pending(i), i); }
+        (M.boats || []).forEach(function (bt) { if (bt.hands && bt.hands.by === 'staff' && bt.hands.intent === i.number && bt.station && boatOnMap(bt)) boatTo(bt, [bt.station.q, bt.station.r], i); }); }
       if (i.kind === 'keep_supplied' && (b = baseOf(i.base))) { var src = baseOf(i.limits_read_up && i.limits_read_up.forces && i.limits_read_up.forces.source); if (src) marks.moves.push({ pts: [placeOf(src.place), placeOf(b.place)], label: 'Supply from ' + src.base.name, kind: 'supply', dash: pending(i), order: orderOf(i) }); }
     });
     // What the staff orders this morning for the plan: a force given a
@@ -980,6 +993,7 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
       (so.orders || []).forEach(function (o) {
         var i = inTree[o.intent]; if (!i) return;
         if (/^task_force:/.test(o.unit) && o.order.kind === 'set_route' && (o.order.waypoints || []).length) { var f = M.forces.filter(function (x) { return x.task_force.handle === o.unit; })[0], n0 = asks.length; move(o.unit, (o.order.act_at && o.order.act_at[0]) || o.order.waypoints[0], f && f.mission === 'transport' ? 'supply' : 'cover', i); more = more.concat(asks.slice(n0)); }
+        if (/^submarine:/.test(o.unit) && o.order.kind === 'station' && o.order.hex) boatTo(boatOf(o.unit), o.order.hex, i);
         if (/^air_group:/.test(o.unit) && i.kind === 'neutralise' && o.order.kind === 'set_air_mission') { var x = M.air.filter(function (y) { return y.air_group.handle === o.unit; })[0], b = baseOf(i.target); if (x && x.place && b) { var k = x.place.q + ',' + x.place.r + '>' + i.number; if (!raids[k]) { raids[k] = { pts: [placeOf(x.place), placeOf(b.place)], kind: 'air', n: 0, dash: true }; marks.moves.push(raids[k]); } raids[k].n += 1; raids[k].label = raids[k].n + ' air group' + (raids[k].n > 1 ? 's' : ''); } }
       });
       return Promise.all(more);
@@ -1013,12 +1027,12 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
     // One ring a place, with what is to be done there and who stands there.
     order.forEach(function (at) { var c = ring(at.v, at.r, navy, 0.9, at.dash, 2.6), lines = []; if (at.words.length) lines.push(at.words.join(' \u00B7 ')); at.names.forEach(function (n) { lines.push(n); }); if (at.names.length) lines[lines.length - 1] += ' \u00B7 on station'; tag(c[0], c[1] + at.r * u0 + (12 + 8 * lines.length) * u, lines, at.order); orderHits.push({ x: c[0] - at.r * u0, y: c[1] - at.r * u0, w: 2 * at.r * u0, h: 2 * at.r * u0, order: at.order }); });
     planMarks.moves.forEach(function (m) {
-      var block = m.kind === 'landing' && !m.dash, w = block ? 13 : ({ landing: 7, cover: 4.5, supply: 3.2, air: 2.4 })[m.kind] || 3, P = m.pts.filter(Boolean).map(cpx), k;
+      var block = m.kind === 'landing' && !m.dash, w = block ? 13 : ({ landing: 7, cover: 4.5, supply: 3.2, air: 2.4, sub: 2.4 })[m.kind] || 3, P = m.pts.filter(Boolean).map(cpx), k;
       if (P.length < 2) return;
       if (P.length > 4) { var Q = [P[0]]; for (k = 2; k < P.length - 1; k += 2) Q.push(P[k]); Q.push(P[P.length - 1]); P = Q; }
       var end = P[P.length - 1], prev = P[P.length - 2], ang = Math.atan2(end[1] - prev[1], end[0] - prev[0]), hl = (w * 2.4 + 7) * u, stop = [end[0] - Math.cos(ang) * hl * 0.85, end[1] - Math.sin(ang) * hl * 0.85];
       g.globalAlpha = m.kind === 'air' ? 0.6 : 0.88; g.strokeStyle = navy; g.fillStyle = navy; g.lineWidth = w * u;
-      g.setLineDash(m.dash || m.kind === 'supply' || m.kind === 'air' ? [Math.max(8, w * 2.5) * u, Math.max(6, w * 2) * u] : []);
+      g.setLineDash(m.dash || m.kind === 'supply' || m.kind === 'air' || m.kind === 'sub' ? [Math.max(8, w * 2.5) * u, Math.max(6, w * 2) * u] : []);
       g.beginPath(); g.moveTo(P[0][0], P[0][1]);
       if (P.length === 2) g.lineTo(stop[0], stop[1]);
       else for (k = 1; k < P.length - 1; k++) { if (k === P.length - 2) g.quadraticCurveTo(P[k][0], P[k][1], stop[0], stop[1]); else g.quadraticCurveTo(P[k][0], P[k][1], (P[k][0] + P[k + 1][0]) / 2, (P[k][1] + P[k + 1][1]) / 2); }
@@ -1087,7 +1101,19 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
     ((M.subEstimate && M.subEstimate.areas) || []).forEach(function (e) { var h = hexAt[e.place.q + ',' + e.place.r]; if (h) reachShape({ lat: h[3], lon: h[4], from: 0, to: 0, range: (e.distance_hexes + 0.5) * hexMiles(), ring: true, fill: true, red: true, label: 'about ' + e.count }, true, u); });
     (M.subReports || []).forEach(function (r) { var v = placeOf(r.place); if (v) subMark(cpx(v), u, Math.max(0.3, 1 - (r.age_pulses || 0) / 9)); });
     // The station of the boat whose card is open, and of a boat's order being drafted; the stations a patrol being drafted would give.
-    (M.boats || []).forEach(function (b) { if (boatShown !== b.submarine.handle || $('card').hidden || !b.station) return; var s = placeOf(b.station), f = b.place && placeOf(b.place); if (!s) return; if (f && !sameHex(b.station, b.place)) { var fc = cpx(f), sc = cpx(s); g.save(); g.strokeStyle = 'rgba(18,51,92,0.6)'; g.lineWidth = 2 * u; g.setLineDash([6 * u, 5 * u]); g.beginPath(); g.moveTo(fc[0], fc[1]); g.lineTo(sc[0], sc[1]); g.stroke(); g.restore(); } stationMark(cpx(s), u, '', false); });
+    // Every boat's station and the station a signed order gives her, drawn always: a line from where she is and a square, named,
+    // unless she keeps it already. The boat whose card is open is drawn firmer; a boat the plan on the chart draws is left to it.
+    (function () {
+      var signed = {}; ((M.queue && M.queue.entries) || []).forEach(function (e) { if (e.unit && /^submarine:/.test(e.unit) && e.order && e.order.kind === 'station' && e.order.hex) signed[e.unit] = { q: e.order.hex[0], r: e.order.hex[1] }; });
+      (M.boats || []).forEach(function (b) {
+        var h = b.submarine.handle, open = boatShown === h && !$('card').hidden, to = signed[h] || b.station;
+        if (!to || !b.place || !boatOnMap(b) || (planMarks && planMarks.boats && planMarks.boats[h])) return;
+        if (sameHex(to, b.place) && !open) return;
+        var s = placeOf(to), f = placeOf(b.place); if (!s) return;
+        if (f && !sameHex(to, b.place)) { var fc = cpx(f), sc = cpx(s); g.save(); g.strokeStyle = open || signed[h] ? 'rgba(18,51,92,0.85)' : 'rgba(18,51,92,0.6)'; g.lineWidth = (open ? 2.4 : 2) * u; g.setLineDash([6 * u, 5 * u]); g.beginPath(); g.moveTo(fc[0], fc[1]); g.lineTo(sc[0], sc[1]); g.stroke(); g.restore(); }
+        stationMark(cpx(s), u, open ? '' : boatName(b), open || !!signed[h]);
+      });
+    })();
     if (stationDraft && paper) { var sv = placeOf(stationDraft.place), bv = stationDraft.from && placeOf(stationDraft.from); if (sv) { if (bv) { var fc2 = cpx(bv), sc2 = cpx(sv); g.save(); g.strokeStyle = 'rgba(18,51,92,0.85)'; g.lineWidth = 2.4 * u; g.setLineDash([8 * u, 6 * u]); g.beginPath(); g.moveTo(fc2[0], fc2[1]); g.lineTo(sc2[0], sc2[1]); g.stroke(); g.restore(); } stationMark(cpx(sv), u, '', true); } }
     if (patrolStations && paper) patrolStations.forEach(function (s) { var v = placeOf(s.hex); if (v) stationMark(cpx(v), u, cleanName(s.name || s.submarine), true); });
     M.asking.forEach(function (a) { var pts = (a.pts || []).filter(Boolean); if (pts.length < 2) return; g.save(); g.strokeStyle = 'rgba(18,51,92,0.85)'; g.fillStyle = '#12335c'; g.lineWidth = 2.4 * u; g.setLineDash([8 * u, 6 * u]); g.beginPath(); pts.forEach(function (v, k) { var c = cpx(v); if (k) g.lineTo(c[0], c[1]); else g.moveTo(c[0], c[1]); }); g.stroke(); g.setLineDash([]); var e = cpx(pts[pts.length - 1]); g.beginPath(); g.arc(e[0], e[1], 5 * u, 0, 7); g.fill(); g.restore(); });
