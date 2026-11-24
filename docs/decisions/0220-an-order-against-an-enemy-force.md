@@ -373,3 +373,8 @@ Each is a row of `docs/rules/differences.md`, marked "Open: to the architect". N
 - **(c) Row 80.** R10: the staff withdraws the old station only where a new one can be chosen in the same hand-in, so a force for which none can be chosen keeps its station though it lies too far.
 - **(d) Row 81.** `follow_forces` works an order whose plan is not yet released, a draft, so a notice of following can be handed in before leave to launch is given.
 - **(e) Row 82.** The notices of lost and of ended, where the contact is no longer held, carry 0 ships and a kind taken from the sort the order kept (carrier or cruiser), not the count and kind last reported.
+
+### After the build (Nov 24, 2026)
+
+- **Statement 40.** The following first read the side's own contacts; it now reads the area command's picture (`follow.rs`, `held_contacts`), as rule 12 has it, and statement 40 holds. No other doctrine's reading was changed.
+- **Scenario 130's comparisons, to the architect.** Scenario 133 is out of part F's skip list. Part F (statements 7, 8 and 24) and part D (statement 20's digests of 86, 81 and 82) fail only because `StaffNotice` and its event gained the field `follow`, which their `Debug` text says as `follow: None`: with that set aside, all 119 games of part F give the text they gave on `origin/main`. Part D's state hashes are remade for the layout v60. The tables `BEFORE` and the pinned digests are not changed; whether the digests leave `follow` out of their text, as they leave a reason's list of limits out, is the architect's.
