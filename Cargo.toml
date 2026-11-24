@@ -52,3 +52,11 @@ overflow-checks = true
 inherits = "release"
 debug-assertions = true
 overflow-checks = true
+
+# The profile the browser's module and the native program `door` are both built
+# in, so the two differ in the target and in nothing else (decision 0229,
+# rulings 7 and 29). Overflow checks are written out again and not left to
+# inheritance: a panic on the browser's target ends the module.
+[profile.web]
+inherits = "release"
+overflow-checks = true

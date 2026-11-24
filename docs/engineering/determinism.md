@@ -16,3 +16,11 @@ The same starting state, orders and seed must give the same state hash on any ma
 - **Units made in play are numbered from their side's series.** A task force made by a detach and an air group formed by a landing take the next number of their own side's series (Allied from 1,000,001, Japanese from 2,000,001), one counter for each side and kind, kept in the state and hashed. The loader refuses a scenario unit numbered 1,000,000 or above. Draws keyed on a made unit then depend on its own side's history only (decision 0086).
 - **Overflow panics in every profile.** `overflow-checks` is on for release builds. Do not turn it off.
 - **No `unsafe`.** It is forbidden workspace-wide.
+
+## The browser's build (decision 0229, stage 3)
+
+The same game is built for `wasm32-unknown-unknown`, where `usize` is 32 bits and a panic ends the module. `web/check.mjs` compares it with the native build, call for call and day for day. What is kept so that the two agree:
+
+- **No unstable sort that depends on the size of what it sorts, where equal does not mean the same.** `clippy.toml` disallows `sort_unstable_by`, `sort_unstable_by_key` and the `select_nth_unstable` family (path `slice::...`); `sort_unstable()` on whole values is allowed.
+- **A cast to `usize` from a 64-bit value is read.** None is made in the crates the module holds; a number that crosses from a call is read through `u32` first (`take_back`'s `number`).
+- **Overflow checks are on in the `web` profile**, so an overflow is a panic in both builds and never a wrapped number in one.

@@ -14,6 +14,9 @@
 //! hash of the state while a game is in play: the hashes of the days reach
 //! the outside only inside the saved game, when the game is over.
 
+#[cfg(target_arch = "wasm32")]
+mod binding;
+
 use std::collections::BTreeMap;
 
 use serde_json::{json, Value};
