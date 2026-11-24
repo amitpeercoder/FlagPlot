@@ -740,3 +740,7 @@ path = "proof_stage_4_harness.rs"
 [[test]]
 name = "proof_stage_4_case_w2_a_carrier_believed_absent"
 path = "proof_stage_4_case_w2_a_carrier_believed_absent.rs"
+
+[[test]]
+name = "scenario_136_supply_at_press"
+path = "scenario_136_supply_at_press.rs"
