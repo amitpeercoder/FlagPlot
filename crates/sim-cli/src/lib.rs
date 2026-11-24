@@ -5,5 +5,6 @@
 
 pub mod estimates;
 pub mod game;
+pub mod pack;
 pub mod save;
 pub mod seat_trial;

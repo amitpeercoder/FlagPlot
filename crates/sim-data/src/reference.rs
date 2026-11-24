@@ -1,4 +1,6 @@
+use crate::source::{read_text, Disk, Source};
 use std::collections::BTreeMap;
+#[cfg(test)]
 use std::fs;
 use std::path::Path;
 
@@ -136,7 +138,15 @@ pub fn load_ship_classes(path: &Path) -> Result<RefData, DataError> {
 /// Loads ship classes from a CSV file with the figures of each that rest on
 /// an estimate (decision 0207, rule 10).
 pub fn load_ship_classes_marked(path: &Path) -> Result<(RefData, EstimatedFigures), DataError> {
-    let text = fs::read_to_string(path).map_err(|e| DataError::in_file(path, e.to_string()))?;
+    load_ship_classes_marked_from(&Disk, path)
+}
+
+/// As [`load_ship_classes_marked`], reading through `source` (decision 0229, ruling 8).
+pub(crate) fn load_ship_classes_marked_from(
+    source: &dyn Source,
+    path: &Path,
+) -> Result<(RefData, EstimatedFigures), DataError> {
+    let text = read_text(source, path)?;
     parse_ship_classes_marked(&text, path)
 }
 
@@ -243,7 +253,15 @@ const LARGEST_PORT_SIZE: u8 = 10;
 /// Loads the port size table from a CSV file. Every size from 0 to 10 must
 /// appear exactly once.
 pub fn load_port_sizes(path: &Path) -> Result<BTreeMap<u8, PortSize>, DataError> {
-    let text = fs::read_to_string(path).map_err(|e| DataError::in_file(path, e.to_string()))?;
+    load_port_sizes_from(&Disk, path)
+}
+
+/// As [`load_port_sizes`], reading through `source` (decision 0229, ruling 8).
+pub(crate) fn load_port_sizes_from(
+    source: &dyn Source,
+    path: &Path,
+) -> Result<BTreeMap<u8, PortSize>, DataError> {
+    let text = read_text(source, path)?;
     let mut reader = csv::ReaderBuilder::new()
         .comment(Some(b'#'))
         .trim(csv::Trim::All)
@@ -340,7 +358,15 @@ struct AircraftTypeRow {
 pub fn load_aircraft_types(
     path: &Path,
 ) -> Result<BTreeMap<AircraftTypeId, AircraftType>, DataError> {
-    let text = fs::read_to_string(path).map_err(|e| DataError::in_file(path, e.to_string()))?;
+    load_aircraft_types_from(&Disk, path)
+}
+
+/// As [`load_aircraft_types`], reading through `source` (decision 0229, ruling 8).
+pub(crate) fn load_aircraft_types_from(
+    source: &dyn Source,
+    path: &Path,
+) -> Result<BTreeMap<AircraftTypeId, AircraftType>, DataError> {
+    let text = read_text(source, path)?;
     parse_aircraft_types(&text, path)
 }
 
@@ -438,7 +464,15 @@ struct SearchFile {
 
 /// Loads the search, report and contact figures from a TOML file.
 pub fn load_search_figures(path: &Path) -> Result<SearchFigures, DataError> {
-    let text = fs::read_to_string(path).map_err(|e| DataError::in_file(path, e.to_string()))?;
+    load_search_figures_from(&Disk, path)
+}
+
+/// As [`load_search_figures`], reading through `source` (decision 0229, ruling 8).
+pub(crate) fn load_search_figures_from(
+    source: &dyn Source,
+    path: &Path,
+) -> Result<SearchFigures, DataError> {
+    let text = read_text(source, path)?;
     parse_search_figures(&text, path)
 }
 
@@ -621,7 +655,15 @@ struct EscortTable {
 
 /// Loads the surface combat figures from a TOML file.
 pub fn load_surface_combat_figures(path: &Path) -> Result<SurfaceCombatFigures, DataError> {
-    let text = fs::read_to_string(path).map_err(|e| DataError::in_file(path, e.to_string()))?;
+    load_surface_combat_figures_from(&Disk, path)
+}
+
+/// As [`load_surface_combat_figures`], reading through `source` (decision 0229, ruling 8).
+pub(crate) fn load_surface_combat_figures_from(
+    source: &dyn Source,
+    path: &Path,
+) -> Result<SurfaceCombatFigures, DataError> {
+    let text = read_text(source, path)?;
     parse_surface_combat_figures(&text, path)
 }
 
@@ -897,7 +939,15 @@ struct BaseHitTable {
 
 /// Loads the air combat figures from a TOML file.
 pub fn load_air_combat_figures(path: &Path) -> Result<AirCombatFigures, DataError> {
-    let text = fs::read_to_string(path).map_err(|e| DataError::in_file(path, e.to_string()))?;
+    load_air_combat_figures_from(&Disk, path)
+}
+
+/// As [`load_air_combat_figures`], reading through `source` (decision 0229, ruling 8).
+pub(crate) fn load_air_combat_figures_from(
+    source: &dyn Source,
+    path: &Path,
+) -> Result<AirCombatFigures, DataError> {
+    let text = read_text(source, path)?;
     parse_air_combat_figures(&text, path)
 }
 
@@ -1097,7 +1147,15 @@ struct AirUpkeepFile {
 
 /// Loads the wear and repair figures from a TOML file (decision 0035).
 pub fn load_air_upkeep_figures(path: &Path) -> Result<AirUpkeepFigures, DataError> {
-    let text = fs::read_to_string(path).map_err(|e| DataError::in_file(path, e.to_string()))?;
+    load_air_upkeep_figures_from(&Disk, path)
+}
+
+/// As [`load_air_upkeep_figures`], reading through `source` (decision 0229, ruling 8).
+pub(crate) fn load_air_upkeep_figures_from(
+    source: &dyn Source,
+    path: &Path,
+) -> Result<AirUpkeepFigures, DataError> {
+    let text = read_text(source, path)?;
     parse_air_upkeep_figures(&text, path)
 }
 
@@ -1231,7 +1289,15 @@ struct GroundFile {
 
 /// Loads the ground figures from a TOML file (decision 0066).
 pub fn load_ground_figures(path: &Path) -> Result<GroundFigures, DataError> {
-    let text = fs::read_to_string(path).map_err(|e| DataError::in_file(path, e.to_string()))?;
+    load_ground_figures_from(&Disk, path)
+}
+
+/// As [`load_ground_figures`], reading through `source` (decision 0229, ruling 8).
+pub(crate) fn load_ground_figures_from(
+    source: &dyn Source,
+    path: &Path,
+) -> Result<GroundFigures, DataError> {
+    let text = read_text(source, path)?;
     parse_ground_figures(&text, path)
 }
 
@@ -1458,7 +1524,15 @@ struct AirSupplyFile {
 
 /// Loads the base supply figures from a TOML file (decision 0039).
 pub fn load_air_supply_figures(path: &Path) -> Result<AirSupplyFigures, DataError> {
-    let text = fs::read_to_string(path).map_err(|e| DataError::in_file(path, e.to_string()))?;
+    load_air_supply_figures_from(&Disk, path)
+}
+
+/// As [`load_air_supply_figures`], reading through `source` (decision 0229, ruling 8).
+pub(crate) fn load_air_supply_figures_from(
+    source: &dyn Source,
+    path: &Path,
+) -> Result<AirSupplyFigures, DataError> {
+    let text = read_text(source, path)?;
     parse_air_supply_figures(&text, path)
 }
 
@@ -1508,7 +1582,15 @@ struct FatigueFile {
 
 /// Loads the fatigue figures from a TOML file (decision 0036).
 pub fn load_fatigue_figures(path: &Path) -> Result<FatigueFigures, DataError> {
-    let text = fs::read_to_string(path).map_err(|e| DataError::in_file(path, e.to_string()))?;
+    load_fatigue_figures_from(&Disk, path)
+}
+
+/// As [`load_fatigue_figures`], reading through `source` (decision 0229, ruling 8).
+pub(crate) fn load_fatigue_figures_from(
+    source: &dyn Source,
+    path: &Path,
+) -> Result<FatigueFigures, DataError> {
+    let text = read_text(source, path)?;
     parse_fatigue_figures(&text, path)
 }
 
@@ -1592,10 +1674,19 @@ struct SubmarineClassRow {
 /// `torpedo_id` and, as the generated file has it, `estimated`. A class
 /// given twice is refused; whether its torpedo is in the torpedo file is
 /// checked when the two are joined.
+#[allow(dead_code)]
 pub fn load_submarine_classes(
     path: &Path,
 ) -> Result<BTreeMap<SubmarineClassId, SubmarineClass>, DataError> {
-    let text = fs::read_to_string(path).map_err(|e| DataError::in_file(path, e.to_string()))?;
+    load_submarine_classes_from(&Disk, path)
+}
+
+/// As [`load_submarine_classes`], reading through `source` (decision 0229, ruling 8).
+pub(crate) fn load_submarine_classes_from(
+    source: &dyn Source,
+    path: &Path,
+) -> Result<BTreeMap<SubmarineClassId, SubmarineClass>, DataError> {
+    let text = read_text(source, path)?;
     parse_submarine_classes(&text, path)
 }
 
@@ -1654,10 +1745,19 @@ struct SubmarineTorpedoRow {
 
 /// Loads a file of submarine torpedoes (decision 0218): a CSV with the
 /// columns `id`, `name` and `damage`, the damage of one hit.
+#[allow(dead_code)]
 pub fn load_submarine_torpedoes(
     path: &Path,
 ) -> Result<BTreeMap<SubmarineTorpedoId, SubmarineTorpedo>, DataError> {
-    let text = fs::read_to_string(path).map_err(|e| DataError::in_file(path, e.to_string()))?;
+    load_submarine_torpedoes_from(&Disk, path)
+}
+
+/// As [`load_submarine_torpedoes`], reading through `source` (decision 0229, ruling 8).
+pub(crate) fn load_submarine_torpedoes_from(
+    source: &dyn Source,
+    path: &Path,
+) -> Result<BTreeMap<SubmarineTorpedoId, SubmarineTorpedo>, DataError> {
+    let text = read_text(source, path)?;
     parse_submarine_torpedoes(&text, path)
 }
 
@@ -1721,8 +1821,17 @@ struct SubmarinesFile {
 
 /// Loads the submarine figures from a TOML file (decision 0218). The class
 /// and torpedo tables are joined to them by the scenario.
+#[allow(dead_code)]
 pub fn load_submarine_figures(path: &Path) -> Result<SubmarineFigures, DataError> {
-    let text = fs::read_to_string(path).map_err(|e| DataError::in_file(path, e.to_string()))?;
+    load_submarine_figures_from(&Disk, path)
+}
+
+/// As [`load_submarine_figures`], reading through `source` (decision 0229, ruling 8).
+pub(crate) fn load_submarine_figures_from(
+    source: &dyn Source,
+    path: &Path,
+) -> Result<SubmarineFigures, DataError> {
+    let text = read_text(source, path)?;
     parse_submarine_figures(&text, path)
 }
 
@@ -1790,7 +1899,15 @@ struct ClassSideRow {
 /// class or type given twice is refused here; whether the file is whole for
 /// a scenario is the scenario's check.
 pub fn load_class_sides(path: &Path) -> Result<ClassSides, DataError> {
-    let text = fs::read_to_string(path).map_err(|e| DataError::in_file(path, e.to_string()))?;
+    load_class_sides_from(&Disk, path)
+}
+
+/// As [`load_class_sides`], reading through `source` (decision 0229, ruling 8).
+pub(crate) fn load_class_sides_from(
+    source: &dyn Source,
+    path: &Path,
+) -> Result<ClassSides, DataError> {
+    let text = read_text(source, path)?;
     parse_class_sides(&text, path)
 }
 
@@ -1857,7 +1974,15 @@ fn parse_class_sides(text: &str, path: &Path) -> Result<ClassSides, DataError> {
 
 /// Loads the report figures from a TOML file (decision 0135).
 pub fn load_report_figures(path: &Path) -> Result<ReportFigures, DataError> {
-    let text = fs::read_to_string(path).map_err(|e| DataError::in_file(path, e.to_string()))?;
+    load_report_figures_from(&Disk, path)
+}
+
+/// As [`load_report_figures`], reading through `source` (decision 0229, ruling 8).
+pub(crate) fn load_report_figures_from(
+    source: &dyn Source,
+    path: &Path,
+) -> Result<ReportFigures, DataError> {
+    let text = read_text(source, path)?;
     parse_report_figures(&text, path)
 }
 
@@ -4666,7 +4791,15 @@ impl TrialSizeFile {
 /// least one world and one day. Every key is required, as the file's other
 /// figures are: a file without the seed or the sizes is refused.
 pub fn load_trial_figures(path: &Path) -> Result<TrialFigures, DataError> {
-    let text = fs::read_to_string(path).map_err(|e| DataError::in_file(path, e.to_string()))?;
+    load_trial_figures_from(&Disk, path)
+}
+
+/// As [`load_trial_figures`], reading through `source` (decision 0229, ruling 8).
+pub(crate) fn load_trial_figures_from(
+    source: &dyn Source,
+    path: &Path,
+) -> Result<TrialFigures, DataError> {
+    let text = read_text(source, path)?;
     parse_trial_figures(&text, path)
 }
 
