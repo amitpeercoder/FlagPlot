@@ -1,6 +1,6 @@
 # Stage 4's proof: what moved since decision 0159's proof
 
-Made on Nov 24, 2026 for the report of stage 4's proof (setup page, "What moved since decision 0159's proof"). It holds no result and no verdict. It is made from the repository as it stands on the branch `proof-reading` (main at 2e5a9efb and the setup's two commits), where decision 0230 is not yet merged: the doctrine's label here is `supply-61`, and the table gains `supply-62` and decision 0230's row when that pull request lands. The proof is run at the labels main has then.
+Made on Nov 24, 2026 for the report of stage 4's proof (setup page, "What moved since decision 0159's proof"). It holds no result and no verdict. It is made from the repository as it stands on the branch `proof-reading` (main at 2e5a9efb and the setup's two commits), with decision 0230 merged: the doctrine's label is `supply-62`.
 
 ## The labels
 
@@ -8,7 +8,7 @@ Made on Nov 24, 2026 for the report of stage 4's proof (setup page, "What moved 
 | --- | --- | --- |
 | State layout | `flagplot-state-v47` | `flagplot-state-v60` (`hash::STATE_VERSION`) |
 | Rules label | 19 | 34 (`world::RULES_VERSION`) |
-| Doctrine | `supply-39` | `supply-61` (`sim_staff::DOCTRINE_VERSION`); `supply-62` once decision 0230 is in |
+| Doctrine | `supply-39` | `supply-62` (`sim_staff::DOCTRINE_VERSION`) |
 | Agent interface | 26 | 55 (`sim_agent::answer::VERSION`); 55 or the next |
 
 ## Changes to (a), (b), (c) and to the staff's setup
@@ -52,10 +52,11 @@ The doctrine's label is in `crates/sim-staff/src/lib.rs`, where each step's para
 | `supply-59` | 0228 | a00b1bea 2026-11-23 | decision 0228: where a side's scenario states that its staff chooses its sources of supply, one rule chooses the source under a commander's hold and under "control an island" (a base that can spare the place's need, one with a transport force empty there, the most to spare, the nearer, the lower number), the staff forms the supply under a hold with no source named and sets its forces limit each morning, a run from a source the staff chose is cut to what the source can spare, an empty pool of ships the staff is to find does not mark a plan failed, and a source the commander names is not refused for another order's draw on it | It gives the orders `supply-58` gave to a side without the key. |
 | `supply-60` | 0220 | 9c27baf7 2026-11-23 | decision 0220's order to destroy a force and gives the orders `supply-59` gave to a side that gives none | (the sentence above says whom it touched) |
 | `supply-61` | 0231 | 1a11296d 2026-11-24 | decision 0231: under "control an island" the staff forms a "keep supplied" for each base of the side on the island's land and in no named place's hex where the side has men ashore or marching, sets its forces limit as a hold's, withdraws it when no man is there, none marches to it and no run of it is loaded or at sea, and records one reason for men at a hex with no base of the side | It gives the orders `supply-60` gave to a side with no such base and men. The staff: the doctrine for keeping a base supplied (stage 1) and, after it, the air doctrine for holding a place and covering a base from the air (step 2 of stage 2). A side with no intent in force and no commitment to free gets nothing from it; one with no hold or cover intent gets nothing from the air doctrine. The staff of each side: the supply staff for both. A side with no intent has a staff that does nothing. The engine's [`Staffs`] over staffs held in a map, as [`staffs`] gives them. |
+| `supply-62` | 0230 | 09bb36b2 2026-11-24 | decision 0230: the floor of a "keep supplied" the staff forms is the margin of its risk and never less than 1 day (10, 5, 1), at all three sites that form one, and the reason says "the least floor, at press" where it is 1 at press | It gives the orders `supply-61` gave to a side with no hold or island at press. Rules label, state layout and interface unchanged |
 
 ## The decisions the setup names
 
-0162, 0163 and 0169 are the mends of decision 0159's miss; 0191 (a lift turned back), 0193 (men ashore with no more coming), 0195 and 0196 (forces that arrive; stock from off the map), 0214 (a carrier force that pursues), 0217, 0220, 0222 and 0228 (limits and the source of supply), 0230 (supply at press, not yet merged) and 0231 (men ashore beside a place are fed) are in the table above or, for 0230, to be added with `supply-62`. Each decision's "As built" names the files it moved: the report names them from the records, as condition 2 asks.
+0162, 0163 and 0169 are the mends of decision 0159's miss; 0191 (a lift turned back), 0193 (men ashore with no more coming), 0195 and 0196 (forces that arrive; stock from off the map), 0214 (a carrier force that pursues), 0217, 0220, 0222 and 0228 (limits and the source of supply), 0230 (supply at press) and 0231 (men ashore beside a place are fed) are in the table above. Each decision's "As built" names the files it moved: the report names them from the records, as condition 2 asks.
 
 ## Condition 3 beside decision 0159's figure
 
