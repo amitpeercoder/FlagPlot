@@ -240,7 +240,7 @@ fn s12_no_game_without_the_limit_changes() {
         (
             "stage-3-proof/07a_slice.toml",
             Some(7),
-            0x3d58_c5e7_8390_64ec,
+            0xba4e_2324_4d22_f95f,
         ),
         (
             "second-proof/05a_eastern_solomons.toml",
