@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 24, 2026, at the designer's requ
 
 Summary: The table's page played in a browser with no bridge and no server: the game compiled to WebAssembly and held in a worker of the page, answering the same seat tools `sim-cli mcp` answers; the data it plays on packed at build time by `sim-data`; the kept game a file of the seat's own calls in the browser's storage; and a check in CI that the browser's build gives, call for call and day for day, what the native build gives. Seven stages, none with a hand calculation.
 
-Standing: Planned on Nov 24, 2026; amended on review the same day (What the review changed). Stage 1 is built (pull request 730); stage 2 is built on pull request 732 and waits for the two tests the architect's rulings on it ask; stages 3 to 7 are not built. Needs review: who playtests and whether the link is public, turning on the host, a new seed for each game, the marks for speed, what a playtester is told of the build, and sharing the packed data (Questions for the designer). The wording of two of `CLAUDE.md`'s "Always" rules was accepted by the designer on Nov 24, 2026 (question 7).
+Standing: Planned on Nov 24, 2026; amended on review the same day (What the review changed). Stage 1 is built (pull request 730); stage 2 is built (pull request 732), with the two tests the architect's rulings on it asked; stages 3 to 7 are not built. Needs review: who playtests and whether the link is public, turning on the host, a new seed for each game, the marks for speed, what a playtester is told of the build, and sharing the packed data (Questions for the designer). The wording of two of `CLAUDE.md`'s "Always" rules was accepted by the designer on Nov 24, 2026 (question 7).
 
 ## Why it is a record
 
