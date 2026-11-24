@@ -7,12 +7,11 @@ mod batch;
 mod batch_record;
 mod events;
 mod export;
-mod mcp;
+mod mcp_command;
 mod play;
 use sim_cli::pack;
 use sim_cli::save;
 mod serve;
-mod staff_tools;
 mod timing;
 mod validate;
 
@@ -519,7 +518,7 @@ fn main() -> ExitCode {
         Some("time") => with_reference(&args[1..], |a, o| timing::command(a, USAGE, o)),
         Some("replay") => with_reference(&args[1..], replay),
         Some("serve") => serve::command(&args[1..], USAGE),
-        Some("mcp") => mcp::command(&args[1..], USAGE),
+        Some("mcp") => mcp_command::command(&args[1..], USAGE),
         Some("play") => play::command(&args[1..]),
         Some("hash") => with_reference(&args[1..], hash),
         Some("pack") => with_reference(&args[1..], |a, o| pack::command(a, USAGE, o)),

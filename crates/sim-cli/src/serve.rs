@@ -43,7 +43,7 @@ use serde_json::{json, Value};
 use sim_agent::{parse_seat, CallError, Called, Post, SeatKind, Session};
 use sim_core::state::Side;
 
-pub use sim_cli::game::{open, Kept};
+pub use sim_cli::game::open;
 
 /// What `serve` was asked to do.
 struct Options<'a> {
@@ -254,10 +254,10 @@ fn watched_lines(
             }
             match what.as_str() {
                 Some("tools") => Ok(json!({
-                    "tools": crate::mcp::tool_list_for(&session.tools(side)),
+                    "tools": sim_cli::mcp::tool_list_for(&session.tools(side)),
                 })),
                 Some("instructions") => Ok(json!({
-                    "instructions": crate::mcp::instructions_for(session, side),
+                    "instructions": sim_cli::mcp::instructions_for(session, side),
                 })),
                 _ => Err(CallError::naming(
                     "\"request\" must name one of a seat's requests",

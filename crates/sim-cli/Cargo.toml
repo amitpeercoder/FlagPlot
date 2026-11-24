@@ -16,5 +16,11 @@ serde_json.workspace = true
 csv.workspace = true
 toml.workspace = true
 
+[dev-dependencies]
+# The door of one seat holds a game as `mcp` does and is tested against
+# `play` here, where the program is built (decision 0229, stage 2). A
+# dev-dependency cycle: `sim-web` depends on this library.
+sim-web = { path = "../sim-web" }
+
 [lints]
 workspace = true

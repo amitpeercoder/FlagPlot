@@ -255,6 +255,7 @@ dependencies = [
  "sim-data",
  "sim-staff",
  "sim-trial",
+ "sim-web",
  "toml",
 ]
 
@@ -287,6 +288,17 @@ dependencies = [
  "sim-core",
  "sim-data",
  "sim-staff",
+]
+
+[[package]]
+name = "sim-web"
+version = "0.1.0"
+dependencies = [
+ "serde_json",
+ "sim-agent",
+ "sim-cli",
+ "sim-core",
+ "sim-data",
 ]
 
 [[package]]
