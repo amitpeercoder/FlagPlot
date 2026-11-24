@@ -539,6 +539,9 @@ fn digests(relative: &str, days: u32) -> Vec<(u64, u64)> {
                 said.push_str(&format!("{side:?}: {d:?}\n"));
             }
         }
+        // A notice's `follow: None` (decision 0220) is left out of the text,
+        // so the digests pinned before that field say what they said.
+        let said = said.replace(", follow: None", "");
         out.push((scenario.world.state_hash(), fnv(&said)));
     }
     out
@@ -558,7 +561,9 @@ fn digests(relative: &str, days: u32) -> Vec<(u64, u64)> {
 /// engine, whose hash and day read no reason, shown by every other game
 /// on file giving the hash it gave. The state hashes were remade for the
 /// state's layout v58 (decision 0223, stage 0), v59 (decision 0228) and v60 (decision
-/// 0220); every digest is as it was.
+/// 0220); every digest is as it was, a notice's `follow: None`, the field
+/// decision 0220 added, being left out of the text digested (the architect's
+/// ruling of Nov 24, 2026, in decision 0220).
 #[test]
 fn statement_20_changes_no_order_no_command_and_no_hash() {
     for (relative, days, expected) in PINNED {

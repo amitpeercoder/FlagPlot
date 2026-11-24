@@ -207,7 +207,10 @@
 //! 9. **Dusk of day 7: ended.** The last report kept is of day 4, and 4 + 2
 //!    + 1 is 7. One notice, ended, the force not found. Intents 1 and 3 are
 //!    withdrawn, with the notice's event as the cause. On day 7 the staff
-//!    hands in nothing for the order.
+//!    hands in nothing for the order. The side no longer holds contact 3,
+//!    and the notice says what the order kept of its last report: 2 ships,
+//!    cruisers, at (8,0), the morning of day 4 (added on Nov 24, 2026:
+//!    ruling 6 after the build).
 //! 10. **What is handed in, in all.** The notices of this rule in the game
 //!     are, by the day of the dusk: follows on days 2, 3, 4 and 5, lost on
 //!     day 6, ended on day 7, and no other. The lost notice is handed in
@@ -301,8 +304,10 @@
 //!     limit of rank 1 set on intent 2 it is the other way: intent 2 takes
 //!     contact 3 and intent 1 is lost.
 //! 23. **Given inside a day** (game B with the order given at the stop at
-//!     0600 of day 1, not at dusk). It keeps contact 1, (2,0), the afternoon
-//!     of day 0 at once, and acts from dusk of day 2 (decision 0219). No
+//!     0600 of day 1, not at dusk). It is taken in at dusk of day 2
+//!     (decision 0219) and keeps then contact 1, (2,0), the afternoon of day
+//!     0, read from the contact as it is held at that dusk (restated on Nov
+//!     24, 2026: the architect's ruling 3 after the build). No
 //!     search flew on day 1, so the side holds contact 1 alone, 3 pulses
 //!     old: the order is lost at once, and the staff forms the search task.
 //!     The forces are reported in the morning of day 2. At dusk of day 3
@@ -336,6 +341,9 @@
 //! 26. **With no Japanese force** (game D with task force 1 taken out): at
 //!     dusk of day 2 nothing qualifies and the order is lost, its centre
 //!     (5,0). The staff withdraws the strike task and keeps the search task.
+//!     The side no longer holds contact 1, and the notice says what the
+//!     order kept of its last report: 2 ships, cruisers, at (5,0), the
+//!     afternoon of day 0 (added on Nov 24, 2026: ruling 6 after the build).
 //!
 //! ## Game E: a kind that changes
 //!
@@ -354,7 +362,8 @@
 //!     order follows it: one notice, follows, the number unchanged, the
 //!     morning of day 2. No notice says the kind changed. The paper says
 //!     the force is taken for destroyers. What the order keeps of the sort
-//!     is unchanged: not a carrier.
+//!     is unchanged: not a carrier. Of the report it keeps 2 ships,
+//!     destroyers (added on Nov 24, 2026: ruling 6 after the build).
 //! 28. A call of `run` for 3 days with all three stops of this rule asked
 //!     for runs to the end without stopping.
 //!
@@ -479,11 +488,11 @@
 //!     the afternoon of day 1 to the end of the morning of day 2, 24 hours,
 //!     12 hexes against 6.
 //! 41. The notices fall on the days of game S.
-//! 42. **A seat below the area.** A seat at base 1 that gives the order
-//!     names a contact by the number of base 1's picture; the order follows
-//!     the area's contact of the same hex and kind. Where the area's
-//!     picture holds no contact of that hex and kind the command is
-//!     refused: the contact is not held.
+//! 42. **A seat below the area cannot give the order** (restated on Nov
+//!     24, 2026: ruling 1 after the build). A seat at base 1 that calls
+//!     `set_intent` with the kind destroy a force is answered as it is for
+//!     every kind: stating an order from a seat that is not the area
+//!     command's is not built. Nothing is queued and no order is made.
 //!
 //! # Properties
 //!
