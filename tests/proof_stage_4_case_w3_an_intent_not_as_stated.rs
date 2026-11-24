@@ -118,28 +118,303 @@
 //!   enemy was given no intent.
 #![allow(clippy::doc_lazy_continuation, clippy::doc_markdown)]
 
+mod common;
+
+use sim_core::command::NoticeKind;
+use sim_core::events::EventKind;
+use sim_core::fixed::Fixed;
+use sim_core::ids::{BaseId, IntentId, LandUnitId};
+use sim_core::state::{Side, TruthState};
+use sim_data::Scenario;
+use sim_trial::{estimate, AssumedOf, Estimate, Spread};
+
+use common::stage_4::{
+    case_text, commands_on, course_of, hex, load_case, notice_days, orders_on, play_game,
+    step_trial, world_orders_on, Game, Given, Stepped4,
+};
+
+const NAME: &str = "case_w3_an_intent_not_as_stated";
+const ALLIED: Side = Side::Allied;
+const JAPANESE: Side = Side::Japanese;
+
+fn n(whole: i64) -> Fixed {
+    Fixed::from_int(whole)
+}
+
+/// The course: scenario 95's four commands of day 1, as scenario text.
+const COURSE: &str = r#"
+[[command]]
+day = 1
+side = "allied"
+kind = "set_intent"
+intent = 1
+intent_kind = "take_place"
+hex = [4, 0]
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_limit"
+limit = "forces"
+intent = 1
+task_forces = [1]
+land_units = [1]
+source = 1
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_leave"
+leave = "prepare"
+given = true
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_leave"
+leave = "launch"
+given = true
+"#;
+
+/// The case with the Allied course handed in on day 1, on `seed`.
+fn scenario_on(seed: u32) -> Scenario {
+    let text = case_text(NAME).replace("seed = 1942", &format!("seed = {seed}"));
+    load_case(NAME, &format!("{text}\n{COURSE}"))
+}
+
+fn trial() -> &'static Stepped4 {
+    static TRIAL: std::sync::OnceLock<Stepped4> = std::sync::OnceLock::new();
+    TRIAL.get_or_init(|| {
+        let scenario = scenario_on(1942);
+        let course = course_of(&scenario, ALLIED);
+        assert_eq!(course.len(), 4);
+        assert!(course.iter().all(|c| c.day == 1));
+        step_trial(&scenario, ALLIED, 1, 16, 14, course)
+    })
+}
+
+fn the_estimate() -> &'static Estimate {
+    static EST: std::sync::OnceLock<Estimate> = std::sync::OnceLock::new();
+    EST.get_or_init(|| estimate(&trial().played, IntentId::new(1), None))
+}
+
+fn unit(truth: &TruthState, id: u32) -> u32 {
+    truth
+        .land_units
+        .get(&LandUnitId::new(id))
+        .map_or(0, |u| u.men_ashore)
+}
+
+fn base_side(truth: &TruthState, base: u32) -> Side {
+    truth.bases[&BaseId::new(base)].side
+}
+
+fn game_on(seed: u32) -> Game {
+    play_game(scenario_on(seed), ALLIED)
+}
+
 /// In every world of the trial: nothing of the enemy's is ordered, the
 /// place is taken on day 4 and kept, and the side loses 100 men.
 #[test]
-#[ignore = "statement written, not built"]
-fn in_every_world_the_second_unit_stays() {}
+fn in_every_world_the_second_unit_stays() {
+    let trial = trial();
+    assert_eq!(trial.played.worlds.len(), 16);
+    for w in &trial.played.worlds {
+        assert!(
+            w.failed.is_none() && w.refused.is_empty(),
+            "world {}",
+            w.number
+        );
+        for day in 1..=14 {
+            // Nothing of the enemy's is ordered on any day.
+            assert_eq!(
+                world_orders_on(w, day, JAPANESE),
+                Vec::<Given>::new(),
+                "world {} day {day}",
+                w.number
+            );
+            let truth = &trial.snapshot(w.number, day).truth;
+            // The second unit and its transports stay where they are: the
+            // enemy's men at C and his ships are as they were on day 1. (A
+            // trial's world makes the believed men and ships under numbers
+            // of its own.)
+            let there = |truth: &TruthState| -> Vec<(u32, u32)> {
+                truth
+                    .land_units
+                    .values()
+                    .filter(|u| u.side == JAPANESE && u.hex == Some(hex(0, 6)))
+                    .map(|u| (u.id.raw(), u.men_ashore))
+                    .collect()
+            };
+            let ships = |truth: &TruthState| -> Vec<(u32, String)> {
+                truth
+                    .ships
+                    .values()
+                    .filter(|s| s.side == JAPANESE)
+                    .map(|s| (s.id.raw(), format!("{:?}", s.location)))
+                    .collect()
+            };
+            let first = &trial.snapshot(w.number, 1).truth;
+            assert_eq!(
+                there(first).iter().map(|(_, m)| *m).sum::<u32>(),
+                1200,
+                "world {}",
+                w.number
+            );
+            assert!(!ships(first).is_empty(), "world {}", w.number);
+            assert_eq!(there(truth), there(first), "world {} day {day}", w.number);
+            assert_eq!(ships(truth), ships(first), "world {} day {day}", w.number);
+        }
+        // The landing is scenario 95's worlds 1 and 3: the place is the
+        // side's at the end of day 4 and after, with 500 men left.
+        assert_eq!(base_side(&trial.snapshot(w.number, 3).truth, 2), JAPANESE);
+        for day in 4..=14 {
+            let truth = &trial.snapshot(w.number, day).truth;
+            assert_eq!(base_side(truth, 2), ALLIED, "world {} day {day}", w.number);
+            assert_eq!(unit(truth, 1), 500, "world {} day {day}", w.number);
+            assert_eq!(unit(truth, 10), 0, "world {} day {day}", w.number);
+        }
+        assert_eq!(trial.snapshot(w.number, 14).lost.men_to_enemy, 100);
+    }
+}
 
 /// The estimate: met and kept in 16 of 16 worlds on day 4, lost again in
 /// none, men lost 100 at the lowest, the middle and the highest.
 #[test]
-#[ignore = "statement written, not built"]
-fn the_estimate_is_cheap() {}
+fn the_estimate_is_cheap() {
+    let e = the_estimate();
+    assert_eq!(e.asked, 16);
+    assert_eq!(e.last_day, Some(14));
+    let all: Vec<u32> = (1..=16).collect();
+    assert_eq!(e.went.worlds, all);
+    assert_eq!(e.went.met_kept, all);
+    assert_eq!(
+        e.went.met_days,
+        Some(Spread {
+            lowest: 4,
+            middle: 4,
+            highest: 4
+        })
+    );
+    assert!(e.went.lost_again.is_empty());
+    assert!(e.went.not_met.is_empty());
+    assert!(e.could_not.is_empty());
+    let hundred = Spread {
+        lowest: 100,
+        middle: 100,
+        highest: 100,
+    };
+    assert_eq!(e.side_costs.expect("costs").men_to_enemy, hundred);
+}
 
 /// What was assumed names the men and the transports at base 3 as made in
 /// every world, and says the enemy was given no intent.
 #[test]
-#[ignore = "statement written, not built"]
-fn what_was_assumed_names_the_intent() {}
+fn what_was_assumed_names_the_intent() {
+    let e = the_estimate();
+    let in_all = |of: &AssumedOf| {
+        e.assumed
+            .iter()
+            .any(|a| &a.of == of && a.made_in.len() == 16 && a.not_in.is_empty())
+    };
+    // The men at base 3 and the transports there, made in every world.
+    assert!(
+        e.assumed.iter().any(|a| matches!(&a.of,
+            AssumedOf::BelievedMen { hex: h, men: 1200, .. } if *h == hex(0, 6))
+            && a.made_in.len() == 16
+            && a.not_in.is_empty()),
+        "{:?}",
+        e.assumed
+    );
+    assert!(
+        e.assumed
+            .iter()
+            .any(|a| matches!(&a.of, AssumedOf::BelievedForce { .. })
+                && a.made_in.len() == 16
+                && a.not_in.is_empty()),
+        "{:?}",
+        e.assumed
+    );
+    // The enemy was given no intent.
+    assert!(in_all(&AssumedOf::EnemyGivenNoIntent), "{:?}", e.assumed);
+}
 
 /// The game, seeds 1 to 20: the take is formed on day 5, the landing is
 /// ordered on days 5 to 8 as the table has it, 448 men are ashore on the
 /// afternoon of day 8, and the side's men lost by the end of day 8 are at
 /// least 300.
 #[test]
-#[ignore = "statement written, not built"]
-fn in_the_game_he_comes_back() {}
+fn in_the_game_he_comes_back() {
+    for seed in 1..=20u32 {
+        let game = game_on(seed);
+        // Days 1 to 4 are the worlds': the place is the side's on day 4
+        // with 100 men lost and 500 left.
+        let four = game.day(4);
+        assert_eq!(base_side(&four.truth, 2), ALLIED, "seed {seed}");
+        assert_eq!(unit(&four.truth, 1), 500, "seed {seed}");
+        assert_eq!(four.lost.men_to_enemy, 100, "seed {seed}");
+        // Day 5: the take is formed and the landing prepared by task force 2.
+        assert!(
+            commands_on(&game, 5, JAPANESE)
+                .iter()
+                .any(|c| c.starts_with("FormIntent")),
+            "seed {seed}: {:?}",
+            commands_on(&game, 5, JAPANESE)
+        );
+        assert_eq!(
+            orders_on(&game, 5, JAPANESE),
+            vec![Given::Landing(hex(4, 0), vec![11])],
+            "seed {seed}"
+        );
+        // Day 6: the notice that the landing is ready, and a load of supply.
+        assert_eq!(
+            notice_days(&game, JAPANESE, NoticeKind::Ready),
+            vec![6],
+            "seed {seed}"
+        );
+        let six = orders_on(&game, 6, JAPANESE);
+        assert!(
+            matches!(six.as_slice(), [Given::LoadTo(_)]),
+            "seed {seed}: {six:?}"
+        );
+        // Day 7: unit 11 set to attack and loaded.
+        let mut seven = orders_on(&game, 7, JAPANESE);
+        seven.sort_by_key(|g| format!("{g:?}"));
+        assert_eq!(
+            seven,
+            vec![Given::Attack(11), Given::LoadUnit(11)],
+            "seed {seed}"
+        );
+        // Day 8: a route to B and back to C, acting at B, and an unload.
+        let mut eight = orders_on(&game, 8, JAPANESE);
+        eight.sort_by_key(|g| format!("{g:?}"));
+        assert_eq!(
+            eight,
+            vec![
+                Given::Route(vec![hex(4, 0), hex(0, 6)], vec![hex(4, 0)]),
+                Given::Unload
+            ],
+            "seed {seed}"
+        );
+        // 448 men are ashore on day 8: 2.8 hours x 80 men an hour for each
+        // of two ships.
+        let landed: u32 = game
+            .events
+            .iter()
+            .filter_map(|e| match &e.kind {
+                EventKind::MenLanded { unit, men, .. } if unit.raw() == 11 && e.day == 8 => {
+                    Some(*men)
+                }
+                _ => None,
+            })
+            .sum();
+        assert_eq!(landed, 448, "seed {seed}");
+        // The side's men lost by the end of day 8 are at least 300.
+        assert!(
+            game.day(8).lost.men_to_enemy >= 300,
+            "seed {seed}: {}",
+            game.day(8).lost.men_to_enemy
+        );
+        let _ = n(0);
+    }
+}
