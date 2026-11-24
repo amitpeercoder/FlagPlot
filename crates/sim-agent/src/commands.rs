@@ -63,8 +63,8 @@ use std::collections::BTreeSet;
 
 use serde_json::{json, Map, Value};
 use sim_core::command::{
-    Addressee, Awaited, Caution, CautionKind, ChainLink, CommandKind, Evidence, ForceKind,
-    ForcesLimit, HeldSetting, HoldTarget, IntentKind, InterruptCondition, InterruptRef,
+    Addressee, Awaited, Caution, CautionKind, ChainLink, CommandKind, Evidence, FollowNotice,
+    ForceKind, ForcesLimit, HeldSetting, HoldTarget, IntentKind, InterruptCondition, InterruptRef,
     InterruptSetting, Knowledge, Leave, Limit, LimitKind, Maker, NoticeBasis, NoticeKind, PlanId,
     PlanOutcome, PursueLeave, PursuitFind, PursuitNotice, Reason, ReasonLimit, Risk, RunDays,
     RunSpec, Serves, StaffCommand, StaffDecisions, StaffNotice, StaffOrder, StandingKind,
@@ -77,6 +77,7 @@ use sim_core::ids::{
     TaskForceId,
 };
 use sim_core::refdata::ShipKind;
+use sim_core::time::Pulse;
 
 use crate::orders::{order_from_json, order_to_json, unit_text};
 
@@ -751,6 +752,17 @@ fn intent_kind_to_json(body: &mut Value, kind: IntentKind) {
             body["hex"] = json!([hex.q, hex.r]);
             body["distance"] = json!(distance);
         }
+        // Decision 0220, R12.
+        IntentKind::DestroyForce {
+            contact,
+            distance,
+            search_only,
+        } => {
+            body["intent_kind"] = json!(kind.name());
+            body["contact"] = json!(contact);
+            body["distance"] = json!(distance);
+            body["search_only"] = json!(search_only);
+        }
         IntentKind::StrikeShips { base } | IntentKind::SearchWaters { base } => {
             body["intent_kind"] = json!(kind.name());
             body["base"] = json!(base.raw());
@@ -870,6 +882,15 @@ fn intent_kind_from_json(value: &Value) -> Result<IntentKind, String> {
             "patrol" => Ok(IntentKind::Patrol {
                 hex: hex_pair(value, "hex")?,
                 distance: small(value, "distance")?,
+            }),
+            // Decision 0220, R12: `search_only` is false where left out.
+            "destroy_force" => Ok(IntentKind::DestroyForce {
+                contact: small(value, "contact")?,
+                distance: small(value, "distance")?,
+                search_only: match value.get("search_only") {
+                    None | Some(Value::Null) => false,
+                    Some(_) => flag(value, "search_only")?,
+                },
             }),
             "strike_ships" => Ok(IntentKind::StrikeShips { base: base()? }),
             "search_waters" => Ok(IntentKind::SearchWaters { base: base()? }),
@@ -1533,7 +1554,46 @@ fn notice_to_json(notice: &StaffNotice) -> Value {
         }
         body["pursuit"] = out;
     }
+    // Written only for a notice of following (decision 0220), so every other
+    // notice is written as it always was.
+    if let Some(follow) = &notice.follow {
+        body["follow"] = json!({
+            "intent": follow.intent.raw(),
+            "contact": follow.contact,
+            "taken_from": follow.taken_from,
+            "other_sort": follow.other_sort,
+            "hex": [follow.hex.q, follow.hex.r],
+            "day": follow.day,
+            "pulse": follow.pulse.name(),
+            "ship_count": follow.ship_count,
+            "kind": follow.kind.name(),
+            "carrier": follow.carrier,
+        });
+    }
     body
+}
+
+fn follow_from_json(value: &Value) -> Result<FollowNotice, String> {
+    let name = text(value, "kind")?;
+    let pulse_name = text(value, "pulse")?;
+    Ok(FollowNotice {
+        intent: IntentId::new(small(value, "intent")?),
+        contact: small(value, "contact")?,
+        taken_from: small_opt(value, "taken_from")?,
+        other_sort: flag(value, "other_sort")?,
+        hex: hex_pair(value, "hex")?,
+        day: small(value, "day")?,
+        pulse: Pulse::ALL
+            .into_iter()
+            .find(|pulse| pulse.name() == pulse_name)
+            .ok_or_else(|| format!("unknown pulse \"{pulse_name}\""))?,
+        ship_count: small(value, "ship_count")?,
+        kind: ShipKind::ALL
+            .into_iter()
+            .find(|kind| kind.name() == name)
+            .ok_or_else(|| format!("unknown kind of ship \"{name}\""))?,
+        carrier: flag(value, "carrier")?,
+    })
 }
 
 fn pursuit_from_json(value: &Value) -> Result<PursuitNotice, String> {
@@ -1588,6 +1648,10 @@ fn notice_from_json(value: &Value) -> Result<StaffNotice, String> {
         pursuit: match value.get("pursuit") {
             None | Some(Value::Null) => None,
             Some(pursuit) => Some(pursuit_from_json(pursuit)?),
+        },
+        follow: match value.get("follow") {
+            None | Some(Value::Null) => None,
+            Some(follow) => Some(follow_from_json(follow)?),
         },
     })
 }
@@ -2495,6 +2559,7 @@ mod tests {
                     run: None,
                     rests_on: NoticeBasis::Command(0),
                     pursuit: None,
+                    follow: None,
                 },
                 StaffNotice {
                     kind: NoticeKind::WaitsForLeave(Leave::Prepare),
@@ -2502,6 +2567,7 @@ mod tests {
                     run: None,
                     rests_on: NoticeBasis::NoOrder(1),
                     pursuit: None,
+                    follow: None,
                 },
                 StaffNotice {
                     kind: NoticeKind::WaitsForLeave(Leave::Launch),
@@ -2509,6 +2575,7 @@ mod tests {
                     run: None,
                     rests_on: NoticeBasis::NoOrder(0),
                     pursuit: None,
+                    follow: None,
                 },
                 StaffNotice {
                     kind: NoticeKind::RunEnded,
@@ -2516,6 +2583,7 @@ mod tests {
                     run: Some(3),
                     rests_on: NoticeBasis::NoOrder(0),
                     pursuit: None,
+                    follow: None,
                 },
                 StaffNotice {
                     kind: NoticeKind::Ready,
@@ -2523,6 +2591,7 @@ mod tests {
                     run: None,
                     rests_on: NoticeBasis::Command(0),
                     pursuit: None,
+                    follow: None,
                 },
                 StaffNotice {
                     kind: NoticeKind::Late,
@@ -2530,6 +2599,7 @@ mod tests {
                     run: None,
                     rests_on: NoticeBasis::Command(0),
                     pursuit: None,
+                    follow: None,
                 },
                 StaffNotice {
                     kind: NoticeKind::Met,
@@ -2537,6 +2607,7 @@ mod tests {
                     run: None,
                     rests_on: NoticeBasis::Command(0),
                     pursuit: None,
+                    follow: None,
                 },
                 StaffNotice {
                     kind: NoticeKind::CannotBringEnough,
@@ -2544,6 +2615,7 @@ mod tests {
                     run: None,
                     rests_on: NoticeBasis::Command(0),
                     pursuit: None,
+                    follow: None,
                 },
                 StaffNotice {
                     kind: NoticeKind::LiftTurnedBack,
@@ -2551,6 +2623,7 @@ mod tests {
                     run: None,
                     rests_on: NoticeBasis::Command(0),
                     pursuit: None,
+                    follow: None,
                 },
             ],
         };

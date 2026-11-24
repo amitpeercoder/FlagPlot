@@ -27,7 +27,7 @@
       "const": "flagplot-agent"
     },
     "version": {
-      "const": 54
+      "const": 55
     },
     "kind": {
       "const": "report"
@@ -82,7 +82,10 @@
               "lift_turned_back",
               "asks_leave_to_pursue",
               "pursues",
-              "pursuit_ended"
+              "pursuit_ended",
+              "follows",
+              "contact_lost",
+              "force_not_found"
             ]
           },
           "task_force": {
@@ -96,6 +99,10 @@
           "contact": {
             "type": "integer",
             "description": "Decision 0214: for a pursuit notice that names a find, the contact's number."
+          },
+          "order": {
+            "type": "integer",
+            "description": "Decision 0220: for a notice of following, the number of the order (the intent) it is about; each order's following is a matter of its own."
           },
           "words": {
             "type": "string"

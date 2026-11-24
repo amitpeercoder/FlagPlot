@@ -9216,6 +9216,54 @@ task_force = 3
             .is_empty());
     }
 
+    /// Decision 0220, R12: the order to destroy a force takes a contact, a
+    /// distance and search only, false where left out.
+    #[test]
+    fn the_order_to_destroy_a_force_loads_with_its_contact_and_its_distance() {
+        use sim_core::command::IntentKind;
+        assert_eq!(
+            only(&command(
+                "kind = \"set_intent\"\nintent = 1\nintent_kind = \"destroy_force\"\ncontact = 2\ndistance = 3"
+            )),
+            CommandKind::SetIntent {
+                intent: IntentId::new(1),
+                kind: IntentKind::DestroyForce {
+                    contact: 2,
+                    distance: 3,
+                    search_only: false
+                }
+            }
+        );
+        assert_eq!(
+            only(&command(
+                "kind = \"set_intent\"\nintent = 1\nintent_kind = \"destroy_force\"\ncontact = 2\ndistance = 0\nsearch_only = true"
+            )),
+            CommandKind::SetIntent {
+                intent: IntentId::new(1),
+                kind: IntentKind::DestroyForce {
+                    contact: 2,
+                    distance: 0,
+                    search_only: true
+                }
+            }
+        );
+        // It takes a contact and a distance and no hex or base.
+        for body in [
+            "intent_kind = \"destroy_force\"\ndistance = 3",
+            "intent_kind = \"destroy_force\"\ncontact = 2",
+            "intent_kind = \"destroy_force\"\ncontact = 2\ndistance = 3\nhex = [1, 1]",
+            "intent_kind = \"destroy_force\"\ncontact = 2\ndistance = 3\nbase = 1",
+        ] {
+            assert!(
+                parse_with(&command(&format!(
+                    "kind = \"set_intent\"\nintent = 1\n{body}"
+                )))
+                .is_err(),
+                "{body}"
+            );
+        }
+    }
+
     /// Decision 0218, stage 3: the patrol order, a hold on a boat and a
     /// forces limit naming boats are given by a scenario's commands.
     #[test]

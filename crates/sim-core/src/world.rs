@@ -180,12 +180,14 @@ impl Default for MadeIds {
 /// and a limit's field a game saved under the old rules could not hold) and
 /// 32 from decision 0223, stages 0 and A (a side's submarine doctrine, which
 /// a game saved under the old rules could not hold, and the pattern of a
-/// patrol, which changes the stations of a side given one). A
+/// patrol, which changes the stations of a side given one) and 33 from
+/// decision 0220 (the order to destroy a force, what it keeps and its three
+/// notices, which a game saved under the old rules could not hold). A
 /// pull request
 /// raises it by one
 /// when it changes a rule in a way that changes what an existing game would do; a
 /// change that leaves every existing game as it was leaves it alone.
-pub const RULES_VERSION: u32 = 32;
+pub const RULES_VERSION: u32 = 33;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct SimConfig {

@@ -16,6 +16,9 @@
 //! every daily hash of every game moves, and the games are compared by the
 //! orders, commands, reasons' words and events instead. (A reason's list of
 //! limits is left out of the text it is written as: decision 0222, rule 5.)
+//! (A notice's `follow: None` is left out of the text too: the field came
+//! with decision 0220 and is `None` in every game with no order to destroy a
+//! force. The architect's ruling of Nov 24, 2026, in that decision's record.)
 //!
 //! # Where the table of "before" digests comes from
 //!
@@ -113,13 +116,7 @@ pub mod digest {
         folders.sort();
         for folder in folders {
             let name = folder.file_name().unwrap().to_string_lossy().to_string();
-            // `a-force-followed` holds scenario 133, written for decision
-            // 0220's orders and not to be run until they are built (decision
-            // 0072): its build takes it out of this list.
-            if name == "step2-frozen"
-                || name == "a-limit-binds-what-it-names"
-                || name == "a-force-followed"
-            {
+            if name == "step2-frozen" || name == "a-limit-binds-what-it-names" {
                 continue;
             }
             visit(&folder, &format!("{name}/"));
@@ -158,7 +155,26 @@ pub mod digest {
         for event in scenario.world.events().iter() {
             writeln!(out, "{event:?}").expect("a string writes");
         }
-        Ok(out)
+        Ok(without_no_follow(&out))
+    }
+
+    /// The text with every `follow: None` taken out, in both forms `Debug`
+    /// writes it. A staff's notice and its event gained the field `follow`
+    /// (decision 0220), which is `None` for every notice that is not one of
+    /// following, so a game with no order to destroy a force says it only
+    /// as `follow: None`. Left out, the text of such a game is the text it
+    /// had before the field, and the digests taken before it still say
+    /// whether a game moved (the architect's ruling of Nov 24, 2026, in
+    /// decision 0220). A notice of following is written whole.
+    pub fn without_no_follow(text: &str) -> String {
+        let mut out = String::with_capacity(text.len());
+        for line in text.split_inclusive('\n') {
+            if line.trim() == "follow: None," {
+                continue;
+            }
+            out.push_str(&line.replace(", follow: None", ""));
+        }
+        out
     }
 
     /// The digest of each staffed file, played in parallel; `None` where the

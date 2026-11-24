@@ -197,8 +197,13 @@ pub const FORMAT: &str = "flagplot-saved-game";
 /// 27 (decision 0228) is a game whose state holds whether each side's staff
 /// chooses its sources of supply, which its scenario states: the file's keys
 /// are unchanged; its state version is v59 and its daily hashes cover it. A
-/// game of an older version is refused, not converted.
-pub const VERSION: u32 = 27;
+/// game of an older version is refused, not converted. Version 28 (decision
+/// 0220) adds in `"commands"` the intent kind `destroy_force` (`contact`,
+/// `distance` and an optional `search_only`) and in a hand-in's notices the
+/// kinds `follows`, `contact_lost` and `force_not_found` with an optional
+/// `"follow"` (the order, the contact and the report); its state version is
+/// v60. A game of an older version is refused, not converted.
+pub const VERSION: u32 = 28;
 
 pub type Script = BTreeMap<u32, Vec<(Side, OrderRequest)>>;
 
@@ -963,6 +968,18 @@ mod tests {
                         },
                     }),
                 ),
+                // Decision 0220: the order to destroy a force.
+                (
+                    Side::Allied,
+                    CommandKind::SetIntent {
+                        intent: IntentId::new(8),
+                        kind: IntentKind::DestroyForce {
+                            contact: 3,
+                            distance: 2,
+                            search_only: true,
+                        },
+                    },
+                ),
                 // Decision 0218, stage 3: the patrol, a limit naming boats
                 // and a hold on a boat.
                 (
@@ -1349,6 +1366,7 @@ mod tests {
                     run: None,
                     rests_on: sim_core::command::NoticeBasis::NoOrder(0),
                     pursuit: None,
+                    follow: None,
                 },
                 sim_core::command::StaffNotice {
                     kind: sim_core::command::NoticeKind::CannotBringEnough,
@@ -1356,6 +1374,7 @@ mod tests {
                     run: None,
                     rests_on: sim_core::command::NoticeBasis::NoOrder(0),
                     pursuit: None,
+                    follow: None,
                 },
                 sim_core::command::StaffNotice {
                     kind: sim_core::command::NoticeKind::RunEnded,
@@ -1363,6 +1382,7 @@ mod tests {
                     run: Some(2),
                     rests_on: sim_core::command::NoticeBasis::Command(0),
                     pursuit: None,
+                    follow: None,
                 },
                 sim_core::command::StaffNotice {
                     kind: sim_core::command::NoticeKind::Ready,
@@ -1370,6 +1390,7 @@ mod tests {
                     run: None,
                     rests_on: sim_core::command::NoticeBasis::NoOrder(0),
                     pursuit: None,
+                    follow: None,
                 },
                 sim_core::command::StaffNotice {
                     kind: sim_core::command::NoticeKind::Late,
@@ -1377,6 +1398,7 @@ mod tests {
                     run: None,
                     rests_on: sim_core::command::NoticeBasis::NoOrder(0),
                     pursuit: None,
+                    follow: None,
                 },
                 sim_core::command::StaffNotice {
                     kind: sim_core::command::NoticeKind::Met,
@@ -1384,6 +1406,7 @@ mod tests {
                     run: None,
                     rests_on: sim_core::command::NoticeBasis::NoOrder(0),
                     pursuit: None,
+                    follow: None,
                 },
                 // Decision 0214: the three notices of a pursuit.
                 sim_core::command::StaffNotice {
@@ -1403,6 +1426,7 @@ mod tests {
                             hours: Some(Fixed::from_raw(7_500_000)),
                         }),
                     }),
+                    follow: None,
                 },
                 sim_core::command::StaffNotice {
                     kind: sim_core::command::NoticeKind::Pursues,
@@ -1421,6 +1445,7 @@ mod tests {
                             hours: None,
                         }),
                     }),
+                    follow: None,
                 },
                 sim_core::command::StaffNotice {
                     kind: sim_core::command::NoticeKind::PursuitEnded,
@@ -1431,6 +1456,65 @@ mod tests {
                         force: sim_core::ids::TaskForceId::new(2),
                         intent: IntentId::new(7),
                         find: None,
+                    }),
+                    follow: None,
+                },
+                // Decision 0220: the three notices of following.
+                sim_core::command::StaffNotice {
+                    kind: sim_core::command::NoticeKind::Follows,
+                    plan: PlanId::new(1),
+                    run: None,
+                    rests_on: sim_core::command::NoticeBasis::NoOrder(0),
+                    pursuit: None,
+                    follow: Some(sim_core::command::FollowNotice {
+                        intent: IntentId::new(8),
+                        contact: 3,
+                        taken_from: Some(1),
+                        other_sort: true,
+                        hex: sim_core::hex::Hex::new(5, -2),
+                        day: 4,
+                        pulse: Pulse::Morning,
+                        ship_count: 2,
+                        kind: sim_core::refdata::ShipKind::Carrier,
+                        carrier: true,
+                    }),
+                },
+                sim_core::command::StaffNotice {
+                    kind: sim_core::command::NoticeKind::ContactLost,
+                    plan: PlanId::new(1),
+                    run: None,
+                    rests_on: sim_core::command::NoticeBasis::NoOrder(0),
+                    pursuit: None,
+                    follow: Some(sim_core::command::FollowNotice {
+                        intent: IntentId::new(8),
+                        contact: 3,
+                        taken_from: None,
+                        other_sort: false,
+                        hex: sim_core::hex::Hex::new(5, -2),
+                        day: 4,
+                        pulse: Pulse::Afternoon,
+                        ship_count: 2,
+                        kind: sim_core::refdata::ShipKind::Cruiser,
+                        carrier: false,
+                    }),
+                },
+                sim_core::command::StaffNotice {
+                    kind: sim_core::command::NoticeKind::ForceNotFound,
+                    plan: PlanId::new(1),
+                    run: None,
+                    rests_on: sim_core::command::NoticeBasis::NoOrder(0),
+                    pursuit: None,
+                    follow: Some(sim_core::command::FollowNotice {
+                        intent: IntentId::new(8),
+                        contact: 3,
+                        taken_from: None,
+                        other_sort: false,
+                        hex: sim_core::hex::Hex::new(5, -2),
+                        day: 4,
+                        pulse: Pulse::Night,
+                        ship_count: 1,
+                        kind: sim_core::refdata::ShipKind::Destroyer,
+                        carrier: false,
                     }),
                 },
             ],
@@ -1473,9 +1557,9 @@ mod tests {
         .expect("writes");
         let written: Value = serde_json::from_str(&fs::read_to_string(&file).expect("reads"))
             .expect("the file is JSON");
-        assert_eq!(written["version"], 27);
+        assert_eq!(written["version"], 28);
         assert_eq!(written["doctrine_version"], sim_staff::DOCTRINE_VERSION);
-        assert_eq!(written["commands"].as_array().expect("commands").len(), 36);
+        assert_eq!(written["commands"].as_array().expect("commands").len(), 37);
         assert_eq!(written["staff"].as_array().expect("staff").len(), 1);
         let saved = read(&file).expect("reads");
         assert_eq!(saved.commands, commands);

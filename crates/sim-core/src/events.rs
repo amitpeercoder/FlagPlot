@@ -1991,6 +1991,10 @@ pub enum EventKind {
         /// order it would leave and the find. `None` for every other
         /// notice. Added at the end.
         pursuit: Option<crate::command::PursuitNotice>,
+        /// What a notice of following says (decision 0220): the order, the
+        /// contact and the report. `None` for every other notice. Added at
+        /// the end.
+        follow: Option<crate::command::FollowNotice>,
     },
     /// An interrupt fired at the morning's test (decision 0107, rulings 31
     /// to 33). A set one carries its condition and the figure it was
@@ -5008,6 +5012,7 @@ impl fmt::Display for EventKind {
                 run,
                 intent,
                 pursuit,
+                follow,
             } => {
                 write!(f, "{side:?} staff's notice: ")?;
                 match (kind, run) {
@@ -5050,6 +5055,18 @@ impl fmt::Display for EventKind {
                     (NoticeKind::PursuitEnded, _) => match pursuit {
                         Some(notice) => write!(f, "{}'s pursuit is ended", notice.force),
                         None => write!(f, "{plan}'s pursuit is ended"),
+                    },
+                    (NoticeKind::Follows, _) => match follow {
+                        Some(notice) => write_follow_notice(f, "follows", notice),
+                        None => write!(f, "{plan} follows a force"),
+                    },
+                    (NoticeKind::ContactLost, _) => match follow {
+                        Some(notice) => write_follow_notice(f, "has lost", notice),
+                        None => write!(f, "{plan} has lost the force it follows"),
+                    },
+                    (NoticeKind::ForceNotFound, _) => match follow {
+                        Some(notice) => write_follow_notice(f, "has not found", notice),
+                        None => write!(f, "{plan} has not found the force it follows"),
                     },
                 }
             }
@@ -5754,6 +5771,35 @@ pub fn air_claim_words(
         "at"
     };
     (place, parts.join(", "))
+}
+
+/// A notice of following in words (decision 0220): "order:3 follows contact 2,
+/// 2 ships, a cruiser, reported at (4,5) in the morning of day 3 (taking it
+/// from contact 1, of the other sort)".
+fn write_follow_notice(
+    f: &mut fmt::Formatter<'_>,
+    verb: &str,
+    notice: &crate::command::FollowNotice,
+) -> fmt::Result {
+    write!(
+        f,
+        "{} {verb} contact {}, {} {}{}, reported at {} in the {} of day {}",
+        notice.intent,
+        notice.contact,
+        notice.ship_count,
+        notice.kind.name(),
+        if notice.carrier { " (a carrier)" } else { "" },
+        notice.hex,
+        notice.pulse.name(),
+        notice.day
+    )?;
+    if let Some(from) = notice.taken_from {
+        write!(f, ", taking it from contact {from}")?;
+        if notice.other_sort {
+            write!(f, ", of the other sort")?;
+        }
+    }
+    Ok(())
 }
 
 /// The find of a pursuit notice in words: "contact 3, a carrier, 2 pulses

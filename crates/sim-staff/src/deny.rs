@@ -37,7 +37,7 @@ use sim_core::view::SideView;
 
 use crate::air::Day;
 use crate::neutralise::bomber_reach;
-use crate::reasons::{base_held_words, base_words, serving, waters_words};
+use crate::reasons::{base_held_words, base_words, serving};
 
 /// The waters of a deny intent (decision 0123, 1): the hexes on the map
 /// within `distance` hexes of `hex`, in hex order.
@@ -144,7 +144,12 @@ impl Day<'_, '_> {
     /// The deny doctrine for the morning (decision 0123, 2 and 3).
     #[allow(clippy::too_many_lines)]
     pub(crate) fn denials(&mut self) {
-        let ends = self.in_priority_order(|i| matches!(i.kind, IntentKind::Deny { .. }));
+        let ends = self.in_priority_order(|i| {
+            matches!(
+                i.kind,
+                IntentKind::Deny { .. } | IntentKind::DestroyForce { .. }
+            )
+        });
         for id in ends {
             let Some(end) = self.state.intents.get(&id).cloned() else {
                 continue;
@@ -155,9 +160,22 @@ impl Day<'_, '_> {
             let Some(plan) = self.plan_of(&end) else {
                 continue;
             };
-            let IntentKind::Deny { hex, distance } = end.kind else {
+            // Decision 0220: an order to destroy a force is a deny whose
+            // centre is read from the force it follows.
+            let Some((hex, distance)) = self.waters_of(&end) else {
                 continue;
             };
+            let search_only = matches!(
+                end.kind,
+                IntentKind::DestroyForce {
+                    search_only: true,
+                    ..
+                }
+            );
+            let destroy = matches!(end.kind, IntentKind::DestroyForce { .. });
+            let lost = self.is_lost(id);
+            // Only its search tasks serve a shadow and an order that is lost.
+            let strikes_too = !search_only && !lost;
             let in_scope = self.in_scope(id);
             let today = self.today;
             let waters_hexes = waters(self.view, hex, distance);
@@ -166,6 +184,12 @@ impl Day<'_, '_> {
                 waters_hexes.len()
             );
             let candidates = self.deny_candidates(&end);
+            let before_hexes = match self.followed.get(&id) {
+                Some(today) if destroy && today.before != hex => {
+                    Some(waters(self.view, today.before, distance))
+                }
+                _ => None,
+            };
             let mut base_served = false;
             for candidate in &candidates {
                 let base = candidate.base;
@@ -182,7 +206,34 @@ impl Day<'_, '_> {
                     .filter(|(_, _, reach)| touches(candidate.hex, &waters_hexes, *reach))
                     .map(|(g, name, reach)| format!("{g} ({name}, a reach of {reach} nm)"))
                     .collect();
-                if !reaching.is_empty() {
+                if destroy && strikes_too && reaching.is_empty() {
+                    // Decision 0220, 2 and R7: a task at a base that has not
+                    // reached the waters at two dusks running is withdrawn.
+                    let was = before_hexes.as_deref().unwrap_or(&waters_hexes);
+                    let held_by = candidate
+                        .bombers
+                        .iter()
+                        .any(|(_, _, reach)| touches(candidate.hex, was, *reach));
+                    if !held_by {
+                        let why = format!(
+                            "{near_text}; its bombers' normal reach touches neither these waters nor the waters round the hex {id} kept before this dusk ({})",
+                            candidate
+                                .bombers
+                                .iter()
+                                .map(|(g, name, reach)| format!("{g} ({name}, a reach of {reach} nm)"))
+                                .collect::<Vec<_>>()
+                                .join(", ")
+                        );
+                        self.withdraw_base_task(
+                            &end,
+                            &plan,
+                            IntentKind::StrikeShips { base },
+                            &why,
+                            in_scope,
+                        );
+                    }
+                }
+                if strikes_too && !reaching.is_empty() {
                     base_served = true;
                     let reach_text = format!(
                         "{near_text}; its bombers whose normal reach touches them: {}",
@@ -199,6 +250,25 @@ impl Day<'_, '_> {
                     .map(|(g, name, range)| format!("{g} ({name}, a search range of {range} nm)"))
                     .collect();
                 if searching.is_empty() {
+                    if destroy {
+                        let was = before_hexes.as_deref().unwrap_or(&waters_hexes);
+                        let held_by = candidate
+                            .searchers
+                            .iter()
+                            .any(|(_, _, range)| touches(candidate.hex, was, *range));
+                        if !held_by {
+                            let why = format!(
+                                "{near_text}; its groups' search range touches neither these waters nor the waters round the hex {id} kept before this dusk"
+                            );
+                            self.withdraw_base_task(
+                                &end,
+                                &plan,
+                                IntentKind::SearchWaters { base },
+                                &why,
+                                in_scope,
+                            );
+                        }
+                    }
                     continue;
                 }
                 base_served = true;
@@ -227,7 +297,7 @@ impl Day<'_, '_> {
                         self.lines.push(format!(
                             "{} is to {}: {base_text}'s cover, {cover}, would search them.",
                             end.id,
-                            waters_words(hex, distance)
+                            self.end_words(&end)
                         ));
                     }
                     continue;
@@ -238,14 +308,20 @@ impl Day<'_, '_> {
             // The tasks of the forces its forces limit names (decisions
             // 0124, 8, and 0125, 2): standing at the centre of the waters,
             // and carriers.
-            let force_served = self.form_force_tasks(&end, &plan, hex, in_scope, false);
+            let force_served =
+                !search_only && self.form_force_tasks(&end, &plan, hex, in_scope, false);
             // Decision 0217: a carrier task under the deny serves it, whoever
             // made the deny: one in force, one formed this morning by the
             // carrier pass, by the island or just above, and a free carrier
             // force the carrier pass gave it (decision 0202).
-            let carrier_tasks = self.carrier_tasks_of(id);
-            let carrier_served =
-                !carrier_tasks.is_empty() || self.carrier_ends.get(&id).is_some_and(|o| o.served);
+            let carrier_tasks = if search_only {
+                Vec::new()
+            } else {
+                self.carrier_tasks_of(id)
+            };
+            let carrier_served = !search_only
+                && (!carrier_tasks.is_empty()
+                    || self.carrier_ends.get(&id).is_some_and(|o| o.served));
             if base_served {
                 continue;
             }
@@ -270,6 +346,36 @@ impl Day<'_, '_> {
                 );
             }
         }
+    }
+
+    /// Decision 0220, R7: the staff withdraws the task of kind `kind` it
+    /// formed under `end`, a task at a base that has not reached the waters
+    /// at two dusks running.
+    fn withdraw_base_task(
+        &mut self,
+        end: &Intent,
+        plan: &sim_core::command::Plan,
+        kind: IntentKind,
+        why: &str,
+        in_scope: bool,
+    ) {
+        let task = self
+            .state
+            .children_in_force(end.id)
+            .into_iter()
+            .filter_map(|c| self.state.intents.get(&c).cloned())
+            .find(|c| c.kind == kind && c.maker == Maker::Staff);
+        let Some(task) = task else {
+            return;
+        };
+        self.withdraw_task(
+            end,
+            plan,
+            &task,
+            in_scope,
+            why,
+            "a bomber or a group that can search within reach of the waters",
+        );
     }
 
     /// The carrier tasks in force under `end`, in intent number order, with
@@ -410,8 +516,7 @@ impl Day<'_, '_> {
             IntentKind::StrikeShips { .. } => format!("strike ships from {base_text}"),
             _ => format!("search the waters from {base_text}"),
         };
-        let (hex, distance) = end.kind.waters().unwrap_or((Hex::new(0, 0), 0));
-        let end_words = waters_words(hex, distance);
+        let end_words = self.end_words(end);
         let standing = self
             .state
             .children_in_force(end.id)
@@ -514,6 +619,7 @@ impl Day<'_, '_> {
             run: None,
             rests_on: NoticeBasis::NoOrder(index),
             pursuit: None,
+            follow: None,
         });
         if in_scope {
             self.lines.push(format!(
@@ -531,7 +637,7 @@ impl Day<'_, '_> {
     pub(crate) fn waters_for_cover(&self, base_hex: Hex, ranges: &[Fixed]) -> Vec<Hex> {
         let mut found: Vec<Hex> = Vec::new();
         for intent in self.state.intents_in_force() {
-            let Some((hex, distance)) = intent.kind.waters() else {
+            let Some((hex, distance)) = self.waters_of(intent) else {
                 continue;
             };
             if !self.released(intent) {

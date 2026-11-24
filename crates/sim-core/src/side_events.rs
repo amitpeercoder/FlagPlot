@@ -5187,6 +5187,7 @@ mod tests {
                     run: None,
                     intent: None,
                     pursuit: None,
+                    follow: None,
                 },
                 Whole,
                 Nothing,
