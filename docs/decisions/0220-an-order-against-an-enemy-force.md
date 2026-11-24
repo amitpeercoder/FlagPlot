@@ -397,3 +397,11 @@ Rows 79, 80 and 81 close as "the code stands; the record is amended"; row 82 sta
 ### The mends after the rulings (Nov 24, 2026)
 
 Ruling 6 is in: `Followed` keeps the count of ships and the kind of the report beside the hex, written at the giving and on every notice of following, hashed in its place and named (the layout stays v60); the notices of lost and of ended carry them where the contact is no longer held, and row 82 of `differences.md` is closed. Ruling 4's owed line is in: on a dusk where a carrier task's station lies too far and none can be chosen, the task's reason of the day says so (`station.rs`, with a unit test). Statement 42 has its test, no longer ignored. No game on file holds an order to destroy a force, so no golden file or pinned hash moved.
+
+### The architect's rulings on the finished build (Nov 24, 2026)
+
+Read against the branch at `d0bca845`.
+
+1. **The slip of the dusk refusal stands, and it stops the clock.** An order given inside a day was accepted at that hour; where it is refused at dusk as "Contact not held" the commander has no order where he believes he has one, and only he can give another. So the slip is drawn at the first stop after that dusk and the clock is held there. It is the page's own stop, read from the day's events of the side, with no interrupt of the engine and no key of the tools; it is not one of the three stops a player may untick, being the refusal of his own order and not a notice of the staff's. **A known limit, owed:** the page names the place from what it held when the order was given, so a reload before the slip loses the place and the slip then says only that the order on a force we no longer hold was not taken up. It is mended when a refused command's event carries what the command named, which is work on decision 0219's queue and not on this rule. It does not hold the merge.
+2. **The count of named kept fields, 6 to 8, is the developer's and is right.** Statement 50 says "each kept field is named in `hash::name_every_field`" and gives no number; the test's count was the developer's way of holding that, and it rose with `ship_count` and `kind` by ruling 6. No statement or expected number of mine was changed.
+
