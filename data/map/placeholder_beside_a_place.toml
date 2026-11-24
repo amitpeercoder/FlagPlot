@@ -1,5 +1,5 @@
 # PLACEHOLDER MAP. Open sea with six coast hexes, used by scenario 135
-# (decision 0229, men ashore beside a place): A at (0,0) with port size 5, the
+# (decision 0231, men ashore beside a place): A at (0,0) with port size 5, the
 # source; D at (4,0), P at (5,0) and N at (6,0), each with port size 0, on one
 # landmass, joined D to P and P to N by land links; T at (0,4) with port size
 # 0, joined to nothing; and J at (6,4) with port size 0, joined to nothing.

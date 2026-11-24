@@ -5,7 +5,7 @@
 //! has the twin of that dump. The staff feeds the men beside the place by
 //! a run from the island's source, and does nothing for the twin.
 //!
-//! Proves decision 0229 as amended on review, against a hand calculation.
+//! Proves decision 0231 as amended on review, against a hand calculation.
 //! It stands on scenario 76's for an island's tree, its source of supply
 //! and the supply doctrine's sums. The data is placeholder data: see
 //! `data/scenarios/men-beside-a-place/135_men_beside_a_place.toml`. It
@@ -227,7 +227,7 @@
 //!
 //! # The intake's three changes
 //!
-//! Tested in `sim-core`'s own command tests, each way (decision 0229,
+//! Tested in `sim-core`'s own command tests, each way (decision 0231,
 //! amended 1): a "keep supplied" of a base of the side is taken under
 //! "control an island", and of a base of the enemy's is refused as
 //! `CannotStandUnder`; so formed it has a plan of its own; and a floor of

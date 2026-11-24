@@ -346,7 +346,7 @@ const BEFORE: &[(&str, u64)] = &[
         0xe2396ee2ad84bb8e,
     ),
     ("stage-2b-proof/07a_week.toml", 0x485071c7e65da537),
-    // Remade for decision 0229 (the island's staff feeds the men beside a place): the one
+    // Remade for decision 0231 (the island's staff feeds the men beside a place): the one
     // game of the table with an island and a base beside a place holding men.
     ("stage-3-proof/07a_slice.toml", 0xec95_4dc0_bcaf_d713),
     ("stage-3-proof/07b_slice.toml", 0x65b57ae5bd373ab9),

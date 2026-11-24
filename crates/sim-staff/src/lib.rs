@@ -428,7 +428,7 @@ use sim_core::view::SideView;
 /// order's draw on it. It gives the orders `supply-58` gave to a side without
 /// the key. `supply-60` adds decision 0220's order to destroy a force and
 /// gives the orders `supply-59` gave to a side that gives none. `supply-61`
-/// adds decision 0229: under "control an island" the staff forms a "keep
+/// adds decision 0231: under "control an island" the staff forms a "keep
 /// supplied" for each base of the side on the island's land and in no named
 /// place's hex where the side has men ashore or marching, sets its forces
 /// limit as a hold's, withdraws it when no man is there, none marches to it

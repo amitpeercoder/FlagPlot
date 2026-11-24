@@ -1,4 +1,4 @@
-//! Men ashore beside a place (decision 0229, as amended on review): under
+//! Men ashore beside a place (decision 0231, as amended on review): under
 //! "control an island" the staff feeds the side's men at a base of the side
 //! that stands on the island's land and in no named place's hex, as well as
 //! the men at the named places.

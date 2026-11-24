@@ -1,5 +1,5 @@
 #!/bin/bash
-# The measurement of decision 0229 ("How it is judged", 3): exports of seeds 1 to 100 of
+# The measurement of decision 0231 ("How it is judged", 3): exports of seeds 1 to 100 of
 # one arrangement, read by unfed.py. Usage: run.sh SCENARIO.toml OUTDIR [JOBS]
 # The scenario is the proof's arrangement (data/scenarios/stage-3-proof/07a_slice.toml)
 # or the same with the table's ground figures. Needs a release sim-cli at

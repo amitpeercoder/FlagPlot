@@ -4272,7 +4272,7 @@ fn world_with_island_and_bases() -> World {
     world
 }
 
-/// Decision 0229, amended 1: a "keep supplied" of a base of the side stands
+/// Decision 0231, amended 1: a "keep supplied" of a base of the side stands
 /// under "control an island"; one of the enemy's is refused as it is under a
 /// hold.
 #[test]
@@ -4299,7 +4299,7 @@ fn keep_supplied_of_a_base_of_the_side_stands_under_an_island() {
     island_invariants(&world);
 }
 
-/// Decision 0229, amended 1: so formed it has a plan of its own, drafted at
+/// Decision 0231, amended 1: so formed it has a plan of its own, drafted at
 /// its forming, where a hold under the island shares the island's.
 #[test]
 fn keep_supplied_under_an_island_has_a_plan_of_its_own() {
@@ -4326,7 +4326,7 @@ fn keep_supplied_under_an_island_has_a_plan_of_its_own() {
     island_invariants(&world);
 }
 
-/// Decision 0229, amended 1: a floor of 0 days is taken under "control an
+/// Decision 0231, amended 1: a floor of 0 days is taken under "control an
 /// island" and is still refused for a "keep supplied" that stands alone.
 #[test]
 fn a_floor_of_no_days_is_taken_under_an_island_and_refused_alone() {
