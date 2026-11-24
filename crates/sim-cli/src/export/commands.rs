@@ -73,6 +73,13 @@ struct IntentKindOut {
     /// 0151).
     #[serde(skip_serializing_if = "Option::is_none")]
     island: Option<u32>,
+    /// The number of the contact an order to destroy a force follows
+    /// (decision 0220).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    contact: Option<u32>,
+    /// Whether an order to destroy a force is search only (decision 0220).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    search_only: Option<bool>,
 }
 
 fn intent_kind(kind: &IntentKind) -> IntentKindOut {
@@ -84,6 +91,8 @@ fn intent_kind(kind: &IntentKind) -> IntentKindOut {
         } => IntentKindOut {
             kind: "keep_supplied",
             island: None,
+            contact: None,
+            search_only: None,
             base: Some(base.raw()),
             target: None,
             hex: None,
@@ -101,6 +110,8 @@ fn intent_kind(kind: &IntentKind) -> IntentKindOut {
         | IntentKind::SearchWaters { base } => IntentKindOut {
             kind: kind.name(),
             island: None,
+            contact: None,
+            search_only: None,
             base: Some(base.raw()),
             target: None,
             hex: None,
@@ -115,6 +126,8 @@ fn intent_kind(kind: &IntentKind) -> IntentKindOut {
         IntentKind::Neutralise { target } | IntentKind::Raid { target, .. } => IntentKindOut {
             kind: kind.name(),
             island: None,
+            contact: None,
+            search_only: None,
             base: kind.own_base().map(|base| base.raw()),
             target: Some(target.raw()),
             hex: None,
@@ -130,6 +143,8 @@ fn intent_kind(kind: &IntentKind) -> IntentKindOut {
             IntentKindOut {
                 kind: kind.name(),
                 island: None,
+                contact: None,
+                search_only: None,
                 base: None,
                 target: None,
                 hex: Some([hex.q, hex.r]),
@@ -146,6 +161,8 @@ fn intent_kind(kind: &IntentKind) -> IntentKindOut {
         IntentKind::ReadyLanding { force, hex, by_day } => IntentKindOut {
             kind: kind.name(),
             island: None,
+            contact: None,
+            search_only: None,
             base: None,
             target: None,
             hex: Some([hex.q, hex.r]),
@@ -161,6 +178,8 @@ fn intent_kind(kind: &IntentKind) -> IntentKindOut {
         IntentKind::TakePlace { hex, by_day } => IntentKindOut {
             kind: kind.name(),
             island: None,
+            contact: None,
+            search_only: None,
             base: None,
             target: None,
             hex: Some([hex.q, hex.r]),
@@ -176,6 +195,8 @@ fn intent_kind(kind: &IntentKind) -> IntentKindOut {
         IntentKind::Bombard { force, target } => IntentKindOut {
             kind: kind.name(),
             island: None,
+            contact: None,
+            search_only: None,
             base: None,
             target: Some(target.raw()),
             hex: None,
@@ -190,6 +211,8 @@ fn intent_kind(kind: &IntentKind) -> IntentKindOut {
         IntentKind::BuildUp { base, wants } => IntentKindOut {
             kind: kind.name(),
             island: None,
+            contact: None,
+            search_only: None,
             base: Some(base.raw()),
             target: None,
             hex: None,
@@ -209,6 +232,8 @@ fn intent_kind(kind: &IntentKind) -> IntentKindOut {
         IntentKind::ControlIsland { island, by_day } => IntentKindOut {
             kind: kind.name(),
             island: Some(*island),
+            contact: None,
+            search_only: None,
             base: None,
             target: None,
             hex: None,
@@ -220,10 +245,34 @@ fn intent_kind(kind: &IntentKind) -> IntentKindOut {
             wants: None,
             defences: None,
         },
+        // Decision 0220: the contact, the distance and whether it is search
+        // only.
+        IntentKind::DestroyForce {
+            contact,
+            distance,
+            search_only,
+        } => IntentKindOut {
+            kind: kind.name(),
+            island: None,
+            contact: Some(*contact),
+            search_only: Some(*search_only),
+            base: None,
+            target: None,
+            hex: None,
+            distance: Some(*distance),
+            task_force: None,
+            floor_days: None,
+            interval_days: None,
+            by_day: None,
+            wants: None,
+            defences: None,
+        },
         IntentKind::Deny { hex, distance } | IntentKind::Patrol { hex, distance } => {
             IntentKindOut {
                 kind: kind.name(),
                 island: None,
+                contact: None,
+                search_only: None,
                 base: None,
                 target: None,
                 hex: Some([hex.q, hex.r]),
@@ -715,6 +764,10 @@ pub struct CommandStateOut {
     /// written only where there are some.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pursuit_refusals: Vec<PursuitRefusalOut>,
+    /// What each order to destroy a force keeps of the force it follows
+    /// (decision 0220), written only where there is one.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    followed: Vec<FollowedOut>,
     /// The pattern the side's staff places the boats of a patrol in, as its
     /// scenario states it (decision 0223, stage 0): `off_bases` or `lines`.
     /// The umpire's file; written only where the scenario states one.
@@ -725,6 +778,19 @@ pub struct CommandStateOut {
     /// written only where true.
     #[serde(skip_serializing_if = "std::ops::Not::not")]
     expects_boats_off_own_bases: bool,
+}
+
+#[derive(Serialize)]
+struct FollowedOut {
+    intent: u32,
+    contact: u32,
+    hex: [i32; 2],
+    day: u32,
+    pulse: &'static str,
+    ship_count: u32,
+    kind: &'static str,
+    carrier: bool,
+    lost: bool,
 }
 
 #[derive(Serialize)]
@@ -796,6 +862,21 @@ fn state(state: &CommandState, key: &UmpireKey) -> CommandStateOut {
             .map(|(force, contact)| PursuitRefusalOut {
                 task_force: force.raw(),
                 contact: *contact,
+            })
+            .collect(),
+        followed: state
+            .followed
+            .iter()
+            .map(|(intent, kept)| FollowedOut {
+                intent: intent.raw(),
+                contact: kept.contact,
+                hex: [kept.hex.q, kept.hex.r],
+                day: kept.day,
+                pulse: kept.pulse.name(),
+                ship_count: kept.ship_count,
+                kind: kept.kind.name(),
+                carrier: kept.carrier,
+                lost: kept.lost,
             })
             .collect(),
         submarine_pattern: state.submarine_doctrine.pattern.map(|p| p.name()),

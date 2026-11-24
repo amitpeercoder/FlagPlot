@@ -1166,6 +1166,12 @@ impl Day<'_, '_> {
                     };
                     let held_words = |c: &Held| {
                         let waters_text = targets.deny_of(c.hex).map_or_else(String::new, |d| {
+                            if d.destroy {
+                                return format!(
+                                    ", in the waters the order to destroy a force, {}, puts first",
+                                    d.deny
+                                );
+                            }
                             format!(
                                 ", in the waters of {} that the targets limit set on {} puts first",
                                 d.deny, d.limit_on
@@ -1468,6 +1474,21 @@ impl Day<'_, '_> {
                                             let (leave, leave_on) =
                                                 self.state.pursue_read_up(task.id);
                                             let source = match leave_on {
+                                                // Decision 0220, 2: an order to
+                                                // destroy a force gives leave of
+                                                // its own, "go", where none is set
+                                                // on it.
+                                                Some(on)
+                                                    if !self.state.pursue_leaves.contains_key(&on)
+                                                        && self.state.intents.get(&on).is_some_and(|i| {
+                                                            matches!(i.kind, IntentKind::DestroyForce { .. })
+                                                        }) =>
+                                                {
+                                                    format!(
+                                                        "the leave is the order's own: {on}, an order to destroy a force, gives leave to pursue ({}), and none is set on it",
+                                                        leave.name()
+                                                    )
+                                                }
                                                 Some(on) => format!(
                                                     "the leave to pursue of {on} is {}",
                                                     leave.name()
@@ -1832,7 +1853,7 @@ impl Day<'_, '_> {
                 let attacked = self.force_attacked(id);
                 let mut threats: Vec<Threat> = self.threats(task.kind.addressee());
                 for above in self.state.ancestors(task.id) {
-                    if let Some((centre, distance)) = above.kind.waters() {
+                    if let Some((centre, distance)) = self.waters_of(above) {
                         for w in waters(view, centre, distance) {
                             threats.push(Threat {
                                 hex: w,
@@ -2172,6 +2193,7 @@ impl Day<'_, '_> {
                     run: None,
                     rests_on: NoticeBasis::NoOrder(index),
                     pursuit: None,
+                    follow: None,
                 });
             }
         }
@@ -2183,6 +2205,7 @@ impl Day<'_, '_> {
                 run: None,
                 rests_on: NoticeBasis::NoOrder(out.no_orders.len() - 1),
                 pursuit: Some(pursuit),
+                follow: None,
             });
         }
         if in_scope {

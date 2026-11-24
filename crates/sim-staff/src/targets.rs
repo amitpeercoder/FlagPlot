@@ -42,6 +42,9 @@ pub struct WatersDeny {
     /// Whether the deny stands above the task (and so already reaches the
     /// search arc of a carrier force under it, as today).
     pub above: bool,
+    /// Whether it is an order to destroy a force, whose waters are first by
+    /// the order itself and by no targets limit (decision 0220, 2).
+    pub destroy: bool,
 }
 
 /// What the targets limits on and around a task give its bombers.
@@ -81,6 +84,15 @@ impl StrikeTargets {
         self.denies
             .iter()
             .map(|d| {
+                if d.destroy {
+                    return format!(
+                        "the waters of {}, the order to destroy a force (the waters within {} hexes of {}, {} hex(es) on the map), first by that order",
+                        d.deny,
+                        d.distance,
+                        d.centre,
+                        d.hexes.len()
+                    );
+                }
                 format!(
                     "the waters of {}, {} ({} hex(es) on the map), first by the targets limit set on {}",
                     d.deny,
@@ -139,7 +151,12 @@ pub(crate) fn speaks_of_waters(
         );
     }
     targets.denies.iter().fold(builder, |b, d| {
-        b.speaks_of_on(LimitKind::Targets, d.limit_on)
+        if d.destroy {
+            // The order puts its waters first itself: no limit says it.
+            b
+        } else {
+            b.speaks_of_on(LimitKind::Targets, d.limit_on)
+        }
     })
 }
 
@@ -245,6 +262,21 @@ impl Day<'_, '_> {
                 }
             }
         }
+        // Decision 0220, 2: an order to destroy a force above the task puts
+        // its waters first, with no targets limit.
+        for id in &ancestors {
+            if let Some(order) = self.state.intents.get(id) {
+                if matches!(
+                    order.kind,
+                    IntentKind::DestroyForce {
+                        search_only: false,
+                        ..
+                    }
+                ) {
+                    self.push_deny(&mut out, order, order.id, true);
+                }
+            }
+        }
         out.denies.sort_by_key(|d| d.deny);
         for d in &out.denies {
             out.waters.extend(d.hexes.iter().copied());
@@ -253,7 +285,14 @@ impl Day<'_, '_> {
     }
 
     fn push_deny(&self, out: &mut StrikeTargets, deny: &Intent, on: IntentId, above: bool) {
-        let IntentKind::Deny { hex, distance } = deny.kind else {
+        let destroy = match deny.kind {
+            IntentKind::Deny { .. } => false,
+            IntentKind::DestroyForce {
+                search_only: false, ..
+            } => true,
+            _ => return,
+        };
+        let Some((hex, distance)) = self.waters_of(deny) else {
             return;
         };
         if !deny.in_force() || !self.released(deny) || out.denies.iter().any(|d| d.deny == deny.id)
@@ -267,6 +306,7 @@ impl Day<'_, '_> {
             distance,
             hexes: waters(self.view, hex, distance),
             above,
+            destroy,
         });
     }
 }

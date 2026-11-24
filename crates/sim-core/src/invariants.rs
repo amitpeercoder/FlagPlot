@@ -211,6 +211,10 @@ pub enum InvariantViolation {
     /// standing one about a ship that is not the side's own (decisions 0107
     /// and 0111, rulings 31 to 33). Added at the end of the enum.
     InterruptUnsound(Side, InterruptRef),
+    /// An order's kept following (decision 0220, 5) that names an intent not
+    /// in force or not an order to destroy a force. Added at the end of the
+    /// enum.
+    FollowedUnsound(Side, IntentId),
     /// An intent whose place in the tree is unsound (decision 0117): a
     /// sub-intent whose parent does not exist, has a number not below its
     /// own, or serves another plan (but a take under an island, which owns
@@ -520,6 +524,10 @@ impl fmt::Display for InvariantViolation {
             InvariantViolation::HoldUnsound(side, target) => write!(
                 f,
                 "{side:?} holds {target}, which does not exist, is not its own, or was held after today"
+            ),
+            InvariantViolation::FollowedUnsound(side, intent) => write!(
+                f,
+                "{side:?} keeps a following for {intent}, which is not an order in force to destroy a force"
             ),
             InvariantViolation::InterruptUnsound(side, interrupt) => write!(
                 f,
@@ -1233,6 +1241,16 @@ pub(crate) fn check_command(
         };
         if !own || hold.day > day {
             violations.push(InvariantViolation::HoldUnsound(side, *target));
+        }
+    }
+
+    for intent in command.followed.keys() {
+        let sound = command.intents.get(intent).is_some_and(|found| {
+            found.in_force()
+                && matches!(found.kind, crate::command::IntentKind::DestroyForce { .. })
+        });
+        if !sound {
+            violations.push(InvariantViolation::FollowedUnsound(side, *intent));
         }
     }
 

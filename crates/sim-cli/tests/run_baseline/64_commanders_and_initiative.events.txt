@@ -2,9 +2,9 @@ Placeholder scenario 64: Commanders and initiative
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash aebc134f47736343  40 events
-day   2  hash 919ed27d632e244d  7 events
-day   3  hash 647e2d361b21cb40  12 events
+day   1  hash 63f22329fcd131bf  40 events
+day   2  hash 258589ee8379a7b9  7 events
+day   3  hash 4aab00f07edc9464  12 events
 
 #1 D0 -         Allied report: 1 ship, cruiser, at (12,0), held at the start: new contact:1
 #2 D1 -         Allied the commander's command taken: set intent:1 to operate the carrier force task_force:1 from (0,0)

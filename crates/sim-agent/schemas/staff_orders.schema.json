@@ -24,7 +24,7 @@
       "const": "flagplot-agent"
     },
     "version": {
-      "const": 54
+      "const": 55
     },
     "kind": {
       "const": "staff_orders"
@@ -92,7 +92,10 @@
               "lift_turned_back",
               "asks_leave_to_pursue",
               "pursues",
-              "pursuit_ended"
+              "pursuit_ended",
+              "follows",
+              "contact_lost",
+              "force_not_found"
             ]
           },
           "plan": {
@@ -106,6 +109,9 @@
           },
           "pursuit": {
             "$ref": "command_defs.schema.json#/$defs/staff_notice_pursuit"
+          },
+          "follow": {
+            "$ref": "command_defs.schema.json#/$defs/staff_notice_follow"
           },
           "rests_on": {
             "type": "object",

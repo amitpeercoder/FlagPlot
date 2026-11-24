@@ -220,11 +220,19 @@ impl Day<'_, '_> {
     /// Rules 1 to 5 and 24 to 28: the carrier pass of the morning, before the
     /// ends are served. It records for each end it reads what it found.
     pub(crate) fn carriers_for_ends(&mut self) {
+        // Decision 0220: an order to destroy a force is stationed for as a deny
+        // is, but not a shadow (rule 3) and not one that is lost-contact (R6).
         let ends = self.in_priority_order(|i| {
             matches!(
                 i.kind,
-                IntentKind::Deny { .. } | IntentKind::Neutralise { .. }
+                IntentKind::Deny { .. }
+                    | IntentKind::Neutralise { .. }
+                    | IntentKind::DestroyForce {
+                        search_only: false,
+                        ..
+                    }
             ) && i.maker == Maker::Commander
+                && !self.is_lost(i.id)
         });
         if ends.is_empty() {
             return;
@@ -460,6 +468,8 @@ impl Day<'_, '_> {
                                 .is_some_and(|f| f.task_forces.contains(&fid))
                     })
             });
+            let mut rechosen = false;
+            let mut too_far_none: Option<String> = None;
             let why = match (held, named_above) {
                 (Some(hold), _) => Some(format!(
                     "{hold} is held by the commander: a force held is let go"
@@ -468,7 +478,20 @@ impl Day<'_, '_> {
                     "{other}, higher in priority than {}, names {fid}",
                     end.id
                 )),
-                (None, None) => None,
+                // Decision 0220, R10: a station of an order to destroy a
+                // force is chosen again where it lies too far from the
+                // waters' centre as it is now.
+                (None, None) => match self.station_rechosen(end, fid, hex) {
+                    Rechosen::Not => None,
+                    Rechosen::Chosen(words) => {
+                        rechosen = true;
+                        Some(words)
+                    }
+                    Rechosen::NoneChoosable(words) => {
+                        too_far_none = Some(words);
+                        None
+                    }
+                },
             };
             match why {
                 Some(why) => {
@@ -497,20 +520,27 @@ impl Day<'_, '_> {
                     if let Some(found) = self.state.intents.get_mut(&task.id) {
                         found.withdrawn_day = Some(today);
                     }
-                    outcome.words.push(format!("{fid} is let go: {why}"));
+                    if !rechosen {
+                        outcome.words.push(format!("{fid} is let go: {why}"));
+                    }
                 }
                 None => {
                     taken.insert(fid, end.id);
                     outcome.served = true;
-                    let reason = serving(end, plan)
-                        .evidence(
-                            format!("{}, the carrier task the staff chose for {fid} at {hex}, is in force under {}", task.id, end.id),
-                            today,
-                        )
+                    let far = too_far_none.clone().unwrap_or_default();
+                    let mut builder = serving(end, plan).evidence(
+                        format!("{}, the carrier task the staff chose for {fid} at {hex}, is in force under {}", task.id, end.id),
+                        today,
+                    );
+                    if too_far_none.is_some() {
+                        builder = builder.evidence(far.clone(), today);
+                    }
+                    let reason = builder
                         .binding(format!("{} stands", task.id))
                         .worked(format!(
-                            "{}, to operate the carrier force {fid} from {hex}, stands under {}: its station was chosen on the morning it was formed and is kept, so the staff forms no other.",
-                            task.id, end.id
+                            "{}, to operate the carrier force {fid} from {hex}, stands under {}: its station was chosen on the morning it was formed and is kept, so the staff forms no other.{}",
+                            task.id, end.id,
+                            if far.is_empty() { String::new() } else { format!(" {far}") }
                         ))
                         .would_change(format!("{} withdrawn, or {fid} held", task.id))
                         .done();
@@ -518,6 +548,50 @@ impl Day<'_, '_> {
                 }
             }
         }
+    }
+
+    /// Decision 0220, R10: where the station `station` of `force` under the
+    /// order `end` lies more than `station_rechosen_hexes` hexes beyond the
+    /// farthest a station may be from the centre of the waters as they are
+    /// today, and a station can be chosen again, the words that say so.
+    fn station_rechosen(&self, end: &Intent, force: TaskForceId, station: Hex) -> Rechosen {
+        if !matches!(end.kind, IntentKind::DestroyForce { .. }) {
+            return Rechosen::Not;
+        }
+        let Some((centre, distance)) = self.waters_of(end) else {
+            return Rechosen::Not;
+        };
+        let Some(aboard) = self.carrier_force_aboard(force) else {
+            return Rechosen::Not;
+        };
+        let Some(reach) = aboard
+            .iter()
+            .filter_map(|g| bomber_reach(self.view, g))
+            .min()
+        else {
+            return Rechosen::Not;
+        };
+        let within = reach_for(reach, Some(distance));
+        let allowed = u32::try_from((within / Fixed::from_int(HEX_NM)).trunc()).unwrap_or(0);
+        let apart = station.distance(centre);
+        if apart <= allowed + crate::follow::STATION_RECHOSEN_HEXES {
+            return Rechosen::Not;
+        }
+        // Only where a station can be chosen again: a force is never left
+        // with no task by this rule.
+        let Some(found) = self.area.task_forces().find(|f| f.id == force) else {
+            return Rechosen::Not;
+        };
+        if self.choose_station(end, found, &aboard).is_err() {
+            return Rechosen::NoneChoosable(too_far_none_words(
+                station, apart, centre, end.id, allowed,
+            ));
+        }
+        Rechosen::Chosen(format!(
+            "the station {station} is {apart} hexes from the centre {centre} of the waters of {} as they are now, against the {allowed} hexes a station may be from it ({within} nm of reach left after 40 nm for each of the waters' {distance} hexes) and the {} allowed beyond: {apart} is more, so the station is chosen again",
+            end.id,
+            crate::follow::STATION_RECHOSEN_HEXES
+        ))
     }
 
     /// What `end` is aimed at, read from the side's map.
@@ -537,7 +611,8 @@ impl Day<'_, '_> {
                     target: Some(target),
                 })
             }
-            IntentKind::Deny { hex, distance } => {
+            IntentKind::Deny { .. } | IntentKind::DestroyForce { .. } => {
+                let (hex, distance) = self.waters_of(end)?;
                 let hexes: BTreeSet<Hex> = crate::deny::waters(self.view, hex, distance)
                     .into_iter()
                     .collect();
@@ -1108,6 +1183,7 @@ impl Day<'_, '_> {
         );
         let aim = match end.kind {
             IntentKind::Deny { hex, distance } => waters_words(hex, distance),
+            IntentKind::DestroyForce { .. } => self.end_words(end),
             IntentKind::Neutralise { target } => {
                 format!("neutralise {}", base_words(self.view, target))
             }
@@ -1160,7 +1236,12 @@ impl Day<'_, '_> {
         };
         matches!(
             parent.kind,
-            IntentKind::Deny { .. } | IntentKind::Neutralise { .. }
+            IntentKind::Deny { .. }
+                | IntentKind::Neutralise { .. }
+                | IntentKind::DestroyForce {
+                    search_only: false,
+                    ..
+                }
         ) && parent.maker == Maker::Commander
             && !self.state.in_place_on_chain(parent.id)
     }
@@ -1225,6 +1306,29 @@ fn force_inside(limit: &sim_core::command::ForcesLimit, force: &TaskForce) -> bo
         || (!force.ships.is_empty() && force.ships.iter().all(|s| limit.ships.contains(s)))
 }
 
+/// The day's reason where a station lies too far from the centre of the waters
+/// and none can be chosen (decision 0220, R10, ruling 4 after the build).
+fn too_far_none_words(
+    station: Hex,
+    apart: u32,
+    centre: Hex,
+    end: IntentId,
+    allowed: u32,
+) -> String {
+    format!(
+        "the station {station} lies too far, {apart} hexes from the centre {centre} of the waters of {end} as they are now (more than the {allowed} hexes a station may be from it and the {} allowed beyond), and none can be chosen, so the station is kept",
+        crate::follow::STATION_RECHOSEN_HEXES
+    )
+}
+
+/// What decision 0220, R10 makes of a station: kept as it lies, to be chosen
+/// again, or too far with none to choose.
+enum Rechosen {
+    Not,
+    Chosen(String),
+    NoneChoosable(String),
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1278,6 +1382,14 @@ mod tests {
         assert_eq!(reach_for(r, Some(6)), r);
         assert_eq!(reach_for(r, Some(5)), r);
         assert_eq!(reach_for(r, Some(4)), Fixed::from_int(50));
+    }
+
+    #[test]
+    fn a_station_too_far_with_none_to_choose_says_so() {
+        let words = too_far_none_words(Hex::new(5, 0), 8, Hex::new(13, 0), IntentId::new(1), 4);
+        assert!(words.contains("lies too far"), "{words}");
+        assert!(words.contains("none can be chosen"), "{words}");
+        assert!(words.contains("8 hexes from the centre"), "{words}");
     }
 
     #[test]

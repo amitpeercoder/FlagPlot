@@ -520,6 +520,14 @@ impl Context {
             },
             IntentKind::Deny { hex, distance } => TaskShown::Deny { hex, distance },
             IntentKind::Patrol { hex, distance } => TaskShown::Patrol { hex, distance },
+            // Decision 0220: shown as the waters round the contact's place as
+            // the seat holds it, the trial having no task of its own for it.
+            IntentKind::DestroyForce {
+                contact, distance, ..
+            } => TaskShown::Deny {
+                hex: self.contact_hex(contact).unwrap_or(Hex { q: 0, r: 0 }),
+                distance,
+            },
             IntentKind::StrikeShips { base: b } => TaskShown::StrikeShips { base: base(b) },
             IntentKind::SearchWaters { base: b } => TaskShown::SearchWaters { base: base(b) },
             IntentKind::StandAt { force: f, hex } => TaskShown::StandAt {
@@ -797,6 +805,8 @@ fn enemy_intent(kind: IntentKind) -> (&'static str, Option<Hex>, Option<BaseId>)
         IntentKind::Cover { base } => ("cover from the air", None, Some(base)),
         IntentKind::Deny { hex, .. } => ("deny the waters", Some(hex), None),
         IntentKind::Patrol { hex, .. } => ("patrol the waters", Some(hex), None),
+        // Decision 0220: an enemy's order is never shown by a force of his.
+        IntentKind::DestroyForce { .. } => ("destroy a force", None, None),
         IntentKind::ControlIsland { .. } => ("control an island", None, None),
         IntentKind::Bombard { target, .. } => ("bombard", None, Some(target)),
         IntentKind::StandAt { hex, .. } | IntentKind::OperateCarriers { hex, .. } => {

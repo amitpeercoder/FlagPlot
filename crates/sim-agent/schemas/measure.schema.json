@@ -47,7 +47,7 @@
       "additionalProperties": false,
       "properties": {
         "format": { "const": "flagplot-agent" },
-        "version": { "const": 54 },
+        "version": { "const": 55 },
         "kind": { "const": "measure" },
         "question": { "const": "air_distance" },
         "from": { "$ref": "#/$defs/resolved" },
@@ -64,7 +64,7 @@
       "additionalProperties": false,
       "properties": {
         "format": { "const": "flagplot-agent" },
-        "version": { "const": 54 },
+        "version": { "const": 55 },
         "kind": { "const": "measure" },
         "question": { "const": "sea_route" },
         "from": { "$ref": "#/$defs/resolved" },
@@ -103,7 +103,7 @@
       "properties": {
         "inside_day": { "type": "string", "description": "Given only at 0600 or 1200, in a game that stops between pulses (decision 0156): the passage or the yard trip is worked as if the force left at 1800, the start of the open day's night, which has passed; the note says by how much the times are early." },
         "format": { "const": "flagplot-agent" },
-        "version": { "const": 54 },
+        "version": { "const": 55 },
         "kind": { "const": "measure" },
         "question": { "const": "passage" },
         "task_force": { "$ref": "defs.schema.json#/$defs/handle" },
@@ -168,7 +168,7 @@
       "properties": {
         "inside_day": { "type": "string", "description": "Given only at 0600 or 1200, in a game that stops between pulses (decision 0156): the passage or the yard trip is worked as if the force left at 1800, the start of the open day's night, which has passed; the note says by how much the times are early." },
         "format": { "const": "flagplot-agent" },
-        "version": { "const": 54 },
+        "version": { "const": 55 },
         "kind": { "const": "measure" },
         "question": { "const": "yard" },
         "task_force": { "$ref": "defs.schema.json#/$defs/handle" },
@@ -213,7 +213,7 @@
       "additionalProperties": false,
       "properties": {
         "format": { "const": "flagplot-agent" },
-        "version": { "const": 54 },
+        "version": { "const": 55 },
         "kind": { "const": "measure" },
         "question": { "const": "air_reach" },
         "air_group": { "$ref": "defs.schema.json#/$defs/handle" },
@@ -262,7 +262,7 @@
       "additionalProperties": false,
       "properties": {
         "format": { "const": "flagplot-agent" },
-        "version": { "const": 54 },
+        "version": { "const": 55 },
         "kind": { "const": "measure" },
         "question": { "const": "choices" },
         "unit": { "$ref": "defs.schema.json#/$defs/handle" },

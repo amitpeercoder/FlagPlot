@@ -10,10 +10,9 @@
 # nothing of the strike's result is stated. The statements and the hand
 # calculation are in tests/scenario_133_a_force_followed.rs.
 #
-# NOT TO BE RUN YET: the order "destroy a force" (`intent_kind =
-# "destroy_force"`, with `contact`, `distance` and, where given,
-# `search_only`) is read by no loader until decision 0220 is built. The keys
-# are the architect's, ruled in the decision record.
+# The order "destroy a force" is `intent_kind = "destroy_force"`, with
+# `contact`, `distance` and, where given, `search_only` (decision 0220, built
+# on Nov 23, 2026; rules chapter 8, Destroying a force).
 #
 # Kept out of the loops that walk data/scenarios/*.toml by being in this
 # folder (decision 0072).

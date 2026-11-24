@@ -2,12 +2,12 @@ Scenario 31: An airfield damaged and mended
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 2441411c4c8a730b  24 events
-day   2  hash 9d68d372a5964222  23 events
-day   3  hash 14d90f3758615858  26 events
-day   4  hash fdaffb457dafc746  22 events
-day   5  hash 3e404607415def5c  21 events
-day   6  hash 717e234fa64b81a6  21 events
+day   1  hash f044a00045d884bf  24 events
+day   2  hash a0eaf1e7104003ee  23 events
+day   3  hash c66881d3219dcc3c  26 events
+day   4  hash 6a4ccf1491242ab2  22 events
+day   5  hash 546fb054257e5390  21 events
+day   6  hash 1482f43959b898b2  21 events
 
 #1 D1 -         order:1 accepted for air_group:1  <- order:1
 #2 D1 -         order:2 accepted for air_group:1  <- order:2
