@@ -712,3 +712,7 @@ path = "boats_in_the_thirty_nine_days_games.rs"
 [[test]]
 name = "table_rear_bases_files"
 path = "table_rear_bases_files.rs"
+
+[[test]]
+name = "scenario_136_supply_at_press"
+path = "scenario_136_supply_at_press.rs"
