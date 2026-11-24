@@ -5914,6 +5914,8 @@ fn an_order_to_destroy_a_force_keeps_the_report_it_follows_at_the_giving() {
             hex: Hex::new(8, 0),
             day: 0,
             pulse: Pulse::Afternoon,
+            ship_count: 2,
+            kind: ShipKind::Cruiser,
             carrier: false,
             lost: false,
         }
@@ -5928,6 +5930,8 @@ fn an_order_to_destroy_a_force_keeps_the_report_it_follows_at_the_giving() {
             hex: Hex::new(14, 1),
             day: 0,
             pulse: Pulse::Night,
+            ship_count: 2,
+            kind: ShipKind::Carrier,
             carrier: true,
             lost: false,
         }
@@ -6075,6 +6079,8 @@ fn a_follows_notice_keeps_the_report_and_a_taking_changes_the_sort_and_clears_lo
             hex: Hex::new(14, 0),
             day: 1,
             pulse: Pulse::Morning,
+            ship_count: 2,
+            kind: ShipKind::Carrier,
             carrier: false,
             lost: true,
         }
@@ -6101,6 +6107,8 @@ fn a_follows_notice_keeps_the_report_and_a_taking_changes_the_sort_and_clears_lo
             hex: Hex::new(20, 0),
             day: 2,
             pulse: Pulse::Afternoon,
+            ship_count: 2,
+            kind: ShipKind::Carrier,
             carrier: true,
             lost: false,
         }

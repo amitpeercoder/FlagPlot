@@ -1792,6 +1792,12 @@ pub struct Followed {
     /// The day and pulse of that report.
     pub day: u32,
     pub pulse: Pulse,
+    /// How many ships the last report kept says (decision 0220, ruling 6 after
+    /// the build), written with the hex.
+    pub ship_count: u32,
+    /// The kind the last report kept says, written with the hex. Not the
+    /// sort: the sort changes only at a taking.
+    pub kind: ShipKind,
     /// Whether the force was taken for a carrier, when the order was given or
     /// last took a contact (the sort, rule 7).
     pub carrier: bool,

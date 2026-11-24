@@ -394,3 +394,6 @@ Read against the branch at `6a34d4d2`: `sim-agent/src/session.rs` (`NO_INTENTS_H
 
 Rows 79, 80 and 81 close as "the code stands; the record is amended"; row 82 stays open until its mend is in.
 
+### The mends after the rulings (Nov 24, 2026)
+
+Ruling 6 is in: `Followed` keeps the count of ships and the kind of the report beside the hex, written at the giving and on every notice of following, hashed in its place and named (the layout stays v60); the notices of lost and of ended carry them where the contact is no longer held, and row 82 of `differences.md` is closed. Ruling 4's owed line is in: on a dusk where a carrier task's station lies too far and none can be chosen, the task's reason of the day says so (`station.rs`, with a unit test). Statement 42 has its test, no longer ignored. No game on file holds an order to destroy a force, so no golden file or pinned hash moved.

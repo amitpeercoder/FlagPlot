@@ -787,6 +787,8 @@ struct FollowedOut {
     hex: [i32; 2],
     day: u32,
     pulse: &'static str,
+    ship_count: u32,
+    kind: &'static str,
     carrier: bool,
     lost: bool,
 }
@@ -871,6 +873,8 @@ fn state(state: &CommandState, key: &UmpireKey) -> CommandStateOut {
                 hex: [kept.hex.q, kept.hex.r],
                 day: kept.day,
                 pulse: kept.pulse.name(),
+                ship_count: kept.ship_count,
+                kind: kept.kind.name(),
                 carrier: kept.carrier,
                 lost: kept.lost,
             })

@@ -406,14 +406,7 @@ impl Day<'_, '_> {
         // What the notices of an order lost or ended say of the report kept.
         let (count, kind) = match followed {
             Some(c) => (c.count, c.kind),
-            None => (
-                0,
-                if kept.carrier {
-                    ShipKind::Carrier
-                } else {
-                    ShipKind::Cruiser
-                },
-            ),
+            None => (kept.ship_count, kept.kind),
         };
         let notice = |contact: u32| FollowNotice {
             intent: id,

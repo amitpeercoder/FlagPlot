@@ -149,6 +149,8 @@ impl World {
             hex: contact.estimated_hex,
             day: report_day,
             pulse: report_pulse,
+            ship_count: contact.estimated_ship_count,
+            kind: contact.estimated_kind,
             carrier: contact.estimated_kind == ShipKind::Carrier,
             lost: false,
         })
@@ -1906,6 +1908,8 @@ impl World {
                     kept.hex = follow.hex;
                     kept.day = follow.day;
                     kept.pulse = follow.pulse;
+                    kept.ship_count = follow.ship_count;
+                    kept.kind = follow.kind;
                     if follow.taken_from.is_some() {
                         kept.carrier = follow.carrier;
                         kept.lost = false;

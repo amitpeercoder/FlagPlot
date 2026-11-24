@@ -949,6 +949,8 @@ fn name_every_field(world: &World) {
                 hex: _,
                 day: _,
                 pulse: _,
+                ship_count: _,
+                kind: _,
                 carrier: _,
                 lost: _,
             },
@@ -1788,6 +1790,8 @@ fn hash_command_state(h: &mut StateHasher, state: &CommandState) {
         h.i32(kept.hex.r);
         h.u32(kept.day);
         h.u64(kept.pulse.code());
+        h.u32(kept.ship_count);
+        h.u8(kept.kind.code());
         h.u8(u8::from(kept.carrier));
         h.u8(u8::from(kept.lost));
     }

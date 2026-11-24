@@ -1199,6 +1199,8 @@ fn a_given_the_order_keeps_its_contact_and_forms_a_denys_tasks() {
             hex: hex(8, 0),
             day: 0,
             pulse: Pulse::Afternoon,
+            ship_count: 2,
+            kind: ShipKind::Cruiser,
             carrier: false,
             lost: false,
         })
@@ -1306,6 +1308,8 @@ fn a_a_refreshed_contact_is_followed_with_its_number() {
             hex: hex(8, 0),
             day: 1,
             pulse: Pulse::Morning,
+            ship_count: 2,
+            kind: ShipKind::Cruiser,
             carrier: false,
             lost: false,
         })
@@ -1339,6 +1343,8 @@ fn a_the_force_seen_again_as_a_new_contact_is_taken() {
             hex: hex(14, 0),
             day: 2,
             pulse: Pulse::Morning,
+            ship_count: 2,
+            kind: ShipKind::Cruiser,
             carrier: false,
             lost: false,
         })
@@ -1435,6 +1441,10 @@ fn a_lost_then_ended_not_found() {
     assert_eq!(kind, NoticeKind::ForceNotFound);
     assert_eq!(follow.contact, 3);
     assert_eq!((follow.day, follow.pulse), (4, Pulse::Morning));
+    // The side no longer holds contact 3: the notice says what the order
+    // kept of its last report (ruling 6 after the build).
+    assert_eq!(follow.hex, hex(8, 0));
+    assert_eq!((follow.ship_count, follow.kind), (2, ShipKind::Cruiser));
     // Intents 1 and 3 are withdrawn, with the notice's event as the cause.
     let notice_event = notice_events(&played)
         .into_iter()
@@ -1669,6 +1679,8 @@ fn s_search_only_forms_no_strike_and_searches_in_both_pulses() {
             hex: hex(14, 0),
             day: 2,
             pulse: Pulse::Afternoon,
+            ship_count: 2,
+            kind: ShipKind::Cruiser,
             carrier: false,
             lost: false,
         })
@@ -2030,6 +2042,10 @@ fn d_a_contact_dropped_by_a_strike_that_found_nothing() {
     let (kind, follow) = played.the_follow(2);
     assert_eq!(kind, NoticeKind::ContactLost);
     assert_eq!(follow.hex, hex(5, 0));
+    // The side no longer holds contact 1: the notice says what the order
+    // kept of its last report, the afternoon of day 0 (ruling 6).
+    assert_eq!((follow.day, follow.pulse), (0, Pulse::Afternoon));
+    assert_eq!((follow.ship_count, follow.kind), (2, ShipKind::Cruiser));
     let kept = played.kept(2, 1).expect("kept");
     assert_eq!((kept.hex, kept.lost), (hex(5, 0), true));
     assert_eq!(played.command_kinds(2), vec![withdraw(2)]);
@@ -2065,6 +2081,7 @@ fn e_a_kind_that_changes_is_no_notice_and_no_stop() {
     let kept = played.kept(3, 1).expect("kept");
     assert!(!kept.carrier);
     assert_eq!(kept.contact, 1);
+    assert_eq!((kept.ship_count, kept.kind), (2, ShipKind::Destroyer));
 
     // The paper says the force is taken for destroyers, and not a carrier.
     let mut session = session_of(e, &text_of(e), &figures());
@@ -2510,6 +2527,8 @@ fn command_levels_on_the_order_keeps_the_report_the_area_heard() {
             hex: hex(14, 0),
             day: 2,
             pulse: Pulse::Morning,
+            ship_count: 2,
+            kind: ShipKind::Cruiser,
             carrier: false,
             lost: false,
         })
@@ -2529,14 +2548,49 @@ fn command_levels_on_the_order_keeps_the_report_the_area_heard() {
 }
 
 #[test]
-#[ignore = "statement 42: a seat at a base cannot give an order to the area today; to the architect"]
-fn a_seat_below_the_area_names_the_areas_contact() {
-    // 42. A seat at base 1 that gives the order names a contact by the number
-    // of base 1's picture; the order follows the area's contact of the same
-    // hex and kind. Where the area's picture holds no contact of that hex and
-    // kind the command is refused: the contact is not held. Not set up: a
-    // seat at a base has no set_intent (crates/sim-agent/src/session.rs,
-    // NO_INTENTS_HERE).
+fn a_seat_below_the_area_cannot_give_the_order() {
+    use serde_json::json;
+    // 42. A seat at base 1 that calls set_intent with the kind destroy a
+    // force is answered as it is for every kind: stating an order from a seat
+    // that is not the area command's is not built. Nothing is queued and no
+    // order is made.
+    let file = "133_a_followed.toml";
+    let text = changed(
+        &inside_a_day(without_order(text_of(file))),
+        "days = 7\n",
+        "days = 7\ncommand_levels = true\n",
+    );
+    let mut session = session_of(file, &text, &figures())
+        .with_post(
+            Side::Allied,
+            sim_agent::Post::At(sim_core::pictures::CommandRef::Base(
+                sim_core::ids::BaseId::new(1),
+            )),
+        )
+        .expect("a seat at base 1");
+    let args = json!({"intent_kind": "destroy_force", "contact": 1, "distance": 2});
+    let answer = session
+        .call(Side::Allied, "set_intent", &args)
+        .expect_err("a seat at a base is refused");
+    assert!(
+        answer.message.contains("is not built"),
+        "{}",
+        answer.message
+    );
+    // The same answer as for another kind of intent.
+    let other = json!({"intent_kind": "deny", "centre": [8, 0], "distance": 2});
+    let other = session
+        .call(Side::Allied, "set_intent", &other)
+        .expect_err("refused for every kind");
+    assert_eq!(answer.message, other.message);
+    assert!(
+        session
+            .into_world()
+            .command_state(Side::Allied)
+            .intents
+            .is_empty(),
+        "no order is made"
+    );
 }
 
 // ------------------------------------------------ Properties: sessions
@@ -3213,10 +3267,19 @@ fn hashed_named_replayed_and_the_same_twice() {
         .split_once("crate::command::Followed {")
         .expect("the kept state is named in name_every_field");
     let block = block.split_once('}').expect("the pattern ends").0;
-    for field in ["contact", "hex", "day", "pulse", "carrier", "lost"] {
+    for field in [
+        "contact",
+        "hex",
+        "day",
+        "pulse",
+        "ship_count",
+        "kind",
+        "carrier",
+        "lost",
+    ] {
         assert!(block.contains(&format!("{field}: _")), "{field} is named");
     }
-    assert_eq!(block.matches(": _").count(), 6, "and no field more");
+    assert_eq!(block.matches(": _").count(), 8, "and no field more");
 
     // A game saved at dusk of day 5 and replayed gives the hash of the game
     // played through.
