@@ -235,19 +235,19 @@ fn s12_no_game_without_the_limit_changes() {
         (
             "five-days/01a_eastern_solomons.toml",
             None,
-            0xae1b_70a8_4e66_9f81,
+            0x5789_7532_39be_59bf,
         ),
         (
             "stage-3-proof/07a_slice.toml",
             Some(7),
-            0x2db5_8085_886d_209e,
+            0x3d58_c5e7_8390_64ec,
         ),
         (
             "second-proof/05a_eastern_solomons.toml",
             None,
             0x72dc_4916_07fd_653b,
         ),
-        ("second-proof/07a_week.toml", None, 0xb817_4bbd_4b8d_4333),
+        ("second-proof/07a_week.toml", None, 0xca38_0b3b_7a22_3459),
     ];
     let write_to = std::env::var("FLAGPILOT_106_RECORD").ok();
     let mut moved = Vec::new();

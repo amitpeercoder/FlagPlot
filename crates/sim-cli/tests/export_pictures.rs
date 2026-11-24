@@ -424,6 +424,9 @@ fn a_step_carries_only_the_pictures_that_changed() {
 /// Remade again for decision 0228 (the state layout v59, the saved game 27, the
 /// doctrine `supply-59`): every file changes in its state version, doctrine and
 /// day hashes and nothing else, as the run baselines (`regenerate.sh`) show.
+/// Remade again for decision 0220 (the state layout v60, the saved game 28, the rules
+/// label 33, the doctrine `supply-60`): every file changes in its state version, rules
+/// label, doctrine and day hashes and nothing else, as the run baselines show.
 #[test]
 fn a_scenario_with_command_levels_off_exports_as_it_did() {
     fn fnv(bytes: &[u8]) -> u64 {
@@ -432,16 +435,16 @@ fn a_scenario_with_command_levels_off_exports_as_it_did() {
         })
     }
     let before: [(&str, u64); 10] = [
-        ("01_transit", 0x1ec0_992b_bf30_ad1b),
-        ("04a_night_action", 0x3080_0e84_6cec_8d9d),
-        ("05_eastern_solomons", 0x7bf7_cefe_0905_863f),
-        ("21_landing", 0xdf77_bc18_4cf2_c2ff),
-        ("23_fight_ashore", 0x3fac_a90d_dea4_0853),
-        ("31_airfield_damage", 0xc826_2514_784c_bdd1),
-        ("36_one_convoy", 0x12c0_5d26_bcc3_5a17),
-        ("43_keep_two_bases_fed", 0x456b_48a9_bbcb_cc30),
-        ("50_neutralise_a_base", 0xcd3c_8d36_9cdf_a229),
-        ("58_a_carrier_force_closes", 0x5cd7_8f51_f392_5ec0),
+        ("01_transit", 0xa407_e2bd_bfce_654c),
+        ("04a_night_action", 0x5e17_7bed_e014_7a94),
+        ("05_eastern_solomons", 0x3baf_6243_202a_b8d2),
+        ("21_landing", 0x82d2_ae7f_09de_8af1),
+        ("23_fight_ashore", 0x29bd_3ae1_a447_a11b),
+        ("31_airfield_damage", 0x7e61_8579_3e84_eac9),
+        ("36_one_convoy", 0x02ed_b732_8300_815d),
+        ("43_keep_two_bases_fed", 0xf675_a411_dd26_1027),
+        ("50_neutralise_a_base", 0x9cf8_d365_d290_174d),
+        ("58_a_carrier_force_closes", 0x6281_26b2_f513_db13),
     ];
     let prefix6 = br#"{"format":"flagplot-replay","version":6,"#;
     let prefix5 = br#"{"format":"flagplot-replay","version":5,"#;
