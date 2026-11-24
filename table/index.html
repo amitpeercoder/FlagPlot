@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Flag Plot Table</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Courier+Prime:wght@400;700&family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&display=swap">
+<link rel="stylesheet" href="vendor/fonts.css">
 <style>
 /* The table fills the room; the commander's papers lie flat on it: the stop paper down the left, cards at the right, the chart's controls at its foot. */
 :root {
@@ -701,7 +701,8 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
   </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="vendor/three.min.js"></script>
+<!--@door-->
 <script>
 (function () {
   'use strict';
@@ -768,13 +769,23 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
   // game screen until a game is begun. In a game against an agent a call may be held, and answer that it
   // waits: the page then calls the seat's wait until the answer comes, and takes it as the call's own.
   var BASE = (/^\/(?:watch|table)\/[^/]+/.exec(location.pathname) || [''])[0], WATCH = null, VERSUS = null;
-  function post(body) { return fetch(BASE + '/call', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then(function (r) { return r.json(); }); }
+  // Every request of the page to the game goes through reach(): a path of the bridge's, and for a POST its body. Behind it is
+  // one of two doors (decision 0229, ruling 15). Under the bridge the line above the script is a comment and the request is
+  // HTTP; in the browser's build that line is made the script of the worker's door, which answers each path itself.
+  // The answer is the bridge's own, parsed: {ok: ..} or {refused: ..}, or what a file of the chart holds.
+  function reach(path, body) {
+    if (window.flagplotDoor) return window.flagplotDoor.reach(path, body);
+    return fetch(BASE + path, body === undefined ? undefined : { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then(function (r) { return r.json(); });
+  }
+  // A file that may be missing for a map, as the coast and the names: nothing, if it is not there.
+  function reachIfAny(path) { return reach(path).then(function (a) { return a && a.refused == null ? a : null; }).catch(function () { return null; }); }
+  function post(body) { return reach('/call', body); }
   function answerOf(a) { if (a && a.waiting) return post({ tool: 'wait', arguments: {} }).then(answerOf); if (a.refused != null) throw new Error(a.refused); return a.ok; }
   function api(tool, args) {
     var body = { tool: tool, arguments: args || {} }; if (WATCH) body.side = WATCH.side;
     return post(body).then(answerOf);
   }
-  if (!window.THREE) { fatal('The table needs its drawing library, which did not load. Check the network and reload.'); return; }
+  if (!window.THREE) { fatal('The table needs its drawing library, which did not load. Reload the page.'); return; }
 
   var canvas = $('scene'), renderer;
   try { renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true }); } catch (e) { fatal('This table needs WebGL, which this browser has turned off.'); return; }
@@ -4608,8 +4619,8 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
   // seat is ready. Carry on is this page stepping whenever they are, until the watcher stops it or
   // the side watched is told of something ticked. The bridge only passes the steps on.
   var SIDE_NAME = { allied: 'Allied', japanese: 'Japanese' }, seatSeen = '', polling = false, noticeSeen = {};
-  function watchGet(path) { return fetch(BASE + path).then(function (r) { return r.json(); }); }
-  function watchPost(path) { return fetch(BASE + path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }).then(function (r) { return r.json(); }); }
+  function watchGet(path) { return reach(path); }
+  function watchPost(path) { return reach(path, {}); }
   function waitWords(list) { return 'Waiting for the ' + list.map(function (s) { return SIDE_NAME[s] || s; }).join(' and the ') + ' commander' + (list.length > 1 ? 's' : '') + '.'; }
   // What the side watched was told, as a seat's advance reads it: a new contact, an attack on its
   // own, a ship lost or out of action, its strike away, its men ashore or fighting.
@@ -4741,10 +4752,10 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
     a.appendChild(f); box.appendChild(a);
     var waited = !!seat.waited_for && !st.game_over; if (waited !== versusWaited) { versusWaited = waited; showClock(); }
   }
-  function pollVersus() { return fetch(BASE + '/standing').then(function (r) { return r.json(); }).then(function (a) { if (a.ok) showVersus(a.ok); }).catch(function () {}); }
+  function pollVersus() { return reach('/standing').then(function (a) { if (a.ok) showVersus(a.ok); }).catch(function () {}); }
   // A page loaded while its call of time is held picks the wait up again, and draws the answer's day once it comes.
   function resumeVersus() {
-    return fetch(BASE + '/standing').then(function (r) { return r.json(); }).then(function (a) {
+    return reach('/standing').then(function (a) {
       var mine = ((a.ok && a.ok.seats) || []).filter(function (x) { return x.seat === config.seat; })[0];
       if (!mine || !mine.held || (a.ok && a.ok.game_over)) return false;
       playing = true; $('btn-go').textContent = 'Stop the clock'; $('btn-day').disabled = true; startRun(); showClock(); say('running', finishedWords());
@@ -4775,7 +4786,7 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
   function agentSeat(parent, side, scenario) {
     var box = el('div', 'agentseat'); box.appendChild(el('h3', '', 'The ' + SIDE_NAME[side] + ' seat, for an agent')); parent.appendChild(box);
     var said = el('div', 'says', 'Asking the table.'); box.appendChild(said);
-    return fetch(BASE + '/agent?side=' + side + (scenario ? '&scenario=' + encodeURIComponent(scenario) : '')).then(function (r) { return r.json(); }).then(function (a) {
+    return reach('/agent?side=' + side + (scenario ? '&scenario=' + encodeURIComponent(scenario) : '')).then(function (a) {
       if (a.refused != null) throw new Error(a.refused); a = a.ok; box.removeChild(said);
       box.appendChild(el('div', 'lab', 'For Claude Code, run this once in the folder the model works in:')); copyRow(box, a.claude);
       box.appendChild(el('div', 'lab', 'For a client that takes its tool servers from a settings file, add this entry. Such a client reads the file when it starts: start it again after adding it.')); copyRow(box, a.settings);
@@ -4831,7 +4842,7 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
       go.addEventListener('click', function () {
         go.disabled = true; note.textContent = 'Opening the game.';
         var body = { scenario: pick.scenario }; SIDES.forEach(function (side) { body[side] = holderOf(p, side); });
-        fetch(BASE + '/begin', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then(function (r) { return r.json(); })
+        reach('/begin', body)
           .then(function (a) { if (a.refused != null) throw new Error(a.refused); location.reload(); })
           .catch(function (e) { go.disabled = false; note.textContent = 'It could not begin: ' + e.message; });
       });
@@ -4844,7 +4855,7 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
       var p = ps.filter(function (q) { return fits(q) && (!side || q[side] === v); })[0] || ps.filter(fits)[0];
       SIDES.forEach(function (x) { if (x !== pick.seat) pick[x] = p[x]; });
     }
-    fetch(BASE + '/scenarios').then(function (r) { return r.json(); }).then(function (a) { list = a.scenarios || []; if (list.length) pick.scenario = list[0].id; settle(); draw(); })
+    reach('/scenarios').then(function (a) { list = a.scenarios || []; if (list.length) pick.scenario = list[0].id; settle(); draw(); })
       .catch(function (e) { fatal('The table could not read its scenarios: ' + e.message); });
   }
   // From the table: what an agent at a seat of this game is given to copy, behind its own button.
@@ -5704,7 +5715,7 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
     var b = this;
     if (!restartAsked) { var w = document.createElement('span'); w.textContent = 'again to restart'; b.appendChild(w); b.classList.add('ask'); say('confirm', 'Touch it again to begin the game anew from its first evening. This game is not kept.'); restartAsked = setTimeout(function () { restartAsked = 0; say('confirm', ''); b.classList.remove('ask'); if (b.lastChild.tagName === 'SPAN') b.removeChild(b.lastChild); }, 5000); return; }
     clearTimeout(restartAsked); b.disabled = true; say('running', 'Beginning again.');
-    fetch(BASE + '/restart', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }).then(function (r) { return r.json(); }).then(function (a) { if (a.refused != null) throw new Error(a.refused); forgetKept(); try { history.replaceState(null, '', location.pathname); } catch (e) {} location.reload(); }).catch(function (e) { b.disabled = false; say('failed', 'It could not begin again: ' + e.message, $('game-says')); });
+    reach('/restart', {}).then(function (a) { if (a.refused != null) throw new Error(a.refused); forgetKept(); try { history.replaceState(null, '', location.pathname); } catch (e) {} location.reload(); }).catch(function (e) { b.disabled = false; say('failed', 'It could not begin again: ' + e.message, $('game-says')); });
   });
   // A new game is asked twice too: it ends the game in hand, whoever is at a seat, and opens the screen.
   var newAsked = 0;
@@ -5712,7 +5723,7 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
     var b = this;
     if (!newAsked) { b.classList.add('ask'); say('confirm', 'Touch it again to end this game and choose another.'); newAsked = setTimeout(function () { newAsked = 0; say('confirm', ''); b.classList.remove('ask'); }, 5000); return; }
     clearTimeout(newAsked); b.disabled = true; playing = false; say('running', 'Ending this game.');
-    fetch(BASE + '/new', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }).then(function (r) { return r.json(); }).then(function (a) { if (a.refused != null) throw new Error(a.refused); forgetKept(); try { history.replaceState(null, '', location.pathname); } catch (e) {} location.reload(); }).catch(function (e) { b.disabled = false; say('failed', 'It could not end the game: ' + e.message, $('game-says')); });
+    reach('/new', {}).then(function (a) { if (a.refused != null) throw new Error(a.refused); forgetKept(); try { history.replaceState(null, '', location.pathname); } catch (e) {} location.reload(); }).catch(function (e) { b.disabled = false; say('failed', 'It could not end the game: ' + e.message, $('game-says')); });
   });
   $('btn-agent').addEventListener('click', function () { shutMenus(); readAgentSeats(); });
   $('btn-back').addEventListener('click', function () { leanBy(-0.25); });
@@ -5793,15 +5804,15 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
   }
 
   var onScreen = false;
-  fetch(BASE + '/config').then(function (r) { return r.json(); }).then(function (c) {
+  reach('/config').then(function (c) {
     if (c.screen) { onScreen = true; showScreen(); return; }
-    return Promise.all([c, fetch(BASE + '/map').then(function (r) { return r.json(); }), fetch(BASE + '/coast').then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }), fetch(BASE + '/names').then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }), fetch(BASE + '/frame').then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; })]).then(function (a) {
+    return Promise.all([c, reach('/map'), reachIfAny('/coast'), reachIfAny('/names'), reachIfAny('/frame')]).then(function (a) {
     config = a[0]; hexes = a[1]; coast = a[2] && a[2].rings; mapFrame = a[4]; FX = mapFrame ? mapFrame.factor : 1;
     // The hexes and the names are brought into the frame's run; the coast file is stored in it already.
     hexes.forEach(function (h) { h[4] = runLon(h[4]); }); chartNames = a[3] && a[3].map(function (n) { return { name: n.name, kind: n.kind, lat: n.lat, lon: runLon(n.lon) }; }); headSeat();
     var ready = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
     if (config.home) { KEPT_ROOT += BASE + '-' + config.home.number; KEPT = KEPT_ROOT; $('btn-new').hidden = false; $('btn-agent').hidden = !config.home.agents.length; }
-    return ready.then(function () { layChart(); cur.zoom = 0; placeCamera(); requestAnimationFrame(frame); if (config.watch) return startWatch(); if (config.versus) startVersus(); return fetch(BASE + '/tools').then(function (r) { return r.json(); }).then(function (names) { names.forEach(function (n) { OFFERED[n] = true; }); $('stops').classList.toggle('daily', !OFFERED.advance); recallTicks(); if (OFFERED.advance) $('btn-day').textContent = 'Next pulse'; return refresh().catch(function (e) { if (!VERSUS || !/waits for the clock/.test(e.message)) throw e; }).then(function () { return VERSUS ? resumeVersus() : false; }).then(function (held) { if (!held && !playing) recallWhy(); if (!held && !playing && !WATCH) return loadSince(); }); }); });
+    return ready.then(function () { layChart(); cur.zoom = 0; placeCamera(); requestAnimationFrame(frame); if (config.watch) return startWatch(); if (config.versus) startVersus(); return reach('/tools').then(function (names) { names.forEach(function (n) { OFFERED[n] = true; }); $('stops').classList.toggle('daily', !OFFERED.advance); recallTicks(); if (OFFERED.advance) $('btn-day').textContent = 'Next pulse'; return refresh().catch(function (e) { if (!VERSUS || !/waits for the clock/.test(e.message)) throw e; }).then(function () { return VERSUS ? resumeVersus() : false; }).then(function (held) { if (!held && !playing) recallWhy(); if (!held && !playing && !WATCH) return loadSince(); }); }); });
   });
   }).then(function () { if (onScreen) return; atStop(); var shown = true; try { shown = localStorage.getItem('flagplot.hint.look') === '1'; localStorage.setItem('flagplot.hint.look', '1'); } catch (e) {} say('hint', shown ? '' : 'Drag to look along the table; scroll to lean in.'); })
     .catch(function (e) { fatal('The table could not reach the game: ' + e.message); });

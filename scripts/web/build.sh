@@ -1,7 +1,8 @@
 #!/bin/sh
 # Makes the browser's build of the game (decision 0229, stage 3): the module,
 # `target/web/module/` (`sim_web.js` and `sim_web_bg.wasm`), and the pack,
-# `target/web/pack.json`, which holds the data of every game the build offers.
+# `target/web/pack.json`, which holds the data of every game the build offers,
+# and (stage 4) the site, `target/web/site/`, that holds them with the page.
 # It also builds, in the same `web` profile, the native `door` and `sim-cli`
 # that `web/check.mjs` compares the module with (ruling 29).
 #
@@ -51,4 +52,19 @@ cargo build --locked --profile web -p sim-cli
 # shellcheck disable=SC2046
 "$out/sim-cli" pack $(node web/offered.mjs) --out "$out/pack.json"
 
+# The site (decision 0229, stage 4): a folder of static files that is the game,
+# opened from any static host or from a folder served on one's own machine, and
+# fetching nothing from anywhere else. The page is `table/index.html` with its one
+# marked line made the script tag of `web/door.js`; the list of games, the chart of
+# each map and the directives are made by the bridge's own readers (rulings 14, 16).
+site="$out/site"
+rm -rf "$site"
+mkdir -p "$site/module"
+cp "$out/module/sim_web.js" "$out/module/sim_web_bg.wasm" "$site/module/"
+cp "$out/pack.json" "$site/pack.json"
+cp web/door.js web/worker.js "$site/"
+cp -R table/vendor "$site/vendor"
+python3 -I scripts/web/site.py "$site"
+
 ls -l "$out/module/sim_web_bg.wasm" "$out/pack.json"
+echo "the site is $site: serve it with, for example, python3 -m http.server -d $site PORT"

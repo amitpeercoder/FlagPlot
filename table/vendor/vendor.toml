@@ -1,0 +1,143 @@
+# What the table's page loads from nobody else (decision 0229, ruling 40).
+# Read by the build and its check, so it is TOML and not Markdown. For each
+# thing: its version, where it was taken from (the address the page used before
+# it was kept here, or the official repository for the licence text), the
+# SHA-256 of each file and its licence. A licence text lies beside what it
+# covers, in licences/.
+
+[three]
+name = "three.js"
+version = "r128"
+source = "https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"
+licence = "MIT"
+licence_file = "licences/three.js-LICENSE.txt"
+licence_source = "https://raw.githubusercontent.com/mrdoob/three.js/r128/LICENSE"
+licence_sha256 = "7dddf7c5b8fd10ee654db8857d75d104b5557889aa5a91fc4ca545ea7c07062f"
+
+[[three.files]]
+path = "three.min.js"
+sha256 = "9274bbcec8d96168626c732b5d31c775aa8cfb7eaa0599bec0c175908a2c1ce2"
+
+# The stylesheet of the fonts, written for this folder from the one the page
+# asked fonts.googleapis.com for: the same families, weights, styles and
+# unicode ranges, with each file's address made one of this folder.
+[fonts_css]
+path = "fonts.css"
+source = "https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Courier+Prime:wght@400;700&family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&display=swap"
+sha256 = "6af21f9c7beba126a601a0c183821c57691b25b170b02e86ff819e8a23e7af1c"
+
+[font.barlow-condensed]
+name = "Barlow Condensed"
+licence = "SIL Open Font License 1.1"
+licence_file = "licences/Barlow-Condensed-OFL.txt"
+licence_source = "https://raw.githubusercontent.com/google/fonts/main/ofl/barlowcondensed/OFL.txt"
+licence_sha256 = "186d750eb496a4c17a76385f82be6aea2ac1cf2de074a811d63786cf374ea73f"
+
+[[font.barlow-condensed.files]]
+path = "fonts/barlow-condensed-500-vietnamese.woff2"
+source = "https://fonts.gstatic.com/s/barlowcondensed/v13/HTxwL3I-JCGChYJ8VI-L6OO_au7B4-Lwz3nWuYMBYrp0xg.woff2"
+sha256 = "864c709d407bcd818c900149400a94194c9e8d3a25b16f9ba1353430d1bd88ec"
+
+[[font.barlow-condensed.files]]
+path = "fonts/barlow-condensed-500-latin-ext.woff2"
+source = "https://fonts.gstatic.com/s/barlowcondensed/v13/HTxwL3I-JCGChYJ8VI-L6OO_au7B4-Lwz3jWuYMBYrp0xg.woff2"
+sha256 = "f8ec026d88a29e8d6a920c82348d90d08200a771e7763c5888376e407ac83a8f"
+
+[[font.barlow-condensed.files]]
+path = "fonts/barlow-condensed-500-latin.woff2"
+source = "https://fonts.gstatic.com/s/barlowcondensed/v13/HTxwL3I-JCGChYJ8VI-L6OO_au7B4-Lwz3bWuYMBYro.woff2"
+sha256 = "31ff5e6e96a096fde4d78bc838719e69b093db2d0b062b96e423c065a6d1b2b1"
+
+[[font.barlow-condensed.files]]
+path = "fonts/barlow-condensed-600-vietnamese.woff2"
+source = "https://fonts.gstatic.com/s/barlowcondensed/v13/HTxwL3I-JCGChYJ8VI-L6OO_au7B4873z3nWuYMBYrp0xg.woff2"
+sha256 = "50c25f3210bca008b36809e4f3f964fc4acab82e07a27d099b14c378ea58bf5b"
+
+[[font.barlow-condensed.files]]
+path = "fonts/barlow-condensed-600-latin-ext.woff2"
+source = "https://fonts.gstatic.com/s/barlowcondensed/v13/HTxwL3I-JCGChYJ8VI-L6OO_au7B4873z3jWuYMBYrp0xg.woff2"
+sha256 = "a2f92ada1d0eaf10dd83b11392ea389c039aa78f6e17418fc062c23f0ba78438"
+
+[[font.barlow-condensed.files]]
+path = "fonts/barlow-condensed-600-latin.woff2"
+source = "https://fonts.gstatic.com/s/barlowcondensed/v13/HTxwL3I-JCGChYJ8VI-L6OO_au7B4873z3bWuYMBYro.woff2"
+sha256 = "5bc49d41f32810a114765314392332ce2acae2276635eee265a50319a12c1b49"
+
+[[font.barlow-condensed.files]]
+path = "fonts/barlow-condensed-700-vietnamese.woff2"
+source = "https://fonts.gstatic.com/s/barlowcondensed/v13/HTxwL3I-JCGChYJ8VI-L6OO_au7B46r2z3nWuYMBYrp0xg.woff2"
+sha256 = "960aaed3bedcba7e3f7aa0b0d619339e5d0de4161218a5a46679ea1010ad2bbe"
+
+[[font.barlow-condensed.files]]
+path = "fonts/barlow-condensed-700-latin-ext.woff2"
+source = "https://fonts.gstatic.com/s/barlowcondensed/v13/HTxwL3I-JCGChYJ8VI-L6OO_au7B46r2z3jWuYMBYrp0xg.woff2"
+sha256 = "0c1655655b5a1fa18382367f471b943c8e009c5cf36a3898433babd92fc606e2"
+
+[[font.barlow-condensed.files]]
+path = "fonts/barlow-condensed-700-latin.woff2"
+source = "https://fonts.gstatic.com/s/barlowcondensed/v13/HTxwL3I-JCGChYJ8VI-L6OO_au7B46r2z3bWuYMBYro.woff2"
+sha256 = "e3e520cb7468f2efd60bc2ce96694567c3312f4ef414fffbe605e3ad146b24e6"
+
+[font.courier-prime]
+name = "Courier Prime"
+licence = "SIL Open Font License 1.1"
+licence_file = "licences/Courier-Prime-OFL.txt"
+licence_source = "https://raw.githubusercontent.com/google/fonts/main/ofl/courierprime/OFL.txt"
+licence_sha256 = "9a755af092b494944c99f471be6fddd19b006a448fefdc4717e4ee0aa09a97b0"
+
+[[font.courier-prime.files]]
+path = "fonts/courier-prime-400-latin-ext.woff2"
+source = "https://fonts.gstatic.com/s/courierprime/v11/u-450q2lgwslOqpF_6gQ8kELaw9pWs39pvnRPA.woff2"
+sha256 = "18c8e32ea1e572327d72c79493e5358187743f76c0ecbc58e0d3a51c57487741"
+
+[[font.courier-prime.files]]
+path = "fonts/courier-prime-400-latin.woff2"
+source = "https://fonts.gstatic.com/s/courierprime/v11/u-450q2lgwslOqpF_6gQ8kELawFpWs39pvk.woff2"
+sha256 = "21bf7ff8d9e067443a3fe0832ee8e4364faee9ace1fb0ec3e625cd09d231802f"
+
+[[font.courier-prime.files]]
+path = "fonts/courier-prime-700-latin-ext.woff2"
+source = "https://fonts.gstatic.com/s/courierprime/v11/u-4k0q2lgwslOqpF_6gQ8kELY7pMT-7fq9PrNX2-Ag.woff2"
+sha256 = "078c780980eb6dc4865a9d738b8230e0d3b5175b3ae7dee7ec4978d75af6efc3"
+
+[[font.courier-prime.files]]
+path = "fonts/courier-prime-700-latin.woff2"
+source = "https://fonts.gstatic.com/s/courierprime/v11/u-4k0q2lgwslOqpF_6gQ8kELY7pMT-Dfq9PrNX0.woff2"
+sha256 = "06622415713b4150c18f4489db7c8850300d9f3e55051fc78ed33dca88c5ff08"
+
+[font.libre-caslon-text]
+name = "Libre Caslon Text"
+licence = "SIL Open Font License 1.1"
+licence_file = "licences/Libre-Caslon-Text-OFL.txt"
+licence_source = "https://raw.githubusercontent.com/google/fonts/main/ofl/librecaslontext/OFL.txt"
+licence_sha256 = "a294245c822c5aa9fd9a9f3189418e99415428be5fecadf797793d5d8f6a3ad3"
+
+[[font.libre-caslon-text.files]]
+path = "fonts/libre-caslon-text-400-italic-latin-ext.woff2"
+source = "https://fonts.gstatic.com/s/librecaslontext/v5/DdT678IGsGw1aF1JU10PUbTvNNaDMfq95-5DGjG2u9vUKg.woff2"
+sha256 = "4e3f448cf8ee878f329a89789f07ca1b791808109749daca79fd3c70b68e8793"
+
+[[font.libre-caslon-text.files]]
+path = "fonts/libre-caslon-text-400-italic-latin.woff2"
+source = "https://fonts.gstatic.com/s/librecaslontext/v5/DdT678IGsGw1aF1JU10PUbTvNNaDMfq95-BDGjG2u9s.woff2"
+sha256 = "33a3280b9c3adb725a9e4199a0ed10403eb0378f334cb6aea066dc2d4ba938a2"
+
+[[font.libre-caslon-text.files]]
+path = "fonts/libre-caslon-text-400-latin-ext.woff2"
+source = "https://fonts.gstatic.com/s/librecaslontext/v5/DdT878IGsGw1aF1JU10PUbTvNNaDMfq21-JJHRO0i9o.woff2"
+sha256 = "35f60892b140ccb72765aca6da321543897fa14295da84d6a5434e9423e4bbe9"
+
+[[font.libre-caslon-text.files]]
+path = "fonts/libre-caslon-text-400-latin.woff2"
+source = "https://fonts.gstatic.com/s/librecaslontext/v5/DdT878IGsGw1aF1JU10PUbTvNNaDMfq41-JJHRO0.woff2"
+sha256 = "1471d8a9f22ba5c42c597c2dc582030297027d3e4c3b59a55aec81678f80485b"
+
+[[font.libre-caslon-text.files]]
+path = "fonts/libre-caslon-text-700-latin-ext.woff2"
+source = "https://fonts.gstatic.com/s/librecaslontext/v5/DdT578IGsGw1aF1JU10PUbTvNNaDMfID8vdqPx6esdPsE-Y.woff2"
+sha256 = "e6c4327bae9223fcd289e14d112760ca9bf7bfa561ccd4425516f7c6e79eb02a"
+
+[[font.libre-caslon-text.files]]
+path = "fonts/libre-caslon-text-700-latin.woff2"
+source = "https://fonts.gstatic.com/s/librecaslontext/v5/DdT578IGsGw1aF1JU10PUbTvNNaDMfID8vdkPx6esdPs.woff2"
+sha256 = "7dc7dc90fb6e140dcdfbfd85aae2bab1f368a448be129fecb953a8290501cef8"

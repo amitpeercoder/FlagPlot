@@ -49,13 +49,30 @@
 // play --export-save` writes from the door's game file is the door's, byte
 // for byte.
 //
+// And, from stage 4 (the page on the worker's door), written by the architect in
+// the same record and copied word for word:
+//
+// 14. With the bridge, the page behaves as before: `table/check_screen.py` and
+// `table/check_watch.py` pass unchanged but for the vendored files' addresses.
+// 15. `worker.js` passes the scan of ruling 24; `index.html` and `door.js` name
+// neither the module nor the pack; the site's page is `table/index.html` but
+// for the one marked line.
+// 16. The folder served from one's own machine with the network off plays
+// Midway from the new game screen to "How it ended".
+//
+// Statement 15 is held here, on the files of the site the build assembled
+// (`target/web/site/`). Statements 14 and 16 are not held by CI: 14 is the
+// developer's run of the two scripts, which CI does not run, and 16 is held by
+// hand in the browsers, both said in the record's "As built" (ruling 48).
+//
 // Also held here, from the rulings: the `web` profile has `overflow-checks =
 // true` written out (ruling 30); the stack is 8 MB and lies first in memory
 // (ruling 7); the games of the check in `web/games/` are those of the
 // games the list offers a person against the engine (ruling 29).
 
 import { spawn, spawnSync } from 'node:child_process';
-import { mkdtempSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { pathToFileURL } from 'node:url';
 
@@ -189,6 +206,197 @@ const compiled = new WebAssembly.Module(wasmBytes);
   }
   check(stack === 8388608, `the stack is 8 MB (the stack pointer starts at ${stack})`);
   check(lowest >= stack, `the stack is first in memory: no data below ${stack} (the lowest data is at ${lowest})`);
+}
+
+// ---------------------------------------------------------------------------
+// The site (statement 15; rulings 14, 16, 23, 24 and 40), on the shipped files.
+// ---------------------------------------------------------------------------
+
+{
+  const SITE = `${OUT}site/`;
+  const read = (name) => readFileSync(`${SITE}${name}`, 'utf8');
+  const stripped = (text) => text.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '').replace(/\s\/\/ .*$/gm, '');
+  const shipped = ['index.html', 'door.js', 'worker.js', 'pack.json', 'scenarios.json', 'module/sim_web.js', 'module/sim_web_bg.wasm', 'vendor/vendor.toml', 'vendor/three.min.js', 'vendor/fonts.css'];
+  const missing = shipped.filter((f) => !existsSync(`${SITE}${f}`));
+  check(missing.length === 0, `the site holds the page, the door, the worker, the module, the pack, the list and the vendored files${missing.length ? ` (missing ${missing})` : ''}`);
+  if (missing.length) stop('the site is not assembled: run scripts/web/build.sh');
+
+  // The scan of ruling 24 on `worker.js`.
+  const worker = stripped(read('worker.js'));
+  const listed = /const MESSAGES = \[([^\]]*)\]/.exec(worker);
+  const names = listed ? [...listed[1].matchAll(/'([^']*)'/g)].map((m) => m[1]) : [];
+  check(JSON.stringify([...names].sort()) === JSON.stringify([...FUNCTIONS].sort()), "worker.js lists the seven messages of the door and no others (`const MESSAGES`)");
+  const words = [...worker.matchAll(/'([a-z_]+)'/g)].map((m) => m[1]).filter((w) => !FUNCTIONS.includes(w));
+  check(words.length === 0, `worker.js names no message in its source but those seven${words.length ? ` (also ${words})` : ''}`);
+  const means = ['JSON.parse', 'TextDecoder', '.text(', '.json(', '.blob(', '.formData(', '.getReader('].filter((w) => worker.includes(w));
+  check(means.length === 0, `worker.js has no means to read an answer or the pack: none of JSON.parse, TextDecoder, .text(, .json(${means.length ? ` (found ${means})` : ''}`);
+  check(worker.includes('.arrayBuffer()') && (worker.match(/\bfetch\(/g) || []).length === 1, 'worker.js takes the pack only as arrayBuffer(): one fetch, read so');
+  check(!/new (Shared)?Worker\(/.test(worker), 'worker.js makes no worker');
+
+  // The page and the door name neither the module nor the pack; the door alone makes a worker.
+  const page = read('index.html');
+  const doorJs = read('door.js');
+  const names2 = ['sim_web', 'pack.json'];
+  const named = ['index.html', 'door.js'].flatMap((f) => names2.filter((n) => read(f).includes(n)).map((n) => `${f}: ${n}`));
+  check(named.length === 0, `index.html and door.js name neither the module nor the pack${named.length ? ` (${named})` : ''}`);
+  check(!/new (Shared)?Worker\(/.test(page) && (stripped(doorJs).match(/new Worker\(/g) || []).length === 1, 'door.js is the only thing that makes a worker, and makes it once');
+
+  // The site's page is the table's, but for the one marked line.
+  const table = readFileSync(`${ROOT}table/index.html`, 'utf8').split('\n');
+  const made = page.split('\n');
+  const differing = table.map((l, i) => [l, made[i]]).filter(([a, b]) => a !== b);
+  check(
+    table.length === made.length && differing.length === 1 && differing[0][0] === '<!--@door-->' && differing[0][1] === '<script src="door.js"></script>',
+    "the site's page is table/index.html but for the one marked line, which is the script tag of door.js",
+  );
+
+  // Nothing is loaded from another site (ruling 40).
+  const elsewhere = ['index.html', 'door.js', 'worker.js', 'vendor/fonts.css'].flatMap((f) => ['cdnjs.cloudflare.com', 'fonts.googleapis.com', 'fonts.gstatic.com'].filter((h) => read(f).includes(h)).map((h) => `${f}: ${h}`));
+  check(elsewhere.length === 0, `the page, the door, the worker and the fonts' stylesheet name no other site's address${elsewhere.length ? ` (${elsewhere})` : ''}`);
+
+  // The vendored files are those vendor.toml names, by SHA-256, and no others (ruling 40).
+  const toml = readFileSync(`${ROOT}table/vendor/vendor.toml`, 'utf8').split('\n');
+  const pairs = [];
+  let path = null;
+  for (const line of toml) {
+    const m = /^(path|licence_file|sha256|licence_sha256) = "(.*)"$/.exec(line);
+    if (!m) continue;
+    if (m[1] === 'path' || m[1] === 'licence_file') path = m[2];
+    else pairs.push([path, m[2]]);
+  }
+  const hash = (file) => createHash('sha256').update(readFileSync(`vendor/${file}`.replace(/^/, SITE))).digest('hex');
+  const wrong = pairs.filter(([f, h]) => !existsSync(`${SITE}vendor/${f}`) || hash(f) !== h).map(([f]) => f);
+  check(pairs.length > 0 && wrong.length === 0, `each of the ${pairs.length} vendored files is what vendor.toml says, by SHA-256${wrong.length ? ` (not so: ${wrong})` : ''}`);
+  const walk = (dir) => readdirSync(dir).flatMap((n) => (statSync(`${dir}/${n}`).isDirectory() ? walk(`${dir}/${n}`).map((f) => `${n}/${f}`) : [n]));
+  const unlisted = walk(`${SITE}vendor`).filter((f) => f !== 'vendor.toml' && !pairs.some(([p]) => p === f));
+  check(unlisted.length === 0, `no vendored file is left out of vendor.toml${unlisted.length ? ` (${unlisted})` : ''}`);
+
+  // The list holds the offered games and each game's chart and directives are there.
+  const list = JSON.parse(read('scenarios.json')).scenarios;
+  const files = [...new Set(list.flatMap((e) => e.pairings.map((p) => p.file)))];
+  check(JSON.stringify([...files].sort()) === JSON.stringify([...offered()].sort()), "the site's list offers the scenario files the check's games are held to");
+  const absent = list.flatMap((e) => [
+    `chart/${e.map.split('/').pop().replace(/\.csv$/, '')}.json`,
+    ...Object.values(e.directives || {}).map((d) => `directives/${d.split('/').pop()}`),
+  ]).filter((f) => !existsSync(`${SITE}${f}`));
+  check(absent.length === 0, `the chart of each map and the directives of each game the list offers are in the site${absent.length ? ` (missing ${absent})` : ''}`);
+}
+
+// ---------------------------------------------------------------------------
+// The two owed by the rulings on pull request 734, run on the shipped files with stubs
+// for what a browser gives (the module, the worker, the page's storage).
+// ---------------------------------------------------------------------------
+
+{
+  const SITE = `${OUT}site/`;
+  const ENDED = 'The game has stopped on an internal error. Begin it again from the new game screen.';
+
+  // `web/worker.js`: "a throw from the call `door[fn](...)` ends the module unless it is a plain
+  // `Error` (its prototype is `Error.prototype`): every `RuntimeError`, `RangeError` and anything
+  // that is not an `Error` sets `ended`, and the answer is the fixed sentence. Errors thrown before
+  // the call (the module or the data not there, a message that is not one of the seven) stay as they are."
+  const dir = mkdtempSync(`${tmpdir()}/flagplot-worker-`);
+  mkdirSync(`${dir}/module`);
+  writeFileSync(`${dir}/worker.js`, readFileSync(`${SITE}worker.js`));
+  writeFileSync(
+    `${dir}/module/sim_web.js`,
+    `export default async function init() {}
+export const versions = () => '{}';
+export const begin = () => {};
+export const tools = () => '{"tools":[]}';
+export const game_file = () => '';
+export const resume = () => {};
+export const saved_game = () => '';
+export function call(tool) {
+  if (tool === 'plain') throw new Error('the words of the door');
+  if (tool === 'range') throw new RangeError('Maximum call stack size exceeded');
+  if (tool === 'trap') throw new WebAssembly.RuntimeError('unreachable');
+  if (tool === 'string') throw 'not an error';
+  return '{"ok":1}';
+}
+`,
+  );
+  const sent = [];
+  globalThis.self = { postMessage: (m) => sent.push(m) };
+  globalThis.fetch = async () => ({ ok: true, arrayBuffer: async () => new ArrayBuffer(2) });
+  await import(pathToFileURL(`${dir}/worker.js`));
+  const ask = async (id, fn, args = []) => {
+    await globalThis.self.onmessage({ data: { id, fn, args } });
+    return sent.find((m) => m.id === id);
+  };
+  const first = await ask(1, 'call', ['plain', '{}']);
+  check(first.error === 'the words of the door', 'worker.js: a plain Error from the call is the door\'s own words');
+  const after = await ask(2, 'call', ['any', '{}']);
+  check(after.ok === '{"ok":1}', 'worker.js: a plain Error does not end the module');
+  const before = await ask(3, 'nothing', []);
+  check(before.error === 'not a message of the door', 'worker.js: a message that is not one of the seven stays as it was, and does not end the module');
+  check((await ask(4, 'call', ['any', '{}'])).ok === '{"ok":1}', 'worker.js: the module is still used after that');
+  const range = await ask(5, 'call', ['range', '{}']);
+  check(range.error === ENDED, 'worker.js: a RangeError from the call is the fixed sentence');
+  const later = await ask(6, 'call', ['any', '{}']);
+  check(later.error === ENDED && later.ok === undefined, 'worker.js: every later message is the fixed sentence, and the module is never used again');
+  for (const [tool, name] of [['trap', 'a RuntimeError'], ['string', 'a thrown thing that is not an Error']]) {
+    // A worker for each: the module is ended once, for good.
+    const again = mkdtempSync(`${tmpdir()}/flagplot-worker-`);
+    mkdirSync(`${again}/module`);
+    writeFileSync(`${again}/worker.js`, readFileSync(`${dir}/worker.js`));
+    writeFileSync(`${again}/module/sim_web.js`, readFileSync(`${dir}/module/sim_web.js`));
+    globalThis.self = { postMessage: (m) => sent.push(m) };
+    await import(`${pathToFileURL(`${again}/worker.js`)}`);
+    sent.length = 0;
+    await globalThis.self.onmessage({ data: { id: 1, fn: 'call', args: [tool, '{}'] } });
+    check(sent[0].error === ENDED, `worker.js: ${name} from the call is the fixed sentence`);
+  }
+
+  // `web/door.js`, `ensure`: "where the game in hand is the one chosen and its seat has stopped,
+  // reject with the fixed sentence and make no worker. A new worker is made only for a game with a
+  // new number (`/begin`, `/restart`) or when no game is held (the page just loaded)."
+  const made = [];
+  class StubWorker {
+    constructor() {
+      made.push(this);
+      this.terminated = false;
+    }
+    postMessage({ id, fn }) {
+      const ok = fn === 'tools' ? '{"tools":[{"name":"get_briefing"}]}' : '{"ok":1}';
+      queueMicrotask(() => this.onmessage({ data: { id, ok } }));
+    }
+    terminate() {
+      this.terminated = true;
+    }
+  }
+  const store = () => {
+    const m = new Map();
+    return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => m.set(k, String(v)), removeItem: (k) => m.delete(k) };
+  };
+  globalThis.window = globalThis;
+  globalThis.document = { currentScript: { src: 'http://site.test/door.js' } };
+  globalThis.Worker = StubWorker;
+  globalThis.sessionStorage = store();
+  globalThis.localStorage = store();
+  globalThis.fetch = async (url) => {
+    const path = String(url).replace('http://site.test/', '');
+    const file = `${SITE}${path}`;
+    return existsSync(file) ? { ok: true, status: 200, json: async () => JSON.parse(readFileSync(file, 'utf8')) } : { ok: false, status: 404 };
+  };
+  await import(`${pathToFileURL(`${SITE}door.js`)}?check`);
+  const reach = globalThis.flagplotDoor.reach;
+  const pairing = JSON.parse(readFileSync(`${SITE}scenarios.json`, 'utf8')).scenarios[0].pairings[0];
+  const begun = await reach('/begin', { scenario: JSON.parse(readFileSync(`${SITE}scenarios.json`, 'utf8')).scenarios[0].id, allied: pairing.allied, japanese: pairing.japanese });
+  check(begun.ok === true && made.length === 0, 'door.js: begin records the choice and makes no worker');
+  const config = await reach('/config');
+  check(config.home?.number === 1 && made.length === 1, 'door.js: the game is opened, in one worker, when the page asks for it');
+  check((await reach('/call', { tool: 'get_briefing', arguments: {} })).ok === 1 && made.length === 1, 'door.js: a call is answered by the same worker');
+  made[0].onerror();
+  const stopped = await reach('/call', { tool: 'get_briefing', arguments: {} });
+  check(stopped.refused === ENDED && made.length === 1, 'door.js: a game whose seat has stopped is refused with the fixed sentence, and no worker is made');
+  check(
+    (await reach('/tools').then(() => 'answered', (e) => e.message)) === ENDED && (await reach('/config').then(() => 'answered', (e) => e.message)) === ENDED && made.length === 1,
+    'door.js: the same for every other path that needs the game, and the game is not begun again',
+  );
+  await reach('/restart', {});
+  const again = await reach('/config');
+  check(again.home?.number === 2 && made.length === 2 && made[0].terminated, 'door.js: a new game number makes a new worker');
 }
 
 // ---------------------------------------------------------------------------
