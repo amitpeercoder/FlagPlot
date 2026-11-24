@@ -703,16 +703,29 @@ impl World {
                         return Err(CommandRefusal::CannotStandUnder(*parent));
                     }
                 }
+                // "Keep supplied" under "control an island" is of a base of
+                // the side's; a base of the enemy's or of no one's is refused
+                // (decision 0229, amended 1). Whether the base is on the
+                // island's land is the staff's reading, not intake's.
+                if let (IntentKind::KeepSupplied { base, .. }, IntentKind::ControlIsland { .. }) =
+                    (kind, found.kind)
+                {
+                    if !self.truth.bases.get(base).is_some_and(|b| b.side == side) {
+                        return Err(CommandRefusal::CannotStandUnder(*parent));
+                    }
+                }
                 // "Keep supplied" formed under "hold a place" takes the
                 // hold's margin as its floor, which is 0 at press (decision
-                // 0144, 7 and 10): its floor is checked as at least 0.
+                // 0144, 7 and 10), and so does one under "control an island"
+                // (decision 0229, amended 1): its floor is checked as at
+                // least 0.
                 if let (
                     IntentKind::KeepSupplied {
                         base,
                         floor_days: 0,
                         interval_days,
                     },
-                    IntentKind::Hold { .. },
+                    IntentKind::Hold { .. } | IntentKind::ControlIsland { .. },
                 ) = (kind, found.kind)
                 {
                     return self.check_intent_kind(

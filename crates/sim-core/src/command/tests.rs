@@ -4259,6 +4259,110 @@ fn a_take_under_an_island_has_a_plan_of_its_own_and_a_hold_shares_the_islands() 
     island_invariants(&world);
 }
 
+/// A world with an island and, beside it, a base of the side (3) and one of
+/// the other side (10) far off.
+fn world_with_island_and_bases() -> World {
+    let mut world = world_with_island();
+    for (id, side) in [(3, A), (10, J)] {
+        world.truth.bases.insert(
+            base(id),
+            Base::new(base(id), format!("Base {id}"), side, FAR),
+        );
+    }
+    world
+}
+
+/// Decision 0229, amended 1: a "keep supplied" of a base of the side stands
+/// under "control an island"; one of the enemy's is refused as it is under a
+/// hold.
+#[test]
+fn keep_supplied_of_a_base_of_the_side_stands_under_an_island() {
+    let mut world = world_with_island_and_bases();
+    staff(&mut world, form_under(1, keep_supplied(3))).unwrap();
+    let formed = &state(&world, A).intents[&intent(2)];
+    assert_eq!(formed.kind, keep_supplied(3));
+    assert_eq!(formed.parent, Some(intent(1)));
+    assert_eq!(formed.maker, Maker::Staff);
+    refused(
+        &mut world,
+        Issuer::Staff,
+        form_under(1, keep_supplied(10)),
+        CommandRefusal::CannotStandUnder(intent(1)),
+    );
+    // A base that is no one's is refused the same way.
+    refused(
+        &mut world,
+        Issuer::Staff,
+        form_under(1, keep_supplied(77)),
+        CommandRefusal::CannotStandUnder(intent(1)),
+    );
+    island_invariants(&world);
+}
+
+/// Decision 0229, amended 1: so formed it has a plan of its own, drafted at
+/// its forming, where a hold under the island shares the island's.
+#[test]
+fn keep_supplied_under_an_island_has_a_plan_of_its_own() {
+    let mut world = world_with_island_and_bases();
+    let before = world.events.len();
+    staff(&mut world, form_under(1, keep_supplied(3))).unwrap();
+    let events: Vec<_> = world.events.from_index(before).to_vec();
+    assert!(matches!(events[0].kind, EventKind::CommandTaken { .. }));
+    assert!(matches!(events[1].kind, EventKind::IntentFormed { .. }));
+    assert_eq!(
+        events[2].kind,
+        EventKind::PlanDrafted {
+            side: A,
+            plan: plan(2),
+            intent: intent(2)
+        }
+    );
+    let supply = &state(&world, A).intents[&intent(2)];
+    assert_eq!(supply.plan, plan(2));
+    assert_eq!(state(&world, A).plans[&plan(2)].intent, intent(2));
+    assert_eq!(state(&world, A).plans[&plan(2)].state, PlanState::Draft);
+    staff(&mut world, form_under(1, island_hold(1))).unwrap();
+    assert_eq!(state(&world, A).intents[&intent(3)].plan, plan(1));
+    island_invariants(&world);
+}
+
+/// Decision 0229, amended 1: a floor of 0 days is taken under "control an
+/// island" and is still refused for a "keep supplied" that stands alone.
+#[test]
+fn a_floor_of_no_days_is_taken_under_an_island_and_refused_alone() {
+    let mut world = world_with_island_and_bases();
+    let no_floor = IntentKind::KeepSupplied {
+        base: base(3),
+        floor_days: 0,
+        interval_days: None,
+    };
+    staff(&mut world, form_under(1, no_floor)).unwrap();
+    assert_eq!(state(&world, A).intents[&intent(2)].kind, no_floor);
+    // An interval of 0 days is refused all the same, and a root with a floor
+    // of 0 days.
+    let no_interval = IntentKind::KeepSupplied {
+        base: base(3),
+        floor_days: 0,
+        interval_days: Some(0),
+    };
+    refused(
+        &mut world,
+        Issuer::Staff,
+        form_under(1, no_interval),
+        CommandRefusal::NoDays,
+    );
+    refused(
+        &mut world,
+        Issuer::Player,
+        CommandKind::SetIntent {
+            intent: intent(9),
+            kind: no_floor,
+        },
+        CommandRefusal::NoDays,
+    );
+    island_invariants(&world);
+}
+
 /// Items 3 and 12: withdrawing the island ends the plan of the take beneath
 /// it as a root's ends, complete if released, else cancelled.
 #[test]
