@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 24, 2026, at the designer's requ
 
 Summary: The table's page played in a browser with no bridge and no server: the game compiled to WebAssembly and held in a worker of the page, answering the same seat tools `sim-cli mcp` answers; the data it plays on packed at build time by `sim-data`; the kept game a file of the seat's own calls in the browser's storage; and a check in CI that the browser's build gives, call for call and day for day, what the native build gives. Seven stages, none with a hand calculation.
 
-Standing: Planned on Nov 24, 2026; amended on review the same day (What the review changed). Stage 1 is built (pull request 730); stage 2 is built (pull request 732), with the two tests the architect's rulings on it asked; stage 3 is built on pull request 733 and waits for the change to its check the architect's rulings on it ask; stages 4 to 7 are not built. Needs review: who playtests and whether the link is public, turning on the host, a new seed for each game, the marks for speed, what a playtester is told of the build, and sharing the packed data (Questions for the designer). The wording of two of `CLAUDE.md`'s "Always" rules was accepted by the designer on Nov 24, 2026 (question 7).
+Standing: Planned on Nov 24, 2026; amended on review the same day (What the review changed). Stage 1 is built (pull request 730); stage 2 is built (pull request 732), with the two tests the architect's rulings on it asked; stage 3 is built (pull request 733); stage 4 is built on pull request 734 and waits for the three changes the architect's rulings on it ask, and for statement 16 by hand in three browsers; stages 5 to 7 are not built. Needs review: who playtests and whether the link is public, turning on the host, a new seed for each game, the marks for speed, what a playtester is told of the build, and sharing the packed data (Questions for the designer). The wording of two of `CLAUDE.md`'s "Always" rules was accepted by the designer on Nov 24, 2026 (question 7).
 
 ## Why it is a record
 
@@ -390,3 +390,49 @@ Written by the architect from the code of pull request 733.
 **The unstable sorts** are held by `clippy.toml` (choice a).
 
 **Sizes, as built on the developer's machine:** the module 14,647,118 bytes (3,394,814 through gzip), the pack 1,362,696 bytes (296,360 through gzip). The check's time, 51 to 54 seconds, is the developer's report.
+
+## The architect's rulings on pull request 734
+
+Stage 4, read on Nov 24, 2026 in `table/index.html` (the seam `reach` and the marked line), `web/door.js`, `web/worker.js`, `scripts/web/site.py`, `scripts/web/build.sh`, `table/serve.py` (`vendored`), `table/vendor/` with `vendor.toml`, and the stage's part of `web/check.mjs`. The architect did not run the build, the check or the two scripts of the table, and opened no browser: that statement 15 holds in the check, that `check_screen.py` and `check_watch.py` held with the bridge, and that a game of Midway was played to its end in one browser are the developer's report.
+
+### The developer's choices
+
+1. **A reload begins the game again: accepted for this stage, and it is stage 5's first duty.** The worker dies with the page, and nothing is kept yet, so there is nothing else a reload could do. Nothing is published before stage 7, so no player meets it. That `begin` only records the choice and the game opens at the page's `/config` is accepted: a refusal there is shown as "The table could not reach the game:" with the door's own words after it, which is true. Stage 5 keeps the game and takes it up on a reload.
+2. **The game's number from a counter in `localStorage`, and the old keys left as they are: accepted.** Naming what the page keeps by the kept game is stage 5's, as ruling 34 has it.
+3. **The fixed sentence: accepted as written.** "The game has stopped on an internal error. Begin it again from the new game screen." The sentence the session gives natively ends "the operator has the details", and here there is no operator, so decision 0085's rule is kept (one fixed sentence, none of the engine's words) and its wording is not. The offer to take the game up from its file is stage 5's, with the kept game it needs. Two things about when the sentence is said are not right, and are owed (changes 1 and 2 below).
+4. **The site's list keeps `file`, `map` and `directives`: accepted.** The door must name the scenario to `begin`, and a path is not the file: what ruling 24 forbids the page is the pack, which holds the files. `door.js` gives the page the list without `file`, as the bridge does, and fetches the directives of the person's side and no other, which the architect read in `ensure`.
+5. **One file for each map's chart: accepted.** Four requests answered from one file fetched once.
+6. **"Check the network and reload": changed.** The words are untrue under both doors now, since the bridge serves the drawing library itself. Statement 14 is about how the page behaves with the bridge, not about leaving a sentence that has become false (change 3 below).
+
+### Two faults found in reading
+
+- **The worker takes only one kind of failure for the module's end.** `worker.js` marks the module ended on `WebAssembly.RuntimeError`. A browser that runs out of stack inside the module throws a `RangeError` instead, and that is not a `RuntimeError`. The call would then be answered as an ordinary refusal with the browser's words, and the next call would go to a module left in the middle of a call, its door still borrowed and its game half changed. Ruling 27 says a module that has failed is never used again. The door's own refusals reach JavaScript as a plain `Error` made by the binding; anything else thrown by a call into the module is the module ending.
+- **A game whose worker has stopped is silently begun again.** In `door.js`, `ensure` opens a new worker and a new game from the first evening whenever the seat of the game in hand is marked stopped. So after a worker fails (its `onerror`), the next call the page makes is answered by a fresh game with no word said, and the page shows the first evening under a clock that says otherwise. A game that has stopped stays stopped until the player begins again.
+
+### Code owed before the merge
+
+1. **`web/worker.js`:** a throw from the call `door[fn](...)` ends the module unless it is a plain `Error` (its prototype is `Error.prototype`): every `RuntimeError`, `RangeError` and anything that is not an `Error` sets `ended`, and the answer is the fixed sentence. Errors thrown before the call (the module or the data not there, a message that is not one of the seven) stay as they are. The scan of ruling 24 still holds on the file.
+2. **`web/door.js`, `ensure`:** where the game in hand is the one chosen and its seat has stopped, reject with the fixed sentence and make no worker. A new worker is made only for a game with a new number (`/begin`, `/restart`) or when no game is held (the page just loaded).
+3. **`table/index.html`, the words when the drawing library is missing:** "The table needs its drawing library, which did not load. Reload the page."
+
+### What the stage still owes that is not code
+
+Statement 16 by hand in the current Chrome, Safari and Firefox on a Mac, with the network off, each with its version in "As built" below. The stage may merge before it, since nothing is published until stage 7; stage 7 does not begin until the three are written here. Safari is the one to watch: the worker is a module and takes its own address from `import.meta.url`.
+
+### Also read, and accepted as built
+
+- **The seam.** Every request of the page goes through `reach(path, body)`; under the bridge it is the same HTTP as before. The site's page differs from `table/index.html` in the one marked line, and the check holds that.
+- **The worker** names the seven messages, fetches the pack once and takes it only as bytes; the check scans for the means to read it and finds none.
+- **The bridge's `/vendor/`** refuses a path that leaves the folder and a file of a kind it does not list.
+- **`vendor.toml`** gives each file's source, version and SHA-256, and the check holds the shipped files to it and fails on a file it does not list. The three font families each have their licence text in `table/vendor/licences/`, named as the SIL Open Font License 1.1; reading them is stage 6's, as ruling 41 says.
+- **`site.py`** reads the table's files with the bridge's own readers and is run with `python3 -I`.
+
+## As built: stage 4
+
+Written by the architect from the code of pull request 734 and the developer's report.
+
+- **Statement 14** (the developer's run, which CI does not make): `table/check_screen.py`, 755 checks, and `table/check_watch.py` held with the bridge.
+- **Statement 15** is held by `web/check.mjs` on the files of `target/web/site/`.
+- **Statement 16:** held by hand in the desktop program's built-in Chromium pane only: Midway from the new game screen to its end, with no request to any host but the one serving the folder. **Owed:** Chrome, Safari and Firefox with the network off, each with its version, written here when done.
+- **Where things are:** `web/door.js` (the page's) and `web/worker.js` (the umpire's relay); `scripts/web/site.py`; the site in `target/web/site/` with `index.html`, `door.js`, `worker.js`, `module/`, `pack.json`, `scenarios.json`, `chart/<map>.json`, `directives/` and `vendor/`.
+- **What a reload does:** begins the same game again from its first evening, until stage 5.
