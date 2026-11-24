@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 19, 2026, inside the plan for st
 
 Summary: A trial can be played and an estimate read, by a program. This record gives them to a commander. A seat with a staff gains the tool `trial`: it names an intent of its own or a draft it has previewed, and a size, and is answered with the estimate in words a commander can read, or with why it cannot be tried. The session that holds the game cannot build worlds and must not learn to, so it is handed something that can, as it is handed its staffs. The estimate is kept with the session as a thing the commander was shown. The game is not changed by asking
 
-Standing: A plan, written by the architect on Nov 19, 2026, inside decision 0161, and amended on review. Built on Nov 20, 2026. Its readings wait for the architect, the second trial for an intent in force among them
+Standing: A plan, written by the architect on Nov 19, 2026, inside decision 0161, and amended on review. Built on Nov 20, 2026, and its readings ruled on the same day. The second trial for an intent in force was settled by decision 0181
 
 ## Why
 

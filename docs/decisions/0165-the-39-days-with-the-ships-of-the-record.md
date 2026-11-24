@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 19, 2026 and confirmed by the de
 
 Summary: A plan to replace the placeholder transports of the 39 days with the ships the record names. Its 78 placeholders that stand for real ships stand for 54 ships the record now names and 14 it does not, but a name is not what keeps them out: a real ship may carry no invented figure, and the transports, the destroyer-transports and three classes of Japanese destroyer still lack facts a class is derived from. Six steps: a second round of research for those facts, the derivation rules a transport needs, the classes, the American landings at the record's 15 and 8 ships, the Japanese runs as the destroyers that made them, and the baseline run again. It is done before stage 4's proof. With six questions for the designer
 
-Standing: Confirmed by the designer, Nov 19, 2026, with his six answers, each as recommended. Step 1, the second round of research, is done (`docs/research/oob/class-facts-39-days.md`); step 2 is decision 0166
+Standing: Confirmed by the designer, Nov 19, 2026, with his six answers, each as recommended. Step 1 is done; step 2 is decision 0166, whose part A (the Japanese destroyers of the runs) is built and whose part B (the American ships) is blocked for want of facts; of step 3 the Japanese classes are made and no scenario reads them; steps 4 to 6 are not done. Whether they come before stage 4's proof is put to the designer again ("Where it stands, Nov 24, 2026")
 
 ## What is so today
 
@@ -77,3 +77,16 @@ The designer confirmed the plan: "Yes, as recommended."
 5. It is done before stage 4's proof.
 6. A real ship whose name the record does not give is called by her type and her run. A ship that never existed may take a name in the pattern of her navy and type that no ship of that navy bore, with a mark of her own in the data and on the table. Craft that had numbers keep numbers. The change to the data rule that a made-up thing is named "Placeholder" is confirmed with it, and is written into `docs/engineering/data-rules.md` and `CLAUDE.md` by the pull request that builds the mark.
 
+## Where it stands, Nov 24, 2026
+
+The architect's reading, from the records, the derivation lists and `data/scenarios/07_full_slice.toml` on main. No ruling on a row is made here.
+
+1. **Step 1 is done** (`docs/research/oob/class-facts-39-days.md`), and a further source was read after it (decision 0166, "After the Navy's data book of 1945").
+2. **Step 2 is decision 0166.** Its part A is built: the Kagero, Shiratsuyu and Hatsuharu classes of the runs are derived (class ids from 3011). Its part B, the American transports, cargo ships and destroyer-transports, is blocked: no source read gives an endurance with its speed or a fuel capacity in tons. The sources that might are named there and are not being sought.
+3. **Step 3** is so far the classes of part A. No scenario reads them (decision 0166, rulings on part A, 2).
+4. **Step 4, the American landings at the record's ships, cannot be built.** By answer 2 a ship that cannot be completed stays a placeholder, and that is every American ship of the landings. It waits for part B and has no date.
+5. **Step 5, the Japanese runs as the destroyers that made them, can be built and is not.** It waits for three things, all the architect's and none written: a rule for a class's troop figure across its runs, with its change to the tool (0166, rulings on part A, 2); rulings on the disputed runs of 29 August, 5, 6 and 11 September and the ships of 31 August (the same, 4); and the scenario's runs rewritten with their notes.
+6. **Step 6, the baseline run again, follows step 5.**
+7. **The scenario today** holds its placeholders as before (122 names beginning "Placeholder" in the file), and the four destroyers it had before this plan.
+
+**"When" no longer holds as written.** The plan said steps 4 to 6 land in one stretch after stage 4's step 8 and before its proof. Step 8 is built, step 4 is blocked, and step 5 is some days of rulings and building that would change every game on the 39 days. The architect's recommendation is in decision 0161 ("The 39 days and decision 0165"): the proof first, on the scenario as it stands; then step 5 and step 6, with the proof's two readings on the 39 days made again and reported beside the first. That reverses answer 5 and is the designer's to give. Until he has, step 5's rule and rulings are not commissioned and the proof is not run.

@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 19, 2026 and confirmed by the de
 
 Summary: The plan for stage 4 of step 3. A commander who has stated an intent can ask the staff to try the plan before it goes: the staff builds private worlds from what the side knows and believes, never from the live enemy, plays the plan in each with both sides on doctrine, and hands in an estimate: what the plan needs, when it could go, what it may cost, how often it came off, and what was assumed about what is not seen. The same course is tried at two or three dates, so the estimate says what waiting buys and what the enemy may do with the days. Nine steps, the first two the mends of decision 0159; a world built from a picture is the one new means in the engine; a new crate plays the trials. With the conditions of its proof and seven questions for the designer.
 
-Standing: Confirmed by the designer, Nov 19, 2026, with his seven answers, each as recommended. Step 1 is built (decisions 0162 and 0163); step 2 is next. A tenth step, the enemy's approaches, was added by the designer the same day
+Standing: Confirmed by the designer, Nov 19, 2026, with his seven answers, each as recommended. Steps 1 to 8 are built (decisions 0162, 0163 and 0169; 0170; 0171, 0173 and 0174; 0175; 0176; 0177; 0178 and 0181, with 0204 after). Step 9, the proof, is not run: its setup is to be written, and three things stand before it ("Where the stage stands, Nov 24, 2026"). Step 10, the enemy's approaches, has no record yet
 
 ## The target
 
@@ -184,3 +184,71 @@ What the step is to give, each point to be settled in its own decision record, w
 
 Where it stands in the order: after step 9. The trial's pictures are what the estimate is made from, so it cannot come before step 4; and it changes what a staff does in a live game, which this record's proof must not have moving under it, so it is not built before the proof is run. It has a proof of its own, set in its record. It is doctrine, chosen by written rule; a staff that chooses between such dispositions by trial stays stage 5's (rule 23).
 
+## Where the stage stands, Nov 24, 2026
+
+The architect's reading, made from the records and the code on main, before the proof's setup is written. It changes no rule, figure, statement or condition. Where it fixes how a condition is read, it does so before any run of the proof is made, and says so.
+
+### What is built
+
+| Step | Records | Standing |
+| --- | --- | --- |
+| 1, fed with the lift | 0162, 0163 | Built, ruled |
+| 2, a take that does not go to starve | 0169 | Built, ruled |
+| 3, a world from a picture | 0170 | Built, ruled |
+| 4, the constructor | 0171, 0173, 0174 | Built, ruled |
+| 5, a trial | 0175 | Built, ruled; the three sizes accepted by the designer on the times of one trial |
+| 6, the estimate | 0176 | Built, ruled |
+| 7, the window | 0177 | Built, ruled |
+| 8, courses, the tool and the table | 0178, 0181; 0204 after | Built, ruled; rule 14 of 0204 (the rest of today played inside a dry run) not built and not a condition |
+| 9, the proof | none | Not run. No setup record, no report |
+| 10, the enemy's approaches | none | Not planned. After the proof |
+
+Every record of steps 1 to 8 has its "The architect's rulings", made on Nov 19 to 21, 2026. The lines of `docs/open-work.md` that say a record is "waiting on the architect's reading" were written with each build and not struck when the ruling was made; no reading of an "As built" is outstanding in this stage. The standing lines of decisions 0176, 0177 and 0178 said the same and are corrected today.
+
+### What is owed, and whether the proof waits for it
+
+| Owed | From | Does the proof wait for it |
+| --- | --- | --- |
+| Whether men ashore at a place the order does not name are the order's to feed; the cause of the Japanese hunger read on more seeds | 0224, the reading of Nov 23, 5 | Yes: condition 3. Its own record, next |
+| Whether a place can be kept fed over weeks | 0169, rulings, 2 | No. It is what a trial of the place shows, and condition 12 reports it |
+| A case of a plan displaced by a take of another place | 0176, rulings, 3 | No condition reads it. Owed as a scenario with its hand calculation (0176, "The architect's reading, Nov 24, 2026") |
+| Words of an estimate for a commander | 0176, rulings, 5 | Settled for a seat by 0178 and 0181. Condition 11 is read on the seat's answer, not on the crate's `Display` |
+| An air group that comes due makes no date of a window | 0177, rulings, 2 | No |
+| The times of a window and of a trial beside another at the full size | 0177, rulings, 8; 0178, 8; 0181, 10 | Yes: condition 10 is "the times the designer accepts", and he has accepted one trial's times only. A question for the designer, below |
+| A test of each of four rules that read the log of earlier days, across a picture | 0170, rulings, 7; 0171, 3 | No condition reads them. They stay owed |
+| A dry run in the test that a seat's answers do not read the other seat's queue | 0182 | Not this proof's. It is owed before a game of two agents is called fair |
+| An enemy's land air groups in a picture | 0174, "What it leaves for later" | No, by that record: "the first thing to mend after the trial is proved". Condition 12's report will show a landing tried with no bomber from Rabaul in it, and says so |
+| A staff that reckons a force forward from its own orders when word of it is stale | 0136, open item 1 | No. It uses the stage's means and is no part of the estimate. Its own record, after the proof |
+| The 39 days with the ships of the record, before the proof | 0165, answer 5 | A question for the designer, below |
+
+### The conditions, one by one
+
+1. **The hand calculations** are on main (scenarios 85, 86, 90 to 97, 100 and 118). The setup lists them by test.
+2. **Nothing changed where it is unused.** Held by each build's baselines. The setup names the files compared.
+3. **The mends hold where 0159 missed.** Not judged here. A measurement of Nov 23 on 100 seeds, with the table's ground figures, has the Japanese side losing 1,011 men a seed to hunger (0224, the reading, 4); that file is not the proof's and the figure is a lead. It is the reason the fallen-back men are planned before the proof. The condition's reading is decision 0159's, unchanged, and its mark is not moved.
+4. **No peek.** Tests exist on the built cases. The 39 days at three days is to be made by the setup.
+5. **The same twice, and nothing changed.** Tests exist (0175, 0178).
+6. **Sampling.** Scenario 95.
+7. **Spreads hold.** No built case has its band yet. The setup states the cases, the 200 games each, the band for the count of worlds met and the share that makes an estimate too wide, each with its hand calculation, before a run.
+8. **A wrong picture.** The three cases are to be stated in the setup with the direction worked by hand.
+9. **Preparation matters.** Read today, before any run: it is two trials of one number, so the same worlds, and not a window (0177, "The architect's reading, Nov 24, 2026"). "Fit" is the glossary's fit men, of the units the take landed, on the evening of the landing day, from the side's own view of each world. "At least 9 worlds in 10" at the standard size is at least 15 of 16. Whether the built staff can hold the landing day the same between an early and a late start needs the code read; it is commissioned below.
+10. **Within its budget.** One trial is measured and accepted. The window and the comparison are measured and not accepted.
+11. **Legible.** Six of six, on the seat's answer.
+12. **Reported.** As written.
+
+### The 39 days and decision 0165
+
+Decision 0165 was to give the 39 days the ships of the record before this proof, and the designer confirmed that order (its answer 5). It has not happened, and part of it cannot. The standing is written in that record today ("Where it stands, Nov 24, 2026"). In short: the American ships cannot be derived and stay placeholders by answer 2; the Japanese destroyers are derived and no scenario reads them, because a rule for a class's troop figure across its runs, a change to the tool and rulings on five disputed runs are all unwritten.
+
+The architect's recommendation, which reverses the designer's answer 5 and so is his to give: run the proof on the 39 days as they stand, on a file named in the setup and not changed until the report is written; give the Japanese runs their destroyers after it; and then read conditions 3 and 12 again on the new file and report them beside the first, with no second judgement. The reason is that condition 3 is read against decision 0159's proof, and a change of the ships that carry the men and the supply, made in the same stretch as a change to who is fed, would leave nobody able to say which of the two moved the hunger.
+
+### To commission
+
+1. **For condition 9,** a developer reads `sim-staff`'s take and reports, with the lines: on what a take with leave to launch sails (the day its men are to hand, or a level of loading and rehearsal); whether a latest day or "not before" in the order holds the day ashore the same when preparation began later; and what a unit under an order with "not before day D" does in the days before D (whether its force is in port with the order to prepare, so that 0095 counts the days). No change. The architect then writes the case and its hand calculation.
+2. **For the setup,** a developer reports which staffed files of the 39 days name a trial's figures and a file of sides (`data/scenarios/staff/07_full_slice.toml`, `data/scenarios/stage-3-proof/07a_slice.toml`), and lists every change to those files and to the doctrine labels since decision 0159's proof of Nov 19, 2026, by commit and decision.
+3. **For condition 3,** the measurement decision 0224's reading asks for is commissioned with the record of the fallen-back men, not here.
+
+### Questions for the designer
+
+1. **The proof before the ships of the record, or after?** Answer 5 of decision 0165 says after. The architect now recommends before, for the reason above; the American ships stay placeholders in either order.
+2. **The times at the full size.** A window of three dates takes about 67 s on the 39 days and 804 MB; a trial beside another 27 to 36 s; one trial 16 to 23 s by the load on the machine. The standard size is 12.8 s for a window and about 5 s compared. Are these accepted for condition 10, or is the full size to be made cheaper first (worlds without breakdowns, worlds side by side: owed from 0175)? The architect recommends accepting them for the proof and taking the cheaper worlds after it: they move no result.
