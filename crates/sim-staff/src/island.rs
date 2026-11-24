@@ -102,6 +102,9 @@ impl Day<'_, '_> {
 
         // Item 8b: a neutralising that has done its work.
         self.withdraw_done(end, plan, in_scope);
+        // Decision 0229, 6 (amended): the supply of a base beside a place
+        // whose men are gone.
+        self.withdraw_beside(end, plan, in_scope);
 
         // Item 8: the source of supply for the holds, chosen on the first
         // morning a base fits and kept (decision 0152, 10).
@@ -113,8 +116,14 @@ impl Day<'_, '_> {
             self.island_hold(end, plan, place.hex, &source, &island_text, in_scope);
         }
 
+        // Decision 0229: the supply of a base beside a place, after the
+        // holds and before the denial.
+        let place_hexes: Vec<Hex> = places.iter().map(|p| p.hex).collect();
+        self.island_beside(end, plan, &place_hexes, &source, &island_text, in_scope);
+
         // Decision 0152, 11: each hold's forces limit set each morning to
-        // the source and its pool.
+        // the source and its pool; so is the supply of a base beside a
+        // place (decision 0229, 4).
         self.island_pools(end, plan, &source, in_scope);
 
         // The denial, once, and the carrier forces under it.
@@ -130,7 +139,7 @@ impl Day<'_, '_> {
     /// Forms `kind` under `parent` in the planned state and hands in the
     /// command, returning the new intent's number. A take under an island has
     /// a plan of its own (decision 0151, 9), drafted here as intake drafts it.
-    fn form_under(
+    pub(crate) fn form_under(
         &mut self,
         parent: &Intent,
         kind: IntentKind,
@@ -184,7 +193,7 @@ impl Day<'_, '_> {
 
     /// The reason given where an intent of the kind and place already stands
     /// (item 6): none is formed beside it.
-    fn island_stands(
+    pub(crate) fn island_stands(
         &mut self,
         end: &Intent,
         plan: &Plan,
@@ -747,7 +756,10 @@ impl Day<'_, '_> {
             .filter(|i| {
                 i.parent == Some(end.id)
                     && i.maker == Maker::Staff
-                    && matches!(i.kind, IntentKind::Hold { .. })
+                    && matches!(
+                        i.kind,
+                        IntentKind::Hold { .. } | IntentKind::KeepSupplied { .. }
+                    )
             })
             .cloned()
             .collect();
@@ -774,14 +786,16 @@ impl Day<'_, '_> {
             if hold.limits.forces.as_ref() == Some(&limit) {
                 continue;
             }
-            let IntentKind::Hold { base: held } = hold.kind else {
-                continue;
+            let (held, what) = match hold.kind {
+                IntentKind::Hold { base: held } => (held, "the hold of"),
+                IntentKind::KeepSupplied { base: held, .. } => (held, "the supply of"),
+                _ => continue,
             };
             let base_text = base_words(self.view, held);
             let reason = serving(end, plan)
                 .evidence(source.words.clone(), self.today)
                 .worked(format!(
-                    "{}: {}; the staff sets the forces limit of {}, the hold of {base_text}, to {} and {}: the source and the transport forces stopped there with nothing aboard, with those it named before.",
+                    "{}: {}; the staff sets the forces limit of {}, {what} {base_text}, to {} and {}: the source and the transport forces stopped there with nothing aboard, with those it named before.",
                     end.id,
                     source.words,
                     hold.id,
@@ -1062,4 +1076,16 @@ enum NotSource {
 pub(crate) struct Source {
     chosen: Option<(BaseId, BTreeSet<TaskForceId>)>,
     words: String,
+}
+
+impl Source {
+    /// The base chosen as the source, where one is.
+    pub(crate) fn chosen_base(&self) -> Option<BaseId> {
+        self.chosen.as_ref().map(|(base, _)| *base)
+    }
+
+    /// The words of the choice.
+    pub(crate) fn words(&self) -> &str {
+        &self.words
+    }
 }

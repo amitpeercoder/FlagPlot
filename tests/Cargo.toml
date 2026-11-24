@@ -714,5 +714,9 @@ name = "table_rear_bases_files"
 path = "table_rear_bases_files.rs"
 
 [[test]]
+name = "scenario_135_men_beside_a_place"
+path = "scenario_135_men_beside_a_place.rs"
+
+[[test]]
 name = "scenario_136_supply_at_press"
 path = "scenario_136_supply_at_press.rs"

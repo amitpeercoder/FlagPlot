@@ -1,0 +1,192 @@
+# Scenario 135: men ashore beside a place.
+#
+# Decision 0229. The commander says "control the island" and nothing else.
+# The island has one place, an anchorage the side holds with a small garrison
+# (base 2, at P). One hex from it by a land link the side has a dump (base 3,
+# at D) with 1,000 men and four days of food. On land joined to no place of
+# the island the side has the twin of that dump (base 4, at T), with the same
+# men and the same food. The staff feeds the men at D by a run from the source
+# and does nothing for the men at T, who are no part of the island it was
+# given.
+#
+# The map is this scenario's own: A at (0,0), port size 5; D at (4,0), P at
+# (5,0) and N at (6,0), port size 0, joined D to P and P to N by land links;
+# T at (0,4) and J at (6,4), port size 0, joined to nothing. Allied base 1 lies
+# at A with 1,000 t of supply; Allied base 2 at P with 100 t; Allied base 3 at
+# D with 20 t; Allied base 4 at T with 20 t. Japanese base 5 lies at J, off the
+# Allied map, with nothing in it: it is there so that the game has two sides
+# and so that the property of two games that differ in what the side cannot
+# see has something to change. No base has a reserve or fuel. Task force 1,
+# two placeholder troop transports, lies stopped at base 1. Three Allied
+# fighting units are ashore: unit 1 at D with 1,000 men, unit 2 at P with 300
+# men and unit 3 at T with 1,000 men. The Allied side holds no contact and no
+# estimate. The island is island 1, "Placeholder island": base 2. On day 1 the
+# commander states "control island 1", names no forces, and gives leave to
+# prepare and to launch. The game is 14 days. No Japanese man or ship is
+# within reach of anything, so no die is rolled.
+#
+# The hand calculation is in tests/scenario_135_men_beside_a_place.rs. The
+# test runs this file on the frozen step 1 figures with scenario 76's ground
+# figures file, which this file names, so that run by itself it plays the game
+# its test proves. It builds its variants from the text of this file using the
+# markers below.
+#
+# Written before the rule is built (decision 0072): this file is in a folder of
+# its own, so no loop over data/scenarios/*.toml reads it.
+#
+# PLACEHOLDER DATA. The bases, ships, units, figures, island and map are
+# invented.
+
+name = "Placeholder scenario 135: Men ashore beside a place"
+placeholder = true
+seed = 1942
+days = 14
+map = "../../map/placeholder_beside_a_place.toml"
+ship_classes = [
+    "../../reference/ship_classes.csv",
+    "../../reference/ship_classes_placeholder_transports.csv",
+]
+port_sizes = "../../reference/port_sizes.csv"
+aircraft_types = "../../reference/aircraft_types.csv"
+search = "../../reference/search.toml"
+surface_combat = "../../reference/surface_combat.toml"
+ground = "../../reference/ground_placeholder_scenario_76.toml"
+
+# Allied base 1 at A, the source: supply and no fuel, and no man.
+[[base]]
+id = 1
+name = "Placeholder source A"
+side = "allied"
+q = 0
+r = 0
+# MARKER: the source's supply
+supply_t = 1000
+fuel_t = 0
+
+# Allied base 2 at P, the island's place.
+[[base]]
+id = 2
+name = "Placeholder anchorage P"
+side = "allied"
+q = 5
+r = 0
+supply_t = 100
+fuel_t = 0
+
+# Allied base 3 at D, the dump beside the place.
+[[base]]
+id = 3
+name = "Placeholder dump D"
+side = "allied"
+q = 4
+r = 0
+supply_t = 20
+fuel_t = 0
+
+# Allied base 4 at T, the twin of base 3, on land joined to no place.
+[[base]]
+id = 4
+name = "Placeholder dump T"
+side = "allied"
+q = 0
+r = 4
+supply_t = 20
+fuel_t = 0
+
+# Japanese base 5 at J: nothing in it, and not on the Allied map.
+[[base]]
+id = 5
+name = "Placeholder shore J"
+side = "japanese"
+q = 6
+r = 4
+# MARKER: base 5's supply
+supply_t = 0
+fuel_t = 0
+on_map = false
+
+# Task force 1: two placeholder troop transports, stopped in port at base 1.
+[[task_force]]
+id = 1
+name = "Placeholder transport force 1"
+side = "allied"
+at_base = 1
+mission = "transport"
+
+[[ship]]
+id = 1
+name = "Placeholder troop transport 1"
+class = 10
+side = "allied"
+fuel_t = 1000
+task_force = 1
+
+[[ship]]
+id = 2
+name = "Placeholder troop transport 2"
+class = 10
+side = "allied"
+fuel_t = 1000
+task_force = 1
+
+# The land units, ashore, fighting units on the defence, each at the standard
+# of experience, 2, and with every skill at 2, the defaults.
+# MARKER: unit 1
+[[land_unit]]
+id = 1
+name = "Placeholder Beside"
+side = "allied"
+men = 1000
+q = 4
+r = 0
+# MARKER: end of unit 1
+
+[[land_unit]]
+id = 2
+name = "Placeholder Garrison"
+side = "allied"
+men = 300
+q = 5
+r = 0
+
+[[land_unit]]
+id = 3
+name = "Placeholder Twin"
+side = "allied"
+men = 1000
+q = 0
+r = 4
+
+# MARKER: more land units
+
+# The island: base 2.
+[[island]]
+number = 1
+name = "Placeholder island"
+places = [{ base = 2 }]
+
+# The Allied commander's commands
+[[command]]
+day = 1
+side = "allied"
+kind = "set_intent"
+intent = 1
+intent_kind = "control_island"
+island = 1
+# MARKER: the island's limits
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_leave"
+leave = "prepare"
+given = true
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_leave"
+leave = "launch"
+given = true
+
+# MARKER: orders

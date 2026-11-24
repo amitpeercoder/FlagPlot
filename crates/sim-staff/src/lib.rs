@@ -23,6 +23,7 @@ mod air;
 mod ammunition;
 mod assemble;
 mod available;
+mod beside;
 mod bombard;
 pub mod carrier;
 mod cover;
@@ -426,8 +427,15 @@ use sim_core::view::SideView;
 /// failed, and a source the commander names is not refused for another
 /// order's draw on it. It gives the orders `supply-58` gave to a side without
 /// the key. `supply-60` adds decision 0220's order to destroy a force and
-/// gives the orders `supply-59` gave to a side that gives none.
-pub const DOCTRINE_VERSION: &str = "supply-60";
+/// gives the orders `supply-59` gave to a side that gives none. `supply-61`
+/// adds decision 0229: under "control an island" the staff forms a "keep
+/// supplied" for each base of the side on the island's land and in no named
+/// place's hex where the side has men ashore or marching, sets its forces
+/// limit as a hold's, withdraws it when no man is there, none marches to it
+/// and no run of it is loaded or at sea, and records one reason for men at a
+/// hex with no base of the side. It gives the orders `supply-60` gave to a
+/// side with no such base and men.
+pub const DOCTRINE_VERSION: &str = "supply-61";
 
 /// The staff: the doctrine for keeping a base supplied (stage 1) and, after
 /// it, the air doctrine for holding a place and covering a base from the air
