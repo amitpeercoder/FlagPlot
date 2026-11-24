@@ -181,17 +181,28 @@
 //!   2 is complete. No intent names base 3 after, and no run is added.
 //!   The orders are the main case's three and the scenario's one.
 //! - **Gone and come back.** With that order, and a scenario order of day
-//!   9 for unit 1 to march to D: intent 3 is withdrawn on the morning of
-//!   day 9, as above, since the day's orders are taken in after the staff
-//!   is asked. On the morning of day 10 unit 1 is marching to D: the staff
-//!   forms a "keep base 3 supplied" under intent 1 again, intent 6, with
-//!   plan 4, and sets its forces limit. The unit arrives on day 11 with
-//!   25 t taken from base 2. Base 3 holds 45 + 25 = 70 t at the end of
-//!   day 11 and pays 5 t on the nights of days 12 to 14: 55 t at the end.
-//!   Base 2 holds 113 - 6.5 x 3 - 25 = 68.5 t at the end of day 11 and
-//!   64 t at the end. Intent 6 needs no run: on the morning of day 12 the
+//!   10 for unit 1 to march to D: on the morning of day 9 the unit is at
+//!   P with no march, and intent 3 is withdrawn, as above. A scenario's
+//!   order is taken in before the staff is asked, so on the morning of
+//!   day 10 unit 1 is marching to D: the staff forms a "keep base 3
+//!   supplied" under intent 1 again, intent 6, with plan 4, and sets its
+//!   forces limit. The unit marches on days 10, 11 and 12 and arrives on
+//!   day 12 with 25 t taken from base 2. Base 2 holds 113 - 6.5 x 4 - 25
+//!   = 62 t at the end of day 12 and pays 1.5 t on the nights of days 13
+//!   and 14: 59 t at the end. Base 3 holds 45 + 25 = 70 t at the end of
+//!   day 12 and pays 5 t on the nights of days 13 and 14: 60 t at the
+//!   end. Intent 6 needs no run: on the mornings of days 11 and 12 no man
+//!   is at D and there is no figure, and on the morning of day 13 the
 //!   stock at D is 70 t and the reading checked 60 t, and on the morning
-//!   of day 14 60 t and 50 t, against 25 t. No man is lost.
+//!   of day 14 65 t and 55 t, against 25 t. No man is lost, and the one
+//!   run of the game is the main case's. (Restated by the architect on
+//!   Nov 24, 2026, on the build's finding: the first writing ordered the
+//!   return on day 9 and said the day's orders are taken in after the
+//!   staff is asked. A scenario's order is taken in before, so the unit
+//!   was already marching back on the morning of day 9 and the supply was
+//!   rightly kept and never withdrawn. The rule is unchanged; the return
+//!   is ordered a day later so that the case is run. Checked on the
+//!   built branch.)
 //! - **Nobody there.** With unit 1 left out: no intent names base 3 on
 //!   any day, the staff gives no order in the game, and base 3 holds 20 t
 //!   at the end.
