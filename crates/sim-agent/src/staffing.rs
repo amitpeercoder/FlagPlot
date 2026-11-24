@@ -1987,6 +1987,11 @@ pub fn plan_order(view: &SideView<'_>, staff: &dyn Staff, intent: u32) -> Result
             thousands(men.to_hand)
         ));
     }
+    // Decision 0231, 10: the bases the staff feeds beside the places of an
+    // island, each with its hex and the place it is beside.
+    if let Some(line) = fed_beside_words(view, &n, &order) {
+        text.push(line);
+    }
     let is_take = order
         .phases
         .iter()
@@ -2019,6 +2024,49 @@ pub fn plan_order(view: &SideView<'_>, staff: &dyn Staff, intent: u32) -> Result
             "text": text,
         }),
     ))
+}
+
+/// The line of a "control an island" order that lists the bases its staff
+/// feeds beside the island's places (decision 0231, 10): each base of a
+/// "keep supplied" formed directly under the island, with its hex and the
+/// place nearest it. `None` where there is none.
+fn fed_beside_words(
+    view: &SideView<'_>,
+    n: &Names<'_>,
+    order: &sim_core::command::PlanOrder,
+) -> Option<String> {
+    let state = view.command_state();
+    let island = match state.intents.get(&order.intent)?.kind {
+        IntentKind::ControlIsland { island, .. } => view.island(island)?,
+        _ => return None,
+    };
+    let fed: Vec<String> = order
+        .tasks
+        .iter()
+        .filter(|task| {
+            state
+                .intents
+                .get(&task.intent)
+                .is_some_and(|found| found.parent == Some(order.intent))
+        })
+        .filter_map(|task| match task.kind {
+            IntentKind::KeepSupplied { base, .. } => {
+                let hex = view.bases().find(|b| b.id == base)?.hex;
+                let place = island
+                    .places
+                    .iter()
+                    .map(|p| (p.hex.distance(hex), p.hex))
+                    .min()?
+                    .1;
+                Some(format!(
+                    "{} at {hex}, beside the place at {place}",
+                    n.text(&base_words(view, base))
+                ))
+            }
+            _ => None,
+        })
+        .collect();
+    (!fed.is_empty()).then(|| format!("It feeds beside its places: {}.", fed.join("; ")))
 }
 
 /// `propose`: what the staff would do for one intent.

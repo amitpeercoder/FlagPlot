@@ -597,6 +597,9 @@ impl IntentKind {
             // or, by decision 0159, A, for a base of the side in the held
             // base's hex, which intake checks.
             (IntentKind::KeepSupplied { .. }, IntentKind::Hold { .. }) => true,
+            // Decision 0231, amended 1: the supply of a base beside a place,
+            // of a base of the side, which intake checks.
+            (IntentKind::KeepSupplied { .. }, IntentKind::ControlIsland { .. }) => true,
             // Decision 0151, 6: the tree of an island.
             (
                 IntentKind::TakePlace { .. }
@@ -2185,15 +2188,19 @@ impl CommandState {
     /// Whether an intent of `kind` formed under `parent` has a plan of its own
     /// (decision 0151, 9, the architect's additions on the build's findings):
     /// a "take a place" under "control an island", prepared, released and
-    /// marked complete as a root take's is; and a "keep supplied" under a
+    /// marked complete as a root take's is; a "keep supplied" under a
     /// "hold a place" under "control an island", whose runs are its own, as
-    /// a root supply intent's are, since the island's holds share one plan.
+    /// a root supply intent's are, since the island's holds share one plan;
+    /// and a "keep supplied" directly under "control an island" (decision
+    /// 0231, amended 1), for the base of the side beside a place.
     pub fn forms_own_plan(&self, kind: IntentKind, parent: IntentId) -> bool {
         let Some(above) = self.intents.get(&parent) else {
             return false;
         };
         match (kind, above.kind) {
             (IntentKind::TakePlace { .. }, IntentKind::ControlIsland { .. }) => true,
+            // Decision 0231, amended 1: the supply of a base beside a place.
+            (IntentKind::KeepSupplied { .. }, IntentKind::ControlIsland { .. }) => true,
             (IntentKind::KeepSupplied { .. }, IntentKind::Hold { .. }) => above
                 .parent
                 .and_then(|p| self.intents.get(&p))
