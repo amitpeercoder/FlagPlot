@@ -716,3 +716,11 @@ path = "table_rear_bases_files.rs"
 [[test]]
 name = "scenario_135_men_beside_a_place"
 path = "scenario_135_men_beside_a_place.rs"
+
+[[test]]
+name = "proof_stage_4_case_r_preparation"
+path = "proof_stage_4_case_r_preparation.rs"
+
+[[test]]
+name = "proof_stage_4_case_w3_an_intent_not_as_stated"
+path = "proof_stage_4_case_w3_an_intent_not_as_stated.rs"

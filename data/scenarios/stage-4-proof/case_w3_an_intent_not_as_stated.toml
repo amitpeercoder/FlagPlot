@@ -1,0 +1,211 @@
+# Stage 4's proof, case W3: an enemy intent not as stated (decision 0161,
+# condition 8).
+#
+# It is scenario 95's landing, 600 men against a garrison the side puts at 200,
+# and here the garrison is 200. The picture is right in everything but the
+# enemy's purpose. He has a second unit of 1,200 men and two transports at an
+# anchorage of his own, C, which the side knows of and believes to be there;
+# the side believes nothing of what he means to do with them, so a trial's
+# enemy holds what he holds and they never sail. In truth he means to control
+# the island: when the airfield is taken he forms a take of it and lands his
+# second unit there on day 8.
+#
+# The map is scenario 27's: A at (0,0), B at (4,0) and C at (0,6). Allied base
+# 1 at A, 1,000 t; Japanese base 2 at B, 200 t, with unit 10, 200 men;
+# Japanese base 3 at C, 1,000 t, on the Allied map, with unit 11, 1,200 men,
+# and task force 2, two placeholder troop transports. Task force 1, two
+# placeholder troop transports, and unit 1, 600 men, are Allied, at A. Island
+# 1 is base 2. The Japanese side's commands of day 1 are in this file: control
+# island 1, both leaves. The Allied side's course is not: the trial, and the
+# game it is set beside, hand it in. The game is 14 days.
+#
+# The statement and its working are in
+# tests/proof_stage_4_case_w3_an_intent_not_as_stated.rs. It names scenario
+# 68's ground figures, in which a whole shot always hits, and scenario 95's
+# files of the trial's figures and of sides.
+#
+# A case of a proof (decision 0072): in a folder of its own, read by no loop,
+# and never a scenario for play.
+#
+# PLACEHOLDER DATA. The bases, ships, units, figures, island, beliefs and map
+# are invented.
+
+name = "Placeholder: stage 4's proof, case W3, an enemy intent not as stated"
+placeholder = true
+seed = 1942
+days = 14
+map = "../../map/placeholder_preparing.toml"
+ship_classes = [
+    "../../reference/ship_classes.csv",
+    "../../reference/ship_classes_placeholder_transports.csv",
+]
+port_sizes = "../../reference/port_sizes.csv"
+aircraft_types = "../../reference/aircraft_types.csv"
+search = "../../reference/search.toml"
+surface_combat = "../../reference/surface_combat.toml"
+ground = "../../reference/ground_placeholder_scenario_68.toml"
+class_sides = "../../reference/class_sides_placeholder_scenario_95.csv"
+trial = "../../reference/trial_placeholder_scenario_95.toml"
+
+# Allied base 1 at A, with supply for every man for the whole game and no
+# fuel to give.
+[[base]]
+id = 1
+name = "Placeholder base A"
+side = "allied"
+q = 0
+r = 0
+supply_t = 1000
+fuel_t = 0
+
+# Japanese base 2 at B: an airfield with 200 t of supply and no fuel.
+[[base]]
+id = 2
+name = "Placeholder airfield B"
+side = "japanese"
+q = 4
+r = 0
+supply_t = 200
+fuel_t = 0
+
+# Task force 1: two placeholder troop transports, stopped in port at base 1.
+[[task_force]]
+id = 1
+name = "Placeholder transport force 1"
+side = "allied"
+at_base = 1
+mission = "transport"
+
+[[ship]]
+id = 1
+name = "Placeholder troop transport 1"
+class = 10
+side = "allied"
+fuel_t = 1000
+task_force = 1
+
+[[ship]]
+id = 2
+name = "Placeholder troop transport 2"
+class = 10
+side = "allied"
+fuel_t = 1000
+task_force = 1
+
+# The Allied land units, ashore at A: one fighting unit on the defence, at
+# the standard of experience, 2, the default, as is the garrison.
+[[land_unit]]
+id = 1
+name = "Placeholder First"
+side = "allied"
+men = 600
+q = 0
+r = 0
+
+# The Japanese garrison of B, on the defence.
+[[land_unit]]
+id = 10
+name = "Placeholder Garrison"
+side = "japanese"
+men = 200
+q = 4
+r = 0
+
+# The Allied side's opening estimate of the enemy's men at B.
+[[estimate]]
+side = "allied"
+q = 4
+r = 0
+men = 200
+
+
+# Japanese base 3 at C, with supply, on the Allied map.
+[[base]]
+id = 3
+name = "Placeholder anchorage C"
+side = "japanese"
+q = 0
+r = 6
+supply_t = 1000
+fuel_t = 0
+
+[[task_force]]
+id = 2
+name = "Placeholder transport force 2"
+side = "japanese"
+at_base = 3
+mission = "transport"
+
+[[ship]]
+id = 3
+name = "Placeholder troop transport 3"
+class = 10
+side = "japanese"
+fuel_t = 1000
+task_force = 2
+
+[[ship]]
+id = 4
+name = "Placeholder troop transport 4"
+class = 10
+side = "japanese"
+fuel_t = 1000
+task_force = 2
+
+[[land_unit]]
+id = 11
+name = "Placeholder Second"
+side = "japanese"
+men = 1200
+q = 0
+r = 6
+
+[[island]]
+number = 1
+name = "Placeholder island"
+places = [{ base = 2 }]
+
+# What the Allied side believes of the enemy beyond its estimate: the men and
+# the transports at C, there. It believes no intent of his.
+[[believed_men]]
+side = "allied"
+name = "Second unit believed at C"
+at_base = 3
+men = 1200
+standing = "present"
+placeholder = true
+note = "Stage 4's proof, case W3: the side knows of the enemy's second unit. Rests on no source."
+
+[[believed_force]]
+side = "allied"
+name = "Transports believed at C"
+kind = "transport"
+ships = 2
+standing = "present"
+at_base = 3
+placeholder = true
+note = "Stage 4's proof, case W3: the side knows of the enemy's transports. Rests on no source."
+
+# The Japanese side's commands: what he means, which the Allied side is not
+# told and does not believe.
+[[command]]
+day = 1
+side = "japanese"
+kind = "set_intent"
+intent = 1
+intent_kind = "control_island"
+island = 1
+
+[[command]]
+day = 1
+side = "japanese"
+kind = "set_leave"
+leave = "prepare"
+given = true
+
+[[command]]
+day = 1
+side = "japanese"
+kind = "set_leave"
+leave = "launch"
+given = true

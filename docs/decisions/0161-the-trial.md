@@ -407,3 +407,12 @@ Decision 0231 (men ashore beside a place are fed; it was planned under the numbe
 
 **Answered by the designer on Nov 24, 2026.** Asked whether the proof is run now with the two misses expected, or after the first of the three costs is mended, he answered: run it now, with the two misses on the Japanese side expected and their cause named in advance; the three costs go to open work after the proof.
 
+## Condition 9's case, corrected (Nov 24, 2026)
+
+The arithmetic of "Condition 9, the case" above was wrong in its day counts, and is replaced by the statement in `tests/proof_stage_4_case_r_preparation.rs`, written before the case is built. That section stopped the count of preparation at the morning the plan is released. A landing goes on being made ready for the two days it takes to load its supply and its men, and its men are ashore on day 11, not day 10. With the order "not before day 9" at press, handed in on day 1 or on day 4, and the case's figures (`preparation_per_day` 10, `unprepared_landing_fatigue` 40):
+
+- Begun on day 1: ten days in port, rehearsal 100; fatigue on landing 0; 1,000 fit men of 1,000 on the evening of day 11.
+- Begun on day 4: seven days, rehearsal 70; fatigue on landing 40 x 30 / 100 = 12, and 7 after the day's rest; 1,000 x 93 / 100 = 930 fit men.
+
+The case, the two courses, the size, what is read and the mark (more in at least 15 of 16 worlds) are as they were. The architect played each course once as a game to check the working; no trial of the case has been played. The setup's line for condition 9 carries the old figures and is corrected when its review is in.
+
