@@ -431,6 +431,29 @@ def read_directives(path):
         return json.load(handle)["directives"]
 
 
+VENDOR = os.path.join(HERE, "vendor")
+VENDOR_KINDS = {
+    ".js": "text/javascript; charset=utf-8",
+    ".css": "text/css; charset=utf-8",
+    ".woff2": "font/woff2",
+}
+
+
+def vendored(path):
+    """What the page loads from nobody else (decision 0229, ruling 40): the
+    drawing library and the fonts, kept in vendor/. A path that begins /vendor/
+    gives (content type, bytes) of the file it names there; anything else, or a
+    path that leaves the folder or names a file of another kind, gives None."""
+    if not path.startswith("/vendor/"):
+        return None
+    name = os.path.normpath(os.path.join(VENDOR, path[len("/vendor/") :]))
+    kind = VENDOR_KINDS.get(os.path.splitext(name)[1])
+    if kind is None or os.path.commonpath([VENDOR, name]) != VENDOR or not os.path.isfile(name):
+        return None
+    with open(name, "rb") as handle:
+        return kind, handle.read()
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     parser.add_argument(
@@ -551,6 +574,8 @@ def main():
             if self.path in ("/", "/index.html"):
                 with open(os.path.join(HERE, "index.html"), "rb") as page:
                     self.answer(200, "text/html; charset=utf-8", page.read())
+            elif vendored(urlsplit(self.path).path):
+                self.answer(200, *vendored(urlsplit(self.path).path))
             elif self.path == "/config":
                 self.json(config)
             elif self.path == "/tools":
@@ -789,6 +814,8 @@ def watch(args, islands, chart):
                 if path in ("/", "/index.html"):
                     with open(os.path.join(HERE, "index.html"), "rb") as page:
                         self.answer(200, "text/html; charset=utf-8", page.read())
+                elif vendored(path):
+                    self.answer(200, *vendored(path))
                 elif path == "/config":
                     self.json(config)
                 elif path == "/tools":
@@ -1367,6 +1394,8 @@ def home(args, load_chart):
                 if path in ("/", "/index.html"):
                     with open(os.path.join(HERE, "index.html"), "rb") as page:
                         self.answer(200, "text/html; charset=utf-8", page.read())
+                elif vendored(path):
+                    self.answer(200, *vendored(path))
                 elif path == "/config":
                     self.json(hand.config if hand else {"screen": True})
                 elif path == "/scenarios":

@@ -49,13 +49,30 @@
 // play --export-save` writes from the door's game file is the door's, byte
 // for byte.
 //
+// And, from stage 4 (the page on the worker's door), written by the architect in
+// the same record and copied word for word:
+//
+// 14. With the bridge, the page behaves as before: `table/check_screen.py` and
+// `table/check_watch.py` pass unchanged but for the vendored files' addresses.
+// 15. `worker.js` passes the scan of ruling 24; `index.html` and `door.js` name
+// neither the module nor the pack; the site's page is `table/index.html` but
+// for the one marked line.
+// 16. The folder served from one's own machine with the network off plays
+// Midway from the new game screen to "How it ended".
+//
+// Statement 15 is held here, on the files of the site the build assembled
+// (`target/web/site/`). Statements 14 and 16 are not held by CI: 14 is the
+// developer's run of the two scripts, which CI does not run, and 16 is held by
+// hand in the browsers, both said in the record's "As built" (ruling 48).
+//
 // Also held here, from the rulings: the `web` profile has `overflow-checks =
 // true` written out (ruling 30); the stack is 8 MB and lies first in memory
 // (ruling 7); the games of the check in `web/games/` are those of the
 // games the list offers a person against the engine (ruling 29).
 
 import { spawn, spawnSync } from 'node:child_process';
-import { mkdtempSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { existsSync, mkdtempSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { pathToFileURL } from 'node:url';
 
@@ -189,6 +206,80 @@ const compiled = new WebAssembly.Module(wasmBytes);
   }
   check(stack === 8388608, `the stack is 8 MB (the stack pointer starts at ${stack})`);
   check(lowest >= stack, `the stack is first in memory: no data below ${stack} (the lowest data is at ${lowest})`);
+}
+
+// ---------------------------------------------------------------------------
+// The site (statement 15; rulings 14, 16, 23, 24 and 40), on the shipped files.
+// ---------------------------------------------------------------------------
+
+{
+  const SITE = `${OUT}site/`;
+  const read = (name) => readFileSync(`${SITE}${name}`, 'utf8');
+  const stripped = (text) => text.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '').replace(/\s\/\/ .*$/gm, '');
+  const shipped = ['index.html', 'door.js', 'worker.js', 'pack.json', 'scenarios.json', 'module/sim_web.js', 'module/sim_web_bg.wasm', 'vendor/vendor.toml', 'vendor/three.min.js', 'vendor/fonts.css'];
+  const missing = shipped.filter((f) => !existsSync(`${SITE}${f}`));
+  check(missing.length === 0, `the site holds the page, the door, the worker, the module, the pack, the list and the vendored files${missing.length ? ` (missing ${missing})` : ''}`);
+  if (missing.length) stop('the site is not assembled: run scripts/web/build.sh');
+
+  // The scan of ruling 24 on `worker.js`.
+  const worker = stripped(read('worker.js'));
+  const listed = /const MESSAGES = \[([^\]]*)\]/.exec(worker);
+  const names = listed ? [...listed[1].matchAll(/'([^']*)'/g)].map((m) => m[1]) : [];
+  check(JSON.stringify([...names].sort()) === JSON.stringify([...FUNCTIONS].sort()), "worker.js lists the seven messages of the door and no others (`const MESSAGES`)");
+  const words = [...worker.matchAll(/'([a-z_]+)'/g)].map((m) => m[1]).filter((w) => !FUNCTIONS.includes(w));
+  check(words.length === 0, `worker.js names no message in its source but those seven${words.length ? ` (also ${words})` : ''}`);
+  const means = ['JSON.parse', 'TextDecoder', '.text(', '.json(', '.blob(', '.formData(', '.getReader('].filter((w) => worker.includes(w));
+  check(means.length === 0, `worker.js has no means to read an answer or the pack: none of JSON.parse, TextDecoder, .text(, .json(${means.length ? ` (found ${means})` : ''}`);
+  check(worker.includes('.arrayBuffer()') && (worker.match(/\bfetch\(/g) || []).length === 1, 'worker.js takes the pack only as arrayBuffer(): one fetch, read so');
+  check(!/new (Shared)?Worker\(/.test(worker), 'worker.js makes no worker');
+
+  // The page and the door name neither the module nor the pack; the door alone makes a worker.
+  const page = read('index.html');
+  const doorJs = read('door.js');
+  const names2 = ['sim_web', 'pack.json'];
+  const named = ['index.html', 'door.js'].flatMap((f) => names2.filter((n) => read(f).includes(n)).map((n) => `${f}: ${n}`));
+  check(named.length === 0, `index.html and door.js name neither the module nor the pack${named.length ? ` (${named})` : ''}`);
+  check(!/new (Shared)?Worker\(/.test(page) && (stripped(doorJs).match(/new Worker\(/g) || []).length === 1, 'door.js is the only thing that makes a worker, and makes it once');
+
+  // The site's page is the table's, but for the one marked line.
+  const table = readFileSync(`${ROOT}table/index.html`, 'utf8').split('\n');
+  const made = page.split('\n');
+  const differing = table.map((l, i) => [l, made[i]]).filter(([a, b]) => a !== b);
+  check(
+    table.length === made.length && differing.length === 1 && differing[0][0] === '<!--@door-->' && differing[0][1] === '<script src="door.js"></script>',
+    "the site's page is table/index.html but for the one marked line, which is the script tag of door.js",
+  );
+
+  // Nothing is loaded from another site (ruling 40).
+  const elsewhere = ['index.html', 'door.js', 'worker.js', 'vendor/fonts.css'].flatMap((f) => ['cdnjs.cloudflare.com', 'fonts.googleapis.com', 'fonts.gstatic.com'].filter((h) => read(f).includes(h)).map((h) => `${f}: ${h}`));
+  check(elsewhere.length === 0, `the page, the door, the worker and the fonts' stylesheet name no other site's address${elsewhere.length ? ` (${elsewhere})` : ''}`);
+
+  // The vendored files are those vendor.toml names, by SHA-256, and no others (ruling 40).
+  const toml = readFileSync(`${ROOT}table/vendor/vendor.toml`, 'utf8').split('\n');
+  const pairs = [];
+  let path = null;
+  for (const line of toml) {
+    const m = /^(path|licence_file|sha256|licence_sha256) = "(.*)"$/.exec(line);
+    if (!m) continue;
+    if (m[1] === 'path' || m[1] === 'licence_file') path = m[2];
+    else pairs.push([path, m[2]]);
+  }
+  const hash = (file) => createHash('sha256').update(readFileSync(`vendor/${file}`.replace(/^/, SITE))).digest('hex');
+  const wrong = pairs.filter(([f, h]) => !existsSync(`${SITE}vendor/${f}`) || hash(f) !== h).map(([f]) => f);
+  check(pairs.length > 0 && wrong.length === 0, `each of the ${pairs.length} vendored files is what vendor.toml says, by SHA-256${wrong.length ? ` (not so: ${wrong})` : ''}`);
+  const walk = (dir) => readdirSync(dir).flatMap((n) => (statSync(`${dir}/${n}`).isDirectory() ? walk(`${dir}/${n}`).map((f) => `${n}/${f}`) : [n]));
+  const unlisted = walk(`${SITE}vendor`).filter((f) => f !== 'vendor.toml' && !pairs.some(([p]) => p === f));
+  check(unlisted.length === 0, `no vendored file is left out of vendor.toml${unlisted.length ? ` (${unlisted})` : ''}`);
+
+  // The list holds the offered games and each game's chart and directives are there.
+  const list = JSON.parse(read('scenarios.json')).scenarios;
+  const files = [...new Set(list.flatMap((e) => e.pairings.map((p) => p.file)))];
+  check(JSON.stringify([...files].sort()) === JSON.stringify([...offered()].sort()), "the site's list offers the scenario files the check's games are held to");
+  const absent = list.flatMap((e) => [
+    `chart/${e.map.split('/').pop().replace(/\.csv$/, '')}.json`,
+    ...Object.values(e.directives || {}).map((d) => `directives/${d.split('/').pop()}`),
+  ]).filter((f) => !existsSync(`${SITE}${f}`));
+  check(absent.length === 0, `the chart of each map and the directives of each game the list offers are in the site${absent.length ? ` (missing ${absent})` : ''}`);
 }
 
 // ---------------------------------------------------------------------------
