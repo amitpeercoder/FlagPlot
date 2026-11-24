@@ -405,8 +405,10 @@ impl Day<'_, '_> {
 mod tests {
     use super::*;
 
+    type Pair = (i32, i32);
+
     /// A row of hexes joined end to end, as a map's land links give them.
-    fn row(links: &[((i32, i32), (i32, i32))]) -> impl Fn(Hex) -> Vec<Hex> + '_ {
+    fn row(links: &[(Pair, Pair)]) -> impl Fn(Hex) -> Vec<Hex> + '_ {
         move |hex| {
             links
                 .iter()
