@@ -378,3 +378,14 @@ Read: the section above, the scenario's file for base 6 and units 11 to 13, and 
 5. **Condition 3's reading does not change.** It is written of "the men a side lands at a place it has not taken", by decision 0159's reading, and a unit that begins ashore is not landed. Counting the garrison in it now would be a change to a condition after its figures were seen. The garrison's hunger is a second count, made by the same reader, and whether the proof judges it or reports it is a question for the designer in decision 0229.
 6. **One thing not explained,** on the proof's figures alone: 28,177 men over the seeds are lost by units 11 to 13 at (2,-4) after they fell back to (2,-5), with no move event between. A developer is to say from one seed's events how the units come to be at (2,-4) again (an attack ordered across the link is the likely way). It changes nothing in decision 0229 unless the men are there by the staff's order, in which case it comes back to the architect.
 7. **The order of work stands:** decision 0229 built, then the proof's setup. The 39 days change for the Japanese side by it; that is before the proof and is what it is for.
+
+## Condition 13, added by the designer on Nov 24, 2026
+
+Asked by decision 0229 whether the hunger of men who begin ashore is judged or reported, the designer answered: judged. It is stated here before decision 0229 is built and before any run of the proof.
+
+13. **Men who begin ashore are fed.** On the 39 days staff against staff, 1,000 seeds: of the men of a side who begin ashore on an island that side is ordered to control, the median lost to hunger is no more than one in twenty, each side by itself.
+
+Its reading, fixed with it: the men are those of land units with men ashore at the start in a hex of the island's land (decision 0229, rule 1) of an island their side states "control an island" of on day 1; lost to hunger is the `lost` of every `men_lost_unfed` of those units to the end of the game, wherever they are; the seed's value is that over the units' men at the start; the median is over the seeds, each side apart. Condition 3 is unchanged and is of men landed; a unit is in one count or the other and never both.
+
+**A note before the build, and a question.** One seed read on Nov 24, 2026 (decision 0229, amended 9) explains the men lost "at (2,-4)" in the architect's reading above (6): they are the garrison on its three days' march after it is beaten, with no base where it walks, and no rule of a staff can feed them. On the proof's figures that is about 283 of 1,984 men a game, one in seven, so this condition as stated is expected to miss on the Japanese side. Whether it is read as stated, or of the men lost where a base of their side stands with the march's losses reported beside it, is the designer's, and is asked in decision 0229. Until he has said, the reading above is the one in force.
+
