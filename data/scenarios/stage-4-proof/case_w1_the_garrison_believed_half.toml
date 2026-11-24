@@ -1,0 +1,99 @@
+# Stage 4's proof, case W1 (decision 0161, condition 8: a wrong picture moves
+# it as expected). Scenario 95's inputs with the garrison truly 400, the
+# Allied side's opening estimate 200, and nothing believed beyond it.
+# Scenario 68's ground figures, in which a whole shot always hits: no die.
+# 14 days. It holds no command: the course (scenario 95's four commands of
+# day 1) is handed in by the trial and by the game.
+#
+# A case of a proof (decision 0072): in a folder of its own, read by no loop,
+# and never a scenario for play.
+#
+# PLACEHOLDER DATA. The bases, ships, units, figures and map are invented.
+
+name = "Placeholder: stage 4's proof, case W1, the garrison believed half the truth"
+placeholder = true
+seed = 1942
+days = 14
+map = "../../map/placeholder_preparing.toml"
+ship_classes = [
+    "../../reference/ship_classes.csv",
+    "../../reference/ship_classes_placeholder_transports.csv",
+]
+port_sizes = "../../reference/port_sizes.csv"
+aircraft_types = "../../reference/aircraft_types.csv"
+search = "../../reference/search.toml"
+surface_combat = "../../reference/surface_combat.toml"
+ground = "../../reference/ground_placeholder_scenario_68.toml"
+class_sides = "../../reference/class_sides_placeholder_scenario_95.csv"
+trial = "../../reference/trial_placeholder_scenario_95.toml"
+
+# Allied base 1 at A, with supply for every man for the whole game and no
+# fuel to give.
+[[base]]
+id = 1
+name = "Placeholder base A"
+side = "allied"
+q = 0
+r = 0
+supply_t = 1000
+fuel_t = 0
+
+# Japanese base 2 at B: an airfield with 200 t of supply and no fuel.
+[[base]]
+id = 2
+name = "Placeholder airfield B"
+side = "japanese"
+q = 4
+r = 0
+supply_t = 200
+fuel_t = 0
+
+# Task force 1: two placeholder troop transports, stopped in port at base 1.
+[[task_force]]
+id = 1
+name = "Placeholder transport force 1"
+side = "allied"
+at_base = 1
+mission = "transport"
+
+[[ship]]
+id = 1
+name = "Placeholder troop transport 1"
+class = 10
+side = "allied"
+fuel_t = 1000
+task_force = 1
+
+[[ship]]
+id = 2
+name = "Placeholder troop transport 2"
+class = 10
+side = "allied"
+fuel_t = 1000
+task_force = 1
+
+# The Allied land units, ashore at A: one fighting unit on the defence, at
+# the standard of experience, 2, the default, as is the garrison.
+[[land_unit]]
+id = 1
+name = "Placeholder First"
+side = "allied"
+men = 600
+q = 0
+r = 0
+
+# The Japanese garrison of B, on the defence.
+[[land_unit]]
+id = 10
+name = "Placeholder Garrison"
+side = "japanese"
+men = 400
+q = 4
+r = 0
+
+# The Allied side's opening estimate of the enemy's men at B.
+[[estimate]]
+side = "allied"
+q = 4
+r = 0
+men = 200

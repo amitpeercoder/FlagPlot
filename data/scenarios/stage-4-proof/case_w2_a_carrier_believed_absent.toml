@@ -1,0 +1,146 @@
+# Stage 4's proof, case W2: a carrier force believed absent that is there
+# (decision 0161, condition 8).
+#
+# It is scenario 5b, the unopposed strike, played for 7 days and read from the
+# other seat. The Japanese force, task force 2, a carrier with no aircraft and
+# two cruisers, lies stopped at (9,0). The Japanese side believes the Allied
+# carrier force is not in these waters. It is: task force 1 lies stopped at
+# (4,0), 200 nm west, its scouts searching the arc the Japanese force lies in
+# and its eighteen dive bombers ordered to strike ships, as scenario 5b has
+# them, every day.
+#
+# A trial of the Japanese side holds no enemy in any world, so nothing can
+# harm its ships. In the game they are bombed.
+#
+# The statement and its working are in
+# tests/proof_stage_4_case_w2_a_carrier_believed_absent.rs. Everything but the
+# days, the two files a trial needs and the belief is scenario 5b's, and that
+# scenario's hand calculation gives the chances.
+#
+# A case of a proof (decision 0072): in a folder of its own, read by no loop,
+# and never a scenario for play.
+#
+# PLACEHOLDER DATA. The ships, aircraft, figures, belief and map are invented.
+
+name = "Placeholder: stage 4's proof, case W2, a carrier force believed absent that is there"
+placeholder = true
+seed = 1942
+days = 7
+map = "../../map/placeholder_search.toml"
+ship_classes = "../../reference/ship_classes.csv"
+port_sizes = "../../reference/port_sizes.csv"
+aircraft_types = "../../reference/aircraft_types.csv"
+search = "../../reference/search.toml"
+surface_combat = "../../reference/surface_combat.toml"
+air_combat = "../../reference/air_combat.toml"
+class_sides = "../../reference/class_sides_placeholder_scenario_93.csv"
+trial = "../../reference/trial_placeholder_scenario_95.toml"
+
+# The carrier force lies stopped at (4,0).
+[[task_force]]
+id = 1
+name = "Placeholder carrier force"
+side = "allied"
+q = 4
+r = 0
+mission = "carrier"
+
+# The enemy force lies stopped at (9,0), 200 nm east.
+[[task_force]]
+id = 2
+name = "Placeholder enemy carrier force"
+side = "japanese"
+q = 9
+r = 0
+mission = "carrier"
+
+[[ship]]
+id = 1
+name = "Placeholder carrier A"
+class = 4
+side = "allied"
+fuel_t = 3000
+task_force = 1
+
+[[ship]]
+id = 2
+name = "Placeholder destroyer A"
+class = 2
+side = "allied"
+fuel_t = 500
+task_force = 1
+
+[[ship]]
+id = 3
+name = "Placeholder carrier B"
+class = 4
+side = "japanese"
+fuel_t = 3000
+task_force = 2
+
+[[ship]]
+id = 4
+name = "Placeholder cruiser B1"
+class = 1
+side = "japanese"
+fuel_t = 2000
+task_force = 2
+
+[[ship]]
+id = 5
+name = "Placeholder cruiser B2"
+class = 1
+side = "japanese"
+fuel_t = 2000
+task_force = 2
+
+# Aboard carrier A: eight scouts and eighteen dive bombers.
+[[air_group]]
+id = 1
+name = "Placeholder scouting squadron"
+side = "allied"
+ship = 1
+aircraft_type = 2
+ready = 8
+
+[[air_group]]
+id = 2
+name = "Placeholder bombing squadron"
+side = "allied"
+ship = 1
+aircraft_type = 3
+ready = 18
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 1
+kind = "set_air_mission"
+mission = "search"
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 1
+kind = "set_search_arc"
+from_deg = 40
+to_deg = 130
+range_nm = 300
+
+[[order]]
+day = 1
+side = "allied"
+air_group = 2
+kind = "set_air_mission"
+mission = "naval_strike"
+
+# What the Japanese side believes of the enemy: that his carrier force is not
+# here.
+[[believed_force]]
+side = "japanese"
+name = "Allied carrier force believed elsewhere"
+kind = "carrier"
+ships = 2
+standing = "absent"
+placeholder = true
+note = "Stage 4's proof, case W2: the side has ruled the enemy's carriers out. Rests on no source."

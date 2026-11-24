@@ -718,5 +718,29 @@ name = "scenario_135_men_beside_a_place"
 path = "scenario_135_men_beside_a_place.rs"
 
 [[test]]
+name = "proof_stage_4_case_r_preparation"
+path = "proof_stage_4_case_r_preparation.rs"
+
+[[test]]
+name = "proof_stage_4_case_w3_an_intent_not_as_stated"
+path = "proof_stage_4_case_w3_an_intent_not_as_stated.rs"
+
+[[test]]
+name = "proof_stage_4_case_w1_the_garrison_believed_half"
+path = "proof_stage_4_case_w1_the_garrison_believed_half.rs"
+
+[[test]]
+name = "proof_stage_4_cases_s1_and_s2"
+path = "proof_stage_4_cases_s1_and_s2.rs"
+
+[[test]]
+name = "proof_stage_4_harness"
+path = "proof_stage_4_harness.rs"
+
+[[test]]
+name = "proof_stage_4_case_w2_a_carrier_believed_absent"
+path = "proof_stage_4_case_w2_a_carrier_believed_absent.rs"
+
+[[test]]
 name = "scenario_136_supply_at_press"
 path = "scenario_136_supply_at_press.rs"

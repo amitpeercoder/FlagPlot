@@ -1,0 +1,93 @@
+# Stage 4's proof, case R: preparation matters (decision 0161, condition 9).
+#
+# One Allied unit of 1,000 men at A is to take B, an airfield the enemy holds
+# with nobody on it, at press, and not before day 9. The same order is handed
+# in on day 1 in one course and on day 4 in the other. Both land on the same
+# day; the one prepared from day 1 lands with more rehearsal and so with less
+# fatigue. The two courses are tried as two trials of one number, in the same
+# worlds, and the fit men ashore are compared world for world.
+#
+# The map is scenario 27's: A at (0,0), port size 5, and B at (4,0), port size
+# 0, 160 nm apart. Allied base 1 lies at A with 1,000 t of supply; Japanese
+# base 2, an airfield with no gun, no aircraft, no man and no stock, lies at B,
+# on the Allied map. Task force 1, two placeholder troop transports, lies
+# stopped at base 1. Unit 1, 1,000 fighting men, is ashore at A. The Allied
+# side holds no contact and no estimate. The game is 14 days. There is no
+# Japanese man, so no die is rolled.
+#
+# This file holds no command: the two courses are handed in by the trial. The
+# statement and the hand calculation are in
+# tests/proof_stage_4_case_r_preparation.rs. It names its own ground figures,
+# scenario 95's file of the trial's figures and scenario 95's file of sides.
+#
+# A case of a proof (decision 0072): in a folder of its own, read by no loop,
+# and never a scenario for play.
+#
+# PLACEHOLDER DATA. The bases, ships, units, figures and map are invented.
+
+name = "Placeholder: stage 4's proof, case R, preparation matters"
+placeholder = true
+seed = 1942
+days = 14
+map = "../../map/placeholder_preparing.toml"
+ship_classes = [
+    "../../reference/ship_classes.csv",
+    "../../reference/ship_classes_placeholder_transports.csv",
+]
+port_sizes = "../../reference/port_sizes.csv"
+aircraft_types = "../../reference/aircraft_types.csv"
+search = "../../reference/search.toml"
+surface_combat = "../../reference/surface_combat.toml"
+air_combat = "../../reference/air_combat.toml"
+ground = "../../reference/ground_placeholder_stage_4_proof_r.toml"
+trial = "../../reference/trial_placeholder_scenario_95.toml"
+class_sides = "../../reference/class_sides_placeholder_scenario_95.csv"
+
+[[base]]
+id = 1
+name = "Placeholder base A"
+side = "allied"
+q = 0
+r = 0
+supply_t = 1000
+fuel_t = 0
+
+[[base]]
+id = 2
+name = "Placeholder airfield B"
+side = "japanese"
+q = 4
+r = 0
+supply_t = 0
+fuel_t = 0
+
+[[task_force]]
+id = 1
+name = "Placeholder transport force 1"
+side = "allied"
+at_base = 1
+mission = "transport"
+
+[[ship]]
+id = 1
+name = "Placeholder troop transport 1"
+class = 10
+side = "allied"
+fuel_t = 1000
+task_force = 1
+
+[[ship]]
+id = 2
+name = "Placeholder troop transport 2"
+class = 10
+side = "allied"
+fuel_t = 1000
+task_force = 1
+
+[[land_unit]]
+id = 1
+name = "Placeholder First"
+side = "allied"
+men = 1000
+q = 0
+r = 0

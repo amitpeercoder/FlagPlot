@@ -20,6 +20,7 @@
 
 pub mod boats_in_a_game;
 pub mod no_deck;
+pub mod stage_4;
 
 use std::fs;
 use std::path::{Path, PathBuf};

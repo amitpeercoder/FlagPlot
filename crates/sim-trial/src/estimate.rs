@@ -120,7 +120,7 @@ pub struct Losses {
 impl Losses {
     /// What a side lost, read from its own view of a world: its own events
     /// and its own ships.
-    fn of(view: &SideView<'_>) -> Losses {
+    pub fn of(view: &SideView<'_>) -> Losses {
         let mut losses = Losses::default();
         let mut sunk = BTreeSet::new();
         for event in view.events() {
