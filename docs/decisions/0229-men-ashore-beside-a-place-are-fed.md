@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 24, 2026, inside the plan for st
 
 Summary: Under an order to control an island the staff feeds the side's men at the island's named places and nowhere else. On the 39 days the Japanese garrison of Lunga is beaten on the first day, falls back one hex to its own side's dump, eats the 71 t there and starves, in every game, with ships and a source to hand: about 1,000 to 1,300 men a game, more than every other loss to hunger together. This makes the men of a side who stand at a base of their side on the island's land the island's to feed, by the supply doctrine as it is, after the named places. One rule of doctrine, and three small changes to what the engine's intake accepts so that the doctrine's intent can stand (amended on review).
 
-Standing: Planned by the architect on Nov 24, 2026, inside decision 0161; amended on review the same day; the designer answered its question (the garrison's hunger is judged: decision 0161, condition 13). To be built before stage 4's proof. One more question for the designer, on how that condition is read
+Standing: Planned by the architect on Nov 24, 2026, inside decision 0161; amended on review the same day; both questions answered by the designer (the garrison's hunger is judged, and counted where a base of the side stands: decision 0161, condition 13). Its statements and hand calculation are written (scenario 135). To be built before stage 4's proof
 
 ## Why
 
@@ -135,3 +135,21 @@ By item 9, on the proof's ground figures a garrison beaten on the first day lose
 - **(a)** As answered. The miss is expected and its cause is named in advance.
 - **(b)** Counted from where a staff can act: the men lost to hunger in a hex where a base of their side stands, over the men who begin ashore; the men lost on the march are reported beside it. The architect recommends this: the condition is there to say whether the staff feeds the men it can feed.
 - **(c)** The proof's arrangement is given the ground figures in which hunger takes time. The architect recommends against it: it changes the figures of every condition of the proof to help one.
+
+## Answered by the designer on Nov 24, 2026: the second question
+
+(b). Condition 13 counts the men lost to hunger in a hex where a base of their side stands. The men lost on the march, with no base where they walk, are counted and reported beside it by name, and judged by nothing. Condition 13 in decision 0161 is restated so, before this is built.
+
+## The statements and the hand calculation, Nov 24, 2026
+
+Written by the architect in `tests/scenario_135_men_beside_a_place.rs`, with the scenario `data/scenarios/men-beside-a-place/135_men_beside_a_place.toml` and its map `data/map/placeholder_beside_a_place.toml`. Thirteen tests, each empty and marked "statement written, not built"; the build fills them. The scenario is in a folder of its own and is read by no loop (decision 0072). It replaces "The case and its arithmetic" above where they differ:
+
+- **The island's place is the side's own,** an anchorage with a garrison of 300, and not an enemy's base. An enemy base one hex from the dump would make the run a run by night (decision 0145), and a take with nothing to take with would add its notices; neither is this rule's, and with the place held the game has no die.
+- **The numbers.** The intent is formed on day 1 as intent 3 and first served on day 2. Its run is 90 t (25 t of floor less the 10 t read on the day it arrives, and 75 t for 15 days), loaded on day 2, sailed at hour 48 of the game and landed on day 3, 40 t in the morning and 50 t in the afternoon. The dump holds 95 t that evening and 40 t at the end of the 14 days, and no man beside the place is lost. The twin, off the island's land, is fed for four nights and loses 397 of 1,000 men by the end.
+- **The march that ends it** is ordered on day 6 and arrives on day 8; the supply is withdrawn on the morning of day 9. Ordered back on day 9, the unit is marching to the dump on the morning of day 10 and the supply is formed again as a new intent.
+- **Checked on the engine as it stands.** The supply doctrine's part (the day, the load, the hours, every stock) was worked by hand and then run in a copy of the scenario in which the dump is itself the island's place, where the same doctrine serves a hold's supply; it gave the same figures, and the same for the two marches. What is the rule's own, the intent's number, its plan, and the mornings it is formed and withdrawn, could be checked on nothing and rests on the statement.
+
+**The versions.** Decision 0220 takes rules label 33, doctrine `supply-60`, interface 55 and state v60. This takes rules label 34 and doctrine `supply-61`. The state's layout does not move. If the plan order's answer to a seat gains a field for the bases fed beside a place, the interface is 56, and the build says so.
+
+**A lead from writing it, not this record's.** A supply formed at press has a floor of 0 days, and the doctrine sends a run when a reading is below the floor's stock; a reading is never below 0. If that is how it plays, a hold at press never sends a run and its men starve when the stock is gone. It is how a hold's supply is formed today (decision 0144) and is not changed here; the test asserts only that the intent is formed. A developer is to play scenario 76's hold at press and say what happens; it goes to `docs/open-work.md`.
+
