@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 24, 2026, at the designer's requ
 
 Summary: The table's page played in a browser with no bridge and no server: the game compiled to WebAssembly and held in a worker of the page, answering the same seat tools `sim-cli mcp` answers; the data it plays on packed at build time by `sim-data`; the kept game a file of the seat's own calls in the browser's storage; and a check in CI that the browser's build gives, call for call and day for day, what the native build gives. Seven stages, none with a hand calculation.
 
-Standing: Planned on Nov 24, 2026; amended on review the same day (What the review changed). Stage 1 is built (pull request 730); stage 2 is built (pull request 732), with the two tests the architect's rulings on it asked; stages 3 to 7 are not built. Needs review: who playtests and whether the link is public, turning on the host, a new seed for each game, the marks for speed, what a playtester is told of the build, and sharing the packed data (Questions for the designer). The wording of two of `CLAUDE.md`'s "Always" rules was accepted by the designer on Nov 24, 2026 (question 7).
+Standing: Planned on Nov 24, 2026; amended on review the same day (What the review changed). Stage 1 is built (pull request 730); stage 2 is built (pull request 732), with the two tests the architect's rulings on it asked; stage 3 is built on pull request 733 and waits for the change to its check the architect's rulings on it ask; stages 4 to 7 are not built. Needs review: who playtests and whether the link is public, turning on the host, a new seed for each game, the marks for speed, what a playtester is told of the build, and sharing the packed data (Questions for the designer). The wording of two of `CLAUDE.md`'s "Always" rules was accepted by the designer on Nov 24, 2026 (question 7).
 
 ## Why it is a record
 
@@ -70,7 +70,7 @@ table/index.html  --messages-->  worker  --calls-->  sim-web (WebAssembly)
 
 15. **One seam in the page.** Every request the page makes of the bridge goes through one function in `table/index.html` (today a dozen `fetch` calls). Behind it is one of two doors: the bridge by HTTP, as now, or the worker. The page is the same file in both and does not know which it has, except through `/config`, which says what the door offers. The bridge stays: it is how the table is developed, how agents take a seat and how a game is watched.
 16. **The worker's door** is a small script, `web/door.js`, and a worker, `web/worker.js`, that loads the module. `table/index.html` holds the seam and one marked comment line before its own script; under the bridge that line is a comment and the seam finds no door and uses HTTP. The build script writes the site's page as `table/index.html` with that one line made the script tag of `door.js`, and changes nothing else in it: the check compares the two files and allows that line alone to differ. `door.js` is the page's own, and plays; `worker.js` is the umpire's relay. Both lie in `web/`, at the top of the repository, and not in `table/`, which reads nothing of the umpire's (ruling 23). The game runs in the worker so that a day being resolved does not freeze the page. The worker takes one message at a time, so calls are answered in the order sent, which is what the bridge's lock did.
-17. **What the door of `sim-web` offers.** These seven are the module's whole door. The binding adds exports of its own that carry no word of the game (`memory`, and names beginning `__wbindgen_`, `__wbg_` or `__externref_`); the check allows those and no other name:
+17. **What the door of `sim-web` offers.** These seven are the module's whole door. The binding adds exports of its own that carry no word of the game (`memory`, names beginning `__wbindgen_`, `__wbg_` or `__externref_`, and, as amended by the rulings on pull request 733, the globals `__abort_handler` and `__instance_terminated`); the check allows those and no other name:
 
     | Function | What it does |
     | --- | --- |
@@ -204,7 +204,7 @@ Done: the statements hold in `cargo test --workspace`; `sim-cli mcp`, `play` and
 9. Midway, the Allied seat, whose file lets a seat stop inside a day: `advance` a pulse at a time, an order to a task force given at 0600 and one at 1200, an order that acts only at dusk given at 0600, and a dry run of an order to the staff at the smallest size. Every answer and the saved game are the native build's.
 10. Each of the ten offered files, the person's seat ending each day and giving nothing: every answer and the saved game are the native build's.
 11. A game file of statement 7 cut at day 20 and continued natively, and one cut natively and continued in the module, each end in the saved game of statement 7.
-12. The module exports the seven functions of ruling 17, and no other name but the binding's own as ruling 17 allows them.
+12. The module exports the seven functions of ruling 17, each a function, and no other name but the binding's own: `memory`, names beginning `__wbindgen_`, `__wbg_` or `__externref_`, and the globals `__abort_handler` and `__instance_terminated`. (Amended by the rulings on pull request 733.)
 13. The module refuses a pack whose versions are not its own, and a game file whose pin is not the pack's.
 13a. For the Eastern Solomons game of statement 6, the saved game `sim-cli play --export-save` writes from the door's game file is the door's, byte for byte.
 
@@ -334,3 +334,59 @@ Stage 2, read on Nov 24, 2026 in `crates/sim-web` (`src/lib.rs`, `src/bin/door.r
 - **B. Statement 5's last clause is not yet held as written.** The statement says a file with its reads left out "replays to the same answers". `the_doors_file_without_reads_replays_as_the_file_with_them` compares the two files' saved games, their game files and one briefing, all after the game is over, on the one day of the Eastern Solomons. That shows the two end alike; it does not show that a call made after a read, in the middle of a game, is answered alike, which is what a kept game taken up in the browser rests on. The test owed, on Midway (five days), the Allied seat: play a file with its reads in, and the same calls with the reads left out, each to the evening of day 3, by `resume` in two doors; then make the same later calls on both and compare every answer, value for value. The later calls must include one whose answer carries a number the game gives out (`queued` after an order is signed, and `take_back` of an entry by its number; a `preview` and its approval where the game offers one) and then `end_day` to the last. The saved games at the end are compared as now. If any answer differs, the developer stops: ruling 33's choice to leave reads out would then be wrong, and it comes back to the architect.
 
 **Noted for stage 3, not owed here.** `door.rs` drops an argument that is not a string and then refuses for the count, in words that say the arguments are text; that is enough for a program only the check speaks to. The door's `call` treats arguments that are only spaces as none, as `play` treats a call with no arguments.
+
+## The architect's rulings on pull request 733
+
+Stage 3, read on Nov 24, 2026 in `crates/sim-web` (`src/binding.rs`, `Cargo.toml`, `tests/stage3.rs`), `web/` (`check.mjs`, `offered.mjs`, `support.mjs`, `games/`), `scripts/web/build.sh`, `clippy.toml`, the `web` job of `.github/workflows/ci.yml` and the `web` profile, and in the module the developer built (`target/web/module/`), whose exports the architect listed in node. The architect did not run the build or the check; that they pass is the developer's report and the pull request's CI to show.
+
+### The one failing check: the two names the binding exports
+
+The module built with `wasm-bindgen` 0.2.130 exports, beside the seven functions, `memory` and the helpers ruling 17 foresaw, two names it did not: `__abort_handler` and `__instance_terminated`. Read from the module itself: both are globals, not functions, and the glue the tool writes (`sim_web.js`) names neither. They are the binding's own state for a module that has ended. A global of the binding's holds a number of the binding's; it carries no word of the game.
+
+1. **Those two names are allowed, by name and by kind, and nothing wider.** The check allows `__abort_handler` and `__instance_terminated` only where each is a global. The whole `__` prefix is not allowed: the point of statement 12 is that a new export is looked at by a person before it ships, and a prefix would let the next one through unseen. An older binding is not pinned to avoid them: it would trade a name read and understood for a tool further from the toolchain it is built with.
+2. **The check is made stricter in the same change.** Each of the seven must be a function. An allowed name of the binding's must be a function, a table or a global, never a second memory. So the allowed set is now: the seven, as functions; `memory`, as the one memory; names beginning `__wbindgen_`, `__wbg_` or `__externref_`; and the two globals above.
+3. **Ruling 17 and statement 12 are amended to say so.** Statement 12 now reads: "The module exports the seven functions of ruling 17, each a function, and no other name but the binding's own: `memory`, names beginning `__wbindgen_`, `__wbg_` or `__externref_`, and the globals `__abort_handler` and `__instance_terminated`." The developer copies it into `check.mjs` in place of the old one. A later version of the binding that exports another name fails the check, and the name comes to the architect.
+4. **What the page can reach is narrower still, and already checked.** `check.mjs` holds that the glue exports the seven functions and its own `init` and nothing else. The worker of stage 4 speaks to the glue, never to the module's raw exports.
+
+### The developer's choices
+
+- **a. The clippy paths (`slice::sort_unstable_by` and the rest): accepted,** with the two further `select_nth_unstable` forms. They are the same hazard and ruling 30 named the family by its first member. That the paths fire on a vector, an array and a slice is the developer's finding and answers what ruling 30 left open; the source test it offered as a fallback is not needed.
+- **b. The games of the check are generators, not `sim-cli play` files: accepted, and better than the plan.** A game that reads its answers can sign the preview it was given and run until the game is over, which a fixed list of calls cannot. And a play file carries a pin, so every change to a figure would have made all fourteen stale. They carry no expected value, as the plan required. One thing is owed for the words: "game file" in this record and in the code means the file `sim-cli play` keeps and the door's `game_file` gives. The modules of `web/games/` are the check's games, and the comments of `support.mjs` and `check.mjs` say "a game of the check", not "a game file", where they mean one. Where ruling 29 and stage 3 say "game files of `web/games/`", read the check's games.
+- **c. `wasm-bindgen` as a dependency for the target alone: accepted.** The native build, the native tests and the native clippy do not compile it at all, which is less than the plan asked. The lock file still pins it.
+- **d. The outputs under `target/web/`: accepted.** `target/` is not in the repository. Stage 4 assembles the site beside them, in `target/web/site/`.
+- **e. `web/offered.mjs` reads `table/scenarios.json`: accepted; it conflicts with nothing.** The rule is one way: what plays never reads the umpire's files. The list is the table's own and holds nothing a player is not shown; the umpire's side may read it, as the bridge does. It is JSON, so the rule against a build step reading Markdown is not touched. It is also the single list: `build.sh` packs what it gives and `check.mjs` holds the check's games to it, so a game offered at the table and not packed, or packed and not checked, fails.
+- **f. The binding tool installed under `~/.cargo-wasm-bindgen`, kept by version: accepted.** It is built from source and nothing is downloaded ready made, as ruling 46 asks.
+- **g. The module is 14.6 MB with nothing run on it: accepted for this stage, and it is stage 6's to judge.** As a host would send it (gzip, measured by the architect on the built file) it is 3.4 MB, and the pack 0.3 MB. Stage 6 measures the time to open a game from a cold page against the mark. If the size has to come down, the order of trying is: settings of the compiler in the `web` profile first (`strip`, `lto`, `codegen-units`), since the native `door` is built in the same profile and the check holds whatever comes out; a tool that rewrites the module only after that, under ruling 30's last line.
+
+### Also read, and accepted as built
+
+- **The first case of ruling 6 held.** `sim-web` takes the workspace's lints unchanged, the binding compiles under `forbid(unsafe_code)`, and no allowance exists anywhere. `CLAUDE.md`'s "No `unsafe`" stands as it was, and the second half of question 7 falls away.
+- **The binding** is seven functions, each one call of the door, over one door in a `thread_local!` cell, with an `Err` given to JavaScript as an error carrying the door's words. No hook prints a panic.
+- **The stack** is set by `build.sh`'s flag, and `check.mjs` reads from the shipped module that the stack pointer starts at 8,388,608 and that no data lies below it. The reading takes the first global to be the stack pointer; if a later toolchain orders them otherwise the check fails, which is the safe way to be wrong.
+- **`take_back`'s `number`** is read through `u32` in both builds.
+- **The check compares strings,** never a parsed value; a trap in the module is thrown and ends the check as a failure, not as an answer.
+
+### Code owed before the merge
+
+1. `web/check.mjs`: the allowed exports as rulings 1 and 2 above have them (the two names, each only as a global; the seven each a function; one memory), and statement 12 in its head comment replaced by the new words.
+2. `web/support.mjs` and `web/check.mjs`: in the comments, "a game of the check" where the modules of `web/games/` are meant, so that "game file" keeps one meaning.
+
+Nothing else is owed. With those two the stage is done as the plan defines it, once the pull request's CI shows the `web` job passing.
+
+## As built: stage 3
+
+Written by the architect from the code of pull request 733.
+
+**Which case of ruling 6 held:** the first. No lint is loosened.
+
+**The casts read.** Every `as usize`, `usize::try_from` and `as isize` outside tests in `sim-core`, `sim-data`, `sim-staff`, `sim-trial`, `sim-agent`, the modules of `sim-cli`'s library and `sim-web`: fifty-eight places, read by the architect on Nov 24, 2026. There is no `as isize`. Every identifier in the game is 32 bits wide (`ids.rs`), which is why none of these can differ between the builds:
+
+- **A cast from a 32-bit or smaller value, which cannot lose anything on either target.** `sim-core`: `claims.rs` (62, 93), `bombardment.rs` (1084, 1151), `rearm.rs` (375), `submarine.rs` (67, 439), `surface/fire.rs` (389), `ground.rs` (715), `airstrike/work_out.rs` (616), `airstrike/mod.rs` (380), `damage.rs` (149). `sim-staff`: `projection.rs` (103, 109, 135, 156, 193, 206). `sim-agent`: `trial.rs` (1453, 1550, 1684, 1791), `reporting.rs` (88, 751, 761, 770), `explain.rs` (144, 167), `staffing.rs` (1363, 2402), `briefing.rs` (4645).
+- **`usize::try_from` of a 32-bit value, which succeeds on both.** `sim-core`: `events.rs` (5548), `bearing.rs` (59), `stragglers.rs` (115), `world_picture.rs` (890), `fuel_at_sea.rs` (523), `view.rs` (805). `sim-data`: `scenario.rs` (3912), `map.rs` (147). `sim-staff`: `way.rs` (214, 226). `sim-agent`: `session.rs` (2036), `commands.rs` (1634, whose number has already been read as a `u32`, so its words "is too large" are never said in either build), `common.rs` (704). `sim-cli`: `seat_trial.rs` (566, 571, 674, 764).
+- **`usize::try_from` of a 64-bit value that is below a small bound by the line before it.** A draw below 6 (`search.rs` 150, `submarine.rs` 657 and 846, and the test of the generator at `rng.rs` 559); a draw scaled to a place among the ships of a pool (`airstrike/spread.rs` 146); a remainder below 3 and a pick below a list's length (`sim-trial`'s `enemy.rs` 118, 245, 378).
+- **`station.rs` (1293),** a count of hexes from a 64-bit value with `unwrap_or(usize::MAX)`: a count above 4,000 million would be cut to that on the browser's target, and both are more than any path has hexes, so the same hexes are taken.
+- **`session.rs` (2235), `take_back`'s `number`:** the one that could differ. Mended, as ruling 30 said: read through `u32` first, in both builds.
+
+**The unstable sorts** are held by `clippy.toml` (choice a).
+
+**Sizes, as built on the developer's machine:** the module 14,647,118 bytes (3,394,814 through gzip), the pack 1,362,696 bytes (296,360 through gzip). The check's time, 51 to 54 seconds, is the developer's report.
