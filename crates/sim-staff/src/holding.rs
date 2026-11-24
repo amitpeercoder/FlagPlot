@@ -46,6 +46,24 @@ pub(crate) fn margin_days(risk: Risk) -> u32 {
     }
 }
 
+/// The floor, in days, of a "keep supplied" the staff forms (decision
+/// 0230): the margin of the risk and never less than 1 day, so 10, 5 and 1.
+/// The check that a place can be held keeps `margin_days` (0 at press). Every
+/// site that forms a supply calls this.
+pub(crate) fn staff_floor_days(risk: Risk) -> u32 {
+    margin_days(risk).max(1)
+}
+
+/// The words after a staff-formed floor: the margin of the risk, or at
+/// press the least floor (decision 0230, rule 5).
+pub(crate) fn staff_floor_note(risk: Risk) -> String {
+    if margin_days(risk) == 0 {
+        format!("the least floor, at {}", risk.name())
+    } else {
+        format!("the margin at {}", risk.name())
+    }
+}
+
 impl Day<'_, '_> {
     /// The land units that serve a "take a place" not yet met (decision
     /// 0144, 4): those named in its forces limit or in the forces limit of
@@ -509,7 +527,7 @@ impl Day<'_, '_> {
             Some(found) => (found.id, false),
             None => {
                 let risk = self.state.risk_read_up(hold.id);
-                let floor_days = margin_days(risk);
+                let floor_days = staff_floor_days(risk);
                 let kind = IntentKind::KeepSupplied {
                     base: fed,
                     floor_days,
@@ -552,9 +570,9 @@ impl Day<'_, '_> {
                     .evidence(words.clone(), today)
                     .binding(format!("{} is held and its plan is released", hold.id))
                     .worked(format!(
-                        "{opening}: the staff forms {id_new}, keep {fed_text} supplied, under it, with a floor of {floor_days} {} (the margin at {}) and no interval, so that the staff uses 15 days. {}.",
+                        "{opening}: the staff forms {id_new}, keep {fed_text} supplied, under it, with a floor of {floor_days} {} ({}) and no interval, so that the staff uses 15 days. {}.",
                         crate::units::days_word(floor_days),
-                        risk.name(),
+                        staff_floor_note(risk),
                         capitalised(&words)
                     ))
                     .would_change("a supply intent for the base already in force")
@@ -666,7 +684,7 @@ impl Day<'_, '_> {
             return;
         };
         let risk = self.state.risk_read_up(hold.id);
-        let floor_days = margin_days(risk);
+        let floor_days = staff_floor_days(risk);
         let kind = IntentKind::KeepSupplied {
             base: fed,
             floor_days,
@@ -732,9 +750,9 @@ impl Day<'_, '_> {
             .evidence(evidence, today)
             .binding(format!("{} is held and its plan is released", hold.id))
             .worked(format!(
-                "{opening}: the staff forms {id_new}, keep {fed_text} supplied from {source}, under it, with a floor of {floor_days} {} (the margin at {}) and no interval, so that the staff uses 15 days. Its forces limit is {}'s.",
+                "{opening}: the staff forms {id_new}, keep {fed_text} supplied from {source}, under it, with a floor of {floor_days} {} ({}) and no interval, so that the staff uses 15 days. Its forces limit is {}'s.",
                 crate::units::days_word(floor_days),
-                risk.name(),
+                staff_floor_note(risk),
                 hold.id
             ))
             .would_change("a supply intent for the base already in force")

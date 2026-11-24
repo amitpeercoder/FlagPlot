@@ -33,7 +33,7 @@ use sim_core::ids::{BaseId, LandUnitId};
 
 use crate::air::Day;
 use crate::fleet::{run_state, Fleet, RunStatus};
-use crate::holding::margin_days;
+use crate::holding::{staff_floor_days, staff_floor_note};
 use crate::island::Source;
 use crate::reasons::{base_words, serving};
 
@@ -294,7 +294,7 @@ impl Day<'_, '_> {
                 continue;
             }
             let risk = self.state.risk_read_up(end.id);
-            let floor_days = margin_days(risk);
+            let floor_days = staff_floor_days(risk);
             let kind = IntentKind::KeepSupplied {
                 base: base.id,
                 floor_days,
@@ -328,11 +328,11 @@ impl Day<'_, '_> {
                 .evidence(source.words().to_string(), today)
                 .binding(format!("{} is released", plan.id))
                 .worked(format!(
-                    "{} controls {island_text}: {base_text} stands at {}, {beside}, in no named place's hex, and the side has men there ({men_words}); it holds {held}, and no supply for its hex is in force, so the staff forms a supply of it under the island, with a floor of {floor_days} {} (the margin at {}), no interval and a plan of its own. For its source: {}.",
+                    "{} controls {island_text}: {base_text} stands at {}, {beside}, in no named place's hex, and the side has men there ({men_words}); it holds {held}, and no supply for its hex is in force, so the staff forms a supply of it under the island, with a floor of {floor_days} {} ({}), no interval and a plan of its own. For its source: {}.",
                     end.id,
                     base.hex,
                     crate::units::days_word(floor_days),
-                    risk.name(),
+                    staff_floor_note(risk),
                     source.words()
                 ))
                 .would_change("no man of the side at the base")

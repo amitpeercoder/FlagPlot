@@ -162,8 +162,9 @@
 //!   morning of day 2, gives the reason on each morning after, and
 //!   nothing sails.
 //! - **Press.** With both intents at press: the margin is 0, the load of
-//!   day 2 is 6 x 4 = 24 t, and intent 4 is formed with a floor of 0
-//!   days.
+//!   day 2 is 6 x 4 = 24 t, and intent 4 is formed with a floor of 1 day.
+//!   (Restated by the architect on Nov 24, 2026, for decision 0230: the
+//!   first writing gave a floor of 0 days.)
 //! - **A hold of a base already the side's, with no man there,** plays as
 //!   it did: every scenario built before this one gives the events it
 //!   gave, scenarios 67 and 68 among them.
@@ -987,7 +988,7 @@ fn press() {
     );
     let g = play(&t);
     assert_eq!(g.orders(2), vec![Given::LoadTo(n(24))]);
-    assert!(g.commands(6).contains(&Cmd::Form(2, keep_kind(0))));
+    assert!(g.commands(6).contains(&Cmd::Form(2, keep_kind(1))));
     assert!(g.refused().is_empty(), "{:?}", g.refused());
 }
 

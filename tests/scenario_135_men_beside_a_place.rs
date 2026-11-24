@@ -215,9 +215,11 @@
 //!   at D, T and P is as written above.
 //! - **More at the source is never worse.** With base 1 holding 2,000 t:
 //!   base 3 holds at the end of each day what it holds in the main case.
-//! - **At press.** With intent 1's risk set to press on day 1: intent 3
-//!   is formed with a floor of 0 days and is not refused. Only the
-//!   forming is asserted.
+//! - **At press.** With intent 1's risk set to press on day 1: intents 3
+//!   and 5 are formed, each with a floor of 1 day, and neither is refused.
+//!   Only the forming is asserted. (Restated by the architect on Nov 24,
+//!   2026, for decision 0230: the first writing gave intent 3 a floor of
+//!   0 days.)
 //! - **What the side cannot see.** With base 5 holding 500 t and a
 //!   Japanese unit of 400 men ashore at J: the Allied staff's commands,
 //!   orders and reasons on every day are those of the main case, word for
@@ -1206,16 +1208,19 @@ intent = 1
 risk = "press"
 "#;
     let g = play(&format!("{}{command}", text()));
-    // Intent 3 is formed with a floor of 0 days and is not refused. Only the
-    // forming is asserted.
-    assert_eq!(
-        g.intent_state(3).kind,
-        IntentKind::KeepSupplied {
-            base: BaseId::new(3),
-            floor_days: 0,
-            interval_days: None
-        }
-    );
+    // Intents 3 and 5 are formed, each with a floor of 1 day, and neither is
+    // refused. Only the forming is asserted.
+    for (raw, base) in [(3, 3), (5, 2)] {
+        assert_eq!(
+            g.intent_state(raw).kind,
+            IntentKind::KeepSupplied {
+                base: BaseId::new(base),
+                floor_days: 1,
+                interval_days: None
+            },
+            "intent {raw}"
+        );
+    }
     assert_eq!(g.intent_state(3).parent, Some(intent(1)));
     assert!(g
         .refused()

@@ -1,0 +1,153 @@
+# Scenario 136: supply at press.
+#
+# Decision 0230. It is scenario 76, controlling an island, with one command
+# more: on day 1 the commander sets the island's risk to press. Everything else
+# is scenario 76's, and that file's notes say what the bases, ships, units,
+# island and map are: an airfield the enemy holds with nobody on it (base 2,
+# at B), an anchorage the side holds with a garrison of 300 (base 3, at C), the
+# source (base 1, at A) with 1,000 t, task force 1 of two placeholder troop
+# transports, and unit 1, 600 men, at A. The game is 14 days. There is no
+# Japanese man, so no die is rolled.
+#
+# At press the staff lands with the men only the supply that lasts until the
+# first run can follow, and then, before decision 0230, sends no run at all:
+# the place is out of food on the night of day 9 and loses men every night to
+# the end. With decision 0230 the supply it forms has a floor of one day, and
+# a run lands on the day the stock runs out.
+#
+# The hand calculation is in tests/scenario_136_supply_at_press.rs. The test
+# runs this file on the frozen step 1 figures with scenario 76's ground figures
+# file, which this file names.
+#
+# Written before the rule is built (decision 0072): this file is in a folder of
+# its own, so no loop over data/scenarios/*.toml reads it.
+#
+# PLACEHOLDER DATA. The bases, ships, units, figures, island and map are
+# invented.
+
+name = "Placeholder scenario 136: Supply at press"
+placeholder = true
+seed = 1942
+days = 14
+map = "../../map/placeholder_preparing.toml"
+ship_classes = [
+    "../../reference/ship_classes.csv",
+    "../../reference/ship_classes_placeholder_transports.csv",
+]
+port_sizes = "../../reference/port_sizes.csv"
+aircraft_types = "../../reference/aircraft_types.csv"
+search = "../../reference/search.toml"
+surface_combat = "../../reference/surface_combat.toml"
+air_combat = "../../reference/air_combat.toml"
+ground = "../../reference/ground_placeholder_scenario_76.toml"
+
+# Allied base 1 at A, with supply for every man for the whole game and no
+# fuel.
+[[base]]
+id = 1
+name = "Placeholder base A"
+side = "allied"
+q = 0
+r = 0
+supply_t = 1000
+fuel_t = 0
+
+# Japanese base 2 at B: no gun, no aircraft, no man, no stock.
+[[base]]
+id = 2
+name = "Placeholder airfield B"
+side = "japanese"
+q = 4
+r = 0
+supply_t = 0
+fuel_t = 0
+
+# Allied base 3 at C, with supply and no fuel.
+[[base]]
+id = 3
+name = "Placeholder anchorage C"
+side = "allied"
+q = 0
+r = 6
+supply_t = 100
+fuel_t = 0
+
+# Task force 1: two placeholder troop transports, stopped in port at base 1.
+[[task_force]]
+id = 1
+name = "Placeholder transport force 1"
+side = "allied"
+at_base = 1
+mission = "transport"
+
+[[ship]]
+id = 1
+name = "Placeholder troop transport 1"
+class = 10
+side = "allied"
+fuel_t = 1000
+task_force = 1
+
+[[ship]]
+id = 2
+name = "Placeholder troop transport 2"
+class = 10
+side = "allied"
+fuel_t = 1000
+task_force = 1
+
+# The land units, ashore, fighting units on the defence, each at the standard
+# of experience, 2, and with every skill at 2, the defaults.
+[[land_unit]]
+id = 1
+name = "Placeholder First"
+side = "allied"
+men = 600
+q = 0
+r = 0
+
+[[land_unit]]
+id = 3
+name = "Placeholder Garrison"
+side = "allied"
+men = 300
+q = 0
+r = 6
+
+# The island: base 2, then base 3.
+[[island]]
+number = 1
+name = "Placeholder island"
+places = [{ base = 2 }, { base = 3 }]
+
+# The Allied commander's commands
+[[command]]
+day = 1
+side = "allied"
+kind = "set_intent"
+intent = 1
+intent_kind = "control_island"
+island = 1
+
+# The island is asked for at press.
+[[command]]
+day = 1
+side = "allied"
+kind = "set_limit"
+limit = "risk"
+intent = 1
+risk = "press"
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_leave"
+leave = "prepare"
+given = true
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_leave"
+leave = "launch"
+given = true

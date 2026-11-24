@@ -434,8 +434,12 @@ use sim_core::view::SideView;
 /// limit as a hold's, withdraws it when no man is there, none marches to it
 /// and no run of it is loaded or at sea, and records one reason for men at a
 /// hex with no base of the side. It gives the orders `supply-60` gave to a
-/// side with no such base and men.
-pub const DOCTRINE_VERSION: &str = "supply-61";
+/// side with no such base and men. `supply-62` adds decision 0230: the floor
+/// of a "keep supplied" the staff forms is the margin of its risk and never
+/// less than 1 day (10, 5, 1), at all three sites that form one, and the
+/// reason says "the least floor, at press" where it is 1 at press. It gives
+/// the orders `supply-61` gave to a side with no hold or island at press.
+pub const DOCTRINE_VERSION: &str = "supply-62";
 
 /// The staff: the doctrine for keeping a base supplied (stage 1) and, after
 /// it, the air doctrine for holding a place and covering a base from the air
