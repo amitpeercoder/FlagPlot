@@ -38,8 +38,16 @@
 //! t. Base 2 at B, Japanese, on the Allied map, empty. Base 3 at C,
 //! Allied, 100 t. Task force 1, ships 1 and 2, placeholder troop
 //! transports, at base 1. Unit 1, 600 men, at A; unit 3, 300 men, at C.
-//! Island 1: base 2, then base 3. A man eats 0.005 t a day. The game is
-//! 14 days.
+//! Island 1: base 2, then base 3. The game is 14 days.
+//!
+//! What the sums rest on, each the engine's as it stands: a man eats
+//! 0.005 t a day; of the unfed one in twenty is lost a night, cut to a
+//! whole man; a load takes one day at A and the passage to B one day, so
+//! a run ordered on a morning is due the next day and the reading the
+//! doctrine checks is the day after that; a night's charge is paid before
+//! anything lands that day; a projected reading is never below 0 t; in a
+//! hex the lower-numbered base pays first, base 2 before base 4; and with
+//! no interval set the staff sizes a run for 15 days of use.
 //!
 //! The Allied side's commands of day 1: intent 1, control island 1; the
 //! risk of intent 1 set to press; both leaves given.
@@ -66,6 +74,10 @@
 //! | 7 | Keep base 3 supplied, floor 1 day | 4 | day 1 |
 //! | 8 | Ready a landing by task force 1 at B | 2 | day 1 |
 //! | 9 | Keep base 2 supplied, floor 1 day | 3 | day 5 |
+//!
+//! The reason of each of the two commands that form a supply says "with a
+//! floor of 1 day (the least floor, at press)", where before the rule it
+//! said "with a floor of 0 days (the margin at press)".
 //!
 //! ## The landing
 //!
@@ -150,10 +162,23 @@
 //!
 //! # Properties
 //!
-//! - **Never a night short.** With unit 1 of 500, 550, 650 and 700 men in
-//!   turn (so that the stock at B is no whole number of days of use): in
-//!   each game no `MenLostUnfed` is recorded and every `MenFed` at B has
-//!   no man unfed. Only that is asserted.
+//! - **Never a night short, with a stock that is no whole number of
+//!   days.** With base 2 holding 3 t at the start: half of it, 1.5 t, is
+//!   taken with the base at the end of day 4. On the night of day 5 base
+//!   2 pays its 1.5 t and base 4 1.5 t (8.5 t left), and base 2 then
+//!   takes the 2 t from the ship; on the night of day 6 base 2 pays 2 t
+//!   and base 4 1 t (7.5 t left). On the morning of day 6 the stock at B
+//!   is 10.5 t and the reading checked 4.5 t, not below 3 t. On the
+//!   morning of day 7 it is 7.5 t, two and a half days, and the reading
+//!   checked 1.5 t, below 3 t: the run is ordered, 0 + 45 = 45 t, since
+//!   the reading of the day it arrives, 4.5 t, is above the floor's
+//!   stock. Base 4 pays 3 t on the nights of days 7 and 8, 4.5 t and
+//!   then 1.5 t left, and the run lands on day 8. No man is unfed on any
+//!   night. Base 4 holds 1.5 t and base 2 27 t at the end. (Restated on
+//!   review, Nov 24, 2026, before anything was built: the first writing
+//!   changed the unit's men, which leaves the stock at three days of use
+//!   at every size and so never ran the case. Checked on the engine as
+//!   the main case was.)
 //! - **At balanced and at preserve nothing moves.** With the risk command
 //!   left out, the game is scenario 76's main case: its ten orders on
 //!   their days, the supplies formed with a floor of 5 days, and 919 t,
