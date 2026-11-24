@@ -736,3 +736,7 @@ path = "proof_stage_4_cases_s1_and_s2.rs"
 [[test]]
 name = "proof_stage_4_harness"
 path = "proof_stage_4_harness.rs"
+
+[[test]]
+name = "proof_stage_4_case_w2_a_carrier_believed_absent"
+path = "proof_stage_4_case_w2_a_carrier_believed_absent.rs"

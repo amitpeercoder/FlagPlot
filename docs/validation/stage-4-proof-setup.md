@@ -195,3 +195,35 @@ The page as first written (commit f3f861ae) was read by a reviewer who had not s
 10. **Condition 9's figures** are corrected as decision 0161 has it ("Condition 9's case, corrected"): rehearsal 100 against 70, fatigue 0 against 7 at the end of day 11, 1,000 fit men against 930. The case, the size, what is read and the mark of 15 worlds in 16 are unchanged.
 11. **What the architect played, and on what.** To check three workings, five games in all, each a copy of a case's file with the course written in, kept outside the cases' folder or removed after, on the scenario's own seed, 1942: W1's game (at commit 9fd3861c, before this page was committed), each of R's two courses, and W3's game. Neither R nor W1 rolls a die. Seed 1942 is not among any judged seeds. No trial of any case has been played, no game of S1, S2 or W2, and no game of (a), (b) or (c) by the architect. The copies are removed; nothing temporary is in the folder.
 
+## The architect's rulings on the harness as built, Nov 24, 2026
+
+The harness, the cases and the scripts were built by a developer (commits 86c98651 to ee673654) and reported. Five things came back for a ruling. Nothing of the judged run has been played.
+
+1. **Case W2 is a case, and is now stated.** `data/scenarios/stage-4-proof/case_w2_a_carrier_believed_absent.toml` and `tests/proof_stage_4_case_w2_a_carrier_believed_absent.rs`, four empty tests, written by the architect. It is not made from scenario 93, as this page first said, but from scenario 5b, the unopposed strike, whose chances are already worked by hand: the same forces and orders for 7 days, read from the Japanese seat, which believes the Allied carrier force absent. This replaces W2 in condition 8 and in "Amended on review", 3:
+   - **The trial:** of the Japanese side, an empty course, the small size, 8 worlds for 7 days, which is the game's length; the trial's figures and the file of sides are scenario 95's and scenario 93's.
+   - **By reasoning:** no enemy is in any world, so the side's ships sunk, ships out of action and aircraft lost are 0 in every world.
+   - **The games:** seeds 1 to 200, 7 days each, played once, by the harness, for the judged run.
+   - **The mark:** the estimate's highest for ships sunk is 0; the side has a ship sunk in at least 100 of the 200 games; and the list of what was assumed names the carrier force as believed absent and in no world. By scenario 5b's working carried roughly over a week the carrier is sunk in most games; 100 is set well under that and can still fail.
+   - The developer fills the four tests, and the harness's part for W2 reads this file at the small size. If a picture with no enemy at all is refused, that comes to the architect before the run.
+2. **Which cases may be played before the judged run.** "Amended on review", 11, said no trial of any case had been played. The tests of R, W1 and W3 now play those cases' trials, and W1's and W3's games on their own seeds, and that is right: each of those statements is worked by hand to a figure, and a test that asserts it is the check of the working, as for any scenario. What stays unplayed until the judged run is everything whose mark is a count over games with dice: S1's and S2's trials and their 200 games, W2's 200 games, W3's games of seeds 1 to 20, and every game and trial of (a), (b) and (c). The tests of S1, S2 and W2 play none of those. The report says which cases' figures were known from their tests before the run (R, W1, and W3's trial) and that their part of conditions 8 and 9 is therefore a check that the tests pass and the harness reads the same, not a discovery.
+3. **Condition 5, "the same answer".** A seat's answer carries the number of the estimate among those the seat has been shown, and the second asking is number 2. That number is the session's and not the trial's. The reading: the two answers are equal byte for byte with that one field set aside, and the field itself goes from 1 to 2. The harness's file gives both the plain comparison and the one with the field set aside; the mark is read on the second, and the report says so.
+4. **Condition 4, what makes a pair.** A pair is good where two things hold, and the harness checks both: the two games differ in truth on the evening of day 3, and the asking side's own half and its beliefs are equal field for field. Whether the hidden land unit is aboard a ship was the architect's way of choosing a candidate likely to pass and is not checked for itself: a unit whose change the side could see would fail the second check. A candidate that does not load or fails a check is void and the next is tried, as "Amended on review" allows; the report names each candidate tried, which was void and why, and which gave the pair.
+5. **`Losses::of` made public in `sim-trial`** is accepted. It reads a side's view and gives that side's own losses; it takes no world and gives nothing of the enemy. The harness is the umpire's and reads a game by it so that a game and a world are counted by one function. The crate's source test must still pass, and `docs/engineering/layout.md` needs no change.
+
+**The table of what moved** gains its row for doctrine `supply-62` when decision 0230 is merged.
+
+**The commands of the run,** confirmed, from main at the commit that has decision 0230, each with `--out` a folder outside the repository:
+
+```
+scripts/stage-4-proof/run.sh check
+scripts/stage-4-proof/run.sh build
+scripts/stage-4-proof/run.sh batch
+scripts/stage-4-proof/run.sh exports --jobs 4
+scripts/stage-4-proof/run.sh sample
+scripts/stage-4-proof/run.sh read
+scripts/stage-4-proof/run.sh harness --jobs 4
+scripts/stage-4-proof/run.sh time --machine "Apple M3 Pro, 11 cores, 36 GB"
+```
+
+`time` is run alone on the machine, after the rest. The harness is run with its judged seed, 1, which is its default under `run.sh`. Before them, by hand: `cargo test --workspace` in release (condition 1) and `sh scripts/regenerate.sh` (condition 2). After them: the readers and the marker of condition 11, on the files the harness wrote. W2's tests are filled and the harness reads W2 before any of this is run; that is the one piece of building left.
+
