@@ -2228,6 +2228,10 @@ impl Session {
         let number = args
             .get("number")
             .and_then(Value::as_u64)
+            // Through `u32` in every build, so that a number of 2 to the
+            // 32nd or more is refused alike where `usize` is 32 bits and
+            // where it is 64 (decision 0229, ruling 30).
+            .and_then(|n| u32::try_from(n).ok())
             .and_then(|n| usize::try_from(n).ok())
             .ok_or_else(|| {
                 CallError::new("\"number\" is needed, as the number of an entry you were shown")

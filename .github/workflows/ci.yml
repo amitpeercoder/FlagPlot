@@ -135,12 +135,62 @@ jobs:
           done
           node viewer/check.js viewer/replays/*.json
 
+  # The browser's build and its check (decision 0229, rulings 46 and 47): the
+  # game as a module for the browser, compared in node with the native `door`
+  # program built from the same commit in the same profile. The binding tool
+  # is built from source at the version the crate pins and kept in the cache
+  # under that version, so it is built once for each version; no program is
+  # downloaded ready made. It reads no Markdown.
+  web:
+    name: Web build and its check
+    needs: changes
+    if: needs.changes.outputs.needed == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4.4.0
+
+      # rustup reads rust-toolchain.toml: the pinned toolchain with the
+      # target wasm32-unknown-unknown.
+      - name: Install the pinned Rust toolchain
+        run: rustup show active-toolchain || rustup toolchain install
+
+      - uses: Swatinem/rust-cache@v2.9.3
+
+      - name: Read the version of the binding the crate pins
+        id: binding
+        run: echo "version=$(sed -n 's/^wasm-bindgen = "=\([0-9][0-9.]*\)".*/\1/p' crates/sim-web/Cargo.toml)" >> "$GITHUB_OUTPUT"
+
+      - name: Keep the binding tool built for that version
+        id: tool
+        uses: actions/cache@v4.2.0
+        with:
+          path: ~/.cargo-wasm-bindgen
+          key: wasm-bindgen-cli-${{ steps.binding.outputs.version }}-${{ runner.os }}
+
+      - name: Build the binding tool from source
+        if: steps.tool.outputs.cache-hit != 'true'
+        run: cargo install wasm-bindgen-cli --version ${{ steps.binding.outputs.version }} --locked --root ~/.cargo-wasm-bindgen
+
+      - name: Put the binding tool on the path
+        run: echo "$HOME/.cargo-wasm-bindgen/bin" >> "$GITHUB_PATH"
+
+      # The rest of the crate is linted natively by the lint job; the binding
+      # module is compiled for the target alone, so it is linted here.
+      - name: Lint the module for the target
+        run: cargo clippy --locked --target wasm32-unknown-unknown -p sim-web --lib -- -D warnings
+
+      - name: Build the module, the pack and the native door
+        run: sh scripts/web/build.sh
+
+      - name: Check the module against the native door
+        run: node web/check.mjs
+
   # The check main requires, by this name. It runs whatever happened above
   # and fails unless the index check passed and every other job passed, or
   # every other job was skipped because only documents changed.
   check:
     name: Format, lint, test
-    needs: [changes, lint, test, run-and-export]
+    needs: [changes, lint, test, run-and-export, web]
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -151,11 +201,13 @@ jobs:
           LINT: ${{ needs.lint.result }}
           TEST: ${{ needs.test.result }}
           EXPORT: ${{ needs.run-and-export.result }}
+          WEB: ${{ needs.web.result }}
         run: |
           echo "decisions index and what changed: $CHANGES (checks needed: $NEEDED)"
           echo "format and lint: $LINT"
           echo "tests: $TEST"
           echo "run and export: $EXPORT"
+          echo "web build and its check: $WEB"
           if [ "$CHANGES" != success ]; then
             echo "The first job did not pass."
             exit 1
@@ -165,7 +217,7 @@ jobs:
           else
             expected=success
           fi
-          for result in "$LINT" "$TEST" "$EXPORT"; do
+          for result in "$LINT" "$TEST" "$EXPORT" "$WEB"; do
             if [ "$result" != "$expected" ]; then
               echo "A job is $result, and $expected was needed."
               exit 1

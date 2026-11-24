@@ -1,3 +1,5 @@
 [toolchain]
 channel = "1.97.0"
 components = ["rustfmt", "clippy"]
+# The browser's build (decision 0229, ruling 4).
+targets = ["wasm32-unknown-unknown"]
