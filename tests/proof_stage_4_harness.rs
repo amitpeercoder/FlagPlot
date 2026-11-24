@@ -586,54 +586,80 @@ fn condition_8_wrong_pictures() {
         let _ = writeln!(out, "  estimate in words:\n{}\n", indent(&e.to_string()));
     }
 
-    // W2: the full size and games; the file is the developer's to make after
-    // the architect writes its particulars.
+    // W2: the Japanese side's trial of an empty course at the small size (8
+    // worlds for 7 days), and games on seeds first to first + games - 1, 7
+    // days each (scenario 5b read from the Japanese seat).
     {
-        let found: Vec<PathBuf> =
-            std::fs::read_dir(common::data_dir().join("scenarios/stage-4-proof"))
-                .expect("the folder reads")
-                .filter_map(|e| e.ok().map(|e| e.path()))
-                .filter(|p| {
-                    p.file_name()
-                        .and_then(|n| n.to_str())
-                        .is_some_and(|n| n.starts_with("case_w2_"))
-                })
-                .collect();
-        let _ = writeln!(out, "== W2, a carrier force believed absent that is there");
-        if let Some(path) = found.first() {
-            let file = path.file_stem().unwrap().to_str().unwrap().to_string();
-            let text = case_text(&file);
-            let scenario = load_case(&file, &text);
-            let sizes = common::stage_4::figures(&scenario).sizes();
-            let e = trial_of_case(&scenario, sizes[2]);
-            let reads = case_games(&file, &text, &e.end, &seeds(games()), &[sizes[2].1.days]);
-            let day = sizes[2].1.days;
-            let with = reads
-                .iter()
-                .filter(|r| {
-                    let l = r.lost(day);
-                    l.ships_sunk + l.ships_out_of_action > 0
-                })
-                .count();
-            let _ = writeln!(
-                out,
-                "  the estimate's ships sunk {}, ships out of action {}, aircraft {} (lowest/middle/highest)",
-                spread_words(e.side_costs.unwrap().ships_sunk),
-                spread_words(e.side_costs.unwrap().ships_out_of_action),
-                spread_words(e.side_costs.unwrap().aircraft)
-            );
-            let _ = writeln!(
-                out,
-                "  games with a ship sunk or out of action: {with} of {}",
-                reads.len()
-            );
-            let _ = writeln!(out, "  assumed: {:#?}", e.assumed);
-            let _ = writeln!(out, "  estimate in words:\n{}\n", indent(&e.to_string()));
-        } else {
-            let _ = writeln!(
-                out,
-                "  no file case_w2_*.toml in data/scenarios/stage-4-proof: the case is not made (the setup, item 4, awaits the architect's particulars).\n"
-            );
+        let file = "case_w2_a_carrier_believed_absent";
+        let text = case_text(file);
+        let scenario = load_case(file, &text);
+        let sizes = common::stage_4::figures(&scenario).sizes();
+        let size = sizes[0];
+        let played = sim_trial::play(
+            &scenario.world.side_view(JAPANESE),
+            &common::stage_4::believed(&scenario, JAPANESE),
+            &common::stage_4::figures(&scenario),
+            scenario.world.ref_data(),
+            scenario.world.map(),
+            Asked {
+                trial: 1,
+                worlds: size.1.worlds,
+                days: size.1.days,
+                course: Vec::new(),
+            },
+        );
+        let _ = writeln!(
+            out,
+            "== W2, a carrier force believed absent that is there ({file})"
+        );
+        match played {
+            Err(refused) => {
+                let _ = writeln!(
+                    out,
+                    "  the trial was REFUSED: {refused:?} (a picture with no enemy: to the architect before the run)\n"
+                );
+            }
+            Ok(played) => {
+                let e = estimate(&played, IntentId::new(1), None);
+                let reads = par_map(&seeds(games()), |seed| {
+                    let s = load_case(file, &text).with_seed(seed).expect("a seed");
+                    play_read(s, &[(JAPANESE, None)], &[7])
+                        .pop()
+                        .expect("a read")
+                });
+                let costs = e.side_costs.expect("costs");
+                let _ = writeln!(
+                    out,
+                    "  the estimate ({} worlds for {} days): ships sunk {}, ships out of action {}, aircraft {} (lowest/middle/highest)",
+                    size.1.worlds,
+                    size.1.days,
+                    spread_words(costs.ships_sunk),
+                    spread_words(costs.ships_out_of_action),
+                    spread_words(costs.aircraft)
+                );
+                let sunk = reads.iter().filter(|r| r.lost(7).ships_sunk > 0).count();
+                let hurt = reads
+                    .iter()
+                    .filter(|r| r.lost(7).ships_sunk + r.lost(7).ships_out_of_action > 0)
+                    .count();
+                let _ = writeln!(
+                    out,
+                    "  games read: {}; with a ship sunk: {sunk} (the mark is at least 100 of 200); with a ship sunk or out of action: {hurt}",
+                    reads.len()
+                );
+                let named = e.assumed.iter().any(|a| {
+                    matches!(a.of, sim_trial::AssumedOf::BelievedForce { .. })
+                        && a.notes
+                            .iter()
+                            .any(|n| matches!(n, sim_trial::AssumedNote::RuledOut { .. }))
+                        && a.made_in.is_empty()
+                });
+                let _ = writeln!(
+                    out,
+                    "  the assumptions name the carrier force as believed absent and in no world: {named}"
+                );
+                let _ = writeln!(out, "  estimate in words:\n{}\n", indent(&e.to_string()));
+            }
         }
     }
 
@@ -894,9 +920,16 @@ fn condition_5_the_same_twice() {
             day = evening;
             let first = ask_trial_both(&mut asked, side, "small");
             let second = ask_trial_both(&mut asked, side, "small");
+            let serial = |raw: &str| {
+                serde_json::from_str::<Value>(raw)
+                    .map_or(Value::Null, |v| v["estimate"].clone())
+                    .to_string()
+            };
             let _ = writeln!(
                 out,
-                "  evening of day {evening}: the two answers equal byte for byte: {}; equal with the answer's own number among the estimates shown set aside: {} ({} bytes)",
+                "  evening of day {evening}: the answer's own number goes from {} to {}; the two answers equal byte for byte: {}; equal with that number set aside (the mark is read on this): {} ({} bytes)",
+                serial(&first.0),
+                serial(&second.0),
                 first.0 == second.0,
                 first.1 == second.1,
                 first.0.len()

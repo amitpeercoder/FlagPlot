@@ -102,25 +102,127 @@
 //! the architect before the judged run.
 #![allow(clippy::doc_lazy_continuation, clippy::doc_markdown)]
 
+mod common;
+
+use sim_core::state::Side;
+use sim_core::state::TruthState;
+use sim_data::Scenario;
+use sim_trial::{estimate, AssumedNote, AssumedOf, Estimate};
+
+use common::stage_4::{case_text, load_case, play_game, step_trial, Stepped4};
+use sim_core::ids::IntentId;
+
+const NAME: &str = "case_w2_a_carrier_believed_absent";
+const JAPANESE: Side = Side::Japanese;
+
+fn scenario() -> Scenario {
+    load_case(NAME, &case_text(NAME))
+}
+
+/// The trial of the Japanese side: an empty course, 8 worlds for 7 days.
+/// Never a game of seeds 1 to 200 is played here.
+fn trial() -> &'static Stepped4 {
+    static TRIAL: std::sync::OnceLock<Stepped4> = std::sync::OnceLock::new();
+    TRIAL.get_or_init(|| step_trial(&scenario(), JAPANESE, 1, 8, 7, Vec::new()))
+}
+
+fn the_estimate() -> &'static Estimate {
+    static EST: std::sync::OnceLock<Estimate> = std::sync::OnceLock::new();
+    EST.get_or_init(|| estimate(&trial().played, IntentId::new(1), None))
+}
+
+fn damaged(truth: &TruthState, side: Side) -> usize {
+    truth
+        .ships
+        .values()
+        .filter(|s| s.side == side)
+        .filter(|s| {
+            s.flotation_damage != sim_core::fixed::Fixed::ZERO
+                || s.fire_damage != sim_core::fixed::Fixed::ZERO
+        })
+        .count()
+}
+
 /// The file loads, plays 7 days, and the Japanese side's belief is one
 /// carrier force of two ships, believed absent.
 #[test]
-#[ignore = "statement written, not built"]
-fn the_case_loads_with_its_belief() {}
+fn the_case_loads_with_its_belief() {
+    let s = scenario();
+    assert_eq!(s.days, 7);
+    let forces: Vec<_> = s.believed_forces(JAPANESE).collect();
+    assert_eq!(forces.len(), 1);
+    assert_eq!(forces[0].name, "Allied carrier force believed elsewhere");
+    assert_eq!(forces[0].ships, 2);
+    assert_eq!(forces[0].standing, sim_core::believed::Standing::Absent);
+    assert_eq!(s.believed_forces(Side::Allied).count(), 0);
+    // Played once on its own seed, 1942 (the file's), for its 7 days.
+    let game = play_game(s, JAPANESE);
+    assert_eq!(game.days.len(), 7);
+}
 
 /// In each of the 8 worlds no enemy ship, aircraft or base exists, and at
 /// the end of day 7 no ship of the side's has any damage.
 #[test]
-#[ignore = "statement written, not built"]
-fn in_every_world_there_is_no_enemy() {}
+fn in_every_world_there_is_no_enemy() {
+    let trial = trial();
+    assert_eq!(trial.played.worlds.len(), 8);
+    for w in &trial.played.worlds {
+        assert!(
+            w.failed.is_none() && w.refused.is_empty(),
+            "world {}",
+            w.number
+        );
+        for day in 1..=7 {
+            let truth = &trial.snapshot(w.number, day).truth;
+            assert!(
+                truth.ships.values().all(|s| s.side == JAPANESE),
+                "world {} day {day}",
+                w.number
+            );
+            assert!(
+                truth.air_groups.values().all(|g| g.side == JAPANESE),
+                "world {} day {day}",
+                w.number
+            );
+            assert!(
+                truth.bases.values().all(|b| b.side == JAPANESE),
+                "world {} day {day}",
+                w.number
+            );
+        }
+        assert_eq!(
+            damaged(&trial.snapshot(w.number, 7).truth, JAPANESE),
+            0,
+            "world {}",
+            w.number
+        );
+    }
+}
 
 /// The estimate's ships sunk, ships out of action and aircraft lost are 0
 /// at the lowest, the middle and the highest.
 #[test]
-#[ignore = "statement written, not built"]
-fn the_estimate_costs_nothing() {}
+fn the_estimate_costs_nothing() {
+    let costs = the_estimate().side_costs.expect("costs");
+    for spread in [costs.ships_sunk, costs.ships_out_of_action, costs.aircraft] {
+        assert_eq!((spread.lowest, spread.middle, spread.highest), (0, 0, 0));
+    }
+}
 
 /// What was assumed names the believed force as ruled out and in no world.
 #[test]
-#[ignore = "statement written, not built"]
-fn what_was_assumed_names_the_carrier() {}
+fn what_was_assumed_names_the_carrier() {
+    let e = the_estimate();
+    let line = e
+        .assumed
+        .iter()
+        .find(|a| matches!(&a.of, AssumedOf::BelievedForce { name, .. } if name == "Allied carrier force believed elsewhere"))
+        .expect("the believed force is among what was assumed");
+    assert!(
+        line.notes
+            .iter()
+            .any(|n| matches!(n, AssumedNote::RuledOut { worlds: 8 })),
+        "{line:?}"
+    );
+    assert!(line.made_in.is_empty(), "{line:?}");
+}
