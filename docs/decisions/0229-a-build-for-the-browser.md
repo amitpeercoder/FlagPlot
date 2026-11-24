@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 24, 2026, at the designer's requ
 
 Summary: The table's page played in a browser with no bridge and no server: the game compiled to WebAssembly and held in a worker of the page, answering the same seat tools `sim-cli mcp` answers; the data it plays on packed at build time by `sim-data`; the kept game a file of the seat's own calls in the browser's storage; and a check in CI that the browser's build gives, call for call and day for day, what the native build gives. Seven stages, none with a hand calculation.
 
-Standing: Planned on Nov 24, 2026; amended on review the same day (What the review changed); not built. Needs review: who playtests and whether the link is public, turning on the host, a new seed for each game, the marks for speed, what a playtester is told of the build, sharing the packed data, and the wording of two of `CLAUDE.md`'s "Always" rules (Questions for the designer).
+Standing: Planned on Nov 24, 2026; amended on review the same day (What the review changed); not built. Needs review: who playtests and whether the link is public, turning on the host, a new seed for each game, the marks for speed, what a playtester is told of the build, and sharing the packed data (Questions for the designer). The wording of two of `CLAUDE.md`'s "Always" rules was accepted by the designer on Nov 24, 2026 (question 7).
 
 ## Why it is a record
 
@@ -280,6 +280,8 @@ Each is "needs review": the plan does not decide it. Stage 7 waits for 1, 2 and 
 7. **Two of `CLAUDE.md`'s "Always" rules change their words.** Neither changes what the rule protects, but both are rules that fail silently, so the words are the designer's to confirm before the stage that needs them.
    - **"Only `sim-data` reads simulation data files"** would read: only `sim-data` reads simulation data files, from the disk or from a pack that `sim-data` itself made (ruling 8). Stage 1 needs it.
    - **"No `unsafe`"** would read: no `unsafe` is written by hand anywhere; `sim-web`'s binding module alone may allow what its binding macro generates (ruling 6). Stage 3 needs it only if the workspace's `forbid` does not compile there; if it does, the rule stands as it is.
+
+   **Answered on Nov 24, 2026: the designer accepted both wordings.** Each goes into `CLAUDE.md` in the stage that makes it true: the first in stage 1, the second in stage 3 and only if the `forbid` does not compile.
 
 ## What the review changed
 
