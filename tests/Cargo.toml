@@ -724,3 +724,11 @@ path = "proof_stage_4_case_r_preparation.rs"
 [[test]]
 name = "proof_stage_4_case_w3_an_intent_not_as_stated"
 path = "proof_stage_4_case_w3_an_intent_not_as_stated.rs"
+
+[[test]]
+name = "proof_stage_4_case_w1_the_garrison_believed_half"
+path = "proof_stage_4_case_w1_the_garrison_believed_half.rs"
+
+[[test]]
+name = "proof_stage_4_cases_s1_and_s2"
+path = "proof_stage_4_cases_s1_and_s2.rs"
