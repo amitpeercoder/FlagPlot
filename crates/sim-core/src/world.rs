@@ -183,7 +183,7 @@ impl Default for MadeIds {
 /// patrol, which changes the stations of a side given one) and 33 from
 /// decision 0220 (the order to destroy a force, what it keeps and its three
 /// notices, which a game saved under the old rules could not hold) and 34 from
-/// decision 0229 (a "keep supplied" is taken under "control an island", with its
+/// decision 0231 (a "keep supplied" is taken under "control an island", with its
 /// own plan and a floor of 0 days, which a command the old rules refused and
 /// which changes games with an island and a base of the side beside a place
 /// with men). A

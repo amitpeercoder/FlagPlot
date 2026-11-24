@@ -102,7 +102,7 @@ impl Day<'_, '_> {
 
         // Item 8b: a neutralising that has done its work.
         self.withdraw_done(end, plan, in_scope);
-        // Decision 0229, 6 (amended): the supply of a base beside a place
+        // Decision 0231, 6 (amended): the supply of a base beside a place
         // whose men are gone.
         self.withdraw_beside(end, plan, in_scope);
 
@@ -116,14 +116,14 @@ impl Day<'_, '_> {
             self.island_hold(end, plan, place.hex, &source, &island_text, in_scope);
         }
 
-        // Decision 0229: the supply of a base beside a place, after the
+        // Decision 0231: the supply of a base beside a place, after the
         // holds and before the denial.
         let place_hexes: Vec<Hex> = places.iter().map(|p| p.hex).collect();
         self.island_beside(end, plan, &place_hexes, &source, &island_text, in_scope);
 
         // Decision 0152, 11: each hold's forces limit set each morning to
         // the source and its pool; so is the supply of a base beside a
-        // place (decision 0229, 4).
+        // place (decision 0231, 4).
         self.island_pools(end, plan, &source, in_scope);
 
         // The denial, once, and the carrier forces under it.

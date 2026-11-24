@@ -1987,7 +1987,7 @@ pub fn plan_order(view: &SideView<'_>, staff: &dyn Staff, intent: u32) -> Result
             thousands(men.to_hand)
         ));
     }
-    // Decision 0229, 10: the bases the staff feeds beside the places of an
+    // Decision 0231, 10: the bases the staff feeds beside the places of an
     // island, each with its hex and the place it is beside.
     if let Some(line) = fed_beside_words(view, &n, &order) {
         text.push(line);
@@ -2027,7 +2027,7 @@ pub fn plan_order(view: &SideView<'_>, staff: &dyn Staff, intent: u32) -> Result
 }
 
 /// The line of a "control an island" order that lists the bases its staff
-/// feeds beside the island's places (decision 0229, 10): each base of a
+/// feeds beside the island's places (decision 0231, 10): each base of a
 /// "keep supplied" formed directly under the island, with its hex and the
 /// place nearest it. `None` where there is none.
 fn fed_beside_words(

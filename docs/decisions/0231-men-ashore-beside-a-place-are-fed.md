@@ -1,4 +1,4 @@
-# 0229: Men ashore on an island's land are fed by the order for the island
+# 0231: Men ashore on an island's land are fed by the order for the island
 
 Status: a plan by the architect, written on Nov 24, 2026, inside the plan for step 3, stage 4 (decision 0161), from the measurement that record holds ("The men unfed, as measured" and the architect's reading of it). It is to be read by a reviewer who has not seen it written before anything is built. It has one question for the designer.
 

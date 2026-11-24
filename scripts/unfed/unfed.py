@@ -1,12 +1,12 @@
 """The men unfed, as measured (decision 0161, "The measurement of the men unfed"),
-with the count G in place of F as first written (decisions 0161 and 0229): a man
+with the count G in place of F as first written (decisions 0161 and 0231): a man
 lost in a hex after a fall-back to it followed by the arrival of its own march.
 Umpire's reading from exports. Prints counts, never a verdict.
 
     python3 -I unfed.py DIR [--all] [--rows OUT.jsonl]
 
 `--all` reads every unit of the side, those ashore at the start included, and
-prints the part of the men who begin ashore (decision 0229, "How it is judged", 3):
+prints the part of the men who begin ashore (decision 0231, "How it is judged", 3):
 the men lost unfed over the men at the start, split into those lost in a hex where
 a base of the side stood and the rest (on the march, with no base).
 
@@ -196,7 +196,7 @@ def read_seed(game):
     if ALL:
         out['U'] = allU
     out['U_uncounted_by_hex'] = {s: dict(unc[s]) for s in SIDES}
-    # Decision 0229: the men who begin ashore (units of the export's initial record) and what
+    # Decision 0231: the men who begin ashore (units of the export's initial record) and what
     # they lose unfed, in a hex where a base of their side stood at the loss and elsewhere.
     start_men = {s: 0 for s in SIDES}
     start_units = {}
