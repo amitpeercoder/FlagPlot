@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 19, 2026 and confirmed by the de
 
 Summary: A plan to replace the placeholder transports of the 39 days with the ships the record names. Its 78 placeholders that stand for real ships stand for 54 ships the record now names and 14 it does not, but a name is not what keeps them out: a real ship may carry no invented figure, and the transports, the destroyer-transports and three classes of Japanese destroyer still lack facts a class is derived from. Six steps: a second round of research for those facts, the derivation rules a transport needs, the classes, the American landings at the record's 15 and 8 ships, the Japanese runs as the destroyers that made them, and the baseline run again. It is done before stage 4's proof. With six questions for the designer
 
-Standing: Confirmed by the designer, Nov 19, 2026, with his six answers, each as recommended. Step 1 is done; step 2 is decision 0166, whose part A (the Japanese destroyers of the runs) is built and whose part B (the American ships) is blocked for want of facts; of step 3 the Japanese classes are made and no scenario reads them; steps 4 to 6 are not done. Whether they come before stage 4's proof is put to the designer again ("Where it stands, Nov 24, 2026")
+Standing: Confirmed by the designer, Nov 19, 2026, with his six answers; answer 5 reversed by him on Nov 24, 2026: stage 4's proof is run first, on the 39 days as they stand, and steps 5 and 6 follow it. Step 1 is done; step 2 is decision 0166, whose part A (the Japanese destroyers of the runs) is built and whose part B (the American ships) is blocked for want of facts; of step 3 the Japanese classes are made and no scenario reads them; step 4 waits for part B
 
 ## What is so today
 
@@ -90,3 +90,11 @@ The architect's reading, from the records, the derivation lists and `data/scenar
 7. **The scenario today** holds its placeholders as before (122 names beginning "Placeholder" in the file), and the four destroyers it had before this plan.
 
 **"When" no longer holds as written.** The plan said steps 4 to 6 land in one stretch after stage 4's step 8 and before its proof. Step 8 is built, step 4 is blocked, and step 5 is some days of rulings and building that would change every game on the 39 days. The architect's recommendation is in decision 0161 ("The 39 days and decision 0165"): the proof first, on the scenario as it stands; then step 5 and step 6, with the proof's two readings on the 39 days made again and reported beside the first. That reverses answer 5 and is the designer's to give. Until he has, step 5's rule and rulings are not commissioned and the proof is not run.
+
+## Answer 5 reversed by the designer, Nov 24, 2026
+
+The designer was asked again, with the standing above, and answered as the architect recommended: stage 4's proof is run before the ships of the record, on the 39 days as they stand. Answer 5 of Nov 19, 2026 ("It is done before stage 4's proof") no longer holds, and "When" is replaced by this:
+
+- **Until the proof's report is written** nothing of this plan changes a file the proof reads. Step 5's rule for a class's troop figure across its runs and the rulings on the disputed runs may be written in that time; they change no game.
+- **After the proof,** step 5 and step 6. The proof's conditions 3 and 12 are then read again on the new file and reported beside the first reading, with no second judgement (decision 0161, "Answered by the designer on Nov 24, 2026").
+- **Step 4** waits for part B of decision 0166 as before, and the other five answers stand.
