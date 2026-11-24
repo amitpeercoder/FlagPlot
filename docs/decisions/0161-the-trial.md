@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 19, 2026 and confirmed by the de
 
 Summary: The plan for stage 4 of step 3. A commander who has stated an intent can ask the staff to try the plan before it goes: the staff builds private worlds from what the side knows and believes, never from the live enemy, plays the plan in each with both sides on doctrine, and hands in an estimate: what the plan needs, when it could go, what it may cost, how often it came off, and what was assumed about what is not seen. The same course is tried at two or three dates, so the estimate says what waiting buys and what the enemy may do with the days. Nine steps, the first two the mends of decision 0159; a world built from a picture is the one new means in the engine; a new crate plays the trials. With the conditions of its proof and seven questions for the designer.
 
-Standing: Confirmed by the designer, Nov 19, 2026, with his seven answers, each as recommended. Steps 1 to 8 are built (decisions 0162, 0163 and 0169; 0170; 0171, 0173 and 0174; 0175; 0176; 0177; 0178 and 0181, with 0204 after). Step 9, the proof, is not run: its setup is to be written, and three things stand before it ("Where the stage stands, Nov 24, 2026"). Step 10, the enemy's approaches, has no record yet
+Standing: Confirmed by the designer, Nov 19, 2026, with his seven answers, each as recommended. Steps 1 to 8 are built (decisions 0162, 0163 and 0169; 0170; 0171, 0173 and 0174; 0175; 0176; 0177; 0178 and 0181, with 0204 after). Step 9, the proof, is not run: by the designer's two answers of Nov 24, 2026 it is run on the 39 days as they stand, before the ships of the record, and the times at the full size are accepted; it waits for the measurement of the men unfed and the record of the fallen-back men, and for its setup. Step 10, the enemy's approaches, has no record yet
 
 ## The target
 
@@ -252,3 +252,51 @@ The architect's recommendation, which reverses the designer's answer 5 and so is
 
 1. **The proof before the ships of the record, or after?** Answer 5 of decision 0165 says after. The architect now recommends before, for the reason above; the American ships stay placeholders in either order.
 2. **The times at the full size.** A window of three dates takes about 67 s on the 39 days and 804 MB; a trial beside another 27 to 36 s; one trial 16 to 23 s by the load on the machine. The standard size is 12.8 s for a window and about 5 s compared. Are these accepted for condition 10, or is the full size to be made cheaper first (worlds without breakdowns, worlds side by side: owed from 0175)? The architect recommends accepting them for the proof and taking the cheaper worlds after it: they move no result.
+
+## Answered by the designer on Nov 24, 2026
+
+Both questions of "Where the stage stands", each as the architect recommended.
+
+1. **The proof is run before the ships of the record.** It is run on the 39 days as they stand, on files named in the setup and not changed until the report is written. This reverses answer 5 of decision 0165, and that record says so. After the proof the Japanese runs are given their destroyers (decision 0165, steps 5 and 6), and conditions 3 and 12 are then read again on the new file and reported beside the first reading, with no second judgement.
+2. **The times at the full size are accepted for condition 10:** a window of three dates at about 67 s and 804 MB, and a trial beside another at 27 to 36 s, on the named machine, with one trial's times as accepted on Nov 19, 2026. Worlds that record no breakdowns and worlds played side by side stay owed from decision 0175 and are taken after the proof.
+
+## Condition 9, the case (Nov 24, 2026)
+
+Written before any run. The code was read for it (a developer's report, checked by the architect in `crates/sim-staff/src/ready.rs` and the rulebook's chapter 7). The statements and the full hand calculation go into the test file's doc comment, written by the architect before the case is built; what follows fixes the case and its arithmetic.
+
+**What the code does.** A landing is ready when its force's loading and each unit's rehearsal are at the level its risk asks: 100 at preserve and at balanced, 50 at press (`thresholds`). A take with leave to launch sails on the first morning it is ready. So at balanced a landing prepared late is not less ready on the same day: it is as ready, later, and the staff hands in "late" once. An order with "not before day D" keeps the lift in port, and the orders to prepare and to rehearse stand through the wait, so loading and rehearsal go on rising to 100.
+
+**So the condition is put at press, with a day.** The same order, "take the place, at press, not before day D", with leave to prepare and leave to launch, is handed in on day 1 in one course and on day P in the other, D being the first morning the later course is ready. Both lifts sail on the morning of day D and are ashore on the same day. Only the day preparation began differs, which is what the condition asks. The two courses are two trials of one number, at the standard size, 16 worlds for 14 days.
+
+**The arithmetic,** on the case's own placeholder figures, `preparation_per_day` 10 and `unprepared_landing_fatigue` 40, one fighting unit of 1,000 men at a source one day's embarking and passage from the place, P = 4 and D = 9:
+
+- Begun on day 1: eight days in port with the order, days 1 to 8. Loading and rehearsal 8 x 10 = 80.
+- Begun on day 4: five days, days 4 to 8. Loading and rehearsal 5 x 10 = 50, which is the level press asks, on the morning of day 9 and not before.
+- Landing fatigue is `unprepared_landing_fatigue` times 100 less the rehearsal, over 100: 40 x 20 / 100 = 8 for the earlier, 40 x 50 / 100 = 20 for the later.
+- Fit men, of 1,000 landed and before any fight: 1,000 x 92 / 100 = 920 for the earlier, 1,000 x 80 / 100 = 800 for the later. The higher loading also lands the earlier's men faster (`unprepared_landing_share`), which works the same way.
+
+**What is asserted.** In each world, on the evening of the day the men are ashore, the fit men of the unit by the side's own view of that world, the course begun on day 1 against the course begun on day 4: more in at least 15 of the 16 worlds. A world in which either course's lift did not land that day is counted as not more, and reported. The day counts above (whether the day an order is taken in counts as a day in port) are checked against scenario 27's hand calculation when the doc comment is written; if a count is one out, P or D moves by a day and the condition does not.
+
+**What it does not show.** That a landing at balanced gains by an earlier start: it gains a date, not fitness, and the window's "decide later" already shows a date. The report says so.
+
+## The measurement of the men unfed, before the record of the fallen-back men (Nov 24, 2026)
+
+Decision 0224's reading of Nov 23 (5) left a lead from one game: the Japanese men lost to hunger are those fallen back to (2,-5), a hex no order names. This says what is to be counted on more seeds before the record is written. It is the umpire's reading, from exports. It prints counts and never a verdict. It is not the proof's run and judges no condition; the proof's report will say that seeds 1 to 100 of its arrangement were read for a cause beforehand.
+
+**The games.** Staff against staff, 39 days, seeds 1 to 100, one `sim-cli export` a seed, release build, from main as it stands (state v59, rules label 32, doctrine `supply-59`; the commit is written in the result). Two arrangements, reported apart:
+
+- **P:** `data/scenarios/stage-3-proof/07a_slice.toml` as it is on main. It is the file condition 3 will be read on.
+- **T:** the same file with the table's ground figures, as decision 0224's reading names it (1), so that the result can be set beside the 1,011 men a seed of Nov 23. If T's Japanese men lost unfed do not come to that figure's neighbourhood, say so before anything else.
+
+**What is counted,** for each seed and each side, with `scripts/0159-proof/hunger.py`'s reading of "landed" and "lost" kept word for word (L, the men landed at a place not the side's; U, the men of every `men_lost_unfed` of those units from their first counted landing):
+
+1. **A unit's place.** The hex of its latest counted `men_landed`.
+2. **A unit's latest move** before a given event: the last, in event order, of its `unit_fell_back`, `spent_unit_fell_back` and `march_arrived` events, or none.
+3. **A fallen-back man unfed** is a man of a `men_lost_unfed` event of a counted unit in a hex H, where the unit's latest move before that event is a `unit_fell_back` or a `spent_unit_fell_back` whose `to` is H. Their sum is F. F is split by which of the two events it was, and by whether H is the unit's place (it fell back to where it landed) or another hex.
+4. **The rest of U,** split: lost at the unit's place with no move before it (A); lost in a hex reached by `march_arrived` (M); anything else (X, which should be nothing: each such event is listed).
+5. **For each hex H that has any of F,** summed over the seeds and listed by seed: the men who fell back there (the events' `men`) and the days; the first and last day of a loss there; whether a base of the side stood in H at the first loss, of the start or formed (`base_formed`, `march_base_formed`); the tons of supply the side unloaded in H from the day of the first fall-back to the end (`cargo_unloaded`); and the last `men_fed` of each unit there before its first loss, with its day.
+6. **Whether the staff looked to H.** For each such H and seed: whether, from the day of the first fall-back, any order of the side's staff names H (a route's end, an unload, a march to or from it), counted by kind. Zero is the lead's claim.
+
+**What is printed,** for each arrangement and side: the medians over the seeds on which the side landed men of U/L, F/L, A/L and M/L, and of (U less F)/L, which is what the hunger would be were no fallen-back man lost; the count of seeds in which F is more than half of U; the sum of F by hex; and the list of item 6. The per-seed rows go to a file beside it.
+
+**What the record will rest on.** If (U less F)/L is at or under one in twenty and F is most of U, the cause is the lead's and the record settles whose the fallen-back men are to feed. If A is large, the men starve where they landed and the cause is still the supply of the place, which is a different record. If neither, the result comes back to the architect before anything is planned.
