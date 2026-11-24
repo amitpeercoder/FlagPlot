@@ -4,7 +4,7 @@ Status: settled by the architect on Nov 19, 2026, inside the plan for step 3, st
 
 Summary: A commander who is shown what an operation would cost today wants to know what it would cost next week. The window tries the same course at two or three dates, in the same worlds, and sets the estimates side by side: what the side has more of at the later date, what the enemy did with the same days, and how it then went. The dates are taken from when something of the side's own changes, not at even steps. A later date is the same commands handed in on a later morning, with the days between played
 
-Standing: Settled by the architect, Nov 19, 2026, inside decision 0161, and amended on review. Built on Nov 19, 2026. Two ground figures of scenario 96's own, which the loader asks for, wait for the architect's reading
+Standing: Settled by the architect, Nov 19, 2026, inside decision 0161, and amended on review. Built on Nov 19, 2026, and its readings ruled on. A later date of a window is the order given later, not the landing prepared now and held; the times of a window at the full size wait for the designer
 
 ## Why
 
@@ -132,3 +132,13 @@ Read on Nov 19, 2026, with the build's core: the source test's two new allowance
 7. **A leave among the standing commands is counted as given by the course.** It stands for this build. Decision 0178, rule 9, changes it: a leave the commander queued is his own.
 8. **The measured times are higher than the plan's estimate:** on the 39 days, with the dates the window chose, 1.1 s at the small size (one date), 12.8 s at the standard (three dates) and 67 s at the full (three dates), with 804 MB at the full. The dates fall 7 and 10 days after the first, not 3 and 5, and each date is a trial's horizon played again. No size is changed by this record. A full window of over a minute goes to the designer with step 8, where a seat first asks for one.
 
+## The architect's reading, Nov 24, 2026
+
+Made with decision 0161's "Where the stage stands". The standing line said two ground figures waited for a reading; they were ruled on Nov 19, 2026 (rulings, 1), and the line is corrected.
+
+1. **A window answers "what if I give the order later".** That is amended 1, and it stands as built. It does not answer "what if I prepare now and go later", which is what the spec's "what if we wait" asks where it says the days between are played "with preparation". The window's own words say so at each later date. The proof's report says it again, as a thing the stage does not do, whatever the conditions give.
+2. **Condition 9 of decision 0161 is not read from a window, and does not need one.** It asks for the same declared start and the same landing date with only the day preparation began changed. That is two courses in the same worlds: in one the order and the leave to prepare are handed in on the first day, in the other on a later day, and in both the landing is held to the same day. A trial takes a course of commands each on its day, a leave among them, and two trials of one number are played in the same worlds (decision 0175), so the means exist. The comparison of two courses world for world is the window's own function (amended 10).
+3. **What is not known is whether the staff holds the day.** If a take that began to prepare late sails late, the two landings are on different days and the condition cannot be put as written. It is read from the code before the case is stated; the commission is in decision 0161.
+4. **A lead, not a ruling.** A commander can already say "not before day D" in an order (decision 0159), and decision 0181's case has such an order ashore two days after its day. If the staff loads and rehearses a landing while it waits for that day, a later date tried as the same order with "not before" its date would be "prepare now and go later", beside the window's "decide later". That would be a second way of trying a date, and a change to rule 2 as amended, which keeps a day written inside a command as written. It is not made here. The same reading of the code settles whether it can be.
+5. **An air group that comes due** (rulings, 2) and **a unit that comes later added to a landing made ready** stay owed. Neither is read by the proof.
+6. **The times** (rulings, 8) have not been put to the designer. They are a question of decision 0161's reading of today.
