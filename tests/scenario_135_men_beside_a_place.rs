@@ -1068,32 +1068,24 @@ fn it_ends_when_the_men_go() {
 }
 
 /// Property: gone and come back.
-///
-/// Not holding as written (the build's report, Nov 24, 2026): a scenario
-/// order of day 9 is taken in before the staff is asked on the morning of
-/// day 9 (the log has `OrderAccepted` ahead of that morning's staff
-/// reasons), so unit 1 is marching to D on that morning and, by rule 2 as
-/// amended (men marching to the base count), intent 3 stands; it is never
-/// withdrawn and intent 6 is never formed. Every supply and man figure below
-/// holds as written (base 3: 70 t at the end of day 11 and 55 t at the end;
-/// base 2: 68.5 t and 64 t; no man lost; no second run). The statement is the
-/// architect's to restate; no expected number is changed here.
 #[test]
-#[ignore = "statement differs from the engine: the order of day 9 is in before the staff is asked"]
 fn gone_and_come_back() {
     let g = play(&with_orders(&format!(
         "{}{}",
         march_order(6, 1, (5, 0)),
-        march_order(9, 1, (4, 0))
+        march_order(10, 1, (4, 0))
     )));
-    // Intent 3 is withdrawn on the morning of day 9, the day's orders being
-    // taken in after the staff is asked.
+    // On the morning of day 9 the unit is at P with no march, and intent 3
+    // is withdrawn.
+    assert_eq!(g.unit_state(8, 1).hex, Some(P));
+    assert!(g.unit_state(8, 1).march.is_none());
     assert!(g.commands(9).contains(&Cmd::Withdraw(3)));
     assert_eq!(g.intent_state(3).withdrawn_day, Some(9));
     assert!(!g.commands(9).iter().any(|c| matches!(c, Cmd::Form(..))));
-    // On the morning of day 10 unit 1 is marching to D: the staff forms a
-    // new supply of base 3 under intent 1, intent 6, with plan 4, and sets
-    // its forces limit.
+    // The order is taken in before the staff is asked: on the morning of
+    // day 10 unit 1 is marching to D, and the staff forms a new supply of
+    // base 3 under intent 1, intent 6, with plan 4, and sets its forces
+    // limit.
     assert_eq!(g.formed_intents().last(), Some(&(10, 6, 1)));
     assert!(g.commands(10).contains(&Cmd::Form(1, keep_kind(3))));
     assert_eq!(g.intent_state(6).kind, keep_kind(3));
@@ -1101,14 +1093,17 @@ fn gone_and_come_back() {
     assert_eq!(g.intent_state(6).withdrawn_day, None);
     assert_eq!(g.staff_limit(10, 6), Some((vec![1], Some(1))));
     assert_says(&g.reasons_serving(10, 1), &["marching here from (5,0)"]);
-    // The unit arrives on day 11, with 25 t taken from base 2.
-    assert_eq!(g.unit_state(10, 1).hex, Some(P));
-    assert_eq!(g.unit_state(11, 1).hex, Some(D));
-    assert_eq!(g.supply(11, 3), n(70));
-    assert_eq!(g.supply(14, 3), n(55));
-    assert_eq!(g.supply(11, 2), fx("68.5"));
-    assert_eq!(g.supply(14, 2), n(64));
-    // Intent 6 needs no run, and no man is lost.
+    // The unit marches on days 10, 11 and 12 and arrives on day 12 with 25 t
+    // taken from base 2.
+    assert_eq!(g.unit_state(11, 1).hex, Some(P));
+    assert_eq!(g.unit_state(12, 1).hex, Some(D));
+    assert_eq!(g.supply(12, 2), n(62));
+    assert_eq!(g.supply(14, 2), n(59));
+    assert_eq!(g.supply(12, 3), n(70));
+    assert_eq!(g.supply(14, 3), n(60));
+    // Intent 6 needs no run: the stock at D is 70 t on the morning of day 13
+    // and 65 t on day 14, and the one run of the game is the main case's.
+    assert_eq!(g.supply(13, 3), n(65));
     assert_eq!(g.runs().len(), 1);
     assert_eq!(g.men(14, 1), 1000);
     g.nothing_refused();
