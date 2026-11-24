@@ -177,3 +177,20 @@ Thirteen of the fourteen statements of scenario 135 held as written. "Gone and c
 
 The statement is restated in the test's doc comment with the return ordered on day 10, and was checked on the built branch: intent 3 is withdrawn on the morning of day 9; on the morning of day 10 the unit is marching to the dump and intent 6 is formed, with plan 4 and its forces limit; the unit arrives on day 12 with 25 t; base 2 holds 62 t that evening and 59 t at the end, and base 3 holds 70 t and 60 t; no man is lost and no second run is sent. The rule is not changed. The line of "The statements and the hand calculation" above that has the unit ordered back on day 9 is read with this. The build fills the test to the new statement and takes its mark off.
 
+
+
+## As measured after the build, Nov 24, 2026
+
+Made as "How it is judged", 3, says, by `scripts/unfed/` (the reader of decision 0161 brought into the repository, with the count G as 0161 amended it, and the men who begin ashore added; `run.sh` makes the exports and reads them): `sim-cli` in release from the build's tree (rules label 34, doctrine `supply-61`), the proof's arrangement `data/scenarios/stage-3-proof/07a_slice.toml` (P) and the same with the table's ground figures (T, the untracked `data/scenarios/tmp-inside/07a_slice_T.toml`), seeds 1 to 100, 39 days. Facts only; nothing is judged and no figure is moved. Medians over the 100 seeds, before (the first measurement, doctrine `supply-59`) and after.
+
+| | Before | After |
+| --- | --- | --- |
+| P, Japanese, men landed lost unfed over men landed (counted units, 0161's condition 3 reading) | 0.0505 | **0.0699** |
+| P, Japanese, every unit's men lost unfed over men landed | 0.3083 | 0.1653 |
+| P, Japanese, men who begin ashore (2,480), lost unfed over those men | 0.6206 | 0.2298 |
+| P, the same, lost in a hex where a base of the side stood (condition 13 as restated) | 0.5069 | 0.1161 |
+| P, Japanese, G (lost on the march back to a fall-back's hex) over men landed | 0.2093 | 0.0481 |
+| P, Allied, men landed lost unfed over men landed | 0.0276 | 0.0028 |
+| T, both sides, every one of the above | 0 | 0 |
+
+Read plainly. The garrison's hunger falls by more than half on the proof's figures, and condition 13's count (a hex where a base of the side stood) is 0.1161 on 100 seeds against a mark of 0.05: not met by this build. The men landed are fed **worse**, 0.0699 against 0.0505, as the amendment (item 2) said they might be: the two supplies draw on one pool and the garrison's has the earlier claim; the order of service was not changed to move the figure. The table's figures show no loss at all, before or after. The sums over the seeds: Japanese men who begin ashore 248,000, lost unfed 57,529 (before 154,253), of which 29,352 at a base of the side (before 126,076) and the rest on the march with no base.
