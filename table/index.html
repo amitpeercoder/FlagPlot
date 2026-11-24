@@ -2518,6 +2518,21 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
     });
     return out;
   }
+  // An order against a force that was given inside a day is taken in at the next dusk; where the force's report was dropped by then
+  // it is refused there, and the tools say so only in the day's events. The staff's slip names the force by the report the order
+  // was given on, which the page kept when it gave it (the contact is gone from the picture by then).
+  var GIVEN_ON = {}, REFUSED_SEEN = {};
+  function refusalsAtDusk(evs) {
+    var out = [];
+    (evs || []).forEach(function (e) {
+      var m = e.event_kind === 'command_refused' && /command refused \(contact \d+ is not held[^)]*\): set intent:\d+ to (destroy|shadow) the force of contact (\d+)/.exec(e.text || '');
+      if (!m || REFUSED_SEEN[e.number]) return; REFUSED_SEEN[e.number] = true;
+      var g = GIVEN_ON[m[2]] || { search_only: m[1] === 'shadow' };
+      out.push({ thing: 'order_refused', day: Math.max(1, (e.day || 1) - 1), words: 'We could not take up the order: ' + destroyOrderWords({ search_only: g.search_only, distance: g.distance, following: g.place ? { place: g.place } : null }).replace(/^(Destroy|Shadow)/, function (v) { return v.toLowerCase(); }) + '. We no longer hold the report of the force.' });
+    });
+    return out;
+  }
+  function duskRefusals(day) { return eventsOf(day).then(refusalsAtDusk, function () { return []; }); }
   function noticeSlips(box) { lastNotices.forEach(function (n) { var a = slip('FROM STAFF \u00b7 DAY ' + n.day, null, null, null, false, box); a.appendChild(rich('strong', '', n.words)); }); }
   // The two orders a held contact's card offers, above the orders on its waters.
   function followOffer(c) {
@@ -2527,7 +2542,7 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
     var near = [2, 4].map(function (d) { var b = el('button', '', round(d).toUpperCase()); b.type = 'button'; b.setAttribute('aria-pressed', String(d === kept)); b.addEventListener('click', function () { kept = d; near.forEach(function (x, k) { x.setAttribute('aria-pressed', String([2, 4][k] === kept)); }); }); seg.appendChild(b); return b; });
     function give(only, b) {
       b.disabled = true;
-      return act('set_intent', { intent_kind: 'destroy_force', contact: n, distance: kept, search_only: only }, only ? 'Signed: shadow the enemy force. The staff takes it up at 1800.' : 'Signed: destroy the enemy force. The staff takes it up at 1800.', box).then(function (ok) { if (!ok) b.disabled = false; });
+      GIVEN_ON[n] = { place: c.place, distance: kept, search_only: only }; return act('set_intent', { intent_kind: 'destroy_force', contact: n, distance: kept, search_only: only }, only ? 'Signed: shadow the enemy force. The staff takes it up at 1800.' : 'Signed: destroy the enemy force. The staff takes it up at 1800.', box).then(function (ok) { if (!ok) b.disabled = false; });
     }
     var d = el('button', 'main', 'DESTROY THIS FORCE'); d.type = 'button'; d.addEventListener('click', function () { give(false, d); }); row.appendChild(d); row.appendChild(seg);
     var s = el('button', '', 'SHADOW IT'); s.type = 'button'; s.addEventListener('click', function () { give(true, s); });
@@ -4563,8 +4578,9 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
               lastTold.push({ thing: t.thing, lines: lines, events: told.map(function (n) { return byNumber[n]; }) }); });
             var subT = submarineTold(subEv); lastTold = lastTold.concat(subT);
             clock = { at: r.clock.at, day: r.clock.day }; await refresh();
+            if (r.clock.at === '0600') lastNotices = lastNotices.concat(await duskRefusals(r.clock.day));
             var arrive = arrivalsStop(), evening = eveningStop();
-            if (!until || !playing || r.game_over || r.stopped !== 'pulses' || arrive || evening || subT.length) {
+            if (!until || !playing || r.game_over || r.stopped !== 'pulses' || arrive || evening || subT.length || lastNotices.length) {
               stopArrive = arrive; stopEvening = evening;
               return rest('');
             }
@@ -4576,6 +4592,7 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
             say('running', 'Day ' + day + ': the reports come in.');
             var dayEv = await eventsOf(day), subT = submarineTold(dayEv); lastTold = subT;
             await plotDay(day, dayEv); await refresh();
+            lastNotices = lastNotices.concat(await duskRefusals(M.day));
             var fired = (d.fired && d.fired.length) || lastNotices.length, arrive = arrivalsStop(), evening = eveningStop();
             if (!until || !playing || d.game_over || fired || arrive || evening || subT.length) { stopArrive = arrive; stopEvening = evening; return rest(''); }
           }

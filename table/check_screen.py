@@ -982,14 +982,14 @@ def follow_code(text):
     what draws, run in node: the card's two orders, the order's paper, the rings, the slips and the stops."""
     helpers = "\n".join(cut_function(text, h) for h in ("function round(n)", "function pulsesOld(n)", "function kv(body, rows)", "function hexWords(pl)"))
     block = "\n".join(cut_function(text, h) for h in ("function heldContact(n)", "function destroyOrderWords(i)", "function followPaper(i)", "function followRings(st)",
-                                                      "function noticesOfTold(told, day)", "function noticesOfReport(rep, day)", "function noticeSlips(box)", "function followOffer(c)"))
+                                                      "function noticesOfTold(told, day)", "function noticesOfReport(rep, day)", "function refusalsAtDusk(evs)", "function noticeSlips(box)", "function followOffer(c)"))
     stops = "\n".join(cut_function(text, h) for h in ("function stopOn()", "function noticeStops()"))
     tick_line = [line for line in text.split("\n") if line.strip().startswith("var TICK_DEFAULT")][0]
     notice_line = [line for line in text.split("\n") if line.strip().startswith("var NOTICE_STOPS")][0]
     return """
 Object.defineProperty(Node.prototype, 'nodeType', { get() { return this.tag === '#text' ? 3 : 1; } });
 Node.prototype.addEventListener = function (k, f) { (this.listeners = this.listeners || {})[k] = f; };
-var WATCH = null, calls = [], placed = [], read = [], lastNotices = [], ticks = {};
+var WATCH = null, calls = [], placed = [], read = [], lastNotices = [], ticks = {}, GIVEN_ON = {}, REFUSED_SEEN = {};
 function whereIs(pl) { return '<' + pl.q + ',' + pl.r + '>'; }
 function num(h) { return parseInt(String(h).split(':')[1], 10); }
 function placeLink(pl) { placed.push([pl.q, pl.r]); const s = el('span', ''); s.appendChild(el('button', 'ref', '<' + pl.q + ',' + pl.r + '>')); return s; }
@@ -1017,6 +1017,11 @@ function main(x) {
   out.words = x.papers.map(i => destroyOrderWords(i));
   out.told = x.told.map(t => noticesOfTold(t[0], t[1])); out.report = x.reports.map(r => noticesOfReport(r[0], r[1]));
   const box = el('div', ''); lastNotices = x.slips; noticeSlips(box); out.slips = box.kids.map(k => k.textContent);
+  // an order given inside a day on a report, refused at the next dusk where the report was dropped
+  GIVEN_ON['1'] = { place: x.contacts[0].place, distance: 2, search_only: false }; GIVEN_ON['4'] = { place: x.contacts[0].place, distance: 4, search_only: true };
+  out.refusals = refusalsAtDusk(x.events); out.again = refusalsAtDusk(x.events);
+  lastNotices = out.refusals; const rbox = el('div', ''); noticeSlips(rbox); out.refusalSlips = rbox.kids.map(k => k.textContent);
+  lastNotices = x.slips;
   out.ticks = {};
   Object.keys(TICK_DEFAULT).forEach(k => { ticks[k] = TICK_DEFAULT[k]; }); out.defaultStops = noticeStops(); out.allStops = stopOn();
   ticks.contact_lost = false; out.untickedLost = noticeStops(); out.untickedAll = stopOn(); ticks.contact_lost = true;
@@ -1024,6 +1029,16 @@ function main(x) {
   return out;
 }
 """
+
+
+REFUSAL_EVENTS = [
+    {"day": 2, "event_kind": "command_refused", "number": 5, "pulse": None, "entities": [],
+     "text": "Allied the commander's command refused (contact 1 is not held: the commander's picture holds no contact of that number): set intent:1 to destroy the force of contact 1, within 2 hexes"},
+    {"day": 2, "event_kind": "command_refused", "number": 6, "pulse": None, "entities": [],
+     "text": "Allied the commander's command refused (contact 4 is not held: the commander's picture holds no contact of that number): set intent:2 to shadow the force of contact 4, within 4 hexes"},
+    {"day": 2, "event_kind": "command_refused", "number": 7, "pulse": None, "entities": [], "text": "Allied the commander's command refused (set_leave twice): set leave prepare"},
+    {"day": 2, "event_kind": "command_taken", "number": 8, "pulse": None, "entities": [], "text": "Allied the commander's command taken: set intent:3 to destroy the force of contact 2, within 2 hexes"},
+]
 
 
 def follow_place(q, r):
@@ -1068,7 +1083,7 @@ def a_force_ordered(report_sample=None):
     same_sort = [{"kind": "follows", "history": [{"day": 5, "why": 85}], "words": same_words}]
     reports = [[{"matters": matters}, 6], [{"matters": matters}, 7], [{"matters": matters}, 5], [{"matters": same_sort}, 5]]
     slips = [{"thing": "contact_lost", "day": 6, "words": lost_words}, {"thing": "force_not_found", "day": 7, "words": ended_words}, {"thing": "follows_other_sort", "day": 5, "words": other_words}]
-    said = run_in_node(follow_code(text), {"contacts": [held], "state": states[0], "papers": papers, "states": states, "told": told, "reports": reports, "slips": slips})
+    said = run_in_node(follow_code(text), {"events": REFUSAL_EVENTS, "contacts": [held], "state": states[0], "papers": papers, "states": states, "told": told, "reports": reports, "slips": slips})
     # 1. where it is
     check(said["offered"][0] == "DESTROY THIS FORCE" and said["offered"][-1] == "SHADOW IT" and said["offered"][1:-1] == ["WITHIN 80 MILES", "WITHIN 160 MILES"],
           f"the card of a held contact has DESTROY THIS FORCE with the choice of 2 or 4 hexes round, then SHADOW IT ({said['offered']})")
@@ -1130,6 +1145,16 @@ def a_force_ordered(report_sample=None):
     check(all(s.startswith("FROM STAFF") for s in said["slips"]) and said["slips"][0].endswith(lost_words) and all(w in " ".join(said["slips"]) for w in ("We have lost the force", "We have not found the force", "We now take the force for a carrier force")),
           f"the slips are the staff's, as we ({said['slips'][0][:60]})")
     check(all("last reported at" in w for w in (lost_words, ended_words, other_words)), "each names the force as the paper does, by its report")
+    # 9b. an order given inside a day on a report dropped by the dusk: refused there, and a slip from the staff at the dusk
+    refused = said["refusals"]
+    check(len(refused) == 2 and said["again"] == [] and said["refusalSlips"][0].startswith("FROM STAFF \u00b7 DAY 1"),
+          f"a command refused as a contact not held is a slip, each once, and no other refusal or taking is ({said['refusalSlips']})")
+    check(refused[0]["words"] == "We could not take up the order: destroy the enemy force reported at <8,0>, within 80 miles. We no longer hold the report of the force."
+          and refused[1]["words"] == "We could not take up the order: shadow the enemy force reported at <8,0>, within 160 miles. We no longer hold the report of the force.",
+          f"it names the force by the report the order was given on, as the paper does, and says we no longer hold it ({refused[0]['words']})")
+    check(not re.search(r"\w+:\d+|\bcontact\b|\bintent\b|\d+ (hex|point)", " ".join(r["words"] for r in refused)) and re.search(r"\bWe\b", refused[0]["words"]),
+          "it gives no number as a handle, no intent and no hex count, and the staff speaks as we")
+    check("if (r.clock.at === '0600') lastNotices = lastNotices.concat(await duskRefusals(r.clock.day))" in text and "duskRefusals(M.day)" in text and "GIVEN_ON[n] = { place: c.place" in text, "the page reads the dusk's refusal where the clock reaches the dusk, by a pulse or by a day, and keeps the report an order was given on")
     # 10. the stops
     for stop, words in (("follows_other_sort", "a carrier where there was none, or none where there was one"), ("contact_lost", "a force lost"), ("force_not_found", "an order against a force ended")):
         check(f'<label class="notice"><input type="checkbox" id="stop-{stop}"> {words}</label>' in text, f"the panel has the stop {stop}: {words}")
@@ -1143,7 +1168,7 @@ def a_force_ordered(report_sample=None):
     check("t.nothing.push(x.r.worked || '')" in plan and "/cannot (meet|be met)/i.test(x.r.worked || '')" in plan and "destroy_force" not in plan,
           "where the staff says the order cannot be met, the paper says so in the staff's words as given, as a deny's paper does")
     # 12. words, 13. no points
-    every = " ".join([p for p in said["papers"] if p] + said["slips"] + said["words"] + [said["offerText"]])
+    every = " ".join([p for p in said["papers"] if p] + said["slips"] + said["words"] + [said["offerText"]] + said["refusalSlips"])
     check("order" in every.lower() and not re.search(r"\bintents?\b", every, re.I), "the text drawn holds order and never intent")
     check("the enemy" in every and not re.search(r"\bhis\b", every), "it says the enemy and never his")
     check(re.search(r"\bWe\b", every) and all(re.search(r"\bwe\b", p, re.I) for p in (said["papers"][0], said["papers"][3], said["slips"][0])), "the staff speaks as we")
@@ -1237,6 +1262,68 @@ def a_force_followed_through_a_bridge(sim_cli, port):
                     check(len(told["told"][0]) == 1 and told["told"][0][0]["thing"] == "force_not_found" and "the order is ended" in told["told"][0][0]["words"], "and its slip was drawn")
             check(all(r.get("stopped") != "told" and not r.get("told") for r in runs[:5]) and runs[5].get("stopped") == "told" and runs[6].get("told", [{}])[0].get("thing") == "force_not_found",
                   "run with the three stops ticked, the clock stopped for the loss and for the end and for nothing else of this order")
+        finally:
+            process.send_signal(signal.SIGTERM)
+            process.wait(30)
+
+
+def a_refusal_at_dusk_through_a_bridge(sim_cli, port):
+    """The page's refusal slip on a real game: scenario 133's game B on the table's copy (the frozen figures with the reports made exact,
+    a report dropped after 2 pulses and orders given inside a day), an order against contact 1 given at 0600 of day 1; the contact is
+    dropped by the afternoon, and at the dusk the engine refuses the order. The page's own function runs in node on the day's events."""
+    import shutil
+    print("-- an order given inside a day on a report dropped by the dusk: the table's copy of scenario 133, game B", flush=True)
+    repo = os.path.dirname(HERE)
+    text = page_text()
+    with open(os.path.join(repo, FOLLOWED_GAMES, "133_b_which_contact.toml"), encoding="utf-8") as f:
+        original = f.read()
+    with tempfile.TemporaryDirectory() as folder:
+        reference = os.path.join(folder, "reference")
+        os.makedirs(reference)
+        frozen = os.path.join(repo, "data", "reference", "step1")
+        for name in os.listdir(frozen):
+            if not name.endswith(".md"):
+                shutil.copy(os.path.join(frozen, name), os.path.join(reference, name))
+        search = os.path.join(reference, "search.toml")
+        with open(search, encoding="utf-8") as f:
+            figures = f.read()
+        for was, now in (('position_error_chance = "0.3"', 'position_error_chance = "0"'), ('count_over_chance = "0.2"', 'count_over_chance = "0"'), ('count_under_chance = "0.2"', 'count_under_chance = "0"'),
+                         ("contact_drop_age_pulses = 5", "contact_drop_age_pulses = 2")):
+            check(figures.count(was) == 1, f"the figures have {was} once, to be changed")
+            figures = figures.replace(was, now)
+        head, rows = figures.split("[kind_confusion.", 1)
+        for block in ("[kind_confusion." + rows).split("[kind_confusion."):
+            if "]" in block:
+                kind = block.split("]")[0]
+                head += f'[kind_confusion.{kind}]\n{kind} = "1"\n\n'
+        with open(search, "w", encoding="utf-8") as out:
+            out.write(head)
+        scenario = original[:original.index("# The Allied commander's commands")]
+        scenario = scenario.replace('"../../reference/', '"' + reference + "/").replace('"../../map/', '"' + os.path.join(repo, "data", "map") + "/")
+        scenario = scenario.replace("days = 3", "days = 3\norders_inside_a_day = true", 1)
+        path = os.path.join(folder, "game.toml")
+        with open(path, "w", encoding="utf-8") as out:
+            out.write(scenario)
+        command = [sys.executable, os.path.join(HERE, "serve.py"), path, "--seat", "allied", "--start", "1942-08-24", "--port", str(port), "--sim-cli", sim_cli]
+        process = subprocess.Popen(command, stdout=subprocess.PIPE, text=True)
+        try:
+            check(process.stdout.readline().startswith("The table is at "), "the bridge is up on the table's copy of scenario 133, game B, the Allied seat, with orders inside a day")
+            call = lambda tool, arguments=None: post(f"http://127.0.0.1:{port}/call", {"tool": tool, "arguments": arguments or {}})["ok"]
+            contacts = call("list_contacts")["contacts"]
+            call("advance", {"pulses": 1})
+            given = call("set_intent", {"intent_kind": "destroy_force", "contact": 1, "distance": 2, "search_only": False})
+            check(given["status"] == "queued", f"inside the day the order is taken at once ({given['summary']})")
+            said = None
+            for _ in range(2):
+                answer = call("advance", {"pulses": 1})
+            check(answer["clock"]["at"] == "dusk" and call("list_contacts")["contacts"] == [], "by the dusk the report is dropped from the picture")
+            answer = call("advance", {"pulses": 1})
+            check(answer["clock"]["at"] == "0600" and answer["clock"]["day"] == 2, "the dusk is handed in, and the next day opens")
+            events = call("events", {"day": answer["clock"]["day"]})["events"]
+            said = run_in_node(follow_code(text), {"contacts": contacts, "state": {"intents": []}, "papers": [], "states": [], "told": [], "reports": [], "slips": [], "events": events})
+            check([r["words"] for r in said["refusals"]] == ["We could not take up the order: destroy the enemy force reported at <2,0>, within 80 miles. We no longer hold the report of the force."],
+                  f"the page's slip at the dusk, from the day's events as the tool gives them ({said['refusals']})")
+            check(said["refusalSlips"][0].startswith("FROM STAFF") and said["again"] == [], "it is a slip from the staff, drawn once")
         finally:
             process.send_signal(signal.SIGTERM)
             process.wait(30)
@@ -2302,6 +2389,7 @@ def main():
     the_patrol_through_the_page(args.sim_cli, args.port)
     the_intelligence_through_a_bridge(args.sim_cli, args.port)
     a_force_followed_through_a_bridge(args.sim_cli, args.port)
+    a_refusal_at_dusk_through_a_bridge(args.sim_cli, args.port)
     print("-- the bridge started with a scenario: table/check_watch.py", flush=True)
     done = subprocess.run([sys.executable, os.path.join(HERE, "check_watch.py"), "--sim-cli", args.sim_cli,
                            "--port", str(args.port + 3), "--hold", str(args.hold)])
