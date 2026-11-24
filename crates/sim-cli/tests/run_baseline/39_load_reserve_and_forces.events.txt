@@ -2,10 +2,10 @@ Scenario 39: A load up to a weight, a reserve, and forces formed and joined
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 84de80a80da0de3b  19 events
-day   2  hash 5b3938caa836b8d2  8 events
-day   3  hash 7be046a45aa734c7  5 events
-day   4  hash 2b91dc9690686ec7  4 events
+day   1  hash 5adbc8059e963557  19 events
+day   2  hash 48106ccf8beb8856  8 events
+day   3  hash f3365e9f53461123  5 events
+day   4  hash 8e4c590d3aad7643  4 events
 
 #1 D1 -         order:1 accepted for base:2  <- order:1
 #2 D1 -         ship:5, ship:6 formed into task_force:1000001 at base:2  <- order:1

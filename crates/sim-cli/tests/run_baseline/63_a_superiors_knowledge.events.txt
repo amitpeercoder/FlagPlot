@@ -2,9 +2,9 @@ Placeholder scenario 63: A superior's knowledge
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 01ead3bcdaa24476  49 events
-day   2  hash 6ce489478f9bc698  12 events
-day   3  hash 2a534e141a298d38  5 events
+day   1  hash ecdcac9bc4989f02  49 events
+day   2  hash e844bab3ac3117fc  12 events
+day   3  hash 72d762d25304a29c  5 events
 
 #1 D0 -         Allied report: 1 ship, carrier, at (12,0), held at the start: new contact:1
 #2 D1 -         Allied the commander's command taken: set intent:1 to operate the carrier force task_force:1 from (0,0)

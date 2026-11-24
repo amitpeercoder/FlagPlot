@@ -2,14 +2,14 @@ Scenario 6c: Fatigue and rest
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 74b1d8ac1b249557  35 events
-day   2  hash b4e0430330ca0ca1  25 events
-day   3  hash fa5102948a8c05f6  25 events
-day   4  hash 0a9c07eb4af66fbe  22 events
-day   5  hash 9935dd7b6e8614cd  26 events
-day   6  hash 7b28e7f7f51ba074  21 events
-day   7  hash 76089a4e317fb98c  14 events
-day   8  hash 2fb77ea349c8354b  18 events
+day   1  hash 03f333fcd31ff05b  35 events
+day   2  hash 1cdd7803c9c80415  25 events
+day   3  hash bbfeb9c6670f7eea  25 events
+day   4  hash d2254b2634e31a6a  22 events
+day   5  hash ec882b9749ece741  26 events
+day   6  hash 8447ca0862269ce0  21 events
+day   7  hash 841bd72435768e58  14 events
+day   8  hash 8fca942fd6abde9f  18 events
 
 air_group:1 "Placeholder bomber group" (Japanese) at base:1: 1 ready, mission BaseStrike on base:2, fatigue 32, rests above 30, no arc
 air_group:2 "Placeholder escort group" (Japanese) at base:1: 10 ready, mission CombatAirPatrol, patrol share 0.5, fatigue 32, rests above 40, stood down, no arc
