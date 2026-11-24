@@ -785,7 +785,7 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
     var body = { tool: tool, arguments: args || {} }; if (WATCH) body.side = WATCH.side;
     return post(body).then(answerOf);
   }
-  if (!window.THREE) { fatal('The table needs its drawing library, which did not load. Check the network and reload.'); return; }
+  if (!window.THREE) { fatal('The table needs its drawing library, which did not load. Reload the page.'); return; }
 
   var canvas = $('scene'), renderer;
   try { renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true }); } catch (e) { fatal('This table needs WebGL, which this browser has turned off.'); return; }

@@ -32,16 +32,21 @@ const ready = (async () => {
 
 self.onmessage = async (message) => {
   const { id, fn, args } = message.data;
+  let called = false;
   try {
     await ready;
     if (ended) throw new Error(ENDED);
     if (!MESSAGES.includes(fn)) throw new Error('not a message of the door');
     const given = WITH_DATA.includes(fn) ? [data, ...args] : args;
+    called = true;
     const answer = door[fn](...given);
     self.postMessage({ id, ok: answer === undefined ? '' : answer });
   } catch (e) {
-    // A trap is the module ending; a thrown string is the door's own words.
-    if (e instanceof WebAssembly.RuntimeError) ended = true;
+    // The door's own refusals reach here as a plain `Error` made by the binding, and are
+    // its words. Anything else thrown by a call into the module (a trap, a stack that ran
+    // out, a thing that is not an Error) is the module ending, and a module that has ended
+    // is never used again (ruling 27).
+    if (called && !(e instanceof Error && Object.getPrototypeOf(e) === Error.prototype)) ended = true;
     self.postMessage({ id, error: ended ? ENDED : String(e && e.message !== undefined ? e.message : e) });
   }
 };

@@ -72,7 +72,7 @@
 
 import { spawn, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { existsSync, mkdtempSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { pathToFileURL } from 'node:url';
 
@@ -280,6 +280,123 @@ const compiled = new WebAssembly.Module(wasmBytes);
     ...Object.values(e.directives || {}).map((d) => `directives/${d.split('/').pop()}`),
   ]).filter((f) => !existsSync(`${SITE}${f}`));
   check(absent.length === 0, `the chart of each map and the directives of each game the list offers are in the site${absent.length ? ` (missing ${absent})` : ''}`);
+}
+
+// ---------------------------------------------------------------------------
+// The two owed by the rulings on pull request 734, run on the shipped files with stubs
+// for what a browser gives (the module, the worker, the page's storage).
+// ---------------------------------------------------------------------------
+
+{
+  const SITE = `${OUT}site/`;
+  const ENDED = 'The game has stopped on an internal error. Begin it again from the new game screen.';
+
+  // `web/worker.js`: "a throw from the call `door[fn](...)` ends the module unless it is a plain
+  // `Error` (its prototype is `Error.prototype`): every `RuntimeError`, `RangeError` and anything
+  // that is not an `Error` sets `ended`, and the answer is the fixed sentence. Errors thrown before
+  // the call (the module or the data not there, a message that is not one of the seven) stay as they are."
+  const dir = mkdtempSync(`${tmpdir()}/flagplot-worker-`);
+  mkdirSync(`${dir}/module`);
+  writeFileSync(`${dir}/worker.js`, readFileSync(`${SITE}worker.js`));
+  writeFileSync(
+    `${dir}/module/sim_web.js`,
+    `export default async function init() {}
+export const versions = () => '{}';
+export const begin = () => {};
+export const tools = () => '{"tools":[]}';
+export const game_file = () => '';
+export const resume = () => {};
+export const saved_game = () => '';
+export function call(tool) {
+  if (tool === 'plain') throw new Error('the words of the door');
+  if (tool === 'range') throw new RangeError('Maximum call stack size exceeded');
+  if (tool === 'trap') throw new WebAssembly.RuntimeError('unreachable');
+  if (tool === 'string') throw 'not an error';
+  return '{"ok":1}';
+}
+`,
+  );
+  const sent = [];
+  globalThis.self = { postMessage: (m) => sent.push(m) };
+  globalThis.fetch = async () => ({ ok: true, arrayBuffer: async () => new ArrayBuffer(2) });
+  await import(pathToFileURL(`${dir}/worker.js`));
+  const ask = async (id, fn, args = []) => {
+    await globalThis.self.onmessage({ data: { id, fn, args } });
+    return sent.find((m) => m.id === id);
+  };
+  const first = await ask(1, 'call', ['plain', '{}']);
+  check(first.error === 'the words of the door', 'worker.js: a plain Error from the call is the door\'s own words');
+  const after = await ask(2, 'call', ['any', '{}']);
+  check(after.ok === '{"ok":1}', 'worker.js: a plain Error does not end the module');
+  const before = await ask(3, 'nothing', []);
+  check(before.error === 'not a message of the door', 'worker.js: a message that is not one of the seven stays as it was, and does not end the module');
+  check((await ask(4, 'call', ['any', '{}'])).ok === '{"ok":1}', 'worker.js: the module is still used after that');
+  const range = await ask(5, 'call', ['range', '{}']);
+  check(range.error === ENDED, 'worker.js: a RangeError from the call is the fixed sentence');
+  const later = await ask(6, 'call', ['any', '{}']);
+  check(later.error === ENDED && later.ok === undefined, 'worker.js: every later message is the fixed sentence, and the module is never used again');
+  for (const [tool, name] of [['trap', 'a RuntimeError'], ['string', 'a thrown thing that is not an Error']]) {
+    // A worker for each: the module is ended once, for good.
+    const again = mkdtempSync(`${tmpdir()}/flagplot-worker-`);
+    mkdirSync(`${again}/module`);
+    writeFileSync(`${again}/worker.js`, readFileSync(`${dir}/worker.js`));
+    writeFileSync(`${again}/module/sim_web.js`, readFileSync(`${dir}/module/sim_web.js`));
+    globalThis.self = { postMessage: (m) => sent.push(m) };
+    await import(`${pathToFileURL(`${again}/worker.js`)}`);
+    sent.length = 0;
+    await globalThis.self.onmessage({ data: { id: 1, fn: 'call', args: [tool, '{}'] } });
+    check(sent[0].error === ENDED, `worker.js: ${name} from the call is the fixed sentence`);
+  }
+
+  // `web/door.js`, `ensure`: "where the game in hand is the one chosen and its seat has stopped,
+  // reject with the fixed sentence and make no worker. A new worker is made only for a game with a
+  // new number (`/begin`, `/restart`) or when no game is held (the page just loaded)."
+  const made = [];
+  class StubWorker {
+    constructor() {
+      made.push(this);
+      this.terminated = false;
+    }
+    postMessage({ id, fn }) {
+      const ok = fn === 'tools' ? '{"tools":[{"name":"get_briefing"}]}' : '{"ok":1}';
+      queueMicrotask(() => this.onmessage({ data: { id, ok } }));
+    }
+    terminate() {
+      this.terminated = true;
+    }
+  }
+  const store = () => {
+    const m = new Map();
+    return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => m.set(k, String(v)), removeItem: (k) => m.delete(k) };
+  };
+  globalThis.window = globalThis;
+  globalThis.document = { currentScript: { src: 'http://site.test/door.js' } };
+  globalThis.Worker = StubWorker;
+  globalThis.sessionStorage = store();
+  globalThis.localStorage = store();
+  globalThis.fetch = async (url) => {
+    const path = String(url).replace('http://site.test/', '');
+    const file = `${SITE}${path}`;
+    return existsSync(file) ? { ok: true, status: 200, json: async () => JSON.parse(readFileSync(file, 'utf8')) } : { ok: false, status: 404 };
+  };
+  await import(`${pathToFileURL(`${SITE}door.js`)}?check`);
+  const reach = globalThis.flagplotDoor.reach;
+  const pairing = JSON.parse(readFileSync(`${SITE}scenarios.json`, 'utf8')).scenarios[0].pairings[0];
+  const begun = await reach('/begin', { scenario: JSON.parse(readFileSync(`${SITE}scenarios.json`, 'utf8')).scenarios[0].id, allied: pairing.allied, japanese: pairing.japanese });
+  check(begun.ok === true && made.length === 0, 'door.js: begin records the choice and makes no worker');
+  const config = await reach('/config');
+  check(config.home?.number === 1 && made.length === 1, 'door.js: the game is opened, in one worker, when the page asks for it');
+  check((await reach('/call', { tool: 'get_briefing', arguments: {} })).ok === 1 && made.length === 1, 'door.js: a call is answered by the same worker');
+  made[0].onerror();
+  const stopped = await reach('/call', { tool: 'get_briefing', arguments: {} });
+  check(stopped.refused === ENDED && made.length === 1, 'door.js: a game whose seat has stopped is refused with the fixed sentence, and no worker is made');
+  check(
+    (await reach('/tools').then(() => 'answered', (e) => e.message)) === ENDED && (await reach('/config').then(() => 'answered', (e) => e.message)) === ENDED && made.length === 1,
+    'door.js: the same for every other path that needs the game, and the game is not begun again',
+  );
+  await reach('/restart', {});
+  const again = await reach('/config');
+  check(again.home?.number === 2 && made.length === 2 && made[0].terminated, 'door.js: a new game number makes a new worker');
 }
 
 // ---------------------------------------------------------------------------

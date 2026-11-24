@@ -105,7 +105,13 @@
   function ensure() {
     var c = chosen();
     if (!c) return Promise.reject(new Error('no game is in hand: choose one on the new game screen'));
-    if (held && held.number === c.number && !held.seat.stopped) return held.ready;
+    // The game in hand is the one chosen: while it stands it is used, and once its worker has
+    // stopped it stays stopped until the player begins again (a new number), never begun anew
+    // under him.
+    if (held && held.number === c.number) {
+      if (held.seat.stopped) return Promise.reject(new Error(STOPPED));
+      return held.ready;
+    }
     endGame();
     var game = held = { seat: new Seat(), number: c.number, entry: null, config: null, ready: null };
     game.ready = entryOf(c.scenario).then(function (entry) {
