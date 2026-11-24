@@ -1,4 +1,5 @@
 use std::collections::{BTreeMap, BTreeSet};
+#[cfg(test)]
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -33,15 +34,17 @@ use sim_core::{DaySummary, Staffs, StartingContact, StartingEstimate, World};
 
 use crate::commands::{BelievedIntentSpec, CommandSpec};
 use crate::error::DataError;
-use crate::map::{load_land_links, load_map, read_map_frame, MapFrame};
+use crate::map::{load_land_links_from, load_map_from, read_map_frame_from, MapFrame};
 use crate::quantity::Quantity;
 use crate::reference::{
-    load_air_combat_figures, load_air_supply_figures, load_air_upkeep_figures, load_aircraft_types,
-    load_class_sides, load_fatigue_figures, load_ground_figures, load_port_sizes,
-    load_report_figures, load_search_figures, load_ship_classes_marked, load_submarine_classes,
-    load_submarine_figures, load_submarine_torpedoes, load_surface_combat_figures,
-    load_trial_figures, parse_kind,
+    load_air_combat_figures_from, load_air_supply_figures_from, load_air_upkeep_figures_from,
+    load_aircraft_types_from, load_class_sides_from, load_fatigue_figures_from,
+    load_ground_figures_from, load_port_sizes_from, load_report_figures_from,
+    load_search_figures_from, load_ship_classes_marked_from, load_submarine_classes_from,
+    load_submarine_figures_from, load_submarine_torpedoes_from, load_surface_combat_figures_from,
+    load_trial_figures_from, parse_kind,
 };
+use crate::source::{read_text, Disk, Noting, Pack, Source};
 
 /// One file name or a list of them (decision 0043).
 #[derive(Deserialize)]
@@ -1879,10 +1882,33 @@ impl Scenario {
     /// ones actually read, so a saved game made with a reference root names
     /// that root's files and its hashes are theirs.
     pub fn load_with(path: &Path, options: &LoadOptions) -> Result<Scenario, DataError> {
-        let fail = |message: String| DataError::in_file(path, message);
+        Scenario::load_via(&Disk, path, options)
+    }
 
-        let text = fs::read_to_string(path).map_err(|e| fail(e.to_string()))?;
-        Scenario::parse_with(&text, path, options)
+    /// As [`Scenario::load_with`], reading the scenario and every file it
+    /// names through `source` (decision 0229, ruling 8): the disk, or a pack.
+    pub fn load_via(
+        source: &dyn Source,
+        path: &Path,
+        options: &LoadOptions,
+    ) -> Result<Scenario, DataError> {
+        let text = read_text(source, path)?;
+        Scenario::parse_via(source, &text, path, options)
+    }
+
+    /// The files the load of the scenario at `path` reads, by the paths it
+    /// asks for, with their text: the pack of that scenario (decision 0229,
+    /// ruling 9). Made by loading it from `source` through a source that
+    /// notes what it is asked for, so the pack holds exactly the files the
+    /// load read and no list of them is kept by hand.
+    pub fn pack_of(
+        source: &dyn Source,
+        path: &Path,
+        options: &LoadOptions,
+    ) -> Result<Pack, DataError> {
+        let noting = Noting::new(source);
+        Scenario::load_via(&noting, path, options)?;
+        Ok(noting.pack())
     }
 
     /// Builds a scenario from text that is not (or no longer) the file's own
@@ -1910,6 +1936,16 @@ impl Scenario {
 
     /// As `parse`, reading the reference files as `options` say.
     fn parse_with(text: &str, path: &Path, options: &LoadOptions) -> Result<Scenario, DataError> {
+        Scenario::parse_via(&Disk, text, path, options)
+    }
+
+    /// As `parse_with`, reading the files the scenario names through `source`.
+    fn parse_via(
+        source: &dyn Source,
+        text: &str,
+        path: &Path,
+        options: &LoadOptions,
+    ) -> Result<Scenario, DataError> {
         let fail = |message: String| DataError::in_file(path, message);
 
         let file: ScenarioFile = toml::from_str(text).map_err(|e| fail(e.to_string()))?;
@@ -1925,7 +1961,7 @@ impl Scenario {
                         fail(format!("\"{name}\" does not name a reference file"))
                     })?;
                     let found = root.join(file_name);
-                    if found.is_file() {
+                    if source.is_file(&found) {
                         Ok(found)
                     } else {
                         Err(fail(format!(
@@ -1937,11 +1973,11 @@ impl Scenario {
                 }
             }
         };
-        let mut map = load_map(&folder.join(&file.map))?;
-        let map_frame = read_map_frame(&folder.join(&file.map))?;
+        let mut map = load_map_from(source, &folder.join(&file.map))?;
+        let map_frame = read_map_frame_from(source, &folder.join(&file.map))?;
         let land_links_file = file.land_links.as_ref().map(|name| folder.join(name));
         if let Some(links) = &land_links_file {
-            load_land_links(links, &mut map)?;
+            load_land_links_from(source, links, &mut map)?;
         }
         let class_files = file.ship_classes.names();
         if class_files.is_empty() {
@@ -1956,7 +1992,7 @@ impl Scenario {
         let mut estimated_figures = crate::reference::EstimatedFigures::new();
         for name in &class_files {
             let file_path = reference(name)?;
-            let (classes, marked) = load_ship_classes_marked(&file_path)?;
+            let (classes, marked) = load_ship_classes_marked_from(source, &file_path)?;
             estimated_figures.extend(marked);
             for (id, class) in classes.ship_classes {
                 if let Some(first) = class_owner.insert(id, file_path.clone()) {
@@ -1969,11 +2005,11 @@ impl Scenario {
                 ref_data.ship_classes.insert(id, class);
             }
         }
-        ref_data.port_sizes = load_port_sizes(&reference(&file.port_sizes)?)?;
+        ref_data.port_sizes = load_port_sizes_from(source, &reference(&file.port_sizes)?)?;
         let mut type_owner: BTreeMap<AircraftTypeId, PathBuf> = BTreeMap::new();
         for name in &type_files {
             let file_path = reference(name)?;
-            for (id, aircraft_type) in load_aircraft_types(&file_path)? {
+            for (id, aircraft_type) in load_aircraft_types_from(source, &file_path)? {
                 if let Some(first) = type_owner.insert(id, file_path.clone()) {
                     return Err(fail(format!(
                         "aircraft type {id} is in both {} and {}",
@@ -1984,28 +2020,38 @@ impl Scenario {
                 ref_data.aircraft_types.insert(id, aircraft_type);
             }
         }
-        ref_data.search = Some(load_search_figures(&reference(&file.search)?)?);
-        ref_data.surface_combat = Some(load_surface_combat_figures(&reference(
-            &file.surface_combat,
-        )?)?);
+        ref_data.search = Some(load_search_figures_from(source, &reference(&file.search)?)?);
+        ref_data.surface_combat = Some(load_surface_combat_figures_from(
+            source,
+            &reference(&file.surface_combat)?,
+        )?);
         if let Some(air_combat) = &file.air_combat {
-            ref_data.air_combat = Some(load_air_combat_figures(&reference(air_combat)?)?);
+            ref_data.air_combat = Some(load_air_combat_figures_from(
+                source,
+                &reference(air_combat)?,
+            )?);
         }
         if let Some(air_upkeep) = &file.air_upkeep {
-            ref_data.air_upkeep = Some(load_air_upkeep_figures(&reference(air_upkeep)?)?);
+            ref_data.air_upkeep = Some(load_air_upkeep_figures_from(
+                source,
+                &reference(air_upkeep)?,
+            )?);
         }
         if let Some(fatigue) = &file.fatigue {
-            ref_data.fatigue = Some(load_fatigue_figures(&reference(fatigue)?)?);
+            ref_data.fatigue = Some(load_fatigue_figures_from(source, &reference(fatigue)?)?);
         }
         if let Some(air_supply) = &file.air_supply {
-            ref_data.air_supply = Some(load_air_supply_figures(&reference(air_supply)?)?);
+            ref_data.air_supply = Some(load_air_supply_figures_from(
+                source,
+                &reference(air_supply)?,
+            )?);
         }
         if let Some(ground) = &file.ground {
-            ref_data.ground = Some(load_ground_figures(&reference(ground)?)?);
+            ref_data.ground = Some(load_ground_figures_from(source, &reference(ground)?)?);
         }
         let reports_file = file.reports.as_ref().map(|name| folder.join(name));
         if let Some(reports) = &reports_file {
-            ref_data.reports = Some(load_report_figures(reports)?);
+            ref_data.reports = Some(load_report_figures_from(source, reports)?);
         }
         // The file of sides (decision 0173, 1 and 2): whole and true of the
         // reference files. Whether a ship or an air group is of a class or
@@ -2015,7 +2061,7 @@ impl Scenario {
             None => None,
         };
         if let Some(sides_path) = &class_sides_file {
-            let sides = load_class_sides(sides_path)?;
+            let sides = load_class_sides_from(source, sides_path)?;
             let shown = sides_path.display();
             for id in ref_data.ship_classes.keys() {
                 if !sides.ship_classes.contains_key(id) {
@@ -2085,7 +2131,7 @@ impl Scenario {
             None => None,
         };
         let trial_figures = match &trial_file {
-            Some(path) => Some(load_trial_figures(path)?),
+            Some(path) => Some(load_trial_figures_from(source, path)?),
             None => None,
         };
         data_files.extend(trial_file);
@@ -2111,9 +2157,9 @@ impl Scenario {
                 let torpedoes_path = reference(torpedoes)?;
                 let figures_path = folder.join(figures);
                 let data = SubmarineData {
-                    classes: load_submarine_classes(&classes_path)?,
-                    torpedoes: load_submarine_torpedoes(&torpedoes_path)?,
-                    figures: load_submarine_figures(&figures_path)?,
+                    classes: load_submarine_classes_from(source, &classes_path)?,
+                    torpedoes: load_submarine_torpedoes_from(source, &torpedoes_path)?,
+                    figures: load_submarine_figures_from(source, &figures_path)?,
                 };
                 data.validate().map_err(|message| {
                     fail(format!("the submarine files do not fit together: {message}"))

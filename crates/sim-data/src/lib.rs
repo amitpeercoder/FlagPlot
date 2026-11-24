@@ -83,6 +83,7 @@ mod map;
 mod quantity;
 mod reference;
 mod scenario;
+mod source;
 
 pub use error::DataError;
 pub use map::{load_map, parse_map_frame, read_map_frame, MapFrame};
@@ -93,3 +94,4 @@ pub use reference::{
     load_surface_combat_figures, load_trial_figures, EstimatedFigures,
 };
 pub use scenario::{LoadOptions, Scenario, ScriptInsideDay, FROZEN_REFERENCE_DIR};
+pub use source::{Disk, Noting, Pack, Source};

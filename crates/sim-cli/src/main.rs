@@ -9,6 +9,7 @@ mod events;
 mod export;
 mod mcp;
 mod play;
+use sim_cli::pack;
 use sim_cli::save;
 mod serve;
 mod staff_tools;
@@ -50,6 +51,7 @@ Usage: sim-cli run <scenario.toml> [--events] [--seed N] [--save <game.json>] [-
                     [--trial-slice FILE] [--trial-figures FILE] [--trial-late-day N] [--only-trial]
                     [--trial-size small|standard|full] [--only-window] [--window-runs N]
                     [--only-seat-trial] [--seat-trial-runs N]
+       sim-cli pack <scenario.toml>... --out <pack.json> [--reference DIR]
        sim-cli play --game FILE ... (run `sim-cli play` for its usage)
 
   run       Runs a scenario to its last day and prints the state hash of
@@ -72,6 +74,12 @@ Usage: sim-cli run <scenario.toml> [--events] [--seed N] [--save <game.json>] [-
             what was saved on every day, it says so.
   hash      Runs a scenario and prints the state hash of each day, one a line
             as `day N <hash>`, and nothing else.
+  pack      Writes the files that loading each scenario named reads, by the path
+            asked for and with its text, as one JSON file: `versions` (the
+            rules, state and doctrine versions of this program) and `files`.
+            The files are found by the load itself, never listed by hand
+            (decision 0229, rulings 9 and 10). Run it from the top of the
+            repository so the paths are the repository's own.
   events    The umpire's questions to a finished run (a scenario run to its
             end, or a saved game replayed). --unit HANDLE (ship:N,
             task_force:N, air_group:N, base:N, land_unit:N, submarine:N, contact:N or allied:contact:N)
@@ -514,6 +522,7 @@ fn main() -> ExitCode {
         Some("mcp") => mcp::command(&args[1..], USAGE),
         Some("play") => play::command(&args[1..]),
         Some("hash") => with_reference(&args[1..], hash),
+        Some("pack") => with_reference(&args[1..], |a, o| pack::command(a, USAGE, o)),
         Some("run") => with_reference(&args, run),
         _ => run(&args, &LoadOptions::default()),
     };

@@ -53,7 +53,7 @@ Each of these fails with no error and no failing test if it is missed. The page 
 
 **Crates** (`docs/engineering/layout.md`)
 
-- `sim-core` depends on nothing, not even other workspace crates, and reads no file. Only `sim-data` reads simulation data files. The simulation never reads `data/oob`.
+- `sim-core` depends on nothing, not even other workspace crates, and reads no file. Only `sim-data` reads simulation data files, from the disk or from a pack that `sim-data` itself made. The simulation never reads `data/oob`.
 
 **Rules and the rulebook** (`docs/engineering/rule-complexity.md`)
 

@@ -1,4 +1,4 @@
-use std::fs;
+use crate::source::{read_text, Disk, Source};
 use std::path::Path;
 
 use serde::Deserialize;
@@ -107,7 +107,12 @@ impl From<TerrainSpec> for Terrain {
 /// Loads a map from a file: a generated `.csv` map (see [`parse_csv_map`])
 /// or a hand-written `.toml` map. The extension decides.
 pub fn load_map(path: &Path) -> Result<Map, DataError> {
-    let text = fs::read_to_string(path).map_err(|e| DataError::in_file(path, e.to_string()))?;
+    load_map_from(&Disk, path)
+}
+
+/// As [`load_map`], reading through `source` (decision 0229, ruling 8).
+pub(crate) fn load_map_from(source: &dyn Source, path: &Path) -> Result<Map, DataError> {
+    let text = read_text(source, path)?;
     if path.extension().and_then(|e| e.to_str()) == Some("csv") {
         return parse_csv_map(&text, path);
     }
@@ -213,8 +218,18 @@ const LAND_LINK_COLUMNS: [&str; 6] = ["q1", "r1", "q2", "r2", "landmass", "reaso
 
 /// Reads a land links file (decision 2 of 0094) and adds its links to `map`,
 /// whatever format the map came from. See [`parse_land_links`].
+#[allow(dead_code)]
 pub fn load_land_links(path: &Path, map: &mut Map) -> Result<(), DataError> {
-    let text = fs::read_to_string(path).map_err(|e| DataError::in_file(path, e.to_string()))?;
+    load_land_links_from(&Disk, path, map)
+}
+
+/// As [`load_land_links`], reading through `source` (decision 0229, ruling 8).
+pub(crate) fn load_land_links_from(
+    source: &dyn Source,
+    path: &Path,
+    map: &mut Map,
+) -> Result<(), DataError> {
+    let text = read_text(source, path)?;
     parse_land_links(&text, path, map)
 }
 
@@ -318,10 +333,18 @@ impl MapFrame {
 /// ... and from ... to ...". `None` for a hand-written `.toml` map, or a map
 /// whose header has none of these lines: it has no frame.
 pub fn read_map_frame(path: &Path) -> Result<Option<MapFrame>, DataError> {
+    read_map_frame_from(&Disk, path)
+}
+
+/// As [`read_map_frame`], reading through `source` (decision 0229, ruling 8).
+pub(crate) fn read_map_frame_from(
+    source: &dyn Source,
+    path: &Path,
+) -> Result<Option<MapFrame>, DataError> {
     if path.extension().and_then(|e| e.to_str()) != Some("csv") {
         return Ok(None);
     }
-    let text = fs::read_to_string(path).map_err(|e| DataError::in_file(path, e.to_string()))?;
+    let text = read_text(source, path)?;
     parse_map_frame(&text).map_err(|message| DataError::in_file(path, message))
 }
 

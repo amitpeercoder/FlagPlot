@@ -8,7 +8,7 @@ use std::path::Path;
 use sim_agent::{Post, Seat, SeatKind, Session};
 use sim_core::orders::OrderRequest;
 use sim_core::state::Side;
-use sim_data::Scenario;
+use sim_data::{Disk, LoadOptions, Scenario, Source};
 
 use crate::save;
 
@@ -44,15 +44,40 @@ pub fn open(
     seats: BTreeMap<Side, SeatKind>,
     posts: &BTreeMap<Side, Post>,
 ) -> Result<(Session, Kept), String> {
-    let mut scenario = Scenario::load(Path::new(scenario_path)).map_err(|e| e.to_string())?;
+    open_from(&Disk, scenario_path, seed, seats, posts)
+}
+
+/// As [`open`], reading the scenario and the files it names through `source`
+/// (decision 0229, ruling 8).
+pub fn open_from(
+    source: &dyn Source,
+    scenario_path: &str,
+    seed: Option<u64>,
+    seats: BTreeMap<Side, SeatKind>,
+    posts: &BTreeMap<Side, Post>,
+) -> Result<(Session, Kept), String> {
+    let mut scenario =
+        Scenario::load_via(source, Path::new(scenario_path), &LoadOptions::default())
+            .map_err(|e| e.to_string())?;
     if let Some(seed) = seed {
         scenario = scenario.with_seed(seed).map_err(|e| e.to_string())?;
     }
-    open_loaded(scenario_path, scenario, seats, posts)
+    open_loaded_from(source, scenario_path, scenario, seats, posts)
 }
 
 /// [`open`] on a scenario already loaded from `scenario_path`.
 pub fn open_loaded(
+    scenario_path: &str,
+    scenario: Scenario,
+    seats: BTreeMap<Side, SeatKind>,
+    posts: &BTreeMap<Side, Post>,
+) -> Result<(Session, Kept), String> {
+    open_loaded_from(&Disk, scenario_path, scenario, seats, posts)
+}
+
+/// As [`open_loaded`], hashing the scenario's files through `source`.
+pub fn open_loaded_from(
+    source: &dyn Source,
     scenario_path: &str,
     scenario: Scenario,
     mut seats: BTreeMap<Side, SeatKind>,
@@ -61,7 +86,7 @@ pub fn open_loaded(
     for side in Side::ALL {
         seats.entry(side).or_insert(SeatKind::Script);
     }
-    let remembered = save::remember(&scenario)?;
+    let remembered = save::remember_from(source, &scenario)?;
     let seat = |side: Side| match seats[&side] {
         SeatKind::Player => Seat::Player,
         SeatKind::Script => Seat::Script(script_of(remembered.script(), side)),
@@ -117,37 +142,55 @@ impl Kept {
         transcript: Option<&str>,
     ) -> Result<(), String> {
         if let Some(file) = save {
-            let hashes: Vec<(u32, u64)> =
-                (1u32..).zip(session.day_hashes().iter().copied()).collect();
-            save::write(
-                file,
-                &self.scenario_path,
-                self.seed,
-                &self.remembered,
-                session.handed_in(),
-                // The orders given inside a day, each with its pulse
-                // (decision 0156).
-                session.handed_in_inside_day(),
-                session.commands_handed_in(),
-                session.staff_handed_in(),
-                &self.seats,
-                &hashes,
-                // A game that stopped inside a day says so (decision 0172,
-                // 3), and so does a watched game left inside a day (decision
-                // 0182, amended 19).
-                session
-                    .stopped_inside_day()
-                    .or_else(|| session.left_inside_day()),
-            )?;
+            let text = self.saved_game_text(&Disk, session)?;
+            std::fs::write(file, text).map_err(|e| format!("{file}: {e}"))?;
         }
         if let Some(file) = transcript {
-            let mut text = String::new();
-            for entry in session.transcript() {
-                text.push_str(&serde_json::to_string(&entry.to_json()).map_err(|e| e.to_string())?);
-                text.push('\n');
-            }
+            let text = transcript_text(session)?;
             std::fs::write(file, text).map_err(|e| format!("{file}: {e}"))?;
         }
         Ok(())
     }
+
+    /// The text of the saved game as it stands, made and not written
+    /// (decision 0229, ruling 12). The scenario file is hashed through
+    /// `source`, which must be the one the game was opened from.
+    pub fn saved_game_text(
+        &self,
+        source: &dyn Source,
+        session: &Session,
+    ) -> Result<String, String> {
+        let hashes: Vec<(u32, u64)> = (1u32..).zip(session.day_hashes().iter().copied()).collect();
+        save::write_text(
+            source,
+            &self.scenario_path,
+            self.seed,
+            &self.remembered,
+            session.handed_in(),
+            // The orders given inside a day, each with its pulse
+            // (decision 0156).
+            session.handed_in_inside_day(),
+            session.commands_handed_in(),
+            session.staff_handed_in(),
+            &self.seats,
+            &hashes,
+            // A game that stopped inside a day says so (decision 0172,
+            // 3), and so does a watched game left inside a day (decision
+            // 0182, amended 19).
+            session
+                .stopped_inside_day()
+                .or_else(|| session.left_inside_day()),
+        )
+    }
+}
+
+/// The text of a game's transcript, made and not written (decision 0229,
+/// ruling 12).
+pub fn transcript_text(session: &Session) -> Result<String, String> {
+    let mut text = String::new();
+    for entry in session.transcript() {
+        text.push_str(&serde_json::to_string(&entry.to_json()).map_err(|e| e.to_string())?);
+        text.push('\n');
+    }
+    Ok(text)
 }

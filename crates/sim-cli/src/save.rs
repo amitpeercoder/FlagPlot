@@ -111,7 +111,7 @@ use sim_core::ids::IntentId;
 use sim_core::orders::{Issuer, OrderRequest, Origin};
 use sim_core::state::Side;
 use sim_core::time::Pulse;
-use sim_data::Scenario;
+use sim_data::{Disk, Scenario, Source};
 
 pub const FORMAT: &str = "flagplot-saved-game";
 /// Version 2 (decision 0100, 8) adds `"state_version"` and `"rules_version"`:
@@ -249,13 +249,21 @@ pub fn hash_hex(bytes: &[u8]) -> String {
 }
 
 pub fn file_hash(path: &Path) -> Result<String, String> {
-    let bytes = fs::read(path).map_err(|e| format!("{}: {e}", path.display()))?;
+    file_hash_from(&Disk, path)
+}
+
+/// As [`file_hash`], reading the file through `source` (decision 0229,
+/// ruling 12).
+pub fn file_hash_from(source: &dyn Source, path: &Path) -> Result<String, String> {
+    let bytes = source
+        .read_bytes(path)
+        .map_err(|e| format!("{}: {e}", path.display()))?;
     Ok(hash_hex(&bytes))
 }
 
 /// The version of the state's layout the engine has, in the text a batch file
 /// and a saved game record it.
-fn engine_state_version() -> String {
+pub fn engine_state_version() -> String {
     String::from_utf8_lossy(sim_core::hash::STATE_VERSION).into_owned()
 }
 
@@ -283,25 +291,42 @@ pub struct InputFile {
 
 /// The inputs of a run of `scenario`, loaded from `scenario_path`.
 pub fn inputs(scenario_path: &str, scenario: &Scenario) -> Result<Inputs, String> {
+    inputs_from(&Disk, scenario_path, scenario)
+}
+
+/// As [`inputs`], hashing the files through `source`.
+pub fn inputs_from(
+    source: &dyn Source,
+    scenario_path: &str,
+    scenario: &Scenario,
+) -> Result<Inputs, String> {
     let mut data = Vec::new();
     for path in scenario.data_files() {
         data.push(InputFile {
             file: path.to_string_lossy().into_owned(),
-            hash: file_hash(path)?,
+            hash: file_hash_from(source, path)?,
         });
     }
     Ok(Inputs {
         state_version: engine_state_version(),
-        scenario_hash: file_hash(Path::new(scenario_path))?,
+        scenario_hash: file_hash_from(source, Path::new(scenario_path))?,
         data,
     })
 }
 
 /// Notes the scripted orders and the hash of every data file, before the run.
 pub fn remember(scenario: &Scenario) -> Result<Remembered, String> {
+    remember_from(&Disk, scenario)
+}
+
+/// As [`remember`], hashing the files through `source`.
+pub fn remember_from(source: &dyn Source, scenario: &Scenario) -> Result<Remembered, String> {
     let mut files = Vec::new();
     for path in scenario.data_files() {
-        files.push((path.to_string_lossy().into_owned(), file_hash(path)?));
+        files.push((
+            path.to_string_lossy().into_owned(),
+            file_hash_from(source, path)?,
+        ));
     }
     Ok(Remembered {
         script: scenario.scripted_orders().clone(),
@@ -366,7 +391,39 @@ pub fn write(
     hashes: &[(u32, u64)],
     stopped_inside_day: Option<u32>,
 ) -> Result<(), String> {
-    let scenario_hash = file_hash(Path::new(scenario_path))?;
+    let text = write_text(
+        &Disk,
+        scenario_path,
+        seed,
+        remembered,
+        orders,
+        inside,
+        commands,
+        staff,
+        seats,
+        hashes,
+        stopped_inside_day,
+    )?;
+    fs::write(file, text).map_err(|e| format!("{file}: {e}"))
+}
+
+/// The text of the saved game [`write`] writes, made and not written
+/// (decision 0229, ruling 12): the scenario file is hashed through `source`.
+#[allow(clippy::too_many_arguments)]
+pub fn write_text(
+    source: &dyn Source,
+    scenario_path: &str,
+    seed: u64,
+    remembered: &Remembered,
+    orders: &Script,
+    inside: &ScriptInsideDay,
+    commands: &Commands,
+    staff: &StaffHandIns,
+    seats: &BTreeMap<Side, SeatKind>,
+    hashes: &[(u32, u64)],
+    stopped_inside_day: Option<u32>,
+) -> Result<String, String> {
+    let scenario_hash = file_hash_from(source, Path::new(scenario_path))?;
     let order_entry = |day: u32, side: Side, request: &OrderRequest, pulse: Option<Pulse>| {
         let mut entry = json!({
             "day": day,
@@ -456,7 +513,7 @@ pub fn write(
     }
     let mut text = serde_json::to_string_pretty(&value).map_err(|e| e.to_string())?;
     text.push('\n');
-    fs::write(file, text).map_err(|e| format!("{file}: {e}"))
+    Ok(text)
 }
 
 fn text<'a>(value: &'a Value, key: &str) -> Result<&'a str, String> {
@@ -494,9 +551,15 @@ pub struct Saved {
 }
 
 pub fn read(file: &str) -> Result<Saved, String> {
+    let text_in = fs::read_to_string(file).map_err(|e| format!("{file}: {e}"))?;
+    read_text(file, &text_in)
+}
+
+/// A saved game read back from its text; `file` is only what the words of a
+/// refusal call it (decision 0229, ruling 12).
+pub fn read_text(file: &str, text_in: &str) -> Result<Saved, String> {
     let bad = |message: String| format!("{file}: {message}");
-    let text_in = fs::read_to_string(file).map_err(|e| bad(e.to_string()))?;
-    let value: Value = serde_json::from_str(&text_in).map_err(|e| bad(e.to_string()))?;
+    let value: Value = serde_json::from_str(text_in).map_err(|e| bad(e.to_string()))?;
     if value.get("format").and_then(Value::as_str) != Some(FORMAT) {
         return Err(bad(format!(
             "not a Flag Plot saved game (format \"{FORMAT}\")"
