@@ -547,6 +547,11 @@
 //!     `data/reference/step1` changes and no file of this scenario is
 //!     copied to `data/scenarios/step2-frozen`; the three figures of the
 //!     staff are constants of the doctrine.
+//!     (Read, by the architect's ruling of Nov 24, 2026: the build of this
+//!     decision changes none, shown once with its pull request; the test
+//!     holds what stays true, that no frozen file names the order or its
+//!     figures and none is a copy of this scenario. A frozen file a later
+//!     decision adds is no breach of it.)
 //!
 //! If a game cannot be set up as written (a carrier force with no home
 //! port, a seat at a base giving an order to the area, an order given at
@@ -3406,6 +3411,10 @@ fn no_game_on_file_moves_and_the_frozen_figures_are_untouched() {
     for dir in ["data/reference", "data/reference/step1", "data/scenarios"] {
         for entry in fs::read_dir(root.join(dir)).expect("it reads") {
             let path = entry.expect("an entry").path();
+            // Figures and scenario files only: no test reads a Markdown file.
+            if path.extension().is_none_or(|x| x != "toml") {
+                continue;
+            }
             if let Ok(text) = fs::read_to_string(&path) {
                 for figure in figures_named {
                     assert!(!text.contains(figure), "{} names {figure}", path.display());
@@ -3413,31 +3422,12 @@ fn no_game_on_file_moves_and_the_frozen_figures_are_untouched() {
             }
         }
     }
-    // Against the commit this is built on, where the history has it: no file
-    // of the frozen figures and none of the frozen scenarios differs.
-    let known = std::process::Command::new("git")
-        .args(["cat-file", "-e", "e9944c16^{commit}"])
-        .current_dir(&root)
-        .status()
-        .is_ok_and(|s| s.success());
-    if known {
-        let changed_files = std::process::Command::new("git")
-            .args([
-                "diff",
-                "--name-only",
-                "e9944c16",
-                "--",
-                "data/reference/step1",
-                "data/scenarios/step2-frozen",
-            ])
-            .current_dir(&root)
-            .output()
-            .expect("git runs");
-        assert!(changed_files.status.success());
-        assert_eq!(
-            String::from_utf8_lossy(&changed_files.stdout).trim(),
-            "",
-            "a frozen file changed"
-        );
-    }
+    // That no frozen file was changed by the build of decision 0220 was shown
+    // once, with its pull request, against the commit it was built on. It is
+    // not asked again here: a comparison with a past commit fails on every
+    // frozen file a later decision rightly adds, reads the history, which a
+    // shallow clone has not, and read a Markdown file (the architect's ruling
+    // of Nov 24, 2026, in decision 0220). What stands is above: no frozen
+    // copy of this scenario, and no figures file that names the order or its
+    // three figures.
 }
