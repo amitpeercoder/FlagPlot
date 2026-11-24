@@ -732,3 +732,7 @@ path = "proof_stage_4_case_w1_the_garrison_believed_half.rs"
 [[test]]
 name = "proof_stage_4_cases_s1_and_s2"
 path = "proof_stage_4_cases_s1_and_s2.rs"
+
+[[test]]
+name = "proof_stage_4_harness"
+path = "proof_stage_4_harness.rs"
