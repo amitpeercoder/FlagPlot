@@ -2,9 +2,9 @@ Scenario 126: Fire among a carrier's aircraft
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash be901b949a0f928f  16 events
-day   2  hash 95b8b164f3959efe  10 events
-day   3  hash 2ee1c33d84575f5c  19 events
+day   1  hash fb730717d4c4c3fb  16 events
+day   2  hash 90a7f2c81a008b2a  10 events
+day   3  hash 9c9670abd3172400  19 events
 
 task_force:1 "Placeholder carrier force" (Allied): Idle at (4,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 task_force:2 "Placeholder enemy carrier force" (Japanese): Idle at (9,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port

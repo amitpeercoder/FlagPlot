@@ -895,7 +895,7 @@ fn the_hash_counts_the_types_in_the_air() {
     // decision 0222 to v57, for a forces limit's `none_of`, and decision
     // 0223 to v58, for a side's submarine doctrine, and decision 0228 to v59,
     // for whether a side's staff chooses its sources of supply.
-    assert_eq!(sim_core::hash::STATE_VERSION, b"flagplot-state-v59");
+    assert_eq!(sim_core::hash::STATE_VERSION, b"flagplot-state-v60");
     let made = run(ALL, "1", &[]);
     let unmade = run(ALL, "0", &[]);
     // The fights are the same and the types differ: so do the hashes.

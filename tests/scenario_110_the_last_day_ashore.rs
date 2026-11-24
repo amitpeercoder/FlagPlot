@@ -454,14 +454,14 @@ fn statement_1_a_side_reads_the_games_days() {
 /// version 53 (decision 0205), at version 54 (decision 0210) and at version
 /// 55 (decision 0214), at version 56 (decision 0212), at version 57 and the rules label 31
 /// (decision 0222), at version 58 and the rules label 32 (decision 0223) and at version 59
-/// (decision 0228), none of which moved an event of the game.
+/// (decision 0228) and at version 60 (decision 0220), none of which moved an event of the game.
 const PRE_RULE: [&str; 6] = [
-    "923d65aac63b20fa",
-    "27d81aeb9b8a57ef",
-    "3fbe98580d7f7dd2",
-    "bddeb184a40fe3fb",
-    "e4c2289a34fd6e60",
-    "f1e6e52e00173253",
+    "0e6eda29c30104d6",
+    "4a956fdb57a1218b",
+    "2bd356ebb7051d5e",
+    "d60eed84909b9ba7",
+    "8372e0df7c9a14c4",
+    "41ebfae1f94e5a1f",
 ];
 
 #[test]
@@ -483,7 +483,7 @@ fn statement_1_the_games_length_is_not_in_the_hash() {
     // And what a game of many days gives is what the game gave before this
     // rule, day for day.
     assert_eq!(hex16(&hundred[..6]), PRE_RULE.to_vec());
-    assert_eq!(format!("{:016x}", hundred[6]), "3675d5ac5c5c4543");
+    assert_eq!(format!("{:016x}", hundred[6]), "ea3ba284e25ae7b7");
 }
 
 // ------------------------------------------------------------------ Statement 2

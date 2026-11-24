@@ -862,6 +862,7 @@
                     "raid",
                     "deny",
                     "patrol",
+                    "destroy_force",
                     "strike_ships",
                     "search_waters",
                     "stand_at",
@@ -954,6 +955,87 @@
             "answer_pursuit"
           ]
         }
+      }
+    },
+    "following": {
+      "type": "object",
+      "description": "Decision 0220: the paper of an order to destroy a force that is in force and keeps a report. What it follows now by the report (place, how many ships, what they are taken for, how old, the report's day and pulse), each taking in the order it happened with its day, whether it is lost (with the last place and day), its distance and whether it is search only, the ring (centre, distance, dashed where lost) and the words in the staff's voice. Left out for an order withdrawn or ended.",
+      "required": ["contact", "held", "place", "hex", "ships", "taken_for", "carrier", "age_pulses", "reported", "takings", "lost", "last_place", "last_day", "distance", "search_only", "ring", "text"],
+      "additionalProperties": false,
+      "properties": {
+        "contact": { "type": "integer", "description": "The contact followed now, in your picture's number." },
+        "held": { "type": "boolean", "description": "Whether your picture holds that contact now; where not, the report is what the order kept." },
+        "place": { "$ref": "defs.schema.json#/$defs/place" },
+        "hex": { "type": "array", "items": { "type": "integer" }, "minItems": 2, "maxItems": 2 },
+        "ships": { "type": ["integer", "null"] },
+        "taken_for": { "type": ["string", "null"], "description": "The kind of ship the force is taken for." },
+        "carrier": { "type": "boolean", "description": "Whether the order keeps the force as taken for a carrier force." },
+        "age_pulses": { "type": "integer", "description": "How many pulses old the report is at the start of the coming day." },
+        "reported": {
+          "type": "object",
+          "required": ["day", "pulse"],
+          "additionalProperties": false,
+          "properties": {
+            "day": { "type": "integer" },
+            "pulse": { "enum": ["night", "morning", "afternoon"] }
+          }
+        },
+        "takings": {
+          "type": "array",
+          "description": "Each time the order took another contact for the same force, the earliest first, with the day the staff handed it in. A report that only refreshed the contact adds none.",
+          "items": {
+            "type": "object",
+            "required": ["day", "taken_from", "contact", "other_sort", "place", "ships", "taken_for", "carrier"],
+            "additionalProperties": false,
+            "properties": {
+              "day": { "type": "integer" },
+              "taken_from": { "type": ["integer", "null"] },
+              "contact": { "type": "integer" },
+              "other_sort": { "type": "boolean" },
+              "place": { "$ref": "defs.schema.json#/$defs/place" },
+              "ships": { "type": "integer" },
+              "taken_for": { "type": "string" },
+              "carrier": { "type": "boolean" },
+              "was_carrier": { "type": "boolean", "description": "Given only for a taking of the other sort: what the force was taken for before, as a carrier force or not." }
+            }
+          }
+        },
+        "lost": { "type": "boolean" },
+        "last_place": { "$ref": "defs.schema.json#/$defs/place", "description": "Where the force was last reported (what the order keeps)." },
+        "last_day": { "type": "integer", "description": "The day of that report." },
+        "distance": { "type": "integer" },
+        "search_only": { "type": "boolean" },
+        "ring": {
+          "type": "object",
+          "description": "The waters the order is round: centre, distance, and dashed where the order is lost. The table draws from this and works no centre of its own.",
+          "required": ["place", "hex", "distance", "dashed"],
+          "additionalProperties": false,
+          "properties": {
+            "place": { "$ref": "defs.schema.json#/$defs/place" },
+            "hex": { "type": "array", "items": { "type": "integer" }, "minItems": 2, "maxItems": 2 },
+            "distance": { "type": "integer" },
+            "dashed": { "type": "boolean" }
+          }
+        },
+        "text": { "type": "array", "items": { "type": "string" }, "description": "The paper in words, in the staff's voice." }
+      }
+    },
+    "staff_notice_follow": {
+      "type": "object",
+      "description": "Decision 0220: for the three notices of following, the order (your intent number), the contact followed (your picture's number), the number followed before where the notice is of a taking, whether the contact taken is of the other sort, the report followed (hex, day, pulse, how many ships, taken for what) and whether it is taken for a carrier; left out for every other notice.",
+      "required": ["intent", "contact", "taken_from", "other_sort", "hex", "day", "pulse", "ship_count", "kind", "carrier"],
+      "additionalProperties": false,
+      "properties": {
+        "intent": { "type": "integer" },
+        "contact": { "type": "integer" },
+        "taken_from": { "type": ["integer", "null"] },
+        "other_sort": { "type": "boolean" },
+        "hex": { "type": "array", "items": { "type": "integer" }, "minItems": 2, "maxItems": 2 },
+        "day": { "type": "integer" },
+        "pulse": { "enum": ["night", "morning", "afternoon"] },
+        "ship_count": { "type": "integer" },
+        "kind": { "type": "string" },
+        "carrier": { "type": "boolean" }
       }
     },
     "staff_notice_pursuit": {
@@ -1207,7 +1289,10 @@
                   "lift_turned_back",
                   "asks_leave_to_pursue",
                   "pursues",
-                  "pursuit_ended"
+                  "pursuit_ended",
+                  "follows",
+                  "contact_lost",
+                  "force_not_found"
                 ]
               },
               "plan": {
@@ -1215,6 +1300,9 @@
               },
               "pursuit": {
                 "$ref": "#/$defs/staff_notice_pursuit"
+              },
+              "follow": {
+                "$ref": "#/$defs/staff_notice_follow"
               },
               "run": {
                 "type": [

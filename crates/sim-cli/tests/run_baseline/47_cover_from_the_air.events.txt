@@ -2,18 +2,18 @@ Placeholder scenario 47: Cover from the air
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 1d153226913c7030  38 events
-day   2  hash 82a4589718f97385  12 events
-day   3  hash 5fc1e9dae14e6507  12 events
-day   4  hash b1a0ed791709834e  10 events
-day   5  hash 8d52930739aec53d  10 events
-day   6  hash 456608c8408845b6  10 events
-day   7  hash 9f7223dff51b1ba9  10 events
-day   8  hash 37272912c4b6acb0  10 events
-day   9  hash 7078ef9c16fcea67  12 events
-day  10  hash 243f05a864a353fe  14 events
-day  11  hash 3fe2b9b8bfc7127b  12 events
-day  12  hash 259bdbbe6fda97fd  12 events
+day   1  hash ca3a6d7b1b933a1c  38 events
+day   2  hash d20a166eae314ac9  12 events
+day   3  hash 124c18812f431423  12 events
+day   4  hash ab907b3933ff5ffa  10 events
+day   5  hash b56e4e045d72ff69  10 events
+day   6  hash d961c202675d2f4a  10 events
+day   7  hash 30ef6651a0c0081d  10 events
+day   8  hash 56e9fba475874004  10 events
+day   9  hash 035d8f0f05989d8b  12 events
+day  10  hash bd4ad57c3d125ef2  14 events
+day  11  hash fbdcc96b0555be3f  12 events
+day  12  hash 7e1518cde2831b41  12 events
 
 #1 D0 -         Allied report: 2 ships, cruiser, at (0,5), held at the start: new contact:1
 #2 D1 -         Allied the commander's command taken: set intent:1 to cover base:1 from the air

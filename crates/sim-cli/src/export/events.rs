@@ -2603,6 +2603,7 @@ pub(super) fn describe(
             run,
             intent,
             pursuit,
+            follow,
         } => {
             let mut data = d
                 .text("side", names::side(*side))
@@ -2634,6 +2635,24 @@ pub(super) fn describe(
                     out = out.with("find", Field::Obj(found));
                 }
                 data = data.with("pursuit", Field::Obj(out));
+            }
+            // What a notice of following says (decision 0220); written only for
+            // those, so every other export is as it was.
+            if let Some(follow) = follow {
+                let mut out = Data::new()
+                    .int("intent", follow.intent.raw())
+                    .int("contact", follow.contact)
+                    .hex("hex", follow.hex)
+                    .int("day", follow.day)
+                    .text("pulse", follow.pulse.name())
+                    .int("ship_count", follow.ship_count)
+                    .text("kind", follow.kind.name())
+                    .flag("carrier", follow.carrier)
+                    .flag("other_sort", follow.other_sort);
+                if let Some(from) = follow.taken_from {
+                    out = out.int("taken_from", from);
+                }
+                data = data.with("follow", Field::Obj(out));
             }
             ("staff_notice", data)
         }

@@ -33,7 +33,7 @@
       "const": "flagplot-agent"
     },
     "version": {
-      "const": 54
+      "const": 55
     },
     "kind": {
       "const": "command_state"
@@ -128,6 +128,7 @@
               "raid",
               "deny",
               "patrol",
+              "destroy_force",
               "strike_ships",
               "search_waters",
               "stand_at",
@@ -216,6 +217,15 @@
             "type": ["integer", "null"],
             "description": "The number of the island a control_island intent names (decision 0151); null for the other kinds."
           },
+          "contact": {
+            "type": "integer",
+            "description": "Decision 0220: for a destroy_force order, the number of the contact in your picture it was given; left out for the other kinds."
+          },
+          "search_only": {
+            "type": "boolean",
+            "description": "Decision 0220: for a destroy_force order, whether it is search only; left out for the other kinds."
+          },
+          "following": { "$ref": "command_defs.schema.json#/$defs/following" },
           "defences": {
             "type": ["integer", "null"],
             "description": "The points of defences a build_up intent wants, from 1 to 100, when defences is among its wants (decision 0141); null otherwise."

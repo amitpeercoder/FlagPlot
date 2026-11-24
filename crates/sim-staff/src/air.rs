@@ -376,6 +376,10 @@ pub(crate) struct Day<'v, 'a> {
     /// The stations a proposal's patrol order would give, in place order
     /// (decision 0218, 54); only for the tree in scope.
     pub(crate) patrol_stations: Vec<sim_core::command::PatrolStation>,
+    /// What `follow_forces` found for each order to destroy a force this
+    /// dusk (decision 0220): its centre for the day, where it was before,
+    /// whether it is lost. Stored nowhere.
+    pub(crate) followed: BTreeMap<IntentId, crate::follow::FollowedToday>,
 }
 
 /// The kinds the air doctrine serves: hold, cover, neutralise, raid, deny,
@@ -402,6 +406,7 @@ pub(crate) fn is_air(kind: IntentKind) -> bool {
             | IntentKind::Bombard { .. }
             | IntentKind::ControlIsland { .. }
             | IntentKind::Patrol { .. }
+            | IntentKind::DestroyForce { .. }
     )
 }
 
@@ -552,7 +557,12 @@ impl<'v, 'a> Day<'v, 'a> {
             men_waits: BTreeMap::new(),
             carrier_ends: BTreeMap::new(),
             patrol_stations: Vec::new(),
+            followed: BTreeMap::new(),
         };
+        // Decision 0220: an order to destroy a force follows its force at
+        // dusk before every other pass, and every pass that serves a deny
+        // reads its waters from it.
+        day.follow_forces();
         day.leaves();
         // Decision 0151: the tree of an island, formed before the doctrines
         // that serve what it forms.
@@ -798,6 +808,7 @@ impl<'v, 'a> Day<'v, 'a> {
             run: None,
             rests_on: NoticeBasis::NoOrder(index),
             pursuit: None,
+            follow: None,
         });
     }
 
@@ -1648,6 +1659,7 @@ impl<'v, 'a> Day<'v, 'a> {
                     run: None,
                     rests_on: NoticeBasis::NoOrder(index),
                     pursuit: None,
+                    follow: None,
                 });
             }
         }

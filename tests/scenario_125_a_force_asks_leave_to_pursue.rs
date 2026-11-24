@@ -679,6 +679,7 @@ fn asking_notice(day_age: u32, kind: ShipKind) -> StaffNotice {
             intent: intent(1),
             find: Some(find),
         }),
+        follow: None,
     }
 }
 

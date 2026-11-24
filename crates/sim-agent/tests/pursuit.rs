@@ -78,6 +78,7 @@ impl Staff for AskingStaff {
                         hours: Some(Fixed::from_int(400) / Fixed::from_int(30)),
                     }),
                 }),
+                follow: None,
             }],
             ..StaffDecisions::default()
         }

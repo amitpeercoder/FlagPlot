@@ -31,7 +31,7 @@
       "const": "flagplot-agent"
     },
     "version": {
-      "const": 54
+      "const": 55
     },
     "kind": {
       "const": "propose"
@@ -233,6 +233,7 @@
                 "raid",
                 "deny",
                 "patrol",
+                "destroy_force",
                 "strike_ships",
                 "search_waters",
                 "stand_at",
@@ -301,6 +302,7 @@
                       "raid",
                       "deny",
                       "patrol",
+                      "destroy_force",
                       "strike_ships",
                       "search_waters",
                       "stand_at",

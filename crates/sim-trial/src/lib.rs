@@ -82,7 +82,7 @@ use sim_core::rng::{Domain, Stream};
 use sim_core::state::Side;
 use sim_core::view::SideView;
 use sim_core::world::SimError;
-use sim_core::world_picture::{PictureHalf, WorldPicture};
+use sim_core::world_picture::{PictureContact, PictureHalf, WorldPicture};
 use sim_core::World;
 
 /// A trial's settings (decision 0174, 2): its seed, its number and how many
@@ -190,6 +190,12 @@ pub fn pictures_from_half(
         .pursuits
         .retain(|_, pursuit| !matches!(pursuit.by, PursuitBy::Answer(_)));
     own.command.pursuit_refusals.clear();
+    // What an order to destroy a force keeps names a contact by its number
+    // in the commander's picture, and a made world numbers its contacts by
+    // their place in the order of the picture's (decision 0220, rule 14).
+    for kept in own.command.followed.values_mut() {
+        kept.contact = made_number(view, &half.belief.contacts, kept.contact);
+    }
     (1..=trial.worlds)
         .map(|world| {
             let (enemy_half, assumptions) =
@@ -212,6 +218,33 @@ pub fn pictures_from_half(
             })
         })
         .collect()
+}
+
+/// The number a made world gives the contact the commander's picture numbers
+/// `number` (decision 0220, rule 14): its place, from 1, in the order of the
+/// contacts the picture holds. Where the commander's picture is the side's
+/// own belief that is its place in it; where it is another's (the area
+/// command's, with command levels on), the contact of the half's belief of
+/// the same hex and kind, as decision 0214 matches one. `0`, which names no
+/// contact, where the commander's picture no longer holds it or the half
+/// holds none like it: the order keeps its report and is read from that.
+fn made_number(view: &SideView<'_>, contacts: &[PictureContact], number: u32) -> u32 {
+    let commander = view.seat_picture();
+    let Some((place, held)) = commander
+        .contacts()
+        .enumerate()
+        .find(|(_, contact)| commander.contact_number(contact.id) == number)
+    else {
+        return 0;
+    };
+    let same = |found: &PictureContact| {
+        found.hex == held.estimated_hex && found.kind == held.estimated_kind
+    };
+    let at = match contacts.get(place) {
+        Some(found) if same(found) => Some(place),
+        _ => contacts.iter().position(same),
+    };
+    at.and_then(|at| u32::try_from(at + 1).ok()).unwrap_or(0)
 }
 
 /// The world of a picture (decision 0174, 2), built by

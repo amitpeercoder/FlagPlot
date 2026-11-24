@@ -523,6 +523,7 @@ impl Day<'_, '_> {
                     run: None,
                     rests_on: NoticeBasis::Command(index),
                     pursuit: None,
+                    follow: None,
                 });
             }
             if in_scope {
