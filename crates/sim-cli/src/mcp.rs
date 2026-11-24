@@ -30,7 +30,7 @@
 use std::collections::BTreeMap;
 
 use serde_json::{json, Map, Value};
-use sim_agent::{parse_seat, CallError, Post, Session};
+use sim_agent::{CallError, Post, Session};
 
 use crate::staff_tools::{staff_tool_definitions, STAFF_INSTRUCTIONS};
 use sim_core::state::Side;
@@ -602,42 +602,76 @@ impl Server {
 
     #[allow(clippy::type_complexity)]
     fn call_tool(&mut self, params: &Value) -> Result<Value, (i64, String, Option<Value>)> {
-        let bad = |message: String| Err((INVALID_PARAMS, message, None));
         let Some(name) = params.get("name").and_then(Value::as_str) else {
-            return bad("\"name\" is needed: the tool to call".to_string());
+            return Err((
+                INVALID_PARAMS,
+                "\"name\" is needed: the tool to call".to_string(),
+                None,
+            ));
         };
-        if !self.session.tools(self.side).contains(&name) {
-            return bad(format!("Unknown tool: {name}"));
+        match call_seat_tool(&mut self.session, self.side, name, params.get("arguments")) {
+            Ok(answer) => Ok(tool_text(answer.text, answer.is_error)),
+            Err(message) => Err((INVALID_PARAMS, message, None)),
         }
-        let mut arguments = match params.get("arguments") {
-            None | Some(Value::Null) => json!({}),
-            Some(value @ Value::Object(_)) => value.clone(),
-            Some(_) => return bad("\"arguments\" must be an object".to_string()),
-        };
-        // The briefing is text unless asked for data (decision 3).
-        let mut as_text = false;
-        if name == "get_briefing" {
-            let map = arguments.as_object_mut().expect("arguments is an object");
-            match map.get("text") {
-                None | Some(Value::Null) => {
-                    map.insert("text".to_string(), json!(true));
-                    as_text = true;
-                }
-                Some(Value::Bool(b)) => as_text = *b,
-                Some(_) => {}
-            }
-        }
-        Ok(match self.session.call(self.side, name, &arguments) {
-            Ok(answer) => {
-                let text = match (as_text, answer.get("text").and_then(Value::as_str)) {
-                    (true, Some(text)) => text.to_string(),
-                    _ => serde_json::to_string_pretty(&answer).expect("an answer serialises"),
-                };
-                tool_text(text, false)
-            }
-            Err(error) => tool_text(error_text(&error), true),
-        })
     }
+}
+
+/// What a seat's tool call came to: the text of the answer and whether the
+/// game marked it a refusal (a call it answered with its reason).
+pub struct ToolAnswer {
+    pub text: String,
+    pub is_error: bool,
+}
+
+/// One tool call for a seat: the tool's name and its arguments (none, null
+/// or an object) in, the text of the answer and whether it is a refusal
+/// out. `Err` is a call the protocol refuses before the game is asked (a
+/// tool the seat is not offered, arguments that are not an object): its
+/// words. The MCP server and the door of `sim-web` both call it (decision
+/// 0229, ruling 2).
+pub fn call_seat_tool(
+    session: &mut Session,
+    side: Side,
+    name: &str,
+    arguments: Option<&Value>,
+) -> Result<ToolAnswer, String> {
+    if !session.tools(side).contains(&name) {
+        return Err(format!("Unknown tool: {name}"));
+    }
+    let mut arguments = match arguments {
+        None | Some(Value::Null) => json!({}),
+        Some(value @ Value::Object(_)) => value.clone(),
+        Some(_) => return Err("\"arguments\" must be an object".to_string()),
+    };
+    // The briefing is text unless asked for data (decision 3).
+    let mut as_text = false;
+    if name == "get_briefing" {
+        let map = arguments.as_object_mut().expect("arguments is an object");
+        match map.get("text") {
+            None | Some(Value::Null) => {
+                map.insert("text".to_string(), json!(true));
+                as_text = true;
+            }
+            Some(Value::Bool(b)) => as_text = *b,
+            Some(_) => {}
+        }
+    }
+    Ok(match session.call(side, name, &arguments) {
+        Ok(answer) => {
+            let text = match (as_text, answer.get("text").and_then(Value::as_str)) {
+                (true, Some(text)) => text.to_string(),
+                _ => serde_json::to_string_pretty(&answer).expect("an answer serialises"),
+            };
+            ToolAnswer {
+                text,
+                is_error: false,
+            }
+        }
+        Err(error) => ToolAnswer {
+            text: error_text(&error),
+            is_error: true,
+        },
+    })
 }
 
 fn error_text(error: &CallError) -> String {
@@ -646,92 +680,4 @@ fn error_text(error: &CallError) -> String {
     } else {
         format!("{} (one of: {})", error.message, error.allowed.join(", "))
     }
-}
-
-// ---------------------------------------------------------------------
-// The command.
-// ---------------------------------------------------------------------
-
-struct Options<'a> {
-    scenario: &'a str,
-    side: Side,
-    /// Where the seat sits (decision 0138, 5): the area command by default.
-    post: Post,
-    seed: Option<u64>,
-    save: Option<&'a str>,
-    transcript: Option<&'a str>,
-}
-
-fn parse<'a>(args: &'a [String], usage: &str) -> Result<Options<'a>, String> {
-    let mut scenario = None;
-    let mut side = None;
-    let mut post = Post::Area;
-    let mut seed = None;
-    let mut save = None;
-    let mut transcript = None;
-    let mut words = args.iter().map(String::as_str);
-    while let Some(word) = words.next() {
-        let mut value = |what: &str| {
-            words
-                .next()
-                .ok_or_else(|| format!("{what} needs a value\n\n{usage}"))
-        };
-        match word {
-            "--seat" => {
-                let v = value("--seat")?;
-                side = Some(
-                    parse_seat(v)
-                        .ok_or_else(|| format!("--seat \"{v}\" is not allied or japanese"))?,
-                );
-            }
-            "--at" => post = Post::parse(value("--at")?)?,
-            "--seed" => {
-                let v = value("--seed")?;
-                seed = Some(
-                    v.parse::<u64>()
-                        .map_err(|_| format!("--seed \"{v}\" is not a whole number"))?,
-                );
-            }
-            "--save" => save = Some(value("--save")?),
-            "--transcript" => transcript = Some(value("--transcript")?),
-            flag if flag.starts_with('-') => {
-                return Err(format!("unknown option \"{flag}\"\n\n{usage}"))
-            }
-            path if scenario.is_none() => scenario = Some(path),
-            extra => return Err(format!("unexpected argument \"{extra}\"\n\n{usage}")),
-        }
-    }
-    Ok(Options {
-        scenario: scenario.ok_or_else(|| format!("no scenario given\n\n{usage}"))?,
-        side: side
-            .ok_or_else(|| format!("--seat allied or --seat japanese is needed\n\n{usage}"))?,
-        post,
-        seed,
-        save,
-        transcript,
-    })
-}
-
-pub fn command(args: &[String], usage: &str) -> Result<(), String> {
-    use std::io::{BufRead, Write};
-    let options = parse(args, usage)?;
-    let seats = BTreeMap::from([(options.side, sim_agent::SeatKind::Player)]);
-    let posts = BTreeMap::from([(options.side, options.post)]);
-    let (session, kept) = crate::serve::open(options.scenario, options.seed, seats, &posts)?;
-    let mut server = Server::new(session, options.side);
-    let stdin = std::io::stdin();
-    let stdout = std::io::stdout();
-    let mut out = stdout.lock();
-    for line in stdin.lock().lines() {
-        let line = line.map_err(|e| format!("standard input: {e}"))?;
-        if line.trim().is_empty() {
-            continue;
-        }
-        if let Some(answer) = server.handle_line(&line) {
-            writeln!(out, "{answer}")
-                .and_then(|()| out.flush())
-                .map_err(|e| format!("standard output: {e}"))?;
-        }
-    }
-    kept.finish(&server.session, options.save, options.transcript)
 }
