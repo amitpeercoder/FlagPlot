@@ -6,11 +6,16 @@ The end date: the designer asked for "13 August 1945". Hostilities ended on 15 A
 
 ## How to run them
 
-1. **Paste the common block below, then one prompt.** Each prompt is written to stand alone with the common block above it. Run one prompt per conversation, and one part per run where a prompt has parts.
-2. **About 80 statements a run.** The clean answers of the earlier passes held 59 to 73 claims each. A part that would need more is split again (by year, by type, by region) and the prompt says where to start.
-3. **Save each answer as its own file**, named by the prompt and part (`C03-part1-carriers.md`). Keep the answers outside the repository, as before; our readers key rows from them.
-4. **Large public-domain tables are not transcribed by the outside model.** JANAC, the AAF Statistical Digest, Ships' Data and the USSBS appendices are US government works in tables. Where a prompt meets one, it asks only where the table is (document, page, URL, what its columns are); our readers key it directly.
-5. **What the earlier passes taught** (Nov 13 and Nov 14): no quote was invented, but about one claim in ten was misattributed (right words, wrong book, chapter, ship, date or author); twice the model's own arithmetic was presented as the source's; some quotes were elided or reworded; its "not found" answers were the weakest part, and its searches were shallow. The common block is written against each of these.
+ChatGPT (Codex) works in a checkout of this repository: it reads this file and writes each answer to disk.
+
+1. **Start each run with one line**, naming one prompt and one part, for example:
+   `Read prompts.md. Follow its common block and run prompt CG, part 1.`
+   One part per run; a fresh session for each run is best, so one answer does not lean on another.
+2. **Answers go to `research-answers/`** at the root of the checkout, one file per run, named `<id>-part<n>-<short-subject>.md` (`CG-part1-allied-ships.md`, `C03-part1-carriers-and-battleships.md`). The folder is ignored by git: the answers are leads, not sources, and stay out of the repository as before. Our readers key rows from them into `data/oob`.
+3. **A run that stops short** writes what it has and says in Table 3 what it did not reach. A second run of the same part writes `<id>-part<n>b-...md` and does not overwrite the first.
+4. **About 80 statements a run.** The clean answers of the earlier passes held 59 to 73 claims each. A part that would need more is split again (by year, by type, by region) and the prompt says where to start.
+5. **Large public-domain tables are not transcribed by the outside model.** JANAC, the AAF Statistical Digest, Ships' Data and the USSBS appendices are US government works in tables. Where a prompt meets one, it asks only where the table is (document, page, URL, what its columns are); our readers key it directly.
+6. **What the earlier passes taught** (Nov 13 and Nov 14): no quote was invented, but about one claim in ten was misattributed (right words, wrong book, chapter, ship, date or author); twice the model's own arithmetic was presented as the source's; some quotes were elided or reworded; its "not found" answers were the weakest part, and its searches were shallow. The common block is written against each of these.
 
 ## Order
 
@@ -63,7 +68,7 @@ Whether Burma, India and China are in the campaign or only its edge (C00 asks th
 
 ---
 
-## The common block (paste above every prompt)
+## The common block (read before every run)
 
 ```
 You are a research assistant gathering sourced historical statements for a
@@ -73,6 +78,32 @@ searches it for the words you quote. A statement that cannot be found in the
 source you name is thrown away, so precision matters more than coverage.
 Aim for about 80 statements in this run. Stop there and say in Table 3
 what you did not reach.
+
+YOU ARE WORKING IN A CHECKOUT OF THE GAME'S REPOSITORY
+
+- Run only the prompt and part you were given. The prompt's own fenced
+  block is your task; the text around it is for the designer.
+- Write your answer to research-answers/<id>-part<n>-<short-subject>.md
+  at the root of the checkout (create the folder if it is missing). If
+  that file exists, write <id>-part<n>b-... and do not overwrite it.
+- Write nothing else. Do not edit, create or delete any other file, do
+  not run git commit, git push or git add, and do not open a pull request.
+- Never open, read or search the folder references/. It holds a
+  commercial wargame's manuals, which this research must not use.
+- You may read, to avoid repeating what is held and to use the right
+  attribute names: data/oob/attributes.csv (the attribute names),
+  data/oob/*.csv (what is already on file; a fact already there from the
+  same source and page need not be given again: say "already held" in
+  the note if you give it), data/oob/gaps.csv (what earlier passes looked
+  for and did not find), docs/research/oob/source-policy.md and
+  docs/research/oob/database-design.md (the rules behind this block).
+  These files are not sources: never cite them, cite what they cite
+  only after opening it yourself.
+- Do not read docs/research/ answers or notes as sources either; they
+  are our own summaries.
+- At the top of the file, before the tables: the prompt id and part,
+  the date, the model you are, and two lines on what you covered and
+  what you did not reach.
 
 WHAT TO DELIVER
 
