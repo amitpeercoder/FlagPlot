@@ -1,10 +1,10 @@
 # 0232: A plan the commander writes
 
-Status: a plan by the architect, written on Nov 26, 2026, on the designer's ask of Nov 25 and 26, 2026, after he played the 39 days as the Allied side: "the player gives 2 commands, the staff does it all, and that's about it ... it feels the commander is not needed much. I would like to make the player feel like it's a struggle, that they need to make decisions, to make tradeoffs", and then "What if planning could be done by the player instead of the staff? No, I don't want to remove the staff doing it as planned, but how would that look like?" He was shown the shape below and said "Shall we try it?". Needs review by the designer: it has three questions for him. Nothing is built. It is to be read by a reviewer who has not seen it written before anything is built.
+Status: a plan by the architect, written on Nov 26, 2026, on the designer's ask of Nov 25 and 26, 2026, after he played the 39 days as the Allied side: "the player gives 2 commands, the staff does it all, and that's about it ... it feels the commander is not needed much. I would like to make the player feel like it's a struggle, that they need to make decisions, to make tradeoffs", and then "What if planning could be done by the player instead of the staff? No, I don't want to remove the staff doing it as planned, but how would that look like?" He was shown the shape below and said "Shall we try it?". It had three questions for the designer, which he answered on Nov 26, 2026, each as recommended ("Confirmed on Nov 26, 2026", at the end). It was read by a reviewer who had not seen it written and amended the same day. Nothing is built.
 
 Summary: A commander may write part of a plan himself: a sub-intent under an order of his own, of a kind the staff forms there today, with himself as its maker. The staff fills what he left blank, forms nothing beside his node, carries it out as it would its own, and where it cannot be met tells him and does not plan the place again. The first build opens one pair, "take a place" under "control an island", which is where the forces, the day and the order of a landing are decided; a draft with its written part can then be tried beside the staff's own plan for the same order, in the same worlds, with the same costs. Three steps and a later one; two new refusals, no new event, no new state; a game with nothing written plays as before, to the hash.
 
-Standing: Needs review. Planned by the architect on Nov 26, 2026; amended on review the same day; not built
+Standing: Confirmed by the designer, Nov 26, 2026, with his three answers, each as recommended. Planned by the architect and amended on review the same day; ready to build; not built
 
 ## Why
 
@@ -284,3 +284,13 @@ Not checked by the architect and left to the build to confirm, each to come back
 1. **Is the landing the right first thing to write?** The first build lets you write the landings of an order for an island: who lands where, from which base, on what day and in what order. It does not yet let you write where the carriers stand and for how long, the surface screen, or the garrison, and a carrier force you name for a landing stays the island's to place. The architect recommends starting with the landing: it is the one node whose doctrine already treats yours as its own, so it can be built and proved quickly, and you can then say from play which is wanted next. The carriers' station is the likely second.
 2. **To try it on the 39 days, an order must have more than one landing.** Guadalcanal and Tulagi are two islands there, one place each. The architect recommends adding to the table's copies of the 39 days, and to no file of record or of a proof, a third island of both places, "Guadalcanal and Tulagi", so that one order holds both landings and there is an order of them to write. An island is map data: adding one changes no game that does not order it.
 3. **A place the staff has already planned stays the staff's in the first build.** You write your part with the order, or before you give the island's plan its leave; afterwards you can give a node of yours back to the staff, and not take one of the staff's. The architect recommends accepting that for the first try, with taking over as the next step if it is missed.
+
+## Confirmed on Nov 26, 2026
+
+The designer answered the three questions, each as recommended:
+
+1. **The landing is the first thing to write** ("Landing first"). The one pair of the first build is "take a place" under "control an island"; the carriers of a landing are the likely second.
+2. **A third island, "Guadalcanal and Tulagi", is added to the table's copies of the 39 days** ("Add it"), and to no file of record or of a proof, so that one order holds both landings.
+3. **A place the staff has already planned stays the staff's in the first build.** Accepted; taking over a node the staff formed is step 4.
+
+The plan stands as amended on review and is ready to build, in the order "Where it stands" gives against stage 4's proof. The hand calculation of scenario 137 is written by the architect before step 1 is delegated.

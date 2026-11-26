@@ -2,11 +2,15 @@
 
 Nov 9, 2026 · Amit Peer
 
+> **Proposed, awaiting the designer's review** (drafted by the architect on Nov 26, 2026, on his instruction "Amend now"; `docs/design/levels.md` has the reasoning). Every change proposed to this document is in a block marked like this one, beside the text it would change, which is left as it was. Nothing in a marked block is in force until he confirms it; he may strike any of them. The five pillars are not changed. Three questions are at the end, where his intent could be read two ways.
+
 ## Concept
 
 An operational wargame of the Pacific War at the scale of War in the Pacific: Admiral's Edition (WitP:AE), where the player commands by intent and a staff executes. Title: Flag Plot, after the compartment on a flagship where the admiral and staff tracked the battle and issued orders.
 
 WitP:AE models every ship, air group and pilot across the whole theatre, day by day, and makes the player hand-enter orders for all of it. This game keeps that depth in the simulation and removes it from the player's hands. The player works at whatever level of command they choose. Everything they are not holding is run by a staff that shows its reasoning.
+
+> **Proposed, awaiting the designer's review** (drafted by the architect on Nov 26, 2026, on his instruction "Amend now"; `docs/design/levels.md` has the reasoning). Add after the paragraph above: **The game is about planning.** The player is taken through levels. Each is a war small enough to hold in the head, with a mission and a date given from above. He writes a plan, may try it in a dry run and amend it, and then fights it. He is scored on the plan, against the plan his staff would have made alone, and on the battle, for what his own hand added to the plan or cost it. Each level teaches one more decision of planning and practises the ones before; the scenarios grow in forces and in length, and in the later ones he may command only part of a side. The theatre is the top of the ladder, not the first thing he is given.
 
 It is a passion project built for an audience of one. There is no commercial target and no deadline. It is the primary side project, ahead of Haulout. The two tests of success are that the UX is wonderful and that the game is engaging to play.
 
@@ -49,11 +53,18 @@ Three directions of the designer, of Nov 15 and 16, 2026, each recorded where th
 - **A staff at every level, each on its own picture** (`docs/design/command-levels.md`, decision 0119). Each commander interprets and splits the intent he is given. Levels differ in what they know and in what they report, of the enemy and of their own forces. Commanders differ in initiative. It is built as its own stage of step 3.
 - **A seat at any level.** A player may later take a role, see what that level sees, and carry out the intents of the levels above. "Anything can be grabbed" then means sitting where that commander sits.
 
+> **Proposed, awaiting the designer's review** (drafted by the architect on Nov 26, 2026, on his instruction "Amend now"; `docs/design/levels.md` has the reasoning). A fourth direction, of Nov 26, 2026, which sharpens pillars 1 and 2 and changes none of the five:
+>
+> - **The player may write the plan, and is judged on it** (decision 0232; `docs/design/levels.md`). A commander may write part of the tree himself and the staff fills the rest; a node is his or the staff's and says so. The staff's own plan for a mission is the mark: a level is passed by a plan that beats it over many games, and the game he fights adds to that score or takes from it. Pillar 1 is then learned one altitude at a time. Pillar 2 gains a second use: the staff's plan is what the player reads to find where he can do better. Pillar 3 stands: the game he fights still runs until something matters, and what he does when it stops is scored.
+
 ## Cuts
 
 These are left out on purpose. Each one protects a pillar or keeps the scope survivable.
 
 - **Mandatory micromanagement.** No task exists that only the player can do. If staff cannot do it, it is not in the game yet.
+
+  > **Proposed, awaiting the designer's review** (drafted by the architect on Nov 26, 2026, on his instruction "Amend now"; `docs/design/levels.md` has the reasoning). Add to this cut: *This still holds inside a level: the staff can plan every level, and its plan is the mark. A level asks more of the player than the staff's plan gives, so within a level writing a plan is required to pass. That is a demand on the player's judgement at the altitude he is playing, and nothing below that altitude is ever his to do by hand.* The designer ruled "Must beat par to pass" knowing it makes writing a plan mandatory within a level; this wording is the architect's attempt to square the two and is his to change. Whether anything can be played with no mark to beat is question 1 at the end.
+
 - **Modal spreadsheet screens.** Lists exist as a secondary view, never as the only route to a decision.
 - **Japanese industrial management as a spreadsheet game.** Production is set by policy and priorities, with staff handling the conversion detail.
 - **Detailed ground combat.** Land fighting is modelled at the level naval and air decisions need. This is not a ground-war game.
@@ -74,6 +85,8 @@ The first playable version is the South Pacific from August 1942 to February 194
 | Sides | Allied player against a Japanese AI first, then the reverse |
 | Systems | Naval movement and combat, air operations, supply and shipping, search and fog of war, basic ground combat |
 
+> **Proposed, awaiting the designer's review** (drafted by the architect on Nov 26, 2026, on his instruction "Amend now"; `docs/design/levels.md` has the reasoning). The slice above stands as the largest thing the first version holds, and becomes the top of the first ladder. Before it come levels, the first of them invented and marked placeholder (his answer of Nov 26, 2026: "invented first"), then levels cut from the battles the slice already has on file. Whether "the first playable version" now means the first levels or still the slice is question 2 at the end.
+
 This campaign is chosen because it stresses every system at once in a small space: carrier battles, night surface actions, an air war of attrition, and a supply fight both sides nearly lost. If the command model works here, it scales. If it fails here, a bigger map will not save it.
 
 ## Build sequence
@@ -85,6 +98,8 @@ Five steps, with a kill gate after step 4. No full database and no real UI befor
 3. **Staff planner.** The layer that turns intent into orders. It serves player delegation and the enemy AI, so it is built once.
 4. **Command-loop prototype.** Minimal UI over steps 1 to 3: set intent, read staff plans, run time, get interrupted, react.
 5. **Full build.** Real UI, complete order of battle, more theatres, the Japanese side.
+
+> **Proposed, awaiting the designer's review** (drafted by the architect on Nov 26, 2026, on his instruction "Amend now"; `docs/design/levels.md` has the reasoning). Steps 1 to 3 are unchanged. Step 4, the command-loop prototype, gains what a level needs: a mission held from above, a plan written and signed, a dry run, the judge, and the score of plan and game. Step 5 changes its order: the ladder of levels up to the slice comes before more theatres. The four questions of the gate are not reworded; the first, "is commanding by intent fun, or does it feel like watching a screensaver?", is what the first level is built to answer. What the gate is judged on is question 3 at the end.
 
 **Kill gate, after step 4.** Four questions, answered by playing the prototype for a few weeks:
 
@@ -130,3 +145,11 @@ The last row is the one to get right from the first commit. Traceability added l
 
   What it asks of step 1: every order carries the intent it serves, and every objective can be measured from state. War-wide strategy (production, the whole Pacific) stays in step 5.
 - [ ] Open source from the start, or decide after the kill gate?
+
+## Proposed amendment: questions for the designer
+
+Asked by the architect on Nov 26, 2026 with the proposed blocks above. On each his intent could be read two ways, and the draft does not choose.
+
+1. **Is there play outside the ladder?** One reading: every game is a level, with a mission and a mark. The other: a battle or the campaign can also be played freely, as the games on the table are today, with a result and no mark to beat. It decides how the cut on mandatory micromanagement reads: under the second, command by intent with nothing required stays a way to play; under the first, it does not.
+2. **What is the first playable version?** One reading: the first few levels, with the South Pacific slice reached later. The other: the slice, as written, with levels as the way into it.
+3. **What is the kill gate judged on?** One reading: the first level, or the first few. The other: the prototype over the slice, as written, with a level as one part of it.

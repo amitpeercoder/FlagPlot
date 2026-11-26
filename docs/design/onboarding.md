@@ -2,6 +2,8 @@
 
 A design note by the architect, begun on Nov 20, 2026 at the designer's asking ("maybe start thinking about the onboarding experience"). It is first thoughts for discussion. Nothing here is built or planned.
 
+> **Proposed, awaiting the designer's review** (drafted by the architect on Nov 26, 2026, on his instruction "Amend now"). The designer's direction of Nov 26, 2026 is that the game is about planning and the player is taken through levels (`docs/design/levels.md`). The changes this note would need are in blocks marked like this one, beside the text they would change, which is left as it was. In short: the ladder of this note gives way to the ladder of levels; the rest stands, and its home is the first level.
+
 ## The problem
 
 The game's premise is its teaching problem. A player commands by orders and a staff carries them out. So a newcomer's first question is not which button to press. It is: what am I supposed to decide, and what happens if I decide nothing? A manual does not answer that, and the designer has ruled that the table carries no captions explaining mechanics.
@@ -11,6 +13,8 @@ What a newcomer meets today: a screen that asks for a scenario, a side and an op
 ## What onboarding should leave a player knowing
 
 In this order, since each rests on the one before:
+
+> **Proposed, awaiting the designer's review** (drafted by the architect on Nov 26, 2026, on his instruction "Amend now"). Add a sixth, after the five below: **A plan is yours to write, and it is judged.** The staff will plan a mission for you. You pass a level by writing a plan that does better than the staff's over many games, and the battle you fight with it adds to your score or takes from it.
 
 1. **You are a commander with a superior and a staff.** You are told what is wanted; you say what you want done; the staff does it and tells you why.
 2. **Time moves in days of three parts, and you choose when it moves.**
@@ -25,6 +29,8 @@ In this order, since each rests on the one before:
 The first thing on the table is a directive from above and the staff's first proposal, which the player approves, changes or sends back. Within a minute he has done the central act of the game and seen its result: forces moving on an order he gave in a sentence. This uses what the game has (directives, proposals, approval) and adds no caption.
 
 ### A ladder of scenarios
+
+> **Proposed, awaiting the designer's review** (drafted by the architect on Nov 26, 2026, on his instruction "Amend now"). This section is replaced by the ladder of `docs/design/levels.md`, whose rungs each add a decision of planning where these add a part of the game. What these four rungs teach (a day, a search, a contact, a convoy, forces that tire, a landing, a campaign) still has to be learned: it is carried by the first rungs of that ladder, which use the same battles, and by "The first five minutes" below. The table is kept here until he confirms.
 
 Each rung adds one thing and is short enough to finish in a sitting:
 
@@ -50,6 +56,8 @@ The one place the role cannot carry it alone: what the chart shows, what a conta
 - **Watch a newcomer.** One or two people who have not seen the game, on the table as it is, saying what they think is happening. Where they stall is the list of what to build.
 - **Read what the agents said.** Each agent that played wrote what confused it. A model reading the briefing cold is a fair stand-in for a newcomer reading it.
 - **Decide what a first game is for:** to finish a small battle in twenty minutes, or to understand command by orders. The ladder assumes the second.
+
+> **Proposed, awaiting the designer's review** (drafted by the architect on Nov 26, 2026, on his instruction "Amend now"). Answered by the direction of Nov 26, 2026: a first game is for learning to plan. The first level's mission, its staff's plan and the directive from above are the first thing on the table, which is "Teach through the role" as written. "The staff explains itself" gains a use: the staff's reasons are what a player below par reads to see why. The three questions below stand.
 
 ## Questions for the designer
 
