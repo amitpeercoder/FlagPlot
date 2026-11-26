@@ -1,0 +1,294 @@
+# 0232: A plan the commander writes
+
+Status: a plan by the architect, written on Nov 26, 2026, on the designer's ask of Nov 25 and 26, 2026, after he played the 39 days as the Allied side: "the player gives 2 commands, the staff does it all, and that's about it ... it feels the commander is not needed much. I would like to make the player feel like it's a struggle, that they need to make decisions, to make tradeoffs", and then "What if planning could be done by the player instead of the staff? No, I don't want to remove the staff doing it as planned, but how would that look like?" He was shown the shape below and said "Shall we try it?". Amended on review the same day. Confirmed by the designer on Nov 26, 2026, who answered its three questions as the architect recommended (Questions for the designer). Nothing is built.
+
+Summary: A commander may write part of a plan himself: a sub-intent under an order of his own, of a kind the staff forms there today, with himself as its maker. The staff fills what he left blank, forms nothing beside his node, carries it out as it would its own, and where it cannot be met tells him and does not plan the place again. The first build opens one pair, "take a place" under "control an island", which is where the forces, the day and the order of a landing are decided; a draft with its written part can then be tried beside the staff's own plan for the same order, in the same worlds, with the same costs. Three steps and a later one; two new refusals, no new event, no new state; a game with nothing written plays as before, to the hash.
+
+Standing: Confirmed. Planned by the architect on Nov 26, 2026; amended on review the same day; confirmed by the designer the same day, his three answers as recommended; not built
+
+## Why
+
+The pillars give the staff everything the commander does not hold, and the cut is "no task exists that only the player can do". Decision 0116, which the designer agreed, already says a commander may write lower in the tree: "A commander may state a sub-intent himself, at any level, and the staff fills in what lies below it" (item 7). Decision 0117 built the tree without that and left it for later (item 4, and "What it leaves out"); chapter 8 lists it under Not built. This record builds the first part of it.
+
+What is so today, read from the code and the rulebook on Nov 26, 2026:
+
+- **A commander's `set_intent` makes a root and nothing else.** It carries no parent (`CommandKind::SetIntent { intent, kind }`); the engine sets `parent: None` and `maker: Commander` (`command/intake.rs`, `apply_command`). The invariants hold a sub-intent to be the staff's and a root the commander's (`invariants.rs`, the tree's check).
+- **A node the staff formed is closed to him but for its limits.** `set_intent` and `withdraw_intent` on it are refused as "Made by the staff". He may set a forces limit, a risk or an area on it once it exists. The limits that tell a plan to wait, and the knowledge limit, he may not: they stand only on a "take a place" or a "control an island" that he made (`NoWaitLimitOn`, `NoKnowledgeLimitOn`).
+- **Under "control an island" the staff forms the takes itself,** one for each named place the side does not hold, in the island's order, on the first morning the island's plan is released, and each chooses its men and ships that morning. The order the places are taken in is the island's order, "each as its forces come free" (chapter 8, Not built). A commander who wants one place first, a force kept for the second, or the second held until the first is his, has no way to say so inside the order.
+- **He can already state a take as a root beside the island,** and the island then forms none for that place: the island's check is for a take of the place in force anywhere on the side, whoever made it (`island.rs`, `island_take`; the same for a hold, `island_hold`). But a root is another tree. Its units and forces are kept from the island's tree by the rule of what the staff may take (decision 0149, item 5); it takes carrier and bombardment forces for itself, where under an island they are the island's (decision 0151, 8a and 8c); it reads none of the island's limits, risk or date; and it is another plan on another paper.
+- **The take's own doctrine does not ask who made it.** What differs for a take under an island is decided by the island on its chain (`island_on_chain`, in `take.rs`, `assemble.rs`, `lifts.rs`), its plan of its own by the two kinds (`forms_own_plan`), and the carriers' strike on the place by the take's parent and kind (`cover.rs`). The engine's guards already keep the staff off a node it did not form: its `withdraw_intent` and its `set_limit` on one are refused as "Not yours".
+- **A draft can already be tried beside another.** The tool `trial` with `compare` plays a second trial in the same worlds of "the side without the thing tried" and sets the two side by side with the same costs (decisions 0178 and 0181; chapter 9, What-ifs from a seat). A preview takes an order with its limits as one (decision 0222, rule 4).
+
+So most of what the ask needs exists. What is missing is the one door: a commander's node inside his own tree.
+
+## What is planned, and in what order
+
+The designer's five points, and where each falls:
+
+| The ask | Where |
+| --- | --- |
+| 1. He writes sub-intents under his own root, sequenced by the waits that exist | Step 1 (rules A) |
+| 2. The staff fills the blanks; a node is his or the staff's, and it shows | Step 1 (rules B and C): the maker is state already |
+| 3. His draft is tried, with the staff's own plan beside it | Step 2 (rules D) |
+| 4. His plan is carried out as written, and he is told where it cannot be met | Step 1 (rules B) |
+| 5. He plans down to task force and date; nothing becomes his alone to do | Holds throughout: every node he may write is one the staff forms when he does not |
+
+**The first build is 1, 2 and 4, for one pair of kinds.** It is the smallest version that is honest: without 4 a written node would be an opening bid the staff then overrode, and without 2 he could not see what he had kept. Point 3 needs no new rule of the game, only two readings of tools that exist, so it is a step of its own and the first can be proved by hand without it. Each step is one branch and one pull request, read by the architect before it merges.
+
+1. **The node:** the engine's door, the doctrine's regard for it, the tools that show whose node is whose. Scenario 137 with its hand calculation.
+2. **The draft as one, and the two plans side by side:** a preview that carries the written part, and the trial's second trial for it.
+3. **The table:** the order's paper gains the written part; the plan's paper marks each line; the dry run shows both plans.
+4. **Later, each with its own plan:** taking over a node the staff has already formed; more pairs (below, What it leaves out).
+
+## The rules
+
+### A. A sub-intent the commander states
+
+1. **`set_intent` may name a parent.** The command gains `parent`, an intent number or none. With none it is the command as it is today, a root. With one, and a number not yet used that is above the parent's, it makes a sub-intent under that parent whose maker is the commander (the tree's check holds a parent's number below its child's, `invariants.rs`; the tool's next free number is always above). The intent is otherwise what a `form_intent` of the same kind under the same parent would make: its addressee is its kind's, it is set on the day the command is taken in, and it has no limits until he sets them.
+2. **One pair is open to him in this build: "take a place" under "control an island"**, where the place is the hex of a named place of that island. It is one of the pairs the staff may form (`IntentKind::may_stand_under`); the commander's pairs are a second, narrower table of the same shape (`may_be_written_under`), so that a pair is opened by adding a line when its doctrine has been read for it.
+3. **It is refused,** the reasons tried in this order after those a `set_intent` has today ("Intent number not usable", "Made by the staff", "Kind cannot change"):
+
+| Reason | When | Words |
+| --- | --- | --- |
+| Parent cannot change (new) | The number is that of an intent in force and a parent is given that is not the one it has. A parent left out for an intent in force is read as the one it has, a root's as none, so a scenario's command and a seat's are one case and no tool fills anything in | "intent:N stands under intent:M and cannot be moved: withdraw it and state another" (for a root, "intent:N is a root and cannot be moved under another") |
+| No such intent | The parent is not in force. A parent never set, one withdrawn and one of the other side's are refused alike | as today, naming the parent |
+| Intent number not usable | The number is new and is not above the parent's | as today |
+| Cannot stand under | The parent was formed by the staff. In this build that is every case the pair's own check would refuse too, so no reason of its own is added; a later pair that needs one adds it | as today, naming the parent |
+| Wrong plan state | The plan the parent serves has ended | as today |
+| Cannot stand under | The pair is not open to him, or the place is not the hex of a named place of the parent's island | as today, naming the parent |
+| Already planned (new) | Another intent than this one is a "take a place" of the same hex, in force on the side, and either its plan has not ended (in any tree, whoever made it) or the commander wrote it under this island (whatever its plan) | "intent:K already plans the place at H" |
+| the kind's own reasons | as for a root: "Not land" | as today |
+
+   The parent's plan may be a draft, preparing or released: he writes his part before he gives leave, or after. The two new refusals are added at the end of `CommandRefusal`. Every check of this rule is made when the intent is set again as when it is first set, the intent itself left out of "Already planned": so a set-again that keeps its place passes, and one that names another hex passes only where that hex is a named place of the island that nothing else plans. A root take stated for a place he has written under an island is not refused, as one stated beside a staff's take is not today; the island's rule of what stands is unchanged for roots.
+4. **Its plan.** A take under an island has a plan of its own (decision 0151, 9), whoever made it: it is drafted when the command is taken in, with the side's next plan number, and `PlanDrafted` is recorded after the command's `CommandTaken`, citing it. No `IntentFormed` is recorded: that event is a `form_intent`'s, and the record of a commander's intent is his command, as for a root. Stating it is no amendment of the island's plan, as the staff's forming of one is none; a change to it while its own plan is approved is an amendment of its own plan, as for any intent.
+5. **Set again, and withdrawn.** `set_intent` on its number, with its parent given, changes its figures (its date) and not its kind, its parent or its maker, as for a root. He withdraws it by `withdraw_intent`, which withdraws what the staff formed beneath it and ends its plan, as for a take under an island today. Withdrawing the island withdraws it with the rest of the tree, with its `IntentWithdrawn`.
+6. **Limits on it** are set as on any intent with a parent: a forces limit, a risk or an area must narrow, by the check as it is under an island (decision 0149's, chapter 8, Forces limits under an island). The limits that tell a plan to wait and the knowledge limit may be set on it: it is a "take a place" of the commander's, which is all intake asks. An "after" may name another take he wrote under the same island, or any other take or island of his, as today.
+7. **No wait that waits for itself.** The ring check of decision 0159 walks the "after" limits from the intent named, on the state before the limit is set, and so misses every ring that runs through a limit read up the tree by a node beneath: a take that waits for its own island, an island that waits for a take beneath it, and a ring through a third intent (R a root take, T his take under island I: "R after T", then "I after R", which T reads). The check is made instead **on the command state with the new limit in place, from every intent in force that would read it:** the intent it is set on and each intent beneath it. From each, the walk follows every "after" read up the tree (`waits_read_up`) and, for an island named, goes down to each take in force beneath it, since an island is met when its places are. The limit is refused as "Not an end to wait for" where any walk comes back to the intent it started from. With no sub-intent of the commander's in the state the walk is the one made today.
+8. **The invariant** of the tree reads: a root is the commander's; a sub-intent is the staff's, or is the commander's where its parent is the commander's and the pair is open to him; a parent's number is below its child's, as today.
+
+### B. What the staff does with a node he wrote
+
+9. **It forms nothing beside it.** While a commander's take of a named place is in force under the island and its plan is not complete, the staff forms no take of that place: so too where he cancelled its plan. (Today the island passes over a place only while a take of it has a plan that has not ended; for a staff's take, and for a take in another tree, that stays so.) A plan marked complete is a landing carried out: his node stands as done, as a staff's take does today, and if the place is later lost the staff retakes it by the rule as it is, with a take of its own. Where his take stands, the island's reason of the morning says so in a line, where today a take of the island's own tree stands without a word: "intent:K, the commander's, plans the place at H: the staff forms no take beside it."
+10. **It is served as the staff's own take under an island is,** by the same doctrine with nothing changed: a plan of its own made ready on leave to prepare; a "ready a landing" formed under it by the staff; the men sized against the estimate by the risk; the waits, the need to know, the check that the place can be held, leave to launch, the move, the landing, the mornings ashore, a second lift; no carrier force and no bombardment force of its own, since those are the island's (below). Two things are added, each for a take the commander made under an island and for no other intent, so that no take that exists today is touched.
+    - **Nothing is done under it while the island's plan is a draft or preparing,** since a staff's take cannot exist before the release and his can. The step of the leaves (`air.rs`, `leaves`, which makes every plan's owner ready before the islands are worked) passes his take over on such a morning: its plan stays a draft and one reason says it waits for the island's plan. Once the island's plan has been released the wait is over for good: if he later cancels the island's plan, his take goes on as a staff's take under that island does today. A preview or a proposal of his take reads the island's plan as released, as it reads the take's own.
+    - **A force on the carrier or the bombardment mission named in its forces limit is not used by it.** Today the cover and the look of a take form a carrier task for each carrier force its nearest forces limit names (`cover.rs`, `form_cover_tasks` and `form_look_task`), and the bombard step likewise; under an island the staff's own limit never names one. For his take these three form nothing, the force stays the island's to use by its own rule, and the take's reason of the morning says "task_force:N is on the carrier mission: under an island the carriers are the island's, and it is not this landing's" (so for bombardment). Naming the carriers of a landing is the second pair (Question 1), not this build.
+11. **The staff fills his blanks and only his blanks.**
+    - *Forces.* What his forces limit names of the task forces, the land units and the source is his; what it does not name the staff chooses, inside the island's limit, and keeps on the "ready a landing" it forms. The staff adds no unit and no force of a kind he named. **This needs one change to the doctrine, made for a take the commander made and for no other.** Today a take with a limit of its own is read by that limit alone and the island's is not looked at (`take.rs`, the first choice and `named_later`; `lifts.rs`, the later lifts), so a kind he left blank would be chosen from the whole side, and the staff's limit on the landing could then be refused by intake, which checks it against every limit above. For his take the limit the staff chooses within is made kind by kind, by one function those three places call: of the task forces, the land units and the source, his where his limit names it, else the island's where the island's names it, else the staff's choice. (The same reading of a staff's take on which the commander has set a limit, under an island with a limit, is a difference found on the way: it is added to `docs/rules/differences.md` and not mended here, so that no game on file moves.)
+    - *What he named is that node's.* Under one root the rule of what the staff may take keeps nothing from a sibling (`assemble.rs`, `others_above`, passes over intents of the same root), and chapter 8 says a unit serves the first intent that takes it. That is not enough for a written plan: a unit he named for the second landing could be chosen by the first. So `others_above`, for a take under an island, counts as well the task forces and the land units (not the source) named in the forces limit of every take **the commander made** under the same island, other than the take being served, whatever their order: the staff's takes, and his nodes that did not name it, may not take it, and the reason names the node that has it. Where two of his nodes name the same unit or force, the one served first has it and the other's reason says so.
+    - *The date.* Where he gave his take a date, that is its date. Where he gave none and the island has one, the staff reads the island's, as it would have given it to a take it formed. One function gives the date a take is held to, and the take's doctrine reads it wherever it reads the take's own today; for every take that exists today it returns the take's own.
+    - *The risk, the knowledge asked, the area* are read up the tree, as they are.
+    - *The places he did not write* are the staff's: it forms their takes as today, on the first morning the island's plan is released.
+    - *Everything beneath a node:* loading, the roster's training and rehearsal, routes, berths, the day it sails, the escort, the supply that follows, the runs and the commitments are the staff's, as today.
+12. **The order of service is the contract's.** Takes are served by rank, then by number. His are set before the staff forms its own, so with no rank his are served first, in the order he wrote them. What a node of his names is kept for it by rule 11; what no node of his names goes among the takes as it does today. A rank he sets on a node is read first, as today.
+13. **What the staff may and may not do to a node of his.**
+
+| The staff may | The staff may not |
+| --- | --- |
+| Form beneath it the tasks its doctrine forms, and set limits on those | Withdraw it (the engine refuses: "Not yours") |
+| Choose inside what he left blank | Set, change or clear a limit on it (refused: "Not yours"), or use a unit or force outside what he named |
+| Approve its plan on the leaves he gave, and mark it complete when its place is the side's | Change its place or its date, cancel its plan or mark it failed |
+| Say what it does, and hand in the notices its doctrine hands in | Form another intent of its kind and place, in any tree, while it is in force and its plan is not complete |
+
+   The first two refusals exist. No new guard is needed in the engine: the rest is doctrine, and scenario 137 tests each line by reading every command the staff hands in.
+14. **Where his node cannot be met, he is told by the notices that exist,** on the node's own plan, and the staff waits for him:
+
+| What is so | What the staff does | How he is told |
+| --- | --- | --- |
+| The men he named are fewer than the men wanted and none in reach brings them | Waits, at balanced; forms nothing, at preserve; goes, at press (Taking a place, Waits for its men, Not to starve) | `cannot_bring_enough` or `cannot_meet`, once; the reason each morning names what he named and what is missing |
+| A unit or force he named was taken by an order served before | Leaves it out and says which order has it | The morning's reason; then the row above where it leaves him short |
+| A wait he set can never be met | Holds the plan preparing | `cannot_meet`, once (Told to wait, Never) |
+| The count he asked for cannot be had | Holds the launch, where a recent count is asked | `cannot_meet`, once (The need to know) |
+| The landing will not be ready by its date | Goes on readying | `late`, once, with the days and what binds |
+| His take's date is later than the island's | Carries out his date | `late`, once, on the island's plan: its reason names his take, both days and the days between |
+| A force or a unit he named is held by him | Plans without it and says what it would have done with it, as today | The morning's reason; then the first row where it leaves him short |
+| He wrote a take of a place the side already holds | Marks its plan complete on the first morning, as for a root | `met`, once |
+| He cancelled his take's plan and the place is not the side's | Forms nothing for the place (rule 9) | `cannot_meet`, once, on the island's plan: its reason names his take and says the island cannot be controlled while the place is his to take and its plan is cancelled, and what would change it: the take set again, which drafts it a new plan, or withdrawn |
+
+   `cannot_meet` and `cannot_bring_enough` are standing interrupts, so each stops a run of days. In no row does the staff plan the place itself. **A notice is handed in once for its kind and its plan in a game** (`ready.rs`, `noticed`), and that is kept: a second take of his later than the island's date, or a `cannot_meet` already handed in for the island's plan for another cause, gets no second notice. The reason is given every morning all the same, names every node of his it turns on, and is on the plan's paper; a notice of its own for each node is left out (below).
+15. **A node he withdraws is a blank again.** A day's commands are taken in before the staff is asked, so on the morning of the day the withdrawal is given the island forms the take of that place itself, as for a place nobody wrote. A withdrawal undoes nothing already ordered: a landing being readied, ships under way and men ashore stay as they are, and the staff's take finds them as it would find any (Forces with men aboard).
+16. **Each doctrine, and a node he wrote.** Read for the one pair of this build:
+
+| Doctrine | What it does with a commander's take under an island |
+| --- | --- |
+| The island (`island.rs`) | Forms no take of the place (rule 9); forms the hold of the place, the denial, the carriers under it, the neutralising and the bombardment as today, and they serve his take as they serve a take of the staff's; hands in `late` and `cannot_meet` of rule 14. Its source of supply, its pools and what it withdraws read only the holds, supplies and neutralisings the staff formed, none of which he can write in this build |
+| Taking a place (`take.rs`, `assemble.rs`, `lifts.rs`, `turn_back.rs`) | Serves it (rule 10); reads its date, the limit it chooses within and what his other nodes name by rule 11 |
+| The leaves (`air.rs`) | Pass it over while the island's plan is a draft or preparing (rule 10) |
+| Told to wait, the need to know (`told.rs`, `look.rs`) | Read his limits on it and above it, as on a root take |
+| Readying a landing (`ready.rs`) | Serves the task the staff formed beneath it, as today |
+| Carriers under the island (`cover.rs`) | The strike on the place is for the first take of the tree whose plan is released, his or the staff's: the code asks the take's parent and kind. No carrier task is formed under his take, for cover or to look (rule 10) |
+| Bombarding a base (`bombard.rs`) | Forms none under his take (rule 10); the island's bombardment under its neutralising is as today |
+| Holding a place (`holding.rs`), the check that a place can be held | By hex, as today |
+| The plan order (`order.rs`) | Rule 18 |
+| Supply, the air doctrines, the patrol | Nothing: they do not read a take |
+
+### C. Whose node is whose
+
+17. **The maker is the mark.** It is state already and every tool gives it. Nothing new is stored.
+18. **What each tool shows.**
+    - `command_state`: each intent's `maker`, `parent` and `children`, as today; the note it writes for each intent the staff formed stays; an island gains nothing.
+    - `propose` of the island, where it gives a tree: the tree as it would be, his nodes in their places marked as standing and his, with their own numbers, and the staff's as it would form them.
+    - `order` (the plan order) of the island lists every intent in force beneath it, where today it lists those the staff formed; each task gains `maker`. His take has a plan order of its own, as every intent of the commander's has, and so does a staff's take (decision 0164). The text of the island's order says "Yours:" before his takes and "The staff's:" before the rest.
+    - `why` and `staff_orders`: a reason's chain already names the maker of each intent above ("under intent 2 (the commander's)"); a reason that serves his node says so in its first line.
+    - `set_intent` takes `parent`, and a scenario's `[[command]]` the key `parent`; left out for an intent in force it is read by the engine as the parent it has (rule 3).
+19. **A reason of the staff's that turns on his node says which node and that it is his,** in the words of rules 9 and 14, and lists the limit it speaks of where one binds (decision 0222, rule 5), so that the table can lead him to it.
+
+### D. The draft as one, and the staff's plan beside it (step 2)
+
+20. **A preview takes an order with its written part.** `preview` of a `set_intent` takes `under`: a list of sub-intents, each a `set_intent` body without `parent`, with its own number where he gives one, above the order's (else the side's next free numbers in order), and its own `limits`. The order, its limits, and each sub-intent with its limits are taken in on the copy in that order and worked as one, as decision 0222's rule 4 works an order with its limits. One that the engine would refuse is answered as that refusal with its place in the batch; nothing is numbered and nothing queued. An "after" in the batch may name an earlier sub-intent of it by its number.
+21. **`approve` of that preview queues all of it or none,** in the same order; `take_back` of the order takes its sub-intents and their limits with it, as it takes the order's limits today, and a sub-intent queued alone is taken back as any new intent is.
+22. **A sub-intent under an order that stands** (in force or queued) is previewed as one `set_intent` with `parent` and its `limits`, by the preview as it is.
+23. **The trial's second trial is the staff's own plan.** `trial` of a preview, or of an intent, with `compare`, reads "the side without the thing tried" (chapter 9, What-ifs from a seat, rule 1) for a written part as follows, and plays nothing new:
+    - a preview of a new order with sub-intents under it: the same order and its limits **with nothing written under it**. The order is in both trials;
+    - a preview of a new sub-intent under an order that stands, or a sub-intent queued and not in force: the side without that sub-intent, which is the order with that place left to the staff. This is the reading the rule already gives a new intent;
+    - a sub-intent in force: the side with it withdrawn on the coming morning, which by rule 15 is the staff planning that place from then, with what was already ordered standing (What-ifs, rule 4).
+24. **`compare` is true where it is not given** for each of the three, since the side has the order itself to weigh.
+25. **The answer** says what the second trial is of in a commander's words ("the same order with the landings left to the staff"), gives its costs as the first's are given, the same five for each side, and, since the order is in both trials, how the order's end went in each and the two world for world: met and kept in both, with his plan alone, with the staff's alone, in neither (What-ifs, rule 5). It gives no advice, no chance and no points, as today.
+26. **A window is not offered for a written part** in this step: `dates` with a preview that carries sub-intents, or of a sub-intent, is refused, with words that say a written landing is held to a day by its "not before". A written take with a "not before" tried beside the staff's plan is that question already.
+
+### E. The table (step 3)
+
+27. **The order's paper for "seize and hold an island" gains a part, YOUR PLAN,** folded, after LIMITS. Closed, it says "The staff plans every landing." or lists what he wrote. Open, it has a line for each place of the island the side does not hold: "left to the staff", or WRITE IT, which opens that landing's own lines: the forces (task forces, land units, the base it sails from), not before, wait for, after (another landing of this order, or another order of his), what must be known, the risk, the date. These are the lines a take offers today (decision 0222, the table of step 4), each at the staff's choice until set.
+28. **THE STAFF'S READING is of the whole draft,** by rule 20; SIGN AND SEND is one approval, one entry under SIGNED, one TAKE BACK.
+29. **DRY RUN on a draft with a written part shows two columns,** "Your plan" and "The staff's plan", by rule 23, with the same rows of cost and the count of worlds in which the island was won by each.
+30. **The plan's paper marks every line YOURS or THE STAFF'S.** A line of his has CHANGE on each of its limits and GIVE IT BACK TO THE STAFF, which is its withdrawal, read before signing as any command is. A place the staff planned says so and offers nothing in this build (Question 3).
+31. **A reason that turns on a node of his** leads to that node's line, as a reason's limit leads to its control (decision 0222, rule 17).
+
+## What a side learns by it
+
+Nothing. A node, its maker and its limits are the side's own; the enemy sees none of it, as it sees no command. The trial is the one built, on the side's picture.
+
+## Events, and who sees them
+
+No kind of event is added, so `side_events.rs` does not change. A written sub-intent is recorded by its `CommandTaken`, which holds the whole command with its parent, and its `PlanDrafted`; a refusal by `CommandRefused` with one of the reasons above; the staff's part by the `StaffReason`, `StaffNotice` and `IntentFormed` events that exist. Each is the side's own, whole, and the enemy's not at all, as decided already. No kind of notice and no interrupt is added: `late` and `cannot_meet` are handed in for the island's plan in two cases they were not before (rule 14).
+
+## Rule card
+
+| Rule | Reads | Writes |
+| --- | --- | --- |
+| A sub-intent the commander states (1 to 8) | The side's intents with their numbers, makers, parents and plans' states; the island's places (map data); for "already planned", the takes in force and their plans | An intent with its parent, the commander as its maker and a plan of its own, drafted; or a refusal |
+| No wait that waits for itself (7) | Every "after" in force with the new one, read up the tree; the takes in force beneath each island | The limit, or a refusal |
+| The staff's regard for it (9 to 14, 16) | The intents under the island with their makers and their plans' states; the island's plan's state; the island's and the take's dates and forces limits, and the forces limits of his other takes under the island; the side's bases at each place; the notices already handed in for a plan, from the side's own events; the missions of the forces he named; what the take's doctrine reads today (the side's own units, forces, bases, estimates, holds and limits) | The intents, limits, orders, reasons and notices the take's and the island's doctrines write today, and through `late` and `cannot_meet` on the island's plan the standing interrupts' records, which are state and are written by a notice as they are today; no take of a place he wrote |
+| A node withdrawn (15) | The commander's `withdraw_intent`; then the island's rule as it is | The node and what is beneath it withdrawn, its plan ended; the staff's take formed that morning |
+| The draft as one, and the second trial (20 to 26) | A session's preview; the trial's inputs as they are | Nothing in the game: a preview and an estimate are the session's |
+
+Draws: none. The staff reads nothing of the enemy but the side's estimates and contacts, as today.
+
+## Versions, the hash and the files
+
+- **The state's layout does not change:** `flagplot-state-v60` stays. An intent's parent and maker are in the hash already (decision 0117), and a command is in the log and the saved game, not in the state. No field of the state is added, so `hash_world` and `name_every_field` are untouched and no golden file is remade.
+- **The rules label rises to 35:** a saved game may hold a command the old rules refused, as for decisions 0220 and 0231.
+- **The saved game is version 29:** `set_intent` gains `parent`, written only where given, which a reader of version 28 could not take.
+- **The doctrine is `supply-63`:** the island's and the take's doctrines act on a case they could not meet.
+- **The agent interface is 56 with step 1** (`set_intent` takes `parent`; the plan order's tasks gain `maker`) **and 57 with step 2** (`preview` takes `under`; the trial's answer names the staff's plan).
+- **A game with nothing written plays as before, hash and all.** The test of it: the before-and-after comparison of every scenario on file, live and frozen figures (`scripts/compare-scenarios.sh`), with the hash lines kept, shows no line different; `regenerate.sh --check` changes no baseline; the recorded games differ in their version numbers alone; the files and records of every closed proof are untouched, and so are the files of stage 4's proof, whose labels are another matter (below, Where it stands). A line that differs is a failure of the build and comes back to the architect.
+
+## Scenario 137, and what its test states
+
+`data/scenarios/a-plan-the-commander-writes/137_a_plan_the_commander_writes.toml`, placeholder data, with its test `tests/scenario_137_a_plan_the_commander_writes.rs` and its variants built from the file's text. It is made from the bases, forces and units of scenario 81's case "after another place", whose arithmetic is proved (`tests/scenario_81_told_to_wait.rs`): the source, Allied base 1 at A; Japanese base 2 at B and Japanese base 4 at C, each on the Allied map with nothing and nobody at it; task force 1, two placeholder troop transports, and units 1 and 2 of 600 men each, which that case lands at B; task force 3, one placeholder troop transport, and unit 3 of 600 men, which it lands at C. To these it adds an island in the form scenario 76 gives one, here of two places that are both the enemy's: base 2, then base 4. (Scenario 76's own places are not used: its C is the side's, with 300 men.) No man of the enemy is at either place in any variant, so no die is rolled. The game with nothing written is one of its variants.
+
+**The main game.** On day 1 the commander states intent 1, "control the island", gives both leaves, and writes two nodes under it: intent 2, take C, naming task force 3 and unit 3; and intent 3, take B, naming nothing, to go after intent 2 and not before a day that falls **before** C is taken, so that on the mornings between that day and the taking of C it is the "after" alone that holds it. (A variant sets the "not before" later than the taking of C, so that the day alone holds it once C is the side's.)
+
+The statements, in words:
+
+1. **Taken in.** Intents 2 and 3 stand under intent 1 with the commander as maker; each has a plan of its own, drafted on day 1; each is recorded by its command and a `PlanDrafted`, and no `IntentFormed` names either.
+2. **Nothing beside them.** On no morning does the staff form a take of B or of C. It forms the holds of both places, the denial and the neutralisings, as the game with nothing written does, and the island's reason names intents 2 and 3 as the commander's.
+3. **His forces, and his blanks.** The landing under intent 2 has task force 3 and unit 3 and no other. The landing under intent 3, served after it, has what the staff chooses of what no node of his names: task force 1 and units 1 and 2, with the numbers of that choice. In a variant intent 3 is given the lower number and is served first: it still does not take task force 3 or unit 3, and its reason names intent 2 as the node that has them (rule 11).
+4. **His order.** Intent 2 is readied and released as a take with no wait. Intent 3 is readied from day 1 and not released while C is not the side's nor before its day; the reason of each such morning names each wait still unmet, the "after" alone once its day has come; it is released on the first morning C is the side's, and that morning is days after its "not before".
+5. **The days and the weights,** each from the rules as they stand: the mornings each landing is ready, the supply each loads, the hours each force sails and arrives, the men ashore on each day, the day each place is the side's, the day each plan is complete, the orders given by day and their count, and the stock of each base at the end.
+6. **The plan order** of intent 1 on each morning lists intents 2 and 3 as the commander's and every other task as the staff's; the plan orders of intents 2 and 3 give their phases, what each waits for and the day each expects to be ashore.
+7. **Against the game with nothing written:** the staff's own plan takes B first and C as its forces come free. The two games are set beside each other in the test's doc comment, day for day: which place is the side's on which day, and what each cost in days. Neither is the better by statement; the test asserts both as calculated.
+
+Its variants:
+
+8. **A mediocre plan is carried out.** The side is given an opening estimate of the enemy's men at B, as scenario 90's file gives one, with no man there in truth, so there is still no fight and no die. He names for the take of B one unit, too few for the men wanted at balanced against that estimate. The staff adds no unit, forms no take of its own, and hands in `cannot_bring_enough` once on that take's plan; at press it lands the unit he named, finds nobody, and the place is the side's.
+9. **A plan that has ended.** He cancels the plan of intent 3 on day 2. The staff forms no take of B on any later morning and hands in `cannot_meet` once on the island's plan, with the reason of rule 14, and the reason each morning after. On the day he withdraws intent 3, the staff forms a take of B under intent 1 that morning, with a new number and a plan of its own. Before the withdrawal, a second take of B written under intent 1 is refused as "Already planned".
+   - **Taken and done.** In the main game, after B is the side's and the plan of intent 3 is complete, intent 3 stays in force and the staff forms no take of B while the place is the side's; that the staff would retake a place lost is the island's rule as it is and is not played here, there being no enemy.
+10. **The date.** With a date on the island and none on his take, his landing's task is given the date a staff's take would have given it. With a later date on his take, his date is kept and `late` is handed in once on the island's plan with the days between.
+11. **Before the island is released.** With leave to launch withheld, nothing is formed or ordered under intents 2 and 3 and their plans stay drafts; on the morning the island's plan is released they are served.
+12. **Refused at intake,** each alone: a parent not in force; a parent the staff formed; a number not above the parent's; a pair not open (a hold under the island; a take under a hold); a place that is not a place of the island; a place a take already plans, the staff's and a root of his own; a parent changed on an intent that stands; an "after" naming the island it stands under, one on the island naming a take beneath it, and the ring through a root take of rule 7. Each changes nothing but the log. Taken in, each alone: his take set again with a new date and its parent left out; his take set again for the other place where nothing plans it.
+   - **A force he named that is not a landing's.** With a carrier force added to the file and named in intent 2's forces limit, no carrier task is formed under intent 2, the island uses the force as it would have, and the take's reason says so (rule 10).
+   - **A unit he named and then held:** the take plans without it and says so.
+13. **Withdrawn with its island:** each of intents 2 and 3 has its `IntentWithdrawn`, and its plan ends as the engine ends any: complete where it was released, cancelled where it was a draft or preparing. The variant withdraws the island on a day when intent 2's plan is released and intent 3's is preparing, and asserts one of each.
+14. **The same start gives the same game; a save on a day in the middle, resumed, is the game not interrupted; and two worlds that differ only in what the side cannot see give the same commands, orders, reasons and plan orders.**
+
+Its properties, which hold in every variant: no command the staff hands in withdraws, limits or names as its own an intent the commander made; no take of a place is formed while his take of it is in force; every unit and force a landing of his uses is one he named, where he named that kind; no landing uses a unit or a force that another node of his names; and the men, the ships and the tons are conserved as in scenarios 76 and 81.
+
+**What the hand calculation must work,** before any code is delegated, in the test's doc comment and by nobody but the architect: for the main game and for the game with nothing written, each morning's choice of units and ships with its numbers (the estimate, the men wanted by the risk, the berths); the days of loading and rehearsal at the scenario's `preparation_per_day`; each task's date from its take's; the supply each lift loads and the reading of days of supply that sizes it; the hours of each passage from the engine's route; the men landed by pulse and the supply landed by hour; the fight ashore where the enemy has men, or its absence where there is none (no die is rolled if the places are empty, which the scenario is to be built to, as scenario 76 is); the morning each wait is met; and every intent and plan number in the order the commands give them. Step 2 has no arithmetic of the game: its test is on the tools (the batch taken in whole or not at all; the second trial's commands being the first's less the written part; the same worlds), beside scenario 100's.
+
+## Where it stands against the spec and the pillars
+
+- **`docs/step3-spec.md` does not need amending by the designer.** Its command contract was changed by decision 0116, which he agreed: a commander may state a sub-intent himself and the staff fills what lies below. "The plan's life" says the sub-intents the staff forms are the staff's to form and change; a node he wrote is not one of those, and rule 13 keeps it his. The stages table does not name this work: it is the part of the tree that decision 0117 left for stage 3 and stage 3 did not build, taken up now.
+- **The proof of stage 5** counts a decision as "one intent, limit, hold, override or approval". A written sub-intent is one intent. Nothing in its terms moves.
+- **Stage 4's proof** (decision 0161, step 9) is set up and not run, and its set-up pins the labels it is run at: rules label 34 and doctrine `supply-62` (`docs/validation/stage-4-proof-setup.md`, "What moved since decision 0159's proof"; the interface is "55 or the next"). Step 1 here raises both. So **the proof is run first, from main as it stands, and step 1 of this decision merges only after the commit the proof is run from.** Step 1 may be built on its branch meanwhile. If the manager must merge step 1 first, the architect amends the set-up before the run, and not after: it then pins rules label 35 and doctrine `supply-63`, and names as its evidence that nothing of the proof moved the before-and-after comparison of the proof's own files across step 1's merge, with the hash lines kept. No file of the proof holds a written node, so that comparison is expected to show no line different; the set-up is not amended on the expectation, only on the comparison.
+- **Pillar 1** ("command at any altitude") is what this serves: the altitude between an order for an island and an order to a unit. **Pillar 2** is kept by rule 19. **The cut on micromanagement** is kept by rule 2: a pair is opened only where the staff forms that node when he does not.
+- **`docs/design/planning.md`** has "The player states the objective and the limits. The staff finds the forces, the shipping and the dates" as a rule to keep. It stands as what happens when he writes nothing.
+
+## What it does not do, said plainly
+
+**It gives the commander authorship, not pressure.** A plan he writes is a decision only where the staff's plan and his differ in what they risk, and the trial of step 2 is what shows him that. If on a given game the two plans come out alike, writing one will feel like filling a form, and the cause will be the game's lack of scarcity there and not this rule. The designer's complaint may need both.
+
+**On the 39 days as they are on file it has little to bite on** (Question 2): Guadalcanal and Tulagi are two islands of one place each, so each order has one landing, and what a commander can say of one landing (its forces, its day, that it follows the other order) he can already say by the limits on the order's paper.
+
+## What it leaves out
+
+- **Taking over a node the staff has formed.** In this build a place the staff already plans is refused as "Already planned". Since the staff forms its takes on the morning the island's plan is released, he writes with the order, or while its plan waits for his leave. Step 4 would let him write over a staff's take whose plan is not yet released, the staff withdrawing its own that morning.
+- **Every other pair.** A hold under an island (the staff sets a hold's source and pool each morning, which it may not do to a node of his: its doctrine must first be made to keep those on the supply beneath, as decision 0228 does for a side whose staff chooses its sources). A carrier force's station and a surface force's stand under his own denial or hold (the carrier pass, the stand doctrine and the denial find their own tasks by maker in several places, which must each be read). A bombardment. A "ready a landing" under his own take. Each is opened by its own plan, with its doctrine read for it and a scenario.
+- **A node of his under a node of the staff's.**
+- **A notice for each node.** A notice is once for its kind and its plan (rule 14); the reason of each morning carries the rest.
+- **A carrier or bombardment force named for a landing** (rule 10): the second pair.
+- **A day on which a task ends.** The waits are a landing's alone; "this force covers the landing until the 12th" has no limit to say it. He withdraws the node that day, or holds the force.
+- **An "after" that names a node of the staff's.** To put one landing after another he writes both.
+- **A window of dates for a written part** (rule 26), and the comparison the staff offers unasked where a limit binds.
+- **A seat at a command below the area writing nodes.** The seat that may state the order may write under it.
+- **The enemy's staff writing nodes.** A scenario may give the enemy's commander a written node by the same key; no file does.
+
+## What it costs
+
+- **Step 1:** one optional field of one command, two refusals, one invariant, the checks of rule 3 and the ring check of rule 7 in intake; in the staff, the island's rule 9, the leaves' pass over his take, the take's date, the limit it chooses within and what his other nodes keep (rule 11), no carrier or bombard task under it, two notices handed in for the island's plan, and the plan order's tasks; one row of `docs/rules/differences.md`; the tools' `parent`; the rulebook's chapter 8 (Intents, Commands, The intent tree, Taking a place, Controlling an island, The plan order, The tools, What is saved, A scenario's commands, Not built) and the glossary (sub-intent, maker, and "written" as a word for a node the commander made); scenario 137 with its hand calculation.
+- **Step 2:** the preview's batch and its approval and taking back; the trial's reading of rule 23 and its words; chapter 9 (A seat's trial, What-ifs from a seat) and chapter 8 (The tools).
+- **Step 3:** the order's paper, the plan's paper, the dry run's two columns, and the page's checks for each.
+
+## Amended on review, Nov 26, 2026
+
+Read by a reviewer who had not seen it written. The architect checked each finding against the code; every one held in substance but the two noted, and the rules above are the plan as amended. What changed:
+
+1. **A sub-intent's number is above its parent's** (rules 1, 3, 8, 20): the tree's check requires it (`invariants.rs`), and a number that is not is refused as "Intent number not usable".
+2. **The ring check is made with the new limit in place, from every intent that reads it** (rule 7). The first writing refused only a wait on the same chain and missed a ring through a third intent: a take reads its island's "after" (`waits_read_up`), and `closes_ring` walks from the intent named on the state before the limit exists.
+3. **The limit the staff chooses within is made kind by kind** (rule 11). The first writing said "inside the island's limit" and that nothing changed; the doctrine reads a take's own limit in place of the island's (`take.rs`, `lifts.rs`). It is changed for a take the commander made alone; the same reading for a staff's take with a limit of his is a row of differences, not mended.
+4. **No carrier or bombard task is formed under his take** (rule 10). The first writing said the take has none of its own; the cover and the look form one for each carrier force a take's nearest limit names (`cover.rs`). The rule now says what happens when he names one: it is not this landing's, and the reason says so.
+5. **A node withdrawn is filled that morning** (rule 15), not the next: commands are taken in before the staff is asked. Statement 9 had it right.
+6. **Scenario 137's sources are restated** from scenario 81's doc comment: task force 1 with two transports and units 1 and 2 for B, task force 3 with unit 3 for C; scenario 76 gives only the form of the island.
+7. **Stage 4's proof is run before step 1 merges,** or its set-up is amended by the architect before the run on the comparison named (Where it stands). The first writing said the proof was untouched; its files are, its pinned labels are not.
+8. **What he named is that node's** (rules 11 and 12). The first writing rested "goes to the first" on a mechanism that keeps nothing from a sibling (`others_above` passes over the same root). It is now a rule with its place in the code, and statement 3 tests it both ways round.
+9. **"Already planned" leaves out the intent itself, and every check is made on a set-again** (rule 3), so a changed place is checked as a new one is.
+10. **The wait for the island's plan is in the leaves, keyed on the maker, and ends at the first release** (rule 10); a cancelled island's plan and a preview are said.
+11. **A parent left out for an intent in force is read as the one it has,** by the engine (rules 3 and 18): the tool fills nothing.
+12. **"Once" is kept as it is and said** (rule 14): once for a kind and a plan in a game. A notice for each node is listed as left out.
+13. **A second take of a place he has written is refused** whatever the first's plan (rule 3). A root take of such a place is not, as today: said, not changed.
+14. **A plan complete no longer blocks the staff** (rules 9 and 13): his node then stands as done, as a staff's take does, and a place lost again is retaken by the island's rule. The first writing would have left it to nobody. The one case in which the staff forms nothing and tells him is a plan he cancelled.
+15. **Said where it was silent:** a unit he named and holds, a take of a place already the side's (rule 14), and which way each plan ends when the island is withdrawn (statement 13).
+16. **The "after" is no longer hidden behind the "not before"** in the main game (statement 4), and a variant has it the other way.
+17. **Variant 8 says where its estimate comes from** and that nobody is at B.
+18. **The property "naming one more unit never lands fewer men" is taken out:** it followed from no rule and named no day. A property of rule 11 stands in its place.
+19. **The rule card** gains what the reviewer found missing: the island's plan's state, the notices handed in, the bases at a place, the standing interrupts' records, and a row for rule 15.
+
+Rejected, with the reason:
+
+- **A refusal of its own for a parent the staff formed.** The first writing had one. In this build the only parent open is a "control an island", which the staff never forms, so "Cannot stand under" already refuses every such case; the reason is added with the first pair that needs it. Two new refusals, not three.
+- **A notice for every node** (finding 12, as far as it asks for one). The notice's "once" is the contract's for every doctrine; a second kind of once for written nodes would be a second mechanism. The reason of each morning is the record.
+
+Not checked by the architect and left to the build to confirm, each to come back if it is not so: that `propose` gives a tree for an island; that the bombard step under a take reads the take's nearest forces limit as the cover does; and how two of the staff's own takes under one island share a unit today, which rule 11 does not change.
+
+## Questions for the designer
+
+Answered by the designer on Nov 26, 2026, each as the architect recommended:
+
+1. **Yes:** the landing is the first thing to write.
+2. **Yes:** the island "Guadalcanal and Tulagi" is added to the table's copies of the 39 days, and to no file of record or of a proof.
+3. **Yes:** a place the staff has already planned stays the staff's in the first build; taking over is the next step if it is missed.
+
+The questions as they were put:
+
+1. **Is the landing the right first thing to write?** The first build lets you write the landings of an order for an island: who lands where, from which base, on what day and in what order. It does not yet let you write where the carriers stand and for how long, the surface screen, or the garrison, and a carrier force you name for a landing stays the island's to place. The architect recommends starting with the landing: it is the one node whose doctrine already treats yours as its own, so it can be built and proved quickly, and you can then say from play which is wanted next. The carriers' station is the likely second.
+2. **To try it on the 39 days, an order must have more than one landing.** Guadalcanal and Tulagi are two islands there, one place each. The architect recommends adding to the table's copies of the 39 days, and to no file of record or of a proof, a third island of both places, "Guadalcanal and Tulagi", so that one order holds both landings and there is an order of them to write. An island is map data: adding one changes no game that does not order it.
+3. **A place the staff has already planned stays the staff's in the first build.** You write your part with the order, or before you give the island's plan its leave; afterwards you can give a node of yours back to the staff, and not take one of the staff's. The architect recommends accepting that for the first try, with taking over as the next step if it is missed.
