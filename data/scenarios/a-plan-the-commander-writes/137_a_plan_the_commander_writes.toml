@@ -1,0 +1,230 @@
+# Scenario 137: a plan the commander writes.
+#
+# Decision 0232, step 1. The commander says "control the island" and writes
+# two of its landings himself: the anchorage first, by the force and the unit
+# he names, and the airfield after it, with what the staff chooses. The staff
+# forms no take beside his, fills what he left blank, and carries both out.
+#
+# The map is scenario 27's: A at (0,0), a coast hex with port size 5, B at
+# (4,0), a coast hex with port size 0, 160 nm from A, and C at (0,6), a coast
+# hex with port size 0, 240 nm from A. The bases, forces and units are those of
+# scenario 81's case "after another place": Allied base 1 at A with 1,000 t of
+# supply; Japanese base 2, an airfield, at B and Japanese base 4, an anchorage,
+# at C, each with no gun, no aircraft, no man and no stock, each on the Allied
+# map; task force 1, two placeholder troop transports (ships 1 and 2), and task
+# force 3, one (ship 4), stopped in port at A with nothing aboard; units 1, 2
+# and 3, Allied fighting units of 600 men, ashore at A. No base has a reserve
+# or fuel. The Allied side holds no contact and no estimate. The island is
+# island 1, "Placeholder island", in scenario 76's form: base 2, then base 4,
+# both the enemy's.
+#
+# On day 1 the commander states intent 1, "control island 1"; writes under it
+# intent 2, "take the place at C", with a forces limit of task force 3 and
+# unit 3; writes under it intent 3, "take the place at B", with no forces
+# limit, to go after intent 2 and not before day 4; and gives leave to prepare
+# and to launch. The game is 16 days. There is no Japanese man, so no die is
+# rolled.
+#
+# The hand calculation is in
+# tests/scenario_137_a_plan_the_commander_writes.rs. The test runs this file on
+# the frozen step 1 figures with scenario 76's ground figures file,
+# preparation_per_day 100, which this file names. It builds its variants, the
+# game with nothing written among them, from the text of this file using the
+# markers below.
+#
+# Written before the rule is built (decision 0072): this file is in a folder of
+# its own, so no loop over data/scenarios/*.toml reads it. A command's key
+# `parent` is decision 0232's (rule 18) and the loader does not take it until
+# step 1 is built: until then this file does not load.
+#
+# PLACEHOLDER DATA. The bases, ships, units, figures, island and map are
+# invented.
+
+name = "Placeholder scenario 137: A plan the commander writes"
+placeholder = true
+seed = 1942
+days = 16
+map = "../../map/placeholder_preparing.toml"
+ship_classes = [
+    "../../reference/ship_classes.csv",
+    "../../reference/ship_classes_placeholder_transports.csv",
+]
+port_sizes = "../../reference/port_sizes.csv"
+aircraft_types = "../../reference/aircraft_types.csv"
+search = "../../reference/search.toml"
+surface_combat = "../../reference/surface_combat.toml"
+air_combat = "../../reference/air_combat.toml"
+ground = "../../reference/ground_placeholder_scenario_76.toml"
+
+# Allied base 1 at A, with supply for every man for the whole game and no
+# fuel.
+[[base]]
+id = 1
+name = "Placeholder base A"
+side = "allied"
+q = 0
+r = 0
+supply_t = 1000
+fuel_t = 0
+
+# Japanese base 2 at B: no gun, no aircraft, no man, no stock.
+[[base]]
+id = 2
+name = "Placeholder airfield B"
+side = "japanese"
+q = 4
+r = 0
+supply_t = 0
+fuel_t = 0
+
+# Japanese base 4 at C: no gun, no aircraft, no man, no stock.
+[[base]]
+id = 4
+name = "Placeholder anchorage C"
+side = "japanese"
+q = 0
+r = 6
+supply_t = 0
+fuel_t = 0
+
+# Task force 1: two placeholder troop transports, stopped in port at base 1.
+[[task_force]]
+id = 1
+name = "Placeholder transport force 1"
+side = "allied"
+at_base = 1
+mission = "transport"
+
+[[ship]]
+id = 1
+name = "Placeholder troop transport 1"
+class = 10
+side = "allied"
+fuel_t = 1000
+task_force = 1
+
+[[ship]]
+id = 2
+name = "Placeholder troop transport 2"
+class = 10
+side = "allied"
+fuel_t = 1000
+task_force = 1
+
+# Task force 3: one placeholder troop transport, stopped in port at base 1.
+[[task_force]]
+id = 3
+name = "Placeholder transport force 3"
+side = "allied"
+at_base = 1
+mission = "transport"
+
+[[ship]]
+id = 4
+name = "Placeholder troop transport 4"
+class = 10
+side = "allied"
+fuel_t = 1000
+task_force = 3
+
+# The land units, ashore at A, fighting units on the defence, each at the
+# standard of experience, 2, and with every skill at 2, the defaults.
+[[land_unit]]
+id = 1
+name = "Placeholder First"
+side = "allied"
+men = 600
+q = 0
+r = 0
+
+[[land_unit]]
+id = 2
+name = "Placeholder Second"
+side = "allied"
+men = 600
+q = 0
+r = 0
+
+[[land_unit]]
+id = 3
+name = "Placeholder Third"
+side = "allied"
+men = 600
+q = 0
+r = 0
+
+# The island: base 2, then base 4.
+[[island]]
+number = 1
+name = "Placeholder island"
+places = [{ base = 2 }, { base = 4 }]
+
+# The Allied commander's commands
+[[command]]
+day = 1
+side = "allied"
+kind = "set_intent"
+intent = 1
+intent_kind = "control_island"
+island = 1
+
+# MARKER: the written part begins
+# Intent 2: the take of C, written under intent 1 (decision 0232, rule 1).
+[[command]]
+day = 1
+side = "allied"
+kind = "set_intent"
+intent = 2
+parent = 1
+intent_kind = "take_place"
+hex = [0, 6]
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_limit"
+limit = "forces"
+intent = 2
+task_forces = [3]
+land_units = [3]
+
+# Intent 3: the take of B, written under intent 1, naming nothing.
+[[command]]
+day = 1
+side = "allied"
+kind = "set_intent"
+intent = 3
+parent = 1
+intent_kind = "take_place"
+hex = [4, 0]
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_limit"
+limit = "after"
+intent = 3
+other_intent = 2
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_limit"
+limit = "not_before"
+intent = 3
+from_day = 4
+# MARKER: the written part ends
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_leave"
+leave = "prepare"
+given = true
+
+[[command]]
+day = 1
+side = "allied"
+kind = "set_leave"
+leave = "launch"
+given = true
