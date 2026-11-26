@@ -1007,6 +1007,7 @@ mod tests {
                 (
                     Side::Allied,
                     CommandKind::SetIntent {
+                        parent: None,
                         intent,
                         kind: IntentKind::KeepSupplied {
                             base: BaseId::new(2),
@@ -1035,6 +1036,7 @@ mod tests {
                 (
                     Side::Allied,
                     CommandKind::SetIntent {
+                        parent: None,
                         intent: IntentId::new(8),
                         kind: IntentKind::DestroyForce {
                             contact: 3,
@@ -1048,6 +1050,7 @@ mod tests {
                 (
                     Side::Japanese,
                     CommandKind::SetIntent {
+                        parent: None,
                         intent: IntentId::new(7),
                         kind: IntentKind::Patrol {
                             hex: Hex::new(4, -1),
@@ -1252,6 +1255,7 @@ mod tests {
                 (
                     Side::Allied,
                     CommandKind::SetIntent {
+                        parent: None,
                         intent: IntentId::new(7),
                         kind: IntentKind::Hold {
                             base: BaseId::new(2),
@@ -1261,6 +1265,7 @@ mod tests {
                 (
                     Side::Allied,
                     CommandKind::SetIntent {
+                        parent: None,
                         intent: IntentId::new(8),
                         kind: IntentKind::TakePlace {
                             hex: sim_core::hex::Hex::new(6, 0),
@@ -1271,6 +1276,7 @@ mod tests {
                 (
                     Side::Allied,
                     CommandKind::SetIntent {
+                        parent: None,
                         intent: IntentId::new(10),
                         kind: IntentKind::ControlIsland {
                             island: 2,
@@ -1281,6 +1287,7 @@ mod tests {
                 (
                     Side::Allied,
                     CommandKind::SetIntent {
+                        parent: None,
                         intent: IntentId::new(9),
                         kind: IntentKind::Bombard {
                             force: sim_core::ids::TaskForceId::new(2),

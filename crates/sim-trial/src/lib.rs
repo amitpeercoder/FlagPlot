@@ -277,6 +277,7 @@ pub fn build_world(picture: &TrialPicture, ref_data: RefData, map: Map) -> Resul
         ];
         commands.extend((1..).zip(&picture.enemy_intents).map(|(number, kind)| {
             CommandKind::SetIntent {
+                parent: None,
                 intent: IntentId::new(number),
                 kind: *kind,
             }

@@ -8632,6 +8632,7 @@ task_force = 3
                 "kind = \"set_intent\"\nintent = 1\nbase = 2\nfloor_days = 10\ninterval_days = 15"
             )),
             CommandKind::SetIntent {
+                parent: None,
                 intent,
                 kind: IntentKind::KeepSupplied {
                     base: BaseId::new(2),
@@ -8646,6 +8647,7 @@ task_force = 3
                 "kind = \"set_intent\"\nintent = 1\nbase = 2\nfloor_days = 10"
             )),
             CommandKind::SetIntent {
+                parent: None,
                 intent,
                 kind: IntentKind::KeepSupplied {
                     base: BaseId::new(2),
@@ -8702,7 +8704,7 @@ task_force = 3
             only(&command(
                 "kind = \"set_intent\"\nintent = 3\nintent_kind = \"ready_landing\"\ntask_force = 2\nhex = [6, 0]\nby_day = 6"
             )),
-            CommandKind::SetIntent {
+            CommandKind::SetIntent { parent: None,
                 intent: IntentId::new(3),
                 kind: IntentKind::ReadyLanding {
                     force: TaskForceId::new(2),
@@ -8715,7 +8717,7 @@ task_force = 3
             only(&command(
                 "kind = \"set_intent\"\nintent = 3\nintent_kind = \"ready_landing\"\ntask_force = 2\nhex = [6, 0]"
             )),
-            CommandKind::SetIntent {
+            CommandKind::SetIntent { parent: None,
                 intent: IntentId::new(3),
                 kind: IntentKind::ReadyLanding {
                     force: TaskForceId::new(2),
@@ -8728,7 +8730,7 @@ task_force = 3
             only(&command(
                 "kind = \"set_intent\"\nintent = 4\nintent_kind = \"build_up\"\nbase = 1\nwants = [\"airfield\", \"defences\"]\ndefences = 10"
             )),
-            CommandKind::SetIntent {
+            CommandKind::SetIntent { parent: None,
                 intent: IntentId::new(4),
                 kind: IntentKind::BuildUp {
                     base: BaseId::new(1),
@@ -8741,7 +8743,7 @@ task_force = 3
             only(&command(
                 "kind = \"set_intent\"\nintent = 5\nintent_kind = \"take_place\"\nhex = [6, 0]\nby_day = 9"
             )),
-            CommandKind::SetIntent {
+            CommandKind::SetIntent { parent: None,
                 intent: IntentId::new(5),
                 kind: IntentKind::TakePlace {
                     hex: Hex::new(6, 0),
@@ -8754,6 +8756,7 @@ task_force = 3
                 "kind = \"set_intent\"\nintent = 5\nintent_kind = \"take_place\"\nhex = [6, 0]"
             )),
             CommandKind::SetIntent {
+                parent: None,
                 intent: IntentId::new(5),
                 kind: IntentKind::TakePlace {
                     hex: Hex::new(6, 0),
@@ -8766,7 +8769,7 @@ task_force = 3
             only(&command(
                 "kind = \"set_intent\"\nintent = 6\nintent_kind = \"control_island\"\nisland = 2\nby_day = 9"
             )),
-            CommandKind::SetIntent {
+            CommandKind::SetIntent { parent: None,
                 intent: IntentId::new(6),
                 kind: IntentKind::ControlIsland {
                     island: 2,
@@ -8779,6 +8782,7 @@ task_force = 3
                 "kind = \"set_intent\"\nintent = 6\nintent_kind = \"control_island\"\nisland = 2"
             )),
             CommandKind::SetIntent {
+                parent: None,
                 intent: IntentId::new(6),
                 kind: IntentKind::ControlIsland {
                     island: 2,
@@ -8791,7 +8795,7 @@ task_force = 3
             only(&command(
                 "kind = \"set_intent\"\nintent = 5\nintent_kind = \"bombard\"\ntask_force = 3\ntarget = 12"
             )),
-            CommandKind::SetIntent {
+            CommandKind::SetIntent { parent: None,
                 intent: IntentId::new(5),
                 kind: IntentKind::Bombard {
                     force: TaskForceId::new(3),
@@ -8840,6 +8844,7 @@ task_force = 3
                     "kind = \"set_intent\"\nintent = 3\nintent_kind = \"{name}\"\nbase = 2"
                 ))),
                 CommandKind::SetIntent {
+                    parent: None,
                     intent: IntentId::new(3),
                     kind
                 }
@@ -8849,7 +8854,7 @@ task_force = 3
             only(&command(
                 "kind = \"set_intent\"\nintent = 1\nintent_kind = \"keep_supplied\"\nbase = 2\nfloor_days = 10"
             )),
-            CommandKind::SetIntent {
+            CommandKind::SetIntent { parent: None,
                 intent,
                 kind: IntentKind::KeepSupplied {
                     base: BaseId::new(2),
@@ -9271,7 +9276,7 @@ task_force = 3
             only(&command(
                 "kind = \"set_intent\"\nintent = 1\nintent_kind = \"destroy_force\"\ncontact = 2\ndistance = 3"
             )),
-            CommandKind::SetIntent {
+            CommandKind::SetIntent { parent: None,
                 intent: IntentId::new(1),
                 kind: IntentKind::DestroyForce {
                     contact: 2,
@@ -9284,7 +9289,7 @@ task_force = 3
             only(&command(
                 "kind = \"set_intent\"\nintent = 1\nintent_kind = \"destroy_force\"\ncontact = 2\ndistance = 0\nsearch_only = true"
             )),
-            CommandKind::SetIntent {
+            CommandKind::SetIntent { parent: None,
                 intent: IntentId::new(1),
                 kind: IntentKind::DestroyForce {
                     contact: 2,
@@ -9320,7 +9325,7 @@ task_force = 3
             only(&command(
                 "kind = \"set_intent\"\nintent = 3\nintent_kind = \"patrol\"\nhex = [5, -2]\ndistance = 4"
             )),
-            CommandKind::SetIntent {
+            CommandKind::SetIntent { parent: None,
                 intent: IntentId::new(3),
                 kind: IntentKind::Patrol {
                     hex: Hex::new(5, -2),
@@ -9428,6 +9433,7 @@ task_force = 3
         assert_eq!(
             only(&aimed("neutralise", "target = 9")),
             CommandKind::SetIntent {
+                parent: None,
                 intent: IntentId::new(4),
                 kind: sim_core::command::IntentKind::Neutralise {
                     target: BaseId::new(9)
@@ -9437,6 +9443,7 @@ task_force = 3
         assert_eq!(
             only(&aimed("raid", "base = 2\ntarget = 9")),
             CommandKind::SetIntent {
+                parent: None,
                 intent: IntentId::new(4),
                 kind: sim_core::command::IntentKind::Raid {
                     base: BaseId::new(2),
@@ -9447,6 +9454,7 @@ task_force = 3
         assert_eq!(
             only(&aimed("deny", "hex = [3, -1]\ndistance = 4")),
             CommandKind::SetIntent {
+                parent: None,
                 intent: IntentId::new(4),
                 kind: sim_core::command::IntentKind::Deny {
                     hex: sim_core::hex::Hex::new(3, -1),
@@ -9457,6 +9465,7 @@ task_force = 3
         assert_eq!(
             only(&aimed("strike_ships", "base = 2")),
             CommandKind::SetIntent {
+                parent: None,
                 intent: IntentId::new(4),
                 kind: sim_core::command::IntentKind::StrikeShips {
                     base: BaseId::new(2)
@@ -9466,6 +9475,7 @@ task_force = 3
         assert_eq!(
             only(&aimed("search_waters", "base = 2")),
             CommandKind::SetIntent {
+                parent: None,
                 intent: IntentId::new(4),
                 kind: sim_core::command::IntentKind::SearchWaters {
                     base: BaseId::new(2)

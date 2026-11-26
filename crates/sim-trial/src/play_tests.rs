@@ -26,6 +26,7 @@ fn scenario_94() -> Scenario {
 fn course() -> Vec<CourseCommand> {
     [
         CommandKind::SetIntent {
+            parent: None,
             intent: IntentId::new(1),
             kind: IntentKind::ControlIsland {
                 island: 1,

@@ -217,6 +217,7 @@ fn scenario() -> Scenario {
 fn commands() -> Vec<CommandKind> {
     vec![
         CommandKind::SetIntent {
+            parent: None,
             intent: IntentId::new(1),
             kind: IntentKind::ControlIsland {
                 island: 1,

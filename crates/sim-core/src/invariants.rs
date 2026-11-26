@@ -1175,7 +1175,12 @@ pub(crate) fn check_command(
             Some(parent) => command.intents.get(&parent).is_some_and(|found| {
                 found.id < intent.id
                     && (found.plan == intent.plan || command.owns_plan(intent))
-                    && intent.maker == Maker::Staff
+                    // Decision 0232, 8: a sub-intent is the staff's, or the
+                    // commander's where its parent is the commander's and
+                    // the pair is open to him.
+                    && (intent.maker == Maker::Staff
+                        || (found.maker == Maker::Commander
+                            && intent.kind.may_be_written_under(found.kind)))
                     && (!intent.in_force() || found.in_force())
             }),
         };

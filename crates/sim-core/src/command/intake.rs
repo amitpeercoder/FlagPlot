@@ -585,7 +585,11 @@ impl World {
             Ok(forces)
         };
         match kind {
-            CommandKind::SetIntent { intent, kind } => {
+            CommandKind::SetIntent {
+                intent,
+                kind,
+                parent,
+            } => {
                 if intent.raw() == 0
                     || state
                         .intents
@@ -611,9 +615,74 @@ impl World {
                 {
                     return Err(CommandRefusal::KindCannotChange(*intent));
                 }
-                // "Search waters" stands under "deny an area" only (decision
-                // 0123, 11); then the kind itself.
-                self.check_root_intent(side, kind)?;
+                // Decision 0232, 3: a parent for an intent in force is the
+                // one it has, left out or given; a root's is none.
+                let existing = state.intents.get(intent);
+                let effective_parent = match existing {
+                    Some(existing) => {
+                        if parent.is_some_and(|given| Some(given) != existing.parent) {
+                            return Err(CommandRefusal::ParentCannotChange(
+                                *intent,
+                                existing.parent,
+                            ));
+                        }
+                        existing.parent
+                    }
+                    None => *parent,
+                };
+                if let Some(parent_id) = effective_parent {
+                    // A commander's sub-intent (decision 0232, 3), the
+                    // reasons in the order the record gives them.
+                    let found = self.in_force_intent(side, parent_id)?;
+                    if existing.is_none() && intent.raw() <= parent_id.raw() {
+                        return Err(CommandRefusal::IntentNumberNotUsable(*intent));
+                    }
+                    if found.maker == Maker::Staff {
+                        return Err(CommandRefusal::CannotStandUnder(parent_id));
+                    }
+                    let served = state.plan_owner(parent_id);
+                    let plan_state = state
+                        .intents
+                        .get(&served)
+                        .and_then(|owner| state.plans.get(&owner.plan))
+                        .map_or(PlanState::Draft, |plan| plan.state);
+                    if plan_state.ended() {
+                        return Err(CommandRefusal::WrongPlanState(plan_state));
+                    }
+                    let place_of_island = match (kind, found.kind) {
+                        (
+                            IntentKind::TakePlace { hex, .. },
+                            IntentKind::ControlIsland { island, .. },
+                        ) => self
+                            .map
+                            .island(island)
+                            .is_some_and(|named| named.places.iter().any(|p| p.hex == *hex)),
+                        _ => false,
+                    };
+                    if !kind.may_be_written_under(found.kind) || !place_of_island {
+                        return Err(CommandRefusal::CannotStandUnder(parent_id));
+                    }
+                    if let IntentKind::TakePlace { hex, .. } = kind {
+                        let planned = state.intents_in_force().find(|other| {
+                            other.id != *intent
+                                && matches!(other.kind, IntentKind::TakePlace { hex: h, .. } if h == *hex)
+                                && (state
+                                    .plans
+                                    .get(&other.plan)
+                                    .is_some_and(|plan| !plan.state.ended())
+                                    || (other.maker == Maker::Commander
+                                        && other.parent == Some(parent_id)))
+                        });
+                        if let Some(other) = planned {
+                            return Err(CommandRefusal::AlreadyPlanned(other.id, *hex));
+                        }
+                    }
+                    self.check_intent_kind(side, kind)?;
+                } else {
+                    // "Search waters" stands under "deny an area" only
+                    // (decision 0123, 11); then the kind itself.
+                    self.check_root_intent(side, kind)?;
+                }
                 // An order to destroy a force names a contact the
                 // commander's picture holds (decision 0220, R12); one the
                 // order already follows may be set again with other figures.
@@ -1360,7 +1429,11 @@ impl World {
     fn apply_command(&mut self, day: u32, side: Side, kind: &CommandKind) -> Vec<EventKind> {
         let mut follow_ups = Vec::new();
         match kind {
-            CommandKind::SetIntent { intent, kind } => {
+            CommandKind::SetIntent {
+                intent,
+                kind,
+                parent,
+            } => {
                 // An order to destroy a force keeps its report from the
                 // commander's picture at the giving, or where the contact
                 // named changed (decision 0220, 5).
@@ -1389,7 +1462,7 @@ impl World {
                             Intent {
                                 id: *intent,
                                 kind: *kind,
-                                parent: None,
+                                parent: *parent,
                                 maker: Maker::Commander,
                                 addressee: kind.addressee(),
                                 limits: IntentLimits::default(),
@@ -2262,27 +2335,62 @@ fn amend(plan: &mut Plan, day: u32, change: AmendmentChange) -> u32 {
 }
 
 /// Whether an "after" set on `intent` naming `other` would close a ring of
-/// waits (the architect's ruling on decision 0159, step 3): walking the
-/// "after" limits from `other`, each intent's read up the tree, reaches
-/// `intent` again, directly or through others. The walk visits each intent
-/// once, in number order.
+/// waits (the architect's ruling on decision 0159, step 3, made exact by
+/// decision 0232, 7). The walk is made on the command state with the new
+/// limit in place, from the intent it is set on and from each intent beneath
+/// it, since each of them reads it. From each start it follows every "after"
+/// read up the tree and, for an island named, goes down to each take in force
+/// beneath it, an island being met when its places are. It closes a ring
+/// where a walk comes back to the intent it started from. Each intent is
+/// visited once per start.
 fn closes_ring(state: &CommandState, intent: IntentId, other: IntentId) -> bool {
-    let mut seen: std::collections::BTreeSet<IntentId> = std::collections::BTreeSet::new();
-    let mut next = vec![other];
-    while let Some(at) = next.pop() {
-        if at == intent {
-            return true;
+    // The intents `at` waits for, read up its tree, with the new limit in
+    // place of the one `intent` has.
+    let awaited_by = |at: IntentId| -> Vec<IntentId> {
+        let mut waited: Vec<IntentId> = state
+            .waits_read_up(at)
+            .after
+            .into_iter()
+            .filter(|(_, set_on)| *set_on != intent)
+            .map(|(waited, _)| waited)
+            .collect();
+        if state.up_the_tree(at).any(|found| found.id == intent) {
+            waited.push(other);
         }
-        if !seen.insert(at) || !state.intents.contains_key(&at) {
-            continue;
+        waited
+    };
+    let starts: Vec<IntentId> = state
+        .intents_in_force()
+        .filter(|found| state.up_the_tree(found.id).any(|above| above.id == intent))
+        .map(|found| found.id)
+        .chain(std::iter::once(intent))
+        .collect();
+    for start in starts {
+        let mut seen: std::collections::BTreeSet<IntentId> = std::collections::BTreeSet::new();
+        let mut next = awaited_by(start);
+        while let Some(at) = next.pop() {
+            if at == start {
+                return true;
+            }
+            if !seen.insert(at) {
+                continue;
+            }
+            let Some(found) = state.intents.get(&at) else {
+                continue;
+            };
+            next.extend(awaited_by(at));
+            if matches!(found.kind, IntentKind::ControlIsland { .. }) {
+                next.extend(
+                    state
+                        .intents_in_force()
+                        .filter(|beneath| {
+                            matches!(beneath.kind, IntentKind::TakePlace { .. })
+                                && state.up_the_tree(beneath.id).any(|above| above.id == at)
+                        })
+                        .map(|beneath| beneath.id),
+                );
+            }
         }
-        next.extend(
-            state
-                .waits_read_up(at)
-                .after
-                .into_iter()
-                .map(|(waited, _)| waited),
-        );
     }
     false
 }

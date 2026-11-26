@@ -945,6 +945,7 @@ pub(crate) fn hold_measure_json(measure: &Option<crate::HoldMeasure>) -> Value {
 fn amendment_text(n: &Names<'_>, plan: &Plan, change: &AmendmentChange) -> String {
     let command = match change {
         AmendmentChange::Intent(kind) => CommandKind::SetIntent {
+            parent: None,
             intent: plan.intent,
             kind: *kind,
         },

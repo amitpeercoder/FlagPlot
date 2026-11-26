@@ -365,7 +365,7 @@ impl CommandSpec {
             })
         };
         let kind = match self.kind.as_str() {
-            "set_intent" => CommandKind::SetIntent {
+            "set_intent" => CommandKind::SetIntent { parent: None,
                 intent: intent()?,
                 kind: match self.intent_kind.as_deref() {
                     Some("neutralise") => IntentKind::Neutralise {
