@@ -2,7 +2,7 @@
 
 A design note by the architect, begun on Nov 20, 2026 at the designer's asking ("maybe start thinking about the onboarding experience"). It is first thoughts for discussion. Nothing here is built or planned.
 
-> **Proposed, awaiting the designer's review** (drafted by the architect on Nov 26, 2026, on his instruction "Amend now"). The designer's direction of Nov 26, 2026 is that the game is about planning and the player is taken through levels (`docs/design/levels.md`). The changes this note would need are in blocks marked like this one, beside the text they would change, which is left as it was. In short: the ladder of this note gives way to the ladder of levels; the rest stands, and its home is the first level.
+> **Proposed, awaiting the designer's review** (drafted by the architect on Nov 26, 2026, on his instruction "Amend now"). The designer's direction of Nov 26, 2026 is that the game is about planning and the player is taken through levels (`docs/design/levels.md`). The changes this note would need are in blocks marked like this one, beside the text they would change, which is left as it was. In short: the ladder of this note gives way to the ladder of levels; the rest stands, and its home is the first level. By his answers of the same day the ladder is the game (free play may be unlocked later) and the first playable version is the first levels, so onboarding is not a way into another game: the first rungs are the onboarding.
 
 ## The problem
 

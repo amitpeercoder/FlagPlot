@@ -2,7 +2,7 @@
 
 Nov 9, 2026 · Amit Peer
 
-> **Proposed, awaiting the designer's review** (drafted by the architect on Nov 26, 2026, on his instruction "Amend now"; `docs/design/levels.md` has the reasoning). Every change proposed to this document is in a block marked like this one, beside the text it would change, which is left as it was. Nothing in a marked block is in force until he confirms it; he may strike any of them. The five pillars are not changed. Three questions are at the end, where his intent could be read two ways.
+> **Proposed, awaiting the designer's review** (drafted by the architect on Nov 26, 2026, on his instruction "Amend now"; `docs/design/levels.md` has the reasoning). Every change proposed to this document is in a block marked like this one, beside the text it would change, which is left as it was. Nothing in a marked block is in force until he confirms it; he may strike any of them. The five pillars are not changed. The three questions the first draft left open he answered the same day; the blocks are reworked to his answers, which are recorded at the end, and stay proposed until he has read them.
 
 ## Concept
 
@@ -10,7 +10,7 @@ An operational wargame of the Pacific War at the scale of War in the Pacific: Ad
 
 WitP:AE models every ship, air group and pilot across the whole theatre, day by day, and makes the player hand-enter orders for all of it. This game keeps that depth in the simulation and removes it from the player's hands. The player works at whatever level of command they choose. Everything they are not holding is run by a staff that shows its reasoning.
 
-> **Proposed, awaiting the designer's review** (drafted by the architect on Nov 26, 2026, on his instruction "Amend now"; `docs/design/levels.md` has the reasoning). Add after the paragraph above: **The game is about planning.** The player is taken through levels. Each is a war small enough to hold in the head, with a mission and a date given from above. He writes a plan, may try it in a dry run and amend it, and then fights it. He is scored on the plan, against the plan his staff would have made alone, and on the battle, for what his own hand added to the plan or cost it. Each level teaches one more decision of planning and practises the ones before; the scenarios grow in forces and in length, and in the later ones he may command only part of a side. The theatre is the top of the ladder, not the first thing he is given.
+> **Proposed, awaiting the designer's review** (drafted by the architect on Nov 26, 2026, on his instruction "Amend now"; `docs/design/levels.md` has the reasoning). Add after the paragraph above: **The game is about planning.** The player is taken through levels. Each is a war small enough to hold in the head, with a mission and a date given from above. He writes a plan, may try it in a dry run and amend it, and then fights it. He is scored on the plan, against the plan his staff would have made alone, and on the battle, for what his own hand added to the plan or cost it. Each level teaches one more decision of planning and practises the ones before; the scenarios grow in forces and in length, and in the later ones he may command only part of a side. The ladder is the game; play outside it, with no mark to beat, may be unlocked later. The theatre is the top of the ladder, not the first thing he is given.
 
 It is a passion project built for an audience of one. There is no commercial target and no deadline. It is the primary side project, ahead of Haulout. The two tests of success are that the UX is wonderful and that the game is engaging to play.
 
@@ -63,7 +63,7 @@ These are left out on purpose. Each one protects a pillar or keeps the scope sur
 
 - **Mandatory micromanagement.** No task exists that only the player can do. If staff cannot do it, it is not in the game yet.
 
-  > **Proposed, awaiting the designer's review** (drafted by the architect on Nov 26, 2026, on his instruction "Amend now"; `docs/design/levels.md` has the reasoning). Add to this cut: *This still holds inside a level: the staff can plan every level, and its plan is the mark. A level asks more of the player than the staff's plan gives, so within a level writing a plan is required to pass. That is a demand on the player's judgement at the altitude he is playing, and nothing below that altitude is ever his to do by hand.* The designer ruled "Must beat par to pass" knowing it makes writing a plan mandatory within a level; this wording is the architect's attempt to square the two and is his to change. Whether anything can be played with no mark to beat is question 1 at the end.
+  > **Proposed, awaiting the designer's review** (drafted by the architect on Nov 26, 2026, on his instruction "Amend now"; `docs/design/levels.md` has the reasoning). Add to this cut: *This still holds inside a level: the staff can plan every level, and its plan is the mark. A level asks more of the player than the staff's plan gives, so within a level writing a plan is required to pass. That is a demand on the player's judgement at the altitude he is playing, and nothing below that altitude is ever his to do by hand. The ladder is the game, so there is no play in which nothing is required, unless free play is unlocked later.* The designer ruled "Must beat par to pass" and "I think the ladder is the game, but we may decide later that free play is unlocked"; this wording is the architect's and is his to change.
 
 - **Modal spreadsheet screens.** Lists exist as a secondary view, never as the only route to a decision.
 - **Japanese industrial management as a spreadsheet game.** Production is set by policy and priorities, with staff handling the conversion detail.
@@ -85,7 +85,7 @@ The first playable version is the South Pacific from August 1942 to February 194
 | Sides | Allied player against a Japanese AI first, then the reverse |
 | Systems | Naval movement and combat, air operations, supply and shipping, search and fog of war, basic ground combat |
 
-> **Proposed, awaiting the designer's review** (drafted by the architect on Nov 26, 2026, on his instruction "Amend now"; `docs/design/levels.md` has the reasoning). The slice above stands as the largest thing the first version holds, and becomes the top of the first ladder. Before it come levels, the first of them invented and marked placeholder (his answer of Nov 26, 2026: "invented first"), then levels cut from the battles the slice already has on file. Whether "the first playable version" now means the first levels or still the slice is question 2 at the end.
+> **Proposed, awaiting the designer's review** (drafted by the architect on Nov 26, 2026, on his instruction "Amend now"; `docs/design/levels.md` has the reasoning). **The first playable version is the first levels** (his answer of Nov 26, 2026): the first rungs of the ladder, small scenarios, the first of them invented and marked placeholder, then levels cut from the battles already on file. The slice in the table above becomes the top rung, reached later, and the long order-of-battle work for it waits. The table is left as it was; read it as the top rung's scope.
 
 This campaign is chosen because it stresses every system at once in a small space: carrier battles, night surface actions, an air war of attrition, and a supply fight both sides nearly lost. If the command model works here, it scales. If it fails here, a bigger map will not save it.
 
@@ -99,7 +99,14 @@ Five steps, with a kill gate after step 4. No full database and no real UI befor
 4. **Command-loop prototype.** Minimal UI over steps 1 to 3: set intent, read staff plans, run time, get interrupted, react.
 5. **Full build.** Real UI, complete order of battle, more theatres, the Japanese side.
 
-> **Proposed, awaiting the designer's review** (drafted by the architect on Nov 26, 2026, on his instruction "Amend now"; `docs/design/levels.md` has the reasoning). Steps 1 to 3 are unchanged. Step 4, the command-loop prototype, gains what a level needs: a mission held from above, a plan written and signed, a dry run, the judge, and the score of plan and game. Step 5 changes its order: the ladder of levels up to the slice comes before more theatres. The four questions of the gate are not reworded; the first, "is commanding by intent fun, or does it feel like watching a screensaver?", is what the first level is built to answer. What the gate is judged on is question 3 at the end.
+> **Proposed, awaiting the designer's review** (drafted by the architect on Nov 26, 2026, on his instruction "Amend now"; `docs/design/levels.md` has the reasoning). Steps 1 to 3 are unchanged. Step 4, the command-loop prototype, is the first levels: a mission held from above, a plan written and signed, a dry run, the judge, the score of plan and game. Step 5 is the ladder built up to the slice, before more theatres. **The kill gate is judged on levels** (his answer of Nov 26, 2026): its questions are answered by playing the first levels. Proposed wording of the four, for his review; the originals below are left as they were:
+>
+> - Is beating the staff's plan a struggle worth having, or filling a form?
+> - Do you trust the staff to carry out your plan as you wrote it, and its dry run to tell you something, or do you stop reading both?
+> - Does the battle you fight with your plan produce tension when the clock stops, or just a stream of pop-ups?
+> - Do you read the account of the game at its end, plan against what happened, or skip to the score?
+>
+> A "no" on any of the first three means reworking the level and the judging before a ladder is built; a "no" on the fourth means reworking how the game is told.
 
 **Kill gate, after step 4.** Four questions, answered by playing the prototype for a few weeks:
 
@@ -146,10 +153,10 @@ The last row is the one to get right from the first commit. Traceability added l
   What it asks of step 1: every order carries the intent it serves, and every objective can be measured from state. War-wide strategy (production, the whole Pacific) stays in step 5.
 - [ ] Open source from the start, or decide after the kill gate?
 
-## Proposed amendment: questions for the designer
+## Proposed amendment: the designer's answers
 
-Asked by the architect on Nov 26, 2026 with the proposed blocks above. On each his intent could be read two ways, and the draft does not choose.
+The first draft of the proposed blocks left three questions open, on which his intent could be read two ways. He answered them on Nov 26, 2026, and the blocks above are reworked to the answers. They stay proposed until he has read them.
 
-1. **Is there play outside the ladder?** One reading: every game is a level, with a mission and a mark. The other: a battle or the campaign can also be played freely, as the games on the table are today, with a result and no mark to beat. It decides how the cut on mandatory micromanagement reads: under the second, command by intent with nothing required stays a way to play; under the first, it does not.
-2. **What is the first playable version?** One reading: the first few levels, with the South Pacific slice reached later. The other: the slice, as written, with levels as the way into it.
-3. **What is the kill gate judged on?** One reading: the first level, or the first few. The other: the prototype over the slice, as written, with a level as one part of it.
+1. **Is there play outside the ladder?** "I think the ladder is the game, but we may decide later that free play is unlocked."
+2. **What is the first playable version?** "The first levels": the first rungs, small scenarios; the slice becomes the top rung, reached later, and the long order-of-battle work for it waits.
+3. **What is the kill gate judged on?** "Judged on levels": answered by playing the first levels. The wording of the gate's questions, proposed above, is his to review.

@@ -1,6 +1,6 @@
 # Design note: levels
 
-Status: a note for discussion, written by the architect on Nov 26, 2026 at the designer's asking, after he read decision 0232. Nothing here is built or planned, and it takes no decision number. Amended the same day to the designer's four answers ("The designer's answers", at the end): the score has two parts, the plan's and the game's, and a level is passed only by beating par. It says what a level would be, how a plan would be judged, what skills a ladder of levels could teach, and what the first level would need. It ends with questions for the designer. Where it speaks of history it names what is on file and invents nothing.
+Status: a note for discussion, written by the architect on Nov 26, 2026 at the designer's asking, after he read decision 0232. Nothing here is built or planned, and it takes no decision number. Amended the same day to the designer's answers, given in two rounds ("The designer's answers", at the end): the score has two parts, the plan's and the game's; a level is passed only by a plan that beats par, and the game he fights can fail it; the ladder is the game; and plans may follow one another, stand side by side, or be held ready against a condition. It says what a level would be, how a plan would be judged, what skills a ladder of levels could teach, and what the first level would need. It ends with questions for the designer. Where it speaks of history it names what is on file and invents nothing.
 
 The designer's words: "The game is about planning. The player will be taken through levels. Each level they will get to learn some new planning skills and practice previous skills. So scenarios will become more challenging (more units, longer scenarios). So the player will set a plan, maybe dry run it, amend, see how it plays, and so on. It could be that the player will only get command for some of the units and will need to fit a plan for a certain date."
 
@@ -86,12 +86,22 @@ Checked against the source: the two games of a pair share their dice only in par
 - **The same seed is played cold** by the judge, among its thousand. His steered game and that cold game are the pair.
 - **What his hand gained or cost** is read on those two games. One game cannot be read by "met on how many": it is met or it is not. So the game's part needs a measure of a single game, and this is where a scale comes back: the level's own, of a scenario for play (decision 0187), with the reason for each figure written first. The mission met by its date is by far the largest thing on it; the costs are the rest.
 - **It adds where his game is better than his cold game by more than a band, subtracts where it is worse by more than the band, and is nothing inside it.**
-- **It is partly luck, and the note cannot make it otherwise.** The moment he steers, his units act on other days and draw other dice than the cold game's (above). A commander who gives his leaves on the first morning and then touches nothing gets the cold game exactly and a game's part of nothing, which is right. A commander who steers gets the effect of his steering and a share of fresh luck, mixed, and one pair cannot part them. Battle is like that, and the designer's reason for wanting the game scored is that it is. It is the reason for the architect's recommendation below that the game's part moves the score and does not decide the pass.
+- **It is partly luck, and the note cannot make it otherwise.** The moment he steers, his units act on other days and draw other dice than the cold game's (above). A commander who gives his leaves on the first morning and then touches nothing gets the cold game exactly and a game's part of nothing, which is right. A commander who steers gets the effect of his steering and a share of fresh luck, mixed, and one pair cannot part them. Battle is like that, and the designer's reason for wanting the game scored is that it is. The designer was told so and ruled that the game can fail a level all the same, with the game open to another try (below).
 - **He does not see the cold result of his seed before he plays, nor any result of the judge.** Settled by the architect: every one of them is read from the truth, and shown before the game is over it would tell him where the enemy is and how the dice fall. They are the umpire's, shown at the end, as a result is today.
 
 ### What passes a level
 
-Settled by the designer: the plan must beat par. Brought back to him (Question 1): whether the game's part can take a level that was passed on the plan below the pass, or lift one that was not. The architect recommends neither: the pass is the plan's, by the test above, and the game's part moves the score that is shown and kept, within a cap. A pass that one game's dice can take away would be a pass decided by a draw.
+Ruled by the designer in two answers. The plan must beat par. And, of the game's part: "The subtraction can fail it but users may try again with the same plan(s)." He was told before he answered that one game's comparison is his steering mixed with fresh luck.
+
+Read together with "first signed plan is kept", this gives the following. Where the note chooses between readings it says so.
+
+- **A level is passed where both hold:** a plan he signed beats par, by the test above; and a game he fought with that plan was not worse than that plan played cold on the same seed by more than the band. A game that is worse fails that attempt. A game that is better adds to the score. (The architect's reading of "the subtraction can fail it": the game's part fails or does not, and beyond that moves the score. An addition does not pass a plan that did not beat par, which he was not asked and did not say.)
+- **A retry of the game** is the same signed plan fought again: the level draws a fresh seed and one of its variants each time, and that game is set beside the cold game of its own seed. Nothing of an earlier game carries over.
+- **A new or amended plan** may be signed on a later play. It is judged against par as the first was, scored and shown.
+- **What the ladder records:** the score of the first plan he signed, kept and never written over; whether the level is passed, and if so on which play, by which plan, and after how many games fought. Every play's scores are shown to him at its end.
+- **A level may be passed by a later plan.** The architect's reading, since otherwise a first plan that did not beat par would close the ladder for good. The first plan's score stays on the record beside the pass.
+
+**Do unlimited tries empty the game's part?** Nearly, as a gate. By luck alone something like half of steered games come out no worse than their cold game, so a few tries pass almost any plan that beats par, and the gate then costs time and proves little. It is not empty as a score: the first game fought is one game, and so is the count of games it took. So the record carries both, and the gate is left as he ruled it. Whether tries should be limited is Question 1.
 
 ### What the trial can and cannot do for this
 
@@ -116,20 +126,41 @@ Each rung is a decision a commander makes. "Built" means a player can make it at
 | --- | --- | --- | --- | --- |
 | 1 | Give an order and read what the staff will do with it; give or withhold leave | A root order, the plan order, leaves | Built | The Eastern Solomons in one day, for play; or a placeholder of one convoy (scenario 36) |
 | 2 | What to spend: which forces, from which base, what is kept back | Forces, source, reserve | Built (decision 0222) | Placeholder: two bases and one stock (scenarios 40b, 43) |
-| 3 | Which of two orders comes first | Rank | Built | The same placeholders; the Eastern Solomons in five days, for play, where a convoy and a carrier battle compete |
+| 3 | Which of two orders comes first: plans in force side by side on the same ships and aircraft ("parallel plans", first sense) | Rank; what each order displaces | Built | The same placeholders; the Eastern Solomons in five days, for play, where a convoy and a carrier battle compete |
 | 4 | How much to risk, and how much must be known first | Risk, knowledge | Built | Placeholder (scenarios 72, 82); the Coral Sea in five days, for play: when to turn a landing back |
-| 5 | When: hold a plan to a day, to a force, to another plan; try it at two dates | Not before, wait for, after; the window | Built | Placeholder (scenarios 80, 81, 96) |
+| 5 | When: hold a plan to a day, to a force, to another plan, so that one plan follows another ("consecutive plans"); try it at two dates | Not before, wait for, after; the window | Built | Placeholder (scenarios 80, 81, 96) |
 | 6 | Try, compare and amend before committing | The trial with `compare` | Built | Any of the above whose file names the trial's figures |
 | 7 | Two landings on shared shipping: which first, with what, by a date | A take written under an order for an island | Decision 0232, steps 1 and 2: planned | Placeholder: scenario 137 grown (the first level, below). In history: the landings at Lunga and Tulagi of 7 August 1942, the first days of the 39 days, whose facts are on file |
 | 8 | Where the carriers stand, and until when | A carrier task written under his own order; a day on which a task ends | New work: 0232 leaves the pair for later, and no limit ends a task on a day | The Eastern Solomons in five days; Midway. Facts on file |
 | 9 | A surface force placed to meet the enemy by night | A stand task written under his own order | New work | Savo Island and Cape Esperance have facts and scenarios of record; a copy for play of either does not exist |
 | 10 | Holding a place and keeping it fed under attack | A hold written under an island; its source | New work, and the hardest pair (0232, What it leaves out) | The 39 days |
 | 11 | A campaign: several orders that draw on the same ships for weeks | Everything above | The orders are built as roots | The 39 days |
-| 12 | A plan for part of a side, fitted to a superior's and a neighbour's | A mission held from above; forces not his; a trial at such a seat | New work | Any battle with command levels on (the files of stage 2b's proof have them; whether a file for play does was not checked) |
+| 12 | An alternative held ready: a second plan written beforehand with the condition that switches to it ("parallel plans", second sense) | A branch with a trigger | New work, with a decision record of its own (below) | None. A carrier battle is its natural ground: the Eastern Solomons in five days, Midway |
+| 13 | A plan for part of a side, fitted to a superior's and a neighbour's | A mission held from above; forces not his; a trial at such a seat | New work | Any battle with command levels on (the files of stage 2b's proof have them; whether a file for play does was not checked) |
 
-**Rungs with no scenario:** 8 to 10 have none made for play that isolates the decision; 12 has none at all. **Rungs with no facts:** none of the twelve needs a battle that is not researched. A ladder that goes on to "more units, longer" past the 39 days does: the battles of October and November 1942 have order-of-battle facts and no scenario, and nothing outside 1942 is on file (`docs/design/larger-scenarios.md`). An invented level is marked `placeholder` and named "Placeholder", as every made-up thing is.
+**Rungs with no scenario:** 8 to 10 have none made for play that isolates the decision; 12 and 13 have none at all. **Rungs with no facts:** none of the thirteen needs a battle that is not researched. A ladder that goes on to "more units, longer" past the 39 days does: the battles of October and November 1942 have order-of-battle facts and no scenario, and nothing outside 1942 is on file (`docs/design/larger-scenarios.md`). An invented level is marked `placeholder` and named "Placeholder", as every made-up thing is.
 
 Rungs 1 to 6 need no new rule of the game. They need levels made, the mission held, and the judge.
+
+## Plans that follow, plans side by side, and a plan held ready
+
+The designer, Nov 26, 2026: "I think that users may also write consecutive and parallel plans." Consecutive was read back to him as one plan following another in time. Of parallel he chose both senses offered: several plans in force at once drawing on the same ships and aircraft, and alternatives held ready with the condition that triggers each.
+
+| | What exists | What is new | Where on the ladder |
+| --- | --- | --- | --- |
+| **Consecutive:** one plan after another | "After", "not before" and "wait for", on an order to take a place or control an island, and by decision 0232 on a landing written under an order. A plan order shows what each waits for | The waits on any other kind of order (a supply, a denial, a carrier's task wait for nothing today); a day on which a task ends | Rung 5 with what exists; rung 7 for two landings; rung 8 needs the day a task ends |
+| **Parallel, in force at once** | Several orders at once, ranked; the higher never short for the lower; what each displaces is reported; a dry run gives what the other plans lost | Nothing for the first levels. Ranks read as one batch in a preview are open work (decision 0222, step 4) | Rung 3, then rung 11 at the size of a campaign |
+| **Parallel, held ready:** plan B and its trigger | Nothing. No command switches a plan on a condition. The nearest things: an interrupt, which is a condition tested each morning that stops the clock and does nothing else; a plan that is preparing and waits for leave to launch; the three waits, which release a plan on a day, a force or another plan's end | All of it | Rung 12 |
+
+**The branch wants a decision record of its own.** This note does not plan its rule. What that record must settle:
+
+- **What a trigger may read.** The side's own picture and nothing else: its contacts and their age and kind, its estimates, its own forces, stocks and losses, the day, and what its own plans have done. Never the truth: "if the carriers are north of the island" can only mean "if my picture holds a contact of carriers there, no older than so many pulses". A trigger is therefore wrong as often as a report is, and that is part of what the rung teaches.
+- **When it is tested, and whether it fires once.** The interrupts' rule is to hand: each morning, on a change and not on a state. Inside a day is another question.
+- **What switching does.** Which plan is withdrawn, held or left, and which is released; what becomes of ships at sea and of what was made ready, by the owners' rules the spec already has; whether plan B is prepared while it waits, and what that preparation takes from plan A.
+- **Whether it reuses a mechanism.** A trigger as a fourth wait ("not before this is so"), with plan B a plan that is preparing, is one candidate; a new command is another. The first is the smaller.
+- **How it is played cold, and in a dry run.** A branch is part of the signed plan, so a cold game follows it. That is its worth for a level: it is how a plan answers the battle without its author. A trial must play it too, in worlds made from the picture.
+- **How the staff says it,** in the plan order and its reasons, and what the enemy's staff may do with the same means.
+- **State:** a trigger is the commander's and is hashed and saved.
 
 ## Part of a side
 
@@ -206,7 +237,7 @@ This note amends none of them. The designer has since asked for the pillars and 
 - **A level known after one play.** The seeds move the dice, not the enemy. Variants of the truth help for a few plays. A player who replays a level until he passes it is fitting a plan to the truth by trial, which is the opposite of the lesson. The honest answer may be that a level is judged on the first plan signed, and later plays are practice.
 - **Par depends on the staff, and the staff is not finished.** Every mend to a doctrine moves every level's par, and a level whose whole struggle is one weakness of the staff disappears when that weakness is mended. A level's record must say which reading of the staff its struggle rests on, so that the mend is seen to end the level.
 - **A staff that plans well leaves nothing to beat.** The game's premise is a competent staff. The better it gets, the less a player's plan can add, and the levels reward finding where it is still weak. That is in tension with pillar 2, a staff the player trusts. Where the staff is as good as a careful player, the right verdict is "at par", and a ladder must be able to live with that.
-- **A ladder longer than the kinds that can be opened.** Rungs 8 to 10 and 12 each wait on doctrine read for a written node, or on new rules. The ladder that can be built soon is rungs 1 to 7.
+- **A ladder longer than the kinds that can be opened.** Rungs 8 to 10, 12 and 13 each wait on doctrine read for a written node, or on new rules. The ladder that can be built soon is rungs 1 to 7.
 - **Small scenarios, each with a hand calculation.** Every scenario's test has one, written by the architect before code. Twelve levels are twelve of them, and each for-play file also has its runs and its games between agents. The first level is cheap because scenario 137 is already owed.
 - **The verdict is one count.** "Met by the date on more games" will not fit a level about supply or attrition. Each level names its own measure, with its reason first, as decision 0187 asks; a ladder needs a few kinds of measure, not one.
 - **A plan played cold flatters plans that need no author.** A plan with a clever wait and a commander watching it may be the better plan and be marked down on its plan's part. The game's part is the designer's answer to that.
@@ -217,6 +248,8 @@ This note amends none of them. The designer has since asked for the pillars and 
 
 ## The designer's answers, Nov 26, 2026
 
+Given one by one, in two rounds. Quoted text is his own words.
+
 To the four questions this note first asked:
 
 1. **Invented or historical first:** invented first. The first level is the placeholder above.
@@ -224,11 +257,17 @@ To the four questions this note first asked:
 3. **May a level be passed at par:** no. "Must beat par to pass." He chose it knowing it makes writing a plan mandatory inside a level. The architect had recommended yes.
 4. **The pillars and the onboarding note:** "Amend now." The architect's drafts are in `docs/pillars.md` and `docs/design/onboarding.md`, each marked as proposed and awaiting his review.
 
-What the answers change in what must be built is written into the sections above: a seed played twice, cold and steered; what "cold" means; beating par as a number; a scale for one game; a level shown to be passable before it is offered.
+To the five that followed:
 
-Settled by the architect, of what he did not rule on: he does not see the cold result of his seed, or any result of the judge, before his game is over.
+5. **Can the game's part change the pass?** "The subtraction can fail it but users may try again with the same plan(s). I think that users may also write consecutive and parallel plans." The architect had recommended that the pass be the plan's alone.
+6. **What he meant by parallel plans:** both of the senses offered, plans in force at once on the same ships and aircraft, and alternatives held ready, written beforehand with the condition that triggers each. He was told the second is new work.
+7. **Which attempt counts on the ladder:** "First signed plan is kept." His first signed plan is the one recorded; every later play, with the same plan or an amended one, is scored and shown; each play draws a fresh seed and one of the level's variants.
+8. **Is there play outside the ladder:** "I think the ladder is the game, but we may decide later that free play is unlocked."
+9. **The first playable version:** "The first levels." The slice becomes the top rung, reached later, and the long order-of-battle work for it waits.
+10. **What the kill gate is judged on:** "Judged on levels." The wording of the gate's questions is his to review; the architect's proposal is in `docs/pillars.md`.
+
+Settled by the architect, of what he did not rule on: he does not see the cold result of his seed, or any result of the judge, before his game is over. Read by the architect and said where it is read ("What passes a level"): the game's part fails an attempt or does not, and an addition does not pass a plan that did not beat par; a level may be passed by a later plan, the first plan's score staying on the record.
 
 ## Questions for the designer
 
-1. **Can the game's part change whether a level is passed?** He ruled that the plan must beat par and that the game adds and can cost. Not ruled: whether a subtraction can take a level passed on its plan below the pass, and whether an addition can pass a level whose plan did not beat par. The architect recommends neither. The pass is the plan's, on a thousand games; the game's part is one game, partly luck by the way the dice are keyed, and moves the score shown and kept, inside a cap set with the level. If he wants the battle to be able to fail a commander, the honest form is a second condition that is not a subtraction: the mission met in the game he fought.
-2. **Is a level judged on the first plan signed, with later plays as practice?** A level played once is a level known: the seeds change the dice, not the enemy. The architect recommends that every play is scored and the first is the one kept on the ladder, with variants of the truth so that a second play is not a copy of the first.
+1. **Are tries of the game unlimited?** As ruled, a game that goes worse than the plan played cold fails the attempt and he may try again. With no limit, luck passes nearly any plan that beat par within a few tries. The architect recommends leaving them unlimited and making the record carry the weight: the first game fought with a plan, and the number of games it took to pass, are kept on the ladder beside the first plan's score. A limit would make one unlucky game close a level, which is harsher than anything he has said.
