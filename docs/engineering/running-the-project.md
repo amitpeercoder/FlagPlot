@@ -16,17 +16,19 @@ There is no team lead between the manager and the developers any more: the manag
 
 ## The class of a change
 
-Decision 0233, B, has the table and the reasons. In short:
+Decision 0233, B, has the table, the list of paths and the reasons. In short:
 
 | Class | What it is | Who |
 | --- | --- | --- |
-| 1, housekeeping | Nothing the game does or says changes: every golden file, pin and recorded game passes untouched, and no statement, expected number or rule's text changes | The manager decides and briefs, a developer builds, the manager reads and merges. No record and no call to the architect |
-| 2, a bounded change | What the game does or a player reads changes, with no new state, draw, event kind, order or tool kind, no change to who knows what, and no closed proof or measure moved | A short record by the architect, or a section in the `as-built/` file of the record it mends, with the statements first. No independent review and no confirmation by Amit. The architect reads the pull request before it is merged |
-| 3, a rule | A rule added or removed, new state, a draw, an event, an order, truth and belief, what is hashed, a crate boundary, a closed proof or a measure moved, what the game is | Everything below, as before |
+| 1, housekeeping | Every path the change touches is on the decision's list (item 7): most Markdown under `docs/`, most of `scripts/`, the table's wording | The manager decides and briefs, a developer builds, the manager reads and merges. No record and no call to the architect |
+| 2, a bounded change | Not class 1, and no rule changes: a mend to what a record already says, what a tool or the table gives with the rules as they are, a refactoring with every hash as it is, work on tests, CI or the documents the list leaves out | The architect says so and what he must be shown; a short record by him where the game or a tool does something new, none where nothing does. No independent review and no confirmation by Amit. The architect reads the pull request before it is merged |
+| 3, a rule | A rule added, changed or removed, new state, a draw, an event, an order, truth and belief, what is hashed, a crate boundary, a scenario, a figure tuned, a closed proof or a measure moved, what the game is | Everything below, as before |
 
-- The manager may call a change class 1 by that test and no other. Above class 1 the architect says the class; the manager calls with the change and the files, not with a class.
-- In doubt, the higher class. A class can rise during a build and never falls: a golden file that moves in a class 1 change stops it.
-- The class, who gave it and the record are written in the pull request's description, and in the report to Amit of what was merged.
+- **Off the list, so never the manager's alone:** any line that is not a comment under a crate's `src`, any `Cargo.toml`, anything under `tests/`, `data/` or `.github/`, `CLAUDE.md`, and `docs/decisions/`, `docs/rules/`, `docs/engineering/`, `docs/validation/`, the specs, the pillars, the glossary and `docs/open-work.md`. The golden files passing does not make a change housekeeping: the rules under "Always" are the ones no test catches.
+- Above class 1 the architect says the class; the manager calls with the change and the files, not with a class.
+- In doubt, the higher class. A class can rise during a build and never falls.
+- No test is removed, ignored or loosened and no check dropped but on the architect's word.
+- The class, who gave it, what the architect asked to be shown and the record are written in the pull request's description, and the class in the report to Amit of what was merged.
 
 ## What goes to the architect
 
@@ -45,9 +47,9 @@ The architect's answer is written into the repository by the architect, so the n
 ## What the manager settles itself
 
 - What comes next, and what runs in parallel. Report, do not ask.
-- That a change is class 1, by the test above, and everything about a class 1 change.
+- That a change is class 1, by the list of paths above and nothing else, and everything about a class 1 change.
 - Merging a pull request whose checks pass and whose statements all hold as written, after reading its core code, and for class 2 or 3 after the architect has read it.
-- Pins remade only because a version or the state layout moved: once in a pull request, in its last commit (decision 0233, C).
+- Remaking the pins inside a pull request that raised a version or the state layout: once, in its last commit (decision 0233, C). That pull request is class 2 or 3; a pin never moves in class 1, and until C is built a changed baseline is shown to the architect.
 - Conflicts, CI failures, worktrees, disk.
 - Wording on the table inside the design rules the memory holds (no captions that explain rules, "order" not "intent", no points during play, names not numbers, the staff speaks as "we").
 

@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 23, 2026. The designer said on t
 
 Summary: The record places few boats well enough to put on a map. This puts in those it does, in games of their own at the table so that no file a test, a proof or a copy reads is touched, beginning with Midway, where the stations are on file. It names the data that must be found before the Solomons and the Coral Sea can have theirs, and it measures each game before and after.
 
-Standing: Planned on Nov 23, 2026; amended on review and by the designer's answer; the Midway games built on branch `boats-midway`, to be reviewed by the architect.
+Standing: Planned on Nov 23, 2026; amended on review and by the designer's answer; the Midway games built and merged (pull request 706).
 
 ## What the rows allow
 
