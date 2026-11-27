@@ -31,6 +31,7 @@ use std::path::{Path, PathBuf};
 mod air;
 mod bases;
 mod beliefs;
+mod built_on;
 mod commanders;
 mod file;
 mod islands;
