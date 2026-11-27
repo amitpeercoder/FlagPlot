@@ -3269,7 +3269,13 @@ impl Session {
         // the draft.
         let tried_parent: Option<IntentId> = match draft.first() {
             Some(CommandKind::SetIntent { parent, .. }) => *parent,
-            Some(_) => None,
+            // A change to a queued landing (a limit on it) is of a landing
+            // the commander wrote all the same.
+            Some(_) => state
+                .intents
+                .get(&tried)
+                .filter(|i| i.maker == Maker::Commander)
+                .and_then(|i| i.parent),
             None => state.intents.get(&tried).and_then(|i| i.parent),
         };
         let has_written = kept.is_some()
@@ -3343,6 +3349,10 @@ impl Session {
                 (_, Some(raw), None) if has_written => {
                     Some(format!("intent {raw} has landings you wrote under it"))
                 }
+                (Some(raw), _, None) if has_written => Some(format!(
+                    "preview {raw} is of intent {}, which has landings you wrote under it",
+                    tried.raw()
+                )),
                 _ => None,
             };
             if let Some(what) = what {

@@ -96,6 +96,11 @@
 //! morning after the anchorage is taken and the landing then takes three
 //! days to embark. The island's end is both places.
 //!
+//! In the seat's own numbers the game's task force 3 is task force 2 (a
+//! seat numbers its forces 1, 2, ...): where a draft below writes
+//! "task_forces": [3] and a statement says "task force 3", the seat
+//! gives and is given 2. Land unit 3 is 3.
+//!
 //! # Rule 20: a preview takes an order with its written part
 //!
 //! ## 1. The draft is read as one
@@ -517,6 +522,16 @@
 //!   "intent 1 has landings you wrote under it: a window is not offered
 //!   for a written part." (A window would hand the order in later and
 //!   leave its landings behind.)
+//! - **A change to a queued written part.** With draft W approved:
+//!   `preview` of `{"command": "set_limit", "limit": "not_before",
+//!   "intent": 3, "from_day": 6}` is preview 2, and `trial` of it with
+//!   `dates` "chosen" is refused: "preview 2 is of a landing you wrote
+//!   under intent 1: a window is not offered for a written part." Then
+//!   `preview` of `{"command": "set_limit", "limit": "not_before",
+//!   "intent": 1, "from_day": 2}` is preview 3, and `trial` of it with
+//!   `dates` "chosen" is refused: "preview 3 is of intent 1, which has
+//!   landings you wrote under it: a window is not offered for a written
+//!   part." Each holds the sentence above; nothing is played.
 //! - Each of the four with `describe` true is refused the same.
 //! - **In force,** on the evening of day 1 of statement 14: `trial` of
 //!   intent 3 with `dates` "chosen" is refused as an order in force is
@@ -2270,6 +2285,24 @@ fn s18_dates_is_refused_for_a_written_part() {
             &mut g,
             json!({"intent": 1, "dates": "chosen", "describe": describe}),
             "intent 1 has landings you wrote under it: a window is not offered for a written part.",
+        );
+        // A change to a queued written part.
+        let mut g = approved();
+        let p = g.preview(json!({"command": "set_limit", "limit": "not_before",
+                                 "intent": 3, "from_day": 6}));
+        assert_eq!(p["preview"], 2, "{p}");
+        refused(
+            &mut g,
+            json!({"preview": 2, "dates": "chosen", "describe": describe}),
+            "preview 2 is of a landing you wrote under intent 1: a window is not offered for a written part.",
+        );
+        let p = g.preview(json!({"command": "set_limit", "limit": "not_before",
+                                 "intent": 1, "from_day": 2}));
+        assert_eq!(p["preview"], 3, "{p}");
+        refused(
+            &mut g,
+            json!({"preview": 3, "dates": "chosen", "describe": describe}),
+            "preview 3 is of intent 1, which has landings you wrote under it: a window is not offered for a written part.",
         );
     }
     // In force: as an order in force is today, in the words that name a
