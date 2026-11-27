@@ -293,6 +293,71 @@ def the_trail_holds_no_duplicate():
           "every way a card opens names the thing it shows")
 
 
+def the_paper_reads_as_the_order():
+    """Decision 0240, stage A: the order paper's head and foot, by the page's text and by the page's own functions run in node.
+    Written by the architect before the build; the expected words here are his and are changed by nobody else. (The page as drawn is
+    tried in a browser, not here.)
+
+    The parts.
+    A1. Inside `<form class="order gives" id="paper"`, in this order: `id="p-back"`, `id="p-head"`, `id="p-title"`, `id="p-the"`,
+        `id="p-hands"`, `id="p-limits"`, `id="p-plan"`, `id="o-pv"`, `id="o-dry-says"`, `id="p-says"`, `id="p-foot"`. Inside
+        `p-foot`, in this order: `id="p-acts-t"`, `id="p-sign"`, `id="p-dry"`, `id="p-cancel"`. (The reading moves above LIMITS in
+        stage B, not here.)
+    A2. Gone from the page's text: `id="p-to"`, `id="p-to-name"`, `id="o-ends"`, `id="o-place"`, `name = 'end'`, `chosen('end')`,
+        "you are to:", `<legend>END</legend>`, the labels `<span class="pl">TO</span>`, `<span class="pl">THE ORDER</span>` and
+        `<span class="pl">ACTS</span>`, and the heading `<h2>ORDER &middot;`. `id="p-acts"` is gone; `id="p-acts-t"` stays, in the foot.
+    A3. The end of a draft is kept in the draft itself: the page's text holds `draft.end = first || 0` in `openDraft`, and every
+        place that read the chosen radio reads `draft.ends[draft.end]`.
+
+    The head line: the page's own `headLine(kind)`, cut and run in node.
+    A4. headLine('staff') is "ORDER TO THE STAFF \u00b7 DRAFT"; headLine('force'), ('air'), ('land') and ('boat') are each
+        "ORDER \u00b7 DRAFT"; headLine('limit') is "CHANGE OF LIMITS \u00b7 DRAFT"; headLine('giveback') is "GIVEN BACK TO THE STAFF
+        \u00b7 DRAFT". `openPaper` sets `$('p-head').textContent = headLine(kind)`.
+
+    The heading: the page's own `draftHeading(e, target)`, cut and run in node with `round` and `cleanName` cut from the page beside
+    it, `showHexes` false and `hexMiles` standing in as a function that returns 40. `e` is an entry of `ends(target)`:
+    [words, the order's arguments, ...]. `target` is {kind, name, ...}.
+    A5. e = ['Hold Placeholder base T', {intent_kind: 'hold', base: 2}], target named "Placeholder base T": "Hold Base T".
+    A6. e = ['Keep it supplied', {intent_kind: 'keep_supplied', base: 2}], the same target: "Keep Base T supplied". With a target named
+        "Thornwick": "Keep Thornwick supplied".
+    A7. e = ['Cover it from the air', {intent_kind: 'cover', base: 2}], target named "Lunga": "Cover Lunga from the air".
+    A8. e = ['Seize and hold Guadalcanal', {intent_kind: 'control_island', island: 1}]: "Seize and hold Guadalcanal".
+        e = ['Capture Lunga only', {intent_kind: 'take_place', base: 3}]: "Capture Lunga only".
+        e = ['Neutralise Rabaul', {intent_kind: 'neutralise', target: 7}]: "Neutralise Rabaul". (Each is the end's own words, cleaned.)
+    A9. target = {kind: 'waters', name: 'the waters about 9\u00b026\u2032S 160\u00b002\u2032E'}:
+        e = ['Deny these waters, within 80 miles', {intent_kind: 'deny', distance: 2}]: "Deny the waters about 9\u00b026\u2032S
+        160\u00b002\u2032E, within 80 miles"; with distance 4: "..., within 160 miles".
+        e = ['Patrol these waters with submarines', {intent_kind: 'patrol'}]: "Patrol the waters about 9\u00b026\u2032S
+        160\u00b002\u2032E with submarines" (no distance: it is the paper's blank).
+        e = ['Operate Task Force 17 from here', {intent_kind: 'operate_carriers', task_force: 17}]: "Operate Task Force 17 from the
+        waters about 9\u00b026\u2032S 160\u00b002\u2032E".
+        e = ['Station Task Force 44 here', {intent_kind: 'stand_at', task_force: 44}]: "Station Task Force 44 in the waters about
+        9\u00b026\u2032S 160\u00b002\u2032E".
+    A10. No heading holds the word "Placeholder", "it" as a word by itself, "these waters" or "here".
+    A11. In the page's text: `openDraft` sets `$('p-title').textContent = draftHeading(` once; for a unit's paper `openPaper` puts the
+        unit's link in the heading, `$('p-title').appendChild(refTo(o.unit, o.name))`; for a change of limits and a give-back the
+        heading is the order's own link, `orderLink(`, and "'Change the limits of '" is still in the page.
+
+    The foot.
+    A12. `actsText([])` is "" (it was "\u2014"), by the page's own `actsText` run in node as `the_submarines` runs it; the other
+        answers of `actsText` are as they were. The page's text holds `$('p-acts-t').hidden = !` so that an empty line takes no room.
+    A13. The style sheet holds a rule for `#paper .pfoot` with `position: sticky` and `bottom: 0` and a `background`, inside
+        `@media (min-width: 760px)`; outside it `.pfoot` is not sticky.
+
+    The look.
+    A14. `.order`'s width is `min(400px, calc(100% - var(--sp-w) - 48px))`, and `body.papered #prompt` has
+        `right: calc(min(400px, 100% - var(--sp-w) - 48px) + 32px)`. Neither holds 360px.
+    A15. `#paper .pp` has no `border-top`. `#paper .phead` has a `border-bottom` or `#paper #p-title` has one (one rule under the
+        heading), and `#paper .pfoot` has a `border-top` (one rule above the foot). No other rule of `#paper` holds "dashed".
+    A16. A number blank of the paper (`#paper input[type=number]`) has `background: transparent`, `border: 0` and a `border-bottom`.
+    A17. Each of `o-floor`, `o-interval` and `o-dist` has a `<label for="...">` in the paper, and keeps its `aria-label`.
+
+    What does not change: every statement of `one_order_paper` but its list of parts (restated by A1 and A2), the ACTS words of
+    `the_words_and_what_the_papers_say`, and what any order sends. `the_supply_orders_two_numbers`, `the_submarines` and
+    `the_island_of_two_places` hold as they are but for the page lines they quote that this stage moves."""
+    raise NotImplementedError("decision 0240, stage A: the developer writes this check to the statements above")
+
+
 def the_fold_and_the_keys():
     """What stops the clock and the keys (decision 0221, stage 4), by the page's text: the fold in the foot with the
     table's ticks and the staff's standing interrupts; the ticks kept in the browser for the game, keyed as the directives
