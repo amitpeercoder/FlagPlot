@@ -1,10 +1,9 @@
 # THE BASE of scenario 114, Midway, 3 to 7 June 1942 (decision 0198, as
 # amended on review, confirmed on Nov 20, 2026, with stage A's rulings 50 to
-# 80 and stage B's rulings 81 to 102). It is not played itself:
-# scripts/midway/make_files.py makes the four files of data/scenarios/midway/
-# from it, each with this text, a name of its own and the commands of its
-# pairing, and nothing else. Edit this file or the script, never a file it
-# makes, and make them again. The hand calculation is the doc comment of
+# 80 and stage B's rulings 81 to 102). It is not played itself: the four
+# files of data/scenarios/midway/ are built on it (`built_on`, decision 0234),
+# each stating a name of its own and the commands of its pairing, and nothing
+# else. The hand calculation is the doc comment of
 # tests/scenario_114_midway.rs.
 #
 # Three American carriers and the aircraft of Midway against four Japanese

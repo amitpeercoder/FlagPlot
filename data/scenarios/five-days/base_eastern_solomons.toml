@@ -1,9 +1,8 @@
 # THE BASE of scenario 103, the Eastern Solomons over five days, 23 to 27
 # August 1942 (decision 0184, as amended on review and confirmed on Nov 20,
-# 2026). It is not played itself: scripts/five-days/make_files.py makes the
-# four files of data/scenarios/five-days/ from it, each with this text, a
-# name of its own and the commands of its pairing, and nothing else. Edit
-# this file or the script, never a file it makes, and make them again. The
+# 2026). It is not played itself: the four files of data/scenarios/five-days/
+# are built on it (`built_on`, decision 0234), each stating a name of its own
+# and the commands of its pairing, and nothing else. The
 # hand calculation is the doc comment of
 # tests/scenario_103_the_eastern_solomons_over_five_days.rs.
 #

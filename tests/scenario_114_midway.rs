@@ -371,12 +371,10 @@ fn path(letter: char) -> PathBuf {
     common::data_dir().join(format!("scenarios/midway/01{letter}_midway.toml"))
 }
 
-fn base_path() -> PathBuf {
-    common::data_dir().join("scenarios/midway/base_midway.toml")
-}
-
+/// The file resolved (decision 0234): a key, a row or a table is read from
+/// the scenario it makes, whether the file holds it or the file it is built on.
 fn text(letter: char) -> String {
-    std::fs::read_to_string(path(letter)).expect("the scenario file reads")
+    common::resolved_text(&path(letter))
 }
 
 fn reference(file: &str) -> String {
@@ -689,51 +687,18 @@ fn sea_route(
     (a["distance_nm"].as_u64().expect("miles") as u32, hexes)
 }
 
-/// The file's comment lines before its first table, as one line of words.
-fn header_words(text: &str) -> String {
-    let mut words = Vec::new();
-    for line in text.lines() {
-        if let Some(rest) = line.strip_prefix('#') {
-            words.push(rest.trim().to_string());
-        } else if line.starts_with("name = ") {
-            break;
-        }
-    }
-    words
+/// The header of the file and of every file it is built on, joined, as one
+/// line of words.
+fn header_words(letter: char) -> String {
+    common::headers(&path(letter))
+        .lines()
+        .filter_map(|line| line.strip_prefix('#'))
+        .map(|rest| rest.trim().to_string())
+        .collect::<Vec<_>>()
         .join(" ")
         .split_whitespace()
         .collect::<Vec<_>>()
         .join(" ")
-}
-
-/// The file with its `name` line and every `[[command]]` and `[[order]]`
-/// table taken away: everything from the first such line on, where only
-/// those tables follow, and the blank lines before it.
-fn without_name_and_commands(text: &str) -> String {
-    let lines: Vec<&str> = text.lines().collect();
-    let first = lines
-        .iter()
-        .position(|line| *line == "[[command]]" || *line == "[[order]]")
-        .unwrap_or(lines.len());
-    for line in &lines[first..] {
-        assert!(
-            line.is_empty()
-                || *line == "[[command]]"
-                || *line == "[[order]]"
-                || (!line.starts_with('[') && !line.starts_with('#') && line.contains(" = "))
-                || (line.starts_with("waypoints = ") || line.starts_with("kinds = ")),
-            "only command and order tables after the first: {line}"
-        );
-    }
-    let mut kept: Vec<&str> = lines[..first]
-        .iter()
-        .copied()
-        .filter(|line| !line.starts_with("name = "))
-        .collect();
-    while kept.last() == Some(&"") {
-        kept.pop();
-    }
-    kept.join("\n")
 }
 
 // ------------------------------------------------------------ The clock (1)
@@ -749,7 +714,7 @@ fn s01_five_days_from_1800_on_2_june_1942_with_day_1_the_3rd_and_zone_plus_12() 
             t.lines().any(|l| l == "days = 5"),
             "file {letter} says days = 5"
         );
-        let header = header_words(&t);
+        let header = header_words(letter);
         assert!(
             header.contains("The game begins at 1800 on 2 June 1942"),
             "file {letter}: {header}"
@@ -811,7 +776,7 @@ fn s03_midway_has_4000_t_and_wake_100_t_both_placeholders_and_the_header_says_wh
         let t = start(letter);
         assert_eq!(t.bases[&base(1)].supply_t, n(4000), "file {letter}");
         assert_eq!(t.bases[&base(2)].supply_t, n(100), "file {letter}");
-        let header = header_words(&text(letter));
+        let header = header_words(letter);
         assert!(
             header.contains("100 t of supply, a PLACEHOLDER"),
             "file {letter}: {header}"
@@ -846,7 +811,7 @@ fn s04_no_base_has_a_port_size_and_no_force_a_home_port() {
         for f in t.task_forces.values() {
             assert_eq!(f.home_port, None, "{} has no home port", f.name);
         }
-        let header = header_words(&text(letter));
+        let header = header_words(letter);
         assert!(
             header.contains("Pearl Harbor, Japan and the Marianas are off the map"),
             "file {letter}: {header}"
@@ -1131,7 +1096,7 @@ fn s09_task_forces_3_and_4_have_21_and_46_ships_of_the_lists_classes_with_fuel_f
 #[test]
 fn s10_the_header_names_the_thirteen_transports_ships_and_the_dispute_and_the_night_threat() {
     for letter in LETTERS {
-        let header = header_words(&text(letter));
+        let header = header_words(letter);
         for name in [
             "Nankai Maru",
             "Zenyo Maru",
@@ -1332,7 +1297,7 @@ fn s13_thirteen_transports_of_class_19_600_berths_each_41_t_of_supply_8_8_kn() {
         assert_eq!(supply, n(13 * 41));
         // The file says beside the speed that it stands on two positions
         // alone; so does the class's file.
-        let header = header_words(&text(letter));
+        let header = header_words(letter);
         assert!(
             header.contains("8.8 kn, stands on two positions alone"),
             "file {letter}: {header}"
@@ -1701,34 +1666,13 @@ fn s19_a_fighter_patrols_both_flying_boat_groups_search_none_strikes_and_the_wat
 // -------------------------------------------------------------- The files
 
 /// Statement 20: The four files differ from the base only in the orders (and
-/// their name and header), and the script's check passes on them.
+/// their name and header). That each states its name and commands and nothing
+/// else is statement R3 of `scenarios_built_on_another`.
 #[test]
-fn s20_the_four_files_differ_from_the_base_only_in_name_header_and_orders_and_the_script_says_so() {
+fn s20_the_four_files_differ_from_the_base_only_in_name_header_and_orders() {
     for letter in LETTERS {
         assert_eq!(load(letter).days, 5, "file {letter}");
     }
-    let d = without_name_and_commands(&text('d'));
-    for letter in ['a', 'b', 'c'] {
-        assert_eq!(without_name_and_commands(&text(letter)), d, "file {letter}");
-    }
-    // The four are the base, with a header put before it: the base is the
-    // end of each, its name line taken away.
-    let base_text = std::fs::read_to_string(base_path()).expect("the base reads");
-    let base_kept: String = base_text
-        .lines()
-        .filter(|l| !l.starts_with("name = "))
-        .collect::<Vec<_>>()
-        .join("\n");
-    let base_kept = base_kept.trim_end().to_string();
-    assert!(
-        d.ends_with(&base_kept),
-        "file d is the base but for a header, a name and the commands"
-    );
-    let head = &d[..d.len() - base_kept.len()];
-    assert!(
-        head.lines().all(|l| l.starts_with('#') || l.is_empty()),
-        "what is put before the base is comment: {head}"
-    );
     assert!(
         !text('d')
             .lines()
@@ -1747,19 +1691,6 @@ fn s20_the_four_files_differ_from_the_base_only_in_name_header_and_orders_and_th
     }
     let names: BTreeSet<String> = LETTERS.iter().map(|l| load(*l).name).collect();
     assert_eq!(names.len(), 4);
-    let out = std::process::Command::new("python3")
-        .arg(repo().join("scripts/midway/make_files.py"))
-        .arg(repo())
-        .arg("--check")
-        .output()
-        .expect("python3 runs the script");
-    let said = String::from_utf8_lossy(&out.stdout);
-    assert!(
-        out.status.success(),
-        "{said}{}",
-        String::from_utf8_lossy(&out.stderr)
-    );
-    assert_eq!(said.matches(": as made").count(), 4, "{said}");
 }
 
 /// Statement 21: Each has the key that marks a scenario for play, and
@@ -1781,7 +1712,7 @@ fn s21_each_file_has_the_key_and_so_have_the_tables_copies_of_b_c_and_d() {
     for letter in ['b', 'c', 'd'] {
         let copy =
             common::data_dir().join(format!("scenarios/table-hunger/01{letter}_midway.toml"));
-        let t = std::fs::read_to_string(&copy).expect("the table's copy reads");
+        let t = common::resolved_text(&copy);
         assert!(t.lines().any(|l| l == "for_play = true"), "copy {letter}");
         let loaded = common::load_live(&copy).expect("the table's copy loads");
         assert!(loaded.world.objectives().expect("objectives").for_play);
@@ -2026,7 +1957,7 @@ fn s26_the_header_says_what_the_game_does_not_model() {
     // is a ship of the scenario.
     assert_eq!(not_modelled.len(), slugs.len() - 3, "{not_modelled:?}");
     for letter in LETTERS {
-        let header = header_words(&text(letter));
+        let header = header_words(letter);
         for words in [
             // Rule 16.
             "A carrier caught with her aircraft armed and fuelled on deck",
@@ -2142,7 +2073,7 @@ fn property_nothing_is_invented() {
         // placeholders and the two stocks.
         let class_file = reference("ship_classes_placeholder_transport_8_8_knots.csv");
         assert!(class_file.contains("PLACEHOLDER DATA"));
-        let header = header_words(&text(letter));
+        let header = header_words(letter);
         assert!(header.contains("PLACEHOLDER DATA"), "file {letter}");
         assert!(header.contains("Midway's stock and Wake's stock"));
         assert!(

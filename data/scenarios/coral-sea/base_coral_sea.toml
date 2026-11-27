@@ -1,9 +1,8 @@
 # THE BASE of scenario 105, the Coral Sea, 6 to 10 May 1942 (decision 0188,
 # as amended on review and confirmed on Nov 20, 2026). It is not played
-# itself: scripts/coral-sea/make_files.py makes the four files of
-# data/scenarios/coral-sea/ from it, each with this text, a name of its own
-# and the commands and orders of its pairing, and nothing else. Edit this
-# file or the script, never a file it makes, and make them again. The hand
+# itself: the four files of data/scenarios/coral-sea/ are built on it
+# (`built_on`, decision 0234), each stating a name of its own and the
+# commands of its pairing, and nothing else. The hand
 # calculation is the doc comment of tests/scenario_105_the_coral_sea.rs.
 #
 # Two American carriers and a cruiser group against two Japanese fleet
