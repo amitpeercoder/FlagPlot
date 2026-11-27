@@ -25,10 +25,59 @@ The foundations stay as they are: the pure core, fixed point, keyed draws, event
 | H | The scripts of closed proofs marked frozen: kept to say how a proof was run, not kept working | 1 | In flight, with item 1 |
 | A, B | What a record holds and where a rule is stated; ceremony by class | Ruled | In force from decision 0233 |
 | 3, C | The day hashes out of the 252 run baselines into `tests/golden/pinned_hashes.txt`; the state version raised once in a pull request | 2 | Ruled in decision 0233, C, which is its record. The day hashes are out of the baselines and in the `run_` lines of the pinned file (built: `docs/decisions/as-built/0233-ceremony-by-risk-and-where-things-are-written.md`, "Built: C"); the state version raised once in a pull request is a working rule, item 21 |
-| 5 | Shared builders for scenario tests in `tests/common`, taken from the tests' own code. A test that exists moves to a builder only where its doc comment, statements and numbers are untouched | 2 with no record: the architect reads the pull request | After items 2 and 3. A test whose statement would have to change is left as it is |
+| 5 | Shared helpers for scenario tests in `tests/common`, taken from the tests' own code, and a test that fails when one is defined again. No builder for a struct: nothing calls for one | 2 with no record: the architect reads each pull request | Ruled, "Item 5 as ruled" below: two pull requests, the second when no other open pull request edits `tests/*.rs` |
 | 4, F | A scenario built on another: `base = "..."` in a scenario file, read by `sim-data`, in place of the 63 generated scenario files and the Python that makes them; before it, `scenario.rs` split by table as a pure move | The split is 2 with no record, a pure move the architect reads. The overlay is 2 for a file nothing names by its bytes, and its plan says which files those are: a file that a closed proof, a frozen copy, a recorded game or a report names stays a file | The architect's plan next, a record of its own. Each overlay is shown to load to the same game as the file it replaces, day hash for day hash, before that file goes |
 | E | The export carries the engine's own words and typed fields, so the viewers stop switching on event kinds; and an event's declaration narrowed to its mechanical parts (its place in the hash and the export), in place of the four or five places it is written today. Who may see an event stays a choice its author must state: a new event still fails to compile until it is decided. `sim-core` still depends on nothing | 2 as planned in decision 0235: no rule, state, event kind, text, export format or version moves | Planned in decision 0235, on measurement: only a kind's word and its fields are declared once, in `EventKind`, and the export reads them by type, every export byte for byte as it was (about 110 to 120 of the 179 arms of the export's `describe` go; the 34 kinds no scenario fires keep theirs); the text, the entities, who may see a kind, the briefing, the batch record and the viewer's switches stay. To be built in four pull requests, the first after items 2 and 3 are merged, since it edits a test under `tests/`. Typed fields for a seat's events, which is what would stop the table reading the engine's sentences, are class 3 and wait on Amit's word |
 | G | The doctrines' common skeleton in `sim-staff`: first a survey by a developer, which changes nothing, of what the doctrines repeat | The survey is 1 if it is written under `docs/` and changes nothing else. Any change from it is 2 at least, with every recorded game and proof file untouched | The survey before stage 5; the architect reads it and plans from it |
+
+### Item 5 as ruled
+
+Ruled by the architect on Nov 27, 2026, on a count of `tests/*.rs` (189 files, 227,000 lines). It takes the place of the Nov 17 wording ("the tests that exist are not rewritten") in one respect only, the second pull request below.
+
+**What the count found.** The repetition is small helpers, not struct literals. Commit e536d81, cited as 63 files for one field, touched 14 files under `tests/` and four literals in three of them; the rest were schemas and recorded games. So no builder with defaults is written for any struct of `sim-core`: none is asked for until a field added to a struct changes more than ten test files, and then the architect is called. The helpers counted below are 552 definitions in 139 files, about 2,000 lines, under one line in a hundred: the gain is that a new test stops copying them, not the size of `tests/`.
+
+**1. What goes into `tests/common/values.rs`** (a new module, `pub mod values;` in `mod.rs`), each the form most files have today:
+
+```rust
+pub fn fx(text: &str) -> Fixed            // text.parse().expect("a decimal")
+pub fn n(whole: i64) -> Fixed             // Fixed::from_int
+pub fn hundredths(value: i64) -> Fixed    // Fixed::from_ratio(value, 100)
+pub fn millionths(value: i64) -> Fixed    // Fixed::from_raw
+pub fn hex(q: i32, r: i32) -> Hex         // stage_4.rs's `hex` becomes `pub use` of this one
+pub fn ship(raw: u32) -> ShipId           // and force -> TaskForceId, group -> AirGroupId,
+                                          // base -> BaseId, unit -> LandUnitId, intent -> IntentId
+pub fn within_four_sigma(k: i64, n: i64, p: i64) -> bool   // the integer form, as scenario 3 has it
+pub fn text_of(reason: &Reason) -> String                  // "worked | binding | evidence", as scenario 107
+pub fn assert_says(all: &str, parts: &[&str])              // as scenario 107
+pub fn at(text: &str, name: &str, what: &str) -> String    // `what` put before the line "# MARK: name"
+pub fn command_table(day: u32, body: &str) -> String       // an Allied [[command]], as scenario 125
+```
+
+`changed` is `common::replace_once`, which exists: a file imports it under that name. `within_four_sigma` is the tolerance thirteen tests judge by; its body is moved, never altered. And `tests/common/played.rs`, for new tests only, taken from scenario 107's `play_from` and `rebuilt`:
+
+```rust
+pub struct Played {
+    pub scenario: Scenario,                                       // as it stands at the end: events, day hashes and command state are read from it
+    pub handed: BTreeMap<Side, BTreeMap<u32, StaffDecisions>>,    // what each side's staff handed in, by day
+    pub truth: Vec<TruthState>,                                   // [0] the start, [d] after day d
+}
+pub fn play(scenario: Scenario) -> Played                         // both sides' staffs, `sim_staff::staffs()`
+pub fn rebuilt(scenario: Scenario, handed: &BTreeMap<Side, BTreeMap<u32, StaffDecisions>>, upto: u32) -> Scenario
+```
+
+It has one test of its own, on `67_taking_a_place.toml` loaded with `common::load`, holding no number: two plays give the same day hashes and the same hand-ins, and `rebuilt` to the last day gives the play's day hashes.
+
+**What stays in each file,** in old tests and new: `path()`, `text()`, `load()` and `figures()` (each names its own scenario and figures and is already one line onto `common`); `play`, `play_from`, `Played`, `Run`, `given`, `cmd`, `variant` and the like (86 forms of 112 structs; which side, which fields and which orders a test reads are part of what it states); and a helper of a common name with another meaning (`fx(value: i64)`, `base() -> Scenario`).
+
+**2. What is migrated.** In the second pull request, by a script and not by hand: a local definition of one of the names above is deleted, and the name imported (`use crate::common::values::{..};`, or `use crate::common::replace_once as changed;`), only where its parameter types and return type are the common one's and its body is the common one's token for token, parameter names and white space aside. Four differences count as the same: `Hex::new(q, r)` for `Hex { q, r }`; `text.parse::<Fixed>()` and another `expect` message in `fx`; `changed(..)` for `common::replace_once(..)` in `at`; a type written with its path. Any other form stays where it is. No call is renamed, so no line inside a test changes. A `///` comment directly above a deleted helper goes with it, and the pull request lists each such comment for the architect to read. A `use` line may lose a name that is no longer used. Nothing else in any file changes: no `//!` comment, no statement, no expected number, no test's name.
+
+**3. The proof of no loss,** shown in each pull request: (a) `cargo test -p scenario-tests -- --list`, sorted, before and after: the first adds only the tests named here, the second adds only the guard; (b) for the second, every removed line is a deleted helper, its `///` comment, a blank line beside it or a `use` line, and every added line is a `use` line, shown by the script's own report of each file (definitions deleted, with the form each matched); (c) `tests/golden/`, `data/` and every crate are untouched, and the three checks pass with `FLAGPILOT_UPDATE_GOLDEN` unset.
+
+**4. Two pull requests.** The first adds `values.rs`, `played.rs` with its test, and the sentence for `docs/engineering/roles-and-tests.md` ("A scenario test takes `fx`, `n`, `hex`, the makers of ids and the other helpers of `tests/common/values.rs` from there and does not define them again; a new test that plays both staffs uses `common::played`"); it edits no test file that exists. The second is the migration and the guard, opened when no other open pull request edits `tests/*.rs`, and brought up to date by running the script again, never by merging by hand.
+
+**5. The guard,** a test in `tests/all.rs` beside `every_test_file_is_declared_as_a_module`: it reads `tests/common/values.rs` for each `pub fn`'s name, parameter types and return type, and fails naming any file of `tests/*.rs` that defines a `fn` of the same name and types. It reads Rust files only.
+
+**The other packages** (`crates/*/tests`, 56,000 lines) are not part of this: they cannot use `tests/common`, `sim-agent` has its own `tests/support`, and what else repeats is ten definitions of `binary` and eight of `temp_dir` in `sim-cli`.
 
 **The old switches,** listed by the architect on Nov 27, 2026 in `docs/validation/old-switches.md` (35 of them) and ruled in decision 0236. Amit's word of Nov 27, 2026: "Retire the five no-cost switches", numbers 16, 24, 25, 28 and 35 of the list; and of the others, "Don't wait on me. Let the architect make whatever decision." So nothing on the list waits on his word any more. Where each stands:
 
