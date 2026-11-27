@@ -14,7 +14,7 @@ What a newcomer meets today: a screen that asks for a scenario, a side and an op
 
 In this order, since each rests on the one before:
 
-> **Proposed, awaiting the designer's review** (drafted by the architect on Nov 26, 2026, on his instruction "Amend now"). Add a sixth, after the five below: **A plan is yours to write, and it is judged.** The staff will plan a mission for you. You pass a level by writing a plan that does better than the staff's over many games, and the battle you fight with it adds to your score or takes from it.
+> **Proposed, awaiting the designer's review** (drafted by the architect on Nov 26, 2026, on his instruction "Amend now"). Add a sixth, after the five below: **A plan is yours to write, and the war measures it once.** The staff will plan a mission for you, and in each level one part of the plan is yours to write. You fight it once and the mission is met or it is not; luck is part of it. You may set your plan beside the staff's, before by a dry run and after over many games. Failing does not stop you going on; you may fight a level again on a new situation. Reworked on Nov 27, 2026 to his change of that day.
 
 1. **You are a commander with a superior and a staff.** You are told what is wanted; you say what you want done; the staff does it and tells you why.
 2. **Time moves in days of three parts, and you choose when it moves.**
@@ -57,7 +57,7 @@ The one place the role cannot carry it alone: what the chart shows, what a conta
 - **Read what the agents said.** Each agent that played wrote what confused it. A model reading the briefing cold is a fair stand-in for a newcomer reading it.
 - **Decide what a first game is for:** to finish a small battle in twenty minutes, or to understand command by orders. The ladder assumes the second.
 
-> **Proposed, awaiting the designer's review** (drafted by the architect on Nov 26, 2026, on his instruction "Amend now"). Answered by the direction of Nov 26, 2026: a first game is for learning to plan. The first level's mission, its staff's plan and the directive from above are the first thing on the table, which is "Teach through the role" as written. "The staff explains itself" gains a use: the staff's reasons are what a player below par reads to see why. The three questions below stand.
+> **Proposed, awaiting the designer's review** (drafted by the architect on Nov 26, 2026, on his instruction "Amend now"). Answered by the direction of Nov 26, 2026: a first game is for learning to plan. The first level's mission, its staff's plan and the directive from above are the first thing on the table, which is "Teach through the role" as written. "The staff explains itself" gains a use: the staff's reasons, and the debrief after a game, are what a player reads to see why a plan went as it did. Reworked on Nov 27, 2026 to his change of that day. The three questions below stand.
 
 ## Questions for the designer
 

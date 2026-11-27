@@ -1,14 +1,14 @@
 # Design note: levels
 
-Status: a note for discussion, written by the architect on Nov 26, 2026 at the designer's asking, after he read decision 0232. Nothing here is built or planned, and it takes no decision number. Amended the same day to the designer's answers, given in two rounds ("The designer's answers", at the end): the score has two parts, the plan's and the game's; a level is passed only by a plan that beats par, and the game he fights can fail it; the ladder is the game; and plans may follow one another, stand side by side, or be held ready against a condition. It says what a level would be, how a plan would be judged, what skills a ladder of levels could teach, and what the first level would need. It ends with questions for the designer. Where it speaks of history it names what is on file and invents nothing.
+Status: a note for discussion, written by the architect on Nov 26, 2026 at the designer's asking, after he read decision 0232. Nothing here is built or planned, and it takes no decision number. Amended on Nov 26 to the designer's answers, and reworked on Nov 27, 2026 to his change of how a level is measured ("The designer's answers", at the end, which says what replaced what): a plan is measured once, in the game he fights; scoring it against the staff is his choice, by the dry run before and a debrief after; failing a level does not block the next, not trying does; a level may be replayed on a new situation, and the last game counts.
 
 The designer's words: "The game is about planning. The player will be taken through levels. Each level they will get to learn some new planning skills and practice previous skills. So scenarios will become more challenging (more units, longer scenarios). So the player will set a plan, maybe dry run it, amend, see how it plays, and so on. It could be that the player will only get command for some of the units and will need to fit a plan for a certain date."
 
 ## The idea in one line
 
-A level is a small war with a mission given from above, in which the player writes a plan, tries it, fights one game of it, and is then scored: on how that plan fares over many games beside the plan the staff would have made alone, and on what his own hand added to it or cost it in the game he fought.
+A level is a small war with a mission given from above, in which the player writes a plan, may try it in a dry run, and fights it once. The war is the measure: the mission is met by its date or it is not. If he chooses, he is then shown how his plan and the staff's own fare over many games, so that he can tell a bad plan from bad luck. He may fight the level again on a new situation with a changed plan.
 
-It continues decision 0232 and does not replace it. Decision 0232 lets a commander write part of a plan and set it beside the staff's in a dry run. A level adds three things: a mission he did not choose, a judgement after the fact on the truth, and a reason to come back for the next.
+It continues decision 0232 and does not replace it. Decision 0232 lets a commander write part of a plan and set it beside the staff's in a dry run. A level adds three things: a mission he did not choose, one game that counts, and a reason to come back for the next.
 
 ## What exists to build on
 
@@ -36,8 +36,8 @@ A level is a scenario for play and five things beside it. The scenario file toda
 
 1. **The mission from above, with its date.** Today a directive is words on the table, and the player states his own order. In a level the order is there when he sits down: a root intent the scenario states for his side on day 1, with its date and its limits, which he may not withdraw, replace or widen. He writes beneath it and narrows inside it. **New:** an intent marked as given from above, which the engine holds him to. It is state, and so a decision record's to plan.
 2. **What is his.** In the first levels, everything of his side in the file. Later, a part: the rest belongs to a neighbour or a superior, and is on the chart and in the plan but not his to order, hold or limit. **New, and the largest piece:** see "Part of a side", below.
-3. **What he may write.** Which kinds of node are open under the mission (decision 0232's table of pairs), named by the level so that a rung can open one more. The engine has one table for every game; a level would narrow it. **New, small:** a scenario's list of the pairs it offers.
-4. **The mark to beat.** The staff's own result for the same mission and limits with nothing written, over the level's seeds, kept with the level and with the versions of rules, doctrine and figures it was worked under. **New:** the record of it, and the tool that makes it and judges a plan beside it.
+3. **What he may write, and the part that is his to write.** Which kinds of node are open under the mission (decision 0232's table of pairs), and which kinds of command are the level's taught part, of which a plan of his own has at least one ("What counts as trying"). The engine has one table for every game; a level would narrow it. **New, small:** a scenario's list of the pairs it offers and of its taught part.
+4. **The staff's own plan, to set his beside.** The same mission and limits with nothing written, played over many seeds, for the debrief if he asks for it. It gates nothing. **New:** the tool that makes it.
 5. **What it teaches.** One line, for the level's screen and for whoever builds the next level: the decision this level is about. It is words and no rule reads it.
 
 A level's file is a scenario for play in every other respect and passes decision 0187's guards as one. It is never a proof's or a validation measure's scenario, and its results are never laid beside the record of a battle.
@@ -46,7 +46,7 @@ A level's file is a scenario for play in every other respect and passes decision
 
 ### The manager's seven suggestions, each judged
 
-1. **The staff's own result is par, and a blank node earns par.** Kept as the mark; changed by the designer's answer 3 in what it earns: par is no longer a pass. A blank still earns par, and par still means the staff can do every task of the level. One consequence is hard and is said under Risks: a level is only worth playing where the staff's own plan is neither the best nor foolish.
+1. **The staff's own result is par, and a blank node earns par.** Kept as a comparison he may ask for, and no longer a mark that gates anything (the change of Nov 27). The staff can still do every task of a level; what it cannot do for him is count as his try.
 2. **A plan is graded across seeds, and the game he watches is one of them.** Kept. One game is a draw from a spread; a good plan loses some games and a bad one wins some.
 3. **The dry run stays fallible.** Kept, and it is so already: a trial is played in worlds built from the side's picture, never from the live enemy. It needs one thing more to matter, below: the truth must be able to differ from the picture in a way the player cannot learn by playing the level once.
 4. **The scoring scale must be real.** Changed. The points of the record's scale are placeholders and stay the architect's to set from the record before stage 5; a level does not need them. A level is judged in the words the trial already uses: on how many games the mission was met by its date, and what it cost. No points are added up.
@@ -54,69 +54,66 @@ A level's file is a scenario for play in every other respect and passes decision
 6. **One level is built as the test before any ladder is designed.** Kept. It is planned below.
 7. **The pillars would need the designer's amendment.** Kept in part. See "Against the pillars".
 
-### The score has two parts
+### Measured once, in the war
 
-The designer's ruling of Nov 26, 2026: "Both. Because I don't believe that planners who only planned but who's plans where never tried in battle, are remembered. So the player will get scoring on their plan and an addition for the game." The plan's score across the seeds is the base. The game adds what his steering gained over his own plan played cold on the same seed, and steering worse than his own plan played cold subtracts: "The game can also cost you."
+The designer's change of Nov 27, 2026: "the player may choose to score their plan against the staff, but like irl, their plan is measured once in the war itself. Once. So, yes, they may be lucky or not. The goal is to learn and improve, feeling more and more accomplished. Failure will not block them from proceeding to the next step. Not trying will. If they choose to continue after failing - fair enough."
 
-### The plan's part
+It replaces the two-part score, the pass by beating par, the game's part that could fail a level and the count of tries (the answers of Nov 26 numbered 2, 3, 5, 7 and 11 at the end). What a level now is:
 
-- **The plan is his commands before the first day runs:** the nodes he wrote, their limits, the settings he made. It is the same thing a trial calls a course.
-- **Cold** means that plan played with nobody at the seat, by rules written once for every level:
-  - leave to prepare and leave to launch are given, as a trial gives its course the leaves it lacks, so that a plan is judged as approved and not on a leave he forgot;
-  - every other setting is as he signed it: the leave to pursue on each order, the interrupts, the holds;
-  - nothing is answered. Where the staff waits for the commander ("cannot bring enough", a wait that can never be met, a force asking leave to pursue where he set "ask") it waits to the end of the game. An asking never lapses into a yes (decision 0214). That is the verdict on a plan that needed its author, and it is why steering can add.
-- **It is played by both staffs** from the level's true start, on each of the level's seeds and variants; and so is the mission with nothing written, which is par. The two are set seed against seed.
-- **What is read from a game:** whether the mission was met by its date, and what the side lost (the five costs a trial gives).
+- **He signs a plan and fights one game of it,** steering as a commander does: he answers what stops the clock and may amend. The level draws the situation (a variant of the truth) and the seed after he signs.
+- **Success is the mission met by its date in that game. Failure is the mission not met.** That is all the two words mean. For an island: every place the side's at the end of the named day. He is shown that, what it cost him (the five costs a trial gives), and the account of the game, plan against what happened.
+- **Neither gates anything.** A failed level opens the next as a met one does. What opens the next level is having tried this one (below).
+- **Luck is in it and is meant to be.** One game cannot tell a good plan that met bad dice from a poor plan that met good ones. The game does not pretend otherwise; the debrief is where he can find out.
 
-### Beating par, as a number
+### Scoring against the staff: his choice, before and after
 
-"Must beat par to pass" needs a win told from a tie and from noise. On N paired games, let *a* be the games in which his plan meets the mission and the staff's does not, and *b* the games the other way round. The games in which both meet it or neither does say nothing of the difference.
+"The player may choose to score their plan against the staff." There are two times he can, and they are different instruments.
 
-- **He beats par where both hold:** *a* − *b* is at least a floor (a placeholder: 20 games in 1,000, so that a difference too small to matter is not a pass), and (*a* − *b*)² is at least 4 × (*a* + *b*), which is the difference standing two standard errors clear of nothing, in whole numbers.
-- **A tie is not a win.** The same plan as the staff's gives *a* = *b* = 0. A plan that differs and does no better gives a difference inside the noise. Both are at par, and at par the level is not passed.
-- **The plan's score** is *a* − *b*: the games in a thousand by which he beat the staff. It can be below nothing.
-- **The floor and the two are figures of the judge, one set for every level,** each with its reason written before a level is read with it; the count of seeds is 1,000 as the proofs use, to be measured for time on the first level, in the browser's build too.
-- **Where the mission is met on nearly every game by both, or by neither, nothing can be told** and the level is badly made: its date or its forces are changed, not the test.
+- **Before the game: the dry run.** The trial with `compare` (decisions 0178 and 0181), and for a written part decision 0232's step 2: his draft and the staff's own plan in the same worlds with the same costs. It is played in worlds made from his side's picture and never reads the truth, so it can be wrong, and it is his to ask or not. Nothing new is built for it.
+- **After the game: the debrief.** His signed plan and the staff's own plan for the same mission, each played cold over many seeds from the true start of the situation he fought, and set side by side: on how many games each met the mission by the date, what each cost, and where his one game fell among the games of his own plan. This reads the truth, so it is the umpire's and is offered only when his game is over. It is where the many seeds earn their place.
+- **The debrief says what the numbers can bear.** On paired games, let *a* be the games his plan meets the mission and the staff's does not, and *b* the other way round. Where *a* − *b* is clear of noise (its square at least 4 × (*a* + *b*)), it says his plan was the better, or the worse; otherwise it says the two cannot be told apart on a thousand games. It is a reading, in words, and gates nothing.
+- **It is of the situation he fought, and no other.** The level's other situations are not played for him until he has fought them: a count over all of them would tell him what the enemy may hold next time.
+- **"Cold"** means a plan played with nobody at the seat: leave to prepare and to launch given, as a trial gives its course the leaves it lacks; every other setting as signed; nothing answered, so that where the staff waits for the commander it waits to the end. His own game is not cold, which is why it may fall well above or below the middle of his plan's games; the debrief shows that and makes no score of it.
 
-Checked against the source: the two games of a pair share their dice only in part. A draw is keyed on the seed, the day, the pulse, the subsystem and the entity (`rng.rs`, `RngKey::stream`), and the staff draws nothing. So where both plans have the same unit do the same thing on the same day and pulse, the die is the same; where the plans part, a unit that acts on another day or against another unit draws from another key. Pairing takes out the luck the two games share and leaves the rest. That is enough for a thousand pairs. It is not enough for one, which matters next.
+Checked against the source, and still what the debrief rests on: a draw is keyed on the seed, the day, the pulse, the subsystem and the entity (`rng.rs`, `RngKey::stream`), and the staff draws nothing. Two plans played on one seed share their dice where the same unit does the same thing on the same day and pulse, and part where the plans part. Pairing by seed takes out the luck the two share. That is sound over a thousand pairs and says nothing sure of one.
 
-### The game's part
+### What counts as trying
 
-- **He fights one game:** one variant and one seed, drawn by the level and not chosen, after the plan is signed. The plan as signed is frozen then as the cold plan; what he amends in the game is steering and changes the game, not the plan's score.
-- **The same seed is played cold** by the judge, among its thousand. His steered game and that cold game are the pair.
-- **What his hand gained or cost** is read on those two games. One game cannot be read by "met on how many": it is met or it is not. So the game's part needs a measure of a single game, and this is where a scale comes back: the level's own, of a scenario for play (decision 0187), with the reason for each figure written first. The mission met by its date is by far the largest thing on it; the costs are the rest.
-- **It adds where his game is better than his cold game by more than a band, subtracts where it is worse by more than the band, and is nothing inside it.**
-- **It is partly luck, and the note cannot make it otherwise.** The moment he steers, his units act on other days and draw other dice than the cold game's (above). A commander who gives his leaves on the first morning and then touches nothing gets the cold game exactly and a game's part of nothing, which is right. A commander who steers gets the effect of his steering and a share of fresh luck, mixed, and one pair cannot part them. Battle is like that, and the designer's reason for wanting the game scored is that it is. The designer was told so and ruled that the game can fail a level all the same, with the game open to another try (below).
-- **He does not see the cold result of his seed before he plays, nor any result of the judge.** Settled by the architect: every one of them is read from the truth, and shown before the game is over it would tell him where the enemy is and how the dice fall. They are the umpire's, shown at the end, as a result is today.
+Ruled by the designer, Nov 27, 2026: "Signing a plan of your own." Leaving it all to the staff does not count. He chose it knowing it makes writing mandatory inside a level.
 
-### What passes a level
+As a check a program can make:
 
-Ruled by the designer in two answers. The plan must beat par. And, of the game's part: "The subtraction can fail it but users may try again with the same plan(s)." He was told before he answered that one game's comparison is his steering mixed with fresh luck.
+- **Each level names its taught part:** the kinds of command the level is about. For a level whose skill is a written node (rung 7 and after), a sub-intent of an open pair under the mission, with the commander as its maker. For a level whose skill is a limit or a wait (rungs 2 to 5), the kinds of limit it teaches: the forces or the source, a rank, the risk or the knowledge asked, a wait. For rung 1, the leave he gives. For rung 6, any of these, since its skill is trying and amending, which a program cannot see in a plan.
+- **A plan is his own where, among the commands he signs before the first day, at least one is of the level's taught part,** on the mission or beneath it. The paper will not sign without one and says which part is his to write.
+- **He has tried the level when he has signed such a plan and fought its game to the end.** That opens the next level.
+- **What the check does not ask:** that his choice differs from the staff's, or that it is any good. A player who sets the one limit to what the staff would have chosen has tried. The check holds the door; the war does the measuring.
 
-Read together with "first signed plan is kept", this gives the following. Where the note chooses between readings it says so.
+### The record, and playing again
 
-- **A level is passed where both hold:** a plan he signed beats par, by the test above; and a game he fought with that plan was not worse than that plan played cold on the same seed by more than the band. A game that is worse fails that attempt. A game that is better adds to the score. (The architect's reading of "the subtraction can fail it": the game's part fails or does not, and beyond that moves the score. An addition does not pass a plan that did not beat par, which he was not asked and did not say.)
-- **A retry of the game** is the same signed plan fought again: the level draws a fresh seed and one of its variants each time, and that game is set beside the cold game of its own seed. Nothing of an earlier game carries over.
-- **A new or amended plan** may be signed on a later play. It is judged against par as the first was, scored and shown.
-- **What the ladder records:** the score of the first plan he signed, kept and never written over; whether the level is passed, and if so on which play, by which plan, and after how many games fought. Every play's scores are shown to him at its end.
-- **A level may be passed by a later plan.** The architect's reading, since otherwise a first plan that did not beat par would close the ladder for good. The first plan's score stays on the record beside the pass.
+Ruled by the designer, Nov 27, 2026: "Replay on a new situation, player can amend their plan, record keep history, and the last game played counts. That encourages replayability, learning, exploration and curiosity."
 
-**Do unlimited tries empty the game's part?** Nearly, as a gate. By luck alone something like half of steered games come out no worse than their cold game, so a few tries pass almost any plan that beats par, and the gate then costs time and proves little. It is not empty as a score: the first game fought is one game, and so is the count of games it took. So the record carries both, and the gate is left as he ruled it. The designer has since ruled that tries are unlimited and the count is kept (answer 11).
+- **The ladder keeps a history for each level:** every game fought, in order, each with the plan as signed, the situation and seed it drew, whether the mission was met, what it cost, and whether a debrief was asked. **The last game is the level's standing;** the earlier ones are there to be read.
+- **A new situation is another variant of the truth:** the enemy's start changed inside what the side's opening picture allows, so that the briefing and the estimates he reads are the same and what is behind them is not. Each is a file of its own, made with the level.
+- **A replay draws a situation he has not fought,** with a fresh seed, and he signs again: the same plan or an amended one.
+- **How many.** A level has at least three, so that the first game and two replays are each new. Settled by the architect as the least that makes "amend and try again" mean something; a level may have more.
+- **When he has fought them all,** a replay draws among them again with a fresh seed, and the history marks that game as on a situation already seen. It still counts as the last game: nothing is gated on it, and a record that says what it is cannot mislead.
+- **"Once" is once for a situation:** a game is never played over, and a situation is not met again until every other has been.
 
 ### What the trial can and cannot do for this
 
 - **It can** be asked as often as he likes, of a draft with a written part beside the staff's own plan (0232, step 2), at three sizes; it shows what the plan needs, when it could go and how often it came off in the picture's worlds.
 - **It optimises against the picture.** The same question at the same hour is the same worlds, so a player can tune a plan until the dry run likes it. That is a plan fitted to what he believes. Whether that is a good plan is the level's lesson, and it is only a lesson if the truth can differ.
-- **It cannot be the judge.** It never reads the truth, and the judge must.
+- **It cannot be the debrief.** It never reads the truth, and the debrief must.
 - **It is not offered at a seat of a command,** only at a seat that plays a whole side. A level in which part of the side is not his cannot use it until that is planned.
 - **A window of dates is refused for a written part** in 0232's step 2. "What if I land two days later" is asked by a "not before" on the node, compared.
 
 ### What cannot be done with what exists
 
 - **Nothing holds a player to a mission.** He can withdraw the order.
-- **Nothing judges.** A batch is run by hand from a file. Nothing takes the commands a player signed, plays them beside par and reports the two.
-- **The judged games read the truth,** so their result is the umpire's and can be shown only when the level is over, as a game's result is today. Shown before, it would tell him where the enemy is.
-- **A level played twice is a level known.** Seeds change the dice and not the enemy's start. See Risks.
+- **Nothing checks that a plan is his own,** or keeps a level's history.
+- **Nothing makes a debrief.** A batch is run by hand from a file. Nothing takes the commands a player signed, plays them cold beside the staff's plan and reports the two.
+- **The debrief reads the truth,** so it is the umpire's and can be shown only when his game is over, as a game's result is today.
+- **No game on file has variants of the truth.** The lettered files of a game for play differ in who plays each side.
 
 ## The skills, as a ladder
 
@@ -140,7 +137,7 @@ Each rung is a decision a commander makes. "Built" means a player can make it at
 
 **Rungs with no scenario:** 8 to 10 have none made for play that isolates the decision; 12 and 13 have none at all. **Rungs with no facts:** none of the thirteen needs a battle that is not researched. A ladder that goes on to "more units, longer" past the 39 days does: the battles of October and November 1942 have order-of-battle facts and no scenario, and nothing outside 1942 is on file (`docs/design/larger-scenarios.md`). An invented level is marked `placeholder` and named "Placeholder", as every made-up thing is.
 
-Rungs 1 to 6 need no new rule of the game. They need levels made, the mission held, and the judge.
+Rungs 1 to 6 need no new rule of the game. They need levels made, the mission held, the check that a plan is his own, and the debrief.
 
 ## Plans that follow, plans side by side, and a plan held ready
 
@@ -184,40 +181,44 @@ Planned far enough that a decision record could follow. Every figure below is a 
 - the enemy holds both places with men, and the side holds an estimate of each, seen from the air, so that each count could be a quarter to twice the truth by the rule as it is;
 - the transports carry fewer men at once than both landings want at the mission's risk;
 - one more transport force and one more unit may be used from a later day, which is before the mission's date by too little to wait for both landings;
-- the truth has two or three variants (the enemy's men divided differently between the places, each inside what the estimates allow), each a file of its own. No game on file has variants of the truth: the lettered files of a game for play differ in who plays each side. The player is not told which he has. The level is judged over all of them.
+- the truth has three situations or more (the enemy's men divided differently between the places, each inside what the estimates allow), each a file of its own. The player is not told which he has drawn.
 
 **The mission and its date.** Given from above and held: control the island, both places, by the end of a named day, at balanced. The date is set so that the staff's own plan meets it on some games and not on most.
 
 **What he commands.** Everything of his side in the file. Nothing is a neighbour's.
 
-**What he may write.** The two landings under the order, each with its forces, its "not before", "wait for" and "after", what must be known, and a risk no bolder than the mission's. He may write neither, one or both.
+**What he may write, and must.** The two landings under the order, each with its forces, its "not before", "wait for" and "after", what must be known, and a risk no bolder than the mission's. The taught part is a landing written under the order: he writes at least one, and the staff plans whatever he leaves.
 
-**Its mark.** The staff alone, 1,000 seeds over the variants: on how many games both places are the side's by the date, and the middle of what it lost. He passes by beating it, by the test of "Beating par, as a number"; at par he has not passed. Recorded with the versions it was worked under, and worked again when the doctrine changes.
+**What it is measured by.** His one game: both places the side's by the end of the named day, or not. The staff's own plan over 1,000 seeds of the situation he fought is what the debrief sets his beside, if he asks.
 
-**Why the staff's plan is beatable and not foolish.** The staff forms both takes on the first morning in the island's order; the first chooses its men against its estimate and the second takes what is left (chapter 8, Controlling an island; Not built: "the order the places are taken in"). It does not weigh one place against the other, does not put the small place first to free its ships, and does not wait for the later force unless a take is short. Those are the three things a player can do. Each has a cost: the small place first delays the large one; everything on the large one leaves the small one for a second trip; waiting spends the date; looking first spends days and a group.
+**Where a plan of his can differ from the staff's.** The staff forms both takes on the first morning in the island's order; the first chooses its men against its estimate and the second takes what is left (chapter 8, Controlling an island; Not built: "the order the places are taken in"). It does not weigh one place against the other, does not put the small place first to free its ships, and does not wait for the later force unless a take is short. Those are the three things a player can do. Each has a cost: the small place first delays the large one; everything on the large one leaves the small one for a second trip; waiting spends the date; looking first spends days and a group. The staff's plan may be the best of them on a given situation. That no longer closes anything: he is measured by the war, not against the staff.
 
-**"Beating par was a struggle" against "it was filling a form".** Checked by the architect with agents before the designer sits down, as decision 0187's third guard has it, and written into the level's record before any run is read:
+**"A plan worth writing" against "filling a form".** Beating the staff is no longer a pass, so the conditions change. Checked by the architect with agents before the designer sits down, and written into the level's record before any run is read:
 
-1. **The level can be passed:** at least two written plans that differ from each other beat par by the test, found by agents and kept with the level's record. Since a level must be beaten, a level no plan beats is a wall, and this is checked again whenever the doctrine changes, since a mend to the staff raises par.
-2. **Par is not the worst:** at least one plausible written plan is below par by as much. If every written plan beats the staff, the level is a form with one box.
-3. **No plan wins on everything:** the plan that meets the date most often does not also lose the fewest men. If one does, the level is a puzzle with one answer, and it is rebuilt.
-4. **The dry run does not give the answer away:** in at least one variant the plan the dry run likes best is not the plan the truth likes best.
-5. **The designer's own account,** which is the test that counts: playing blind, did he try more than one plan, did the dry run change his mind, and can he say what he gave up.
+1. **The plan matters:** over the seeds of a situation, at least two plausible plans differ from each other in how often the mission is met by more than noise. If every plan does alike, the game he fights measures the dice and nothing else.
+2. **The mission is neither given nor hopeless:** in each situation a sensible plan meets it on a fair share of games, well short of all. A level won nine times in ten whatever he writes teaches nothing, and one lost nine in ten sends him away.
+3. **No plan wins on everything:** the plan that meets the date most often does not also lose the fewest men. If one does, the level is a puzzle with one answer.
+4. **The situations differ in what they reward:** the plan that does best in one is not the best in every other. Otherwise a replay is the same level with new dice, and "a new situation" is a name.
+5. **The dry run does not give the answer away:** in at least one situation the plan the dry run likes best is not the plan the truth likes best.
+6. **The designer's own account,** which is the test that counts: playing blind, did he want the debrief, did it tell him something his one game had not, and did he want to fight the level again with a changed plan.
 
-If 1 to 4 cannot be made to hold on a level this small, the direction is in doubt and it is cheap to have found out.
+If 1 to 5 cannot be made to hold on a level this small, the direction is in doubt and it is cheap to have found out.
 
 **What must be built for it, beyond decision 0232's steps 1 to 3.**
 
 | Piece | What | Size |
 | --- | --- | --- |
 | The mission held | An intent given from above that its side's commander cannot withdraw, replace or widen: one mark on an intent, set by a scenario, checked in intake. State, so the hash's layout rises | Small. A decision record with a rule card |
-| The judge | A tool of the umpire's that takes the commands a player signed before day 1, plays them cold and the unwritten mission over the level's variants and seeds, reports the two seed for seed with *a*, *b* and the test, and sets his steered game beside the cold game of its seed on the level's scale. The rules of "cold" are written once, in its record. In `sim-cli`, beside `batch`; the session is handed it as it is handed the trial's runner, and may show it only when the level is over | Medium. No rule of the game |
-| The level's file and record | Scenario 137 grown, with its variants, its trial figures, its mission's measure, its own scale for one game with the reasons, the band of the game's part, its par and the plans that beat it | Medium. The hand calculation covers the days before the fights; the fights have dice and are read by batch under decision 0187's guards |
-| The level on the table | The mission shown as given; the plan signed and frozen before the game; at the end the plan's score, pass or not, the spread with his own game marked in it, and what his hand added or cost | Medium |
-| The seed drawn | The level draws the variant and the seed of his game after he signs, and a second play draws another | Small |
-| The check that it is a struggle | Agents write plans and are judged; conditions 1 to 4 | A few runs, and the architect's reading |
+| The debrief | A tool of the umpire's that takes the commands a player signed before day 1, plays them cold and the unwritten mission over the seeds of the situation he fought, and reports the two side by side with his own game placed among his plan's. In `sim-cli`, beside `batch`; the session is handed it as it is handed the trial's runner, and may show it only when his game is over. The rules of "cold" are written once, in its record | Medium. No rule of the game, and nothing waits on it to open a level |
+| The plan of his own, and the history | The level's taught part named in its file; the check at signing; the record of each game with its plan, situation, seed and result, the last counting | Small to medium. The record is the session's or the table's, not the game's state |
+| The level's file and record | Scenario 137 grown, in three situations or more, with its trial figures and its mission's measure | Medium. The hand calculation covers the days before the fights; the fights have dice and are read by batch under decision 0187's guards |
+| The level on the table | The mission shown as given; the part that is his to write; the plan signed; at the end the mission met or not, the costs and the account; the debrief if he asks; the history; play again | Medium |
+| The situation drawn | The level draws the situation and the seed of his game after he signs; a replay draws a situation not yet fought | Small |
+| The check that a plan is worth writing | Agents write plans and are played over the seeds; conditions 1 to 5 | A few runs, and the architect's reading |
 
-Not needed for it: forces that are not his, a new kind of node, difficulty. Needed after all, by the designer's answer 2: a scale of the level's own on which one game is read.
+**What fell out of the build on Nov 27:** the floor and the test of beating par as a pass; the game's part, with its band, its cap and the cold game of his own seed as a score; a scale of the level's own on which one game is read (the mission met and the costs are enough again); the count of tries; and the check that a level can be passed, since none can be failed shut. **What stays:** the mission held from above, the rules of "cold", the many seeds (now the debrief's), the situations, and the test of a difference clear of noise, as a sentence in the debrief.
+
+Not needed for it: forces that are not his, a new kind of node, difficulty, any scale of points.
 
 ## Against the pillars, the spec and the open work
 
@@ -225,26 +226,27 @@ This note amends none of them. The designer has since asked for the pillars and 
 
 - **The five pillars stand.** A level is command by intent with a staff that explains itself. Pillar 1 is narrowed in practice: a ladder teaches one altitude at a time and leaves "anything can be grabbed" to the last rungs.
 - **The concept shifts.** `docs/pillars.md` opens with "the player commands by intent and a staff executes". "The game is about planning" puts the weight on the plan before the first day, where the pillars put it on interrupts and running time (pillar 3). Both can be true of one game, and the note above keeps both: the plan is judged cold, the game is fought warm. If the designer means the plan to be the core, that is a line for "Since these pillars were written", in his words.
-- **The cut on mandatory micromanagement.** The designer has ruled that a level must be beaten, knowing that it makes writing a plan mandatory inside a level. The cut's own words still hold: no task exists that only the player can do, since the staff plans every level and its plan is par. What changes is that inside a level doing only what the staff does is not enough. The proposed wording is in `docs/pillars.md`, marked for his review.
+- **The cut on mandatory micromanagement.** The designer has ruled that trying a level means signing a plan of his own, knowing it makes writing mandatory inside a level. The cut's words still hold in one sense and not in another, and the proposed block in `docs/pillars.md` says both: the staff can do every task of a level, and does every one he does not write; but inside a level the taught part is his to write, and the staff's writing it for him does not count as his try.
 - **The first slice and the build sequence** name the area commander's seat on the South Pacific as the first playable version, and step 5 as more theatres. A ladder puts small invented wars before the slice and makes the 39 days its top rung. Step 5's order would change.
-- **The kill gate.** Its first question is "Is commanding by intent fun, or does it feel like watching a screensaver?", which is the designer's complaint of Nov 25. The first level is a direct test of it, and it fits what `planning.md` already gives the gate. The gate's questions need no change to be asked of a level.
+- **The kill gate.** The designer has ruled it is judged on levels. Its proposed questions are reworded again in `docs/pillars.md`, since beating the staff is no longer what a level asks: the first is now whether writing a plan and seeing it fought is worth doing again.
 - **`docs/step3-spec.md`.** The target (the 39 days from one statement, both sides) and stage 5 (a model by intent against the same model ordering units) are untouched: a level is not a proof's scenario. Point 6 of the target, "The choices", asks for built situations with two real courses; a level is one, and could serve as one of them if its record says so before it is run. The spec keeps a choice of seats out of step 3, which is why "part of a side" is not in the first level.
 - **`docs/open-work.md`.** The objectives scale set from the record stays open and stays where it is, before stage 5; levels do not wait on it. Decision 0189, difficulty, is planned and would sit under a ladder. Nothing is closed by this note.
 
 ## What it does not settle, and the risks
 
 - **A puzzle with one answer.** If one plan is best on every count, the level is solved once and is then a form. Conditions 3 and 4 are the guard, and they may not be satisfiable on a small level.
-- **A level known after one play.** The seeds move the dice, not the enemy. Variants of the truth help for a few plays. A player who replays a level until he passes it is fitting a plan to the truth by trial, which is the opposite of the lesson. The honest answer may be that a level is judged on the first plan signed, and later plays are practice.
-- **Par depends on the staff, and the staff is not finished.** Every mend to a doctrine moves every level's par, and a level whose whole struggle is one weakness of the staff disappears when that weakness is mended. A level's record must say which reading of the staff its struggle rests on, so that the mend is seen to end the level.
-- **A staff that plans well leaves nothing to beat.** The game's premise is a competent staff. The better it gets, the less a player's plan can add, and the levels reward finding where it is still weak. That is in tension with pillar 2, a staff the player trusts. Where the staff is as good as a careful player, the right verdict is "at par", and a ladder must be able to live with that.
+- **A level known after one play.** The seeds move the dice, not the enemy, and a debrief shows the truth of the situation fought. A replay is therefore on another situation, by the designer's ruling; once every situation has been fought the level is known, and the history says so.
+- **The staff is not finished.** Every mend to a doctrine moves what the debrief shows for the staff's plan, and may undo conditions 1 to 5 of a level. They are checked again with each doctrine.
+- **A staff that plans well.** Where the staff's plan is as good as a careful player's, the debrief says the two cannot be told apart. Since nothing is gated on beating it, that is a fair thing for a level to say, and no longer in tension with a staff the player trusts.
 - **A ladder longer than the kinds that can be opened.** Rungs 8 to 10, 12 and 13 each wait on doctrine read for a written node, or on new rules. The ladder that can be built soon is rungs 1 to 7.
 - **Small scenarios, each with a hand calculation.** Every scenario's test has one, written by the architect before code. Twelve levels are twelve of them, and each for-play file also has its runs and its games between agents. The first level is cheap because scenario 137 is already owed.
 - **The verdict is one count.** "Met by the date on more games" will not fit a level about supply or attrition. Each level names its own measure, with its reason first, as decision 0187 asks; a ladder needs a few kinds of measure, not one.
-- **A plan played cold flatters plans that need no author.** A plan with a clever wait and a commander watching it may be the better plan and be marked down on its plan's part. The game's part is the designer's answer to that.
-- **A level that must be beaten can become a wall.** Every mend to the staff raises par. A level's passing plans are checked again with each doctrine, and a level nothing beats is withdrawn or rebuilt.
-- **The game's part rewards meddling as much as judgement.** A player who steers gets fresh dice, and by luck alone about half of such games come out ahead. A cap and a band are the only guards.
+- **A plan played cold flatters plans that need no author.** The debrief plays both plans cold, so a plan that leans on its commander's hand looks worse there than it fought. His own game placed among them is the only answer, and the debrief should say in words that it was steered and they were not.
+- **One game teaches little by itself.** A player who never asks for the debrief learns from luck. It is his choice by the designer's ruling; the table should make the debrief one touch away and not a chore.
+- **A try can be nominal.** One limit set to what the staff would have chosen opens the next level. The designer chose not to gate on merit, and this is the price.
+- **The last game counts, so a record can be polished** by replaying until the dice are kind. Nothing is gated on it and the history shows every game, so it harms nobody.
 - **Fun is not shown by any of this.** The five conditions say a level has a decision in it. Only the designer playing says whether deciding it is a pleasure.
-- **Not settled here:** how levels are unlocked; whether a level may be played from the enemy's side; what a level tells a player who is below par (the staff's reasons are the obvious teacher, and they are written for the umpire today); whether an agent's ladder is the same ladder.
+- **Not settled here:** whether a level may be played from the enemy's side; what a level tells a player who is below par (the staff's reasons are the obvious teacher, and they are written for the umpire today); whether an agent's ladder is the same ladder.
 
 ## The designer's answers, Nov 26, 2026
 
@@ -270,8 +272,33 @@ To the one question that followed:
 
 11. **Are tries of the game unlimited:** yes, the architect's recommendation, offered to him as: "Unlimited, count kept: try as often as you like. The ladder keeps your first game's result and the number of games it took, so a pass on the first try reads differently from a pass on the sixth."
 
-Settled by the architect, of what he did not rule on: he does not see the cold result of his seed, or any result of the judge, before his game is over. Read by the architect and said where it is read ("What passes a level"): the game's part fails an attempt or does not, and an addition does not pass a plan that did not beat par; a level may be passed by a later plan, the first plan's score staying on the record.
+## The change of Nov 27, 2026, and what it replaces
+
+His words: "Here's a thout I'm having, and it's a change: the player may choose to score their plan against the staff, but like irl, their plan is measured once in the war itself. Once. So, yes, they may be lucky or not. The goal is to learn and improve, feeling more and more accomplished. Failure will not block them from proceeding to the next step. Not trying will. If they choose to continue after failing - fair enough."
+
+Two points it left open, each answered the same day:
+
+12. **What counts as trying a level:** "Signing a plan of your own." He must write at least the part the level teaches and fight it; leaving it all to the staff does not count.
+13. **May a level be played again:** "Replay on a new situation, player can amend their plan, record keep history, and the last game played counts. That encourages replayability, learning, exploration and curiosity."
+
+The earlier answers stand in the record above and are replaced as follows:
+
+| Earlier answer (Nov 26) | Replaced by |
+| --- | --- |
+| 2. The plan's score across the seeds is the base, and the game adds to it or subtracts | The plan is measured once, in the game he fights. Scoring against the staff is his choice: the dry run before, the debrief after |
+| 3. "Must beat par to pass" | Failure does not block the next level; not trying does (12) |
+| 5. The game's subtraction can fail a level, with another try allowed | Nothing fails a level shut. A game is fought once; a replay is on a new situation (13) |
+| 7. "First signed plan is kept" | The history is kept and the last game played counts (13) |
+| 11. Tries unlimited, the count kept | Overtaken: there are no tries of one game. The history shows every game |
+
+Answers 1, 4, 6, 8, 9 and 10 stand: invented first; the pillars and onboarding amended now; consecutive and parallel plans; the ladder is the game; the first playable version is the first levels; the kill gate is judged on levels.
+
+**Overtaken with them,** two readings the architect had flagged as his own: that an addition cannot pass a plan that did not beat par, and that a later plan may pass a level. There is no pass by score for either to be about. So is his settling that the cold result of the player's own seed is kept from him: no such result is a score now, and the debrief as a whole is shown only after the game.
+
+Judged by the architect, of what the manager said to the designer and he did not answer: each is right and is in the sections above. This replaces what the manager listed. The debrief is where the many seeds earn their place. A comparison before the game must be the fallible one, on the side's picture, and the exact one comes only after.
+
+Settled by the architect: the debrief is of the situation he fought and no other; a level has at least three situations; when all are fought a replay draws among them and the history says so; what a level's taught part is for each kind of rung ("What counts as trying").
 
 ## Questions for the designer
 
-None is open. The one this note last asked, whether tries of the game are unlimited, is answered (answer 11).
+None is open.
