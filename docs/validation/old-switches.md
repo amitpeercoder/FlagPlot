@@ -192,3 +192,13 @@ A yes or a no for each. The architect's recommendation is in brackets.
 35. `search` and `surface_combat` optional in `sim-core`: leave to the architect as a refactoring? [yes]
 
 And one question beside the list: whether the delegation of Nov 27, 2026 covers the retirements at no cost to any game (16, 24, 25, 28 and 35), or whether each still waits on his word.
+
+## What was ruled (Nov 27, 2026)
+
+Added after the list was read. Amit: "Retire the five no-cost switches" (16, 24, 25, 28 and 35), and of the rest, "Don't wait on me. Let the architect make whatever decision." Decision 0236 retires the five in two pull requests, rules number 4 to be retired by a class 3 record of its own, leaves numbers 1 and 3 to the record of the interface's design, keeps the other 27, and rules that the panic of scenario 29 is mended before command levels are turned on anywhere new.
+
+**Three corrections to the list above,** found while that record was written. The text above is left as Amit read it.
+
+- **16, 24 and 25: "only the loader's own tests of the absent case read the off side"** is wrong. `p_a_scenario_with_no_bombardment_no_men_and_no_estimate_is_unchanged` in `tests/scenario_24_shells_and_estimates.rs` takes these figures out of the frozen files and runs scenarios 6a and 4a. Decision 0236, ruling 8, restates it.
+- **28: "saved games are remade in their file hashes"** should have named them: the `save.json` of three recorded games (`full_slice_five_days_sonnet`, `keep_two_bases_fed_sonnet`, `second_proof_week_sonnet`) changes in the hash of `ground.toml` and in nothing else.
+- **35 was called no cost** in the question to Amit. No game moves, but about 50 places build `RefData::default()`, two of them loaders in `sim-data`, and eight statements of `sim-core`'s unit tests about a world without the figures are withdrawn, with seven rulebook sentences, seven setup errors and one refusal of the trial. It is a pull request of its own.
