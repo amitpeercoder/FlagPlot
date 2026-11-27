@@ -329,6 +329,10 @@ impl World {
                             ..Base::new(id, format!("Dump at {to}"), side, to)
                         },
                     );
+                    // With command levels on it is a command of its side
+                    // (decision 0237), formed before the supply is put into
+                    // it.
+                    self.base_formed_by_march(id, from);
                     let formed = self.events.record(
                         day,
                         None,

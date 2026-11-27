@@ -345,7 +345,11 @@ const BEFORE: &[(&str, u64)] = &[
         "stage-2b-proof/05c_eastern_solomons_bold.toml",
         0xe2396ee2ad84bb8e,
     ),
-    ("stage-2b-proof/07a_week.toml", 0x485071c7e65da537),
+    // Remade by decision 0237 (a base formed by a march is a command): the
+    // week forms base 10 on day 16 with command levels and reports on. It was
+    // 0x485071c7e65da537; no event before the `MarchBaseFormed` of base 10
+    // moves.
+    ("stage-2b-proof/07a_week.toml", 0xe774a1c621dab10b),
     // Remade for decision 0231 (the island's staff feeds the men beside a place): the one
     // game of the table with an island and a base beside a place holding men.
     ("stage-3-proof/07a_slice.toml", 0xec95_4dc0_bcaf_d713),

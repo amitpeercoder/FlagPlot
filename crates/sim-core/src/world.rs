@@ -186,12 +186,15 @@ impl Default for MadeIds {
 /// decision 0231 (a "keep supplied" is taken under "control an island", with its
 /// own plan and a floor of 0 days, which a command the old rules refused and
 /// which changes games with an island and a base of the side beside a place
-/// with men). A
+/// with men) and 35 from decision 0232 (a sub-intent the commander writes, a
+/// command the old rules refused) and 36 from decision 0237 (with command
+/// levels on a base formed by a march is a command, which changes a game with
+/// command levels on in which a march forms one). A
 /// pull request
 /// raises it by one
 /// when it changes a rule in a way that changes what an existing game would do; a
 /// change that leaves every existing game as it was leaves it alone.
-pub const RULES_VERSION: u32 = 35;
+pub const RULES_VERSION: u32 = 36;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct SimConfig {

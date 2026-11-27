@@ -83,7 +83,10 @@ pub fn sents_of(world: &World, key: &UmpireKey, report: u32) -> Vec<Sent> {
 #[derive(Clone, Debug)]
 pub enum Road {
     /// It made the report (or holds it with no passing to it that arrived).
-    Own { when: When },
+    /// `formed` is `Some(moment)` for a command formed in the game that held
+    /// the report from the first moment it was seen, by the copy of the
+    /// picture it was formed with (decision 0237, ruling 11).
+    Own { when: When, formed: Option<Moment> },
     /// A passing brought it.
     Told {
         event: u32,
@@ -145,7 +148,13 @@ fn arrival_key(sent: When, arrival: Arrival, event: u32) -> ((u32, u8, u8, u32),
 /// The road by which `command` came to hold the report whose event is at
 /// `made`, given its `ReportSent` events and whether the state says it held
 /// the report.
-pub fn road(command: CommandRef, made: When, sents: &[Sent], held: bool) -> Road {
+pub fn road(
+    command: CommandRef,
+    made: When,
+    sents: &[Sent],
+    held: bool,
+    formed: Option<Moment>,
+) -> Road {
     // It sent the report up or sideways: the passing of its own report.
     if sents.iter().any(|sent| {
         sent.sender == command
@@ -154,7 +163,10 @@ pub fn road(command: CommandRef, made: When, sents: &[Sent], held: bool) -> Road
                 .iter()
                 .any(|l| matches!(l.direction, Direction::Up | Direction::Sideways))
     }) {
-        return Road::Own { when: made };
+        return Road::Own {
+            when: made,
+            formed: None,
+        };
     }
     // The area command sending it down with no passing up behind it made it
     // itself.
@@ -163,7 +175,18 @@ pub fn road(command: CommandRef, made: When, sents: &[Sent], held: bool) -> Road
             .iter()
             .any(|sent| sent.sender == CommandRef::Area && sent.brought_by.is_empty())
     {
-        return Road::Own { when: made };
+        return Road::Own {
+            when: made,
+            formed: None,
+        };
+    }
+    // A command formed in the game holds what the picture it was copied from
+    // held, from the moment it was formed.
+    if let Some(moment) = formed {
+        return Road::Own {
+            when: made,
+            formed: Some(moment),
+        };
     }
     // The first passing to it that arrived.
     let mut arrived: Vec<_> = sents
@@ -202,7 +225,10 @@ pub fn road(command: CommandRef, made: When, sents: &[Sent], held: bool) -> Road
         };
     }
     if held {
-        return Road::Own { when: made };
+        return Road::Own {
+            when: made,
+            formed: None,
+        };
     }
     Road::Never {
         sent_to_it: sents
@@ -237,6 +263,9 @@ fn arrival_words(arrival: Arrival) -> &'static str {
 /// (event #33), a pulse late".
 pub fn road_words(road: &Road) -> String {
     match road {
+        Road::Own {
+            formed: Some(_), ..
+        } => "a copy of the picture it was formed with".to_string(),
         Road::Own { .. } => "its own (it made the report)".to_string(),
         Road::Overtaken { .. } => "never held in the game".to_string(),
         Road::Told {
@@ -271,7 +300,15 @@ pub fn road_words(road: &Road) -> String {
 /// `report` and by which road, or that it never did.
 pub fn line(command: CommandRef, report: u32, road: &Road) -> String {
     match road {
-        Road::Own { when } | Road::Told { when, .. } => format!(
+        Road::Own {
+            formed: Some(moment),
+            ..
+        } => format!(
+            "{command} first held report #{report} at {}: {}.",
+            moment_words(*moment),
+            road_words(road)
+        ),
+        Road::Own { when, .. } | Road::Told { when, .. } => format!(
             "{command} first held report #{report} {}: {}.",
             when_words(*when),
             road_words(road)
@@ -347,7 +384,11 @@ fn attributions(moment: Moment) -> Vec<When> {
 /// says it can have been held in.
 pub fn agrees(first_seen: Moment, road: &Road) -> bool {
     let when = match road {
-        Road::Own { when } | Road::Told { when, .. } => *when,
+        Road::Own {
+            formed: Some(moment),
+            ..
+        } => return first_seen == *moment,
+        Road::Own { when, .. } | Road::Told { when, .. } => *when,
         Road::Never { .. } | Road::Overtaken { .. } => return false,
     };
     attributions(first_seen).contains(&when)
@@ -455,7 +496,15 @@ pub fn answers_json(report: u32, answers: &Answers) -> serde_json::Value {
                 .iter()
                 .map(|row| {
                     let mut value = match &row.road {
-                        Road::Own { when: at } => json!({
+                        Road::Own {
+                            formed: Some(moment),
+                            ..
+                        } => json!({
+                            "held": true,
+                            "road": "copy",
+                            "first_held": moment_words(*moment),
+                        }),
+                        Road::Own { when: at, .. } => json!({
                             "held": true,
                             "road": "own",
                             "first_held": when(*at),

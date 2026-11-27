@@ -388,6 +388,33 @@ fn a_command_formed_is_held_as_of_now_and_a_base_changing_side_moves_its_hold() 
 }
 
 #[test]
+fn a_base_formed_by_a_march_is_held_as_it_stood_before_its_supply_was_put_into_it() {
+    // Decision 0237, rule 3 and ruling 5: the hook runs before the supply
+    // carried is put into the base.
+    let mut world = holding(ON_TIME);
+    let id = crate::ids::BaseId::new(3);
+    world.truth.bases.insert(
+        id,
+        crate::state::Base::new(id, "Dump at (1,1)".to_string(), Side::Allied, hx(1, 1)),
+    );
+    world.base_formed_by_march(id, hx(0, 0));
+    let new = CommandRef::Base(id);
+    let held = held_of(&world, new);
+    assert_eq!(held.as_of(), AsOf::Start);
+    assert_eq!(held.base().expect("a base").supply_t, Fixed::ZERO);
+    // 5 t is put into the base in truth, as the march does after the hook.
+    world.truth.bases.get_mut(&id).expect("base").supply_t = Fixed::from_int(5);
+    assert_eq!(
+        held_of(&world, new).base().expect("a base").supply_t,
+        Fixed::ZERO
+    );
+    assert!(!world
+        .held(Side::Japanese)
+        .expect("holding")
+        .contains_key(&new));
+}
+
+#[test]
 fn radio_silence_is_an_order_and_a_setting_that_is_part_of_the_hash() {
     let mut world = holding(ON_TIME);
     let before = world.state_hash();
