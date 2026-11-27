@@ -64,7 +64,7 @@
 //! - A scenario with no rebase order is unchanged, apart from the hash
 //!   version.
 
-mod common;
+use crate::common;
 
 use std::path::PathBuf;
 

@@ -151,7 +151,7 @@
 //! - An order to set sizing on a group that is not the side's is refused.
 //! - Every existing scenario's events and end states are what they were.
 
-mod common;
+use crate::common;
 
 use std::collections::BTreeMap;
 use std::path::PathBuf;

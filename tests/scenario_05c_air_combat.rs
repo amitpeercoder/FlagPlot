@@ -158,7 +158,7 @@
 //!   lost to fighters and guns in that attack.
 //! - A replay of any seed reproduces the daily hash.
 
-mod common;
+use crate::common;
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;

@@ -7,7 +7,7 @@
 //! is the day the refusal `... may be used from day N` names. A land unit's
 //! `get_entity` gives its formation and the formations above it.
 
-mod support;
+use crate::support;
 
 use serde_json::{json, Value};
 use sim_core::state::Side;

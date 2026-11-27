@@ -4,6 +4,10 @@ description = "Flag Plot trials: the pictures of a world a side may be tried in,
 version.workspace = true
 edition.workspace = true
 publish.workspace = true
+# One test program for the package, not one for each file under `tests/`:
+# building and linking them was most of a build. `tests/integration.rs`
+# declares each file as a module.
+autotests = false
 
 [dependencies]
 sim-core.workspace = true
@@ -14,3 +18,7 @@ sim-data.workspace = true
 
 [lints]
 workspace = true
+
+[[test]]
+name = "integration"
+path = "tests/integration.rs"

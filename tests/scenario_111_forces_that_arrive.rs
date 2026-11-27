@@ -130,7 +130,7 @@ use sim_core::time::Pulse;
 use sim_data::Scenario;
 use sim_staff::{as_staffs, staffs};
 
-mod common;
+use crate::common;
 
 const A: Side = Side::Allied;
 const J: Side = Side::Japanese;

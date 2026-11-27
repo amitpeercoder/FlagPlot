@@ -135,7 +135,7 @@
 //! - A scenario with no march order is unchanged, apart from the hash
 //!   version.
 
-mod common;
+use crate::common;
 
 use std::path::PathBuf;
 

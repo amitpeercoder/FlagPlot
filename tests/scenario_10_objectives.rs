@@ -60,7 +60,7 @@
 //! - Over seeds 1 to 200 the known count of each objective is never above
 //!   the true count, for both sides.
 
-mod common;
+use crate::common;
 
 use std::collections::BTreeMap;
 use std::path::PathBuf;

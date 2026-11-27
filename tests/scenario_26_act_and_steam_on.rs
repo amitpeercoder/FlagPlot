@@ -112,7 +112,7 @@
 //! (which pulse a force halts, fires, steams on in; where it ends) and not
 //! the dice.
 
-mod common;
+use crate::common;
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;

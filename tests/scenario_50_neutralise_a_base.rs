@@ -199,7 +199,7 @@ use sim_staff::raid::{
 };
 use sim_staff::{as_staffs, staffs};
 
-mod common;
+use crate::common;
 
 const COMMANDS_MARKER: &str = "# The Allied commander's commands";
 

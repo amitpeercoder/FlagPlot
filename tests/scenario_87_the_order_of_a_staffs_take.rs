@@ -109,7 +109,7 @@ use sim_core::state::Side;
 use sim_data::Scenario;
 use sim_staff::{as_staffs, staffs, SupplyStaff};
 
-mod common;
+use crate::common;
 
 const COMMANDS_MARKER: &str = "# The Allied commander's commands";
 const B: Hex = Hex { q: 4, r: 0 };

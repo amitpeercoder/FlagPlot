@@ -155,7 +155,7 @@
 //! - The enemy's view is the same in two worlds that differ only in a
 //!   prepare order.
 
-mod common;
+use crate::common;
 
 use std::path::PathBuf;
 

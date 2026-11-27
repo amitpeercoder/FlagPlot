@@ -107,7 +107,7 @@
 //!   what the Allied side cannot see of ships not in task force 2 give
 //!   the same choice.
 
-mod common;
+use crate::common;
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;

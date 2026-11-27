@@ -93,7 +93,7 @@
 //!   mornings of days 2 and 3, where they fly, each have their own draw;
 //!   with the figure at 1 each names type 3 and with it at 0 none does.
 
-mod common;
+use crate::common;
 
 use std::fs;
 use std::path::PathBuf;

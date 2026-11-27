@@ -129,7 +129,7 @@
 //!   apart from the hash version. A scenario whose events change is listed
 //!   for the architect before its baseline is remade.
 
-mod common;
+use crate::common;
 
 use std::collections::BTreeMap;
 use std::path::PathBuf;

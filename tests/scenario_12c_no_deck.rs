@@ -130,7 +130,7 @@ use sim_core::time::Pulse;
 use sim_core::World;
 use sim_data::Scenario;
 
-mod common;
+use crate::common;
 
 const ROOT: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
 const CARRIER_B: ShipId = ShipId::new(3);

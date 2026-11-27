@@ -11,7 +11,7 @@
 //! place, and the unit arrives in day 3's ground combat phase. So the
 //! briefing of the start of day 2 is told one day marched, of 3.
 
-mod support;
+use crate::support;
 
 use serde_json::{json, Value};
 use sim_agent::{Seat, Session};

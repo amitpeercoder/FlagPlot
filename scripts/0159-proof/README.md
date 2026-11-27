@@ -32,7 +32,7 @@ python3 scripts/0159-proof/unused.py --sim $OUT/target/release/sim-cli --list
 python3 scripts/0159-proof/hunger.py $OUT/a --list --jsonl $OUT/read/hunger.jsonl
 python3 scripts/0159-proof/short_lifts.py $OUT/a --list --jsonl $OUT/read/short_lifts.jsonl
 FLAGPILOT_0159_ORDERS_OUT=$OUT/orders CARGO_TARGET_DIR=$OUT/target \
-  cargo test --release -p scenario-tests --test proof_0159_orders -- --ignored
+  cargo test --release -p scenario-tests --test scenarios proof_0159_orders:: -- --ignored
 python3 scripts/stage-3-proof/conditions.py $OUT/a --batch $OUT/a.json --list
 python3 scripts/stage-3-proof/margin.py $OUT/a.json $OUT/b.json
 python3 scripts/stage-3-proof/margin.py $OUT/a.json $OUT/c.json

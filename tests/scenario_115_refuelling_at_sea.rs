@@ -161,7 +161,7 @@
 // statement 1 continues a list item without indentation.
 #![allow(clippy::doc_lazy_continuation)]
 
-mod common;
+use crate::common;
 
 use std::path::PathBuf;
 use std::sync::OnceLock;

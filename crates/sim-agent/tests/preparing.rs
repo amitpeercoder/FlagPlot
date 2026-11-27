@@ -22,7 +22,7 @@
 //! counts day 1 of 30; unit 2 fires on day 1, counts its tenth day and gains
 //! a step to experience 3.
 
-mod support;
+use crate::support;
 
 use serde_json::{json, Value};
 use sim_agent::{Seat, Session};

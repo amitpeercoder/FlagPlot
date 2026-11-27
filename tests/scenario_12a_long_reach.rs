@@ -110,7 +110,7 @@ use sim_core::state::Side;
 use sim_core::{SimConfig, World};
 use sim_data::Scenario;
 
-mod common;
+use crate::common;
 
 const ROOT: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
 const SCENARIO: &str = "12a_long_reach.toml";

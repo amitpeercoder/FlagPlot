@@ -112,7 +112,7 @@
 //! 21. **A game not watched is as it was:** the recorded games replay
 //!     as they did, and every tool listed for them is one listed before.
 
-mod common;
+use crate::common;
 
 use std::collections::BTreeMap;
 use std::path::PathBuf;

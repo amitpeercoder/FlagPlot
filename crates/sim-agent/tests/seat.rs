@@ -9,7 +9,7 @@
 //! the start and after each day. Over scenario 62's text (command levels on,
 //! reports up on time, sideways and down never) changed in the test.
 
-mod support;
+use crate::support;
 
 use std::collections::BTreeMap;
 

@@ -85,7 +85,7 @@
 //! ready (chapter 4, "Ready, and the share of the guns"). Task force 2 is at
 //! battle readiness, so alert and ready.
 
-mod common;
+use crate::common;
 
 // The code is written to the hand calculation above.
 

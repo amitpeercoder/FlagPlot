@@ -155,7 +155,7 @@ use sim_data::Scenario;
 use sim_staff::station::{margin_of, order_by_risk, reach_for, Candidate};
 use sim_staff::{as_staffs, staffs, SupplyStaff};
 
-mod common;
+use crate::common;
 
 const COMMANDS_MARKER: &str = "# The Japanese commander's commands";
 

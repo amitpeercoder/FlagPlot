@@ -18,7 +18,7 @@
 //! `tests/measure.rs`, and a sample of its answers is compared with the rest
 //! under every difference.
 
-mod support;
+use crate::support;
 
 use std::collections::BTreeMap;
 

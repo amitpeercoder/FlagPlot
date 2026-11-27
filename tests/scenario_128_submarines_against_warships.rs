@@ -206,7 +206,7 @@
 // The hand calculation above is the architect's text, kept as written.
 #![allow(clippy::doc_lazy_continuation)]
 
-mod common;
+use crate::common;
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;

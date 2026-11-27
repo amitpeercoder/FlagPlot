@@ -208,7 +208,7 @@ use sim_core::state::Side;
 use sim_data::Scenario;
 use sim_staff::{as_staffs, staffs};
 
-mod common;
+use crate::common;
 
 // ---------------------------------------------------------------------
 // The games, each a file of `data/scenarios/the-pattern-of-a-patrol/`.

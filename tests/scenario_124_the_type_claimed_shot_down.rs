@@ -139,7 +139,7 @@
 // which is left as written.
 #![allow(clippy::doc_lazy_continuation)]
 
-mod common;
+use crate::common;
 
 use std::fs;
 use std::path::PathBuf;

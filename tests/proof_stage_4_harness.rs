@@ -8,7 +8,7 @@
 //!
 //! ```text
 //! FLAGPILOT_STAGE4_OUT=DIR [FLAGPILOT_STAGE4_SEED=2001] [FLAGPILOT_STAGE4_GAMES=4] \
-//!     cargo test --release -p scenario-tests --test proof_stage_4_harness \
+//!     cargo test --release -p scenario-tests --test scenarios proof_stage_4_harness:: \
 //!     -- --ignored --nocapture condition_7_spreads
 //! ```
 //!
@@ -49,7 +49,7 @@
 //! reads what they write.
 #![allow(clippy::doc_lazy_continuation, clippy::doc_markdown)]
 
-mod common;
+use crate::common;
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::Write as _;

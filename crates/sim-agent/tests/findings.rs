@@ -2,7 +2,7 @@
 //! alone (decision 0051, as built; the findings of the review of that play).
 //! Nothing here is a rule: each test is about what is said.
 
-mod support;
+use crate::support;
 
 use serde_json::{json, Value};
 use sim_agent::Session;

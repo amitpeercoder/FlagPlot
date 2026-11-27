@@ -121,7 +121,7 @@
 // doctrine's staffs, and what the staff handed in each day read from
 // `staff_handed_in`. The figure at T is read at the staff's moment.
 
-mod common;
+use crate::common;
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};

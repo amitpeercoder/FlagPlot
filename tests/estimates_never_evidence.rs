@@ -14,7 +14,7 @@
 //! each refusing a file that hides the mark. This file holds them over what
 //! is on file, so that a scenario or a measure added later is held too.
 
-mod common;
+use crate::common;
 
 use std::path::{Path, PathBuf};
 

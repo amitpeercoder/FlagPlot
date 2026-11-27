@@ -8,7 +8,7 @@
 //! the grade of its defences, its digging, the wear on its fieldworks and
 //! defences and its strain. The Japanese side is told none of it.
 
-mod support;
+use crate::support;
 
 use serde_json::{json, Value};
 use sim_agent::{Seat, Session};

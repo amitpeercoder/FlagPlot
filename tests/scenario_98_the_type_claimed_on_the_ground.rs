@@ -110,7 +110,7 @@
 //! - **The frozen figures are as they were:** no figures file is changed,
 //!   and on them no claim names a type.
 
-mod common;
+use crate::common;
 
 use std::fs;
 use std::path::PathBuf;

@@ -98,7 +98,7 @@ do_orders() {
   say "orders: the six plan orders of condition 6 into $OUT/orders/"
   rm -rf "$OUT/orders"
   (cd "$REPO" && CARGO_TARGET_DIR="$OUT/target" FLAGPILOT_0159_ORDERS_OUT="$OUT/orders" \
-    cargo test --release -p scenario-tests --test proof_0159_orders -- --ignored)
+    cargo test --release -p scenario-tests --test scenarios -- --ignored proof_0159_orders::)
   echo "wrote $OUT/orders/ ($(ls "$OUT/orders" | grep -c '\.json$') orders and check.txt)"
 }
 

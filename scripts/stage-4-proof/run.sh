@@ -114,7 +114,7 @@ do_build() {
   say "build: sim-cli and the harness, release, into $OUT/target"
   (cd "$REPO" && CARGO_TARGET_DIR="$OUT/target" cargo build --release -p sim-cli)
   (cd "$REPO" && CARGO_TARGET_DIR="$OUT/target" cargo test --release -p scenario-tests \
-    --test proof_stage_4_harness --no-run)
+    --test scenarios --no-run)
 }
 
 do_batch() { stage3 batch a b c; }
@@ -185,7 +185,7 @@ harness_test() {
   (cd "$REPO" && CARGO_TARGET_DIR="$OUT/target" \
     FLAGPILOT_STAGE4_OUT="$OUT/harness" FLAGPILOT_STAGE4_SEED="$SEED" \
     FLAGPILOT_STAGE4_GAMES="$games" FLAGPILOT_STAGE4_JOBS="$JOBS" \
-    cargo test --release -p scenario-tests --test proof_stage_4_harness -- --ignored --nocapture "$test")
+    cargo test --release -p scenario-tests --test scenarios -- --ignored --nocapture "proof_stage_4_harness::$test")
 }
 
 do_harness() {

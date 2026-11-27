@@ -126,7 +126,7 @@
 //! - The same seed gives the same game; the hash holds her fire among
 //!   aircraft and the pulse it was set, and a save and replay agree.
 
-mod common;
+use crate::common;
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;

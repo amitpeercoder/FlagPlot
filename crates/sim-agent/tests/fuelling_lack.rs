@@ -9,7 +9,7 @@
 //! destroyer lacks 500 t, 12.5 hours. With the frozen port sizes, which give
 //! no fuelling rate, the tons are the same and no hours are given.
 
-mod support;
+use crate::support;
 
 use serde_json::{json, Value};
 use sim_agent::{Seat, Session};

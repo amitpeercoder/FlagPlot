@@ -174,7 +174,7 @@
 //! and expected hits, and the points of each hit from the damage events, and
 //! asserts that no salvo exists that is not listed above.
 
-mod common;
+use crate::common;
 
 use std::path::PathBuf;
 

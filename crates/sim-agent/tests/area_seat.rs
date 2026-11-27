@@ -5,7 +5,7 @@
 //! up on time, sideways and down never), with task force 1 kept silent from
 //! the start where a test needs one stale force beside a fresh one.
 
-mod support;
+use crate::support;
 
 use std::collections::BTreeMap;
 use std::path::PathBuf;

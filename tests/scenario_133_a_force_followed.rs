@@ -581,7 +581,7 @@ use sim_core::time::Pulse;
 use sim_data::Scenario;
 use sim_staff::{as_staffs, staffs};
 
-mod common;
+use crate::common;
 
 fn path_of(file: &str) -> PathBuf {
     common::data_dir()

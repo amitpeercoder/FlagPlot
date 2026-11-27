@@ -143,7 +143,7 @@ use sim_core::{Staffs, World};
 use sim_data::Scenario;
 use sim_staff::{as_staffs, staffs};
 
-mod common;
+use crate::common;
 
 const LEVELS_LINE: &str = "command_levels = true\n";
 const REPORTS_LINE: &str = "reports = \"../reference/reports_placeholder_scenario_63.toml\"\n";

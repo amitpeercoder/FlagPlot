@@ -113,7 +113,7 @@
 //!   that order's acceptance cites the event that detached the force.
 //! - A replay reproduces both daily hashes.
 
-mod common;
+use crate::common;
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;

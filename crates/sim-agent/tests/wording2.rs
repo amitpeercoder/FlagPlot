@@ -4,7 +4,7 @@
 //! rule: every figure is checked against what another tool or the engine
 //! says.
 
-mod support;
+use crate::support;
 
 use std::collections::BTreeMap;
 

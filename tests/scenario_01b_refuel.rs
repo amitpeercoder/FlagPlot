@@ -146,7 +146,7 @@
 
 // The test code is written by a developer from the hand calculation above.
 
-mod common;
+use crate::common;
 
 use std::collections::BTreeSet;
 use std::path::PathBuf;

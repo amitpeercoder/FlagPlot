@@ -9,7 +9,7 @@
 //! work and defences of its own bases and nothing of the other side's: the
 //! Japanese bases keep their public line.
 
-mod support;
+use crate::support;
 
 use serde_json::{json, Value};
 use sim_agent::{Seat, Session};

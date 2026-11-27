@@ -135,7 +135,7 @@
 
 #![allow(clippy::doc_lazy_continuation, clippy::doc_markdown)]
 
-mod common;
+use crate::common;
 
 use std::collections::BTreeMap;
 

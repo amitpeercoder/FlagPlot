@@ -19,7 +19,7 @@
 //!    side cannot know gives the side the same events, field for field, and
 //!    the side that can know it sees the difference.
 
-mod common;
+use crate::common;
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};

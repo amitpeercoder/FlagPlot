@@ -111,7 +111,7 @@
 // which is left as written.
 #![allow(clippy::doc_lazy_continuation)]
 
-mod common;
+use crate::common;
 
 use std::collections::BTreeMap;
 use std::path::PathBuf;

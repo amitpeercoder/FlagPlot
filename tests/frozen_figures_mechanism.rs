@@ -16,7 +16,7 @@
 //! tuning round they do not, and these must still hold. The real files are
 //! never changed; the changed copy is made under the build directory.
 
-mod common;
+use crate::common;
 
 use std::fs;
 use std::path::{Path, PathBuf};

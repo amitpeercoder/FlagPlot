@@ -19,7 +19,7 @@
 //! the harness is tried on seed 2,001 to show that it runs.
 #![allow(clippy::doc_lazy_continuation, clippy::doc_markdown)]
 
-mod common;
+use crate::common;
 
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;

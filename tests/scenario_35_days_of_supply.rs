@@ -210,7 +210,7 @@
 // the day's scripted orders already handed to the world as the scenario's
 // `next_day` hands them. Reading before each `next_day` gives the same.
 
-mod common;
+use crate::common;
 
 use std::collections::BTreeMap;
 use std::path::PathBuf;

@@ -150,7 +150,7 @@
 //! - The enemy's view is the same in two worlds that differ only in the
 //!   other side's skills, where the hits are the same.
 
-mod common;
+use crate::common;
 
 use std::path::PathBuf;
 

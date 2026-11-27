@@ -172,7 +172,7 @@
 // `crates/sim-core/src/objectives.rs`; the loader's own are in
 // `crates/sim-data/src/scenario.rs`.
 
-mod common;
+use crate::common;
 
 use std::collections::BTreeMap;
 use std::path::PathBuf;

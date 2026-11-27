@@ -327,7 +327,7 @@ use sim_core::time::Pulse;
 use sim_core::{SimConfig, World};
 use sim_data::{LoadOptions, Scenario};
 
-mod common;
+use crate::common;
 
 const ROOT: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
 const SCENARIO: &str = "16_all_together.toml";

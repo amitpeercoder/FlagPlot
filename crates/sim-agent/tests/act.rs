@@ -13,7 +13,7 @@
 //! waypoint where it has no work. The orders are the scenario's, given here
 //! through `issue_orders`.
 
-mod support;
+use crate::support;
 
 use serde_json::{json, Value};
 use sim_agent::{Seat, Session};

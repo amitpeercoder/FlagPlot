@@ -8,7 +8,7 @@
 //! below 50: day 1 (60) and day 2 (50) are not met; days 3 to 6 (40, 30, 20,
 //! 10) are. So after day 6: 6 days in force, 4 met, no raid.
 
-mod support;
+use crate::support;
 
 use serde_json::{json, Value};
 use sim_agent::{hold_measure, Seat, Session};
