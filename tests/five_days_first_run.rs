@@ -21,7 +21,7 @@
 //!
 //! ```text
 //! FLAGPILOT_FIVE_DAYS_OUT=FILE [FLAGPILOT_FIVE_DAYS_RUNS=N] \
-//!     cargo test --release -p scenario-tests --test five_days_first_run \
+//!     cargo test --release -p scenario-tests --test scenarios five_days_first_run:: \
 //!     -- --ignored --nocapture
 //! ```
 //!

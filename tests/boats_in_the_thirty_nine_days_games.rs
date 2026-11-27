@@ -266,7 +266,7 @@ fn statement_7_without_its_boats_it_is_the_game_it_copies() {
 // out of the suite; the measure of decision 0227, stage 3, reports the same
 // statement over its 100 seeds.
 #[test]
-#[ignore = "plays 39 days: run once, in release (cargo test --release -p scenario-tests --test boats_in_the_thirty_nine_days_games -- --ignored)"]
+#[ignore = "plays 39 days: run once, in release (cargo test --release -p scenario-tests --test scenarios boats_in_the_thirty_nine_days_games:: -- --ignored)"]
 fn statement_8_played_on_seed_1_no_boat_on_the_map_has_moved() {
     game().statement_8(&['a']);
 }

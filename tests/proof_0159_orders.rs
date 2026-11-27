@@ -7,7 +7,7 @@
 //!
 //! ```text
 //! FLAGPILOT_0159_ORDERS_OUT=DIR cargo test --release -p scenario-tests \
-//!     --test proof_0159_orders -- --ignored --nocapture
+//!     --test scenarios proof_0159_orders:: -- --ignored --nocapture
 //! ```
 //!
 //! The six (decision 0159, "The proof: how each condition is read", 6):
