@@ -6,8 +6,8 @@ Trimmed on Nov 27, 2026 to what is open or next. What was closed, built or overt
 
 ## Next
 
-1. **Stage 4's proof** (decision 0161, step 9): set up in `docs/validation/stage-4-proof-setup.md`, amended on Nov 27, 2026 for decision 0232's step 1, and not run. Run once, by the architect. Two misses are expected on the Japanese side, conditions 3 and 13, their cause named before the run.
-2. **A plan the commander writes** (decision 0232): step 1 is built; step 2 is held until the proof is run; step 3 after it.
+1. **Stage 4's proof** (decision 0161, step 9): set up in `docs/validation/stage-4-proof-setup.md`, amended twice on Nov 27, 2026, for decision 0232's steps 1 and 2, and not run. Run once, by the architect. Two misses are expected on the Japanese side, conditions 3 and 13, their cause named before the run.
+2. **A plan the commander writes** (decision 0232): steps 1 and 2 are built; step 3, the table, is next.
 3. **The enemy's approaches** (decision 0161, step 10; below): its own record and plan first, for the designer's confirmation.
 4. **Levels** (`docs/design/levels.md`): a note, nothing built; the designer's answers of Nov 26 and 27, 2026 are in it.
 5. **The clean-up in progress,** beside these and not ahead of the proof.
