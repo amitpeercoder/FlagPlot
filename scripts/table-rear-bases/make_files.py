@@ -26,7 +26,18 @@ the files", 1 to 5):
      7, and `available_from` one less, each with a note;
   4. ruling 2: Espiritu Santo (base 3) starts with `supply_t = 2120` in place
      of 960, with its note and working;
-  5. a note beside Shortland (base 7), which keeps no supply and no fuel.
+  5. a note beside Shortland (base 7), which keeps no supply and no fuel;
+
+and, since decision 0232, step 3 (the plan's items 5 to 7, the designer's
+yes of Nov 27, 2026), these lines added and no other:
+
+  6. in each file, `trial = "../../reference/trial.toml"`, next after its
+     `class_sides` line;
+  7. in each file, island 3, "Guadalcanal and Tulagi", of the places base 1
+     and base 4, after its island 2 (in 07b and 07c) or at the end of the
+     file (in 07_full_slice_submarines.toml);
+  8. in 07_full_slice_submarines.toml, which has no island, islands 1 and 2
+     at the end of the file, each line as 07b has it, before island 3.
 
 With `--check` it writes nothing: it says whether each file kept is byte for
 byte the one it would make, whether the folder holds anything else, and exits
@@ -65,6 +76,12 @@ HEADER = '''# THE TABLE'S 39 DAYS UNDER DECISION 0224'S RULINGS OF NOV 23, 2026.
 #   not a stock (data/oob/gaps.csv holds the two entries for espiritu-santo).
 #   Its fuel stays 600 t, a placeholder (ruling 3).
 #
+#   Decision 0232, step 3: the line `trial = "../../reference/trial.toml"` is
+#   added next after `class_sides`; island 3, "Guadalcanal and Tulagi" (base 1,
+#   then base 4), is added after island 2 (at the end of the file in the
+#   full-slice copy, which also gains islands 1 and 2 as its sister files have
+#   them). An island is map data and the trial a key: no game moves.
+#
 # Do not edit by hand: change the script or the file it is made from and make
 # it again.
 #
@@ -94,6 +111,14 @@ NOTE_BASE_7 = (
     '# Decision 0224, ruling 1: Shortland keeps no supply and no fuel (no row gives it a stock:\n'
     '# the two entries of data/oob/gaps.csv for shortland-islands say so). The runs that\n'
     '# started here start at Rabaul, a named simplification.\n')
+
+
+CLASS_SIDES = 'class_sides = "../../reference/class_sides_full_slice.csv"\n'
+TRIAL = 'trial = "../../reference/trial.toml"\n'
+ISLAND_1 = ('[[island]]\nnumber = 1\nname = "Guadalcanal"\nplaces = [{ base = 1 }]\n')
+ISLAND_2 = ('[[island]]\nnumber = 2\nname = "Tulagi"\nplaces = [{ base = 4 }]\n')
+ISLAND_3 = ('[[island]]\nnumber = 3\nname = "Guadalcanal and Tulagi"\n'
+            'places = [{ base = 1 }, { base = 4 }]\n')
 
 
 def header_end(lines):
@@ -147,6 +172,19 @@ def make(source_text, source_name):
                                       NOTE_RUN.format(old=old, why=why) + f'available_from = {old - 1}', 1)
         new_block = new_block.replace('at_base = 7', 'at_base = 2', 1).replace('home_port = 7', 'home_port = 2', 1)
         body = body[:found.start()] + new_block + body[stop:]
+    # the trial's figures (decision 0232, step 3)
+    if body.count(CLASS_SIDES) != 1:
+        raise SystemExit(f'{source_name}: no single class_sides line')
+    body = body.replace(CLASS_SIDES, CLASS_SIDES + TRIAL, 1)
+    # the islands
+    if source_name.startswith('07_'):
+        if '[[island]]' in body or not body.endswith('\n'):
+            raise SystemExit(f'{source_name}: not as the islands read it')
+        body += '\n' + ISLAND_1 + '\n' + ISLAND_2 + '\n' + ISLAND_3
+    else:
+        if body.count(ISLAND_2) != 1 or body.count('[[island]]') != 2:
+            raise SystemExit(f'{source_name}: island 2 is not as the island reads it')
+        body = body.replace(ISLAND_2, ISLAND_2 + '\n' + ISLAND_3, 1)
     return head + body
 
 

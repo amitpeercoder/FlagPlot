@@ -117,3 +117,15 @@ data/scenarios/midway/01c_midway.toml resolve same run same
 data/scenarios/midway/01d_midway.toml resolve same run same
 27 overlays, 0 differing
 ```
+
+## Built: step E
+
+`parse_via`, about 2,450 lines in `scenario/build.rs`, is cut into one function for each table, in the order it had; `build.rs` is now 175 lines (reading the file, calling each stage, making the world and the `Scenario`). The stages are in `scenario/build/`: `figures` (the map and the reference, trial and submarine files, and the list of data files), `bases`, `ships` (task forces, ships, the check of the file of sides, radio silence is in `commanders`), `land`, `air` (groups, replacements, arrivals), `supply` (lines, streams of men), `orders` (orders and commands), `islands`, `submarines`, `enters` (units that enter later), `commanders` (doctrine, command levels, commanders, radio silence) and `beliefs` (contacts, estimates, waters, what each side believed). Each body is the old text moved whole; what the move forced is the parameters (`file`, `path`, `truth`, `ref_data`, `map`, `world`) and a `fail` closure at the top of each. The order of the tables built and checked is unchanged, so a file with two faults reports the same one. No public name, error text, hash or baseline moved. The misplaced doc comment above `available_day` is not mended (the record does not ask, and `mod.rs` is outside this step's files).
+
+**Checks.**
+
+- `cargo test -p sim-data -- --list`, test names by their last part and sorted, before and after: 321 and 321, identical.
+- `sim-cli resolve` and `sim-cli hash` of every one of the 263 files under `data/scenarios`, old build against new, output and exit code compared: 263 files, 0 differ.
+- `sh scripts/compare-scenarios.sh --jobs 4`: 254 runs compared, 254 the same, 0 differ.
+- `cargo fmt --all -- --check`: no output. `cargo clippy --workspace --all-targets -- -D warnings`: no warning.
+- `cargo test --profile checked --workspace`: every program ok, none failed (`scenarios` 3,092 passed and 21 ignored; `sim-data`'s library 306; `sim-cli` 431 and 167); nothing regenerated.

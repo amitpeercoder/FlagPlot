@@ -144,7 +144,8 @@
       },
       "islands": [
         {"number": 1, "name": "Guadalcanal", "base": 1},
-        {"number": 2, "name": "Tulagi", "base": 4}
+        {"number": 2, "name": "Tulagi", "base": 4},
+        {"number": 3, "name": "Guadalcanal and Tulagi", "base": 1, "places": [1, 4]}
       ],
       "directives": {
         "allied": "table/directives/guadalcanal_allied.json",
