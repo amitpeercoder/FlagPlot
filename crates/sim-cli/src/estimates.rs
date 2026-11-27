@@ -65,14 +65,10 @@ pub fn estimated_classes_of(text: &str, path: &Path) -> Result<Vec<EstimatedClas
     let mut classes = Vec::new();
     for name in names {
         let class_path = folder.join(&name);
-        let (ref_data, marked) =
+        let (loaded, marked) =
             sim_data::load_ship_classes_marked(&class_path).map_err(|e| e.to_string())?;
         for (id, figures) in marked {
-            let name = ref_data
-                .ship_classes
-                .get(&id)
-                .map(|c| c.name.clone())
-                .unwrap_or_default();
+            let name = loaded.get(&id).map(|c| c.name.clone()).unwrap_or_default();
             classes.push(EstimatedClass {
                 id,
                 name,

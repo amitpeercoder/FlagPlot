@@ -69,7 +69,7 @@ fn world(tweak: impl FnOnce(&mut TruthState)) -> World {
     }
     map.add_land_link(P, Q).expect("link");
     map.add_land_link(P, R).expect("link");
-    let mut ref_data = RefData::default();
+    let mut ref_data = RefData::for_tests();
     ref_data.port_sizes.insert(
         0,
         PortSize {
@@ -83,7 +83,7 @@ fn world(tweak: impl FnOnce(&mut TruthState)) -> World {
         },
     );
     ref_data.ground = Some(GroundFigures::FIRST);
-    ref_data.search = Some(crate::refdata::SearchFigures::from_search_toml());
+    ref_data.search = crate::refdata::SearchFigures::from_search_toml();
     let mut truth = TruthState::default();
     for base in [
         base(1, Side::Japanese, P, 1000),

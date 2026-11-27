@@ -26,8 +26,7 @@ impl World {
     /// rest are kept to be told at the close of the day before their day.
     /// What was kept before is replaced, so that a world made again from the
     /// same scenario holds the same. Fails, changing nothing, if the game
-    /// has begun, if an entry is off the map or has day 0, or if there are
-    /// no search figures (belief is written with them). An error names the
+    /// has begun, or if an entry is off the map or has day 0. An error names the
     /// entry.
     pub fn hold_suspected_waters(&mut self, entries: Vec<WatersWaiting>) -> Result<(), SimError> {
         if self.truth.day > 0 {
@@ -38,11 +37,7 @@ impl World {
         if entries.is_empty() {
             return Ok(());
         }
-        let Some(search) = self.ref_data.search.clone() else {
-            return Err(SimError::InvalidSetup(
-                "there are suspected waters but no search figures".to_string(),
-            ));
-        };
+        let search = self.ref_data.search.clone();
         for entry in &entries {
             let describe = || {
                 format!(
@@ -85,9 +80,7 @@ impl World {
         if self.truth.waters_waiting.is_empty() {
             return;
         }
-        let Some(search) = self.ref_data.search.clone() else {
-            return;
-        };
+        let search = self.ref_data.search.clone();
         let (due, later): (Vec<WatersWaiting>, Vec<WatersWaiting>) =
             std::mem::take(&mut self.truth.waters_waiting)
                 .into_iter()

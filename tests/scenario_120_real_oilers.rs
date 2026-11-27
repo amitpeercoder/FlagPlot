@@ -223,7 +223,7 @@ fn raw_rows(path: &Path) -> BTreeMap<u32, BTreeMap<String, String>> {
 /// A class as the engine's own loader reads it from the class file.
 fn engine_class(file: &str, id: u32) -> ShipClass {
     let data = sim_data::load_ship_classes(&reference(file)).expect("the class file loads");
-    data.ship_classes[&ShipClassId::new(id)].clone()
+    data[&ShipClassId::new(id)].clone()
 }
 
 /// The rows of a sources file: the class id, the figure, then the row.

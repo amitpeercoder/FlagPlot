@@ -73,7 +73,26 @@ fn world() -> World {
         map.insert(Hex::new(q, 0), HexData::open_sea());
     }
     map.insert(Hex::new(20, 0), HexData::open_sea());
-    let mut ref_data = RefData::default();
+    // The two figures every game has, from the frozen files (decision 0236).
+    let frozen =
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data/reference/step1");
+    let mut ref_data = RefData {
+        ship_classes: Default::default(),
+        port_sizes: Default::default(),
+        aircraft_types: Default::default(),
+        search: sim_data::load_search_figures(&frozen.join("search.toml"))
+            .expect("the frozen search figures load"),
+        surface_combat: sim_data::load_surface_combat_figures(&frozen.join("surface_combat.toml"))
+            .expect("the frozen surface combat figures load"),
+        air_combat: None,
+        air_upkeep: None,
+        fatigue: None,
+        air_supply: None,
+        ground: None,
+        reports: None,
+        class_sides: None,
+        submarines: None,
+    };
     ref_data.port_sizes.insert(
         0,
         PortSize {

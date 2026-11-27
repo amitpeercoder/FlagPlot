@@ -641,13 +641,13 @@ mod tests {
                 map.insert(Hex::new(q, r), HexData::open_sea());
             }
         }
-        let mut ref_data = RefData::default();
+        let mut ref_data = RefData::for_tests();
         ref_data.ship_classes.insert(transport().id, transport());
         ref_data.ground = Some(GroundFigures {
             handling_t_per_man: Fixed::ONE,
             daily_supply_t_per_man: Fixed::ONE,
             unfed_loss_share_per_day: Fixed::ONE,
-            // No search figures here, so no ground report (decision 0092).
+            // No ground report here (decision 0092).
             report_error: None,
             reconnaissance_error: None,
             ..crate::refdata::GroundFigures::FIRST

@@ -871,9 +871,9 @@ fn ctx() -> &'static Ctx {
             .collect();
         Ctx {
             map: scenario.world.map().clone(),
-            search: data.search.clone().expect("search figures"),
+            search: data.search.clone(),
             air: data.air_combat.clone().expect("air combat figures"),
-            surface: data.surface_combat.clone().expect("surface combat figures"),
+            surface: data.surface_combat.clone(),
             types: data
                 .aircraft_types
                 .values()

@@ -84,8 +84,8 @@ pub(crate) fn bombardment_target_of(
 }
 
 /// Whether `force` has a bombardment to make in `hex` (decision 0096, 2):
-/// the phase would have it bombard a base there, the figures the phase needs
-/// are loaded, and a ship of it can fire, that is, would fire a shell by the
+/// the phase would have it bombard a base there, and a ship of it can fire,
+/// that is, would fire a shell by the
 /// gun rule of the phase. It reads the force, its ships, the figures and the
 /// enemy bases on the map (`enemy_base_at`, see [`bombardment_target_of`]).
 pub(crate) fn has_bombardment_work(
@@ -94,9 +94,7 @@ pub(crate) fn has_bombardment_work(
     hex: Hex,
     enemy_base_at: &dyn Fn(Hex) -> Option<BaseId>,
 ) -> bool {
-    let Some(surface) = ground.ref_data.surface_combat.as_ref() else {
-        return false;
-    };
+    let surface = &ground.ref_data.surface_combat;
     let figures = surface.bombardment;
     if ground.ref_data.air_combat.is_none()
         || bombardment_target_of(force, hex, enemy_base_at).is_none()
@@ -490,17 +488,10 @@ impl World {
     }
 
     /// The shore bombardment phase of the night pulse (decision 0092, 1).
-    /// Does nothing without the bombardment figures and the air combat
+    /// Does nothing without the air combat
     /// figures, whose table says where a hit lands.
     pub(crate) fn bombard_bases(&mut self, day: u32, pulse: Pulse) {
-        let Some(figures) = self
-            .ref_data
-            .surface_combat
-            .as_ref()
-            .map(|surface| surface.bombardment)
-        else {
-            return;
-        };
+        let figures = self.ref_data.surface_combat.bombardment;
         if self.ref_data.air_combat.is_none() {
             return;
         }
@@ -532,11 +523,7 @@ impl World {
             .air_combat
             .clone()
             .expect("checked by the caller");
-        let surface = self
-            .ref_data
-            .surface_combat
-            .clone()
-            .expect("checked by the caller");
+        let surface = self.ref_data.surface_combat.clone();
         let force = &self.truth.task_forces[&force_id];
         let (side, hex) = (force.side, force.position());
         let ships: Vec<ShipId> = force.ships.iter().copied().collect();
@@ -748,11 +735,7 @@ impl World {
         // The base's side sights the force (decision 7), on the first firing
         // ship's stream after its hits and where they landed.
         let base_side = self.truth.bases[&base].side;
-        let search = self
-            .ref_data
-            .search
-            .clone()
-            .expect("World::new requires search figures with surface combat figures");
+        let search = self.ref_data.search.clone();
         let afloat: Vec<ShipId> = self.truth.task_forces[&force_id]
             .ships
             .iter()
@@ -831,11 +814,7 @@ impl World {
         figures: &BombardmentFigures,
         causes: Vec<Cause>,
     ) {
-        let search = self
-            .ref_data
-            .search
-            .clone()
-            .expect("World::new requires search figures with surface combat figures");
+        let search = self.ref_data.search.clone();
         let mut stream = self.rng_pair(
             day,
             Some(pulse),
@@ -998,7 +977,7 @@ mod tests {
                 map.insert(Hex::new(q, r), HexData::open_sea());
             }
         }
-        let mut ref_data = RefData::default();
+        let mut ref_data = RefData::for_tests();
         for class in classes() {
             ref_data.ship_classes.insert(class.id, class);
         }
@@ -1017,8 +996,8 @@ mod tests {
                 self_sealing_tanks: false,
             },
         );
-        ref_data.search = Some(SearchFigures::from_search_toml());
-        ref_data.surface_combat = Some(SurfaceCombatFigures::from_surface_combat_toml());
+        ref_data.search = SearchFigures::from_search_toml();
+        ref_data.surface_combat = SurfaceCombatFigures::from_surface_combat_toml();
         ref_data.air_combat = Some(AirCombatFigures::from_air_combat_toml());
         ref_data.ground = Some(GroundFigures::FIRST);
         ref_data.port_sizes.insert(

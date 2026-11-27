@@ -1022,9 +1022,11 @@ pub enum RejectReason {
     Held(crate::command::HoldTarget),
     /// A strike contact age is below 0 or not below the scenario's contact
     /// drop age (decision 0114, 3). `max` is the oldest age that is not
-    /// dropped, one less than `search.toml: contact_drop_age_pulses`; it is
-    /// `None` in a scenario with no search figures, where only a negative
-    /// age is refused. Added at the end of the enum.
+    /// dropped, one less than `search.toml: contact_drop_age_pulses`. It is
+    /// always given since decision 0236 (every scenario has search figures);
+    /// the case of `None` is kept for the shape of the reason, which is in
+    /// the log, the hash and the export, and no world makes it. Added at the
+    /// end of the enum.
     StrikeContactAgeOutOfRange { pulses: i64, max: Option<u32> },
     /// A held share is not between 0 and 1 (decision 0114, 11). Added at
     /// the end of the enum.

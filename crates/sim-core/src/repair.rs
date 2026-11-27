@@ -107,7 +107,7 @@ pub(crate) fn yard_plan_in(
     force: TaskForceId,
 ) -> Option<YardPlan> {
     let force = truth.task_forces.get(&force)?;
-    let figures = ref_data.surface_combat.as_ref()?;
+    let figures = &ref_data.surface_combat;
     let base = yard_port_in(truth, force)?;
     let passage_days = truth.bases[&base].yard_passage_days?;
     let ships: Vec<(ShipId, u32)> = force
@@ -137,8 +137,7 @@ impl World {
 
     /// What a yard order given to `force` now would do: its port, passage,
     /// each ship's days of repair and the days away. `None` if the force does
-    /// not exist, has no ship afloat in it, has no port for the yard or the
-    /// scenario has no surface combat figures. Reads the state as it stands
+    /// not exist, has no ship afloat in it or has no port for the yard. Reads the state as it stands
     /// and checks nothing else (the order's checks are `check_order`'s).
     pub fn yard_plan(&self, force: TaskForceId) -> Option<YardPlan> {
         yard_plan_in(&self.truth, &self.ref_data, force)
@@ -344,9 +343,7 @@ impl World {
     /// that a bank cleared with no degraded system left records one of 0
     /// points.
     pub(crate) fn repair_in_port(&mut self, day: u32) {
-        let Some(figures) = self.ref_data.surface_combat.clone() else {
-            return;
-        };
+        let figures = self.ref_data.surface_combat.clone();
         let mut allowance: BTreeMap<BaseId, Fixed> = self
             .truth
             .bases

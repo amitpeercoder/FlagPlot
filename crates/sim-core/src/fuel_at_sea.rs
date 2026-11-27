@@ -56,10 +56,7 @@ impl FuellingPulse {
 impl World {
     /// The figures of fuelling at sea, if the scenario's figures give them.
     fn fuelling_figures(&self) -> Option<FuellingAtSeaFigures> {
-        self.ref_data
-            .surface_combat
-            .as_ref()
-            .and_then(|figures| figures.fuelling_at_sea)
+        self.ref_data.surface_combat.fuelling_at_sea
     }
 
     /// Whether `ship` is afloat and her class has the mark (decision 0201,

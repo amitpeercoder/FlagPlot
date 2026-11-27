@@ -726,7 +726,7 @@ fn submarine_report(hex: Hex, event: u32) -> crate::belief::Report {
 /// does, so that the world can be hashed.
 fn tell(world: &mut World, side: Side, report: &crate::belief::Report) {
     use crate::pictures::Holders;
-    let figures = world.ref_data.search.clone().expect("figures");
+    let figures = world.ref_data.search.clone();
     world.apply_report(side, report, &Holders::Every, &figures);
     world.age_contacts_at_end_of_pulse(1, Pulse::Night);
 }
@@ -850,7 +850,7 @@ fn a_report_of_nothing_there_removes_no_report_of_a_submarine_in_the_world() {
     use crate::belief::{Report, SightingReport};
     use crate::pictures::Holders;
     let mut world = world_with(vec![boat(1)]);
-    let figures = world.ref_data.search.clone().expect("figures");
+    let figures = world.ref_data.search.clone();
     tell(&mut world, Side::Allied, &submarine_report(hx(5, 0), 3));
     // A contact of ships at the same hex, then a strike that found nothing
     // there: the contact goes, the report of a submarine stays.
@@ -1177,7 +1177,7 @@ fn waters_are_hashed_only_where_there_are_some_and_each_field_counts() {
 }
 
 #[test]
-fn waters_are_refused_off_the_map_on_day_0_with_no_search_figures_or_after_day_1_begins() {
+fn waters_are_refused_off_the_map_on_day_0_or_after_day_1_begins() {
     let mut world = world_with(Vec::new());
     let mut off = waters(Side::Allied, 1);
     off.hex = hx(50, 0);
@@ -1188,11 +1188,6 @@ fn waters_are_refused_off_the_map_on_day_0_with_no_search_figures_or_after_day_1
     // A refusal changes nothing.
     assert!(world.truth.waters_waiting.is_empty());
     assert!(held_waters(&world, Side::Allied).is_empty());
-    let mut bare = world_with(Vec::new());
-    bare.ref_data.search = None;
-    assert!(bare
-        .hold_suspected_waters(vec![waters(Side::Allied, 1)])
-        .is_err());
     world.resolve_day().expect("day 1");
     assert!(world
         .hold_suspected_waters(vec![waters(Side::Allied, 1)])

@@ -36,10 +36,7 @@ pub(crate) use orders::SideSpec;
 /// the game by `World::set_objectives`.
 ///
 /// `days` is the scenario's length, which is the horizon unless the table
-/// states a longer one. `has_surface_combat` says whether the days of repair
-/// can be worked out: `ships_out_of_action` reads the yard figures in the
-/// surface combat file (decision 0088, "As built": the loader refuses the
-/// objective without them).
+/// states a longer one.
 /// A unit's day from the scenario (decision 0140, 1): a whole number from
 /// 1, or none.
 fn available_day(day: Option<u32>, unit: impl std::fmt::Display) -> Result<Option<u32>, String> {
