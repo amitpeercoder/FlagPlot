@@ -2,13 +2,13 @@
 
 Status: a plan by the architect, written on Nov 27, 2026, on Amit's delegation of that day (decision 0233's Status has his words). It is the record for items 4 and F of the programme in `docs/open-work.md`. Nothing is built.
 
-Summary: A scenario file may state `built_on = "another.toml"` and then holds only what differs: `sim-data` reads the file below, lays this one over it and loads the result as it loads any scenario. The 58 scenario files that six Python generators make become such files, each shown to resolve to the table of the file it replaces and to play the same game day for day before that file goes; the generators are then deleted. The other 205 files stay as they are. Before it, `scenario.rs` is split by table as a pure move. A saved game still records the hash of the file it names, and now also the hash of each file that one is built on. No rule of the game changes.
+Summary: A scenario file may state `built_on = "another.toml"` and then holds only what differs: `sim-data` reads the file below, lays this one over it and loads the result as it loads any scenario. The 58 scenario files that nine Python scripts in six folders make become such files, each shown to resolve to the table of the file it replaces and to play the same game day for day before that file goes; the generators are then deleted. The other 205 files stay as they are. Before it, `scenario.rs` is split by table as a pure move. A saved game still records the hash of the file it names, and now also the hash of each file that one is built on. No rule of the game changes.
 
-Standing: Ruled by the architect on Nov 27, 2026, on Amit's delegation; class 2 (the split of `scenario.rs`, class 1); to be built
+Standing: Ruled by the architect on Nov 27, 2026, on Amit's delegation; class 2, every step, the split of `scenario.rs` among them; to be built
 
 ## Why
 
-`data/scenarios` holds 263 files and 212,996 lines, of which 9,567 are distinct. More than half of the lines, 113,746, are in six folders whose files are one scenario told again with a name, a set of orders, an oiler, a ground figures file or some boats changed. They are kept alike by 3,123 lines of Python under `scripts/`, which copy text and are run by the tests with `--check`. So a scenario has two sources, its text and its script; a reader of a 2,400 line file cannot see the twenty lines that make it itself; and a change to a base rewrites up to sixteen files. The loader that reads them, `crates/sim-data/src/scenario.rs`, is one file of 10,550 lines, 5,934 of them tests.
+`data/scenarios` holds 263 files and 212,996 lines, of which 9,567 are distinct. More than half of the lines, 113,746, are in six folders whose files are one scenario told again with a name, a set of orders, an oiler, a ground figures file or some boats changed. They are kept alike by nine Python scripts in six folders under `scripts/`, 2,754 lines, which copy text and are run by the tests with `--check`. So a scenario has two sources, its text and its script; a reader of a 2,400 line file cannot see the twenty lines that make it itself; and a change to a base rewrites up to sixteen files. The loader that reads them, `crates/sim-data/src/scenario.rs`, is one file of 10,550 lines, 5,934 of them tests.
 
 ## What was weighed
 
@@ -35,8 +35,9 @@ The pull request that builds the loader (step B) moves this section to `docs/rul
 9. **`built_on` is not a reference file.** It is read where it is named, through the same `Source` as every other file, and `LoadOptions::reference_root` does not move it.
 10. **The file built on is a whole scenario.** It loads and runs alone. No file is "only a base": whether a loop over `data/scenarios/*.toml` walks a file is decided, as before, by the folder it is in (decision 0072), for an overlay and for the file it is built on alike. An overlay directly in `data/scenarios` is a scenario the loops run; none is made by this record.
 11. **What a saved game records.** `Scenario::data_files` ends with the files the scenario is built on, nearest first, after every file listed today. A saved game, a game file, a batch file and an export therefore record the hash of the bytes of the file named, as now, and the hash of the bytes of each file below it, and a saved game is refused when any of them has changed. A pack holds them too, with nothing added to `pack_of`. No version moves: a file with no `built_on` records what it recorded.
-12. **`sim-cli resolve FILE`** prints the resolved scenario as TOML on standard output, and on standard error the chain it read. It builds no world and reads no file but the chain. It is the umpire's tool, for reading an overlay whole and for the proof below.
-13. **Where an overlay may not be.** No file in `data/scenarios/step2-frozen`, no file of a proof (`orders-inside-proof`, `second-proof`, `stage-2b-proof`, `stage-3-proof`, `stage-4-proof`, `staff`) and no scenario a recorded game names is an overlay. Any of them may be built on: that reads it and changes nothing in it.
+12. **The resolved text.** `sim_data::Scenario::resolved_text(source, path)` gives the resolved scenario as TOML: it holds no `built_on`, and every file name in it is written for the folder of the file asked for (item 8), so the text put in that folder, or handed to `from_text` with that path, loads as the overlay does. `sim_data::Scenario::built_on_chain(source, path)` gives the files read, the one asked for first. **`sim-cli resolve FILE`** only prints the first on standard output and the second on standard error. Neither builds a world or reads a file but the chain. It is the umpire's tool, for reading an overlay whole and for the proof below.
+13. **`from_text`.** Text that states `built_on`, handed to `Scenario::from_text` or `from_text_with`, is laid over the file it names, read relative to the path given, as a file at that path would be. Text with none is read as before.
+14. **Where an overlay may not be.** No file in `data/scenarios/step2-frozen`, no file of a proof (`orders-inside-proof`, `second-proof`, `stage-2b-proof`, `stage-3-proof`, `stage-4-proof`, `staff`) and no scenario a recorded game names is an overlay. Any of them may be built on: that reads it and changes nothing in it.
 
 ## Rule card
 
@@ -48,14 +49,15 @@ No rule of the game is added, changed or removed. No state, draw, event, order o
 
 ## Its class
 
-- **Step A, the split of `scenario.rs`: class 1.** A pure move; decision 0233's item 7 is its test.
-- **Steps B to E: class 2,** "a loader or tool change with a stated equality to check". This record is their record. The statements are in the doc comment of `tests/scenarios_built_on_another.rs`, written before any code. The architect reads each pull request before it is merged. No game of a closed proof and no validation measure moves; if one does, the class has risen and the build stops (0233, 10).
+- **Every step is class 2,** and this record is its record. The architect reads each pull request before it is merged.
+- **Step A, the split of `scenario.rs`,** changes lines under a crate's `src`, which decision 0233's item 7 leaves off the list of class 1: it is "a refactoring of a crate's `src` with every hash as it is". Step E is the same.
+- **Steps B, C and D** are "a loader or tool change with a stated equality to check". A converted file is the same scenario as the file it replaces, by equality 1 below, so no scenario of record or for play is changed. A file that fails equality 1 would be a changed scenario: for that file the class rises to 3 and the build stops. The statements are in the doc comment of `tests/scenarios_built_on_another.rs`, written before any code. No game of a closed proof and no validation measure moves; if one does, the class has risen and the build stops (0233, 10).
 
 ## The proof that nothing is lost
 
 - **Step B (the loader).** Every file on `main` has no `built_on`, so: every golden file, pin, run baseline, recorded game, saved game fixture and the web check pass untouched, and the loader's own 5,934 lines of tests pass with no expected text changed.
 - **Steps C and D (each file converted), three equalities, made by `scripts/overlay-proof.sh REV`** with `REV` the commit the branch left `main` at, using the branch's own `sim-cli` on both trees:
-  1. `sim-cli resolve` of the overlay is byte for byte `sim-cli resolve` of the file as it was at `REV`. The loader is one function of the resolved table and the folder, so this alone gives the same world, script, commands, beliefs and data files.
+  1. `sim-cli resolve` of the overlay is byte for byte `sim-cli resolve` of the file as it was at `REV`. The loader is one function of the resolved table and the folder, so this alone gives the same world, script, commands and beliefs, read from the same reference files. The overlay's list of data files is that list and then the files it is built on (item 11).
   2. `sim-cli run` of the two prints the same text: the same hash and count of events for every day.
   3. The script lists each file with `same` or `DIFFERS` for each of the two, counts them, and exits 1 on any difference or if the count is not the step's. Its output goes into the as-built file.
 - **Held by tests that are not touched:** the pinned hashes of `tests/scenario_130/part_f.rs`, the boats tests' games, `pack_from_source`, `door`, the web check and `table/check_screen.py`.
@@ -69,7 +71,7 @@ All 55 files a live generator makes and marks "Do not edit by hand", and the thr
 | --- | --- | --- | --- |
 | `coral-sea` | `base_coral_sea_oilers` | `base_coral_sea` | `name`, `ship_classes`, `class_sides`, task force 6, ships 54 and 55 |
 | `coral-sea` | `base_coral_sea_both_oilers` | `base_coral_sea_oilers` | `name`, `ship_classes`, `class_sides`, task force 7, ship 56 |
-| `coral-sea` | `01a` to `01d`, `02a` to `02d`, `03a` to `03d` (12) | the base of its number | `name`, `[[command]]`, `[[order]]`; file d, `name` alone |
+| `coral-sea` | `01a` to `01d`, `02a` to `02d`, `03a` to `03d` (12) | the base of its number | `name`, `[[command]]`; file d, `name` alone |
 | `five-days` | `base_eastern_solomons_oilers` | `base_eastern_solomons` | `name`, `ship_classes`, `class_sides`, task force 6, ships 44 and 45 |
 | `five-days` | `01a` to `01d`, `02a` to `02d` (8) | the base of its number | `name`, `[[command]]`; file d, `name` alone |
 | `midway` | `01a` to `01d` (4) | `base_midway` | `name`, `[[command]]`; file d, `name` alone |
@@ -91,7 +93,7 @@ The eight "Do not edit by hand" files of frozen proofs counted in the 63 (`order
 
 ## The generators
 
-`scripts/coral-sea/` (three scripts), `scripts/five-days/make_files.py` and `make_oiler_files.py`, `scripts/midway/`, `scripts/table-boats/`, `scripts/table-copies/` and `scripts/table-rear-bases/` are deleted, each in the pull request that converts the last file it makes, and not before. `scripts/five-days/read_first_run.py` stays, frozen. `scripts/README.md` loses their line under "Live" and gains one line saying they were retired by this record and are in git before that commit. Records before 0233 that cite them are not edited.
+Nine scripts in six folders, 2,754 lines: `scripts/coral-sea/` (three), `scripts/five-days/make_files.py` and `make_oiler_files.py`, `scripts/midway/`, `scripts/table-boats/`, `scripts/table-copies/` and `scripts/table-rear-bases/`. They are deleted, each in the pull request that converts the last file it makes, and not before. `scripts/five-days/read_first_run.py` stays, frozen, and so do the two `make_arrangements.py` of the proofs. `scripts/README.md` loses their line under "Live" and gains one line saying they were retired by this record and are in git before that commit. Records before 0233 that cite them are not edited.
 
 Their `--check` said a file was its source with stated changes. In its place: the loader, by construction; statements R1 to R5 of `tests/scenarios_built_on_another.rs`; and each test that ran a script with `--check` loses that call.
 
@@ -101,6 +103,9 @@ Their `--check` said a file was its source with stated changes. In its place: th
 - (b) **Of a header** (the header says the game begins at 1800 on 5 May; it names the class that is estimated): read from the headers of the file and of every file it is built on, joined, nearest first, through one helper.
 - (c) **That two files are the same but for X,** byte for byte or line for line: withdrawn as a statement about bytes, and held as "the overlay states X and nothing else" (R3).
 - (d) **That a header names its script, or that the script's check passes:** withdrawn.
+- (e) **A test that reads the file's text, alters it and loads it with `from_text`** (scenarios 104, 106, 120, 121 and 123): it alters the resolved text (item 12), through the same helper as (a), and loads that with the file's own path. What it alters and what it expects stand.
+
+`crates/sim-cli/src/estimates.rs` reads a scenario's text itself and asks for `ship_classes`, which an overlay need not state. In step B it reads the class files of the resolved scenario through `sim-data`, and looks for the mark's words in the headers of the chain, joined as in (b): decision 0207's rule 12 is then "in its header or the header of a file it is built on" (statement L15).
 
 No expected number is touched by any of the four.
 
@@ -114,7 +119,7 @@ Every item moves whole. Nothing inside an item changes but what the move forces:
 
 | Step | Class | What | Waits for |
 | --- | --- | --- | --- |
-| A | 1 | `scenario.rs` split by table, a pure move | nothing |
+| A | 2 | `scenario.rs` split by table, a pure move | nothing |
 | B | 2 | The loader reads `built_on`; `data_files`; `sim-cli resolve`; `scripts/overlay-proof.sh`; the statements' tests on invented files; the rulebook section, the glossary, `layout.md`, `data-rules.md`, `commands.md` | A |
 | C | 2 | `coral-sea`, `five-days` and `midway` converted (27 files); their six scripts deleted | B |
 | D | 2 | `table-hunger`, `table-boats` and `table-rear-bases` converted (31 files, each chain reaching C's files); their three scripts deleted | C |
@@ -127,7 +132,7 @@ One developer at a time holds `crates/sim-data/src/scenario*`: A, then B, then E
 Every brief: work in a worktree; read this record and the doc comment of `tests/scenarios_built_on_another.rs`; change no statement and no expected number; a golden file, pin, baseline or recorded game that moves is a stop, not a remake; the three checks before a commit; the class and this record's number in the pull request's description; what was built goes in `docs/decisions/as-built/0234-a-scenario-built-on-another.md`.
 
 - **A.** Files: `crates/sim-data/src/scenario.rs` to `scenario/` as above, and nothing else. Steps: move the tests out first, then the types, building after each. Checks: the names of the tests of `cargo test -p sim-data -- --list`, read by their last part and sorted, are the same list before and after; a throwaway count shows the tokens of the old file and of the new files together, with white space and commas taken out, differ only in `use`, `mod`, visibility and `super::`; `cargo test --workspace` with nothing regenerated. Must not change: any line inside a function or a test, any public name, any error text.
-- **B.** Files: `crates/sim-data/src/scenario/` (a new `built_on.rs` for reading the chain and laying one table over another, and the few lines of `parse_via`'s caller that hand it the result), `crates/sim-cli` (the `resolve` command), `scripts/overlay-proof.sh`, `tests/scenarios_built_on_another.rs` with its entry in `tests/Cargo.toml`, the loader's tests of statements L1 to L14 on invented files held in a `Pack`, and the documents the table above names. Steps: a file with no `built_on` takes the old path, `toml::from_str` on its text, so its errors keep their lines; an overlay is laid as tables and deserialised from the result. Checks: the proof of step B above; `sim-cli resolve` of a file with no `built_on` parses back to that file's table. Must not change: `Scenario`'s public functions, `data_files` for a file with no `built_on`, any version.
+- **B.** Files: `crates/sim-data/src/scenario/` (a new `built_on.rs` for reading the chain and laying one table over another, and the few lines of `parse_via`'s caller that hand it the result), `crates/sim-cli` (the `resolve` command), `scripts/overlay-proof.sh`, `tests/scenarios_built_on_another.rs`, named as the package names its test files that day, `crates/sim-cli/src/estimates.rs`, the helpers `common::resolved_text(path)` and `common::headers(path)` in `tests/common`, the loader's tests of statements L1 to L16 on invented files held in a `Pack`, and the documents the table above names. Steps: `Scenario::resolved_text` and `Scenario::built_on_chain` are public functions of `sim-data` and `sim-cli resolve` only prints them; a file with no `built_on` takes the old path, `toml::from_str` on its text, so its errors keep their lines; an overlay is laid as tables and deserialised from the result. Checks: the proof of step B above; `sim-cli resolve` of a file with no `built_on` parses back to that file's table. Must not change: `Scenario`'s public functions, `data_files` for a file with no `built_on`, any version.
 - **C and D.** Files: the scenario files of the step, the scripts deleted, `scripts/README.md`, `docs/commands.md`, `table/scenarios.json`'s note (its paths stand), and the tests named above, changed only by readings (a) to (d). Steps: write each overlay from its generator's own account of what it changes; run `scripts/overlay-proof.sh`; only then delete the scripts and the `--check` calls. Checks: the proof's count is 27 for C and 31 for D, every line `same`; R1 to R5 pass; `web/check.mjs` and `table/check_screen.py` pass. Must not change: a path, a name of a scenario, any file outside the step's folders under `data/`, a file of the 205.
 - **E.** Files: `crates/sim-data/src/scenario/build.rs` and new files beside it. Checks: every test of the workspace with nothing regenerated. Must not change: the order in which tables are built and checked, so that a file with two faults reports the same one.
 

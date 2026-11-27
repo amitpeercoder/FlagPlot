@@ -3,8 +3,8 @@
 //! the game. The rule is decision 0234's "The format as planned", cited
 //! below by its item, and by its rulebook section once step B has moved it.
 //!
-//! This file holds no test until step B, which also names it in
-//! `tests/Cargo.toml`. The statements L are of the loader and are tested in
+//! This file holds no test until step B, which also names it as the
+//! package names its test files that day. The statements L are of the loader and are tested in
 //! `sim-data` on invented files held in a `Pack`; the statements R are of
 //! the repository's files and are tested here.
 //!
@@ -58,6 +58,16 @@
 //!      table; `resolve` of an overlay, written to a file in the overlay's
 //!      folder, loads to a scenario with the same hash at day 0, the same
 //!      script and the same commands (item 12).
+//! L15. `estimated_classes` of an overlay that states no `ship_classes`
+//!      gives the classes of the same scenario written out in full. The
+//!      check of decision 0207's rule 12 passes where the mark's words are
+//!      in the header of the overlay or of any file it is built on, and
+//!      fails where they are in none.
+//! L16. Text that states `built_on`, given to `from_text` with a path, loads
+//!      as a file of that text at that path. The resolved text of an
+//!      overlay states no `built_on`, and given to `from_text` with the
+//!      overlay's path loads to the same scenario as the overlay (items 12
+//!      and 13).
 //!
 //! The repository
 //!
@@ -68,7 +78,7 @@
 //!      `stage-2b-proof`, `stage-3-proof`, `stage-4-proof` or `staff`, and
 //!      no scenario a recorded game under
 //!      `crates/sim-cli/tests/recorded_games` names, states `built_on`
-//!      (item 13).
+//!      (item 14).
 //! R3.  Each converted file states `built_on`, the file decision 0234's
 //!      table "Which files convert" gives it, and beside it only the keys,
 //!      lists and ids that table gives its row. From step C for the 27
