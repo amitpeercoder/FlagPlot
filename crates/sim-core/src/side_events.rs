@@ -5522,27 +5522,11 @@ mod tests {
         rows
     }
 
-    /// The variant names of `EventKind`, read from the source.
+    /// The variant names of `EventKind`.
     fn event_kind_names() -> BTreeSet<String> {
-        let source = include_str!("events.rs");
-        let start = source
-            .find("pub enum EventKind {")
-            .expect("the enum is there");
-        let body = &source[start..];
-        let end = body.find("\n}\n").expect("the enum ends");
-        body[..end]
-            .lines()
-            .filter_map(|line| {
-                let rest = line.strip_prefix("    ")?;
-                if !rest.chars().next()?.is_ascii_uppercase() {
-                    return None;
-                }
-                Some(
-                    rest.chars()
-                        .take_while(|c| c.is_ascii_alphanumeric())
-                        .collect::<String>(),
-                )
-            })
+        EventKind::KINDS
+            .iter()
+            .map(|kind| kind.name.to_string())
             .collect()
     }
 

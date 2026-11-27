@@ -171,7 +171,7 @@ pub fn events(world: &World, side: Side) -> Vec<SideEventOut> {
                 .events()
                 .get(event.id)
                 .expect("a side's event is an event of the log");
-            let (kind, _) = describe(&source.kind, &key, (event.day, event.pulse));
+            let kind = source.kind.tag();
             let (data, cut) = describe_side(&event.kind, &key, (event.day, event.pulse));
             let pulse = event.pulse.map(Pulse::name);
             let cause_text: Vec<String> = causes
@@ -235,7 +235,7 @@ fn breakdown(breakdown: &SideBreakdown) -> BreakdownOut {
 fn describe_side(kind: &SideEventKind, key: &UmpireKey, at: (u32, Option<Pulse>)) -> (Data, bool) {
     let d = Data::new();
     match kind {
-        SideEventKind::Whole(kind) => (describe(kind, key, at).1, false),
+        SideEventKind::Whole(kind) => (describe(kind, key, at), false),
         SideEventKind::Salvo {
             round,
             firer,
