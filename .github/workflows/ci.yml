@@ -177,10 +177,12 @@ jobs:
 
       - name: Test
         run: |
-          mkdir -p nextest-extract
-          export SIM_CLI_PREBUILT="$PWD/nextest-extract/target/checked/sim-cli"
+          # Unpacked into the checkout itself, so that `target/checked` is
+          # where the build job had it: the paths `env!("CARGO_BIN_EXE_...")`
+          # baked into the tests point there.
+          export SIM_CLI_PREBUILT="$PWD/target/checked/sim-cli"
           cargo-nextest nextest run --profile ci --no-fail-fast \
-            --archive-file nextest.tar.zst --extract-to nextest-extract --workspace-remap . \
+            --archive-file nextest.tar.zst --extract-to . --extract-overwrite --workspace-remap . \
             --partition count:$(( ${{ matrix.shard }} + 1 ))/4 \
             -E 'not (package(sim-cli) and test(=timing::time_reports_its_sections_and_changes_nothing))'
 
