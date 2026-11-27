@@ -1118,6 +1118,9 @@ def home(args, load_chart):
         # A rung of the ladder (decision 0237) gives the page the measure its verdict is read by, as its entry has it.
         if "mission" in entry:
             common["mission"] = entry["mission"]
+        # The sizes the table offers for a dry run in this game, and the seconds each takes (decision 0232, item 22a), as its entry has them.
+        if "dry_run" in entry:
+            common["dry_run"] = entry["dry_run"]
         if hand.kind == "engine":
             command = [args.sim_cli, "mcp", file, "--seat", hand.person]
             if kept:

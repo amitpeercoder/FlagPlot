@@ -2409,6 +2409,8 @@ TWO_PLANS_ANSWER = {
 # plan), and the line run for run. It has these five keys and no other: `left_out` and `no_cost` are absent, not empty (D4, D5). A cost's
 # row is named "Your " or "The enemy’s " and the page's own name for the cost with its first letter small, the enemy's ending
 # ", in the dry run"; the row for men unfed, where it has one, is "Your men lost unfed" and "The enemy’s men lost unfed, in the dry run".
+# One exception (item 21, amended Nov 27, 2026): the enemy's first row is "The enemy’s men lost, in the dry run", not "men lost to the
+# enemy": the enemy's men are not lost to the enemy.
 # The architect's working: 5 and 7 of 8 runs kept, on days 6 to 11 and on day 9; 1 and 0 lost again; 2 and
 # 1 not won; a cost's row only where either column's highest is above nothing, so no row for men unfed on either side; a spread whose
 # lowest and highest are one figure is said as that figure.
@@ -2443,6 +2445,33 @@ REASONS_AND_HIS_NODES = [
     ({"serves": {"intent": 5}, "limits": None, "worked": "task_force:9 has fighting men aboard and intent:3 is in force for a place not yet the side's: it is the takes'."}, [3]),
     ({"serves": {"intent": 4}, "limits": [{"intent": 1, "kind": "forces"}], "worked": "intent:4 holds base:1 (Lunga) under intent:1 (the commander's); intent:30 has the force."}, []),
     ({"serves": {"intent": 1}, "limits": [{"intent": 2, "kind": "forces"}], "worked": "intent:3 waits for intent:2."}, [2, 3]),
+]
+
+
+# What the page says of a reason's words where they name a landing of his (item 28 as amended on Nov 27, 2026; R2). The engine's
+# sentences are as `sim-staff` writes them (island.rs, air.rs, cover.rs), read by the architect in the code; intent 3 is his landing and
+# intent 1 the order above it. ⟦3⟧ is the mark the page already makes a link from. Whose intent 3 is, is decided by its number before
+# any of this is read (item 27): the words after a handle known to be his are dropped, for the link says whose it is, and without it
+# the page's own "the commander's" to "your" would say "your landing at Lunga, your, is in force". The architect's: not to be changed.
+HIS_LANDING_READ = [
+    ("intent:3, the commander's, plans the place at (2,-4): the staff forms no take beside it.",
+     "⟦3⟧ stands: the staff forms no take beside it."),
+    ("intent:3, the commander's, plans the place at (2,-4), and its plan is cancelled: the staff forms no take beside it, and intent:1 cannot be controlled while the place is his to take.",
+     "⟦3⟧ stands, and its plan is cancelled: the staff forms no take beside it, and intent:1 cannot be controlled while the place is yours to take."),
+    ("intent:1 is to be done by the end of day 6; intent:3, the commander's take of the place at (2,-4), is to be done by the end of day 9, 3 days later. The staff carries out his date.",
+     "intent:1 is to be done by the end of day 6; ⟦3⟧ is to be done by the end of day 9, 3 days later. The staff carries out your date."),
+    ("intent:3, the commander's take under intent:1, waits for the plan of intent:1: it is preparing, and a take under an island is served once the island's plan is released, so the staff gives no order under intent:3 and its plan stays a draft.",
+     "⟦3⟧ waits for the plan of intent:1: it is preparing, and a take under an island is served once the island's plan is released, so the staff gives no order under ⟦3⟧ and its plan stays a draft."),
+    ("intent:3 is the commander's take under an island", "⟦3⟧ is your landing under an island"),
+    ("intent:3, the commander's, is in force and its plan is preparing", "⟦3⟧ is in force and its plan is preparing"),
+    ("intent:3, the commander's, is to be done by the end of day 9", "⟦3⟧ is to be done by the end of day 9"),
+    ("task_force:9 has fighting men aboard and intent:3 is in force for a place not yet the side's: it is the takes'.",
+     "task_force:9 has fighting men aboard and ⟦3⟧ is in force for a place not yet the side's: it is the takes'."),
+    ("intent:3 stands", "⟦3⟧ stands"),
+    # No landing of his is named: nothing is read, and "is his to take" is left as it is. intent:30 is not intent:3.
+    ("intent:4 holds base:1 (Lunga) under intent:1 (the commander's); intent:30 has the force.",
+     "intent:4 holds base:1 (Lunga) under intent:1 (the commander's); intent:30 has the force."),
+    ("intent:30, the commander's, plans the place at (5,5): the place is his to take.", "intent:30, the commander's, plans the place at (5,5): the place is his to take."),
 ]
 
 
@@ -2541,10 +2570,160 @@ def your_plan_on_the_order_paper(bridge):
          and N + 2; its tree has a `take_place` of the commander's, `standing`, at H4 and at H1, and no `take_place` of the staff's.
          The lines the page shows are still Lunga, then Tulagi.
     P11. The same with Tulagi's landing given "Risk: press" (the order at balanced) is refused with `of_batch.position` 4 (the order, the
-         landing at Tulagi, its forces, its risk), the reason being that the limit is wider than its parent allows; the page's
-         words for it begin "The landing at Tulagi: Risk: " and what follows is the engine's reason through the page's refusal words.
+         landing at Tulagi, its forces, its risk), the engine's reason being "the limit is wider than what its parent intent:N
+         allows" (`CommandRefusal::WiderThanParent`, crates/sim-core/src/command.rs). The page's words for it are exactly "The landing
+         at Tulagi: Risk: It is wider than the order above it allows.": `refusalWords` of the engine's reason gives "It is wider than
+         the order above it allows.", with no handle and no number in it (amended Nov 27, 2026: the engine's sentence names its parent
+         by handle, which the page's refusal words would have said as a number).
     Nothing is signed, and the game is put away."""
-    check(False, "not built: decision 0232, step 3, rule 27 (YOUR PLAN on the order's paper)")
+    import re
+    print("-- YOUR PLAN on the order paper: the part, its model in node, and the engine taking what it sends", flush=True)
+    text = page_text()
+    # P1
+    at = lambda i: text.index(f'id="{i}"')
+    check(at("p-limits") < at("p-plan") < at("p-acts") and re.search(r'<details[^>]*id="p-plan"[^>]*><summary[^>]*>YOUR PLAN</summary>', text) is not None,
+          "P1: the order paper has the fold p-plan after p-limits and before p-acts, whose head begins YOUR PLAN")
+    end = cut_function(text, "  function planEnd() {")
+    check("'control_island'" in end and "paper.kind !== 'staff'" in end and "WATCH" in end and "part.hidden = !end" in cut_function(text, "  function drawPlan(focusId) {"),
+          "P1: it is shown for a new order to the staff whose end is control_island, and for no other paper and not in a watched game")
+    check("'YOUR PLAN · '" in cut_function(text, "  function planHead() {") and "$('p-plan').hidden = true" in cut_function(text, "  function dropPaper() {") and "planReset();" in cut_function(text, "  function dropPaper() {"),
+          "P1: the head is YOUR PLAN and then what the model says of it; a paper put away puts it away")
+    # P2
+    check(all(w in text for w in ("function planLines(", "function writtenUnder(", "function planSummary(", "WRITE IT", "LEAVE IT TO THE STAFF", "left to the staff", "By the end of")),
+          "P2: the page holds planLines, writtenUnder and planSummary, and the words WRITE IT, LEAVE IT TO THE STAFF, left to the staff and By the end of")
+    check("Sails from" not in text, "P2: the page does not hold \"Sails from\": the forces' source is \"Supplied from\", as LIMITS has it")
+    # P4, in the page's text
+    check("There is no reading of this order to take its landings from." in text and "Every place is ours" not in text,
+          "P4: the page says there is no reading to take the landings from where there is none, and never that every place is ours")
+    ask = cut_function(text, "  function askPreview() {")
+    check("args.under = writtenUnder(previewIntent, planState.written)" in ask and "if (planEnd() && !landings.length) planState.lines = planLines(" in ask and "p.intent !== asked" in ask,
+          "P10: the staff is asked with the landings numbered from the order's number, the lines are taken from a reading of the bare order alone, and a changed number is asked again")
+    # The model in node
+    helpers = "".join(cut_function(text, f"  function {h}(") + "\n" for h in ("cleanName", "num", "hexDist", "hexWords"))
+    model = text[text.index("  var LIMITS_OFFERED"):text.index("  // ---- end of the written plan model ----")]
+    refusal = (text[text.index("  function cleanName"):text.index("  function sayIntent")] + text[text.index("  function orderWords"):text.index("  function nameOf(")]
+               + cut_function(text, "  function commas(n)") + "\n" + text[text.index("  var REFUSALS = ["):text.index("  // What the status line says of orders taken in")])
+    code = helpers + model + refusal + r"""
+const hexes = []; function dateOf(d) { return 'day ' + d; }
+let HX = [[2, -4], [3, -5]];
+function worked() {
+  const lunga = newLanding(HX[0]), tulagi = newLanding(HX[1]);
+  tulagi.lim.ships = { mode: 'only', task_forces: [10], ships: [] };
+  lunga.lim.not_before = 3; lunga.lim.after = { landing: HX[1] }; lunga.lim.risk = 'preserve'; lunga.by_day = 6;
+  return { lunga: lunga, tulagi: tulagi, written: [lunga, tulagi] };
+}
+function main(x) {
+  HX = [x.h1, x.h4]; M.hexNames[x.h1[0] + ',' + x.h1[1]] = 'Lunga'; M.hexNames[x.h4[0] + ',' + x.h4[1]] = 'Tulagi';
+  const out = {}, n = x.n;
+  out.lines = planLines(x.tree, 1); out.none = planLines(x.bare, 1); out.noTree = [planLines(null, 1), planLines(undefined, 1), planLines({}, 1)];
+  out.realLines = x.real ? planLines(x.real, n) : null; out.underLines = x.under_tree ? planLines(x.under_tree, n) : null;
+  let w = worked(), lines = [{ hex: HX[0] }, { hex: HX[1] }];
+  out.summary = { empty: planSummary(lines, []), worked: planSummary(lines, w.written), none: planSummary([], []), null_: planSummary(null, []), nullWritten: planSummary(null, w.written) };
+  out.under = writtenUnder(n, w.written);
+  w = worked(); w.lunga.lim.after = null; out.noAfter = writtenUnder(1, w.written).map(u => [u.hex, u.intent]);
+  w = worked(); w.tulagi.lim.risk = 'balanced'; out.balanced = writtenUnder(1, w.written)[0].limits; w.tulagi.lim.risk = null; out.balancedBack = writtenUnder(1, w.written)[0].limits;
+  out.bare = writtenUnder(1, [newLanding(HX[0])]);
+  // what a landing does not offer is not sent, if it is set
+  const odd = newLanding(HX[0]); odd.by_day = 5;
+  odd.lim.ships = { mode: 'none', task_forces: [], ships: [7] }; odd.lim.land_units = { mode: 'none', list: [4] }; odd.lim.air_groups = { mode: 'only', list: [3] }; odd.lim.submarines = { mode: 'only', list: [1] };
+  odd.lim.area = { q: 0, r: 0, dist: 2 }; odd.lim.targets = { kinds: ['carrier'], waters_first: true }; odd.lim.protected = [7]; odd.lim.in_place = true;
+  out.odd = writtenUnder(1, [odd]);
+  const odd2 = newLanding(HX[0]); odd2.lim.ships = { mode: 'only', task_forces: [10], ships: [7] }; odd2.lim.land_units = { mode: 'only', list: [4] }; odd2.lim.source = 1; out.odd2 = writtenUnder(1, [odd2]);
+  out.offered = LANDING_LINES.map(landingLineName); out.risks = LANDING_RISKS; out.offers = LIMITS_OFFERED.written_landing;
+  // After
+  w = worked(); out.afterTulagi = afterOptions(w.written, w.tulagi).map(o => o[1]); out.afterLunga = afterOptions(w.written, w.lunga).map(o => o[1]);
+  w.lunga.lim.after = null; out.afterTulagiBack = afterOptions(w.written, w.tulagi).map(o => o[1]);
+  const three = [newLanding(HX[0]), newLanding(HX[1]), newLanding([4, 4])]; three[0].lim.after = { landing: HX[1] }; three[1].lim.after = { landing: [4, 4] };
+  out.afterThree = afterOptions(three, three[2]).map(o => o[1]);
+  // The words the model gives
+  w = worked(); const landings = landingsSent(n, w.written);
+  out.words = [out.summary.worked, out.summary.none, out.summary.empty, landingCap(HX[0]), out.offered.join('|')].concat(out.afterTulagi, out.afterLunga, out.risks);
+  if (x.reason) {
+    const tul = newLanding(HX[1]); tul.lim.ships = { mode: 'only', task_forces: [10], ships: [] }; tul.lim.risk = 'press';
+    const sent = landingsSent(n, [tul]);
+    out.refusedWhy = refusalWords(x.reason); out.refusedAt = batchAt([], sent, x.position); out.refusedWords = batchWords(out.refusedAt, out.refusedWhy);
+    out.refusedOrder = batchWords(batchAt([], sent, 1), 'x'); out.refusedLanding = batchWords(batchAt([], sent, 2), 'x'); out.refusedLimit = batchWords(batchAt([{ key: 'risk' }], [], 2), 'x');
+    out.words.push(out.refusedWords);
+  }
+  return out;
+}
+"""
+    sub = lambda number, kind, parent, hex_=None, maker="staff": {"number": number, "kind": kind, "parent": parent, "hex": hex_, "maker": maker}
+    tree = {"sub_intents": [sub(2, "take_place", 1, [2, -4]), sub(3, "hold", 1), sub(4, "hold", 1), sub(5, "take_place", 1, [3, -5]), sub(6, "deny", 1, [2, -4]),
+                            sub(7, "ready_landing", 2, [2, -4]), sub(8, "ready_landing", 5, [3, -5]), sub(9, "take_place", 3, [9, 9])]}
+    bare = {"sub_intents": [sub(3, "hold", 1), sub(9, "take_place", 3, [9, 9])]}
+    said = run_in_node(code, {"tree": tree, "bare": bare, "n": 1, "h1": [2, -4], "h4": [3, -5], "reason": None, "position": 4})
+    # P3
+    check(said["lines"] == [{"hex": [2, -4]}, {"hex": [3, -5]}], f"P3: the bare reading's tree gives two lines, at those hexes, in the tree's order, and a hold, a deny, a ready_landing or a take under another gives none ({said['lines']})")
+    check(said["none"] == [] and said["noTree"] == [None, None, None], f"P3: a tree with no such take gives an empty list, and no tree gives null ({said['none']}, {said['noTree']})")
+    # P4
+    s = said["summary"]
+    check(s["empty"] == "The staff plans every landing." and s["worked"] == "Yours: the landing at Tulagi, the landing at Lunga." and s["none"] == "The staff plans no landing under this order: there is none to write."
+          and s["null_"] == "" and s["nullWritten"] == "", f"P4: the summary says every landing is the staff's, the worked draft's two in the order sent, that there is none to write, and nothing for no reading ({s})")
+    # P5
+    check(said["under"] == worked_under(1, (2, -4), (3, -5)), f"P5: writtenUnder of the worked draft is exactly the architect's `under` ({said['under']})")
+    check(said["noAfter"] == [[[2, -4], 2], [[3, -5], 3]], f"P5: with Lunga's After taken off the entries stand in the lines' order, Lunga numbered 2 and Tulagi 3 ({said['noAfter']})")
+    check(said["bare"] == [{"intent_kind": "take_place", "hex": [2, -4], "intent": 2, "limits": []}], f"P5: a landing with nothing set is sent with limits empty and no by_day ({said['bare']})")
+    check(not any(l["limit"] == "risk" for l in said["balancedBack"]) and said["balanced"][-1] == {"limit": "risk", "risk": "balanced"} and said["balanced"][:-1] == said["balancedBack"],
+          f"P5: a risk never set sends none; set to balanced it ends the landing's limits; put back to the staff's choice it sends none again ({said['balanced']})")
+    # P6
+    check(said["offered"] == ["Ships and forces", "Land units", "Supplied from", "Not before", "Wait for", "After", "Knowledge", "Risk", "By the end of"],
+          f"P6: a written landing offers these lines in this order ({said['offered']})")
+    unoffered = {"air_groups", "submarines", "area", "targets", "protected", "in_place"}
+    odd = said["odd"][0]
+    check(odd["limits"] == [] and odd["by_day"] == 5 and "none_of" not in json.dumps(said["odd"]) and not any(k in json.dumps(said["odd"]) for k in unoffered),
+          f"P6: single ships, air groups, boats, an area, targets, protected ships, from where they lie and \"none of\" set on a landing are not sent ({odd})")
+    check(said["odd2"][0]["limits"] == [{"limit": "forces", "task_forces": [10], "ships": [], "source": 1, "land_units": [4]}],
+          f"P6: a forces limit of a landing carries task forces, land units and a base, and no single ship ({said['odd2']})")
+    rows = cut_function(text, "  function landingRows(l) {") + cut_function(text, "  function planKind(l, key, items) {")
+    check(not any(k in rows for k in ("'air_groups'", "'submarines'", "'area'", "'targets'", "'protected'", "'in_place'", "'None'", "none_of", "limShips", "limAir", "M.air")) and "['only', 'Use only these']" in rows and "LANDING_RISKS.map" in rows,
+          "P6: the lines drawn offer no single ship, no air group, no area, no targets, no protected ships and no \"none of\": a list is the staff's choice or use only these")
+    check(said["risks"] == ["preserve", "balanced", "press"] and "[['', STAFFS]].concat(options)" in cut_function(text, "  function planChoose(l, key, options, value, change, reset, more) {"),
+          "P6: Risk offers four choices: the staff's choice, preserve, balanced and press")
+    check(said["offers"] == ["ships", "land_units", "source", "landing", "risk"], f"P6: the limits model's kind for a written landing offers these ({said['offers']})")
+    # P7
+    check(said["afterTulagi"] == [] and said["afterLunga"] == ["The landing at Tulagi"] and said["afterTulagiBack"] == ["The landing at Lunga"] and said["afterThree"] == [],
+          f"P7: a landing that waits for another, directly or through a third, is not offered to it, and is again once put back ({said['afterTulagi']}, {said['afterTulagiBack']}, {said['afterThree']})")
+    # P8
+    bad = [w for w in said["words"] if re.search(r"intent|task_force|\w:\d|\d", w)]
+    check(not bad, f"P8: no words the model gives hold a handle or a number of the engine's ({bad})")
+    # The engine
+    begin_ok = begin(bridge, "guadalcanal-39-days", "engine", "person") == {"ok": True}
+    check(begin_ok, "begun: the person Japanese, to read the hexes of Lunga and Tulagi")
+    placed = {b["base"]["handle"]: [b["place"]["q"], b["place"]["r"]] for b in Person(bridge.table).call("list_bases")["ok"]["bases"]}
+    h1, h4 = placed["base:1"], placed["base:4"]
+    check(post(bridge.table + "/new") == {"ok": True}, "the game is put away")
+    check(begin(bridge, "guadalcanal-39-days", "person", "engine") == {"ok": True}, "begun: the person Allied against the engine")
+    person = Person(bridge.table)
+    command = {"command": "set_intent", "intent_kind": "control_island", "island": 3}
+    shown = person.call("preview", command)["ok"]
+    n = shown["intent"]
+    # P9
+    real = run_in_node(code, {"tree": tree, "bare": bare, "n": n, "h1": h1, "h4": h4, "real": shown["with_change"]["tree"], "reason": None, "position": 4})
+    check(real["realLines"] == [{"hex": h1}, {"hex": h4}], f"P9: planLines of the real bare reading of island 3 gives two lines, at the hex of Lunga and then of Tulagi ({real['realLines']})")
+    # P10
+    under = worked_under(n, h1, h4)
+    drafted = person.call("preview", dict(command, under=under))["ok"]
+    sub_ = drafted["with_change"]["tree"]["sub_intents"]
+    takes = [(i["maker"], i.get("standing"), i["hex"]) for i in sub_ if i["kind"] == "take_place"]
+    check(drafted.get("status") != "refused" and drafted["intent"] == n and [u["intent"] for u in drafted["under"]] == [n + 1, n + 2],
+          f"P10: a preview of the order with the worked draft under it is not refused; its intent is {n}, its under numbers {n + 1} and {n + 2}")
+    check(sorted(takes) == sorted([("commander", True, h4), ("commander", True, h1)]) and not any(t[0] == "staff" for t in takes), f"P10: its tree has his takes standing at the hex of Tulagi and of Lunga, and none of the staff's ({takes})")
+    lines = run_in_node(code, {"tree": tree, "bare": bare, "n": n, "h1": h1, "h4": h4, "real": shown["with_change"]["tree"], "under_tree": drafted["with_change"]["tree"], "reason": None, "position": 4})
+    check(lines["underLines"] == [{"hex": h4}, {"hex": h1}] and lines["realLines"] == [{"hex": h1}, {"hex": h4}] and lines["under"] == worked_under(n, h1, h4),
+          f"P10: the reading with his landings under it gives its takes in the order sent, Tulagi and then Lunga ({lines['underLines']}); the lines the page shows are still those of the bare reading, Lunga and then Tulagi, and the page sends what the architect's `under` is")
+    # P11
+    press = [{"intent_kind": "take_place", "hex": h4, "intent": n + 1, "limits": [{"limit": "forces", "task_forces": [10], "ships": []}, {"limit": "risk", "risk": "press"}]}]
+    refused = person.call("preview", dict(command, under=press))["ok"]
+    check(refused.get("status") == "refused" and refused["of_batch"]["position"] == 4 and refused["reason"] == f"the limit is wider than what its parent intent:{n} allows",
+          f"P11: a landing at press under an order at balanced is refused at position 4, the engine's reason being the limit is wider than what its parent allows ({refused.get('of_batch')}, {refused.get('reason')})")
+    words = run_in_node(code, {"tree": tree, "bare": bare, "n": n, "h1": h1, "h4": h4, "reason": refused["reason"], "position": refused["of_batch"]["position"]})
+    check(words["refusedWhy"] == "It is wider than the order above it allows." and not re.search(r"\d|intent|:", words["refusedWhy"]),
+          f"P11: refusalWords of the engine's reason gives It is wider than the order above it allows., with no handle or number ({words['refusedWhy']})")
+    check(words["refusedWords"] == "The landing at Tulagi: Risk: It is wider than the order above it allows.", f"P11: the page's words for it are exactly that line, said at the landing's line ({words['refusedWords']})")
+    check(words["refusedOrder"] == "x" and words["refusedLanding"] == "The landing at Tulagi: x" and words["refusedLimit"] == "Risk: x",
+          f"P11: position 1 is the order, 2 the landing and a limit of the order its own line ({words['refusedOrder']}, {words['refusedLanding']}, {words['refusedLimit']})")
+    check(post(bridge.table + "/new") == {"ok": True}, "nothing was signed, and the game is put away")
 
 
 def the_draft_is_read_and_signed_as_one(bridge):
@@ -2562,11 +2741,107 @@ def the_draft_is_read_and_signed_as_one(bridge):
         no `parent`, whose `goes_with` names the other six. The page's own
         function for SIGNED, run in node on that answer, makes one line of them: it says the order as the page says it, then
         "Yours: the landing at Tulagi, the landing at Lunga.", and holds no handle or number of the engine's. No entry with a `parent`,
-        and no limit of one, is a line of its own.
+        and no limit of one, is a line of its own. The limits the line says are the order's own and no other: those `set_limit`
+        entries whose `intent` is N. This order has none, so nothing stands between the order's words and "Yours:" but the page's
+        mark between two parts of a line: no limit of a landing (Tulagi's forces; Lunga's Not before, After and Risk) is said as
+        the order's (made exact Nov 27, 2026: `goes_with` of the order names the landings' limits too).
     S4. One `take_back` of that entry's place leaves `queued` empty.
-    S5. The worked draft with the order's own risk at press: `limits_queued` is 1, and SIGNED's line says the risk before "Yours:".
+    S5. The worked draft with the order's own risk at press: `limits_queued` is 1, and SIGNED's line says the risk before "Yours:",
+        once, as press, and says no other limit before it (Lunga's "Risk: preserve" is not the order's).
+    S6. (New, Nov 27, 2026.) THE ORDERS' Signed list holds no entry with a `parent`: a landing is not listed as an order. The page's
+        `signedOrders`, in node on S3's queue, gives one entry, the order's; and that order's row in THE ORDERS says, as its limits,
+        the order's own alone, as S3 and S5 have SIGNED say them.
     The game is put away."""
-    check(False, "not built: decision 0232, step 3, rule 28 (the draft read and signed as one)")
+    import re
+    print("-- the draft read and signed as one: one preview, one approval, one line under SIGNED, one TAKE BACK", flush=True)
+    text = page_text()
+    # S1
+    ask = cut_function(text, "  function askPreview() {")
+    sign = cut_function(text, "  function signStaff() {")
+    check(ask.count("api('preview'") == 1 and "args.under = writtenUnder(" in ask and text.count("function askPreview(") == 1,
+          "S1: the reading of a draft with a landing written is asked with under, by the one function that asks a reading")
+    check(sign.count("api('approve', { preview: no })") == 1 and not any(f"api('{t}'" in sign for t in ("set_intent", "set_limit", "form_intent", "withdraw_intent")) and "under_queued" in sign and "limits_queued" in sign,
+          "S1: signing is one approve of the preview, sends no set_intent, set_limit or form_intent of its own, and checks limits_queued and under_queued after it")
+    # The engine: the worked draft, signed
+    check(begin(bridge, "guadalcanal-39-days", "engine", "person") == {"ok": True}, "begun: the person Japanese, to read the hexes of Lunga and Tulagi")
+    placed = {b["base"]["handle"]: [b["place"]["q"], b["place"]["r"]] for b in Person(bridge.table).call("list_bases")["ok"]["bases"]}
+    h1, h4 = placed["base:1"], placed["base:4"]
+    check(post(bridge.table + "/new") == {"ok": True}, "the game is put away")
+    check(begin(bridge, "guadalcanal-39-days", "person", "engine") == {"ok": True}, "begun: the person Allied against the engine")
+    person = Person(bridge.table)
+    command = {"command": "set_intent", "intent_kind": "control_island", "island": 3}
+    n = person.call("preview", command)["ok"]["intent"]
+    # The page's own function for SIGNED, and THE ORDERS' list, in node
+    helpers = "".join(cut_function(text, f"  function {h}(") + "\n" for h in ("cleanName", "num", "hexDist", "hexWords", "nm", "unitNo", "nameText", "queuedKind", "sayIntent", "signedWith", "signedOwnLimits",
+                                                                                "signedPlanWords", "signedLine", "signedOrders"))
+    word = re.search(r"^  var WORD = \{.*?\};$", text, re.M).group(0)
+    model = text[text.index("  var LIMITS_OFFERED"):text.index("  // ---- end of the written plan model ----")]
+    code = helpers + word + "\n" + model + r"""
+const hexes = [], config = { islands: [{ number: 3, name: 'Guadalcanal and Tulagi', base: 1, places: [1, 4] }] }; let hexRaw = false;
+function dateOf(d) { return 'day ' + d; } function rich(tag, cls, w) { return el(tag, cls, w); } function placeLink() { return el('span', '', '?'); } function refTo() { return el('span', '', '?'); }
+function baseByNumber() { return null; } function plainWords(t) { return t; }
+function main(x) {
+  M.hexNames[x.h1[0] + ',' + x.h1[1]] = 'Lunga'; M.hexNames[x.h4[0] + ',' + x.h4[1]] = 'Tulagi';
+  const out = {};
+  x.queues.forEach(function (q, k) {
+    M.queue = { entries: q };
+    const order = q.filter(function (e) { return e.command.kind === 'set_intent' && e.command.parent == null; })[0];
+    out['line' + k] = signedLine(order).textContent;
+    out['signed' + k] = signedOrders().map(function (e) { return e.place.number; });
+    out['own' + k] = limitsLine('control_island', limFromBodies(signedOwnLimits(order, q)));
+    out['said' + k] = signedOwnLimits(order, q).length;
+    out['saidOrder' + k] = 'Order: ' + sayIntent({ number: 'signed 1', kind: 'control_island', island: 3 }, {});
+  });
+  return out;
+}
+"""
+    # S2
+    drafted = person.call("preview", dict(command, under=worked_under(n, h1, h4)))["ok"]
+    approved = person.call("approve", {"preview": drafted["preview"]})["ok"]
+    check(approved["status"] == "queued" and approved["limits_queued"] == 0 and approved["under_queued"] == [{"intent": n + 1, "limits_queued": 1}, {"intent": n + 2, "limits_queued": 3}],
+          f"S2: approve of the worked draft's preview answers queued, limits_queued 0 and under_queued of two ({approved.get('status')}, {approved.get('limits_queued')}, {approved.get('under_queued')})")
+    # S3
+    held = person.call("queued")["ok"]
+    entries = held["entries"]
+    top = [e for e in entries if e["command"]["kind"] == "set_intent" and "parent" not in e["command"]]
+    others = [e for e in entries if e not in top]
+    check(len(entries) == 7 and len(top) == 1 and len(top[0]["goes_with"]) == 6 and all({"queue": e["place"]["queue"], "number": e["place"]["number"]} in top[0]["goes_with"] for e in others),
+          f"S3: queued holds seven entries, one set_intent with no parent whose goes_with names the other six ({len(entries)} entries, {len(top)} orders)")
+    check(sum(1 for e in entries if e["command"]["kind"] == "set_limit") == 4 and sum(1 for e in entries if e["command"]["kind"] == "set_intent" and "parent" in e["command"]) == 2,
+          "S3: they are the order, each landing, one limit of Tulagi's and three of Lunga's")
+    first = run_in_node(code, {"queues": [entries], "h1": h1, "h4": h4})
+    line, expect = first["line0"], first["saidOrder0"]
+    check(line == expect + " · Yours: the landing at Tulagi, the landing at Lunga." and not re.search(r"intent|\w:\d|\d", line[len("Order: "):]),
+          f"S3: the page's own function for SIGNED makes one line of them: the order as the page says it, then Yours: the landing at Tulagi, the landing at Lunga., with no handle or number ({line})")
+    check(not [e for e in entries if e["command"]["kind"] == "set_limit" and e["command"]["intent"] == n] and first["said0"] == 0
+          and not any(w in line for w in ("Not before", "After", "Risk", "Ships and forces", "forces", "preserve")) and line.index(" · Yours:") == len(expect),
+          f"S3: the limits the line says are the order's own, which this order has none of: nothing stands between the order's words and Yours: but the page's mark between two parts of a line ({line})")
+    check(all(sum(1 for e in entries if e["command"]["kind"] == "set_limit" and e["command"]["intent"] == i) >= 1 for i in (n + 1, n + 2)),
+          "S3: the landings' limits are on their own numbers, and none of them is said as the order's")
+    # S6, on this queue
+    check(first["signed0"] == [top[0]["place"]["number"]] and first["own0"] == "The staff’s choice in all.",
+          f"S6: THE ORDERS' Signed list, in node on this queue, holds the order alone, and its row says no limit of the order's, none of a landing's ({first['signed0']}, {first['own0']})")
+    # S4
+    taken = person.call("take_back", {"queue": top[0]["place"]["queue"], "number": top[0]["place"]["number"], "as_of": held["as_of"]})["ok"]
+    check(taken.get("status") != "refused" and person.call("queued")["ok"]["entries"] == [], f"S4: one take_back of that entry's place leaves queued empty ({taken.get('status')})")
+    # S5
+    risk = {"limit": "risk", "risk": "press"}
+    pressed = person.call("preview", dict(command, limits=[risk], under=worked_under(n, h1, h4)))["ok"]
+    approved = person.call("approve", {"preview": pressed["preview"]})["ok"]
+    check(approved["status"] == "queued" and approved["limits_queued"] == 1, f"S5: the worked draft with the order's own risk at press: limits_queued is 1 ({approved.get('status')}, {approved.get('limits_queued')})")
+    entries = person.call("queued")["ok"]["entries"]
+    second = run_in_node(code, {"queues": [entries], "h1": h1, "h4": h4})
+    line, expect = second["line0"], second["saidOrder0"]
+    check(line == expect + " · Risk: press · Yours: the landing at Tulagi, the landing at Lunga." and line.count("Risk") == 1 and "preserve" not in line,
+          f"S5: SIGNED's line says the risk before Yours:, once, as press, and says no other limit before it ({line})")
+    check(second["signed0"] == [entries[0]["place"]["number"]] and second["own0"] == "Risk: press" and second["said0"] == 1,
+          f"S6: the order's row in THE ORDERS says the order's own risk alone ({second['own0']}); the page's signedOrders gives one entry ({second['signed0']})")
+    # S6: a landing is no order of its own, and both of THE ORDERS' and SIGNED's words are one function's
+    draw = cut_function(text, "  function drawOrders(focus) {")
+    check("signedOwnLimits(e, (M.queue && M.queue.entries) || [])" in draw and "limFromBodies(lims)" in draw and "signedOwnLimits(e, (M.queue && M.queue.entries) || [])" in cut_function(text, "  function signedLine(e) {")
+          and "e.command.parent == null" in cut_function(text, "  function signedOrders() {"),
+          "S6: THE ORDERS' Signed list holds no entry with a parent, and its row and SIGNED's line say the order's limits by one function, the limits on the order's own number")
+    check(post(bridge.table + "/new") == {"ok": True}, "the game is put away")
 
 
 def the_dry_run_shows_two_plans(bridge):
@@ -2597,13 +2872,167 @@ def the_dry_run_shows_two_plans(bridge):
     D8. The order paper's DRY RUN sends `trial` with the preview and the size and no `compare`.
 
     Through the bridge, on the 39 days, which have a trial from the island's pull request on (item 7):
-    D9. `trial` of the worked draft's preview at the size small is answered with `beside.of` "left_to_the_staff", `beside.order` N,
+    D9. `trial` of the worked draft's preview at the size small (a size the table offers on the 39 days: D11) is answered with `beside.of` "left_to_the_staff", `beside.order` N,
         `asked.compare` true, and `beside.with_your_plan` equal to `how_it_went`. Whatever counts it gives, what `twoPlans` makes of it
         says them: each cell of the first row begins with the page's words for the count of `met_and_kept` of its column, the four
         counts run for run are those of `world_for_world`, and together with `apart` they are the answer's `asked.worlds`.
     D10. The preview tried is not spent: it is approved after the trial. The game is put away.
+
+    The sizes offered (item 22a; the designer's answer of Nov 27, 2026, after timing the 39 days on his machine):
+    D11. In `table/scenarios.json` the entry `guadalcanal-39-days` has the key `dry_run`, exactly
+        {"sizes": ["small", "standard"], "seconds": {"standard": 45}}, and no other entry has the key.
+    D12. The page's pure function `sizesOffered(dry)`, in node. Of that value it gives exactly
+        {"sizes": ["small", "standard"], "says": ["Standard takes about 45 seconds."]}. Of undefined, of null, of {} and of
+        {"sizes": []} it gives {"sizes": ["small", "standard", "full"], "says": []}. Of
+        {"sizes": ["full", "huge", "small"], "seconds": {"small": 2, "full": 1, "standard": 45}} it gives
+        {"sizes": ["small", "full"], "says": ["Small takes about 2 seconds.", "Full takes about 1 second."]}: the order is always
+        small, standard, full; a size it does not know is left out; a time is said only of a size offered.
+    D13. In the page's text: the three sizes are listed in the body of `sizesOffered` and nowhere else; `dryBox` draws its size
+        buttons from `sizesOffered(config.dry_run).sizes` and a line for each of its `says` under them; `drySize` begins as
+        "small", and a DRY RUN sends the first size offered where the size in hand is not offered. Neither function names a
+        game ("guadalcanal", "39"). Through the bridge: `/config` of a game of the 39 days has `dry_run` equal to the entry's, and
+        `/config` of a game of the Eastern Solomons over five days has no such key.
     No count from a real trial is an expected value here (item 30): the developer reports them to the architect in "Built: step 3"."""
-    check(False, "not built: decision 0232, step 3, rule 29 (the dry run's two columns)")
+    import copy
+    import re
+    print("-- the dry run's two columns: twoPlans in node on the architect's answer, and on a real trial of the worked draft", flush=True)
+    text = page_text()
+    helpers = "".join(cut_function(text, f"  function {h}(") + "\n" for h in ("commas", "lowerFirst", "spreadOf", "runsIn", "twoPlans"))
+    code = helpers + text[text.index("  var COSTS ="):text.index("  function spreadOf")] + r"""
+function main(x) {
+  return { shown: x.cases.map(function (c) { return twoPlans(c.answer, c.landing); }),
+           runs: x.cases.map(function (c) { var b = c.answer.beside; return b ? [runsIn(b.with_your_plan.met_and_kept, b.with_your_plan.worlds.length), runsIn(b.how_it_went.met_and_kept, b.how_it_went.worlds.length)] : null; }) };
+}
+"""
+    def ask(*cases):
+        return run_in_node(code, {"cases": [{"answer": a, "landing": l} for a, l in cases]})
+    answer = TWO_PLANS_ANSWER
+    def varied(beside_of=None, tried=None, mend=None):
+        a = copy.deepcopy(answer)
+        if beside_of is not None:
+            a["beside"]["of"] = beside_of
+        if tried is not None:
+            a["asked"]["tried_intent"] = tried
+        if mend:
+            mend(a)
+        return a
+    def apart_one(a):
+        w = a["beside"]["world_for_world"]; w["both"] = [1, 2, 3, 5]; w["apart"] = [8]
+    def apart_two(a):
+        w = a["beside"]["world_for_world"]; w["both"] = [1, 2, 3]; w["apart"] = [5, 8]
+    def no_cost(a):
+        for holder in (a, a["beside"]):
+            holder["cost"] = _costs((0, 0, 0), (0, 0, 0), (0, 0, 0), (0, 0, 0), (0, 0, 0))
+            holder["enemy_lost"] = _costs((0, 0, 0), (0, 0, 0), (0, 0, 0), (0, 0, 0), (0, 0, 0))
+    given = varied("given_back_to_the_staff", 3)
+    left = varied("left_to_the_staff", 3)
+    said = ask((answer, None), (given, "Lunga"), (left, "Lunga"), (varied("without_it"), None), (varied("withdrawn"), None), (varied("as_it_stands"), None),
+               (dict((k, v) for k, v in answer.items() if k != "beside"), None), (varied(mend=apart_one), None), (varied(mend=apart_two), None), (varied(mend=no_cost), None),
+               (varied(mend=lambda a: a.update(text=["Tried: preview 1, the whole order.", "How it went: met and held in 5 of 8 worlds."])), None),
+               (varied(mend=lambda a: a.update(text=["Quite other words, none of them the first's.", "Nor is this one."])), None),
+               (given, None))
+    shown = said["shown"]
+    # D1
+    check(shown[0] == TWO_PLANS_SHOWN and set(shown[0]) == {"heading", "staffs_is", "columns", "rows", "run_for_run"},
+          f"D1: twoPlans of the architect's answer is exactly the architect's table, with no left_out and no no_cost ({shown[0]})")
+    # D2, D2a
+    check(shown[1] == dict(TWO_PLANS_SHOWN, staffs_is="The staff’s plan is this order with the landing at Lunga given back to the staff from 1800."),
+          f"D2: a landing given back is said as given back to the staff from 1800, the rest as D1 ({shown[1]['staffs_is']})")
+    check(shown[12] == dict(TWO_PLANS_SHOWN, staffs_is="The staff’s plan is this order with the landing given back to the staff from 1800."),
+          f"D2: a landing given back and no place for it to name says the landing given back to the staff from 1800 ({shown[12]['staffs_is']})")
+    check(shown[2] == dict(TWO_PLANS_SHOWN, staffs_is="The staff’s plan is this order with the landing at Lunga left to the staff."),
+          f"D2a: a landing left to the staff is said as left to the staff, the rest as D1 ({shown[2]['staffs_is']})")
+    # D3
+    check(shown[3] is None and shown[4] is None and shown[5] is None and shown[6] is None, "D3: beside of without_it, withdrawn, as_it_stands, or none gives nothing: the sheet is as it is today")
+    # D4
+    four = "Run for run: won and held with both plans in 4; with your plan alone in 0; with the staff’s plan alone in 2; with neither in 1."
+    check(shown[7] == dict(TWO_PLANS_SHOWN, run_for_run=four, left_out="1 run is left out: it was not played under both plans.") and list(shown[7]).index("left_out") > list(shown[7]).index("run_for_run"),
+          f"D4: with one run apart it gains left_out, after the line run for run ({shown[7].get('left_out')})")
+    three = "Run for run: won and held with both plans in 3; with your plan alone in 0; with the staff’s plan alone in 2; with neither in 1."
+    check(shown[8] == dict(TWO_PLANS_SHOWN, run_for_run=three, left_out="2 runs are left out: they were not played under both plans."),
+          f"D4: with two apart it says 2 runs are left out: they were not played under both plans. ({shown[8].get('left_out')})")
+    # D5
+    check(shown[9] == dict(TWO_PLANS_SHOWN, rows=TWO_PLANS_SHOWN["rows"][:3], no_cost="No man, ship or aircraft is lost in any run."),
+          f"D5: with every cost at nothing the rows are the island's alone and it gains no_cost ({shown[9]['rows'] if shown[9] else None})")
+    # D6
+    check(shown[10] == TWO_PLANS_SHOWN and shown[11] == TWO_PLANS_SHOWN, "D6: with every string of text changed to other words what twoPlans gives does not change")
+    # D7
+    body = cut_function(text, "  function twoPlans(j, landing) {")
+    sheet = body + cut_function(text, "  function twoPlansSheet(box, two) {")
+    drawn = cut_function(text, "  function twoPlansSheet(box, two) {")
+    check(not re.search(r"\btext\b", body), "D7: the body of twoPlans does not name text")
+    check(not re.search(r"better|worse|best|recommend|advise|should|per cent|%|points|chance", sheet, re.I) and "Beside your side without this order" not in sheet
+          and not any(w in drawn for w in ("className", "classList", ".style", "setAttribute")) and drawn.count("el('td', ''") == 2 and drawn.count("el('th', ''") == 3,
+          "D7: the sheet for the two plans says none of better, worse, best, recommend, advise, should, per cent, a per cent sign, points or chance; neither column is given a class or a colour the other is not")
+    # D8
+    dry = text[text.index("$('p-dry').addEventListener('click'"):]
+    dry = dry[:dry.index("\n  });") + 6]
+    check("playDry({ preview: previewNo, size: drySize }" in dry and "compare" not in dry, "D8: the order paper's DRY RUN sends trial with the preview and the size and no compare")
+    # The engine, on the 39 days
+    check(begin(bridge, "guadalcanal-39-days", "engine", "person") == {"ok": True}, "begun: the person Japanese, to read the hexes of Lunga and Tulagi")
+    placed = {b["base"]["handle"]: [b["place"]["q"], b["place"]["r"]] for b in Person(bridge.table).call("list_bases")["ok"]["bases"]}
+    h1, h4 = placed["base:1"], placed["base:4"]
+    check(post(bridge.table + "/new") == {"ok": True}, "the game is put away")
+    check(begin(bridge, "guadalcanal-39-days", "person", "engine") == {"ok": True}, "begun: the person Allied against the engine")
+    person = Person(bridge.table)
+    command = {"command": "set_intent", "intent_kind": "control_island", "island": 3}
+    n = person.call("preview", command)["ok"]["intent"]
+    drafted = person.call("preview", dict(command, under=worked_under(n, h1, h4)))["ok"]
+    tried = person.call("trial", {"preview": drafted["preview"], "size": "small"})["ok"]
+    b = tried.get("beside") or {}
+    # D9
+    check(b.get("of") == "left_to_the_staff" and b.get("order") == n and tried["asked"].get("compare") is True and b.get("with_your_plan") == tried["how_it_went"],
+          f"D9: trial of the worked draft at the size small is answered with beside of left_to_the_staff, beside.order {n}, asked.compare true and with_your_plan equal to how_it_went ({b.get('of')}, {b.get('order')}, {tried['asked'].get('compare')})")
+    real = ask((tried, None))
+    two, runs = real["shown"][0], real["runs"][0]
+    w = b["world_for_world"]
+    counts = [int(c) for c in re.findall(r"in (\d+)", two["run_for_run"])]
+    check(two is not None and two["rows"][0][1].startswith(runs[0]) and two["rows"][0][2].startswith(runs[1]) and two["rows"][0][0] == "Island won and held",
+          f"D9: each cell of the first row begins with the page's words for the count of met_and_kept of its column ({two['rows'][0]}, {runs})")
+    check(counts == [len(w["both"]), len(w["with_your_plan_alone"]), len(w["with_the_staffs_alone"]), len(w["neither"])] and sum(counts) + len(w["apart"]) == tried["asked"]["worlds"],
+          f"D9: the four counts run for run are those of world_for_world, and with apart they are the answer's {tried['asked']['worlds']} runs ({counts}, {len(w['apart'])} apart)")
+    # D10
+    approved = person.call("approve", {"preview": drafted["preview"]})["ok"]
+    check(approved.get("status") == "queued", f"D10: the preview tried is not spent: it is approved after the trial ({approved.get('status')})")
+    check(post(bridge.table + "/new") == {"ok": True}, "the game is put away")
+    # D11
+    with open(os.path.join(HERE, "scenarios.json"), encoding="utf-8") as entries_file:
+        entries = json.load(entries_file)["scenarios"]
+    holders = [e["id"] for e in entries if "dry_run" in e]
+    check(holders == ["guadalcanal-39-days"] and [e for e in entries if e["id"] == "guadalcanal-39-days"][0]["dry_run"] == {"sizes": ["small", "standard"], "seconds": {"standard": 45}},
+          f"D11: the entry guadalcanal-39-days has dry_run exactly small and standard with standard at 45 seconds, and no other entry has the key ({holders})")
+    # D12
+    offered = run_in_node(cut_function(text, "  function sizesOffered(dry) {") + "\nfunction main(x) { return x.map(function (d) { return sizesOffered(d === 'undefined' ? undefined : d); }); }\n",
+                          ["undefined", None, {}, {"sizes": []}, {"sizes": ["small", "standard"], "seconds": {"standard": 45}},
+                           {"sizes": ["full", "huge", "small"], "seconds": {"small": 2, "full": 1, "standard": 45}}])
+    every = {"sizes": ["small", "standard", "full"], "says": []}
+    check(offered[4] == {"sizes": ["small", "standard"], "says": ["Standard takes about 45 seconds."]},
+          f"D12: the 39 days' value gives small and standard and the line for standard ({offered[4]})")
+    check(offered[0] == every and offered[1] == every and offered[2] == every and offered[3] == every,
+          f"D12: undefined, null, {{}} and {{sizes: []}} give the three sizes and no line ({offered[:4]})")
+    check(offered[5] == {"sizes": ["small", "full"], "says": ["Small takes about 2 seconds.", "Full takes about 1 second."]},
+          f"D12: the order is small, standard, full; an unknown size is left out; a time is said only of a size offered ({offered[5]})")
+    # D13
+    sizes_body = cut_function(text, "  function sizesOffered(dry) {")
+    box = cut_function(text, "  function dryBox(doc, root) {")
+    outside = text.replace(sizes_body, "")
+    check("'small', 'standard', 'full'" in sizes_body and not re.search(r"'standard'|'full'|\"standard\"|\"full\"", outside.replace("value=\"full\"", "").replace("=== 'full'", "").replace("speed: 'full'", "").replace("'full' ?", "")),
+          "D13: the three sizes are listed in the body of sizesOffered and nowhere else")
+    check("sizesOffered(config.dry_run).sizes" in box.replace("offered.sizes", "sizesOffered(config.dry_run).sizes") and "var offered = sizesOffered(config.dry_run);" in box and "offered.sizes.forEach" in box
+          and "offered.says.forEach" in box and "'small', 'standard', 'full'" not in box,
+          "D13: dryBox draws its size buttons from sizesOffered(config.dry_run).sizes and a line for each of its says under them")
+    play = cut_function(text, "  function playDry(args, says, lock, done) {")
+    check("var drySize = 'small'" in text and "offeredNow.indexOf(drySize) < 0" in play and "drySize = offeredNow[0]" in play and "args.size = drySize" in play,
+          "D13: drySize begins as small, and a DRY RUN sends the first size offered where the size in hand is not offered")
+    check(not re.search(r"guadalcanal|39", sizes_body + box, re.I), "D13: neither sizesOffered nor dryBox names a game")
+    check(post(bridge.table + "/new") == {"ok": True}, "the game is put away")
+    check(begin(bridge, "guadalcanal-39-days", "person", "engine") == {"ok": True}, "begun: the 39 days, the person Allied")
+    check(get(bridge.table + "/config").get("dry_run") == {"sizes": ["small", "standard"], "seconds": {"standard": 45}},
+          "D13: /config of a game of the 39 days has dry_run equal to the entry's")
+    check(post(bridge.table + "/new") == {"ok": True}, "the game is put away")
+    check(begin(bridge, "eastern-solomons-five-days", "person", "engine") == {"ok": True}, "begun: the Eastern Solomons over five days")
+    check("dry_run" not in get(bridge.table + "/config"), "D13: /config of a game of the Eastern Solomons has no dry_run")
+    check(post(bridge.table + "/new") == {"ok": True}, "the game is put away")
 
 
 def the_plan_paper_marks_whose_line(bridge):
@@ -2618,7 +3047,9 @@ def the_plan_paper_marks_whose_line(bridge):
 
     In the page's text:
     W3. The plan's paper marks a task from `maker`, of `command_state`'s intent for a plan in force and of `propose`'s entry for a plan
-        that waits; the page matches or cuts no text for it (it holds no test for "commander's" or for "Yours:").
+        that waits; the page matches or cuts no text for it: the body of `whoseLine` names `maker` and `parent` and no other field,
+        and holds neither "commander's" nor "Yours:" (amended Nov 27, 2026: the page as it stood already held both elsewhere, in
+        its words for a stop and for a hold; the readings of R2 are a reason's words and mark no line).
     W4. GIVE IT BACK TO THE STAFF opens the order paper and asks the staff's reading: `preview` with `command` "withdraw_intent" and
         the landing's number (item 25; agent interface 58). Nothing is queued until SIGN AND SEND, which is one `approve` of that
         preview and nothing else: the page calls the tool `withdraw_intent` nowhere. Its DRY RUN sends `trial` with `intent`, the
@@ -2634,7 +3065,7 @@ def the_plan_paper_marks_whose_line(bridge):
         (`preview` of a `set_limit` `not_before` on N + 2) is not refused and is approved; what BACK TO THE STAFF’S CHOICE sends for
         its "Not before" is not refused; what CHANGE sends for "Risk: balanced" (`preview` of a `set_limit` `risk` on N + 2) is not
         refused.
-    W7. Before W8, nothing being queued: `trial` with `intent` N + 2 at the size small is answered with `beside.of`
+    W7. Before W8, nothing being queued: `trial` with `intent` N + 2 at the size small (a size the table offers there: D11) is answered with `beside.of`
         "given_back_to_the_staff" and `beside.order` N, and `twoPlans` of it and "Lunga", the name the page gives from the hex of
         intent N + 2 in `command_state`, says "the landing at Lunga given back to the staff from 1800".
     W8. `preview` of {"command": "withdraw_intent", "intent": N + 2} is valid and its `intent` is N: its tree has a `take_place` at H1
@@ -2644,8 +3075,175 @@ def the_plan_paper_marks_whose_line(bridge):
         is taken back by one `take_back`.
     W9. Signed again and a day resolved: no intent N + 2 is in force; a `take_place` at H1 stands under the order with `maker` "staff";
         the page marks it THE STAFF’S, and its line has no GIVE IT BACK TO THE STAFF, no WRITE IT and no CHANGE of a landing's lines.
+    W10. (New, Nov 27, 2026.) Between W8's `approve` and its `take_back`, the give-back of N + 2 being queued: the line of his
+        landing at Lunga, drawn by the page's own functions in node from `command_state` and `queued` as they then stand, is still
+        marked YOURS and offers no GIVE IT BACK TO THE STAFF, no CHANGE and no BACK TO THE STAFF’S CHOICE; the line of his landing at
+        Tulagi offers them as W6 has it. After the `take_back` Lunga's line offers them again. The page learns that a give-back is
+        queued from `queued` alone: an entry whose command is a `withdraw_intent` of that landing's number.
     The game is put away."""
-    check(False, "not built: decision 0232, step 3, rule 30 (the plan's paper marks whose line)")
+    import re
+    print("-- the plan's paper marks whose line: whoseLine in node, the lines of his, the give-back, and the engine's plan before and after", flush=True)
+    text = page_text()
+    # In the page's text: W3, W4, W9
+    body = cut_function(text, "  function whoseLine(t) {")
+    fields = set(re.findall(r"\bt\.(\w+)", body))
+    check(fields == {"maker", "parent"} and "commander's" not in body and "Yours:" not in body,
+          f"W3: the body of whoseLine names maker and parent and no other field, and holds neither \"commander's\" nor \"Yours:\" ({sorted(fields)})")
+    check("t.maker = i.maker; t.parent = i.parent;" in cut_function(text, "  function readPlan(") and "by[s.number].maker = s.maker; by[s.number].parent = s.parent;" in cut_function(text, "  function proposedTree(")
+          and "var mark = whoseLine(t); if (mark) who.appendChild(el('span', 'whose', mark))" in cut_function(text, "  function paperNode("),
+          "W3: the plan's paper marks a task from maker, of command_state's intent for a plan in force and of propose's entry for a plan that waits, and the line says it")
+    ask, dry, sign, openg = (cut_function(text, f"  function {h}(") for h in ("askGiveBack", "giveBackDry", "signGiveBack", "openGiveBack"))
+    check("api('preview', { command: 'withdraw_intent', intent: g_.number })" in ask and "api('approve', { preview: no })" in sign and sign.count("api('") == 1,
+          "W4: GIVE IT BACK TO THE STAFF asks the staff's reading, preview of withdraw_intent with the landing's number, and SIGN AND SEND is one approve of it")
+    check(not any(re.search(r"api\('(withdraw_intent|set_intent|set_limit|form_intent)'|act\('withdraw_intent'", f) for f in (ask, dry, sign, openg, cut_function(text, "  function hisBlock("))),
+          "W4: the page's give-back calls the tool withdraw_intent nowhere, and sends no set_intent, set_limit or form_intent")
+    check("playDry({ intent: g_.number, size: drySize }" in dry and "preview" not in dry and "compare" not in dry,
+          "W4: its DRY RUN sends trial with the landing's number, and never the reading's preview")
+    check("giveBackWords(hex)" in openg and "paper.kind === 'giveback'" in cut_function(text, "  function askPreview(") and "signGiveBack()" in text[text.index("$('paper').addEventListener('submit'"):][:300],
+          "W4: the order paper opens as a give-back whose ORDER is giveBackWords, is asked again where the draft is, and is signed by signGiveBack")
+    nodes = "".join(cut_function(text, f"  function {h}(") for h in ("hisBlock", "paperNode", "hisLine", "hisLineRows"))
+    check("WRITE IT" not in nodes and "LEAVE IT TO THE STAFF" not in nodes, "W9: the lines of the plan's paper hold no WRITE IT, which is the order paper's")
+    # The page's own functions in node
+    helpers = "".join(cut_function(text, f"  function {h}(") + "\n" for h in ("cleanName", "num", "hexDist", "hexWords", "nameText", "queuedKind", "sayIntent", "signedWith", "signedOwnLimits", "signedPlanWords", "signedLine",
+                                                                              "whoseLine", "marksOf", "giveBackQueued", "hisLineRows", "hisLine", "giveBackWords", "hisLanding", "landingTried", "twoPlans",
+                                                                              "commas", "lowerFirst", "spreadOf", "runsIn"))
+    word = re.search(r"^  var WORD = \{.*?\};$", text, re.M).group(0)
+    model = text[text.index("  var LIMITS_OFFERED"):text.index("  // ---- end of the written plan model ----")]
+    code = helpers + word + "\n" + model + text[text.index("  var COSTS ="):text.index("  function spreadOf")] + r"""
+const hexes = [], config = { islands: [{ number: 3, name: 'Guadalcanal and Tulagi', base: 1, places: [1, 4] }] }; let hexRaw = false;
+function dateOf(d) { return 'day ' + d; } function rich(tag, cls, w) { return el(tag, cls, w); } function placeLink() { return el('span', '', '?'); } function refTo() { return el('span', '', '?'); }
+function baseByNumber() { return null; } function plainWords(t) { return t; } function orderCap(n) { return 'Order ' + n + ' words'; } function intentKindOf() { return null; }
+function intentWords(n) { return 'take the place at (2,-4)'; }
+function main(x) {
+  M.hexNames[x.h1[0] + ',' + x.h1[1]] = 'Lunga'; M.hexNames[x.h4[0] + ',' + x.h4[1]] = 'Tulagi';
+  const out = {};
+  out.w1 = [whoseLine({ maker: 'commander', parent: 1 }), whoseLine({ maker: 'staff', parent: 1 }), whoseLine({ maker: 'staff', parent: 2 }), whoseLine({ maker: 'commander', parent: null }),
+            whoseLine({ maker: 'staff', parent: 1, text: "the commander's take" }), whoseLine({ maker: 'commander', parent: 1, text: 'a hold of the staff' })];
+  M.state = { intents: [{ number: 5, maker: 'commander', parent: 4, hex: x.h1, kind: 'take_place' }] };
+  const root = (c, k) => ({ command: c, place: { queue: 'commands', number: k }, goes_with: [], acts: { at: 'dusk' } });
+  out.w2 = [signedLine(root({ kind: 'withdraw_intent', intent: 5 }, 1)).textContent, signedLine(root({ kind: 'withdraw_intent', intent: 4 }, 2)).textContent, signedLine(root({ kind: 'withdraw_intent', intent: 9 }, 3)).textContent];
+  out.words = giveBackWords(x.h1);
+  if (!x.state) return out;
+  M.state = x.state; M.queue = { entries: x.queue }; const st = x.state.intents, by = {}; st.forEach(i => { by[i.number] = i; });
+  out.marks = marksOf(st); out.tree = x.tree ? marksOf(x.tree) : null;
+  const rows = i => { const h = hisLine(by[i], x.queue, true); return h && { mark: h.mark, giveBack: h.giveBack, held: h.held, rows: h.rows.map(r => [r.key, r.set, r.change, r.back, r.said]) }; };
+  out.lunga = rows(x.lunga); out.tulagi = rows(x.tulagi); out.staff = x.staff.map(n => hisLine(by[n], x.queue, true));
+  out.cantSign = hisLine(by[x.lunga], x.queue, false);
+  out.signed = x.queue.map(e => signedLine(e).textContent);
+  // What CHANGE and BACK TO THE STAFF’S CHOICE send for the landing's lines
+  const top = by[x.lunga], bodyOf = (key, change, back) => { const l = limFromState(top.limits); if (back) limReset(l, key); if (change) change(l); return limGroupBody(top.kind, l, limGroup(key)); };
+  out.sends = { not_before: bodyOf('not_before', l => { l.not_before = 5; }, false), not_before_back: bodyOf('not_before', null, true), after_back: bodyOf('after', null, true), risk: bodyOf('risk', l => { l.risk = 'balanced'; }, false) };
+  if (x.trial) { M.queue = { entries: [] }; const land = landingTried(x.trial); out.landing = land; out.two = twoPlans(x.trial, land); }
+  return out;
+}
+"""
+    def hex_of(person):
+        placed = {b["base"]["handle"]: [b["place"]["q"], b["place"]["r"]] for b in person.call("list_bases")["ok"]["bases"]}
+        return placed["base:1"], placed["base:4"]
+    check(begin(bridge, "guadalcanal-39-days", "engine", "person") == {"ok": True}, "begun: the person Japanese, to read the hexes of Lunga and Tulagi")
+    h1, h4 = hex_of(Person(bridge.table))
+    check(post(bridge.table + "/new") == {"ok": True}, "the game is put away")
+    # W1, W2
+    first = run_in_node(code, {"h1": h1, "h4": h4})
+    check(first["w1"] == ["YOURS", "THE STAFF’S", "THE STAFF’S", "", "THE STAFF’S", "YOURS"], f"W1: whoseLine is the field and never the words ({first['w1']})")
+    check(first["w2"][0] == "The landing at Lunga: given back to the staff" and first["w2"][1] == "Order 4 words: withdrawn" and first["w2"][2] == "Order 9 words: withdrawn",
+          f"W2: SIGNED says a withdrawal of a landing of his as given back to the staff, and a root's as it says it today ({first['w2']})")
+    check(first["words"] == "Give the landing at Lunga back to the staff.", f"W4: THE ORDER says Give the landing at Lunga back to the staff. ({first['words']})")
+    # The engine: the worked draft signed, leave to launch given, one day resolved
+    check(begin(bridge, "guadalcanal-39-days", "person", "engine") == {"ok": True}, "begun: the person Allied against the engine")
+    person = Person(bridge.table)
+    command = {"command": "set_intent", "intent_kind": "control_island", "island": 3}
+    n = person.call("preview", command)["ok"]["intent"]
+    drafted = person.call("preview", dict(command, under=worked_under(n, h1, h4)))["ok"]
+    check(person.call("approve", {"preview": drafted["preview"]})["ok"]["status"] == "queued", "the worked draft is signed")
+    person.call("set_leave", {"leave": "launch", "given": True})
+    person.call("end_day")
+    state = person.call("command_state")["ok"]
+    tulagi, lunga = n + 1, n + 2
+    # W5
+    marks = run_in_node(code, {"h1": h1, "h4": h4, "state": state, "queue": [], "lunga": lunga, "tulagi": tulagi, "staff": [], "tree": None})["marks"]
+    mine = {i["number"] for i in state["intents"] if i["parent"] == n and i["maker"] == "commander"}
+    under = [i for i in state["intents"] if i["number"] != n]
+    check(mine == {tulagi, lunga} and all(i["maker"] == ("commander" if i["number"] in (tulagi, lunga) else "staff") for i in under),
+          f"W5: in command_state the intents under the order are {tulagi} and {lunga} with maker commander and the rest staff")
+    check(all(marks[str(i["number"])] == ("YOURS" if i["number"] in (tulagi, lunga) else "THE STAFF’S") for i in under) and marks[str(n)] == "",
+          f"W5: the page marks {tulagi} and {lunga} YOURS, every other task under the order THE STAFF’S and the order's own line not at all ({sorted(marks.items(), key=lambda kv: int(kv[0]))})")
+    ready = [i for i in under if i["kind"] == "ready_landing" and i["parent"] == tulagi]
+    check(ready and marks[str(ready[0]["number"])] == "THE STAFF’S", "W5: the ready_landing beneath a landing of his is THE STAFF’S")
+    ordered = person.call("order", {"intent": n})["ok"]["tasks"]
+    check(ordered and all(t["maker"] == next(i["maker"] for i in state["intents"] if i["number"] == t["intent"]) for t in ordered) and {t["intent"] for t in ordered} >= {tulagi, lunga},
+          f"W5: the tool order for {n} gives each task the same maker ({len(ordered)} tasks)")
+    # W6
+    full = run_in_node(code, {"h1": h1, "h4": h4, "state": state, "queue": [], "lunga": lunga, "tulagi": tulagi, "staff": [], "tree": None})
+    got = {r[0]: r[1:4] for r in full["lunga"]["rows"]}
+    check(got.get("not_before") == [True, True, True] and got.get("after") == [True, True, True] and got.get("risk") == [True, True, False] and got.get("by_day") == [True, False, False]
+          and full["lunga"]["mark"] == "YOURS" and full["lunga"]["giveBack"] is True,
+          f"W6: his landing at Lunga shows After and Not before with CHANGE and BACK, Risk with CHANGE alone and its day with neither ({got})")
+    check([r[0] for r in full["lunga"]["rows"]] == ["ships", "land_units", "source", "not_before", "wait_for", "after", "knowledge", "risk", "by_day"]
+          and all(r[2] for r in full["lunga"]["rows"] if r[0] != "by_day") and all(not r[3] for r in full["lunga"]["rows"] if r[1] is False),
+          "W6: every line of item 14 is shown with CHANGE (the day apart), and BACK TO THE STAFF’S CHOICE only where the line is set")
+    tg = {r[0]: r[1:4] for r in full["tulagi"]["rows"]}
+    check(tg["ships"] == [True, True, True] and tg["risk"] == [False, True, False] and tg["not_before"] == [False, True, False] and "by_day" not in tg, f"W6: the landing at Tulagi offers its set forces with both and the lines unset with CHANGE ({tg})")
+    sends = full["sends"]
+    check(sends["not_before"] == {"limit": "not_before", "from_day": 5} and sends["risk"] == {"limit": "risk", "risk": "balanced"} and sends["not_before_back"] == {"limit": "not_before"},
+          f"W6: what CHANGE sends for Not before: day 5, for Risk: balanced, and BACK for Not before ({sends['not_before']}, {sends['risk']}, {sends['not_before_back']})")
+    for words, body in (("CHANGE of Not before: day 5", sends["not_before"]), ("BACK TO THE STAFF’S CHOICE of Not before", sends["not_before_back"]), ("CHANGE of Risk: balanced", sends["risk"])):
+        seen = person.call("preview", dict(body, command="set_limit", intent=lunga))["ok"]
+        check(seen.get("status") != "refused" and seen.get("valid") is True, f"W6: what {words} sends is not refused ({seen.get('status')}, {str(seen.get('reason'))[:80]})")
+    seen = person.call("preview", dict(sends["not_before"], command="set_limit", intent=lunga))["ok"]
+    check(person.call("approve", {"preview": seen["preview"]})["ok"]["status"] == "queued", "W6: what CHANGE sends for Not before: day 5 is approved")
+    held = person.call("queued")["ok"]
+    check(len(held["entries"]) == 1 and held["entries"][0]["command"]["kind"] == "set_limit" and held["entries"][0]["command"]["intent"] == lunga, "W6: it stands as one set_limit of the landing under SIGNED")
+    person.call("take_back", {"queue": held["entries"][0]["place"]["queue"], "number": held["entries"][0]["place"]["number"], "as_of": held["as_of"]})
+    check(person.call("queued")["ok"]["entries"] == [], "W6: and one take_back leaves nothing queued")
+    # W7
+    trial = person.call("trial", {"intent": lunga, "size": "small"})["ok"]
+    b = trial.get("beside") or {}
+    check(trial.get("status") != "refused" and b.get("of") == "given_back_to_the_staff" and b.get("order") == n,
+          f"W7: trial with intent {lunga} at the size small is answered with beside.of given_back_to_the_staff and beside.order {n} ({b.get('of')}, {b.get('order')})")
+    said = run_in_node(code, {"h1": h1, "h4": h4, "state": state, "queue": [], "lunga": lunga, "tulagi": tulagi, "staff": [], "tree": None, "trial": trial})
+    check(said["landing"] == "Lunga" and "the landing at Lunga given back to the staff from 1800" in said["two"]["staffs_is"],
+          f"W7: twoPlans of it and {said['landing']}, the name the page gives from the hex of intent {lunga}, says the landing at Lunga given back to the staff from 1800 ({said['two']['staffs_is']})")
+    # W8
+    withdrawal = person.call("preview", {"command": "withdraw_intent", "intent": lunga})["ok"]
+    sub = withdrawal["with_change"]["tree"]["sub_intents"]
+    at_h1 = [i for i in sub if i["kind"] == "take_place" and i["hex"] == h1]
+    tul = [i for i in sub if i["number"] == tulagi]
+    check(withdrawal.get("valid") is True and withdrawal["intent"] == n and at_h1 and all(i["maker"] == "staff" for i in at_h1) and tul and tul[0]["maker"] == "commander" and tul[0].get("standing") is True,
+          f"W8: the preview of withdraw_intent {lunga} is valid, its intent is {n}, its tree has the staff's take at the hex of Lunga and none of the commander's there, and Tulagi's landing still his and standing")
+    seen = run_in_node(code, {"h1": h1, "h4": h4, "state": state, "queue": [], "lunga": lunga, "tulagi": tulagi, "staff": [], "tree": sub})
+    check(seen["tree"][str(at_h1[0]["number"])] == "THE STAFF’S" and seen["tree"][str(tulagi)] == "YOURS",
+          f"W8: the page's reading marks the take at the hex of Lunga THE STAFF’S and the landing at Tulagi YOURS ({seen['tree'][str(at_h1[0]['number'])]}, {seen['tree'][str(tulagi)]})")
+    approved = person.call("approve", {"preview": withdrawal["preview"]})["ok"]
+    held = person.call("queued")["ok"]
+    check(approved["status"] == "queued" and len(held["entries"]) == 1 and held["entries"][0]["command"] == {"kind": "withdraw_intent", "intent": lunga} and held["entries"][0]["goes_with"] == [],
+          f"W8: approve of it answers queued, and queued holds one entry, a withdraw_intent of {lunga} ({approved.get('status')}, {len(held['entries'])})")
+    # W10: while it is queued
+    queued = run_in_node(code, {"h1": h1, "h4": h4, "state": state, "queue": held["entries"], "lunga": lunga, "tulagi": tulagi, "staff": [], "tree": None})
+    check(queued["signed"] == ["The landing at Lunga: given back to the staff"], f"W8: it is one line under SIGNED in the words of W2 ({queued['signed']})")
+    lq = queued["lunga"]
+    check(lq["mark"] == "YOURS" and lq["held"] is True and lq["giveBack"] is False and not any(r[2] or r[3] for r in lq["rows"]),
+          f"W10: with the give-back queued the line of his landing at Lunga is still YOURS and offers no GIVE IT BACK, no CHANGE and no BACK TO THE STAFF’S CHOICE ({lq['mark']}, {lq['giveBack']})")
+    tq = queued["tulagi"]
+    check(tq["giveBack"] is True and {r[0]: r[1:4] for r in tq["rows"]} == tg, "W10: the line of his landing at Tulagi offers them as W6 has it")
+    check(text.count("giveBackQueued(") >= 2 and "e.command.kind === 'withdraw_intent' && e.command.intent === n" in cut_function(text, "  function giveBackQueued("),
+          "W10: the page learns that a give-back is queued from the queue alone: an entry whose command is a withdraw_intent of that landing's number")
+    taken = person.call("take_back", {"queue": held["entries"][0]["place"]["queue"], "number": held["entries"][0]["place"]["number"], "as_of": held["as_of"]})["ok"]
+    check(taken.get("status") != "refused" and person.call("queued")["ok"]["entries"] == [], "W8: one take_back of it leaves nothing queued")
+    after = run_in_node(code, {"h1": h1, "h4": h4, "state": state, "queue": [], "lunga": lunga, "tulagi": tulagi, "staff": [], "tree": None})["lunga"]
+    check(after["giveBack"] is True and {r[0]: r[1:4] for r in after["rows"]} == got, "W10: after the take_back Lunga's line offers them again")
+    # W9: signed again, and a day resolved
+    again = person.call("preview", {"command": "withdraw_intent", "intent": lunga})["ok"]
+    check(person.call("approve", {"preview": again["preview"]})["ok"]["status"] == "queued", "W9: the give-back is signed again")
+    person.call("end_day")
+    later_ = person.call("command_state")["ok"]
+    gone = [i for i in later_["intents"] if i["number"] == lunga and i["in_force"]]
+    took = [i for i in later_["intents"] if i["kind"] == "take_place" and i["parent"] == n and i["hex"] == h1 and i["in_force"]]
+    check(not gone and took and all(i["maker"] == "staff" for i in took), f"W9: no intent {lunga} is in force; a take_place at the hex of Lunga stands under the order with maker staff ({[i['number'] for i in took]})")
+    last = run_in_node(code, {"h1": h1, "h4": h4, "state": later_, "queue": [], "lunga": lunga, "tulagi": tulagi, "staff": [t["number"] for t in took], "tree": None})
+    check(all(last["marks"][str(t["number"])] == "THE STAFF’S" for t in took) and all(x is None for x in last["staff"]),
+          "W9: the page marks it THE STAFF’S, and its line has no GIVE IT BACK TO THE STAFF and no CHANGE of a landing's lines")
+    check(post(bridge.table + "/new") == {"ok": True}, "the game is put away")
 
 
 def a_reason_leads_to_his_line(bridge):
@@ -2654,9 +3252,21 @@ def a_reason_leads_to_his_line(bridge):
     The page's own functions, in node:
     R1. `hisNodesIn(reason, HIS_NODES)` gives, for each pair of `REASONS_AND_HIS_NODES`, the numbers beside it, ascending; and the
         same for each with its `limits` key taken out where that is None.
-    R2. The first of those reasons, shown under the order's line with his landing 3 at Lunga: its words say "your landing at Lunga"
-        where the engine wrote "intent:3", that is a link, and no "intent:" is left in what is shown; its WHY ends with "YOUR PLAN" and
-        one link, "The landing at Lunga".
+    R2. (Amended Nov 27, 2026.) The page's pure function `writtenMarks(text, his)`, `his(n)` saying whether intent n is a node of
+        his (decided by number, item 27, before any word is read): for each pair of `HIS_LANDING_READ`, with his nodes [3], it gives
+        exactly the second of the pair. With no node of his it gives every text back unchanged. It reads these and no other, each
+        only where K is a node of his: "intent:K, the commander's, plans the place at (q,r)" is "⟦K⟧ stands"; "intent:K, the
+        commander's take of the place at (q,r)," and "intent:K, the commander's take under intent:M," are "⟦K⟧"; "intent:K is the
+        commander's take under an island" is "⟦K⟧ is your landing under an island"; any other "intent:K, the commander's," is "⟦K⟧";
+        any other "intent:K" is "⟦K⟧"; and, in a text so marked, "is his to take" is "is yours to take" and "carries out his date"
+        "carries out your date". Every string of a reason the page shows (its words, what it rests on, what binds, what would change
+        it) goes through it before the page's other words for a reason. A reason shown under his own node's line says that node as
+        the page says it today ("this task"): there the page gives `his` as false for that one number.
+    R2a. The first of those reasons, shown under the order's line with his landing 3 at Lunga: its words are, but for the case of the
+        first letter, "your landing at Lunga stands: the staff forms no take beside it.", where "your landing at Lunga" is a link;
+        no "intent:", no "the commander" and no ", your," is left in what is shown; its WHY ends with "YOUR PLAN" and one link, "The
+        landing at Lunga". The fifth says "your landing at Lunga waits for your landing at Tulagi" (his landing 2 at Tulagi), each
+        a link.
     R3. The second, shown under his own landing's line: no YOUR PLAN link to the line it stands under; its limit is under YOUR LIMITS as
         today, and that link leads to the Risk line of his landing.
     R4. The fourth has no YOUR PLAN.
@@ -2670,9 +3280,132 @@ def a_reason_leads_to_his_line(bridge):
         least one serves N + 2 itself. For every reason given, `hisNodesIn(reason, [N + 1, N + 2])` is what the three tests of item 27
         give when the check works them itself from `serves.intent`, `limits` and the handles in `worked`.
     R7. The page's view of the first kind, in node on the real reason, ends its WHY with YOUR PLAN and the link "The landing at Lunga",
-        and shows no handle.
+        and shows no handle, no "the commander" and no ", your,": the engine's evidence there is "intent:K, the commander's, is in
+        force and its plan is ..." (crates/sim-staff/src/island.rs).
     The game is put away."""
-    check(False, "not built: decision 0232, step 3, rule 31 (a reason leads to his line)")
+    import copy
+    import re
+    print("-- a reason that leads to his line: hisNodesIn and writtenMarks in node, the page's view of a reason, and the engine's reasons", flush=True)
+    text = page_text()
+    # R5, in the page's text
+    check("openOrder(n)" in cut_function(text, "  function goToHis(") and "planFocus(hex)" in cut_function(text, "  function goToHis(") and "$('p-plan').open = true" in cut_function(text, "  function planFocus(")
+          and "readPlan(found.root, found.task !== found.root ? found.task : null)" in cut_function(text, "  function openOrder(") and "limitJump(limitFocus.kind, focus)" in cut_function(text, "  function readPlan("),
+          "R5: a YOUR PLAN link in a plan's paper opens that plan's paper at his node's line (readPlan with the node as its focus); in the reading of a draft it opens the fold p-plan at that landing")
+    check("block('YOUR PLAN', planLinks(t.reasons, t.n))" in cut_function(text, "  function whyView(") and "writtenMarks(t," in cut_function(text, "  function markHis(")
+          and all("markHis(" in cut_function(text, f"  function {f}(") for f in ("whyView", "paperLine")) and "reasonMarked(" in cut_function(text, "  function workedView(") and "reasonMarked(" in cut_function(text, "  function reasonView("),
+          "R2: every string of a reason goes through writtenMarks before the page's other words for a reason, and a WHY ends with YOUR PLAN")
+    check(not re.search(r"commander's|the commander|\.test\(|\.exec\(", cut_function(text, "  function hisNodesIn(")) and not re.search(r"commander's", cut_function(text, "  function hisNumbers(")),
+          "R1: whose a node is is decided by numbers and `maker`: no word of a reason is read to say it, and not the words \"the commander's\"")
+    helpers = "".join(cut_function(text, f"  function {h}(") + "\n" for h in ("hisNodesIn", "writtenMarks"))
+    heads = ["orderWords", "plainCounts", "shareWords", "tiredBit", "plainFact", "cautionPart", "cautionWords", "cautionTexts", "cleanName", "num", "hexDist", "hexWords", "nameText", "intentWords", "plainWords",
+             "tidyWorked", "paperPre", "paperText", "reasonWords", "cutTop", "oneFact", "threatsOf", "placeSpan", "taskWords", "rich", "plainLinks", "refTo", "nameOf", "hexRef", "hexPlace", "whyView",
+             "newTask", "hisNumbers", "hisNodesIn", "writtenMarks", "hisHex", "hisLanding", "hisLink", "planLinks", "goToHis", "draftHis", "landingWords", "landingCap", "limitLinks", "limitSetOn",
+             "limitLinkWords", "limitInState", "isDraftNo", "markHis", "paperLine", "orderWordsOf", "orderLink", "orderFound", "commas", "sayIntent", "sameHex", "limitJump"]
+    word = re.search(r"^  var WORD = \{.*?\};$", text, re.M).group(0)
+    code = "".join(cut_function(text, f"  function {h}(") + "\n" for h in heads) + word + "\n" + re.search(r"  var MENTION = .*\n", text).group(0)
+    code += text[text.index("  var LIMIT_LINK ="):text.index("  function limitLinkWords(")] + r"""
+Node.prototype.addEventListener = function () {}; document.createElement = function (t) { return new Node(t); };
+const hexes = [], config = { islands: [] }; let hexRaw = false, PAPER_TASKS = null, PAPER_ROOT = null, PLACE_HEX = null, paper = null, previewIntent = null, planState = { written: [] };
+const paperOpen = {}; function paperArcsDraw() {} function paperArc() { return null; } function planEnd() { return null; } function dateOf() { return ''; }
+M.contacts = []; M.bases = []; M.enemyBases = []; M.forces = []; M.units = [];
+function walk(n, f) { f(n); (n.kids || []).forEach(k => walk(k, f)); }
+// A reason shown under the line of task `own`, as the plan's paper shows it: through whyView, a block at a time.
+function view(state, hexNames, own, reason) {
+  M.state = state; M.queue = { entries: [] }; M.hexNames = hexNames; Object.keys(hexNames).forEach(k => { hexAt[k] = [0, 0, 0, 0, 0]; });
+  const t = newTask(own, 'Order'); t.reasons = [reason]; t.nothing = [reason.worked];
+  const w = whyView(t), blocks = [];
+  if (!w) return { blocks: [] };
+  w.kids.forEach(k => {
+    if (k.className === 'wsub') blocks.push({ title: k.textContent, items: [] });
+    else if (k.className === 'rpoints' && blocks.length) k.kids.forEach(li => { const links = []; walk(li, n => { if (n.className && /\bref\b/.test(n.className)) links.push(n.textContent); }); blocks[blocks.length - 1].items.push({ text: li.textContent, links: links }); });
+  });
+  return { blocks: blocks, text: w.textContent };
+}
+function main(x) {
+  const out = {};
+  if (x.his_in) out.his_in = x.his_in.map(r => hisNodesIn(r, x.his));
+  if (x.marks) out.marks = x.marks.map(p => [writtenMarks(p[0], n => x.mine.indexOf(n) >= 0), writtenMarks(p[0], () => false)]);
+  if (x.views) out.views = x.views.map(v => view(x.state, x.hexNames, v.own, v.reason));
+  if (x.jump) {
+    M.state = x.state; const rows = {}, picked = [], fake = k => ({ k: k, closest: () => null, scrollIntoView() {}, classList: { add() { picked.push(k); } }, querySelector: () => null });
+    $('sheet-doc').querySelector = sel => { const m = /data-his="(\d+)"\]\[data-key="(\w+)"/.exec(sel), p = /^\.limrow\[data-key="(\w+)"\]$/.exec(sel); const k = m ? 'his:' + m[1] + ':' + m[2] : p ? 'order:' + p[1] : null; return k && x.jump.rows.indexOf(k) >= 0 ? fake(k) : null; };
+    limitJump(x.jump.kind, x.jump.at); out.picked = picked;
+  }
+  return out;
+}
+"""
+    his_nodes = HIS_NODES
+    pairs = REASONS_AND_HIS_NODES
+    bare = [{k: v for k, v in r.items() if not (k == "limits" and v is None)} for r, _ in pairs]
+    first = run_in_node(code, {"his": his_nodes, "his_in": [r for r, _ in pairs] + bare, "marks": [[a, b] for a, b in HIS_LANDING_READ], "mine": [3]})
+    want = [nodes for _, nodes in pairs]
+    check(first["his_in"] == want + want, f"R1: hisNodesIn gives, for each reason, the numbers beside it, ascending, and the same with its limits key taken out ({first['his_in']})")
+    check([m[0] for m in first["marks"]] == [b for _, b in HIS_LANDING_READ], f"R2: writtenMarks of each of HIS_LANDING_READ's first, with his nodes [3], is exactly its second ({[m[0] for m in first['marks'] if m[0] not in [b for _, b in HIS_LANDING_READ]]})")
+    check([m[1] for m in first["marks"]] == [a for a, _ in HIS_LANDING_READ], "R2: with no node of his it gives every text back unchanged")
+    # R2a, R3, R4: a reason as the plan's paper shows it
+    lunga_hex, tulagi_hex = [2, -4], [3, -5]
+    state = {"intents": [{"number": 1, "kind": "control_island", "maker": "commander", "parent": None, "hex": None, "in_force": True, "island": 3},
+                         {"number": 2, "kind": "take_place", "maker": "commander", "parent": 1, "hex": tulagi_hex, "in_force": True},
+                         {"number": 3, "kind": "take_place", "maker": "commander", "parent": 1, "hex": lunga_hex, "in_force": True},
+                         {"number": 4, "kind": "hold", "maker": "staff", "parent": 1, "hex": None, "in_force": True, "base": {"handle": "base:1", "name": "Lunga"}},
+                         {"number": 30, "kind": "hold", "maker": "staff", "parent": 1, "hex": None, "in_force": True, "base": {"handle": "base:1", "name": "Lunga"}}]}
+    names = {"2,-4": "Lunga", "3,-5": "Tulagi"}
+    reasons = [r for r, _ in pairs]
+    said = run_in_node(code, {"state": state, "hexNames": names, "views": [{"own": 1, "reason": reasons[0]}, {"own": 3, "reason": reasons[1]}, {"own": 4, "reason": reasons[3]}, {"own": 1, "reason": reasons[4]}]})["views"]
+    one, two, four, five = said
+    lower = lambda s: s[:1].lower() + s[1:]
+    held = [i for b in one["blocks"] if b["title"] == "HOLDS IT BACK" for i in b["items"]]
+    check(held and lower(held[0]["text"]) == "your landing at Lunga stands: the staff forms no take beside it." and held[0]["links"] and lower(held[0]["links"][0]) == "your landing at Lunga",
+          f"R2a: the first reason under the order's line says your landing at Lunga stands: the staff forms no take beside it., where your landing at Lunga is a link ({held[:1]})")
+    check(not re.search(r"intent:|the commander|, your,", one["text"]) and one["blocks"][-1]["title"] == "YOUR PLAN" and [i["links"] for i in one["blocks"][-1]["items"]] == [["The landing at Lunga"]],
+          f"R2a: no intent:, no the commander and no , your, is left in what is shown, and its WHY ends with YOUR PLAN and one link, The landing at Lunga ({one['blocks'][-1]})")
+    waits = [i for b in five["blocks"] if b["title"] == "HOLDS IT BACK" for i in b["items"]]
+    check(waits and lower(waits[0]["text"]) == "your landing at Lunga waits for your landing at Tulagi." and [lower(l) for l in waits[0]["links"]] == ["your landing at Lunga", "your landing at Tulagi"],
+          f"R2a: the fifth says your landing at Lunga waits for your landing at Tulagi, each a link ({waits[:1]})")
+    check([b["title"] for b in two["blocks"]].count("YOUR PLAN") == 0 and any(b["title"] == "YOUR LIMITS" for b in two["blocks"]),
+          f"R3: the second, under his own landing's line, has no YOUR PLAN link to the line it stands under, and its limit is under YOUR LIMITS ({[b['title'] for b in two['blocks']]})")
+    jump = run_in_node(code, {"state": state, "jump": {"kind": "risk", "at": 3, "rows": ["order:risk", "his:3:risk"]}})["picked"]
+    plain = run_in_node(code, {"state": state, "jump": {"kind": "risk", "at": None, "rows": ["order:risk", "his:3:risk"]}})["picked"]
+    check(jump == ["his:3:risk"] and plain == ["order:risk"], f"R3: that limit's link leads to the Risk line of his landing, and a limit of an order itself to the order's ({jump}, {plain})")
+    check(not any(b["title"] == "YOUR PLAN" for b in four["blocks"]), f"R4: the fourth has no YOUR PLAN ({[b['title'] for b in four['blocks']]})")
+    # Through the bridge: the worked draft signed, leave to launch given, one day resolved
+    check(begin(bridge, "guadalcanal-39-days", "engine", "person") == {"ok": True}, "begun: the person Japanese, to read the hexes of Lunga and Tulagi")
+    placed = {b["base"]["handle"]: [b["place"]["q"], b["place"]["r"]] for b in Person(bridge.table).call("list_bases")["ok"]["bases"]}
+    h1, h4 = placed["base:1"], placed["base:4"]
+    check(post(bridge.table + "/new") == {"ok": True}, "the game is put away")
+    check(begin(bridge, "guadalcanal-39-days", "person", "engine") == {"ok": True}, "begun: the person Allied against the engine")
+    person = Person(bridge.table)
+    command = {"command": "set_intent", "intent_kind": "control_island", "island": 3}
+    n = person.call("preview", command)["ok"]["intent"]
+    drafted = person.call("preview", dict(command, under=worked_under(n, h1, h4)))["ok"]
+    check(person.call("approve", {"preview": drafted["preview"]})["ok"]["status"] == "queued", "the worked draft is signed")
+    person.call("set_leave", {"leave": "launch", "given": True})
+    person.call("end_day")
+    given = person.call("staff_orders")["ok"]
+    every = [o["reason"] for o in given.get("orders", [])] + [c["reason"] for c in given.get("commands", [])] + list(given.get("no_orders", []))
+    every = [r for r in every if isinstance(r, dict)]
+    tulagi, lunga = n + 1, n + 2
+    # R6
+    check(any((r.get("serves") or {}).get("intent") == n and f"intent:{lunga}" in str(r.get("worked")) for r in every) and any((r.get("serves") or {}).get("intent") == lunga for r in every),
+          f"R6: among the {len(every)} reasons staff_orders gives, one serves the order and carries the handle of intent {lunga} in its words, and one serves intent {lunga} itself")
+
+    def by_the_three_tests(r):
+        found = set()
+        if (r.get("serves") or {}).get("intent") in (tulagi, lunga):
+            found.add(r["serves"]["intent"])
+        found |= {l["intent"] for l in (r.get("limits") or []) if l.get("intent") in (tulagi, lunga)}
+        found |= {int(k) for k in re.findall(r"\bintent:(\d+)\b", str(r.get("worked"))) if int(k) in (tulagi, lunga)}
+        return sorted(found)
+    real = run_in_node(code, {"his": [tulagi, lunga], "his_in": every})["his_in"]
+    check(real == [by_the_three_tests(r) for r in every], f"R6: for each of the {len(every)} reasons hisNodesIn gives what the three tests of item 27 give when worked from serves.intent, limits and the handles in worked")
+    # R7
+    state_now = person.call("command_state")["ok"]
+    first_kind = [r for r in every if (r.get("serves") or {}).get("intent") == n and f"intent:{lunga}" in str(r.get("worked"))][0]
+    seen = run_in_node(code, {"state": state_now, "hexNames": {f"{h1[0]},{h1[1]}": "Lunga", f"{h4[0]},{h4[1]}": "Tulagi"}, "views": [{"own": n, "reason": first_kind}]})["views"][0]
+    check(seen["blocks"] and seen["blocks"][-1]["title"] == "YOUR PLAN" and [i["links"] for i in seen["blocks"][-1]["items"]] == [["The landing at Lunga"]],
+          f"R7: the page's view of the real reason ends its WHY with YOUR PLAN and the link The landing at Lunga ({seen['blocks'][-1:] })")
+    check(not re.search(r"intent:\d|the commander|, your,", seen["text"]), f"R7: and shows no handle, no the commander and no , your, ({seen['text'][:200]})")
+    check(post(bridge.table + "/new") == {"ok": True}, "the game is put away")
 
 
 # ---- Rung 1 on the table (decision 0237). The statements are the architect's, written before the code with
@@ -3112,6 +3845,11 @@ def main():
             person_against_agent(bridge, args.hold)
             seat_mcp(bridge)
             the_island_of_two_places(bridge)
+            your_plan_on_the_order_paper(bridge)
+            the_draft_is_read_and_signed_as_one(bridge)
+            the_dry_run_shows_two_plans(bridge)
+            the_plan_paper_marks_whose_line(bridge)
+            a_reason_leads_to_his_line(bridge)
             rung_one_on_the_list(bridge)
             the_supply_orders_two_numbers(bridge)
             the_supply_order_signed(bridge)
