@@ -130,13 +130,73 @@ fn statement_1_the_scripts_check_passes() {
     );
 }
 
+const TRIAL_LINE: &str = "trial = \"../../reference/trial.toml\"";
+const ISLAND_3: [&str; 4] = [
+    "[[island]]",
+    "number = 3",
+    "name = \"Guadalcanal and Tulagi\"",
+    "places = [{ base = 1 }, { base = 4 }]",
+];
+
+/// The data lines of a made file, and of its source, as statement 2a reads
+/// them: the made file's with the lines 2a adds taken out (checked to be
+/// there, where and as many as 2a says), the source's as they are.
+fn made_without_added(name: &str) -> (Vec<String>, Vec<String>) {
+    let from = data_lines(&read(repo().join("data/scenarios/table-boats").join(name)));
+    let mut made = data_lines(&read(
+        repo().join("data/scenarios/table-rear-bases").join(name),
+    ));
+    let is_full = name.starts_with("07_");
+    let added = if is_full { 13 } else { 5 };
+    assert_eq!(made.len(), from.len() + added, "{name}: the lines added");
+    // the trial's line, next after the class_sides line
+    let class_sides = made
+        .iter()
+        .position(|l| l == "class_sides = \"../../reference/class_sides_full_slice.csv\"")
+        .expect("the class_sides line");
+    assert_eq!(made[class_sides + 1], TRIAL_LINE, "{name}");
+    made.remove(class_sides + 1);
+    // island 3, after islands 1 and 2; in the full-slice copy the twelve
+    // lines of the three islands are the last lines of the file
+    if is_full {
+        assert_eq!(made.len(), from.len() + 12, "{name}");
+        let at = made.len() - 12;
+        let sister = data_lines(&read(
+            repo()
+                .join("data/scenarios/table-rear-bases")
+                .join("07b_slice_submarines.toml"),
+        ));
+        let first = sister
+            .iter()
+            .position(|l| l == "[[island]]")
+            .expect("07b's islands");
+        assert_eq!(
+            made[at..at + 8],
+            sister[first..first + 8],
+            "{name}: 1 and 2"
+        );
+        assert_eq!(made[at + 8..], ISLAND_3, "{name}: island 3");
+        made.truncate(at);
+    } else {
+        let at = made
+            .iter()
+            .position(|l| l == ISLAND_3[1])
+            .expect("island 3")
+            - 1;
+        assert_eq!(made[at..at + 4], ISLAND_3, "{name}");
+        // after island 2 (a name, then its places)
+        assert_eq!(made[at - 1], "places = [{ base = 4 }]", "{name}");
+        made.drain(at..at + 4);
+    }
+    (from, made)
+}
+
 #[test]
 fn statement_2_each_file_differs_in_what_the_rulings_say_and_nothing_else() {
+    // Statement 2a, which amends statement 2: the added lines are counted and
+    // taken out, then the lines differ as statement 2 says.
     for name in FILES {
-        let from = data_lines(&read(repo().join("data/scenarios/table-boats").join(name)));
-        let made = data_lines(&read(
-            repo().join("data/scenarios/table-rear-bases").join(name),
-        ));
+        let (from, made) = made_without_added(name);
         assert_eq!(from.len(), made.len(), "{name}: the same lines");
         let differing: Vec<(&String, &String)> =
             from.iter().zip(&made).filter(|(a, b)| a != b).collect();
@@ -217,22 +277,112 @@ fn statement_4_task_force_30_may_be_used_on_day_9_and_lies_at_rabaul_with_7_t() 
     }
 }
 
+fn live(name: &str) -> sim_data::Scenario {
+    common::load_live(&repo().join("data/scenarios/table-rear-bases").join(name))
+        .expect("the file loads")
+}
+
+/// An island as the map gives it: its number, name and the hexes of its
+/// places in order.
+fn islands_of(scenario: &sim_data::Scenario) -> Vec<(u32, String, Vec<sim_core::hex::Hex>)> {
+    scenario
+        .world
+        .map()
+        .islands()
+        .map(|i| {
+            (
+                i.number,
+                i.name.clone(),
+                i.places.iter().map(|p| p.hex).collect(),
+            )
+        })
+        .collect()
+}
+
 #[test]
 fn statement_6_the_full_slice_copy_has_islands_1_and_2_as_its_sisters_have_them() {
-    panic!("not built: decision 0232, step 3, the island (statement 6)");
+    let sister = islands_of(&live("07b_slice_submarines.toml"));
+    let full = islands_of(&live("07_full_slice_submarines.toml"));
+    for number in [1, 2] {
+        let a = sister.iter().find(|i| i.0 == number).expect("07b's island");
+        let b = full.iter().find(|i| i.0 == number).expect("the island");
+        assert_eq!(a, b, "island {number}");
+    }
+    assert_eq!(sister[0].1, "Guadalcanal");
+    assert_eq!(sister[1].1, "Tulagi");
 }
 
 #[test]
 fn statement_7_each_file_has_the_island_of_two_places() {
-    panic!("not built: decision 0232, step 3, the island (statement 7)");
+    for name in FILES {
+        let scenario = live(name);
+        let truth = scenario.world.umpire();
+        let island = scenario
+            .world
+            .map()
+            .island(3)
+            .unwrap_or_else(|| panic!("{name}: island 3"));
+        assert_eq!(island.name, "Guadalcanal and Tulagi", "{name}");
+        let hexes: Vec<_> = island.places.iter().map(|p| p.hex).collect();
+        assert_eq!(
+            hexes,
+            vec![
+                truth.bases[&BaseId::new(1)].hex,
+                truth.bases[&BaseId::new(4)].hex
+            ],
+            "{name}"
+        );
+        if name != FILES[0] {
+            let all = islands_of(&scenario);
+            assert_eq!(all.len(), 3, "{name}");
+            assert_eq!(all[0].1, "Guadalcanal", "{name}");
+            assert_eq!(all[1].1, "Tulagi", "{name}");
+        }
+    }
 }
 
 #[test]
 fn statement_8_no_game_moves_by_the_island() {
-    panic!("not built: decision 0232, step 3, the island (statement 8)");
+    // The file's text with the lines 2a adds taken out, loaded from that
+    // text (at the file's own path), against the file kept: the hash at the
+    // start and the hash at the end of day 1, run with the staffs.
+    fn start_and_day_1(mut scenario: sim_data::Scenario) -> (u64, u64) {
+        let start = scenario.world.state_hash();
+        let held = sim_staff::staffs();
+        scenario
+            .next_day_watched(sim_staff::as_staffs(&held), &mut |_, _| {})
+            .expect("day 1 resolves")
+            .expect("there is a day 1");
+        (start, scenario.world.state_hash())
+    }
+    for name in FILES {
+        let path = repo().join("data/scenarios/table-rear-bases").join(name);
+        let text = read(path.clone());
+        let mut stripped = common::replace_once(&text, &format!("{TRIAL_LINE}\n"), "");
+        if name == FILES[0] {
+            let at = stripped.find("[[island]]").expect("its islands");
+            stripped.truncate(at);
+        } else {
+            let block = format!("{}\n\n", ISLAND_3.join("\n"));
+            let block = if stripped.contains(&block) {
+                block
+            } else {
+                format!("\n{}\n", ISLAND_3.join("\n"))
+            };
+            stripped = common::replace_once(&stripped, &block, "");
+        }
+        let without = sim_data::Scenario::from_text(&stripped, &path).expect("the text loads");
+        let kept = common::load_live(&path).expect("the file loads");
+        assert_eq!(start_and_day_1(without), start_and_day_1(kept), "{name}");
+    }
 }
 
 #[test]
 fn statement_9_each_file_names_the_trials_figures() {
-    panic!("not built: decision 0232, step 3, the island (statement 9)");
+    let figures = sim_data::load_trial_figures(&common::data_dir().join("reference/trial.toml"))
+        .expect("the trial's figures load");
+    for name in FILES {
+        let scenario = live(name);
+        assert_eq!(scenario.trial_figures(), Some(&figures), "{name}");
+    }
 }

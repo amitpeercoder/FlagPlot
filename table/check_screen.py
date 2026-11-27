@@ -2459,7 +2459,44 @@ def the_island_of_two_places(bridge):
     I6. (Item 7, on the designer's yes of Nov 27, 2026.) In that game the seat is offered the tool `trial`: a call of it with that
         preview and `describe` true is answered and not refused.
     Each game is put away after it."""
-    check(False, "not built: decision 0232, step 3, the island of two places")
+    print("-- the island of two places: the list, the card and the games of the 39 days", flush=True)
+    entries = {e["id"]: e for e in json.load(open(os.path.join(HERE, "scenarios.json")))["scenarios"]}
+    islands = entries["guadalcanal-39-days"]["islands"]
+    check(islands == [{"number": 1, "name": "Guadalcanal", "base": 1}, {"number": 2, "name": "Tulagi", "base": 4},
+                      {"number": 3, "name": "Guadalcanal and Tulagi", "base": 1, "places": [1, 4]}],
+          f"I1: the 39 days lists three islands in order, the third of two places ({islands})")
+    check(all(i["number"] != 3 and "places" not in i for gid, e in entries.items() if gid != "guadalcanal-39-days" for i in e.get("islands", [])),
+          "I1: no other entry has an island numbered 3 or the key places")
+    page = page_text()
+    check("config.islands.forEach(function (i) { if (i.base === n || (i.places && i.places.indexOf(n) >= 0)) {" in page,
+          "I2: the page offers an island on the card of its base and of each base in its places")
+    command = {"command": "set_intent", "intent_kind": "control_island", "island": 3}
+    for allied, japanese in (("person", "engine"), ("engine", "person"), ("person", "agent")):
+        check(begin(bridge, "guadalcanal-39-days", allied, japanese) == {"ok": True}, f"begun: the 39 days, {allied} Allied against {japanese} Japanese")
+        person = Person(bridge.table)
+        answer = person.call("preview", command)
+        check("ok" in answer and "refused" not in answer and "error" not in answer,
+              f"I3: a preview of island 3 is not refused ({allied} against {japanese}): {str(answer)[:120]}")
+        if (allied, japanese) == ("person", "agent"):
+            for number in (1, 2):
+                answer = person.call("preview", dict(command, island=number))
+                check("ok" in answer and "refused" not in answer and "error" not in answer,
+                      f"I4: in the person Allied against an agent a preview of island {number} is not refused: {str(answer)[:120]}")
+        check(post(bridge.table + "/new") == {"ok": True}, "the game is put away")
+    # H1 and H4, read from a seat that holds the bases (the Japanese, who hold Lunga and Tulagi on the first evening)
+    check(begin(bridge, "guadalcanal-39-days", "engine", "person") == {"ok": True}, "begun: the person Japanese, to read the hexes of Lunga and Tulagi")
+    placed = {b["base"]["handle"]: [b["place"]["q"], b["place"]["r"]] for b in Person(bridge.table).call("list_bases")["ok"]["bases"]}
+    h1, h4 = placed["base:1"], placed["base:4"]
+    check(post(bridge.table + "/new") == {"ok": True}, "the game is put away")
+    check(begin(bridge, "guadalcanal-39-days", "person", "engine") == {"ok": True}, "begun: the person Allied against the engine")
+    person = Person(bridge.table)
+    shown = person.call("preview", command)["ok"]
+    takes = [i for i in shown["with_change"]["tree"]["sub_intents"] if i["kind"] == "take_place" and i["parent"] == shown["intent"]]
+    check([(t["maker"], t["hex"]) for t in takes] == [("staff", h1), ("staff", h4)],
+          f"I5: the tree of that preview has two takes under the order, the staff's, at the hex of Lunga then of Tulagi ({[(t['maker'], t['hex']) for t in takes]} for {h1}, {h4})")
+    tried = person.call("trial", {"preview": shown["preview"], "describe": True})
+    check("ok" in tried and "refused" not in tried and "error" not in tried, f"I6: a dry run of that preview, described, is answered and not refused: {str(tried)[:120]}")
+    check(post(bridge.table + "/new") == {"ok": True}, "the game is put away")
 
 
 def your_plan_on_the_order_paper(bridge):
