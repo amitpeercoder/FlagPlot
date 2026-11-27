@@ -1,10 +1,10 @@
 # 0240: The order paper reads as the order
 
-Status: a plan, written by the architect on Nov 27, 2026 at the designer's word ("Plan the order paper"), reviewed that day by a fresh agent and amended from its findings. Needs review: the designer's word on the plan before anything is built.
+Status: approved by the designer on Nov 27, 2026 ("OK. Go ahead."). Written by the architect that day at his word ("Plan the order paper"), reviewed by a fresh agent and amended from its findings. To be built in three stages.
 
 Summary: The order paper is laid out again so that it reads as the order being given. Its heading is the order in words, the list of ends goes from it, what an order of its kind cannot do without stands on its face as blanks that start empty, the staff's reading stands directly under the order, and when it acts is said beside the button that signs it. For a supply order the days of supply, the ships and the source are such blanks. No rule of the game changes. Three stages; the plan takes class 3's ceremony and each build is class 2.
 
-Standing: A plan, needs review; amends decision 0221, rule 8 and amended rule 12, decision 0222, rule 1, its as-built bullet "The order paper" and the paper's lines in `table/README.md`, decision 0232's as-built order of the parts (check P1), and decision 0237's as-built note on the floor's starting value; nothing built
+Standing: Approved by the designer on Nov 27, 2026; amends decision 0221, rule 8 and amended rule 12, decision 0222, rule 1, its as-built bullet "The order paper" and the paper's lines in `table/README.md`, decision 0232's as-built order of the parts (check P1), and decision 0237's as-built note on the floor's starting value; nothing built
 
 ## Why
 
@@ -150,7 +150,9 @@ The as-built file for this record is written with each stage.
 
 No rule card: the plan adds no rule, state, draw, event or tool. It reads what the paper reads now (the seat's `preview`, `command_state`, `list_forces`, `list_bases`) and sends what it sends now (`preview`, `approve`, `issue_orders`, `hold`).
 
-## Questions for the designer
+## Questions for the designer, and his answer
+
+Both were put to him on Nov 27, 2026 with the architect's course for each, which is the plan's: the interval keeps "left to the staff: 15 days", and Risk goes into the fold for every kind. He answered "OK. Go ahead." Both stand as the plan has them.
 
 1. **Rule N.** A new player meets a supply paper that cannot be signed until he gives the days, the ship and the source, in place of one he can sign at once to no effect. The plan takes the first. Within it: the interval keeps "left to the staff: 15 days", which fails rung 1's mission if he leaves it. The other course is for the interval's empty row to say nothing of a number.
 2. **Risk in the fold.** Risk is a choice of some weight in the 39 days and of none in rung 1. The plan puts it first in the fold for every kind, with the fold's closed line always saying it. The other course keeps it on the face wherever the side holds a contact of the enemy, which is a control that comes and goes.
