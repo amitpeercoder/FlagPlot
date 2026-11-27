@@ -2478,13 +2478,13 @@ def the_island_of_two_places(bridge):
         check(begin(bridge, "guadalcanal-39-days", allied, japanese) == {"ok": True}, f"begun: the 39 days, {allied} Allied against {japanese} Japanese")
         person = Person(bridge.table)
         answer = person.call("preview", command)
-        check("ok" in answer and "refused" not in answer and "error" not in answer,
-              f"I3: a preview of island 3 is not refused ({allied} against {japanese}): {str(answer)[:120]}")
+        check("ok" in answer and answer["ok"].get("status") != "refused" and answer["ok"].get("valid") is True,
+              f"I3: a preview of island 3 is not refused and is valid ({allied} against {japanese}): {str(answer)[:120]}")
         if (allied, japanese) == ("person", "agent"):
             for number in (1, 2):
                 answer = person.call("preview", dict(command, island=number))
-                check("ok" in answer and "refused" not in answer and "error" not in answer,
-                      f"I4: in the person Allied against an agent a preview of island {number} is not refused: {str(answer)[:120]}")
+                check("ok" in answer and answer["ok"].get("status") != "refused" and answer["ok"].get("valid") is True,
+                      f"I4: in the person Allied against an agent a preview of island {number} is not refused and is valid: {str(answer)[:120]}")
         check(post(bridge.table + "/new") == {"ok": True}, "the game is put away")
     # H1 and H4, read from a seat that holds the bases (the Japanese, who hold Lunga and Tulagi on the first evening)
     check(begin(bridge, "guadalcanal-39-days", "engine", "person") == {"ok": True}, "begun: the person Japanese, to read the hexes of Lunga and Tulagi")
@@ -2498,7 +2498,7 @@ def the_island_of_two_places(bridge):
     check([(t["maker"], t["hex"]) for t in takes] == [("staff", h1), ("staff", h4)],
           f"I5: the tree of that preview has two takes under the order, the staff's, at the hex of Lunga then of Tulagi ({[(t['maker'], t['hex']) for t in takes]} for {h1}, {h4})")
     tried = person.call("trial", {"preview": shown["preview"], "describe": True})
-    check("ok" in tried and "refused" not in tried and "error" not in tried, f"I6: a dry run of that preview, described, is answered and not refused: {str(tried)[:120]}")
+    check("ok" in tried and tried["ok"].get("status") != "refused", f"I6: a dry run of that preview, described, is answered and not refused: {str(tried)[:120]}")
     check(post(bridge.table + "/new") == {"ok": True}, "the game is put away")
 
 
