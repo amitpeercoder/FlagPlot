@@ -89,11 +89,24 @@ button:disabled { opacity: 0.45; cursor: default; }
 .slip button, .order button, .sheet button { min-height: 42px; padding: 0 14px; border-radius: 2px; font-size: 16px; font-weight: 600; letter-spacing: 0.08em; background: transparent; color: var(--paper-ink); border: 1.5px solid var(--paper-ink); }
 .slip button.go, .order button.go { background: var(--own); color: var(--paper); border-color: var(--own); }
 
-.order { position: fixed; right: 16px; left: auto; top: 60px; bottom: auto; width: min(360px, calc(100% - var(--sp-w) - 48px)); max-height: calc(100% - 60px - 124px); overflow-y: auto; background: var(--paper); color: var(--paper-ink); font-family: var(--f-type); font-size: 14px; line-height: 1.38; padding: 14px 16px; border-radius: 2px; box-shadow: 0 8px 24px rgba(0,0,0,0.55); display: flex; flex-direction: column; gap: 10px; }
+.order { position: fixed; right: 16px; left: auto; top: 60px; bottom: auto; width: min(400px, calc(100% - var(--sp-w) - 48px)); max-height: calc(100% - 60px - 124px); overflow-y: auto; background: var(--paper); color: var(--paper-ink); font-family: var(--f-type); font-size: 14px; line-height: 1.38; padding: 14px 16px; border-radius: 2px; box-shadow: 0 8px 24px rgba(0,0,0,0.55); display: flex; flex-direction: column; gap: 10px; }
 /* The one order paper: the same parts in the same places for every order. */
 .order [hidden] { display: none !important; }
 .order.abovesheet { z-index: 45; }
-#paper .pp { display: flex; flex-direction: column; gap: 4px; border-top: 1px dashed #8d8672; padding-top: 8px; }
+#paper .pp { display: flex; flex-direction: column; gap: 4px; }
+#paper fieldset { border-top: 0; padding-top: 0; }
+#paper .pv { border-top: 0; padding-top: 0; }
+#paper .phead { display: flex; flex-direction: column; gap: 2px; border-bottom: 1px solid #8d8672; padding-bottom: 8px; }
+#paper #p-head { font-family: var(--f-ui); font-size: 12px; font-weight: 700; letter-spacing: 0.14em; color: var(--paper-dim); }
+#paper #p-title { font-size: 19px; letter-spacing: 0.02em; line-height: 1.25; overflow-wrap: anywhere; }
+#paper #p-title:empty { display: none; }
+#paper #p-title button.ref { font-size: inherit; letter-spacing: inherit; }
+#paper .pfoot { display: flex; flex-direction: column; gap: 8px; border-top: 1px solid #8d8672; padding-top: 8px; }
+#paper .pfoot #p-acts-t { color: var(--paper-ink); }
+#paper .pfoot #p-acts-t:empty { display: none; }
+@media (min-width: 760px) { #paper .pfoot { position: sticky; bottom: 0; background: var(--paper); margin-bottom: -14px; padding-bottom: 14px; } }
+#paper input[type=number] { background: transparent; border: 0; border-bottom: 1px solid var(--paper-ink); border-radius: 0; color: var(--paper-ink); font-family: var(--f-type); padding: 2px 4px; text-align: center; }
+#paper input[type=number]:focus-visible { outline: 3px solid #f0c36a; outline-offset: 1px; }
 #paper .pp .pl { font-family: var(--f-ui); font-size: 12px; font-weight: 700; letter-spacing: 0.14em; color: var(--paper-dim); }
 #p-staff, #p-force, #p-unit { display: flex; flex-direction: column; gap: 8px; }
 #p-summary:empty, #p-costs:empty, #p-says:empty, #o-dry-says:empty { display: none; }
@@ -135,7 +148,7 @@ button:disabled { opacity: 0.45; cursor: default; }
 #p-plan .planlines { display: flex; flex-direction: column; gap: 8px; }
 #p-says { display: flex; flex-direction: column; gap: 4px; font-size: 14px; }
 #p-says .sentline { color: var(--paper-dim); }
-#p-says .ask { border-top: 1px dashed #8d8672; padding-top: 8px; display: flex; flex-direction: column; gap: 8px; }
+#p-says .ask { display: flex; flex-direction: column; gap: 8px; }
 #paper .nomake { color: var(--paper-dim); }
 #paper .nomake:empty { display: none; }
 .order h2, .sheet h2 { margin: 0; font-family: var(--f-ui); font-size: 19px; font-weight: 700; letter-spacing: 0.12em; }
@@ -172,12 +185,6 @@ button:disabled { opacity: 0.45; cursor: default; }
 .seg label:hover > span { border-color: var(--paper-ink); }
 .order input[type=range] { flex: 1 1 100%; accent-color: var(--own); }
 .order legend { font-size: 12px; color: var(--paper-dim); padding: 0 6px 0 0; }
-.order #o-ends { flex-direction: column; flex-wrap: nowrap; gap: 6px; }
-.order #o-ends label { align-items: flex-start; min-height: 0; padding: 3px 0; }
-.order #o-ends input { margin-top: 3px; flex: none; }
-.order #o-ends .endw { display: flex; flex-direction: column; gap: 1px; }
-.order #o-ends .endw b { font-weight: 700; }
-.order #o-ends .endw small { font-size: 12px; color: var(--paper-dim); line-height: 1.3; }
 .order label { display: inline-flex; align-items: center; gap: 6px; min-height: 38px; cursor: pointer; }
 /* What stops the clock (decision 0221, stage 4): a fold in the stop paper's foot, closed. The ticks are the commander's own settings. */
 .fold { border-top: 1px solid #cfc6a8; margin: -4px 0 0; padding-top: 6px; }
@@ -510,7 +517,7 @@ body.watched .gives { display: none !important; }
 #sp-why:focus-visible, #card:focus-visible { outline: 2px solid #b8862a; outline-offset: 2px; }
   body.drawer-open .stoppaper .sp-foot { padding: 10px 18px 14px; }
   body.drawer-open .menus, body.drawer-open .view { z-index: 11; }
-  .order { width: min(360px, calc(100% - 32px)); }
+  .order { width: min(400px, calc(100% - 32px)); }
   .view { max-width: calc(100% - 32px); }
 }
 @media (max-width: 760px) {
@@ -542,7 +549,7 @@ body.watched .gives { display: none !important; }
    and clear of the menus; in the drawer layout under the head and its strip (--sp-h is the stop paper's foot, set by the page). */
 #prompt { position: fixed; top: 12px; bottom: auto; left: calc(var(--sp-w) + 16px); right: 200px; width: fit-content; max-width: 340px; margin: 0 auto; z-index: 7; padding: 9px 12px; background: var(--paper); color: var(--paper-ink); font-family: var(--f-type); font-size: 14px; line-height: 1.35; border-left: 4px solid var(--own); box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
 #prompt[hidden] { display: none; }
-body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px); }
+body.papered #prompt { right: calc(min(400px, 100% - var(--sp-w) - 48px) + 32px); }
 @media (max-width: 1099px) { #prompt, body.papered #prompt { top: calc(var(--sp-h, 190px) + 8px); left: 16px; right: auto; margin: 0; max-width: min(340px, calc(100% - 32px)); } body.drawer-open #prompt { left: 416px; } }
 @media (max-width: 760px) { #prompt, body.papered #prompt { top: calc(var(--sp-h, 190px) + 56px); } body.prompting .order { top: calc(var(--sp-h, 190px) + 56px + var(--pr-h, 60px) + 8px); max-height: calc(100% - var(--sp-h, 190px) - 56px - var(--pr-h, 60px) - 8px - 124px); } }
 #game-says { font-family: var(--f-type); font-size: 13px; line-height: 1.4; color: var(--ink); }
@@ -617,16 +624,13 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
 
 <form class="order gives" id="paper" hidden aria-label="An order, in draft">
   <div class="cardnav"><button type="button" id="p-back" hidden></button></div>
-  <h2>ORDER &middot; <span id="p-draft">DRAFT</span></h2>
-  <div class="pp" id="p-to"><span class="pl">TO</span><span class="pv-" id="p-to-name"></span></div>
-  <div class="pp" id="p-the"><span class="pl">THE ORDER</span>
+  <div class="phead"><div id="p-head"></div><h2 id="p-title"></h2></div>
+  <div class="pp" id="p-the">
     <div id="p-staff" hidden>
-      <div>At <strong id="o-place">this place</strong> you are to:</div>
-      <fieldset id="o-ends"><legend>END</legend></fieldset>
-      <div class="frow" id="o-patrol" hidden><span class="fl">Patrol these waters,</span><input type="number" id="o-dist" min="1" max="6" step="1" value="2" aria-label="Hexes round the place"><span class="sval" id="o-dist-out"></span></div>
+      <div class="frow" id="o-patrol" hidden><label class="fl" for="o-dist">Patrol these waters,</label><input type="number" id="o-dist" min="1" max="6" step="1" value="2" aria-label="Hexes round the place"><span class="sval" id="o-dist-out"></span></div>
       <div id="o-supply" hidden>
-        <div class="frow"><span class="fl">Never below</span><input type="number" id="o-floor" min="1" max="99" step="1" value="30" aria-label="Days of supply never to fall below"><span class="fl">days of supply</span></div>
-        <div class="frow"><span class="fl">Each run brings</span><input type="number" id="o-interval" min="1" max="99" step="1" aria-label="Days more each run brings"><span class="fl">days more</span><span class="sval" id="o-interval-out"></span></div>
+        <div class="frow"><label class="fl" for="o-floor">Never below</label><input type="number" id="o-floor" min="1" max="99" step="1" value="30" aria-label="Days of supply never to fall below"><span class="fl">days of supply</span></div>
+        <div class="frow"><label class="fl" for="o-interval">Each run brings</label><input type="number" id="o-interval" min="1" max="99" step="1" aria-label="Days more each run brings"><span class="fl">days more</span><span class="sval" id="o-interval-out"></span></div>
       </div>
       <fieldset id="o-risk"><legend>RISK</legend>
         <label><input type="radio" name="risk" id="o-risk-preserve" value="preserve"> Preserve</label>
@@ -669,14 +673,16 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
   <div class="pp" id="p-hands" hidden><span class="pl">IN WHOSE HANDS</span><span id="p-hands-t"></span></div>
   <details class="pp" id="p-limits" hidden><summary id="p-limits-sum">LIMITS</summary><div id="p-limits-body"></div></details>
   <details class="pp" id="p-plan" hidden><summary id="p-plan-sum">YOUR PLAN</summary><div id="p-plan-body"></div></details>
-  <div class="pp" id="p-acts"><span class="pl">ACTS</span><span id="p-acts-t"></span></div>
   <details class="pv" id="o-pv" open hidden><summary id="o-pv-sum">THE STAFF'S READING</summary><div id="o-preview" aria-live="polite">Asking the staff.</div></details>
   <div id="o-dry-says" class="pv" aria-live="polite"></div>
   <div id="p-says" aria-live="polite"></div>
-  <div class="row">
-    <button type="submit" class="go" id="p-sign" disabled title="Sign and send: Ctrl+Enter anywhere in the paper">SIGN AND SEND</button>
-    <button type="button" id="p-dry" hidden disabled>DRY RUN</button>
-    <button type="button" id="p-cancel">TEAR UP</button>
+  <div class="pfoot" id="p-foot">
+    <div id="p-acts-t"></div>
+    <div class="row">
+      <button type="submit" class="go" id="p-sign" disabled title="Sign and send: Ctrl+Enter anywhere in the paper">SIGN AND SEND</button>
+      <button type="button" id="p-dry" hidden disabled>DRY RUN</button>
+      <button type="button" id="p-cancel">TEAR UP</button>
+    </div>
   </div>
 </form>
 
@@ -4044,7 +4050,7 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
       box.appendChild(el('div', '', giveBackWords(hex)));
       return { draft: function () { return { orders: [], words: [] }; }, update: function () { return ''; } };
     } });
-    if (!paper || paper.kind !== 'giveback') return; $('paper').classList.add('abovesheet');
+    if (!paper || paper.kind !== 'giveback') return; $('p-title').appendChild(orderLink(root)); $('paper').classList.add('abovesheet');
     paper.give = { number: i.number, hex: hex, root: root }; $('o-pv').hidden = false; $('p-dry').hidden = !OFFERED.trial; askGiveBack();
   }
   function askGiveBack() {
@@ -4092,7 +4098,7 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
       box.appendChild(d);
       return { draft: function () { return { orders: [], words: [] }; }, update: function () { return ''; } };
     } });
-    if (!paper || paper.kind !== 'landing') return; $('paper').classList.add('abovesheet');
+    if (!paper || paper.kind !== 'landing') return; $('p-title').appendChild(orderLink(order)); $('paper').classList.add('abovesheet');
     paper.landing = { hex: hex, order: order, l: newLanding(hex) }; paper.write = null; planMarked = null;
     $('p-plan').hidden = false; $('p-plan').open = true; $('o-pv').hidden = false; $('p-dry').hidden = !OFFERED.trial;
     drawLandingPaper(); askLanding();
@@ -5315,7 +5321,7 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
   function holdOf(hold) { var k = hold && Object.keys(hold)[0]; return k ? (((M.state && M.state.holds) || []).filter(function (x) { return x.target && x.target[k] === hold[k] && !x.target.setting; })[0] || null) : null; }
   // When what is drafted acts, before it is signed: in the pulse that begins now, or kept for 1800 and given with that dusk's orders.
   function actsText(orders) {
-    if (!orders || !orders.length) return '—';
+    if (!orders || !orders.length) return '';
     if (clock.at === 'dusk') return ACTS_TONIGHT;
     var kept = orders.filter(function (o) { return !INSIDE_KINDS[o.order.kind]; }), now = orders.filter(function (o) { return kept.indexOf(o) < 0; });
     var names = function (l) { return l.map(labelOf).join(', '); };
@@ -5338,7 +5344,7 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
     $('p-summary').textContent = staff ? '' : d.words.length ? d.words.join(' ') : 'Nothing is changed yet.';
     $('p-costs').textContent = extra || '';
     var hands = staff ? '' : handsText(d); $('p-hands').hidden = !hands; $('p-hands-t').textContent = hands;
-    $('p-acts-t').textContent = staff ? (clock.at === 'dusk' ? ACTS_TONIGHT : ACTS_DUSK) : actsText(d.orders);
+    var acts = staff ? (clock.at === 'dusk' ? ACTS_TONIGHT : ACTS_DUSK) : actsText(d.orders); $('p-acts-t').textContent = acts; $('p-acts-t').hidden = !acts;
     if (!staff && !paper.busy) $('p-sign').disabled = !d.orders.length && !d.error;
     if (g) drawMarks();
   }
@@ -5354,6 +5360,26 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
     if (g) drawMarks();
   }
   function closePaper() { dropPaper(); }
+  // The head line of the paper, small capitals above the heading (decision 0240, stage A).
+  function headLine(kind) {
+    if (kind === 'staff') return 'ORDER TO THE STAFF \u00b7 DRAFT';
+    if (kind === 'limit') return 'CHANGE OF LIMITS \u00b7 DRAFT';
+    if (kind === 'giveback') return 'GIVEN BACK TO THE STAFF \u00b7 DRAFT';
+    if (kind === 'landing') return 'A LANDING OF YOUR PLAN \u00b7 DRAFT';
+    return 'ORDER \u00b7 DRAFT';
+  }
+  // The heading of an order to the staff: the end as the card's button said it, with the place named where the button said "it" or "here".
+  function draftHeading(e, target) {
+    var k = e[1].intent_kind, place = cleanName(target.name), words = cleanName(e[0]);
+    if (k === 'hold') return 'Hold ' + place;
+    if (k === 'keep_supplied') return 'Keep ' + place + ' supplied';
+    if (k === 'cover') return 'Cover ' + place + ' from the air';
+    if (k === 'deny') return 'Deny ' + place + ', ' + round(e[1].distance);
+    if (k === 'patrol') return 'Patrol ' + place + ' with submarines';
+    if (k === 'operate_carriers') return 'Operate ' + words.replace(/^Operate /, '').replace(/ from here$/, '') + ' from ' + place;
+    if (k === 'stand_at') return 'Station ' + words.replace(/^Station /, '').replace(/ here$/, '') + ' in ' + place;
+    return words;
+  }
   function openPaper(kind, o) {
     if (WATCH || M.over || playing) return;
     var cardOpen = !$('card').hidden && typeof shown === 'function', from = cardOpen ? { go: shown, title: String((($('card-body').querySelector('h2') || {}).textContent) || '') } : null;
@@ -5362,14 +5388,13 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
     endMarch(); arcDraft = null; $('card').hidden = true; picking = false; canvas.classList.remove('picking');
     ['p-staff', 'p-force', 'p-unit', 'p-limits', 'p-plan'].forEach(function (id) { $(id).hidden = true; });
     $('p-says').textContent = ''; $('o-dry-says').textContent = ''; $('o-pv').hidden = true; $('p-dry').hidden = true; sendingOff($('p-sign')); $('p-sign').disabled = true;
-    var to = $('p-to-name'); to.textContent = ''; if (kind === 'staff' || kind === 'limit' || kind === 'giveback' || kind === 'landing') to.textContent = 'The staff'; else to.appendChild(refTo(o.unit, o.name));
+    $('p-head').textContent = headLine(kind); $('p-title').textContent = ''; if (kind !== 'staff' && kind !== 'limit' && kind !== 'giveback' && kind !== 'landing') $('p-title').appendChild(refTo(o.unit, o.name));
     var back = $('p-back'); back.hidden = !from; if (from) back.textContent = '← BACK TO ' + from.title.toUpperCase();
-    $('p-draft').textContent = 'DRAFT';
     if (kind === 'force') { $('p-force').hidden = false; setupForce(o.force); paper.draft = forceDraft; }
     else if (kind === 'staff') { $('p-staff').hidden = false; openDraft(o.target, o.first); }
     else { var box = $('p-unit'); box.textContent = ''; box.hidden = false; var c = o.build(box); paper.draft = c.draft; paper.update = c.update; paper.onSigned = c.onSigned || null; }
     $('paper').hidden = false; document.body.classList.add('papered'); paperShow(); say('draft', 'A draft is open.');
-    setTimeout(function () { if (paper) { var f = $('p-the').querySelector('input:checked, input, button'); if (f) f.focus({ preventScroll: true }); } }, 0);
+    setTimeout(function () { if (paper) { var f = Array.prototype.filter.call($('p-the').querySelectorAll('input, button'), function (c) { return !c.closest('[hidden]'); })[0]; if (f) f.focus({ preventScroll: true }); } }, 0);
   }
   // A question put in the paper itself; `yes` is what TEAR UP does there.
   function paperAsk(words, yes) {
@@ -5402,8 +5427,7 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
     }
     if (paper.kind === 'staff' && e.type === 'input' && e.target.id === 'o-dist') showPatrol();
     if (paper.kind === 'staff' && e.type === 'input' && e.target.id === 'o-interval') showSupply();
-    if (paper.kind === 'staff' && e.type === 'change' && e.target.name === 'end') { showPatrol(); showSupply(); endChanged(); }
-    else if (paper.kind === 'staff' && e.type === 'change' && e.target.id === 'o-dist') { showPatrol(); askPreview(); }
+    if (paper.kind === 'staff' && e.type === 'change' && e.target.id === 'o-dist') { showPatrol(); askPreview(); }
     else if (paper.kind === 'staff' && e.type === 'change' && (e.target.id === 'o-floor' || e.target.id === 'o-interval')) { showSupply(); askPreview(); }
     else if (paper.kind === 'staff' && e.type === 'change' && e.target.name === 'risk') { limSummary(); limAsk(); }
     paper.dirty = true; $('p-says').textContent = ''; paperShow();
@@ -5838,7 +5862,7 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
   var LINES = ['ships', 'in_place', 'air_groups', 'land_units', 'submarines', 'source', 'area', 'targets', 'protected', 'not_before', 'wait_for', 'after', 'knowledge'];
   // The place the order is about: the waters touched, or the base.
   function draftPlace() { if (limCtx) { var h = taskHex(limCtx.top); return h ? { q: h[0], r: h[1] } : { q: 0, r: 0 }; } return draft.q != null ? { q: draft.q, r: draft.r } : (draft.base && draft.base.place) || { q: 0, r: 0 }; }
-  function limKind() { if (limCtx) return limCtx.kind; var e = draft && draft.ends && draft.ends[parseInt(chosen('end'), 10) || 0]; return e ? e[1].intent_kind : null; }
+  function limKind() { if (limCtx) return limCtx.kind; var e = draft && draft.ends && draft.ends[draft.end]; return e ? e[1].intent_kind : null; }
   // An entity of the game, read once for the draft; null while it is being read, and the part is drawn again when it comes.
   function limGet(h) {
     if (!(h in limEnt)) { limEnt[h] = null; var mine = limEnt; api('get_entity', { handle: h }).then(function (a) { mine[h] = a.entity || {}; }).catch(function () { mine[h] = {}; }).then(function () { if (mine !== limEnt) return; clearTimeout(limDraw); limDraw = setTimeout(function () { drawLimits(); }, 40); }); }
@@ -6036,7 +6060,7 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
   // The end of the order in hand, where it is to seize and hold an island and is a new order to the staff (never in a watched game).
   function planEnd() {
     if (!draft || !paper || paper.kind !== 'staff' || WATCH || !draft.ends) return null;
-    var e = draft.ends[parseInt(chosen('end'), 10) || 0]; return e && e[1].intent_kind === 'control_island' ? e[1] : null;
+    var e = draft.ends[draft.end]; return e && e[1].intent_kind === 'control_island' ? e[1] : null;
   }
   function planDates() { var days = [], from = clock.at === 'dusk' ? M.day : M.day + 1, last = M.lastDay || from + 30; for (var d = from; d <= last; d++) days.push([String(d), dateOf(d - 1) || 'Day ' + d]); return days; }
   function planHead() { if (paper && paper.kind === 'landing') return landingHead(); var w = planSummary(planState.lines, planState.written); $('p-plan-sum').textContent = w ? 'YOUR PLAN · ' + w : 'YOUR PLAN'; }
@@ -6134,7 +6158,7 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
   // The order's kind has changed, or a draft has just been opened: the limits begin again, the staff's own choice of a source is put in
   // them where it makes one (and says so), and then the staff reads the order.
   function endChanged() {
-    if (!draft) return; var e = draft.ends[parseInt(chosen('end'), 10) || 0], kind = e[1].intent_kind, mine = ++limSeq;
+    if (!draft) return; var e = draft.ends[draft.end], kind = e[1].intent_kind, mine = ++limSeq;
     lim = newLim(); limMarked = null; limEnt = {}; planReset(); drawPlan(); if (picking === 'area') { picking = false; canvas.classList.remove('picking'); showPrompt('', ''); }
     $('o-risk').hidden = !offers(kind, 'risk'); $('p-limits').hidden = false; drawLimits(); limSummary();
     previewSeq += 1; previewNo = null; $('p-sign').disabled = true; $('p-dry').disabled = true; $('o-preview').textContent = 'Asking the staff.'; $('o-pv-sum').textContent = 'THE STAFF\'S READING'; clearTimeout(limTimer);
@@ -6171,7 +6195,7 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
   // numbered `first` picked: from a touch on the chart, or from a card.
   // The patrol's distance: a small whole number of hexes, chosen in the paper where the end chosen is a patrol.
   function patrolDistance() {
-    if (!draft || !draft.ends) return null; var e = draft.ends[parseInt(chosen('end'), 10) || 0]; if (!e || e[1].intent_kind !== 'patrol') return null;
+    if (!draft || !draft.ends) return null; var e = draft.ends[draft.end]; if (!e || e[1].intent_kind !== 'patrol') return null;
     var n = parseInt($('o-dist').value, 10); return isNaN(n) ? 2 : Math.max(1, Math.min(6, n));
   }
   function showPatrol() { var d = patrolDistance(); $('o-patrol').hidden = d == null; if (d != null) $('o-dist-out').textContent = round(d); }
@@ -6180,13 +6204,11 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
   function supplyFloor() { var n = parseInt($('o-floor').value, 10); return isNaN(n) ? 30 : Math.max(1, Math.min(99, n)); }
   function supplyInterval() { var n = parseInt($('o-interval').value, 10); return isNaN(n) ? null : Math.max(1, Math.min(99, n)); }
   function addSupplyNumbers(args) { if (args.intent_kind !== 'keep_supplied') return args; args.floor_days = supplyFloor(); var d = supplyInterval(); if (d != null) args.interval_days = d; return args; }
-  function supplyChosen() { if (!draft || !draft.ends) return false; var e = draft.ends[parseInt(chosen('end'), 10) || 0]; return !!e && e[1].intent_kind === 'keep_supplied'; }
+  function supplyChosen() { if (!draft || !draft.ends) return false; var e = draft.ends[draft.end]; return !!e && e[1].intent_kind === 'keep_supplied'; }
   function showSupply() { var on = supplyChosen(); $('o-supply').hidden = !on; if (on) $('o-interval-out').textContent = supplyInterval() == null ? 'left to the staff: 15 days' : ''; }
   function openDraft(best, first) {
     draft = best; draft.ends = ends(best); picking = false; canvas.classList.remove('picking');
-    $('o-place').textContent = best.name; $('o-pv').hidden = false; $('p-dry').hidden = !OFFERED.trial;
-    var box = $('o-ends'); while (box.children.length > 1) box.removeChild(box.lastChild);
-    draft.ends.forEach(function (e, i) { var l = el('label'), r = el('input'); r.type = 'radio'; r.name = 'end'; r.value = String(i); r.id = 'o-end-' + i; r.checked = i === (first || 0); l.appendChild(r); var t = el('span', 'endw'); t.appendChild(el('b', '', e[0])); l.appendChild(t); box.appendChild(l); });
+    draft.end = first || 0; $('p-title').textContent = draftHeading(draft.ends[draft.end], best); $('o-pv').hidden = false; $('p-dry').hidden = !OFFERED.trial;
     $('o-risk-balanced').checked = true; $('o-dist').value = '2'; $('o-floor').value = '30'; $('o-interval').value = ''; patrolStations = null; showPatrol(); showSupply(); drawMarks(); endChanged();
   }
   function chosen(name) { var r = document.querySelector('#paper input[name="' + name + '"]:checked'); return r ? r.value : ''; }
@@ -6253,7 +6275,7 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
     if (paper && paper.kind === 'limit') return askLimitPreview();
     if (paper && paper.kind === 'giveback') return askGiveBack();
     if (paper && paper.kind === 'landing') return askLanding();
-    if (!draft) return; var again = arguments[0] === true, seq = ++previewSeq, out = $('o-preview'), e = draft.ends[parseInt(chosen('end'), 10) || 0], kind = e[1].intent_kind;
+    if (!draft) return; var again = arguments[0] === true, seq = ++previewSeq, out = $('o-preview'), e = draft.ends[draft.end], kind = e[1].intent_kind;
     previewNo = null; $('p-sign').disabled = true; $('p-dry').disabled = true; $('p-dry').hidden = !OFFERED.trial; $('o-dry-says').textContent = ''; out.textContent = 'Asking the staff.'; $('o-pv').open = true; $('o-pv-sum').textContent = 'THE STAFF\'S READING';
     var args = { command: 'set_intent' }; Object.keys(e[1]).forEach(function (k) { args[k] = e[1][k]; }); if (e[1].intent_kind === 'patrol') args.distance = patrolDistance(); addSupplyNumbers(args);
     var sent = sentLimits(kind); if (sent.length) args.limits = sent.map(function (x) { return x.body; });
@@ -6294,7 +6316,7 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
       box.appendChild(document.createTextNode('Change the limits of ')); box.appendChild(orderLink(root));
       return { draft: function () { return { orders: [], words: [] }; }, update: function () { return ''; } };
     } });
-    if (!paper || paper.kind !== 'limit') return; $('paper').classList.add('abovesheet');
+    if (!paper || paper.kind !== 'limit') return; $('p-title').appendChild(orderLink(root)); $('paper').classList.add('abovesheet');
     var l = limFromState(top.limits); if (back) limReset(l, key);
     limCtx = { root: root, top: top, kind: top.kind, key: key, group: group, keys: keys }; lim = l; limMarked = null; limEnt = {};
     $('p-limits').hidden = false; $('p-limits').open = true; $('o-pv').hidden = false; $('p-dry').hidden = !OFFERED.trial;
