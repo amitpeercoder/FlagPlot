@@ -749,29 +749,10 @@ fn bare(handle: String) -> Handle {
     Handle { handle, name: None }
 }
 
-/// The name of an event's kind in snake_case, such as `ship_sunk`, from the
-/// name of its variant.
+/// The name of an event's kind in snake_case, such as `ship_sunk`, as the
+/// engine gives it (decision 0235, ruling 10).
 pub(crate) fn kind_name(kind: &SideEventKind) -> String {
-    let debug = match kind {
-        SideEventKind::Whole(inner) => format!("{inner:?}"),
-        cut => format!("{cut:?}"),
-    };
-    let name: String = debug
-        .chars()
-        .take_while(|c| c.is_ascii_alphanumeric())
-        .collect();
-    let mut out = String::new();
-    for (i, c) in name.chars().enumerate() {
-        if c.is_ascii_uppercase() {
-            if i > 0 {
-                out.push('_');
-            }
-            out.push(c.to_ascii_lowercase());
-        } else {
-            out.push(c);
-        }
-    }
-    out
+    kind.tag().to_string()
 }
 
 /// The day an own unit may be used from, while that day has not come for the

@@ -17,6 +17,8 @@ mod boats_in_the_midway_games;
 mod boats_in_the_thirty_nine_days_games;
 #[path = "choices_asked_and_run.rs"]
 mod choices_asked_and_run;
+#[path = "command_levels_ashore.rs"]
+mod command_levels_ashore;
 #[path = "day_in_parts.rs"]
 mod day_in_parts;
 #[path = "estimates_never_evidence.rs"]

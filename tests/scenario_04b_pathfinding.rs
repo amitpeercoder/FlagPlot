@@ -337,7 +337,8 @@ static VARIANT_COUNT: AtomicUsize = AtomicUsize::new(0);
 fn variant(change: &Change) -> Scenario {
     let data = data_dir();
     let id = VARIANT_COUNT.fetch_add(1, Ordering::SeqCst);
-    let root = Path::new(env!("CARGO_TARGET_TMPDIR")).join(format!("pathfinding_{id}"));
+    let root = Path::new(env!("CARGO_TARGET_TMPDIR"))
+        .join(format!("pathfinding_{}_{id}", std::process::id()));
     // The map is what this variant changes: the scenario and the map are
     // copied, and the figures come from the frozen reference root.
     for folder in ["scenarios", "map"] {

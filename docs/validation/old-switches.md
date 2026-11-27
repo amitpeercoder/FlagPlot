@@ -202,3 +202,12 @@ Added after the list was read. Amit: "Retire the five no-cost switches" (16, 24,
 - **16, 24 and 25: "only the loader's own tests of the absent case read the off side"** is wrong. `p_a_scenario_with_no_bombardment_no_men_and_no_estimate_is_unchanged` in `tests/scenario_24_shells_and_estimates.rs` takes these figures out of the frozen files and runs scenarios 6a and 4a. Decision 0236, ruling 8, restates it.
 - **28: "saved games are remade in their file hashes"** should have named them: the `save.json` of three recorded games (`full_slice_five_days_sonnet`, `keep_two_bases_fed_sonnet`, `second_proof_week_sonnet`) changes in the hash of `ground.toml` and in nothing else.
 - **35 was called no cost** in the question to Amit. No game moves, but about 50 places build `RefData::default()`, two of them loaders in `sim-data`, and eight statements of `sim-core`'s unit tests about a world without the figures are withdrawn, with seven rulebook sentences, seven setup errors and one refusal of the trial. It is a pull request of its own.
+
+**Number 4, measured again and kept for now** (decision 0238, Nov 27, 2026, which amends decision 0236's ruling on it). Measured with `run --events` on all 263 files, the workspace's tests and the recorded games played again. The text above is left as Amit read it; its recommendation for number 4, "retire", is overruled until two conditions hold.
+
+- **"8 games move": right, in what happens.** 26 more move in the words of a reason and in nothing else, three files of stage 3's closed proof and one of stage 4's among them; the list ran `run` without `--events`, which prints no reason.
+- **"Three hand calculations restated" was short.** 29 tests fail; scenarios 36, 74, 76 and 86 each state something the one rule changes.
+- **"236 scenarios' pins remade"** was the count of files that differed in hashes alone with the key on. With the field out of the hash every pinned hash would change, once.
+- **The second proof's recorded game would not replay,** and its save is read by scenarios 111 to 113.
+- **A trial of the stage 3 slice runs about eight times slower** with every side on the one rule (5.7 s to 44.2 s; not traced).
+- **Kept until** the slowness is traced and mended and there is a way to keep that recorded game replaying.

@@ -35,7 +35,7 @@
       "const": "flagplot-agent"
     },
     "version": {
-      "const": 57
+      "const": 58
     },
     "kind": {
       "const": "preview"
@@ -97,7 +97,7 @@
         "integer",
         "null"
       ],
-      "description": "The intent concerned; null for a reserve at a base no intent loads from."
+      "description": "The intent concerned; null for a reserve at a base no intent loads from. For a withdraw_intent (decision 0232, rule 30) the order the sub-intent withdrawn stands under: the reading is of that order."
     },
     "as_things_stand": {
       "type": "object",

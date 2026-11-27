@@ -64,7 +64,7 @@ All 55 files a live generator makes and marks "Do not edit by hand", and the thr
 | `midway` | `01a` to `01d` (4) | `base_midway` | `name`, `[[command]]`; file d, `name` alone |
 | `table-hunger` | 12 | the file `scripts/table-copies/make_copies.py` lists as its source | `ground` |
 | `table-boats` | 16 | the file `scripts/table-boats/make_files.py` copies | `submarine_classes`, `submarine_torpedoes`, `submarines`, `[side]`, `[[submarine]]`; `ground` too in the four built on a file of the live ground figures |
-| `table-rear-bases` | 3 | the file of the same name in `table-boats` | `name`; base 3's `supply_t`; for task forces 30 and 32 to 39, `at_base`, `home_port`, `available_from` |
+| `table-rear-bases` | 3 | the file of the same name in `table-boats` | `name`; `trial`; base 3's `supply_t`; for task forces 30 and 32 to 39, `at_base`, `home_port`, `available_from`; `[[island]]` rows: island 3, and in `07_full_slice_submarines.toml` islands 1 and 2 before it (amended on Nov 27, 2026 for decision 0232's step 3, which adds them before step D: `as-built/0232-a-plan-the-commander-writes.md`, item 5a) |
 
 An overlay's header says what it is built on and what it states, and keeps what its generator's header said of the scenario, less the sentences about the script. Notes the generators wrote beside a changed line go beside that line in the overlay.
 

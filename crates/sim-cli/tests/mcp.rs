@@ -1396,6 +1396,22 @@ fn scenario_36_without_commands(label: &str) -> String {
     path.to_string_lossy().into_owned()
 }
 
+/// Statement 24 of scenario 137b: the `preview` tool's `command` is one of
+/// exactly the three commands it reads.
+#[test]
+fn the_preview_tool_reads_exactly_three_commands() {
+    let scenario = scenario_36_without_commands("preview_commands");
+    let mut c = Client::start(&scenario, &[]);
+    c.handshake();
+    let listed = c.request("tools/list", json!({}));
+    let tools = listed["result"]["tools"].as_array().unwrap();
+    let preview = tools.iter().find(|t| t["name"] == "preview").unwrap();
+    assert_eq!(
+        preview["inputSchema"]["properties"]["command"]["enum"],
+        json!(["set_intent", "set_limit", "withdraw_intent"])
+    );
+}
+
 #[test]
 fn a_seat_with_a_staff_lists_the_staff_tools_and_commands_through_them() {
     let scenario = scenario_36_without_commands("tools");
