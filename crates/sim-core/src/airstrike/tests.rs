@@ -137,7 +137,7 @@ fn world(seed: u64, contacts: Vec<StartingContact>) -> World {
             map.insert(Hex::new(q, r), HexData::open_sea());
         }
     }
-    let mut ref_data = RefData::default();
+    let mut ref_data = RefData::for_tests();
     ref_data
         .ship_classes
         .insert(ShipClassId::new(1), class(1, ShipKind::Cruiser, 400, 0));
@@ -168,8 +168,8 @@ fn world(seed: u64, contacts: Vec<StartingContact>) -> World {
             .aircraft_types
             .insert(aircraft_type.id, aircraft_type);
     }
-    ref_data.search = Some(SearchFigures::from_search_toml());
-    ref_data.surface_combat = Some(SurfaceCombatFigures::from_surface_combat_toml());
+    ref_data.search = SearchFigures::from_search_toml();
+    ref_data.surface_combat = SurfaceCombatFigures::from_surface_combat_toml();
     ref_data.air_combat = Some(AirCombatFigures::from_air_combat_toml());
 
     let mut truth = TruthState::default();
@@ -223,11 +223,7 @@ fn air_figures(world: &mut World) -> &mut AirCombatFigures {
 }
 
 fn surface_figures(world: &mut World) -> &mut SurfaceCombatFigures {
-    world
-        .ref_data
-        .surface_combat
-        .as_mut()
-        .expect("surface figures")
+    &mut world.ref_data.surface_combat
 }
 
 fn group_mut(world: &mut World, id: AirGroupId) -> &mut AirGroup {
@@ -1378,7 +1374,7 @@ fn an_attack_report_that_moved_the_contact_first_means_nothing_is_dropped() {
     // the contact stays.
     for seed in 1..=10 {
         let mut world = two_groups_two_contacts(seed, true, 1);
-        let search = world.ref_data.search.as_mut().expect("search");
+        let search = &mut world.ref_data.search;
         search.merge_distance_hexes = 4;
         search.fresh_contact_max_age_pulses = 0;
         air_figures(&mut world).strike_contact_max_age_pulses = 1;
@@ -1550,7 +1546,7 @@ fn the_attack_stream_draws_each_shot_then_track_and_system_per_hit_then_the_repo
             Hex::new(5, 0),
             3,
             ShipKind::Carrier,
-            world.ref_data.search.as_ref().expect("search"),
+            &world.ref_data.search,
             EventId::new(0),
         );
         let received = events_where(&world, |k| matches!(k, EventKind::ReportReceived { .. }));
@@ -8860,26 +8856,6 @@ mod strike_settings {
         assert!(group.strike_age_order.is_some());
         assert_eq!(group.strike_held_share, Fixed::ZERO);
 
-        // With no search figures only a negative age is refused.
-        let mut world = self::world(1, vec![]);
-        world.ref_data.search = None;
-        world.submit_orders(
-            Side::Allied,
-            vec![age_order(BOMBERS, 40), age_order(BOMBERS, -1)],
-        );
-        world.resolve_day().expect("day resolves");
-        assert_eq!(
-            rejections(&world),
-            vec![RejectReason::StrikeContactAgeOutOfRange {
-                pulses: -1,
-                max: None
-            }]
-        );
-        assert_eq!(
-            rejections(&world)[0].to_string(),
-            "strike contact age -1 is not 0 or more pulses"
-        );
-
         // No air combat figures, no order.
         let mut world = self::world(1, vec![]);
         world.ref_data.air_combat = None;
@@ -9379,42 +9355,39 @@ mod choices {
     fn able_to_fly_cases() {
         let mut g = group(AirGroupId::new(1), Side::Allied, 1, 2, 18);
         g.fatigue = Fixed::from_int(50);
-        assert_eq!(able_to_fly(&g, false, Fixed::ZERO, None, None, true, 1), 9);
-        assert_eq!(
-            able_to_fly(&g, false, Fixed::ZERO, None, None, false, 1),
-            18
-        );
-        g.stood_down = true;
-        assert_eq!(able_to_fly(&g, false, Fixed::ZERO, None, None, true, 1), 0);
-        assert_eq!(
-            able_to_fly(&g, false, Fixed::ZERO, None, None, false, 1),
-            18
-        );
-        g.stood_down = false;
-        g.rebased_day = Some(1);
-        assert_eq!(able_to_fly(&g, false, Fixed::ZERO, None, None, true, 1), 0);
-        assert_eq!(able_to_fly(&g, false, Fixed::ZERO, None, None, true, 2), 9);
-        g.rebased_day = None;
-        g.pilots = Some(10);
-        assert_eq!(
-            able_to_fly(&g, false, Fixed::ZERO, None, None, false, 1),
-            10
-        );
-        // Grounded: only a group at a base.
-        assert_eq!(able_to_fly(&g, true, Fixed::ZERO, None, None, false, 1), 10);
-        g.location = AirGroupLocation::Base(BASE_A);
-        assert_eq!(able_to_fly(&g, true, Fixed::ZERO, None, None, false, 1), 0);
-        // A ship's deck out gives none, with the figures.
-        g.location = AirGroupLocation::Ship(ShipId::new(1));
-        let figures = SurfaceCombatFigures::from_surface_combat_toml();
         assert_eq!(
             able_to_fly(
                 &g,
                 false,
                 Fixed::ZERO,
-                Some(SystemState::Out),
-                Some(&figures),
+                None,
+                &SurfaceCombatFigures::from_surface_combat_toml(),
+                true,
+                1
+            ),
+            9
+        );
+        assert_eq!(
+            able_to_fly(
+                &g,
                 false,
+                Fixed::ZERO,
+                None,
+                &SurfaceCombatFigures::from_surface_combat_toml(),
+                false,
+                1
+            ),
+            18
+        );
+        g.stood_down = true;
+        assert_eq!(
+            able_to_fly(
+                &g,
+                false,
+                Fixed::ZERO,
+                None,
+                &SurfaceCombatFigures::from_surface_combat_toml(),
+                true,
                 1
             ),
             0
@@ -9424,12 +9397,93 @@ mod choices {
                 &g,
                 false,
                 Fixed::ZERO,
-                Some(SystemState::Out),
                 None,
+                &SurfaceCombatFigures::from_surface_combat_toml(),
+                false,
+                1
+            ),
+            18
+        );
+        g.stood_down = false;
+        g.rebased_day = Some(1);
+        assert_eq!(
+            able_to_fly(
+                &g,
+                false,
+                Fixed::ZERO,
+                None,
+                &SurfaceCombatFigures::from_surface_combat_toml(),
+                true,
+                1
+            ),
+            0
+        );
+        assert_eq!(
+            able_to_fly(
+                &g,
+                false,
+                Fixed::ZERO,
+                None,
+                &SurfaceCombatFigures::from_surface_combat_toml(),
+                true,
+                2
+            ),
+            9
+        );
+        g.rebased_day = None;
+        g.pilots = Some(10);
+        assert_eq!(
+            able_to_fly(
+                &g,
+                false,
+                Fixed::ZERO,
+                None,
+                &SurfaceCombatFigures::from_surface_combat_toml(),
                 false,
                 1
             ),
             10
+        );
+        // Grounded: only a group at a base.
+        assert_eq!(
+            able_to_fly(
+                &g,
+                true,
+                Fixed::ZERO,
+                None,
+                &SurfaceCombatFigures::from_surface_combat_toml(),
+                false,
+                1
+            ),
+            10
+        );
+        g.location = AirGroupLocation::Base(BASE_A);
+        assert_eq!(
+            able_to_fly(
+                &g,
+                true,
+                Fixed::ZERO,
+                None,
+                &SurfaceCombatFigures::from_surface_combat_toml(),
+                false,
+                1
+            ),
+            0
+        );
+        // A ship's deck out gives none, with the figures.
+        g.location = AirGroupLocation::Ship(ShipId::new(1));
+        let figures = SurfaceCombatFigures::from_surface_combat_toml();
+        assert_eq!(
+            able_to_fly(
+                &g,
+                false,
+                Fixed::ZERO,
+                Some(SystemState::Out),
+                &figures,
+                false,
+                1
+            ),
+            0
         );
     }
 
@@ -9443,7 +9497,15 @@ mod choices {
         let at_base = |ready: u32, damage: i64| {
             let mut g = group(AirGroupId::new(1), Side::Allied, 1, 2, ready);
             g.location = AirGroupLocation::Base(BASE_A);
-            able_to_fly(&g, false, Fixed::from_int(damage), None, None, false, 1)
+            able_to_fly(
+                &g,
+                false,
+                Fixed::from_int(damage),
+                None,
+                &SurfaceCombatFigures::from_surface_combat_toml(),
+                false,
+                1,
+            )
         };
         assert_eq!(at_base(12, 30), 8);
         assert_eq!(at_base(4, 60), 1);
@@ -9455,7 +9517,15 @@ mod choices {
         let mut ship = group(AirGroupId::new(1), Side::Allied, 1, 2, 12);
         ship.location = AirGroupLocation::Ship(ShipId::new(1));
         assert_eq!(
-            able_to_fly(&ship, false, Fixed::from_int(60), None, None, false, 1),
+            able_to_fly(
+                &ship,
+                false,
+                Fixed::from_int(60),
+                None,
+                &SurfaceCombatFigures::from_surface_combat_toml(),
+                false,
+                1
+            ),
             12
         );
         // 12 x 70/100 x 50/100 = 4.2, cut once.
@@ -9463,7 +9533,15 @@ mod choices {
         tired.location = AirGroupLocation::Base(BASE_A);
         tired.fatigue = Fixed::from_int(50);
         assert_eq!(
-            able_to_fly(&tired, false, Fixed::from_int(30), None, None, true, 1),
+            able_to_fly(
+                &tired,
+                false,
+                Fixed::from_int(30),
+                None,
+                &SurfaceCombatFigures::from_surface_combat_toml(),
+                true,
+                1
+            ),
             4
         );
     }

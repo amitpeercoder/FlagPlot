@@ -777,8 +777,8 @@ fn s9_a_side_whose_enemy_has_no_objectives_is_told_so() {
 // 10. Nothing else changed.
 // ---------------------------------------------------------------------
 
-/// The daily hashes and the result lines of the run baseline `sim-cli run`
-/// wrote for the scenario before this record (a generated file, which
+/// The daily hashes (pinned) and the result lines of the run baseline
+/// `sim-cli run` wrote for the scenario before this record (a generated file, which
 /// `sh scripts/regenerate.sh --check` holds to the code).
 fn baseline(name: &str) -> (Vec<String>, Vec<String>) {
     let stem = name.trim_end_matches(".toml");
@@ -788,14 +788,11 @@ fn baseline(name: &str) -> (Vec<String>, Vec<String>) {
             .join(format!("{stem}.txt")),
     )
     .expect("the baseline reads");
-    let hashes = text
-        .lines()
-        .filter(|l| l.starts_with("day "))
-        .map(|l| {
-            let words: Vec<&str> = l.split_whitespace().collect();
-            assert_eq!(words[2], "hash");
-            words[3].to_string()
-        })
+    // The day hashes are pinned in tests/golden/pinned_hashes.txt (decision
+    // 0233), not held by the baseline.
+    let hashes = common::pinned_day_hashes(stem)
+        .iter()
+        .map(|h| format!("{h:016x}"))
         .collect();
     let results = text
         .lines()

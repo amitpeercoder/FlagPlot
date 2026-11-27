@@ -40,10 +40,10 @@ fn scenario_files(dir: &Path, into: &mut Vec<PathBuf>) {
             }
         } else if name.ends_with(".toml") {
             let text = std::fs::read_to_string(&path).expect("reads");
-            if text
-                .lines()
-                .any(|l| l.trim_start().starts_with("ship_classes"))
-            {
+            // An overlay (decision 0234) need not name its class files.
+            if text.lines().any(|l| {
+                l.trim_start().starts_with("ship_classes") || l.trim_start().starts_with("built_on")
+            }) {
                 into.push(path);
             }
         }

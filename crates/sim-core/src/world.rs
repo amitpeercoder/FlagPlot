@@ -17,7 +17,7 @@ use crate::objectives::{self, GameResult, Objectives};
 use crate::orders::{Order, OrderRequest};
 use crate::refdata::RefData;
 use crate::rng::{Domain, Draw, RngKey, RngStream, Subsystem};
-use crate::state::{ShipSystem, Side, SystemState, TruthState};
+use crate::state::{Side, TruthState};
 use crate::time::Pulse;
 use crate::upkeep::Sortie;
 use crate::view::{PulseScratch, SideView};
@@ -447,8 +447,7 @@ impl World {
     /// port size, aircraft type, the search figures or the surface combat
     /// figures with bad figures), a
     /// ship has an unknown class, an air group has an unknown aircraft type,
-    /// there are air groups but no search figures, a base
-    /// sits in a port size with no entry in the port table, or the starting
+    /// a base sits in a port size with no entry in the port table, or the starting
     /// state already breaks an invariant.
     pub fn new(
         seed: u64,
@@ -466,14 +465,10 @@ impl World {
                 return Err(SimError::InvalidSetup(problem));
             }
         }
-        if let Some(problem) = ref_data.search.as_ref().and_then(|search| search.problem()) {
+        if let Some(problem) = ref_data.search.problem() {
             return Err(SimError::InvalidSetup(problem));
         }
-        if let Some(problem) = ref_data
-            .surface_combat
-            .as_ref()
-            .and_then(|figures| figures.problem())
-        {
+        if let Some(problem) = ref_data.surface_combat.problem() {
             return Err(SimError::InvalidSetup(problem));
         }
         if let Some(problem) = ref_data
@@ -512,13 +507,6 @@ impl World {
         if !truth.submarines.is_empty() && ref_data.submarines.is_none() {
             return Err(SimError::InvalidSetup(
                 "there are submarines but no submarine data".to_string(),
-            ));
-        }
-        // A boat's claim and the report of her to the side fired on are told
-        // through the search figures' error and confusion of kinds.
-        if !truth.submarines.is_empty() && ref_data.search.is_none() {
-            return Err(SimError::InvalidSetup(
-                "there are submarines but no search figures".to_string(),
             ));
         }
         for (key, boat) in &truth.submarines {
@@ -588,29 +576,6 @@ impl World {
                 )));
             }
         }
-        if (!truth.air_groups.is_empty() || truth.held_air_groups().next().is_some())
-            && ref_data.search.is_none()
-        {
-            return Err(SimError::InvalidSetup(
-                "there are air groups but no search figures".to_string(),
-            ));
-        }
-        let reports_ashore = ref_data
-            .ground
-            .is_some_and(|ground| ground.report_error.is_some());
-        if reports_ashore && ref_data.search.is_none() {
-            // A ground report is written into belief with the search figures
-            // (decision 0092, 12).
-            return Err(SimError::InvalidSetup(
-                "there are ground report figures but no search figures".to_string(),
-            ));
-        }
-        if ref_data.surface_combat.is_some() && ref_data.search.is_none() {
-            // A fight reports what it sighted through the search figures.
-            return Err(SimError::InvalidSetup(
-                "there are surface combat figures but no search figures".to_string(),
-            ));
-        }
         for ship in truth.ships.values().chain(truth.held_ships()) {
             if !ref_data.ship_classes.contains_key(&ship.class) {
                 return Err(SimError::InvalidSetup(format!(
@@ -633,22 +598,6 @@ impl World {
                         "{} is in a hex of port size {}, which has no entry in the port table",
                         base.id, hex.port_size
                     )));
-                }
-            }
-        }
-
-        if ref_data.surface_combat.is_none() {
-            // Without the figures a damaged system has no factor to apply.
-            for ship in truth.ships.values().chain(truth.held_ships()) {
-                for system in ShipSystem::ALL {
-                    if ship.systems.get(system) != SystemState::Working {
-                        return Err(SimError::InvalidSetup(format!(
-                            "{} has {} {} but there are no surface combat figures",
-                            ship.id,
-                            system.name(),
-                            ship.systems.get(system).name()
-                        )));
-                    }
                 }
             }
         }

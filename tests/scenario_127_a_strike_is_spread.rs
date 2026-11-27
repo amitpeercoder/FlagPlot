@@ -625,13 +625,7 @@ fn one_looks_lost_crippled_or_burning_she_is_not_attacked_either() {
     // Flotation damage at crippled_flotation, and fire damage at
     // claimed_sunk_fire, each in place of the deck.
     let base = live(|text| text);
-    let surface = base
-        .world
-        .ref_data()
-        .surface_combat
-        .as_ref()
-        .expect("held")
-        .clone();
+    let surface = base.world.ref_data().surface_combat.clone();
     for (line, label) in [
         (
             format!("flotation_damage = \"{}\"", surface.crippled_flotation),

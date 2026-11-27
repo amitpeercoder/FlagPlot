@@ -93,11 +93,7 @@ impl World {
             }
             return;
         }
-        let search = self
-            .ref_data
-            .search
-            .clone()
-            .expect("World::new requires search figures with the ground report figures");
+        let search = self.ref_data.search.clone();
         for (index, side) in Side::ALL.into_iter().enumerate() {
             let reporter = units[index][0].0;
             let true_men: u32 = units[1 - index].iter().map(|(_, men)| men).sum();
@@ -231,11 +227,7 @@ impl World {
         if !fighting {
             return;
         }
-        let search = self
-            .ref_data
-            .search
-            .clone()
-            .expect("World::new requires search figures with the ground report figures");
+        let search = self.ref_data.search.clone();
         let report = NoneFoundReport {
             hex,
             day,
@@ -280,8 +272,7 @@ impl World {
     /// 0, with no error and no cause, as a starting contact does. Takes
     /// effect completely or, on an error, not at all.
     ///
-    /// Fails if a day has been resolved, if there are no search figures
-    /// (belief is written with them), or if two entries are for the same
+    /// Fails if a day has been resolved, or if two entries are for the same
     /// side and hex: a side holds one estimate for a hex. An error names the
     /// entry.
     ///
@@ -298,11 +289,7 @@ impl World {
         if estimates.is_empty() {
             return Ok(());
         }
-        let Some(search) = self.ref_data.search.clone() else {
-            return Err(SimError::InvalidSetup(
-                "there are opening estimates but no search figures".to_string(),
-            ));
-        };
+        let search = self.ref_data.search.clone();
         let mut staged = self.clone();
         for estimate in &estimates {
             let describe = || {
@@ -405,30 +392,21 @@ mod tests {
 
     use crate::events::Event;
     use crate::map::{HexData, Map};
-    use crate::refdata::{GroundFigures, PortSize, RefData, SearchFigures};
+    use crate::refdata::{GroundFigures, PortSize, RefData};
     use crate::state::{Base, LandUnit, TruthState};
 
     const AT: Hex = Hex::new(0, 0);
     const OTHER: Hex = Hex::new(4, 0);
 
-    fn world(
-        search: bool,
-        units: &[(u32, Side, u32, Hex)],
-        bases: &[(u32, Side, Hex, bool)],
-    ) -> World {
+    fn world(units: &[(u32, Side, u32, Hex)], bases: &[(u32, Side, Hex, bool)]) -> World {
         let mut map = Map::new();
         for q in -1..=9 {
             for r in -1..=1 {
                 map.insert(Hex::new(q, r), HexData::open_sea());
             }
         }
-        let mut ref_data = RefData::default();
-        if search {
-            ref_data.search = Some(SearchFigures::from_search_toml());
-        }
-        if search {
-            ref_data.ground = Some(GroundFigures::FIRST);
-        }
+        let mut ref_data = RefData::for_tests();
+        ref_data.ground = Some(GroundFigures::FIRST);
         ref_data.port_sizes.insert(
             0,
             PortSize {
@@ -476,7 +454,7 @@ mod tests {
 
     #[test]
     fn opening_estimates_are_held_on_day_0_through_belief() {
-        let mut world = world(true, &[], &[]);
+        let mut world = world(&[], &[]);
         world
             .hold_starting_estimates(vec![
                 estimate(Side::Japanese, AT, 300),
@@ -506,20 +484,15 @@ mod tests {
         assert!(events
             .iter()
             .all(|e| e.day == 0 && e.causes.is_empty() && e.breakdown.is_none()));
-        // None given is nothing, even with no search figures.
-        let mut bare = super::tests::world(false, &[], &[]);
+        // None given is nothing.
+        let mut bare = super::tests::world(&[], &[]);
         bare.hold_starting_estimates(Vec::new())
             .expect("nothing to hold");
-        assert!(bare
-            .hold_starting_estimates(vec![estimate(Side::Allied, AT, 5)])
-            .expect_err("needs search figures")
-            .to_string()
-            .contains("search figures"));
     }
 
     #[test]
     fn a_bad_opening_estimate_changes_nothing() {
-        let mut world = world(true, &[], &[]);
+        let mut world = world(&[], &[]);
         let hash = world.state_hash();
         let events = log(&world);
         let refused = |world: &mut World, estimates: Vec<StartingEstimate>| -> String {
@@ -564,7 +537,6 @@ mod tests {
         // Japanese base there is off the Allied map; Allied unit 3 alone at
         // OTHER.
         let mut world = world(
-            true,
             &[
                 (1, Side::Allied, 1000, AT),
                 (2, Side::Japanese, 400, AT),
@@ -643,7 +615,6 @@ mod tests {
     #[test]
     fn no_ground_report_is_made_without_the_report_error_figures() {
         let mut world = world(
-            true,
             &[(1, Side::Allied, 1000, AT), (2, Side::Japanese, 400, AT)],
             &[],
         );
@@ -653,7 +624,6 @@ mod tests {
         assert_eq!(world.side_view(Side::Allied).ground_estimates().count(), 0);
         // A unit with no man ashore does not count as a side being there.
         let mut world = super::tests::world(
-            true,
             &[(1, Side::Allied, 1000, AT), (2, Side::Japanese, 400, AT)],
             &[],
         );
@@ -684,7 +654,7 @@ mod tests {
 
     #[test]
     fn a_side_with_fighting_men_and_an_estimate_finds_the_hex_empty_and_the_estimate_is_cleared() {
-        let mut world = world(true, &[(1, Side::Allied, 100, AT)], &[]);
+        let mut world = world(&[(1, Side::Allied, 100, AT)], &[]);
         world
             .hold_starting_estimates(vec![estimate(Side::Allied, AT, 400)])
             .expect("held");
@@ -708,12 +678,12 @@ mod tests {
     #[test]
     fn no_empty_report_is_made_without_an_estimate_or_with_only_working_men() {
         // No estimate held.
-        let mut bare = world(true, &[(1, Side::Allied, 100, AT)], &[]);
+        let mut bare = world(&[(1, Side::Allied, 100, AT)], &[]);
         bare.report_ashore(1, AT, None);
         assert!(log(&bare).is_empty());
         // An estimate held and only a working unit there: nothing, and the
         // estimate stays.
-        let mut working = world(true, &[(1, Side::Allied, 100, AT)], &[]);
+        let mut working = world(&[(1, Side::Allied, 100, AT)], &[]);
         working
             .truth
             .land_units
@@ -734,7 +704,6 @@ mod tests {
         );
         // The enemy has men ashore: an ordinary report, not an empty one.
         let mut both = world(
-            true,
             &[(1, Side::Allied, 100, AT), (2, Side::Japanese, 100, AT)],
             &[],
         );

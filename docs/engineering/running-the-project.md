@@ -49,7 +49,7 @@ The architect's answer is written into the repository by the architect, so the n
 - What comes next, and what runs in parallel. Report, do not ask.
 - That a change is class 1, by the list of paths above and nothing else, and everything about a class 1 change.
 - Merging a pull request whose checks pass and whose statements all hold as written, after reading its core code, and for class 2 or 3 after the architect has read it.
-- Remaking the pins inside a pull request that raised a version or the state layout: once, in its last commit (decision 0233, C). That pull request is class 2 or 3; a pin never moves in class 1, and until C is built a changed baseline is shown to the architect.
+- Remaking the pins inside a pull request that raised a version or the state layout: once, in its last commit (decision 0233, C). That pull request is class 2 or 3; a pin never moves in class 1. C is built: a baseline holds no hash, so a changed baseline is a game that moved, and `scripts/regenerate.sh` reports baselines and `run_` lines apart.
 - Conflicts, CI failures, worktrees, disk.
 - Wording on the table inside the design rules the memory holds (no captions that explain rules, "order" not "intent", no points during play, names not numbers, the staff speaks as "we").
 

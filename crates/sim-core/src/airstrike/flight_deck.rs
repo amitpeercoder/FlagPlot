@@ -29,7 +29,7 @@ pub(crate) fn able_to_fly(
     base_grounded: bool,
     field_damage: Fixed,
     flight_deck: Option<SystemState>,
-    surface_combat: Option<&SurfaceCombatFigures>,
+    surface_combat: &SurfaceCombatFigures,
     fatigue_loaded: bool,
     day: u32,
 ) -> u32 {
@@ -48,10 +48,7 @@ pub(crate) fn able_to_fly(
         .map_or(group.ready, |pilots| group.ready.min(pilots));
     let mut able = Fixed::from_int(i64::from(crewed));
     if let (AirGroupLocation::Ship(_), Some(state)) = (group.location, flight_deck) {
-        // Without the figures no system can be damaged (World::new).
-        if let Some(figures) = surface_combat {
-            able = able * figures.system_factor(ShipSystem::FlightDeck, state);
-        }
+        able = able * surface_combat.system_factor(ShipSystem::FlightDeck, state);
     }
     if matches!(group.location, AirGroupLocation::Base(_)) && field_damage > Fixed::ZERO {
         let hundred = Fixed::from_int(100);
@@ -113,7 +110,7 @@ impl World {
             base_grounded,
             field_damage,
             flight_deck,
-            self.ref_data.surface_combat.as_ref(),
+            &self.ref_data.surface_combat,
             self.ref_data.fatigue.is_some(),
             self.truth.day + 1,
         );

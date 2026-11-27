@@ -86,7 +86,7 @@ fn world() -> World {
         troop_capacity_men: 0,
         fuels_at_sea: false,
     };
-    let mut ref_data = RefData::default();
+    let mut ref_data = RefData::for_tests();
     ref_data.ship_classes.insert(class.id, class);
     ref_data.port_sizes.insert(
         0,

@@ -40,6 +40,8 @@
 //! 8. Played on seed 1 with no order to any boat, every boat on the map at
 //!    the end that is not going home is in the hex she started in.
 //!
+//! Since step C of decision 0234 the script makes thirteen of the sixteen; the three files a of the Coral Sea, the five days and Midway are kept, and held as tables by statement 7.
+//!
 //! And the script, run with `--check`, says every file kept is the one it
 //! makes and the folder holds nothing else. No statement holds a number that
 //! rests on a figure.
@@ -220,7 +222,8 @@ const GAME: Game = Game {
         ),
     ],
     boats: &BOATS,
-    script_files: 16,
+    script_files: 13,
+    kept_files: 3,
 };
 
 fn game() -> &'static Game {

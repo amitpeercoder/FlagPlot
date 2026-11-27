@@ -163,7 +163,7 @@ impl Losses {
                 ShipLocation::Sunk => false,
                 ShipLocation::Yard(_) => true,
                 ShipLocation::TaskForce(_) | ShipLocation::Port(_) => {
-                    figures.is_some_and(|figures| days_of_repair(ship, figures) >= 1)
+                    days_of_repair(ship, figures) >= 1
                 }
             })
             .count();

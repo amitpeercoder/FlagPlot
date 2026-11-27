@@ -478,7 +478,7 @@ fn objectives_change_no_hash_and_no_event() {
     assert_eq!(with.day_hashes(), without.world.day_hashes());
     assert_eq!(with.state_hash(), without.world.state_hash());
     assert_eq!(with.events().len(), without.world.events().len());
-    // And the hash is the one in the baseline file. The baseline follows the
+    // And the hash is the one pinned for the run (the `run_` line). The run follows the
     // live figures, so this run does too (docs/step2-spec.md, "Tests while
     // figures move").
     let live_text = std::fs::read_to_string(live_scenario_path()).expect("the live scenario reads");
@@ -487,11 +487,10 @@ fn objectives_change_no_hash_and_no_event() {
         .with_seed(SEED)
         .expect("a seed can be set");
     live.run_to_end().expect("runs");
-    let baseline = std::fs::read_to_string(
-        PathBuf::from(ROOT).join("crates/sim-cli/tests/run_baseline/05_eastern_solomons.txt"),
-    )
-    .expect("the baseline reads");
-    assert!(baseline.contains(&format!("hash {:016x}", live.world.day_hashes()[0])));
+    assert_eq!(
+        common::pinned_day_hashes("05_eastern_solomons")[0],
+        live.world.day_hashes()[0]
+    );
     // The day's hash in the baseline: it was a5f3f2bbd3931d4b until decision
     // 0056 put the claims from the air into belief, and so into the hash,
     // 2f37141bddfdb856 until the hash went to version 2 (decision 9 of
@@ -572,7 +571,7 @@ fn objectives_change_no_hash_and_no_event() {
         "scenario_10_eastern_solomons_day_1",
         live.world.day_hashes()[0],
     );
-    assert!(baseline.contains(&format!("hash {pinned:016x}")));
+    assert_eq!(common::pinned_day_hashes("05_eastern_solomons")[0], pinned);
 }
 
 /// The scenario run with the three false claim chances of decision 0056 set

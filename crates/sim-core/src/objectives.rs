@@ -499,10 +499,9 @@ pub fn tallies(truth: &TruthState, log: &EventLog, ref_data: &RefData) -> BTreeM
             }
             // Out of action (decision 0088). At the yard her damage is what
             // she left with, which the departure event holds: not twice.
-            // Without the figures the loader refuses the objective, so 0.
-            let at_end = match (ship.location, ref_data.surface_combat.as_ref()) {
-                (ShipLocation::TaskForce(_) | ShipLocation::Port(_), Some(figures)) => {
-                    crate::repair::days_of_repair(ship, figures)
+            let at_end = match ship.location {
+                ShipLocation::TaskForce(_) | ShipLocation::Port(_) => {
+                    crate::repair::days_of_repair(ship, &ref_data.surface_combat)
                 }
                 _ => 0,
             };
@@ -1335,7 +1334,7 @@ mod tests {
     #[test]
     fn cargo_landed_counts_the_tons_of_supply_and_fuel_the_side_unloaded_at_the_named_base() {
         let (truth, log) = cargo_scenario();
-        let ref_data = RefData::default();
+        let ref_data = RefData::for_tests();
         let tallies = tallies(&truth, &log, &ref_data);
         assert_eq!(tallies[&Side::Allied].cargo_t[&BaseId::new(1)], n(140));
         assert_eq!(tallies[&Side::Allied].cargo_t[&BaseId::new(2)], n(10));
@@ -1507,7 +1506,7 @@ mod tests {
         let (truth, log) = worked_case();
         let result = score(
             &worked_objectives(),
-            &tallies(&truth, &log, &RefData::default()),
+            &tallies(&truth, &log, &RefData::for_tests()),
         );
         let cargo = &result.allied.objectives[0];
         assert_eq!(
@@ -1534,7 +1533,7 @@ mod tests {
         let mut log = EventLog::default();
         unloaded(&mut log, 1, 1, Cargo::Supply, 300);
         loaded(&mut log, 1, 1, 1, 500);
-        let tallies = tallies(&truth, &log, &RefData::default());
+        let tallies = tallies(&truth, &log, &RefData::for_tests());
         let result = score(&worked_objectives(), &tallies);
         let cargo = &result.allied.objectives[0];
         assert_eq!((cargo.count, cargo.points), (Fixed::ZERO, Fixed::ZERO));
@@ -1542,7 +1541,7 @@ mod tests {
         let mut log = EventLog::default();
         unloaded(&mut log, 1, 1, Cargo::Supply, 300);
         loaded(&mut log, 1, 1, 2, 500);
-        let tallies = self::tallies(&truth, &log, &RefData::default());
+        let tallies = self::tallies(&truth, &log, &RefData::for_tests());
         assert_eq!(
             score(&worked_objectives(), &tallies).allied.objectives[0].count,
             n(300)
@@ -1571,7 +1570,7 @@ mod tests {
     #[test]
     fn either_sides_tally_says_the_same_of_a_base_whoever_holds_it() {
         let (truth, log) = worked_case();
-        let tallies = tallies(&truth, &log, &RefData::default());
+        let tallies = tallies(&truth, &log, &RefData::for_tests());
         assert_eq!(
             tallies[&Side::Allied].base_days,
             tallies[&Side::Japanese].base_days
@@ -1916,7 +1915,7 @@ mod tests {
             troop_capacity_men: 0,
             fuels_at_sea: false,
         };
-        let mut ref_data = RefData::default();
+        let mut ref_data = RefData::for_tests();
         ref_data.ship_classes.insert(class.id, class);
         let mut truth = TruthState::default();
         // Ship 1 is at the yard with her propulsion out; ship 2 is at the
@@ -1968,13 +1967,13 @@ mod tests {
             troop_capacity_men: 0,
             fuels_at_sea: false,
         };
-        let mut ref_data = RefData::default();
+        let mut ref_data = RefData::for_tests();
         ref_data.ship_classes.insert(class.id, class);
         let mut figures = SurfaceCombatFigures::from_surface_combat_toml();
         figures.yard_days_per_flotation_point = n(2);
         figures.yard_days_per_system_degraded = n(5);
         figures.yard_days_per_system_out = n(30);
-        ref_data.surface_combat = Some(figures);
+        ref_data.surface_combat = figures;
         ref_data
     }
 
@@ -2180,7 +2179,7 @@ mod tests {
             );
         }
         let log = EventLog::default();
-        let tallies = tallies(&truth, &log, &RefData::default());
+        let tallies = tallies(&truth, &log, &RefData::for_tests());
         // A side's tally holds the enemy's boats it sank.
         assert_eq!(tallies[&Side::Allied].submarines_sunk, 2);
         assert_eq!(tallies[&Side::Japanese].submarines_sunk, 1);
@@ -2261,7 +2260,7 @@ mod tests {
                 None,
             );
         }
-        tallies(&truth, &log, &RefData::default())
+        tallies(&truth, &log, &RefData::for_tests())
     }
 
     fn men_landed_at(tallies: &BTreeMap<Side, Tally>, side: Side) -> u32 {

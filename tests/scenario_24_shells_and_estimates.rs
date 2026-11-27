@@ -2173,14 +2173,7 @@ fn e_a_ship_with_its_main_battery_out_fires_nothing_and_the_rest_of_the_force_do
         "gun_rounds = 800\nmain_battery = \"degraded\"\n",
     );
     let run = Run::text(&source);
-    let factor_degraded = run
-        .scenario
-        .world
-        .ref_data()
-        .surface_combat
-        .as_ref()
-        .unwrap()
-        .degraded_factor;
+    let factor_degraded = run.scenario.world.ref_data().surface_combat.degraded_factor;
     let fires = ship_fires(&run.events());
     let cruiser = fires
         .iter()

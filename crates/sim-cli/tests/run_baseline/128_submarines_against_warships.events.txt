@@ -2,7 +2,7 @@ Scenario 128: A submarine lies in the way of a force
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 106a25563e5f1fe8  4 events
+day   1  hash ----------------  4 events
 
 #1 D1 night     submarine:1 had a chance of 0.215287 to attack task_force:1 at (5,0): 12 hours at 0.02 an hour
 #2 D1 morning   submarine:1 had a chance of 0.114159 to attack task_force:1 at (5,0): 6 hours at 0.02 an hour

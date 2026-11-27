@@ -2,22 +2,22 @@ Placeholder scenario 40a: Two intents and one ship
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 9485d9fe26aa4f8b  45 events
-day   2  hash 3d1ad6ac00f4c27a  25 events
-day   3  hash ca8418ce8ead9973  20 events
-day   4  hash eed1a2ea254bf1c2  10 events
-day   5  hash 57c464e5755577ff  16 events
-day   6  hash a309dc264568f902  22 events
-day   7  hash 5ce78bab16ecfd70  13 events
-day   8  hash 09dd3868d5833e24  9 events
-day   9  hash 8c72e82f7610adf0  9 events
-day  10  hash 3f4e2e7aa7e7908c  18 events
-day  11  hash 5271395f8fd0d980  23 events
-day  12  hash 54dfd2e8955680c7  14 events
-day  13  hash 03e562ec3fc8678f  10 events
-day  14  hash f749ddc469aec163  16 events
-day  15  hash effd9c1671a853c9  22 events
-day  16  hash 6c9d6d8c3d02a976  13 events
+day   1  hash ----------------  45 events
+day   2  hash ----------------  25 events
+day   3  hash ----------------  20 events
+day   4  hash ----------------  10 events
+day   5  hash ----------------  16 events
+day   6  hash ----------------  22 events
+day   7  hash ----------------  13 events
+day   8  hash ----------------  9 events
+day   9  hash ----------------  9 events
+day  10  hash ----------------  18 events
+day  11  hash ----------------  23 events
+day  12  hash ----------------  14 events
+day  13  hash ----------------  10 events
+day  14  hash ----------------  16 events
+day  15  hash ----------------  22 events
+day  16  hash ----------------  13 events
 
 #1 D1 -         Allied the commander's command taken: set intent:1 to keep base:2 supplied at 30 days, a run every 15 days
 #2 D1 -         Allied plan:1 drafted for intent:1  <- #1

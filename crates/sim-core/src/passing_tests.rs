@@ -135,7 +135,7 @@ pub(crate) fn make(
         day,
         pulse: Some(pulse),
     };
-    let figures = world.ref_data.search.clone().expect("figures");
+    let figures = world.ref_data.search.clone();
     world.apply_report(Side::Allied, &report, &holders, &figures);
     assert_eq!(record_key(world, day, pulse), key);
     world.pass_report(Side::Allied, &report, &holders);
@@ -669,7 +669,7 @@ fn newer_word_stands() {
 fn nothing_there_by_number_for_the_holder_and_by_hex_for_the_rest_the_sides_own_too() {
     let mut world = travelling(ON_TIME, NEVER, NEVER, 600);
     // Every picture and the side's own hold contact 1 at (5,0).
-    let figures_search = world.ref_data.search.clone().expect("figures");
+    let figures_search = world.ref_data.search.clone();
     let key = world.events.next_id();
     let sighting = sighting_at(key, hx(5, 0), 2);
     world.apply_report(Side::Allied, &sighting, &Holders::Every, &figures_search);
@@ -773,7 +773,7 @@ fn with_no_report_figures_every_report_reaches_every_command_at_once() {
         contact: Some(ContactId::new(1)),
         hex: hx(5, 0),
     };
-    let figures_search = world.ref_data.search.clone().expect("figures");
+    let figures_search = world.ref_data.search.clone();
     world.apply_report(
         Side::Allied,
         &report,
@@ -803,7 +803,7 @@ fn with_command_levels_off_only_the_sides_own_belief_changes_and_nothing_is_sent
         day: DAY,
         pulse: Some(NOON),
     };
-    let figures_search = world.ref_data.search.clone().expect("figures");
+    let figures_search = world.ref_data.search.clone();
     world.apply_report(Side::Allied, &report, &holders, &figures_search);
     record_key(&mut world, DAY, NOON);
     world.pass_report(Side::Allied, &report, &holders);
@@ -1048,7 +1048,7 @@ fn without_report_figures_the_holders_mark_it_their_own_and_a_dropped_contact_lo
     assert_eq!(own_of(&world, tf(TF1)), vec![1]);
     assert!(own_of(&world, tf(TF2)).is_empty());
     assert!(own_of(&world, AREA).is_empty());
-    let figures = world.ref_data.search.clone().expect("figures");
+    let figures = world.ref_data.search.clone();
     for _ in 0..figures.contact_drop_age_pulses + 1 {
         world.age_pictures(Side::Allied, &figures);
     }
@@ -1059,7 +1059,7 @@ fn without_report_figures_the_holders_mark_it_their_own_and_a_dropped_contact_lo
 fn a_contact_one_command_saw_is_in_its_picture_alone() {
     let mut world = travelling(ON_TIME, ON_TIME, ON_TIME, 600);
     let key = record_key(&mut world, DAY, NOON);
-    let figures = world.ref_data.search.clone().expect("figures");
+    let figures = world.ref_data.search.clone();
     world.apply_report(
         Side::Allied,
         &sighting_at(key, hx(4, 0), 1),

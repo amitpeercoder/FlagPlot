@@ -2,20 +2,20 @@ Placeholder scenario 76: Controlling an island
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 8bb383e0e5cda2a0  64 events
-day   2  hash de0fba62de44da44  29 events
-day   3  hash a5a35a5ca28d8a81  21 events
-day   4  hash caf740b876d16341  33 events
-day   5  hash fbf213babad17ea0  35 events
-day   6  hash ab7fc3f7f939bcb0  25 events
-day   7  hash 1fb3b1b5ccc4039f  15 events
-day   8  hash 669403f01c84cc1c  22 events
-day   9  hash d773970f3781cfa8  28 events
-day  10  hash 251d007b6d6f4e66  23 events
-day  11  hash 8b2c29fa5513edb9  15 events
-day  12  hash b008139b89cb77e0  15 events
-day  13  hash 0c410368aa17a273  15 events
-day  14  hash 65b5ebca43cd60cc  15 events
+day   1  hash ----------------  64 events
+day   2  hash ----------------  29 events
+day   3  hash ----------------  21 events
+day   4  hash ----------------  33 events
+day   5  hash ----------------  35 events
+day   6  hash ----------------  25 events
+day   7  hash ----------------  15 events
+day   8  hash ----------------  22 events
+day   9  hash ----------------  28 events
+day  10  hash ----------------  23 events
+day  11  hash ----------------  15 events
+day  12  hash ----------------  15 events
+day  13  hash ----------------  15 events
+day  14  hash ----------------  15 events
 
 task_force:1 "Placeholder transport force 1" (Allied): Arrived at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 ship:1 "Placeholder troop transport 1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 936 t of fuel, 0 t of supply

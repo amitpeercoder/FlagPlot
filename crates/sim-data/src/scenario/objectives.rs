@@ -106,11 +106,7 @@ pub(super) fn ship_points(
     Ok(ShipPoints(points))
 }
 
-pub(super) fn build_objectives(
-    spec: &ObjectivesSpec,
-    days: u32,
-    has_surface_combat: bool,
-) -> Result<Objectives, String> {
+pub(super) fn build_objectives(spec: &ObjectivesSpec, days: u32) -> Result<Objectives, String> {
     let horizon_days = match spec.horizon_days {
         None => days,
         Some(stated) => {
@@ -142,19 +138,11 @@ pub(super) fn build_objectives(
                 )
             })
     };
-    if uses("ships_out_of_action") {
-        if uses("ships_crippled") {
-            return Err(
-                "a scenario counts damaged ships one way: it may not have both ships_out_of_action and ships_crippled (decision 0088)"
-                    .to_string(),
-            );
-        }
-        if !has_surface_combat {
-            return Err(
-                "ships_out_of_action needs the surface combat figures, which hold the yard figures (decision 0088)"
-                    .to_string(),
-            );
-        }
+    if uses("ships_out_of_action") && uses("ships_crippled") {
+        return Err(
+            "a scenario counts damaged ships one way: it may not have both ships_out_of_action and ships_crippled (decision 0088)"
+                .to_string(),
+        );
     }
     let level = |quantity: &Quantity, name: &str| {
         quantity

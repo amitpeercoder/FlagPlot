@@ -56,11 +56,7 @@ impl World {
             .expect("a force that fought had ships");
         let ship_count = u32::try_from(seen.len()).expect("few ships");
 
-        let figures = self
-            .ref_data
-            .search
-            .clone()
-            .expect("World::new requires search figures with surface combat figures");
+        let figures = self.ref_data.search.clone();
         let mut stream = self.rng_pair(
             fight.day,
             Some(fight.pulse),
@@ -128,11 +124,7 @@ impl World {
             .count();
         let claimed_sunk = u32::try_from(enemy.sunk_in_fight.len() + burning).expect("few ships");
 
-        let figures = self
-            .ref_data
-            .search
-            .clone()
-            .expect("World::new requires search figures with surface combat figures");
+        let figures = self.ref_data.search.clone();
         let claim = BattleClaim {
             hex: fight.hex,
             day: fight.day,

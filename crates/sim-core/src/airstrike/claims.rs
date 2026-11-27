@@ -54,11 +54,7 @@ impl World {
             .air_combat
             .clone()
             .expect("a strike needs the air combat figures");
-        let search = self
-            .ref_data
-            .search
-            .clone()
-            .expect("World::new requires search figures with air groups");
+        let search = self.ref_data.search.clone();
         for tally in tallies {
             for (side, part, attacking) in [
                 (tally.attacker_side, tally.attacker, true),
@@ -161,12 +157,7 @@ impl World {
                             claimed_kind = tally.taken_for;
                             // A ship left burning, as a surface fight's claim
                             // counts it (decision 5).
-                            let level = self
-                                .ref_data
-                                .surface_combat
-                                .as_ref()
-                                .expect("World::new requires surface combat figures")
-                                .claimed_sunk_fire;
+                            let level = self.ref_data.surface_combat.claimed_sunk_fire;
                             burning = self.truth.task_forces[&force]
                                 .ships
                                 .iter()

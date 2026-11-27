@@ -164,7 +164,7 @@ A ship's speed is set by the force's speed setting:
 | Full | the class's `max_speed_kn`, times the ship's propulsion factor |
 | Knots | the ordered knots, or the class's `max_speed_kn` times the propulsion factor, whichever is lower |
 
-The propulsion factor is 1 for working propulsion, the `degraded_factor` of `surface_combat.toml` for degraded propulsion, and 0 for propulsion that is out. A game with no surface combat figures has no damaged ships and every factor is 1. A ship with a factor of 0 has a speed of 0. [0005, 0016 item 7, 0021 item 7]
+The propulsion factor is 1 for working propulsion, the `degraded_factor` of `surface_combat.toml` for degraded propulsion, and 0 for propulsion that is out. A ship with a factor of 0 has a speed of 0. [0005, 0016 item 7, 0021 item 7, 0236]
 
 The speed of the task force is the lowest speed of its ships. On a tie the lowest ship number is the slowest ship, which matters only for the breakdown. One damaged ship therefore slows the whole force. A force whose speed is 0 is dead in the water: it does not move, records no event, burns no fuel and stays underway. [0005, 0016 item 8]
 

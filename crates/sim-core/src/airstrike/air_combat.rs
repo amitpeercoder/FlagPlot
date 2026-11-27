@@ -519,11 +519,7 @@ impl World {
             pulse,
             round: 0,
         };
-        let search = self
-            .ref_data
-            .search
-            .clone()
-            .expect("World::new requires search figures with air groups");
+        let search = self.ref_data.search.clone();
         for ((_, outcome), event) in outcomes.into_iter().zip(attack_events) {
             let attack = match outcome {
                 Outcome::Attack(attack) => attack,
