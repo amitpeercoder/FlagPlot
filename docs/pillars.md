@@ -2,11 +2,15 @@
 
 Nov 9, 2026 · Amit Peer
 
+> **Proposed, awaiting the designer's review** (drafted by the architect on Nov 26, 2026, on his instruction "Amend now"; `docs/design/levels.md` has the reasoning). Every change proposed to this document is in a block marked like this one, beside the text it would change, which is left as it was. Nothing in a marked block is in force until he confirms it; he may strike any of them. The five pillars are not changed. The three questions the first draft left open he answered the same day; the blocks are reworked to his answers, which are recorded at the end, and stay proposed until he has read them.
+
 ## Concept
 
 An operational wargame of the Pacific War at the scale of War in the Pacific: Admiral's Edition (WitP:AE), where the player commands by intent and a staff executes. Title: Flag Plot, after the compartment on a flagship where the admiral and staff tracked the battle and issued orders.
 
 WitP:AE models every ship, air group and pilot across the whole theatre, day by day, and makes the player hand-enter orders for all of it. This game keeps that depth in the simulation and removes it from the player's hands. The player works at whatever level of command they choose. Everything they are not holding is run by a staff that shows its reasoning.
+
+> **Proposed, awaiting the designer's review** (drafted by the architect on Nov 26, 2026, on his instruction "Amend now"; `docs/design/levels.md` has the reasoning). Add after the paragraph above: **The game is about planning.** The player is taken through levels. Each is a war small enough to hold in the head, with a mission and a date given from above. He writes a plan, may try it in a dry run and amend it, and then fights it. The plan is measured once, in the war itself: the mission is met by its date or it is not, and luck is part of it. He may choose to set his plan beside the one his staff would have made alone, before the game by a dry run and after it over many games. Failing a level does not keep him from the next; not trying does, and he may fight a level again on a new situation with a changed plan. Each level teaches one more decision of planning and practises the ones before; the scenarios grow in forces and in length, and in the later ones he may command only part of a side. The ladder is the game; play outside it, with no mark to beat, may be unlocked later. The theatre is the top of the ladder, not the first thing he is given.
 
 It is a passion project built for an audience of one. There is no commercial target and no deadline. It is the primary side project, ahead of Haulout. The two tests of success are that the UX is wonderful and that the game is engaging to play.
 
@@ -49,11 +53,18 @@ Three directions of the designer, of Nov 15 and 16, 2026, each recorded where th
 - **A staff at every level, each on its own picture** (`docs/design/command-levels.md`, decision 0119). Each commander interprets and splits the intent he is given. Levels differ in what they know and in what they report, of the enemy and of their own forces. Commanders differ in initiative. It is built as its own stage of step 3.
 - **A seat at any level.** A player may later take a role, see what that level sees, and carry out the intents of the levels above. "Anything can be grabbed" then means sitting where that commander sits.
 
+> **Proposed, awaiting the designer's review** (drafted by the architect on Nov 26, 2026, on his instruction "Amend now"; `docs/design/levels.md` has the reasoning). A fourth direction, of Nov 26 and 27, 2026, which sharpens pillars 1, 2 and 5 and changes none of the five:
+>
+> - **The player writes the plan, and the war measures it** (decision 0232; `docs/design/levels.md`). A commander may write part of the tree himself and the staff fills the rest; a node is his or the staff's and says so. A plan is measured once, in the game he fights. The staff's own plan for the mission is there to set his beside if he chooses, and gates nothing. Pillar 1 is learned one altitude at a time. Pillar 2 gains a second use: the staff's plan and its reasons are what he reads to learn. Pillar 3 stands: the game he fights runs until something matters. Pillar 5 is sharpened: the consequence of a plan is one war, fought once on what he knew. Reworked on Nov 27, 2026 to his change of that day.
+
 ## Cuts
 
 These are left out on purpose. Each one protects a pillar or keeps the scope survivable.
 
 - **Mandatory micromanagement.** No task exists that only the player can do. If staff cannot do it, it is not in the game yet.
+
+  > **Proposed, awaiting the designer's review** (drafted by the architect on Nov 26, 2026, on his instruction "Amend now"; `docs/design/levels.md` has the reasoning). Add to this cut: *Inside a level one thing is the player's to do: he writes the part of the plan that the level teaches, and a level is not tried until he has. The staff does everything he does not write, and could have written that part too; it is asked of him because the level exists to teach it. Nothing below the altitude he is playing is ever his to do by hand, and what he writes need not be better than the staff's: failing a level does not close the next.* This is an exception to the cut's first sentence and is worded as one. The designer ruled that trying a level is "signing a plan of your own", knowing it makes writing mandatory inside a level, and that "the ladder is the game, but we may decide later that free play is unlocked"; the wording is the architect's and is his to change. Reworked on Nov 27, 2026 to his change of that day.
+
 - **Modal spreadsheet screens.** Lists exist as a secondary view, never as the only route to a decision.
 - **Japanese industrial management as a spreadsheet game.** Production is set by policy and priorities, with staff handling the conversion detail.
 - **Detailed ground combat.** Land fighting is modelled at the level naval and air decisions need. This is not a ground-war game.
@@ -74,6 +85,8 @@ The first playable version is the South Pacific from August 1942 to February 194
 | Sides | Allied player against a Japanese AI first, then the reverse |
 | Systems | Naval movement and combat, air operations, supply and shipping, search and fog of war, basic ground combat |
 
+> **Proposed, awaiting the designer's review** (drafted by the architect on Nov 26, 2026, on his instruction "Amend now"; `docs/design/levels.md` has the reasoning). **The first playable version is the first levels** (his answer of Nov 26, 2026): the first rungs of the ladder, small scenarios, the first of them invented and marked placeholder, then levels cut from the battles already on file. The slice in the table above becomes the top rung, reached later, and the long order-of-battle work for it waits. The table is left as it was; read it as the top rung's scope.
+
 This campaign is chosen because it stresses every system at once in a small space: carrier battles, night surface actions, an air war of attrition, and a supply fight both sides nearly lost. If the command model works here, it scales. If it fails here, a bigger map will not save it.
 
 ## Build sequence
@@ -85,6 +98,15 @@ Five steps, with a kill gate after step 4. No full database and no real UI befor
 3. **Staff planner.** The layer that turns intent into orders. It serves player delegation and the enemy AI, so it is built once.
 4. **Command-loop prototype.** Minimal UI over steps 1 to 3: set intent, read staff plans, run time, get interrupted, react.
 5. **Full build.** Real UI, complete order of battle, more theatres, the Japanese side.
+
+> **Proposed, awaiting the designer's review** (drafted by the architect on Nov 26, 2026, on his instruction "Amend now"; `docs/design/levels.md` has the reasoning). Steps 1 to 3 are unchanged. Step 4, the command-loop prototype, is the first levels: a mission held from above, a plan written and signed, a dry run, the one game that measures it, the debrief, and the history of a level. Step 5 is the ladder built up to the slice, before more theatres. **The kill gate is judged on levels** (his answer of Nov 26, 2026): its questions are answered by playing the first levels. Proposed wording of the four, for his review; the originals below are left as they were:
+>
+> - Is writing a plan and seeing it fought once worth doing again, or is it filling a form?
+> - Do you trust the staff to carry out your plan as you wrote it, and its dry run to tell you something, or do you stop reading both?
+> - Does the game you fight with your plan produce tension when the clock stops, or just a stream of pop-ups?
+> - Do you read the account of the game and ask for the debrief, or move on without them?
+>
+> A "no" on any of the first three means reworking the level before a ladder is built; a "no" on the fourth means reworking how the game is told and what the debrief shows. Reworked on Nov 27, 2026 to his change of that day.
 
 **Kill gate, after step 4.** Four questions, answered by playing the prototype for a few weeks:
 
@@ -130,3 +152,13 @@ The last row is the one to get right from the first commit. Traceability added l
 
   What it asks of step 1: every order carries the intent it serves, and every objective can be measured from state. War-wide strategy (production, the whole Pacific) stays in step 5.
 - [ ] Open source from the start, or decide after the kill gate?
+
+## Proposed amendment: the designer's answers
+
+The first draft of the proposed blocks left three questions open, on which his intent could be read two ways. He answered them on Nov 26, 2026, and the blocks above are reworked to the answers. They stay proposed until he has read them.
+
+1. **Is there play outside the ladder?** "I think the ladder is the game, but we may decide later that free play is unlocked."
+2. **What is the first playable version?** "The first levels": the first rungs, small scenarios; the slice becomes the top rung, reached later, and the long order-of-battle work for it waits.
+3. **What is the kill gate judged on?** "Judged on levels": answered by playing the first levels. The wording of the gate's questions, proposed above, is his to review.
+
+On Nov 27, 2026 he changed how a level is measured (once, in the war; scoring against the staff is the player's choice; failure does not block, not trying does; trying is "signing a plan of your own"; a replay is on a new situation and the last game counts). It replaces "must beat par to pass" and the two-part score of Nov 26, on which the first draft of several blocks rested; those blocks are reworked and say so. `docs/design/levels.md` records each answer and what replaced it.
