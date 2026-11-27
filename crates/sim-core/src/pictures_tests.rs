@@ -449,7 +449,7 @@ fn a_base_formed_by_a_landing_is_a_command_with_a_copy_of_the_landing_forces_pic
 
 #[test]
 fn a_base_formed_by_a_march_is_a_command_with_a_copy_of_the_picture_of_the_command_left() {
-    // The hook `march.rs` calls when a march forms a base (decision 0237,
+    // The hook `march.rs` calls when a march forms a base (decision 0239,
     // rules 1 and 2), with the base it made and the hex left: a march is not
     // played here.
     let mut world = world_with_levels(&[]);

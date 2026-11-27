@@ -286,7 +286,7 @@ pub(crate) struct Watched {
     seen: BTreeSet<(Side, CommandRef)>,
     /// The first moment the run was watched at, and the first moment each
     /// command was seen: a command first seen later was formed in the game
-    /// (decision 0237, ruling 11).
+    /// (decision 0239, ruling 11).
     first_moment: Option<Moment>,
     first_seen_at: BTreeMap<(Side, CommandRef), Moment>,
     /// A strike decision to review: the group, the day and the pulse.
@@ -904,7 +904,7 @@ pub(super) fn report_answers(
         .map(|command| {
             let first = watch.first_held.get(&(side, command, number)).copied();
             // A command formed in the game that first held the report at the
-            // first moment it was seen held it by copy (decision 0237,
+            // first moment it was seen held it by copy (decision 0239,
             // ruling 11).
             let formed = first.filter(|moment| {
                 watch.first_seen_at.get(&(side, command)) == Some(moment)
@@ -1137,7 +1137,7 @@ mod tests {
     }
 
     /// A command formed in the game holds what the picture it was copied
-    /// from held (decision 0237, ruling 11): the dump of the second proof's
+    /// from held (decision 0239, ruling 11): the dump of the second proof's
     /// week, base 10, formed on day 16 with a copy of base 2's picture, holds
     /// report #2235 (base 2's, day 15) from the end of day 16.
     #[test]

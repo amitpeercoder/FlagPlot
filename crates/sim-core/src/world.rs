@@ -187,7 +187,7 @@ impl Default for MadeIds {
 /// own plan and a floor of 0 days, which a command the old rules refused and
 /// which changes games with an island and a base of the side beside a place
 /// with men) and 35 from decision 0232 (a sub-intent the commander writes, a
-/// command the old rules refused) and 36 from decision 0237 (with command
+/// command the old rules refused) and 36 from decision 0239 (with command
 /// levels on a base formed by a march is a command, which changes a game with
 /// command levels on in which a march forms one). A
 /// pull request

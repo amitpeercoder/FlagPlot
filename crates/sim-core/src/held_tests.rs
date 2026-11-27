@@ -389,7 +389,7 @@ fn a_command_formed_is_held_as_of_now_and_a_base_changing_side_moves_its_hold() 
 
 #[test]
 fn a_base_formed_by_a_march_is_held_as_it_stood_before_its_supply_was_put_into_it() {
-    // Decision 0237, rule 3 and ruling 5: the hook runs before the supply
+    // Decision 0239, rule 3 and ruling 5: the hook runs before the supply
     // carried is put into the base.
     let mut world = holding(ON_TIME);
     let id = crate::ids::BaseId::new(3);

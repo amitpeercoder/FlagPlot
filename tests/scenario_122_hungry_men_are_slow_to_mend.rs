@@ -1594,7 +1594,7 @@ fn property_no_new_state() {
     // to v58 and 32, for a side's submarine doctrine and the pattern of a
     // patrol, and decision 0228 to v59, for whether a side's staff chooses its
     // sources of supply, and decision 0232 the rules label to 35, for a
-    // sub-intent the commander writes, and decision 0237 to 36, for a base
+    // sub-intent the commander writes, and decision 0239 to 36, for a base
     // formed by a march as a command; none touches this rule.
     assert_eq!(sim_core::hash::STATE_VERSION, b"flagplot-state-v60");
     assert_eq!(sim_core::world::RULES_VERSION, 36);

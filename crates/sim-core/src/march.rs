@@ -330,7 +330,7 @@ impl World {
                         },
                     );
                     // With command levels on it is a command of its side
-                    // (decision 0237), formed before the supply is put into
+                    // (decision 0239), formed before the supply is put into
                     // it.
                     self.base_formed_by_march(id, from);
                     let formed = self.events.record(

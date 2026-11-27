@@ -1,6 +1,6 @@
 //! Command levels ashore: a base formed by a march is a command.
 //!
-//! Proves decision 0237 (`docs/decisions/0237-a-base-formed-by-a-march-is-a-command.md`),
+//! Proves decision 0239 (`docs/decisions/0239-a-base-formed-by-a-march-is-a-command.md`),
 //! rules 1, 2 and 4. Rule 2's source of the copy is proved in
 //! `crates/sim-core/src/pictures_tests.rs` (below, "In `sim-core`"); rule 3
 //! is `World::base_formed`, proved for a landing already.
@@ -91,7 +91,7 @@
 //!   `tests/golden/pinned_hashes.txt` do, and the pull request shows that no
 //!   baseline and no pinned line changed. The one game that moves is the
 //!   row of `stage-2b-proof/07a_week.toml` in `tests/scenario_130/part_f.rs`
-//!   (decision 0237, ruling 4).
+//!   (decision 0239, ruling 4).
 //!
 //! # In `sim-core`
 //!
@@ -119,7 +119,7 @@
 //!   2 stands. Its picture is the Allied area command's.
 //! - **With command levels off** the hook makes no command.
 //!
-//! The third case cannot come about by a march today (decision 0237, the
+//! The third case cannot come about by a march today (decision 0239, the
 //! note under rule 2): it is proved by the hook alone.
 //!
 //! And one test in `crates/sim-core/src/held_tests.rs`, beside

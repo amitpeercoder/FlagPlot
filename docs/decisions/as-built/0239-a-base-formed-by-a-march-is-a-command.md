@@ -1,6 +1,6 @@
-# 0237, as built: A base formed by a march is a command
+# 0239, as built: A base formed by a march is a command
 
-## Built (Nov 27, 2026, pull request pending)
+## Built (Nov 27, 2026, pull request 773)
 
 Class 3. The rule is built as the record rules it, in `sim-core` only: `World::base_formed_by_march(base, left)` (`pictures.rs`) makes the base a command with a copy of the picture of the command at the hex left (`command_at_hex`) by `base_formed`, and `march.rs` calls it where "Dump at (q,r)" is put into the state, before `MarchBaseFormed` is recorded and before the supply carried is put into the base (ruling 5). The rules label is 36 (ruling 3). No state, field, draw, event or `Draw` value is added; `hash.rs` and `picture_of` are not touched.
 

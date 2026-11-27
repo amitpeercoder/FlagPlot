@@ -85,7 +85,7 @@ pub enum Road {
     /// It made the report (or holds it with no passing to it that arrived).
     /// `formed` is `Some(moment)` for a command formed in the game that held
     /// the report from the first moment it was seen, by the copy of the
-    /// picture it was formed with (decision 0237, ruling 11).
+    /// picture it was formed with (decision 0239, ruling 11).
     Own { when: When, formed: Option<Moment> },
     /// A passing brought it.
     Told {

@@ -345,7 +345,7 @@ const BEFORE: &[(&str, u64)] = &[
         "stage-2b-proof/05c_eastern_solomons_bold.toml",
         0xe2396ee2ad84bb8e,
     ),
-    // Remade by decision 0237 (a base formed by a march is a command): the
+    // Remade by decision 0239 (a base formed by a march is a command): the
     // week forms base 10 on day 16 with command levels and reports on. It was
     // 0x485071c7e65da537; no event before the `MarchBaseFormed` of base 10
     // moves.

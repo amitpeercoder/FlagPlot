@@ -1,10 +1,10 @@
-# 0237: A base formed by a march is a command
+# 0239: A base formed by a march is a command
 
 Status: ruled by the architect on Nov 27, 2026, on Amit's word that the defect found in `docs/validation/old-switches.md` be fixed. Class 3 (ruling 1). Amended the same day on an independent reading of pull request 769, which found the cause complete and the rule right and asked for three things named and one said (rulings 3, 4 and 8, and the note under rule 2). It is built only after Amit's word; it reaches Amit as a plan because it moves one file of a closed proof.
 
 Summary: With command levels on, a base a march forms (a dump) was never made a command, so the first rule that read its picture stopped the game ("base:8 is not a command of the Allied side", scenario 29 with command levels turned on). It becomes a command when it is formed, as a base formed by a landing does, with a copy of the picture of the command the marching unit left. With command levels off nothing changes. One file of stage 2b's closed proof, the week, forms a dump and moves; the proof stands as run.
 
-Standing: Ruled by the architect on Nov 27, 2026, on Amit's word; class 3; amended on an independent reading the same day; not built
+Standing: Ruled by the architect on Nov 27, 2026, on Amit's word; class 3; amended on an independent reading the same day; built in pull request 773 (`docs/decisions/as-built/0239-a-base-formed-by-a-march-is-a-command.md`); renumbered from 0237 on Nov 27, 2026, because the record of the ladder's first three rungs had taken that number first
 
 ## Why
 
@@ -31,7 +31,7 @@ Only orders written in the files were played. A seat's own orders to march were 
 
 ## The rule
 
-The rule is in the rulebook: `docs/rules/01-the-day-orders-and-what-a-side-knows.md`, "Commands and their pictures", the paragraph "A base formed by a march" (decision 0233, item A2).
+Rules 1 to 4 are in the rulebook: `docs/rules/01-the-day-orders-and-what-a-side-knows.md`, "Commands and their pictures", the paragraph "A base formed by a march" (decision 0233, item A2).
 
 ## Rule card
 
@@ -47,9 +47,9 @@ The rule is in the rulebook: `docs/rules/01-the-day-orders-and-what-a-side-knows
 1. **Class 3.** The change adds no state, draw or event kind, and with command levels off, which is every game for play and 255 of the 263 files, nothing moves. But `stage-2b-proof/07a_week.toml` has command levels on, has reports travel and forms a dump on day 16; from that day the dump reports its state and is told reports, so the file's events move. That is a game of a closed proof moved, which decision 0233, item B, makes class 3.
 2. **Stage 2b's proof stands as run** and is not run again. The week was its condition 6, reported and not judged (decision 0138, item 13). `docs/validation/stage-2b-proof.md` is not changed.
 3. **The rules label is raised by one,** from 35 to 36: a saved game with command levels on and a march that forms a dump would not replay. With it change, and only so:
-   - the comment on `RULES_VERSION` in `world.rs`, which ends at 34: it gains the clause it lacks for 35 ("35 from decision 0232 (a sub-intent the commander writes, a command the old rules refused)") and the clause for 36 ("36 from decision 0237 (with command levels on a base formed by a march is a command, which changes a game with command levels on in which a march forms one)");
-   - `assert_eq!(sim_core::world::RULES_VERSION, 35)` in `tests/scenario_122_hungry_men_are_slow_to_mend.rs` and `tests/scenario_123_a_fight_costs_supply.rs` (`property_no_new_state` in each), to 36, and the comment above each, which gains "and decision 0237 to 36, for a base formed by a march as a command" before "none touches this rule". These two values follow the constant and are not hand calculations; commit e536d81c is the precedent. No other expected value in either file changes;
-   - rules chapter 1, the paragraph on what a saved game records, which stops at 32: it gains one sentence before "A game saved under an earlier layout or version is refused, not converted.": "Decision 0237 makes the rules label 36 (with command levels on a base formed by a march is a command); the state's layout is unchanged, and no game with command levels off plays differently." and `0237` at the end of its list of decisions. Its missing sentences for 33 to 35 are not this record's and are left;
+   - the comment on `RULES_VERSION` in `world.rs`, which ends at 34: it gains the clause it lacks for 35 ("35 from decision 0232 (a sub-intent the commander writes, a command the old rules refused)") and the clause for 36 ("36 from decision 0239 (with command levels on a base formed by a march is a command, which changes a game with command levels on in which a march forms one)");
+   - `assert_eq!(sim_core::world::RULES_VERSION, 35)` in `tests/scenario_122_hungry_men_are_slow_to_mend.rs` and `tests/scenario_123_a_fight_costs_supply.rs` (`property_no_new_state` in each), to 36, and the comment above each, which gains "and decision 0239 to 36, for a base formed by a march as a command" before "none touches this rule". These two values follow the constant and are not hand calculations; commit e536d81c is the precedent. No other expected value in either file changes;
+   - rules chapter 1, the paragraph on what a saved game records, which stops at 32: it gains one sentence before "A game saved under an earlier layout or version is refused, not converted.": "Decision 0239 makes the rules label 36 (with command levels on a base formed by a march is a command); the state's layout is unchanged, and no game with command levels off plays differently." and `0239` at the end of its list of decisions. Its missing sentences for 33 to 35 are not this record's and are left;
    - the recorded games kept at the current label, remade by `scripts/regenerate.sh`: each differs in its label and in nothing else, since none has command levels on. `stage_2b_seat_sonnet`, kept at label 18, is left as it is.
 4. **What may move, and nothing else:** the row of `stage-2b-proof/07a_week.toml` in `BEFORE` in `tests/scenario_130/part_f.rs`, remade as that file's doc comment says. The two texts (`FLAGPILOT_130_TEXTS`, before and after) are shown to the architect: no line differs before the `MarchBaseFormed` of base 10, and after it the differences are the dump's reports and what follows from them. No run baseline, no line of `tests/golden/pinned_hashes.txt` and no other row of `BEFORE` moves. These tests play the moved game or one like it with command levels on, and each passes with no word of it changed:
    - `every_report_has_a_road_the_state_agrees_with` in `crates/sim-cli/src/events.rs` (the second proof's week with command levels and reports on, seed 1);

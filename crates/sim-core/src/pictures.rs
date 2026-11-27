@@ -781,7 +781,7 @@ impl World {
     }
 
     /// A base was formed during the game, by a landing (decision 0066, 11) or
-    /// a march (decision 0237): with command levels on it is a command under
+    /// a march (decision 0239): with command levels on it is a command under
     /// the area command, with a copy of the picture of `from`, the command
     /// that formed it (a reading of decision 0134, 5, which names task forces
     /// only).
@@ -791,7 +791,7 @@ impl World {
         self.hold_now(side, CommandRef::Base(base));
     }
 
-    /// A base was formed by a march (decision 0237, rules 1 to 3): with
+    /// A base was formed by a march (decision 0239, rules 1 to 3): with
     /// command levels on it is a command of its side under the area command,
     /// with a copy of the picture of the command the marching unit left in
     /// the hex `left`: the lowest-numbered base of the side there, else the
