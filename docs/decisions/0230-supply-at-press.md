@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 24, 2026, from a lead found whil
 
 Summary: A hold at press forms its supply with a floor of 0 days, and the supply doctrine sends a run only when a reading is below the floor's stock, which nothing can be below. So at press no run is ever sent, and the men of a place taken at press starve when what they landed with is gone. This makes the floor of a supply the staff forms the margin of its risk and never less than one day: 10, 5 and 1. One day is the least floor at which the doctrine's own timing never leaves a night short. One figure of doctrine; nothing in the engine.
 
-Standing: Planned by the architect on Nov 24, 2026; amended on review the same day. To be built after decision 0231 and before the setup of stage 4's proof. Its statements and hand calculation are written (scenario 136)
+Standing: Planned by the architect on Nov 24, 2026; amended on review the same day. Its statements and hand calculation are written (scenario 136). Built and merged before stage 4's proof (pull request 728)
 
 ## The fault
 
