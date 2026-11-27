@@ -2672,6 +2672,155 @@ def a_reason_leads_to_his_line(bridge):
     check(False, "not built: decision 0232, step 3, rule 31 (a reason leads to his line)")
 
 
+# ---- Rung 1 on the table (decision 0237). The statements are the architect's, written before the code with
+# docs/decisions/as-built/0237-the-first-three-rungs.md, "Planned: rung 1 on the table", which has the entry, the directive and the
+# verdict's words in full. None of the five is called from main() until it is built. An expected value below that the build cannot
+# meet goes back to the architect: it is not changed to pass.
+
+RUNG_ONE = "ladder-1-one-ship"
+RUNG_ONE_MISSION = {"measure": "every_night_fed", "last_day": 14,
+                    "places": [{"q": 0, "r": 0, "name": "Base S"}, {"q": 5, "r": 0, "name": "Base T"}]}
+RUNG_ONE_MET = ["Mission met.", "Every man was fed every night to the end of day 14, at Base S and at Base T."]
+
+
+def rung_one_order(floor, interval):
+    """The supply order as the paper sends it for a reading: base 2 (T), with ship 1 and base 1 (S) as its forces."""
+    return {"command": "set_intent", "intent_kind": "keep_supplied", "base": 2, "floor_days": floor, "interval_days": interval,
+            "limits": [{"limit": "forces", "ships": [1], "task_forces": [], "source": 1}]}
+
+
+def rung_one_on_the_list(bridge):
+    """Rung 1 on the list, its directive, the screen and a game with no date.
+
+    In the files:
+    L1. The first entry of `table/scenarios.json` has the id "ladder-1-one-ship", the name "Rung 1: One ship", `dates` "An invented
+        sea", `days` 14, `placeholder` true, the map "data/map/placeholder_ladder.toml", no key `start`, `islands` empty, three `lines`
+        of which the last begins "A placeholder game", `sides` with the key `allied` alone, `directives` with the key `allied` alone,
+        `mission` equal to RUNG_ONE_MISSION, and one pairing: {allied "person", japanese "engine", engine "absent", file
+        "data/scenarios/ladder/138_one_ship.toml"}. The whole entry is the one written in the as-built section.
+    L2. Every other entry is what it was: none has the key `mission` or `placeholder`, none has a pairing whose `engine` is "absent",
+        and each has a `start`.
+    L3. `table/directives/ladder_1_allied.json` has one directive, number 1, `when` "start", from "Area Commander", to "Commander, Base
+        S", subject "Both garrisons fed", with three parts headed "1. Situation", "2. Mission" and "3. Guidance". The text of its mission
+        is one paragraph and is the entry's `sides.allied`, letter for letter. Its guidance names "Base T", "Base S" and "two numbers".
+
+    In the page's text:
+    L4. `ENGINE_IS` has the key `absent`, whose words are "There is no enemy in this game: the Japanese side has nothing." for the
+        Japanese side, and keeps `staff`, `script` and `none` as they were.
+    L5. `dateOf`, cut from the page and run in node with a config whose `start` is the empty string, gives the empty string for days 0,
+        1 and 13. No place where the page writes a day shows nothing for it: each use of `dateOf` whose result is shown has a fallback
+        in words ("day 3", "Day 3"), the three that had none included ("Not before" on a force's card, and the two lines of what comes
+        within the week in the staff's summary).
+
+    Through the bridge:
+    L6. The screen's list has the rung first, with one pairing, and names no file and no `mission` (what the screen is given of a
+        scenario is unchanged). The game begins: `/config` has `seat` "allied", `start` the empty string, `islands` empty, the one
+        directive, and `mission` equal to RUNG_ONE_MISSION. The seat's `list_bases` has two bases; for each place of the mission, the
+        page's `cleanName` (in node) of the name of the base in that hex is the place's `name`.
+    L7. The seat's tools do not include `trial`. `get_briefing` gives `heading.last_day` 14.
+    L8. A game of another scenario begun after it (the Eastern Solomons, a person Allied against the engine) has no key `mission` in
+        its `/config`.
+    Each game is put away after it."""
+    check(False, "not built: decision 0237, rung 1 on the table (the entry, the directive and the screen)")
+
+
+def the_supply_orders_two_numbers(bridge):
+    """The floor and the interval on the order paper, for the end "keep it supplied".
+
+    In the page's text:
+    O1. The paper has a row with the id `o-supply` holding two inputs of type number, `o-floor` (min 1, max 99, value 30) and
+        `o-interval` (min 1, max 99, no value), and the words "Never below", "days of supply", "Each run brings", "days more" and "left
+        to the staff: 15 days". The page does not hold "Keep it supplied, 30 days"; the end reads "Keep it supplied".
+    O2. The row is shown where the end chosen is `keep_supplied` and hidden for every other, by the same path that shows `o-patrol`
+        for a patrol; a change of either input asks the reading again, as a change of `o-dist` does.
+
+    The page's own functions, cut from its text and run in node, with a stand-in for the two inputs:
+    O3. Nothing touched (30, empty): what the paper adds to the order is `floor_days` 30 and no key `interval_days`, so the arguments of
+        the reading are exactly {command "set_intent", intent_kind "keep_supplied", base n, floor_days 30}: what the page sent before.
+    O4. (2, 5) gives `floor_days` 2 and `interval_days` 5. An empty floor, or one that is no number, gives 30; 0 gives 1; 150 gives 99.
+        An interval of 0 gives 1 and of 150 gives 99; an empty one gives no key. For an end of any other kind neither key is added.
+    O5. What a place's card says of an order in force: {kind keep_supplied, floor_days 2, interval_days 5} gives "Kept supplied, 2
+        days, each run 5 days more"; {floor_days 30} with no interval gives "Kept supplied, 30 days", as before.
+
+    Through the bridge, in a game of rung 1:
+    O6. A preview of `rung_one_order(2, 5)` is valid and not refused, its `command` has `floor_days` 2 and `interval_days` 5, and its
+        `shown_limits` has one entry. A preview of the same order with no `interval_days` is valid and its `command` has no interval.
+        Nothing is signed, and the game is put away."""
+    check(False, "not built: decision 0237, rung 1 on the table (the floor and the interval on the order paper)")
+
+
+def the_verdict_in_words():
+    """The verdict's words: the page's own `missionLines(mission, days)`, cut from its text with `commas` and run in node. It draws
+    nothing and asks nothing. `days` is a list, day 1 first, each the list of that day's events as the tool `events` gives them, or
+    null for a day that was not answered. The events below are made up in the tool's shape: {"day", "event_kind": "men_fed", "pulse":
+    "night", "text"}, the text being the engine's, "Allied men ashore at (5,0): 0 of 1000 fed from base:2, 1000 unfed". `fed(q, r)` is
+    such an event with every one of 1,000 men fed, `unfed(q, r, n)` one with n of 1,000 unfed. The mission is RUNG_ONE_MISSION.
+
+    W1. Fourteen days, each with fed(0,0) and fed(5,0): RUNG_ONE_MET.
+    W2. The same with unfed(5,0,1000) on day 14: ["Mission not met.", "1,000 men at Base T went unfed on the night of day 14."].
+    W3. The same as W1 with unfed(0,0,1000) on days 13 and 14: ["Mission not met.", "1,000 men at Base S went unfed on the nights of
+        days 13 and 14."].
+    W4. unfed(5,0,1000) on days 7, 8, 9, 12, 13 and 14: the second line is "1,000 men at Base T went unfed on the nights of days 7, 8,
+        9, 12, 13 and 14."
+    W5. Both places, and two counts: unfed(5,0,400) on day 12, unfed(5,0,1000) on days 13 and 14, unfed(0,0,1) on day 14 gives, in
+        this order: "Mission not met.", "1 man at Base S went unfed on the night of day 14.", "400 men at Base T went unfed on the
+        night of day 12.", "1,000 men at Base T went unfed on the nights of days 13 and 14." (the measure's order of places, then each
+        count in the order of its first night).
+    W6. What does not count: an event of another kind whose text says "1000 unfed"; a `men_fed` at a hex the mission does not name
+        ((3,3), 600 unfed); a `men_fed` of a named hex whose pulse is not "night". Each added to W1's days leaves RUNG_ONE_MET. The
+        form with no base, "Allied men ashore at (5,0): no base of the side, none of 1000 fed, 1000 unfed", on day 6 counts: "1,000 men
+        at Base T went unfed on the night of day 6." Two events of (5,0) on one night, 300 and 200 unfed, are said as 500 men.
+    W7. Not judged, and never "met": day 9 null gives ["The mission could not be judged.", "Day 9 could not be read."]; thirteen days
+        given where the mission's last day is 14 gives "Day 14 could not be read."; a `men_fed` of day 9 whose text is "Allied men
+        ashore somewhere" gives ["The mission could not be judged.", "A report of the men fed on day 9 could not be read."]. A night
+        unfed on an earlier day does not turn either into "Mission not met.": what could not be read whole is not judged.
+    W8. A mission of one place, (5,0) "Base T", all fed: the second line ends "at Base T."; of three places named A, B and C: "at A,
+        B and C."
+
+    In the page's text:
+    W9. `missionLines(` is called in one place, inside `readEnd`, and only where `config.mission` is set; what it is given is read
+        through `dayEvents` for the days 1 to the mission's `last_day` and through no other call of the seat. The paper holds "MISSION
+        MET", "MISSION NOT MET" and "Reading the nights.", and still holds "This game set no objectives, so the umpire gives no result."
+        for a game with no mission."""
+    check(False, "not built: decision 0237, rung 1 on the table (the verdict's words)")
+
+
+def rung_one_played_three_ways(bridge):
+    """Rung 1 played through the bridge to its end three times, and the verdict of each: the page's own `missionLines` in node on what
+    the seat's `events` answered. Each game is cases A, B and C of the hand calculation in `tests/scenario_138_one_ship.rs` (its
+    statements 3, 5 and 6), which gives both leaves on day 1; leave to prepare is given when a game on the table begins.
+
+    Each game: begun from the list (rung 1, a person Allied against the engine); a preview of `rung_one_order(floor, interval)`,
+    approved; `set_leave` {leave "launch", given true}; then `run` {days 14} again and again until an answer says the game is over
+    (a stop is answered by `run` again, and nothing else is ordered); then `events` {day d} for d from 1 to 14, in order.
+
+    V1. A floor of 2 days and an interval of 5: the lines are RUNG_ONE_MET.
+    V2. 2 and 6: ["Mission not met.", "1,000 men at Base S went unfed on the nights of days 13 and 14."].
+    V3. 2 and 4: ["Mission not met.", "1,000 men at Base T went unfed on the night of day 14."].
+    V4. In each game: the last `run` answers `game_over` true and `result` null; every one of the fourteen `events` answers has `begun`
+        true; the check's own reading of those answers (an event of kind `men_fed` whose text does not end ", 0 unfed", by day and hex)
+        agrees with the lines; and the lines are the same when the fourteen answers are asked a second time, after the end. In V1 the
+        first stop is the staff's "cannot meet" of day 13 (the fuel), which shows the mission is not touched by it.
+    Each game is put away after it."""
+    check(False, "not built: decision 0237, rung 1 on the table (the three games and their verdicts)")
+
+
+def rung_one_as_a_newcomer_plays_it(bridge):
+    """Rung 1 as a newcomer plays it: the order given, leave to launch not given, and the staff's plan approved when the clock stops
+    for it.
+
+    The game: begun from the list; a preview of `rung_one_order(2, 5)`, approved; no `set_leave`; `run` {days 14} until the game is over,
+    and where an answer's `fired` has a standing `waits_for_leave`, `approve` {plan: that plan} before the next `run`.
+
+    V5. The first stop is `waits_for_leave`, and there is one such stop in the game. The verdict's lines are RUNG_ONE_MET.
+
+    This statement's expected value waits for case H of the hand calculation (a floor of 2 and an interval of 5, the plan approved at the
+    stop), which the architect adds to `tests/scenario_138_one_ship.rs` once rung 1's game is merged. Until case H is written this
+    function is not filled and not called. If the designer rules that the scenario gives leave to launch itself (the as-built
+    section, "For the designer", course b), this statement is withdrawn."""
+    check(False, "not built: decision 0237, rung 1 on the table (the game with the plan approved at the stop; waits for case H)")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     parser.add_argument("--sim-cli", default="target/release/sim-cli")
