@@ -2,16 +2,16 @@
 
 ## Planned: rung 1 on the table (Nov 27, 2026)
 
-Written by the architect before any code, as the record's class table says: what the pull request "rung 1 on the table" (class 2, the record's step 3, second half) makes, in words and in values. It is built from `main` once rung 1's game (scenario 138) and the chart of a hand-written map are merged. The statements of its screen check are the doc comments of five functions in `table/check_screen.py`, written with this section; each fails "not built" and none is called from `main()`. The developer fills them and adds the calls. A statement or an expected value that the build cannot meet goes back to the architect; it is not changed to pass.
+Written by the architect before any code, as the record's class table says: what the pull request "rung 1 on the table" (class 2, the record's step 3, second half) makes, in words and in values. It is built from `main` once rung 1's game (scenario 138) and the chart of a hand-written map are merged. The statements of its screen check are the doc comments of four functions in `table/check_screen.py`, written with this section; each fails "not built" and none is called from `main()`. The developer fills them and adds the calls. A statement or an expected value that the build cannot meet goes back to the architect; it is not changed to pass.
 
 ### Two things found while writing this
 
 1. **The table cannot give rung 1's order today.** The record lists "the supply order with its floor, interval, forces and source" as built and used as it is. That is true of the engine and of the seat's tools, and false of the page: its order paper offers "Keep it supplied, 30 days" and nothing else (`table/index.html`, `ends`), and the page never sends `interval_days`. A floor of 30 days with no interval sends 30 t twice and the source goes unfed, so the rung cannot be won from the page. The designer's first answer makes the floor and the interval his, so the paper learns the two numbers in this pull request ("The order paper", below). It is what the table gives, with the rules as they are: class 2, and no other game's order moves.
-2. **Leave to launch is withheld by default, and the hand calculation gives it.** Every case of `tests/scenario_138_one_ship.rs` gives both leaves on day 1. On the table a game begins with leave to prepare given and leave to launch withheld, so the staff readies its plan, the clock stops on "the plan waits for the commander's leave", and he approves it. Tried by the architect on Nov 27, 2026 through the seat's tools (the order previewed and approved, the plan approved at the stop, `run` to the end): 2 and 5 is met and 2 and 6 fails at the source as proved, but the band is not the proved one. 2 and 4 is met, and a floor of 1 day fails by one night at the forward place whatever the interval. A trial is not a hand calculation. So: the three games the architect is shown give leave to launch with the order, and are cases A, B and C; the path a newcomer takes is statement V5, which waits for a case H the architect adds to the test file once rung 1's game is merged; and what the directive tells him of the leave is a question for the designer ("For the designer").
+2. **Leave to launch is withheld by default, and the hand calculation gives it.** Every case of `tests/scenario_138_one_ship.rs` gives both leaves on day 1. On the table a game begins with leave to prepare given and leave to launch withheld, so the staff readies its plan, the clock stops on "the plan waits for the commander's leave", and he approves it. Tried by the architect on Nov 27, 2026 through the seat's tools (the order previewed and approved, the plan approved at the stop, `run` to the end): 2 and 5 is met and 2 and 6 fails at the source as proved, but the band is not the proved one. 2 and 4 is met, and a floor of 1 day fails by one night at the forward place whatever the interval. A trial is not a hand calculation. The designer settled it ("The designer's answer", below): he gives leave to launch himself on the first evening, by the switch the page has, and the game he plays is the proved one.
 
 ### What the player meets
 
-He starts the table, and the new game screen lists "Rung 1: One ship" first. He picks it and reads three lines and the mission. The Allied seat is the only one offered. He presses BEGIN. The directive opens of itself, as every game's first directive does: the challenge. He touches Base T, picks "Keep it supplied", names the ship and Base S, sets two numbers, signs, and carries on. The clock stops when the staff asks leave to launch and when it cannot meet the order. When day 14 is fought, "Read how it ended" says whether the mission was met.
+He starts the table, and the new game screen lists "Rung 1: One ship" first. He picks it and reads three lines and the mission. The Allied seat is the only one offered. He presses BEGIN. The directive opens of itself, as every game's first directive does: the challenge. He touches Base T, picks "Keep it supplied", names the ship and Base S, sets two numbers and signs. Under YOUR ORDERS he presses WHEN READY, so that plans launch when ready, and carries on. The clock stops when the staff cannot meet the order, which with a right answer is day 13. When day 14 is fought, "Read how it ended" says whether the mission was met.
 
 ### The entry
 
@@ -96,7 +96,7 @@ The bridge gives the game's page the mission as `config.mission`, the entry's va
      "heading": "3. Guidance",
      "text": [
       "Give the staff one order: keep Base T supplied. Name the ship, and Base S as its source, and set its two numbers: the days of food Base T is never to fall below, and the days more that each run brings. The staff does the rest: it sizes each run from those two numbers, loads the ship and sails her.",
-      "Before its plan first launches, the staff stops the clock and asks your leave. Approve the plan and carry on.",
+      "Then tell the staff that plans launch when ready, under YOUR ORDERS, and carry on: it will not sail the ship without that leave.",
       "When day 14 is fought you are told whether the mission was met and, if it was not, which garrison went unfed and on which nights."
      ]
     }
@@ -106,7 +106,7 @@ The bridge gives the game's page the mission as `config.mission`, the entry's va
 }
 ```
 
-The second paragraph of the guidance is the one the designer's answer may change ("For the designer").
+The second paragraph of the guidance is the designer's answer ("The designer's answer", below).
 
 ### The order paper: the floor and the interval
 
@@ -141,15 +141,14 @@ Where the end chosen is "keep it supplied", the paper shows one more row, as it 
 
 ### The screen check
 
-Five functions in `table/check_screen.py`, above `main()`, each with its statements in its doc comment:
+Four functions in `table/check_screen.py`, above `main()`, each with its statements in its doc comment:
 
 | Function | Holds |
 | --- | --- |
-| `rung_one_on_the_list(bridge)` | L1 to L8: the entry, the directive, the screen, the game begun with no date |
+| `rung_one_on_the_list(bridge)` | L1 to L9: the entry, the directive, the screen, the game begun with no date, and the switch for leave to launch |
 | `the_supply_orders_two_numbers(bridge)` | O1 to O6: the row, what is sent, and that an untouched paper sends what it sent |
 | `the_verdict_in_words()` | W1 to W9: `missionLines` in node on events of the tool's shape |
 | `rung_one_played_three_ways(bridge)` | V1 to V4: 2 and 5, 2 and 6, 2 and 4, each with leave to launch given; what the verdict read |
-| `rung_one_as_a_newcomer_plays_it(bridge)` | V5: leave not given, the plan approved at the stop. Waits for case H |
 
 The expected verdicts of V1 to V3 are the nights of statements 3, 5 and 6 of `tests/scenario_138_one_ship.rs` (cases A, B and C), said in the verdict's words:
 
@@ -181,7 +180,7 @@ The expected verdicts of V1 to V3 are the nights of statements 3, 5 and 6 of `te
 
 ### What the architect is shown
 
-The pull request's diff, and the output of: `python3 table/check_screen.py` (the lines of the five functions, V5 apart if case H is not yet written, and "all held"); `node web/check.mjs`; `cargo test -p sim-cli --test pack_from_source`; `node web/offered.mjs`; `git diff --stat` against `main`; and the paper HOW IT ENDED of the three games of V1 to V3, as text or as a picture.
+The pull request's diff, and the output of: `python3 table/check_screen.py` (the lines of the four functions, and "all held"); `node web/check.mjs`; `cargo test -p sim-cli --test pack_from_source`; `node web/offered.mjs`; `git diff --stat` against `main`; and the paper HOW IT ENDED of the three games of V1 to V3, as text or as a picture.
 
 ### How to start it
 
@@ -194,10 +193,16 @@ python3 table/serve.py
 
 The bridge prints "The table is at" and an address. Opened in a browser, it shows A NEW GAME with "Rung 1: One ship" first on the list: pick it, and BEGIN. The browser's build has it too: `sh scripts/web/build.sh`, then `python3 -m http.server -d target/web/site 8000`.
 
-### For the designer
+### The designer's answer (Nov 27, 2026)
 
-**How the first run sails.** On the table every game begins with leave to launch withheld: the staff readies its plan, stops the clock and asks. So on rung 1 he gives the order, carries on, and is stopped once, on about day 3, to approve the plan. That is the game's ordinary way and he will meet it on every rung. But the answers proved by hand are those with leave given on day 1, and with the stop the band shifts a little (2 and 4 passes; a floor of 1 day fails by a night).
+**The question put.** On the table every game begins with leave to launch withheld: the staff readies its plan, stops the clock and asks. The answers proved by hand give that leave on day 1. Three courses were offered: (a) he approves the plan at the stop, the directive says so and the architect adds a case H to the hand calculation for that path; (b) the scenario gives leave to launch itself, a class 3 change to scenario 138; (c) the directive tells him to give the leave himself.
 
-- **(a) As it is, recommended.** The directive's guidance says so in one sentence, as written above. The architect adds case H to scenario 138's hand calculation, 2 and 5 with the plan approved at the stop, so that the game a newcomer plays is proved; no file of the game changes.
-- **(b) The scenario gives leave to launch from day 1.** He gives one order and is not stopped until day 13, and the game is exactly the proved one. It puts a command in a file for a side a person plays, which no game on the list does, and changes scenario 138 and its first statement: class 3.
-- **(c) The guidance tells him to switch leave to launch on himself** before he carries on. The proved game, at the cost of a switch he has no reason yet to understand.
+**His question back:** "Since the game is now about planning - can the plan be approved before the clock starts running?"
+
+**The reading, from the code and from runs of the engine through the seat's tools that day.**
+
+- The plan exists on the first evening. Once the supply order is signed at 1800, before day 1 is fought, the seat's `plans` lists plan 1 as a draft with no run yet.
+- Approving that plan then does not launch it. `approve` of a plan prepares a draft or releases a plan that is preparing; on the first evening it moves plan 1 from draft to preparing, and the clock still stops later on "the plan waits for the commander's leave".
+- The switch does. Under YOUR ORDERS on the stop paper the page has the line "Plans launch: on my word" with the button WHEN READY, which sends `set_leave` for the leave to launch. It can be pressed on the first evening. With the order signed and the switch pressed before day 1, the game is the hand calculation's: 2 and 5 met, 2 and 6 the source unfed on the nights of days 13 and 14, 2 and 4 the forward garrison unfed on the night of day 14, and the whole table of the record's "Rung 1 with two sides to fail on", cell for cell.
+
+**Settled: course (c), by the page's own switch, before the clock runs.** No scenario changes and the page needs nothing new for it. The directive's guidance says it in its second paragraph, as written above. V1 to V3 stand as written: they give leave to launch with the order. V5 (the plan approved at the stop) and case H are withdrawn: that path is play, and is not proved or checked. The list check gains L9: the switch is on the page and can be pressed before day 1.

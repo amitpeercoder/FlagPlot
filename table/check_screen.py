@@ -2674,7 +2674,7 @@ def a_reason_leads_to_his_line(bridge):
 
 # ---- Rung 1 on the table (decision 0237). The statements are the architect's, written before the code with
 # docs/decisions/as-built/0237-the-first-three-rungs.md, "Planned: rung 1 on the table", which has the entry, the directive and the
-# verdict's words in full. None of the five is called from main() until it is built. An expected value below that the build cannot
+# verdict's words in full. None of the four is called from main() until it is built. An expected value below that the build cannot
 # meet goes back to the architect: it is not changed to pass.
 
 RUNG_ONE = "ladder-1-one-ship"
@@ -2702,7 +2702,8 @@ def rung_one_on_the_list(bridge):
         and each has a `start`.
     L3. `table/directives/ladder_1_allied.json` has one directive, number 1, `when` "start", from "Area Commander", to "Commander, Base
         S", subject "Both garrisons fed", with three parts headed "1. Situation", "2. Mission" and "3. Guidance". The text of its mission
-        is one paragraph and is the entry's `sides.allied`, letter for letter. Its guidance names "Base T", "Base S" and "two numbers".
+        is one paragraph and is the entry's `sides.allied`, letter for letter. Its guidance names "Base T", "Base S" and "two numbers", and its second paragraph is "Then tell the staff that plans launch when ready, under YOUR ORDERS,
+        and carry on: it will not sail the ship without that leave."
 
     In the page's text:
     L4. `ENGINE_IS` has the key `absent`, whose words are "There is no enemy in this game: the Japanese side has nothing." for the
@@ -2720,6 +2721,12 @@ def rung_one_on_the_list(bridge):
     L7. The seat's tools do not include `trial`. `get_briefing` gives `heading.last_day` 14.
     L8. A game of another scenario begun after it (the Eastern Solomons, a person Allied against the engine) has no key `mission` in
         its `/config`.
+    L9. (The designer's answer of Nov 27, 2026: leave to launch is his to give on the first evening, by the page's own switch.) In the
+        page's text, YOUR ORDERS has the line "Plans launch: " with a button that reads "WHEN READY" while the leave is withheld and
+        sends `set_leave` {leave "launch", given true}; it is disabled only where `canSign()` is false, and `canSign` is false only in
+        a watched game, a game that is over, or while time runs. In the game of L6, before any day is fought, `command_state` gives
+        `leaves.launch` false and `leaves.prepare` true; `set_leave` {leave "launch", given true} is answered `status` "queued"; and
+        `command_state` then gives `leaves.launch` true.
     Each game is put away after it."""
     check(False, "not built: decision 0237, rung 1 on the table (the entry, the directive and the screen)")
 
@@ -2788,7 +2795,8 @@ def the_verdict_in_words():
 def rung_one_played_three_ways(bridge):
     """Rung 1 played through the bridge to its end three times, and the verdict of each: the page's own `missionLines` in node on what
     the seat's `events` answered. Each game is cases A, B and C of the hand calculation in `tests/scenario_138_one_ship.rs` (its
-    statements 3, 5 and 6), which gives both leaves on day 1; leave to prepare is given when a game on the table begins.
+    statements 3, 5 and 6), which gives both leaves on day 1; leave to prepare is given when a game on the table begins, and leave to launch is given here as
+    the player gives it: before day 1 is fought (the designer's answer of Nov 27, 2026).
 
     Each game: begun from the list (rung 1, a person Allied against the engine); a preview of `rung_one_order(floor, interval)`,
     approved; `set_leave` {leave "launch", given true}; then `run` {days 14} again and again until an answer says the game is over
@@ -2803,22 +2811,6 @@ def rung_one_played_three_ways(bridge):
         first stop is the staff's "cannot meet" of day 13 (the fuel), which shows the mission is not touched by it.
     Each game is put away after it."""
     check(False, "not built: decision 0237, rung 1 on the table (the three games and their verdicts)")
-
-
-def rung_one_as_a_newcomer_plays_it(bridge):
-    """Rung 1 as a newcomer plays it: the order given, leave to launch not given, and the staff's plan approved when the clock stops
-    for it.
-
-    The game: begun from the list; a preview of `rung_one_order(2, 5)`, approved; no `set_leave`; `run` {days 14} until the game is over,
-    and where an answer's `fired` has a standing `waits_for_leave`, `approve` {plan: that plan} before the next `run`.
-
-    V5. The first stop is `waits_for_leave`, and there is one such stop in the game. The verdict's lines are RUNG_ONE_MET.
-
-    This statement's expected value waits for case H of the hand calculation (a floor of 2 and an interval of 5, the plan approved at the
-    stop), which the architect adds to `tests/scenario_138_one_ship.rs` once rung 1's game is merged. Until case H is written this
-    function is not filled and not called. If the designer rules that the scenario gives leave to launch itself (the as-built
-    section, "For the designer", course b), this statement is withdrawn."""
-    check(False, "not built: decision 0237, rung 1 on the table (the game with the plan approved at the stop; waits for case H)")
 
 
 def main():
