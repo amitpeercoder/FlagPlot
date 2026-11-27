@@ -17,7 +17,9 @@
 //! that is no battle's is proved on the figures it is played on. A tuning
 //! that moves a number below comes back to the architect.
 //!
-//! **Not built.** Each test below is its statement and nothing more.
+//! **Built.** Each test below asserts its statement, on the file as given
+//! with the case's commands added at its mark `# orders`. The last day's
+//! hash of each game is pinned in `tests/golden/pinned_hashes.txt`.
 //!
 //! # Hand calculation
 //!
