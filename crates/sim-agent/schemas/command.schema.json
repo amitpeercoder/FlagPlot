@@ -27,7 +27,7 @@
       "const": "flagplot-agent"
     },
     "version": {
-      "const": 56
+      "const": 57
     },
     "kind": {
       "const": "command"
@@ -90,11 +90,24 @@
     },
     "limits_queued": {
       "type": "integer",
-      "description": "For an approve of a preview of an order with limits given with it: the number of limit commands queued with the order (decision 0222, rule 4). `queued` counts all."
+      "description": "For an approve of a preview of an order with limits given with it: the number of limit commands queued with the order (decision 0222, rule 4); where sub-intents were written under the order, the order's own limits alone (`under_queued` has the rest). `queued` counts all."
+    },
+    "under_queued": {
+      "type": "array",
+      "description": "For an approve of a preview of an order with sub-intents written under it (decision 0232, rule 21): each sub-intent queued, by its number, with the count of its own limits queued after it, in the order queued. `limits_queued` then counts the order's own limits alone; `queued` counts all.",
+      "items": {
+        "type": "object",
+        "required": ["intent", "limits_queued"],
+        "additionalProperties": false,
+        "properties": {
+          "intent": { "type": "integer" },
+          "limits_queued": { "type": "integer" }
+        }
+      }
     },
     "of_batch": {
       "type": "object",
-      "description": "For a refusal of one of the commands of an order and its limits given as one: which of them it is, 1 for the order and 2 up for its limits in the order given, and how many there are. Nothing of the batch is queued.",
+      "description": "For a refusal of one of the commands of an order, its limits and the sub-intents written under it, given as one: which of them it is, 1 for the order, then its limits in the order given, then each sub-intent followed by its own limits, and how many there are. Nothing of the batch is queued.",
       "required": ["position", "size"],
       "additionalProperties": false,
       "properties": {

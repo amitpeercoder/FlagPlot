@@ -3590,7 +3590,9 @@ fn other_plans_give_up(
 /// queued commands, and `with` the same and the command queued last. It is
 /// stored nowhere in the game. `number` is the preview's number among the
 /// side's own previews (decision 0172, 4). `limits` are the limits given
-/// with a set_intent, taken in after it (decision 0222, rule 4).
+/// with a set_intent, taken in after it (decision 0222, rule 4); `under` are
+/// the sub-intents written under it, each with its own limits (decision 0232,
+/// rule 20).
 pub(crate) fn preview(
     number: u32,
     as_is: &SideView<'_>,
@@ -3598,6 +3600,7 @@ pub(crate) fn preview(
     staff: &dyn Staff,
     request: &Request,
     limits: &[Request],
+    under: &[(&Request, &[Request])],
 ) -> Value {
     let n = Names::new(with);
     let intent = previewed_intent(with, &request.kind);
@@ -3631,6 +3634,22 @@ pub(crate) fn preview(
                 .map(|l| command_text(&n, &l.kind, Some(l)))
                 .collect::<Vec<_>>(),
             "intent": intent.map(|i| i.raw()),
+            "under": under
+                .iter()
+                .map(|(sub, sub_limits)| json!({
+                    "intent": previewed_intent(with, &sub.kind).map(|i| i.raw()),
+                    "command": command_json(&n, &sub.kind, Some(sub)),
+                    "shown": command_text(&n, &sub.kind, Some(sub)),
+                    "limits": sub_limits
+                        .iter()
+                        .map(|l| command_json(&n, &l.kind, Some(l)))
+                        .collect::<Vec<_>>(),
+                    "shown_limits": sub_limits
+                        .iter()
+                        .map(|l| command_text(&n, &l.kind, Some(l)))
+                        .collect::<Vec<_>>(),
+                }))
+                .collect::<Vec<_>>(),
             "as_things_stand": now_json,
             "with_change": with_json,
             "held": held_words(&n, with, intent),
