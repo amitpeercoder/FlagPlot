@@ -22,6 +22,50 @@
 //!    that the side's staff chooses its sources in the table's files, so
 //!    the pull request that builds it changes the table's files by that key
 //!    and by nothing else; the files of the new folder are made from them.)
+//!
+//! # Amended and added for decision 0232, step 3: the island
+//!
+//! Written by the architect on Nov 27, 2026, before the generator is changed
+//! (`docs/decisions/as-built/0232-a-plan-the-commander-writes.md`, "Planned:
+//! step 3", items 5 to 7). Statement 2 above is amended by 2a and its test is
+//! changed to it, on the architect's word given here; statements 1 and 3 to 5
+//! stand as they are. Statements 6 and 9, and the part of 2a each names, hold
+//! only on the designer's word (items 6 and 7 of the plan): the brief says
+//! whether it was given, and a statement without it is left out with its
+//! test, not loosened.
+//!
+//! 2a. Read as data, with every comment set aside, each file is the file it
+//!     is made from with the lines of statement 2 changed, as counted there
+//!     (one name, one `supply_t`, nine each of `at_base`, `home_port` and
+//!     `available_from`), and with these lines added and no other:
+//!     - in each of the three, the four lines of island 3: `[[island]]`,
+//!       `number = 3`, `name = "Guadalcanal and Tulagi"`,
+//!       `places = [{ base = 1 }, { base = 4 }]`;
+//!     - on the designer's word (item 6), in `07_full_slice_submarines.toml`
+//!       alone, before island 3, the eight lines of islands 1 and 2, each
+//!       line equal to the line of `07b_slice_submarines.toml`;
+//!     - on the designer's word (item 7), in each of the three, the one line
+//!       `trial = "../../reference/trial.toml"`, next after the line
+//!       `class_sides = "../../reference/class_sides_full_slice.csv"`.
+//!     So a file has 4 lines more than its source, or 5 with the trial; the
+//!     full-slice copy 4, 12, 5 or 13. With the added lines taken out, the
+//!     lines are as many as the source's and differ as statement 2 says.
+//! 6.  (Item 6.) Loaded, `07_full_slice_submarines.toml` has islands 1 and 2
+//!     with the names and the places `07b_slice_submarines.toml` gives them.
+//! 7.  Loaded, each of the three files has island 3, named "Guadalcanal and
+//!     Tulagi", of two places in this order: the hex of base 1, then the hex
+//!     of base 4. In the two slice files islands 1 and 2 are as they were.
+//! 8.  No game moves by it. For each of the three files, the file's text with
+//!     the lines 2a adds taken out, loaded from that text, gives the same
+//!     state hash at the start and the same hash at the end of day 1, run
+//!     with its staffs, as the file kept. (The whole games are compared
+//!     outside `cargo test`, by `sim-cli run --events` before and after with
+//!     the hash lines kept, and shown to the architect: the plan's item 3.)
+//! 9.  (Item 7.) Loaded, each of the three files has a trial's figures, and
+//!     they are those of `data/reference/trial.toml`.
+//!
+//! No expected value here is a figure of the game: each is a line of the
+//! file, or what the file made from gives on the same commit.
 
 use crate::common;
 
@@ -154,4 +198,24 @@ fn statement_4_task_force_30_may_be_used_on_day_9_and_lies_at_rabaul_with_7_t() 
             "{name}"
         );
     }
+}
+
+#[test]
+fn statement_6_the_full_slice_copy_has_islands_1_and_2_as_its_sisters_have_them() {
+    panic!("not built: decision 0232, step 3, the island (statement 6)");
+}
+
+#[test]
+fn statement_7_each_file_has_the_island_of_two_places() {
+    panic!("not built: decision 0232, step 3, the island (statement 7)");
+}
+
+#[test]
+fn statement_8_no_game_moves_by_the_island() {
+    panic!("not built: decision 0232, step 3, the island (statement 8)");
+}
+
+#[test]
+fn statement_9_each_file_names_the_trials_figures() {
+    panic!("not built: decision 0232, step 3, the island (statement 9)");
 }
