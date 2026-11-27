@@ -1,12 +1,16 @@
 //! A scenario built on another (decision 0234): the architect's statements,
 //! written on Nov 27, 2026, before any code. No number here is a figure of
-//! the game. The rule is decision 0234's "The format as planned", cited
-//! below by its item, and by its rulebook section once step B has moved it.
+//! the game. The rule was decision 0234's "The format as planned" and is,
+//! since step B, the rulebook's section "A scenario built on another"
+//! (`docs/rules/01-the-day-orders-and-what-a-side-knows.md`), cited below by
+//! the number of its item.
 //!
-//! This file holds no test until step B, which also names it as the
-//! package names its test files that day. The statements L are of the loader and are tested in
-//! `sim-data` on invented files held in a `Pack`; the statements R are of
-//! the repository's files and are tested here.
+//! The statements L are of the loader. L1 to L14 and L16 are tested in
+//! `sim-data` (`crates/sim-data/src/scenario/tests/built_on.rs`) on invented
+//! files held in a `Pack`; L15, which reads `sim-cli`'s check of decision
+//! 0207, is tested here. The statements R are of the repository's files and
+//! are tested here: R1 and R2 since step B, R3 from step C, R4 and R5 from
+//! step D. `tests/all.rs` names this file as a module.
 //!
 //! The loader
 //!
@@ -93,3 +97,171 @@
 //! R5.  The words "Do not edit by hand" are in eight scenario files and no
 //!      other: the four of `orders-inside-proof`, the three of
 //!      `stage-3-proof` and `staff/07_full_slice.toml` (from step D).
+
+use crate::common;
+
+use std::collections::BTreeSet;
+use std::path::{Path, PathBuf};
+
+fn scenarios_dir() -> PathBuf {
+    common::data_dir().join("scenarios")
+}
+
+/// Every `.toml` file under `dir`, but in the `tmp-` folders, which are
+/// someone's trials, sorted.
+fn scenario_files(dir: &Path, into: &mut Vec<PathBuf>) {
+    for entry in std::fs::read_dir(dir).expect("a folder") {
+        let path = entry.expect("an entry").path();
+        let name = path
+            .file_name()
+            .unwrap_or_default()
+            .to_string_lossy()
+            .into_owned();
+        if path.is_dir() {
+            if !name.starts_with("tmp-") {
+                scenario_files(&path, into);
+            }
+        } else if name.ends_with(".toml") {
+            into.push(path);
+        }
+    }
+    into.sort();
+}
+
+/// The file a scenario file is built on, as it names it, if it states one.
+fn built_on_of(path: &Path) -> Option<String> {
+    let text = std::fs::read_to_string(path).expect("reads");
+    let table: toml::Table = toml::from_str(&text).ok()?;
+    table
+        .get("built_on")
+        .map(|v| v.as_str().unwrap_or_default().to_string())
+}
+
+#[test]
+fn r1_every_file_built_on_another_names_a_scenario_that_loads_alone() {
+    let mut files = Vec::new();
+    scenario_files(&scenarios_dir(), &mut files);
+    assert!(files.len() > 200, "{} files", files.len());
+    let mut overlays = 0;
+    for file in &files {
+        let Some(name) = built_on_of(file) else {
+            continue;
+        };
+        overlays += 1;
+        let below = file.parent().expect("a folder").join(&name);
+        assert!(
+            below.is_file(),
+            "{} names {name}, which is not there",
+            file.display()
+        );
+        assert!(
+            below
+                .canonicalize()
+                .expect("it is there")
+                .starts_with(scenarios_dir().canonicalize().expect("the folder")),
+            "{} is built on {name}, which is not under data/scenarios",
+            file.display()
+        );
+        common::load_live(&below).unwrap_or_else(|e| {
+            panic!(
+                "{} is built on {name}, which does not load alone: {e}",
+                file.display()
+            )
+        });
+    }
+    eprintln!("{overlays} scenario files state built_on");
+}
+
+#[test]
+fn r2_no_frozen_proof_or_recorded_file_states_built_on() {
+    let mut barred: BTreeSet<PathBuf> = BTreeSet::new();
+    let mut files = Vec::new();
+    for folder in [
+        "step2-frozen",
+        "orders-inside-proof",
+        "second-proof",
+        "stage-2b-proof",
+        "stage-3-proof",
+        "stage-4-proof",
+        "staff",
+    ] {
+        let mut inside = Vec::new();
+        scenario_files(&scenarios_dir().join(folder), &mut inside);
+        assert!(!inside.is_empty(), "{folder} holds no scenario");
+        files.extend(inside);
+    }
+    let games = common::data_dir().join("../crates/sim-cli/tests/recorded_games");
+    for entry in std::fs::read_dir(&games).expect("the recorded games") {
+        let save = entry.expect("an entry").path().join("save.json");
+        if !save.is_file() {
+            continue;
+        }
+        let saved: serde_json::Value =
+            serde_json::from_str(&std::fs::read_to_string(&save).expect("reads")).expect("json");
+        let named = saved["scenario"]["file"].as_str().expect("a scenario file");
+        barred.insert(common::data_dir().join("..").join(named));
+    }
+    assert!(barred.len() >= 5, "{barred:?}");
+    files.extend(barred);
+    for file in files {
+        assert!(
+            built_on_of(&file).is_none(),
+            "{} states built_on, and may not (decision 0234, item 14)",
+            file.display()
+        );
+    }
+}
+
+/// L15: a scenario that states no `ship_classes` has those of the file it
+/// is built on, and rule 12 of decision 0207 finds its words in the header
+/// of any file of the chain.
+#[test]
+fn l15_estimates_are_read_from_the_resolved_scenario_and_the_headers_of_the_chain() {
+    use sim_cli::estimates::{estimated_classes, estimated_classes_of, header_problem};
+
+    let dir = std::env::temp_dir().join(format!("flagplot-0234-estimates-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).expect("a folder");
+    let real = scenarios_dir().join("coral-sea/02a_coral_sea_oilers.toml");
+    let real_text = std::fs::read_to_string(&real).expect("reads");
+    let full = estimated_classes_of(&real_text, &real).expect("classes");
+    assert!(!full.is_empty(), "the file loads a class with an estimate");
+    // The file written out whole but for its header and with its file names
+    // made absolute, so that it can sit in another folder.
+    let folder = real.parent().expect("a folder");
+    let mut below = String::new();
+    for line in real_text.lines() {
+        if line.trim_start().starts_with('#') {
+            continue;
+        }
+        below.push_str(&line.replace("\"../", &format!("\"{}/../", folder.display())));
+        below.push('\n');
+    }
+    let base = dir.join("base.toml");
+    std::fs::write(&base, &below).expect("writes");
+    let over = dir.join("over.toml");
+    let say = "# Built on base.toml. Its figures are estimated (decision 0207, rule 12).\n";
+    // The overlay states no ship_classes, and neither header says the mark.
+    std::fs::write(&over, "built_on = \"base.toml\"\nname = \"Over\"\n").expect("writes");
+    let classes = estimated_classes(&over).expect("classes of the resolved scenario");
+    let ids = |list: &[sim_cli::estimates::EstimatedClass]| -> Vec<_> {
+        list.iter()
+            .map(|c| (c.id, c.name.clone(), c.figures.clone()))
+            .collect()
+    };
+    assert_eq!(ids(&classes), ids(&full));
+    let problem = header_problem(&over).expect("reads").expect("a problem");
+    assert!(problem.contains("decision 0207"), "{problem}");
+    // The words in the header of the overlay.
+    std::fs::write(
+        &over,
+        format!("{say}built_on = \"base.toml\"\nname = \"Over\"\n"),
+    )
+    .expect("writes");
+    assert_eq!(header_problem(&over).expect("reads"), None);
+    // The words in the header of the file below.
+    std::fs::write(&base, format!("{say}{below}")).expect("writes");
+    std::fs::write(&over, "built_on = \"base.toml\"\nname = \"Over\"\n").expect("writes");
+    assert_eq!(header_problem(&over).expect("reads"), None);
+    assert!(common::headers(&over).contains("decision 0207"));
+    std::fs::remove_dir_all(&dir).expect("removes the folder");
+}

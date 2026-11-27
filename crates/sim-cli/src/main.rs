@@ -9,6 +9,7 @@ mod events;
 mod export;
 mod mcp_command;
 mod play;
+mod resolve;
 use sim_cli::pack;
 use sim_cli::save;
 mod serve;
@@ -51,6 +52,7 @@ Usage: sim-cli run <scenario.toml> [--events] [--seed N] [--save <game.json>] [-
                     [--trial-size small|standard|full] [--only-window] [--window-runs N]
                     [--only-seat-trial] [--seat-trial-runs N]
        sim-cli pack <scenario.toml>... --out <pack.json> [--reference DIR]
+       sim-cli resolve <scenario.toml>
        sim-cli play --game FILE ... (run `sim-cli play` for its usage)
 
   run       Runs a scenario to its last day and prints the state hash of
@@ -79,6 +81,11 @@ Usage: sim-cli run <scenario.toml> [--events] [--seed N] [--save <game.json>] [-
             The files are found by the load itself, never listed by hand
             (decision 0229, rulings 9 and 10). Run it from the top of the
             repository so the paths are the repository's own.
+  resolve   Prints a scenario built on another (decision 0234) whole, as TOML,
+            with no `built_on` and every file name written for the folder of
+            the file asked for, on standard output, and the files read, the
+            one asked for first, a path a line on standard error. A file
+            with no `built_on` is printed as its table. It builds no world.
   events    The umpire's questions to a finished run (a scenario run to its
             end, or a saved game replayed). --unit HANDLE (ship:N,
             task_force:N, air_group:N, base:N, land_unit:N, submarine:N, contact:N or allied:contact:N)
@@ -521,6 +528,7 @@ fn main() -> ExitCode {
         Some("mcp") => mcp_command::command(&args[1..], USAGE),
         Some("play") => play::command(&args[1..]),
         Some("hash") => with_reference(&args[1..], hash),
+        Some("resolve") => resolve::command(&args[1..], USAGE),
         Some("pack") => with_reference(&args[1..], |a, o| pack::command(a, USAGE, o)),
         Some("run") => with_reference(&args, run),
         _ => run(&args, &LoadOptions::default()),

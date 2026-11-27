@@ -72,6 +72,22 @@ pub fn from_text_with(
     Scenario::from_text_with(text, path, options)
 }
 
+/// The scenario file at `path` resolved (decision 0234, item 12): as TOML,
+/// with no `built_on` and its file names written for its own folder. The one
+/// way a test reads a key, a row or a table of a scenario that may be built
+/// on another, and the text a test that alters a scenario alters before it
+/// loads it with the file's own path.
+pub fn resolved_text(path: &Path) -> String {
+    Scenario::resolved_text(&sim_data::Disk, path).unwrap_or_else(|e| panic!("{e}"))
+}
+
+/// The header of the scenario file at `path` and of every file it is built
+/// on, joined, nearest first (decision 0234, item 12): the one way a test
+/// reads what a scenario's header says.
+pub fn headers(path: &Path) -> String {
+    sim_cli::estimates::chain_header(path).unwrap_or_else(|e| panic!("{e}"))
+}
+
 /// Replaces `original` with `changed` in `text`, asserting that `original`
 /// appears exactly once.
 pub fn replace_once(text: &str, original: &str, changed: &str) -> String {

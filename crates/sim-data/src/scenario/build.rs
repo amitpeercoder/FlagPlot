@@ -37,6 +37,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
 use super::beliefs::{believed_force, believed_intent, believed_men};
+use super::built_on::{self, Chain};
 use super::file::ScenarioFile;
 use super::land::{formations, LandUnitSpec};
 use super::objectives::build_objectives;
@@ -53,7 +54,22 @@ impl Scenario {
     ) -> Result<Scenario, DataError> {
         let fail = |message: String| DataError::in_file(path, message);
 
-        let file: ScenarioFile = toml::from_str(text).map_err(|e| fail(e.to_string()))?;
+        // A file that states no `built_on` is read as it always was, so its
+        // errors keep their lines; an overlay is laid over the files it is
+        // built on as tables and read from the result (decision 0234).
+        let mut built_on_files: Vec<PathBuf> = Vec::new();
+        let file: ScenarioFile = if built_on::may_state_built_on(text)
+            && toml::from_str::<toml::Table>(text).is_ok_and(|t| t.contains_key("built_on"))
+        {
+            let chain = Chain::read(source, text, path)?;
+            built_on_files = chain.paths[1..].to_vec();
+            chain
+                .laid()?
+                .try_into()
+                .map_err(|e: toml::de::Error| fail(e.to_string()))?
+        } else {
+            toml::from_str(text).map_err(|e| fail(e.to_string()))?
+        };
 
         let folder = path.parent().unwrap_or_else(|| Path::new("."));
         // Where a named reference file is read from: where the scenario names
@@ -281,6 +297,10 @@ impl Scenario {
                 ))
             }
         }
+
+        // The files the scenario is built on, nearest first, after every
+        // file a scenario without `built_on` lists (decision 0234, item 11).
+        data_files.extend(built_on_files);
 
         let mut truth = TruthState::default();
 

@@ -9,12 +9,16 @@
 //!   the class in its own notes (its `reason`) and says it is estimated.
 //!
 //! Both read the files as text and the class files through `sim-data`; no
-//! rule of the game reads the mark.
+//! rule of the game reads the mark. A scenario built on another (decision
+//! 0234) is read as `sim-data` resolves it, so its class files are those of
+//! the whole scenario; and the words of rule 12 may be in the header of the
+//! file or of any file it is built on, their headers joined, nearest first.
 
 use std::path::{Path, PathBuf};
 
 use serde::Deserialize;
 use sim_core::ids::ShipClassId;
+use sim_data::{Disk, Scenario};
 
 /// A class a scenario loads with figures that rest on an estimate.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -50,8 +54,9 @@ pub fn estimated_classes(path: &Path) -> Result<Vec<EstimatedClass>, String> {
 /// As [`estimated_classes`], for the text of a scenario file as if it sat
 /// at `path`.
 pub fn estimated_classes_of(text: &str, path: &Path) -> Result<Vec<EstimatedClass>, String> {
+    let resolved = Scenario::resolved_text_of(&Disk, text, path).map_err(|e| e.to_string())?;
     let file: ScenarioClasses =
-        toml::from_str(text).map_err(|e| format!("{}: {e}", path.display()))?;
+        toml::from_str(&resolved).map_err(|e| format!("{}: {e}", path.display()))?;
     let names = match file.ship_classes {
         Files::One(name) => vec![name],
         Files::Many(names) => names,
@@ -90,9 +95,30 @@ pub fn header(text: &str) -> String {
         .join("\n")
 }
 
+/// The headers of the scenario file at `path` and of every file it is
+/// built on, joined, nearest first (decision 0234, item 12).
+pub fn chain_header(path: &Path) -> Result<String, String> {
+    let text = std::fs::read_to_string(path).map_err(|e| format!("{}: {e}", path.display()))?;
+    chain_header_of(&text, path)
+}
+
+/// As [`chain_header`], for the text of a scenario file as if it sat at
+/// `path`.
+pub fn chain_header_of(text: &str, path: &Path) -> Result<String, String> {
+    let chain = Scenario::built_on_chain_of(&Disk, text, path).map_err(|e| e.to_string())?;
+    let mut headers = vec![header(text)];
+    for file in &chain[1..] {
+        let below =
+            std::fs::read_to_string(file).map_err(|e| format!("{}: {e}", file.display()))?;
+        headers.push(header(&below));
+    }
+    Ok(headers.join("\n"))
+}
+
 /// What is wrong with the header of the scenario file at `path`, if
-/// anything: where it loads a class with estimated figures, its header must
-/// say that figures are estimated and cite decision 0207 (rule 12). `None`
+/// anything: where it loads a class with estimated figures, its header, or
+/// the header of a file it is built on, must say that figures are estimated
+/// and cite decision 0207 (rule 12). `None`
 /// for a file that loads no such class, or says so.
 pub fn header_problem(path: &Path) -> Result<Option<String>, String> {
     let text = std::fs::read_to_string(path).map_err(|e| format!("{}: {e}", path.display()))?;
@@ -106,7 +132,7 @@ pub fn header_problem_of(text: &str, path: &Path) -> Result<Option<String>, Stri
     if classes.is_empty() {
         return Ok(None);
     }
-    let head = header(text).to_lowercase();
+    let head = chain_header_of(text, path)?.to_lowercase();
     if head.contains("estimated") && head.contains("decision 0207") {
         return Ok(None);
     }
