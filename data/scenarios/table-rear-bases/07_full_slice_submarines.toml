@@ -19,6 +19,12 @@
 #   not a stock (data/oob/gaps.csv holds the two entries for espiritu-santo).
 #   Its fuel stays 600 t, a placeholder (ruling 3).
 #
+#   Decision 0232, step 3: the line `trial = "../../reference/trial.toml"` is
+#   added next after `class_sides`; island 3, "Guadalcanal and Tulagi" (base 1,
+#   then base 4), is added after island 2 (at the end of the file in the
+#   full-slice copy, which also gains islands 1 and 2 as its sister files have
+#   them). An island is map data and the trial a key: no game moves.
+#
 # Do not edit by hand: change the script or the file it is made from and make
 # it again.
 #
@@ -247,6 +253,7 @@ air_supply = "../../reference/air_supply.toml"
 ground = "../../reference/ground_hunger.toml"
 # Whose each class and type is (decision 0173, 1 to 3).
 class_sides = "../../reference/class_sides_full_slice.csv"
+trial = "../../reference/trial.toml"
 
 # The Japanese bases at Lunga and Tulagi have no defences (0): no row sizes
 # the works of the garrisons of 7 August, so they stay 0 until research gives
@@ -3492,3 +3499,18 @@ r = -2
 home = 2
 enters = 25
 leave_day = 36
+
+[[island]]
+number = 1
+name = "Guadalcanal"
+places = [{ base = 1 }]
+
+[[island]]
+number = 2
+name = "Tulagi"
+places = [{ base = 4 }]
+
+[[island]]
+number = 3
+name = "Guadalcanal and Tulagi"
+places = [{ base = 1 }, { base = 4 }]

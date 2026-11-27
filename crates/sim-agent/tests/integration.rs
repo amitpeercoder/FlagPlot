@@ -30,6 +30,7 @@ mod hold_intent;
 mod holds_and_preview;
 mod intelligence_tool;
 mod interrupts;
+mod kind_names;
 mod land_units;
 mod leaks;
 mod legibility;
