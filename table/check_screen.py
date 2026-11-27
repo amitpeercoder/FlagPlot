@@ -3964,6 +3964,7 @@ def main():
             the_dry_run_shows_two_plans(bridge)
             the_plan_paper_marks_whose_line(bridge)
             a_reason_leads_to_his_line(bridge)
+            a_landing_written_under_an_order_in_force(bridge)
             rung_one_on_the_list(bridge)
             the_supply_orders_two_numbers(bridge)
             rung_one_played_three_ways(bridge)
