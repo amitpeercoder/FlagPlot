@@ -130,7 +130,7 @@ Open the base card to inspect its stocks, days of supply, air groups, and men as
 
 A landing needs troops, shipping, time to unload, and a way to feed the men once ashore. Read the staff’s plan for what must happen before it can go, which forces are available, and how supply is expected to follow. Convoys take time to load, reach their destination, and unload. Port capacity and the transport available affect what can be delivered.
 
-A land unit’s card shows its strength, posture, fatigue, and whether it was fed. Where offered, give a direct order to change its posture, issue or halt a march along a land link, or choose what it does when free to work or train. Taking a base gives you a new position. Keeping it useful requires supplied troops and working facilities. [Land units](rules/07-land-units.md) · [Staff supply doctrine](rules/08-the-staff.md#the-doctrine-keep-a-base-supplied)
+A land unit’s card shows its strength, posture, fatigue, and whether it was fed. Where offered, give a direct order to change its posture, issue or halt a march along a land link, or choose what it does when free to work or train. Taking a base gives you a new position. Keeping it useful requires supplied troops and working facilities. [Land units](rules/07-land-units.md) · [Staff supply doctrine](rules/08-the-staff/doctrine.md#the-doctrine-keep-a-base-supplied)
 
 ## 10. Dry runs
 
