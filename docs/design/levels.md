@@ -328,9 +328,9 @@ What a rung of these three is: a scenario for play, a mission in a directive, an
 
 **The three, in a line each** (decision 0237 has the forces, the missions and what was tried):
 
-1. **One ship.** One garrison five days from hunger, one ship that carries six days of its food, fuel for two round trips, 14 days. His decision: the floor and the interval of one supply order.
+1. **One ship.** A forward garrison five days from hunger, a source with men of its own on a stock 5 t above what both need, one ship that carries six days of the forward garrison's food, fuel for two round trips, 14 days. His decision: the floor and the interval of one supply order; too little starves one place and too much the other.
 2. **Two mouths, two ships.** A near garrison and a far one, a slow freighter and a fast small transport, 14 days. His decision: which ship is named to which order.
-3. **Men, then food.** 600 men to put on an empty place and keep fed, 21 days. His decision: the risk that sets the day of the landing, and the supply order that can be given only when the place is his.
+3. **Men, then food.** 600 men to put on an empty place and keep fed, 21 days. His decision: the risk that sets the day of the landing, and how the place is fed: a hold given with the landing, or a supply order when the place is his.
 
 **Why three and not two.** Each adds one decision to the one before. Rung 2 moves no man, since answer 17 puts troops where a place is seized; rung 3 is that seizure, and practises rungs 1 and 2 after it.
 

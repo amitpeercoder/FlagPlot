@@ -1,0 +1,94 @@
+# Scenario 138: one ship. The first rung of the ladder (decision 0237).
+#
+# A game for play, and no battle's. Allied base 1 at S, the source, holds
+# 120 t of supply and 50 t of fuel and has a garrison of its own, land unit
+# 2, of 1,000 men. Allied base 2 at T, 200 nm away, holds 25 t of supply and
+# land unit 1, 1,000 men. Each garrison eats 5 t a day, so T holds five days
+# of food and S holds, for its own men alone, twenty-four. Ship 1, a
+# placeholder fast transport with cargo (class 12: 30 t of cargo, 16 kn,
+# 0.125 t of fuel a mile), lies in port at S in no task force with 60 t of
+# fuel. A round trip burns 50 t, so the 110 t on hand are fuel for two. The
+# game is 14 days. There is no enemy, no aircraft and no random draw.
+#
+# The mission is to feed every man at both places every night to the end of
+# day 14. The source's men need 70 t and T needs 45 t more than it has, so
+# 5 t are to spare: too little sent starves T, and too much starves S.
+#
+# No command is in force: the commander gives the order. The test adds
+# commands at the mark `orders`, the last line of this file. The hand
+# calculation is in tests/scenario_138_one_ship.rs. The test runs this file
+# on the figures it names, the live ones, by decision 0237's exception
+# (question 8); the ground figures are the table's, with hunger that takes
+# time.
+#
+# In a folder of its own, so that no loop over data/scenarios/*.toml reads it
+# (decision 0072).
+#
+# PLACEHOLDER DATA. The bases, ship, units and map are invented. Every name
+# below says "Placeholder".
+
+name = "Placeholder scenario 138: One ship"
+placeholder = true
+seed = 1942
+days = 14
+map = "../../map/placeholder_ladder.toml"
+ship_classes = [
+    "../../reference/ship_classes.csv",
+    "../../reference/ship_classes_placeholder_fast_transport_cargo.csv",
+]
+port_sizes = "../../reference/port_sizes.csv"
+aircraft_types = "../../reference/aircraft_types.csv"
+search = "../../reference/search.toml"
+surface_combat = "../../reference/surface_combat.toml"
+ground = "../../reference/ground_hunger.toml"
+
+# S: the source. Port size 1, one berth.
+[[base]]
+id = 1
+name = "Placeholder base S"
+side = "allied"
+q = 0
+r = 0
+supply_t = 120
+fuel_t = 50
+
+# T: the forward place. Port size 0, by lighter.
+[[base]]
+id = 2
+name = "Placeholder base T"
+side = "allied"
+q = 5
+r = 0
+supply_t = 25
+
+# The forward garrison: 1,000 men x 0.005 t = 5 t a day at T.
+[[land_unit]]
+id = 1
+name = "Placeholder forward garrison"
+side = "allied"
+men = 1000
+q = 5
+r = 0
+posture = "defend"
+
+# The source's own garrison: 5 t a day at S.
+[[land_unit]]
+id = 2
+name = "Placeholder source garrison"
+side = "allied"
+men = 1000
+q = 0
+r = 0
+posture = "defend"
+
+# Ship 1 lies in port at S in no task force, with fuel for one round trip
+# and 10 t over.
+[[ship]]
+id = 1
+name = "Placeholder fast transport 1"
+class = 12
+side = "allied"
+fuel_t = 60
+port = 1
+
+# orders
