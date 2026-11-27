@@ -8,7 +8,7 @@
 //! (`Scenario::next_day_staffed` with the doctrine's staffs, which is what
 //! `sim-cli run` calls).
 
-mod support;
+use crate::support;
 
 use std::collections::BTreeMap;
 use std::path::PathBuf;

@@ -1,0 +1,28 @@
+name: Nextest
+description: >
+  Puts cargo-nextest on the path, built from source at the pinned version and
+  kept in the cache under that version, as the binding tool of the web job
+  is; no program is downloaded ready made. Built without its self-update,
+  which needs a C library built.
+inputs:
+  version:
+    description: The version of cargo-nextest.
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Keep nextest built for the pinned version
+      id: cache
+      uses: actions/cache@v4.2.0
+      with:
+        path: ~/.cargo-nextest
+        key: nextest-${{ inputs.version }}-${{ runner.os }}
+
+    - name: Build nextest from source
+      if: steps.cache.outputs.cache-hit != 'true'
+      shell: sh
+      run: cargo install cargo-nextest --version "${{ inputs.version }}" --locked --no-default-features --features default-no-update --root ~/.cargo-nextest
+
+    - name: Put nextest on the path
+      shell: sh
+      run: echo "$HOME/.cargo-nextest/bin" >> "$GITHUB_PATH"

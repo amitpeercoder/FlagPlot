@@ -1,6 +1,6 @@
 //! Playing through a session (decisions 0050).
 
-mod support;
+use crate::support;
 
 use sim_core::state::Side;
 use support::load;

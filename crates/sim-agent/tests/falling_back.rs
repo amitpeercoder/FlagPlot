@@ -8,7 +8,7 @@
 //! surrender, the hex and the men, and nothing of the falling back: not
 //! where, not that there was one, and nothing of the marches.
 
-mod support;
+use crate::support;
 
 use serde_json::{json, Value};
 use sim_agent::{Seat, Session};

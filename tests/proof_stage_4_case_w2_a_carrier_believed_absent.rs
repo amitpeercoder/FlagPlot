@@ -102,7 +102,7 @@
 //! the architect before the judged run.
 #![allow(clippy::doc_lazy_continuation, clippy::doc_markdown)]
 
-mod common;
+use crate::common;
 
 use sim_core::state::Side;
 use sim_core::state::TruthState;

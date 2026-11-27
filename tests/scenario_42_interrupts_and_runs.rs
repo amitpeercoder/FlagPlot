@@ -215,7 +215,7 @@
 // table names are read as the staff reads them, at the staff's moment of each
 // day, in a game of its own (`readings`): the interrupts change no reading.
 
-mod common;
+use crate::common;
 
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};

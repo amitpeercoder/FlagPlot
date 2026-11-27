@@ -40,7 +40,7 @@
 //! lowest group first, forces move in clock order, and so on. That order is
 //! part of the rules (decision 3 of 0043).
 
-mod common;
+use crate::common;
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;

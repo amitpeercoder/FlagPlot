@@ -42,10 +42,10 @@ case "$STEP" in
         --runs 1000 --first-seed 1 --label proof --out "$OUT/after.json"
     cmp "$OUT/before.json" "$OUT/after.json" && echo "byte for byte the same" ;;
   2)
-    PROOF_SEEDS=1-1000 cargo test --release -p sim-agent --test orders_inside_proof \
-        condition_2 -- --ignored --nocapture ;;
+    PROOF_SEEDS=1-1000 cargo test --release -p sim-agent --test integration \
+        orders_inside_proof::condition_2 -- --ignored --nocapture ;;
   3)
-    cargo test -p scenario-tests --test scenario_78_orders_inside_a_day ;;
+    cargo test -p scenario-tests --test scenarios scenario_78_orders_inside_a_day:: ;;
   4)
     $BIN run data/scenarios/78_orders_inside_a_day.toml --save "$OUT/s78.save.json"
     $BIN replay "$OUT/s78.save.json"
@@ -66,15 +66,15 @@ open(p, 'w').write(t[:a] + t[b:])
 EOF
     "$TOP/$BIN" replay "$OUT/s78.save.json" || true) ;;
   5)
-    cargo test -p sim-agent --test leaks the_library_code_names_nothing_of_the_truth
-    cargo test -p sim-agent --test leaks the_tools_of_a_seat_read_the_world_only_through_the_seats_view
-    cargo test --release -p sim-agent --test orders_inside_proof condition_5 -- --nocapture ;;
+    cargo test -p sim-agent --test integration leaks::the_library_code_names_nothing_of_the_truth
+    cargo test -p sim-agent --test integration leaks::the_tools_of_a_seat_read_the_world_only_through_the_seats_view
+    cargo test --release -p sim-agent --test integration orders_inside_proof::condition_5 -- --nocapture ;;
   6)
-    PROOF_OUT="$OUT/c6" cargo test --release -p sim-agent --test orders_inside_proof \
-        condition_6 -- --ignored --nocapture ;;
+    PROOF_OUT="$OUT/c6" cargo test --release -p sim-agent --test integration \
+        orders_inside_proof::condition_6 -- --ignored --nocapture ;;
   8)
-    PROOF_REPEATS=30 cargo test --release -p sim-agent --test orders_inside_proof \
-        condition_8 -- --ignored --nocapture ;;
+    PROOF_REPEATS=30 cargo test --release -p sim-agent --test integration \
+        orders_inside_proof::condition_8 -- --ignored --nocapture ;;
   read7)
     python3 scripts/orders-inside-proof/read_games.py "$OUT/days" --out "$OUT/read/days.json"
     python3 scripts/orders-inside-proof/read_games.py "$OUT/pulse" --out "$OUT/read/pulse.json" ;;

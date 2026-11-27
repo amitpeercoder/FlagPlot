@@ -20,7 +20,7 @@
 //! figure: each compares two ways of playing the same game, or a tool's
 //! answer with the side's own view.
 
-mod support;
+use crate::support;
 
 use std::collections::BTreeMap;
 use std::path::PathBuf;

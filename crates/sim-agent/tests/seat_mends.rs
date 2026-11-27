@@ -45,7 +45,7 @@
 //! side a base to keep supplied, so that each side's seat may ask for
 //! previews of an intent of its own.
 
-mod support;
+use crate::support;
 
 use std::collections::BTreeMap;
 

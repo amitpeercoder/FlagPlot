@@ -233,7 +233,7 @@
 //! = 8, 12 - 1 - 1 = 10, 12 - 1 = 11, 12); and a seed's draws, taken from the
 //! patrol's own stream by the test, give the hits of each part.
 
-mod common;
+use crate::common;
 
 use std::fs;
 use std::path::PathBuf;

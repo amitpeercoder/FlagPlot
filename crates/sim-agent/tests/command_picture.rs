@@ -1,7 +1,7 @@
 //! A command's picture and held state in `command_state`, and refusals by
 //! cause in `report` (decision 0138, items 3 and 4).
 
-mod support;
+use crate::support;
 
 use std::collections::BTreeMap;
 use std::path::PathBuf;

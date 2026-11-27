@@ -254,7 +254,7 @@
 // is read from `staff_handed_in`. 41b and 41c have their own files; the
 // variants of 41a are the text of its file with other commands.
 
-mod common;
+use crate::common;
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};

@@ -18,7 +18,7 @@
 //! refused. Its one ship is mended there: day 1's allowance of 6 goes 3 to
 //! fire damage, 2 to flotation damage and 1 toward the degraded system.
 
-mod support;
+use crate::support;
 
 use serde_json::{json, Value};
 use sim_agent::{briefing_for_game, measure, Question, Seat, Session};

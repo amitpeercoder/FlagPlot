@@ -246,7 +246,7 @@
 //! often each ship is sunk over seeds 1 to 1000, and asserts nothing about
 //! those counts.
 
-mod common;
+use crate::common;
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;

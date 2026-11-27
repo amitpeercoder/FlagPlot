@@ -268,7 +268,7 @@
 //! - Scenarios 1 to 4a2 keep every number: on their maps the shortest path
 //!   is the path they already took.
 
-mod common;
+use crate::common;
 
 use std::fs;
 use std::path::{Path, PathBuf};

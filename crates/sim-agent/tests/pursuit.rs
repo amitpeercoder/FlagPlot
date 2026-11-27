@@ -11,7 +11,7 @@
 //! says is the test staff's own invention: a carrier at (16,0) and (10,0) to
 //! go to, in 400 / 30 hours.
 
-mod support;
+use crate::support;
 
 use std::collections::BTreeMap;
 

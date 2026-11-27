@@ -20,7 +20,7 @@
 //! of resolving the same day. No number depends on a figure, so the
 //! scenarios are read on the live figures.
 
-mod common;
+use crate::common;
 
 use std::path::Path;
 

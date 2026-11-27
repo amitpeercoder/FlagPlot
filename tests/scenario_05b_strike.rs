@@ -127,7 +127,7 @@
 //!   with the scouts fills the carrier's 36, the expected hits are 5.6.
 //! - A replay of any seed reproduces the daily hash.
 
-mod common;
+use crate::common;
 
 use std::collections::BTreeSet;
 use std::fs;

@@ -7,7 +7,7 @@
 //! scenario 78 (scenario 1's transit with orders inside a day on) with its
 //! own order inside a day taken out, as `tests/advance.rs` has it.
 
-mod support;
+use crate::support;
 
 use std::collections::BTreeMap;
 use std::path::PathBuf;

@@ -165,7 +165,7 @@
 //!   and kind are those of the report that last refreshed it.
 //! - A replay of any seed reproduces every daily hash.
 
-mod common;
+use crate::common;
 
 use std::fs;
 use std::path::PathBuf;

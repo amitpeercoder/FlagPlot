@@ -169,7 +169,7 @@ use sim_core::Staffs;
 use sim_data::{LoadOptions, Scenario};
 use sim_staff::{as_staffs, staffs};
 
-mod common;
+use crate::common;
 
 const Q: Hex = Hex::new(10, 0);
 

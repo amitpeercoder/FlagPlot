@@ -145,7 +145,7 @@
 //! - No ship ever holds more than its cargo capacity, and no stock goes
 //!   negative. These are also end-of-day invariants.
 
-mod common;
+use crate::common;
 
 use std::fs;
 use std::path::{Path, PathBuf};

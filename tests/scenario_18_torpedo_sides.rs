@@ -118,7 +118,7 @@
 //! Cases B, B', D', E, F and G are unit tests in
 //! `crates/sim-core/src/surface.rs`, where a scenario cannot reach them.
 
-mod common;
+use crate::common;
 
 use std::collections::BTreeMap;
 use std::path::PathBuf;

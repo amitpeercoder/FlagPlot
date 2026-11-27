@@ -7,7 +7,7 @@
 //! base 2 in no force, and the side has three forces, so the force a forming
 //! order makes is force 4 by position.
 
-mod support;
+use crate::support;
 
 use serde_json::{json, Value};
 use sim_agent::{Seat, Session};

@@ -10,7 +10,7 @@
 //! 4. On the day the game ends the final briefing and the `end_day` answer
 //!    carry the umpire's result, and before that nothing of it.
 
-mod support;
+use crate::support;
 
 use serde_json::{json, Value};
 use sim_agent::briefing;

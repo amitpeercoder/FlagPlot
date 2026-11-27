@@ -8,7 +8,7 @@
 //! of the day in force). The side that gave no deny intent has no measure,
 //! and neither has an intent that is not a deny.
 
-mod support;
+use crate::support;
 
 use sim_agent::deny_measure;
 use sim_core::ids::IntentId;

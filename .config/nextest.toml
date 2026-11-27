@@ -1,0 +1,18 @@
+# Settings for cargo-nextest, which CI runs the tests with
+# (.github/workflows/ci.yml). A local `cargo test` does not read this file.
+
+experimental = ["setup-scripts"]
+
+# The `ci` profile runs the tests from an archive built once, in jobs that do
+# not build the workspace. Several scenario tests shell out to
+# `cargo run -p sim-cli` (scenarios 36, 40, 41, 42, 45 and 104), which would
+# build the program, from nothing, in every job. Nextest sets CARGO for a test
+# to the real cargo, so a setup script sets it to a stand-in that runs the
+# program the archive holds (`.github/scripts/cargo-prebuilt.sh`, which says
+# what it answers and refuses the rest).
+[scripts.setup.cargo-prebuilt]
+command = 'sh -c "echo CARGO=$PWD/.github/scripts/cargo-prebuilt.sh >> $NEXTEST_ENV"'
+
+[[profile.ci.scripts]]
+filter = 'all()'
+setup = 'cargo-prebuilt'

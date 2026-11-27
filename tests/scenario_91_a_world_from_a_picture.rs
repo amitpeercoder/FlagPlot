@@ -148,7 +148,7 @@
 //!   world and a build with no domain both ask for the umpire's key.
 //!   The test that reads the agent's source still passes.
 
-mod common;
+use crate::common;
 
 use std::collections::{BTreeMap, BTreeSet};
 

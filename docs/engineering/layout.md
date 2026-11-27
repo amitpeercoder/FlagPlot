@@ -21,7 +21,7 @@ Where things are in the repository and which crate may depend on which. Moved ou
 | `data/scenarios` | One TOML file per scenario: starting state, seed, scripted orders |
 | `data/oob` | Order-of-battle facts: sourced historical statements as CSV. Research, not simulation data. Start with its `README.md` |
 | `docs/research/oob` | The facts format, the source policy, where sources disagree, and a note per battle and per topic |
-| `tests` | One test file per scenario, each with its hand calculation written out |
+| `tests` | One test file per scenario, each with its hand calculation written out. The files are the modules of one test program, `all.rs`, listed there in place of one `[[test]]` each; a new file is added to `all.rs`. Every package with more than one integration test file does the same with `tests/integration.rs` (`autotests = false` in its `Cargo.toml`): a new file is a `mod` line there, and it reaches `common` (or `support`) as `use crate::common;`, not `mod common;`. One program for a package is a build that links once, not once for each file. Run one file as `cargo test -p scenario-tests -- scenario_05_eastern_solomons::` |
 | `scripts` | Commands for working on the repository, not parts of the game: shell scripts run from the top of the repository, each described in `docs/commands.md` |
 | `viewer` | The read-only replay viewer (decision 0018): one HTML page with no build step, its check script, and `replays/` (git-ignored) for exported runs |
 | `table` | A prototype of the player's interface (decision 0154): a bridge that serves one seat's tools to a browser on this machine, and one HTML page with no build step. It plays the game: it is given a seat's tools and the map file and nothing else |

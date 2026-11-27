@@ -10,7 +10,7 @@
 //! fields whole and the aircraft they keep on the ground; the other side is
 //! shown none of it.
 
-mod support;
+use crate::support;
 
 use serde_json::{json, Value};
 use sim_agent::{Seat, Session};

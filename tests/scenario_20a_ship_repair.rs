@@ -323,7 +323,7 @@
 // The `measure` of `yard` is the staff tool's, tested with it in `sim-agent`.
 // The air group at the yard awaits the architect's choice and is not tested.
 
-mod common;
+use crate::common;
 
 use std::collections::BTreeSet;
 use std::path::PathBuf;

@@ -76,7 +76,7 @@
 //!
 //! The scenario file's comments say what each part of it is for.
 
-mod common;
+use crate::common;
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
@@ -715,7 +715,7 @@ fn other_seeds_run_180_days_with_everything_holding() {
 }
 
 /// Seeds 1 to 100, in release mode by hand:
-/// `cargo test --release -p scenario-tests --test scenario_08_soak -- --ignored`
+/// `cargo test --release -p scenario-tests --test scenarios scenario_08_soak:: -- --ignored`
 #[test]
 #[ignore = "a hundred 180-day runs; run by hand"]
 fn a_hundred_seeds_run_180_days_with_everything_holding() {

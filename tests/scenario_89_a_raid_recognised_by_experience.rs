@@ -146,7 +146,7 @@
 // the chance of the row." The build records no breakdown of the draw (the
 // record's "As built", reading 1), which goes to the architect.
 
-mod common;
+use crate::common;
 
 use std::fs;
 use std::path::PathBuf;

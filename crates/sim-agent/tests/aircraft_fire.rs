@@ -3,7 +3,7 @@
 //! other side is told nothing of it. Midway (scenario 1a) sets such fires in
 //! most games.
 
-mod support;
+use crate::support;
 
 use std::path::Path;
 

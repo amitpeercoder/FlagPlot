@@ -8,7 +8,7 @@
 //!    rests on, and nothing of the enemy's.
 //! 3. A side is never given a claim of the enemy's.
 
-mod support;
+use crate::support;
 
 use serde_json::Value;
 use sim_agent::{briefing, explain};

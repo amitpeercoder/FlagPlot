@@ -2,7 +2,7 @@
 //! are read by the architect line by line. To write them again after a change
 //! to the text, run with `FLAGPILOT_UPDATE_GOLDEN=1` and read the difference.
 
-mod support;
+use crate::support;
 
 use std::path::Path;
 

@@ -85,7 +85,7 @@ use sim_data::{LoadOptions, Scenario};
 use sim_staff::{as_staffs, staffs};
 use sim_trial::{Asked, Believed};
 
-mod common;
+use crate::common;
 
 /// The morning of the first judgement ashore (3 days resolved).
 const M: u32 = 4;

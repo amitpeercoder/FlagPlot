@@ -182,7 +182,7 @@
 //!   other side's fieldworks and defences, where the hits and the men lost
 //!   are the same.
 
-mod common;
+use crate::common;
 
 use std::collections::BTreeMap;
 use std::path::PathBuf;

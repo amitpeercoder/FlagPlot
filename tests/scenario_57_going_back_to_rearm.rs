@@ -112,7 +112,7 @@ use sim_core::world::SimConfig;
 use sim_data::{LoadOptions, Scenario};
 use sim_staff::{as_staffs, staffs};
 
-mod common;
+use crate::common;
 
 fn path() -> PathBuf {
     common::data_dir().join("scenarios/57_going_back_to_rearm.toml")

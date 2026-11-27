@@ -53,7 +53,7 @@
 //! - With a staff: in scenario 36, the one convoy, a `set_speed` at 0600 to the convoy's force, which is in the forces limit of the supply intent, records `HeldByOrder` in the morning pulse. At the next dusk the staff gives the held force no order: it sets it aside as chapter 8 has it, ends the run with a reason that names the hold, frees the ship and forms another run with another ship.
 //! - A saved game of case A replays to the same daily hashes. The same file with the order's pulse changed to the afternoon replays to case B's.
 
-mod common;
+use crate::common;
 
 use std::path::PathBuf;
 

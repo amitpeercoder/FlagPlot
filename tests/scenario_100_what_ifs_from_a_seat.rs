@@ -268,7 +268,7 @@
 
 // The tests are written by the build, to the statements above.
 
-mod common;
+use crate::common;
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;

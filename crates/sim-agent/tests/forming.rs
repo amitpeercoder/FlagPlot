@@ -19,7 +19,7 @@
 //! - Ships 5 and 6, formed on day 1, make the side's next force by position,
 //!   force 4. On day 2 force 3 joins it; on day 3 it is stood down.
 
-mod support;
+use crate::support;
 
 use serde_json::{json, Value};
 use sim_agent::{Seat, Session};

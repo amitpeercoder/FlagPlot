@@ -132,7 +132,7 @@
 //! - **No live game changes:** no baseline, golden file or pinned hash
 //!   moves.
 
-mod common;
+use crate::common;
 
 use std::collections::{BTreeMap, BTreeSet};
 

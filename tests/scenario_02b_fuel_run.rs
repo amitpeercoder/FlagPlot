@@ -154,7 +154,7 @@
 
 // The test code is written by a developer from the hand calculation above.
 
-mod common;
+use crate::common;
 
 use std::fs;
 use std::path::PathBuf;

@@ -59,7 +59,7 @@
 //! figures; the frozen copies of `data/scenarios/step2-frozen` run on the
 //! frozen figures, as their README says.
 
-mod common;
+use crate::common;
 
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};

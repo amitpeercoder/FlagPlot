@@ -74,7 +74,7 @@
 //! 11. **The answers are checked against their schemas,** and the
 //!     briefing's schema names the new part.
 
-mod common;
+use crate::common;
 
 #[allow(dead_code)]
 #[path = "../crates/sim-agent/tests/support/validator.rs"]

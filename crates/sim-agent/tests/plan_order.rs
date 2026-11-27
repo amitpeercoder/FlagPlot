@@ -4,7 +4,7 @@
 //! phases and what the plan waits for, and refuses an intent that is not the
 //! commander's in the words `propose` uses.
 
-mod support;
+use crate::support;
 
 use serde_json::{json, Value};
 use sim_core::state::Side;

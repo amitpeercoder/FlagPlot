@@ -139,7 +139,7 @@
 //! - The enemy's view is the same in two worlds that differ only in which
 //!   of the other side's ships are in which force at a base.
 
-mod common;
+use crate::common;
 
 use std::collections::BTreeMap;
 use std::path::PathBuf;

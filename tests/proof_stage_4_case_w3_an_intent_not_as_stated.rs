@@ -118,7 +118,7 @@
 //!   enemy was given no intent.
 #![allow(clippy::doc_lazy_continuation, clippy::doc_markdown)]
 
-mod common;
+use crate::common;
 
 use sim_core::command::NoticeKind;
 use sim_core::events::EventKind;

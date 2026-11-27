@@ -172,7 +172,7 @@ use sim_core::state::{Side, TruthState};
 use sim_data::Scenario;
 use sim_staff::{as_staffs, staffs};
 
-mod common;
+use crate::common;
 
 const COMMANDS_MARKER: &str = "# The Allied commander's commands";
 const ESTIMATE_MARKER: &str = "# ESTIMATE_MARKER\n";

@@ -18,7 +18,7 @@
 //! 3 were at it, and group 3 is flown to X by the Japanese order of day 1
 //! given here.
 
-mod support;
+use crate::support;
 
 use serde_json::{json, Value};
 use sim_agent::{Seat, Session};

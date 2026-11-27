@@ -140,7 +140,7 @@ use sim_core::time::Pulse;
 use sim_core::Staffs;
 use sim_data::{LoadOptions, Scenario};
 
-mod common;
+use crate::common;
 
 /// P, the empty shore, and Q, the base at the start.
 const P: Hex = Hex::new(8, 0);

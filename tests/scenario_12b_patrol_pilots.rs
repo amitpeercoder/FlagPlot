@@ -86,7 +86,7 @@ use sim_core::ids::AirGroupId;
 use sim_core::World;
 use sim_data::Scenario;
 
-mod common;
+use crate::common;
 
 const ROOT: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
 const ESCORTS: AirGroupId = AirGroupId::new(2);

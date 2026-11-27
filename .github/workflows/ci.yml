@@ -4,12 +4,19 @@ on:
   push:
     branches: [main]
   pull_request:
+  # A merge queue builds each entry on a branch of its own and runs the
+  # required check there; main then gets that very commit.
+  merge_group:
 
 permissions:
   contents: read
+  # To read whether a commit already has a passing "Format, lint, test".
+  checks: read
 
 env:
   CARGO_TERM_COLOR: always
+  # The version of cargo-nextest, built from source (.github/actions/nextest).
+  NEXTEST_VERSION: 0.9.150
 
 # The checks are split into jobs that run at the same time: format and lint,
 # the tests in shards, and the command-line runs with the viewer's check. The
@@ -21,7 +28,7 @@ jobs:
     name: Decisions index and what changed
     runs-on: ubuntu-latest
     outputs:
-      needed: ${{ steps.changes.outputs.needed }}
+      needed: ${{ steps.decide.outputs.needed }}
     steps:
       # Two commits deep, so the commit's first parent is there to compare
       # with.
@@ -41,6 +48,40 @@ jobs:
       - name: See whether anything but documents changed
         id: changes
         run: echo "needed=$(sh .github/scripts/needs-checks.sh)" >> "$GITHUB_OUTPUT"
+
+      # A push to main is the commit a merge queue (or a merge) made. If that
+      # very commit, by its SHA, already has a passing "Format, lint, test"
+      # check run from GitHub Actions, from the run of the queue entry, the
+      # work is done and is not repeated. Only a push is asked: a pull
+      # request or a queue entry is never skipped on this ground. Any doubt
+      # (no answer, no such run) is "not tested", and everything runs.
+      - name: See whether this commit has already passed
+        id: tested
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          passed=$(gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/check-runs?per_page=100" \
+            --jq '[.check_runs[] | select(.name == "Format, lint, test" and .conclusion == "success" and .app.slug == "github-actions")] | length' \
+            2>/dev/null) || passed=0
+          if [ "${passed:-0}" -gt 0 ]; then
+            echo "already=true" >> "$GITHUB_OUTPUT"
+            echo "$GITHUB_SHA already has a passing Format, lint, test."
+          else
+            echo "already=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Decide whether the heavy jobs run
+        id: decide
+        env:
+          CHANGED: ${{ steps.changes.outputs.needed }}
+          ALREADY: ${{ steps.tested.outputs.already }}
+        run: |
+          if [ "$CHANGED" = true ] && [ "$ALREADY" != true ]; then
+            echo "needed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "needed=false" >> "$GITHUB_OUTPUT"
+          fi
 
   lint:
     name: Format and lint
@@ -64,23 +105,20 @@ jobs:
         run: cargo clippy --workspace --all-targets --locked -- -D warnings
 
   # Tests run in the `checked` profile (Cargo.toml): optimized, with debug
-  # assertions and overflow checks on. Building the test programs is most
-  # of the time, so the tests are split into five shards, each built and run
-  # on its own machine, with `--workspace` so that every shard resolves the
-  # same features as the whole workspace does and builds the same programs.
-  # Shards 0 to 3 run the integration tests: `.github/scripts/test-shard.sh`
-  # gives each test target to exactly one of them. Shard 4 runs the unit
-  # tests of the libraries and programs and the documentation tests.
-  # Together they are what `cargo test --workspace` runs.
-  test:
-    name: Test (shard ${{ matrix.shard }} of 5)
+  # assertions and overflow checks on. Each package has one integration test
+  # program (`tests/integration.rs`, and `tests/all.rs` for the scenario
+  # tests). Building them was most of a run, and building them in every
+  # shard repeated it, so they are built once, in `build-tests`, into an
+  # archive (`cargo nextest archive`, with `--workspace` so it resolves the
+  # same features as the whole workspace does), and the shards only run it.
+  # Together with the timing test and the documentation tests (which nextest
+  # does not run) these are what `cargo test --workspace` runs; the sorted
+  # list of every test is the same.
+  build-tests:
+    name: Build the tests
     needs: changes
     if: needs.changes.outputs.needed == 'true'
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        shard: [0, 1, 2, 3, 4]
     steps:
       - uses: actions/checkout@v4.4.0
 
@@ -89,21 +127,109 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2.9.3
         with:
-          key: shard-${{ matrix.shard }}
+          key: build-tests
+
+      - uses: ./.github/actions/nextest
+        with:
+          version: ${{ env.NEXTEST_VERSION }}
+
+      - name: Build the tests into an archive
+        run: cargo nextest archive --workspace --locked --cargo-profile checked --archive-file nextest.tar.zst
+
+      - uses: actions/upload-artifact@v4.6.2
+        with:
+          name: nextest-archive
+          path: nextest.tar.zst
+          retention-days: 1
+          compression-level: 0
+          if-no-files-found: error
+
+  # The tests, four shards of the archive. `--partition count:K/4` gives each
+  # test of the archive to exactly one shard, so a test added later is in one
+  # with no change here. The timing test is the one test taken out: it runs
+  # alone, below. A shard needs no toolchain and no cache: it runs programs.
+  # Nextest runs each test in a process of its own; its `ci` profile
+  # (`.config/nextest.toml`) stands a script in for cargo in the scenario
+  # tests that run the command-line program through `cargo run`, so that none
+  # of them builds it again: they run the one in the archive.
+  test:
+    name: Test (shard ${{ matrix.shard }} of 4)
+    needs: [changes, build-tests]
+    if: needs.changes.outputs.needed == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3]
+    steps:
+      - uses: actions/checkout@v4.4.0
+
+      - uses: actions/download-artifact@v4.3.0
+        with:
+          name: nextest-archive
+
+      # No toolchain: nextest is in the cache the build job saved (cargo, and
+      # with it the pinned toolchain, is wanted only on a miss), and it is run
+      # as `cargo-nextest nextest`, which does not go through cargo.
+      - uses: ./.github/actions/nextest
+        with:
+          version: ${{ env.NEXTEST_VERSION }}
 
       - name: Test
         run: |
-          set -eu
-          if [ ${{ matrix.shard }} -eq 4 ]; then
-            targets="--lib --bins"
-          else
-            targets=$(sh .github/scripts/test-shard.sh ${{ matrix.shard }} 4)
-          fi
-          # shellcheck disable=SC2086
-          cargo test --workspace --locked --profile checked $targets
+          # Unpacked into the checkout itself, so that `target/checked` is
+          # where the build job had it: the paths `env!("CARGO_BIN_EXE_...")`
+          # baked into the tests point there.
+          export SIM_CLI_PREBUILT="$PWD/target/checked/sim-cli"
+          cargo-nextest nextest run --profile ci --no-fail-fast \
+            --archive-file nextest.tar.zst --extract-to . --extract-overwrite --workspace-remap . \
+            --partition count:$(( ${{ matrix.shard }} + 1 ))/4 \
+            -E 'not (package(sim-cli) and test(=timing::time_reports_its_sections_and_changes_nothing))'
+
+  # `sim-cli time` plays trials, windows and a seat's trials besides the
+  # sections the test names on its command line, and takes about five minutes
+  # on its own, whatever else runs. As part of a shard it set the time of the
+  # whole run, so it is a job of its own, built and run from the one package,
+  # at the same time as the rest.
+  test-timing:
+    name: Test (the timing test)
+    needs: changes
+    if: needs.changes.outputs.needed == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4.4.0
+
+      - name: Install the pinned Rust toolchain
+        run: rustup show active-toolchain || rustup toolchain install
+
+      - uses: Swatinem/rust-cache@v2.9.3
+        with:
+          key: test-timing
+
+      - uses: ./.github/actions/nextest
+        with:
+          version: ${{ env.NEXTEST_VERSION }}
+
+      - name: Test
+        run: cargo nextest run -p sim-cli --locked --cargo-profile checked -E 'test(=timing::time_reports_its_sections_and_changes_nothing)'
+
+  # The documentation tests, which nextest does not run.
+  test-doc:
+    name: Test (documentation tests)
+    needs: changes
+    if: needs.changes.outputs.needed == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4.4.0
+
+      - name: Install the pinned Rust toolchain
+        run: rustup show active-toolchain || rustup toolchain install
+
+      - uses: Swatinem/rust-cache@v2.9.3
+        with:
+          key: test-doc
 
       - name: Documentation tests
-        if: matrix.shard == 4
         run: cargo test --workspace --locked --profile checked --doc
 
   # The command-line program in the same profile as the tests.
@@ -190,7 +316,7 @@ jobs:
   # every other job was skipped because only documents changed.
   check:
     name: Format, lint, test
-    needs: [changes, lint, test, run-and-export, web]
+    needs: [changes, lint, build-tests, test, test-timing, test-doc, run-and-export, web]
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -199,13 +325,19 @@ jobs:
           CHANGES: ${{ needs.changes.result }}
           NEEDED: ${{ needs.changes.outputs.needed }}
           LINT: ${{ needs.lint.result }}
+          BUILD: ${{ needs.build-tests.result }}
           TEST: ${{ needs.test.result }}
+          TIMING: ${{ needs.test-timing.result }}
+          DOC: ${{ needs.test-doc.result }}
           EXPORT: ${{ needs.run-and-export.result }}
           WEB: ${{ needs.web.result }}
         run: |
           echo "decisions index and what changed: $CHANGES (checks needed: $NEEDED)"
           echo "format and lint: $LINT"
+          echo "build of the tests: $BUILD"
           echo "tests: $TEST"
+          echo "timing test: $TIMING"
+          echo "documentation tests: $DOC"
           echo "run and export: $EXPORT"
           echo "web build and its check: $WEB"
           if [ "$CHANGES" != success ]; then
@@ -217,7 +349,7 @@ jobs:
           else
             expected=success
           fi
-          for result in "$LINT" "$TEST" "$EXPORT" "$WEB"; do
+          for result in "$LINT" "$BUILD" "$TEST" "$TIMING" "$DOC" "$EXPORT" "$WEB"; do
             if [ "$result" != "$expected" ]; then
               echo "A job is $result, and $expected was needed."
               exit 1

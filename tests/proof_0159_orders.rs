@@ -7,7 +7,7 @@
 //!
 //! ```text
 //! FLAGPILOT_0159_ORDERS_OUT=DIR cargo test --release -p scenario-tests \
-//!     --test proof_0159_orders -- --ignored --nocapture
+//!     --test scenarios proof_0159_orders:: -- --ignored --nocapture
 //! ```
 //!
 //! The six (decision 0159, "The proof: how each condition is read", 6):
@@ -46,7 +46,7 @@ use sim_core::state::Side;
 use sim_data::Scenario;
 use sim_staff::{as_staffs, staffs, SupplyStaff};
 
-mod common;
+use crate::common;
 
 const SOURCE_84: &str = include_str!("scenario_84_the_plan_as_an_order.rs");
 

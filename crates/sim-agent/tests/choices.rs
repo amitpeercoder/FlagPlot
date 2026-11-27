@@ -10,7 +10,7 @@
 //! wrong kind and a number that names nothing are all `not_known`, the one
 //! document.
 
-mod support;
+use crate::support;
 
 use std::collections::BTreeSet;
 

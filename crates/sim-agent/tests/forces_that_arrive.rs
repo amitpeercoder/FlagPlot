@@ -8,7 +8,7 @@
 //! on day 2, air group 1 (at base 1) on day 2, land unit 1 (ashore at base 1)
 //! on day 3 and the Japanese garrison, land unit 10 (at base 2), on day 2.
 
-mod support;
+use crate::support;
 
 use serde_json::{json, Value};
 use sim_core::state::Side;

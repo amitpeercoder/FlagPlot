@@ -210,7 +210,7 @@
 //! - **No live game changes** by the build: no baseline, golden file or
 //!   pinned hash moves.
 
-mod common;
+use crate::common;
 
 use std::collections::BTreeSet;
 use std::path::PathBuf;

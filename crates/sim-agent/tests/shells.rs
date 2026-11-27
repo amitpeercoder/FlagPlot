@@ -18,7 +18,7 @@
 //! 1's fight 2940 Allied men and 420 Japanese stand at Y; after day 2's, 2940
 //! and 40.
 
-mod support;
+use crate::support;
 
 use serde_json::{json, Value};
 use sim_agent::{Seat, Session};

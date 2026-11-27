@@ -22,7 +22,7 @@
 //!   state has not changed); at the start of the day the first moves it and
 //!   the second is refused as already moved that day.
 
-mod support;
+use crate::support;
 
 use serde_json::{json, Value};
 use sim_agent::{Seat, Session};

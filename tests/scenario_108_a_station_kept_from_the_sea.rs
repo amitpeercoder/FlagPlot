@@ -106,7 +106,7 @@ use sim_data::Scenario;
 use sim_staff::stand::{margin, THREAT_HEXES};
 use sim_staff::{as_staffs, staffs};
 
-mod common;
+use crate::common;
 
 /// Where G begins, B and its neighbours.
 const START: Hex = Hex { q: 0, r: 0 };

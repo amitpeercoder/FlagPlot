@@ -195,7 +195,7 @@
 //! the hits are the same and the attacker's attack failed on the same days
 //! (decision 0105, 9).
 
-mod common;
+use crate::common;
 
 use std::collections::BTreeMap;
 use std::path::PathBuf;

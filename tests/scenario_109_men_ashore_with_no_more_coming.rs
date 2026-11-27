@@ -146,7 +146,7 @@ use sim_core::state::{Side, TruthState};
 use sim_data::{LoadOptions, Scenario};
 use sim_staff::{as_staffs, staffs};
 
-mod common;
+use crate::common;
 
 /// The morning of the first judgement ashore.
 const M: u32 = 4;

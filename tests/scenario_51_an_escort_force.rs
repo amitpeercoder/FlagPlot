@@ -125,7 +125,7 @@
 
 // ---------------------------------------------------------------- The harness
 
-mod common;
+use crate::common;
 
 use std::path::PathBuf;
 
