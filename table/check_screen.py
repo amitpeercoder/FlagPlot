@@ -1441,11 +1441,11 @@ def the_screen(bridge):
     check("<html" in get(bridge.table + "/"), "the page is served under the table's key")
     check(get(bridge.table + "/config") == {"screen": True}, "with no game in hand the page is told to show the screen")
     listed = get(bridge.table + "/scenarios")["scenarios"]
-    check([s["id"] for s in listed] == ["eastern-solomons", "coral-sea", "midway", "eastern-solomons-five-days", "guadalcanal-39-days"],
-          "the screen lists the scenarios simplest first: the Eastern Solomons, the Coral Sea, Midway, the Eastern Solomons over five days and the 39 days")
+    check([s["id"] for s in listed] == ["ladder-1-one-ship", "eastern-solomons", "coral-sea", "midway", "eastern-solomons-five-days", "guadalcanal-39-days"],
+          "the screen lists the scenarios simplest first: rung 1, the Eastern Solomons, the Coral Sea, Midway, the Eastern Solomons over five days and the 39 days")
     check(all("file" not in p for s in listed for p in s["pairings"]), "the list given to the screen names no file")
-    check([len(s["pairings"]) for s in listed] == [4, 7, 7, 7, 7],
-          "the Eastern Solomons offers 4 games, the Coral Sea 7, Midway 7, the five-day Eastern Solomons 7 and the 39 days 7")
+    check([len(s["pairings"]) for s in listed] == [1, 4, 7, 7, 7, 7],
+          "rung 1 offers 1 game, the Eastern Solomons 4, the Coral Sea 7, Midway 7, the five-day Eastern Solomons 7 and the 39 days 7")
     # Every battle that has boats has them (decisions 0225 and 0227): one game of the battle, and it plays the copies with boats in
     # table-boats/; its directives name each side's boats in the situation's last sentence.
     entries = {e["id"]: e for e in json.load(open(os.path.join(HERE, "scenarios.json")))["scenarios"]}
@@ -1471,6 +1471,9 @@ def the_screen(bridge):
           "the other side's brief gives its own directive, from its own commander above")
     for entry in json.load(open(os.path.join(HERE, "scenarios.json")))["scenarios"]:
         for side in ("allied", "japanese"):
+            # A side only the engine ever holds needs no directive (decision 0237).
+            if not any(p[side] in ("person", "agent") for p in entry["pairings"]):
+                continue
             file = entry.get("directives", {}).get(side)
             first = json.load(open(os.path.join(os.path.dirname(HERE), file)))["directives"][0] if file else {}
             check(first.get("when") == "start" and any("mission" in p["heading"].lower() for p in first.get("parts", [])),
@@ -2728,7 +2731,74 @@ def rung_one_on_the_list(bridge):
         `leaves.launch` false and `leaves.prepare` true; `set_leave` {leave "launch", given true} is answered `status` "queued"; and
         `command_state` then gives `leaves.launch` true.
     Each game is put away after it."""
-    check(False, "not built: decision 0237, rung 1 on the table (the entry, the directive and the screen)")
+    print("-- rung 1 on the list", flush=True)
+    root = os.path.dirname(HERE)
+    entries = json.load(open(os.path.join(HERE, "scenarios.json")))["scenarios"]
+    first = entries[0]
+    check(first["id"] == RUNG_ONE and first["name"] == "Rung 1: One ship" and first["dates"] == "An invented sea" and first["days"] == 14 and first["placeholder"] is True
+          and first["map"] == "data/map/placeholder_ladder.toml" and "start" not in first and first["islands"] == [],
+          "L1: the first entry is rung 1, with its id, name, dates, days, placeholder and map, no start and no islands")
+    check(len(first["lines"]) == 3 and first["lines"][2].startswith("A placeholder game") and list(first["sides"]) == ["allied"] and list(first["directives"]) == ["allied"]
+          and first["directives"]["allied"] == "table/directives/ladder_1_allied.json" and first["mission"] == RUNG_ONE_MISSION
+          and first["pairings"] == [{"allied": "person", "japanese": "engine", "engine": "absent", "file": "data/scenarios/ladder/138_one_ship.toml"}]
+          and sorted(first) == sorted(["id", "map", "name", "dates", "days", "placeholder", "lines", "sides", "islands", "directives", "mission", "pairings"]),
+          "L1: three lines, the Allied side alone in `sides` and `directives`, the mission, and the one pairing with no agent and the engine absent")
+    check(all("mission" not in e and "placeholder" not in e and "start" in e and all(p.get("engine") != "absent" for p in e["pairings"]) for e in entries[1:]),
+          "L2: every other entry has no `mission` or `placeholder`, no pairing with the engine absent, and a start")
+    directive = json.load(open(os.path.join(root, first["directives"]["allied"])))["directives"]
+    d = directive[0]
+    check(len(directive) == 1 and d["number"] == 1 and d["when"] == "start" and d["from"] == "Area Commander" and d["to"] == "Commander, Base S" and d["subject"] == "Both garrisons fed"
+          and [p["heading"] for p in d["parts"]] == ["1. Situation", "2. Mission", "3. Guidance"],
+          "L3: the directive is number 1, at the start, from the Area Commander to the Commander, Base S, in three parts")
+    guidance = " ".join(d["parts"][2]["text"])
+    check(len(d["parts"][1]["text"]) == 1 and d["parts"][1]["text"][0] == first["sides"]["allied"], "L3: the mission is one paragraph and is the entry's words for the side, letter for letter")
+    check(all(w in guidance for w in ("Base T", "Base S", "two numbers")) and d["parts"][2]["text"][1] == "Then tell the staff that plans launch when ready, under YOUR ORDERS, and carry on: it will not sail the ship without that leave.",
+          "L3: the guidance names Base T, Base S and the two numbers, and its second paragraph is the designer's")
+    text = page_text()
+    said = run_in_node(text[text.index("  var SIDES = ['allied', 'japanese'], ENGINE_IS = {"):text.index("  function copyRow(")].replace("var SIDES = ['allied', 'japanese'], ENGINE_IS", "var ENGINE_IS")
+                       + "\nfunction main(x) { return { keys: Object.keys(ENGINE_IS), absent: ENGINE_IS.absent('Japanese'), none: ENGINE_IS.none('Japanese'), staff: ENGINE_IS.staff('Allied'), script: ENGINE_IS.script('Allied') }; }", [])
+    check(said["keys"] == ["staff", "script", "none", "absent"] and said["absent"] == "There is no enemy in this game: the Japanese side has nothing."
+          and said["none"] == "The Japanese side is the engine's, and the scenario gives it no orders: its units do only what they do by themselves."
+          and said["staff"] == "The Allied side is the engine's: its staff carries out the orders the scenario gives that side, day by day."
+          and said["script"] == "The Allied side is the engine's: its forces follow the orders the scenario gives them, as written.",
+          "L4: ENGINE_IS has `absent`, \"There is no enemy in this game: the Japanese side has nothing.\", and keeps staff, script and none as they were")
+    said = run_in_node("const config = { start: '' }; const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];\n" + cut_function(text, "  function dateOf(")
+                       + "\nfunction main(x) { return x.map(n => dateOf(n)); }", [0, 1, 13])
+    check(said == ["", "", ""], "L5: with no start date, dateOf gives the empty string for days 0, 1 and 13")
+    check("(dateOf(x.day - 1) || 'Day ' + x.day) + ': '" in text and "(dateOf(f.available_from - 1) || 'Day ' + f.available_from) + ': '" in text
+          and "dateOf(f.available_from - 1) ? dateOf(f.available_from - 1) + ' (day ' + f.available_from + ')' : 'day ' + f.available_from" in text,
+          "L5: the three places that had no fallback for a date have one in words: \"Not before\" on a force's card and the two lines of what comes within the week")
+
+    print("-- the game begun, and the switch for leave to launch", flush=True)
+    listed = get(bridge.table + "/scenarios")["scenarios"]
+    check(listed[0]["id"] == RUNG_ONE and listed[0]["pairings"] == [{"allied": "person", "japanese": "engine", "engine": "absent"}] and "mission" not in listed[0] and "file" not in listed[0],
+          "L6: the screen's list has the rung first with one pairing, and names no file and no mission")
+    check(begin(bridge, RUNG_ONE, "person", "engine") == {"ok": True}, "L6: rung 1 begins")
+    config = get(bridge.table + "/config")
+    check(config["seat"] == "allied" and config["start"] == "" and config["islands"] == [] and len(config["directives"]) == 1 and config["mission"] == RUNG_ONE_MISSION,
+          "L6: /config has the seat, an empty start, no islands, the one directive and the mission")
+    person = Person(bridge.table)
+    bases = person.call("list_bases")["ok"]["bases"]
+    names = run_in_node(text[text.index("  function cleanName"):text.index("  function nameText")] + "\nfunction main(x) { return x.map(cleanName); }",
+                        [next(b["base"]["name"] for b in bases if (b["place"]["q"], b["place"]["r"]) == (pl["q"], pl["r"])) for pl in RUNG_ONE_MISSION["places"]])
+    check(len(bases) == 2 and names == [pl["name"] for pl in RUNG_ONE_MISSION["places"]],
+          f"L6: list_bases has two bases, and the page's name for each place of the mission is the mission's ({names})")
+    check("trial" not in get(bridge.table + "/tools") and person.call("get_briefing", {"text": False})["ok"]["heading"]["last_day"] == 14,
+          "L7: the seat's tools do not include trial, and the briefing's last day is 14")
+    lines = text[text.index("var given = !!s.leaves.launch"):]
+    lines = lines[:lines.index("line.appendChild(l);")]
+    check("'Plans launch: ' + (given ? 'when ready' : 'on my word')" in lines and "given ? 'ON MY WORD' : 'WHEN READY'" in lines and "sw.disabled = !canSign()" in lines
+          and "act('set_leave', { leave: 'launch', given: !given }" in lines and "function canSign() { return !WATCH && !M.over && !playing; }" in text,
+          "L9: YOUR ORDERS has \"Plans launch: \" and a button WHEN READY that sends set_leave for launch, disabled only where canSign() is false (a watched game, a game that is over, time running)")
+    state = person.call("command_state")["ok"]["leaves"]
+    check(state["launch"] is False and state["prepare"] is True, "L9: before any day is fought leave to prepare is given and leave to launch is withheld")
+    queued = person.call("set_leave", {"leave": "launch", "given": True})["ok"]
+    check(queued["status"] == "queued" and person.call("command_state")["ok"]["leaves"]["launch"] is True,
+          "L9: set_leave for launch is queued on the first evening, and command_state then gives leave to launch")
+    check(post(bridge.table + "/new") == {"ok": True}, "the game is put away")
+    check(begin(bridge, "eastern-solomons", "person", "engine") == {"ok": True} and "mission" not in get(bridge.table + "/config"),
+          "L8: a game of another scenario begun after it has no mission in its /config")
+    check(post(bridge.table + "/new") == {"ok": True}, "the game is put away")
 
 
 def the_supply_orders_two_numbers(bridge):
@@ -2753,7 +2823,50 @@ def the_supply_orders_two_numbers(bridge):
     O6. A preview of `rung_one_order(2, 5)` is valid and not refused, its `command` has `floor_days` 2 and `interval_days` 5, and its
         `shown_limits` has one entry. A preview of the same order with no `interval_days` is valid and its `command` has no interval.
         Nothing is signed, and the game is put away."""
-    check(False, "not built: decision 0237, rung 1 on the table (the floor and the interval on the order paper)")
+    import re
+    print("-- the supply order's two numbers", flush=True)
+    text = page_text()
+    floor_tag = re.search(r'<input type="number" id="o-floor"[^>]*>', text).group(0)
+    interval_tag = re.search(r'<input type="number" id="o-interval"[^>]*>', text).group(0)
+    row = text[text.index('<div id="o-supply"'):text.index('<fieldset id="o-risk">')]
+    check('min="1"' in floor_tag and 'max="99"' in floor_tag and 'value="30"' in floor_tag and 'min="1"' in interval_tag and 'max="99"' in interval_tag and "value=" not in interval_tag
+          and all(w in row for w in ("Never below", "days of supply", "Each run brings", "days more")) and "left to the staff: 15 days" in text
+          and "Keep it supplied, 30 days" not in text and "['Keep it supplied', { intent_kind: 'keep_supplied'" in text,
+          "O1: the paper has the row o-supply with o-floor (1 to 99, 30) and o-interval (1 to 99, empty), their words and \"left to the staff: 15 days\"; the end reads \"Keep it supplied\"")
+    check("$('o-supply').hidden = !on" in text and "function supplyChosen()" in text and "e[1].intent_kind === 'keep_supplied'" in text
+          and "showPatrol(); showSupply(); endChanged();" in text and "e.target.id === 'o-floor' || e.target.id === 'o-interval'" in text and "{ showSupply(); askPreview(); }" in text
+          and "$('o-floor').value = '30'; $('o-interval').value = '';" in text,
+          "O2: the row is shown where the end chosen is keep_supplied and hidden for every other, by the path that shows o-patrol; a change of either input asks the reading again")
+    code = ("".join(cut_function(text, h) + "\n" for h in ("  function supplyFloor(", "  function supplyInterval(", "  function addSupplyNumbers(", "  function commas(n)", "  function dayCount(", "  function suppliedWords("))
+            + "function main(list) { return list.map(function (x) { made['o-floor'] = { value: x.floor }; made['o-interval'] = { value: x.interval };"
+              " return { args: addSupplyNumbers(Object.assign({ command: 'set_intent' }, x.end)), card: x.card ? suppliedWords(x.card) : null }; }); }")
+    keep = {"intent_kind": "keep_supplied", "base": 2}
+    out = run_in_node(code, [
+        {"floor": "30", "interval": "", "end": keep}, {"floor": "2", "interval": "5", "end": keep}, {"floor": "", "interval": "", "end": keep},
+        {"floor": "abc", "interval": "abc", "end": keep}, {"floor": "0", "interval": "0", "end": keep}, {"floor": "150", "interval": "150", "end": keep},
+        {"floor": "2", "interval": "5", "end": {"intent_kind": "hold", "base": 2}},
+        {"floor": "30", "interval": "", "end": keep, "card": {"kind": "keep_supplied", "floor_days": 2, "interval_days": 5}},
+        {"floor": "30", "interval": "", "end": keep, "card": {"kind": "keep_supplied", "floor_days": 30}}])
+    args = [o["args"] for o in out]
+    check(args[0] == {"command": "set_intent", "intent_kind": "keep_supplied", "base": 2, "floor_days": 30},
+          "O3: nothing touched (30, empty) adds floor_days 30 and no interval_days: the arguments are what the page sent before")
+    check(args[1]["floor_days"] == 2 and args[1]["interval_days"] == 5 and args[2]["floor_days"] == 30 and "interval_days" not in args[2] and args[3]["floor_days"] == 30 and "interval_days" not in args[3]
+          and args[4]["floor_days"] == 1 and args[4]["interval_days"] == 1 and args[5]["floor_days"] == 99 and args[5]["interval_days"] == 99
+          and args[6] == {"command": "set_intent", "intent_kind": "hold", "base": 2},
+          "O4: (2, 5) gives 2 and 5; empty or no number gives a floor of 30 and no interval; 0 gives 1; 150 gives 99; an end of another kind gets neither key")
+    check(out[7]["card"] == "Kept supplied, 2 days, each run 5 days more" and out[8]["card"] == "Kept supplied, 30 days",
+          "O5: a place's card says \"Kept supplied, 2 days, each run 5 days more\", and with no interval \"Kept supplied, 30 days\"")
+    check(begin(bridge, RUNG_ONE, "person", "engine") == {"ok": True}, "begun: rung 1")
+    person = Person(bridge.table)
+    both = person.call("preview", rung_one_order(2, 5))["ok"]
+    check(both["valid"] is True and both["command"]["floor_days"] == 2 and both["command"]["interval_days"] == 5 and len(both["shown_limits"]) == 1,
+          "O6: a preview of the supply order at 2 and 5 is valid, carries both numbers and shows one limit")
+    bare = rung_one_order(2, None)
+    del bare["interval_days"]
+    only = person.call("preview", bare)["ok"]
+    check(only["valid"] is True and only["command"]["floor_days"] == 2 and "interval_days" not in only["command"],
+          "O6: the same with no interval is valid and its command has no interval")
+    check(person.call("queued")["ok"]["entries"] == [] and post(bridge.table + "/new") == {"ok": True}, "nothing was signed, and the game is put away")
 
 
 def the_verdict_in_words():
@@ -2789,7 +2902,82 @@ def the_verdict_in_words():
         through `dayEvents` for the days 1 to the mission's `last_day` and through no other call of the seat. The paper holds "MISSION
         MET", "MISSION NOT MET" and "Reading the nights.", and still holds "This game set no objectives, so the umpire gives no result."
         for a game with no mission."""
-    check(False, "not built: decision 0237, rung 1 on the table (the verdict's words)")
+    import re
+    print("-- the verdict's words", flush=True)
+    text = page_text()
+
+    def event(day, q, r, unfed):
+        base = "base:1" if (q, r) == (0, 0) else "base:2"
+        return {"day": day, "event_kind": "men_fed", "pulse": "night",
+                "text": f"Allied men ashore at ({q},{r}): {1000 - unfed} of 1000 fed from {base}, {unfed} unfed"}
+
+    def fourteen(unfed=(), extra=(), places=((0, 0), (5, 0)), length=14, null=(), replaced=()):
+        """The days: each with every place fed, an unfed (day, q, r, n) put in the place of the fed event of its place, `extra` events
+        added to their day, `replaced` events (day, q, r, event) put in place of a place's, a day in `null` not answered."""
+        bad = {(d, q, r): n for d, q, r, n in unfed}
+        swap = {(d, q, r): e for d, q, r, e in replaced}
+        days = []
+        for d in range(1, length + 1):
+            if d in null:
+                days.append(None)
+                continue
+            events = []
+            for q, r in places:
+                events.append(swap[(d, q, r)] if (d, q, r) in swap else event(d, q, r, bad.get((d, q, r), 0)))
+            events += [e for day, e in extra if day == d]
+            days.append(events)
+        return days
+
+    base_t = {"q": 5, "r": 0, "name": "Base T"}
+    cases = []
+    def case(days, mission=RUNG_ONE_MISSION):
+        cases.append({"mission": mission, "days": days})
+    case(fourteen())                                                                    # W1
+    case(fourteen(unfed=[(14, 5, 0, 1000)]))                                            # W2
+    case(fourteen(unfed=[(13, 0, 0, 1000), (14, 0, 0, 1000)]))                          # W3
+    case(fourteen(unfed=[(d, 5, 0, 1000) for d in (7, 8, 9, 12, 13, 14)]))              # W4
+    case(fourteen(unfed=[(12, 5, 0, 400), (13, 5, 0, 1000), (14, 5, 0, 1000), (14, 0, 0, 1)]))   # W5
+    other = {"day": 4, "event_kind": "cargo_unloaded", "pulse": "night", "text": "1000 unfed"}
+    case(fourteen(extra=[(4, other)]))                                                  # W6 other kind
+    case(fourteen(extra=[(5, event(5, 3, 3, 600))]))                                    # W6 a hex the mission does not name
+    late = dict(event(6, 5, 0, 1000), pulse="morning")
+    case(fourteen(extra=[(6, late)]))                                                   # W6 not the night pulse
+    nobase = {"day": 6, "event_kind": "men_fed", "pulse": "night", "text": "Allied men ashore at (5,0): no base of the side, none of 1000 fed, 1000 unfed"}
+    case(fourteen(replaced=[(6, 5, 0, nobase)]))                                        # W6 no base
+    case(fourteen(replaced=[(9, 5, 0, event(9, 5, 0, 300))], extra=[(9, event(9, 5, 0, 200))]))   # W6 two events of one night
+    earlier = [(3, 5, 0, 1000)]
+    case(fourteen(null=[9], unfed=earlier))                                             # W7 a day not answered
+    case(fourteen(length=13, unfed=earlier))                                            # W7 thirteen days
+    somewhere = {"day": 9, "event_kind": "men_fed", "pulse": "night", "text": "Allied men ashore somewhere"}
+    case(fourteen(unfed=earlier, extra=[(9, somewhere)]))                               # W7 a report that does not fit
+    case(fourteen(places=((5, 0),)), {"measure": "every_night_fed", "last_day": 14, "places": [base_t]})                                       # W8 one place
+    three = {"measure": "every_night_fed", "last_day": 14, "places": [{"q": 0, "r": 0, "name": "A"}, {"q": 5, "r": 0, "name": "B"}, {"q": 3, "r": 3, "name": "C"}]}
+    case(fourteen(places=((0, 0), (5, 0), (3, 3))), three)                              # W8 three places
+    code = text[text.index("  function missionLines("):text.index("  var endSeq = 0;")] + cut_function(text, "  function commas(n)") + "\nfunction main(list) { return list.map(x => missionLines(x.mission, x.days)); }"
+    got = run_in_node(code, cases)
+    check(got[0] == RUNG_ONE_MET, "W1: fourteen days, each with both places fed: " + " ".join(got[0]))
+    check(got[1] == ["Mission not met.", "1,000 men at Base T went unfed on the night of day 14."], "W2: " + " ".join(got[1]))
+    check(got[2] == ["Mission not met.", "1,000 men at Base S went unfed on the nights of days 13 and 14."], "W3: " + " ".join(got[2]))
+    check(got[3][1] == "1,000 men at Base T went unfed on the nights of days 7, 8, 9, 12, 13 and 14.", "W4: " + got[3][1])
+    check(got[4] == ["Mission not met.", "1 man at Base S went unfed on the night of day 14.", "400 men at Base T went unfed on the night of day 12.",
+                     "1,000 men at Base T went unfed on the nights of days 13 and 14."], "W5: both places and two counts, in the measure's order")
+    check(got[5] == RUNG_ONE_MET and got[6] == RUNG_ONE_MET and got[7] == RUNG_ONE_MET, "W6: an event of another kind, a hex the mission does not name and a pulse that is not the night do not count")
+    check(got[8] == ["Mission not met.", "1,000 men at Base T went unfed on the night of day 6."], "W6: the form with no base counts: " + got[8][1])
+    check(got[9] == ["Mission not met.", "500 men at Base T went unfed on the night of day 9."], "W6: two events of one hex in one night are added: " + got[9][1])
+    check(got[10] == ["The mission could not be judged.", "Day 9 could not be read."] and got[11] == ["The mission could not be judged.", "Day 14 could not be read."]
+          and got[12] == ["The mission could not be judged.", "A report of the men fed on day 9 could not be read."],
+          "W7: a day not answered, thirteen days of fourteen and a report that does not fit are not judged, and a night unfed before them does not make it \"not met\"")
+    check(got[13] == ["Mission met.", "Every man was fed every night to the end of day 14, at Base T."] and got[14] == ["Mission met.", "Every man was fed every night to the end of day 14, at A, B and C."],
+          "W8: the places are joined as English joins a list: \"at Base T.\" and \"at A, B and C.\"")
+    end = cut_function(text, "  function readEnd(")
+    check(end.rstrip().endswith("}") and "api('get_briefing'" in end, "W9: readEnd is cut whole")
+    mission_branch = end[:end.index("    var show = function () {")]
+    check(text.count("missionLines(") == 2 and end.count("missionLines(") == 1 and mission_branch.count("missionLines(") == 1 and mission_branch.split("\n", 1)[1].lstrip().startswith("if (config.mission) {"),
+          "W9: missionLines( is defined once and called once, in readEnd, only where config.mission is set")
+    check(mission_branch.count("dayEvents(") == 1 and "for (d = 1; d <= mission.last_day; d++) asks.push(dayEvents(d)" in mission_branch and "api(" not in mission_branch and "M.result" not in mission_branch,
+          "W9: what it is given is read through dayEvents for the days 1 to the last day, and through no other call of the seat")
+    check("'MISSION MET'" in end and "'MISSION NOT MET'" in end and "'Reading the nights.'" in end and "This game set no objectives, so the umpire gives no result." in end[end.index("    var show = function () {"):],
+          "W9: the paper holds MISSION MET, MISSION NOT MET and Reading the nights., and still says there is no result for a game with no mission")
 
 
 def rung_one_played_three_ways(bridge):
@@ -2810,7 +2998,44 @@ def rung_one_played_three_ways(bridge):
         agrees with the lines; and the lines are the same when the fourteen answers are asked a second time, after the end. In V1 the
         first stop is the staff's "cannot meet" of day 13 (the fuel), which shows the mission is not touched by it.
     Each game is put away after it."""
-    check(False, "not built: decision 0237, rung 1 on the table (the three games and their verdicts)")
+    import re
+    print("-- rung 1 played to its end three ways", flush=True)
+    text = page_text()
+    code = text[text.index("  function missionLines("):text.index("  var endSeq = 0;")] + cut_function(text, "  function commas(n)") + "\nfunction main(list) { return list.map(x => missionLines(x.mission, x.days)); }"
+    games = [("V1", 2, 5, RUNG_ONE_MET, {}),
+             ("V2", 2, 6, ["Mission not met.", "1,000 men at Base S went unfed on the nights of days 13 and 14."], {(0, 0): [13, 14]}),
+             ("V3", 2, 4, ["Mission not met.", "1,000 men at Base T went unfed on the night of day 14."], {(5, 0): [14]})]
+    for name, floor, interval, expected, unfed in games:
+        check(begin(bridge, RUNG_ONE, "person", "engine") == {"ok": True}, f"{name}: rung 1 begins")
+        person = Person(bridge.table)
+        shown = person.call("preview", rung_one_order(floor, interval))["ok"]
+        check(shown["valid"] is True and person.call("approve", {"preview": shown["preview"]})["ok"]["status"] == "queued", f"{name}: the order at {floor} and {interval} is previewed and approved")
+        check(person.call("set_leave", {"leave": "launch", "given": True})["ok"]["status"] == "queued", f"{name}: leave to launch is given before day 1 is fought")
+        runs = []
+        while not runs or not runs[-1].get("game_over"):
+            check(len(runs) < 8, f"{name}: the game ends in a few runs")
+            runs.append(person.call("run", {"days": 14})["ok"])
+
+        def asked():
+            return [person.call("events", {"day": d})["ok"] for d in range(1, 15)]
+        answers = asked()
+        lines = run_in_node(code, [{"mission": RUNG_ONE_MISSION, "days": [a["events"] for a in answers]}])[0]
+        check(lines == expected, f"{name}: the verdict is " + " ".join(lines))
+        check(runs[-1]["game_over"] is True and runs[-1]["result"] is None and all(a["begun"] is True for a in answers) and len(answers) == 14,
+              f"{name}: the last run answers game_over with no result, and every one of the fourteen days is answered as begun")
+        reading = {}
+        for a in answers:
+            for e in a["events"]:
+                if e["event_kind"] == "men_fed" and not e["text"].endswith(", 0 unfed"):
+                    q, r = map(int, re.search(r"\((-?\d+),(-?\d+)\)", e["text"]).groups())
+                    reading.setdefault((q, r), []).append(a["day"])
+        check(reading == unfed and (lines[0] == "Mission met.") == (not reading), f"{name}: the check's own reading of the events agrees with the lines ({reading or 'every night fed'})")
+        again = run_in_node(code, [{"mission": RUNG_ONE_MISSION, "days": [a["events"] for a in asked()]}])[0]
+        check(again == lines, f"{name}: asked a second time, after the end, the lines are the same")
+        if name == "V1":
+            check(runs[0]["day"] == 13 and any(f.get("standing") == "cannot_meet" for f in runs[0]["fired"]),
+                  "V1: the first stop is the staff's \"cannot meet\" of day 13 (the fuel), and the mission is not touched by it")
+        check(post(bridge.table + "/new") == {"ok": True}, f"{name}: the game is put away")
 
 
 def main():
@@ -2833,6 +3058,7 @@ def main():
     the_submarines()
     the_intelligence_paper()
     a_force_ordered()
+    the_verdict_in_words()
     if not os.path.exists(args.sim_cli):
         sys.exit(f"{args.sim_cli} is not built: cargo build --release -p sim-cli")
     with tempfile.TemporaryDirectory() as keep:
@@ -2855,6 +3081,9 @@ def main():
             person_against_agent(bridge, args.hold)
             seat_mcp(bridge)
             the_island_of_two_places(bridge)
+            rung_one_on_the_list(bridge)
+            the_supply_orders_two_numbers(bridge)
+            rung_one_played_three_ways(bridge)
         finally:
             bridge.stop()
         check(bridge.process.returncode is not None, "the bridge has left")

@@ -1115,6 +1115,9 @@ def home(args, load_chart):
             "islands": entry.get("islands", []),
             "home": {"scenario": entry["name"], "kind": hand.kind, "agents": hand.agents, "number": hand.number},
         }
+        # A rung of the ladder (decision 0237) gives the page the measure its verdict is read by, as its entry has it.
+        if "mission" in entry:
+            common["mission"] = entry["mission"]
         if hand.kind == "engine":
             command = [args.sim_cli, "mcp", file, "--seat", hand.person]
             if kept:

@@ -103,6 +103,11 @@ button:disabled { opacity: 0.45; cursor: default; }
 #paper .frow .sval { flex: 0 0 84px; text-align: right; }
 #paper #o-patrol .fl { flex: 0 0 auto; }
 #paper #o-patrol .sval { flex: 1 1 auto; text-align: left; }
+#paper #o-supply { display: flex; flex-direction: column; gap: 6px; }
+#paper #o-supply[hidden] { display: none; }
+#paper #o-supply .fl { flex: 0 0 auto; }
+#paper #o-supply input[type=number] { width: 4.5em; min-height: 34px; font: inherit; }
+#paper #o-supply .sval { flex: 1 1 auto; text-align: left; }
 #p-limits summary { cursor: pointer; min-height: 30px; display: flex; align-items: center; font-family: var(--f-ui); font-size: 12px; font-weight: 700; letter-spacing: 0.14em; color: var(--paper-dim); }
 #p-limits summary:focus-visible { outline: 3px solid #f0c36a; outline-offset: 1px; }
 #p-limits-body { display: flex; flex-direction: column; gap: 8px; padding-top: 4px; }
@@ -608,6 +613,10 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
       <div>At <strong id="o-place">this place</strong> you are to:</div>
       <fieldset id="o-ends"><legend>END</legend></fieldset>
       <div class="frow" id="o-patrol" hidden><span class="fl">Patrol these waters,</span><input type="number" id="o-dist" min="1" max="6" step="1" value="2" aria-label="Hexes round the place"><span class="sval" id="o-dist-out"></span></div>
+      <div id="o-supply" hidden>
+        <div class="frow"><span class="fl">Never below</span><input type="number" id="o-floor" min="1" max="99" step="1" value="30" aria-label="Days of supply never to fall below"><span class="fl">days of supply</span></div>
+        <div class="frow"><span class="fl">Each run brings</span><input type="number" id="o-interval" min="1" max="99" step="1" aria-label="Days more each run brings"><span class="fl">days more</span><span class="sval" id="o-interval-out"></span></div>
+      </div>
       <fieldset id="o-risk"><legend>RISK</legend>
         <label><input type="radio" name="risk" id="o-risk-preserve" value="preserve"> Preserve</label>
         <label><input type="radio" name="risk" id="o-risk-balanced" value="balanced" checked> Balanced</label>
@@ -2496,12 +2505,14 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
     return found[0] || null;
   }
   function rootIntent(i) { var by = {}; (((M.state || {}).intents) || []).forEach(function (x) { by[x.number] = x; }); while (i && i.parent != null && by[i.parent]) i = by[i.parent]; return i; }
+  // The supply order in force, with its two numbers (decision 0237): the floor, and the days more each run brings where the commander set them.
+  function suppliedWords(i) { return 'Kept supplied' + (i.floor_days ? ', ' + dayCount(i.floor_days) : '') + (i.interval_days ? ', each run ' + dayCount(i.interval_days) + ' more' : ''); }
   // An order in force said as what is being done, in a line of its own.
   function doingWords(i, target) {
     var tfn = ((M.forces.filter(function (f) { return num(f.task_force.handle) === Number(typeof i.task_force === 'object' && i.task_force ? num(i.task_force.handle) : i.task_force); })[0] || {}).task_force || {}).name;
     tfn = tfn ? cleanName(tfn) : 'The force';
     var island = i.island != null && (config.islands.filter(function (x) { return x.number === i.island; })[0] || {}).name;
-    return { hold: 'Holding ' + target.name, keep_supplied: 'Kept supplied' + (i.floor_days ? ', ' + dayCount(i.floor_days) : ''), cover: 'Covered from the air', control_island: 'Seizing and holding ' + island, take_place: 'Capturing ' + target.name, neutralise: 'Neutralising ' + target.name, deny: 'Denying these waters, ' + round(i.distance), patrol: 'Patrolling these waters with submarines, ' + round(i.distance), operate_carriers: 'Operating ' + tfn + ' from here', stand_at: tfn + ' stationed here' }[i.kind] || sayIntent(i, {});
+    return { hold: 'Holding ' + target.name, keep_supplied: suppliedWords(i), cover: 'Covered from the air', control_island: 'Seizing and holding ' + island, take_place: 'Capturing ' + target.name, neutralise: 'Neutralising ' + target.name, deny: 'Denying these waters, ' + round(i.distance), patrol: 'Patrolling these waters with submarines, ' + round(i.distance), operate_carriers: 'Operating ' + tfn + ' from here', stand_at: tfn + ' stationed here' }[i.kind] || sayIntent(i, {});
   }
   // ---- an order against an enemy force (decision 0220) ----
   // A held contact's card offers two orders: to destroy the force, within 2 or 4 hexes of where it is reported, and to shadow it,
@@ -2731,7 +2742,7 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
     var doing = !f.fuel_from ? f.status.replace(/_/g, ' ') + (f.destination ? ', for ' + hexWords(f.destination) : '')
       : giver && sameHex(giver.place, f.place) ? 'fuelling at sea from ' + giverName : 'steaming to ' + giverName + ', to fuel at sea from it';
     kv(body, [['Kind', f.mission.replace(/_/g, ' ')], ['Where', placeLink(f.place)], ['Doing', doing],
-      ['Not before', f.available_from > M.day ? dateOf(f.available_from - 1) + ' (day ' + f.available_from + ')' : null],
+      ['Not before', f.available_from > M.day ? (dateOf(f.available_from - 1) ? dateOf(f.available_from - 1) + ' (day ' + f.available_from + ')' : 'day ' + f.available_from) : null],
       ['Speed', f.speed], ['Readiness', f.readiness + (f.alert ? ', alert' : '')], ['Fatigue', tiredWords(f.fatigue)],
       ['Cargo', f.cargo_supply_t != null ? commas(f.cargo_supply_t) + ' t supply, ' + commas(f.cargo_fuel_t || 0) + ' t fuel' : null],
       ['Range', f.least_fuelled ? commas(f.least_fuelled.range_nm) + ' miles at cruise \u00B7 ' + cleanName(f.least_fuelled.ship.name).replace(/^./, function (c) { return c.toUpperCase(); }) + ' runs dry first' : null],
@@ -4093,7 +4104,51 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
       default: return [o.kind.replace(/_/g, ' ') + (base ? ', ' + base : ''), commas(n)];
     }
   }
+  // The verdict of a game that sets a mission (decision 0237): the lines the mission's measure gives from each day's events, day 1 first, or
+  // nothing for a day not answered. It draws nothing and asks nothing. The measure is `every_night_fed`: an event of kind men_fed in the
+  // night pulse, at a hex of the mission's places, with men unfed, is a night unfed there. What cannot be read whole is not judged.
+  function missionLines(mission, days) {
+    var places = mission.places || [], nights = places.map(function () { return {}; }), d, i, j, joined = function (a) { return a.length < 2 ? a.join('') : a.slice(0, -1).join(', ') + ' and ' + a[a.length - 1]; };
+    for (d = 1; d <= mission.last_day; d++) {
+      var list = days[d - 1];
+      if (!list) return ['The mission could not be judged.', 'Day ' + d + ' could not be read.'];
+      for (j = 0; j < list.length; j++) {
+        if (list[j].event_kind !== 'men_fed') continue;
+        var m = /^\w+ men ashore at \((-?\d+),(-?\d+)\): (?:\d+ of \d+ fed from [^,]+|no base of the side, none of \d+ fed), (\d+) unfed$/.exec(list[j].text || '');
+        if (!m) return ['The mission could not be judged.', 'A report of the men fed on day ' + d + ' could not be read.'];
+        if (list[j].pulse !== 'night' || !parseInt(m[3], 10)) continue;
+        for (i = 0; i < places.length; i++) if (places[i].q === parseInt(m[1], 10) && places[i].r === parseInt(m[2], 10)) nights[i][d] = (nights[i][d] || 0) + parseInt(m[3], 10);
+      }
+    }
+    var lines = [];
+    places.forEach(function (pl, k) {
+      var counts = [], by = {};
+      for (d = 1; d <= mission.last_day; d++) if (nights[k][d]) { if (!by[nights[k][d]]) { by[nights[k][d]] = []; counts.push(nights[k][d]); } by[nights[k][d]].push(d); }
+      counts.forEach(function (n) { var ds = by[n]; lines.push(commas(n) + (n === 1 ? ' man' : ' men') + ' at ' + pl.name + ' went unfed on the night' + (ds.length > 1 ? 's' : '') + ' of day' + (ds.length > 1 ? 's' : '') + ' ' + joined(ds) + '.'); });
+    });
+    if (!lines.length) return ['Mission met.', 'Every man was fed every night to the end of day ' + mission.last_day + ', at ' + (places.length === 2 ? places[0].name + ' and at ' + places[1].name : joined(places.map(function (pl) { return pl.name; }))) + '.'];
+    return ['Mission not met.'].concat(lines);
+  }
+  var endSeq = 0;
   function readEnd() {
+    if (config.mission) {
+      // The mission's verdict, read from the seat's `events` of each day from 1 to the last day and from nothing else, asked each time the paper is opened.
+      var mission = config.mission, mine = ++endSeq, doc = $('sheet-doc'), asks = [], d;
+      doc.textContent = ''; doc.appendChild(el('p', '', 'Reading the nights.'));
+      sheetAs('HOW IT ENDED'); doc.hidden = false; $('sheet-text').hidden = true; $('sheet').hidden = false; $('sheet-close').focus();
+      for (d = 1; d <= mission.last_day; d++) asks.push(dayEvents(d).catch(function () { return null; }));
+      Promise.all(asks).then(function (days) {
+        if (mine !== endSeq) return;
+        var lines = missionLines(mission, days), met = lines[0] === 'Mission met.', judged = met || lines[0] === 'Mission not met.', box = el('div', 'est');
+        doc.textContent = '';
+        if (judged) box.appendChild(el('div', 'stamp ' + (met ? 'win' : 'loss'), met ? 'MISSION MET' : 'MISSION NOT MET')); else box.appendChild(el('p', '', lines[0]));
+        lines.slice(1).forEach(function (l) { box.appendChild(el(judged ? 'div' : 'p', judged ? 'work' : '', l)); });
+        box.appendChild(el('div', 'work', 'Day ' + mission.last_day + ' of ' + mission.last_day + ' is fought.'));
+        doc.appendChild(box);
+        var row = el('div', 'row'), b = el('button', '', 'READ THE WAR DIARY'); b.type = 'button'; b.addEventListener('click', function () { readDiary(); }); row.appendChild(b); doc.appendChild(row);
+      });
+      return;
+    }
     var show = function () {
       var doc = $('sheet-doc'), r = M.result; doc.textContent = '';
       if (!r || !r.allied || !r.japanese) { doc.appendChild(el('p', '', 'The game is over. This game set no objectives, so the umpire gives no result.')); }
@@ -4402,8 +4457,8 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
       Object.keys(w).forEach(function (k) { if (['base_supply_low', 'base_without_fuel_with_force', 'air_group_tired', 'air_group_short_of_pilots'].indexOf(k) < 0 && n(w[k])) needs.push(k.replace(/_/g, ' ').replace(/^./, function (ch) { return ch.toUpperCase(); }) + ': ' + n(w[k]) + '.'); });
       part('For your decision or notice', needs);
       // what comes this week
-      var soon = []; (b.arrivals && b.arrivals.due || []).forEach(function (x) { if (x.day >= M.day && x.day <= M.day + 7) soon.push([x.day, dateOf(x.day - 1) + ': ' + x.air_group.handle + ', ' + x.aircraft + ' aircraft, to ' + x.at.handle + (x.can_be_delivered ? '.' : '. Cannot be delivered as things stand.')]); });
-      M.forces.forEach(function (f) { if (f.available_from > M.day && f.available_from <= M.day + 7) soon.push([f.available_from, dateOf(f.available_from - 1) + ': ' + f.task_force.handle + ' may be used.']); });
+      var soon = []; (b.arrivals && b.arrivals.due || []).forEach(function (x) { if (x.day >= M.day && x.day <= M.day + 7) soon.push([x.day, (dateOf(x.day - 1) || 'Day ' + x.day) + ': ' + x.air_group.handle + ', ' + x.aircraft + ' aircraft, to ' + x.at.handle + (x.can_be_delivered ? '.' : '. Cannot be delivered as things stand.')]); });
+      M.forces.forEach(function (f) { if (f.available_from > M.day && f.available_from <= M.day + 7) soon.push([f.available_from, (dateOf(f.available_from - 1) || 'Day ' + f.available_from) + ': ' + f.task_force.handle + ' may be used.']); });
       part('Coming this week', soon.sort(function (x, y) { return x[0] - y[0]; }).map(function (x) { return x[1]; }));
       var row = el('div', 'row'), full = el('button', '', 'THE FULL SITUATION'); full.type = 'button'; full.addEventListener('click', readBriefing); row.appendChild(full); doc.appendChild(row);
       if (M.day > 1) casualtyReturn(doc, M.day - 1);
@@ -4800,7 +4855,8 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
   var SIDES = ['allied', 'japanese'], ENGINE_IS = {
     staff: function (s) { return 'The ' + s + ' side is the engine\'s: its staff carries out the orders the scenario gives that side, day by day.'; },
     script: function (s) { return 'The ' + s + ' side is the engine\'s: its forces follow the orders the scenario gives them, as written.'; },
-    none: function (s) { return 'The ' + s + ' side is the engine\'s, and the scenario gives it no orders: its units do only what they do by themselves.'; }
+    none: function (s) { return 'The ' + s + ' side is the engine\'s, and the scenario gives it no orders: its units do only what they do by themselves.'; },
+    absent: function (s) { return 'There is no enemy in this game: the ' + s + ' side has nothing.'; }
   };
   function copyRow(parent, text) {
     var row = el('div', 'copy'), pre = el('pre', '', text), b = el('button', '', 'COPY'); b.type = 'button';
@@ -4994,8 +5050,10 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
       }
     }
     if (paper.kind === 'staff' && e.type === 'input' && e.target.id === 'o-dist') showPatrol();
-    if (paper.kind === 'staff' && e.type === 'change' && e.target.name === 'end') { showPatrol(); endChanged(); }
+    if (paper.kind === 'staff' && e.type === 'input' && e.target.id === 'o-interval') showSupply();
+    if (paper.kind === 'staff' && e.type === 'change' && e.target.name === 'end') { showPatrol(); showSupply(); endChanged(); }
     else if (paper.kind === 'staff' && e.type === 'change' && e.target.id === 'o-dist') { showPatrol(); askPreview(); }
+    else if (paper.kind === 'staff' && e.type === 'change' && (e.target.id === 'o-floor' || e.target.id === 'o-interval')) { showSupply(); askPreview(); }
     else if (paper.kind === 'staff' && e.type === 'change' && e.target.name === 'risk') { limSummary(); limAsk(); }
     paper.dirty = true; $('p-says').textContent = ''; paperShow();
   }
@@ -5511,7 +5569,7 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
     var list = [], n = target.base ? num(target.base.base.handle) : null, wide = null;
     if (n != null) config.islands.forEach(function (i) { if (i.base === n || (i.places && i.places.indexOf(n) >= 0)) { if (wide == null) wide = list.length; list.push(['Seize and hold ' + i.name, { intent_kind: 'control_island', island: i.number }, null, null]); } });
     if (target.kind === 'enemy') list.push(['Capture ' + target.name + ' only', { intent_kind: 'take_place', base: n }, null, wide], ['Neutralise ' + target.name, { intent_kind: 'neutralise', target: n }, null, wide]);
-    if (target.kind === 'own') { var hold = list.length; list.push(['Hold ' + target.name, { intent_kind: 'hold', base: n }, null, wide], ['Keep it supplied, 30 days', { intent_kind: 'keep_supplied', base: n, floor_days: 30 }, null, wide != null ? wide : hold, hold], ['Cover it from the air', { intent_kind: 'cover', base: n }, null, wide != null ? wide : hold, hold]); }
+    if (target.kind === 'own') { var hold = list.length; list.push(['Hold ' + target.name, { intent_kind: 'hold', base: n }, null, wide], ['Keep it supplied', { intent_kind: 'keep_supplied', base: n, floor_days: 30 }, null, wide != null ? wide : hold, hold], ['Cover it from the air', { intent_kind: 'cover', base: n }, null, wide != null ? wide : hold, hold]); }
     if (target.kind === 'waters') list.push(['Deny these waters, ' + round(2), { intent_kind: 'deny', hex: [target.q, target.r], distance: 2 }, null], ['Deny these waters, ' + round(4), { intent_kind: 'deny', hex: [target.q, target.r], distance: 4 }, null]);
     // Submarines patrol waters, where the side has boats: the staff gives each its station. The distance is chosen in the paper.
     if (target.kind === 'waters' && (M.boats || []).some(function (b) { return b.state !== 'sunk' && b.state !== 'home'; })) list.push(['Patrol these waters with submarines', { intent_kind: 'patrol', hex: [target.q, target.r], distance: 2 }, null]);
@@ -5531,12 +5589,19 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
     var n = parseInt($('o-dist').value, 10); return isNaN(n) ? 2 : Math.max(1, Math.min(6, n));
   }
   function showPatrol() { var d = patrolDistance(); $('o-patrol').hidden = d == null; if (d != null) $('o-dist-out').textContent = round(d); }
+  // The supply order's two numbers (decision 0237), chosen in the paper where the end chosen is to keep a place supplied: the days of
+  // supply it is never to fall below (30 where the field is empty), and the days more that each run brings, which is sent only where set.
+  function supplyFloor() { var n = parseInt($('o-floor').value, 10); return isNaN(n) ? 30 : Math.max(1, Math.min(99, n)); }
+  function supplyInterval() { var n = parseInt($('o-interval').value, 10); return isNaN(n) ? null : Math.max(1, Math.min(99, n)); }
+  function addSupplyNumbers(args) { if (args.intent_kind !== 'keep_supplied') return args; args.floor_days = supplyFloor(); var d = supplyInterval(); if (d != null) args.interval_days = d; return args; }
+  function supplyChosen() { if (!draft || !draft.ends) return false; var e = draft.ends[parseInt(chosen('end'), 10) || 0]; return !!e && e[1].intent_kind === 'keep_supplied'; }
+  function showSupply() { var on = supplyChosen(); $('o-supply').hidden = !on; if (on) $('o-interval-out').textContent = supplyInterval() == null ? 'left to the staff: 15 days' : ''; }
   function openDraft(best, first) {
     draft = best; draft.ends = ends(best); picking = false; canvas.classList.remove('picking');
     $('o-place').textContent = best.name; $('o-pv').hidden = false; $('p-dry').hidden = !OFFERED.trial;
     var box = $('o-ends'); while (box.children.length > 1) box.removeChild(box.lastChild);
     draft.ends.forEach(function (e, i) { var l = el('label'), r = el('input'); r.type = 'radio'; r.name = 'end'; r.value = String(i); r.id = 'o-end-' + i; r.checked = i === (first || 0); l.appendChild(r); var t = el('span', 'endw'); t.appendChild(el('b', '', e[0])); l.appendChild(t); box.appendChild(l); });
-    $('o-risk-balanced').checked = true; $('o-dist').value = '2'; patrolStations = null; showPatrol(); drawMarks(); endChanged();
+    $('o-risk-balanced').checked = true; $('o-dist').value = '2'; $('o-floor').value = '30'; $('o-interval').value = ''; patrolStations = null; showPatrol(); showSupply(); drawMarks(); endChanged();
   }
   function chosen(name) { var r = document.querySelector('#paper input[name="' + name + '"]:checked'); return r ? r.value : ''; }
   // The draft as an order in force would be read, so that the plan's functions can draw its tree: its number is the next free one, and in
@@ -5598,7 +5663,7 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
     if (paper && paper.kind === 'limit') return askLimitPreview();
     if (!draft) return; var seq = ++previewSeq, out = $('o-preview'), e = draft.ends[parseInt(chosen('end'), 10) || 0], kind = e[1].intent_kind;
     previewNo = null; $('p-sign').disabled = true; $('p-dry').disabled = true; $('p-dry').hidden = !OFFERED.trial; $('o-dry-says').textContent = ''; out.textContent = 'Asking the staff.'; $('o-pv').open = true; $('o-pv-sum').textContent = 'THE STAFF\'S READING';
-    var args = { command: 'set_intent' }; Object.keys(e[1]).forEach(function (k) { args[k] = e[1][k]; }); if (e[1].intent_kind === 'patrol') args.distance = patrolDistance();
+    var args = { command: 'set_intent' }; Object.keys(e[1]).forEach(function (k) { args[k] = e[1][k]; }); if (e[1].intent_kind === 'patrol') args.distance = patrolDistance(); addSupplyNumbers(args);
     var sent = sentLimits(kind); if (sent.length) args.limits = sent.map(function (x) { return x.body; });
     patrolStations = null; if (g) drawMarks();
     api('preview', args).then(function (p) {

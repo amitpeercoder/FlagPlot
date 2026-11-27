@@ -1,6 +1,37 @@
 {
-  "note": "The scenarios offered for play on the table's new game screen (decision 0185). The screen reads nothing else of a scenario. For each, a game is offered only where a file makes it one: the engine's side given orders to its units (\"script\") or orders for its staff to carry out (\"staff\"), and a side played by a person or an agent given nothing. Each pairing names who holds each side (person, agent or engine) and the file. Each scenario names its map, key \"map\", a repository path, and the table draws the chart of that map (decision 0199); an entry with none is on the present map, data/map/south_pacific.csv, and every present entry names it. Kept by hand: a scenario renamed or moved is changed here. A file that names the ground figures is the copy in data/scenarios/table-hunger (for each battle that has submarines, the copy in data/scenarios/table-boats made from it by scripts/table-boats/make_files.py, decisions 0225 and 0227); for the 39 days, the copy in data/scenarios/table-rear-bases made from that by scripts/table-rear-bases/make_files.py, decision 0224's rulings of Nov 23, 2026 that names the figures of hunger that takes time (decision 0205, 3), made from the file on file by scripts/table-copies/make_copies.py; a file with no land units is the file on file. Listed simplest first: by its length and by how much a side has to run.",
+  "note": "The scenarios offered for play on the table's new game screen (decision 0185). The screen reads nothing else of a scenario. For each, a game is offered only where a file makes it one: the engine's side given orders to its units (\"script\") or orders for its staff to carry out (\"staff\"), and a side played by a person or an agent given nothing. Each pairing names who holds each side (person, agent or engine) and the file. A rung of the ladder (decision 0237) is an invented game with no enemy: its other side is the engine's and has nothing (\"engine\": \"absent\"), it names no date for day 1, and its \"mission\" is the measure its verdict is read by. Each scenario names its map, key \"map\", a repository path, and the table draws the chart of that map (decision 0199); an entry with none is on the present map, data/map/south_pacific.csv, and every present entry names it. Kept by hand: a scenario renamed or moved is changed here. A file that names the ground figures is the copy in data/scenarios/table-hunger (for each battle that has submarines, the copy in data/scenarios/table-boats made from it by scripts/table-boats/make_files.py, decisions 0225 and 0227); for the 39 days, the copy in data/scenarios/table-rear-bases made from that by scripts/table-rear-bases/make_files.py, decision 0224's rulings of Nov 23, 2026 that names the figures of hunger that takes time (decision 0205, 3), made from the file on file by scripts/table-copies/make_copies.py; a file with no land units is the file on file. Listed simplest first: by its length and by how much a side has to run.",
   "scenarios": [
+    {
+      "id": "ladder-1-one-ship",
+      "map": "data/map/placeholder_ladder.toml",
+      "name": "Rung 1: One ship",
+      "dates": "An invented sea",
+      "days": 14,
+      "placeholder": true,
+      "lines": [
+        "The first rung of the ladder: one ship, one order, no enemy.",
+        "You command at Base S, which has the stock, the fuel and the ship. Base T, 200 miles away, is the forward garrison.",
+        "A placeholder game: the sea, the bases, the ship and the men are invented."
+      ],
+      "sides": {
+        "allied": "Keep both garrisons fed. Every man, here and forward, is to be fed every night to the end of day 14. The forward garrison holds five days of food. Our own men eat from the stock you ship from, and it holds 5 t more than both need. Your one ship carries six days of the forward garrison's food at a time, and the fuel on hand is enough for two round trips."
+      },
+      "islands": [],
+      "directives": {
+        "allied": "table/directives/ladder_1_allied.json"
+      },
+      "mission": {
+        "measure": "every_night_fed",
+        "last_day": 14,
+        "places": [
+          {"q": 0, "r": 0, "name": "Base S"},
+          {"q": 5, "r": 0, "name": "Base T"}
+        ]
+      },
+      "pairings": [
+        {"allied": "person", "japanese": "engine", "engine": "absent", "file": "data/scenarios/ladder/138_one_ship.toml"}
+      ]
+    },
     {
       "id": "eastern-solomons",
       "map": "data/map/south_pacific.csv",

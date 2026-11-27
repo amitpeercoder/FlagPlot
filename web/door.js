@@ -127,6 +127,8 @@
           seat: side, start: entry.start || '', islands: entry.islands || [], directives: a[1],
           home: { scenario: entry.name, kind: 'engine', agents: [], number: c.number }
         };
+        // A rung of the ladder (decision 0237) gives the page its mission, the entry's, unchanged.
+        if (entry.mission) game.config.mission = entry.mission;
         return game;
       });
     }).catch(function (e) { if (held === game) { game.seat.end(); held = null; } throw e; });
