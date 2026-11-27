@@ -6,6 +6,8 @@ Summary: A land unit's men only ever fall. Nothing in play adds a man. Over 39 d
 
 Standing: Planned on Nov 20, 2026 and amended on review; built on Nov 21, 2026 (scenario 113) and confirmed by the architect's rulings below.
 
+See `as-built/0236-five-old-switches-retired.md`: since decision 0236 the two figures of replacement men are written in every ground file and the code holds no value for them; rule 14, in its second sentence (a file that names none is read with 2 and a half), is superseded.
+
 ## Why
 
 `docs/design/larger-scenarios.md`, and decision 0102, which deferred "replacements for land units" until the tuning of the ground figures needed them.

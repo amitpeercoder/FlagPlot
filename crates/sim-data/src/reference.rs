@@ -560,12 +560,12 @@ struct SurfaceCombatFile {
     yard_days_per_flotation_point: Quantity,
     yard_days_per_system_degraded: Quantity,
     yard_days_per_system_out: Quantity,
-    /// Shore bombardment (decision 0092). All four or none: a file with none
-    /// loads as before and no force bombards.
-    bombardment_minutes: Option<u32>,
-    bombardment_hit_chance: Option<Quantity>,
-    bombardment_reference_gun_damage: Option<Quantity>,
-    bombardment_false_claim_chance: Option<Quantity>,
+    /// Shore bombardment (decision 0092). Required like every other key
+    /// (decision 0236): a file without one is refused, naming the key.
+    bombardment_minutes: u32,
+    bombardment_hit_chance: Quantity,
+    bombardment_reference_gun_damage: Quantity,
+    bombardment_false_claim_chance: Quantity,
     gun_system_hit: SystemTable,
     torpedo_system_hit: SystemTable,
     straggler_escorts: EscortTable,
@@ -755,26 +755,17 @@ fn parse_surface_combat_figures(
             "yard_days_per_system_out",
             &file.yard_days_per_system_out,
         )?,
-        bombardment: match (
-            file.bombardment_minutes,
-            &file.bombardment_hit_chance,
-            &file.bombardment_reference_gun_damage,
-            &file.bombardment_false_claim_chance,
-        ) {
-            (None, None, None, None) => None,
-            (Some(minutes), Some(hit), Some(reference), Some(false_claim)) => {
-                Some(BombardmentFigures {
-                    minutes,
-                    hit_chance: number("bombardment_hit_chance", hit)?,
-                    reference_gun_damage: number("bombardment_reference_gun_damage", reference)?,
-                    false_claim_chance: number("bombardment_false_claim_chance", false_claim)?,
-                })
-            }
-            _ => {
-                return Err(fail(
-                    "the bombardment figures are bombardment_minutes, bombardment_hit_chance, bombardment_reference_gun_damage and bombardment_false_claim_chance: give all four or none".to_string(),
-                ))
-            }
+        bombardment: BombardmentFigures {
+            minutes: file.bombardment_minutes,
+            hit_chance: number("bombardment_hit_chance", &file.bombardment_hit_chance)?,
+            reference_gun_damage: number(
+                "bombardment_reference_gun_damage",
+                &file.bombardment_reference_gun_damage,
+            )?,
+            false_claim_chance: number(
+                "bombardment_false_claim_chance",
+                &file.bombardment_false_claim_chance,
+            )?,
         },
         rearming: match &file.rearming {
             None => None,
@@ -929,12 +920,12 @@ impl StrikeAircraftTable {
 struct BaseHitTable {
     aircraft: Quantity,
     supply: Quantity,
-    /// The share for men ashore (decision 0092, 8). Without it the share is
-    /// 0 and those hits land on nothing, as before.
-    men: Option<Quantity>,
-    /// The share for the airfield (decision 0103, 2). Without it the share
-    /// is 0 and those hits land as before.
-    airfield: Option<Quantity>,
+    /// The share for men ashore (decision 0092, 8). Required (decision
+    /// 0236); 0 is a value a file may state.
+    men: Quantity,
+    /// The share for the airfield (decision 0103, 2). Required (decision
+    /// 0236); 0 is a value a file may state.
+    airfield: Quantity,
 }
 
 /// Loads the air combat figures from a TOML file.
@@ -982,14 +973,8 @@ fn parse_air_combat_figures(text: &str, path: &Path) -> Result<AirCombatFigures,
         )?,
         base_hit_aircraft: number("base_hit.aircraft", &file.base_hit.aircraft)?,
         base_hit_supply: number("base_hit.supply", &file.base_hit.supply)?,
-        base_hit_men: match &file.base_hit.men {
-            Some(men) => number("base_hit.men", men)?,
-            None => Fixed::ZERO,
-        },
-        base_hit_airfield: match &file.base_hit.airfield {
-            Some(airfield) => number("base_hit.airfield", airfield)?,
-            None => Fixed::ZERO,
-        },
+        base_hit_men: number("base_hit.men", &file.base_hit.men)?,
+        base_hit_airfield: number("base_hit.airfield", &file.base_hit.airfield)?,
         fighter_false_claim_chance: number(
             "fighter_false_claim_chance",
             &file.fighter_false_claim_chance,
@@ -1200,9 +1185,10 @@ struct GroundFile {
     attack_fatigue_limit: Quantity,
     beaten_share: Quantity,
     captured_stock_share: Quantity,
-    /// Decision 0092. Without `men_lost_per_base_hit` a hit on men removes
-    /// nobody; without both report errors no ground report is made.
-    men_lost_per_base_hit: Option<Quantity>,
+    /// Decision 0092. `men_lost_per_base_hit` is required (decision 0236);
+    /// 0 is a value a file may state. Without both report errors no ground
+    /// report is made.
+    men_lost_per_base_hit: Quantity,
     report_error_low: Option<Quantity>,
     report_error_high: Option<Quantity>,
     /// Decision 0147: without both, no reconnaissance flight is made.
@@ -1265,10 +1251,9 @@ struct GroundFile {
     cover_from_strain: Quantity,
     cover_wear_per_hit: Quantity,
     /// Replacement men (decision 0197, 14): a whole level from 0 to 4 and a
-    /// share. Placeholders; without them, 2 and a half, so that no older
-    /// file changes.
-    replacement_experience: Option<u32>,
-    replacement_share: Option<Quantity>,
+    /// share. Placeholders, and required (decision 0236).
+    replacement_experience: u32,
+    replacement_share: Quantity,
     /// Hunger that takes time (decision 0205, 1 and 9): all three or none.
     /// Without them a landing brings no rations and the unfed are lost from
     /// the first night, so that no older file changes. The count of nights
@@ -1326,10 +1311,7 @@ fn parse_ground_figures(text: &str, path: &Path) -> Result<GroundFigures, DataEr
         attack_fatigue_limit: number("attack_fatigue_limit", &file.attack_fatigue_limit)?,
         beaten_share: number("beaten_share", &file.beaten_share)?,
         captured_stock_share: number("captured_stock_share", &file.captured_stock_share)?,
-        men_lost_per_base_hit: match &file.men_lost_per_base_hit {
-            Some(men) => number("men_lost_per_base_hit", men)?,
-            None => Fixed::ZERO,
-        },
+        men_lost_per_base_hit: number("men_lost_per_base_hit", &file.men_lost_per_base_hit)?,
         report_error: match (&file.report_error_low, &file.report_error_high) {
             (None, None) => None,
             (Some(low), Some(high)) => Some(ReportError {
@@ -1424,18 +1406,13 @@ fn parse_ground_figures(text: &str, path: &Path) -> Result<GroundFigures, DataEr
             "airfield_landing_refused_at",
             &file.airfield_landing_refused_at,
         )?,
-        replacement_experience: match file.replacement_experience {
-            None => GroundFigures::REPLACEMENT_EXPERIENCE,
-            Some(level) => u8::try_from(level).map_err(|_| {
-                fail(format!(
-                    "ground replacement_experience {level} is not between 0 and 4"
-                ))
-            })?,
-        },
-        replacement_share: match &file.replacement_share {
-            None => GroundFigures::REPLACEMENT_SHARE,
-            Some(share) => number("replacement_share", share)?,
-        },
+        replacement_experience: u8::try_from(file.replacement_experience).map_err(|_| {
+            fail(format!(
+                "ground replacement_experience {} is not between 0 and 4",
+                file.replacement_experience
+            ))
+        })?,
+        replacement_share: number("replacement_share", &file.replacement_share)?,
         hunger: match (
             &file.rations_landed_nights,
             &file.hungry_below_share,
@@ -3910,30 +3887,39 @@ mod tests {
     }
 
     #[test]
-    fn the_replacement_figures_default_to_the_standard_and_a_half_and_are_checked() {
-        // Decision 0197, 14: a file that names neither is read with 2 and a
-        // half, so that no older file changes.
+    fn the_replacement_figures_are_required_and_checked() {
+        // Decision 0236: the shipped file gives 2 and a half; a file without
+        // either is refused with the key named.
         let figures = parse_ground_figures(&ground_text(), here()).expect("parses");
         assert_eq!(figures.replacement_experience, 2);
         assert_eq!(figures.replacement_share, Fixed::from_ratio(1, 2));
-        let with = |extra: &str| format!("{}{extra}\n", ground_text());
+        for key in ["replacement_experience", "replacement_share"] {
+            let message = parse_ground_figures(&without_keys(&ground_text(), &[key]), here())
+                .expect_err("a missing key is refused")
+                .message;
+            assert!(message.contains(key), "without {key}: {message}");
+        }
         let set = parse_ground_figures(
-            &with("replacement_experience = 3\nreplacement_share = \"0.25\""),
+            &with_key(
+                &with_key(&ground_text(), "replacement_experience", "3"),
+                "replacement_share",
+                "\"0.25\"",
+            ),
             here(),
         )
         .expect("parses");
         assert_eq!(set.replacement_experience, 3);
         assert_eq!(set.replacement_share, Fixed::from_ratio(1, 4));
-        for (extra, key) in [
-            ("replacement_experience = 5", "replacement_experience"),
-            ("replacement_share = 0", "replacement_share"),
-            ("replacement_share = 2", "replacement_share"),
-            ("replacement_share = 0.5", "replacement_share"),
+        for (key, value) in [
+            ("replacement_experience", "5"),
+            ("replacement_share", "0"),
+            ("replacement_share", "2"),
+            ("replacement_share", "0.5"),
         ] {
-            let message = parse_ground_figures(&with(extra), here())
+            let message = parse_ground_figures(&with_key(&ground_text(), key, value), here())
                 .expect_err("refused")
                 .message;
-            assert!(message.contains(key), "{extra}: {message}");
+            assert!(message.contains(key), "{key} = {value}: {message}");
         }
     }
 
@@ -4433,32 +4419,16 @@ mod tests {
     ];
 
     #[test]
-    fn the_bombardment_figures_load_all_four_or_none() {
-        let loaded = parse_surface_combat_figures(&combat_text(), here()).expect("parses");
-        assert!(loaded.bombardment.is_some(), "the shipped file has them");
-        // None of the four: the file loads and no force bombards.
-        let none = without_keys(&combat_text(), &BOMBARDMENT_KEYS);
-        assert_eq!(
-            parse_surface_combat_figures(&none, here())
-                .expect("loads as before")
-                .bombardment,
-            None
-        );
-        // Any part of the set is refused, with the four named.
-        for count in 1..=3 {
-            for start in 0..4 {
-                let dropped: Vec<&str> = (0..count)
-                    .map(|i| BOMBARDMENT_KEYS[(start + i) % 4])
-                    .collect();
-                let partial = without_keys(&combat_text(), &dropped);
-                let message = parse_surface_combat_figures(&partial, here())
-                    .expect_err("a partial set is refused")
+    fn each_bombardment_figure_is_required() {
+        // Decision 0236: the shipped file loads, and a file without any one
+        // of the four is refused with that key named.
+        parse_surface_combat_figures(&combat_text(), here()).expect("the shipped file loads");
+        for key in BOMBARDMENT_KEYS {
+            let message =
+                parse_surface_combat_figures(&without_keys(&combat_text(), &[key]), here())
+                    .expect_err("a missing key is refused")
                     .message;
-                assert!(
-                    message.contains("give all four or none"),
-                    "without {dropped:?}: {message}"
-                );
-            }
+            assert!(message.contains(key), "without {key}: {message}");
         }
     }
 
@@ -4492,7 +4462,7 @@ mod tests {
             let text = with_key(&combat_text(), "bombardment_hit_chance", edge);
             let figures = parse_surface_combat_figures(&text, here()).expect("the edge loads");
             assert_eq!(
-                figures.bombardment.expect("held").hit_chance,
+                figures.bombardment.hit_chance,
                 Fixed::from_int(edge.parse().unwrap())
             );
         }
@@ -4611,32 +4581,29 @@ mod tests {
     }
 
     #[test]
-    fn files_without_the_figures_of_decision_0092_load_as_before() {
-        let surface = without_keys(&combat_text(), &BOMBARDMENT_KEYS);
-        assert_eq!(
-            parse_surface_combat_figures(&surface, here())
-                .expect("loads")
-                .bombardment,
-            None
-        );
-        let air = without_keys(&air_combat_text(), &["men"]);
-        assert_eq!(
-            parse_air_combat_figures(&air, here())
-                .expect("loads")
-                .base_hit_men,
-            Fixed::ZERO,
-            "no share for men"
-        );
-        let ground = without_keys(
-            &ground_text(),
-            &[
-                "men_lost_per_base_hit",
-                "report_error_low",
-                "report_error_high",
-            ],
-        );
+    fn the_figures_of_decision_0092_are_required_but_the_report_errors() {
+        // Decision 0236: a file without `men`, without `airfield` or without
+        // `men_lost_per_base_hit` is refused with the key named.
+        let message = parse_air_combat_figures(&without_keys(&air_combat_text(), &["men"]), here())
+            .expect_err("refused")
+            .message;
+        assert!(message.contains("men"), "{message}");
+        let message =
+            parse_air_combat_figures(&without_keys(&air_combat_text(), &["airfield"]), here())
+                .expect_err("refused")
+                .message;
+        assert!(message.contains("airfield"), "{message}");
+        let message = parse_ground_figures(
+            &without_keys(&ground_text(), &["men_lost_per_base_hit"]),
+            here(),
+        )
+        .expect_err("refused")
+        .message;
+        assert!(message.contains("men_lost_per_base_hit"), "{message}");
+        // A ground file without the two report errors loads with no report
+        // error.
+        let ground = without_keys(&ground_text(), &["report_error_low", "report_error_high"]);
         let figures = parse_ground_figures(&ground, here()).expect("loads");
-        assert_eq!(figures.men_lost_per_base_hit, Fixed::ZERO);
         assert_eq!(figures.report_error, None);
         // The rest of the ground figures are untouched.
         let full = parse_ground_figures(&ground_text(), here()).expect("parses");
@@ -4683,7 +4650,7 @@ mod tests {
         );
         let surface =
             parse_surface_combat_figures(&frozen("surface_combat.toml"), here()).expect("parses");
-        let bombardment = surface.bombardment.expect("held");
+        let bombardment = surface.bombardment;
         assert_eq!(bombardment.minutes, 30);
         assert_eq!(bombardment.hit_chance, Fixed::from_ratio(5, 100));
         assert_eq!(bombardment.reference_gun_damage, Fixed::from_int(20));

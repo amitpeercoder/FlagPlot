@@ -1960,9 +1960,9 @@ fn p_a_raid_on_a_base_with_no_men_ashore_gives_the_hits_it_gave_before() {
 
 #[test]
 fn p_a_scenario_with_no_bombardment_no_men_and_no_estimate_is_unchanged() {
-    // The figures of decision 0092 are taken out of the frozen files (the
-    // file as it stood before the decision) and put back: the logs, the
-    // truth and the hash are the same.
+    // The figures of decision 0092 at the values at which they do nothing
+    // (decision 0236, 8): the logs, the truth and the hash are the same as
+    // with the frozen figures.
     fn drop_keys(text: String, keys: &[&str]) -> String {
         text.lines()
             .filter(|line| {
@@ -1974,30 +1974,20 @@ fn p_a_scenario_with_no_bombardment_no_men_and_no_estimate_is_unchanged() {
             .collect()
     }
     let without = common::altered_reference("no_0092", |dir| {
-        common::edit_file(dir, "surface_combat.toml", |t| {
-            drop_keys(
-                t,
-                &[
-                    "bombardment_minutes",
-                    "bombardment_hit_chance",
-                    "bombardment_reference_gun_damage",
-                    "bombardment_false_claim_chance",
-                ],
-            )
-        });
-        common::edit_file(dir, "air_combat.toml", |t| drop_keys(t, &["men"]));
+        common::edit_file_by(dir, "air_combat.toml", &[("men = \"0.2\"", "men = \"0\"")]);
         common::edit_file(dir, "ground.toml", |t| {
             drop_keys(
-                t,
-                &[
-                    "men_lost_per_base_hit",
-                    "report_error_low",
-                    "report_error_high",
-                ],
+                common::replace_once(
+                    &t,
+                    "men_lost_per_base_hit = 10",
+                    "men_lost_per_base_hit = 0",
+                ),
+                &["report_error_low", "report_error_high"],
             )
         });
     });
-    // The control: the old files really have none of the new figures.
+    // The control: the altered files really have the figures at the values
+    // that do nothing.
     {
         let path = common::data_dir().join("scenarios/06a_base_raid.toml");
         let source = std::fs::read_to_string(&path).expect("the scenario reads");
@@ -2008,12 +1998,6 @@ fn p_a_scenario_with_no_bombardment_no_men_and_no_estimate_is_unchanged() {
         );
         let old = common::from_text_with(&with_ground, &path, &without).expect("loads");
         let figures = old.world.ref_data();
-        assert!(figures
-            .surface_combat
-            .as_ref()
-            .unwrap()
-            .bombardment
-            .is_none());
         assert_eq!(
             figures.air_combat.as_ref().unwrap().base_hit_men,
             Fixed::ZERO
@@ -2023,12 +2007,6 @@ fn p_a_scenario_with_no_bombardment_no_men_and_no_estimate_is_unchanged() {
         assert!(ground.report_error.is_none());
         let new = common::from_text_with(&with_ground, &path, &common::frozen()).expect("loads");
         let figures = new.world.ref_data();
-        assert!(figures
-            .surface_combat
-            .as_ref()
-            .unwrap()
-            .bombardment
-            .is_some());
         assert_ne!(
             figures.air_combat.as_ref().unwrap().base_hit_men,
             Fixed::ZERO

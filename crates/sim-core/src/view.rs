@@ -727,7 +727,7 @@ impl<'a> SideView<'a> {
         self.ref_data
             .surface_combat
             .as_ref()
-            .and_then(|surface| surface.bombardment.as_ref())
+            .map(|surface| &surface.bombardment)
     }
 
     /// The side's own orders, accepted or not, in the order they were taken
