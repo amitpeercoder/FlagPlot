@@ -2869,6 +2869,37 @@ def the_supply_orders_two_numbers(bridge):
     check(person.call("queued")["ok"]["entries"] == [] and post(bridge.table + "/new") == {"ok": True}, "nothing was signed, and the game is put away")
 
 
+def the_supply_order_signed(bridge):
+    """The supply order of rung 1 under SIGNED, as `queued` lists it once it is signed. `queued` writes a keep_supplied, the default,
+    with no `intent_kind` (crates/sim-cli/src/save.rs), and the page once read the kind from that key alone, so SIGNED threw and said
+    "Could not read what is signed" until the day began.
+
+    Through the bridge, in a game of rung 1: `rung_one_order(2, 5)` is previewed and approved; `queued` then lists one entry whose
+    command is a set_intent with no `intent_kind`. The page's own `signedIntentWords` (with `queuedKind`, `sayIntent` and the few
+    names they read stood in: base 2 named as `list_bases` names it) says it "Keep Placeholder base T supplied". `sayIntent` given a
+    kind of null says something and does not throw. Nothing else is signed, and the game is put away."""
+    print("-- the supply order of rung 1 under SIGNED", flush=True)
+    text = page_text()
+    check(begin(bridge, RUNG_ONE, "person", "engine") == {"ok": True}, "begun: rung 1")
+    person = Person(bridge.table)
+    shown = person.call("preview", rung_one_order(2, 5))["ok"]
+    check(shown["valid"] is True and person.call("approve", {"preview": shown["preview"]})["ok"]["status"] == "queued", "the supply order at 2 and 5 is previewed and approved")
+    entries = person.call("queued")["ok"]["entries"]
+    intents = [e["command"] for e in entries if e.get("command", {}).get("kind") == "set_intent"]
+    check(len(intents) == 1 and "intent_kind" not in intents[0] and intents[0]["base"] == 2,
+          f"queued lists the order as a set_intent of base 2 with no intent_kind, the default ({intents})")
+    bases = person.call("list_bases")["ok"]
+    code = ("".join(cut_function(text, h) + "\n" for h in ("  function queuedKind(c)", "  function signedIntentWords(c)", "  function sayIntent(i, said)"))
+            + text[text.index("  var WORD = {"):text.index("\n", text.index("  var WORD = {"))] + "\n"
+            + "var config = { islands: [] }, BASES = []; function num(h) { return parseInt(String(h).split(':')[1], 10); }\n"
+              "function baseByNumber(n) { return BASES.filter(function (b) { return num(b.base.handle) === n; })[0] || null; }\n"
+              "function main(x) { BASES = x.bases; M.forces = []; return { signed: signedIntentWords(x.command), bare: sayIntent({ kind: null, base: { name: 'X' } }, {}) }; }")
+    said = run_in_node(code, {"command": intents[0], "bases": bases["bases"]})
+    check(said["signed"] == "Keep Placeholder base T supplied", f"SIGNED says the order \"Keep Placeholder base T supplied\" ({said['signed']!r})")
+    check(isinstance(said["bare"], str) and said["bare"], f"an order of no kind is still said, not thrown on ({said['bare']!r})")
+    check(post(bridge.table + "/new") == {"ok": True}, "the game is put away")
+
+
 def the_verdict_in_words():
     """The verdict's words: the page's own `missionLines(mission, days)`, cut from its text with `commas` and run in node. It draws
     nothing and asks nothing. `days` is a list, day 1 first, each the list of that day's events as the tool `events` gives them, or
@@ -3083,6 +3114,7 @@ def main():
             the_island_of_two_places(bridge)
             rung_one_on_the_list(bridge)
             the_supply_orders_two_numbers(bridge)
+            the_supply_order_signed(bridge)
             rung_one_played_three_ways(bridge)
         finally:
             bridge.stop()
