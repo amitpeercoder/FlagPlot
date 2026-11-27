@@ -1,12 +1,16 @@
 //! A scenario built on another (decision 0234): the architect's statements,
 //! written on Nov 27, 2026, before any code. No number here is a figure of
-//! the game. The rule is decision 0234's "The format as planned", cited
-//! below by its item, and by its rulebook section once step B has moved it.
+//! the game. The rule was decision 0234's "The format as planned" and is,
+//! since step B, the rulebook's section "A scenario built on another"
+//! (`docs/rules/01-the-day-orders-and-what-a-side-knows.md`), cited below by
+//! the number of its item.
 //!
-//! This file holds no test until step B, which also names it as the
-//! package names its test files that day. The statements L are of the loader and are tested in
-//! `sim-data` on invented files held in a `Pack`; the statements R are of
-//! the repository's files and are tested here.
+//! The statements L are of the loader. L1 to L14 and L16 are tested in
+//! `sim-data` (`crates/sim-data/src/scenario/tests/built_on.rs`) on invented
+//! files held in a `Pack`; L15, which reads `sim-cli`'s check of decision
+//! 0207, is tested here. The statements R are of the repository's files and
+//! are tested here: R1 and R2 since step B, R3 from step C, R4 and R5 from
+//! step D. `tests/all.rs` names this file as a module.
 //!
 //! The loader
 //!
@@ -93,3 +97,359 @@
 //! R5.  The words "Do not edit by hand" are in eight scenario files and no
 //!      other: the four of `orders-inside-proof`, the three of
 //!      `stage-3-proof` and `staff/07_full_slice.toml` (from step D).
+
+use crate::common;
+
+use std::collections::BTreeSet;
+use std::path::{Path, PathBuf};
+
+fn scenarios_dir() -> PathBuf {
+    common::data_dir().join("scenarios")
+}
+
+/// Every `.toml` file under `dir`, but in the `tmp-` folders, which are
+/// someone's trials, sorted.
+fn scenario_files(dir: &Path, into: &mut Vec<PathBuf>) {
+    for entry in std::fs::read_dir(dir).expect("a folder") {
+        let path = entry.expect("an entry").path();
+        let name = path
+            .file_name()
+            .unwrap_or_default()
+            .to_string_lossy()
+            .into_owned();
+        if path.is_dir() {
+            if !name.starts_with("tmp-") {
+                scenario_files(&path, into);
+            }
+        } else if name.ends_with(".toml") {
+            into.push(path);
+        }
+    }
+    into.sort();
+}
+
+/// The file a scenario file is built on, as it names it, if it states one.
+fn built_on_of(path: &Path) -> Option<String> {
+    let text = std::fs::read_to_string(path).expect("reads");
+    let table: toml::Table = toml::from_str(&text).ok()?;
+    table
+        .get("built_on")
+        .map(|v| v.as_str().unwrap_or_default().to_string())
+}
+
+#[test]
+fn r1_every_file_built_on_another_names_a_scenario_that_loads_alone() {
+    let mut files = Vec::new();
+    scenario_files(&scenarios_dir(), &mut files);
+    assert!(files.len() > 200, "{} files", files.len());
+    let mut overlays = 0;
+    for file in &files {
+        let Some(name) = built_on_of(file) else {
+            continue;
+        };
+        overlays += 1;
+        let below = file.parent().expect("a folder").join(&name);
+        assert!(
+            below.is_file(),
+            "{} names {name}, which is not there",
+            file.display()
+        );
+        assert!(
+            below
+                .canonicalize()
+                .expect("it is there")
+                .starts_with(scenarios_dir().canonicalize().expect("the folder")),
+            "{} is built on {name}, which is not under data/scenarios",
+            file.display()
+        );
+        common::load_live(&below).unwrap_or_else(|e| {
+            panic!(
+                "{} is built on {name}, which does not load alone: {e}",
+                file.display()
+            )
+        });
+    }
+    eprintln!("{overlays} scenario files state built_on");
+}
+
+#[test]
+fn r2_no_frozen_proof_or_recorded_file_states_built_on() {
+    let mut barred: BTreeSet<PathBuf> = BTreeSet::new();
+    let mut files = Vec::new();
+    for folder in [
+        "step2-frozen",
+        "orders-inside-proof",
+        "second-proof",
+        "stage-2b-proof",
+        "stage-3-proof",
+        "stage-4-proof",
+        "staff",
+    ] {
+        let mut inside = Vec::new();
+        scenario_files(&scenarios_dir().join(folder), &mut inside);
+        assert!(!inside.is_empty(), "{folder} holds no scenario");
+        files.extend(inside);
+    }
+    let games = common::data_dir().join("../crates/sim-cli/tests/recorded_games");
+    for entry in std::fs::read_dir(&games).expect("the recorded games") {
+        let save = entry.expect("an entry").path().join("save.json");
+        if !save.is_file() {
+            continue;
+        }
+        let saved: serde_json::Value =
+            serde_json::from_str(&std::fs::read_to_string(&save).expect("reads")).expect("json");
+        let named = saved["scenario"]["file"].as_str().expect("a scenario file");
+        barred.insert(common::data_dir().join("..").join(named));
+    }
+    assert!(barred.len() >= 5, "{barred:?}");
+    files.extend(barred);
+    for file in files {
+        assert!(
+            built_on_of(&file).is_none(),
+            "{} states built_on, and may not (decision 0234, item 14)",
+            file.display()
+        );
+    }
+}
+
+/// L15: a scenario that states no `ship_classes` has those of the file it
+/// is built on, and rule 12 of decision 0207 finds its words in the header
+/// of any file of the chain.
+#[test]
+fn l15_estimates_are_read_from_the_resolved_scenario_and_the_headers_of_the_chain() {
+    use sim_cli::estimates::{estimated_classes, estimated_classes_of, header_problem};
+
+    let dir = std::env::temp_dir().join(format!("flagplot-0234-estimates-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).expect("a folder");
+    let real = scenarios_dir().join("coral-sea/02a_coral_sea_oilers.toml");
+    // The file resolved: 02a is itself an overlay, and the file written out
+    // in full is the scenario it makes.
+    let real_text = common::resolved_text(&real);
+    let full = estimated_classes_of(&real_text, &real).expect("classes");
+    assert!(!full.is_empty(), "the file loads a class with an estimate");
+    // The file written out whole but for its header and with its file names
+    // made absolute, so that it can sit in another folder.
+    let folder = real.parent().expect("a folder");
+    let mut below = String::new();
+    for line in real_text.lines() {
+        if line.trim_start().starts_with('#') {
+            continue;
+        }
+        below.push_str(&line.replace("\"../", &format!("\"{}/../", folder.display())));
+        below.push('\n');
+    }
+    let base = dir.join("base.toml");
+    std::fs::write(&base, &below).expect("writes");
+    let over = dir.join("over.toml");
+    let say = "# Built on base.toml. Its figures are estimated (decision 0207, rule 12).\n";
+    // The overlay states no ship_classes, and neither header says the mark.
+    std::fs::write(&over, "built_on = \"base.toml\"\nname = \"Over\"\n").expect("writes");
+    let classes = estimated_classes(&over).expect("classes of the resolved scenario");
+    let ids = |list: &[sim_cli::estimates::EstimatedClass]| -> Vec<_> {
+        list.iter()
+            .map(|c| (c.id, c.name.clone(), c.figures.clone()))
+            .collect()
+    };
+    assert_eq!(ids(&classes), ids(&full));
+    let problem = header_problem(&over).expect("reads").expect("a problem");
+    assert!(problem.contains("decision 0207"), "{problem}");
+    // The words in the header of the overlay.
+    std::fs::write(
+        &over,
+        format!("{say}built_on = \"base.toml\"\nname = \"Over\"\n"),
+    )
+    .expect("writes");
+    assert_eq!(header_problem(&over).expect("reads"), None);
+    // The words in the header of the file below.
+    std::fs::write(&base, format!("{say}{below}")).expect("writes");
+    std::fs::write(&over, "built_on = \"base.toml\"\nname = \"Over\"\n").expect("writes");
+    assert_eq!(header_problem(&over).expect("reads"), None);
+    assert!(common::headers(&over).contains("decision 0207"));
+    std::fs::remove_dir_all(&dir).expect("removes the folder");
+}
+
+/// One row of decision 0234's table "Which files convert": the file, the
+/// file it is built on, the plain keys it states beside `built_on`, and the
+/// lists of units it states with the ids of their rows. `commands` is true
+/// where it also states `[[command]]` rows, which no row's id names.
+struct Converted {
+    file: &'static str,
+    built_on: &'static str,
+    keys: &'static [&'static str],
+    rows: &'static [(&'static str, &'static [i64])],
+    commands: bool,
+}
+
+const NAME: &[&str] = &["name"];
+const NEW_CLASSES: &[&str] = &["name", "ship_classes", "class_sides"];
+
+/// The table, copied as data when step C was built; step D adds its 31 rows
+/// of `table-hunger`, `table-boats` and `table-rear-bases`. A file `a`, `b`
+/// or `c` of a pairing states `name` and its commands; a file `d`, `name`
+/// alone.
+fn converted() -> Vec<Converted> {
+    let mut out = vec![
+        Converted {
+            file: "coral-sea/base_coral_sea_oilers.toml",
+            built_on: "base_coral_sea.toml",
+            keys: NEW_CLASSES,
+            rows: &[("task_force", &[6]), ("ship", &[54, 55])],
+            commands: false,
+        },
+        Converted {
+            file: "coral-sea/base_coral_sea_both_oilers.toml",
+            built_on: "base_coral_sea_oilers.toml",
+            keys: NEW_CLASSES,
+            rows: &[("task_force", &[7]), ("ship", &[56])],
+            commands: false,
+        },
+        Converted {
+            file: "five-days/base_eastern_solomons_oilers.toml",
+            built_on: "base_eastern_solomons.toml",
+            keys: NEW_CLASSES,
+            rows: &[("task_force", &[6]), ("ship", &[44, 45])],
+            commands: false,
+        },
+    ];
+    // (folder, file number, file name after the letter, the base it is built on)
+    for (folder, number, rest, base) in [
+        ("coral-sea", "01", "coral_sea", "base_coral_sea"),
+        (
+            "coral-sea",
+            "02",
+            "coral_sea_oilers",
+            "base_coral_sea_oilers",
+        ),
+        (
+            "coral-sea",
+            "03",
+            "coral_sea_both_oilers",
+            "base_coral_sea_both_oilers",
+        ),
+        (
+            "five-days",
+            "01",
+            "eastern_solomons",
+            "base_eastern_solomons",
+        ),
+        (
+            "five-days",
+            "02",
+            "eastern_solomons_oilers",
+            "base_eastern_solomons_oilers",
+        ),
+        ("midway", "01", "midway", "base_midway"),
+    ] {
+        for letter in ["a", "b", "c", "d"] {
+            let file: &'static str =
+                Box::leak(format!("{folder}/{number}{letter}_{rest}.toml").into_boxed_str());
+            let built_on: &'static str = Box::leak(format!("{base}.toml").into_boxed_str());
+            out.push(Converted {
+                file,
+                built_on,
+                keys: NAME,
+                rows: &[],
+                commands: letter != "d",
+            });
+        }
+    }
+    out
+}
+
+#[test]
+fn r3_each_converted_file_states_what_its_row_gives_and_nothing_else() {
+    let files = converted();
+    assert_eq!(files.len(), 27, "step C converts 27 files");
+    for row in &files {
+        let path = scenarios_dir().join(row.file);
+        let text = std::fs::read_to_string(&path).expect("reads");
+        let table: toml::Table =
+            toml::from_str(&text).unwrap_or_else(|e| panic!("{}: {e}", row.file));
+        assert_eq!(
+            table.get("built_on").and_then(toml::Value::as_str),
+            Some(row.built_on),
+            "{} is built on {}",
+            row.file,
+            row.built_on
+        );
+        let mut want: BTreeSet<&str> = BTreeSet::from(["built_on"]);
+        want.extend(row.keys.iter().copied());
+        want.extend(row.rows.iter().map(|(list, _)| *list));
+        if row.commands {
+            want.insert("command");
+        }
+        let has: BTreeSet<&str> = table.keys().map(String::as_str).collect();
+        assert_eq!(
+            has, want,
+            "{} states the keys and lists its row gives",
+            row.file
+        );
+        for (list, ids) in row.rows {
+            let got: Vec<i64> = table[*list]
+                .as_array()
+                .expect("a list of tables")
+                .iter()
+                .map(|r| r["id"].as_integer().expect("an id"))
+                .collect();
+            assert_eq!(&got, ids, "{}: the rows of {list}", row.file);
+        }
+        if row.commands {
+            assert!(
+                !table["command"].as_array().expect("commands").is_empty(),
+                "{} states commands",
+                row.file
+            );
+        }
+    }
+}
+
+#[test]
+fn r4_the_three_folders_of_the_tables_games_hold_the_converted_files_and_nothing_else() {
+    for (folder, count) in [
+        ("table-hunger", 12),
+        ("table-boats", 16),
+        ("table-rear-bases", 3),
+    ] {
+        let mut files = Vec::new();
+        scenario_files(&scenarios_dir().join(folder), &mut files);
+        assert_eq!(files.len(), count, "{folder} holds {count} files");
+        let others: Vec<_> = std::fs::read_dir(scenarios_dir().join(folder))
+            .expect("the folder")
+            .map(|e| e.expect("an entry").path())
+            .filter(|p| p.extension().is_none_or(|e| e != "toml"))
+            .collect();
+        assert!(
+            others.is_empty(),
+            "{folder} holds {others:?} beside the files"
+        );
+    }
+}
+
+#[test]
+#[ignore = "from step D: the files of the table's three folders still say it until they are converted"]
+fn r5_do_not_edit_by_hand_is_in_eight_files_and_no_other() {
+    let mut files = Vec::new();
+    scenario_files(&scenarios_dir(), &mut files);
+    let said: Vec<String> = files
+        .iter()
+        .filter(|f| {
+            std::fs::read_to_string(f)
+                .expect("reads")
+                .contains("Do not edit by hand")
+        })
+        .map(|f| {
+            f.strip_prefix(scenarios_dir())
+                .expect("under the folder")
+                .to_string_lossy()
+                .into_owned()
+        })
+        .collect();
+    let folder = |name: &str| said.iter().filter(|f| f.starts_with(name)).count();
+    assert_eq!(said.len(), 8, "{said:?}");
+    assert_eq!(folder("orders-inside-proof/"), 4, "{said:?}");
+    assert_eq!(folder("stage-3-proof/"), 3, "{said:?}");
+    assert!(
+        said.contains(&"staff/07_full_slice.toml".to_string()),
+        "{said:?}"
+    );
+}

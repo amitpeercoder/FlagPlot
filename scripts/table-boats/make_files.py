@@ -53,6 +53,15 @@ byte the one it would make, whether the folder holds anything else, and exits
 1 where not. Python 3, standard library only, deterministic. No build step
 runs it; the tests run it with `--check`. Run it by hand whenever a source
 changes.
+
+Since step C of decision 0234 the sources of the three files a of Midway, the
+Coral Sea and the five days are built on another file (`built_on`), so their
+text is not one this script can copy byte for byte. Those three, marked
+`'kept'` in their game's `files` list, are not read, not written and not
+compared: they must be in the folder, and `--check` prints for each `: kept,
+its source is built on another file`. Statement 7 of each game's test holds
+them as tables, the source resolved. Step D of decision 0234 retires this
+script.
 """
 import argparse
 import csv
@@ -507,7 +516,7 @@ GAMES = [
         key='midway', title='MIDWAY', name='Midway',
         decision='decisions 0225 and 0227, each as amended on review',
         files=[
-            ('a', 'data/scenarios/midway/01a_midway.toml', True),
+            ('a', 'data/scenarios/midway/01a_midway.toml', True, 'kept'),
             ('b', 'data/scenarios/table-hunger/01b_midway.toml', False),
             ('c', 'data/scenarios/table-hunger/01c_midway.toml', False),
             ('d', 'data/scenarios/table-hunger/01d_midway.toml', False),
@@ -592,7 +601,7 @@ GAMES = [
         name='the Coral Sea',
         decision='decision 0227, as amended on review',
         files=[
-            ('a', 'data/scenarios/coral-sea/03a_coral_sea_both_oilers.toml', True),
+            ('a', 'data/scenarios/coral-sea/03a_coral_sea_both_oilers.toml', True, 'kept'),
             ('b', 'data/scenarios/table-hunger/03b_coral_sea_both_oilers.toml', False),
             ('c', 'data/scenarios/table-hunger/03c_coral_sea_both_oilers.toml', False),
             ('d', 'data/scenarios/table-hunger/03d_coral_sea_both_oilers.toml', False),
@@ -638,7 +647,7 @@ GAMES = [
         name='the Eastern Solomons over five days',
         decision='decision 0227, as amended on review',
         files=[
-            ('a', 'data/scenarios/five-days/02a_eastern_solomons_oilers.toml', True),
+            ('a', 'data/scenarios/five-days/02a_eastern_solomons_oilers.toml', True, 'kept'),
             ('b', 'data/scenarios/table-hunger/02b_eastern_solomons_oilers.toml', False),
             ('c', 'data/scenarios/table-hunger/02c_eastern_solomons_oilers.toml', False),
             ('d', 'data/scenarios/table-hunger/02d_eastern_solomons_oilers.toml', False),
@@ -879,7 +888,16 @@ def main():
     classes = classes_file(args.repo)
     stale, names = [], set()
     for game in GAMES:
-        for letter, source, change_ground in game['files']:
+        for letter, source, change_ground, *marks in game['files']:
+            if 'kept' in marks:
+                name = out_name(source)
+                names.add(name)
+                if os.path.isfile(os.path.join(folder, name)):
+                    print(f'{FOLDER}/{name}: kept, its source is built on another file')
+                else:
+                    print(f'{FOLDER}/{name}: NOT there, and kept')
+                    stale.append(name)
+                continue
             with open(os.path.join(args.repo, source), encoding='utf-8', newline='') as f:
                 old_head, body = make(f.read(), source, change_ground, game)
             made = header(game, letter, source, classes) + old_head + body

@@ -194,11 +194,7 @@ impl World {
         let Some(side) = self.truth.task_forces.get(&force).map(|f| f.side) else {
             return;
         };
-        let drop_age = self
-            .ref_data
-            .search
-            .as_ref()
-            .map_or(0, |figures| u64::from(figures.contact_drop_age_pulses));
+        let drop_age = u64::from(self.ref_data.search.contact_drop_age_pulses);
         let now = ordinal(day, pulse);
         let mut kept: Vec<UnsentReport> = kept
             .into_iter()
@@ -560,9 +556,7 @@ impl World {
         made: (u32, Pulse),
         now: (u32, Pulse),
     ) -> bool {
-        let Some(figures) = self.ref_data.search.clone() else {
-            return false;
-        };
+        let figures = self.ref_data.search.clone();
         let age = ordinal(now.0, now.1).saturating_sub(ordinal(made.0, made.1));
         let report = aged(report, age);
         let Some(post) = self

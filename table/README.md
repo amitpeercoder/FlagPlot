@@ -154,7 +154,7 @@ The first game for play with boats on the map is Midway (above).
 - It reads the clock from the words of a refused briefing when it is opened at 0600 or 1200, since no tool tells a seat the hour.
 - It gives no order to a ship.
 - A seat's orders kept for 1800 (decision 0219) are listed among what is signed from the page's own memory: a reload forgets the list, though the game still holds the orders, since no tool lists a seat's queued orders.
-- It has no check in CI and no test.
+- It has no test. CI runs `check_screen.py` (with `check_watch.py`), which checks the page's text, its own wording and the bridge; the page as drawn in a browser is still tried by hand.
 
 ## The chart's coastline
 

@@ -54,9 +54,7 @@ impl World {
         else {
             return;
         };
-        let Some(search) = self.ref_data.search.clone() else {
-            return;
-        };
+        let search = self.ref_data.search.clone();
         let groups: Vec<(AirGroup, crate::hex::Hex)> = self
             .truth
             .air_groups

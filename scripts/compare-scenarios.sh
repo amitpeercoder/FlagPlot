@@ -107,7 +107,7 @@ run_jobs() {
     ' sh "$1" "$3")
 }
 strip_hashes() {
-    sed -E 's/^(day +[0-9]+ +hash )[0-9a-f]{16}/\1-/' "$1"
+    sed -E 's/^(day +[0-9]+ +hash )[0-9a-f-]{16}/\1-/' "$1"
 }
 
 echo "compare-scenarios: running the live figures"

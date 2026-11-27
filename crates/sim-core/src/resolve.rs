@@ -596,10 +596,7 @@ impl World {
                 }
             }
         }
-        // With no search figures there are no air groups, so no contacts.
-        let Some(figures) = self.ref_data.search.clone() else {
-            return;
-        };
+        let figures = self.ref_data.search.clone();
         for side in Side::ALL {
             let outcomes = self.age_pictures(side, &figures);
             for outcome in outcomes {
@@ -1360,12 +1357,12 @@ impl World {
                         let max = self
                             .ref_data
                             .search
-                            .as_ref()
-                            .map(|search| search.contact_drop_age_pulses.saturating_sub(1));
-                        if *pulses < 0 || max.is_some_and(|max| *pulses > i64::from(max)) {
+                            .contact_drop_age_pulses
+                            .saturating_sub(1);
+                        if *pulses < 0 || *pulses > i64::from(max) {
                             Err(RejectReason::StrikeContactAgeOutOfRange {
                                 pulses: *pulses,
-                                max,
+                                max: Some(max),
                             })
                         } else {
                             Ok(())
@@ -2228,7 +2225,7 @@ mod tests {
             troop_capacity_men: 0,
             fuels_at_sea: false,
         };
-        let mut ref_data = RefData::default();
+        let mut ref_data = RefData::for_tests();
         ref_data.ship_classes.insert(class.id, class);
         // Test-only figures: the test base sits in open sea, port size 0.
         ref_data.port_sizes.insert(
@@ -2459,10 +2456,10 @@ mod tests {
         // the alert limit or drops, and the force stays alerted by it.
         {
             let position = world.truth.task_forces[&TF].position();
-            let mut search = world.ref_data.search.clone().expect("search figures");
+            let mut search = world.ref_data.search.clone();
             search.contact_drop_age_pulses = 1000;
             search.fresh_contact_max_age_pulses = 1000;
-            world.ref_data.search = Some(search.clone());
+            world.ref_data.search = search.clone();
             world
                 .beliefs
                 .get_mut(&Side::Allied)
@@ -2938,7 +2935,7 @@ mod tests {
             .ref_data
             .aircraft_types
             .insert(aircraft_type.id, aircraft_type);
-        world.ref_data.search = Some(SearchFigures::from_search_toml());
+        world.ref_data.search = SearchFigures::from_search_toml();
         world.truth.air_groups.insert(
             GROUP,
             AirGroup {
@@ -3153,20 +3150,13 @@ mod tests {
         })
         .is_err());
         assert!(build(&|r, _| {
-            r.search.as_mut().expect("search").position_error_chance = nm(2);
+            r.search.position_error_chance = nm(2);
         })
         .is_err());
         assert!(build(&|_, t| {
             t.air_groups.get_mut(&GROUP).expect("group").aircraft_type = AircraftTypeId::new(9);
         })
         .is_err());
-        assert!(build(&|r, _| r.search = None).is_err());
-        // No air groups and no search figures is fine.
-        assert!(build(&|r, t| {
-            r.search = None;
-            t.air_groups.clear();
-        })
-        .is_ok());
     }
 
     #[test]
@@ -3375,23 +3365,18 @@ mod tests {
             change(&mut ref_data);
             World::new(1, ref_data, good.map.clone(), good.truth.clone())
         };
-        // No figures at all is fine for a world with no fights.
+        // The fixture's figures are fine.
         assert!(build(&|_| {}).is_ok());
         assert!(build(&|r| {
-            r.search = Some(SearchFigures::from_search_toml());
-            r.surface_combat = Some(SurfaceCombatFigures::from_surface_combat_toml());
+            r.search = SearchFigures::from_search_toml();
+            r.surface_combat = SurfaceCombatFigures::from_surface_combat_toml();
         })
         .is_ok());
-        // Fights report through the search figures, so they need them.
         assert!(build(&|r| {
-            r.surface_combat = Some(SurfaceCombatFigures::from_surface_combat_toml());
-        })
-        .is_err());
-        assert!(build(&|r| {
-            r.search = Some(SearchFigures::from_search_toml());
+            r.search = SearchFigures::from_search_toml();
             let mut figures = SurfaceCombatFigures::from_surface_combat_toml();
             figures.gun_hit_flotation = nm(2);
-            r.surface_combat = Some(figures);
+            r.surface_combat = figures;
         })
         .is_err());
         assert!(build(&|r| {
@@ -4426,8 +4411,8 @@ mod tests {
     fn damage_world() -> World {
         let good = world_with_fuel(2000);
         let mut ref_data = good.ref_data.clone();
-        ref_data.search = Some(SearchFigures::from_search_toml());
-        ref_data.surface_combat = Some(SurfaceCombatFigures::from_surface_combat_toml());
+        ref_data.search = SearchFigures::from_search_toml();
+        ref_data.surface_combat = SurfaceCombatFigures::from_surface_combat_toml();
         let mut truth = good.truth.clone();
         truth.bases.insert(
             ENEMY_BASE,
@@ -4625,16 +4610,13 @@ mod tests {
     }
 
     #[test]
-    fn world_new_rejects_a_damaged_system_without_surface_combat_figures() {
+    fn world_new_accepts_a_damaged_system() {
         let good = world_with_fuel(2000);
         let mut truth = good.truth.clone();
         truth.ships.get_mut(&SHIP).expect("ship").systems.propulsion = SystemState::Degraded;
-        let error = World::new(1, good.ref_data.clone(), good.map.clone(), truth.clone())
-            .expect_err("rejected");
-        assert!(matches!(error, SimError::InvalidSetup(_)), "{error}");
         let mut ref_data = good.ref_data.clone();
-        ref_data.search = Some(SearchFigures::from_search_toml());
-        ref_data.surface_combat = Some(SurfaceCombatFigures::from_surface_combat_toml());
+        ref_data.search = SearchFigures::from_search_toml();
+        ref_data.surface_combat = SurfaceCombatFigures::from_surface_combat_toml();
         assert!(World::new(1, ref_data, good.map.clone(), truth).is_ok());
     }
 

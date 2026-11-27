@@ -112,11 +112,7 @@ impl World {
         if !on {
             return spread;
         }
-        let surface = self
-            .ref_data
-            .surface_combat
-            .as_ref()
-            .expect("World::new requires surface combat figures");
+        let surface = &self.ref_data.surface_combat;
         // (force, kind) -> the ship the last raid of that kind took.
         let mut last: BTreeMap<(TaskForceId, ShipKind), ShipId> = BTreeMap::new();
         // The raids come in the order of their first group (`group_raids`).

@@ -2,24 +2,24 @@ Placeholder scenario 36: One convoy
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 9f8207d1a3799028  28 events
-day   2  hash 276e46fa38389cfa  17 events
-day   3  hash 551544736f9ebb58  12 events
-day   4  hash 396c8815d63ae332  11 events
-day   5  hash d84a087fb4eb56b2  5 events
-day   6  hash cf19ad8463df89d0  5 events
-day   7  hash e1c34715ce6d8b4c  5 events
-day   8  hash 3f8dd40bd4ba24e3  5 events
-day   9  hash f26775a45dc656ab  5 events
-day  10  hash c3fbd834016f7216  5 events
-day  11  hash 90b696a2eda4ad61  5 events
-day  12  hash 069535dce3fd61f2  5 events
-day  13  hash 53c43fc0c225fbcc  5 events
-day  14  hash c01e1aa108053411  5 events
-day  15  hash f603aae76a9d0edb  5 events
-day  16  hash fbe8dea5cf01b96f  12 events
-day  17  hash fc6365c3517f785b  16 events
-day  18  hash 8a886bae0489fc90  12 events
+day   1  hash ----------------  28 events
+day   2  hash ----------------  17 events
+day   3  hash ----------------  12 events
+day   4  hash ----------------  11 events
+day   5  hash ----------------  5 events
+day   6  hash ----------------  5 events
+day   7  hash ----------------  5 events
+day   8  hash ----------------  5 events
+day   9  hash ----------------  5 events
+day  10  hash ----------------  5 events
+day  11  hash ----------------  5 events
+day  12  hash ----------------  5 events
+day  13  hash ----------------  5 events
+day  14  hash ----------------  5 events
+day  15  hash ----------------  5 events
+day  16  hash ----------------  12 events
+day  17  hash ----------------  16 events
+day  18  hash ----------------  12 events
 
 #1 D1 -         Allied the commander's command taken: set intent:1 to keep base:2 supplied at 30 days, a run every 15 days
 #2 D1 -         Allied plan:1 drafted for intent:1  <- #1

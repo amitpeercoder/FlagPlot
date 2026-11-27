@@ -367,14 +367,15 @@ mod scenario_97_a_seats_trial;
 mod scenario_98_the_type_claimed_on_the_ground;
 #[path = "scenario_99_a_groups_tally_of_claims.rs"]
 mod scenario_99_a_groups_tally_of_claims;
+#[path = "scenarios_built_on_another.rs"]
+mod scenarios_built_on_another;
 #[path = "table_rear_bases_files.rs"]
 mod table_rear_bases_files;
 
 /// `autotests = false` means a file with no `mod` line here would never run, and
 /// nothing would say so. This names every top-level `.rs` file of the `tests` package that
 /// this file does not declare as a module.
-/// Scenario 75 and `scenarios_built_on_another.rs` are exempt by name: each file
-/// holds a doc comment and no test.
+/// Scenario 75 is exempt by name: the file holds a doc comment and no test.
 #[test]
 fn every_test_file_is_declared_as_a_module() {
     use std::collections::BTreeSet;
@@ -405,7 +406,6 @@ fn every_test_file_is_declared_as_a_module() {
             && name != "all.rs"
             && !declared.contains(&name)
             && name != "scenario_75_leaving_a_place.rs"
-            && name != "scenarios_built_on_another.rs"
         {
             missing.insert(name);
         }

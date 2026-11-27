@@ -4,8 +4,6 @@ This chapter covers a fight between two task forces of opposing sides: when it b
 
 Numbers are fixed-point, and every multiplication and division below cuts, as chapter 1, Numbers and chance, says. Figures named as `surface_combat.toml: key` are read from `data/reference/surface_combat.toml`. Every figure in that file is a placeholder (decision 0014).
 
-A scenario that names no surface combat figures has no fights, and no ship in it can be damaged (decision 0014).
-
 ## When a fight begins
 
 ### Meeting
@@ -19,7 +17,6 @@ Two task forces of opposing sides meet when one's position becomes a hex where t
 - A pair fights at most once in a pulse. [0022]
 - A force's position is the nearest hex centre, so a force that is under way enters a hex before it reaches the centre (chapter 2, Legs and position). [0005, 0022]
 - A fight takes no time. Its rounds, at most `max_rounds` of `round_minutes` minutes each, cost the forces no steaming. After a fight each force carries on along its route for what is left of the pulse, at the speed its ships can then make (chapter 2, After a fight). [0022]
-- A game with no surface combat figures has no meetings. [0014, 0022]
 - Forces that meet and neither sights the other in `max_rounds` rounds pass unseen (see the ending checks). [0014]
 
 A side sees: it learns of a fight from the round in which its own force first sights the enemy or is first fired on, and not before. A fight a side never knows of is wholly absent from its view, including the events that begin and end it. The enemy learns the same way. [0047] The side is told the fight from that round, as its round 1, and is told a sinking or a break-off as the ending only if its own force made it, otherwise "contact lost" (chapter 1, A surface fight). [0085]

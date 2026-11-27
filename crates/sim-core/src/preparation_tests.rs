@@ -149,7 +149,7 @@ fn world_with(figures: GroundFigures, tweak: impl FnOnce(&mut TruthState)) -> Wo
         troop_capacity_men: 600,
         fuels_at_sea: false,
     };
-    let mut ref_data = RefData::default();
+    let mut ref_data = RefData::for_tests();
     ref_data.ship_classes.insert(class.id, class);
     ref_data.port_sizes.insert(
         0,
@@ -164,7 +164,7 @@ fn world_with(figures: GroundFigures, tweak: impl FnOnce(&mut TruthState)) -> Wo
         },
     );
     ref_data.ground = Some(figures);
-    ref_data.search = Some(crate::refdata::SearchFigures::from_search_toml());
+    ref_data.search = crate::refdata::SearchFigures::from_search_toml();
 
     let mut truth = TruthState::default();
     truth.bases.insert(

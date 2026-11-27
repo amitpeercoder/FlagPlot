@@ -124,10 +124,7 @@ impl World {
 
     /// The weights of rearming, where the scenario gives them.
     pub(crate) fn rearming_figures(&self) -> Option<RearmingFigures> {
-        self.ref_data
-            .surface_combat
-            .as_ref()
-            .and_then(|figures| figures.rearming)
+        self.ref_data.surface_combat.rearming
     }
 
     /// Rearms the ships of a force stopped at a base of its side, for the
@@ -344,7 +341,7 @@ pub fn ammunition_work(
         return None;
     }
     let hex = record.position();
-    let weights = ref_data.surface_combat.as_ref().and_then(|f| f.rearming);
+    let weights = ref_data.surface_combat.rearming;
     let base = truth
         .bases
         .values()

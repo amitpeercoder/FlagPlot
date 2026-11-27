@@ -2599,12 +2599,7 @@ fn each_fight_ends_in_the_round_and_for_the_reason_the_rules_give() {
 #[test]
 fn reports_and_claims_say_what_the_fight_says() {
     let base = load();
-    let figures = base
-        .world
-        .ref_data()
-        .search
-        .clone()
-        .expect("search figures are loaded");
+    let figures = base.world.ref_data().search.clone();
     let cruiser_row: BTreeSet<ShipKind> = figures.kind_confusion[&ShipKind::Cruiser]
         .keys()
         .copied()

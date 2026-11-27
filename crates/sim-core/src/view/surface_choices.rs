@@ -38,20 +38,13 @@ impl SideView<'_> {
     /// The answer to `question` from what this side holds now. `None`
     /// where the question names no unit of this side, or the choice does not
     /// arise (alert from belief skips a force with no ship afloat or at
-    /// battle readiness, and is not made at all where the scenario names no
-    /// surface combat figures).
+    /// battle readiness).
     pub(crate) fn ask_surface(&self, question: &SurfaceQuestion) -> Option<SurfaceAnswer> {
         match question {
             SurfaceQuestion::Alert { task_force } => {
                 let force = self.own_force(*task_force)?;
-                let figures = self.ref_data.surface_combat.as_ref()?;
-                // Without search figures no side can hold a contact, so the
-                // age limit is never read.
-                let fresh_max_age = self
-                    .ref_data
-                    .search
-                    .as_ref()
-                    .map_or(0, |search| search.fresh_contact_max_age_pulses);
+                let figures = &self.ref_data.surface_combat;
+                let fresh_max_age = self.ref_data.search.fresh_contact_max_age_pulses;
                 alert_choice(
                     force,
                     // The force's own picture (decision 0134, 13).
@@ -86,7 +79,7 @@ impl SideView<'_> {
                 already_avoiding,
             } => {
                 let force = self.own_force(*task_force)?;
-                let figures = self.ref_data.surface_combat.as_ref()?;
+                let figures = &self.ref_data.surface_combat;
                 // Only the side's own ships are read.
                 if !began_with.iter().all(|id| {
                     self.truth
@@ -107,7 +100,7 @@ impl SideView<'_> {
             }
             SurfaceQuestion::Stragglers { task_force } => {
                 let force = self.own_force(*task_force)?;
-                let figures = self.ref_data.surface_combat.as_ref()?;
+                let figures = &self.ref_data.surface_combat;
                 Some(SurfaceAnswer::Stragglers(straggler_plan(
                     force,
                     &self.truth.ships,

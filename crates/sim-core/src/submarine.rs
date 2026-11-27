@@ -180,15 +180,11 @@ impl World {
     fn dead_in_the_water(&self, ship: ShipId) -> bool {
         self.ref_data
             .surface_combat
-            .as_ref()
-            .is_some_and(|figures| {
-                figures
-                    .system_factor(
-                        ShipSystem::Propulsion,
-                        self.truth.ships[&ship].systems.propulsion,
-                    )
-                    .is_zero()
-            })
+            .system_factor(
+                ShipSystem::Propulsion,
+                self.truth.ships[&ship].systems.propulsion,
+            )
+            .is_zero()
     }
 
     /// One boat's attack in the pulse (decision 0218, 4 to 10, 37 to 42):
@@ -336,11 +332,7 @@ impl World {
         // 0218, 45): first the kind her side takes the ship for, through the
         // search figures' confusion row of its true kind, then one chance for each torpedo that
         // missed, drawn below.
-        let search = self
-            .ref_data
-            .search
-            .clone()
-            .expect("World::new requires search figures with submarines");
+        let search = self.ref_data.search.clone();
         let mut claim_stream = self.rng_pair(
             day,
             Some(pulse),
@@ -380,17 +372,16 @@ impl World {
         // A hit may also knock a system down, as a torpedo's hit does in a
         // surface fight: one draw for each hit, after the torpedoes'.
         let mut system_hits = Vec::new();
-        if let Some(surface) = self.ref_data.surface_combat.as_ref() {
-            let system_chance = system_hit_chance(per_hit, surface.system_hit_chance_per_point);
-            for _ in 0..hits {
-                let draw = stream.below(Fixed::SCALE.unsigned_abs());
-                let draw = Fixed::from_raw(i64::try_from(draw).expect("a draw fits in i64"));
-                system_hits.extend(system_for_draw(
-                    draw,
-                    system_chance,
-                    &surface.torpedo_system_hit,
-                ));
-            }
+        let surface = &self.ref_data.surface_combat;
+        let system_chance = system_hit_chance(per_hit, surface.system_hit_chance_per_point);
+        for _ in 0..hits {
+            let draw = stream.below(Fixed::SCALE.unsigned_abs());
+            let draw = Fixed::from_raw(i64::try_from(draw).expect("a draw fits in i64"));
+            system_hits.extend(system_for_draw(
+                draw,
+                system_chance,
+                &surface.torpedo_system_hit,
+            ));
         }
         let breakdown = self.config.record_breakdowns.then(|| {
             let mut factors = vec![Factor {

@@ -1468,12 +1468,7 @@ fn claim_replayed(
     true_kind: ShipKind,
     missed: u32,
 ) -> (ShipKind, u32) {
-    let search = run
-        .world
-        .ref_data()
-        .search
-        .as_ref()
-        .expect("search figures");
+    let search = &run.world.ref_data().search;
     let mut stream = run.world.rng_pair(
         day,
         Some(pulse),
@@ -1504,12 +1499,7 @@ fn claim_replayed(
 /// salvo at `ship` in `(day, pulse)`, replayed from the world's seed as the
 /// rule draws it: her hex, or a neighbour where the error struck.
 fn report_replayed(run: &Run, day: u32, pulse: Pulse, ship: u32, at: (i32, i32)) -> (i32, i32) {
-    let search = run
-        .world
-        .ref_data()
-        .search
-        .as_ref()
-        .expect("search figures");
+    let search = &run.world.ref_data().search;
     let mut stream = run.world.rng_pair(
         day,
         Some(pulse),
@@ -2287,12 +2277,7 @@ fn statement_18_in_the_groups_own_hex_the_distance_is_one_hex_and_the_chance_is_
 fn statement_19_sighted_she_is_reported_in_its_own_list_and_nothing_else_is_told() {
     let d1 = game_d1((5, 0), "");
     let search = d1.clone().with_seed(1).expect("a seed");
-    let search = search
-        .world
-        .ref_data()
-        .search
-        .clone()
-        .expect("search figures");
+    let search = search.world.ref_data().search.clone();
     let (mut sighted_runs, mut struck, mut at_her_hex) = (0, 0, 0);
     for seed in 1..=SEEDS {
         let run = play(&d1, seed);
@@ -2683,22 +2668,10 @@ fn statement_26_a_side_given_no_waters_is_shown_nothing_until_a_boat_is_reported
     assert!(shown_empty > 0 && shown_report > 0);
 }
 
-/// The first line of a baseline written by the repository for `name`'s
-/// day 1: `day   1  hash <hex>`.
+/// The hash of day 1 that the repository pins for `name`'s run: the first
+/// hash of its `run_` line in tests/golden/pinned_hashes.txt.
 fn baseline_hash(name: &str) -> u64 {
-    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../crates/sim-cli/tests/run_baseline")
-        .join(format!("{name}.txt"));
-    let text = fs::read_to_string(&path).expect("the run baseline");
-    let line = text
-        .lines()
-        .find(|line| line.starts_with("day   1  hash "))
-        .expect("a hash line");
-    let hex = line
-        .strip_prefix("day   1  hash ")
-        .and_then(|rest| rest.split_whitespace().next())
-        .expect("the hash");
-    u64::from_str_radix(hex, 16).expect("hex")
+    common::pinned_day_hashes(name)[0]
 }
 
 #[test]
