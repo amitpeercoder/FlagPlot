@@ -53,7 +53,10 @@ pub fn load(path: &Path) -> Result<Scenario, DataError> {
 }
 
 /// Loads a scenario file on the live figures. For a test that asserts no
-/// number which depends on a figure, and says so where it calls this.
+/// number which depends on a figure, and says so where it calls this; and,
+/// by a named exception, for the ladder's rungs (decision 0237), which test
+/// on the live figures the table plays: a tuning that breaks a rung fails
+/// them and goes to the architect.
 pub fn load_live(path: &Path) -> Result<Scenario, DataError> {
     Scenario::load(path)
 }
