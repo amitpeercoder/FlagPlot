@@ -16,8 +16,8 @@ of the repository:
 
 It uses ports 8780 to 8785 (`--port` for the first of six). It prints one line
 for each thing checked and stops at the first that does not hold. Every
-process it starts it stops. Standard library only. It is not run by CI: the
-table has no test there.
+process it starts it stops. Standard library only. It is run by CI,
+with `check_watch.py`.
 """
 
 import argparse
@@ -364,8 +364,11 @@ def run_in_node(code, data):
     with tempfile.TemporaryDirectory() as folder:
         path = os.path.join(folder, "run.js")
         with open(path, "w", encoding="utf-8") as out:
-            out.write(NODE_PRELUDE + code + "\nconst input = JSON.parse(process.argv[2]); console.log(JSON.stringify(main(input)));\n")
-        done = subprocess.run([node, path, json.dumps(data)], capture_output=True, text=True)
+            out.write(NODE_PRELUDE + code + "\nconst input = JSON.parse(require('fs').readFileSync(process.argv[2], 'utf8')); console.log(JSON.stringify(main(input)));\n")
+        data_path = os.path.join(folder, "input.json")
+        with open(data_path, "w", encoding="utf-8") as out:
+            json.dump(data, out)
+        done = subprocess.run([node, path, data_path], capture_output=True, text=True)
         check(done.returncode == 0, "the page's own wording runs in node" + ("" if done.returncode == 0 else ": " + done.stderr.strip()[-300:]))
         return json.loads(done.stdout)
 
