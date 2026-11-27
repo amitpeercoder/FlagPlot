@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 24, 2026, inside the plan for st
 
 Summary: Under an order to control an island the staff feeds the side's men at the island's named places and nowhere else. On the 39 days the Japanese garrison of Lunga is beaten on the first day, falls back one hex to its own side's dump, eats the 71 t there and starves, in every game, with ships and a source to hand: about 1,000 to 1,300 men a game, more than every other loss to hunger together. This makes the men of a side who stand at a base of their side on the island's land the island's to feed, by the supply doctrine as it is, after the named places. One rule of doctrine, and three small changes to what the engine's intake accepts so that the doctrine's intent can stand (amended on review).
 
-Standing: Planned by the architect on Nov 24, 2026, inside decision 0161; amended on review the same day; both questions answered by the designer (the garrison's hunger is judged, and counted where a base of the side stands: decision 0161, condition 13). Its statements and hand calculation are written (scenario 135). To be built before stage 4's proof
+Standing: Planned by the architect on Nov 24, 2026, inside decision 0161; amended on review the same day; both questions answered by the designer (the garrison's hunger is judged, and counted where a base of the side stands: decision 0161, condition 13). Its statements and hand calculation are written (scenario 135). Built and merged before stage 4's proof (pull request 726)
 
 ## Why
 
