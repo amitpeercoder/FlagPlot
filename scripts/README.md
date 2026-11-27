@@ -8,6 +8,7 @@ Read and run these for current work.
 
 - `decisions-index.sh` (CI runs it with `--check`), `regenerate.sh`, `compare-scenarios.sh`.
 - `web/` (`build.sh`, `site.py`): the browser build, run by CI.
+- `stage-4-proof/`: stage 4's proof, not yet run. Its `run.sh` also calls `stage-3-proof/`, `0159-proof/hunger.py` and `unfed/unfed.py`, so those three stay working, and the "not maintained" note below does not apply to them, until stage 4's proof closes.
 - The scenario generators, each run with `--check` to confirm the generated files are as the script makes them: `coral-sea/`, `five-days/make_files.py` and `five-days/make_oiler_files.py`, `midway/`, `table-boats/`, `table-copies/`, `table-rear-bases/`. A scenario's files are changed by changing its generator and running it, never by hand.
 
 ## Frozen
@@ -20,7 +21,6 @@ These served a closed proof, a count or a measurement owed by a decision, and ha
 | `0220-count/` | The count owed by decision 0220, as stated and as run |
 | `orders-inside-proof/` | The proof of orders inside a day (decision 0156) |
 | `stage-3-proof/` | The proof of stage 3, taking and holding a place (decision 0153, `docs/validation/stage-3-proof.md`) |
-| `stage-4-proof/` | Stage 4's proof |
 | `unfed/` | The measurement of the men unfed (decisions 0161 and 0231) |
 | `five-days/read_first_run.py` | The reading of the first run of scenario 103 (decision 0184) |
 
