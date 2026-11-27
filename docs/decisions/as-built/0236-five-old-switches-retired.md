@@ -103,3 +103,5 @@ Rulings 1, 2 and 6 of the architect's section are made: the statement of surface
 - renamed: `a_force_without_ships_is_not_alerted_and_without_combat_figures_nothing_runs` to `a_force_without_ships_is_not_alerted`; `a_starting_contact_needs_ships_and_search_figures_and_a_game_not_begun` to `a_starting_contact_needs_ships_and_a_game_not_begun`; `waters_are_refused_off_the_map_on_day_0_with_no_search_figures_or_after_day_1_begins` to `waters_are_refused_off_the_map_on_day_0_or_after_day_1_begins`; `world_new_rejects_a_damaged_system_without_surface_combat_figures` to `world_new_accepts_a_damaged_system`.
 
 - `sh scripts/compare-scenarios.sh` against 21f1a806 (step 2, after the rulings): 254 runs compared, 254 the same with the hashes cut, 0 differ.
+
+**Final checks of step 2.** `cargo fmt --all -- --check` and `cargo clippy --workspace --all-targets -- -D warnings` clean; `cargo test --workspace --locked --profile checked --no-fail-fast` passes whole; `sh scripts/compare-scenarios.sh` against 21f1a806: "254 runs compared, 254 the same with the hashes cut, 0 differ"; the hash of `07_full_slice` on day 39 is `e09e0205abb9a981`, as the baseline on `main`.
