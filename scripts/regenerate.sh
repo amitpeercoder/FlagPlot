@@ -102,7 +102,7 @@ if [ "$check" -eq 1 ]; then
     probe "2 agent goldens" cargo test --release --quiet -p sim-agent --test integration golden::
     probe "2 viewer measure fixture" cargo test --release --quiet -p sim-cli measure_fixture
     probe "3 recorded games" cargo test --release --quiet -p sim-cli --test integration mcp::every_recorded_game_replays_to_its_transcript_and_save
-    probe "4 pinned hashes" cargo test --release --quiet -p scenario-tests --test scenarios scenario_10_objectives:: scenario_17a_target_choice::
+    probe "4 pinned hashes" cargo test --release --quiet -p scenario-tests --test scenarios -- scenario_10_objectives:: scenario_17a_target_choice::
     probe "5 batch fixture" cargo test --release --quiet -p sim-cli --test integration batch::the_keys_a_version_1_reader_used_keep_their_values
     probe "6 submarine tables" cargo test --release --quiet -p oob-derive --test integration submarines::the_submarine_list_derives_exactly_the_files_in_data_reference
     rm -f "${TMPDIR:-/tmp}/regenerate-check.out"
@@ -157,7 +157,7 @@ quiet python3 "$games/regame.py" || fail "3 recorded games"
 # 4 pinned hashes (after 1: the scenario 10 test reads the baseline)
 say "4 pinned hashes"
 quiet env FLAGPILOT_UPDATE_GOLDEN=1 cargo test --release --quiet -p scenario-tests \
-    --test scenarios scenario_10_objectives:: scenario_17a_target_choice:: \
+    --test scenarios -- scenario_10_objectives:: scenario_17a_target_choice:: \
     || fail "4 pinned hashes"
 
 # 5 the old-format batch fixture
