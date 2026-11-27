@@ -178,7 +178,7 @@ pub fn pictures_from_half(
             view.day()
         )));
     }
-    enemy::check(half, view, believed)?;
+    enemy::check(half, believed)?;
     // The commander's answers to a force's asking leave to pursue name a
     // contact by its number and, for a yes, the event of the answer
     // (decision 0214, "Who answers where no one is there"). A made-up world's

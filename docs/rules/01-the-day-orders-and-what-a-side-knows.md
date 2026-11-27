@@ -463,7 +463,7 @@ Then, by kind:
 | Set patrol share | Patrol share out of range | Below 0 or above 1. |
 | Set rest threshold | Fatigue out of range | Below 0 or above 100. |
 | Set strike contact age | No air combat figures | The scenario has none: "this scenario has no air combat figures". Tried first. [0114] |
-| Set strike contact age | Strike contact age out of range | Below 0, or above `search.toml: contact_drop_age_pulses` less 1, since an older contact has been dropped: "strike contact age P is not between 0 and M pulses". In a scenario with no search figures only a negative age is refused: "strike contact age P is not 0 or more pulses". [0114] |
+| Set strike contact age | Strike contact age out of range | Below 0, or above `search.toml: contact_drop_age_pulses` less 1, since an older contact has been dropped: "strike contact age P is not between 0 and M pulses". [0114, 0236] |
 | Set strike first waters | Waters off the map | A hex of the list is not on the map: "H of the waters to strike first is off the map". [0190] |
 | Set strike first waters | Waters hex twice | A hex is named twice in the list: "H is named twice in the waters to strike first". Tried after "Waters off the map", hex by hex in list order. [0190] |
 | Set strike held share | Held share out of range | Below 0 or above 1: "held share S is not between 0 and 1". [0114] |
@@ -955,7 +955,7 @@ A rule's figures are **loaded** when the scenario file names the file that holds
 
 A scenario may also name a **file of sides**, `class_sides`, a hand-written file in `data/reference/` that gives each class of ship and type of aircraft of its reference files the side that uses it: Allied, Japanese or both. The scenario does not load if a class or type of its files has no row, a row names one they do not give, one is given twice, or a ship or air group is of a class or type given to the other side alone. A derived class takes the side of the ships its derivation list gives it; a placeholder class takes both. No rule of play reads it, and a scenario that names none has none. [0173, rules 1 to 4]
 
-A scenario with air groups must also name search figures, and a scenario with surface combat figures must also name them. [0021, 0026, 0035, 0036, 0037, 0039, 0066, 0090]
+Every scenario names its search figures and its surface combat figures. [0021, 0026, 0035, 0036, 0037, 0039, 0066, 0090, 0236]
 
 The five repair figures of decision 0069 are keys of `surface_combat.toml`, so they are always loaded and every one is required: `forward_repair_max_flotation`, `forward_repair_system_points`, `yard_days_per_flotation_point`, `yard_days_per_system_degraded` and `yard_days_per_system_out`. Chapter 4, Repair, gives what each means and what the loader refuses. The frozen step 1 copy holds the same values. The rules do nothing until a base has `ship_repair_points_per_day` or `yard_passage_days` (chapter 2, Bases on hexes). [0069]
 

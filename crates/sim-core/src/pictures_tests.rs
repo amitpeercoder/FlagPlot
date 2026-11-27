@@ -72,7 +72,7 @@ pub(crate) fn world() -> World {
         troop_capacity_men: 0,
         fuels_at_sea: false,
     };
-    let mut ref_data = RefData::default();
+    let mut ref_data = RefData::for_tests();
     ref_data.ship_classes.insert(class.id, class);
     ref_data.port_sizes.insert(
         0,
@@ -86,7 +86,7 @@ pub(crate) fn world() -> World {
             ammunition_lighter_rate_t_per_h: None,
         },
     );
-    ref_data.search = Some(SearchFigures::from_search_toml());
+    ref_data.search = SearchFigures::from_search_toml();
     ref_data.ground = Some(GroundFigures::FIRST);
 
     let mut truth = TruthState::default();
@@ -177,7 +177,7 @@ fn report(world: &World, at: Hex, men: u32) -> Report {
 
 /// Writes an estimate to one command's picture alone.
 fn tell_only(world: &mut World, side: Side, command: CommandRef, at: Hex, men: u32) {
-    let figures = world.ref_data.search.clone().expect("figures");
+    let figures = world.ref_data.search.clone();
     let r = report(world, at, men);
     world
         .chain
@@ -455,7 +455,7 @@ fn with_command_levels_off_there_is_no_command_and_a_view_gives_the_sides_own_be
     assert!(world.commands(Side::Allied).is_none());
     assert!(world.commands(Side::Japanese).is_none());
     assert!(!world.command_levels());
-    let figures = world.ref_data.search.clone().expect("figures");
+    let figures = world.ref_data.search.clone();
     let r = report(&world, hx(3, 3), 120);
     world.apply_report(Side::Allied, &r, &Holders::Every, &figures);
     let view = world.side_view(Side::Allied);
@@ -506,7 +506,7 @@ fn a_side_is_given_no_view_of_the_other_sides_commands_with_levels_on_or_off() {
 #[test]
 fn with_command_levels_on_a_report_reaches_every_picture_of_the_side_and_no_other() {
     let mut world = world_with_levels(&[]);
-    let figures = world.ref_data.search.clone().expect("figures");
+    let figures = world.ref_data.search.clone();
     let r = report(&world, hx(3, 3), 120);
     world.apply_report(Side::Allied, &r, &Holders::Every, &figures);
     let own: Vec<GroundEstimate> = world

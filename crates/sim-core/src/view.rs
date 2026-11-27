@@ -721,13 +721,10 @@ impl<'a> SideView<'a> {
         self.own_belief().suspected_waters()
     }
 
-    /// The figures of shore bombardment, if a force can bombard (decision
-    /// 0092): public rules, not intelligence.
-    pub fn bombardment_figures(&self) -> Option<&'a BombardmentFigures> {
-        self.ref_data
-            .surface_combat
-            .as_ref()
-            .map(|surface| &surface.bombardment)
+    /// The figures of shore bombardment (decision 0092): public rules, not
+    /// intelligence.
+    pub fn bombardment_figures(&self) -> &'a BombardmentFigures {
+        &self.ref_data.surface_combat.bombardment
     }
 
     /// The side's own orders, accepted or not, in the order they were taken
@@ -750,10 +747,7 @@ impl<'a> SideView<'a> {
         let owners = Owners::from_state(
             self.truth,
             self.orders,
-            self.ref_data
-                .surface_combat
-                .as_ref()
-                .map_or(0, |figures| figures.round_minutes),
+            self.ref_data.surface_combat.round_minutes,
         );
         let all = side_events::project(self.side, self.log.from_index(0), &owners);
         match self.seat {
@@ -1427,8 +1421,8 @@ impl<'a> SideView<'a> {
     }
 
     /// The search figures are reference data, so common knowledge.
-    pub fn search_figures(&self) -> Option<&'a SearchFigures> {
-        self.ref_data.search.as_ref()
+    pub fn search_figures(&self) -> &'a SearchFigures {
+        &self.ref_data.search
     }
 
     /// Which of the optional rules have their figures loaded for this game
@@ -1457,13 +1451,13 @@ impl<'a> SideView<'a> {
         self.ref_data.port_sizes.get(&size)
     }
 
-    /// The surface combat figures, if the scenario names them: among them
+    /// The surface combat figures: among them
     /// the ones a side's own choices use (how near a contact alerts a force,
     /// when a ship counts as crippled, the escorts a straggler takes). They
     /// are rules, the same for both sides, so common knowledge (decision
     /// 0100, 3).
-    pub fn surface_combat_figures(&self) -> Option<&'a SurfaceCombatFigures> {
-        self.ref_data.surface_combat.as_ref()
+    pub fn surface_combat_figures(&self) -> &'a SurfaceCombatFigures {
+        &self.ref_data.surface_combat
     }
 
     /// The air combat figures, if the scenario names them. Rules, so common
@@ -1562,7 +1556,7 @@ mod tests {
         let mut map = Map::new();
         map.insert(Hex::new(0, 0), HexData::open_sea());
         map.insert(Hex::new(5, 0), HexData::open_sea());
-        let mut ref_data = RefData::default();
+        let mut ref_data = RefData::for_tests();
         ref_data.port_sizes.insert(
             0,
             PortSize {
@@ -1590,7 +1584,7 @@ mod tests {
                 self_sealing_tanks: false,
             },
         );
-        ref_data.search = Some(SearchFigures::from_search_toml());
+        ref_data.search = SearchFigures::from_search_toml();
         let mut truth = TruthState::default();
         for (id, side, hex) in [(1, Side::Allied, 0), (2, Side::Japanese, 5)] {
             truth.bases.insert(
@@ -1623,7 +1617,6 @@ mod tests {
 
         let view = world.side_view(Side::Allied);
         assert!(view.aircraft_type(AircraftTypeId::new(1)).is_some());
-        assert!(view.search_figures().is_some());
 
         // Formatting a view must not print the truth it holds.
         for printed in [format!("{view:?}"), format!("{view:#?}")] {
@@ -1641,7 +1634,7 @@ mod tests {
         let hex = Hex::new(0, 0);
         let mut map = Map::new();
         map.insert(hex, HexData::open_sea());
-        let mut ref_data = RefData::default();
+        let mut ref_data = RefData::for_tests();
         ref_data.port_sizes.insert(
             0,
             PortSize {
@@ -1680,10 +1673,10 @@ mod tests {
                 fuels_at_sea: false,
             },
         );
-        ref_data.search = Some(SearchFigures::from_search_toml());
+        ref_data.search = SearchFigures::from_search_toml();
         let mut figures = SurfaceCombatFigures::from_surface_combat_toml();
         figures.gun_hit_flotation = Fixed::ONE;
-        ref_data.surface_combat = Some(figures);
+        ref_data.surface_combat = figures;
 
         let mut truth = TruthState::default();
         for (force, side, ships) in [(1, Side::Allied, vec![1, 2]), (2, Side::Japanese, vec![3])] {
@@ -1782,7 +1775,7 @@ mod tests {
     fn a_side_with_no_fight_has_no_claims() {
         let mut map = Map::new();
         map.insert(Hex::new(0, 0), HexData::open_sea());
-        let mut ref_data = RefData::default();
+        let mut ref_data = RefData::for_tests();
         ref_data.port_sizes.insert(
             0,
             PortSize {
@@ -1795,8 +1788,8 @@ mod tests {
                 ammunition_lighter_rate_t_per_h: None,
             },
         );
-        ref_data.search = Some(SearchFigures::from_search_toml());
-        ref_data.surface_combat = Some(SurfaceCombatFigures::from_surface_combat_toml());
+        ref_data.search = SearchFigures::from_search_toml();
+        ref_data.surface_combat = SurfaceCombatFigures::from_surface_combat_toml();
         let world = World::new(1, ref_data, map, TruthState::default()).expect("valid setup");
         assert!(world.side_view(Side::Allied).claims().is_empty());
     }

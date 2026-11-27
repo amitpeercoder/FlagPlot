@@ -87,7 +87,7 @@ impl Scene {
                 map.insert(Hex::new(q, r), HexData::open_sea());
             }
         }
-        let mut ref_data = RefData::default();
+        let mut ref_data = RefData::for_tests();
         let classes = [
             (
                 1,
@@ -188,8 +188,8 @@ impl Scene {
                 ammunition_lighter_rate_t_per_h: None,
             },
         );
-        ref_data.search = Some(SearchFigures::from_search_toml());
-        ref_data.surface_combat = Some(SurfaceCombatFigures::from_surface_combat_toml());
+        ref_data.search = SearchFigures::from_search_toml();
+        ref_data.surface_combat = SurfaceCombatFigures::from_surface_combat_toml();
 
         let mut truth = TruthState::default();
         let mut next_ship = 1;
@@ -242,7 +242,7 @@ impl Scene {
     /// to belief (contacts age), so that the state can be hashed.
     fn run_step(&self, world: &mut World) {
         world.run_pulse_phase(1, self.pulse, PulsePhase::Movement);
-        let figures = world.ref_data.search.clone().expect("search figures");
+        let figures = world.ref_data.search.clone();
         for belief in world.beliefs.values_mut() {
             belief.age_contacts(&figures);
         }
@@ -309,7 +309,7 @@ fn a_decimal_rate_of_fire_gives_whole_shots_multiplied_before_any_division() {
         .get_mut(&ShipClassId::new(1))
         .expect("class 1")
         .gun_rounds_per_min = "3.5".parse().expect("3.5");
-    let figures = world.ref_data.surface_combat.clone().expect("figures");
+    let figures = world.ref_data.surface_combat.clone();
     assert_eq!(figures.round_minutes, 5);
     let ship = ship(&world, 1);
     let class = &world.ref_data.ship_classes[&ship.class];
@@ -504,11 +504,7 @@ fn run(scene: &Scene, setup: impl FnOnce(&mut World)) -> World {
 }
 
 fn figures_mut(world: &mut World) -> &mut SurfaceCombatFigures {
-    world
-        .ref_data
-        .surface_combat
-        .as_mut()
-        .expect("combat figures")
+    &mut world.ref_data.surface_combat
 }
 
 fn ship_mut(world: &mut World, id: u32) -> &mut Ship {
@@ -2044,7 +2040,7 @@ fn case_b_the_second_side_goes_into_a_second_fight_from_its_own_stream() {
     assert!(!ship(&world, 1).torpedoes_ready);
     assert!(!ship(&world, 1).torpedoes_one_side_fired);
 
-    let figures = world.ref_data.surface_combat.clone().unwrap();
+    let figures = world.ref_data.surface_combat.clone();
     let mut stream = world.rng_pair(
         1,
         Some(Pulse::Morning),
@@ -2591,7 +2587,7 @@ fn the_fire_stream_draws_each_shot_then_track_and_system_per_gun_hit_then_the_to
         only_ship_1_fires(w);
         figures_mut(w).torpedo_hit_chance_day = fx("0.125");
     });
-    let figures = world.ref_data.surface_combat.clone().unwrap();
+    let figures = world.ref_data.surface_combat.clone();
     let mut stream = ship_1_stream(&world);
 
     let n = replay_shots(&mut stream, 120, fx("0.05"));
@@ -2629,7 +2625,7 @@ fn the_fire_stream_carries_on_in_the_next_round_one_draw_per_shot() {
             .into_iter()
             .collect();
     });
-    let figures = world.ref_data.surface_combat.clone().unwrap();
+    let figures = world.ref_data.surface_combat.clone();
     let mut stream = ship_1_stream(&world);
     for round in 1..=2 {
         let n = replay_shots(&mut stream, 120, fx("0.05"));
@@ -2660,7 +2656,7 @@ fn the_draws_are_the_same_whatever_the_chance_of_a_system_hit() {
             figures_mut(w).system_hit_chance_per_point = fx(per_point);
             figures_mut(w).torpedo_hit_chance_day = fx("0.125");
         });
-        let figures = world.ref_data.surface_combat.clone().unwrap();
+        let figures = world.ref_data.surface_combat.clone();
         let mut stream = ship_1_stream(&world);
         let n = replay_shots(&mut stream, 120, fx("0.05"));
         let (tracks, systems) = replay_gun_hits(&mut stream, &figures, Fixed::from_int(5), n);
@@ -2727,7 +2723,7 @@ use crate::belief::SightingReport;
 /// Puts a contact into one side's belief and returns it with the event
 /// that recorded the report's arrival.
 fn give_contact(world: &mut World, side: Side, hex: Hex) -> (ContactId, EventId) {
-    let figures = world.ref_data.search.clone().expect("search figures");
+    let figures = world.ref_data.search.clone();
     let received = world.events.next_id();
     let report = Report::Sighting(SightingReport {
         estimated_hex: hex,
@@ -2767,7 +2763,7 @@ fn give_contact(world: &mut World, side: Side, hex: Hex) -> (ContactId, EventId)
 /// call than the age wanted. A contact is still held at age 4 and dropped
 /// at age 5.
 fn age_contacts_by(world: &mut World, pulses: u32) {
-    let figures = world.ref_data.search.clone().expect("search figures");
+    let figures = world.ref_data.search.clone();
     for _ in 0..=pulses {
         for belief in world.beliefs.values_mut() {
             belief.age_contacts(&figures);
@@ -2961,12 +2957,7 @@ fn the_alert_reads_the_one_freshness_figure_the_merge_reads() {
     // the search figures (decision 0032): moving it moves the alert.
     let alerted_with = |limit: u32, age: u32| {
         let mut world = lone_allied();
-        world
-            .ref_data
-            .search
-            .as_mut()
-            .expect("search figures")
-            .fresh_contact_max_age_pulses = limit;
+        world.ref_data.search.fresh_contact_max_age_pulses = limit;
         give_contact(&mut world, Side::Allied, Hex::new(1, 0));
         age_contacts_by(&mut world, age);
         world.alert_from_belief(1, Pulse::Night);
@@ -2990,19 +2981,12 @@ fn only_the_forces_own_sides_belief_alerts_it() {
 }
 
 #[test]
-fn a_force_without_ships_is_not_alerted_and_without_combat_figures_nothing_runs() {
+fn a_force_without_ships_is_not_alerted() {
     let mut world = lone_allied();
     give_contact(&mut world, Side::Allied, Hex::new(1, 0));
     force_mut(&mut world, 1).ships.clear();
     world.alert_from_belief(1, Pulse::Night);
     assert!(!force(&world, 1).alerted);
-
-    let mut world = lone_allied();
-    give_contact(&mut world, Side::Allied, Hex::new(1, 0));
-    world.ref_data.surface_combat = None;
-    world.alert_from_belief(1, Pulse::Night);
-    assert!(!force(&world, 1).alerted);
-    assert_eq!(world.events().len(), 1, "only the report");
 }
 
 #[test]
@@ -3761,17 +3745,12 @@ fn entries_that_would_merge_are_an_error() {
 }
 
 #[test]
-fn a_starting_contact_needs_ships_and_search_figures_and_a_game_not_begun() {
+fn a_starting_contact_needs_ships_and_a_game_not_begun() {
     let mut world = lone_allied();
     let mut none = starting(Side::Allied, 3, 0, 0);
     none.ship_count = 0;
     let error = world.hold_starting_contacts(vec![none]).expect_err("0");
     assert!(error.to_string().contains("no ships"), "{error}");
-
-    world.ref_data.search = None;
-    assert!(world
-        .hold_starting_contacts(vec![starting(Side::Allied, 3, 0, 0)])
-        .is_err());
 
     // A second call is refused as well (it would age the first call's
     // contacts again). An empty list changes nothing.
@@ -4936,7 +4915,7 @@ fn alert_choice_takes_the_nearest_fresh_contact_and_the_lowest_id_on_a_tie() {
     // No merging of reports into one contact, so each stays its own: the
     // three reports come in one pulse, so the same-pulse distance of
     // decision 0133 is set to 0 too.
-    let search = world.ref_data.search.as_mut().expect("search figures");
+    let search = &mut world.ref_data.search;
     search.merge_distance_hexes = 0;
     search.merge_distance_same_pulse_hexes = Some(0);
     let (far, _) = give_contact(&mut world, Side::Allied, Hex::new(3, 0));

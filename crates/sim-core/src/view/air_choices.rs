@@ -54,7 +54,7 @@ impl SideView<'_> {
             base_grounded,
             field_damage,
             flight_deck,
-            self.ref_data.surface_combat.as_ref(),
+            &self.ref_data.surface_combat,
             self.ref_data.fatigue.is_some(),
             self.truth.day + 1,
         )

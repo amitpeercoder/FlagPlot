@@ -1752,7 +1752,7 @@ fn the_generated_classes_load_and_a_tiny_scenario_runs() {
     ));
 
     let classes = sim_data::load_ship_classes(&dir.join("reference/test_out.csv")).expect("loads");
-    let class = &classes.ship_classes[&ShipClassId::new(1000)];
+    let class = &classes[&ShipClassId::new(1000)];
     assert_eq!(class.name, "Test class");
     assert_eq!(class.main_guns, 8);
     assert_eq!(class.gun_rounds_per_min, "3.5".parse::<Fixed>().unwrap());

@@ -170,11 +170,7 @@ impl World {
     /// ID order as they stand when the pass begins; forces made during the
     /// pass are not processed in it.
     pub(crate) fn handle_stragglers(&mut self, day: u32, pulse: Pulse) {
-        // Without surface combat figures no ship can be damaged
-        // (`World::new`), so there are no stragglers.
-        let Some(figures) = self.ref_data.surface_combat.clone() else {
-            return;
-        };
+        let figures = self.ref_data.surface_combat.clone();
         let ids: Vec<TaskForceId> = self.truth.task_forces.keys().copied().collect();
         for id in ids {
             self.handle_stragglers_of(day, pulse, &figures, id);
@@ -190,9 +186,7 @@ impl World {
         pulse: Pulse,
         forces: [TaskForceId; 2],
     ) {
-        let Some(figures) = self.ref_data.surface_combat.clone() else {
-            return;
-        };
+        let figures = self.ref_data.surface_combat.clone();
         for id in forces {
             self.handle_stragglers_of(day, pulse, &figures, id);
         }
@@ -516,7 +510,7 @@ mod tests {
                 map.insert(hx(q, r), HexData::open_sea());
             }
         }
-        let mut ref_data = RefData::default();
+        let mut ref_data = RefData::for_tests();
         // (id, kind, main guns)
         let classes = [
             (CRUISER, ShipKind::Cruiser, 8),
@@ -575,8 +569,8 @@ mod tests {
                 ammunition_lighter_rate_t_per_h: None,
             },
         );
-        ref_data.search = Some(SearchFigures::from_search_toml());
-        ref_data.surface_combat = Some(SurfaceCombatFigures::from_surface_combat_toml());
+        ref_data.search = SearchFigures::from_search_toml();
+        ref_data.surface_combat = SurfaceCombatFigures::from_surface_combat_toml();
 
         let mut truth = TruthState::default();
         let mut force = TaskForce::at(
@@ -749,14 +743,6 @@ mod tests {
             assert!(world.events().is_empty());
             assert_eq!(world.truth.task_forces.len(), 1);
         }
-    }
-
-    #[test]
-    fn a_world_without_surface_combat_figures_does_nothing() {
-        let mut world = world(&[(CRUISER, Working)], StragglerInstruction::Leave, half());
-        world.ref_data.surface_combat = None;
-        world.handle_stragglers(1, Pulse::Night);
-        assert!(world.events().is_empty());
     }
 
     #[test]

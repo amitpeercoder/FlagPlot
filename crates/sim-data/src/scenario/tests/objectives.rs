@@ -295,8 +295,7 @@ fn a_scenario_counts_damaged_ships_one_way_out_of_action_or_crippled() {
 #[test]
 fn ships_out_of_action_needs_the_surface_combat_figures() {
     // The surface combat file is a required key, so a scenario without
-    // it is refused whatever its objectives; the check in
-    // `build_objectives` is the second line of that.
+    // it is refused whatever its objectives.
     let text = format!("{HEAD}{}", objectives(LEVELS, OUT_OF_ACTION)).replace(
         "surface_combat = \"../reference/surface_combat.toml\"\n",
         "",
@@ -310,12 +309,7 @@ fn ships_out_of_action_needs_the_surface_combat_figures() {
             "minor = 3\nmajor = 8\ndecisive = 16\n[allied]\nmission = \"A.\"\n[[allied.objective]]\nkind = \"ships_out_of_action\"\npoints = { carrier = 5 }\n[japanese]\nmission = \"B.\"\n",
         )
         .expect("parses");
-    let message = build_objectives(&spec, 2, false).expect_err("refused");
-    assert!(
-        message.contains("needs the surface combat figures"),
-        "{message}"
-    );
-    assert!(build_objectives(&spec, 2, true).is_ok());
+    assert!(build_objectives(&spec, 2).is_ok());
 }
 
 #[test]

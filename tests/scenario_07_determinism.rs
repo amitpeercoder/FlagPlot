@@ -46,7 +46,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use sim_core::events::Event;
+use sim_core::events::{Event, EventKind};
 use sim_core::SimConfig;
 use sim_data::Scenario;
 
@@ -386,29 +386,11 @@ fn the_permutation_keeps_one_units_orders_in_order() {
 // 4. Every kind of event.
 // ---------------------------------------------------------------------
 
-/// The variant names of `EventKind`, read from the source.
+/// The variant names of `EventKind`.
 fn event_kinds() -> BTreeSet<String> {
-    let source = fs::read_to_string(Path::new(ROOT).join("crates/sim-core/src/events.rs"))
-        .expect("the events file reads");
-    let start = source
-        .find("pub enum EventKind {")
-        .expect("the enum is there");
-    let body = &source[start..];
-    let end = body.find("\n}\n").expect("the enum ends");
-    body[..end]
-        .lines()
-        .filter_map(|line| {
-            let rest = line.strip_prefix("    ")?;
-            let first = rest.chars().next()?;
-            if !first.is_ascii_uppercase() {
-                return None;
-            }
-            Some(
-                rest.chars()
-                    .take_while(|c| c.is_ascii_alphanumeric())
-                    .collect::<String>(),
-            )
-        })
+    EventKind::KINDS
+        .iter()
+        .map(|kind| kind.name.to_string())
         .collect()
 }
 

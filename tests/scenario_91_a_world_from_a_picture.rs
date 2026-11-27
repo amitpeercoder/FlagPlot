@@ -492,11 +492,7 @@ fn case_one_steams_as_scenario_one_does() {
     // a contact that reaches 5 pulses: the figure is read, and the contact
     // is dropped on the pulse at which it reaches it, the afternoon of day
     // 5, aged 5, as a contact of that age in a game from day 0 is.
-    let drop_age = ref_data
-        .search
-        .as_ref()
-        .expect("scenario 1 has search figures")
-        .contact_drop_age_pulses;
+    let drop_age = ref_data.search.contact_drop_age_pulses;
     assert_eq!(drop_age, 5);
     let contact_events: Vec<(Pulse, u32, bool, Vec<Cause>)> = world
         .events()

@@ -213,10 +213,7 @@ impl Day<'_, '_> {
         };
         let today = self.today;
         let in_scope = self.in_scope(id);
-        let fresh_age = self
-            .area
-            .search_figures()
-            .map_or(2, |f| f.fresh_contact_max_age_pulses);
+        let fresh_age = self.area.search_figures().fresh_contact_max_age_pulses;
         let own = |c: &Held| c.number == kept.contact;
         let followed = held.iter().copied().find(own);
         let keeps = |day: u32, pulse: Pulse, hex: Hex| {

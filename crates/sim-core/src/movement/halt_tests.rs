@@ -81,7 +81,7 @@ fn world_marked(marks: &[Hex]) -> World {
             map.insert(Hex::new(q, r), HexData::open_sea());
         }
     }
-    let mut ref_data = RefData::default();
+    let mut ref_data = RefData::for_tests();
     ref_data.ship_classes.insert(cruiser().id, cruiser());
     ref_data.port_sizes.insert(
         0,
@@ -95,8 +95,8 @@ fn world_marked(marks: &[Hex]) -> World {
             ammunition_lighter_rate_t_per_h: None,
         },
     );
-    ref_data.search = Some(SearchFigures::from_search_toml());
-    ref_data.surface_combat = Some(SurfaceCombatFigures::from_surface_combat_toml());
+    ref_data.search = SearchFigures::from_search_toml();
+    ref_data.surface_combat = SurfaceCombatFigures::from_surface_combat_toml();
     ref_data.air_combat = Some(AirCombatFigures::from_air_combat_toml());
 
     let mut truth = TruthState::default();

@@ -12,3 +12,4 @@
 
 # Answers of outside research runs (prompts.md). Leads, not sources; never committed.
 /research-answers/
+__pycache__/

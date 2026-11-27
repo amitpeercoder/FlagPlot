@@ -419,21 +419,15 @@ fn build_mover<'s>(
         return None;
     }
 
-    let figures: Option<&SurfaceCombatFigures> = ref_data.surface_combat.as_ref();
+    let figures = &ref_data.surface_combat;
     let steamers: Vec<Steamer> = task_force
         .ships
         .iter()
         .map(|ship_id| {
             let ship = ship_of(*ship_id);
             let class = &ref_data.ship_classes[&ship.class];
-            // World::new rejects a damaged ship without figures, so
-            // with none every ship's propulsion works.
-            let propulsion_factor = match figures {
-                Some(figures) => {
-                    figures.system_factor(ShipSystem::Propulsion, ship.systems.propulsion)
-                }
-                None => Fixed::ONE,
-            };
+            let propulsion_factor =
+                figures.system_factor(ShipSystem::Propulsion, ship.systems.propulsion);
             let speed_kn = match task_force.speed {
                 SpeedSetting::Cruise => class.cruise_speed_kn * propulsion_factor,
                 SpeedSetting::Full => class.max_speed_kn * propulsion_factor,
@@ -538,7 +532,7 @@ struct MeetingOutcome {
 struct Step {
     day: u32,
     pulse: Pulse,
-    figures: Option<SurfaceCombatFigures>,
+    figures: SurfaceCombatFigures,
     movers: BTreeMap<TaskForceId, Mover>,
     /// The pairs that have fought this pulse (decision 4 of 0022). Local to
     /// the step, not state.
@@ -643,15 +637,13 @@ impl World {
 
         // Meetings at the start (decision 3 of 0022): forces in one hex
         // neither of which will move. The list is taken once.
-        if step.figures.is_some() {
-            let pairs: Vec<(TaskForceId, TaskForceId)> = self
-                .opposing_pairs_in_one_hex()
-                .into_iter()
-                .filter(|(a, b)| !step.is_moving(*a) && !step.is_moving(*b))
-                .collect();
-            for (a, b) in pairs {
-                self.meet(&mut step, a, b, pulse_start(day, pulse), None);
-            }
+        let pairs: Vec<(TaskForceId, TaskForceId)> = self
+            .opposing_pairs_in_one_hex()
+            .into_iter()
+            .filter(|(a, b)| !step.is_moving(*a) && !step.is_moving(*b))
+            .collect();
+        for (a, b) in pairs {
+            self.meet(&mut step, a, b, pulse_start(day, pulse), None);
         }
 
         // Position changes in time order.
@@ -957,9 +949,6 @@ impl World {
     /// force has no ship afloat, and the mover stops meeting when it has
     /// none.
     fn meet_in(&mut self, step: &mut Step, id: TaskForceId, hex: Hex, elapsed_hours: Fixed) {
-        if step.figures.is_none() {
-            return;
-        }
         let side = self.truth.task_forces[&id].side;
         let others: Vec<TaskForceId> = self
             .truth
@@ -1000,9 +989,7 @@ impl World {
         elapsed_hours: Fixed,
         mover: Option<TaskForceId>,
     ) {
-        let Some(figures) = step.figures.clone() else {
-            return;
-        };
+        let figures = step.figures.clone();
         // A meeting is held only if both forces are still in one hex when
         // its turn comes (decision 7 of 0022): an earlier fight at the same
         // moment may have sent one of them home, turning it out of the hex.
@@ -2033,7 +2020,7 @@ mod tests {
                 map.insert(Hex::new(q, r), HexData::open_sea());
             }
         }
-        let mut ref_data = RefData::default();
+        let mut ref_data = RefData::for_tests();
         ref_data.ship_classes.insert(
             ShipClassId::new(1),
             ShipClass {
@@ -2072,8 +2059,8 @@ mod tests {
                 ammunition_lighter_rate_t_per_h: None,
             },
         );
-        ref_data.search = Some(SearchFigures::from_search_toml());
-        ref_data.surface_combat = Some(SurfaceCombatFigures::from_surface_combat_toml());
+        ref_data.search = SearchFigures::from_search_toml();
+        ref_data.surface_combat = SurfaceCombatFigures::from_surface_combat_toml();
 
         let mut truth = TruthState::default();
         let mut next_ship = 1;

@@ -11,7 +11,7 @@ use sim_core::refdata::{
     AirCombatFigures, AirSupplyFigures, AirUpkeepFigures, AircraftFireFigures, AircraftRole,
     AircraftType, AttackWeapon, BombardmentFigures, BySide, ClassSide, ClassSides, FatigueFigures,
     FightSupplyFigures, GroundFigures, HungerFigures, MendingFigures, PassingChances, PortSize,
-    RefData, ReportError, ReportFigures, SearchFigures, ShipClass, ShipKind, SubmarineClass,
+    ReportError, ReportFigures, SearchFigures, ShipClass, ShipKind, SubmarineClass,
     SubmarineFigures, SubmarineTorpedo, SurfaceCombatFigures, TrialFigures, TrialSize,
 };
 use sim_core::state::{ShipSystem, Side};
@@ -131,13 +131,15 @@ pub(crate) fn parse_kind(text: &str) -> Option<ShipKind> {
 }
 
 /// Loads ship classes from a CSV file.
-pub fn load_ship_classes(path: &Path) -> Result<RefData, DataError> {
-    load_ship_classes_marked(path).map(|(ref_data, _)| ref_data)
+pub fn load_ship_classes(path: &Path) -> Result<BTreeMap<ShipClassId, ShipClass>, DataError> {
+    load_ship_classes_marked(path).map(|(classes, _)| classes)
 }
 
 /// Loads ship classes from a CSV file with the figures of each that rest on
 /// an estimate (decision 0207, rule 10).
-pub fn load_ship_classes_marked(path: &Path) -> Result<(RefData, EstimatedFigures), DataError> {
+pub fn load_ship_classes_marked(
+    path: &Path,
+) -> Result<(BTreeMap<ShipClassId, ShipClass>, EstimatedFigures), DataError> {
     load_ship_classes_marked_from(&Disk, path)
 }
 
@@ -145,15 +147,18 @@ pub fn load_ship_classes_marked(path: &Path) -> Result<(RefData, EstimatedFigure
 pub(crate) fn load_ship_classes_marked_from(
     source: &dyn Source,
     path: &Path,
-) -> Result<(RefData, EstimatedFigures), DataError> {
+) -> Result<(BTreeMap<ShipClassId, ShipClass>, EstimatedFigures), DataError> {
     let text = read_text(source, path)?;
     parse_ship_classes_marked(&text, path)
 }
 
 /// Parses ship classes from CSV text. `path` is only used in messages.
 #[cfg(test)]
-fn parse_ship_classes(text: &str, path: &Path) -> Result<RefData, DataError> {
-    parse_ship_classes_marked(text, path).map(|(ref_data, _)| ref_data)
+fn parse_ship_classes(
+    text: &str,
+    path: &Path,
+) -> Result<BTreeMap<ShipClassId, ShipClass>, DataError> {
+    parse_ship_classes_marked(text, path).map(|(classes, _)| classes)
 }
 
 /// Parses ship classes from CSV text with the figures each rests on an
@@ -161,13 +166,13 @@ fn parse_ship_classes(text: &str, path: &Path) -> Result<RefData, DataError> {
 fn parse_ship_classes_marked(
     text: &str,
     path: &Path,
-) -> Result<(RefData, EstimatedFigures), DataError> {
+) -> Result<(BTreeMap<ShipClassId, ShipClass>, EstimatedFigures), DataError> {
     let mut reader = csv::ReaderBuilder::new()
         .comment(Some(b'#'))
         .trim(csv::Trim::All)
         .from_reader(text.as_bytes());
 
-    let mut ref_data = RefData::default();
+    let mut ship_classes = BTreeMap::new();
     let mut estimated = EstimatedFigures::new();
     for row in reader.deserialize::<ShipClassRow>() {
         let row = row.map_err(|e| DataError::in_file(path, e.to_string()))?;
@@ -240,11 +245,11 @@ fn parse_ship_classes_marked(
         if let Some(problem) = class.problem() {
             return Err(DataError::in_file(path, problem));
         }
-        if ref_data.ship_classes.insert(id, class).is_some() {
+        if ship_classes.insert(id, class).is_some() {
             return Err(DataError::in_file(path, format!("{id} appears twice")));
         }
     }
-    Ok((ref_data, estimated))
+    Ok((ship_classes, estimated))
 }
 
 /// The port sizes the table must cover, inclusive.
@@ -2862,7 +2867,7 @@ mod tests {
 
     const CLASS_HEADER: &str = "id,name,kind,cruise_speed_kn,max_speed_kn,fuel_capacity_t,endurance_nm,cargo_capacity_t,main_guns,gun_rounds_per_min,gun_rounds_per_gun,gun_damage,torpedo_tubes,torpedo_tubes_one_side,torpedo_damage,toughness,radar\n";
 
-    fn classes(rows: &str) -> Result<RefData, DataError> {
+    fn classes(rows: &str) -> Result<BTreeMap<ShipClassId, ShipClass>, DataError> {
         parse_ship_classes(&format!("# c\n{CLASS_HEADER}{rows}"), here())
     }
 
@@ -2873,7 +2878,7 @@ mod tests {
              2,Cargo,transport,10,12,1000,10000,3000,0,0,0,0,0,0,0,300,0\n",
         )
         .expect("parses");
-        let cruiser = &data.ship_classes[&ShipClassId::new(1)];
+        let cruiser = &data[&ShipClassId::new(1)];
         assert_eq!(cruiser.main_guns, 8);
         assert_eq!(cruiser.gun_rounds_per_min, Fixed::from_int(3));
         assert_eq!(cruiser.gun_rounds_per_gun, 100);
@@ -2883,7 +2888,7 @@ mod tests {
         assert_eq!(cruiser.torpedo_damage, Fixed::from_int(200));
         assert_eq!(cruiser.toughness, Fixed::from_int(400));
         assert!(cruiser.radar);
-        let cargo = &data.ship_classes[&ShipClassId::new(2)];
+        let cargo = &data[&ShipClassId::new(2)];
         assert_eq!(cargo.main_guns, 0);
         assert_eq!(cargo.torpedo_tubes, 0);
         assert_eq!(cargo.toughness, Fixed::from_int(300));
@@ -2895,11 +2900,8 @@ mod tests {
         // A wing fit: 8 tubes, 4 on a side.
         let data =
             classes("1,Wing,cruiser,16,32,2000,8000,0,8,3,100,20,8,4,200,400,1\n").expect("parses");
-        assert_eq!(data.ship_classes[&ShipClassId::new(1)].torpedo_tubes, 8);
-        assert_eq!(
-            data.ship_classes[&ShipClassId::new(1)].torpedo_tubes_one_side,
-            4
-        );
+        assert_eq!(data[&ShipClassId::new(1)].torpedo_tubes, 8);
+        assert_eq!(data[&ShipClassId::new(1)].torpedo_tubes_one_side, 4);
         // A file without the column is refused, not read as the whole count.
         let old_header = CLASS_HEADER.replace("torpedo_tubes_one_side,", "");
         let old =
@@ -2923,7 +2925,7 @@ mod tests {
     fn gun_rate_of_fire_may_be_a_decimal() {
         let data =
             classes("1,A,cruiser,16,32,2000,8000,0,8,3.5,100,20,8,8,200,400,0\n").expect("parses");
-        let rate = data.ship_classes[&ShipClassId::new(1)].gun_rounds_per_min;
+        let rate = data[&ShipClassId::new(1)].gun_rounds_per_min;
         assert_eq!(rate, "3.5".parse::<Fixed>().expect("fixed"));
         assert_eq!(rate * 2, Fixed::from_int(7));
     }
@@ -2932,7 +2934,7 @@ mod tests {
     fn damage_and_toughness_may_be_decimals() {
         let data = classes("1,A,cruiser,16,32,2000,8000,0,9,3.5,100,19.666666,8,8,196,405.44,0\n")
             .expect("parses");
-        let class = &data.ship_classes[&ShipClassId::new(1)];
+        let class = &data[&ShipClassId::new(1)];
         assert_eq!(class.gun_damage.raw(), 19_666_666);
         assert_eq!(class.torpedo_damage, Fixed::from_int(196));
         assert_eq!(class.toughness.raw(), 405_440_000);
@@ -2978,7 +2980,7 @@ mod tests {
         // 0025).
         let data = classes("1,A,cruiser,16,32,2000,8000,0,8,3,100,20,8,8,200,400,0\n")
             .expect("parses without the column");
-        assert_eq!(data.ship_classes[&ShipClassId::new(1)].aircraft_capacity, 0);
+        assert_eq!(data[&ShipClassId::new(1)].aircraft_capacity, 0);
 
         // With the column, each row's whole number is read.
         let with_column = |rows: &str| {
@@ -2995,11 +2997,8 @@ mod tests {
              2,B,carrier,16,30,3000,9000,0,0,0,0,0,0,0,0,600,0,36\n",
         )
         .expect("parses with the column");
-        assert_eq!(data.ship_classes[&ShipClassId::new(1)].aircraft_capacity, 0);
-        assert_eq!(
-            data.ship_classes[&ShipClassId::new(2)].aircraft_capacity,
-            36
-        );
+        assert_eq!(data[&ShipClassId::new(1)].aircraft_capacity, 0);
+        assert_eq!(data[&ShipClassId::new(2)].aircraft_capacity, 36);
 
         // With the column, every row needs a whole number.
         for bad in ["", "-1", "2.5", "many"] {
@@ -3015,7 +3014,7 @@ mod tests {
         // Absent: no shots, whether or not the capacity column is there.
         let data = classes("1,A,cruiser,16,32,2000,8000,0,8,3,100,20,8,8,200,400,0\n")
             .expect("parses without the columns");
-        assert_eq!(data.ship_classes[&ShipClassId::new(1)].anti_aircraft, 0);
+        assert_eq!(data[&ShipClassId::new(1)].anti_aircraft, 0);
 
         let with_column = |rows: &str| {
             parse_ship_classes(
@@ -3031,12 +3030,9 @@ mod tests {
              2,B,carrier,16,30,3000,9000,0,0,0,0,0,0,0,0,600,0,36,20\n",
         )
         .expect("parses with the column");
-        assert_eq!(data.ship_classes[&ShipClassId::new(1)].anti_aircraft, 8);
-        assert_eq!(data.ship_classes[&ShipClassId::new(2)].anti_aircraft, 20);
-        assert_eq!(
-            data.ship_classes[&ShipClassId::new(2)].aircraft_capacity,
-            36
-        );
+        assert_eq!(data[&ShipClassId::new(1)].anti_aircraft, 8);
+        assert_eq!(data[&ShipClassId::new(2)].anti_aircraft, 20);
+        assert_eq!(data[&ShipClassId::new(2)].aircraft_capacity, 36);
         for bad in ["", "-1", "2.5", "many"] {
             let row = format!("1,A,carrier,16,32,2000,8000,0,8,3,100,20,8,8,200,400,0,0,{bad}\n");
             assert!(with_column(&row).is_err(), "anti_aircraft \"{bad}\"");
@@ -3047,10 +3043,10 @@ mod tests {
             Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data/reference/ship_classes.csv");
         let data = load_ship_classes(&path).expect("the shipped classes load");
         for id in 1..=4 {
-            assert_eq!(data.ship_classes[&ShipClassId::new(id)].anti_aircraft, 0);
+            assert_eq!(data[&ShipClassId::new(id)].anti_aircraft, 0);
         }
-        assert_eq!(data.ship_classes[&ShipClassId::new(5)].anti_aircraft, 20);
-        assert_eq!(data.ship_classes[&ShipClassId::new(6)].anti_aircraft, 8);
+        assert_eq!(data[&ShipClassId::new(5)].anti_aircraft, 20);
+        assert_eq!(data[&ShipClassId::new(6)].anti_aircraft, 8);
     }
 
     #[test]
@@ -3082,11 +3078,8 @@ mod tests {
         let path = Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../data/reference/ship_classes_savo_island.csv");
         let data = load_ship_classes(&path).expect("the generated classes load");
-        assert!(!data.ship_classes.is_empty());
-        assert!(data
-            .ship_classes
-            .values()
-            .all(|class| class.aircraft_capacity == 0));
+        assert!(!data.is_empty());
+        assert!(data.values().all(|class| class.aircraft_capacity == 0));
     }
 
     #[test]
@@ -3094,17 +3087,11 @@ mod tests {
         let path =
             Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data/reference/ship_classes.csv");
         let data = load_ship_classes(&path).expect("the shipped classes load");
-        let cruiser = &data.ship_classes[&ShipClassId::new(1)];
+        let cruiser = &data[&ShipClassId::new(1)];
         assert_eq!(cruiser.main_guns, 8);
         assert_eq!(cruiser.toughness, Fixed::from_int(400));
-        assert!(data
-            .ship_classes
-            .values()
-            .all(|class| class.toughness > Fixed::ZERO));
-        assert_eq!(
-            data.ship_classes[&ShipClassId::new(4)].aircraft_capacity,
-            36
-        );
+        assert!(data.values().all(|class| class.toughness > Fixed::ZERO));
+        assert_eq!(data[&ShipClassId::new(4)].aircraft_capacity, 36);
     }
 
     fn combat_text() -> String {
@@ -4253,10 +4240,7 @@ mod tests {
     fn the_troop_capacity_column_defaults_to_0_and_is_read_when_present() {
         let without = classes("1,Cargo,transport,10,12,1000,10000,3000,0,0,0,0,0,0,0,300,0\n")
             .expect("parses");
-        assert_eq!(
-            without.ship_classes[&ShipClassId::new(1)].troop_capacity_men,
-            0
-        );
+        assert_eq!(without[&ShipClassId::new(1)].troop_capacity_men, 0);
         let header = CLASS_HEADER.trim_end().to_string()
             + ",aircraft_capacity,anti_aircraft,troop_capacity_men\n";
         let with = parse_ship_classes(
@@ -4264,10 +4248,7 @@ mod tests {
             here(),
         )
         .expect("parses");
-        assert_eq!(
-            with.ship_classes[&ShipClassId::new(1)].troop_capacity_men,
-            600
-        );
+        assert_eq!(with[&ShipClassId::new(1)].troop_capacity_men, 600);
         for bad in ["-1", "1.5", "many"] {
             let text = format!("# c\n{header}1,Troop ship,transport,10,12,1000,10000,3000,0,0,0,0,0,0,0,300,0,0,0,{bad}\n");
             assert!(

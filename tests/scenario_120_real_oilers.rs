@@ -97,7 +97,6 @@ use crate::common;
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
-use std::process::Command;
 
 use sim_core::events::{Event, EventKind, FuelOrderEnd};
 use sim_core::fixed::Fixed;
@@ -129,22 +128,19 @@ fn read(path: &Path) -> String {
     std::fs::read_to_string(path).unwrap_or_else(|e| panic!("{} reads: {e}", path.display()))
 }
 
+/// A scenario file resolved (decision 0234): a key, a row or a table is read
+/// from the scenario it makes, whether the file holds it or the file it is
+/// built on.
+fn resolved(path: &Path) -> String {
+    common::resolved_text(path)
+}
+
 /// The file of one of the two scenarios: `coral` or not, and its letter.
 fn file(coral: bool, letter: char) -> PathBuf {
     let name = if coral {
         format!("coral-sea/02{letter}_coral_sea_oilers.toml")
     } else {
         format!("five-days/02{letter}_eastern_solomons_oilers.toml")
-    };
-    common::data_dir().join("scenarios").join(name)
-}
-
-/// The file the oiler file stands beside.
-fn old_file(coral: bool, letter: char) -> PathBuf {
-    let name = if coral {
-        format!("coral-sea/01{letter}_coral_sea.toml")
-    } else {
-        format!("five-days/01{letter}_eastern_solomons.toml")
     };
     common::data_dir().join("scenarios").join(name)
 }
@@ -223,7 +219,7 @@ fn raw_rows(path: &Path) -> BTreeMap<u32, BTreeMap<String, String>> {
 /// A class as the engine's own loader reads it from the class file.
 fn engine_class(file: &str, id: u32) -> ShipClass {
     let data = sim_data::load_ship_classes(&reference(file)).expect("the class file loads");
-    data.ship_classes[&ShipClassId::new(id)].clone()
+    data[&ShipClassId::new(id)].clone()
 }
 
 /// The rows of a sources file: the class id, the figure, then the row.
@@ -660,7 +656,7 @@ fn statement_6_the_class_ships_and_sides_files_are_as_they_were() {
             if !file_name.ends_with(".toml") || file_name.contains("_oilers") {
                 continue;
             }
-            let text = read(&path);
+            let text = resolved(&path);
             assert!(
                 !text.contains("_oilers.csv"),
                 "{} names a file of the oilers",
@@ -742,7 +738,7 @@ fn tables(text: &str) -> Vec<Vec<String>> {
 /// No order and no command of the file names the group or its ships.
 fn nobody_orders_the_group(coral: bool, group_ships: [i64; 2]) {
     for letter in LETTERS {
-        let text = read(&file(coral, letter));
+        let text = resolved(&file(coral, letter));
         for table in tables(&text) {
             let header = table.first().map(String::as_str);
             if header != Some("[[order]]") && header != Some("[[command]]") {
@@ -842,13 +838,16 @@ fn statement_13_the_meeting_place_is_reachable_with_fuel_many_times_over() {
 
 // ------------------------------------------- Statement 8: a destroyer fuels
 
-const ANDERSON: &str = "name = \"USS Anderson\"\nclass = 4008\nside = \"allied\"\nfuel_t = 453";
+const ANDERSON: &str =
+    "class = 4008\nexperience = 2\nfuel_t = 453\nid = 14\nname = \"USS Anderson\"\nside = \"allied\"";
 
 fn anderson_at(text: &str, tons: i64) -> String {
     changed(
         text,
         ANDERSON,
-        &format!("name = \"USS Anderson\"\nclass = 4008\nside = \"allied\"\nfuel_t = {tons}"),
+        &format!(
+            "class = 4008\nexperience = 2\nfuel_t = {tons}\nid = 14\nname = \"USS Anderson\"\nside = \"allied\""
+        ),
     )
 }
 
@@ -909,7 +908,7 @@ fn ended(log: &[Event]) -> Vec<(u32, Option<Pulse>, FuelOrderEnd)> {
 #[test]
 fn statement_8_a_destroyer_fuels_in_the_first_night() {
     let path = file(true, 'd');
-    let text = anderson_at(&read(&path), 153) + FUEL_FROM_6;
+    let text = anderson_at(&resolved(&path), 153) + FUEL_FROM_6;
     let mut scenario = load_text(&text, &path);
     // Task Force 17 lies still: no route, and none given by the file.
     {
@@ -998,7 +997,7 @@ fn statement_9_the_staff_sends_a_short_force_to_her() {
     // 02c gives the Allied side its orders, task force 1 an operate_carriers
     // intent: a task of the staff's.
     let path = file(true, 'c');
-    let text = read(&path);
+    let text = resolved(&path);
     // At 100 tons, below 113.25, a quarter of her 453.
     let scenario = staffed_day_1(&anderson_at(&text, 100), &path);
     let log = events(&scenario);
@@ -1072,7 +1071,7 @@ fn counted_forces(scenario: &Scenario) -> Vec<u32> {
 #[test]
 fn statement_10_she_is_no_lift() {
     let path = file(true, 'd');
-    let text = read(&path) + TAKE_RABAUL;
+    let text = resolved(&path) + TAKE_RABAUL;
     let scenario = load_text(&text, &path);
     let counted = counted_forces(&scenario);
     eprintln!("statement 10: a take with no forces named counts {counted:?}");
@@ -1088,9 +1087,9 @@ fn statement_10_she_is_no_lift() {
 fn statement_10_a_force_of_neosho_alone_is_not_counted() {
     let path = file(true, 'd');
     let text = changed(
-        &(read(&path) + TAKE_RABAUL),
-        "name = \"USS Sims\"\nclass = 4031\nside = \"allied\"\nfuel_t = 453\nexperience = 2\ntask_force = 6",
-        "name = \"USS Sims\"\nclass = 4031\nside = \"allied\"\nfuel_t = 453\nexperience = 2\ntask_force = 2",
+        &(resolved(&path) + TAKE_RABAUL),
+        "class = 4031\nexperience = 2\nfuel_t = 453\nid = 55\nname = \"USS Sims\"\nside = \"allied\"\ntask_force = 6",
+        "class = 4031\nexperience = 2\nfuel_t = 453\nid = 55\nname = \"USS Sims\"\nside = \"allied\"\ntask_force = 2",
     );
     let scenario = load_text(&text, &path);
     let truth = scenario.world.umpire();
@@ -1176,152 +1175,33 @@ fn statement_11_sunk_she_scores_as_an_auxiliary() {
     // The file's ships_sunk points: auxiliary = 1.
     assert_eq!(result.japanese.total, t(1), "the points the kind has");
     assert_eq!(result.allied.total, Fixed::ZERO);
-    // The points are the file's: the line is in both sides' tables.
-    let text = read(&file(true, 'd'));
-    assert_eq!(
-        text.matches("points = { carrier = 10, battleship = 8, cruiser = 4, destroyer = 1, transport = 2, auxiliary = 1 }")
-            .count(),
-        2,
-        "ships_sunk gives an auxiliary 1 point on each side"
-    );
-}
-
-// ------------------------------------------- Properties
-
-/// The scripts that make the new files, asked to check, say they are what
-/// each makes: the base and the four files of each.
-#[test]
-fn the_scripts_say_the_files_are_what_they_make() {
-    for script in ["coral-sea", "five-days"] {
-        let out = Command::new("python3")
-            .arg(repo().join(format!("scripts/{script}/make_oiler_files.py")))
-            .arg(repo())
-            .arg("--check")
-            .output()
-            .expect("python3 runs the script");
-        let said = String::from_utf8_lossy(&out.stdout);
-        assert!(
-            out.status.success(),
-            "{said}{}",
-            String::from_utf8_lossy(&out.stderr)
-        );
-        assert_eq!(said.matches(": as made").count(), 5, "{said}");
-    }
-}
-
-/// The lines of the `ship_classes = [ ... ]` list of a file's first table.
-fn class_list(preamble: &[String]) -> Vec<String> {
-    let start = preamble
-        .iter()
-        .position(|l| l.starts_with("ship_classes = ["))
-        .expect("the list of class files");
-    let end = start
-        + preamble[start..]
+    // The points are the file's: the table is in both sides' objectives.
+    let table: toml::Table = resolved(&file(true, 'd')).parse().expect("a table");
+    for side in ["allied", "japanese"] {
+        let objectives = table["objectives"][side]["objective"]
+            .as_array()
+            .expect("the objectives of the side");
+        let sunk: Vec<&toml::Value> = objectives
             .iter()
-            .position(|l| l.trim() == "]")
-            .expect("its end");
-    preamble[start + 1..end]
-        .iter()
-        .map(|l| l.trim().to_string())
-        .collect()
-}
-
-/// Property: the new files differ from the files they stand beside only in
-/// the ships added, the class file and the sides file named, and the name.
-/// Taken away the name, the class and sides files, the group's force and its
-/// ships, the two tables are equal; and the new list of class files is the
-/// old with the one oiler file inserted.
-#[test]
-fn property_the_new_files_differ_only_in_the_group_the_class_file_and_the_sides_file() {
-    for (coral, group_ships, oiler_file) in [
-        (
-            true,
-            [54, 55],
-            "\"../../reference/ship_classes_coral_sea_oilers.csv\",",
-        ),
-        (
-            false,
-            [44, 45],
-            "\"../../reference/ship_classes_five_days_oilers.csv\",",
-        ),
-    ] {
-        for letter in LETTERS {
-            let who = format!("coral {coral}, file {letter}");
-            let old = tables(&read(&old_file(coral, letter)));
-            let new = tables(&read(&file(coral, letter)));
-
-            // The list of class files: the old with the one file inserted.
-            let (old_list, new_list) = (class_list(&old[0]), class_list(&new[0]));
-            assert_eq!(new_list.len(), old_list.len() + 1, "{who}");
-            let without: Vec<String> = new_list
-                .iter()
-                .filter(|l| l.as_str() != oiler_file)
-                .cloned()
-                .collect();
-            assert_eq!(without, old_list, "{who}: the list with one inserted");
+            .filter(|o| o["kind"].as_str() == Some("ships_sunk"))
+            .collect();
+        assert_eq!(sunk.len(), 1, "{side}: one ships_sunk objective");
+        let points = sunk[0]["points"].as_table().expect("its points");
+        let want = [
+            ("carrier", 10),
+            ("battleship", 8),
+            ("cruiser", 4),
+            ("destroyer", 1),
+            ("transport", 2),
+            ("auxiliary", 1),
+        ];
+        assert_eq!(points.len(), want.len(), "{side}");
+        for (kind, n) in want {
             assert_eq!(
-                new_list.iter().filter(|l| l.as_str() == oiler_file).count(),
-                1,
-                "{who}"
+                points[kind].as_integer(),
+                Some(n),
+                "ships_sunk gives {kind} {n} points on the {side} side"
             );
-
-            // What comes before any table, without the name, the list of
-            // class files and the sides file.
-            let bare = |preamble: &[String]| -> Vec<String> {
-                let start = preamble
-                    .iter()
-                    .position(|l| l.starts_with("ship_classes = ["))
-                    .expect("a list");
-                let end = start
-                    + preamble[start..]
-                        .iter()
-                        .position(|l| l.trim() == "]")
-                        .expect("its end");
-                preamble
-                    .iter()
-                    .enumerate()
-                    .filter(|(i, l)| {
-                        (*i < start || *i > end)
-                            && !l.starts_with("name = ")
-                            && !l.starts_with("class_sides = ")
-                    })
-                    .map(|(_, l)| l.clone())
-                    .collect()
-            };
-            assert_eq!(bare(&old[0]), bare(&new[0]), "{who}: the header");
-            assert!(
-                old[0].iter().any(|l| l.starts_with("class_sides = "))
-                    && new[0].iter().any(|l| l.starts_with("class_sides = ")),
-                "{who}: both name a sides file"
-            );
-            assert_ne!(
-                old[0].iter().find(|l| l.starts_with("class_sides = ")),
-                new[0].iter().find(|l| l.starts_with("class_sides = ")),
-                "{who}: the sides file is another"
-            );
-
-            // The other tables, the new without the group's force and ships.
-            let mut removed_forces = 0;
-            let mut removed_ships = Vec::new();
-            let rest: Vec<Vec<String>> = new[1..]
-                .iter()
-                .filter(|table| {
-                    let header = table[0].as_str();
-                    if header == "[[task_force]]" && numbers_of(table, &["id"]) == [6] {
-                        removed_forces += 1;
-                        return false;
-                    }
-                    if header == "[[ship]]" && numbers_of(table, &["task_force"]) == [6] {
-                        removed_ships.push(numbers_of(table, &["id"])[0]);
-                        return false;
-                    }
-                    true
-                })
-                .cloned()
-                .collect();
-            assert_eq!(removed_forces, 1, "{who}: one force added");
-            assert_eq!(removed_ships, group_ships, "{who}: two ships added");
-            assert!(rest == old[1..], "{who}: every other table is the old's");
         }
     }
 }

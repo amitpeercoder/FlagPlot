@@ -60,7 +60,7 @@ impl World {
     ///
     /// Fails if the game has begun (a day has been resolved or any event is
     /// recorded, including an earlier call: ageing again would change the
-    /// ages already given), if there are no search figures, if an entry has
+    /// ages already given), if an entry has
     /// no ships, if an entry's report would refresh a contact instead of
     /// making a new one (two entries too close together, as the search
     /// figures merge them), or if an entry would be dropped by ageing before
@@ -90,11 +90,6 @@ impl World {
         }
         if contacts.is_empty() {
             return Ok(());
-        }
-        if self.ref_data.search.is_none() {
-            return Err(SimError::InvalidSetup(
-                "there are starting contacts but no search figures".to_string(),
-            ));
         }
         for (contact, seen_by) in &contacts {
             if contact.ship_count == 0 {
@@ -133,7 +128,7 @@ impl World {
         let Some(oldest) = entries.iter().map(|(c, _)| c.age_pulses).max() else {
             return Ok(());
         };
-        let figures = self.ref_data.search.clone().expect("checked by the caller");
+        let figures = self.ref_data.search.clone();
         // Which entry made which contact, to name it in an error.
         let mut made: BTreeMap<ContactId, &StartingContact> = BTreeMap::new();
         for pulse in (0..=oldest).rev() {

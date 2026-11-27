@@ -272,13 +272,13 @@ impl SideView<'_> {
                     grounded,
                     base.airfield_damage,
                     None,
-                    self.ref_data.surface_combat.as_ref(),
+                    &self.ref_data.surface_combat,
                     fatigue_loaded,
                     today,
                 )
             };
             let (aircraft, distance_nm) = match group.mission {
-                AirMission::Search if self.ref_data.search.is_some() => match group.search {
+                AirMission::Search => match group.search {
                     Some(arc) if group.ready > 0 => {
                         (able(group), arc.range_nm * Fixed::from_int(2))
                     }

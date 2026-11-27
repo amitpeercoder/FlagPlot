@@ -155,16 +155,8 @@ impl World {
     /// leaves its `alerted` and `alerted_by` alone. Reads belief only, never
     /// the truth of enemy units.
     pub(crate) fn alert_from_belief(&mut self, day: u32, pulse: Pulse) {
-        let Some(figures) = self.ref_data.surface_combat.clone() else {
-            return;
-        };
-        // Without search figures no side can hold a contact, so the age
-        // limit is never read.
-        let fresh_max_age = self
-            .ref_data
-            .search
-            .as_ref()
-            .map_or(0, |search| search.fresh_contact_max_age_pulses);
+        let figures = self.ref_data.surface_combat.clone();
+        let fresh_max_age = self.ref_data.search.fresh_contact_max_age_pulses;
         let decisions: Vec<(TaskForceId, AlertChoice)> = self
             .truth
             .task_forces
