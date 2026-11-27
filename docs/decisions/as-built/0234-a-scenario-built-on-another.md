@@ -1,0 +1,5 @@
+# 0234, as built: A scenario built on another
+
+## Amended (Nov 27, 2026): the islands of the table's 39 days
+
+Decision 0232's step 3 gives the three files of `data/scenarios/table-rear-bases/` islands they did not have: a third island, "Guadalcanal and Tulagi", in `07b` and `07c`, and islands 1, 2 and 3 in `07_full_slice`, which had none (the designer's answer 2 to decision 0232, and the architect's ruling in `as-built/0232-a-plan-the-commander-writes.md`). They are written by `scripts/table-rear-bases/make_files.py`, which step D of this record deletes. So the row of "Which files convert" for `table-rear-bases` gains those islands: an overlay of step D states them, and statement R3 of `tests/scenarios_built_on_another.rs` reads the row as amended. Whichever of the two builds merges second takes the other's change into account: if step D is built first, step 3 of decision 0232 adds the islands to the three overlays by hand and its statements for `tests/table_rear_bases_files.rs` come back to the architect to be restated for a file that no script makes.

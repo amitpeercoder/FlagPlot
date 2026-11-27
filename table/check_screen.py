@@ -2376,6 +2376,12 @@ def main():
             limits_in_force(bridge)
             the_orders_paper(bridge)
             reason_limits_as_links(bridge)
+            # A plan the commander writes (decision 0232, step 3): its statements and its checks are in check_plan.py, which is
+            # imported here and not at the top, since it takes this file's helpers; its count of checks is added to this one's.
+            import check_plan
+            import check_screen as twin
+            check_plan.run(bridge)
+            COUNT["held"] += twin.COUNT["held"]
             the_intelligence_of_the_long_game(bridge)
             midway_on_its_chart(bridge)
             person_against_agent(bridge, args.hold)

@@ -1,6 +1,6 @@
 # 0234: A scenario built on another
 
-Status: a plan by the architect, written on Nov 27, 2026, on Amit's delegation of that day (decision 0233's Status has his words). It is the record for items 4 and F of the programme in `docs/open-work.md`. Nothing is built.
+Status: a plan by the architect, written on Nov 27, 2026, on Amit's delegation of that day (decision 0233's Status has his words). It is the record for items 4 and F of the programme in `docs/open-work.md`. Nothing is built. Amended on Nov 27, 2026, in one row of "Which files convert" (`as-built/0234-a-scenario-built-on-another.md`).
 
 Summary: A scenario file may state `built_on = "another.toml"` and then holds only what differs: `sim-data` reads the file below, lays this one over it and loads the result as it loads any scenario. The 58 scenario files that nine Python scripts in six folders make become such files, each shown to resolve to the table of the file it replaces and to play the same game day for day before that file goes; the generators are then deleted. The other 205 files stay as they are. Before it, `scenario.rs` is split by table as a pure move. A saved game still records the hash of the file it names, and now also the hash of each file that one is built on. No rule of the game changes.
 
@@ -77,7 +77,7 @@ All 55 files a live generator makes and marks "Do not edit by hand", and the thr
 | `midway` | `01a` to `01d` (4) | `base_midway` | `name`, `[[command]]`; file d, `name` alone |
 | `table-hunger` | 12 | the file `scripts/table-copies/make_copies.py` lists as its source | `ground` |
 | `table-boats` | 16 | the file `scripts/table-boats/make_files.py` copies | `submarine_classes`, `submarine_torpedoes`, `submarines`, `[side]`, `[[submarine]]`; `ground` too in the four built on a file of the live ground figures |
-| `table-rear-bases` | 3 | the file of the same name in `table-boats` | `name`; base 3's `supply_t`; for task forces 30 and 32 to 39, `at_base`, `home_port`, `available_from` |
+| `table-rear-bases` | 3 | the file of the same name in `table-boats` | `name`; base 3's `supply_t`; for task forces 30 and 32 to 39, `at_base`, `home_port`, `available_from`; and, once decision 0232's step 3 is built, `[[island]]` 3 in `07b` and `07c` and `[[island]]` 1, 2 and 3 in `07_full_slice` (`as-built/0234-a-scenario-built-on-another.md`) |
 
 An overlay's header says what it is built on and what it states, and keeps what its generator's header said of the scenario, less the sentences about the script. Notes the generators wrote beside a changed line go beside that line in the overlay.
 

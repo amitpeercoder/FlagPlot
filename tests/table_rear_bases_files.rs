@@ -10,9 +10,17 @@
 //! 2. Read as data, with every comment set aside, each file differs from the
 //!    file it is made from in this and nothing else: its `name`; base 3's
 //!    `supply_t`, 2120 for 960; for each of task forces 30 and 32 to 39,
-//!    `at_base = 2`, `home_port = 2` and `available_from` one less. Its
-//!    comments differ in the header and in the notes rulings 1 and 2 ask for,
-//!    beside base 3, base 7 and each run moved.
+//!    `at_base = 2`, `home_port = 2` and `available_from` one less; and the
+//!    data lines of the islands statement 6 adds: in `07b` and `07c` the
+//!    four of the third island, after the block of island 2 and before the
+//!    next data line of the file it is made from; in `07_full_slice` twelve,
+//!    the last data lines of the file. Its comments differ in the header, in
+//!    the notes rulings 1 and 2 ask for, beside base 3, base 7 and each run
+//!    moved, and in the note above the islands added. (Restated by the
+//!    architect on Nov 27, 2026, for decision 0232, step 3: the files had
+//!    the same count of data lines before; with the added lines set aside
+//!    they still do, and every other difference is counted as before, 1, 1,
+//!    9, 9 and 9.)
 //! 3. Base 7 has no supply and no fuel on the first day.
 //! 4. On the first morning task force 30 may be used (day 9), it lies
 //!    stopped at Rabaul's hex with 7 t of supply aboard, as the file it is
@@ -22,6 +30,32 @@
 //!    that the side's staff chooses its sources in the table's files, so
 //!    the pull request that builds it changes the table's files by that key
 //!    and by nothing else; the files of the new folder are made from them.)
+//!
+//! Added by the architect on Nov 27, 2026, before the code, for decision
+//! 0232, step 3 (the designer's answer 2 of Nov 26, 2026: the island
+//! "Guadalcanal and Tulagi" is added to the table's copies of the 39 days,
+//! and to no file of record or of a proof):
+//!
+//! 6. Each of the three files has three islands when loaded: 1,
+//!    "Guadalcanal", of base 1; 2, "Tulagi", of base 4; and 3, "Guadalcanal
+//!    and Tulagi", of base 1 and then base 4. In `07b` and `07c` the script
+//!    writes the third after the block of island 2: `[[island]]`, `number =
+//!    3`, `name = "Guadalcanal and Tulagi"`, `places = [{ base = 1 }, { base
+//!    = 4 }]`, those four data lines in that order and no other.
+//!    `07_full_slice`, which is made from a file with no island (the table's
+//!    list offered its islands all the same, and the engine refused them:
+//!    found on Nov 27, 2026), is given all three at its end: the four lines
+//!    of island 1 and of island 2 as `07b` has them, then the four of island
+//!    3. The files they are made from, in `table-boats`, are as they were:
+//!    `07b` and `07c` with islands 1 and 2 and no third, `07_full_slice`
+//!    with none. No scenario file outside `table-rear-bases` holds the line
+//!    `name = "Guadalcanal and Tulagi"`.
+//! 7. An island is map data and nothing of it is hashed: for each of the
+//!    three files, the world on the first morning and at the end of day 3
+//!    has the same hash as the world of the same file with the lines
+//!    statement 6 adds taken out of its text, both loaded on the live figures as
+//!    statement 3 loads the file. No number is worked here: the two hashes
+//!    are compared with each other.
 
 use crate::common;
 
