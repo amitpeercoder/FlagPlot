@@ -46,3 +46,8 @@ The statements of rules 27 to 31 are written by the architect before any code of
 1. **Shall the table's 39 days offer a dry run?** Today they offer none: the files name no trial's figures. Step 3's two columns, "Your plan" and "The staff's plan", need one, and the 39 days are the only game on the table with two landings to write. The architect recommends yes: the three files of the table's 39 days name `data/reference/trial.toml`, the placeholder figures the table's three other battles name, once the times are measured on your machine. Two things to know first. A dry run then shows on every order of the 39 days, not only on a written plan. And in the tries made, over 7 and over 14 days, the island was won in no run by either plan, so the first row of the two columns will often read "no run" twice and the difference will be in the costs.
 
    On a yes the script writes `trial = "../../reference/trial.toml"` after the files' `class_sides` line, as its seventh change, statement 2 of `tests/table_rear_bases_files.rs` gains that one line, and `the_dry_run_beside` in `table/check_plan.py`, which is written, runs. On a no, rule 29 is built and held by the node check alone.
+
+## The designer's answers (Nov 27, 2026)
+
+1. **A dry run on the table's 39 days:** yes, once the times are measured on his machine, as the architect recommended.
+2. **Islands 1 and 2 in the third file** (ruling 2 above, which went beyond his word of Nov 26 that named island 3 alone): accepted.
