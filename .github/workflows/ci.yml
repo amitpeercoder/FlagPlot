@@ -177,6 +177,7 @@ jobs:
 
       - name: Test
         run: |
+          mkdir -p nextest-extract
           export SIM_CLI_PREBUILT="$PWD/nextest-extract/target/checked/sim-cli"
           cargo-nextest nextest run --profile ci --no-fail-fast \
             --archive-file nextest.tar.zst --extract-to nextest-extract --workspace-remap . \
