@@ -129,7 +129,7 @@ Where the end chosen is "keep it supplied", the paper shows one more row, as it 
 
 **The words.** The page's own function `missionLines(mission, days)`, which draws nothing and asks nothing: `days` holds each day's events, day 1 first, or nothing for a day not answered. It gives the lines, the first of which is one of three.
 
-- **Met:** "Mission met." and then "Every man was fed every night to the end of day 14, at Base S and at Base T." The places are the measure's, in its order, joined as English joins a list: "at A.", "at A and B.", "at A, B and C."
+- **Met:** "Mission met." and then "Every man was fed every night to the end of day 14, at Base S and at Base T." The places are the measure's, in its order, each named: one place is "at A.", two each take their own "at", "at A and at B.", and three or more are joined as English joins a list under one "at", "at A, B and C."
 - **Not met:** "Mission not met." and then one sentence for each place that had a night unfed, in the measure's order, and within a place one sentence for each count of men, in the order of its first night:
   - "1,000 men at Base T went unfed on the night of day 14."
   - "1,000 men at Base S went unfed on the nights of days 13 and 14."
