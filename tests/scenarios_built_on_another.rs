@@ -1,12 +1,16 @@
 //! A scenario built on another (decision 0234): the architect's statements,
 //! written on Nov 27, 2026, before any code. No number here is a figure of
-//! the game. The rule is decision 0234's "The format as planned", cited
-//! below by its item, and by its rulebook section once step B has moved it.
+//! the game. The rule was decision 0234's "The format as planned" and is,
+//! since step B, the rulebook's section "A scenario built on another"
+//! (`docs/rules/01-the-day-orders-and-what-a-side-knows.md`), cited below by
+//! the number of its item.
 //!
-//! This file holds no test until step B, which also names it as the
-//! package names its test files that day. The statements L are of the loader and are tested in
-//! `sim-data` on invented files held in a `Pack`; the statements R are of
-//! the repository's files and are tested here.
+//! The statements L are of the loader. L1 to L14 and L16 are tested in
+//! `sim-data` (`crates/sim-data/src/scenario/tests/built_on.rs`) on invented
+//! files held in a `Pack`; L15, which reads `sim-cli`'s check of decision
+//! 0207, is tested here. The statements R are of the repository's files and
+//! are tested here: R1 and R2 since step B, R3 from step C, R4 and R5 from
+//! step D. `tests/all.rs` names this file as a module.
 //!
 //! The loader
 //!
@@ -151,8 +155,10 @@ fn r1_every_file_built_on_another_names_a_scenario_that_loads_alone() {
             file.display()
         );
         assert!(
-            below.starts_with(scenarios_dir())
-                || below.components().any(|c| c.as_os_str() == "scenarios"),
+            below
+                .canonicalize()
+                .expect("it is there")
+                .starts_with(scenarios_dir().canonicalize().expect("the folder")),
             "{} is built on {name}, which is not under data/scenarios",
             file.display()
         );

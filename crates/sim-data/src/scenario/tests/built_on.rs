@@ -427,6 +427,26 @@ fn l13_the_files_built_on_are_recorded_and_the_pack_holds_them() {
     assert_eq!(from_pack.data_files(), overlay.data_files());
 }
 
+#[test]
+fn l13_the_files_built_on_are_listed_nearest_first() {
+    let files = [
+        ("a/s.toml", whole(1, &with_force(&ship("")))),
+        (
+            "b/m.toml",
+            "built_on = \"../a/s.toml\"\nname = \"Mid\"\n".to_string(),
+        ),
+        (
+            "c/o.toml",
+            "built_on = \"../b/m.toml\"\nname = \"Top\"\n".to_string(),
+        ),
+    ];
+    let scenario = Scenario::load_via(&source(&files), &at("c/o.toml"), &LoadOptions::default())
+        .expect("loads");
+    let listed = scenario.data_files();
+    let (last_two, _) = (&listed[listed.len() - 2..], ());
+    assert_eq!(last_two, [at("c/../b/m.toml"), at("c/../b/../a/s.toml")]);
+}
+
 /// What a scenario plays: its hash at day 0, its script and its commands.
 fn played(scenario: &Scenario) -> (u64, String, String) {
     (
@@ -444,20 +464,13 @@ fn l14_the_resolved_text_loads_as_the_overlay_does() {
     assert_eq!(resolved(&files, "y/s.toml"), table(&plain));
     // An overlay, with orders and a command of its own, resolved and
     // written in its own folder.
-    let over = "built_on = \"../../y/s.toml\"\nname = \"Over\"\n\n[[command]]\nday = 1\nside = \"allied\"\ntext = \"hold\"\n";
-    let mut files = vec![("y/s.toml", plain), ("x/z/o.toml", over.to_string())];
-    let overlay = Scenario::load_via(&source(&files), &at("x/z/o.toml"), &LoadOptions::default());
-    // The command may be refused as a command; the test needs the overlay
-    // to load, so a plain order is used when it is.
-    let over = if overlay.is_ok() {
-        over.to_string()
-    } else {
-        "built_on = \"../../y/s.toml\"\nname = \"Over\"\n".to_string()
-    };
-    files[1].1 = over;
+    let over = "built_on = \"../../y/s.toml\"\nname = \"Over\"\n\n[[order]]\nday = 1\nside = \"allied\"\ntask_force = 1\nkind = \"set_speed\"\nspeed = \"full\"\n\n[[command]]\nday = 1\nside = \"allied\"\nkind = \"hold\"\ntask_force = 1\n";
+    let files = vec![("y/s.toml", plain), ("x/z/o.toml", over.to_string())];
     let src = source(&files);
     let overlay = Scenario::load_via(&src, &at("x/z/o.toml"), &LoadOptions::default())
         .expect("the overlay loads");
+    assert!(!overlay.scripted_orders().is_empty());
+    assert!(!overlay.scripted_commands().is_empty());
     let text = Scenario::resolved_text(&src, &at("x/z/o.toml")).expect("resolves");
     assert!(!text.contains("built_on"));
     let again = Scenario::load_via(
@@ -481,11 +494,13 @@ fn l16_text_that_states_built_on_loads_as_a_file_of_that_text_would() {
         .replace("\"../reference/", &format!("{names}reference/"));
     let base = format!("{base}{}", with_force(&ship("")));
     fs::write(dir.join("s.toml"), &base).expect("writes");
-    let over = "built_on = \"s.toml\"\nname = \"Over\"\n";
+    let over = "built_on = \"s.toml\"\nname = \"Over\"\n\n[[order]]\nday = 1\nside = \"allied\"\ntask_force = 1\nkind = \"set_speed\"\nspeed = \"full\"\n\n[[command]]\nday = 1\nside = \"allied\"\nkind = \"hold\"\ntask_force = 1\n";
     let path = dir.join("o.toml");
     fs::write(&path, over).expect("writes");
     let from_file = Scenario::load(&path).expect("loads");
     let from_text = Scenario::from_text(over, &path).expect("loads");
+    assert!(!from_file.scripted_orders().is_empty());
+    assert!(!from_file.scripted_commands().is_empty());
     assert_eq!(played(&from_text), played(&from_file));
     assert_eq!(from_text.data_files(), from_file.data_files());
     assert_eq!(from_text.name, "Over");

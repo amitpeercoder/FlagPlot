@@ -1049,7 +1049,7 @@ A game begins from a scenario, at day 0: the state the scenario gives, with an e
 
 A scenario file may state that it is **built on** another and then hold only what differs: the loader reads the file below, lays this one over it and loads the result as it loads any scenario. No rule of the game is added: only how a scenario is written. [0234]
 
-1. **`built_on`.** A scenario file may state `built_on = "path"`, one path, relative to its own folder. The file named is **the file it is built on**; the file that states the key is **an overlay**. A file with no `built_on` is read exactly as before this record, error for error.
+1. **`built_on`.** A scenario file may state `built_on = "path"`, one path, relative to its own folder. The file named is **the file it is built on**; the file that states the key is **an overlay**. A file with no `built_on` is read exactly as a scenario always was, error for error.
 2. **A chain.** The file built on may itself be an overlay. A chain that comes back to a file it has read is refused, and so is one of more than 8 files. A file states one `built_on`, never a list.
 3. **What is read.** The loader reads the lowest file's table, lays each file above over it in turn, and gives the result to the one loader of scenarios, with the folder of the file that was asked for. Unknown keys, missing keys, floats and every other check are made on the result, as for a file written out in full.
 4. **A plain key** (anything that is not a list of tables: `name`, `days`, `ground`, `ship_classes` whether one name or a list, the `[objectives]` table, the `[side]` table) stated by the overlay takes the place of the whole value below. `[side.allied]` in an overlay therefore drops a `[side.japanese]` below unless the overlay states it too.
