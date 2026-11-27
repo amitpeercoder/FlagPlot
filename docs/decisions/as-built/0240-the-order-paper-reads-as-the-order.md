@@ -11,3 +11,11 @@ What the pull request "order paper, stage A" makes. It changes what the table gi
 - **Focus on opening** goes to the first control of the order that is shown, no longer to a hidden one.
 - **Not built, as the plan has it:** the reading's move above LIMITS, the supply order's blanks and the limits on the face (stage B) and the empty floor (stage C). The parts' order is still p-limits, p-plan, the reading.
 - **Checks restated.** `one_order_paper`'s list of parts; `the_words_and_what_the_papers_say`'s width of `body.papered #prompt`; `the_submarines`'s quoted label of the patrol's hexes (now a `<label>`); `the_supply_orders_two_numbers`'s quoted line in `openDraft` (the end's change no longer calls `showSupply` and `endChanged` from the paper's listener); `your_plan_on_the_order_paper`'s P1, which named `p-acts` and now names `p-acts-t`. Nothing was loosened or removed.
+
+### After the build: two mends by the architect
+
+- **No dashed rule in the paper (A15a).** The rules above a fieldset and above the staff's reading come from `.order`, which the card shares. `#paper fieldset` and `#paper .pv` now set `border-top: 0`, so the paper draws only the rule under its heading and the rule above its foot.
+- **The paper of a written landing.** Decision 0232's step 3 brought a new paper to `main` while this stage was built: a landing written under an order in force (`openPaper('landing', …)`). The plan did not have it. It is treated as the change-of-limits paper is: its head line is "A LANDING OF YOUR PLAN · DRAFT", its heading is the order's link, and its sentence stays under the heading. The check's A4 holds both.
+
+Tried by hand on a local table, on rung 1: the supply order at Thornwick ("Keep Thornwick supplied") and a deny on open water ("Deny the waters about (2, 4), within 160 miles"). Not tried by hand: a unit's paper, the change-of-limits, give-back and landing papers, and the 39 days.
+
