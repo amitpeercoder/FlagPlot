@@ -128,7 +128,7 @@ impl Stage {
 /// one was asked, a world at a time.
 struct UnderWay {
     with: Stage,
-    without: Option<(BesideOf, Stage)>,
+    without: Option<(BesideOf, Option<IntentId>, Stage)>,
     /// Answered as a window: dates were asked.
     window: bool,
     intent: IntentId,
@@ -230,6 +230,7 @@ impl TrialRunner for SeatTrials {
         let without = match &asked.second {
             Some(second) => Some((
                 second.of,
+                second.order,
                 Stage::new(
                     begin_window(
                         view,
@@ -332,7 +333,7 @@ impl TrialUnderWay for UnderWay {
         if self.with.step() {
             return TrialStep::Going;
         }
-        if let Some((_, without)) = &mut self.without {
+        if let Some((_, _, without)) = &mut self.without {
             if without.step() {
                 return TrialStep::Going;
             }
@@ -342,17 +343,43 @@ impl TrialUnderWay for UnderWay {
             return TrialStep::Done(Box::new(Answered::Window(fill_window(&self.context, with))));
         }
         let first = &with.played[0].played;
-        let without = self
-            .without
-            .as_ref()
-            .and_then(|(of, stage)| stage.played().map(|p| (*of, &p.played[0].played)));
-        let estimate = estimate(first, self.intent, without.map(|(_, p)| p));
+        let without = self.without.as_ref().and_then(|(of, order, stage)| {
+            stage.played().map(|p| (*of, *order, &p.played[0].played))
+        });
+        let estimate = estimate(first, self.intent, without.map(|(_, _, p)| p));
         let mut answer = fill(&self.context, &estimate, first);
-        answer.beside = without.map(|(of, second)| {
+        answer.beside = without.map(|(of, order, second)| {
+            if of.is_the_staffs_plan() {
+                // Decision 0232, rule 25: the order the written part stands
+                // under is in both trials; its end is read in each and the
+                // two are counted world for world. Where the order is the
+                // intent tried the first is the estimate already made.
+                let order = order.unwrap_or(self.intent);
+                let kept = |played: &Played| sim_trial::estimate(played, order, None);
+                let yours = if order == self.intent {
+                    estimate.clone()
+                } else {
+                    kept(first)
+                };
+                let staffs = kept(second);
+                return BesideShown {
+                    of,
+                    order: Some(order),
+                    with_your_plan: Some(went(&yours.went)),
+                    went: Some(went(&staffs.went)),
+                    last_day: staffs.last_day,
+                    could_not: staffs.could_not.iter().map(|f| f.world).collect(),
+                    side_costs: staffs.side_costs.as_ref().map(costs),
+                    enemy_costs: staffs.enemy_costs.as_ref().map(costs),
+                    matched: Some(matched(&world_for_world(&yours, &staffs))),
+                };
+            }
             let beside = sim_trial::estimate(second, self.intent, None);
             let shown_went = of == BesideOf::AsItStands;
             BesideShown {
                 of,
+                order: None,
+                with_your_plan: None,
                 went: shown_went.then(|| went(&beside.went)),
                 last_day: beside.last_day,
                 could_not: beside.could_not.iter().map(|f| f.world).collect(),

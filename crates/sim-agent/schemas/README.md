@@ -190,6 +190,17 @@ there is nothing to say, so a game with no stream and no establishment reads
 as before; the text briefing gains "Replacement men:" and "Men joined
 yesterday:" lines. Only the side's own are ever given.
 
+Version 57 (decision 0232, step 2) lets a preview of a `set_intent` take `under`, a list of sub-intents the commander
+writes under the order, each a `set_intent` body without `parent` and with its own `limits`: the order, its limits and
+each sub-intent followed by its own limits are taken in as one. A `preview` answer gains `under` (each sub-intent's
+`intent`, `command`, `shown`, `limits` and `shown_limits`; an empty list where none), `approve` of it queues all or none
+and its answer gains `under_queued` (`limits_queued` then counts the order's own), `take_back` of the order takes its
+sub-intents, and a refusal's `of_batch` counts the whole batch. A `trial` with `compare` reads the staff's own plan as the
+second trial for a written part: `beside` is `left_to_the_staff` or `given_back_to_the_staff`, and gains `order` and
+`with_your_plan`, its `how_it_went` is the order's end with the staff's plan, and its `world_for_world` has the keys
+`both`, `with_your_plan_alone`, `with_the_staffs_alone`, `neither` and `apart`. `compare` is true where not given for
+each. `dates` is refused for a written part. Every other answer differs only in the version.
+
 Version 40 (decision 0204) lets a trial be asked inside a day, at 0600 and 1200: the refusal "a trial is asked at dusk"
 is no longer given, and what was asked (`asked`, in `trial`, `window` and `trial_described`) gains `inside_day`, `null`
 at dusk and inside a day `{"day": 1, "clock": "0600"}`; each row of `trials` gains it beside `asked_on`. Such a trial is

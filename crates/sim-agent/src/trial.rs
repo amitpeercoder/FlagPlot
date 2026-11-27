@@ -71,6 +71,25 @@ pub enum BesideOf {
     WithoutIt,
     /// An intent in force: the side with it withdrawn on the coming morning.
     Withdrawn,
+    /// Decision 0232, rule 23: landings the commander wrote, left out, so
+    /// that the staff plans them. The order they stand under is in both
+    /// trials.
+    LeftToTheStaff,
+    /// Decision 0232, rule 23: a landing the commander wrote that is in
+    /// force, withdrawn on the coming morning, so that the staff plans that
+    /// place from then, with what was already ordered standing.
+    GivenBackToTheStaff,
+}
+
+impl BesideOf {
+    /// Whether the second trial is the staff's own plan for what the
+    /// commander wrote (decision 0232, rule 23).
+    pub fn is_the_staffs_plan(self) -> bool {
+        matches!(
+            self,
+            BesideOf::LeftToTheStaff | BesideOf::GivenBackToTheStaff
+        )
+    }
 }
 
 impl BesideOf {
@@ -79,6 +98,8 @@ impl BesideOf {
             BesideOf::AsItStands => "as_it_stands",
             BesideOf::WithoutIt => "without_it",
             BesideOf::Withdrawn => "withdrawn",
+            BesideOf::LeftToTheStaff => "left_to_the_staff",
+            BesideOf::GivenBackToTheStaff => "given_back_to_the_staff",
         }
     }
 }
@@ -91,6 +112,10 @@ pub struct SecondAsked {
     pub of: BesideOf,
     pub standing: Vec<CommandKind>,
     pub course: Vec<CourseStep>,
+    /// Decision 0232, rule 25: for the staff's plan beside the commander's
+    /// written part, the order the written part stands under, whose end is
+    /// read in both trials; `None` for every other second trial.
+    pub order: Option<IntentId>,
 }
 
 /// What a trial is asked (rule 2): its number; its size; the standing
@@ -605,6 +630,12 @@ pub struct MatchedShown {
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct BesideShown {
     pub of: BesideOf,
+    /// Decision 0232, rule 25: the order whose end is read in both trials,
+    /// where the second trial is the staff's plan; else `None`.
+    pub order: Option<IntentId>,
+    /// The order's end in the first trial, where the second trial is the
+    /// staff's plan.
+    pub with_your_plan: Option<TrialWent>,
     /// `None` where the intent is not in the second trial to have gone.
     pub went: Option<TrialWent>,
     pub last_day: Option<u32>,
@@ -1325,6 +1356,9 @@ pub(crate) struct AskedShown {
     /// The side has men ashore: what is ashore is a day behind in a trial
     /// asked inside a day (decision 0204, 4).
     pub ashore: bool,
+    /// Decision 0232, rule 25: where the intent tried is one landing the
+    /// commander wrote under an order, the place of it.
+    pub landing: Option<Hex>,
 }
 
 impl AskedShown {
@@ -1401,12 +1435,24 @@ impl AskedShown {
     }
 }
 
-/// The words of what a second trial is of.
-fn beside_words(of: BesideOf) -> &'static str {
+/// The words of what a second trial is of. `landing` is the place of the
+/// one landing tried, where the thing tried is one (decision 0232, rule 25).
+fn beside_words(of: BesideOf, landing: Option<Hex>) -> String {
+    let landing = landing.map(|hex| format!("the landing at ({},{})", hex.q, hex.r));
     match of {
-        BesideOf::AsItStands => "the plan as it stands, without the draft",
-        BesideOf::WithoutIt => "your side without the order",
-        BesideOf::Withdrawn => "your side with the order withdrawn on the coming morning",
+        BesideOf::AsItStands => "the plan as it stands, without the draft".to_string(),
+        BesideOf::WithoutIt => "your side without the order".to_string(),
+        BesideOf::Withdrawn => {
+            "your side with the order withdrawn on the coming morning".to_string()
+        }
+        BesideOf::LeftToTheStaff => format!(
+            "the same order with {} left to the staff",
+            landing.as_deref().unwrap_or("the landings")
+        ),
+        BesideOf::GivenBackToTheStaff => format!(
+            "the same order with {} given back to the staff on the coming morning",
+            landing.as_deref().unwrap_or("the landings")
+        ),
     }
 }
 
@@ -1565,7 +1611,10 @@ fn in_worlds(worlds: &[u32]) -> String {
 /// The second trial beside the first (decision 0181, rule 5), in words.
 fn beside_lines(asked: &AskedShown, beside: &BesideShown) -> Vec<String> {
     let mut text = Vec::new();
-    let mut line = format!("Beside it, {}, in the same worlds", beside_words(beside.of));
+    let mut line = format!(
+        "Beside it, {}, in the same worlds",
+        beside_words(beside.of, asked.landing)
+    );
     match (&beside.went, beside.of) {
         (Some(went), _) => {
             let of = went.played.len();
@@ -1595,6 +1644,12 @@ fn beside_lines(asked: &AskedShown, beside: &BesideShown) -> Vec<String> {
         (None, _) => line.push_str(": the order is not there to have gone, so only what it cost is given."),
     }
     text.push(line);
+    if beside.of == BesideOf::GivenBackToTheStaff {
+        text.push(format!(
+            "What was already ordered stands, a landing being readied, ships under way and men ashore as they are. The withdrawal is the trial's, not yours: intent {} is not withdrawn in your game.",
+            asked.tried_intent
+        ));
+    }
     if !beside.could_not.is_empty() {
         text.push(format!(
             "Beside it, {} could not be played.",
@@ -1614,13 +1669,24 @@ fn beside_lines(asked: &AskedShown, beside: &BesideShown) -> Vec<String> {
         ));
     }
     if let Some(m) = &beside.matched {
-        let mut line = format!(
-            "Taken world by world, the draft against the plan as it stands: met and kept in both {}; with the draft alone {}; as it stands alone {}; in neither {}",
-            in_worlds(&m.both),
-            in_worlds(&m.first_alone),
-            in_worlds(&m.later_alone),
-            in_worlds(&m.neither)
-        );
+        let mut line = if beside.of.is_the_staffs_plan() {
+            // Decision 0232, rule 25: the order's end, in both trials.
+            format!(
+                "Taken world by world, your plan against the staff's: met and kept in both {}; with your plan alone {}; with the staff's plan alone {}; in neither {}",
+                in_worlds(&m.both),
+                in_worlds(&m.first_alone),
+                in_worlds(&m.later_alone),
+                in_worlds(&m.neither)
+            )
+        } else {
+            format!(
+                "Taken world by world, the draft against the plan as it stands: met and kept in both {}; with the draft alone {}; as it stands alone {}; in neither {}",
+                in_worlds(&m.both),
+                in_worlds(&m.first_alone),
+                in_worlds(&m.later_alone),
+                in_worlds(&m.neither)
+            )
+        };
         if !m.apart.is_empty() {
             line.push_str(&format!(
                 "; could not be played in one of the two, counted apart, {}",
@@ -1856,15 +1922,32 @@ pub(crate) fn answer_fields(
     fields.insert(
         "beside".to_string(),
         answer.beside.as_ref().map_or(Value::Null, |b| {
-            json!({
+            let mut beside = json!({
                 "of": b.of.name(),
                 "how_it_went": b.went.as_ref().map(|w| n.went_json(w)),
                 "last_day": b.last_day,
                 "could_not_be_played": b.could_not,
                 "cost": b.side_costs.as_ref().map(costs_json),
                 "enemy_lost": b.enemy_costs.as_ref().map(costs_json),
-                "world_for_world": b.matched.as_ref().map(|m| matched_json(m, "with_the_draft_alone", "as_it_stands_alone")),
-            })
+                "world_for_world": b.matched.as_ref().map(|m| {
+                    if b.of.is_the_staffs_plan() {
+                        matched_json(m, "with_your_plan_alone", "with_the_staffs_alone")
+                    } else {
+                        matched_json(m, "with_the_draft_alone", "as_it_stands_alone")
+                    }
+                }),
+            });
+            // Decision 0232, rule 25: the order whose end is read in both
+            // trials, and its end in the first; given only for the staff's
+            // plan, so that no other second trial's answer changes.
+            if let (true, Some(map)) = (b.of.is_the_staffs_plan(), beside.as_object_mut()) {
+                map.insert("order".to_string(), json!(b.order.map(IntentId::raw)));
+                map.insert(
+                    "with_your_plan".to_string(),
+                    json!(b.with_your_plan.as_ref().map(|w| n.went_json(w))),
+                );
+            }
+            beside
         }),
     );
     fields.insert("text".to_string(), json!(text));
@@ -2218,7 +2301,7 @@ pub(crate) fn described_fields(
             described.worlds,
             described.days,
             if asked.preview.is_some() { "the draft" } else { "the order" },
-            beside_words(of)
+            beside_words(of, asked.landing)
         ));
     } else if !window {
         text.push(format!(
