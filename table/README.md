@@ -151,6 +151,10 @@ The first game for play with boats on the map is Midway (above).
 
 `table/check_screen.py` and `table/check_watch.py` check each part. The games they use are `data/scenarios/table-submarines/` (scenarios 128 and 129 with their paths one folder deeper, three days, the seed that has the boat fire and be hunted on the first morning, the waters the Allied side is told of, and no patrol order for the player to give himself): placeholders, not for play, and not in `scenarios.json`.
 
+## YOUR PLAN, the two columns, the marks and the give-back (decision 0232, step 3)
+
+On the paper for an order to seize and hold an island, YOUR PLAN lists each landing the staff's reading forms, left to the staff or written by the player with its own limits; the staff reads the whole draft and one SIGN AND SEND is one `approve` of that reading. A dry run of a draft with a written part, or of a landing given back, is shown in two columns, "Your plan" and "The staff's plan", from the answer's fields alone, with no mark of either as the better. On the plan's paper every task under an order is marked YOURS or THE STAFF'S, from the intent's `maker` and nothing else. A line of his shows his limits, each with CHANGE and (but a risk, and the day he gave) BACK TO THE STAFF'S CHOICE, and GIVE IT BACK TO THE STAFF: that opens a paper where the staff reads the withdrawal, the dry run is of the landing given back, and SIGN AND SEND is one `approve`; SIGNED says "The landing at Lunga: given back to the staff", with TAKE BACK, and while it is queued the line offers neither the give-back nor a change. A reason of the staff's that turns on a landing of his (by numbers: what it serves, the limits it names, a handle in its words) says "your landing at Lunga" as a link and ends its WHY with YOUR PLAN and a link to that line.
+
 ## What it does not do
 
 - It reads the clock from the words of a refused briefing when it is opened at 0600 or 1200, since no tool tells a seat the hour.
