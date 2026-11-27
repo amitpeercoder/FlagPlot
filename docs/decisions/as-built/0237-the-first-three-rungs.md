@@ -206,3 +206,34 @@ The bridge prints "The table is at" and an address. Opened in a browser, it show
 - The switch does. Under YOUR ORDERS on the stop paper the page has the line "Plans launch: on my word" with the button WHEN READY, which sends `set_leave` for the leave to launch. It can be pressed on the first evening. With the order signed and the switch pressed before day 1, the game is the hand calculation's: 2 and 5 met, 2 and 6 the source unfed on the nights of days 13 and 14, 2 and 4 the forward garrison unfed on the night of day 14, and the whole table of the record's "Rung 1 with two sides to fail on", cell for cell.
 
 **Settled: course (c), by the page's own switch, before the clock runs.** No scenario changes and the page needs nothing new for it. The directive's guidance says it in its second paragraph, as written above. V1 to V3 stand as written: they give leave to launch with the order. V5 (the plan approved at the stop) and case H are withdrawn: that path is play, and is not proved or checked. The list check gains L9: the switch is on the page and can be pressed before day 1.
+
+## The card on the new game screen, cut short (Nov 27, 2026)
+
+The designer read rung 1's card on the new game screen and found it too long and too technical for a first game: "We could do with much less, so that users may actually want to try it." The card is cut to this, in `table/scenarios.json`:
+
+```json
+"lines": [
+ "Welcome, Commander. Your first command is a quiet one: one ship, one order, no enemy.",
+ "Base T, 200 miles away, depends on you for its food.",
+ "A placeholder game: everything in it is invented."
+],
+"sides": {
+ "allied": "Keep both garrisons fed."
+}
+```
+
+The entry above in this file shows the card as first built. The directive opens when the game begins and carries the mission in full, as the designer confirmed it, with every figure: its mission paragraph is unchanged.
+
+The designer then asked that the directive be "a bit more friendly and welcoming, after all, this is the commander's onboarding mission". Three places of it changed, still in the Area Commander's voice. The situation opens "Welcome to your first command. Base S is yours, with its stock, its fuel and one ship, Fast transport 1." and ends "There is no enemy within reach, so take your time and learn the work." The guidance opens "You need give only one order. Tell your staff to keep Base T supplied: name the ship, and Base S as its source, and set its two numbers:" and goes on as it did. Its last paragraph ends "If it goes badly, begin again: that is how this work is learned. Good luck." The directive shown earlier in this file is the one first built. The entry's `mission`, its pairing and the scenario are unchanged. The card still has three lines, the last beginning "A placeholder game", and the header still says 14 days.
+
+One check changed with it. `table/check_screen.py`, statement L3, held the directive's mission to be the entry's `sides.allied`, letter for letter. It now holds that `sides.allied` is "Keep both garrisons fed." and that the directive's mission begins with it: the card says the mission in brief and the directive says it in full.
+
+## Islands on the ladder's chart, and where a rung opens (Nov 27, 2026)
+
+The designer, of the same first look: "The map has what it needs other than proper islands. We need to make a good impression on the new player. Also, maybe have these islands more towards the middle of the map rather where it currently is, at the top-left?"
+
+- **The islands.** `table/chart/placeholder_ladder_coast.json` is new: six invented outlines, one island under each of the map's four coast hexes, S (0,0), T (5,0), U (0,14) and E (3,3), and an islet off S and off T. Each lies inside its own hex. It is for the eye only, as every map's coast file is: the page draws it and the game reads none of it. The map, `data/map/placeholder_ladder.toml`, and the scenario are unchanged.
+- **Where a rung opens.** The page has `openOnMission`: a game whose entry has a `mission` opens looking at the middle of the mission's places, leant in (zoom 0.3), where every other game opens on the whole table. Sat right back, the table is whole as before. So rung 1 opens on Base S and Base T in the middle of the view.
+- **Not done: the map itself.** S and T still lie in the map's north-west, since the one map holds the far place of rungs 2 and 3 fourteen rows south. Moving them toward the middle of the table means changing the map's extent, which is data shared by three rungs, and is left for the designer's word.
+- **The check.** `table/check_screen.py`, statement L3a: the coast file's note, its six closed rings, each inside the hex of one of the four places, and `openOnMission` defined once and called once.
+

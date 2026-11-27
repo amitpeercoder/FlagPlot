@@ -5717,6 +5717,13 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
 
   // ---- the chair: you lean, you do not fly ----
   var goal = { x: 0, z: 0, zoom: 0 }, cur = { x: 0, z: 0, zoom: 0 }, camDist = 12;
+  // A game with a mission (a rung of the ladder) opens looking at the mission's own places, leant in so that they
+  // fill the view: the middle of them, not the middle of the map. Sat right back, the whole table, as in every game.
+  function openOnMission() {
+    var ps = ((config.mission && config.mission.places) || []).map(function (p) { return placeOf({ q: p.q, r: p.r }); }).filter(Boolean); if (!ps.length) return;
+    var x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9; ps.forEach(function (v) { x0 = Math.min(x0, v.x); x1 = Math.max(x1, v.x); z0 = Math.min(z0, v.z); z1 = Math.max(z1, v.z); });
+    goal.x = (x0 + x1) / 2; goal.z = (z0 + z1) / 2; goal.zoom = 0.3; clampGoal(); cur.x = goal.x; cur.z = goal.z; cur.zoom = goal.zoom;
+  }
   function clampGoal() { goal.x = Math.max(-TW / 2, Math.min(TW / 2, goal.x)); goal.z = Math.max(-TD / 2, Math.min(TD / 2, goal.z)); goal.zoom = Math.max(0, Math.min(1, goal.zoom)); }
   var chartView = false, flat = 0;
   try { chartView = localStorage.getItem('flagplot.view') === 'chart'; flat = chartView ? 1 : 0; } catch (e) {}
@@ -5903,7 +5910,7 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
     hexes.forEach(function (h) { h[4] = runLon(h[4]); }); chartNames = a[3] && a[3].map(function (n) { return { name: n.name, kind: n.kind, lat: n.lat, lon: runLon(n.lon) }; }); headSeat();
     var ready = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
     if (config.home) { KEPT_ROOT += BASE + '-' + config.home.number; KEPT = KEPT_ROOT; $('btn-new').hidden = false; $('btn-agent').hidden = !config.home.agents.length; }
-    return ready.then(function () { layChart(); cur.zoom = 0; placeCamera(); requestAnimationFrame(frame); if (config.watch) return startWatch(); if (config.versus) startVersus(); return reach('/tools').then(function (names) { names.forEach(function (n) { OFFERED[n] = true; }); $('stops').classList.toggle('daily', !OFFERED.advance); recallTicks(); if (OFFERED.advance) $('btn-day').textContent = 'Next pulse'; return refresh().catch(function (e) { if (!VERSUS || !/waits for the clock/.test(e.message)) throw e; }).then(function () { return VERSUS ? resumeVersus() : false; }).then(function (held) { if (!held && !playing) recallWhy(); if (!held && !playing && !WATCH) return loadSince(); }); }); });
+    return ready.then(function () { layChart(); cur.zoom = 0; openOnMission(); placeCamera(); requestAnimationFrame(frame); if (config.watch) return startWatch(); if (config.versus) startVersus(); return reach('/tools').then(function (names) { names.forEach(function (n) { OFFERED[n] = true; }); $('stops').classList.toggle('daily', !OFFERED.advance); recallTicks(); if (OFFERED.advance) $('btn-day').textContent = 'Next pulse'; return refresh().catch(function (e) { if (!VERSUS || !/waits for the clock/.test(e.message)) throw e; }).then(function () { return VERSUS ? resumeVersus() : false; }).then(function (held) { if (!held && !playing) recallWhy(); if (!held && !playing && !WATCH) return loadSince(); }); }); });
   });
   }).then(function () { if (onScreen) return; atStop(); var shown = true; try { shown = localStorage.getItem('flagplot.hint.look') === '1'; localStorage.setItem('flagplot.hint.look', '1'); } catch (e) {} say('hint', shown ? '' : 'Drag to look along the table; scroll to lean in.'); })
     .catch(function (e) { fatal('The table could not reach the game: ' + e.message); });

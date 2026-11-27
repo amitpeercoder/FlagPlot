@@ -2705,7 +2705,8 @@ def rung_one_on_the_list(bridge):
         and each has a `start`.
     L3. `table/directives/ladder_1_allied.json` has one directive, number 1, `when` "start", from "Area Commander", to "Commander, Base
         S", subject "Both garrisons fed", with three parts headed "1. Situation", "2. Mission" and "3. Guidance". The text of its mission
-        is one paragraph and is the entry's `sides.allied`, letter for letter. Its guidance names "Base T", "Base S" and "two numbers", and its second paragraph is "Then tell the staff that plans launch when ready, under YOUR ORDERS,
+        is one paragraph and begins with the entry's `sides.allied`, which is its first sentence, "Keep both garrisons fed." (the card on
+        the new game screen says the mission in brief and the directive says it in full: as-built, "The card on the new game screen, cut short"). Its guidance names "Base T", "Base S" and "two numbers", and its second paragraph is "Then tell the staff that plans launch when ready, under YOUR ORDERS,
         and carry on: it will not sail the ship without that leave."
 
     In the page's text:
@@ -2751,9 +2752,25 @@ def rung_one_on_the_list(bridge):
           and [p["heading"] for p in d["parts"]] == ["1. Situation", "2. Mission", "3. Guidance"],
           "L3: the directive is number 1, at the start, from the Area Commander to the Commander, Base S, in three parts")
     guidance = " ".join(d["parts"][2]["text"])
-    check(len(d["parts"][1]["text"]) == 1 and d["parts"][1]["text"][0] == first["sides"]["allied"], "L3: the mission is one paragraph and is the entry's words for the side, letter for letter")
+    check(len(d["parts"][1]["text"]) == 1 and first["sides"]["allied"] == "Keep both garrisons fed." and d["parts"][1]["text"][0].startswith(first["sides"]["allied"] + " "),
+          "L3: the mission is one paragraph and begins with the entry's words for the side, its first sentence")
     check(all(w in guidance for w in ("Base T", "Base S", "two numbers")) and d["parts"][2]["text"][1] == "Then tell the staff that plans launch when ready, under YOUR ORDERS, and carry on: it will not sail the ship without that leave.",
           "L3: the guidance names Base T, Base S and the two numbers, and its second paragraph is the designer's")
+    # L3a. The islands of the ladder's chart, for the eye only: `table/chart/placeholder_ladder_coast.json` has a note that begins
+    # "PLACEHOLDER" and six rings, each closed, and every point of every ring lies within 0.333 degrees (the hex's inner radius,
+    # 20 nm at 60 nm to the degree) of the centre of one of the map's four coast hexes, (0,0), (5,0), (0,14) and (3,3), as
+    # serve.py places a hand-written map's hexes: so no island reaches into a hex of open sea. Each of the four has a ring about it.
+    # The page defines `openOnMission` once and calls it once, after the chart is laid and before the camera is first placed.
+    coast = json.load(open(os.path.join(HERE, "chart", "placeholder_ladder_coast.json")))
+    centres = [(40 * (q + r / 2) / 60, -34.641016 * r / 60) for q, r in ((0, 0), (5, 0), (0, 14), (3, 3))]
+    near = lambda x, y: [n for n, (cx, cy) in enumerate(centres) if (x - cx) ** 2 + (y - cy) ** 2 <= 0.333 ** 2]
+    homes = [{tuple(near(ring[n], ring[n + 1])) for n in range(0, len(ring), 2)} for ring in coast["rings"]]
+    check(coast["note"].startswith("PLACEHOLDER") and len(coast["rings"]) == 6 and all(len(r) % 2 == 0 and r[:2] == r[-2:] for r in coast["rings"])
+          and all(len(h) == 1 and len(next(iter(h))) == 1 for h in homes) and {next(iter(h))[0] for h in homes} == {0, 1, 2, 3},
+          "L3a: the ladder's chart has six invented islands, marked a placeholder, each inside the hex of one of the four places, and each place has one")
+    page = page_text()
+    check(page.count("function openOnMission()") == 1 and page.count("openOnMission()") == 2 and "layChart(); cur.zoom = 0; openOnMission(); placeCamera();" in page,
+          "L3a: the page opens a game with a mission looking at the mission's places: openOnMission is defined once and called once, as the chart is first laid")
     text = page_text()
     said = run_in_node(text[text.index("  var SIDES = ['allied', 'japanese'], ENGINE_IS = {"):text.index("  function copyRow(")].replace("var SIDES = ['allied', 'japanese'], ENGINE_IS", "var ENGINE_IS")
                        + "\nfunction main(x) { return { keys: Object.keys(ENGINE_IS), absent: ENGINE_IS.absent('Japanese'), none: ENGINE_IS.none('Japanese'), staff: ENGINE_IS.staff('Allied'), script: ENGINE_IS.script('Allied') }; }", [])
