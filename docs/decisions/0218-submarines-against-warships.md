@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 22, 2026, on the designer's ques
 
 Summary: The game has no submarines. In the battles on file they torpedoed Saratoga twice, sank Wasp, Yorktown and Kako, and hit North Carolina and O'Brien. This puts a submarine on the map as a boat on a station. A force that comes into her waters may be met; a boat that meets one fires at a ship of the kind she wants, the likelier to hit the slower and steadier the force and the thinner its screen; the escorts then hunt her, hold her down and may damage or sink her. A side knows its own boats and knows an enemy boat only by her torpedoes or a sighting. Scouting by submarines and patrol lines kept by the staff are the second stage, and the war on shipping the third.
 
-Standing: Ruled and amended on Nov 22, 2026; stage 1 (the data) built; stage 2 (the rule) built and merged (pull request 690); stage 3 (the staff, the agent and the table) built on branch `submarine-3`, to be reviewed by the architect.
+Standing: Ruled and amended on Nov 22, 2026; stage 1 (the data) built; stage 2 (the rule) built and merged (pull request 690); stage 3 (the staff, the agent and the table) built and merged (pull request 691).
 
 ## Why
 

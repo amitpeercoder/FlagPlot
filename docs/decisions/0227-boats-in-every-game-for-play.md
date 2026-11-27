@@ -4,7 +4,7 @@ Status: a plan and rulings by the architect, written on Nov 23, 2026. It carries
 
 Summary: The table offers one game of each battle, and where the battle has boats that game has them (the designer, Nov 23, 2026). This says which boats each side has in the Coral Sea, the Eastern Solomons over five days and the 39 days of Guadalcanal, and which more Midway gains, each from a row; states each navy's pattern in every such game; derives three more classes and leaves six waiting; and rules on the rows in dispute. It adds no rule and changes no figure but the three classes' and the estimates that read them.
 
-Standing: Planned on Nov 23, 2026; amended on review the same day; built on branch `boats-placed`, to be reviewed by the architect (see "As built").
+Standing: Planned on Nov 23, 2026; amended on review the same day; built and merged (pull request 717; see "As built").
 
 ## What decision 0225 settled, and stands
 
