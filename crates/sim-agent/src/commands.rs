@@ -941,9 +941,18 @@ fn keep_supplied_from_json(value: &Value, base: BaseId) -> Result<IntentKind, St
 /// A command as JSON.
 pub fn command_to_json(command: &CommandKind) -> Value {
     match command {
-        CommandKind::SetIntent { intent, kind } => {
+        CommandKind::SetIntent {
+            intent,
+            kind,
+            parent,
+        } => {
             let mut body = json!({ "kind": "set_intent", "intent": intent.raw() });
             intent_kind_to_json(&mut body, *kind);
+            // Written only where given, so a command without one reads as it
+            // always did (decision 0232, 1).
+            if let Some(parent) = parent {
+                body["parent"] = json!(parent.raw());
+            }
             body
         }
         CommandKind::FormIntent { parent, kind } => {
@@ -1105,6 +1114,9 @@ pub fn command_from_json(value: &Value) -> Result<CommandKind, String> {
     let plan = || small(value, "plan").map(PlanId::new);
     match text(value, "kind")? {
         "set_intent" => Ok(CommandKind::SetIntent {
+            // Left out it is sent as none and the engine reads it (decision
+            // 0232, rule 3): no tool fills it in.
+            parent: small_opt(value, "parent")?.map(IntentId::new),
             intent: IntentId::new(small(value, "intent")?),
             kind: intent_kind_from_json(value)?,
         }),
@@ -1716,6 +1728,7 @@ mod tests {
         };
         vec![
             CommandKind::SetIntent {
+                parent: None,
                 intent,
                 kind: IntentKind::KeepSupplied {
                     base: BaseId::new(5),
@@ -1724,6 +1737,7 @@ mod tests {
                 },
             },
             CommandKind::SetIntent {
+                parent: None,
                 intent,
                 kind: IntentKind::KeepSupplied {
                     base: BaseId::new(5),
@@ -1732,12 +1746,14 @@ mod tests {
                 },
             },
             CommandKind::SetIntent {
+                parent: None,
                 intent,
                 kind: IntentKind::Cover {
                     base: BaseId::new(5),
                 },
             },
             CommandKind::SetIntent {
+                parent: None,
                 intent,
                 kind: IntentKind::Hold {
                     base: BaseId::new(5),
@@ -1750,12 +1766,14 @@ mod tests {
                 },
             },
             CommandKind::SetIntent {
+                parent: None,
                 intent,
                 kind: IntentKind::Neutralise {
                     target: BaseId::new(9),
                 },
             },
             CommandKind::SetIntent {
+                parent: None,
                 intent,
                 kind: IntentKind::Raid {
                     base: BaseId::new(5),
@@ -1770,6 +1788,7 @@ mod tests {
                 },
             },
             CommandKind::SetIntent {
+                parent: None,
                 intent,
                 kind: IntentKind::Deny {
                     hex: Hex::new(-3, 7),
@@ -1777,6 +1796,7 @@ mod tests {
                 },
             },
             CommandKind::SetIntent {
+                parent: None,
                 intent,
                 kind: IntentKind::StrikeShips {
                     base: BaseId::new(5),
@@ -1797,6 +1817,7 @@ mod tests {
             },
             // Decision 0141: the two tasks, a hold of a land unit.
             CommandKind::SetIntent {
+                parent: None,
                 intent,
                 kind: IntentKind::ReadyLanding {
                     force: TaskForceId::new(2),
@@ -1813,6 +1834,7 @@ mod tests {
                 },
             },
             CommandKind::SetIntent {
+                parent: None,
                 intent,
                 kind: IntentKind::BuildUp {
                     base: BaseId::new(1),
@@ -1828,6 +1850,7 @@ mod tests {
                 },
             },
             CommandKind::SetIntent {
+                parent: None,
                 intent,
                 kind: IntentKind::TakePlace {
                     hex: Hex::new(6, 0),
@@ -1835,6 +1858,7 @@ mod tests {
                 },
             },
             CommandKind::SetIntent {
+                parent: None,
                 intent,
                 kind: IntentKind::TakePlace {
                     hex: Hex::new(-2, 5),
@@ -1850,6 +1874,7 @@ mod tests {
             // Decision 0218, stage 3: the patrol, a hold on a boat and a
             // forces limit naming boats.
             CommandKind::SetIntent {
+                parent: None,
                 intent,
                 kind: IntentKind::Patrol {
                     hex: Hex::new(-3, 4),
@@ -2201,6 +2226,7 @@ mod tests {
         // Keeping supplied has no `intent_kind` key, as before the kinds.
         assert_eq!(
             command_to_json(&CommandKind::SetIntent {
+                parent: None,
                 intent,
                 kind: IntentKind::KeepSupplied {
                     base: BaseId::new(5),
@@ -2212,6 +2238,7 @@ mod tests {
         );
         assert_eq!(
             command_to_json(&CommandKind::SetIntent {
+                parent: None,
                 intent,
                 kind: IntentKind::Hold {
                     base: BaseId::new(5)
@@ -2260,6 +2287,7 @@ mod tests {
         );
         assert_eq!(
             command_to_json(&CommandKind::SetIntent {
+                parent: None,
                 intent,
                 kind: IntentKind::ReadyLanding {
                     force: TaskForceId::new(1),
@@ -2271,6 +2299,7 @@ mod tests {
         );
         assert_eq!(
             command_to_json(&CommandKind::SetIntent {
+                parent: None,
                 intent,
                 kind: IntentKind::BuildUp {
                     base: BaseId::new(1),
@@ -2281,6 +2310,7 @@ mod tests {
         );
         assert_eq!(
             command_to_json(&CommandKind::SetIntent {
+                parent: None,
                 intent,
                 kind: IntentKind::TakePlace {
                     hex: Hex::new(6, 0),
@@ -2291,6 +2321,7 @@ mod tests {
         );
         assert_eq!(
             command_to_json(&CommandKind::SetIntent {
+                parent: None,
                 intent,
                 kind: IntentKind::TakePlace {
                     hex: Hex::new(6, 0),
@@ -2302,6 +2333,7 @@ mod tests {
         // Decision 0146: a force and the base it bombards, set or formed.
         for command in [
             CommandKind::SetIntent {
+                parent: None,
                 intent,
                 kind: IntentKind::Bombard {
                     force: TaskForceId::new(3),
@@ -2336,6 +2368,7 @@ mod tests {
         );
         assert_eq!(
             command_to_json(&CommandKind::SetIntent {
+                parent: None,
                 intent,
                 kind: IntentKind::Neutralise {
                     target: BaseId::new(9)
@@ -2355,6 +2388,7 @@ mod tests {
         );
         assert_eq!(
             command_to_json(&CommandKind::SetIntent {
+                parent: None,
                 intent,
                 kind: IntentKind::Deny {
                     hex: Hex::new(-3, 7),
@@ -2365,6 +2399,7 @@ mod tests {
         );
         assert_eq!(
             command_to_json(&CommandKind::SetIntent {
+                parent: None,
                 intent,
                 kind: IntentKind::StrikeShips {
                     base: BaseId::new(5)
@@ -2379,6 +2414,7 @@ mod tests {
                 &json!({ "kind": "set_intent", "intent": 1, "base": 2, "floor_days": 9 })
             ),
             Ok(CommandKind::SetIntent {
+                parent: None,
                 intent: IntentId::new(1),
                 kind: IntentKind::KeepSupplied {
                     base: BaseId::new(2),

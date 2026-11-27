@@ -1593,9 +1593,10 @@ fn property_no_new_state() {
     // `none_of` and a limit that binds the kinds it names; and decision 0223
     // to v58 and 32, for a side's submarine doctrine and the pattern of a
     // patrol, and decision 0228 to v59, for whether a side's staff chooses its
-    // sources of supply; none touches this rule.
+    // sources of supply, and decision 0232 the rules label to 35, for a
+    // sub-intent the commander writes; none touches this rule.
     assert_eq!(sim_core::hash::STATE_VERSION, b"flagplot-state-v60");
-    assert_eq!(sim_core::world::RULES_VERSION, 34);
+    assert_eq!(sim_core::world::RULES_VERSION, 35);
     let root = common::data_dir().join("..");
     let file = root.join("crates/sim-cli/tests/recorded_games/eastern_solomons_haiku/save.json");
     let saved = sim_cli::save::read(file.to_str().expect("a path")).expect("the save reads");

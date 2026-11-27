@@ -489,9 +489,11 @@ impl Day<'_, '_> {
 
     #[allow(clippy::too_many_lines)]
     fn prepare_place(&mut self, end: &Intent, plan: &Plan) {
-        let IntentKind::TakePlace { hex: place, by_day } = end.kind else {
+        let IntentKind::TakePlace { hex: place, .. } = end.kind else {
             return;
         };
+        // Decision 0232, rule 11: the date the take is held to.
+        let by_day = self.take_date(end);
         let in_scope = self.in_scope(end.id);
         let today = self.today;
         // Items 3 and 23: met.
@@ -856,11 +858,9 @@ impl Day<'_, '_> {
             // Under "control an island" with no limit of its own, the take's
             // choices are inside the island's limit, kind by kind (decision
             // 0151, 4).
-            let within = commander.clone().or_else(|| {
-                self.state
-                    .island_on_chain(end.id)
-                    .and_then(|island| island.limits.forces.clone())
-            });
+            // For a take the commander wrote, kind by kind (decision 0232,
+            // rule 11).
+            let within = self.forces_within(end);
             match self.assemble(end, within.as_ref(), place, risk) {
                 Ok(found) => FirstChoice::Found {
                     choice: found.choice,
@@ -879,9 +879,10 @@ impl Day<'_, '_> {
     /// leave to prepare is acted on: what the take does in place of forming
     /// its landing, or `None` where it is as it was.
     pub(crate) fn draft_take_waits(&self, end: &Intent) -> Option<Waiting> {
-        let IntentKind::TakePlace { hex: place, by_day } = end.kind else {
+        let IntentKind::TakePlace { hex: place, .. } = end.kind else {
             return None;
         };
+        let by_day = self.take_date(end);
         if self.place_is_ours(place) || self.landing_of(end).is_some() {
             return None;
         }
@@ -1044,11 +1045,7 @@ impl Day<'_, '_> {
     /// the side.
     fn named_later(&self, end: &Intent, today_choice: &Choice) -> Vec<(String, u32)> {
         let view = self.view;
-        let limit = end.limits.forces.clone().or_else(|| {
-            self.state
-                .island_on_chain(end.id)
-                .and_then(|island| island.limits.forces.clone())
-        });
+        let limit = self.forces_within(end);
         let mut found: Vec<(u32, u8, u32, String)> = Vec::new();
         let counted = crate::available::counted_by_a_take(view, limit.as_ref());
         for force in counted.task_forces {
@@ -1286,9 +1283,10 @@ impl Day<'_, '_> {
         fed: &[LandUnitId],
         level: Fixed,
     ) -> Option<Starve> {
-        let IntentKind::TakePlace { hex: place, by_day } = end.kind else {
+        let IntentKind::TakePlace { hex: place, .. } = end.kind else {
             return None;
         };
+        let by_day = self.take_date(end);
         let risk = self.state.risk_read_up(end.id);
         if risk != Risk::Balanced {
             return None;

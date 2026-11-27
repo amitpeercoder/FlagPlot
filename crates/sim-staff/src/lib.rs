@@ -439,7 +439,16 @@ use sim_core::view::SideView;
 /// less than 1 day (10, 5, 1), at all three sites that form one, and the
 /// reason says "the least floor, at press" where it is 1 at press. It gives
 /// the orders `supply-61` gave to a side with no hold or island at press.
-pub const DOCTRINE_VERSION: &str = "supply-62";
+/// `supply-63` adds decision 0232: a "take a place" the commander wrote under
+/// "control an island" is served as a staff's take is (the island forms none
+/// beside it, a carrier or bombardment force he named is not its landing's,
+/// the staff fills what he left blank, and the island's plan is told `late`
+/// or `cannot_meet` where his node cannot be met), and two mends of decision
+/// 0151, item 5: the takes under one island keep what each landing has from
+/// one another, and a force readying a landing is no free ship of a supply
+/// pool. It gives the orders `supply-62` gave to a side that wrote nothing,
+/// with two takes under no island and no landing's force in a supply pool.
+pub const DOCTRINE_VERSION: &str = "supply-63";
 
 /// The staff: the doctrine for keeping a base supplied (stage 1) and, after
 /// it, the air doctrine for holding a place and covering a base from the air

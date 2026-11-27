@@ -214,6 +214,7 @@ fn keep_supplied(base_id: u32) -> IntentKind {
 
 fn set_intent(n: u32) -> CommandKind {
     CommandKind::SetIntent {
+        parent: None,
         intent: intent(n),
         kind: keep_supplied(1),
     }
@@ -377,6 +378,7 @@ fn a_new_intent_is_taken_in_and_its_plan_drafted_citing_the_command() {
 fn an_intent_is_refused_for_a_bad_number_base_or_days_and_nothing_changes() {
     let mut world = world();
     let bad = |n: u32, base_id: u32, floor: u32, interval: Option<u32>| CommandKind::SetIntent {
+        parent: None,
         intent: intent(n),
         kind: IntentKind::KeepSupplied {
             base: base(base_id),
@@ -437,6 +439,7 @@ fn setting_an_intent_again_amends_an_approved_plan_and_not_a_draft() {
     let mut world = world();
     player(&mut world, set_intent(1)).unwrap();
     let again = |floor: u32| CommandKind::SetIntent {
+        parent: None,
         intent: intent(1),
         kind: IntentKind::KeepSupplied {
             base: base(1),
@@ -1014,6 +1017,7 @@ fn taking_a_place_is_taken_in_and_its_landing_formed_while_preparing() {
         },
     );
     let take = |hex: Hex| CommandKind::SetIntent {
+        parent: None,
         intent: intent(1),
         kind: IntentKind::TakePlace { hex, by_day: None },
     };
@@ -1106,6 +1110,7 @@ fn a_carrier_task_under_a_take_is_formed_while_preparing() {
     player(
         &mut world,
         CommandKind::SetIntent {
+            parent: None,
             intent: intent(1),
             kind: IntentKind::TakePlace {
                 hex: PLACE,
@@ -1154,6 +1159,7 @@ fn taking_a_place_needs_no_source_and_the_staff_names_what_is_left_out() {
     player(
         &mut world,
         CommandKind::SetIntent {
+            parent: None,
             intent: intent(1),
             kind: IntentKind::TakePlace {
                 hex: PLACE,
@@ -2190,6 +2196,7 @@ fn two_worlds_differing_in_the_other_side(other: Side) -> (World, World) {
     give_other(
         &mut busy,
         CommandKind::SetIntent {
+            parent: None,
             intent: intent(1),
             kind: IntentKind::KeepSupplied {
                 base: base(enemy_base),
@@ -2612,6 +2619,7 @@ fn a_run_ends_once_by_the_staff_on_an_approved_plan_and_nothing_else_changes() {
     player(
         &mut world,
         CommandKind::SetIntent {
+            parent: None,
             intent: intent(2),
             kind: keep_supplied(1),
         },
@@ -4087,6 +4095,7 @@ fn world_with_island() -> World {
 
 fn island_intent(n: u32, island: u32) -> CommandKind {
     CommandKind::SetIntent {
+        parent: None,
         intent: intent(n),
         kind: IntentKind::ControlIsland {
             island,
@@ -4355,6 +4364,7 @@ fn a_floor_of_no_days_is_taken_under_an_island_and_refused_alone() {
         &mut world,
         Issuer::Player,
         CommandKind::SetIntent {
+            parent: None,
             intent: intent(9),
             kind: no_floor,
         },
@@ -4426,6 +4436,7 @@ fn world_holding(held: u32) -> World {
     player(
         &mut world,
         CommandKind::SetIntent {
+            parent: None,
             intent: intent(1),
             kind: IntentKind::Hold { base: base(held) },
         },
@@ -4537,6 +4548,7 @@ fn three_takes() -> World {
         player(
             &mut world,
             CommandKind::SetIntent {
+                parent: None,
                 intent: intent(n),
                 kind: IntentKind::TakePlace { hex, by_day: None },
             },
@@ -4619,6 +4631,7 @@ fn targets(n: u32, kinds: &[ShipKind], waters_first: bool) -> CommandKind {
 
 fn deny_intent(n: u32) -> CommandKind {
     CommandKind::SetIntent {
+        parent: None,
         intent: intent(n),
         kind: IntentKind::Deny {
             hex: Hex::new(4, 0),
@@ -4952,6 +4965,7 @@ fn pursue_read_up_takes_the_nearest_setting_and_has_two_defaults() {
     player(
         &mut world,
         CommandKind::SetIntent {
+            parent: None,
             intent: intent(1),
             kind: IntentKind::TakePlace {
                 hex: PLACE,
@@ -5286,6 +5300,7 @@ fn patrol_kind() -> IntentKind {
 
 fn set_patrol(n: u32) -> CommandKind {
     CommandKind::SetIntent {
+        parent: None,
         intent: intent(n),
         kind: patrol_kind(),
     }
@@ -5340,6 +5355,7 @@ fn a_patrol_is_a_root_the_commander_states_and_it_is_refused_off_the_map() {
     player(
         &mut world,
         CommandKind::SetIntent {
+            parent: None,
             intent: intent(1),
             kind: IntentKind::Patrol {
                 hex: Hex::new(6, 0),
@@ -5352,6 +5368,7 @@ fn a_patrol_is_a_root_the_commander_states_and_it_is_refused_off_the_map() {
         &mut world,
         Issuer::Player,
         CommandKind::SetIntent {
+            parent: None,
             intent: intent(1),
             kind: keep_supplied(1),
         },
@@ -5364,6 +5381,7 @@ fn a_patrol_is_a_root_the_commander_states_and_it_is_refused_off_the_map() {
         &mut world,
         Issuer::Player,
         CommandKind::SetIntent {
+            parent: None,
             intent: intent(1),
             kind: IntentKind::Patrol {
                 hex: off,
@@ -5665,6 +5683,7 @@ fn a_forces_limit_with_no_boat_hashes_as_it_did_and_one_with_a_boat_does_not() {
         player(
             &mut world,
             CommandKind::SetIntent {
+                parent: None,
                 intent: intent(1),
                 kind,
             },
@@ -5714,6 +5733,7 @@ fn world_with_a_hold_and_its_supply(keyed: bool) -> World {
     player(
         &mut world,
         CommandKind::SetIntent {
+            parent: None,
             intent: intent(1),
             kind: IntentKind::Hold { base: base(1) },
         },
@@ -5857,6 +5877,7 @@ fn hold_contact(world: &mut World, hex: Hex, kind: ShipKind, age: u32) -> u32 {
 
 fn destroy(n: u32, contact: u32) -> CommandKind {
     CommandKind::SetIntent {
+        parent: None,
         intent: intent(n),
         kind: IntentKind::DestroyForce {
             contact,
@@ -6045,6 +6066,7 @@ fn an_order_to_destroy_a_force_keeps_the_report_it_follows_at_the_giving() {
     player(
         &mut world,
         CommandKind::SetIntent {
+            parent: None,
             intent: intent(1),
             kind: IntentKind::DestroyForce {
                 contact: 1,
@@ -6060,6 +6082,7 @@ fn an_order_to_destroy_a_force_keeps_the_report_it_follows_at_the_giving() {
     player(
         &mut world,
         CommandKind::SetIntent {
+            parent: None,
             intent: intent(1),
             kind: IntentKind::DestroyForce {
                 contact: 2,
@@ -6121,6 +6144,7 @@ fn a_destroy_force_order_with_no_leave_set_reads_go_and_search_only_reads_stay()
     player(
         &mut world,
         CommandKind::SetIntent {
+            parent: None,
             intent: intent(2),
             kind: IntentKind::DestroyForce {
                 contact: found,
@@ -6431,5 +6455,412 @@ fn what_the_order_keeps_is_in_the_hash_and_the_command_state_is_not_empty_with_i
             A,
             intent(9)
         )]
+    );
+}
+
+// ---------------------------------------------------------------------------
+// A plan the commander writes (decision 0232).
+// ---------------------------------------------------------------------------
+
+const PLACE_B: Hex = Hex::new(5, 0);
+const PLACE_C: Hex = Hex::new(6, 0);
+
+/// Island 1 of two coast places, B and C, stated as intent 1 with its plan
+/// released.
+fn world_with_two_places() -> World {
+    let mut world = world_with_island();
+    world.map.insert(
+        PLACE_C,
+        HexData {
+            kind: crate::map::HexKind::Coast,
+            ..HexData::open_sea()
+        },
+    );
+    world.map.add_island(crate::map::Island {
+        number: 1,
+        name: "Placeholder island".to_string(),
+        places: vec![
+            crate::map::IslandPlace {
+                base: None,
+                hex: PLACE_B,
+            },
+            crate::map::IslandPlace {
+                base: None,
+                hex: PLACE_C,
+            },
+        ],
+    });
+    world
+}
+
+/// The commander's take of `hex`, numbered `n`, under `parent` if given.
+fn written_take(n: u32, hex: Hex, parent: Option<u32>) -> CommandKind {
+    CommandKind::SetIntent {
+        intent: intent(n),
+        kind: IntentKind::TakePlace { hex, by_day: None },
+        parent: parent.map(intent),
+    }
+}
+
+fn wait_after(on: u32, other: Option<u32>) -> CommandKind {
+    CommandKind::SetLimit(Limit::After {
+        intent: intent(on),
+        other: other.map(intent),
+    })
+}
+
+/// Rule 1, 4 and 8: a take written under an island is the commander's, has
+/// a plan of its own drafted after the command's record and citing it, and
+/// no `IntentFormed` is recorded.
+#[test]
+fn a_take_written_under_an_island_is_the_commanders_with_a_plan_of_its_own() {
+    let mut world = world_with_two_places();
+    let before = world.events.len();
+    player(&mut world, written_take(2, PLACE_B, Some(1))).unwrap();
+    let found = &state(&world, A).intents[&intent(2)];
+    assert_eq!(found.parent, Some(intent(1)));
+    assert_eq!(found.maker, Maker::Commander);
+    assert_eq!(found.addressee, found.kind.addressee());
+    assert_eq!(found.plan, plan(2));
+    assert_eq!(state(&world, A).plans[&plan(2)].state, PlanState::Draft);
+    let events = world.events.from_index(before);
+    assert!(matches!(events[0].kind, EventKind::CommandTaken { .. }));
+    assert!(matches!(
+        events[1].kind,
+        EventKind::PlanDrafted {
+            plan: p,
+            intent: i,
+            ..
+        } if p == plan(2) && i == intent(2)
+    ));
+    assert!(events[1].causes.contains(&Cause::Event(events[0].id)));
+    assert!(!events
+        .iter()
+        .any(|event| matches!(event.kind, EventKind::IntentFormed { .. })));
+    island_invariants(&world);
+}
+
+/// Rule 3 and 5: set again with the parent left out or given is the same
+/// intent under the same parent; a changed place is checked as a new one is.
+#[test]
+fn a_written_take_set_again_keeps_its_parent_and_its_place_is_checked_again() {
+    let mut world = world_with_two_places();
+    player(&mut world, written_take(2, PLACE_B, Some(1))).unwrap();
+    player(&mut world, written_take(3, PLACE_C, Some(1))).unwrap();
+    // The parent left out, and the parent given, are the parent it has.
+    player(&mut world, written_take(2, PLACE_B, None)).unwrap();
+    player(&mut world, written_take(2, PLACE_B, Some(1))).unwrap();
+    assert_eq!(state(&world, A).intents[&intent(2)].parent, Some(intent(1)));
+    // Its place is checked again: C is planned by intent 3.
+    refused(
+        &mut world,
+        Issuer::Player,
+        written_take(2, PLACE_C, None),
+        CommandRefusal::AlreadyPlanned(intent(3), PLACE_C),
+    );
+    // Withdrawn, intent 3 plans nothing, and intent 2 may take its place.
+    player(
+        &mut world,
+        CommandKind::WithdrawIntent { intent: intent(3) },
+    )
+    .unwrap();
+    player(&mut world, written_take(2, PLACE_C, None)).unwrap();
+    assert_eq!(
+        state(&world, A).intents[&intent(2)].kind,
+        IntentKind::TakePlace {
+            hex: PLACE_C,
+            by_day: None
+        }
+    );
+    // The plan is approved and a change amends it.
+    player(&mut world, CommandKind::Approve { plan: plan(2) }).unwrap();
+    player(
+        &mut world,
+        CommandKind::SetIntent {
+            intent: intent(2),
+            kind: IntentKind::TakePlace {
+                hex: PLACE_C,
+                by_day: Some(12),
+            },
+            parent: None,
+        },
+    )
+    .unwrap();
+    assert_eq!(state(&world, A).plans[&plan(2)].amendments.len(), 1);
+    island_invariants(&world);
+}
+
+/// Rule 3: a parent cannot change on an intent in force, with its words.
+#[test]
+fn a_parent_cannot_change_on_an_intent_in_force() {
+    let mut world = world_with_two_places();
+    player(&mut world, written_take(2, PLACE_B, Some(1))).unwrap();
+    player(&mut world, written_take(3, PLACE_C, Some(1))).unwrap();
+    refused(
+        &mut world,
+        Issuer::Player,
+        written_take(2, PLACE_B, Some(3)),
+        CommandRefusal::ParentCannotChange(intent(2), Some(intent(1))),
+    );
+    assert_eq!(
+        CommandRefusal::ParentCannotChange(intent(2), Some(intent(1))).to_string(),
+        "intent:2 stands under intent:1 and cannot be moved: withdraw it and state another"
+    );
+    refused(
+        &mut world,
+        Issuer::Player,
+        CommandKind::SetIntent {
+            intent: intent(1),
+            kind: IntentKind::ControlIsland {
+                island: 1,
+                by_day: None,
+            },
+            parent: Some(intent(2)),
+        },
+        CommandRefusal::ParentCannotChange(intent(1), None),
+    );
+    assert_eq!(
+        CommandRefusal::ParentCannotChange(intent(1), None).to_string(),
+        "intent:1 is a root and cannot be moved under another"
+    );
+}
+
+/// Rule 3, in its order: the parent not in force, a number not above the
+/// parent's, a parent the staff formed, a plan that has ended, a pair not
+/// open, a place not the island's.
+#[test]
+fn a_written_take_is_refused_for_its_parent_its_number_its_pair_and_its_place() {
+    let mut world = world_with_two_places();
+    refused(
+        &mut world,
+        Issuer::Player,
+        written_take(2, PLACE_B, Some(7)),
+        CommandRefusal::NoSuchIntent(intent(7)),
+    );
+    // A number not above the parent's: the island stated as intent 5.
+    player(&mut world, island_intent(5, 1)).unwrap();
+    refused(
+        &mut world,
+        Issuer::Player,
+        written_take(3, PLACE_B, Some(5)),
+        CommandRefusal::IntentNumberNotUsable(intent(3)),
+    );
+    refused(
+        &mut world,
+        Issuer::Player,
+        written_take(4, PLACE_B, Some(5)),
+        CommandRefusal::IntentNumberNotUsable(intent(4)),
+    );
+    // A parent the staff formed.
+    staff(&mut world, form_under(1, island_hold(1))).unwrap();
+    assert_eq!(state(&world, A).intents[&intent(6)].maker, Maker::Staff);
+    refused(
+        &mut world,
+        Issuer::Player,
+        written_take(20, PLACE_B, Some(6)),
+        CommandRefusal::CannotStandUnder(intent(6)),
+    );
+    // A pair not open: a hold under the island, a take under a hold.
+    refused(
+        &mut world,
+        Issuer::Player,
+        CommandKind::SetIntent {
+            intent: intent(20),
+            kind: island_hold(1),
+            parent: Some(intent(1)),
+        },
+        CommandRefusal::CannotStandUnder(intent(1)),
+    );
+    player(
+        &mut world,
+        CommandKind::SetIntent {
+            intent: intent(8),
+            kind: island_hold(1),
+            parent: None,
+        },
+    )
+    .unwrap();
+    refused(
+        &mut world,
+        Issuer::Player,
+        written_take(20, PLACE_B, Some(8)),
+        CommandRefusal::CannotStandUnder(intent(8)),
+    );
+    // A place that is not a place of the island.
+    refused(
+        &mut world,
+        Issuer::Player,
+        written_take(20, Hex::new(7, 0), Some(1)),
+        CommandRefusal::CannotStandUnder(intent(1)),
+    );
+    // A place of the island that is not land is the kind's own reason, after
+    // the rest: here it is a named place, off the land.
+    world.map.add_island(crate::map::Island {
+        number: 1,
+        name: "Placeholder island".to_string(),
+        places: vec![crate::map::IslandPlace {
+            base: None,
+            hex: Hex::new(7, 0),
+        }],
+    });
+    refused(
+        &mut world,
+        Issuer::Player,
+        written_take(20, Hex::new(7, 0), Some(1)),
+        CommandRefusal::NotLand(Hex::new(7, 0)),
+    );
+    // A plan that has ended: the island's.
+    player(&mut world, CommandKind::CancelPlan { plan: plan(1) }).unwrap();
+    refused(
+        &mut world,
+        Issuer::Player,
+        written_take(20, PLACE_B, Some(1)),
+        CommandRefusal::WrongPlanState(PlanState::Cancelled),
+    );
+}
+
+/// Rule 3: a place another take plans is refused, whoever made it, in any
+/// tree; a root of his own whose plan has ended does not block, and a take
+/// he wrote does whatever its plan.
+#[test]
+fn a_place_a_take_already_plans_is_refused() {
+    // The staff's.
+    let mut world = world_with_two_places();
+    staff(&mut world, form_under(1, island_take(PLACE_B))).unwrap();
+    refused(
+        &mut world,
+        Issuer::Player,
+        written_take(20, PLACE_B, Some(1)),
+        CommandRefusal::AlreadyPlanned(intent(2), PLACE_B),
+    );
+    assert_eq!(
+        CommandRefusal::AlreadyPlanned(intent(2), PLACE_B).to_string(),
+        format!("intent:2 already plans the place at {PLACE_B}")
+    );
+    // A root of his own, its plan not ended; then ended.
+    let mut world = world_with_two_places();
+    player(&mut world, written_take(2, PLACE_B, None)).unwrap();
+    refused(
+        &mut world,
+        Issuer::Player,
+        written_take(3, PLACE_B, Some(1)),
+        CommandRefusal::AlreadyPlanned(intent(2), PLACE_B),
+    );
+    player(&mut world, CommandKind::CancelPlan { plan: plan(2) }).unwrap();
+    player(&mut world, written_take(3, PLACE_B, Some(1))).unwrap();
+    // One he wrote under the island blocks whatever its plan.
+    player(&mut world, CommandKind::CancelPlan { plan: plan(3) }).unwrap();
+    refused(
+        &mut world,
+        Issuer::Player,
+        written_take(4, PLACE_B, Some(1)),
+        CommandRefusal::AlreadyPlanned(intent(3), PLACE_B),
+    );
+    // Withdrawn, it blocks no more.
+    player(
+        &mut world,
+        CommandKind::WithdrawIntent { intent: intent(3) },
+    )
+    .unwrap();
+    player(&mut world, written_take(4, PLACE_B, Some(1))).unwrap();
+    island_invariants(&world);
+}
+
+/// Rule 6: the limits that tell a plan to wait and the knowledge limit are
+/// allowed on a take he wrote; a forces limit must narrow.
+#[test]
+fn the_wait_limits_and_the_knowledge_limit_are_allowed_on_a_written_take() {
+    let mut world = world_with_two_places();
+    player(&mut world, written_take(2, PLACE_B, Some(1))).unwrap();
+    player(&mut world, written_take(3, PLACE_C, Some(1))).unwrap();
+    for limit in [
+        Limit::NotBefore {
+            intent: intent(3),
+            day: Some(4),
+        },
+        Limit::WaitFor {
+            intent: intent(3),
+            awaited: Some(Awaited::TaskForce(tf(1))),
+        },
+        Limit::Knowledge {
+            intent: intent(3),
+            knowledge: Some(Knowledge::Count),
+        },
+    ] {
+        player(&mut world, CommandKind::SetLimit(limit)).unwrap();
+    }
+    // Another take of his, under the same island.
+    player(&mut world, wait_after(3, Some(2))).unwrap();
+    assert_eq!(
+        state(&world, A).intents[&intent(3)].limits.after,
+        Some(intent(2))
+    );
+    island_invariants(&world);
+}
+
+/// Rule 7: no wait that waits for itself. The three rings the rule names
+/// are refused alone, and the ring of today is refused as before.
+#[test]
+fn no_wait_waits_for_itself_through_the_tree() {
+    let mut world = world_with_two_places();
+    player(&mut world, written_take(2, PLACE_B, Some(1))).unwrap();
+    // A take that waits for its own island.
+    refused(
+        &mut world,
+        Issuer::Player,
+        wait_after(2, Some(1)),
+        CommandRefusal::NotAnEndToWaitFor(intent(1)),
+    );
+    // An island that waits for a take beneath it.
+    refused(
+        &mut world,
+        Issuer::Player,
+        wait_after(1, Some(2)),
+        CommandRefusal::NotAnEndToWaitFor(intent(2)),
+    );
+    // A ring through a third intent: R a root take, T his take under I;
+    // "R after T", then "I after R", which T reads.
+    player(&mut world, written_take(4, PLACE_C, None)).unwrap();
+    player(&mut world, wait_after(4, Some(2))).unwrap();
+    refused(
+        &mut world,
+        Issuer::Player,
+        wait_after(1, Some(4)),
+        CommandRefusal::NotAnEndToWaitFor(intent(4)),
+    );
+    // With nothing waiting for T the same limit is no ring.
+    player(&mut world, wait_after(4, None)).unwrap();
+    player(&mut world, wait_after(1, Some(4))).unwrap();
+    // The ring of today: two roots that wait for each other.
+    let mut world = world_with_two_places();
+    player(&mut world, written_take(2, PLACE_B, None)).unwrap();
+    player(&mut world, written_take(3, PLACE_C, None)).unwrap();
+    player(&mut world, wait_after(2, Some(3))).unwrap();
+    refused(
+        &mut world,
+        Issuer::Player,
+        wait_after(3, Some(2)),
+        CommandRefusal::NotAnEndToWaitFor(intent(2)),
+    );
+}
+
+/// Rule 8: the invariant of the tree holds for a commander's sub-intent and
+/// reports one beneath a staff's intent, or of a pair not open, as unsound.
+#[test]
+fn the_tree_invariant_holds_a_commanders_sub_intent_to_its_open_pair() {
+    let mut world = world_with_two_places();
+    player(&mut world, written_take(2, PLACE_B, Some(1))).unwrap();
+    island_invariants(&world);
+    let side = state(&world, A).clone();
+    let mut bad = side.clone();
+    bad.intents.get_mut(&intent(2)).unwrap().kind = IntentKind::Hold { base: base(1) };
+    bad.intents.get_mut(&intent(2)).unwrap().addressee =
+        IntentKind::Hold { base: base(1) }.addressee();
+    let found = crate::invariants::check_command(A, &bad, &world.truth, world.truth.day);
+    assert!(
+        found
+            .iter()
+            .any(|v| matches!(v, crate::invariants::InvariantViolation::IntentTreeUnsound(_, i) if *i == intent(2))),
+        "{found:?}"
     );
 }

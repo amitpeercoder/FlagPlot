@@ -1038,6 +1038,7 @@ fn a_forces_limit_an_intent_and_a_hold_may_name_the_sides_own_held_units() {
             &mut world,
             Side::Allied,
             CommandKind::SetIntent {
+                parent: None,
                 intent,
                 kind: IntentKind::OperateCarriers {
                     force: TF5,
@@ -1090,6 +1091,7 @@ fn the_other_side_may_not_name_a_held_unit_in_a_command() {
             &mut world,
             Side::Japanese,
             CommandKind::SetIntent {
+                parent: None,
                 intent,
                 kind: IntentKind::OperateCarriers {
                     force: TF5,

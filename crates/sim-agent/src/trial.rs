@@ -2296,7 +2296,7 @@ pub(crate) fn command_words(view: &SideView<'_>, command: &CommandKind) -> Strin
             }
             out
         }
-        CommandKind::SetIntent { intent, kind } => format!(
+        CommandKind::SetIntent { intent, kind, .. } => format!(
             "set intent {}: {}",
             intent.raw(),
             crate::staffing::intent_words(view, *kind)

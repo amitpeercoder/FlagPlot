@@ -31,7 +31,7 @@
       "const": "flagplot-agent"
     },
     "version": {
-      "const": 55
+      "const": 56
     },
     "kind": {
       "const": "plan_order"
@@ -289,12 +289,13 @@
     },
     "tasks": {
       "type": "array",
-      "description": "The staff's intents under the plan's intent, each with the phase it serves.",
+      "description": "The intents in force under the plan's intent, the commander's and the staff's, each with whose it is (decision 0232) and the phase it serves.",
       "items": {
         "type": "object",
         "required": [
           "intent",
           "kind",
+          "maker",
           "statement",
           "phase"
         ],
@@ -302,6 +303,12 @@
         "properties": {
           "intent": {
             "type": "integer"
+          },
+          "maker": {
+            "enum": [
+              "commander",
+              "staff"
+            ]
           },
           "kind": {
             "enum": [

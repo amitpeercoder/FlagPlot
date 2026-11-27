@@ -659,6 +659,7 @@ fn the_inputs_are_scenario_68_with_its_changes() {
     assert_eq!(
         c[0].command,
         CommandKind::SetIntent {
+            parent: None,
             intent: IntentId::new(1),
             kind: IntentKind::TakePlace {
                 hex: B,

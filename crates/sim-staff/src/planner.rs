@@ -32,8 +32,8 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use sim_core::command::{
-    CommandState, Commitment, Committed, Displacement, ForcesLimit, Hold, HoldTarget, Intent, Plan,
-    PlanId, RunDays,
+    CommandState, Commitment, Committed, Displacement, ForcesLimit, Hold, HoldTarget, Intent,
+    IntentKind, Plan, PlanId, RunDays,
 };
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
@@ -445,6 +445,34 @@ impl<'a, 'v> Planner<'a, 'v> {
         found
     }
 
+    /// Decision 0232, rule 11 ("A force readying a landing is not a supply
+    /// run's"): whether a "ready a landing" in force is of the force, its
+    /// plan has not ended, and the force's order to prepare the landing
+    /// stands. Such a force serves the landing until it has unloaded
+    /// (decision 0151, 5).
+    fn readying_a_landing(&self, force: &sim_core::state::TaskForce) -> bool {
+        if force.preparation.is_none() {
+            return false;
+        }
+        let state = self.state();
+        state.intents_in_force().any(|task| {
+            let IntentKind::ReadyLanding { force: own, .. } = task.kind else {
+                return false;
+            };
+            let named = own == force.id
+                || task
+                    .limits
+                    .forces
+                    .as_ref()
+                    .is_some_and(|f| f.task_forces.contains(&force.id));
+            named
+                && state
+                    .plans
+                    .get(&task.plan)
+                    .is_some_and(|p| !p.state.ended())
+        })
+    }
+
     fn free_units_with(&self, respect_holds: bool) -> Vec<Unit> {
         let free = |ship: ShipId| {
             !self.held.contains(&ship)
@@ -477,6 +505,7 @@ impl<'a, 'v> Planner<'a, 'v> {
                     };
                     seen.extend(force.ships.iter().copied());
                     let ok = force_stopped_at(force, self.params.source_hex)
+                        && !self.readying_a_landing(force)
                         && force
                             .ships
                             .iter()

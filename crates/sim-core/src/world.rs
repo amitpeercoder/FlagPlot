@@ -191,7 +191,7 @@ impl Default for MadeIds {
 /// raises it by one
 /// when it changes a rule in a way that changes what an existing game would do; a
 /// change that leaves every existing game as it was leaves it alone.
-pub const RULES_VERSION: u32 = 34;
+pub const RULES_VERSION: u32 = 35;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct SimConfig {

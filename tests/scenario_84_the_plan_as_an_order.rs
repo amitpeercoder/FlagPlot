@@ -384,6 +384,7 @@ fn landing_task() -> Vec<OrderTask> {
             hex: B,
             by_day: None,
         },
+        maker: sim_core::command::Maker::Staff,
         phase: Some(PhaseName::Prepare),
     }]
 }

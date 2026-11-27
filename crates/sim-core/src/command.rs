@@ -611,6 +611,22 @@ impl IntentKind {
             _ => false,
         }
     }
+
+    /// Whether the commander may write an intent of this kind under one of
+    /// `parent`'s kind (decision 0232, 2): a second, narrower table than
+    /// [`IntentKind::may_stand_under`], opened one pair at a time when the
+    /// doctrine has been read for it. In this build the one pair is "take a
+    /// place" under "control an island"; intake checks that the place is the
+    /// hex of a named place of the island.
+    pub fn may_be_written_under(self, parent: IntentKind) -> bool {
+        matches!(
+            (self, parent),
+            (
+                IntentKind::TakePlace { .. },
+                IntentKind::ControlIsland { .. }
+            )
+        )
+    }
 }
 
 /// Who made an intent (decision 0117, 1): the commander, by `set_intent`, or
@@ -2614,12 +2630,19 @@ pub enum PlanOutcome {
 /// A command: a change to the side's command state. The first six are the
 /// commander's; the rest the staff's, with `Approve` for both (the staff
 /// only where the commander gave leave).
-#[derive(Clone, PartialEq, Eq, Debug)]
+#[derive(Clone, PartialEq, Eq)]
 pub enum CommandKind {
     /// Set an intent, or change one in force. The commander names its
     /// number. The first time a number is set its plan is drafted; a change
-    /// to an intent whose plan is approved is an amendment of it.
-    SetIntent { intent: IntentId, kind: IntentKind },
+    /// to an intent whose plan is approved is an amendment of it. With a
+    /// `parent` (decision 0232, 1) it makes a sub-intent of the commander's
+    /// under that intent; with none it is a root, or, for an intent in force,
+    /// the intent as it stands (decision 0232, 3).
+    SetIntent {
+        intent: IntentId,
+        kind: IntentKind,
+        parent: Option<IntentId>,
+    },
     /// Withdraw an intent in force. Its plan ends: complete if released,
     /// else cancelled.
     WithdrawIntent { intent: IntentId },
@@ -2690,6 +2713,113 @@ pub enum CommandKind {
         contact: u32,
         allow: bool,
     },
+}
+
+/// The text of a command as the derive would write it, but for the parent of
+/// a `set_intent`, which is written only where given (decision 0232, 1), so
+/// that the record of every game with none is the record it was.
+impl core::fmt::Debug for CommandKind {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            CommandKind::SetIntent {
+                intent,
+                kind,
+                parent,
+            } => {
+                let mut shown = f.debug_struct("SetIntent");
+                shown.field("intent", intent).field("kind", kind);
+                if parent.is_some() {
+                    shown.field("parent", parent);
+                }
+                shown.finish()
+            }
+            CommandKind::WithdrawIntent { intent } => f
+                .debug_struct("WithdrawIntent")
+                .field("intent", intent)
+                .finish(),
+            CommandKind::SetLimit(limit) => f.debug_tuple("SetLimit").field(limit).finish(),
+            CommandKind::SetLeave { leave, given } => f
+                .debug_struct("SetLeave")
+                .field("leave", leave)
+                .field("given", given)
+                .finish(),
+            CommandKind::Approve { plan } => f.debug_struct("Approve").field("plan", plan).finish(),
+            CommandKind::CancelPlan { plan } => {
+                f.debug_struct("CancelPlan").field("plan", plan).finish()
+            }
+            CommandKind::CommitShips {
+                plan,
+                run,
+                ships,
+                from_day,
+                to_day,
+            } => f
+                .debug_struct("CommitShips")
+                .field("plan", plan)
+                .field("run", run)
+                .field("ships", ships)
+                .field("from_day", from_day)
+                .field("to_day", to_day)
+                .finish(),
+            CommandKind::FreeShips { plan, ships } => f
+                .debug_struct("FreeShips")
+                .field("plan", plan)
+                .field("ships", ships)
+                .finish(),
+            CommandKind::AddRun { plan, run } => f
+                .debug_struct("AddRun")
+                .field("plan", plan)
+                .field("run", run)
+                .finish(),
+            CommandKind::TimeRun { plan, run, days } => f
+                .debug_struct("TimeRun")
+                .field("plan", plan)
+                .field("run", run)
+                .field("days", days)
+                .finish(),
+            CommandKind::MarkPlan { plan, outcome } => f
+                .debug_struct("MarkPlan")
+                .field("plan", plan)
+                .field("outcome", outcome)
+                .finish(),
+            CommandKind::Hold { target } => f.debug_struct("Hold").field("target", target).finish(),
+            CommandKind::Release { target } => {
+                f.debug_struct("Release").field("target", target).finish()
+            }
+            CommandKind::EndRun { plan, run } => f
+                .debug_struct("EndRun")
+                .field("plan", plan)
+                .field("run", run)
+                .finish(),
+            CommandKind::SetInterrupt(setting) => {
+                f.debug_tuple("SetInterrupt").field(setting).finish()
+            }
+            CommandKind::Acknowledge { interrupt } => f
+                .debug_struct("Acknowledge")
+                .field("interrupt", interrupt)
+                .finish(),
+            CommandKind::FormIntent { parent, kind } => f
+                .debug_struct("FormIntent")
+                .field("parent", parent)
+                .field("kind", kind)
+                .finish(),
+            CommandKind::SetPursuit { intent, leave } => f
+                .debug_struct("SetPursuit")
+                .field("intent", intent)
+                .field("leave", leave)
+                .finish(),
+            CommandKind::AnswerPursuit {
+                force,
+                contact,
+                allow,
+            } => f
+                .debug_struct("AnswerPursuit")
+                .field("force", force)
+                .field("contact", contact)
+                .field("allow", allow)
+                .finish(),
+        }
+    }
 }
 
 /// What a `set_interrupt` command sets.
@@ -2908,6 +3038,14 @@ pub enum CommandRefusal {
     /// An order to destroy a force names a number the commander's picture
     /// does not hold, or none (0) (decision 0220, R12). Added at the end.
     ContactNotHeld(u32),
+    /// A `set_intent` names a parent other than the one the intent in force
+    /// has (decision 0232, 3): the intent, and the parent it has (`None` for
+    /// a root). Added at the end.
+    ParentCannotChange(IntentId, Option<IntentId>),
+    /// Another "take a place" of the same hex is in force and plans the place
+    /// (decision 0232, 3): the intent that does, and the hex. Added at the
+    /// end.
+    AlreadyPlanned(IntentId, Hex),
 }
 
 impl core::fmt::Display for CommandRefusal {
@@ -2918,6 +3056,16 @@ impl core::fmt::Display for CommandRefusal {
                 write!(f, "{id} is not a number an intent may take")
             }
             CommandRefusal::NoSuchIntent(id) => write!(f, "{id} is not in force"),
+            CommandRefusal::ParentCannotChange(id, Some(parent)) => write!(
+                f,
+                "{id} stands under {parent} and cannot be moved: withdraw it and state another"
+            ),
+            CommandRefusal::ParentCannotChange(id, None) => {
+                write!(f, "{id} is a root and cannot be moved under another")
+            }
+            CommandRefusal::AlreadyPlanned(id, hex) => {
+                write!(f, "{id} already plans the place at {hex}")
+            }
             CommandRefusal::NotYourBase(base) => write!(f, "{base} is not one of the side's bases"),
             CommandRefusal::NotYourShip(ship) => write!(f, "{ship} is not one of the side's ships"),
             CommandRefusal::NotYourForce(force) => {
@@ -3060,9 +3208,17 @@ impl core::fmt::Display for Count {
 impl core::fmt::Display for CommandKind {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
-            CommandKind::SetIntent { intent, kind } => {
+            CommandKind::SetIntent {
+                intent,
+                kind,
+                parent,
+            } => {
                 write!(f, "set {intent} to ")?;
-                write_intent_kind(f, *kind)
+                write_intent_kind(f, *kind)?;
+                if let Some(parent) = parent {
+                    write!(f, " under {parent}")?;
+                }
+                Ok(())
             }
             CommandKind::WithdrawIntent { intent } => write!(f, "withdraw {intent}"),
             CommandKind::SetLimit(limit) => match limit {
@@ -4050,6 +4206,9 @@ pub struct MenCount {
 pub struct OrderTask {
     pub intent: IntentId,
     pub kind: IntentKind,
+    /// Whose intent it is (decision 0232, rule 18). Not state: read from the
+    /// intent, not hashed.
+    pub maker: Maker,
     pub phase: Option<PhaseName>,
 }
 

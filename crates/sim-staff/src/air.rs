@@ -693,6 +693,34 @@ impl<'v, 'a> Day<'v, 'a> {
                 self.set_plan(plan.id, PlanState::Released);
                 return;
             }
+            // Decision 0232, rule 10: a take the commander wrote under an
+            // island is passed over while the island's plan is a draft or
+            // preparing (a staff's take cannot exist before its release, and
+            // his can). Once released the wait is over for good.
+            if now == PlanState::Draft && crate::assemble::written_take(&self.state, &intent) {
+                let island = intent
+                    .parent
+                    .and_then(|p| self.state.intents.get(&p))
+                    .and_then(|p| self.plan_of(p).map(|plan| (p.id, plan)));
+                if let Some((island, island_plan)) = island {
+                    if matches!(island_plan.state, PlanState::Draft | PlanState::Preparing) {
+                        let reason = serving(&intent, &plan)
+                            .evidence(format!("{} is {}", island_plan.id, island_plan.state.name()), today)
+                            .binding(format!("{} is not released", island_plan.id))
+                            .worked(format!(
+                                "{}, the commander's take under {island}, waits for the plan of {island}: it is {}, and a take under an island is served once the island's plan is released, so the staff gives no order under {} and its plan stays a {}.",
+                                intent.id,
+                                island_plan.state.name(),
+                                intent.id,
+                                now.name()
+                            ))
+                            .would_change(format!("the plan of {island} released"))
+                            .done();
+                        self.target(in_scope).no_orders.push(reason);
+                        return;
+                    }
+                }
+            }
             let leaves = self.state.leaves;
             if now == PlanState::Draft {
                 if !leaves.prepare {

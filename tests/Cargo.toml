@@ -744,3 +744,7 @@ path = "proof_stage_4_case_w2_a_carrier_believed_absent.rs"
 [[test]]
 name = "scenario_136_supply_at_press"
 path = "scenario_136_supply_at_press.rs"
+
+[[test]]
+name = "scenario_137_a_plan_the_commander_writes"
+path = "scenario_137_a_plan_the_commander_writes.rs"

@@ -370,7 +370,7 @@ fn intent_kind(asked: &WindowAsked) -> Option<IntentKind> {
         .chain(asked.course.iter().map(|c| &c.command))
         .rev()
         .find_map(|command| match command {
-            CommandKind::SetIntent { intent, kind } if *intent == asked.intent => Some(*kind),
+            CommandKind::SetIntent { intent, kind, .. } if *intent == asked.intent => Some(*kind),
             _ => None,
         })
 }

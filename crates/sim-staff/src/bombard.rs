@@ -117,6 +117,20 @@ impl Day<'_, '_> {
             if force.mission != Mission::Bombardment {
                 continue;
             }
+            // Decision 0232, rule 10: under an island the bombardment forces
+            // are the island's, and a force the commander named for a landing
+            // he wrote is not this landing's.
+            if crate::assemble::written_take(&self.state, end) {
+                self.not_this_landings(
+                    end,
+                    plan,
+                    id,
+                    "bombardment",
+                    "bombardment forces",
+                    in_scope,
+                );
+                continue;
+            }
             // A force before its day is no force a task may use (decision
             // 0140, 3).
             if crate::available::force_waiting(self.area, id).is_some() {

@@ -202,8 +202,13 @@ pub const FORMAT: &str = "flagplot-saved-game";
 /// `distance` and an optional `search_only`) and in a hand-in's notices the
 /// kinds `follows`, `contact_lost` and `force_not_found` with an optional
 /// `"follow"` (the order, the contact and the report); its state version is
-/// v60. A game of an older version is refused, not converted.
-pub const VERSION: u32 = 28;
+/// v60. A game of an older version is refused, not converted. Version 29
+/// (decision 0232) adds in `"commands"` an optional `"parent"` of a
+/// `set_intent`, an intent number, written only where the command gave one
+/// (a sub-intent the commander writes under an island); a reader of version
+/// 28 could not take it. The state version stays v60 and no daily hash
+/// changes. A game of an older version is refused, not converted.
+pub const VERSION: u32 = 29;
 
 pub type Script = BTreeMap<u32, Vec<(Side, OrderRequest)>>;
 
@@ -1007,6 +1012,7 @@ mod tests {
                 (
                     Side::Allied,
                     CommandKind::SetIntent {
+                        parent: None,
                         intent,
                         kind: IntentKind::KeepSupplied {
                             base: BaseId::new(2),
@@ -1035,6 +1041,7 @@ mod tests {
                 (
                     Side::Allied,
                     CommandKind::SetIntent {
+                        parent: None,
                         intent: IntentId::new(8),
                         kind: IntentKind::DestroyForce {
                             contact: 3,
@@ -1048,6 +1055,7 @@ mod tests {
                 (
                     Side::Japanese,
                     CommandKind::SetIntent {
+                        parent: None,
                         intent: IntentId::new(7),
                         kind: IntentKind::Patrol {
                             hex: Hex::new(4, -1),
@@ -1252,6 +1260,7 @@ mod tests {
                 (
                     Side::Allied,
                     CommandKind::SetIntent {
+                        parent: None,
                         intent: IntentId::new(7),
                         kind: IntentKind::Hold {
                             base: BaseId::new(2),
@@ -1261,6 +1270,7 @@ mod tests {
                 (
                     Side::Allied,
                     CommandKind::SetIntent {
+                        parent: None,
                         intent: IntentId::new(8),
                         kind: IntentKind::TakePlace {
                             hex: sim_core::hex::Hex::new(6, 0),
@@ -1271,6 +1281,7 @@ mod tests {
                 (
                     Side::Allied,
                     CommandKind::SetIntent {
+                        parent: None,
                         intent: IntentId::new(10),
                         kind: IntentKind::ControlIsland {
                             island: 2,
@@ -1281,6 +1292,7 @@ mod tests {
                 (
                     Side::Allied,
                     CommandKind::SetIntent {
+                        parent: None,
                         intent: IntentId::new(9),
                         kind: IntentKind::Bombard {
                             force: sim_core::ids::TaskForceId::new(2),
@@ -1620,7 +1632,7 @@ mod tests {
         .expect("writes");
         let written: Value = serde_json::from_str(&fs::read_to_string(&file).expect("reads"))
             .expect("the file is JSON");
-        assert_eq!(written["version"], 28);
+        assert_eq!(written["version"], 29);
         assert_eq!(written["doctrine_version"], sim_staff::DOCTRINE_VERSION);
         assert_eq!(written["commands"].as_array().expect("commands").len(), 37);
         assert_eq!(written["staff"].as_array().expect("staff").len(), 1);
