@@ -1947,6 +1947,7 @@ pub fn plan_order(view: &SideView<'_>, staff: &dyn Staff, intent: u32) -> Result
             json!({
                 "intent": task.intent.raw(),
                 "kind": task.kind.name(),
+                "maker": task.maker.name(),
                 "statement": n.text(&task_words(view, task.kind)),
                 "phase": task.phase.map(PhaseName::name),
             })
@@ -1993,6 +1994,11 @@ pub fn plan_order(view: &SideView<'_>, staff: &dyn Staff, intent: u32) -> Result
     if let Some(line) = fed_beside_words(view, &n, &order) {
         text.push(line);
     }
+    // Decision 0232, rule 18: the order of an island says which of its tasks
+    // are the commander's. Said only where he wrote one.
+    if let Some(lines) = made_by_words(view, &n, &order) {
+        text.extend(lines);
+    }
     let is_take = order
         .phases
         .iter()
@@ -2025,6 +2031,50 @@ pub fn plan_order(view: &SideView<'_>, staff: &dyn Staff, intent: u32) -> Result
             "text": text,
         }),
     ))
+}
+
+/// The lines of a "control an island" order that say which tasks beneath it
+/// are the commander's and which the staff's (decision 0232, rule 18):
+/// "Yours:" before his takes and "The staff's:" before the rest. `None` where
+/// the intent is no island or the commander wrote none beneath it, so an
+/// order as it was reads as it did.
+fn made_by_words(
+    view: &SideView<'_>,
+    n: &Names<'_>,
+    order: &sim_core::command::PlanOrder,
+) -> Option<Vec<String>> {
+    use sim_core::command::Maker;
+    let state = view.command_state();
+    if !matches!(
+        state.intents.get(&order.intent)?.kind,
+        IntentKind::ControlIsland { .. }
+    ) {
+        return None;
+    }
+    let words = |maker: Maker| -> Vec<String> {
+        order
+            .tasks
+            .iter()
+            .filter(|task| task.maker == maker)
+            .map(|task| {
+                format!(
+                    "intent {}: {}",
+                    task.intent.raw(),
+                    n.text(&task_words(view, task.kind))
+                )
+            })
+            .collect()
+    };
+    let yours = words(Maker::Commander);
+    if yours.is_empty() {
+        return None;
+    }
+    let mut lines = vec![format!("Yours: {}.", yours.join("; "))];
+    let staffs = words(Maker::Staff);
+    if !staffs.is_empty() {
+        lines.push(format!("The staff's: {}.", staffs.join("; ")));
+    }
+    Some(lines)
 }
 
 /// The line of a "control an island" order that lists the bases its staff
@@ -2187,6 +2237,38 @@ fn tree_json(n: &Names<'_>, view: &SideView<'_>, proposal: &Proposal) -> Value {
     }
     let mut next = state.next_intent_number().raw();
     let mut sub_intents: Vec<Value> = Vec::new();
+    // Decision 0232, rule 18: each intent in force beneath the one proposed
+    // that the commander made, before the staff's: its own number, its
+    // parent, `maker` "commander" and `standing` true, with its kind's
+    // fields and no reason.
+    for id in state.descendants_in_force(proposal.intent) {
+        let Some(own) = state.intents.get(&id) else {
+            continue;
+        };
+        if own.maker != sim_core::command::Maker::Commander {
+            continue;
+        }
+        let parent = own.parent.unwrap_or(proposal.intent);
+        let mut entry = json!({
+            "number": own.id.raw(),
+            "parent": parent.raw(),
+            "maker": own.maker.name(),
+            "standing": true,
+            "text": command_text(
+                n,
+                &CommandKind::SetIntent {
+                    intent: own.id,
+                    kind: own.kind,
+                    parent: Some(parent),
+                },
+                None,
+            ),
+        });
+        if let (Some(map), Value::Object(kind)) = (entry.as_object_mut(), kind_json(n, own.kind)) {
+            map.extend(kind);
+        }
+        sub_intents.push(entry);
+    }
     for command in &proposal.decisions.commands {
         let CommandKind::FormIntent { parent, kind } = &command.kind else {
             continue;
@@ -2485,6 +2567,7 @@ fn allowed_keys(tool: &str) -> &'static [&'static str] {
     match tool {
         "set_intent" => &[
             "intent",
+            "parent",
             "intent_kind",
             "base",
             "target",

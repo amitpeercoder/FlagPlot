@@ -31,7 +31,7 @@
       "const": "flagplot-agent"
     },
     "version": {
-      "const": 55
+      "const": 56
     },
     "kind": {
       "const": "propose"
@@ -254,8 +254,6 @@
                   "parent",
                   "maker",
                   "text",
-                  "reason",
-                  "cautions",
                   "kind",
                   "base",
                   "target",
@@ -278,7 +276,15 @@
                     "type": "integer"
                   },
                   "maker": {
-                    "const": "staff"
+                    "enum": [
+                      "commander",
+                      "staff"
+                    ],
+                    "description": "Whose intent it is. The commander's entries (decision 0232, rule 18) come first, each already in force beneath the intent proposed, with no reason; the staff's are what it would form."
+                  },
+                  "standing": {
+                    "const": true,
+                    "description": "Only on the commander's entries: the intent stands, and the staff forms nothing in its place."
                   },
                   "text": {
                     "type": "string"

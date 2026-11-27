@@ -4206,6 +4206,9 @@ pub struct MenCount {
 pub struct OrderTask {
     pub intent: IntentId,
     pub kind: IntentKind,
+    /// Whose intent it is (decision 0232, rule 18). Not state: read from the
+    /// intent, not hashed.
+    pub maker: Maker,
     pub phase: Option<PhaseName>,
 }
 

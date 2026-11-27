@@ -103,6 +103,7 @@ fn order_of(view: &SideView<'_>, day: Option<&Day<'_, '_>>, intent: &Intent) -> 
         .map(|task| OrderTask {
             intent: task.id,
             kind: task.kind,
+            maker: task.maker,
             phase: match task.kind {
                 IntentKind::ReadyLanding { .. } if is_take => Some(PhaseName::Prepare),
                 IntentKind::Bombard { .. } if is_take => Some(PhaseName::Move),

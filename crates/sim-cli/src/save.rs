@@ -202,8 +202,13 @@ pub const FORMAT: &str = "flagplot-saved-game";
 /// `distance` and an optional `search_only`) and in a hand-in's notices the
 /// kinds `follows`, `contact_lost` and `force_not_found` with an optional
 /// `"follow"` (the order, the contact and the report); its state version is
-/// v60. A game of an older version is refused, not converted.
-pub const VERSION: u32 = 28;
+/// v60. A game of an older version is refused, not converted. Version 29
+/// (decision 0232) adds in `"commands"` an optional `"parent"` of a
+/// `set_intent`, an intent number, written only where the command gave one
+/// (a sub-intent the commander writes under an island); a reader of version
+/// 28 could not take it. The state version stays v60 and no daily hash
+/// changes. A game of an older version is refused, not converted.
+pub const VERSION: u32 = 29;
 
 pub type Script = BTreeMap<u32, Vec<(Side, OrderRequest)>>;
 
@@ -1627,7 +1632,7 @@ mod tests {
         .expect("writes");
         let written: Value = serde_json::from_str(&fs::read_to_string(&file).expect("reads"))
             .expect("the file is JSON");
-        assert_eq!(written["version"], 28);
+        assert_eq!(written["version"], 29);
         assert_eq!(written["doctrine_version"], sim_staff::DOCTRINE_VERSION);
         assert_eq!(written["commands"].as_array().expect("commands").len(), 37);
         assert_eq!(written["staff"].as_array().expect("staff").len(), 1);

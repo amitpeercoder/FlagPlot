@@ -374,7 +374,7 @@
       "hash": "3b3353e3ccc0e0d7"
     }
   ],
-  "doctrine_version": "supply-62",
+  "doctrine_version": "supply-63",
   "format": "flagplot-saved-game",
   "hashes": [
     {
@@ -982,7 +982,7 @@
       "unit": "land_unit:17"
     }
   ],
-  "rules_version": 34,
+  "rules_version": 35,
   "scenario": {
     "file": "data/scenarios/second-proof/07m_model_week.toml",
     "hash": "d88d85d1b304bed6"
@@ -12814,5 +12814,5 @@
     }
   ],
   "state_version": "flagplot-state-v60",
-  "version": 28
+  "version": 29
 }

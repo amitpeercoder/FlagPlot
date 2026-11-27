@@ -17,7 +17,7 @@
       "const": "flagplot-agent"
     },
     "version": {
-      "const": 55
+      "const": 56
     },
     "kind": {
       "const": "trials"

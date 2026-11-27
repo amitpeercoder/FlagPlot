@@ -2429,11 +2429,13 @@ fn the_plan_orders() {
                 vec![OrderTask {
                     intent: intent(9),
                     kind: landing_kind(3, C, None),
+                    maker: sim_core::command::Maker::Staff,
                     phase: Some(PhaseName::Prepare),
                 }],
                 vec![OrderTask {
                     intent: intent(10),
                     kind: landing_kind(1, B, None),
+                    maker: sim_core::command::Maker::Staff,
                     phase: Some(PhaseName::Prepare),
                 }],
             )
@@ -2493,7 +2495,6 @@ fn the_tree_proposed() {
 /// `tree_json` of `crates/sim-agent`, the other developer's step; the
 /// staff's part of the same rule is `the_tree_proposed`.
 #[test]
-#[ignore = "waits for sim-agent's tree_json (decision 0232, rule 18)"]
 fn the_tree_proposed_as_the_tool_gives_it() {
     let held = staffs();
     let mut scenario = load(&text());

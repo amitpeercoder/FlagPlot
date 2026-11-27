@@ -652,8 +652,8 @@ fn told_in_list_contacts_beside_the_reports_and_the_suspected_waters() {
     assert_eq!(beside["submarine_estimate"], answer["submarine_estimate"]);
     let estimate = estimate_of(&world_after(&with_waters, 1), Side::Allied);
     assert_eq!(rows(&estimate), four_areas(1));
-    // The tool's answer is valid as the schema has it, and says version 55.
-    assert_eq!(answer["version"], 55);
+    // The tool's answer is valid as the schema has it, and says version 56 (decision 0232 raised it from 55).
+    assert_eq!(answer["version"], 56);
 }
 
 #[test]

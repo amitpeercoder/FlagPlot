@@ -1114,7 +1114,9 @@ pub fn command_from_json(value: &Value) -> Result<CommandKind, String> {
     let plan = || small(value, "plan").map(PlanId::new);
     match text(value, "kind")? {
         "set_intent" => Ok(CommandKind::SetIntent {
-            parent: None,
+            // Left out it is sent as none and the engine reads it (decision
+            // 0232, rule 3): no tool fills it in.
+            parent: small_opt(value, "parent")?.map(IntentId::new),
             intent: IntentId::new(small(value, "intent")?),
             kind: intent_kind_from_json(value)?,
         }),
