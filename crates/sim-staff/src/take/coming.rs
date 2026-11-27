@@ -21,7 +21,7 @@
 
 use std::collections::BTreeSet;
 
-use sim_core::command::{Intent, IntentKind, Risk};
+use sim_core::command::{Intent, Risk};
 use sim_core::hex::Hex;
 use sim_core::ids::{BaseId, EntityRef, LandUnitId};
 use sim_core::state::{ShipLocation, TaskForce};
@@ -241,10 +241,7 @@ impl Day<'_, '_> {
         wanted: u32,
     ) -> Coming {
         let view = self.view;
-        let end_by = match end.kind {
-            IntentKind::TakePlace { by_day, .. } => by_day,
-            _ => None,
-        };
+        let end_by = self.take_date(end);
         // Decision 0194, 10: "more is coming" ends with the game. The latest
         // day is the end's date or the game's last day, whichever is the
         // earlier; a world with no last day has the end's date alone.

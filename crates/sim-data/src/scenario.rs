@@ -8933,6 +8933,70 @@ task_force = 3
         );
     }
 
+    /// Decision 0232, rule 1: a `set_intent` takes `parent`, an intent
+    /// number, of any kind (the engine refuses a pair that is not open); no
+    /// other command takes it, and a float is not a number.
+    #[test]
+    fn a_set_intent_takes_a_parent_and_no_other_command_does() {
+        use sim_core::command::IntentKind;
+        use sim_core::hex::Hex;
+        use sim_core::ids::BaseId;
+        assert_eq!(
+            only(&command(
+                "kind = \"set_intent\"\nintent = 2\nparent = 1\nintent_kind = \"take_place\"\nhex = [6, 0]"
+            )),
+            CommandKind::SetIntent {
+                parent: Some(IntentId::new(1)),
+                intent: IntentId::new(2),
+                kind: IntentKind::TakePlace {
+                    hex: Hex::new(6, 0),
+                    by_day: None,
+                },
+            }
+        );
+        // Left out, it is none: a root, as before.
+        assert_eq!(
+            only(&command(
+                "kind = \"set_intent\"\nintent = 2\nintent_kind = \"take_place\"\nhex = [6, 0]"
+            )),
+            CommandKind::SetIntent {
+                parent: None,
+                intent: IntentId::new(2),
+                kind: IntentKind::TakePlace {
+                    hex: Hex::new(6, 0),
+                    by_day: None,
+                },
+            }
+        );
+        // Any kind of intent takes the key; the engine's pairs refuse.
+        assert_eq!(
+            only(&command(
+                "kind = \"set_intent\"\nintent = 2\nparent = 1\nintent_kind = \"hold\"\nbase = 2"
+            )),
+            CommandKind::SetIntent {
+                parent: Some(IntentId::new(1)),
+                intent: IntentId::new(2),
+                kind: IntentKind::Hold {
+                    base: BaseId::new(2)
+                },
+            }
+        );
+        // No other command takes it.
+        assert!(error_of(&command(
+            "kind = \"withdraw_intent\"\nintent = 2\nparent = 1"
+        ))
+        .contains("does not take \"parent\""));
+        assert!(error_of(&command(
+            "kind = \"set_limit\"\nlimit = \"risk\"\nintent = 2\nrisk = \"press\"\nparent = 1"
+        ))
+        .contains("does not take \"parent\""));
+        // A float is not an intent number.
+        assert!(parse_with(&command(
+            "kind = \"set_intent\"\nintent = 2\nparent = 1.0\nintent_kind = \"take_place\"\nhex = [6, 0]"
+        ))
+        .is_err());
+    }
+
     #[test]
     fn a_landing_or_build_up_intent_with_wrong_keys_is_refused() {
         let intent = |body: &str| {

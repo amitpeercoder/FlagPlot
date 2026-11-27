@@ -17,6 +17,7 @@
 //! | `set_limit` | `limit` and its keys, below |
 //! | `set_leave` | `leave` (`"prepare"` or `"launch"`), `given` |
 //! | `set_pursuit` | `intent` and `leave` (`"ask"`, `"go"` or `"stay"`; left out clears the setting so that it is read up the tree again), decision 0214 |
+//! | `set_intent` (any kind) | and, optionally, `parent`, an intent number: decision 0232, rule 1, the intent it stands under, a sub-intent the commander writes (in this build a `"take_place"` under a `"control_island"`); no other kind of command takes `parent` |
 //! | `answer_pursuit` | `task_force`, `contact` (the commander's number of the contact) and `allow` (a bool), decision 0214 |
 //! | `approve`, `cancel_plan` | `plan` |
 //! | `hold`, `release` | exactly one of `ship`, `task_force`, `air_group`, `land_unit` and `submarine`; with `air_group`, `setting` (`"search_arc"`) holds that setting alone, and with no `setting` the whole group is held; no other target takes `setting` |
@@ -74,6 +75,9 @@ pub(crate) struct CommandSpec {
     kind: String,
     limit: Option<String>,
     intent: Option<u32>,
+    /// Decision 0232, rule 1: the intent a `set_intent` stands under, a
+    /// sub-intent the commander writes. Only a `set_intent` takes it.
+    parent: Option<u32>,
     intent_kind: Option<String>,
     base: Option<u32>,
     target: Option<u32>,
@@ -144,6 +148,7 @@ impl CommandSpec {
         };
         note(self.limit.is_some(), "limit");
         note(self.intent.is_some(), "intent");
+        note(self.parent.is_some(), "parent");
         note(self.intent_kind.is_some(), "intent_kind");
         note(self.base.is_some(), "base");
         note(self.target.is_some(), "target");
@@ -336,7 +341,10 @@ impl CommandSpec {
             }
         };
         for key in self.given() {
-            if !allowed.contains(&key) {
+            // Decision 0232, rule 1: any kind of `set_intent` takes a
+            // `parent`; the engine refuses a pair that is not open to him.
+            let parent_of_an_intent = key == "parent" && self.kind == "set_intent";
+            if !allowed.contains(&key) && !parent_of_an_intent {
                 return Err(format!("{what} does not take \"{key}\""));
             }
         }
@@ -365,7 +373,8 @@ impl CommandSpec {
             })
         };
         let kind = match self.kind.as_str() {
-            "set_intent" => CommandKind::SetIntent { parent: None,
+            "set_intent" => CommandKind::SetIntent {
+                parent: self.parent.map(IntentId::new),
                 intent: intent()?,
                 kind: match self.intent_kind.as_deref() {
                     Some("neutralise") => IntentKind::Neutralise {
@@ -880,6 +889,7 @@ impl BelievedIntentSpec {
             kind: "set_intent".to_string(),
             limit: None,
             intent: Some(1),
+            parent: None,
             intent_kind: self.intent_kind.clone(),
             base: self.base,
             target: self.target,

@@ -307,6 +307,13 @@ impl Day<'_, '_> {
             if force.mission != Mission::Carrier {
                 continue;
             }
+            // Decision 0232, rule 10: under an island the carriers are the
+            // island's, and a force the commander named for a landing he
+            // wrote is not this landing's.
+            if crate::assemble::written_take(&self.state, end) {
+                self.not_this_landings(end, plan, id, "carrier", "carriers", in_scope);
+                continue;
+            }
             if crate::available::force_waiting(self.area, id).is_some() {
                 continue;
             }
@@ -480,6 +487,31 @@ impl Day<'_, '_> {
         }
     }
 
+    /// Decision 0232, rule 10: the reason given for a force of the mission
+    /// the commander named in the limit of a landing he wrote, which is not
+    /// that landing's: under an island the carriers and the bombardment
+    /// forces are the island's.
+    pub(crate) fn not_this_landings(
+        &mut self,
+        end: &Intent,
+        plan: &Plan,
+        force: TaskForceId,
+        mission: &str,
+        owners: &str,
+        in_scope: bool,
+    ) {
+        let reason = serving(end, plan)
+            .evidence(format!("{force} is on the {mission} mission"), self.today)
+            .binding(format!("{} is the commander's take under an island", end.id))
+            .worked(format!(
+                "{force} is on the {mission} mission: under an island the {owners} are the island's, and it is not this landing's, so the staff forms no {mission} task for it under {}.",
+                end.id
+            ))
+            .would_change(format!("{force} left to the island"))
+            .done();
+        self.target(in_scope).no_orders.push(reason);
+    }
+
     /// The "take a place" intent `task` stands under, where it does.
     pub(crate) fn under_take(&self, task: &Intent) -> Option<Intent> {
         task.parent
@@ -502,6 +534,11 @@ impl Day<'_, '_> {
                 continue;
             };
             if force.mission != Mission::Carrier {
+                continue;
+            }
+            // Decision 0232, rule 10.
+            if crate::assemble::written_take(&self.state, end) {
+                self.not_this_landings(end, plan, id, "carrier", "carriers", in_scope);
                 continue;
             }
             // A force before its day is no force a task may use (decision

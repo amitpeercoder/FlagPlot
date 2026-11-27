@@ -31,7 +31,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use sim_core::command::{Addressee, ForcesLimit, Intent, IntentKind, Risk};
+use sim_core::command::{Addressee, CommandState, ForcesLimit, Intent, IntentKind, Maker, Risk};
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
 use sim_core::ids::{BaseId, EntityRef, IntentId, LandUnitId, ShipId, TaskForceId};
@@ -65,6 +65,22 @@ pub(crate) struct Others {
     pub(crate) forces: BTreeMap<TaskForceId, IntentId>,
     units: BTreeMap<LandUnitId, IntentId>,
     bases: BTreeMap<BaseId, IntentId>,
+    /// The forces and units of `forces` and `units` that a take beside the
+    /// one served has (decision 0232, rule 11): on its landing, or named for
+    /// it by the commander. Their words are not "higher in priority".
+    beside_forces: std::collections::BTreeSet<TaskForceId>,
+    beside_units: std::collections::BTreeSet<LandUnitId>,
+}
+
+/// Decision 0232: whether `end` is a "take a place" the commander wrote
+/// under "control an island" (the one pair open to him in the first build).
+pub(crate) fn written_take(state: &CommandState, end: &Intent) -> bool {
+    end.maker == Maker::Commander
+        && matches!(end.kind, IntentKind::TakePlace { .. })
+        && end
+            .parent
+            .and_then(|p| state.intents.get(&p))
+            .is_some_and(|p| matches!(p.kind, IntentKind::ControlIsland { .. }))
 }
 
 /// One base's lift (item 7).
@@ -116,6 +132,128 @@ pub(crate) fn limit_words(limit: &ForcesLimit) -> String {
 }
 
 impl Day<'_, '_> {
+    /// Decision 0232, rule 11: the forces limit a take chooses inside. For a
+    /// take the commander wrote, kind by kind: of the task forces, the land
+    /// units and the source, his where his limit names it, else the
+    /// island's where the island's names it, else the staff's choice. For
+    /// every other take, its own limit, else its island's, as before.
+    pub(crate) fn forces_within(&self, end: &Intent) -> Option<ForcesLimit> {
+        let island = self
+            .state
+            .island_on_chain(end.id)
+            .and_then(|island| island.limits.forces.clone());
+        let own = end.limits.forces.clone();
+        if !written_take(&self.state, end) {
+            return own.or(island);
+        }
+        match (own, island) {
+            (Some(mut own), Some(island)) => {
+                if !names_forces(&own) {
+                    own.task_forces = island.task_forces;
+                    own.ships = island.ships;
+                }
+                if own.land_units.is_empty() {
+                    own.land_units = island.land_units;
+                }
+                if own.source.is_none() {
+                    own.source = island.source;
+                }
+                Some(own)
+            }
+            (own, island) => own.or(island),
+        }
+    }
+
+    /// The date a take is held to (decision 0232, rule 11): its own; or, for
+    /// a take the commander wrote with none, the island's. For every take
+    /// that exists today it is the take's own.
+    pub(crate) fn take_date(&self, end: &Intent) -> Option<u32> {
+        let IntentKind::TakePlace { by_day, .. } = end.kind else {
+            return None;
+        };
+        if by_day.is_some() || !written_take(&self.state, end) {
+            return by_day;
+        }
+        match end
+            .parent
+            .and_then(|p| self.state.intents.get(&p))
+            .map(|p| p.kind)
+        {
+            Some(IntentKind::ControlIsland { by_day, .. }) => by_day,
+            _ => None,
+        }
+    }
+
+    /// Decision 0232, rule 11: what the other takes under the island of the
+    /// take `end` keep from it. What a landing has (its own force, and the
+    /// task forces and land units of its forces limit) is kept while its
+    /// take's plan has not ended, whoever made the take and whatever the
+    /// order; what the commander named in the forces limit of a take he
+    /// wrote is that take's, but where `end` names it too the take served
+    /// first has it.
+    fn keep_beside(&self, end: &Intent, others: &mut Others) {
+        let Some(island) = self.state.island_on_chain(end.id).map(|i| i.id) else {
+            return;
+        };
+        let order = self.in_priority_order(|_| true);
+        let place = |id: IntentId| order.iter().position(|x| *x == id);
+        let own = end.limits.forces.as_ref();
+        for take in self.state.intents_in_force() {
+            if take.id == end.id
+                || !matches!(take.kind, IntentKind::TakePlace { .. })
+                || self.state.island_on_chain(take.id).map(|i| i.id) != Some(island)
+                || self
+                    .state
+                    .plans
+                    .get(&take.plan)
+                    .is_none_or(|plan| plan.state.ended())
+            {
+                continue;
+            }
+            // What its landing has.
+            for landing in self.state.intents_in_force().filter(|i| {
+                i.parent == Some(take.id) && matches!(i.kind, IntentKind::ReadyLanding { .. })
+            }) {
+                if let IntentKind::ReadyLanding { force, .. } = landing.kind {
+                    others.forces.entry(force).or_insert(take.id);
+                    others.beside_forces.insert(force);
+                }
+                if let Some(limit) = &landing.limits.forces {
+                    for force in &limit.task_forces {
+                        others.forces.entry(*force).or_insert(take.id);
+                        others.beside_forces.insert(*force);
+                    }
+                    for unit in &limit.land_units {
+                        others.units.entry(*unit).or_insert(take.id);
+                        others.beside_units.insert(*unit);
+                    }
+                }
+            }
+            // What the commander named for it.
+            if take.maker != Maker::Commander {
+                continue;
+            }
+            let Some(named) = &take.limits.forces else {
+                continue;
+            };
+            let earlier = place(take.id) < place(end.id);
+            for force in &named.task_forces {
+                if own.is_some_and(|f| f.task_forces.contains(force)) && !earlier {
+                    continue;
+                }
+                others.forces.entry(*force).or_insert(take.id);
+                others.beside_forces.insert(*force);
+            }
+            for unit in &named.land_units {
+                if own.is_some_and(|f| f.land_units.contains(unit)) && !earlier {
+                    continue;
+                }
+                others.units.entry(*unit).or_insert(take.id);
+                others.beside_units.insert(*unit);
+            }
+        }
+    }
+
     /// Item 5: what the intents served before `end` name.
     pub(crate) fn others_above(&self, end: &Intent) -> Others {
         let mut others = Others::default();
@@ -144,6 +282,11 @@ impl Day<'_, '_> {
                     others.bases.entry(base).or_insert(id);
                 }
             }
+        }
+        // Decision 0232, rule 11: a take under an island keeps from the takes
+        // beside it what they have and what the commander named for them.
+        if matches!(end.kind, IntentKind::TakePlace { .. }) {
+            self.keep_beside(end, &mut others);
         }
         others
     }
@@ -181,6 +324,12 @@ impl Day<'_, '_> {
             return Err(format!("{} is left out: {words}", force.id));
         }
         if let Some(other) = others.forces.get(&force.id) {
+            if others.beside_forces.contains(&force.id) {
+                return Err(format!(
+                    "{} is kept for {other}, a take beside it under the island: a landing keeps what it has, and a take the commander wrote keeps what he named for it",
+                    force.id
+                ));
+            }
             return Err(format!(
                 "{} serves {other}, an intent higher in priority",
                 force.id
@@ -199,6 +348,12 @@ impl Day<'_, '_> {
             return Err(hold_words(hold, *found));
         }
         if let Some(other) = others.units.get(&unit.id) {
+            if others.beside_units.contains(&unit.id) {
+                return Err(format!(
+                    "{} is kept for {other}, a take beside it under the island: a landing keeps what it has, and a take the commander wrote keeps what he named for it",
+                    unit_words(unit)
+                ));
+            }
             return Err(format!(
                 "{} serves {other}, an intent higher in priority",
                 unit_words(unit)

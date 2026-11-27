@@ -309,11 +309,7 @@ impl Day<'_, '_> {
         let others = self.others_above(end);
         // Inside what the commander named, his or his island's (decision
         // 0151, 4).
-        let within = end.limits.forces.clone().or_else(|| {
-            self.state
-                .island_on_chain(end.id)
-                .and_then(|island| island.limits.forces.clone())
-        });
+        let within = self.forces_within(end);
         let named = within.filter(crate::assemble::names_forces);
         let mut plan = LiftPlan {
             words: Vec::new(),

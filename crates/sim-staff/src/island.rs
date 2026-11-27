@@ -27,8 +27,8 @@ use sim_core::command::LimitKind;
 use std::collections::{BTreeMap, BTreeSet};
 
 use sim_core::command::{
-    CommandKind, ForcesLimit, Intent, IntentKind, IntentLimits, Limit, Maker, Plan, PlanId,
-    PlanState, StaffCommand,
+    CommandKind, ForcesLimit, Intent, IntentKind, IntentLimits, Limit, Maker, NoticeKind, Plan,
+    PlanId, PlanState, StaffCommand,
 };
 use sim_core::hex::Hex;
 use sim_core::ids::{BaseId, IntentId, TaskForceId};
@@ -115,6 +115,10 @@ impl Day<'_, '_> {
             self.island_take(end, plan, place.hex, by_day, &island_text, in_scope);
             self.island_hold(end, plan, place.hex, &source, &island_text, in_scope);
         }
+
+        // Decision 0232, rule 14: a take he wrote that is later than the
+        // island's date.
+        self.island_late(end, plan, by_day, in_scope);
 
         // Decision 0231: the supply of a base beside a place, after the
         // holds and before the denial.
@@ -295,6 +299,12 @@ impl Day<'_, '_> {
         if self.view.bases().any(|b| b.hex == hex) {
             return;
         }
+        // Decision 0232, rule 9: the commander's take of the place, in force
+        // under the island with its plan not complete, has the place: the
+        // staff forms none beside it.
+        if self.written_stands(end, plan, hex, in_scope) {
+            return;
+        }
         let standing = self
             .state
             .intents_in_force()
@@ -338,6 +348,121 @@ impl Day<'_, '_> {
         // Its plan is made ready on leave to prepare this morning, as a
         // root's is (item 9).
         self.leave_for(id_new);
+    }
+
+    /// Decision 0232, rule 9: whether a "take a place" of `hex` that the
+    /// commander wrote under `end` is in force with its plan not complete;
+    /// if so, the reason of the morning says it plans the place and the
+    /// staff forms none beside it. Where he cancelled its plan, the reason
+    /// says so too, and the island cannot be controlled while the place is
+    /// his to take: the notice that it cannot meet the intent is handed in
+    /// once for its plan (rule 14).
+    fn written_stands(&mut self, end: &Intent, plan: &Plan, hex: Hex, in_scope: bool) -> bool {
+        let today = self.today;
+        let Some((written, state)) = self
+            .state
+            .intents_in_force()
+            .filter(|i| {
+                i.parent == Some(end.id)
+                    && i.maker == Maker::Commander
+                    && matches!(i.kind, IntentKind::TakePlace { hex: h, .. } if h == hex)
+            })
+            .filter_map(|i| self.state.plans.get(&i.plan).map(|p| (i.clone(), p.state)))
+            .find(|(_, state)| *state != PlanState::Complete)
+        else {
+            return false;
+        };
+        let id = written.id;
+        if !state.ended() {
+            let reason = serving(end, plan)
+                .evidence(format!("{id}, the commander's, is in force and its plan is {}", state.name()), today)
+                .binding(format!("{id} stands"))
+                .worked(format!(
+                    "{id}, the commander's, plans the place at {hex}: the staff forms no take beside it."
+                ))
+                .would_change(format!("{id} withdrawn"))
+                .done();
+            self.target(in_scope).no_orders.push(reason);
+            return true;
+        }
+        let noticed = self.noticed(NoticeKind::CannotMeet, plan.id);
+        let reason = serving(end, plan)
+            .evidence(format!("{id}, the commander's, is in force and its plan is {}", state.name()), today)
+            .binding(format!("{id} stands, with its plan {}", state.name()))
+            .worked(format!(
+                "{id}, the commander's, plans the place at {hex}, and its plan is {}: the staff forms no take beside it, and {} cannot be controlled while the place is his to take.{}",
+                state.name(),
+                end.id,
+                if noticed {
+                    ""
+                } else {
+                    " It hands in the notice that it cannot meet the intent."
+                }
+            ))
+            .would_change(format!("{id} set again, which drafts it a new plan"))
+            .would_change(format!("{id} withdrawn"))
+            .done();
+        if noticed {
+            self.target(in_scope).no_orders.push(reason);
+        } else {
+            self.notice(in_scope, reason, NoticeKind::CannotMeet, plan);
+        }
+        true
+    }
+
+    /// Decision 0232, rule 14: the notice `late` on the island's plan for a
+    /// take the commander wrote that is to be done by a day later than the
+    /// island's own. The staff carries out his date; the reason names every
+    /// such take each morning and the notice is handed in once.
+    fn island_late(&mut self, end: &Intent, plan: &Plan, by_day: Option<u32>, in_scope: bool) {
+        let Some(island_date) = by_day else {
+            return;
+        };
+        let today = self.today;
+        let later: Vec<(IntentId, Hex, u32)> = self
+            .state
+            .intents_in_force()
+            .filter(|i| i.parent == Some(end.id) && i.maker == Maker::Commander)
+            .filter(|i| {
+                self.state
+                    .plans
+                    .get(&i.plan)
+                    .is_some_and(|p| !p.state.ended())
+            })
+            .filter_map(|i| match i.kind {
+                IntentKind::TakePlace {
+                    hex,
+                    by_day: Some(day),
+                } if day > island_date => Some((i.id, hex, day)),
+                _ => None,
+            })
+            .collect();
+        let mut noticed = self.noticed(NoticeKind::Late, plan.id);
+        for (id, hex, day) in later {
+            let between = day - island_date;
+            let days = if between == 1 { "day" } else { "days" };
+            let reason = serving(end, plan)
+                .evidence(format!("{id}, the commander's, is to be done by the end of day {day}"), today)
+                .binding(format!("{id} is later than {}", end.id))
+                .worked(format!(
+                    "{} is to be done by the end of day {island_date}; {id}, the commander's take of the place at {hex}, is to be done by the end of day {day}, {between} {days} later. The staff carries out his date{}.",
+                    end.id,
+                    if noticed {
+                        ""
+                    } else {
+                        " and hands in the notice that the island's date will not be kept"
+                    }
+                ))
+                .would_change(format!("{id} set to a day no later than day {island_date}"))
+                .would_change(format!("{} set to a later day", end.id))
+                .done();
+            if noticed {
+                self.target(in_scope).no_orders.push(reason);
+            } else {
+                self.notice(in_scope, reason, NoticeKind::Late, plan);
+                noticed = true;
+            }
+        }
     }
 
     /// Item 6: "hold a place" of the side's base at the place, else the

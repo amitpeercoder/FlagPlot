@@ -24,6 +24,10 @@
 //!
 //! A day on which a task had no order is not in the order (item 16): it
 //! stays in the task's reasons.
+//!
+//! The tasks are every intent in force beneath (decision 0232, rule 18):
+//! those the staff formed and those the commander wrote under his own order.
+//! Whose each is, is the intent's `maker` in the command state.
 
 use sim_core::command::{
     Intent, IntentKind, Knowledge, Leave, Maker, MenCount, OrderTask, Phase, PhaseEnd, PhaseName,
@@ -96,7 +100,6 @@ fn order_of(view: &SideView<'_>, day: Option<&Day<'_, '_>>, intent: &Intent) -> 
         .descendants_in_force(intent.id)
         .into_iter()
         .filter_map(|id| state.intents.get(&id))
-        .filter(|task| task.maker == Maker::Staff)
         .map(|task| OrderTask {
             intent: task.id,
             kind: task.kind,
@@ -333,9 +336,7 @@ fn expected_ashore(
             // projection a latest day is worked by.
             let (begun, lift) = day.men_waits.get(&end.id)?.then.clone()?;
             let (force, days) = lift_of(lift.force, &lift.units, (lift.source, lift.source_hex))?;
-            let IntentKind::TakePlace { by_day, .. } = end.kind else {
-                return None;
-            };
+            let by_day = day.take_date(end);
             let left = by_day.map(|latest| i64::from(days.task_date(latest)) - i64::from(begun));
             let ready = begun + day.days_to_ready(&force, place, &lift.units, risk, left)?;
             let start = waited_until.map_or(ready, |w| w.max(ready));
