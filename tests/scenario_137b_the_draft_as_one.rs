@@ -2685,31 +2685,14 @@ fn s19_the_withdrawal_of_a_landing_he_wrote_is_read() {
     }
     let change = g.preview(json!({"command": "set_intent", "intent": 1,
         "intent_kind": "control_island", "island": 1}));
-    for key in [
-        "held",
-        "runs_in_hand",
-        "made_ready_lost",
-        "other_plans_give_up",
-    ] {
+    for key in ["held", "runs_in_hand", "made_ready_lost"] {
         assert_eq!(
-            p[key].is_array(),
-            change[key].is_array(),
+            p[key], change[key],
             "{key} is given as for a change to intent 1"
         );
-        assert_eq!(p[key].is_string(), change[key].is_string(), "{key}");
     }
-    assert_eq!(
-        p["as_things_stand"]
-            .as_object()
-            .unwrap()
-            .keys()
-            .collect::<Vec<_>>(),
-        change["as_things_stand"]
-            .as_object()
-            .unwrap()
-            .keys()
-            .collect::<Vec<_>>()
-    );
+    assert!(p["other_plans_give_up"].is_array(), "{p}");
+    assert_eq!(p["as_things_stand"], change["as_things_stand"]);
     // Nothing is queued or withdrawn, and the hash is what it was.
     assert_eq!(g.queued(), queue);
     assert_eq!(entries(&g.queued()).len(), 0);
@@ -2797,15 +2780,10 @@ fn s20_what_is_not_read() {
     let tool = fresh.ask("withdraw_intent", json!({"intent": 3}));
     let a = queued.preview(withdrawal());
     checked(&a);
-    if tool["status"] == "queued" {
-        assert_eq!(a["kind"], "preview", "{a}");
-        assert_eq!(a["valid"], true, "{a}");
-        assert_eq!(a["intent"], 1, "{a}");
-    } else {
-        assert_eq!(a["kind"], "command", "{a}");
-        assert_eq!(a["status"], "refused", "{a}");
-        assert_eq!(a["reason"], tool["reason"]);
-    }
+    assert_eq!(tool["status"], "queued", "{tool}");
+    assert_eq!(a["kind"], "preview", "{a}");
+    assert_eq!(a["valid"], true, "{a}");
+    assert_eq!(a["intent"], 1, "{a}");
 }
 
 /// Statement 21: `approve` of the preview queues the one withdrawal, as
@@ -2830,6 +2808,7 @@ fn s21_approve_queues_the_withdrawal_and_nothing_else() {
     let mut fresh = in_force_w();
     let tool = fresh.ask("withdraw_intent", json!({"intent": 3}));
     assert_eq!(tool["status"], "queued", "{tool}");
+    assert_eq!(p["shown"], tool["text"], "{p} {tool}");
     let theirs = fresh.queued();
     let mut mine = g.queued();
     let strip = |q: &mut Value| {
