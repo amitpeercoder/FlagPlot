@@ -172,7 +172,8 @@ fn orders_to(queues: &Queues<'_>, unit: &str) -> Vec<Slot> {
 ///   either order queue) is to that unit, every queued hold on the unit;
 /// - a `set_intent` that makes a new intent (its number is not yet in the
 ///   side's command state): the commands after it that name that intent as
-///   their own.
+///   their own, and the sub-intents queued under it with what goes with each
+///   (decision 0232, rule 21).
 ///
 /// Anything else takes nothing with it.
 pub(crate) fn goes_with(view: &SideView<'_>, queues: &Queues<'_>, slot: Slot) -> Vec<Slot> {
@@ -211,17 +212,31 @@ pub(crate) fn goes_with(view: &SideView<'_>, queues: &Queues<'_>, slot: Slot) ->
             if !made_here {
                 return Vec::new();
             }
-            queues
-                .commands
-                .iter()
-                .enumerate()
-                .skip(slot.number)
-                .filter(|(_, command)| intent_named(command) == Some(*intent))
-                .map(|(i, _)| Slot {
-                    queue: QueueName::Commands,
-                    number: i + 1,
-                })
-                .collect()
+            // The commands after it that name the intent as their own, and
+            // (decision 0232, rule 21) the sub-intents queued under it with
+            // what goes with each of those, in turn.
+            let mut under: BTreeSet<IntentId> = BTreeSet::from([*intent]);
+            let mut gone = Vec::new();
+            for (i, command) in queues.commands.iter().enumerate().skip(slot.number) {
+                let takes = match command {
+                    CommandKind::SetIntent {
+                        intent: sub,
+                        parent: Some(parent),
+                        ..
+                    } if under.contains(parent) => {
+                        under.insert(*sub);
+                        true
+                    }
+                    other => intent_named(other).is_some_and(|named| under.contains(&named)),
+                };
+                if takes {
+                    gone.push(Slot {
+                        queue: QueueName::Commands,
+                        number: i + 1,
+                    });
+                }
+            }
+            gone
         }
     }
 }

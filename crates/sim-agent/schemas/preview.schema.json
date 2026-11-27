@@ -14,6 +14,7 @@
     "shown",
     "limits",
     "shown_limits",
+    "under",
     "intent",
     "as_things_stand",
     "with_change",
@@ -34,7 +35,7 @@
       "const": "flagplot-agent"
     },
     "version": {
-      "const": 56
+      "const": 57
     },
     "kind": {
       "const": "preview"
@@ -66,6 +67,29 @@
       "description": "The words of each of the limits, in the same order. An empty list where none was given.",
       "items": {
         "type": "string"
+      }
+    },
+    "under": {
+      "type": "array",
+      "description": "The sub-intents the commander wrote under the order, given with a set_intent as one (decision 0232, rule 20), in the order given: each is a set_intent with the order as its parent, followed by its own limits. The order, its limits, and each sub-intent followed by its own limits are taken in as one, in that order, and the staff's reading is of the whole. An empty list where none was given.",
+      "items": {
+        "type": "object",
+        "required": ["intent", "command", "shown", "limits", "shown_limits"],
+        "additionalProperties": false,
+        "properties": {
+          "intent": {
+            "type": ["integer", "null"],
+            "description": "The sub-intent's number: the one given, or one past the highest the side has ever set, has queued, or that stands before it in the batch."
+          },
+          "command": { "$ref": "command_defs.schema.json#/$defs/command_body" },
+          "shown": { "type": "string", "description": "The sub-intent in words." },
+          "limits": {
+            "type": "array",
+            "description": "The limits given with the sub-intent, each a set_limit command as it would be queued, after it.",
+            "items": { "$ref": "command_defs.schema.json#/$defs/command_body" }
+          },
+          "shown_limits": { "type": "array", "items": { "type": "string" } }
+        }
       }
     },
     "intent": {

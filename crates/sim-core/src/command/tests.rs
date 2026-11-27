@@ -6863,4 +6863,12 @@ fn the_tree_invariant_holds_a_commanders_sub_intent_to_its_open_pair() {
             .any(|v| matches!(v, crate::invariants::InvariantViolation::IntentTreeUnsound(_, i) if *i == intent(2))),
         "{found:?}"
     );
+    // Beneath a staff's intent: the pair open, the parent the staff's.
+    let mut beneath = side.clone();
+    beneath.intents.get_mut(&intent(1)).unwrap().maker = Maker::Staff;
+    let found = crate::invariants::check_command(A, &beneath, &world.truth, world.truth.day);
+    assert!(
+        found.iter().any(|v| matches!(v, crate::invariants::InvariantViolation::IntentTreeUnsound(_, i) if *i == intent(2))),
+        "{found:?}"
+    );
 }
