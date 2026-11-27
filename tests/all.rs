@@ -187,6 +187,8 @@ mod scenario_136_supply_at_press;
 mod scenario_137_a_plan_the_commander_writes;
 #[path = "scenario_137b_the_draft_as_one.rs"]
 mod scenario_137b_the_draft_as_one;
+#[path = "scenario_138_one_ship.rs"]
+mod scenario_138_one_ship;
 #[path = "scenario_13a_target_priority.rs"]
 mod scenario_13a_target_priority;
 #[path = "scenario_13b_afternoon_base_strike.rs"]
