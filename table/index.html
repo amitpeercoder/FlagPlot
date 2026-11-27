@@ -4079,21 +4079,33 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
   var drySize = 'small', dryBusy = false;
   // A distance the staff gives in hexes is given in miles, as the draft gave it, unless the hexes are shown.
   function dryWords(t) { return nameText(plainCounts(t).replace(/\b(\d+) hex(?:es)?\b(?! round)/g, function (m, n) { return showHexes ? m : (+n * hexMiles()) + ' miles'; }).replace(/\((-?\d+),(-?\d+)\)/g, function (m, q, r) { return hexWords({ q: Number(q), r: Number(r) }); }).replace(/\bworlds\b/g, 'runs').replace(/\bworld\b/g, 'run').replace(/\bintent (\d+)/g, 'order $1').replace(/\b[Tt]he trial's enemy/g, function (m) { return (m.charAt(0) === 'T' ? 'The' : 'the') + ' enemy of the dry run'; }).replace(/\bthe trial\b/g, 'the dry run').replace(/\ba trial\b/g, 'a dry run').replace(/\bsecond trial\b/g, 'second run')); }
+  // The sizes the table offers for a dry run in this game, and a line for each with a time (decision 0232, item 22a): `dry` is the entry's `dry_run` of /config, or nothing.
+  function sizesOffered(dry) {
+    var known = ['small', 'standard', 'full'], want = dry && dry.sizes && dry.sizes.length ? dry.sizes : known, secs = (dry && dry.seconds) || {}, sizes = [], says = [];
+    known.forEach(function (z) {
+      if (want.indexOf(z) < 0) return;
+      sizes.push(z);
+      if (typeof secs[z] === 'number') says.push(z.charAt(0).toUpperCase() + z.slice(1) + ' takes about ' + secs[z] + (secs[z] === 1 ? ' second.' : ' seconds.'));
+    });
+    return { sizes: sizes, says: says };
+  }
   function dryBox(doc, root) {
     var box = el('div', 'planorder dryrun'), sizes = el('span', 'seg sizes'), row = el('div', 'line'), more = el('div', 'line'), says = el('div', 'work'), all = [];
-    ['small', 'standard', 'full'].forEach(function (z) { var b = el('button', z === drySize ? 'on' : '', z.toUpperCase()); b.type = 'button'; b.addEventListener('click', function () { drySize = z; Array.prototype.forEach.call(sizes.children, function (c) { c.className = c === b ? 'on' : ''; }); }); sizes.appendChild(b); });
+    var offered = sizesOffered(config.dry_run);
+    offered.sizes.forEach(function (z) { var b = el('button', z === drySize ? 'on' : '', z.toUpperCase()); b.type = 'button'; b.addEventListener('click', function () { drySize = z; Array.prototype.forEach.call(sizes.children, function (c) { c.className = c === b ? 'on' : ''; }); }); sizes.appendChild(b); });
     function go(words, args0, cls, into) {
       var b = el('button', cls, words); b.type = 'button'; into.appendChild(b); all.push(b);
       b.addEventListener('click', function () { var args = { intent: root, size: drySize }, k; for (k in args0) args[k] = args0[k]; playDry(args, says, all, function (j) { readEstimate(j, root); }); });
     }
     go('DRY RUN', {}, '', row); row.appendChild(el('span', 'fl', 'size')); row.appendChild(sizes);
     go('ALSO WITHOUT THIS ORDER', { compare: true }, 'quiet', more); go('AT LATER DATES', { dates: 'chosen' }, 'quiet', more);
-    box.appendChild(row); box.appendChild(more); box.appendChild(says); doc.appendChild(box);
+    box.appendChild(row); offered.says.forEach(function (s) { box.appendChild(el('div', 'line', s)); }); box.appendChild(more); box.appendChild(says); doc.appendChild(box);
   }
   // Plays a dry run: says what it will play, counts the seconds, and locks
   // the buttons given until it is answered or refused.
   function playDry(args, says, lock, done) {
     if (dryBusy) return; dryBusy = true;
+    var offeredNow = sizesOffered(config.dry_run).sizes; if (offeredNow.indexOf(drySize) < 0) drySize = offeredNow[0]; if (args.size !== undefined) args.size = drySize;
     var began = Date.now(), what = '', k, tick = setInterval(function () { says.textContent = 'The staff is playing it through' + what + ' \u2026 ' + Math.round((Date.now() - began) / 1000) + ' s'; }, 500);
     Array.prototype.forEach.call(lock, function (c) { c.disabled = true; }); says.style.color = ''; says.textContent = 'The staff is playing it through \u2026';
     var asked = {}; for (k in args) asked[k] = args[k]; asked.describe = true;

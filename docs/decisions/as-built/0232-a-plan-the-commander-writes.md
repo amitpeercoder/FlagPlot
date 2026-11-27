@@ -220,6 +220,8 @@ Built in two parts to the statements in `table/check_screen.py`. Part 1: YOUR PL
    6. WRITE IT is offered only once the first reading has given the order its number. **Stands.**
    7. The words for a landing's limits come short after signing hold no colon, since the page's refusal words cut at one. **Stands.**
 
+**The sizes offered (item 22a, built to D11 to D13).** `sizesOffered(dry)` is the page's one list of the three sizes; `dryBox` draws its buttons and the lines of time from it, and `playDry` sends the first size offered where the size in hand is not offered, so every dry run is held to it, not the one button.
+
 ## The architect's rulings on pull request B, part 2 (Nov 27, 2026)
 
 Read at `10b3a1aa` against `8a817ae5`; `table/check_screen.py` run by the architect: all held, 1054 checks. Four files changed, none under `crates/`, `data/`, `tests/` or `docs/rules/`.

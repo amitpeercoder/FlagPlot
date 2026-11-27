@@ -2995,7 +2995,44 @@ function main(x) {
     approved = person.call("approve", {"preview": drafted["preview"]})["ok"]
     check(approved.get("status") == "queued", f"D10: the preview tried is not spent: it is approved after the trial ({approved.get('status')})")
     check(post(bridge.table + "/new") == {"ok": True}, "the game is put away")
-    check(False, "not built: decision 0232, step 3, item 22a (the sizes offered: D11 to D13)")
+    # D11
+    with open(os.path.join(HERE, "scenarios.json"), encoding="utf-8") as entries_file:
+        entries = json.load(entries_file)["scenarios"]
+    holders = [e["id"] for e in entries if "dry_run" in e]
+    check(holders == ["guadalcanal-39-days"] and [e for e in entries if e["id"] == "guadalcanal-39-days"][0]["dry_run"] == {"sizes": ["small", "standard"], "seconds": {"standard": 45}},
+          f"D11: the entry guadalcanal-39-days has dry_run exactly small and standard with standard at 45 seconds, and no other entry has the key ({holders})")
+    # D12
+    offered = run_in_node(cut_function(text, "  function sizesOffered(dry) {") + "\nfunction main(x) { return x.map(function (d) { return sizesOffered(d === 'undefined' ? undefined : d); }); }\n",
+                          ["undefined", None, {}, {"sizes": []}, {"sizes": ["small", "standard"], "seconds": {"standard": 45}},
+                           {"sizes": ["full", "huge", "small"], "seconds": {"small": 2, "full": 1, "standard": 45}}])
+    every = {"sizes": ["small", "standard", "full"], "says": []}
+    check(offered[4] == {"sizes": ["small", "standard"], "says": ["Standard takes about 45 seconds."]},
+          f"D12: the 39 days' value gives small and standard and the line for standard ({offered[4]})")
+    check(offered[0] == every and offered[1] == every and offered[2] == every and offered[3] == every,
+          f"D12: undefined, null, {{}} and {{sizes: []}} give the three sizes and no line ({offered[:4]})")
+    check(offered[5] == {"sizes": ["small", "full"], "says": ["Small takes about 2 seconds.", "Full takes about 1 second."]},
+          f"D12: the order is small, standard, full; an unknown size is left out; a time is said only of a size offered ({offered[5]})")
+    # D13
+    sizes_body = cut_function(text, "  function sizesOffered(dry) {")
+    box = cut_function(text, "  function dryBox(doc, root) {")
+    outside = text.replace(sizes_body, "")
+    check("'small', 'standard', 'full'" in sizes_body and not re.search(r"'standard'|'full'|\"standard\"|\"full\"", outside.replace("value=\"full\"", "").replace("=== 'full'", "").replace("speed: 'full'", "").replace("'full' ?", "")),
+          "D13: the three sizes are listed in the body of sizesOffered and nowhere else")
+    check("sizesOffered(config.dry_run).sizes" in box.replace("offered.sizes", "sizesOffered(config.dry_run).sizes") and "var offered = sizesOffered(config.dry_run);" in box and "offered.sizes.forEach" in box
+          and "offered.says.forEach" in box and "'small', 'standard', 'full'" not in box,
+          "D13: dryBox draws its size buttons from sizesOffered(config.dry_run).sizes and a line for each of its says under them")
+    play = cut_function(text, "  function playDry(args, says, lock, done) {")
+    check("var drySize = 'small'" in text and "offeredNow.indexOf(drySize) < 0" in play and "drySize = offeredNow[0]" in play and "args.size = drySize" in play,
+          "D13: drySize begins as small, and a DRY RUN sends the first size offered where the size in hand is not offered")
+    check(not re.search(r"guadalcanal|39", sizes_body + box, re.I), "D13: neither sizesOffered nor dryBox names a game")
+    check(post(bridge.table + "/new") == {"ok": True}, "the game is put away")
+    check(begin(bridge, "guadalcanal-39-days", "person", "engine") == {"ok": True}, "begun: the 39 days, the person Allied")
+    check(get(bridge.table + "/config").get("dry_run") == {"sizes": ["small", "standard"], "seconds": {"standard": 45}},
+          "D13: /config of a game of the 39 days has dry_run equal to the entry's")
+    check(post(bridge.table + "/new") == {"ok": True}, "the game is put away")
+    check(begin(bridge, "eastern-solomons-five-days", "person", "engine") == {"ok": True}, "begun: the Eastern Solomons over five days")
+    check("dry_run" not in get(bridge.table + "/config"), "D13: /config of a game of the Eastern Solomons has no dry_run")
+    check(post(bridge.table + "/new") == {"ok": True}, "the game is put away")
 
 
 def the_plan_paper_marks_whose_line(bridge):
