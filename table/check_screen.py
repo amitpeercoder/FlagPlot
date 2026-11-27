@@ -349,6 +349,8 @@ def the_paper_reads_as_the_order():
         `right: calc(min(400px, 100% - var(--sp-w) - 48px) + 32px)`. Neither holds 360px.
     A15. `#paper .pp` has no `border-top`. `#paper .phead` has a `border-bottom` or `#paper #p-title` has one (one rule under the
         heading), and `#paper .pfoot` has a `border-top` (one rule above the foot). No other rule of `#paper` holds "dashed".
+        A15a. `#paper fieldset` and `#paper .pv` each have `border-top: 0`: the dashed rule those take from `.order`, which the
+        card shares, is not drawn in the paper.
     A16. A number blank of the paper (`#paper input[type=number]`) has `background: transparent`, `border: 0` and a `border-bottom`.
     A17. Each of `o-floor`, `o-interval` and `o-dist` has a `<label for="...">` in the paper, and keeps its `aria-label`.
 
@@ -438,6 +440,8 @@ def the_paper_reads_as_the_order():
     check(any("border-bottom" in b for s, b in rules if s.strip() in ("#paper .phead", "#paper #p-title")) and any("border-top" in b for s, b in rules if s.strip() == "#paper .pfoot"),
           "A15: one rule under the heading and one above the foot")
     check(not any("dashed" in b for s, b in rules if "#paper" in s), "A15: no rule of the paper is dashed")
+    check(all(any("border-top: 0" in b for s, b in rules if s.strip() == sel) for sel in ("#paper fieldset", "#paper .pv")),
+          "A15a: the paper draws no rule above a fieldset or above the staff's reading")
     num = [b for s, b in rules if s.strip() == "#paper input[type=number]"]
     check(num and "background: transparent" in num[0] and "border: 0" in num[0] and "border-bottom" in num[0], "A16: a number blank is drawn as a blank, transparent with a rule beneath it")
     for i in ("o-floor", "o-interval", "o-dist"):
