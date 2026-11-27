@@ -358,6 +358,47 @@ pub enum SideEventKind {
     AttackedSubmarineFromAir { air_group: AirGroupId, hex: Hex },
 }
 
+impl SideEventKind {
+    /// The kind's word, such as `ship_sunk`: a whole event's is its
+    /// `EventKind`'s, a cut form's is the snake case of its own name
+    /// (decision 0235, ruling 10).
+    pub fn tag(&self) -> &'static str {
+        match self {
+            SideEventKind::Whole(inner) => inner.tag(),
+            SideEventKind::Salvo { .. } => "salvo",
+            SideEventKind::SalvoAgainst { .. } => "salvo_against",
+            SideEventKind::AirAttackAgainst { .. } => "air_attack_against",
+            SideEventKind::AirAttack { .. } => "air_attack",
+            SideEventKind::AirFight { .. } => "air_fight",
+            SideEventKind::AntiAircraftFire { .. } => "anti_aircraft_fire",
+            SideEventKind::BaseAntiAircraftFire { .. } => "base_anti_aircraft_fire",
+            SideEventKind::BaseAttacked { .. } => "base_attacked",
+            SideEventKind::BaseAttackedAgainst { .. } => "base_attacked_against",
+            SideEventKind::SearchAttempt { .. } => "search_attempt",
+            SideEventKind::EngagementBegun { .. } => "engagement_begun",
+            SideEventKind::EngagementEnded { .. } => "engagement_ended",
+            SideEventKind::SightingRoll { .. } => "sighting_roll",
+            SideEventKind::ForceSurprised { .. } => "force_surprised",
+            SideEventKind::ForceSlippedAway { .. } => "force_slipped_away",
+            SideEventKind::AlarmRoll { .. } => "alarm_roll",
+            SideEventKind::GroundFight { .. } => "ground_fight",
+            SideEventKind::GroundFire { .. } => "ground_fire",
+            SideEventKind::BaseChangedSide { .. } => "base_changed_side",
+            SideEventKind::EnemySurrendered { .. } => "enemy_surrendered",
+            SideEventKind::GroundAttackFailed { .. } => "ground_attack_failed",
+            SideEventKind::BombardmentFire { .. } => "bombardment_fire",
+            SideEventKind::ShoreBombardment { .. } => "shore_bombardment",
+            SideEventKind::ShoreBombardmentAgainst { .. } => "shore_bombardment_against",
+            SideEventKind::OwnSubmarineFired { .. } => "own_submarine_fired",
+            SideEventKind::SalvoFromSubmarine { .. } => "salvo_from_submarine",
+            SideEventKind::OwnSubmarineHunted { .. } => "own_submarine_hunted",
+            SideEventKind::SubmarineHuntedBy { .. } => "submarine_hunted_by",
+            SideEventKind::OwnSubmarineAttackedFromAir { .. } => "own_submarine_attacked_from_air",
+            SideEventKind::AttackedSubmarineFromAir { .. } => "attacked_submarine_from_air",
+        }
+    }
+}
+
 /// Why a surface fight ended, as a side is told (decision 0085, F5). It has
 /// the reasons of [`EngagementEndReason`] and one more, `ContactLost`, and
 /// the two reasons that are an enemy's doing, a force sunk and a force broke

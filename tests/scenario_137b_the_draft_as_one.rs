@@ -540,6 +540,160 @@
 //! Draft O, with nothing written, is given its window as before:
 //! `trial` of it with `dates` `[4]` is answered with the kind `window`.
 //!
+//! # Rule 30: a landing given back is read before it is signed
+//!
+//! Decision 0232, step 3, the preview of a withdrawal: rule 30 as made
+//! exact on Nov 27, 2026, on the designer's word that the staff's
+//! reading comes before a give-back is signed. **Statements 19 to 24
+//! were written by the architect that day, before the tool was changed.**
+//! Each has an empty test below marked `#[ignore = "statement written,
+//! not built"]`; the build fills each to its statement and takes the
+//! mark off. The agent's interface is then version 58.
+//!
+//! Unless a statement says otherwise, the game is statement 14's:
+//! draft W approved and day 1 resolved, the evening of day 1 with
+//! nothing queued. Intents 1, 2 and 3 are in force, the commander's;
+//! intent 2, the take of C at (0,6), and intent 3, the take of B at
+//! (4,0), stand under intent 1; the staff's intents are numbered from 4.
+//! **The withdrawal** is `preview` of `{"command": "withdraw_intent",
+//! "intent": 3}`.
+//!
+//! ## 19. The withdrawal of a landing he wrote is read
+//!
+//! The withdrawal is answered with the kind `preview`, `valid` true,
+//! and:
+//!
+//! - `preview` the side's next preview number, and `day` 2;
+//! - `command` is the withdrawal as taken in, of the kind
+//!   `withdraw_intent` with `intent` 3; `shown` is its words; `limits`,
+//!   `shown_limits` and `under` are empty lists;
+//! - `intent` is 1: the order the landing stands under. The reading is
+//!   of that order, as the reading of a limit is of the intent the limit
+//!   is on;
+//! - `with_change` is the staff's reading of intent 1 with intent 3
+//!   withdrawn on the coming morning, before the staff is asked (rule
+//!   15). Its `tree` has an entry for intent 2 with `parent` 1, `maker`
+//!   "commander" and `standing` true, and no entry for intent 3. It has
+//!   exactly one entry of the kind "take a place" with `maker` "staff":
+//!   at (4,0), with `parent` 1 and a number above every number the side
+//!   has set. It has `would_hand_in` and `reason`, as the reading of any
+//!   draft has;
+//! - `as_things_stand` is the staff's reading of intent 1 as it stands,
+//!   with the fields a preview of a change to intent 1 gives it;
+//! - `held`, `runs_in_hand`, `made_ready_lost` and `other_plans_give_up`
+//!   are given as for a change to intent 1.
+//!
+//! Nothing is queued and nothing withdrawn: `queued` lists no command,
+//! intent 3 is in force in `command_state`, and the session's hash of
+//! the game is what it was. Asked again on the same evening it is
+//! answered the same, field for field, but for `preview`.
+//!
+//! ## 20. What is not read
+//!
+//! Each alone, on the same evening; each numbers nothing and queues
+//! nothing, and the withdrawal, previewed after all of them, takes the
+//! preview number it would have taken before them.
+//!
+//! - **What the engine would refuse is answered as that refusal.**
+//!   `preview` of the withdrawal of intent 4, the staff's own, and of
+//!   intent 99, which is no intent: the answer is of the kind `command`,
+//!   with `tool` "preview", `status` "refused" and no `of_batch`, and its
+//!   `reason` is, word for word, the `reason` the tool `withdraw_intent`
+//!   gives for the same number on a fresh evening of the same game.
+//! - **An order that stands under none is not previewed.** `preview` of
+//!   the withdrawal of intent 1 is an error of the call, not a refusal
+//!   of the engine's and not an answer. Its words are: `intent 1 stands
+//!   under no order of yours: a preview of a withdrawal is of a landing
+//!   you wrote under an order. Withdraw an order with withdraw_intent;
+//!   trial with "intent" and "compare" true shows what it costs`.
+//! - **`limits` and `under` are an order's.** The withdrawal given with
+//!   `"limits": []`, and with `"under": []`, is an error of the call:
+//!   `"limits" is not an argument of preview for command
+//!   withdraw_intent: it is given with a set_intent`, and the same for
+//!   `under`. An argument `withdraw_intent` does not take (`"parent":
+//!   1`) is the error the tool `withdraw_intent` gives for it.
+//! - **A command `preview` does not read.** `preview` of `{"command":
+//!   "set_leave"}` is an error that names the three it reads:
+//!   `set_intent`, `set_limit` and `withdraw_intent`.
+//! - **Queued and not in force.** On the evening before day 1 with
+//!   draft W approved (seven commands queued, none in force), `preview`
+//!   of the withdrawal of intent 3 is valid or refused as the tool
+//!   `withdraw_intent` is queued or refused for intent 3 on a fresh
+//!   evening so set up, and where refused the two `reason`s are the
+//!   same words. The preview reads the queue taken in, as every preview
+//!   does. (The table does not ask this: a queued landing is taken
+//!   back.)
+//!
+//! ## 21. `approve` queues the withdrawal and nothing else
+//!
+//! After the withdrawal is shown as preview G, `approve` of preview G
+//! is answered with `status` "queued", `preview` G, `queued` 1, and
+//! neither `limits_queued` nor `under_queued`. `queued` then lists one
+//! command, the `withdraw_intent` of intent 3, and it is the entry the
+//! tool `withdraw_intent` queues for intent 3 on a fresh evening, field
+//! for field but for what names the tool that queued it.
+//!
+//! **Void as any preview is.** On a fresh evening, after the withdrawal
+//! is shown the commander queues one thing more (`set_leave`: leave to
+//! prepare, given). `approve` of the preview is refused as void, saying
+//! what was queued after it; `queued` lists the leave alone and intent
+//! 3 is in force.
+//!
+//! ## 22. `take_back`, and the game after it
+//!
+//! - **Taken back alone.** With the withdrawal approved, `take_back` of
+//!   command 1 of the queue takes it and nothing else: `queued` lists no
+//!   command, and after `end_day` intent 3 is in force.
+//! - **Signed, it is rule 15.** With the withdrawal approved, `end_day`
+//!   resolves day 2. In `command_state` intent 3 is not in force; intent
+//!   2 is in force, the commander's, under intent 1; and one "take a
+//!   place" at (4,0) is in force under intent 1 with `maker` "staff".
+//! - **The same game as the tool's.** A second game brought to the same
+//!   evening, in which the tool `withdraw_intent` is called for intent 3
+//!   with no preview, has after `end_day` the same hash as the game
+//!   above after its `end_day`. A preview and its approval change
+//!   nothing the command itself does not.
+//!
+//! ## 23. The trial is of the landing, not of the preview
+//!
+//! - With the withdrawal shown as preview G and nothing signed, `trial`
+//!   with `preview` G is an error, nothing played, the hash what it was
+//!   and nothing more in the list `trials` gives: `preview G is of a
+//!   withdrawal: a preview of a withdrawal is not tried. Try the landing
+//!   itself, trial with "intent": 3, which sets it beside the same order
+//!   with it given back to the staff` (G said as its number). With
+//!   `describe` true it is refused the same.
+//! - On that evening, the preview shown and not approved, `trial` of
+//!   intent 3 with no `compare` given is statement 14's answer, field
+//!   for field but for `estimate`: a preview is not a queued command,
+//!   and the landing is tried as if none had been shown. The preview is
+//!   not spent by it: `approve` of preview G then queues the withdrawal.
+//! - With the withdrawal approved, `trial` of intent 3 is refused as it
+//!   is today for an intent whose withdrawal is queued, in the words
+//!   chapter 9 has.
+//!
+//! ## 24. The interface, and the words
+//!
+//! - The answers of statements 19 to 23 are checked against their
+//!   schemas (`preview`, `command`), and each carries the version of the
+//!   agent's interface, 58. `sim_agent::VERSION` is 58.
+//! - The arguments `sim-cli` lists for the tool `preview` give
+//!   `command` as one of `set_intent`, `set_limit` and
+//!   `withdraw_intent`. (It is tested in `sim-cli`, beside the tests of
+//!   that list, and not from this file.)
+//! - The words of every answer of statements 19 to 23 hold no per cent
+//!   sign and none of "chance", "points", "better", "should",
+//!   "recommend" or "advise".
+//! - The preview of a withdrawal reads the seat's own view and nothing
+//!   else: in the same game with a Japanese fighting unit of 300 men
+//!   added ashore at B, of which the Allied side holds no contact, no
+//!   estimate and no report on the evening of day 1 (the test asserts
+//!   that first), statement 19's answer is the same, byte for byte.
+//!
+//! No number of the game is worked in statements 19 to 24. The words in
+//! code marks above that are an error's are asserted as written; a
+//! `reason` of the engine's is asserted only as equal to the tool's.
+//!
 //! # Properties
 //!
 //! - **Nothing is changed.** The session's hash of the game is the same
@@ -560,7 +714,9 @@
 //!   of "chance", "points", "better", "should", "recommend" or "advise".
 //! - **The answers are checked against their schemas** (`preview`,
 //!   `command`, `trial`, `trial_described`), and each carries the
-//!   version of the agent's interface, 57.
+//!   version of the agent's interface, 57 (58 once statements 19 to 24
+//!   are built: that build changes the number in this property's test,
+//!   on the architect's word given here, and nothing else of it).
 //!
 //! # What this assumes of the build
 //!
@@ -2423,7 +2579,7 @@ fn the_words_the_schemas_and_the_version() {
     }
     for answer in &answers {
         checked(answer);
-        assert_eq!(answer["version"], 57, "{answer}");
+        assert_eq!(answer["version"], 58, "{answer}");
         let all = answer.to_string().to_lowercase();
         assert!(!all.contains('%'), "a per cent sign in {answer}");
         for word in [
@@ -2437,5 +2593,404 @@ fn the_words_the_schemas_and_the_version() {
             assert!(!all.contains(word), "{word:?} in {answer}");
         }
     }
-    assert_eq!(sim_agent::VERSION, 57);
+    assert_eq!(sim_agent::VERSION, 58);
+}
+
+/// The withdrawal of intent 3, the take of B, as a preview.
+fn withdrawal() -> Value {
+    json!({"command": "withdraw_intent", "intent": 3})
+}
+
+/// An answer with its preview number set aside: asked again it is the
+/// same, field for field, but for that.
+fn unnumbered_preview(a: &Value) -> Value {
+    let mut a = a.clone();
+    a.as_object_mut().unwrap().remove("preview");
+    a
+}
+
+/// The intents of `command_state`, by number.
+fn intents_of(g: &mut Game) -> Vec<Value> {
+    g.ask("command_state", json!({}))["intents"]
+        .as_array()
+        .expect("intents")
+        .clone()
+}
+
+fn intent_in(g: &mut Game, number: u64) -> Value {
+    intents_of(g)
+        .into_iter()
+        .find(|i| i["number"] == number)
+        .unwrap_or_else(|| panic!("no intent {number}"))
+}
+
+/// Statement 19: the withdrawal of a landing the commander wrote is
+/// answered as a valid preview of the order it stands under, the staff's
+/// reading being of that order with the landing withdrawn on the coming
+/// morning; nothing is queued or withdrawn and the hash is what it was.
+#[test]
+fn s19_the_withdrawal_of_a_landing_he_wrote_is_read() {
+    let mut g = in_force_w();
+    let hash = g.hash();
+    let queue = g.queued();
+    let p = g.preview(withdrawal());
+    checked(&p);
+    assert_eq!(p["kind"], "preview");
+    assert_eq!(p["valid"], true);
+    // Draft W's preview was the side's first.
+    assert_eq!(p["preview"], 2, "{p}");
+    assert_eq!(p["day"], 2);
+    assert_eq!(p["command"]["kind"], "withdraw_intent");
+    assert_eq!(p["command"]["intent"], 3);
+    assert!(p["shown"].as_str().is_some_and(|s| !s.is_empty()), "{p}");
+    assert_eq!(p["limits"], json!([]));
+    assert_eq!(p["shown_limits"], json!([]));
+    assert_eq!(p["under"], json!([]));
+    assert_eq!(p["intent"], 1);
+    // The staff's reading of intent 1 with intent 3 withdrawn.
+    let t = tree(&p);
+    let two = t
+        .iter()
+        .find(|e| e["number"] == 2)
+        .unwrap_or_else(|| panic!("no entry for intent 2: {t:?}"));
+    assert_eq!(two["parent"], 1, "{two}");
+    assert_eq!(two["maker"], "commander", "{two}");
+    assert_eq!(two["standing"], true, "{two}");
+    assert!(t.iter().all(|e| e["number"] != 3), "{t:?}");
+    let takes: Vec<&Value> = t
+        .iter()
+        .filter(|e| e["kind"] == "take_place" && e["maker"] == "staff")
+        .collect();
+    assert_eq!(takes.len(), 1, "{t:?}");
+    let take = takes[0];
+    assert_eq!(take["maker"], "staff", "{take}");
+    assert_eq!(take["hex"], json!([4, 0]), "{take}");
+    assert_eq!(take["parent"], 1, "{take}");
+    // A number above every number the side has set: 1, 2 and 3.
+    assert!(take["number"].as_u64().unwrap() > 3, "{take}");
+    assert!(p["with_change"]["would_hand_in"].is_object(), "{p}");
+    assert!(p["with_change"]["reason"].is_object(), "{p}");
+    // As things stand is the reading of intent 1 as a change to it gives it.
+    let as_is = &p["as_things_stand"];
+    for key in ["orders", "commands", "no_orders", "runs"] {
+        assert!(as_is.get(key).is_some(), "{key} in {as_is}");
+    }
+    for key in [
+        "held",
+        "runs_in_hand",
+        "made_ready_lost",
+        "other_plans_give_up",
+    ] {
+        assert!(p.get(key).is_some(), "{key} in {p}");
+    }
+    let change = g.preview(json!({"command": "set_intent", "intent": 1,
+        "intent_kind": "control_island", "island": 1}));
+    for key in ["held", "runs_in_hand", "made_ready_lost"] {
+        assert_eq!(
+            p[key], change[key],
+            "{key} is given as for a change to intent 1"
+        );
+    }
+    assert!(p["other_plans_give_up"].is_array(), "{p}");
+    assert_eq!(p["as_things_stand"], change["as_things_stand"]);
+    // Nothing is queued or withdrawn, and the hash is what it was.
+    assert_eq!(g.queued(), queue);
+    assert_eq!(entries(&g.queued()).len(), 0);
+    assert_eq!(intent_in(&mut g, 3)["in_force"], true);
+    assert_eq!(g.hash(), hash);
+    // Asked again it is the same but for the number.
+    let again = g.preview(withdrawal());
+    assert_eq!(again["preview"], 4, "{again}");
+    assert_eq!(unnumbered_preview(&p), unnumbered_preview(&again));
+}
+
+/// Statement 20: what the engine would refuse is answered as its
+/// refusal; an order under none, `limits`, `under` and a command preview
+/// does not read are errors of the call; a queued landing is read as the
+/// tool reads it.
+#[test]
+fn s20_what_is_not_read() {
+    let mut g = in_force_w();
+    let hash = g.hash();
+    // What the engine would refuse, as the tool is refused on a fresh
+    // evening so set up.
+    for number in [4u64, 99] {
+        let a = g.preview(json!({"command": "withdraw_intent", "intent": number}));
+        checked(&a);
+        assert_eq!(a["kind"], "command", "{a}");
+        assert_eq!(a["tool"], "preview", "{a}");
+        assert_eq!(a["status"], "refused", "{a}");
+        assert!(a.get("of_batch").is_none(), "{a}");
+        let mut fresh = in_force_w();
+        let tool = fresh.ask("withdraw_intent", json!({"intent": number}));
+        assert_eq!(tool["status"], "refused", "{tool}");
+        assert_eq!(a["reason"], tool["reason"], "intent {number}");
+    }
+    // An order that stands under none is an error of the call.
+    let e = g.error(
+        "preview",
+        json!({"command": "withdraw_intent", "intent": 1}),
+    );
+    assert_eq!(
+        e,
+        "intent 1 stands under no order of yours: a preview of a withdrawal is of a landing you wrote under an order. Withdraw an order with withdraw_intent; trial with \"intent\" and \"compare\" true shows what it costs"
+    );
+    // `limits` and `under` are an order's.
+    for key in ["limits", "under"] {
+        let e = g.error(
+            "preview",
+            json!({"command": "withdraw_intent", "intent": 3, key: []}),
+        );
+        assert_eq!(
+            e,
+            format!(
+                "\"{key}\" is not an argument of preview for command withdraw_intent: it is given with a set_intent"
+            )
+        );
+    }
+    // An argument the tool does not take is the tool's own error.
+    let tool = {
+        let mut fresh = in_force_w();
+        fresh.error("withdraw_intent", json!({"intent": 3, "parent": 1}))
+    };
+    let e = g.error(
+        "preview",
+        json!({"command": "withdraw_intent", "intent": 3, "parent": 1}),
+    );
+    assert_eq!(e, tool);
+    // A command preview does not read names the three it reads.
+    match g.call("preview", json!({"command": "set_leave"})) {
+        Err(e) => {
+            assert_eq!(
+                e.allowed,
+                strs(&["set_intent", "set_limit", "withdraw_intent"])
+            );
+        }
+        Ok(a) => panic!("answered: {a}"),
+    }
+    // None of it numbered or queued anything.
+    assert_eq!(g.hash(), hash);
+    assert_eq!(entries(&g.queued()).len(), 0);
+    let p = g.preview(withdrawal());
+    assert_eq!(p["preview"], 2, "{p}");
+
+    // Queued and not in force: draft W approved, none in force.
+    let mut queued = approved();
+    let mut fresh = approved();
+    let tool = fresh.ask("withdraw_intent", json!({"intent": 3}));
+    let a = queued.preview(withdrawal());
+    checked(&a);
+    assert_eq!(tool["status"], "queued", "{tool}");
+    assert_eq!(a["kind"], "preview", "{a}");
+    assert_eq!(a["valid"], true, "{a}");
+    assert_eq!(a["intent"], 1, "{a}");
+}
+
+/// Statement 21: `approve` of the preview queues the one withdrawal, as
+/// the tool queues it, and a void preview queues nothing.
+#[test]
+fn s21_approve_queues_the_withdrawal_and_nothing_else() {
+    let mut g = in_force_w();
+    let p = g.preview(withdrawal());
+    let number = p["preview"].as_u64().unwrap();
+    let a = g.ask("approve", json!({"preview": number}));
+    checked(&a);
+    assert_eq!(a["status"], "queued", "{a}");
+    assert_eq!(a["preview"], number, "{a}");
+    assert_eq!(a["queued"], 1, "{a}");
+    assert!(a.get("limits_queued").is_none(), "{a}");
+    assert!(a.get("under_queued").is_none(), "{a}");
+    let queued = entries(&g.queued());
+    assert_eq!(queued.len(), 1);
+    assert_eq!(queued[0].1["kind"], "withdraw_intent");
+    assert_eq!(queued[0].1["intent"], 3);
+    // The entry the tool queues, field for field but for the tool.
+    let mut fresh = in_force_w();
+    let tool = fresh.ask("withdraw_intent", json!({"intent": 3}));
+    assert_eq!(tool["status"], "queued", "{tool}");
+    assert_eq!(p["shown"], tool["text"], "{p} {tool}");
+    let theirs = fresh.queued();
+    let mut mine = g.queued();
+    let strip = |q: &mut Value| {
+        for e in q["entries"].as_array_mut().unwrap() {
+            if let Some(map) = e.as_object_mut() {
+                map.remove("tool");
+                map.remove("queued_by");
+                map.remove("by");
+            }
+        }
+    };
+    let mut theirs = theirs;
+    strip(&mut mine);
+    strip(&mut theirs);
+    assert_eq!(mine["entries"], theirs["entries"]);
+
+    // Void as any preview is.
+    let mut g = in_force_w();
+    let p = g.preview(withdrawal());
+    let number = p["preview"].as_u64().unwrap();
+    queue_leave(&mut g);
+    let a = g.ask("approve", json!({"preview": number}));
+    assert_eq!(a["status"], "refused", "{a}");
+    let reason = a["reason"].as_str().expect("a reason");
+    assert!(reason.contains("void"), "{reason}");
+    assert!(reason.contains("you queued"), "{reason}");
+    assert_eq!(queued_tags(&mut g), strs(&[LEAVE]));
+    assert_eq!(intent_in(&mut g, 3)["in_force"], true);
+}
+
+/// Statement 22: the withdrawal is taken back alone; signed, the staff
+/// plans the place on the coming morning (rule 15), and the game is the
+/// one the tool `withdraw_intent` makes.
+#[test]
+fn s22_take_back_and_the_game_after_it() {
+    // Taken back alone.
+    let mut g = in_force_w();
+    let p = g.preview(withdrawal());
+    g.ask("approve", json!({"preview": p["preview"]}));
+    let q = g.queued();
+    assert_eq!(entries(&q).len(), 1);
+    let t = g.ask(
+        "take_back",
+        json!({"queue": "commands", "number": 1, "as_of": q["as_of"]}),
+    );
+    assert_eq!(t["taken_back"].as_array().map(Vec::len), Some(1), "{t}");
+    assert_eq!(entries(&g.queued()).len(), 0, "{t}");
+    g.ask("end_day", json!({}));
+    assert_eq!(intent_in(&mut g, 3)["in_force"], true);
+
+    // Signed, it is rule 15.
+    let mut signed = in_force_w();
+    let p = signed.preview(withdrawal());
+    signed.ask("approve", json!({"preview": p["preview"]}));
+    signed.ask("end_day", json!({}));
+    assert_eq!(intent_in(&mut signed, 3)["in_force"], false);
+    let two = intent_in(&mut signed, 2);
+    assert_eq!(two["in_force"], true, "{two}");
+    assert_eq!(two["parent"], 1, "{two}");
+    assert_eq!(two["maker"], "commander", "{two}");
+    let takes: Vec<Value> = intents_of(&mut signed)
+        .into_iter()
+        .filter(|i| i["kind"] == "take_place" && i["in_force"] == true && i["maker"] == "staff")
+        .collect();
+    assert_eq!(takes.len(), 1, "{takes:?}");
+    assert_eq!(takes[0]["hex"], json!([4, 0]), "{takes:?}");
+    assert_eq!(takes[0]["parent"], 1, "{takes:?}");
+
+    // The same game as the tool's.
+    let mut by_tool = in_force_w();
+    let a = by_tool.ask("withdraw_intent", json!({"intent": 3}));
+    assert_eq!(a["status"], "queued", "{a}");
+    by_tool.ask("end_day", json!({}));
+    assert_eq!(by_tool.hash(), signed.hash());
+}
+
+/// Statement 23: `trial` of the preview of a withdrawal is refused, and
+/// `trial` of the landing is statement 14's whether or not the preview
+/// was shown.
+#[test]
+fn s23_the_trial_is_of_the_landing_not_of_the_preview() {
+    let mut g = in_force_w();
+    let p = g.preview(withdrawal());
+    let number = p["preview"].as_u64().unwrap();
+    let hash = g.hash();
+    let before = g.trials();
+    let words = format!(
+        "preview {number} is of a withdrawal: a preview of a withdrawal is not tried. Try the landing itself, trial with \"intent\": 3, which sets it beside the same order with it given back to the staff"
+    );
+    let e = g.error("trial", json!({"preview": number, "size": "small"}));
+    assert_eq!(e, words);
+    let e = g.error(
+        "trial",
+        json!({"preview": number, "size": "small", "describe": true}),
+    );
+    assert_eq!(e, words);
+    assert_eq!(g.hash(), hash);
+    assert_eq!(g.trials(), before);
+    assert!(g.handed().is_empty());
+
+    // The landing is tried as statement 14 has it, the preview shown or not.
+    let a = g.trial(json!({"intent": 3, "size": "small"}));
+    let mut plain = in_force_w();
+    let b = plain.trial(json!({"intent": 3, "size": "small"}));
+    let unestimated = |a: &Value| {
+        let mut a = a.clone();
+        a.as_object_mut().unwrap().remove("estimate");
+        a
+    };
+    assert_eq!(unestimated(&a), unestimated(&b));
+    // The preview is not spent: approve queues the withdrawal.
+    let q = g.ask("approve", json!({"preview": number}));
+    assert_eq!(q["status"], "queued", "{q}");
+    assert_eq!(queued_tags(&mut g), strs(&["withdraw_intent"]));
+    // With the withdrawal queued the landing is not tried.
+    let e = g.error("trial", json!({"intent": 3, "size": "small"}));
+    assert_eq!(e, "intent 3 has its withdrawal queued: it cannot be tried");
+}
+
+/// Statement 24: the answers are of interface 58 and pass their schemas,
+/// the tool list names the three commands, the words give no advice, and
+/// the live enemy is not read.
+#[test]
+fn s24_the_interface_and_the_words() {
+    let mut answers: Vec<Value> = Vec::new();
+    let mut g = in_force_w();
+    answers.push(g.preview(withdrawal()));
+    answers.push(g.preview(json!({"command": "withdraw_intent", "intent": 4})));
+    answers.push(g.ask("approve", json!({"preview": 2})));
+    let mut g = in_force_w();
+    g.preview(withdrawal());
+    queue_leave(&mut g);
+    answers.push(g.ask("approve", json!({"preview": 2})));
+    for answer in &answers {
+        checked(answer);
+        assert_eq!(answer["version"], 58, "{answer}");
+        let all = answer.to_string().to_lowercase();
+        assert!(!all.contains('%'), "a per cent sign in {answer}");
+        for word in [
+            "chance",
+            "points",
+            "better",
+            "should",
+            "recommend",
+            "advise",
+        ] {
+            assert!(!all.contains(word), "{word:?} in {answer}");
+        }
+    }
+    let kinds: BTreeSet<String> = answers
+        .iter()
+        .map(|a| a["kind"].as_str().unwrap().to_string())
+        .collect();
+    assert!(kinds.contains("preview") && kinds.contains("command"));
+    assert_eq!(sim_agent::VERSION, 58);
+
+    // The live enemy is not read: a Japanese fighting unit of 300 men added
+    // ashore at B, of which the Allied side holds nothing.
+    let mut plain = in_force_w();
+    let a = plain.preview(withdrawal());
+    let mut text = game_text();
+    text.push_str(
+        "\n[[land_unit]]\nid = 4\nname = \"Placeholder Japanese\"\nside = \"japanese\"\nmen = 300\nq = 4\nr = 0\n",
+    );
+    let mut g = game_of(&text);
+    queue_leave(&mut g);
+    let p = g.preview(draft_w());
+    assert_eq!(p["preview"], 1, "{p}");
+    let q = g.ask("approve", json!({"preview": 1}));
+    assert_eq!(q["status"], "queued", "{q}");
+    g.ask("end_day", json!({}));
+    let contacts = g.ask("list_contacts", json!({}));
+    assert_eq!(contacts["contacts"], json!([]), "{contacts}");
+    assert!(
+        contacts["ground_estimates"]
+            .as_array()
+            .is_none_or(Vec::is_empty),
+        "{contacts}"
+    );
+    let b = g.preview(withdrawal());
+    assert_eq!(
+        serde_json::to_string(&a).unwrap(),
+        serde_json::to_string(&b).unwrap()
+    );
 }

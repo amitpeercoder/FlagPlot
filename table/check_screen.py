@@ -2342,6 +2342,336 @@ def seat_mcp(bridge):
     check(post(bridge.table + "/new") == {"ok": True}, "New game ends it")
 
 
+# ---- decision 0232, step 3: the table of a plan the commander writes ----
+#
+# THE ARCHITECT'S STATEMENTS, written on Nov 27, 2026, before any code of step 3 (decision 0233, A, item 3), and amended the same day on
+# the plan's review and the designer's answers ("Amended on review (Nov 27, 2026)" in the file named next). The plan they are of is in
+# docs/decisions/as-built/0232-a-plan-the-commander-writes.md, "Planned: step 3"; "item N" below is an item of that section, and "rule N" a
+# rule of decision 0232. Each function below is empty and fails "not built". A developer fills its body to the statements in its doc
+# comment and changes no statement, no word in quotes and no expected value: one that cannot be filled as written goes back to the
+# architect. `the_island_of_two_places` is called from main() from the island's pull request on; the five after it are called from main(),
+# in the order they stand here and after it, from the first commit of the screen's pull request (item 2), which is begun once the
+# preview of a withdrawal (item 10, agent interface 58) is merged: W8 needs it.
+#
+# The game they play is the 39 days as the list offers it, begin(bridge, "guadalcanal-39-days", "person", "engine"): the Allied seat, the
+# first evening, where Lunga (base 1) and Tulagi (base 4) are the enemy's. H1 is the hex of base 1 and H4 the hex of base 4, each read from
+# `list_bases` and never written into the check. N is the number the reading of the bare order gives it (`intent`).
+#
+# THE WORKED DRAFT, used by statements below. The order: seize and hold island 3, nothing set on it. Under it two landings written:
+#   the landing at Lunga:  After: the landing at Tulagi. Not before: day 3. By the end of: day 6. Risk: preserve.
+#   the landing at Tulagi: Ships and forces: use only the task force numbered 10 (the transports that lie loaded for Tulagi).
+# Its lines stand Lunga, then Tulagi (the island's order); it is sent Tulagi first, since Lunga waits for it (item 15).
+
+
+def worked_under(n, h1, h4):
+    """What the worked draft sends as `under` for an order numbered `n` (item 15). The architect's: not to be changed."""
+    return [
+        {"intent_kind": "take_place", "hex": list(h4), "intent": n + 1, "limits": [{"limit": "forces", "task_forces": [10], "ships": []}]},
+        {"intent_kind": "take_place", "hex": list(h1), "intent": n + 2, "by_day": 6,
+         "limits": [{"limit": "not_before", "from_day": 3}, {"limit": "after", "other_intent": n + 1}, {"limit": "risk", "risk": "preserve"}]},
+    ]
+
+
+def _spread(lowest, middle, highest):
+    return {"lowest": lowest, "middle": middle, "highest": highest}
+
+
+def _costs(men, unfed, sunk, out, aircraft):
+    return {"men_lost_to_the_enemy": _spread(*men), "men_lost_unfed": _spread(*unfed), "ships_sunk": _spread(*sunk),
+            "ships_out_of_action": _spread(*out), "aircraft_lost": _spread(*aircraft)}
+
+
+_RUNS = [1, 2, 3, 4, 5, 6, 7, 8]
+_YOURS = {"worlds": _RUNS, "met_and_kept": [1, 2, 3, 5, 8], "met_days": {"earliest": 6, "middle": 8, "latest": 11}, "met_and_lost_again": [4], "not_met": [6, 7]}
+_STAFFS = {"worlds": _RUNS, "met_and_kept": [1, 2, 3, 4, 5, 6, 8], "met_days": {"earliest": 9, "middle": 9, "latest": 9}, "met_and_lost_again": [], "not_met": [7]}
+
+# A trial's answer, made up by the architect for the check (no game gave it): an order tried with its landings written, 8 runs of 14 days.
+# Your plan wins and holds the island in runs 1, 2, 3, 5 and 8; the staff's in those and in runs 4 and 6; neither in run 7.
+TWO_PLANS_ANSWER = {
+    "kind": "trial", "estimate": 3, "first_day": 1, "last_day": 14, "has_end": True, "could_not_be_played": [],
+    "asked": {"worlds": 8, "days": 14, "preview": 1, "intent": None, "tried_intent": 1, "beside": "left_to_the_staff", "inside_day": None},
+    "how_it_went": _YOURS,
+    "cost": _costs((485, 1660, 1960), (0, 0, 0), (0, 0, 1), (0, 0, 7), (10, 16, 19)),
+    "enemy_lost": _costs((20, 2453, 2568), (0, 0, 0), (0, 0, 3), (0, 0, 0), (0, 0, 36)),
+    "beside": {
+        "of": "left_to_the_staff", "order": 1, "last_day": 14, "could_not_be_played": [],
+        "with_your_plan": _YOURS, "how_it_went": _STAFFS,
+        "cost": _costs((1640, 1720, 2120), (0, 0, 0), (0, 0, 1), (0, 0, 0), (13, 16, 19)),
+        "enemy_lost": _costs((796, 2646, 2844), (0, 0, 0), (0, 0, 2), (0, 0, 2), (0, 0, 36)),
+        "world_for_world": {"both": [1, 2, 3, 5, 8], "with_your_plan_alone": [], "with_the_staffs_alone": [4, 6], "neither": [7], "apart": []},
+    },
+    "other_plans": [], "assumed": [], "partings": [], "leaves_given_to_the_side": [], "text": [],
+}
+# What the page shows of it (item 21): the heading, the line under it, the two columns, each row as (its name, your plan, the staff's
+# plan), and the line run for run. It has these five keys and no other: `left_out` and `no_cost` are absent, not empty (D4, D5). A cost's
+# row is named "Your " or "The enemy’s " and the page's own name for the cost with its first letter small, the enemy's ending
+# ", in the dry run"; the row for men unfed, where it has one, is "Your men lost unfed" and "The enemy’s men lost unfed, in the dry run".
+# The architect's working: 5 and 7 of 8 runs kept, on days 6 to 11 and on day 9; 1 and 0 lost again; 2 and
+# 1 not won; a cost's row only where either column's highest is above nothing, so no row for men unfed on either side; a spread whose
+# lowest and highest are one figure is said as that figure.
+TWO_PLANS_SHOWN = {
+    "heading": "Your plan beside the staff’s",
+    "staffs_is": "The staff’s plan is this order with every landing left to the staff.",
+    "columns": ["Your plan", "The staff’s plan"],
+    "rows": [
+        ["Island won and held", "5 of 8 runs, days 6 to 11", "7 of 8 runs, day 9"],
+        ["Won and lost again", "1 of 8 runs", "no run"],
+        ["Not won by day 14", "2 of 8 runs", "1 of 8 runs"],
+        ["Your men lost to the enemy", "485 to 1,960, the middle 1,660", "1,640 to 2,120, the middle 1,720"],
+        ["Your ships sunk", "0 to 1, the middle 0", "0 to 1, the middle 0"],
+        ["Your ships out of action at the end", "0 to 7, the middle 0", "0"],
+        ["Your aircraft lost", "10 to 19, the middle 16", "13 to 19, the middle 16"],
+        ["The enemy’s men lost, in the dry run", "20 to 2,568, the middle 2,453", "796 to 2,844, the middle 2,646"],
+        ["The enemy’s ships sunk, in the dry run", "0 to 3, the middle 0", "0 to 2, the middle 0"],
+        ["The enemy’s ships out of action at the end, in the dry run", "0", "0 to 2, the middle 0"],
+        ["The enemy’s aircraft lost, in the dry run", "0 to 36, the middle 0", "0 to 36, the middle 0"],
+    ],
+    "run_for_run": "Run for run: won and held with both plans in 5; with your plan alone in 0; with the staff’s plan alone in 2; with neither in 1.",
+}
+
+# Reasons of the staff's, made up by the architect in the shapes `staff_orders` gave on the 39 days on Nov 27, 2026, and for each the
+# numbers of the commander's nodes it turns on (item 27), his nodes being intents 2 and 3. D turns on none: the words "the commander's"
+# alone make no reason his, and intent:30 is not intent:3. A real reason with no limit has no `limits` key at all: `hisNodesIn` reads a
+# missing key as it reads None (R1).
+HIS_NODES = [2, 3]
+REASONS_AND_HIS_NODES = [
+    ({"serves": {"intent": 1}, "limits": None, "worked": "intent:3, the commander's, plans the place at (2,-4): the staff forms no take beside it."}, [3]),
+    ({"serves": {"intent": 3}, "limits": [{"intent": 3, "kind": "risk"}], "worked": "the side's estimate is 5275 enemy men at (2,-4); at preserve the staff wants 3 men for each."}, [3]),
+    ({"serves": {"intent": 5}, "limits": None, "worked": "task_force:9 has fighting men aboard and intent:3 is in force for a place not yet the side's: it is the takes'."}, [3]),
+    ({"serves": {"intent": 4}, "limits": [{"intent": 1, "kind": "forces"}], "worked": "intent:4 holds base:1 (Lunga) under intent:1 (the commander's); intent:30 has the force."}, []),
+    ({"serves": {"intent": 1}, "limits": [{"intent": 2, "kind": "forces"}], "worked": "intent:3 waits for intent:2."}, [2, 3]),
+]
+
+
+def the_island_of_two_places(bridge):
+    """The island "Guadalcanal and Tulagi" in the table's 39 days (decision 0232, the designer's answer 2; items 5 to 8). Called from
+    main() from the island's pull request on. The generator's `--check` and `tests/table_rear_bases_files.rs` hold the files; this holds
+    the list and the games.
+
+    I1. The list's entry `guadalcanal-39-days` has three islands in this order: {number 1, "Guadalcanal", base 1}, {number 2, "Tulagi",
+        base 4} and {number 3, "Guadalcanal and Tulagi", base 1, places [1, 4]}. No other entry has an island numbered 3 or the key
+        `places`.
+    I2. In the page's text, an island is offered on a base's card where the base is the island's `base` or is in its `places`.
+    I3. In each game of the 39 days a person can sit in (the person Allied against the engine; the person Japanese against the engine; the
+        person Allied against an agent), a preview of `{"command": "set_intent", "intent_kind": "control_island", "island": 3}` is not
+        refused.
+    I4. (Item 6, on the designer's yes of Nov 27, 2026.) In the person Allied against an agent, previews of islands 1 and 2 are not
+        refused either.
+    I5. The person Allied against the engine: the tree of that preview (`with_change.tree.sub_intents`) has exactly two entries of kind
+        `take_place` whose parent is the order, both with `maker` "staff", at H1 and then at H4.
+    I6. (Item 7, on the designer's yes of Nov 27, 2026.) In that game the seat is offered the tool `trial`: a call of it with that
+        preview and `describe` true is answered and not refused.
+    Each game is put away after it."""
+    print("-- the island of two places: the list, the card and the games of the 39 days", flush=True)
+    entries = {e["id"]: e for e in json.load(open(os.path.join(HERE, "scenarios.json")))["scenarios"]}
+    islands = entries["guadalcanal-39-days"]["islands"]
+    check(islands == [{"number": 1, "name": "Guadalcanal", "base": 1}, {"number": 2, "name": "Tulagi", "base": 4},
+                      {"number": 3, "name": "Guadalcanal and Tulagi", "base": 1, "places": [1, 4]}],
+          f"I1: the 39 days lists three islands in order, the third of two places ({islands})")
+    check(all(i["number"] != 3 and "places" not in i for gid, e in entries.items() if gid != "guadalcanal-39-days" for i in e.get("islands", [])),
+          "I1: no other entry has an island numbered 3 or the key places")
+    page = page_text()
+    check("config.islands.forEach(function (i) { if (i.base === n || (i.places && i.places.indexOf(n) >= 0)) {" in page,
+          "I2: the page offers an island on the card of its base and of each base in its places")
+    command = {"command": "set_intent", "intent_kind": "control_island", "island": 3}
+    for allied, japanese in (("person", "engine"), ("engine", "person"), ("person", "agent")):
+        check(begin(bridge, "guadalcanal-39-days", allied, japanese) == {"ok": True}, f"begun: the 39 days, {allied} Allied against {japanese} Japanese")
+        person = Person(bridge.table)
+        answer = person.call("preview", command)
+        check("ok" in answer and answer["ok"].get("status") != "refused" and answer["ok"].get("valid") is True,
+              f"I3: a preview of island 3 is not refused and is valid ({allied} against {japanese}): {str(answer)[:120]}")
+        if (allied, japanese) == ("person", "agent"):
+            for number in (1, 2):
+                answer = person.call("preview", dict(command, island=number))
+                check("ok" in answer and answer["ok"].get("status") != "refused" and answer["ok"].get("valid") is True,
+                      f"I4: in the person Allied against an agent a preview of island {number} is not refused and is valid: {str(answer)[:120]}")
+        check(post(bridge.table + "/new") == {"ok": True}, "the game is put away")
+    # H1 and H4, read from a seat that holds the bases (the Japanese, who hold Lunga and Tulagi on the first evening)
+    check(begin(bridge, "guadalcanal-39-days", "engine", "person") == {"ok": True}, "begun: the person Japanese, to read the hexes of Lunga and Tulagi")
+    placed = {b["base"]["handle"]: [b["place"]["q"], b["place"]["r"]] for b in Person(bridge.table).call("list_bases")["ok"]["bases"]}
+    h1, h4 = placed["base:1"], placed["base:4"]
+    check(post(bridge.table + "/new") == {"ok": True}, "the game is put away")
+    check(begin(bridge, "guadalcanal-39-days", "person", "engine") == {"ok": True}, "begun: the person Allied against the engine")
+    person = Person(bridge.table)
+    shown = person.call("preview", command)["ok"]
+    takes = [i for i in shown["with_change"]["tree"]["sub_intents"] if i["kind"] == "take_place" and i["parent"] == shown["intent"]]
+    check([(t["maker"], t["hex"]) for t in takes] == [("staff", h1), ("staff", h4)],
+          f"I5: the tree of that preview has two takes under the order, the staff's, at the hex of Lunga then of Tulagi ({[(t['maker'], t['hex']) for t in takes]} for {h1}, {h4})")
+    tried = person.call("trial", {"preview": shown["preview"], "describe": True})
+    check("ok" in tried and tried["ok"].get("status") != "refused", f"I6: a dry run of that preview, described, is answered and not refused: {str(tried)[:120]}")
+    check(post(bridge.table + "/new") == {"ok": True}, "the game is put away")
+
+
+def your_plan_on_the_order_paper(bridge):
+    """Rule 27: YOUR PLAN on the order's paper (items 11 to 16).
+
+    In the page's text:
+    P1. The paper has a fold with the id `p-plan` after `p-limits` and before `p-acts`, whose head begins "YOUR PLAN". It is shown for a
+        new order to the staff whose end is `control_island` and for no other kind of paper, and not in a watched game.
+    P2. The page holds the functions `planLines(`, `writtenUnder(` and `planSummary(` and the words "WRITE IT", "LEAVE IT TO THE STAFF",
+        "left to the staff" and "By the end of". It does not hold "Sails from": the forces' source is "Supplied from", as LIMITS has it.
+
+    The page's own functions, cut from its text and run in node:
+    P3. `planLines` of the tree of a bare reading (the shape I5 reads: takes of the staff's at two hexes, holds, a deny, and a
+        `ready_landing` under each take) and the order's number gives two lines, at those hexes, in the tree's order; an entry that is
+        not a `take_place`, or whose parent is not the order, gives no line. A tree with no such take gives an empty list; no tree
+        (null, or a reading that was refused and has none) gives null.
+    P4. `planSummary` says "The staff plans every landing." with nothing written; "Yours: the landing at Tulagi, the landing at Lunga."
+        for the worked draft; "The staff plans no landing under this order: there is none to write." for an empty list of lines; and
+        nothing (an empty string) for null. The page's text holds "There is no reading of this order to take its landings from." and
+        does not hold "Every place is ours".
+    P5. `writtenUnder` of the worked draft, the order numbered 1, the hexes (2,-4) for Lunga and (3,-5) for Tulagi, is exactly
+        `worked_under(1, (2, -4), (3, -5))`. With the "After" of Lunga taken off, the entries stand in the lines' order: Lunga numbered 2,
+        Tulagi numbered 3. A landing with nothing set is sent with `limits` empty and no `by_day`. Risk (item 14): a landing whose risk
+        was never set sends no risk; with Tulagi's risk set to balanced its limits end with {"limit": "risk", "risk": "balanced"}; put
+        back to the staff's choice, it sends none again.
+    P6. What a written landing offers is, in this order, and nothing else: Ships and forces, Land units, Supplied from, Not before,
+        Wait for, After, Knowledge, Risk, By the end of. It offers no single ship, no air group, no area, no targets, no protected ships
+        and no "none of" for its ships or its land units, and a draft that has any of those set on a landing sends none of them (no
+        `none_of` among them). Risk offers four choices: the staff's choice, preserve, balanced, press.
+    P7. With Lunga after Tulagi, the "After" of Tulagi does not offer the landing at Lunga; it offers it again once Lunga's is put back.
+    P8. No words the model gives hold a handle or a number of the engine's (no "intent", no "task_force:", no number of an intent).
+
+    Through the bridge:
+    P9. `planLines` of the real bare reading of island 3 gives two lines, at H1 and then at H4.
+    P10. A preview of the order with `under` as `worked_under(N, H1, H4)` is not refused; its `intent` is N; its `under` numbers are N + 1
+         and N + 2; its tree has a `take_place` of the commander's, `standing`, at H4 and at H1, and no `take_place` of the staff's.
+         The lines the page shows are still Lunga, then Tulagi.
+    P11. The same with Tulagi's landing given "Risk: press" (the order at balanced) is refused with `of_batch.position` 4 (the order, the
+         landing at Tulagi, its forces, its risk), the reason being that the limit is wider than its parent allows; the page's
+         words for it begin "The landing at Tulagi: Risk: " and what follows is the engine's reason through the page's refusal words.
+    Nothing is signed, and the game is put away."""
+    check(False, "not built: decision 0232, step 3, rule 27 (YOUR PLAN on the order's paper)")
+
+
+def the_draft_is_read_and_signed_as_one(bridge):
+    """Rule 28: one reading, one approval, one entry under SIGNED, one TAKE BACK (items 17 to 19).
+
+    In the page's text:
+    S1. The reading is asked with `under` where a landing is written, by the one function that asks a reading today; signing is still
+        one `approve` of the preview and sends no `set_intent`, `set_limit` or `form_intent` of its own; after it the page checks
+        `under_queued`.
+
+    Through the bridge, the worked draft:
+    S2. `approve` of its preview answers `status` "queued", `limits_queued` 0, and `under_queued` of two: {intent N + 1, limits_queued 1}
+        and {intent N + 2, limits_queued 3}.
+    S3. `queued` then holds seven entries (the order; each landing; one limit of Tulagi's and three of Lunga's): one `set_intent` with
+        no `parent`, whose `goes_with` names the other six. The page's own
+        function for SIGNED, run in node on that answer, makes one line of them: it says the order as the page says it, then
+        "Yours: the landing at Tulagi, the landing at Lunga.", and holds no handle or number of the engine's. No entry with a `parent`,
+        and no limit of one, is a line of its own.
+    S4. One `take_back` of that entry's place leaves `queued` empty.
+    S5. The worked draft with the order's own risk at press: `limits_queued` is 1, and SIGNED's line says the risk before "Yours:".
+    The game is put away."""
+    check(False, "not built: decision 0232, step 3, rule 28 (the draft read and signed as one)")
+
+
+def the_dry_run_shows_two_plans(bridge):
+    """Rule 29: the dry run's two columns (items 20 to 22).
+
+    The page's own function `twoPlans(j, landing)`, cut from its text and run in node. `landing` is the name of the place of the landing
+    tried, which the page gives it from `command_state` (the hex of the intent `asked.tried_intent`), or null where the order itself was
+    tried; the function reads no word of the answer for it (item 21):
+    D1. `twoPlans(TWO_PLANS_ANSWER, null)` is exactly `TWO_PLANS_SHOWN`: the keys `heading`, `staffs_is`, `columns`, `rows` and
+        `run_for_run`, with those values, and no other key (no `left_out`, no `no_cost`).
+    D2. Of the same answer with `beside.of` "given_back_to_the_staff" and `asked.tried_intent` 3, `twoPlans(that, "Lunga")` has
+        `staffs_is` "The staff’s plan is this order with the landing at Lunga given back to the staff from 1800." and the rest is as D1.
+    D2a. Of the same answer with `beside.of` "left_to_the_staff" and `asked.tried_intent` 3, `twoPlans(that, "Lunga")` has `staffs_is`
+        "The staff’s plan is this order with the landing at Lunga left to the staff." and the rest is as D1.
+    D3. Of the same answer with `beside.of` "without_it", "withdrawn" or "as_it_stands", or with no `beside`, it gives nothing, and the
+        sheet is as it is today.
+    D4. With `world_for_world.apart` [8] (and 8 taken out of `both`) it gains the key `left_out`, "1 run is left out: it was not played
+        under both plans.", shown after the line run for run; with two in `apart`, "2 runs are left out: they were not played under both
+        plans." (`apart` holds a run that could not be played under one plan, or under either.)
+    D5. With every cost of both sides at nothing in both columns the rows are the island's alone, and it gains the key `no_cost`, "No
+        man, ship or aircraft is lost in any run."
+    D6. With every string of `text` in the answer changed to other words, what `twoPlans` gives does not change.
+
+    In the page's text:
+    D7. The body of `twoPlans` does not name `text`. The sheet for these two kinds does not say "Beside your side without this order",
+        and holds none of the words "better", "worse", "best", "recommend", "advise", "should", "per cent", "%", "points", "chance" in
+        what it writes; neither column is given a class or a colour the other is not.
+    D8. The order paper's DRY RUN sends `trial` with the preview and the size and no `compare`.
+
+    Through the bridge, on the 39 days, which have a trial from the island's pull request on (item 7):
+    D9. `trial` of the worked draft's preview at the size small is answered with `beside.of` "left_to_the_staff", `beside.order` N,
+        `asked.compare` true, and `beside.with_your_plan` equal to `how_it_went`. Whatever counts it gives, what `twoPlans` makes of it
+        says them: each cell of the first row begins with the page's words for the count of `met_and_kept` of its column, the four
+        counts run for run are those of `world_for_world`, and together with `apart` they are the answer's `asked.worlds`.
+    D10. The preview tried is not spent: it is approved after the trial. The game is put away.
+    No count from a real trial is an expected value here (item 30): the developer reports them to the architect in "Built: step 3"."""
+    check(False, "not built: decision 0232, step 3, rule 29 (the dry run's two columns)")
+
+
+def the_plan_paper_marks_whose_line(bridge):
+    """Rule 30: the plan's paper marks every line YOURS or THE STAFF’S (items 23 to 26).
+
+    The page's own functions, in node:
+    W1. `whoseLine` of {maker "commander", parent 1} is "YOURS"; of {maker "staff", parent 1} and of {maker "staff", parent 2} it is
+        "THE STAFF’S"; of {maker "commander", parent null} it is ""; of {maker "staff", parent 1, text "the commander's take"} it is
+        "THE STAFF’S": the mark is the field and never the words.
+    W2. The page's function for SIGNED says a queued `withdraw_intent` of a landing of his at Lunga as "The landing at Lunga: given back
+        to the staff", and a withdrawal of a root as it says it today.
+
+    In the page's text:
+    W3. The plan's paper marks a task from `maker`, of `command_state`'s intent for a plan in force and of `propose`'s entry for a plan
+        that waits; the page matches or cuts no text for it (it holds no test for "commander's" or for "Yours:").
+    W4. GIVE IT BACK TO THE STAFF opens the order paper and asks the staff's reading: `preview` with `command` "withdraw_intent" and
+        the landing's number (item 25; agent interface 58). Nothing is queued until SIGN AND SEND, which is one `approve` of that
+        preview and nothing else: the page calls the tool `withdraw_intent` nowhere. Its DRY RUN sends `trial` with `intent`, the
+        landing's number, and never that preview's. THE ORDER says "Give the landing at Lunga back to the staff." (the place by its
+        name).
+
+    Through the bridge: the worked draft signed, leave to launch given, one day resolved:
+    W5. In `command_state` the intents under the order are intents N + 1 and N + 2 with `maker` "commander" and the rest with `maker`
+        "staff"; the page marks N + 1 and N + 2 YOURS, every other task under the order THE STAFF’S, the `ready_landing` beneath a
+        landing of his among them, and the order's own line not at all. The tool `order` for N gives each task the same `maker`.
+    W6. His landing at Lunga shows its limits: After and Not before, each with CHANGE and BACK TO THE STAFF’S CHOICE; Risk with CHANGE
+        alone (no tool unsets a risk: item 24); and its day ("By the end of") with neither. What CHANGE sends for "Not before: day 5"
+        (`preview` of a `set_limit` `not_before` on N + 2) is not refused and is approved; what BACK TO THE STAFF’S CHOICE sends for
+        its "Not before" is not refused; what CHANGE sends for "Risk: balanced" (`preview` of a `set_limit` `risk` on N + 2) is not
+        refused.
+    W7. Before W8, nothing being queued: `trial` with `intent` N + 2 at the size small is answered with `beside.of`
+        "given_back_to_the_staff" and `beside.order` N, and `twoPlans` of it and "Lunga", the name the page gives from the hex of
+        intent N + 2 in `command_state`, says "the landing at Lunga given back to the staff from 1800".
+    W8. `preview` of {"command": "withdraw_intent", "intent": N + 2} is valid and its `intent` is N: its tree has a `take_place` at H1
+        with `maker` "staff" and none of the commander's there, and the landing at Tulagi, N + 1, still the commander's and `standing`;
+        the page's reading of it marks the take at H1 THE STAFF’S and the landing at Tulagi YOURS. `approve` of it answers `status`
+        "queued"; `queued` then holds one entry, a `withdraw_intent` of N + 2, which is one line under SIGNED in the words of W2, and
+        is taken back by one `take_back`.
+    W9. Signed again and a day resolved: no intent N + 2 is in force; a `take_place` at H1 stands under the order with `maker` "staff";
+        the page marks it THE STAFF’S, and its line has no GIVE IT BACK TO THE STAFF, no WRITE IT and no CHANGE of a landing's lines.
+    The game is put away."""
+    check(False, "not built: decision 0232, step 3, rule 30 (the plan's paper marks whose line)")
+
+
+def a_reason_leads_to_his_line(bridge):
+    """Rule 31: a reason that turns on a node of his leads to that node's line (items 27 and 28).
+
+    The page's own functions, in node:
+    R1. `hisNodesIn(reason, HIS_NODES)` gives, for each pair of `REASONS_AND_HIS_NODES`, the numbers beside it, ascending; and the
+        same for each with its `limits` key taken out where that is None.
+    R2. The first of those reasons, shown under the order's line with his landing 3 at Lunga: its words say "your landing at Lunga"
+        where the engine wrote "intent:3", that is a link, and no "intent:" is left in what is shown; its WHY ends with "YOUR PLAN" and
+        one link, "The landing at Lunga".
+    R3. The second, shown under his own landing's line: no YOUR PLAN link to the line it stands under; its limit is under YOUR LIMITS as
+        today, and that link leads to the Risk line of his landing.
+    R4. The fourth has no YOUR PLAN.
+
+    In the page's text:
+    R5. A YOUR PLAN link in a plan's paper opens that plan's paper at his node's line (`readPlan` with the node as its focus); in the
+        reading of a draft it opens the fold `p-plan` at that landing.
+
+    Through the bridge: the worked draft signed, leave to launch given, one day resolved:
+    R6. Among the reasons `staff_orders` gives, at least one serves the order N and carries the handle of N + 2 in its words, and at
+        least one serves N + 2 itself. For every reason given, `hisNodesIn(reason, [N + 1, N + 2])` is what the three tests of item 27
+        give when the check works them itself from `serves.intent`, `limits` and the handles in `worked`.
+    R7. The page's view of the first kind, in node on the real reason, ends its WHY with YOUR PLAN and the link "The landing at Lunga",
+        and shows no handle.
+    The game is put away."""
+    check(False, "not built: decision 0232, step 3, rule 31 (a reason leads to his line)")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     parser.add_argument("--sim-cli", default="target/release/sim-cli")
@@ -2383,6 +2713,7 @@ def main():
             midway_on_its_chart(bridge)
             person_against_agent(bridge, args.hold)
             seat_mcp(bridge)
+            the_island_of_two_places(bridge)
         finally:
             bridge.stop()
         check(bridge.process.returncode is not None, "the bridge has left")

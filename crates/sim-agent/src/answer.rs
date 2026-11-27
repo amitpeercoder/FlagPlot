@@ -186,7 +186,10 @@ pub const FORMAT: &str = "flagplot-agent";
 /// the side's estimate of the enemy's boats, a reading of its own reports.
 /// 55 is decision 0220's order to destroy a force, which the tools do not
 /// yet name (the staff and the agent's part is to follow).
-pub const VERSION: u32 = 57;
+/// 58 lets `preview` take `withdraw_intent` of a sub-intent the commander wrote
+/// (decision 0232, step 3): the staff's reading of the order it stands under,
+/// with it withdrawn on the coming morning.
+pub const VERSION: u32 = 58;
 
 /// The answer to a question about something the side does not know of: a
 /// unit of the enemy, a number that does not exist, an event the side may not
