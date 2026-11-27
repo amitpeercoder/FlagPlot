@@ -1153,6 +1153,7 @@ fn seat_trials(s: &Settings, options: &LoadOptions) -> Result<Vec<SeatTrialTime>
                         of: BesideOf::WithoutIt,
                         standing: as_they_stand.clone(),
                         course: course.clone(),
+                        order: None,
                     }),
                 };
                 let begin = clock();

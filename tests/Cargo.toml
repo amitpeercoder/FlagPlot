@@ -748,3 +748,7 @@ path = "scenario_136_supply_at_press.rs"
 [[test]]
 name = "scenario_137_a_plan_the_commander_writes"
 path = "scenario_137_a_plan_the_commander_writes.rs"
+
+[[test]]
+name = "scenario_137b_the_draft_as_one"
+path = "scenario_137b_the_draft_as_one.rs"
