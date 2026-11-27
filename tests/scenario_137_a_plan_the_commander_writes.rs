@@ -3222,6 +3222,37 @@ fn before_the_island_is_released() {
     assert_eq!(g.plan_day(3, PlanState::Released), Some(8));
 }
 
+/// Architect's ruling on pull request 739 (decision 0232, must change 1):
+/// the variant of statement 11 (leave to launch withheld) with the
+/// commander's own approval of plan 2 on day 1. His take's plan is
+/// preparing, not a draft, so the leaves do not pass it over for the
+/// island's plan: on day 1 no reason under intent 2 says it waits for the
+/// plan of intent 1, a landing by task force 3 at C is formed under intent
+/// 2, and intent 3, its plan a draft, is passed over as before.
+#[test]
+fn his_approved_take_is_not_passed_over() {
+    let g = play(&format!(
+        "{}{}",
+        launch_withheld(),
+        command_table(1, "kind = \"approve\"\nplan = 2")
+    ));
+    g.nothing_refused();
+    let reason = g.no_orders(1, 2).join(" || ");
+    assert!(
+        !reason.contains("waits for the plan of intent:1"),
+        "{reason}"
+    );
+    assert!(
+        g.forms()
+            .iter()
+            .any(|(d, parent, k)| *d == 1 && *parent == 2 && *k == landing_kind(3, C, None)),
+        "{:?}",
+        g.forms()
+    );
+    let reason = g.no_orders(1, 3).join(" || ");
+    assert_says(&reason, &["waits for the plan of intent:1"]);
+}
+
 /// Statement 12, "Refused at intake": each command of the list refused
 /// with its reason and words, changing nothing but the log.
 #[test]

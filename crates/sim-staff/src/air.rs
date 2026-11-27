@@ -697,7 +697,7 @@ impl<'v, 'a> Day<'v, 'a> {
             // island is passed over while the island's plan is a draft or
             // preparing (a staff's take cannot exist before its release, and
             // his can). Once released the wait is over for good.
-            if crate::assemble::written_take(&self.state, &intent) {
+            if now == PlanState::Draft && crate::assemble::written_take(&self.state, &intent) {
                 let island = intent
                     .parent
                     .and_then(|p| self.state.intents.get(&p))
