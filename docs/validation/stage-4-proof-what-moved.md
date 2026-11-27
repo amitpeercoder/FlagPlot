@@ -2,14 +2,17 @@
 
 Made on Nov 24, 2026 for the report of stage 4's proof (setup page, "What moved since decision 0159's proof"). It holds no result and no verdict. It is made from the repository as it stands on the branch `proof-reading` (main at 2e5a9efb and the setup's two commits), with decision 0230 merged: the doctrine's label is `supply-62`.
 
+Amended by the architect on Nov 27, 2026, before the run: step 1 of decision 0232 was merged first (main at 03d9a25), and the labels and the last row of the doctrine's table are brought to it. The evidence that nothing of the proof moved by it is on the setup page, "Amended before the run, Nov 27, 2026": 444 runs of the proof's nine files by the builds before and after, the hash lines kept, no line different.
+
 ## The labels
 
 | | Decision 0159's proof (Nov 19, 2026, main at 2ed57bfd) | Now |
 | --- | --- | --- |
 | State layout | `flagplot-state-v47` | `flagplot-state-v60` (`hash::STATE_VERSION`) |
-| Rules label | 19 | 34 (`world::RULES_VERSION`) |
-| Doctrine | `supply-39` | `supply-62` (`sim_staff::DOCTRINE_VERSION`) |
-| Agent interface | 26 | 55 (`sim_agent::answer::VERSION`); 55 or the next |
+| Rules label | 19 | 35 (`world::RULES_VERSION`); 34 before step 1 of decision 0232 |
+| Doctrine | `supply-39` | `supply-63` (`sim_staff::DOCTRINE_VERSION`); `supply-62` before step 1 of decision 0232 |
+| Agent interface | 26 | 56 (`sim_agent::answer::VERSION`), and no later one: step 2 of decision 0232, which makes it 57, is held until the run (the setup page) |
+| Saved game | | 29 (`sim-cli`'s `save::VERSION`); 28 before step 1 of decision 0232 |
 
 ## Changes to (a), (b), (c) and to the staff's setup
 
@@ -53,10 +56,11 @@ The doctrine's label is in `crates/sim-staff/src/lib.rs`, where each step's para
 | `supply-60` | 0220 | 9c27baf7 2026-11-23 | decision 0220's order to destroy a force and gives the orders `supply-59` gave to a side that gives none | (the sentence above says whom it touched) |
 | `supply-61` | 0231 | 1a11296d 2026-11-24 | decision 0231: under "control an island" the staff forms a "keep supplied" for each base of the side on the island's land and in no named place's hex where the side has men ashore or marching, sets its forces limit as a hold's, withdraws it when no man is there, none marches to it and no run of it is loaded or at sea, and records one reason for men at a hex with no base of the side | It gives the orders `supply-60` gave to a side with no such base and men. The staff: the doctrine for keeping a base supplied (stage 1) and, after it, the air doctrine for holding a place and covering a base from the air (step 2 of stage 2). A side with no intent in force and no commitment to free gets nothing from it; one with no hold or cover intent gets nothing from the air doctrine. The staff of each side: the supply staff for both. A side with no intent has a staff that does nothing. The engine's [`Staffs`] over staffs held in a map, as [`staffs`] gives them. |
 | `supply-62` | 0230 | 09bb36b2 2026-11-24 | decision 0230: the floor of a "keep supplied" the staff forms is the margin of its risk and never less than 1 day (10, 5, 1), at all three sites that form one, and the reason says "the least floor, at press" where it is 1 at press | It gives the orders `supply-61` gave to a side with no hold or island at press. Rules label, state layout and interface unchanged |
+| `supply-63` | 0232 | 70f7971 2026-11-27 | decision 0232, step 1: a "take a place" the commander wrote under "control an island" is served as a staff's take is (the island forms none beside it, a carrier or bombardment force he named is not its landing's, the staff fills what he left blank, and the island's plan is told `late` or `cannot_meet` where his node cannot be met); and two mends of decision 0151, item 5: the takes under one island keep what each landing has from one another, and a force readying a landing is no free ship of a supply pool | It gives the orders `supply-62` gave to a side that wrote nothing, with two takes under no island and no landing's force in a supply pool. (a), (b), (c) and the six cases play the same line for line, hash lines kept, on the builds before and after (the setup page, "Amended before the run, Nov 27, 2026"). Rules label 34 to 35, interface 55 to 56, saved game 28 to 29; state layout unchanged |
 
 ## The decisions the setup names
 
-0162, 0163 and 0169 are the mends of decision 0159's miss; 0191 (a lift turned back), 0193 (men ashore with no more coming), 0195 and 0196 (forces that arrive; stock from off the map), 0214 (a carrier force that pursues), 0217, 0220, 0222 and 0228 (limits and the source of supply), 0230 (supply at press) and 0231 (men ashore beside a place are fed) are in the table above. Each decision's "As built" names the files it moved: the report names them from the records, as condition 2 asks.
+0162, 0163 and 0169 are the mends of decision 0159's miss; 0191 (a lift turned back), 0193 (men ashore with no more coming), 0195 and 0196 (forces that arrive; stock from off the map), 0214 (a carrier force that pursues), 0217, 0220, 0222 and 0228 (limits and the source of supply), 0230 (supply at press) and 0231 (men ashore beside a place are fed) are in the table above, and with them, as amended on Nov 27, 2026, step 1 of decision 0232. Each decision's "As built" names the files it moved: the report names them from the records, as condition 2 asks.
 
 ## Condition 3 beside decision 0159's figure
 
