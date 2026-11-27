@@ -27,31 +27,33 @@
 //!
 //! Written by the architect on Nov 27, 2026, before the generator is changed
 //! (`docs/decisions/as-built/0232-a-plan-the-commander-writes.md`, "Planned:
-//! step 3", items 5 to 7). Statement 2 above is amended by 2a and its test is
-//! changed to it, on the architect's word given here; statements 1 and 3 to 5
-//! stand as they are. Statements 6 and 9, and the part of 2a each names, hold
-//! only on the designer's word (items 6 and 7 of the plan): the brief says
-//! whether it was given, and a statement without it is left out with its
-//! test, not loosened.
+//! step 3", items 5 to 7), and amended the same day on the plan's review and
+//! the designer's answers: he said yes to islands 1 and 2 in the full-slice
+//! copy (item 6) and to the trial's figures (item 7), so nothing below is
+//! conditional. Statement 2 above is amended by 2a and its test is changed to
+//! it, on the architect's word given here; statements 1 and 3 to 5 stand as
+//! they are.
 //!
 //! 2a. Read as data, with every comment set aside, each file is the file it
 //!     is made from with the lines of statement 2 changed, as counted there
 //!     (one name, one `supply_t`, nine each of `at_base`, `home_port` and
 //!     `available_from`), and with these lines added and no other:
-//!     - in each of the three, the four lines of island 3: `[[island]]`,
-//!       `number = 3`, `name = "Guadalcanal and Tulagi"`,
-//!       `places = [{ base = 1 }, { base = 4 }]`;
-//!     - on the designer's word (item 6), in `07_full_slice_submarines.toml`
-//!       alone, before island 3, the eight lines of islands 1 and 2, each
-//!       line equal to the line of `07b_slice_submarines.toml`;
-//!     - on the designer's word (item 7), in each of the three, the one line
+//!     - in each of the three, the one line
 //!       `trial = "../../reference/trial.toml"`, next after the line
-//!       `class_sides = "../../reference/class_sides_full_slice.csv"`.
-//!     So a file has 4 lines more than its source, or 5 with the trial; the
-//!     full-slice copy 4, 12, 5 or 13. With the added lines taken out, the
-//!     lines are as many as the source's and differ as statement 2 says.
-//! 6.  (Item 6.) Loaded, `07_full_slice_submarines.toml` has islands 1 and 2
-//!     with the names and the places `07b_slice_submarines.toml` gives them.
+//!       `class_sides = "../../reference/class_sides_full_slice.csv"`;
+//!     - in `07_full_slice_submarines.toml` alone, the eight lines of
+//!       islands 1 and 2, each line equal to the line of
+//!       `07b_slice_submarines.toml`, in that file's order;
+//!     - in each of the three, after its islands 1 and 2, the four lines of
+//!       island 3: `[[island]]`, `number = 3`,
+//!       `name = "Guadalcanal and Tulagi"`,
+//!       `places = [{ base = 1 }, { base = 4 }]`. In the full-slice copy the
+//!       twelve lines of the three islands are the last lines of the file.
+//!     So each slice file has 5 lines more than its source and the
+//!     full-slice copy 13. With the added lines taken out, the lines are as
+//!     many as the source's and differ as statement 2 says.
+//! 6.  Loaded, `07_full_slice_submarines.toml` has islands 1 and 2 with the
+//!     names and the places `07b_slice_submarines.toml` gives them.
 //! 7.  Loaded, each of the three files has island 3, named "Guadalcanal and
 //!     Tulagi", of two places in this order: the hex of base 1, then the hex
 //!     of base 4. In the two slice files islands 1 and 2 are as they were.
@@ -61,11 +63,26 @@
 //!     with its staffs, as the file kept. (The whole games are compared
 //!     outside `cargo test`, by `sim-cli run --events` before and after with
 //!     the hash lines kept, and shown to the architect: the plan's item 3.)
-//! 9.  (Item 7.) Loaded, each of the three files has a trial's figures, and
-//!     they are those of `data/reference/trial.toml`.
+//! 9.  Loaded, each of the three files has a trial's figures, and they are
+//!     those of `data/reference/trial.toml`.
 //!
 //! No expected value here is a figure of the game: each is a line of the
 //! file, or what the file made from gives on the same commit.
+//!
+//! ## At decision 0234's step D
+//!
+//! Step D makes the three files overlays built on the files of
+//! `table-boats` and deletes the generator. Its row for this folder was
+//! amended for the island on Nov 27, 2026 (the plan's item 5a), and the
+//! statements here are then read by that record's readings (a) to (e), as
+//! the plan's item 5b rules: statement 1 is withdrawn (d); statements 2 and
+//! 2a are withdrawn as statements about lines and held as that record's R3
+//! (c); statement 4's line of the file is read from the resolved scenario
+//! (a); statements 3, 5, 6, 7 and 9 stand as written; statement 8 stands
+//! with "the file's text with the lines 2a adds taken out" read as the
+//! overlay's own text with its `[[island]]` rows and its `trial` line taken
+//! out, given to `from_text` with the file's path. Nobody but the architect
+//! changes a statement at that step either.
 
 use crate::common;
 
