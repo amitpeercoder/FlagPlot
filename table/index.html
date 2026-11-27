@@ -833,13 +833,13 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
     b2.strokeStyle = 'rgba(40,75,100,0.14)'; b2.lineWidth = 3; b2.beginPath(); b2.moveTo(W / 2, 0); b2.lineTo(W / 2, H); b2.moveTo(0, H / 2); b2.lineTo(W, H / 2); b2.stroke();
     // a line every two degrees
     b2.strokeStyle = 'rgba(45,85,110,0.32)'; b2.lineWidth = 1.2; b2.fillStyle = '#2f5268'; b2.font = "600 20px 'Barlow Condensed', sans-serif";
-    for (var lon = Math.ceil(lo / 2) * 2; lon <= hi; lon += 2) { var x = cpx(world(latMid, lon))[0]; b2.beginPath(); b2.moveTo(x, 0); b2.lineTo(x, H); b2.stroke(); b2.fillText(lonLabel(lon), x + 6, H - 14); }
-    for (var lat = Math.ceil(la / 2) * 2; lat <= ha; lat += 2) { var y = cpx(world(lat, lonMid))[1]; b2.beginPath(); b2.moveTo(0, y); b2.lineTo(W, y); b2.stroke(); b2.fillText(Math.abs(lat) + '° ' + (lat < 0 ? 'S' : 'N'), W - 70, y - 6); }
+    for (var lon = Math.ceil(lo / 2) * 2; mapFrame && lon <= hi; lon += 2) { var x = cpx(world(latMid, lon))[0]; b2.beginPath(); b2.moveTo(x, 0); b2.lineTo(x, H); b2.stroke(); b2.fillText(lonLabel(lon), x + 6, H - 14); }
+    for (var lat = Math.ceil(la / 2) * 2; mapFrame && lat <= ha; lat += 2) { var y = cpx(world(lat, lonMid))[1]; b2.beginPath(); b2.moveTo(0, y); b2.lineTo(W, y); b2.stroke(); b2.fillText(Math.abs(lat) + '° ' + (lat < 0 ? 'S' : 'N'), W - 70, y - 6); }
     // the scale along the border: a short tick each half degree, a long one each degree
     var border = function () {
       b2.strokeStyle = '#3f3b31'; b2.lineWidth = 2;
-      for (var tl = Math.ceil(lo * 2) / 2; tl <= hi; tl += 0.5) { var tx = cpx(world(latMid, tl))[0], len = tl % 1 === 0 ? 22 : 12; b2.beginPath(); b2.moveTo(tx, 14); b2.lineTo(tx, 14 + len); b2.moveTo(tx, H - 14); b2.lineTo(tx, H - 14 - len); b2.stroke(); }
-      for (var ta = Math.ceil(la * 2) / 2; ta <= ha; ta += 0.5) { var ty = cpx(world(ta, lonMid))[1], ln = ta % 1 === 0 ? 22 : 12; b2.beginPath(); b2.moveTo(14, ty); b2.lineTo(14 + ln, ty); b2.moveTo(W - 14, ty); b2.lineTo(W - 14 - ln, ty); b2.stroke(); }
+      for (var tl = Math.ceil(lo * 2) / 2; mapFrame && tl <= hi; tl += 0.5) { var tx = cpx(world(latMid, tl))[0], len = tl % 1 === 0 ? 22 : 12; b2.beginPath(); b2.moveTo(tx, 14); b2.lineTo(tx, 14 + len); b2.moveTo(tx, H - 14); b2.lineTo(tx, H - 14 - len); b2.stroke(); }
+      for (var ta = Math.ceil(la * 2) / 2; mapFrame && ta <= ha; ta += 0.5) { var ty = cpx(world(ta, lonMid))[1], ln = ta % 1 === 0 ? 22 : 12; b2.beginPath(); b2.moveTo(14, ty); b2.lineTo(14 + ln, ty); b2.moveTo(W - 14, ty); b2.lineTo(W - 14 - ln, ty); b2.stroke(); }
     };
     if (coast) {
       // The chart as a chart: the coastline of Natural Earth (public domain),
@@ -1053,7 +1053,7 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
   // air group's card is drawn firm; what a card's groups are already set to do, faint.
   var airReach = null, cardSerial = 0;
   function reachShape(a, faint, u) {
-    var at = function (b, d) { var rad = b * Math.PI / 180; return cpx(world(a.lat + d * Math.cos(rad) / 60, a.lon + d * Math.sin(rad) / (60 * (mapFrame ? mapFrame.factor : Math.cos(a.lat * Math.PI / 180))))); }, c = at(0, 0), w = a.from === a.to ? 360 : ((a.to - a.from) % 360 + 360) % 360;
+    var at = function (b, d) { var rad = b * Math.PI / 180; return cpx(world(a.lat + d * Math.cos(rad) / 60, a.lon + d * Math.sin(rad) / (60 * FX))); }, c = at(0, 0), w = a.from === a.to ? 360 : ((a.to - a.from) % 360 + 360) % 360;
     g.save(); g.beginPath(); if (w < 360) g.moveTo(c[0], c[1]); for (var k = 0; k <= w; k += 5) { var p = at(a.from + k, a.range); g[k || w < 360 ? 'lineTo' : 'moveTo'](p[0], p[1]); } g.closePath();
     if (!a.ring || a.fill) { g.fillStyle = a.red ? 'rgba(163,33,26,0.07)' : faint ? 'rgba(31,78,140,0.06)' : 'rgba(31,78,140,0.13)'; g.fill(); }
     g.strokeStyle = a.red ? 'rgba(163,33,26,0.35)' : faint ? 'rgba(18,51,92,0.4)' : 'rgba(18,51,92,0.7)'; g.lineWidth = (faint ? 1.6 : 2) * u; g.setLineDash(a.dash ? a.dash.map(function (x) { return x * u; }) : a.ring ? [3 * u, 6 * u] : [7 * u, 5 * u]); g.stroke(); g.setLineDash([]);
@@ -2314,7 +2314,7 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
   // Where a place is: its latitude and longitude as a chart gives them, or
   // its hex where the hexes are shown or the map has no latitudes.
   function dm(v, pos, neg) { var a = Math.abs(v), d = Math.floor(a), m = Math.round((a - d) * 60); if (m === 60) { d += 1; m = 0; } return d + '\u00B0' + (m < 10 ? '0' : '') + m + '\u2032' + (v < 0 ? neg : pos); }
-  function whereIs(pl) { var h = hexAt[pl.q + ',' + pl.r], lat = pl.lat != null ? pl.lat : h && h[3], lon = pl.lon != null ? pl.lon : h && h[4]; return showHexes || lat == null || lon == null ? '(' + pl.q + ', ' + pl.r + ')' : dm(lat, 'N', 'S') + ' ' + dmLon(runLon(lon)); }
+  function whereIs(pl) { var h = hexAt[pl.q + ',' + pl.r], lat = pl.lat != null ? pl.lat : h && h[3], lon = pl.lon != null ? pl.lon : h && h[4]; return showHexes || !mapFrame || lat == null || lon == null ? '(' + pl.q + ', ' + pl.r + ')' : dm(lat, 'N', 'S') + ' ' + dmLon(runLon(lon)); }
   // A distance the game counts in hexes, as a chart gives it: in nautical
   // miles, or in hexes where the hexes are shown. A hex's width is read
   // from the map itself.
@@ -2324,7 +2324,7 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
   // and a press turns the chart to it.
   function placeLink(pl) {
     var h = hexAt[pl.q + ',' + pl.r], lat = pl.lat != null ? pl.lat : h && h[3], lon = pl.lon != null ? pl.lon : h && h[4], known = M.hexNames[pl.q + ',' + pl.r], hex = '(' + pl.q + ', ' + pl.r + ')';
-    var words = lat == null || lon == null ? '' : dm(lat, 'N', 'S') + ' ' + dmLon(runLon(lon));
+    var words = !mapFrame || lat == null || lon == null ? '' : dm(lat, 'N', 'S') + ' ' + dmLon(runLon(lon));
     var s = el('span', ''), b = el('button', 'ref', known || words || hex); b.type = 'button'; b.title = 'Show on the chart'; b.addEventListener('click', function (e) { e.stopPropagation(); turnTo(pl); }); s.appendChild(b);
     if (known && words) s.appendChild(document.createTextNode(' \u00B7 ' + words));
     if (known || words) s.appendChild(document.createTextNode(' ' + hex));
@@ -3265,9 +3265,9 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
       var again = !!(said && !known && said[q + ',' + r]); if (said) said[q + ',' + r] = true;
       var before = text.slice(last, m.index); if (again) before = before.replace(/\b(?:at|in) $/, '');
       if (before) e.appendChild(rich('span', '', before));
-      var b = el('button', 'ref', known || (again ? 'there' : dm(h[3], 'N', 'S') + ' ' + dmLon(runLon(h[4])))); b.type = 'button'; b.title = 'Show on the chart';
+      var b = el('button', 'ref', known || (again ? 'there' : mapFrame ? dm(h[3], 'N', 'S') + ' ' + dmLon(runLon(h[4])) : '(' + h[0] + ', ' + h[1] + ')')); b.type = 'button'; b.title = 'Show on the chart';
       b.addEventListener('click', function (x) { return function (ev) { ev.stopPropagation(); see(x); }; }(base ? base.base.handle : 'hex:' + q + ',' + r)); e.appendChild(b);
-      if (!known && !again) e.appendChild(document.createTextNode(' (' + q + ', ' + r + ')'));
+      if (!known && !again && mapFrame) e.appendChild(document.createTextNode(' (' + q + ', ' + r + ')'));
       last = re.lastIndex;
     }
     if (last < text.length) e.appendChild(rich('span', '', text.slice(last)));
