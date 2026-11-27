@@ -4,6 +4,8 @@ Written by the architect on Nov 24, 2026, for step 9 of decision 0161, the proof
 
 It is read on main once decisions 0230 (supply at press) and 0231 (men ashore beside a place are fed) are merged, and the proof is run from that commit, which the report names with its labels. Nothing a condition reads changes between this page and the report. Decision 0165's ships of the record come after (the designer, Nov 24, 2026).
 
+Amended on Nov 27, 2026, before the run: step 1 of decision 0232 merged first, and the labels the proof is run at are those of main with it in ("Amended before the run, Nov 27, 2026", at the foot of this page).
+
 The rules of a proof hold: nothing is tuned to pass it; nothing is changed after a judged run without saying so; a case fixed here is not replaced after its figures are seen; and the proof is run once.
 
 ## What has been seen already, and said so
@@ -130,7 +132,7 @@ On (a), seeds 1 to 1,000, by `scripts/unfed/` as it stands on main: for each sid
 
 ## What moved since decision 0159's proof
 
-That proof was run on Nov 19, 2026 at state layout v47, doctrine `supply-39`, rules label 19 and interface 26. This one is run at the labels main has once decisions 0230 and 0231 are in: state layout v60, rules label 34, doctrine `supply-62`, interface 55 or the next. The developer makes the table for the report: every change to (a), (b) and (c) and to the staff's setup since that day, by commit and decision; and every decision that raised the doctrine's label from 39, with a line on what it changed in a staff's orders. Among them, as the index gives them: decisions 0162, 0163 and 0169 (the mends of decision 0159's miss), 0191 (a lift turned back), 0193 (men ashore with no more coming), 0195 and 0196 (forces that arrive, and stock from off the map), 0214 (a carrier force that pursues), 0217, 0220, 0222 and 0228 (limits and the source of supply), 0230 and 0231. Condition 3's figure is set beside decision 0159's 0.2537 with that table, since the difference is the work of all of them and not of the two mends alone.
+That proof was run on Nov 19, 2026 at state layout v47, doctrine `supply-39`, rules label 19 and interface 26. This one is run at the labels main has once decisions 0230 and 0231 are in: state layout v60, rules label 34, doctrine `supply-62`, interface 55 or the next. (Amended on Nov 27, 2026, before the run: state layout v60, rules label 35, doctrine `supply-63`, agent interface 56, saved game 29; "Amended before the run, Nov 27, 2026" below has the evidence.) The developer makes the table for the report: every change to (a), (b) and (c) and to the staff's setup since that day, by commit and decision; and every decision that raised the doctrine's label from 39, with a line on what it changed in a staff's orders. Among them, as the index gives them: decisions 0162, 0163 and 0169 (the mends of decision 0159's miss), 0191 (a lift turned back), 0193 (men ashore with no more coming), 0195 and 0196 (forces that arrive, and stock from off the map), 0214 (a carrier force that pursues), 0217, 0220, 0222 and 0228 (limits and the source of supply), 0230 and 0231, and, as amended on Nov 27, 2026, 0232's step 1 (a take the commander wrote, which no file of the proof holds). Condition 3's figure is set beside decision 0159's 0.2537 with that table, since the difference is the work of all of them and not of the two mends alone.
 
 ## What is to be made
 
@@ -227,3 +229,29 @@ scripts/stage-4-proof/run.sh time --machine "Apple M3 Pro, 11 cores, 36 GB"
 
 `time` is run alone on the machine, after the rest. The harness is run with its judged seed, 1, which is its default under `run.sh`. Before them, by hand: `cargo test --workspace` in release (condition 1) and `sh scripts/regenerate.sh` (condition 2). After them: the readers and the marker of condition 11, on the files the harness wrote. W2's tests are filled and the harness reads W2 before any of this is run; that is the one piece of building left.
 
+## Amended before the run, Nov 27, 2026: step 1 of decision 0232 merged first
+
+Written by the architect on Nov 27, 2026. Nothing of the judged run has been played.
+
+**What happened.** This page pinned the labels of main with decisions 0230 and 0231 in: rules label 34 and doctrine `supply-62`. Decision 0232 said the proof was to be run first and its step 1 merged after, and what follows if the order is turned: the architect amends this page before the run, and not after, on the comparison of the proof's own files across the merge and not on the expectation. On the designer's word of Nov 27, 2026, step 1 (pull request 739) was merged before the run, as main at 03d9a25. The commit before it on main is e01ec4d.
+
+**The labels the proof is run at.** State layout `flagplot-state-v60`, unchanged; rules label 35; doctrine `supply-63`; agent interface 56; saved game 29. They are read from the code at 03d9a25 (`world::RULES_VERSION`, `sim_staff::DOCTRINE_VERSION`, `sim_agent::answer::VERSION`, `sim-cli`'s `save::VERSION`, `hash::STATE_VERSION`). Wherever this page says rules label 34, doctrine `supply-62` or interface "55 or the next", these stand in their place. The commit the proof is run from is main at 03d9a25 or a later commit of main that carries these five and no other; the report names it.
+
+**The evidence: the comparison, with the hash lines kept.** Every scenario file of the proof was run with `sim-cli run FILE --events` by the release build of e01ec4d, in its own tree and on its own files, and by the release build of 03d9a25, built again for this on Nov 27, 2026, and the two outputs of each run were compared byte for byte, the day's hash lines in them and not cut:
+
+- (a), (b) and (c), `data/scenarios/stage-3-proof/07a_slice.toml`, `07b_slice.toml` and `07c_slice.toml`, 39 days each, on the files' own figures: with no seed given, with `--seed 1942` (the files' own), and with `--seed` 2001 to 2100. 102 runs of each, 306 in all.
+- The six cases, `data/scenarios/stage-4-proof/case_s1_one_unit_against_200.toml`, `case_s2_two_units_against_300.toml`, `case_w1_the_garrison_believed_half.toml`, `case_w2_a_carrier_believed_absent.toml`, `case_w3_an_intent_not_as_stated.toml` and `case_r_preparation.toml`, on the figures each names: with no seed given, with `--seed 1942`, with `--seed` 2001 to 2020, and once more with `--reference data/reference/step1`. 23 runs of each, 138 in all.
+
+444 runs, 2,243,539 lines, 14,027 of them a day's hash: **no line differs, and no run failed on either build.** `make_arrangements.py --check` reports (a), (b) and (c) "as made" at 03d9a25. No file under `data/scenarios/stage-3-proof`, `data/scenarios/stage-4-proof`, `data/scenarios/staff` or `data/reference`, and no script of the proof, differs between the two commits; `sim-trial` differs by the new field of `set_intent`, given as none, and by nothing else.
+
+**What the comparison is, and is not.**
+
+- No judged seed was played for it. The seeds are 1942, which is each file's own and judged by nothing, and 2001 upward, which are no judged seeds of (a), (b), (c) (1 to 1,000) or of the cases (1 to 200, and W3's 1 to 20). The outputs were compared by machine and read by no one for what the games did; nothing of them is kept.
+- These files are in no loop that walks `data/scenarios/*.toml` (decision 0072), so the manager's comparison of every file in `data/scenarios`, live and frozen, across the same merge (254 of 254 runs the same with the hash lines kept, 240bee5 against e01ec4d) did not cover them, and this one does. The two together are the whole of what is on file.
+- It is the games of the files, played as `sim-cli run` plays them. A trial and a seat's answer were not played on the build before: its harness is not built there, and no room was made for it. What they rest on is read from the difference of the two commits and is so named: `sim-trial` as above; the trial's answer changed by its version number alone (`schemas/trial.schema.json`); and conditions 4 and 5 compare two answers of one build. The estimates of condition 11 will carry interface 56. If the tests of R, W1 or W3 no longer hold a trial's figure they held before step 1, that is condition 1 failing and is reported as that.
+
+**The table of what moved** has its row for `supply-63` and its labels as above.
+
+**The commands of the run** are those of "The architect's rulings on the harness as built", from main at the commit named above.
+
+**Step 2 of decision 0232 is not in this, and is held until the run.** Step 2 raises the agent interface to 57 and leaves the rules label and the doctrine alone. It is not a change of a number only: with it "the trial's answer names the staff's plan" (decision 0232, "Versions, the hash and the files"), and the trial's answer is what conditions 5 and 11 read, and what condition 11's readers are shown. So the interface is pinned here at 56 and not at "56 or the next": if step 2 merged before the run this page would be untrue, and the six estimates of the legibility test would not be the ones this page set up. The proof is run before step 2 merges. Step 2 may be built on its branch meanwhile. If it must merge first all the same, that is a second amendment by the architect before the run, on its own comparison and on a reading of what the trial's answer then shows a reader, and not on this one.
