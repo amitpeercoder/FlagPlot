@@ -284,6 +284,11 @@ pub(crate) struct Watched {
     first_held: BTreeMap<(Side, CommandRef, u32), Moment>,
     /// Every command of each side at any moment of the game.
     seen: BTreeSet<(Side, CommandRef)>,
+    /// The first moment the run was watched at, and the first moment each
+    /// command was seen: a command first seen later was formed in the game
+    /// (decision 0239, ruling 11).
+    first_moment: Option<Moment>,
+    first_seen_at: BTreeMap<(Side, CommandRef), Moment>,
     /// A strike decision to review: the group, the day and the pulse.
     strike: Option<(AirGroupId, u32, Pulse)>,
     review: Option<(Side, StrikeReview)>,
@@ -297,12 +302,14 @@ pub(crate) struct Watched {
 impl Watched {
     fn at(&mut self, world: &World, moment: Moment) {
         let key = world.umpire_key();
+        self.first_moment.get_or_insert(moment);
         for side in Side::ALL {
             let Some(posts) = world.commands(side) else {
                 continue;
             };
             for (command, post) in posts {
                 self.seen.insert((side, *command));
+                self.first_seen_at.entry((side, *command)).or_insert(moment);
                 for report in post.heard().keys() {
                     let number = report.umpire_raw(&key);
                     if self.all_reports
@@ -697,7 +704,7 @@ fn print_road_to_decider<'a>(
     if sents.is_empty() {
         return;
     }
-    let road = report_road::road(command, report_road::made_when(event), &sents, true);
+    let road = report_road::road(command, report_road::made_when(event), &sents, true, None);
     println!(
         "{indent}    -> {}  [{command} decided]",
         report_road::line(command, number, &road)
@@ -896,7 +903,14 @@ pub(super) fn report_answers(
         .into_iter()
         .map(|command| {
             let first = watch.first_held.get(&(side, command, number)).copied();
-            let mut road = report_road::road(command, made, &sents, first.is_some());
+            // A command formed in the game that first held the report at the
+            // first moment it was seen held it by copy (decision 0239,
+            // ruling 11).
+            let formed = first.filter(|moment| {
+                watch.first_seen_at.get(&(side, command)) == Some(moment)
+                    && watch.first_moment != Some(*moment)
+            });
+            let mut road = report_road::road(command, made, &sents, first.is_some(), formed);
             // A passing a pulse late that fell due after the game's last day.
             if let (
                 None,
@@ -1120,5 +1134,40 @@ mod tests {
         ] {
             assert!(count > 0, "no {name} road was met in these games");
         }
+    }
+
+    /// A command formed in the game holds what the picture it was copied
+    /// from held (decision 0239, ruling 11): the dump of the second proof's
+    /// week, base 10, formed on day 16 with a copy of base 2's picture, holds
+    /// report #2235 (base 2's, day 15) from the end of day 16.
+    #[test]
+    fn a_base_formed_by_a_march_holds_the_reports_of_its_copy_from_the_moment_it_is_formed() {
+        let week = from_intents_with_levels("07a_week.toml");
+        let mut watch = Watched {
+            all_reports: true,
+            ..Watched::default()
+        };
+        let (executed, _) = execute_source_watching(
+            &week.display().to_string(),
+            Some(1),
+            &sim_data::LoadOptions::default(),
+            &mut |world, moment| watch.at(world, moment),
+        )
+        .expect("the game runs");
+        let _ = std::fs::remove_file(&week);
+        let world = &executed.scenario.world;
+        let answers = report_answers(world, 2235, None, &watch).expect("an answer");
+        let lines = report_road::answers_text(&answers);
+        assert!(
+            lines.contains(
+                &"base:10 first held report #2235 at the end of day 16, before its Logistics step: a copy of the picture it was formed with."
+                    .to_string()
+            ),
+            "{lines:?}"
+        );
+        assert!(
+            lines.iter().all(|line| !line.starts_with("note:")),
+            "{lines:?}"
+        );
     }
 }

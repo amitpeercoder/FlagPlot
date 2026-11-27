@@ -447,6 +447,88 @@ fn a_base_formed_by_a_landing_is_a_command_with_a_copy_of_the_landing_forces_pic
     );
 }
 
+#[test]
+fn a_base_formed_by_a_march_is_a_command_with_a_copy_of_the_picture_of_the_command_left() {
+    // The hook `march.rs` calls when a march forms a base (decision 0239,
+    // rules 1 and 2), with the base it made and the hex left: a march is not
+    // played here.
+    let mut world = world_with_levels(&[]);
+    tell_only(
+        &mut world,
+        Side::Allied,
+        CommandRef::Base(BASE1),
+        hx(3, 3),
+        120,
+    );
+    tell_only(&mut world, Side::Allied, CommandRef::Area, hx(4, 4), 40);
+
+    // From a hex with a base of the side.
+    let first = BaseId::new(3);
+    world.truth.bases.insert(
+        first,
+        Base::new(first, "Dump at (1,1)".to_string(), Side::Allied, hx(1, 1)),
+    );
+    world.base_formed_by_march(first, hx(0, 0));
+    assert!(has_command(&world, Side::Allied, CommandRef::Base(first)));
+    assert!(!has_command(
+        &world,
+        Side::Japanese,
+        CommandRef::Base(first)
+    ));
+    assert_eq!(
+        superior(&world, Side::Allied, CommandRef::Base(first)),
+        Some(CommandRef::Area)
+    );
+    let got = held(&world, Side::Allied, CommandRef::Base(first));
+    assert_eq!(got, held(&world, Side::Allied, CommandRef::Base(BASE1)));
+    assert_eq!(got.len(), 1);
+    assert_eq!(got[0].hex, hx(3, 3));
+    assert_eq!(got[0].men, 120);
+
+    // From a hex with no base of the side.
+    let second = BaseId::new(4);
+    world.truth.bases.insert(
+        second,
+        Base::new(second, "Dump at (2,2)".to_string(), Side::Allied, hx(2, 2)),
+    );
+    world.base_formed_by_march(second, hx(6, 6));
+    assert!(has_command(&world, Side::Allied, CommandRef::Base(second)));
+    assert_eq!(
+        superior(&world, Side::Allied, CommandRef::Base(second)),
+        Some(CommandRef::Area)
+    );
+    let got = held(&world, Side::Allied, CommandRef::Base(second));
+    assert_eq!(got, held(&world, Side::Allied, CommandRef::Area));
+    assert_eq!(got.len(), 1);
+    assert_eq!(got[0].hex, hx(4, 4));
+    assert_eq!(got[0].men, 40);
+
+    // From a hex with only the enemy's base.
+    let third = BaseId::new(5);
+    world.truth.bases.insert(
+        third,
+        Base::new(third, "Dump at (2,3)".to_string(), Side::Allied, hx(2, 3)),
+    );
+    world.base_formed_by_march(third, hx(5, 0));
+    assert_eq!(
+        held(&world, Side::Allied, CommandRef::Base(third)),
+        held(&world, Side::Allied, CommandRef::Area)
+    );
+}
+
+#[test]
+fn a_base_formed_by_a_march_with_command_levels_off_makes_no_command() {
+    let mut world = world();
+    let id = BaseId::new(3);
+    world.truth.bases.insert(
+        id,
+        Base::new(id, "Dump at (1,1)".to_string(), Side::Allied, hx(1, 1)),
+    );
+    world.base_formed_by_march(id, hx(0, 0));
+    assert!(world.commands(Side::Allied).is_none());
+    assert!(world.commands(Side::Japanese).is_none());
+}
+
 // ------------------------------------------------------------ The view
 
 #[test]

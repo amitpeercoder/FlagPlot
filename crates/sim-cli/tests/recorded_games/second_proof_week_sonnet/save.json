@@ -982,7 +982,7 @@
       "unit": "land_unit:17"
     }
   ],
-  "rules_version": 35,
+  "rules_version": 36,
   "scenario": {
     "file": "data/scenarios/second-proof/07m_model_week.toml",
     "hash": "d88d85d1b304bed6"

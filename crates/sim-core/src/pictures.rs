@@ -780,14 +780,28 @@ impl World {
         self.hold_now(side, CommandRef::TaskForce(force));
     }
 
-    /// A base was formed during the game, by a landing (decision 0066, 11):
-    /// with command levels on it is a command under the area command, with a
-    /// copy of the picture of `from`, the command whose landing formed it
-    /// (a reading of decision 0134, 5, which names task forces only).
+    /// A base was formed during the game, by a landing (decision 0066, 11) or
+    /// a march (decision 0239): with command levels on it is a command under
+    /// the area command, with a copy of the picture of `from`, the command
+    /// that formed it (a reading of decision 0134, 5, which names task forces
+    /// only).
     pub(crate) fn base_formed(&mut self, base: BaseId, from: CommandRef) {
         let side = self.truth.bases[&base].side;
         self.add_command(side, CommandRef::Base(base), from);
         self.hold_now(side, CommandRef::Base(base));
+    }
+
+    /// A base was formed by a march (decision 0239, rules 1 to 3): with
+    /// command levels on it is a command of its side under the area command,
+    /// with a copy of the picture of the command the marching unit left in
+    /// the hex `left`: the lowest-numbered base of the side there, else the
+    /// area command (and the area command's where that command is no longer
+    /// one). Called before the supply carried is put into the base, so the
+    /// area command holds the base as it stood when formed.
+    pub(crate) fn base_formed_by_march(&mut self, base: BaseId, left: crate::hex::Hex) {
+        let side = self.truth.bases[&base].side;
+        let from = command_at_hex(&self.truth, side, left);
+        self.base_formed(base, from);
     }
 
     /// A base changed side from `from` to `to` (decision 0134, 7): with

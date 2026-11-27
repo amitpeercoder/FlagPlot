@@ -1531,7 +1531,7 @@ fn property_no_game_on_file_moves() {
             || rel.starts_with("table-hunger/")
             || rel.starts_with("table-boats/")
             || rel.starts_with("table-rear-bases/")
-            // The games of the ladder are played on the live figures (decision 0237).
+            // The games of the ladder are played on the live figures (decision 0239).
             || rel.starts_with("ladder/");
         let text = std::fs::read_to_string(file).expect("the scenario reads");
         let Some(ground) = ground_line(&text) else {
@@ -1592,9 +1592,10 @@ fn property_no_new_state() {
     // to v58 and 32, for a side's submarine doctrine and the pattern of a
     // patrol, and decision 0228 to v59, for whether a side's staff chooses its
     // sources of supply, and decision 0232 the rules label to 35, for a
-    // sub-intent the commander writes; none touches this rule.
+    // sub-intent the commander writes, and decision 0239 to 36, for a base
+    // formed by a march as a command; none touches this rule.
     assert_eq!(sim_core::hash::STATE_VERSION, b"flagplot-state-v60");
-    assert_eq!(sim_core::world::RULES_VERSION, 35);
+    assert_eq!(sim_core::world::RULES_VERSION, 36);
     let root = common::data_dir().join("..");
     let file = root.join("crates/sim-cli/tests/recorded_games/eastern_solomons_haiku/save.json");
     let saved = sim_cli::save::read(file.to_str().expect("a path")).expect("the save reads");
