@@ -2446,6 +2446,33 @@ REASONS_AND_HIS_NODES = [
 ]
 
 
+# What the page says of a reason's words where they name a landing of his (item 28 as amended on Nov 27, 2026; R2). The engine's
+# sentences are as `sim-staff` writes them (island.rs, air.rs, cover.rs), read by the architect in the code; intent 3 is his landing and
+# intent 1 the order above it. ⟦3⟧ is the mark the page already makes a link from. Whose intent 3 is, is decided by its number before
+# any of this is read (item 27): the words after a handle known to be his are dropped, for the link says whose it is, and without it
+# the page's own "the commander's" to "your" would say "your landing at Lunga, your, is in force". The architect's: not to be changed.
+HIS_LANDING_READ = [
+    ("intent:3, the commander's, plans the place at (2,-4): the staff forms no take beside it.",
+     "⟦3⟧ stands: the staff forms no take beside it."),
+    ("intent:3, the commander's, plans the place at (2,-4), and its plan is cancelled: the staff forms no take beside it, and intent:1 cannot be controlled while the place is his to take.",
+     "⟦3⟧ stands, and its plan is cancelled: the staff forms no take beside it, and intent:1 cannot be controlled while the place is yours to take."),
+    ("intent:1 is to be done by the end of day 6; intent:3, the commander's take of the place at (2,-4), is to be done by the end of day 9, 3 days later. The staff carries out his date.",
+     "intent:1 is to be done by the end of day 6; ⟦3⟧ is to be done by the end of day 9, 3 days later. The staff carries out your date."),
+    ("intent:3, the commander's take under intent:1, waits for the plan of intent:1: it is preparing, and a take under an island is served once the island's plan is released, so the staff gives no order under intent:3 and its plan stays a draft.",
+     "⟦3⟧ waits for the plan of intent:1: it is preparing, and a take under an island is served once the island's plan is released, so the staff gives no order under ⟦3⟧ and its plan stays a draft."),
+    ("intent:3 is the commander's take under an island", "⟦3⟧ is your landing under an island"),
+    ("intent:3, the commander's, is in force and its plan is preparing", "⟦3⟧ is in force and its plan is preparing"),
+    ("intent:3, the commander's, is to be done by the end of day 9", "⟦3⟧ is to be done by the end of day 9"),
+    ("task_force:9 has fighting men aboard and intent:3 is in force for a place not yet the side's: it is the takes'.",
+     "task_force:9 has fighting men aboard and ⟦3⟧ is in force for a place not yet the side's: it is the takes'."),
+    ("intent:3 stands", "⟦3⟧ stands"),
+    # No landing of his is named: nothing is read, and "is his to take" is left as it is. intent:30 is not intent:3.
+    ("intent:4 holds base:1 (Lunga) under intent:1 (the commander's); intent:30 has the force.",
+     "intent:4 holds base:1 (Lunga) under intent:1 (the commander's); intent:30 has the force."),
+    ("intent:30, the commander's, plans the place at (5,5): the place is his to take.", "intent:30, the commander's, plans the place at (5,5): the place is his to take."),
+]
+
+
 def the_island_of_two_places(bridge):
     """The island "Guadalcanal and Tulagi" in the table's 39 days (decision 0232, the designer's answer 2; items 5 to 8). Called from
     main() from the island's pull request on. The generator's `--check` and `tests/table_rear_bases_files.rs` hold the files; this holds
@@ -2541,8 +2568,11 @@ def your_plan_on_the_order_paper(bridge):
          and N + 2; its tree has a `take_place` of the commander's, `standing`, at H4 and at H1, and no `take_place` of the staff's.
          The lines the page shows are still Lunga, then Tulagi.
     P11. The same with Tulagi's landing given "Risk: press" (the order at balanced) is refused with `of_batch.position` 4 (the order, the
-         landing at Tulagi, its forces, its risk), the reason being that the limit is wider than its parent allows; the page's
-         words for it begin "The landing at Tulagi: Risk: " and what follows is the engine's reason through the page's refusal words.
+         landing at Tulagi, its forces, its risk), the engine's reason being "the limit is wider than what its parent intent:N
+         allows" (`CommandRefusal::WiderThanParent`, crates/sim-core/src/command.rs). The page's words for it are exactly "The landing
+         at Tulagi: Risk: It is wider than the order above it allows.": `refusalWords` of the engine's reason gives "It is wider than
+         the order above it allows.", with no handle and no number in it (amended Nov 27, 2026: the engine's sentence names its parent
+         by handle, which the page's refusal words would have said as a number).
     Nothing is signed, and the game is put away."""
     check(False, "not built: decision 0232, step 3, rule 27 (YOUR PLAN on the order's paper)")
 
@@ -2562,9 +2592,16 @@ def the_draft_is_read_and_signed_as_one(bridge):
         no `parent`, whose `goes_with` names the other six. The page's own
         function for SIGNED, run in node on that answer, makes one line of them: it says the order as the page says it, then
         "Yours: the landing at Tulagi, the landing at Lunga.", and holds no handle or number of the engine's. No entry with a `parent`,
-        and no limit of one, is a line of its own.
+        and no limit of one, is a line of its own. The limits the line says are the order's own and no other: those `set_limit`
+        entries whose `intent` is N. This order has none, so nothing stands between the order's words and "Yours:" but the page's
+        mark between two parts of a line: no limit of a landing (Tulagi's forces; Lunga's Not before, After and Risk) is said as
+        the order's (made exact Nov 27, 2026: `goes_with` of the order names the landings' limits too).
     S4. One `take_back` of that entry's place leaves `queued` empty.
-    S5. The worked draft with the order's own risk at press: `limits_queued` is 1, and SIGNED's line says the risk before "Yours:".
+    S5. The worked draft with the order's own risk at press: `limits_queued` is 1, and SIGNED's line says the risk before "Yours:",
+        once, as press, and says no other limit before it (Lunga's "Risk: preserve" is not the order's).
+    S6. (New, Nov 27, 2026.) THE ORDERS' Signed list holds no entry with a `parent`: a landing is not listed as an order. The page's
+        `signedOrders`, in node on S3's queue, gives one entry, the order's; and that order's row in THE ORDERS says, as its limits,
+        the order's own alone, as S3 and S5 have SIGNED say them.
     The game is put away."""
     check(False, "not built: decision 0232, step 3, rule 28 (the draft read and signed as one)")
 
@@ -2618,7 +2655,9 @@ def the_plan_paper_marks_whose_line(bridge):
 
     In the page's text:
     W3. The plan's paper marks a task from `maker`, of `command_state`'s intent for a plan in force and of `propose`'s entry for a plan
-        that waits; the page matches or cuts no text for it (it holds no test for "commander's" or for "Yours:").
+        that waits; the page matches or cuts no text for it: the body of `whoseLine` names `maker` and `parent` and no other field,
+        and holds neither "commander's" nor "Yours:" (amended Nov 27, 2026: the page as it stood already held both elsewhere, in
+        its words for a stop and for a hold; the readings of R2 are a reason's words and mark no line).
     W4. GIVE IT BACK TO THE STAFF opens the order paper and asks the staff's reading: `preview` with `command` "withdraw_intent" and
         the landing's number (item 25; agent interface 58). Nothing is queued until SIGN AND SEND, which is one `approve` of that
         preview and nothing else: the page calls the tool `withdraw_intent` nowhere. Its DRY RUN sends `trial` with `intent`, the
@@ -2644,6 +2683,11 @@ def the_plan_paper_marks_whose_line(bridge):
         is taken back by one `take_back`.
     W9. Signed again and a day resolved: no intent N + 2 is in force; a `take_place` at H1 stands under the order with `maker` "staff";
         the page marks it THE STAFF’S, and its line has no GIVE IT BACK TO THE STAFF, no WRITE IT and no CHANGE of a landing's lines.
+    W10. (New, Nov 27, 2026.) Between W8's `approve` and its `take_back`, the give-back of N + 2 being queued: the line of his
+        landing at Lunga, drawn by the page's own functions in node from `command_state` and `queued` as they then stand, is still
+        marked YOURS and offers no GIVE IT BACK TO THE STAFF, no CHANGE and no BACK TO THE STAFF’S CHOICE; the line of his landing at
+        Tulagi offers them as W6 has it. After the `take_back` Lunga's line offers them again. The page learns that a give-back is
+        queued from `queued` alone: an entry whose command is a `withdraw_intent` of that landing's number.
     The game is put away."""
     check(False, "not built: decision 0232, step 3, rule 30 (the plan's paper marks whose line)")
 
@@ -2654,9 +2698,21 @@ def a_reason_leads_to_his_line(bridge):
     The page's own functions, in node:
     R1. `hisNodesIn(reason, HIS_NODES)` gives, for each pair of `REASONS_AND_HIS_NODES`, the numbers beside it, ascending; and the
         same for each with its `limits` key taken out where that is None.
-    R2. The first of those reasons, shown under the order's line with his landing 3 at Lunga: its words say "your landing at Lunga"
-        where the engine wrote "intent:3", that is a link, and no "intent:" is left in what is shown; its WHY ends with "YOUR PLAN" and
-        one link, "The landing at Lunga".
+    R2. (Amended Nov 27, 2026.) The page's pure function `writtenMarks(text, his)`, `his(n)` saying whether intent n is a node of
+        his (decided by number, item 27, before any word is read): for each pair of `HIS_LANDING_READ`, with his nodes [3], it gives
+        exactly the second of the pair. With no node of his it gives every text back unchanged. It reads these and no other, each
+        only where K is a node of his: "intent:K, the commander's, plans the place at (q,r)" is "⟦K⟧ stands"; "intent:K, the
+        commander's take of the place at (q,r)," and "intent:K, the commander's take under intent:M," are "⟦K⟧"; "intent:K is the
+        commander's take under an island" is "⟦K⟧ is your landing under an island"; any other "intent:K, the commander's," is "⟦K⟧";
+        any other "intent:K" is "⟦K⟧"; and, in a text so marked, "is his to take" is "is yours to take" and "carries out his date"
+        "carries out your date". Every string of a reason the page shows (its words, what it rests on, what binds, what would change
+        it) goes through it before the page's other words for a reason. A reason shown under his own node's line says that node as
+        the page says it today ("this task"): there the page gives `his` as false for that one number.
+    R2a. The first of those reasons, shown under the order's line with his landing 3 at Lunga: its words are, but for the case of the
+        first letter, "your landing at Lunga stands: the staff forms no take beside it.", where "your landing at Lunga" is a link;
+        no "intent:", no "the commander" and no ", your," is left in what is shown; its WHY ends with "YOUR PLAN" and one link, "The
+        landing at Lunga". The fifth says "your landing at Lunga waits for your landing at Tulagi" (his landing 2 at Tulagi), each
+        a link.
     R3. The second, shown under his own landing's line: no YOUR PLAN link to the line it stands under; its limit is under YOUR LIMITS as
         today, and that link leads to the Risk line of his landing.
     R4. The fourth has no YOUR PLAN.
@@ -2670,7 +2726,8 @@ def a_reason_leads_to_his_line(bridge):
         least one serves N + 2 itself. For every reason given, `hisNodesIn(reason, [N + 1, N + 2])` is what the three tests of item 27
         give when the check works them itself from `serves.intent`, `limits` and the handles in `worked`.
     R7. The page's view of the first kind, in node on the real reason, ends its WHY with YOUR PLAN and the link "The landing at Lunga",
-        and shows no handle.
+        and shows no handle, no "the commander" and no ", your,": the engine's evidence there is "intent:K, the commander's, is in
+        force and its plan is ..." (crates/sim-staff/src/island.rs).
     The game is put away."""
     check(False, "not built: decision 0232, step 3, rule 31 (a reason leads to his line)")
 
