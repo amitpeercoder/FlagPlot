@@ -1047,7 +1047,9 @@ fn property_no_game_on_file_moves() {
             || rel.starts_with("a-fight-costs-supply/")
             || rel.starts_with("table-hunger/")
             || rel.starts_with("table-boats/")
-            || rel.starts_with("table-rear-bases/");
+            || rel.starts_with("table-rear-bases/")
+            // The games of the ladder are played on the live figures (decision 0237).
+            || rel.starts_with("ladder/");
         // The scenario resolved (decision 0234): its ground key is the file's
         // own or that of the file it is built on.
         let text = common::resolved_text(file);

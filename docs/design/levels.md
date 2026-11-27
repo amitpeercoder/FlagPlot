@@ -1,6 +1,6 @@
 # Design note: levels
 
-Status: a note for discussion, written by the architect on Nov 26, 2026 at the designer's asking, after he read decision 0232. Nothing here is built or planned, and it takes no decision number. Amended on Nov 26 to the designer's answers, and reworked on Nov 27, 2026 to his change of how a level is measured ("The designer's answers", at the end, which says what replaced what): a plan is measured once, in the game he fights; scoring it against the staff is his choice, by the dry run before and a debrief after; failing a level does not block the next, not trying does; a level may be replayed on a new situation, and the last game counts.
+Status: a note for discussion, written by the architect on Nov 26, 2026 at the designer's asking, after he read decision 0232. But for its first three rungs, which decision 0237 plans, nothing here is built or planned, and the note takes no decision number. Amended on Nov 26 to the designer's answers, and reworked on Nov 27, 2026 to his change of how a level is measured ("The designer's answers", at the end, which says what replaced what): a plan is measured once, in the game he fights; scoring it against the staff is his choice, by the dry run before and a debrief after; failing a level does not block the next, not trying does; a level may be replayed on a new situation, and the last game counts. Amended again on Nov 27, 2026 to four further answers ("The first three rungs", at the end): the ladder begins with three plain scenarios on the table's list, judged by the game played alone, which decision 0237 plans; nothing else here is built or planned.
 
 The designer's words: "The game is about planning. The player will be taken through levels. Each level they will get to learn some new planning skills and practice previous skills. So scenarios will become more challenging (more units, longer scenarios). So the player will set a plan, maybe dry run it, amend, see how it plays, and so on. It could be that the player will only get command for some of the units and will need to fit a plan for a certain date."
 
@@ -118,6 +118,8 @@ Ruled by the designer, Nov 27, 2026: "Replay on a new situation, player can amen
 ## The skills, as a ladder
 
 Each rung is a decision a commander makes. "Built" means a player can make it at the table today. The scenarios named are candidates on file, not a plan; a file of record is never used as a level, a copy for play is made as decision 0187 has it.
+
+**Before this table come the first three rungs** of decision 0237 ("The first three rungs", at the end): one supply order, two supply orders with their ships, a landing and its supply. They teach rows 1 and 2 below and the risk of row 4, at a smaller size than those rows' candidates, and the level planned under "The first level" is the fourth rung. The rows are renumbered when that rung is planned, not here.
 
 | Rung | The decision | What it needs open | Standing | A scenario that could carry it |
 | --- | --- | --- | --- | --- |
@@ -302,3 +304,36 @@ Settled by the architect: the debrief is of the situation he fought and no other
 ## Questions for the designer
 
 None is open.
+
+## The first three rungs, as plain scenarios (Nov 27, 2026)
+
+The designer was given the architect's view that the ladder should start tiny, with the 39 days as its top rung, and answered four questions the same day. Decision 0237 is the plan; this section says what the answers change in this note.
+
+14. **Rung 1 is by intent.** He names the ship, the source, the floor and the interval, and the staff sails her.
+15. **Rung 1 may be a tutorial with one right answer,** with no enemy: a decision only by scarcity and time.
+16. **Rungs 1 to 3 ship as plain scenarios on the table's list.** "It can be plain. But it doesn't need to be judged against the staff's, only against the play itself."
+17. **Troops seize an empty place,** which is built, and do not reinforce a held base. The cut of rungs 2 and 3 was left to the architect.
+
+What a rung of these three is: a scenario for play, a mission in a directive, and a line at the end that says whether the mission was met in the game he played, read from what his seat was told. Of the five things "What a level is, as an object" sets beside a scenario, they have the first as words and the fifth; the mission is not held by the engine, everything of his side is his, and no staff's plan is set beside his.
+
+| In this note | For rungs 1 to 3 |
+| --- | --- |
+| The mission given from above and held by the engine | Words on the table. He can withdraw his own order, and the verdict is of the game whatever he did |
+| Scoring against the staff: the dry run before, the debrief after | Neither. No dry run is offered (decision 0237, question 2) and no debrief is made |
+| What counts as trying, and "not trying blocks the next" | Nothing is checked and nothing is gated: the three are open from the start, beside the battles |
+| The history, the situations, a replay on a new situation, the last game counts | None. One situation each, with no enemy to vary; he may play a rung again as he may any scenario, and nothing is kept |
+| "Measured once, in the war" | Stands, and is the whole of it |
+| The check that a plan is worth writing, conditions 1 to 5 | Not asked of a tutorial. Rung 1 has a band of right answers by answer 15; the conditions begin with the first rung that has an enemy |
+| "The first level": two landings | The fourth rung, on decision 0232's screen, with a record of its own |
+
+**The three, in a line each** (decision 0237 has the forces, the missions and what was tried):
+
+1. **One ship.** A forward garrison five days from hunger, a source with men of its own on a stock 5 t above what both need, one ship that carries six days of the forward garrison's food, fuel for two round trips, 14 days. His decision: the floor and the interval of one supply order; too little starves one place and too much the other.
+2. **Two mouths, two ships.** A near garrison and a far one, a slow freighter and a fast small transport, 14 days. His decision: which ship is named to which order.
+3. **Men, then food.** 600 men to put on an empty place and keep fed, 21 days. His decision: the risk that sets the day of the landing, and how the place is fed: a hold given with the landing, or a supply order when the place is his.
+
+**Why three and not two.** Each adds one decision to the one before. Rung 2 moves no man, since answer 17 puts troops where a place is seized; rung 3 is that seizure, and practises rungs 1 and 2 after it.
+
+**The measure is a night unfed, not a man lost.** On the live figures of hunger a man is lost only on his unit's fifteenth hungry night, so nobody can be lost in these games; a night unfed is what the seat is told each morning. "The verdict is one count" under "What it does not settle" foresaw it: a level about supply names its own measure.
+
+**Everything above this section stands for the rungs that follow,** from the fourth: the mission held, a plan of his own, the history and the situations, the debrief, and the conditions.

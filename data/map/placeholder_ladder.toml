@@ -1,0 +1,43 @@
+# PLACEHOLDER MAP. The sea of the ladder's first three rungs (decision 0237):
+# open water with four coast hexes. S at (0,0), the source, port size 1, one
+# berth; T at (5,0), the near place, 5 hexes and 200 nm from S; U at (0,14),
+# the far place, 14 hexes and 560 nm from S; and E at (3,3), the empty place,
+# 6 hexes and 240 nm from S. T, U and E have port size 0 and work by lighter
+# only. Rung 1 uses S and T. The geography is invented and has no place on
+# the earth.
+
+placeholder = true
+
+# Ranges are inclusive.
+[[region]]
+kind = "deep_sea"
+q = [-2, 8]
+r = [-2, 16]
+
+# S: the source, with one berth.
+[[hex]]
+q = 0
+r = 0
+kind = "coast"
+port_size = 1
+
+# T: the near place, by lighter.
+[[hex]]
+q = 5
+r = 0
+kind = "coast"
+port_size = 0
+
+# U: the far place, by lighter.
+[[hex]]
+q = 0
+r = 14
+kind = "coast"
+port_size = 0
+
+# E: the empty place, by lighter.
+[[hex]]
+q = 3
+r = 3
+kind = "coast"
+port_size = 0
