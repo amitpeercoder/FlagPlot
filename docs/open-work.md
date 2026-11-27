@@ -7,7 +7,7 @@ Trimmed on Nov 27, 2026 to what is open or next. What was closed, built or overt
 ## Next
 
 1. **Stage 4's proof** (decision 0161, step 9): set up in `docs/validation/stage-4-proof-setup.md`, amended twice on Nov 27, 2026, for decision 0232's steps 1 and 2, and not run. Run once, by the architect. Two misses are expected on the Japanese side, conditions 3 and 13, their cause named before the run.
-2. **A plan the commander writes** (decision 0232): steps 1 and 2 are built; step 3, the table, is next: its statements are written (`table/check_plan.py`) and one question is with the designer (`docs/decisions/as-built/0232-a-plan-the-commander-writes.md`).
+2. **A plan the commander writes** (decision 0232): built, steps 1 to 3. Open: the dry run on the table's 39 days, which the designer said yes to once timed on his machine (`python3 scripts/time-table-dry-run.py`; the marks are 2.2 s, 7.1 s and 40 s); within them, the script of `table-rear-bases` writes the trial key as its seventh change and statement 2 of its test gains the line. Left out and next if missed: taking over a node the staff formed, a preview of a withdrawal, a landing's date changed after signing.
 3. **The enemy's approaches** (decision 0161, step 10; below): its own record and plan first, for the designer's confirmation.
 4. **Levels** (`docs/design/levels.md`): a note, nothing built; the designer's answers of Nov 26 and 27, 2026 are in it.
 5. **The clean-up in progress,** beside these and not ahead of the proof.

@@ -67,14 +67,9 @@ The island (Amit's answer 2 of Nov 26, 2026)
    three files of `data/scenarios/table-rear-bases/` as it does today with
    one change more, its sixth. In `07b_slice_submarines.toml` and
    `07c_slice_submarines.toml`, after the block of island 2 (the `[[island]]`
-   with `number = 2`, to the blank line that ends it) it writes
+   with `number = 2`, to the blank line that ends it) it writes a note of
+   three lines that names decision 0232, step 3, and then
 
-       # Decision 0232, the designer's answer 2 (Nov 26, 2026): a third island of
-       # both places, for the table alone, so that one order holds both landings.
-       # An island is map data: nothing of it is hashed, and a game that does not
-       # order it plays as before. Its places are bases 1 and 4, in the order of
-       # islands 1 and 2; its number is the next free. No file of record or of a
-       # proof has it.
        [[island]]
        number = 3
        name = "Guadalcanal and Tulagi"
@@ -84,24 +79,30 @@ The island (Amit's answer 2 of Nov 26, 2026)
    against an agent and of two agents, has no island at all today (found on
    Nov 27, 2026: the table's list offers "Seize and hold Guadalcanal" in
    that game too, and the engine refuses it, "island 1 is not an island of
-   the scenario"). At its end, after a blank line, the script writes
+   the scenario"). At its end, after a blank line, the script writes a note
+   of two lines, then the blocks of islands 1 and 2, each `[[island]]`,
+   `number`, `name` ("Guadalcanal" of `{ base = 1 }`, "Tulagi" of `{ base =
+   4 }`) and `places`, as those two files have them, a blank line after
+   each, and then the block of island 3. The header the script writes, which
+   says the file is the file it copies "with these changes and nothing
+   else", says this change after ruling 2's, in these words:
 
-       # The table's islands (decision 0232, step 3; ruled by the architect on Nov
-       # 27, 2026): islands 1 and 2 as the table's two other files of the 39 days
-       # have them (decision 0153, "The islands"), which the table's list offers in
-       # every game of the 39 days and this file lacked, and the third island of
-       # the designer's answer 2. Map data: no game that does not order one moves.
+       #   Decision 0232, step 3 (the designer's answers of Nov 26 and 27, 2026):
+       #   the island "Guadalcanal and Tulagi" (number 3, of base 1 and then base
+       #   4), so that one order holds both landings; and, in the file that had no
+       #   island, islands 1 and 2 as the other two files have them. Map data:
+       #   nothing of an island is hashed, and a game that orders none plays as
+       #   before. No file of record or of a proof has the third island.
 
-   then the blocks of islands 1 and 2, each `[[island]]`, `number`, `name`
-   ("Guadalcanal" of `{ base = 1 }`, "Tulagi" of `{ base = 4 }`) and
-   `places`, as those two files have them, a blank line after each, and then
-   the block of island 3 above without its comment. The header the script
-   writes says the change in a paragraph, after ruling 2's. Nothing is
-   invented: the places are the bases islands 1 and 2 name in decision 0153,
-   and an island has no figure. No other file under `data/` changes: not
-   `table-boats/`, not `table-hunger/`, no file of record and no file of a
-   proof. Tested in `tests/table_rear_bases_files.rs`, statements 2, 6 and 7
-   (restated and added by the architect in its doc comment).
+   (The notes beside the islands were fixed word for word when this was first
+   written; the build's shorter notes say the same and are accepted, and the
+   header's paragraph, which the build left out, is restated here: amended by
+   the architect on reading pull request 759.) Nothing is invented: the
+   places are the bases islands 1 and 2 name in decision 0153, and an island
+   has no figure. No other file under `data/` changes: not `table-boats/`,
+   not `table-hunger/`, no file of record and no file of a proof. Tested in
+   `tests/table_rear_bases_files.rs`, statements 2, 6 and 7 (restated and
+   added by the architect in its doc comment).
 
 2. NO GAME MOVES. For each of the three files, `sim-cli run FILE --events`
    gives, before the change and after it, output that differs in no line, the
@@ -209,7 +210,10 @@ Rule 28: one reading, one signature, one entry, one TAKE BACK
     limit, as today; for a landing, "The landing at <place>: " and the
     engine's reason; for a landing's line, "The landing at <place>: <line>:
     " and the reason (`batchWords`). YOUR PLAN is opened with that landing's
-    row, or line, marked.
+    row, or line, marked. The engine's reason for a limit wider than the
+    order above allows names that order by its handle; the page says "It is
+    wider than the order above it allows." (added by the architect on
+    reading pull request 759: no handle is said).
 
 12. SIGN AND SEND is one `approve` of that preview and sends nothing else.
     The count that went is checked: `limits_queued` against the order's own
@@ -340,6 +344,7 @@ Rule 31: a reason leads to his line
     | "intent:K, the commander's take of the place at (q,r)," | "[K]" |
     | "intent:K, the commander's take under intent:M," | "[K]" |
     | "intent:K is the commander's take under an island" | "[K] is your landing under an island" |
+    | any other "intent:K, the commander's," (added on reading pull request 759: the island's evidence read "your landing at Lunga, your, is in force") | "[K]" |
     | any other "intent:K" | "[K]" |
     | in a sentence so marked, "is his to take" and "carries out his date" | "is yours to take", "carries out your date" |
 
@@ -488,6 +493,7 @@ REASONS = [
     "intent:1 is to be done by the end of day 6; intent:3, the commander's take of the place at (2,-4), is to be done by the end of day 9, 3 days later. The staff carries out his date.",
     "intent:3, the commander's take under intent:1, waits for the plan of intent:1: it is preparing, and a take under an island is served once the island's plan is released, so the staff gives no order under intent:3 and its plan stays a draft.",
     "intent:3 is the commander's take under an island",
+    "intent:3, the commander's, is in force and its plan is preparing",
     "intent:4 holds base:1 (Lunga)",
 ]
 
@@ -558,6 +564,7 @@ def the_model_in_node():
         "intent:1 is to be done by the end of day 6; ⟦3⟧ is to be done by the end of day 9, 3 days later. The staff carries out your date.",
         "⟦3⟧ waits for the plan of intent:1: it is preparing, and a take under an island is served once the island's plan is released, so the staff gives no order under ⟦3⟧ and its plan stays a draft.",
         "⟦3⟧ is your landing under an island",
+        "⟦3⟧ is in force and its plan is preparing",
         "intent:4 holds base:1 (Lunga)",
     ]
     for got, want in zip(said["marks"], marks):
@@ -572,7 +579,7 @@ def the_page_holds_it():
     check('id="p-plan"' in text and 'id="p-plan-sum"' in text and 'id="p-plan-body"' in text and text.index('id="p-limits"') < text.index('id="p-plan"') < text.index('id="p-acts"'),
           "the order paper has the part YOUR PLAN after LIMITS and before ACTS")
     for words in ("'YOUR PLAN · '", "left to the staff", "'WRITE IT'", "'LEAVE IT TO THE STAFF'", "'GIVE IT BACK TO THE STAFF'", "This reading is worked with your plan.",
-                  "This reading is worked with the limits you set and your plan.", "' · Your plan: '", "You hold every place of it: there is no landing to write.", ": given back to the staff"):
+                  "This reading is worked with the limits you set and your plan.", "' · Your plan: '", "You hold every place of it: there is no landing to write.", ": given back to the staff", "It is wider than the order above it allows."):
         check(words in text, f"the page says {words}")
     # Rules 30 and 31 (statements 16 to 21): the papers that write a landing and give one back, the mark, and the link to his line.
     for words in ("'Write the landing at '", "'Give the landing at '", "'Landing: '", "'Change the limits of '", "whoseTag(t.maker)", "'your landing at '", "writtenMarks(t, isHisNo)", "data-landing"):

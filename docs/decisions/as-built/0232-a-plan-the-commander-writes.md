@@ -51,3 +51,15 @@ The statements of rules 27 to 31 are written by the architect before any code of
 
 1. **A dry run on the table's 39 days:** yes, once the times are measured on his machine, as the architect recommended.
 2. **Islands 1 and 2 in the third file** (ruling 2 above, which went beyond his word of Nov 26 that named island 3 alone): accepted.
+
+## Built: step 3 (Nov 27, 2026, pull request 759)
+
+Rules 27 to 31, in the table alone: `table/index.html`, `table/serve.py`, `table/scenarios.json`, the script and the three files of `data/scenarios/table-rear-bases/`. No crate changes and no version moves; the three files play as before, line for line with the hash lines kept. `table/check_plan.py` holds 105 checks; statements 2, 6 and 7 of `tests/table_rear_bases_files.rs` are tested. The trial key is not in the files: the dry run on the 39 days waits for its time on the designer's machine (`scripts/time-table-dry-run.py`), against the times he accepted for a trial beside another with a tenth over: 2.2 s, 7.1 s and 40 s.
+
+## The architect's rulings on pull request 759 (Nov 27, 2026)
+
+1. **A refusal said an engine handle** ("its parent order:1"). The page now says "It is wider than the order above it allows."; statement 11 has the words.
+2. **"Your landing at Lunga, your, is in force".** Statement 21 gains one reading: any other "intent:K, the commander's," is the mark alone.
+3. **The files' header** said "these changes and nothing else" and did not say the islands. It says them now; the build's notes beside the islands are accepted in place of the words statement 1 first fixed.
+4. **Accepted as built:** the reading of one limit changed on a landing is the landing's own tree; the guard round `writtenMarks` in `reasonWords`, held by the text check; a landing is no order in THE ORDERS' Signed list; WRITE IT and GIVE IT BACK TO THE STAFF are not offered while one is signed.
+5. **Decision 0234:** step 3 edits `scripts/table-rear-bases/make_files.py` and no other script; step C's note that it edits `table-copies` is not so.

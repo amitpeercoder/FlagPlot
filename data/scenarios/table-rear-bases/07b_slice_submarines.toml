@@ -18,6 +18,12 @@
 #   they loaded (troop_lift_facts 88, 60); a least figure of what was carried,
 #   not a stock (data/oob/gaps.csv holds the two entries for espiritu-santo).
 #   Its fuel stays 600 t, a placeholder (ruling 3).
+#   Decision 0232, step 3 (the designer's answers of Nov 26 and 27, 2026):
+#   the island "Guadalcanal and Tulagi" (number 3, of base 1 and then base
+#   4), so that one order holds both landings; and, in the file that had no
+#   island, islands 1 and 2 as the other two files have them. Map data:
+#   nothing of an island is hashed, and a game that orders none plays as
+#   before. No file of record or of a proof has the third island.
 #
 # Do not edit by hand: change the script or the file it is made from and make
 # it again.

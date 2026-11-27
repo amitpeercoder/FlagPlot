@@ -2107,7 +2107,8 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
     [/^not known$|not one of your units|not one of your/, function () { return 'It is not one of yours.'; }],
     [/task force is under way/, function () { return 'The force is under way.'; }],
     [/task force is out of fuel/, function () { return 'The force is out of fuel.'; }],
-    [/cannot be reached by sea/, function () { return 'It cannot get there by sea.'; }]
+    [/cannot be reached by sea/, function () { return 'It cannot get there by sea.'; }],
+    [/wider than what its parent intent:\d+ allows/, function () { return 'It is wider than the order above it allows.'; }]
   ];
   function refusalWords(t) {
     t = String(t == null ? '' : t).replace(/^Refused: /, '').trim();
@@ -5402,6 +5403,7 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
       .replace(/intent:(\d+), the commander's take of the place at \(-?\d+,-?\d+\),/g, function (x, n) { return w(n) ? mark(n) : x; })
       .replace(/intent:(\d+), the commander's take under intent:\d+,/g, function (x, n) { return w(n) ? mark(n) : x; })
       .replace(/intent:(\d+) is the commander's take under an island/g, function (x, n) { return w(n) ? mark(n) + ' is your landing under an island' : x; })
+      .replace(/intent:(\d+), the commander's,/g, function (x, n) { return w(n) ? mark(n) : x; })
       .replace(/intent:(\d+)/g, function (x, n) { return w(n) ? mark(n) : x; });
     return any ? t.replace(/is his to take/g, 'is yours to take').replace(/carries out his date/g, 'carries out your date') : t;
   }
