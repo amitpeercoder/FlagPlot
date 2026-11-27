@@ -218,80 +218,451 @@
 //! 11. In every case no `MenLostUnfed` is recorded, each unit has 1,000 men
 //!     at the end, and the game played twice gives the same hash each day.
 
+use std::path::PathBuf;
+
+use sim_core::command::{CommandKind, IntentKind, NoticeKind};
+use sim_core::events::EventKind;
+use sim_core::fixed::Fixed;
+use sim_core::state::Side;
+use sim_data::LoadOptions;
+
+use crate::common::played::{play, Played};
+use crate::common::values::{base, hex, n, ship, text_of, unit};
+use crate::common::{self, data_dir};
+
+fn path() -> PathBuf {
+    data_dir().join("scenarios/ladder/138_one_ship.toml")
+}
+
+fn text() -> String {
+    std::fs::read_to_string(path()).expect("the scenario file reads")
+}
+
+/// The scenario as given, on the live figures, with `orders` added at its
+/// mark `# orders`.
+fn load(orders: &str) -> sim_data::Scenario {
+    let t = common::replace_once(&text(), "# orders", &format!("# orders\n{orders}"));
+    common::from_text_with(&t, &path(), &LoadOptions::default()).expect("the scenario loads")
+}
+
+fn command(day: u32, body: &str) -> String {
+    format!("\n[[command]]\nday = {day}\nside = \"allied\"\n{body}\n")
+}
+
+fn leaves() -> String {
+    command(1, "kind = \"set_leave\"\nleave = \"prepare\"\ngiven = true")
+        + &command(1, "kind = \"set_leave\"\nleave = \"launch\"\ngiven = true")
+}
+
+fn limit() -> String {
+    command(
+        1,
+        "kind = \"set_limit\"\nlimit = \"forces\"\nintent = 1\nships = [1]\nsource = 1",
+    )
+}
+
+/// "Keep base 2 supplied", with a floor and an interval, the ship and the
+/// source, and both leaves.
+fn supply(floor: u32, interval: u32) -> String {
+    leaves()
+        + &command(
+            1,
+            &format!(
+                "kind = \"set_intent\"\nintent = 1\nintent_kind = \"keep_supplied\"\nbase = 2\nfloor_days = {floor}\ninterval_days = {interval}"
+            ),
+        )
+        + &limit()
+}
+
+fn hold() -> String {
+    leaves()
+        + &command(
+            1,
+            "kind = \"set_intent\"\nintent = 1\nintent_kind = \"hold\"\nbase = 2",
+        )
+        + &limit()
+}
+
+fn game(orders: &str) -> Played {
+    play(load(orders))
+}
+
+fn supply_game(floor: u32, interval: u32) -> Played {
+    game(&supply(floor, interval))
+}
+
+const S: u32 = 1;
+const T: u32 = 2;
+
+/// A run the staff added: the day, its load and its days.
+struct RunAdded {
+    day: u32,
+    load: Fixed,
+    days: sim_core::command::RunDays,
+}
+
+trait Reads {
+    fn runs(&self) -> Vec<RunAdded>;
+    fn stock(&self, day: u32, base_raw: u32) -> Fixed;
+    fn fed(&self, base_raw: u32) -> Vec<(u32, u32, u32)>;
+    fn unfed_days(&self, base_raw: u32) -> Vec<u32>;
+    fn cannot_meet_days(&self) -> Vec<u32>;
+    fn lost(&self) -> usize;
+}
+
+impl Reads for Played {
+    fn runs(&self) -> Vec<RunAdded> {
+        let mut out = Vec::new();
+        for (day, d) in &self.handed[&Side::Allied] {
+            for c in &d.commands {
+                if let CommandKind::AddRun { run, .. } = &c.kind {
+                    out.push(RunAdded {
+                        day: *day,
+                        load: run.load_t,
+                        days: run.days,
+                    });
+                }
+            }
+        }
+        out
+    }
+
+    fn stock(&self, day: u32, base_raw: u32) -> Fixed {
+        self.truth[day as usize].bases[&base(base_raw)].supply_t
+    }
+
+    /// (day, fed, unfed) of the men at base `base_raw`'s hex, each night:
+    /// one record a night, of 1,000 men, all fed or all unfed.
+    fn fed(&self, base_raw: u32) -> Vec<(u32, u32, u32)> {
+        let at = if base_raw == S { hex(0, 0) } else { hex(5, 0) };
+        self.scenario
+            .world
+            .events()
+            .iter()
+            .filter_map(|e| match &e.kind {
+                EventKind::MenFed {
+                    hex, fed, unfed, ..
+                } if *hex == at => Some((e.day, *fed, *unfed)),
+                _ => None,
+            })
+            .collect::<Vec<_>>()
+    }
+
+    fn unfed_days(&self, base_raw: u32) -> Vec<u32> {
+        let nights = self.fed(base_raw);
+        let days: Vec<u32> = (1..=14).collect();
+        assert_eq!(
+            nights.iter().map(|(d, _, _)| *d).collect::<Vec<_>>(),
+            days,
+            "one record a night"
+        );
+        for (day, fed, unfed) in &nights {
+            assert_eq!(fed + unfed, 1000, "day {day}");
+            assert!(*unfed == 0 || *unfed == 1000, "day {day}: {unfed} unfed");
+        }
+        nights
+            .into_iter()
+            .filter(|(_, _, unfed)| *unfed > 0)
+            .map(|(day, _, _)| day)
+            .collect()
+    }
+
+    fn cannot_meet_days(&self) -> Vec<u32> {
+        self.handed[&Side::Allied]
+            .iter()
+            .filter(|(_, d)| d.notices.iter().any(|x| x.kind == NoticeKind::CannotMeet))
+            .map(|(day, _)| *day)
+            .collect()
+    }
+
+    fn lost(&self) -> usize {
+        self.scenario
+            .world
+            .events()
+            .iter()
+            .filter(|e| matches!(e.kind, EventKind::MenLostUnfed { .. }))
+            .count()
+    }
+}
+
+/// A run's load and day, plainly.
+fn runs_of(g: &Played) -> Vec<(u32, Fixed)> {
+    g.runs().iter().map(|r| (r.day, r.load)).collect()
+}
+
+fn stocks(g: &Played, b: u32) -> Vec<Fixed> {
+    (1..=14).map(|d| g.stock(d, b)).collect()
+}
+
+fn tons(list: &[i64]) -> Vec<Fixed> {
+    list.iter().map(|t| n(*t)).collect()
+}
+
+/// Every game of the file, by case.
+fn every_case() -> Vec<(&'static str, String)> {
+    vec![
+        ("A", supply(2, 5)),
+        ("B", supply(2, 6)),
+        ("C", supply(2, 4)),
+        ("D", supply(1, 1)),
+        ("E", hold()),
+        ("F 4 and 5", supply(4, 5)),
+        ("F 8 and 1", supply(8, 1)),
+        ("G", supply(0, 5)),
+        ("no command", String::new()),
+    ]
+}
+
 /// Statement 1: the file as the player is given it.
 #[test]
-#[ignore = "statement written, not built"]
 fn the_file_as_given() {
-    todo!()
+    let t = text();
+    assert!(!t.contains("[[command]]"), "no command in the file");
+    assert!(t.contains("../../reference/ground_hunger.toml"));
+    assert!(!t.contains("step1"), "the live figures");
+    let scenario = load("");
+    let truth = scenario.world.umpire();
+    assert_eq!(truth.bases.len(), 2);
+    assert!(truth.bases.values().all(|b| b.side == Side::Allied));
+    assert_eq!(truth.land_units.len(), 2);
+    for raw in [1, 2] {
+        let u = &truth.land_units[&unit(raw)];
+        assert_eq!((u.side, u.men_ashore), (Side::Allied, 1000));
+    }
+    assert_eq!(truth.ships.len(), 1);
+    assert_eq!(truth.ships[&ship(1)].side, Side::Allied);
+    assert!(truth.air_groups.is_empty());
+    assert!(scenario
+        .world
+        .command_state(Side::Allied)
+        .intents
+        .is_empty());
+    assert!(scenario
+        .world
+        .command_state(Side::Japanese)
+        .intents
+        .is_empty());
+    // The Japanese side has nothing.
+    assert!(truth.bases.values().all(|b| b.side != Side::Japanese));
+    assert!(truth.ships.values().all(|s| s.side != Side::Japanese));
+    assert!(truth.land_units.values().all(|u| u.side != Side::Japanese));
+    // S to T is 200 nm by sea: 5 hexes of 40 nm, in a straight line.
+    let (s, t) = (hex(0, 0), hex(5, 0));
+    assert_eq!(truth.bases[&base(S)].hex, s);
+    assert_eq!(truth.bases[&base(T)].hex, t);
+    assert_eq!(scenario.world.map().sea_distance(s, t), Some(5));
+    assert_eq!(s.air_distance_nm(t), 200);
 }
 
 /// Statement 2: case A, two runs of 25 t, ordered on days 3 and 8.
 #[test]
-#[ignore = "statement written, not built"]
 fn two_runs_of_twenty_five() {
-    todo!()
+    let g = supply_game(2, 5);
+    assert_eq!(runs_of(&g), vec![(3, n(25)), (8, n(25))]);
+    let days: Vec<_> = g
+        .runs()
+        .iter()
+        .map(|r| (r.days.load, r.days.sail, r.days.arrive, r.days.free))
+        .collect();
+    assert_eq!(days, vec![(3, 4, 4, 7), (8, 9, 9, 12)]);
+    // The ship is committed for days 3 to 6 and 8 to 11.
+    let mut commits = Vec::new();
+    for (day, d) in &g.handed[&Side::Allied] {
+        for c in &d.commands {
+            if let CommandKind::CommitShips {
+                ships,
+                from_day,
+                to_day,
+                ..
+            } = &c.kind
+            {
+                assert!(ships.contains(&ship(1)) && ships.len() == 1);
+                commits.push((*day, *from_day, *to_day));
+            }
+        }
+    }
+    assert_eq!(commits, vec![(3, 3, 6), (8, 8, 11)]);
 }
 
 /// Statement 3: case A, the stocks of each night and every man fed.
 #[test]
-#[ignore = "statement written, not built"]
 fn every_man_fed_every_night() {
-    todo!()
+    let g = supply_game(2, 5);
+    assert_eq!(
+        stocks(&g, T),
+        tons(&[20, 15, 10, 30, 25, 20, 15, 10, 30, 25, 20, 15, 10, 5])
+    );
+    assert_eq!(
+        stocks(&g, S),
+        tons(&[115, 110, 80, 75, 70, 65, 60, 30, 25, 20, 15, 10, 5, 0])
+    );
+    for b in [S, T] {
+        assert_eq!(
+            g.fed(b),
+            (1..=14).map(|d| (d, 1000, 0)).collect::<Vec<_>>(),
+            "base {b}"
+        );
+    }
 }
 
 /// Statement 4: case A, the fuel, and "cannot meet" on days 13 and 14 alone.
 #[test]
-#[ignore = "statement written, not built"]
 fn fuel_for_two_trips() {
-    todo!()
+    let g = supply_game(2, 5);
+    let ship_fuel = |d: usize| g.truth[d].ships[&ship(1)].fuel_t;
+    let source_fuel = |d: usize| g.truth[d].bases[&base(S)].fuel_t;
+    assert_eq!((ship_fuel(2), source_fuel(2)), (n(60), n(50)));
+    // The night of day 3: she takes the 50 t.
+    assert_eq!((ship_fuel(3), source_fuel(3)), (n(110), n(0)));
+    assert_eq!(ship_fuel(5), n(60));
+    assert_eq!(ship_fuel(10), n(10));
+    assert_eq!((ship_fuel(14), source_fuel(14)), (n(10), n(0)));
+    assert_eq!(g.cannot_meet_days(), vec![13, 14]);
+    let day_13 = &g.handed[&Side::Allied][&13];
+    let all: String = day_13
+        .no_orders
+        .iter()
+        .map(text_of)
+        .collect::<Vec<_>>()
+        .join("\n");
+    assert!(
+        all.contains("fuel"),
+        "the reason of day 13 names the fuel: {all}"
+    );
 }
 
 /// Statement 5: case B, too much sent, and the source unfed on two nights.
 #[test]
-#[ignore = "statement written, not built"]
 fn too_much_starves_the_source() {
-    todo!()
+    let g = supply_game(2, 6);
+    assert_eq!(runs_of(&g), vec![(3, n(30)), (9, n(30))]);
+    assert_eq!(g.unfed_days(S), vec![13, 14]);
+    assert!(g.unfed_days(T).is_empty());
+    assert_eq!(g.stock(14, T), n(15));
 }
 
 /// Statement 6: case C, too little sent, and the forward garrison unfed on
 /// the last night.
 #[test]
-#[ignore = "statement written, not built"]
 fn too_little_starves_the_forward_garrison() {
-    todo!()
+    let g = supply_game(2, 4);
+    assert_eq!(runs_of(&g), vec![(3, n(20)), (7, n(20))]);
+    assert_eq!(g.unfed_days(T), vec![14]);
+    assert!(g.unfed_days(S).is_empty());
+    assert_eq!(g.cannot_meet_days(), vec![11, 12, 13, 14]);
+    let after: Vec<_> = (9..=13).map(|d| g.stock(d, T)).collect();
+    assert_eq!(after, tons(&[20, 15, 10, 5, 0]));
+    assert_eq!(g.stock(14, S), n(10));
 }
 
 /// Statement 7: case D, 1 and 1, six nights unfed.
 #[test]
-#[ignore = "statement written, not built"]
 fn far_too_little() {
-    todo!()
+    let g = supply_game(1, 1);
+    assert_eq!(runs_of(&g), vec![(4, n(5)), (8, n(10))]);
+    assert_eq!(g.unfed_days(T), vec![7, 8, 9, 12, 13, 14]);
+    assert!(g.unfed_days(S).is_empty());
+    assert_eq!(g.stock(14, S), n(35));
 }
 
 /// Statement 8: case E, a hold with no number fails as case B does.
 #[test]
-#[ignore = "statement written, not built"]
 fn a_hold_with_no_number() {
-    todo!()
+    let g = game(&hold());
+    let formed: Vec<_> = g.handed[&Side::Allied]
+        .iter()
+        .flat_map(|(day, d)| d.commands.iter().map(move |c| (*day, &c.kind)))
+        .filter_map(|(day, k)| match k {
+            CommandKind::FormIntent { parent, kind } => Some((day, *parent, *kind)),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(
+        formed,
+        vec![(
+            1,
+            sim_core::ids::IntentId::new(1),
+            IntentKind::KeepSupplied {
+                base: base(T),
+                floor_days: 5,
+                interval_days: None
+            }
+        )]
+    );
+    assert_eq!(runs_of(&g), vec![(2, n(30)), (6, n(30))]);
+    assert_eq!(g.unfed_days(S), vec![13, 14]);
+    assert!(g.unfed_days(T).is_empty());
 }
 
 /// Statement 9: case F, the two edges of the band.
 #[test]
-#[ignore = "statement written, not built"]
 fn the_edges_of_the_band() {
-    todo!()
+    let g = supply_game(4, 5);
+    assert_eq!(runs_of(&g), vec![(1, n(25)), (6, n(25))]);
+    assert!(g.unfed_days(S).is_empty() && g.unfed_days(T).is_empty());
+    assert_eq!(g.stock(14, T), n(5));
+    assert_eq!(
+        (g.stock(1, S), g.stock(6, S), g.stock(14, S)),
+        (n(90), n(40), n(0))
+    );
+
+    let g = supply_game(8, 1);
+    assert_eq!(runs_of(&g), vec![(1, n(25)), (5, n(20))]);
+    assert!(g.unfed_days(S).is_empty() && g.unfed_days(T).is_empty());
+    assert_eq!((g.stock(2, T), g.stock(6, T)), (n(40), n(40)));
+    assert_eq!((g.stock(14, T), g.stock(14, S)), (n(0), n(5)));
 }
 
 /// Statement 10: case G, a floor of nothing is refused.
 #[test]
-#[ignore = "statement written, not built"]
 fn a_floor_of_nothing_is_refused() {
-    todo!()
+    let g = supply_game(0, 5);
+    let refused: Vec<(u32, String)> = g
+        .scenario
+        .world
+        .events()
+        .iter()
+        .filter_map(|e| match &e.kind {
+            EventKind::CommandRefused { reason, .. } => Some((e.day, reason.to_string())),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(
+        refused,
+        vec![
+            (1, "a number of days is 0".to_string()),
+            (1, "intent:1 is not in force".to_string()),
+        ]
+    );
+    assert!(g.runs().is_empty());
+    assert_eq!(g.unfed_days(T), (6..=14).collect::<Vec<_>>());
+    assert!(g.unfed_days(S).is_empty());
+    assert_eq!(g.stock(5, T), n(0));
+    assert_eq!(g.stock(14, S), n(50));
 }
 
 /// Statement 11: nobody is lost, and the game is the same played twice.
 #[test]
-#[ignore = "statement written, not built"]
 fn nobody_lost_and_the_same_twice() {
-    todo!()
+    for (name, orders) in every_case() {
+        let g = game(&orders);
+        assert_eq!(g.lost(), 0, "case {name}");
+        for raw in [1, 2] {
+            assert_eq!(
+                g.truth[14].land_units[&unit(raw)].men_ashore,
+                1000,
+                "case {name}, unit {raw}"
+            );
+        }
+        let again = game(&orders);
+        assert_eq!(g.scenario.world.day_hashes().len(), 14, "case {name}");
+        let last = *g.scenario.world.day_hashes().last().expect("a day hash");
+        let pin = format!("scenario_138_{}", name.to_lowercase().replace(' ', "_"));
+        assert_eq!(common::pinned_hash(&pin, last), last, "case {name}");
+        assert_eq!(
+            g.scenario.world.day_hashes(),
+            again.scenario.world.day_hashes(),
+            "case {name}"
+        );
+    }
 }
