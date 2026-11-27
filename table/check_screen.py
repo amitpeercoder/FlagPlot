@@ -125,9 +125,10 @@ def the_stop_paper():
           "the reports panel, the signals tray, the bar at the foot, the in-tray button, Give an order, the Orders menu, the plan chip and the outcomes' line are gone")
     view = text[text.index('<div class="view"'):]
     view = view[:view.index("</div>\n</div>") if "</div>\n</div>" in view else 2000]
-    check(all(f'id="{b}"' in view for b in ("btn-plans", "btn-pieces", "btn-labels", "btn-hexes", "btn-view", "btn-above", "btn-lean", "btn-back"))
+    check(all(f'id="{b}"' in view for b in ("btn-plans", "btn-pieces", "btn-labels", "btn-hexes", "btn-view", "btn-lean", "btn-back")) and 'id="btn-above"' not in text
+          and "$('btn-view').addEventListener('click', function () { setView(!chartView); });" in text and "'VIEW \\u00b7 ' + (chartView ? '2D' : '3D')" in text
           and "bottom: 16px" in css(".view"),
-          "the chart's controls are at its foot: plans, pieces, names, hexes, table or from above, and the zoom")
+          "the chart's controls are at its foot: plans, pieces, names, hexes, one button that turns between the table (3D) and the chart from above (2D), and the zoom")
     menus = text[text.index('<div class="menus"'):]
     menus = menus[:menus.index("</div>")]
     check(all(f'id="{b}"' in menus for b in ("btn-staff", "btn-game")) and 'id="btn-orders"' not in menus and 'id="btn-agent"' in text[text.index('id="pop-game"'):],
@@ -3415,8 +3416,8 @@ function main(x) {
 
 RUNG_ONE = "ladder-1-one-ship"
 RUNG_ONE_MISSION = {"measure": "every_night_fed", "last_day": 14,
-                    "places": [{"q": 0, "r": 0, "name": "Base S"}, {"q": 5, "r": 0, "name": "Base T"}]}
-RUNG_ONE_MET = ["Mission met.", "Every man was fed every night to the end of day 14, at Base S and at Base T."]
+                    "places": [{"q": 0, "r": 0, "name": "Saltmere"}, {"q": 5, "r": 0, "name": "Thornwick"}]}
+RUNG_ONE_MET = ["Mission met.", "Every man was fed every night to the end of day 14, at Saltmere and at Thornwick."]
 
 
 def rung_one_order(floor, interval):
@@ -3436,10 +3437,10 @@ def rung_one_on_the_list(bridge):
         "data/scenarios/ladder/138_one_ship.toml"}. The whole entry is the one written in the as-built section.
     L2. Every other entry is what it was: none has the key `mission` or `placeholder`, none has a pairing whose `engine` is "absent",
         and each has a `start`.
-    L3. `table/directives/ladder_1_allied.json` has one directive, number 1, `when` "start", from "Area Commander", to "Commander, Base
-        S", subject "Both garrisons fed", with three parts headed "1. Situation", "2. Mission" and "3. Guidance". The text of its mission
+    L3. `table/directives/ladder_1_allied.json` has one directive, number 1, `when` "start", from "Area Commander", to "Commander,
+        Saltmere", subject "Both garrisons fed", with three parts headed "1. Situation", "2. Mission" and "3. Guidance". The text of its mission
         is one paragraph and begins with the entry's `sides.allied`, which is its first sentence, "Keep both garrisons fed." (the card on
-        the new game screen says the mission in brief and the directive says it in full: as-built, "The card on the new game screen, cut short"). Its guidance names "Base T", "Base S" and "two numbers", and its second paragraph is "Then tell the staff that plans launch when ready, under YOUR ORDERS,
+        the new game screen says the mission in brief and the directive says it in full: as-built, "The card on the new game screen, cut short"). Its guidance names "Thornwick", "Saltmere" and "two numbers", and its second paragraph is "Then tell the staff that plans launch when ready, under YOUR ORDERS,
         and carry on: it will not sail the ship without that leave."
 
     In the page's text:
@@ -3481,14 +3482,24 @@ def rung_one_on_the_list(bridge):
           "L2: every other entry has no `mission` or `placeholder`, no pairing with the engine absent, and a start")
     directive = json.load(open(os.path.join(root, first["directives"]["allied"])))["directives"]
     d = directive[0]
-    check(len(directive) == 1 and d["number"] == 1 and d["when"] == "start" and d["from"] == "Area Commander" and d["to"] == "Commander, Base S" and d["subject"] == "Both garrisons fed"
+    check(len(directive) == 1 and d["number"] == 1 and d["when"] == "start" and d["from"] == "Area Commander" and d["to"] == "Commander, Saltmere" and d["subject"] == "Both garrisons fed"
           and [p["heading"] for p in d["parts"]] == ["1. Situation", "2. Mission", "3. Guidance"],
-          "L3: the directive is number 1, at the start, from the Area Commander to the Commander, Base S, in three parts")
+          "L3: the directive is number 1, at the start, from the Area Commander to the Commander, Saltmere, in three parts")
     guidance = " ".join(d["parts"][2]["text"])
     check(len(d["parts"][1]["text"]) == 1 and first["sides"]["allied"] == "Keep both garrisons fed." and d["parts"][1]["text"][0].startswith(first["sides"]["allied"] + " "),
           "L3: the mission is one paragraph and begins with the entry's words for the side, its first sentence")
-    check(all(w in guidance for w in ("Base T", "Base S", "two numbers")) and d["parts"][2]["text"][1] == "Then tell the staff that plans launch when ready, under YOUR ORDERS, and carry on: it will not sail the ship without that leave.",
-          "L3: the guidance names Base T, Base S and the two numbers, and its second paragraph is the designer's")
+    check(all(w in guidance for w in ("Thornwick", "Saltmere", "two numbers")) and d["parts"][2]["text"][1] == "Then tell the staff that plans launch when ready, under YOUR ORDERS, and carry on: it will not sail the ship without that leave.",
+          "L3: the guidance names Thornwick, Saltmere and the two numbers, and its second paragraph is the designer's")
+    # L1a. Decision 0241: rung 1's scenario names its two bases "Saltmere" and "Thornwick", its land units "Thornwick garrison" and
+    # "Saltmere garrison" and its ship "Merrowdale", in that order in the file; it is marked `placeholder = true`; and none of the
+    # words Saltmere, Thornwick and Merrowdale is in any file of `data/oob`, whatever its case.
+    scen = open(os.path.join(root, "data", "scenarios", "ladder", "138_one_ship.toml")).read()
+    named = [l.split('"')[1] for l in scen.splitlines() if l.startswith('name = "')]
+    oob = os.path.join(root, "data", "oob")
+    record = " ".join(open(os.path.join(d, f), errors="replace").read().lower() for d, _, fs in os.walk(oob) for f in fs if f.endswith((".csv", ".toml")))
+    check(named[1:] == ["Saltmere", "Thornwick", "Thornwick garrison", "Saltmere garrison", "Merrowdale"] and named[0].startswith("Placeholder scenario 138")
+          and "\nplaceholder = true\n" in scen and not any(w in record for w in ("saltmere", "thornwick", "merrowdale")),
+          "L1a: rung 1's bases, garrisons and ship carry invented names that are in no file of data/oob, and the scenario is still marked a placeholder")
     # L3a. The islands of the ladder's chart, for the eye only: `table/chart/placeholder_ladder_coast.json` has a note that begins
     # "PLACEHOLDER" and six rings, each closed, and every point of every ring lies within 0.333 degrees (the hex's inner radius,
     # 20 nm at 60 nm to the degree) of the centre of one of the map's four coast hexes, (0,0), (5,0), (0,14) and (3,3), as
@@ -3627,24 +3638,24 @@ def the_verdict_in_words():
     such an event with every one of 1,000 men fed, `unfed(q, r, n)` one with n of 1,000 unfed. The mission is RUNG_ONE_MISSION.
 
     W1. Fourteen days, each with fed(0,0) and fed(5,0): RUNG_ONE_MET.
-    W2. The same with unfed(5,0,1000) on day 14: ["Mission not met.", "1,000 men at Base T went unfed on the night of day 14."].
-    W3. The same as W1 with unfed(0,0,1000) on days 13 and 14: ["Mission not met.", "1,000 men at Base S went unfed on the nights of
+    W2. The same with unfed(5,0,1000) on day 14: ["Mission not met.", "1,000 men at Thornwick went unfed on the night of day 14."].
+    W3. The same as W1 with unfed(0,0,1000) on days 13 and 14: ["Mission not met.", "1,000 men at Saltmere went unfed on the nights of
         days 13 and 14."].
-    W4. unfed(5,0,1000) on days 7, 8, 9, 12, 13 and 14: the second line is "1,000 men at Base T went unfed on the nights of days 7, 8,
+    W4. unfed(5,0,1000) on days 7, 8, 9, 12, 13 and 14: the second line is "1,000 men at Thornwick went unfed on the nights of days 7, 8,
         9, 12, 13 and 14."
     W5. Both places, and two counts: unfed(5,0,400) on day 12, unfed(5,0,1000) on days 13 and 14, unfed(0,0,1) on day 14 gives, in
-        this order: "Mission not met.", "1 man at Base S went unfed on the night of day 14.", "400 men at Base T went unfed on the
-        night of day 12.", "1,000 men at Base T went unfed on the nights of days 13 and 14." (the measure's order of places, then each
+        this order: "Mission not met.", "1 man at Saltmere went unfed on the night of day 14.", "400 men at Thornwick went unfed on the
+        night of day 12.", "1,000 men at Thornwick went unfed on the nights of days 13 and 14." (the measure's order of places, then each
         count in the order of its first night).
     W6. What does not count: an event of another kind whose text says "1000 unfed"; a `men_fed` at a hex the mission does not name
         ((3,3), 600 unfed); a `men_fed` of a named hex whose pulse is not "night". Each added to W1's days leaves RUNG_ONE_MET. The
         form with no base, "Allied men ashore at (5,0): no base of the side, none of 1000 fed, 1000 unfed", on day 6 counts: "1,000 men
-        at Base T went unfed on the night of day 6." Two events of (5,0) on one night, 300 and 200 unfed, are said as 500 men.
+        at Thornwick went unfed on the night of day 6." Two events of (5,0) on one night, 300 and 200 unfed, are said as 500 men.
     W7. Not judged, and never "met": day 9 null gives ["The mission could not be judged.", "Day 9 could not be read."]; thirteen days
         given where the mission's last day is 14 gives "Day 14 could not be read."; a `men_fed` of day 9 whose text is "Allied men
         ashore somewhere" gives ["The mission could not be judged.", "A report of the men fed on day 9 could not be read."]. A night
         unfed on an earlier day does not turn either into "Mission not met.": what could not be read whole is not judged.
-    W8. A mission of one place, (5,0) "Base T", all fed: the second line ends "at Base T."; of three places named A, B and C: "at A,
+    W8. A mission of one place, (5,0) "Thornwick", all fed: the second line ends "at Thornwick."; of three places named A, B and C: "at A,
         B and C."
 
     In the page's text:
@@ -3678,7 +3689,7 @@ def the_verdict_in_words():
             days.append(events)
         return days
 
-    base_t = {"q": 5, "r": 0, "name": "Base T"}
+    base_t = {"q": 5, "r": 0, "name": "Thornwick"}
     cases = []
     def case(days, mission=RUNG_ONE_MISSION):
         cases.append({"mission": mission, "days": days})
@@ -3706,19 +3717,19 @@ def the_verdict_in_words():
     code = text[text.index("  function missionLines("):text.index("  var endSeq = 0;")] + cut_function(text, "  function commas(n)") + "\nfunction main(list) { return list.map(x => missionLines(x.mission, x.days)); }"
     got = run_in_node(code, cases)
     check(got[0] == RUNG_ONE_MET, "W1: fourteen days, each with both places fed: " + " ".join(got[0]))
-    check(got[1] == ["Mission not met.", "1,000 men at Base T went unfed on the night of day 14."], "W2: " + " ".join(got[1]))
-    check(got[2] == ["Mission not met.", "1,000 men at Base S went unfed on the nights of days 13 and 14."], "W3: " + " ".join(got[2]))
-    check(got[3][1] == "1,000 men at Base T went unfed on the nights of days 7, 8, 9, 12, 13 and 14.", "W4: " + got[3][1])
-    check(got[4] == ["Mission not met.", "1 man at Base S went unfed on the night of day 14.", "400 men at Base T went unfed on the night of day 12.",
-                     "1,000 men at Base T went unfed on the nights of days 13 and 14."], "W5: both places and two counts, in the measure's order")
+    check(got[1] == ["Mission not met.", "1,000 men at Thornwick went unfed on the night of day 14."], "W2: " + " ".join(got[1]))
+    check(got[2] == ["Mission not met.", "1,000 men at Saltmere went unfed on the nights of days 13 and 14."], "W3: " + " ".join(got[2]))
+    check(got[3][1] == "1,000 men at Thornwick went unfed on the nights of days 7, 8, 9, 12, 13 and 14.", "W4: " + got[3][1])
+    check(got[4] == ["Mission not met.", "1 man at Saltmere went unfed on the night of day 14.", "400 men at Thornwick went unfed on the night of day 12.",
+                     "1,000 men at Thornwick went unfed on the nights of days 13 and 14."], "W5: both places and two counts, in the measure's order")
     check(got[5] == RUNG_ONE_MET and got[6] == RUNG_ONE_MET and got[7] == RUNG_ONE_MET, "W6: an event of another kind, a hex the mission does not name and a pulse that is not the night do not count")
-    check(got[8] == ["Mission not met.", "1,000 men at Base T went unfed on the night of day 6."], "W6: the form with no base counts: " + got[8][1])
-    check(got[9] == ["Mission not met.", "500 men at Base T went unfed on the night of day 9."], "W6: two events of one hex in one night are added: " + got[9][1])
+    check(got[8] == ["Mission not met.", "1,000 men at Thornwick went unfed on the night of day 6."], "W6: the form with no base counts: " + got[8][1])
+    check(got[9] == ["Mission not met.", "500 men at Thornwick went unfed on the night of day 9."], "W6: two events of one hex in one night are added: " + got[9][1])
     check(got[10] == ["The mission could not be judged.", "Day 9 could not be read."] and got[11] == ["The mission could not be judged.", "Day 14 could not be read."]
           and got[12] == ["The mission could not be judged.", "A report of the men fed on day 9 could not be read."],
           "W7: a day not answered, thirteen days of fourteen and a report that does not fit are not judged, and a night unfed before them does not make it \"not met\"")
-    check(got[13] == ["Mission met.", "Every man was fed every night to the end of day 14, at Base T."] and got[14] == ["Mission met.", "Every man was fed every night to the end of day 14, at A, B and C."],
-          "W8: the places are joined as English joins a list: \"at Base T.\" and \"at A, B and C.\"")
+    check(got[13] == ["Mission met.", "Every man was fed every night to the end of day 14, at Thornwick."] and got[14] == ["Mission met.", "Every man was fed every night to the end of day 14, at A, B and C."],
+          "W8: the places are joined as English joins a list: \"at Thornwick.\" and \"at A, B and C.\"")
     end = cut_function(text, "  function readEnd(")
     check(end.rstrip().endswith("}") and "api('get_briefing'" in end, "W9: readEnd is cut whole")
     mission_branch = end[:end.index("    var show = function () {")]
@@ -3741,8 +3752,8 @@ def rung_one_played_three_ways(bridge):
     (a stop is answered by `run` again, and nothing else is ordered); then `events` {day d} for d from 1 to 14, in order.
 
     V1. A floor of 2 days and an interval of 5: the lines are RUNG_ONE_MET.
-    V2. 2 and 6: ["Mission not met.", "1,000 men at Base S went unfed on the nights of days 13 and 14."].
-    V3. 2 and 4: ["Mission not met.", "1,000 men at Base T went unfed on the night of day 14."].
+    V2. 2 and 6: ["Mission not met.", "1,000 men at Saltmere went unfed on the nights of days 13 and 14."].
+    V3. 2 and 4: ["Mission not met.", "1,000 men at Thornwick went unfed on the night of day 14."].
     V4. In each game: the last `run` answers `game_over` true and `result` null; every one of the fourteen `events` answers has `begun`
         true; the check's own reading of those answers (an event of kind `men_fed` whose text does not end ", 0 unfed", by day and hex)
         agrees with the lines; and the lines are the same when the fourteen answers are asked a second time, after the end. In V1 the
@@ -3753,8 +3764,8 @@ def rung_one_played_three_ways(bridge):
     text = page_text()
     code = text[text.index("  function missionLines("):text.index("  var endSeq = 0;")] + cut_function(text, "  function commas(n)") + "\nfunction main(list) { return list.map(x => missionLines(x.mission, x.days)); }"
     games = [("V1", 2, 5, RUNG_ONE_MET, {}),
-             ("V2", 2, 6, ["Mission not met.", "1,000 men at Base S went unfed on the nights of days 13 and 14."], {(0, 0): [13, 14]}),
-             ("V3", 2, 4, ["Mission not met.", "1,000 men at Base T went unfed on the night of day 14."], {(5, 0): [14]})]
+             ("V2", 2, 6, ["Mission not met.", "1,000 men at Saltmere went unfed on the nights of days 13 and 14."], {(0, 0): [13, 14]}),
+             ("V3", 2, 4, ["Mission not met.", "1,000 men at Thornwick went unfed on the night of day 14."], {(5, 0): [14]})]
     for name, floor, interval, expected, unfed in games:
         check(begin(bridge, RUNG_ONE, "person", "engine") == {"ok": True}, f"{name}: rung 1 begins")
         person = Person(bridge.table)

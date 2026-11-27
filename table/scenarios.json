@@ -10,7 +10,7 @@
       "placeholder": true,
       "lines": [
         "Welcome, Commander. Your first command is a quiet one: one ship, one order, no enemy.",
-        "Base T, 200 miles away, depends on you for its food.",
+        "Thornwick, 200 miles away, depends on you for its food.",
         "A placeholder game: everything in it is invented."
       ],
       "sides": {
@@ -24,8 +24,8 @@
         "measure": "every_night_fed",
         "last_day": 14,
         "places": [
-          {"q": 0, "r": 0, "name": "Base S"},
-          {"q": 5, "r": 0, "name": "Base T"}
+          {"q": 0, "r": 0, "name": "Saltmere"},
+          {"q": 5, "r": 0, "name": "Thornwick"}
         ]
       },
       "pairings": [

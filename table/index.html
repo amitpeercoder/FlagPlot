@@ -706,7 +706,6 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
   </div>
   <div class="vg">
     <button type="button" id="btn-view" aria-pressed="false"></button>
-    <button type="button" id="btn-above" aria-pressed="false"></button>
   </div>
   <div class="vg col">
     <button type="button" id="btn-lean" title="Lean in" aria-label="Lean in">+</button>
@@ -6219,8 +6218,8 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
   // The chart's controls are words, each lit when what it shows is on.
   function sign(b, word, title, lit) { b.textContent = word; b.title = title; b.setAttribute('aria-label', title); b.setAttribute('aria-pressed', String(!!lit)); }
   function signs() {
-    sign($('btn-view'), 'TABLE', 'The table from the chair', !chartView);
-    sign($('btn-above'), 'FROM ABOVE', 'The chart from above', chartView);
+    // One button turns between the two views and says the one that is on: the table from the chair (3D) or the chart from above (2D).
+    sign($('btn-view'), 'VIEW \u00b7 ' + (chartView ? '2D' : '3D'), chartView ? 'The chart from above. Press for the table from the chair' : 'The table from the chair. Press for the chart from above', chartView);
     sign($('btn-pieces'), 'PIECES \u00b7 ' + { all: 'ALL', own: 'OURS', enemy: 'ENEMY', none: 'OFF' }[piecesShown], PIECE_WORD[piecesShown], piecesShown !== 'none');
     sign($('btn-labels'), 'NAMES \u00b7 ' + { pointer: 'POINTER', all: 'ALL', off: 'OFF' }[labelsShown], LABEL_WORD[labelsShown] + ': the slips over the pieces', labelsShown !== 'off');
   }
@@ -6229,7 +6228,7 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
   $('btn-labels').addEventListener('click', function () { labelsShown = LABELS[(LABELS.indexOf(labelsShown) + 1) % LABELS.length]; try { localStorage.setItem('flagplot.labels', labelsShown); } catch (e) {} signs(); });
   signs();
   function setView(chart) { if (chartView === chart) return; chartView = chart; try { localStorage.setItem('flagplot.view', chartView ? 'chart' : 'table'); } catch (e) {} signs(); }
-  $('btn-view').addEventListener('click', function () { setView(false); }); $('btn-above').addEventListener('click', function () { setView(true); });
+  $('btn-view').addEventListener('click', function () { setView(!chartView); });
   $('btn-plans').addEventListener('click', function () { if (planShown === 'all') clearPlan(); else showPlanOnChart('all'); });
   try { if (localStorage.getItem('flagplot.plans') === '1') { planShown = 'all'; $('btn-plans').setAttribute('aria-pressed', 'true'); } } catch (e) {}
   $('btn-hexes').setAttribute('aria-pressed', String(showHexes));
