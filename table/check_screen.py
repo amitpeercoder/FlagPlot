@@ -3550,7 +3550,326 @@ def a_landing_written_under_an_order_in_force(bridge):
         ending " already plans the place at " and H1; the page says "It is already planned." The page's paper for N is then
         drawn from the command state, where no line is offered WRITE IT (U1).
     The game is put away."""
-    check(False, "not built: decision 0232, step 3, pull request C (a landing written under an order in force)")
+    import re
+    print("-- a landing written under an order in force: the page's functions in node, its text, and the engine taking what it sends", flush=True)
+    text = page_text()
+    tool_calls = r"api\('(set_intent|set_limit|form_intent|withdraw_intent)'|act\('(set_intent|set_limit|form_intent|withdraw_intent)'"
+    # U1, U2: in the page's text
+    check(all(f"function {f}(" in text for f in ("writeLines", "writtenAlone", "hisOtherLandings", "readingOfLanding")) and "openPaper('landing'" in text and "paper.kind === 'landing'" in text,
+          "U1: the page holds writeLines, writtenAlone, hisOtherLandings and readingOfLanding, and a paper of the kind 'landing'")
+    plan = cut_function(text, "  function readPlan(")
+    waits = plan[plan.index("if (proposed) {"):plan.index("PAPER_TASKS = {};\n        var make")]
+    nodes = "".join(cut_function(text, f"  function {h}(") for h in ("hisBlock", "hisLine", "hisLineRows"))
+    check("writeLines(pr.tree, root)" in waits and "canSign()" in waits and "t.write = {" in waits and plan.count("t.write = {") == 1 and "WRITE IT" not in nodes
+          and "t.write && !bare" in cut_function(text, "  function paperNode(") and "WRITE IT" in cut_function(text, "  function writeBlock(") and "WRITE IT" not in cut_function(text, "  function paperNode("),
+          "U1: WRITE IT is put on a line only for a line writeLines gives of the tree propose gave (a plan that waits), only where canSign(), and the bodies of hisBlock, hisLine and hisLineRows hold none")
+    ask, dry, sign = (cut_function(text, f"  function {h}(") for h in ("askLanding", "landingDry", "signLanding"))
+    check("body = writtenAlone(c.order, c.l)" in ask and ask.count("api('preview', body)") == 1 and ask.count("api(") == 1, "U2: the paper's reading is preview with the body writtenAlone gives, and nothing added")
+    check(sign.count("api('approve', { preview: no })") == 1 and sign.count("api(") == 1 and "askLanding" in cut_function(text, "  function askPreview(") and "signLanding()" in text[text.index("$('paper').addEventListener('submit'"):][:400],
+          "U2: SIGN AND SEND is one approve of that preview, and the function that signs makes no other call")
+    check("playDry({ preview: previewNo, size: drySize }" in dry and not any(w in dry for w in ("compare", "dates", "intent:", "intent =", "{ intent")) and "landingDry()" in text[text.index("$('p-dry').addEventListener('click'"):][:400],
+          "U2: its DRY RUN sends trial with preview and size, and holds no compare, dates or intent")
+    own = "".join(cut_function(text, f"  function {h}(") for h in ("writeBlock", "openLanding", "landingHead", "drawLandingPaper", "landingFocus", "knownLandings", "askLanding", "landingDry", "signLanding"))
+    check(not re.search(tool_calls, own), "U2: the functions of this paper call the tools set_intent, set_limit, form_intent and withdraw_intent nowhere")
+    # The page's own functions, in node
+    helpers = "".join(cut_function(text, f"  function {h}(") + "\n" for h in ("cleanName", "num", "hexDist", "hexWords", "nm", "unitNo", "nameText", "sayIntent", "signedWith", "signedOwnLimits", "signedPlanWords", "signedLine",
+                                                                              "signedOrders", "whoseLine", "marksOf", "landingTried", "twoPlans", "commas", "lowerFirst", "spreadOf", "runsIn", "orderWordsOf", "orderFound",
+                                                                              "intentWords", "knownLandings", "hisLineRows", "hisLine", "giveBackQueued"))
+    word = re.search(r"^  var WORD = \{.*?\};$", text, re.M).group(0)
+    model = text[text.index("  var LIMITS_OFFERED"):text.index("  // ---- end of the written plan model ----")]
+    refusal = (text[text.index("  function cleanName"):text.index("  function sayIntent")] + text[text.index("  function orderWords"):text.index("  function nameOf(")]
+               + cut_function(text, "  function commas(n)") + "\n" + text[text.index("  var REFUSALS = ["):text.index("  // What the status line says of orders taken in")])
+    code = helpers + word + "\n" + model + refusal + text[text.index("  var COSTS ="):text.index("  function spreadOf")] + r"""
+const hexes = [], config = { islands: [{ number: 3, name: 'Guadalcanal and Tulagi', base: 1, places: [1, 4] }] }; let hexRaw = false, PAPER_TASKS = null, paper = null;
+function dateOf(d) { return 'AUG ' + (d + 1); } function rich(tag, cls, w) { return el(tag, cls, w); } function placeLink() { return el('span', '', '?'); } function refTo() { return el('span', '', '?'); }
+function baseByNumber() { return null; } function plainWords(t) { return t; }
+function tulagi(h) { const l = newLanding(h); l.lim.ships = { mode: 'only', task_forces: [10], ships: [] }; l.lim.not_before = 5; return l; }
+function lunga(h, after) { const l = newLanding(h); l.lim.after = after; l.lim.risk = 'preserve'; l.by_day = 9; return l; }
+function main(x) {
+  const out = {}; M.hexNames[x.h1[0] + ',' + x.h1[1]] = 'Lunga'; M.hexNames[x.h4[0] + ',' + x.h4[1]] = 'Tulagi'; M.names['task_force:10'] = 'Transport Group Yoke';
+  M.state = x.state || { intents: [] }; M.queue = { entries: x.queue || [] };
+  if (x.pure) {
+    const fx = x.pure.fixture, clone = o => JSON.parse(JSON.stringify(o));
+    // U3
+    const staffs = clone(fx); staffs.sub_intents[0].maker = 'staff'; delete staffs.sub_intents[0].standing;
+    out.u3 = { fixture: writeLines(fx, 1), staffs: writeLines(staffs, 1), nulls: [writeLines(null, 1), writeLines(undefined, 1), writeLines({}, 1), writeLines({ sub_intents: [fx.sub_intents[0], fx.sub_intents[2]] }, 1)] };
+    // U4
+    const odd = newLanding(x.h4); odd.by_day = 5; odd.lim.ships = { mode: 'none', task_forces: [], ships: [7] }; odd.lim.land_units = { mode: 'none', list: [4] }; odd.lim.air_groups = { mode: 'only', list: [3] };
+    odd.lim.submarines = { mode: 'only', list: [1] }; odd.lim.area = { q: 0, r: 0, dist: 2 }; odd.lim.targets = { kinds: ['carrier'], waters_first: true }; odd.lim.protected = [7]; odd.lim.in_place = true;
+    const both = newLanding(x.h4); both.lim.ships = { mode: 'only', task_forces: [10], ships: [7] }; both.lim.land_units = { mode: 'only', list: [4] }; both.lim.source = 1;
+    const bal = tulagi(x.h4); bal.lim.risk = 'balanced';
+    const set = [tulagi(x.h4), lunga(x.h1, 2), newLanding(x.h1), odd, both, bal, tulagi(x.h4)];
+    out.u4 = { tulagi: writtenAlone(1, set[0]), lunga: writtenAlone(1, set[1]), bare: writtenAlone(1, set[2]), odd: writtenAlone(1, set[3]), both: writtenAlone(1, set[4]), balanced: writtenAlone(1, set[5]),
+               everyone: set.map(l => { const u = writtenUnder(1, [l])[0]; delete u.intent; return [writtenAlone(1, l), Object.assign({ command: 'set_intent', parent: 1 }, u)]; }) };
+    // U5
+    out.u5 = hisOtherLandings(1, x.h1, x.pure.u5.intents, x.pure.u5.entries);
+    // U6
+    const press = tulagi(x.h4); press.lim.risk = 'press'; const why = refusalWords('the limit is wider than what its parent intent:1 allows');
+    out.u6 = { planned: refusalWords("intent:2 already plans the place at (3,-5)"), wider: why, said: orderWordsOf(1, orderFound(1)), refused: [1, 2, 4].map(k => refusedAlone(press, k, why)), signed: signedAloneWords(x.h4),
+               write: writeWords(x.h4, 'your order to seize and hold Guadalcanal and Tulagi') };
+    // U8
+    const p = x.pure.u8.p, known = x.pure.u8.known, listed = clone(p); listed.with_change.tree.sub_intents.push({ number: 2, kind: 'take_place', hex: [3, -5], parent: 1, maker: 'commander', standing: true });
+    const r = readingOfLanding(p, known), bare = readingOfLanding(p, []), twice = readingOfLanding(listed, known);
+    out.u8 = { r: r, marks: marksOf(r), bare: bare && bare.map(e => e.number), twice: twice && twice.map(e => e.number), none: [readingOfLanding({ intent: 3, command: p.command, with_change: {} }, known), readingOfLanding({ intent: 3, command: p.command }, known), readingOfLanding(null, known)] };
+    // U9
+    M.state = { intents: [] }; M.queue = { entries: [] }; const j = x.pure.u9.j, same = clone(j); same.asked.tried_intent = 1;
+    out.u9 = { named: landingTried(j, x.h4), bare: landingTried(j), same: [landingTried(same, x.h4), landingTried(same)], two: twoPlans(j, landingTried(j, x.h4)).staffs_is };
+  }
+  if (x.signed) {
+    M.state = x.state; const q = x.signed.queue; M.queue = { entries: q }; const first = q.filter(e => e.command.kind === 'set_intent' && e.command.parent != null)[0];
+    out.signed = { line: signedLine(first).textContent, orders: signedOrders().length, order_line: x.signed.order ? signedLine(q.filter(e => e.command.kind === 'set_intent' && e.command.parent == null)[0]).textContent : null };
+    M.queue = { entries: [first] }; out.signed.bare = signedLine(Object.assign({}, first, { goes_with: [] })).textContent;
+  }
+  if (x.lines) out.lines = writeLines(x.lines.tree, x.lines.order).map(l => l.hex);
+  if (x.reading) {
+    const rd = readingOfLanding(x.reading.p, knownLandings()); out.reading = { marks: marksOf(rd), numbers: rd.map(e => e.number) };
+  }
+  if (x.his) {
+    const by = {}; x.state.intents.forEach(i => { by[i.number] = i; }); const h = hisLine(by[x.his.k], x.queue || [], true);
+    out.his = h && { mark: h.mark, giveBack: h.giveBack, rows: h.rows.map(r => [r.key, r.set, r.change, r.back]) };
+    out.others = hisOtherLandings(x.his.n, x.his.hex, x.state.intents, x.queue || []);
+  }
+  if (x.trial) { const ct = landingTried(x.trial, x.h4); out.trial = { land: ct, two: twoPlans(x.trial, ct).staffs_is }; }
+  return out;
+}
+"""
+    # The engine's names for the places, and the architect's fixtures
+    check(begin(bridge, "guadalcanal-39-days", "engine", "person") == {"ok": True}, "begun: the person Japanese, to read the hexes of Lunga and Tulagi")
+    placed = {b["base"]["handle"]: [b["place"]["q"], b["place"]["r"]] for b in Person(bridge.table).call("list_bases")["ok"]["bases"]}
+    h1, h4 = placed["base:1"], placed["base:4"]
+    check(post(bridge.table + "/new") == {"ok": True}, "the game is put away")
+    sub = lambda number, kind, parent, hex_=None, maker="staff", **more: dict({"number": number, "kind": kind, "parent": parent, "hex": hex_, "maker": maker}, **more)
+    fixture = {"sub_intents": [sub(2, "take_place", 1, [3, -5], "commander", standing=True), sub(3, "take_place", 1, [2, -4]), sub(4, "hold", 1), sub(12, "ready_landing", 2, [3, -5]),
+                               sub(13, "ready_landing", 3, [2, -4]), sub(14, "take_place", 3, [9, 9])]}
+    intents5 = [{"number": 1, "kind": "control_island", "maker": "commander", "parent": None, "hex": None, "in_force": True},
+                {"number": 2, "kind": "take_place", "maker": "commander", "parent": 1, "hex": [3, -5], "in_force": True},
+                {"number": 5, "kind": "take_place", "maker": "commander", "parent": 1, "hex": [2, -4], "in_force": True},
+                {"number": 6, "kind": "take_place", "maker": "commander", "parent": 1, "hex": [8, 8], "in_force": False},
+                {"number": 7, "kind": "take_place", "maker": "staff", "parent": 1, "hex": [7, 7], "in_force": True},
+                {"number": 8, "kind": "take_place", "maker": "commander", "parent": None, "hex": [6, 6], "in_force": True},
+                {"number": 9, "kind": "take_place", "maker": "commander", "parent": 20, "hex": [4, 4], "in_force": True}]
+    entries5 = [{"command": {"kind": "set_intent", "intent": 12, "intent_kind": "take_place", "parent": 1, "hex": [5, -5]}}, {"command": {"kind": "set_intent", "intent": 13, "intent_kind": "take_place", "parent": 20, "hex": [4, 5]}},
+                {"command": {"kind": "set_limit", "intent": 12, "limit": "risk", "risk": "preserve"}}]
+    p8 = {"intent": 3, "command": {"hex": [2, -4], "parent": 1}, "with_change": {"tree": {"sub_intents": [sub(4, "hold", 1), sub(12, "ready_landing", 2), sub(13, "ready_landing", 3)]}}}
+    known8 = [sub(1, "control_island", None, None, "commander"), sub(2, "take_place", 1, [3, -5], "commander"), sub(7, "take_place", 1, [7, 7], "staff"), sub(9, "take_place", 20, [4, 4], "commander")]
+    spread = {"lowest": 0, "middle": 0, "highest": 0}
+    world = lambda: {"worlds": [1, 2], "met_and_kept": [], "met_and_lost_again": [], "not_met": [1, 2], "met_days": None}
+    j9 = {"asked": {"tried_intent": 9}, "last_day": 8, "cost": {}, "enemy_lost": {}, "beside": {"of": "left_to_the_staff", "order": 1, "with_your_plan": world(), "how_it_went": world(), "cost": {}, "enemy_lost": {},
+                                                                                              "world_for_world": {"apart": [], "both": [], "neither": [1, 2], "with_the_staffs_alone": [], "with_your_plan_alone": []}}}
+    state7 = {"intents": [{"number": 1, "kind": "control_island", "island": 3, "maker": "commander", "parent": None, "hex": None, "in_force": True}]}
+    queue7 = [{"command": {"kind": "set_intent", "intent": 2, "intent_kind": "take_place", "parent": 1, "hex": h4}, "place": {"queue": "commands", "number": 1}, "goes_with": [{"queue": "commands", "number": 2}, {"queue": "commands", "number": 3}], "acts": {"at": "dusk"}},
+              {"command": {"kind": "set_limit", "intent": 2, "limit": "forces", "task_forces": [10], "ships": []}, "place": {"queue": "commands", "number": 2}, "goes_with": [], "acts": {"at": "dusk"}},
+              {"command": {"kind": "set_limit", "intent": 2, "limit": "not_before", "from_day": 5}, "place": {"queue": "commands", "number": 3}, "goes_with": [], "acts": {"at": "dusk"}}]
+    pure = run_in_node(code, {"h1": h1, "h4": h4, "state": state7, "queue": queue7, "pure": {"fixture": fixture, "u5": {"intents": intents5, "entries": entries5}, "u8": {"p": p8, "known": known8}, "u9": {"j": j9}}, "signed": {"queue": queue7}})
+    # U3
+    u3 = pure["u3"]
+    check(u3["fixture"] == [{"hex": [2, -4], "number": 3}] and u3["staffs"] == [{"hex": [3, -5], "number": 2}, {"hex": [2, -4], "number": 3}] and u3["nulls"] == [[], [], [], []],
+          f"U3: writeLines gives the one line at (2,-4) of the fixture (not the standing landing of his, a hold, or a take under another task), both once entry 2 is the staff's, and none of no tree ({u3})")
+    # U4
+    u4 = pure["u4"]
+    check(u4["tulagi"] == worked_tulagi_alone(1, (3, -5)) and u4["lunga"] == worked_lunga_alone(1, 2, (2, -4)) and all("intent" not in u4[k] for k in ("tulagi", "lunga", "bare")),
+          f"U4: writtenAlone of the worked landings is exactly the architect's bodies, and carries no intent ({u4['tulagi']}, {u4['lunga']})")
+    check(u4["bare"] == {"command": "set_intent", "parent": 1, "intent_kind": "take_place", "hex": [2, -4], "limits": []} and "by_day" not in u4["bare"],
+          f"U4: a landing with nothing set sends limits empty and no by_day ({u4['bare']})")
+    check(all(a == b for a, b in u4["everyone"]) and not any(k in json.dumps([u4["odd"]]) for k in ("none_of", "air_groups", "submarines", "area", "targets", "protected", "in_place")) and u4["odd"]["limits"] == []
+          and u4["both"]["limits"] == [{"limit": "forces", "task_forces": [10], "ships": [], "source": 1, "land_units": [4]}] and u4["balanced"]["limits"][-1] == {"limit": "risk", "risk": "balanced"}
+          and not any(l["limit"] == "risk" for l in u4["tulagi"]["limits"]),
+          "U4: for every landing writtenAlone is writtenUnder less its intent, with command and parent: a risk never set sends none, balanced once set is sent, and no none_of, single ship, air group, area, target or protected ship is sent")
+    # U5
+    check(pure["u5"] == [{"number": 2, "hex": [3, -5]}, {"number": 12, "hex": [5, -5]}], f"U5: hisOtherLandings gives his landings under the order, in force or queued, by number, and no other ({pure['u5']})")
+    # U6
+    u6 = pure["u6"]
+    check(u6["said"] == "your order to seize and hold Guadalcanal and Tulagi" and u6["write"] == "Write the landing at Tulagi under your order to seize and hold Guadalcanal and Tulagi."
+          and "writeWords(hex, said)" in cut_function(text, "  function openLanding(") and "orderLink(order)" in cut_function(text, "  function openLanding("),
+          f"U6: THE ORDER's text is exactly Write the landing at Tulagi under your order to seize and hold Guadalcanal and Tulagi. ({u6['write']})")
+    check(u6["planned"] == "It is already planned." and u6["wider"] == "It is wider than the order above it allows.", f"U6: refusalWords says It is already planned. and, as ever, that a limit is wider than the order above it allows ({u6['planned']}, {u6['wider']})")
+    check(u6["refused"][0]["words"] == u6["wider"] and u6["refused"][1]["words"] == "Ships and forces: " + u6["wider"] and u6["refused"][2]["words"] == "Risk: It is wider than the order above it allows." and u6["refused"][2]["key"] == "risk",
+          f"U6: a refusal at position 1 is said as the reason alone, at position 2 as Ships and forces: and the reason, at position 4 of the Tulagi landing with Risk press exactly Risk: It is wider than the order above it allows. ({u6['refused']})")
+    check(u6["signed"] == "Signed: the landing at Tulagi is yours. The staff takes it up at 1800." and "signedAloneWords(c.hex)" in cut_function(text, "  function signLanding("),
+          f"U6: the status line once signed is exactly Signed: the landing at Tulagi is yours. The staff takes it up at 1800. ({u6['signed']})")
+    # U7
+    s7 = pure["signed"]
+    begins = "The landing at Tulagi: written under your order to seize and hold Guadalcanal and Tulagi · Ships and forces: Transport Group Yoke · Not before: "
+    check(s7["line"] == begins + "AUG 5" and not re.search(r"Order:|Capture", s7["line"]) and s7["orders"] == 0,
+          f"U7: SIGNED says the landing as The landing at Tulagi: written under your order to seize and hold Guadalcanal and Tulagi, then its limits, with no Order: and no Capture, and signedOrders gives none ({s7['line']})")
+    check(s7["bare"] == "The landing at Tulagi: written under your order to seize and hold Guadalcanal and Tulagi", f"U7: with no limit queued it is exactly that ({s7['bare']})")
+    own_orders = run_in_node(code, {"h1": h1, "h4": h4, "state": state7, "queue": [], "signed": {"order": True, "queue": [{"command": {"kind": "set_intent", "intent": 1, "intent_kind": "control_island", "island": 3}, "place": {"queue": "commands", "number": 1}, "goes_with": [], "acts": {"at": "dusk"}},
+                                                                                                                            queue7[0]]}})["signed"]
+    check(own_orders["order_line"].startswith("Order: ") and own_orders["orders"] == 1, f"U7: a queued set_intent with no parent is said as today, and signedOrders still gives no entry with a parent ({own_orders['order_line']})")
+    # U8
+    u8 = pure["u8"]
+    check([e["number"] for e in u8["r"]] == [3, 2, 4, 12, 13] and u8["r"][0] == {"number": 3, "kind": "take_place", "hex": [2, -4], "parent": 1, "maker": "commander"}
+          and u8["r"][1] == {"number": 2, "kind": "take_place", "hex": [3, -5], "parent": 1, "maker": "commander", "standing": True} and u8["r"][2:] == p8["with_change"]["tree"]["sub_intents"],
+          f"U8: readingOfLanding gives five entries numbered 3, 2, 4, 12, 13: his landing, his other landing standing, and the tree's own unchanged ({[e['number'] for e in u8['r']]})")
+    check(u8["marks"] == {"3": "YOURS", "2": "YOURS", "4": "THE STAFF’S", "12": "THE STAFF’S", "13": "THE STAFF’S"} and u8["bare"] == [3, 4, 12, 13] and u8["twice"] == [3, 4, 12, 13, 2] and u8["none"] == [None, None, None],
+          f"U8: marksOf of it is YOURS for 3 and 2 and THE STAFF’S for the rest; with known empty 3, 4, 12, 13; a landing the tree lists is not added again; no tree gives null ({u8['marks']}, {u8['bare']}, {u8['twice']}, {u8['none']})")
+    # U9
+    u9 = pure["u9"]
+    check(u9["named"] == "Tulagi" and u9["bare"] == "that place" and u9["same"] == [None, None], f"U9: landingTried names the paper's own place, says that place with none given, and is null for the order itself ({u9})")
+    check(u9["two"] == "The staff’s plan is this order with the landing at Tulagi left to the staff.", f"U9: twoPlans says exactly The staff’s plan is this order with the landing at Tulagi left to the staff. ({u9['two']})")
+    # U10, U11: a reason as the plan's paper shows it (the view of B's check of a reason)
+    heads = ["orderWords", "plainCounts", "shareWords", "tiredBit", "plainFact", "cautionPart", "cautionWords", "cautionTexts", "cleanName", "num", "hexDist", "hexWords", "nameText", "intentWords", "plainWords",
+             "tidyWorked", "paperPre", "paperText", "reasonWords", "cutTop", "oneFact", "threatsOf", "placeSpan", "taskWords", "rich", "plainLinks", "refTo", "nameOf", "hexRef", "hexPlace", "whyView",
+             "newTask", "hisNumbers", "hisNodesIn", "writtenMarks", "hisHex", "hisLanding", "hisLink", "planLinks", "goToHis", "draftHis", "landingWords", "landingCap", "limitLinks", "limitSetOn",
+             "limitLinkWords", "limitInState", "isDraftNo", "markHis", "paperLine", "orderWordsOf", "orderLink", "orderFound", "commas", "sayIntent", "sameHex", "limitJump"]
+    vcode = "".join(cut_function(text, f"  function {h}(") + "\n" for h in heads) + word + "\n" + re.search(r"  var MENTION = .*\n", text).group(0)
+    vcode += text[text.index("  var LIMIT_LINK ="):text.index("  function limitLinkWords(")] + r"""
+Node.prototype.addEventListener = function () {}; document.createElement = function (t) { return new Node(t); };
+const hexes = [], config = { islands: [] }; let hexRaw = false, PAPER_TASKS = null, PAPER_ROOT = null, PLACE_HEX = null, paper = null, previewIntent = null, planState = { written: [] };
+const paperOpen = {}; function paperArcsDraw() {} function paperArc() { return null; } function planEnd() { return null; } function dateOf() { return ''; }
+M.contacts = []; M.bases = []; M.enemyBases = []; M.forces = []; M.units = [];
+function walk(n, f) { f(n); (n.kids || []).forEach(k => walk(k, f)); }
+function view(state, hexNames, own, reason, landing) {
+  M.state = state; M.queue = { entries: [] }; M.hexNames = hexNames; Object.keys(hexNames).forEach(k => { hexAt[k] = [0, 0, 0, 0, 0]; }); paper = landing ? { kind: 'landing', write: landing } : null;
+  const t = newTask(own, 'Order'); t.reasons = [reason]; t.nothing = [reason.worked];
+  const w = whyView(t), blocks = [];
+  if (!w) return { blocks: [] };
+  w.kids.forEach(k => {
+    if (k.className === 'wsub') blocks.push({ title: k.textContent, items: [] });
+    else if (k.className === 'rpoints' && blocks.length) k.kids.forEach(li => { const links = []; walk(li, n => { if (n.className && /\bref\b/.test(n.className)) links.push(n.textContent); }); blocks[blocks.length - 1].items.push({ text: li.textContent, links: links }); });
+  });
+  return { blocks: blocks, text: w.textContent };
+}
+function main(x) { return x.views.map(v => view(x.state, x.hexNames, v.own, v.reason, v.landing)); }
+"""
+    state = {"intents": [{"number": 1, "kind": "control_island", "maker": "commander", "parent": None, "hex": None, "in_force": True, "island": 3},
+                         {"number": 2, "kind": "take_place", "maker": "commander", "parent": 1, "hex": [3, -5], "in_force": True},
+                         {"number": 3, "kind": "take_place", "maker": "commander", "parent": 1, "hex": [2, -4], "in_force": True},
+                         {"number": 4, "kind": "hold", "maker": "staff", "parent": 1, "hex": None, "in_force": True, "base": {"handle": "base:1", "name": "Lunga"}},
+                         {"number": 30, "kind": "hold", "maker": "staff", "parent": 1, "hex": None, "in_force": True, "base": {"handle": "base:1", "name": "Lunga"}}]}
+    reasons = [r for r, _ in REASONS_AND_HIS_NODES]
+    kept = {"intent": 2, "hex": [3, -5]}
+    said = run_in_node(vcode, {"state": state, "hexNames": {"2,-4": "Lunga", "3,-5": "Tulagi"}, "views": [
+        {"own": 3, "reason": reasons[1]}, {"own": 1, "reason": reasons[4]}, {"own": 4, "reason": reasons[3]},
+        {"own": 2, "reason": {"serves": {"intent": 1}, "limits": None, "worked": "intent:2, the commander's, plans the place at (3,-5): the staff forms no take beside it."}, "landing": {"number": 2, "hex": [3, -5]}},
+        {"own": 4, "reason": {"serves": {"intent": 4}, "limits": None, "worked": "intent:2, the commander's, plans the place at (3,-5): the staff forms no take beside it."}, "landing": {"number": 2, "hex": [3, -5]}}]})
+    two, five, four, line_own, line_other = said
+    limits = lambda v: [i for b in v["blocks"] if b["title"] == "YOUR LIMITS" for i in b["items"]]
+    check([(i["text"], i["links"]) for i in limits(two)] == [("its risk", ["its risk"])] and " on " not in limits(two)[0]["text"],
+          f"U10: the second reason, under his own landing's line, lists its limit as exactly its risk, one link and no on ({limits(two)})")
+    check([(i["text"], i["links"]) for i in limits(five)] == [("the forces it may use on your landing at Tulagi", ["the forces it may use", "your landing at Tulagi"])]
+          and not any("your order to" in i["text"] for v in (two, five) for i in limits(v)), f"U10: the fifth, under the order's line, lists exactly the forces it may use on your landing at Tulagi, two links, and no your order to ({limits(five)})")
+    check([(i["text"], i["links"]) for i in limits(four)] == [("the forces it may use on your order to seize and hold", ["the forces it may use", "your order to seize and hold"])], f"U10: the fourth, a limit of the order itself under a task of the staff's, is said as the page on main says it ({limits(four)})")
+    # U11
+    held = [i for b in line_own["blocks"] if b["title"] == "HOLDS IT BACK" for i in b["items"]]
+    lower = lambda s: s[:1].lower() + s[1:]
+    check(held and lower(held[0]["text"]) == "your landing at Tulagi stands: the staff forms no take beside it." and [lower(l) for l in held[0]["links"]] == ["your landing at Tulagi"]
+          and not re.search(r"intent:|the commander|, your,", line_own["text"] + line_other["text"]), f"U11: the engine's line about the landing in hand is shown as your landing at Tulagi stands: the staff forms no take beside it., the place a link ({held[:1]})")
+    check(not any(b["title"] == "YOUR PLAN" for v in (line_own, line_other) for b in v["blocks"]), f"U11: its WHY has no YOUR PLAN link to the landing whose paper it is ({[b['title'] for v in (line_own, line_other) for b in v['blocks']]})")
+    # Through the bridge: the 39 days, the person Allied against the engine; the order alone signed, one day resolved
+    check(begin(bridge, "guadalcanal-39-days", "person", "engine") == {"ok": True}, "begun: the person Allied against the engine")
+    person = Person(bridge.table)
+    command = {"command": "set_intent", "intent_kind": "control_island", "island": 3}
+    n = person.call("preview", command)["ok"]["intent"]
+    check(person.call("approve", {"preview": person.call("preview", command)["ok"]["preview"]})["ok"]["status"] == "queued", "the order to seize and hold island 3 is signed alone")
+    person.call("end_day")
+
+    def island(**more):
+        return dict({"h1": h1, "h4": h4, "state": person.call("command_state")["ok"], "queue": person.call("queued")["ok"]["entries"]}, **more)
+
+    # U12
+    st = person.call("command_state")["ok"]
+    mine = [i for i in st["intents"] if i["number"] == n][0]
+    plan_of = {p_["number"]: p_ for p_ in st["plans"]}
+    check(mine["in_force"] and not st["leaves"]["launch"] and plan_of[mine["plan"]]["state"] in ("preparing", "draft") and not [i for i in st["intents"] if i["parent"] == n],
+          f"U12: the order {n} is in force, leave to launch is not given, its plan is {plan_of[mine['plan']]['state']} and no intent stands under it")
+    tree = person.call("propose", {"intent": n})["ok"]["tree"]
+    takes = [(i["hex"], i["maker"], i.get("standing")) for i in tree["sub_intents"] if i["kind"] == "take_place" and i["parent"] == n]
+    check(sorted(t[0] for t in takes) == sorted([h1, h4]) and all(t[1] == "staff" and not t[2] for t in takes),
+          f"U12: propose for {n} gives a take_place at the hex of Lunga and of Tulagi, each the staff's and not standing ({takes})")
+    lines = run_in_node(code, island(lines={"tree": tree, "order": n}))["lines"]
+    check(sorted(lines) == sorted([h1, h4]) and len(lines) == 2, f"U12: writeLines of that tree and {n} gives two lines, at the hex of Lunga and of Tulagi ({lines})")
+    # U13
+    shown = person.call("preview", worked_tulagi_alone(n, h4))["ok"]
+    k = shown["intent"]
+    sub_ = shown["with_change"]["tree"]["sub_intents"]
+    check(shown.get("valid") is True and shown["command"]["parent"] == n and shown["command"]["hex"] == h4 and k > n and shown["under"] == [],
+          f"U13: preview of the worked landing at Tulagi is valid: its command has parent {n} and the hex of Tulagi, its intent is {k}, its under is empty")
+    check(not [i for i in sub_ if i["number"] == k] and not [i for i in sub_ if i["kind"] == "take_place" and i["hex"] == h4]
+          and [i for i in sub_ if i["kind"] == "take_place" and i["hex"] == h1 and i["maker"] == "staff" and i["parent"] == n] and [i for i in sub_ if i["kind"] == "ready_landing" and i["parent"] == k]
+          and [t for t in shown["with_change"]["tree"]["no_orders"] if t.startswith(f"intent:{k}, the commander's, plans the place at")],
+          f"U13: its tree lists no entry numbered {k}, no take_place at the hex of Tulagi, the staff's take at the hex of Lunga and a ready_landing under {k}; among its no_orders is the line about intent:{k}")
+    got = run_in_node(code, island(reading={"p": shown}))["reading"]
+    check(got["marks"][str(k)] == "YOURS" and all(v == "THE STAFF’S" for key, v in got["marks"].items() if key != str(k)) and got["numbers"][0] == k,
+          f"U13: marksOf of readingOfLanding is YOURS for {k} and THE STAFF’S for every other entry ({got['marks']})")
+    # U14
+    press = [{"limit": "forces", "task_forces": [10], "ships": []}, {"limit": "not_before", "from_day": 5}, {"limit": "risk", "risk": "press"}]
+    refused = person.call("preview", dict(worked_tulagi_alone(n, h4), limits=press))["ok"]
+    check(refused.get("status") == "refused" and refused["of_batch"] == {"position": 4, "size": 4} and refused["reason"] == f"the limit is wider than what its parent intent:{n} allows",
+          f"U14: the same with Risk press is refused with of_batch position 4, size 4, the engine's reason being the limit is wider than what its parent allows ({refused.get('of_batch')}, {refused.get('reason')})")
+    shown = person.call("preview", worked_tulagi_alone(n, h4))["ok"]
+    # U15
+    trial = person.call("trial", {"preview": shown["preview"], "size": "small"})["ok"]
+    asked, beside = trial.get("asked") or {}, trial.get("beside") or {}
+    check(asked.get("second_trial") is True and asked.get("tried_intent") == k and beside.get("of") == "left_to_the_staff" and beside.get("order") == n,
+          f"U15: trial of that preview at the size small is answered with second_trial true, tried_intent {k}, beside.of left_to_the_staff and beside.order {n} ({asked.get('second_trial')}, {asked.get('tried_intent')}, {beside.get('of')}, {beside.get('order')})")
+    said_two = run_in_node(code, island(trial=trial))["trial"]
+    check(said_two["land"] == "Tulagi" and "the landing at Tulagi left to the staff" in said_two["two"], f"U15: twoPlans of it and Tulagi says the landing at Tulagi left to the staff ({said_two})")
+    dated = person.call("trial", {"preview": shown["preview"], "size": "small", "dates": "chosen"})
+    check('A written landing is held to a day by its "not before"' in str(dated.get("refused", "")), f"U15: trial of the same preview with dates chosen is refused in the words of the tool ({str(dated.get('refused', ''))[:120]})")
+    # U16
+    approved = person.call("approve", {"preview": shown["preview"]})["ok"]
+    check(approved["status"] == "queued" and approved["limits_queued"] == 2, f"U16: approve of that preview answers queued and limits_queued 2 ({approved.get('status')}, {approved.get('limits_queued')})")
+    held = person.call("queued")["ok"]
+    top = [e for e in held["entries"] if e["command"]["kind"] == "set_intent"]
+    check(len(held["entries"]) == 3 and len(top) == 1 and top[0]["command"].get("parent") == n and top[0]["command"]["hex"] == h4 and len(top[0]["goes_with"]) == 2
+          and sorted(e["command"]["limit"] for e in held["entries"] if e["command"]["kind"] == "set_limit" and e["command"]["intent"] == k) == ["forces", "not_before"],
+          f"U16: queued then holds a set_intent with parent {n} and the hex of Tulagi whose goes_with names a forces and a not_before limit of {k}")
+    signed = run_in_node(code, island(signed={"queue": held["entries"]}))["signed"]
+    check(signed["line"].startswith("The landing at Tulagi: written under your order to seize and hold Guadalcanal and Tulagi · Ships and forces: ") and " · Not before: " in signed["line"] and signed["orders"] == 0 and not re.search(r"Order:|Capture", signed["line"]),
+          f"U16: the page's function for SIGNED says the first in the words of U7, and signedOrders of that queue is empty ({signed['line']})")
+    after = person.call("propose", {"intent": n})["ok"]["tree"]
+    takes = {i["number"]: i for i in after["sub_intents"] if i["kind"] == "take_place" and i["parent"] == n}
+    check(takes[k]["maker"] == "commander" and takes[k].get("standing") and takes[k]["hex"] == h4 and [i for i in takes.values() if i["maker"] == "staff" and i["hex"] == h1],
+          f"U16: propose for {n} now gives the take_place at the hex of Tulagi as number {k}, the commander's and standing, and the staff's at the hex of Lunga")
+    check(run_in_node(code, island(lines={"tree": after, "order": n}))["lines"] == [h1], "U16: writeLines gives the hex of Lunga alone")
+    again = person.call("preview", worked_tulagi_alone(n, h4))["ok"]
+    check(again.get("status") == "refused" and again["reason"] == f"intent:{k} already plans the place at ({h4[0]},{h4[1]})" and pure["u6"]["planned"] == "It is already planned.",
+          f"U16: previewing the worked landing at Tulagi again is refused, the engine's reason being intent:{k} already plans the place at that hex, which the page says It is already planned. ({again.get('reason')})")
+    # U17
+    entry = top[0]
+    taken = person.call("take_back", {"queue": entry["place"]["queue"], "number": entry["place"]["number"], "as_of": held["as_of"]})["ok"]
+    back = person.call("propose", {"intent": n})["ok"]["tree"]
+    check(taken.get("status") != "refused" and person.call("queued")["ok"]["entries"] == [] and all(i["maker"] == "staff" for i in back["sub_intents"] if i["kind"] == "take_place" and i["parent"] == n)
+          and sorted(run_in_node(code, island(lines={"tree": back, "order": n}))["lines"]) == sorted([h1, h4]),
+          "U17: one take_back of the first entry is not refused and leaves nothing queued; propose gives both takes as the staff's again and writeLines both lines")
+    # U18
+    shown = person.call("preview", worked_tulagi_alone(n, h4))["ok"]
+    k = shown["intent"]
+    check(person.call("approve", {"preview": shown["preview"]})["ok"]["status"] == "queued", "U18: the landing at Tulagi is previewed and approved again")
+    person.call("end_day")
+    st = person.call("command_state")["ok"]
+    his = [i for i in st["intents"] if i["number"] == k]
+    plans = {p_["number"]: p_ for p_ in st["plans"]}
+    check(his and his[0]["in_force"] and his[0]["maker"] == "commander" and his[0]["parent"] == n and plans[his[0]["plan"]]["state"] in ("draft", "preparing") and plans[[i for i in st["intents"] if i["number"] == n][0]["plan"]]["state"] in ("draft", "preparing"),
+          f"U18: intent {k} is in force under {n}, the commander's, its plan {plans[his[0]['plan']]['state']} while the order's plan still waits")
+    line = run_in_node(code, island(his={"k": k, "n": n, "hex": h1}))
+    rows = {r[0]: r[1:] for r in line["his"]["rows"]}
+    check(line["his"]["mark"] == "YOURS" and line["his"]["giveBack"] is True and rows["ships"] == [True, True, True] and rows["not_before"] == [True, True, True]
+          and all(v[1] for key, v in rows.items() if key != "by_day") and all(not v[2] for key, v in rows.items() if v[0] is False) and "by_day" not in rows,
+          f"U18: hisLine of it is YOURS, offers GIVE IT BACK TO THE STAFF, and shows Ships and forces and Not before with CHANGE and BACK TO THE STAFF’S CHOICE and every other line with CHANGE ({rows})")
+    check("t.his = hisLine(byNum[t.n]" in waits, "U18 (C5): the plan's paper of a plan that waits gives a landing of his the lines of one in force")
+    check(line["others"] == [{"number": k, "hex": h4}], f"U18: hisOtherLandings for the order and the hex of Lunga gives {k} at the hex of Tulagi alone ({line['others']})")
+    lu = person.call("preview", worked_lunga_alone(n, k, h1))["ok"]
+    check(lu.get("valid") is True and lu["command"]["parent"] == n and lu["intent"] > k and person.call("queued")["ok"]["entries"] == [],
+          f"U18: preview of the worked landing at Lunga is valid, with parent {n} and a number above {k}, and nothing is approved")
+    wd = person.call("preview", {"command": "withdraw_intent", "intent": k})["ok"]
+    check(wd.get("valid") is True and wd["intent"] == n, f"U18: preview of withdraw_intent {k} is valid with intent {n}")
+    # U19
+    person.call("set_leave", {"leave": "launch", "given": True})
+    person.call("end_day")
+    st = person.call("command_state")["ok"]
+    plans = {p_["number"]: p_ for p_ in st["plans"]}
+    took = [i for i in st["intents"] if i["kind"] == "take_place" and i["parent"] == n and i["hex"] == h1 and i["in_force"]]
+    check(took and all(i["maker"] == "staff" for i in took) and plans[[i for i in st["intents"] if i["number"] == n][0]["plan"]]["state"] == "released",
+          f"U19: a take_place at the hex of Lunga with maker staff is in force under {n} and the order's plan is released")
+    late = person.call("preview", worked_lunga_alone(n, k, h1))["ok"]
+    check(late.get("status") == "refused" and re.fullmatch(r"intent:\d+ already plans the place at \(%d,%d\)" % tuple(h1), late["reason"]) and pure["u6"]["planned"] == "It is already planned.",
+          f"U19: preview of the worked landing at Lunga is now refused, the engine's reason beginning intent: and ending already plans the place at that hex, which the page says It is already planned. ({late.get('reason')})")
+    check(plans[[i for i in st["intents"] if i["number"] == n][0]["plan"]]["state"] == "released" and any(i["parent"] == n for i in st["intents"])
+          and "mp.state === 'released' && !(a[0].intents || []).some(function (i) { return i.parent === root; })" in plan,
+          "U19: the page's paper for the order is then drawn from the command state (its plan is released and has tasks), where no line is offered WRITE IT")
+    check(post(bridge.table + "/new") == {"ok": True}, "the game is put away")
 
 
 # ---- Rung 1 on the table (decision 0237). The statements are the architect's, written before the code with
