@@ -3275,7 +3275,8 @@ pub(crate) fn commands_text(view: &SideView<'_>, commands: &[CommandKind]) -> Ve
 }
 
 /// The intent a previewed command is about: the intent set, or the intent
-/// the limit is for. A reserve is for a base, not an intent: it is read as
+/// the limit is for; for a withdrawal, the order above the intent withdrawn
+/// (decision 0232, rule 30), none where it stands under none. A reserve is for a base, not an intent: it is read as
 /// about the lowest intent in force whose forces limit loads at that base.
 pub(crate) fn previewed_intent(view: &SideView<'_>, kind: &CommandKind) -> Option<IntentId> {
     match kind {
@@ -3291,6 +3292,19 @@ pub(crate) fn previewed_intent(view: &SideView<'_>, kind: &CommandKind) -> Optio
             })
             .map(|i| i.id),
         CommandKind::SetLimit(limit) => limit.intent(),
+        CommandKind::WithdrawIntent { intent } => view
+            .command_state()
+            .intents
+            .get(intent)
+            .and_then(|held| held.parent),
+        _ => None,
+    }
+}
+
+/// The intent a withdrawal withdraws.
+pub(crate) fn withdrawn_by(kind: &CommandKind) -> Option<IntentId> {
+    match kind {
+        CommandKind::WithdrawIntent { intent } => Some(*intent),
         _ => None,
     }
 }

@@ -190,6 +190,13 @@ there is nothing to say, so a game with no stream and no establishment reads
 as before; the text briefing gains "Replacement men:" and "Men joined
 yesterday:" lines. Only the side's own are ever given.
 
+Version 58 (decision 0232, step 3, the preview of a withdrawal) lets `preview` take `withdraw_intent` of a sub-intent the
+commander wrote. The answer is of the kind `preview`: `intent` is the order the sub-intent stands under, `command` is the
+withdrawal, `limits`, `shown_limits` and `under` are empty lists, and `with_change` is the staff's reading of that order
+with the sub-intent withdrawn on the coming morning. The withdrawal of an order that stands under none, and `limits` or
+`under` given with a withdrawal, are errors of the call; `trial` of such a preview is an error of the call. `approve` and
+`take_back` are as they were. Every other answer differs only in the version.
+
 Version 57 (decision 0232, step 2) lets a preview of a `set_intent` take `under`, a list of sub-intents the commander
 writes under the order, each a `set_intent` body without `parent` and with its own `limits`: the order, its limits and
 each sub-intent followed by its own limits are taken in as one. A `preview` answer gains `under` (each sub-intent's
