@@ -118,3 +118,19 @@
 //!   and the hook called with the hex left, (5,0), where only Japanese base
 //!   2 stands. Its picture is the Allied area command's.
 //! - **With command levels off** the hook makes no command.
+//!
+//! The third case cannot come about by a march today (decision 0237, the
+//! note under rule 2): it is proved by the hook alone.
+//!
+//! And one test in `crates/sim-core/src/held_tests.rs`, beside
+//! `a_command_formed_is_held_as_of_now_and_a_base_changing_side_moves_its_hold`,
+//! in that file's world with report figures (`holding(ON_TIME)`), for rule
+//! 3 and ruling 5:
+//!
+//! - A base of the Allied side is put into the state at (1,1) with no
+//!   supply, and the hook is called with the hex left, (0,0), base 1's.
+//!   The Allied area command holds the new base at once, as of the moment
+//!   the hook ran (the start, in that world), with 0 t of supply.
+//! - 5 t is then put into the base in truth, as the march does after the
+//!   hook. What the area command holds of it is unchanged: 0 t.
+//! - The Japanese side holds nothing of it.
