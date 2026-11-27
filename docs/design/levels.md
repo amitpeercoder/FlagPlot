@@ -101,7 +101,7 @@ Read together with "first signed plan is kept", this gives the following. Where 
 - **What the ladder records:** the score of the first plan he signed, kept and never written over; whether the level is passed, and if so on which play, by which plan, and after how many games fought. Every play's scores are shown to him at its end.
 - **A level may be passed by a later plan.** The architect's reading, since otherwise a first plan that did not beat par would close the ladder for good. The first plan's score stays on the record beside the pass.
 
-**Do unlimited tries empty the game's part?** Nearly, as a gate. By luck alone something like half of steered games come out no worse than their cold game, so a few tries pass almost any plan that beats par, and the gate then costs time and proves little. It is not empty as a score: the first game fought is one game, and so is the count of games it took. So the record carries both, and the gate is left as he ruled it. Whether tries should be limited is Question 1.
+**Do unlimited tries empty the game's part?** Nearly, as a gate. By luck alone something like half of steered games come out no worse than their cold game, so a few tries pass almost any plan that beats par, and the gate then costs time and proves little. It is not empty as a score: the first game fought is one game, and so is the count of games it took. So the record carries both, and the gate is left as he ruled it. The designer has since ruled that tries are unlimited and the count is kept (answer 11).
 
 ### What the trial can and cannot do for this
 
@@ -266,8 +266,12 @@ To the five that followed:
 9. **The first playable version:** "The first levels." The slice becomes the top rung, reached later, and the long order-of-battle work for it waits.
 10. **What the kill gate is judged on:** "Judged on levels." The wording of the gate's questions is his to review; the architect's proposal is in `docs/pillars.md`.
 
+To the one question that followed:
+
+11. **Are tries of the game unlimited:** yes, the architect's recommendation, offered to him as: "Unlimited, count kept: try as often as you like. The ladder keeps your first game's result and the number of games it took, so a pass on the first try reads differently from a pass on the sixth."
+
 Settled by the architect, of what he did not rule on: he does not see the cold result of his seed, or any result of the judge, before his game is over. Read by the architect and said where it is read ("What passes a level"): the game's part fails an attempt or does not, and an addition does not pass a plan that did not beat par; a level may be passed by a later plan, the first plan's score staying on the record.
 
 ## Questions for the designer
 
-1. **Are tries of the game unlimited?** As ruled, a game that goes worse than the plan played cold fails the attempt and he may try again. With no limit, luck passes nearly any plan that beat par within a few tries. The architect recommends leaving them unlimited and making the record carry the weight: the first game fought with a plan, and the number of games it took to pass, are kept on the ladder beside the first plan's score. A limit would make one unlucky game close a level, which is harsher than anything he has said.
+None is open. The one this note last asked, whether tries of the game are unlimited, is answered (answer 11).
