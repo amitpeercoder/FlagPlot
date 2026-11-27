@@ -10,7 +10,7 @@
 //! and holds this file to a shorter list of what it may call.
 
 use std::borrow::Cow;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use serde_json::{json, Value};
 use sim_core::command::{
@@ -220,6 +220,12 @@ struct PreviewRecord {
     /// order and its limits are one preview, queued in this order or not
     /// at all.
     requests: Vec<staffing::Request>,
+    /// Decision 0232, rule 20: how `requests` divide. The order and its own
+    /// limits come first (`order_limits` of them), then each sub-intent the
+    /// commander wrote under it followed by its own limits (`under_limits`,
+    /// the count of each's limits, in the order given).
+    order_limits: usize,
+    under_limits: Vec<usize>,
     /// The side's queued commands and the count of its queued orders when
     /// the preview was made, to say what was queued after it.
     commands: Vec<CommandKind>,
@@ -2558,7 +2564,7 @@ impl Session {
             next_intent,
             next_interrupt,
         )?;
-        self.queue_requests(side, tool, vec![request], queue, None)
+        self.queue_requests(side, tool, vec![request], queue, None, None)
     }
 
     /// Takes commands read from a call (or from a preview) in after `queue`,
@@ -2575,6 +2581,7 @@ impl Session {
         requests: Vec<staffing::Request>,
         queue: Vec<CommandKind>,
         via: Option<u32>,
+        shape: Option<(usize, Vec<(u32, usize)>)>,
     ) -> Result<Value, CallError> {
         // The script's commands of the side come first on the day, then the
         // seat's: the new commands are the ones after both.
@@ -2616,7 +2623,27 @@ impl Session {
                         json!({ "position": shown + 1, "size": requests.len() }),
                     );
                 } else {
-                    map.insert("limits_queued".into(), json!(requests.len() - 1));
+                    // Decision 0232, rule 21: where sub-intents came with
+                    // the order, `limits_queued` counts the order's own and
+                    // each sub-intent's are given beside it.
+                    match &shape {
+                        Some((order_limits, under)) if !under.is_empty() => {
+                            map.insert("limits_queued".into(), json!(order_limits));
+                            map.insert(
+                                "under_queued".into(),
+                                json!(under
+                                    .iter()
+                                    .map(|(intent, limits)| json!({
+                                        "intent": intent,
+                                        "limits_queued": limits,
+                                    }))
+                                    .collect::<Vec<_>>()),
+                            );
+                        }
+                        _ => {
+                            map.insert("limits_queued".into(), json!(requests.len() - 1));
+                        }
+                    }
                 }
             }
         }
@@ -2658,56 +2685,167 @@ impl Session {
                 ));
             }
         };
+        // Decision 0232, rule 20: the sub-intents the commander writes under
+        // the order, each a set_intent body without `parent` and with its own
+        // limits.
+        let under = match rest.remove("under") {
+            None | Some(Value::Null) => Vec::new(),
+            Some(Value::Array(list)) if command == "set_intent" => list,
+            Some(_) if command == "set_limit" => {
+                return Err(CallError::new(
+                    "\"under\" is not an argument of preview for command set_limit: it is given with a set_intent",
+                ));
+            }
+            Some(_) => {
+                return Err(CallError::new(
+                    "\"under\" must be a list of sub-intents, each a set_intent body without \"parent\" (the sub-intent stands under this order)",
+                ));
+            }
+        };
         let queue = self.seats[&side].commands.clone();
         let next_intent = {
             let world = self.preview_with(Some((side, &queue)), None);
             staffing::next_free_intent(&world.side_view(side), &queue)
         };
-        let mut requests = vec![staffing::request(
-            &self.world.side_view(side),
-            command,
-            &rest,
-            next_intent,
-            0,
-        )?];
-        if !limits.is_empty() {
-            let CommandKind::SetIntent { intent, .. } = &requests[0].kind else {
+        let view = self.world.side_view(side);
+        let mut requests = vec![staffing::request(&view, command, &rest, next_intent, 0)?];
+        let CommandKind::SetIntent {
+            intent: order_number,
+            ..
+        } = &requests[0].kind
+        else {
+            if !limits.is_empty() || !under.is_empty() {
                 return Err(CallError::new("a preview of limits is of a set_intent"));
-            };
-            let intent = intent.raw();
-            for (i, limit) in limits.iter().enumerate() {
-                let Value::Object(body) = limit else {
-                    return Err(CallError::new(format!(
-                        "limits[{i}] must be an object, a limit as set_limit takes it without \"intent\""
-                    )));
-                };
-                if body.contains_key("intent") {
-                    return Err(CallError::new(format!(
-                        "limits[{i}]: \"intent\" is not an argument of a limit given with a set_intent: the limit is of that order"
-                    )));
-                }
-                if body.get("limit").and_then(Value::as_str) == Some("reserve") {
-                    return Err(CallError::new(format!(
-                        "limits[{i}]: a reserve is of a base, not of an order: give it with set_limit"
-                    )));
-                }
-                let mut body = body.clone();
-                body.insert("intent".into(), json!(intent));
-                requests.push(
-                    staffing::request(
-                        &self.world.side_view(side),
-                        "set_limit",
-                        &body,
-                        next_intent,
-                        0,
-                    )
-                    .map_err(|e| CallError {
-                        message: format!("limits[{i}]: {}", e.message),
-                        allowed: e.allowed,
-                    })?,
-                );
             }
+            return self.finish_preview(side, requests, 0, Vec::new(), queue);
+        };
+        let order_number = *order_number;
+        self.push_limits(
+            &view,
+            &mut requests,
+            "limits",
+            &limits,
+            order_number,
+            next_intent,
+        )?;
+        let order_limits = requests.len() - 1;
+        // Each sub-intent takes the number it is given, else one past the
+        // highest the side has ever set, has queued, or that stands before it
+        // in the batch (decision 0232, "Found in writing step 2's statements",
+        // 1).
+        let mut highest = next_intent.saturating_sub(1).max(order_number.raw());
+        let mut under_limits = Vec::new();
+        for (i, entry) in under.iter().enumerate() {
+            let Value::Object(body) = entry else {
+                return Err(CallError::new(format!(
+                    "under[{i}] must be an object, a set_intent body without \"parent\""
+                )));
+            };
+            if body.contains_key("parent") {
+                return Err(CallError::new(format!(
+                    "under[{i}]: \"parent\" is not an argument of a sub-intent given in under: the sub-intent stands under this order, intent {}",
+                    order_number.raw()
+                )));
+            }
+            let mut body = body.clone();
+            match body.remove("command") {
+                None | Some(Value::Null) => {}
+                Some(Value::String(c)) if c == "set_intent" => {}
+                Some(_) => {
+                    return Err(CallError::new(format!(
+                        "under[{i}]: \"command\" is not an argument of a sub-intent given in under: each is a set_intent"
+                    )));
+                }
+            }
+            let sub_limits = match body.remove("limits") {
+                None | Some(Value::Null) => Vec::new(),
+                Some(Value::Array(list)) => list,
+                Some(_) => {
+                    return Err(CallError::new(format!(
+                        "under[{i}].limits must be a list of limits, each as set_limit takes one without \"intent\""
+                    )));
+                }
+            };
+            body.insert("parent".into(), json!(order_number.raw()));
+            let request =
+                staffing::request(&view, "set_intent", &body, highest + 1, 0).map_err(|e| {
+                    CallError {
+                        message: format!("under[{i}]: {}", e.message),
+                        allowed: e.allowed,
+                    }
+                })?;
+            let CommandKind::SetIntent { intent, .. } = &request.kind else {
+                return Err(CallError::new(format!("under[{i}] is not a set_intent")));
+            };
+            let intent = *intent;
+            highest = highest.max(intent.raw());
+            requests.push(request);
+            let before = requests.len();
+            self.push_limits(
+                &view,
+                &mut requests,
+                &format!("under[{i}].limits"),
+                &sub_limits,
+                intent,
+                highest + 1,
+            )?;
+            under_limits.push(requests.len() - before);
         }
+        self.finish_preview(side, requests, order_limits, under_limits, queue)
+    }
+
+    /// The limits given with an intent of a preview, each read as a
+    /// `set_limit` of that intent and pushed after it (decision 0222, rule 4;
+    /// decision 0232, rule 20). `place` names the list in a fault of the call.
+    fn push_limits(
+        &self,
+        view: &SideView<'_>,
+        requests: &mut Vec<staffing::Request>,
+        place: &str,
+        limits: &[Value],
+        intent: IntentId,
+        next_intent: u32,
+    ) -> Result<(), CallError> {
+        for (i, limit) in limits.iter().enumerate() {
+            let Value::Object(body) = limit else {
+                return Err(CallError::new(format!(
+                    "{place}[{i}] must be an object, a limit as set_limit takes it without \"intent\""
+                )));
+            };
+            if body.contains_key("intent") {
+                return Err(CallError::new(format!(
+                    "{place}[{i}]: \"intent\" is not an argument of a limit given with a set_intent: the limit is of that order"
+                )));
+            }
+            if body.get("limit").and_then(Value::as_str) == Some("reserve") {
+                return Err(CallError::new(format!(
+                    "{place}[{i}]: a reserve is of a base, not of an order: give it with set_limit"
+                )));
+            }
+            let mut body = body.clone();
+            body.insert("intent".into(), json!(intent.raw()));
+            requests.push(
+                staffing::request(view, "set_limit", &body, next_intent, 0).map_err(|e| {
+                    CallError {
+                        message: format!("{place}[{i}]: {}", e.message),
+                        allowed: e.allowed,
+                    }
+                })?,
+            );
+        }
+        Ok(())
+    }
+
+    /// The rest of `preview`: the engine's verdict on each command of the
+    /// batch taken in as one, and the answer.
+    fn finish_preview(
+        &mut self,
+        side: Side,
+        requests: Vec<staffing::Request>,
+        order_limits: usize,
+        under_limits: Vec<usize>,
+        queue: Vec<CommandKind>,
+    ) -> Result<Value, CallError> {
         let day = self.command_day();
         let before = self.commands.get(&day).map_or(0, |list| {
             list.iter().filter(|(who, _)| *who == side).count()
@@ -2742,13 +2880,22 @@ impl Session {
         let shown = self.previews.iter().filter(|p| p.side == side).count();
         let number = u32::try_from(shown + 1).expect("few previews");
         let staff: &dyn Staff = self.staffs[&side].as_ref();
+        let (order_requests, written) = requests.split_at(1 + order_limits);
+        let mut under: Vec<(&staffing::Request, &[staffing::Request])> = Vec::new();
+        let mut rest = written;
+        for count in &under_limits {
+            let (sub, after) = rest.split_at(1 + count);
+            under.push((&sub[0], &sub[1..]));
+            rest = after;
+        }
         let out = staffing::preview(
             number,
             &as_is.side_view(side),
             &with.side_view(side),
             staff,
-            &requests[0],
-            &requests[1..],
+            &order_requests[0],
+            &order_requests[1..],
+            &under,
         );
         self.previews.push(PreviewRecord {
             number,
@@ -2757,6 +2904,8 @@ impl Session {
             moment: self.moment(),
             revision: self.revision(side),
             requests,
+            order_limits,
+            under_limits,
             commands: queue,
             orders: self.seats[&side].queued.len(),
         });
@@ -2811,6 +2960,19 @@ impl Session {
             record.moment,
         );
         let (was_commands, was_orders) = (record.commands.clone(), record.orders);
+        let shape = {
+            let mut under = Vec::new();
+            let mut at = 1 + record.order_limits;
+            for count in &record.under_limits {
+                let intent = match &record.requests[at].kind {
+                    CommandKind::SetIntent { intent, .. } => intent.raw(),
+                    _ => 0,
+                };
+                under.push((intent, *count));
+                at += 1 + count;
+            }
+            (record.order_limits, under)
+        };
         let queue = self.seats[&side].commands.clone();
         let void = if day != self.command_day() {
             Some(format!(
@@ -2860,7 +3022,7 @@ impl Session {
                 queue.len(),
             ));
         }
-        self.queue_requests(side, "approve", requests, queue, Some(number))
+        self.queue_requests(side, "approve", requests, queue, Some(number), Some(shape))
     }
 
     // -----------------------------------------------------------------
@@ -3013,7 +3175,10 @@ impl Session {
         let coming = self.preview();
         let coming_view = coming.side_view(side);
         let state = coming_view.command_state();
-        let (tried, draft, tried_words) = match (intent_arg, preview_arg) {
+        // `kept` is, for a preview of an order with landings written under
+        // it (decision 0232, rule 20), how many of the draft's commands are
+        // the order and its own limits: what the second trial keeps.
+        let (tried, draft, tried_words, kept) = match (intent_arg, preview_arg) {
             (Some(raw), _) => {
                 let id = IntentId::new(raw);
                 if standing
@@ -3038,7 +3203,7 @@ impl Session {
                     return Err(CallError::new(format!("intent {raw} is withdrawn")));
                 }
                 let words = staffing::intent_words(&coming_view, held.kind);
-                (id, Vec::new(), format!("intent {raw}, {words}"))
+                (id, Vec::new(), format!("intent {raw}, {words}"), None)
             }
             (None, Some(raw)) => {
                 let Some(record) = self
@@ -3061,22 +3226,22 @@ impl Session {
                     )));
                 }
                 let command = record.requests[0].kind.clone();
-                let limits: Vec<CommandKind> = record.requests[1..]
-                    .iter()
-                    .map(|r| r.kind.clone())
-                    .collect();
                 let Some(id) = staffing::previewed_intent(&coming_view, &command) else {
                     return Err(CallError::new(format!(
                         "preview {raw} is of a limit on no intent: there is no intent to try"
                     )));
                 };
-                let mut words = command_words(&coming_view, &command);
-                for limit in &limits {
-                    words = format!("{words}; {}", command_words(&coming_view, limit));
-                }
-                let mut draft = vec![command];
-                draft.extend(limits);
-                (id, draft, format!("preview {raw}, {words}"))
+                // The order, its limits, then each landing written under it
+                // with its own: the draft is all of them, as one.
+                let draft: Vec<CommandKind> =
+                    record.requests.iter().map(|r| r.kind.clone()).collect();
+                let kept = (!record.under_limits.is_empty()).then_some(1 + record.order_limits);
+                let words = draft
+                    .iter()
+                    .map(|c| command_words(&coming_view, c))
+                    .collect::<Vec<_>>()
+                    .join("; ");
+                (id, draft, format!("preview {raw}, {words}"), kept)
             }
             (None, None) => unreachable!("one of the two is given"),
         };
@@ -3098,14 +3263,46 @@ impl Session {
             _ => false,
         };
         let queued = !in_force && standing.iter().any(&sets);
-        // What the second trial would be of (decision 0181, amended 1).
+        // A landing the commander wrote (decision 0232): the order it stands
+        // under, where the intent tried is one; and where it is an order,
+        // whether it has landings written under it, in force, queued or in
+        // the draft.
+        let tried_parent: Option<IntentId> = match draft.first() {
+            Some(CommandKind::SetIntent { parent, .. }) => *parent,
+            Some(_) => None,
+            None => state.intents.get(&tried).and_then(|i| i.parent),
+        };
+        let has_written = kept.is_some()
+            || state
+                .intents_in_force()
+                .any(|i| i.parent == Some(tried) && i.maker == Maker::Commander);
+        let landing: Option<Hex> = tried_parent.and_then(|_| {
+            let kind = match draft.first() {
+                Some(CommandKind::SetIntent { kind, .. }) => Some(*kind),
+                _ => state.intents.get(&tried).map(|i| i.kind),
+            };
+            match kind {
+                Some(IntentKind::TakePlace { hex, .. }) => Some(hex),
+                _ => None,
+            }
+        });
+        // What the second trial would be of (decision 0181, amended 1; and,
+        // for what the commander wrote, decision 0232, rule 23).
         let of = match draft.first() {
+            None if in_force && tried_parent.is_some() => BesideOf::GivenBackToTheStaff,
             None if in_force => BesideOf::Withdrawn,
+            None if tried_parent.is_some() || has_written => BesideOf::LeftToTheStaff,
             None => BesideOf::WithoutIt,
-            Some(CommandKind::SetIntent { .. }) if !in_force && !queued => BesideOf::WithoutIt,
+            Some(CommandKind::SetIntent { .. }) if !in_force && !queued => {
+                if tried_parent.is_some() || has_written {
+                    BesideOf::LeftToTheStaff
+                } else {
+                    BesideOf::WithoutIt
+                }
+            }
             Some(_) => BesideOf::AsItStands,
         };
-        // Where `compare` is not given (amended 2).
+        // Where `compare` is not given (amended 2; decision 0232, rule 24).
         let other = state.intents_in_force().any(|i| {
             i.id != tried
                 && i.maker == Maker::Commander
@@ -3118,7 +3315,7 @@ impl Session {
         });
         let compare = compare_arg.unwrap_or(match of {
             _ if window => false,
-            BesideOf::AsItStands => true,
+            BesideOf::AsItStands | BesideOf::LeftToTheStaff | BesideOf::GivenBackToTheStaff => true,
             BesideOf::WithoutIt => other,
             BesideOf::Withdrawn => false,
         });
@@ -3129,22 +3326,100 @@ impl Session {
                 tried.raw()
             )));
         }
+        // No window for a written part (decision 0232, rule 26).
+        if window {
+            let what = match (preview_arg, intent_arg, tried_parent) {
+                (Some(raw), _, None) if kept.is_some() => {
+                    Some(format!("preview {raw} carries landings you wrote"))
+                }
+                (Some(raw), _, Some(parent)) => Some(format!(
+                    "preview {raw} is of a landing you wrote under intent {}",
+                    parent.raw()
+                )),
+                (_, Some(raw), Some(parent)) => Some(format!(
+                    "intent {raw} is a landing you wrote under intent {}",
+                    parent.raw()
+                )),
+                (_, Some(raw), None) if has_written => {
+                    Some(format!("intent {raw} has landings you wrote under it"))
+                }
+                _ => None,
+            };
+            if let Some(what) = what {
+                return Err(CallError::new(format!(
+                    "{what}: a window is not offered for a written part. A written landing is held to a day by its \"not before\", which can be previewed and compared"
+                )));
+            }
+        }
+        // What the second trial leaves out of the standing commands, by their
+        // places: a queued order is left out with its limits (amended 1); a
+        // queued landing with its own; a queued order with landings written
+        // under it, the landings with what goes with each (decision 0232,
+        // rule 23). And the intents that thereby go.
+        let mut going: Vec<bool> = vec![false; standing.len()];
+        let mut left_out: BTreeSet<IntentId> = BTreeSet::new();
+        match of {
+            BesideOf::WithoutIt if queued => {
+                going = standing.iter().map(&sets).collect();
+                left_out.insert(tried);
+            }
+            BesideOf::LeftToTheStaff if queued || (draft.is_empty() && !in_force) => {
+                if tried_parent.is_some() {
+                    going = standing.iter().map(&sets).collect();
+                    left_out.insert(tried);
+                } else {
+                    let mut under: BTreeSet<IntentId> = BTreeSet::from([tried]);
+                    for (i, c) in standing.iter().enumerate() {
+                        let part = match c {
+                            CommandKind::SetIntent {
+                                intent,
+                                parent: Some(parent),
+                                ..
+                            } if under.contains(parent) => {
+                                under.insert(*intent);
+                                true
+                            }
+                            CommandKind::SetLimit(limit) => limit
+                                .intent()
+                                .is_some_and(|n| n != tried && under.contains(&n)),
+                            CommandKind::SetPursuit { intent, .. }
+                            | CommandKind::WithdrawIntent { intent } => {
+                                *intent != tried && under.contains(intent)
+                            }
+                            _ => false,
+                        };
+                        going[i] = part;
+                    }
+                    under.remove(&tried);
+                    left_out = under;
+                }
+            }
+            _ => {}
+        }
         // A window hands in the whole order at each date (amended 4); the
         // second trial of a queued order leaves it out (amended 1). Either
         // way the commands that set it move or go, and a standing command
         // left behind that names it is refused (amended 7).
-        let moves = window || (compare && of == BesideOf::WithoutIt && queued);
-        if moves {
-            if let Some(after) = standing.iter().find(|c| {
-                !sets(c)
-                    && matches!(c, CommandKind::SetLimit(Limit::After { other: Some(o), .. }) if *o == tried)
-            }) {
+        if window {
+            going = standing.iter().map(&sets).collect();
+            left_out = BTreeSet::from([tried]);
+        }
+        if (window || compare) && !left_out.is_empty() {
+            let named = standing.iter().enumerate().find_map(|(i, c)| match c {
+                CommandKind::SetLimit(Limit::After { other: Some(o), .. })
+                    if !going[i] && left_out.contains(o) =>
+                {
+                    Some((c, *o))
+                }
+                _ => None,
+            });
+            if let Some((after, named)) = named {
                 return Err(CallError::new(format!(
                     "\"{}\" stands among your commands for the morning and names intent {}: the trial would {} intent {} and not that command, so the worlds would differ by more than the thing tried. It cannot be tried so",
                     command_words(&coming_view, after),
-                    tried.raw(),
+                    named.raw(),
                     if window { "move" } else { "leave out" },
-                    tried.raw()
+                    named.raw()
                 )));
             }
         }
@@ -3203,23 +3478,47 @@ impl Session {
             (standing.clone(), course)
         };
         let second = compare.then(|| {
+            let kept_standing = || -> Vec<CommandKind> {
+                standing
+                    .iter()
+                    .zip(&going)
+                    .filter(|(_, gone)| !**gone)
+                    .map(|(c, _)| c.clone())
+                    .collect()
+            };
             let (second_standing, mut second_course) = match of {
                 BesideOf::AsItStands => (standing.clone(), Vec::new()),
-                BesideOf::WithoutIt => (
-                    standing.iter().filter(|c| !sets(c)).cloned().collect(),
-                    Vec::new(),
+                BesideOf::WithoutIt => (kept_standing(), Vec::new()),
+                // The order and its own limits stay; the landings under it,
+                // and what each has, are the staff's.
+                BesideOf::LeftToTheStaff => (
+                    kept_standing(),
+                    kept.map_or_else(Vec::new, |n| draft[..n].to_vec()),
                 ),
-                BesideOf::Withdrawn => (
+                BesideOf::Withdrawn | BesideOf::GivenBackToTheStaff => (
                     standing.clone(),
                     vec![CommandKind::WithdrawIntent { intent: tried }],
                 ),
             };
             second_course.extend(leaves.iter().cloned());
-            // The second world has the order as it stands, or has it out.
-            second_course.extend(settings(
-                None,
-                (of != BesideOf::AsItStands).then_some(tried),
-            ));
+            // The second world has the order as it stands, or has it out;
+            // what the first carries for the order it tries, the second
+            // carries for it (decision 0232, "Found", 8).
+            let carried = match of {
+                BesideOf::AsItStands => settings(None, None),
+                BesideOf::LeftToTheStaff => {
+                    let mut carried = settings(
+                        kept.map(|_| tried),
+                        tried_parent.map(|_| tried),
+                    );
+                    carried.retain(|c| {
+                        !matches!(c, CommandKind::SetPursuit { intent, .. } if left_out.contains(intent))
+                    });
+                    carried
+                }
+                _ => settings(None, Some(tried)),
+            };
+            second_course.extend(carried);
             SecondAsked {
                 of,
                 standing: second_standing,
@@ -3227,6 +3526,7 @@ impl Session {
                     .into_iter()
                     .map(|command| CourseStep { day: 1, command })
                     .collect(),
+                order: of.is_the_staffs_plan().then(|| tried_parent.unwrap_or(tried)),
             }
         });
         let standing_words: Vec<String> = first_standing
@@ -3291,6 +3591,7 @@ impl Session {
                 .side_view(side)
                 .land_units()
                 .any(|unit| unit.men_ashore > 0),
+            landing: landing.filter(|_| of.is_the_staffs_plan()),
         };
         if describe {
             let described = self.describe_trial(&closed, side, &asked)?;

@@ -32,7 +32,7 @@
       "const": "flagplot-agent"
     },
     "version": {
-      "const": 56
+      "const": 57
     },
     "kind": {
       "const": "trial"
@@ -121,9 +121,11 @@
             "as_it_stands",
             "without_it",
             "withdrawn",
+            "left_to_the_staff",
+            "given_back_to_the_staff",
             null
           ],
-          "description": "What the second trial is of: the plan as it stands without the draft, the side without the order, or the side with the order withdrawn on the coming morning; null where none was played."
+          "description": "What the second trial is of: the plan as it stands without the draft, the side without the order, the side with the order withdrawn on the coming morning, the same order with the landings the commander wrote left to the staff (decision 0232, rule 23), or the same order with a landing in force given back to the staff on the coming morning; null where none was played."
         },
         "in_force": {
           "type": "boolean",
@@ -609,8 +611,21 @@
               "enum": [
                 "as_it_stands",
                 "without_it",
-                "withdrawn"
+                "withdrawn",
+                "left_to_the_staff",
+                "given_back_to_the_staff"
               ]
+            },
+            "order": {
+              "type": ["integer", "null"],
+              "description": "Given only where the second trial is the staff's plan beside what the commander wrote (decision 0232, rule 25): the order the written part stands under, the intent tried where an order is tried and its parent where a landing is. Its end is read in both trials and counted world for world."
+            },
+            "with_your_plan": {
+              "oneOf": [
+                { "$ref": "#/$defs/went" },
+                { "type": "null" }
+              ],
+              "description": "Given only where the second trial is the staff's plan: how the order's end went in the first trial, with the commander's plan."
             },
             "how_it_went": {
               "oneOf": [
@@ -621,7 +636,7 @@
                   "type": "null"
                 }
               ],
-              "description": "How the intent went in the second trial; null where it is not there to have gone (the side without the order, or with it withdrawn)."
+              "description": "How the intent went in the second trial; null where it is not there to have gone (the side without the order, or with it withdrawn). Where the second trial is the staff's plan, how the order's end went there."
             },
             "last_day": {
               "type": [
@@ -668,43 +683,36 @@
                   ],
                   "additionalProperties": false,
                   "properties": {
-                    "both": {
-                      "type": "array",
-                      "items": {
-                        "type": "integer"
-                      }
-                    },
-                    "with_the_draft_alone": {
-                      "type": "array",
-                      "items": {
-                        "type": "integer"
-                      }
-                    },
-                    "as_it_stands_alone": {
-                      "type": "array",
-                      "items": {
-                        "type": "integer"
-                      }
-                    },
-                    "neither": {
-                      "type": "array",
-                      "items": {
-                        "type": "integer"
-                      }
-                    },
-                    "apart": {
-                      "type": "array",
-                      "items": {
-                        "type": "integer"
-                      }
-                    }
+                    "both": { "type": "array", "items": { "type": "integer" } },
+                    "with_the_draft_alone": { "type": "array", "items": { "type": "integer" } },
+                    "as_it_stands_alone": { "type": "array", "items": { "type": "integer" } },
+                    "neither": { "type": "array", "items": { "type": "integer" } },
+                    "apart": { "type": "array", "items": { "type": "integer" } }
+                  }
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "both",
+                    "with_your_plan_alone",
+                    "with_the_staffs_alone",
+                    "neither",
+                    "apart"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "both": { "type": "array", "items": { "type": "integer" } },
+                    "with_your_plan_alone": { "type": "array", "items": { "type": "integer" } },
+                    "with_the_staffs_alone": { "type": "array", "items": { "type": "integer" } },
+                    "neither": { "type": "array", "items": { "type": "integer" } },
+                    "apart": { "type": "array", "items": { "type": "integer" } }
                   }
                 },
                 {
                   "type": "null"
                 }
               ],
-              "description": "The draft against the plan as it stands, world for world; null for any other second trial."
+              "description": "The draft against the plan as it stands, world for world; or, where the second trial is the staff's plan, the order's end with the commander's plan against the staff's (decision 0232, rule 25); null for any other second trial."
             }
           },
           "description": "The second trial beside the first (decision 0181, rule 5)."

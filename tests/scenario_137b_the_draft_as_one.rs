@@ -578,40 +578,849 @@
 
 #![allow(clippy::doc_lazy_continuation, clippy::doc_markdown)]
 
+mod common;
+
+use std::collections::{BTreeMap, BTreeSet};
+use std::path::PathBuf;
+use std::sync::{Arc, Mutex, OnceLock};
+
+use serde_json::{json, Value};
+use sim_agent::{
+    BesideOf, CallError, Described, Seat, Session, TrialAsked, TrialRefused, TrialRunner,
+    TrialUnderWay,
+};
+use sim_core::command::CommandKind;
+use sim_core::state::Side;
+use sim_data::{LoadOptions, Scenario};
+use sim_staff::staffs;
+
+#[allow(dead_code)]
+#[path = "../crates/sim-agent/tests/support/validator.rs"]
+mod validator;
+
+const ALLIED: Side = Side::Allied;
+
+/// The task force the statements name for the landing at C, "task force 3".
+const FORCE_OF_C: u64 = 2;
+
+fn path() -> PathBuf {
+    common::data_dir()
+        .join("scenarios/a-plan-the-commander-writes/137_a_plan_the_commander_writes.toml")
+}
+
+/// Scenario 137's text with every `[[command]]` taken out and the trial's
+/// figures named.
+fn game_text() -> String {
+    let full = std::fs::read_to_string(path()).expect("the scenario file reads");
+    let cut = full
+        .find("# The Allied commander's commands")
+        .expect("the commands begin");
+    let head = &full[..cut];
+    let ground = "ground = \"../../reference/ground_placeholder_scenario_76.toml\"\n";
+    common::replace_once(
+        head,
+        ground,
+        &format!("{ground}trial = \"../../reference/trial_placeholder_scenario_100.toml\"\n"),
+    )
+}
+
+/// The frozen step 1 figures with scenario 100's trial figures, two sizes
+/// changed: `small` is 4 worlds for 7 days and `standard` 4 worlds for 12.
+fn options() -> &'static LoadOptions {
+    static OPTIONS: OnceLock<LoadOptions> = OnceLock::new();
+    OPTIONS.get_or_init(|| {
+        common::altered_reference("s137b", |dir| {
+            common::edit_file(dir, "trial_placeholder_scenario_100.toml", |text| {
+                let text = common::replace_once(
+                    &text,
+                    "[small]\nworlds = 4\ndays = 5",
+                    "[small]\nworlds = 4\ndays = 7",
+                );
+                common::replace_once(
+                    &text,
+                    "[standard]\nworlds = 8\ndays = 5",
+                    "[standard]\nworlds = 4\ndays = 12",
+                )
+            })
+        })
+    })
+}
+
+fn load(text: &str) -> Scenario {
+    common::from_text_with(text, &path(), options()).expect("the scenario loads")
+}
+
+/// What a session hands its runner, kept; the trial itself is played by
+/// `sim-cli`'s runner, unchanged.
+struct Keeping {
+    inner: Box<dyn TrialRunner>,
+    asked: Arc<Mutex<Vec<TrialAsked>>>,
+}
+
+impl TrialRunner for Keeping {
+    fn begin(
+        &self,
+        view: &sim_core::view::SideView<'_>,
+        asked: &TrialAsked,
+    ) -> Result<Box<dyn TrialUnderWay>, TrialRefused> {
+        self.asked.lock().expect("kept").push(asked.clone());
+        self.inner.begin(view, asked)
+    }
+
+    fn describe(
+        &self,
+        view: &sim_core::view::SideView<'_>,
+        asked: &TrialAsked,
+    ) -> Result<Described, TrialRefused> {
+        self.inner.describe(view, asked)
+    }
+}
+
+/// A session built as `sim-cli` builds one, the Allied seat played and the
+/// Japanese scripted, with the runner wrapped.
+struct Game {
+    session: Session,
+    asked: Arc<Mutex<Vec<TrialAsked>>>,
+}
+
+fn game_of(text: &str) -> Game {
+    let mut scenario = load(text);
+    let inner = sim_cli::seat_trial::SeatTrials::runner_of(&scenario).expect("it has a trial");
+    let asked = Arc::new(Mutex::new(Vec::new()));
+    let runner = Keeping {
+        inner,
+        asked: asked.clone(),
+    };
+    let commands = scenario.scripted_commands().clone();
+    scenario.replace_commands(BTreeMap::new());
+    let inside = scenario.orders_inside_a_day();
+    let script_inside = scenario.scripted_orders_inside_day().clone();
+    let name = scenario.name.clone();
+    let session = Session::new(
+        scenario.world,
+        &name,
+        scenario.days,
+        Seat::Player,
+        Seat::Script(BTreeMap::new()),
+    )
+    .with_staffs(staffs())
+    .with_commands(commands)
+    .with_orders_inside_a_day(inside, script_inside)
+    .with_trial(Box::new(runner));
+    Game { session, asked }
+}
+
+/// The evening before day 1 with `set_leave`, leave to launch, queued: command
+/// 1 of the queue.
+fn evening() -> Game {
+    let mut g = game_of(&game_text());
+    queue_leave(&mut g);
+    g
+}
+
+/// The evening with nothing queued.
+fn bare_evening() -> Game {
+    game_of(&game_text())
+}
+
+fn queue_leave(g: &mut Game) {
+    let a = g.ask("set_leave", json!({"leave": "launch", "given": true}));
+    assert_eq!(a["status"], "queued", "{a}");
+}
+
+impl Game {
+    fn call(&mut self, tool: &str, args: Value) -> Result<Value, CallError> {
+        self.session.call(ALLIED, tool, &args)
+    }
+
+    fn ask(&mut self, tool: &str, args: Value) -> Value {
+        self.call(tool, args.clone())
+            .unwrap_or_else(|e| panic!("{tool} {args}: {}", e.message))
+    }
+
+    /// The error of a call that must be refused as an error of the call.
+    fn error(&mut self, tool: &str, args: Value) -> String {
+        match self.call(tool, args.clone()) {
+            Err(e) => e.message,
+            Ok(a) => panic!("{tool} {args} was answered: {a}"),
+        }
+    }
+
+    fn queued(&mut self) -> Value {
+        self.ask("queued", json!({}))
+    }
+
+    fn hash(&self) -> u64 {
+        self.session.state_hash()
+    }
+
+    /// What the runner was handed, in order.
+    fn handed(&self) -> Vec<TrialAsked> {
+        self.asked.lock().expect("kept").clone()
+    }
+
+    fn preview(&mut self, args: Value) -> Value {
+        self.ask("preview", args)
+    }
+
+    fn trial(&mut self, args: Value) -> Value {
+        self.ask("trial", args)
+    }
+
+    fn trials(&mut self) -> Value {
+        self.ask("trials", json!({}))
+    }
+}
+
+fn take_c(extra: Value) -> Value {
+    let mut c = json!({"intent_kind": "take_place", "hex": [0, 6]});
+    c.as_object_mut()
+        .unwrap()
+        .extend(extra.as_object().unwrap().clone());
+    c
+}
+
+fn order() -> Value {
+    json!({"command": "set_intent", "intent_kind": "control_island", "island": 1})
+}
+
+/// Draft W, "with the waits".
+fn draft_w() -> Value {
+    json!({"command": "set_intent", "intent_kind": "control_island", "island": 1,
+    "under": [
+        {"intent_kind": "take_place", "hex": [0, 6],
+         "limits": [{"limit": "forces", "task_forces": [FORCE_OF_C], "land_units": [3]}]},
+        {"intent_kind": "take_place", "hex": [4, 0],
+         "limits": [{"limit": "after", "other_intent": 2},
+                    {"limit": "not_before", "from_day": 4}]}
+    ]})
+}
+
+/// Draft N, "no waits": draft W without the two limits of the second
+/// sub-intent.
+fn draft_n() -> Value {
+    json!({"command": "set_intent", "intent_kind": "control_island", "island": 1,
+    "under": [
+        {"intent_kind": "take_place", "hex": [0, 6],
+         "limits": [{"limit": "forces", "task_forces": [FORCE_OF_C], "land_units": [3]}]},
+        {"intent_kind": "take_place", "hex": [4, 0]}
+    ]})
+}
+
+/// Draft O, "the order alone".
+fn draft_o() -> Value {
+    order()
+}
+
+/// The words of an answer, one string.
+fn words(answer: &Value) -> String {
+    answer["text"]
+        .as_array()
+        .expect("words")
+        .iter()
+        .map(|line| line.as_str().expect("a line"))
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
+fn numbers(v: &Value) -> Vec<u64> {
+    v.as_array()
+        .unwrap_or_else(|| panic!("a list: {v}"))
+        .iter()
+        .map(|n| n.as_u64().unwrap_or_else(|| panic!("a number: {n}")))
+        .collect()
+}
+
+fn checked(answer: &Value) {
+    let schemas = validator::Schemas::load(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../crates/sim-agent/schemas"),
+    );
+    let kind = answer["kind"].as_str().expect("a kind");
+    let errors = schemas.check(&format!("{kind}.schema.json"), answer);
+    assert!(errors.is_empty(), "{errors:?}\n{answer}");
+}
+
+fn course(steps: &[sim_agent::CourseStep]) -> Vec<CommandKind> {
+    steps.iter().map(|s| s.command.clone()).collect()
+}
+
+// ------------------------------------------------------------ Reading answers
+
+/// A command as the test reads a course: the engine's own command, in a line.
+fn tag(c: &CommandKind) -> String {
+    use sim_core::command::Limit;
+    match c {
+        CommandKind::SetLeave { leave, given } => format!("leave {} {given}", leave.name()),
+        CommandKind::SetIntent { intent, parent, .. } => format!(
+            "intent {} parent {}",
+            intent.raw(),
+            parent.map_or("none".to_string(), |p| p.raw().to_string())
+        ),
+        CommandKind::SetLimit(limit) => match limit {
+            Limit::Forces { intent, .. } => format!("forces {}", intent.raw()),
+            Limit::After { intent, other } => {
+                format!("after {} {}", intent.raw(), other.map_or(0, |o| o.raw()))
+            }
+            Limit::NotBefore { intent, day } => {
+                format!("not_before {} {}", intent.raw(), day.unwrap_or(0))
+            }
+            Limit::Risk { intent, risk } => format!("risk {} {risk:?}", intent.raw()),
+            other => format!("{other:?}"),
+        },
+        CommandKind::SetPursuit { intent, .. } => format!("pursuit {}", intent.raw()),
+        CommandKind::WithdrawIntent { intent } => format!("withdraw {}", intent.raw()),
+        other => format!("{other:?}"),
+    }
+}
+
+fn tags(commands: &[CommandKind]) -> Vec<String> {
+    commands.iter().map(tag).collect()
+}
+
+fn strs(items: &[&str]) -> Vec<String> {
+    items.iter().map(|s| s.to_string()).collect()
+}
+
+/// Draft W's six commands, in the batch's order.
+fn batch_w() -> Vec<String> {
+    strs(&[
+        "intent 1 parent none",
+        "intent 2 parent 1",
+        "forces 2",
+        "intent 3 parent 1",
+        "after 3 2",
+        "not_before 3 4",
+    ])
+}
+
+const LEAVE: &str = "leave launch true";
+
+/// Each queued entry of `queued`: its place in its queue and its command.
+fn entries(q: &Value) -> Vec<(u64, Value)> {
+    q["entries"]
+        .as_array()
+        .expect("entries")
+        .iter()
+        .map(|e| {
+            (
+                e["place"]["number"].as_u64().expect("a place"),
+                e["command"].clone(),
+            )
+        })
+        .collect()
+}
+
+/// A short name for a queued command as `queued` gives it.
+fn entry_tag(command: &Value) -> String {
+    let n = |key: &str| command[key].as_u64().unwrap_or(0);
+    match command["kind"].as_str().expect("a kind") {
+        "set_leave" => format!(
+            "leave {} {}",
+            command["leave"].as_str().unwrap(),
+            command["given"]
+        ),
+        "set_intent" => match command["parent"].as_u64() {
+            Some(p) => format!("intent {} parent {p}", n("intent")),
+            None => format!("intent {} parent none", n("intent")),
+        },
+        "set_limit" => match command["limit"].as_str().unwrap() {
+            "forces" => format!("forces {}", n("intent")),
+            "after" => format!("after {} {}", n("intent"), n("other_intent")),
+            "not_before" => format!("not_before {} {}", n("intent"), n("from_day")),
+            other => format!("{other} {}", n("intent")),
+        },
+        other => other.to_string(),
+    }
+}
+
+fn queued_tags(g: &mut Game) -> Vec<String> {
+    entries(&g.queued())
+        .iter()
+        .map(|(_, c)| entry_tag(c))
+        .collect()
+}
+
+/// The staff's reading of a preview: the tree's entries.
+fn tree(p: &Value) -> Vec<Value> {
+    p["with_change"]["tree"]["sub_intents"]
+        .as_array()
+        .expect("a tree")
+        .clone()
+}
+
+/// The commands of a kept trial asked, as the second trial is given.
+fn second_of(a: &TrialAsked) -> &sim_agent::SecondAsked {
+    a.second.as_ref().expect("a second trial")
+}
+
+/// How an order went, given as the worlds it was met and kept in.
+fn met_in(v: &Value, worlds: &[u64]) {
+    assert_eq!(numbers(&v["worlds"]), [1, 2, 3, 4], "{v}");
+    assert_eq!(numbers(&v["met_and_kept"]), worlds, "{v}");
+    assert!(numbers(&v["met_and_lost_again"]).is_empty(), "{v}");
+    let not_met: Vec<u64> = (1..=4).filter(|w| !worlds.contains(w)).collect();
+    assert_eq!(numbers(&v["not_met"]), not_met, "{v}");
+}
+
+fn tally(beside: &Value, both: &[u64], yours: &[u64], staffs: &[u64], neither: &[u64]) {
+    let w = &beside["world_for_world"];
+    assert_eq!(numbers(&w["both"]), both, "{w}");
+    assert_eq!(numbers(&w["with_your_plan_alone"]), yours, "{w}");
+    assert_eq!(numbers(&w["with_the_staffs_alone"]), staffs, "{w}");
+    assert_eq!(numbers(&w["neither"]), neither, "{w}");
+    assert!(numbers(&w["apart"]).is_empty(), "{w}");
+}
+
+/// The five costs, each the lowest, the middle and the highest.
+fn five_costs(c: &Value) {
+    for key in [
+        "men_lost_to_the_enemy",
+        "men_lost_unfed",
+        "ships_sunk",
+        "ships_out_of_action",
+        "aircraft_lost",
+    ] {
+        for end in ["lowest", "middle", "highest"] {
+            assert!(c[key][end].is_u64(), "{key} {end} in {c}");
+        }
+    }
+}
+
+fn zero(c: &Value, key: &str) {
+    assert_eq!(
+        c[key],
+        json!({"lowest": 0, "middle": 0, "highest": 0}),
+        "{key} in {c}"
+    );
+}
+
+/// The words of a trial: every line.
+fn lines(answer: &Value) -> Vec<String> {
+    answer["text"]
+        .as_array()
+        .expect("words")
+        .iter()
+        .map(|l| l.as_str().expect("a line").to_string())
+        .collect()
+}
+
+fn says(answer: &Value, part: &str) {
+    assert!(
+        lines(answer).iter().any(|l| l.contains(part)),
+        "no line has {part:?}:\n{}",
+        words(answer)
+    );
+}
+
+/// What is asked and answered in the first trial of statement 11: the
+/// evening, draft W previewed as preview 1, `trial` of it at the size.
+fn trial_of(draft: Value, size: &str, compare: Option<bool>) -> (Game, Value) {
+    let mut g = evening();
+    let p = g.preview(draft);
+    assert_eq!(p["preview"], 1, "{p}");
+    let mut args = json!({"preview": 1, "size": size});
+    if let Some(c) = compare {
+        args["compare"] = json!(c);
+    }
+    let a = g.trial(args);
+    (g, a)
+}
+
+fn middle(went: &Value) -> u64 {
+    went["met_days"]["middle"]
+        .as_u64()
+        .unwrap_or_else(|| panic!("a middle day in {went}"))
+}
+
+/// Everything an answer says that statement 11's first answer is read for.
+fn same_fields(a: &Value, b: &Value) {
+    for key in [
+        "how_it_went",
+        "last_day",
+        "could_not_be_played",
+        "cost",
+        "enemy_lost",
+        "beside",
+    ] {
+        assert_eq!(a[key], b[key], "{key}");
+    }
+}
+
+/// Draft W approved on the evening: the leave and the six commands queued.
+fn approved() -> Game {
+    let mut g = evening();
+    let p = g.preview(draft_w());
+    assert_eq!(p["preview"], 1, "{p}");
+    let a = g.ask("approve", json!({"preview": 1}));
+    assert_eq!(a["status"], "queued", "{a}");
+    g
+}
+
+/// Draft O previewed and approved: the leave and the order, queued.
+fn queued_order() -> Game {
+    let mut g = evening();
+    let p = g.preview(draft_o());
+    assert_eq!(p["preview"], 1, "{p}");
+    let a = g.ask("approve", json!({"preview": 1}));
+    assert_eq!(a["status"], "queued", "{a}");
+    g
+}
+
+/// The take of B under intent 1, to go not before day 8, as a preview.
+fn later_b() -> Value {
+    json!({"command": "set_intent", "parent": 1, "intent_kind": "take_place",
+           "hex": [4, 0], "limits": [{"limit": "not_before", "from_day": 8}]})
+}
+
+/// Draft W approved, and day 1 resolved: the evening of day 1.
+fn in_force_w() -> Game {
+    let mut g = approved();
+    g.ask("end_day", json!({}));
+    g
+}
+
 /// Statement 1: draft W previewed on the evening is preview 1, of intent
 /// 1, with `under` giving intents 2 and 3, each with its command, its
 /// parent and its limits; the staff's reading is of the whole draft (the
 /// two standing entries, no take of the staff's, a landing under each);
 /// nothing is queued and the hash is what it was.
 #[test]
-#[ignore = "statement written, not built"]
 fn s01_the_draft_is_read_as_one() {
-    todo!()
+    let mut g = evening();
+    let before = g.queued();
+    let hash = g.hash();
+    let p = g.preview(draft_w());
+    checked(&p);
+    assert_eq!(p["kind"], "preview");
+    assert_eq!(p["valid"], true);
+    assert_eq!(p["preview"], 1);
+    assert_eq!(p["day"], 1);
+    assert_eq!(p["intent"], 1);
+    assert_eq!(p["command"]["kind"], "set_intent");
+    assert_eq!(p["command"]["intent"], 1);
+    assert_eq!(p["command"]["intent_kind"], "control_island");
+    assert_eq!(p["limits"], json!([]));
+    assert_eq!(p["shown_limits"], json!([]));
+    let under = p["under"].as_array().expect("under");
+    assert_eq!(under.len(), 2);
+    for (u, (number, limits)) in under.iter().zip([(2u64, 1usize), (3, 2)]) {
+        assert_eq!(u["intent"], number);
+        assert_eq!(u["command"]["kind"], "set_intent");
+        assert_eq!(u["command"]["intent"], number);
+        assert_eq!(u["command"]["parent"], 1);
+        assert!(u["shown"].as_str().is_some_and(|s| !s.is_empty()));
+        assert_eq!(u["limits"].as_array().unwrap().len(), limits);
+        assert_eq!(u["shown_limits"].as_array().unwrap().len(), limits);
+    }
+    // The staff's reading is of the whole draft: first his two entries, then
+    // the staff's, numbered from 4.
+    let t = tree(&p);
+    for (entry, number) in t.iter().zip([2u64, 3]) {
+        assert_eq!(entry["number"], number, "{entry}");
+        assert_eq!(entry["parent"], 1, "{entry}");
+        assert_eq!(entry["maker"], "commander", "{entry}");
+        assert_eq!(entry["standing"], true, "{entry}");
+    }
+    let staffs = &t[2..];
+    let numbered: Vec<u64> = staffs
+        .iter()
+        .map(|e| e["number"].as_u64().unwrap())
+        .collect();
+    assert_eq!(numbered, (4..4 + staffs.len() as u64).collect::<Vec<_>>());
+    for entry in staffs {
+        assert_eq!(entry["maker"], "staff", "{entry}");
+        assert_ne!(entry["kind"], "take_place", "{entry}");
+    }
+    let landing = |parent: u64, force: u64, hex: Value| {
+        staffs.iter().any(|e| {
+            e["kind"] == "ready_landing"
+                && e["parent"] == parent
+                && e["task_force"] == force
+                && e["hex"] == hex
+        })
+    };
+    assert!(landing(2, FORCE_OF_C, json!([0, 6])), "{t:?}");
+    assert!(landing(3, 1, json!([4, 0])), "{t:?}");
+    let no_orders: Vec<&str> = p["with_change"]["tree"]["no_orders"]
+        .as_array()
+        .expect("no_orders")
+        .iter()
+        .map(|r| r.as_str().expect("words"))
+        .collect();
+    for line in [
+        "intent:2, the commander's, plans the place at (0,6): the staff forms no take beside it.",
+        "intent:3, the commander's, plans the place at (4,0): the staff forms no take beside it.",
+    ] {
+        assert!(no_orders.contains(&line), "{line}\n{no_orders:?}");
+    }
+    // As things stand intent 1 is not there.
+    assert_eq!(p["as_things_stand"]["orders"], json!([]));
+    assert_eq!(p["as_things_stand"]["commands"], json!([]));
+    // Nothing is queued, and the game is what it was.
+    let after = g.queued();
+    assert_eq!(after, before);
+    assert_eq!(entries(&after).len(), 1);
+    assert_eq!(g.hash(), hash);
 }
 
 /// Statement 2: the four rows of the table of numbers, each a valid
 /// preview with the numbers given.
 #[test]
-#[ignore = "statement written, not built"]
 fn s02_the_numbers() {
-    todo!()
+    let case = |queue_hold: bool, order_number: Option<u64>, first: Option<u64>, second: Value| {
+        let mut g = evening();
+        if queue_hold {
+            let a = g.ask(
+                "set_intent",
+                json!({"intent": 1, "intent_kind": "hold", "base": 1}),
+            );
+            assert_eq!(a["status"], "queued", "{a}");
+        }
+        let mut order = order();
+        if let Some(n) = order_number {
+            order["intent"] = json!(n);
+        }
+        let mut one = json!({"intent_kind": "take_place", "hex": [0, 6]});
+        if let Some(n) = first {
+            one["intent"] = json!(n);
+        }
+        order["under"] = json!([one, second]);
+        let p = g.preview(order);
+        assert_eq!(p["kind"], "preview", "{p}");
+        assert_eq!(p["valid"], true, "{p}");
+        let under = p["under"].as_array().unwrap();
+        (
+            p["intent"].as_u64().unwrap(),
+            under[0]["intent"].as_u64().unwrap(),
+            under[1]["intent"].as_u64().unwrap(),
+        )
+    };
+    let after = |other: u64, number: Option<u64>| {
+        let mut b = json!({"intent_kind": "take_place", "hex": [4, 0],
+                           "limits": [{"limit": "after", "other_intent": other}]});
+        if let Some(n) = number {
+            b["intent"] = json!(n);
+        }
+        b
+    };
+    // Draft W.
+    let mut g = evening();
+    let p = g.preview(draft_w());
+    let under = p["under"].as_array().unwrap();
+    assert_eq!(
+        (
+            p["intent"].clone(),
+            under[0]["intent"].clone(),
+            under[1]["intent"].clone()
+        ),
+        (json!(1), json!(2), json!(3))
+    );
+    // A root hold of base 1, his intent 1, queued.
+    assert_eq!(case(true, None, None, after(3, None)), (2, 3, 4));
+    // The order as 4, the first sub-intent as 7.
+    assert_eq!(case(false, Some(4), Some(7), after(7, None)), (4, 7, 8));
+    // The second sub-intent as 9, naming 2.
+    assert_eq!(case(false, None, None, after(2, Some(9))), (1, 2, 9));
 }
 
 /// Statement 3: the five drafts the engine would refuse, each answered
 /// as that refusal with its place in the batch and the batch's size;
 /// after all five nothing is queued and draft W is preview 1.
 #[test]
-#[ignore = "statement written, not built"]
 fn s03_a_refusal_with_its_place_in_the_batch() {
-    todo!()
+    let c = || take_c(json!({}));
+    let b = |extra: Value| {
+        let mut b = json!({"intent_kind": "take_place", "hex": [4, 0]});
+        b.as_object_mut()
+            .unwrap()
+            .extend(extra.as_object().unwrap().clone());
+        b
+    };
+    let forces_c = || {
+        take_c(
+            json!({"limits": [{"limit": "forces", "task_forces": [FORCE_OF_C], "land_units": [3]}]}),
+        )
+    };
+    let with_under = |mut order: Value, under: Vec<Value>| {
+        order["under"] = json!(under);
+        order
+    };
+    // (the draft, the command refused, its place, the size, words the reason has)
+    let cases: Vec<(Value, Value, u64, u64, Vec<&str>)> = vec![
+        (
+            with_under(
+                order(),
+                vec![
+                    take_c(json!({"limits": [{"limit": "after", "other_intent": 3}]})),
+                    b(json!({})),
+                ],
+            ),
+            json!({"kind": "set_limit", "limit": "after", "intent": 2, "other_intent": 3}),
+            3,
+            4,
+            vec!["intent:3", "not in force"],
+        ),
+        (
+            with_under(order(), vec![b(json!({})), b(json!({}))]),
+            json!({"kind": "set_intent", "hex": [4, 0], "intent": 3}),
+            3,
+            3,
+            vec!["already plans", "intent:2", "(4,0)"],
+        ),
+        (
+            with_under(
+                {
+                    let mut o = order();
+                    o["limits"] = json!([{"limit": "risk", "risk": "press"}]);
+                    o
+                },
+                vec![c(), take_c(json!({"hex": [0, 0]}))],
+            ),
+            json!({"kind": "set_intent", "hex": [0, 0], "intent": 3}),
+            4,
+            4,
+            vec!["cannot stand under", "intent:1"],
+        ),
+        (
+            with_under(
+                order(),
+                vec![
+                    forces_c(),
+                    b(json!({"limits": [{"limit": "risk", "risk": "press"}]})),
+                ],
+            ),
+            json!({"kind": "set_limit", "limit": "risk", "intent": 3, "risk": "press"}),
+            5,
+            5,
+            vec!["wider", "intent:1"],
+        ),
+        (
+            with_under(
+                {
+                    let mut o = order();
+                    o["intent"] = json!(4);
+                    o
+                },
+                vec![take_c(json!({"intent": 2}))],
+            ),
+            json!({"kind": "set_intent", "hex": [0, 6], "intent": 2, "parent": 4}),
+            2,
+            2,
+            vec!["intent:2", "not a number"],
+        ),
+    ];
+    for (draft, command, place, size, reason) in &cases {
+        let mut g = evening();
+        let hash = g.hash();
+        let queue = g.queued();
+        let a = g.preview(draft.clone());
+        checked(&a);
+        assert_eq!(a["kind"], "command", "{a}");
+        assert_eq!(a["tool"], "preview", "{a}");
+        assert_eq!(a["status"], "refused", "{a}");
+        for (key, value) in command.as_object().unwrap() {
+            assert_eq!(&a["command"][key], value, "{key} in {a}");
+        }
+        assert_eq!(
+            a["of_batch"],
+            json!({"position": place, "size": size}),
+            "{a}"
+        );
+        let why = a["reason"].as_str().unwrap().to_lowercase();
+        for part in reason {
+            assert!(why.contains(part), "{part:?} not in {why:?}");
+        }
+        // Nothing numbered, nothing queued.
+        assert_eq!(g.queued(), queue);
+        assert_eq!(g.hash(), hash);
+        let next = g.preview(draft_w());
+        assert_eq!(next["preview"], 1, "a refusal is not numbered");
+    }
+    // All five on one evening, one after another.
+    let mut g = evening();
+    let queue = g.queued();
+    for (draft, ..) in &cases {
+        let a = g.preview(draft.clone());
+        assert_eq!(a["status"], "refused", "{a}");
+        assert_eq!(g.queued(), queue);
+    }
+    let p = g.preview(draft_w());
+    assert_eq!(p["preview"], 1, "{p}");
+    assert_eq!(g.queued(), queue);
 }
 
 /// Statement 4: the errors of the call, each naming what is wrong, each
 /// numbering and queueing nothing.
 #[test]
-#[ignore = "statement written, not built"]
 fn s04_an_error_of_the_call() {
-    todo!()
+    let mut g = evening();
+    let queue = g.queued();
+    let c = || take_c(json!({}));
+    let b = |limits: Value| json!({"intent_kind": "take_place", "hex": [4, 0], "limits": limits});
+    let mut cases: Vec<(String, Vec<&str>)> = Vec::new();
+    cases.push((
+        g.error(
+            "preview",
+            json!({"command": "set_limit", "limit": "risk", "intent": 1, "risk": "press",
+                   "under": [c()]}),
+        ),
+        vec!["under", "set_intent"],
+    ));
+    cases.push((
+        g.error("preview", {
+            let mut o = order();
+            o["under"] = json!(5);
+            o
+        }),
+        vec!["under"],
+    ));
+    cases.push((
+        g.error("preview", {
+            let mut o = order();
+            o["under"] = json!([5]);
+            o
+        }),
+        vec!["under[0]"],
+    ));
+    cases.push((
+        g.error("preview", {
+            let mut o = order();
+            o["under"] = json!([take_c(json!({"parent": 1}))]);
+            o
+        }),
+        vec!["under[0]", "parent", "stands under"],
+    ));
+    cases.push((
+        g.error("preview", {
+            let mut o = order();
+            o["under"] = json!([
+                c(),
+                b(json!([{"limit": "risk", "risk": "press", "intent": 2}]))
+            ]);
+            o
+        }),
+        vec!["under[1].limits[0]", "intent"],
+    ));
+    cases.push((
+        g.error("preview", {
+            let mut o = order();
+            o["under"] = json!([
+                c(),
+                b(json!([{"limit": "reserve", "base": 1, "supply_t": 10}]))
+            ]);
+            o
+        }),
+        vec!["under[1].limits[0]", "reserve"],
+    ));
+    for (message, parts) in cases {
+        for part in parts {
+            assert!(message.contains(part), "{part:?} not in {message:?}");
+        }
+    }
+    // Each numbers nothing and queues nothing.
+    assert_eq!(g.queued(), queue);
+    let p = g.preview(draft_w());
+    assert_eq!(p["preview"], 1, "{p}");
 }
 
 /// Statement 5: `approve` of preview 1 queues the six commands in the
@@ -619,43 +1428,188 @@ fn s04_an_error_of_the_call() {
 /// day 1 takes in the seven, none refused, and the command state is
 /// scenario 137's first morning.
 #[test]
-#[ignore = "statement written, not built"]
 fn s05_approve_queues_all_of_it_in_order() {
-    todo!()
+    let mut g = evening();
+    let p = g.preview(draft_w());
+    assert_eq!(p["preview"], 1);
+    let a = g.ask("approve", json!({"preview": 1}));
+    checked(&a);
+    assert_eq!(a["status"], "queued", "{a}");
+    assert_eq!(a["preview"], 1);
+    assert_eq!(a["intent"], 1);
+    assert_eq!(a["queued"], 7);
+    assert_eq!(a["limits_queued"], 0);
+    assert_eq!(
+        a["under_queued"],
+        json!([{"intent": 2, "limits_queued": 1}, {"intent": 3, "limits_queued": 2}])
+    );
+    let q = g.queued();
+    let list = entries(&q);
+    assert_eq!(list.len(), 7);
+    for (i, e) in q["entries"].as_array().unwrap().iter().enumerate() {
+        assert_eq!(e["place"], json!({"queue": "commands", "number": i + 1}));
+    }
+    let mut want = vec![LEAVE.to_string()];
+    want.extend(batch_w());
+    let got: Vec<String> = list.iter().map(|(_, c)| entry_tag(c)).collect();
+    assert_eq!(got, want);
+    // Day 1 takes in the seven and refuses none.
+    g.ask("end_day", json!({}));
+    let e = g.ask("events", json!({"day": 1}));
+    let count = |kind: &str| {
+        e["events"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter(|ev| {
+                ev["event_kind"] == kind && ev["text"].as_str().unwrap().contains("the commander's")
+            })
+            .count()
+    };
+    assert_eq!(count("command_taken"), 7, "{e}");
+    assert_eq!(count("command_refused"), 0, "{e}");
+    let state = g.ask("command_state", json!({}));
+    let intents = state["intents"].as_array().unwrap();
+    let find = |n: u64| {
+        intents
+            .iter()
+            .find(|i| i["number"] == n)
+            .unwrap_or_else(|| panic!("intent {n}"))
+    };
+    for n in [1u64, 2, 3] {
+        assert_eq!(find(n)["in_force"], true);
+        assert_eq!(find(n)["maker"], "commander");
+    }
+    assert_eq!(find(1)["parent"], Value::Null);
+    assert_eq!(find(2)["parent"], 1);
+    assert_eq!(find(3)["parent"], 1);
+    assert!(!find(2)["limits"]["forces"].is_null());
+    assert!(find(2)["limits"]["not_before"].is_null());
+    assert!(!find(3)["limits"]["after"].is_null());
+    assert!(!find(3)["limits"]["not_before"].is_null());
+    // The staff's intents are numbered from 4 and none is a take.
+    for i in intents
+        .iter()
+        .filter(|i| i["number"].as_u64().unwrap() >= 4)
+    {
+        assert_eq!(i["maker"], "staff", "{i}");
+        assert_ne!(i["kind"], "take_place", "{i}");
+    }
 }
 
 /// Statement 6: something queued after the preview voids it, and
 /// `approve` queues nothing of the batch.
 #[test]
-#[ignore = "statement written, not built"]
 fn s06_or_none_of_it() {
-    todo!()
+    let mut g = evening();
+    let p = g.preview(draft_w());
+    assert_eq!(p["preview"], 1);
+    let l = g.ask("set_leave", json!({"leave": "prepare", "given": true}));
+    assert_eq!(l["status"], "queued", "{l}");
+    let a = g.ask("approve", json!({"preview": 1}));
+    checked(&a);
+    assert_eq!(a["status"], "refused", "{a}");
+    let why = a["reason"].as_str().unwrap();
+    assert!(why.contains("void"), "{why}");
+    assert!(why.contains("something was queued after it"), "{why}");
+    assert!(why.contains("give the leave to prepare"), "{why}");
+    assert_eq!(
+        queued_tags(&mut g),
+        strs(&["leave launch true", "leave prepare true"])
+    );
 }
 
 /// Statement 7, the first bullet: `take_back` of the order takes
 /// commands 2 to 7.
 #[test]
-#[ignore = "statement written, not built"]
 fn s07_take_back_of_the_order_takes_its_written_part() {
-    todo!()
+    let mut g = approved();
+    let q = g.queued();
+    let t = g.ask(
+        "take_back",
+        json!({"queue": "commands", "number": 2, "as_of": q["as_of"]}),
+    );
+    let taken: Vec<u64> = t["taken_back"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|e| e["place"]["number"].as_u64().unwrap())
+        .collect();
+    assert_eq!(taken.len(), 6, "{t}");
+    let mut sorted = taken.clone();
+    sorted.sort();
+    assert_eq!(sorted, [2, 3, 4, 5, 6, 7]);
+    assert_eq!(queued_tags(&mut g), strs(&[LEAVE]));
 }
 
 /// Statement 7, the second and fourth bullets: `take_back` of the take
 /// of B takes its two limits; then of the take of C its forces limit;
 /// and a limit alone goes alone.
 #[test]
-#[ignore = "statement written, not built"]
 fn s07_take_back_of_a_sub_intent_takes_its_limits() {
-    todo!()
+    let mut g = approved();
+    let q = g.queued();
+    let t = g.ask(
+        "take_back",
+        json!({"queue": "commands", "number": 5, "as_of": q["as_of"]}),
+    );
+    let mut taken: Vec<u64> = t["taken_back"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|e| e["place"]["number"].as_u64().unwrap())
+        .collect();
+    taken.sort();
+    assert_eq!(taken, [5, 6, 7], "{t}");
+    let mut want = vec![LEAVE.to_string()];
+    want.extend(batch_w()[..3].iter().cloned());
+    assert_eq!(queued_tags(&mut g), want);
+    // Then the take of C and its forces limit.
+    let q = g.queued();
+    let t = g.ask(
+        "take_back",
+        json!({"queue": "commands", "number": 3, "as_of": q["as_of"]}),
+    );
+    let mut taken: Vec<u64> = t["taken_back"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|e| e["place"]["number"].as_u64().unwrap())
+        .collect();
+    taken.sort();
+    assert_eq!(taken, [3, 4], "{t}");
+    assert_eq!(
+        queued_tags(&mut g),
+        vec![LEAVE.to_string(), "intent 1 parent none".to_string()]
+    );
+    // A limit alone goes alone.
+    let mut g = approved();
+    let q = g.queued();
+    let t = g.ask(
+        "take_back",
+        json!({"queue": "commands", "number": 7, "as_of": q["as_of"]}),
+    );
+    assert_eq!(t["taken_back"].as_array().unwrap().len(), 1, "{t}");
+    assert_eq!(t["taken_back"][0]["place"]["number"], 7);
+    assert_eq!(queued_tags(&mut g).len(), 6);
 }
 
 /// Statement 7, the third bullet: `take_back` of the take of C while the
 /// "after intent 2" is queued is refused, naming command 6, and the
 /// queue is as it was.
 #[test]
-#[ignore = "statement written, not built"]
 fn s07_a_sub_intent_another_rests_on_is_not_taken_back() {
-    todo!()
+    let mut g = approved();
+    let q = g.queued();
+    let why = g.error(
+        "take_back",
+        json!({"queue": "commands", "number": 3, "as_of": q["as_of"]}),
+    );
+    assert!(why.contains("intent:3 after intent:2"), "{why}");
+    assert!(why.contains("commands 6"), "{why}");
+    assert!(why.contains("take that back first"), "{why}");
+    // The queue and its as_of are as they were.
+    assert_eq!(g.queued(), q);
 }
 
 /// Statement 8: under a queued order, a sub-intent previewed as one
@@ -664,26 +1618,171 @@ fn s07_a_sub_intent_another_rests_on_is_not_taken_back() {
 /// "Already planned"; and under an order in force, a take of a place
 /// the staff has planned refused as "Already planned".
 #[test]
-#[ignore = "statement written, not built"]
 fn s08_a_sub_intent_under_an_order_that_stands() {
-    todo!()
+    let sub = |limit: Value| {
+        json!({"command": "set_intent", "parent": 1, "intent_kind": "take_place",
+               "hex": [0, 6], "limits": [limit]})
+    };
+    let forces = || json!({"limit": "forces", "task_forces": [FORCE_OF_C], "land_units": [3]});
+    // The order queued alone.
+    let queued_order = || {
+        let mut g = evening();
+        let p = g.preview(draft_o());
+        assert_eq!(p["preview"], 1);
+        let a = g.ask("approve", json!({"preview": 1}));
+        assert_eq!(a["status"], "queued", "{a}");
+        g
+    };
+    let mut g = queued_order();
+    let p = g.preview(sub(forces()));
+    checked(&p);
+    assert_eq!(p["kind"], "preview", "{p}");
+    assert_eq!(p["valid"], true);
+    assert_eq!(p["preview"], 2);
+    assert_eq!(p["intent"], 2);
+    assert_eq!(p["command"]["parent"], 1);
+    assert_eq!(p["limits"].as_array().unwrap().len(), 1);
+    assert_eq!(p["under"], json!([]));
+    let a = g.ask("approve", json!({"preview": 2}));
+    checked(&a);
+    assert_eq!(a["status"], "queued", "{a}");
+    assert_eq!(a["limits_queued"], 1);
+    assert_eq!(entries(&g.queued()).len(), 4);
+    // A limit wider than its parent allows is refused with its place.
+    let mut g = queued_order();
+    let r = g.preview(sub(json!({"limit": "risk", "risk": "press"})));
+    assert_eq!(r["status"], "refused", "{r}");
+    assert_eq!(r["of_batch"], json!({"position": 2, "size": 2}), "{r}");
+    assert!(r["reason"].as_str().unwrap().contains("wider"), "{r}");
+    // A second take of C is "Already planned", naming intent 2: one command.
+    let mut g = queued_order();
+    let p = g.preview(sub(forces()));
+    g.ask("approve", json!({"preview": p["preview"]}));
+    let r = g.preview(
+        json!({"command": "set_intent", "parent": 1, "intent_kind": "take_place", "hex": [0, 6]}),
+    );
+    assert_eq!(r["status"], "refused", "{r}");
+    assert!(
+        r["reason"]
+            .as_str()
+            .unwrap()
+            .contains("intent:2 already plans"),
+        "{r}"
+    );
+    assert!(r.get("of_batch").is_none(), "{r}");
+    // Under an order in force: the staff has planned both places.
+    let mut g = queued_order();
+    g.ask("end_day", json!({}));
+    let state = g.ask("command_state", json!({}));
+    let staffs_take = state["intents"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|i| i["kind"] == "take_place" && i["hex"] == json!([4, 0]) && i["maker"] == "staff")
+        .expect("the staff's take of B")["number"]
+        .as_u64()
+        .unwrap();
+    let r = g.preview(
+        json!({"command": "set_intent", "parent": 1, "intent_kind": "take_place", "hex": [4, 0]}),
+    );
+    assert_eq!(r["status"], "refused", "{r}");
+    assert!(
+        r["reason"].as_str().unwrap().contains(&format!(
+            "intent:{staffs_take} already plans the place at (4,0)"
+        )),
+        "{r}"
+    );
 }
 
 /// Statement 9: the `TrialAsked` of draft W's trial: the standing
 /// commands of both trials, the course of each, and that the first's
 /// course less the written part is the second's, step for step.
 #[test]
-#[ignore = "statement written, not built"]
 fn s09_the_second_trials_commands_are_the_firsts_less_the_written_part() {
-    todo!()
+    let (g, a) = trial_of(draft_w(), "small", None);
+    let handed = g.handed();
+    assert_eq!(handed.len(), 1, "one TrialAsked");
+    let asked = &handed[0];
+    let second = second_of(asked);
+    assert_eq!(asked.intent.raw(), 1);
+    assert_eq!(second.of, BesideOf::LeftToTheStaff);
+    assert_eq!(second.of.name(), "left_to_the_staff");
+    assert_eq!(a["asked"]["beside"], "left_to_the_staff");
+    // The standing commands: the leave to launch in both.
+    assert_eq!(tags(&asked.standing), strs(&[LEAVE]));
+    assert_eq!(tags(&second.standing), strs(&[LEAVE]));
+    assert_eq!(asked.standing, second.standing);
+    // The course, all on day 1.
+    assert!(asked.course.iter().all(|s| s.day == 1));
+    assert!(second.course.iter().all(|s| s.day == 1));
+    assert_eq!(tags(&course(&asked.course)), batch_w());
+    assert_eq!(
+        tags(&course(&second.course)),
+        strs(&["intent 1 parent none"])
+    );
+    // Less the written part, and nothing else.
+    let less: Vec<CommandKind> = course(&asked.course)
+        .into_iter()
+        .filter(|c| match c {
+            CommandKind::SetIntent { parent, .. } => parent.is_none(),
+            CommandKind::SetLimit(limit) => {
+                !matches!(limit.intent().map(|i| i.raw()), Some(2) | Some(3))
+            }
+            _ => true,
+        })
+        .collect();
+    assert_eq!(less, course(&second.course));
+    // No leave is given by the trial in either.
+    for steps in [&asked.course, &second.course] {
+        assert!(course(steps)
+            .iter()
+            .all(|c| !matches!(c, CommandKind::SetLeave { .. })));
+    }
+    assert_eq!(a["leaves_given_to_the_side"], json!([]));
 }
 
 /// Statement 9, "The same leaves and the same settings in both" and
 /// "With limits on the order".
 #[test]
-#[ignore = "statement written, not built"]
 fn s09_the_same_leaves_and_the_orders_limits_in_both() {
-    todo!()
+    // On an evening with nothing queued: the batch, then what the trial gives.
+    let mut g = bare_evening();
+    let p = g.preview(draft_w());
+    assert_eq!(p["preview"], 1);
+    g.trial(json!({"preview": 1, "size": "small"}));
+    let handed = g.handed();
+    let asked = &handed[0];
+    let second = second_of(asked);
+    let first = course(&asked.course);
+    let then = &first[6..];
+    assert_eq!(tags(&first[..6]), batch_w());
+    assert!(
+        then.iter()
+            .any(|c| matches!(c, CommandKind::SetLeave { given: true, .. })),
+        "the trial gives the leave to launch: {:?}",
+        tags(&first)
+    );
+    let second_course = course(&second.course);
+    assert_eq!(tags(&second_course[..1]), strs(&["intent 1 parent none"]));
+    assert_eq!(tags(&second_course[1..]), tags(then));
+    assert_eq!(second.standing, asked.standing);
+    // With limits on the order: the second's course is the order and its risk.
+    let mut g = evening();
+    let mut w = draft_w();
+    w["limits"] = json!([{"limit": "risk", "risk": "press"}]);
+    let p = g.preview(w);
+    assert_eq!(p["preview"], 1, "{p}");
+    g.trial(json!({"preview": 1, "size": "small"}));
+    let handed = g.handed();
+    let asked = &handed[0];
+    let second = second_of(asked);
+    let first = course(&asked.course);
+    assert_eq!(first.len(), 7);
+    assert_eq!(course(&second.course), first[..2].to_vec());
+    assert_eq!(
+        tags(&course(&second.course)),
+        strs(&["intent 1 parent none", "risk 1 Press"])
+    );
 }
 
 /// Statement 10: one asking, one trial's number and one size; the
@@ -691,44 +1790,257 @@ fn s09_the_same_leaves_and_the_orders_limits_in_both() {
 /// and `beside` is the trial of the order alone, field for field, for
 /// draft W and for draft N.
 #[test]
-#[ignore = "statement written, not built"]
 fn s10_both_trials_play_the_same_worlds() {
-    todo!()
+    // One asking, one trial's number and one size.
+    let (mut g, a) = trial_of(draft_w(), "small", None);
+    let handed = g.handed();
+    assert_eq!(handed.len(), 1);
+    assert_eq!(handed[0].trial, 1);
+    assert_eq!(
+        handed[0].size,
+        sim_agent::SizeAsked::Named("small".to_string())
+    );
+    // The pictures are the same: the test plays the two sets of commands.
+    let s = load(&game_text());
+    let play = |standing: &[CommandKind], steps: &[sim_agent::CourseStep]| {
+        let played = sim_trial::play_window(
+            &s.world.side_view(ALLIED),
+            &sim_trial::Believed {
+                forces: s.believed_forces(ALLIED).cloned().collect(),
+                intents: s.believed_intents(ALLIED).cloned().collect(),
+                men: s.believed_men(ALLIED).cloned().collect(),
+            },
+            s.trial_figures().unwrap(),
+            s.world.ref_data(),
+            s.world.map(),
+            sim_trial::WindowAsked {
+                trial: handed[0].trial,
+                worlds: 4,
+                days: 7,
+                intent: handed[0].intent,
+                standing: standing.to_vec(),
+                course: steps
+                    .iter()
+                    .map(|st| sim_trial::CourseCommand {
+                        day: st.day,
+                        command: st.command.clone(),
+                    })
+                    .collect(),
+                dates: Some(vec![1]),
+            },
+        )
+        .expect("played");
+        let worlds = played.played.into_iter().next().unwrap().played.worlds;
+        worlds
+            .into_iter()
+            .map(|w| (w.number, w.assumptions))
+            .collect::<Vec<_>>()
+    };
+    let second = second_of(&handed[0]);
+    let yours = play(&handed[0].standing, &handed[0].course);
+    let staffs = play(&second.standing, &second.course);
+    assert_eq!(yours.iter().map(|w| w.0).collect::<Vec<_>>(), [1, 2, 3, 4]);
+    assert_eq!(yours, staffs, "the pictures assume the same things");
+    // The second trial is the trial of the order alone, for W and for N.
+    let n = g.preview(draft_n());
+    let o = g.preview(draft_o());
+    assert_eq!(
+        (n["preview"].as_u64(), o["preview"].as_u64()),
+        (Some(2), Some(3))
+    );
+    let n_answer = g.trial(json!({"preview": 2, "size": "small"}));
+    let alone = g.trial(json!({"preview": 3, "size": "small", "compare": false}));
+    assert_eq!(alone["beside"], Value::Null);
+    for answer in [&a, &n_answer] {
+        let b = &answer["beside"];
+        assert_eq!(b["how_it_went"], alone["how_it_went"]);
+        assert_eq!(b["last_day"], alone["last_day"]);
+        assert_eq!(b["could_not_be_played"], alone["could_not_be_played"]);
+        assert_eq!(b["cost"], alone["cost"]);
+        assert_eq!(b["enemy_lost"], alone["enemy_lost"]);
+    }
 }
 
 /// Statement 11: the answer for draft W at `small`: what was asked, how
 /// the order went with his plan and with the staff's, the tally, and the
 /// words quoted.
 #[test]
-#[ignore = "statement written, not built"]
 fn s11_the_answer_names_the_staffs_plan_and_gives_the_tally() {
-    todo!()
+    let (_, a) = trial_of(draft_w(), "small", None);
+    checked(&a);
+    assert_eq!(a["kind"], "trial");
+    let asked = &a["asked"];
+    assert_eq!(asked["preview"], 1);
+    assert_eq!(asked["intent"], Value::Null);
+    assert_eq!(asked["tried_intent"], 1);
+    assert_eq!(asked["compare"], true);
+    assert_eq!(asked["second_trial"], true);
+    assert_eq!(asked["beside"], "left_to_the_staff");
+    assert_eq!(asked["in_force"], false);
+    assert_eq!(asked["dates"], Value::Null);
+    assert_eq!(asked["standing"], json!(["give leave to launch"]));
+    assert_eq!(asked["course"].as_array().unwrap().len(), 6, "{asked}");
+    // The order with his plan: not met by day 7 in worlds 1 to 4.
+    met_in(&a["how_it_went"], &[]);
+    assert_eq!(a["last_day"], 7);
+    let b = &a["beside"];
+    assert_eq!(b["of"], "left_to_the_staff");
+    assert_eq!(b["order"], 1);
+    met_in(&b["how_it_went"], &[1, 2, 3, 4]);
+    assert_eq!(b["with_your_plan"], a["how_it_went"]);
+    tally(b, &[], &[], &[1, 2, 3, 4], &[]);
+    // In words.
+    says(
+        &a,
+        "Beside it, the same order with the landings left to the staff, in the same worlds",
+    );
+    for part in [
+        "your plan against the staff's",
+        "met and kept in both in none",
+        "with your plan alone in none",
+        "with the staff's plan alone in 4 worlds (worlds 1, 2, 3 and 4)",
+        "in neither in none",
+    ] {
+        assert!(
+            lines(&a)
+                .iter()
+                .any(|l| l.starts_with("Taken world by world") && l.contains(part)),
+            "{part:?} in {}",
+            words(&a)
+        );
+    }
+    // No advice.
+    assert!(!words(&a).contains("better"));
 }
 
 /// Statement 11's table: the tally for draft N at `small` and for draft
 /// W at `standard`, and in the last the staff's day earlier than his.
 #[test]
-#[ignore = "statement written, not built"]
 fn s11_the_tally_for_each_draft_and_size() {
-    todo!()
+    // N at small: both, in all four.
+    let (_, n) = trial_of(draft_n(), "small", None);
+    checked(&n);
+    assert_eq!(n["beside"]["of"], "left_to_the_staff");
+    tally(&n["beside"], &[1, 2, 3, 4], &[], &[], &[]);
+    met_in(&n["how_it_went"], &[1, 2, 3, 4]);
+    met_in(&n["beside"]["how_it_went"], &[1, 2, 3, 4]);
+    // W at standard: both, in all four, his day later than the staff's.
+    let (_, w) = trial_of(draft_w(), "standard", None);
+    checked(&w);
+    tally(&w["beside"], &[1, 2, 3, 4], &[], &[], &[]);
+    met_in(&w["how_it_went"], &[1, 2, 3, 4]);
+    met_in(&w["beside"]["how_it_went"], &[1, 2, 3, 4]);
+    let (his, staffs) = (
+        middle(&w["how_it_went"]),
+        middle(&w["beside"]["how_it_went"]),
+    );
+    assert!(his > staffs, "his {his} against the staff's {staffs}");
+    // Reported for the architect, not asserted beyond the relation.
+    println!(
+        "137b s11: standard, W: how_it_went {} ; beside {}",
+        w["how_it_went"], w["beside"]["how_it_went"]
+    );
+    println!(
+        "137b s11: small, N: how_it_went {} ; beside {}",
+        n["how_it_went"], n["beside"]["how_it_went"]
+    );
 }
 
 /// Statement 12: the five costs of each side in both trials, given
 /// alike; the three that are 0; the second's equal to the trial of the
 /// order alone.
 #[test]
-#[ignore = "statement written, not built"]
 fn s12_the_costs() {
-    todo!()
+    let (mut g, w) = trial_of(draft_w(), "small", None);
+    let n = g.preview(draft_n());
+    assert_eq!(n["preview"], 2);
+    let n = g.trial(json!({"preview": 2, "size": "small"}));
+    let o = g.preview(draft_o());
+    assert_eq!(o["preview"], 3);
+    let alone = g.trial(json!({"preview": 3, "size": "small", "compare": false}));
+    for answer in [&w, &n] {
+        let b = &answer["beside"];
+        for costs in [
+            &answer["cost"],
+            &answer["enemy_lost"],
+            &b["cost"],
+            &b["enemy_lost"],
+        ] {
+            five_costs(costs);
+            for key in ["men_lost_to_the_enemy", "ships_sunk", "aircraft_lost"] {
+                zero(costs, key);
+            }
+        }
+        assert_eq!(b["cost"], alone["cost"]);
+        assert_eq!(b["enemy_lost"], alone["enemy_lost"]);
+        let beside: Vec<String> = lines(answer)
+            .into_iter()
+            .filter(|l| l.starts_with("Beside it, what "))
+            .collect();
+        assert_eq!(beside.len(), 2, "{}", words(answer));
+        assert!(beside[0].starts_with("Beside it, what it cost your side"));
+        assert!(beside[1].starts_with("Beside it, what the trial's enemy lost"));
+    }
 }
 
 /// Statement 13: a new sub-intent under a queued order, previewed and
 /// tried: the commands of both trials, the landing's own end, the
 /// order's end in each and the tally; and, queued, the same answer.
 #[test]
-#[ignore = "statement written, not built"]
 fn s13_a_new_sub_intent_under_an_order_that_stands() {
-    todo!()
+    let mut g = queued_order();
+    let p = g.preview(later_b());
+    assert_eq!(p["preview"], 2, "{p}");
+    assert_eq!(p["intent"], 2, "{p}");
+    let a = g.trial(json!({"preview": 2, "size": "small"}));
+    checked(&a);
+    let handed = g.handed();
+    let asked = &handed[0];
+    let second = second_of(asked);
+    let held = strs(&[LEAVE, "intent 1 parent none"]);
+    assert_eq!(tags(&asked.standing), held);
+    assert_eq!(
+        tags(&course(&asked.course)),
+        strs(&["intent 2 parent 1", "not_before 2 8"])
+    );
+    assert_eq!(tags(&second.standing), held);
+    assert!(second.course.is_empty());
+    assert_eq!(asked.intent.raw(), 2);
+    assert_eq!(second.of, BesideOf::LeftToTheStaff);
+    met_in(&a["how_it_went"], &[]);
+    assert_eq!(a["asked"]["beside"], "left_to_the_staff");
+    let b = &a["beside"];
+    assert_eq!(b["of"], "left_to_the_staff");
+    assert_eq!(b["order"], 1);
+    met_in(&b["with_your_plan"], &[]);
+    met_in(&b["how_it_went"], &[1, 2, 3, 4]);
+    tally(b, &[], &[], &[1, 2, 3, 4], &[]);
+    says(
+        &a,
+        "Beside it, the same order with the landing at (4,0) left to the staff, in the same worlds",
+    );
+    // Queued, it reads the same.
+    let q = g.ask("approve", json!({"preview": 2}));
+    assert_eq!(q["status"], "queued", "{q}");
+    let t = g.trial(json!({"intent": 2, "size": "small"}));
+    checked(&t);
+    let handed = g.handed();
+    let asked = &handed[1];
+    let second = second_of(asked);
+    assert_eq!(
+        tags(&asked.standing),
+        strs(&[
+            LEAVE,
+            "intent 1 parent none",
+            "intent 2 parent 1",
+            "not_before 2 8"
+        ])
+    );
+    assert!(asked.course.is_empty());
+    assert_eq!(tags(&second.standing), held);
+    assert!(second.course.is_empty());
+    assert_eq!(second.of, BesideOf::LeftToTheStaff);
+    same_fields(&t, &a);
 }
 
 /// Statement 14: a sub-intent in force tried with no `compare`: two
@@ -736,9 +2048,65 @@ fn s13_a_new_sub_intent_under_an_order_that_stands() {
 /// nothing withdrawn in the game. With `compare` false, one. The order
 /// in force is as it was.
 #[test]
-#[ignore = "statement written, not built"]
 fn s14_a_sub_intent_in_force() {
-    todo!()
+    let mut g = in_force_w();
+    let hash = g.hash();
+    let a = g.trial(json!({"intent": 3, "size": "small"}));
+    checked(&a);
+    let handed = g.handed();
+    assert_eq!(handed.len(), 1, "two trials in one asking");
+    let asked = &handed[0];
+    let second = second_of(asked);
+    assert!(asked.standing.is_empty());
+    assert!(asked.course.is_empty());
+    assert!(second.standing.is_empty());
+    assert_eq!(tags(&course(&second.course)), strs(&["withdraw 3"]));
+    assert!(second.course.iter().all(|s| s.day == 1));
+    assert_eq!(second.of, BesideOf::GivenBackToTheStaff);
+    assert_eq!(second.of.name(), "given_back_to_the_staff");
+    assert_eq!(a["asked"]["in_force"], true);
+    assert_eq!(a["asked"]["beside"], "given_back_to_the_staff");
+    assert_eq!(a["asked"]["for_day"], 2);
+    let b = &a["beside"];
+    assert_eq!(b["of"], "given_back_to_the_staff");
+    assert_eq!(b["order"], 1);
+    assert_eq!(a["last_day"], 8);
+    met_in(&b["with_your_plan"], &[]);
+    met_in(&b["how_it_went"], &[1, 2, 3, 4]);
+    tally(b, &[], &[], &[1, 2, 3, 4], &[]);
+    says(
+        &a,
+        "Beside it, the same order with the landing at (4,0) given back to the staff on the coming morning, in the same worlds",
+    );
+    says(&a, "hat was already ordered stands");
+    says(
+        &a,
+        "The withdrawal is the trial's, not yours: intent 3 is not withdrawn in your game",
+    );
+    // After it intent 3 is in force and the hash is what it was.
+    assert_eq!(g.hash(), hash);
+    let state = g.ask("command_state", json!({}));
+    let three = state["intents"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|i| i["number"] == 3)
+        .unwrap();
+    assert_eq!(three["in_force"], true);
+    // With compare false one trial is played and beside is null.
+    let one = g.trial(json!({"intent": 3, "size": "small", "compare": false}));
+    assert_eq!(one["beside"], Value::Null);
+    assert_eq!(one["asked"]["second_trial"], false);
+    assert_eq!(g.handed().len(), 2);
+    assert!(g.handed()[1].second.is_none());
+    // The order itself, in force, is as it was.
+    let order = g.trial(json!({"intent": 1, "size": "small"}));
+    assert_eq!(order["beside"], Value::Null);
+    assert_eq!(order["asked"]["second_trial"], false);
+    assert_eq!(order["asked"]["in_force"], true);
+    says(&order, "Your order is in force");
+    says(&order, "\"compare\" true");
+    assert!(g.handed()[2].second.is_none());
 }
 
 /// Statement 15: with draft W queued, the order tried reads as its
@@ -746,54 +2114,295 @@ fn s14_a_sub_intent_in_force() {
 /// plan of its place; a sub-intent an "after" names is refused, naming
 /// the command, and played with `compare` false.
 #[test]
-#[ignore = "statement written, not built"]
 fn s15_a_queued_order_with_its_written_part() {
-    todo!()
+    // Statement 11's first answer, for the comparison.
+    let (_, first) = trial_of(draft_w(), "small", None);
+    let mut g = approved();
+    // The order is read as its preview was.
+    let a = g.trial(json!({"intent": 1, "size": "small"}));
+    checked(&a);
+    let handed = g.handed();
+    let asked = &handed[0];
+    let second = second_of(asked);
+    let mut seven = vec![LEAVE.to_string()];
+    seven.extend(batch_w());
+    assert_eq!(tags(&asked.standing), seven);
+    assert!(asked.course.is_empty());
+    assert_eq!(
+        tags(&second.standing),
+        strs(&[LEAVE, "intent 1 parent none"])
+    );
+    assert_eq!(second.of, BesideOf::LeftToTheStaff);
+    same_fields(&a, &first);
+    // A sub-intent nothing else names.
+    let t = g.trial(json!({"intent": 3, "size": "small"}));
+    checked(&t);
+    let handed = g.handed();
+    let second = second_of(&handed[1]);
+    assert_eq!(
+        tags(&second.standing),
+        strs(&[
+            LEAVE,
+            "intent 1 parent none",
+            "intent 2 parent 1",
+            "forces 2"
+        ])
+    );
+    assert_eq!(t["beside"]["of"], "left_to_the_staff");
+    assert_eq!(t["beside"]["order"], 1);
+    tally(&t["beside"], &[], &[], &[1, 2, 3, 4], &[]);
+    // A sub-intent another queued command names: refused, nothing played.
+    let played = g.handed().len();
+    for args in [
+        json!({"intent": 2, "size": "small"}),
+        json!({"intent": 2, "size": "small", "compare": true}),
+    ] {
+        let why = g.error("trial", args);
+        assert!(why.contains("intent:3 after intent:2"), "{why}");
+        assert!(why.contains("names intent 2"), "{why}");
+    }
+    assert_eq!(g.handed().len(), played);
+    let one = g.trial(json!({"intent": 2, "size": "small", "compare": false}));
+    assert_eq!(one["beside"], Value::Null);
+    assert_eq!(g.handed().len(), played + 1);
+    assert!(g.handed()[played].second.is_none());
 }
 
 /// Statement 16: where `compare` is not given, the rows stated here
 /// (draft O, and draft W with `compare` false).
 #[test]
-#[ignore = "statement written, not built"]
 fn s16_where_compare_is_not_given() {
-    todo!()
+    // Draft O, the side having no other plan: not played, as before.
+    let (g, a) = trial_of(draft_o(), "small", None);
+    checked(&a);
+    assert_eq!(a["asked"]["second_trial"], false);
+    assert_eq!(a["beside"], Value::Null);
+    says(&a, "Your side has no other plan to weigh");
+    assert!(g.handed()[0].second.is_none());
+    // Draft W with compare false: one trial, the first answer's fields.
+    let (_, first) = trial_of(draft_w(), "small", None);
+    let (g, one) = trial_of(draft_w(), "small", Some(false));
+    checked(&one);
+    assert_eq!(one["asked"]["second_trial"], false);
+    assert_eq!(one["beside"], Value::Null);
+    assert!(g.handed()[0].second.is_none());
+    assert_eq!(one["how_it_went"], first["how_it_went"]);
+    assert_eq!(one["cost"], first["cost"]);
 }
 
 /// Statement 17: draft W described: two trials of 4 worlds for 7 days,
 /// the words quoted, nothing played and nothing kept.
 #[test]
-#[ignore = "statement written, not built"]
 fn s17_asked_before_it_is_played() {
-    todo!()
+    let mut g = evening();
+    let p = g.preview(draft_w());
+    assert_eq!(p["preview"], 1);
+    let hash = g.hash();
+    let queue = g.queued();
+    let d = g.trial(json!({"preview": 1, "size": "small", "describe": true}));
+    checked(&d);
+    assert_eq!(d["kind"], "trial_described");
+    assert_eq!(d["asked"]["beside"], "left_to_the_staff");
+    let plays = d["plays"].as_array().unwrap();
+    assert_eq!(plays.len(), 2, "{d}");
+    assert_eq!(plays[0]["trial"], "first");
+    assert_eq!(plays[1]["trial"], "second");
+    for play in plays {
+        assert_eq!(play["worlds"], 4);
+        assert_eq!(play["days"], 7);
+    }
+    says(
+        &d,
+        "Two trials of 4 worlds of 7 days each, in the same worlds: the first with the draft, the second the same order with the landings left to the staff.",
+    );
+    assert_eq!(g.hash(), hash);
+    assert_eq!(g.queued(), queue);
+    assert!(g.handed().is_empty(), "nothing was played");
+    let t = g.trials();
+    assert_eq!(t["estimates"], json!([]), "{t}");
 }
 
 /// Statement 18: `dates` refused for a written part, each case with its
 /// words, nothing played; and draft O given its window as before.
 #[test]
-#[ignore = "statement written, not built"]
 fn s18_dates_is_refused_for_a_written_part() {
-    todo!()
+    let sentence =
+        "A written landing is held to a day by its \"not before\", which can be previewed and compared";
+    // Each alone, each an error with nothing played.
+    let refused = |g: &mut Game, args: Value, begins: &str| {
+        let hash = g.hash();
+        let played = g.handed().len();
+        let listed = g.trials();
+        let why = g.error("trial", args.clone());
+        assert!(why.starts_with(begins), "{args}: {why}");
+        assert!(why.contains(sentence), "{why}");
+        assert_eq!(g.handed().len(), played);
+        assert_eq!(g.hash(), hash);
+        assert_eq!(g.trials(), listed);
+    };
+    for dates in [json!("chosen"), json!([4])] {
+        for describe in [false, true] {
+            let mut g = evening();
+            g.preview(draft_w());
+            refused(
+                &mut g,
+                json!({"preview": 1, "dates": dates, "describe": describe}),
+                "preview 1 carries landings you wrote: a window is not offered for a written part.",
+            );
+        }
+    }
+    for describe in [false, true] {
+        let mut g = queued_order();
+        let p = g.preview(later_b());
+        assert_eq!(p["preview"], 2);
+        refused(
+            &mut g,
+            json!({"preview": 2, "dates": "chosen", "describe": describe}),
+            "preview 2 is of a landing you wrote under intent 1: a window is not offered for a written part.",
+        );
+        let mut g = approved();
+        refused(
+            &mut g,
+            json!({"intent": 3, "dates": "chosen", "describe": describe}),
+            "intent 3 is a landing you wrote under intent 1: a window is not offered for a written part.",
+        );
+        refused(
+            &mut g,
+            json!({"intent": 1, "dates": "chosen", "describe": describe}),
+            "intent 1 has landings you wrote under it: a window is not offered for a written part.",
+        );
+    }
+    // In force: as an order in force is today, in the words that name a
+    // "not before".
+    let mut g = in_force_w();
+    let why = g.error("trial", json!({"intent": 3, "dates": "chosen"}));
+    assert!(why.contains("is in force"), "{why}");
+    assert!(why.contains("not before"), "{why}");
+    // Draft O is given its window as before.
+    let mut g = evening();
+    let p = g.preview(draft_o());
+    assert_eq!(p["preview"], 1);
+    let w = g.trial(json!({"preview": 1, "dates": [4], "size": "small"}));
+    assert_eq!(w["kind"], "window", "{w}");
 }
 
 /// Properties: nothing is changed, a preview tried is not spent, asked
 /// twice the same, one estimate each.
 #[test]
-#[ignore = "statement written, not built"]
 fn nothing_is_changed() {
-    todo!()
+    let mut g = evening();
+    let p = g.preview(draft_w());
+    assert_eq!(p["preview"], 1);
+    let n = g.preview(draft_n());
+    assert_eq!(n["preview"], 2);
+    let hash = g.hash();
+    let queue = g.queued();
+    let first = g.trial(json!({"preview": 1, "size": "small"}));
+    assert_eq!(g.hash(), hash);
+    assert_eq!(g.queued(), queue);
+    let again = g.trial(json!({"preview": 1, "size": "small"}));
+    // Asked twice, the same, but for the estimate.
+    let unnumbered = |a: &Value| {
+        let mut a = a.clone();
+        a.as_object_mut().unwrap().remove("estimate");
+        a
+    };
+    assert_eq!(unnumbered(&first), unnumbered(&again));
+    assert_eq!(first["estimate"], 1);
+    assert_eq!(again["estimate"], 2);
+    // One estimate each: the three questions of statement 11.
+    let n_answer = g.trial(json!({"preview": 2, "size": "small"}));
+    let standard = g.trial(json!({"preview": 1, "size": "standard"}));
+    assert_eq!(g.hash(), hash);
+    assert_eq!(g.queued(), queue);
+    let listed = g.trials();
+    let estimates = listed["estimates"].as_array().unwrap();
+    assert_eq!(estimates.len(), 4, "{listed}");
+    for e in estimates {
+        assert_eq!(e["kind"], "trial");
+    }
+    for (number, answer) in [(1, &first), (2, &again), (3, &n_answer), (4, &standard)] {
+        let kept = g.ask("trials", json!({"estimate": number}));
+        assert_eq!(&kept, answer);
+    }
+    // A preview tried is not spent: approve queues the six.
+    let a = g.ask("approve", json!({"preview": 1}));
+    assert_eq!(a["status"], "queued", "{a}");
+    assert_eq!(a["queued"], 7);
+    assert_eq!(queued_tags(&mut g).len(), 7);
 }
 
 /// Property: the live enemy is not read.
 #[test]
-#[ignore = "statement written, not built"]
 fn the_live_enemy_is_not_read() {
-    todo!()
+    let (_, plain) = trial_of(draft_w(), "small", None);
+    let mut text = game_text();
+    text.push_str(
+        "\n[[land_unit]]\nid = 4\nname = \"Placeholder Japanese\"\nside = \"japanese\"\nmen = 300\nq = 4\nr = 0\n",
+    );
+    let mut g = game_of(&text);
+    queue_leave(&mut g);
+    g.preview(draft_w());
+    let with_enemy = g.trial(json!({"preview": 1, "size": "small"}));
+    assert_eq!(
+        serde_json::to_string(&plain).unwrap(),
+        serde_json::to_string(&with_enemy).unwrap()
+    );
 }
 
 /// Properties: the words hold no advice, the answers pass their schemas
 /// and carry version 57 of the agent's interface.
 #[test]
-#[ignore = "statement written, not built"]
 fn the_words_the_schemas_and_the_version() {
-    todo!()
+    let mut answers: Vec<Value> = Vec::new();
+    let mut g = evening();
+    answers.push(g.preview(draft_w()));
+    answers.push(g.preview(draft_n()));
+    answers.push(g.preview(draft_o()));
+    answers.push(g.preview({
+        let mut o = order();
+        o["under"] = json!([take_c(
+            json!({"limits": [{"limit": "after", "other_intent": 3}]})
+        )]);
+        o
+    }));
+    for args in [
+        json!({"preview": 1, "size": "small"}),
+        json!({"preview": 2, "size": "small"}),
+        json!({"preview": 1, "size": "standard"}),
+        json!({"preview": 1, "size": "small", "describe": true}),
+        json!({"preview": 3, "size": "small"}),
+    ] {
+        answers.push(g.trial(args));
+    }
+    answers.push(g.ask("approve", json!({"preview": 1})));
+    let mut g = queued_order();
+    answers.push(g.preview(later_b()));
+    answers.push(g.trial(json!({"preview": 2, "size": "small"})));
+    let mut g = in_force_w();
+    answers.push(g.trial(json!({"intent": 3, "size": "small"})));
+    let kinds: BTreeSet<String> = answers
+        .iter()
+        .map(|a| a["kind"].as_str().unwrap().to_string())
+        .collect();
+    for kind in ["preview", "command", "trial", "trial_described"] {
+        assert!(kinds.contains(kind), "{kind} in {kinds:?}");
+    }
+    for answer in &answers {
+        checked(answer);
+        assert_eq!(answer["version"], 57, "{answer}");
+        let all = answer.to_string().to_lowercase();
+        assert!(!all.contains('%'), "a per cent sign in {answer}");
+        for word in [
+            "chance",
+            "points",
+            "better",
+            "should",
+            "recommend",
+            "advise",
+        ] {
+            assert!(!all.contains(word), "{word:?} in {answer}");
+        }
+    }
+    assert_eq!(sim_agent::VERSION, 57);
 }
