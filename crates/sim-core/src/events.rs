@@ -12,12 +12,13 @@ use crate::command::{
     CommandKind, CommandRefusal, HoldTarget, InterruptCondition, InterruptRef, NoticeKind, PlanId,
     PlanState, Reason, StandingKind, StandingSubject,
 };
+use crate::field_value::{Fields, ReadField};
 use crate::fixed::Fixed;
 use crate::held::AsOf;
 use crate::hex::Hex;
 use crate::ids::{
     AirGroupId, AircraftTypeId, BaseId, ContactId, EntityRef, EventId, IntentId, LandUnitId,
-    OrderId, ShipId, SubmarineId, TaskForceId,
+    OrderId, ShipId, SubmarineId, TaskForceId, UmpireKey,
 };
 use crate::orders::{Cargo, Issuer, Job, RejectReason};
 use crate::pictures::CommandRef;
@@ -638,15 +639,43 @@ pub struct KindInfo {
     pub by_hand: bool,
 }
 
+/// Whether a variant carries the `[by_hand]` mark (decision 0235).
+macro_rules! event_kind_mark {
+    () => {
+        false
+    };
+    ($hand:ident) => {
+        true
+    };
+}
+
+/// One kind's fields read by their types, or `None` for a kind marked
+/// `[by_hand]`, which does not compile its fields' types into a reading.
+macro_rules! event_kind_fields {
+    ([$hand:ident] $key:ident; $($field:ident),*) => {
+        None
+    };
+    ([] $key:ident; $($field:ident),*) => {
+        Some(vec![
+            $( (stringify!($field), ReadField::read($field, $key)) ),*
+        ]
+        .into_iter()
+        .filter_map(|(name, value)| value.map(|value| (name, value)))
+        .collect())
+    };
+}
+
 /// Declares `EventKind` and, from the same lines, `EventKind::tag` (a kind's
-/// word) and `EventKind::KINDS` (every kind in the order declared). Each
-/// variant is `Name = "word" { fields }`; its doc comments, fields and their
-/// order are the enum's own (decision 0235).
+/// word), `EventKind::KINDS` (every kind in the order declared) and
+/// `EventKind::fields` (the kind's fields read by their types). Each variant
+/// is `Name = "word" { fields }`, or `Name = "word" [by_hand] { fields }`
+/// where the export writes the fields itself; its doc comments, fields and
+/// their order are the enum's own (decision 0235).
 macro_rules! event_kinds {
     (
         $(
             $(#[$variant_meta:meta])*
-            $name:ident = $word:literal {
+            $name:ident = $word:literal $([$hand:ident])? {
                 $( $(#[$field_meta:meta])* $field:ident : $ty:ty ),* $(,)?
             }
         ),* $(,)?
@@ -665,7 +694,11 @@ macro_rules! event_kinds {
         impl EventKind {
             /// Every kind of event, in the order declared.
             pub const KINDS: &'static [KindInfo] = &[
-                $( KindInfo { name: stringify!($name), word: $word, by_hand: false } ),*
+                $( KindInfo {
+                    name: stringify!($name),
+                    word: $word,
+                    by_hand: event_kind_mark!($($hand)?),
+                } ),*
             ];
 
             /// The kind's word: the name the export and the viewer give it.
@@ -674,22 +707,37 @@ macro_rules! event_kinds {
                     $( EventKind::$name { .. } => $word ),*
                 }
             }
+
+            /// The kind's fields, each in the order declared and read by its
+            /// type; `None` for a kind marked `[by_hand]`, whose export is
+            /// written in `sim-cli`. For the umpire only: it asks for the key
+            /// that only a world gives (decision 0235, ruling 5).
+            #[allow(unused_variables)]
+            pub fn fields(&self, key: &UmpireKey) -> Option<Fields> {
+                match self {
+                    $(
+                        EventKind::$name { $($field),* } => {
+                            event_kind_fields!([$($hand)?] key; $($field),*)
+                        }
+                    ),*
+                }
+            }
         }
     };
 }
 
 event_kinds! {
-    OrderAccepted = "order_accepted" {
+    OrderAccepted = "order_accepted" [by_hand] {
         order: OrderId,
         target: EntityRef,
     },
-    OrderRejected = "order_rejected" {
+    OrderRejected = "order_rejected" [by_hand] {
         order: OrderId,
         target: EntityRef,
         reason: RejectReason,
     },
     /// A task force moved during a pulse.
-    TaskForceSteamed = "task_force_steamed" {
+    TaskForceSteamed = "task_force_steamed" [by_hand] {
         task_force: TaskForceId,
         from: Hex,
         to: Hex,
@@ -718,7 +766,7 @@ event_kinds! {
     },
     /// A ship took supply or fuel cargo aboard from a base. `cargo` says
     /// which (decision 0046); the tons, and the stock, are of that cargo.
-    CargoLoaded = "cargo_loaded" {
+    CargoLoaded = "cargo_loaded" [by_hand] {
         ship: ShipId,
         task_force: TaskForceId,
         base: BaseId,
@@ -731,7 +779,7 @@ event_kinds! {
     },
     /// A ship put supply or fuel cargo ashore into a base's stock. `cargo`
     /// says which (decision 0046); the tons, and the stock, are of that cargo.
-    CargoUnloaded = "cargo_unloaded" {
+    CargoUnloaded = "cargo_unloaded" [by_hand] {
         ship: ShipId,
         task_force: TaskForceId,
         base: BaseId,
@@ -744,7 +792,7 @@ event_kinds! {
     },
     /// Every ship of a task force is full, or the base has no stock left of
     /// the cargo loaded.
-    LoadingComplete = "loading_complete" {
+    LoadingComplete = "loading_complete" [by_hand] {
         task_force: TaskForceId,
         base: BaseId,
         cargo: Cargo,
@@ -761,7 +809,7 @@ event_kinds! {
     },
     /// An air group flew its search arc from its base, or from the hex of the
     /// ship it is aboard (decision 4 of 0025). `hex` is the hex it flew from.
-    SearchFlown = "search_flown" {
+    SearchFlown = "search_flown" [by_hand] {
         air_group: AirGroupId,
         from: AirGroupLocation,
         hex: Hex,
@@ -779,7 +827,7 @@ event_kinds! {
         sighted: bool,
     },
     /// A sighting report reached the searching side's belief.
-    ReportReceived = "report_received" {
+    ReportReceived = "report_received" [by_hand] {
         side: Side,
         contact: ContactId,
         hex: Hex,
@@ -789,13 +837,13 @@ event_kinds! {
         created: bool,
     },
     /// A contact went a pulse without a fresh report.
-    ContactAged = "contact_aged" {
+    ContactAged = "contact_aged" [by_hand] {
         side: Side,
         contact: ContactId,
         age_pulses: u32,
     },
     /// A contact reached the age at which it is forgotten and was dropped.
-    ContactDropped = "contact_dropped" {
+    ContactDropped = "contact_dropped" [by_hand] {
         side: Side,
         contact: ContactId,
         age_pulses: u32,
@@ -812,7 +860,7 @@ event_kinds! {
         elapsed_hours: Fixed,
     },
     /// One roll of a force looking for the enemy force.
-    SightingRoll = "sighting_roll" {
+    SightingRoll = "sighting_roll" [by_hand] {
         round: u32,
         task_force: TaskForceId,
         enemy: TaskForceId,
@@ -832,7 +880,7 @@ event_kinds! {
         enemy: TaskForceId,
     },
     /// One ship fired one weapon at one ship.
-    Salvo = "salvo" {
+    Salvo = "salvo" [by_hand] {
         round: u32,
         firer: ShipId,
         target: ShipId,
@@ -843,7 +891,7 @@ event_kinds! {
         hits: u32,
     },
     /// The hits of one salvo on one damage track of the target.
-    ShipDamaged = "ship_damaged" {
+    ShipDamaged = "ship_damaged" [by_hand] {
         round: u32,
         ship: ShipId,
         track: DamageTrack,
@@ -882,7 +930,7 @@ event_kinds! {
         b: TaskForceId,
     },
     /// A fight ended.
-    EngagementEnded = "engagement_ended" {
+    EngagementEnded = "engagement_ended" [by_hand] {
         round: u32,
         a: TaskForceId,
         b: TaskForceId,
@@ -893,7 +941,7 @@ event_kinds! {
     /// sunk only) or, since decision 0056, of a raid (also hits believed
     /// scored, the kind of ship believed attacked, aircraft believed shot
     /// down and aircraft believed destroyed on the ground).
-    ClaimReceived = "claim_received" {
+    ClaimReceived = "claim_received" [by_hand] {
         side: Side,
         hex: Hex,
         claimed_sunk: u32,
@@ -923,7 +971,7 @@ event_kinds! {
     /// A hit knocked, or tried to knock, one named system of a ship down one
     /// level (decision 0016). `before == after` when the ship lacks the
     /// system or it was already out.
-    SystemHit = "system_hit" {
+    SystemHit = "system_hit" [by_hand] {
         round: u32,
         ship: ShipId,
         system: ShipSystem,
@@ -934,7 +982,7 @@ event_kinds! {
     /// (decision 0016). `ships` are the stragglers moved and `escorts` the
     /// escorts moved, each in ID order. `escorts` is empty when the ships
     /// are left behind.
-    ShipsDetached = "ships_detached" {
+    ShipsDetached = "ships_detached" [by_hand] {
         parent: TaskForceId,
         new_force: TaskForceId,
         ships: Vec<ShipId>,
@@ -950,7 +998,7 @@ event_kinds! {
     /// and the force became alerted (decision 3 of
     /// `docs/decisions/0021-readiness-and-alarm.md`). `contact` is the
     /// nearest such contact, the lowest ID on a tie.
-    ForceAlertedByContact = "force_alerted_by_contact" {
+    ForceAlertedByContact = "force_alerted_by_contact" [by_hand] {
         task_force: TaskForceId,
         contact: ContactId,
     },
@@ -985,7 +1033,7 @@ event_kinds! {
     /// 0035): `aircraft` flew and came back, each was worn at `chance`, and
     /// `worn` of them were, of which `written_off` are lost for good. `ready`
     /// and `damaged` are what the group has afterwards.
-    AircraftWorn = "aircraft_worn" {
+    AircraftWorn = "aircraft_worn" [by_hand] {
         air_group: AirGroupId,
         sortie: SortieKind,
         distance_nm: Fixed,
@@ -999,7 +1047,7 @@ event_kinds! {
     },
     /// A base or a carrier repaired damaged aircraft of a group at the start
     /// of the day (decision 9 of 0035). `at` is where the group is.
-    AircraftRepaired = "aircraft_repaired" {
+    AircraftRepaired = "aircraft_repaired" [by_hand] {
         air_group: AirGroupId,
         at: AirGroupLocation,
         repaired: u32,
@@ -1016,7 +1064,7 @@ event_kinds! {
     /// An air group on the naval strike mission launched at a contact its
     /// side holds (decisions 3 to 6 of `docs/decisions/0026-air-strikes.md`).
     /// `hex` is the hex the contact names, and where the strike flies to.
-    StrikeLaunched = "strike_launched" {
+    StrikeLaunched = "strike_launched" [by_hand] {
         air_group: AirGroupId,
         contact: ContactId,
         hex: Hex,
@@ -1031,7 +1079,7 @@ event_kinds! {
     },
     /// A strike attacked one ship of an enemy task force (decisions 7 to 9
     /// of 0026).
-    AirAttack = "air_attack" {
+    AirAttack = "air_attack" [by_hand] {
         air_group: AirGroupId,
         task_force: TaskForceId,
         ship: ShipId,
@@ -1058,7 +1106,7 @@ event_kinds! {
     /// fighters and `target` the first group of those fired at.
     /// `after_attack` is true for the part of the patrol's fire at the
     /// bombers worked after the raid's attack (decision 0087).
-    AirFight = "air_fight" {
+    AirFight = "air_fight" [by_hand] {
         firer: AirGroupId,
         target: AirGroupId,
         firing: AirFirer,
@@ -1073,7 +1121,7 @@ event_kinds! {
     /// bombers of a raid (decision 7 of 0027). `air_group` is the raid's
     /// first strike group. `after_attack` is true for the part of the guns'
     /// fire worked after the raid's attack (decision 0079).
-    AntiAircraftFire = "anti_aircraft_fire" {
+    AntiAircraftFire = "anti_aircraft_fire" [by_hand] {
         task_force: TaskForceId,
         air_group: AirGroupId,
         shots: Fixed,
@@ -1122,7 +1170,7 @@ event_kinds! {
     },
     /// A strike that found nothing told its side so, and the side dropped the
     /// contact the strike was sent at (decision 0028).
-    ContactNotThere = "contact_not_there" {
+    ContactNotThere = "contact_not_there" [by_hand] {
         side: Side,
         contact: ContactId,
         hex: Hex,
@@ -1140,7 +1188,7 @@ event_kinds! {
     /// A base fired its anti-aircraft guns at the bombers of a raid on it
     /// (decision 5 of 0034). `air_group` is the raid's first strike group.
     /// `after_attack` is as for `AntiAircraftFire` (decision 0079).
-    BaseAntiAircraftFire = "base_anti_aircraft_fire" {
+    BaseAntiAircraftFire = "base_anti_aircraft_fire" [by_hand] {
         base: BaseId,
         air_group: AirGroupId,
         shots: Fixed,
@@ -1153,7 +1201,7 @@ event_kinds! {
     /// `hits` is the bombs that hit, and `hits_on_aircraft` and
     /// `hits_on_supply` how many of them landed on each; the rest landed on
     /// nothing.
-    BaseAttacked = "base_attacked" {
+    BaseAttacked = "base_attacked" [by_hand] {
         air_group: AirGroupId,
         base: BaseId,
         shots: Fixed,
@@ -1191,7 +1239,7 @@ event_kinds! {
     /// in its hex for the reason `Men` (decision 0066, 16), and 0 for every
     /// other reason. `asked_t` is what the rule asked for, `paid_t` what the
     /// stock covered, and `left_t` what the base has afterwards.
-    BaseSupplySpent = "base_supply_spent" {
+    BaseSupplySpent = "base_supply_spent" [by_hand] {
         base: BaseId,
         reason: SupplyUse,
         aircraft: u32,
@@ -1203,7 +1251,7 @@ event_kinds! {
     /// An air group's fatigue changed in a daylight pulse (decisions 4 and 5
     /// of 0036). `amount` is what it actually gained or lost, after the cap
     /// at 100 or the floor at 0; `fatigue` is what it has afterwards.
-    AirGroupFatigue = "air_group_fatigue" {
+    AirGroupFatigue = "air_group_fatigue" [by_hand] {
         air_group: AirGroupId,
         change: FatigueChange,
         amount: Fixed,
@@ -1227,7 +1275,7 @@ event_kinds! {
     /// A task force's fatigue changed at the start of a pulse (decision 2 of
     /// 0037). `amount` is what it actually gained or lost, after the cap at
     /// 100 or the floor at 0; `fatigue` is what it has afterwards.
-    TaskForceFatigue = "task_force_fatigue" {
+    TaskForceFatigue = "task_force_fatigue" [by_hand] {
         task_force: TaskForceId,
         change: ForceFatigueChange,
         amount: Fixed,
@@ -1276,7 +1324,7 @@ event_kinds! {
     /// pilots are counted (`None` and 0 where they are not). `ready` is what
     /// the group has ready afterwards. Recorded for each such sortie that
     /// rolled, whether or not an aircraft ditched.
-    AircraftDitched = "aircraft_ditched" {
+    AircraftDitched = "aircraft_ditched" [by_hand] {
         air_group: AirGroupId,
         sortie: SortieKind,
         distance_nm: Fixed,
@@ -1295,7 +1343,7 @@ event_kinds! {
     /// `docs/decisions/0059-aircraft-that-cannot-land-where-they-took-off.md`).
     /// They joined the group `to` located at `at`, or formed it if `formed`.
     /// `pilots` came with them, where pilots are counted.
-    AircraftLandedElsewhere = "aircraft_landed_elsewhere" {
+    AircraftLandedElsewhere = "aircraft_landed_elsewhere" [by_hand] {
         from: AirGroupId,
         to: AirGroupId,
         at: AirGroupLocation,
@@ -1311,7 +1359,7 @@ event_kinds! {
     /// the figure for the open sea. `crews_recovered` is none where the
     /// group's pilots are not counted. `ready` is what the group has ready
     /// afterwards.
-    AircraftDitchedNoDeck = "aircraft_ditched_no_deck" {
+    AircraftDitchedNoDeck = "aircraft_ditched_no_deck" [by_hand] {
         air_group: AirGroupId,
         hex: Hex,
         aircraft: u32,
@@ -1325,7 +1373,7 @@ event_kinds! {
     /// (decision 0067): its supply and the ready aircraft of the air groups
     /// at it. Recorded for every base on every day, whatever the objectives
     /// say, and changes no state. `base_open` is counted from it.
-    BaseAtDayEnd = "base_at_day_end" {
+    BaseAtDayEnd = "base_at_day_end" [by_hand] {
         base: BaseId,
         supply_t: Fixed,
         aircraft_ready: u32,
@@ -1336,7 +1384,7 @@ event_kinds! {
     /// afterwards, `restored` the systems put back to working that day (in
     /// system order) and `system_repair_points` the points banked in the
     /// system still being mended.
-    ShipRepaired = "ship_repaired" {
+    ShipRepaired = "ship_repaired" [by_hand] {
         ship: ShipId,
         task_force: TaskForceId,
         base: BaseId,
@@ -1350,7 +1398,7 @@ event_kinds! {
     /// the ships afloat in number order, each with her days of repair,
     /// `passage_days` the base's passage, `days_away` the passage plus the
     /// largest days of repair and `return_day` the day it is back.
-    ForceLeftForYard = "force_left_for_yard" {
+    ForceLeftForYard = "force_left_for_yard" [by_hand] {
         task_force: TaskForceId,
         base: BaseId,
         passage_days: u32,
@@ -1360,7 +1408,7 @@ event_kinds! {
     },
     /// A task force came back from the yard at the start of its day of
     /// return, its ships repaired, refuelled and rearmed (decision 0069).
-    ForceReturnedFromYard = "force_returned_from_yard" {
+    ForceReturnedFromYard = "force_returned_from_yard" [by_hand] {
         task_force: TaskForceId,
         base: BaseId,
         ships: Vec<ShipId>,
@@ -1392,7 +1440,7 @@ event_kinds! {
     /// The first man landed in a hex with no base of his side formed one
     /// (decision 0066, 11): `base`, of `side`, in `hex`, with the port of
     /// the hex and nothing else. It is on its own side's map only.
-    BaseFormed = "base_formed" {
+    BaseFormed = "base_formed" [by_hand] {
         base: BaseId,
         side: Side,
         hex: Hex,
@@ -1409,7 +1457,7 @@ event_kinds! {
     },
     /// The men aboard a ship that sank were lost with her (decision 0066,
     /// 15).
-    MenLostWithShip = "men_lost_with_ship" {
+    MenLostWithShip = "men_lost_with_ship" [by_hand] {
         unit: LandUnitId,
         ship: ShipId,
         men: u32,
@@ -1418,7 +1466,7 @@ event_kinds! {
     /// (decisions 16 and 17 of 0066). `base` is the base that was asked,
     /// `None` where the side has none in the hex. `fed` and `unfed` add up to
     /// `men`.
-    MenFed = "men_fed" {
+    MenFed = "men_fed" [by_hand] {
         side: Side,
         hex: Hex,
         base: Option<BaseId>,
@@ -1443,7 +1491,7 @@ event_kinds! {
     /// has a berth for one, and nothing remains of the named cargo. `base`
     /// is the base loaded from, `None` off a bare shore, and `cargo` the
     /// cargo named, `None` for none.
-    UnitLoadingComplete = "unit_loading_complete" {
+    UnitLoadingComplete = "unit_loading_complete" [by_hand] {
         task_force: TaskForceId,
         unit: LandUnitId,
         base: Option<BaseId>,
@@ -1465,7 +1513,7 @@ event_kinds! {
     /// (decision 0091). Its `ready` aircraft and all its pilots went with it
     /// (`pilots`, `None` where they are not counted). It flies nothing that
     /// day.
-    AirGroupRebased = "air_group_rebased" {
+    AirGroupRebased = "air_group_rebased" [by_hand] {
         air_group: AirGroupId,
         from: BaseId,
         to: BaseId,
@@ -1477,7 +1525,7 @@ event_kinds! {
     /// A land unit's fed share went back to 1 at the night's charge, because
     /// none of its men were ashore to be charged (decision 0090, 8). The
     /// share of a unit with men ashore is the `MenFed` of its side and hex.
-    FedShareRestored = "fed_share_restored" {
+    FedShareRestored = "fed_share_restored" [by_hand] {
         unit: LandUnitId,
     },
     /// The day's fight in a contested hex (decisions 4 and 5 of 0090): both
@@ -1510,7 +1558,7 @@ event_kinds! {
     },
     /// A land unit's fatigue changed in the ground combat phase (decision 12
     /// of 0090). `fatigue` is what it has afterwards.
-    LandUnitFatigue = "land_unit_fatigue" {
+    LandUnitFatigue = "land_unit_fatigue" [by_hand] {
         unit: LandUnitId,
         change: LandFatigueChange,
         fatigue: Fixed,
@@ -1525,7 +1573,7 @@ event_kinds! {
     /// men ashore there, against `enemy_men`, the other side's, counted
     /// after the day's losses. `fought` is false for a base with no men,
     /// which falls without a fight.
-    SideBeatenAshore = "side_beaten_ashore" {
+    SideBeatenAshore = "side_beaten_ashore" [by_hand] {
         side: Side,
         hex: Hex,
         men: u32,
@@ -1536,7 +1584,7 @@ event_kinds! {
     /// It keeps `supply_t` of its supply and `fuel_t` of its fuel, and
     /// `supply_lost_t` and `fuel_lost_t` are lost. It is on both sides' maps
     /// from now on.
-    BaseChangedSide = "base_changed_side" {
+    BaseChangedSide = "base_changed_side" [by_hand] {
         base: BaseId,
         hex: Hex,
         from: Side,
@@ -1618,7 +1666,7 @@ event_kinds! {
     /// (decision 0092, 12 to 16): its estimate there is now `men`, dated
     /// `day`. `replaced` is true if it held one before. Day 0 is a
     /// scenario's opening estimate.
-    GroundReportReceived = "ground_report_received" {
+    GroundReportReceived = "ground_report_received" [by_hand] {
         side: Side,
         hex: Hex,
         men: u32,
@@ -1631,7 +1679,7 @@ event_kinds! {
     /// `from`, at a cost of `supply_t` of supply (the cost of one search
     /// sortie of twice the distance). The ground report it gave is the
     /// next event.
-    ReconnaissanceFlown = "reconnaissance_flown" {
+    ReconnaissanceFlown = "reconnaissance_flown" [by_hand] {
         air_group: AirGroupId,
         from: AirGroupLocation,
         hex: Hex,
@@ -1640,7 +1688,7 @@ event_kinds! {
     },
     /// A ground report put an enemy base formed by a landing on the
     /// reporting side's map (decision 0092, 15).
-    BaseFound = "base_found" {
+    BaseFound = "base_found" [by_hand] {
         side: Side,
         base: BaseId,
         hex: Hex,
@@ -1662,7 +1710,7 @@ event_kinds! {
     /// A march formed a base for its side in the hex it reached, to hold the
     /// supply it carried (decision 0094, 9): no guns, no repairs, and on its
     /// own side's map only.
-    MarchBaseFormed = "march_base_formed" {
+    MarchBaseFormed = "march_base_formed" [by_hand] {
         base: BaseId,
         side: Side,
         hex: Hex,
@@ -1672,7 +1720,7 @@ event_kinds! {
     /// order is spent (decision 0094, 4 and 9). `supply_t` is the supply it
     /// carried from its side's bases at `from`, put into `base`; `base` is
     /// `None` when it carried nothing.
-    MarchArrived = "march_arrived" {
+    MarchArrived = "march_arrived" [by_hand] {
         unit: LandUnitId,
         from: Hex,
         to: Hex,
@@ -1682,7 +1730,7 @@ event_kinds! {
     },
     /// A land unit's march to `to` stopped after `days` days marched, and the
     /// unit stays where it is (decision 0094, 3).
-    MarchStopped = "march_stopped" {
+    MarchStopped = "march_stopped" [by_hand] {
         unit: LandUnitId,
         to: Hex,
         days: u32,
@@ -1693,7 +1741,7 @@ event_kinds! {
     /// or both, as `work` says; or one marked to stand at, reached in the
     /// night pulse, to stand there for the night (decision 0124, 2). It
     /// halted at `elapsed_hours` since the scenario began.
-    TaskForceHalted = "task_force_halted" {
+    TaskForceHalted = "task_force_halted" [by_hand] {
         task_force: TaskForceId,
         hex: Hex,
         work: HaltWork,
@@ -1703,7 +1751,7 @@ event_kinds! {
     /// movement, its work done (decision 0096, 4). `work` is what it halted
     /// for; `fired` is whether it bombarded while halted (with `work.bombard`
     /// and not `fired`, no ship of it could fire any longer).
-    TaskForceSteamedOn = "task_force_steamed_on" {
+    TaskForceSteamedOn = "task_force_steamed_on" [by_hand] {
         task_force: TaskForceId,
         hex: Hex,
         work: HaltWork,
@@ -1718,7 +1766,7 @@ event_kinds! {
     },
     /// A force's loading for `hex` fell from `loading_before` to `loading`
     /// (decision 0095, 5, 8 and 10). A `Spent` loss means the order is done.
-    LoadingLost = "loading_lost" {
+    LoadingLost = "loading_lost" [by_hand] {
         task_force: TaskForceId,
         hex: Hex,
         loading_before: Fixed,
@@ -1735,21 +1783,21 @@ event_kinds! {
     },
     /// A land unit's rehearsal for `hex` fell from `rehearsal_before` to 0
     /// (decision 0095, 7, 8 and 3b of 0099).
-    RehearsalLost = "rehearsal_lost" {
+    RehearsalLost = "rehearsal_lost" [by_hand] {
         unit: LandUnitId,
         hex: Hex,
         rehearsal_before: Fixed,
         reason: RehearsalLoss,
     },
     /// A land unit left a force's roster (decision 0095, 7 and 3c of 0099).
-    LeftRoster = "left_roster" {
+    LeftRoster = "left_roster" [by_hand] {
         unit: LandUnitId,
         task_force: TaskForceId,
         reason: RosterLeft,
     },
     /// A force that split gave the new part its loading at `hex` and the
     /// roster `units` (decision 12 of 0095).
-    PreparationShared = "preparation_shared" {
+    PreparationShared = "preparation_shared" [by_hand] {
         parent: TaskForceId,
         new_force: TaskForceId,
         hex: Hex,
@@ -1773,7 +1821,7 @@ event_kinds! {
     },
     /// A land unit's experience rose to `experience` (decisions 3 and 5 of
     /// 0097).
-    ExperienceRaised = "experience_raised" {
+    ExperienceRaised = "experience_raised" [by_hand] {
         unit: LandUnitId,
         experience: u8,
         by: ExperienceSource,
@@ -1782,7 +1830,7 @@ event_kinds! {
     /// 0099): it made `work`, and the base's `total` for the job is then the
     /// work done on its airfield, the day's work on its port or on its
     /// aircraft, or its defences. Added at the end.
-    UnitWorked = "unit_worked" {
+    UnitWorked = "unit_worked" [by_hand] {
         unit: LandUnitId,
         base: BaseId,
         job: Job,
@@ -1791,7 +1839,7 @@ event_kinds! {
     },
     /// The airfield of `side`'s base was built: its work done reached the
     /// figure (decision 5 of 0099). Added at the end.
-    AirfieldBuilt = "airfield_built" {
+    AirfieldBuilt = "airfield_built" [by_hand] {
         base: BaseId,
         side: Side,
         hex: Hex,
@@ -1800,7 +1848,7 @@ event_kinds! {
     /// Hits on the airfield of `side`'s base added to its damage (decision 3
     /// of 0103): `hits` hits, and `damage` is the damage after, from 0 to
     /// 100. Added at the end.
-    AirfieldDamaged = "airfield_damaged" {
+    AirfieldDamaged = "airfield_damaged" [by_hand] {
         base: BaseId,
         side: Side,
         hits: u32,
@@ -1829,7 +1877,7 @@ event_kinds! {
     /// A unit of a side beaten in `from` was set to march out of it to `to`
     /// (decision 1 of 0104), with `men` ashore, tired by the defeat:
     /// `fatigue` is what it has afterwards. Added at the end.
-    UnitFellBack = "unit_fell_back" {
+    UnitFellBack = "unit_fell_back" [by_hand] {
         unit: LandUnitId,
         side: Side,
         from: Hex,
@@ -1840,7 +1888,7 @@ event_kinds! {
     /// A unit of a side beaten in `hex` with nowhere to fall back to
     /// surrendered (decision 7 of 0104): its `men` ashore are lost. Added at
     /// the end.
-    UnitSurrendered = "unit_surrendered" {
+    UnitSurrendered = "unit_surrendered" [by_hand] {
         unit: LandUnitId,
         side: Side,
         hex: Hex,
@@ -1850,7 +1898,7 @@ event_kinds! {
     /// surrendered, `men` ashore in all (decision 7 of 0104): one event for
     /// the hex, so that what the enemy is told shows no count of units. It
     /// names no unit. Added at the end.
-    MenSurrenderedAshore = "men_surrendered_ashore" {
+    MenSurrenderedAshore = "men_surrendered_ashore" [by_hand] {
         side: Side,
         hex: Hex,
         men: u32,
@@ -1860,7 +1908,7 @@ event_kinds! {
     /// of shots times chance, after the limit on engaged men) was below the
     /// other side's (`enemy_weight`). Worked out before any die is rolled.
     /// Added at the end.
-    GroundAttackFailed = "ground_attack_failed" {
+    GroundAttackFailed = "ground_attack_failed" [by_hand] {
         side: Side,
         hex: Hex,
         weight: Fixed,
@@ -1870,7 +1918,7 @@ event_kinds! {
     /// by its order's instruction or its default (decisions 6 and 7 of
     /// 0105), with `men` ashore, tired by `beaten_fatigue`: `fatigue` is what
     /// it has afterwards. Its side was not beaten. Added at the end.
-    SpentUnitFellBack = "spent_unit_fell_back" {
+    SpentUnitFellBack = "spent_unit_fell_back" [by_hand] {
         unit: LandUnitId,
         side: Side,
         from: Hex,
@@ -1880,7 +1928,7 @@ event_kinds! {
     },
     /// A land unit's fieldworks changed (decisions 5, 6 and 12 of 0106):
     /// `fieldworks` is what it has afterwards. Added at the end.
-    FieldworksChanged = "fieldworks_changed" {
+    FieldworksChanged = "fieldworks_changed" [by_hand] {
         unit: LandUnitId,
         change: FieldworksChange,
         fieldworks: Fixed,
@@ -1888,7 +1936,7 @@ event_kinds! {
     /// Hits on men of `side` in `hex` wore down the defences of its base
     /// there (decision 12 of 0106): `hits` hits, and `defences` is what the
     /// base has afterwards. Added at the end.
-    DefencesWorn = "defences_worn" {
+    DefencesWorn = "defences_worn" [by_hand] {
         base: BaseId,
         side: Side,
         hex: Hex,
@@ -1897,7 +1945,7 @@ event_kinds! {
     },
     /// Ships in port at a base, in no force, were formed into a task force
     /// (decision 12 of 0111), citing the order. Added at the end.
-    TaskForceFormed = "task_force_formed" {
+    TaskForceFormed = "task_force_formed" [by_hand] {
         task_force: TaskForceId,
         side: Side,
         base: BaseId,
@@ -1906,7 +1954,7 @@ event_kinds! {
     /// A force was joined to another at a base (decision 13 of 0111), citing
     /// the order: `ships` moved from `joined`, which ceased to be, into
     /// `into`. Added at the end.
-    TaskForceJoined = "task_force_joined" {
+    TaskForceJoined = "task_force_joined" [by_hand] {
         joined: TaskForceId,
         into: TaskForceId,
         base: BaseId,
@@ -1915,7 +1963,7 @@ event_kinds! {
     /// A force was stood down at a base (decision 14 of 0111), citing the
     /// order: `ships` lie in port there in no force, and the force ceased to
     /// be. Added at the end.
-    TaskForceStoodDownInPort = "task_force_stood_down_in_port" {
+    TaskForceStoodDownInPort = "task_force_stood_down_in_port" [by_hand] {
         task_force: TaskForceId,
         base: BaseId,
         ships: Vec<ShipId>,
@@ -1923,7 +1971,7 @@ event_kinds! {
     /// A load the commander ordered may take `below_t` tons of the base's
     /// stock below its reserve (decision 9 of 0111): the answer to the
     /// order, recorded after its acceptance and citing it. Added at the end.
-    LoadBelowReserve = "load_below_reserve" {
+    LoadBelowReserve = "load_below_reserve" [by_hand] {
         task_force: TaskForceId,
         base: BaseId,
         cargo: Cargo,
@@ -1945,7 +1993,7 @@ event_kinds! {
     /// of the cargo above its reserve (decisions 4 and 8 of 0111), with
     /// `aboard_t` of it aboard the force, short of its weight or its room.
     /// Recorded after the load's completion, citing it. Added at the end.
-    LoadHeldAtReserve = "load_held_at_reserve" {
+    LoadHeldAtReserve = "load_held_at_reserve" [by_hand] {
         task_force: TaskForceId,
         base: BaseId,
         cargo: Cargo,
@@ -1954,14 +2002,14 @@ event_kinds! {
     },
     /// A command was taken in and applied (decision 0107). The root record
     /// of the change it made: no causes. Added at the end (decision 0107).
-    CommandTaken = "command_taken" {
+    CommandTaken = "command_taken" [by_hand] {
         side: Side,
         issuer: Issuer,
         command: CommandKind,
     },
     /// A command was refused, with the reason; nothing changed (decision
     /// 0107). No causes. Added at the end (decision 0107).
-    CommandRefused = "command_refused" {
+    CommandRefused = "command_refused" [by_hand] {
         side: Side,
         issuer: Issuer,
         command: CommandKind,
@@ -1970,14 +2018,14 @@ event_kinds! {
     /// A plan was drafted for an intent, when its number was first set or
     /// set again after its plan ended. Cites the `CommandTaken`. Added at
     /// the end (decision 0107).
-    PlanDrafted = "plan_drafted" {
+    PlanDrafted = "plan_drafted" [by_hand] {
         side: Side,
         plan: PlanId,
         intent: IntentId,
     },
     /// A plan changed state. Cites the `CommandTaken`. Added at the end
     /// (decision 0107).
-    PlanStateChanged = "plan_state_changed" {
+    PlanStateChanged = "plan_state_changed" [by_hand] {
         side: Side,
         plan: PlanId,
         from: PlanState,
@@ -1986,7 +2034,7 @@ event_kinds! {
     /// A plan that is approved was amended by a change to its intent or one
     /// of its limits; `number` is the amendment's. Cites the `CommandTaken`.
     /// Added at the end (decision 0107).
-    PlanAmended = "plan_amended" {
+    PlanAmended = "plan_amended" [by_hand] {
         side: Side,
         plan: PlanId,
         number: u32,
@@ -1996,7 +2044,7 @@ event_kinds! {
     /// neither, for giving no order (decision 0107). Cites the order and its
     /// acceptance or refusal, if there is an order, or the command's
     /// `CommandTaken` or `CommandRefused`. Added at the end (decision 0107).
-    StaffReason = "staff_reason" {
+    StaffReason = "staff_reason" [by_hand] {
         side: Side,
         order: Option<OrderId>,
         command: Option<Box<CommandKind>>,
@@ -2008,7 +2056,7 @@ event_kinds! {
     /// the estimate cleared. Cites the report that made the estimate and
     /// the day's fight there, if there was one. Added at the end (decision
     /// 0110).
-    GroundFoundEmpty = "ground_found_empty" {
+    GroundFoundEmpty = "ground_found_empty" [by_hand] {
         side: Side,
         hex: Hex,
         men: u32,
@@ -2018,7 +2066,7 @@ event_kinds! {
     /// from the staff, at step 2 of the day (decision 0107, step 3, ruling
     /// 23). `target` is what is held. Cites the order and its acceptance.
     /// Added at the end (decision 0107).
-    HeldByOrder = "held_by_order" {
+    HeldByOrder = "held_by_order" [by_hand] {
         side: Side,
         target: HoldTarget,
         order: OrderId,
@@ -2029,7 +2077,7 @@ event_kinds! {
     /// end (decision 0107, step 4). `intent` names the intent whose words the
     /// notice says: the end of a `met` notice of "take a place" (the ruling
     /// on decision 0142's reading 4); `None` for every other notice.
-    StaffNotice = "staff_notice" {
+    StaffNotice = "staff_notice" [by_hand] {
         side: Side,
         kind: NoticeKind,
         plan: PlanId,
@@ -2049,7 +2097,7 @@ event_kinds! {
     /// tested on; a standing one carries neither. Cites the command that set
     /// it, the staff's notices of the morning, or the event that sank the
     /// ship. Added at the end (decision 0107, step 4).
-    InterruptFired = "interrupt_fired" {
+    InterruptFired = "interrupt_fired" [by_hand] {
         side: Side,
         interrupt: InterruptRef,
         condition: Option<InterruptCondition>,
@@ -2059,7 +2107,7 @@ event_kinds! {
     /// number, `parent` the intent it stands under. Cites the
     /// `CommandTaken` of the staff's `form_intent`. Added at the end (step 2
     /// of stage 2).
-    IntentFormed = "intent_formed" {
+    IntentFormed = "intent_formed" [by_hand] {
         side: Side,
         intent: IntentId,
         parent: IntentId,
@@ -2067,7 +2115,7 @@ event_kinds! {
     /// An intent was withdrawn because an intent above it was (decision
     /// 0117, 6): `parent` is the one it stood under. Cites the `CommandTaken`
     /// of the withdrawal. Added at the end.
-    IntentWithdrawn = "intent_withdrawn" {
+    IntentWithdrawn = "intent_withdrawn" [by_hand] {
         side: Side,
         intent: IntentId,
         parent: IntentId,
@@ -2080,7 +2128,7 @@ event_kinds! {
     /// where it is. Recorded only where the escort's route, speed or status
     /// changes. Cites the escort order and, in station, the charge's route
     /// order. Added at the end (decision 0121).
-    StationKept = "station_kept" {
+    StationKept = "station_kept" [by_hand] {
         escort: TaskForceId,
         charge: TaskForceId,
         in_station: bool,
@@ -2092,7 +2140,7 @@ event_kinds! {
     /// this moment and stops where it is, at `hex`. Cites the escort order
     /// and the event that emptied the charge, where there is one. Added at
     /// the end (decision 0121).
-    ChargeLost = "charge_lost" {
+    ChargeLost = "charge_lost" [by_hand] {
         escort: TaskForceId,
         charge: TaskForceId,
         hex: Hex,
@@ -2104,7 +2152,7 @@ event_kinds! {
     /// escort's order and the end of each escort's fight. The umpire's and
     /// the charge's side's; the enemy is told nothing. Added at the end
     /// (decision 0121).
-    MeetingNotHeld = "meeting_not_held" {
+    MeetingNotHeld = "meeting_not_held" [by_hand] {
         charge: TaskForceId,
         enemy: TaskForceId,
         hex: Hex,
@@ -2132,7 +2180,7 @@ event_kinds! {
     /// direction and whether it arrives on time, a pulse late or never. The
     /// report's own event is its cause. The side's own. Added at the end
     /// (decision 0135).
-    ReportSent = "report_sent" {
+    ReportSent = "report_sent" [by_hand] {
         side: Side,
         sender: CommandRef,
         report: EventId,
@@ -2142,14 +2190,14 @@ event_kinds! {
     /// command a pulse late (decision 0136, 6). It carries the draw's
     /// breakdown and no cause. The side's own. Added at the end (decision
     /// 0136).
-    StateReportLate = "state_report_late" {
+    StateReportLate = "state_report_late" [by_hand] {
         side: Side,
         command: CommandRef,
         as_of: AsOf,
     },
     /// A command's state report, of the moment `as_of`, never arrives at the
     /// area command (decision 0136, 6). As [`EventKind::StateReportLate`].
-    StateReportLost = "state_report_lost" {
+    StateReportLost = "state_report_lost" [by_hand] {
         side: Side,
         command: CommandRef,
         as_of: AsOf,
@@ -2159,7 +2207,7 @@ event_kinds! {
     /// no pulse and no cause. What the state and belief held as reported or
     /// done before the picture cites it. Both sides see it. Added at the
     /// end.
-    BuiltFromPicture = "built_from_picture" {
+    BuiltFromPicture = "built_from_picture" [by_hand] {
         day: u32,
     },
     /// A task force, with its ships, the air groups aboard them and the land
@@ -2167,7 +2215,7 @@ event_kinds! {
     /// 0195, 2 and 3): `base` is a base of its side in the hex, if any. The
     /// lists are in number order. It cites no cause. Its own side's, whole.
     /// Added at the end.
-    ForceEntered = "force_entered" {
+    ForceEntered = "force_entered" [by_hand] {
         force: TaskForceId,
         side: Side,
         hex: Hex,
@@ -2181,7 +2229,7 @@ event_kinds! {
     /// men ashore of a land unit and `aircraft` the ready and damaged
     /// aircraft of a group, 0 for the other. It cites no cause. Its own
     /// side's, whole. Added at the end.
-    UnitEntered = "unit_entered" {
+    UnitEntered = "unit_entered" [by_hand] {
         unit: EntityRef,
         side: Side,
         base: BaseId,
@@ -2194,7 +2242,7 @@ event_kinds! {
     /// 16): the base is not its side's, or takes no aircraft and the group
     /// has some. Recorded on each day it waits, with no cause. Its own
     /// side's, whole. Added at the end.
-    EntryWaiting = "entry_waiting" {
+    EntryWaiting = "entry_waiting" [by_hand] {
         unit: EntityRef,
         side: Side,
         base: BaseId,
@@ -2207,7 +2255,7 @@ event_kinds! {
     /// holds the base. It cites no cause: nothing in the game led to it
     /// (rule 11). Its own side's, whole; the enemy is told nothing. Added at
     /// the end.
-    StockReceived = "stock_received" {
+    StockReceived = "stock_received" [by_hand] {
         base: BaseId,
         side: Side,
         supply_t: Fixed,
@@ -2221,7 +2269,7 @@ event_kinds! {
     /// unchanged), and `joined` is its count after the night, 0 when it lost
     /// a level. It cites no cause, as a stream of aircraft cites none. Its
     /// own side's, whole; the enemy is told nothing. Added at the end.
-    MenJoined = "men_joined" {
+    MenJoined = "men_joined" [by_hand] {
         unit: LandUnitId,
         side: Side,
         base: BaseId,
@@ -2238,7 +2286,7 @@ event_kinds! {
     /// out of fuel idle (15). Its breakdown holds what she lacked, what the
     /// oiler held, the hours she had the lines and their rate. Cites the
     /// order. The side's own. Added at the end.
-    ShipFuelledAtSea = "ship_fuelled_at_sea" {
+    ShipFuelledAtSea = "ship_fuelled_at_sea" [by_hand] {
         ship: ShipId,
         task_force: TaskForceId,
         oiler: ShipId,
@@ -2252,7 +2300,7 @@ event_kinds! {
     /// the pulse: a raid attacked a ship of either, or either fought a
     /// surface action (decision 0201, 10 and 17). Cites the order and the
     /// attacks. The side's own. Added at the end.
-    FuellingBrokenOff = "fuelling_broken_off" {
+    FuellingBrokenOff = "fuelling_broken_off" [by_hand] {
         task_force: TaskForceId,
         giver: TaskForceId,
         hex: Hex,
@@ -2260,7 +2308,7 @@ event_kinds! {
     /// The order of `task_force` to fuel from `giver` ended, for `reason`
     /// (decision 0201, 7 and 17). Cites the order, and the order or event
     /// that ended it where there is one. The side's own. Added at the end.
-    FuelOrderEnded = "fuel_order_ended" {
+    FuelOrderEnded = "fuel_order_ended" [by_hand] {
         task_force: TaskForceId,
         giver: TaskForceId,
         reason: FuelOrderEnd,
@@ -2273,7 +2321,7 @@ event_kinds! {
     /// `BaseFormed` where the landing formed the base, and the unload order
     /// and the force's arrival where the base stood. The side's own, whole;
     /// the enemy is told nothing. Added at the end.
-    RationsLanded = "rations_landed" {
+    RationsLanded = "rations_landed" [by_hand] {
         base: BaseId,
         side: Side,
         task_force: TaskForceId,
@@ -2286,7 +2334,7 @@ event_kinds! {
     /// only when the count changes, and only where the hunger figures are
     /// given. Cites the night's `MenFed` of its side and hex. The unit's own
     /// side's, whole; the enemy is told nothing. Added at the end.
-    HungerNightsChanged = "hunger_nights_changed" {
+    HungerNightsChanged = "hunger_nights_changed" [by_hand] {
         unit: LandUnitId,
         hex: Hex,
         before: u32,
@@ -2301,7 +2349,7 @@ event_kinds! {
     /// of 0209 are given, after the fight's event and before any unit's
     /// fire, the Allied side first. Cites the fight. The side's own, whole;
     /// the enemy is told nothing. Added at the end.
-    FightSupplyCharged = "fight_supply_charged" {
+    FightSupplyCharged = "fight_supply_charged" [by_hand] {
         side: Side,
         hex: Hex,
         men_at_grips: Fixed,
@@ -2316,7 +2364,7 @@ event_kinds! {
     /// Recorded only for a base with ammunition that was asked something.
     /// Cites the side's `FightSupplyCharged`. The base's side's own, whole;
     /// the enemy is told nothing. Added at the end.
-    BaseAmmunitionSpent = "base_ammunition_spent" {
+    BaseAmmunitionSpent = "base_ammunition_spent" [by_hand] {
         base: BaseId,
         asked_t: Fixed,
         paid_t: Fixed,
@@ -2331,7 +2379,7 @@ event_kinds! {
     /// `BaseFormed` where the landing formed the base, and the unload order
     /// and the force's arrival where the base stood. The side's own, whole;
     /// the enemy is told nothing. Added at the end.
-    AmmunitionLanded = "ammunition_landed" {
+    AmmunitionLanded = "ammunition_landed" [by_hand] {
         base: BaseId,
         side: Side,
         task_force: TaskForceId,
@@ -2372,7 +2420,7 @@ event_kinds! {
     /// what goes down with her cites it. Cites the fire's record before it,
     /// the raid's or the last pulse's. The carrier's side's own, whole; the
     /// enemy is told nothing but the sinking, as of any. Added at the end.
-    AircraftFireFought = "aircraft_fire_fought" {
+    AircraftFireFought = "aircraft_fire_fought" [by_hand] {
         ship: ShipId,
         task_force: Option<TaskForceId>,
         level_before: u8,
@@ -2384,7 +2432,7 @@ event_kinds! {
     /// 33), first thing, where the units held apart enter. It cites no
     /// cause. Her own side's, whole; the enemy is told nothing. Added at
     /// the end.
-    SubmarineEntered = "submarine_entered" {
+    SubmarineEntered = "submarine_entered" [by_hand] {
         submarine: SubmarineId,
         hex: Hex,
     },
@@ -2407,7 +2455,7 @@ event_kinds! {
     /// A submarine left her station for the base her scenario names
     /// (decision 0218, 3, 21 and 43), for `reason`. Her own side's, whole;
     /// the enemy is told nothing. Added at the end.
-    SubmarineLeftForHome = "submarine_left_for_home" {
+    SubmarineLeftForHome = "submarine_left_for_home" [by_hand] {
         submarine: SubmarineId,
         base: BaseId,
         reason: SubmarineLeftReason,
@@ -2415,7 +2463,7 @@ event_kinds! {
     /// A submarine reached her home base and is taken off the map
     /// (decision 0218, 43). Cites her steaming. Her own side's, whole; the
     /// enemy is told nothing. Added at the end.
-    SubmarineReachedHome = "submarine_reached_home" {
+    SubmarineReachedHome = "submarine_reached_home" [by_hand] {
         submarine: SubmarineId,
         base: BaseId,
     },
@@ -2440,7 +2488,7 @@ event_kinds! {
     /// Each side is given its cut of it: the boat's side that she fired and
     /// at what kind, the side fired on that its ship was fired at, with no
     /// boat named. Added at the end.
-    SubmarineSalvo = "submarine_salvo" {
+    SubmarineSalvo = "submarine_salvo" [by_hand] {
         submarine: SubmarineId,
         task_force: TaskForceId,
         ship: ShipId,
@@ -2454,7 +2502,7 @@ event_kinds! {
     /// hunt's draws damaged her or sank her or neither. Cites the salvo.
     /// Her side is told of it cut of the force, and the force's side that
     /// it hunted and nothing of the result. Added at the end.
-    SubmarineHunted = "submarine_hunted" {
+    SubmarineHunted = "submarine_hunted" [by_hand] {
         submarine: SubmarineId,
         task_force: TaskForceId,
         hex: Hex,
@@ -2465,7 +2513,7 @@ event_kinds! {
     /// A submarine was sunk (decision 0218, 9 and 22) and is gone from the
     /// map. Cites the hunt. Her own side's, whole; the enemy is told
     /// nothing. Added at the end.
-    SubmarineSunk = "submarine_sunk" {
+    SubmarineSunk = "submarine_sunk" [by_hand] {
         submarine: SubmarineId,
     },
     /// A report of a submarine reached `side`'s belief (decision 0218, 44
@@ -2473,7 +2521,7 @@ event_kinds! {
     /// the side held a report of one there before. Cites the salvo (or the
     /// sighting) it rests on. Seen whole by `side` and not at all by the
     /// other. Added at the end.
-    SubmarineReported = "submarine_reported" {
+    SubmarineReported = "submarine_reported" [by_hand] {
         side: Side,
         hex: Hex,
         replaced: bool,
@@ -2481,7 +2529,7 @@ event_kinds! {
     /// A report of a submarine at `hex` was dropped from `side`'s belief for
     /// its age (decision 0218, 44). Cites the report that made it. Seen
     /// whole by `side`. Added at the end.
-    SubmarineReportDropped = "submarine_report_dropped" {
+    SubmarineReportDropped = "submarine_report_dropped" [by_hand] {
         side: Side,
         hex: Hex,
     },
@@ -2490,7 +2538,7 @@ event_kinds! {
     /// lessened by her surfaced share when she is on station. Cites the
     /// flight. Seen by neither side: the report that follows tells the
     /// searchers. Added at the end.
-    SubmarineSearchAttempt = "submarine_search_attempt" {
+    SubmarineSearchAttempt = "submarine_search_attempt" [by_hand] {
         air_group: AirGroupId,
         submarine: SubmarineId,
         distance_nm: Fixed,
@@ -2502,7 +2550,7 @@ event_kinds! {
     /// under its share. Cites the search attempt. Her side is told it cut
     /// of the group, the group's side that its aircraft attacked a boat and
     /// nothing of the result. Added at the end.
-    SubmarineAttackedFromAir = "submarine_attacked_from_air" {
+    SubmarineAttackedFromAir = "submarine_attacked_from_air" [by_hand] {
         air_group: AirGroupId,
         submarine: SubmarineId,
         hex: Hex,
@@ -2520,7 +2568,7 @@ event_kinds! {
     /// (decision 0218, 23 and 47): a hex and a distance, with the words of
     /// the belief, told on `day`. Seen whole by `side` and not at all by the
     /// other. Added at the end.
-    SuspectedWatersTold = "suspected_waters_told" {
+    SuspectedWatersTold = "suspected_waters_told" [by_hand] {
         side: Side,
         hex: Hex,
         distance: u32,
