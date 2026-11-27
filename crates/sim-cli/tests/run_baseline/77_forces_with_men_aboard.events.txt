@@ -2,14 +2,14 @@ Placeholder scenario 77: Forces with men aboard
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash e3c5074ce8c717a4  73 events
-day   2  hash 0ecae962de052b52  23 events
-day   3  hash ac0d742a4c91a95d  35 events
-day   4  hash 96638d28aca89c8a  39 events
-day   5  hash 6565ca98c77aa1c4  24 events
-day   6  hash a589e8f77d0d8470  12 events
-day   7  hash 846a76c9bfde57a8  12 events
-day   8  hash 5657a460292a1106  12 events
+day   1  hash ----------------  73 events
+day   2  hash ----------------  23 events
+day   3  hash ----------------  35 events
+day   4  hash ----------------  39 events
+day   5  hash ----------------  24 events
+day   6  hash ----------------  12 events
+day   7  hash ----------------  12 events
+day   8  hash ----------------  12 events
 
 #1 D1 -         Allied the commander's command taken: set intent:1 to control island 1
 #2 D1 -         Allied plan:1 drafted for intent:1  <- #1
