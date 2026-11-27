@@ -574,6 +574,9 @@ def the_page_holds_it():
     for words in ("'YOUR PLAN · '", "left to the staff", "'WRITE IT'", "'LEAVE IT TO THE STAFF'", "'GIVE IT BACK TO THE STAFF'", "This reading is worked with your plan.",
                   "This reading is worked with the limits you set and your plan.", "' · Your plan: '", "You hold every place of it: there is no landing to write.", ": given back to the staff"):
         check(words in text, f"the page says {words}")
+    # Rules 30 and 31 (statements 16 to 21): the papers that write a landing and give one back, the mark, and the link to his line.
+    for words in ("'Write the landing at '", "'Give the landing at '", "'Landing: '", "'Change the limits of '", "whoseTag(t.maker)", "'your landing at '", "writtenMarks(t, isHisNo)", "data-landing"):
+        check(words in text, f"the page holds {words}")
 
 
 def places(person):
