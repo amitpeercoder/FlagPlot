@@ -220,14 +220,14 @@ fn world() -> World {
             map.insert(Hex::new(q, r), HexData::open_sea());
         }
     }
-    let mut ref_data = RefData::default();
+    let mut ref_data = RefData::for_tests();
     ref_data
         .ship_classes
         .insert(escort_class().id, escort_class());
     ref_data
         .aircraft_types
         .insert(fighter_type().id, fighter_type());
-    ref_data.search = Some(SearchFigures::from_search_toml());
+    ref_data.search = SearchFigures::from_search_toml();
     ref_data.port_sizes.insert(
         0,
         PortSize {
@@ -1178,7 +1178,7 @@ fn fb_world(units: Vec<FbUnit>) -> World {
         );
     }
     map.add_land_link(FB_AT, FB_TO).expect("link");
-    let mut ref_data = RefData::default();
+    let mut ref_data = RefData::for_tests();
     ref_data.port_sizes.insert(
         0,
         PortSize {
@@ -1195,7 +1195,7 @@ fn fb_world(units: Vec<FbUnit>) -> World {
         engagement_ratio: n(3),
         ..GroundFigures::FIRST
     });
-    ref_data.search = Some(SearchFigures::from_search_toml());
+    ref_data.search = SearchFigures::from_search_toml();
     let mut truth = TruthState::default();
     for (id, side) in [(1, Side::Japanese), (2, Side::Allied)] {
         truth.bases.insert(

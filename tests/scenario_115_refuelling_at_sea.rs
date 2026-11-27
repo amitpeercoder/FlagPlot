@@ -1585,16 +1585,15 @@ fn nothing_is_drawn() {
 fn a_class_file_with_no_column_for_the_mark_loads_and_gives_no_mark() {
     let live = sim_data::load_ship_classes(&common::data_dir().join("reference/ship_classes.csv"))
         .expect("the live classes load");
-    assert!(live.ship_classes.values().all(|c| !c.fuels_at_sea));
+    assert!(live.values().all(|c| !c.fuels_at_sea));
     let frozen = sim_data::load_ship_classes(&common::frozen_root().join("ship_classes.csv"))
         .expect("the frozen classes load");
-    assert!(frozen.ship_classes.values().all(|c| !c.fuels_at_sea));
+    assert!(frozen.values().all(|c| !c.fuels_at_sea));
     let ours = sim_data::load_ship_classes(
         &common::data_dir().join("reference/ship_classes_placeholder_scenario_115.csv"),
     )
     .expect("the scenario's classes load");
     let marked: Vec<u32> = ours
-        .ship_classes
         .values()
         .filter(|c| c.fuels_at_sea)
         .map(|c| c.id.raw())

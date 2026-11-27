@@ -1216,18 +1216,17 @@ impl PortSize {
 }
 
 /// All reference data for a game.
-#[derive(Clone, PartialEq, Eq, Debug, Default)]
+#[derive(Clone, PartialEq, Eq, Debug)]
 pub struct RefData {
     pub ship_classes: BTreeMap<ShipClassId, ShipClass>,
     /// Cargo handling figures by port size, 0 to 10.
     pub port_sizes: BTreeMap<u8, PortSize>,
     pub aircraft_types: BTreeMap<AircraftTypeId, AircraftType>,
-    /// The search figures. `None` only in unit tests that have no air
-    /// groups; the loader always supplies it.
-    pub search: Option<SearchFigures>,
-    /// The surface combat figures. `None` only in unit tests that have no
-    /// fights; the loader always supplies it.
-    pub surface_combat: Option<SurfaceCombatFigures>,
+    /// The search figures. Every scenario names them (decision 0236).
+    pub search: SearchFigures,
+    /// The surface combat figures. Every scenario names them (decision
+    /// 0236).
+    pub surface_combat: SurfaceCombatFigures,
     /// The air combat figures of decision 0026. `None` if the scenario names
     /// no file: no air group can then be given the naval strike mission.
     pub air_combat: Option<AirCombatFigures>,
@@ -2552,6 +2551,30 @@ impl SurfaceCombatFigures {
                 alongside_hours: Fixed::ONE,
                 lines: 2,
             }),
+        }
+    }
+}
+
+#[cfg(test)]
+impl RefData {
+    /// A reference data of the two figures every game has and nothing else:
+    /// the figures of `from_search_toml` and `from_surface_combat_toml`. The
+    /// one place the unit tests of the crate build a `RefData` from.
+    pub(crate) fn for_tests() -> RefData {
+        RefData {
+            ship_classes: BTreeMap::new(),
+            port_sizes: BTreeMap::new(),
+            aircraft_types: BTreeMap::new(),
+            search: SearchFigures::from_search_toml(),
+            surface_combat: SurfaceCombatFigures::from_surface_combat_toml(),
+            air_combat: None,
+            air_upkeep: None,
+            fatigue: None,
+            air_supply: None,
+            ground: None,
+            reports: None,
+            class_sides: None,
+            submarines: None,
         }
     }
 }

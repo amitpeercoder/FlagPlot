@@ -108,14 +108,14 @@ impl Scenario {
         if type_files.is_empty() {
             return Err(fail("aircraft_types names no file".to_string()));
         }
-        let mut ref_data = RefData::default();
+        let mut ship_classes = BTreeMap::new();
         let mut class_owner: BTreeMap<ShipClassId, PathBuf> = BTreeMap::new();
         let mut estimated_figures = crate::reference::EstimatedFigures::new();
         for name in &class_files {
             let file_path = reference(name)?;
             let (classes, marked) = load_ship_classes_marked_from(source, &file_path)?;
             estimated_figures.extend(marked);
-            for (id, class) in classes.ship_classes {
+            for (id, class) in classes {
                 if let Some(first) = class_owner.insert(id, file_path.clone()) {
                     return Err(fail(format!(
                         "ship class {id} is in both {} and {}",
@@ -123,10 +123,11 @@ impl Scenario {
                         file_path.display()
                     )));
                 }
-                ref_data.ship_classes.insert(id, class);
+                ship_classes.insert(id, class);
             }
         }
-        ref_data.port_sizes = load_port_sizes_from(source, &reference(&file.port_sizes)?)?;
+        let port_sizes = load_port_sizes_from(source, &reference(&file.port_sizes)?)?;
+        let mut aircraft_types = BTreeMap::new();
         let mut type_owner: BTreeMap<AircraftTypeId, PathBuf> = BTreeMap::new();
         for name in &type_files {
             let file_path = reference(name)?;
@@ -138,14 +139,27 @@ impl Scenario {
                         file_path.display()
                     )));
                 }
-                ref_data.aircraft_types.insert(id, aircraft_type);
+                aircraft_types.insert(id, aircraft_type);
             }
         }
-        ref_data.search = Some(load_search_figures_from(source, &reference(&file.search)?)?);
-        ref_data.surface_combat = Some(load_surface_combat_figures_from(
-            source,
-            &reference(&file.surface_combat)?,
-        )?);
+        let search = load_search_figures_from(source, &reference(&file.search)?)?;
+        let surface_combat =
+            load_surface_combat_figures_from(source, &reference(&file.surface_combat)?)?;
+        let mut ref_data = RefData {
+            ship_classes,
+            port_sizes,
+            aircraft_types,
+            search,
+            surface_combat,
+            air_combat: None,
+            air_upkeep: None,
+            fatigue: None,
+            air_supply: None,
+            ground: None,
+            reports: None,
+            class_sides: None,
+            submarines: None,
+        };
         if let Some(air_combat) = &file.air_combat {
             ref_data.air_combat = Some(load_air_combat_figures_from(
                 source,
@@ -1043,19 +1057,11 @@ impl Scenario {
                 strike_contact_age: match spec.strike_contact_age_pulses {
                     Some(pulses) => {
                         // Decision 0114, 3: from 0 up to one less than the
-                        // age at which a contact is dropped, where the
-                        // search figures are loaded.
-                        let max = ref_data
-                            .search
-                            .as_ref()
-                            .map(|search| search.contact_drop_age_pulses.saturating_sub(1));
-                        if pulses < 0 || max.is_some_and(|max| pulses > i64::from(max)) {
-                            let range = match max {
-                                Some(max) => format!("between 0 and {max}"),
-                                None => "0 or more".to_string(),
-                            };
+                        // age at which a contact is dropped.
+                        let max = ref_data.search.contact_drop_age_pulses.saturating_sub(1);
+                        if pulses < 0 || pulses > i64::from(max) {
                             return Err(fail(format!(
-                                "{id} has a strike_contact_age_pulses of {pulses}, not {range}"
+                                "{id} has a strike_contact_age_pulses of {pulses}, not between 0 and {max}"
                             )));
                         }
                         Some(u32::try_from(pulses).expect("the age was checked"))
@@ -2364,9 +2370,7 @@ impl Scenario {
             }
         }
         if let Some(spec) = &file.objectives {
-            let objectives =
-                build_objectives(spec, file.days, world.ref_data().surface_combat.is_some())
-                    .map_err(&fail)?;
+            let objectives = build_objectives(spec, file.days).map_err(&fail)?;
             world
                 .set_objectives(objectives)
                 .map_err(|e| fail(e.to_string()))?;

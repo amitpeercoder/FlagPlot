@@ -922,12 +922,7 @@ fn the_unopposed_strike_claims_what_the_hand_calculation_says() {
 /// afloat when the claim was made with fire damage at the claim level.
 fn ships_a_claim_should_count(world: &World, claim: &Claim) -> u32 {
     let events: Vec<Event> = world.events().iter().cloned().collect();
-    let level = world
-        .ref_data()
-        .surface_combat
-        .as_ref()
-        .expect("surface combat figures")
-        .claimed_sunk_fire;
+    let level = world.ref_data().surface_combat.claimed_sunk_fire;
     // The attacks it cites, and the force they attacked.
     let mut force = None;
     let mut attacks = Vec::new();

@@ -302,12 +302,7 @@ fn the_air_combat_key_is_optional_and_loads_the_figures() {
 #[test]
 fn the_surface_combat_path_is_required_and_the_file_is_loaded() {
     let scenario = parse_with(&task_force("at_base = 1")).expect("loads");
-    let figures = scenario
-        .world
-        .ref_data()
-        .surface_combat
-        .as_ref()
-        .expect("the loader supplies the figures");
+    let figures = &scenario.world.ref_data().surface_combat;
     assert_eq!(figures.max_rounds, 6);
 
     let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data/scenarios/test.toml");

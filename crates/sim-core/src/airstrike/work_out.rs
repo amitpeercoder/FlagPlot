@@ -562,16 +562,8 @@ impl World {
             .air_combat
             .as_ref()
             .expect("a strike needs the air combat figures");
-        let surface = self
-            .ref_data
-            .surface_combat
-            .as_ref()
-            .expect("World::new requires surface combat figures");
-        let search = self
-            .ref_data
-            .search
-            .as_ref()
-            .expect("World::new requires search figures with air groups");
+        let surface = &self.ref_data.surface_combat;
+        let search = &self.ref_data.search;
         let group = &self.truth.air_groups[&strike.air_group];
         let aircraft_type = &self.ref_data.aircraft_types[&group.aircraft_type];
         let toughness = self.ref_data.ship_classes[&self.truth.ships[&ship].class].toughness;

@@ -630,9 +630,7 @@ pub(crate) fn check(truth: &TruthState, map: &Map, ref_data: &RefData) -> Vec<In
             ));
         }
         if ship.system_repair_points.is_negative()
-            || ref_data.surface_combat.as_ref().is_some_and(|figures| {
-                ship.system_repair_points >= figures.forward_repair_system_points
-            })
+            || ship.system_repair_points >= ref_data.surface_combat.forward_repair_system_points
         {
             violations.push(InvariantViolation::ShipRepairPointsOutOfRange(ship.id));
         }
@@ -1335,7 +1333,7 @@ mod tests {
     #[test]
     fn a_sound_air_group_breaks_nothing() {
         let (truth, map) = setup();
-        assert_eq!(check(&truth, &map, &RefData::default()), Vec::new());
+        assert_eq!(check(&truth, &map, &RefData::for_tests()), Vec::new());
     }
 
     #[test]
@@ -1362,7 +1360,7 @@ mod tests {
             } else {
                 Vec::new()
             };
-            assert_eq!(check(&truth, &map, &RefData::default()), expected);
+            assert_eq!(check(&truth, &map, &RefData::for_tests()), expected);
         }
     }
 
@@ -1375,7 +1373,7 @@ mod tests {
             .expect("group")
             .location = AirGroupLocation::Base(BaseId::new(9));
         assert_eq!(
-            check(&truth, &map, &RefData::default()),
+            check(&truth, &map, &RefData::for_tests()),
             vec![InvariantViolation::AirGroupAtUnknownBase(
                 AirGroupId::new(1),
                 BaseId::new(9)
@@ -1392,7 +1390,7 @@ mod tests {
             .expect("group")
             .side = Side::Japanese;
         assert_eq!(
-            check(&truth, &map, &RefData::default()),
+            check(&truth, &map, &RefData::for_tests()),
             vec![InvariantViolation::AirGroupAtOtherSidesBase(
                 AirGroupId::new(1),
                 BaseId::new(1)
@@ -1415,7 +1413,7 @@ mod tests {
             .expect("group");
         group.ready = 0;
         group.strength = 0;
-        assert_eq!(check(&truth, &map, &RefData::default()), Vec::new());
+        assert_eq!(check(&truth, &map, &RefData::for_tests()), Vec::new());
         // One aircraft: both violations are named, the side first.
         truth
             .air_groups
@@ -1423,7 +1421,7 @@ mod tests {
             .expect("group")
             .ready = 1;
         assert_eq!(
-            check(&truth, &map, &RefData::default()),
+            check(&truth, &map, &RefData::for_tests()),
             vec![InvariantViolation::AirGroupAtOtherSidesBase(
                 AirGroupId::new(1),
                 BaseId::new(1)
@@ -1436,7 +1434,7 @@ mod tests {
             .expect("group");
         group.ready = 0;
         group.pilots = Some(1);
-        assert_eq!(check(&truth, &map, &RefData::default()).len(), 1);
+        assert_eq!(check(&truth, &map, &RefData::for_tests()).len(), 1);
         // A damaged aircraft: still a violation.
         let group = truth
             .air_groups
@@ -1444,7 +1442,7 @@ mod tests {
             .expect("group");
         group.pilots = None;
         group.damaged = 1;
-        assert_eq!(check(&truth, &map, &RefData::default()).len(), 1);
+        assert_eq!(check(&truth, &map, &RefData::for_tests()).len(), 1);
     }
 
     #[test]
@@ -1456,14 +1454,14 @@ mod tests {
             .get_mut(&AirGroupId::new(1))
             .expect("group");
         group.ready = 0;
-        assert_eq!(check(&truth, &map, &RefData::default()), Vec::new());
+        assert_eq!(check(&truth, &map, &RefData::for_tests()), Vec::new());
         truth
             .air_groups
             .get_mut(&AirGroupId::new(1))
             .expect("group")
             .ready = 1;
         assert_eq!(
-            check(&truth, &map, &RefData::default()),
+            check(&truth, &map, &RefData::for_tests()),
             vec![InvariantViolation::AirGroupAtBaseWithoutAirfield(
                 AirGroupId::new(1),
                 BaseId::new(1)
@@ -1505,7 +1503,7 @@ mod tests {
     }
 
     fn violations_of(truth: &TruthState, map: &Map) -> Vec<InvariantViolation> {
-        check(truth, map, &RefData::default())
+        check(truth, map, &RefData::for_tests())
     }
 
     fn ship_mut(truth: &mut TruthState) -> &mut Ship {
@@ -1629,7 +1627,7 @@ mod tests {
     #[test]
     fn a_damaged_system_the_class_lacks_is_caught() {
         let (mut truth, map) = setup_with_ship();
-        let mut ref_data = RefData::default();
+        let mut ref_data = RefData::for_tests();
         // A class with no guns and no tubes: only propulsion exists.
         ref_data.ship_classes.insert(
             ShipClassId::new(1),
@@ -1674,7 +1672,7 @@ mod tests {
     #[test]
     fn a_torpedo_side_fired_is_caught_without_ready_torpedoes_or_a_second_side() {
         let (mut truth, map) = setup_with_ship();
-        let mut ref_data = RefData::default();
+        let mut ref_data = RefData::for_tests();
         let class = |tubes: u32, one_side: u32| ShipClass {
             id: ShipClassId::new(1),
             name: "Cruiser".to_string(),
@@ -1727,7 +1725,7 @@ mod tests {
     #[test]
     fn fuel_above_the_class_capacity_or_a_negative_base_stock_is_caught() {
         let (mut truth, map) = setup_with_ship();
-        let mut ref_data = RefData::default();
+        let mut ref_data = RefData::for_tests();
         ref_data.ship_classes.insert(
             ShipClassId::new(1),
             ShipClass {
@@ -1774,7 +1772,7 @@ mod tests {
     fn fuel_cargo_is_not_negative_and_shares_the_cargo_capacity_with_supply() {
         // Same setup as the fuel test above: a class with 100 t of cargo.
         let (mut truth, map) = setup_with_ship();
-        let mut ref_data = RefData::default();
+        let mut ref_data = RefData::for_tests();
         ref_data.ship_classes.insert(
             ShipClassId::new(1),
             ShipClass {
@@ -1951,7 +1949,7 @@ mod tests {
     /// and the air group aboard it instead of at the base.
     fn setup_aboard() -> (TruthState, Map, RefData) {
         let (mut truth, map) = setup_with_ship();
-        let mut ref_data = RefData::default();
+        let mut ref_data = RefData::for_tests();
         ref_data.ship_classes.insert(
             ShipClassId::new(1),
             ShipClass {

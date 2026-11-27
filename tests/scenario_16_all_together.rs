@@ -1603,7 +1603,7 @@ fn the_figures_and_the_places_are_what_the_calculation_uses() {
     let setup = Setup::working("setting");
     let world = &setup.base.world;
     let data = world.ref_data();
-    let surface = data.surface_combat.as_ref().expect("surface figures");
+    let surface = &data.surface_combat;
     assert_eq!(surface.experience_gun_strength, fx("0.4"));
     assert_eq!(surface.experience_torpedo_strength, fx("0.4"));
     assert_eq!(surface.experience_sighting_strength, fx("0.4"));

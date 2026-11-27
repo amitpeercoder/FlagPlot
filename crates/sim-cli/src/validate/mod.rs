@@ -253,12 +253,9 @@ pub fn command(
         }
     }
     // 7. Every measure is one validate can take.
-    let round_minutes = scenario
-        .world
-        .ref_data()
-        .surface_combat
-        .as_ref()
-        .map(|figures| u64::from(figures.round_minutes));
+    let round_minutes = Some(u64::from(
+        scenario.world.ref_data().surface_combat.round_minutes,
+    ));
     let ctx = take::Context::new(&batch, round_minutes);
     let mut seen = std::collections::BTreeSet::new();
     let mut takes = Vec::new();

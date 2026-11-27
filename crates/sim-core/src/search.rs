@@ -207,10 +207,7 @@ pub(crate) struct SubmarineSearch {
 impl World {
     /// The air search phase of one daylight pulse.
     pub(crate) fn search_from_the_air(&mut self, day: u32, pulse: Pulse) {
-        let Some(figures) = self.ref_data.search.clone() else {
-            // Without search figures there are no air groups (World::new).
-            return;
-        };
+        let figures = self.ref_data.search.clone();
 
         // Search runs before movement, so these are the positions at the
         // start of the pulse. A task force with no ships has nothing to see.
@@ -636,7 +633,7 @@ mod tests {
             },
         );
 
-        let mut ref_data = RefData::default();
+        let mut ref_data = RefData::for_tests();
         for (id, kind) in [
             (1, ShipKind::Cruiser),
             (2, ShipKind::Destroyer),
@@ -696,7 +693,7 @@ mod tests {
                 self_sealing_tanks: false,
             },
         );
-        ref_data.search = Some(SearchFigures::from_search_toml());
+        ref_data.search = SearchFigures::from_search_toml();
 
         let mut truth = TruthState::default();
         truth.bases.insert(
@@ -1471,8 +1468,6 @@ mod tests {
         use crate::orders::{OrderKind, TaskForceOrder};
         use crate::state::Base;
         let mut world = carrier_world(1);
-        world.ref_data.surface_combat =
-            Some(crate::refdata::SurfaceCombatFigures::from_surface_combat_toml());
         // A port for the yard under the carrier, a passage of 1 day: the
         // carrier is undamaged, so she is away for 1 day, sent on day 1 and
         // back on day 2.

@@ -227,7 +227,6 @@ fn build(
     // Per ship, in id order: runs sunk, runs crippled.
     let mut sunk_runs: Vec<u64> = Vec::new();
     let mut crippled_runs: Vec<u64> = Vec::new();
-    let mut has_combat = false;
     // histogram per side, indexed like SIDES.
     let mut histograms: Vec<Vec<u64>> = Vec::new();
     let mut side_ships: Vec<u64> = Vec::new();
@@ -278,7 +277,6 @@ fn build(
             }
             sunk_runs = vec![0; ships.len()];
             crippled_runs = vec![0; ships.len()];
-            has_combat = ref_data.surface_combat.is_some();
             for side in SIDES {
                 let count = batch_record::initial_ships(&executed.initial)
                     .into_iter()
@@ -295,11 +293,7 @@ fn build(
             });
         }
 
-        let crippled_level = world
-            .ref_data()
-            .surface_combat
-            .as_ref()
-            .map(|figures| figures.crippled_flotation);
+        let crippled_level = world.ref_data().surface_combat.crippled_flotation;
         let mut sunk_ids: BTreeSet<u32> = BTreeSet::new();
         let mut sunk_by_side = [0usize; 2];
         for (position, ship) in batch_record::initial_ships(&executed.initial)
@@ -317,7 +311,7 @@ fn build(
                 if let Some(slot) = SIDES.iter().position(|side| *side == ship.side) {
                     sunk_by_side[slot] += 1;
                 }
-            } else if crippled_level.is_some_and(|level| now.flotation_damage >= level) {
+            } else if now.flotation_damage >= crippled_level {
                 crippled_runs[position] += 1;
             }
         }
@@ -365,7 +359,7 @@ fn build(
         .map(|(position, ship)| PerShip {
             id: ship.id,
             sunk_runs: sunk_runs[position],
-            crippled_runs: has_combat.then_some(crippled_runs[position]),
+            crippled_runs: Some(crippled_runs[position]),
         })
         .collect();
 

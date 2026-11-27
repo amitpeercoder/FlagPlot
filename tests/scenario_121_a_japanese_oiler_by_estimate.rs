@@ -176,7 +176,7 @@ fn load_text(text: &str, path: &Path) -> Scenario {
 
 fn toho_class() -> ShipClass {
     let data = sim_data::load_ship_classes(&reference(CLASSES)).expect("the class file loads");
-    data.ship_classes[&ShipClassId::new(TOHO_CLASS)].clone()
+    data[&ShipClassId::new(TOHO_CLASS)].clone()
 }
 
 /// The rows of the sources file for her class: figure to (rule, facts, note).
@@ -725,7 +725,7 @@ fn statement_13_neosho_s_cargo_is_marked_too() {
         vec!["cargo_capacity_t".to_string()]
     );
     assert_eq!(
-        data.ship_classes[&ShipClassId::new(4030)].cargo_capacity_t,
+        data[&ShipClassId::new(4030)].cargo_capacity_t,
         fx("15408.3208")
     );
     let (ok, said) = derive_check(&repo().join("data/derivation/coral_sea_oilers.toml"), None);

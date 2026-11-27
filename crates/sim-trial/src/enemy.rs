@@ -46,15 +46,11 @@ pub(crate) const fn other(side: Side) -> Side {
 }
 
 /// What is checked once for a trial, before any world: every belief handed
-/// in is the side's own; the view has search figures; and no unit of the
+/// in is the side's own; and no unit of the
 /// side's own, numbered by its scenario, has a number the made units take
 /// (rule 20). A unit the side made in play is numbered from its side's
 /// series above 1,000,000 and cannot meet them.
-pub(crate) fn check(
-    half: &PictureHalf,
-    view: &SideView<'_>,
-    believed: &Believed,
-) -> Result<(), Refused> {
+pub(crate) fn check(half: &PictureHalf, believed: &Believed) -> Result<(), Refused> {
     let side = half.side;
     if let Some(force) = believed.forces.iter().find(|force| force.side != side) {
         return Err(Refused(format!(
@@ -78,11 +74,6 @@ pub(crate) fn check(
             intent.side.name(),
             side.name()
         )));
-    }
-    if view.search_figures().is_none() {
-        return Err(Refused(
-            "the view has no search figures, and so no merging distance".to_string(),
-        ));
     }
     let reaches = |raw: u32| (FIRST_MADE..=MADE_IDS_FLOOR).contains(&raw);
     let own = half
@@ -673,10 +664,7 @@ pub(crate) fn make(
     world: u32,
 ) -> Result<(PictureHalf, Vec<Assumption>), Refused> {
     let enemy = other(own.side);
-    let merge = view
-        .search_figures()
-        .map(|search| search.merge_distance_hexes)
-        .ok_or_else(|| Refused("the view has no search figures".to_string()))?;
+    let merge = view.search_figures().merge_distance_hexes;
     let rules = Rules {
         view,
         enemy,
