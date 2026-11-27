@@ -246,7 +246,7 @@
 use crate::common;
 
 use std::collections::{BTreeMap, BTreeSet};
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::sync::OnceLock;
 
 use serde_json::{json, Value};
@@ -268,18 +268,21 @@ const LETTERS: [char; 4] = ['a', 'b', 'c', 'd'];
 
 // ------------------------------------------------------------------ helpers
 
-fn repo() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR")).join("..")
-}
-
 fn path(letter: char) -> PathBuf {
     common::data_dir().join(format!(
         "scenarios/five-days/01{letter}_eastern_solomons.toml"
     ))
 }
 
+/// The file resolved (decision 0234): a key, a row or a table is read from
+/// the scenario it makes, whether the file holds it or the file it is built on.
 fn text(letter: char) -> String {
-    std::fs::read_to_string(path(letter)).expect("the scenario file reads")
+    common::resolved_text(&path(letter))
+}
+
+/// The header of the file and of every file it is built on, joined.
+fn headers(letter: char) -> String {
+    common::headers(&path(letter))
 }
 
 /// Loaded on the live figures: the scenario runs on them (the doc comment).
@@ -460,34 +463,6 @@ fn reach(
 fn radii(world: &sim_core::World, type_raw: u32) -> (Fixed, Fixed) {
     let t = &world.ref_data().aircraft_types[&sim_core::ids::AircraftTypeId::new(type_raw)];
     (t.search_range_nm, t.strike_range_nm)
-}
-
-/// The file with its `name` line and every `[[command]]` table taken away:
-/// everything from the first line `[[command]]` on, where only command
-/// tables follow, and the blank lines before it.
-fn without_name_and_commands(text: &str) -> String {
-    let lines: Vec<&str> = text.lines().collect();
-    let first = lines
-        .iter()
-        .position(|line| *line == "[[command]]")
-        .unwrap_or(lines.len());
-    for line in &lines[first..] {
-        assert!(
-            line.is_empty()
-                || *line == "[[command]]"
-                || (!line.starts_with('[') && !line.starts_with('#') && line.contains(" = ")),
-            "only command tables after the first: {line}"
-        );
-    }
-    let mut kept: Vec<&str> = lines[..first]
-        .iter()
-        .copied()
-        .filter(|line| !line.starts_with("name = "))
-        .collect();
-    while kept.last() == Some(&"") {
-        kept.pop();
-    }
-    kept.join("\n")
 }
 
 /// A stable digest of bytes, FNV-1a of 64 bits, for the files that must not
@@ -843,7 +818,7 @@ fn four_rated_destroyers_and_the_ships_left_out() {
             "{left} is left out"
         );
         assert!(
-            text('a').to_lowercase().contains(left),
+            headers('a').to_lowercase().contains(left),
             "the file says {left} is left out"
         );
     }
@@ -1304,14 +1279,11 @@ fn each_file_plays_five_days_the_same_twice() {
     }
 }
 
-/// The four files are one scenario: with names and command tables taken
-/// away they are the same, byte for byte.
+/// The four files are one scenario but for their names and command tables.
+/// That they state nothing else is statement R3 of
+/// `scenarios_built_on_another`, which holds it of each file's own text.
 #[test]
 fn the_four_files_are_one_scenario() {
-    let d = without_name_and_commands(&text('d'));
-    for letter in ['a', 'b', 'c'] {
-        assert_eq!(without_name_and_commands(&text(letter)), d, "file {letter}");
-    }
     assert!(
         !text('d').lines().any(|line| line == "[[command]]"),
         "file d has no command"
@@ -1325,24 +1297,6 @@ fn the_four_files_are_one_scenario() {
     // The name of each is its own.
     let names: BTreeSet<String> = LETTERS.iter().map(|l| load(*l).name).collect();
     assert_eq!(names.len(), 4);
-}
-
-/// The script that makes them, asked to check, says they are what it makes.
-#[test]
-fn the_script_says_the_files_are_what_it_makes() {
-    let out = std::process::Command::new("python3")
-        .arg(repo().join("scripts/five-days/make_files.py"))
-        .arg(repo())
-        .arg("--check")
-        .output()
-        .expect("python3 runs the script");
-    let said = String::from_utf8_lossy(&out.stdout);
-    assert!(
-        out.status.success(),
-        "{said}{}",
-        String::from_utf8_lossy(&out.stderr)
-    );
-    assert_eq!(said.matches(": as made").count(), 4, "{said}");
 }
 
 /// The forces are scenario 5's: every ship of task forces 1 to 4 and every

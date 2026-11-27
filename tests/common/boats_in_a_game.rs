@@ -44,9 +44,6 @@ pub struct Game {
     /// `data/scenarios/`.
     pub copies: [(char, &'static str, &'static str); 4],
     pub boats: &'static [Boat],
-    /// The number of files the script says are as made, for the whole
-    /// folder: sixteen.
-    pub script_files: usize,
 }
 
 /// The keys of the submarine files.
@@ -59,10 +56,6 @@ const KEYS: [&str; 3] = [
 /// Where the section of boats begins: the blank line before it is the last
 /// line of the file it copies.
 const SECTION: &str = "\n\n# SUBMARINES (decisions 0225 and 0227)";
-
-fn repo() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("..")
-}
 
 impl Game {
     fn copy(&self, letter: char) -> PathBuf {
@@ -284,23 +277,31 @@ impl Game {
                 assert_eq!(found.len(), 1, "copy {letter}: {key}");
                 lines.remove(found[0]);
             }
-            let original = read(&self.source(letter));
-            let mut want = body(&original);
+            // The copy is its source but for the three keys, the section of
+            // boats and, in copy a, the ground figures: read as tables, the
+            // source resolved (decision 0234, item 12), since it may be built
+            // on another file.
+            let mut want: toml::Table = super::resolved_text(&self.source(letter))
+                .parse()
+                .expect("the source resolves to a table");
+            let have: toml::Table = lines.join("\n").parse().expect("the copy is a table");
+            let hunger = toml::Value::String("../../reference/ground_hunger.toml".to_string());
             if letter == 'a' {
                 // File a's copy is on the table's ground figures, as the
                 // copies of b, c and d come from files that are.
-                let i = want
-                    .iter()
-                    .position(|l| *l == "ground = \"../../reference/ground.toml\"")
-                    .expect("file a names the live ground figures");
-                want[i] = "ground = \"../../reference/ground_hunger.toml\"";
+                assert_eq!(
+                    want["ground"].as_str(),
+                    Some("../../reference/ground.toml"),
+                    "file a names the live ground figures"
+                );
+                want.insert("ground".to_string(), hunger);
             } else {
-                assert!(
-                    want.contains(&"ground = \"../../reference/ground_hunger.toml\""),
+                assert_eq!(
+                    want["ground"], hunger,
                     "the table's copy {letter} names the table's ground figures"
                 );
             }
-            assert_eq!(lines, want, "copy {letter}");
+            assert_eq!(have, want, "copy {letter}");
         }
     }
 
@@ -339,33 +340,6 @@ impl Game {
                 );
             }
         }
-    }
-
-    /// The script, run with `--check`: every file kept is the one it makes
-    /// and the folder holds nothing else.
-    pub fn the_script_says_each_copy_is_the_one_it_makes(&self) {
-        let out = std::process::Command::new("python3")
-            .arg(repo().join("scripts/table-boats/make_files.py"))
-            .arg(repo())
-            .arg("--check")
-            .output()
-            .expect("python3 runs the script");
-        let said = String::from_utf8_lossy(&out.stdout);
-        assert!(
-            out.status.success(),
-            "{said}{}",
-            String::from_utf8_lossy(&out.stderr)
-        );
-        assert_eq!(
-            said.matches(": as made").count(),
-            self.script_files,
-            "{said}"
-        );
-        assert_eq!(
-            said.matches("not a file this script makes").count(),
-            0,
-            "{said}"
-        );
     }
 }
 

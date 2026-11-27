@@ -40,3 +40,25 @@ The loader reads `built_on`; nothing in `data/` is converted (that is steps C an
 - `sim-cli resolve` of every one of the 263 files under `data/scenarios` (`tmp-` folders apart), read back as TOML, is the table of the file itself: 263 files, 0 differ.
 - `sh scripts/overlay-proof.sh HEAD 1`, with `data/scenarios/midway/01d_midway.toml` temporarily written as an overlay of `base_midway.toml` stating its `name` alone (restored after; not committed): `data/scenarios/midway/01d_midway.toml resolve same run same`, `1 overlays, 0 differing`, exit 0. With the name changed one word: `resolve DIFFERS run DIFFERS`, `1 overlays, 1 differing`, `expected 2 overlays, found 1`, exit 1.
 - The commands of "Before a commit": `run data/scenarios/01_transit.toml --events`, `hash data/scenarios/07_full_slice.toml` (day 39 `e09e0205abb9a981`, as pinned) and `oob-check data/oob` (no problems) were run.
+
+## Built: step C
+
+The 27 files of `coral-sea` (14: the two oiler bases and files a to d of 01, 02 and 03), `five-days` (9) and `midway` (4) are overlays, each at its own path and name, built on the file the record's table gives it: 38,829 lines before, 2,897 after. The three hand-written bases (`base_coral_sea`, `base_eastern_solomons`, `base_midway`) are untouched, so their headers still name the retired scripts. Nothing under `crates/` changed. The `table-*` families, `tests/golden` and `scripts/regenerate.sh` were not touched.
+
+**Overlays.** A file a to c states `name` and its `[[command]]` rows verbatim from the flat file; a file d, `name`; the three bases, `name`, `ship_classes`, `class_sides`, the new task force and the new ships, each with the comment it had. The header of a file keeps what the generator's header said of the scenario less the sentences about the script, and names the file it is built on; a base keeps its own account and says what it states. No file says "Do not edit by hand".
+
+**Proof,** `SIM_CLI=target/release/sim-cli sh scripts/overlay-proof.sh 21f1a806 27` (the commit the branch left `main` at): 27 lines, each `resolve same run same`, `27 overlays, 0 differing`, exit 0. `sim-cli hash` of `coral-sea/03a`, `five-days/01c` and `midway/01a`, before and after: day 5 `ba3aeefe6e1dc2ad`, `71283675c6410067`, `9c2c65c665e89b5e`, identical.
+
+**Scripts deleted:** `scripts/coral-sea/` (3), `five-days/make_files.py`, `five-days/make_oiler_files.py`, `midway/make_files.py`. `scripts/README.md` and `docs/commands.md` say so.
+
+**Statements.** R3 (the 27 rows copied into the test as data), R4 (file counts of the three table folders) and R5 are written in `tests/scenarios_built_on_another.rs`. R5 is `#[ignore]`d until step D, since the 31 files of the table's folders still say "Do not edit by hand"; run with `--ignored` it fails on exactly those, and the 8 files it names are the ones it finds besides. L15's set-up reads the resolved text of file 02a, which is an overlay.
+
+**Tests changed, by reading** (no expected number or statement text touched):
+
+- (a), a key, row or table: `text()` of scenarios 103, 105, 114 reads the resolved file; 104's `five_days_text`, its walk of every file for `for_play`, and 119's walk for `ground` likewise; 120's scan for `_oilers.csv`, the orders of the group and the points table (now read as a table); 121's orders; 114's copies of the table in `s21`.
+- (b), a header: 103's "the file says X is left out", 105/114's `header_words`, 121's header words read `common::headers`.
+- (c), "the same but for X": the byte comparisons of the four files (103, 105, 114) and 120's property of the oiler files are withdrawn, held by R3. Two statements that a copy is its source but for X (`boats_in_a_game` statement 7 and 119's copies) are read as tables, the source resolved, which is stronger.
+- (d), a script's check: withdrawn for the five scripts deleted (103, 105, 114, 120 twice) and also for the table scripts `table-boats` (the four `boats_in_the_..._games` tests, and the field `script_files`) and `table-copies` (119, 121). Those two scripts copy the text of C's files and refuse an overlay ("its first key is not its name"), so their `--check` cannot pass once step C is built, whatever is done to them in D. `table-rear-bases`' check still passes and stays for D.
+- (e), alter the resolved text: 104, 120, 121 alter the resolved text, with each literal in the resolved layout (keys in order, as `sim-cli resolve` writes them).
+
+**Checks.** `cargo fmt --all -- --check`; `cargo clippy --workspace --all-targets -- -D warnings`; `cargo test --profile checked --workspace`: every program ok, none failed (the `scenarios` program 3,088 passed and 21 ignored, R5 among them; `sim-cli`'s 431 and 167); no golden file, pin, baseline or recorded game remade. `table/check_screen.py` passes its 434 checks of the table's games and then stops where it passes the page to `node` as an argument ("Argument list too long", this machine); `web/check.mjs` needs `target/web/module`, not built here. Neither reads a converted file's text.

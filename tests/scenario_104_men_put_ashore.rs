@@ -750,13 +750,15 @@ fn five_days(letter: char) -> PathBuf {
     ))
 }
 
+/// The file resolved (decision 0234, item 12): the text a test that alters
+/// the scenario alters, and loads with the file's own path.
 fn five_days_text(letter: char) -> String {
-    std::fs::read_to_string(five_days(letter)).expect("the scenario file reads")
+    common::resolved_text(&five_days(letter))
 }
 
 /// The Japanese men landed objective's text in the five-days files.
 const MEN_LANDED_BLOCK: &str =
-    "[[objectives.japanese.objective]]\nkind = \"men_landed\"\nbase = 5\npoints_per_100_men = 1\n";
+    "[[objectives.japanese.objective]]\nbase = 5\nkind = \"men_landed\"\npoints_per_100_men = 1\n";
 
 fn load_text(text: &str, letter: char) -> Result<Scenario, sim_data::DataError> {
     Scenario::from_text(text, &five_days(letter))
@@ -801,7 +803,7 @@ fn statement_16_the_files_key() {
     ));
     assert!(message.contains("negative"), "{message}");
     // Each as supply landed and men lost are refused.
-    let cargo = "kind = \"cargo_landed\"\nbase = 5\npoints_per_t = \"0.005\"\n";
+    let cargo = "base = 5\nkind = \"cargo_landed\"\npoints_per_t = \"0.005\"\n";
     let message = refused(&common::replace_once(
         &text,
         cargo,
@@ -877,7 +879,7 @@ fn game_a_without_the_objective() -> &'static Game {
     static GAME: OnceLock<Game> = OnceLock::new();
     GAME.get_or_init(|| {
         let text = common::replace_once(&five_days_text('a'), MEN_LANDED_BLOCK, "");
-        assert!(!text.contains("men_landed\"\nbase"));
+        assert!(!text.contains("men_landed\"\npoints_per_100_men"));
         play_text(&text, 'a')
     })
 }
@@ -888,8 +890,8 @@ fn game_a_without_the_key() -> &'static Game {
     GAME.get_or_init(|| {
         let text = common::replace_once(
             &five_days_text('a'),
-            "[objectives]\nfor_play = true\n",
-            "[objectives]\n",
+            "[objectives]\ndecisive = 16\nfor_play = true\n",
+            "[objectives]\ndecisive = 16\n",
         );
         play_text(&text, 'a')
     })
@@ -1164,13 +1166,17 @@ fn statement_23_the_key() {
     let text = five_days_text('a');
     let with = load_text(&text, 'a').expect("loads");
     assert!(with.world.objectives().expect("objectives").for_play);
-    let absent = common::replace_once(&text, "[objectives]\nfor_play = true\n", "[objectives]\n");
+    let absent = common::replace_once(
+        &text,
+        "[objectives]\ndecisive = 16\nfor_play = true\n",
+        "[objectives]\ndecisive = 16\n",
+    );
     let absent = load_text(&absent, 'a').expect("loads");
     assert!(!absent.world.objectives().expect("objectives").for_play);
     let false_ = common::replace_once(
         &text,
-        "[objectives]\nfor_play = true\n",
-        "[objectives]\nfor_play = false\n",
+        "[objectives]\ndecisive = 16\nfor_play = true\n",
+        "[objectives]\ndecisive = 16\nfor_play = false\n",
     );
     let false_ = load_text(&false_, 'a').expect("loads");
     assert!(!false_.world.objectives().expect("objectives").for_play);
@@ -1202,7 +1208,7 @@ fn statement_23_the_key() {
             && name != Some("base_coral_sea_both_oilers.toml")
             && name != Some("base_midway.toml")
     }) {
-        let text = std::fs::read_to_string(file).expect("reads");
+        let text = common::resolved_text(file);
         if text.lines().any(|l| l.trim_start().starts_with("for_play")) {
             with_key.push(file.strip_prefix(common::data_dir()).unwrap().to_owned());
         }

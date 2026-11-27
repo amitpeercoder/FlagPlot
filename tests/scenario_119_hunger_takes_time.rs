@@ -1044,7 +1044,9 @@ fn property_no_game_on_file_moves() {
             || rel.starts_with("table-hunger/")
             || rel.starts_with("table-boats/")
             || rel.starts_with("table-rear-bases/");
-        let text = std::fs::read_to_string(file).expect("the scenario reads");
+        // The scenario resolved (decision 0234): its ground key is the file's
+        // own or that of the file it is built on.
+        let text = common::resolved_text(file);
         let Some(ground) = ground_line(&text) else {
             continue;
         };
@@ -1172,17 +1174,13 @@ fn property_each_side_sees_its_own() {
     }
 }
 
-fn repo() -> PathBuf {
-    common::data_dir().join("..")
-}
-
 /// Properties: the table's copies are true copies. Each scenario in
 /// `data/scenarios/table-hunger/` differs from the one file of its name in
 /// another folder of `data/scenarios` (not the folder itself, whose files are
 /// of the proofs' scenarios at the top, and not `step2-frozen/`, which holds
 /// frozen copies for the tests) in the line that names its ground figures
-/// and in nothing else, and the script that makes them, asked to check, says
-/// they are what it makes.
+/// and in nothing else (read as tables, the source resolved: it may be built
+/// on another file, decision 0234).
 #[test]
 fn property_the_tables_copies_are_true_copies() {
     let folder = scenarios_dir().join("table-hunger");
@@ -1204,34 +1202,27 @@ fn property_the_tables_copies_are_true_copies() {
             })
             .collect();
         assert_eq!(sources.len(), 1, "one source for {name:?}: {sources:?}");
-        let source_text = std::fs::read_to_string(sources[0]).expect("the source reads");
-        let copy_text = std::fs::read_to_string(copy).expect("the copy reads");
-        let a: Vec<&str> = source_text.lines().collect();
-        let b: Vec<&str> = copy_text.lines().collect();
-        assert_eq!(a.len(), b.len(), "{name:?} has the lines of its source");
-        let differing: Vec<usize> = (0..a.len()).filter(|&i| a[i] != b[i]).collect();
-        assert_eq!(
-            differing.len(),
-            1,
-            "{name:?} differs in one line: {differing:?}"
+        const HUNGER: &str = "../../reference/ground_hunger.toml";
+        let mut want: toml::Table = common::resolved_text(sources[0])
+            .parse()
+            .expect("the source resolves to a table");
+        let have: toml::Table = std::fs::read_to_string(copy)
+            .expect("the copy reads")
+            .parse()
+            .expect("the copy is a table");
+        assert!(
+            want["ground"].as_str().is_some_and(|g| g != HUNGER),
+            "{name:?}: its source names other ground figures"
         );
-        let i = differing[0];
         assert_eq!(
-            b[i], "ground = \"../../reference/ground_hunger.toml\"",
-            "{name:?}"
+            have["ground"].as_str(),
+            Some(HUNGER),
+            "{name:?}: the copy names the table's ground figures"
         );
-        assert!(a[i].starts_with("ground = "), "{name:?}: {}", a[i]);
+        want.insert(
+            "ground".to_string(),
+            toml::Value::String(HUNGER.to_string()),
+        );
+        assert_eq!(have, want, "{name:?} is its source but for its ground line");
     }
-    let out = std::process::Command::new("python3")
-        .arg(repo().join("scripts/table-copies/make_copies.py"))
-        .arg("--check")
-        .current_dir(repo())
-        .output()
-        .expect("python3 runs the script");
-    assert!(
-        out.status.success(),
-        "{}{}",
-        String::from_utf8_lossy(&out.stdout),
-        String::from_utf8_lossy(&out.stderr)
-    );
 }

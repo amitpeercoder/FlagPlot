@@ -40,7 +40,7 @@
 //! 8. Played on seed 1 with no order to any boat, every boat on the map at
 //!    the end that is not going home is in the hex she started in.
 //!
-//! And the script, run with `--check`, says every file kept is the one it
+//! (Withdrawn when the Coral Sea's, the five days' and Midway's files became overlays, decision 0234, reading (d): the script reads their text, and a copy is held as the tables of its source.) And the script, run with `--check`, says every file kept is the one it
 //! makes and the folder holds nothing else. No statement holds a number that
 //! rests on a figure.
 
@@ -220,7 +220,6 @@ const GAME: Game = Game {
         ),
     ],
     boats: &BOATS,
-    script_files: 16,
 };
 
 fn game() -> &'static Game {
@@ -269,9 +268,4 @@ fn statement_7_without_its_boats_it_is_the_game_it_copies() {
 #[ignore = "plays 39 days: run once, in release (cargo test --release -p scenario-tests --test scenarios boats_in_the_thirty_nine_days_games:: -- --ignored)"]
 fn statement_8_played_on_seed_1_no_boat_on_the_map_has_moved() {
     game().statement_8(&['a']);
-}
-
-#[test]
-fn the_script_says_each_copy_is_the_one_it_makes() {
-    game().the_script_says_each_copy_is_the_one_it_makes();
 }
