@@ -540,6 +540,160 @@
 //! Draft O, with nothing written, is given its window as before:
 //! `trial` of it with `dates` `[4]` is answered with the kind `window`.
 //!
+//! # Rule 30: a landing given back is read before it is signed
+//!
+//! Decision 0232, step 3, the preview of a withdrawal: rule 30 as made
+//! exact on Nov 27, 2026, on the designer's word that the staff's
+//! reading comes before a give-back is signed. **Statements 19 to 24
+//! were written by the architect that day, before the tool was changed.**
+//! Each has an empty test below marked `#[ignore = "statement written,
+//! not built"]`; the build fills each to its statement and takes the
+//! mark off. The agent's interface is then version 58.
+//!
+//! Unless a statement says otherwise, the game is statement 14's:
+//! draft W approved and day 1 resolved, the evening of day 1 with
+//! nothing queued. Intents 1, 2 and 3 are in force, the commander's;
+//! intent 2, the take of C at (0,6), and intent 3, the take of B at
+//! (4,0), stand under intent 1; the staff's intents are numbered from 4.
+//! **The withdrawal** is `preview` of `{"command": "withdraw_intent",
+//! "intent": 3}`.
+//!
+//! ## 19. The withdrawal of a landing he wrote is read
+//!
+//! The withdrawal is answered with the kind `preview`, `valid` true,
+//! and:
+//!
+//! - `preview` the side's next preview number, and `day` 2;
+//! - `command` is the withdrawal as taken in, of the kind
+//!   `withdraw_intent` with `intent` 3; `shown` is its words; `limits`,
+//!   `shown_limits` and `under` are empty lists;
+//! - `intent` is 1: the order the landing stands under. The reading is
+//!   of that order, as the reading of a limit is of the intent the limit
+//!   is on;
+//! - `with_change` is the staff's reading of intent 1 with intent 3
+//!   withdrawn on the coming morning, before the staff is asked (rule
+//!   15). Its `tree` has an entry for intent 2 with `parent` 1, `maker`
+//!   "commander" and `standing` true, and no entry for intent 3. It has
+//!   exactly one entry of the kind "take a place" with `maker` "staff":
+//!   at (4,0), with `parent` 1 and a number above every number the side
+//!   has set. It has `would_hand_in` and `reason`, as the reading of any
+//!   draft has;
+//! - `as_things_stand` is the staff's reading of intent 1 as it stands,
+//!   with the fields a preview of a change to intent 1 gives it;
+//! - `held`, `runs_in_hand`, `made_ready_lost` and `other_plans_give_up`
+//!   are given as for a change to intent 1.
+//!
+//! Nothing is queued and nothing withdrawn: `queued` lists no command,
+//! intent 3 is in force in `command_state`, and the session's hash of
+//! the game is what it was. Asked again on the same evening it is
+//! answered the same, field for field, but for `preview`.
+//!
+//! ## 20. What is not read
+//!
+//! Each alone, on the same evening; each numbers nothing and queues
+//! nothing, and the withdrawal, previewed after all of them, takes the
+//! preview number it would have taken before them.
+//!
+//! - **What the engine would refuse is answered as that refusal.**
+//!   `preview` of the withdrawal of intent 4, the staff's own, and of
+//!   intent 99, which is no intent: the answer is of the kind `command`,
+//!   with `tool` "preview", `status` "refused" and no `of_batch`, and its
+//!   `reason` is, word for word, the `reason` the tool `withdraw_intent`
+//!   gives for the same number on a fresh evening of the same game.
+//! - **An order that stands under none is not previewed.** `preview` of
+//!   the withdrawal of intent 1 is an error of the call, not a refusal
+//!   of the engine's and not an answer. Its words are: `intent 1 stands
+//!   under no order of yours: a preview of a withdrawal is of a landing
+//!   you wrote under an order. Withdraw an order with withdraw_intent;
+//!   trial with "intent" and "compare" true shows what it costs`.
+//! - **`limits` and `under` are an order's.** The withdrawal given with
+//!   `"limits": []`, and with `"under": []`, is an error of the call:
+//!   `"limits" is not an argument of preview for command
+//!   withdraw_intent: it is given with a set_intent`, and the same for
+//!   `under`. An argument `withdraw_intent` does not take (`"parent":
+//!   1`) is the error the tool `withdraw_intent` gives for it.
+//! - **A command `preview` does not read.** `preview` of `{"command":
+//!   "set_leave"}` is an error that names the three it reads:
+//!   `set_intent`, `set_limit` and `withdraw_intent`.
+//! - **Queued and not in force.** On the evening before day 1 with
+//!   draft W approved (seven commands queued, none in force), `preview`
+//!   of the withdrawal of intent 3 is valid or refused as the tool
+//!   `withdraw_intent` is queued or refused for intent 3 on a fresh
+//!   evening so set up, and where refused the two `reason`s are the
+//!   same words. The preview reads the queue taken in, as every preview
+//!   does. (The table does not ask this: a queued landing is taken
+//!   back.)
+//!
+//! ## 21. `approve` queues the withdrawal and nothing else
+//!
+//! After the withdrawal is shown as preview G, `approve` of preview G
+//! is answered with `status` "queued", `preview` G, `queued` 1, and
+//! neither `limits_queued` nor `under_queued`. `queued` then lists one
+//! command, the `withdraw_intent` of intent 3, and it is the entry the
+//! tool `withdraw_intent` queues for intent 3 on a fresh evening, field
+//! for field but for what names the tool that queued it.
+//!
+//! **Void as any preview is.** On a fresh evening, after the withdrawal
+//! is shown the commander queues one thing more (`set_leave`: leave to
+//! prepare, given). `approve` of the preview is refused as void, saying
+//! what was queued after it; `queued` lists the leave alone and intent
+//! 3 is in force.
+//!
+//! ## 22. `take_back`, and the game after it
+//!
+//! - **Taken back alone.** With the withdrawal approved, `take_back` of
+//!   command 1 of the queue takes it and nothing else: `queued` lists no
+//!   command, and after `end_day` intent 3 is in force.
+//! - **Signed, it is rule 15.** With the withdrawal approved, `end_day`
+//!   resolves day 2. In `command_state` intent 3 is not in force; intent
+//!   2 is in force, the commander's, under intent 1; and one "take a
+//!   place" at (4,0) is in force under intent 1 with `maker` "staff".
+//! - **The same game as the tool's.** A second game brought to the same
+//!   evening, in which the tool `withdraw_intent` is called for intent 3
+//!   with no preview, has after `end_day` the same hash as the game
+//!   above after its `end_day`. A preview and its approval change
+//!   nothing the command itself does not.
+//!
+//! ## 23. The trial is of the landing, not of the preview
+//!
+//! - With the withdrawal shown as preview G and nothing signed, `trial`
+//!   with `preview` G is an error, nothing played, the hash what it was
+//!   and nothing more in the list `trials` gives: `preview G is of a
+//!   withdrawal: a preview of a withdrawal is not tried. Try the landing
+//!   itself, trial with "intent": 3, which sets it beside the same order
+//!   with it given back to the staff` (G said as its number). With
+//!   `describe` true it is refused the same.
+//! - On that evening, the preview shown and not approved, `trial` of
+//!   intent 3 with no `compare` given is statement 14's answer, field
+//!   for field but for `estimate`: a preview is not a queued command,
+//!   and the landing is tried as if none had been shown. The preview is
+//!   not spent by it: `approve` of preview G then queues the withdrawal.
+//! - With the withdrawal approved, `trial` of intent 3 is refused as it
+//!   is today for an intent whose withdrawal is queued, in the words
+//!   chapter 9 has.
+//!
+//! ## 24. The interface, and the words
+//!
+//! - The answers of statements 19 to 23 are checked against their
+//!   schemas (`preview`, `command`), and each carries the version of the
+//!   agent's interface, 58. `sim_agent::VERSION` is 58.
+//! - The arguments `sim-cli` lists for the tool `preview` give
+//!   `command` as one of `set_intent`, `set_limit` and
+//!   `withdraw_intent`. (It is tested in `sim-cli`, beside the tests of
+//!   that list, and not from this file.)
+//! - The words of every answer of statements 19 to 23 hold no per cent
+//!   sign and none of "chance", "points", "better", "should",
+//!   "recommend" or "advise".
+//! - The preview of a withdrawal reads the seat's own view and nothing
+//!   else: in the same game with a Japanese fighting unit of 300 men
+//!   added ashore at B, of which the Allied side holds no contact, no
+//!   estimate and no report on the evening of day 1 (the test asserts
+//!   that first), statement 19's answer is the same, byte for byte.
+//!
+//! No number of the game is worked in statements 19 to 24. The words in
+//! code marks above that are an error's are asserted as written; a
+//! `reason` of the engine's is asserted only as equal to the tool's.
+//!
 //! # Properties
 //!
 //! - **Nothing is changed.** The session's hash of the game is the same
@@ -560,7 +714,9 @@
 //!   of "chance", "points", "better", "should", "recommend" or "advise".
 //! - **The answers are checked against their schemas** (`preview`,
 //!   `command`, `trial`, `trial_described`), and each carries the
-//!   version of the agent's interface, 57.
+//!   version of the agent's interface, 57 (58 once statements 19 to 24
+//!   are built: that build changes the number in this property's test,
+//!   on the architect's word given here, and nothing else of it).
 //!
 //! # What this assumes of the build
 //!
@@ -2439,3 +2595,46 @@ fn the_words_the_schemas_and_the_version() {
     }
     assert_eq!(sim_agent::VERSION, 57);
 }
+
+/// Statement 19: the withdrawal of a landing the commander wrote is
+/// answered as a valid preview of the order it stands under, the staff's
+/// reading being of that order with the landing withdrawn on the coming
+/// morning; nothing is queued or withdrawn and the hash is what it was.
+#[test]
+#[ignore = "statement written, not built"]
+fn s19_the_withdrawal_of_a_landing_he_wrote_is_read() {}
+
+/// Statement 20: what the engine would refuse is answered as its
+/// refusal; an order under none, `limits`, `under` and a command preview
+/// does not read are errors of the call; a queued landing is read as the
+/// tool reads it.
+#[test]
+#[ignore = "statement written, not built"]
+fn s20_what_is_not_read() {}
+
+/// Statement 21: `approve` of the preview queues the one withdrawal, as
+/// the tool queues it, and a void preview queues nothing.
+#[test]
+#[ignore = "statement written, not built"]
+fn s21_approve_queues_the_withdrawal_and_nothing_else() {}
+
+/// Statement 22: the withdrawal is taken back alone; signed, the staff
+/// plans the place on the coming morning (rule 15), and the game is the
+/// one the tool `withdraw_intent` makes.
+#[test]
+#[ignore = "statement written, not built"]
+fn s22_take_back_and_the_game_after_it() {}
+
+/// Statement 23: `trial` of the preview of a withdrawal is refused, and
+/// `trial` of the landing is statement 14's whether or not the preview
+/// was shown.
+#[test]
+#[ignore = "statement written, not built"]
+fn s23_the_trial_is_of_the_landing_not_of_the_preview() {}
+
+/// Statement 24: the answers are of interface 58 and pass their schemas,
+/// the tool list names the three commands, the words give no advice, and
+/// the live enemy is not read.
+#[test]
+#[ignore = "statement written, not built"]
+fn s24_the_interface_and_the_words() {}
