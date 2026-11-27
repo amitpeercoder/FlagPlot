@@ -3,8 +3,7 @@
 use serde::Serialize;
 use sim_core::entering::EntryWait;
 use sim_core::events::{
-    Arrival, Breakdown, Cause, Event, EventKind, FatigueChange, ForceFatigueChange,
-    LandFatigueChange, ReportListener, SupplyUse,
+    Arrival, Breakdown, Cause, Event, EventKind, FatigueChange, ReportListener, SupplyUse,
 };
 use sim_core::field_value::FieldValue;
 use sim_core::fixed::Fixed;
@@ -241,9 +240,6 @@ fn reject_reason(reason: &RejectReason) -> Data {
     }
 }
 
-/// Every field an event carries, under the
-/// field names of `EventKind`. Ids are integers, hexes `[q, r]`, quantities
-/// numbers, enums snake_case words. The match names every variant.
 /// Names the cargo in an event's data, for fuel only: the data of a supply
 /// event is what it was before fuel became a cargo (decision 0046).
 fn cargo_named(data: Data, cargo: Cargo) -> Data {
@@ -258,43 +254,28 @@ fn cargo_named(data: Data, cargo: Cargo) -> Data {
 /// ruling 6).
 #[cfg(test)]
 pub(super) const HAND_ARMS: &[&str] = &[
-    "order_accepted",
     "order_rejected",
-    "task_force_steamed",
     "cargo_loaded",
     "cargo_unloaded",
     "loading_complete",
     "search_flown",
     "aircraft_ditched",
-    "aircraft_worn",
     "aircraft_landed_elsewhere",
     "aircraft_ditched_no_deck",
     "aircraft_repaired",
     "air_group_fatigue",
-    "strike_launched",
     "base_anti_aircraft_fire",
     "base_attacked",
     "base_supply_spent",
-    "base_formed",
     "men_lost_with_ship",
-    "men_fed",
     "fed_share_restored",
     "submarine_reported",
     "submarine_report_dropped",
     "suspected_waters_told",
-    "ground_report_received",
     "reconnaissance_flown",
-    "ground_found_empty",
-    "march_base_formed",
-    "march_arrived",
-    "march_stopped",
     "task_force_halted",
     "task_force_steamed_on",
-    "loading_lost",
-    "rehearsal_lost",
-    "left_roster",
     "preparation_shared",
-    "unit_worked",
     "airfield_built",
     "airfield_damaged",
     "force_entered",
@@ -315,58 +296,25 @@ pub(super) const HAND_ARMS: &[&str] = &[
     "fight_supply_charged",
     "base_ammunition_spent",
     "ammunition_landed",
-    "unit_fell_back",
-    "unit_surrendered",
-    "men_surrendered_ashore",
-    "ground_attack_failed",
-    "spent_unit_fell_back",
-    "fieldworks_changed",
     "defences_worn",
-    "experience_raised",
-    "base_found",
-    "land_unit_fatigue",
-    "side_beaten_ashore",
-    "base_changed_side",
     "unit_loading_complete",
-    "contact_not_there",
-    "air_attack",
     "air_fight",
     "anti_aircraft_fire",
-    "report_received",
-    "contact_aged",
-    "contact_dropped",
     "sighting_roll",
-    "salvo",
-    "ship_damaged",
-    "aircraft_fire_fought",
-    "engagement_ended",
     "claim_received",
-    "system_hit",
-    "ships_detached",
-    "force_alerted_by_contact",
-    "task_force_fatigue",
     "ship_repaired",
     "force_left_for_yard",
-    "air_group_rebased",
-    "force_returned_from_yard",
     "base_at_day_end",
     "task_force_formed",
-    "task_force_joined",
-    "task_force_stood_down_in_port",
     "load_below_reserve",
     "load_held_at_reserve",
     "command_taken",
     "command_refused",
-    "plan_drafted",
-    "plan_state_changed",
-    "plan_amended",
     "staff_reason",
     "held_by_order",
     "staff_notice",
     "interrupt_fired",
-    "intent_formed",
     "intent_withdrawn",
-    "station_kept",
     "ship_fuelled_at_sea",
     "fuelling_broken_off",
     "fuel_order_ended",
@@ -388,17 +336,22 @@ fn from_fields(fields: Vec<(&'static str, FieldValue)>) -> Data {
                 FieldValue::Num(n) => Field::Num(n),
                 FieldValue::Bool(b) => Field::Bool(b),
                 FieldValue::Hex(h) => Field::Hex(h),
+                FieldValue::Text(t) => Field::Text(t),
+                FieldValue::Str(t) => Field::Str(t),
+                FieldValue::Hexes(h) => Field::Hexes(h),
+                FieldValue::Ids(ids) => Field::Ids(ids),
             },
         )
     })
 }
 
+/// The fields an event carries as the export writes them, under the field
+/// names of `EventKind`: ids are integers, hexes `[q, r]`, quantities numbers,
+/// enums snake_case words. The arms are the kinds marked `[by_hand]`; every
+/// other kind falls to `_`, which reads its fields by their types.
 pub(super) fn describe(kind: &EventKind, key: &UmpireKey, at: (u32, Option<Pulse>)) -> Data {
     let d = Data::new();
     match kind {
-        EventKind::OrderAccepted { order, target } => d
-            .int("order", order.umpire_raw(key))
-            .with("target", Field::Str(target.to_string())),
         EventKind::OrderRejected {
             order,
             target,
@@ -407,20 +360,6 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey, at: (u32, Option<Pulse
             .int("order", order.umpire_raw(key))
             .with("target", Field::Str(target.to_string()))
             .with("reason", Field::Obj(reject_reason(reason))),
-        EventKind::TaskForceSteamed {
-            task_force,
-            from,
-            to,
-            distance_nm,
-            speed_kn,
-            hexes_entered,
-        } => d
-            .id("task_force", *task_force)
-            .hex("from", *from)
-            .hex("to", *to)
-            .num("distance_nm", *distance_nm)
-            .num("speed_kn", *speed_kn)
-            .with("hexes_entered", Field::Hexes(hexes_entered.clone())),
         EventKind::CargoLoaded {
             ship,
             task_force,
@@ -510,28 +449,6 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey, at: (u32, Option<Pulse
             };
             data.int("pilots_lost", *pilots_lost).int("ready", *ready)
         }
-        EventKind::AircraftWorn {
-            air_group,
-            sortie,
-            distance_nm,
-            aircraft,
-            chance,
-            expected,
-            worn,
-            written_off,
-            ready,
-            damaged,
-        } => d
-            .id("air_group", *air_group)
-            .text("sortie", sortie.name())
-            .num("distance_nm", *distance_nm)
-            .int("aircraft", *aircraft)
-            .num("chance", *chance)
-            .num("expected", *expected)
-            .int("worn", *worn)
-            .int("written_off", *written_off)
-            .int("ready", *ready)
-            .int("damaged", *damaged),
         EventKind::AircraftLandedElsewhere {
             from,
             to,
@@ -603,18 +520,6 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey, at: (u32, Option<Pulse
         }
         .num("amount", *amount)
         .num("fatigue", *fatigue),
-        EventKind::StrikeLaunched {
-            air_group,
-            contact,
-            hex,
-            aircraft,
-            distance_nm,
-        } => d
-            .id("air_group", *air_group)
-            .int("contact", contact.umpire_raw(key))
-            .hex("hex", *hex)
-            .int("aircraft", *aircraft)
-            .num("distance_nm", *distance_nm),
         EventKind::BaseAntiAircraftFire {
             base,
             air_group,
@@ -677,33 +582,8 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey, at: (u32, Option<Pulse
                 .num("paid_t", *paid_t)
                 .num("left_t", *left_t)
         }
-        EventKind::BaseFormed {
-            base,
-            side,
-            hex,
-            task_force,
-        } => d
-            .id("base", *base)
-            .text("side", names::side(*side))
-            .hex("hex", *hex)
-            .id("task_force", *task_force),
         EventKind::MenLostWithShip { unit, ship, men } => {
             d.id("unit", *unit).id("ship", *ship).int("men", *men)
-        }
-        EventKind::MenFed {
-            side,
-            hex,
-            base,
-            men,
-            fed,
-            unfed,
-        } => {
-            let d = d.text("side", names::side(*side)).hex("hex", *hex);
-            let d = match base {
-                Some(base) => d.id("base", *base),
-                None => d,
-            };
-            d.int("men", *men).int("fed", *fed).int("unfed", *unfed)
         }
         EventKind::FedShareRestored { unit } => d.id("unit", *unit),
         EventKind::SubmarineReported {
@@ -729,18 +609,6 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey, at: (u32, Option<Pulse
             .int("distance", *distance)
             .int("day", *day)
             .with("words", Field::Str(words.clone())),
-        EventKind::GroundReportReceived {
-            side,
-            hex,
-            men,
-            replaced,
-            grade,
-        } => d
-            .text("side", names::side(*side))
-            .hex("hex", *hex)
-            .int("men", *men)
-            .flag("replaced", *replaced)
-            .text("grade", grade.name()),
         EventKind::ReconnaissanceFlown {
             air_group,
             from,
@@ -755,55 +623,6 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey, at: (u32, Option<Pulse
         .hex("hex", *hex)
         .num("distance_nm", *distance_nm)
         .num("supply_t", *supply_t),
-        EventKind::GroundFoundEmpty {
-            side,
-            hex,
-            men,
-            reported_day,
-        } => d
-            .text("side", names::side(*side))
-            .hex("hex", *hex)
-            .int("men", *men)
-            .int("reported_day", *reported_day),
-        EventKind::MarchBaseFormed {
-            base,
-            side,
-            hex,
-            unit,
-        } => d
-            .id("base", *base)
-            .text("side", names::side(*side))
-            .hex("hex", *hex)
-            .id("unit", *unit),
-        EventKind::MarchArrived {
-            unit,
-            from,
-            to,
-            men,
-            supply_t,
-            base,
-        } => {
-            let d = d
-                .id("unit", *unit)
-                .hex("from", *from)
-                .hex("to", *to)
-                .int("men", *men)
-                .num("supply_t", *supply_t);
-            match base {
-                Some(base) => d.id("base", *base),
-                None => d,
-            }
-        }
-        EventKind::MarchStopped {
-            unit,
-            to,
-            days,
-            reason,
-        } => d
-            .id("unit", *unit)
-            .hex("to", *to)
-            .int("days", *days)
-            .text("reason", reason.name()),
         EventKind::TaskForceHalted {
             task_force,
             hex,
@@ -828,36 +647,6 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey, at: (u32, Option<Pulse
             .flag("cargo", work.cargo)
             .flag_when_true("night", work.night)
             .flag("fired", *fired),
-        EventKind::LoadingLost {
-            task_force,
-            hex,
-            loading_before,
-            loading,
-            reason,
-        } => d
-            .id("task_force", *task_force)
-            .hex("hex", *hex)
-            .num("loading_before", *loading_before)
-            .num("loading", *loading)
-            .text("reason", names::loading_loss(*reason)),
-        EventKind::RehearsalLost {
-            unit,
-            hex,
-            rehearsal_before,
-            reason,
-        } => d
-            .id("unit", *unit)
-            .hex("hex", *hex)
-            .num("rehearsal_before", *rehearsal_before)
-            .text("reason", names::rehearsal_loss(*reason)),
-        EventKind::LeftRoster {
-            unit,
-            task_force,
-            reason,
-        } => d
-            .id("unit", *unit)
-            .id("task_force", *task_force)
-            .text("reason", names::roster_left(*reason)),
         EventKind::PreparationShared {
             parent,
             new_force,
@@ -870,18 +659,6 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey, at: (u32, Option<Pulse
             .hex("hex", *hex)
             .num("loading", *loading)
             .ids("units", units),
-        EventKind::UnitWorked {
-            unit,
-            base,
-            job,
-            work,
-            total,
-        } => d
-            .id("unit", *unit)
-            .id("base", *base)
-            .text("job", job.name())
-            .num("work", *work)
-            .num("total", *total),
         EventKind::AirfieldBuilt {
             base,
             side,
@@ -1112,66 +889,6 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey, at: (u32, Option<Pulse
             .int("men", *men)
             .num("days", *days)
             .num("ammunition_t", *ammunition_t),
-        EventKind::UnitFellBack {
-            unit,
-            side,
-            from,
-            to,
-            men,
-            fatigue,
-        } => d
-            .id("unit", *unit)
-            .text("side", names::side(*side))
-            .hex("from", *from)
-            .hex("to", *to)
-            .int("men", *men)
-            .num("fatigue", *fatigue),
-        EventKind::UnitSurrendered {
-            unit,
-            side,
-            hex,
-            men,
-        } => d
-            .id("unit", *unit)
-            .text("side", names::side(*side))
-            .hex("hex", *hex)
-            .int("men", *men),
-        EventKind::MenSurrenderedAshore { side, hex, men } => d
-            .text("side", names::side(*side))
-            .hex("hex", *hex)
-            .int("men", *men),
-        EventKind::GroundAttackFailed {
-            side,
-            hex,
-            weight,
-            enemy_weight,
-        } => d
-            .text("side", names::side(*side))
-            .hex("hex", *hex)
-            .num("weight", *weight)
-            .num("enemy_weight", *enemy_weight),
-        EventKind::SpentUnitFellBack {
-            unit,
-            side,
-            from,
-            to,
-            men,
-            fatigue,
-        } => d
-            .id("unit", *unit)
-            .text("side", names::side(*side))
-            .hex("from", *from)
-            .hex("to", *to)
-            .int("men", *men)
-            .num("fatigue", *fatigue),
-        EventKind::FieldworksChanged {
-            unit,
-            change,
-            fieldworks,
-        } => d
-            .id("unit", *unit)
-            .text("change", change.name())
-            .num("fieldworks", *fieldworks),
         EventKind::DefencesWorn {
             base,
             side,
@@ -1184,66 +901,6 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey, at: (u32, Option<Pulse
             .hex("hex", *hex)
             .int("hits", *hits)
             .num("defences", *defences),
-        EventKind::ExperienceRaised {
-            unit,
-            experience,
-            by,
-        } => d
-            .id("unit", *unit)
-            .int("experience", u32::from(*experience))
-            .text("by", by.name()),
-        EventKind::BaseFound { side, base, hex } => d
-            .text("side", names::side(*side))
-            .id("base", *base)
-            .hex("hex", *hex),
-        EventKind::LandUnitFatigue {
-            unit,
-            change,
-            fatigue,
-        } => d
-            .id("unit", *unit)
-            .text(
-                "change",
-                match change {
-                    LandFatigueChange::Gained => "gained",
-                    LandFatigueChange::Rested => "rested",
-                    LandFatigueChange::Marched => "marched",
-                    LandFatigueChange::MarchedAndAttacked => "marched_and_attacked",
-                    LandFatigueChange::Landed => "landed",
-                    LandFatigueChange::Strained => "strained",
-                },
-            )
-            .num("fatigue", *fatigue),
-        EventKind::SideBeatenAshore {
-            side,
-            hex,
-            men,
-            enemy_men,
-            fought,
-        } => d
-            .text("side", names::side(*side))
-            .hex("hex", *hex)
-            .int("men", *men)
-            .int("enemy_men", *enemy_men)
-            .flag("fought", *fought),
-        EventKind::BaseChangedSide {
-            base,
-            hex,
-            from,
-            to,
-            supply_t,
-            fuel_t,
-            supply_lost_t,
-            fuel_lost_t,
-        } => d
-            .id("base", *base)
-            .hex("hex", *hex)
-            .text("from", names::side(*from))
-            .text("to", names::side(*to))
-            .num("supply_t", *supply_t)
-            .num("fuel_t", *fuel_t)
-            .num("supply_lost_t", *supply_lost_t)
-            .num("fuel_lost_t", *fuel_lost_t),
         EventKind::UnitLoadingComplete {
             task_force,
             unit,
@@ -1262,30 +919,6 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey, at: (u32, Option<Pulse
             };
             d.num("elapsed_hours", *elapsed_hours)
         }
-        EventKind::ContactNotThere { side, contact, hex } => d
-            .text("side", names::side(*side))
-            .int("contact", contact.umpire_raw(key))
-            .hex("hex", *hex),
-        EventKind::AirAttack {
-            air_group,
-            task_force,
-            ship,
-            weapon,
-            shots,
-            chance,
-            expected,
-            hits,
-            recognised,
-        } => d
-            .id("air_group", *air_group)
-            .id("task_force", *task_force)
-            .id("ship", *ship)
-            .text("weapon", names::weapon(*weapon))
-            .num("shots", *shots)
-            .num("chance", *chance)
-            .num("expected", *expected)
-            .int("hits", *hits)
-            .id_when_some("recognised", *recognised),
         EventKind::AirFight {
             firer,
             target,
@@ -1322,36 +955,6 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey, at: (u32, Option<Pulse
             .num("expected", *expected)
             .int("hits", *hits)
             .flag_when_true("after_attack", *after_attack),
-        EventKind::ReportReceived {
-            side,
-            contact,
-            hex,
-            ship_count,
-            kind,
-            created,
-        } => d
-            .text("side", names::side(*side))
-            .int("contact", contact.umpire_raw(key))
-            .hex("hex", *hex)
-            .int("ship_count", *ship_count)
-            .text("kind", kind.name())
-            .flag("created", *created),
-        EventKind::ContactAged {
-            side,
-            contact,
-            age_pulses,
-        } => d
-            .text("side", names::side(*side))
-            .int("contact", contact.umpire_raw(key))
-            .int("age_pulses", *age_pulses),
-        EventKind::ContactDropped {
-            side,
-            contact,
-            age_pulses,
-        } => d
-            .text("side", names::side(*side))
-            .int("contact", contact.umpire_raw(key))
-            .int("age_pulses", *age_pulses),
         EventKind::SightingRoll {
             round,
             task_force,
@@ -1373,64 +976,6 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey, at: (u32, Option<Pulse
             };
             d.flag("sighted", *sighted)
         }
-        EventKind::Salvo {
-            round,
-            firer,
-            target,
-            weapon,
-            shots,
-            chance,
-            expected,
-            hits,
-        } => d
-            .int("round", *round)
-            .id("firer", *firer)
-            .id("target", *target)
-            .text("weapon", names::weapon(*weapon))
-            .num("shots", *shots)
-            .num("chance", *chance)
-            .num("expected", *expected)
-            .int("hits", *hits),
-        EventKind::ShipDamaged {
-            round,
-            ship,
-            track,
-            hits,
-            points,
-            value_after,
-        } => d
-            .int("round", *round)
-            .id("ship", *ship)
-            .text("track", names::track(*track))
-            .int("hits", *hits)
-            .num("points", *points)
-            .num("value_after", *value_after),
-        EventKind::AircraftFireFought {
-            ship,
-            task_force,
-            level_before,
-            draw,
-            level_after,
-            lost,
-        } => d
-            .id("ship", *ship)
-            .id_when_some("task_force", *task_force)
-            .int("level_before", u32::from(*level_before))
-            .num("draw", *draw)
-            .int("level_after", u32::from(*level_after))
-            .flag("lost", *lost),
-        EventKind::EngagementEnded {
-            round,
-            a,
-            b,
-            hex,
-            reason,
-        } => d
-            .int("round", *round)
-            .id("a", *a)
-            .id("b", *b)
-            .hex("hex", *hex)
-            .text("reason", names::end_reason(*reason)),
         EventKind::ClaimReceived {
             side,
             hex,
@@ -1546,52 +1091,6 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey, at: (u32, Option<Pulse
             };
             d
         }
-        EventKind::SystemHit {
-            round,
-            ship,
-            system,
-            before,
-            after,
-        } => d
-            .int("round", *round)
-            .id("ship", *ship)
-            .text("system", names::system(*system))
-            .text("before", names::system_state(*before))
-            .text("after", names::system_state(*after)),
-        EventKind::ShipsDetached {
-            parent,
-            new_force,
-            ships,
-            escorts,
-            reason,
-        } => d
-            .id("parent", *parent)
-            .id("new_force", *new_force)
-            .ids("ships", ships)
-            .ids("escorts", escorts)
-            .text("reason", names::detach_reason(*reason)),
-        EventKind::ForceAlertedByContact {
-            task_force,
-            contact,
-        } => d
-            .id("task_force", *task_force)
-            .int("contact", contact.umpire_raw(key)),
-        EventKind::TaskForceFatigue {
-            task_force,
-            change,
-            amount,
-            fatigue,
-        } => d
-            .id("task_force", *task_force)
-            .text(
-                "change",
-                match change {
-                    ForceFatigueChange::Gained => "gained",
-                    ForceFatigueChange::Rested => "rested",
-                },
-            )
-            .num("amount", *amount)
-            .num("fatigue", *fatigue),
         EventKind::ShipRepaired {
             ship,
             task_force,
@@ -1640,36 +1139,6 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey, at: (u32, Option<Pulse
             )
             .int("days_away", *days_away)
             .int("return_day", *return_day),
-        EventKind::AirGroupRebased {
-            air_group,
-            from,
-            to,
-            distance_nm,
-            transfer_range_nm,
-            ready,
-            pilots,
-        } => {
-            let data = d
-                .id("air_group", *air_group)
-                .id("from", *from)
-                .id("to", *to)
-                .num("distance_nm", *distance_nm)
-                .num("transfer_range_nm", *transfer_range_nm)
-                .int("ready", *ready);
-            // Left out where the group's pilots are not counted.
-            match pilots {
-                Some(pilots) => data.int("pilots", *pilots),
-                None => data,
-            }
-        }
-        EventKind::ForceReturnedFromYard {
-            task_force,
-            base,
-            ships,
-        } => d
-            .id("task_force", *task_force)
-            .id("base", *base)
-            .ids("ships", ships),
         EventKind::BaseAtDayEnd {
             base,
             supply_t,
@@ -1686,24 +1155,6 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey, at: (u32, Option<Pulse
         EventKind::TaskForceFormed {
             task_force,
             side: _,
-            base,
-            ships,
-        } => d
-            .id("task_force", *task_force)
-            .id("base", *base)
-            .ids("ships", ships),
-        EventKind::TaskForceJoined {
-            joined,
-            into,
-            base,
-            ships,
-        } => d
-            .id("joined", *joined)
-            .id("into", *into)
-            .id("base", *base)
-            .ids("ships", ships),
-        EventKind::TaskForceStoodDownInPort {
-            task_force,
             base,
             ships,
         } => d
@@ -1748,24 +1199,6 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey, at: (u32, Option<Pulse
             .text("command", command.name())
             .with("detail", Field::Str(command.to_string()))
             .with("reason", Field::Str(reason.to_string())),
-        EventKind::PlanDrafted { side, plan, intent } => d
-            .text("side", names::side(*side))
-            .int("plan", plan.raw())
-            .id("intent", *intent),
-        EventKind::PlanStateChanged {
-            side,
-            plan,
-            from,
-            to,
-        } => d
-            .text("side", names::side(*side))
-            .int("plan", plan.raw())
-            .text("from", from.name())
-            .text("to", to.name()),
-        EventKind::PlanAmended { side, plan, number } => d
-            .text("side", names::side(*side))
-            .int("plan", plan.raw())
-            .int("number", *number),
         EventKind::StaffReason {
             side,
             order,
@@ -1945,14 +1378,6 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey, at: (u32, Option<Pulse
             }
             data
         }
-        EventKind::IntentFormed {
-            side,
-            intent,
-            parent,
-        } => d
-            .text("side", names::side(*side))
-            .int("intent", intent.raw())
-            .int("parent", parent.raw()),
         EventKind::IntentWithdrawn {
             side,
             intent,
@@ -1961,23 +1386,6 @@ pub(super) fn describe(kind: &EventKind, key: &UmpireKey, at: (u32, Option<Pulse
             .text("side", names::side(*side))
             .int("intent", intent.raw())
             .int("parent", parent.raw()),
-        EventKind::StationKept {
-            escort,
-            charge,
-            in_station,
-            waypoints,
-            knots,
-        } => {
-            let data = d
-                .id("escort", *escort)
-                .id("charge", *charge)
-                .flag("in_station", *in_station)
-                .with("waypoints", Field::Hexes(waypoints.clone()));
-            match knots {
-                Some(knots) => data.num("knots", *knots),
-                None => data,
-            }
-        }
         EventKind::ShipFuelledAtSea {
             ship,
             task_force,

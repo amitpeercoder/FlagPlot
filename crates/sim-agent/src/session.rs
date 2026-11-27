@@ -2661,12 +2661,12 @@ impl Session {
             return Err(CallError::new("the game is over"));
         }
         let command = args.get("command").and_then(Value::as_str);
-        let (Some(command @ ("set_intent" | "set_limit")), false) =
+        let (Some(command @ ("set_intent" | "set_limit" | "withdraw_intent")), false) =
             (command, args.contains_key("clear"))
         else {
             return Err(CallError::naming(
-                "\"command\" is needed, as \"set_intent\" or \"set_limit\" (and \"clear\" is not an argument of preview)",
-                &["set_intent", "set_limit"],
+                "\"command\" is needed, as \"set_intent\", \"set_limit\" or \"withdraw_intent\" (and \"clear\" is not an argument of preview)",
+                &["set_intent", "set_limit", "withdraw_intent"],
             ));
         };
         let mut rest = args.clone();
@@ -2674,10 +2674,10 @@ impl Session {
         let limits = match rest.remove("limits") {
             None | Some(Value::Null) => Vec::new(),
             Some(Value::Array(list)) if command == "set_intent" => list,
-            Some(_) if command == "set_limit" => {
-                return Err(CallError::new(
-                    "\"limits\" is not an argument of preview for command set_limit: it is given with a set_intent",
-                ));
+            Some(_) if command != "set_intent" => {
+                return Err(CallError::new(format!(
+                    "\"limits\" is not an argument of preview for command {command}: it is given with a set_intent"
+                )));
             }
             Some(_) => {
                 return Err(CallError::new(
@@ -2691,10 +2691,10 @@ impl Session {
         let under = match rest.remove("under") {
             None | Some(Value::Null) => Vec::new(),
             Some(Value::Array(list)) if command == "set_intent" => list,
-            Some(_) if command == "set_limit" => {
-                return Err(CallError::new(
-                    "\"under\" is not an argument of preview for command set_limit: it is given with a set_intent",
-                ));
+            Some(_) if command != "set_intent" => {
+                return Err(CallError::new(format!(
+                    "\"under\" is not an argument of preview for command {command}: it is given with a set_intent"
+                )));
             }
             Some(_) => {
                 return Err(CallError::new(
@@ -2874,6 +2874,17 @@ impl Session {
                     );
                 }
                 return Ok(out);
+            }
+        }
+        // Decision 0232, rule 30: the withdrawal of an order that stands
+        // under none has no order's tree to read. The engine's refusal of a
+        // withdrawal comes first, above.
+        if let CommandKind::WithdrawIntent { intent } = &requests[0].kind {
+            if staffing::previewed_intent(&with.side_view(side), &requests[0].kind).is_none() {
+                return Err(CallError::new(format!(
+                    "intent {} stands under no order of yours: a preview of a withdrawal is of a landing you wrote under an order. Withdraw an order with withdraw_intent; trial with \"intent\" and \"compare\" true shows what it costs",
+                    intent.raw()
+                )));
             }
         }
         let as_is = self.preview();
@@ -3226,6 +3237,12 @@ impl Session {
                     )));
                 }
                 let command = record.requests[0].kind.clone();
+                if matches!(command, CommandKind::WithdrawIntent { .. }) {
+                    let withdrawn = staffing::withdrawn_by(&command).map_or(0, |i| i.raw());
+                    return Err(CallError::new(format!(
+                        "preview {raw} is of a withdrawal: a preview of a withdrawal is not tried. Try the landing itself, trial with \"intent\": {withdrawn}, which sets it beside the same order with it given back to the staff"
+                    )));
+                }
                 let Some(id) = staffing::previewed_intent(&coming_view, &command) else {
                     return Err(CallError::new(format!(
                         "preview {raw} is of a limit on no intent: there is no intent to try"
