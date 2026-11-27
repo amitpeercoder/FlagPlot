@@ -9,12 +9,12 @@
       "days": 14,
       "placeholder": true,
       "lines": [
-        "The first rung of the ladder: one ship, one order, no enemy.",
-        "You command at Base S, which has the stock, the fuel and the ship. Base T, 200 miles away, is the forward garrison.",
-        "A placeholder game: the sea, the bases, the ship and the men are invented."
+        "Welcome, Commander. Your first command is a quiet one: one ship, one order, no enemy.",
+        "Thornwick, 200 miles away, depends on you for its food.",
+        "A placeholder game: everything in it is invented."
       ],
       "sides": {
-        "allied": "Keep both garrisons fed. Every man, here and forward, is to be fed every night to the end of day 14. The forward garrison holds five days of food. Our own men eat from the stock you ship from, and it holds 5 t more than both need. Your one ship carries six days of the forward garrison's food at a time, and the fuel on hand is enough for two round trips."
+        "allied": "Keep both garrisons fed."
       },
       "islands": [],
       "directives": {
@@ -24,8 +24,8 @@
         "measure": "every_night_fed",
         "last_day": 14,
         "places": [
-          {"q": 0, "r": 0, "name": "Base S"},
-          {"q": 5, "r": 0, "name": "Base T"}
+          {"q": 0, "r": 0, "name": "Saltmere"},
+          {"q": 5, "r": 0, "name": "Thornwick"}
         ]
       },
       "pairings": [
