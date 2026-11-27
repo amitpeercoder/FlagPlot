@@ -24,8 +24,10 @@
 # In a folder of its own, so that no loop over data/scenarios/*.toml reads it
 # (decision 0072).
 #
-# PLACEHOLDER DATA. The bases, ship, units and map are invented. Every name
-# below says "Placeholder".
+# PLACEHOLDER DATA. The bases, ship, units and map are invented. The game is
+# invented whole, so its things carry invented names without the word
+# (decision 0241): Saltmere is S, Thornwick is T, and the ship is Merrowdale.
+# None is a name in data/oob.
 
 name = "Placeholder scenario 138: One ship"
 placeholder = true
@@ -45,7 +47,7 @@ ground = "../../reference/ground_hunger.toml"
 # S: the source. Port size 1, one berth.
 [[base]]
 id = 1
-name = "Placeholder base S"
+name = "Saltmere"
 side = "allied"
 q = 0
 r = 0
@@ -55,7 +57,7 @@ fuel_t = 50
 # T: the forward place. Port size 0, by lighter.
 [[base]]
 id = 2
-name = "Placeholder base T"
+name = "Thornwick"
 side = "allied"
 q = 5
 r = 0
@@ -64,7 +66,7 @@ supply_t = 25
 # The forward garrison: 1,000 men x 0.005 t = 5 t a day at T.
 [[land_unit]]
 id = 1
-name = "Placeholder forward garrison"
+name = "Thornwick garrison"
 side = "allied"
 men = 1000
 q = 5
@@ -74,7 +76,7 @@ posture = "defend"
 # The source's own garrison: 5 t a day at S.
 [[land_unit]]
 id = 2
-name = "Placeholder source garrison"
+name = "Saltmere garrison"
 side = "allied"
 men = 1000
 q = 0
@@ -85,7 +87,7 @@ posture = "defend"
 # and 10 t over.
 [[ship]]
 id = 1
-name = "Placeholder fast transport 1"
+name = "Merrowdale"
 class = 12
 side = "allied"
 fuel_t = 60

@@ -1,17 +1,17 @@
 {
-  "note": "The directive for the Allied seat of rung 1 of the ladder (decision 0237). A placeholder: the command, the places, the ship and the men are invented, and the page shows each name without the word. Written for the game in its own words. The mission is the record's, as the designer confirmed it.",
+  "note": "The directive for the Allied seat of rung 1 of the ladder (decision 0237). A placeholder: the command, the places, the ship and the men are invented, and every name in it is invented (decision 0241). Written for the game in its own words. The mission is the record's, as the designer confirmed it.",
   "directives": [
     {
       "number": 1,
       "when": "start",
       "from": "Area Commander",
-      "to": "Commander, Base S",
+      "to": "Commander, Saltmere",
       "subject": "Both garrisons fed",
       "parts": [
         {
           "heading": "1. Situation",
           "text": [
-            "You command at Base S. It has the stock, the fuel and one ship, Fast transport 1. Base T, 200 miles away, is the forward garrison. Each place has 1,000 men, who eat 5 t a day. There is no enemy within reach."
+            "Welcome to your first command. Saltmere is yours, with its stock, its fuel and one ship, the fast transport Merrowdale. Thornwick, 200 miles away, is the forward garrison. Each place has 1,000 men, who eat 5 t a day. There is no enemy within reach, so take your time and learn the work."
           ]
         },
         {
@@ -23,9 +23,9 @@
         {
           "heading": "3. Guidance",
           "text": [
-            "Give the staff one order: keep Base T supplied. Name the ship, and Base S as its source, and set its two numbers: the days of food Base T is never to fall below, and the days more that each run brings. The staff does the rest: it sizes each run from those two numbers, loads the ship and sails her.",
+            "You need give only one order. Tell your staff to keep Thornwick supplied: name the ship, and Saltmere as its source, and set its two numbers: the days of food Thornwick is never to fall below, and the days more that each run brings. The staff does the rest: it sizes each run from those two numbers, loads the ship and sails her.",
             "Then tell the staff that plans launch when ready, under YOUR ORDERS, and carry on: it will not sail the ship without that leave.",
-            "When day 14 is fought you are told whether the mission was met and, if it was not, which garrison went unfed and on which nights."
+            "When day 14 is fought you are told whether the mission was met and, if it was not, which garrison went unfed and on which nights. If it goes badly, begin again: that is how this work is learned. Good luck."
           ]
         }
       ]
