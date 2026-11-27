@@ -706,7 +706,6 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
   </div>
   <div class="vg">
     <button type="button" id="btn-view" aria-pressed="false"></button>
-    <button type="button" id="btn-above" aria-pressed="false"></button>
   </div>
   <div class="vg col">
     <button type="button" id="btn-lean" title="Lean in" aria-label="Lean in">+</button>
@@ -6160,6 +6159,13 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
 
   // ---- the chair: you lean, you do not fly ----
   var goal = { x: 0, z: 0, zoom: 0 }, cur = { x: 0, z: 0, zoom: 0 }, camDist = 12;
+  // A game with a mission (a rung of the ladder) opens looking at the mission's own places, leant in so that they
+  // fill the view: the middle of them, not the middle of the map. Sat right back, the whole table, as in every game.
+  function openOnMission() {
+    var ps = ((config.mission && config.mission.places) || []).map(function (p) { return placeOf({ q: p.q, r: p.r }); }).filter(Boolean); if (!ps.length) return;
+    var x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9; ps.forEach(function (v) { x0 = Math.min(x0, v.x); x1 = Math.max(x1, v.x); z0 = Math.min(z0, v.z); z1 = Math.max(z1, v.z); });
+    goal.x = (x0 + x1) / 2; goal.z = (z0 + z1) / 2; goal.zoom = 0.3; clampGoal(); cur.x = goal.x; cur.z = goal.z; cur.zoom = goal.zoom;
+  }
   function clampGoal() { goal.x = Math.max(-TW / 2, Math.min(TW / 2, goal.x)); goal.z = Math.max(-TD / 2, Math.min(TD / 2, goal.z)); goal.zoom = Math.max(0, Math.min(1, goal.zoom)); }
   var chartView = false, flat = 0;
   try { chartView = localStorage.getItem('flagplot.view') === 'chart'; flat = chartView ? 1 : 0; } catch (e) {}
@@ -6212,8 +6218,8 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
   // The chart's controls are words, each lit when what it shows is on.
   function sign(b, word, title, lit) { b.textContent = word; b.title = title; b.setAttribute('aria-label', title); b.setAttribute('aria-pressed', String(!!lit)); }
   function signs() {
-    sign($('btn-view'), 'TABLE', 'The table from the chair', !chartView);
-    sign($('btn-above'), 'FROM ABOVE', 'The chart from above', chartView);
+    // One button turns between the two views and says the one that is on: the table from the chair (3D) or the chart from above (2D).
+    sign($('btn-view'), 'VIEW \u00b7 ' + (chartView ? '2D' : '3D'), chartView ? 'The chart from above. Press for the table from the chair' : 'The table from the chair. Press for the chart from above', chartView);
     sign($('btn-pieces'), 'PIECES \u00b7 ' + { all: 'ALL', own: 'OURS', enemy: 'ENEMY', none: 'OFF' }[piecesShown], PIECE_WORD[piecesShown], piecesShown !== 'none');
     sign($('btn-labels'), 'NAMES \u00b7 ' + { pointer: 'POINTER', all: 'ALL', off: 'OFF' }[labelsShown], LABEL_WORD[labelsShown] + ': the slips over the pieces', labelsShown !== 'off');
   }
@@ -6222,7 +6228,7 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
   $('btn-labels').addEventListener('click', function () { labelsShown = LABELS[(LABELS.indexOf(labelsShown) + 1) % LABELS.length]; try { localStorage.setItem('flagplot.labels', labelsShown); } catch (e) {} signs(); });
   signs();
   function setView(chart) { if (chartView === chart) return; chartView = chart; try { localStorage.setItem('flagplot.view', chartView ? 'chart' : 'table'); } catch (e) {} signs(); }
-  $('btn-view').addEventListener('click', function () { setView(false); }); $('btn-above').addEventListener('click', function () { setView(true); });
+  $('btn-view').addEventListener('click', function () { setView(!chartView); });
   $('btn-plans').addEventListener('click', function () { if (planShown === 'all') clearPlan(); else showPlanOnChart('all'); });
   try { if (localStorage.getItem('flagplot.plans') === '1') { planShown = 'all'; $('btn-plans').setAttribute('aria-pressed', 'true'); } } catch (e) {}
   $('btn-hexes').setAttribute('aria-pressed', String(showHexes));
@@ -6346,7 +6352,7 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
     hexes.forEach(function (h) { h[4] = runLon(h[4]); }); chartNames = a[3] && a[3].map(function (n) { return { name: n.name, kind: n.kind, lat: n.lat, lon: runLon(n.lon) }; }); headSeat();
     var ready = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
     if (config.home) { KEPT_ROOT += BASE + '-' + config.home.number; KEPT = KEPT_ROOT; $('btn-new').hidden = false; $('btn-agent').hidden = !config.home.agents.length; }
-    return ready.then(function () { layChart(); cur.zoom = 0; placeCamera(); requestAnimationFrame(frame); if (config.watch) return startWatch(); if (config.versus) startVersus(); return reach('/tools').then(function (names) { names.forEach(function (n) { OFFERED[n] = true; }); $('stops').classList.toggle('daily', !OFFERED.advance); recallTicks(); if (OFFERED.advance) $('btn-day').textContent = 'Next pulse'; return refresh().catch(function (e) { if (!VERSUS || !/waits for the clock/.test(e.message)) throw e; }).then(function () { return VERSUS ? resumeVersus() : false; }).then(function (held) { if (!held && !playing) recallWhy(); if (!held && !playing && !WATCH) return loadSince(); }); }); });
+    return ready.then(function () { layChart(); cur.zoom = 0; openOnMission(); placeCamera(); requestAnimationFrame(frame); if (config.watch) return startWatch(); if (config.versus) startVersus(); return reach('/tools').then(function (names) { names.forEach(function (n) { OFFERED[n] = true; }); $('stops').classList.toggle('daily', !OFFERED.advance); recallTicks(); if (OFFERED.advance) $('btn-day').textContent = 'Next pulse'; return refresh().catch(function (e) { if (!VERSUS || !/waits for the clock/.test(e.message)) throw e; }).then(function () { return VERSUS ? resumeVersus() : false; }).then(function (held) { if (!held && !playing) recallWhy(); if (!held && !playing && !WATCH) return loadSince(); }); }); });
   });
   }).then(function () { if (onScreen) return; atStop(); var shown = true; try { shown = localStorage.getItem('flagplot.hint.look') === '1'; localStorage.setItem('flagplot.hint.look', '1'); } catch (e) {} say('hint', shown ? '' : 'Drag to look along the table; scroll to lean in.'); })
     .catch(function (e) { fatal('The table could not reach the game: ' + e.message); });
