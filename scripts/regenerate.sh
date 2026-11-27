@@ -271,7 +271,7 @@ if [ -n "$changes" ]; then
         echo "Run baselines changed (a game moved, or a scenario came or went):"
         cat "${TMPDIR:-/tmp}/regenerate-beyond.out"
     else
-        echo "No run baseline changed beyond its hash lines."
+        echo "No run baseline changed (a baseline holds no hash; the hashes are the run_ lines of the pins file)."
     fi
     rm -f "${TMPDIR:-/tmp}/regenerate-beyond.out"
 else
