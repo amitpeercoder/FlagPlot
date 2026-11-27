@@ -467,9 +467,9 @@ pub struct SurfaceCombatFigures {
     /// Days of yard repair for each system out. Not negative and not below
     /// `yard_days_per_system_degraded`.
     pub yard_days_per_system_out: Fixed,
-    /// The figures of a night's shore bombardment (decision 0092). `None`
-    /// when the file names none of them: then no force bombards.
-    pub bombardment: Option<BombardmentFigures>,
+    /// The figures of a night's shore bombardment (decision 0092). Every
+    /// surface combat file gives them (decision 0236).
+    pub bombardment: BombardmentFigures,
     /// The weights of rearming (decision 0122, 3): `[rearming]`. `None` where
     /// the file has no such table: no ship rearms. Added at the end.
     pub rearming: Option<RearmingFigures>,
@@ -772,11 +772,7 @@ impl SurfaceCombatFigures {
                 ));
             }
         }
-        if let Some(problem) = self
-            .bombardment
-            .as_ref()
-            .and_then(BombardmentFigures::problem)
-        {
+        if let Some(problem) = self.bombardment.problem() {
             return Some(problem);
         }
         None
@@ -819,13 +815,13 @@ pub struct AirCombatFigures {
     /// hits land on nothing.
     pub base_hit_supply: Fixed,
     /// The chance a hit on a base lands on men ashore there (decision 8 of
-    /// 0092). With the other two it adds to 1 at most. A file that names no
-    /// share for men gives 0, and every such hit lands on nothing.
+    /// 0092). With the other two it adds to 1 at most. Every air
+    /// combat file gives it (decision 0236); 0 lands nothing there.
     pub base_hit_men: Fixed,
     /// The chance a hit on a base lands on its airfield (decision 2 of
     /// 0103), counted only where the base has one. With the other three it
-    /// adds to 1 at most. A file that names no share for the airfield gives
-    /// 0, and every such hit lands as before.
+    /// adds to 1 at most. Every air combat file gives it (decision
+    /// 0236); 0 lands nothing there.
     pub base_hit_airfield: Fixed,
     /// The chance each whole shot of fighters that missed is claimed as an
     /// aircraft shot down (decision 3 of
@@ -1708,7 +1704,7 @@ pub struct GroundFigures {
     /// 0090).
     pub captured_stock_share: Fixed,
     /// Men a bomb or shell hit on men removes, a whole number (decision 9 of
-    /// 0092). A file that names none gives 0: a hit on men removes nobody.
+    /// 0092). Every ground file gives it (decision 0236); 0 removes nobody.
     pub men_lost_per_base_hit: Fixed,
     /// The bounds of a ground report's error (decision 14 of 0092). `None`
     /// when the file names neither: then no ground report is made.
@@ -1841,13 +1837,13 @@ pub struct GroundFigures {
     pub cover_wear_per_hit: Fixed,
     /// The experience of replacement men (decision 0197, 12 and 14), from 0
     /// to 4: a unit above it loses a level as they join, one at or below it
-    /// is not changed. A placeholder; a file that names none gives 2, the
-    /// standard.
+    /// is not changed. A placeholder; every ground file gives it (decision
+    /// 0236).
     pub replacement_experience: u8,
     /// The share of a unit's establishment that the men joined since its
     /// experience last changed must reach for it to lose a level (decision
-    /// 0197, 12 and 14), above 0 and not above 1. A placeholder; a file that
-    /// names none gives a half.
+    /// 0197, 12 and 14), above 0 and not above 1. A placeholder; every ground
+    /// file gives it (decision 0236).
     pub replacement_share: Fixed,
     /// The figures of hunger that takes time (decision 0205, 1 and 9).
     /// `None` when the file names none of the three: then a landing brings
@@ -1978,17 +1974,10 @@ impl GroundFigures {
         strain_limit: Fixed::from_int(60),
         cover_from_strain: Fixed::ZERO,
         cover_wear_per_hit: Fixed::ZERO,
-        replacement_experience: GroundFigures::REPLACEMENT_EXPERIENCE,
-        replacement_share: GroundFigures::REPLACEMENT_SHARE,
+        replacement_experience: 2,
+        replacement_share: Fixed::from_raw(500_000),
         hunger: None,
     };
-
-    /// The experience of replacement men where a ground file names none
-    /// (decision 0197, 14): the standard, 2.
-    pub const REPLACEMENT_EXPERIENCE: u8 = 2;
-    /// The share of the establishment where a ground file names none
-    /// (decision 0197, 14): a half.
-    pub const REPLACEMENT_SHARE: Fixed = Fixed::from_raw(500_000);
 
     /// Describes what is wrong with the figures, if anything. The weight of
     /// a man, his daily charge and the men to a shot divide, so they must be
@@ -2544,12 +2533,12 @@ impl SurfaceCombatFigures {
             yard_days_per_flotation_point: Fixed::from_int(2),
             yard_days_per_system_degraded: Fixed::from_int(5),
             yard_days_per_system_out: Fixed::from_int(30),
-            bombardment: Some(BombardmentFigures {
+            bombardment: BombardmentFigures {
                 minutes: 30,
                 hit_chance: hundredth(5),
                 reference_gun_damage: Fixed::from_int(20),
                 false_claim_chance: hundredth(1),
-            }),
+            },
             rearming: Some(RearmingFigures {
                 tons_per_round_battleship: Fixed::ONE,
                 tons_per_round_cruiser: hundredth(15),

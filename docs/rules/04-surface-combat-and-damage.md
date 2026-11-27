@@ -353,7 +353,7 @@ A force on the bombardment mission can fire its guns at an enemy base. This is t
 
 **Breakdown.** A ship's `BombardmentFire` records `rate`, `guns`, `minutes`, `main_battery_factor`, `rounds_aboard`, `shells`, `gun_damage`, `reference_gun_damage`, `weighed_shots` and `chance`, then `hit_on_airfield_chance` only where the base has an airfield, the ground figures are loaded and the share is above 0, and the result is the expected hits. A hit on the airfield appears in the event as a hit on nothing. [0092, 0103]
 
-**Figures.** All four are in `surface_combat.toml`, all placeholders, and are given all or none; with none, no force bombards. A partial set is refused when the file loads. Minutes must be above 0, the reference gun damage above 0, and the two chances from 0 to 1. [0092]
+**Figures.** All four are in `surface_combat.toml`, all placeholders, and every surface combat file gives all four: one that lacks any is refused when it loads. Minutes must be above 0, the reference gun damage above 0, and the two chances from 0 to 1. [0092, 0236]
 
 | Key | Value | What it is |
 | --- | --- | --- |

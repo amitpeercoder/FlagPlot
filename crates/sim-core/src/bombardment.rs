@@ -97,9 +97,7 @@ pub(crate) fn has_bombardment_work(
     let Some(surface) = ground.ref_data.surface_combat.as_ref() else {
         return false;
     };
-    let Some(figures) = surface.bombardment else {
-        return false;
-    };
+    let figures = surface.bombardment;
     if ground.ref_data.air_combat.is_none()
         || bombardment_target_of(force, hex, enemy_base_at).is_none()
     {
@@ -499,7 +497,7 @@ impl World {
             .ref_data
             .surface_combat
             .as_ref()
-            .and_then(|surface| surface.bombardment)
+            .map(|surface| surface.bombardment)
         else {
             return;
         };

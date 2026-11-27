@@ -188,3 +188,17 @@ strain_per_day = 0
 strain_limit = 60
 cover_from_strain = 0
 cover_wear_per_hit = 0
+
+# Men who replace the lost (decision 0197, 12 and 14). Both figures are
+# placeholders and rest on no source. Until decision 0236 no file named them
+# and the loader read these two values from the code.
+
+# The experience of replacement men, from 0 to 4: a unit above it loses a
+# level as they join, one at or below it is not changed. Placeholder: 2, the
+# standard.
+replacement_experience = 2
+
+# The share of a unit's establishment that the men joined since its
+# experience last changed must reach for it to lose a level, above 0 and not
+# above 1. Placeholder: a half.
+replacement_share = "0.5"

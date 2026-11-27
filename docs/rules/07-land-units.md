@@ -777,9 +777,9 @@ A side knows its own streams exactly, the base, the men a day and the days, and 
 
 ### The figures
 
-Two figures of `ground.toml`, both placeholders that rest on no source. A file that leaves them out is read with the values below, so no existing file changes; neither file in the repository names them.
+Two figures of `ground.toml`, both placeholders that rest on no source. Every ground file gives them (decision 0236).
 
-| Key | Where not named | What it is |
+| Key | In `ground.toml` | What it is |
 | --- | --- | --- |
 | `replacement_experience` | 2 | The level of replacement men. A whole number from 0 to 4 |
 | `replacement_share` | 0.5 | The share of its establishment that the men joined must reach for a unit above that level to lose one. Above 0 and not above 1 |
@@ -920,7 +920,7 @@ A side sees: as each section says. The briefing, the list and detail queries and
 | `ground.toml` | `beaten_fatigue` | Fatigue a unit gains when its side is beaten and it falls back. From 0 to 100. Required (decision 0104) |
 | `ground.toml` | `engagement_ratio` | The most firing men a side counts, as a multiple of the other side's fighting men ashore in the hex. 1 or more. Required (decision 0105) |
 | `ground.toml` | `failed_attack_fatigue` | Fatigue a unit on attack that fired gains on a day its side's attack failed. From 0 to 100. Required (decision 0105) |
-| `ground.toml` | `men_lost_per_base_hit` | Men a bomb or shell hit on men removes. A whole number, 0 or more. Missing gives 0 (decision 0092) |
+| `ground.toml` | `men_lost_per_base_hit` | Men a bomb or shell hit on men removes. A whole number, 0 or more (decision 0092) |
 | `ground.toml` | `report_error_low`, `report_error_high` | The least and the most a ground report can be, as a share of the truth, `0.5` and `1.5`. Both or neither: with neither no ground report is made, and one alone is refused. The low is 0 or more and not above the high (decision 0092) |
 | `ground.toml` | `cover_from_fire`, `cover_in_fight`, `cover_from_strain` | The share of the men lost to bombs and shells, of the men lost in the fight, and of the strain, that full cover saves. Each from 0 to 1. Required (decision 0106) |
 | `ground.toml` | `fieldworks_per_day`, `fieldworks_limit` | Fieldworks a unit on the defence digs in a day, and the most it digs for itself. From 0 to 100, and the limit no more than `prepared_from`. Required (decision 0106) |
@@ -932,12 +932,12 @@ A side sees: as each section says. The briefing, the list and detail queries and
 | `ground.toml` | `fight_supply_t_per_man`, `unsupplied_fire_share`, `fight_days_landed` | The tons a man at grips costs in a day's fight (0 or more), a side's fire share where its fight was supplied with nothing (0 to 1), and the days of fighting a landing puts into its base's ammunition (0 or more). All three or none, and only with the three hunger figures (they do not need the two of 0208): one or two alone, or the three without the hunger figures, is refused. Only `ground_hunger.toml` (0.01, 0.25 and 4), its frozen counterpart and scenario 123's own file give them; each is a placeholder (decision 0209) |
 | `ground.toml` | `hunger_weakness_per_night`, `unfed_fighting_share` | What a unit's condition loses for each night of hunger, and its share from last night's meal where it was fed nothing, each from 0 to 1. Both or neither, and only with the three hunger figures: one alone, or the two without the three, is refused. Only `ground_hunger.toml` (0.01 and 0.5, with its `hungry_below_share` at 0.6), its frozen counterpart and scenario 122's own file give them (decision 0208) |
 | Scenario file | `[[land_unit]]` `hunger_nights` | The unit's nights of hunger at the start, a whole number, 0 by default (decision 0205) |
-| `ground.toml` | `replacement_experience`, `replacement_share` | The level of replacement men (a whole number from 0 to 4) and the share of a unit's establishment at which they cost a unit above that level one (above 0, not above 1). Missing gives 2 and 0.5 (decision 0197) |
+| `ground.toml` | `replacement_experience`, `replacement_share` | The level of replacement men (a whole number from 0 to 4) and the share of a unit's establishment at which they cost a unit above that level one (above 0, not above 1) (decision 0197) |
 | Scenario file | `[[men_replacement]]` | `base`, `men` (a day, above 0), and optional `first_day`, `last_day` and `side` (Men who replace the lost, above; decision 0197) |
 | Scenario file | `[[land_unit]]` `establishment` | The men the unit should have, not below its `men`; its `men` where not given (decision 0197) |
 | Scenario file | `[[land_unit]]` `fieldworks` | The unit's fieldworks at the start, a whole number or a decimal string from 0 to `fieldworks_limit`, 0 by default; only for a fighting unit on defend with men ashore (decision 0106) |
-| `air_combat.toml` | `[base_hit] men` | The share of hits on a base that land on men, `0.2`. Missing gives 0 (decision 0092) |
-| `air_combat.toml` | `[base_hit] airfield` | The share of hits on a base that land on its airfield, `0.2` (`0` in the frozen copy). Missing gives 0 (decision 0103) |
+| `air_combat.toml` | `[base_hit] men` | The share of hits on a base that land on men, `0.2` (decision 0092) |
+| `air_combat.toml` | `[base_hit] airfield` | The share of hits on a base that land on its airfield, `0.2` (`0` in the frozen copy) (decision 0103) |
 | Scenario file | `[[base]]` `on_map` | `true` by default. `false` puts the base off the enemy's map at the start (decision 0092) |
 | Scenario file | `[[estimate]]` | `side`, `q`, `r` and `men`: an opening estimate (chapter 3, The ground report and the estimate) |
 | Scenario file | `[[land_unit]]` `posture`, `fatigue` | The unit's posture at the start (`defend` by default or `attack`) and its fatigue (0 to 100, 0 by default) |

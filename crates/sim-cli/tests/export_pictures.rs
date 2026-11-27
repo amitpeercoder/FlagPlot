@@ -427,6 +427,10 @@ fn a_step_carries_only_the_pictures_that_changed() {
 /// Remade again for decision 0220 (the state layout v60, the saved game 28, the rules
 /// label 33, the doctrine `supply-60`): every file changes in its state version, rules
 /// label, doctrine and day hashes and nothing else, as the run baselines show.
+/// Remade again for decision 0236 (the two figures of replacement men written
+/// into the ground files): the exports of the scenarios that name a ground file
+/// change in that file's hash under `inputs` and nothing else: checked against
+/// the exports of d4d1ff2d.
 #[test]
 fn a_scenario_with_command_levels_off_exports_as_it_did() {
     fn fnv(bytes: &[u8]) -> u64 {
@@ -438,11 +442,11 @@ fn a_scenario_with_command_levels_off_exports_as_it_did() {
         ("01_transit", 0xa407_e2bd_bfce_654c),
         ("04a_night_action", 0x5e17_7bed_e014_7a94),
         ("05_eastern_solomons", 0x3baf_6243_202a_b8d2),
-        ("21_landing", 0x82d2_ae7f_09de_8af1),
-        ("23_fight_ashore", 0x29bd_3ae1_a447_a11b),
-        ("31_airfield_damage", 0x7e61_8579_3e84_eac9),
-        ("36_one_convoy", 0x02ed_b732_8300_815d),
-        ("43_keep_two_bases_fed", 0xf675_a411_dd26_1027),
+        ("21_landing", 0x9be4_b1b5_35ea_6860),
+        ("23_fight_ashore", 0x3987_d6d3_a4a4_ac2c),
+        ("31_airfield_damage", 0x8d74_08a1_756c_620a),
+        ("36_one_convoy", 0x973c_ddfc_7158_e6e8),
+        ("43_keep_two_bases_fed", 0x4081_388c_af5c_8774),
         ("50_neutralise_a_base", 0x9cf8_d365_d290_174d),
         ("58_a_carrier_force_closes", 0x6281_26b2_f513_db13),
     ];
