@@ -44,6 +44,11 @@ pub struct Game {
     /// `data/scenarios/`.
     pub copies: [(char, &'static str, &'static str); 4],
     pub boats: &'static [Boat],
+    /// The number of files the script says are as made, for the whole
+    /// folder: thirteen (decision 0234, step C).
+    pub script_files: usize,
+    /// The files it keeps, whose source is built on another file: three.
+    pub kept_files: usize,
 }
 
 /// The keys of the submarine files.
@@ -341,6 +346,43 @@ impl Game {
             }
         }
     }
+
+    /// The script, run with `--check`: every file kept is the one it makes
+    /// and the folder holds nothing else.
+    pub fn the_script_says_each_copy_is_the_one_it_makes(&self) {
+        let out = std::process::Command::new("python3")
+            .arg(repo().join("scripts/table-boats/make_files.py"))
+            .arg(repo())
+            .arg("--check")
+            .output()
+            .expect("python3 runs the script");
+        let said = String::from_utf8_lossy(&out.stdout);
+        assert!(
+            out.status.success(),
+            "{said}{}",
+            String::from_utf8_lossy(&out.stderr)
+        );
+        assert_eq!(
+            said.matches(": as made").count(),
+            self.script_files,
+            "{said}"
+        );
+        assert_eq!(
+            said.matches(": kept, its source is built on another file")
+                .count(),
+            self.kept_files,
+            "{said}"
+        );
+        assert_eq!(
+            said.matches("not a file this script makes").count(),
+            0,
+            "{said}"
+        );
+    }
+}
+
+fn repo() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("..")
 }
 
 fn read(path: &PathBuf) -> String {

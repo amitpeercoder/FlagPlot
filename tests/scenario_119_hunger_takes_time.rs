@@ -989,6 +989,10 @@ fn statement_13_without_the_figures_a_landing_brings_nothing() {
 
 // ---------------------------------------------------------------- Properties
 
+fn repo() -> PathBuf {
+    common::data_dir().join("..")
+}
+
 fn scenarios_dir() -> PathBuf {
     common::data_dir().join("scenarios")
 }
@@ -1225,4 +1229,25 @@ fn property_the_tables_copies_are_true_copies() {
         );
         assert_eq!(have, want, "{name:?} is its source but for its ground line");
     }
+    // The script makes the three of the 39 days and keeps the nine whose
+    // source is built on another file (decision 0234, step C).
+    let out = std::process::Command::new("python3")
+        .arg(repo().join("scripts/table-copies/make_copies.py"))
+        .arg("--check")
+        .current_dir(repo())
+        .output()
+        .expect("python3 runs the script");
+    let said = String::from_utf8_lossy(&out.stdout);
+    assert!(
+        out.status.success(),
+        "{said}{}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    assert_eq!(said.matches(": the copy it makes").count(), 3, "{said}");
+    assert_eq!(
+        said.matches(": kept, its source is built on another file")
+            .count(),
+        9,
+        "{said}"
+    );
 }

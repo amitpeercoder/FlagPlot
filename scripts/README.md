@@ -9,7 +9,7 @@ Read and run these for current work.
 - `decisions-index.sh` (CI runs it with `--check`), `regenerate.sh`, `compare-scenarios.sh`.
 - `web/` (`build.sh`, `site.py`): the browser build, run by CI.
 - `stage-4-proof/`: stage 4's proof, not yet run. Its `run.sh` also calls `stage-3-proof/`, `0159-proof/hunger.py` and `unfed/unfed.py`, so those three stay working, and the "not maintained" note below does not apply to them, until stage 4's proof closes.
-- The scenario generators, each run with `--check` to confirm the generated files are as the script makes them: `table-boats/`, `table-copies/`, `table-rear-bases/`. A scenario's files are changed by changing its generator and running it, never by hand.
+- The scenario generators, each run with `--check` to confirm the generated files are as the script makes them: `table-boats/`, `table-copies/`, `table-rear-bases/`. Since step C of decision 0234 `table-copies/make_copies.py` makes 3 of its 12 files and keeps 9, and `table-boats/make_files.py` makes 13 of its 16 and keeps 3: a kept file's source is built on another file, so it is not read, written or compared (`--check` prints `: kept, its source is built on another file`). Step D retires the three scripts. A scenario's files are changed by changing its generator and running it, never by hand.
 - Retired by decision 0234, which has the Coral Sea's, the five days' and Midway's files built on their bases and states only what differs: the generators `coral-sea/` (three), `five-days/make_files.py`, `five-days/make_oiler_files.py` and `midway/make_files.py`. They are in git before the commit that converted the files.
 
 ## Frozen
