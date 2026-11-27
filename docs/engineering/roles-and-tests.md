@@ -27,6 +27,7 @@ Rules:
 ## Tests
 
 - Each scenario in the spec gets one file in `tests/` and one TOML file in `data/scenarios/`.
+- A scenario test takes `fx`, `n`, `hex`, the makers of ids and the other helpers of `tests/common/values.rs` from there and does not define them again; a new test that plays both staffs uses `common::played`.
 - A scenario test writes out its hand calculation in the file's doc comment, then asserts those numbers exactly. From decision 0233 on the doc comment is the one place the arithmetic is written: it cites each rule by its record and number, or by its section of `docs/rules/` once built, and does not restate it, and the record names the test file and holds no calculation.
 - A chance worked by hand over several draws (at least one hit in n shots, a fight that never opens, a bomber that is never hit) is written cut to six decimal places, as the engine's fixed point cuts, never rounded: 0.95^20 = 0.358485922… is written 0.358485. Ruled by the coordinating architect on Nov 13, 2026, after the rulebook-only test (`docs/validation/closing-tests.md`, finding R6). Doc comments written before then that round such a chance are not edited (nobody changes an expected number, and none of them is asserted); that record lists them.
 - Build scenarios in the spec's order. Each adds one subsystem, so a failure points at the newest code.

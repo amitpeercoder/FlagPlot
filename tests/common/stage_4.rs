@@ -203,9 +203,7 @@ pub fn men_of(truth: &TruthState, unit: u32) -> u32 {
         .map_or(0, |u| u.men_ashore)
 }
 
-pub fn hex(q: i32, r: i32) -> Hex {
-    Hex { q, r }
-}
+pub use super::values::hex;
 
 pub fn path_exists(p: &Path) -> bool {
     p.exists()
