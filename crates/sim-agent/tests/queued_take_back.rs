@@ -28,7 +28,7 @@
 //! 7. Both tools are in the seat's list after `end_day`, and a watched game's
 //!    seat that is ready is refused them as any call.
 
-mod support;
+use crate::support;
 
 use std::collections::BTreeMap;
 

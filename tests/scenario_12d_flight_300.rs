@@ -92,7 +92,7 @@
 //! bombers and their patrol shares, fatigue and deck factors it would be
 //! a second copy of the engine.
 
-mod common;
+use crate::common;
 
 use std::collections::BTreeMap;
 use std::fs;

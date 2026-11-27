@@ -23,7 +23,7 @@
 //!    the pull request that builds it changes the table's files by that key
 //!    and by nothing else; the files of the new folder are made from them.)
 
-mod common;
+use crate::common;
 
 use std::path::PathBuf;
 use std::process::Command;

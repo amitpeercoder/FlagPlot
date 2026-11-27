@@ -12,7 +12,7 @@
 //! `ship:1` to `ship:9` and Chicago is `ship:2`, Vincennes `ship:5`, Astoria
 //! `ship:7`; the Allied task force 3 is `task_force:2`.
 
-mod support;
+use crate::support;
 
 use serde_json::Value;
 use sim_agent::{briefing, get_entity, list_bases, list_contacts, list_forces};

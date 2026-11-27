@@ -11,7 +11,7 @@
 //! preview changes nothing and says what the staff would do, and that
 //! approving a preview queues exactly what it showed, or is refused as void.
 
-mod support;
+use crate::support;
 
 use std::collections::BTreeMap;
 

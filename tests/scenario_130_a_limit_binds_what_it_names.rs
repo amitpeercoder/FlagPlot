@@ -142,7 +142,7 @@
 
 #![allow(clippy::doc_lazy_continuation)]
 
-mod common;
+use crate::common;
 
 // The tests, one file a part, each under the statements it proves.
 #[path = "scenario_130/part_a.rs"]

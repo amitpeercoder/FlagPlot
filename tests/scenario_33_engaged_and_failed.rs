@@ -208,7 +208,7 @@
 //!   instruction the other side's attack orders carry, until a unit has
 //!   left the hex.
 
-mod common;
+use crate::common;
 
 use std::path::PathBuf;
 

@@ -278,7 +278,7 @@
 //!   other side's activities, jobs, work done and defences, where the hits
 //!   are the same.
 
-mod common;
+use crate::common;
 
 use std::path::PathBuf;
 

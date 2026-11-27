@@ -8,7 +8,7 @@
 //! nothing of the other side's: it has no line for an enemy land unit, and
 //! asked for one by handle it is told "not known".
 
-mod support;
+use crate::support;
 
 use serde_json::{json, Value};
 use sim_agent::{Seat, Session};

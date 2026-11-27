@@ -180,7 +180,7 @@
 //! at a base's command, a boat sighted at a chance of 1), the build says so
 //! and it comes back to the architect; no statement is changed to fit.
 
-mod common;
+use crate::common;
 
 use std::path::PathBuf;
 

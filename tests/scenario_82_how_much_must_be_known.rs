@@ -142,7 +142,7 @@ use sim_core::time::Pulse;
 use sim_data::Scenario;
 use sim_staff::{as_staffs, staffs, SupplyStaff};
 
-mod common;
+use crate::common;
 
 const COMMANDS_MARKER: &str = "# The Allied commander's commands";
 const KNOWLEDGE_MARKER: &str = "# The knowledge limit\n";

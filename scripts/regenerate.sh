@@ -98,13 +98,13 @@ if [ "$check" -eq 1 ]; then
             tail -n 15 "${TMPDIR:-/tmp}/regenerate-check.out"
         fi
     }
-    probe "1 run baselines" cargo test --release --quiet -p sim-cli --test export run_output_matches_the_golden_files
-    probe "2 agent goldens" cargo test --release --quiet -p sim-agent --test golden
+    probe "1 run baselines" cargo test --release --quiet -p sim-cli --test integration export::run_output_matches_the_golden_files
+    probe "2 agent goldens" cargo test --release --quiet -p sim-agent --test integration golden::
     probe "2 viewer measure fixture" cargo test --release --quiet -p sim-cli measure_fixture
-    probe "3 recorded games" cargo test --release --quiet -p sim-cli --test mcp every_recorded_game_replays_to_its_transcript_and_save
-    probe "4 pinned hashes" cargo test --release --quiet -p scenario-tests --test scenario_10_objectives --test scenario_17a_target_choice
-    probe "5 batch fixture" cargo test --release --quiet -p sim-cli --test batch the_keys_a_version_1_reader_used_keep_their_values
-    probe "6 submarine tables" cargo test --release --quiet -p oob-derive --test submarines the_submarine_list_derives_exactly_the_files_in_data_reference
+    probe "3 recorded games" cargo test --release --quiet -p sim-cli --test integration mcp::every_recorded_game_replays_to_its_transcript_and_save
+    probe "4 pinned hashes" cargo test --release --quiet -p scenario-tests --test scenarios scenario_10_objectives:: scenario_17a_target_choice::
+    probe "5 batch fixture" cargo test --release --quiet -p sim-cli --test integration batch::the_keys_a_version_1_reader_used_keep_their_values
+    probe "6 submarine tables" cargo test --release --quiet -p oob-derive --test integration submarines::the_submarine_list_derives_exactly_the_files_in_data_reference
     rm -f "${TMPDIR:-/tmp}/regenerate-check.out"
     if [ -n "$stale" ]; then
         say "stale, or failing for another reason (read the output above):$stale"
@@ -144,7 +144,7 @@ done
 
 # 2 agent goldens and the viewer's measure fixture
 say "2 agent goldens"
-quiet env FLAGPILOT_UPDATE_GOLDEN=1 cargo test --release --quiet -p sim-agent --test golden \
+quiet env FLAGPILOT_UPDATE_GOLDEN=1 cargo test --release --quiet -p sim-agent --test integration golden:: \
     || fail "2 agent goldens"
 say "2 viewer measure fixture"
 quiet env FLAGPILOT_UPDATE_GOLDEN=1 cargo test --release --quiet -p sim-cli measure_fixture \
@@ -157,13 +157,13 @@ quiet python3 "$games/regame.py" || fail "3 recorded games"
 # 4 pinned hashes (after 1: the scenario 10 test reads the baseline)
 say "4 pinned hashes"
 quiet env FLAGPILOT_UPDATE_GOLDEN=1 cargo test --release --quiet -p scenario-tests \
-    --test scenario_10_objectives --test scenario_17a_target_choice \
+    --test scenarios scenario_10_objectives:: scenario_17a_target_choice:: \
     || fail "4 pinned hashes"
 
 # 5 the old-format batch fixture
 say "5 batch fixture"
-quiet env FLAGPILOT_UPDATE_GOLDEN=1 cargo test --release --quiet -p sim-cli --test batch \
-    the_keys_a_version_1_reader_used_keep_their_values \
+quiet env FLAGPILOT_UPDATE_GOLDEN=1 cargo test --release --quiet -p sim-cli --test integration \
+    batch::the_keys_a_version_1_reader_used_keep_their_values \
     || fail "5 batch fixture"
 
 # 6 the submarine tables (decision 0218, stage 1)
@@ -185,8 +185,8 @@ fi
 
 say "7a NOT_IN_THE_FULL_SLICE"
 out=$(mktemp)
-if cargo test --release --quiet -p scenario-tests --test scenario_07_determinism \
-    the_full_slice_log_has_every_kind_of_event_the_engine_can_emit > "$out" 2>&1; then
+if cargo test --release --quiet -p scenario-tests --test scenarios \
+    scenario_07_determinism::the_full_slice_log_has_every_kind_of_event_the_engine_can_emit > "$out" 2>&1; then
     echo "Every kind of event the engine can emit is in the full slice or in the list."
 else
     cat "$out"

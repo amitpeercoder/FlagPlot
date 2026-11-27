@@ -732,7 +732,7 @@ use sim_core::time::Pulse;
 use sim_data::Scenario;
 use sim_staff::{as_staffs, staffs, SupplyStaff};
 
-mod common;
+use crate::common;
 
 const BEGIN: &str = "# MARKER: the written part begins";
 const END: &str = "# MARKER: the written part ends";

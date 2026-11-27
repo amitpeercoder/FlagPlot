@@ -143,7 +143,7 @@ use sim_core::state::Side;
 use sim_data::Scenario;
 use sim_staff::{as_staffs, staffs, SupplyStaff};
 
-mod common;
+use crate::common;
 
 fn path_of(name: &str) -> PathBuf {
     common::data_dir().join(format!("scenarios/{name}.toml"))

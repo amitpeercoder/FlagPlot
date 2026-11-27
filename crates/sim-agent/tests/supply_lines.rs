@@ -6,7 +6,7 @@
 //! Scenario 72, base 1 Allied and base 2 Japanese. The Allied line at base 1
 //! gives 12.5 tons of supply and 4 of fuel on days 1 to 3.
 
-mod support;
+use crate::support;
 
 use serde_json::{json, Value};
 use sim_core::state::Side;

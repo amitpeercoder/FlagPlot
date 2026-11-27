@@ -149,7 +149,7 @@
 //!   and two worlds that differ only in one group's tally hash
 //!   differently.
 
-mod common;
+use crate::common;
 
 use std::collections::BTreeMap;
 use std::fs;

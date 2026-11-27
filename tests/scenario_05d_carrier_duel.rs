@@ -145,7 +145,7 @@
 //!   and every launch by a report to the launching side.
 //! - A replay of any seed reproduces the daily hash.
 
-mod common;
+use crate::common;
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;

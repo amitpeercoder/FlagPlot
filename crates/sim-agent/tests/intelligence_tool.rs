@@ -386,7 +386,7 @@
 // comment is kept as written, list continuations and all.
 #![allow(clippy::doc_lazy_continuation)]
 
-mod support;
+use crate::support;
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::OnceLock;

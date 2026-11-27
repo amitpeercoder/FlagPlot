@@ -44,7 +44,7 @@
 //! makes and the folder holds nothing else. No statement holds a number that
 //! rests on a figure.
 
-mod common;
+use crate::common;
 
 use common::boats_in_a_game::{Boat, Game};
 use sim_core::state::Side;

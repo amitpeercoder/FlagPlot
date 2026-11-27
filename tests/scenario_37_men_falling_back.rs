@@ -155,7 +155,7 @@
 //!   whether a unit it cannot see is falling back or standing, where the
 //!   hits are the same.
 
-mod common;
+use crate::common;
 
 use std::path::PathBuf;
 

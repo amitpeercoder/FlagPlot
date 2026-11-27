@@ -187,7 +187,7 @@
 //!   as they did, but for the version of the agent's interface in each
 //!   answer; and every tool listed for them is one listed before.
 
-mod common;
+use crate::common;
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;

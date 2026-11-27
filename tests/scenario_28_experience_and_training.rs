@@ -126,7 +126,7 @@
 //! - The enemy's view of a fight is the same in two worlds that differ only
 //!   in the other side's experience, where the hits are the same.
 
-mod common;
+use crate::common;
 
 use std::collections::BTreeMap;
 use std::path::PathBuf;

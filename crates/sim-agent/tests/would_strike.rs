@@ -7,7 +7,7 @@
 //! target list, and the contacts held with their place, kind and age. So a
 //! player can check the line from the briefing alone.
 
-mod support;
+use crate::support;
 
 use serde_json::Value;
 use sim_agent::briefing;

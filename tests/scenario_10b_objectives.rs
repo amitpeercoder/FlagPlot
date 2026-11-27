@@ -125,7 +125,7 @@
 //! - In each, the two margins sum to zero and the levels mirror.
 //! - The result from a saved game replayed is the same.
 
-mod common;
+use crate::common;
 
 use std::collections::BTreeMap;
 use std::path::PathBuf;

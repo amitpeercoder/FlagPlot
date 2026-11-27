@@ -64,19 +64,25 @@ jobs:
         run: cargo clippy --workspace --all-targets --locked -- -D warnings
 
   # Tests run in the `checked` profile (Cargo.toml): optimized, with debug
-  # assertions and overflow checks on. Building the test programs is most
-  # of the time, so the tests are split into five shards, each built and run
-  # on its own machine, with `--workspace` so that every shard resolves the
-  # same features as the whole workspace does and builds the same programs.
-  # Shards 0 to 3 run the integration tests: `.github/scripts/test-shard.sh`
-  # gives each test target to exactly one of them. Shard 4 runs the unit
-  # tests of the libraries and programs and the documentation tests.
-  # Together they are what `cargo test --workspace` runs.
+  # assertions and overflow checks on. Each package has one integration test
+  # program (`tests/integration.rs`, and `tests/all.rs` for the scenario
+  # tests), so the tests are not split by program but by test: cargo-nextest
+  # (`--partition count:K/4`) gives each test of the workspace to exactly one
+  # of shards 0 to 3, so a test added later is in one with no change here.
+  # Each shard builds every test program with `--workspace`, so every shard
+  # resolves the same features as the whole workspace does. Shard 4 runs the
+  # documentation tests, which nextest does not run. Together they are what
+  # `cargo test --workspace` runs. Nextest runs each test in a process of its
+  # own, as `cargo test` ran each test file in one before the files were
+  # joined, so a test that sets a variable or a working directory affects
+  # nothing else.
   test:
     name: Test (shard ${{ matrix.shard }} of 5)
     needs: changes
     if: needs.changes.outputs.needed == 'true'
     runs-on: ubuntu-latest
+    env:
+      NEXTEST_VERSION: 0.9.150
     strategy:
       fail-fast: false
       matrix:
@@ -91,16 +97,31 @@ jobs:
         with:
           key: shard-${{ matrix.shard }}
 
+      # Built from source (without its self-update, which needs a C library
+      # built) at the version pinned above and kept in the cache
+      # under that version, as the binding tool of the web job is; no
+      # program is downloaded ready made.
+      - name: Keep nextest built for the pinned version
+        if: matrix.shard != 4
+        id: nextest
+        uses: actions/cache@v4.2.0
+        with:
+          path: ~/.cargo-nextest
+          key: nextest-${{ env.NEXTEST_VERSION }}-${{ runner.os }}
+
+      - name: Build nextest from source
+        if: matrix.shard != 4 && steps.nextest.outputs.cache-hit != 'true'
+        run: cargo install cargo-nextest --version "$NEXTEST_VERSION" --locked --no-default-features --features default-no-update --root ~/.cargo-nextest
+
+      - name: Put nextest on the path
+        if: matrix.shard != 4
+        run: echo "$HOME/.cargo-nextest/bin" >> "$GITHUB_PATH"
+
       - name: Test
+        if: matrix.shard != 4
         run: |
-          set -eu
-          if [ ${{ matrix.shard }} -eq 4 ]; then
-            targets="--lib --bins"
-          else
-            targets=$(sh .github/scripts/test-shard.sh ${{ matrix.shard }} 4)
-          fi
-          # shellcheck disable=SC2086
-          cargo test --workspace --locked --profile checked $targets
+          cargo nextest run --workspace --locked --cargo-profile checked \
+            --no-fail-fast --partition count:$(( ${{ matrix.shard }} + 1 ))/4
 
       - name: Documentation tests
         if: matrix.shard == 4

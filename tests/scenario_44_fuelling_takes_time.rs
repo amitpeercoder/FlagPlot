@@ -127,7 +127,7 @@
 //!   of day 1 and takes 1200 t in 12 hours; ship 1 loads 240 t by lighter
 //!   and takes no fuel that pulse.
 
-mod common;
+use crate::common;
 
 use std::collections::BTreeMap;
 use std::path::PathBuf;

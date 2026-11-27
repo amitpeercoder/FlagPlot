@@ -11,7 +11,7 @@
 //! on day 2, is due on day 2 and its ship is free on day 5; the second run
 //! carries 150 t from day 16.
 
-mod support;
+use crate::support;
 
 use std::collections::BTreeMap;
 

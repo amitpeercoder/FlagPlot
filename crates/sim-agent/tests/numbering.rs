@@ -15,7 +15,7 @@
 //!    raw ids, is `an_enemy_air_group_that_is_merely_there_changes_nothing_the_side_is_given`
 //!    in `tests/scenario_09a_side_events.rs`; it is ignored until part 2.)
 
-mod support;
+use crate::support;
 
 use std::collections::{BTreeMap, BTreeSet};
 

@@ -162,7 +162,7 @@
 
 // The tests are written by the build, to the statements above.
 
-mod common;
+use crate::common;
 
 use std::path::PathBuf;
 use std::sync::OnceLock;

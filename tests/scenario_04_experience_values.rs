@@ -11,7 +11,7 @@
 //! every ship of the scenario has the value the file gives her. The table
 //! below only says which file row is which scenario ship.
 
-mod common;
+use crate::common;
 
 use std::collections::BTreeMap;
 use std::path::PathBuf;

@@ -156,7 +156,7 @@ use sim_core::state::{Side, TaskForceStatus, TruthState};
 use sim_data::Scenario;
 use sim_staff::{as_staffs, staffs};
 
-mod common;
+use crate::common;
 
 const S: Hex = Hex { q: 0, r: 0 };
 const P: Hex = Hex { q: 14, r: 0 };

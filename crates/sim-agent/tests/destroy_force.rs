@@ -23,7 +23,7 @@
 //! | 5 | lost: the force last reported at (14,0), the morning of day 3 |
 //! | 6 | ended: not found, the same report |
 
-mod support;
+use crate::support;
 
 use std::collections::BTreeMap;
 use std::path::Path;

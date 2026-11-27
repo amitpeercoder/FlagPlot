@@ -1,7 +1,7 @@
 //! The validator itself is tested on a few good and bad documents, with
 //! small schemas of its own and then with the real ones.
 
-mod support;
+use crate::support;
 
 use std::collections::BTreeMap;
 

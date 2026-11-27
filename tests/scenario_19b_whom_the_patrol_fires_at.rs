@@ -174,7 +174,7 @@
 //! bombers are 3 lost); and (f) is the same at s = 0 and 1, the shots and
 //! the stream being the same.
 
-mod common;
+use crate::common;
 
 use std::fs;
 use std::path::PathBuf;

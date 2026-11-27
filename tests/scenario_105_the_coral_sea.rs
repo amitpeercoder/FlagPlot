@@ -421,7 +421,7 @@
 // the statement it proves. Everything here runs on the live figures: no
 // number asserted is one the step 1 freeze holds.
 
-mod common;
+use crate::common;
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};

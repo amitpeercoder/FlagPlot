@@ -86,7 +86,7 @@ use sim_core::Staff;
 use sim_data::Scenario;
 use sim_staff::{as_staffs, staffs, SupplyStaff};
 
-mod common;
+use crate::common;
 
 const A: Side = Side::Allied;
 const J: Side = Side::Japanese;

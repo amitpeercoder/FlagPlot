@@ -86,7 +86,7 @@
 //! - The aircraft aboard a ship never exceed its class's capacity, 36 here.
 //! - A replay of any seed reproduces the daily hash.
 
-mod common;
+use crate::common;
 
 use std::fs;
 use std::path::PathBuf;

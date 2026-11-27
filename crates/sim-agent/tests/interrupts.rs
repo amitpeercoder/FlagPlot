@@ -12,7 +12,7 @@
 //! is a day-for-day copy of `end_day`, and `report` and `command_state` say
 //! what the hand calculation says.
 
-mod support;
+use crate::support;
 
 use std::collections::BTreeMap;
 

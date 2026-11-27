@@ -142,7 +142,7 @@
 //! The scenario file's comments say what each part of it is for. A fault this
 //! test finds in a rule is a finding and not something to work around.
 
-mod common;
+use crate::common;
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};

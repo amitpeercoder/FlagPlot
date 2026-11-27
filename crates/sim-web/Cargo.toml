@@ -4,6 +4,10 @@ description = "Flag Plot's door of one seat: one game held and answered as `sim-
 version.workspace = true
 edition.workspace = true
 publish.workspace = true
+# One test program for the package, not one for each file under `tests/`:
+# building and linking them was most of a build. `tests/integration.rs`
+# declares each file as a module.
+autotests = false
 
 [lib]
 # The rlib is what the native tests and the program `door` use; the cdylib is
@@ -25,3 +29,7 @@ wasm-bindgen = "=0.2.130"
 
 [lints]
 workspace = true
+
+[[test]]
+name = "integration"
+path = "tests/integration.rs"

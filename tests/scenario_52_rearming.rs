@@ -114,7 +114,7 @@
 //!   loaded.
 //! - Every existing scenario's events and end states are what they were.
 
-mod common;
+use crate::common;
 
 use std::collections::BTreeMap;
 use std::path::PathBuf;

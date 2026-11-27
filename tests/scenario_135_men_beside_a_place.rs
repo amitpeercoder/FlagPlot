@@ -256,7 +256,7 @@ use sim_core::time::Pulse;
 use sim_data::Scenario;
 use sim_staff::{as_staffs, staffs};
 
-mod common;
+use crate::common;
 
 const A: Hex = Hex { q: 0, r: 0 };
 const D: Hex = Hex { q: 4, r: 0 };

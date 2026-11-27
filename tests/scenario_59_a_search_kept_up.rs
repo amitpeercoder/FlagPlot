@@ -114,7 +114,7 @@ use sim_staff::carrier::{decide, roles, CarrierGroup, CarrierRole};
 use sim_staff::search::{base_turn, least_tired, once_a_day, TurnCandidate};
 use sim_staff::{as_staffs, staffs};
 
-mod common;
+use crate::common;
 
 const COMMANDS_MARKER: &str = "# The Allied commander's commands";
 const FATIGUE_FILE: &str = "fatigue_placeholder_search_kept_up.toml";

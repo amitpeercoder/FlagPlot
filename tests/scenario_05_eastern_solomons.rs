@@ -449,7 +449,7 @@
 //! The test prints how often each carrier is sunk and how many aircraft each
 //! side loses over seeds 1 to 1000, and asserts nothing about those counts.
 
-mod common;
+use crate::common;
 
 use std::cmp::Reverse;
 use std::collections::{BTreeMap, BTreeSet};

@@ -11,7 +11,7 @@
 //! refuses aircraft), 21 (a landing), 06a with objectives added, and 02 with
 //! a home port added.
 
-mod support;
+use crate::support;
 
 use serde_json::{json, Value};
 use sim_agent::{briefing, Seat, Session};

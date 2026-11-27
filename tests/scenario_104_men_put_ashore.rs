@@ -158,7 +158,7 @@
 // the truth and ignores the other side's ships) cannot be tested on made-up
 // events, and those parts are ignored tests that say so.
 
-mod common;
+use crate::common;
 
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};

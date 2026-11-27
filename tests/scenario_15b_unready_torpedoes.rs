@@ -68,7 +68,7 @@
 //!    no hand calculation can say which draw succeeds. It follows the live
 //!    figures and is remade with them.
 
-mod common;
+use crate::common;
 
 use std::collections::BTreeMap;
 use std::path::PathBuf;

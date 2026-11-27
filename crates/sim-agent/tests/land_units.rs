@@ -12,7 +12,7 @@
 //! `tests/scenario_21_landing.rs`; what is checked here is what a player is
 //! told: the same numbers, by the side's own handles.
 
-mod support;
+use crate::support;
 
 use serde_json::{json, Value};
 use sim_agent::Session;

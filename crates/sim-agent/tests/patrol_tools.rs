@@ -9,7 +9,7 @@
 //! hold whose target is boat 2; the Allied side, told one suspected water at
 //! (4,0) of 1 hex on day 1, lists that and no boat of the Japanese side.
 
-mod support;
+use crate::support;
 
 use serde_json::{json, Value};
 use sim_agent::{Seat, Session};

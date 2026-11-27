@@ -101,7 +101,7 @@ use sim_core::side_events::SideEventKind;
 use sim_core::state::{Side, TruthState};
 use sim_data::Scenario;
 
-mod common;
+use crate::common;
 
 const A: Side = Side::Allied;
 const J: Side = Side::Japanese;

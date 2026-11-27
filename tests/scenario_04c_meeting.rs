@@ -124,7 +124,7 @@
 //!   allows: at most 192 nm in a night at 16 kn, and 288 nm at 24 kn.
 //! - A replay of any seed reproduces the daily hash.
 
-mod common;
+use crate::common;
 
 use std::collections::BTreeMap;
 use std::path::PathBuf;

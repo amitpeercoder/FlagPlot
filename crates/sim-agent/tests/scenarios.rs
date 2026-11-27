@@ -3,7 +3,7 @@
 //! the data, and no enemy unit appears except as a contact or in an event the
 //! side may see (decision 0048).
 
-mod support;
+use crate::support;
 
 use sim_core::state::Side;
 use support::check::check_view;

@@ -42,7 +42,7 @@
 //! the architect.
 #![allow(clippy::doc_lazy_continuation, clippy::doc_markdown)]
 
-mod common;
+use crate::common;
 
 use sim_core::ids::{BaseId, IntentId, LandUnitId};
 use sim_core::state::{Side, TruthState};

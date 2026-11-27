@@ -105,7 +105,7 @@ use sim_core::state::Side;
 use sim_core::time::Pulse;
 use sim_staff::{as_staffs, staffs};
 
-mod common;
+use crate::common;
 
 /// The Allied contacts' hexes as the afternoon of day 1 begins, after the
 /// morning's ageing, in the Eastern Solomons from both sides' intents on

@@ -164,7 +164,7 @@
 //! less the patrol's 1 hit at the bombers less the hits before (11 - 3 = 8,
 //! 9, 10, 11).
 
-mod common;
+use crate::common;
 
 use std::fs;
 use std::path::PathBuf;

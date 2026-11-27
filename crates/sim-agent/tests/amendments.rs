@@ -1,6 +1,6 @@
 //! The architect's seven changes to stage 9b, each tested where it shows.
 
-mod support;
+use crate::support;
 
 use serde_json::Value;
 use sim_agent::{briefing, explain};

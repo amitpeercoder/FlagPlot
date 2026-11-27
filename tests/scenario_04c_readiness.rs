@@ -218,7 +218,7 @@
 //!   was written for.
 //! - A replay of any seed reproduces the daily hash.
 
-mod common;
+use crate::common;
 
 use std::collections::BTreeMap;
 use std::fs;

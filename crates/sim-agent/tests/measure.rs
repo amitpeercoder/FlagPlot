@@ -9,7 +9,7 @@
 //! `tests/scenario_04b_pathfinding.rs`. Places, and what a side cannot know,
 //! are tested by difference as stage 9b's are.
 
-mod support;
+use crate::support;
 
 use std::collections::BTreeMap;
 use std::fs;

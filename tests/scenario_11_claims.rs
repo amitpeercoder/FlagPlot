@@ -91,7 +91,7 @@
 //!   claim holds no identity of an enemy unit.
 //! - Run twice, and from a saved game, the claims are the same.
 
-mod common;
+use crate::common;
 
 use std::collections::BTreeMap;
 use std::fs;

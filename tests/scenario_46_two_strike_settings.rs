@@ -136,7 +136,7 @@
 // the hand calculation fixes, and `the_numbers_the_comment_gives_to_the_contacts`
 // (ignored) asserts the comment's own numbers.
 
-mod common;
+use crate::common;
 
 use std::collections::BTreeMap;
 use std::path::PathBuf;

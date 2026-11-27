@@ -4,7 +4,7 @@
 //! 2. Every scenario that raises a warning: each is recomputed from the
 //!    view's own state and events, and between them all five kinds occur.
 
-mod support;
+use crate::support;
 
 use std::collections::BTreeSet;
 

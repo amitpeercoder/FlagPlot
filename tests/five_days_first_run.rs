@@ -37,7 +37,7 @@ use sim_core::state::Side;
 use sim_data::Scenario;
 use sim_staff::{as_staffs, staffs};
 
-mod common;
+use crate::common;
 
 fn number(name: &str, default: u64) -> u64 {
     std::env::var(name)

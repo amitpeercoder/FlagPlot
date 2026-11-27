@@ -8,7 +8,7 @@
 //! units ashore there below their establishment: unit 1 (400 of 600,
 //! experience 4), unit 2 (500 of 500), unit 3 (250 of 300).
 
-mod support;
+use crate::support;
 
 use serde_json::{json, Value};
 use sim_core::state::Side;

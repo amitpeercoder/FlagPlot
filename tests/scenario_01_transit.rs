@@ -80,7 +80,7 @@
 //! Day 3: no new orders. The task force has arrived, so nothing moves and no
 //! fuel is burned.
 
-mod common;
+use crate::common;
 
 use std::path::PathBuf;
 

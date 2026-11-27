@@ -125,7 +125,7 @@
 // comment above, which is left as written.
 #![allow(clippy::doc_lazy_continuation)]
 
-mod common;
+use crate::common;
 
 // ------------------------------------------------- Statement 12: the record
 

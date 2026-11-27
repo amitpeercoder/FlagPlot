@@ -9,7 +9,7 @@
 //! either: no failed attack, no weight, no falling back, and nothing of the
 //! Japanese instruction.
 
-mod support;
+use crate::support;
 
 use serde_json::{json, Value};
 use sim_agent::{Seat, Session};

@@ -46,7 +46,7 @@ use sim_core::state::Side;
 use sim_data::Scenario;
 use sim_staff::{as_staffs, staffs, SupplyStaff};
 
-mod common;
+use crate::common;
 
 const SOURCE_84: &str = include_str!("scenario_84_the_plan_as_an_order.rs");
 

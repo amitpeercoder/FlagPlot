@@ -258,7 +258,7 @@
 // on the same view, and asks for the proposal of each intent. What the staff
 // handed in each day is read from `staff_handed_in`.
 
-mod common;
+use crate::common;
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;

@@ -164,7 +164,7 @@
 // that moment (`Moment::Orders`), and asks the staff twice on the same view.
 // What the staff handed in each day is read from `staff_handed_in`.
 
-mod common;
+use crate::common;
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;

@@ -3,7 +3,7 @@
 //! the engine already does; none changes a rule. The briefing is made from a
 //! real scenario and one part of its data is set, then read as text.
 
-mod support;
+use crate::support;
 
 use sim_agent::{briefing, AttackOnShip, Briefing, DamagedShip, Dec, Handle, SystemChange};
 use sim_core::fixed::Fixed;

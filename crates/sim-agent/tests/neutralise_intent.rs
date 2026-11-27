@@ -11,7 +11,7 @@
 //! neutralise intent and so no measure, and neither has an intent that is a
 //! hold.
 
-mod support;
+use crate::support;
 
 use std::collections::BTreeSet;
 

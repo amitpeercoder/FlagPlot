@@ -151,7 +151,7 @@
 //!   other side's airfield damage and the work done to mend it, where the
 //!   hits are the same; and a raid's claim says nothing of the field.
 
-mod common;
+use crate::common;
 
 use std::path::PathBuf;
 

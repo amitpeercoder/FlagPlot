@@ -53,7 +53,7 @@
 //! The team lead's own test, beside the architect's: the same for a land
 //! unit, in an order to it, a hold on it and a limit that waits for it.
 
-mod support;
+use crate::support;
 
 use std::collections::BTreeSet;
 

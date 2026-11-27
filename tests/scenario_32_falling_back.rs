@@ -156,7 +156,7 @@
 //! - The enemy's view is the same in two worlds that differ only in where
 //!   the beaten side's units fall back to.
 
-mod common;
+use crate::common;
 
 use std::path::PathBuf;
 

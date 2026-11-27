@@ -164,7 +164,7 @@ use sim_data::Scenario;
 use sim_staff::stand::{break_off, margin, threat, usable_day, Sighted, THREAT_HEXES};
 use sim_staff::{as_staffs, staffs};
 
-mod common;
+use crate::common;
 
 const COMMANDS_MARKER: &str = "# The Allied commander's commands";
 

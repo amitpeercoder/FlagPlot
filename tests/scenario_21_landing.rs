@@ -198,7 +198,7 @@
 //! is the same in two worlds that differ only in a land unit, its landing and
 //! the base it formed.
 
-mod common;
+use crate::common;
 
 use std::collections::BTreeMap;
 use std::path::PathBuf;

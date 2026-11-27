@@ -16,7 +16,7 @@
 //! with the day just played D - 1: the briefing of day 3 is the evening of
 //! day 2, and says what comes on day 3.
 
-mod support;
+use crate::support;
 
 use serde_json::{json, Value};
 use sim_core::state::Side;
