@@ -2,18 +2,18 @@ Placeholder scenario 66: Units made ready, and a base built up
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 35ef23b444734605  25 events
-day   2  hash ea0ff700861044a6  9 events
-day   3  hash ef9ff698e39f7bcf  10 events
-day   4  hash b4a138991a7cc235  11 events
-day   5  hash 1fb8d6f0e60bf068  8 events
-day   6  hash 0efabc288ade2ada  7 events
-day   7  hash 62aac3fedaaaaeb8  7 events
-day   8  hash d07fa47c5099c30d  7 events
-day   9  hash e4ce2ae13fb583d5  6 events
-day  10  hash e8240ef30fe34aac  6 events
-day  11  hash fca89623140eb625  6 events
-day  12  hash cf7c36ce583f839a  6 events
+day   1  hash ----------------  25 events
+day   2  hash ----------------  9 events
+day   3  hash ----------------  10 events
+day   4  hash ----------------  11 events
+day   5  hash ----------------  8 events
+day   6  hash ----------------  7 events
+day   7  hash ----------------  7 events
+day   8  hash ----------------  7 events
+day   9  hash ----------------  6 events
+day  10  hash ----------------  6 events
+day  11  hash ----------------  6 events
+day  12  hash ----------------  6 events
 
 #1 D1 -         Allied the commander's command taken: set intent:1 to ready a landing at (6,0) by task_force:1
 #2 D1 -         Allied plan:1 drafted for intent:1  <- #1
