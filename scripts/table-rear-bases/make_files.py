@@ -26,7 +26,10 @@ the files", 1 to 5):
      7, and `available_from` one less, each with a note;
   4. ruling 2: Espiritu Santo (base 3) starts with `supply_t = 2120` in place
      of 960, with its note and working;
-  5. a note beside Shortland (base 7), which keeps no supply and no fuel.
+  5. a note beside Shortland (base 7), which keeps no supply and no fuel;
+  6. decision 0232, step 3: the island "Guadalcanal and Tulagi" (number 3, of
+     base 1 and then base 4) after island 2's block in 07b and 07c; in
+     07_full_slice, which has no island, islands 1, 2 and 3 at its end.
 
 With `--check` it writes nothing: it says whether each file kept is byte for
 byte the one it would make, whether the folder holds anything else, and exits
@@ -96,6 +99,19 @@ NOTE_BASE_7 = (
     '# started here start at Rabaul, a named simplification.\n')
 
 
+NOTE_ISLAND = (
+    '# Decision 0232, step 3: the island of the two places, Guadalcanal and Tulagi together,\n'
+    '# the table\'s list offers (the islands of table/scenarios.json). Map data; nothing of it\n'
+    '# is hashed.\n')
+NOTE_ISLANDS_ALL = (
+    '# Decision 0232, step 3: the islands the table\'s list offers for the 39 days (the file it\n'
+    '# is made from has none, and the engine refused them). Map data; nothing of them is hashed.\n')
+ISLAND_1 = '[[island]]\nnumber = 1\nname = "Guadalcanal"\nplaces = [{ base = 1 }]\n'
+ISLAND_2 = '[[island]]\nnumber = 2\nname = "Tulagi"\nplaces = [{ base = 4 }]\n'
+ISLAND_3 = ('[[island]]\nnumber = 3\nname = "Guadalcanal and Tulagi"\n'
+            'places = [{ base = 1 }, { base = 4 }]\n')
+
+
 def header_end(lines):
     """The index of the first line that is not a comment or blank."""
     for k, line in enumerate(lines):
@@ -147,6 +163,14 @@ def make(source_text, source_name):
                                       NOTE_RUN.format(old=old, why=why) + f'available_from = {old - 1}', 1)
         new_block = new_block.replace('at_base = 7', 'at_base = 2', 1).replace('home_port = 7', 'home_port = 2', 1)
         body = body[:found.start()] + new_block + body[stop:]
+    # the islands (decision 0232, step 3)
+    if '[[island]]' in body:
+        two = re.search(r'\[\[island\]\]\nnumber = 2\n.*?\n\n', body, re.S)
+        if not two or body.count('[[island]]') != 2 or 'number = 3' in body:
+            raise SystemExit(f'{source_name}: the islands are not as step 3 reads them')
+        body = body[:two.end()] + NOTE_ISLAND + ISLAND_3 + '\n' + body[two.end():]
+    else:
+        body = body.rstrip('\n') + '\n\n' + NOTE_ISLANDS_ALL + ISLAND_1 + '\n' + ISLAND_2 + '\n' + ISLAND_3
     return head + body
 
 

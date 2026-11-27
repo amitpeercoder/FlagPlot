@@ -3296,6 +3296,14 @@ number = 2
 name = "Tulagi"
 places = [{ base = 4 }]
 
+# Decision 0232, step 3: the island of the two places, Guadalcanal and Tulagi together,
+# the table's list offers (the islands of table/scenarios.json). Map data; nothing of it
+# is hashed.
+[[island]]
+number = 3
+name = "Guadalcanal and Tulagi"
+places = [{ base = 1 }, { base = 4 }]
+
 # The Allied intents of decision 0153, "The intents as stated", on day 1:
 # no forces limit, no risk set (balanced), both leaves given.
 [[command]]

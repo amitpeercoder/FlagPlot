@@ -3492,3 +3492,20 @@ r = -2
 home = 2
 enters = 25
 leave_day = 36
+
+# Decision 0232, step 3: the islands the table's list offers for the 39 days (the file it
+# is made from has none, and the engine refused them). Map data; nothing of them is hashed.
+[[island]]
+number = 1
+name = "Guadalcanal"
+places = [{ base = 1 }]
+
+[[island]]
+number = 2
+name = "Tulagi"
+places = [{ base = 4 }]
+
+[[island]]
+number = 3
+name = "Guadalcanal and Tulagi"
+places = [{ base = 1 }, { base = 4 }]

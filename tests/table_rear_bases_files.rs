@@ -88,6 +88,52 @@ fn data_lines(text: &str) -> Vec<String> {
         .collect()
 }
 
+/// The data lines of the islands statement 6 adds: `07b` and `07c` the four
+/// of island 3, after the block of island 2; `07_full_slice` the twelve of
+/// islands 1, 2 and 3, the last data lines of the file. Asserts they are
+/// those lines, in that order, and returns the lines without them.
+fn without_added_islands(name: &str, mut lines: Vec<String>) -> Vec<String> {
+    let one = [
+        "[[island]]",
+        "number = 1",
+        "name = \"Guadalcanal\"",
+        "places = [{ base = 1 }]",
+    ];
+    let two = [
+        "[[island]]",
+        "number = 2",
+        "name = \"Tulagi\"",
+        "places = [{ base = 4 }]",
+    ];
+    let three = [
+        "[[island]]",
+        "number = 3",
+        "name = \"Guadalcanal and Tulagi\"",
+        "places = [{ base = 1 }, { base = 4 }]",
+    ];
+    let expected: Vec<&str> = if name.starts_with("07_") {
+        one.iter().chain(&two).chain(&three).copied().collect()
+    } else {
+        three.to_vec()
+    };
+    let at = if name.starts_with("07_") {
+        lines.len() - expected.len()
+    } else {
+        lines
+            .iter()
+            .position(|l| l == "number = 3")
+            .unwrap_or_else(|| panic!("{name}: no island 3"))
+            - 1
+    };
+    let taken: Vec<String> = lines.drain(at..at + expected.len()).collect();
+    assert_eq!(taken, expected, "{name}: the lines the islands add");
+    if !name.starts_with("07_") {
+        // after island 2's block: the data line before is its places line
+        assert_eq!(lines[at - 1], two[3], "{name}: after island 2's block");
+    }
+    lines
+}
+
 #[test]
 fn statement_1_the_scripts_check_passes() {
     let out = Command::new("python3")
@@ -107,9 +153,12 @@ fn statement_1_the_scripts_check_passes() {
 fn statement_2_each_file_differs_in_what_the_rulings_say_and_nothing_else() {
     for name in FILES {
         let from = data_lines(&read(repo().join("data/scenarios/table-boats").join(name)));
-        let made = data_lines(&read(
-            repo().join("data/scenarios/table-rear-bases").join(name),
-        ));
+        let made = without_added_islands(
+            name,
+            data_lines(&read(
+                repo().join("data/scenarios/table-rear-bases").join(name),
+            )),
+        );
         assert_eq!(from.len(), made.len(), "{name}: the same lines");
         let differing: Vec<(&String, &String)> =
             from.iter().zip(&made).filter(|(a, b)| a != b).collect();
@@ -187,5 +236,111 @@ fn statement_4_task_force_30_may_be_used_on_day_9_and_lies_at_rabaul_with_7_t() 
             sim_core::fixed::Fixed::from_int(7),
             "{name}"
         );
+    }
+}
+
+#[test]
+fn statement_6_each_file_has_the_three_islands() {
+    for name in FILES {
+        let truth = common::load_live(&repo().join("data/scenarios/table-rear-bases").join(name))
+            .expect("the file loads");
+        let found: Vec<(u32, String, Vec<Option<BaseId>>)> = truth
+            .world
+            .map()
+            .islands()
+            .map(|i| {
+                (
+                    i.number,
+                    i.name.clone(),
+                    i.places.iter().map(|p| p.base).collect(),
+                )
+            })
+            .collect();
+        let b = |n| Some(BaseId::new(n));
+        assert_eq!(
+            found,
+            vec![
+                (1, "Guadalcanal".to_string(), vec![b(1)]),
+                (2, "Tulagi".to_string(), vec![b(4)]),
+                (3, "Guadalcanal and Tulagi".to_string(), vec![b(1), b(4)]),
+            ],
+            "{name}"
+        );
+        // the three files are the table's: the made files are the only ones with island 3
+        let source = read(repo().join("data/scenarios/table-boats").join(name));
+        assert!(
+            !source.contains("name = \"Guadalcanal and Tulagi\""),
+            "{name}"
+        );
+        assert_eq!(
+            source.matches("[[island]]").count(),
+            if name.starts_with("07_") { 0 } else { 2 },
+            "{name}: the file it is made from"
+        );
+    }
+    // no scenario file outside table-rear-bases holds the line
+    let mut stack = vec![repo().join("data/scenarios")];
+    while let Some(dir) = stack.pop() {
+        for entry in std::fs::read_dir(&dir).expect("the folder reads") {
+            let path = entry.expect("an entry").path();
+            if path.is_dir() {
+                if path.file_name().is_some_and(|n| n == "table-rear-bases") {
+                    continue;
+                }
+                stack.push(path);
+            } else if path.extension().is_some_and(|e| e == "toml") {
+                assert!(
+                    !read(path.clone()).contains("name = \"Guadalcanal and Tulagi\""),
+                    "{}",
+                    path.display()
+                );
+            }
+        }
+    }
+}
+
+/// The text of a file with the lines statement 6 adds taken out: `[[island]]`
+/// to its places line for island 3 in `07b` and `07c`; every island block in
+/// `07_full_slice`, whose islands are at its end.
+fn without_island_lines(name: &str, text: &str) -> String {
+    let lines: Vec<&str> = text.lines().collect();
+    let mut out = Vec::new();
+    let mut k = 0;
+    while k < lines.len() {
+        let is_three = lines[k] == "[[island]]" && lines.get(k + 1) == Some(&"number = 3");
+        let is_any = lines[k] == "[[island]]";
+        if (name.starts_with("07_") && is_any) || (!name.starts_with("07_") && is_three) {
+            k += 4;
+        } else {
+            out.push(lines[k]);
+            k += 1;
+        }
+    }
+    out.join("\n") + "\n"
+}
+
+#[test]
+fn statement_7_an_island_is_not_hashed() {
+    for name in FILES {
+        let path = repo().join("data/scenarios/table-rear-bases").join(name);
+        let text = read(path.clone());
+        let stripped = without_island_lines(name, &text);
+        assert!(stripped.len() < text.len(), "{name}");
+        let play = |text: &str| {
+            let mut scenario =
+                common::from_text_with(text, &path, &sim_data::LoadOptions::default())
+                    .expect("the file loads");
+            let held = sim_staff::staffs();
+            let mut hashes = vec![scenario.world.state_hash()];
+            for _ in 0..3 {
+                scenario
+                    .next_day_watched(sim_staff::as_staffs(&held), &mut |_, _| {})
+                    .expect("a day resolves")
+                    .expect("a day to play");
+                hashes.push(scenario.world.state_hash());
+            }
+            (hashes[0], hashes[3])
+        };
+        assert_eq!(play(&text), play(&stripped), "{name}");
     }
 }

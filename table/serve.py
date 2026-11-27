@@ -474,7 +474,8 @@ def main():
         action="append",
         default=[],
         help='an island the scenario names, as "1=Guadalcanal@1": its number, a name, '
-        "and the number of a base that stands on it. No tool lists islands yet.",
+        'and the number of a base that stands on it; an island of more than one place '
+        'lists its bases in order, as "3=Guadalcanal and Tulagi@1,4". No tool lists islands yet.',
     )
     parser.add_argument(
         "--directives",
@@ -530,7 +531,11 @@ def main():
     for item in args.island:
         number, rest = item.split("=", 1)
         name, base = rest.rsplit("@", 1)
-        islands.append({"number": int(number), "name": name, "base": int(base)})
+        bases = [int(b) for b in base.split(",")]
+        entry = {"number": int(number), "name": name, "base": bases[0]}
+        if len(bases) > 1:
+            entry["places"] = bases
+        islands.append(entry)
     chart = load_chart(args.map)
     if args.scenario is None:
         home(args, load_chart)
