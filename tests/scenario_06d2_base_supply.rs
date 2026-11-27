@@ -2960,15 +2960,7 @@ fn a_scenario_that_names_no_supply_file_has_the_hashes_it_had_before_this_stage(
         .collect();
     names.sort();
     for name in names {
-        let text = fs::read_to_string(golden.join(format!("{name}.txt"))).expect("a golden file");
-        let wanted: Vec<u64> = text
-            .lines()
-            .filter(|line| line.starts_with("day "))
-            .map(|line| {
-                let hash = line.split_whitespace().nth(3).expect("a hash");
-                u64::from_str_radix(hash, 16).expect("hex")
-            })
-            .collect();
+        let wanted: Vec<u64> = common::pinned_day_hashes(&name);
         assert!(!wanted.is_empty(), "{name}");
         let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join(format!("../data/scenarios/{name}.toml"));

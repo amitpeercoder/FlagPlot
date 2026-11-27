@@ -2,20 +2,20 @@ Placeholder scenario 70: A run by night
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 9e5b2eb98d2f439a  18 events
-day   2  hash d558e650b00465fd  7 events
-day   3  hash a748a7ca77203820  7 events
-day   4  hash daa34febadefa17d  6 events
-day   5  hash 50c4a8354cde73e6  14 events
-day   6  hash e115230041f8ef7e  28 events
-day   7  hash 27bb5f72b54a2b4e  6 events
-day   8  hash 39e6e01cc6209c33  6 events
-day   9  hash bc36ddd8d9fb746d  6 events
-day  10  hash 29183444abba5168  6 events
-day  11  hash e9af739d02916ed0  14 events
-day  12  hash 73251913d4ee766f  26 events
-day  13  hash c4d6b16ed5fbdbe3  6 events
-day  14  hash d8f58d95b7a8c994  6 events
+day   1  hash ----------------  18 events
+day   2  hash ----------------  7 events
+day   3  hash ----------------  7 events
+day   4  hash ----------------  6 events
+day   5  hash ----------------  14 events
+day   6  hash ----------------  28 events
+day   7  hash ----------------  6 events
+day   8  hash ----------------  6 events
+day   9  hash ----------------  6 events
+day  10  hash ----------------  6 events
+day  11  hash ----------------  14 events
+day  12  hash ----------------  26 events
+day  13  hash ----------------  6 events
+day  14  hash ----------------  6 events
 
 task_force:1 "Placeholder transport force 1" (Allied): Arrived at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 ship:1 "Placeholder fast transport 1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 500 t of fuel, 0 t of supply

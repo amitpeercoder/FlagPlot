@@ -359,15 +359,71 @@ fn a_bad_command_line_fails_without_writing() {
     assert!(!out.exists());
 }
 
+/// `run`'s output with the sixteen hex digits of every line of the form
+/// `day N  hash H  K events` written as sixteen hyphens, and the hashes taken
+/// out, one hex string a day in order (decision 0233, item 15). Everything
+/// else is kept byte for byte.
+fn hyphened(output: &[u8]) -> (Vec<u8>, Vec<String>) {
+    let mut out = Vec::with_capacity(output.len());
+    let mut hashes = Vec::new();
+    for line in output.split_inclusive(|byte| *byte == b'\n') {
+        let mut line = line.to_vec();
+        if let Ok(text) = std::str::from_utf8(&line) {
+            let words: Vec<&str> = text.split_whitespace().collect();
+            let is_day_line = words.len() == 6
+                && words[0] == "day"
+                && words[1].bytes().all(|b| b.is_ascii_digit())
+                && words[2] == "hash"
+                && words[3].len() == 16
+                && words[3].bytes().all(|b| b.is_ascii_hexdigit())
+                && words[4].bytes().all(|b| b.is_ascii_digit())
+                && words[5] == "events";
+            if is_day_line {
+                let at = text.find("hash ").expect("a hash") + "hash ".len();
+                hashes.push(words[3].to_string());
+                line[at..at + 16].fill(b'-');
+            }
+        }
+        out.extend(line);
+    }
+    (out, hashes)
+}
+
+/// The `run_<stem>` lines of `tests/golden/pinned_hashes.txt` (decision 0233,
+/// item 16), read by their path from the top of the repository: the stem of
+/// each and the day hashes it holds, in order. The form of a line is stated in
+/// the file's heading.
+fn pinned_run_lines() -> Vec<(String, Vec<String>)> {
+    let text = fs::read_to_string(Path::new(ROOT).join("tests/golden/pinned_hashes.txt"))
+        .expect("the pinned hashes read");
+    text.lines()
+        .filter_map(|line| {
+            let mut words = line.split_whitespace();
+            let stem = words.next()?.strip_prefix("run_")?;
+            Some((stem.to_string(), words.map(str::to_string).collect()))
+        })
+        .collect()
+}
+
 #[test]
 fn run_output_matches_the_golden_files() {
     let golden = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/run_baseline");
+    let pinned = pinned_run_lines();
     // Scenarios whose event log is too large to keep as a baseline file: the
-    // soak's is 1.98 MB (decision 0044). Their summary file, with every
-    // day's hash, is still compared.
+    // soak's is 1.98 MB (decision 0044). Their summary file, with a hyphen for
+    // every day's hash, is still compared; the hashes are pinned all the same.
     const NO_EVENTS_BASELINE: [&str; 2] = ["08_soak", "45_soak_ashore"];
     for scenario in scenarios() {
         let name = stem(&scenario);
+        let pin = pinned
+            .iter()
+            .find(|(stem, _)| *stem == name)
+            .map(|(_, hashes)| hashes)
+            .unwrap_or_else(|| {
+                panic!(
+                    "{scenario} has no pinned line run_{name} in tests/golden/pinned_hashes.txt (the pins: run `sh scripts/regenerate.sh`)"
+                )
+            });
         for (suffix, extra) in [("", None), (".events", Some("--events"))] {
             if extra.is_some() && NO_EVENTS_BASELINE.contains(&name.as_str()) {
                 continue;
@@ -379,13 +435,32 @@ fn run_output_matches_the_golden_files() {
             args.extend(extra);
             let result = binary(&args);
             assert!(result.status.success(), "{scenario} failed to run");
+            let (cut, hashes) = hyphened(&result.stdout);
+            // First comparison: the output without its hashes, against the
+            // baseline. A difference means a game moved.
             assert!(
-                result.stdout == expected,
-                "{scenario}: `run {}` output differs from {}",
+                cut == expected,
+                "A GAME MOVED: {scenario}: `run {}` output, hashes aside, differs from {}",
                 extra.unwrap_or(""),
                 file.display()
             );
+            // Second comparison: the day hashes against the pinned line. A
+            // difference alone means the state or its layout moved.
+            assert!(
+                hashes == *pin,
+                "THE STATE OR ITS LAYOUT MOVED (the game did not): {scenario}: `run {}` day hashes {hashes:?} differ from the pinned line run_{name} {pin:?}",
+                extra.unwrap_or("")
+            );
         }
+    }
+    // A pinned run line with no scenario file fails, as a scenario with no
+    // line does.
+    let have: Vec<String> = scenarios().iter().map(|s| stem(s)).collect();
+    for (stem, _) in &pinned {
+        assert!(
+            have.contains(stem),
+            "tests/golden/pinned_hashes.txt has the line run_{stem} and there is no scenario file {stem}.toml"
+        );
     }
 }
 

@@ -2695,9 +2695,8 @@ fn the_same_seed_gives_the_same_hashes_twice_and_fatigue_changes_the_state() {
 fn a_scenario_without_the_fatigue_file_has_the_hashes_it_had_before_this_stage() {
     // The golden files of the command-line tests were written before fatigue
     // existed and are unchanged: each scenario with no fatigue file, run with
-    // its own seed, has the day hashes they hold.
-    let golden =
-        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../crates/sim-cli/tests/run_baseline");
+    // its own seed, has the day hashes they pin (the `run_` lines of
+    // tests/golden/pinned_hashes.txt, decision 0233).
     for name in [
         "01_transit",
         "03_search",
@@ -2705,16 +2704,7 @@ fn a_scenario_without_the_fatigue_file_has_the_hashes_it_had_before_this_stage()
         "06a_base_raid",
         "06b_wear_and_repair",
     ] {
-        let text = fs::read_to_string(golden.join(format!("{name}.txt")))
-            .unwrap_or_else(|_| panic!("a golden file for {name}"));
-        let wanted: Vec<u64> = text
-            .lines()
-            .filter(|line| line.starts_with("day "))
-            .map(|line| {
-                let hash = line.split_whitespace().nth(3).expect("a hash");
-                u64::from_str_radix(hash, 16).expect("hex")
-            })
-            .collect();
+        let wanted: Vec<u64> = common::pinned_day_hashes(name);
         assert!(!wanted.is_empty(), "{name}");
         let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join(format!("../data/scenarios/{name}.toml"));

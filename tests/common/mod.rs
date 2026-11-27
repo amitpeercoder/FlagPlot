@@ -139,17 +139,53 @@ pub fn edit_file_by(dir: &Path, name: &str, edits: &[(&str, &str)]) {
     });
 }
 
-/// The file of pinned hashes, `tests/golden/pinned_hashes.txt`: one
-/// `name hexhash` line each. `sh scripts/regenerate.sh` writes it; it is not
-/// edited by hand.
+/// The file of pinned hashes, `tests/golden/pinned_hashes.txt`. Its heading
+/// states the two kinds of line and who writes each; this module writes the
+/// `name hexhash` lines (`pinned_hash`) and reads the `run_` lines
+/// (`pinned_day_hashes`), and leaves every line of the other kind, comments
+/// included, byte for byte.
 fn pinned_hashes_path() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("golden/pinned_hashes.txt")
 }
 
+/// Whether a line of the pinned file is a `run_` line (decision 0233, item
+/// 16): names that begin `run_` are kept for those lines.
+fn is_run_line(line: &str) -> bool {
+    line.starts_with("run_")
+}
+
+/// The hash of every day of the run of the scenario `stem` (its file name
+/// without `.toml`), read from its `run_<stem>` line of the pinned file.
+/// Panics when the line is missing, as a scenario with no line fails.
+pub fn pinned_day_hashes(stem: &str) -> Vec<u64> {
+    let name = format!("run_{stem}");
+    let text = fs::read_to_string(pinned_hashes_path()).expect("the pinned hashes read");
+    let line = text
+        .lines()
+        .find(|line| line.split_whitespace().next() == Some(name.as_str()))
+        .unwrap_or_else(|| {
+            panic!(
+                "no line {name} in tests/golden/pinned_hashes.txt; run `sh scripts/regenerate.sh`"
+            )
+        });
+    let hashes: Vec<u64> = line
+        .split_whitespace()
+        .skip(1)
+        .map(|hex| u64::from_str_radix(hex, 16).expect("a day hash is hex"))
+        .collect();
+    assert!(!hashes.is_empty(), "{name} holds no hash");
+    hashes
+}
+
 /// The hash pinned under `name`. With `FLAGPILOT_UPDATE_GOLDEN` set it writes
 /// `computed` into the file under that name and returns it, so the caller's
-/// assertion holds; otherwise it reads the file.
+/// assertion holds; otherwise it reads the file. A new line goes in before
+/// the `run_` lines, which stand last.
 pub fn pinned_hash(name: &str, computed: u64) -> u64 {
+    assert!(
+        !is_run_line(name),
+        "{name}: names that begin run_ are kept for run lines"
+    );
     let path = pinned_hashes_path();
     let text = fs::read_to_string(&path).unwrap_or_default();
     if std::env::var("FLAGPILOT_UPDATE_GOLDEN").is_ok() {
@@ -161,6 +197,12 @@ pub fn pinned_hash(name: &str, computed: u64) -> u64 {
                 out.push_str(&line);
                 found = true;
             } else {
+                if !found && is_run_line(old) {
+                    // The first run line: the new line goes before it.
+                    out.push_str(&line);
+                    out.push('\n');
+                    found = true;
+                }
                 out.push_str(old);
             }
             out.push('\n');

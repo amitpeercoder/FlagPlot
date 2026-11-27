@@ -2683,22 +2683,10 @@ fn statement_26_a_side_given_no_waters_is_shown_nothing_until_a_boat_is_reported
     assert!(shown_empty > 0 && shown_report > 0);
 }
 
-/// The first line of a baseline written by the repository for `name`'s
-/// day 1: `day   1  hash <hex>`.
+/// The hash of day 1 that the repository pins for `name`'s run: the first
+/// hash of its `run_` line in tests/golden/pinned_hashes.txt.
 fn baseline_hash(name: &str) -> u64 {
-    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../crates/sim-cli/tests/run_baseline")
-        .join(format!("{name}.txt"));
-    let text = fs::read_to_string(&path).expect("the run baseline");
-    let line = text
-        .lines()
-        .find(|line| line.starts_with("day   1  hash "))
-        .expect("a hash line");
-    let hex = line
-        .strip_prefix("day   1  hash ")
-        .and_then(|rest| rest.split_whitespace().next())
-        .expect("the hash");
-    u64::from_str_radix(hex, 16).expect("hex")
+    common::pinned_day_hashes(name)[0]
 }
 
 #[test]
