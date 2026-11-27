@@ -70,7 +70,7 @@ A game day begins at **1800 on the preceding calendar date**. For a scenario who
 
 ### 4.1 Giving an objective
 
-An **intent** is the outcome you ask the staff to bring about or maintain. Click the base, force, or waters that the order concerns. Under **Orders You Can Give**, choose an objective. The available orders depend on the place, scenario, and forces at hand.
+An **intent** is the outcome you ask the staff to bring about or maintain. Click the base, force, or waters that the order concerns. Under **Orders You Can Give**, choose an objective. The available orders depend on the place, scenario, and forces at hand. The paper opens headed by that order in words, for example "Keep Thornwick supplied"; to give another order, use the way back at the top of the paper and choose again on the card.
 
 | Objective | What you are asking of the staff |
 | --- | --- |
@@ -96,7 +96,7 @@ Use **Cancel Plan** on a plan where offered. Use **Withdraw This Order** when yo
 
 ## 5. Direct orders and control of units
 
-Click a friendly task force, air group, land unit, or submarine and choose **Give a Direct Order** when offered. The paper shows the choices for that unit, who will control it, and when the order acts. Review the draft before signing. As the order takes effect, the unit is held in your hands. A held unit is kept out of the staff’s plans.
+Click a friendly task force, air group, land unit, or submarine and choose **Give a Direct Order** when offered. The paper is headed by the unit's name and shows the choices for that unit and who will control it. When the order acts is said beside **Sign and Send**. Review the draft before signing. As the order takes effect, the unit is held in your hands. A held unit is kept out of the staff’s plans.
 
 Use **Return It to the Staff** on a held unit’s card when you want the staff to use it again. Some cards also let you keep a unit out of the staff’s plans without giving it an immediate task. Before taking a unit, check whether it already serves an objective elsewhere. A plan may now have to wait or find another unit.
 

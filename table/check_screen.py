@@ -207,9 +207,9 @@ def one_order_paper():
           "every way to an order opens the one paper: a force's card, an air group's, a land unit's, and a card's orders you can give")
     start = text.index('<form class="order gives" id="paper"')
     form = text[start:text.index("</form>", start)]
-    parts = ['id="p-to"', "THE ORDER", "IN WHOSE HANDS", "ACTS", 'id="o-pv"', "THE STAFF'S READING", 'id="p-says"', "SIGN AND SEND", "TEAR UP"]
+    parts = ['id="p-head"', 'id="p-title"', 'id="p-the"', "IN WHOSE HANDS", 'id="o-pv"', "THE STAFF'S READING", 'id="p-says"', 'id="p-acts-t"', "SIGN AND SEND", "TEAR UP"]
     at = [form.find(p) for p in parts]
-    check(all(a >= 0 for a in at) and at == sorted(at), "the paper's parts are in order: TO, THE ORDER, IN WHOSE HANDS, ACTS, the staff's reading, what was sent, SIGN AND SEND, TEAR UP")
+    check(all(a >= 0 for a in at) and at == sorted(at), "the paper's parts are in order: the heading, the order, IN WHOSE HANDS, the staff's reading, what was sent, when it acts, SIGN AND SEND, TEAR UP")
     check('id="o-pv" open' in form and "$('o-pv').open = true" in text and 'id="p-dry"' in form and "OFFERED.trial" in text,
           "the staff's reading is shown open, with DRY RUN where the game has a trial")
     check("function actsText(orders)" in text and "return ACTS_NOW;" in text and "return ACTS_DUSK;" in text and "return ACTS_TONIGHT;" in text and "ACTS_NOW + ': ' + names(now)" in text,
@@ -355,7 +355,94 @@ def the_paper_reads_as_the_order():
     What does not change: every statement of `one_order_paper` but its list of parts (restated by A1 and A2), the ACTS words of
     `the_words_and_what_the_papers_say`, and what any order sends. `the_supply_orders_two_numbers`, `the_submarines` and
     `the_island_of_two_places` hold as they are but for the page lines they quote that this stage moves."""
-    raise NotImplementedError("decision 0240, stage A: the developer writes this check to the statements above")
+    import re
+    print("-- the order paper reads as the order: its head and its foot", flush=True)
+    text = page_text()
+    start = text.index('<form class="order gives" id="paper"')
+    form = text[start:text.index("</form>", start)]
+    # A1
+    parts = ['id="p-back"', 'id="p-head"', 'id="p-title"', 'id="p-the"', 'id="p-hands"', 'id="p-limits"', 'id="p-plan"', 'id="o-pv"', 'id="o-dry-says"', 'id="p-says"', 'id="p-foot"']
+    at = [form.find(p) for p in parts]
+    check(all(a >= 0 for a in at) and at == sorted(at), "A1: the paper's parts are in order: the way back, the head line, the heading, the order, in whose hands, LIMITS, YOUR PLAN, the reading, the dry run's line, what was sent, the foot")
+    foot = form[form.index('id="p-foot"'):]
+    fat = [foot.find(p) for p in ('id="p-acts-t"', 'id="p-sign"', 'id="p-dry"', 'id="p-cancel"')]
+    check(all(a >= 0 for a in fat) and fat == sorted(fat), "A1: the foot holds, in order, when the order acts, SIGN AND SEND, DRY RUN and TEAR UP")
+    # A2
+    gone = ['id="p-to"', 'id="p-to-name"', 'id="o-ends"', 'id="o-place"', "name = 'end'", "chosen('end')", "you are to:", "<legend>END</legend>",
+            '<span class="pl">TO</span>', '<span class="pl">THE ORDER</span>', '<span class="pl">ACTS</span>', "<h2>ORDER &middot;", 'id="p-acts"']
+    check(not [g for g in gone if g in text] and 'id="p-acts-t"' in foot,
+          "A2: the part TO, the list of ends with its radios, the sentence \"you are to:\", the labels TO, THE ORDER and ACTS and the old heading are gone; the line that says when it acts stays, in the foot")
+    # A3
+    open_draft = cut_function(text, "  function openDraft(best, first) {")
+    check("draft.end = first || 0" in open_draft and "draft.ends[draft.end]" in text and "draft.ends[parseInt(" not in text,
+          "A3: the end of a draft is kept in the draft, and everything that read the chosen radio reads it there")
+    # A4
+    head = run_in_node(cut_function(text, "  function headLine(kind) {")
+                       + "\nfunction main(ks) { return ks.map(headLine); }", ["staff", "force", "air", "land", "boat", "limit", "giveback"])
+    check(head == ["ORDER TO THE STAFF \u00b7 DRAFT", "ORDER \u00b7 DRAFT", "ORDER \u00b7 DRAFT", "ORDER \u00b7 DRAFT", "ORDER \u00b7 DRAFT",
+                   "CHANGE OF LIMITS \u00b7 DRAFT", "GIVEN BACK TO THE STAFF \u00b7 DRAFT"], f"A4: the head line says what the paper is ({head})")
+    check("$('p-head').textContent = headLine(kind)" in cut_function(text, "  function openPaper(kind, o) {"), "A4: opening the paper sets the head line")
+    # A5 to A10
+    waters = "the waters about 9\u00b026\u2032S 160\u00b002\u2032E"
+    base_t, thorn, lunga, wt = {"kind": "own", "name": "Placeholder base T"}, {"kind": "own", "name": "Thornwick"}, {"kind": "own", "name": "Lunga"}, {"kind": "waters", "name": waters}
+    cases = [
+        (["Hold Placeholder base T", {"intent_kind": "hold", "base": 2}], base_t, "Hold Base T"),
+        (["Keep it supplied", {"intent_kind": "keep_supplied", "base": 2}], base_t, "Keep Base T supplied"),
+        (["Keep it supplied", {"intent_kind": "keep_supplied", "base": 2}], thorn, "Keep Thornwick supplied"),
+        (["Cover it from the air", {"intent_kind": "cover", "base": 2}], lunga, "Cover Lunga from the air"),
+        (["Seize and hold Guadalcanal", {"intent_kind": "control_island", "island": 1}], lunga, "Seize and hold Guadalcanal"),
+        (["Capture Lunga only", {"intent_kind": "take_place", "base": 3}], lunga, "Capture Lunga only"),
+        (["Neutralise Rabaul", {"intent_kind": "neutralise", "target": 7}], lunga, "Neutralise Rabaul"),
+        (["Deny these waters, within 80 miles", {"intent_kind": "deny", "distance": 2}], wt, "Deny " + waters + ", within 80 miles"),
+        (["Deny these waters, within 160 miles", {"intent_kind": "deny", "distance": 4}], wt, "Deny " + waters + ", within 160 miles"),
+        (["Patrol these waters with submarines", {"intent_kind": "patrol"}], wt, "Patrol " + waters + " with submarines"),
+        (["Operate Task Force 17 from here", {"intent_kind": "operate_carriers", "task_force": 17}], wt, "Operate Task Force 17 from " + waters),
+        (["Station Task Force 44 here", {"intent_kind": "stand_at", "task_force": 44}], wt, "Station Task Force 44 in " + waters),
+    ]
+    code = (cut_function(text, "  function cleanName(s)") + "\n" + cut_function(text, "  function round(n)") + "\n" + cut_function(text, "  function draftHeading(e, target) {")
+            + "\nfunction main(cs) { return cs.map(function (c) { return draftHeading(c[0], c[1]); }); }")
+    said = run_in_node(code, [[c[0], c[1]] for c in cases])
+    for (e, tgt, want), got in zip(cases, said):
+        check(got == want, f"A5-A9: {e[1]['intent_kind']} at {tgt['name']} is headed \"{want}\" ({got})")
+    check(not [s for s in said if "Placeholder" in s or "these waters" in s or "here" in s or re.search(r"\bit\b", s)],
+          "A10: no heading holds \"Placeholder\", \"it\" by itself, \"these waters\" or \"here\"")
+    # A11
+    check(text.count("$('p-title').textContent = draftHeading(") == 1 and "$('p-title').textContent = draftHeading(" in open_draft,
+          "A11: openDraft sets the heading to the end's words once")
+    open_paper = cut_function(text, "  function openPaper(kind, o) {")
+    check("$('p-title').appendChild(refTo(o.unit, o.name))" in open_paper and "$('p-title').appendChild(orderLink(" in cut_function(text, "  function openLimitPaper(root, key, back) {")
+          and "$('p-title').appendChild(orderLink(" in cut_function(text, "  function openGiveBack(i) {") and "'Change the limits of '" in text,
+          "A11: a unit's paper is headed by the unit's link, and a change of limits and a give-back by the order's link")
+    # A12
+    acts = run_in_node(text[text.index("  var ACTS_TONIGHT"):text.index("\n", text.index("  var ACTS_TONIGHT"))] + "\n" + text[text.index("  var INSIDE_KINDS"):text.index("\n", text.index("  var INSIDE_KINDS"))]
+                       + "\nvar ORDER_LABEL = { station: 'Station' }; var clock = { at: 'dusk' };\n" + cut_function(text, "function labelOf(o)") + "\n" + cut_function(text, "function actsText(orders)")
+                       + "\nfunction main(x) { const o = [{ unit: 'submarine:1', order: { kind: 'station', hex: [1, 1] } }]; const out = [actsText([]), actsText(o)]; clock = { at: '1200' }; out.push(actsText(o)); return out; }", None)
+    check(acts == ["", "Acts at 1800, with tonight\u2019s orders", "Acts at 1800, for the coming day"] and "$('p-acts-t').hidden = !" in text,
+          f"A12: with nothing chosen the line of when it acts is empty and takes no room, and says what it said otherwise ({acts})")
+    # A13 to A16, from the style sheet
+    css = re.sub(r"/\*.*?\*/", "", text[text.index("<style"):text.index("</style>")], flags=re.S)
+    rules = re.findall(r"([^{}]+)\{([^{}]*)\}", css)
+    def decl(sel_has):
+        return [(s.strip(), b) for s, b in rules if sel_has(s)]
+    media = css[css.index("@media (min-width: 760px)"):]
+    media = media[:media.index("}", media.index("#paper .pfoot") + 20) + 1]
+    check("#paper .pfoot" in media and "position: sticky" in media and "bottom: 0" in media and "background:" in media, "A13: from 760 px the foot is held at the paper's bottom")
+    outside = css.replace(media, "")
+    check(not any("sticky" in b for s, b in re.findall(r"([^{}]+)\{([^{}]*)\}", outside) if ".pfoot" in s), "A13: below 760 px the foot is not sticky")
+    check(re.search(r"\.order \{[^}]*width: min\(400px, calc\(100% - var\(--sp-w\) - 48px\)\)", css) is not None
+          and "body.papered #prompt { right: calc(min(400px, 100% - var(--sp-w) - 48px) + 32px); }" in css
+          and not any("360px" in b for s, b in rules if s.strip() == ".order") and not any("360px" in b for s, b in rules if "#prompt" in s),
+          "A14: the paper and the card are 400 px wide and the prompt lies beside them")
+    pp = [b for s, b in rules if s.strip() == "#paper .pp"]
+    check(pp and not any("border-top" in b for b in pp), "A15: a part of the paper has no rule above it")
+    check(any("border-bottom" in b for s, b in rules if s.strip() in ("#paper .phead", "#paper #p-title")) and any("border-top" in b for s, b in rules if s.strip() == "#paper .pfoot"),
+          "A15: one rule under the heading and one above the foot")
+    check(not any("dashed" in b for s, b in rules if "#paper" in s), "A15: no rule of the paper is dashed")
+    num = [b for s, b in rules if s.strip() == "#paper input[type=number]"]
+    check(num and "background: transparent" in num[0] and "border: 0" in num[0] and "border-bottom" in num[0], "A16: a number blank is drawn as a blank, transparent with a rule beneath it")
+    for i in ("o-floor", "o-interval", "o-dist"):
+        tag = re.search(r'<input type="number" id="%s"[^>]*>' % i, form).group(0)
+        check(f'<label class="fl" for="{i}">' in form and "aria-label=" in tag, f"A17: {i} has a label tied to it and keeps its aria-label")
 
 
 def the_fold_and_the_keys():
@@ -491,7 +578,7 @@ def the_words_and_what_the_papers_say():
     # 7. the prompt at the chart's top centre
     css = re.search(r"#prompt \{([^}]*)\}", text).group(1)
     check("top: 12px" in css and "bottom: 76px" not in css and "margin: 0 auto" in css and "right: 200px" in css and "left: calc(var(--sp-w) + 16px)" in css
-          and "body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px); }" in text
+          and "body.papered #prompt { right: calc(min(400px, 100% - var(--sp-w) - 48px) + 32px); }" in text
           and "top: calc(var(--sp-h, 190px) + 8px)" in text and "setProperty('--sp-h'" in text and "body.prompting .order" in text,
           "the prompt lies at the chart's top centre between the stop paper and the order paper, and under the head and its strip in the drawer layout, clear of the order paper and the controls")
     # 8. SIGNED is never silently stale
@@ -779,7 +866,7 @@ def the_submarines():
     check("if (top.kind === 'patrol') (pr.stations || []).forEach(" in text and "if (i.kind === 'patrol') (M.boats || []).filter(function (b) { return b.hands && b.hands.by === 'staff' && b.hands.intent === i.number" in text
           and "if (k === 'station')" in text and "case 'station': text('take station at ')" in text and "patrol: 'PATROL WITH SUBMARINES'" in text and "'Patrol the waters within '" in text,
           "a patrol signed is in the plan's paper as the tree shows any task, each boat under it with her station, in YOUR ORDERS and SIGNED and on the chart as an order")
-    check('<span class="fl">Patrol these waters,</span><input type="number" id="o-dist"' in text
+    check('<label class="fl" for="o-dist">Patrol these waters,</label><input type="number" id="o-dist"' in text
           and "' hex' : ' hexes') + ' of ' + where + ' with submarines'" in text,
           "the patrol paper labels its distance as the deny order's choices are labelled (\"these waters\"), and the signed line says it: within 2 hexes of <place>, 1 hex for 1")
     # A link to a boat, a force, a base, a contact, a hex or any other `#see=` kind goes through see(); at a narrow width the stop
@@ -2647,7 +2734,7 @@ def your_plan_on_the_order_paper(bridge):
     text = page_text()
     # P1
     at = lambda i: text.index(f'id="{i}"')
-    check(at("p-limits") < at("p-plan") < at("p-acts") and re.search(r'<details[^>]*id="p-plan"[^>]*><summary[^>]*>YOUR PLAN</summary>', text) is not None,
+    check(at("p-limits") < at("p-plan") < at("p-acts-t") and re.search(r'<details[^>]*id="p-plan"[^>]*><summary[^>]*>YOUR PLAN</summary>', text) is not None,
           "P1: the order paper has the fold p-plan after p-limits and before p-acts, whose head begins YOUR PLAN")
     end = cut_function(text, "  function planEnd() {")
     check("'control_island'" in end and "paper.kind !== 'staff'" in end and "WATCH" in end and "part.hidden = !end" in cut_function(text, "  function drawPlan(focusId) {"),
@@ -3660,7 +3747,7 @@ def the_supply_orders_two_numbers(bridge):
           and "Keep it supplied, 30 days" not in text and "['Keep it supplied', { intent_kind: 'keep_supplied'" in text,
           "O1: the paper has the row o-supply with o-floor (1 to 99, 30) and o-interval (1 to 99, empty), their words and \"left to the staff: 15 days\"; the end reads \"Keep it supplied\"")
     check("$('o-supply').hidden = !on" in text and "function supplyChosen()" in text and "e[1].intent_kind === 'keep_supplied'" in text
-          and "showPatrol(); showSupply(); endChanged();" in text and "e.target.id === 'o-floor' || e.target.id === 'o-interval'" in text and "{ showSupply(); askPreview(); }" in text
+          and "showPatrol(); showSupply(); drawMarks(); endChanged();" in text and "e.target.id === 'o-floor' || e.target.id === 'o-interval'" in text and "{ showSupply(); askPreview(); }" in text
           and "$('o-floor').value = '30'; $('o-interval').value = '';" in text,
           "O2: the row is shown where the end chosen is keep_supplied and hidden for every other, by the path that shows o-patrol; a change of either input asks the reading again")
     code = ("".join(cut_function(text, h) + "\n" for h in ("  function supplyFloor(", "  function supplyInterval(", "  function addSupplyNumbers(", "  function commas(n)", "  function dayCount(", "  function suppliedWords("))
@@ -3875,6 +3962,7 @@ def main():
     the_stop_paper()
     orders_and_signed()
     one_order_paper()
+    the_paper_reads_as_the_order()
     stops_speak_as_the_staff()
     cards_show_no_handle()
     the_trail_holds_no_duplicate()
