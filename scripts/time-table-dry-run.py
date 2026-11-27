@@ -6,31 +6,29 @@ once it is timed on his machine).
     cargo build --release -p sim-cli
     python3 scripts/time-table-dry-run.py [--sim-cli PATH] [--sizes small,standard,full] [--runs 3]
 
-It writes a throwaway copy of data/scenarios/table-rear-bases/07b_slice_submarines.toml
-that names data/reference/trial.toml, in data/scenarios/tmp-time-dry-run/ (removed
-when it ends), takes the Allied seat through `sim-cli mcp`, previews "Seize and
-hold Guadalcanal and Tulagi" with both landings written (Tulagi with its
-transports, Lunga after it and not before day 4), and for each size asks `trial`
-of that preview, which plays the draft and the staff's plan beside it. Each size
-is asked in a process of its own, `--runs` times, and the middle time is printed
-in seconds beside the mark: the time the designer accepted for a trial beside
-another on the 39 days, with a tenth over (docs/validation/stage-4-proof-setup.md,
-condition 10). It changes no file it does not remove, and nothing reads what it
-prints. It reads the clock, outside the simulation. Standard library only.
+It reads data/scenarios/table-rear-bases/07b_slice_submarines.toml as it is (it
+names data/reference/trial.toml and has island 3, "Guadalcanal and Tulagi", of
+bases 1 and 4) and makes no copy. It takes the Allied seat through `sim-cli
+mcp`, previews "Seize and hold Guadalcanal and Tulagi" with both landings
+written (Tulagi with its transports, Lunga after it and not before day 4), and
+for each size asks `trial` of that preview, which plays the draft and the
+staff's plan beside it. Each size is asked in a process of its own, `--runs`
+times, and the middle time is printed in seconds beside the mark: the time the
+designer accepted for a trial beside another on the 39 days, with a tenth over
+(docs/validation/stage-4-proof-setup.md, condition 10). It changes no file, and
+nothing reads what it prints. It reads the clock, outside the simulation.
+Standard library only. Run by hand on the designer's machine.
 """
 import argparse
 import json
 import os
-import shutil
 import subprocess
 import sys
 import time
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SOURCE = "data/scenarios/table-rear-bases/07b_slice_submarines.toml"
-FOLDER = "data/scenarios/tmp-time-dry-run"
 MARKS = {"small": 2.2, "standard": 7.1, "full": 40.0}
-KEY = 'class_sides = "../../reference/class_sides_full_slice.csv"\n'
 
 
 class Seat:
@@ -88,22 +86,15 @@ def main():
     if not os.path.exists(cli):
         sys.exit(f"{args.sim_cli} is not built: cargo build --release -p sim-cli")
     text = open(os.path.join(ROOT, SOURCE)).read()
-    if text.count(KEY) != 1 or "\ntrial = " in text or "number = 3\n" not in text:
-        sys.exit(f"{SOURCE} is not as this script reads it (one class_sides line, no trial key, island 3)")
-    folder = os.path.join(ROOT, FOLDER)
-    os.makedirs(folder, exist_ok=True)
-    try:
-        with open(os.path.join(folder, "07b_with_a_trial.toml"), "w") as out:
-            out.write(text.replace(KEY, KEY + 'trial = "../../reference/trial.toml"\n'))
-        for size in args.sizes.split(","):
-            times, worlds, days = [], 0, 0
-            for _ in range(args.runs):
-                taken, worlds, days = one(cli, FOLDER + "/07b_with_a_trial.toml", size)
-                times.append(taken)
-            middle = sorted(times)[len(times) // 2]
-            print(f"{size}: {worlds} runs of {days} days, twice: {middle:.1f} s (the middle of {', '.join(f'{t:.1f}' for t in times)}); the mark is {MARKS[size]} s: {'within' if middle <= MARKS[size] else 'OVER'}", flush=True)
-    finally:
-        shutil.rmtree(folder, ignore_errors=True)
+    if '\ntrial = "../../reference/trial.toml"\n' not in text or "\nnumber = 3\nname = \"Guadalcanal and Tulagi\"\nplaces = [{ base = 1 }, { base = 4 }]\n" not in text:
+        sys.exit(f"{SOURCE} is not as this script reads it (a trial key, island 3 of bases 1 and 4)")
+    for size in args.sizes.split(","):
+        times, worlds, days = [], 0, 0
+        for _ in range(args.runs):
+            taken, worlds, days = one(cli, SOURCE, size)
+            times.append(taken)
+        middle = sorted(times)[len(times) // 2]
+        print(f"{size}: {worlds} runs of {days} days, twice: {middle:.1f} s (the middle of {', '.join(f'{t:.1f}' for t in times)}); the mark is {MARKS[size]} s: {'within' if middle <= MARKS[size] else 'OVER'}", flush=True)
 
 
 if __name__ == "__main__":
