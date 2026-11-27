@@ -2,34 +2,34 @@ Scenario 6: Rabaul against Guadalcanal, 21 August to 17 September 1942
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 7418fbb44cd74760  37 events
-day   2  hash 192a874962c37bbd  19 events
-day   3  hash 1c65d027576375fe  18 events
-day   4  hash 1f6c819ace29c2bd  26 events
-day   5  hash 76b7c12f7ad9331c  48 events
-day   6  hash cd04bc93361f6518  52 events
-day   7  hash 1fc83b390761991b  34 events
-day   8  hash d3f759e5481e85af  31 events
-day   9  hash 3ee121dee7815621  54 events
-day  10  hash 9b10fa2dd5cd1377  64 events
-day  11  hash e192ba4431af6552  44 events
-day  12  hash e0159a9afd8f3b7b  44 events
-day  13  hash afd522942d4c03a8  64 events
-day  14  hash 54d4d5f6ccc73937  44 events
-day  15  hash 601ae4090d658792  47 events
-day  16  hash 74b761a04eb29d92  63 events
-day  17  hash 37912404c613c047  42 events
-day  18  hash 2df6da80ba50f536  43 events
-day  19  hash 749bc9b92c78be39  37 events
-day  20  hash e0ad60da63a4412e  54 events
-day  21  hash a5642745df1907d2  60 events
-day  22  hash 3c80a25ddcf022db  62 events
-day  23  hash aeaa0af5a71b3192  57 events
-day  24  hash 4a7b88b22da33128  68 events
-day  25  hash d047e61520b654b1  55 events
-day  26  hash 7c1ec5e535cf1922  54 events
-day  27  hash 9e180b7c55204397  52 events
-day  28  hash b034a40083e38a65  48 events
+day   1  hash ----------------  37 events
+day   2  hash ----------------  19 events
+day   3  hash ----------------  18 events
+day   4  hash ----------------  26 events
+day   5  hash ----------------  48 events
+day   6  hash ----------------  52 events
+day   7  hash ----------------  34 events
+day   8  hash ----------------  31 events
+day   9  hash ----------------  54 events
+day  10  hash ----------------  64 events
+day  11  hash ----------------  44 events
+day  12  hash ----------------  44 events
+day  13  hash ----------------  64 events
+day  14  hash ----------------  44 events
+day  15  hash ----------------  47 events
+day  16  hash ----------------  63 events
+day  17  hash ----------------  42 events
+day  18  hash ----------------  43 events
+day  19  hash ----------------  37 events
+day  20  hash ----------------  54 events
+day  21  hash ----------------  60 events
+day  22  hash ----------------  62 events
+day  23  hash ----------------  57 events
+day  24  hash ----------------  68 events
+day  25  hash ----------------  55 events
+day  26  hash ----------------  54 events
+day  27  hash ----------------  52 events
+day  28  hash ----------------  48 events
 
 #1 D1 -         order:1 accepted for air_group:10  <- order:1
 #2 D1 -         order:2 accepted for air_group:10  <- order:2

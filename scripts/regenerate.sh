@@ -9,14 +9,19 @@
 #
 #   1 run baselines     crates/sim-cli/tests/run_baseline: `run` and
 #                       `run --events` of every file in data/scenarios (the
-#                       soak has no events file); a baseline whose scenario is
-#                       gone is removed
+#                       soak has no events file), each day's hash written as
+#                       sixteen hyphens; and the `run_<stem>` lines of
+#                       tests/golden/pinned_hashes.txt, the hashes of each
+#                       day, from the same runs (decision 0233, C). A baseline
+#                       or a line whose scenario is gone is removed
 #   2 agent goldens     crates/sim-agent/tests/golden/*.txt and
 #                       viewer/measure_fixture.json (FLAGPILOT_UPDATE_GOLDEN=1)
 #   3 recorded games    transcript.jsonl and save.json of each game under
 #                       crates/sim-cli/tests/recorded_games (regame.py)
-#   4 pinned hashes     tests/golden/pinned_hashes.txt, written by the tests
-#                       that pin them (FLAGPILOT_UPDATE_GOLDEN=1)
+#   4 pinned hashes     the `name hexhash` lines of tests/golden/pinned_hashes.txt,
+#                       written by the tests that pin them
+#                       (FLAGPILOT_UPDATE_GOLDEN=1); step 1 and this step each
+#                       keep the other's lines
 #   5 batch fixture     crates/sim-cli/tests/batch_before, the old-format
 #                       batch file, written by its test (FLAGPILOT_UPDATE_GOLDEN=1)
 #   6 submarine tables  data/reference/submarine_classes_1942.csv and
@@ -34,8 +39,9 @@
 #
 # Last it says, for each group, how many files changed and which, from
 # `git status --porcelain` (so against the last commit, and counting anything
-# already changed there); for the run baselines which scenarios changed beyond
-# their hash lines; for the recorded games whether a transcript changed or
+# already changed there); for the run baselines and the `run_` lines apart
+# (a baseline changed means a game moved; only lines changed means the state
+# or its layout moved and no game did); for the recorded games whether a transcript changed or
 # only a save.
 #
 # Exits 0 when every step ran and the by-hand checks passed, whatever changed;
@@ -118,21 +124,42 @@ fi
 say "building the release binary"
 cargo build --release --quiet -p sim-cli || { echo "regenerate: the build failed" >&2; exit 1; }
 
-# 1 run baselines
+# 1 run baselines and the run_ lines of the pinned hashes (decision 0233, C).
+# Each scenario's plain run gives the baseline, with the sixteen digits of
+# every `day N  hash H  K events` line written as hyphens, and the hashes of
+# the days for its `run_<stem>` line; the run with --events must give the same
+# hashes. The `run_` lines are then written into the pinned file after every
+# other line, in the order of their names, the other lines kept byte for byte.
 say "1 run baselines"
 list=$(mktemp)
-trap 'rm -f "$list"' EXIT
+runlines=$(mktemp -d)
+trap 'rm -f "$list"; rm -rf "$runlines"' EXIT
 for f in data/scenarios/*.toml; do
     name=$(basename "$f" .toml)
     echo "$name $f" >> "$list"
 done
 if xargs -P "$jobs" -L 1 sh -c '
-    name="$1"; file="$2"; base="'"$baselines"'"
-    "'"$bin"'" run "$file" > "$base/$name.txt" || exit 255
+    name="$1"; file="$2"; base="'"$baselines"'"; lines="'"$runlines"'"
+    cut_hashes() { sed -E "s/^(day +[0-9]+ +hash )[0-9a-f]{16}( +[0-9]+ events)\$/\1----------------\2/"; }
+    day_hashes() { sed -n -E "s/^day +[0-9]+ +hash ([0-9a-f]{16}) +[0-9]+ events\$/\1/p" | tr "\n" " " | sed "s/ \$//"; }
+    raw=$(mktemp)
+    "'"$bin"'" run "$file" > "$raw" || exit 255
+    cut_hashes < "$raw" > "$base/$name.txt"
+    echo "run_$name $(day_hashes < "$raw")" > "$lines/$name"
     if [ "$name" != 08_soak ] && [ "$name" != 45_soak_ashore ]; then
-        "'"$bin"'" run "$file" --events > "$base/$name.events.txt" || exit 255
+        "'"$bin"'" run "$file" --events > "$raw" || exit 255
+        cut_hashes < "$raw" > "$base/$name.events.txt"
+        [ "run_$name $(day_hashes < "$raw")" = "$(cat "$lines/$name")" ] || {
+            echo "regenerate: $name: the run and the run with --events give different day hashes" >&2; exit 255; }
     fi
-' sh < "$list"; then :; else fail "1 run baselines"; fi
+    rm -f "$raw"
+' sh < "$list"; then
+    # Written only when every run was made, so no line is lost to a failure.
+    new=$(mktemp)
+    grep -v '^run_' "$pinned" > "$new" || true
+    for f in "$runlines"/*; do cat "$f"; done | sort -k1,1 >> "$new"
+    if cmp -s "$new" "$pinned"; then rm -f "$new"; else mv "$new" "$pinned"; fi
+else fail "1 run baselines"; fi
 for f in "$baselines"/*.txt; do
     base=$(basename "$f" .txt)
     name=${base%.events}
@@ -154,7 +181,8 @@ quiet env FLAGPILOT_UPDATE_GOLDEN=1 cargo test --release --quiet -p sim-cli meas
 say "3 recorded games"
 quiet python3 "$games/regame.py" || fail "3 recorded games"
 
-# 4 pinned hashes (after 1: the scenario 10 test reads the baseline)
+# 4 pinned hashes (after 1, which writes the run_ lines the tests read; each
+# of the two steps keeps the other's lines)
 say "4 pinned hashes"
 quiet env FLAGPILOT_UPDATE_GOLDEN=1 cargo test --release --quiet -p scenario-tests \
     --test scenarios -- scenario_10_objectives:: scenario_17a_target_choice:: \
@@ -225,25 +253,44 @@ group() { # group TITLE PATH...
 group "1 run baselines" "$baselines"
 changes=$(git status --porcelain --untracked-files=all -- "$baselines" | awk '{ print $1, $2 }')
 if [ -n "$changes" ]; then
-    beyond=""
-    cut_hashes() { sed -E 's/^(day +[0-9]+ +hash )[0-9a-f]{16}/\1-/'; }
+    # A baseline holds no hash (decision 0233): a baseline that changed means
+    # a game moved. One still in the old form (hashes in it) is compared with
+    # the hashes cut from both sides.
+    cut_hashes() { sed -E 's/^(day +[0-9]+ +hash )[0-9a-f-]{16}/\1----------------/'; }
     echo "$changes" | while read -r code path; do
         case "$code" in
             M*)
                 if [ "$(git show "HEAD:$path" | cut_hashes)" != "$(cut_hashes < "$path")" ]; then
-                    echo "  changed beyond its hash lines: $path"
+                    echo "  a game moved: $path"
                 fi ;;
             D*) echo "  removed: $path" ;;
             *) echo "  new: $path" ;;
         esac
     done > "${TMPDIR:-/tmp}/regenerate-beyond.out"
     if [ -s "${TMPDIR:-/tmp}/regenerate-beyond.out" ]; then
-        echo "Scenarios whose run changed beyond the hash lines:"
+        echo "Run baselines changed (a game moved, or a scenario came or went):"
         cat "${TMPDIR:-/tmp}/regenerate-beyond.out"
     else
-        echo "No run baseline changed beyond its hash lines."
+        echo "No run baseline changed (a baseline holds no hash; the hashes are the run_ lines of the pins file)."
     fi
     rm -f "${TMPDIR:-/tmp}/regenerate-beyond.out"
+else
+    echo "No run baseline changed: no game moved."
+fi
+# The run_ lines of the pinned hashes, apart from the baselines.
+old_runs=$(mktemp); new_runs=$(mktemp)
+git show "HEAD:$pinned" 2>/dev/null | grep '^run_' | sort > "$old_runs" || true
+grep '^run_' "$pinned" | sort > "$new_runs" || true
+moved=$(diff "$old_runs" "$new_runs" | grep -c '^>' || true)
+gone=$(diff "$old_runs" "$new_runs" | grep -c '^<' || true)
+rm -f "$old_runs" "$new_runs"
+if [ "$moved" -eq 0 ] && [ "$gone" -eq 0 ]; then
+    echo "1 run lines of the pinned hashes: no line changed"
+else
+    echo "1 run lines of the pinned hashes: $moved line(s) new or changed, $gone replaced or removed"
+    if [ -z "$changes" ]; then
+        echo "Only the pins changed, no baseline: the state or its layout moved and no game did."
+    fi
 fi
 group "2 agent goldens and the viewer's measure fixture" "$goldens" "$measure"
 group "3 recorded games" "$games"
@@ -257,7 +304,7 @@ fi
 if [ -n "$transcripts$saves" ]; then
     echo "Write a \"Regenerated after ...\" paragraph by hand in $games/README.md."
 fi
-group "4 pinned hashes" "$pinned"
+group "4 pinned hashes (both kinds of line; the run_ lines are reported at step 1)" "$pinned"
 group "5 batch fixture" "$batch_before"
 group "6 submarine tables" data/reference/submarine_classes_1942.csv \
     data/reference/submarine_classes_1942.sources.csv \

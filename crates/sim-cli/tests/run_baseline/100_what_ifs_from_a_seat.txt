@@ -2,20 +2,20 @@ Placeholder scenario 100: What-ifs from a seat
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 6729471ecd2e5813  9 events
-day   2  hash aebf6a323a4660cd  9 events
-day   3  hash d2563b0f333692b2  9 events
-day   4  hash 0fdf826b8618efdd  9 events
-day   5  hash de6951669feaf4fb  9 events
-day   6  hash 10616ff56e1f19ac  9 events
-day   7  hash 20524087fec76490  9 events
-day   8  hash 8d0a0087b0a5797c  9 events
-day   9  hash 594866cb2bc1021f  9 events
-day  10  hash 38368d4182b88596  9 events
-day  11  hash b8f4ce5773c6176d  6 events
-day  12  hash 3caf858bc05d9056  6 events
-day  13  hash 2210f95728d2598e  6 events
-day  14  hash 881c42ce299fab02  6 events
+day   1  hash ----------------  9 events
+day   2  hash ----------------  9 events
+day   3  hash ----------------  9 events
+day   4  hash ----------------  9 events
+day   5  hash ----------------  9 events
+day   6  hash ----------------  9 events
+day   7  hash ----------------  9 events
+day   8  hash ----------------  9 events
+day   9  hash ----------------  9 events
+day  10  hash ----------------  9 events
+day  11  hash ----------------  6 events
+day  12  hash ----------------  6 events
+day  13  hash ----------------  6 events
+day  14  hash ----------------  6 events
 
 task_force:1 "Placeholder transport force 1" (Allied): Idle at (0,0); readiness normal, not alert, rules of engagement: engage, break off at 0.5, stragglers: keep, keep 0; no home port
 ship:1 "Placeholder troop transport 1": afloat in task_force:1; damage flotation 0, fire 0; all systems working; 0 gun rounds, torpedoes gone; 1000 t of fuel, 0 t of supply

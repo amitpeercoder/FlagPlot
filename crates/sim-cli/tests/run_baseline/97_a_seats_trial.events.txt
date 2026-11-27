@@ -2,20 +2,20 @@ Placeholder scenario 97: A seat's trial
 PLACEHOLDER DATA: some or all of the units, figures and geography are invented, not historical.
 seed 1942
 
-day   1  hash 807d66f29db2b46f  6 events
-day   2  hash 79f4d9762be6bd38  6 events
-day   3  hash 3f0d7095657a0b2a  6 events
-day   4  hash 0e849786bdfea5d3  6 events
-day   5  hash 5cf8f6ff42c29bcd  6 events
-day   6  hash 9636bad5b0732fd9  6 events
-day   7  hash 1a4bdcac15af5e8f  6 events
-day   8  hash f80128abfb68bc5c  6 events
-day   9  hash 061eda901d44de1a  6 events
-day  10  hash 5c669d5074e28a03  6 events
-day  11  hash 2411db7eba1ba57e  6 events
-day  12  hash b81a6b00e8eca039  6 events
-day  13  hash 1f296d100fb0ec8f  6 events
-day  14  hash b80e9cbd30d7debe  6 events
+day   1  hash ----------------  6 events
+day   2  hash ----------------  6 events
+day   3  hash ----------------  6 events
+day   4  hash ----------------  6 events
+day   5  hash ----------------  6 events
+day   6  hash ----------------  6 events
+day   7  hash ----------------  6 events
+day   8  hash ----------------  6 events
+day   9  hash ----------------  6 events
+day  10  hash ----------------  6 events
+day  11  hash ----------------  6 events
+day  12  hash ----------------  6 events
+day  13  hash ----------------  6 events
+day  14  hash ----------------  6 events
 
 #1 D0 -         Allied ground report at (4,0): 200 enemy men ashore (told)
 #2 D1 night     base:1 spent 3 t of supply on 600 men ashore for the day, 997 t left
