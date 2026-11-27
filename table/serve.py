@@ -53,6 +53,7 @@ import subprocess
 import sys
 import threading
 import time
+import tomllib
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlsplit
 
@@ -339,6 +340,26 @@ DEFAULT_MAP = "data/map/south_pacific.csv"
 
 
 def read_map(path):
+    """A map's hexes as the page takes them: [q, r, kind, lat, lon, land_percent].
+    A generated .csv map says where each hex is on the earth. A hand-written
+    .toml map (placeholder maps) has no degrees: each hex is placed from its q
+    and r by the generated maps' own lattice (east 40 nm * (q + r/2), south
+    34.641016 nm * r from hex (0,0)), at 60 nm to the degree and so with no
+    stretch, and the map has no frame (read_frame gives None), so the page
+    letters no degrees. For drawing only: the engine (sim-data) is the reader
+    of record of the file's hexes."""
+    if path.endswith(".toml"):
+        return [
+            [
+                q,
+                r,
+                kind,
+                round(-34.641016 * r / 60, 6) + 0.0,
+                round(40 * (q + r / 2) / 60, 6) + 0.0,
+                100 if kind == "land" else 0,
+            ]
+            for (q, r), (kind, _port_size) in sorted(read_toml_map(path).items())
+        ]
     hexes = []
     with open(path, newline="") as handle:
         rows = csv.DictReader(line for line in handle if not line.startswith("#"))
@@ -354,6 +375,22 @@ def read_map(path):
                 ]
             )
     return hexes
+
+
+def read_toml_map(path):
+    """The hexes of a hand-written .toml map as {(q, r): (kind, port_size)}, as
+    sim-data loads them: each [[region]] fills its inclusive q and r ranges, then
+    each [[hex]] replaces whatever a region put there. For drawing only."""
+    with open(path, "rb") as handle:
+        data = tomllib.load(handle)
+    placed = {}
+    for region in data.get("region", []):
+        for q in range(region["q"][0], region["q"][1] + 1):
+            for r in range(region["r"][0], region["r"][1] + 1):
+                placed[(q, r)] = (region["kind"], 0)
+    for hexed in data.get("hex", []):
+        placed[(hexed["q"], hexed["r"])] = (hexed["kind"], hexed.get("port_size", 0))
+    return placed
 
 
 def read_frame(path):
@@ -1078,6 +1115,9 @@ def home(args, load_chart):
             "islands": entry.get("islands", []),
             "home": {"scenario": entry["name"], "kind": hand.kind, "agents": hand.agents, "number": hand.number},
         }
+        # A rung of the ladder (decision 0237) gives the page the measure its verdict is read by, as its entry has it.
+        if "mission" in entry:
+            common["mission"] = entry["mission"]
         if hand.kind == "engine":
             command = [args.sim_cli, "mcp", file, "--seat", hand.person]
             if kept:

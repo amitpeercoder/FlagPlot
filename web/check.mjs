@@ -34,7 +34,7 @@
 // at 1200, an order that acts only at dusk given at 0600, and a dry run of an
 // order to the staff at the smallest size. Every answer and the saved game
 // are the native build's.
-// 10. Each of the ten offered files, the person's seat ending each day and
+// 10. Each of the eleven offered files, the person's seat ending each day and
 // giving nothing: every answer and the saved game are the native build's.
 // 11. A game file of statement 7 cut at day 20 and continued natively, and one
 // cut natively and continued in the module, each end in the saved game of
@@ -59,6 +59,16 @@
 // for the one marked line.
 // 16. The folder served from one's own machine with the network off plays
 // Midway from the new game screen to "How it ended".
+//
+// And, from decision 0237 (rung 1 on the table), written by the architect in
+// docs/decisions/as-built/0237-the-first-three-rungs.md and copied word for word:
+//
+// 17. Rung 1, the Allied seat: the reads of a page's load, then the supply
+// order for base 2 at a floor of 2 days and an interval of 5, with ship 1 and
+// base 1 as its forces, previewed and then signed, leave to launch given, then
+// `run` to the end with whatever stops it answered by `run` again, then
+// `events` of each day from 1 to 14 as the verdict asks them. Every answer and
+// the saved game are the native door's, byte for byte.
 //
 // Statement 15 is held here, on the files of the site the build assembled
 // (`target/web/site/`). Statements 14 and 16 are not held by CI: 14 is the
@@ -276,7 +286,7 @@ const compiled = new WebAssembly.Module(wasmBytes);
   const files = [...new Set(list.flatMap((e) => e.pairings.map((p) => p.file)))];
   check(JSON.stringify([...files].sort()) === JSON.stringify([...offered()].sort()), "the site's list offers the scenario files the check's games are held to");
   const absent = list.flatMap((e) => [
-    `chart/${e.map.split('/').pop().replace(/\.csv$/, '')}.json`,
+    `chart/${e.map.split('/').pop().replace(/\.[^.]*$/, '')}.json`,
     ...Object.values(e.directives || {}).map((d) => `directives/${d.split('/').pop()}`),
   ]).filter((f) => !existsSync(`${SITE}${f}`));
   check(absent.length === 0, `the chart of each map and the directives of each game the list offers are in the site${absent.length ? ` (missing ${absent})` : ''}`);
@@ -634,7 +644,7 @@ for (const f of files) games[f.replace(/\.mjs$/, '')] = (await import(`${ROOT}we
   }
   // One byte of one data file's text changed in the pack after the file was begun.
   const value = JSON.parse(packText);
-  const data = Object.keys(value.files).find((p) => p.endsWith('search.toml'));
+  const data = Object.keys(value.files).find((p) => p.startsWith(game.scenario.replace(/[^/]*$/, '')) && p.endsWith('search.toml'));
   value.files[data] += ' ';
   await refused('a game file whose pin is not the pack\'s', Buffer.from(JSON.stringify(value)), 'resume', [gameFile]);
 }
@@ -652,6 +662,7 @@ for (const name of ordered) {
     'orders-guadalcanal-staff': '7',
     'orders-midway-submarines': '8',
     'orders-midway-pulses': '9',
+    'orders-ladder-one-ship': '17',
   }[name] ?? '10';
   ok(`statement ${statement}: ${name}: ${runs[name].calls.length} calls and the saved game (${runs[name].saved.length} characters) are the native door's, byte for byte (${((Date.now() - began) / 1000).toFixed(1)} s)`);
 }
