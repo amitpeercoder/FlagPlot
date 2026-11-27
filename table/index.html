@@ -1053,7 +1053,7 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
   // air group's card is drawn firm; what a card's groups are already set to do, faint.
   var airReach = null, cardSerial = 0;
   function reachShape(a, faint, u) {
-    var at = function (b, d) { var rad = b * Math.PI / 180; return cpx(world(a.lat + d * Math.cos(rad) / 60, a.lon + d * Math.sin(rad) / (60 * (mapFrame ? mapFrame.factor : Math.cos(a.lat * Math.PI / 180))))); }, c = at(0, 0), w = a.from === a.to ? 360 : ((a.to - a.from) % 360 + 360) % 360;
+    var at = function (b, d) { var rad = b * Math.PI / 180; return cpx(world(a.lat + d * Math.cos(rad) / 60, a.lon + d * Math.sin(rad) / (60 * FX))); }, c = at(0, 0), w = a.from === a.to ? 360 : ((a.to - a.from) % 360 + 360) % 360;
     g.save(); g.beginPath(); if (w < 360) g.moveTo(c[0], c[1]); for (var k = 0; k <= w; k += 5) { var p = at(a.from + k, a.range); g[k || w < 360 ? 'lineTo' : 'moveTo'](p[0], p[1]); } g.closePath();
     if (!a.ring || a.fill) { g.fillStyle = a.red ? 'rgba(163,33,26,0.07)' : faint ? 'rgba(31,78,140,0.06)' : 'rgba(31,78,140,0.13)'; g.fill(); }
     g.strokeStyle = a.red ? 'rgba(163,33,26,0.35)' : faint ? 'rgba(18,51,92,0.4)' : 'rgba(18,51,92,0.7)'; g.lineWidth = (faint ? 1.6 : 2) * u; g.setLineDash(a.dash ? a.dash.map(function (x) { return x * u; }) : a.ring ? [3 * u, 6 * u] : [7 * u, 5 * u]); g.stroke(); g.setLineDash([]);
@@ -3267,7 +3267,7 @@ body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px)
       if (before) e.appendChild(rich('span', '', before));
       var b = el('button', 'ref', known || (again ? 'there' : mapFrame ? dm(h[3], 'N', 'S') + ' ' + dmLon(runLon(h[4])) : '(' + h[0] + ', ' + h[1] + ')')); b.type = 'button'; b.title = 'Show on the chart';
       b.addEventListener('click', function (x) { return function (ev) { ev.stopPropagation(); see(x); }; }(base ? base.base.handle : 'hex:' + q + ',' + r)); e.appendChild(b);
-      if (!known && !again) e.appendChild(document.createTextNode(' (' + q + ', ' + r + ')'));
+      if (!known && !again && mapFrame) e.appendChild(document.createTextNode(' (' + q + ', ' + r + ')'));
       last = re.lastIndex;
     }
     if (last < text.length) e.appendChild(rich('span', '', text.slice(last)));
