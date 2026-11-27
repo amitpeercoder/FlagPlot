@@ -424,7 +424,7 @@
 use crate::common;
 
 use std::collections::{BTreeMap, BTreeSet};
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::sync::OnceLock;
 
 use serde_json::{json, Value};
@@ -450,16 +450,14 @@ const LETTERS: [char; 4] = ['a', 'b', 'c', 'd'];
 
 // ------------------------------------------------------------------ helpers
 
-fn repo() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR")).join("..")
-}
-
 fn path(letter: char) -> PathBuf {
     common::data_dir().join(format!("scenarios/coral-sea/01{letter}_coral_sea.toml"))
 }
 
+/// The file resolved (decision 0234): a key, a row or a table is read from
+/// the scenario it makes, whether the file holds it or the file it is built on.
 fn text(letter: char) -> String {
-    std::fs::read_to_string(path(letter)).expect("the scenario file reads")
+    common::resolved_text(&path(letter))
 }
 
 fn reference(file: &str) -> String {
@@ -817,51 +815,18 @@ fn reach(
     (radius, lines)
 }
 
-/// The file's comment lines before its first table, as one line of words.
-fn header_words(text: &str) -> String {
-    let mut words = Vec::new();
-    for line in text.lines() {
-        if let Some(rest) = line.strip_prefix('#') {
-            words.push(rest.trim().to_string());
-        } else if line.starts_with("name = ") {
-            break;
-        }
-    }
-    words
+/// The header of the file and of every file it is built on, joined, as one
+/// line of words.
+fn header_words(letter: char) -> String {
+    common::headers(&path(letter))
+        .lines()
+        .filter_map(|line| line.strip_prefix('#'))
+        .map(|rest| rest.trim().to_string())
+        .collect::<Vec<_>>()
         .join(" ")
         .split_whitespace()
         .collect::<Vec<_>>()
         .join(" ")
-}
-
-/// The file with its `name` line and every `[[command]]` and `[[order]]`
-/// table taken away: everything from the first such line on, where only
-/// those tables follow, and the blank lines before it.
-fn without_name_and_commands(text: &str) -> String {
-    let lines: Vec<&str> = text.lines().collect();
-    let first = lines
-        .iter()
-        .position(|line| *line == "[[command]]" || *line == "[[order]]")
-        .unwrap_or(lines.len());
-    for line in &lines[first..] {
-        assert!(
-            line.is_empty()
-                || *line == "[[command]]"
-                || *line == "[[order]]"
-                || (!line.starts_with('[') && !line.starts_with('#') && line.contains(" = "))
-                || (line.starts_with("waypoints = ") || line.starts_with("kinds = ")),
-            "only command and order tables after the first: {line}"
-        );
-    }
-    let mut kept: Vec<&str> = lines[..first]
-        .iter()
-        .copied()
-        .filter(|line| !line.starts_with("name = "))
-        .collect();
-    while kept.last() == Some(&"") {
-        kept.pop();
-    }
-    kept.join("\n")
 }
 
 // ------------------------------------------------------------ The clock (1)
@@ -877,7 +842,7 @@ fn s01_five_days_from_1800_on_5_may_1942_with_day_1_the_6th() {
             t.lines().any(|l| l == "days = 5"),
             "file {letter} says days = 5"
         );
-        let header = header_words(&t);
+        let header = header_words(letter);
         assert!(
             header.contains("The game begins at 1800 on 5 May 1942"),
             "file {letter}: {header}"
@@ -1698,17 +1663,14 @@ fn s20_minus_12_1_is_461_nm_by_air_and_the_games_sea_measure_is_not_below_that()
 
 // -------------------------------------------------------------- The files
 
-/// Statement 21: The four files load, differ only in name and commands, and the script
-/// says each is what it makes.
+/// Statement 21: The four files load and differ only in name and commands.
+/// That each states its name and commands and nothing else is statement R3 of
+/// `scenarios_built_on_another`.
 #[test]
-fn s21_the_four_files_load_differ_only_in_name_and_orders_and_the_script_says_so() {
+fn s21_the_four_files_load_and_differ_only_in_name_and_orders() {
     for letter in LETTERS {
         let s = load(letter);
         assert_eq!(s.days, 5, "file {letter}");
-    }
-    let d = without_name_and_commands(&text('d'));
-    for letter in ['a', 'b', 'c'] {
-        assert_eq!(without_name_and_commands(&text(letter)), d, "file {letter}");
     }
     assert!(
         !text('d')
@@ -1724,20 +1686,6 @@ fn s21_the_four_files_load_differ_only_in_name_and_orders_and_the_script_says_so
     }
     let names: BTreeSet<String> = LETTERS.iter().map(|l| load(*l).name).collect();
     assert_eq!(names.len(), 4);
-    // The base is not played: it is not one of the four.
-    let out = std::process::Command::new("python3")
-        .arg(repo().join("scripts/coral-sea/make_files.py"))
-        .arg(repo())
-        .arg("--check")
-        .output()
-        .expect("python3 runs the script");
-    let said = String::from_utf8_lossy(&out.stdout);
-    assert!(
-        out.status.success(),
-        "{said}{}",
-        String::from_utf8_lossy(&out.stderr)
-    );
-    assert_eq!(said.matches(": as made").count(), 4, "{said}");
 }
 
 // ---------------------------------------------------------- The objectives

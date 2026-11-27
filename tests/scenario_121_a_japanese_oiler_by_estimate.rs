@@ -159,6 +159,13 @@ fn file(letter: char) -> PathBuf {
         .join(format!("03{letter}_coral_sea_both_oilers.toml"))
 }
 
+/// A scenario file resolved (decision 0234): a key, a row or a table is read
+/// from the scenario it makes, whether the file holds it or the file it is
+/// built on.
+fn resolved(path: &Path) -> String {
+    common::resolved_text(path)
+}
+
 fn load(path: &Path) -> Scenario {
     Scenario::load(path).unwrap_or_else(|e| panic!("{} loads: {e}", path.display()))
 }
@@ -660,13 +667,10 @@ fn statement_12_never_evidence() {
     let path = file('a');
     let text = read(&path);
     // A scenario file that loads her class and does not say so in its
-    // header is refused; the file on file says so.
+    // header is refused; the file on file says so (in its header or the
+    // header of a file it is built on). The resolved text has no header.
     assert_eq!(header_problem_of(&text, &path).expect("reads"), None);
-    let body: String = text
-        .lines()
-        .skip_while(|l| l.trim_start().is_empty() || l.starts_with('#'))
-        .map(|l| format!("{l}\n"))
-        .collect();
+    let body = resolved(&path);
     let refused = header_problem_of(&body, &path)
         .expect("reads")
         .expect("refused");
@@ -788,7 +792,7 @@ fn statement_14_the_japanese_fuelling_group() {
     assert_eq!(toho.cargo_fuel_t, t(12487));
     // No order of any of the four files names her or her force.
     for letter in ['a', 'b', 'c', 'd'] {
-        for line in named_in_orders(&read(&file(letter))) {
+        for line in named_in_orders(&resolved(&file(letter))) {
             let (key, value) = line
                 .split_once('=')
                 .map(|(k, v)| (k.trim(), v.trim()))
@@ -810,7 +814,7 @@ fn statement_14_the_japanese_fuelling_group() {
         }
         // The header says her light displacement and her cargo are
         // estimated, and that her load on 5 May is not known.
-        let head = sim_cli::estimates::header(&read(&file(letter)))
+        let head = common::headers(&file(letter))
             .replace('#', " ")
             .split_whitespace()
             .collect::<Vec<_>>()
@@ -823,13 +827,14 @@ fn statement_14_the_japanese_fuelling_group() {
     }
 }
 
-const AKEBONO_FULL: &str = "name = \"Akebono\"\nclass = 4017\nside = \"japanese\"\nfuel_t = 475";
+const AKEBONO_FULL: &str =
+    "class = 4017\nfuel_t = 475\nid = 26\nname = \"Akebono\"\nside = \"japanese\"";
 
 fn akebono_at(text: &str, tons: i64) -> String {
     common::replace_once(
         text,
         AKEBONO_FULL,
-        &format!("name = \"Akebono\"\nclass = 4017\nside = \"japanese\"\nfuel_t = {tons}"),
+        &format!("class = 4017\nfuel_t = {tons}\nid = 26\nname = \"Akebono\"\nside = \"japanese\""),
     )
 }
 
@@ -855,7 +860,7 @@ fn statement_15_the_staff_sends_a_short_force_to_her() {
     // 03b gives the Japanese side its orders: the Striking Force is under a
     // task of the Japanese staff's.
     let path = file('b');
-    let text = read(&path);
+    let text = resolved(&path);
     // At 100 tons, below a quarter of her 475 (118.75).
     let mut scenario = load_text(&akebono_at(&text, 100), &path);
     let held = staffs();
@@ -899,7 +904,7 @@ fn statement_15_the_staff_sends_a_short_force_to_her() {
 #[test]
 fn statement_16_a_destroyer_fuels() {
     let path = file('d');
-    let text = akebono_at(&read(&path), 175)
+    let text = akebono_at(&resolved(&path), 175)
         + "\n[[order]]\nday = 1\nside = \"japanese\"\ntask_force = 3\nkind = \"fuel_from\"\ngiver = 7\n";
     let mut scenario = load_text(&text, &path);
     {
@@ -990,9 +995,13 @@ fn property_the_table_s_copies() {
         .current_dir(repo())
         .output()
         .expect("python3 runs");
-    assert!(
-        out.status.success(),
-        "{}",
-        String::from_utf8_lossy(&out.stdout)
+    let said = String::from_utf8_lossy(&out.stdout);
+    assert!(out.status.success(), "{said}");
+    assert_eq!(said.matches(": the copy it makes").count(), 3, "{said}");
+    assert_eq!(
+        said.matches(": kept, its source is built on another file")
+            .count(),
+        9,
+        "{said}"
     );
 }
