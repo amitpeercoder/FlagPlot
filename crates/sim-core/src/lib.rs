@@ -21,6 +21,7 @@ pub mod entering;
 #[cfg(test)]
 mod entering_tests;
 pub mod events;
+pub mod field_value;
 pub mod fixed;
 pub mod hash;
 pub mod held;
