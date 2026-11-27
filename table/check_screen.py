@@ -2409,6 +2409,8 @@ TWO_PLANS_ANSWER = {
 # plan), and the line run for run. It has these five keys and no other: `left_out` and `no_cost` are absent, not empty (D4, D5). A cost's
 # row is named "Your " or "The enemy’s " and the page's own name for the cost with its first letter small, the enemy's ending
 # ", in the dry run"; the row for men unfed, where it has one, is "Your men lost unfed" and "The enemy’s men lost unfed, in the dry run".
+# One exception (item 21, amended Nov 27, 2026): the enemy's first row is "The enemy’s men lost, in the dry run", not "men lost to the
+# enemy": the enemy's men are not lost to the enemy.
 # The architect's working: 5 and 7 of 8 runs kept, on days 6 to 11 and on day 9; 1 and 0 lost again; 2 and
 # 1 not won; a cost's row only where either column's highest is above nothing, so no row for men unfed on either side; a spread whose
 # lowest and highest are one figure is said as that figure.
@@ -2870,11 +2872,26 @@ def the_dry_run_shows_two_plans(bridge):
     D8. The order paper's DRY RUN sends `trial` with the preview and the size and no `compare`.
 
     Through the bridge, on the 39 days, which have a trial from the island's pull request on (item 7):
-    D9. `trial` of the worked draft's preview at the size small is answered with `beside.of` "left_to_the_staff", `beside.order` N,
+    D9. `trial` of the worked draft's preview at the size small (a size the table offers on the 39 days: D11) is answered with `beside.of` "left_to_the_staff", `beside.order` N,
         `asked.compare` true, and `beside.with_your_plan` equal to `how_it_went`. Whatever counts it gives, what `twoPlans` makes of it
         says them: each cell of the first row begins with the page's words for the count of `met_and_kept` of its column, the four
         counts run for run are those of `world_for_world`, and together with `apart` they are the answer's `asked.worlds`.
     D10. The preview tried is not spent: it is approved after the trial. The game is put away.
+
+    The sizes offered (item 22a; the designer's answer of Nov 27, 2026, after timing the 39 days on his machine):
+    D11. In `table/scenarios.json` the entry `guadalcanal-39-days` has the key `dry_run`, exactly
+        {"sizes": ["small", "standard"], "seconds": {"standard": 45}}, and no other entry has the key.
+    D12. The page's pure function `sizesOffered(dry)`, in node. Of that value it gives exactly
+        {"sizes": ["small", "standard"], "says": ["Standard takes about 45 seconds."]}. Of undefined, of null, of {} and of
+        {"sizes": []} it gives {"sizes": ["small", "standard", "full"], "says": []}. Of
+        {"sizes": ["full", "huge", "small"], "seconds": {"small": 2, "full": 1, "standard": 45}} it gives
+        {"sizes": ["small", "full"], "says": ["Small takes about 2 seconds.", "Full takes about 1 second."]}: the order is always
+        small, standard, full; a size it does not know is left out; a time is said only of a size offered.
+    D13. In the page's text: the three sizes are listed in the body of `sizesOffered` and nowhere else; `dryBox` draws its size
+        buttons from `sizesOffered(config.dry_run).sizes` and a line for each of its `says` under them; `drySize` begins as
+        "small", and a DRY RUN sends the first size offered where the size in hand is not offered. Neither function names a
+        game ("guadalcanal", "39"). Through the bridge: `/config` of a game of the 39 days has `dry_run` equal to the entry's, and
+        `/config` of a game of the Eastern Solomons over five days has no such key.
     No count from a real trial is an expected value here (item 30): the developer reports them to the architect in "Built: step 3"."""
     import copy
     import re
@@ -2978,6 +2995,7 @@ function main(x) {
     approved = person.call("approve", {"preview": drafted["preview"]})["ok"]
     check(approved.get("status") == "queued", f"D10: the preview tried is not spent: it is approved after the trial ({approved.get('status')})")
     check(post(bridge.table + "/new") == {"ok": True}, "the game is put away")
+    check(False, "not built: decision 0232, step 3, item 22a (the sizes offered: D11 to D13)")
 
 
 def the_plan_paper_marks_whose_line(bridge):
@@ -3010,7 +3028,7 @@ def the_plan_paper_marks_whose_line(bridge):
         (`preview` of a `set_limit` `not_before` on N + 2) is not refused and is approved; what BACK TO THE STAFF’S CHOICE sends for
         its "Not before" is not refused; what CHANGE sends for "Risk: balanced" (`preview` of a `set_limit` `risk` on N + 2) is not
         refused.
-    W7. Before W8, nothing being queued: `trial` with `intent` N + 2 at the size small is answered with `beside.of`
+    W7. Before W8, nothing being queued: `trial` with `intent` N + 2 at the size small (a size the table offers there: D11) is answered with `beside.of`
         "given_back_to_the_staff" and `beside.order` N, and `twoPlans` of it and "Lunga", the name the page gives from the hex of
         intent N + 2 in `command_state`, says "the landing at Lunga given back to the staff from 1800".
     W8. `preview` of {"command": "withdraw_intent", "intent": N + 2} is valid and its `intent` is N: its tree has a `take_place` at H1
